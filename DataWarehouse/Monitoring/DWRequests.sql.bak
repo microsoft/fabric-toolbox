@@ -65,4 +65,4 @@ JOIN sys.databases d
 	ON d.database_id = r.database_id
 WHERE r.dist_statement_id != '00000000-0000-0000-0000-000000000000' 
 AND r.session_id <> @@SPID 
-AND s.program_name NOT IN ('QueryStore','DMS')
+AND s.program_name <> 'QueryStore'
