@@ -1,6 +1,5 @@
 --CREATE VIEW vRequests
 --AS
---All active queries
 SELECT 
 	d.name as 'database_name'
 	, s.login_name
@@ -9,7 +8,6 @@ SELECT
 	, r.status
 	, r.total_elapsed_time
 	, r.command
-	--, t.text 
 	,CASE   --uses statement start and end offset to figure out what statement is running
 	WHEN r.[statement_start_offset] > 0 THEN  
 	--The start of the active command is not at the beginning of the full command text 
@@ -35,26 +33,14 @@ SELECT
 	AS [executing_statement] 
 	,t.[text] AS [parent_batch] 
 	, s.program_name
-	--, r.user_id
-	--, r.blocking_session_id
-	--, r.wait_type
-	--, r.wait_time
-	--, r.last_wait_type
-	--, r.reads
-	--, r.writes
-	--, r.logical_reads
 	, r.query_hash
 	, r.query_plan_hash
 	, r.dist_statement_id
 	, r.label
-	--, s.host_name
 	, s.client_interface_name
-	--,r.statement_start_offset
-	--,r.statement_end_offset
 	,r.sql_handle
 	,c.client_net_address
 	,c.connection_id
- 
 FROM sys.dm_exec_requests r 
 CROSS APPLY sys.[dm_exec_sql_text](r.[sql_handle]) t  
 JOIN sys.dm_exec_sessions s
@@ -65,4 +51,4 @@ JOIN sys.databases d
 	ON d.database_id = r.database_id
 WHERE r.dist_statement_id != '00000000-0000-0000-0000-000000000000' 
 AND r.session_id <> @@SPID 
-AND s.program_name NOT IN ('QueryStore','DMS')
+AND s.program_name NOT IN ('QueryInsights','DMS')
