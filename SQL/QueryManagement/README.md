@@ -1,6 +1,7 @@
 # sp_KillQueries
 
-This tool will kill queries that meet specified criteria inclucding: 
+A stored procedure will kill queries that meet specified criteria passed as parameters. 
+These criteria include: 
 * database name
 * login name
 * query text snippet
@@ -13,3 +14,9 @@ It may be useful to configure this to run at a specific interval via a Fabric Pi
 
 Example Pipeline configuration: 
 ![KillQuery_30minTimeoutExample.png](https://github.com/microsoft/Fabric_Toolbox/blob/main/collateral/screenshots/KillQuery_30minTimeoutExample.png)
+
+
+Future functionality being considered: 
+* Use role membership as a criteria
+* Introduce 'exclude parameters' - query does does not have "xyz"
+* Instructions on how to set up pipeline to send notifications after kill
