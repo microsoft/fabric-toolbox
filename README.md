@@ -1,6 +1,6 @@
 # Fabric Toolbox
 
-Fabric toolbox is a repository of tools, tempalates, queries and other artifacts that can help make you successful with Microsoft Fabric. This repository will be populated over time as we get closer to the official release of Microsoft Fabric. 
+Fabric toolbox is a repository of tools, tempalates, queries and other artifacts that can help make you successful with Microsoft Fabric. This repository will be ever-growing as we develop new tools and accelerators.  
 
 ## Contributing
 
