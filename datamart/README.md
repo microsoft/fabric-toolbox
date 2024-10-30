@@ -13,7 +13,9 @@ This section offers accelerators designed to assist you in upgrading and moderni
 
 # Instructions
 
-To get started, use the [schema and table creation](./schema_and_table_migration.ps1) PowerShell script. This module will guide you through the process of completing the following required input fields.
+1. To get started, use the [schema and table creation](./schema_and_table_migration.ps1) PowerShell script.
+
+- This script prompts will guide you through the process of completing the following required input fields.
 
 | Name | Description |
 | :-- | :-- |
@@ -22,4 +24,19 @@ To get started, use the [schema and table creation](./schema_and_table_migration
 | Datawarehouse Server Address | How to [retrieve the SQL connection string](https://learn.microsoft.com/en-us/fabric/data-warehouse/connectivity#retrieve-the-sql-connection-string) for the Fabric data warehouse. |
 | Datawarehouse Name | The data warehouse name as it is displayed in the workspace list. |
 | Schema Name | The name of a new schema that will be created in the data warehouse. |
-| Tenant Id| The CTID is appended to the end of the tenant URL, you can [find the CTID in the Fabric portal](https://learn.microsoft.com/fabric/admin/find-fabric-home-region) by opening the About Microsoft Fabric dialog window. It's available from the Help & Support (?) menu, which is located at the top-right of the Fabric portal. |
+| Tenant Id| The customer tenant id (CTID) is appended to the end of the tenant URL, you can [find the CTID in the Fabric portal](https://learn.microsoft.com/fabric/admin/find-fabric-home-region) by opening the About Microsoft Fabric dialog window. It's available from the Help & Support (?) menu, which is located at the top-right of the Fabric portal. |
+
+<br>
+
+2. Download and import the [Power BI semantic model migration](./Datamart%20Migration.ipynb) notebook into a workspace.
+
+ - Within the **Import the library and set initial parameters** code block, complete the following input parameter values as described below.
+
+| Name | Description |
+| :-- | :-- |
+| workspace_name | Specify the workspace of the datamart semantic model. If set to None, it will use the current workspace. |
+| dataset_name | Specify the name of the datamart semantic model. |
+| new_dataset_name | Specify the name for the new Direct Lake semantic model. |
+| item_name | Specify the name of the warehouse to be used for the Direct Lake semantic model. |
+| item_type | Specify the item type for the migration; options are 'Warehouse' or 'Lakehouse'. The default is 'Lakehouse'. <br><br>**Important:**  Ensure that it is configured as 'Warehouse' |
+| schema_name | Specify the name of the schema from the data warehouse. <br><br>**Important:** Ensure that it is configured to match the **Schema Name** from the previously executed script. |
