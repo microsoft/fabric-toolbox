@@ -40,3 +40,7 @@ This section offers accelerators designed to assist you in upgrading and moderni
 | item_name | Specify the name of the warehouse to be used for the Direct Lake semantic model. |
 | item_type | Specify the item type for the migration; options are 'Warehouse' or 'Lakehouse'. The default is 'Lakehouse'. <br><br>**Important:**  Ensure that it is configured as 'Warehouse' |
 | schema_name | Specify the name of the schema from the data warehouse. <br><br>**Important:** Ensure that it is configured to match the **Schema Name** from the previously executed script. |
+
+# Important
+
+Data ingestion from the original datamart is not migrated in this solution - as it is now decoupled, allowing you greater flexibility of options across Microsoft Fabric - including the use of standalone items such as dataflow gen2, data pipelines, copy job and more. If you wish to continue to use the Power Query Online authoring experience you can export a [Power Query template](https://aka.ms/pqtemplate) which includes your original queries and transformation logic and create a new dataflow gen2 to ingest data.
