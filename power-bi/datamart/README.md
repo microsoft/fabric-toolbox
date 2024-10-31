@@ -38,7 +38,7 @@ This section offers accelerators designed to assist you in upgrading and moderni
 | dataset_name | Specify the name of the datamart semantic model. |
 | new_dataset_name | Specify the name for the new Direct Lake semantic model. |
 | item_name | Specify the name of the warehouse to be used for the Direct Lake semantic model. |
-| item_type | Specify the item type for the migration; options are 'Warehouse' or 'Lakehouse'. The default is 'Lakehouse'. <br><br>**Important:**  Ensure that it is configured as 'Warehouse' |
+| item_type | Specify the item type for the migration; options are 'Warehouse' or 'Lakehouse'. <br><br>**Important:**  Ensure that it is configured as 'Warehouse' |
 | schema_name | Specify the name of the schema from the data warehouse. <br><br>**Important:** Ensure that it is configured to match the **Schema Name** from the previously executed script. |
 
 # Important
