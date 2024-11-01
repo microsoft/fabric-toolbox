@@ -2,12 +2,10 @@
 
 # Define the datamart connection parameters
 $datamartServerAddress = Read-Host("Please provide your datamart server address ")
-
 $datamartDatabaseName = Read-Host("`nPleas provide your datamart name ")
 
 # Define the warehouse connection parameters
 $warehouseServerAddress = Read-Host("`nPlease provide your datawarehouse server address ")
-
 $warehouseDatabaseName = Read-Host("`nPlease provide your datawarehouse name ")
 
 # Define the schema you want to create in the warehouse
@@ -26,9 +24,11 @@ $tenantId = Read-Host("`nPlease provide your tenant id ")
 # Install the necessary modules if not already installed
 if (-not (Get-Module -ListAvailable -Name Az.Accounts)) {
     Install-Module -Name Az.Accounts -AllowClobber -Force
+    Import-Module -Name Az.Accounts
 }
 if (-not (Get-Module -ListAvailable -Name SqlServer)) {
     Install-Module -Name SqlServer -AllowClobber -Force
+    Import-Module -Name SqlServer
 }
 
 ############################################ BEGIN MIGRATION
