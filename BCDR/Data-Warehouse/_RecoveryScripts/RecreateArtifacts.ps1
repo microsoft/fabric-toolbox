@@ -185,14 +185,14 @@ $apiUrl = "https://api.fabric.microsoft.com/v1/workspaces/$WorkspaceID/items/$LH
 
 #Connect to OneLake and Loop through schemas and tables to create shortcuts
 $ctx = New-AzStorageContext -StorageAccountName 'onelake' -UseConnectedAccount -endpoint 'fabric.microsoft.com'
-$OldTablesPath= $DWName+".datawarehouse/Tables"
+$OldTablesPath= $OldDWID+"/Tables"
 # Get Schemas
-$schemas=Get-AzDataLakeGen2ChildItem -Context $ctx -FileSystem $OldWS -Path $OldTablesPath 
+$schemas=Get-AzDataLakeGen2ChildItem -Context $ctx -FileSystem $OldWSID -Path $OldTablesPath 
 $schemas | ForEach-Object {
     #Get Tables per schema
     $schema=Split-Path -Path $_.Path -Leaf 
     
-    $tables=Get-AzDataLakeGen2ChildItem -Context $ctx -FileSystem $OldWS -Path $_.Path
+    $tables=Get-AzDataLakeGen2ChildItem -Context $ctx -FileSystem $OldWSID -Path $_.Path
     $tables | ForEach-Object {
         $table=Split-Path -Path $_.Path -Leaf
         #Write-Output $schema`.$table     
