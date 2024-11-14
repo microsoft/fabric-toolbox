@@ -19,10 +19,13 @@ When planning and executing a successful modernization, it's essential to have a
 A visualized data lineage enhances your ability to manage and execute your dataflow modernization projects effectively.
 
 Let's break down a dependency map:
+
 1. The dataflow starts in a workspace called **Linked Table** with a dataflow named **Third Link**. Third Link is connected to two upstream dataflows:
-- **New Link From One**, which is located in the workspace **Linked Table Example 1**.
-- **2ndLink**, which is located in the workspace **Linked Table Example 2**.
+  - **New Link From One**, which is located in the workspace **Linked Table Example 1**.
+  - **2ndLink**, which is located in the workspace **Linked Table Example 2**.
 2. Additionally, **2ndLink** is connected to another dataflow called **Gen1Dataflow**, which also resides in the workspace Linked **Table Example 1**.
 
 The original dataflow spans across three workspaces and involves multiple connections between different dataflows.
+</br>
+</br>
 ![Dataflow dependency map](./media/dataflow_dependency.png)
