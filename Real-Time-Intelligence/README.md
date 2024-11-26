@@ -45,7 +45,6 @@ Update-AzConfig -DefaultSubscriptionForLogin "My_Subscription_Name"
 ```
 
 * Example of Eventhouse, KQL Database, table and a function created using this Powershell script
-
   ![Eventhouse](https://github.com/SuryaTejJosyula/FabricRTI_Accelerator/blob/main/Assets/Created_Entities.png)
 
 # Eventstream
@@ -75,3 +74,4 @@ Please follow the steps below in order to create the right payload for Eventstre
 * Example of Eventstream created along with defined topology
 
   ![Eventstream](https://github.com/SuryaTejJosyula/FabricRTI_Accelerator/blob/main/Assets/Eventstream_Created.png)
+

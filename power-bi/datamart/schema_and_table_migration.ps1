@@ -1,26 +1,37 @@
+############################################ RUN SCRIPT TO BEGIN INPUTS
+
 # Define the datamart connection parameters
 $datamartServerAddress = Read-Host("Please provide your datamart server address ")
-$datamartDatabaseName = Read-Host("`nPlease provide your datamart name ")
+$datamartDatabaseName = Read-Host("`nPleas provide your datamart name ")
 
 # Define the warehouse connection parameters
 $warehouseServerAddress = Read-Host("`nPlease provide your datawarehouse server address ")
 $warehouseDatabaseName = Read-Host("`nPlease provide your datawarehouse name ")
 
 # Define the schema you want to create in the warehouse
-$schemaName = Read-Host("`nPlease provide the name of the schema you want created in the warehouse ")
+do {
+    $schemaName = Read-Host("`nPlease provide the name of a new schema you want created in the warehouse ")
+    if ($schemaName -match "^(?i)dbo$") {
+        Write-Host "The name 'dbo' is not recommended. Please choose a different name."
+    }
+} while ($schemaName -match "^(?i)dbo$")
 
 # Define the tenant id you're logging into
 $tenantId = Read-Host("`nPlease provide your tenant id ")
 
-# SCRIPT START
+############################################ CHECK AND INSTALL MODULES
 
 # Install the necessary modules if not already installed
 if (-not (Get-Module -ListAvailable -Name Az.Accounts)) {
     Install-Module -Name Az.Accounts -AllowClobber -Force
+    Import-Module -Name Az.Accounts
 }
 if (-not (Get-Module -ListAvailable -Name SqlServer)) {
     Install-Module -Name SqlServer -AllowClobber -Force
+    Import-Module -Name SqlServer
 }
+
+############################################ BEGIN MIGRATION
 
 # Login with your Entra ID account
 Connect-AzAccount -TenantId $tenantId
@@ -69,7 +80,7 @@ try {
     Write-Error "Failed to generate schema creation script: $_"
 }
 
-# Create a new schema and tables in the fabric warehouse
+# Create a new schema and tables in the fabric data warehouse
 try {
     Invoke-Sqlcmd -ServerInstance $warehouseServerAddress -Database $warehouseDatabaseName -AccessToken $accessToken -Query $createSchema[0]
     Write-Output "Schema and tables created successfully in the fabric warehouse."
