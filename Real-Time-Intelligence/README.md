@@ -45,6 +45,7 @@ Update-AzConfig -DefaultSubscriptionForLogin "My_Subscription_Name"
 ```
 
 * Example of Eventhouse, KQL Database, table and a function created using this Powershell script
+  
   ![Eventhouse](https://github.com/SuryaTejJosyula/FabricRTI_Accelerator/blob/main/Assets/Created_Entities.png)
 
 # Eventstream
