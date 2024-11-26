@@ -1,0 +1,14 @@
+{
+    "displayName": "AutoDeployES2",
+    "description": "This Eventstream is created using APIs",
+	"type": "Eventstream",
+    "definition": {
+        "parts": [
+            {
+                "path": "eventstream.json",
+                "payload": "<Base64 converted string of entire EventstreamDefinition.json file>",
+                "payloadType": "InlineBase64"
+            }
+        ]
+    }
+}
