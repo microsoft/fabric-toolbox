@@ -11,4 +11,4 @@ This section hold sa collection of tsql scripts and code examples that can help 
 * Copying results of DMVs into tables
 
 ## tpch-benchmarcking
-This section includes all fo the scripts necessary to load tpch from ADLS storage into the warehouse, then create statistics and run TPCH queries. The queries include labels to make it easy to use QueryInsights to look into the execution statistics afterwards. 
+This section includes all of the scripts necessary to load tpch from ADLS storage into the warehouse, then create statistics and run TPCH queries. The queries include labels to make it easy to use QueryInsights to look into the execution statistics afterwards. 
