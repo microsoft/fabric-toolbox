@@ -27,11 +27,9 @@ This module of the Fabric toolbox provides a set of pre-built reports (Real-Time
 
 There are two monitoring template options available:
 
-###### Real-Time Dashboard: 
-This template allows users to track workspace activities in real-time. It provides an operational tool for users to analyze issues within seconds, and zoom in to exact time periods that an event occured.
-
-###### Power BI Report: 
-This template allows users to configure connections to the Monitoring Eventhouse to retain detailed historical activity data.
+| Real-Time Dashboard | Power BI Report|
+| ------ | ------ |
+| This template allows users to track workspace activities in real-time. It provides an operational tool for users to analyze issues within seconds, and zoom in to exact time periods that an event occured. | This template allows users to configure connections to the Monitoring Eventhouse to retain detailed historical activity data. |
 
 
 ### It is real. In Real-Time Dashboard
@@ -39,28 +37,26 @@ This template allows users to configure connections to the Monitoring Eventhouse
 This template, in combination with Workspace Monitoring features, allows users to track workspace activities in real-time. It connects directly to the underlying monitoring Eventhouse KQL database, providing an overview of items, operations, and users. Users can also compare DAX improvements between semantic models. Users can deep dive an analyze the Query and Ingestion patterns of Eventhouses. 
 
 
-The Real Time Dashboard template is structured on the following way:
+The Real-Time Dashboard template is structured on the following way:
+
 ![Workspace Monitoring Real Time Dashboard template structure](./media/fwm_rtid_template_0_structure.png)
 
-##### Screenshots | Real Time Dashboard template
+##### Screenshots | Real-Time Dashboard template
 
-Workspace Overview
 ![Screenshot](./media/fwm_rtid_template_2_workspace_overview_screenshot.png)
 
-Eventhouse logs
 ![Screenshot](./media/fwm_rtid_template_2_eventhouses_overview_screenshot.png)
 
 ![Screenshot](./media/fwm_rtid_template_2_eventhouse_queries_screenshot.png)
 
 ![Screenshot](./media/fwm_rtid_template_2_eventhouse_table_ingestions_screenshot.png)
 
-Semantic Model logs
 ![Screenshot](./media/fwm_rtid_template_2_semantic_model_overview_screenshot.png)
 
 **Recommendation:** We recommend to filter the detail pages for a subset of semantic models for a short time period to avoid the 50.000 row result set soft limit.
 ![Screenshot](./media/fwm_rtid_template_2_semantic_model_details_screenshot.png)
 
-##### Additional information | Real Time Dashboard template
+##### Additional information | Real-Time Dashboard template
 
 ![Screenshot](./media/fwm_rtid_template_3_dynamic_units_screenshot.png)
 
@@ -128,14 +124,14 @@ Workspace Monitoring features must be enabled for the Workspace under the Worksp
 The following step-by-step guide describes the initial configuration step of the **dashboard/report template**.
 
 
-### Setup | Real Time Dashboard template
+### Setup | Real-Time Dashboard template
 
 #### Steps
-###### Preparation
+##### Preparation
 - Download the '**Workspace Monitoring Dashboard.json**' template file from the repository
 - Navigate to your workpace
 
-###### Main steps
+##### Main steps
 1. Click on '**New item**'
 2. Create a new '**Real-Time Dashboard**' item
 3. Provide a dashboard name 
@@ -159,7 +155,7 @@ The following step-by-step guide describes the initial configuration step of the
 15. Select the initial value of the **Workspace** parameter on the menu bar
 16. '**Save**' the Dashboard
 17. '**Refresh**' the Dashboard
-18. Switch the UI experience to **Viewing**
+18. Switch the UI experience to '**Viewing**' mode
 ![Screenshot](./media/fwm_rtid_template_1_getting_started_3.png)
 
 Congratulations! You are ready to go!
@@ -198,12 +194,16 @@ The following parameters are defined in the template:
 **Optimize Power BI refreshes for the template**
 Additionally, you can optimize the Power BI report template usage, you can configure the incremental refresh for each table.
 
+
+------------------------
+
 ## Considerations and limitations
 
 **Power BI report template**
 - **Eventhouse Query Limits**
     - If the template refresh fails due to the data volume, you can filter the data by configuring the Fabric Item Id parameter.
 
+------------------------
 
 ## Remarks
 
@@ -215,8 +215,10 @@ Please note that the CPU and Memory related metrics are **not aggregated, smooth
 
 Please test the solution on a non-production Fabric SKU first without impacting other workloads on your tenant.
 
+------------------------
+
 ## Support
-These templates (Real Time Dashboard template and Power BI template) **are not official Microsoft services**. 
+These templates (Real-Time Dashboard template and Power BI template) **are not official Microsoft services**. 
 
 
 **Ideas/Suggestions:**
@@ -232,5 +234,6 @@ In case of any questions, issues regarding the templates, please **create an iss
 
 For more information, please visit the main page of this repository or the learn.microsoft.com website.
 
+------------------------
 ## Trademarks
 This project may contain trademarks or logos for projects, products, or services. Authorized use of Microsoft trademarks or logos is subject to and must follow Microsoft's Trademark & Brand Guidelines. Use of Microsoft trademarks or logos in modified versions of this project must not cause confusion or imply Microsoft sponsorship. Any use of third-party trademarks or logos are subject to those third-party's policies.
