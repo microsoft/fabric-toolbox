@@ -3,6 +3,7 @@
 
 ![Fabric Workspace Monitoring component overview with report templates](./media/fwm_overview_cover.png)
 
+Current Template Version: **2025.1.1**
 
 ## Introduction
 
@@ -128,7 +129,7 @@ The following step-by-step guide describes the initial configuration step of the
 
 #### Steps
 ##### Preparation
-- Download the '**Workspace Monitoring Dashboard.json**' template file from the repository
+- Download the '**Fabric Workspace Monitoring Dashboard.json**' template file from the repository
 - Navigate to your workpace
 
 ##### Main steps
@@ -138,7 +139,7 @@ The following step-by-step guide describes the initial configuration step of the
 4. Click on '**Create**'
 4. Navigate to the Dashboard and select the '**Manage**' tab
 6. Click on '**Replace from file**'
-7. Select the downloaded '**Workspace Monitoring Dashboard.json**' template
+7. Select the downloaded '**Fabric Workspace Monitoring Dashboard.json**' template
 
 ![Screenshot](./media/fwm_rtid_template_1_getting_started_1.png)
 
@@ -209,6 +210,7 @@ Additionally, you can optimize the Power BI report template usage, you can confi
 
 **Capacity utilization:**
 Please note that the **report templates** and the items of the  Workspace Monitoring **are utilizing CU of your capacity.**
+The Workspace Monitoring feature is not charged during public preview.
 
 **CPU & Memory metrics in Monitoring Eventhouse and templates:**
 Please note that the CPU and Memory related metrics are **not aggregated, smoothed or bursted, like the operations in the Microsoft Fabric Capacity Metrics App**. A one-to-one comparison is for different reasons not possible. Billable capacity utilization and storage information are shown in the Microsoft Fabric Capacity Metrics App. https://learn.microsoft.com/en-us/fabric/enterprise/metrics-app
