@@ -1,0 +1,30 @@
+{
+  "DatabaseConfig": {
+    "ConnectionString": "Server=<-Server Name->;Database={d};User Id=<- Username ->;Password=<- Password ->;TrustServerCertificate=True;",
+    "Type": "",
+    "syncVersion": 1,
+    "Tables": [
+      {
+        "TableName": "<- table name->",
+        "SchemaName": "<- schema ->",
+        "KeyColumn": "<- table key column ->",
+        "OtherColumns": "<- columna, columnb, column c->",
+        "AdditionalColumns": " getdate() _lastupdated_ ",
+        "FullDataExtractQuery": "select 1 __rowMarker__ , {KeyColumn} , {OtherColumns} ,{AdditionalColumns} from {t} "
+      }
+    ],
+    "LocalLocationforTables": "<- local path to temp location for files->",
+    "DatabaseName": "<- database name ->",
+    "ChangeTrackingSQL": "ALTER DATABASE {d} SET CHANGE_TRACKING = ON (CHANGE_RETENTION = 2 DAYS, AUTO_CLEANUP = ON);",
+    "ChangeTrackingTable": "ALTER TABLE {d} ENABLE CHANGE_TRACKING  WITH (TRACK_COLUMNS_UPDATED = ON)  ",
+    "HighwatermarkSQL": "select CHANGE_TRACKING_CURRENT_VERSION ( )  ",
+    "ChangeIncrementalSQL": "select case changetb.SYS_CHANGE_OPERATION WHEN \u0027D\u0027 THEN 2 ELSE 1 END __rowMarker__ , changetb.{KeyColumn} , {OtherColumns} ,{AdditionalColumns}   FROM CHANGETABLE (CHANGES {t}, {h}) AS changetb left outer join {t} rowdata on changetb.{KeyColumn} = rowdata.{KeyColumn}\t  ",
+    "uploadDetails": {
+      "SPN_Application_ID": "<- SPN Application Id ->",
+      "SPN_Secret": "<- SPN Secret ->",
+      "SPN_Tenant": "<- Tenant ->",
+      "LandingZone": "<- Cut and paste the LandingZone here ->",
+      "PathtoAZCopy": "<- Path to AZCOPY->"
+    }
+  }
+}
