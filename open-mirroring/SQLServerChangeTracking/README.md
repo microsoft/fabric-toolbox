@@ -15,7 +15,7 @@ This solution will:
 1. On a custom schedule per table, extract any changes on the table and upload them to the landing zone.
 
 # Instructions
-1. Conpile the solution using VSCode or Visual Studio 2022 - I used Community Edition.
+1. Compile the solution using VSCode or Visual Studio 2022 - I used Community Edition.
 1. Edit the config file, to include the SQL Server, tables you want to Mirror and the SPN Application ID, SPN Secret and SPN Tenant. (All the details are in the [youtube video](https://youtu.be/Gg3YlGyy5P8), there is a [seperate youtube video](https://youtu.be/85xWqWHfWbU)for creating an SPN)
 1. [Create the Mirrored database](https://youtu.be/tiHHw2Hj848) , Copy the Landing Zone to the config file. 
 1. Run the program.
