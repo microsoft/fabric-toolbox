@@ -1,8 +1,18 @@
-# Fabric Toolbox
+# Welcome to the Fabric Toolbox
 
-Fabric toolbox is a repository of tools, tempalates, queries, and other useful artifacts that can help make you successful with Microsoft Fabric. This repository will be ever-growing as we develop new tools and accelerators.  
+Fabric toolbox is a repository of tools, accelerators, scripts, and samples to help you work with Microsoft Fabric. This repository will be ever-growing as we develop new tools and accelerators.  
 
-## Contributing
+<details>
+  <summary><strong>Table of Contents</strong></summary>
+
+## Accelerators
+- [Data Warehouse Backup and Recovery](./accelerators/data-warehouse-backup-and-recovery)
+
+</details>
+
+
+
+# Contributing
 
 This project welcomes contributions and suggestions.  Most contributions require you to agree to a
 Contributor License Agreement (CLA) declaring that you have the right to, and actually do, grant us
@@ -16,7 +26,7 @@ This project has adopted the [Microsoft Open Source Code of Conduct](https://ope
 For more information see the [Code of Conduct FAQ](https://opensource.microsoft.com/codeofconduct/faq/) or
 contact [opencode@microsoft.com](mailto:opencode@microsoft.com) with any additional questions or comments.
 
-## Trademarks
+# Trademarks
 
 This project may contain trademarks or logos for projects, products, or services. Authorized use of Microsoft 
 trademarks or logos is subject to and must follow 
