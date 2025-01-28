@@ -74,5 +74,5 @@ Please follow the steps below in order to create the right payload for Eventstre
 
 * Example of Eventstream created along with defined topology
 
-  ![Eventstream](https://github.com/SuryaTejJosyula/FabricRTI_Accelerator/blob/main/media/Eventstream_Created.png)
+  ![Eventstream](./main/media/Eventstream_Created.png)
 
