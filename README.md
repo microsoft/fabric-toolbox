@@ -31,6 +31,9 @@ These assets should be treated as examples that you can use to create the soluti
 - [Copy Warehouse](./tools/copy-warehouse)
 - [TPCH Benchmarking](./tools/tpch-benchmarking)
 
+## Monitoring
+- [Workspace Monitoring Dashboards](./monitoring/workspace-monitoring-dashboards)
+
 # Contributing
 
 This project welcomes contributions and suggestions.  Most contributions require you to agree to a
