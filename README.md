@@ -4,7 +4,9 @@
 
 # Welcome to the Fabric Toolbox
 
-Fabric toolbox is a repository of tools, accelerators, scripts, and samples to help you work with Microsoft Fabric. This repository will be ever-growing as we develop new tools and accelerators.  
+Fabric toolbox is a repository of tools, accelerators, scripts, and samples to help you work with Microsoft Fabric. This repository is brought to you by the Fabric Customer Advisory Team (CAT) and will continue to grow as we develop new tools and accelerators.  
+
+These assets should be treated as examples that you can use to create the solutions that are appropriate for your use case.
 
 ## Accelerators
 - [Data Warehouse Backup and Recovery](./accelerators/data-warehouse-backup-and-recovery)
@@ -28,6 +30,9 @@ Fabric toolbox is a repository of tools, accelerators, scripts, and samples to h
 ## Tools
 - [Copy Warehouse](./tools/copy-warehouse)
 - [TPCH Benchmarking](./tools/tpch-benchmarking)
+
+## Monitoring
+- [Workspace Monitoring Dashboards](./monitoring/workspace-monitoring-dashboards)
 
 # Contributing
 
