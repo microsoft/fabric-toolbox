@@ -1,0 +1,105 @@
+{
+    "mode": "Indexed",
+    "policyRule": {
+      "if": {
+        "field": "type",
+        "equals": "Microsoft.Fabric/capacities"
+      },
+      "then": {
+        "effect": "deployIfNotExists",
+        "details": {
+          "type": "Microsoft.Insights/activityLogAlerts",
+          "existenceCondition": {
+            "field": "name",
+            "equals": "[concat(parameters('alertName'), ' - ', field('name'))]"
+          },
+          "roleDefinitionIds": [
+            "/providers/Microsoft.Authorization/roleDefinitions/b24988ac-6180-42a0-ab88-20f7382dd24c"
+          ],
+          "deployment": {
+            "properties": {
+              "mode": "incremental",
+              "parameters": {
+                "capacityName": {
+                  "value": "[field('name')]"
+                },
+                "actionGroupId": {
+                  "value": "[parameters('actionGroupId')]"
+                },
+                "alertName": {
+                  "value": "[parameters('alertName')]"
+                }
+              },
+              "template": {
+                "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+                "contentVersion": "1.0.0.0",
+                "parameters": {
+                  "alertName": {
+                    "type": "String"
+                  },
+                  "capacityName": {
+                    "type": "String"
+                  },
+                  "actionGroupId": {
+                    "type": "String"
+                  }
+                },
+                "variables": {},
+                "resources": [
+                  {
+                    "type": "Microsoft.Insights/activityLogAlerts",
+                    "apiVersion": "2020-10-01",
+                    "name": "[concat(parameters('alertName'), ' - ', parameters('capacityName'))]",
+                    "location": "global",
+                    "properties": {
+                      "scopes": [
+                        "[resourceId('Microsoft.Fabric/capacities', parameters('capacityName'))]"
+                      ],
+                      "condition": {
+                        "allOf": [
+                          {
+                            "field": "category",
+                            "equals": "Administrative"
+                          },
+                          {
+                            "field": "operationName",
+                            "equals": "Microsoft.Fabric/capacities/suspend/action"
+                          }
+                        ]
+                      },
+                      "actions": {
+                        "actionGroups": [
+                          {
+                            "actionGroupId": "[parameters('actionGroupId')]",
+                            "webhookProperties": {}
+                          }
+                        ]
+                      },
+                      "enabled": true
+                    }
+                  }
+                ]
+              }
+            }
+          }
+        }
+      }
+    },
+    "parameters": {
+      "actionGroupId": {
+        "type": "String",
+        "metadata": {
+          "displayName": "Action Group ID",
+          "description": "ID of the action group for alerts"
+        }
+      },
+      "alertName": {
+        "type": "String",
+        "metadata": {
+          "displayName": "Alert Name",
+          "description": "Name of the alert to be created"
+        },
+        "defaultValue": "Fabric Capacity Suspended"
+      }
+    }
+  }
