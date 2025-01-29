@@ -2,15 +2,28 @@
 
 Fabric toolbox is a repository of tools, accelerators, scripts, and samples to help you work with Microsoft Fabric. This repository will be ever-growing as we develop new tools and accelerators.  
 
-<details>
-  <summary><strong>Table of Contents</strong></summary>
-
 ## Accelerators
 - [Data Warehouse Backup and Recovery](./accelerators/data-warehouse-backup-and-recovery)
+- [Power BI to Fabric Data Warehouse Modernization](./accelerators/power-bi-to-fabric-data-warehouse-modernization)
+- [Real Time Intelligence Eventhouse](./accelerators/real-time-intelligence_eventhouse)
+- [Real Time Intelligence Eventstream](./accelerators/real-time-intelligence_eventstream)
 
-</details>
+## Samples
+- [Open Mirroring](./samples/open-mirroring)
+- [Advanced Data Pipeline Scheduleing Specific_Day](./samples/Advanced_Data_Pipeline_Scheduleing_Specific_Day)
+- [Polling Storage Event Trigger](./samples/polling-storage-even-trigger)
+- [Refresh tables in SQL Endpoint](./samples/refresh-tables-in-sql-endpoint)
+- [Visualizing Linked Table Dataflows](./samples/visualizing-linked-table-dataflows)
 
+## Scripts
+- [DW Active Requests](./scripts/dw-active-requests)
+- [DW Copy DMV to Table](./scripts/dw-copy-dmv-to-table)
+- [DW Queries Running at Timepoint](./scripts/dw-queries-running-at-timepoint)
+- [DW SP Kill Queries](./scripts/dw-sp-kill-queries)
 
+## Tools
+- [Copy Warehouse](./tools/copy-warehouse)
+- [TPCH Benchmarking](./tools/tpch-benchmarking)
 
 # Contributing
 
