@@ -37,7 +37,7 @@ These assets should be treated as examples that you can use to create the soluti
 - [TPCH Benchmarking](./tools/tpch-benchmarking)
 
 ## Monitoring
-
+ $${\color{green}NEW!}$$ [Workspace Monitoring Dashboards](./monitoring/workspace-monitoring-dashboards)
 
 # Contributing
 
