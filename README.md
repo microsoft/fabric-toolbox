@@ -15,12 +15,15 @@ These assets should be treated as examples that you can use to create the soluti
 - [Real Time Intelligence Eventstream](./accelerators/real-time-intelligence_eventstream)
 
 ## Samples
-- [Open Mirroring](./samples/open-mirroring)
+- $${\color{green}NEW!}$$ [Open Mirroring](./samples/open-mirroring)
 - [Advanced Data Pipeline Scheduleing Specific_Day](./samples/Advanced_Data_Pipeline_Scheduleing_Specific_Day)
 - [Polling Storage Event Trigger](./samples/polling-storage-even-trigger)
-- [Refresh tables in SQL Endpoint](./samples/refresh-tables-in-sql-endpoint)
+- $${\color{green}NEW!}$$ [Refresh tables in SQL Endpoint](./samples/refresh-tables-in-sql-endpoint)
 - [Visualizing Linked Table Dataflows](./samples/visualizing-linked-table-dataflows)
-- [Azure Policies: Pause or Delete Capacity](./samples/azure-policy)
+- $${\color{green}NEW!}$$ [Azure Policies: Pause or Delete Capacity](./samples/azure-policy)
+- $${\color{green}NEW!}$$ [Notebook: List Dedicated Pool Connections](./samples/notebook-list-dedicated-pool-connections)
+- $${\color{green}NEW!}$$ [Notebook: Create, List, Delete a Data Warehouse](./samples/notebook-create-list-delete-warehouse)
+- $${\color{green}NEW!}$$ [Notebook: Workspace Size](./samples/notebook-workspace-size)
 
 ## Scripts
 - [DW Active Requests](./scripts/dw-active-requests)
@@ -29,11 +32,11 @@ These assets should be treated as examples that you can use to create the soluti
 - [DW SP Kill Queries](./scripts/dw-sp-kill-queries)
 
 ## Tools
-- [Copy Warehouse](./tools/copy-warehouse)
+- $${\color{green}NEW!}$$ [Copy Warehouse](./tools/copy-warehouse)
 - [TPCH Benchmarking](./tools/tpch-benchmarking)
 
 ## Monitoring
-- [Workspace Monitoring Dashboards](./monitoring/workspace-monitoring-dashboards)
+- $${\color{green}NEW!}$$ [Workspace Monitoring Dashboards](./monitoring/workspace-monitoring-dashboards)
 
 # Contributing
 
