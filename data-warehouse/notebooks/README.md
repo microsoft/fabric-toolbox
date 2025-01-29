@@ -1,0 +1,9 @@
+# create-list-delete-warehouse
+
+A notebook that shows how to create, list and delete a Fabric warehouse using the public REST API.
+
+# workspace size
+
+A notebook that shows the size of a folder on Onelake, it can be used to show the size of Workspace, Warehouse or just a table.
+
+Change the path, as per example to the appropriate folder.
