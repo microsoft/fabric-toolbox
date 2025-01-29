@@ -15,7 +15,6 @@ These assets should be treated as examples that you can use to create the soluti
 - [Real Time Intelligence Eventstream](./accelerators/real-time-intelligence_eventstream)
 
 ## Samples
-- $${\color{green}NEW!}$$ [Workspace Monitoring Dashboards](./samples/monitoring/workspace-monitoring-dashboards)
 - $${\color{green}NEW!}$$ [Open Mirroring](./samples/open-mirroring)
 - [Advanced Data Pipeline Scheduleing Specific_Day](./samples/Advanced_Data_Pipeline_Scheduleing_Specific_Day)
 - [Polling Storage Event Trigger](./samples/polling-storage-even-trigger)
