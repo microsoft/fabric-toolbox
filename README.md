@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="./media/Fabric.svg" />
+</p>
+
 # Welcome to the Fabric Toolbox
 
 Fabric toolbox is a repository of tools, accelerators, scripts, and samples to help you work with Microsoft Fabric. This repository will be ever-growing as we develop new tools and accelerators.  
