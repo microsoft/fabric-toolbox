@@ -6,7 +6,7 @@
 
 Fabric toolbox is a repository of tools, accelerators, scripts, and samples to help you work with Microsoft Fabric. This repository is brought to you by the Fabric Customer Advisory Team (CAT) and will continue to grow as we develop new tools and accelerators.  
 
-These assets should be treated as examples that you can use to create the solutions that are appropriate for your use case.
+These assets should be treated as examples that you can use to create the solutions that are appropriate for your use case. If you have any issues, please use the 'issues' tab of this repository and we will work to address issues on a best effort basis. 
 
 ## Accelerators
 - [Data Warehouse Backup and Recovery](./accelerators/data-warehouse-backup-and-recovery)
