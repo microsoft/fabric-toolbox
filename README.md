@@ -20,6 +20,7 @@ These assets should be treated as examples that you can use to create the soluti
 - [Polling Storage Event Trigger](./samples/polling-storage-even-trigger)
 - [Refresh tables in SQL Endpoint](./samples/refresh-tables-in-sql-endpoint)
 - [Visualizing Linked Table Dataflows](./samples/visualizing-linked-table-dataflows)
+- [Azure Policies: Pause or Delete Capacity](./samples/azure-policy)
 
 ## Scripts
 - [DW Active Requests](./scripts/dw-active-requests)
