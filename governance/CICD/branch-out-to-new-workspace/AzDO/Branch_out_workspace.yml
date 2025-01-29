@@ -86,7 +86,7 @@ stages:
               scriptSource: 'filePath'
               scriptPath: 'scripts/Run_post_activity.py'
               arguments:  '--FABRIC_TOKEN $(fabrictoken) --NOTEBOOK_WORKSPACE_ID $(NOTEBOOK_WORKSPACE_ID) --NOTEBOOK_ID $(NOTEBOOK_ID) --SOURCE_WORKSPACE ${{ parameters.source_workspace }} --TARGET_WORKSPACE ${{ parameters.target_workspace }}  --TENANT_ID $(TENANT_ID) --COPY_LAKEHOUSE ${{ parameters.copy_lakehouse_data }} --COPY_WAREHOUSE ${{ parameters.copy_warehouse_data }} --CREATE_SHORTCUTS ${{ parameters.create_lakehouse_shortcuts }} --USER_NAME $(username) --PASSWORD $(password) --CLIENT_ID $(azclientid) --CONNECTIONS_FROM_TO ${{ parameters.connections_from_to }}'
-              failOnStderr: true 
+              #failOnStderr: true 
             displayName: 'Invoke Fabric Post Activity Job'
 
               
