@@ -21,7 +21,7 @@ These assets should be treated as examples that you can use to create the soluti
 - $${\color{green}NEW!}$$ [Open Mirroring](./samples/open-mirroring)
 - [Advanced Data Pipeline Scheduleing Specific_Day](./samples/Advanced_Data_Pipeline_Scheduleing_Specific_Day)
 - [Polling Storage Event Trigger](./samples/polling-storage-even-trigger)
-- $${\color{green}NEW!}$$ [Refresh tables in SQL Endpoint](./samples/refresh-tables-in-sql-endpoint)
+- $${\color{green}NEW!}$$ [Notebook: Refresh tables in SQL Endpoint](./samples/notebook-refresh-tables-in-sql-endpoint)
 - [Visualizing Linked Table Dataflows](./samples/visualizing-linked-table-dataflows)
 - $${\color{green}NEW!}$$ [Azure Policies: Pause or Delete Capacity](./samples/azure-policy)
 - $${\color{green}NEW!}$$ [Notebook: List Dedicated Pool Connections](./samples/notebook-list-dedicated-pool-connections)
