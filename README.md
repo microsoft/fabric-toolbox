@@ -1,8 +1,44 @@
-# Fabric Toolbox
+<p align="center">
+  <img src="./media/Fabric.svg" />
+</p>
 
-Fabric toolbox is a repository of tools, tempalates, queries, and other useful artifacts that can help make you successful with Microsoft Fabric. This repository will be ever-growing as we develop new tools and accelerators.  
+# Welcome to the Fabric Toolbox
 
-## Contributing
+Fabric toolbox is a repository of tools, accelerators, scripts, and samples to help you work with Microsoft Fabric. This repository is brought to you by the Fabric Customer Advisory Team (CAT) and will continue to grow as we develop new tools and accelerators.  
+
+These assets should be treated as examples that you can use to create the solutions that are appropriate for your use case. If you have any issues, please use the [issues](https://github.com/microsoft/fabric-toolbox/issues) tab of this repository and we will work to address issues on a best effort basis. 
+
+## Accelerators
+- [Data Warehouse Backup and Recovery](./accelerators/data-warehouse-backup-and-recovery)
+- [Power BI to Fabric Data Warehouse Modernization](./accelerators/power-bi-to-fabric-data-warehouse-modernization)
+- [Real Time Intelligence Eventhouse](./accelerators/real-time-intelligence_eventhouse)
+- [Real Time Intelligence Eventstream](./accelerators/real-time-intelligence_eventstream)
+
+## Samples
+- $${\color{green}NEW!}$$ [Open Mirroring](./samples/open-mirroring)
+- [Advanced Data Pipeline Scheduleing Specific_Day](./samples/Advanced_Data_Pipeline_Scheduleing_Specific_Day)
+- [Polling Storage Event Trigger](./samples/polling-storage-even-trigger)
+- $${\color{green}NEW!}$$ [Refresh tables in SQL Endpoint](./samples/refresh-tables-in-sql-endpoint)
+- [Visualizing Linked Table Dataflows](./samples/visualizing-linked-table-dataflows)
+- $${\color{green}NEW!}$$ [Azure Policies: Pause or Delete Capacity](./samples/azure-policy)
+- $${\color{green}NEW!}$$ [Notebook: List Dedicated Pool Connections](./samples/notebook-list-dedicated-pool-connections)
+- $${\color{green}NEW!}$$ [Notebook: Create, List, Delete a Data Warehouse](./samples/notebook-create-list-delete-warehouse)
+- $${\color{green}NEW!}$$ [Notebook: Workspace Size](./samples/notebook-workspace-size)
+
+## Scripts
+- [DW Active Requests](./scripts/dw-active-requests)
+- [DW Copy DMV to Table](./scripts/dw-copy-dmv-to-table)
+- [DW Queries Running at Timepoint](./scripts/dw-queries-running-at-timepoint)
+- [DW SP Kill Queries](./scripts/dw-sp-kill-queries)
+
+## Tools
+- $${\color{green}NEW!}$$ [Copy Warehouse](./tools/copy-warehouse)
+- [TPCH Benchmarking](./tools/tpch-benchmarking)
+
+## Monitoring
+ $${\color{green}NEW!}$$ [Workspace Monitoring Dashboards](./monitoring/workspace-monitoring-dashboards)
+
+# Contributing
 
 This project welcomes contributions and suggestions.  Most contributions require you to agree to a
 Contributor License Agreement (CLA) declaring that you have the right to, and actually do, grant us
@@ -16,7 +52,7 @@ This project has adopted the [Microsoft Open Source Code of Conduct](https://ope
 For more information see the [Code of Conduct FAQ](https://opensource.microsoft.com/codeofconduct/faq/) or
 contact [opencode@microsoft.com](mailto:opencode@microsoft.com) with any additional questions or comments.
 
-## Trademarks
+# Trademarks
 
 This project may contain trademarks or logos for projects, products, or services. Authorized use of Microsoft 
 trademarks or logos is subject to and must follow 
