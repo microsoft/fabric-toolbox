@@ -12,6 +12,7 @@ namespace SQLMirroring
         public string ConnectionString { get; set; }
         public string Type { get; set; }
 
+        public string Enabled { get; set; }
         public string ChangeTrackingEnabled { get; set; }
 
         public int syncVersion { get; set; }
@@ -47,6 +48,15 @@ namespace SQLMirroring
 
         public string SoftDelete { get; set; }
         
+    }
+
+    public class Gen2TableConfig : TableConfig
+    {
+        public string ChangeCaptureMethod { get; set; } // 1 = high watermark
+        
+        public string highhwaterMark { get; set; }
+        public string highwaterMarkColumn { get; set; } 
+
     }
 
     public class Root
@@ -109,11 +119,41 @@ namespace SQLMirroring
     public class Gen2Config
     {
         public string ConnectionString { get; set; }
+        public string Enabled { get; set; }
+
+        public List<Gen2TableConfig> Tables { get; set; }
+
+        public string LocalLocationforTables { get; set; }
     }
 
     public class SharepointConfig
     {
+        public string Enabled { get; set; }
+        public string Sharepoint_TenantID {  get; set; }
+        public string Sharepoint_ClientID { get; set; }
+        public string Sharepoint_Secret { get; set; }
 
+        public string Sharepoint_Scope { get; set; }
+
+        public string Sharepoint_BaseAPI { get; set; }
+
+        public DateTime LastUpdate { get; set; }
+        public List<SharepointLists> sharepointLists { get; set; }
+
+        public string LocalLocationforTables { get; set; }
+    }
+
+    public class SharepointLists
+    {
+        public string List { get; set; }
+        public int interval_seconds { get; set; }
+        public DateTime LastUpdate { get; set; }
+        public string Status { get; set; }
+
+        public string ColumnList { get; set; }
+
+        public string Schema { get; set; }
+        public string Table { get; set; }
     }
 
 }
