@@ -7,16 +7,22 @@ using System.Runtime.Intrinsics.Arm;
 using System.Data;
 using GenericMirroring;
 using GenericMirroring.sources;
+using System.Drawing;
+using Apache.Arrow;
+using Newtonsoft.Json.Linq;
 class Program
 {
     private static Root config = null;
-    static void Main(string[] args)
+    static async Task Main(string[] args)
     {
         #region Load the Config
         // Path to the JSON configuration file
         string configFilePath = "mirrorconfig.json";
-        //  string configpath = System.IO.Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location);
-        string configpath = "C:\\source\\samples\\fabric-toolbox\\open-mirroring\\GenericMirroring"; 
+    //  string configpath = System.IO.Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location);
+   
+
+        string configpath = "C:\\source\\samples\\fabric-toolbox\\open-mirroring\\GenericMirroring";
+       // string configpath = "C:\\temp"; 
         string wholepath = string.Format("{0}\\{1}", configpath, configFilePath);
         string loggingfilename = $"{DateTime.Now:yyyy-MM-dd_HH-mm-ss}_logging.txt";
 
@@ -165,12 +171,15 @@ class Program
        
         while (true)
         {
+            #region SQL Server loop
             foreach (DatabaseConfig dbC in config.SQLChangeTrackingConfig)
             { 
             #region SQL Change Tracking
             if (dbC != null)
             {
-                if (dbC.ConnectionString != null || dbC.ConnectionString.Length > 0)
+                    if(dbC.Enabled=="True") 
+                    { 
+                        if (dbC.ConnectionString != null || dbC.ConnectionString.Length > 0)
                 {
                     // only run the SQL code, when there is a connection string.
 
@@ -288,16 +297,113 @@ class Program
 
                     }
                 }
+                    }
+                }
+
+                #endregion  
+            }
+            #endregion
+
+            #region Sharepoint loop
+            try
+            {
+               
+                if (config.SharepointMirroringConfig!=null)
+                {
+                    SharepointConfig shConfig = config.SharepointMirroringConfig;
+                    if(shConfig.Enabled=="True")
+                    { 
+                        //Logging.Log($"Sharepoint...");
+
+                        foreach (SharepointLists list in shConfig.sharepointLists)
+                        {
+                            if (list.LastUpdate == null) list.LastUpdate = DateTime.Now;
+                            if (list.interval_seconds == null || list.interval_seconds == 0) list.interval_seconds = 60;
+
+                            // normal syncing
+                            if (list.LastUpdate.AddSeconds(list.interval_seconds) < DateTime.Now)
+                            {
+                                string t = await Sharepoint.ExtractSharepoint(shConfig, list);
+                                DataTable dataTable = new DataTable("FieldsTable");
+                                DataTable dt = Sharepoint.ConvertListoDataTable(list, t, dataTable);
+                                
+                                
+                                string sName = list.Table;
+                                string sSchema = list.Schema;
+                                DateTime? _lastUpdate = list.LastUpdate;
+                                string? sStatus = list.Status;
+                                string LocalLocationforTables = shConfig.LocalLocationforTables;
+
+                                string locforTable = string.Format("{0}\\{1}.schema\\{2}\\", LocalLocationforTables, sSchema, sName);
+
+                           
+                                {
+
+                                    string newfilename = helper.GetFileVersionName(locforTable);
+                                    string parquetFilePath = Path.Combine(locforTable, $"{newfilename}.parquet");
+
+                                    string justTablepath = string.Format("/{0}.schema/{1}/{2}.parquet", sSchema, sName, newfilename);
+                                    string justMetadatapath = string.Format("/{0}.schema/{1}/_metadata.json", sSchema, sName, newfilename);
+                                    string removePath = string.Format("{0}.schema/{1}", sSchema, sName, newfilename);
+
+                                    if (sStatus == "Running")
+                                    {
+                                        if (Sharepoint.CheckforChanges(locforTable, dataTable))
+                                        {
+                                            if (dataTable.Rows.Count > 0)
+                                            {
+                                                ParquetDump.WriteDataTableToParquet(dataTable, parquetFilePath);
+                                                Upload.CopyChangesToOnelake(config, parquetFilePath, justTablepath);
+                                            }
+                                        }
+                                        list.LastUpdate = DateTime.Now;
+                                        helper.SaveData(config, wholepath);
+                                    }
+
+                                    if (sStatus is null || sStatus.Length == 0)
+                                    {
+                                        // Inital run, setup, everything
+                                        helper.DeleteFolders(locforTable);
+
+                                        helper.CreateFolders(locforTable);
+                                        helper.CreateJSONMetadata(locforTable, "id");
+
+                                        Upload.RemoveChangesToOnelake(config, removePath);
+                                        Upload.CopyChangesToOnelake(config, String.Format("{0}{1}", locforTable, "_metadata.json"), justMetadatapath);
+
+                                        //SQLServer.ExecuteRSWritePQ(connectionString, extractQuery, parquetFilePath);
+
+
+                                        list.Status = "Running";
+                                        list.LastUpdate = DateTime.Now;
+                                        helper.SaveData(config, wholepath);
+
+                                    }
+
+                                }
+                                shConfig.LastUpdate = DateTime.Now;
+                                helper.SaveData(config, wholepath);
+                            }
+
+
+                        }
+                    }
+                }
+            }
+            catch (Exception e)
+            {
+                Logging.Log($"Sharepoint Error {e.Message}");
             }
 
             #endregion
-        }
+
         }
 
-            Console.ReadLine();
+        Console.ReadLine();
         
       
     }
+
 
     private static string UpdateQuery(DatabaseConfig dbC, TableConfig table, string tableName, string extractQuery)
     {

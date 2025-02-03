@@ -14,7 +14,6 @@
           "KeyColumn": "PersonID",
           "OtherColumns": "LastName,FirstName,Address,City ",
           "AdditionalColumns": " getdate() _lastupdated_ ",
-          "DeltaVersion": "00000000000000000001",
           "SoftDelete": "1"
         }
       ],
@@ -22,7 +21,6 @@
       "DatabaseName": "demo_changetracking",
       "ChangeTrackingSQL": "ALTER DATABASE {d} SET CHANGE_TRACKING = ON (CHANGE_RETENTION = 2 DAYS, AUTO_CLEANUP = ON);",
       "ChangeTrackingTable": "ALTER TABLE {d} ENABLE CHANGE_TRACKING  WITH (TRACK_COLUMNS_UPDATED = ON)  ",
-      "Highwatermark": "84",
       "HighwatermarkSQL": "select CHANGE_TRACKING_CURRENT_VERSION ( )  ",
       "ChangeIncrementalSQL": "select case changetb.SYS_CHANGE_OPERATION WHEN \u0027D\u0027 THEN {SoftDelete} ELSE 1 END __rowMarker__ , changetb.{KeyColumn} , {OtherColumns} ,{AdditionalColumns} , convert(varchar(10),changetb.SYS_CHANGE_VERSION)  SYS_CHANGE_VERSION  , convert(varchar(10),changetb.SYS_CHANGE_CREATION_VERSION)  SYS_CHANGE_CREATION_VERSION, changetb.SYS_CHANGE_OPERATION FROM CHANGETABLE (CHANGES {t}, {h}) AS changetb left outer join {t} rowdata on changetb.{KeyColumn} = rowdata.{KeyColumn}\t  ",
       "FullDataExtractQuery": "select 0 __rowMarker__ , rowdata.{KeyColumn} , {OtherColumns} ,{AdditionalColumns} , convert(varchar(10),changetb.SYS_CHANGE_VERSION)  SYS_CHANGE_VERSION  , convert(varchar(10),changetb.SYS_CHANGE_CREATION_VERSION)  SYS_CHANGE_CREATION_VERSION, changetb.SYS_CHANGE_OPERATION FROM CHANGETABLE (CHANGES {t}, 0) AS changetb right outer join {t} rowdata on changetb.{KeyColumn} = rowdata.{KeyColumn} "
@@ -40,9 +38,7 @@
           "SecondsBetweenChecks": 15,
           "KeyColumn": "AlbumID ",
           "OtherColumns": "AlbumName , ArtistName ,  ReleaseDate , Sales  ",
-          "AdditionalColumns": " getdate() _lastupdated_ ",
-          "DeltaVersion": "00000000000000000001",
-          "SoftDelete": "1"
+          "AdditionalColumns": " getdate() _lastupdated_ "
         }
       ],
       "LocalLocationforTables": "C:\\repos\\SQLMirroring\\temp",
@@ -75,16 +71,36 @@
       "PathtoAZCopy": "C:\\repos\\SQLMirroring\\"
     }
   ],
-  "LocationLogging": "C:\\Users\\maprycem\\source\\repos\\SQLMirroring\\logging",
+  "LocationLogging": "C:\\Mirroring\\logging",
   "AccessMirroringConfig": {
     "folderToWatch": "C:\\temp\\watch",
-    "outputFolder": "C:\\Users\\maprycem\\source\\repos\\SQLMirroring\\temp",
+    "outputFolder": "C:\\AccessMirroring\\temp",
     "IncludeFolders": false
   },
   "CSVMirroringConfig": {
     "folderToWatch": "C:\\temp\\watch",
-    "outputFolder": "C:\\Users\\maprycem\\source\\repos\\SQLMirroring\\temp"
+    "outputFolder": "C:\\CSVMirroring\\temp"
   },
   "Gen2MirroringConfig": null,
-  "SharepointMirroringConfig": null
+  "SharepointMirroringConfig": {
+    "Enabled": "False",
+    "Sharepoint_TenantID": "Sharepoint_TenantID",
+    "Sharepoint_ClientID": "Sharepoint_ClientID",
+    "Sharepoint_Secret": "Sharepoint_Secret",
+    "Sharepoint_Scope": "https://graph.microsoft.com/.default",
+    "Sharepoint_BaseAPI": "https://graph.microsoft.com/v1.0/sites/root/lists",
+    "sharepointLists": [
+      {
+        "List": "/LIST_GUID_1/items?$expand=fields",
+        "Schema": "sharepoint",
+        "Table": "table_1"
+      },
+      {
+        "List": "/LIST_GUID_2/items?$expand=fields",
+        "Schema": "sharepoint",
+        "Table": "table_2"
+      }
+    ],
+    "LocalLocationforTables": "C:\\SharepointMirroring\\temp"
+  }
 }
