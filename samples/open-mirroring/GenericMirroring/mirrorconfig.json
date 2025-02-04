@@ -1,0 +1,106 @@
+{
+  "SQLChangeTrackingConfig": [
+    {
+      "ConnectionString": "Server=ServerA;Database={d};User Id=login;Password=your_password;TrustServerCertificate=True;",
+      "Type": "your_table_name",
+      "ChangeTrackingEnabled": "Enabled",
+      "syncVersion": 1,
+      "Tables": [
+        {
+          "TableName": "Persons3",
+          "SchemaName": "dbo",
+          "LastUpdate": "2025-01-28T22:36:38.4969622+00:00",
+          "SecondsBetweenChecks": 1,
+          "KeyColumn": "PersonID",
+          "OtherColumns": "LastName,FirstName,Address,City ",
+          "AdditionalColumns": " getdate() _lastupdated_ ",
+          "SoftDelete": "1"
+        }
+      ],
+      "LocalLocationforTables": "C:\\repos\\SQLMirroring\\temp",
+      "DatabaseName": "demo_changetracking",
+      "ChangeTrackingSQL": "ALTER DATABASE {d} SET CHANGE_TRACKING = ON (CHANGE_RETENTION = 2 DAYS, AUTO_CLEANUP = ON);",
+      "ChangeTrackingTable": "ALTER TABLE {d} ENABLE CHANGE_TRACKING  WITH (TRACK_COLUMNS_UPDATED = ON)  ",
+      "HighwatermarkSQL": "select CHANGE_TRACKING_CURRENT_VERSION ( )  ",
+      "ChangeIncrementalSQL": "select case changetb.SYS_CHANGE_OPERATION WHEN \u0027D\u0027 THEN {SoftDelete} ELSE 1 END __rowMarker__ , changetb.{KeyColumn} , {OtherColumns} ,{AdditionalColumns} , convert(varchar(10),changetb.SYS_CHANGE_VERSION)  SYS_CHANGE_VERSION  , convert(varchar(10),changetb.SYS_CHANGE_CREATION_VERSION)  SYS_CHANGE_CREATION_VERSION, changetb.SYS_CHANGE_OPERATION FROM CHANGETABLE (CHANGES {t}, {h}) AS changetb left outer join {t} rowdata on changetb.{KeyColumn} = rowdata.{KeyColumn}\t  ",
+      "FullDataExtractQuery": "select 0 __rowMarker__ , rowdata.{KeyColumn} , {OtherColumns} ,{AdditionalColumns} , convert(varchar(10),changetb.SYS_CHANGE_VERSION)  SYS_CHANGE_VERSION  , convert(varchar(10),changetb.SYS_CHANGE_CREATION_VERSION)  SYS_CHANGE_CREATION_VERSION, changetb.SYS_CHANGE_OPERATION FROM CHANGETABLE (CHANGES {t}, 0) AS changetb right outer join {t} rowdata on changetb.{KeyColumn} = rowdata.{KeyColumn} "
+    },
+    {
+      "ConnectionString": "Server=ServerB;Database={d};User Id=database login;Password=Your PAssword;TrustServerCertificate=True;",
+      "Type": "your_table_name",
+      "ChangeTrackingEnabled": "Enabled",
+      "syncVersion": 1,
+      "Tables": [
+        {
+          "TableName": "AlbumSales",
+          "SchemaName": "dbo",
+          "LastUpdate": "2025-01-28T22:36:29.3841447+00:00",
+          "SecondsBetweenChecks": 15,
+          "KeyColumn": "AlbumID ",
+          "OtherColumns": "AlbumName , ArtistName ,  ReleaseDate , Sales  ",
+          "AdditionalColumns": " getdate() _lastupdated_ "
+        }
+      ],
+      "LocalLocationforTables": "C:\\repos\\SQLMirroring\\temp",
+      "DatabaseName": "demo_db2",
+      "ChangeTrackingSQL": "ALTER DATABASE {d} SET CHANGE_TRACKING = ON (CHANGE_RETENTION = 2 DAYS, AUTO_CLEANUP = ON);",
+      "ChangeTrackingTable": "ALTER TABLE {d} ENABLE CHANGE_TRACKING  WITH (TRACK_COLUMNS_UPDATED = ON)  ",
+      "Highwatermark": "0",
+      "HighwatermarkSQL": "select CHANGE_TRACKING_CURRENT_VERSION ( )  ",
+      "ChangeIncrementalSQL": "select case changetb.SYS_CHANGE_OPERATION WHEN \u0027D\u0027 THEN {SoftDelete} ELSE 1 END __rowMarker__ , changetb.{KeyColumn} , {OtherColumns} ,{AdditionalColumns} , convert(varchar(10),changetb.SYS_CHANGE_VERSION)  SYS_CHANGE_VERSION  , convert(varchar(10),changetb.SYS_CHANGE_CREATION_VERSION)  SYS_CHANGE_CREATION_VERSION, changetb.SYS_CHANGE_OPERATION FROM CHANGETABLE (CHANGES {t}, {h}) AS changetb left outer join {t} rowdata on changetb.{KeyColumn} = rowdata.{KeyColumn}\t  ",
+      "FullDataExtractQuery": "select 0 __rowMarker__ , rowdata.{KeyColumn} , {OtherColumns} ,{AdditionalColumns} , convert(varchar(10),changetb.SYS_CHANGE_VERSION)  SYS_CHANGE_VERSION  , convert(varchar(10),changetb.SYS_CHANGE_CREATION_VERSION)  SYS_CHANGE_CREATION_VERSION, changetb.SYS_CHANGE_OPERATION FROM CHANGETABLE (CHANGES {t}, 0) AS changetb right outer join {t} rowdata on changetb.{KeyColumn} = rowdata.{KeyColumn} "
+    }
+  ],
+  "ExcelMirroringConfig": {
+    "folderToWatch": "C:\\temp\\watch",
+    "outputFolder": "C:\\repos\\SQLMirroring\\temp"
+  },
+  "uploadDetails": [
+    {
+      "SPN_Application_ID": "SPN_APP_ID",
+      "SPN_Secret": "SECRET",
+      "SPN_Tenant": "TENANT",
+      "LandingZone": "https://onelake.dfs.fabric.microsoft.com//workspace_ID/Mirrored_db_1/Files/LandingZone",
+      "PathtoAZCopy": "C:\\repos\\SQLMirroring\\"
+    },
+    {
+      "SPN_Application_ID": "SPN_APP_ID",
+      "SPN_Secret": "SECRET",
+      "SPN_Tenant": "TENANT",
+      "LandingZone": "https://onelake.dfs.fabric.microsoft.com/workspace_ID/Mirrored_db_2/Files/LandingZone",
+      "PathtoAZCopy": "C:\\repos\\SQLMirroring\\"
+    }
+  ],
+  "LocationLogging": "C:\\Mirroring\\logging",
+  "AccessMirroringConfig": {
+    "folderToWatch": "C:\\temp\\watch",
+    "outputFolder": "C:\\AccessMirroring\\temp",
+    "IncludeFolders": false
+  },
+  "CSVMirroringConfig": {
+    "folderToWatch": "C:\\temp\\watch",
+    "outputFolder": "C:\\CSVMirroring\\temp"
+  },
+  "Gen2MirroringConfig": null,
+  "SharepointMirroringConfig": {
+    "Enabled": "False",
+    "Sharepoint_TenantID": "Sharepoint_TenantID",
+    "Sharepoint_ClientID": "Sharepoint_ClientID",
+    "Sharepoint_Secret": "Sharepoint_Secret",
+    "Sharepoint_Scope": "https://graph.microsoft.com/.default",
+    "Sharepoint_BaseAPI": "https://graph.microsoft.com/v1.0/sites/root/lists",
+    "sharepointLists": [
+      {
+        "List": "/LIST_GUID_1/items?$expand=fields",
+        "Schema": "sharepoint",
+        "Table": "table_1"
+      },
+      {
+        "List": "/LIST_GUID_2/items?$expand=fields",
+        "Schema": "sharepoint",
+        "Table": "table_2"
+      }
+    ],
+    "LocalLocationforTables": "C:\\SharepointMirroring\\temp"
+  }
+}
