@@ -1,0 +1,327 @@
+{
+
+    "name": "Advanced_Data_Pipeline_Scheduleing_EventTrigger",
+
+    "objectId": "",
+
+    "properties": {
+
+        "activities": [
+
+            {
+
+                "name": "Get New Files",
+
+                "type": "GetMetadata",
+
+                "dependsOn": [
+
+                    {
+
+                        "activity": "v_string_modified_datetime_start",
+
+                        "dependencyConditions": [
+
+                            "Succeeded"
+
+                        ]
+
+                    }
+
+                ],
+
+                "policy": {
+
+                    "timeout": "0.12:00:00",
+
+                    "retry": 0,
+
+                    "retryIntervalInSeconds": 30,
+
+                    "secureOutput": false,
+
+                    "secureInput": false
+
+                },
+
+                "typeProperties": {
+
+                    "fieldList": [
+
+                        "childItems",
+
+                        "lastModified"
+
+                    ],
+
+                    "datasetSettings": {
+
+                        "annotations": [],
+
+                        "type": "Binary",
+
+                        "typeProperties": {
+
+                            "location": {
+
+                                "type": "AzureBlobFSLocation",
+
+                                "folderPath": {
+
+                                    "value": "@coalesce(pipeline().parameters.p_string_directory,'')",
+
+                                    "type": "Expression"
+
+                                },
+
+                                "fileSystem": {
+
+                                    "value": "@pipeline().parameters.p_string_file_system",
+
+                                    "type": "Expression"
+
+                                }
+
+                            }
+
+                        },
+
+                        "externalReferences": {
+
+                            "connection": ""
+
+                        }
+
+                    },
+
+                    "storeSettings": {
+
+                        "type": "AzureBlobFSReadSettings",
+
+                        "recursive": true,
+
+                        "modifiedDatetimeStart": {
+
+                            "value": "@variables('v_string_modified_datetime_start')",
+
+                            "type": "Expression"
+
+                        },
+
+                        "enablePartitionDiscovery": false
+
+                    },
+
+                    "formatSettings": {
+
+                        "type": "BinaryReadSettings"
+
+                    }
+
+                }
+
+            },
+
+            {
+
+                "name": "Set v_array_final_file_list",
+
+                "type": "SetVariable",
+
+                "dependsOn": [
+
+                    {
+
+                        "activity": "For Each File",
+
+                        "dependencyConditions": [
+
+                            "Succeeded"
+
+                        ]
+
+                    }
+
+                ],
+
+                "policy": {
+
+                    "secureOutput": false,
+
+                    "secureInput": false
+
+                },
+
+                "typeProperties": {
+
+                    "variableName": "v_array_final_file_list",
+
+                    "value": {
+
+                        "value": "@variables('v_array_files')",
+
+                        "type": "Expression"
+
+                    }
+
+                }
+
+            },
+
+            {
+
+                "name": "For Each File",
+
+                "type": "ForEach",
+
+                "dependsOn": [
+
+                    {
+
+                        "activity": "Get New Files",
+
+                        "dependencyConditions": [
+
+                            "Succeeded"
+
+                        ]
+
+                    }
+
+                ],
+
+                "typeProperties": {
+
+                    "items": {
+
+                        "value": "@activity('Get New Files').output.childItems",
+
+                        "type": "Expression"
+
+                    },
+
+                    "batchCount": 50,
+
+                    "activities": [
+
+                        {
+
+                            "name": "Hydrate v_array_files",
+
+                            "type": "AppendVariable",
+
+                            "dependsOn": [],
+
+                            "typeProperties": {
+
+                                "variableName": "v_array_files",
+
+                                "value": {
+
+                                    "value": "@item().name",
+
+                                    "type": "Expression"
+
+                                }
+
+                            }
+
+                        }
+
+                    ]
+
+                }
+
+            },
+
+            {
+
+                "name": "v_string_modified_datetime_start",
+
+                "type": "SetVariable",
+
+                "dependsOn": [],
+
+                "policy": {
+
+                    "secureOutput": false,
+
+                    "secureInput": false
+
+                },
+
+                "typeProperties": {
+
+                    "variableName": "v_string_modified_datetime_start",
+
+                    "value": {
+
+                        "value": "@string(addminutes(utcnow(),mul(pipeline().parameters.p_int_schedule_frequency,-1)))",
+
+                        "type": "Expression"
+
+                    }
+
+                }
+
+            }
+
+        ],
+
+        "parameters": {
+
+            "p_int_schedule_frequency": {
+
+                "type": "int",
+
+                "defaultValue": 3
+
+            },
+
+            "p_string_file_system": {
+
+                "type": "string",
+
+                "defaultValue": "landingzone"
+
+            },
+
+            "p_string_directory": {
+
+                "type": "string"
+
+            }
+
+        },
+
+        "variables": {
+
+            "v_array_files": {
+
+                "type": "Array"
+
+            },
+
+            "v_array_final_file_list": {
+
+                "type": "Array"
+
+            },
+
+            "v_string_modified_datetime_start": {
+
+                "type": "String"
+
+            }
+
+        },
+
+        "annotations": [],
+
+        "lastModifiedByObjectId": "",
+
+        "lastPublishTime": ""
+
+    }
+
+}

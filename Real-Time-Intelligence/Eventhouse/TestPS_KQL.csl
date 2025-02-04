@@ -1,8 +1,0 @@
-.execute database script <|
-.create table testPS3 (id: int, Name:string);
-.create-or-alter function GetNames()
-{
-testPS3
-| where ingestion_time() > ago(1h)
-| project Name
-}
