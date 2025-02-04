@@ -13,11 +13,15 @@ Part 2 - [Create a Mirrored database](https://youtu.be/tiHHw2Hj848)
 Part 3 - [Setting Up Permissions for Excel Mirroring in Microsoft Fabric](https://youtu.be/85xWqWHfWbU)
 
 
-## SQLServerChangeTracking
+# Generic Mirroring
 
-Is the On-Prem SQL Server Open Mirroring solution for SQL Server 2008 and above (althought I have only tested SQL Server 2017 on Docker.)   This solution is designed to show you how you can simply and quickly setup Mirroring from virtually any SQL Server by using change tracking.
+The folder containing Generic mirroring has the Open Mirroring solutions for;
+1. SQL Server 2008-2022 (using Change Tracking)
+1. Excel
+1. CSV
+1. Access
+1. Sharepoint Lists
 
-## Excel Mirroring
-Project for Mirroring Excel documents to Fabric.
+The SQLServerChangeTracking and ExcelDemo (Excel Mirroring) codebases have been moved into the GenericMirroring Project, please use that in future.
 
 
