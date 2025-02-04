@@ -117,34 +117,34 @@ https://app.fabric.microsoft..com/groups/<Workspace_ID>/synapsenotebooks/<Notebo
 When using Azure DevOps PAT and Fabric token ensure the following secrets are
 configured:
 
-<div align=center><img src=media/variable_groups.png width=500></div>
+<div align=center><img src=../../media/variable_groups.png width=500></div>
 
 When using a service account ensure the following secrets are configured:
 
-<div align=center><img src=media/variable_group_s.png width=500></div>
+<div align=center><img src=../../media/variable_group_s.png width=500></div>
 
 4. Create another variable group called Fabric_Deployment_Group_NS and populate
     the required key value pairs as shown in the image below.
 
-<div align=center><img src=media/variable_group_ns.png width=500></div>
+<div align=center><img src=../../media/variable_group_ns.png width=500></div>
 
 ADO_API_URL: normally will be https://dev.azure.com
 
 ADO_ORG_NAME, ADO_PROJECT_NAME, ADO_REPO_NAME can be obtained when
 viewing the Repos page in Azure DevOps as shown below
 
-<div align=center><img src=media/ado_taxonomy.png width=500></div>
+<div align=center><img src=../../media/ado_taxonomy.png width=500></div>
 
 5. Navigate to the repos page and add / upload the YAML file to the root of the repo.
 6. Edit the YAML file and review and change the pipeline and script parameters as necessary:
    a. The default parameters section contains relevant default values for example, the default capacity to be assigned to the new workspace. The capacity ID can be obtained in the Fabric Admin portal. Navigate to the capacities tab, click on the actions icon to display the capacity details.
 
-<div align=center><img src=media/fabric-capacity.png width=500></div>
+<div align=center><img src=../../media/fabric-capacity.png width=500></div>
 
 b. the parameters on line 76 are configured correctly depending which
 authentication method has been chosen:
 
-<div align=center><img src=media/configure_params.png width=500></div>
+<div align=center><img src=../../media/configure_params.png width=500></div>
 
 7. Add a new folder to the root of the repo called scripts and upload the associated python scripts.
 
@@ -157,7 +157,7 @@ authentication method has been chosen:
     
 11. This will display run-time parameters which can be modified as necessary:
 
-<div><img align=right src=media/pipeline_params.png width=500>
+<div><img align=right src=../../media/pipeline_params.png width=500>
 <p>&nbsp;</p><p>&nbsp;</p> 
 a. Source workspace: Name of the dev workspace
 </p><p> b. Target workspace: Name of the new workspace to be created which will also serve as the new branch name
@@ -172,15 +172,15 @@ a. Source workspace: Name of the dev workspace
 </div><p>&nbsp;</p><p>&nbsp;</p>
 <p>&nbsp;</p>
 12. To debug and monitor the running YAML pipeline click on the “BranchOut” job
-<div align=center><img src=media/branchout_job.png width=500></div>
+<div align=center><img src=../../media/branchout_job.png width=500></div>
 Importantly ensure both python scripts complete successfully.
-<div align=center><img src=media/branchout_success.png width=500></div>
+<div align=center><img src=../../media/branchout_success.png width=500></div>
 Azure DevOps success will be displayed on the previous job screen
-<div align=center><img src=media/branchout_complete.png width=500></div>
+<div align=center><img src=../../media/branchout_complete.png width=500></div>
 13. The second python script asynchronously invokes the post activity notebook in Fabric, therefore navigate to the monitoring hub in Fabric to ensure the notebook completes successfully. To debug or troubleshoot notebook errors, click on the failed activity name in the monitoring hub
-<div align=center><img src=media/monitor_failed.png width=500></div>
+<div align=center><img src=../../media/monitor_failed.png width=500></div>
 Click on item snapshots and review the output of the notebook.
-<div align=center><img src=media/monitor_debug.png width=500></div>
+<div align=center><img src=../../media/monitor_debug.png width=500></div>
 After successfully running the pipeline the new workspace should set up and ready for the developer to access and start developing.
 
 
