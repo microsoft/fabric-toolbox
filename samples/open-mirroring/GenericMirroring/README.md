@@ -1,6 +1,6 @@
 # Generic Mirroring
 
-The aim of this POC (Proof of Concept) code, was to show how easy it is to setup Open Mirroring and Mirroring some data.
+The aim of this POC (Proof of Concept) code, was to show how easy it is to setup [Open Mirroring](https://learn.microsoft.com/en-us/fabric/database/mirrored-database/open-mirroring) and Mirroring data.
 It is completely driven by the config file, you will need to configure the config file so it connect to the correct sources and Mirrored databases.
 
 This is an 'uber' project, including all the sources in one project.
@@ -11,8 +11,11 @@ This project is a combination of multiple Mirroring sources. It can mirror:
 1. Excel
 1. CSV
 1. Access
-1. TODO: Sharepoint
+1. Sharepoint Lists
 1. TODO: Dedicated SQL Pool
+1. TODO: Google Big Query
+1. TODO: Redshift
+1. TODO: ODBC
 
 ## Many to Many Mirroring
 The most recent changes allow for what I am calling ""many to many"" Mirroring.   
@@ -46,5 +49,8 @@ This solution will:
 1. [Create the Mirrored database](https://youtu.be/tiHHw2Hj848) , Copy the Landing Zone to the config file. 
 1. Run the program.
  
+# Training and useful information
+
+The following [Youtube playlist](https://www.youtube.com/playlist?list=PL5wR5nXbiSA6-nOaZiD6ySP7I3ifaXgjM) contains all the videos on Open Mirroring in Fabric.
 
 
