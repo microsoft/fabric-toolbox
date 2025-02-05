@@ -18,14 +18,16 @@ This project is a combination of multiple Mirroring sources. It can mirror:
 1. TODO: ODBC
 
 ## Many to Many Mirroring
+![Many to Many Mirroring](../../media/manytomany.png "Many to Many Mirroring Image")
+
 The most recent changes allow for what I am calling ""many to many"" Mirroring.   
 It allows for **1 or many sources** to be Mirrored/replicated to **1 or many Mirrored databases**.
 
-
+![Many to One Mirroring](../../media/manytoone.png "Many to One Mirroring Image")
 1. Many SQL Servers all Mirroring to one Mirrored database.
 If you have a multi-tenanted architecture and I want to consolidate all the reporting in one centralised hub.
 
-
+![One to Many Mirroring](../../media/onetomany.png "One to Many Mirroring Image")
 1. One master source being mirrored to many difference Mirrored databases.
 If you have a centralise data hub and need to push out changes to many downstream systems.
 
