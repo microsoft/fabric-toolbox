@@ -9,37 +9,37 @@ parameters:
 - name: source_workspace
   displayName: Enter source workspace
   type: string
-  default: 'Dev_WS_CICDSample_3'
+  default: ''
 
 - name: target_workspace
   displayName: Enter target workspace name
   type: string
-  default: 'Dev_WS_CICDSample_Clone5'
+  default: ''
 
 - name: copy_lakehouse_data
   displayName: Copy Lakehouse Data (enter True or False)
   type: string
-  default: 'True'
+  default: 'False'
 
 - name: copy_warehouse_data
-  displayName: Copy Lakehouse Data (enter True or False)
+  displayName: Copy Warehouse Data (enter True or False)
   type: string
   default: 'False'
 
 - name: create_lakehouse_shortcuts
   displayName: Create lakehouse shortcuts (only if copy lakehouse data set to False)
   type: string
-  default: 'False'
+  default: 'True'
 
 - name: developer_email
   displayName: Enter developer email
   type: string
-  default: 'reportbuilder1@MngEnvMCAP553100.onmicrosoft.com'
+  default: ''
 
 - name: capacity_id
   displayName: Enter capacity ID of the new workspace
   type: string
-  default: 'B34D9528-0FF8-4E40-865D-8BA769F574BB'
+  default: ''
 
 
 - name: ado_branch
@@ -47,10 +47,15 @@ parameters:
   type: string
   default: 'main'
 
-- name: connections_from_to
-  displayName: Swap connections in pipelines using names or IDs in the format (from,to) format
+- name: ado_git_folder
+  displayName: Folder in the repo where the Fabric content is stored. Leave as / if content is stored in root. 
   type: string
-  default: "('4498340c-27cf-4c6e-a025-00e5de6b0726','4498340c-27cf-4c6e-a025-00e5de6b0726')"
+  default: "/"
+
+- name: connections_from_to
+  displayName: Swap connections in pipelines using names or IDs in the format (from,to) format. Leave as () if no connections to swap.
+  type: string
+  default: "()"
 
 variables:
 - group: Fabric_Deployment_Group_S
@@ -77,7 +82,7 @@ stages:
             inputs:
               scriptSource: 'filePath'
               scriptPath: 'scripts/BranchOut-Feature-Workspace-Automation.py'
-              arguments: '--ADO_ORG_NAME $(ADO_ORG_NAME) --ADO_REPO_NAME $(ADO_REPO_NAME) --ADO_PROJECT_NAME $(ADO_PROJECT_NAME) --ADO_NEW_BRANCH ${{ parameters.target_workspace}} --DEVELOPER ${{ parameters.developer_email }} --WORKSPACE_NAME ${{ parameters.target_workspace }} --CAPACITY_ID ${{ parameters.capacity_id }} --ADO_API_URL $(ADO_API_URL) --ADO_MAIN_BRANCH ${{ parameters.ado_branch }}  --TENANT_ID $(TENANT_ID) --FABRIC_TOKEN $(fabrictoken) --ADO_PAT_TOKEN $(azdopat) --CLIENT_ID $(azclientid) --USER_NAME $(username) --PASSWORD $(password)'
+              arguments: '--ADO_ORG_NAME $(ADO_ORG_NAME) --ADO_REPO_NAME $(ADO_REPO_NAME) --ADO_PROJECT_NAME $(ADO_PROJECT_NAME) --ADO_NEW_BRANCH ${{ parameters.target_workspace}} --DEVELOPER ${{ parameters.developer_email }} --WORKSPACE_NAME ${{ parameters.target_workspace }} --CAPACITY_ID ${{ parameters.capacity_id }} --ADO_API_URL $(ADO_API_URL) --ADO_MAIN_BRANCH ${{ parameters.ado_branch }} --ADO_GIT_FOLDER ${{ parameters.ado_git_folder }} --TENANT_ID $(TENANT_ID) --FABRIC_TOKEN $(fabrictoken) --ADO_PAT_TOKEN $(azdopat) --CLIENT_ID $(azclientid) --USER_NAME $(username) --PASSWORD $(password)'
               #failOnStderr: true 
             displayName: 'Run Branch-Out-To-New-Workspace Script'
 

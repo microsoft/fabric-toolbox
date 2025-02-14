@@ -18,6 +18,7 @@ WORKSPACE_NAME = ""
 DEVELOPER = ""
 ADO_MAIN_BRANCH = ""
 ADO_NEW_BRANCH = ""
+ADO_GIT_FOLDER = ""
 ADO_PROJECT_NAME = ""
 ADO_REPO_NAME = ""
 ADO_ORG_NAME = ""
@@ -187,9 +188,9 @@ def get_branch_object_id(project_name, repo_name, branch_name, token, token_type
         return None
 
 # Function to connect Azure DevOps branch to Fabric workspace
-def connect_branch_to_workspace(workspace_id, project_name, org_name, repo_name, branch_name, token):
+def connect_branch_to_workspace(workspace_id, project_name, org_name, repo_name, branch_name, git_folder, token):
     try:
-        logging.info(f"Conecting workspace {workspace_id} to feature branch {branch_name} is in progess..")
+        logging.info(f"Conecting workspace {workspace_id} to feature branch {branch_name} at folder {git_folder}..")
         headers = {"Authorization": f"Bearer {token}"}
         data = {
         "gitProviderDetails": {
@@ -198,7 +199,7 @@ def connect_branch_to_workspace(workspace_id, project_name, org_name, repo_name,
                 "gitProviderType": "AzureDevOps",
                 "repositoryName": repo_name,
                 "branchName": branch_name,
-                "directoryName": ""
+                "directoryName": git_folder.rstrip("/")
          }
         } 
         response = requests.post(f"{FABRIC_API_URL}/workspaces/{workspace_id}/git/connect", headers=headers, json=data)
@@ -233,7 +234,7 @@ def long_running_operation_polling(uri,retry_after,headers):
 def initialize_workspace_from_git(workspace_id,token):
 
     try:
-        logging.info(f"Connecting f{WORKSPACE_NAME} to feature branch {ADO_NEW_BRANCH} is in propress... ")
+        logging.info(f"Initializing {WORKSPACE_NAME} to feature branch {ADO_NEW_BRANCH} is in propress... ")
         headers = {"Authorization": f"Bearer {token}"}
         # Initialize the connection to the GIT repository
         gitinitializeurl = f"{FABRIC_API_URL}/workspaces/{workspace_id}/git/initializeConnection"
@@ -290,6 +291,7 @@ def set_main_parameters():
     global DEVELOPER
     global ADO_MAIN_BRANCH
     global ADO_NEW_BRANCH
+    global ADO_GIT_FOLDER
     global ADO_PROJECT_NAME
     global ADO_REPO_NAME
     global ADO_ORG_NAME
@@ -311,6 +313,7 @@ def set_main_parameters():
         parser.add_argument('--WORKSPACE_NAME',type=str, help= 'Name of the feature workspace to be created')
         parser.add_argument('--DEVELOPER',type=str, help= 'Developr UPN to be added to workspace as admin')
         parser.add_argument('--ADO_MAIN_BRANCH',type=str, help= 'Main development branch')
+        parser.add_argument('--ADO_GIT_FOLDER',type=str, help= 'Folder where Fabric content is stored')
         parser.add_argument('--ADO_NEW_BRANCH',type=str, help= 'New branch to be created')
         parser.add_argument('--ADO_PROJECT_NAME',type=str, help= 'ADO project name')
         parser.add_argument('--ADO_REPO_NAME',type=str, help= 'ADO repository name')
@@ -324,6 +327,7 @@ def set_main_parameters():
         logging.error(f'Error: {e}')
         raise ValueError("Could not extract parameters: {e}")
     
+    logging.info('Binding parameters...')
     #Bind parameters to script variables
     TENANT_ID = args.TENANT_ID
     USERNAME = args.USER_NAME
@@ -332,6 +336,7 @@ def set_main_parameters():
     DEVELOPER = args.DEVELOPER
     ADO_MAIN_BRANCH = args.ADO_MAIN_BRANCH
     ADO_NEW_BRANCH = args.ADO_NEW_BRANCH
+    ADO_GIT_FOLDER = args.ADO_GIT_FOLDER
     ADO_PROJECT_NAME = args.ADO_PROJECT_NAME
     ADO_REPO_NAME = args.ADO_REPO_NAME
     ADO_ORG_NAME = args.ADO_ORG_NAME
@@ -364,10 +369,10 @@ def main():
            logging.info(f'Workspace {WORKSPACE_NAME} ({workspace_id}) successfully created and assigned to capacity {CAPACITY_ID}')
            logging.info(f'Adding workspace admins {DEVELOPER}...')
            add_workspace_admins(workspace_id, DEVELOPER, token)
-           logging.info(f'Creating ado branch from main {ADO_MAIN_BRANCH}...')
+           logging.info(f'Creating ado branch {ADO_NEW_BRANCH} from {ADO_MAIN_BRANCH}...')
            create_azure_devops_branch(ADO_PROJECT_NAME, ADO_REPO_NAME, ADO_MAIN_BRANCH, ADO_NEW_BRANCH)           
            logging.info(f'Connecting workspace to branch {ADO_NEW_BRANCH}...')
-           connect_branch_to_workspace(workspace_id, ADO_PROJECT_NAME, ADO_ORG_NAME,ADO_REPO_NAME, ADO_NEW_BRANCH, token)
+           connect_branch_to_workspace(workspace_id, ADO_PROJECT_NAME, ADO_ORG_NAME,ADO_REPO_NAME, ADO_NEW_BRANCH, ADO_GIT_FOLDER, token)
            logging.info('Initialize workspace...')
            initialize_workspace_from_git(workspace_id, token)
         else:

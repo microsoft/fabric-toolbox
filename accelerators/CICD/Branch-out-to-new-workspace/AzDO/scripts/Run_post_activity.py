@@ -69,41 +69,54 @@ def acquire_token_user_id_password(tenant_id, client_id,user_name,password):
      logging.error('Error: Token could not be obtained: '+str(result))
    return access_token
 
-logging.info('Checking for supplied credentials...')
-if FABRIC_TOKEN!="":
-    logging.info('Fabric token found...')
-    token = FABRIC_TOKEN
-else:
-    logging.info('User creds found, generating token...')
-    token = acquire_token_user_id_password(TENANT_ID,CLIENT_ID,user_name,password)
+def main():
+    logging.info('Checking for supplied credentials...')
+    if FABRIC_TOKEN!="":
+        logging.info('Fabric token found...')
+        token = FABRIC_TOKEN
+    else:
+        logging.info('User creds found, generating token...')
+        token = acquire_token_user_id_password(TENANT_ID,CLIENT_ID,user_name,password)
+        
+    if token:
+        if NOTEBOOK_ID == '':
+            raise ValueError('Error: Could not execute notebook as no Notebook ID has been specified.')
+
+
+        plurl = 'https://api.fabric.microsoft.com/v1/workspaces/'+WS_ID +'/items/'+NOTEBOOK_ID+'/jobs/instances?jobType=RunNotebook'
+
+        headers = {
+        "Authorization": f"Bearer {token}", 
+        "Content-Type": "application/json"  # Set the content type based on your request
+        }
+        logging.info('Setting notebook parameters...')
+        payload_data = '{' \
+            '"executionData": {' \
+                '"parameters": {' \
+                    '"_inlineInstallationEnabled": {"value": "True", "type": "bool"},' \
+                    '"source_ws": {"value": "' + SOURCE_WS + '", "type": "string"},' \
+                    '"copy_lakehouse_data": {"value": "' + COPY_LH + '", "type": "bool"},' \
+                    '"create_lakehouse_shortcuts": {"value": "' + CREATE_SC + '", "type": "bool"},' \
+                    '"copy_warehouse_data": {"value": "' + COPY_WH + '", "type": "bool"},' \
+                    '"target_ws": {"value": "' + TARGET_WS + '", "type": "string"},' \
+                    '"p_connections_from_to": {"value": "' + CONNECTIONS_FROM_TO + '", "type": "string"}' \
+                    '}}}'
+        logging.info('Invoking Fabric notebook job...')
+        plresponse = requests.post(plurl, json=json.loads(payload_data), headers=headers)
+        #logging.info(str(plresponse.status_code) + ' - ' + plresponse.text)    
+        if plresponse.status_code==202:
+            logging.info('Job invoked. Please check the Fabric monitoring hub to review the status of the job.')
+        else:
+            logging.error('An error occurred when trying to invoke job: ' + str(plresponse.status_code) + ' - ' + plresponse.text)
+            raise ValueError("Error invoking Fabric notebook. Please review the debug logs.")
+
+    else:
+        logging.error("Could not aquire token")
+        raise ValueError("Could not generate authentication token. Please review the debug logs.")
     
-if token:
-    if NOTEBOOK_ID == '':
-        raise ValueError('Error: Could not execute notebook as no Notebook ID has been specified.')
 
 
-    plurl = 'https://api.fabric.microsoft.com/v1/workspaces/'+WS_ID +'/items/'+NOTEBOOK_ID+'/jobs/instances?jobType=RunNotebook'
-
-    headers = {
-    "Authorization": f"Bearer {token}", 
-    "Content-Type": "application/json"  # Set the content type based on your request
-    }
-    logging.info('Setting notebook parameters...')
-    payload_data = '{' \
-        '"executionData": {' \
-            '"parameters": {' \
-                '"_inlineInstallationEnabled": {"value": "True", "type": "bool"},' \
-                '"source_ws": {"value": "' + SOURCE_WS + '", "type": "string"},' \
-                '"copy_lakehouse_data": {"value": "' + COPY_LH + '", "type": "bool"},' \
-                '"create_lakehouse_shortcuts": {"value": "' + CREATE_SC + '", "type": "bool"},' \
-                '"copy_warehouse_data": {"value": "' + COPY_WH + '", "type": "bool"},' \
-                '"target_ws": {"value": "' + TARGET_WS + '", "type": "string"},' \
-                '"p_connections_from_to": {"value": "' + CONNECTIONS_FROM_TO + '", "type": "string"}' \
-                '}}}'
-    logging.info('Invoking Fabric notebook job...')
-    plresponse = requests.post(plurl, json=json.loads(payload_data), headers=headers)
-    logging.info(str(plresponse.status_code) + ' - ' + plresponse.text)    
-else:
-    logging.error("Could not aquire token")
-    raise ValueError("Could not generate authentication token. Please review the debug logs.")
-
+if __name__ == "__main__":
+    logging.info('Starting Run_post_activity script...')
+    main()
+    
