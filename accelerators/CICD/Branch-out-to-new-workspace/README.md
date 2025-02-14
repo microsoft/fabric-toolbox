@@ -167,8 +167,9 @@ a. Source workspace: Name of the dev workspace
 </p><p> f. Swap connections in pipelines: Specify connections to be replaced using format (from 1 ,to1),(from2,to2),...(fromN,toN) using either connection ID or name.
 </p><p> g. Enter Developer Email: Add the email address of the developer to be granted admin role on the new workspace 
 </p><p> h. Enter Capacity ID: Enter the capacity ID of the new workspace if different from the default GUID.
-</p><p> i. Enter the branch name: Enter the source branch name which the new branch will be created from.
-</p><p> j. Click Run and monitor the release pipeline in Azure Devops and also the progress of the post activity notebook in the Fabric monitoring hub.
+</p><p> i. Enter the source branch name: Enter the source branch name which the new branch will be created from.
+</p><p> j. Enter the Git folder where Fabric content is stored. Leave as / if content is stored in root. 
+</p><p> k. Click Run and monitor the release pipeline in Azure Devops and also the progress of the post activity notebook in the Fabric monitoring hub.
 </div><p>&nbsp;</p><p>&nbsp;</p>
 <p>&nbsp;</p>
 12. To debug and monitor the running YAML pipeline click on the “BranchOut” job
