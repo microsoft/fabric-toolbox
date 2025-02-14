@@ -157,7 +157,7 @@ authentication method has been chosen:
     
 11. This will display run-time parameters which can be modified as necessary:
 
-<div><img align=right src=../../media/pipeline_params.png width=500>
+<div><img align=right src=../../media/pipeline_params.png width=300>
 <p>&nbsp;</p><p>&nbsp;</p> 
 a. Source workspace: Name of the dev workspace
 </p><p> b. Target workspace: Name of the new workspace to be created which will also serve as the new branch name
