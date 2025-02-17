@@ -3,6 +3,7 @@ import json
 import argparse
 import os
 import logging
+import time
 
 # Constants
 # Configure logging
@@ -102,7 +103,35 @@ if token:
                 '}}}'
     logging.info('Invoking Fabric notebook job...')
     plresponse = requests.post(plurl, json=json.loads(payload_data), headers=headers)
-    logging.info(str(plresponse.status_code) + ' - ' + plresponse.text)    
+    logging.info(str(plresponse.status_code) + ' - ' + plresponse.text)
+
+    location_url = plresponse.headers.get("Location")
+    retry_after = int(plresponse.headers.get("Retry-After", 5))  # Default to 5 seconds if not provided
+    
+    logging.info(f"Job with the location: '{location_url}' has been triggered  with a status check of '{retry_after}' seconds.")
+
+    # Polling for operation status
+    while True:
+        time.sleep(10) # there is a delay between having the status updated after calling the job instance api so adding a 10 seconds wait
+        operation_status_response = requests.get(f"{location_url}", headers=headers)
+        operation_state = operation_status_response.json()
+        logging.info(operation_state)
+
+        status = operation_state.get("status")
+        logging.info(f"Operation status: {status}")
+
+        if status in ["NotStarted", "Running"]:
+            logging.info(f"The job is still running or is not started")
+            time.sleep(retry_after)
+        else:
+            break
+
+    # Final check on operation status
+    if status == "Failed":
+        error_response = operation_state.get("Error", {})
+        logging.error(f"The job failed. Error response: {error_response}")
+    else:
+        logging.info("The job has complete successfully")   
 else:
     logging.error("Could not aquire token")
     raise ValueError("Could not generate authentication token. Please review the debug logs.")
