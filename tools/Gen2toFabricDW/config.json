@@ -1,0 +1,22 @@
+{
+  "Gen2Connectionstring": "Server=myGen2.database.windows.net;Database=mydatabase;User Id=extract_user;Pwd=extract_user_password;TrustServerCertificate=True;",
+  "fabricEndpoint": "fabric-dw-endpoint.datawarehouse.fabric.microsoft.com",
+  "fabricWarehouse": "fabricDataWarehouseName",
+  "SQLCreateExternalTable": "CREATE EXTERNAL TABLE {ss}.{t}  WITH (\tLOCATION = '{ExternalTableSubfolder}',\tDATA_SOURCE = _extract_storage, FILE_FORMAT = _extract_parquet\t)  AS SELECT {top} * FROM {s}.{t} {Whereclause} {orderby}",
+  "COPYINTO_Statement": "COPY INTO {s}.{t}                FROM '{httpslocation}{ExternalTableSubfolder}'                WITH (   FILE_TYPE = 'PARQUET',                  CREDENTIAL=(IDENTITY= 'Shared Access Signature',                 SECRET='{SASKey}'));",
+  "abfslocation": "abfss://container@storage-account.dfs.core.windows.net/",
+  "httpslocation": "https://storage-account.blob.core.windows.net/container/",
+  "SASKey": "-the SaS key-",
+  "batchsize": 60000,
+  "Tables": [
+    {
+      "Schema": "schema",
+      "Name": "table-name",
+      "DropDestinationTable": "True",
+      "CreateDestination": "True",
+      "TruncateDestination": "False",
+      "batchcolumn": "",
+      "externalTableSchema": "ext"
+    }
+  ]
+}
