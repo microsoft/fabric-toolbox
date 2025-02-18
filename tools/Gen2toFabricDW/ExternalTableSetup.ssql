@@ -1,0 +1,24 @@
+﻿if not exists(select * from sys.external_file_formats where name='_extract_parquet')
+begin
+	CREATE EXTERNAL FILE FORMAT _extract_parquet  
+	WITH (      FORMAT_TYPE = PARQUET,    DATA_COMPRESSION = 'org.apache.hadoop.io.compress.SnappyCodec')
+end
+
+--DROP DATABASE SCOPED CREDENTIAL [_extract_cred]
+if not exists(SELECT name, create_date, modify_date  FROM sys.database_scoped_credentials where name ='_extract_cred')
+BEGIN
+	CREATE DATABASE SCOPED CREDENTIAL [_extract_cred] WITH IDENTITY='SHARED ACCESS SIGNATURE',   SECRET = '{SASKey}'
+END
+
+-- drop EXTERNAL DATA SOURCE [_extract_storage]
+if not exists(SELECT name   FROM sys.external_data_sources where name = '_extract_storage')
+BEGIN
+	CREATE EXTERNAL DATA SOURCE [_extract_storage] WITH ( type=hadoop, LOCATION = N'{abfslocation}', CREDENTIAL = [_extract_cred])
+END
+
+/*
+-- script to list all external tables
+select 'drop external table [' + s.name + '].[' +  t.name + ']'  from sys.tables t inner join sys.schemas s on s.schema_id = t.schema_id 
+where t.is_external = 1
+*/
+
