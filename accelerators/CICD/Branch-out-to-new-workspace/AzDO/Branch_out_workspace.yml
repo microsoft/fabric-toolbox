@@ -22,7 +22,7 @@ parameters:
   default: 'True'
 
 - name: copy_warehouse_data
-  displayName: Copy Lakehouse Data (enter True or False)
+  displayName: Copy Warehouse Data (enter True or False)
   type: string
   default: 'False'
 
