@@ -1,0 +1,46 @@
+# Starter pipeline
+# Start with a minimal pipeline that you can customize to build and deploy your code.
+# Add steps that build, run tests, deploy, and more:
+# https://aka.ms/yaml
+
+trigger: 
+      branches:
+        include: 
+        - main
+
+pool:
+   vmImage: ubuntu-latest
+
+variables:
+- group: Variables_Demo
+
+
+    
+stages:
+    - stage: Apply_Changes_To_DEV_Workspace
+      jobs:
+      - job: Deploy
+        displayName: "Apply changes to DEV workspace"
+        steps:
+        - task: CopyFiles@2
+          inputs:
+            SourceFolder: 'cicd'
+            Contents: '**'
+            TargetFolder: '$(Pipeline.Workspace)/cicd'
+        - script: |
+            echo "Triggering interactive Azure CLI login..."
+            az login --use-device-code
+          displayName: 'Azure CLI - Interactive Login'
+        - script: |
+            FABRIC_BEARER_TOKEN=$(az account get-access-token --resource https://api.fabric.microsoft.com --query accessToken -o tsv)
+            # Set the tokens as pipeline variables
+            echo "##vso[task.setvariable variable=FABRIC_BEARER_TOKEN]$FABRIC_BEARER_TOKEN"
+            echo "BEAR TOKEN-------$(FABRIC_BEARER_TOKEN)"
+          displayName: 'Get Access Tokens'
+          name: GetAccessTokens
+        - task: PowerShell@2
+          displayName: "Update Main Workspace"
+          inputs:
+            targetType: 'filePath'
+            filePath: 'cicd/workspace_update.ps1'
+            arguments: -token $(FABRIC_BEARER_TOKEN) -workspace_id $(dev_workspace_id)

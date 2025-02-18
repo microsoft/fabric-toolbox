@@ -1,0 +1,74 @@
+# Starter pipeline
+# Start with a minimal pipeline that you can customize to build and deploy your code.
+# Add steps that build, run tests, deploy, and more:
+# https://aka.ms/yaml
+
+trigger:
+- None
+
+pool:
+  vmImage: ubuntu-latest
+
+variables:
+- group: Variables_Demo
+
+parameters:
+
+- name: copy_lakehouse_data
+  displayName: Copy Lakehouse Data (enter True or False)
+  type: string
+  default: 'True'
+
+- name: copy_warehouse_data
+  displayName: Copy Warehouse Data (enter True or False)
+  type: string
+  default: 'False'
+
+- name: create_lakehouse_shortcuts
+  displayName: Create lakehouse shortcuts (only if copy lakehouse data set to False)
+  type: string
+  default: 'False'
+
+- name: connections_from_to
+  displayName: Swap connections in pipelines using names or IDs in the format (from,to) format
+  type: string
+  default: "[('5a04ea96-e0ee-437e-b0e9-2e6ce9dddda3','5f9bd0af-0f69-4fac-9fab-5bd6a9182321')]"
+
+
+stages:
+    - stage: Deployment_From_Dev_to_UAT
+      jobs:
+      - deployment: "Deployment_From_Dev_to_UAT"
+        environment: UAT
+        strategy:
+          runOnce: 
+            deploy: 
+              steps:
+              - checkout: self
+              - task: CopyFiles@2
+                inputs:
+                  SourceFolder: 'cicd'
+                  Contents: '**'
+                  TargetFolder: '$(Pipeline.Workspace)/Option3/cicd'
+              - script: |
+                  echo "Triggering interactive Azure CLI login..."
+                  az login --use-device-code
+                displayName: 'Azure CLI - Interactive Login'
+              - script: |
+                  FABRIC_BEARER_TOKEN=$(az account get-access-token --resource https://api.fabric.microsoft.com --query accessToken -o tsv)
+                  # Set the tokens as pipeline variables
+                  echo "##vso[task.setvariable variable=FABRIC_BEARER_TOKEN]$FABRIC_BEARER_TOKEN"
+                displayName: 'Get Access Tokens'
+                name: GetAccessTokens
+              - task: PowerShell@2
+                displayName: "Update UAT workspace"
+                inputs:
+                  targetType: 'filePath'
+                  filePath: 'cicd/trigger_deployment_pipeline.ps1'
+                  arguments: -token $(FABRIC_BEARER_TOKEN) -deployment_pipeline $(deployment_pipeline_id) -source_workspace $(dev_workspace_id) -target_workspace $(uat_workspace_id)
+              - task: PythonScript@0
+                inputs:
+                  scriptSource: 'filePath'
+                  scriptPath: 'cicd/Run_post_activity.py'
+                  arguments:  '--FABRIC_TOKEN $(FABRIC_BEARER_TOKEN) --NOTEBOOK_WORKSPACE_ID $(uat_workspace_id) --NOTEBOOK_ID $(post_deployment_notebook_id) --SOURCE_WORKSPACE $(dev_workspace_name) --TARGET_WORKSPACE $(uat_workspace_name)  --TENANT_ID $(TENANT_ID) --COPY_LAKEHOUSE ${{ parameters.copy_lakehouse_data }} --COPY_WAREHOUSE ${{ parameters.copy_warehouse_data }} --CREATE_SHORTCUTS ${{ parameters.create_lakehouse_shortcuts }} --USER_NAME $(username) --PASSWORD $(password) --CLIENT_ID $(azclientid) --CONNECTIONS_FROM_TO ${{ parameters.connections_from_to }}'
+                displayName: 'Invoke Fabric Post Activity Job'
