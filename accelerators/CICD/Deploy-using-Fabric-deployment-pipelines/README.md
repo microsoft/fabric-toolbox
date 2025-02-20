@@ -24,7 +24,8 @@ Consider also that deployments in Fabric deployment pipelines have a linear stru
 - **[Deploy_Changes_From_Source_To_Target_Workspace.yaml](cicd/Deploy_Changes_From_Source_To_Target_Workspace.yaml):** Yaml file to deploy changes from a source workspace to a target workspace
 - **[trigger_deployment_pipeline.ps1](cicd/trigger_deployment_pipeline.ps1):** Powershell script called by Deploy_Changes_From_Source_To_Target_Workspace.yaml to call the Deployment Pipeline Fabric Rest API
 - **[workspace_update.ps1](cicd/workspace_update.ps1):** Powershell script called by Apply_Changes_To_Branch.yaml to call the GIT Fabric Rest API got
-- **[Run_post_activity.py](cicd/Run_post_activity.py):** Python script trigged for post deployment activity. It will for example rebind the connections. For more information please visit [Run post activiy details](https://github.com/microsoft/fabric-toolbox/blob/main/accelerators/CICD/Branch-out-to-new-workspace/README.md)
+- **[Run_post_activity.py](cicd/Run_post_activity.py):** A Python script is triggered for post-deployment activities, launching a post-activity notebook to rebind connections, among other tasks. For more information please visit [Run post activiy details](https://github.com/microsoft/fabric-toolbox/blob/main/accelerators/CICD/Branch-out-to-new-workspace/README.md).
+Please note that the post-activity notebook must exist and can be found [here](https://github.com/microsoft/fabric-toolbox/blob/main/accelerators/CICD/Branch-out-to-new-workspace/Fabric/Branch%20out%20to%20new%20workspace%20-%20Post%20Activity.ipynb)
 
 ## Prerequsite and configurations required
 
@@ -66,5 +67,4 @@ Some fabric items require post deployment activities after the deployment pipeli
 For more information about what the current post activity is able to support please visit [this page](https://github.com/microsoft/fabric-toolbox/blob/main/accelerators/CICD/Branch-out-to-new-workspace/README.md)
 
 ## Demo
-
-[![Watch the demo](https://raw.githubusercontent.com/TechMeToTheCloud/accelerators/main/media/deployment_pipeline_workflow.png)](https://raw.githubusercontent.com/TechMeToTheCloud/accelerators/main/media/Fabric_CICD_Option_3_cut.mp4)
+**[Fabric Deployment Pipeline with swap connection demo](Fabric_cicd_option_3.mp4):** You can watch a quick recording here
