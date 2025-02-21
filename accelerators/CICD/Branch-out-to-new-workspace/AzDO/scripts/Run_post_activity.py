@@ -106,7 +106,7 @@ def main():
                     '"target_ws": {"value": "' + TARGET_WS + '", "type": "string"},' \
                     '"connections_from_to": {"value": "' + CONNECTIONS_FROM_TO + '", "type": "string"},' \
                     '"has_wh_views_on_lh": {"value": "' + WH_VIEWS_ON_LH + '", "type": "bool"},' \
-                    '"_runStandalone": {"value": "False", "type": "bool"}'
+                    '"_runStandalone": {"value": "False", "type": "bool"}' \
                     '}}}'
         logging.info('Invoking Fabric notebook job...')
         plresponse = requests.post(plurl, json=json.loads(payload_data), headers=headers)
