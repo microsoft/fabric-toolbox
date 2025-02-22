@@ -67,4 +67,4 @@ Some fabric items require post deployment activities after the deployment pipeli
 For more information about what the current post activity is able to support please visit [this page](https://github.com/microsoft/fabric-toolbox/blob/main/accelerators/CICD/Branch-out-to-new-workspace/README.md)
 
 ## Demo
-**[Fabric Deployment Pipeline with swap connection demo](Fabric_cicd_option_3.mp4):** You can watch a quick recording here
+**[Fabric Deployment Pipeline with swap connection demo](https://github.com/microsoft/fabric-toolbox/raw/refs/heads/main/accelerators/media/Fabric_cicd_option_3.mp4):** You can watch a quick recording here
