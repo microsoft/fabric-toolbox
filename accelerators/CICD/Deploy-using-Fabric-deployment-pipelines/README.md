@@ -32,6 +32,8 @@ Please note that the post-activity notebook must exist and can be found [here](h
 - You need all the workspaces required for your workflow (DEV, UAT, XXX, Prod)
   - If you want to automate this part please visit [this page](https://github.com/Azure-Samples/modern-data-warehouse-dataops/blob/main/e2e_samples/fabric_dataops_sample/README.md) for an example
 - You need to have create a Fabric Deployment pipeline as you will need the deployment ID for the trigger_deployment_pipeline script
+- The post-deployment notebook can be found at the [following location](https://github.com/microsoft/fabric-toolbox/blob/main/accelerators/CICD/Branch-out-to-new-workspace/Fabric/Branch%20out%20to%20new%20workspace%20-%20Post%20Activity.ipynb).
+Ensure that this notebook exists in the workspace from which the execution will be run.
 - You will need to create Azure Devops variables even if you can replace them with Azure Key Vault
 <div align=center><img src=../../media/ado_variables.png width=500></div>
   
@@ -42,6 +44,7 @@ Please note that the post-activity notebook must exist and can be found [here](h
   - post_deployment_notebook_id: The Notebook ID for the post activity deployment. In this case, it will be the id of the notebook **Notebook_Post_Deployment**
   - uat_workspace_id: The UAT workspace ID
   - uat_workspace_name: the UAT workspace name
+
 
 ## Steps
 
