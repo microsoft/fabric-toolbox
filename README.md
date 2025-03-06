@@ -39,7 +39,7 @@ These assets should be treated as examples that you can use to create the soluti
 ## Tools
 - $${\color{green}NEW!}$$ [Copy Warehouse](./tools/copy-warehouse)
 - [TPCH Benchmarking](./tools/tpch-benchmarking)
-
+- $${\color{green}NEW!}$$ [DAX Performance Testing](./tools/DAXPerformanceTesting)
 
 
 # Contributing
