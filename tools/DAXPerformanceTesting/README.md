@@ -45,29 +45,29 @@ This notebook is designed to measure DAX query timings under different cache sta
 
 1. Download the notebook from GitHub and upload to a Fabric workspace.
 
-![dpt-upload-notebook](readme-images/dpt-upload-notebook.png)
+![dpt-upload-notebook](media/dpt-upload-notebook.png)
 
 2. Attach a Lakehouse that will be used to save the logs and host the query list.
 
-![dpt-attach-lakehouse](readme-images/dpt-attach-lakehouse.png)
+![dpt-attach-lakehouse](media/dpt-attach-lakehouse.png)
 
 3. Add an Excel file with your query list to the Lakehouse. One column must be named “queryId” and there can be as many other columns as you want containing the DAX queries. You will assign one query column to each model. The same column can be used for multiple models. Update the excel file path the with correct file name and worksheet name.
 
-![dpt-excel-dax-example](readme-images/dpt-excel-dax-example.png)
-![dpt-upload-dax-queries](readme-images/dpt-upload-dax-queries.png)
+![dpt-excel-dax-example](media/dpt-excel-dax-example.png)
+![dpt-upload-dax-queries](media/dpt-upload-dax-queries.png)
 
 4. Update the list of models you want to test.
 
-![dpt-define-test-models](readme-images/dpt-define-test-models.png)
+![dpt-define-test-models](media/dpt-define-test-models.png)
 
 5. Configure the rest of the settings in the config cell. You can leave the capacity settings blank if you are not testing cold-cache from Import and/or Direct Query. There are a lot of options, so read carefully. 🙂
 
-![dpt-configure-additional-args](readme-images/dpt-configure-additional-args.png)
+![dpt-configure-additional-args](media/dpt-configure-additional-args.png)
 
 6. Run the notebook and collect the logs. Under the run_dax_queries() cell, you can track along with the testing if you want to understand what is happening.
 
-![dpt-track-run](readme-images/dpt-track-run.png)
+![dpt-track-run](media/dpt-track-run.png)
 
 7. Analyze the logs saved in your Lakehouse to compare query results across query versions, cache-states, models, etc.
 
-![dpt-query-logs](readme-images/dpt-query-logs.png)
+![dpt-query-logs](media/dpt-query-logs.png)
