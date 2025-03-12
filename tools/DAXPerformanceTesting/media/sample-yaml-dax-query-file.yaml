@@ -1,0 +1,4 @@
+- queryId: 1
+  daxQuery: EVALUATE ROW("Test", COUNTROWS(Fabric Capacity Units))
+- queryId: 2
+  daxQuery: EVALUATE ROW("Test_1", COUNTROWS(Fabric Capacity Units))
