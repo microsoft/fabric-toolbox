@@ -14,7 +14,7 @@ The MicrosoftFabricMgmt is a collection of PowerShell scripts designed to intera
 To install the MicrosoftFabricMgmt, clone the repository and import the module in your PowerShell session:
 ```sh
 git clone https://github.com/microsoft/fabric-toolbox.git
-Import-Module ./MicrosoftFabricMgmt/MicrosoftFabricMgmt.psm1
+Import-Module ./tools/MicrosoftFabricMgmt/MicrosoftFabricMGMT/MicrosoftFabricMgmt.psm1
 ```
 
 ## Prerequisites
