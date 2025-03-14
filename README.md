@@ -15,7 +15,7 @@ These assets should be treated as examples that you can use to create the soluti
 - $${\color{green}NEW!}$$ [CICD: Deploy using Fabric deployment pipelines](./accelerators/CICD/Deploy-using-Fabric-deployment-pipelines)
 - $${\color{green}NEW!}$$ [CICD: Branch out to new workspace](./accelerators/CICD/Branch-out-to-new-workspace)
 - [Data Warehouse Backup and Recovery](./accelerators/data-warehouse-backup-and-recovery)
-- [Power BI to Fabric Data Warehouse Modernization](./accelerators/power-bi-to-fabric-data-warehouse-modernization)
+- [Power BI datamart to Fabric Data Warehouse Modernization](./accelerators/power-bi-to-fabric-data-warehouse-modernization)
 - [Real Time Intelligence Eventhouse](./accelerators/real-time-intelligence_eventhouse)
 - [Real Time Intelligence Eventstream](./accelerators/real-time-intelligence_eventstream)
 
@@ -40,6 +40,7 @@ These assets should be treated as examples that you can use to create the soluti
 - $${\color{green}NEW!}$$ [Copy Warehouse](./tools/copy-warehouse)
 - [TPCH Benchmarking](./tools/tpch-benchmarking)
 - $${\color{green}NEW!}$$ [DAX Performance Testing](./tools/DAXPerformanceTesting)
+- $${\color{green}NEW!}$$ [MicrosoftFabricMgmt](./tools/MicrosoftFabricMgmt)
 
 
 # Contributing
