@@ -21,13 +21,13 @@ ModuleVersion = '1.0'
 GUID = 'd0110b5c-cfcc-4bcc-8049-468880cf66c8'
 
 # Author of this module
-Author = 'MicrosoftFabricMgmt'
+Author = 'Tiago Balabuch'
 
 # Company or vendor of this module
 CompanyName = 'MicrosoftFabricMgmt'
 
 # Copyright statement for this module
-Copyright = '2025 MicrosoftFabricMgmt by Tiago Balabuch'
+Copyright = '2025 MicrosoftFabricMgmt by Fabric Toolbox'
 
 # Description of the functionality provided by this module
 Description = 'MicrosoftFabricMgmt'
