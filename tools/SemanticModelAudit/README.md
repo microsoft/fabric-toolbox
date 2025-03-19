@@ -44,7 +44,7 @@ The tool consists of three main components:
    - Captures both summary query counts and detailed DAX query logs.
 
 1. **Unused Column Identification:**  
-   - Compares lakehouse and model metadata to identify unused columns in your model's source lakehouse.
+   - Compares lakehouse/warehouse and model metadata to identify unused columns in your model's source lakehouse/warehouse.
    - Removing unused columns will result in greater data compression and performance.
 
 1. **Cold Cache & Resident Statistics:**  
