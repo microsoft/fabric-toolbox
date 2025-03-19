@@ -12,6 +12,7 @@ These assets should be treated as examples that you can use to create the soluti
 - $${\color{green}NEW!}$$ [Workspace Monitoring Report Templates](./monitoring/workspace-monitoring-dashboards)
 
 ## Accelerators
+- $${\color{green}NEW!}$$ [CICD: Git-based Deployments](./accelerators/CICD/Git-base-deployments)
 - $${\color{green}NEW!}$$ [CICD: Deploy using Fabric deployment pipelines](./accelerators/CICD/Deploy-using-Fabric-deployment-pipelines)
 - $${\color{green}NEW!}$$ [CICD: Branch out to new workspace](./accelerators/CICD/Branch-out-to-new-workspace)
 - [Data Warehouse Backup and Recovery](./accelerators/data-warehouse-backup-and-recovery)
