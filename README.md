@@ -38,12 +38,12 @@ These assets should be treated as examples that you can use to create the soluti
 - [DW SP Kill Queries](./scripts/dw-sp-kill-queries)
 
 ## Tools
+- $${\color{green}NEW!}$$ [MicrosoftFabricMgmt PowerShell Module](./tools/MicrosoftFabricMgmt)
 - $${\color{green}NEW!}$$ [Gen2 Dedicated Pool to Fabric DW Table Copy](./tools/Gen2toFabricDW)
 - $${\color{green}NEW!}$$ [Semantic Model Audit](./tools/SemanticModelAudit)
 - [Copy Warehouse](./tools/copy-warehouse)
 - [TPCH Benchmarking](./tools/tpch-benchmarking)
 - $${\color{green}NEW!}$$ [DAX Performance Testing](./tools/DAXPerformanceTesting)
-- $${\color{green}NEW!}$$ [MicrosoftFabricMgmt](./tools/MicrosoftFabricMgmt)
 
 
 # Contributing
