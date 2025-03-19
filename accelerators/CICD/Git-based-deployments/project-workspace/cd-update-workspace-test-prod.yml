@@ -1,0 +1,272 @@
+pool:
+  vmImage: ubuntu-20.04
+
+name: release pipeline
+
+variables:
+  - group: GroupFabricWorkspaces
+  - group: GroupDevOps
+
+trigger: none
+
+stages:
+
+  - stage: stage1 
+    displayName: 'Stage 1 - Authentication'
+
+    jobs:
+
+    - job: interactive_login
+      displayName: 'Interactive login'
+
+      steps:
+
+        - task: Bash@3
+          displayName: 'Azure CLI - Interactive Login'
+          name: azure_cli_interactive_login
+          inputs:
+            targetType: 'inline'
+            script: |
+              echo "Triggering interactive Azure CLI login..."
+              az login --use-device-code
+
+        - task: Bash@3
+          displayName: 'Get access token for Fabric APIs'
+          name: get_access_token_fabric_api
+          inputs:
+            targetType: 'inline'
+            script: |
+              FABRIC_BEARER_TOKEN=$(az account get-access-token --resource https://api.fabric.microsoft.com/ --query accessToken -o tsv)
+              # Set the tokens as pipeline variables
+              echo "##vso[task.setvariable variable=FABRIC_BEARER_TOKEN;isOutput=true;]$FABRIC_BEARER_TOKEN"
+              echo "BEAR TOKEN-------$(FABRIC_BEARER_TOKEN)"
+      
+        - task: Bash@3
+          displayName: 'Get access token for SQL Server'
+          name: get_access_token_sql_server
+          inputs:
+            targetType: 'inline'
+            script: |
+              SQL_BEARER_TOKEN=$(az account get-access-token --resource https://database.windows.net/ --query accessToken -o tsv)
+              # Set the tokens as pipeline variables
+              echo "##vso[task.setvariable variable=SQL_BEARER_TOKEN;isOutput=true;]$SQL_BEARER_TOKEN"
+              echo "BEAR TOKEN-------$(SQL_BEARER_TOKEN)"
+
+  - stage: stage2
+    displayName: 'Stage 2 - Deployment to TEST'
+    dependsOn: 
+    - stage1
+
+    jobs:
+
+    - job: deployment
+      displayName: 'Deployment'
+      variables:
+        fabricToken: $[ stageDependencies.stage1.interactive_login.outputs['get_access_token_fabric_api.FABRIC_BEARER_TOKEN'] ]
+        sqlToken: $[ stageDependencies.stage1.interactive_login.outputs['get_access_token_sql_server.SQL_BEARER_TOKEN'] ]
+
+      steps:
+      
+        - task: DownloadSecureFile@1
+          displayName: 'Download the mapping connections secure file'
+          name: mapping_connections_download
+          inputs:
+            secureFile: '$(MappingConnectionsFileName)'
+
+        - task: DownloadSecureFile@1
+          displayName: 'Download the onelake roles secure file'
+          name: onelake_roles_download
+          inputs:
+            secureFile: '$(OnelakeRolesFileName)'
+
+        - task: DownloadSecureFile@1
+          displayName: 'Download the onelake rules secure file'
+          name: onelake_rules_download
+          inputs:
+            secureFile: '$(OnelakeRulesFileName)'
+
+        - task: DownloadSecureFile@1
+          displayName: 'Download the onelake entra members secure file'
+          name: onelake_entra_members_download
+          inputs:
+            secureFile: '$(OnelakeEntraMembersFileName)'
+
+        - task: DownloadSecureFile@1
+          displayName: 'Download the onelake item members secure file'
+          name: onelake_item_members_download
+          inputs:
+            secureFile: '$(OnelakeItemMembersFileName)'
+
+        - task: UsePythonVersion@0
+          displayName: 'Install python dependencies'
+          name: install_dependencies
+          inputs:
+            versionSpec: '3.9'
+            addToPath: true
+        - script: |
+            python -m pip install --upgrade pip
+            python -m pip install requests
+            python -m pip install pandas
+            python -m pip install argparse      
+            python -m pip install regex  
+
+        - task: PythonScript@0
+          displayName: "Run pre deployment steps - Lakehouses & Warehouses"
+          name: pre_deployment
+          inputs:
+            scriptSource: filePath
+            scriptPath: pipeline-scripts/pre_deployment.py
+            arguments: -oneLakeRolesFilePath "$(Agent.TempDirectory)/$(OnelakeRolesFileName)" -oneLakeRulesFilePath "$(Agent.TempDirectory)/$(OnelakeRulesFileName)" -oneLakeEntraMembersFilePath "$(Agent.TempDirectory)/$(OnelakeEntraMembersFileName)" -oneLakeItemMembersFilePath "$(Agent.TempDirectory)/$(OnelakeItemMembersFileName)"
+          env:
+            cicdWorkspaceId : '$(CiCdWorkspaceId)'
+            sourceWorkspaceId : '$(Stage1WorkspaceId)'
+            targetWorkspaceId : '$(Stage2WorkspaceId)'
+            fabricToken : $(fabricToken)
+            sqlToken : $(sqlToken)
+            projectName : $(ProjectName)
+            featureBranch : "NA"
+
+        - task: PythonScript@0
+          displayName: "Git process to deploy artifacts to workspace"
+          name: "git_update"
+          inputs:
+            scriptSource: filePath
+            scriptPath: pipeline-scripts/git_update.py 
+          env:
+            token : '$(fabricToken)'
+            targetWorspaceId: '$(Stage2WorkspaceId)'     
+            organizationName: '$(OrganizationName)'   
+            projectName: '$(ProjectName)'   
+            repositoryName: '$(RepositoryName)'  
+            brancheName : '$(Stage2BrancheName)'  
+            initializationStrategy: '$(InitializationStrategy)'
+            conflictResolutionPolicy: '$(ConflictResolutionPolicy)'
+            disconnectGit: "yes"
+
+        - task: PythonScript@0
+          displayName: "Run post deployment steps - Notebooks & Data Pipelines & Semantic Models/Reports"
+          name: post_deployment
+          inputs:
+            scriptSource: filePath
+            scriptPath: pipeline-scripts/post_deployment.py
+            arguments: -mappingConnectionsFilePath "$(Agent.TempDirectory)/$(MappingConnectionsFileName)" 
+          env:
+            cicdWorkspaceId : '$(CiCdWorkspaceId)'
+            sourceWorkspaceId : '$(Stage1WorkspaceId)'
+            targetWorkspaceId : '$(Stage2WorkspaceId)'
+            fabricToken : $(fabricToken)
+            sqlToken : $(sqlToken)
+            targetStage : "Stage2"
+            projectName : $(ProjectName)
+            featureBranch : "NA"
+            
+  - stage: stage3
+    displayName: 'Stage 3 - Deployment to PROD'
+    dependsOn: 
+    - stage1
+
+    jobs:
+
+    - job: deployment
+      displayName: 'Deployment'
+      variables:
+        fabricToken: $[ stageDependencies.stage1.interactive_login.outputs['get_access_token_fabric_api.FABRIC_BEARER_TOKEN'] ]
+        sqlToken: $[ stageDependencies.stage1.interactive_login.outputs['get_access_token_sql_server.SQL_BEARER_TOKEN'] ]
+
+      steps:
+      
+        - task: DownloadSecureFile@1
+          displayName: 'Download the mapping connections secure file'
+          name: mapping_connections_download
+          inputs:
+            secureFile: '$(MappingConnectionsFileName)'
+                  
+        - task: DownloadSecureFile@1
+          displayName: 'Download the onelake roles secure file'
+          name: onelake_roles_download
+          inputs:
+            secureFile: '$(OnelakeRolesFileName)'
+
+        - task: DownloadSecureFile@1
+          displayName: 'Download the onelake rules secure file'
+          name: onelake_rules_download
+          inputs:
+            secureFile: '$(OnelakeRulesFileName)'
+
+        - task: DownloadSecureFile@1
+          displayName: 'Download the onelake entra members secure file'
+          name: onelake_entra_members_download
+          inputs:
+            secureFile: '$(OnelakeEntraMembersFileName)'
+
+        - task: DownloadSecureFile@1
+          displayName: 'Download the onelake item members secure file'
+          name: onelake_item_members_download
+          inputs:
+            secureFile: '$(OnelakeItemMembersFileName)'
+
+        - task: UsePythonVersion@0
+          displayName: 'Install python dependencies'
+          name: install_dependencies
+          inputs:
+            versionSpec: '3.9'
+            addToPath: true
+        - script: |
+            python -m pip install --upgrade pip
+            python -m pip install requests
+            python -m pip install pandas
+            python -m pip install argparse      
+            python -m pip install regex  
+
+        - task: PythonScript@0
+          displayName: "Run pre deployment steps - Lakehouses & Warehouses"
+          name: pre_deployment
+          inputs:
+            scriptSource: filePath
+            scriptPath: pipeline-scripts/pre_deployment.py
+            arguments: -oneLakeRolesFilePath "$(Agent.TempDirectory)/$(OnelakeRolesFileName)" -oneLakeRulesFilePath "$(Agent.TempDirectory)/$(OnelakeRulesFileName)" -oneLakeEntraMembersFilePath "$(Agent.TempDirectory)/$(OnelakeEntraMembersFileName)" -oneLakeItemMembersFilePath "$(Agent.TempDirectory)/$(OnelakeItemMembersFileName)"
+          env:
+            cicdWorkspaceId : '$(CiCdWorkspaceId)'
+            sourceWorkspaceId : '$(Stage2WorkspaceId)'
+            targetWorkspaceId : '$(Stage3WorkspaceId)'
+            fabricToken : $(fabricToken)
+            sqlToken : $(sqlToken)
+            projectName : $(ProjectName)
+            featureBranch : "NA"
+
+        - task: PythonScript@0
+          displayName: "Git process to deploy artifacts to workspace"
+          name: "git_update"
+          inputs:
+            scriptSource: filePath
+            scriptPath: pipeline-scripts/git_update.py 
+          env:
+            token : '$(fabricToken)'
+            targetWorspaceId: '$(Stage3WorkspaceId)'     
+            organizationName: '$(OrganizationName)'   
+            projectName: '$(ProjectName)'   
+            repositoryName: '$(RepositoryName)'  
+            brancheName : '$(Stage3BrancheName)'  
+            initializationStrategy: '$(InitializationStrategy)'
+            conflictResolutionPolicy: '$(ConflictResolutionPolicy)'
+            disconnectGit: "yes"
+            
+        - task: PythonScript@0
+          displayName: "Run post deployment steps - Notebooks & Data Pipelines & Semantic Models/Reports"
+          name: post_deployment
+          inputs:
+            scriptSource: filePath
+            scriptPath: pipeline-scripts/post_deployment.py
+            arguments: -mappingConnectionsFilePath "$(Agent.TempDirectory)/$(MappingConnectionsFileName)" 
+          env:
+            cicdWorkspaceId : '$(CiCdWorkspaceId)'
+            sourceWorkspaceId : '$(Stage2WorkspaceId)'
+            targetWorkspaceId : '$(Stage3WorkspaceId)'
+            fabricToken : $(fabricToken)
+            sqlToken : $(sqlToken)
+            targetStage : "Stage3"
+            projectName : $(ProjectName)
+            featureBranch : "NA"
+            
+            
+            
