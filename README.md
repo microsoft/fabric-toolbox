@@ -12,15 +12,16 @@ These assets should be treated as examples that you can use to create the soluti
 - $${\color{green}NEW!}$$ [Workspace Monitoring Report Templates](./monitoring/workspace-monitoring-dashboards)
 
 ## Accelerators
-- $${\color{green}NEW!}$$ [CICD: Deploy using Fabric deployment pipelines](./accelerators/CICD/Deploy-using-Fabric-deployment-pipelines)
-- $${\color{green}NEW!}$$ [CICD: Branch out to new workspace](./accelerators/CICD/Branch-out-to-new-workspace)
+- $${\color{green}NEW!}$$ [CICD: Git-Based Deployments](./accelerators/CICD/Git-based-deployments)
+- [CICD: Deploy using Fabric deployment pipelines](./accelerators/CICD/Deploy-using-Fabric-deployment-pipelines)
+- [CICD: Branch out to new workspace](./accelerators/CICD/Branch-out-to-new-workspace)
 - [Data Warehouse Backup and Recovery](./accelerators/data-warehouse-backup-and-recovery)
 - [Power BI datamart to Fabric Data Warehouse Modernization](./accelerators/power-bi-to-fabric-data-warehouse-modernization)
 - [Real Time Intelligence Eventhouse](./accelerators/real-time-intelligence_eventhouse)
 - [Real Time Intelligence Eventstream](./accelerators/real-time-intelligence_eventstream)
 
 ## Samples
-- $${\color{green}NEW!}$$ [Open Mirroring](./samples/open-mirroring)
+- [Open Mirroring](./samples/open-mirroring)
 - [Advanced Data Pipeline Scheduleing Specific_Day](./samples/Advanced_Data_Pipeline_Scheduleing_Specific_Day)
 - [Polling Storage Event Trigger](./samples/polling-storage-even-trigger)
 - [Notebook: Refresh tables in SQL Endpoint](./samples/notebook-refresh-tables-in-sql-endpoint)
@@ -37,7 +38,9 @@ These assets should be treated as examples that you can use to create the soluti
 - [DW SP Kill Queries](./scripts/dw-sp-kill-queries)
 
 ## Tools
-- $${\color{green}NEW!}$$ [Copy Warehouse](./tools/copy-warehouse)
+- $${\color{green}NEW!}$$ [Gen2 Dedicated Pool to Fabric DW Table Copy](./tools/Gen2toFabricDW)
+- $${\color{green}NEW!}$$ [Semantic Model Audit](./tools/SemanticModelAudit)
+- [Copy Warehouse](./tools/copy-warehouse)
 - [TPCH Benchmarking](./tools/tpch-benchmarking)
 - $${\color{green}NEW!}$$ [DAX Performance Testing](./tools/DAXPerformanceTesting)
 - $${\color{green}NEW!}$$ [MicrosoftFabricMgmt](./tools/MicrosoftFabricMgmt)
