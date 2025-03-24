@@ -88,7 +88,12 @@ We recommend to create a new Capacity Metrics App -> workspace in your tenant
 - Navigate to the Capacity Metrics App's Workspace
 - Attach this workspace to a P or F capacity
 - Change the name to 'FUAM Capacity Metrics'
-- Copy the Name of the workspace: FUAM Capacity Metrics' and the name of the semantic model 'Fabric Capacity Metrics'
+- Copy the Name of the workspace: FUAM Capacity Metrics' and the name of the semantic model 'Fabric Capacity Metrics'.
+
+The Capacity metrics workspace name will be set later as a value of the 'metrics_workspace' parameter in the 'Load_FUAM_Data_E2E' Pipeline.
+
+The capacity metrics semantic model name will be set lates as a value of the 'metrics_dataset' parameter in the 'Load_FUAM_Data_E2E' Pipeline.
+
 
 
 ## 6. Run orchestration Pipeline
@@ -106,15 +111,18 @@ The Pipeline has different parameters, which are controlling the data load flow:
 |----------------|-------------------------------|-----------------------------|
 |has_tenant_domains|If **true**, the tenant inventory is enriched with domain information. Use it only, if domains are in use at your tenant. **Default is false**        | true or false            |
 |extract_powerbi_artifacts_only|If **true**, the tenant inventory contains **only** semantic models, dataflows, datamarts, reports, dashboard and apps. If **false** the pipeline extracts Power BI **and** Fabric items. Currently, first-party workloads are supported only. **Default is false** | true or false |
+|metric_days_in_scope|Defines how many days should be extracted from the capacity metrics app. A maximum of 14 days can be extracted. For an initial load you can set it to the maximum and in subsequent runs reduce it to 2 days|range between **1** and **14**|
+|metric_workspace|This is the name of the workspace where the capacity metrics app was deployed|string|
+|metric_dataset|This is the name of the semantic model of the capacity metrics app |string|
 |activity_days_in_scope|It defines how many days in the past the activity must be retrieved from the API. Recommended to **use 30 for the initial load** and change the value to **2 for daily load**.| range between **1** and **30** |
 |display_data|If **true**, the notebooks will display more information about each relevant step at runtime. This is useful for debugging. **Default is false**| true or false |
 |optional_keyvault_name|**Optional**: If you have configured a key vault, enter the name of the key vault. Otherwise, simply leave this field blank. In this case, the Load_Inventory module will use the Notebook owner's identity.| empty or string|
-|optional_keyvault_sp_tenantId_secret_name|**Optional**: If you have configured a key vault and its secretes, enter the name of the tenantId secret name. Otherwise, simply leave this field blank. In this case, the Load_Inventory module will use the Notebook owner's identity.|empty or string|
-|optional_keyvault_sp_clientId_secret_name|**Optional**: If you have configured a key vault and its secretes, enter the name of the clientId secret name. Otherwise, simply leave this field blank. In this case, the Load_Inventory module will use the Notebook owner's identity.|empty or string|
-|optional_keyvault_sp_secret_secret_name|**Optional**: If you have configured a key vault and its secretes, enter the name of the service principal's secret secret name. Otherwise, simply leave this field blank. In this case, the Load_Inventory module will use the Notebook owner's identity.|empty or string|
+|optional_keyvault_sp_ tenantId_secret_name|**Optional**: If you have configured a key vault and its secretes, enter the name of the tenantId secret name. Otherwise, simply leave this field blank. In this case, the Load_Inventory module will use the Notebook owner's identity.|empty or string|
+|optional_keyvault_sp_ clientId_secret_name|**Optional**: If you have configured a key vault and its secretes, enter the name of the clientId secret name. Otherwise, simply leave this field blank. In this case, the Load_Inventory module will use the Notebook owner's identity.|empty or string|
+|optional_keyvault_sp_ secret_secret_name|**Optional**: If you have configured a key vault and its secretes, enter the name of the service principal's secret secret name. Otherwise, simply leave this field blank. In this case, the Load_Inventory module will use the Notebook owner's identity.|empty or string|
 
 
-- Run the Pipeline once
+- Run the Pipeline once. This will initially load the data into FUAM_Lakehouse
 
     ![](/monitoring/fabric-unified-admin-monitoring/media/deployment/FUAM_basic_deployment_process_5_1.png)
 
@@ -155,14 +163,18 @@ The Pipeline has different parameters, which are controlling the data load flow:
 
 > **Error handling:** In case of errors like 'Visual can't be rendered', please check the 'Remark' section.
 
-## 7. Schedule Pipeline for daily load
+## 8. Schedule Pipeline for daily load
 
 - Navigate to your FUAM Workspace
 - Search for the item 'Load_Basic_Package_Sequentially_E2E'
 - Open the **Load_FUAM_Data_E2E** pipeline
+- (Recommended) Change the **metrics_days_in_scope** parameter value to **2**
+- (Recommended) Change the **activity_days_in_scope** parameter value to **2**
 - Click on **Run** -> **Schedule**
 - Configure the schedule
    ![](/monitoring/fabric-unified-admin-monitoring/media/deployment/FUAM_basic_deployment_process_8_1.png)
+
+With that you have configured the main orchestration pipeline, which will be executed every day. The new parameter values act like an 'incremental' load. The capacity metrics and activity logs will be fetched only for the last two days and populated in the Lakehouse table.
 
 ---------------
 
@@ -197,4 +209,3 @@ You have deployed and configured FUAM.
 
 # Other helpful resources
 - [Watch 'Introduction to FUAM Basic'](https://www.youtube.com/watch?v=Ai71Xzr_2Ds)
-
