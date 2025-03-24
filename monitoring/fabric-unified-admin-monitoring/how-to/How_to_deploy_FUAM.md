@@ -3,7 +3,7 @@
 The deployment of FUAM can be done with very little effort, since we tried to automize as much as possible. FUAM will be deployed on your tenant in a workspace.
 
 
-![FUAM deployment process overview](/media/deployment/deploy_fuam_process_cover.png)
+![FUAM deployment process overview](/monitoring/fabric-unified-admin-monitoring/media/deployment/deploy_fuam_process_cover.png)
 
 
 ## Important to know
@@ -45,18 +45,18 @@ The deployment of FUAM can be done with very little effort, since we tried to au
 ### 2.2 Create a Workspace
 
 - Create a new workspace "FUAM" (name can be changed), which is backed by a P or F-capacity
-- Download the [Workspace logo](/media/deployment/icon_FUAM_workspace.png) 
+- Download the [Workspace logo](/monitoring/fabric-unified-admin-monitoring/media/deployment/icon_FUAM_workspace.png) 
 - Add the logo to FUAM workspace
 
 ## 3. Import and Run Notebook
 
 - Import the recently downloaded **Deploy_FUAM_to_your_workspace.ipynb** Notebook into your FUAM workspace
 
-    ![](/media/deployment/FUAM_basic_deployment_process_3_1.png)
+    ![](/monitoring/fabric-unified-admin-monitoring/media/deployment/FUAM_basic_deployment_process_3_1.png)
 
 - Run the Notebook
 
-    ![](/media/deployment/FUAM_basic_deployment_process_3_2.png)
+    ![](/monitoring/fabric-unified-admin-monitoring/media/deployment/FUAM_basic_deployment_process_3_2.png)
 
 > **Info:** The notebook will **automatically create** two new cloud connections (without credentials):
 
@@ -75,7 +75,7 @@ The deployment of FUAM can be done with very little effort, since we tried to au
 - Navigate under Settings to 'Manage connections and gateways' in Fabric
 - Set the credentials of the connections with the recently created service principal information:
 
-     ![](/media/deployment/FUAM_basic_deployment_process_4_1.png)
+     ![](/monitoring/fabric-unified-admin-monitoring/media/deployment/FUAM_basic_deployment_process_4_1.png)
 
 > **Info:** These connections are used in FUAM pipelines to retrieve data from REST APIs. If the credentials are incorrect or the secret has expired, the pipeline will fail.
 
@@ -116,7 +116,7 @@ The Pipeline has different parameters, which are controlling the data load flow:
 
 - Run the Pipeline once
 
-    ![](/media/deployment/FUAM_basic_deployment_process_5_1.png)
+    ![](/monitoring/fabric-unified-admin-monitoring/media/deployment/FUAM_basic_deployment_process_5_1.png)
 
 > **Error handling:**
 
@@ -150,7 +150,7 @@ The Pipeline has different parameters, which are controlling the data load flow:
 - Search for the item 'FUAM_Basic_Overview_Report'
 - Open the **FUAM_Core_Report** Power BI report
 - Feel free to explore the report pages
-   ![](/media/deployment/FUAM_basic_deployment_process_7_3.png)
+   ![](/monitoring/fabric-unified-admin-monitoring/media/deployment/FUAM_basic_deployment_process_7_3.png)
 
 
 > **Error handling:** In case of errors like 'Visual can't be rendered', please check the 'Remark' section.
@@ -162,7 +162,7 @@ The Pipeline has different parameters, which are controlling the data load flow:
 - Open the **Load_FUAM_Data_E2E** pipeline
 - Click on **Run** -> **Schedule**
 - Configure the schedule
-   ![](/media/deployment/FUAM_basic_deployment_process_8_1.png)
+   ![](/monitoring/fabric-unified-admin-monitoring/media/deployment/FUAM_basic_deployment_process_8_1.png)
 
 ---------------
 
@@ -195,8 +195,6 @@ You have deployed and configured FUAM.
     - In case there are no regular scheduled refreshes on the tenant, the execution for capacity refreshables can fail. This should be resolved by creating a scheduled refresh and running it multiple times
     - In case the are no delegated tenant settings set in one of the capacities, the extraction step will fail. You can remove this step if it is not needed in your tenant
 
-# Other helpful resource
-- [FUAM wiki](https://github.com/GT-Analytics/fuam-basic/wiki)
-- [Learn more about FUAM's architecture](https://github.com/GT-Analytics/fuam-basic/wiki/Architecture)
+# Other helpful resources
 - [Watch 'Introduction to FUAM Basic'](https://www.youtube.com/watch?v=Ai71Xzr_2Ds)
 
