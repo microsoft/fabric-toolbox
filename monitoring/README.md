@@ -14,4 +14,4 @@ There are different diagnostic/monitoring tools out there. Here is a (not exhaus
 |**Fabric Unified Admin Monitoring (FUAM)** |✅|✅| ◐ (for topN semantic models only)|✅|◐ (partly - with engine specific reports)|**primary tenant** level -> capacity -> domain -> workspace -> item/engine level|
 |**Workspace Monitoring Report templates**|◐ (partly, extracted from trace logs)|❌|✅|◐ (raw CPU & memory)|◐ (partly, extracted from trace logs)|**workspace** level (one per connection) -> **item/engine** level (for supported items)|
 |**Semantic Model Audit**|◐ (partly, extracted from trace logs)|❌|✅|◐ (raw CPU & memory|✅|**workspace** level (one per connection) -> **item/engine** level (for semantic models)|
-|**Engine specific reports within FUAM**|❌|❌| ◐ (for topN semantic models only)|❌|✅|**item** level for semantic models/SQL endpoints (one per connection)|
+|**Engine specific reports within FUAM**|❌|❌|❌|❌|✅|**item** level for semantic models/SQL endpoints (one per connection)|
