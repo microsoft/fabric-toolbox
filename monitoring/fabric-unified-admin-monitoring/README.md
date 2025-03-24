@@ -53,7 +53,7 @@ The data ingestion logic is orchastrated and parametizable, which allows to use 
 
 Are you ready to try FUAM out? We have prepared two step-by-step documentations, which support you to deploy FUAM in your workspace on your tenant:
 
-#### [Click here to **deploy/upgrade** FUAM](./how-to/How_to_deploy_FUAM.md_to/)
+#### [Click here to **deploy/upgrade** FUAM](https://github.com/microsoft/fabric-toolbox/blob/FUAM/monitoring/fabric-unified-admin-monitoring/how-to/How_to_deploy_FUAM.md)
 
 
 ## Support
