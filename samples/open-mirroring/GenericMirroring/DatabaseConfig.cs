@@ -47,15 +47,15 @@ namespace SQLMirroring
         public string DeltaVersion { get; set; }
 
         public string SoftDelete { get; set; }
-        
+
     }
 
     public class Gen2TableConfig : TableConfig
     {
         public string ChangeCaptureMethod { get; set; } // 1 = high watermark
-        
+
         public string highhwaterMark { get; set; }
-        public string highwaterMarkColumn { get; set; } 
+        public string highwaterMarkColumn { get; set; }
 
     }
 
@@ -72,18 +72,19 @@ namespace SQLMirroring
         public AccessConfig AccessMirroringConfig { get; set; }
 
         public CSVConfig CSVMirroringConfig { get; set; }
-        
+
         public Gen2Config Gen2MirroringConfig { get; set; }
 
-        public SharepointConfig SharepointMirroringConfig { get; set; }     
+        public SharepointConfig SharepointMirroringConfig { get; set; }
 
+        public FalseMirrorDB FalseMirroredDB { get; set; }
         public Root()
         {
             uploadDetails = new List<UploadDetails>();
         }
     }
 
-    public  class UploadDetails
+    public class UploadDetails
     {
         public string SPN_Application_ID { get; set; }
         public string SPN_Secret { get; set; }
@@ -91,6 +92,15 @@ namespace SQLMirroring
         public string LandingZone { get; set; }
 
         public string PathtoAZCopy { get; set; }
+
+        public string UploadMethod { get; set; }
+        public string Enabled { get; set; }
+        public string WorkspaceName { get; set; }
+        public string LakehouseName { get; set; }
+
+        public string URI { get; set; }
+        public string Path { get; set; }
+
     }
 
     public class ExcelConfig
@@ -129,7 +139,7 @@ namespace SQLMirroring
     public class SharepointConfig
     {
         public string Enabled { get; set; }
-        public string Sharepoint_TenantID {  get; set; }
+        public string Sharepoint_TenantID { get; set; }
         public string Sharepoint_ClientID { get; set; }
         public string Sharepoint_Secret { get; set; }
 
@@ -154,6 +164,19 @@ namespace SQLMirroring
 
         public string Schema { get; set; }
         public string Table { get; set; }
+    }
+
+
+    public class FalseMirrorDB
+    {
+        public string Enabled { get; set; }
+        public string ConnectionString { get; set; }
+        public string ServerName { get; set; }
+        public string DatabaseName { get; set; }
+        public string Authenication { get; set; }
+        public string SPN_Application_ID { get; set; }
+        public string SPN_Secret { get; set; }
+        public string SPN_Tenant { get; set; }
     }
 
 }

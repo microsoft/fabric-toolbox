@@ -10,25 +10,26 @@ using System.Data;
 
 namespace SQLMirroring
 {
-    static public class helper { 
-    static public Root ReadConfig(string filePath)
+    static public class helper
     {
-        try
+        static public Root ReadConfig(string filePath)
         {
-            string json = File.ReadAllText(filePath);
-            return JsonSerializer.Deserialize<Root>(json);
-        }
-        catch (Exception ex)
-        {
+            try
+            {
+                string json = File.ReadAllText(filePath);
+                return JsonSerializer.Deserialize<Root>(json);
+            }
+            catch (Exception ex)
+            {
                 Logging.Log($"Error reading configuration file: {ex.Message}");
-            return null;
+                return null;
+            }
         }
-    }
 
         static public void SaveData<T>(T data, string filePath)
         {
-            lock(data)
-            { 
+            lock (data)
+            {
                 try
                 {
                     string json = JsonSerializer.Serialize(data, new JsonSerializerOptions { WriteIndented = true });
@@ -60,8 +61,8 @@ namespace SQLMirroring
                 return default;
             }
         }
-    
-    
+
+
         static public string UpdateString(string orginalString, string d)
         {
             return orginalString.Replace("{d}", d);
@@ -207,5 +208,19 @@ namespace SQLMirroring
 
         }
 
+
+        static public Boolean IsEnabled(string? value)
+        {
+            Boolean rt = false;
+            if (value != null)
+            {
+                if (value == "1" || value.ToLower() == "true" || value.ToLower() == "yes" || value.ToLower() == "enabled")
+                {
+                    rt = true;
+                }
+            }
+
+            return rt;
+        }
     }
 }
