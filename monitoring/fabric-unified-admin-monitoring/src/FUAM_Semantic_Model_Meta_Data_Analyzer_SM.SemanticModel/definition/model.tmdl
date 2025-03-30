@@ -1,0 +1,94 @@
+model Model
+	culture: en-US
+	defaultPowerBIDataSourceVersion: powerBI_V3
+	sourceQueryCulture: en-US
+	dataAccessOptions
+		legacyRedirects
+		returnErrorValuesAsNull
+
+queryGroup 'START HERE'
+
+	annotation PBI_QueryGroupOrder = 0
+
+queryGroup 'Meta Data'
+
+	annotation PBI_QueryGroupOrder = 1
+
+queryGroup Discover
+
+	annotation PBI_QueryGroupOrder = 3
+
+queryGroup 'DB Schema'
+
+	annotation PBI_QueryGroupOrder = 3
+
+annotation PBI_QueryOrder = ["Tables TM","serverURL","Get Model Name","modelName","Model TM","Columns TM","Measures TM","Data Sources TM","Partitions TM","Partitions Storages TM","Segment Map Storages TM","Relationships TM","Expressions TM","Query Groups TM","KPIs TM","Calc Dependencies","Data Source ImpersonationMode ENUM","Data Source Type ENUM","Data Source Isolation ENUM","DataType ENUM","State ENUM","Column Alignment ENUM","Column SummarizeBy ENUM","Column Type ENUM","Column EncodingHint ENUM","Partition Type ENUM","Partition Mode ENUM","CrossFilteringBehavior ENUM","Cardinality ENUM","JoinOnDateBehavior ENUM","SecurityFilteringBehavior ENUM","Relationship Type ENUM","From Tables TM","To Tables TM","From Columns TM","To Columns TM","Object Type Names","Storage Folders TM","Storage Files TM","Segment Storages TM","Column Partition Storages TM","Dictionary Storages TM","Column Storages TM","Storage Table Columns TM","Storage Table Column Segments TM","Units","Catalog DBSCHEMA","TMMDA Refresh META"]
+
+annotation __PBI_TimeIntelligenceEnabled = 0
+
+annotation PBIDesktopVersion = 2.141.833.0 (25.03)+cdc444a951f7d3dd724d8de5dd58efd34e693cba
+
+annotation __TEdtr = 1
+
+annotation __PBIService_Versioning_SaveVersion = c6f787f8-0dec-4b20-a66a-ae5a5043f2c5
+
+annotation PBI_ProTooling = ["WebModelingEdit"]
+
+ref table 'Tables TM'
+ref table 'Model TM'
+ref table 'Columns TM'
+ref table 'Measures TM'
+ref table 'Data Sources TM'
+ref table 'Partitions TM'
+ref table 'Relationships TM'
+ref table 'Expressions TM'
+ref table Insights
+ref table 'KPIs TM'
+ref table 'Calc Dependencies'
+ref table modelName
+ref table 'Data Source ImpersonationMode ENUM'
+ref table 'DataType ENUM'
+ref table 'State ENUM'
+ref table 'Column Alignment ENUM'
+ref table 'Column SummarizeBy ENUM'
+ref table 'Column Type ENUM'
+ref table 'Column EncodingHint ENUM'
+ref table 'Partition Type ENUM'
+ref table 'Partition Mode ENUM'
+ref table 'CrossFilteringBehavior ENUM'
+ref table 'Cardinality ENUM'
+ref table 'JoinOnDateBehavior ENUM'
+ref table 'SecurityFilteringBehavior ENUM'
+ref table 'Relationship Type ENUM'
+ref table 'From Tables TM'
+ref table 'To Tables TM'
+ref table 'From Columns TM'
+ref table 'To Columns TM'
+ref table 'Data Source Type ENUM'
+ref table 'Data Source Isolation ENUM'
+ref table 'Object Type Names'
+ref table 'Segment Map Storages TM'
+ref table 'Storage Folders TM'
+ref table 'Storage Files TM'
+ref table 'Segment Storages TM'
+ref table 'Column Partition Storages TM'
+ref table 'Dictionary Storages TM'
+ref table 'Column Storages TM'
+ref table 'Storage Table Columns TM'
+ref table 'Storage Table Column Segments TM'
+ref table 'Column Encoding ENUM'
+ref table 'Partitions Storages TM'
+ref table Units
+ref table 'State Column ENUM'
+ref table 'Catalog DBSCHEMA'
+ref table 'To Table Statistic'
+ref table 'From Table Statistic'
+ref table 'Storage Table Segments TM'
+ref table 'Query Groups TM'
+ref table 'Queries PQ'
+ref table 'Simulation Series'
+ref table 'Partition Simulation Helper'
+ref table 'TMMDA Refresh META'
+
+ref cultureInfo en-US
+

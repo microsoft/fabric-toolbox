@@ -1,0 +1,40 @@
+table 'JoinOnDateBehavior ENUM'
+	lineageTag: b4a1cbda-1005-4f9f-bb1a-7ee5d54491bc
+
+	column Enum
+		dataType: int64
+		formatString: 0
+		lineageTag: 445c7f79-a9f1-4a19-8b2f-dd3d6e46b552
+		summarizeBy: none
+		sourceColumn: Enum
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'JoinOnDateBehavior Name'
+		dataType: string
+		lineageTag: 5315c01d-ed1f-427a-83ab-f0234e05413e
+		summarizeBy: none
+		sourceColumn: JoinOnDateBehavior Name
+
+		annotation SummarizationSetBy = Automatic
+
+	column Description
+		dataType: string
+		lineageTag: 13e6781d-6793-470a-87bd-faf2f4c48847
+		summarizeBy: none
+		sourceColumn: Description
+
+		annotation SummarizationSetBy = Automatic
+
+	partition 'JoinOnDateBehavior ENUM' = m
+		mode: import
+		source =
+				let
+				    Source = Table.FromRows(Json.Document(Binary.Decompress(Binary.FromText("i45WMlTSUXJJLEl1zEsJycxNBfLCM1LzFLLyM/My89IVSsrzFVKA0golQEmF5Pyc0ty8Yh2wtEJ+HkQqMS8FIl2QWFRSrKcUqxOtZAQ1NgAo5J+XU0mOuSDjgJycSqCRsQA=", BinaryEncoding.Base64), Compression.Deflate)), let _t = ((type nullable text) meta [Serialized.Text = true]) in type table [Enum = _t, Name = _t, Description = _t]),
+				    #"Changed Type" = Table.TransformColumnTypes(Source,{{"Enum", Int64.Type}, {"Name", type text}, {"Description", type text}}),
+				    #"Renamed Columns" = Table.RenameColumns(#"Changed Type",{{"Name", "JoinOnDateBehavior Name"}})
+				in
+				    #"Renamed Columns"
+
+	annotation PBI_ResultType = Table
+

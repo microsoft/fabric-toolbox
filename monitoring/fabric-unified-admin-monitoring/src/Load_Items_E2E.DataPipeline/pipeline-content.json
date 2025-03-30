@@ -1,0 +1,167 @@
+{
+    "properties": {
+        "activities": [
+            {
+                "name": "01_Transfer_Active_Items_Unit",
+                "type": "TridentNotebook",
+                "dependsOn": [
+                    {
+                        "activity": "Get Items",
+                        "dependencyConditions": [
+                            "Succeeded"
+                        ]
+                    }
+                ],
+                "policy": {
+                    "timeout": "0.12:00:00",
+                    "retry": 0,
+                    "retryIntervalInSeconds": 30,
+                    "secureOutput": false,
+                    "secureInput": false
+                },
+                "typeProperties": {
+                    "notebookId": "d587f38d-ef29-54e5-ab85-2703576c8db9",
+                    "workspaceId": "eb764c8b-cf3b-55be-adf4-348fe9233657",
+                    "parameters": {
+                        "display_data": {
+                            "value": {
+                                "value": "@pipeline().parameters.display_data",
+                                "type": "Expression"
+                            },
+                            "type": "bool"
+                        }
+                    },
+                    "sessionTag": "fuam"
+                }
+            },
+            {
+                "name": "Get Items",
+                "type": "Copy",
+                "dependsOn": [
+                    {
+                        "activity": "Delete files",
+                        "dependencyConditions": [
+                            "Succeeded"
+                        ]
+                    }
+                ],
+                "policy": {
+                    "timeout": "0.12:00:00",
+                    "retry": 0,
+                    "retryIntervalInSeconds": 30,
+                    "secureOutput": false,
+                    "secureInput": false
+                },
+                "typeProperties": {
+                    "source": {
+                        "type": "RestSource",
+                        "httpRequestTimeout": "00:01:40",
+                        "requestInterval": "00.00:00:10.000",
+                        "requestMethod": "GET",
+                        "paginationRules": {
+                            "AbsoluteUrl": {
+                                "value": "@string('$.continuationUri')",
+                                "type": "Expression"
+                            }
+                        },
+                        "datasetSettings": {
+                            "annotations": [],
+                            "type": "RestResource",
+                            "typeProperties": {
+                                "relativeUrl": "items"
+                            },
+                            "schema": [],
+                            "externalReferences": {
+                                "connection": "ea79859d-a1fb-5a17-a815-da0602762a8a"
+                            }
+                        }
+                    },
+                    "sink": {
+                        "type": "JsonSink",
+                        "storeSettings": {
+                            "type": "LakehouseWriteSettings",
+                            "copyBehavior": "FlattenHierarchy"
+                        },
+                        "formatSettings": {
+                            "type": "JsonWriteSettings",
+                            "filePattern": "arrayOfObjects"
+                        },
+                        "datasetSettings": {
+                            "annotations": [],
+                            "linkedService": {
+                                "name": "FUAM_Lakehouse",
+                                "properties": {
+                                    "annotations": [],
+                                    "type": "Lakehouse",
+                                    "typeProperties": {
+                                        "workspaceId": "eb764c8b-cf3b-55be-adf4-348fe9233657",
+                                        "artifactId": "729eb8a2-8070-5ed8-ad43-dccbc00b32af",
+                                        "rootFolder": "Files"
+                                    }
+                                }
+                            },
+                            "type": "Json",
+                            "typeProperties": {
+                                "location": {
+                                    "type": "LakehouseLocation",
+                                    "fileName": "active_items.json",
+                                    "folderPath": "raw/active_items"
+                                }
+                            },
+                            "schema": {}
+                        }
+                    },
+                    "enableStaging": false
+                }
+            },
+            {
+                "name": "Delete files",
+                "type": "Delete",
+                "dependsOn": [],
+                "policy": {
+                    "timeout": "0.12:00:00",
+                    "retry": 0,
+                    "retryIntervalInSeconds": 30,
+                    "secureOutput": false,
+                    "secureInput": false
+                },
+                "typeProperties": {
+                    "datasetSettings": {
+                        "annotations": [],
+                        "linkedService": {
+                            "name": "FUAM_Lakehouse",
+                            "properties": {
+                                "annotations": [],
+                                "type": "Lakehouse",
+                                "typeProperties": {
+                                    "workspaceId": "eb764c8b-cf3b-55be-adf4-348fe9233657",
+                                    "artifactId": "729eb8a2-8070-5ed8-ad43-dccbc00b32af",
+                                    "rootFolder": "Files"
+                                }
+                            }
+                        },
+                        "type": "Binary",
+                        "typeProperties": {
+                            "location": {
+                                "type": "LakehouseLocation",
+                                "folderPath": "raw/active_items"
+                            }
+                        }
+                    },
+                    "enableLogging": false,
+                    "storeSettings": {
+                        "type": "LakehouseReadSettings",
+                        "recursive": true,
+                        "enablePartitionDiscovery": false
+                    }
+                }
+            }
+        ],
+        "parameters": {
+            "display_data": {
+                "type": "bool",
+                "defaultValue": false
+            }
+        }
+    }
+}

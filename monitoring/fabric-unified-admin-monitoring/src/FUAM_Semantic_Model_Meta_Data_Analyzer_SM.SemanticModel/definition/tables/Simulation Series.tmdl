@@ -1,0 +1,27 @@
+table 'Simulation Series'
+	lineageTag: bc2914dc-e53a-49d8-831e-83785579ab62
+
+	measure 'Simulation Series Parameter Value' = SELECTEDVALUE('Simulation Series'[Simulation Series Parameter], 4)
+		formatString: 0
+		lineageTag: 77d2967f-eac0-4448-9104-c9aca3c7ed64
+
+	column 'Simulation Series Parameter'
+		isHidden
+		formatString: 0
+		lineageTag: 956ca023-d227-41f0-b46a-20c887d5283a
+		summarizeBy: none
+		sourceColumn: [Value]
+
+		extendedProperty ParameterMetadata =
+				{
+				  "version": 0
+				}
+
+		annotation SummarizationSetBy = User
+
+	partition 'Simulation Series' = calculated
+		mode: import
+		source = GENERATESERIES(1, 128, 1)
+
+	annotation PBI_Id = c8eb87f2a51e4b9ea7a4ad8f5e2c4a4f
+

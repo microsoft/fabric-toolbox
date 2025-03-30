@@ -1,0 +1,80 @@
+table 'Partitions Storages TM'
+	lineageTag: fe9143e9-5a51-48aa-aa74-ebd517a50a41
+
+	column ID
+		dataType: double
+		lineageTag: 7f3d8729-2cc5-443b-9d39-2acefea78a91
+		summarizeBy: none
+		sourceColumn: ID
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column PartitionID
+		dataType: double
+		lineageTag: 7d596cfb-eefa-412b-a0eb-7b04b9c6f31d
+		summarizeBy: none
+		sourceColumn: PartitionID
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column Name
+		dataType: string
+		lineageTag: 541828c4-7fb7-49da-8a98-27eb1c99220a
+		summarizeBy: none
+		sourceColumn: Name
+
+		annotation SummarizationSetBy = Automatic
+
+	column StoragePosition
+		dataType: int64
+		formatString: 0
+		lineageTag: b3aa01a9-eb09-4109-bf38-04631686ed0b
+		summarizeBy: sum
+		sourceColumn: StoragePosition
+
+		annotation SummarizationSetBy = Automatic
+
+	column SegmentMapStorageID
+		dataType: double
+		lineageTag: 7170e5d0-c210-4812-a4f7-013b1e55f314
+		summarizeBy: count
+		sourceColumn: SegmentMapStorageID
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column DataObjectId
+		dataType: int64
+		formatString: 0
+		lineageTag: e5257964-cec2-4840-902f-dd820546c08c
+		summarizeBy: count
+		sourceColumn: DataObjectId
+
+		annotation SummarizationSetBy = Automatic
+
+	column StorageFolderID
+		dataType: double
+		lineageTag: c5cc1a04-7a4f-4b19-a651-338ec661556d
+		summarizeBy: count
+		sourceColumn: StorageFolderID
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	partition 'Partitions Storages TM' = m
+		mode: import
+		queryGroup: 'Meta Data'
+		source =
+				let
+				    #"Partitions TM" = AnalysisServices.Database(serverURL, modelName, [Query="SELECT * FROM $System.TMSCHEMA_PARTITION_STORAGES", Implementation="2.0"])
+				in
+				    #"Partitions TM"
+
+	annotation PBI_ResultType = Table
+

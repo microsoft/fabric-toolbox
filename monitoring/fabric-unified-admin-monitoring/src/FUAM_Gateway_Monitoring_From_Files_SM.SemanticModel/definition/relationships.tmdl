@@ -1,0 +1,62 @@
+relationship f6e19d1f-841c-58c8-3502-6427e0c713bc
+	crossFilteringBehavior: bothDirections
+	fromColumn: QueryStartReport_EvaluationContext.RequestTrackingKey
+	toColumn: QueryStartReport.RequestTrackingKey
+
+relationship 922c4691-a018-0c24-10ff-a52a4afe60fa
+	crossFilteringBehavior: bothDirections
+	fromColumn: QueryStartReport_DataSources.RequestTrackingKey
+	toColumn: QueryStartReport.RequestTrackingKey
+
+relationship 3a86cea6-65d4-2c11-0eda-5521d1e0379f
+	crossFilteringBehavior: bothDirections
+	fromColumn: QueryStartReport_ApplicationContext.RequestTrackingKey
+	toColumn: QueryStartReport.RequestTrackingKey
+
+relationship a1ab3df0-86c6-7d31-fd86-19e3f26fbb75
+	crossFilteringBehavior: bothDirections
+	fromCardinality: one
+	fromColumn: QueryStartReport_QueryTexts.RequestTrackingKey
+	toColumn: QueryStartReport.RequestTrackingKey
+
+relationship 63644ea2-ff08-d6a6-fde5-e731bf5256fc
+	crossFilteringBehavior: bothDirections
+	fromColumn: QueryExecutionReport.RequestTrackingKey
+	toColumn: QueryStartReport.RequestTrackingKey
+
+relationship 70717623-8517-4ee2-1a87-ad19dc70c55a
+	crossFilteringBehavior: bothDirections
+	fromCardinality: one
+	fromColumn: QueryStartReport.RequestTrackingKey
+	toColumn: MashupEvaluationReport.RequestTrackingKey
+
+relationship 5ce9e153-db98-f79e-6b2e-7a62d82f0c0d
+	crossFilteringBehavior: bothDirections
+	fromColumn: QueryExecutionAggregationReport.AggregationEndDate
+	toColumn: 'Dim Date'.Date
+
+relationship 7bbdaf55-6702-e145-a92d-6c2e7994dcd9
+	fromColumn: QueryExecutionReport.QueryExecutionEndDate
+	toColumn: 'Dim Date'.Date
+
+relationship 848a7790-151a-4783-f745-d6198c0a08ea
+	fromColumn: SystemCounterAggregationReport.AggregationEndDate
+	toColumn: 'Dim Date'.Date
+
+relationship c1ccf5b0-b140-8086-d0f0-6ffdfd9b004b
+	isActive: false
+	fromColumn: MashupEvaluationReport.EndDate
+	toColumn: 'Dim Date'.Date
+
+relationship 5fb60fd2-4b46-2350-5939-99cf18819e05
+	crossFilteringBehavior: bothDirections
+	fromCardinality: one
+	fromColumn: QueryStartReport_EvaluationContext_Service_Mapping.RequestTrackingKey
+	toColumn: QueryStartReport.RequestTrackingKey
+
+relationship 91eb96d6-cc45-3f0e-f49b-3474e015c601
+	crossFilteringBehavior: bothDirections
+	fromCardinality: one
+	fromColumn: QueryStartReport.RequestTrackingKey
+	toColumn: QueryStartReport_EvaluationContext_HostConnectionTypes.RequestTrackingKey
+

@@ -1,0 +1,44 @@
+table 'State ENUM'
+	isHidden
+	lineageTag: e75e33c0-2aa1-48ad-9bf7-79326d1a5fcf
+
+	column Enum
+		dataType: int64
+		formatString: 0
+		lineageTag: 4aad706e-5d95-4e49-9a43-713f29b9b5e2
+		summarizeBy: none
+		sourceColumn: Enum
+
+		annotation SummarizationSetBy = Automatic
+
+	column State
+		dataType: string
+		lineageTag: e2626555-9bc7-495d-aa23-a09552159519
+		summarizeBy: none
+		sourceColumn: State
+		sortByColumn: Enum
+
+		changedProperty = SortByColumn
+
+		annotation SummarizationSetBy = Automatic
+
+	column Description
+		dataType: string
+		lineageTag: e0db4018-9896-4a3c-b32f-ae77eed96c45
+		summarizeBy: none
+		sourceColumn: Description
+
+		annotation SummarizationSetBy = Automatic
+
+	partition 'State ENUM' = m
+		mode: import
+		source =
+				let
+				    Source = Table.FromRows(Json.Document(Binary.Decompress(Binary.FromText("nVNLTxsxEP4roz1RKUSqCrScA4deOBRuWQ4Te9J15Yy3fiD23zNjJ6QkgAqXXdkz32tndrnsvnaz7hehneR9NxCE1R8yGVyCv4XihCtPgGxhwARlPM3h1GImkAd297Nl901wN+FKj28TrEquBBwqcF6RZwJYoDfFY3aBb4gs2SMSDvnACUtjgp5zgBVBpHWkNJCFkzygQmZyZ7a8ZL9A7TNhQ7AubFQKfXNwLmq3tEHOzlzHGOKRumORBNIapKzBhQpLkp61WJCa4wf0zgI9juIjCfsc3knQhC9E6FpwpSb/rHSr2RId//5HH+iZuVkxwZcN76z0fGDmu0hf0Uhsic30UTM9J/204snlBGY/T7A7TkcJMNIxSbPX80uDe3tSlrumh+PolSiwn3SkDZPax8hCk6eRYPE8dxCR/elO+RYVMu+5xv4hIX+K9Gb0lEk3QXOMGHMlzfv8Az7QbnVndQWb4tZ228fDbdRzHYx2KlLi7/K+8ou0UVyqjYkzPn5iJ1BnUcHbDunWmfz/Zt4/AQ==", BinaryEncoding.Base64), Compression.Deflate)), let _t = ((type nullable text) meta [Serialized.Text = true]) in type table [Enum = _t, Name = _t, Description = _t]),
+				    #"Changed Type" = Table.TransformColumnTypes(Source,{{"Enum", Int64.Type}, {"Name", type text}, {"Description", type text}}),
+				    #"Renamed Columns" = Table.RenameColumns(#"Changed Type",{{"Name", "State"}})
+				in
+				    #"Renamed Columns"
+
+	annotation PBI_ResultType = Table
+

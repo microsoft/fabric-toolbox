@@ -1,0 +1,127 @@
+table 'Expressions TM'
+	lineageTag: dd723bad-dc48-4292-9fc9-1fa289766d4a
+
+	column ID
+		dataType: double
+		lineageTag: 9e32f2cb-729f-4e31-a940-72dbeffbb607
+		summarizeBy: count
+		sourceColumn: ID
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column ModelID
+		dataType: double
+		lineageTag: deb5cd9d-cec3-4adc-be87-6c3416d9d717
+		summarizeBy: count
+		sourceColumn: ModelID
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column 'Expression Name'
+		dataType: string
+		lineageTag: 6399f943-1bea-46d3-8e2a-337c320b6196
+		summarizeBy: none
+		sourceColumn: Expression Name
+
+		annotation SummarizationSetBy = Automatic
+
+	column Description
+		dataType: string
+		lineageTag: 368a84a2-2cfa-42ec-9bfe-3a1a9c0e936e
+		summarizeBy: none
+		sourceColumn: Description
+
+		annotation SummarizationSetBy = Automatic
+
+	column Kind
+		dataType: int64
+		formatString: 0
+		lineageTag: 033f4790-a22f-4419-a717-4e1c3da535e7
+		summarizeBy: sum
+		sourceColumn: Kind
+
+		annotation SummarizationSetBy = Automatic
+
+	column Expression
+		dataType: string
+		lineageTag: a9d2acb7-0cde-453a-8527-23a2ca7732a7
+		summarizeBy: none
+		sourceColumn: Expression
+
+		annotation SummarizationSetBy = Automatic
+
+	column ModifiedTime
+		dataType: dateTime
+		formatString: General Date
+		lineageTag: 82b5c2cc-1d0c-4900-a792-9f02faec0fc0
+		summarizeBy: none
+		sourceColumn: ModifiedTime
+
+		annotation SummarizationSetBy = Automatic
+
+	column QueryGroupID
+		dataType: string
+		lineageTag: 5c67caea-8778-4dbc-8f4d-c43056899629
+		summarizeBy: none
+		sourceColumn: QueryGroupID
+
+		annotation SummarizationSetBy = Automatic
+
+	column ParameterValuesColumnID
+		dataType: double
+		lineageTag: 6019d63c-0f83-4f91-be7b-8ee01dc60430
+		summarizeBy: count
+		sourceColumn: ParameterValuesColumnID
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column MAttributes
+		dataType: string
+		lineageTag: f43abf5f-e0bf-45bd-864d-9d6e7477697d
+		summarizeBy: none
+		sourceColumn: MAttributes
+
+		annotation SummarizationSetBy = Automatic
+
+	column LineageTag
+		dataType: string
+		lineageTag: dba48ecf-d3ab-4401-ba3b-140fb05ba59c
+		summarizeBy: none
+		sourceColumn: LineageTag
+
+		annotation SummarizationSetBy = Automatic
+
+	column SourceLineageTag
+		dataType: string
+		lineageTag: f7967c44-8ffe-49a9-aa73-0941fb6501b8
+		summarizeBy: none
+		sourceColumn: SourceLineageTag
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Expression Type' = IF(CONTAINSSTRING('Expressions TM'[Expression], "IsParameterQuery"), "P", "E")
+		lineageTag: e41174cc-6d2f-445e-af98-e50472165c46
+		summarizeBy: none
+
+		annotation SummarizationSetBy = Automatic
+
+	partition 'Expressions TM' = m
+		mode: import
+		queryGroup: 'Meta Data'
+		source =
+				let
+				    Source = AnalysisServices.Database(serverURL, modelName, [Query="SELECT * FROM $System.TMSCHEMA_EXPRESSIONS", Implementation="2.0"]),
+				    #"Changed Type" = Table.TransformColumnTypes(Source,{{"QueryGroupID", type text}}),
+				    HasPowerBIDatasetConnection = Table.ReplaceValue(#"Changed Type",null, each if Text.Contains([Expression], "AnalysisServices.Database(""powerbi://") then "ePBIDTS" else "0",Replacer.ReplaceValue,{"QueryGroupID"}),
+				    #"Renamed Columns" = Table.RenameColumns(HasPowerBIDatasetConnection,{{"Name", "Expression Name"}})
+				    in
+				        #"Renamed Columns"
+
+	annotation PBI_ResultType = Table
+

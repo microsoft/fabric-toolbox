@@ -1,0 +1,257 @@
+table capacity_metrics_by_timepoint
+	lineageTag: 5c6050e1-6fe1-4dab-adce-bce128daa3f0
+	sourceLineageTag: [dbo].[capacity_metrics_by_timepoint]
+
+	column CapacityId
+		dataType: string
+		sourceProviderType: varchar(8000)
+		lineageTag: 7eb0f92e-cece-4b85-812e-5460018db22e
+		sourceLineageTag: CapacityId
+		summarizeBy: none
+		sourceColumn: CapacityId
+
+		annotation SummarizationSetBy = Automatic
+
+	column TimePoint
+		dataType: dateTime
+		formatString: General Date
+		sourceProviderType: datetime2
+		lineageTag: c15aa89e-2d4e-4e8c-924a-b10b456a18fa
+		sourceLineageTag: TimePoint
+		summarizeBy: none
+		sourceColumn: TimePoint
+
+		annotation SummarizationSetBy = Automatic
+
+	column BackgroundPercentage
+		dataType: double
+		sourceProviderType: float
+		lineageTag: 179a5c6b-fd06-473f-ba97-4cea321f9bd5
+		sourceLineageTag: BackgroundPercentage
+		summarizeBy: sum
+		sourceColumn: BackgroundPercentage
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column InteractivePercentage
+		dataType: double
+		sourceProviderType: float
+		lineageTag: feeeac6a-6dcc-4b68-8955-74808cb178c4
+		sourceLineageTag: InteractivePercentage
+		summarizeBy: sum
+		sourceColumn: InteractivePercentage
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column BackgroundNonBillablePercentage
+		dataType: double
+		sourceProviderType: float
+		lineageTag: 321f1785-5f13-4765-ac7e-e623d23859c2
+		sourceLineageTag: BackgroundNonBillablePercentage
+		summarizeBy: sum
+		sourceColumn: BackgroundNonBillablePercentage
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column InteractiveNonBillablePercentage
+		dataType: double
+		sourceProviderType: float
+		lineageTag: c9ae622a-c091-4fe2-b8f5-3665a546caf1
+		sourceLineageTag: InteractiveNonBillablePercentage
+		summarizeBy: sum
+		sourceColumn: InteractiveNonBillablePercentage
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column AutoscalePercentage
+		dataType: double
+		sourceProviderType: float
+		lineageTag: a3b5552d-7aa7-446c-a204-42949046b067
+		sourceLineageTag: AutoscalePercentage
+		summarizeBy: sum
+		sourceColumn: AutoscalePercentage
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column CULimitPercentage
+		dataType: int64
+		formatString: 0
+		sourceProviderType: bigint
+		lineageTag: ad259dc9-7092-4187-b704-11785a99980a
+		sourceLineageTag: CULimitPercentage
+		summarizeBy: sum
+		sourceColumn: CULimitPercentage
+
+		annotation SummarizationSetBy = Automatic
+
+	column TotalCUUsagePercentage
+		dataType: double
+		sourceProviderType: float
+		lineageTag: d95ef9b3-0a8a-42cb-9f43-4b83849c0dbe
+		sourceLineageTag: TotalCUUsagePercentage
+		summarizeBy: sum
+		sourceColumn: TotalCUUsagePercentage
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column TotalCUs
+		dataType: double
+		sourceProviderType: float
+		lineageTag: f908ccd5-c746-45ce-b824-a4ad4b101860
+		sourceLineageTag: TotalCUs
+		summarizeBy: sum
+		sourceColumn: TotalCUs
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column SKUCUByTimePoint
+		dataType: int64
+		formatString: 0
+		sourceProviderType: bigint
+		lineageTag: a9a93bce-8ea7-4c4b-9be6-f5e717c59d1b
+		sourceLineageTag: SKUCUByTimePoint
+		summarizeBy: sum
+		sourceColumn: SKUCUByTimePoint
+
+		annotation SummarizationSetBy = Automatic
+
+	column InteractiveDelayPercentage
+		dataType: double
+		sourceProviderType: float
+		lineageTag: bedc11dc-808a-4c92-b9b4-5c0f0a1d8904
+		sourceLineageTag: InteractiveDelayPercentage
+		summarizeBy: sum
+		sourceColumn: InteractiveDelayPercentage
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column InteractiveRejectionPercentage
+		dataType: double
+		sourceProviderType: float
+		lineageTag: 76b50cd9-f275-4948-8796-74975d461964
+		sourceLineageTag: InteractiveRejectionPercentage
+		summarizeBy: sum
+		sourceColumn: InteractiveRejectionPercentage
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column InteractiveRejectionThreshold
+		dataType: int64
+		formatString: 0
+		sourceProviderType: bigint
+		lineageTag: 60dc87f2-af64-4574-af59-69277abbff19
+		sourceLineageTag: InteractiveRejectionThreshold
+		summarizeBy: sum
+		sourceColumn: InteractiveRejectionThreshold
+
+		annotation SummarizationSetBy = Automatic
+
+	column BackgroundRejectionPercentage
+		dataType: double
+		sourceProviderType: float
+		lineageTag: 4c1c9f80-b200-478c-a84f-767957e4c1e8
+		sourceLineageTag: BackgroundRejectionPercentage
+		summarizeBy: sum
+		sourceColumn: BackgroundRejectionPercentage
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column BackgroundRejectionThreshold
+		dataType: int64
+		formatString: 0
+		sourceProviderType: bigint
+		lineageTag: 7f8f3034-2bef-4a8f-acc7-c150a8ab9f3d
+		sourceLineageTag: BackgroundRejectionThreshold
+		summarizeBy: sum
+		sourceColumn: BackgroundRejectionThreshold
+
+		annotation SummarizationSetBy = Automatic
+
+	column CarryOverAddedPercentage
+		dataType: double
+		sourceProviderType: float
+		lineageTag: cf1b9d87-baee-4b0b-a756-537c397e6952
+		sourceLineageTag: CarryOverAddedPercentage
+		summarizeBy: sum
+		sourceColumn: CarryOverAddedPercentage
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column CarryOverBurndownPercentage
+		dataType: double
+		sourceProviderType: float
+		lineageTag: 06edb26a-110b-4223-8e34-7738efb774b1
+		sourceLineageTag: CarryOverBurndownPercentage
+		summarizeBy: sum
+		sourceColumn: CarryOverBurndownPercentage
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column CarryOverCumulativePercentage
+		dataType: double
+		sourceProviderType: float
+		lineageTag: 500e439d-c2bd-462c-85b5-63ebf07d7c2a
+		sourceLineageTag: CarryOverCumulativePercentage
+		summarizeBy: sum
+		sourceColumn: CarryOverCumulativePercentage
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column OverageReferenceLine
+		dataType: int64
+		formatString: 0
+		sourceProviderType: bigint
+		lineageTag: fcc79a7d-d5c7-45f3-a25f-d2a920055d69
+		sourceLineageTag: OverageReferenceLine
+		summarizeBy: sum
+		sourceColumn: OverageReferenceLine
+
+		annotation SummarizationSetBy = Automatic
+
+	column ExpectedBurndownInMin
+		dataType: double
+		sourceProviderType: float
+		lineageTag: 3705b7a8-4236-475c-83a3-762da676c573
+		sourceLineageTag: ExpectedBurndownInMin
+		summarizeBy: sum
+		sourceColumn: ExpectedBurndownInMin
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	partition capacity_metrics_by_timepoint = entity
+		mode: directLake
+		source
+			entityName: capacity_metrics_by_timepoint
+			schemaName: dbo
+			expressionSource: DatabaseQuery
+
+	annotation PBI_ResultType = Table
+

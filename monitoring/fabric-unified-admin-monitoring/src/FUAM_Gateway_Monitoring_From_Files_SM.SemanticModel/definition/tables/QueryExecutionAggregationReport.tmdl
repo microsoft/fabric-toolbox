@@ -1,0 +1,191 @@
+table QueryExecutionAggregationReport
+	lineageTag: 6ea5609b-4b78-4ab2-90b7-5a072b399855
+
+	column 'Source.Name'
+		dataType: string
+		lineageTag: cc73e58a-2ed6-4e91-8ebd-8ed91f15e0a5
+		summarizeBy: none
+		sourceColumn: Source.Name
+
+		annotation SummarizationSetBy = Automatic
+
+	column GatewayObjectId
+		dataType: string
+		lineageTag: 442c3b15-d262-4131-b726-7766d008b023
+		summarizeBy: none
+		sourceColumn: GatewayObjectId
+
+		annotation SummarizationSetBy = Automatic
+
+	column AggregationStartTimeUTC
+		dataType: dateTime
+		formatString: General Date
+		lineageTag: 75323255-b82e-42be-b3dc-878b524b0b5e
+		summarizeBy: none
+		sourceColumn: AggregationStartTimeUTC
+
+		annotation SummarizationSetBy = Automatic
+
+	column AggregationEndTimeUTC
+		dataType: dateTime
+		formatString: General Date
+		lineageTag: 3d143802-1a81-4961-a20b-ed41fe0e2f7c
+		summarizeBy: none
+		sourceColumn: AggregationEndTimeUTC
+
+		annotation SummarizationSetBy = Automatic
+
+	column Success
+		dataType: string
+		lineageTag: 93d632ee-353a-450e-b9fd-2d9acad5a7d7
+		summarizeBy: none
+		sourceColumn: Success
+
+		annotation SummarizationSetBy = Automatic
+
+	column AverageQueryExecutionDuration(ms)
+		dataType: double
+		lineageTag: 1a32ca06-5c85-451c-84e6-532b1a5aa4c6
+		summarizeBy: sum
+		sourceColumn: AverageQueryExecutionDuration(ms)
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column MaxQueryExecutionDuration(ms)
+		dataType: int64
+		formatString: 0
+		lineageTag: 846ab541-a03b-405e-b8e5-11b6cb161b1e
+		summarizeBy: sum
+		sourceColumn: MaxQueryExecutionDuration(ms)
+
+		annotation SummarizationSetBy = Automatic
+
+	column MinQueryExecutionDuration(ms)
+		dataType: int64
+		formatString: 0
+		lineageTag: 8057f952-10a9-4495-aa42-824a653d93ed
+		summarizeBy: sum
+		sourceColumn: MinQueryExecutionDuration(ms)
+
+		annotation SummarizationSetBy = Automatic
+
+	column QueryType
+		dataType: string
+		lineageTag: 46b941b9-5f57-486d-a327-dc3643b8dec9
+		summarizeBy: none
+		sourceColumn: QueryType
+
+		annotation SummarizationSetBy = Automatic
+
+	column AverageDataProcessingDuration(ms)
+		dataType: double
+		lineageTag: 31ddf98f-9297-4641-88f8-5af034aee125
+		summarizeBy: sum
+		sourceColumn: AverageDataProcessingDuration(ms)
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column MaxDataProcessingDuration(ms)
+		dataType: int64
+		formatString: 0
+		lineageTag: af76a2e3-75ce-4616-92a3-1495a8899ff3
+		summarizeBy: sum
+		sourceColumn: MaxDataProcessingDuration(ms)
+
+		annotation SummarizationSetBy = Automatic
+
+	column MinDataProcessingDuration(ms)
+		dataType: int64
+		formatString: 0
+		lineageTag: ba921fa8-f420-4318-8ea9-b9a98d7e8268
+		summarizeBy: sum
+		sourceColumn: MinDataProcessingDuration(ms)
+
+		annotation SummarizationSetBy = Automatic
+
+	column Count
+		dataType: int64
+		formatString: 0
+		lineageTag: 59aa259e-237d-4065-ae26-8f8bb4f86e95
+		summarizeBy: sum
+		sourceColumn: Count
+
+		annotation SummarizationSetBy = Automatic
+
+	column Index
+		dataType: int64
+		lineageTag: dd49d89d-a76b-4c39-a372-98a401412dcb
+		summarizeBy: sum
+		sourceColumn: Index
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column 'DataSource.kind'
+		dataType: string
+		lineageTag: e4c2461d-6a82-44b9-9494-22aa6e0e6876
+		summarizeBy: none
+		sourceColumn: DataSource.kind
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'DataSource.path'
+		dataType: string
+		lineageTag: 9d9aa271-890f-4b68-857a-9abac3e1c399
+		summarizeBy: none
+		sourceColumn: DataSource.path
+
+		annotation SummarizationSetBy = Automatic
+
+	column AggregationEndDate
+		dataType: dateTime
+		formatString: Long Date
+		lineageTag: ae4ca4b7-cf41-4606-bb93-d433d6f2d1ee
+		summarizeBy: none
+		sourceColumn: AggregationEndDate
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation UnderlyingDateTimeDataType = Date
+
+	partition QueryExecutionAggregationReport-0dee5c70-04c2-487c-8742-4c78d8ff8af6 = m
+		mode: import
+		source =
+				let
+				    Source = Folder.Files(#"Folder Path"),
+				    #"Filtered Rows" = Table.SelectRows(Source, each Text.Contains([Name], "QueryExecutionAggregationReport") and [Extension] = ".log"),
+				    #"CsvDoc" = Table.AddColumn(#"Filtered Rows", "csvDocColumn", each try Table.PromoteHeaders(Csv.Document([Content]))),
+				    #"Expanded csvDocColumn" = Table.ExpandRecordColumn(CsvDoc, "csvDocColumn", {"HasError", "Value"}, {"csvDocColumn.HasError", "csvDocColumn.Value"}),
+				    #"Filtered Rows1" = Table.SelectRows(#"Expanded csvDocColumn", each [csvDocColumn.HasError] = false),
+				    #"Expanded csvDocColumn.Value" = Table.ExpandTableColumn(#"Filtered Rows1", "csvDocColumn.Value", {"GatewayObjectId", "AggregationStartTimeUTC", "AggregationEndTimeUTC", "DataSource", "Success", "AverageQueryExecutionDuration(ms)", "MaxQueryExecutionDuration(ms)", "MinQueryExecutionDuration(ms)", "QueryType", "AverageDataProcessingDuration(ms)", "MaxDataProcessingDuration(ms)", "MinDataProcessingDuration(ms)", "Count"}, {"GatewayObjectId", "AggregationStartTimeUTC", "AggregationEndTimeUTC", "DataSource", "Success", "AverageQueryExecutionDuration(ms)", "MaxQueryExecutionDuration(ms)", "MinQueryExecutionDuration(ms)", "QueryType", "AverageDataProcessingDuration(ms)", "MaxDataProcessingDuration(ms)", "MinDataProcessingDuration(ms)", "Count"}),
+				    #"Added Index" = Table.AddIndexColumn(#"Expanded csvDocColumn.Value", "Index", 1, 1),
+				    #"Removed Columns" = Table.RemoveColumns(#"Added Index",{"Content", "Extension", "Date accessed", "Date modified", "Date created", "Attributes", "Folder Path", "csvDocColumn.HasError"}),
+				    #"Renamed Columns" = Table.RenameColumns(#"Removed Columns",{{"Name", "Source.Name"}}),
+				   #"JsonDoc" = Table.AddColumn(#"Renamed Columns", "jsonDocColumn", each try Json.Document([DataSource])),
+				    #"Expanded jsonDocColumn" = Table.ExpandRecordColumn(JsonDoc, "jsonDocColumn", {"HasError", "Value"}, {"HasError", "Value"}),
+				    #"Filtered Rows2" = Table.SelectRows(#"Expanded jsonDocColumn", each [HasError] = false),
+				    #"Removed Columns1" = Table.RemoveColumns(#"Filtered Rows2",{"DataSource"}),
+				    #"Renamed Columns1" = Table.RenameColumns(#"Removed Columns1",{{"Value", "DataSource"}}),
+				    #"Removed Columns2" = Table.RemoveColumns(#"Renamed Columns1",{"HasError"}),
+				    #"Expanded DataSource" = Table.ExpandListColumn(#"Removed Columns2", "DataSource"),
+				    #"Parsed JSON1" = Table.TransformColumns(#"Expanded DataSource",{{"DataSource", Json.Document}}),
+				    #"Expanded DataSource1 - kind" = Table.AddColumn(#"Parsed JSON1", "DataSource.kind", each Record.FieldOrDefault([DataSource], "kind") ?? Record.FieldOrDefault([DataSource], "ConnectorType")),
+				    #"Expanded DataSource1 - path" = Table.AddColumn(#"Expanded DataSource1 - kind", "DataSource.path", each Record.FieldOrDefault([DataSource], "path") ?? Text.Combine(List.RemoveFirstN(Record.FieldValues([DataSource]), 1), ";")),
+				    #"Removed Columns3" = Table.RemoveColumns(#"Expanded DataSource1 - path",{"DataSource"}),
+				    #"Removed Duplicates" = Table.Distinct(#"Removed Columns3"),
+				    #"Changed Type" = Table.TransformColumnTypes(#"Removed Duplicates",{{"Source.Name", type text}, {"GatewayObjectId", type text}, {"AggregationStartTimeUTC", type datetime}, {"AggregationEndTimeUTC", type datetime}, {"Success", type text}, {"AverageQueryExecutionDuration(ms)", type number}, {"MaxQueryExecutionDuration(ms)", Int64.Type}, {"MinQueryExecutionDuration(ms)", Int64.Type}, {"QueryType", type text}, {"AverageDataProcessingDuration(ms)", type number}, {"MaxDataProcessingDuration(ms)", Int64.Type}, {"MinDataProcessingDuration(ms)", Int64.Type}, {"Count", Int64.Type}, {"Index", Int64.Type}, {"DataSource.kind", type text}, {"DataSource.path", type text}}),
+				    #"Inserted Date" = Table.AddColumn(#"Changed Type", "AggregationEndDate", each DateTime.Date([AggregationEndTimeUTC]), type date)
+				in
+				    #"Inserted Date"
+
+	annotation PBI_NavigationStepName = Navigation
+
+	annotation PBI_QueryRelationships = {"columnCount":16,"keyColumnNames":[],"queryRelationships":[],"columnIdentities":["Section1/QueryExecutionAggregationReport/Changed Type.{Source.Name,0}","Section1/QueryExecutionAggregationReport/Changed Type.{GatewayObjectId,1}","Section1/QueryExecutionAggregationReport/Changed Type.{AggregationStartTimeUTC,2}","Section1/QueryExecutionAggregationReport/Changed Type.{AggregationEndTimeUTC,3}","Section1/QueryExecutionAggregationReport/Changed Type.{Success,4}","Section1/QueryExecutionAggregationReport/Changed Type.{AverageQueryExecutionDuration(ms),5}","Section1/QueryExecutionAggregationReport/Changed Type.{MaxQueryExecutionDuration(ms),6}","Section1/QueryExecutionAggregationReport/Changed Type.{MinQueryExecutionDuration(ms),7}","Section1/QueryExecutionAggregationReport/Changed Type.{QueryType,8}","Section1/QueryExecutionAggregationReport/Changed Type.{AverageDataProcessingDuration(ms),9}","Section1/QueryExecutionAggregationReport/Changed Type.{MaxDataProcessingDuration(ms),10}","Section1/QueryExecutionAggregationReport/Changed Type.{MinDataProcessingDuration(ms),11}","Section1/QueryExecutionAggregationReport/Changed Type.{Count,12}","Section1/QueryExecutionAggregationReport/Grouped Rows.{Index,13}","Section1/QueryExecutionAggregationReport/Grouped Rows.{DataSourceType,14}","Section1/QueryExecutionAggregationReport/Changed Type.{DataSource,15}"],"ColumnCount":16,"KeyColumnNames":[],"ColumnIdentities":["Section1/QueryExecutionAggregationReport/Changed Type.{Source.Name,0}","Section1/QueryExecutionAggregationReport/Changed Type.{GatewayObjectId,1}","Section1/QueryExecutionAggregationReport/Changed Type.{AggregationStartTimeUTC,2}","Section1/QueryExecutionAggregationReport/Changed Type.{AggregationEndTimeUTC,3}","Section1/QueryExecutionAggregationReport/Changed Type.{Success,4}","Section1/QueryExecutionAggregationReport/Changed Type.{AverageQueryExecutionDuration(ms),5}","Section1/QueryExecutionAggregationReport/Changed Type.{MaxQueryExecutionDuration(ms),6}","Section1/QueryExecutionAggregationReport/Changed Type.{MinQueryExecutionDuration(ms),7}","Section1/QueryExecutionAggregationReport/Changed Type.{QueryType,8}","Section1/QueryExecutionAggregationReport/Changed Type.{AverageDataProcessingDuration(ms),9}","Section1/QueryExecutionAggregationReport/Changed Type.{MaxDataProcessingDuration(ms),10}","Section1/QueryExecutionAggregationReport/Changed Type.{MinDataProcessingDuration(ms),11}","Section1/QueryExecutionAggregationReport/Changed Type.{Count,12}","Section1/QueryExecutionAggregationReport/Grouped Rows.{Index,13}","Section1/QueryExecutionAggregationReport/Grouped Rows.{DataSourceType,14}","Section1/QueryExecutionAggregationReport/Changed Type.{DataSource,15}"],"RelationshipInfo":[]}
+
+	annotation PBI_ResultType = Table
+

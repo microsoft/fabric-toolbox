@@ -1,0 +1,281 @@
+table QueryExecutionReport
+	lineageTag: 5c20ec9d-cb32-48f8-bc8b-9d3a45a06a51
+
+	column Index
+		dataType: int64
+		lineageTag: 4be1a512-2226-49b3-a71f-166f1cb543ae
+		summarizeBy: sum
+		sourceColumn: Index
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column GatewayObjectId
+		dataType: string
+		lineageTag: 24b01b00-5bf4-4548-80e4-825329dcc3d3
+		summarizeBy: none
+		sourceColumn: GatewayObjectId
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Source.Name'
+		dataType: string
+		lineageTag: 5105a91c-23e9-40af-a4cd-17c293b7d263
+		summarizeBy: none
+		sourceColumn: Source.Name
+
+		annotation SummarizationSetBy = Automatic
+
+	column RequestId
+		dataType: string
+		lineageTag: a2e167f4-bd7e-4382-bb66-cdfa865ec206
+		summarizeBy: none
+		sourceColumn: RequestId
+
+		annotation SummarizationSetBy = Automatic
+
+	column QueryTrackingId
+		dataType: string
+		lineageTag: efbf2f94-6c2a-4d94-90d3-50b339b64db5
+		summarizeBy: none
+		sourceColumn: QueryTrackingId
+
+		annotation SummarizationSetBy = Automatic
+
+	column QueryExecutionEndTimeUTC
+		dataType: dateTime
+		formatString: General Date
+		lineageTag: afcb2d7c-6c93-435d-b960-62fa295966e3
+		summarizeBy: none
+		sourceColumn: QueryExecutionEndTimeUTC
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation __PBI_SemanticLinks = [{"LinkTarget":{"TableName":"QueryExecutionReport","TableItemName":"QueryExecutionEndTimeUTC 5 Min","ObjectType":4},"LinkType":"UsedInGroup"}]
+
+	column QueryExecutionDuration(ms)
+		dataType: int64
+		formatString: 0
+		lineageTag: d374cd76-c3b1-4b60-91f0-02631cf37f3c
+		summarizeBy: sum
+		sourceColumn: QueryExecutionDuration(ms)
+
+		annotation SummarizationSetBy = Automatic
+
+	column QueryType
+		dataType: string
+		lineageTag: b7f6216e-7270-4ed6-b6ad-20a01d69cf9e
+		summarizeBy: none
+		sourceColumn: QueryType
+
+		annotation SummarizationSetBy = Automatic
+
+	column DataProcessingEndTimeUTC
+		dataType: dateTime
+		formatString: General Date
+		lineageTag: 10c4db30-8e50-4cdf-a240-96bc0e01d0b9
+		summarizeBy: none
+		sourceColumn: DataProcessingEndTimeUTC
+
+		annotation SummarizationSetBy = Automatic
+
+	column DataProcessingDuration(ms)
+		dataType: int64
+		formatString: 0
+		lineageTag: 934393c5-5a27-498c-9b9c-7510105f0d27
+		summarizeBy: sum
+		sourceColumn: DataProcessingDuration(ms)
+
+		annotation SummarizationSetBy = Automatic
+
+	column Success
+		dataType: string
+		lineageTag: fcb610b7-65f0-4c06-82ce-4b6cb2c3d904
+		summarizeBy: none
+		sourceColumn: Success
+
+		annotation SummarizationSetBy = Automatic
+
+	column ErrorMessage
+		dataType: string
+		lineageTag: a1de5719-df80-4596-b3a2-3301c3a31111
+		summarizeBy: none
+		sourceColumn: ErrorMessage
+
+		annotation SummarizationSetBy = Automatic
+
+	column DataReadingAndSerializationDuration(ms)
+		dataType: int64
+		formatString: 0
+		lineageTag: 185fe76f-3b9a-4353-bd63-4f25a9fe7fe7
+		summarizeBy: sum
+		sourceColumn: DataReadingAndSerializationDuration(ms)
+
+		annotation SummarizationSetBy = Automatic
+
+	column SpoolingDiskWritingDuration(ms)
+		dataType: int64
+		formatString: 0
+		lineageTag: ec951d76-583f-4f36-874d-50b1379ab4f2
+		summarizeBy: sum
+		sourceColumn: SpoolingDiskWritingDuration(ms)
+
+		annotation SummarizationSetBy = Automatic
+
+	column SpoolingDiskReadingDuration(ms)
+		dataType: int64
+		formatString: 0
+		lineageTag: 923cd9a3-ac1f-44b7-854d-ec3265d4a96d
+		summarizeBy: sum
+		sourceColumn: SpoolingDiskReadingDuration(ms)
+
+		annotation SummarizationSetBy = Automatic
+
+	column SpoolingTotalDataSize(byte)
+		dataType: int64
+		formatString: 0
+		lineageTag: 03602c60-3731-4b03-919c-c74112f23843
+		summarizeBy: sum
+		sourceColumn: SpoolingTotalDataSize(byte)
+
+		annotation SummarizationSetBy = Automatic
+
+	column DiskReadIO(bytes/sec) = DIVIDE(QueryExecutionReport[SpoolingTotalDataSize(byte)],QueryExecutionReport[SpoolingDiskReadingDuration(ms)]/1000.0)
+		lineageTag: 5415f53c-a39a-450c-afeb-0e40f14079fd
+		summarizeBy: sum
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column DiskWriteIO(byte/sec) = DIVIDE(QueryExecutionReport[SpoolingTotalDataSize(byte)],QueryExecutionReport[SpoolingDiskWritingDuration(ms)]/1000.0)
+		lineageTag: a59d6f00-c356-4d5e-bfc3-3f49645b3e27
+		summarizeBy: sum
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column 'DataSource.kind'
+		dataType: string
+		lineageTag: 0f7b7895-9809-458d-8121-04b36464c460
+		summarizeBy: none
+		sourceColumn: DataSource.kind
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'DataSource.path'
+		dataType: string
+		lineageTag: 1fe63b9d-5550-4ec6-a230-5680dcaefa2a
+		summarizeBy: none
+		sourceColumn: DataSource.path
+
+		annotation SummarizationSetBy = Automatic
+
+	column QueryExecutionEndDate
+		dataType: dateTime
+		formatString: yyyy-mm-dd
+		lineageTag: 321de755-dcf9-4e8f-87e8-bda33f5561c1
+		summarizeBy: none
+		sourceColumn: QueryExecutionEndDate
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation UnderlyingDateTimeDataType = Date
+
+		annotation PBI_FormatHint = {"isCustom":true}
+
+	column Status =
+			
+			SWITCH(QueryExecutionReport[Success],
+			"Y", "Success",
+			"N", "Error",
+			"N/A")
+		lineageTag: d4171791-17f8-460b-af7c-0ff821d631fe
+		summarizeBy: none
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'QueryExecutionEndTimeUTC 5 Min' =
+			IF(
+				ISBLANK('QueryExecutionReport'[QueryExecutionEndTimeUTC]),
+				BLANK(),
+				(INT(('QueryExecutionReport'[QueryExecutionEndTimeUTC] * 1440) / 5) * 5) / 1440
+			)
+		dataType: dateTime
+		formatString: General Date
+		lineageTag: 28a46734-615d-49c5-af40-fb964c4beaec
+		summarizeBy: none
+
+		extendedProperty GroupingMetadata =
+				{
+				  "version": 0,
+				  "groupedColumns": [
+				    {
+				      "Column": {
+				        "Expression": {
+				          "SourceRef": {
+				            "Entity": "QueryExecutionReport"
+				          }
+				        },
+				        "Property": "QueryExecutionEndTimeUTC"
+				      }
+				    }
+				  ],
+				  "binningMetadata": {
+				    "binSize": {
+				      "value": 5.0,
+				      "unit": 10
+				    }
+				  }
+				}
+
+		annotation GroupingDesignState = {"Version":0,"Sources":[{"Name":"q","Entity":"QueryExecutionReport"}],"GroupedColumns":[{"Column":{"Expression":{"SourceRef":{"Source":"q"}},"Property":"QueryExecutionEndTimeUTC"}}],"BinItem":{"Expression":{"Floor":{"Expression":{"Column":{"Expression":{"SourceRef":{"Source":"q"}},"Property":"QueryExecutionEndTimeUTC"}},"Size":5.0,"TimeUnit":6}}}}
+
+		annotation SummarizationSetBy = Automatic
+
+	column RequestTrackingKey
+		dataType: string
+		lineageTag: ad7501e5-fa9e-439c-ae8d-d591fda94389
+		summarizeBy: none
+		sourceColumn: RequestTrackingKey
+
+		annotation SummarizationSetBy = Automatic
+
+	partition QueryExecutionReport-94b6026b-5fe2-4e77-b34c-8f798440dfb2 = m
+		mode: import
+		source =
+				let
+				    Source = Folder.Files(#"Folder Path"),
+				    #"Filtered Rows" = Table.SelectRows(Source, each Text.Contains([Name], "QueryExecutionReport") and [Extension] = ".log"),
+				    #"CsvDoc" = Table.AddColumn(#"Filtered Rows", "csvDocColumn", each try Table.PromoteHeaders(Csv.Document([Content]))),
+				    #"Expanded csvDocColumn" = Table.ExpandRecordColumn(CsvDoc, "csvDocColumn", {"HasError", "Value"}, {"csvDocColumn.HasError", "csvDocColumn.Value"}),
+				    #"Filtered Rows1" = Table.SelectRows(#"Expanded csvDocColumn", each [csvDocColumn.HasError] = false),
+				    #"Expanded csvDocColumn.Value" = Table.ExpandTableColumn(#"Filtered Rows1", "csvDocColumn.Value", {"GatewayObjectId", "RequestId", "DataSource", "QueryTrackingId", "QueryExecutionEndTimeUTC", "QueryExecutionDuration(ms)", "QueryType", "DataReadingAndSerializationDuration(ms)", "SpoolingDiskWritingDuration(ms)", "SpoolingDiskReadingDuration(ms)", "SpoolingTotalDataSize(byte)", "DataProcessingEndTimeUTC", "DataProcessingDuration(ms)", "Success", "ErrorMessage"}, {"GatewayObjectId", "RequestId", "DataSource", "QueryTrackingId", "QueryExecutionEndTimeUTC", "QueryExecutionDuration(ms)", "QueryType", "DataReadingAndSerializationDuration(ms)", "SpoolingDiskWritingDuration(ms)", "SpoolingDiskReadingDuration(ms)", "SpoolingTotalDataSize(byte)", "DataProcessingEndTimeUTC", "DataProcessingDuration(ms)", "Success", "ErrorMessage"}),
+				    #"Added Index" = Table.AddIndexColumn(#"Expanded csvDocColumn.Value", "Index", 1, 1),
+				    #"Removed Columns" = Table.RemoveColumns(#"Added Index",{"Content", "Extension", "Date accessed", "Date modified", "Date created", "Attributes", "Folder Path", "csvDocColumn.HasError"}),
+				    #"Renamed Columns" = Table.RenameColumns(#"Removed Columns",{{"Name", "Source.Name"}}),
+				   #"JsonDoc" = Table.AddColumn(#"Renamed Columns", "jsonDocColumn", each try Json.Document([DataSource])),
+				    #"Expanded jsonDocColumn" = Table.ExpandRecordColumn(JsonDoc, "jsonDocColumn", {"HasError", "Value"}, {"HasError", "Value"}),
+				    #"Filtered Rows2" = Table.SelectRows(#"Expanded jsonDocColumn", each [HasError] = false),
+				    #"Removed Columns1" = Table.RemoveColumns(#"Filtered Rows2",{"DataSource"}),
+				    #"Renamed Columns1" = Table.RenameColumns(#"Removed Columns1",{{"Value", "DataSource"}}),
+				    #"Removed Columns2" = Table.RemoveColumns(#"Renamed Columns1",{"HasError"}),
+				    #"Expanded DataSource" = Table.ExpandListColumn(#"Removed Columns2", "DataSource"),
+				    #"Parsed JSON1" = Table.TransformColumns(#"Expanded DataSource",{{"DataSource", Json.Document}}),
+				    #"Expanded DataSource1 - kind" = Table.AddColumn(#"Parsed JSON1", "DataSource.kind", each Record.FieldOrDefault([DataSource], "kind") ?? Record.FieldOrDefault([DataSource], "ConnectorType")),
+				    #"Expanded DataSource1 - path" = Table.AddColumn(#"Expanded DataSource1 - kind", "DataSource.path", each Record.FieldOrDefault([DataSource], "path") ?? Text.Combine(List.RemoveFirstN(Record.FieldValues([DataSource]), 1), ";")),
+				    #"Removed Columns3" = Table.RemoveColumns(#"Expanded DataSource1 - path",{"DataSource"}),
+				    #"Changed Type" = Table.TransformColumnTypes(#"Removed Columns3",{{"Source.Name", type text}, {"GatewayObjectId", type text}, {"RequestId", type text}, {"QueryTrackingId", type text}, {"QueryExecutionEndTimeUTC", type datetime}, {"QueryExecutionDuration(ms)", Int64.Type}, {"QueryType", type text}, {"DataReadingAndSerializationDuration(ms)", Int64.Type}, {"SpoolingDiskWritingDuration(ms)", Int64.Type}, {"SpoolingDiskReadingDuration(ms)", Int64.Type}, {"SpoolingTotalDataSize(byte)", Int64.Type}, {"DataProcessingEndTimeUTC", type datetime}, {"DataProcessingDuration(ms)", Int64.Type}, {"Success", type text}, {"ErrorMessage", type text}, {"Index", Int64.Type}, {"DataSource.kind", type text}, {"DataSource.path", type text}}),
+				    #"Inserted Date" = Table.AddColumn(#"Changed Type", "QueryExecutionEndDate", each DateTime.Date([QueryExecutionEndTimeUTC]), type date),
+				    #"Inserted Merged Column" = Table.AddColumn(#"Inserted Date", "RequestTrackingKey", each Text.Combine({[RequestId], [QueryTrackingId]}, ""), type text)
+				in
+				    #"Inserted Merged Column"
+
+	annotation PBI_NavigationStepName = Navigation
+
+	annotation PBI_QueryRelationships = {"columnCount":19,"keyColumnNames":[],"queryRelationships":[],"columnIdentities":["Section1/QueryExecutionReport/Grouped Rows.{Index,0}","Section1/QueryExecutionReport/Changed Type.{GatewayObjectId,1}","Section1/QueryExecutionReport/Changed Type.{Source.Name,2}","Section1/QueryExecutionReport/Changed Type.{RequestId,3}","Section1/QueryExecutionReport/Changed Type.{QueryTrackingId,4}","Section1/QueryExecutionReport/Changed Type.{QueryExecutionEndTimeUTC,5}","Section1/QueryExecutionReport/Changed Type.{QueryExecutionDuration(ms),6}","Section1/QueryExecutionReport/Changed Type.{QueryType,7}","Section1/QueryExecutionReport/Changed Type.{DataReadingAndSerializationDuration(ms),8}","Section1/QueryExecutionReport/Changed Type.{SpoolingDiskWritingDuration(ms),9}","Section1/QueryExecutionReport/Changed Type.{SpoolingDiskReadingDuration(ms),10}","Section1/QueryExecutionReport/Changed Type.{SpoolingTotalDataSize(byte),11}","Section1/QueryExecutionReport/Changed Type.{DataProcessingEndTimeUTC,12}","Section1/QueryExecutionReport/Changed Type.{DataProcessingDuration(ms),13}","Section1/QueryExecutionReport/Changed Type.{Success,14}","Section1/QueryExecutionReport/Changed Type.{ErrorMessage,15}","Section1/QueryExecutionReport/Grouped Rows.{Count,16}","Section1/QueryExecutionReport/Grouped Rows.{DataSourceType,17}","Section1/QueryExecutionReport/Changed Type.{DataSource,18}"],"ColumnCount":19,"KeyColumnNames":[],"ColumnIdentities":["Section1/QueryExecutionReport/Grouped Rows.{Index,0}","Section1/QueryExecutionReport/Changed Type.{GatewayObjectId,1}","Section1/QueryExecutionReport/Changed Type.{Source.Name,2}","Section1/QueryExecutionReport/Changed Type.{RequestId,3}","Section1/QueryExecutionReport/Changed Type.{QueryTrackingId,4}","Section1/QueryExecutionReport/Changed Type.{QueryExecutionEndTimeUTC,5}","Section1/QueryExecutionReport/Changed Type.{QueryExecutionDuration(ms),6}","Section1/QueryExecutionReport/Changed Type.{QueryType,7}","Section1/QueryExecutionReport/Changed Type.{DataReadingAndSerializationDuration(ms),8}","Section1/QueryExecutionReport/Changed Type.{SpoolingDiskWritingDuration(ms),9}","Section1/QueryExecutionReport/Changed Type.{SpoolingDiskReadingDuration(ms),10}","Section1/QueryExecutionReport/Changed Type.{SpoolingTotalDataSize(byte),11}","Section1/QueryExecutionReport/Changed Type.{DataProcessingEndTimeUTC,12}","Section1/QueryExecutionReport/Changed Type.{DataProcessingDuration(ms),13}","Section1/QueryExecutionReport/Changed Type.{Success,14}","Section1/QueryExecutionReport/Changed Type.{ErrorMessage,15}","Section1/QueryExecutionReport/Grouped Rows.{Count,16}","Section1/QueryExecutionReport/Grouped Rows.{DataSourceType,17}","Section1/QueryExecutionReport/Changed Type.{DataSource,18}"],"RelationshipInfo":[]}
+
+	annotation PBI_ResultType = Table
+

@@ -1,0 +1,61 @@
+table 'Storage Files TM'
+	lineageTag: 987b6291-7b85-403a-85b8-6cb287098cb0
+
+	column ID
+		dataType: double
+		lineageTag: 17b9d4ef-c917-4956-8439-11c29e092b8e
+		summarizeBy: none
+		sourceColumn: ID
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column OwnerID
+		dataType: double
+		lineageTag: cb22f698-f3ca-45a4-8edd-0f9f623f19b9
+		summarizeBy: count
+		sourceColumn: OwnerID
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column OwnerType
+		dataType: int64
+		formatString: 0
+		lineageTag: b2260a7d-1008-40a8-8132-a47d89c78f97
+		summarizeBy: sum
+		sourceColumn: OwnerType
+
+		annotation SummarizationSetBy = Automatic
+
+	column StorageFolderID
+		dataType: double
+		lineageTag: b1233dfb-646f-4705-a8e7-8bce266dfeec
+		summarizeBy: none
+		sourceColumn: StorageFolderID
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column FileName
+		dataType: string
+		lineageTag: 7f432128-3020-498b-9d76-326f5f11aa65
+		summarizeBy: none
+		sourceColumn: FileName
+
+		annotation SummarizationSetBy = Automatic
+
+	partition 'Storage Files TM' = m
+		mode: import
+		queryGroup: 'Meta Data'
+		source =
+				let
+				    Source = AnalysisServices.Database(serverURL, modelName, [Query="SELECT * FROM $System.TMSCHEMA_STORAGE_FILES", Implementation="2.0"])
+				in
+				    Source
+
+	annotation PBI_ResultType = Exception
+

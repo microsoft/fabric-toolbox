@@ -1,0 +1,56 @@
+table 'Query Groups TM'
+	lineageTag: b81195bf-80a5-4cf6-ba6e-dfc3eb83c2aa
+
+	column ID
+		dataType: string
+		lineageTag: a6180045-7719-42f2-99b8-9fb5a36ee85b
+		summarizeBy: none
+		sourceColumn: ID
+
+		annotation SummarizationSetBy = Automatic
+
+	column ModelID
+		dataType: string
+		lineageTag: cff6f448-1759-455e-a2f6-9c1868e4dc7d
+		summarizeBy: none
+		sourceColumn: ModelID
+
+		annotation SummarizationSetBy = Automatic
+
+	column Folder
+		dataType: string
+		lineageTag: ca094c6e-3438-477d-8499-77779a21c33e
+		summarizeBy: none
+		sourceColumn: Folder
+
+		annotation SummarizationSetBy = Automatic
+
+	column Description
+		dataType: string
+		lineageTag: a8e528a6-1349-4c3a-8f55-24f062984d38
+		summarizeBy: none
+		sourceColumn: Description
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Folder with icon' = "📁 " & 'Query Groups TM'[Folder]
+		lineageTag: 98b41fd0-00b9-48e6-bc11-f9ebec89e630
+		summarizeBy: none
+
+		annotation SummarizationSetBy = Automatic
+
+	partition 'Query Groups TM' = m
+		mode: import
+		queryGroup: 'Meta Data'
+		source =
+				let
+				    DefaultQueryGroups = Table.FromRows(Json.Document(Binary.Decompress(Binary.FromText("PYzBCsIwEER/ZdlzDvoLpYI9WdFbyGFpRwyEjWS32M83gngYeANvJkbGPEzj/caBjz3nvK7QP9BpfzWY5aqBlqouWY2kFKoPwu5oKoXm+kajYaJRXAz+NRWL95VxCpEPv/eLP7t43dAyrHdO6QM=", BinaryEncoding.Base64), Compression.Deflate)), let _t = ((type nullable text) meta [Serialized.Text = true]) in type table [ID = _t, ModelID = _t, Folder = _t, Description = _t]),
+				    #"Changed Type" = Table.TransformColumnTypes(DefaultQueryGroups,{{"ID", type text}, {"ModelID", text}, {"Folder", type text}, {"Description", type text}}),
+				    QueryGroups = AnalysisServices.Database(serverURL, modelName, [Query="SELECT * FROM $System.TMSCHEMA_QUERY_GROUPS", Implementation="2.0"]),
+				    #"Changed Type1" = Table.TransformColumnTypes(QueryGroups,{{"ID", type text}, {"ModelID", type text}}),
+				    TableToReturn = Table.Combine({DefaultQueryGroups, #"Changed Type1"})
+				in
+				    TableToReturn
+
+	annotation PBI_ResultType = Table
+

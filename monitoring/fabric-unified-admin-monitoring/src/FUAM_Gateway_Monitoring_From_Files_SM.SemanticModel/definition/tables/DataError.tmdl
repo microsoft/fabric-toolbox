@@ -1,0 +1,59 @@
+table DataError
+	lineageTag: 4554d021-c1de-4854-8054-6e6ee8367fc3
+
+	column FileName
+		dataType: string
+		lineageTag: b4fc2e0b-b599-42d1-a32e-5bf1faf7d583
+		summarizeBy: none
+		sourceColumn: FileName
+
+		annotation SummarizationSetBy = Automatic
+
+	column LineNumber
+		dataType: int64
+		lineageTag: d4e92e09-d858-46f7-9eeb-6244f1d81501
+		summarizeBy: sum
+		sourceColumn: LineNumber
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column 'jsonDocColumn.HasError'
+		dataType: string
+		lineageTag: 274a2814-8dac-49f3-886d-af487f6fa3e8
+		summarizeBy: none
+		sourceColumn: jsonDocColumn.HasError
+
+		annotation SummarizationSetBy = Automatic
+
+	partition DataError-39d8636d-4ced-418a-9ca7-0f781457b6df = m
+		mode: import
+		queryGroup: Helpers
+		source =
+				let
+				    Source = Folder.Files(#"Folder Path"),
+				    #"Filtered Rows" = Table.SelectRows(Source, each Text.Contains([Name], "QueryExecutionReport") and [Extension] = ".log"),
+				    #"Added File Index" = Table.AddIndexColumn(#"Filtered Rows", "FileIndex", 1, 1),
+				    #"CsvDoc" = Table.AddColumn(#"Added File Index", "csvDocColumn", each try Table.PromoteHeaders(Csv.Document([Content]))),
+				    #"Expanded csvDocColumn" = Table.ExpandRecordColumn(CsvDoc, "csvDocColumn", {"HasError", "Value"}, {"csvDocColumn.HasError", "csvDocColumn.Value"}),
+				    #"Filtered Rows1" = Table.SelectRows(#"Expanded csvDocColumn", each [csvDocColumn.HasError] = false),
+				    #"Expanded csvDocColumn.Value" = Table.ExpandTableColumn(#"Filtered Rows1", "csvDocColumn.Value", {"GatewayObjectId", "RequestId", "DataSource", "QueryTrackingId", "QueryExecutionEndTimeUTC", "QueryExecutionDuration(ms)", "QueryType", "DataProcessingEndTimeUTC", "DataProcessingDuration(ms)", "Success", "ErrorMessage"}, {"GatewayObjectId", "RequestId", "DataSource", "QueryTrackingId", "QueryExecutionEndTimeUTC", "QueryExecutionDuration(ms)", "QueryType", "DataProcessingEndTimeUTC", "DataProcessingDuration(ms)", "Success", "ErrorMessage"}),
+				    #"Added Index" = Table.AddIndexColumn(#"Expanded csvDocColumn.Value", "Index", 1, 1),
+				    #"Removed Columns" = Table.RemoveColumns(#"Added Index",{"Content", "Extension", "Date accessed", "Date modified", "Date created", "Attributes", "Folder Path", "csvDocColumn.HasError"}),
+				    #"Renamed Columns" = Table.RenameColumns(#"Removed Columns",{{"Name", "Source.Name"}}),
+				   #"JsonDoc" = Table.AddColumn(#"Renamed Columns", "jsonDocColumn", each try Json.Document([DataSource])),
+				    #"Expanded jsonDocColumn" = Table.ExpandRecordColumn(JsonDoc, "jsonDocColumn", {"HasError"}, {"jsonDocColumn.HasError"}),
+				    #"Filtered Rows2" = Table.SelectRows(#"Expanded jsonDocColumn", each ([jsonDocColumn.HasError] = true)),
+				    #"Removed Columns1" = Table.RemoveColumns(#"Filtered Rows2",{"FileIndex", "GatewayObjectId", "RequestId", "DataSource", "QueryTrackingId", "QueryExecutionEndTimeUTC", "QueryExecutionDuration(ms)", "QueryType", "DataProcessingEndTimeUTC", "DataProcessingDuration(ms)", "Success", "ErrorMessage"}),
+				    #"Renamed Columns1" = Table.RenameColumns(#"Removed Columns1",{{"Index", "LineNumber"}, {"Source.Name", "FileName"}}),
+				    #"Changed Type" = Table.TransformColumnTypes(#"Renamed Columns1",{{"LineNumber", Int64.Type}})
+				in
+				    #"Changed Type"
+
+	annotation PBI_NavigationStepName = Navigation
+
+	annotation PBI_QueryRelationships = {"columnCount":3,"keyColumnNames":[],"queryRelationships":[],"columnIdentities":["Section1/DataError/Added Index.{Name,1}","Section1/DataError/Changed Type.{LineNumber,1}","Section1/DataError/Expanded jsonDocColumn.{jsonDocColumn.HasError,14}"],"ColumnCount":3,"KeyColumnNames":[],"ColumnIdentities":["Section1/DataError/Added Index.{Name,1}","Section1/DataError/Changed Type.{LineNumber,1}","Section1/DataError/Expanded jsonDocColumn.{jsonDocColumn.HasError,14}"],"RelationshipInfo":[]}
+
+	annotation PBI_ResultType = Table
+

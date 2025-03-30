@@ -1,0 +1,17 @@
+table 'Dim Hours'
+	lineageTag: e2d54f79-fd75-4120-b896-4c2fedb358a5
+
+	column Hour
+		formatString: 0
+		lineageTag: 10cc3b11-ebe2-4914-9ab9-8b80f0d84ace
+		summarizeBy: none
+		sourceColumn: [Value]
+
+		annotation SummarizationSetBy = Automatic
+
+	partition 'Dim Hours' = calculated
+		mode: import
+		source = GENERATESERIES(0, 23)
+
+	annotation PBI_Id = 69ac4e640e25479ebabc70de160903a1
+

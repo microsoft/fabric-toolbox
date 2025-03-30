@@ -1,0 +1,25 @@
+model Model
+	culture: en-US
+	defaultPowerBIDataSourceVersion: powerBI_V3
+	sourceQueryCulture: de-DE
+	dataAccessOptions
+		legacyRedirects
+		returnErrorValuesAsNull
+
+annotation __PBI_TimeIntelligenceEnabled = 0
+
+annotation PBIDesktopVersion = 2.141.833.0 (25.03)+cdc444a951f7d3dd724d8de5dd58efd34e693cba
+
+annotation PBI_QueryOrder = ["sqlEndpointUrl","sqlEndpointItemName","Size Units","Time Units","queryinsights exec_requests_history"]
+
+annotation PBI_ProTooling = ["DaxQueryView_Desktop"]
+
+ref table Metrics
+ref table 'Size Units'
+ref table 'Time Units'
+ref table 'queryinsights exec_requests_history'
+ref table 'Dim Hours'
+ref table 'Dim Dates'
+
+ref cultureInfo en-US
+

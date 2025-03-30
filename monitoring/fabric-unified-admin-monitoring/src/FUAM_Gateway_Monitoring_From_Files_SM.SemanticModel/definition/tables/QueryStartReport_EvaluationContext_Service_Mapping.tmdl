@@ -1,0 +1,59 @@
+table QueryStartReport_EvaluationContext_Service_Mapping
+	lineageTag: e043f347-8317-4a10-b52c-1dd21d9843d9
+
+	column RequestTrackingKey
+		dataType: string
+		lineageTag: 163cdba9-6521-4c32-8abe-9c65c30315ca
+		summarizeBy: none
+		sourceColumn: RequestTrackingKey
+
+		annotation SummarizationSetBy = Automatic
+
+	column SemanticModelId
+		dataType: string
+		lineageTag: 0e51826e-f2df-4d1d-ac47-ce4c1d9af357
+		summarizeBy: none
+		sourceColumn: SemanticModelId
+
+		annotation SummarizationSetBy = Automatic
+
+	column WorkspaceId
+		dataType: string
+		lineageTag: cf92dfc1-b3b6-4fb4-8886-3659ad83982b
+		summarizeBy: none
+		sourceColumn: WorkspaceId
+
+		annotation SummarizationSetBy = Automatic
+
+	partition QueryStartReport_EvaluationContext_Service_Mapping = m
+		mode: import
+		queryGroup: QueryStartReport
+		source =
+				let
+				    Source = Folder.Files(#"Folder Path"),
+				    #"Filtered Rows" = Table.SelectRows(Source, each Text.Contains([Name], "QueryStartReport") and [Extension] = ".log"),
+				    #"CsvDoc" = Table.AddColumn(#"Filtered Rows", "csvDocColumn", each try Table.PromoteHeaders(Csv.Document([Content]))),
+				    #"Expanded csvDocColumn" = Table.ExpandRecordColumn(CsvDoc, "csvDocColumn", {"HasError", "Value"}, {"csvDocColumn.HasError", "csvDocColumn.Value"}),
+				    #"Filtered Rows1" = Table.SelectRows(#"Expanded csvDocColumn", each [csvDocColumn.HasError] = false),
+				    #"Expanded csvDocColumn.Value" = Table.ExpandTableColumn(#"Filtered Rows1", "csvDocColumn.Value", {"GatewayObjectId", "RequestId", "QueryTrackingId", "EvaluationContext"}, {"GatewayObjectId", "RequestId", "QueryTrackingId", "EvaluationContext"}),
+				    #"Removed Columns" = Table.RemoveColumns(#"Expanded csvDocColumn.Value",{"Content", "Name", "Extension", "Date accessed", "Date modified", "Date created", "Attributes", "Folder Path", "csvDocColumn.HasError"}),
+				    #"Parsed JSON" = Table.TransformColumns(#"Removed Columns",{{"EvaluationContext", Json.Document}}),
+				    #"Expanded EvaluationContext" = Table.ExpandRecordColumn(#"Parsed JSON", "EvaluationContext", {"serviceTraceContexts"}, {"serviceTraceContexts"}),
+				    #"Expanded serviceTraceContexts" = Table.ExpandListColumn(#"Expanded EvaluationContext", "serviceTraceContexts"),
+				    #"Expanded serviceTraceContexts1" = Table.ExpandRecordColumn(#"Expanded serviceTraceContexts", "serviceTraceContexts", {"serviceName", "traceIds"}, {"serviceName", "traceIds"}),
+				    #"Expanded traceIds" = Table.ExpandListColumn(#"Expanded serviceTraceContexts1", "traceIds"),
+				    #"Expanded traceIds1" = Table.ExpandRecordColumn(#"Expanded traceIds", "traceIds", {"key", "value"}, {"key", "value"}),
+				    #"Filtered Rows2" = Table.SelectRows(#"Expanded traceIds1", each ([key] <> "ApplicationContext")),
+				    #"Filtered Rows3" = Table.SelectRows(#"Filtered Rows2", each [key] = "DatasetId" or [key] = "WorkspaceId"),
+				    #"Changed Type" = Table.TransformColumnTypes(#"Filtered Rows3",{{"GatewayObjectId", type text}, {"RequestId", type text}, {"QueryTrackingId", type text}, {"serviceName", type text}, {"key", type text}, {"value", type text}}),
+				    #"Inserted Merged Column" = Table.AddColumn(#"Changed Type", "RequestTrackingKey", each Text.Combine({[RequestId], [QueryTrackingId]}, ""), type text),
+				    #"Removed Other Columns" = Table.SelectColumns(#"Inserted Merged Column",{"RequestTrackingKey", "value", "key"}),
+				    #"Pivoted Column" = Table.Pivot(#"Removed Other Columns", List.Distinct(#"Removed Other Columns"[key]), "key", "value"),
+				    #"Renamed Columns" = Table.RenameColumns(#"Pivoted Column",{{"DatasetId", "SemanticModelId"}})
+				in
+				    #"Renamed Columns"
+
+	annotation PBI_NavigationStepName = Navigation
+
+	annotation PBI_ResultType = Table
+

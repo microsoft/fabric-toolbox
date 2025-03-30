@@ -1,0 +1,231 @@
+table 'From Tables TM'
+	isHidden
+	lineageTag: 2d19ddd4-f6d2-4908-a925-0d46b06d4189
+
+	column ID
+		dataType: double
+		isHidden
+		lineageTag: 9f511263-9f8e-40b1-8afb-b430eb250da2
+		summarizeBy: none
+		sourceColumn: ID
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column ModelID
+		dataType: double
+		isHidden
+		lineageTag: 092ea732-414c-40c3-affc-11f309d3e3ce
+		summarizeBy: none
+		sourceColumn: ModelID
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column 'Table Name'
+		dataType: string
+		isHidden
+		lineageTag: a48d3ed8-6559-4d83-9d5c-be40c10d105c
+		summarizeBy: none
+		sourceColumn: Table Name
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	column DataCategory
+		dataType: string
+		isHidden
+		lineageTag: e467b061-ce57-41c6-a24c-f5c85178c4ad
+		summarizeBy: none
+		sourceColumn: DataCategory
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	column Description
+		dataType: string
+		isHidden
+		lineageTag: 856e32e2-027e-429b-9703-d7ed020d1554
+		summarizeBy: none
+		sourceColumn: Description
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	column IsHidden
+		dataType: boolean
+		isHidden
+		formatString: """TRUE"";""TRUE"";""FALSE"""
+		lineageTag: 2cbeb3a7-90fd-41c3-8202-2ce8fed96b2d
+		summarizeBy: none
+		sourceColumn: IsHidden
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	column TableStorageID
+		dataType: double
+		isHidden
+		lineageTag: 736fa5fb-98b7-4ab9-ab67-f57da1c22cbd
+		summarizeBy: none
+		sourceColumn: TableStorageID
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column SystemFlags
+		dataType: int64
+		isHidden
+		formatString: 0
+		lineageTag: f41308f9-62bc-4fb0-b654-202199c02f1e
+		summarizeBy: none
+		sourceColumn: SystemFlags
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	column ShowAsVariationsOnly
+		dataType: boolean
+		isHidden
+		formatString: """TRUE"";""TRUE"";""FALSE"""
+		lineageTag: 4bff5f71-c58f-4033-bb14-33ae534cba8b
+		summarizeBy: none
+		sourceColumn: ShowAsVariationsOnly
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	column IsPrivate
+		dataType: boolean
+		isHidden
+		formatString: """TRUE"";""TRUE"";""FALSE"""
+		lineageTag: 2b921445-4986-40ca-aca8-d4685fe94570
+		summarizeBy: none
+		sourceColumn: IsPrivate
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	column DefaultDetailRowsDefinitionID
+		dataType: double
+		isHidden
+		lineageTag: 71635699-a2bc-466e-84db-0752163eee4d
+		summarizeBy: none
+		sourceColumn: DefaultDetailRowsDefinitionID
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column AlternateSourcePrecedence
+		dataType: int64
+		formatString: 0
+		lineageTag: 0135ffe0-5f30-4a90-b6fb-414047e0d403
+		summarizeBy: none
+		sourceColumn: AlternateSourcePrecedence
+
+		annotation SummarizationSetBy = Automatic
+
+	column RefreshPolicyID
+		dataType: double
+		lineageTag: 905debac-fe0a-4010-bf91-67d652dfc72c
+		summarizeBy: none
+		sourceColumn: RefreshPolicyID
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column CalculationGroupID
+		dataType: double
+		lineageTag: 0f53995e-3c7b-463b-b3d3-d7e72fe7024d
+		summarizeBy: none
+		sourceColumn: CalculationGroupID
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column ExcludeFromModelRefresh
+		dataType: boolean
+		formatString: """TRUE"";""TRUE"";""FALSE"""
+		lineageTag: 872eaecc-30bd-4b3c-a418-fc49c423630a
+		summarizeBy: none
+		sourceColumn: ExcludeFromModelRefresh
+
+		annotation SummarizationSetBy = Automatic
+
+	column LineageTag
+		dataType: string
+		lineageTag: 62466692-545e-49f2-b6c8-80ea53aeffd8
+		summarizeBy: none
+		sourceColumn: LineageTag
+
+		annotation SummarizationSetBy = Automatic
+
+	column SourceLineageTag
+		dataType: string
+		lineageTag: e8dc90e2-a54e-4183-9ef8-483fd37514b3
+		summarizeBy: none
+		sourceColumn: SourceLineageTag
+
+		annotation SummarizationSetBy = Automatic
+
+	column SystemManaged
+		dataType: boolean
+		formatString: """TRUE"";""TRUE"";""FALSE"""
+		lineageTag: d94b6943-c561-4d6b-a91d-b3e88faef66e
+		summarizeBy: none
+		sourceColumn: SystemManaged
+
+		annotation SummarizationSetBy = Automatic
+
+	column Modified
+		dataType: dateTime
+		formatString: General Date
+		lineageTag: beab38f5-77e4-4394-81e7-14706c1eb60f
+		summarizeBy: none
+		sourceColumn: Modified
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Structure Modified'
+		dataType: dateTime
+		formatString: General Date
+		lineageTag: a92250e1-edad-4f3f-aedb-262bd5fa067b
+		summarizeBy: none
+		sourceColumn: Structure Modified
+
+		annotation SummarizationSetBy = Automatic
+
+	partition 'From Tables TM' = m
+		mode: import
+		queryGroup: 'Meta Data'
+		source =
+				let
+				    Source = #"Tables TM"
+				in
+				    Source
+
+	changedProperty = IsHidden
+
+	annotation PBI_ResultType = Table
+

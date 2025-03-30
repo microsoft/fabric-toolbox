@@ -1,0 +1,368 @@
+{
+    "properties": {
+        "activities": [
+            {
+                "name": "Set dayArray",
+                "description": "A range between 0 and the value of the parameter \"fromDateDayAgo\"-1 is generated.\nThe maximum range allowed in this pipeline can be 0 to 28 (29 days) to make this FUAM module more error-resistant.",
+                "type": "SetVariable",
+                "dependsOn": [
+                    {
+                        "activity": "Delete files",
+                        "dependencyConditions": [
+                            "Succeeded"
+                        ]
+                    }
+                ],
+                "policy": {
+                    "secureOutput": false,
+                    "secureInput": false
+                },
+                "typeProperties": {
+                    "variableName": "dayArray",
+                    "value": {
+                        "value": "@range(0, sub(pipeline().parameters.fromDateDayAgo, 1))",
+                        "type": "Expression"
+                    }
+                }
+            },
+            {
+                "name": "ForEach days",
+                "type": "ForEach",
+                "dependsOn": [
+                    {
+                        "activity": "Set dayArray",
+                        "dependencyConditions": [
+                            "Succeeded"
+                        ]
+                    }
+                ],
+                "typeProperties": {
+                    "items": {
+                        "value": "@variables('dayArray')",
+                        "type": "Expression"
+                    },
+                    "isSequential": true,
+                    "activities": [
+                        {
+                            "name": "Set currentDay",
+                            "type": "SetVariable",
+                            "dependsOn": [],
+                            "policy": {
+                                "secureOutput": false,
+                                "secureInput": false
+                            },
+                            "typeProperties": {
+                                "variableName": "currentDay",
+                                "value": {
+                                    "value": "@mul(item(), -1)",
+                                    "type": "Expression"
+                                }
+                            }
+                        },
+                        {
+                            "name": "Set fromDate",
+                            "type": "SetVariable",
+                            "dependsOn": [
+                                {
+                                    "activity": "Set currentDay",
+                                    "dependencyConditions": [
+                                        "Succeeded"
+                                    ]
+                                }
+                            ],
+                            "policy": {
+                                "secureOutput": false,
+                                "secureInput": false
+                            },
+                            "typeProperties": {
+                                "variableName": "fromDateFormatted",
+                                "value": {
+                                    "value": "@concat(formatDateTime(addDays(utcNow(), variables('currentDay')),'yyyy-MM-dd'), 'T00:00:00.000Z')",
+                                    "type": "Expression"
+                                }
+                            }
+                        },
+                        {
+                            "name": "Set toDate",
+                            "type": "SetVariable",
+                            "dependsOn": [
+                                {
+                                    "activity": "Set currentDay",
+                                    "dependencyConditions": [
+                                        "Succeeded"
+                                    ]
+                                }
+                            ],
+                            "policy": {
+                                "secureOutput": false,
+                                "secureInput": false
+                            },
+                            "typeProperties": {
+                                "variableName": "toDateFormatted",
+                                "value": {
+                                    "value": "@concat(formatDateTime(addDays(utcNow(), variables('currentDay')),'yyyy-MM-dd'), 'T23:59:59.999Z')",
+                                    "type": "Expression"
+                                }
+                            }
+                        },
+                        {
+                            "name": "Copy Activity Log to Files",
+                            "type": "Copy",
+                            "dependsOn": [
+                                {
+                                    "activity": "Set fromDate",
+                                    "dependencyConditions": [
+                                        "Succeeded"
+                                    ]
+                                },
+                                {
+                                    "activity": "Set toDate",
+                                    "dependencyConditions": [
+                                        "Succeeded"
+                                    ]
+                                },
+                                {
+                                    "activity": "Set currentDateLabel",
+                                    "dependencyConditions": [
+                                        "Succeeded"
+                                    ]
+                                }
+                            ],
+                            "policy": {
+                                "timeout": "0.12:00:00",
+                                "retry": 0,
+                                "retryIntervalInSeconds": 30,
+                                "secureOutput": false,
+                                "secureInput": false
+                            },
+                            "typeProperties": {
+                                "source": {
+                                    "type": "RestSource",
+                                    "httpRequestTimeout": "00:01:40",
+                                    "requestInterval": "00.00:00:00.010",
+                                    "requestMethod": "GET",
+                                    "paginationRules": {
+                                        "AbsoluteUrl": {
+                                            "value": "@string('$.continuationUri')",
+                                            "type": "Expression"
+                                        }
+                                    },
+                                    "datasetSettings": {
+                                        "annotations": [],
+                                        "type": "RestResource",
+                                        "typeProperties": {
+                                            "relativeUrl": {
+                                                "value": "@concat('activityevents?startDateTime=''',variables('fromDateFormatted'),'''&endDateTime=''', variables('toDateFormatted'), '''')",
+                                                "type": "Expression"
+                                            }
+                                        },
+                                        "schema": [],
+                                        "externalReferences": {
+                                            "connection": "30c5df6c-5353-562f-9d7a-01a9eec0250b"
+                                        }
+                                    }
+                                },
+                                "sink": {
+                                    "type": "JsonSink",
+                                    "storeSettings": {
+                                        "type": "LakehouseWriteSettings"
+                                    },
+                                    "formatSettings": {
+                                        "type": "JsonWriteSettings",
+                                        "filePattern": "arrayOfObjects"
+                                    },
+                                    "datasetSettings": {
+                                        "annotations": [],
+                                        "linkedService": {
+                                            "name": "FUAM_Lakehouse",
+                                            "properties": {
+                                                "annotations": [],
+                                                "type": "Lakehouse",
+                                                "typeProperties": {
+                                                    "workspaceId": "eb764c8b-cf3b-55be-adf4-348fe9233657",
+                                                    "artifactId": "729eb8a2-8070-5ed8-ad43-dccbc00b32af",
+                                                    "rootFolder": "Files"
+                                                }
+                                            }
+                                        },
+                                        "type": "Json",
+                                        "typeProperties": {
+                                            "location": {
+                                                "type": "LakehouseLocation",
+                                                "fileName": "activities.json",
+                                                "folderPath": {
+                                                    "value": "@concat('raw/activities/', variables('currentDateLabel'))",
+                                                    "type": "Expression"
+                                                }
+                                            }
+                                        },
+                                        "schema": {}
+                                    }
+                                },
+                                "enableStaging": false
+                            }
+                        },
+                        {
+                            "name": "Set currentDateLabel",
+                            "type": "SetVariable",
+                            "dependsOn": [
+                                {
+                                    "activity": "Set currentDay",
+                                    "dependencyConditions": [
+                                        "Succeeded"
+                                    ]
+                                }
+                            ],
+                            "policy": {
+                                "secureOutput": false,
+                                "secureInput": false
+                            },
+                            "typeProperties": {
+                                "variableName": "currentDateLabel",
+                                "value": {
+                                    "value": "@concat(formatDateTime(addDays(utcNow(), variables('currentDay')),'yyyy-MM-dd'))",
+                                    "type": "Expression"
+                                }
+                            }
+                        }
+                    ]
+                }
+            },
+            {
+                "name": "Delete files",
+                "type": "Delete",
+                "dependsOn": [],
+                "policy": {
+                    "timeout": "0.12:00:00",
+                    "retry": 0,
+                    "retryIntervalInSeconds": 30,
+                    "secureOutput": false,
+                    "secureInput": false
+                },
+                "typeProperties": {
+                    "datasetSettings": {
+                        "annotations": [],
+                        "linkedService": {
+                            "name": "FUAM_Lakehouse",
+                            "properties": {
+                                "annotations": [],
+                                "type": "Lakehouse",
+                                "typeProperties": {
+                                    "workspaceId": "eb764c8b-cf3b-55be-adf4-348fe9233657",
+                                    "artifactId": "729eb8a2-8070-5ed8-ad43-dccbc00b32af",
+                                    "rootFolder": "Files"
+                                }
+                            }
+                        },
+                        "type": "Binary",
+                        "typeProperties": {
+                            "location": {
+                                "type": "LakehouseLocation",
+                                "folderPath": "raw/activities"
+                            }
+                        }
+                    },
+                    "enableLogging": false,
+                    "storeSettings": {
+                        "type": "LakehouseReadSettings",
+                        "recursive": true,
+                        "enablePartitionDiscovery": false
+                    }
+                }
+            },
+            {
+                "name": "02_Transform_Activities_Unit",
+                "type": "TridentNotebook",
+                "dependsOn": [
+                    {
+                        "activity": "ForEach days",
+                        "dependencyConditions": [
+                            "Succeeded"
+                        ]
+                    }
+                ],
+                "policy": {
+                    "timeout": "0.12:00:00",
+                    "retry": 0,
+                    "retryIntervalInSeconds": 30,
+                    "secureOutput": false,
+                    "secureInput": false
+                },
+                "typeProperties": {
+                    "notebookId": "79eae50d-9aa9-50f9-99e2-0436ba9ab649",
+                    "workspaceId": "eb764c8b-cf3b-55be-adf4-348fe9233657",
+                    "parameters": {
+                        "display_data": {
+                            "value": {
+                                "value": "@pipeline().parameters.display_data",
+                                "type": "Expression"
+                            },
+                            "type": "bool"
+                        }
+                    },
+                    "sessionTag": "fuam"
+                }
+            },
+            {
+                "name": "03_Aggregate_Activities_Unit",
+                "type": "TridentNotebook",
+                "dependsOn": [
+                    {
+                        "activity": "02_Transform_Activities_Unit",
+                        "dependencyConditions": [
+                            "Succeeded"
+                        ]
+                    }
+                ],
+                "policy": {
+                    "timeout": "0.12:00:00",
+                    "retry": 0,
+                    "retryIntervalInSeconds": 30,
+                    "secureOutput": false,
+                    "secureInput": false
+                },
+                "typeProperties": {
+                    "notebookId": "b87e115f-b8d0-5505-b264-8cd986ededc3",
+                    "workspaceId": "eb764c8b-cf3b-55be-adf4-348fe9233657",
+                    "parameters": {
+                        "display_data": {
+                            "value": {
+                                "value": "@pipeline().parameters.display_data",
+                                "type": "Expression"
+                            },
+                            "type": "bool"
+                        }
+                    },
+                    "sessionTag": "fuam"
+                }
+            }
+        ],
+        "parameters": {
+            "fromDateDayAgo": {
+                "type": "int",
+                "defaultValue": 30
+            },
+            "display_data": {
+                "type": "bool",
+                "defaultValue": false
+            }
+        },
+        "variables": {
+            "fromDateFormatted": {
+                "type": "String"
+            },
+            "toDateFormatted": {
+                "type": "String"
+            },
+            "dayArray": {
+                "type": "Array"
+            },
+            "currentDay": {
+                "type": "Integer"
+            },
+            "currentDateLabel": {
+                "type": "String"
+            }
+        }
+    }
+}

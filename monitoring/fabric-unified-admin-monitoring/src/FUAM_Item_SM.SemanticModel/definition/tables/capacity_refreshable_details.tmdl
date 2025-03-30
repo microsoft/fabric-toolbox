@@ -1,0 +1,168 @@
+table capacity_refreshable_details
+	lineageTag: d89d54ad-2277-40ac-9da3-9ae2ea8f80cd
+	sourceLineageTag: [dbo].[capacity_refreshable_details]
+
+	column CapacityId
+		dataType: string
+		sourceProviderType: varchar(8000)
+		lineageTag: 3e09528b-cf80-4a80-8157-bdf065cbb4d1
+		sourceLineageTag: CapacityId
+		summarizeBy: none
+		sourceColumn: CapacityId
+
+		annotation SummarizationSetBy = Automatic
+
+	column WorkspaceId
+		dataType: string
+		sourceProviderType: varchar(8000)
+		lineageTag: d00cc9e5-11cc-4c20-95cf-3368c9ecaebe
+		sourceLineageTag: WorkspaceId
+		summarizeBy: none
+		sourceColumn: WorkspaceId
+
+		annotation SummarizationSetBy = Automatic
+
+	column ItemId
+		dataType: string
+		sourceProviderType: varchar(8000)
+		lineageTag: aacb8636-4e5f-4541-a762-9473d89cbd7a
+		sourceLineageTag: ItemId
+		summarizeBy: none
+		sourceColumn: ItemId
+
+		annotation SummarizationSetBy = Automatic
+
+	column ItemName
+		dataType: string
+		sourceProviderType: varchar(8000)
+		lineageTag: 1fe4bed3-fc3b-4e57-9a6d-7dbebf38286a
+		sourceLineageTag: ItemName
+		summarizeBy: none
+		sourceColumn: ItemName
+
+		annotation SummarizationSetBy = Automatic
+
+	column RequestId
+		dataType: string
+		sourceProviderType: varchar(8000)
+		lineageTag: 1415af26-f6cc-4f88-96f1-0367cfa5e513
+		sourceLineageTag: RequestId
+		summarizeBy: none
+		sourceColumn: RequestId
+
+		annotation SummarizationSetBy = Automatic
+
+	column LastRefreshStartDateKey
+		dataType: string
+		sourceProviderType: varchar(8000)
+		lineageTag: b316f7df-b530-4183-8a34-28032ad9a232
+		sourceLineageTag: LastRefreshStartDateKey
+		summarizeBy: none
+		sourceColumn: LastRefreshStartDateKey
+
+		annotation SummarizationSetBy = Automatic
+
+	column Status
+		dataType: string
+		sourceProviderType: varchar(8000)
+		lineageTag: 822ba8cf-e482-4afc-ba57-f4157c3da2b7
+		sourceLineageTag: Status
+		summarizeBy: none
+		sourceColumn: Status
+
+		annotation SummarizationSetBy = Automatic
+
+	column RefreshType
+		dataType: string
+		sourceProviderType: varchar(8000)
+		lineageTag: a13edfcc-40ae-484e-88db-89151fddaf3d
+		sourceLineageTag: RefreshType
+		summarizeBy: none
+		sourceColumn: RefreshType
+
+		annotation SummarizationSetBy = Automatic
+
+	column LastRefreshStartDate
+		dataType: dateTime
+		formatString: General Date
+		sourceProviderType: date
+		lineageTag: cb41d623-50f2-4565-9196-bdbd827dedaf
+		sourceLineageTag: LastRefreshStartDate
+		summarizeBy: none
+		sourceColumn: LastRefreshStartDate
+
+		annotation SummarizationSetBy = Automatic
+
+	column LastRefreshEndDate
+		dataType: dateTime
+		formatString: General Date
+		sourceProviderType: date
+		lineageTag: 0776d424-0c93-4158-a559-8c1827b0d4d4
+		sourceLineageTag: LastRefreshEndDate
+		summarizeBy: none
+		sourceColumn: LastRefreshEndDate
+
+		annotation SummarizationSetBy = Automatic
+
+	column LastRefreshStartTime
+		dataType: dateTime
+		formatString: General Date
+		sourceProviderType: datetime2
+		lineageTag: 84020d62-9b98-437b-9998-e09581e2be16
+		sourceLineageTag: LastRefreshStartTime
+		summarizeBy: none
+		sourceColumn: LastRefreshStartTime
+
+		annotation SummarizationSetBy = Automatic
+
+	column LastRefreshEndTime
+		dataType: dateTime
+		formatString: General Date
+		sourceProviderType: datetime2
+		lineageTag: 6bf6f916-085b-4bae-bdb4-6b80dfb6b54e
+		sourceLineageTag: LastRefreshEndTime
+		summarizeBy: none
+		sourceColumn: LastRefreshEndTime
+
+		annotation SummarizationSetBy = Automatic
+
+	column LastRefreshStartHour
+		dataType: string
+		sourceProviderType: varchar(8000)
+		lineageTag: 9621469b-ad5c-4618-ae0b-1fa53bdce227
+		sourceLineageTag: LastRefreshStartHour
+		summarizeBy: none
+		sourceColumn: LastRefreshStartHour
+
+		annotation SummarizationSetBy = Automatic
+
+	column LastRefreshEndHour
+		dataType: string
+		sourceProviderType: varchar(8000)
+		lineageTag: 02c4bf65-e8ad-4346-967a-9855f54f3d90
+		sourceLineageTag: LastRefreshEndHour
+		summarizeBy: none
+		sourceColumn: LastRefreshEndHour
+
+		annotation SummarizationSetBy = Automatic
+
+	column DurationInSeconds
+		dataType: int64
+		formatString: 0
+		sourceProviderType: bigint
+		lineageTag: 02e5759f-0daf-4807-8f39-a48e5fe1766d
+		sourceLineageTag: DurationInSeconds
+		summarizeBy: sum
+		sourceColumn: DurationInSeconds
+
+		annotation SummarizationSetBy = Automatic
+
+	partition capacity_refreshable_details = entity
+		mode: directLake
+		source
+			entityName: capacity_refreshable_details
+			schemaName: dbo
+			expressionSource: DatabaseQuery
+
+	annotation PBI_ResultType = Table
+

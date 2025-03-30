@@ -1,0 +1,13 @@
+{
+    "version": "4.0",
+    "datasetReference": {
+        "byConnection": {
+            "connectionString": "Data Source=\"powerbi://api.powerbi.com/v1.0/myorg/FUAM Master DEV\";Initial Catalog=FUAM_Semantic_Model_Meta_Data_Analyzer_SM;Integrated Security=ClaimsToken",
+            "pbiServiceModelId": null,
+            "pbiModelVirtualServerName": "sobe_wowvirtualserver",
+            "pbiModelDatabaseName": "f7d9f33b-9d76-584d-b880-afc497bbcff0",
+            "name": "EntityDataSource",
+            "connectionType": "pbiServiceXmlaStyleLive"
+        }
+    }
+}

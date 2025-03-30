@@ -1,0 +1,33 @@
+table 'DataType ENUM'
+	isHidden
+	lineageTag: aef8f89e-63c0-44fe-ad90-b013d8423de9
+
+	column Enum
+		dataType: int64
+		formatString: 0
+		lineageTag: 4feb5443-3704-4b13-8230-9e468067e126
+		summarizeBy: none
+		sourceColumn: Enum
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Data Type'
+		dataType: string
+		lineageTag: d8a22f18-3f40-4a52-ada9-bc54dc586a7b
+		summarizeBy: none
+		sourceColumn: Data Type
+
+		annotation SummarizationSetBy = Automatic
+
+	partition 'DataType ENUM' = m
+		mode: import
+		source =
+				let
+				    Source = Table.FromRows(Json.Document(Binary.Decompress(Binary.FromText("i45WMlTSUXIsLcnPTSzJTFaK1YlWMgKKBJcUZealg7lmQK5nXomZCZhnAeS55Jcm5aSCuZYgbmJJakhmLkTA0AAkkpqcmZuYAxEAWeCUn5+TmpgHETAHCWTmJRZVQvggM0LzsvPyy4EKYgE=", BinaryEncoding.Base64), Compression.Deflate)), let _t = ((type nullable text) meta [Serialized.Text = true]) in type table [Enum = _t, Name = _t]),
+				    #"Changed Type" = Table.TransformColumnTypes(Source,{{"Enum", Int64.Type}}),
+				    #"Renamed Columns" = Table.RenameColumns(#"Changed Type",{{"Name", "Data Type"}})
+				in
+				    #"Renamed Columns"
+
+	annotation PBI_ResultType = Table
+

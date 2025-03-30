@@ -1,0 +1,279 @@
+table Insights
+	lineageTag: 820c3699-072a-4ec3-b792-0fab80088fe7
+
+	measure '# Columns' = COUNTROWS('Columns TM')
+		formatString: 0
+		lineageTag: 5a43eff5-5bfc-4396-a4d0-8ad8a5c6d4d8
+
+	measure '# Data Sources' = COUNTROWS('Data Sources TM')
+		formatString: 0
+		lineageTag: 04abae2f-ff0c-4fc4-99de-83e6d9906358
+
+	measure '# Expressions' = ```
+			COUNTROWS('Expressions TM') 
+			```
+		formatString: 0
+		lineageTag: a151804b-4542-4309-abde-e5b1752ce18d
+
+	measure '# Measures' = COUNTROWS('Measures TM')
+		formatString: 0
+		lineageTag: 3f20aebe-19b9-4e3d-9cda-b4bc707cd885
+
+	measure '# Models' = COUNTROWS('Model TM')
+		formatString: 0
+		lineageTag: 339c40e8-1854-47fa-a1d0-6f7b7a3aaab8
+
+	measure '# Partitions' = COUNTROWS('Partitions TM')
+		formatString: 0
+		lineageTag: 3f38c722-6e3d-437c-b0cc-a5b963e9789b
+
+	measure '# Relationships' = COUNTROWS('Relationships TM')
+		formatString: 0
+		lineageTag: 534d7768-7473-40c4-8c9a-7da74a4b837b
+
+	measure '# Tables' = COUNTROWS('Tables TM')
+		formatString: 0
+		lineageTag: 3a690f60-03eb-4d2a-bbff-ab752d53e9cc
+
+	measure '# KPIs' = COUNTROWS('KPIs TM')
+		formatString: 0
+		lineageTag: 8b362c0f-ed7c-4de9-8943-1eca72b49353
+
+	measure '# Measure Errors' = COUNTA('Measures TM'[ErrorMessage])
+		formatString: 0
+		lineageTag: c9bc58e4-dd4e-40de-91f6-9c4df2f0ab81
+
+	measure '# Column Errors' = COUNTA('Columns TM'[ErrorMessage])
+		formatString: 0
+		lineageTag: 506a2515-04d3-481e-b33f-ab5df20aed26
+
+	measure '# Partition Errors' = COUNTA('Partitions TM'[ErrorMessage])
+		formatString: 0
+		lineageTag: f56bc153-6201-4b5a-939a-14609999496c
+
+	measure 'Compatibility Level' = MAX('Catalog DBSCHEMA'[COMPATIBILITY_LEVEL])
+		formatString: 0
+		lineageTag: 9e09e200-a066-43d4-aca8-62044edaef95
+
+	measure 'Columns Healthy' = IF([# Column Errors]=0, "Healthy", "Faulty")
+		lineageTag: 31cfbfc5-a012-4cdd-9d1c-da71247307dd
+
+	measure 'Partition Healthy' = ```
+			
+			VAR _stateCount = COUNTX(FILTER('Partitions TM', RELATED('State ENUM'[State]) <> "Ready"), COUNTA('Partitions TM'[ID]))
+			VAR _errorCount = [# Partition Errors]
+			RETURN IF((_stateCount+_errorCount)=0, "Healthy", "Faulty")
+			
+			```
+		lineageTag: e96aa945-c9e5-4e6e-b086-f4e7118e3fdf
+
+	measure 'Measure Healthy' =
+			
+			VAR _stateCount = COUNTX(FILTER('Measures TM', RELATED('State ENUM'[State]) <> "Ready"), COUNTA('Measures TM'[ID]))
+			VAR _errorCount = [# Measure Errors]
+			RETURN IF((_stateCount+_errorCount)=0, "Healthy", "Faulty")
+		lineageTag: 9c4c7245-ba5b-428c-8627-0be21cab4f08
+
+	measure 'Relationship Healthy' =
+			
+			VAR _stateCount = COUNTX(FILTER('Relationships TM', RELATED('State ENUM'[State]) <> "Ready"), COUNTA('Relationships TM'[ID]))
+			RETURN IF(_stateCount=0, "Healthy", "Faulty")
+		lineageTag: 80662a0c-77e1-4e83-8c7c-a4b09d05fbfe
+
+	measure 'Model Healty' = IF([Columns Healthy] = "Healthy" && [Partition Healthy] = "Healthy" && [Measure Healthy] = "Healthy"  && [Relationship Healthy] = "Healthy", "Healthy", "Faulty")
+		lineageTag: 9087187c-2dab-47ae-83a3-ca22fe55c9ca
+
+	measure '# Objects' = DISTINCTCOUNT('Calc Dependencies'[OBJECT])
+		formatString: 0
+		lineageTag: 1d68a6af-c084-463e-919c-f962457d1424
+
+	measure '# Objects referenced' = DISTINCTCOUNT('Calc Dependencies'[REFERENCED_OBJECT])
+		formatString: 0
+		lineageTag: 0f318c8c-c0b6-4fc6-8371-8dae09c97b10
+
+	measure 'Dependency Insights' = ```
+			
+			var _selectionObjectType = DISTINCTCOUNT('Calc Dependencies'[OBJECT_TYPE])
+			var _selectionObjectTypeR = DISTINCTCOUNT('Calc Dependencies'[REFERENCED_OBJECT_TYPE])
+			var _objectTypeName = IF([# Objects] = 1, MIN('Calc Dependencies'[SingularName]), MIN('Calc Dependencies'[PluralName]))
+			var _selectedSummaryHelper = IF([# Objects] = 1, " is ", " are ")
+			var _objectTypeNameR = IF([# Objects referenced] = 1, MIN('Calc Dependencies'[SingularNameReferenced]), MIN('Calc Dependencies'[PluralNameReferenced]))
+			
+			var _selectedSummary = [# Objects] & " " & _objectTypeName & _selectedSummaryHelper & "referenced to " & [# Objects referenced] & " " &  _objectTypeNameR & "."
+			var _overallSummary = [# Objects] & " objects are referenced to " & [# Objects referenced] & " objects."
+			
+			var _more = "Select more specific object combinations to get more insights."
+			
+			var _selectionHelperMeasure = IF(SELECTEDVALUE('Calc Dependencies'[OBJECT_TYPE]) = "MEASURE", "DAX expressions in Measures contains Table(s) and/or Column(s).", "")
+			
+			var _selectionHelperPartition = IF(SELECTEDVALUE('Calc Dependencies'[OBJECT_TYPE]) = "PARTITION", "One Table has at least one Partition.", "")
+			
+			var _selectionHelperPartitionTableComb = 
+			IF(
+			    SELECTEDVALUE('Calc Dependencies'[OBJECT_TYPE]) = "PARTITION",
+			    IF([# Objects] = [# Objects referenced], 
+			        "Each Partition currently has one Data Source.",
+			        "Some Partitions have multiple Data Sources."))
+			
+			RETURN IF(_selectionObjectType = 1 && _selectionObjectTypeR = 1, _selectedSummary, _overallSummary) 
+			& UNICHAR(10) & UNICHAR(10) 
+			& _selectionHelperMeasure
+			& UNICHAR(10) 
+			& _selectionHelperPartition
+			& UNICHAR(10) 
+			& _selectionHelperPartitionTableComb
+			```
+		lineageTag: 4be449d3-645f-484f-a074-90d0d18018b7
+
+	measure 'Sum Allocated Size' = DIVIDE(SUM('Storage Table Column Segments TM'[ALLOCATED_SIZE]),[Selected Unit Value])
+		formatString: 0
+		lineageTag: 97f9d65c-3e66-4d88-a4da-4a4039c540c5
+
+		annotation PBI_FormatHint = {"isDecimal":true}
+
+	measure 'Sum Data Size' = DIVIDE(SUMX(FILTER('Storage Table Column Segments TM', RIGHT(LEFT('Storage Table Column Segments TM'[TABLE_ID], 2), 1) <> "$"), 'Storage Table Column Segments TM'[USED_SIZE]),[Selected Unit Value])
+		formatString: #,0.00
+		lineageTag: d96d27d3-af20-4565-9b1a-70fc49c97785
+
+	measure '# Segment Records' = SUM('Segment Map Storages TM'[RecordCount])
+		formatString: #,0
+		lineageTag: 606df94d-3c10-42dd-8fc9-fe53d5ad55ff
+
+	measure 'Avg Segment Temperature' = AVERAGE('Storage Table Column Segments TM'[TEMPERATURE])
+		lineageTag: bfc682b6-eb6d-4252-9727-aa8d06c991a9
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'Sum Dictionary Size' = DIVIDE(SUMX(FILTER('Storage Table Columns TM', 'Storage Table Columns TM'[COLUMN_TYPE] = "BASIC_DATA"), 'Storage Table Columns TM'[DICTIONARY_SIZE]),[Selected Unit Value])
+		lineageTag: 18cb2d7b-c19f-4156-9102-aa7871c7e503
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'Avg Dictionary Temperature' = AVERAGE('Storage Table Columns TM'[DICTIONARY_TEMPERATURE])
+		lineageTag: ec27db78-95e5-4f06-949e-d8e103049cf4
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'Sum Hierarchy Size' = DIVIDE(SUMX(FILTER('Storage Table Column Segments TM', LEFT('Storage Table Column Segments TM'[TABLE_ID],2) = "H$" && 'Storage Table Column Segments TM'[SEGMENT_NUMBER] = 0), 'Storage Table Column Segments TM'[USED_SIZE]),[Selected Unit Value])
+		formatString: #,0.0
+		lineageTag: c32afc7f-fd75-45ca-860f-60f77d43b3b4
+
+	measure 'Sum Size' = [Sum Data Size] + [Sum Dictionary Size] + [Sum Hierarchy Size] + IF ( HASONEFILTER ( 'Columns TM'[ExplicitName] ), BLANK(),  [Sum User Hierarchy Size] + [Sum Relationship Size] )
+		formatString: #,0.00
+		lineageTag: faf7eacb-c5ab-4904-bfc4-29dd15f96b91
+
+	measure 'Selected Unit Value' = SELECTEDVALUE(Units[UnitValue])
+		formatString: 0
+		lineageTag: 5d9141fa-58e1-4249-9c6f-9915612091d6
+
+	measure 'Sum User Hierarchy Size' = IF ( HASONEFILTER ( 'Columns TM'[ExplicitName] ), BLANK(),  DIVIDE(SUMX(FILTER('Storage Table Segments TM', LEFT('Storage Table Segments TM'[TABLE_ID],2) = "U$"), 'Storage Table Segments TM'[USED_SIZE]),[Selected Unit Value]) )
+		lineageTag: d302d60d-c295-40dc-9f56-7d25fb2e5665
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'Sum Relationship Size' = ```
+			
+			IF( 
+			    HASONEFILTER('Columns TM'[Column Name]),
+			    BLANK(),
+			    DIVIDE(
+			        SUMX(
+			            FILTER('Storage Table Segments TM', 
+			            LEFT('Storage Table Segments TM'[TABLE_ID],2) = "R$"
+			            ),
+			            'Storage Table Segments TM'[USED_SIZE]), 
+			            [Selected Unit Value]
+			        ) 
+			)
+			```
+		lineageTag: 75218f60-87bc-48d2-9afa-90664fc9d1ce
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure '# Folders' = COUNTROWS('Query Groups TM')
+		formatString: 0
+		lineageTag: 332f854d-017f-465a-88d1-1fe217181a3f
+
+	measure '# Queries PQ' = COUNTROWS('Queries PQ')
+		formatString: 0
+		lineageTag: 6b9550d3-f9b0-4661-a6e4-70dec7dbf9a3
+
+	measure 'Ratio Table Documented %' = COUNTA('Tables TM'[Description]) / COUNTROWS('Tables TM') + 0
+		formatString: 0%;-0%;0%
+		lineageTag: 31848a77-813b-4a3d-b9fd-52193448f38a
+
+	measure 'Ratio Measure Documented %' = COUNTA('Measures TM'[Description]) / COUNTROWS('Measures TM') + 0
+		formatString: 0%;-0%;0%
+		lineageTag: 552a6948-5bc9-48a3-99dd-a28aebebd168
+
+	measure 'Avg Rows by Partition' = AVERAGE('Segment Map Storages TM'[RecordCount])
+		formatString: #,0
+		lineageTag: 16d5ba86-36a1-45ac-b6a0-2768e59e32a9
+
+		annotation PBI_FormatHint = {"isDecimal":true}
+
+	measure 'Median Rows by Partition' = MEDIAN('Segment Map Storages TM'[RecordCount])
+		formatString: #,0
+		lineageTag: 0aa6efaf-0740-4ca0-9ca6-35666785b91f
+
+		annotation PBI_FormatHint = {"isDecimal":true}
+
+	measure 'Min Rows by Partition' = MIN('Segment Map Storages TM'[RecordCount])
+		lineageTag: 703b0262-2473-4311-8bcd-d2f22af0603c
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'Max Rows by Partition' = MAX('Segment Map Storages TM'[RecordCount])
+		lineageTag: 2511aadf-cd2c-4e89-bfa3-77f3e12f5088
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'Sum Data Size by Partition' = DIVIDE(SUM('Partitions TM'[Data Sum Size Bytes]), [Selected Unit Value])
+		lineageTag: d31ed5b2-6070-49ee-99a9-435962f61137
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'Avg Data Size by Partition' = DIVIDE(AVERAGE('Partitions TM'[Data Sum Size Bytes]), [Selected Unit Value])
+		lineageTag: edb4fc93-9488-4dc6-9867-5cfbfc39e430
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'Median Data Size by Partition' = DIVIDE(MEDIAN('Partitions TM'[Data Sum Size Bytes]), [Selected Unit Value])
+		lineageTag: ba4e964c-c4da-4dff-aac1-64c3f67e81bc
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'Avg Data Size by Partition Bytes' = AVERAGE('Partitions TM'[Data Sum Size Bytes])
+		lineageTag: 8f9109a0-11bb-4ef4-b5f1-09c8d8044b9b
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'Selected Unit Name' = SELECTEDVALUE(Units[Unit])
+		lineageTag: 7682d840-0428-45b4-b3c9-4a918a76f3b8
+
+	measure Cardinality = SUM('Column Storages TM'[Statistics_DistinctStates])
+		lineageTag: 477442e1-36d0-43d0-bad0-89624e5b7ddb
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'Model Insights' = ```
+			
+			 "The semantic model " & MIN(modelName[modelName]) & " is " & [Model Healty] & ". " & "It has a total estimated size of " & ROUND([Sum Size],2) & " " & [Selected Unit Name] & ". " & "The model has " & [# Tables] & " tables, " & [# Relationships] & " relationships, " & [# Measures] & " measures. " & "The dependency explorer shows that " & [Dependency Insights]
+			```
+		lineageTag: d8f71248-b815-485a-9f06-14d52a4e09f3
+
+	column Value
+		isHidden
+		lineageTag: e4083cfd-8808-48eb-a7a1-caaffb9a7bf6
+		summarizeBy: none
+		isNameInferred
+		sourceColumn: [Value]
+
+		annotation SummarizationSetBy = Automatic
+
+	partition Insights = calculated
+		mode: import
+		source = {"data is gold"}
+
+	annotation PBI_Id = 9db4e66762de40bf8a2a161f82da4a2d
+

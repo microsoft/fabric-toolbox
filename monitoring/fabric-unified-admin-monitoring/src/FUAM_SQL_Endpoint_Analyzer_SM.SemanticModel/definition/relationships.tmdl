@@ -1,0 +1,8 @@
+relationship 222426dc-18dd-3674-f1d4-fc82f70db6e7
+	fromColumn: 'queryinsights exec_requests_history'.start_date
+	toColumn: 'Dim Dates'.Date
+
+relationship a2ad7ba2-5484-499a-0957-78d9a44cbb58
+	fromColumn: 'queryinsights exec_requests_history'.start_hour
+	toColumn: 'Dim Hours'.Hour
+
