@@ -27,7 +27,7 @@ The deployment of FUAM can be done with very little effort, since we tried to au
 
 ## 1. Download Notebook
 
-- Download the [Deploy_FUAM_to_your_workspace.ipynb](https://TODO) locally to you computer.
+- Download the [Deploy_FUAM.ipynb](/monitoring/fabric-unified-admin-monitoring/scripts/Deploy_FUAM.ipynb) notebook from src folder locally to you computer.
 
 ## 2. Prepare your environment
 
@@ -45,24 +45,24 @@ The deployment of FUAM can be done with very little effort, since we tried to au
 ### 2.2 Create a Workspace
 
 - Create a new workspace "FUAM" (name can be changed), which is backed by a P or F-capacity
-- Download the [Workspace logo](/monitoring/fabric-unified-admin-monitoring/media/deployment/icon_FUAM_workspace.png) 
-- Add the logo to FUAM workspace
+- (**Optional**) Download the [Workspace logo](/monitoring/fabric-unified-admin-monitoring/media/deployment/icon_FUAM_workspace.png) 
+- (**Optional**) Add the logo to FUAM workspace
 
 ## 3. Import and Run Notebook
 
-- Import the recently downloaded **Deploy_FUAM_to_your_workspace.ipynb** Notebook into your FUAM workspace
+- Import the recently downloaded **Deploy_FUAM.ipynb** Notebook into your FUAM workspace
 
     ![](/monitoring/fabric-unified-admin-monitoring/media/deployment/FUAM_basic_deployment_process_3_1.png)
 
-- Run the Notebook
+- Click "Run All" in the Notebook
 
     ![](/monitoring/fabric-unified-admin-monitoring/media/deployment/FUAM_basic_deployment_process_3_2.png)
 
-> **Info:** The notebook will **automatically create** two new cloud connections (without credentials):
+> **Info:** The notebook will **automatically create** two new cloud connections (without credentials). You can also choose your own names in case you have any naming conventions:
 
 | | Connection 1  | Connection 2 |
 |-------------| ------------- | ------------- |
-|Connection Name| pbi-service-api admin  | fabric-service-api admin  |
+|Connection Name| fuam pbi-service-api admin  | fuam fabric-service-api admin  |
 |Connection Type| Web v2  | Web v2  |
 |Base Url| https://api.powerbi.com/v1.0/myorg/admin  | https://api.fabric.microsoft.com/v1/admin  |
 |Token Audience Url| https://analysis.windows.net/powerbi/api| https://api.fabric.microsoft.com|
@@ -88,17 +88,17 @@ We recommend to create a new Capacity Metrics App -> workspace in your tenant
 - Navigate to the Capacity Metrics App's Workspace
 - Attach this workspace to a P or F capacity
 - Change the name to 'FUAM Capacity Metrics'
-- Copy the Name of the workspace: FUAM Capacity Metrics' and the name of the semantic model 'Fabric Capacity Metrics'.
+- Copy the Name of the workspace: e.g. 'FUAM Capacity Metrics' and the name of the semantic model e.g. 'Fabric Capacity Metrics'.
 
-The Capacity metrics workspace name will be set later as a value of the 'metrics_workspace' parameter in the 'Load_FUAM_Data_E2E' Pipeline.
+The Capacity metrics workspace name will be set later as a value of the **metrics_workspace** parameter in the 'Load_FUAM_Data_E2E' Pipeline.
 
-The capacity metrics semantic model name will be set lates as a value of the 'metrics_dataset' parameter in the 'Load_FUAM_Data_E2E' Pipeline.
+The capacity metrics semantic model name will be set lates as a value of the **metrics_dataset** parameter in the 'Load_FUAM_Data_E2E' Pipeline.
 
-
+> **Important:**  By default the Metrics App workspace is created on a Pro license. If you don't change this to F/P-SKU you will get an error
 
 ## 6. Run orchestration Pipeline
 
-> **Info:** The **Load_FUAM_Data_E2E** is the main end-to-end orchestration pipeline of FUAM Basic. It contains/triggers all other sub-pipelines (FUAM modules), which are implemented in the solution. The sub-pipelines download all the required data via APIs and the referenced Notebooks will transform/write the data to the final FUAM_Lakehouse delta tables.
+> **Info:** The **Load_FUAM_Data_E2E** is the main end-to-end orchestration pipeline of FUAM. It contains/triggers all other sub-pipelines (FUAM modules), which are implemented in the solution. The sub-pipelines download all the required data via APIs and the referenced Notebooks will transform/write the data to the final FUAM_Lakehouse delta tables.
 
 - Navigate to your FUAM Workspace
 - Search for the item 'Load_FUAM_Data_E2E'
@@ -155,7 +155,7 @@ The Pipeline has different parameters, which are controlling the data load flow:
 
 ### 7.3 Open PBI report
 - Navigate to your FUAM Workspace
-- Search for the item 'FUAM_Basic_Overview_Report'
+- Search for the item 'FUAM_Core_Report'
 - Open the **FUAM_Core_Report** Power BI report
 - Feel free to explore the report pages
    ![](/monitoring/fabric-unified-admin-monitoring/media/deployment/FUAM_basic_deployment_process_7_3.png)
@@ -166,7 +166,7 @@ The Pipeline has different parameters, which are controlling the data load flow:
 ## 8. Schedule Pipeline for daily load
 
 - Navigate to your FUAM Workspace
-- Search for the item 'Load_Basic_Package_Sequentially_E2E'
+- Search for the item 'Load_FUAM_Data_E2E'
 - Open the **Load_FUAM_Data_E2E** pipeline
 - (Recommended) Change the **metrics_days_in_scope** parameter value to **2**
 - (Recommended) Change the **activity_days_in_scope** parameter value to **2**
@@ -190,9 +190,9 @@ You have deployed and configured FUAM.
 
 - There can be errors in case specific item types have not been created on the tenant, yet. We tried to reduce these kind of errors, by catching this kind of errors, but on relatively empty tenants this could still effect the execution
 
-- The pipeline 'Load_Inventory_E2E' is using the notebook owner's identity to query the Scanner API. In case the user doesn't have 'Fabric Administrator' permissions, the notebook will wail. Use Azure Key Vault to run the Scanner API calls in Service Principal context.
+- The pipeline 'Load_Inventory_E2E' is using the notebook owner's identity to query the Scanner API. In case the user doesn't have 'Fabric Administrator' permissions, the notebook will fail. Use Azure Key Vault to run the Scanner API calls in Service Principal context.
 
-- In some cases the reports throw an error because of missing fields, which have not been provided by the API. In this case please execute the following steps:
+- In some cases the reports throw an error because of missing fields (in the semantic model), which have not been provided by the API. In this case please execute the following steps:
 
     - Try to refresh the underlying semantic model
     - Open the semantic model
