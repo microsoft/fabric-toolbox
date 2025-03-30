@@ -6,7 +6,7 @@ Solution accelerator for Fabric platform administrator monitoring.
 
 ## Introduction
 
-Fabric Unfied Admin Monitoring (short: FUAM) is a solution to enable a holistic monitoring on top of Power BI and Fabric. Today monitoring for Fabric can be done through different reports, apps and tools. 
+Fabric Unfied Admin Monitoring (short: FUAM) is a solution to enable a holistic monitoring on top of Microsoft Fabric. Today monitoring for Fabric can be done through different reports, apps and tools. 
 
 
 FUAM has the goal to provide a more holistic view on top of the various information, which can be extracted from Fabric, allowing it's users to analyze at a very high level, but also to deep dive into specific artifacts for a more fine granular data analysis.
@@ -32,10 +32,10 @@ FUAM extracts the following data from the tenant:
 - Tenant meta data (Scanner API)
 - Capacity Refreshables
 - Git Connections
-- Engine level insights (coming soon in Optimization module)
+- Engine level insights (coming soon in pptimization module)
 
 ### Architecture
-The architecture of FUAM is built on Fabric items like Pipelines, Notebooks, Lakehouses, Semantic models and Power BI reports. We have built the component in a modular structure, which helps you to extend FUAM with your own modules. This architecture design helps to maintain the solution also with ease.
+The architecture of FUAM is built on Fabric items like Pipelines, Notebooks, Lakehouses, Semantic Models and Power BI reports. We have built the component in a modular structure, which helps you to extend FUAM with your own modules. This architecture design helps to maintain the solution also with ease.
 
 The data ingestion logic is orchastrated and parametizable, which allows to use the main orchestration pipeline for initial and incremental data loads. FUAM Lakehouse is one of the core component in the architecture. All the data is transformed and persisted in a way, which open amazing capabilities analyzing the collected data in a semantic model with DirectLake mode.
 
@@ -45,7 +45,7 @@ The data ingestion logic is orchastrated and parametizable, which allows to use 
 - Modular building blocks
 - One-source-of-truth approach
 - End-to-end report experience
-- Intelligent Optimization module (coming soon)
+- Intelligent optimization module (coming soon)
 - Long term CU utilization analysis
 - Bring your own data & connect FUAM
 
@@ -53,7 +53,7 @@ The data ingestion logic is orchastrated and parametizable, which allows to use 
 
 Are you ready to try FUAM out? We have prepared two step-by-step documentations, which support you to deploy FUAM in your workspace on your tenant:
 
-#### [Click here to **deploy/upgrade** FUAM](https://github.com/microsoft/fabric-toolbox/blob/FUAM/monitoring/fabric-unified-admin-monitoring/how-to/How_to_deploy_FUAM.md)
+#### [Click here to **deploy/upgrade** FUAM](/monitoring/fabric-unified-admin-monitoring/how-to/How_to_deploy_FUAM.md)
 
 
 ## Support
