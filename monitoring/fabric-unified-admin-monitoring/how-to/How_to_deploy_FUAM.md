@@ -114,7 +114,7 @@ The Pipeline has different parameters, which are controlling the data load flow:
 |metric_days_in_scope|Defines how many days should be extracted from the capacity metrics app. A maximum of 14 days can be extracted. For an initial load you can set it to the maximum and in subsequent runs reduce it to 2 days|range between **1** and **14**|
 |metric_workspace|This is the name of the workspace where the capacity metrics app was deployed|string|
 |metric_dataset|This is the name of the semantic model of the capacity metrics app |string|
-|activity_days_in_scope|It defines how many days in the past the activity must be retrieved from the API. Recommended to **use 30 for the initial load** and change the value to **2 for daily load**.| range between **1** and **30** |
+|activity_days_in_scope|It defines how many days in the past the activity must be retrieved from the API. Recommended to **use 30 for the initial load** and change the value to **2 for daily load**.| range between **2** and **30** |
 |display_data|If **true**, the notebooks will display more information about each relevant step at runtime. This is useful for debugging. **Default is false**| true or false |
 |optional_keyvault_name|**Optional**: If you have configured a key vault, enter the name of the key vault. Otherwise, simply leave this field blank. In this case, the Load_Inventory module will use the Notebook owner's identity.| empty or string|
 |optional_keyvault_sp_ tenantId_secret_name|**Optional**: If you have configured a key vault and its secretes, enter the name of the tenantId secret name. Otherwise, simply leave this field blank. In this case, the Load_Inventory module will use the Notebook owner's identity.|empty or string|
@@ -188,7 +188,7 @@ You have deployed and configured FUAM.
 #### Limitations
 - There is a maximum of 500 requests a 100 workspaces possible through the scanner API (learn.microsoft.com). If you have more than 50.000 workspaces in your organisation, which are attached to capacities, the pipeline must wait one hour for the next Scanner API call. This might lead to a longer Pipeline run.
 
-- There can be errors in case specific item types have not been created on the tenant, yet. We tried to reduce these kind of errors, by catching this kind of errors, but on relatively empty tenants this could still effect the execution
+- There can be errors in case specific item types have not been created on the tenant, yet. We tried to reduce these kind of errors, by catching this kind of errors, but on relatively empty tenants this could still effect the execution.
 
 - The pipeline 'Load_Inventory_E2E' is using the notebook owner's identity to query the Scanner API. In case the user doesn't have 'Fabric Administrator' permissions, the notebook will fail. Use Azure Key Vault to run the Scanner API calls in Service Principal context.
 
@@ -200,6 +200,8 @@ You have deployed and configured FUAM.
     - Press "Confirm" to refresh semantic model meta data
     - Test semantic model refresh & report
 
+
+- In the pipeline 'FUAM_Load_Data_E2E', the parameter activity_days_in_scope supports currently the minimum value 2.
 
 #### Known errors
 - There are some known issues on "empty" or demo tenants, where some objects do not exist, which causes errors:
