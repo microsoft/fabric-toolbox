@@ -32,7 +32,7 @@ FUAM extracts the following data from the tenant:
 - Tenant meta data (Scanner API)
 - Capacity Refreshables
 - Git Connections
-- Engine level insights (coming soon in opptimization module)
+- Engine level insights (coming soon in optimization module)
 
 ### Architecture
 The architecture of FUAM is built on Fabric items like Pipelines, Notebooks, Lakehouses, Semantic Models and Power BI reports. We have built the component in a modular structure, which helps you to extend FUAM with your own modules. This architecture design helps to maintain the solution also with ease.
