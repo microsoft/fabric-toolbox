@@ -1,0 +1,169 @@
+table 'Data Sources TM'
+	lineageTag: 3cb5d8d4-b807-4964-a20c-86461c43d91b
+
+	column ID
+		dataType: double
+		lineageTag: 571673e0-d6a4-405c-92dc-61b9795faa8e
+		summarizeBy: none
+		sourceColumn: ID
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column ModelID
+		dataType: double
+		lineageTag: 197fd010-ec6e-4c77-aa8e-bffd53e5e938
+		summarizeBy: count
+		sourceColumn: ModelID
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column 'Data Source Name'
+		dataType: string
+		lineageTag: 8318ea58-cd60-4e5c-9d76-7531187b1d94
+		summarizeBy: none
+		sourceColumn: Data Source Name
+
+		annotation SummarizationSetBy = Automatic
+
+	column Description
+		dataType: string
+		lineageTag: 43f5f3cb-1f36-49fa-bbb2-9b27cc1c5d7e
+		summarizeBy: none
+		sourceColumn: Description
+
+		annotation SummarizationSetBy = Automatic
+
+	column Type
+		dataType: int64
+		formatString: 0
+		lineageTag: f2c5363f-3122-405e-ae37-b897726371a2
+		summarizeBy: none
+		sourceColumn: Type
+
+		annotation SummarizationSetBy = Automatic
+
+	column ConnectionString
+		dataType: string
+		lineageTag: 38844d27-9612-4a53-a041-bd2714febfec
+		summarizeBy: none
+		sourceColumn: ConnectionString
+
+		annotation SummarizationSetBy = Automatic
+
+	column ImpersonationMode
+		dataType: int64
+		formatString: 0
+		lineageTag: b34431f8-f86f-4374-b2ed-71814d27a006
+		summarizeBy: none
+		sourceColumn: ImpersonationMode
+
+		annotation SummarizationSetBy = Automatic
+
+	column Account
+		dataType: string
+		lineageTag: 7ab46774-6581-440d-ae69-863a2f56e7b7
+		summarizeBy: none
+		sourceColumn: Account
+
+		annotation SummarizationSetBy = Automatic
+
+	column Password
+		dataType: string
+		lineageTag: c106ded7-8fca-4f15-989b-f965ffb4b860
+		summarizeBy: none
+		sourceColumn: Password
+
+		annotation SummarizationSetBy = Automatic
+
+	column MaxConnections
+		dataType: int64
+		formatString: 0
+		lineageTag: 53c527d3-924a-4b91-9d65-880993d96fb8
+		summarizeBy: sum
+		sourceColumn: MaxConnections
+
+		annotation SummarizationSetBy = Automatic
+
+	column Isolation
+		dataType: int64
+		formatString: 0
+		lineageTag: c3892d43-3ff3-4978-827c-85a37001875b
+		summarizeBy: none
+		sourceColumn: Isolation
+
+		annotation SummarizationSetBy = Automatic
+
+	column Timeout
+		dataType: int64
+		formatString: 0
+		lineageTag: 81c7cb1c-4582-437a-996b-1055eeeb179a
+		summarizeBy: sum
+		sourceColumn: Timeout
+
+		annotation SummarizationSetBy = Automatic
+
+	column Provider
+		dataType: string
+		lineageTag: 9818af3b-f0b8-444b-967f-c9041579cb2c
+		summarizeBy: none
+		sourceColumn: Provider
+
+		annotation SummarizationSetBy = Automatic
+
+	column ModifiedTime
+		dataType: dateTime
+		formatString: General Date
+		lineageTag: 16531d84-95f4-4f71-b2f7-70e8567f149e
+		summarizeBy: none
+		sourceColumn: ModifiedTime
+
+		annotation SummarizationSetBy = Automatic
+
+	column ConnectionDetails
+		dataType: string
+		lineageTag: 10637a88-18f1-40e6-b31c-b8905af2dea3
+		summarizeBy: none
+		sourceColumn: ConnectionDetails
+
+		annotation SummarizationSetBy = Automatic
+
+	column Options
+		dataType: string
+		lineageTag: 07f1f7b9-c120-435f-98c1-c3e3cdf46947
+		summarizeBy: none
+		sourceColumn: Options
+
+		annotation SummarizationSetBy = Automatic
+
+	column Credential
+		dataType: string
+		lineageTag: 35d7e0a7-0185-4344-ac47-a9433192f24d
+		summarizeBy: none
+		sourceColumn: Credential
+
+		annotation SummarizationSetBy = Automatic
+
+	column ContextExpression
+		dataType: string
+		lineageTag: f0142b62-85b1-4962-a98c-4564deec5159
+		summarizeBy: none
+		sourceColumn: ContextExpression
+
+		annotation SummarizationSetBy = Automatic
+
+	partition 'Data Sources TM' = m
+		mode: import
+		queryGroup: 'Meta Data'
+		source =
+				let
+				    #"Data Sources TM" = AnalysisServices.Database(serverURL, modelName, [Query="SELECT * FROM $System.TMSCHEMA_DATA_SOURCES", Implementation="2.0"]),
+				    #"Renamed Columns" = Table.RenameColumns(#"Data Sources TM",{{"Name", "Data Source Name"}})
+				in
+				    #"Renamed Columns"
+
+	annotation PBI_ResultType = Exception
+

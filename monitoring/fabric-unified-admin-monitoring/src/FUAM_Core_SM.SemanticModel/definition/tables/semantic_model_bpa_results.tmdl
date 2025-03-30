@@ -1,0 +1,106 @@
+table semantic_model_bpa_results
+	lineageTag: ce8bad35-c34f-492f-b7ef-65c74b9a619a
+	sourceLineageTag: [dbo].[semantic_model_bpa_results]
+
+	column ObjectName
+		dataType: string
+		sourceProviderType: varchar(8000)
+		lineageTag: 9cbdf406-7ec0-4b1a-a584-b74005c3f78c
+		sourceLineageTag: ObjectName
+		summarizeBy: none
+		sourceColumn: ObjectName
+
+		annotation SummarizationSetBy = Automatic
+
+	column Scope
+		dataType: string
+		sourceProviderType: varchar(8000)
+		lineageTag: bfb824ae-7338-46f1-9d6d-e64d050da5d7
+		sourceLineageTag: Scope
+		summarizeBy: none
+		sourceColumn: Scope
+
+		annotation SummarizationSetBy = Automatic
+
+	column RuleId
+		dataType: int64
+		formatString: 0
+		sourceProviderType: bigint
+		lineageTag: ff926510-ecd4-4ab0-b43a-f2c6ce988dc1
+		sourceLineageTag: RuleId
+		summarizeBy: none
+		sourceColumn: RuleId
+
+		annotation SummarizationSetBy = Automatic
+
+	column WorkspaceId
+		dataType: string
+		sourceProviderType: varchar(8000)
+		lineageTag: 0b9567da-2ab7-4a39-a821-85f49f58c439
+		sourceLineageTag: WorkspaceId
+		summarizeBy: none
+		sourceColumn: WorkspaceId
+
+		annotation SummarizationSetBy = Automatic
+
+	column SemanticModelId
+		dataType: string
+		sourceProviderType: varchar(8000)
+		lineageTag: 84e35adb-676c-472e-a4f7-a2dd2d7e8b90
+		sourceLineageTag: SemanticModelId
+		summarizeBy: none
+		sourceColumn: SemanticModelId
+
+		annotation SummarizationSetBy = Automatic
+
+	column Timestamp
+		dataType: dateTime
+		formatString: General Date
+		sourceProviderType: datetime2
+		lineageTag: 2cab8f05-b617-4d46-ac45-937ba3801d50
+		sourceLineageTag: Timestamp
+		summarizeBy: none
+		sourceColumn: Timestamp
+
+		annotation SummarizationSetBy = Automatic
+
+	column RunId
+		dataType: int64
+		formatString: 0
+		sourceProviderType: bigint
+		lineageTag: b5a0f27d-1dc1-4b05-9dea-f66cc687438d
+		sourceLineageTag: RunId
+		summarizeBy: count
+		sourceColumn: RunId
+
+		annotation SummarizationSetBy = Automatic
+
+	column RunName
+		dataType: string
+		sourceProviderType: varchar(8000)
+		lineageTag: f3595419-5059-467c-82ce-ce1bf8640e13
+		sourceLineageTag: RunName
+		summarizeBy: none
+		sourceColumn: RunName
+
+		annotation SummarizationSetBy = Automatic
+
+	column SemanticModelRunKey
+		dataType: string
+		sourceProviderType: varchar(8000)
+		lineageTag: 682e3918-25e1-4555-b58c-5f23d0e4098b
+		sourceLineageTag: SemanticModelRunKey
+		summarizeBy: none
+		sourceColumn: SemanticModelRunKey
+
+		annotation SummarizationSetBy = Automatic
+
+	partition semantic_model_bpa_results = entity
+		mode: directLake
+		source
+			entityName: semantic_model_bpa_results
+			schemaName: dbo
+			expressionSource: DatabaseQuery
+
+	annotation PBI_ResultType = Table
+

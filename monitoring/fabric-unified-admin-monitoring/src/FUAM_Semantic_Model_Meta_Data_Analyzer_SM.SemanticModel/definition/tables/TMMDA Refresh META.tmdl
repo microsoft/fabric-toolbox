@@ -1,0 +1,33 @@
+table 'TMMDA Refresh META'
+	lineageTag: 3a027af4-42b0-44c6-a224-03ea12fd1c21
+
+	column Key
+		dataType: string
+		lineageTag: e64cb963-0003-4ea0-a475-6b7770ba785f
+		summarizeBy: none
+		sourceColumn: Key
+
+		annotation SummarizationSetBy = Automatic
+
+	column Value
+		dataType: dateTime
+		formatString: General Date
+		lineageTag: 62d121c5-c354-463a-878f-de7b3bd59dd9
+		summarizeBy: none
+		sourceColumn: Value
+
+		annotation SummarizationSetBy = Automatic
+
+	partition 'TMMDA Refresh META' = m
+		mode: import
+		source =
+				let
+				    Source = Table.FromRows(Json.Document(Binary.Decompress(Binary.FromText("i45W8kksLgnx9XVxDEpNK0otznBJLElVio0FAA==", BinaryEncoding.Base64), Compression.Deflate)), let _t = ((type nullable text) meta [Serialized.Text = true]) in type table [Key = _t]),
+				    #"Changed Type" = Table.TransformColumnTypes(Source,{{"Key", type text}}),
+				    #"Added Custom" = Table.AddColumn(#"Changed Type", "Value", each DateTimeZone.FixedUtcNow()),
+				    #"Changed Type1" = Table.TransformColumnTypes(#"Added Custom",{{"Value", type datetimezone}})
+				in
+				    #"Changed Type1"
+
+	annotation PBI_ResultType = Table
+

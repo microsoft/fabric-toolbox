@@ -1,0 +1,270 @@
+table 'queryinsights exec_requests_history'
+	lineageTag: d7962d3f-d156-4e1d-aac7-3b5704a0b6f5
+
+	column distributed_statement_id
+		dataType: string
+		lineageTag: ca8883d7-ef9e-4950-ac98-5cb847b29411
+		summarizeBy: none
+		sourceColumn: distributed_statement_id
+
+		annotation SummarizationSetBy = Automatic
+
+	column submit_time
+		dataType: dateTime
+		formatString: General Date
+		lineageTag: 924a9c47-d478-4770-a64c-ba55ba49793c
+		summarizeBy: none
+		sourceColumn: submit_time
+
+		annotation SummarizationSetBy = Automatic
+
+	column start_time
+		dataType: dateTime
+		formatString: General Date
+		lineageTag: 2be39440-7912-4579-80c2-ec6f774ed3e8
+		summarizeBy: none
+		sourceColumn: start_time
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation __PBI_SemanticLinks = [{"LinkTarget":{"TableName":"queryinsights exec_requests_history","TableItemName":"start_time (15 min bins)","ObjectType":4},"LinkType":"UsedInGroup"}]
+
+	column end_time
+		dataType: dateTime
+		formatString: General Date
+		lineageTag: fe4ca955-d561-42ad-8956-c29d3b337dab
+		summarizeBy: none
+		sourceColumn: end_time
+
+		annotation SummarizationSetBy = Automatic
+
+	column total_elapsed_time_ms
+		dataType: int64
+		formatString: 0
+		lineageTag: 83d11540-e434-486a-b182-8753525ccdd6
+		summarizeBy: sum
+		sourceColumn: total_elapsed_time_ms
+
+		annotation SummarizationSetBy = Automatic
+
+	column login_name
+		dataType: string
+		lineageTag: a218305f-73c9-44a0-a400-bbfa089cf12d
+		summarizeBy: none
+		sourceColumn: login_name
+
+		annotation SummarizationSetBy = Automatic
+
+	column row_count
+		dataType: int64
+		formatString: 0
+		lineageTag: 3748ca49-dc3b-4569-a0e5-3217171e5c05
+		summarizeBy: sum
+		sourceColumn: row_count
+
+		annotation SummarizationSetBy = Automatic
+
+	column status
+		dataType: string
+		lineageTag: ee2d534b-a089-498f-86ef-a3cbd07bab7b
+		summarizeBy: none
+		sourceColumn: status
+
+		annotation SummarizationSetBy = Automatic
+
+	column session_id
+		dataType: int64
+		formatString: 0
+		lineageTag: 3f6faa97-fa82-4382-946e-c653ada66d01
+		summarizeBy: sum
+		sourceColumn: session_id
+
+		annotation SummarizationSetBy = Automatic
+
+	column connection_id
+		dataType: string
+		lineageTag: 32262d06-c865-4532-a83e-78d2ce787d2d
+		summarizeBy: none
+		sourceColumn: connection_id
+
+		annotation SummarizationSetBy = Automatic
+
+	column program_name
+		dataType: string
+		lineageTag: 5ba5ceda-d76b-4fd1-a08b-58c55def627c
+		summarizeBy: none
+		sourceColumn: program_name
+
+		annotation SummarizationSetBy = Automatic
+
+	column batch_id
+		dataType: string
+		lineageTag: 04dafc71-00a4-4a1a-adf6-70e453b44d0a
+		summarizeBy: none
+		sourceColumn: batch_id
+
+		annotation SummarizationSetBy = Automatic
+
+	column root_batch_id
+		dataType: string
+		lineageTag: 5903caa6-6026-456e-ac7e-cb572e7dceee
+		summarizeBy: none
+		sourceColumn: root_batch_id
+
+		annotation SummarizationSetBy = Automatic
+
+	column query_hash
+		dataType: string
+		lineageTag: d67f0042-96db-4376-bd42-0b7cab61a4b8
+		summarizeBy: none
+		sourceColumn: query_hash
+
+		annotation SummarizationSetBy = Automatic
+
+	column label
+		dataType: string
+		lineageTag: bf940cc1-f3d2-41f9-828b-2e706c13e9c0
+		summarizeBy: none
+		sourceColumn: label
+
+		annotation SummarizationSetBy = Automatic
+
+	column result_cache_hit
+		dataType: int64
+		formatString: 0
+		lineageTag: adb1b72e-ab93-4061-bd8a-66ae59534d8d
+		summarizeBy: sum
+		sourceColumn: result_cache_hit
+
+		annotation SummarizationSetBy = Automatic
+
+	column command
+		dataType: string
+		lineageTag: c1ea0ff6-7eef-4dae-98da-118da721265e
+		summarizeBy: none
+		sourceColumn: command
+
+		annotation SummarizationSetBy = Automatic
+
+	column start_date
+		dataType: dateTime
+		formatString: yyyy-mm-dd
+		lineageTag: 6675e55d-5ac0-412e-986c-dbda889c8dc4
+		summarizeBy: none
+		sourceColumn: start_date
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation UnderlyingDateTimeDataType = Date
+
+		annotation PBI_FormatHint = {"isCustom":true}
+
+	column start_hour
+		dataType: int64
+		formatString: 0
+		lineageTag: b5fd719f-9a13-40c7-b829-19e038a031e8
+		summarizeBy: none
+		sourceColumn: start_hour
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'start_time (15 min bins)' =
+			IF(
+				ISBLANK('queryinsights exec_requests_history'[start_time]),
+				BLANK(),
+				(INT(('queryinsights exec_requests_history'[start_time] * 1440) / 15) * 15) / 1440
+			)
+		dataType: dateTime
+		formatString: General Date
+		lineageTag: 2d3fbc07-4977-404d-80fe-da81532962a5
+		summarizeBy: none
+
+		extendedProperty GroupingMetadata =
+				{
+				  "version": 0,
+				  "groupedColumns": [
+				    {
+				      "Column": {
+				        "Expression": {
+				          "SourceRef": {
+				            "Entity": "queryinsights exec_requests_history"
+				          }
+				        },
+				        "Property": "start_time"
+				      }
+				    }
+				  ],
+				  "binningMetadata": {
+				    "binSize": {
+				      "value": 15.0,
+				      "unit": 10
+				    }
+				  }
+				}
+
+		annotation GroupingDesignState = {"Version":0,"Sources":[{"Name":"q","Entity":"queryinsights exec_requests_history"}],"GroupedColumns":[{"Column":{"Expression":{"SourceRef":{"Source":"q"}},"Property":"start_time"}}],"BinItem":{"Expression":{"Floor":{"Expression":{"Column":{"Expression":{"SourceRef":{"Source":"q"}},"Property":"start_time"}},"Size":15.0,"TimeUnit":6}}}}
+
+		annotation SummarizationSetBy = Automatic
+
+	column database_name
+		dataType: string
+		lineageTag: 0ca87c17-9ede-4987-a09b-9b5b182444d9
+		summarizeBy: none
+		sourceColumn: database_name
+
+		annotation SummarizationSetBy = Automatic
+
+	column allocated_cpu_time_ms
+		dataType: int64
+		formatString: 0
+		lineageTag: e847ff8b-206d-4b5d-8157-04759937ccb4
+		summarizeBy: sum
+		sourceColumn: allocated_cpu_time_ms
+
+		annotation SummarizationSetBy = Automatic
+
+	column data_scanned_remote_storage_mb
+		dataType: double
+		lineageTag: 004947be-d3b8-4485-a2b1-f026ba31b7b0
+		summarizeBy: sum
+		sourceColumn: data_scanned_remote_storage_mb
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column data_scanned_memory_mb
+		dataType: double
+		lineageTag: 99c88925-e106-4bef-9f41-8c79e53a9dfb
+		summarizeBy: sum
+		sourceColumn: data_scanned_memory_mb
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column data_scanned_disk_mb
+		dataType: double
+		lineageTag: 5e8b5ad0-a6f8-4ad5-8eb9-4bd90bbc99ef
+		summarizeBy: sum
+		sourceColumn: data_scanned_disk_mb
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	partition 'queryinsights exec_requests_history' = m
+		mode: import
+		source =
+				let
+				    Source = Sql.Database(sqlEndpointUrl, sqlEndpointItemName, [CreateNavigationProperties=false]),
+				    queryinsights_exec_requests_history = Source{[Schema="queryinsights",Item="exec_requests_history"]}[Data],
+				    #"Inserted Date" = Table.AddColumn(queryinsights_exec_requests_history, "start_date", each DateTime.Date([start_time]), type date),
+				    #"Inserted Hour" = Table.AddColumn(#"Inserted Date", "start_hour", each Time.Hour([start_time]), Int64.Type)
+				in
+				    #"Inserted Hour"
+
+	annotation PBI_NavigationStepName = Navigation
+
+	annotation PBI_ResultType = Exception
+

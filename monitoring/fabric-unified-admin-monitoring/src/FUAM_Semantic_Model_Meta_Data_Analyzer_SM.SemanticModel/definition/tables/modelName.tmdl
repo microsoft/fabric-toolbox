@@ -1,0 +1,22 @@
+/// Semantic model name
+table modelName
+	isHidden
+	lineageTag: eaea5d53-06e0-4313-8468-ab00ebe5eb03
+
+	column modelName
+		dataType: string
+		lineageTag: e3316f51-cc52-471d-b138-bd6f33581eec
+		summarizeBy: none
+		sourceColumn: modelName
+
+		annotation SummarizationSetBy = Automatic
+
+	partition modelName = m
+		mode: import
+		queryGroup: 'START HERE'
+		source = "FUAM_Certification_Results_SM" meta [IsParameterQuery = true, IsParameterQueryRequired = true, Type = "Text"]
+
+	annotation PBI_ResultType = Text
+
+	annotation PBI_NavigationStepName = Navigation
+

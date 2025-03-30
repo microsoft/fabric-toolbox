@@ -1,0 +1,85 @@
+table dataflows
+	lineageTag: 0cb51830-f99b-4aa5-b95a-776f701c985a
+	sourceLineageTag: [dbo].[dataflows]
+
+	column WorkspaceId
+		dataType: string
+		sourceProviderType: varchar(8000)
+		lineageTag: 2101f95a-5ebe-4107-8d6a-99874b7c761e
+		sourceLineageTag: WorkspaceId
+		summarizeBy: none
+		sourceColumn: WorkspaceId
+
+		annotation SummarizationSetBy = Automatic
+
+	column DataflowId
+		dataType: string
+		sourceProviderType: varchar(8000)
+		lineageTag: 4ed4de24-808b-4686-ae12-c97237436d83
+		sourceLineageTag: DataflowId
+		summarizeBy: none
+		sourceColumn: DataflowId
+
+		annotation SummarizationSetBy = Automatic
+
+	column Name
+		dataType: string
+		sourceProviderType: varchar(8000)
+		lineageTag: 6bc1d34b-8517-4dde-b20d-3c8b6c296cbc
+		sourceLineageTag: Name
+		summarizeBy: none
+		sourceColumn: Name
+
+		annotation SummarizationSetBy = Automatic
+
+	column ModifiedDateTime
+		dataType: string
+		sourceProviderType: varchar(8000)
+		lineageTag: a0429334-c451-4224-9928-90faa165aff1
+		sourceLineageTag: ModifiedDateTime
+		summarizeBy: none
+		sourceColumn: ModifiedDateTime
+
+		annotation SummarizationSetBy = Automatic
+
+	column Generation
+		dataType: double
+		sourceProviderType: float
+		lineageTag: 8d25fd02-6916-452b-8a38-9aadf05ec76b
+		sourceLineageTag: Generation
+		summarizeBy: sum
+		sourceColumn: Generation
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column datasourceUsages
+		dataType: string
+		sourceProviderType: varchar(8000)
+		lineageTag: f60223aa-5840-4602-8fbd-ff71055f9eab
+		sourceLineageTag: datasourceUsages
+		summarizeBy: none
+		sourceColumn: datasourceUsages
+
+		annotation SummarizationSetBy = Automatic
+
+	column relations
+		dataType: string
+		sourceProviderType: varchar(8000)
+		lineageTag: 14d61a39-ac7c-41ac-9c4b-23aa8db8ca38
+		sourceLineageTag: relations
+		summarizeBy: none
+		sourceColumn: relations
+
+		annotation SummarizationSetBy = Automatic
+
+	partition dataflows = entity
+		mode: directLake
+		source
+			entityName: dataflows
+			schemaName: dbo
+			expressionSource: DatabaseQuery
+
+	annotation PBI_ResultType = Table
+

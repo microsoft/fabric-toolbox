@@ -1,0 +1,59 @@
+model Model
+	culture: en-US
+	collation: Latin1_General_100_BIN2_UTF8
+	defaultPowerBIDataSourceVersion: powerBI_V3
+	sourceQueryCulture: en-US
+	directLakeBehavior: directLakeOnly
+	dataAccessOptions
+		legacyRedirects
+		returnErrorValuesAsNull
+
+annotation __PBI_TimeIntelligenceEnabled = 0
+
+annotation PBIDesktopVersion = 2.142.7627.6 (Main)+12378a3b51a63d36fded4ef866d1d94d4d0715e0
+
+annotation PBI_QueryOrder = ["DatabaseQuery"]
+
+annotation PBI_ProTooling = ["WebModelingEdit"]
+
+annotation __TEdtr = 1
+
+annotation __PBIService_Versioning_SaveVersion = c5734dc2-ff4b-42f7-abc6-976982827486
+
+ref table dashboards
+ref table dataflows
+ref table activities
+ref table capacity_refreshables
+ref table aggregated_activities_last_30days
+ref table capacity_refreshable_times
+ref table capacity_refreshable_days
+ref table datasource_instances
+ref table active_items
+ref table calendar
+ref table capacity_metrics_by_item_kind_by_day
+ref table capacity_metrics_by_item_by_operation_by_day
+ref table capacity_metrics_by_timepoint
+ref table semantic_models
+ref table capacities
+ref table reports
+ref table workspaces_scanned_users
+ref table workspaces
+ref table Metrics
+ref table tenant_settings
+ref table delegated_tenant_settings_overrides
+ref table capacity_refreshable_details
+ref table capacity_refreshable_summaries
+ref table git_connections
+ref table semantic_model_bpa_results
+ref table capacity_regions
+ref table workspace_monitoring_reports
+ref table semantic_model_bpa_rule_catalog
+ref table semantic_model_analyzer_runs
+ref table size_units
+ref table semantic_model_content_types
+ref table semantic_model_vertipaq_tables
+ref table semantic_model_vertipaq_relationships
+ref table calendar_timepoints
+
+ref cultureInfo en-US
+

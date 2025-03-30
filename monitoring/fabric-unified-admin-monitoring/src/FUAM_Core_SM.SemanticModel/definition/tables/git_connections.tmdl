@@ -1,0 +1,43 @@
+table git_connections
+	lineageTag: 47f54b23-d8f1-48be-b4d7-1f6055e79d74
+	sourceLineageTag: [dbo].[git_connections]
+
+	column workspaceId
+		dataType: string
+		sourceProviderType: varchar(8000)
+		lineageTag: 3cf2eba7-526f-4092-a0fc-756cd951db48
+		sourceLineageTag: workspaceId
+		summarizeBy: none
+		sourceColumn: workspaceId
+
+		annotation SummarizationSetBy = Automatic
+
+	column repositoryName
+		dataType: string
+		sourceProviderType: varchar(8000)
+		lineageTag: 59281b34-05b9-493d-b318-25192413768a
+		sourceLineageTag: repositoryName
+		summarizeBy: none
+		sourceColumn: repositoryName
+
+		annotation SummarizationSetBy = Automatic
+
+	column gitProviderType
+		dataType: string
+		sourceProviderType: varchar(8000)
+		lineageTag: 7893797a-217e-4ab7-a14d-bde9b1cf3c8d
+		sourceLineageTag: gitProviderType
+		summarizeBy: none
+		sourceColumn: gitProviderType
+
+		annotation SummarizationSetBy = Automatic
+
+	partition git_connections = entity
+		mode: directLake
+		source
+			entityName: git_connections
+			schemaName: dbo
+			expressionSource: DatabaseQuery
+
+	annotation PBI_ResultType = Table
+

@@ -1,0 +1,84 @@
+table capacity_refreshables
+	lineageTag: 0bc54e35-f54e-43bc-8e13-89d1f27c85ca
+	sourceLineageTag: [dbo].[capacity_refreshables]
+
+	column CapacityId
+		dataType: string
+		sourceProviderType: varchar(8000)
+		lineageTag: 98a302ff-c740-4a6e-8829-3e6e34cf6f15
+		sourceLineageTag: CapacityId
+		summarizeBy: none
+		sourceColumn: CapacityId
+
+		annotation SummarizationSetBy = Automatic
+
+	column WorkspaceId
+		dataType: string
+		sourceProviderType: varchar(8000)
+		lineageTag: ba14af74-bff6-4304-8db3-9ce3eeefda49
+		sourceLineageTag: WorkspaceId
+		summarizeBy: none
+		sourceColumn: WorkspaceId
+
+		annotation SummarizationSetBy = Automatic
+
+	column ItemId
+		dataType: string
+		sourceProviderType: varchar(8000)
+		lineageTag: 812ab686-b76e-4eec-abba-5d51f9730ef8
+		sourceLineageTag: ItemId
+		summarizeBy: none
+		sourceColumn: ItemId
+
+		annotation SummarizationSetBy = Automatic
+
+	column ItemName
+		dataType: string
+		sourceProviderType: varchar(8000)
+		lineageTag: e8188f18-b170-48c3-aa9c-7e2be2b39588
+		sourceLineageTag: ItemName
+		summarizeBy: none
+		sourceColumn: ItemName
+
+		annotation SummarizationSetBy = Automatic
+
+	column IsRefreshEnabled
+		dataType: boolean
+		formatString: """TRUE"";""TRUE"";""FALSE"""
+		sourceProviderType: bit
+		lineageTag: bf3d5148-d074-42d1-968e-a6b26ab1c2a6
+		sourceLineageTag: IsRefreshEnabled
+		summarizeBy: none
+		sourceColumn: IsRefreshEnabled
+
+		annotation SummarizationSetBy = Automatic
+
+	column LocalTimeZoneId
+		dataType: string
+		sourceProviderType: varchar(8000)
+		lineageTag: f9b51dc4-0c96-4884-9b28-42eaffc25a20
+		sourceLineageTag: LocalTimeZoneId
+		summarizeBy: none
+		sourceColumn: LocalTimeZoneId
+
+		annotation SummarizationSetBy = Automatic
+
+	column Kind
+		dataType: string
+		sourceProviderType: varchar(8000)
+		lineageTag: f156bde5-d1d5-4344-8d76-cf68e7bbf8e3
+		sourceLineageTag: Kind
+		summarizeBy: none
+		sourceColumn: Kind
+
+		annotation SummarizationSetBy = Automatic
+
+	partition capacity_refreshables = entity
+		mode: directLake
+		source
+			entityName: capacity_refreshables
+			schemaName: dbo
+			expressionSource: DatabaseQuery
+
+	annotation PBI_ResultType = Table
+

@@ -1,0 +1,33 @@
+table 'Partition Mode ENUM'
+	isHidden
+	lineageTag: 45ebe96a-3eef-49dc-b788-47f3a31b930e
+
+	column Enum
+		dataType: int64
+		formatString: 0
+		lineageTag: ca1a5f3f-b57a-4187-8b48-66785a208349
+		summarizeBy: none
+		sourceColumn: Enum
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Partition Mode'
+		dataType: string
+		lineageTag: aad82655-672e-46d4-9fb5-4af68a584194
+		summarizeBy: none
+		sourceColumn: Partition Mode
+
+		annotation SummarizationSetBy = Automatic
+
+	partition 'Partition Mode ENUM' = m
+		mode: import
+		source =
+				let
+				    Source = Table.FromRows(Json.Document(Binary.Decompress(Binary.FromText("i45WMlDSUfLMLcgvKlGK1YlWMgRyXTKLUpNLAktTiyrBYkYgsdS0xNIciBpjID+gtDhDKTYWAA==", BinaryEncoding.Base64), Compression.Deflate)), let _t = ((type nullable text) meta [Serialized.Text = true]) in type table [Enum = _t, Name = _t]),
+				    #"Changed Type" = Table.TransformColumnTypes(Source,{{"Enum", Int64.Type}, {"Name", type text}}),
+				    #"Renamed Columns" = Table.RenameColumns(#"Changed Type",{{"Name", "Partition Mode"}})
+				in
+				    #"Renamed Columns"
+
+	annotation PBI_ResultType = Table
+

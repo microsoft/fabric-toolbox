@@ -1,0 +1,51 @@
+table 'Storage Folders TM'
+	lineageTag: aca01c6d-25e0-4a7b-8ab1-b5046983409e
+
+	column ID
+		dataType: double
+		lineageTag: 8ef0d7e0-70ed-4f43-bfad-b9c7718e573d
+		summarizeBy: none
+		sourceColumn: ID
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column OwnerID
+		dataType: double
+		lineageTag: 86062676-1e30-4f51-a4c2-f3e8f1167e8c
+		summarizeBy: none
+		sourceColumn: OwnerID
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column OwnerType
+		dataType: int64
+		formatString: 0
+		lineageTag: 8da3d76f-ed04-45d6-805e-3d75d55c98af
+		summarizeBy: none
+		sourceColumn: OwnerType
+
+		annotation SummarizationSetBy = Automatic
+
+	column Path
+		dataType: string
+		lineageTag: 990032b2-7955-43af-b69f-ee550a4c6160
+		summarizeBy: none
+		sourceColumn: Path
+
+		annotation SummarizationSetBy = Automatic
+
+	partition 'Storage Folders TM' = m
+		mode: import
+		queryGroup: 'Meta Data'
+		source =
+				let
+				    Source = AnalysisServices.Database(serverURL, modelName, [Query="SELECT * FROM $System.TMSCHEMA_STORAGE_FOLDERS", Implementation="2.0"])
+				in
+				    Source
+
+	annotation PBI_ResultType = Exception
+

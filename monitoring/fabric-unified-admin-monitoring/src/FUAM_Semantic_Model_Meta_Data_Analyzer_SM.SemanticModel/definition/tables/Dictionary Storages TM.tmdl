@@ -1,0 +1,147 @@
+table 'Dictionary Storages TM'
+	lineageTag: 7eb2245e-59d0-4c19-9637-01a3e6c817e9
+
+	column ID
+		dataType: double
+		lineageTag: abb2bed6-f6dd-4075-a89a-3b92a1cc251a
+		summarizeBy: count
+		sourceColumn: ID
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column ColumnStorageID
+		dataType: double
+		lineageTag: 957a75e3-1795-41eb-b87e-94d6f931c2f4
+		summarizeBy: none
+		sourceColumn: ColumnStorageID
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column Type
+		dataType: int64
+		formatString: 0
+		lineageTag: 9149d8f4-6e5e-4e5e-895e-690aa21c1f52
+		summarizeBy: sum
+		sourceColumn: Type
+
+		annotation SummarizationSetBy = Automatic
+
+	column DataType
+		dataType: int64
+		formatString: 0
+		lineageTag: c9084c29-091e-433c-ab6b-1469ca6cf034
+		summarizeBy: sum
+		sourceColumn: DataType
+
+		annotation SummarizationSetBy = Automatic
+
+	column DataVersion
+		dataType: int64
+		formatString: 0
+		lineageTag: 8ff6e9e9-fd3d-488a-ae99-4d72247475f6
+		summarizeBy: sum
+		sourceColumn: DataVersion
+
+		annotation SummarizationSetBy = Automatic
+
+	column BaseId
+		dataType: double
+		lineageTag: 1f5c099c-fb0d-4620-8a39-e4961e27129e
+		summarizeBy: count
+		sourceColumn: BaseId
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column Magnitude
+		dataType: double
+		lineageTag: 2fbda963-ffd3-4971-af5b-245d41fcec22
+		summarizeBy: sum
+		sourceColumn: Magnitude
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column LastId
+		dataType: int64
+		formatString: 0
+		lineageTag: 4851645d-7200-4bc2-bd6e-638c5d19c048
+		summarizeBy: count
+		sourceColumn: LastId
+
+		annotation SummarizationSetBy = Automatic
+
+	column IsNullable
+		dataType: boolean
+		formatString: """TRUE"";""TRUE"";""FALSE"""
+		lineageTag: 73c4363c-9344-4beb-90b0-036e9fe6a88b
+		summarizeBy: none
+		sourceColumn: IsNullable
+
+		annotation SummarizationSetBy = Automatic
+
+	column IsUnique
+		dataType: boolean
+		formatString: """TRUE"";""TRUE"";""FALSE"""
+		lineageTag: f2800e19-a33f-4cf3-8bed-1a232a6fde1f
+		summarizeBy: none
+		sourceColumn: IsUnique
+
+		annotation SummarizationSetBy = Automatic
+
+	column IsOperatingOn32
+		dataType: boolean
+		formatString: """TRUE"";""TRUE"";""FALSE"""
+		lineageTag: 431816c9-a1db-4361-a81e-2d19c3e85b70
+		summarizeBy: none
+		sourceColumn: IsOperatingOn32
+
+		annotation SummarizationSetBy = Automatic
+
+	column DictionaryFlags
+		dataType: double
+		lineageTag: 3bae1950-d08f-451f-b0c9-16f967d7d000
+		summarizeBy: sum
+		sourceColumn: DictionaryFlags
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column StorageFileID
+		dataType: double
+		lineageTag: 888128ae-a314-4697-aa43-d43c641ecba6
+		summarizeBy: count
+		sourceColumn: StorageFileID
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column Size
+		dataType: double
+		lineageTag: ecdad7a9-b448-4555-83d5-d70647f0818e
+		summarizeBy: sum
+		sourceColumn: Size
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	partition 'Dictionary Storages TM' = m
+		mode: import
+		queryGroup: 'Meta Data'
+		source =
+				let
+				    Source = AnalysisServices.Database(serverURL, modelName, [Query="SELECT * FROM $System.TMSCHEMA_DICTIONARY_STORAGES", Implementation="2.0"])
+				in
+				    Source
+
+	annotation PBI_ResultType = Exception
+

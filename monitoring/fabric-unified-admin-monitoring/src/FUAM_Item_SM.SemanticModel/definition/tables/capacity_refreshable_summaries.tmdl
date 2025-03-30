@@ -1,0 +1,161 @@
+table capacity_refreshable_summaries
+	lineageTag: ddd5bac7-e33c-464a-96ef-0d0bfc90d287
+	sourceLineageTag: [dbo].[capacity_refreshable_summaries]
+
+	column CapacityId
+		dataType: string
+		sourceProviderType: varchar(8000)
+		lineageTag: e37050fd-9e18-4f6a-b339-f4854fed9fee
+		sourceLineageTag: CapacityId
+		summarizeBy: none
+		sourceColumn: CapacityId
+
+		annotation SummarizationSetBy = Automatic
+
+	column WorkspaceId
+		dataType: string
+		sourceProviderType: varchar(8000)
+		lineageTag: 9014d6ad-9ff2-4d82-9d28-fb29520f8f34
+		sourceLineageTag: WorkspaceId
+		summarizeBy: none
+		sourceColumn: WorkspaceId
+
+		annotation SummarizationSetBy = Automatic
+
+	column ItemId
+		dataType: string
+		sourceProviderType: varchar(8000)
+		lineageTag: 4f935068-0050-49d4-b717-ff99e79d9844
+		sourceLineageTag: ItemId
+		summarizeBy: none
+		sourceColumn: ItemId
+
+		annotation SummarizationSetBy = Automatic
+
+	column ItemName
+		dataType: string
+		sourceProviderType: varchar(8000)
+		lineageTag: 07bc37bd-c2fa-4228-8d5a-4e5de591f0bc
+		sourceLineageTag: ItemName
+		summarizeBy: none
+		sourceColumn: ItemName
+
+		annotation SummarizationSetBy = Automatic
+
+	column ConsideredStartDateKey
+		dataType: string
+		sourceProviderType: varchar(8000)
+		lineageTag: 33f86aba-e53c-4d7c-9fb5-80a8f4fcbf52
+		sourceLineageTag: ConsideredStartDateKey
+		summarizeBy: none
+		sourceColumn: ConsideredStartDateKey
+
+		annotation SummarizationSetBy = Automatic
+
+	column ConsideredStartDate
+		dataType: dateTime
+		formatString: yyyy-mm-dd
+		sourceProviderType: date
+		lineageTag: f2704e3c-aca4-4833-92e1-c04e2cb40546
+		sourceLineageTag: ConsideredStartDate
+		summarizeBy: none
+		sourceColumn: ConsideredStartDate
+
+		changedProperty = FormatString
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isCustom":true}
+
+	column ConsideredEndDate
+		dataType: dateTime
+		formatString: yyyy-mm-dd
+		sourceProviderType: date
+		lineageTag: bd7da026-649e-4d33-a393-0c179e6624e4
+		sourceLineageTag: ConsideredEndDate
+		summarizeBy: none
+		sourceColumn: ConsideredEndDate
+
+		changedProperty = FormatString
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isCustom":true}
+
+	column ConsideredStartTime
+		dataType: dateTime
+		formatString: General Date
+		sourceProviderType: datetime2
+		lineageTag: e49761a2-420f-4553-9045-0b65157a1998
+		sourceLineageTag: ConsideredStartTime
+		summarizeBy: none
+		sourceColumn: ConsideredStartTime
+
+		annotation SummarizationSetBy = Automatic
+
+	column ConsideredEndTime
+		dataType: dateTime
+		formatString: General Date
+		sourceProviderType: datetime2
+		lineageTag: 62af51f4-ec63-4ad4-a7b6-f7f48f5b4796
+		sourceLineageTag: ConsideredEndTime
+		summarizeBy: none
+		sourceColumn: ConsideredEndTime
+
+		annotation SummarizationSetBy = Automatic
+
+	column RefreshAverageDuration
+		dataType: double
+		sourceProviderType: float
+		lineageTag: e060988a-945f-4625-8862-8e832f8f33a1
+		sourceLineageTag: RefreshAverageDuration
+		summarizeBy: sum
+		sourceColumn: RefreshAverageDuration
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column RefreshMedianDuration
+		dataType: double
+		sourceProviderType: float
+		lineageTag: c9d2c2b1-99ec-4a75-a1ef-6b1857c0f678
+		sourceLineageTag: RefreshMedianDuration
+		summarizeBy: sum
+		sourceColumn: RefreshMedianDuration
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column RefreshCount
+		dataType: int64
+		formatString: 0
+		sourceProviderType: bigint
+		lineageTag: d899564d-9cff-4255-b5cf-364ebe939025
+		sourceLineageTag: RefreshCount
+		summarizeBy: sum
+		sourceColumn: RefreshCount
+
+		annotation SummarizationSetBy = Automatic
+
+	column ConsiderationDurationSeconds
+		dataType: int64
+		formatString: 0
+		sourceProviderType: bigint
+		lineageTag: 0f3d4283-6f3c-4a5c-b383-97e686c31b4b
+		sourceLineageTag: ConsiderationDurationSeconds
+		summarizeBy: sum
+		sourceColumn: ConsiderationDurationSeconds
+
+		annotation SummarizationSetBy = Automatic
+
+	partition capacity_refreshable_summaries = entity
+		mode: directLake
+		source
+			entityName: capacity_refreshable_summaries
+			schemaName: dbo
+			expressionSource: DatabaseQuery
+
+	annotation PBI_ResultType = Table
+

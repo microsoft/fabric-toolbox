@@ -1,0 +1,790 @@
+table Metrics
+	lineageTag: a33c9891-2c5d-411b-a645-25981d072ef2
+
+	measure '# Capacities' =
+			
+			CALCULATE(
+			    COUNT(capacities[CapacityId]),
+			    capacities[fuam_deleted] = FALSE()
+			    )
+		formatString: #,0
+		displayFolder: Capacities
+		lineageTag: bd85a397-8db1-4cfb-a843-da7507bc99a6
+
+		changedProperty = Name
+
+		changedProperty = FormatString
+
+	measure 'Avg CU by Item by Day IOD' = ```
+			
+			VAR _calculatedResult = 
+			    SUMMARIZECOLUMNS(
+			            'calendar'[Date2Key],
+			            capacity_metrics_by_item_by_operation_by_day[ItemId],
+			            "SumCuByItemByDay", [Total CUs IOD]
+			        )
+			RETURN
+			    AVERAGEX(
+			        _calculatedResult,
+			        [SumCuByItemByDay]
+			    )
+			```
+		formatString: #,0.00
+		displayFolder: Capacity IOD Metrics\General
+		lineageTag: 196caee6-65fe-4a9c-a54d-82e77b19437e
+
+	measure 'Cancelled Ops IOD' = SUM(capacity_metrics_by_item_by_operation_by_day[CancelledOperationCount])
+		formatString: #,0
+		displayFolder: Capacity IOD Metrics\General
+		lineageTag: 39d629c3-59df-41f8-be59-cd999dda899e
+
+	measure 'Failure Ops IOD' = SUM(capacity_metrics_by_item_by_operation_by_day[FailureOperationCount])
+		formatString: #,0
+		displayFolder: Capacity IOD Metrics\General
+		lineageTag: 16da05d8-8dac-446c-826d-05f26edb251d
+
+	measure 'Invalid Ops IOD' = SUM(capacity_metrics_by_item_by_operation_by_day[InvalidOperationCount])
+		formatString: #,0
+		displayFolder: Capacity IOD Metrics\General
+		lineageTag: 1b58ae5f-c82f-463d-b73a-4a8fbf392f89
+
+	measure 'Max CU by Item by Day IOD' = ```
+			
+			VAR _calculatedResult = 
+			    SUMMARIZECOLUMNS(
+			            'calendar'[Date2Key],
+			            capacity_metrics_by_item_by_operation_by_day[ItemId],
+			            "SumCuByItemByDay", [Total CUs IOD]
+			        )
+			RETURN
+			    MAXX(
+			        _calculatedResult,
+			        [SumCuByItemByDay]
+			    )
+			```
+		formatString: 0
+		displayFolder: Capacity IOD Metrics\General
+		lineageTag: 22e5649a-d087-482f-8d3a-948221c6b7ae
+
+		annotation PBI_FormatHint = {"isDecimal":true}
+
+	measure 'Max Throttling (min) IOD' =
+			
+			MAX(capacity_metrics_by_item_by_operation_by_day[ThrottlingInMin])
+		displayFolder: Capacity IOD Metrics\General
+		lineageTag: 61ee5ff7-30f4-4540-afa0-9fe43fe9f2de
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'Operations IOD' = SUM(capacity_metrics_by_item_by_operation_by_day[OperationCount])
+		formatString: #,0
+		displayFolder: Capacity IOD Metrics\General
+		lineageTag: b107c2e9-ceea-4c93-8c1f-b37f459f63d1
+
+	measure 'Rejected Ops IOD' = SUM(capacity_metrics_by_item_by_operation_by_day[RejectedOperationCount])
+		formatString: #,0
+		displayFolder: Capacity IOD Metrics\General
+		lineageTag: bc5deb07-23d3-4c6e-9732-27e324accd91
+
+	measure 'Succeeded Ops IOD' = SUM(capacity_metrics_by_item_by_operation_by_day[SuccessOperationCount])
+		formatString: #,0
+		displayFolder: Capacity IOD Metrics\General
+		lineageTag: f6ff3cb7-5c3d-4b77-b3f7-6ddcce358805
+
+	measure 'Total CUs IOD' = SUM(capacity_metrics_by_item_by_operation_by_day[TotalCUs])
+		formatString: #,0.00
+		displayFolder: Capacity IOD Metrics\General
+		lineageTag: 66a68833-e5fb-4090-8052-86cfd577197a
+
+	measure 'Total Duration (s) IOD' = SUM(capacity_metrics_by_item_by_operation_by_day[DurationInSec])
+		formatString: #,0
+		displayFolder: Capacity IOD Metrics\General
+		lineageTag: 4922653b-f91b-41e6-a4af-841ea5fb29d4
+
+		annotation PBI_FormatHint = {"isDecimal":true}
+
+	measure 'Total Throttling (min) IOD' =
+			
+			SUM(capacity_metrics_by_item_by_operation_by_day[ThrottlingInMin])
+		displayFolder: Capacity IOD Metrics\General
+		lineageTag: 9fd47661-9ef0-441c-b692-c051f58b945e
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'Users IOD' = SUM(capacity_metrics_by_item_by_operation_by_day[UserCount])
+		formatString: #,0
+		displayFolder: Capacity IOD Metrics\General
+		lineageTag: 789a6c4a-d86b-43b6-8ba6-e2e73b2c5b53
+
+	measure 'Avg CU by Item by Day 14d IOD' =
+			
+			CALCULATE(
+			    [Avg CU by Item by Day IOD],
+			    'calendar'[IsInLast14Days] = 1
+			)
+		formatString: #,0.00
+		displayFolder: Capacity IOD Metrics\Time Intelligence
+		lineageTag: 33a4360b-bd62-4e36-8907-b79efd8e5340
+
+	measure 'Avg CU by Item by Day 30d IOD' =
+			
+			CALCULATE(
+			    [Avg CU by Item by Day IOD],
+			    'calendar'[IsInLast30Days] = 1
+			)
+		formatString: #,0.00
+		displayFolder: Capacity IOD Metrics\Time Intelligence
+		lineageTag: ee8159f9-b95b-4eca-991d-1364ee57381f
+
+	measure 'Avg CU by Item by Day 7d IOD' =
+			
+			CALCULATE(
+			    [Avg CU by Item by Day IOD],
+			    'calendar'[Date2Key] >= TODAY()-7
+			)
+		formatString: #,0.00
+		displayFolder: Capacity IOD Metrics\Time Intelligence
+		lineageTag: 9e582f5d-af24-4a3f-9eff-fbb042d9cd3d
+
+	measure 'Avg CU by Item by Day 90d IOD' =
+			
+			CALCULATE(
+			    [Avg CU by Item by Day IOD],
+			    'calendar'[Date2Key] >= TODAY()-90
+			)
+		formatString: #,0.00
+		displayFolder: Capacity IOD Metrics\Time Intelligence
+		lineageTag: e14125de-8cf0-4181-a0c2-510124039954
+
+	measure 'Max CU by Item by Day 14d IOD' =
+			
+			CALCULATE(
+			    [Max CU by Item by Day IOD],
+			    'calendar'[IsInLast14Days] = 1
+			)
+		formatString: #,0
+		displayFolder: Capacity IOD Metrics\Time Intelligence
+		lineageTag: 8bb3e656-cdf9-4151-9f2c-9bec17f05071
+
+	measure 'Max CU by Item by Day 30d IOD' =
+			
+			CALCULATE(
+			    [Max CU by Item by Day IOD],
+			    'calendar'[IsInLast30Days] = 1
+			)
+		formatString: #,0
+		displayFolder: Capacity IOD Metrics\Time Intelligence
+		lineageTag: ea3d6ec2-8f71-480b-a135-a62cad325cc4
+
+	measure 'Max CU by Item by Day 7d IOD' =
+			
+			CALCULATE(
+			    [Max CU by Item by Day IOD],
+			    'calendar'[Date2Key] >= TODAY()-7
+			)
+		displayFolder: Capacity IOD Metrics\Time Intelligence
+		lineageTag: 3b216a08-0d14-4d79-b501-c16ddd8e7693
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'Max CU by Item by Day 90d IOD' =
+			
+			CALCULATE(
+			    [Max CU by Item by Day IOD],
+			    'calendar'[Date2Key] >= TODAY()-90
+			)
+		formatString: 0
+		displayFolder: Capacity IOD Metrics\Time Intelligence
+		lineageTag: dd55f0d9-8b86-4f8f-89a8-18c82ac13f85
+
+		annotation PBI_FormatHint = {"isDecimal":true}
+
+	measure 'Selected Unit Name' = SELECTEDVALUE(size_units[Unit])
+		displayFolder: Helper
+		lineageTag: 2c56ff35-47a2-417d-8d93-821eb0786bc6
+
+	measure 'Selected Unit Value' = SELECTEDVALUE(size_units[UnitValue])
+		formatString: 0
+		displayFolder: Helper
+		lineageTag: 331bbd11-d17a-45d3-bc34-4139135bc6e0
+
+	measure 'FUAM Release' = "2025.4.1"
+		displayFolder: Meta
+		lineageTag: ca859e16-fcf7-4da8-8409-85eee8cad196
+
+	measure 'Avg Refresh Duration Minutes (Det.)' =
+			
+			DIVIDE(
+			    AVERAGE(capacity_refreshable_details[DurationInSeconds]),
+			    60
+			)
+		displayFolder: Refreshables\Details
+		lineageTag: fce7de86-67b8-4c65-820c-e97b04ca4f4c
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'Refresh Duration Minutes' =
+			
+			DIVIDE(
+			    SUM(capacity_refreshable_details[DurationInSeconds]),
+			    60
+			)
+		formatString: #,0.00
+		displayFolder: Refreshables\Details
+		lineageTag: ab62d8e5-3579-4d75-b512-1202a35b871c
+
+	measure '# Refreshes' = SUM(capacity_refreshable_summaries[RefreshCount])
+		formatString: #,0
+		displayFolder: Refreshables\Summary
+		lineageTag: 20043732-7ddd-487c-8746-ba2081d0cc49
+
+	measure 'Avg Refresh Duration Minutes' =
+			
+			DIVIDE(
+			    AVERAGE(capacity_refreshable_summaries[RefreshAverageDuration]),
+			    60
+			)
+		displayFolder: Refreshables\Summary
+		lineageTag: f69d023b-7805-4697-86af-6fae8d04fda9
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'Consideration End' = MIN(capacity_refreshable_summaries[ConsideredEndTime])
+		formatString: General Date
+		displayFolder: Refreshables\Summary
+		lineageTag: 3a93baf5-caf3-437b-ade3-179cc914169b
+
+	measure 'Consideration Start' = MIN(capacity_refreshable_summaries[ConsideredStartTime])
+		formatString: General Date
+		displayFolder: Refreshables\Summary
+		lineageTag: 30d99fc0-2e88-474f-bb90-7b337d8494d2
+
+	measure 'Considered Days' =
+			
+			VAR _dayInt = 86400
+			RETURN
+			DIVIDE(
+			    SUM(capacity_refreshable_summaries[ConsiderationDurationSeconds]),
+			    _dayInt
+			)
+		displayFolder: Refreshables\Summary
+		lineageTag: 92cd0171-70cd-4509-ba7b-64b056fad636
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'Median Refresh Duration Minutes' =
+			
+			DIVIDE(
+			    MEDIAN(capacity_refreshable_summaries[RefreshMedianDuration]),
+			    60
+			)
+		displayFolder: Refreshables\Summary
+		lineageTag: b3ac6134-1b3c-498a-ad59-420aa34218b9
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure '# Disabled Refreshables' =
+			
+			VAR _matrix =
+			SUMMARIZECOLUMNS(
+					capacity_refreshables[WorkspaceId],
+					capacity_refreshables[ItemId],
+					capacity_refreshable_days[Day],
+					capacity_refreshable_times[Time],
+			        // Filter results only for disabled refreshes
+			        TREATAS({FALSE}, 'capacity_refreshables'[IsRefreshEnabled]),
+					"scheduledRefreshes", [# Refreshable Items]
+				)
+			RETURN
+			SUMX(
+			    _matrix,
+			    [scheduledRefreshes]
+			)
+		formatString: #,0
+		displayFolder: Refreshables
+		lineageTag: 37e01bac-631b-4fe1-adb6-c574d2a0179f
+
+	measure '# Enabled Refreshables' =
+			
+			VAR _matrix =
+			SUMMARIZECOLUMNS(
+					capacity_refreshables[WorkspaceId],
+					capacity_refreshables[ItemId],
+					capacity_refreshable_days[Day],
+					capacity_refreshable_times[Time],
+			        // Filter results only for enabled refreshes
+			        TREATAS({TRUE}, 'capacity_refreshables'[IsRefreshEnabled]),
+					"scheduledRefreshes", [# Refreshable Items]
+				)
+			RETURN
+			SUMX(
+			    _matrix,
+			    [scheduledRefreshes]
+			)
+		formatString: #,0
+		displayFolder: Refreshables
+		lineageTag: 5eee9bff-0dfe-48b0-bfa5-60b01b2d1692
+
+	measure '# Refreshable Items' =
+			
+			COUNTROWS(capacity_refreshables)
+		formatString: #,0
+		displayFolder: Refreshables
+		lineageTag: 0566ffdc-1a11-4b5a-94aa-ba0909f37b30
+
+	measure '# Scheduled Refreshables' =
+			
+			VAR _matrix =
+			SUMMARIZECOLUMNS(
+					capacity_refreshables[WorkspaceId],
+					capacity_refreshables[ItemId],
+					capacity_refreshable_days[Day],
+					capacity_refreshable_times[Time],
+					capacity_refreshables[IsRefreshEnabled],
+			        // Filter results only for enabled refreshes
+			        //TREATAS({TRUE}, 'capacity_refreshables'[IsRefreshEnabled]),
+					"scheduledRefreshes", [# Refreshable Items]
+				)
+			RETURN
+			SUMX(
+			    _matrix,
+			    [scheduledRefreshes]
+			)
+		formatString: #,0
+		displayFolder: Refreshables
+		lineageTag: 3eea8987-e814-4534-ad7b-10dbd4f7e3af
+
+	measure 'BPA Rules' = COUNTROWS(semantic_model_bpa_rule_catalog)
+		formatString: 0
+		displayFolder: Semantic Models\Optimization Module\BPA
+		lineageTag: b4dfbdce-36c7-44f6-bb91-3d8e22e367f9
+
+	measure 'BPA Violations' = COUNTROWS(semantic_model_bpa_results)
+		formatString: #,0
+		displayFolder: Semantic Models\Optimization Module\BPA
+		lineageTag: 664f03e1-0dc0-4060-94f7-81134d9f4163
+
+	measure 'BPA Violations (Background Impact)' =
+			
+			CALCULATE(
+			    [BPA Violations],
+			    semantic_model_bpa_rule_catalog[ImpactArea] = "Background Operation"
+			    )
+		formatString: 0
+		displayFolder: Semantic Models\Optimization Module\BPA
+		lineageTag: 0189dc81-3190-4e4f-83bd-44aa61dd27fd
+
+	measure 'BPA Violations (Background Impact) Last Run' =
+			
+			VAR _run = [Semantic Model Analyzer Last Run]
+			RETURN
+			    CALCULATE(
+			        [BPA Violations (Background Impact)],
+			        semantic_model_analyzer_runs[RunId] = _run
+			    )
+		formatString: #,0
+		displayFolder: Semantic Models\Optimization Module\BPA
+		lineageTag: 8f3c3c99-f21a-4582-8afc-f9f53f0215f9
+
+	measure 'BPA Violations (Error)' =
+			
+			CALCULATE(
+			    [BPA Violations],
+			    semantic_model_bpa_rule_catalog[Severity] = "Error"
+			    )
+		formatString: 0
+		displayFolder: Semantic Models\Optimization Module\BPA
+		lineageTag: ce3ec90e-462f-4959-a833-80137c811d55
+
+	measure 'BPA Violations (Info)' =
+			
+			CALCULATE(
+			    [BPA Violations],
+			    semantic_model_bpa_rule_catalog[Severity] = "Info"
+			    )
+		formatString: 0
+		displayFolder: Semantic Models\Optimization Module\BPA
+		lineageTag: ec1ea508-cabf-4d2f-858e-b68599c0d123
+
+	measure 'BPA Violations (Query Impact)' =
+			
+			CALCULATE(
+			    [BPA Violations],
+			    semantic_model_bpa_rule_catalog[ImpactArea] = "Query Operation"
+			    )
+		formatString: 0
+		displayFolder: Semantic Models\Optimization Module\BPA
+		lineageTag: f9f8238a-459c-4161-98f3-a6b6e9c4ef53
+
+	measure 'BPA Violations (Query Impact) Last Run' =
+			
+			VAR _run = [Semantic Model Analyzer Last Run]
+			RETURN
+			    CALCULATE(
+			        [BPA Violations (Query Impact)],
+			        semantic_model_analyzer_runs[RunId] = _run
+			    )
+		formatString: #,0
+		displayFolder: Semantic Models\Optimization Module\BPA
+		lineageTag: 29ff0816-d9f6-4d83-ac01-1031663ca257
+
+	measure 'BPA Violations (Usability Impact)' =
+			
+			CALCULATE(
+			    [BPA Violations],
+			    semantic_model_bpa_rule_catalog[ImpactArea] = "Usability"
+			    )
+		formatString: 0
+		displayFolder: Semantic Models\Optimization Module\BPA
+		lineageTag: 0dd169f1-0b7e-4357-9f97-2cc87d530cf9
+
+	measure 'BPA Violations (Usability Impact) Last Run' =
+			
+			VAR _run = [Semantic Model Analyzer Last Run]
+			RETURN
+			    CALCULATE(
+			        [BPA Violations (Usability Impact)],
+			        semantic_model_analyzer_runs[RunId] = _run
+			    )
+		formatString: #,0
+		displayFolder: Semantic Models\Optimization Module\BPA
+		lineageTag: 64c5b768-6b39-48d7-928d-c1c6a65dcf37
+
+	measure 'BPA Violations (Warning)' =
+			
+			CALCULATE(
+			    [BPA Violations],
+			    semantic_model_bpa_rule_catalog[Severity] = "Warning"
+			    )
+		formatString: 0
+		displayFolder: Semantic Models\Optimization Module\BPA
+		lineageTag: ee95802b-e8df-4255-8a3f-d2a28850ddde
+
+	/// Calculates the Average CU seconds by Item by Day. It ignores the 'semantic model' and 'storage mode' attributes in the filter context.
+	measure 'Avg Capacity CU 90d IOD' =
+			
+			CALCULATE(
+			    [Avg CU by Item by Day 90d IOD],
+			    REMOVEFILTERS(semantic_models[Name])
+			)
+		displayFolder: Semantic Models\Optimization Module\Capacity IOD Metrics
+		lineageTag: e067423c-d332-4d51-8482-86c58e77e1a1
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'Avg Capacity CU 90d vs SM CU 7d % IOD' = ```
+			
+			VAR _avg1d = [Avg CU by Item by Day 7d IOD]
+			RETURN 
+			    IF(
+			        ISBLANK(_avg1d), BLANK(),    
+			        DIVIDE(
+			            [Avg CU by Item by Day 7d IOD] - [Avg Capacity CU 90d IOD], 
+			            [Avg Capacity CU 90d IOD]
+			        )
+			    )
+			```
+		formatString: 0.00%;-0.00%;0.00%
+		displayFolder: Semantic Models\Optimization Module\Capacity IOD Metrics
+		lineageTag: 5d64719d-9175-4a41-bc96-2c83767a5bc4
+
+	measure 'Avg Capacity CU 90d vs SM CU 7d Bool IOD' = ```
+			
+			IF(
+			    [Avg Capacity CU 90d vs SM CU 7d IOD] > 0, 
+			    TRUE(),
+			    FALSE()
+			)
+			
+			```
+		formatString: """TRUE"";""TRUE"";""FALSE"""
+		displayFolder: Semantic Models\Optimization Module\Capacity IOD Metrics
+		lineageTag: 54ae8aec-1bce-4364-91bc-784043c4c59f
+
+	measure 'Avg Capacity CU 90d vs SM CU 7d Color IOD' =
+			
+			VAR _avg1d = [Avg Capacity CU 90d vs SM CU 7d IOD]
+			RETURN
+			SWITCH (
+			        TRUE,
+			        _avg1d > 0, "#D195EA",
+			        _avg1d = 0, "",
+			        _avg1d < 0, "#8dbed6",
+			        BLANK()
+			        )
+		displayFolder: Semantic Models\Optimization Module\Capacity IOD Metrics
+		lineageTag: 60d5b249-1b78-4368-9cd3-99b87ed7c412
+
+	measure 'Avg Capacity CU 90d vs SM CU 7d IOD' = ```
+			
+			VAR _avg1d = [Avg CU by Item by Day 7d IOD]
+			RETURN
+			IF(
+			    ISBLANK(_avg1d), 
+			    BLANK(),
+			    [Avg CU by Item by Day 7d IOD] - [Avg Capacity CU 90d IOD]
+			)
+			```
+		displayFolder: Semantic Models\Optimization Module\Capacity IOD Metrics
+		lineageTag: 11839e41-5f9f-4d33-95ac-761cfc3e210f
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'Semantic Model Analyzer Last Run' =
+			
+			CALCULATE(
+			    MAX(semantic_model_analyzer_runs[RunId]),
+			    REMOVEFILTERS(semantic_model_analyzer_runs[RunId])
+			)
+		formatString: 0
+		displayFolder: Semantic Models\Optimization Module\General
+		lineageTag: 02a516b2-6dff-47a4-a316-7f6779d8ab25
+
+	measure 'Semantic Model Analyzer Runs' = COUNT(semantic_model_analyzer_runs[RunId])
+		formatString: 0
+		displayFolder: Semantic Models\Optimization Module\General
+		lineageTag: 34e47dc5-e5d8-41e8-92f3-227f97352ca7
+
+	measure 'Data Size (model)' =
+			
+			DIVIDE(
+			    SUM(semantic_model_analyzer_runs[DataSize]),
+			    [Selected Unit Value]
+			)
+		formatString: #,0.0
+		displayFolder: Semantic Models\Optimization Module\VertiPaq\Model level
+		lineageTag: 7639ecc7-73df-4722-9790-38570f465886
+
+	measure 'Dictionary Size (model)' =
+			
+			DIVIDE(
+			    SUM(semantic_model_analyzer_runs[DictionarySize]),
+			    [Selected Unit Value]
+			)
+		formatString: #,0.0
+		displayFolder: Semantic Models\Optimization Module\VertiPaq\Model level
+		lineageTag: d9e0cec1-0499-4f63-bf5b-25a5e18423ce
+
+	measure 'Hierarchy Size (model)' =
+			
+			DIVIDE(
+			    SUM(semantic_model_analyzer_runs[HierarchySize]),
+			    [Selected Unit Value]
+			)
+		formatString: #,0.0
+		displayFolder: Semantic Models\Optimization Module\VertiPaq\Model level
+		lineageTag: 46ab6477-fff4-4165-9b04-4786bc0617fa
+
+	measure 'Relationship Size (model)' =
+			
+			DIVIDE(
+			    SUM(semantic_model_analyzer_runs[RelationshipSize]),
+			    [Selected Unit Value]
+			)
+		formatString: #,0.0
+		displayFolder: Semantic Models\Optimization Module\VertiPaq\Model level
+		lineageTag: fa1b41eb-f73c-479b-812b-02d28f421272
+
+	measure 'Tables (model)' = SUM(semantic_model_analyzer_runs[TableCount])
+		formatString: #,0
+		displayFolder: Semantic Models\Optimization Module\VertiPaq\Model level
+		lineageTag: 3dec6a3c-bf9d-4bc4-942e-29429325eb35
+
+		annotation PBI_FormatHint = {"isDecimal":true}
+
+	measure 'Tables Last Run (model)' =
+			
+			VAR _run = [Semantic Model Analyzer Last Run]
+			RETURN
+			    CALCULATE(
+			        [Tables (model)],
+			        semantic_model_analyzer_runs[RunId] = _run
+			    )
+		formatString: 0
+		displayFolder: Semantic Models\Optimization Module\VertiPaq\Model level
+		lineageTag: 9ae70191-3679-488e-9d6f-4b7595923c43
+
+	measure 'Total Size (model)' =
+			
+			DIVIDE(
+			    SUM(semantic_model_analyzer_runs[TotalSize]),
+			    [Selected Unit Value]
+			)
+		formatString: #,0.0
+		displayFolder: Semantic Models\Optimization Module\VertiPaq\Model level
+		lineageTag: 43265ea6-a92f-481e-b9e8-7225ccbd6165
+
+	measure 'Total Size Last Run (model)' =
+			
+			VAR _run = [Semantic Model Analyzer Last Run]
+			RETURN
+			    CALCULATE(
+			        [Total Size (model)],
+			        semantic_model_analyzer_runs[RunId] = _run
+			    )
+		displayFolder: Semantic Models\Optimization Module\VertiPaq\Model level
+		lineageTag: e5357d48-cabc-4b3b-bf05-df10cfc925c6
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'User Hierarchy Size (model)' =
+			
+			DIVIDE(
+			    SUM(semantic_model_analyzer_runs[UserHierarchySize]),
+			    [Selected Unit Value]
+			)
+		formatString: #,0.0
+		displayFolder: Semantic Models\Optimization Module\VertiPaq\Model level
+		lineageTag: 49b05f0b-e771-4f1b-9276-1b97cd6e54a7
+
+	measure 'Columns (table)' = SUM(semantic_model_vertipaq_tables[Columns])
+		formatString: #,0
+		displayFolder: Semantic Models\Optimization Module\VertiPaq\Table level
+		lineageTag: 154916a4-f1e4-4abf-b176-63bb25011af8
+
+	measure 'Data Size (table)' =
+			
+			DIVIDE(
+			    SUM(semantic_model_vertipaq_tables[DataSize]),
+			    [Selected Unit Value]
+			)
+		displayFolder: Semantic Models\Optimization Module\VertiPaq\Table level
+		lineageTag: 40edb924-4688-4a56-b616-bae4f1cacb55
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'Dictionary Size (table)' =
+			
+			DIVIDE(
+			    SUM(semantic_model_vertipaq_tables[DictionarySize]),
+			    [Selected Unit Value]
+			)
+		formatString: #,0
+		displayFolder: Semantic Models\Optimization Module\VertiPaq\Table level
+		lineageTag: 25c85240-81f6-498d-a811-20fd04f5d5f8
+
+	measure 'Hierarcy Size (table)' =
+			
+			DIVIDE(
+			    SUM(semantic_model_vertipaq_tables[HierarchySize]),
+			    [Selected Unit Value]
+			)
+		formatString: #,0
+		displayFolder: Semantic Models\Optimization Module\VertiPaq\Table level
+		lineageTag: b52f35cf-9007-4591-9d57-d4b1cf8e9c85
+
+	measure 'Relationship Size (table)' =
+			
+			DIVIDE(
+			    SUM(semantic_model_vertipaq_tables[RelationshipSize]),
+			    [Selected Unit Value]
+			)
+		formatString: #,0
+		displayFolder: Semantic Models\Optimization Module\VertiPaq\Table level
+		lineageTag: f4f279a5-48b9-4583-891c-0871b6fa7893
+
+	measure 'Rows (table)' = SUM(semantic_model_vertipaq_tables[RowCount])
+		formatString: #,0
+		displayFolder: Semantic Models\Optimization Module\VertiPaq\Table level
+		lineageTag: 3602707b-f90c-4587-a174-ffe5d6a748f5
+
+	measure 'Total Size (table)' =
+			
+			DIVIDE(
+			    SUM(semantic_model_vertipaq_tables[TotalSize]),
+			    [Selected Unit Value]
+			)
+		formatString: #,0
+		displayFolder: Semantic Models\Optimization Module\VertiPaq\Table level
+		lineageTag: 5bcc39c4-32cb-4bc3-b15a-a9b294386597
+
+	measure 'User Hierarchy Size (table)' = SUM(semantic_model_vertipaq_tables[UserHierarchySize])
+		formatString: #,0
+		displayFolder: Semantic Models\Optimization Module\VertiPaq\Table level
+		lineageTag: 00c046ce-a4a3-4dd7-bf31-e55a7a11b59d
+
+	measure '# Semantic models in Composite mode' =
+			
+			CALCULATE(
+			    COUNT(semantic_models[SemanticModelId]),
+			    semantic_models[ContentProviderType] = "PbixInCompositeMode"
+			)
+		formatString: #,0
+		displayFolder: Semantic Models\Storage Modes
+		lineageTag: ef54510b-cbcc-4cc1-9492-0921187c9ac6
+
+	measure '# Semantic models in DirectQuery mode' =
+			
+			CALCULATE(
+			    COUNT(semantic_models[SemanticModelId]),
+			    semantic_models[ContentProviderType] = "PbixInDirectQueryMode"
+			)
+		formatString: #,0
+		displayFolder: Semantic Models\Storage Modes
+		lineageTag: 9cbfe032-8fec-420a-8fcc-6942e0600008
+
+	measure '# Semantic models in Import mode' =
+			
+			CALCULATE(
+			    COUNT(semantic_models[SemanticModelId]),
+			    semantic_models[ContentProviderType] = "PbixInImportMode"
+			)
+		formatString: #,0
+		displayFolder: Semantic Models\Storage Modes
+		lineageTag: e64ed9d8-023f-4310-a634-0425790d39fe
+
+	measure '# Workspaces' =
+			
+			CALCULATE(
+			    COUNT(workspaces[WorkspaceId]),
+			    workspaces[fuam_deleted] = FALSE()
+			)
+		formatString: #,0
+		displayFolder: Workspaces
+		lineageTag: be9f178a-434b-4fc2-a770-6839aba5b666
+
+		changedProperty = Name
+
+		changedProperty = FormatString
+
+	measure '# Report Activities' = COUNTROWS(report_activities)
+		formatString: 0
+		displayFolder: Activities\Report
+		lineageTag: b6821115-d076-4857-b016-fa75dc16df9c
+
+	measure '# Item Activities' = COUNTROWS(activities)
+		formatString: #,0
+		displayFolder: Activities\Item
+		lineageTag: 99a28eae-db47-4863-8230-f72eea7663e0
+
+	measure 'Partitions (table)' = SUM(semantic_model_vertipaq_tables[Partitions])
+		formatString: 0
+		displayFolder: Semantic Models\Optimization Module\VertiPaq\Table level
+		lineageTag: 99e9bfe8-e964-4221-a23a-f93fc5ad57df
+
+	measure '# Users' = DISTINCTCOUNT(activities[UserId])
+		formatString: 0
+		displayFolder: Activities\Item
+		lineageTag: 5b25cfa8-b432-4de7-b01a-bb4e2e9c8016
+
+	measure '# Viewed Reports' =
+			CALCULATE(
+			    DISTINCTCOUNT(report_activities[ReportId]),
+			    activities[Activity] = "ViewReport"
+			)
+		displayFolder: Activities\Report
+		lineageTag: d580a30f-46e9-40a8-a1b9-af7e2fbb1377
+
+	column Value
+		isHidden
+		lineageTag: 36bb8156-da04-4f6d-a909-7082d1e29721
+		summarizeBy: none
+		isNameInferred
+		sourceColumn: [Value]
+
+		annotation SummarizationSetBy = Automatic
+
+	partition 'New Calculated Table' = calculated
+		mode: import
+		source = {"metrics bucket"}
+

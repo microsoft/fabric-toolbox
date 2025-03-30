@@ -1,0 +1,47 @@
+table size_units
+	lineageTag: 1dd0978a-9d03-4035-a6d7-467a0d72e5c1
+
+	column Unit
+		lineageTag: 93453b99-5e09-41f0-aff2-2371394e0cde
+		summarizeBy: none
+		isNameInferred
+		sourceColumn: [Unit]
+		sortByColumn: UnitKey
+
+		annotation SummarizationSetBy = Automatic
+
+	column UnitValue
+		formatString: 0
+		lineageTag: cb1f8148-9bad-4b82-9624-685fd094861b
+		summarizeBy: sum
+		isNameInferred
+		sourceColumn: [UnitValue]
+
+		annotation SummarizationSetBy = Automatic
+
+	column UnitKey
+		formatString: 0
+		lineageTag: 44a38b38-bbf7-491d-ba7f-84d0f7774054
+		summarizeBy: count
+		isNameInferred
+		sourceColumn: [UnitKey]
+
+		annotation SummarizationSetBy = Automatic
+
+	partition 'New Calculated Table' = calculated
+		mode: import
+		source = ```
+				DATATABLE(
+				    "UnitKey", INTEGER,
+				    "Unit", STRING,
+				    "UnitValue", INTEGER,
+				    {
+				        {1, "bytes", 1},
+				        {2, "kilobytes", 1024},
+				        {3, "megabytes", 1048576},
+				        {4, "gigabytes", 1073741824}
+				    }
+				)
+				
+				```
+

@@ -1,0 +1,57 @@
+table 'Time Units'
+	lineageTag: 626c3610-e786-4575-af01-6dd4dfbd6cdf
+
+	column TimeUnitKey
+		dataType: int64
+		formatString: 0
+		lineageTag: 826ac248-e464-402a-910f-5c318cf65749
+		summarizeBy: count
+		sourceColumn: TimeUnitKey
+
+		annotation SummarizationSetBy = Automatic
+
+	column Unit
+		dataType: string
+		lineageTag: 70dd895b-891e-4d83-951a-3f2ea1dc7c9b
+		summarizeBy: none
+		sourceColumn: Unit
+		sortByColumn: TimeUnitKey
+
+		changedProperty = SortByColumn
+
+		annotation SummarizationSetBy = Automatic
+
+	column UnitValue
+		dataType: int64
+		formatString: 0
+		lineageTag: 3810f49c-7fb7-4279-a23c-ea54b6382bd7
+		summarizeBy: sum
+		sourceColumn: UnitValue
+
+		annotation SummarizationSetBy = Automatic
+
+	column UnitShort
+		dataType: string
+		lineageTag: 053df831-e68d-4f4e-bfba-587237642850
+		summarizeBy: none
+		sourceColumn: UnitShort
+		sortByColumn: TimeUnitKey
+
+		changedProperty = SortByColumn
+
+		annotation SummarizationSetBy = Automatic
+
+	partition 'Time Units' = m
+		mode: import
+		queryGroup: Helpers
+		source =
+				let
+				    Source = Table.FromRows(Json.Document(Binary.Decompress(Binary.FromText("i45WMlTSUcrNzMnJLE5Nzs9LKQZywULFSrE60UpGQCaShIGBAUQALGkM1ppXWpIKkjQzgMgCRcCyJkB2Rn5pEUjOGCwJks0oUoqNBQA=", BinaryEncoding.Base64), Compression.Deflate)), let _t = ((type nullable text) meta [Serialized.Text = true]) in type table [TimeUnitKey = _t, Unit = _t, UnitValue = _t, UnitShort = _t]),
+				    #"Changed Type" = Table.TransformColumnTypes(Source,{{"TimeUnitKey", Int64.Type}, {"Unit", type text}, {"UnitValue", Int64.Type}, {"UnitShort", type text}})
+				in
+				    #"Changed Type"
+
+	annotation PBI_NavigationStepName = Navigation
+
+	annotation PBI_ResultType = Table
+

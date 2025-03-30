@@ -1,0 +1,21 @@
+/// Workspace connection Uri e.g. 'powerbi://api.powerbi.com/v1.0/myorg/my-premium-workspace'
+expression serverURL = "powerbi://api.powerbi.com/v1.0/myorg/FUAM%20Certify%20Semantic%20Model" meta [IsParameterQuery = true, IsParameterQueryRequired = true, Type = "Text"]
+	lineageTag: 6b562550-8414-4f15-b831-2c4e55c1a61e
+	queryGroup: 'START HERE'
+
+	annotation PBI_ResultType = Text
+
+	annotation PBI_NavigationStepName = Navigation
+
+expression 'Get Model Name' =
+		let
+		    Source = AnalysisServices.Database(serverURL, "", [Query="SELECT * FROM $System.DBSCHEMA_CATALOGS", Implementation="2.0"])
+		in
+		    Source
+	lineageTag: e8c67f1c-5fc4-4aa9-9a65-af4b0638fd11
+	queryGroup: 'START HERE'
+
+	annotation PBI_NavigationStepName = Navigation
+
+	annotation PBI_ResultType = Table
+

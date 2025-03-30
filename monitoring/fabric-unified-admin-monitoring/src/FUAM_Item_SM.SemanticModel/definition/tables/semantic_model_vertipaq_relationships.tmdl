@@ -1,0 +1,218 @@
+table semantic_model_vertipaq_relationships
+	lineageTag: 97b817ae-1bde-4dd0-9902-4522abdff5b8
+	sourceLineageTag: [dbo].[semantic_model_vertipaq_relationships]
+
+	column Multiplicity
+		dataType: string
+		sourceProviderType: varchar(8000)
+		lineageTag: 011eff48-da2e-4d42-82ee-dfc40ad5e8a2
+		sourceLineageTag: Multiplicity
+		summarizeBy: none
+		sourceColumn: Multiplicity
+
+		annotation SummarizationSetBy = Automatic
+
+	column FromTable
+		dataType: string
+		sourceProviderType: varchar(8000)
+		lineageTag: 2cb54c25-70e4-4c8d-b508-63abc3643123
+		sourceLineageTag: FromTable
+		summarizeBy: none
+		sourceColumn: FromTable
+
+		annotation SummarizationSetBy = Automatic
+
+	column FromColumn
+		dataType: string
+		sourceProviderType: varchar(8000)
+		lineageTag: ec965792-81e1-4d5f-b1cf-263881345494
+		sourceLineageTag: FromColumn
+		summarizeBy: none
+		sourceColumn: FromColumn
+
+		annotation SummarizationSetBy = Automatic
+
+	column ToTable
+		dataType: string
+		sourceProviderType: varchar(8000)
+		lineageTag: cf292bd8-332e-4b77-9d9f-ff0eca1e9fe2
+		sourceLineageTag: ToTable
+		summarizeBy: none
+		sourceColumn: ToTable
+
+		annotation SummarizationSetBy = Automatic
+
+	column ToColumn
+		dataType: string
+		sourceProviderType: varchar(8000)
+		lineageTag: 6b8863dc-9708-4556-9108-ccc85bd91643
+		sourceLineageTag: ToColumn
+		summarizeBy: none
+		sourceColumn: ToColumn
+
+		annotation SummarizationSetBy = Automatic
+
+	column Active
+		dataType: boolean
+		formatString: """TRUE"";""TRUE"";""FALSE"""
+		sourceProviderType: bit
+		lineageTag: dc0c91b1-92ce-4b4d-88c5-eb196e06d13e
+		sourceLineageTag: Active
+		summarizeBy: none
+		sourceColumn: Active
+
+		annotation SummarizationSetBy = Automatic
+
+	column CrossFilteringBehavior
+		dataType: string
+		sourceProviderType: varchar(8000)
+		lineageTag: 14fa10e2-4efc-47e8-8bca-fd432efd68c5
+		sourceLineageTag: CrossFilteringBehavior
+		summarizeBy: none
+		sourceColumn: CrossFilteringBehavior
+
+		annotation SummarizationSetBy = Automatic
+
+	column SecurityFilteringBehavior
+		dataType: string
+		sourceProviderType: varchar(8000)
+		lineageTag: d9841f07-63bd-444c-8cca-77695951aa96
+		sourceLineageTag: SecurityFilteringBehavior
+		summarizeBy: none
+		sourceColumn: SecurityFilteringBehavior
+
+		annotation SummarizationSetBy = Automatic
+
+	column JoinOnDateBehavior
+		dataType: string
+		sourceProviderType: varchar(8000)
+		lineageTag: 4e624cea-553f-4b4b-a6ea-c8b30a21a249
+		sourceLineageTag: JoinOnDateBehavior
+		summarizeBy: none
+		sourceColumn: JoinOnDateBehavior
+
+		annotation SummarizationSetBy = Automatic
+
+	column RelyOnReferentialIntegrity
+		dataType: boolean
+		formatString: """TRUE"";""TRUE"";""FALSE"""
+		sourceProviderType: bit
+		lineageTag: 67125fe9-825e-4fc5-9215-ef3abcf29349
+		sourceLineageTag: RelyOnReferentialIntegrity
+		summarizeBy: none
+		sourceColumn: RelyOnReferentialIntegrity
+
+		annotation SummarizationSetBy = Automatic
+
+	column State
+		dataType: string
+		sourceProviderType: varchar(8000)
+		lineageTag: 7ada5a58-9252-4f04-acc6-9b946be7f209
+		sourceLineageTag: State
+		summarizeBy: none
+		sourceColumn: State
+
+		annotation SummarizationSetBy = Automatic
+
+	column ModifiedTime
+		dataType: dateTime
+		formatString: General Date
+		sourceProviderType: datetime2
+		lineageTag: 7cd04ed0-2446-4fb5-b97f-9f1a5a3c5717
+		sourceLineageTag: ModifiedTime
+		summarizeBy: none
+		sourceColumn: ModifiedTime
+
+		annotation SummarizationSetBy = Automatic
+
+	column RelationshipName
+		dataType: string
+		sourceProviderType: varchar(8000)
+		lineageTag: 86f60b61-6cdf-4b67-bcd4-220b215eb89a
+		sourceLineageTag: RelationshipName
+		summarizeBy: none
+		sourceColumn: RelationshipName
+
+		annotation SummarizationSetBy = Automatic
+
+	column FromObject
+		dataType: string
+		sourceProviderType: varchar(8000)
+		lineageTag: 4bee1aec-82a8-46c5-be55-f884b8918f63
+		sourceLineageTag: FromObject
+		summarizeBy: none
+		sourceColumn: FromObject
+
+		annotation SummarizationSetBy = Automatic
+
+	column ToObject
+		dataType: string
+		sourceProviderType: varchar(8000)
+		lineageTag: a37512ee-893d-42db-8af0-cf722f61c189
+		sourceLineageTag: ToObject
+		summarizeBy: none
+		sourceColumn: ToObject
+
+		annotation SummarizationSetBy = Automatic
+
+	column UsedSize
+		dataType: int64
+		formatString: 0
+		sourceProviderType: bigint
+		lineageTag: 6f8edcfc-31fb-444d-85ac-b461b1a3570c
+		sourceLineageTag: UsedSize
+		summarizeBy: sum
+		sourceColumn: UsedSize
+
+		annotation SummarizationSetBy = Automatic
+
+	column SemanticModelId
+		dataType: string
+		sourceProviderType: varchar(8000)
+		lineageTag: 31b8b017-6869-4894-9ba1-16eae504e868
+		sourceLineageTag: SemanticModelId
+		summarizeBy: none
+		sourceColumn: SemanticModelId
+
+		annotation SummarizationSetBy = Automatic
+
+	column WorkspaceId
+		dataType: string
+		sourceProviderType: varchar(8000)
+		lineageTag: a32a2237-ab31-4ad4-9720-09b7a637bcb7
+		sourceLineageTag: WorkspaceId
+		summarizeBy: none
+		sourceColumn: WorkspaceId
+
+		annotation SummarizationSetBy = Automatic
+
+	column RunId
+		dataType: int64
+		formatString: 0
+		sourceProviderType: bigint
+		lineageTag: 93ce7dab-da88-450e-be94-3060dbc03219
+		sourceLineageTag: RunId
+		summarizeBy: count
+		sourceColumn: RunId
+
+		annotation SummarizationSetBy = Automatic
+
+	column SemanticModelRunKey
+		dataType: string
+		sourceProviderType: varchar(2048)
+		lineageTag: e7c3f24e-c89b-4244-b208-bf9f75556fa6
+		sourceLineageTag: SemanticModelRunKey
+		summarizeBy: none
+		sourceColumn: SemanticModelRunKey
+
+		annotation SummarizationSetBy = Automatic
+
+	partition semantic_model_vertipaq_relationships = entity
+		mode: directLake
+		source
+			entityName: semantic_model_vertipaq_relationships
+			schemaName: dbo
+			expressionSource: DatabaseQuery
+
+	annotation PBI_ResultType = Table
+

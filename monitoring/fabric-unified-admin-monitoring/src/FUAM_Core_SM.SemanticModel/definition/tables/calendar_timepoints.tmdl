@@ -1,0 +1,50 @@
+table calendar_timepoints
+	lineageTag: 8a8e1df5-b301-4b71-b1b0-a1ff0fd9ee7e
+	sourceLineageTag: [dbo].[calendar_timepoints]
+
+	column TimePoint
+		dataType: dateTime
+		formatString: General Date
+		sourceProviderType: datetime2
+		lineageTag: d007950f-aa47-46ba-9b52-9dfcbef8265a
+		sourceLineageTag: TimePoint
+		summarizeBy: none
+		sourceColumn: TimePoint
+
+		annotation SummarizationSetBy = Automatic
+
+	column Date
+		dataType: dateTime
+		formatString: yyyy-mm-dd
+		sourceProviderType: date
+		lineageTag: 4218f81b-1f98-496d-971b-63d617b5be5b
+		sourceLineageTag: Date
+		summarizeBy: none
+		sourceColumn: Date
+
+		changedProperty = FormatString
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isCustom":true}
+
+	column Hour
+		dataType: dateTime
+		formatString: General Date
+		sourceProviderType: datetime2
+		lineageTag: 88b73151-f1a8-4e6e-8014-bb9e925f2773
+		sourceLineageTag: Hour
+		summarizeBy: none
+		sourceColumn: Hour
+
+		annotation SummarizationSetBy = Automatic
+
+	partition calendar_timepoints = entity
+		mode: directLake
+		source
+			entityName: calendar_timepoints
+			schemaName: dbo
+			expressionSource: DatabaseQuery
+
+	annotation PBI_ResultType = Table
+
