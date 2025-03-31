@@ -9,7 +9,8 @@ Fabric toolbox is a repository of tools, accelerators, scripts, and samples to h
 These assets should be treated as examples that you can use to create the solutions that are appropriate for your use case. If you have any issues, please use the [issues](https://github.com/microsoft/fabric-toolbox/issues) tab of this repository and we will work to address issues on a best effort basis. 
 
 ## Monitoring
-- $${\color{green}NEW!}$$ [Workspace Monitoring Report Templates](./monitoring/workspace-monitoring-dashboards)
+- $${\color{green}NEW!}$$ [Fabric Unified Admin Monitoring (FUAM)](./monitoring/fabric-unified-admin-monitoring)
+- [Workspace Monitoring Report Templates](./monitoring/workspace-monitoring-dashboards)
 
 ## Accelerators
 - $${\color{green}NEW!}$$ [CICD: Git-Based Deployments](./accelerators/CICD/Git-based-deployments)
