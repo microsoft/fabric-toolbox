@@ -14,7 +14,9 @@ annotation PBIDesktopVersion = 2.142.7627.6 (Main)+12378a3b51a63d36fded4ef866d1d
 
 annotation PBI_QueryOrder = ["DatabaseQuery"]
 
-annotation PBI_ProTooling = ["WebModelingEdit"]
+annotation PBI_ProTooling = ["WebModelingEdit","TMDL-Extension"]
+
+annotation FUAM_Tag = ["FUAM_2025.4.1"]
 
 annotation __TEdtr = 1
 
