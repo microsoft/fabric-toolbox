@@ -4,10 +4,13 @@ Solution accelerator for Fabric platform administrator monitoring.
 
 ![image](./media/general/fuam_cover.png)
 
+
+[Want to get a brief introduction on FUAM? - Watch the video](https://youtu.be/CmHMOsQcMGI)
+
+
 ## Introduction
 
 Fabric Unfied Admin Monitoring (short: FUAM) is a solution to enable a holistic monitoring on top of Microsoft Fabric. Today monitoring for Fabric can be done through different reports, apps and tools. 
-
 
 FUAM has the goal to provide a more holistic view on top of the various information, which can be extracted from Fabric, allowing it's users to analyze at a very high level, but also to deep dive into specific artifacts for a more fine granular data analysis.
 
@@ -20,6 +23,7 @@ FUAM is completely build with Fabric capabilities with Pipelines and Notebooks a
 
 ## FUAM Content
 
+![image](./media/general/fuam_cover_flow.png)
 
 FUAM extracts the following data from the tenant:
 
@@ -33,6 +37,8 @@ FUAM extracts the following data from the tenant:
 - Capacity Refreshables
 - Git Connections
 - Engine level insights (coming soon in optimization module)
+
+
 
 ### Architecture
 The architecture of FUAM is built on Fabric items like Pipelines, Notebooks, Lakehouses, Semantic Models and Power BI reports. We have built the component in a modular structure, which helps you to extend FUAM with your own modules. This architecture design helps to maintain the solution also with ease.
