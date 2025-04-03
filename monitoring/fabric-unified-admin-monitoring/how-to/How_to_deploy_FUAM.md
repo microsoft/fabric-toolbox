@@ -210,4 +210,6 @@ You have deployed and configured FUAM.
     - In case the are no delegated tenant settings set in one of the capacities, the extraction step will fail. You can remove this step if it is not needed in your tenant
 
 # Other helpful resources
-- [Watch 'Introduction to FUAM'](https://www.youtube.com/watch?v=Ai71Xzr_2Ds)
+- [Brief introduction to FUAM - Watch the video](https://youtu.be/CmHMOsQcMGI)
+- [FUAM Architecture documentation](/monitoring/fabric-unified-admin-monitoring/how-to/FUAM_Architecture.md)
+- [FUAM Lakehouse table documentation](/monitoring/fabric-unified-admin-monitoring/media/documentation/FUAM_Documentation_Lakehouse_table_lineage.pdf)
