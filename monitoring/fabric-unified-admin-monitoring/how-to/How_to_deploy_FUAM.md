@@ -208,6 +208,7 @@ You have deployed and configured FUAM.
     - If there is no workspace description on the whole tenant. In this case just add one workspace description. This will fix the error
     - In case there are no regular scheduled refreshes on the tenant, the execution for capacity refreshables can fail. This should be resolved by creating a scheduled refresh and running it multiple times
     - In case the are no delegated tenant settings set in one of the capacities, the extraction step will fail. You can remove this step if it is not needed in your tenant
+    - Try to run the "Init_FUAM_Lakehouse_Tables" notebook to automatically create missing columns
 
 # Other helpful resources
 - [Brief introduction to FUAM - Watch the video](https://youtu.be/CmHMOsQcMGI)
