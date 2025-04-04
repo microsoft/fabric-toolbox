@@ -62,33 +62,55 @@ https://learn.microsoft.com/en-us/fabric/cicd/manage-deployment#option-1---git--
 
     | Variable Group name    | Variable Names | Variable Value | Comment |
     | -------- | ------- | ------- | ------- |
-    | DynamicGroup  | FeatureBranch    |  <empty>    |      | 
-    | GroupDevOps  | ConflictResolutionPolicy    |  PreferRemote    |     | 
-    | GroupDevOps  | InitializationStrategy    |  PreferRemote    |      | 
-    | GroupDevOps  | MappingConnectionsFileName    |  mapping_connections.json    |  This json file will hold the mapping of connections between different stages    | 
-    | GroupDevOps  | OnelakeRolesFileName    |  onelake_roles.json    |  This json file will hold the list of roles you wish to create in the target lakehouses   | 
-    | GroupDevOps  | OnelakeRulesFileName    |  onelake_rules.json    |  This json file will hold the rules applied to the lakehouse tables/shortcut/folders defined for a role    | 
-    | GroupDevOps  | OnelakeEntraMembersFileName    |  onelake_entra_members.json    | This json file will hold the Entra ID principles assigned to a role    | 
-    | GroupDevOps  | OnelakeItemMembersFileName    |  onelake_item_members.json    |  This json file will hold the the lakehouse tables/shortcut/folders defined for a role  | 
-    | GroupDevOps  | OrganizationName    |  <name of your organization>    |      | 
-    | GroupDevOps  | ProjectName    |  <name of your project>    |      | 
-    | GroupDevOps  | RepositoryName    |  <name of your repository>    |      | 
-    | GroupDevOps  | Stage1BrancheName    |  main    |      | 
-    | GroupDevOps  | Stage2BrancheName    |  <name of your test branch>    |      | 
-    | GroupDevOps  | Stage3BrancheName    |  <name of your prod branch>    |      | 
-    | GroupFabricWorkspaces  | CiCdLakehouseId    |  <lakehouse id in your ci/cd workspace>    |      | 
-    | GroupFabricWorkspaces  | CiCdWorkspaceId    |  <ci/cd workspace id>    |      | 
-    | GroupFabricWorkspaces  | Stage1WorkspaceId    |  <dev workspace id>    |      | 
-    | GroupFabricWorkspaces  | Stage2WorkspaceId    |  <test workspace id>    |      | 
-    | GroupFabricWorkspaces  | Stage3WorkspaceId    |  <prod workspace id>    |      | 
+    | DynamicGroup  | FeatureBranch    |  <em>empty</em>    |      | 
+    | GroupDevOps  | ConflictResolutionPolicy    |  <strong>PreferRemote</strong>    |     | 
+    | GroupDevOps  | InitializationStrategy    |  <strong>PreferRemote</strong>    |      | 
+    | GroupDevOps  | MappingConnectionsFileName    |  <strong>mapping_connections.json</strong>    |  This json file will hold the mapping of connections between different stages    | 
+    | GroupDevOps  | OnelakeRolesFileName    |  <strong>onelake_roles.json</strong>    |  This json file will hold the list of roles you wish to create in the target lakehouses   | 
+    | GroupDevOps  | OnelakeRulesFileName    |  <strong>onelake_rules.json</strong>    |  This json file will hold the rules applied to the lakehouse tables/shortcut/folders defined for a role    | 
+    | GroupDevOps  | OnelakeEntraMembersFileName    |  <strong>onelake_entra_members.json</strong>    | This json file will hold the Entra ID principles assigned to a role    | 
+    | GroupDevOps  | OnelakeItemMembersFileName    |  <strong>onelake_item_members.json</strong>    |  This json file will hold the the lakehouse tables/shortcut/folders defined for a role  | 
+    | GroupDevOps  | OrganizationName    |  <em>name of your organization</em>    |      | 
+    | GroupDevOps  | ProjectName    |  <em>name of your project</em>    |      | 
+    | GroupDevOps  | RepositoryName    |  <em>name of your repository</em>    |      | 
+    | GroupDevOps  | Stage1BrancheName    |  <strong>main</strong>    |      | 
+    | GroupDevOps  | Stage2BrancheName    |  <em>name of your test branch</em>    |      | 
+    | GroupDevOps  | Stage3BrancheName    |  <em>name of your prod branch</em>    |      | 
+    | GroupFabricWorkspaces  | CiCdLakehouseId    |  <em>lakehouse id in your ci/cd workspace</em>    |      | 
+    | GroupFabricWorkspaces  | CiCdWorkspaceId    |  <em>ci/cd workspace id</em>    |      | 
+    | GroupFabricWorkspaces  | Stage1WorkspaceId    |  <em>dev workspace id</em>    |      | 
+    | GroupFabricWorkspaces  | Stage2WorkspaceId    |  <em>test workspace id</em>    |      | 
+    | GroupFabricWorkspaces  | Stage3WorkspaceId    |  <em>prod workspace id</em>    |      | 
 
     <br />
 
     The files **mapping_connections.json**, **onelake_roles.json**, **onelake_rules.json**, **onelake_entra_members.json** and **onelake_item_members.json** are all secure files uploaded in your project, at this location: Pipeline/Library/Secure Files.
     A helper notebook called **nb_extract_lakehouse_access.ipynb**  helps you extract the onelake roles defined in your lakehouses and generate the json files in your cicd lakehouse (see CI CD Workspace - Read me). Using your Onelake explorer, you can download the files and make the required modifications.
-    <span style="color: red; font-weight: bold;">The Yaml Pipelines expects the presence of these files even if empty (when you do not wish to change the connections in your Fabric items or create custom onelake roles in your target lakehouses).</span>
+   <font color="red">The Yaml Pipelines expects the presence of these files even if empty (when you do not wish to change the connections in your Fabric items or create custom onelake roles in your target lakehouses).</font>
 
+    The following screenshot highlights the structure of the mapping_connection.json file (the sample file can be downloaded from the resource folder):
 
+    ![ci_cd_option_1.png](./resources/mapping-connections-sample.png)  
+
+    The mapping_connection.json file should contain an array of mappings. In the screenshot above, there are:
+
+    - 3 connection mappings
+      - the first 2 mappings are for [connections defined within Fabric](https://learn.microsoft.com/en-us/fabric/data-factory/connector-overview)
+      - the last mapping in this sample is specific to semantic models in Direct Query or Import Mode, developed in Power BI Desktop.
+        This mapping shows a Synpase Serverless SQL Pool server, and a database in that pool. But is can be any other datasource defined in the model. To extract the right value required for this accelerator:
+        - open the power bi file, then click on Transform data and identify the sources used for the tables
+        - using the advance editor, extract the source defined in the M code as shown in the screenshot
+          ![ci_cd_option_1.png](./resources/extract-powerbi-m-source.png)  
+        - replace doubles quotes by 2 simple quotes: " --> ''
+        
+    - each mapping has 4 connections, 1 per stage:
+        - stage 0 is for feature branch workspaces
+        - stage 1 is for dev
+        - stage 2 is for test
+        - stage 3 is for prod
+
+   
+   
     <br />
 
     The variable group **DynamicGroup** requires additional permission as the variable **FeatureBranch** it contains will be updated by a pipeline execution.
