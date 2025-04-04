@@ -108,31 +108,31 @@ https://learn.microsoft.com/en-us/fabric/cicd/manage-deployment#option-1---git--
 
     ![ci_cd_option_1.png](./resources/mapping-connections-sample.png)  
 
-    Ensure the file includes an array of mappings, where each item represents a connection used in your fabric item. The screenshot above illustrates this with:
+    Ensure the file includes an array of mappings, where each item represents a connection used in your Fabric item. The screenshot above illustrates this with:
 
     - 3 mappings:
       
-      - the first 2 mappings are for [connections defined within Fabric](https://learn.microsoft.com/en-us/fabric/data-factory/connector-overview)
-      - the last mapping in this sample is specific to semantic models in Direct Query or Import Mode, developed in Power BI Desktop.
-
+      - The first 2 mappings are for [connections defined within Fabric](https://learn.microsoft.com/en-us/fabric/data-factory/connector-overview)
+        - If a stage mapping is **null**, the connection is not replaced in the fabric item in the target workspace.
+      - The last mapping in this sample is specific to semantic models in Direct Query or Import Mode, developed in Power BI Desktop.
         <br />
-        It shows an **AdventureWorksDW** database, on an on-prem server called **dev_server*. But is can be any other datasource defined in the model.
-     
+        
+        It shows an **AdventureWorksDW** database, on an on-prem server called **dev_server**.
         <br />
         
         To extract the right value required for this accelerator:
-        - open the power bi file, then click on Transform data and identify the sources used for the tables
-        - using the advance editor, extract the source defined in the M code as shown in the screenshot
+        - Open the power bi file, then click on Transform data and identify the sources used for the tables
+        - Using the advance editor, extract the source defined in the M code as shown in the screenshot
        
           ![ci_cd_option_1.png](./resources/extract-powerbi-m-source.png)
           
-        - replace doubles quotes by 2 simple quotes: " --> ''
+        - Replace doubles quotes by 2 simple quotes: " --> ''
         
-    - each mapping has 4 connections, 1 per stage:
-        - stage 0 is for feature branch workspaces
-        - stage 1 is for dev
-        - stage 2 is for test
-        - stage 3 is for prod
+    - Each mapping has 4 connections, 1 per stage:
+        - ConnectionStage0 is for feature branch workspaces
+        - ConnectionStage1 is for dev
+        - ConnectionStage2 is for test
+        - ConnectionStage3 is for prod
 
 <br />
 
