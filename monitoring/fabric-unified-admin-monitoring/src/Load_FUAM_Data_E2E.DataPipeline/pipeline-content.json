@@ -346,7 +346,7 @@
             },
             "metric_workspace": {
                 "type": "string",
-                "defaultValue": "Microsoft Fabric Capacity Metrics v30"
+                "defaultValue": "Microsoft Fabric Capacity Metrics v35"
             },
             "metric_dataset": {
                 "type": "string",
