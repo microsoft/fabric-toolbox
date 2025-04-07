@@ -27,7 +27,7 @@ This notebook is designed to measure DAX query timings under different cache sta
 1. **Different Cache States**
     - **Cold Cache**: Clears all cache. For Import/Direct Query, this involves pausing capacity, reassigning workspaces, and clearing VertiPaq cache. For DirectLake, it triggers a dataset clearValues refresh and then a full refresh. For Direct Query, the way cold-cache is set assumes that your data store is in a Fabric workspace, e.g., Lakehouse, Warehouse, etc.
     - **Warm Cache**: Partial caching. For Direct Query, we set cold-cache first, then run a query to “prime” the model. For Import and Direct Lake, we ensure all columns are framed by running the target query, then we clear the Vertipaq cache.
-    - **Hot Cache**: Runs the query twice before measuring the third time to ensure columns are framed and all caches are set.
+    - **Hot Cache**: Runs the target query before measuring the second time to ensure columns are framed and all caches are set. The Vertipaq cache is not cleared.
 1. **Capacity Pause/Resume**
     - **Warning**: Pausing a capacity will interrupt any running workloads on that capacity. Resuming will take time and resources, and can affect other workspaces assigned to the same capacity.
     - For cold-cache queries on Import and DirectQuery models, the notebook pauses and resumes capacities to ensure truly cold-cache testing. Configure your workspace capacities in the config cell if using this feature.
