@@ -30,8 +30,7 @@ The `Get-FabricWorkspace` function retrieves workspace details from a specified 
 ### Example 1: Get a list of Workspaces
 
 ```powershell
-$workspace = Get-FabricWorkspace -WorkspaceName "workspace-12345"
-Get-FabricWorkspace -WorkspaceId $workspace.id
+Get-FabricWorkspace 
 ```
 
 ### Example 2: Get a Workspace by name
