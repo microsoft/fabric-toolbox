@@ -1,15 +1,16 @@
 # General
 
-The architecture of **FUAM** is built on **Fabric items** like Pipelines, Notebooks, Lakehouses, Semantic models and Power BI reports.
-We have built the component in a **modular structure**, which helps you to extend FUAM with your own modules. This architecture design helps to maintain the solution also with ease.
+FUAM's architecture is **based on Fabric items** such as pipelines, notebooks, lakehouses, semantic models, and Power BI reports. We've designed the component to be modular, allowing you to extend FUAM with your own modules. This architectural design also makes the solution easier to maintain.
 
-The **data ingestion** logic is orchastrated and parametizable, which allows to use the main orchestration pipeline for initial and incremental data loads.
-**FUAM Lakehouse** is one of the core component in the architecture. All the data is transformed and persisted in a way, which open amazing capabilities analyzing the collected data in a semantic model with DirectLake mode.
+The **data ingestion** logic is orchestrated and parameterizable, allowing us to use the main orchestration pipeline for initial and incremental data loads. **FUAM_Lakehouse** is one of the core components of the architecture. All data is transformed and stored persistently, opening up amazing possibilities by analyzing the collected data in a semantic model in DirectLake mode.
+
+
+
 ![image](/monitoring/fabric-unified-admin-monitoring/media/general/fuam_architecture.png)
 
 # Lakehouses
 
-FUAM is designed with a 'minimalistic' but modular approach. FUAM aims to have a medallion architecture (Bronze, Silver, Gold lakehouses), however we would like to store centrally the target tables (gold layer) and the raw files (bronze layer).
+FUAM is designed to be modular. FUAM aims for a medallion architecture (Bronze, Silver, and Gold), with the target tables (Gold layer) and the raw files (Bronze layer) stored centrally.
 
 |Lakehouse|Description|
 |--|--|
@@ -18,14 +19,13 @@ FUAM is designed with a 'minimalistic' but modular approach. FUAM aims to have a
 |FUAM_Config_Lakehouse |Used for deployment of FUAM.|
 |FUAM_Backup_Lakehouse |Aimed for backup of raw and/or parquet files.|
 
-![image](/monitoring/fabric-unified-admin-monitoring/media/general/fuam_architecture.png)
 
 You can find the detailed documentation of **FUAM_Lakehouse** tables, data lineage and its purpose here:
 [FUAM Lakehouse table documentation](/monitoring/fabric-unified-admin-monitoring/media/documentation/FUAM_Documentation_Lakehouse_table_lineage.pdf).
 
 # Modules (Pipelines)
 
-FUAM is built with a modular approach. Each module contains the end-to-end data ingestion logic (from source to lakehouse table). Every module is orchestrated in a main orchestration pipeline (see more later), which makes scheduling much easier.
+FUAM is based on a modular approach. Each module contains the end-to-end logic for data ingestion (from the source to the lakehouse table). Each module is orchestrated in a central orchestration pipeline, which significantly simplifies scheduling.
 
 |Module| Description | Item name| Populated tables in FUAM_Lakehouse |
 |--|--|--|--|
@@ -52,28 +52,37 @@ Each module contains its own Notebook, which are typically using inbound paramet
 
 # Semantic Model
 
-**General**
+### General
+
+Currently, there are two semantic models within the FUAM solution accelerator:
+-	**FUAM_Core_SM** (time based)
+-	**FUAM_Item_SM** (item based)
+
+![image](/monitoring/fabric-unified-admin-monitoring/media/general/fuam_report_data_lineage.png)
+
 
 The main semantic model of FUAM is the **FUAM_Core_SM**.
 This contains all the business logic on top of the gold layer (FUAM_Lakehouse delta tables).
 
 
-**Data model**
 
-The main point-of-view of the data model is **time-based**. Whenever possible, a table is connected via relationship to the calendar table.
+#### Data model
+
+The main point-of-view of the **FUAM_Core_SM** data model is **time-based**. Whenever possible, a table is connected via relationship to the calendar table.
 This structure covers lot of different analytical scenarios. 
 
-Reconstruction of the data lineage between items or chained-data structures are **not** in the scope of this semantic model. How to can extend FUAM is described later.
+![image](/monitoring/fabric-unified-admin-monitoring/media/general/fuam_sm_model_approaches.png)
+
+> **Info:** Reconstruction of the data lineage between items or chained-data structures are **not** in the scope of this semantic model. How to can extend FUAM is described later.
 
 
-**Connectivity mode**
+#### Connectivity mode
 
-In default the **FUAM_Core_SM** semantic model is connected via **DirectLake only** mode to the Lakehouse.
-
-> **Info:** There is an other point-of-view of the data model which is coming on the next releases.
+In default the **FUAM_Core_SM** and the **FUAM_Item_SM** semantic models are connected via **DirectLake only** mode to the Lakehouse.
 
 
-**Measure structure**
+
+#### Measure structure
 
 The home table of every measure is the "Metrics" placeholder table. The measure groups can almost 1-to-1 mapped to the FUAM modules, which are described above.
 
@@ -86,9 +95,12 @@ Most of the time intelligence measures utilizing the advantages of the pre-calcu
 
 # Reports
 
-FUAM provides one central Power BI report **FUAM_Core_Report**.
-From the 'Analytic paths' you can jump to the **FUAM_Item_Analyzer_Report** to explore an item.
-These two reports are referenced to the main semantic models, which gathers data from FUAM_Lakehouse.
+FUAM provides some pre-built reports to get ready from the beginning. We have collected different views on the data which we saw important to have at enterprise customers. The aim of the report is to show you the potential of the collected data; these reports shouldn’t limit you to building your own report or enriching your data with FUAM.
+
+The following illustration shows you the current structure and purpose of the pre-built reports:
+
+
+![image](/monitoring/fabric-unified-admin-monitoring/media/general/fuam_report_structure.png)
 
 **Some screenshots of the FUAM_Core_Report:**
 
@@ -134,3 +146,13 @@ Cloning semantic model from FUAM:
 Cloning reports from FUAM:
 
 5. Use **semantic-link-lab** to clone and rebind the report to your custom semantic model
+
+
+----------------
+
+## Other helpful resources
+- [Video - Brief introduction to FUAM](https://youtu.be/CmHMOsQcMGI)
+- [Documentation - FUAM's Authorization & Authentication](/monitoring/fabric-unified-admin-monitoring/media/documentation/FUAM_Authorization.md)
+- [Documentation - FUAM Lakehouse table lineage](/monitoring/fabric-unified-admin-monitoring/media/documentation/FUAM_Documentation_Lakehouse_table_lineage.pdf)
+
+----------------
