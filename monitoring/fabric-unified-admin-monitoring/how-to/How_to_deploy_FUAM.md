@@ -7,27 +7,45 @@ The deployment of FUAM can be done with very little effort, since we tried to au
 
 
 ## Important to know
-- Capacity utilization: Please note that the items of FUAM are utilizing CUs of your capacity.
 
-- Please test the solution on a non-production Fabric SKU first without impacting other workloads on your tenant.
+- **Capacity Utilization**
+    - Please note that FUAM items only consume your capacity in CUs.
+    - FUAM is designed to minimize your capacity consumption. However, FUAM's CU consumption depends heavily on how often you run the pipeline and how many users use the FUAM report.
 
-- FUAM has been designed to have a minimum CU footprint on your capacity, however the CU consumption of FUAM is highly dependent, how often you run the pipeline and how many users are exploring the FUAM report. 
+- **Testing**
+    - Please first test the solution on a non-production Fabric SKU without impacting other workloads on your tenant.
+
+- **Lifecycle** 
+     - The Deployment Notebook supports initial deployments and updates of FUAM items. Once FUAM has updates in the repository, you can simply run the same Deployment Notebook in your workspace. The items will then be updated (overwritten) based on their names.
+
+- **Support**
+    - FUAM is **not** an official Microsoft service. It is community-driven solution accelerator
+
 
 ## Prerequisites
-- A user account with permanent **Fabric Administrator** Entra rights
+
+- A Power BI or Fabric capacity (PPU, Pro 'shared' workspaces are not supported)
 - Ability to **create** a **Service Principal** on your tenant
 - Ability to **create** a **Workspace** on your tenant
-- A Power BI or Fabric capacity
-- Enabled admin setting '**Users can create Fabric items**' for FUAM workspace admin(s)
-- **Recommended:** Fabric Capacity Metrics app (workspace) with attached P or F-capacity
+- A user account with permanent **Fabric Administrator** EntraID rights
+    - Alternatively, use SPN via Azure Key Vault 
+    - For more details, please read the article [FUAM's Authorization & Authentication](/monitoring/fabric-unified-admin-monitoring/media/documentation/FUAM_Authorization.md)
+
+- Enabled admin settings for user account, who deployes FUAM:
+    - _Users can create Fabric items_ for FUAM workspace admin(s) - [learn.microsoft.com](https://learn.microsoft.com/en-us/fabric/admin/fabric-switch)
+    - _Allow XMLA endpoints and Analyze in Excel with on-premises semantic models_ – [learn.microsoft.com](https://learn.microsoft.com/en-us/fabric/admin/service-admin-portal-integration#allow-xmla-endpoints-and-analyze-in-excel-with-on-premises-datasets)
+- Fabric Capacity Metrics app (workspace) **with attached P or F-capacity** with **enabled XMLA endpoint** (at least 'Read')
+
 - **Optional:** Ability to access an Azure Key Vault on your tenant
+
+
 
 
 # Steps
 
 ## 1. Download Notebook
 
-- Download the [Deploy_FUAM.ipynb](/monitoring/fabric-unified-admin-monitoring/scripts/Deploy_FUAM.ipynb) notebook from src folder locally to you computer.
+- Download the [Deploy_FUAM.ipynb](/monitoring/fabric-unified-admin-monitoring/scripts/Deploy_FUAM.ipynb) notebook from script folder locally to you computer.
 
 ## 2. Prepare your environment
 
@@ -35,18 +53,21 @@ The deployment of FUAM can be done with very little effort, since we tried to au
 
 - Create a new service principal with client secret within Azure Entra ID, without any API permissions. 
 
-> **Info:** Enabling some of the Power BI API permissions might cause errors when executing pipelines later on.
+> **Important:** Enabling some of the Power BI API permissions might cause errors when executing pipelines later on.
 
 
 - Add the service principal to a group enabled for the following two admin settings:
-  - Service Principals can use Fabric APIs
-  - Service Principals can access read-only admin APIs
+  - _Service Principals can use Fabric APIs_ - [learn.microsoft.com](https://learn.microsoft.com/en-us/fabric/admin/enable-service-principal-admin-apis)
+  - _Service Principals can access read-only admin APIs_ - [learn.microsoft.com](https://learn.microsoft.com/en-us/fabric/admin/enable-service-principal-admin-apis)
+
+
+Please see [FUAM's Authorization & Authentication](/monitoring/fabric-unified-admin-monitoring/media/documentation/FUAM_Authorization.md) article for more details
+
 
 ### 2.2 Create a Workspace
 
 - Create a new workspace "FUAM" (name can be changed), which is backed by a P or F-capacity
-- (**Optional**) Download the [Workspace logo](/monitoring/fabric-unified-admin-monitoring/media/deployment/icon_FUAM_workspace.png) 
-- (**Optional**) Add the logo to FUAM workspace
+- (**Optional**) Download the [Workspace logo](/monitoring/fabric-unified-admin-monitoring/media/deployment/icon_FUAM_workspace.png) and add the logo to FUAM workspace
 
 ## 3. Import and Run Notebook
 
@@ -57,6 +78,7 @@ The deployment of FUAM can be done with very little effort, since we tried to au
 - Click "Run All" in the Notebook
 
     ![](/monitoring/fabric-unified-admin-monitoring/media/deployment/FUAM_basic_deployment_process_3_2.png)
+
 
 > **Info:** The notebook will **automatically create** two new cloud connections (without credentials). You can also choose your own names in case you have any naming conventions:
 
@@ -82,7 +104,7 @@ The deployment of FUAM can be done with very little effort, since we tried to au
 
 ## 5. Configure Capacity Metrics App
 
-We recommend to create a new Capacity Metrics App -> workspace in your tenant
+We recommend to create a new Capacity Metrics App -(with automatically deployed workspace) in your tenant
 - Create a new Capacity Metrics App
 - Configure the App like always
 - Navigate to the Capacity Metrics App's Workspace
@@ -90,15 +112,16 @@ We recommend to create a new Capacity Metrics App -> workspace in your tenant
 - Change the name to 'FUAM Capacity Metrics'
 - Copy the Name of the workspace: e.g. 'FUAM Capacity Metrics' and the name of the semantic model e.g. 'Fabric Capacity Metrics'.
 
-The Capacity metrics workspace name will be set later as a value of the **metrics_workspace** parameter in the 'Load_FUAM_Data_E2E' Pipeline.
+> **Info:** The Capacity metric's workspace name will used set later as a value of the **metric_workspace** parameter in the 'Load_FUAM_Data_E2E' pipeline and Capacity metric's semantic model name will used set later as a value of the **metric_dataset** parameter in the 'Load_FUAM_Data_E2E' pipeline.
 
-The capacity metrics semantic model name will be set lates as a value of the **metrics_dataset** parameter in the 'Load_FUAM_Data_E2E' Pipeline.
 
 > **Important:**  By default the Metrics App workspace is created on a Pro license. If you don't change this to F/P-SKU you will get an error
 
 ## 6. Run orchestration Pipeline
 
-> **Info:** The **Load_FUAM_Data_E2E** is the main end-to-end orchestration pipeline of FUAM. It contains/triggers all other sub-pipelines (FUAM modules), which are implemented in the solution. The sub-pipelines download all the required data via APIs and the referenced Notebooks will transform/write the data to the final FUAM_Lakehouse delta tables.
+> **Info:** The **Load_FUAM_Data_E2E** is the main end-to-end orchestration pipeline of FUAM. It contains/triggers all other sub-pipelines (FUAM modules), which are implemented in the solution. 
+
+> The sub-pipelines download all the required data via APIs and the referenced Notebooks will transform/write the data to the final FUAM_Lakehouse delta tables.
 
 - Navigate to your FUAM Workspace
 - Search for the item 'Load_FUAM_Data_E2E'
@@ -112,14 +135,14 @@ The Pipeline has different parameters, which are controlling the data load flow:
 |has_tenant_domains|If **true**, the tenant inventory is enriched with domain information. Use it only, if domains are in use at your tenant. **Default is false**        | true or false            |
 |extract_powerbi_artifacts_only|If **true**, the tenant inventory contains **only** semantic models, dataflows, datamarts, reports, dashboard and apps. If **false** the pipeline extracts Power BI **and** Fabric items. Currently, first-party workloads are supported only. **Default is false** | true or false |
 |metric_days_in_scope|Defines how many days should be extracted from the capacity metrics app. A maximum of 14 days can be extracted. For an initial load you can set it to the maximum and in subsequent runs reduce it to 2 days|range between **1** and **14**|
-|metric_workspace|This is the name of the workspace where the capacity metrics app was deployed|string|
-|metric_dataset|This is the name of the semantic model of the capacity metrics app |string|
-|activity_days_in_scope|It defines how many days in the past the activity must be retrieved from the API. Recommended to **use 30 for the initial load** and change the value to **2 for daily load**.| range between **2** and **30** |
+|metric_workspace|This is the name/id of the workspace where the capacity metrics app was deployed|string|
+|metric_dataset|This is the name/id of the semantic model of the capacity metrics app |string|
+|activity_days_in_scope|It defines how many days in the past the activity must be retrieved from the API. Recommended to **use 28 for the initial load** and change the value to **2 for daily load**.| range between **2** and **28** |
 |display_data|If **true**, the notebooks will display more information about each relevant step at runtime. This is useful for debugging. **Default is false**| true or false |
 |optional_keyvault_name|**Optional**: If you have configured a key vault, enter the name of the key vault. Otherwise, simply leave this field blank. In this case, the Load_Inventory module will use the Notebook owner's identity.| empty or string|
-|optional_keyvault_sp_ tenantId_secret_name|**Optional**: If you have configured a key vault and its secretes, enter the name of the tenantId secret name. Otherwise, simply leave this field blank. In this case, the Load_Inventory module will use the Notebook owner's identity.|empty or string|
-|optional_keyvault_sp_ clientId_secret_name|**Optional**: If you have configured a key vault and its secretes, enter the name of the clientId secret name. Otherwise, simply leave this field blank. In this case, the Load_Inventory module will use the Notebook owner's identity.|empty or string|
-|optional_keyvault_sp_ secret_secret_name|**Optional**: If you have configured a key vault and its secretes, enter the name of the service principal's secret secret name. Otherwise, simply leave this field blank. In this case, the Load_Inventory module will use the Notebook owner's identity.|empty or string|
+|optional_keyvault_sp_ tenantId_secret_name|**Optional**: If you have configured a key vault and its secrets, enter the name of the tenantId secret name. Otherwise, simply leave this field blank. In this case, the Load_Inventory module will use the Notebook owner's identity.|empty or string|
+|optional_keyvault_sp_ clientId_secret_name|**Optional**: If you have configured a key vault and its secrets, enter the name of the clientId secret name. Otherwise, simply leave this field blank. In this case, the Load_Inventory module will use the Notebook owner's identity.|empty or string|
+|optional_keyvault_sp_ secret_secret_name|**Optional**: If you have configured a key vault and its secrets, enter the name of the service principal's secret secret name. Otherwise, simply leave this field blank. In this case, the Load_Inventory module will use the Notebook owner's identity.|empty or string|
 
 
 - Run the Pipeline once. This will initially load the data into FUAM_Lakehouse
@@ -128,15 +151,13 @@ The Pipeline has different parameters, which are controlling the data load flow:
 
 > **Error handling:**
 
-> Make sure that you are signed-in with a User, which has 'Fabric Administrator' rights on the tenant
+> Make sure that you are signed-in with a User, which has 'Fabric Administrator' rights on the tenant - alternatively add the secret names from your Azure Key Vault to the optional_keyvault_* parameter values
 
-> Make sure that the SP has granted access for the two tenant settings: 'Service Principals can use Fabric APIs' and 'Service Principals can access read-only admin APIs'
+> Make sure that the User and the SP are members of the admin settings enablement, like documented above
 
 > Review the credentials of the connections
 
-> Set the 'activity_days_in_scope' to 28, whenever the 'Load_Activities' pipeline got an error
-
-> Or check the 'Remark' section.
+> or check the 'Remark' section.
 
 
 
@@ -168,7 +189,7 @@ The Pipeline has different parameters, which are controlling the data load flow:
 - Navigate to your FUAM Workspace
 - Search for the item 'Load_FUAM_Data_E2E'
 - Open the **Load_FUAM_Data_E2E** pipeline
-- (Recommended) Change the **metrics_days_in_scope** parameter value to **2**
+- (Recommended) Change the **metric_days_in_scope** parameter value to **2**
 - (Recommended) Change the **activity_days_in_scope** parameter value to **2**
 - Click on **Run** -> **Schedule**
 - Configure the schedule
@@ -210,7 +231,27 @@ You have deployed and configured FUAM.
     - In case the are no delegated tenant settings set in one of the capacities, the extraction step will fail. You can remove this step if it is not needed in your tenant
     - Try to run the "Init_FUAM_Lakehouse_Tables" notebook to automatically create missing columns
 
-# Other helpful resources
-- [Brief introduction to FUAM - Watch the video](https://youtu.be/CmHMOsQcMGI)
-- [FUAM Architecture documentation](/monitoring/fabric-unified-admin-monitoring/how-to/FUAM_Architecture.md)
-- [FUAM Lakehouse table documentation](/monitoring/fabric-unified-admin-monitoring/media/documentation/FUAM_Documentation_Lakehouse_table_lineage.pdf)
+- Deployment in case of Private Link (possible with additional manual steps)
+    - In some cases the deployment notebook can't download the required content from the repository.
+    - In this case follow the steps to be able to deploy FUAM
+        1) Run the notebook (the cell beginning with: _src_file_path = "./builtin/data/table_definitions.snappy.parquet"_ - will fail)
+        2) Do a git clone of the whole repository, to download all the files to your local computer.
+        3) Manually create a zip file (src.zip) for the src folder. The zip should have the src folder the only folder contained like this:
+        ![image](/monitoring/fabric-unified-admin-monitoring/media/deployment/FUAM_deployment_process_with_private_link_limitation.png)
+        4) After that upload these into the structure you see in the first screenshot
+            - monitoring/fabric-unified-admin-monitoring/config/deployment_order.json
+            - monitoring/fabric-unified-admin-monitoring/config/item_config.yaml
+            - monitoring/fabric-unified-admin-monitoring/data/table_definitions.snappy.parquet
+src.zip
+        5) Run the notebook cells individually, skipping the download of the files in cell 7
+        6) Then everything should be there
+
+----------------
+
+## Other helpful resources
+- [Video - Brief introduction to FUAM](https://youtu.be/CmHMOsQcMGI)
+- [Documentation - FUAM's Authorization & Authentication](/monitoring/fabric-unified-admin-monitoring/media/documentation/FUAM_Authorization.md)
+- [Documentation - FUAM Architecture](/monitoring/fabric-unified-admin-monitoring/media/documentation/FUAM_Architecture.md)
+- [Documentation - FUAM Lakehouse table lineage](/monitoring/fabric-unified-admin-monitoring/media/documentation/FUAM_Documentation_Lakehouse_table_lineage.pdf)
+
+----------------
