@@ -36,7 +36,7 @@ To keep every interaction to REST APIs securely and secure sensitive tokens duri
 
 To be able to deploy FUAM, the user 
 
-Currently, the capacity metrics data will be gathered via DAX queries within Notebooks, which can be executed via the Notebook’s Owner Identity. For this reason, the Fabric Administrator User Account must be a member of the following tenant settings:
+Currently, the capacity metrics data will be gathered via DAX queries within Notebooks, which can be executed via the Notebook’s Owner Identity. For this reason, the User Account (who is the owner of the Notebook, the one who deployed it) must be a member of the following tenant setting:
 
 •	_Allow XMLA endpoints and Analyze in Excel with on-premises semantic models_ – [learn.microsoft.com](https://learn.microsoft.com/en-us/fabric/admin/service-admin-portal-integration#allow-xmla-endpoints-and-analyze-in-excel-with-on-premises-datasets)
 

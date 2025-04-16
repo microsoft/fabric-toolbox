@@ -11,6 +11,8 @@ This page describes how to upgrade FUAM to the latest version.
 
 - If you **have made custom changes to pipelines, notebooks, semantic models, and reports**, please **create a backup or rename your custom items**
 
+- **Recommended:** Take a screenshot from your current pipeline parameters in "Load_FUAM_Data_E2E"
+
 - **Recommended:** Back up your workspace items (e.g., using Git) before the update
 
 - **Recommended:** Check the Release notes of FUAM to see enhanced, fixed or new items, features of FUAM
@@ -19,7 +21,7 @@ This page describes how to upgrade FUAM to the latest version.
 # Steps
 
 ## 1. Run Notebook
-
+- Check if you have the latest "Deploy_FUAM.ipynb" Notebook
 - Run the [Deploy_FUAM.ipynb](/monitoring/fabric-unified-admin-monitoring/scripts/Deploy_FUAM.ipynb) from your FUAM workspace
 
     ![](/monitoring/fabric-unified-admin-monitoring/media/deployment/FUAM_basic_deployment_process_3_2.png)
