@@ -1,18 +1,18 @@
 # Microsoft Fabric CI/CD: Git-Based Deployments Using Build Environments
 
-<div align=center><img src=../../media/CICD-option2-custom.png width=600></div>
+<div align=left><img src=../../media/CICD-option2-custom.png width=650></div>
 
 This variation of [**Option 2**](https://learn.microsoft.com/en-us/fabric/cicd/manage-deployment#option-2---git--based-deployments-using-build-environments) from the official documentation uses the [`fabric-cicd`](https://blog.fabric.microsoft.com/en-us/blog/introducing-fabric-cicd-deployment-tool?ft=All#:~:text=Fabric-cicd%20is%20a%20code-first%20solution%20for%20deploying%20Microsoft,with%20the%20primary%20goal%20of%20streamlining%20script-based%20deployments) Python library as a **code-first solution** for deploying Microsoft Fabric items from a repository branch into a workspace.
 
-The associated scripts in this folder assume:
-- One or more **feature branches** and associated **Git Integrated workspaces**
-- Two or more higher environments such as **dev** or **pre-prod**, and **production**
-
-> ⚠️ Commits to the `main`/`dev` branch are **not allowed**. Changes must be merged via an **approved PR**, which triggers the YAML pipeline to deploy Fabric items using the `fabric-cicd` library.
+As depicted in the diagram above, the associated scripts in this folder assume:
+- Two or more higher environments such as **dev**, **test**, and **prod**.
+- Each git branch contains the item definitions for each workspace. Each branch is associated with an environment. 
+- One or more feature development environments are **feature branches** with associated **Git Integrated workspaces**
+- ⚠️ As per usual best practice, commits to the main or dev branch are **not allowed** due to branch policy, therefore any changes must be merged via an **approved PR**, which triggers the YAML pipeline to deploy Fabric items using the `fabric-cicd` library.
 
 This allows:
 - Running **unit tests** in the `dev` workspace before merging into subsequent branches and environments
-- `Dev` and higher environments to be **non-Git integrated**, with all deployments originating from Git
+- `Dev` and higher environments are **non-Git integrated**, with all deployments originating from Git
 
 👉 For more details on **workspace design and branching strategy**, refer to [this blog post](https://blog.fabric.microsoft.com/en-us/blog/optimizing-for-ci-cd-in-microsoft-fabric?ft=Fabric-platform:category).
 
@@ -58,22 +58,24 @@ Defines the release pipeline:
 2. Review the `Deploy-To-Fabric.yml` and ensure the **agent pool name** is set correctly.
 3. As a **one-time setup**:
    - Connect your Dev workspace to the `dev/main` branch.
-   - Specify a folder (e.g., `fabric`) to sync items to your main branch.
-   - **Disconnect** the workspace from Git after syncing. This folder name will be set in the variable group.
-4. Create **branch policies** as required.
+   - Specify a folder (e.g., `fabric`) to sync items to your main branch. This folder name will be set in the variable group later.
+   - This stores an initial snapshot of each item definition from the workspace into the dev/main branch.
+   - **Disconnect** the workspace from Git after syncing.
+4. Create additional branches from main/dev as required e.g. test and prod branches. These are not connected to any workspace, but instead their contents will be deployed to their target workspace using the fabric-cicd module.  
+5. Create **branch policies** as required.
    <div align=center><img src=../../media/cicd-option2-branch-policy.png></div>   
    <div align=center><img src=../../media/cicd-option2-branch-reviewers.png></div>   
 
 ---
 
-5. Create a **variable group** under `Pipelines -> Library`:
+6. Create a **variable group** under `Pipelines -> Library`:
 
    - **Name:** `Fabric_Deployment_Group_S`  
      Stores sensitive information and is linked to the Key Vault created earlier.
 
 <div align=center><img src=../../media/cicd-option2-variable-group-s.png width=450></div>   
 
-6. Create another **variable group**:
+7. Create another **variable group**:
 
    - **Name:** `Fabric_Deployment_Group_NS`  
      Stores non-sensitive key-value pairs.
@@ -85,7 +87,7 @@ Defines the release pipeline:
 
 ---
 
-7. Under `Pipelines -> Environments`, create two or more environments, e.g.:
+8. Under `Pipelines -> Environments`, create two or more environments, e.g.:
 
    - `dev`
    - `test`
@@ -95,7 +97,7 @@ Defines the release pipeline:
 
 ---
 
-8. Add **approvals** as necessary to enforce environment protection:
+9. Add **approvals** as necessary to enforce environment protection:
 
    > Example: An **approval gate** is triggered whenever the pipeline targets `prod`.
 
@@ -105,17 +107,17 @@ Defines the release pipeline:
 
 ---
 
-9. Create a new **release pipeline**:
+10. Create a new **release pipeline**:
    - Choose **Azure Repos Git**
    - Select the repository
    - Choose **Existing YAML file**
    - Select the uploaded `Deploy-To-Fabric.yml` file
 
-10. Return to the variable groups (`Fabric_Deployment_Group_S` and `_NS`) and **allow pipeline access** via the **Pipeline Permissions** button.
+11. Return to the variable groups (`Fabric_Deployment_Group_S` and `_NS`) and **allow pipeline access** via the **Pipeline Permissions** button.
 
-11. After configuring your Fabric environment, you can **manually test** the pipeline via Azure DevOps UI.
+12. After configuring your Fabric environment, you can **manually test** the pipeline via Azure DevOps UI.
 
-12. To **monitor/debug** the YAML pipeline:
+13. To **monitor/debug** the YAML pipeline:
    - Click the running job under `Pipelines`
    - Review the latest run to ensure success
 
@@ -129,7 +131,7 @@ Azure DevOps success will be displayed on the previous job screen
 
 ---
 
-13. Edit the `Deploy-To-Fabric.yml` to define [which branches trigger the pipeline](https://learn.microsoft.com/en-us/azure/devops/pipelines/yaml-schema/trigger?view=azure-pipelines#examples-1).
+14. Edit the `Deploy-To-Fabric.yml` to define [which branches trigger the pipeline](https://learn.microsoft.com/en-us/azure/devops/pipelines/yaml-schema/trigger?view=azure-pipelines#examples-1).
 
 14. In future, once changes are successfully merged to the branch through PR process this will trigger the yaml pipeline passing the required parameters, and using the mapping defined in the  variable group will ensure the items are deployed to the correct workspace based on which branch triggered the pipeline.
 
