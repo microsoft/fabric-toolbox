@@ -1,6 +1,6 @@
 # Microsoft Fabric CI/CD: Git-Based Deployments Using Build Environments
 
-<div align=center><img src=../media/CICD-option2-custom.png width=400></div>
+<div align=center><img src=../../media/CICD-option2-custom.png width=400></div>
 
 This variation of **Option 2** from the official documentation uses the `fabric-cicd` Python library as a **code-first solution** for deploying Microsoft Fabric items from a repository into a workspace.
 
