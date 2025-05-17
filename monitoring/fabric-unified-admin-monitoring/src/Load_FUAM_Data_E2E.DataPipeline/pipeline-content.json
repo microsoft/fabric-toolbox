@@ -299,7 +299,8 @@
                 },
                 "typeProperties": {
                     "notebookId": "fa9500ac-2738-5288-a823-239c83e997dd",
-                    "workspaceId": "eb764c8b-cf3b-55be-adf4-348fe9233657"
+                    "workspaceId": "eb764c8b-cf3b-55be-adf4-348fe9233657",
+                    "sessionTag": "fuam"
                 }
             },
             {
