@@ -34,12 +34,14 @@ This section offers accelerators designed to assist you in upgrading and moderni
 
 | Name | Description |
 | :-- | :-- |
-| workspace_name | Specify the workspace of the datamart semantic model. If set to None, it will use the current workspace. |
-| dataset_name | Specify the name of the datamart semantic model. |
-| new_dataset_name | Specify the name for the new Direct Lake semantic model. |
-| item_name | Specify the name of the warehouse to be used for the Direct Lake semantic model. |
-| item_type | Specify the item type for the migration; options are 'Warehouse' or 'Lakehouse'. <br><br>**Important:**  Ensure that it is configured as 'Warehouse' |
-| schema_name | Specify the name of the schema from the data warehouse. <br><br>**Important:** Ensure that it is configured to match the **Schema Name** from the previously executed script. |
+| datamart_workspace_name | Specify the name of the workspace containing the datamart semantic model. |
+| datamart_dataset_name | Specify the name of the datamart semantic model. |
+| semantic_model_workspace_name | Specify the name of the workspace containing the new semantic model will be stored. This can be the same as the datamart workspace. |
+| semantic_model_name | Specify the name of the new Direct Lake semantic model. |
+| item_workspace_name | Specify the name of the workspace containing the data warehouse that the datamart was migrated to. |
+| item_name | Specify the name of the warehouse that the datamart was migrated to. |
+| schema_name | Specify the name of the schema where the data is stored in the data warehouse. <br><br>**Important:** Ensure that it is configured to match the **Schema Name** from the previously executed script.|
+| item_type | Specify the item type for the migration; options are 'Warehouse' or 'Lakehouse'. <br><br>**Important:**  Ensure that it is configured as 'Warehouse'|
 
 # Important
 

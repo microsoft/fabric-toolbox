@@ -44,9 +44,9 @@ $sqlQuery = @"
 DECLARE @sql VARCHAR(MAX) = '',
         @schema VARCHAR(MAX) = '$schemaName';
 
-SELECT @sql = @sql + 'CREATE TABLE ['  + @schema + '].' + TABLE_NAME + ' (' + CHAR(13) + CHAR(10) +
+SELECT @sql = @sql + 'CREATE TABLE ['  + @schema + '].[' + TABLE_NAME + '] (' + CHAR(13) + CHAR(10) +
     STRING_AGG(
-        COLUMN_NAME + ' ' + 
+        '[' + COLUMN_NAME + '] ' + 
         CASE 
             WHEN DATA_TYPE = 'nvarchar' THEN 'varchar'
             WHEN DATA_TYPE = 'nchar' THEN 'char'
