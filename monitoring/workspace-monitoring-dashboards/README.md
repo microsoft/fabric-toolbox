@@ -93,17 +93,17 @@ The following step-by-step guide describes the initial configuration step of the
 
 ![Screenshot](./media/fwm_rtid_template_1_getting_started_2.png)
 
-13. Provide a data source name
-14. The data source shall be connected to several tiles, parameters and base queries
-15. Select the initial value of the **Workspace** parameter on the menu bar
+12. Provide a data source name
+13. The data source shall be connected to several tiles, parameters and base queries
+14. Select the initial value of the **Workspace** parameter on the menu bar
     - Optionally: Set Default value for Workspace parameter
         - Navigate to '**Parameters**' on the '**Manage**' tab
         - Click on '**Edit**' at the '**Workspace**' parameter
         - Select a '**Default value**'
-16. '**Save**' the Dashboard
-17. '**Refresh**' the Dashboard
+15. '**Save**' the Dashboard
+16. '**Refresh**' the Dashboard
     
-18. Switch the UI experience to '**Viewing**' mode
+17. Switch the UI experience to '**Viewing**' mode
 ![Screenshot](./media/fwm_rtid_template_1_getting_started_3.png)
 
 Congratulations! You are ready to go!
