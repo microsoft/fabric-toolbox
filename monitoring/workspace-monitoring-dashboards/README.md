@@ -86,10 +86,9 @@ The following step-by-step guide describes the initial configuration step of the
 
 ![Screenshot](./media/fwm_rtid_template_1_getting_started_1.png)
 
-8. Click on '**Data sources**'
-9. Click on '**Add**' on the side bar
-10. Select the **OneLake data hub**
-11. Select the preferred Monitoring KQL database from OneLake catalog
+8. Click on '**New data source**'
+9. Select '**Eventhouse / KQL Database**'
+10. Select the preferred Monitoring KQL database from OneLake catalog
 12. Click on '**Connect**'
 
 ![Screenshot](./media/fwm_rtid_template_1_getting_started_2.png)
