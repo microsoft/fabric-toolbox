@@ -162,6 +162,8 @@ Additionally, you can optimize the Power BI report template usage, you can confi
 
 ![Screenshot](./media/fwm_rtid_template_2_eventhouse_queries_screenshot.png)
 
+![Screenshot](./media/fwm_rtid_template_2_eventhouse_activity_time_screenshot.png)
+
 ![Screenshot](./media/fwm_rtid_template_2_eventhouse_table_ingestions_screenshot.png)
 
 ![Screenshot](./media/fwm_rtid_template_2_semantic_model_overview_screenshot.png)
