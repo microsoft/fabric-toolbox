@@ -6,7 +6,7 @@ There is a public REST API for synchronising the delta tables in Onelake with th
 A REST API has been released, which follows the long running operation (LRO) implementation.   It is slightly different from the old REST API.   Please update any references to the old REST API, to use this new one.
 
 ### User Data Function example
-[Useing a service principal](./RefreshTableinSQLEndpoint.py) - This example is for a User Data Function.   Copy and paste the code into a new User Data Function and add the libraries.   This can be called from other services in Fabric, i.e. notebooks and pipelines.
+[Using a service principal](./RefreshTableinSQLEndpoint.py) - This example is for a User Data Function.   Copy and paste the code into a new User Data Function and add the libraries.   This can be called from other services in Fabric, i.e. notebooks and pipelines.
 
 
 ### Notebooks examples
