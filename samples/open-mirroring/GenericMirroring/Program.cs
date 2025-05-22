@@ -18,11 +18,11 @@ class Program
         #region Load the Config
         // Path to the JSON configuration file
         string configFilePath = "mirrorconfig.json";
-    //  string configpath = System.IO.Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location);
-   
+        string configpath = System.IO.Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location);
 
-        string configpath = "C:\\source\\samples\\fabric-toolbox\\open-mirroring\\GenericMirroring";
-       // string configpath = "C:\\temp"; 
+
+        //    string configpath = "C:\\source\\samples\\fabric-toolbox\\open-mirroring\\GenericMirroring";
+        // string configpath = "C:\\temp"; 
         string wholepath = string.Format("{0}\\{1}", configpath, configFilePath);
         string loggingfilename = $"{DateTime.Now:yyyy-MM-dd_HH-mm-ss}_logging.txt";
 
@@ -39,7 +39,7 @@ class Program
         #endregion
 
         helper.CreateFolders(config.LocationLogging);
-        Logging.locallogging  = string.Format("{0}\\{1}",config.LocationLogging,loggingfilename);
+        Logging.locallogging = string.Format("{0}\\{1}", config.LocationLogging, loggingfilename);
 
         #region Setup Excel Mirroing Watcher
         if (config.ExcelMirroringConfig != null)
@@ -168,135 +168,139 @@ class Program
         #endregion
 
         // Power loop
-       
+
         while (true)
         {
             #region SQL Server loop
             foreach (DatabaseConfig dbC in config.SQLChangeTrackingConfig)
-            { 
-            #region SQL Change Tracking
-            if (dbC != null)
             {
-                    if(dbC.Enabled=="True") 
-                    { 
-                        if (dbC.ConnectionString != null || dbC.ConnectionString.Length > 0)
+                #region SQL Change Tracking
+                if (dbC != null)
                 {
-                    // only run the SQL code, when there is a connection string.
-
-                    string databaseName = dbC.DatabaseName;
-                    string connectionString = helper.UpdateString(dbC.ConnectionString, databaseName);
-                    string ChangeTrackingSQL = helper.UpdateString(dbC.ChangeTrackingSQL, databaseName);
-                    string ChangeTrackingTable = dbC.ChangeTrackingTable;
-                    string LocalLocationforTables = dbC.LocalLocationforTables;
-
-
-                    if (dbC.ChangeTrackingEnabled == null || dbC.ChangeTrackingEnabled == string.Empty)
+                    if (dbC.Enabled == "True")
                     {
-                        Logging.Log("Enabled CT at database.");
-                        SQLServer.ExecuteNonQuery(connectionString, ChangeTrackingSQL);
-                        dbC.ChangeTrackingEnabled = "Enabled";
-                        helper.SaveData(config, wholepath);
-                    }
-
-                    foreach (TableConfig table in dbC.Tables)
-                    {
-                        string tableName = string.Format("{0}.{1}", table.SchemaName, table.TableName);
-
-                        //Log("Scanning::{0}", tableName);
-
-                        if (table.LastUpdate == null) table.LastUpdate = DateTime.Now;
-                        if (table.SecondsBetweenChecks == null || table.SecondsBetweenChecks == 0) table.SecondsBetweenChecks = 15;
-
-                        #region Enable CT on table
-                        if (table.Status == null)
+                        if (dbC.ConnectionString != null || dbC.ConnectionString.Length > 0)
                         {
-                            Logging.Log(String.Format("Starting from scratch {0} ", tableName));
+                            // only run the SQL code, when there is a connection string.
 
-                            string TableCt = helper.UpdateString(ChangeTrackingTable, tableName);
+                            string databaseName = dbC.DatabaseName;
+                            string connectionString = helper.UpdateString(dbC.ConnectionString, databaseName);
+                            string ChangeTrackingSQL = helper.UpdateString(dbC.ChangeTrackingSQL, databaseName);
+                            string ChangeTrackingTable = dbC.ChangeTrackingTable;
+                            string LocalLocationforTables = dbC.LocalLocationforTables;
 
-                            SQLServer.ExecuteNonQuery(connectionString, TableCt);
 
-                            table.Status = "Enabled";
-
-                            helper.SaveData(config, wholepath);
-                        }
-                        #endregion
-
-                        #region Check for changes
-                        if (table.Status == "Running")
-                        {
-                            // Get Initial Snapshot
-                            if (table.LastUpdate.AddSeconds(table.SecondsBetweenChecks) < DateTime.Now)
+                            if (dbC.ChangeTrackingEnabled == null || dbC.ChangeTrackingEnabled == string.Empty)
                             {
-
-                                //Logging.Log(String.Format("Checking for updates: {0} ", tableName));
-
-                                string extractQuery = dbC.ChangeIncrementalSQL;
-                                extractQuery = UpdateQuery(dbC, table, tableName, extractQuery);
-
-                                string locforTable = string.Format("{0}\\{1}.schema\\{2}\\", LocalLocationforTables, table.SchemaName, table.TableName);
-                                string newfilename = helper.GetFileVersionName(locforTable);
-                                string parquetFilePath = Path.Combine(locforTable, $"{newfilename}.parquet");
-
-                                string justTablepath = string.Format("/{0}.schema/{1}/{2}.parquet", table.SchemaName, table.TableName, newfilename);
-                                string justMetadatapath = string.Format("/{0}.schema/{1}/_metadata.json", table.SchemaName, table.TableName, newfilename);
-                                string removePath = string.Format("{0}.schema/{1}", table.SchemaName, table.TableName, newfilename);
-
-                                if (SQLServer.ExecuteRSWritePQ(connectionString, extractQuery, parquetFilePath))
-                                {
-                                    Logging.Log(String.Format("Found upates : {0} ", tableName));
-                                    Upload.CopyChangesToOnelake(config, parquetFilePath, justTablepath);
-                                    table.DeltaVersion = newfilename;
-                                    dbC.Highwatermark = SQLServer.ExecuteScalar(connectionString, dbC.HighwatermarkSQL);
-                                }
-
-                                table.LastUpdate = DateTime.Now;
+                                Logging.Log("Enabled CT at database.");
+                                SQLServer.ExecuteNonQuery(connectionString, ChangeTrackingSQL);
+                                dbC.ChangeTrackingEnabled = "Enabled";
                                 helper.SaveData(config, wholepath);
                             }
+
+                            foreach (TableConfig table in dbC.Tables)
+                            {
+                                string tableName = string.Format("{0}.{1}", table.SchemaName, table.TableName);
+
+                                //Log("Scanning::{0}", tableName);
+
+                                if (table.LastUpdate == null) table.LastUpdate = DateTime.Now;
+                                if (table.SecondsBetweenChecks == null || table.SecondsBetweenChecks == 0) table.SecondsBetweenChecks = 15;
+
+                                #region Enable CT on table
+                                if (table.Status == null)
+                                {
+                                    Logging.Log(String.Format("Starting from scratch {0} ", tableName));
+
+                                    string TableCt = helper.UpdateString(ChangeTrackingTable, tableName);
+
+                                    SQLServer.ExecuteNonQuery(connectionString, TableCt);
+
+                                    table.Status = "Enabled";
+
+                                    helper.SaveData(config, wholepath);
+                                }
+                                #endregion
+
+                                #region Check for changes
+                                if (table.Status == "Running")
+                                {
+                                    // Get Initial Snapshot
+                                    if (table.LastUpdate.AddSeconds(table.SecondsBetweenChecks) < DateTime.Now)
+                                    {
+
+                                        //Logging.Log(String.Format("Checking for updates: {0} ", tableName));
+
+                                        string extractQuery = dbC.ChangeIncrementalSQL;
+                                        extractQuery = UpdateQuery(dbC, table, tableName, extractQuery);
+
+                                        string locforTable = string.Format("{0}\\{1}.schema\\{2}\\", LocalLocationforTables, table.SchemaName, table.TableName);
+                                        string newfilename = helper.GetFileVersionName(locforTable);
+                                        string parquetFilePath = Path.Combine(locforTable, $"{newfilename}.parquet");
+
+                                        string justTablepath = string.Format("/{0}.schema/{1}/{2}.parquet", table.SchemaName, table.TableName, newfilename);
+                                        string justMetadatapath = string.Format("/{0}.schema/{1}/_metadata.json", table.SchemaName, table.TableName, newfilename);
+                                        string removePath = string.Format("{0}.schema/{1}", table.SchemaName, table.TableName, newfilename);
+
+                                        if (SQLServer.ExecuteRSWritePQ(connectionString, extractQuery, parquetFilePath))
+                                        {
+                                            Logging.Log(String.Format("Found upates : {0} ", tableName));
+
+                                            Upload upload = new Upload();
+                                            upload.CopyChangesToOnelake(config, parquetFilePath, justTablepath);
+                                            table.DeltaVersion = newfilename;
+                                            dbC.Highwatermark = SQLServer.ExecuteScalar(connectionString, dbC.HighwatermarkSQL);
+                                        }
+
+                                        table.LastUpdate = DateTime.Now;
+                                        helper.SaveData(config, wholepath);
+                                    }
+                                }
+                                #endregion
+
+                                #region Get a copy of the table / snapshot
+                                if (table.Status == "Enabled")
+                                {
+                                    // Get Initial Snapshot
+                                    string extractQuery = dbC.FullDataExtractQuery;
+                                    extractQuery = UpdateQuery(dbC, table, tableName, extractQuery);
+
+                                    Logging.Log(String.Format("Generating Snapshot: {0} ", tableName));
+
+                                    string locforTable = string.Format("{0}\\{1}.schema\\{2}\\", LocalLocationforTables, table.SchemaName, table.TableName);
+
+                                    helper.DeleteFolders(locforTable);
+
+                                    helper.CreateFolders(locforTable);
+                                    helper.CreateJSONMetadata(locforTable, table.KeyColumn);
+                                    string newfilename = helper.GetFileVersionName(locforTable);
+                                    string parquetFilePath = Path.Combine(locforTable, $"{newfilename}.parquet");
+
+
+                                    string justTablepath = string.Format("/{0}.schema/{1}/{2}.parquet", table.SchemaName, table.TableName, newfilename);
+                                    string justMetadatapath = string.Format("/{0}.schema/{1}/_metadata.json", table.SchemaName, table.TableName, newfilename);
+                                    string removePath = string.Format("{0}.schema/{1}", table.SchemaName, table.TableName, newfilename);
+
+
+                                    Upload upload = new Upload();
+                                    upload.RemoveChangesToOnelake(config, removePath);
+
+                                    SQLServer.ExecuteRSWritePQ(connectionString, extractQuery, parquetFilePath);
+
+                                    await upload.CopyChangesToOnelake(config, String.Format("{0}{1}", locforTable, "_metadata.json"), justMetadatapath);
+                                    await upload.CopyChangesToOnelake(config, parquetFilePath, justTablepath);
+
+                                    dbC.Highwatermark = SQLServer.ExecuteScalar(connectionString, dbC.HighwatermarkSQL);
+                                    table.DeltaVersion = newfilename;
+                                    table.Status = "Running";
+                                    table.LastUpdate = DateTime.Now;
+                                    helper.SaveData(config, wholepath);
+                                }
+                                #endregion
+                                Thread.Sleep(1000);
+
+                            }
                         }
-                        #endregion
-
-                        #region Get a copy of the table / snapshot
-                        if (table.Status == "Enabled")
-                        {
-                            // Get Initial Snapshot
-                            string extractQuery = dbC.FullDataExtractQuery;
-                            extractQuery = UpdateQuery(dbC, table, tableName, extractQuery);
-
-                            Logging.Log(String.Format("Generating Snapshot: {0} ", tableName));
-
-                            string locforTable = string.Format("{0}\\{1}.schema\\{2}\\", LocalLocationforTables, table.SchemaName, table.TableName);
-
-                            helper.DeleteFolders(locforTable);
-
-                            helper.CreateFolders(locforTable);
-                            helper.CreateJSONMetadata(locforTable, table.KeyColumn);
-                            string newfilename = helper.GetFileVersionName(locforTable);
-                            string parquetFilePath = Path.Combine(locforTable, $"{newfilename}.parquet");
-
-
-                            string justTablepath = string.Format("/{0}.schema/{1}/{2}.parquet", table.SchemaName, table.TableName, newfilename);
-                            string justMetadatapath = string.Format("/{0}.schema/{1}/_metadata.json", table.SchemaName, table.TableName, newfilename);
-                            string removePath = string.Format("{0}.schema/{1}", table.SchemaName, table.TableName, newfilename);
-
-                            Upload.RemoveChangesToOnelake(config, removePath);
-
-                            SQLServer.ExecuteRSWritePQ(connectionString, extractQuery, parquetFilePath);
-
-                            Upload.CopyChangesToOnelake(config, String.Format("{0}{1}", locforTable, "_metadata.json"), justMetadatapath);
-                            Upload.CopyChangesToOnelake(config, parquetFilePath, justTablepath);
-
-                            dbC.Highwatermark = SQLServer.ExecuteScalar(connectionString, dbC.HighwatermarkSQL);
-                            table.DeltaVersion = newfilename;
-                            table.Status = "Running";
-                            table.LastUpdate = DateTime.Now;
-                            helper.SaveData(config, wholepath);
-                        }
-                        #endregion
-                        Thread.Sleep(1000);
-
-                    }
-                }
                     }
                 }
 
@@ -307,12 +311,12 @@ class Program
             #region Sharepoint loop
             try
             {
-               
-                if (config.SharepointMirroringConfig!=null)
+
+                if (config.SharepointMirroringConfig != null)
                 {
                     SharepointConfig shConfig = config.SharepointMirroringConfig;
-                    if(shConfig.Enabled=="True")
-                    { 
+                    if (shConfig.Enabled == "True")
+                    {
                         //Logging.Log($"Sharepoint...");
 
                         foreach (SharepointLists list in shConfig.sharepointLists)
@@ -326,8 +330,8 @@ class Program
                                 string t = await Sharepoint.ExtractSharepoint(shConfig, list);
                                 DataTable dataTable = new DataTable("FieldsTable");
                                 DataTable dt = Sharepoint.ConvertListoDataTable(list, t, dataTable);
-                                
-                                
+
+
                                 string sName = list.Table;
                                 string sSchema = list.Schema;
                                 DateTime? _lastUpdate = list.LastUpdate;
@@ -336,7 +340,7 @@ class Program
 
                                 string locforTable = string.Format("{0}\\{1}.schema\\{2}\\", LocalLocationforTables, sSchema, sName);
 
-                           
+
                                 {
 
                                     string newfilename = helper.GetFileVersionName(locforTable);
@@ -353,7 +357,8 @@ class Program
                                             if (dataTable.Rows.Count > 0)
                                             {
                                                 ParquetDump.WriteDataTableToParquet(dataTable, parquetFilePath);
-                                                Upload.CopyChangesToOnelake(config, parquetFilePath, justTablepath);
+                                                Upload upload = new Upload();
+                                                upload.CopyChangesToOnelake(config, parquetFilePath, justTablepath);
                                             }
                                         }
                                         list.LastUpdate = DateTime.Now;
@@ -368,8 +373,9 @@ class Program
                                         helper.CreateFolders(locforTable);
                                         helper.CreateJSONMetadata(locforTable, "id");
 
-                                        Upload.RemoveChangesToOnelake(config, removePath);
-                                        Upload.CopyChangesToOnelake(config, String.Format("{0}{1}", locforTable, "_metadata.json"), justMetadatapath);
+                                        Upload upload = new Upload();
+                                        upload.RemoveChangesToOnelake(config, removePath);
+                                        upload.CopyChangesToOnelake(config, String.Format("{0}{1}", locforTable, "_metadata.json"), justMetadatapath);
 
                                         //SQLServer.ExecuteRSWritePQ(connectionString, extractQuery, parquetFilePath);
 
@@ -400,8 +406,8 @@ class Program
         }
 
         Console.ReadLine();
-        
-      
+
+
     }
 
 
@@ -422,20 +428,20 @@ class Program
         Logging.Log($"Change found {e.FullPath}");
         string fileExtension = Path.GetExtension(e.FullPath).ToLower();
 
-        switch(fileExtension)
+        switch (fileExtension)
         {
             case ".xlsx":
                 Excel.ImportFile(e.FullPath, config);
                 break;
             case ".csv":
-                CSV.ExtractCSV(e.FullPath, config); 
+                CSV.ExtractCSV(e.FullPath, config);
                 break;
             case ".accdb":
                 Access.ExtractAccess(e.FullPath, config);
                 break;
         }
-        
+
     }
- 
+
 
 }

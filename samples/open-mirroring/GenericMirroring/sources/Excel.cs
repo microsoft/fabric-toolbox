@@ -11,6 +11,12 @@ using LicenseContext = OfficeOpenXml.LicenseContext;
 using OfficeOpenXml;
 using Parquet.Schema;
 using System.Reflection.PortableExecutable;
+using Microsoft.Data.SqlClient;
+using Azure.Identity;
+using Microsoft.Identity.Client.Platforms.Features.DesktopOs.Kerberos;
+using System.Security.Cryptography.X509Certificates;
+using System.Xml.Schema;
+using GenericMirroring.destination;
 
 namespace GenericMirroring.sources
 {
@@ -40,6 +46,7 @@ namespace GenericMirroring.sources
         {
             try
             {
+                string colID = "_id_";
                 Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
 
                 string fileName = Path.GetFileName(filePathtoExcel);
@@ -55,8 +62,10 @@ namespace GenericMirroring.sources
 
                         var table = new DataTable();
 
+                        table.TableName = $"{fileNameWithoutExtension}.{worksheet.Name}";
+
                         table.Columns.Add($"__rowMarker__", typeof(int));
-                        table.Columns.Add($"_id_", typeof(int));
+                        table.Columns.Add($"{colID}", typeof(int));
 
                         if (worksheet.Dimension == null)
                             return;
@@ -129,17 +138,35 @@ namespace GenericMirroring.sources
 
                         string justTablepath = string.Format("/{0}.schema/{1}/{2}.parquet", fileNameWithoutExtension, worksheet.Name, newfilename);
                         string justMetadatapath = string.Format("/{0}.schema/{1}/_metadata.json", fileNameWithoutExtension, worksheet.Name, newfilename);
+                        string justMetadataDirpath = string.Format("/{0}.schema/{1}/", fileNameWithoutExtension, worksheet.Name, newfilename);
+
                         //helper.DeleteFolders(locforTable);
+
+                        Upload upload = new Upload();
 
                         if (firstRun == true)
                         {
                             helper.CreateFolders(locforTable);
-                            helper.CreateJSONMetadata(locforTable, "_id_");
-                            Upload.CopyChangesToOnelake(config, string.Format("{0}{1}", locforTable, "_metadata.json"), justMetadatapath);
+                            helper.CreateJSONMetadata(locforTable, colID);
+                            upload.CopyChangesToOnelake(config, string.Format("{0}", locforTable, "_metadata.json"), justMetadataDirpath);
                         }
 
                         ParquetDump.WriteDataTableToParquet(table, parquetFilePath);
-                        Upload.CopyChangesToOnelake(config, parquetFilePath, justTablepath);
+                        upload.CopyChangesToOnelake(config, parquetFilePath, justTablepath);
+
+                        if (config.FalseMirroredDB.Enabled.ToLower() == "true" || config.FalseMirroredDB.Enabled.ToLower() == "yes" || config.FalseMirroredDB.Enabled.ToLower() == "enabled")
+                        {
+                            var sqlConnection = AntiMirror.GetSqlConnection(config);
+
+                            using (sqlConnection)
+                            {
+                                sqlConnection.Open();
+                                // Step 2: Insert Data
+                                AntiMirror.CreateSqlTableFromDataTableAsync(sqlConnection, table, colID, fileNameWithoutExtension);
+                                AntiMirror.BulkInsertDataTableAsync(sqlConnection, table, colID);
+                            }
+
+                        }
                     }
                 }
             }
