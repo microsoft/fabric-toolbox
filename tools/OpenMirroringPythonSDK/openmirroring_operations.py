@@ -1,5 +1,5 @@
-﻿// Copyright (c) Microsoft Corporation. All rights reserved.
-// Licensed under the MIT License.
+﻿# Copyright (c) Microsoft Corporation. All rights reserved.
+# Licensed under the MIT License.
 
 from azure.storage.filedatalake import DataLakeServiceClient
 from azure.identity import ClientSecretCredential
@@ -50,7 +50,7 @@ class OpenMirroringClient:
             raise ValueError("table_name cannot be empty.")
 
         # Construct the folder path
-        folder_path = f"{schema_name}/{table_name}" if schema_name else f"{table_name}"
+        folder_path = f"{schema_name}.schema/{table_name}" if schema_name else f"{table_name}"
 
         try:
             # Create the folder
@@ -81,7 +81,7 @@ class OpenMirroringClient:
             raise ValueError("table_name cannot be empty.")
 
         # Construct the folder path
-        folder_path = f"{schema_name}/{table_name}" if schema_name else f"{table_name}"
+        folder_path = f"{schema_name}.schema/{table_name}" if schema_name else f"{table_name}"
 
         try:
             # Get the directory client
@@ -99,7 +99,7 @@ class OpenMirroringClient:
 
             # Check if schema folder exists
             if remove_schema_folder and schema_name:
-                schema_folder_path = f"{schema_name}"
+                schema_folder_path = f"{schema_name}.schema"
                 schema_directory_client = file_system_client.get_directory_client(schema_folder_path)
                 if schema_directory_client.exists():
                     schema_directory_client.delete_directory()
@@ -121,7 +121,7 @@ class OpenMirroringClient:
             raise ValueError("table_name cannot be empty.")
 
         # Construct the folder path
-        folder_path = f"LandingZone/{schema_name}/{table_name}" if schema_name else f"LandingZone/{table_name}"
+        folder_path = f"LandingZone/{schema_name}.schema/{table_name}" if schema_name else f"LandingZone/{table_name}"
 
         try:
             # Get the system client
@@ -165,7 +165,7 @@ class OpenMirroringClient:
             raise ValueError("Invalid local file path.")
 
         # Construct the folder path
-        folder_path = f"{schema_name}/{table_name}" if schema_name else f"{table_name}"
+        folder_path = f"{schema_name}.schema/{table_name}" if schema_name else f"{table_name}"
 
         try:
             # Get the directory client
@@ -224,3 +224,57 @@ class OpenMirroringClient:
             print(f"File renamed from {old_file_name} to {new_file_name} successfully.")
         else:
             print(f"Failed to rename file. Status code: {response.status_code}, Error: {response.text}")
+
+    def get_mirrored_database_status(self):
+        """
+        Retrieves and displays the status of the mirrored database from Monitoring/replicator.json.
+
+        :raises Exception: If the status file or path does not exist.
+        """
+        file_system_client = self.service_client.get_file_system_client(file_system="Monitoring")
+        try:
+            file_client = file_system_client.get_file_client("replicator.json")
+            if not file_client.exists():
+                raise Exception("No status of mirrored database has been found. Please check whether the mirrored database has been started properly.")
+
+            download = file_client.download_file()
+            content = download.readall()
+            status_json = json.loads(content)
+            print(json.dumps(status_json, indent=4))
+        except Exception:
+            raise Exception("No status of mirrored database has been found. Please check whether the mirrored database has been started properly.")
+
+    def get_table_status(self, schema_name: str = None, table_name: str = None):
+        """
+        Retrieves and displays the status of tables from Monitoring/table.json.
+
+        :param schema_name: Optional schema name to filter.
+        :param table_name: Optional table name to filter.
+        :raises Exception: If the status file or path does not exist.
+        """
+        file_system_client = self.service_client.get_file_system_client(file_system="Monitoring")
+        try:
+            file_client = file_system_client.get_file_client("tables.json")
+            if not file_client.exists():
+                raise Exception("No status of mirrored database has been found. Please check whether the mirrored database has been started properly.")
+
+            download = file_client.download_file()
+            content = download.readall()
+            status_json = json.loads(content)
+
+            # Treat None as empty string for filtering
+            schema_name = schema_name or ""
+            table_name = table_name or ""
+
+            if not schema_name and not table_name:
+                # Show the whole JSON content
+                print(json.dumps(status_json, indent=4))
+            else:
+                # Filter tables array
+                filtered_tables = [
+                    t for t in status_json.get("tables", [])
+                    if t.get("sourceSchemaName", "") == schema_name and t.get("sourceTableName", "") == table_name
+                ]
+                print(json.dumps({"tables": filtered_tables}, indent=4))
+        except Exception:
+            raise Exception("No status of mirrored database has been found. Please check whether the mirrored database has been started properly.")

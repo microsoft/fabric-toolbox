@@ -16,6 +16,41 @@ The `openmirroring_operations.py` module provides a Python client, `OpenMirrorin
 4. **Folder Management**:
    - `remove_table`: Deletes a specified folder in the storage, with warnings if the folder does not exist.
 
+5. **Monitoring & Status**:
+   - `get_mirrored_database_status`: Retrieves and displays the overall status of the mirrored database.  
+     **Sample response:**
+     ```json
+     {
+         "status": "Stopped",
+         "errorCode": "",
+         "errorMessage": ""
+     }
+     ```
+   - `get_table_status`: Retrieves and displays the detail status of tables. You can filter by schema and table name, or display all table statuses.  
+     **Sample response:**
+     ```json
+     {
+         "tables": [
+             {
+                 "id": "db54958b-cdec-43a5-9dd6-d9b76287aea1",
+                 "status": "Replicating",
+                 "errorCode": "",
+                 "errorMessage": "",
+                 "normalizedTableName": "abc.12345",
+                 "sourceTableName": "12345",
+                 "sourceSchemaName": "abc",
+                 "sourceObjectType": "Table",
+                 "metrics": {
+                     "processedRowCount": 5,
+                     "processedByte": 60,
+                     "lastSourceCommitTimeUtc": "0001-01-01T00:00:00",
+                     "lastSyncTimeUtc": "2025-05-20T00:02:24.2389983Z"
+                 }
+             }
+         ]
+     }
+     ```
+
 ### Usage:
 This module is designed to be used as part of the Python SDK for Microsoft Fabric Open Mirroring. It provides a high-level API for managing data in Fabric OneLake, making it easier to integrate with Microsoft Fabric workflows.
 
@@ -49,4 +84,11 @@ client.upload_data_file(schema_name="SampleSchema", table_name="SampleTable", lo
 # Remove a table
 client.remove_table(schema_name="SampleSchema", table_name="SampleTable")
 
+# Get mirrored database status
+client.get_mirrored_database_status()
 
+# Get table status (all tables)
+client.get_table_status()
+
+# Get table status (filtered by schema and table)
+client.get_table_status(schema_name="abc", table_name="12345")
