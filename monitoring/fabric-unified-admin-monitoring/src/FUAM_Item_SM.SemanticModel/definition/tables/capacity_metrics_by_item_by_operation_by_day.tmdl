@@ -1,0 +1,205 @@
+table capacity_metrics_by_item_by_operation_by_day
+	lineageTag: cf3f4555-4067-4998-895a-3d6ae80daf99
+	sourceLineageTag: [dbo].[capacity_metrics_by_item_by_operation_by_day]
+
+	column CapacityId
+		dataType: string
+		sourceProviderType: varchar(8000)
+		lineageTag: 3b62a3f8-ddc0-4cde-8530-c61a7a668aab
+		sourceLineageTag: CapacityId
+		summarizeBy: none
+		sourceColumn: CapacityId
+
+		annotation SummarizationSetBy = Automatic
+
+	column WorkspaceId
+		dataType: string
+		sourceProviderType: varchar(8000)
+		lineageTag: db8c9909-1035-42bf-92c3-41693ce8d76b
+		sourceLineageTag: WorkspaceId
+		summarizeBy: none
+		sourceColumn: WorkspaceId
+
+		annotation SummarizationSetBy = Automatic
+
+	column Date
+		dataType: dateTime
+		formatString: yyyy-mm-dd
+		sourceProviderType: datetime2
+		lineageTag: 6d8d7cc9-5344-4690-a47b-f19c9116e04c
+		sourceLineageTag: Date
+		summarizeBy: none
+		sourceColumn: Date
+
+		changedProperty = DataType
+
+		changedProperty = FormatString
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation UnderlyingDateTimeDataType = Date
+
+		annotation PBI_FormatHint = {"isCustom":true}
+
+	column ItemId
+		dataType: string
+		sourceProviderType: varchar(8000)
+		lineageTag: ebbdb034-93b2-4ef5-bd84-e6e96ee2d946
+		sourceLineageTag: ItemId
+		summarizeBy: none
+		sourceColumn: ItemId
+
+		annotation SummarizationSetBy = Automatic
+
+	column ItemKind
+		dataType: string
+		sourceProviderType: varchar(8000)
+		lineageTag: 60e92336-a6fd-4194-8ccb-f4162be9aae0
+		sourceLineageTag: ItemKind
+		summarizeBy: none
+		sourceColumn: ItemKind
+
+		annotation SummarizationSetBy = Automatic
+
+	column OperationName
+		dataType: string
+		sourceProviderType: varchar(8000)
+		lineageTag: c7abc6b7-ee6d-4973-8789-4f6ae260833b
+		sourceLineageTag: OperationName
+		summarizeBy: none
+		sourceColumn: OperationName
+
+		annotation SummarizationSetBy = Automatic
+
+	column DurationInSec
+		dataType: double
+		sourceProviderType: float
+		lineageTag: 5f8eec48-a878-48dd-87a2-dfeb443322e1
+		sourceLineageTag: DurationInSec
+		summarizeBy: sum
+		sourceColumn: DurationInSec
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column TotalCUs
+		dataType: double
+		sourceProviderType: float
+		lineageTag: 56071512-7cff-4d03-974e-d2cb387760f9
+		sourceLineageTag: TotalCUs
+		summarizeBy: sum
+		sourceColumn: TotalCUs
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column ThrottlingInMin
+		dataType: double
+		sourceProviderType: float
+		lineageTag: 4968a55c-f036-4b42-a31c-dcd53bf638de
+		sourceLineageTag: ThrottlingInMin
+		summarizeBy: sum
+		sourceColumn: ThrottlingInMin
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column UserCount
+		dataType: int64
+		formatString: 0
+		sourceProviderType: bigint
+		lineageTag: 3123d151-5f5d-4aff-9b1d-5f1407ddc619
+		sourceLineageTag: UserCount
+		summarizeBy: sum
+		sourceColumn: UserCount
+
+		annotation SummarizationSetBy = Automatic
+
+	column SuccessOperationCount
+		dataType: int64
+		formatString: 0
+		sourceProviderType: bigint
+		lineageTag: eb078c3c-741d-4ecf-8270-09a5eef77f25
+		sourceLineageTag: SuccessOperationCount
+		summarizeBy: sum
+		sourceColumn: SuccessOperationCount
+
+		annotation SummarizationSetBy = Automatic
+
+	column RejectedOperationCount
+		dataType: int64
+		formatString: 0
+		sourceProviderType: bigint
+		lineageTag: 0f08f19e-627e-4b37-85b6-97b8f60a24a1
+		sourceLineageTag: RejectedOperationCount
+		summarizeBy: sum
+		sourceColumn: RejectedOperationCount
+
+		annotation SummarizationSetBy = Automatic
+
+	column OperationCount
+		dataType: int64
+		formatString: 0
+		sourceProviderType: bigint
+		lineageTag: a7ce23ce-8c2d-4c9b-a452-d9d905b2d466
+		sourceLineageTag: OperationCount
+		summarizeBy: sum
+		sourceColumn: OperationCount
+
+		annotation SummarizationSetBy = Automatic
+
+	column InvalidOperationCount
+		dataType: int64
+		formatString: 0
+		sourceProviderType: bigint
+		lineageTag: ff2360ea-187e-4ab8-bd5b-d0ced95b3602
+		sourceLineageTag: InvalidOperationCount
+		summarizeBy: sum
+		sourceColumn: InvalidOperationCount
+
+		annotation SummarizationSetBy = Automatic
+
+	column FailureOperationCount
+		dataType: int64
+		formatString: 0
+		sourceProviderType: bigint
+		lineageTag: 94947582-621e-497a-a0ef-2a3c942ad287
+		sourceLineageTag: FailureOperationCount
+		summarizeBy: sum
+		sourceColumn: FailureOperationCount
+
+		annotation SummarizationSetBy = Automatic
+
+	column CancelledOperationCount
+		dataType: int64
+		formatString: 0
+		sourceProviderType: bigint
+		lineageTag: 597b6e92-3a50-4827-b773-2a0e99a48af5
+		sourceLineageTag: CancelledOperationCount
+		summarizeBy: sum
+		sourceColumn: CancelledOperationCount
+
+		annotation SummarizationSetBy = Automatic
+
+	column DateKey
+		dataType: string
+		sourceProviderType: varchar(8000)
+		lineageTag: d25658ef-f976-4986-b85b-6e666c98587d
+		sourceLineageTag: DateKey
+		summarizeBy: none
+		sourceColumn: DateKey
+
+		annotation SummarizationSetBy = Automatic
+
+	partition capacity_metrics_by_item_by_operation_by_day = entity
+		mode: directLake
+		source
+			entityName: capacity_metrics_by_item_by_operation_by_day
+			schemaName: dbo
+			expressionSource: DatabaseQuery
+
+	annotation PBI_ResultType = Table
+

@@ -1,0 +1,252 @@
+table MashupEvaluationReport
+	lineageTag: 463fd9bb-99b8-4ac4-9e04-f950aea35d53
+
+	column GatewayObjectId
+		dataType: string
+		lineageTag: 07e9d3cd-7913-4f1d-b29e-03b029f68379
+		summarizeBy: none
+		sourceColumn: GatewayObjectId
+
+		annotation SummarizationSetBy = Automatic
+
+	column ConnectionId
+		dataType: string
+		lineageTag: 461cadb5-5272-472f-94f2-c23d56bbf1fd
+		summarizeBy: none
+		sourceColumn: ConnectionId
+
+		annotation SummarizationSetBy = Automatic
+
+	column RequestId
+		dataType: string
+		lineageTag: 6f1f7b32-86bf-4abf-a824-c5ecd050df72
+		summarizeBy: none
+		sourceColumn: RequestId
+
+		annotation SummarizationSetBy = Automatic
+
+	column QueryTrackingId
+		dataType: string
+		lineageTag: 98922f2e-4cda-43db-a586-3785f4bc785b
+		summarizeBy: none
+		sourceColumn: QueryTrackingId
+
+		annotation SummarizationSetBy = Automatic
+
+	column DataSource
+		dataType: string
+		lineageTag: 9cea0423-4182-4773-8c59-1f66f60c779c
+		summarizeBy: none
+		sourceColumn: DataSource
+
+		annotation SummarizationSetBy = Automatic
+
+	column TotalRows
+		dataType: string
+		lineageTag: e71bee35-4160-466b-994a-cb32abbf7a98
+		summarizeBy: none
+		sourceColumn: TotalRows
+
+		annotation SummarizationSetBy = Automatic
+
+	column TotalBytes
+		dataType: string
+		lineageTag: ffca2bd1-d24b-415e-bc95-8b1948938ab4
+		summarizeBy: none
+		sourceColumn: TotalBytes
+
+		annotation SummarizationSetBy = Automatic
+
+	column TotalProcessorTime(ms)
+		dataType: int64
+		formatString: 0
+		lineageTag: df742f97-5348-49b4-894b-29c866d8a6ce
+		summarizeBy: sum
+		sourceColumn: TotalProcessorTime(ms)
+
+		annotation SummarizationSetBy = Automatic
+
+	column EndTimeUTC
+		dataType: dateTime
+		formatString: General Date
+		lineageTag: 14197bc6-5e2b-42c1-9029-c22d794e5bf3
+		summarizeBy: none
+		sourceColumn: EndTimeUTC
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation __PBI_SemanticLinks = [{"LinkTarget":{"TableName":"MashupEvaluationReport","TableItemName":"EndTimeUTC 5 Min","ObjectType":4},"LinkType":"UsedInGroup"}]
+
+	column AverageWorkingSet(byte)
+		dataType: int64
+		formatString: 0
+		lineageTag: 3b4b4f6c-182a-4624-ba90-54f40bc56b76
+		summarizeBy: sum
+		sourceColumn: AverageWorkingSet(byte)
+
+		annotation SummarizationSetBy = Automatic
+
+	column MaxWorkingSet(byte)
+		dataType: int64
+		formatString: 0
+		lineageTag: a5982c65-caaf-4565-b262-df8b3b1bfd3a
+		summarizeBy: sum
+		sourceColumn: MaxWorkingSet(byte)
+
+		annotation SummarizationSetBy = Automatic
+
+	column AverageCommit(byte)
+		dataType: int64
+		formatString: 0
+		lineageTag: 3829a2ff-7af4-4e1e-83e6-794b3c56362e
+		summarizeBy: sum
+		sourceColumn: AverageCommit(byte)
+
+		annotation SummarizationSetBy = Automatic
+
+	column MaxCommit(byte)
+		dataType: int64
+		formatString: 0
+		lineageTag: ee0ffb20-4750-4265-b5eb-abf7e1e33452
+		summarizeBy: sum
+		sourceColumn: MaxCommit(byte)
+
+		annotation SummarizationSetBy = Automatic
+
+	column AveragePercentProcessorTime
+		dataType: double
+		lineageTag: 1f3f80f7-cc92-446d-8372-572f8815fe54
+		summarizeBy: sum
+		sourceColumn: AveragePercentProcessorTime
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column MaxPercentProcessorTime
+		dataType: double
+		lineageTag: b56ac102-6d7e-4db9-9698-414895b1464c
+		summarizeBy: sum
+		sourceColumn: MaxPercentProcessorTime
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column AverageIODataBytesPerSecond
+		dataType: int64
+		formatString: 0
+		lineageTag: 2a198563-935d-4676-a8d8-126b93122502
+		summarizeBy: sum
+		sourceColumn: AverageIODataBytesPerSecond
+
+		annotation SummarizationSetBy = Automatic
+
+	column MaxIODataBytesPerSecond
+		dataType: int64
+		formatString: 0
+		lineageTag: d5f9da95-4aaf-4fe1-ade0-fb4e096dfcdb
+		summarizeBy: sum
+		sourceColumn: MaxIODataBytesPerSecond
+
+		annotation SummarizationSetBy = Automatic
+
+	column EndDate
+		dataType: dateTime
+		formatString: yyyy-mm-dd
+		lineageTag: c301580d-0af2-4ea9-bca0-9141159e9183
+		summarizeBy: none
+		sourceColumn: EndDate
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation UnderlyingDateTimeDataType = Date
+
+		annotation PBI_FormatHint = {"isCustom":true}
+
+	column RequestTrackingKey
+		dataType: string
+		lineageTag: 08681c97-ebcf-4725-bb68-2c97cd94b844
+		summarizeBy: none
+		sourceColumn: RequestTrackingKey
+
+		annotation SummarizationSetBy = Automatic
+
+	column TotalRowsNum
+		dataType: int64
+		formatString: #,0
+		lineageTag: c5f5f8c1-f39d-4882-8341-2d2fe56fd155
+		summarizeBy: sum
+		sourceColumn: TotalRowsNum
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'EndTimeUTC 5 Min' =
+			IF(
+				ISBLANK('MashupEvaluationReport'[EndTimeUTC]),
+				BLANK(),
+				(INT(('MashupEvaluationReport'[EndTimeUTC] * 1440) / 5) * 5) / 1440
+			)
+		dataType: dateTime
+		formatString: General Date
+		lineageTag: d3177410-509d-42f8-b3f6-163ed0b22a9d
+		summarizeBy: none
+
+		extendedProperty GroupingMetadata =
+				{
+				  "version": 0,
+				  "groupedColumns": [
+				    {
+				      "Column": {
+				        "Expression": {
+				          "SourceRef": {
+				            "Entity": "MashupEvaluationReport"
+				          }
+				        },
+				        "Property": "EndTimeUTC"
+				      }
+				    }
+				  ],
+				  "binningMetadata": {
+				    "binSize": {
+				      "value": 5.0,
+				      "unit": 10
+				    }
+				  }
+				}
+
+		annotation GroupingDesignState = {"Version":0,"Sources":[{"Name":"m","Entity":"MashupEvaluationReport"}],"GroupedColumns":[{"Column":{"Expression":{"SourceRef":{"Source":"m"}},"Property":"EndTimeUTC"}}],"BinItem":{"Expression":{"Floor":{"Expression":{"Column":{"Expression":{"SourceRef":{"Source":"m"}},"Property":"EndTimeUTC"}},"Size":5.0,"TimeUnit":6}}}}
+
+		annotation SummarizationSetBy = Automatic
+
+	partition MashupEvaluationReport = m
+		mode: import
+		queryGroup: MashupEvaluationReport
+		source = ```
+				let
+				    Source = Folder.Files(#"Folder Path"),
+				    #"Filtered Rows" = Table.SelectRows(Source, each Text.Contains([Name], "MashupEvaluationReport") and [Extension] = ".log"),
+				    #"CsvDoc" = Table.AddColumn(#"Filtered Rows", "csvDocColumn", each try Table.PromoteHeaders(Csv.Document([Content]))),
+				    #"Expanded csvDocColumn" = Table.ExpandRecordColumn(CsvDoc, "csvDocColumn", {"HasError", "Value"}, {"csvDocColumn.HasError", "csvDocColumn.Value"}),
+				    #"Filtered Rows1" = Table.SelectRows(#"Expanded csvDocColumn", each [csvDocColumn.HasError] = false),
+				    #"Expanded csvDocColumn.Value" = Table.ExpandTableColumn(#"Filtered Rows1", "csvDocColumn.Value", {"GatewayObjectId", "ConnectionId", "RequestId", "QueryTrackingId", "DataSource", "TotalRows", "TotalBytes", "TotalProcessorTime(ms)", "EndTimeUTC", "AverageWorkingSet(byte)", "MaxWorkingSet(byte)", "AverageCommit(byte)", "MaxCommit(byte)", "AveragePercentProcessorTime", "MaxPercentProcessorTime", "AverageIODataBytesPerSecond", "MaxIODataBytesPerSecond"}, {"GatewayObjectId", "ConnectionId", "RequestId", "QueryTrackingId", "DataSource", "TotalRows", "TotalBytes", "TotalProcessorTime(ms)", "EndTimeUTC", "AverageWorkingSet(byte)", "MaxWorkingSet(byte)", "AverageCommit(byte)", "MaxCommit(byte)", "AveragePercentProcessorTime", "MaxPercentProcessorTime", "AverageIODataBytesPerSecond", "MaxIODataBytesPerSecond"}),
+				    #"Removed Columns" = Table.RemoveColumns(#"Expanded csvDocColumn.Value",{"Content", "Name", "Extension", "Date accessed", "Date modified", "Date created", "Attributes", "Folder Path", "csvDocColumn.HasError"}),
+				    #"Changed Type" = Table.TransformColumnTypes(#"Removed Columns",{{"GatewayObjectId", type text}, {"ConnectionId", type text}, {"RequestId", type text}, {"QueryTrackingId", type text}, {"DataSource", type text}, {"TotalRows", type text}, {"TotalBytes", type text}, {"TotalProcessorTime(ms)", Int64.Type}, {"EndTimeUTC", type datetime}, {"AverageWorkingSet(byte)", Int64.Type}, {"MaxWorkingSet(byte)", Int64.Type}, {"AverageCommit(byte)", Int64.Type}, {"MaxCommit(byte)", Int64.Type}, {"AveragePercentProcessorTime", type number}, {"MaxPercentProcessorTime", type number}, {"AverageIODataBytesPerSecond", Int64.Type}, {"MaxIODataBytesPerSecond", Int64.Type}}),
+				    #"Inserted Date" = Table.AddColumn(#"Changed Type", "EndDate", each DateTime.Date([EndTimeUTC]), type date),
+				    #"Inserted Merged Column" = Table.AddColumn(#"Inserted Date", "RequestTrackingKey", each Text.Combine({[RequestId], [QueryTrackingId]}, ""), type text),
+				    #"Inserted Text Between Delimiters" = Table.AddColumn(#"Inserted Merged Column", "ExtractedTotalRows", each Text.BetweenDelimiters([TotalRows], "[", "]"), type text),
+				    #"Added Custom" = Table.AddColumn(#"Inserted Text Between Delimiters", "TotalRowsNum", each if Text.Contains([ExtractedTotalRows], ",") then 
+				
+				List.Sum(List.Transform(Text.Split([ExtractedTotalRows], ","), each Number.From(_)))
+				
+				else [ExtractedTotalRows]),
+				    #"Removed Columns1" = Table.RemoveColumns(#"Added Custom",{"ExtractedTotalRows"}),
+				    #"Changed Type1" = Table.TransformColumnTypes(#"Removed Columns1",{{"TotalRowsNum", Int64.Type}})
+				in
+				    #"Changed Type1"
+				```
+
+	annotation PBI_NavigationStepName = Navigation
+
+	annotation PBI_ResultType = Table
+

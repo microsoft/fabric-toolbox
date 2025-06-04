@@ -1,0 +1,119 @@
+table 'KPIs TM'
+	lineageTag: 8b7119f8-a6ba-4fc4-8f5b-de64f9164ed3
+
+	column ID
+		dataType: double
+		lineageTag: 4ec8f3f4-6f0e-4d39-9314-319277929047
+		summarizeBy: count
+		sourceColumn: ID
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column MeasureID
+		dataType: double
+		lineageTag: 7dd3b743-22f8-466c-8fda-af8de091ade4
+		summarizeBy: none
+		sourceColumn: MeasureID
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column Description
+		dataType: string
+		lineageTag: 35fd6d58-18ab-4b20-a95d-35ae8c2fa04e
+		summarizeBy: none
+		sourceColumn: Description
+
+		annotation SummarizationSetBy = Automatic
+
+	column TargetDescription
+		dataType: string
+		lineageTag: 5fc2e75b-516e-48f8-be76-aa3dfb0dd635
+		summarizeBy: none
+		sourceColumn: TargetDescription
+
+		annotation SummarizationSetBy = Automatic
+
+	column TargetExpression
+		dataType: string
+		lineageTag: ad493460-3480-4428-9bbe-f0e12f2409a9
+		summarizeBy: none
+		sourceColumn: TargetExpression
+
+		annotation SummarizationSetBy = Automatic
+
+	column TargetFormatString
+		dataType: string
+		lineageTag: 98ff3f14-2143-476f-8ccf-9aa7186849e4
+		summarizeBy: none
+		sourceColumn: TargetFormatString
+
+		annotation SummarizationSetBy = Automatic
+
+	column StatusGraphic
+		dataType: string
+		lineageTag: 38626f0e-3964-47f2-8ee6-46593337c17b
+		summarizeBy: none
+		sourceColumn: StatusGraphic
+
+		annotation SummarizationSetBy = Automatic
+
+	column StatusDescription
+		dataType: string
+		lineageTag: 9e037bbe-cf0a-445c-b5e1-be01329ef0f2
+		summarizeBy: none
+		sourceColumn: StatusDescription
+
+		annotation SummarizationSetBy = Automatic
+
+	column StatusExpression
+		dataType: string
+		lineageTag: f9e61cce-76e1-4954-9255-a80ef9a14a6d
+		summarizeBy: none
+		sourceColumn: StatusExpression
+
+		annotation SummarizationSetBy = Automatic
+
+	column TrendGraphic
+		dataType: string
+		lineageTag: 12c8aa07-b41d-45be-ab10-3d4f6b0868e8
+		summarizeBy: none
+		sourceColumn: TrendGraphic
+
+		annotation SummarizationSetBy = Automatic
+
+	column TrendDescription
+		dataType: string
+		lineageTag: da535780-d366-4631-81aa-bf67754da5e8
+		summarizeBy: none
+		sourceColumn: TrendDescription
+
+		annotation SummarizationSetBy = Automatic
+
+	column TrendExpression
+		dataType: string
+		lineageTag: 1f16355d-bbeb-4ad0-b353-24c769b570f5
+		summarizeBy: none
+		sourceColumn: TrendExpression
+
+		annotation SummarizationSetBy = Automatic
+
+	column ModifiedTime
+		dataType: dateTime
+		formatString: General Date
+		lineageTag: 4a5fa203-182d-4faf-a6df-da48b4ad211b
+		summarizeBy: none
+		sourceColumn: ModifiedTime
+
+		annotation SummarizationSetBy = Automatic
+
+	partition 'KPIs TM' = m
+		mode: import
+		queryGroup: 'Meta Data'
+		source = AnalysisServices.Database(serverURL, modelName, [Query="SELECT * FROM $System.TMSCHEMA_KPIS", Implementation="2.0"])
+
+	annotation PBI_ResultType = Exception
+

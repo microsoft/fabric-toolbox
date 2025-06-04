@@ -9,26 +9,28 @@ Fabric toolbox is a repository of tools, accelerators, scripts, and samples to h
 These assets should be treated as examples that you can use to create the solutions that are appropriate for your use case. If you have any issues, please use the [issues](https://github.com/microsoft/fabric-toolbox/issues) tab of this repository and we will work to address issues on a best effort basis. 
 
 ## Monitoring
-- $${\color{green}NEW!}$$ [Workspace Monitoring Report Templates](./monitoring/workspace-monitoring-dashboards)
+- $${\color{green}NEW!}$$ [Fabric Unified Admin Monitoring (FUAM)](./monitoring/fabric-unified-admin-monitoring)
+- [Workspace Monitoring Report Templates](./monitoring/workspace-monitoring-dashboards)
 
 ## Accelerators
-- $${\color{green}NEW!}$$ [CICD: Deploy using Fabric deployment pipelines](./accelerators/CICD/Deploy-using-Fabric-deployment-pipelines)
-- $${\color{green}NEW!}$$ [CICD: Branch out to new workspace](./accelerators/CICD/Branch-out-to-new-workspace)
+- $${\color{green}NEW!}$$ [CICD: Git-Based Deployments](./accelerators/CICD/Git-based-deployments)
+- [CICD: Deploy using Fabric deployment pipelines](./accelerators/CICD/Deploy-using-Fabric-deployment-pipelines)
+- [CICD: Branch out to new workspace](./accelerators/CICD/Branch-out-to-new-workspace)
 - [Data Warehouse Backup and Recovery](./accelerators/data-warehouse-backup-and-recovery)
-- [Power BI to Fabric Data Warehouse Modernization](./accelerators/power-bi-to-fabric-data-warehouse-modernization)
+- [Power BI datamart to Fabric Data Warehouse Modernization](./accelerators/power-bi-to-fabric-data-warehouse-modernization)
 - [Real Time Intelligence Eventhouse](./accelerators/real-time-intelligence_eventhouse)
 - [Real Time Intelligence Eventstream](./accelerators/real-time-intelligence_eventstream)
 
 ## Samples
-- $${\color{green}NEW!}$$ [Open Mirroring](./samples/open-mirroring)
+- [Open Mirroring](./samples/open-mirroring)
 - [Advanced Data Pipeline Scheduleing Specific_Day](./samples/Advanced_Data_Pipeline_Scheduleing_Specific_Day)
 - [Polling Storage Event Trigger](./samples/polling-storage-even-trigger)
-- $${\color{green}NEW!}$$ [Notebook: Refresh tables in SQL Endpoint](./samples/notebook-refresh-tables-in-sql-endpoint)
+- [Notebook: Refresh tables in SQL Endpoint](./samples/notebook-refresh-tables-in-sql-endpoint)
 - [Visualizing Linked Table Dataflows](./samples/visualizing-linked-table-dataflows)
-- $${\color{green}NEW!}$$ [Azure Policies: Pause or Delete Capacity](./samples/azure-policy)
-- $${\color{green}NEW!}$$ [Notebook: List Dedicated Pool Connections](./samples/notebook-list-dedicated-pool-connections)
-- $${\color{green}NEW!}$$ [Notebook: Create, List, Delete a Data Warehouse](./samples/notebook-create-list-delete-warehouse)
-- $${\color{green}NEW!}$$ [Notebook: Workspace Size](./samples/notebook-workspace-size)
+- [Azure Policies: Pause or Delete Capacity](./samples/azure-policy)
+- [Notebook: List Dedicated Pool Connections](./samples/notebook-list-dedicated-pool-connections)
+- [Notebook: Create, List, Delete a Data Warehouse](./samples/notebook-create-list-delete-warehouse)
+- [Notebook: Workspace Size](./samples/notebook-workspace-size)
 
 ## Scripts
 - [DW Active Requests](./scripts/dw-active-requests)
@@ -37,9 +39,12 @@ These assets should be treated as examples that you can use to create the soluti
 - [DW SP Kill Queries](./scripts/dw-sp-kill-queries)
 
 ## Tools
-- $${\color{green}NEW!}$$ [Copy Warehouse](./tools/copy-warehouse)
+- $${\color{green}NEW!}$$ [MicrosoftFabricMgmt PowerShell Module](./tools/MicrosoftFabricMgmt)
+- $${\color{green}NEW!}$$ [Gen2 Dedicated Pool to Fabric DW Table Copy](./tools/Gen2toFabricDW)
+- $${\color{green}NEW!}$$ [Semantic Model Audit](./tools/SemanticModelAudit)
+- [Copy Warehouse](./tools/copy-warehouse)
 - [TPCH Benchmarking](./tools/tpch-benchmarking)
-
+- $${\color{green}NEW!}$$ [DAX Performance Testing](./tools/DAXPerformanceTesting)
 
 
 # Contributing

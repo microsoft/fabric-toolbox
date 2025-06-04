@@ -1,0 +1,89 @@
+relationship b8976822-9208-ae6c-dae7-d8502f8e4c9a
+	fromColumn: reports.SemanticModelId
+	toColumn: semantic_models.SemanticModelId
+
+relationship ad656f4e-a33e-56a2-70fb-909a263aaa96
+	fromColumn: semantic_model_bpa_results.RuleId
+	toColumn: semantic_model_bpa_rule_catalog.RuleId
+
+relationship 186329d2-0c2a-d60f-7ce1-aa2d1ed31ffa
+	crossFilteringBehavior: bothDirections
+	fromColumn: semantic_models.SemanticModelId
+	toColumn: capacity_refreshables.ItemId
+
+relationship 0221e251-e715-39d6-2780-2fd70e2bf5a6
+	crossFilteringBehavior: bothDirections
+	fromColumn: capacity_refreshable_times.ItemId
+	toColumn: capacity_refreshables.ItemId
+
+relationship 417a66ff-6e60-6322-74e4-32eb15a6979d
+	crossFilteringBehavior: bothDirections
+	fromColumn: capacity_refreshable_days.ItemId
+	toColumn: capacity_refreshables.ItemId
+
+relationship b685bb19-3c46-0dbf-4dc5-41d78ccb6819
+	fromColumn: capacity_refreshable_summaries.ItemId
+	toColumn: capacity_refreshables.ItemId
+
+relationship 407901ed-c2f3-e959-94bd-493a344c019d
+	fromColumn: capacity_refreshable_details.ItemId
+	toColumn: capacity_refreshables.ItemId
+
+relationship 610c1016-10e9-f6fa-50f4-0132cbea8b7a
+	fromColumn: semantic_models.ContentProviderType
+	toColumn: semantic_model_content_types.ContentProviderType
+
+relationship fe4d87c2-ea7b-ffcf-570d-cadc2ce0aac9
+	crossFilteringBehavior: bothDirections
+	fromColumn: semantic_model_analyzer_runs.SemanticModelId
+	toColumn: semantic_models.SemanticModelId
+
+relationship 6c19e63d-d8df-6aba-8801-d8d3974a069b
+	fromColumn: semantic_model_bpa_results.SemanticModelRunKey
+	toColumn: semantic_model_analyzer_runs.SemanticModelRunKey
+
+relationship b8d83c2a-9ae1-e832-1601-12b23994db6c
+	fromColumn: semantic_model_vertipaq_relationships.SemanticModelRunKey
+	toColumn: semantic_model_analyzer_runs.SemanticModelRunKey
+
+relationship 3d2ebb4a-4a50-70fc-5cdb-1adc0cad9a48
+	fromColumn: semantic_model_vertipaq_tables.SemanticModelRunKey
+	toColumn: semantic_model_analyzer_runs.SemanticModelRunKey
+
+relationship 84236f40-6ed1-eacf-6de8-16d099a04396
+	fromColumn: workspaces.CapacityId
+	toColumn: capacities.CapacityId
+
+relationship 5fbdde08-6e2b-e35e-ef5c-43da39faf441
+	fromColumn: activities.CreationDateKey
+	toColumn: calendar.DateKey
+
+relationship dadda672-b9dd-1368-25c6-039db7d2b764
+	fromColumn: active_items.workspaceId
+	toColumn: workspaces.WorkspaceId
+
+relationship f9bcaa6c-62d0-3e8c-3b21-51ea514219e1
+	fromColumn: capacity_metrics_by_item_by_operation_by_day.ItemId
+	toColumn: active_items.id
+
+relationship 033e74ab-662c-027f-5af9-15674cacf470
+	fromColumn: activities.ItemId
+	toColumn: active_items.id
+
+relationship 10b47dd9-eb08-f7df-91f1-6dd9b386e4fc
+	fromColumn: workspaces_scanned_users.WorkspaceId
+	toColumn: workspaces.WorkspaceId
+
+relationship 2a90311f-f24b-3837-6e69-93ed171528a0
+	crossFilteringBehavior: bothDirections
+	fromColumn: active_items.id
+	toColumn: semantic_models.SemanticModelId
+
+relationship 5bce86a0-eea9-cbd1-8dde-7803cd6a87e1
+	fromColumn: report_activities.ReportId
+	toColumn: reports.ReportId
+
+relationship 06a1218d-d1ea-5c25-44b0-ba218960bb45
+	fromColumn: report_activities.CreationDateKey
+	toColumn: calendar.DateKey
+

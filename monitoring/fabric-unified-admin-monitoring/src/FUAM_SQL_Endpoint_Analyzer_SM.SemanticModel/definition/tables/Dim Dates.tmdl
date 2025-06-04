@@ -1,0 +1,32 @@
+table 'Dim Dates'
+	lineageTag: 788c5cef-95f2-408d-8af9-358cca532247
+
+	column Date
+		formatString: yyyy-mm-dd
+		lineageTag: d3e7b062-dc45-49f3-9a88-ce0ec84f2c17
+		summarizeBy: none
+		isNameInferred
+		sourceColumn: [Date]
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isCustom":true}
+
+	column Year-Month = FORMAT('Dim Dates'[Date], "yyyy-mm")
+		lineageTag: e3e1c3b6-5376-45f1-b492-3557d9343e57
+		summarizeBy: none
+
+		annotation SummarizationSetBy = Automatic
+
+	column WeekDay = WEEKDAY('Dim Dates'[Date]) & " " & FORMAT('Dim Dates'[Date], "(ddd)")
+		lineageTag: d6481c1e-63d5-49dd-88a7-c4dca26e571a
+		summarizeBy: none
+
+		annotation SummarizationSetBy = Automatic
+
+	partition 'Dim Dates' = calculated
+		mode: import
+		source = CALENDARAUTO()
+
+	annotation PBI_Id = 94946a8f77454024a25cc7d589fb0dfa
+

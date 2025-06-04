@@ -1,0 +1,53 @@
+table capacity_refreshable_times
+	lineageTag: ea74975a-4197-4616-a054-53f5a4f0042d
+	sourceLineageTag: [dbo].[capacity_refreshable_times]
+
+	column CapacityId
+		dataType: string
+		sourceProviderType: varchar(8000)
+		lineageTag: de93e21e-2dd7-422a-8b65-7057680d2bbd
+		sourceLineageTag: CapacityId
+		summarizeBy: none
+		sourceColumn: CapacityId
+
+		annotation SummarizationSetBy = Automatic
+
+	column WorkspaceId
+		dataType: string
+		sourceProviderType: varchar(8000)
+		lineageTag: 366d6c6c-5deb-4572-9b53-fbe1b19bd230
+		sourceLineageTag: WorkspaceId
+		summarizeBy: none
+		sourceColumn: WorkspaceId
+
+		annotation SummarizationSetBy = Automatic
+
+	column ItemId
+		dataType: string
+		sourceProviderType: varchar(8000)
+		lineageTag: 430d3a59-0c05-4b4d-a50b-e5cfe040ffa3
+		sourceLineageTag: ItemId
+		summarizeBy: none
+		sourceColumn: ItemId
+
+		annotation SummarizationSetBy = Automatic
+
+	column Time
+		dataType: string
+		sourceProviderType: varchar(8000)
+		lineageTag: 11aadc7f-de75-4cf4-9550-463b2423adfe
+		sourceLineageTag: Time
+		summarizeBy: none
+		sourceColumn: Time
+
+		annotation SummarizationSetBy = Automatic
+
+	partition capacity_refreshable_times = entity
+		mode: directLake
+		source
+			entityName: capacity_refreshable_times
+			schemaName: dbo
+			expressionSource: DatabaseQuery
+
+	annotation PBI_ResultType = Table
+

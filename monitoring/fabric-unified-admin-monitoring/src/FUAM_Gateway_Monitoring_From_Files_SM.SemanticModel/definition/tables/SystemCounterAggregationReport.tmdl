@@ -1,0 +1,116 @@
+table SystemCounterAggregationReport
+	lineageTag: f3b08e35-72a4-4304-aad6-8d09cfcfb237
+
+	column 'Source.Name'
+		dataType: string
+		lineageTag: b9500863-25b7-4114-af1f-e6f69b5b0738
+		summarizeBy: none
+		sourceColumn: Source.Name
+
+		annotation SummarizationSetBy = Automatic
+
+	column GatewayObjectId
+		dataType: string
+		lineageTag: 3a9b739c-a05c-41df-9d0b-a9f3af8e62ca
+		summarizeBy: none
+		sourceColumn: GatewayObjectId
+
+		annotation SummarizationSetBy = Automatic
+
+	column AggregationStartTimeUTC
+		dataType: dateTime
+		formatString: General Date
+		lineageTag: 5e9be292-c70c-4861-8b55-0b3a8d0bb916
+		summarizeBy: none
+		sourceColumn: AggregationStartTimeUTC
+
+		annotation SummarizationSetBy = Automatic
+
+	column AggregationEndTimeUTC
+		dataType: dateTime
+		formatString: General Date
+		lineageTag: 114f833c-346a-4edc-8627-e12a091dbdd4
+		summarizeBy: none
+		sourceColumn: AggregationEndTimeUTC
+
+		annotation SummarizationSetBy = Automatic
+
+	column CounterName
+		dataType: string
+		lineageTag: 4b5d0e0a-9068-466a-9cee-36bf96822bf9
+		summarizeBy: none
+		sourceColumn: CounterName
+
+		annotation SummarizationSetBy = Automatic
+
+	column Max
+		dataType: double
+		lineageTag: 0d18f03b-f9f7-49b9-a1b9-8b1aba673c3d
+		summarizeBy: sum
+		sourceColumn: Max
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column Min
+		dataType: double
+		lineageTag: ff5b2742-6d45-425b-b56e-ab20c48f830d
+		summarizeBy: sum
+		sourceColumn: Min
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column Average
+		dataType: double
+		lineageTag: 9d3f6848-c271-46b3-8f52-f35dddb164b6
+		summarizeBy: sum
+		sourceColumn: Average
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column Day = DATE(YEAR([AggregationEndTimeUTC]), Month([AggregationEndTimeUTC]), Day([AggregationEndTimeUTC]))
+		formatString: General Date
+		lineageTag: a4363bcf-fa6d-4f19-aa44-960eee6b6afa
+		summarizeBy: none
+
+		annotation SummarizationSetBy = Automatic
+
+	column AggregationEndDate
+		dataType: dateTime
+		formatString: Long Date
+		lineageTag: 4ac3f85d-e43a-4681-be69-641de27bdb18
+		summarizeBy: none
+		sourceColumn: AggregationEndDate
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation UnderlyingDateTimeDataType = Date
+
+	partition SystemCounterAggregationReport-5eafce48-3dab-40a3-9800-8abbe0c2cbf6 = m
+		mode: import
+		source =
+				let
+				    Source = Folder.Files(#"Folder Path"),
+				    #"Filtered Rows" = Table.SelectRows(Source, each Text.Contains([Name], "SystemCounterAggregationReport") and [Extension] = ".log"),
+				    #"CsvDoc" = Table.AddColumn(#"Filtered Rows", "csvDocColumn", each try Table.PromoteHeaders(Csv.Document([Content]))),
+				    #"Expanded csvDocColumn" = Table.ExpandRecordColumn(CsvDoc, "csvDocColumn", {"HasError", "Value"}, {"csvDocColumn.HasError", "csvDocColumn.Value"}),
+				    #"Filtered Rows1" = Table.SelectRows(#"Expanded csvDocColumn", each [csvDocColumn.HasError] = false),
+				    #"Expanded csvDocColumn.Value" = Table.ExpandTableColumn(#"Filtered Rows1", "csvDocColumn.Value", {"GatewayObjectId", "AggregationStartTimeUTC", "AggregationEndTimeUTC", "CounterName", "Max", "Min", "Average"}, {"GatewayObjectId", "AggregationStartTimeUTC", "AggregationEndTimeUTC", "CounterName", "Max", "Min", "Average"}),
+				    #"Changed Type" = Table.TransformColumnTypes(#"Expanded csvDocColumn.Value",{{"AggregationStartTimeUTC", type datetime}, {"AggregationEndTimeUTC", type datetime}, {"CounterName", type text}, {"Max", type number}, {"Min", type number}, {"Average", type number}}, "en-us"),
+				    #"Removed Columns" = Table.RemoveColumns(#"Changed Type",{"Content", "Extension", "Date accessed", "Date modified", "Date created", "Attributes", "Folder Path", "csvDocColumn.HasError"}),
+				    #"Renamed Columns" = Table.RenameColumns(#"Removed Columns",{{"Name", "Source.Name"}}),
+				    #"Inserted Date" = Table.AddColumn(#"Renamed Columns", "AggregationEndDate", each DateTime.Date([AggregationEndTimeUTC]), type date)
+				in
+				    #"Inserted Date"
+
+	annotation PBI_NavigationStepName = Navigation
+
+	annotation PBI_QueryRelationships = {"columnCount":8,"keyColumnNames":[],"queryRelationships":[],"columnIdentities":["Section1/SystemCounterAggregationReport/Source.{Name,1}","Section1/SystemCounterAggregationReport/Expanded csvDocColumn.Value.{GatewayObjectId,9}","Section1/SystemCounterAggregationReport/Changed Type.{AggregationStartTimeUTC,10}","Section1/SystemCounterAggregationReport/Changed Type.{AggregationEndTimeUTC,11}","Section1/SystemCounterAggregationReport/Changed Type.{CounterName,12}","Section1/SystemCounterAggregationReport/Changed Type.{Max,13}","Section1/SystemCounterAggregationReport/Changed Type.{Min,14}","Section1/SystemCounterAggregationReport/Changed Type.{Average,15}"],"ColumnCount":8,"KeyColumnNames":[],"ColumnIdentities":["Section1/SystemCounterAggregationReport/Source.{Name,1}","Section1/SystemCounterAggregationReport/Expanded csvDocColumn.Value.{GatewayObjectId,9}","Section1/SystemCounterAggregationReport/Changed Type.{AggregationStartTimeUTC,10}","Section1/SystemCounterAggregationReport/Changed Type.{AggregationEndTimeUTC,11}","Section1/SystemCounterAggregationReport/Changed Type.{CounterName,12}","Section1/SystemCounterAggregationReport/Changed Type.{Max,13}","Section1/SystemCounterAggregationReport/Changed Type.{Min,14}","Section1/SystemCounterAggregationReport/Changed Type.{Average,15}"],"RelationshipInfo":[]}
+
+	annotation PBI_ResultType = Table
+

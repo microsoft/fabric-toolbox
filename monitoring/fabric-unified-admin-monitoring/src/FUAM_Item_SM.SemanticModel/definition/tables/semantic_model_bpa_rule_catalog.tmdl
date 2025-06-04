@@ -1,0 +1,108 @@
+table semantic_model_bpa_rule_catalog
+	lineageTag: be737207-a4ed-45f2-a0ac-edda350e762d
+	sourceLineageTag: [dbo].[semantic_model_bpa_rule_catalog]
+
+	column RuleId
+		dataType: int64
+		formatString: 0
+		sourceProviderType: bigint
+		lineageTag: 4495e445-269d-48f3-8717-9ad8b604e139
+		sourceLineageTag: RuleId
+		summarizeBy: none
+		sourceColumn: RuleId
+
+		annotation SummarizationSetBy = Automatic
+
+	column Category
+		dataType: string
+		sourceProviderType: varchar(8000)
+		lineageTag: 8e2c6d5d-a4c4-4728-8133-584f545a0dc0
+		sourceLineageTag: Category
+		summarizeBy: none
+		sourceColumn: Category
+
+		annotation SummarizationSetBy = Automatic
+
+	column Scope
+		dataType: string
+		sourceProviderType: varchar(8000)
+		lineageTag: 6167e527-9fc6-4433-babe-077dd709bd99
+		sourceLineageTag: Scope
+		summarizeBy: none
+		sourceColumn: Scope
+
+		annotation SummarizationSetBy = Automatic
+
+	column Severity
+		dataType: string
+		sourceProviderType: varchar(8000)
+		lineageTag: f8a2d0ef-402d-4be6-8d33-7e2ec97abf21
+		sourceLineageTag: Severity
+		summarizeBy: none
+		sourceColumn: Severity
+
+		annotation SummarizationSetBy = Automatic
+
+	column ImpactArea
+		dataType: string
+		sourceProviderType: varchar(8000)
+		lineageTag: f884cf3a-5967-48fb-8555-799065da39b2
+		sourceLineageTag: ImpactArea
+		summarizeBy: none
+		sourceColumn: ImpactArea
+
+		annotation SummarizationSetBy = Automatic
+
+	column RuleName
+		dataType: string
+		sourceProviderType: varchar(8000)
+		lineageTag: 4cdcdae3-26e8-47e9-a882-7739592ab4b6
+		sourceLineageTag: RuleName
+		summarizeBy: none
+		sourceColumn: RuleName
+
+		annotation SummarizationSetBy = Automatic
+
+	column Description
+		dataType: string
+		sourceProviderType: varchar(8000)
+		lineageTag: 0d7a4bf4-d226-42b5-ad01-b0b2ebdc49ec
+		sourceLineageTag: Description
+		summarizeBy: none
+		sourceColumn: Description
+
+		annotation SummarizationSetBy = Automatic
+
+	column URL
+		dataType: string
+		sourceProviderType: varchar(8000)
+		lineageTag: 07710acd-8d8e-4d7a-8d2f-eea74fac7e22
+		sourceLineageTag: URL
+		dataCategory: WebUrl
+		summarizeBy: none
+		sourceColumn: URL
+
+		changedProperty = DataCategory
+
+		annotation SummarizationSetBy = Automatic
+
+	column WithDependency
+		dataType: boolean
+		formatString: """TRUE"";""TRUE"";""FALSE"""
+		sourceProviderType: bit
+		lineageTag: a4e61068-0227-4059-b10a-0eaeec499527
+		sourceLineageTag: WithDependency
+		summarizeBy: none
+		sourceColumn: WithDependency
+
+		annotation SummarizationSetBy = Automatic
+
+	partition semantic_model_bpa_rule_catalog = entity
+		mode: directLake
+		source
+			entityName: semantic_model_bpa_rule_catalog
+			schemaName: dbo
+			expressionSource: DatabaseQuery
+
+	annotation PBI_ResultType = Table
+

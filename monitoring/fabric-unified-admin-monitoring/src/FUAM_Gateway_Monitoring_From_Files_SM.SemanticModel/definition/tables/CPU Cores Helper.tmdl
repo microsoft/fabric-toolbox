@@ -1,0 +1,26 @@
+table 'CPU Cores Helper'
+	lineageTag: b5688f16-e4af-4765-aa14-698115646f48
+
+	measure 'CPU Cores Helper Value' = SELECTEDVALUE('CPU Cores Helper'[CPU Cores Helper], 8)
+		formatString: 0
+		lineageTag: 57a16ae0-cd41-4ef1-bb6f-590c14956232
+
+	column 'CPU Cores Helper'
+		formatString: 0
+		lineageTag: 56b316e9-458f-41c0-b4e3-780a37a3f22a
+		summarizeBy: none
+		sourceColumn: [Value]
+
+		extendedProperty ParameterMetadata =
+				{
+				  "version": 0
+				}
+
+		annotation SummarizationSetBy = User
+
+	partition 'CPU Cores Helper' = calculated
+		mode: import
+		source = GENERATESERIES(0, 128, 1)
+
+	annotation PBI_Id = 1126ac14d1a245639a36006e8044fda0
+

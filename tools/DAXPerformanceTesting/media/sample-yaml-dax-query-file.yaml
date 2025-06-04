@@ -1,0 +1,4 @@
+- queryId: 1
+  daxQuery: EVALUATE ROW("Test", COUNTROWS('m_calendar'))
+- queryId: 2
+  daxQuery: EVALUATE ROW("Test_1", COUNTROWS('m_milestone'))

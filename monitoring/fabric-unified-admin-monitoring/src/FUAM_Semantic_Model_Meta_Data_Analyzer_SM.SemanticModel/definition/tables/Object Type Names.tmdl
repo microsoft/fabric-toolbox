@@ -1,0 +1,38 @@
+table 'Object Type Names'
+	lineageTag: ae88763f-2449-48f0-ac69-02c094200f89
+
+	column OriginalValue
+		dataType: string
+		lineageTag: f795ab0f-b4b0-4026-994b-15b511c46e2b
+		summarizeBy: none
+		sourceColumn: OriginalValue
+
+		annotation SummarizationSetBy = Automatic
+
+	column SingularName
+		dataType: string
+		lineageTag: adeb10e9-2b73-4e26-bea9-07cdee6c8522
+		summarizeBy: none
+		sourceColumn: SingularName
+
+		annotation SummarizationSetBy = Automatic
+
+	column PluralName
+		dataType: string
+		lineageTag: ebb342a7-6938-4741-b744-a0fb978be575
+		summarizeBy: none
+		sourceColumn: PluralName
+
+		annotation SummarizationSetBy = Automatic
+
+	partition 'Object Type Names' = m
+		mode: import
+		source =
+				let
+				    Source = Table.FromRows(Json.Document(Binary.Decompress(Binary.FromText("bZDhCoIwFIVfRfzdS9zWwIGmzGsQEbLsQgPTmFvQ2+cY1gr/3Z19Ozv3nE4pMBQH3kqeA4pyX2eiSjcpdFY/KZHUK6vHYbrpx7o6pefNbIIoxbZB3maCS5AsO3rcWqMvzlKSaTLKdLfXqqopuDDIWcvKvCn2M8dU37n5I7ombOzdfVjToocI25z/MqguPa1I4VUcNQ74H6vgUDfSWxekJmfoOwWgAonClzdfVMpY7cuJ54DtAKGty0Yy77VTViX16ExHv6cAL9ssK0S5vw19alm6OL8B", BinaryEncoding.Base64), Compression.Deflate)), let _t = ((type nullable text) meta [Serialized.Text = true]) in type table [OriginalValue = _t, SingularName = _t, PluralName = _t]),
+				    #"Changed Type" = Table.TransformColumnTypes(Source,{{"OriginalValue", type text}, {"SingularName", type text}, {"PluralName", type text}})
+				in
+				    #"Changed Type"
+
+	annotation PBI_ResultType = Table
+

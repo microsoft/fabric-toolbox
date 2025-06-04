@@ -1,0 +1,96 @@
+table ConcurrentOperationAggregationReport
+	lineageTag: d11a824d-ea43-48d2-808d-4096ad42a281
+
+	column GatewayObjectId
+		dataType: string
+		lineageTag: e1b3ce15-5555-4303-81d6-96447b3b8759
+		summarizeBy: none
+		sourceColumn: GatewayObjectId
+
+		annotation SummarizationSetBy = Automatic
+
+	column AggregationStartTimeUTC
+		dataType: dateTime
+		formatString: General Date
+		lineageTag: 8cadcad6-5b3a-4a4f-b0c3-40a04a630cfc
+		summarizeBy: none
+		sourceColumn: AggregationStartTimeUTC
+
+		annotation SummarizationSetBy = Automatic
+
+	column AggregationEndTimeUTC
+		dataType: dateTime
+		formatString: General Date
+		lineageTag: 7d9a08fc-e9d2-47de-a16e-266e7c5a8152
+		summarizeBy: none
+		sourceColumn: AggregationEndTimeUTC
+
+		annotation SummarizationSetBy = Automatic
+
+	column CounterName
+		dataType: string
+		lineageTag: 8ab1b423-551e-47de-a6a1-29c5d73d13ba
+		summarizeBy: none
+		sourceColumn: CounterName
+
+		annotation SummarizationSetBy = Automatic
+
+	column Max
+		dataType: int64
+		formatString: 0
+		lineageTag: 2b9d3605-bb9a-4099-94f2-519dcc7e0700
+		summarizeBy: sum
+		sourceColumn: Max
+
+		annotation SummarizationSetBy = Automatic
+
+	column Min
+		dataType: int64
+		formatString: 0
+		lineageTag: fc6062d3-291b-4f4a-b358-e26bb84cf6ab
+		summarizeBy: sum
+		sourceColumn: Min
+
+		annotation SummarizationSetBy = Automatic
+
+	column Average
+		dataType: double
+		lineageTag: c691954b-6e61-40ae-88e1-89bbd53ca811
+		summarizeBy: sum
+		sourceColumn: Average
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column AggregationStartDate
+		dataType: dateTime
+		formatString: Long Date
+		lineageTag: 108cfb91-9ab8-4a49-97ee-a1e1c540ca30
+		summarizeBy: none
+		sourceColumn: AggregationStartDate
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation UnderlyingDateTimeDataType = Date
+
+	partition ConcurrentOperationAggregationReport = m
+		mode: import
+		source =
+				let
+				    Source = Folder.Files(#"Folder Path"),
+				    #"Filtered Rows" = Table.SelectRows(Source, each Text.Contains([Name], "ConcurrentOperationAggregationReport") and [Extension] = ".log"),
+				    #"CsvDoc" = Table.AddColumn(#"Filtered Rows", "csvDocColumn", each try Table.PromoteHeaders(Csv.Document([Content]))),
+				    #"Expanded csvDocColumn" = Table.ExpandRecordColumn(CsvDoc, "csvDocColumn", {"HasError", "Value"}, {"csvDocColumn.HasError", "csvDocColumn.Value"}),
+				    #"Filtered Rows1" = Table.SelectRows(#"Expanded csvDocColumn", each [csvDocColumn.HasError] = false),
+				    #"Expanded csvDocColumn.Value" = Table.ExpandTableColumn(#"Filtered Rows1", "csvDocColumn.Value", {"GatewayObjectId", "AggregationStartTimeUTC", "AggregationEndTimeUTC", "CounterName", "Max", "Min", "Average"}, {"GatewayObjectId", "AggregationStartTimeUTC", "AggregationEndTimeUTC", "CounterName", "Max", "Min", "Average"}),
+				    #"Removed Columns" = Table.RemoveColumns(#"Expanded csvDocColumn.Value",{"Content", "Name", "Extension", "Date accessed", "Date modified", "Date created", "Attributes", "Folder Path", "csvDocColumn.HasError"}),
+				    #"Changed Type" = Table.TransformColumnTypes(#"Removed Columns",{{"GatewayObjectId", type text}, {"AggregationStartTimeUTC", type datetime}, {"AggregationEndTimeUTC", type datetime}, {"CounterName", type text}, {"Max", Int64.Type}, {"Min", Int64.Type}, {"Average", type number}}),
+				    #"Inserted Date" = Table.AddColumn(#"Changed Type", "AggregationStartDate", each DateTime.Date([AggregationStartTimeUTC]), type date)
+				in
+				    #"Inserted Date"
+
+	annotation PBI_NavigationStepName = Navigation
+
+	annotation PBI_ResultType = Table
+

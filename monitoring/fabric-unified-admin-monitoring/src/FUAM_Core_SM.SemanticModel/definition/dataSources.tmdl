@@ -1,0 +1,3 @@
+dataSource 'New Provider Data Source' = provider
+	impersonationMode: impersonateServiceAccount
+

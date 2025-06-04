@@ -1,0 +1,133 @@
+table datasource_instances
+	lineageTag: 295515eb-9785-483d-9d89-713822455ba7
+	sourceLineageTag: [dbo].[datasource_instances]
+
+	column DatasourceType
+		dataType: string
+		sourceProviderType: varchar(8000)
+		lineageTag: 14f5fa77-689b-4f34-96f6-a3c45fc46c2c
+		sourceLineageTag: DatasourceType
+		summarizeBy: none
+		sourceColumn: DatasourceType
+
+		annotation SummarizationSetBy = Automatic
+
+	column DatasourceId
+		dataType: string
+		sourceProviderType: varchar(8000)
+		lineageTag: 98f24a91-849e-482a-a1b0-f409e57baeef
+		sourceLineageTag: DatasourceId
+		summarizeBy: none
+		sourceColumn: DatasourceId
+
+		annotation SummarizationSetBy = Automatic
+
+	column GatewayId
+		dataType: string
+		sourceProviderType: varchar(8000)
+		lineageTag: cb154d8b-a836-41fd-ae67-5361cb336c70
+		sourceLineageTag: GatewayId
+		summarizeBy: none
+		sourceColumn: GatewayId
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'connectionDetails.server'
+		dataType: string
+		sourceProviderType: varchar(8000)
+		lineageTag: be8c0bdb-2b84-4358-89e4-109cb71f9bf6
+		sourceLineageTag: connectionDetails.server
+		summarizeBy: none
+		sourceColumn: connectionDetails.server
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'connectionDetails.extensionDataSourceKind'
+		dataType: string
+		sourceProviderType: varchar(8000)
+		lineageTag: b8883ced-dcce-4c2a-864c-80b978daaa0c
+		sourceLineageTag: connectionDetails.extensionDataSourceKind
+		summarizeBy: none
+		sourceColumn: connectionDetails.extensionDataSourceKind
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'connectionDetails.extensionDataSourcePath'
+		dataType: string
+		sourceProviderType: varchar(8000)
+		lineageTag: a7479be1-e0ba-4eda-b4aa-cd017da5d07b
+		sourceLineageTag: connectionDetails.extensionDataSourcePath
+		summarizeBy: none
+		sourceColumn: connectionDetails.extensionDataSourcePath
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'connectionDetails.path'
+		dataType: string
+		sourceProviderType: varchar(8000)
+		lineageTag: 6257ad0d-1b71-41a6-9861-6a9d5cdf2638
+		sourceLineageTag: connectionDetails.path
+		summarizeBy: none
+		sourceColumn: connectionDetails.path
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'connectionDetails.sharePointSiteUrl'
+		dataType: string
+		sourceProviderType: varchar(8000)
+		lineageTag: c9a97ff5-6f38-444b-9bff-5f4cb76318f1
+		sourceLineageTag: connectionDetails.sharePointSiteUrl
+		summarizeBy: none
+		sourceColumn: connectionDetails.sharePointSiteUrl
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'connectionDetails.url'
+		dataType: string
+		sourceProviderType: varchar(8000)
+		lineageTag: d7238200-1731-419c-afeb-2cee89350925
+		sourceLineageTag: connectionDetails.url
+		summarizeBy: none
+		sourceColumn: connectionDetails.url
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'connectionDetails.database'
+		dataType: string
+		sourceProviderType: varchar(8000)
+		lineageTag: b784912c-199b-4d26-be8e-f30628a2629b
+		sourceLineageTag: connectionDetails.database
+		summarizeBy: none
+		sourceColumn: connectionDetails.database
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'connectionDetails.account'
+		dataType: string
+		sourceProviderType: varchar(8000)
+		lineageTag: 1e78f489-9eb5-4fb3-8ad5-c9f4bf3964ce
+		sourceLineageTag: connectionDetails.account
+		summarizeBy: none
+		sourceColumn: connectionDetails.account
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'connectionDetails.domain'
+		dataType: string
+		sourceProviderType: varchar(8000)
+		lineageTag: f05d2d62-91be-4d40-b408-273111c543ea
+		sourceLineageTag: connectionDetails.domain
+		summarizeBy: none
+		sourceColumn: connectionDetails.domain
+
+		annotation SummarizationSetBy = Automatic
+
+	partition datasource_instances = entity
+		mode: directLake
+		source
+			entityName: datasource_instances
+			schemaName: dbo
+			expressionSource: DatabaseQuery
+
+	annotation PBI_ResultType = Table
+

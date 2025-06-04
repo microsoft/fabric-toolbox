@@ -1,0 +1,78 @@
+table QueryStartReport_DataSources
+	lineageTag: fe590050-84cc-451c-951c-2324b50ff37d
+
+	column GatewayObjectId
+		dataType: string
+		lineageTag: 166a1082-2100-4eaa-8fab-d065342a8457
+		summarizeBy: none
+		sourceColumn: GatewayObjectId
+
+		annotation SummarizationSetBy = Automatic
+
+	column RequestId
+		dataType: string
+		lineageTag: 998ea213-695b-403f-82ed-771d52c8b611
+		summarizeBy: none
+		sourceColumn: RequestId
+
+		annotation SummarizationSetBy = Automatic
+
+	column QueryTrackingId
+		dataType: string
+		lineageTag: 592c6261-2288-4104-9079-31aa71cd371e
+		summarizeBy: none
+		sourceColumn: QueryTrackingId
+
+		annotation SummarizationSetBy = Automatic
+
+	column kind
+		dataType: string
+		lineageTag: e73cadab-61d4-42e7-94d4-f1fc0a2467d8
+		summarizeBy: none
+		sourceColumn: kind
+
+		annotation SummarizationSetBy = Automatic
+
+	column path
+		dataType: string
+		lineageTag: 9d06367d-fb12-4000-aae9-ae285933c882
+		summarizeBy: none
+		sourceColumn: path
+
+		annotation SummarizationSetBy = Automatic
+
+	column RequestTrackingKey
+		dataType: string
+		lineageTag: 0a28df76-28e5-4ea2-bcd9-926334c1eaf6
+		summarizeBy: none
+		sourceColumn: RequestTrackingKey
+
+		annotation SummarizationSetBy = Automatic
+
+	partition QueryStartReport_DataSources = m
+		mode: import
+		queryGroup: QueryStartReport
+		source =
+				let
+				    Source = Folder.Files(#"Folder Path"),
+				    #"Filtered Rows" = Table.SelectRows(Source, each Text.Contains([Name], "QueryStartReport") and [Extension] = ".log"),
+				    #"CsvDoc" = Table.AddColumn(#"Filtered Rows", "csvDocColumn", each try Table.PromoteHeaders(Csv.Document([Content]))),
+				    #"Expanded csvDocColumn" = Table.ExpandRecordColumn(CsvDoc, "csvDocColumn", {"HasError", "Value"}, {"csvDocColumn.HasError", "csvDocColumn.Value"}),
+				    #"Filtered Rows1" = Table.SelectRows(#"Expanded csvDocColumn", each [csvDocColumn.HasError] = false),
+				    #"Expanded csvDocColumn.Value" = Table.ExpandTableColumn(#"Filtered Rows1", "csvDocColumn.Value", {"GatewayObjectId", "RequestId", "QueryTrackingId", "DataSource"}, {"GatewayObjectId", "RequestId", "QueryTrackingId", "DataSource"}),
+				    #"Removed Columns" = Table.RemoveColumns(#"Expanded csvDocColumn.Value",{"Content", "Name", "Extension", "Date accessed", "Date modified", "Date created", "Attributes", "Folder Path", "csvDocColumn.HasError"}),
+				    #"Inserted Parsed JSON" = Table.AddColumn(#"Removed Columns", "JSON", each Json.Document([DataSource])),
+				    #"Expanded JSON" = Table.ExpandListColumn(#"Inserted Parsed JSON", "JSON"),
+				    #"Removed Columns1" = Table.RemoveColumns(#"Expanded JSON",{"DataSource"}),
+				    #"Inserted Parsed JSON1" = Table.AddColumn(#"Removed Columns1", "JSON.1", each Json.Document([JSON])),
+				    #"Expanded JSON.1" = Table.ExpandRecordColumn(#"Inserted Parsed JSON1", "JSON.1", {"kind", "path"}, {"kind", "path"}),
+				    #"Removed Columns2" = Table.RemoveColumns(#"Expanded JSON.1",{"JSON"}),
+				    #"Changed Type" = Table.TransformColumnTypes(#"Removed Columns2",{{"GatewayObjectId", type text}, {"RequestId", type text}, {"QueryTrackingId", type text}, {"kind", type text}, {"path", type text}}),
+				    #"Inserted Merged Column" = Table.AddColumn(#"Changed Type", "RequestTrackingKey", each Text.Combine({[RequestId], [QueryTrackingId]}, ""), type text)
+				in
+				    #"Inserted Merged Column"
+
+	annotation PBI_NavigationStepName = Navigation
+
+	annotation PBI_ResultType = Table
+

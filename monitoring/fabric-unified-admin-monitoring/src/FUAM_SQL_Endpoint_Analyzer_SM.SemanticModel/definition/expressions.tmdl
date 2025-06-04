@@ -1,0 +1,15 @@
+expression sqlEndpointUrl = "tda4ha7r35du5fvotnklauu6ui-m4enoksxdyquzjt4ibwzqj4gxq.datawarehouse.fabric.microsoft.com" meta [IsParameterQuery=true, Type="Text", IsParameterQueryRequired=true]
+	lineageTag: 2e2f5534-3d92-4f68-b8f6-26c8bc0f2a99
+
+	annotation PBI_NavigationStepName = Navigation
+
+	annotation PBI_ResultType = Text
+
+/// It can be the name of a Warehouse database or the name of your Lakehouse
+expression sqlEndpointItemName = "FUAM_Lakehouse" meta [IsParameterQuery=true, Type="Text", IsParameterQueryRequired=true]
+	lineageTag: c38b0941-395d-4500-8398-a62e437f2081
+
+	annotation PBI_NavigationStepName = Navigation
+
+	annotation PBI_ResultType = Text
+

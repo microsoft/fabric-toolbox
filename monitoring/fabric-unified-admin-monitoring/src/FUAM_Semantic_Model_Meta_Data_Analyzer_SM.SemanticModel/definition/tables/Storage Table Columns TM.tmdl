@@ -1,0 +1,201 @@
+table 'Storage Table Columns TM'
+	lineageTag: 3b02524f-2502-4827-b38e-3e94747f7e48
+
+	column DATABASE_NAME
+		dataType: string
+		lineageTag: 56576c57-a38a-433d-8134-f980d1d7bf3f
+		summarizeBy: none
+		sourceColumn: DATABASE_NAME
+
+		annotation SummarizationSetBy = Automatic
+
+	column CUBE_NAME
+		dataType: string
+		lineageTag: be412a0d-86cb-4b63-bb02-f4e0f81c104c
+		summarizeBy: none
+		sourceColumn: CUBE_NAME
+
+		annotation SummarizationSetBy = Automatic
+
+	column MEASURE_GROUP_NAME
+		dataType: string
+		lineageTag: a4b7916f-061d-45a4-a487-79313ae81a94
+		summarizeBy: none
+		sourceColumn: MEASURE_GROUP_NAME
+
+		annotation SummarizationSetBy = Automatic
+
+	column DIMENSION_NAME
+		dataType: string
+		lineageTag: 35394ee3-cacc-4634-8953-ee2875a06c6f
+		summarizeBy: none
+		sourceColumn: DIMENSION_NAME
+
+		annotation SummarizationSetBy = Automatic
+
+	column ATTRIBUTE_NAME
+		dataType: string
+		lineageTag: 982d0782-7c0a-4790-878a-d119e943d4a4
+		summarizeBy: none
+		sourceColumn: ATTRIBUTE_NAME
+
+		annotation SummarizationSetBy = Automatic
+
+	column TABLE_ID
+		dataType: string
+		lineageTag: f7c25052-bd04-4d94-b2ad-66c9d70109e0
+		summarizeBy: none
+		sourceColumn: TABLE_ID
+
+		annotation SummarizationSetBy = Automatic
+
+	column COLUMN_ID
+		dataType: string
+		lineageTag: b0855652-1d80-4549-be4f-b138263f8b09
+		summarizeBy: none
+		sourceColumn: COLUMN_ID
+
+		annotation SummarizationSetBy = Automatic
+
+	column COLUMN_TYPE
+		dataType: string
+		lineageTag: a1a9ebdb-2767-4bd5-bef3-f18fde1d638f
+		summarizeBy: none
+		sourceColumn: COLUMN_TYPE
+
+		annotation SummarizationSetBy = Automatic
+
+	column COLUMN_ENCODING
+		dataType: int64
+		formatString: 0
+		lineageTag: e446ca61-6127-43d7-a35e-c26387613d00
+		summarizeBy: none
+		sourceColumn: COLUMN_ENCODING
+
+		annotation SummarizationSetBy = Automatic
+
+	column DATATYPE
+		dataType: string
+		lineageTag: 3aa9dad4-0bf8-4d90-ada0-64969abe9fb5
+		summarizeBy: none
+		sourceColumn: DATATYPE
+
+		annotation SummarizationSetBy = Automatic
+
+	column ISKEY
+		dataType: boolean
+		formatString: """TRUE"";""TRUE"";""FALSE"""
+		lineageTag: 5f86f9c1-ed1a-4ccd-917a-5120ef8ac552
+		summarizeBy: none
+		sourceColumn: ISKEY
+
+		annotation SummarizationSetBy = Automatic
+
+	column ISUNIQUE
+		dataType: boolean
+		formatString: """TRUE"";""TRUE"";""FALSE"""
+		lineageTag: f8bd8cba-e941-432a-81eb-42a3d789859e
+		summarizeBy: none
+		sourceColumn: ISUNIQUE
+
+		annotation SummarizationSetBy = Automatic
+
+	column ISNULLABLE
+		dataType: boolean
+		formatString: """TRUE"";""TRUE"";""FALSE"""
+		lineageTag: adc57693-d985-45d5-b943-eb428a091390
+		summarizeBy: none
+		sourceColumn: ISNULLABLE
+
+		annotation SummarizationSetBy = Automatic
+
+	column ISROWNUMBER
+		dataType: boolean
+		formatString: """TRUE"";""TRUE"";""FALSE"""
+		lineageTag: 8752c601-dd57-4c2a-a454-bd3d0b324e92
+		summarizeBy: none
+		sourceColumn: ISROWNUMBER
+
+		annotation SummarizationSetBy = Automatic
+
+	column DICTIONARY_SIZE
+		dataType: double
+		lineageTag: b5ffb738-3311-483a-bd83-a9a1f16a025d
+		summarizeBy: sum
+		sourceColumn: DICTIONARY_SIZE
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column DICTIONARY_ISPAGEABLE
+		dataType: boolean
+		formatString: """TRUE"";""TRUE"";""FALSE"""
+		lineageTag: 21b513ea-8019-4e87-91cd-b7f2f1a290e0
+		summarizeBy: none
+		sourceColumn: DICTIONARY_ISPAGEABLE
+
+		annotation SummarizationSetBy = Automatic
+
+	column DICTIONARY_ISRESIDENT
+		dataType: boolean
+		formatString: """TRUE"";""TRUE"";""FALSE"""
+		lineageTag: 2de5e0c0-bcc2-415c-8ac1-7eaeabd89191
+		summarizeBy: none
+		sourceColumn: DICTIONARY_ISRESIDENT
+
+		annotation SummarizationSetBy = Automatic
+
+	column DICTIONARY_TEMPERATURE
+		dataType: double
+		lineageTag: 0821533b-90aa-490f-8024-489099fd58ab
+		summarizeBy: sum
+		sourceColumn: DICTIONARY_TEMPERATURE
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column DICTIONARY_LAST_ACCESSED
+		dataType: dateTime
+		formatString: General Date
+		lineageTag: 38337405-18c2-49f1-9cf7-290a2764147d
+		summarizeBy: none
+		sourceColumn: DICTIONARY_LAST_ACCESSED
+
+		annotation SummarizationSetBy = Automatic
+
+	column ExtractedColumnID
+		dataType: double
+		lineageTag: 08db519f-ba9b-44db-8562-2698bc3de079
+		summarizeBy: none
+		sourceColumn: ExtractedColumnID
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column Encoding = RELATED('Column Encoding ENUM'[Encoding])
+		lineageTag: a64dcafc-14f7-4c0e-8f73-a18fec39bf1c
+		summarizeBy: none
+
+		annotation SummarizationSetBy = Automatic
+
+	partition 'Storage Table Columns TM' = m
+		mode: import
+		queryGroup: 'Meta Data'
+		source =
+				let
+				    Source = AnalysisServices.Database(serverURL, modelName, [Query="SELECT * FROM $System.DISCOVER_STORAGE_TABLE_COLUMNS", Implementation="2.0"]),
+				    ExtractColumnId1 = Table.AddColumn(Source, "ExtractColumnId1", each Text.BetweenDelimiters([COLUMN_ID], "(", ")"), type text),
+				    ExtractColumnId2 = Table.AddColumn(ExtractColumnId1, "ExtractColumnId2", each Text.BetweenDelimiters([TABLE_ID], "(", ")", {0, RelativePosition.FromEnd}, 0), type text),
+				    AddColumnId = Table.AddColumn(ExtractColumnId2, "ExtractedColumnID", each if [ExtractColumnId1] <> "" then [ExtractColumnId1] else [ExtractColumnId2]),
+				    #"Removed Columns" = Table.RemoveColumns(AddColumnId,{"ExtractColumnId1", "ExtractColumnId2"}),
+				    #"Changed Type" = Table.TransformColumnTypes(#"Removed Columns",{{"ExtractedColumnID", type number}})
+				in
+				    #"Changed Type"
+
+	annotation PBI_ResultType = Table
+
+	annotation PBI_NavigationStepName = Navigation
+

@@ -1,0 +1,125 @@
+table QueryStartReport_ApplicationContext
+	lineageTag: 1186cb70-bc56-475c-82dc-eba7f034389b
+
+	column GatewayObjectId
+		dataType: string
+		lineageTag: c9471cf0-7644-4dc5-8dfd-c7b760a04c83
+		summarizeBy: none
+		sourceColumn: GatewayObjectId
+
+		annotation SummarizationSetBy = Automatic
+
+	column RequestId
+		dataType: string
+		lineageTag: abc23a65-ab92-4472-8152-e552655e48c4
+		summarizeBy: none
+		sourceColumn: RequestId
+
+		annotation SummarizationSetBy = Automatic
+
+	column QueryTrackingId
+		dataType: string
+		lineageTag: 1b4af34d-5527-4634-95ed-5b3b67f8dbd2
+		summarizeBy: none
+		sourceColumn: QueryTrackingId
+
+		annotation SummarizationSetBy = Automatic
+
+	column serviceName
+		dataType: string
+		lineageTag: fce7be1b-5eee-4626-93cb-562eb7c54e86
+		summarizeBy: none
+		sourceColumn: serviceName
+
+		annotation SummarizationSetBy = Automatic
+
+	column key
+		dataType: string
+		lineageTag: 9e101514-b629-4731-956d-1bfad6da1b83
+		summarizeBy: none
+		sourceColumn: key
+
+		annotation SummarizationSetBy = Automatic
+
+	column SemanticModelId
+		dataType: string
+		lineageTag: 9bf5822a-bbad-46bc-891f-7969750c3377
+		summarizeBy: none
+		sourceColumn: SemanticModelId
+
+		annotation SummarizationSetBy = Automatic
+
+	column ReportId
+		dataType: string
+		lineageTag: 158e1120-b848-4112-9a74-7d36f0a987df
+		summarizeBy: none
+		sourceColumn: ReportId
+
+		annotation SummarizationSetBy = Automatic
+
+	column VisualId
+		dataType: string
+		lineageTag: ac55884a-17c9-44d9-92e9-9a010626b9e4
+		summarizeBy: none
+		sourceColumn: VisualId
+
+		annotation SummarizationSetBy = Automatic
+
+	column ConsumptionMethod
+		dataType: string
+		lineageTag: bf251362-79b9-4148-b830-8585f4b93c4f
+		summarizeBy: none
+		sourceColumn: ConsumptionMethod
+
+		annotation SummarizationSetBy = Automatic
+
+	column UserSession
+		dataType: string
+		lineageTag: 34028232-d628-46d4-b43d-631ec3094e2e
+		summarizeBy: none
+		sourceColumn: UserSession
+
+		annotation SummarizationSetBy = Automatic
+
+	column RequestTrackingKey
+		dataType: string
+		lineageTag: d2dd0d6e-bc0a-47da-8996-efd0c94bc78a
+		summarizeBy: none
+		sourceColumn: RequestTrackingKey
+
+		annotation SummarizationSetBy = Automatic
+
+	partition QueryStartReport_ApplicationContext = m
+		mode: import
+		queryGroup: QueryStartReport
+		source =
+				let
+				    Source = Folder.Files(#"Folder Path"),
+				    #"Filtered Rows" = Table.SelectRows(Source, each Text.Contains([Name], "QueryStartReport") and [Extension] = ".log"),
+				    #"CsvDoc" = Table.AddColumn(#"Filtered Rows", "csvDocColumn", each try Table.PromoteHeaders(Csv.Document([Content]))),
+				    #"Expanded csvDocColumn" = Table.ExpandRecordColumn(CsvDoc, "csvDocColumn", {"HasError", "Value"}, {"csvDocColumn.HasError", "csvDocColumn.Value"}),
+				    #"Filtered Rows1" = Table.SelectRows(#"Expanded csvDocColumn", each [csvDocColumn.HasError] = false),
+				    #"Expanded csvDocColumn.Value" = Table.ExpandTableColumn(#"Filtered Rows1", "csvDocColumn.Value", {"GatewayObjectId", "RequestId", "QueryTrackingId", "EvaluationContext"}, {"GatewayObjectId", "RequestId", "QueryTrackingId", "EvaluationContext"}),
+				    #"Removed Columns" = Table.RemoveColumns(#"Expanded csvDocColumn.Value",{"Content", "Name", "Extension", "Date accessed", "Date modified", "Date created", "Attributes", "Folder Path", "csvDocColumn.HasError"}),
+				    #"Parsed JSON" = Table.TransformColumns(#"Removed Columns",{{"EvaluationContext", Json.Document}}),
+				    #"Expanded EvaluationContext" = Table.ExpandRecordColumn(#"Parsed JSON", "EvaluationContext", {"serviceTraceContexts"}, {"serviceTraceContexts"}),
+				    #"Expanded serviceTraceContexts" = Table.ExpandListColumn(#"Expanded EvaluationContext", "serviceTraceContexts"),
+				    #"Expanded serviceTraceContexts1" = Table.ExpandRecordColumn(#"Expanded serviceTraceContexts", "serviceTraceContexts", {"serviceName", "traceIds"}, {"serviceName", "traceIds"}),
+				    #"Expanded traceIds" = Table.ExpandListColumn(#"Expanded serviceTraceContexts1", "traceIds"),
+				    #"Expanded traceIds1" = Table.ExpandRecordColumn(#"Expanded traceIds", "traceIds", {"key", "value"}, {"key", "value"}),
+				    #"Filtered Rows2" = Table.SelectRows(#"Expanded traceIds1", each ([key] = "ApplicationContext")),
+				    #"Parsed JSON1" = Table.TransformColumns(#"Filtered Rows2",{{"value", Json.Document}}),
+				    #"Expanded value" = Table.ExpandRecordColumn(#"Parsed JSON1", "value", {"DatasetId", "Sources"}, {"DatasetId", "Sources"}),
+				    #"Expanded Sources" = Table.ExpandListColumn(#"Expanded value", "Sources"),
+				    #"Expanded Sources1" = Table.ExpandRecordColumn(#"Expanded Sources", "Sources", {"ReportId", "VisualId", "HostProperties"}, {"ReportId", "VisualId", "HostProperties"}),
+				    #"Expanded HostProperties" = Table.ExpandRecordColumn(#"Expanded Sources1", "HostProperties", {"ConsumptionMethod", "UserSession"}, {"ConsumptionMethod", "UserSession"}),
+				    #"Changed Type" = Table.TransformColumnTypes(#"Expanded HostProperties",{{"GatewayObjectId", type text}, {"RequestId", type text}, {"QueryTrackingId", type text}, {"serviceName", type text}, {"key", type text}, {"DatasetId", type text}, {"ReportId", type text}, {"VisualId", type text}, {"ConsumptionMethod", type text}, {"UserSession", type text}}),
+				    #"Inserted Merged Column" = Table.AddColumn(#"Changed Type", "RequestTrackingKey", each Text.Combine({[RequestId], [QueryTrackingId]}, ""), type text),
+				    #"Renamed Columns" = Table.RenameColumns(#"Inserted Merged Column",{{"DatasetId", "SemanticModelId"}})
+				in
+				    #"Renamed Columns"
+
+	annotation PBI_NavigationStepName = Navigation
+
+	annotation PBI_ResultType = Table
+

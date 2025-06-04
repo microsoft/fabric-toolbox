@@ -1,0 +1,29 @@
+{
+    "version": "2.4.0",
+    "author": {
+        "name": "Microsoft",
+        "email": "pbicvsupport@microsoft.com"
+    },
+    "resources": [
+        {
+            "resourceId": "rId0",
+            "sourceType": 5,
+            "file": "resources/Timeline1447991079100.pbiviz.json"
+        }
+    ],
+    "visual": {
+        "guid": "Timeline1447991079100",
+        "name": "Timeline",
+        "displayName": "Timeline 2.4.0",
+        "version": "2.4.0",
+        "description": "Timeline slicer is a graphical date range selector used as a filtering component in the report canvas",
+        "supportUrl": "https://community.powerbi.com",
+        "gitHubUrl": "https://github.com/Microsoft/powerbi-visuals-timeline",
+        "visualClassName": "Timeline"
+    },
+    "metadata": {
+        "pbivizjson": {
+            "resourceId": "rId0"
+        }
+    }
+}
