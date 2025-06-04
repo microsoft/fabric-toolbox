@@ -43,15 +43,17 @@ namespace GenericMirroring.sources
             string justMetadatapath = string.Format("/{0}.schema/{1}/_metadata.json", fileNameWithoutExtension, tablename, newfilename);
             //helper.DeleteFolders(locforTable);
 
+            Upload upload = new Upload();
+
             if (firstRun == true)
             {
                 helper.CreateFolders(locforTable);
                 helper.CreateJSONMetadata(locforTable, "_id_");
-                Upload.CopyChangesToOnelake(config, string.Format("{0}{1}", locforTable, "_metadata.json"), justMetadatapath);
+                upload.CopyChangesToOnelake(config, string.Format("{0}{1}", locforTable, "_metadata.json"), justMetadatapath);
             }
 
             ParquetDump.WriteDataTableToParquet(table, parquetFilePath);
-            Upload.CopyChangesToOnelake(config, parquetFilePath, justTablepath);
+            upload.CopyChangesToOnelake(config, parquetFilePath, justTablepath);
 
         }
 

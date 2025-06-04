@@ -5,7 +5,7 @@ using GenericMirroring;
 
 namespace SQLMirroring
 {
-    public static  class ParquetDump
+    public static class ParquetDump
     {
         static public void WriteDataTableToParquet(DataTable table, string filePath)
         {
