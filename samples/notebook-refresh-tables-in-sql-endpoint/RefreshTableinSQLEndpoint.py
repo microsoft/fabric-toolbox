@@ -1,3 +1,6 @@
+## Example of calling the MD Sync REST API from a User Data Function.
+## https://learn.microsoft.com/en-us/fabric/data-engineering/user-data-functions/user-data-functions-overview
+
 import fabric.functions as fn
 import logging
 import msal
@@ -28,9 +31,9 @@ def refresh_sql_endpoint(sqlendpoint_id, header, workspaceId)-> str:
     Calls the SQL Endpoint refresh API for the specified SQL Endpoint ID.
     Handles both synchronous and asynchronous responses.
     """
-    refresh_url = f'https://api.powerbi.com/v1/workspaces/{workspaceId}/sqlEndpoints/{sqlendpoint_id}/refreshMetadata'
+    refresh_url = f'https://api.powerbi.com/v1/workspaces/{workspaceId}/sqlEndpoints/{sqlendpoint_id}/refreshMetadata?preview=true'
     logging.info(refresh_url)
-    payload = {"commands": [{"$type": "MetadataRefreshExternalCommand"}]}
+    payload = {}
     response = requests.post(url=refresh_url, headers=header, json=payload)
 
     try:
