@@ -33,10 +33,76 @@ function Get-FabricLongRunningOperation {
         [string]$location,
 
         [Parameter(Mandatory = $false)]
-        [int]$retryAfter = 5
+        [int]$retryAfter = 5,
+
+        [Parameter(Mandatory = $false)]
+        [int]$timeoutInSeconds = 900
     )
 
-    # Step 1: Construct the API URL
+    if (-not ($operationId -or $location)) {
+        throw "Either 'operationId' or 'location' parameter must be provided."
+    }
+
+    # Validate authentication token before proceeding.
+    Write-Message -Message "Validating authentication token..." -Level Debug
+    Test-TokenExpired
+    Write-Message -Message "Authentication token is valid." -Level Debug
+    
+    # Construct the API endpoint URI 
+    $apiEndpointURI = if ($operationId) {
+        "https://api.fabric.microsoft.com/v1/operations/{0}" -f $operationId
+    }
+    else {
+        $location 
+    }
+    Write-Message -Message "API Endpoint: $apiEndpointURI" -Level Debug
+
+    $startTime = Get-Date
+
+    try {
+        do {
+            # Check for timeout
+            if ((Get-Date) - $startTime -gt (New-TimeSpan -Seconds $timeoutInSeconds)) {
+                throw "Operation timed out after $timeoutInSeconds seconds."
+            }
+
+            # Wait before the next request
+            Start-Sleep -Seconds $retryAfter
+
+            # Make the API request
+            $operation = Invoke-FabricAPIRequest `
+                -BaseURI $apiEndpointURI `
+                -Headers $FabricConfig.FabricHeaders `
+                -Method Get
+
+            # Log status for debugging
+            Write-Message -Message "Operation Status: $($operation.status)" -Level Debug
+
+        } while ($operation.status -notin @("Succeeded", "Completed", "Failed"))
+
+        # Return the operation result
+        return $operation
+    }
+    catch {
+        # Capture and log error details
+        $errorDetails = $_.Exception.Message
+        Write-Message -Message "An error occurred while checking the long running operation: $errorDetails" -Level Error
+        throw
+    }
+}
+
+<# function Get-FabricLongRunningOperation { 
+    param (
+        [Parameter(Mandatory = $false)]
+        [string]$operationId,
+       
+        [Parameter(Mandatory = $false)]
+        [string]$location,
+
+        [Parameter(Mandatory = $false)]
+        [int]$retryAfter = 5
+    )
+    # Construct the API URI
     if ($location) {
         # Use the Location header to define the operationUrl
         $apiEndpointUrl = $location
@@ -57,17 +123,14 @@ function Get-FabricLongRunningOperation {
                 Start-Sleep -Seconds 5  # Default retry interval if no Retry-After header
             }
 
-            # Step 3: Make the API request
-            $response = Invoke-RestMethod `
+            # Make the API request
+            $dataItems = Invoke-FabricAPIRequest `
+                -BaseURI $apiEndpointURI `
                 -Headers $FabricConfig.FabricHeaders `
-                -Uri $apiEndpointUrl `
-                -Method Get `
-                -ErrorAction Stop `
-                -ResponseHeadersVariable responseHeader `
-                -StatusCodeVariable statusCode
+                -Method Get
 
             # Step 3: Parse the response
-            $jsonOperation = $response | ConvertTo-Json
+            $jsonOperation = $dataItems | ConvertTo-Json
             $operation = $jsonOperation | ConvertFrom-Json
 
             # Log status for debugging
@@ -86,3 +149,4 @@ function Get-FabricLongRunningOperation {
         throw
     }
 }
+#>

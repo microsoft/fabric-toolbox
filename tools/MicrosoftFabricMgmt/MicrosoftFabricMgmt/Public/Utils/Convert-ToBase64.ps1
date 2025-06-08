@@ -37,22 +37,31 @@ function Convert-ToBase64 {
         [string]$filePath
     )
     try {
-        
-        # Step 1: Reading all the bytes from the file
-        #$bytes = [System.Text.Encoding]::UTF8.GetBytes($InputString)
+        # Validate file existence
+        if (-not (Test-Path -Path $filePath -PathType Leaf)) {
+            throw "File not found at path: $filePath"
+        }
+
+        # Warn if file size exceeds threshold (e.g., 50MB)
+        $fileInfo = Get-Item -Path $filePath
+        if ($fileInfo.Length -gt 50MB) {
+            Write-Message -Message "Warning: File size exceeds 50MB. This may cause memory issues." -Level Warning
+        }
+
+        # Reading all the bytes from the file
         Write-Message -Message "Reading all the bytes from the file specified: $filePath" -Level Debug
         $fileBytes = [System.IO.File]::ReadAllBytes($filePath)
 
-        # Step 2: Convert the byte array to Base64 string
+        # Convert the byte array to Base64 string
         Write-Message -Message "Convert the byte array to Base64 string" -Level Debug
         $base64String = [Convert]::ToBase64String($fileBytes)
 
-        # Step 3: Return the encoded string
+        # Return the encoded string
         Write-Message -Message "Return the encoded string for the file: $filePath" -Level Debug
         return $base64String
     }
     catch {
-        # Step 4: Handle and log errors
+        # Capture and log error details
         $errorDetails = $_.Exception.Message
         Write-Message -Message "An error occurred while encoding to Base64: $errorDetails" -Level Error
         throw "An error occurred while encoding to Base64: $_"

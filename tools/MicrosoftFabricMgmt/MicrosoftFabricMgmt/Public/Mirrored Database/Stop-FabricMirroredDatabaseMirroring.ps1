@@ -1,6 +1,6 @@
 
 
-function Stop-FabricMirroredDatabaseMirroring{
+function Stop-FabricMirroredDatabaseMirroring {
     [CmdletBinding()]
     param (
         [Parameter(Mandatory = $true)]
@@ -11,41 +11,28 @@ function Stop-FabricMirroredDatabaseMirroring{
         [ValidateNotNullOrEmpty()]
         [string]$MirroredDatabaseId
     )
-
     try {
-        # Step 2: Ensure token validity
-        Write-Message -Message "Validating token..." -Level Debug
+        # Validate authentication token before proceeding.
+        Write-Message -Message "Validating authentication token..." -Level Debug
         Test-TokenExpired
-        Write-Message -Message "Token validation completed." -Level Debug
- 
-        $apiEndpointUrl = "{0}/workspaces/{1}/mirroredDatabases/{2}/stopMirroring" -f $FabricConfig.BaseUrl, $WorkspaceId, $MirroredDatabaseId
-        Write-Message -Message "API Endpoint: $apiEndpointUrl" -Level Debug
+        Write-Message -Message "Authentication token is valid." -Level Debug
+
+        # Construct the API endpoint URI 
+        $apiEndpointURI = "{0}/workspaces/{1}/mirroredDatabases/{2}/stopMirroring" -f $FabricConfig.BaseUrl, $WorkspaceId, $MirroredDatabaseId
+        Write-Message -Message "API Endpoint: $apiEndpointURI" -Level Debug
          
-        # Step 6: Make the API request
-        $response = Invoke-RestMethod `
+        # Make the API request
+        $response = Invoke-FabricAPIRequest `
+            -BaseURI $apiEndpointURI `
             -Headers $FabricConfig.FabricHeaders `
-            -Uri $apiEndpointUrl `
-            -Method Post `
-            -ErrorAction Stop `
-            -SkipHttpErrorCheck `
-            -ResponseHeadersVariable "responseHeader" `
-            -StatusCodeVariable "statusCode"
-         
-        # Step 7: Validate the response code
-        if ($statusCode -ne 200) {
-            Write-Message -Message "Unexpected response code: $statusCode from the API." -Level Error
-            Write-Message -Message "Error: $($response.message)" -Level Error
-            Write-Message -Message "Error Details: $($response.moreDetails)" -Level Error
-            Write-Message "Error Code: $($response.errorCode)" -Level Error
-            return $null
-        }
-         
-        # Step 9: Handle results
+            -Method Post 
+
+        # Return the API response
         Write-Message -Message "Database mirroring stopped successfully for MirroredDatabaseId: $MirroredDatabaseId" -Level Info   
-        return
+        return $response
     }
     catch {
-        # Step 10: Capture and log error details
+        # Capture and log error details
         $errorDetails = $_.Exception.Message
         Write-Message -Message "Failed to stop MirroredDatabase. Error: $errorDetails" -Level Error
     } 

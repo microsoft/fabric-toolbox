@@ -23,7 +23,6 @@ Deletes the environment with ID "67890" from workspace "12345".
 Author: Tiago Balabuch  
 
 #>
-
 function Remove-FabricEnvironment {
     [CmdletBinding()]
     param (
@@ -35,39 +34,28 @@ function Remove-FabricEnvironment {
         [ValidateNotNullOrEmpty()]
         [string]$EnvironmentId
     )
-
     try {
-        # Step 1: Ensure token validity
-        Write-Message -Message "Validating token..." -Level Debug
+        # Validate authentication token before proceeding.
+        Write-Message -Message "Validating authentication token..." -Level Debug
         Test-TokenExpired
-        Write-Message -Message "Token validation completed." -Level Debug
+        Write-Message -Message "Authentication token is valid." -Level Debug
+                
+        # Construct the API endpoint URI
+        $apiEndpointURI = "{0}/workspaces/{1}/environments/{2}" -f $FabricConfig.BaseUrl, $WorkspaceId, $EnvironmentId
+        Write-Message -Message "API Endpoint: $apiEndpointURI" -Level Debug
 
-        # Step 2: Construct the API URL
-        $apiEndpointUrl = "{0}/workspaces/{1}/environments/{2}" -f $FabricConfig.BaseUrl, $WorkspaceId, $EnvironmentId
-        Write-Message -Message "API Endpoint: $apiEndpointUrl" -Level Debug
-
-        # Step 3: Make the API request
-        $response = Invoke-RestMethod `
+        # Make the API request
+        $response = Invoke-FabricAPIRequest `
             -Headers $FabricConfig.FabricHeaders `
-            -Uri $apiEndpointUrl `
-            -Method Delete `
-            -ErrorAction Stop `
-            -SkipHttpErrorCheck `
-            -ResponseHeadersVariable "responseHeader" `
-            -StatusCodeVariable "statusCode"
+            -BaseURI $apiEndpointURI `
+            -Method Delete 
 
-        # Step 4: Validate the response code
-        if ($statusCode -ne 200) {
-            Write-Message -Message "Unexpected response code: $statusCode from the API." -Level Error
-            Write-Message -Message "Error: $($response.message)" -Level Error
-            Write-Message "Error Code: $($response.errorCode)" -Level Error
-            return $null
-        }
+        # Return the API response
         Write-Message -Message "Environment '$EnvironmentId' deleted successfully from workspace '$WorkspaceId'." -Level Info
-        
+        return $response
     }
     catch {
-        # Step 5: Log and handle errors
+        # Capture and log error details
         $errorDetails = $_.Exception.Message
         Write-Message -Message "Failed to delete environment '$EnvironmentId' from workspace '$WorkspaceId'. Error: $errorDetails" -Level Error
     }
