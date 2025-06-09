@@ -1,3 +1,37 @@
+<#
+.SYNOPSIS
+    Invokes a Microsoft Fabric API request with support for pagination and long-running operations.
+
+.DESCRIPTION
+    This function handles HTTP requests to Microsoft Fabric APIs, including pagination via continuation tokens and long-running operations (LROs). It supports various HTTP methods and processes responses based on status codes.
+
+.PARAMETER Headers
+    Hashtable containing HTTP headers required for the API request.
+
+.PARAMETER BaseURI
+    The base URI endpoint for the API request.
+
+.PARAMETER Method
+    HTTP method to use for the request. Allowed values: Get, Post, Delete, Put, Patch.
+
+.PARAMETER Body
+    Optional request body for methods that support payloads (Post, Put, Patch).
+
+.PARAMETER ContentType
+    Content type of the request body. Defaults to "application/json; charset=utf-8".
+
+.PARAMETER WaitForCompletion
+    Indicates whether to wait for completion of long-running operations. Defaults to $true.
+
+.PARAMETER HasResults
+    Indicates whether the operation is expected to return results. Defaults to $true.
+
+.EXAMPLE
+    Invoke-FabricAPIRequest -Headers $headers -BaseURI "https://api.fabric.microsoft.com/resource" -Method "Get"
+
+.NOTES
+    Author: Tiago Balabuch
+#>
 function Invoke-FabricAPIRequest {
     param (
         [Parameter(Mandatory = $true)]
@@ -24,15 +58,20 @@ function Invoke-FabricAPIRequest {
         [Parameter(Mandatory = $false)]
         [bool]$HasResults = $true
     )
+
     try {
+        # Initialize continuation token and results collection
         $continuationToken = $null
         $results = New-Object System.Collections.Generic.List[Object]
 
+        # Ensure System.Web assembly is loaded for URL encoding
         if (-not ([System.Web.HttpUtility] -as [type])) {
             Add-Type -AssemblyName System.Web
         }
-    
+
+        # Loop to handle pagination via continuation tokens
         do {
+            # Construct API endpoint URI with continuation token if present
             $apiEndpointURI = $BaseURI
             if ($null -ne $continuationToken) {
                 $encodedToken = [System.Web.HttpUtility]::UrlEncode($continuationToken)
@@ -42,6 +81,7 @@ function Invoke-FabricAPIRequest {
 
             Write-Message -Message "Calling API: $apiEndpointURI" -Level Debug
 
+            # Prepare parameters for Invoke-RestMethod
             $invokeParams = @{
                 Headers                 = $Headers
                 Uri                     = $apiEndpointURI
@@ -52,18 +92,22 @@ function Invoke-FabricAPIRequest {
                 StatusCodeVariable      = 'statusCode'
             }
 
+            # Include body and content type for applicable HTTP methods
             if ($Method -in @('Post', 'Put', 'Patch') -and $Body) {
                 $invokeParams.Body = $Body
                 $invokeParams.ContentType = $ContentType
             }
 
+            # Invoke the API request
             $response = Invoke-RestMethod @invokeParams
             Write-Message -Message "API response code: $statusCode" -Level Debug
 
+            # Handle response based on HTTP status code
             switch ($statusCode) {
                 200 {
                     Write-Message -Message "API call succeeded." -Level Debug 
                     if ($response) {
+                        # Determine response structure and add data to results
                         $propertyNames = $response.PSObject.Properties.Name
                         switch ($true) {
                             { $propertyNames -contains 'value' } { $results.AddRange($response.value); break }
@@ -74,8 +118,7 @@ function Invoke-FabricAPIRequest {
                             { $propertyNames -contains 'data' } { $results.AddRange($response.data); break }
                             default { $results.Add($response) }
                         }
-                        # Write-Message -Message "############# New Code 200 #################" -Level Debug
-                        
+                        # Update continuation token for pagination
                         $continuationToken = $propertyNames -contains 'continuationToken' ? $response.continuationToken : $null
                     }
                     else {
@@ -88,26 +131,27 @@ function Invoke-FabricAPIRequest {
                     return $response
                 }
                 202 {
+                    # Handle long-running operations (LROs)
                     Write-Message -Message "Request accepted. The operation is being processed." -Level Info
                     [string]$operationId = $responseHeader["x-ms-operation-id"]
                     [string]$location = $responseHeader["Location"]
                     $retryAfter = $responseHeader["Retry-After"]
 
+                    # If the response contains an operation ID or Location header, handle as a long-running operation (LRO)
                     if ($operationId -or $location) {
                         Write-Message -Message "Operation ID: '$operationId', Location: '$location'" -Level Debug
 
+                        # If waiting for completion is requested, poll the operation status until completion
                         if ($waitForCompletion) {
                             Write-Message -Message "The operation is running synchronously. Proceeding with long-running operation." -Level Debug
-                            Write-Message -Message "Getting Long Running Operation status" -Level Debug
-                        
                             $operationStatus = Get-FabricLongRunningOperation -operationId $operationId -location $location
                             Write-Message -Message "Long Running Operation status: $operationStatus" -Level Debug
 
+                            # If the operation succeeded and results are expected, fetch the result
                             if ($operationStatus.status -eq "Succeeded" -and $HasResults) {
                                 Write-Message -Message "Operation succeeded. Fetching result." -Level Debug
                                 $operationResult = Get-FabricLongRunningOperationResult -operationId $operationId
-                                Write-Message -Message "Long Running Operation result: $operationResult" -Level Debug                   
-
+                                # Add result data to the results collection, handling 'definition' property if present
                                 if ($operationResult.PSObject.Properties.Name -contains 'definition') {
                                     $results.AddRange($operationResult.definition.parts)
                                 }
@@ -117,61 +161,13 @@ function Invoke-FabricAPIRequest {
                                 return , $results.ToArray()
                             }
 
-
+                            # Throw an error if the operation failed
                             if ($operationStatus.status -eq "Failed") {
-                                $results.Add($operationStatus)
-                                $resultArray = $results.ToArray()
-                                return $resultArray
                                 throw "Fabric long-running operation failed. Status: Failed. Details: $($operationStatus | ConvertTo-Json -Depth 10)"
                             }
-
-                            <# 
-                            if ($operationStatus.status -eq "Failed") {
-                                $results.Add($operationStatus)
-                                $resultArray = $results.ToArray()
-
-                                $exception = [System.Exception]::new("Operation failed with status: $($operationStatus.status).")
-                                $errorRecord = [System.Management.Automation.ErrorRecord]::new(
-                                    $exception,
-                                    "FabricOperationFailed",
-                                    [System.Management.Automation.ErrorCategory]::OperationStopped,
-                                    $resultArray
-                                )
-
-                                $PSCmdlet.WriteError($errorRecord)  # Emit error but continue
-                                return , $resultArray
-                            }
-
-
-                            if ($operationStatus.status -eq "Failed") {
-                                Write-Message -Message "Operation failed. Status: $($operationStatus)" -Level Error
-                                #return $operationStatus
-                                $results.Add($operationStatus)
-                                return , $results.ToArray()
-                                Write-Message -Message "AFTER RETURN" -Level Error
-                                throw "Operation failed with status: $($operationStatus.status)."
-                            }
-
-
-                            if ($operationStatus.status -eq "Failed") {
-                                Write-Message -Message "Operation failed. Status: $($operationStatus)" -Level Error
-                                $results.Add($operationStatus)
-                                Write-Message -Message "object: $($results.error)" -Level Debug
-                                $resultArray = $results.ToArray()
-                                
-                                $exception = [System.Exception]::new("Operation failed with status: $($operationStatus.status).")
-                                $errorRecord = [System.Management.Automation.ErrorRecord]::new(
-                                    $exception,
-                                    "FabricOperationFailed",
-                                    [System.Management.Automation.ErrorCategory]::OperationStopped,
-                                    $resultArray
-                                )
-                                throw $errorRecord
-                            }
-#>
-
                         }
                         else {
+                            # If not waiting for completion, return operation tracking information
                             Write-Message -Message "The operation is running asynchronously." -Level Info
                             return [PSCustomObject]@{
                                 OperationId = $operationId
@@ -180,10 +176,8 @@ function Invoke-FabricAPIRequest {
                             }
                         }
                     }
-                    else {
-                        Write-Message -Message "Operation ID or Location not found. Skipping long-running operation handling." -Level Debug
-                    }
                 }
+                # Handle common HTTP error codes
                 400 { $errorMsg = "Bad Request" }
                 401 { $errorMsg = "Unauthorized" }
                 403 { $errorMsg = "Forbidden" }
@@ -194,11 +188,9 @@ function Invoke-FabricAPIRequest {
                 default { $errorMsg = "Unexpected response code: $statusCode" }
             }
 
+            # Throw error for unsuccessful responses
             if ($statusCode -notin 200, 201, 202) {
-                Write-Message -Message "$errorMsg : $($response.message -join ', ')" -Level Error
-                Write-Message -Message "Error Details: $($response.moreDetails)" -Level Error
-                Write-Message -Message "Error Code: $($response.errorCode)" -Level Error
-                throw "API request failed with status code $statusCode."
+                throw "API request failed with status code $statusCode. Error: $errorMsg"
             }
 
         } while ($null -ne $continuationToken)
@@ -206,196 +198,7 @@ function Invoke-FabricAPIRequest {
         return , $results.ToArray()
     }
     catch {
-        # Capture and log error details
-        $errorDetails = $_.Exception.Message
-        Write-Message -Message "Invoke Fabric API error. Error: $errorDetails" -Level Error
+        Write-Message -Message "Invoke Fabric API error. Error: $($_.Exception.Message)" -Level Error
         throw 
     }
 }
-
-<#
-
-function Invoke-FabricAPIRequest_old {
-    param (
-        [Parameter(Mandatory = $true)]
-        [ValidateNotNullOrEmpty()]
-        [hashtable]$Headers,
-        
-        [Parameter(Mandatory = $true)]
-        [ValidateNotNullOrEmpty()]
-        [string]$BaseURI,
-
-        [Parameter(Mandatory = $true)] 
-        [ValidateSet('Get', 'Post', 'Delete', 'Put', 'Patch')] 
-        [string] $Method,
-        
-        [Parameter(Mandatory = $false)] 
-        [string] $Body,
-
-        [Parameter(Mandatory = $false)] 
-        [string] $ContentType = "application/json; charset=utf-8",
-
-        [Parameter(Mandatory = $false)]
-        [ValidateNotNullOrEmpty()]
-        [bool]$waitForCompletion = $true,
-
-        [Parameter(Mandatory = $false)]
-        [ValidateNotNullOrEmpty()]
-        [bool]$hasResults = $true
-    )
-
-    $continuationToken = $null
-    $results = @()
-
-    if (-not ([AppDomain]::CurrentDomain.GetAssemblies() | Where-Object { $_.GetName().Name -eq "System.Web" })) {
-        Add-Type -AssemblyName System.Web
-    }
-
-    do {
-        $apiEndpointURI = $BaseURI
-        if ($null -ne $continuationToken) {
-            $encodedToken = [System.Web.HttpUtility]::UrlEncode($continuationToken)
-
-            if ($BaseURI -like "*`?*") {
-                # URI already has parameters, append with &
-                $apiEndpointURI = "$BaseURI&continuationToken=$encodedToken"
-            }
-            else {
-                # No existing parameters, append with ?
-                $apiEndpointURI = "$BaseURI?continuationToken=$encodedToken"
-            }
-        }
-        Write-Message -Message "Calling API: $apiEndpointURI" -Level Debug
-
-        $invokeParams = @{
-            Headers                 = $Headers
-            Uri                     = $apiEndpointURI
-            Method                  = $Method
-            ErrorAction             = 'Stop'
-            SkipHttpErrorCheck      = $true
-            ResponseHeadersVariable = 'responseHeader'
-            StatusCodeVariable      = 'statusCode'
-            # TimeoutSec              = $timeoutSec
-        }
-
-        if ($method -in @('Post', 'Put', 'Patch') -and $body) {
-            $invokeParams.Body = $body
-            $invokeParams.ContentType = $contentType
-        }
-
-        $response = Invoke-RestMethod @invokeParams
-        Write-Message -Message "API response code: $statusCode" -Level Debug
-        switch ($statusCode) {
-
-            200 {
-                Write-Message -Message "API call succeeded." -Level Debug 
-                # Step 5: Handle and log the response
-                if ($response) {
-                    if ($response.PSObject.Properties.Name -contains 'value') {
-                        $results += $response.value
-                    }
-                    elseif ($response.PSObject.Properties.Name -contains 'accessEntities') {
-                        $results += $response.accessEntities
-                    } 
-                    elseif ($response.PSObject.Properties.Name -contains 'domains') {
-                        $results += $response.domains
-                    }
-                    elseif ($response.PSObject.Properties.Name -contains 'publishDetails') {
-                        $results += $response.publishDetails
-                    } 
-                    elseif ($response.PSObject.Properties.Name -contains 'definition') {
-                        $results += $response.definition.parts
-                    } 
-                    else {
-                        $results += $response
-                    }
-                    $continuationToken = $response.PSObject.Properties.Match("continuationToken") ? $response.continuationToken : $null
-                }
-                else {
-                    Write-Message -Message "No data in response" -Level Debug
-                    $continuationToken = $null
-                }
-            }
-            201 {
-                Write-Message -Message "Resource created successfully." -Level Debug 
-                return $response
-            }   
-            202 {
-                # Step 6: Handle long-running operations      
-                Write-Message -Message "Request accepted. Provisioning in progress." -Level Info
-                [string]$operationId = $responseHeader["x-ms-operation-id"]
-                [string]$location = $responseHeader["Location"]
-                # Need to implement a retry mechanism for long running operations  
-                # [string]$retryAfter = $responseHeader["Retry-After"] 
-
-                if ($operationId -and $location) {
-                    Write-Message -Message "Operation ID and Location found. Proceeding with long-running operation." -Level Debug
-                    Write-Message -Message "Operation ID: '$operationId', Location: '$location'" -Level Debug
-                    Write-Message -Message "Getting Long Running Operation status" -Level Debug
-                   
-                    if ($waitForCompletion -eq $true) {
-                        $operationStatus = Get-FabricLongRunningOperation -operationId $operationId -location $location
-                        Write-Message -Message "Long Running Operation status: $operationStatus" -Level Debug
-
-                        return $operationStatus
-                    }
-                    else {
-                        Write-Message -Message "The operation is running asynchronously." -Level Info
-                        Write-Message -Message "Use the returned details to check the operation status." -Level Debug
-                        Write-Message -Message "To wait for the operation to complete, set the 'waitForCompletion' parameter to true." -Level Debug  
-                        $operationDetails = [PSCustomObject]@{
-                            OperationId = $operationId
-                            Location    = $location
-                            RetryAfter  = $retryAfter
-                        }
-                        return $operationDetails
-                    }
-                    # Handle operation result
-                    if ($operationStatus.status -eq "Succeeded" -and $hasResults -eq $true) {
-                        Write-Message -Message "Operation succeeded. Fetching result." -Level Debug
-                        
-                        $operationResult = Get-FabricLongRunningOperationResult -operationId $operationId
-                        Write-Message -Message "Long Running Operation result: $operationResult" -Level Debug                   
-
-                        if ($operationResult.PSObject.Properties.Name -contains 'definition') {
-                            $results += $operationResult.definition.parts
-                        }
-                        else {
-                            $results += $operationResult
-                        }
-                        return $results
-                    }
-                    else {
-                        Write-Message -Message "Operation failed. Status: $($operationStatus)" -Level Error
-                        return $operationStatus
-                    }
-                }
-                else {
-                    Write-Message -Message "Operation ID or Location not found. Skipping long-running operation handling." -Level Debug
-                }
-               
-            }
-            400 { $errorMsg = "Bad Request" }
-            401 { $errorMsg = "Unauthorized" }
-            403 { $errorMsg = "Forbidden" }
-            404 { $errorMsg = "Not Found" }
-            409 { $errorMsg = "Conflict" }
-            429 { $errorMsg = "Too Many Requests" }
-            500 { $errorMsg = "Internal Server Error" }
-            default { $errorMsg = "Unexpected response code: $statusCode" }
-        }
-    
-        if ($statusCode -notin 200, 201, 202) {
-            Write-Message -Message "$errorMsg : $($response.message)" -Level Error
-            Write-Message -Message "Error Details: $($response.moreDetails)" -Level Error
-            Write-Message -Message "Error Code: $($response.errorCode)" -Level Error
-            throw "API request failed with status code $statusCode."
-        }
-    } while ($null -ne $continuationToken)
-
-    return $results
-}
-#>
-
-
-
