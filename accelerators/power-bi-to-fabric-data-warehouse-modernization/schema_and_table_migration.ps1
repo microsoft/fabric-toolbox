@@ -75,7 +75,7 @@ GO
 
 # Generate the T-SQL command for schema and table creation from the existing datamart
 try {
-    $createSchema = Invoke-Sqlcmd -ServerInstance $datamartServerAddress -Database $datamartDatabaseName -AccessToken $accessToken -Query $sqlQuery -MaxCharLength 12000
+    $createSchema = Invoke-Sqlcmd -ServerInstance $datamartServerAddress -Database $datamartDatabaseName -AccessToken $accessToken -Query $sqlQuery -MaxCharLength 65535
 } catch {
     Write-Error "Failed to generate schema creation script: $_"
 }
