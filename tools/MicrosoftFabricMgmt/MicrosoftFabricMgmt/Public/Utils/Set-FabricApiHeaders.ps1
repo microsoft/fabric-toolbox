@@ -50,67 +50,73 @@ function Set-FabricApiHeaders {
         [ValidateNotNullOrEmpty()]
         [System.Security.SecureString]$AppSecret
     )
-
     try {
-        # Step 1: Connect to the Azure account
+        # Log the start of the Azure login process
         Write-Message -Message "Logging in to Azure tenant: $TenantId" -Level Info
 
-        # Step 2: Performing validation checks on the parameters passed to a function or script.
-        # Checks if 'AppId' is provided without 'AppSecret' and vice versa.
-        if ($PSBoundParameters.ContainsKey('AppId') -and -not $PSBoundParameters.ContainsKey('AppSecret')) {
-            Write-Message -Message "AppSecret is required when using AppId: $AppId" -Level Error
-            throw "AppSecret is required when using AppId."
-        } 
-        if ($PSBoundParameters.ContainsKey('AppSecret') -and -not $PSBoundParameters.ContainsKey('AppId')) {
-            Write-Message -Message "AppId is required when using AppSecret." -Level Error
-            throw "AppId is required when using AppId."
-        }
-        # Step 3: Connect to the Azure account
-        # Using AppId and AppSecret
+        # Check if AppId and AppSecret are provided for service principal authentication
         if ($PSBoundParameters.ContainsKey('AppId') -and $PSBoundParameters.ContainsKey('AppSecret')) {
-            
+            # Log the use of service principal authentication
             Write-Message -Message "Logging in using the AppId: $AppId" -Level Debug
-            Write-Message -Message "Logging in using the AppId: $AppId" -Level Info
+
+            # Create a credential object using AppId and AppSecret
             $psCredential = [pscredential]::new($AppId, $AppSecret)
-            Connect-AzAccount -ServicePrincipal -Credential $psCredential -Tenant $tenantId
 
-        } 
-        # Using the current user
+            # Connect to Azure using service principal credentials
+            Connect-AzAccount -ServicePrincipal -Credential $psCredential -Tenant $TenantId -ErrorAction Stop | Out-Null
+        }
         else {
-            
+            # Log the use of current user authentication
             Write-Message -Message "Logging in using the current user" -Level Debug
-            Write-Message -Message "Logging in using the current user" -Level Info
-            Connect-AzAccount -Tenant $TenantId -ErrorAction Stop | Out-Null
-       }
 
-       ## Step 4: Retrieve the access token for the Fabric API
-        Write-Message -Message "Retrieve the access token for the Fabric API: $TenantId" -Level Debug
+            # Connect to Azure using the current user's credentials
+            Connect-AzAccount -Tenant $TenantId -ErrorAction Stop | Out-Null
+        }
+
+        # Log the retrieval of the access token for the Fabric API
+        Write-Message -Message "Retrieving the access token for the Fabric API: $TenantId" -Level Debug
+
+        # Retrieve the access token securely for the specified resource URL
         $fabricToken = Get-AzAccessToken -AsSecureString -ResourceUrl $FabricConfig.ResourceUrl -ErrorAction Stop -WarningAction SilentlyContinue
 
-        ## Step 5: Extract the plain token from the secure string
-        Write-Message -Message "Extract the plain token from the secure string" -Level Debug
-        $plainToken = [System.Runtime.InteropServices.Marshal]::PtrToStringAuto(
-            [System.Runtime.InteropServices.Marshal]::SecureStringToBSTR($fabricToken.Token)
-        )
+        # Log the extraction of the plain token from the secure string
+        Write-Message -Message "Extracting the plain token from the secure string" -Level Debug
 
-        ## Step 6: Set the headers in the global configuration
-        Write-Message -Message "Set the headers in the global configuration" -Level Debug
+        # Convert the secure token to a plain text token
+        $plainTokenPtr = [System.Runtime.InteropServices.Marshal]::SecureStringToBSTR($fabricToken.Token)
+        $plainToken = [System.Runtime.InteropServices.Marshal]::PtrToStringAuto($plainTokenPtr)
+
+        # Log the setting of headers in the global configuration
+        Write-Message -Message "Setting headers in the global configuration" -Level Debug
+
+        # Set the required headers for Fabric API requests
         $FabricConfig.FabricHeaders = @{
             'Content-Type'  = 'application/json'
             'Authorization' = "Bearer $plainToken"
         }
 
-        ## Step 7: Update token metadata in the global configuration
-        Write-Message -Message "Update token metadata in the global configuration" -Level Debug
+        # Log the update of token metadata in the global configuration
+        Write-Message -Message "Updating token metadata in the global configuration" -Level Debug
+
+        # Update token expiration and tenant ID metadata
         $FabricConfig.TokenExpiresOn = $fabricToken.ExpiresOn
         $FabricConfig.TenantIdGlobal = $TenantId
 
+        # Log successful configuration of the Fabric token
         Write-Message -Message "Fabric token successfully configured." -Level Info
     }
     catch {
-        # Step 8: Handle and log errors
+        # Capture and log error details if an exception occurs
         $errorDetails = $_.Exception.Message
         Write-Message -Message "Failed to set Fabric token: $errorDetails" -Level Error
+
+        # Throw a descriptive error message
         throw "Unable to configure Fabric token. Ensure tenant and API configurations are correct."
+    }
+    finally {
+        # Ensure secure memory cleanup of the plain token pointer
+        if ($plainTokenPtr) {
+            [System.Runtime.InteropServices.Marshal]::ZeroFreeBSTR($plainTokenPtr)
+        }
     }
 }
