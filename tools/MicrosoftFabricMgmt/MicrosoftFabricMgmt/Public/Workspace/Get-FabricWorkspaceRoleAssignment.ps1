@@ -41,88 +41,42 @@ function Get-FabricWorkspaceRoleAssignment {
     )
 
     try {
-        # Step 1: Ensure token validity
-        Write-Message -Message "Validating token..." -Level Debug
+        # Validate authentication token before proceeding.
+        Write-Message -Message "Validating authentication token..." -Level Debug
         Test-TokenExpired
-        Write-Message -Message "Token validation completed." -Level Debug
+        Write-Message -Message "Authentication token is valid." -Level Debug
     
-        # Step 3: Initialize variables
-        $continuationToken = $null
-        $workspaceRoles = @()
-
-        if (-not ([AppDomain]::CurrentDomain.GetAssemblies() | Where-Object { $_.GetName().Name -eq "System.Web" })) {
-            Add-Type -AssemblyName System.Web
-        }
- 
-        # Step 4: Loop to retrieve all capacities with continuation token
-        Write-Message -Message "Loop started to get continuation token" -Level Debug
-        $baseApiEndpointUrl = "{0}/workspaces/{1}/roleAssignments" -f $FabricConfig.BaseUrl, $WorkspaceId
-       
-        do {
-            # Step 5: Construct the API URL
-            $apiEndpointUrl = $baseApiEndpointUrl
+        # Construct the API endpoint URI
+        $apiEndpointURI = "{0}/workspaces/{1}/roleAssignments" -f $FabricConfig.BaseUrl, $WorkspaceId
+        Write-Message -Message "API Endpoint: $apiEndpointURI" -Level Debug
+             
+        # Make the API request
+        $dataItems = Invoke-FabricAPIRequest `
+            -BaseURI $apiEndpointURI `
+            -Headers $FabricConfig.FabricHeaders `
+            -Method Get
         
-            if ($null -ne $continuationToken) {
-                # URL-encode the continuation token
-                $encodedToken = [System.Web.HttpUtility]::UrlEncode($continuationToken)
-                $apiEndpointUrl = "{0}?continuationToken={1}" -f $apiEndpointUrl, $encodedToken
-            }
-            Write-Message -Message "API Endpoint: $apiEndpointUrl" -Level Debug
-         
-            # Step 6: Make the API request
-            $response = Invoke-RestMethod `
-                -Headers $FabricConfig.FabricHeaders `
-                -Uri $apiEndpointUrl `
-                -Method Get `
-                -ErrorAction Stop `
-                -SkipHttpErrorCheck `
-                -ResponseHeadersVariable "responseHeader" `
-                -StatusCodeVariable "statusCode"
-         
-            # Step 7: Validate the response code
-            if ($statusCode -ne 200) {
-                Write-Message -Message "Unexpected response code: $statusCode from the API." -Level Error
-                Write-Message -Message "Error: $($response.message)" -Level Error
-                Write-Message -Message "Error Details: $($response.moreDetails)" -Level Error
-                Write-Message "Error Code: $($response.errorCode)" -Level Error
-                return $null
-            }
-         
-            # Step 8: Add data to the list
-            if ($null -ne $response) {
-                Write-Message -Message "Adding data to the list" -Level Debug
-                $workspaceRoles += $response.value
-                 
-                # Update the continuation token if present
-                if ($response.PSObject.Properties.Match("continuationToken")) {
-                    Write-Message -Message "Updating the continuation token" -Level Debug
-                    $continuationToken = $response.continuationToken
-                    Write-Message -Message "Continuation token: $continuationToken" -Level Debug
-                }
-                else {
-                    Write-Message -Message "Updating the continuation token to null" -Level Debug
-                    $continuationToken = $null
-                }
-            }
-            else {
-                Write-Message -Message "No data received from the API." -Level Warning
-                break
-            }
-        } while ($null -ne $continuationToken)
-        Write-Message -Message "Loop finished and all data added to the list" -Level Debug
-        # Step 8: Filter results based on provided parameters
-        $roleAssignments = if ($WorkspaceRoleAssignmentId) {
-            $workspaceRoles | Where-Object { $_.Id -eq $WorkspaceRoleAssignmentId }
+        # Immediately handle empty response
+        if (-not $dataItems) {
+            Write-Message -Message "No data returned from the API." -Level Warning
+            return $null
+        }
+
+        # Apply filtering logic efficiently
+        if ($WorkspaceRoleAssignmentId) {
+            $matchedItems = $dataItems.Where({ $_.Id -eq $WorkspaceRoleAssignmentId })
         }
         else {
-            $workspaceRoles
+            Write-Message -Message "No filter provided. Returning all items." -Level Debug
+            $matchedItems = $dataItems
         }
 
-        # Step 9: Handle results
-        if ($roleAssignments) {
-            Write-Message -Message "Found $($roleAssignments.Count) role assignments for WorkspaceId '$WorkspaceId'." -Level Debug
+        # Handle results
+        if ($matchedItems) {
+            Write-Message -Message "Found $($matchedItems.Count) role assignments for WorkspaceId '$WorkspaceId'." -Level Debug
+            
             # Transform data into custom objects
-            $results = foreach ($obj in $roleAssignments) {
+            $customResults = foreach ($obj in $matchedItems) {
                 [PSCustomObject]@{
                     ID                = $obj.id
                     PrincipalId       = $obj.principal.id
@@ -133,20 +87,21 @@ function Get-FabricWorkspaceRoleAssignment {
                     Role              = $obj.role
                 }
             }
-            return $results
+            return $customResults
         }
         else {
             if ($WorkspaceRoleAssignmentId) {
                 Write-Message -Message "No role assignment found with ID '$WorkspaceRoleAssignmentId' for WorkspaceId '$WorkspaceId'." -Level Warning
+                return $null
             }
             else {
                 Write-Message -Message "No role assignments found for WorkspaceId '$WorkspaceId'." -Level Warning
+                return $null
             }
-            return @()
         }
     }
     catch {
-        # Step 10: Capture and log error details
+        # Capture and log error details
         $errorDetails = $_.Exception.Message
         Write-Message -Message "Failed to retrieve role assignments for WorkspaceId '$WorkspaceId'. Error: $errorDetails" -Level Error
     }
