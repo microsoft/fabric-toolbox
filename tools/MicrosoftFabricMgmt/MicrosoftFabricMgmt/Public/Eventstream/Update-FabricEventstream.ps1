@@ -31,7 +31,6 @@ Updates both the name and description of the Eventstream "Eventstream123".
 Author: Tiago Balabuch  
 
 #>
-
 function Update-FabricEventstream {
     [CmdletBinding()]
     param (
@@ -54,14 +53,14 @@ function Update-FabricEventstream {
     )
 
     try {
-        # Step 1: Ensure token validity
-        Write-Message -Message "Validating token..." -Level Debug
+        # Validate authentication token before proceeding.
+        Write-Message -Message "Validating authentication token..." -Level Debug
         Test-TokenExpired
-        Write-Message -Message "Token validation completed." -Level Debug
+        Write-Message -Message "Authentication token is valid." -Level Debug
 
-        # Step 2: Construct the API URL
-        $apiEndpointUrl = "{0}/workspaces/{1}/eventstreams/{2}" -f $FabricConfig.BaseUrl, $WorkspaceId, $EventstreamId
-        Write-Message -Message "API Endpoint: $apiEndpointUrl" -Level Debug
+        # Construct the API endpoint URI
+        $apiEndpointURI = "{0}/workspaces/{1}/eventstreams/{2}" -f $FabricConfig.BaseUrl, $WorkspaceId, $EventstreamId
+        Write-Message -Message "API Endpoint: $apiEndpointURI" -Level Debug
 
         # Step 3: Construct the request body
         $body = @{
@@ -76,31 +75,19 @@ function Update-FabricEventstream {
         $bodyJson = $body | ConvertTo-Json
         Write-Message -Message "Request Body: $bodyJson" -Level Debug
 
-        # Step 4: Make the API request
-        $response = Invoke-RestMethod `
+        # Make the API request
+        $response = Invoke-FabricAPIRequest `
             -Headers $FabricConfig.FabricHeaders `
-            -Uri $apiEndpointUrl `
+            -BaseURI $apiEndpointURI `
             -Method Patch `
-            -Body $bodyJson `
-            -ContentType "application/json" `
-            -ErrorAction Stop `
-            -SkipHttpErrorCheck `
-            -StatusCodeVariable "statusCode"
+            -Body $bodyJson 
 
-        # Step 5: Validate the response code
-        if ($statusCode -ne 200) {
-            Write-Message -Message "Unexpected response code: $statusCode from the API." -Level Error
-            Write-Message -Message "Error: $($response.message)" -Level Error
-            Write-Message "Error Code: $($response.errorCode)" -Level Error
-            return $null
-        }
-
-        # Step 6: Handle results
+        # Return the API response
         Write-Message -Message "Eventstream '$EventstreamName' updated successfully!" -Level Info
         return $response
     }
     catch {
-        # Step 7: Handle and log errors
+        # Capture and log error details
         $errorDetails = $_.Exception.Message
         Write-Message -Message "Failed to update Eventstream. Error: $errorDetails" -Level Error
     }

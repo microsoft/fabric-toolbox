@@ -27,39 +27,28 @@ function Get-FabricLongRunningOperationResult {
         [Parameter(Mandatory = $true)]
         [string]$operationId
     )
-
-    # Step 1: Construct the API URL
-    $apiEndpointUrl = "https://api.fabric.microsoft.com/v1/operations/{0}/result" -f $operationId
-    Write-Message -Message "API Endpoint: $apiEndpointUrl" -Level Debug
+    # Validate authentication token before proceeding.
+    Write-Message -Message "Validating authentication token..." -Level Debug
+    Test-TokenExpired
+    Write-Message -Message "Authentication token is valid." -Level Debug
+        
+    # Construct the API endpoint URI
+    $apiEndpointURI = "https://api.fabric.microsoft.com/v1/operations/{0}/result" -f $operationId
+    Write-Message -Message "API Endpoint: $apiEndpointURI" -Level Debug
 
     try {
-        # Step 2: Make the API request
-        $response = Invoke-RestMethod `
-        -Headers $FabricConfig.FabricHeaders `
-        -Uri $apiEndpointUrl `
-        -Method Get `
-        -ErrorAction Stop `
-        -SkipHttpErrorCheck `
-        -ResponseHeadersVariable "responseHeader" `
-        -StatusCodeVariable "statusCode"
-        
+        # Make the API request
+        $response = Invoke-FabricAPIRequest `
+            -BaseURI $apiEndpointURI `
+            -Headers $FabricConfig.FabricHeaders `
+            -Method Get
 
-        # Step 3: Return the result
-        Write-Message -Message "Result response code: $statusCode" -Level Debug
-        Write-Message -Message "Result return: $response" -Level Debug
-
-        # Step 4: Validate the response code
-        if ($statusCode -ne 200) {
-            Write-Message -Message "Unexpected response code: $statusCode from the API." -Level Debug
-            Write-Message -Message "Error: $($response.message)" -Level Debug
-            Write-Message -Message "Error Details: $($response.moreDetails)" -Level Debug
-            Write-Message "Error Code: $($response.errorCode)" -Level Debug
-        }
-
+        # Return the API response
+        Write-Message -Message "LRO result return: $($response)" -Level Debug
         return $response 
     }
     catch {
-        # Step 3: Capture and log error details
+        # Capture and log error details
         $errorDetails = $_.Exception.Message
         Write-Message -Message "An error occurred while returning the operation result: $errorDetails" -Level Error
         throw
