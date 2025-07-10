@@ -30,7 +30,8 @@
                             },
                             "type": "int"
                         }
-                    }
+                    },
+                    "sessionTag": "fuam"
                 }
             },
             {
@@ -63,7 +64,8 @@
                             "type": "int"
                         }
                     }
-                }
+                },
+                "sessionTag": "fuam"
             }
         ],
         "parameters": {
