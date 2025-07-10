@@ -14,7 +14,7 @@
                 },
                 "typeProperties": {
                     "notebookId": "2a4d82cd-7581-5548-a184-301407eadbc1",
-                    "workspaceId": "eb764c8b-cf3b-55be-adf4-348fe9233657"
+                    "workspaceId": "eb764c8b-cf3b-55be-adf4-348fe9233657",
                     "parameters": {
                         "metric_days_in_scope": {
                             "value": {
