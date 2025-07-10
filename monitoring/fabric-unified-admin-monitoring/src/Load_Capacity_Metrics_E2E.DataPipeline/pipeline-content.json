@@ -44,7 +44,8 @@
                             },
                             "type": "bool"
                         }
-                    }
+                    },
+                    "sessionTag": "fuam"
                 }
             },
             {
@@ -97,7 +98,8 @@
                             },
                             "type": "bool"
                         }
-                    }
+                    },
+                    "sessionTag": "fuam"
                 }
             },
             {
@@ -150,7 +152,8 @@
                             },
                             "type": "bool"
                         }
-                    }
+                    },
+                    "sessionTag": "fuam"
                 }
             }
         ],
