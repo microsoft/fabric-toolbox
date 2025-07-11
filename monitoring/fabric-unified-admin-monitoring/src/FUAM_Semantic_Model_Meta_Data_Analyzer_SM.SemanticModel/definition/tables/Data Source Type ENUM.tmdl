@@ -1,0 +1,40 @@
+table 'Data Source Type ENUM'
+	lineageTag: b2b09d99-3bd6-4100-9f05-09c0176c6443
+
+	column Enum
+		dataType: int64
+		formatString: 0
+		lineageTag: f8c2bcc9-194c-452b-a25c-6d591282d72a
+		summarizeBy: none
+		sourceColumn: Enum
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Data Source Type'
+		dataType: string
+		lineageTag: 816f958a-9e7f-47d0-91b0-e7fd67e8a78f
+		summarizeBy: none
+		sourceColumn: Data Source Type
+
+		annotation SummarizationSetBy = Automatic
+
+	column Description
+		dataType: string
+		lineageTag: 360d1d16-eb8f-4760-8932-395a80a6740f
+		summarizeBy: none
+		sourceColumn: Description
+
+		annotation SummarizationSetBy = Automatic
+
+	partition 'Data Source Type ENUM' = m
+		mode: import
+		source =
+				let
+				    Source = Table.FromRows(Json.Document(Binary.Decompress(Binary.FromText("bY9NbgIxDIWv8pQ1RVD1AohdF20llgOLTOISSxkbEoeW2zczsOzOevL3fobBbd3KfRW9caTSzx2iN4+qrQSCJW9IvsI/5MvzEV4igopQMFZBtcJyXrvTanCv3eVgpQVrheL/lq3S7Pl++Px4GX2liKPQr5FUHjPNMaZBM0wR6ZtlxghZg1/i5vSJQvLCdcJ47/RP4pCWryWMKwr1UnSjuMZep0snR85sd+QuZmzfNhtoQeJz6oOOsiDXxr10H3L6Aw==", BinaryEncoding.Base64), Compression.Deflate)), let _t = ((type nullable text) meta [Serialized.Text = true]) in type table [Enum = _t, Name = _t, Description = _t]),
+				    #"Changed Type" = Table.TransformColumnTypes(Source,{{"Enum", Int64.Type}, {"Name", type text}, {"Description", type text}}),
+				    #"Renamed Columns" = Table.RenameColumns(#"Changed Type",{{"Name", "Data Source Type"}})
+				in
+				    #"Renamed Columns"
+
+	annotation PBI_ResultType = Table
+

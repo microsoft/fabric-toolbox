@@ -1,0 +1,31 @@
+table 'Cardinality ENUM'
+	lineageTag: 19d63426-33b2-4d24-aea0-292b80e37c55
+
+	column Enum
+		dataType: int64
+		formatString: 0
+		lineageTag: bed7c5db-3e59-4764-855b-68dcf8c099c8
+		summarizeBy: sum
+		sourceColumn: Enum
+
+		annotation SummarizationSetBy = Automatic
+
+	column Name
+		dataType: string
+		lineageTag: 36ade14d-9c36-4342-ab7c-2e86efc99cff
+		summarizeBy: none
+		sourceColumn: Name
+
+		annotation SummarizationSetBy = Automatic
+
+	partition 'Cardinality ENUM' = m
+		mode: import
+		source =
+				let
+				    Source = Table.FromRows(Json.Document(Binary.Decompress(Binary.FromText("i45WMlTSUfLPS1WK1YlWMgKyfRPzKpViYwE=", BinaryEncoding.Base64), Compression.Deflate)), let _t = ((type nullable text) meta [Serialized.Text = true]) in type table [Enum = _t, Name = _t]),
+				    #"Changed Type" = Table.TransformColumnTypes(Source,{{"Enum", Int64.Type}, {"Name", type text}})
+				in
+				    #"Changed Type"
+
+	annotation PBI_ResultType = Table
+

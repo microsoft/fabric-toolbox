@@ -1,0 +1,358 @@
+table Metrics
+	lineageTag: c0609344-505c-477a-9dcd-bb540e8cba8b
+
+	measure 'Selected Time Unit Name' = SELECTEDVALUE('Time Units'[UnitShort])
+		displayFolder: Helpers
+		lineageTag: ea7b2edf-f1a7-45a2-bb9b-bfd0db680d42
+
+	measure 'Selected Time Unit Value' = SELECTEDVALUE('Time Units'[UnitValue])
+		formatString: 0
+		displayFolder: Helpers
+		lineageTag: 47e913b3-748c-4d11-823e-0d453707b281
+
+	measure Queries = SUM(QueryExecutionAggregationReport[Count])
+		formatString: #,0
+		displayFolder: Query Execution Aggregation
+		lineageTag: 11a31f44-ef6c-417c-a843-0f1494d5e3c3
+
+	measure 'Max Query Execution Duration' = DIVIDE(MAX(QueryExecutionAggregationReport[MaxQueryExecutionDuration(ms)]), [Selected Time Unit Value])
+		formatString: #,0.00
+		displayFolder: Query Execution Aggregation
+		lineageTag: c6ae2f8a-2708-41ae-b46b-9bb29028623a
+
+	measure 'Max Data Processing Duration' = DIVIDE(MAX(QueryExecutionAggregationReport[MaxDataProcessingDuration(ms)]), [Selected Time Unit Value])
+		formatString: #,0.00
+		displayFolder: Query Execution Aggregation
+		lineageTag: b853d58e-ad6e-46f5-8411-51d34dd9b483
+
+	measure 'Query Execution Duration' = DIVIDE(SUM(QueryExecutionReport[QueryExecutionDuration(ms)]), [Selected Time Unit Value])
+		formatString: #,0.00
+		displayFolder: Query Execution
+		lineageTag: b7a15fa5-08c0-42e6-bf50-c56eb442dec4
+
+	measure 'Data Processing Duration' = DIVIDE(SUM(QueryExecutionReport[DataProcessingDuration(ms)]), [Selected Time Unit Value])
+		formatString: #,0.00
+		displayFolder: Query Execution
+		lineageTag: 43030907-982a-4148-8cb5-71fdd05162ac
+
+	measure 'Query Trackings' = DISTINCTCOUNT(QueryExecutionReport[QueryTrackingId])
+		formatString: #,0
+		displayFolder: Query Execution
+		lineageTag: df1cad08-c393-4543-b80e-cbff0ceeaf05
+
+	measure Requests = DISTINCTCOUNT(QueryExecutionReport[RequestId])
+		formatString: #,0
+		displayFolder: Query Execution
+		lineageTag: e175a04a-4366-49ca-a649-c29e982ab14e
+
+	measure 'Data Reading and Serialization Duration' = DIVIDE(SUM(QueryExecutionReport[DataReadingAndSerializationDuration(ms)]), [Selected Time Unit Value])
+		formatString: #,0.00
+		displayFolder: Query Execution
+		lineageTag: 5b4645c4-a354-4739-b2b5-94fa0b822984
+
+	measure 'Spooling Total Data Size' = DIVIDE(SUM(QueryExecutionReport[SpoolingTotalDataSize(byte)]), [Selected Size Unit Value])
+		displayFolder: Query Execution
+		lineageTag: 6dd11d03-d79c-4841-8b38-9a56b0bbbf7e
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'Selected Size Unit Value' = SELECTEDVALUE('Size Units'[UnitValue])
+		formatString: 0
+		displayFolder: Helpers
+		lineageTag: 1925f706-3aa7-45ae-892d-9192f51485f0
+
+	measure 'Selected Size Unit Name' = SELECTEDVALUE('Size Units'[UnitShort])
+		displayFolder: Helpers
+		lineageTag: 86ce20c1-3591-4e14-a7dc-df91e13cf5b1
+
+	measure 'Avg. System CPU Percent' =
+			
+			DIVIDE(
+			CALCULATE(
+			    AVERAGE(SystemCounterAggregationReport[Average]),
+			    SystemCounterAggregationReport[CounterName] = "SystemCPUPercent"
+			), 100)
+		formatString: 0.00%;-0.00%;0.00%
+		displayFolder: System Counters
+		lineageTag: 6f30bb9d-2910-46d0-a831-9d369cd68595
+
+	measure 'Avg. Gateway CPU Percent' =
+			
+			DIVIDE(
+			    DIVIDE(
+			        CALCULATE(
+			            AVERAGE(SystemCounterAggregationReport[Average]),
+			            SystemCounterAggregationReport[CounterName] = "GatewayCPUPercent"
+			        ),
+			        100),
+			        'CPU Cores Helper'[CPU Cores Helper Value]
+			)
+		formatString: 0.00%;-0.00%;0.00%
+		displayFolder: System Counters
+		lineageTag: d950a31e-2338-45c4-9be3-7446a740c705
+
+	measure 'Avg. Mashup Memory' =
+			
+			DIVIDE(
+			CALCULATE(
+			    AVERAGE(SystemCounterAggregationReport[Average]),
+			    SystemCounterAggregationReport[CounterName] = "MashupMEMKB"
+			), [Selected Size Unit Value (from KB)])
+		formatString: #,0.00
+		displayFolder: System Counters
+		lineageTag: f320c347-dc99-4525-ad53-b334fd19ac6c
+
+	measure 'Avg. Used System Memory' =
+			
+			DIVIDE(
+			CALCULATE(
+			    AVERAGE(SystemCounterAggregationReport[Average]),
+			    SystemCounterAggregationReport[CounterName] = "SystemMEMUsedPercent"
+			), 100)
+		formatString: 0.00%;-0.00%;0.00%
+		displayFolder: System Counters
+		lineageTag: c6765385-5bb0-40df-bc31-b60cd8242ea1
+
+	measure 'Avg. Gateway Memory' =
+			
+			DIVIDE(
+			CALCULATE(
+			    AVERAGE(SystemCounterAggregationReport[Average]),
+			    SystemCounterAggregationReport[CounterName] = "GatewayMEMKb"
+			), [Selected Size Unit Value (from KB)])
+		formatString: #,0.00
+		displayFolder: System Counters
+		lineageTag: e5ed5ced-7a32-495b-b864-131aee4c0faa
+
+	measure 'Avg. Mashup CPU Percent' =
+			
+			DIVIDE(
+			    DIVIDE(
+			        CALCULATE(
+			            AVERAGE(SystemCounterAggregationReport[Average]),
+			            SystemCounterAggregationReport[CounterName] = "MashupCPUPercent"
+			        ),
+			        100),
+			        'CPU Cores Helper'[CPU Cores Helper Value]
+			)
+		formatString: #,0.00%;-#,0.00%;#,0.00%
+		displayFolder: System Counters
+		lineageTag: b1843dd8-fa6d-4e0c-ad5d-f874a339d0a2
+
+	measure 'Selected Size Unit Value (from KB)' = SELECTEDVALUE('Size Units'[UnitValueFromKB])
+		displayFolder: Helpers
+		lineageTag: 70bb88d7-fc35-42d4-9c45-b6aa256fd791
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'Avg. Gateway Active Async IO Thread Count' =
+			
+			CALCULATE(
+			    AVERAGE(SystemCounterAggregationReport[Average]),
+			    SystemCounterAggregationReport[CounterName] = "GatewayActiveAsyncIOThreadCount"
+			)
+		displayFolder: System Counters
+		lineageTag: 4195c636-49a5-4ef5-8627-8b9ec309a413
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'Avg. Gateway Active Worker Thread Count' =
+			
+			CALCULATE(
+			    AVERAGE(SystemCounterAggregationReport[Average]),
+			    SystemCounterAggregationReport[CounterName] = "GatewayActiveWorkerThreadCount"
+			)
+		displayFolder: System Counters
+		lineageTag: 9a29c330-751e-4761-beee-dd5819996091
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'Last Timestamp' = MAX(QueryExecutionAggregationReport[AggregationEndTimeUTC])
+		formatString: General Date
+		displayFolder: Helpers
+		lineageTag: fa4ba8b6-a58f-483e-a29a-dd1f3815c196
+
+	measure 'Request Success Ratio' = ```
+			
+			VAR _successCount = 
+			CALCULATE(
+			    [Requests],
+			    QueryExecutionReport[Success] = "Y"
+			)
+			
+			RETURN
+			DIVIDE(_successCount, [Requests])
+			
+			```
+		formatString: 0.00%;-0.00%;0.00%
+		displayFolder: Query Execution
+		lineageTag: 82bbdf62-6903-42a5-8ac8-51c9e2e68b64
+
+	measure 'Spooling Disk Reading Duration' = DIVIDE(SUM(QueryExecutionReport[SpoolingDiskReadingDuration(ms)]), [Selected Time Unit Value])
+		displayFolder: Query Execution
+		lineageTag: fb1aaace-0f92-4b4a-b3ea-9535a4105175
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'Spooling Disk Writing Duration' = DIVIDE(SUM(QueryExecutionReport[SpoolingDiskWritingDuration(ms)]), [Selected Time Unit Value])
+		displayFolder: Query Execution
+		lineageTag: 6dd1e2a2-766f-4be1-ae80-16d853bd8abd
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'Query Trackings QSR' = DISTINCTCOUNT(QueryStartReport[QueryTrackingId])
+		formatString: #,0
+		displayFolder: Query Starts
+		lineageTag: 93ffbf1e-1361-4fad-bdc1-0bb998342fe4
+
+	measure 'Requests QSR' = DISTINCTCOUNT(QueryStartReport[RequestId])
+		formatString: #,0
+		displayFolder: Query Starts
+		lineageTag: 2732122d-8954-4504-b617-a61736927449
+
+	measure 'Evaluation Contexts QSR' = COUNT(QueryStartReport_EvaluationContext[RequestId])
+		formatString: 0
+		displayFolder: Query Starts
+		lineageTag: fd7f75f6-e367-4642-a82d-ac05f7f1cbc9
+
+	measure 'Average Commit Size ME' =
+			
+			CALCULATE(
+			    DIVIDE(AVERAGE(MashupEvaluationReport[AverageCommit(byte)]), [Selected Size Unit Value]),
+			    USERELATIONSHIP(MashupEvaluationReport[EndDate], 'Dim Date'[Date])
+			)
+		displayFolder: Mashup Evaluation
+		lineageTag: 5fcd1c92-88ee-4b67-a1e4-4991f56604db
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'Average Working Set Size ME' =
+			
+			CALCULATE(
+			    DIVIDE(AVERAGE(MashupEvaluationReport[AverageWorkingSet(byte)]), [Selected Size Unit Value]),
+			    USERELATIONSHIP(MashupEvaluationReport[EndDate], 'Dim Date'[Date])
+			)
+		displayFolder: Mashup Evaluation
+		lineageTag: f480b926-6088-4c24-a25f-17294ee790f9
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'Max Working Set Size ME' =
+			
+			CALCULATE(
+			    DIVIDE(AVERAGE(MashupEvaluationReport[MaxWorkingSet(byte)]), [Selected Size Unit Value]),
+			    USERELATIONSHIP(MashupEvaluationReport[EndDate], 'Dim Date'[Date])
+			)
+		displayFolder: Mashup Evaluation
+		lineageTag: 0d8c5cd6-4ded-4e54-ad1e-1cb0a79614aa
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'Max Commit Size ME' =
+			
+			CALCULATE(
+			    DIVIDE(MAX(MashupEvaluationReport[MaxCommit(byte)]), [Selected Size Unit Value]),
+			    USERELATIONSHIP(MashupEvaluationReport[EndDate], 'Dim Date'[Date])
+			)
+		displayFolder: Mashup Evaluation
+		lineageTag: 74b92d8c-e357-425d-b2af-a3eb46acf429
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'Total Processor Time ME' =
+			
+			CALCULATE(
+			    DIVIDE(SUM(MashupEvaluationReport[TotalProcessorTime(ms)]), [Selected Time Unit Value]),
+			    USERELATIONSHIP(MashupEvaluationReport[EndDate], 'Dim Date'[Date])
+			)
+		displayFolder: Mashup Evaluation
+		lineageTag: 7a78c34e-0c6b-4fd1-9968-b5008d900c16
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'Average Percent Processor Time ME' =
+			
+			CALCULATE(
+			    DIVIDE(AVERAGE(MashupEvaluationReport[AveragePercentProcessorTime]),100),
+			    USERELATIONSHIP(MashupEvaluationReport[EndDate], 'Dim Date'[Date])
+			)
+		formatString: 0.00%;-0.00%;0.00%
+		displayFolder: Mashup Evaluation
+		lineageTag: 3e493a7d-4dbf-4197-ad4d-f21d18a9edac
+
+	measure 'Max Percent Processor Time ME' =
+			
+			CALCULATE(
+			    DIVIDE(MAX(MashupEvaluationReport[MaxPercentProcessorTime]),100),
+			    USERELATIONSHIP(MashupEvaluationReport[EndDate], 'Dim Date'[Date])
+			)
+		formatString: 0.00%;-0.00%;0.00%
+		displayFolder: Mashup Evaluation
+		lineageTag: 0b24e433-7441-49d0-86dc-987758546ecd
+
+	measure 'Total Rows ME' = ```
+			
+			CALCULATE(
+			    SUM(MashupEvaluationReport[TotalRowsNum]), 
+			    USERELATIONSHIP(MashupEvaluationReport[EndDate], 'Dim Date'[Date])
+			)
+			```
+		formatString: #,0
+		displayFolder: Mashup Evaluation
+		lineageTag: 968369f6-248d-4237-be46-e8a51c0bc33b
+
+	measure 'Requests ME' =
+			
+			CALCULATE(
+			    DISTINCTCOUNT(QueryExecutionReport[RequestId]),
+			    USERELATIONSHIP(MashupEvaluationReport[EndDate], 'Dim Date'[Date])
+			)
+		formatString: #,0
+		displayFolder: Mashup Evaluation
+		lineageTag: 285e6ad2-c2b3-42ba-93a6-9658cb805bd1
+
+	measure 'Query Trackings ME' =
+			
+			CALCULATE(
+			    DISTINCTCOUNT(MashupEvaluationReport[QueryTrackingId]),
+			    USERELATIONSHIP(MashupEvaluationReport[EndDate], 'Dim Date'[Date])
+			)
+		formatString: #,0
+		displayFolder: Mashup Evaluation
+		lineageTag: 7dc52bcd-7db0-4ede-970a-acf7888502f0
+
+	measure 'Refresh WorkspaceId QSR' = ```
+			
+			 CALCULATE(
+			    MAX(QueryStartReport_EvaluationContext[value]),
+			    QueryStartReport_ApplicationContext[key] = "WorkspaceId"
+			 )
+			```
+		displayFolder: Query Starts
+		lineageTag: 9d10b6e7-557b-4758-bd03-92fab8b4a765
+
+	measure 'Refresh SemanticModelId QSR' = ```
+			
+			 CALCULATE(
+			    MIN(QueryStartReport_EvaluationContext[value]),
+			    QueryStartReport_ApplicationContext[key] = "DatasetId"
+			 )
+			```
+		displayFolder: Query Starts
+		lineageTag: 82d1baa9-c6b8-4d2e-9bf6-2a269f72fb30
+
+	column Value
+		isHidden
+		lineageTag: d06fbd8a-211b-4f96-9bd7-a899260609e6
+		summarizeBy: none
+		isNameInferred
+		sourceColumn: [Value]
+
+		annotation SummarizationSetBy = Automatic
+
+	partition Metrics = calculated
+		mode: import
+		source = {"Metrics"}
+
+	annotation PBI_Id = 6df4121b41d741fe84d975f406ece9f1
+

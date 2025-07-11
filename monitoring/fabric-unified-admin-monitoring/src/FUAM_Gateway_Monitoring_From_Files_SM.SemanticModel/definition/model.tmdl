@@ -1,0 +1,54 @@
+model Model
+	culture: en-US
+	defaultPowerBIDataSourceVersion: powerBI_V3
+	sourceQueryCulture: de-DE
+	dataAccessOptions
+		legacyRedirects
+		returnErrorValuesAsNull
+
+queryGroup Helpers
+
+	annotation PBI_QueryGroupOrder = 0
+
+queryGroup Parameters
+
+	annotation PBI_QueryGroupOrder = 1
+
+queryGroup QueryStartReport
+
+	annotation PBI_QueryGroupOrder = 2
+
+queryGroup MashupEvaluationReport
+
+	annotation PBI_QueryGroupOrder = 3
+
+annotation __PBI_TimeIntelligenceEnabled = 0
+
+annotation PBIDesktopVersion = 2.137.751.0 (24.10)
+
+annotation PBI_QueryOrder = ["Folder Path","SystemCounterAggregationReport","QueryExecutionReport","QueryExecutionAggregationReport","Size Units","Time Units","DataError","OpenConnectionReport","MashupEvaluationReport","ConcurrentOperationAggregationReport","QueryStartReport","QueryStartReport_DataSources","QueryStartReport_QueryTexts","QueryStartReport_EvaluationContext","QueryStartReport_ApplicationContext","QueryStartReport_EvaluationContext_Service_Mapping","QueryStartReport_EvaluationContext_HostConnectionTypes"]
+
+annotation PBI_ProTooling = ["DaxQueryView_Desktop"]
+
+ref table SystemCounterAggregationReport
+ref table QueryExecutionReport
+ref table QueryExecutionAggregationReport
+ref table DataError
+ref table 'Dim Date'
+ref table Metrics
+ref table 'Size Units'
+ref table 'Time Units'
+ref table 'CPU Cores Helper'
+ref table OpenConnectionReport
+ref table MashupEvaluationReport
+ref table ConcurrentOperationAggregationReport
+ref table QueryStartReport
+ref table QueryStartReport_DataSources
+ref table QueryStartReport_QueryTexts
+ref table QueryStartReport_EvaluationContext
+ref table QueryStartReport_ApplicationContext
+ref table QueryStartReport_EvaluationContext_Service_Mapping
+ref table QueryStartReport_EvaluationContext_HostConnectionTypes
+
+ref cultureInfo en-US
+

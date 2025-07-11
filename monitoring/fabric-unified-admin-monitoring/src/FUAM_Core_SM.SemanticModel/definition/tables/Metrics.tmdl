@@ -1,0 +1,2204 @@
+table Metrics
+	lineageTag: c805f12b-a3b3-4116-887a-1791384c44f8
+
+	measure '# Active Artifacts' = ```
+			
+			    CALCULATE(
+			        COUNT(active_items[id]),
+			        active_items[fuam_deleted] = FALSE()
+			    )
+			```
+		formatString: #,0
+		displayFolder: Items\General
+		lineageTag: 8b8096ed-6aa4-4d83-87f0-27438b589c1d
+
+		changedProperty = Name
+
+		changedProperty = FormatString
+
+	measure '# Activities' = COUNTROWS(activities)
+		formatString: #,0
+		displayFolder: Activities\General
+		lineageTag: 3955e3b0-a2c0-4036-97c4-dbdf64c636cd
+
+		changedProperty = Name
+
+		changedProperty = FormatString
+
+	measure '# Activities 30d (Aggregated)' = SUM(aggregated_activities_last_30days[CountOfActivities])
+		formatString: #,0
+		displayFolder: Activities\General
+		lineageTag: 4e0fa99b-143a-4ce7-8748-e4e0dcb33a98
+
+		changedProperty = Name
+
+		changedProperty = FormatString
+
+	measure '# Capacities' =
+			
+			CALCULATE(
+			    COUNT(capacities[CapacityId]),
+			    capacities[fuam_deleted] = FALSE()
+			    )
+		formatString: #,0
+		displayFolder: Capacities
+		lineageTag: 0436f135-213e-443f-8a0c-bd6f11cc960e
+
+		changedProperty = Name
+
+		changedProperty = FormatString
+
+	measure '# Dashboards (Inventory)' = COUNTROWS(dashboards)
+		formatString: #,0
+		displayFolder: Inventory
+		lineageTag: 9c96c2c3-7bca-4f82-87a2-4c6e2dfef41c
+
+		changedProperty = Name
+
+		changedProperty = FormatString
+
+	measure '# Dataflows (Inventory)' = COUNTROWS(dataflows)
+		formatString: #,0
+		displayFolder: Inventory
+		lineageTag: 8ddb0541-58de-47bc-b713-a7e947faa1f6
+
+		changedProperty = Name
+
+		changedProperty = FormatString
+
+	measure '# Datasource Instances' = COUNTROWS(datasource_instances)
+		formatString: #,0
+		displayFolder: Gateways
+		lineageTag: 10ac93f8-3870-4d5c-91a1-d4934623d6c8
+
+		changedProperty = Name
+
+		changedProperty = FormatString
+
+	measure '# Reports (Inventory)' = COUNTROWS(reports)
+		formatString: #,0
+		displayFolder: Inventory
+		lineageTag: aa1caa2a-ad1a-4817-a2ed-fa1532c64fd4
+
+		changedProperty = Name
+
+		changedProperty = FormatString
+
+	measure '# Semantic Models (Inventory)' = COUNTROWS(semantic_models)
+		formatString: #,0
+		displayFolder: Inventory
+		lineageTag: 4b54b412-4280-4d9b-b747-9ca35691cde5
+
+		changedProperty = Name
+
+		changedProperty = FormatString
+
+	measure '# Workspaces' =
+			
+			CALCULATE(
+			    COUNT(workspaces[WorkspaceId]),
+			    workspaces[fuam_deleted] = FALSE()
+			)
+		formatString: #,0
+		displayFolder: Workspaces
+		lineageTag: d041c706-c091-4d13-9148-57f45994285c
+
+		changedProperty = Name
+
+		changedProperty = FormatString
+
+	measure '# Workspace Accesses' = DISTINCTCOUNT(workspaces_scanned_users[GraphId])
+		formatString: #,0
+		displayFolder: Workspaces
+		lineageTag: e8bca7f6-5521-4314-92c8-740af327b9d1
+
+		changedProperty = Name
+
+		changedProperty = FormatString
+
+	measure 'Add %' = SUM(capacity_metrics_by_timepoint[CarryOverAddedPercentage])
+		formatString: 0.00%;-0.00%;0.00%
+		displayFolder: Capacity TimePoint Metrics\Overage
+		lineageTag: a310b379-5a3d-4b02-a877-35ef457cb2be
+
+	measure 'Burndown %' = SUM(capacity_metrics_by_timepoint[CarryOverBurndownPercentage])
+		formatString: 0.00%;-0.00%;0.00%
+		displayFolder: Capacity TimePoint Metrics\Overage
+		lineageTag: b0d8f085-bca8-4b41-89ce-638878696d69
+
+	measure 'Cumulative %' = SUM(capacity_metrics_by_timepoint[CarryOverCumulativePercentage])
+		formatString: 0.00%;-0.00%;0.00%
+		displayFolder: Capacity TimePoint Metrics\Overage
+		lineageTag: 5b88f9b8-5177-4ba7-9f85-258a2a8935c4
+
+	measure 'Expected minutes to burndown' = SUM(capacity_metrics_by_timepoint[ExpectedBurndownInMin])
+		formatString: 0.00
+		displayFolder: Capacity TimePoint Metrics\Overage
+		lineageTag: c3e7b815-6e29-49e7-a3d9-96ef80777143
+
+	measure 'Overage reference line' = SUM(capacity_metrics_by_timepoint[OverageReferenceLine])
+		formatString: 0
+		displayFolder: Capacity TimePoint Metrics\Overage
+		lineageTag: 66e790b8-8041-4f20-ba82-7b1f41dc635c
+
+		annotation PBI_FormatHint = {"isDecimal":true}
+
+	measure 'Background rejection %' = SUM(capacity_metrics_by_timepoint[BackgroundRejectionPercentage])
+		formatString: 0.00%;-0.00%;0.00%
+		displayFolder: Capacity TimePoint Metrics\Rejection
+		lineageTag: 7e49eb73-147a-44c9-82f9-c49b1430f036
+
+	measure 'Background rejection threshold' = SUM(capacity_metrics_by_timepoint[BackgroundRejectionThreshold])
+		formatString: 0
+		displayFolder: Capacity TimePoint Metrics\Rejection
+		lineageTag: a803e845-0624-464b-a601-76d5daeab885
+
+	measure 'Interactive rejection %' = SUM(capacity_metrics_by_timepoint[InteractiveRejectionPercentage])
+		formatString: 0.00%;-0.00%;0.00%
+		displayFolder: Capacity TimePoint Metrics\Rejection
+		lineageTag: f9bd169e-5bc3-42c6-9f88-72bc831adc2a
+
+	measure 'Interactive rejection threshold' = SUM(capacity_metrics_by_timepoint[InteractiveRejectionThreshold])
+		formatString: 0
+		displayFolder: Capacity TimePoint Metrics\Rejection
+		lineageTag: f5ce0406-40e4-4769-984b-71d68229902f
+
+	measure 'Autoscale %' = SUM(capacity_metrics_by_timepoint[AutoscalePercentage])
+		formatString: 0.00%;-0.00%;0.00%
+		displayFolder: Capacity TimePoint Metrics\Utilization
+		lineageTag: 5fbaa1b2-8cf7-4c77-b56d-c2819e00e3c6
+
+	measure 'Background %' = SUM(capacity_metrics_by_timepoint[BackgroundPercentage])
+		formatString: 0.00%;-0.00%;0.00%
+		displayFolder: Capacity TimePoint Metrics\Utilization
+		lineageTag: e0e0820a-a5f0-40f3-a711-a91d10233a2d
+
+	measure 'Background non-billable %' = SUM(capacity_metrics_by_timepoint[BackgroundNonBillablePercentage])
+		formatString: 0.00%;-0.00%;0.00%
+		displayFolder: Capacity TimePoint Metrics\Utilization
+		lineageTag: fb0d2117-1962-4ac3-ac4a-1044b9e5dcd0
+
+	measure 'CU % Limit' = SUM(capacity_metrics_by_timepoint[CULimitPercentage])
+		formatString: 0%;-0%;0%
+		displayFolder: Capacity TimePoint Metrics\Utilization
+		lineageTag: b6dfbe43-3c7f-42a6-820a-a8a1d2c42dfb
+
+	measure 'Interactive %' = SUM(capacity_metrics_by_timepoint[InteractivePercentage])
+		formatString: 0.00%;-0.00%;0.00%
+		displayFolder: Capacity TimePoint Metrics\Utilization
+		lineageTag: bc7c0953-6eb6-46b1-b13c-09bc97169cb9
+
+	measure 'Interactive non-billable %' = SUM(capacity_metrics_by_timepoint[InteractiveNonBillablePercentage])
+		formatString: 0.00%;-0.00%;0.00%
+		displayFolder: Capacity TimePoint Metrics\Utilization
+		lineageTag: 148204d2-0972-4819-a58c-9a7fa003e3fa
+
+	measure 'SKU in CU(s)' = SUM(capacity_metrics_by_timepoint[SKUCUByTimePoint])
+		formatString: #,0.00
+		displayFolder: Capacity TimePoint Metrics\Utilization
+		lineageTag: 13e4c1a5-1f11-42b1-961a-b5686f8b0e08
+
+	measure 'Total CU Usage %' = SUM(capacity_metrics_by_timepoint[TotalCUUsagePercentage])
+		formatString: 0.00%;-0.00%;0.00%
+		displayFolder: Capacity TimePoint Metrics\Utilization
+		lineageTag: 1ff85bd6-58e0-4117-a088-a76cf409068b
+
+	measure 'Total CU(s)' = SUM(capacity_metrics_by_timepoint[TotalCUs])
+		formatString: #,0.00
+		displayFolder: Capacity TimePoint Metrics\Utilization
+		lineageTag: 6f592326-0443-457f-895b-69939bba7802
+
+	measure 'Interactive Delay %' = SUM(capacity_metrics_by_timepoint[InteractiveDelayPercentage])
+		formatString: 0.00%;-0.00%;0.00%
+		displayFolder: Capacity TimePoint Metrics\Delay
+		lineageTag: a7d9e369-8d83-461e-9829-5cbebb0dd116
+
+	measure 'Operations KD' = SUM(capacity_metrics_by_item_kind_by_day[OperationCount])
+		formatString: #,0
+		displayFolder: Capacity KD Metrics\General
+		lineageTag: 714c39cd-9db2-412f-ba5f-356d1fa482fa
+
+	measure 'Total CUs KD' = SUM(capacity_metrics_by_item_kind_by_day[TotalCUs])
+		formatString: #,0.00
+		displayFolder: Capacity KD Metrics\General
+		lineageTag: b2ff1f75-0712-42ae-b7ef-bb1194795d83
+
+	measure 'Total Duration (s) KD' = SUM(capacity_metrics_by_item_kind_by_day[DurationInSec])
+		formatString: #,0.00
+		displayFolder: Capacity KD Metrics\General
+		lineageTag: 3700d10d-6b1c-445b-b2d8-987217a76737
+
+	measure 'Users KD' = SUM(capacity_metrics_by_item_kind_by_day[UserCount])
+		formatString: #,0
+		displayFolder: Capacity KD Metrics\General
+		lineageTag: 78c93f10-1e28-46f1-9984-40fb153df6f9
+
+	measure 'Cancelled Ops IOD' = SUM(capacity_metrics_by_item_by_operation_by_day[CancelledOperationCount])
+		formatString: #,0
+		displayFolder: Capacity IOD Metrics\General
+		lineageTag: 56f74350-a4b0-4162-9db4-766b459740b1
+
+	measure 'Failure Ops IOD' = SUM(capacity_metrics_by_item_by_operation_by_day[FailureOperationCount])
+		formatString: #,0
+		displayFolder: Capacity IOD Metrics\General
+		lineageTag: 31c24a0c-4fe7-47e1-9ee4-28298f55953b
+
+	measure 'Invalid Ops IOD' = SUM(capacity_metrics_by_item_by_operation_by_day[InvalidOperationCount])
+		formatString: #,0
+		displayFolder: Capacity IOD Metrics\General
+		lineageTag: 51db50fb-071b-4953-8849-1df44705f563
+
+	measure 'Operations IOD' = SUM(capacity_metrics_by_item_by_operation_by_day[OperationCount])
+		formatString: #,0
+		displayFolder: Capacity IOD Metrics\General
+		lineageTag: 3f648a9e-97c4-44d5-93b7-1e9a4f723261
+
+	measure 'Rejected Ops IOD' = SUM(capacity_metrics_by_item_by_operation_by_day[RejectedOperationCount])
+		formatString: #,0
+		displayFolder: Capacity IOD Metrics\General
+		lineageTag: 1581db5e-ce53-4214-bd1f-3fc1ba65b83b
+
+	measure 'Succeeded Ops IOD' = SUM(capacity_metrics_by_item_by_operation_by_day[SuccessOperationCount])
+		formatString: #,0
+		displayFolder: Capacity IOD Metrics\General
+		lineageTag: ae3e3e9d-be59-4bcb-8357-7cddece6ba6b
+
+	measure 'Total CUs IOD' = SUM(capacity_metrics_by_item_by_operation_by_day[TotalCUs])
+		formatString: #,0
+		displayFolder: Capacity IOD Metrics\General
+		lineageTag: df24a49c-6fc7-4a9b-afd4-1379f73d8711
+
+		annotation PBI_FormatHint = {"isDecimal":true}
+
+	measure 'Total Duration (s) IOD' = SUM(capacity_metrics_by_item_by_operation_by_day[DurationInSec])
+		formatString: #,0
+		displayFolder: Capacity IOD Metrics\General
+		lineageTag: be564493-0f81-4490-a19d-4ad9e5b67c31
+
+		annotation PBI_FormatHint = {"isDecimal":true}
+
+	measure 'Users IOD' = SUM(capacity_metrics_by_item_by_operation_by_day[UserCount])
+		formatString: #,0
+		displayFolder: Capacity IOD Metrics\General
+		lineageTag: a06c2249-9e1f-4ff0-824e-29d0df11f5a8
+
+	measure 'Cancelled Ops KD' = SUM(capacity_metrics_by_item_kind_by_day[CancelledOperationCount])
+		formatString: #,0
+		displayFolder: Capacity KD Metrics\General
+		lineageTag: 618dad32-eeab-4e01-be53-7263c91efa97
+
+	measure 'Failure Ops KD' = SUM(capacity_metrics_by_item_kind_by_day[FailureOperationCount])
+		formatString: #,0
+		displayFolder: Capacity KD Metrics\General
+		lineageTag: e840b26b-7e01-46e5-ac68-489058f606cc
+
+	measure 'Invalid Ops KD' = SUM(capacity_metrics_by_item_kind_by_day[InvalidOperationCount])
+		formatString: #,0
+		displayFolder: Capacity KD Metrics\General
+		lineageTag: 86d29ba7-dec4-483a-a110-70c30a4d2034
+
+	measure 'Rejected Ops KD' = SUM(capacity_metrics_by_item_kind_by_day[RejectedOperationCount])
+		formatString: #,0
+		displayFolder: Capacity KD Metrics\General
+		lineageTag: 0429c6e4-97d2-45da-9b04-730452c66899
+
+	measure 'Succeeded Ops KD' = SUM(capacity_metrics_by_item_kind_by_day[SuccessOperationCount])
+		formatString: #,0
+		displayFolder: Capacity KD Metrics\General
+		lineageTag: 4c0be011-940a-4446-9c99-df676b4b3894
+
+	measure '# Tenant Settings Snapshots' = DISTINCTCOUNT(tenant_settings[TransferDateTime])
+		formatString: 0
+		displayFolder: Tenant Settings\Tenant Level
+		lineageTag: 2a378c4d-88c2-4635-ab06-5326d88eadb9
+
+	measure '# Different Datasource Types' = DISTINCTCOUNT(datasource_instances[DatasourceType])
+		formatString: 0
+		displayFolder: Gateways
+		lineageTag: bd761b09-ab1a-4e1e-9d57-267ea326c968
+
+	measure '# Lakehouses' =
+			
+			CALCULATE(
+			    COUNT(active_items[id]),
+			    active_items[fuam_deleted] = FALSE(),
+			    active_items[type] = "Lakehouse"
+			)
+		formatString: #,0
+		displayFolder: Items\General
+		lineageTag: 14538630-f3aa-4bc4-a2a0-18c0d7e85e15
+
+	measure '# ML Experiments' =
+			
+			CALCULATE(
+			    COUNT(active_items[id]),
+			    active_items[fuam_deleted] = FALSE(),
+			    active_items[type] = "MLExperiment"
+			)
+		formatString: #,0
+		displayFolder: Items\General
+		lineageTag: c9995779-db0f-4731-9cc0-7d2c1a0c577e
+
+	measure '# Reflex' =
+			
+			CALCULATE(
+			    COUNT(active_items[id]),
+			    active_items[fuam_deleted] = FALSE(),
+			    active_items[type] = "Reflex"
+			)
+		formatString: #,0
+		displayFolder: Items\General
+		lineageTag: 81434f7d-8371-4048-b642-4d23cb8720c8
+
+	measure '# Mounted Databases' =
+			
+			CALCULATE(
+			    COUNT(active_items[id]),
+			    active_items[fuam_deleted] = FALSE(),
+			    active_items[type] = "MontedDatabase"
+			)
+		formatString: #,0
+		displayFolder: Items\General
+		lineageTag: 7f390b43-7571-477c-9262-db1845ae69eb
+
+	measure '# Dashboards' =
+			
+			CALCULATE(
+			    COUNT(active_items[id]),
+			    active_items[fuam_deleted] = FALSE(),
+			    active_items[type] = "Dashboard"
+			)
+		formatString: #,0
+		displayFolder: Items\General
+		lineageTag: 81aab67f-d640-4dfd-857d-9f574afe9876
+
+	measure '# Users' = DISTINCTCOUNT(activities[UserId])
+		formatString: #,0
+		displayFolder: Activities\General
+		lineageTag: 0d9f348e-98e6-483b-a9c5-7823251eae3c
+
+	measure '# KQL Querysets' =
+			
+			CALCULATE(
+			    COUNT(active_items[id]),
+			    active_items[fuam_deleted] = FALSE(),
+			    active_items[type] = "KQLQueryset"
+			)
+		formatString: #,0
+		displayFolder: Items\General
+		lineageTag: fa62b435-35a6-4b04-b05e-8fef573f95c5
+
+	measure '# ML Models' =
+			
+			CALCULATE(
+			    COUNT(active_items[id]),
+			    active_items[fuam_deleted] = FALSE(),
+			    active_items[type] = "MLModel"
+			)
+		formatString: #,0
+		displayFolder: Items\General
+		lineageTag: 5abf4a06-9698-440e-b5d5-c412fb4026fd
+
+	measure '# Reports' =
+			
+			CALCULATE(
+			    COUNT(active_items[id]),
+			    active_items[fuam_deleted] = FALSE(),
+			    active_items[type] = "Report"
+			)
+		formatString: #,0
+		displayFolder: Items\General
+		lineageTag: 4003e501-2343-4713-b62b-40e964234569
+
+	measure '# Semantic Models' =
+			
+			CALCULATE(
+			    COUNT(active_items[id]),
+			    active_items[fuam_deleted] = FALSE(),
+			    active_items[type] = "SemanticModel"
+			)
+		formatString: #,0
+		displayFolder: Items\General
+		lineageTag: 463773d2-801f-453b-8c50-59072563c580
+
+	measure '# Mirrored Warehouses' =
+			
+			CALCULATE(
+			    COUNT(active_items[id]),
+			    active_items[fuam_deleted] = FALSE(),
+			    active_items[type] = "MirroredWarehouse"
+			)
+		formatString: #,0
+		displayFolder: Items\General
+		lineageTag: e994c255-beda-40d4-bae4-cf1c9780f038
+
+	measure '# Eventstreams' =
+			
+			CALCULATE(
+			    COUNT(active_items[id]),
+			    active_items[fuam_deleted] = FALSE(),
+			    active_items[type] = "Eventstream"
+			)
+		formatString: #,0
+		displayFolder: Items\General
+		lineageTag: ab07950f-67b9-43da-a202-a6bf6c0c0924
+
+	measure '# Notebooks' =
+			
+			CALCULATE(
+			    COUNT(active_items[id]),
+			    active_items[fuam_deleted] = FALSE(),
+			    active_items[type] = "Notebook"
+			)
+		formatString: #,0
+		displayFolder: Items\General
+		lineageTag: 82c42342-6fcd-403b-bdd0-de9d02e05ecf
+
+	measure '# KQL Databases' =
+			
+			CALCULATE(
+			    COUNT(active_items[id]),
+			    active_items[fuam_deleted] = FALSE(),
+			    active_items[type] = "KQLDatabase"
+			)
+		formatString: #,0
+		displayFolder: Items\General
+		lineageTag: b21eec47-a8e7-42e6-9201-4e263be007e8
+
+	measure '# Datamarts' =
+			
+			CALCULATE(
+			    COUNT(active_items[id]),
+			    active_items[fuam_deleted] = FALSE(),
+			    active_items[type] = "Datamart"
+			)
+		formatString: #,0
+		displayFolder: Items\General
+		lineageTag: 188adeeb-3cc7-4bf8-82b7-1ee4b6e740c6
+
+	measure '# Dataflows' =
+			
+			CALCULATE(
+			    COUNT(active_items[id]),
+			    active_items[fuam_deleted] = FALSE(),
+			    active_items[type] = "Dataflow"
+			)
+		formatString: #,0
+		displayFolder: Items\General
+		lineageTag: 44fc57db-2319-46fe-a014-a5082ec58bdb
+
+	measure '# Pipelines' =
+			
+			CALCULATE(
+			    COUNT(active_items[id]),
+			    active_items[fuam_deleted] = FALSE(),
+			    active_items[type] = "DataPipeline"
+			)
+		formatString: #,0
+		displayFolder: Items\General
+		lineageTag: 9f7de853-f510-431f-96f5-153be4d1f60b
+
+	measure '# Warehouses' =
+			
+			CALCULATE(
+			    COUNT(active_items[id]),
+			    active_items[fuam_deleted] = FALSE(),
+			    active_items[type] = "Warehouse"
+			)
+		formatString: #,0
+		displayFolder: Items\General
+		lineageTag: 0f8e4d01-d36a-4f90-97d6-a59a49110245
+
+	measure '# Eventhouses' =
+			
+			CALCULATE(
+			    COUNT(active_items[id]),
+			    active_items[fuam_deleted] = FALSE(),
+			    active_items[type] = "Eventhouse"
+			)
+		formatString: #,0
+		displayFolder: Items\General
+		lineageTag: 2bb5bf27-2989-4971-ac09-e0c236c89129
+
+	measure '# Apps' =
+			
+			CALCULATE(
+			    COUNT(active_items[id]),
+			    active_items[fuam_deleted] = FALSE(),
+			    active_items[type] = "App"
+			)
+		formatString: #,0
+		displayFolder: Items\General
+		lineageTag: f05492f1-e610-46f4-826e-b8f5ea1467a2
+
+	measure '# SQL Endpoints' =
+			
+			CALCULATE(
+			    COUNT(active_items[id]),
+			    active_items[fuam_deleted] = FALSE(),
+			    active_items[type] = "SQLEndpoint"
+			)
+		formatString: #,0
+		displayFolder: Items\General
+		lineageTag: 3c2d751a-a083-4946-92fb-00131c2551c3
+
+	measure Enabled =
+			
+			CALCULATE(
+			    COUNTROWS(tenant_settings),
+			    tenant_settings[enabled] = TRUE()
+			)
+		formatString: 0
+		displayFolder: Tenant Settings\Tenant Level
+		lineageTag: 3863d3bb-b0ca-463d-bead-31e9d5bc179a
+
+	measure Disabled =
+			
+			CALCULATE(
+			    COUNTROWS(tenant_settings),
+			    tenant_settings[enabled] = FALSE()
+			)
+		formatString: 0
+		displayFolder: Tenant Settings\Tenant Level
+		lineageTag: 529cddb5-be26-4238-b3c0-f9f5427bdcc1
+
+	measure '# Refreshable Items' =
+			
+			COUNTROWS(capacity_refreshables)
+		formatString: #,0
+		displayFolder: Refreshables
+		lineageTag: 64954318-71d9-4f0a-810f-bd7525d1d10d
+
+	measure '# Semantic models in Composite mode' =
+			
+			CALCULATE(
+			    COUNT(semantic_models[SemanticModelId]),
+			    semantic_models[ContentProviderType] = "PbixInCompositeMode"
+			)
+		formatString: #,0
+		displayFolder: Semantic Models\Storage Modes
+		lineageTag: e4019108-87c3-4825-80cc-38cd9f64a6aa
+
+	measure '# Semantic models in DirectQuery mode' =
+			
+			CALCULATE(
+			    COUNT(semantic_models[SemanticModelId]),
+			    semantic_models[ContentProviderType] = "PbixInDirectQueryMode"
+			)
+		formatString: #,0
+		displayFolder: Semantic Models\Storage Modes
+		lineageTag: 797ce100-ab43-4942-a068-7d92c9fb8d60
+
+	measure '# Semantic models in Import mode' =
+			
+			CALCULATE(
+			    COUNT(semantic_models[SemanticModelId]),
+			    semantic_models[ContentProviderType] = "PbixInImportMode"
+			)
+		formatString: #,0
+		displayFolder: Semantic Models\Storage Modes
+		lineageTag: f158878a-9c26-41e4-a5f4-c80a4779215a
+
+	measure 'Refresh Duration Minutes' =
+			
+			DIVIDE(
+			    SUM(capacity_refreshable_details[DurationInSeconds]),
+			    60
+			)
+		formatString: #,0.00
+		displayFolder: Refreshables\Details
+		lineageTag: b30cd76f-a0b4-4970-b34c-92583a364e67
+
+	measure '# Refreshes' = SUM(capacity_refreshable_summaries[RefreshCount])
+		formatString: #,0
+		displayFolder: Refreshables\Summary
+		lineageTag: 02116206-c42f-452e-a445-f1e973dc51a4
+
+	measure 'Avg Refresh Duration Minutes' =
+			
+			DIVIDE(
+			    AVERAGE(capacity_refreshable_summaries[RefreshAverageDuration]),
+			    60
+			)
+		displayFolder: Refreshables\Summary
+		lineageTag: b1b4ab9a-85f1-4fde-b286-f0afa4acf331
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'Consideration End' = MIN(capacity_refreshable_summaries[ConsideredEndTime])
+		formatString: General Date
+		displayFolder: Refreshables\Summary
+		lineageTag: 53b729bc-29f8-4b80-9c47-a1809346316d
+
+	measure 'Consideration Start' = MIN(capacity_refreshable_summaries[ConsideredStartTime])
+		formatString: General Date
+		displayFolder: Refreshables\Summary
+		lineageTag: bc9bf7e8-7c98-4514-8307-e88c9ed2cf31
+
+	measure 'Considered Days' =
+			
+			VAR _dayInt = 86400
+			RETURN
+			DIVIDE(
+			    SUM(capacity_refreshable_summaries[ConsiderationDurationSeconds]),
+			    _dayInt
+			)
+		displayFolder: Refreshables\Summary
+		lineageTag: 6848e462-4220-46b0-9a5d-005a6b4ba53c
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'Median Refresh Duration Minutes' =
+			
+			DIVIDE(
+			    MEDIAN(capacity_refreshable_summaries[RefreshMedianDuration]),
+			    60
+			)
+		displayFolder: Refreshables\Summary
+		lineageTag: 72f02b5e-34d1-4749-9bf3-f59957f461ae
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'BPA Violations (Error)' =
+			
+			CALCULATE(
+			    [BPA Violations],
+			    semantic_model_bpa_rule_catalog[Severity] = "Error"
+			    )
+		formatString: 0
+		displayFolder: Semantic Models\Optimization Module\BPA
+		lineageTag: 79f8dc17-acac-44bd-895f-d56757d56cae
+
+	measure 'BPA Violations' = COUNTROWS(semantic_model_bpa_results)
+		formatString: #,0
+		displayFolder: Semantic Models\Optimization Module\BPA
+		lineageTag: 87ad3666-5d4c-4365-8a65-13b748479ea9
+
+	measure 'Data Size (table)' =
+			
+			DIVIDE(
+			    SUM(semantic_model_vertipaq_tables[DataSize]),
+			    [Selected Unit Value]
+			)
+		displayFolder: Semantic Models\Optimization Module\VertiPaq\Table level
+		lineageTag: 02153be1-6884-403b-b908-f241c4acdae0
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'Dictionary Size (table)' =
+			
+			DIVIDE(
+			    SUM(semantic_model_vertipaq_tables[DictionarySize]),
+			    [Selected Unit Value]
+			)
+		formatString: #,0
+		displayFolder: Semantic Models\Optimization Module\VertiPaq\Table level
+		lineageTag: 89b77efc-002c-478e-bd86-87feedc6ac67
+
+	measure 'Hierarcy Size (table)' =
+			
+			DIVIDE(
+			    SUM(semantic_model_vertipaq_tables[HierarchySize]),
+			    [Selected Unit Value]
+			)
+		formatString: #,0
+		displayFolder: Semantic Models\Optimization Module\VertiPaq\Table level
+		lineageTag: be3b9b64-c055-4d42-bc0e-8c2ae59e3f39
+
+	measure 'Relationship Size (table)' =
+			
+			DIVIDE(
+			    SUM(semantic_model_vertipaq_tables[RelationshipSize]),
+			    [Selected Unit Value]
+			)
+		formatString: #,0
+		displayFolder: Semantic Models\Optimization Module\VertiPaq\Table level
+		lineageTag: 24dcf160-326b-4211-b517-74a3ff24ccf3
+
+	measure 'User Hierarchy Size (table)' = SUM(semantic_model_vertipaq_tables[UserHierarchySize])
+		formatString: #,0
+		displayFolder: Semantic Models\Optimization Module\VertiPaq\Table level
+		lineageTag: 7cb5ae9a-ad0c-4b23-9660-0c860bf67d05
+
+	measure 'Total Size (table)' =
+			
+			DIVIDE(
+			    SUM(semantic_model_vertipaq_tables[TotalSize]),
+			    [Selected Unit Value]
+			)
+		formatString: #,0
+		displayFolder: Semantic Models\Optimization Module\VertiPaq\Table level
+		lineageTag: d8cdd739-9eb8-4571-b9f3-8fb17a523a04
+
+	measure 'Rows (table)' = SUM(semantic_model_vertipaq_tables[RowCount])
+		formatString: #,0
+		displayFolder: Semantic Models\Optimization Module\VertiPaq\Table level
+		lineageTag: c02bfbfe-f16d-4de5-b484-4cb49dbefe3e
+
+	measure 'Columns (table)' = SUM(semantic_model_vertipaq_tables[Columns])
+		formatString: #,0
+		displayFolder: Semantic Models\Optimization Module\VertiPaq\Table level
+		lineageTag: 671ad86e-e3b9-4805-8229-fef0bc3e91bf
+
+	measure 'Tables (model)' = SUM(semantic_model_analyzer_runs[TableCount])
+		formatString: #,0
+		displayFolder: Semantic Models\Optimization Module\VertiPaq\Model level
+		lineageTag: 3e1107f2-5b26-46b8-8af4-664e3ebc3dc1
+
+		annotation PBI_FormatHint = {"isDecimal":true}
+
+	measure 'Total Size (model)' =
+			
+			DIVIDE(
+			    SUM(semantic_model_analyzer_runs[TotalSize]),
+			    [Selected Unit Value]
+			)
+		formatString: #,0.0
+		displayFolder: Semantic Models\Optimization Module\VertiPaq\Model level
+		lineageTag: b9b794a2-1213-4fda-86e6-2116b9ece7f3
+
+	measure 'Last Enabled' =
+			
+			CALCULATE(
+			    COUNTROWS(tenant_settings),
+			    tenant_settings[enabled] = TRUE(),
+			    tenant_settings[TransferDateTime] = MAX(tenant_settings[TransferDateTime])
+			)
+		formatString: 0
+		displayFolder: Tenant Settings\Tenant Level
+		lineageTag: 7d3695b7-9603-46cc-8e1e-e6c949bf6fed
+
+	measure 'Last Disabled' =
+			
+			CALCULATE(
+			    COUNTROWS(tenant_settings),
+			    tenant_settings[enabled] = FALSE(),
+			    tenant_settings[TransferDateTime] = MAX(tenant_settings[TransferDateTime])
+			)
+		formatString: 0
+		displayFolder: Tenant Settings\Tenant Level
+		lineageTag: 9148e6b8-6573-4d14-a95c-530381d894d3
+
+	measure '# Activities PM' =
+			
+			// Previous Month
+			CALCULATE(
+			    [# Activities],
+			    'calendar'[IsPreviousMonth] = 1
+			)
+		formatString: #,0
+		displayFolder: Activities\Time Intelligence
+		lineageTag: 120c6f5f-5a2b-4c62-9ebd-899b1804313c
+
+	measure 'Activities Growth MoM' = ```
+			
+			VAR _prevMonth = 
+			    CALCULATE(
+			        [# Activities],
+			        PREVIOUSMONTH('calendar'[Date2Key])
+			    )
+			RETURN
+			DIVIDE(
+			    ([# Activities]- _prevMonth), 
+			    _prevMonth
+			)
+			```
+		formatString: 0%;-0%;0%
+		displayFolder: Tenant Growth
+		lineageTag: 84707bd8-1e60-43d4-8979-7e455eb6fe61
+
+	measure 'Avg CU by Item by Day 14d IOD' =
+			
+			CALCULATE(
+			    [Avg CU by Item by Day IOD],
+			    'calendar'[IsInLast14Days] = 1
+			)
+		formatString: #,0
+		displayFolder: Capacity IOD Metrics\Time Intelligence
+		lineageTag: 410ddc5a-5777-4d11-aa07-e3776239db31
+
+		annotation PBI_FormatHint = {"isDecimal":true}
+
+	measure 'Avg CU by Item by Day 30d IOD' =
+			
+			CALCULATE(
+			    [Avg CU by Item by Day IOD],
+			    'calendar'[IsInLast30Days] = 1
+			)
+		formatString: #,0
+		displayFolder: Capacity IOD Metrics\Time Intelligence
+		lineageTag: cb711b04-4c6e-4cc2-8a7a-c8a361dcf7c2
+
+		annotation PBI_FormatHint = {"isDecimal":true}
+
+	measure 'Max CU by Item by Day 30d IOD' =
+			
+			CALCULATE(
+			    [Max CU by Item by Day IOD],
+			    'calendar'[IsInLast30Days] = 1
+			)
+		formatString: #,0
+		displayFolder: Capacity IOD Metrics\Time Intelligence
+		lineageTag: bc15d8ba-1702-4a41-9f2c-1ced52cd05d7
+
+	measure 'Max CU by Item by Day 14d IOD' =
+			
+			CALCULATE(
+			    [Max CU by Item by Day IOD],
+			    'calendar'[IsInLast14Days] = 1
+			)
+		formatString: #,0
+		displayFolder: Capacity IOD Metrics\Time Intelligence
+		lineageTag: 9585e86c-4c37-441d-bdc1-7b65e370d221
+
+	measure 'Avg CU by Item by Day Difference 14d vs 30d IOD' =
+			
+			// Trend of Average CU by item by day. Comparison the average of last 30d to last 14d.
+			DIVIDE(
+			    [Avg CU by Item by Day 14d IOD]-[Avg CU by Item by Day 30d IOD],
+			    [Avg CU by Item by Day 30d IOD]
+			)
+		formatString: 0.00%;-0.00%;0.00%
+		displayFolder: Capacity IOD Metrics\Time Intelligence
+		lineageTag: a43efbd5-ccfe-4478-8422-1359d2cd05bb
+
+	measure 'Total Throttling (min) IOD' =
+			
+			SUM(capacity_metrics_by_item_by_operation_by_day[ThrottlingInMin])
+		displayFolder: Capacity IOD Metrics\General
+		lineageTag: a43eb090-228e-401e-9274-fc1063af59e4
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'Max Throttling (min) IOD' =
+			
+			MAX(capacity_metrics_by_item_by_operation_by_day[ThrottlingInMin])
+		displayFolder: Capacity IOD Metrics\General
+		lineageTag: 870b96e6-de9c-48bb-b70e-82f5b84c29d3
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'Avg Duration (min) KD' = ```
+			
+			DIVIDE(
+			    AVERAGE(capacity_metrics_by_item_kind_by_day[DurationInSec]),   
+			    60
+			)
+			```
+		displayFolder: Capacity KD Metrics\General
+		lineageTag: d915daef-1bf5-401e-9184-b698309c7344
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'Avg CUs KD' = AVERAGE(capacity_metrics_by_item_kind_by_day[TotalCUs])
+		displayFolder: Capacity KD Metrics\General
+		lineageTag: d5de49bf-727a-4387-8042-9d25c58149ae
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'Total Duration (min) KD' =
+			
+			DIVIDE(
+			    SUM(capacity_metrics_by_item_kind_by_day[DurationInSec]),
+			    60
+			)
+		displayFolder: Capacity KD Metrics\General
+		lineageTag: 96fcf39a-66d6-4d2a-9f94-a08c7406f209
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure '# Scheduled Refreshables' =
+			
+			VAR _matrix =
+			SUMMARIZECOLUMNS(
+					capacity_refreshables[WorkspaceId],
+					capacity_refreshables[ItemId],
+					capacity_refreshable_days[Day],
+					capacity_refreshable_times[Time],
+					capacity_refreshables[IsRefreshEnabled],
+			        // Filter results only for enabled refreshes
+			        //TREATAS({TRUE}, 'capacity_refreshables'[IsRefreshEnabled]),
+					"scheduledRefreshes", [# Refreshable Items]
+				)
+			RETURN
+			SUMX(
+			    _matrix,
+			    [scheduledRefreshes]
+			)
+		formatString: #,0
+		displayFolder: Refreshables
+		lineageTag: f38db52d-4350-4a02-8d48-78a4bf7f9b60
+
+	measure '# Activities PY' =
+			
+			// Previous Year
+			CALCULATE(
+			    [# Activities],
+			    'calendar'[IsPreviousYear] = 1
+			)
+		formatString: #,0
+		displayFolder: Activities\Time Intelligence
+		lineageTag: e2c77861-7c16-4dbb-ad99-68e1cb6b6c00
+
+	measure '# Viewed Reports (Activities)' =
+			
+			CALCULATE(
+			    DISTINCTCOUNT(activities[ReportId]),
+			    activities[Activity] = "ViewReport"
+			)
+		formatString: #,0
+		displayFolder: Activities\General
+		lineageTag: 1f1961b4-2482-4c7a-9ec0-ef5c739afd58
+
+	measure '# Activities CM' =
+			
+			// Current Month
+			CALCULATE(
+			    [# Activities],
+			    'calendar'[IsCurrentMonth] = 1
+			)
+		formatString: #,0
+		displayFolder: Activities\Time Intelligence
+		lineageTag: 94b3e530-7157-4c92-882a-635090e423d5
+
+	measure '# Users CM' =
+			
+			// Current Month
+			CALCULATE(
+			    [# Users],
+			    'calendar'[IsCurrentMonth] = 1
+			)
+		formatString: #,0
+		displayFolder: Activities\Time Intelligence
+		lineageTag: e7ebadb4-6388-4e38-a295-80a949c528ae
+
+	measure '# Users PM' =
+			
+			// Previous Month
+			CALCULATE(
+			    [# Users],
+			    'calendar'[IsPreviousMonth] = 1
+			)
+		formatString: #,0
+		displayFolder: Activities\Time Intelligence
+		lineageTag: 3aecd8fd-cdb9-4c29-8d16-c95903293ae6
+
+	measure '# Users PY' =
+			
+			// Previous Year
+			CALCULATE(
+			    [# Users],
+			    'calendar'[IsPreviousYear] = 1
+			)
+		formatString: #,0
+		displayFolder: Activities\Time Intelligence
+		lineageTag: 855b2fa8-0ba0-4246-8a85-3534fc5f0462
+
+	measure '# Enabled Refreshables' =
+			
+			VAR _matrix =
+			SUMMARIZECOLUMNS(
+					capacity_refreshables[WorkspaceId],
+					capacity_refreshables[ItemId],
+					capacity_refreshable_days[Day],
+					capacity_refreshable_times[Time],
+			        // Filter results only for enabled refreshes
+			        TREATAS({TRUE}, 'capacity_refreshables'[IsRefreshEnabled]),
+					"scheduledRefreshes", [# Refreshable Items]
+				)
+			RETURN
+			SUMX(
+			    _matrix,
+			    [scheduledRefreshes]
+			)
+		formatString: #,0
+		displayFolder: Refreshables
+		lineageTag: 192e9bff-d4f4-46cf-a8ea-d9ac76ae0a68
+
+	measure '# Disabled Refreshables' =
+			
+			VAR _matrix =
+			SUMMARIZECOLUMNS(
+					capacity_refreshables[WorkspaceId],
+					capacity_refreshables[ItemId],
+					capacity_refreshable_days[Day],
+					capacity_refreshable_times[Time],
+			        // Filter results only for disabled refreshes
+			        TREATAS({FALSE}, 'capacity_refreshables'[IsRefreshEnabled]),
+					"scheduledRefreshes", [# Refreshable Items]
+				)
+			RETURN
+			SUMX(
+			    _matrix,
+			    [scheduledRefreshes]
+			)
+		formatString: #,0
+		displayFolder: Refreshables
+		lineageTag: 0a090fe5-4ec7-4b93-8499-cef5d9218312
+
+	measure '# Git Connections' = COUNT(git_connections[workspaceId])
+		formatString: 0
+		displayFolder: Workspaces
+		lineageTag: 302d650e-be08-4c35-91dc-c08499a4b98e
+
+	measure 'Avg Refresh Duration Minutes (Det.)' =
+			
+			DIVIDE(
+			    AVERAGE(capacity_refreshable_details[DurationInSeconds]),
+			    60
+			)
+		displayFolder: Refreshables\Details
+		lineageTag: 5e99a980-16ca-4465-9bc4-204a9bf484bd
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure '# Activities CY' =
+			
+			// Current Year
+			CALCULATE(
+			    [# Activities],
+			    'calendar'[IsCurrentYear] = 1
+			)
+		formatString: #,0
+		displayFolder: Activities\Time Intelligence
+		lineageTag: 0cc938dc-1f85-41c3-87da-b764f653ad7c
+
+	measure '# Users CY' =
+			
+			// Current Month
+			CALCULATE(
+			    [# Users],
+			    'calendar'[IsCurrentYear] = 1
+			)
+		formatString: #,0
+		displayFolder: Activities\Time Intelligence
+		lineageTag: c8eb5648-b2b1-49f9-acd3-719cb163636c
+
+	measure 'Monthly Active User Growth MoM' = ```
+			
+			VAR _prevMonth = 
+			    CALCULATE(
+			        [# Users],
+			        PREVIOUSMONTH('calendar'[Date2Key])
+			    )
+			RETURN
+			DIVIDE(
+			    ([# Users] - _prevMonth), 
+			    _prevMonth
+			)
+			```
+		formatString: 0%;-0%;0%
+		displayFolder: Tenant Growth
+		lineageTag: f5df1b23-4ae7-4b4f-a329-408499027fb4
+
+	measure 'Total CUs CM' =
+			
+			// Current Month
+			CALCULATE(
+			    [Total CUs KD],
+			    'calendar'[IsCurrentMonth] = 1
+			)
+		displayFolder: Capacity KD Metrics\Time Intelligence
+		lineageTag: d05e798c-c9a0-4145-a57e-5e7028a66d22
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'Total CUs PM' =
+			
+			// Previous Month
+			CALCULATE(
+			    [Total CUs KD],
+			    'calendar'[IsPreviousMonth] = 1
+			)
+		displayFolder: Capacity KD Metrics\Time Intelligence
+		lineageTag: 9ea9998a-ace9-4b76-b09b-8200d4b5145f
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'Total CUs CY' =
+			
+			// Current Year
+			CALCULATE(
+			    [Total CUs KD],
+			    'calendar'[IsCurrentYear] = 1
+			)
+		displayFolder: Capacity KD Metrics\Time Intelligence
+		lineageTag: 1bc7758c-c0ee-44b7-b346-c761ce45d518
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'Total CUs PY' =
+			
+			// Previous Year
+			CALCULATE(
+			    [Total CUs KD],
+			    'calendar'[IsPreviousYear] = 1
+			)
+		displayFolder: Capacity KD Metrics\Time Intelligence
+		lineageTag: 2dc93eaa-df0c-47f0-81b0-b695a228a121
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'Total CU Growth MoM' = ```
+			
+			VAR _prevMonth = 
+			    CALCULATE(
+			        [Total CUs KD],
+			        PREVIOUSMONTH('calendar'[Date2Key])
+			    )
+			RETURN
+			DIVIDE(
+			    ([Total CUs KD] - _prevMonth), 
+			    _prevMonth
+			)
+			```
+		formatString: 0%;-0%;0%
+		displayFolder: Tenant Growth
+		lineageTag: 01effba1-8a03-4e74-846a-d65a73c9a196
+
+	measure '# Activities last 30d' =
+			
+			CALCULATE(
+			    [# Activities],
+			    'calendar'[IsInLast30Days] = 1
+			)
+		formatString: #,0
+		displayFolder: Activities\Time Intelligence
+		lineageTag: ace525df-e6cf-43d7-a533-4fb18579222c
+
+	measure '# Activities last 14d' =
+			
+			CALCULATE(
+			    [# Activities],
+			    'calendar'[IsInLast14Days] = 1
+			)
+		formatString: #,0
+		displayFolder: Activities\Time Intelligence
+		lineageTag: 4a74fd9c-5648-4c78-85ab-a5b28df232c2
+
+	measure '# Users last 14d' =
+			
+			CALCULATE(
+			    [# Users],
+			    'calendar'[IsInLast14Days] = 1
+			)
+		formatString: #,0
+		displayFolder: Activities\Time Intelligence
+		lineageTag: 80329f49-3888-4bca-8818-c1347f04d48d
+
+	measure '# Users last 30d' =
+			
+			CALCULATE(
+			    [# Users],
+			    'calendar'[IsInLast30Days] = 1
+			)
+		formatString: #,0
+		displayFolder: Activities\Time Intelligence
+		lineageTag: 0054b861-e04f-4fcd-8799-f10f93ff93a7
+
+	measure 'Total CUs last 14d' =
+			
+			CALCULATE(
+			    [Total CUs KD],
+			    'calendar'[IsInLast14Days] = 1
+			)
+		displayFolder: Capacity KD Metrics\Time Intelligence
+		lineageTag: 72d70246-36ac-4f0f-904e-45bf8cd45cfd
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'Total CUs last 30d' =
+			
+			CALCULATE(
+			    [Total CUs KD],
+			    'calendar'[IsInLast30Days] = 1
+			)
+		displayFolder: Capacity KD Metrics\Time Intelligence
+		lineageTag: 4d89cb46-64ee-4196-a445-d6ffc2999a66
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure '# AI Skills' =
+			
+			CALCULATE(
+			    COUNT(active_items[id]),
+			    active_items[fuam_deleted] = FALSE(),
+			    active_items[type] = "AISkill"
+			)
+		formatString: #,0
+		displayFolder: Items\General
+		lineageTag: ac8ae4d6-5870-44b8-8a60-21596ea96143
+
+	measure 'Avg CU by Item by Day IOD' = ```
+			
+			VAR _calculatedResult = 
+			    SUMMARIZECOLUMNS(
+			            'calendar'[Date2Key],
+			            capacity_metrics_by_item_by_operation_by_day[ItemId],
+			            "SumCuByItemByDay", [Total CUs IOD]
+			        )
+			RETURN
+			    AVERAGEX(
+			        _calculatedResult,
+			        [SumCuByItemByDay]
+			    )
+			```
+		formatString: #,0.00
+		displayFolder: Capacity IOD Metrics\General
+		lineageTag: 393eee7a-4d1f-4357-be79-2ecbfae8b43b
+
+	measure 'Max CU by Item by Day IOD' = ```
+			
+			VAR _calculatedResult = 
+			    SUMMARIZECOLUMNS(
+			            'calendar'[Date2Key],
+			            capacity_metrics_by_item_by_operation_by_day[ItemId],
+			            "SumCuByItemByDay", [Total CUs IOD]
+			        )
+			RETURN
+			    MAXX(
+			        _calculatedResult,
+			        [SumCuByItemByDay]
+			    )
+			```
+		formatString: 0
+		displayFolder: Capacity IOD Metrics\General
+		lineageTag: b396842a-86d0-4f18-9ea6-1df76173a9cf
+
+		annotation PBI_FormatHint = {"isDecimal":true}
+
+	measure '# Healthcare Data Solutions' =
+			
+			CALCULATE(
+			    COUNT(active_items[id]),
+			    active_items[fuam_deleted] = FALSE(),
+			    active_items[type] = "Healthcaredatasolution"
+			)
+		formatString: #,0
+		displayFolder: Items\General
+		lineageTag: 4823224b-0b54-48bf-af6d-3ca467b396c0
+
+	measure '# GraphQL APIs' =
+			
+			CALCULATE(
+			    COUNT(active_items[id]),
+			    active_items[fuam_deleted] = FALSE(),
+			    active_items[type] = "GraphQLApi"
+			)
+		formatString: #,0
+		displayFolder: Items\General
+		lineageTag: 05a645c3-0853-44cc-8b79-cbe035f16e11
+
+	measure '# Spark Job Definitions' =
+			
+			CALCULATE(
+			    COUNT(active_items[id]),
+			    active_items[fuam_deleted] = FALSE(),
+			    active_items[type] = "SparkJobDefinition"
+			)
+		formatString: #,0
+		displayFolder: Items\General
+		lineageTag: 84853b8e-8d24-46b1-9b1c-1e73cd3b8bb9
+
+	measure '# Workspace Accesses (User)' =
+			
+			CALCULATE(
+			    DISTINCTCOUNT(workspaces_scanned_users[GraphId]),
+			    workspaces_scanned_users[PrincipalType] = "User"
+			)
+		formatString: #,0
+		displayFolder: Workspaces
+		lineageTag: 8369f218-a6b9-4f57-a25b-fce7ad76bfc2
+
+	measure '# Workspace Accesses (App)' =
+			
+			CALCULATE(
+			    DISTINCTCOUNT(workspaces_scanned_users[GraphId]),
+			    workspaces_scanned_users[PrincipalType] = "App"
+			)
+		formatString: #,0
+		displayFolder: Workspaces
+		lineageTag: 84be89b6-54bf-4aa3-81ad-e9eeb8ba0668
+
+	measure '# Workspace Accesses (Group)' =
+			
+			CALCULATE(
+			    DISTINCTCOUNT(workspaces_scanned_users[GraphId]),
+			    workspaces_scanned_users[PrincipalType] = "Group"
+			)
+		formatString: #,0
+		displayFolder: Workspaces
+		lineageTag: b78ba92b-ae7d-43f2-9ca4-b88b84246f2e
+
+	measure 'Trend of Avg CU by Item by Day 30d IOD' =
+			
+			VAR _currentDate = MAX(capacity_metrics_by_item_by_operation_by_day[Date])
+			RETURN
+			CALCULATE(
+			    [Avg CU by Item by Day IOD],
+			    REMOVEFILTERS('calendar'[Date2Key]),
+			    'calendar'[Date2Key] <= _currentDate,
+			    'calendar'[Date2Key] >= _currentDate-30
+			)
+		formatString: 0.00
+		displayFolder: Capacity IOD Metrics\Time Intelligence
+		lineageTag: 8bd1725a-42c7-4a09-ad98-d0af281ed4b7
+
+	measure 'Trend Avg CU by Item by Day Difference 14d vs 30d IOD' =
+			
+			// Trend of Average CU by item by day. Comparison the average of last 30d to last 14d.
+			DIVIDE(
+			    [Trend of Avg CU by Item by Day 30d IOD] - [Avg CU by Item by Day IOD],
+			    [Trend of Avg CU by Item by Day 30d IOD]
+			)
+		formatString: 0.00%;-0.00%;0.00%
+		displayFolder: Capacity IOD Metrics\Time Intelligence
+		lineageTag: 993f34d0-1c4a-4ace-858d-be2512a71b12
+
+	measure '# Delegated Tenant Settings Overrides Snapshots' =
+			
+			DISTINCTCOUNT(delegated_tenant_settings_overrides[TransferDateTime])
+		formatString: 0
+		displayFolder: Tenant Settings\Delegated Settings Overrides
+		lineageTag: 0a281414-9f3e-4db8-9349-4e6401ceb545
+
+	measure 'Enabled (Delegated)' =
+			
+			CALCULATE(
+			    COUNTROWS(delegated_tenant_settings_overrides),
+			    delegated_tenant_settings_overrides[enabled] = TRUE()
+			)
+		formatString: 0
+		displayFolder: Tenant Settings\Delegated Settings Overrides
+		lineageTag: 3743e541-5c6b-41a1-ac72-db3cf5615a23
+
+	measure 'Disabled (Delegated)' =
+			
+			CALCULATE(
+			    COUNTROWS(delegated_tenant_settings_overrides),
+			    delegated_tenant_settings_overrides[enabled] = FALSE()
+			)
+		formatString: 0
+		displayFolder: Tenant Settings\Delegated Settings Overrides
+		lineageTag: 334ab8fd-4d28-46e8-ba0a-951b56c2927a
+
+	measure '# Capacities with Current Tenant Setting Overrides' =
+			
+			VAR _maxDate = MAX(delegated_tenant_settings_overrides[TransferDateTime])
+			RETURN
+			CALCULATE(
+			    DISTINCTCOUNT(delegated_tenant_settings_overrides[CapacityId]),
+			    delegated_tenant_settings_overrides[TransferDateTime] = _maxDate,
+			    delegated_tenant_settings_overrides[enabled] = TRUE()
+			)
+		formatString: 0
+		displayFolder: Tenant Settings\Delegated Settings Overrides
+		lineageTag: b6737f0a-c226-4147-b745-9f0d069d4b69
+
+	measure 'BPA Rules' = COUNTROWS(semantic_model_bpa_rule_catalog)
+		formatString: 0
+		displayFolder: Semantic Models\Optimization Module\BPA
+		lineageTag: 044f0475-baa0-4741-8b77-e5ddb179055c
+
+	measure 'BPA Violations (Warning)' =
+			
+			CALCULATE(
+			    [BPA Violations],
+			    semantic_model_bpa_rule_catalog[Severity] = "Warning"
+			    )
+		formatString: 0
+		displayFolder: Semantic Models\Optimization Module\BPA
+		lineageTag: bfc041b1-5c6b-45c3-9f80-6eb1b7dfb6bd
+
+	measure 'BPA Violations (Info)' =
+			
+			CALCULATE(
+			    [BPA Violations],
+			    semantic_model_bpa_rule_catalog[Severity] = "Info"
+			    )
+		formatString: 0
+		displayFolder: Semantic Models\Optimization Module\BPA
+		lineageTag: 71119d44-d242-4b1c-aa17-8606d39b8bc3
+
+	measure 'FUAM Release' = "2025.4.1"
+		displayFolder: Meta
+		lineageTag: 186c2aac-d73b-4371-88ae-423e22b84179
+
+	measure 'CU 100% Limit static' = 1
+		formatString: 0%;-0%;0%
+		displayFolder: Capacity TimePoint Metrics\Utilization
+		lineageTag: 5d8961b5-4df3-4785-ae0e-9a08ad3c4109
+
+	measure 'Workspace Monitoring URL' = ```
+			
+			IF(
+			    SELECTEDVALUE(active_items[type]) = "SemanticModel" && 
+			    COUNTROWS(workspace_monitoring_reports) > 0, 
+			        "https://app.powerbi.com/groups/" &
+			        MAX(workspaces[WorkspaceId]) &
+			        "/reports/" &
+			        LOWER(MAX(workspace_monitoring_reports[ReportId])) &
+			        "?experience=power-bi&filter=SM_Semantic_Models%2FItemId%20eq%20%27" &
+			        SELECTEDVALUE(active_items[id]) &"%27",
+			    BLANK()
+			)
+			```
+		displayFolder: Items\Links
+		lineageTag: c467c9b2-517e-4ce1-9669-cd7f35d7b3aa
+		dataCategory: WebUrl
+
+	measure 'Used CU(s) %' = ```
+			
+			// Aggregatable Measure, 
+			// This measure supports SKU scale-ups & scale-downs over time
+			// Utilized CU(s) in percentage
+			DIVIDE(
+			    [Total CU(s)],
+			    [SKU in CU(s)]
+			)
+			```
+		formatString: #,0.00%;-#,0.00%;#,0.00%
+		displayFolder: Capacity TimePoint Metrics\Calculated
+		lineageTag: 30ae991c-4497-4e74-a590-1709c709c644
+
+	measure 'Used CU(s) % last 14d' =
+			
+			VAR _minDate = TODAY()-14
+			RETURN
+			CALCULATE(
+			    [Used CU(s) %],
+			    capacity_metrics_by_timepoint[TimePoint] >= _minDate
+			)
+		formatString: 0.00%;-0.00%;0.00%
+		displayFolder: Capacity TimePoint Metrics\Calculated
+		lineageTag: 87d2e8f7-7533-449a-aa43-f751f41eabd9
+
+	measure 'Used CU(s) % last 30d' =
+			
+			VAR _minDate = TODAY()-30
+			RETURN
+			CALCULATE(
+			    [Used CU(s) %],
+			    capacity_metrics_by_timepoint[TimePoint] >= _minDate
+			)
+		formatString: 0.00%;-0.00%;0.00%
+		displayFolder: Capacity TimePoint Metrics\Calculated
+		lineageTag: e1ea23ad-cff0-453c-a574-e03ee3d22db5
+
+	measure 'Used CU(s) % last 60d' =
+			
+			VAR _minDate = TODAY()-60
+			RETURN
+			CALCULATE(
+			    [Used CU(s) %],
+			    capacity_metrics_by_timepoint[TimePoint] >= _minDate
+			)
+		formatString: 0.00%;-0.00%;0.00%
+		displayFolder: Capacity TimePoint Metrics\Calculated
+		lineageTag: ba285308-2556-4b72-bf30-eea2b94cbe34
+
+	measure 'Used CU(s) % last 90d' =
+			
+			VAR _minDate = TODAY()-90
+			RETURN
+			CALCULATE(
+			    [Used CU(s) %],
+			    capacity_metrics_by_timepoint[TimePoint] >= _minDate
+			)
+		formatString: 0.00%;-0.00%;0.00%
+		displayFolder: Capacity TimePoint Metrics\Calculated
+		lineageTag: 427dee6b-47aa-474c-a816-ae94b1352620
+
+	measure 'Tenant Setting Value' =
+			
+			SUMX(
+			    tenant_settings,
+			    IF(tenant_settings[enabled] = TRUE(), 1, 0)
+			)
+		formatString: 0
+		displayFolder: Tenant Settings\Tenant Level
+		lineageTag: 2f479f53-99e1-476e-9def-ad62d0c363cc
+
+	measure 'Delegated Tenant Setting Overrides Value' =
+			
+			SUMX(
+			    delegated_tenant_settings_overrides,
+			    IF(delegated_tenant_settings_overrides[enabled] = TRUE(), 1, 0)
+			)
+		formatString: 0
+		displayFolder: Tenant Settings\Delegated Settings Overrides
+		lineageTag: 339648cf-63a9-4a58-b7ad-4e16ca5bb03a
+
+	measure 'Data Size (model)' =
+			
+			DIVIDE(
+			    SUM(semantic_model_analyzer_runs[DataSize]),
+			    [Selected Unit Value]
+			)
+		formatString: #,0.0
+		displayFolder: Semantic Models\Optimization Module\VertiPaq\Model level
+		lineageTag: 667f0903-bcff-46b4-aa0b-3c7784c6596f
+
+	measure 'Dictionary Size (model)' =
+			
+			DIVIDE(
+			    SUM(semantic_model_analyzer_runs[DictionarySize]),
+			    [Selected Unit Value]
+			)
+		formatString: #,0.0
+		displayFolder: Semantic Models\Optimization Module\VertiPaq\Model level
+		lineageTag: 68d6c989-ec36-482a-b968-31e4133f42c0
+
+	measure 'Hierarchy Size (model)' =
+			
+			DIVIDE(
+			    SUM(semantic_model_analyzer_runs[HierarchySize]),
+			    [Selected Unit Value]
+			)
+		formatString: #,0.0
+		displayFolder: Semantic Models\Optimization Module\VertiPaq\Model level
+		lineageTag: 4e7f6eb7-1323-462a-81c6-413b36985d40
+
+	measure 'Relationship Size (model)' =
+			
+			DIVIDE(
+			    SUM(semantic_model_analyzer_runs[RelationshipSize]),
+			    [Selected Unit Value]
+			)
+		formatString: #,0.0
+		displayFolder: Semantic Models\Optimization Module\VertiPaq\Model level
+		lineageTag: afebb1f8-b912-4a6c-8951-f7eaa59d2405
+
+	measure 'User Hierarchy Size (model)' =
+			
+			DIVIDE(
+			    SUM(semantic_model_analyzer_runs[UserHierarchySize]),
+			    [Selected Unit Value]
+			)
+		formatString: #,0.0
+		displayFolder: Semantic Models\Optimization Module\VertiPaq\Model level
+		lineageTag: 190cba9c-f991-46fa-b77d-5c614c69372d
+
+	measure 'Selected Unit Value' = SELECTEDVALUE(size_units[UnitValue])
+		formatString: 0
+		displayFolder: Helper
+		lineageTag: 715aed73-d836-4f3c-acaa-3f54f7f1ff3e
+
+	measure 'Selected Unit Name' = SELECTEDVALUE(size_units[Unit])
+		displayFolder: Helper
+		lineageTag: 0f3dfbdb-21e8-4094-bea2-3983c9013e3d
+
+	measure 'Avg CU by Item by Day 7d IOD' =
+			
+			CALCULATE(
+			    [Avg CU by Item by Day IOD],
+			    'calendar'[Date2Key] >= TODAY()-7
+			)
+		formatString: #,0
+		displayFolder: Capacity IOD Metrics\Time Intelligence
+		lineageTag: 7ec89853-ece3-4000-915b-7054967922ae
+
+		annotation PBI_FormatHint = {"isDecimal":true}
+
+	/// Calculates the Average CU seconds by Item by Day. It ignores the 'semantic model' and 'storage mode' attributes in the filter context.
+	measure 'Avg Capacity CU 90d IOD' =
+			
+			CALCULATE(
+			    [Avg CU by Item by Day 90d IOD],
+			    REMOVEFILTERS(semantic_models[Name])
+			)
+		displayFolder: Semantic Models\Optimization Module\Capacity IOD Metrics
+		lineageTag: bbf6bc51-d5eb-4fa4-81ad-605823765fe2
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'Avg Capacity CU 90d vs SM CU 7d IOD' = ```
+			
+			VAR _avg1d = [Avg CU by Item by Day 7d IOD]
+			RETURN
+			IF(
+			    ISBLANK(_avg1d), 
+			    BLANK(),
+			    [Avg CU by Item by Day 7d IOD] - [Avg Capacity CU 90d IOD]
+			)
+			```
+		displayFolder: Semantic Models\Optimization Module\Capacity IOD Metrics
+		lineageTag: c43f25f0-6473-4877-8021-99f7b0eb82a6
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'Avg Capacity CU 90d vs SM CU 7d Bool IOD' = ```
+			
+			IF(
+			    [Avg Capacity CU 90d vs SM CU 7d IOD] > 0, 
+			    TRUE(),
+			    FALSE()
+			)
+			
+			```
+		formatString: """TRUE"";""TRUE"";""FALSE"""
+		displayFolder: Semantic Models\Optimization Module\Capacity IOD Metrics
+		lineageTag: 4577b837-d37a-4c4c-9992-35161f2264e1
+
+	measure 'Avg Capacity CU 90d vs SM CU 7d Color IOD' =
+			
+			VAR _avg1d = [Avg Capacity CU 90d vs SM CU 7d IOD]
+			RETURN
+			SWITCH (
+			        TRUE,
+			        _avg1d > 0, "#D195EA",
+			        _avg1d = 0, "",
+			        _avg1d < 0, "#8dbed6",
+			        BLANK()
+			        )
+		displayFolder: Semantic Models\Optimization Module\Capacity IOD Metrics
+		lineageTag: 5683a60f-64c4-4b98-928a-ec29dcf72211
+
+	measure 'Semantic Model Analyzer Runs' = COUNT(semantic_model_analyzer_runs[RunId])
+		formatString: 0
+		displayFolder: Semantic Models\Optimization Module\General
+		lineageTag: 26269557-b123-4ad8-8dfd-3dde354c253c
+
+	measure 'Avg Capacity CU 90d vs SM CU 7d % IOD' = ```
+			
+			VAR _avg1d = [Avg CU by Item by Day 7d IOD]
+			RETURN 
+			    IF(
+			        ISBLANK(_avg1d), BLANK(),    
+			        DIVIDE(
+			            [Avg CU by Item by Day 7d IOD] - [Avg Capacity CU 90d IOD], 
+			            [Avg Capacity CU 90d IOD]
+			        )
+			    )
+			```
+		formatString: 0.00%;-0.00%;0.00%
+		displayFolder: Semantic Models\Optimization Module\Capacity IOD Metrics
+		lineageTag: a9cf4f14-4030-4415-80b3-c2377d1b26e7
+
+	measure 'Avg CU by Item by Day 90d IOD' =
+			
+			CALCULATE(
+			    [Avg CU by Item by Day IOD],
+			    'calendar'[Date2Key] >= TODAY()-90
+			)
+		formatString: #,0
+		displayFolder: Capacity IOD Metrics\Time Intelligence
+		lineageTag: 0edac413-3b48-4732-bc76-94905a36d412
+
+		annotation PBI_FormatHint = {"isDecimal":true}
+
+	measure 'Max CU by Item by Day 90d IOD' =
+			
+			CALCULATE(
+			    [Max CU by Item by Day IOD],
+			    'calendar'[Date2Key] >= TODAY()-90
+			)
+		formatString: #,0
+		displayFolder: Capacity IOD Metrics\Time Intelligence
+		lineageTag: 40e9ac30-eaa6-413d-8145-ba25b48f9662
+
+		annotation PBI_FormatHint = {"isDecimal":true}
+
+	measure 'BPA Violations (Background Impact)' =
+			
+			CALCULATE(
+			    [BPA Violations],
+			    semantic_model_bpa_rule_catalog[ImpactArea] = "Background Operation"
+			    )
+		formatString: 0
+		displayFolder: Semantic Models\Optimization Module\BPA
+		lineageTag: abc5ed4d-03d9-487f-83b0-06867f26dfcc
+
+	measure 'BPA Violations (Query Impact)' =
+			
+			CALCULATE(
+			    [BPA Violations],
+			    semantic_model_bpa_rule_catalog[ImpactArea] = "Query Operation"
+			    )
+		formatString: 0
+		displayFolder: Semantic Models\Optimization Module\BPA
+		lineageTag: 6d590647-b410-45ec-ba28-1eb059eedd06
+
+	measure 'BPA Violations (Usability Impact)' =
+			
+			CALCULATE(
+			    [BPA Violations],
+			    semantic_model_bpa_rule_catalog[ImpactArea] = "Usability"
+			    )
+		formatString: 0
+		displayFolder: Semantic Models\Optimization Module\BPA
+		lineageTag: c5ce404e-2ee0-46a0-8be9-e9938c65f2ab
+
+	measure 'Semantic Model Analyzer Last Run' =
+			
+			CALCULATE(
+			    MAX(semantic_model_analyzer_runs[RunId]),
+			    REMOVEFILTERS(semantic_model_analyzer_runs[RunId])
+			)
+		formatString: 0
+		displayFolder: Semantic Models\Optimization Module\General
+		lineageTag: 355a3faf-4756-4502-84ae-9160f26f05e2
+
+	measure 'Total Size Last Run (model)' =
+			
+			VAR _run = [Semantic Model Analyzer Last Run]
+			RETURN
+			    CALCULATE(
+			        [Total Size (model)],
+			        semantic_model_analyzer_runs[RunId] = _run
+			    )
+		displayFolder: Semantic Models\Optimization Module\VertiPaq\Model level
+		lineageTag: 4411d9c1-b2d3-462f-b7b3-d454aa2f2bdf
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'Tables Last Run (model)' =
+			
+			VAR _run = [Semantic Model Analyzer Last Run]
+			RETURN
+			    CALCULATE(
+			        [Tables (model)],
+			        semantic_model_analyzer_runs[RunId] = _run
+			    )
+		formatString: 0
+		displayFolder: Semantic Models\Optimization Module\VertiPaq\Model level
+		lineageTag: 3420ea7d-cb54-468c-8afb-33d83bda39eb
+
+	measure 'BPA Violations (Background Impact) Last Run' =
+			
+			VAR _run = [Semantic Model Analyzer Last Run]
+			RETURN
+			    CALCULATE(
+			        [BPA Violations (Background Impact)],
+			        semantic_model_analyzer_runs[RunId] = _run
+			    )
+		formatString: #,0
+		displayFolder: Semantic Models\Optimization Module\BPA
+		lineageTag: d515c393-ddb1-4576-976c-db3843c4b99b
+
+	measure 'BPA Violations (Query Impact) Last Run' =
+			
+			VAR _run = [Semantic Model Analyzer Last Run]
+			RETURN
+			    CALCULATE(
+			        [BPA Violations (Query Impact)],
+			        semantic_model_analyzer_runs[RunId] = _run
+			    )
+		formatString: #,0
+		displayFolder: Semantic Models\Optimization Module\BPA
+		lineageTag: b69909a2-2b72-4774-8f9a-1ce931a6b136
+
+	measure 'BPA Violations (Usability Impact) Last Run' =
+			
+			VAR _run = [Semantic Model Analyzer Last Run]
+			RETURN
+			    CALCULATE(
+			        [BPA Violations (Usability Impact)],
+			        semantic_model_analyzer_runs[RunId] = _run
+			    )
+		formatString: #,0
+		displayFolder: Semantic Models\Optimization Module\BPA
+		lineageTag: 19475181-365c-436b-98c2-f1e4b91fa795
+
+	measure 'Avg VR by Item by Day' = ```
+			
+			// VR = View Report
+			VAR _calculatedResult = 
+			    SUMMARIZECOLUMNS(
+			            'calendar'[Date2Key],
+			            activities[DatasetId],
+			            "SumBySemanticModelByDay", CALCULATE( [# Activities], activities[Activity] = "ViewReport" )
+			        )
+			RETURN
+			    AVERAGEX(
+			        _calculatedResult,
+			        [SumBySemanticModelByDay]
+			    )
+			```
+		displayFolder: Activities\General
+		lineageTag: 7040e928-0742-4736-822d-effb8f41d4d6
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'Avg SMR by Item by Day' = ```
+			
+			// SMR = Semantic Model Refresh
+			VAR _calculatedResult = 
+			    SUMMARIZECOLUMNS(
+			            'calendar'[Date2Key],
+			            activities[ItemId],
+			            "SumBySemanticModelByDay", CALCULATE( [# Activities], activities[Activity] = "RefreshDataset" ) 
+			        )
+			RETURN
+			    AVERAGEX(
+			        _calculatedResult,
+			        [SumBySemanticModelByDay]
+			    )
+			```
+		displayFolder: Activities\General
+		lineageTag: 9c506500-ddbd-4fa0-90b4-947db5ec394c
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'Max CU by Item by Day 7d IOD' =
+			
+			CALCULATE(
+			    [Max CU by Item by Day IOD],
+			    'calendar'[Date2Key] >= TODAY()-7
+			)
+		formatString: #,0
+		displayFolder: Capacity IOD Metrics\Time Intelligence
+		lineageTag: cb03dd03-f282-4a08-a1b7-dd95b2fda4ba
+
+		annotation PBI_FormatHint = {"isDecimal":true}
+
+	measure 'Avg SMR by Item by Day 90d' =
+			
+			CALCULATE(
+			    [Avg SMR by Item by Day],
+			    'calendar'[Date2Key] >= TODAY()-90
+			)
+		displayFolder: Activities\Time Intelligence
+		lineageTag: 28991b9b-ee7b-4647-9db6-f21f2d2a3183
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'Avg VR by Item by Day 90d' =
+			
+			CALCULATE(
+			    [Avg VR by Item by Day],
+			    'calendar'[Date2Key] >= TODAY()-90
+			)
+		displayFolder: Activities\Time Intelligence
+		lineageTag: e48241e7-53e5-480f-9e90-c0995b314ccb
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'Avg AiEA by Item by Day' = ```
+			
+			// AiEA = Analyzed in External Application
+			VAR _calculatedResult = 
+			    SUMMARIZECOLUMNS(
+			            'calendar'[Date2Key],
+			            activities[DatasetId],
+			            "SumBySemanticModelByDay", CALCULATE( [# Activities], activities[Activity] = "AnalyzedByExternalApplication" )
+			        )
+			RETURN
+			    AVERAGEX(
+			        _calculatedResult,
+			        [SumBySemanticModelByDay]
+			    )
+			```
+		displayFolder: Activities\General
+		lineageTag: df094cdf-5341-4348-840e-a7731b626d87
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'Avg AiEx by Item by Day' = ```
+			
+			// AiEx = Analyzed in Excel
+			VAR _calculatedResult = 
+			    SUMMARIZECOLUMNS(
+			            'calendar'[Date2Key],
+			            activities[ItemId],
+			            "SumBySemanticModelByDay", CALCULATE( [# Activities], activities[Activity] = "AnalyzeInExcel" )
+			        )
+			RETURN
+			    AVERAGEX(
+			        _calculatedResult,
+			        [SumBySemanticModelByDay]
+			    )
+			```
+		displayFolder: Activities\General
+		lineageTag: c645ce44-8ae1-49e0-96fa-cde08257c0bf
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'Avg AiEx by Item by Day 90d' =
+			
+			CALCULATE(
+			    [Avg AiEx by Item by Day],
+			    'calendar'[Date2Key] >= TODAY()-90
+			)
+		displayFolder: Activities\Time Intelligence
+		lineageTag: 5a18b1ff-1f60-4eba-94b9-033417a25857
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'Avg AiEA by Item by Day 90d' =
+			
+			CALCULATE(
+			    [Avg AiEA by Item by Day],
+			    'calendar'[Date2Key] >= TODAY()-90
+			)
+		displayFolder: Activities\Time Intelligence
+		lineageTag: da10f72e-09c4-47f6-b4e8-98574d599aeb
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'SM Analyzer Report URL' = ```
+			
+			// Get Analyzer report workspaceId and ReportId from FUAM Workspace
+			// For specific semantic model workloads
+			VAR _workspace_id = "eb764c8b-cf3b-55be-adf4-348fe9233657"
+			VAR _reportId = "84b6a5b7-4150-5a30-b2d3-07ffdca8f818"
+			
+			RETURN
+			IF(
+			    SELECTEDVALUE(active_items[type]) = "SemanticModel",
+			    "https://app.powerbi.com/groups/" &
+			    _workspace_id &
+			    "/reports/" &
+			    _reportId &
+			    "/a8201acb6b6000ff7f60?experience=power-bi&filter=semantic_models%2FSemanticModelId%20eq%20%27" &
+			    MIN(semantic_models[SemanticModelId]) & 
+			    "%27",
+			    BLANK()
+			)
+			```
+		displayFolder: Items\Links
+		lineageTag: 60dba4fb-3da2-40d6-bfbb-bea95addec12
+		dataCategory: WebUrl
+
+	measure 'Throttling Count' =
+			
+			CALCULATE(
+			    COUNTROWS(capacity_metrics_by_timepoint),
+			    capacity_metrics_by_timepoint[InteractiveDelayPercentage] > 1
+			)
+		formatString: 0
+		displayFolder: Capacity TimePoint Metrics\Calculated
+		lineageTag: 038ea501-8c7a-43d4-abda-6f10f9701c11
+
+	measure 'Avg TimePoint CU %' = ```
+			
+			VAR timetable = 
+			    SUMMARIZE(
+			        capacity_metrics_by_timepoint, 
+			        capacity_metrics_by_timepoint[TimePoint], 
+			        "TP", [Total CU Usage %]
+			        )
+			RETURN 
+			    AVERAGEX(
+			        timetable, 
+			        [Total CU Usage %]
+			        )
+			```
+		formatString: 0.00%;-0.00%;0.00%
+		displayFolder: Capacity TimePoint Metrics\Calculated
+		lineageTag: 29617e93-f45f-473b-8281-4e78c7196743
+
+	measure 'Max TimePoint CU %' = ```
+			
+			VAR timetable = 
+			    SUMMARIZE(
+			        capacity_metrics_by_timepoint, 
+			        capacity_metrics_by_timepoint[TimePoint], 
+			        "TP", [Total CU Usage %]
+			        )
+			RETURN 
+			    MAXX(
+			        timetable, 
+			        [Total CU Usage %]
+			    )
+			```
+		formatString: 0.00%;-0.00%;0.00%
+		displayFolder: Capacity TimePoint Metrics\Calculated
+		lineageTag: 9e774c8e-9a52-4847-a0cf-1c50c7d91345
+
+	measure '# Viewed Reports 30d' =
+			
+			CALCULATE(
+			    DISTINCTCOUNT(activities[ReportId]),
+			    activities[Activity] = "ViewReport",
+			    'calendar'[IsInLast30Days] = 1
+			)
+		formatString: 0
+		displayFolder: Activities\Time Intelligence
+		lineageTag: c1467e22-4f49-4638-b138-ab92233d238d
+
+	measure '# Viewed Reports 14d' =
+			
+			CALCULATE(
+			    DISTINCTCOUNT(activities[ReportId]),
+			    activities[Activity] = "ViewReport",
+			    'calendar'[IsInLast14Days] = 1
+			)
+		formatString: 0
+		displayFolder: Activities\Time Intelligence
+		lineageTag: b38b9cac-ed6e-4374-9b7f-083af3f77141
+
+	measure 'Total CU for Capacity/Day IOD OA' =
+			
+			CALCULATE([Total CUs IOD], ALLSELECTED())
+		formatString: #,0.00
+		displayFolder: Capacity IOD Metrics\Outlier Analysis
+		lineageTag: 3987f17a-0ad3-44ca-bb95-5600e11cb4c6
+
+	measure 'Total CUs Ignore Date2Key IOD OA' = ```
+			
+			CALCULATE(
+			    [Total CUs IOD], 
+			    REMOVEFILTERS('calendar'[Date2Key])
+			    )
+			```
+		formatString: #,0.00
+		displayFolder: Capacity IOD Metrics\Outlier Analysis
+		lineageTag: 6979c0b3-852d-47b8-8396-25464ff4bb33
+
+	/// 
+	/// 
+	measure 'Selected Capacity IOD OA' = SELECTEDVALUE(capacities[displayName])
+		displayFolder: Capacity IOD Metrics\Outlier Analysis
+		lineageTag: 1c783a1b-d9a8-4544-aefd-9398b84e211c
+
+	measure 'Selected Date IOD OA' =
+			
+			SELECTEDVALUE(calendar_timepoints[Date])
+		formatString: yyyy-mm-dd
+		displayFolder: Capacity IOD Metrics\Outlier Analysis
+		lineageTag: 3f3ceea0-2c9d-4ac7-8de7-e2223c027f15
+
+		annotation PBI_FormatHint = {"isCustom":true}
+
+	measure 'Selected Item IOD OA' =
+			
+			SELECTEDVALUE(active_items[name])
+		displayFolder: Capacity IOD Metrics\Outlier Analysis
+		lineageTag: bc2304eb-650b-4f71-842f-3d9a3eb21c3c
+
+	measure 'Selected ItemKind IOD OA' =
+			
+			SELECTEDVALUE(capacity_metrics_by_item_by_operation_by_day[ItemKind])
+		displayFolder: Capacity IOD Metrics\Outlier Analysis
+		lineageTag: 601560d0-9c3e-4b2b-8db1-503307739449
+
+	measure 'Selected Operation IOD OA' =
+			
+			SELECTEDVALUE(capacity_metrics_by_item_by_operation_by_day[OperationName])
+		displayFolder: Capacity IOD Metrics\Outlier Analysis
+		lineageTag: 49ced013-5a71-42e3-ad2b-c73d1212ed5c
+
+	measure 'Selected Workspace IOD OA' =
+			
+			SELECTEDVALUE(workspaces[WorkspaceName])
+		displayFolder: Capacity IOD Metrics\Outlier Analysis
+		lineageTag: 4b53adbb-cea8-40ea-8a7a-4b5c2aa2007d
+
+	/// Used for Item Outlier Analysis
+	measure 'Daily CU vs Avg CU IOD OA' =
+			
+			[Total CUs IOD] -  [Avg CU by Item by Day Relative 14d IOD OA]
+		formatString: #,0.00
+		displayFolder: Capacity IOD Metrics\Outlier Analysis
+		lineageTag: fda0e25d-852b-425c-af78-8e96c0faa2e5
+
+	/// Used for Item Outlier Analysis
+	measure 'Avg CU by Item by Day Relative 14d IOD OA' =
+			
+			CALCULATE( [Avg CU by Item By Day IOD OA], ALL('calendar'[Date2Key]))
+		formatString: #,0.00
+		displayFolder: Capacity IOD Metrics\Outlier Analysis
+		lineageTag: 4c2bbe9a-f850-48c8-8229-bb21a18d5b33
+
+	/// Used for Item Outlier Analysis
+	measure 'Avg CU by Item By Day IOD OA' = ```
+			
+			// KETH IOD AVG
+			VAR _calculatedResult = CALCULATETABLE(
+			    SUMMARIZECOLUMNS(
+			            'calendar'[Date2Key],
+			            "SumCuByItemByDay", [Total CUs IOD]
+			        ) , ALL('calendar'))
+			RETURN 
+			    AVERAGEX(
+			        _calculatedResult,
+			        [SumCuByItemByDay]
+			    ) 
+			```
+		formatString: #,0.00
+		displayFolder: Capacity IOD Metrics\Outlier Analysis
+		lineageTag: a3c931c9-da63-4772-b9fc-82a50c3b0ccc
+
+	measure 'CU Outlier Factor IOD OA' =
+			
+			DIVIDE(
+			    [Daily CU vs Avg CU IOD OA] - [Avg CU by Item by Day Relative 14d IOD OA],
+			    [Avg CU by Item by Day Relative 14d IOD OA], BLANK()
+			    )
+			
+			//DIVIDE( [Daily CU vs AVG CU] - [STDEV CU by Item by Day Relative 14d IOD] , [Avg CU by Item by Day Relative 14d IOD], BLANK())
+		displayFolder: Capacity IOD Metrics\Outlier Analysis
+		lineageTag: 9306521f-42db-489a-a49f-8dd45b2429cc
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'Item Analyzer Report URL' = ```
+			
+			// Get Analyzer report workspaceId and ReportId from FUAM Workspace
+			// For every workload
+			VAR _workspace_id = "eb764c8b-cf3b-55be-adf4-348fe9233657"
+			VAR _reportId = "84b6a5b7-4150-5a30-b2d3-07ffdca8f818"
+			
+			// Put URL link together for selected item
+			RETURN
+			IF(
+			    ISBLANK(SELECTEDVALUE(active_items[id])) == FALSE(),
+			    "https://app.powerbi.com/groups/" &
+			    _workspace_id &
+			    "/reports/" &
+			    _reportId &
+			    "?experience=power-bi&filter=active_items%2Fid%20eq%20%27" &
+			    MIN(active_items[id]) & 
+			    "%27",
+			    BLANK()
+			)
+			```
+		displayFolder: Items\Links
+		lineageTag: bc81573f-ab20-421d-92d5-971835ce1424
+		dataCategory: WebUrl
+
+	measure 'Daily CU vs Avg CU date filtered IOD OA' =
+			
+			CALCULATE(
+			[Total CUs IOD] -  [Avg CU by Item by Day Relative 14d IOD OA],
+			'calendar'[Date2Key] = SELECTEDVALUE(calendar_timepoints[Date])
+			)
+		displayFolder: Capacity IOD Metrics\Outlier Analysis
+		lineageTag: 32a82df7-6f84-495e-b807-cfe267d25f24
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'Selected Date Helper IOD OA' =
+			
+			VAR _selectedTimePointDate = SELECTEDVALUE(calendar_timepoints[Date])
+			RETURN
+			IF(
+			    MIN('calendar'[Date2Key]) = _selectedTimePointDate,
+			    1, BLANK()
+			)
+		formatString: 0
+		displayFolder: Capacity IOD Metrics\Outlier Analysis
+		lineageTag: 48491c44-8a6a-473b-a1ed-c9fafbcb9e15
+
+	measure 'TimePoint SKU CU' =
+			
+			DIVIDE(
+			    MAX(capacity_metrics_by_timepoint[SKUCUByTimePoint]), 30)
+		formatString: 0
+		displayFolder: Capacity TimePoint Metrics\Calculated
+		lineageTag: e33353ea-dbac-4d43-91dc-4ea7fe62ac33
+
+	column Value
+		isHidden
+		lineageTag: 6e177236-9abc-4961-ae93-da64da18826c
+		summarizeBy: none
+		isNameInferred
+		sourceColumn: [Value]
+
+		annotation SummarizationSetBy = Automatic
+
+	partition 'New Calculated Table' = calculated
+		mode: import
+		source = {"metrics bucket"}
+

@@ -1,0 +1,127 @@
+table QueryStartReport
+	lineageTag: f5bb1da3-c241-4139-a135-f8b9670d540b
+
+	column GatewayObjectId
+		dataType: string
+		lineageTag: 4c37d1b4-81ca-42e0-b583-95531b94611b
+		summarizeBy: none
+		sourceColumn: GatewayObjectId
+
+		annotation SummarizationSetBy = Automatic
+
+	column RequestId
+		dataType: string
+		lineageTag: 8e6b208a-dc58-4b98-a789-6ce6b68f2b11
+		summarizeBy: none
+		sourceColumn: RequestId
+
+		annotation SummarizationSetBy = Automatic
+
+	column QueryTrackingId
+		dataType: string
+		lineageTag: c0c78f70-fa1d-4dc9-a452-f566fd98b54f
+		summarizeBy: none
+		sourceColumn: QueryTrackingId
+
+		annotation SummarizationSetBy = Automatic
+
+	column QueryExecutionStartTimeUTC
+		dataType: dateTime
+		formatString: General Date
+		lineageTag: 619e0534-7e70-481f-92bc-2995bbd95e25
+		summarizeBy: none
+		sourceColumn: QueryExecutionStartTimeUTC
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation __PBI_SemanticLinks = [{"LinkTarget":{"TableName":"QueryStartReport","TableItemName":"QueryExecutionStartTimeUTC 5 Min","ObjectType":4},"LinkType":"UsedInGroup"}]
+
+	column QueryType
+		dataType: string
+		lineageTag: bc786df0-037c-41f1-b46d-1c852660ac88
+		summarizeBy: none
+		sourceColumn: QueryType
+
+		annotation SummarizationSetBy = Automatic
+
+	column QueryExecutionDate
+		dataType: dateTime
+		formatString: yyyy-mm-dd
+		lineageTag: 51c8355f-c15e-4861-920b-bd9fde47bbc2
+		summarizeBy: none
+		sourceColumn: QueryExecutionDate
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation UnderlyingDateTimeDataType = Date
+
+		annotation PBI_FormatHint = {"isCustom":true}
+
+	column RequestTrackingKey
+		dataType: string
+		lineageTag: 0244e36d-f57c-4990-8162-919804a47a28
+		summarizeBy: none
+		sourceColumn: RequestTrackingKey
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'QueryExecutionStartTimeUTC 5 Min' =
+			IF(
+				ISBLANK('QueryStartReport'[QueryExecutionStartTimeUTC]),
+				BLANK(),
+				(INT(('QueryStartReport'[QueryExecutionStartTimeUTC] * 1440) / 5) * 5) / 1440
+			)
+		dataType: dateTime
+		formatString: General Date
+		lineageTag: 57056cd9-2f50-4fc9-a2a0-02e07589a313
+		summarizeBy: none
+
+		extendedProperty GroupingMetadata =
+				{
+				  "version": 0,
+				  "groupedColumns": [
+				    {
+				      "Column": {
+				        "Expression": {
+				          "SourceRef": {
+				            "Entity": "QueryStartReport"
+				          }
+				        },
+				        "Property": "QueryExecutionStartTimeUTC"
+				      }
+				    }
+				  ],
+				  "binningMetadata": {
+				    "binSize": {
+				      "value": 5.0,
+				      "unit": 10
+				    }
+				  }
+				}
+
+		annotation GroupingDesignState = {"Version":0,"Sources":[{"Name":"q","Entity":"QueryStartReport"}],"GroupedColumns":[{"Column":{"Expression":{"SourceRef":{"Source":"q"}},"Property":"QueryExecutionStartTimeUTC"}}],"BinItem":{"Expression":{"Floor":{"Expression":{"Column":{"Expression":{"SourceRef":{"Source":"q"}},"Property":"QueryExecutionStartTimeUTC"}},"Size":5.0,"TimeUnit":6}}}}
+
+		annotation SummarizationSetBy = Automatic
+
+	partition QueryStartReport = m
+		mode: import
+		queryGroup: QueryStartReport
+		source =
+				let
+				    Source = Folder.Files(#"Folder Path"),
+				    #"Filtered Rows" = Table.SelectRows(Source, each Text.Contains([Name], "QueryStartReport") and [Extension] = ".log"),
+				    #"CsvDoc" = Table.AddColumn(#"Filtered Rows", "csvDocColumn", each try Table.PromoteHeaders(Csv.Document([Content]))),
+				    #"Expanded csvDocColumn" = Table.ExpandRecordColumn(CsvDoc, "csvDocColumn", {"HasError", "Value"}, {"csvDocColumn.HasError", "csvDocColumn.Value"}),
+				    #"Filtered Rows1" = Table.SelectRows(#"Expanded csvDocColumn", each [csvDocColumn.HasError] = false),
+				    #"Expanded csvDocColumn.Value" = Table.ExpandTableColumn(#"Filtered Rows1", "csvDocColumn.Value", {"GatewayObjectId", "RequestId","QueryTrackingId", "QueryExecutionStartTimeUTC", "QueryType"}, {"GatewayObjectId", "RequestId", "QueryTrackingId", "QueryExecutionStartTimeUTC", "QueryType"}),
+				    #"Removed Columns" = Table.RemoveColumns(#"Expanded csvDocColumn.Value",{"Content", "Name", "Extension", "Date accessed", "Date modified", "Date created", "Attributes", "Folder Path", "csvDocColumn.HasError"}),
+				    #"Changed Type" = Table.TransformColumnTypes(#"Removed Columns",{{"GatewayObjectId", type text}, {"RequestId", type text}, {"QueryTrackingId", type text}, {"QueryExecutionStartTimeUTC", type datetime}, {"QueryType", type text}}),
+				    #"Inserted Date" = Table.AddColumn(#"Changed Type", "QueryExecutionDate", each DateTime.Date([QueryExecutionStartTimeUTC]), type date),
+				    #"Inserted Merged Column" = Table.AddColumn(#"Inserted Date", "RequestTrackingKey", each Text.Combine({[RequestId], [QueryTrackingId]}, ""), type text)
+				in
+				    #"Inserted Merged Column"
+
+	annotation PBI_NavigationStepName = Navigation
+
+	annotation PBI_ResultType = Table
+

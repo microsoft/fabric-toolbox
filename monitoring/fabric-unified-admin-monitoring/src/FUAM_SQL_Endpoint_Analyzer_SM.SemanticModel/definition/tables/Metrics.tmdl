@@ -1,0 +1,132 @@
+table Metrics
+	lineageTag: c0609344-505c-477a-9dcd-bb540e8cba8b
+
+	measure 'Last Timestamp' = MAX('queryinsights exec_requests_history'[end_time])
+		formatString: General Date
+		displayFolder: Helpers
+		lineageTag: b10e86ef-a096-43c6-92b3-34a0673a3ba7
+
+	measure 'Selected Time Unit Value' = SELECTEDVALUE('Time Units'[UnitValue])
+		formatString: 0
+		displayFolder: Helpers
+		lineageTag: c25a5915-587c-4008-b04e-0d6ea6c77ca5
+
+	measure 'Selected Time Unit Name' = SELECTEDVALUE('Time Units'[Unit])
+		displayFolder: Helpers
+		lineageTag: fd47827d-dd77-4c05-9b8e-8424a5bcea4e
+
+	measure 'Total Elapsed Duration (RH)' =
+			
+			DIVIDE(
+			    SUM('queryinsights exec_requests_history'[total_elapsed_time_ms]),
+			    [Selected Time Unit Value]
+			)
+		formatString: #,0
+		displayFolder: Request History
+		lineageTag: 728c8390-9e61-4095-a8dc-0c96c293bee1
+
+	measure 'Runs (RH)' = COUNTROWS('queryinsights exec_requests_history')
+		formatString: #,0
+		displayFolder: Request History
+		lineageTag: 28e1830e-607b-4bc6-b66c-5ac92fda05e3
+
+	measure 'Row count (RH)' = SUM('queryinsights exec_requests_history'[row_count])
+		formatString: #,0
+		displayFolder: Request History
+		lineageTag: 6fea6308-1daa-4612-8c49-af9666a4b999
+
+	measure 'Result Cache Hit (RH)' = SUM('queryinsights exec_requests_history'[result_cache_hit])
+		formatString: #,0
+		displayFolder: Request History
+		lineageTag: 0e77cefc-1511-48d6-a987-573bd79a186a
+
+	measure 'Success Rate (RH)' = ```
+			
+			VAR _succeeded = 
+			CALCULATE(
+			    [Runs (RH)],
+			    'queryinsights exec_requests_history'[status] = "Succeeded"
+			)
+			RETURN
+			DIVIDE(
+			    _succeeded,
+			    [Runs (RH)]
+			)
+			```
+		formatString: 0.00%;-0.00%;0.00%
+		displayFolder: Request History
+		lineageTag: 3201fd29-9b94-41cf-b50b-4eaf600be75e
+
+	measure 'Allocated CPU Time (RH)' =
+			
+			DIVIDE(
+			    SUM('queryinsights exec_requests_history'[allocated_cpu_time_ms]),
+			    [Selected Time Unit Value]
+			)
+		formatString: #,0
+		displayFolder: Request History
+		lineageTag: bd769574-31d2-424f-b66c-717e85801f2d
+
+	measure 'Data Scanned Disk (RH)' =
+			
+			DIVIDE(
+			    SUM('queryinsights exec_requests_history'[data_scanned_disk_mb]),
+			    [Selected Size Unit Value]
+			)
+		displayFolder: Request History
+		lineageTag: dd9f072f-346e-43b8-b127-dd93d1407c4f
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'Data Scanned Remote Storage (RH)' =
+			
+			DIVIDE(
+			    SUM('queryinsights exec_requests_history'[data_scanned_remote_storage_mb]),
+			    [Selected Size Unit Value]
+			)
+		formatString: #,0.00
+		displayFolder: Request History
+		lineageTag: dbbaa64b-96e6-4e03-807d-6164504e2b8c
+
+	measure 'Max Allocated CPU Time (RH)' = MAX('queryinsights exec_requests_history'[allocated_cpu_time_ms])
+		formatString: #,0
+		displayFolder: Request History
+		lineageTag: 78d76286-d971-49f0-a776-fde12aebb756
+
+	measure 'Max Elapsed Duration (RH)' =
+			
+			DIVIDE(
+			    MAX('queryinsights exec_requests_history'[total_elapsed_time_ms]),
+			    [Selected Time Unit Value]
+			)
+		formatString: #,0.00
+		displayFolder: Request History
+		lineageTag: 8f3aece4-e37f-491a-9372-29f3edb144be
+
+	measure 'Selected Size Unit Name' = SELECTEDVALUE('Size Units'[Unit])
+		displayFolder: Helpers
+		lineageTag: d5a88fe0-ab5c-4ded-ae44-50b0d82b3b5b
+
+	measure 'Selected Size Unit Value' = SELECTEDVALUE('Size Units'[UnitValue])
+		formatString: 0
+		displayFolder: Helpers
+		lineageTag: 4982637d-2789-45c3-8aee-c3e195d2cd44
+
+	measure 'FUAM Release' = "2025.3.1"
+		lineageTag: dd7d61f6-b05f-446e-b555-9239e0fec136
+
+	column Value
+		isHidden
+		lineageTag: d06fbd8a-211b-4f96-9bd7-a899260609e6
+		summarizeBy: none
+		isNameInferred
+		sourceColumn: [Value]
+
+		annotation SummarizationSetBy = Automatic
+
+	partition Metrics = calculated
+		mode: import
+		source = {"Metrics"}
+
+	annotation PBI_Id = 6df4121b41d741fe84d975f406ece9f1
+

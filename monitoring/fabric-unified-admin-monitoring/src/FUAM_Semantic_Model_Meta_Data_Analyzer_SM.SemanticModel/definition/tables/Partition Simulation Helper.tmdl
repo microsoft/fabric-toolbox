@@ -1,0 +1,172 @@
+table 'Partition Simulation Helper'
+	lineageTag: 7182dd44-fbf9-40ba-a1b2-e2ddfb14f4fd
+
+	measure 'Simulation RT Rows' = ```
+			
+			VAR _version = "Simulation"
+			VAR _sum = SUMX(FILTER('Partition Simulation Helper', 'Partition Simulation Helper'[IsCurrent] = _version), 'Partition Simulation Helper'[Avg])
+			VAR _rt = CALCULATE(
+			        SUMX(FILTER('Partition Simulation Helper', 'Partition Simulation Helper'[IsCurrent] = _version), 'Partition Simulation Helper'[Avg]) + [Existing RT Rows],
+			        FILTER(ALLSELECTED('Partition Simulation Helper'[Value]),
+			                          ISONORAFTER('Partition Simulation Helper'[Value],
+			                          MAX('Partition Simulation Helper'[Value]), DESC)))
+			
+			RETURN 
+			    IF(ISBLANK(_sum), BLANK(), _rt)
+			```
+		formatString: #,0
+		lineageTag: baee1a1c-67e7-4713-8424-1ecff813c76f
+
+		annotation PBI_FormatHint = {"isDecimal":true}
+
+	measure 'Existing RT Rows' = ```
+			
+			VAR _version = "Current"
+			VAR _sum = SUMX(FILTER('Partition Simulation Helper', 'Partition Simulation Helper'[IsCurrent] = _version), 'Partition Simulation Helper'[Avg])
+			VAR _rt = CALCULATE(
+			        SUMX(FILTER('Partition Simulation Helper', 'Partition Simulation Helper'[IsCurrent] = _version), 'Partition Simulation Helper'[Avg]),
+			        FILTER(ALLSELECTED('Partition Simulation Helper'[Value]),
+			                          ISONORAFTER('Partition Simulation Helper'[Value],
+			                          MAX('Partition Simulation Helper'[Value]), DESC)))
+			
+			RETURN 
+			    IF(ISBLANK(_sum), BLANK(), _rt)
+			```
+		formatString: #,0
+		lineageTag: fdb3404f-2a42-47a8-abf9-0ddd6a1b672f
+
+		annotation PBI_FormatHint = {"isDecimal":true}
+
+	measure 'Existing RT Data Size' = ```
+			
+			VAR _version = "Current"
+			VAR _sum = SUMX(FILTER('Partition Simulation Helper', 'Partition Simulation Helper'[IsCurrent] = _version), 'Partition Simulation Helper'[SizeInBytes])
+			VAR _rt = CALCULATE(
+			        SUMX(FILTER('Partition Simulation Helper', 'Partition Simulation Helper'[IsCurrent] = _version), 'Partition Simulation Helper'[SizeInBytes]),
+			        FILTER(ALLSELECTED('Partition Simulation Helper'[Value]),
+			                          ISONORAFTER('Partition Simulation Helper'[Value],
+			                          MAX('Partition Simulation Helper'[Value]), DESC)))
+			
+			RETURN 
+			    IF(ISBLANK(_sum), BLANK(), _rt)
+			```
+		lineageTag: 31e0f898-3639-489f-ad3a-dde4b582249c
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'Simulation RT Data Size' = ```
+			
+			VAR _version = "Simulation"
+			VAR _sum = SUMX(FILTER('Partition Simulation Helper', 'Partition Simulation Helper'[IsCurrent] = _version), 'Partition Simulation Helper'[SizeInBytes])
+			var _current = [Existing RT Data Size]
+			VAR _rt = CALCULATE(
+			        SUMX(FILTER('Partition Simulation Helper', 'Partition Simulation Helper'[IsCurrent] = _version), 'Partition Simulation Helper'[SizeInBytes]) + ([Existing RT Data Size]),
+			        FILTER(ALLSELECTED('Partition Simulation Helper'[Value]),
+			                          ISONORAFTER('Partition Simulation Helper'[Value],
+			                          MAX('Partition Simulation Helper'[Value]), DESC)))
+			
+			RETURN 
+			    IF(ISBLANK(_sum), BLANK(), _rt)
+			```
+		lineageTag: 4dcf5863-6174-49b0-8a22-be329df60aa5
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'Simulation RT Size' = [Simulation RT Data Size] / [Selected Unit Value]
+		lineageTag: 3d662a34-d896-4ca3-9b90-60785b69e592
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'Existing RT Size' = [Existing RT Data Size] / [Selected Unit Value]
+		lineageTag: 51a3dc7d-05aa-45af-94d6-c216b0ecfbea
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column Value
+		formatString: 0
+		lineageTag: 0e9fb671-cdd7-4d97-ae3f-97721f701649
+		summarizeBy: sum
+		isNameInferred
+		sourceColumn: [Value]
+
+		annotation SummarizationSetBy = Automatic
+
+	column Avg
+		lineageTag: 60ee6c1e-58c6-4565-9974-625bbc0f0afc
+		summarizeBy: sum
+		isNameInferred
+		sourceColumn: [Avg]
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column ID
+		lineageTag: 1bfa6cf9-14e6-4ee5-b9b2-b41226ac049c
+		summarizeBy: none
+		isNameInferred
+		sourceColumn: Tables TM[ID]
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column IsCurrent = ```
+			
+			VAR _foundedValue = LOOKUPVALUE('Partitions TM'[InternalIndex], 'Partitions TM'[InternalIndex], 'Partition Simulation Helper'[Value], 'Partitions TM'[TableID], 'Partition Simulation Helper'[ID], BLANK())
+			
+			RETURN
+			    IF(ISBLANK(_foundedValue), "Simulation", "Current")
+			
+			```
+		lineageTag: f276ae0f-b76c-4e03-97c1-36232c36ebba
+		summarizeBy: none
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Table Name'
+		lineageTag: 7610df11-21ef-420e-b4a3-da1382148bd3
+		summarizeBy: none
+		isNameInferred
+		sourceColumn: Tables TM[Table Name]
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Data Sum Size Bytes' = LOOKUPVALUE('Partitions TM'[Data Sum Size Bytes], 'Partitions TM'[InternalIndex], 'Partition Simulation Helper'[Value], 'Tables TM'[Table Name], 'Partition Simulation Helper'[Table Name], BLANK())
+		lineageTag: c154ff83-1c8d-4bd9-8fc9-44ba14c6bb3e
+		summarizeBy: sum
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column SizeInBytes
+		lineageTag: fdbee084-5172-45ba-a725-d0b7604ad6bd
+		summarizeBy: sum
+		isNameInferred
+		sourceColumn: [SizeInBytes]
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	partition 'Partition Simulation Helper' = calculated
+		mode: import
+		source = ```
+				
+				CROSSJOIN(
+				    GENERATESERIES(1, 64, 1),
+				    SUMMARIZE(
+				        'Tables TM', 
+				        'Tables TM'[ID], 
+				        'Tables TM'[Table Name],
+				        "Avg", 
+				            ROUND([Avg Rows by Partition],0),
+				        "SizeInBytes", 
+				            ROUND([Avg Data Size by Partition Bytes], 0)
+				    )
+				)
+				```
+
+	annotation PBI_Id = 2cbd019211114f0d9c7edc7b84911aea
+

@@ -1,0 +1,73 @@
+table workspace_monitoring_reports
+	lineageTag: 800b997e-9d96-4f8c-b47b-f682b3d9070c
+	sourceLineageTag: [dbo].[workspace_monitoring_reports]
+
+	column WorkspaceId
+		dataType: string
+		sourceProviderType: varchar(8000)
+		lineageTag: 49239593-d98b-4502-bf4f-ffc60e546b47
+		sourceLineageTag: WorkspaceId
+		summarizeBy: none
+		sourceColumn: WorkspaceId
+
+		annotation SummarizationSetBy = Automatic
+
+	column KQLDatabaseId
+		dataType: string
+		sourceProviderType: varchar(8000)
+		lineageTag: 7d712920-2aa0-46a0-9f8f-ef1f7f1bd1f3
+		sourceLineageTag: KQLDatabaseId
+		summarizeBy: none
+		sourceColumn: KQLDatabaseId
+
+		annotation SummarizationSetBy = Automatic
+
+	column KQLDatabaseName
+		dataType: string
+		sourceProviderType: varchar(8000)
+		lineageTag: 6555b4c9-2ad8-497c-863e-8c2d72253e92
+		sourceLineageTag: KQLDatabaseName
+		summarizeBy: none
+		sourceColumn: KQLDatabaseName
+
+		annotation SummarizationSetBy = Automatic
+
+	column SemanticModelId
+		dataType: string
+		sourceProviderType: varchar(8000)
+		lineageTag: c5bec216-9326-4fbd-be9d-52f34bc2b13f
+		sourceLineageTag: SemanticModelId
+		summarizeBy: none
+		sourceColumn: SemanticModelId
+
+		annotation SummarizationSetBy = Automatic
+
+	column ReportId
+		dataType: string
+		sourceProviderType: varchar(8000)
+		lineageTag: 51249aba-a29b-4cb0-874b-1ac3dfca93e4
+		sourceLineageTag: ReportId
+		summarizeBy: none
+		sourceColumn: ReportId
+
+		annotation SummarizationSetBy = Automatic
+
+	column ReportName
+		dataType: string
+		sourceProviderType: varchar(8000)
+		lineageTag: d3a9b7d5-e1f4-4f2b-ab0a-a63fd60b3ded
+		sourceLineageTag: ReportName
+		summarizeBy: none
+		sourceColumn: ReportName
+
+		annotation SummarizationSetBy = Automatic
+
+	partition workspace_monitoring_reports = entity
+		mode: directLake
+		source
+			entityName: workspace_monitoring_reports
+			schemaName: dbo
+			expressionSource: DatabaseQuery
+
+	annotation PBI_ResultType = Table
+

@@ -1,0 +1,73 @@
+table workspaces_scanned_users
+	lineageTag: 6af566f0-5d3d-49a0-8fe8-8a759b99868f
+	sourceLineageTag: [dbo].[workspaces_scanned_users]
+
+	column WorkspaceId
+		dataType: string
+		sourceProviderType: varchar(8000)
+		lineageTag: e0f64d68-c2c5-4dc4-a822-130608158aff
+		sourceLineageTag: WorkspaceId
+		summarizeBy: none
+		sourceColumn: WorkspaceId
+
+		annotation SummarizationSetBy = Automatic
+
+	column GroupUserAccessRight
+		dataType: string
+		sourceProviderType: varchar(8000)
+		lineageTag: 19f1851d-fe8f-4cef-869a-7d0af2cb1f76
+		sourceLineageTag: GroupUserAccessRight
+		summarizeBy: none
+		sourceColumn: GroupUserAccessRight
+
+		annotation SummarizationSetBy = Automatic
+
+	column Identifier
+		dataType: string
+		sourceProviderType: varchar(8000)
+		lineageTag: 75899641-9b75-434a-89eb-0e8cf40032f2
+		sourceLineageTag: Identifier
+		summarizeBy: none
+		sourceColumn: Identifier
+
+		annotation SummarizationSetBy = Automatic
+
+	column GraphId
+		dataType: string
+		sourceProviderType: varchar(8000)
+		lineageTag: 434c278c-4531-4c9d-9ee3-4ee400733a41
+		sourceLineageTag: GraphId
+		summarizeBy: none
+		sourceColumn: GraphId
+
+		annotation SummarizationSetBy = Automatic
+
+	column PrincipalType
+		dataType: string
+		sourceProviderType: varchar(8000)
+		lineageTag: 81cd75bb-d981-47ea-8406-f0865993a8b7
+		sourceLineageTag: PrincipalType
+		summarizeBy: none
+		sourceColumn: PrincipalType
+
+		annotation SummarizationSetBy = Automatic
+
+	column UserType
+		dataType: string
+		sourceProviderType: varchar(8000)
+		lineageTag: 08ea3c47-128f-4367-8e7f-93f4361a6de2
+		sourceLineageTag: UserType
+		summarizeBy: none
+		sourceColumn: UserType
+
+		annotation SummarizationSetBy = Automatic
+
+	partition workspaces_scanned_users = entity
+		mode: directLake
+		source
+			entityName: workspaces_scanned_users
+			schemaName: dbo
+			expressionSource: DatabaseQuery
+
+	annotation PBI_ResultType = Table
+

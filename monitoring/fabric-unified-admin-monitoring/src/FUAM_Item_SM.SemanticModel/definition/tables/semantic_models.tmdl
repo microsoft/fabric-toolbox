@@ -1,0 +1,178 @@
+table semantic_models
+	lineageTag: ba7d8204-1801-4312-ab30-d315f098ca6d
+	sourceLineageTag: [dbo].[semantic_models]
+
+	column WorkspaceId
+		dataType: string
+		sourceProviderType: varchar(8000)
+		lineageTag: 11656a98-8b4f-4c4a-8986-6be0a290c07b
+		sourceLineageTag: WorkspaceId
+		summarizeBy: none
+		sourceColumn: WorkspaceId
+
+		annotation SummarizationSetBy = Automatic
+
+	column SemanticModelId
+		dataType: string
+		sourceProviderType: varchar(8000)
+		lineageTag: 27ece8a3-e169-429f-bb03-7c012d2706b0
+		sourceLineageTag: SemanticModelId
+		summarizeBy: none
+		sourceColumn: SemanticModelId
+
+		annotation SummarizationSetBy = Automatic
+
+	column Name
+		dataType: string
+		sourceProviderType: varchar(8000)
+		lineageTag: 23d1f064-0987-4eb2-af19-4a6923dead81
+		sourceLineageTag: Name
+		summarizeBy: none
+		sourceColumn: Name
+
+		annotation SummarizationSetBy = Automatic
+
+	column ConfiguredById
+		dataType: string
+		sourceProviderType: varchar(8000)
+		lineageTag: 22e04479-abe3-4660-8cd6-2b3d8c8ecd1a
+		sourceLineageTag: ConfiguredById
+		summarizeBy: none
+		sourceColumn: ConfiguredById
+
+		annotation SummarizationSetBy = Automatic
+
+	column isEffectiveIdentityRequired
+		dataType: boolean
+		formatString: """TRUE"";""TRUE"";""FALSE"""
+		sourceProviderType: bit
+		lineageTag: 57865568-154f-44aa-9f86-594311b778a5
+		sourceLineageTag: isEffectiveIdentityRequired
+		summarizeBy: none
+		sourceColumn: isEffectiveIdentityRequired
+
+		annotation SummarizationSetBy = Automatic
+
+	column isEffectiveIdentityRolesRequired
+		dataType: boolean
+		formatString: """TRUE"";""TRUE"";""FALSE"""
+		sourceProviderType: bit
+		lineageTag: c08e41d6-0c30-44fc-86f9-08bae0f5adb8
+		sourceLineageTag: isEffectiveIdentityRolesRequired
+		summarizeBy: none
+		sourceColumn: isEffectiveIdentityRolesRequired
+
+		annotation SummarizationSetBy = Automatic
+
+	column StorageMode
+		dataType: string
+		sourceProviderType: varchar(8000)
+		lineageTag: 2a670de5-26c4-45b1-9ac7-0a44f5e5b83f
+		sourceLineageTag: StorageMode
+		summarizeBy: none
+		sourceColumn: StorageMode
+
+		annotation SummarizationSetBy = Automatic
+
+	column CreatedDateTime
+		dataType: string
+		sourceProviderType: varchar(8000)
+		lineageTag: f57d38ef-a434-443a-a4d7-38ccfae35be1
+		sourceLineageTag: CreatedDateTime
+		summarizeBy: none
+		sourceColumn: CreatedDateTime
+
+		annotation SummarizationSetBy = Automatic
+
+	column ContentProviderType
+		dataType: string
+		sourceProviderType: varchar(8000)
+		lineageTag: 232fbb15-a74d-420e-9b48-06ade1946d42
+		sourceLineageTag: ContentProviderType
+		summarizeBy: none
+		sourceColumn: ContentProviderType
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'directQueryRefreshSchedule.frequency'
+		dataType: double
+		sourceProviderType: float
+		lineageTag: 2bc798aa-0559-40e8-9e11-1b38ee13a71e
+		sourceLineageTag: directQueryRefreshSchedule.frequency
+		summarizeBy: sum
+		sourceColumn: directQueryRefreshSchedule.frequency
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column 'directQueryRefreshSchedule.localTimeZoneId'
+		dataType: string
+		sourceProviderType: varchar(8000)
+		lineageTag: 9d957a5a-c335-407a-9e5f-15c39f10f922
+		sourceLineageTag: directQueryRefreshSchedule.localTimeZoneId
+		summarizeBy: none
+		sourceColumn: directQueryRefreshSchedule.localTimeZoneId
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'refreshSchedule.enabled'
+		dataType: boolean
+		formatString: """TRUE"";""TRUE"";""FALSE"""
+		sourceProviderType: bit
+		lineageTag: 12bf629b-c055-40d1-9fd2-5ea1aff795e8
+		sourceLineageTag: refreshSchedule.enabled
+		summarizeBy: none
+		sourceColumn: refreshSchedule.enabled
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'refreshSchedule.localTimeZoneId'
+		dataType: string
+		sourceProviderType: varchar(8000)
+		lineageTag: 4975bd90-c393-4c2b-9d86-1c4a0bbea352
+		sourceLineageTag: refreshSchedule.localTimeZoneId
+		summarizeBy: none
+		sourceColumn: refreshSchedule.localTimeZoneId
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'refreshSchedule.notifyOption'
+		dataType: string
+		sourceProviderType: varchar(8000)
+		lineageTag: bb7943ba-67be-45b7-b486-89f0b32e7261
+		sourceLineageTag: refreshSchedule.notifyOption
+		summarizeBy: none
+		sourceColumn: refreshSchedule.notifyOption
+
+		annotation SummarizationSetBy = Automatic
+
+	column CreatedDate
+		dataType: string
+		sourceProviderType: varchar(8000)
+		lineageTag: 8a027e8b-72f9-45d4-aa8b-4cd78935189a
+		sourceLineageTag: CreatedDate
+		summarizeBy: none
+		sourceColumn: CreatedDate
+
+		annotation SummarizationSetBy = Automatic
+
+	column description
+		dataType: string
+		sourceProviderType: varchar(8000)
+		lineageTag: 2dfd56f1-2d15-4b35-850e-36e48e254f5e
+		sourceLineageTag: description
+		summarizeBy: none
+		sourceColumn: description
+
+		annotation SummarizationSetBy = Automatic
+
+	partition semantic_models = entity
+		mode: directLake
+		source
+			entityName: semantic_models
+			schemaName: dbo
+			expressionSource: DatabaseQuery
+
+	annotation PBI_ResultType = Table
+

@@ -1,0 +1,124 @@
+table tenant_settings
+	lineageTag: 166a6b62-bac2-4aee-81da-89f664bc06f6
+	sourceLineageTag: [dbo].[tenant_settings]
+
+	column TransferDate
+		dataType: dateTime
+		formatString: yyyy-mm-dd
+		sourceProviderType: date
+		lineageTag: c875042a-6eba-4e42-8155-6846a1d1f7fc
+		sourceLineageTag: TransferDate
+		summarizeBy: none
+		sourceColumn: TransferDate
+
+		changedProperty = FormatString
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isCustom":true}
+
+	column TransferDateTime
+		dataType: dateTime
+		formatString: General Date
+		sourceProviderType: datetime2
+		lineageTag: e7ad4085-cd9a-4e73-930b-ef62233778b6
+		sourceLineageTag: TransferDateTime
+		summarizeBy: none
+		sourceColumn: TransferDateTime
+
+		annotation SummarizationSetBy = Automatic
+
+	column canSpecifySecurityGroups
+		dataType: boolean
+		formatString: """TRUE"";""TRUE"";""FALSE"""
+		sourceProviderType: bit
+		lineageTag: 7c83814c-78c6-425a-85e8-1ba0d650fbb0
+		sourceLineageTag: canSpecifySecurityGroups
+		summarizeBy: none
+		sourceColumn: canSpecifySecurityGroups
+
+		annotation SummarizationSetBy = Automatic
+
+	column enabled
+		dataType: boolean
+		formatString: """TRUE"";""TRUE"";""FALSE"""
+		sourceProviderType: bit
+		lineageTag: 94793258-d5d3-4163-a1a4-7eca7ebe7f06
+		sourceLineageTag: enabled
+		summarizeBy: none
+		sourceColumn: enabled
+
+		annotation SummarizationSetBy = Automatic
+
+	column settingName
+		dataType: string
+		sourceProviderType: varchar(8000)
+		lineageTag: e2a5c736-8a68-4820-b94f-161d11c5214b
+		sourceLineageTag: settingName
+		summarizeBy: none
+		sourceColumn: settingName
+
+		annotation SummarizationSetBy = Automatic
+
+	column tenantSettingGroup
+		dataType: string
+		sourceProviderType: varchar(8000)
+		lineageTag: 4250b9fa-0a8f-48a9-abd6-9cf087a86731
+		sourceLineageTag: tenantSettingGroup
+		summarizeBy: none
+		sourceColumn: tenantSettingGroup
+
+		annotation SummarizationSetBy = Automatic
+
+	column title
+		dataType: string
+		sourceProviderType: varchar(8000)
+		lineageTag: b59f8931-753f-4fd9-88ce-39c97d0d9649
+		sourceLineageTag: title
+		summarizeBy: none
+		sourceColumn: title
+
+		annotation SummarizationSetBy = Automatic
+
+	column delegateToCapacity
+		dataType: boolean
+		formatString: """TRUE"";""TRUE"";""FALSE"""
+		sourceProviderType: bit
+		lineageTag: 6d564576-d6f2-47ad-b4a1-b97d955b286b
+		sourceLineageTag: delegateToCapacity
+		summarizeBy: none
+		sourceColumn: delegateToCapacity
+
+		annotation SummarizationSetBy = Automatic
+
+	column delegateToDomain
+		dataType: boolean
+		formatString: """TRUE"";""TRUE"";""FALSE"""
+		sourceProviderType: bit
+		lineageTag: a4c20e86-3a35-4eee-818c-ad8f9755068e
+		sourceLineageTag: delegateToDomain
+		summarizeBy: none
+		sourceColumn: delegateToDomain
+
+		annotation SummarizationSetBy = Automatic
+
+	column delegateToWorkspace
+		dataType: boolean
+		formatString: """TRUE"";""TRUE"";""FALSE"""
+		sourceProviderType: bit
+		lineageTag: abce722e-6405-4e81-bd32-fb35e3ba3d40
+		sourceLineageTag: delegateToWorkspace
+		summarizeBy: none
+		sourceColumn: delegateToWorkspace
+
+		annotation SummarizationSetBy = Automatic
+
+	partition tenant_settings = entity
+		mode: directLake
+		source
+			entityName: tenant_settings
+			schemaName: dbo
+			expressionSource: DatabaseQuery
+
+	annotation PBI_ResultType = Table
+

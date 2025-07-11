@@ -1,0 +1,207 @@
+table 'Storage Table Column Segments TM'
+	lineageTag: 050ba197-3b1d-4618-9470-57c4e668d1b5
+
+	column DATABASE_NAME
+		dataType: string
+		lineageTag: e4d697f9-32ce-4785-9a9c-7893bf4659f5
+		summarizeBy: none
+		sourceColumn: DATABASE_NAME
+
+		annotation SummarizationSetBy = Automatic
+
+	column CUBE_NAME
+		dataType: string
+		lineageTag: 23f161ae-70df-49ef-8add-9876620dba78
+		summarizeBy: none
+		sourceColumn: CUBE_NAME
+
+		annotation SummarizationSetBy = Automatic
+
+	column MEASURE_GROUP_NAME
+		dataType: string
+		lineageTag: 09fabc3f-f6a5-44e5-8a59-5405ee1a701d
+		summarizeBy: none
+		sourceColumn: MEASURE_GROUP_NAME
+
+		annotation SummarizationSetBy = Automatic
+
+	column PARTITION_NAME
+		dataType: string
+		lineageTag: a27d8b40-5291-49e8-85a3-31616e3d64a5
+		summarizeBy: none
+		sourceColumn: PARTITION_NAME
+
+		annotation SummarizationSetBy = Automatic
+
+	column DIMENSION_NAME
+		dataType: string
+		lineageTag: 3343e7de-9986-4831-bc5f-327c4ca176af
+		summarizeBy: none
+		sourceColumn: DIMENSION_NAME
+
+		annotation SummarizationSetBy = Automatic
+
+	column TABLE_ID
+		dataType: string
+		lineageTag: 37a434ec-456b-440c-b256-839426eff68b
+		summarizeBy: none
+		sourceColumn: TABLE_ID
+
+		annotation SummarizationSetBy = Automatic
+
+	column COLUMN_ID
+		dataType: string
+		lineageTag: fab8039d-5d77-4ac2-b6fc-597e44448001
+		summarizeBy: none
+		sourceColumn: COLUMN_ID
+
+		annotation SummarizationSetBy = Automatic
+
+	column SEGMENT_NUMBER
+		dataType: int64
+		formatString: 0
+		lineageTag: a1f86fb0-2891-4f0d-8bc3-e8b2cc42d854
+		summarizeBy: sum
+		sourceColumn: SEGMENT_NUMBER
+
+		annotation SummarizationSetBy = Automatic
+
+	column TABLE_PARTITION_NUMBER
+		dataType: int64
+		formatString: 0
+		lineageTag: 1f6bf5d1-9b2a-4c05-9dc9-4b0902b3eb47
+		summarizeBy: sum
+		sourceColumn: TABLE_PARTITION_NUMBER
+
+		annotation SummarizationSetBy = Automatic
+
+	column RECORDS_COUNT
+		dataType: int64
+		formatString: #,0
+		lineageTag: 4d527be4-6f36-4364-84e9-3c0de9440911
+		summarizeBy: sum
+		sourceColumn: RECORDS_COUNT
+
+		annotation SummarizationSetBy = Automatic
+
+	column ALLOCATED_SIZE
+		dataType: double
+		lineageTag: 6b723ec4-ecbc-4177-96bf-5f140343fd8e
+		summarizeBy: sum
+		sourceColumn: ALLOCATED_SIZE
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column USED_SIZE
+		dataType: double
+		lineageTag: f36c270c-3996-4c72-905e-2378e104c89f
+		summarizeBy: sum
+		sourceColumn: USED_SIZE
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column COMPRESSION_TYPE
+		dataType: string
+		lineageTag: 08db5808-9e28-4b42-8d75-927ffe3dc50c
+		summarizeBy: none
+		sourceColumn: COMPRESSION_TYPE
+
+		annotation SummarizationSetBy = Automatic
+
+	column BITS_COUNT
+		dataType: int64
+		formatString: 0
+		lineageTag: ea486933-aaaa-4680-8221-fa624a9d64d3
+		summarizeBy: sum
+		sourceColumn: BITS_COUNT
+
+		annotation SummarizationSetBy = Automatic
+
+	column BOOKMARK_BITS_COUNT
+		dataType: int64
+		formatString: 0
+		lineageTag: 2346bd73-af68-4f2b-9076-b94e3c6a7cb5
+		summarizeBy: sum
+		sourceColumn: BOOKMARK_BITS_COUNT
+
+		annotation SummarizationSetBy = Automatic
+
+	column VERTIPAQ_STATE
+		dataType: string
+		lineageTag: 478080d2-2f70-4750-b05d-3382d56abb2e
+		summarizeBy: none
+		sourceColumn: VERTIPAQ_STATE
+
+		annotation SummarizationSetBy = Automatic
+
+	column ISPAGEABLE
+		dataType: boolean
+		formatString: """TRUE"";""TRUE"";""FALSE"""
+		lineageTag: 250bc09a-504f-4bea-811b-f391431a10c6
+		summarizeBy: none
+		sourceColumn: ISPAGEABLE
+
+		annotation SummarizationSetBy = Automatic
+
+	column ISRESIDENT
+		dataType: boolean
+		formatString: """TRUE"";""TRUE"";""FALSE"""
+		lineageTag: 4c2c93bb-12b8-40f5-831a-97bc8e71f7be
+		summarizeBy: none
+		sourceColumn: ISRESIDENT
+
+		annotation SummarizationSetBy = Automatic
+
+	column TEMPERATURE
+		dataType: double
+		lineageTag: 0cc8961d-5675-472f-b3bb-2cb65970b506
+		summarizeBy: sum
+		sourceColumn: TEMPERATURE
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column LAST_ACCESSED
+		dataType: dateTime
+		formatString: yyyy-mm-dd hh:nn:ss
+		lineageTag: 485dbf91-b426-4fdd-9160-62f43cbc30dc
+		summarizeBy: none
+		sourceColumn: LAST_ACCESSED
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isDateTimeCustom":true}
+
+	column ExtractedColumnID
+		dataType: double
+		lineageTag: a627ba7e-aa3d-490a-bc6d-75107569ae1f
+		summarizeBy: none
+		sourceColumn: ExtractedColumnID
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	partition 'Storage Table Column Segments TM' = m
+		mode: import
+		queryGroup: 'Meta Data'
+		source =
+				let
+				    Source = AnalysisServices.Database(serverURL, modelName, [Query="SELECT * FROM $System.DISCOVER_STORAGE_TABLE_COLUMN_SEGMENTS", Implementation="2.0"]),
+				    ExtractColumnId1 = Table.AddColumn(Source, "ExtractColumnId1", each Text.BetweenDelimiters([COLUMN_ID], "(", ")"), type text),
+				    ExtractColumnId2 = Table.AddColumn(ExtractColumnId1, "ExtractColumnId2", each Text.BetweenDelimiters([TABLE_ID], "(", ")", {0, RelativePosition.FromEnd}, 0), type text),
+				    AddColumnId = Table.AddColumn(ExtractColumnId2, "ExtractedColumnID", each if [ExtractColumnId1] <> "" then [ExtractColumnId1] else [ExtractColumnId2]),
+				    #"Removed Columns" = Table.RemoveColumns(AddColumnId,{"ExtractColumnId1", "ExtractColumnId2"}),
+				    #"Changed Type" = Table.TransformColumnTypes(#"Removed Columns",{{"ExtractedColumnID", type number}})
+				in
+				    #"Changed Type"
+
+	annotation PBI_ResultType = Table
+
+	annotation PBI_NavigationStepName = Navigation
+

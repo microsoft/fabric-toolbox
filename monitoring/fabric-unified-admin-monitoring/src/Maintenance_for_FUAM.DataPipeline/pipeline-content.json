@@ -1,0 +1,84 @@
+{
+    "properties": {
+        "activities": [
+            {
+                "name": "Perform Backup",
+                "type": "TridentNotebook",
+                "dependsOn": [],
+                "policy": {
+                    "timeout": "0.12:00:00",
+                    "retry": 0,
+                    "retryIntervalInSeconds": 30,
+                    "secureOutput": false,
+                    "secureInput": false
+                },
+                "typeProperties": {
+                    "notebookId": "356043fc-da88-5bab-9eaf-586787c6da6d",
+                    "workspaceId": "eb764c8b-cf3b-55be-adf4-348fe9233657",
+                    "parameters": {
+                        "backup_files": {
+                            "value": {
+                                "value": "@pipeline().parameters.backup_files",
+                                "type": "Expression"
+                            },
+                            "type": "bool"
+                        },
+                        "keep_historic_days": {
+                            "value": {
+                                "value": "@pipeline().parameters.keep_historic_days",
+                                "type": "Expression"
+                            },
+                            "type": "int"
+                        }
+                    }
+                }
+            },
+            {
+                "name": "Perform Table Maintenance",
+                "type": "TridentNotebook",
+                "dependsOn": [
+                    {
+                        "activity": "Perform Backup",
+                        "dependencyConditions": [
+                            "Succeeded"
+                        ]
+                    }
+                ],
+                "policy": {
+                    "timeout": "0.12:00:00",
+                    "retry": 0,
+                    "retryIntervalInSeconds": 30,
+                    "secureOutput": false,
+                    "secureInput": false
+                },
+                "typeProperties": {
+                    "notebookId": "6a60b8f4-2512-5832-8c57-aa0bc6463d8d",
+                    "workspaceId": "eb764c8b-cf3b-55be-adf4-348fe9233657",
+                    "parameters": {
+                        "number_of_days": {
+                            "value": {
+                                "value": "@pipeline().parameters.vacuum_number_of_days",
+                                "type": "Expression"
+                            },
+                            "type": "int"
+                        }
+                    }
+                }
+            }
+        ],
+        "parameters": {
+            "keep_historic_days": {
+                "type": "int",
+                "defaultValue": 14
+            },
+            "backup_files": {
+                "type": "bool",
+                "defaultValue": true
+            },
+            "vacuum_number_of_days": {
+                "type": "string",
+                "defaultValue": "14"
+            }
+        }
+    }
+}

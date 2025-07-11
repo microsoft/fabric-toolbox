@@ -1,0 +1,193 @@
+table 'Storage Table Segments TM'
+	lineageTag: bffbb482-0a03-4242-b81d-2dedbfb4e689
+
+	column DATABASE_NAME
+		lineageTag: ace90cfe-10c2-46f6-8d94-54c3d8b77af7
+		summarizeBy: none
+		isNameInferred
+		sourceColumn: Storage Table Column Segments TM[DATABASE_NAME]
+
+		annotation SummarizationSetBy = Automatic
+
+	column CUBE_NAME
+		lineageTag: 261267c7-8f9e-4071-8a48-078e1ea3dd8f
+		summarizeBy: none
+		isNameInferred
+		sourceColumn: Storage Table Column Segments TM[CUBE_NAME]
+
+		annotation SummarizationSetBy = Automatic
+
+	column MEASURE_GROUP_NAME
+		lineageTag: d3b04411-e18f-4e3d-abce-232284705fbd
+		summarizeBy: none
+		isNameInferred
+		sourceColumn: Storage Table Column Segments TM[MEASURE_GROUP_NAME]
+
+		annotation SummarizationSetBy = Automatic
+
+	column PARTITION_NAME
+		lineageTag: ab71361a-e561-44fd-9bc9-264d87bfc243
+		summarizeBy: none
+		isNameInferred
+		sourceColumn: Storage Table Column Segments TM[PARTITION_NAME]
+
+		annotation SummarizationSetBy = Automatic
+
+	column DIMENSION_NAME
+		lineageTag: 39214b11-4363-4c0e-b807-536507e50c58
+		summarizeBy: none
+		isNameInferred
+		sourceColumn: Storage Table Column Segments TM[DIMENSION_NAME]
+
+		annotation SummarizationSetBy = Automatic
+
+	column TABLE_ID
+		lineageTag: 3f14795a-b893-4eeb-ac29-69263ebac51c
+		summarizeBy: none
+		isNameInferred
+		sourceColumn: Storage Table Column Segments TM[TABLE_ID]
+
+		annotation SummarizationSetBy = Automatic
+
+	column COLUMN_ID
+		lineageTag: fba203b3-1874-4a0a-96fe-0136c16b7a7f
+		summarizeBy: none
+		isNameInferred
+		sourceColumn: Storage Table Column Segments TM[COLUMN_ID]
+
+		annotation SummarizationSetBy = Automatic
+
+	column SEGMENT_NUMBER
+		formatString: 0
+		lineageTag: a818096a-1c57-4155-8b57-380e46197837
+		summarizeBy: sum
+		isNameInferred
+		sourceColumn: Storage Table Column Segments TM[SEGMENT_NUMBER]
+
+		annotation SummarizationSetBy = Automatic
+
+	column TABLE_PARTITION_NUMBER
+		formatString: 0
+		lineageTag: 46e12c63-c74d-4df1-8abd-3aba7806ef4b
+		summarizeBy: sum
+		isNameInferred
+		sourceColumn: Storage Table Column Segments TM[TABLE_PARTITION_NUMBER]
+
+		annotation SummarizationSetBy = Automatic
+
+	column RECORDS_COUNT
+		formatString: 0
+		lineageTag: 413aa02e-0d2e-41be-b38e-1bc9153e1854
+		summarizeBy: sum
+		isNameInferred
+		sourceColumn: Storage Table Column Segments TM[RECORDS_COUNT]
+
+		annotation SummarizationSetBy = Automatic
+
+	column ALLOCATED_SIZE
+		lineageTag: 5daf6c85-707d-40e9-b720-bb8a817328ba
+		summarizeBy: sum
+		isNameInferred
+		sourceColumn: Storage Table Column Segments TM[ALLOCATED_SIZE]
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column USED_SIZE
+		lineageTag: b4edc7b0-1eab-4851-b115-ac405d81c5a0
+		summarizeBy: sum
+		isNameInferred
+		sourceColumn: Storage Table Column Segments TM[USED_SIZE]
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column COMPRESSION_TYPE
+		lineageTag: 3540e535-77cb-4930-9f24-b4d718473e68
+		summarizeBy: none
+		isNameInferred
+		sourceColumn: Storage Table Column Segments TM[COMPRESSION_TYPE]
+
+		annotation SummarizationSetBy = Automatic
+
+	column BITS_COUNT
+		formatString: 0
+		lineageTag: 23db274c-f65a-465a-b07f-e3b2b6e08c44
+		summarizeBy: sum
+		isNameInferred
+		sourceColumn: Storage Table Column Segments TM[BITS_COUNT]
+
+		annotation SummarizationSetBy = Automatic
+
+	column BOOKMARK_BITS_COUNT
+		formatString: 0
+		lineageTag: b7bcd5c5-26c9-4fc9-8e36-01efc78ff1cf
+		summarizeBy: sum
+		isNameInferred
+		sourceColumn: Storage Table Column Segments TM[BOOKMARK_BITS_COUNT]
+
+		annotation SummarizationSetBy = Automatic
+
+	column VERTIPAQ_STATE
+		lineageTag: 59c81b52-362c-4caf-822e-45498847ad7b
+		summarizeBy: none
+		isNameInferred
+		sourceColumn: Storage Table Column Segments TM[VERTIPAQ_STATE]
+
+		annotation SummarizationSetBy = Automatic
+
+	column ISPAGEABLE
+		formatString: """TRUE"";""TRUE"";""FALSE"""
+		lineageTag: 15e9e63b-6b83-4adb-b2ee-8d795dfea129
+		summarizeBy: none
+		isNameInferred
+		sourceColumn: Storage Table Column Segments TM[ISPAGEABLE]
+
+		annotation SummarizationSetBy = Automatic
+
+	column ISRESIDENT
+		formatString: """TRUE"";""TRUE"";""FALSE"""
+		lineageTag: 92e3d850-f5f1-4618-876b-878a2d0395ff
+		summarizeBy: none
+		isNameInferred
+		sourceColumn: Storage Table Column Segments TM[ISRESIDENT]
+
+		annotation SummarizationSetBy = Automatic
+
+	column TEMPERATURE
+		lineageTag: 206beddf-e21f-4f1c-84cf-f6204a7ada45
+		summarizeBy: sum
+		isNameInferred
+		sourceColumn: Storage Table Column Segments TM[TEMPERATURE]
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column LAST_ACCESSED
+		formatString: General Date
+		lineageTag: b686cfab-6ee5-45f1-816d-2b6cdda30c49
+		summarizeBy: none
+		isNameInferred
+		sourceColumn: Storage Table Column Segments TM[LAST_ACCESSED]
+
+		annotation SummarizationSetBy = Automatic
+
+	column ExtractedColumnID
+		lineageTag: 03233a58-da3b-44ef-84bf-580d745bb300
+		summarizeBy: count
+		isNameInferred
+		sourceColumn: Storage Table Column Segments TM[ExtractedColumnID]
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	partition 'Storage Table Segments TM' = calculated
+		mode: import
+		source = 'Storage Table Column Segments TM'
+
+	annotation PBI_Id = 1af2c06a64eb47739c0b82be91849963
+

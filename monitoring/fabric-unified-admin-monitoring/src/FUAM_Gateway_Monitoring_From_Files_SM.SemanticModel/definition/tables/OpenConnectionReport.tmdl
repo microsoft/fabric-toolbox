@@ -1,0 +1,108 @@
+table OpenConnectionReport
+	lineageTag: e77a3eab-2e38-4e7d-9ffb-9bba7f798f81
+
+	column GatewayObjectId
+		dataType: string
+		lineageTag: edac6161-4106-4228-be9e-63a35e8949a3
+		summarizeBy: none
+		sourceColumn: GatewayObjectId
+
+		annotation SummarizationSetBy = Automatic
+
+	column RequestId
+		dataType: string
+		lineageTag: 6217712d-56e0-4374-8271-a29e22020b2e
+		summarizeBy: none
+		sourceColumn: RequestId
+
+		annotation SummarizationSetBy = Automatic
+
+	column DataSource
+		dataType: string
+		lineageTag: 3d48fc3f-88f5-4d7b-b912-a4bad8d3beb8
+		summarizeBy: none
+		sourceColumn: DataSource
+
+		annotation SummarizationSetBy = Automatic
+
+	column ProviderName
+		dataType: string
+		lineageTag: 3b343281-fd1c-4f01-946f-0f8966cef69d
+		summarizeBy: none
+		sourceColumn: ProviderName
+
+		annotation SummarizationSetBy = Automatic
+
+	column OpenConnectionTrackingId
+		dataType: string
+		lineageTag: b8186ac9-f7b6-43eb-a805-397118ad8788
+		summarizeBy: none
+		sourceColumn: OpenConnectionTrackingId
+
+		annotation SummarizationSetBy = Automatic
+
+	column OpenConnectionStartTimeUTC
+		dataType: dateTime
+		formatString: General Date
+		lineageTag: 98a27edf-dfbc-4406-bdde-00304b2a2c80
+		summarizeBy: none
+		sourceColumn: OpenConnectionStartTimeUTC
+
+		annotation SummarizationSetBy = Automatic
+
+	column OpenConnectionDuration(ms)
+		dataType: int64
+		formatString: 0
+		lineageTag: 391f76a8-15e2-41a2-b932-7ea0e8f54bc1
+		summarizeBy: sum
+		sourceColumn: OpenConnectionDuration(ms)
+
+		annotation SummarizationSetBy = Automatic
+
+	column Success
+		dataType: string
+		lineageTag: 115e17ae-5394-4745-8c56-d47675d49481
+		summarizeBy: none
+		sourceColumn: Success
+
+		annotation SummarizationSetBy = Automatic
+
+	column ErrorMessage
+		dataType: string
+		lineageTag: de7918c9-2a3d-4750-afa0-5ad92b280c83
+		summarizeBy: none
+		sourceColumn: ErrorMessage
+
+		annotation SummarizationSetBy = Automatic
+
+	column OpenConnectionStartDate
+		dataType: dateTime
+		formatString: Long Date
+		lineageTag: 5983ad65-1d1f-4423-9a29-818de550ed40
+		summarizeBy: none
+		sourceColumn: OpenConnectionStartDate
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation UnderlyingDateTimeDataType = Date
+
+	partition OpenConnectionReport = m
+		mode: import
+		source =
+				let
+				    Source = Folder.Files(#"Folder Path"),
+				    #"Filtered Rows" = Table.SelectRows(Source, each Text.Contains([Name], "OpenConnectionReport") and [Extension] = ".log"),
+				    #"CsvDoc" = Table.AddColumn(#"Filtered Rows", "csvDocColumn", each try Table.PromoteHeaders(Csv.Document([Content]))),
+				    #"Expanded csvDocColumn" = Table.ExpandRecordColumn(CsvDoc, "csvDocColumn", {"HasError", "Value"}, {"csvDocColumn.HasError", "csvDocColumn.Value"}),
+				    #"Filtered Rows1" = Table.SelectRows(#"Expanded csvDocColumn", each [csvDocColumn.HasError] = false),
+				    #"Expanded csvDocColumn.Value" = Table.ExpandTableColumn(#"Filtered Rows1", "csvDocColumn.Value", {"GatewayObjectId", "RequestId", "DataSource", "ProviderName", "OpenConnectionTrackingId", "OpenConnectionStartTimeUTC", "OpenConnectionDuration(ms)", "Success", "ErrorMessage"}, {"GatewayObjectId", "RequestId", "DataSource", "ProviderName", "OpenConnectionTrackingId", "OpenConnectionStartTimeUTC", "OpenConnectionDuration(ms)", "Success", "ErrorMessage"}),
+				    #"Removed Columns" = Table.RemoveColumns(#"Expanded csvDocColumn.Value",{"Content", "Name", "Extension", "Date accessed", "Date modified", "Date created", "Attributes", "Folder Path", "csvDocColumn.HasError"}),
+				    #"Changed Type" = Table.TransformColumnTypes(#"Removed Columns",{{"GatewayObjectId", type text}, {"RequestId", type text}, {"DataSource", type text}, {"ProviderName", type text}, {"OpenConnectionTrackingId", type text}, {"OpenConnectionStartTimeUTC", type datetime}, {"OpenConnectionDuration(ms)", Int64.Type}, {"Success", type text}, {"ErrorMessage", type text}}),
+				    #"Inserted Date" = Table.AddColumn(#"Changed Type", "OpenConnectionStartDate", each DateTime.Date([OpenConnectionStartTimeUTC]), type date)
+				in
+				    #"Inserted Date"
+
+	annotation PBI_NavigationStepName = Navigation
+
+	annotation PBI_ResultType = Table
+

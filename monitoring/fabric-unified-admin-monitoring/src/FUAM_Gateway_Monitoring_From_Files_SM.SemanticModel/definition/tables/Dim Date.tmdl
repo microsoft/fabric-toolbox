@@ -1,0 +1,32 @@
+table 'Dim Date'
+	lineageTag: dd665362-ff6d-4f95-bd64-511b6bddd737
+
+	column Date
+		formatString: yyyy-mm-dd
+		lineageTag: 29ef551b-05f6-44a7-b852-fa08acc2e9c5
+		summarizeBy: none
+		isNameInferred
+		sourceColumn: [Date]
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isCustom":true}
+
+	column Year-Month = FORMAT('Dim Date'[Date], "yyyy-MM")
+		lineageTag: e45f7512-d0e5-43ec-8747-d5525894c8a5
+		summarizeBy: none
+
+		annotation SummarizationSetBy = Automatic
+
+	partition 'Dim Date' = calculated
+		mode: import
+		source =
+				
+				VAR _minDate = FIRSTDATE(QueryStartReport[QueryExecutionDate])
+				VAR _maxDate = LASTDATE(QueryStartReport[QueryExecutionDate])
+				
+				RETURN
+				CALENDAR(_minDate, _maxDate)
+
+	annotation PBI_Id = be0ca0acdc5d455aafc9e5dde85ad964
+

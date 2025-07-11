@@ -1,0 +1,73 @@
+{
+    "name": "Accessible Tidal",
+    "dataColors": [
+        "#248A85",
+        "#3DCBFF",
+        "#3D7DEB",
+        "#D195EA",
+        "#56C17B",
+        "#97B7F3",
+        "#3EE5C9",
+        "#FFA342"
+    ],
+    "foreground": "#121212",
+    "background": "#FFFFFF",
+    "foregroundNeutralSecondary": "#6C6966",
+    "backgroundLight": "#E5E0DA",
+    "foregroundNeutralTertiary": "#ABA7A2",
+    "backgroundNeutral": "#C6C2BE",
+    "tableAccent": "#4E9466",
+    "maximum": "#F69CCC",
+    "center": "#FFA342",
+    "minimum": "#3D7DEB",
+    "bad": "#F6465A",
+    "neutral": "#3DD9EB",
+    "good": "#37CCB7",
+    "textClasses": {
+        "callout": {
+            "fontSize": 25
+        },
+        "title": {
+            "fontSize": 10
+        },
+        "header": {
+            "fontSize": 10
+        }
+    },
+    "visualStyles": {
+        "*": {
+            "*": {
+                "border": [
+                    {
+                        "color": {
+                            "solid": {
+                                "color": "#FFFFFF"
+                            }
+                        },
+                        "show": true,
+                        "radius": 8
+                    }
+                ],
+                "outspacePane": [
+                    {
+                        "titleSize": 10
+                    }
+                ]
+            }
+        },
+        "page": {
+            "*": {
+                "background": [
+                    {
+                        "color": {
+                            "solid": {
+                                "color": "#EAEAEA"
+                            }
+                        },
+                        "transparency": 50
+                    }
+                ]
+            }
+        }
+    }
+}

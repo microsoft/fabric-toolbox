@@ -1,0 +1,338 @@
+{
+    "properties": {
+        "activities": [
+            {
+                "name": "Delete files",
+                "type": "Delete",
+                "dependsOn": [],
+                "policy": {
+                    "timeout": "0.12:00:00",
+                    "retry": 0,
+                    "retryIntervalInSeconds": 30,
+                    "secureOutput": false,
+                    "secureInput": false
+                },
+                "typeProperties": {
+                    "datasetSettings": {
+                        "annotations": [],
+                        "linkedService": {
+                            "name": "FUAM_Lakehouse",
+                            "properties": {
+                                "annotations": [],
+                                "type": "Lakehouse",
+                                "typeProperties": {
+                                    "workspaceId": "eb764c8b-cf3b-55be-adf4-348fe9233657",
+                                    "artifactId": "729eb8a2-8070-5ed8-ad43-dccbc00b32af",
+                                    "rootFolder": "Files"
+                                }
+                            }
+                        },
+                        "type": "Binary",
+                        "typeProperties": {
+                            "location": {
+                                "type": "LakehouseLocation",
+                                "folderPath": "raw/refreshables"
+                            }
+                        }
+                    },
+                    "enableLogging": false,
+                    "storeSettings": {
+                        "type": "LakehouseReadSettings",
+                        "recursive": true,
+                        "enablePartitionDiscovery": false
+                    }
+                }
+            },
+            {
+                "name": "Fetch count",
+                "type": "Lookup",
+                "dependsOn": [
+                    {
+                        "activity": "Delete files",
+                        "dependencyConditions": [
+                            "Succeeded"
+                        ]
+                    }
+                ],
+                "policy": {
+                    "timeout": "0.12:00:00",
+                    "retry": 0,
+                    "retryIntervalInSeconds": 30,
+                    "secureOutput": false,
+                    "secureInput": false
+                },
+                "typeProperties": {
+                    "source": {
+                        "type": "RestSource",
+                        "httpRequestTimeout": "00:01:40",
+                        "requestInterval": "00.00:00:00.010",
+                        "requestMethod": "GET",
+                        "paginationRules": {
+                            "supportRFC5988": "true"
+                        }
+                    },
+                    "firstRowOnly": false,
+                    "datasetSettings": {
+                        "annotations": [],
+                        "type": "RestResource",
+                        "typeProperties": {
+                            "relativeUrl": {
+                                "value": "@string('capacities/refreshables?$top=1')\n",
+                                "type": "Expression"
+                            }
+                        },
+                        "schema": [],
+                        "externalReferences": {
+                            "connection": "30c5df6c-5353-562f-9d7a-01a9eec0250b"
+                        }
+                    }
+                }
+            },
+            {
+                "name": "Set item_count",
+                "type": "SetVariable",
+                "dependsOn": [
+                    {
+                        "activity": "Fetch count",
+                        "dependencyConditions": [
+                            "Succeeded"
+                        ]
+                    }
+                ],
+                "policy": {
+                    "secureOutput": false,
+                    "secureInput": false
+                },
+                "typeProperties": {
+                    "variableName": "item_count",
+                    "value": {
+                        "value": "@activity('Fetch count').output.value[0]['@odata.count']",
+                        "type": "Expression"
+                    }
+                }
+            },
+            {
+                "name": "Set page_count",
+                "type": "SetVariable",
+                "dependsOn": [
+                    {
+                        "activity": "Set item_count",
+                        "dependencyConditions": [
+                            "Succeeded"
+                        ]
+                    }
+                ],
+                "policy": {
+                    "secureOutput": false,
+                    "secureInput": false
+                },
+                "typeProperties": {
+                    "variableName": "page_count",
+                    "value": {
+                        "value": "@add(div(variables('item_count'),variables('limit')),1)",
+                        "type": "Expression"
+                    }
+                }
+            },
+            {
+                "name": "Set page_array",
+                "type": "SetVariable",
+                "dependsOn": [
+                    {
+                        "activity": "Set page_count",
+                        "dependencyConditions": [
+                            "Succeeded"
+                        ]
+                    }
+                ],
+                "policy": {
+                    "secureOutput": false,
+                    "secureInput": false
+                },
+                "typeProperties": {
+                    "variableName": "page_array",
+                    "value": {
+                        "value": "@range(0,variables('page_count'))",
+                        "type": "Expression"
+                    }
+                }
+            },
+            {
+                "name": "ForEach Get Refreshables",
+                "type": "ForEach",
+                "dependsOn": [
+                    {
+                        "activity": "Set page_array",
+                        "dependencyConditions": [
+                            "Succeeded"
+                        ]
+                    }
+                ],
+                "typeProperties": {
+                    "items": {
+                        "value": "@variables('page_array')",
+                        "type": "Expression"
+                    },
+                    "isSequential": true,
+                    "activities": [
+                        {
+                            "name": "Set currentSkip",
+                            "type": "SetVariable",
+                            "dependsOn": [],
+                            "policy": {
+                                "secureOutput": false,
+                                "secureInput": false
+                            },
+                            "typeProperties": {
+                                "variableName": "currentSkip",
+                                "value": {
+                                    "value": "@mul(item(),variables('limit'))",
+                                    "type": "Expression"
+                                }
+                            }
+                        },
+                        {
+                            "name": "Copy files",
+                            "type": "Copy",
+                            "dependsOn": [
+                                {
+                                    "activity": "Set currentSkip",
+                                    "dependencyConditions": [
+                                        "Succeeded"
+                                    ]
+                                }
+                            ],
+                            "policy": {
+                                "timeout": "0.12:00:00",
+                                "retry": 0,
+                                "retryIntervalInSeconds": 30,
+                                "secureOutput": false,
+                                "secureInput": false
+                            },
+                            "typeProperties": {
+                                "source": {
+                                    "type": "RestSource",
+                                    "httpRequestTimeout": "00:01:40",
+                                    "requestInterval": "00.00:00:00.010",
+                                    "requestMethod": "GET",
+                                    "paginationRules": {
+                                        "supportRFC5988": "true"
+                                    },
+                                    "datasetSettings": {
+                                        "annotations": [],
+                                        "type": "RestResource",
+                                        "typeProperties": {
+                                            "relativeUrl": {
+                                                "value": "@concat('capacities/refreshables?$expand=capacity,group&$top=',variables('limit'),'&$skip=', variables('currentSkip'))",
+                                                "type": "Expression"
+                                            }
+                                        },
+                                        "schema": [],
+                                        "externalReferences": {
+                                            "connection": "30c5df6c-5353-562f-9d7a-01a9eec0250b"
+                                        }
+                                    }
+                                },
+                                "sink": {
+                                    "type": "JsonSink",
+                                    "storeSettings": {
+                                        "type": "LakehouseWriteSettings"
+                                    },
+                                    "formatSettings": {
+                                        "type": "JsonWriteSettings",
+                                        "filePattern": "arrayOfObjects"
+                                    },
+                                    "datasetSettings": {
+                                        "annotations": [],
+                                        "linkedService": {
+                                            "name": "FUAM_Lakehouse",
+                                            "properties": {
+                                                "annotations": [],
+                                                "type": "Lakehouse",
+                                                "typeProperties": {
+                                                    "workspaceId": "eb764c8b-cf3b-55be-adf4-348fe9233657",
+                                                    "artifactId": "729eb8a2-8070-5ed8-ad43-dccbc00b32af",
+                                                    "rootFolder": "Files"
+                                                }
+                                            }
+                                        },
+                                        "type": "Json",
+                                        "typeProperties": {
+                                            "location": {
+                                                "type": "LakehouseLocation",
+                                                "fileName": {
+                                                    "value": "@concat(item(),'_refreshables.json')",
+                                                    "type": "Expression"
+                                                },
+                                                "folderPath": "raw/refreshables"
+                                            }
+                                        },
+                                        "schema": {}
+                                    }
+                                },
+                                "enableStaging": false
+                            }
+                        }
+                    ]
+                }
+            },
+            {
+                "name": "01_Transfer_Capacity_Refreshables_Unit",
+                "type": "TridentNotebook",
+                "dependsOn": [
+                    {
+                        "activity": "ForEach Get Refreshables",
+                        "dependencyConditions": [
+                            "Succeeded"
+                        ]
+                    }
+                ],
+                "policy": {
+                    "timeout": "0.12:00:00",
+                    "retry": 0,
+                    "retryIntervalInSeconds": 30,
+                    "secureOutput": false,
+                    "secureInput": false
+                },
+                "typeProperties": {
+                    "notebookId": "6910d6b4-546d-57a9-84db-7a004813cbb8",
+                    "workspaceId": "eb764c8b-cf3b-55be-adf4-348fe9233657",
+                    "parameters": {
+                        "display_data": {
+                            "value": {
+                                "value": "@pipeline().parameters.display_data",
+                                "type": "Expression"
+                            },
+                            "type": "bool"
+                        }
+                    },
+                    "sessionTag": "fuam"
+                }
+            }
+        ],
+        "parameters": {
+            "display_data": {
+                "type": "bool",
+                "defaultValue": false
+            }
+        },
+        "variables": {
+            "item_count": {
+                "type": "Integer"
+            },
+            "limit": {
+                "type": "Integer",
+                "defaultValue": 1000
+            },
+            "page_count": {
+                "type": "Integer"
+            },
+            "page_array": {
+                "type": "Array"
+            },
+            "currentSkip": {
+                "type": "Integer"
+            }
+        }
+    }
+}

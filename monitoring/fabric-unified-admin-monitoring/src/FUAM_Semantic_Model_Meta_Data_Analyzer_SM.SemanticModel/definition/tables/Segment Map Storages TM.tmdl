@@ -1,0 +1,78 @@
+table 'Segment Map Storages TM'
+	lineageTag: 2d0eeb39-f051-405d-a92a-da569aac2272
+
+	column ID
+		dataType: double
+		lineageTag: 2d6c23bd-0f72-4ce5-9830-c1b528c99c1d
+		summarizeBy: count
+		sourceColumn: ID
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column PartitionStorageID
+		dataType: double
+		formatString: 0
+		lineageTag: 326de639-033a-43f7-afd3-81d71e82e77d
+		summarizeBy: none
+		sourceColumn: PartitionStorageID
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isDecimal":true}
+
+	column Type
+		dataType: double
+		lineageTag: 1decf594-02f3-43bb-84fa-4b70487dcd7a
+		summarizeBy: sum
+		sourceColumn: Type
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column RecordCount
+		dataType: double
+		formatString: #,0
+		lineageTag: b882e9f5-e02a-4967-9b6d-dc884d2c2880
+		summarizeBy: sum
+		sourceColumn: RecordCount
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isDecimal":true}
+
+	column SegmentCount
+		dataType: double
+		formatString: #,0
+		lineageTag: f2ca43c0-7c29-40dc-a7e3-2f1362c0b10e
+		summarizeBy: sum
+		sourceColumn: SegmentCount
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isDecimal":true}
+
+	column RecordsPerSegment
+		dataType: double
+		formatString: #,0
+		lineageTag: ec4c1469-e8d7-4e21-a2cd-504f8d112795
+		summarizeBy: sum
+		sourceColumn: RecordsPerSegment
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isDecimal":true}
+
+	partition 'Segment Map Storages TM' = m
+		mode: import
+		queryGroup: 'Meta Data'
+		source =
+				let
+				    Source = AnalysisServices.Database(serverURL, modelName, [Query="SELECT * FROM $System.TMSCHEMA_SEGMENT_MAP_STORAGES", Implementation="2.0"])
+				in
+				    Source
+
+	annotation PBI_ResultType = Exception
+

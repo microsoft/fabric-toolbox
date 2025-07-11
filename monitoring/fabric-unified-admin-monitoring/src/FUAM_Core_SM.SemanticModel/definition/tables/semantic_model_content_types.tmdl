@@ -1,0 +1,55 @@
+table semantic_model_content_types
+	lineageTag: 9fd657cc-b5ec-4c4e-8db7-a0675bce1938
+	sourceLineageTag: [dbo].[semantic_model_content_types]
+
+	column ContentProviderType
+		dataType: string
+		sourceProviderType: varchar(8000)
+		lineageTag: 7f792d2d-27d3-485e-9afa-67b10cf5bc82
+		sourceLineageTag: ContentProviderType
+		summarizeBy: none
+		sourceColumn: ContentProviderType
+
+		annotation SummarizationSetBy = Automatic
+
+	column MappedName
+		dataType: string
+		sourceProviderType: varchar(8000)
+		lineageTag: 38b27278-9c3d-455e-893a-63890b1cbd65
+		sourceLineageTag: MappedName
+		summarizeBy: none
+		sourceColumn: MappedName
+
+		annotation SummarizationSetBy = Automatic
+
+	column IsIncludedInOptimizationModule
+		dataType: boolean
+		formatString: """TRUE"";""TRUE"";""FALSE"""
+		sourceProviderType: bit
+		lineageTag: 7d08c17a-2cb3-431f-aeca-f9d0a998dbae
+		sourceLineageTag: IsIncludedInOptimizationModule
+		summarizeBy: none
+		sourceColumn: IsIncludedInOptimizationModule
+
+		annotation SummarizationSetBy = Automatic
+
+	column IsDefaultSemanticModel
+		dataType: boolean
+		formatString: """TRUE"";""TRUE"";""FALSE"""
+		sourceProviderType: bit
+		lineageTag: ce6677f4-ed2d-4857-840c-6e849d661f72
+		sourceLineageTag: IsDefaultSemanticModel
+		summarizeBy: none
+		sourceColumn: IsDefaultSemanticModel
+
+		annotation SummarizationSetBy = Automatic
+
+	partition semantic_model_content_types = entity
+		mode: directLake
+		source
+			entityName: semantic_model_content_types
+			schemaName: dbo
+			expressionSource: DatabaseQuery
+
+	annotation PBI_ResultType = Table
+

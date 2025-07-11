@@ -1,0 +1,53 @@
+table dashboards
+	lineageTag: aa97bc71-d7a4-42d1-873c-5ad234b394cb
+	sourceLineageTag: [dbo].[dashboards]
+
+	column WorkspaceId
+		dataType: string
+		sourceProviderType: varchar(8000)
+		lineageTag: 527166f7-94b2-4e41-ab16-7f9785233ba5
+		sourceLineageTag: WorkspaceId
+		summarizeBy: none
+		sourceColumn: WorkspaceId
+
+		annotation SummarizationSetBy = Automatic
+
+	column DashboardId
+		dataType: string
+		sourceProviderType: varchar(8000)
+		lineageTag: b4427501-db9d-4cf1-98ee-1acb059bf6ef
+		sourceLineageTag: DashboardId
+		summarizeBy: none
+		sourceColumn: DashboardId
+
+		annotation SummarizationSetBy = Automatic
+
+	column Name
+		dataType: string
+		sourceProviderType: varchar(8000)
+		lineageTag: fc565611-7ff2-48a5-89f5-e6bc5cda9963
+		sourceLineageTag: Name
+		summarizeBy: none
+		sourceColumn: Name
+
+		annotation SummarizationSetBy = Automatic
+
+	column tiles
+		dataType: string
+		sourceProviderType: varchar(8000)
+		lineageTag: 29e9a93f-0d47-42e0-a66a-046875a90028
+		sourceLineageTag: tiles
+		summarizeBy: none
+		sourceColumn: tiles
+
+		annotation SummarizationSetBy = Automatic
+
+	partition dashboards = entity
+		mode: directLake
+		source
+			entityName: dashboards
+			schemaName: dbo
+			expressionSource: DatabaseQuery
+
+	annotation PBI_ResultType = Table
+

@@ -1,0 +1,42 @@
+trigger:
+  branches:
+    include: []
+
+parameters:
+- name: items_in_scope
+  displayName: Enter Fabric items to be deployed
+  type: string
+  default: '["Notebook","DataPipeline","Lakehouse","SemanticModel","Report"]'
+
+variables:
+  # This variable group is linked to Azure Key Vault and secrets contain tenant id, service principal client id, secret
+  - group: Fabric_Deployment_Group_S
+  # This variable group contains the workspace names based on naming convention "[branch]WorkspaceName". It also contains the gitFolder to be referenced in the python script.
+  - group: Fabric_Deployment_Group_NS
+stages:
+  - stage: DeployToFabric
+    displayName: "Deploy to Fabric Workspace"
+    jobs:
+      - job: Deployment
+        displayName: "Deploy Resources"
+        pool:
+          name: Azure Pipelines
+        steps:
+          # Use Python Version 3.12
+          - task: UsePythonVersion@0
+            inputs:
+              versionSpec: '3.12'
+              addToPath: true
+            displayName: "Set up Python Environment"
+          # Install Dependencies
+          - script: |
+              python -m pip install --upgrade pip
+              pip install fabric-cicd 
+            displayName: "Install Fabric CICD Library"
+          - task: PythonScript@0
+            inputs:
+              scriptSource: 'filePath'
+              scriptPath: 'scripts/deploy/deploy-to-fabric.py'
+              arguments: '--aztenantid $(aztenantid) --azclientid $(azclientid) --azspsecret $(azspsecret) --items_in_scope ${{ parameters.items_in_scope }}'
+              #failOnStderr: true 
+            displayName: 'Run deployment using fabric-cicd'

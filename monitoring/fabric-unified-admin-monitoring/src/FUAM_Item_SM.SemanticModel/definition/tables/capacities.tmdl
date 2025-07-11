@@ -1,0 +1,95 @@
+table capacities
+	lineageTag: d933d0b5-c842-40e8-97d9-511f0175ec34
+	sourceLineageTag: [dbo].[capacities]
+
+	column capacityUserAccessRight
+		dataType: string
+		sourceProviderType: varchar(8000)
+		lineageTag: 644e89eb-c4d4-49c8-9e61-f35b835bde3a
+		sourceLineageTag: capacityUserAccessRight
+		summarizeBy: none
+		sourceColumn: capacityUserAccessRight
+
+		annotation SummarizationSetBy = Automatic
+
+	column displayName
+		dataType: string
+		sourceProviderType: varchar(8000)
+		lineageTag: 2c70a540-8431-4e73-b62c-5c08abbc0bc0
+		sourceLineageTag: displayName
+		summarizeBy: none
+		sourceColumn: displayName
+
+		annotation SummarizationSetBy = Automatic
+
+	column CapacityId
+		dataType: string
+		sourceProviderType: varchar(8000)
+		lineageTag: ba08a3e1-8916-4721-829a-d427fe5c5511
+		sourceLineageTag: CapacityId
+		summarizeBy: none
+		sourceColumn: CapacityId
+
+		annotation SummarizationSetBy = Automatic
+
+	column region
+		dataType: string
+		sourceProviderType: varchar(8000)
+		lineageTag: 03637153-6009-4952-843b-b520f7fb1dab
+		sourceLineageTag: region
+		summarizeBy: none
+		sourceColumn: region
+
+		annotation SummarizationSetBy = Automatic
+
+	column sku
+		dataType: string
+		sourceProviderType: varchar(8000)
+		lineageTag: efa7f3e1-6ff7-42b4-b52e-c797c3e4f8f2
+		sourceLineageTag: sku
+		summarizeBy: none
+		sourceColumn: sku
+
+		annotation SummarizationSetBy = Automatic
+
+	column state
+		dataType: string
+		sourceProviderType: varchar(8000)
+		lineageTag: cb2ca4ba-1f20-40bc-99e7-40d5493bb2e0
+		sourceLineageTag: state
+		summarizeBy: none
+		sourceColumn: state
+
+		annotation SummarizationSetBy = Automatic
+
+	column fuam_modified_at
+		dataType: dateTime
+		formatString: General Date
+		sourceProviderType: datetime2
+		lineageTag: bd9ddea4-6aa4-48af-9708-ad032e53cdc8
+		sourceLineageTag: fuam_modified_at
+		summarizeBy: none
+		sourceColumn: fuam_modified_at
+
+		annotation SummarizationSetBy = Automatic
+
+	column fuam_deleted
+		dataType: boolean
+		formatString: """TRUE"";""TRUE"";""FALSE"""
+		sourceProviderType: bit
+		lineageTag: f5c76df9-4460-4167-8679-abedea56eec6
+		sourceLineageTag: fuam_deleted
+		summarizeBy: none
+		sourceColumn: fuam_deleted
+
+		annotation SummarizationSetBy = Automatic
+
+	partition capacities = entity
+		mode: directLake
+		source
+			entityName: capacities
+			schemaName: dbo
+			expressionSource: DatabaseQuery
+
+	annotation PBI_ResultType = Table
+

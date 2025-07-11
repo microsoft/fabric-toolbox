@@ -1,0 +1,67 @@
+table 'Size Units'
+	lineageTag: c4767ab0-543f-4430-9545-addb8840e6c3
+
+	column UnitKey
+		dataType: int64
+		formatString: 0
+		lineageTag: d1d43efc-2611-406f-b02b-8f066bf41152
+		summarizeBy: count
+		sourceColumn: UnitKey
+
+		annotation SummarizationSetBy = Automatic
+
+	column Unit
+		dataType: string
+		lineageTag: dec18dc0-c6e2-4537-b9f6-4df25aeb86c5
+		summarizeBy: none
+		sourceColumn: Unit
+		sortByColumn: UnitKey
+
+		changedProperty = SortByColumn
+
+		annotation SummarizationSetBy = Automatic
+
+	column UnitValue
+		dataType: int64
+		formatString: 0
+		lineageTag: 99ccf7a6-992d-4af9-8258-8d64c2ff8ac2
+		summarizeBy: sum
+		sourceColumn: UnitValue
+
+		annotation SummarizationSetBy = Automatic
+
+	column UnitShort
+		dataType: string
+		lineageTag: dca7bbe7-d5cb-492d-a48c-b4048756a684
+		summarizeBy: none
+		sourceColumn: UnitShort
+		sortByColumn: UnitKey
+
+		changedProperty = SortByColumn
+
+		annotation SummarizationSetBy = Automatic
+
+	column UnitValueFromKB
+		dataType: double
+		lineageTag: 6cbea1dc-73a6-4059-be6b-3b521c37fd20
+		summarizeBy: sum
+		sourceColumn: UnitValueFromKB
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	partition 'Size Units' = m
+		mode: import
+		queryGroup: Helpers
+		source =
+				let
+				    Source = Table.FromRows(Json.Document(Binary.Decompress(Binary.FromText("i45WMlTSUUqqLEktBtIgtoGegYGBpbmZqZmRKZDrBJaK1YlWMgLysjNz8uGKDYxMoHq8ncAqjIHM3NT0RIQKEwtTczOEWl+IOhAzPRNZnbmxuYmhBcQ8uCZ3oOpYAA==", BinaryEncoding.Base64), Compression.Deflate)), let _t = ((type nullable text) meta [Serialized.Text = true]) in type table [UnitKey = _t, Unit = _t, UnitValue = _t, UnitValueFromKB = _t, UnitShort = _t]),
+				    #"Changed Type" = Table.TransformColumnTypes(Source,{{"UnitKey", Int64.Type}, {"Unit", type text}, {"UnitValue", Int64.Type}, {"UnitValueFromKB", type number}, {"UnitShort", type text}})
+				in
+				    #"Changed Type"
+
+	annotation PBI_NavigationStepName = Navigation
+
+	annotation PBI_ResultType = Table
+

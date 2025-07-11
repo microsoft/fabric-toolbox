@@ -1,0 +1,67 @@
+table capacity_regions
+	lineageTag: 125ec8f2-a2e4-4058-81c0-f665053f67bb
+	sourceLineageTag: [dbo].[capacity_regions]
+
+	column Continent
+		dataType: string
+		sourceProviderType: varchar(8000)
+		lineageTag: c52c81e2-6019-4894-85e3-cd20c2977206
+		sourceLineageTag: Continent
+		summarizeBy: none
+		sourceColumn: Continent
+
+		annotation SummarizationSetBy = Automatic
+
+	column FabricRegion
+		dataType: string
+		sourceProviderType: varchar(8000)
+		lineageTag: e58eb02e-9126-405b-bce0-d9c541400507
+		sourceLineageTag: FabricRegion
+		summarizeBy: none
+		sourceColumn: FabricRegion
+
+		annotation SummarizationSetBy = Automatic
+
+	column Latitude
+		dataType: double
+		sourceProviderType: float
+		lineageTag: 9ceb02db-81b1-447c-adb5-8cdc9fbe4451
+		sourceLineageTag: Latitude
+		summarizeBy: none
+		sourceColumn: Latitude
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column Longitude
+		dataType: double
+		sourceProviderType: float
+		lineageTag: bf8fc9b3-6a12-43bd-8af8-fce6df1de7aa
+		sourceLineageTag: Longitude
+		summarizeBy: none
+		sourceColumn: Longitude
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column Location
+		dataType: string
+		sourceProviderType: varchar(8000)
+		lineageTag: 3f83cab5-9e42-4db2-9be4-ec1f1f2352c7
+		sourceLineageTag: Location
+		summarizeBy: none
+		sourceColumn: Location
+
+		annotation SummarizationSetBy = Automatic
+
+	partition capacity_regions = entity
+		mode: directLake
+		source
+			entityName: capacity_regions
+			schemaName: dbo
+			expressionSource: DatabaseQuery
+
+	annotation PBI_ResultType = Table
+

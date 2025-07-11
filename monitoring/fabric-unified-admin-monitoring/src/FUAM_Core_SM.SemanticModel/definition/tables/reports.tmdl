@@ -1,0 +1,143 @@
+table reports
+	lineageTag: ac608518-8c3a-438f-9b6f-25b7d27b3344
+	sourceLineageTag: [dbo].[reports]
+
+	column WorkspaceId
+		dataType: string
+		sourceProviderType: varchar(8000)
+		lineageTag: bb115694-922e-4b8f-89fc-84a59b2048ad
+		sourceLineageTag: WorkspaceId
+		summarizeBy: none
+		sourceColumn: WorkspaceId
+
+		annotation SummarizationSetBy = Automatic
+
+	column ReportType
+		dataType: string
+		sourceProviderType: varchar(8000)
+		lineageTag: d38f82c8-d69f-4f52-8286-522ee54eb575
+		sourceLineageTag: ReportType
+		summarizeBy: none
+		sourceColumn: ReportType
+
+		annotation SummarizationSetBy = Automatic
+
+	column ReportId
+		dataType: string
+		sourceProviderType: varchar(8000)
+		lineageTag: 6e32d67b-6180-4b22-a329-b442e0dd4f76
+		sourceLineageTag: ReportId
+		summarizeBy: none
+		sourceColumn: ReportId
+
+		annotation SummarizationSetBy = Automatic
+
+	column Name
+		dataType: string
+		sourceProviderType: varchar(8000)
+		lineageTag: 80ddf56d-52db-4450-bf40-bfa2b536856b
+		sourceLineageTag: Name
+		summarizeBy: none
+		sourceColumn: Name
+
+		annotation SummarizationSetBy = Automatic
+
+	column SemanticModelId
+		dataType: string
+		sourceProviderType: varchar(8000)
+		lineageTag: 6629a2c1-1d18-4430-ba15-976cfed36f60
+		sourceLineageTag: SemanticModelId
+		summarizeBy: none
+		sourceColumn: SemanticModelId
+
+		annotation SummarizationSetBy = Automatic
+
+	column CreatedDateTime
+		dataType: string
+		sourceProviderType: varchar(8000)
+		lineageTag: adc0a56b-3689-4cd2-b004-8a0976686a5e
+		sourceLineageTag: CreatedDateTime
+		summarizeBy: none
+		sourceColumn: CreatedDateTime
+
+		annotation SummarizationSetBy = Automatic
+
+	column ModifiedDateTime
+		dataType: string
+		sourceProviderType: varchar(8000)
+		lineageTag: e15acce8-c08c-4680-8d73-fedbe226ccc1
+		sourceLineageTag: ModifiedDateTime
+		summarizeBy: none
+		sourceColumn: ModifiedDateTime
+
+		annotation SummarizationSetBy = Automatic
+
+	column ModifiedById
+		dataType: string
+		sourceProviderType: varchar(8000)
+		lineageTag: f509ef88-1563-49e2-910d-eaa961e3d047
+		sourceLineageTag: ModifiedById
+		summarizeBy: none
+		sourceColumn: ModifiedById
+
+		annotation SummarizationSetBy = Automatic
+
+	column CreatedById
+		dataType: string
+		sourceProviderType: varchar(8000)
+		lineageTag: e249992a-e244-4b12-b096-4898aebfe50a
+		sourceLineageTag: CreatedById
+		summarizeBy: none
+		sourceColumn: CreatedById
+
+		annotation SummarizationSetBy = Automatic
+
+	column OriginalReportObjectId
+		dataType: string
+		sourceProviderType: varchar(8000)
+		lineageTag: 686141bf-a68e-497c-94ce-270f5e6d9698
+		sourceLineageTag: OriginalReportObjectId
+		summarizeBy: none
+		sourceColumn: OriginalReportObjectId
+
+		annotation SummarizationSetBy = Automatic
+
+	column AppId
+		dataType: string
+		sourceProviderType: varchar(8000)
+		lineageTag: 59f99601-0bc3-4cd9-96ed-3ed119ef329d
+		sourceLineageTag: AppId
+		summarizeBy: none
+		sourceColumn: AppId
+
+		annotation SummarizationSetBy = Automatic
+
+	column users
+		dataType: string
+		sourceProviderType: varchar(8000)
+		lineageTag: 6fc02de4-93e6-4a81-8fea-1fcda18dd230
+		sourceLineageTag: users
+		summarizeBy: none
+		sourceColumn: users
+
+		annotation SummarizationSetBy = Automatic
+
+	column description
+		dataType: string
+		sourceProviderType: varchar(8000)
+		lineageTag: 43c5951a-794c-42bc-be02-3c45b6b07e03
+		sourceLineageTag: description
+		summarizeBy: none
+		sourceColumn: description
+
+		annotation SummarizationSetBy = Automatic
+
+	partition reports = entity
+		mode: directLake
+		source
+			entityName: reports
+			schemaName: dbo
+			expressionSource: DatabaseQuery
+
+	annotation PBI_ResultType = Table
+

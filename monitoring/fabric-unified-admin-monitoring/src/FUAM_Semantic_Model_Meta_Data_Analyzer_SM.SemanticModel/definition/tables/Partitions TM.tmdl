@@ -1,0 +1,268 @@
+table 'Partitions TM'
+	lineageTag: db25680b-6deb-44bd-9d6a-6b86fee77a8e
+
+	column ID
+		dataType: double
+		lineageTag: d686aa25-30b5-485c-8add-bb6a4aaa9a2f
+		summarizeBy: none
+		sourceColumn: ID
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column TableID
+		dataType: double
+		lineageTag: 0bb493c7-3156-41bd-8b5c-0f600135d2f6
+		summarizeBy: none
+		sourceColumn: TableID
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column 'Partition Name'
+		dataType: string
+		lineageTag: d84898e1-9571-4b06-b5b2-16ddc8fe7783
+		summarizeBy: none
+		sourceColumn: Partition Name
+
+		annotation SummarizationSetBy = Automatic
+
+	column Description
+		dataType: string
+		lineageTag: 853bddd1-c229-4c5b-89e4-c647d69740e5
+		summarizeBy: none
+		sourceColumn: Description
+
+		annotation SummarizationSetBy = Automatic
+
+	column DataSourceID
+		dataType: double
+		lineageTag: 97aa726f-a909-40ce-b2be-4db2ca2850d9
+		summarizeBy: none
+		sourceColumn: DataSourceID
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column QueryDefinition
+		dataType: string
+		lineageTag: e3ee72fb-8036-47f1-a392-6e57cff078ec
+		summarizeBy: none
+		sourceColumn: QueryDefinition
+
+		annotation SummarizationSetBy = Automatic
+
+	column State
+		dataType: int64
+		formatString: 0
+		lineageTag: 3ad0144d-0620-48f5-be6a-91fe7eb945c9
+		summarizeBy: none
+		sourceColumn: State
+
+		annotation SummarizationSetBy = Automatic
+
+	column Type
+		dataType: int64
+		formatString: 0
+		lineageTag: c45e0de9-960f-43e7-9617-b40399879a28
+		summarizeBy: none
+		sourceColumn: Type
+
+		annotation SummarizationSetBy = Automatic
+
+	column PartitionStorageID
+		dataType: double
+		formatString: 0
+		lineageTag: a0401591-efb7-4b1c-bf91-f10dea556665
+		summarizeBy: count
+		sourceColumn: PartitionStorageID
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isDecimal":true}
+
+	column Mode
+		dataType: int64
+		formatString: 0
+		lineageTag: cd0f6ea7-23e5-4afb-b14c-f6162f1b610b
+		summarizeBy: none
+		sourceColumn: Mode
+
+		annotation SummarizationSetBy = Automatic
+
+	column DataView
+		dataType: int64
+		formatString: 0
+		lineageTag: 8e7212dd-43ec-454a-a085-33ee07d0a6d2
+		summarizeBy: sum
+		sourceColumn: DataView
+
+		annotation SummarizationSetBy = Automatic
+
+	column Modified
+		dataType: dateTime
+		formatString: yyyy-mm-dd hh:nn:ss
+		lineageTag: 1fa9c263-8278-45c7-9257-2d96d213d107
+		summarizeBy: none
+		sourceColumn: Modified
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isDateTimeCustom":true}
+
+	column Refreshed
+		dataType: dateTime
+		formatString: yyyy-mm-dd hh:nn:ss
+		lineageTag: 53cbebe8-b8cf-4f38-97e3-8e994b99f12f
+		summarizeBy: none
+		sourceColumn: Refreshed
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isDateTimeCustom":true}
+
+	column SystemFlags
+		dataType: int64
+		formatString: 0
+		lineageTag: e13f24df-af3b-4098-9f54-b7067866e2f7
+		summarizeBy: sum
+		sourceColumn: SystemFlags
+
+		annotation SummarizationSetBy = Automatic
+
+	column ErrorMessage
+		dataType: string
+		lineageTag: f1859779-806f-49ef-806f-c877019c538a
+		summarizeBy: none
+		sourceColumn: ErrorMessage
+
+		annotation SummarizationSetBy = Automatic
+
+	column RetainDataTillForceCalculate
+		dataType: boolean
+		formatString: """TRUE"";""TRUE"";""FALSE"""
+		lineageTag: dbe19ed9-59bb-4e7f-a09d-04eaaf5dd0c4
+		summarizeBy: none
+		sourceColumn: RetainDataTillForceCalculate
+
+		annotation SummarizationSetBy = Automatic
+
+	column RangeStart
+		dataType: dateTime
+		formatString: General Date
+		lineageTag: 0b5dd672-4ffd-43d1-8e54-ac9bfc73f40c
+		summarizeBy: none
+		sourceColumn: RangeStart
+
+		annotation SummarizationSetBy = Automatic
+
+	column RangeEnd
+		dataType: dateTime
+		formatString: General Date
+		lineageTag: cf9ca174-d91f-42bb-a53f-e48301f57183
+		summarizeBy: none
+		sourceColumn: RangeEnd
+
+		annotation SummarizationSetBy = Automatic
+
+	column RangeGranularity
+		dataType: int64
+		formatString: 0
+		lineageTag: f9a2a2ac-fc56-4133-bf94-16e4a476a58c
+		summarizeBy: sum
+		sourceColumn: RangeGranularity
+
+		annotation SummarizationSetBy = Automatic
+
+	column RefreshBookmark
+		dataType: string
+		lineageTag: 51e87ed4-575f-4fb7-9deb-d4f8ade97a3a
+		summarizeBy: none
+		sourceColumn: RefreshBookmark
+
+		annotation SummarizationSetBy = Automatic
+
+	column QueryGroupID
+		dataType: string
+		lineageTag: 55db6e63-a300-49d5-bf1c-beefffa0efbe
+		summarizeBy: none
+		sourceColumn: QueryGroupID
+
+		annotation SummarizationSetBy = Automatic
+
+	column ExpressionSourceID
+		dataType: double
+		lineageTag: f1efdd1b-6e88-4160-bcd1-4fbb24a16eff
+		summarizeBy: count
+		sourceColumn: ExpressionSourceID
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column MAttributes
+		dataType: string
+		lineageTag: 3264ad1b-3fd8-4b0a-9171-367fbf865a83
+		summarizeBy: none
+		sourceColumn: MAttributes
+
+		annotation SummarizationSetBy = Automatic
+
+	column InternalIndex =
+			
+			RANKX(
+			    FILTER(
+			        'Partitions TM',
+			        EARLIER('Partitions TM'[TableID]) = 'Partitions TM'[TableID]
+			    ),
+			    'Partitions TM'[ID]
+			    )
+		lineageTag: f28c0c9e-175e-4d59-a3a2-a107f2eee5c6
+		summarizeBy: sum
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column 'Data Sum Size Bytes' = ```
+			
+			VAR _partAgg = SUMMARIZE(
+			    'Storage Table Column Segments TM', 
+			    'Storage Table Column Segments TM'[DIMENSION_NAME], // Table Name
+			    'Storage Table Column Segments TM'[PARTITION_NAME], // Partition Name
+			    "Data Sum Size Bytes", SUMX(FILTER('Storage Table Column Segments TM', RIGHT(LEFT('Storage Table Column Segments TM'[TABLE_ID], 2), 1) <> "$"), 'Storage Table Column Segments TM'[USED_SIZE])
+			    )
+			RETURN 
+			CALCULATE(
+			    SUMX(FILTER('Storage Table Column Segments TM', RIGHT(LEFT('Storage Table Column Segments TM'[TABLE_ID], 2), 1) <> "$"), 'Storage Table Column Segments TM'[USED_SIZE]),
+			    FILTER(_partAgg,
+			    [DIMENSION_NAME] = RELATED('Tables TM'[Table Name]) && 
+			    [PARTITION_NAME] = 'Partitions TM'[Partition Name]
+			    )
+			)
+			```
+		lineageTag: a107dee5-ca65-4405-a419-2b832647c52e
+		summarizeBy: sum
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	partition 'Partitions TM' = m
+		mode: import
+		queryGroup: 'Meta Data'
+		source =
+				let
+				    #"Partitions TM" = AnalysisServices.Database(serverURL, modelName, [Query="SELECT * FROM $System.TMSCHEMA_PARTITIONS", Implementation="2.0"]),
+				    #"Renamed Columns" = Table.RenameColumns(#"Partitions TM",{{"Name", "Partition Name"}}),
+				    #"Changed Type" = Table.TransformColumnTypes(#"Renamed Columns",{{"QueryGroupID", type text}}),
+				    #"Replaced Value" = Table.ReplaceValue(#"Changed Type",null,"0",Replacer.ReplaceValue,{"QueryGroupID"}),
+				    #"Renamed Columns1" = Table.RenameColumns(#"Replaced Value",{{"RefreshedTime", "Refreshed"}, {"ModifiedTime", "Modified"}})
+				in
+				    #"Renamed Columns1"
+
+	annotation PBI_ResultType = Table
+

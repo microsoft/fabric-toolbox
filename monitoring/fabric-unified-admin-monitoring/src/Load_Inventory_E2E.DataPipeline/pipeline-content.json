@@ -1,0 +1,100 @@
+{
+    "properties": {
+        "activities": [
+            {
+                "name": "01_Transfer_Incremental_Inventory_Unit",
+                "type": "TridentNotebook",
+                "dependsOn": [],
+                "policy": {
+                    "timeout": "0.12:00:00",
+                    "retry": 0,
+                    "retryIntervalInSeconds": 30,
+                    "secureOutput": false,
+                    "secureInput": false
+                },
+                "typeProperties": {
+                    "notebookId": "b2971e0b-f5c8-5e37-849f-fc245dca21fd",
+                    "workspaceId": "eb764c8b-cf3b-55be-adf4-348fe9233657",
+                    "parameters": {
+                        "has_tenant_domains": {
+                            "value": {
+                                "value": "@pipeline().parameters.has_tenant_domains",
+                                "type": "Expression"
+                            },
+                            "type": "bool"
+                        },
+                        "extract_powerbi_artifacts_only": {
+                            "value": {
+                                "value": "@pipeline().parameters.extract_powerbi_artifacts_only",
+                                "type": "Expression"
+                            },
+                            "type": "bool"
+                        },
+                        "display_data": {
+                            "value": {
+                                "value": "@pipeline().parameters.display_data",
+                                "type": "Expression"
+                            },
+                            "type": "bool"
+                        },
+                        "optional_keyvault_name": {
+                            "value": {
+                                "value": "@pipeline().parameters.optional_keyvault_name",
+                                "type": "Expression"
+                            },
+                            "type": "string"
+                        },
+                        "optional_keyvault_sp_tenantId_secret_name": {
+                            "value": {
+                                "value": "@pipeline().parameters.optional_keyvault_sp_tenantId_secret_name",
+                                "type": "Expression"
+                            },
+                            "type": "string"
+                        },
+                        "optional_keyvault_sp_clientId_secret_name": {
+                            "value": {
+                                "value": "@pipeline().parameters.optional_keyvault_sp_clientId_secret_name",
+                                "type": "Expression"
+                            },
+                            "type": "string"
+                        },
+                        "optional_keyvault_sp_secret_secret_name": {
+                            "value": {
+                                "value": "@pipeline().parameters.optional_keyvault_sp_secret_secret_name",
+                                "type": "Expression"
+                            },
+                            "type": "string"
+                        }
+                    },
+                    "sessionTag": "fuam"
+                }
+            }
+        ],
+        "parameters": {
+            "has_tenant_domains": {
+                "type": "bool",
+                "defaultValue": false
+            },
+            "extract_powerbi_artifacts_only": {
+                "type": "bool",
+                "defaultValue": false
+            },
+            "display_data": {
+                "type": "bool",
+                "defaultValue": false
+            },
+            "optional_keyvault_name": {
+                "type": "string"
+            },
+            "optional_keyvault_sp_tenantId_secret_name": {
+                "type": "string"
+            },
+            "optional_keyvault_sp_clientId_secret_name": {
+                "type": "string"
+            },
+            "optional_keyvault_sp_secret_secret_name": {
+                "type": "string"
+            }
+        }
+    }
+}
