@@ -355,7 +355,7 @@
             },
             "activity_days_in_scope": {
                 "type": "int",
-                "defaultValue": 30
+                "defaultValue": 28
             },
             "display_data": {
                 "type": "bool",
