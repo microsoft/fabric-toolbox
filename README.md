@@ -9,11 +9,11 @@ Fabric toolbox is a repository of tools, accelerators, scripts, and samples to h
 These assets should be treated as examples that you can use to create the solutions that are appropriate for your use case. If you have any issues, please use the [issues](https://github.com/microsoft/fabric-toolbox/issues) tab of this repository and we will work to address issues on a best effort basis. 
 
 ## Monitoring
-- $${\color{green}NEW!}$$ [Fabric Unified Admin Monitoring (FUAM)](./monitoring/fabric-unified-admin-monitoring)
+- [Fabric Unified Admin Monitoring (FUAM)](./monitoring/fabric-unified-admin-monitoring)
 - [Workspace Monitoring Report Templates](./monitoring/workspace-monitoring-dashboards)
 
 ## Accelerators
-- $${\color{green}NEW!}$$ [CICD: Git-Based Deployments](./accelerators/CICD/Git-based-deployments)
+- [CICD: Git-Based Deployments](./accelerators/CICD/Git-based-deployments)
 - [CICD: Deploy using Fabric deployment pipelines](./accelerators/CICD/Deploy-using-Fabric-deployment-pipelines)
 - [CICD: Branch out to new workspace](./accelerators/CICD/Branch-out-to-new-workspace)
 - [Data Warehouse Backup and Recovery](./accelerators/data-warehouse-backup-and-recovery)
@@ -33,18 +33,20 @@ These assets should be treated as examples that you can use to create the soluti
 - [Notebook: Workspace Size](./samples/notebook-workspace-size)
 
 ## Scripts
+- $${\color{green}NEW!}$$ [CI Views](./scripts/dw-ci-views)
+- $${\color{green}NEW!}$$ [DW/SQL AE Properties](./scripts/dw-properties)
 - [DW Active Requests](./scripts/dw-active-requests)
 - [DW Copy DMV to Table](./scripts/dw-copy-dmv-to-table)
 - [DW Queries Running at Timepoint](./scripts/dw-queries-running-at-timepoint)
 - [DW SP Kill Queries](./scripts/dw-sp-kill-queries)
 
 ## Tools
-- $${\color{green}NEW!}$$ [MicrosoftFabricMgmt PowerShell Module](./tools/MicrosoftFabricMgmt)
-- $${\color{green}NEW!}$$ [Gen2 Dedicated Pool to Fabric DW Table Copy](./tools/Gen2toFabricDW)
-- $${\color{green}NEW!}$$ [Semantic Model Audit](./tools/SemanticModelAudit)
+- [MicrosoftFabricMgmt PowerShell Module](./tools/MicrosoftFabricMgmt)
+- [Gen2 Dedicated Pool to Fabric DW Table Copy](./tools/Gen2toFabricDW)
+- [Semantic Model Audit](./tools/SemanticModelAudit)
 - [Copy Warehouse](./tools/copy-warehouse)
 - [TPCH Benchmarking](./tools/tpch-benchmarking)
-- $${\color{green}NEW!}$$ [DAX Performance Testing](./tools/DAXPerformanceTesting)
+- [DAX Performance Testing](./tools/DAXPerformanceTesting)
 
 
 # Contributing
