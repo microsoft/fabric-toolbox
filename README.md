@@ -41,6 +41,7 @@ These assets should be treated as examples that you can use to create the soluti
 - [DW SP Kill Queries](./scripts/dw-sp-kill-queries)
 
 ## Tools
+- $${\color{green}NEW!}$$ [Open Mirroring SDK](./tools/OpenMirroringPythonSDK)
 - [MicrosoftFabricMgmt PowerShell Module](./tools/MicrosoftFabricMgmt)
 - [Gen2 Dedicated Pool to Fabric DW Table Copy](./tools/Gen2toFabricDW)
 - [Semantic Model Audit](./tools/SemanticModelAudit)
