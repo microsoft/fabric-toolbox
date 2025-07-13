@@ -70,7 +70,6 @@ Workspace Monitoring features must be enabled for the Workspace under the Worksp
 The following step-by-step guide describes the initial configuration step of the **dashboard/report template**.
 
 
-<<<<<<< Updated upstream
 ### Setup | Real-Time Dashboard template
 
 #### Steps
@@ -125,9 +124,6 @@ The following parameters are defined in the template:
 | **Fabric Item Id**  | Optionally enter a fabric artifact (semantic model) Id. |
 | **RangeStart** | Optionally enter the start date for incremental refreshes |
 | **RangeEnd** | Optionally enter the end date for incremental refreshes |
-=======
-#### [Click here to deploy the **RTI Dashboard**](./how-to/How_to_deploy_Workspace_Monitoring_RTI_Dashboard.md)
->>>>>>> Stashed changes
 
 
 #### [Click here to deploy the **PBI Report**](./how-to/How_to_deploy_Workspace_Monitoring_PBI_Report.md)
@@ -143,7 +139,6 @@ The following parameters are defined in the template:
 ------------------------
 
 
-<<<<<<< Updated upstream
 ### Screenshots | Real-Time Dashboard template
 
 ![Screenshot](./media/fwm_rtid_template_2_workspace_overview_screenshot.png)
@@ -210,8 +205,6 @@ The **SM Query Diagnostic** is a drill-through analyzer page, which focuses on t
 
 ------------------------
 
-=======
->>>>>>> Stashed changes
 ## Remarks
 
 **Capacity utilization:**
