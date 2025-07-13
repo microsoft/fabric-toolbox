@@ -1,9 +1,9 @@
 # Fabric Workspace Monitoring Report templates (preview)
 
 
-![Fabric Workspace Monitoring component overview with report templates](./media/fwm_overview_cover.png)
+![Fabric Workspace Monitoring component overview with report templates](./media/general/fwm_overview_cover.png)
 
-Current Template Version: **2025.1.1**
+Current Template Version: **2025.7.1**
 
 ## Introduction
 
@@ -31,6 +31,8 @@ There are two monitoring template options available:
 | Real-Time Dashboard | Power BI Report|
 | ------ | ------ |
 | This template allows users to track workspace activities in real-time. It provides an operational tool for users to analyze issues within seconds, and zoom in to exact time periods that an event occured. | This template allows users to configure connections to the Monitoring Eventhouse to retain detailed historical activity data. |
+|[How to deploy **RTI Dashboard**](./how-to/How_to_deploy_Workspace_Monitoring_RTI_Dashboard.md)| [How to deploy **PBI Report**](./how-to/How_to_deploy_Workspace_Monitoring_PBI_Report.md)  |
+|[Documentation to **RTI Dashboard**](./documentation/Workspace_Monitoring_RTI_Dashboard.md) | [Documentation to **PBI Report**](./documentation/Workspace_Monitoring_PBI_Report.md) |
 
 
 ### It is real. In Real-Time Dashboard
@@ -40,7 +42,7 @@ This template, in combination with Workspace Monitoring features, allows users t
 
 The Real-Time Dashboard template is structured on the following way:
 
-![Workspace Monitoring Real Time Dashboard template structure](./media/fwm_rtid_template_0_structure.png)
+![Workspace Monitoring Real Time Dashboard template structure](./media/general/fwm_rtid_template_0_structure.png)
 
 
 ### Log Insights in Power BI Report
@@ -52,7 +54,7 @@ We have ported and enhanced the 'Fabric Log Analytics for Analysis Service Engin
 Now, you can seamlessy connect and track your workspace items, operations, visuals etc. without leaving the SaaS experience from Microsoft Fabric.
 
 The Power BI Report template is structured on the following way:
-![Workspace Monitoring Power BI Dashboard template structure](./media/fwm_pbi_template_0_structure.png)
+![Workspace Monitoring Power BI Dashboard template structure](./media/general/fwm_pbi_template_0_structure.png)
 
 
 ### Migrate from BYOLA
@@ -68,6 +70,7 @@ Workspace Monitoring features must be enabled for the Workspace under the Worksp
 The following step-by-step guide describes the initial configuration step of the **dashboard/report template**.
 
 
+<<<<<<< Updated upstream
 ### Setup | Real-Time Dashboard template
 
 #### Steps
@@ -122,26 +125,12 @@ The following parameters are defined in the template:
 | **Fabric Item Id**  | Optionally enter a fabric artifact (semantic model) Id. |
 | **RangeStart** | Optionally enter the start date for incremental refreshes |
 | **RangeEnd** | Optionally enter the end date for incremental refreshes |
+=======
+#### [Click here to deploy the **RTI Dashboard**](./how-to/How_to_deploy_Workspace_Monitoring_RTI_Dashboard.md)
+>>>>>>> Stashed changes
 
 
-#### Steps
-1. Download the '**Fabric Workspace Monitoring.pbit**' file from the repository
-2. **Open** the report in Power BI Desktop
-3. **Paste** the **URI** of the Monitoring Database to the first parameter
-![Screenshot](./media/fwm_pbi_template_1_getting_queryuri.png)
-4. **Sign-in** with your Microsoft Account
-5. Click on '**Load**'
-6. **Save** the report (for instance as a '.pbix' file)
-7. **Publish** the report in a preferred workspace
-8. **Navigate** to the settings of the semantic model
-9. **Edit** the credentials of the data source in Fabric
-10. Trigger the first initial refresh in Fabric
-    - Optionally - Schedule the semantic model refresh, if preferred
-11. Once the refresh has been succedeed, open the report
-
-**Optimize Power BI refreshes for the template**
-Additionally, you can optimize the Power BI report template usage, you can configure the incremental refresh for each table.
-
+#### [Click here to deploy the **PBI Report**](./how-to/How_to_deploy_Workspace_Monitoring_PBI_Report.md)
 
 ------------------------
 
@@ -154,6 +143,7 @@ Additionally, you can optimize the Power BI report template usage, you can confi
 ------------------------
 
 
+<<<<<<< Updated upstream
 ### Screenshots | Real-Time Dashboard template
 
 ![Screenshot](./media/fwm_rtid_template_2_workspace_overview_screenshot.png)
@@ -220,6 +210,8 @@ The **SM Query Diagnostic** is a drill-through analyzer page, which focuses on t
 
 ------------------------
 
+=======
+>>>>>>> Stashed changes
 ## Remarks
 
 **Capacity utilization:**
