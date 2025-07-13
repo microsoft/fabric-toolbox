@@ -10,6 +10,8 @@ Run the second code cell in the RunLoadTest notebook
 
 ## Instructions
 
+    Watch a video showing how to setup and run a load test using these Fabric Notebooks here : https://youtu.be/0rSTDeC75vw
+
     1. Get sample from here (https://learn.microsoft.com/en-us/power-bi/create-reports/sample-datasets#install-built-in-samples)
 
     2. Upload sample Power BI PBIX file to target workspace
@@ -24,7 +26,7 @@ Run the second code cell in the RunLoadTest notebook
             iv. Close Power BI Desktop
 
     4. Create Lakehouse to be used to store DAX queries for Load Test, Email Addresses (if using RLS) and log files.
-        a. Create a subfolder in Files section called "PerfScenarios/DIAD"
+        a. Create a subfolder in Files section called "PerfScenarios/Queries"
         b. Upload PowerBIPerformanceData.json file from step 3 to this subfolder
 
     5. Upload two fabric notebooks to Fabric Workspace
@@ -35,10 +37,10 @@ Run the second code cell in the RunLoadTest notebook
 
         c. Use Semantic Link Labs to install in a new pure python notebook add the following four lines of code to a code cell then run.
         
-        %pip install -q --disable-pip-version-check semantic-link-labs
-        import sempy_labs as labs
-        labs.import_notebook_from_web(overwrite=True,notebook_name="RunLoadTest"        , url="https://raw.githubusercontent.com/microsoft/fabric-toolbox/main/tools/FabricLoadTestTool/RunLoadTest.ipynb")
-        labs.import_notebook_from_web(overwrite=True,notebook_name="RunPerfScenario"    , url="https://raw.githubusercontent.com/microsoft/fabric-toolbox/main/tools/FabricLoadTestTool/RunPerfScenario.ipynb")
+    %pip install -q --disable-pip-version-check semantic-link-labs
+    import sempy_labs as labs
+    labs.import_notebook_from_web(overwrite=True,notebook_name="RunLoadTest"        , url="https://raw.githubusercontent.com/microsoft/fabric-toolbox/main/tools/FabricLoadTestTool/RunLoadTest.ipynb")
+    labs.import_notebook_from_web(overwrite=True,notebook_name="RunPerfScenario"    , url="https://raw.githubusercontent.com/microsoft/fabric-toolbox/main/tools/FabricLoadTestTool/RunPerfScenario.ipynb")
         
         
         d. Stop and close notebook
