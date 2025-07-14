@@ -44,52 +44,42 @@ function Unassign-FabricDomainWorkspace {
     )
 
     try {
-        # Step 1: Ensure token validity
-        Write-Message -Message "Validating token..." -Level Debug
+        # Validate authentication token before proceeding.
+        Write-Message -Message "Validating authentication token..." -Level Debug
         Test-TokenExpired
-        Write-Message -Message "Token validation completed." -Level Debug
+        Write-Message -Message "Authentication token is valid." -Level Debug
+                
+        # Construct the API endpoint URI based on the presence of WorkspaceIds
+        # Construct the request body
+        if ($WorkspaceIds -and $WorkspaceIds.Count -gt 0) {
+            $endpointSuffix = "unassignWorkspaces"
+            $body = @{
+                workspacesIds = $WorkspaceIds
+            }
 
-        # Step 2: Construct the API URL
-        # Determine the API endpoint URL based on the presence of WorkspaceIds
-        $endpointSuffix = if ($WorkspaceIds) { "unassignWorkspaces" }  else { "unassignAllWorkspaces" }
-
-        $apiEndpointUrl = "{0}/admin/domains/{1}/{2}" -f $FabricConfig.BaseUrl, $DomainId, $endpointSuffix
-        Write-Message -Message "API Endpoint: $apiEndpointUrl" -Level Debug
-        
-
-        # Step 3: Construct the request body (if needed)
-        $bodyJson = if ($WorkspaceIds) {
-            $body = @{ workspacesIds = $WorkspaceIds }
-            $body | ConvertTo-Json -Depth 2
+            $bodyJson = $body | ConvertTo-Json -Depth 2
         }
         else {
-            $null
+            $endpointSuffix = "unassignAllWorkspaces"
+            $bodyJson = $null
         }
-    
+        $apiEndpointURI = "{0}/admin/domains/{1}/{2}" -f $FabricConfig.BaseUrl, $DomainId, $endpointSuffix
+        Write-Message -Message "API Endpoint: $apiEndpointURI" -Level Debug
         Write-Message -Message "Request Body: $bodyJson" -Level Debug
-        # Step 4: Make the API request to unassign specific workspaces
-        $response = Invoke-RestMethod `
-            -Headers $FabricConfig.FabricHeaders `
-            -Uri $apiEndpointUrl `
-            -Method Post `
-            -Body $bodyJson `
-            -ContentType "application/json" `
-            -ErrorAction Stop `
-            -SkipHttpErrorCheck `
-            -ResponseHeadersVariable "responseHeader" `
-            -StatusCodeVariable "statusCode"
 
-        # Step 5: Validate the response code
-        if ($statusCode -ne 200) {
-            Write-Message -Message "Unexpected response code: $statusCode from the API." -Level Error
-            Write-Message -Message "Error: $($response.message)" -Level Error
-            Write-Message "Error Code: $($response.errorCode)" -Level Error
-            return $null
-        }
+        # Make the API request 
+        $response = Invoke-FabricAPIRequest `
+            -BaseURI $apiEndpointURI `
+            -Headers $FabricConfig.FabricHeaders `
+            -Method Post `
+            -Body $bodyJson
+        
+        # Return the API response
         Write-Message -Message "Successfully unassigned workspaces to the domain with ID '$DomainId'." -Level Info
+        return $response
     }
     catch {
-        # Step 6: Capture and log error details
+        # Capture and log error details
         $errorDetails = $_.Exception.Message
         Write-Message -Message "Failed to unassign workspaces to the domain with ID '$DomainId'. Error: $errorDetails" -Level Error
     }

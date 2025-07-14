@@ -35,60 +35,49 @@ function Get-FabricTenantSetting {
     )
 
     try {
-        # Step 1: Ensure token validity
-        Write-Message -Message "Validating token..." -Level Debug
+        # Validate authentication token before proceeding.
+        Write-Message -Message "Validating authentication token..." -Level Debug
         Test-TokenExpired
-        Write-Message -Message "Token validation completed." -Level Debug
+        Write-Message -Message "Authentication token is valid." -Level Debug
+                
+        # Construct the API endpoint URI 
+        $apiEndpointURI = "{0}/admin/tenantsettings" -f $FabricConfig.BaseUrl
+        Write-Message -Message "Constructed API Endpoint: $apiEndpointURI" -Level Debug
 
-        # Step 2: Construct the API URL
-        $apiEndpointUrl = "{0}/admin/tenantsettings" -f $FabricConfig.BaseUrl
-        Write-Message -Message "API Endpoint: $apiEndpointUrl" -Level Debug
-
-        # Step 3: Make the API request
-        $response = Invoke-RestMethod `
+         # Make the API request
+        $dataItems = Invoke-FabricAPIRequest `
+            -BaseURI $apiEndpointURI `
             -Headers $FabricConfig.FabricHeaders `
-            -Uri $apiEndpointUrl `
-            -Method Get `
-            -ErrorAction Stop `
-            -SkipHttpErrorCheck `
-            -ResponseHeadersVariable "responseHeader" `
-            -StatusCodeVariable "statusCode"
-
-        # Step 4: Validate the response code
-        if ($statusCode -ne 200) {
-            Write-Message -Message "Unexpected response code: $statusCode from the API." -Level Error
-            Write-Message -Message "Error: $($response.message)" -Level Error
-            Write-Message "Error Code: $($response.errorCode)" -Level Error
-            return $null
-        }
+            -Method Get
         
-        # Step 5: Handle empty response
-        if (-not $response) {
+        # Immediately handle empty response
+        if (-not $dataItems) {
             Write-Message -Message "No data returned from the API." -Level Warning
             return $null
         }
-        # Step 6: Filter results based on provided parameters
-        $settings = if ($SettingTitle) {
-            $response.tenantSettings | Where-Object { $_.title -eq $SettingTitle }
+
+        # Apply filtering logic efficiently
+        if ($SettingTitle) {
+            $matchedItems = $dataItems.Where({ $_.title -eq $SettingTitle }, 'First')
         }
         else {
-            # Return all workspaces if no filter is provided
-            Write-Message -Message "No filter provided. Returning all tenant settings." -Level Debug
-            $response.tenantSettings
+            Write-Message -Message "No filter provided. Returning all items." -Level Debug
+            $matchedItems = $dataItems
         }
 
-        # Step 7: Handle results
-        if ($settings) {
-            return $settings
+        # Handle results
+        if ($matchedItems) {
+            Write-Message -Message "Item(s) found matching the specified criteria." -Level Debug
+            return $matchedItems
         }
         else {
-            Write-Message -Message "No tenant settings found matching the provided criteria." -Level Warning
+            Write-Message -Message "No item found matching the provided criteria." -Level Warning
             return $null
         }
     }
     catch {
-        # Step 8: Capture and log error details
+        # Capture and log error details
         $errorDetails = $_.Exception.Message
-        Write-Message -Message "Failed to retrieve tenant settings. Error: $errorDetails" -Level Error
+        Write-Message -Message "Error retrieving tenant settings: $errorDetails" -Level Error
     }
 }

@@ -46,75 +46,61 @@ function Get-FabricDomain {
         [ValidateNotNullOrEmpty()]
         [bool]$NonEmptyDomainsOnly = $false
     )
-
     try {
-        # Step 1: Handle ambiguous input
+        # Validate input parameters
         if ($DomainId -and $DomainName) {
-            Write-Message -Message "Both 'DomainId' and 'DomainName' were provided. Please specify only one." -Level Error
-            return @()
-        }
-
-        # Step 2: Ensure token validity
-        Write-Message -Message "Validating token..." -Level Debug
-        Test-TokenExpired
-        Write-Message -Message "Token validation completed." -Level Debug
-
-        # Step 3: Construct the API URL with filtering logic        
-        $apiEndpointUrl = "{0}/admin/domains" -f $FabricConfig.BaseUrl
-        if ($NonEmptyDomainsOnly) {
-            $apiEndpointUrl = "{0}?nonEmptyOnly=true" -f $apiEndpointUrl
-        }
-        Write-Message -Message "API Endpoint: $apiEndpointUrl" -Level Debug
-
-        # Step 4: Make the API request
-        $response = Invoke-RestMethod `
-            -Headers $FabricConfig.FabricHeaders `
-            -Uri $apiEndpointUrl `
-            -Method Get `
-            -ErrorAction Stop `
-            -SkipHttpErrorCheck `
-            -ResponseHeadersVariable "responseHeader" `
-            -StatusCodeVariable "statusCode"
-
-        # Step 5: Validate the response code
-        if ($statusCode -ne 200) {
-            Write-Message -Message "Unexpected response code: $statusCode from the API." -Level Error
-            Write-Message -Message "Error: $($response.message)" -Level Error
-            Write-Message "Error Code: $($response.errorCode)" -Level Error
+            Write-Message -Message "Specify only one parameter: either 'DomainId' or 'DomainName'." -Level Error
             return $null
         }
-                    
-        # Step 6: Handle empty response
-        if (-not $response) {
+
+        # Validate authentication token before proceeding.
+        Write-Message -Message "Validating authentication token..." -Level Debug
+        Test-TokenExpired
+        Write-Message -Message "Authentication token is valid." -Level Debug
+                
+        # Construct the API endpoint URI with filtering logic        
+        $apiEndpointURI = "{0}/admin/domains" -f $FabricConfig.BaseUrl
+        if ($NonEmptyDomainsOnly) {
+            $apiEndpointURI = "{0}?nonEmptyOnly=true" -f $apiEndpointURI
+        }
+        Write-Message -Message "API Endpoint: $apiEndpointURI" -Level Debug
+
+        # Make the API request
+        $dataItems = Invoke-FabricAPIRequest `
+            -BaseURI $apiEndpointURI `
+            -Headers $FabricConfig.FabricHeaders `
+            -Method Get
+       
+        # Immediately handle empty response
+        if (-not $dataItems) {
             Write-Message -Message "No data returned from the API." -Level Warning
             return $null
         }
 
-
-        # Step 7: Filter results based on provided parameters
-        $domains = if ($DomainId) {
-            $response.domains | Where-Object { $_.Id -eq $DomainId }
+        # Apply filtering logic efficiently
+        if ($DomainId) {
+            $matchedItems = $dataItems.Where({ $_.Id -eq $DomainId }, 'First')
         }
         elseif ($DomainName) {
-            $response.domains | Where-Object { $_.DisplayName -eq $DomainName }
+            $matchedItems = $dataItems.Where({ $_.DisplayName -eq $DomainName }, 'First')
         }
         else {
-            # Return all domains if no filter is provided
-            Write-Message -Message "No filter provided. Returning all domains." -Level Debug
-            return $response.domains
+            Write-Message -Message "No filter provided. Returning all items." -Level Debug
+            $matchedItems = $dataItems
         }
 
-        # Step 8: Handle results
-        if ($domains) {
-            return $domains
+        # Handle results
+        if ($matchedItems) {
+            Write-Message -Message "Item(s) found matching the specified criteria." -Level Debug
+            return $matchedItems
         }
         else {
-            Write-Message -Message "No domain found matching the provided criteria." -Level Warning
+            Write-Message -Message "No item found matching the provided criteria." -Level Warning
             return $null
         }
     }
     catch {
-        # Step 9: Capture and log error details
+        # Capture and log error details
         $errorDetails = $_.Exception.Message
         Write-Message -Message "Failed to retrieve environment. Error: $errorDetails" -Level Error
     }

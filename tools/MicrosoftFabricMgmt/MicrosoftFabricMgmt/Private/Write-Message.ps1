@@ -47,7 +47,6 @@ function Write-Message {
         [Parameter()]
         [string]$LogFile
     )
-
     process {
         try {
             # Format timestamp

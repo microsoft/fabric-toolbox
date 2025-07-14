@@ -40,68 +40,28 @@ function Get-FabricMirroredDatabaseDefinition {
         [ValidateNotNullOrEmpty()]
         [string]$MirroredDatabaseId
     )
-
     try {
-        # Step 2: Ensure token validity
-        Write-Message -Message "Validating token..." -Level Debug
+        # Validate authentication token before proceeding.
+        Write-Message -Message "Validating authentication token..." -Level Debug
         Test-TokenExpired
-        Write-Message -Message "Token validation completed." -Level Debug
+        Write-Message -Message "Authentication token is valid." -Level Debug
 
-        # Step 3: Construct the API URL
-        $apiEndpointUrl = "{0}/workspaces/{1}/mirroredDatabases/{2}/getDefinition" -f $FabricConfig.BaseUrl, $WorkspaceId, $MirroredDatabaseId
-        Write-Message -Message "API Endpoint: $apiEndpointUrl" -Level Debug
+        # Construct the API endpoint URI 
+        $apiEndpointURI = "{0}/workspaces/{1}/mirroredDatabases/{2}/getDefinition" -f $FabricConfig.BaseUrl, $WorkspaceId, $MirroredDatabaseId
+        Write-Message -Message "API Endpoint: $apiEndpointURI" -Level Debug
 
-        # Step 4: Make the API request
-        $response = Invoke-RestMethod `
+        # Make the API request
+        $response = Invoke-FabricAPIRequest `
+            -BaseURI $apiEndpointURI `
             -Headers $FabricConfig.FabricHeaders `
-            -Uri $apiEndpointUrl `
-            -Method Post `
-            -ErrorAction Stop `
-            -ResponseHeadersVariable "responseHeader" `
-            -StatusCodeVariable "statusCode"
-
-        # Step 5: Validate the response code and handle the response
-        switch ($statusCode) {
-            200 {
-                Write-Message -Message "MirroredDatabase '$MirroredDatabaseId' definition retrieved successfully!" -Level Debug
-                return $response.definition.parts
-            }
-            202 {
-
-                Write-Message -Message "Getting MirroredDatabase '$MirroredDatabaseId' definition request accepted. Retrieving in progress!" -Level Debug
-
-                [string]$operationId = $responseHeader["x-ms-operation-id"]
-                Write-Message -Message "Operation ID: '$operationId'" -Level Debug
-                Write-Message -Message "Getting Long Running Operation status" -Level Debug
-               
-                $operationStatus = Get-FabricLongRunningOperation -operationId $operationId
-                Write-Message -Message "Long Running Operation status: $operationStatus" -Level Debug
-                # Handle operation result
-                if ($operationStatus.status -eq "Succeeded") {
-                    Write-Message -Message "Operation Succeeded" -Level Debug
-                    Write-Message -Message "Getting Long Running Operation result" -Level Debug
-                
-                    $operationResult = Get-FabricLongRunningOperationResult -operationId $operationId
-                    Write-Message -Message "Long Running Operation status: $operationResult" -Level Debug
-                
-                    return $operationResult.definition.parts
-                }
-                else {
-                    Write-Message -Message "Operation failed. Status: $($operationStatus)" -Level Debug
-                    Write-Message -Message "Operation failed. Status: $($operationStatus)" -Level Error
-                    return $operationStatus
-                }  
-            }
-            default {
-                Write-Message -Message "Unexpected response code: $statusCode" -Level Error
-                Write-Message -Message "Error details: $($response.message)" -Level Error
-                throw "API request failed with status code $statusCode."
-            }
-        
-        }
+            -Method Post 
+   
+        # Return the API response
+        Write-Message -Message "Mirrored Database '$MirroredDatabaseId' definition retrieved successfully!" -Level Debug
+        return $response
     }
     catch {
-        # Step 9: Capture and log error details
+        # Capture and log error details
         $errorDetails = $_.Exception.Message
         Write-Message -Message "Failed to retrieve MirroredDatabase. Error: $errorDetails" -Level Error
     } 
