@@ -80,11 +80,13 @@ function New-FabricLakehouse {
         Write-Message -Message "Request Body: $bodyJson" -Level Debug
 
         # Make the API request
-        $response = Invoke-FabricAPIRequest `
-            -BaseURI $apiEndpointURI `
-            -Headers $FabricConfig.FabricHeaders `
-            -Method Post `
-            -Body $bodyJson
+        $apiParams = @{
+            BaseURI = $apiEndpointURI
+            Headers = $FabricConfig.FabricHeaders
+            Method = 'Post'
+            Body = $bodyJson
+        }
+        $response = Invoke-FabricAPIRequest @apiParams
 
         # Return the API response
         Write-Message -Message "Lakehouse '$LakehouseName' created successfully!" -Level Info

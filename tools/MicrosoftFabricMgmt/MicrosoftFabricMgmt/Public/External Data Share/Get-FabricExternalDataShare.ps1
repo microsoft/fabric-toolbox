@@ -39,10 +39,12 @@ function Get-FabricExternalDataShare {
         Write-Message -Message "API Endpoint: $apiEndpointURI" -Level Debug
 
         # Make the API request
-        $dataItems = Invoke-FabricAPIRequest `
-            -BaseURI $apiEndpointURI `
-            -Headers $FabricConfig.FabricHeaders `
-            -Method Get
+        $apiParams = @{
+            BaseURI = $apiEndpointURI
+            Headers = $FabricConfig.FabricHeaders
+            Method = 'Get'
+        }
+        $dataItems = Invoke-FabricAPIRequest @apiParams
 
         if (-not $dataItems) {
             Write-Message -Message "No data returned from the API." -Level Warning

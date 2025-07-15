@@ -50,10 +50,12 @@ function Revoke-FabricExternalDataShare {
         Write-Message -Message "Constructing API endpoint URI..." -Level Debug
         $apiEndpointURI = "{0}/admin/workspaces/{1}/items/{2}/externalDataShares/{3}/revoke" -f $FabricConfig.BaseUrl, $WorkspaceId, $ItemId, $ExternalDataShareId
                 
-        $dataItems = Invoke-FabricAPIRequest `
-            -BaseURI $apiEndpointURI `
-            -Headers $FabricConfig.FabricHeaders `
-            -Method Post 
+        $apiParams = @{
+            BaseURI = $apiEndpointURI
+            Headers = $FabricConfig.FabricHeaders
+            Method = 'Post'
+        }
+        $dataItems = Invoke-FabricAPIRequest @apiParams 
 
         # Return the API response
         Write-Message -Message "External data share with ID '$ExternalDataShareId' successfully revoked in workspace '$WorkspaceId', item '$ItemId'." -Level Info

@@ -39,11 +39,13 @@ function Remove-FabricWorkspaceIdentity {
         Write-Message -Message "API Endpoint: $apiEndpointURI" -Level Debug
 
         # Make the API request
-        Invoke-FabricAPIRequest `
-            -BaseURI $apiEndpointURI `
-            -Headers $FabricConfig.FabricHeaders `
-            -Method Post `
-            -Body $bodyJson
+        $apiParams = @{
+            BaseURI = $apiEndpointURI
+            Headers = $FabricConfig.FabricHeaders
+            Method = 'Post'
+            Body = $bodyJson
+        }
+        Invoke-FabricAPIRequest @apiParams
 
         # Return the API response
         Write-Message -Message "Workspace identity was successfully deprovisioned for workspace '$WorkspaceId'." -Level Info

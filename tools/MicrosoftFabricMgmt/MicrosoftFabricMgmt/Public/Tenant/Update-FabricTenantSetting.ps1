@@ -3,7 +3,14 @@
 Updates tenant setting overrides for a specified capacity ID.
 
 .DESCRIPTION
-The `Update-FabricCapacityTenantSettingOverrides` function updates tenant setting overrides in a Fabric environment by making a POST request to the appropriate API endpoint. It allows specifying settings such as enabling tenant settings, delegating to a workspace, and including or excluding security groups.
+The `Update-FabricCapacityTenantSettingOverrides` func        # Make the API request
+        $apiParams = @{
+            BaseURI = $apiEndpointURI
+            Headers = $FabricConfig.FabricHeaders
+            Method = 'Patch'
+            Body = $bodyJson
+        }
+        $response = Invoke-FabricAPIRequest @apiParamsupdates tenant setting overrides in a Fabric environment by making a POST request to the appropriate API endpoint. It allows specifying settings such as enabling tenant settings, delegating to a workspace, and including or excluding security groups.
 
 .PARAMETER CapacityId
 (Mandatory) The ID of the capacity for which the tenant setting overrides are being updated.

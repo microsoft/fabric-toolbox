@@ -44,10 +44,12 @@ function Remove-FabricCopyJob {
         Write-Message -Message "API Endpoint: $apiEndpointURI" -Level Debug
 
         # Make the API request
-        $response = Invoke-FabricAPIRequest `
-            -Headers $FabricConfig.FabricHeaders `
-            -BaseURI $apiEndpointURI `
-            -Method Delete 
+        $apiParams = @{
+            Headers = $FabricConfig.FabricHeaders
+            BaseURI = $apiEndpointURI
+            Method = 'Delete'
+        }
+        $response = Invoke-FabricAPIRequest @apiParams 
         
         Write-Message -Message "Copy Job '$CopyJobId' deleted successfully from workspace '$WorkspaceId'." -Level Info
         return $response

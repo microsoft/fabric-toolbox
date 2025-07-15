@@ -145,11 +145,13 @@ function Update-FabricEnvironmentStagingSparkCompute {
         Write-Message -Message "Request Body: $bodyJson" -Level Debug
 
         # Make the API request
-        $response = Invoke-FabricAPIRequest `
-            -Headers $FabricConfig.FabricHeaders `
-            -BaseURI $apiEndpointURI `
-            -Method Patch `
-            -Body $bodyJson 
+        $apiParams = @{
+            Headers = $FabricConfig.FabricHeaders
+            BaseURI = $apiEndpointURI
+            Method = 'Patch'
+            Body = $bodyJson
+        }
+        $response = Invoke-FabricAPIRequest @apiParams 
         
         # Return the API response
         Write-Message -Message "Environment staging Spark compute updated successfully!" -Level Info

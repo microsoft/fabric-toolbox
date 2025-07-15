@@ -1,6 +1,13 @@
 <#
 .SYNOPSIS
-Removes sharing links in bulk from items in Microsoft Fabric.
+Removes sharing links in bulk from items in Mic        # Make the API request
+        $apiParams = @{
+            BaseURI = $apiEndpointURI
+            Headers = $FabricConfig.FabricHeaders
+            Method = 'Delete'
+            Body = $bodyJson
+        }
+        $response = Invoke-FabricAPIRequest @apiParamst Fabric.
 
 .DESCRIPTION
 Removes sharing links of a specified type (e.g., 'OrgLink') from multiple items (such as datasets, reports, etc.) in a Microsoft Fabric workspace by sending a bulk removal request to the Fabric API. Each item must include 'id' and 'type' properties.

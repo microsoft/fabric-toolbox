@@ -72,11 +72,13 @@ function Update-FabricCopyJob {
         Write-Message -Message "Request Body: $bodyJson" -Level Debug
         
         # Make the API request
-        $response = Invoke-FabricAPIRequest `
-            -Headers $FabricConfig.FabricHeaders `
-            -BaseURI $apiEndpointURI `
-            -Method Patch `
-            -Body $bodyJson 
+        $apiParams = @{
+            Headers = $FabricConfig.FabricHeaders
+            BaseURI = $apiEndpointURI
+            Method = 'Patch'
+            Body = $bodyJson
+        }
+        $response = Invoke-FabricAPIRequest @apiParams 
 
         Write-Message -Message "Copy Job '$CopyJobName' updated successfully!" -Level Info
         return $response

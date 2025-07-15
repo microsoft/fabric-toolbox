@@ -57,11 +57,14 @@ function Start-FabricSparkJobDefinitionOnDemand {
         Write-Message -Message "API Endpoint: $apiEndpointURI" -Level Debug
 
         # Step 4: Make the API request
-        $response = Invoke-FabricAPIRequest `
-            -BaseURI $apiEndpointURI `
-            -Headers $FabricConfig.FabricHeaders `
-            -Method Post `
-            -Body $bodyJson `
+        # Make the API request
+        $apiParams = @{
+            BaseURI = $apiEndpointURI
+            Headers = $FabricConfig.FabricHeaders
+            Method = 'Post'
+            Body = $bodyJson
+        }
+        $response = Invoke-FabricAPIRequest @apiParams `
             -WaitForCompletion $waitForCompletion `
             -HasResults $false
 

@@ -126,11 +126,13 @@ function New-FabricEventhouse {
         $bodyJson = $body | ConvertTo-Json -Depth 10
         Write-Message -Message "Request Body: $bodyJson" -Level Debug
 
-        $response = Invoke-FabricAPIRequest `
-            -BaseURI $apiEndpointURI `
-            -Headers $FabricConfig.FabricHeaders `
-            -Method Post `
-            -Body $bodyJson
+        $apiParams = @{
+            BaseURI = $apiEndpointURI
+            Headers = $FabricConfig.FabricHeaders
+            Method = 'Post'
+            Body = $bodyJson
+        }
+        $response = Invoke-FabricAPIRequest @apiParams
         
         # Return the API response
         Write-Message -Message "Eventhouse '$EventhouseName' created successfully!" -Level Info

@@ -40,10 +40,12 @@ function Remove-FabricDomain {
         Write-Message -Message "API Endpoint: $apiEndpointURI" -Level Debug
 
         # Make the API request
-        $response = Invoke-FabricAPIRequest `
-            -Headers $FabricConfig.FabricHeaders `
-            -BaseURI $apiEndpointURI `
-            -Method Delete 
+        $apiParams = @{
+            Headers = $FabricConfig.FabricHeaders
+            BaseURI = $apiEndpointURI
+            Method = 'Delete'
+        }
+        $response = Invoke-FabricAPIRequest @apiParams 
 
         # Return the API response
         Write-Message -Message "Domain '$DomainId' deleted successfully!" -Level Info

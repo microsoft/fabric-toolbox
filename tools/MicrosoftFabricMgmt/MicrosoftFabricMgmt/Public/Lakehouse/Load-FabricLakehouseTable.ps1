@@ -76,12 +76,14 @@ function Load-FabricLakehouseTable {
         Write-Message -Message "Request Body: $bodyJson" -Level Debug
 
         # Make the API request
-        $response = Invoke-FabricAPIRequest `
-            -BaseURI $apiEndpointURI `
-            -Headers $FabricConfig.FabricHeaders `
-            -Method Post `
-            -Body $bodyJson `
-            -HasResults $false
+        $apiParams = @{
+            BaseURI = $apiEndpointURI
+            Headers = $FabricConfig.FabricHeaders
+            Method = 'Post'
+            Body = $bodyJson
+            HasResults = $false
+        }
+        $response = Invoke-FabricAPIRequest @apiParams
             
         # Return the API response
         Write-Message -Message "Table '$TableName' loaded successfully into Lakehouse '$LakehouseId' in Workspace '$WorkspaceId'." -Level Info

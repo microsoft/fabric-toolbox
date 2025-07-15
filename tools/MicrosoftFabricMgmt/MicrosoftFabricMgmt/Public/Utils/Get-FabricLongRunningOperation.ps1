@@ -70,10 +70,12 @@ function Get-FabricLongRunningOperation {
             Start-Sleep -Seconds $retryAfter
 
             # Make the API request
-            $operation = Invoke-FabricAPIRequest `
-                -BaseURI $apiEndpointURI `
-                -Headers $FabricConfig.FabricHeaders `
-                -Method Get
+            $apiParams = @{
+                BaseURI = $apiEndpointURI
+                Headers = $FabricConfig.FabricHeaders
+                Method = 'Get'
+            }
+            $operation = Invoke-FabricAPIRequest @apiParams
 
             # Log status for debugging
             Write-Message -Message "Operation Status: $($operation.status)" -Level Debug
@@ -124,10 +126,12 @@ function Get-FabricLongRunningOperation {
             }
 
             # Make the API request
-            $dataItems = Invoke-FabricAPIRequest `
-                -BaseURI $apiEndpointURI `
-                -Headers $FabricConfig.FabricHeaders `
-                -Method Get
+            $apiParams = @{
+                BaseURI = $apiEndpointURI
+                Headers = $FabricConfig.FabricHeaders
+                Method = 'Get'
+            }
+            $dataItems = Invoke-FabricAPIRequest @apiParams
 
             # Step 3: Parse the response
             $jsonOperation = $dataItems | ConvertTo-Json

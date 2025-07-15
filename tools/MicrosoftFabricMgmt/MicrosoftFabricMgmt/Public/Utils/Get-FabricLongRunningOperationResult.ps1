@@ -38,10 +38,13 @@ function Get-FabricLongRunningOperationResult {
 
     try {
         # Make the API request
-        $response = Invoke-FabricAPIRequest `
-            -BaseURI $apiEndpointURI `
-            -Headers $FabricConfig.FabricHeaders `
-            -Method Get
+        # Make the API request
+        $apiParams = @{
+            BaseURI = $apiEndpointURI
+            Headers = $FabricConfig.FabricHeaders
+            Method = 'Get'
+        }
+        $response = Invoke-FabricAPIRequest @apiParams
 
         # Return the API response
         Write-Message -Message "LRO result return: $($response)" -Level Debug

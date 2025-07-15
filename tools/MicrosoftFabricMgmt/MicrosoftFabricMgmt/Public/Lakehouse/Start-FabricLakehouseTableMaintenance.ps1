@@ -130,13 +130,15 @@ function Start-FabricLakehouseTableMaintenance {
         Write-Message -Message "Request Body: $bodyJson" -Level Debug
 
         # Make the API request
-        $response = Invoke-FabricAPIRequest `
-            -BaseURI $apiEndpointURI `
-            -Headers $FabricConfig.FabricHeaders `
-            -Method Post `
-            -Body $bodyJson `
-            -WaitForCompletion $waitForCompletion `
-            -HasResults $false  
+        $apiParams = @{
+            BaseURI = $apiEndpointURI
+            Headers = $FabricConfig.FabricHeaders
+            Method = 'Post'
+            Body = $bodyJson
+            WaitForCompletion = $waitForCompletion
+            HasResults = $false
+        }
+        $response = Invoke-FabricAPIRequest @apiParams  
       
 
         if ($waitForCompletion) {
