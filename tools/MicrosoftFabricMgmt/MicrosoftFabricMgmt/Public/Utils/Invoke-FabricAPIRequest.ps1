@@ -54,11 +54,7 @@ function Invoke-FabricAPIRequest {
 
         [Parameter(Mandatory = $false)]
         [switch]$WaitForCompletion
-
-        #[Parameter(Mandatory = $false)]
-        #[bool]$HasResults = $true
     )
-
     try {
         # Initialize continuation token and results collection
         $continuationToken = $null

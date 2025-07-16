@@ -38,7 +38,6 @@ function Get-FabricLongRunningOperationResult {
 
     try {
         # Make the API request
-        # Make the API request
         $apiParams = @{
             BaseURI = $apiEndpointURI
             Headers = $FabricConfig.FabricHeaders
