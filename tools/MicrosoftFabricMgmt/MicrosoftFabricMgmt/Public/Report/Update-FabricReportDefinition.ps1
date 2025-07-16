@@ -93,8 +93,7 @@ function Update-FabricReportDefinition {
             Method = 'Post'
             Body = $bodyJson
         }
-        $response = Invoke-FabricAPIRequest @apiParams `
-            -HasResults $false
+        $response = Invoke-FabricAPIRequest @apiParams
        
         # Return the API response
         Write-Message -Message "Successfully updated the definition for Report with ID '$ReportId' in workspace '$WorkspaceId'." -Level Info

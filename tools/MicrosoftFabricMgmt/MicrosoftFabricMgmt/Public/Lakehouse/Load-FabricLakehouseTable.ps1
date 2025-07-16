@@ -25,7 +25,7 @@ function Load-FabricLakehouseTable {
 
         [Parameter(Mandatory = $true)]
         [ValidateNotNullOrEmpty()]
-        [ValidateSet('CSV', 'Parquet')]
+        [ValidateSet('Csv', 'Parquet')]
         [string]$FileFormat,
 
         [Parameter(Mandatory = $false)]
@@ -66,9 +66,9 @@ function Load-FabricLakehouseTable {
             }
         }
         
-        if ($FileFormat -eq "CSV") {
+        if ($FileFormat -eq "Csv") {
             $body.formatOptions.delimiter = $CsvDelimiter
-            $body.formatOptions.hasHeader = $CsvHeader
+            $body.formatOptions.header = $CsvHeader
         }
 
         # Convert the body to JSON
@@ -79,9 +79,9 @@ function Load-FabricLakehouseTable {
         $apiParams = @{
             BaseURI = $apiEndpointURI
             Headers = $FabricConfig.FabricHeaders
-            Method = 'Post'
-            Body = $bodyJson
-            HasResults = $false
+            Method  = 'Post'
+            Body    = $bodyJson
+            #HasResults = $false
         }
         $response = Invoke-FabricAPIRequest @apiParams
             

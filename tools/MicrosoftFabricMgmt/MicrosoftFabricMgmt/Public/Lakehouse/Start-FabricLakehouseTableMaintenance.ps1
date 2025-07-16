@@ -36,9 +36,7 @@ function Start-FabricLakehouseTableMaintenance {
         [string]$retentionPeriod,
 
         [Parameter(Mandatory = $false)]
-        [ValidateNotNullOrEmpty()]
-        [bool]$waitForCompletion = $false
-        
+        [switch]$WaitForCompletion        
     )
     try {
         # Validate authentication token before proceeding.
@@ -93,28 +91,7 @@ function Start-FabricLakehouseTableMaintenance {
             }
         }
 
-
-        <#    if ($ColumnsZOrderBy) {
-            # Ensure $ColumnsZOrderBy is an array
-            Write-Message -Message "ColumnsZOrderBy: $ColumnsZOrderBy" -Level Debug
-            if ($ColumnsZOrderBy -is [string]) {
-                Write-Message -Message "Converting string to array for ColumnsZOrderBy" -Level Debug
-                $ColumnsZOrderBy = $ColumnsZOrderBy -split "\s*,\s*"
-            }
-            # Add it to the optimizeSettings in the request body
-            $body.executionData.optimizeSettings.zOrderBy = $ColumnsZOrderBy
-        }
-#>
-
-        <#        if ($ColumnsZOrderBy) {
-            # Ensure $ColumnsZOrderBy is an array
-            if (-not ($ColumnsZOrderBy -is [array])) {
-                $ColumnsZOrderBy = $ColumnsZOrderBy -split ","
-            }
-            # Add it to the optimizeSettings in the request body
-            $body.executionData.optimizeSettings.zOrderBy = $ColumnsZOrderBy
-        }#>
-        
+       
         if ($retentionPeriod) {
             if (-not $body.executionData.PSObject.Properties['vacuumSettings']) {
                 $body.executionData.vacuumSettings = @{
@@ -133,15 +110,16 @@ function Start-FabricLakehouseTableMaintenance {
         $apiParams = @{
             BaseURI = $apiEndpointURI
             Headers = $FabricConfig.FabricHeaders
-            Method = 'Post'
-            Body = $bodyJson
-            WaitForCompletion = $waitForCompletion
-            HasResults = $false
+            Method  = 'Post'
+            Body    = $bodyJson
+        }
+        
+        if ($WaitForCompletion.IsPresent) {
+            $apiParams.WaitForCompletion = $true
         }
         $response = Invoke-FabricAPIRequest @apiParams  
       
-
-        if ($waitForCompletion) {
+        if ($WaitForCompletion) {
             Write-Message -Message "Table maintenance job for Lakehouse '$($lakehouse.displayName)' has completed." -Level Info
             Write-Message -Message "Job details: $($response | ConvertTo-Json -Depth 5)" -Level Debug
         }
