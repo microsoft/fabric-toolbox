@@ -10,7 +10,7 @@ Run the second code cell in the RunLoadTest notebook
 
 ## Instructions
 
-    Watch a video showing how to setup and run a load test using these Fabric Notebooks here : https://youtu.be/0rSTDeC75vw
+    Watch a video showing how to setup and run a load test using these Fabric Notebooks [here](https://youtu.be/0rSTDeC75vw)
 
     1. Get sample from here (https://learn.microsoft.com/en-us/power-bi/create-reports/sample-datasets#install-built-in-samples)
 
