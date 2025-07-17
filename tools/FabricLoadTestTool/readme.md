@@ -12,7 +12,8 @@ Run the second code cell in the RunLoadTest notebook
 
 Watch a video showing how to setup and run a load test using these Fabric Notebooks [here](https://youtu.be/0rSTDeC75vw)
 
-1. **Get sample from here (https://learn.microsoft.com/en-us/power-bi/create-reports/sample-datasets#install-built-in-samples)**
+1. **Get sample PBIX file from [here](https://learn.microsoft.com/en-us/power-bi/create-reports/sample-datasets#install-built-in-samples)**
+   - Or use your own report and semantic model
 
 1. **Upload sample Power BI PBIX file to target workspace**
 
@@ -25,11 +26,11 @@ Watch a video showing how to setup and run a load test using these Fabric Notebo
         iii. Export PowerBIPerformanceData.json file when done to be uploaded to Lakehouse
         iv. Close Power BI Desktop
 
-1. Create Lakehouse to be used to store DAX queries for Load Test, Email Addresses (if using RLS) and log files.
+1. **Create Lakehouse to be used to store DAX queries for Load Test, Email Addresses (if using RLS) and log files.**
    - Create a subfolder in Files section called "PerfScenarios/Queries"
    - Upload PowerBIPerformanceData.json file from step 3 to this subfolder
 
-1. Upload two fabric notebooks to Fabric Workspace
+1. **Upload two fabric notebooks to Fabric Workspace**
    - Download two notebooks (RunLoadTest.ipynb and RunPerfScenario.ipynb) from https://github.com/microsoft/fabric-toolbox/tree/main/tools/FabricLoadTestTool
    - Import two notebooks to Fabric workspace
 
@@ -43,17 +44,17 @@ import sempy_labs as labs
 labs.import_notebook_from_web(overwrite=True,notebook_name="RunLoadTest"        , url="https://raw.githubusercontent.com/microsoft/fabric-toolbox/main/tools/FabricLoadTestTool/RunLoadTest.ipynb")
 labs.import_notebook_from_web(overwrite=True,notebook_name="RunPerfScenario"    , url="https://raw.githubusercontent.com/microsoft/fabric-toolbox/main/tools/FabricLoadTestTool/RunPerfScenario.ipynb")
 ```        
-        
+6.        
    - Stop and close notebook
    - Delete notebook used for importing loadtest notebooks
 
-1. **Open RunPerfScenario notebook and connect to Lakehouse created at step 4**
+7. **Open RunPerfScenario notebook and connect to Lakehouse created at step 4**
    - Open Notebook
    - In Explorer Panel, on Items click ellipsis, then "Remove all Sources" (if required)
    - Click "Add data items" and choose existing Lakehouse created at step 4
    - Save and close notebook (no other changes required)
 
-1. **Open Run Load Test notebook and connect it Lakehouse create at step 4**
+8. **Open Run Load Test notebook and connect it Lakehouse create at step 4**
    - Open Notebook
    - In Explorer Panel, on Items click ellipsis, then "Remove all Sources" (if required)
    - Click "Add data items" and choose existing Lakehouse created at step 4
