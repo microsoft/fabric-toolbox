@@ -36,28 +36,27 @@ Run the second code cell in the RunLoadTest notebook
         or
 
         c. Use Semantic Link Labs to install in a new pure python notebook add the following four lines of code to a code cell then run.
-        
-    %pip install -q --disable-pip-version-check semantic-link-labs
-    import sempy_labs as labs
-    labs.import_notebook_from_web(overwrite=True,notebook_name="RunLoadTest"        , url="https://raw.githubusercontent.com/microsoft/fabric-toolbox/main/tools/FabricLoadTestTool/RunLoadTest.ipynb")
-    labs.import_notebook_from_web(overwrite=True,notebook_name="RunPerfScenario"    , url="https://raw.githubusercontent.com/microsoft/fabric-toolbox/main/tools/FabricLoadTestTool/RunPerfScenario.ipynb")
-        
+```python        
+%pip install -q --disable-pip-version-check semantic-link-labs
+import sempy_labs as labs
+labs.import_notebook_from_web(overwrite=True,notebook_name="RunLoadTest"        , url="https://raw.githubusercontent.com/microsoft/fabric-toolbox/main/tools/FabricLoadTestTool/RunLoadTest.ipynb")
+labs.import_notebook_from_web(overwrite=True,notebook_name="RunPerfScenario"    , url="https://raw.githubusercontent.com/microsoft/fabric-toolbox/main/tools/FabricLoadTestTool/RunPerfScenario.ipynb")
+```        
         
         d. Stop and close notebook
         e. Delete notebook used for importing loadtest notebooks
 
     6. Open RunPerfScenario notebook and connect to Lakehouse created at step 4
         a. Open Notebook
-        b. In Explorer Panel, on Items click ellipsis, then "Remove all Sources"
+        b. In Explorer Panel, on Items click ellipsis, then "Remove all Sources" (if required)
         c. Click "Add data items" and choose existing Lakehouse created at step 4
-        d. Close notebook (no other changes required)
+        d. Save and close notebook (no other changes required)
 
     7. Open Run Load Test notebook and connect it Lakehouse create at step 4
         a. Open Notebook
-        b. In Explorer Panel, on Items click ellipsis, then "Remove all Sources"
+        b. In Explorer Panel, on Items click ellipsis, then "Remove all Sources" (if required)
         c. Click "Add data items" and choose existing Lakehouse created at step 4
-        d. Close notebook (no other changes required)
-        e. Edit Load Test Parameters
+        d. Edit Load Test Parameters
             i. Change Load Test Name to preferred name (line 13)
             ii. Change Dataset name to name of semantic model to be tested e.g. "Customer Profitability Sample PBIX"
             iii. Set correct workspace name e.g. "Fabric Load Testing Demo"
