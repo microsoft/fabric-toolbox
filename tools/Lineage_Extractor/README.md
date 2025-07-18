@@ -9,7 +9,7 @@ The notebook code provided in this  repo extracts from MS Fabric:
 - Attributes of PowerBI reports (saved in the new PBIP/PBIR format) with their source Lakehouse and Warehouse tables 
 - Column mappings from Copy Activities in Fabric Data Factory pipelines. 
 
-The code then uploads all metadata, which have been extracted, to MS Purview Data Governance and creates a graphical column-level lineage graph. You can find some example screeshots of the resulting lineage graph in the section [Some output examples](https://github.com/sdetoni-prj/Fabric_LineageExtractor/blob/main/README.md#some-output-examples) below.
+The code then uploads all metadata, which have been extracted, to MS Purview Data Governance and creates a graphical column-level lineage graph. You can find some example screeshots of the resulting lineage graph in the section [Some output examples]( https://github.com/sdetoni-prj/fabric-toolbox/blob/patch-1/README.md#some-output-examples) below. 
 
 Extraction is obtained automatically using API calls, python libraries and SQL queries. The process does not require human intervention, apart from quick configuration of the code (namely the SVC Principal auth details, see Prerequisites below).
 
@@ -38,15 +38,15 @@ In more detail, the provided notebook code accomplishes the following four tasks
 
 # Quickstart: How to run the code
 
-Download the notebook in the [Fabric-notebook folder](https://github.com/sdetoni-prj/Fabric_LineageExtractor/tree/main/Fabric-notebook) to a PC or VM, then import it into an MS Fabric workspace.
+Download the notebook in the [Fabric-notebook folder](https://github.com/sdetoni-prj/fabric-toolbox/tree/patch-1/tools/Lineage_Extractor/Fabric-notebook) to a PC or VM, then import it into an MS Fabric workspace.
 
-![Import notebook](https://github.com/sdetoni-prj/Fabric_LineageExtractor/blob/main/media/import_notebook.png)
+![Import notebook](https://github.com/sdetoni-prj/fabric-toolbox/blob/patch-1/media/tools/import_notebook.png)
 
-If you already have Service Principal(s) created for MS Fabric and MS Purview,, and you already enabled API access in the Fabric Admin Portal, then you just need to fill their IDs and secrets in the first cell of the notebook code. Check the section [Prerequisites and Fabric configuration in more detail](https://github.com/sdetoni-prj/Fabric_LineageExtractor/blob/main/README.md#prerequisites-and-fabric-configuration-in-more-detail) below to make sure the Fabric/PowerBI Admin portal settings are ok.
+If you already have Service Principal(s) created for MS Fabric and MS Purview,, and you already enabled API access in the Fabric Admin Portal, then you just need to fill their IDs and secrets in the first cell of the notebook code. Check the section [Prerequisites and Fabric configuration in more detail](https://github.com/sdetoni-prj/fabric-toolbox/blob/patch-1/README.md#prerequisites-and-fabric-configuration-in-more-detail) below to make sure the Fabric/PowerBI Admin portal settings are ok.
 
 Configure the second cell of the notebook with the following values (you can refer to the Prerequisites section for further details):
 
-![Authentication settings](https://github.com/sdetoni-prj/Fabric_LineageExtractor/blob/main/media/auth_settings.png)
+![Authentication settings](https://github.com/sdetoni-prj/fabric-toolbox/blob/patch-1/media/tools/auth_settings.png)
 
 - **tenant_id** enter here the tenant_id of the Azure Tenant where Fabric is deployed
 
@@ -65,7 +65,7 @@ fabric_SQL_connection_string get the value to be inserted here by clicking on th
 
 - **optional: demo_workspace** fill the name of a test workspace here if you want to first try the notebook code on only one specific workspace (you might need to uncomment a couple of lines of code in the cell extracting the metadata)
 
-![Optional demo workspace](https://github.com/sdetoni-prj/Fabric_LineageExtractor/blob/main/media/demo_wkspace_code.png)
+![Optional demo workspace](https://github.com/sdetoni-prj/fabric-toolbox/blob/patch-1/media/tools/demo_wkspace_code.png)
 
 - **optional: demo_workspace_id** the id of the demo_workspace where you want to give a first try of the code. Only this workspace will be explored for metadata extraction.
 
@@ -101,13 +101,13 @@ Here follows a more complete description of the configuration steps, for the gen
 
 4. Configure the EntraID Security Group you created as a specific “enabled” Security Group in the  following settings of the PowerBI/Fabric Admin Portal (search for “API” in the top-right search textbox to easily find all the relevant settings):
 	
-    ![Admin portal security group](https://github.com/sdetoni-prj/Fabric_LineageExtractor/blob/main/media/admin_portal1.png)
+    ![Admin portal security group](https://github.com/sdetoni-prj/fabric-toolbox/blob/patch-1/media/tools/admin_portal1.png)
 
     - in  “Service principals can use Fabric APIs” within “Developer Settings” (see screenshots)
     
     - in "Service principals can access read-only admin APIs" and "Enhance admin APIs responses with detailed metadata" within “Admin API settings”
 
-![Admin portal security group](https://github.com/sdetoni-prj/Fabric_LineageExtractor/blob/main/media/admin_portal2.png)
+![Admin portal security group](https://github.com/sdetoni-prj/fabric-toolbox/blob/patch-1/media/tools/admin_portal2.png)
 
 
 <br />
@@ -116,12 +116,12 @@ Here follows a more complete description of the configuration steps, for the gen
 # Some output examples
 
 The first screenshot shows an example of the resulting column-level lineage display of Copy DataPipelines
-<img src="https://github.com/sdetoni-prj/Fabric_LineageExtractor/blob/main/media/example_output_1.png" alt="Pipeline lineage example" width="600">
+<img src="https://github.com/sdetoni-prj/fabric-toolbox/blob/patch-1/media/tools/example_output_1.png" alt="Pipeline lineage example" width="600">
 
 <br />
 
 The second screenshot shows column-level lineage display of Fabric/PowerBI reports in PBIR format.
-<img src="https://github.com/sdetoni-prj/Fabric_LineageExtractor/blob/main/media/example_output_2.png" alt="Report lineage example" width="600">
+<img src="https://github.com/sdetoni-prj/fabric-toolbox/blob/patch-1/media/tools/example_output_2.png" alt="Report lineage example" width="600">
 
 <br />
 
