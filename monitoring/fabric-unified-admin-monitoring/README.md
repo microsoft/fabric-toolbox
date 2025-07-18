@@ -66,6 +66,10 @@ Are you ready to try FUAM out? We have prepared two step-by-step documentations,
 
 #### [Click here to **update** FUAM](/monitoring/fabric-unified-admin-monitoring/how-to/How_to_update_FUAM.md)
 
+## Changelog
+
+- **FUAM [Release 2025.7.1](/monitoring/fabric-unified-admin-monitoring/changelog/FUAM_Changelog.md)**
+
 ## Support
 The FUAM solution accelerator template **is not an official Microsoft service**.
 

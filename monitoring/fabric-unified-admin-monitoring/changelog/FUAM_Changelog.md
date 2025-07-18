@@ -7,7 +7,7 @@ We've updated the "Deploy_FUAM" notebook logic.
 **Please download the latest version of the notebook, before you update FUAM in your environment.**
 
 ### How to Update?
-Follow the [documented steps](/monitoring/fabric-unified-admin-monitoring/how-to/How_to_update_FUAM.md).
+Follow the [documented steps](https://github.com/microsoft/fabric-toolbox/blob/main/monitoring/fabric-unified-admin-monitoring/how-to/How_to_update_FUAM.md).
 
 ---
 
