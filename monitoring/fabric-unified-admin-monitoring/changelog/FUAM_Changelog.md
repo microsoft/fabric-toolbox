@@ -88,4 +88,4 @@ Follow the [documented steps](https://github.com/microsoft/fabric-toolbox/blob/m
 ---
 
 
-We’re excited to see such strong engagement from the community and truly appreciate all the valuable feedback. With this update, we’ve made FUAM more robust and laid the groundwork for new features that were announced in the initial release. More versions are already in the works—stay tuned!
+We’re excited to see such strong engagement from the community and truly appreciate all the valuable feedback. With this update, we’ve made FUAM more robust and laid the groundwork for new features that were announced in the initial release. More versions are already in the works - stay tuned!
