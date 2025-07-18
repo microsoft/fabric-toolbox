@@ -40,7 +40,7 @@ In more detail, the provided notebook code accomplishes the following four tasks
 
 Download the notebook in the [Fabric-notebook folder](./Fabric-notebook) to a PC or VM, then import it into an MS Fabric workspace.
 
-![Import notebook](https://github.com/sdetoni-prj/fabric-toolbox/blob/patch-1/media/tools/import_notebook.png)
+![Import notebook](../../media/tools/import_notebook.png)
 
 If you already have Service Principal(s) created for MS Fabric and MS Purview,, and you already enabled API access in the Fabric Admin Portal, then you just need to fill their IDs and secrets in the first cell of the notebook code. Check the section [Prerequisites and Fabric configuration in more detail](#prerequisites-and-fabric-configuration-in-more-detail) below to make sure the Fabric/PowerBI Admin portal settings are ok.
 
@@ -65,7 +65,7 @@ fabric_SQL_connection_string get the value to be inserted here by clicking on th
 
 - **optional: demo_workspace** fill the name of a test workspace here if you want to first try the notebook code on only one specific workspace (you might need to uncomment a couple of lines of code in the cell extracting the metadata)
 
-![Optional demo workspace](https://github.com/sdetoni-prj/fabric-toolbox/blob/patch-1/media/tools/demo_wkspace_code.png)
+![Optional demo workspace](../../media/tools/demo_wkspace_code.png)
 
 - **optional: demo_workspace_id** the id of the demo_workspace where you want to give a first try of the code. Only this workspace will be explored for metadata extraction.
 
@@ -101,13 +101,13 @@ Here follows a more complete description of the configuration steps, for the gen
 
 4. Configure the EntraID Security Group you created as a specific “enabled” Security Group in the  following settings of the PowerBI/Fabric Admin Portal (search for “API” in the top-right search textbox to easily find all the relevant settings):
 	
-    ![Admin portal security group](https://github.com/sdetoni-prj/fabric-toolbox/blob/patch-1/media/tools/admin_portal1.png)
+    ![Admin portal security group](../../media/tools/admin_portal1.png)
 
     - in  “Service principals can use Fabric APIs” within “Developer Settings” (see screenshots)
     
     - in "Service principals can access read-only admin APIs" and "Enhance admin APIs responses with detailed metadata" within “Admin API settings”
 
-![Admin portal security group](https://github.com/sdetoni-prj/fabric-toolbox/blob/patch-1/media/tools/admin_portal2.png)
+![Admin portal security group](../../media/tools/admin_portal2.png)
 
 
 <br />
@@ -116,12 +116,12 @@ Here follows a more complete description of the configuration steps, for the gen
 # Some output examples
 
 The first screenshot shows an example of the resulting column-level lineage display of Copy DataPipelines
-<img src="https://github.com/sdetoni-prj/fabric-toolbox/blob/patch-1/media/tools/example_output_1.png" alt="Pipeline lineage example" width="600">
+<img src="../../media/tools/example_output_1.png" alt="Pipeline lineage example" width="600">
 
 <br />
 
 The second screenshot shows column-level lineage display of Fabric/PowerBI reports in PBIR format.
-<img src="https://github.com/sdetoni-prj/fabric-toolbox/blob/patch-1/media/tools/example_output_2.png" alt="Report lineage example" width="600">
+<img src="../../media/tools/example_output_2.png" alt="Report lineage example" width="600">
 
 <br />
 
