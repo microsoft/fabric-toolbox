@@ -46,7 +46,7 @@ If you already have Service Principal(s) created for MS Fabric and MS Purview,, 
 
 Configure the second cell of the notebook with the following values (you can refer to the Prerequisites section for further details):
 
-![Authentication settings](https://github.com/sdetoni-prj/fabric-toolbox/blob/patch-1/media/tools/auth_settings.png)
+![Authentication settings](../../media/tools/auth_settings.png)
 
 - **tenant_id** enter here the tenant_id of the Azure Tenant where Fabric is deployed
 
