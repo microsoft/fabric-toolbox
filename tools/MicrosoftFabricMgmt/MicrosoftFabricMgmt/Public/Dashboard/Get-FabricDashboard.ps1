@@ -38,10 +38,12 @@ function Get-FabricDashboard {
         $apiEndpointURI = "{0}/workspaces/{1}/dashboards" -f $FabricConfig.BaseUrl, $WorkspaceId
 
         # Invoke the Fabric API to retrieve capacity details
-        $Dashboards = Invoke-FabricAPIRequest `
-            -BaseURI $apiEndpointURI `
-            -Headers $FabricConfig.FabricHeaders `
-            -Method Get
+        $apiParams = @{
+            BaseURI = $apiEndpointURI
+            Headers = $FabricConfig.FabricHeaders
+            Method = 'Get'
+        }
+        $Dashboards = Invoke-FabricAPIRequest @apiParams
         
         return $Dashboards
 

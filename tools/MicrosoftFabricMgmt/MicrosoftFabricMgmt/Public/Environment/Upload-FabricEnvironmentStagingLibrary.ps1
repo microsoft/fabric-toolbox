@@ -47,11 +47,13 @@ function Upload-FabricEnvironmentStagingLibrary {
         # Construct the request body
         
         # Make the API request
-        $response = Invoke-FabricAPIRequest `
-            -BaseURI $apiEndpointURI `
-            -Headers $FabricConfig.FabricHeaders `
-            -Method Post `
-            -Body $bodyJson
+        $apiParams = @{
+            BaseURI = $apiEndpointURI
+            Headers = $FabricConfig.FabricHeaders
+            Method = 'Post'
+            Body = $bodyJson
+        }
+        $response = Invoke-FabricAPIRequest @apiParams
 
         # Return the API response
         Write-Message -Message "Environment staging library uploaded successfully!" -Level Info

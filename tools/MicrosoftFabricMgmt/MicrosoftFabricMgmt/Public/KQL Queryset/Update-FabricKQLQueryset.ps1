@@ -75,11 +75,13 @@ function Update-FabricKQLQueryset {
         Write-Message -Message "Request Body: $bodyJson" -Level Debug
 
         # Make the API request
-        $response = Invoke-FabricAPIRequest `
-            -Headers $FabricConfig.FabricHeaders `
-            -BaseURI $apiEndpointURI `
-            -Method Patch `
-            -Body $bodyJson 
+        $apiParams = @{
+            Headers = $FabricConfig.FabricHeaders
+            BaseURI = $apiEndpointURI
+            Method = 'Patch'
+            Body = $bodyJson
+        }
+        $response = Invoke-FabricAPIRequest @apiParams 
 
         # Return the API response
         Write-Message -Message "KQLQueryset '$KQLQuerysetName' updated successfully!" -Level Info

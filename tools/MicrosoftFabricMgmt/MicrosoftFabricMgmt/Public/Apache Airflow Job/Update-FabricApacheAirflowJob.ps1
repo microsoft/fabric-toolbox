@@ -71,11 +71,13 @@ function Update-FabricApacheAirflowJob {
         Write-Message -Message "Request Body: $bodyJson" -Level Debug
         
         # Make the API request
-        $response = Invoke-FabricAPIRequest `
-            -Headers $FabricConfig.FabricHeaders `
-            -BaseURI $apiEndpointURI `
-            -Method Patch `
-            -Body $bodyJson 
+        $apiParams = @{
+            Headers = $FabricConfig.FabricHeaders
+            BaseURI = $apiEndpointURI
+            Method = 'Patch'
+            Body = $bodyJson
+        }
+        $response = Invoke-FabricAPIRequest @apiParams 
 
         # Return the API response
         Write-Message -Message "Apache Airflow Job '$ApacheAirflowJobName' updated successfully!" -Level Info

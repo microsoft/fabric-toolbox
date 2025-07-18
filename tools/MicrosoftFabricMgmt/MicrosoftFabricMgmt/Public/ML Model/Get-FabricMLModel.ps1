@@ -64,10 +64,13 @@ function Get-FabricMLModel {
         Write-Message -Message "API Endpoint: $apiEndpointURI" -Level Debug
          
         # Make the API request
-        $dataItems = Invoke-FabricAPIRequest `
-            -BaseURI $apiEndpointURI `
-            -Headers $FabricConfig.FabricHeaders `
-            -Method Get
+        # Make the API request
+        $apiParams = @{
+            BaseURI = $apiEndpointURI
+            Headers = $FabricConfig.FabricHeaders
+            Method = 'Get'
+        }
+        $dataItems = Invoke-FabricAPIRequest @apiParams
            
         # Immediately handle empty response
         if (-not $dataItems) {

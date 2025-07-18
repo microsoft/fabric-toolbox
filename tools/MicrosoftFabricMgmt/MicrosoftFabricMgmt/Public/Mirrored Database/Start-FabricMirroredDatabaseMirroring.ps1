@@ -21,10 +21,12 @@ function Start-FabricMirroredDatabaseMirroring {
         Write-Message -Message "API Endpoint: $apiEndpointURI" -Level Debug
          
         # Make the API request
-        $response = Invoke-FabricAPIRequest `
-            -BaseURI $apiEndpointURI `
-            -Headers $FabricConfig.FabricHeaders `
-            -Method Post 
+        $apiParams = @{
+            BaseURI = $apiEndpointURI
+            Headers = $FabricConfig.FabricHeaders
+            Method = 'Post'
+        }
+        $response = Invoke-FabricAPIRequest @apiParams 
 
         # Return the API response
         Write-Message -Message "Database mirroring started successfully for Mirrored DatabaseId: $MirroredDatabaseId" -Level Info   

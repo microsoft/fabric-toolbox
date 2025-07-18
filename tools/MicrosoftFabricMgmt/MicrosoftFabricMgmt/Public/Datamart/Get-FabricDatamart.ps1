@@ -51,10 +51,12 @@ function Get-FabricDatamart {
         $apiEndpointURI = "{0}/workspaces/{1}/datamarts" -f $FabricConfig.BaseUrl, $WorkspaceId
 
         # Make the API request
-        $dataItems = Invoke-FabricAPIRequest `
-            -BaseURI $apiEndpointURI `
-            -Headers $FabricConfig.FabricHeaders `
-            -Method Get
+        $apiParams = @{
+            BaseURI = $apiEndpointURI
+            Headers = $FabricConfig.FabricHeaders
+            Method = 'Get'
+        }
+        $dataItems = Invoke-FabricAPIRequest @apiParams
 
         # Immediately handle empty response
         if (-not $dataItems) {

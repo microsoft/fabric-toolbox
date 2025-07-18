@@ -61,10 +61,12 @@ function Get-FabricKQLQuerysetDefinition {
         Write-Message -Message "API Endpoint: $apiEndpointURI" -Level Debug
       
         # Make the API request
-        $response = Invoke-FabricAPIRequest `
-            -BaseURI $apiEndpointURI `
-            -Headers $FabricConfig.FabricHeaders `
-            -Method Post 
+        $apiParams = @{
+            BaseURI = $apiEndpointURI
+            Headers = $FabricConfig.FabricHeaders
+            Method = 'Post'
+        }
+        $response = Invoke-FabricAPIRequest @apiParams 
      
         Write-Message -Message "KQLQueryset '$KQLQuerysetId' definition retrieved successfully!" -Level Debug
         return $response

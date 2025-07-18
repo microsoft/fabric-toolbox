@@ -54,10 +54,12 @@ function Get-FabricCapacity {
         $apiEndpointURI = "{0}/capacities" -f $FabricConfig.BaseUrl
         Write-Message -Message "API Endpoint: $apiEndpointURI" -Level Debug
         # Make the API request
-        $dataItems = Invoke-FabricAPIRequest `
-            -BaseURI $apiEndpointURI `
-            -Headers $FabricConfig.FabricHeaders `
-            -Method Get
+        $apiParams = @{
+            BaseURI = $apiEndpointURI
+            Headers = $FabricConfig.FabricHeaders
+            Method = 'Get'
+        }
+        $dataItems = Invoke-FabricAPIRequest @apiParams
  
         # Immediately handle empty response
         if (-not $dataItems) {

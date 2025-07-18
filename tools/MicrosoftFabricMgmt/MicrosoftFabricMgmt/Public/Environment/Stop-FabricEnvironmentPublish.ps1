@@ -46,10 +46,12 @@ function Stop-FabricEnvironmentPublish {
         Write-Message -Message "API Endpoint: $apiEndpointURI" -Level Debug
 
         #  Make the API request
-        $response = Invoke-FabricAPIRequest `
-            -BaseURI $apiEndpointURI `
-            -Headers $FabricConfig.FabricHeaders `
-            -Method Post 
+        $apiParams = @{
+            BaseURI = $apiEndpointURI
+            Headers = $FabricConfig.FabricHeaders
+            Method = 'Post'
+        }
+        $response = Invoke-FabricAPIRequest @apiParams 
 
         # Return the API response
         Write-Message -Message "Publication for environment '$EnvironmentId' has been successfully canceled." -Level Info

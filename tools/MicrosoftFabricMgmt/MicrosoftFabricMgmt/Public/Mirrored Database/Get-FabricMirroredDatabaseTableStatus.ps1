@@ -19,10 +19,12 @@ function Get-FabricMirroredDatabaseTableStatus {
         $apiEndpointURI = "{0}/workspaces/{1}/mirroredDatabases/{2}/getTablesMirroringStatus" -f $FabricConfig.BaseUrl, $WorkspaceId, $MirroredDatabaseId
         
         # Make the API request
-        $dataItems = Invoke-FabricAPIRequest `
-            -BaseURI $apiEndpointURI `
-            -Headers $FabricConfig.FabricHeaders `
-            -Method Post 
+        $apiParams = @{
+            BaseURI = $apiEndpointURI
+            Headers = $FabricConfig.FabricHeaders
+            Method = 'Post'
+        }
+        $dataItems = Invoke-FabricAPIRequest @apiParams 
      
         # Immediately handle empty response
         if (-not $dataItems) {

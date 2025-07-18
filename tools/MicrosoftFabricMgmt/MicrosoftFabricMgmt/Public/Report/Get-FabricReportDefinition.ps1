@@ -59,10 +59,13 @@ function Get-FabricReportDefinition {
         Write-Message -Message "API Endpoint: $apiEndpointURI" -Level Debug
 
         # Make the API request
-        $response = Invoke-FabricAPIRequest `
-            -BaseURI $apiEndpointURI `
-            -Headers $FabricConfig.FabricHeaders `
-            -Method Post 
+        # Make the API request
+        $apiParams = @{
+            BaseURI = $apiEndpointURI
+            Headers = $FabricConfig.FabricHeaders
+            Method = 'Post'
+        }
+        $response = Invoke-FabricAPIRequest @apiParams 
         
         # Return the API response
         Write-Message -Message "Report '$ReportId' definition retrieved successfully!" -Level Debug

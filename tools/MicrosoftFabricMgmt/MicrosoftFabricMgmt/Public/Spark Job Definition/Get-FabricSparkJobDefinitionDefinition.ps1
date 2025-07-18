@@ -1,6 +1,12 @@
 <#
 .SYNOPSIS
-    Retrieves the definition of an SparkJobDefinition from a specified Microsoft Fabric workspace.
+    Retrieves the definition of an SparkJobDef        # Make the API request
+        $apiParams = @{
+            BaseURI = $apiEndpointURI
+            Headers = $FabricConfig.FabricHeaders
+            Method = 'Get'
+        }
+        $response = Invoke-FabricAPIRequest @apiParamsion from a specified Microsoft Fabric workspace.
 
 .DESCRIPTION
     This function retrieves the definition of an SparkJobDefinition from a specified workspace using the provided SparkJobDefinitionId.

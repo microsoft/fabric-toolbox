@@ -70,10 +70,12 @@ function Get-FabricLongRunningOperation {
             Start-Sleep -Seconds $retryAfter
 
             # Make the API request
-            $operation = Invoke-FabricAPIRequest `
-                -BaseURI $apiEndpointURI `
-                -Headers $FabricConfig.FabricHeaders `
-                -Method Get
+            $apiParams = @{
+                BaseURI = $apiEndpointURI
+                Headers = $FabricConfig.FabricHeaders
+                Method = 'Get'
+            }
+            $operation = Invoke-FabricAPIRequest @apiParams
 
             # Log status for debugging
             Write-Message -Message "Operation Status: $($operation.status)" -Level Debug
@@ -90,63 +92,3 @@ function Get-FabricLongRunningOperation {
         throw
     }
 }
-
-<# function Get-FabricLongRunningOperation { 
-    param (
-        [Parameter(Mandatory = $false)]
-        [string]$operationId,
-       
-        [Parameter(Mandatory = $false)]
-        [string]$location,
-
-        [Parameter(Mandatory = $false)]
-        [int]$retryAfter = 5
-    )
-    # Construct the API URI
-    if ($location) {
-        # Use the Location header to define the operationUrl
-        $apiEndpointUrl = $location
-    }
-    else {
-        $apiEndpointUrl = "https://api.fabric.microsoft.com/v1/operations/{0}" -f $operationId
-    }
-    Write-Message -Message "API Endpoint: $apiEndpointUrl" -Level Debug
-    
-    try {
-        do {
-
-            # Step 2: Wait before the next request
-            if ($retryAfter) {
-                Start-Sleep -Seconds $retryAfter
-            }
-            else {
-                Start-Sleep -Seconds 5  # Default retry interval if no Retry-After header
-            }
-
-            # Make the API request
-            $dataItems = Invoke-FabricAPIRequest `
-                -BaseURI $apiEndpointURI `
-                -Headers $FabricConfig.FabricHeaders `
-                -Method Get
-
-            # Step 3: Parse the response
-            $jsonOperation = $dataItems | ConvertTo-Json
-            $operation = $jsonOperation | ConvertFrom-Json
-
-            # Log status for debugging
-            Write-Message -Message "Operation Status: $($operation.status)" -Level Debug
-
-  
-        } while ($operation.status -notin @("Succeeded", "Completed", "Failed"))
-
-        # Step 5: Return the operation result
-        return $operation
-    }
-    catch {
-        # Step 6: Capture and log error details
-        $errorDetails = $_.Exception.Message
-        Write-Message -Message "An error occurred while checking the operation: $errorDetails" -Level Error
-        throw
-    }
-}
-#>

@@ -43,8 +43,7 @@ function Start-FabricSparkJobDefinitionOnDemand {
         [string]$JobType = "sparkjob",
 
         [Parameter(Mandatory = $false)]
-        [ValidateNotNullOrEmpty()]
-        [bool]$waitForCompletion = $false
+        [switch]$WaitForCompletion
     )
     try { 
         # Validate authentication token before proceeding.
@@ -57,16 +56,29 @@ function Start-FabricSparkJobDefinitionOnDemand {
         Write-Message -Message "API Endpoint: $apiEndpointURI" -Level Debug
 
         # Step 4: Make the API request
-        $response = Invoke-FabricAPIRequest `
-            -BaseURI $apiEndpointURI `
-            -Headers $FabricConfig.FabricHeaders `
-            -Method Post `
-            -Body $bodyJson `
-            -WaitForCompletion $waitForCompletion `
-            -HasResults $false
+        # Make the API request
+        $apiParams = @{
+            BaseURI = $apiEndpointURI
+            Headers = $FabricConfig.FabricHeaders
+            Method  = 'Post'
+            Body    = $bodyJson
+        }
+        if ($WaitForCompletion.IsPresent) {
+            $apiParams.WaitForCompletion = $true
+        }        
+        $response = Invoke-FabricAPIRequest @apiParams
+
+        if ($WaitForCompletion) {
+            Write-Message -Message "On-demand Spark Job Definition (ID: '$SparkJobDefinitionId') has completed." -Level Info
+            Write-Message -Message "Job details: $($response | ConvertTo-Json -Depth 5)" -Level Debug
+        }
+        else {
+            Write-Message -Message "Successfully started on-demand Spark Job Definition (ID: '$SparkJobDefinitionId') in workspace '$WorkspaceId'. and is running asynchronously." -Level Info
+            Write-Message -Message "You can monitor the job status using the job ID from the response." -Level Debug
+        }
 
         # Return the API response  
-        Write-Message -Message "Successfully started on-demand Spark Job Definition (ID: '$SparkJobDefinitionId') in workspace '$WorkspaceId'." -Level Info
+        #Write-Message -Message "Successfully started on-demand Spark Job Definition (ID: '$SparkJobDefinitionId') in workspace '$WorkspaceId'." -Level Info
         return $response
     }
     catch {
