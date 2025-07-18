@@ -130,16 +130,6 @@ table activities
 
 		annotation SummarizationSetBy = Automatic
 
-	column DatasetName
-		dataType: string
-		sourceProviderType: varchar(8000)
-		lineageTag: 16c38dea-7a3d-4ec1-a907-41f4732607df
-		sourceLineageTag: DatasetName
-		summarizeBy: none
-		sourceColumn: DatasetName
-
-		annotation SummarizationSetBy = Automatic
-
 	column DatasourceId
 		dataType: string
 		sourceProviderType: varchar(8000)
@@ -147,16 +137,6 @@ table activities
 		sourceLineageTag: DatasourceId
 		summarizeBy: none
 		sourceColumn: DatasourceId
-
-		annotation SummarizationSetBy = Automatic
-
-	column GatewayId
-		dataType: string
-		sourceProviderType: varchar(8000)
-		lineageTag: 81a7ec9e-970e-4a69-ad30-dca1c576767c
-		sourceLineageTag: GatewayId
-		summarizeBy: none
-		sourceColumn: GatewayId
 
 		annotation SummarizationSetBy = Automatic
 
@@ -200,16 +180,6 @@ table activities
 
 		annotation SummarizationSetBy = Automatic
 
-	column RequestId
-		dataType: string
-		sourceProviderType: varchar(8000)
-		lineageTag: 3b6a3a86-6055-4e91-9554-17ad1eb63c13
-		sourceLineageTag: RequestId
-		summarizeBy: none
-		sourceColumn: RequestId
-
-		annotation SummarizationSetBy = Automatic
-
 	column UserId
 		dataType: string
 		sourceProviderType: varchar(8000)
@@ -241,26 +211,6 @@ table activities
 
 		annotation SummarizationSetBy = Automatic
 
-	column WorkSpaceName
-		dataType: string
-		sourceProviderType: varchar(8000)
-		lineageTag: be317a5a-4060-4e23-ab1f-71bfd142a2eb
-		sourceLineageTag: WorkSpaceName
-		summarizeBy: none
-		sourceColumn: WorkSpaceName
-
-		annotation SummarizationSetBy = Automatic
-
-	column Workload
-		dataType: string
-		sourceProviderType: varchar(8000)
-		lineageTag: 22ac63db-d275-403f-8c38-4faba7d1784d
-		sourceLineageTag: Workload
-		summarizeBy: none
-		sourceColumn: Workload
-
-		annotation SummarizationSetBy = Automatic
-
 	column WorkspaceId
 		dataType: string
 		sourceProviderType: varchar(8000)
@@ -271,14 +221,104 @@ table activities
 
 		annotation SummarizationSetBy = Automatic
 
-	column BillingType
-		dataType: int64
-		formatString: 0
-		sourceProviderType: bigint
-		lineageTag: f887794b-5891-40f4-90c7-ccb5f9156027
-		sourceLineageTag: BillingType
-		summarizeBy: sum
-		sourceColumn: BillingType
+	column ItemName
+		dataType: string
+		sourceProviderType: varchar(8000)
+		lineageTag: 08c32f16-6f95-407b-9030-7d35a0fce0f1
+		sourceLineageTag: ItemName
+		summarizeBy: none
+		sourceColumn: ItemName
+
+		annotation SummarizationSetBy = Automatic
+
+	column AppId
+		dataType: string
+		sourceProviderType: varchar(8000)
+		lineageTag: 1d17551e-d2e1-4b9b-a1e9-52897363aced
+		sourceLineageTag: AppId
+		summarizeBy: none
+		sourceColumn: AppId
+
+		annotation SummarizationSetBy = Automatic
+
+	column ResultStatus
+		dataType: string
+		sourceProviderType: varchar(8000)
+		lineageTag: 529fc9d0-6ddb-4b9d-9d78-20f228b51b22
+		sourceLineageTag: ResultStatus
+		summarizeBy: none
+		sourceColumn: ResultStatus
+
+		annotation SummarizationSetBy = Automatic
+
+	column ObjectType
+		dataType: string
+		sourceProviderType: varchar(8000)
+		lineageTag: ccdf4ff8-52ee-438d-9bcd-0d0983c778d3
+		sourceLineageTag: ObjectType
+		summarizeBy: none
+		sourceColumn: ObjectType
+
+		annotation SummarizationSetBy = Automatic
+
+	column AppName
+		dataType: string
+		sourceProviderType: varchar(8000)
+		lineageTag: a5725917-7eba-4517-a555-29e78b7e3544
+		sourceLineageTag: AppName
+		summarizeBy: none
+		sourceColumn: AppName
+
+		annotation SummarizationSetBy = Automatic
+
+	column ObjectId
+		dataType: string
+		sourceProviderType: varchar(8000)
+		lineageTag: 0b9fe5fd-352e-4fa4-9040-06ca97fa220b
+		sourceLineageTag: ObjectId
+		summarizeBy: none
+		sourceColumn: ObjectId
+
+		annotation SummarizationSetBy = Automatic
+
+	column Experience
+		dataType: string
+		sourceProviderType: varchar(8000)
+		lineageTag: 52bc2ec9-432c-4fac-8265-33b7fcd37b69
+		sourceLineageTag: Experience
+		summarizeBy: none
+		sourceColumn: Experience
+
+		annotation SummarizationSetBy = Automatic
+
+	column ReportName
+		dataType: string
+		sourceProviderType: varchar(8000)
+		lineageTag: d32a8219-57d7-4571-8bde-f41654472cdd
+		sourceLineageTag: ReportName
+		summarizeBy: none
+		sourceColumn: ReportName
+
+		annotation SummarizationSetBy = Automatic
+
+	column IsSuccess
+		dataType: boolean
+		formatString: """TRUE"";""TRUE"";""FALSE"""
+		sourceProviderType: bit
+		lineageTag: 7236470c-975c-4b99-96a0-96675591c334
+		sourceLineageTag: IsSuccess
+		summarizeBy: none
+		sourceColumn: IsSuccess
+
+		annotation SummarizationSetBy = Automatic
+
+	column ReportType
+		dataType: string
+		sourceProviderType: varchar(8000)
+		lineageTag: d4768ad6-cbb5-47b2-848e-3480574fffd3
+		sourceLineageTag: ReportType
+		summarizeBy: none
+		sourceColumn: ReportType
 
 		annotation SummarizationSetBy = Automatic
 

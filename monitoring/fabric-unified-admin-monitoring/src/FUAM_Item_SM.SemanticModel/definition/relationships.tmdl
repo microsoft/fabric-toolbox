@@ -66,10 +66,6 @@ relationship f9bcaa6c-62d0-3e8c-3b21-51ea514219e1
 	fromColumn: capacity_metrics_by_item_by_operation_by_day.ItemId
 	toColumn: active_items.id
 
-relationship 033e74ab-662c-027f-5af9-15674cacf470
-	fromColumn: activities.ItemId
-	toColumn: active_items.id
-
 relationship 10b47dd9-eb08-f7df-91f1-6dd9b386e4fc
 	fromColumn: workspaces_scanned_users.WorkspaceId
 	toColumn: workspaces.WorkspaceId
@@ -79,11 +75,15 @@ relationship 2a90311f-f24b-3837-6e69-93ed171528a0
 	fromColumn: active_items.id
 	toColumn: semantic_models.SemanticModelId
 
-relationship 5bce86a0-eea9-cbd1-8dde-7803cd6a87e1
-	fromColumn: report_activities.ReportId
-	toColumn: reports.ReportId
+relationship d7ef097c-51bc-54b3-b019-f6a39803026f
+	fromColumn: aggregated_activities_last_30days.fuam_item_id
+	toColumn: active_items.id
 
-relationship 06a1218d-d1ea-5c25-44b0-ba218960bb45
-	fromColumn: report_activities.CreationDateKey
+relationship ea164a71-a3ad-93cc-4488-1bbf0cb66a4c
+	fromColumn: aggregated_activities_last_30days.CreationDateKey
 	toColumn: calendar.DateKey
+
+relationship fcf4a48b-4a5b-23f0-de3e-13e0ec383628
+	fromColumn: activities.ReportId
+	toColumn: reports.ReportId
 

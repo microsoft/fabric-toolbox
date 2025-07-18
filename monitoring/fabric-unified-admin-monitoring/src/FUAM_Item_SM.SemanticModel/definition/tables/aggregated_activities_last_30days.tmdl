@@ -1,0 +1,159 @@
+table aggregated_activities_last_30days
+	lineageTag: de42788f-d649-4d9f-8c21-edde7b4a69b9
+	sourceLineageTag: [dbo].[aggregated_activities_last_30days]
+
+	column CreationDate
+		dataType: dateTime
+		formatString: General Date
+		sourceProviderType: date
+		lineageTag: 08d71231-0180-4126-87db-94eb70a7c6f0
+		sourceLineageTag: CreationDate
+		summarizeBy: none
+		sourceColumn: CreationDate
+
+		annotation SummarizationSetBy = Automatic
+
+	column Experience
+		dataType: string
+		sourceProviderType: varchar(8000)
+		lineageTag: 1e7a3c4b-9ab6-4681-8fd3-2225fab1eb4c
+		sourceLineageTag: Experience
+		summarizeBy: none
+		sourceColumn: Experience
+
+		annotation SummarizationSetBy = Automatic
+
+	column CapacityId
+		dataType: string
+		sourceProviderType: varchar(8000)
+		lineageTag: 9d4da042-9310-44df-978a-39636140f0d6
+		sourceLineageTag: CapacityId
+		summarizeBy: none
+		sourceColumn: CapacityId
+
+		annotation SummarizationSetBy = Automatic
+
+	column CreationDateKey
+		dataType: string
+		sourceProviderType: varchar(8000)
+		lineageTag: 631c7a1c-8a72-45bd-bdd9-cd35580fb4b4
+		sourceLineageTag: CreationDateKey
+		summarizeBy: none
+		sourceColumn: CreationDateKey
+
+		annotation SummarizationSetBy = Automatic
+
+	column WorkspaceId
+		dataType: string
+		sourceProviderType: varchar(8000)
+		lineageTag: 26a01b14-2c98-4fd0-ac3a-1f41dfa7f19b
+		sourceLineageTag: WorkspaceId
+		summarizeBy: none
+		sourceColumn: WorkspaceId
+
+		annotation SummarizationSetBy = Automatic
+
+	column CountOfActivities
+		dataType: int64
+		formatString: 0
+		sourceProviderType: bigint
+		lineageTag: abbd3d99-1ed4-43fd-82ac-165fb8acc508
+		sourceLineageTag: CountOfActivities
+		summarizeBy: sum
+		sourceColumn: CountOfActivities
+
+		annotation SummarizationSetBy = Automatic
+
+	column Activity
+		dataType: string
+		sourceProviderType: varchar(8000)
+		lineageTag: 60a08952-bd5c-43a7-8c6f-2b2671716aa1
+		sourceLineageTag: Activity
+		summarizeBy: none
+		sourceColumn: Activity
+
+		annotation SummarizationSetBy = Automatic
+
+	column Workload
+		dataType: string
+		sourceProviderType: varchar(8000)
+		lineageTag: d5ed9841-4cbc-4fef-b934-d2d01d6225ab
+		sourceLineageTag: Workload
+		summarizeBy: none
+		sourceColumn: Workload
+
+		annotation SummarizationSetBy = Automatic
+
+	column CreationHour
+		dataType: int64
+		formatString: 0
+		sourceProviderType: varchar(8000)
+		lineageTag: 0a7d777b-2517-4b4d-8ee9-0e1b6d947a3f
+		sourceLineageTag: CreationHour
+		summarizeBy: sum
+		sourceColumn: CreationHour
+
+		changedProperty = DataType
+
+		annotation SummarizationSetBy = Automatic
+
+	column GatewayId
+		dataType: string
+		sourceProviderType: varchar(8000)
+		lineageTag: 38099901-e000-4f07-a0cc-de30c779efd1
+		sourceLineageTag: GatewayId
+		summarizeBy: none
+		sourceColumn: GatewayId
+
+		annotation SummarizationSetBy = Automatic
+
+	column fuam_item_id
+		dataType: string
+		sourceProviderType: varchar(8000)
+		lineageTag: 78ce3f46-0e88-4dbb-b664-24f8cf1da698
+		sourceLineageTag: fuam_item_id
+		summarizeBy: none
+		sourceColumn: fuam_item_id
+
+		annotation SummarizationSetBy = Automatic
+
+	column fuam_item_kind
+		dataType: string
+		sourceProviderType: varchar(8000)
+		lineageTag: 7f72dc1a-4038-4b9b-b242-adea45202f11
+		sourceLineageTag: fuam_item_kind
+		summarizeBy: none
+		sourceColumn: fuam_item_kind
+
+		annotation SummarizationSetBy = Automatic
+
+	column fuam_activity_status
+		dataType: string
+		sourceProviderType: varchar(8000)
+		lineageTag: 8d22a5a5-ad06-4c5f-a70c-3667cf466186
+		sourceLineageTag: fuam_activity_status
+		summarizeBy: none
+		sourceColumn: fuam_activity_status
+
+		annotation SummarizationSetBy = Automatic
+
+	column DistinctCountOfUsers
+		dataType: int64
+		formatString: 0
+		sourceProviderType: bigint
+		lineageTag: d9bff9eb-8528-4dc9-9f75-0076e8e2052d
+		sourceLineageTag: DistinctCountOfUsers
+		summarizeBy: sum
+		sourceColumn: DistinctCountOfUsers
+
+		annotation SummarizationSetBy = Automatic
+
+	partition aggregated_activities_last_30days = entity
+		mode: directLake
+		source
+			entityName: aggregated_activities_last_30days
+			schemaName: dbo
+			expressionSource: DatabaseQuery
+
+	annotation PBI_ResultType = Table
+

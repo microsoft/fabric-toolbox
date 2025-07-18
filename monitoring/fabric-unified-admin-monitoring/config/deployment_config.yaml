@@ -1,0 +1,8 @@
+workspace: "FUAM"
+connections:
+  pbi_connection : fuam pbi-service-api admin
+  fabric_connection: fuam fabric-service-api admin
+
+fuam_lakehouse_semantic_models:
+  - FUAM_Core_SM.SemanticModel
+  - FUAM_Item_SM.SemanticModel
