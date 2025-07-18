@@ -9,7 +9,7 @@ The notebook code provided in this  repo extracts from MS Fabric:
 - Attributes of PowerBI reports (saved in the new PBIP/PBIR format) with their source Lakehouse and Warehouse tables 
 - Column mappings from Copy Activities in Fabric Data Factory pipelines. 
 
-The code then uploads all metadata, which have been extracted, to MS Purview Data Governance and creates a graphical column-level lineage graph. You can find some example screeshots of the resulting lineage graph in the section [Some output examples](https://github.com/sdetoni-prj/fabric-toolbox/blob/patch-1/tools/Lineage_Extractor/README.md#some-output-examples) below. 
+The code then uploads all metadata, which have been extracted, to MS Purview Data Governance and creates a graphical column-level lineage graph. You can find some example screeshots of the resulting lineage graph in the section [Some output examples](#some-output-examples) below. 
 
 Extraction is obtained automatically using API calls, python libraries and SQL queries. The process does not require human intervention, apart from quick configuration of the code (namely the SVC Principal auth details, see Prerequisites below).
 
