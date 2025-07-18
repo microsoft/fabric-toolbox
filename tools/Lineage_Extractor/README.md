@@ -38,11 +38,11 @@ In more detail, the provided notebook code accomplishes the following four tasks
 
 # Quickstart: How to run the code
 
-Download the notebook in the [Fabric-notebook folder](https://github.com/sdetoni-prj/fabric-toolbox/tree/patch-1/tools/Lineage_Extractor/Fabric-notebook) to a PC or VM, then import it into an MS Fabric workspace.
+Download the notebook in the [Fabric-notebook folder](./Fabric-notebook) to a PC or VM, then import it into an MS Fabric workspace.
 
 ![Import notebook](https://github.com/sdetoni-prj/fabric-toolbox/blob/patch-1/media/tools/import_notebook.png)
 
-If you already have Service Principal(s) created for MS Fabric and MS Purview,, and you already enabled API access in the Fabric Admin Portal, then you just need to fill their IDs and secrets in the first cell of the notebook code. Check the section [Prerequisites and Fabric configuration in more detail](https://github.com/sdetoni-prj/fabric-toolbox/blob/patch-1/tools/Lineage_Extractor/README.md#prerequisites-and-fabric-configuration-in-more-detail) below to make sure the Fabric/PowerBI Admin portal settings are ok.
+If you already have Service Principal(s) created for MS Fabric and MS Purview,, and you already enabled API access in the Fabric Admin Portal, then you just need to fill their IDs and secrets in the first cell of the notebook code. Check the section [Prerequisites and Fabric configuration in more detail](#prerequisites-and-fabric-configuration-in-more-detail) below to make sure the Fabric/PowerBI Admin portal settings are ok.
 
 Configure the second cell of the notebook with the following values (you can refer to the Prerequisites section for further details):
 
