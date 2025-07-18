@@ -1,11 +1,11 @@
 table capacity_refreshable_summaries
-	lineageTag: 92812791-16e0-455e-9a22-b3b5ad6022b7
+	lineageTag: 151b072d-3f93-4476-8a19-882841b21fd4
 	sourceLineageTag: [dbo].[capacity_refreshable_summaries]
 
 	column CapacityId
 		dataType: string
 		sourceProviderType: varchar(8000)
-		lineageTag: d2eb7040-deed-4678-bf62-87ab7e14a7ac
+		lineageTag: c65662b1-2466-4d60-8948-17b479cada86
 		sourceLineageTag: CapacityId
 		summarizeBy: none
 		sourceColumn: CapacityId
@@ -15,7 +15,7 @@ table capacity_refreshable_summaries
 	column WorkspaceId
 		dataType: string
 		sourceProviderType: varchar(8000)
-		lineageTag: 0c70afca-9b16-4778-801b-dcfc5935b9b1
+		lineageTag: ca8e09ab-c5b7-4599-ae91-4ed80b1f5b12
 		sourceLineageTag: WorkspaceId
 		summarizeBy: none
 		sourceColumn: WorkspaceId
@@ -25,7 +25,7 @@ table capacity_refreshable_summaries
 	column ItemId
 		dataType: string
 		sourceProviderType: varchar(8000)
-		lineageTag: 4cb34b10-ff8c-4ef1-ba67-8c85df01ec86
+		lineageTag: 93bbbf49-bf2a-4435-b54a-afe6d7e2d4f4
 		sourceLineageTag: ItemId
 		summarizeBy: none
 		sourceColumn: ItemId
@@ -35,7 +35,7 @@ table capacity_refreshable_summaries
 	column ItemName
 		dataType: string
 		sourceProviderType: varchar(8000)
-		lineageTag: c279c353-7969-41e4-a622-0bfc40c70b4e
+		lineageTag: a553a30f-0029-4e20-89d2-77879cfe9fd9
 		sourceLineageTag: ItemName
 		summarizeBy: none
 		sourceColumn: ItemName
@@ -45,7 +45,7 @@ table capacity_refreshable_summaries
 	column ConsideredStartDateKey
 		dataType: string
 		sourceProviderType: varchar(8000)
-		lineageTag: 3d8911f8-ca8d-4b81-a9b3-c5cc4687a0c4
+		lineageTag: 7bd5b9bc-5c58-437d-9f4a-7a23181f2f11
 		sourceLineageTag: ConsideredStartDateKey
 		summarizeBy: none
 		sourceColumn: ConsideredStartDateKey
@@ -54,39 +54,31 @@ table capacity_refreshable_summaries
 
 	column ConsideredStartDate
 		dataType: dateTime
-		formatString: yyyy-MM-dd
+		formatString: General Date
 		sourceProviderType: date
-		lineageTag: 6d77af02-19be-4445-bc8e-966887539ade
+		lineageTag: 6e04faf8-b5fd-4782-8c91-6fe95d02a996
 		sourceLineageTag: ConsideredStartDate
 		summarizeBy: none
 		sourceColumn: ConsideredStartDate
 
-		changedProperty = FormatString
-
 		annotation SummarizationSetBy = Automatic
-
-		annotation PBI_FormatHint = {"isCustom":true}
 
 	column ConsideredEndDate
 		dataType: dateTime
-		formatString: yyyy-mm-dd
+		formatString: General Date
 		sourceProviderType: date
-		lineageTag: 1c1f9390-0db5-45aa-8aac-a91411d16d41
+		lineageTag: d8def3f3-1198-474b-93c4-180cb06d5ad2
 		sourceLineageTag: ConsideredEndDate
 		summarizeBy: none
 		sourceColumn: ConsideredEndDate
 
-		changedProperty = FormatString
-
 		annotation SummarizationSetBy = Automatic
-
-		annotation PBI_FormatHint = {"isCustom":true}
 
 	column ConsideredStartTime
 		dataType: dateTime
 		formatString: General Date
 		sourceProviderType: datetime2
-		lineageTag: fa3f202d-bbf0-4ef2-bea6-48900b0906d3
+		lineageTag: 18a81a6c-8032-4fc1-85bd-6db1d656a5a1
 		sourceLineageTag: ConsideredStartTime
 		summarizeBy: none
 		sourceColumn: ConsideredStartTime
@@ -97,7 +89,7 @@ table capacity_refreshable_summaries
 		dataType: dateTime
 		formatString: General Date
 		sourceProviderType: datetime2
-		lineageTag: 8f1e4bf0-cb96-493e-ae95-6f149a7baec9
+		lineageTag: aa54a665-5f61-4f6a-9732-358b8238ac11
 		sourceLineageTag: ConsideredEndTime
 		summarizeBy: none
 		sourceColumn: ConsideredEndTime
@@ -107,7 +99,7 @@ table capacity_refreshable_summaries
 	column RefreshAverageDuration
 		dataType: double
 		sourceProviderType: float
-		lineageTag: 2c5a949e-8f94-4e40-b9da-3e56efa34b40
+		lineageTag: b376451d-103e-4251-a8e9-e386c1b2fa0a
 		sourceLineageTag: RefreshAverageDuration
 		summarizeBy: sum
 		sourceColumn: RefreshAverageDuration
@@ -119,7 +111,7 @@ table capacity_refreshable_summaries
 	column RefreshMedianDuration
 		dataType: double
 		sourceProviderType: float
-		lineageTag: 47629242-d18c-4785-b803-23346da40414
+		lineageTag: 4d53fec0-f9c4-4f3e-adb9-b4a8b69c6bc9
 		sourceLineageTag: RefreshMedianDuration
 		summarizeBy: sum
 		sourceColumn: RefreshMedianDuration
@@ -132,7 +124,7 @@ table capacity_refreshable_summaries
 		dataType: int64
 		formatString: 0
 		sourceProviderType: bigint
-		lineageTag: 753032f7-d75a-4760-82b4-05e0698967d7
+		lineageTag: a8e3f940-ed94-4775-87bf-bb20c68193ce
 		sourceLineageTag: RefreshCount
 		summarizeBy: sum
 		sourceColumn: RefreshCount
@@ -143,7 +135,7 @@ table capacity_refreshable_summaries
 		dataType: int64
 		formatString: 0
 		sourceProviderType: bigint
-		lineageTag: 1e63f142-60fe-4913-9bf9-053421cca78e
+		lineageTag: 9cd61bbe-04ae-4933-bb05-9521eddecb2a
 		sourceLineageTag: ConsiderationDurationSeconds
 		summarizeBy: sum
 		sourceColumn: ConsiderationDurationSeconds

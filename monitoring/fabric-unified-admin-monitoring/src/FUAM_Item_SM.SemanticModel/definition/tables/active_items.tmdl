@@ -114,6 +114,16 @@ table active_items
 
 		annotation SummarizationSetBy = Automatic
 
+	column folderId
+		dataType: string
+		sourceProviderType: varchar(8000)
+		lineageTag: 842058fd-f39e-427b-9644-39636b57d9e0
+		sourceLineageTag: folderId
+		summarizeBy: none
+		sourceColumn: folderId
+
+		annotation SummarizationSetBy = Automatic
+
 	partition active_items = entity
 		mode: directLake
 		source

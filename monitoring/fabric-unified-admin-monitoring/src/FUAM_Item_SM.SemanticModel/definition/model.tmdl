@@ -10,7 +10,7 @@ model Model
 
 annotation __PBI_TimeIntelligenceEnabled = 0
 
-annotation PBIDesktopVersion = 2.142.7627.6 (Main)+12378a3b51a63d36fded4ef866d1d94d4d0715e0
+annotation PBIDesktopVersion = 2.146.7727.7 (Main)+bc5f9142edb5be5beb4b90d87b320b00b8f2d382
 
 annotation PBI_QueryOrder = ["DatabaseQuery"]
 
@@ -43,7 +43,7 @@ ref table semantic_model_vertipaq_relationships
 ref table size_units
 ref table active_items
 ref table workspaces_scanned_users
-ref table report_activities
+ref table aggregated_activities_last_30days
 
 ref cultureInfo en-US
 

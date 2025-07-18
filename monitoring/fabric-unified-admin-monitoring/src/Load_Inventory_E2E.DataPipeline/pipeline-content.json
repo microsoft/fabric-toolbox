@@ -13,8 +13,8 @@
                     "secureInput": false
                 },
                 "typeProperties": {
-                    "notebookId": "b2971e0b-f5c8-5e37-849f-fc245dca21fd",
-                    "workspaceId": "eb764c8b-cf3b-55be-adf4-348fe9233657",
+                    "notebookId": "d52678e8-1cbd-346f-8349-a7c5a3ca37be",
+                    "workspaceId": "88c8d9fa-2c24-3fad-8f46-b36431c7ba1d",
                     "parameters": {
                         "has_tenant_domains": {
                             "value": {

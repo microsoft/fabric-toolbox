@@ -17,7 +17,7 @@
                 },
                 "typeProperties": {
                     "pipeline": {
-                        "referenceName": "2c7e10f5-7d44-5acf-a471-0b0d1fa6f949",
+                        "referenceName": "b6d26e22-ab2b-36de-aa35-7a7be49c0d16",
                         "type": "PipelineReference"
                     },
                     "waitOnCompletion": true,
@@ -42,7 +42,7 @@
                 },
                 "typeProperties": {
                     "pipeline": {
-                        "referenceName": "ca8aed99-4fff-58d4-8c52-e559b4af2d2b",
+                        "referenceName": "c27a06eb-f788-3126-97c6-84da599eaab5",
                         "type": "PipelineReference"
                     },
                     "waitOnCompletion": true,
@@ -64,7 +64,7 @@
                 },
                 "typeProperties": {
                     "pipeline": {
-                        "referenceName": "13f115cc-e9e2-591e-afb5-5ec0b820973a",
+                        "referenceName": "bbc79b56-f08d-32e9-8a05-bc54587d743b",
                         "type": "PipelineReference"
                     },
                     "waitOnCompletion": true,
@@ -92,7 +92,7 @@
                 },
                 "typeProperties": {
                     "pipeline": {
-                        "referenceName": "8c28e8a4-0ede-5600-b754-1b440d7e7b74",
+                        "referenceName": "1424bf87-e7cc-3e4d-9cff-b57cd1804641",
                         "type": "PipelineReference"
                     },
                     "waitOnCompletion": true,
@@ -126,7 +126,7 @@
                 },
                 "typeProperties": {
                     "pipeline": {
-                        "referenceName": "20918174-b1be-5c2c-9d6a-c0813660137a",
+                        "referenceName": "0c455dc0-51fe-33b8-8b36-401a002dfab4",
                         "type": "PipelineReference"
                     },
                     "waitOnCompletion": true,
@@ -166,7 +166,7 @@
                 },
                 "typeProperties": {
                     "pipeline": {
-                        "referenceName": "1ebc7e31-c85c-5669-80ac-4e60c2312cb6",
+                        "referenceName": "2e071f9f-715e-3419-8f12-b7f4dfcd854a",
                         "type": "PipelineReference"
                     },
                     "waitOnCompletion": true,
@@ -218,7 +218,7 @@
                 },
                 "typeProperties": {
                     "pipeline": {
-                        "referenceName": "5b3737e4-4ffe-56f6-bb98-ecf4496aa813",
+                        "referenceName": "d7ede29f-f3f9-35c3-a81d-12d10ae16269",
                         "type": "PipelineReference"
                     },
                     "waitOnCompletion": true,
@@ -246,7 +246,7 @@
                 },
                 "typeProperties": {
                     "pipeline": {
-                        "referenceName": "6f620dc5-1bbf-5284-9143-4c0db4f10452",
+                        "referenceName": "8c1a405e-5a90-35c6-bcc4-88ffde924597",
                         "type": "PipelineReference"
                     },
                     "waitOnCompletion": true,
@@ -267,7 +267,7 @@
                 },
                 "typeProperties": {
                     "pipeline": {
-                        "referenceName": "038f8eb2-532f-5ac0-9c2e-734b5fce4837",
+                        "referenceName": "bf6b036c-f4cf-3064-a41d-7161ebc97e06",
                         "type": "PipelineReference"
                     },
                     "waitOnCompletion": true,
@@ -298,8 +298,8 @@
                     "secureInput": false
                 },
                 "typeProperties": {
-                    "notebookId": "fa9500ac-2738-5288-a823-239c83e997dd",
-                    "workspaceId": "eb764c8b-cf3b-55be-adf4-348fe9233657",
+                    "notebookId": "8f6dadb3-5b32-369c-a4e7-33f03853fc28",
+                    "workspaceId": "88c8d9fa-2c24-3fad-8f46-b36431c7ba1d",
                     "sessionTag": "fuam"
                 }
             },
@@ -319,7 +319,7 @@
                 },
                 "typeProperties": {
                     "pipeline": {
-                        "referenceName": "6be51f60-f72d-51f4-ba74-afb5561752f4",
+                        "referenceName": "5ecbec01-016b-3033-94d8-2dcb3e41e02a",
                         "type": "PipelineReference"
                     },
                     "waitOnCompletion": true,
@@ -329,6 +329,30 @@
                             "type": "Expression"
                         }
                     }
+                }
+            },
+            {
+                "name": "Check_FUAM_Version",
+                "type": "TridentNotebook",
+                "dependsOn": [
+                    {
+                        "activity": "Load_Git_Connections_E2E",
+                        "dependencyConditions": [
+                            "Completed"
+                        ]
+                    }
+                ],
+                "policy": {
+                    "timeout": "0.12:00:00",
+                    "retry": 0,
+                    "retryIntervalInSeconds": 30,
+                    "secureOutput": false,
+                    "secureInput": false
+                },
+                "typeProperties": {
+                    "notebookId": "be52418c-fdb7-3a4b-b043-7ed8d866e919",
+                    "workspaceId": "88c8d9fa-2c24-3fad-8f46-b36431c7ba1d",
+                    "sessionTag": "fuam"
                 }
             }
         ],
@@ -343,11 +367,11 @@
             },
             "metric_days_in_scope": {
                 "type": "int",
-                "defaultValue": 14
+                "defaultValue": 2
             },
             "metric_workspace": {
                 "type": "string",
-                "defaultValue": "Microsoft Fabric Capacity Metrics v35"
+                "defaultValue": "FUAM Capacity Metrics v37"
             },
             "metric_dataset": {
                 "type": "string",
@@ -355,7 +379,7 @@
             },
             "activity_days_in_scope": {
                 "type": "int",
-                "defaultValue": 28
+                "defaultValue": 2
             },
             "display_data": {
                 "type": "bool",

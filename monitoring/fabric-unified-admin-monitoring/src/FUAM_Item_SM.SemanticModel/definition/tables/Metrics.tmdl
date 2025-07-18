@@ -208,7 +208,7 @@ table Metrics
 		displayFolder: Helper
 		lineageTag: 331bbd11-d17a-45d3-bc34-4139135bc6e0
 
-	measure 'FUAM Release' = "2025.4.1"
+	measure 'FUAM Release' = "2025.7.1"
 		displayFolder: Meta
 		lineageTag: ca859e16-fcf7-4da8-8409-85eee8cad196
 
@@ -747,12 +747,12 @@ table Metrics
 
 		changedProperty = FormatString
 
-	measure '# Report Activities' = COUNTROWS(report_activities)
+	measure '# Report Activities' = COUNTROWS(activities)
 		formatString: 0
 		displayFolder: Activities\Report
 		lineageTag: b6821115-d076-4857-b016-fa75dc16df9c
 
-	measure '# Item Activities' = COUNTROWS(activities)
+	measure '# Item Activities' = SUM(aggregated_activities_last_30days[CountOfActivities])
 		formatString: #,0
 		displayFolder: Activities\Item
 		lineageTag: 99a28eae-db47-4863-8230-f72eea7663e0
@@ -762,18 +762,79 @@ table Metrics
 		displayFolder: Semantic Models\Optimization Module\VertiPaq\Table level
 		lineageTag: 99e9bfe8-e964-4221-a23a-f93fc5ad57df
 
-	measure '# Users' = DISTINCTCOUNT(activities[UserId])
+	measure '# Users' = DISTINCTCOUNT(aggregated_activities_last_30days[DistinctCountOfUsers])
 		formatString: 0
 		displayFolder: Activities\Item
 		lineageTag: 5b25cfa8-b432-4de7-b01a-bb4e2e9c8016
 
 	measure '# Viewed Reports' =
 			CALCULATE(
-			    DISTINCTCOUNT(report_activities[ReportId]),
+			    DISTINCTCOUNT(activities[ReportId]),
 			    activities[Activity] = "ViewReport"
 			)
+		formatString: 0
 		displayFolder: Activities\Report
 		lineageTag: d580a30f-46e9-40a8-a1b9-af7e2fbb1377
+
+	measure '# Report Users' = DISTINCTCOUNT(activities[UserId])
+		formatString: 0
+		displayFolder: Activities\Report
+		lineageTag: 95de4e7d-892c-4497-b4a7-9b4f75a81fc8
+
+	measure 'Selected Capacity' =
+			
+			CALCULATE(
+			    MIN(capacities[displayName]),
+			    CROSSFILTER(active_items[workspaceId], workspaces[WorkspaceId], Both),
+			    CROSSFILTER(workspaces[CapacityId], capacities[CapacityId], Both)
+			)
+		displayFolder: Helper
+		lineageTag: 7e58730f-c8ad-4664-b5a5-3b71aa9c7580
+
+	measure 'Selected Capacity SKU' =
+			
+			CALCULATE(
+			    MIN(capacities[sku]),
+			    CROSSFILTER(active_items[workspaceId], workspaces[WorkspaceId], Both),
+			    CROSSFILTER(workspaces[CapacityId], capacities[CapacityId], Both)
+			)
+		displayFolder: Helper
+		lineageTag: c93fe7e2-d72f-40b2-8c10-a500904bc764
+
+	measure 'Selected Workspace' =
+			
+			CALCULATE(
+			    MIN(workspaces[WorkspaceName]),
+			    CROSSFILTER(active_items[workspaceId], workspaces[WorkspaceId], Both)
+			)
+		displayFolder: Helper
+		lineageTag: 4ce4154a-e206-443a-965b-c71783a151ad
+
+	measure 'Selected Workspace Storage Format' =
+			
+			CALCULATE(
+			    MIN(workspaces[DefaultDatasetStorageFormat]),
+			    CROSSFILTER(active_items[workspaceId], workspaces[WorkspaceId], Both)
+			)
+		displayFolder: Helper
+		lineageTag: 4a140781-4d58-48b8-aab0-cf01e461575f
+
+	measure 'Selected Workspace Storage Mode' =
+			
+			CALCULATE(
+			    MIN(semantic_models[StorageMode])
+			)
+		displayFolder: Helper
+		lineageTag: 5d80af73-ce8f-434c-adac-bc137025f225
+
+	measure 'Selected SM Connectivity Mode' =
+			
+			CALCULATE(
+			    MIN(semantic_model_content_types[MappedName]),
+			    CROSSFILTER(semantic_model_content_types[ContentProviderType], semantic_models[ContentProviderType], Both)
+			)
+		displayFolder: Helper
+		lineageTag: d646a50c-8508-41e2-a25c-44d8f5c83018
 
 	column Value
 		isHidden

@@ -13,8 +13,8 @@
                     "secureInput": false
                 },
                 "typeProperties": {
-                    "notebookId": "2a4d82cd-7581-5548-a184-301407eadbc1",
-                    "workspaceId": "eb764c8b-cf3b-55be-adf4-348fe9233657",
+                    "notebookId": "0483c441-2a52-3d47-886c-c92d889965bd",
+                    "workspaceId": "88c8d9fa-2c24-3fad-8f46-b36431c7ba1d",
                     "parameters": {
                         "metric_days_in_scope": {
                             "value": {
@@ -67,8 +67,8 @@
                     "secureInput": false
                 },
                 "typeProperties": {
-                    "notebookId": "fc8c385f-18f8-556f-986b-a360cc855827",
-                    "workspaceId": "eb764c8b-cf3b-55be-adf4-348fe9233657",
+                    "notebookId": "8f4db3b0-9262-3ade-9d61-1fdddb091586",
+                    "workspaceId": "88c8d9fa-2c24-3fad-8f46-b36431c7ba1d",
                     "parameters": {
                         "metric_days_in_scope": {
                             "value": {
@@ -121,8 +121,8 @@
                     "secureInput": false
                 },
                 "typeProperties": {
-                    "notebookId": "38e5dae7-b770-535e-85a3-512d20d8c556",
-                    "workspaceId": "eb764c8b-cf3b-55be-adf4-348fe9233657",
+                    "notebookId": "f7c9cc03-7453-3624-b3f6-24f0e47577b0",
+                    "workspaceId": "88c8d9fa-2c24-3fad-8f46-b36431c7ba1d",
                     "parameters": {
                         "metric_days_in_scope": {
                             "value": {

@@ -1,106 +1,55 @@
 table aggregated_activities_last_30days
-	lineageTag: ef90b91f-7b6e-49db-b61d-c2043296de27
+	lineageTag: de42788f-d649-4d9f-8c21-edde7b4a69b9
 	sourceLineageTag: [dbo].[aggregated_activities_last_30days]
 
 	column CreationDate
 		dataType: dateTime
 		formatString: General Date
 		sourceProviderType: date
-		lineageTag: 856e69e5-3366-4a73-9886-ecf74a20cb56
+		lineageTag: 08d71231-0180-4126-87db-94eb70a7c6f0
 		sourceLineageTag: CreationDate
 		summarizeBy: none
 		sourceColumn: CreationDate
 
 		annotation SummarizationSetBy = Automatic
 
-	column Activity
-		dataType: string
-		sourceProviderType: varchar(8000)
-		lineageTag: f7e780b1-213c-4e69-9d11-9cc6cea1470a
-		sourceLineageTag: Activity
-		summarizeBy: none
-		sourceColumn: Activity
-
-		annotation SummarizationSetBy = Automatic
-
 	column Experience
 		dataType: string
 		sourceProviderType: varchar(8000)
-		lineageTag: 3951d4a7-f66c-43a2-b491-8cba4b0157d6
+		lineageTag: 1e7a3c4b-9ab6-4681-8fd3-2225fab1eb4c
 		sourceLineageTag: Experience
 		summarizeBy: none
 		sourceColumn: Experience
 
 		annotation SummarizationSetBy = Automatic
 
-	column Workload
-		dataType: string
-		sourceProviderType: varchar(8000)
-		lineageTag: 3610f05d-e9bc-4140-b425-68add7316d25
-		sourceLineageTag: Workload
-		summarizeBy: none
-		sourceColumn: Workload
-
-		annotation SummarizationSetBy = Automatic
-
 	column CapacityId
 		dataType: string
 		sourceProviderType: varchar(8000)
-		lineageTag: a399fa69-4875-480c-a329-e25917cbd444
+		lineageTag: 9d4da042-9310-44df-978a-39636140f0d6
 		sourceLineageTag: CapacityId
 		summarizeBy: none
 		sourceColumn: CapacityId
 
 		annotation SummarizationSetBy = Automatic
 
+	column CreationDateKey
+		dataType: string
+		sourceProviderType: varchar(8000)
+		lineageTag: 631c7a1c-8a72-45bd-bdd9-cd35580fb4b4
+		sourceLineageTag: CreationDateKey
+		summarizeBy: none
+		sourceColumn: CreationDateKey
+
+		annotation SummarizationSetBy = Automatic
+
 	column WorkspaceId
 		dataType: string
 		sourceProviderType: varchar(8000)
-		lineageTag: 03bdd98b-77dc-469d-ab0e-b933373c7e12
+		lineageTag: 26a01b14-2c98-4fd0-ac3a-1f41dfa7f19b
 		sourceLineageTag: WorkspaceId
 		summarizeBy: none
 		sourceColumn: WorkspaceId
-
-		annotation SummarizationSetBy = Automatic
-
-	column ObjectType
-		dataType: string
-		sourceProviderType: varchar(8000)
-		lineageTag: 59f64861-50c8-47dd-8d00-8cc49bf1e8c8
-		sourceLineageTag: ObjectType
-		summarizeBy: none
-		sourceColumn: ObjectType
-
-		annotation SummarizationSetBy = Automatic
-
-	column ItemId
-		dataType: string
-		sourceProviderType: varchar(8000)
-		lineageTag: bc265125-9276-44a3-ab34-d5b671f97e93
-		sourceLineageTag: ItemId
-		summarizeBy: none
-		sourceColumn: ItemId
-
-		annotation SummarizationSetBy = Automatic
-
-	column IsSuccess
-		dataType: boolean
-		formatString: """TRUE"";""TRUE"";""FALSE"""
-		sourceProviderType: bit
-		lineageTag: 39af610c-c264-4236-9c6c-3e6d607a1d6f
-		sourceLineageTag: IsSuccess
-		summarizeBy: none
-		sourceColumn: IsSuccess
-
-		annotation SummarizationSetBy = Automatic
-
-	column ResultStatus
-		dataType: string
-		sourceProviderType: varchar(8000)
-		lineageTag: 252acd65-02ae-4149-9454-562fe8fdc5ba
-		sourceLineageTag: ResultStatus
-		summarizeBy: none
-		sourceColumn: ResultStatus
 
 		annotation SummarizationSetBy = Automatic
 
@@ -108,37 +57,50 @@ table aggregated_activities_last_30days
 		dataType: int64
 		formatString: 0
 		sourceProviderType: bigint
-		lineageTag: 0528e13e-b39b-4a71-a7b4-af54d30fdbe9
+		lineageTag: abbd3d99-1ed4-43fd-82ac-165fb8acc508
 		sourceLineageTag: CountOfActivities
 		summarizeBy: sum
 		sourceColumn: CountOfActivities
 
 		annotation SummarizationSetBy = Automatic
 
-	column CreationDateKey
+	column Activity
 		dataType: string
 		sourceProviderType: varchar(8000)
-		lineageTag: add59468-3241-4756-90fc-d53d9ffabdb5
-		sourceLineageTag: CreationDateKey
+		lineageTag: 60a08952-bd5c-43a7-8c6f-2b2671716aa1
+		sourceLineageTag: Activity
 		summarizeBy: none
-		sourceColumn: CreationDateKey
+		sourceColumn: Activity
+
+		annotation SummarizationSetBy = Automatic
+
+	column Workload
+		dataType: string
+		sourceProviderType: varchar(8000)
+		lineageTag: d5ed9841-4cbc-4fef-b934-d2d01d6225ab
+		sourceLineageTag: Workload
+		summarizeBy: none
+		sourceColumn: Workload
 
 		annotation SummarizationSetBy = Automatic
 
 	column CreationHour
-		dataType: string
+		dataType: int64
+		formatString: 0
 		sourceProviderType: varchar(8000)
-		lineageTag: a80539ee-60e5-4247-bb6d-127a076c57a7
+		lineageTag: 0a7d777b-2517-4b4d-8ee9-0e1b6d947a3f
 		sourceLineageTag: CreationHour
-		summarizeBy: none
+		summarizeBy: sum
 		sourceColumn: CreationHour
+
+		changedProperty = DataType
 
 		annotation SummarizationSetBy = Automatic
 
 	column GatewayId
 		dataType: string
 		sourceProviderType: varchar(8000)
-		lineageTag: 17ddc5f4-3649-400d-a36a-f9b4adc48687
+		lineageTag: 38099901-e000-4f07-a0cc-de30c779efd1
 		sourceLineageTag: GatewayId
 		summarizeBy: none
 		sourceColumn: GatewayId
@@ -148,7 +110,7 @@ table aggregated_activities_last_30days
 	column fuam_item_id
 		dataType: string
 		sourceProviderType: varchar(8000)
-		lineageTag: 7abde423-3ae2-41c2-9c6c-b6f274718484
+		lineageTag: 78ce3f46-0e88-4dbb-b664-24f8cf1da698
 		sourceLineageTag: fuam_item_id
 		summarizeBy: none
 		sourceColumn: fuam_item_id
@@ -158,7 +120,7 @@ table aggregated_activities_last_30days
 	column fuam_item_kind
 		dataType: string
 		sourceProviderType: varchar(8000)
-		lineageTag: 58fa9bb5-d198-48d9-b0c5-4983f5822087
+		lineageTag: 7f72dc1a-4038-4b9b-b242-adea45202f11
 		sourceLineageTag: fuam_item_kind
 		summarizeBy: none
 		sourceColumn: fuam_item_kind
@@ -168,7 +130,7 @@ table aggregated_activities_last_30days
 	column fuam_activity_status
 		dataType: string
 		sourceProviderType: varchar(8000)
-		lineageTag: 5d0b2eee-7ade-4787-955c-ea4df28f1429
+		lineageTag: 8d22a5a5-ad06-4c5f-a70c-3667cf466186
 		sourceLineageTag: fuam_activity_status
 		summarizeBy: none
 		sourceColumn: fuam_activity_status
@@ -179,7 +141,7 @@ table aggregated_activities_last_30days
 		dataType: int64
 		formatString: 0
 		sourceProviderType: bigint
-		lineageTag: 8ab78716-2294-4155-b8b4-41f51e8d17da
+		lineageTag: d9bff9eb-8528-4dc9-9f75-0076e8e2052d
 		sourceLineageTag: DistinctCountOfUsers
 		summarizeBy: sum
 		sourceColumn: DistinctCountOfUsers

@@ -132,6 +132,26 @@ table reports
 
 		annotation SummarizationSetBy = Automatic
 
+	column SemanticModelWorkspaceId
+		dataType: string
+		sourceProviderType: varchar(8000)
+		lineageTag: b9bf6e6f-f625-4504-902d-d965ac8f74f5
+		sourceLineageTag: SemanticModelWorkspaceId
+		summarizeBy: none
+		sourceColumn: SemanticModelWorkspaceId
+
+		annotation SummarizationSetBy = Automatic
+
+	column tags
+		dataType: string
+		sourceProviderType: varchar(8000)
+		lineageTag: 606b0fb8-3661-4a02-874e-e38af274cb24
+		sourceLineageTag: tags
+		summarizeBy: none
+		sourceColumn: tags
+
+		annotation SummarizationSetBy = Automatic
+
 	partition reports = entity
 		mode: directLake
 		source
