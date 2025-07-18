@@ -10,59 +10,61 @@ Run the second code cell in the RunLoadTest notebook
 
 ## Instructions
 
-    Watch a video showing how to setup and run a load test using these Fabric Notebooks here : https://youtu.be/0rSTDeC75vw
+Watch a video showing how to setup and run a load test using these Fabric Notebooks [here](https://youtu.be/0rSTDeC75vw)
 
-    1. Get sample from here (https://learn.microsoft.com/en-us/power-bi/create-reports/sample-datasets#install-built-in-samples)
+1. **Get sample PBIX file from [here](https://learn.microsoft.com/en-us/power-bi/create-reports/sample-datasets#install-built-in-samples)**
+   - Or use your own report and semantic model
 
-    2. Upload sample Power BI PBIX file to target workspace
+1. **Upload sample Power BI PBIX file to target workspace**
 
-    3. Capture DAX Queries
-        a. Open and edit the report in Web Service
-        b. Download Power BI Report to local machine - use "A Copy of your report with a live connection to data online (.pbix)"
-        c. Open downloaded report in Power BI Desktop
-            i. Start Performance Analyzer
-            ii. Interact with the report to generate queries you'd like to include in load test (try to create variety)
-            iii. Export PowerBIPerformanceData.json file when done to be uploaded to Lakehouse
-            iv. Close Power BI Desktop
+1. **Capture DAX Queries**
+   - Open and edit the report in Web Service
+   - Download Power BI Report to local machine - use "A Copy of your report with a live connection to data online (.pbix)"
+   - Open downloaded report in Power BI Desktop
+        i. Start Performance Analyzer
+        ii. Interact with the report to generate queries you'd like to include in load test (try to create variety)
+        iii. Export PowerBIPerformanceData.json file when done to be uploaded to Lakehouse
+        iv. Close Power BI Desktop
 
-    4. Create Lakehouse to be used to store DAX queries for Load Test, Email Addresses (if using RLS) and log files.
-        a. Create a subfolder in Files section called "PerfScenarios/Queries"
-        b. Upload PowerBIPerformanceData.json file from step 3 to this subfolder
+1. **Create Lakehouse to be used to store DAX queries for Load Test, Email Addresses (if using RLS) and log files.**
+   - Create a subfolder in Files section called "PerfScenarios/Queries"
+   - Upload PowerBIPerformanceData.json file from step 3 to this subfolder
 
-    5. Upload two fabric notebooks to Fabric Workspace
-        a. Download two notebooks (RunLoadTest.ipynb and RunPerfScenario.ipynb) from https://github.com/microsoft/fabric-toolbox/tree/main/tools/FabricLoadTestTool
-        b. Import two notebooks to Fabric workspace
+1. **Upload two fabric notebooks to Fabric Workspace**
+   - Download two notebooks (RunLoadTest.ipynb and RunPerfScenario.ipynb) from https://github.com/microsoft/fabric-toolbox/tree/main/tools/FabricLoadTestTool
+   - Import two notebooks to Fabric workspace
 
-        or
+    or
 
-        c. Use Semantic Link Labs to install in a new pure python notebook add the following four lines of code to a code cell then run.
-        
-    %pip install -q --disable-pip-version-check semantic-link-labs
-    import sempy_labs as labs
-    labs.import_notebook_from_web(overwrite=True,notebook_name="RunLoadTest"        , url="https://raw.githubusercontent.com/microsoft/fabric-toolbox/main/tools/FabricLoadTestTool/RunLoadTest.ipynb")
-    labs.import_notebook_from_web(overwrite=True,notebook_name="RunPerfScenario"    , url="https://raw.githubusercontent.com/microsoft/fabric-toolbox/main/tools/FabricLoadTestTool/RunPerfScenario.ipynb")
-        
-        
-        d. Stop and close notebook
-        e. Delete notebook used for importing loadtest notebooks
+   - Use Semantic Link Labs to install in a new pure python notebook add the following four lines of code to a code cell then run.
+    
+```python        
+%pip install -q --disable-pip-version-check semantic-link-labs
+import sempy_labs as labs
+labs.import_notebook_from_web(overwrite=True,notebook_name="RunLoadTest"        , url="https://raw.githubusercontent.com/microsoft/fabric-toolbox/main/tools/FabricLoadTestTool/RunLoadTest.ipynb")
+labs.import_notebook_from_web(overwrite=True,notebook_name="RunPerfScenario"    , url="https://raw.githubusercontent.com/microsoft/fabric-toolbox/main/tools/FabricLoadTestTool/RunPerfScenario.ipynb")
+```        
+6.        
+   - Stop and close notebook
+   - Delete notebook used for importing loadtest notebooks
 
-    6. Open RunPerfScenario notebook and connect to Lakehouse created at step 4
-        a. Open Notebook
-        b. In Explorer Panel, on Items click ellipsis, then "Remove all Sources"
-        c. Click "Add data items" and choose existing Lakehouse created at step 4
-        d. Close notebook (no other changes required)
+7. **Open RunPerfScenario notebook and connect to Lakehouse created at step 4**
+   - Open Notebook
+   - In Explorer Panel, on Items click ellipsis, then "Remove all Sources" (if required)
+   - Click "Add data items" and choose existing Lakehouse created at step 4
+   - Save and close notebook (no other changes required)
 
-    7. Open Run Load Test notebook and connect it Lakehouse create at step 4
-        a. Open Notebook
-        b. In Explorer Panel, on Items click ellipsis, then "Remove all Sources"
-        c. Click "Add data items" and choose existing Lakehouse created at step 4
-        d. Close notebook (no other changes required)
-        e. Edit Load Test Parameters
-            i. Change Load Test Name to preferred name (line 13)
-            ii. Change Dataset name to name of semantic model to be tested e.g. "Customer Profitability Sample PBIX"
-            iii. Set correct workspace name e.g. "Fabric Load Testing Demo"
+8. **Open Run Load Test notebook and connect it Lakehouse create at step 4**
+   - Open Notebook
+   - In Explorer Panel, on Items click ellipsis, then "Remove all Sources" (if required)
+   - Click "Add data items" and choose existing Lakehouse created at step 4
+   - Edit Load Test Parameters
+        i. Change Load Test Name to preferred name (line 13)
+        ii. Change Dataset name to name of semantic model to be tested e.g. "Customer Profitability Sample PBIX"
+        iii. Set correct workspace name e.g. "Fabric Load Testing Demo"
 
-Adjust parameters and run
+1. **Adjust parameters and run**
+
 ## RLS
 If testing using RLS, ensure a list of valid UPN (email addresses) get added to the users variable in the RunLoadTest notebook.  
 
