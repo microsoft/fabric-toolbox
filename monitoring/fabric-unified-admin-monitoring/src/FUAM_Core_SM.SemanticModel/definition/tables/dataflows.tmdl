@@ -74,6 +74,16 @@ table dataflows
 
 		annotation SummarizationSetBy = Automatic
 
+	column tags
+		dataType: string
+		sourceProviderType: varchar(8000)
+		lineageTag: 897fe7c6-931f-462a-baad-d2205da05e0e
+		sourceLineageTag: tags
+		summarizeBy: none
+		sourceColumn: tags
+
+		annotation SummarizationSetBy = Automatic
+
 	partition dataflows = entity
 		mode: directLake
 		source

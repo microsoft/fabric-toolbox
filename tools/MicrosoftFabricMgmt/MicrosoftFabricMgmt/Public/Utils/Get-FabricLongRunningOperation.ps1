@@ -33,56 +33,62 @@ function Get-FabricLongRunningOperation {
         [string]$location,
 
         [Parameter(Mandatory = $false)]
-        [int]$retryAfter = 5
+        [int]$retryAfter = 5,
+
+        [Parameter(Mandatory = $false)]
+        [int]$timeoutInSeconds = 900
     )
 
-    # Step 1: Construct the API URL
-    if ($location) {
-        # Use the Location header to define the operationUrl
-        $apiEndpointUrl = $location
+    if (-not ($operationId -or $location)) {
+        throw "Either 'operationId' or 'location' parameter must be provided."
+    }
+
+    # Validate authentication token before proceeding.
+    Write-Message -Message "Validating authentication token..." -Level Debug
+    Test-TokenExpired
+    Write-Message -Message "Authentication token is valid." -Level Debug
+    
+    # Construct the API endpoint URI 
+    $apiEndpointURI = if ($operationId) {
+        "https://api.fabric.microsoft.com/v1/operations/{0}" -f $operationId
     }
     else {
-        $apiEndpointUrl = "https://api.fabric.microsoft.com/v1/operations/{0}" -f $operationId
+        $location 
     }
-    Write-Message -Message "API Endpoint: $apiEndpointUrl" -Level Debug
-    
+    Write-Message -Message "API Endpoint: $apiEndpointURI" -Level Debug
+
+    $startTime = Get-Date
+
     try {
         do {
-
-            # Step 2: Wait before the next request
-            if ($retryAfter) {
-                Start-Sleep -Seconds $retryAfter
-            }
-            else {
-                Start-Sleep -Seconds 5  # Default retry interval if no Retry-After header
+            # Check for timeout
+            if ((Get-Date) - $startTime -gt (New-TimeSpan -Seconds $timeoutInSeconds)) {
+                throw "Operation timed out after $timeoutInSeconds seconds."
             }
 
-            # Step 3: Make the API request
-            $response = Invoke-RestMethod `
-                -Headers $FabricConfig.FabricHeaders `
-                -Uri $apiEndpointUrl `
-                -Method Get `
-                -ErrorAction Stop `
-                -ResponseHeadersVariable responseHeader `
-                -StatusCodeVariable statusCode
+            # Wait before the next request
+            Start-Sleep -Seconds $retryAfter
 
-            # Step 3: Parse the response
-            $jsonOperation = $response | ConvertTo-Json
-            $operation = $jsonOperation | ConvertFrom-Json
+            # Make the API request
+            $apiParams = @{
+                BaseURI = $apiEndpointURI
+                Headers = $FabricConfig.FabricHeaders
+                Method = 'Get'
+            }
+            $operation = Invoke-FabricAPIRequest @apiParams
 
             # Log status for debugging
             Write-Message -Message "Operation Status: $($operation.status)" -Level Debug
 
-  
         } while ($operation.status -notin @("Succeeded", "Completed", "Failed"))
 
-        # Step 5: Return the operation result
+        # Return the operation result
         return $operation
     }
     catch {
-        # Step 6: Capture and log error details
+        # Capture and log error details
         $errorDetails = $_.Exception.Message
-        Write-Message -Message "An error occurred while checking the operation: $errorDetails" -Level Error
+        Write-Message -Message "An error occurred while checking the long running operation: $errorDetails" -Level Error
         throw
     }
 }

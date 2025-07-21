@@ -84,10 +84,6 @@ relationship a5df602a-2861-1b78-fce8-cc241fe904eb
 	fromColumn: capacity_refreshable_details.ItemId
 	toColumn: capacity_refreshables.ItemId
 
-relationship c35a8ffd-ba70-ec9f-36a0-343767ca7332
-	fromColumn: capacity_refreshable_summaries.ItemId
-	toColumn: capacity_refreshables.ItemId
-
 relationship f6af2a7f-1c78-c39c-4c3f-763b1521a981
 	crossFilteringBehavior: bothDirections
 	fromColumn: active_items.id
@@ -137,4 +133,8 @@ relationship b956c683-ac70-259b-91ff-e5c1aa685996
 relationship e36113f6-13d1-efdc-ff59-f87294063e1a
 	fromColumn: capacity_metrics_by_timepoint.TimePoint
 	toColumn: calendar_timepoints.TimePoint
+
+relationship cd3f95ba-eb03-17ac-c9e5-1a8d14c596ea
+	fromColumn: capacity_refreshable_summaries.ItemId
+	toColumn: capacity_refreshables.ItemId
 

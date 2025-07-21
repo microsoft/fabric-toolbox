@@ -28,7 +28,7 @@ function Start-FabricLakehouseTableMaintenance {
 
         [Parameter(Mandatory = $false)]
         [ValidateNotNullOrEmpty()]
-        [array]$ColumnsZOrderBy,
+        [string[]]$ColumnsZOrderBy,
 
         [Parameter(Mandatory = $false)]
         [ValidateNotNullOrEmpty()]
@@ -36,29 +36,26 @@ function Start-FabricLakehouseTableMaintenance {
         [string]$retentionPeriod,
 
         [Parameter(Mandatory = $false)]
-        [ValidateNotNullOrEmpty()]
-        [bool]$waitForCompletion = $false
-        
+        [switch]$WaitForCompletion        
     )
-
     try {
-        # Step 1: Ensure token validity
-        Write-Message -Message "Validating token..." -Level Debug
+        # Validate authentication token before proceeding.
+        Write-Message -Message "Validating authentication token..." -Level Debug
         Test-TokenExpired
-        Write-Message -Message "Token validation completed." -Level Debug
-        
-        
+        Write-Message -Message "Authentication token is valid." -Level Debug
+
+        # Validate input parameters
         $lakehouse = Get-FabricLakehouse -WorkspaceId $WorkspaceId -LakehouseId $LakehouseId   
         if ($lakehouse.properties.PSObject.Properties['defaultSchema'] -and -not $SchemaName) {
             Write-Error "The Lakehouse '$lakehouse.displayName' has schema enabled, but no schema name was provided. Please specify the 'SchemaName' parameter to proceed."
-            return
+            return $null
         }
-                
-        # Step 2: Construct the API URL
-        $apiEndpointUrl = "{0}/workspaces/{1}/lakehouses/{2}/jobs/instances?jobType={3}" -f $FabricConfig.BaseUrl, $WorkspaceId , $LakehouseId, $JobType
-        Write-Message -Message "API Endpoint: $apiEndpointUrl" -Level Debug
+        
+        # Construct the API endpoint URI 
+        $apiEndpointURI = "{0}/workspaces/{1}/lakehouses/{2}/jobs/instances?jobType={3}" -f $FabricConfig.BaseUrl, $WorkspaceId , $LakehouseId, $JobType
+        Write-Message -Message "API Endpoint: $apiEndpointURI" -Level Debug
 
-        # Step 3: Construct the request body
+        # Construct the request body
         $body = @{
             executionData = @{
                 tableName        = $TableName
@@ -68,24 +65,34 @@ function Start-FabricLakehouseTableMaintenance {
         if ($lakehouse.properties.PSObject.Properties['defaultSchema'] -and $SchemaName) {
             $body.executionData.schemaName = $SchemaName
         }
-
         if ($IsVOrder) {
             $body.executionData.optimizeSettings.vOrder = $IsVOrder
         }
+       
 
-      if ($ColumnsZOrderBy) {
-        # Ensure $ColumnsZOrderBy is an array
-        if (-not ($ColumnsZOrderBy -is [array])) {
-            $ColumnsZOrderBy = $ColumnsZOrderBy -split ","
+        if ($ColumnsZOrderBy) {
+            Write-Message -Message "Original ColumnsZOrderBy input: $ColumnsZOrderBy" -Level Debug
+
+            # If it's a single string like "id,nome", split it into array
+            if ($ColumnsZOrderBy.Count -eq 1 -and $ColumnsZOrderBy[0] -is [string] -and $ColumnsZOrderBy[0] -match ",") {
+                Write-Message -Message "Detected comma-separated string in ColumnsZOrderBy. Splitting it..." -Level Debug
+                $ColumnsZOrderBy = $ColumnsZOrderBy[0] -split "\s*,\s*"
+            }
+
+            # Ensure values are trimmed and valid
+            $ColumnsZOrderBy = $ColumnsZOrderBy | ForEach-Object { $_.ToString().Trim() } | Where-Object { $_ }
+
+            if ($ColumnsZOrderBy.Count -gt 0) {
+                $body.executionData.optimizeSettings.zOrderBy = $ColumnsZOrderBy
+                Write-Message -Message "Final ColumnsZOrderBy: $($ColumnsZOrderBy -join ', ')" -Level Debug
+            }
+            else {
+                Write-Message -Message "ColumnsZOrderBy was provided but resulted in an empty array after processing." -Level Warning
+            }
         }
-        # Add it to the optimizeSettings in the request body
-        $body.executionData.optimizeSettings.zOrderBy = $ColumnsZOrderBy
-    }
-    
 
-
+       
         if ($retentionPeriod) {
-
             if (-not $body.executionData.PSObject.Properties['vacuumSettings']) {
                 $body.executionData.vacuumSettings = @{
                     retentionPeriod = @()
@@ -94,66 +101,37 @@ function Start-FabricLakehouseTableMaintenance {
             $body.executionData.vacuumSettings.retentionPeriod = $retentionPeriod
     
         }
-            
+
+        # Convert the body to JSON
         $bodyJson = $body | ConvertTo-Json -Depth 10
         Write-Message -Message "Request Body: $bodyJson" -Level Debug
 
-        # Step 4: Make the API request
-        $response = Invoke-RestMethod `
-            -Headers $FabricConfig.FabricHeaders `
-            -Uri $apiEndpointUrl `
-            -Method Post `
-            -Body $bodyJson `
-            -ContentType "application/json" `
-            -ErrorAction Stop `
-            -SkipHttpErrorCheck `
-            -ResponseHeadersVariable "responseHeader" `
-            -StatusCodeVariable "statusCode"
-
-        Write-Message -Message "Response Code: $statusCode" -Level Debug    
-        # Step 5: Handle and log the response
-        switch ($statusCode) {
-            201 {
-                Write-Message -Message "Table maintenance job successfully initiated for Lakehouse '$lakehouse.displayName'." -Level Info
-                return $response
-            }
-            202 {
-                Write-Message -Message "Table maintenance job accepted and is now running in the background. Job execution is in progress." -Level Info
-                [string]$operationId = $responseHeader["x-ms-operation-id"]
-                [string]$location = $responseHeader["Location"]
-                [string]$retryAfter = $responseHeader["Retry-After"] 
-
-                Write-Message -Message "Operation ID: '$operationId'" -Level Debug
-                Write-Message -Message "Location: '$location'" -Level Debug
-                Write-Message -Message "Retry-After: '$retryAfter'" -Level Debug
-               
-                if ($waitForCompletion -eq $true) {
-                    Write-Message -Message "Getting Long Running Operation status" -Level Debug               
-                    $operationStatus = Get-FabricLongRunningOperation -operationId $operationId -location $location -retryAfter $retryAfter
-                    Write-Message -Message "Long Running Operation status: $operationStatus" -Level Debug
-                    return $operationStatus
-                }
-                else {
-                    Write-Message -Message "The operation is running asynchronously." -Level Info
-                    Write-Message -Message "Use the returned details to check the operation status." -Level Info
-                    Write-Message -Message "To wait for the operation to complete, set the 'waitForCompletion' parameter to true." -Level Info  
-                    $operationDetails = [PSCustomObject]@{
-                        OperationId = $operationId
-                        Location    = $location
-                        RetryAfter  = $retryAfter
-                    }
-                    return $operationDetails
-                }
-            }
-            default {
-                Write-Message -Message "Unexpected response code: $statusCode" -Level Error
-                Write-Message -Message "Error details: $($response.message)" -Level Error
-                throw "API request failed with status code $statusCode."
-            }
+        # Make the API request
+        $apiParams = @{
+            BaseURI = $apiEndpointURI
+            Headers = $FabricConfig.FabricHeaders
+            Method  = 'Post'
+            Body    = $bodyJson
         }
+        
+        if ($WaitForCompletion.IsPresent) {
+            $apiParams.WaitForCompletion = $true
+        }
+        $response = Invoke-FabricAPIRequest @apiParams  
+      
+        if ($WaitForCompletion) {
+            Write-Message -Message "Table maintenance job for Lakehouse '$($lakehouse.displayName)' has completed." -Level Info
+            Write-Message -Message "Job details: $($response | ConvertTo-Json -Depth 5)" -Level Debug
+        }
+        else {
+            Write-Message -Message "Table maintenance job for Lakehouse '$($lakehouse.displayName)' has been started and is running asynchronously." -Level Info
+            Write-Message -Message "You can monitor the job status using the job ID from the response." -Level Debug
+        }
+        # Return the API response
+        return $response
     }
     catch {
-        # Step 6: Handle and log errors
+        # Capture and log error details
         $errorDetails = $_.Exception.Message
         Write-Message -Message "Failed to start table maintenance job. Error: $errorDetails" -Level Error
     }

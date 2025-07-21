@@ -1,6 +1,12 @@
 <#
 .SYNOPSIS
-Unassigns a Fabric workspace from its capacity.
+Unassigns a Fabric worksp        # Make the API request
+        $apiParams = @{
+            BaseURI = $apiEndpointURI
+            Headers = $FabricConfig.FabricHeaders
+            Method = 'Delete'
+        }
+        $response = Invoke-FabricAPIRequest @apiParamsfrom its capacity.
 
 .DESCRIPTION
 The `Unassign-FabricWorkspaceCapacity` function sends a POST request to unassign a workspace from its assigned capacity.
@@ -28,39 +34,27 @@ function Unassign-FabricWorkspaceCapacity {
         [string]$WorkspaceId
     )
     try {
-        # Step 1: Ensure token validity
-        Write-Message -Message "Validating token..." -Level Debug
+        # Validate authentication token before proceeding.
+        Write-Message -Message "Validating authentication token..." -Level Debug
         Test-TokenExpired
-        Write-Message -Message "Token validation completed." -Level Debug
+        Write-Message -Message "Authentication token is valid." -Level Debug
 
-        # Step 2: Construct the API URL
-        $apiEndpointUrl = "{0}/workspaces/{1}/unassignFromCapacity" -f $FabricConfig.BaseUrl, $WorkspaceId
-        Write-Message -Message "API Endpoint: $apiEndpointUrl" -Level Message
+        # Construct the API endpoint URI
+        $apiEndpointURI = "{0}/workspaces/{1}/unassignFromCapacity" -f $FabricConfig.BaseUrl, $WorkspaceId
+        Write-Message -Message "API Endpoint: $apiEndpointURI" -Level Debug
 
-        # Step 3: Make the API request
-        $response = Invoke-RestMethod `
+        # Make the API request
+        $response = Invoke-FabricAPIRequest `
+            -BaseURI $apiEndpointURI `
             -Headers $FabricConfig.FabricHeaders `
-            -Uri $apiEndpointUrl `
-            -Method Post `
-            -ContentType "application/json" `
-            -ErrorAction Stop `
-            -SkipHttpErrorCheck `
-            -ResponseHeadersVariable "responseHeader" `
-            -StatusCodeVariable "statusCode"
+            -Method Post
 
-
-        # Step 4: Validate the response code
-        if ($statusCode -ne 202) {
-            Write-Message -Message "Unexpected response code: $statusCode from the API." -Level Error
-            Write-Message -Message "Error: $($response.message)" -Level Error
-            Write-Message "Error Code: $($response.errorCode)" -Level Error
-            return $null
-        }
-
+        # Return the API response    
         Write-Message -Message "Workspace capacity has been successfully unassigned from workspace '$WorkspaceId'." -Level Info         
+        return $response
     }
     catch {
-        # Step 5: Capture and log error details
+        # Capture and log error details
         $errorDetails = $_.Exception.Message
         Write-Message -Message "Failed to unassign workspace from capacity. Error: $errorDetails" -Level Error
     }

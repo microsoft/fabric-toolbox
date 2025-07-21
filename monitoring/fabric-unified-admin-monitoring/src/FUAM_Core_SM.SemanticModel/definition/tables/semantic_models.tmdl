@@ -167,6 +167,16 @@ table semantic_models
 
 		annotation SummarizationSetBy = Automatic
 
+	column tags
+		dataType: string
+		sourceProviderType: varchar(8000)
+		lineageTag: 1ad8a7f2-6183-43d0-a3b8-78071c0f5213
+		sourceLineageTag: tags
+		summarizeBy: none
+		sourceColumn: tags
+
+		annotation SummarizationSetBy = Automatic
+
 	partition semantic_models = entity
 		mode: directLake
 		source

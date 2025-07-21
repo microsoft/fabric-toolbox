@@ -36,16 +36,16 @@ function Assign-FabricDomainWorkspaceByCapacity {
     )
 
     try {
-        # Step 1: Ensure token validity
-        Write-Message -Message "Validating token..." -Level Debug
+        # Validate authentication token before proceeding.
+        Write-Message -Message "Validating authentication token..." -Level Debug
         Test-TokenExpired
-        Write-Message -Message "Token validation completed." -Level Debug
-
-        # Step 2: Construct the API URL
-        $apiEndpointUrl = "{0}/admin/domains/{1}/assignWorkspacesByCapacities" -f $FabricConfig.BaseUrl, $DomainId
-        Write-Message -Message "API Endpoint: $apiEndpointUrl" -Level Debug
+        Write-Message -Message "Authentication token is valid." -Level Debug
+                
+        # Construct the API endpoint URI
+        $apiEndpointURI = "{0}/admin/domains/{1}/assignWorkspacesByCapacities" -f $FabricConfig.BaseUrl, $DomainId
+        Write-Message -Message "API Endpoint: $apiEndpointURI" -Level Debug
         
-        # Step 3: Construct the request body
+        # Construct the request body
         $body = @{
             capacitiesIds = $CapacitiesIds
         }
@@ -54,59 +54,21 @@ function Assign-FabricDomainWorkspaceByCapacity {
         $bodyJson = $body | ConvertTo-Json -Depth 2
         Write-Message -Message "Request Body: $bodyJson" -Level Debug
 
-        # Step 4: Make the API request
-        $response = Invoke-RestMethod `
-            -Headers $FabricConfig.FabricHeaders `
-            -Uri $apiEndpointUrl `
-            -Method Post `
-            -Body $bodyJson `
-            -ContentType "application/json" `
-            -ErrorAction Stop `
-            -SkipHttpErrorCheck `
-            -ResponseHeadersVariable "responseHeader" `
-            -StatusCodeVariable "statusCode"
-
-        # Step 5: Handle and log the response
-        switch ($statusCode) {
-            201 {
-                Write-Message -Message "Assigning domain workspaces by capacity completed successfully!" -Level Info
-                return $response
-            }
-            202 {
-                Write-Message -Message "Assigning domain workspaces by capacity is in progress for domain '$DomainId'." -Level Info
-                [string]$operationId = $responseHeader["x-ms-operation-id"]
-
-                [string]$operationId = $responseHeader["x-ms-operation-id"]
-                [string]$location = $responseHeader["Location"]
-                [string]$retryAfter = $responseHeader["Retry-After"] 
-
-                Write-Message -Message "Operation ID: '$operationId'" -Level Debug
-                Write-Message -Message "Location: '$location'" -Level Debug
-                Write-Message -Message "Retry-After: '$retryAfter'" -Level Debug
-                Write-Message -Message "Getting Long Running Operation status" -Level Debug
-               
-                $operationStatus = Get-FabricLongRunningOperation -operationId $operationId
-                Write-Message -Message "Long Running Operation status: $operationStatus" -Level Debug
-                # Handle operation result
-                if ($operationStatus.status -eq "Succeeded") {
-                    Write-Message -Message "Operation Succeeded" -Level Debug
-                    return $operationStatus
-                }
-                else {
-                    Write-Message -Message "Operation failed. Status: $($operationStatus)" -Level Debug
-                    Write-Message -Message "Operation failed. Status: $($operationStatus)" -Level Error
-                    return $operationStatus
-                }  
-            }
-            default {
-                Write-Message -Message "Unexpected response code: $statusCode" -Level Error
-                Write-Message -Message "Error details: $($response.message)" -Level Error
-                throw "API request failed with status code $statusCode."
-            }
+        # Make the API request
+        $apiParams = @{
+            BaseURI = $apiEndpointURI
+            Headers = $FabricConfig.FabricHeaders
+            Method = 'Post'
+            Body = $bodyJson
         }
+        $response = Invoke-FabricAPIRequest @apiParams
+
+        # Return the API response
+        Write-Message -Message "Assigning domain workspaces by capacity completed successfully!" -Level Info
+        return $response
     }
     catch {
-        # Step 6: Handle and log errors
+        # Capture and log error details
         $errorDetails = $_.Exception.Message
         Write-Message -Message "Error occurred while assigning workspaces by capacity for domain '$DomainId'. Details: $errorDetails" -Level Error
     }

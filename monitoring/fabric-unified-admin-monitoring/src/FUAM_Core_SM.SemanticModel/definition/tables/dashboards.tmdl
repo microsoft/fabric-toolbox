@@ -42,6 +42,16 @@ table dashboards
 
 		annotation SummarizationSetBy = Automatic
 
+	column tags
+		dataType: string
+		sourceProviderType: varchar(8000)
+		lineageTag: bcb5c8a8-1b31-419d-aa0f-9b0603391ff1
+		sourceLineageTag: tags
+		summarizeBy: none
+		sourceColumn: tags
+
+		annotation SummarizationSetBy = Automatic
+
 	partition dashboards = entity
 		mode: directLake
 		source

@@ -47,7 +47,6 @@ function Write-Message {
         [Parameter()]
         [string]$LogFile
     )
-
     process {
         try {
             # Format timestamp
@@ -60,8 +59,8 @@ function Write-Message {
             switch ($Level) {
                 "Message" { Write-Host $logMessage -ForegroundColor White }
                 "Info" { Write-Host $logMessage -ForegroundColor Green }
-                "Error" { Write-Host $logMessage -ForegroundColor Red }
-                "Warning" { Write-Host $logMessage -ForegroundColor Yellow } 
+                "Error" { Write-Error $logMessage -ForegroundColor Red }
+                "Warning" { Write-Warning $logMessage -ForegroundColor Yellow } 
                 "Critical" { Write-Host $logMessage -ForegroundColor Red }
                 "Verbose" { Write-Verbose $logMessage }
                 "Debug" { Write-Debug $logMessage }
