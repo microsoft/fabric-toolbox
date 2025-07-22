@@ -1,6 +1,35 @@
 
+# 📦 Changelog – FUAM Release 2025.7.2
+
+Date: 2025-07-22
+
+## Important:
+We've updated the "Deploy_FUAM" notebook logic in Release 2025.7.1. 
+**Please download the latest version of the notebook, before you update FUAM in your environment.**
+
+### How to Update?
+Follow the [documented steps](https://github.com/microsoft/fabric-toolbox/blob/main/monitoring/fabric-unified-admin-monitoring/how-to/How_to_update_FUAM.md).
+
+
+## 🛠 Fixes
+
+- **Notebook Update**  
+    - An issue has been updated in notebook `01_Transfer_CapacityMetricData_Timepoints_Unit` 
+    - This fix addresses the following reported issue [#183](https://github.com/microsoft/fabric-toolbox/issues/183) by @alexisjensennz
+
+
+---
+
+
+We’re excited to see such strong engagement from the community and truly appreciate all the valuable feedback. With this update, we’ve made FUAM more robust and laid the groundwork for new features that were announced in the initial release. More versions are already in the works - stay tuned!
+
+---
+
+
+
 # 📦 Changelog – FUAM Release 2025.7.1
 
+Date: 2025-07-18
 
 ## Important:
 We've updated the "Deploy_FUAM" notebook logic. 
