@@ -16,6 +16,7 @@ Follow the [documented steps](https://github.com/microsoft/fabric-toolbox/blob/m
 - **Notebook Update**  
     - An issue has been updated in notebook `01_Transfer_CapacityMetricData_Timepoints_Unit` 
     - This fix addresses the following reported issue [#183](https://github.com/microsoft/fabric-toolbox/issues/183) by @alexisjensennz
+    - In case you already executed the main pipeline to fetch data with version 2025.7.1, please make sure you change the parameter of metrics_days_in_scope to a higher value in order to make sure the wrong data gets overwritten
 
 
 ---
