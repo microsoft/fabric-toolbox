@@ -9,7 +9,7 @@ The notebook uses some simple code to extract the Excel document and the [OpenMi
 
 1. This notebook scans a folder in the Onelake, 
 1. It finds all the Excel files.
-1. It extracts each notebook to a parquet file
+1. It extracts each sheet to a parquet file
 1. If needed it will create the Mirrored table.
 1. It uploads the parquet file to the Mirrored table.
 
