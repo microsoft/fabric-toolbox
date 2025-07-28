@@ -58,6 +58,7 @@ SELECT @sql = @sql + 'CREATE TABLE ['  + @schema + '].[' + TABLE_NAME + '] (' + 
         END +
         CASE
             WHEN DATA_TYPE IN ('float', 'money', 'text', 'ntext') THEN ''
+            WHEN DATA_TYPE = 'nvarchar' AND CHARACTER_MAXIMUM_LENGTH = -1 THEN '(MAX)'
             WHEN CHARACTER_MAXIMUM_LENGTH IS NOT NULL AND DATA_TYPE NOT IN ('bigint', 'datetime', 'date', 'time', 'datetime2', 'smalldatetime') THEN '(' + CAST(CHARACTER_MAXIMUM_LENGTH AS VARCHAR) + ')'
             WHEN NUMERIC_PRECISION IS NOT NULL AND DATA_TYPE NOT IN ('bigint') THEN '(' + CAST(NUMERIC_PRECISION AS VARCHAR) + ',' + CAST(NUMERIC_SCALE AS VARCHAR) + ')'
             ELSE ''
