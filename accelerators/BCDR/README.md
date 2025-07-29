@@ -10,7 +10,7 @@ When the DR setting is enabled at capacity level, all OneLake data (lakehouse an
 In a DR scenario, Fabric items (such as lakehouse and warehouse definitions) and associated data will need to be recovered into new workspaces in the secondary region. The initial goal of the notebooks in this repository was to automate this recovery process but their functionality can be used for backup purposes also if run on a periodic basis. 
 The following images represents the conceptual state of your Fabric deployment before and after a DR scenario when using the notebooks in this repo.
 <div>
-<img src="./media/beforeDR.png?raw=true" width="650"/>&nbsp;<img src="./media/afterDR2.png?raw=true" width="650"/>
+<img src="../media/beforeDR.png" width="650"/>&nbsp;<img src="../media/afterDR2.png" width="650"/>
 </div>
 
 ## Prerequisites for testing the scripts in a non-DR scenario
