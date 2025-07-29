@@ -23,7 +23,7 @@ Currently the notebooks only support recovering workspaces [git supported items]
 The notebooks do not recreate capacities, shortcuts, apply permissions and roles, setup data gateways (etc) in the secondary. Currently lakehouse schemas are not supported. There is a a long list of [items on the backlog](https://dev.azure.com/nihurt/FabricBCDR/_workitems/recentlyupdated/). 
 
 ## Instructions
-Please review the guidance in the associated pdf
+Please review the guidance in the [associated pdf](./Fabric%20BCDR%20Accelerator%20User%20Guide.pdf)
 
 ## Contributing
 
