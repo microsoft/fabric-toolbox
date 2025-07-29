@@ -2,7 +2,21 @@
 
 This set of notebooks demonstrates an automated end-to-end business continuity disaster recovery (BCDR) process to recover supported git items, lakehouses and warehouses data.
 
-<b>The contents of this repository should be used for demonstration purposes only.</b>
+The accelerator consists of three notebooks, one which is run in the primary region (01 – Run in Primary) and another which is run in the DR/secondary region (02 – Run in DR). The third notebook (workspaceutils) contains utility functions utilised in both notebooks.
+
+<b>01 – Run in Primary.ipynb</b>
+
+Gathers metadata about the current primary environment and stores this as tables in OneLake. This metadata forms part of the replicated DR data and will be recovered in the DR environment in subsequent stages.
+
+<b>02 – Run in DR.ipynb</b>
+
+Performs the recovery steps such as recreating workspaces, connecting them to Git, syncing and restoring items (lakehouses, warehouses, pipelines etc) and applying workspaces roles.
+
+<b>workspaceutils.ipynb</b>
+
+A utility notebook with many useful supporting functions such as extracting and storing metadata, copying data, and more, which is included (using %run) in the other two notebooks to reduce the amount of code in each main notebook and for code re-use.
+
+<b>Note the contents of this repository should be used for demonstration purposes only.</b>
 
 ## Overview
 Please read the disaster recovery guidance found in <a href="https://learn.microsoft.com/en-us/fabric/security/experience-specific-guidance">the documentation</a> to obtain a general understanding of how to recover lakehouse and warehouse data for BCDR purposes.
