@@ -4,6 +4,22 @@ All notable changes to the MicrosoftFabricMgmt project will be documented in thi
 
 ## [Unreleased]
 
+### Added
+- New Managed Private Endpoints functions
+  - Get-FabricManagedPrivateEndpoint
+  - New-FabricManagedPrivateEndpoint
+  - Remove-FabricManagedPrivateEndpoint
+- New OneLake Shortcut functions
+  - Get-FabricOneLakeShortcut
+  - New-FabricOneLakeShortcut
+  - Remove-FabricOneLakeShortcut
+  - Reset-FabricOneLakeShortcutCache
+
+### Fixed
+- Get-FabricWarehouse: Incorrect variable name used for input validation
+- New-FabricWarehouse: Remove the line breaks between parameters to enhance readability
+- New-FabricFolder: Make the folder name parameter mandatory
+- 
 ## [0.5.1] – 2025-07-30
 
 ### Added
@@ -15,7 +31,7 @@ All notable changes to the MicrosoftFabricMgmt project will be documented in thi
   - Update-FabricFolder
 
 ### Fixed
-    *Remove the -ForegroundColor parameter for Write-Error and Write-Warning in the Write-Message function*
+    - Remove the -ForegroundColor parameter for Write-Error and Write-Warning in the Write-Message function
 
 ## [0.5.0] – 2025-07-19
 
