@@ -41,7 +41,7 @@ function Write-Message {
         [string]$Message,
 
         [Parameter()]
-        [ValidateSet("Message","Info", "Error", "Warning","Critical", "Verbose", "Debug", IgnoreCase = $true)]
+        [ValidateSet("Message", "Info", "Error", "Warning", "Critical", "Verbose", "Debug", IgnoreCase = $true)]
         [string]$Level = "Info",
 
         [Parameter()]
@@ -59,8 +59,8 @@ function Write-Message {
             switch ($Level) {
                 "Message" { Write-Host $logMessage -ForegroundColor White }
                 "Info" { Write-Host $logMessage -ForegroundColor Green }
-                "Error" { Write-Error $logMessage -ForegroundColor Red }
-                "Warning" { Write-Warning $logMessage -ForegroundColor Yellow } 
+                "Error" { Write-Error $logMessage }
+                "Warning" { Write-Warning $logMessage } 
                 "Critical" { Write-Host $logMessage -ForegroundColor Red }
                 "Verbose" { Write-Verbose $logMessage }
                 "Debug" { Write-Debug $logMessage }
@@ -71,12 +71,14 @@ function Write-Message {
             if ($LogFile) {
                 try {
                     Add-Content -Path $LogFile -Value $logMessage -Encoding UTF8
-                } catch {
+                }
+                catch {
                     # Catch and log any errors when writing to file
                     Write-Host "[ERROR] Failed to write to log file '$LogFile': $_" -ForegroundColor Red
                 }
             }
-        } catch {
+        }
+        catch {
             Write-Host "[ERROR] An unexpected error occurred: $_" -ForegroundColor Red
         }
     }
