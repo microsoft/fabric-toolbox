@@ -49,10 +49,10 @@
     (Optional) The bucket name, required for s3Compatible target.
 
 .EXAMPLE
-    New-FabricOneLakeShortcut -WorkspaceId "workspace-12345" -ItemId "item-67890" -Target "adlsGen2" -ConnectionId "conn-abc" -Location "container" -SubPath "folder"
+    New-FabricOneLakeShortcut -WorkspaceId "workspace-12345" -ItemId "item-67890" -ShortcutName "shortcut1" -Target "adlsGen2" -ConnectionId "conn-abc" -Location "container" -SubPath "folder"
 
 .EXAMPLE
-    New-FabricOneLakeShortcut -WorkspaceId "workspace-12345" -ItemId "item-67890" -Target "dataverse" -ConnectionId "conn-xyz" -DeltaLakeFolder "folder" -EnvironmentDomain "domain" -TableName "table"
+    New-FabricOneLakeShortcut -WorkspaceId "workspace-12345" -ItemId "item-67890" -ShortcutName "shortcut2" -Target "dataverse" -ConnectionId "conn-xyz" -DeltaLakeFolder "folder" -EnvironmentDomain "domain" -TableName "table"
 
 .NOTES
     - Requires `$FabricConfig` global configuration, including `BaseUrl` and `FabricHeaders`.
@@ -75,7 +75,7 @@ function New-FabricOneLakeShortcut {
         [ValidateNotNullOrEmpty()]
         [string]$ShortcutName,
 
-        [Parameter(Mandatory = $false)]
+        [Parameter(Mandatory = $true)]
         [ValidateNotNullOrEmpty()]
         [string]$Path,
 
