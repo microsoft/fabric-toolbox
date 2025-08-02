@@ -31,10 +31,10 @@ Co-pilot in VS Code has far fewer limitations than some MCP Clients and can also
 git clone https://github.com/microsoft/fabric-toolbox.git
 cd fabric-toolbox/tools/SemanticModelMCPServer
 
-or
+or for the dev version
 
-git clone --branch Semantic-Model-MCP-Server https://github.com/microsoft/fabric-toolbox.git
-cd fabric-toolbox/tools/SemanticModelMCPServer
+git clone --branch Semantic-Model-MCP-Server https://github.com/philseamark/fabric-toolbox.git
+setup.bat
 
 ```
 ###
