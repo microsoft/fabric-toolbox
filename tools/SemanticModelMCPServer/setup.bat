@@ -1,3 +1,4 @@
+@cls
 @echo "This script sets up the Semantic Model MCP Server environment."
 
 @echo "Step 1: Create virtual environment..."

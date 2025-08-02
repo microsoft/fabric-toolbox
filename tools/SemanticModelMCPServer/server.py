@@ -44,6 +44,18 @@ mcp = FastMCP(
     - Make sure you use the correct dataset name, not the dataset ID.
     - Provide the DAX query, the workspace name, and the dataset name to get results.
     - The results will be returned in JSON format for easy consumption.
+
+    ## Updating TMDL Definition:
+    - The `update_tmdl_definition` tool allows you to update the TMDL definition for a specified dataset in a Power BI workspace.
+    - Provide the workspace name, dataset name, and the new TMDL definition as a string.
+    - The tool will return a success message or an error if the update fails.
+    - Use this tool to modify the structure of your Power BI models dynamically.
+    - eg. to add measures, calculated columns, or modify relationships in the model.
+
+    ## Example TMDL Definition:
+    - The TMDL definition should be a valid serialized string representing the model structure.
+    - It can include tables, columns, measures, relationships, and other model elements.
+    - Ensure the TMDL definition is correctly formatted to avoid errors during updates.
     """
 )
 
@@ -112,6 +124,43 @@ def execute_dax_query(workspace_name:str, dataset_name: str, dax_query: str, dat
     connection.Close()
     return results
 
+
+@mcp.tool
+def update_tmdl_definition(workspace_name: str, dataset_name: str, tmdl_definition: str) -> str:
+    """Updates the TMDL definition for an Analysis Services Model.
+    This tool connects to the specified Power BI workspace and dataset name, updates the TMDL definition,
+    and returns a success message or an error if the update fails.
+    The function connects to the Power BI service using an access token, deserializes the TMDL definition,
+    updates the model, and returns the result.
+    Note: The TMDL definition should be a valid serialized TMDL string.
+    """
+    script_dir = os.path.dirname(os.path.abspath(__file__))
+    dotnet_dir = os.path.join(script_dir, "dotnet")
+    print(f"Using .NET assemblies from: {dotnet_dir}")
+    clr.AddReference(os.path.join(dotnet_dir, "Microsoft.AnalysisServices.Tabular.dll"))
+    clr.AddReference(os.path.join(dotnet_dir, "Microsoft.Identity.Client.dll"))
+    clr.AddReference(os.path.join(dotnet_dir, "Microsoft.IdentityModel.Abstractions.dll"))
+
+    from Microsoft.AnalysisServices.Tabular import Server, Model, Database, TmdlSerializer  # type: ignore
+    access_token = get_access_token()
+    if not access_token:
+        return "Error: No valid access token available"
+    workspace_name_encoded = urllib.parse.quote(workspace_name)
+    connection_string = f"Data Source=powerbi://api.powerbi.com/v1.0/myorg/{workspace_name_encoded};Password={access_token}"
+    server: Server = Server()
+    server.Connect(connection_string)
+    database: Database = server.Databases.GetByName(dataset_name)
+    if not database:
+        return f"Error: Dataset '{dataset_name}' not found in workspace '{workspace_name}'."
+    try:
+        tmdl_model = TmdlSerializer.Deserialize(tmdl_definition)
+        database.Model = tmdl_model
+        server.Update(database, "Update TMDL definition")
+        return f"TMDL definition updated successfully for dataset '{dataset_name}' in workspace '{workspace_name}'."
+    except Exception as e:
+        return f"Error updating TMDL definition: {str(e)}"
+    finally:
+        server.Disconnect()
 
 
 @mcp.tool
