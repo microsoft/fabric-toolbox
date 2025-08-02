@@ -150,6 +150,132 @@ The server uses Azure Active Directory authentication. Ensure you have:
 #semantic_model_mcp_server run a DAX query sum quantity by year
 ```
 
+## Getting Started: Chat Prompt Examples
+
+Once you have the MCP server running in VS Code, you can start chatting with your semantic models using these example prompts. Simply type these into your VS Code chat and the AI will use the MCP server to interact with your data:
+
+### 🔍 **Discovery & Exploration**
+
+**"What workspaces do I have access to?"**
+```
+#semantic_model_mcp_server list all my Power BI workspaces
+```
+
+**"Show me all the datasets in my main workspace"**
+```
+#semantic_model_mcp_server list datasets in [Your Workspace Name]
+```
+
+**"What's the structure of my sales model?"**
+```
+#semantic_model_mcp_server get the TMDL definition for [Workspace Name] and [Dataset Name]
+```
+
+### 📊 **Basic Data Analysis**
+
+**"How many rows are in my fact table?"**
+```
+#semantic_model_mcp_server run a DAX query to count rows in the fact table
+```
+
+**"What are my top product categories by sales?"**
+```
+#semantic_model_mcp_server run a DAX query to show sales amount by product category, ordered by highest sales
+```
+
+**"Show me sales trends by year"**
+```
+#semantic_model_mcp_server run a DAX query to sum sales amount by year
+```
+
+### 🎯 **Specific Business Questions**
+
+**"What was our best performing month last year?"**
+```
+#semantic_model_mcp_server run a DAX query to find the month with highest sales in 2023
+```
+
+**"Which customers bought the most products?"**
+```
+#semantic_model_mcp_server run a DAX query to show top 10 customers by total quantity purchased
+```
+
+**"What's our profit margin by product category?"**
+```
+#semantic_model_mcp_server run a DAX query to calculate profit margin percentage by product category
+```
+
+### 🔬 **Advanced Analytics**
+
+**"Show me year-over-year growth for each product category"**
+```
+#semantic_model_mcp_server create a DAX query that calculates YoY growth percentage for sales by category
+```
+
+**"What's the average order value by customer segment?"**
+```
+#semantic_model_mcp_server run a DAX query to calculate average order value grouped by customer segment
+```
+
+**"Find products that haven't sold in the last 6 months"**
+```
+#semantic_model_mcp_server write a DAX query to identify products with no sales in the last 180 days
+```
+
+### 🛠️ **Model Optimization**
+
+**"What measures are defined in my model?"**
+```
+#semantic_model_mcp_server get the TMDL definition and show me all the measures
+```
+
+**"Are there any relationships I should be aware of?"**
+```
+#semantic_model_mcp_server show me the relationships in my semantic model
+```
+
+**"What tables are hidden in my model?"**
+```
+#semantic_model_mcp_server analyze the TMDL definition and list any hidden tables or columns
+```
+
+### 💡 **Tips for Better Prompts**
+
+1. **Be Specific**: Include workspace names and dataset names when you know them
+2. **Use Natural Language**: The AI can translate your business questions into DAX queries
+3. **Ask for Explanations**: Add "and explain the results" to understand what the data means
+4. **Request Visualizations**: Ask "create a summary table" or "format the results nicely"
+5. **Build on Previous Queries**: Reference earlier results to dive deeper into insights
+
+### 🚀 **Getting Started Workflow**
+
+1. **Start with Discovery**: `"What workspaces do I have access to?"`
+2. **Explore Your Data**: `"Show me the structure of my [dataset name] model"`
+3. **Ask Simple Questions**: `"How many rows of data do I have?"`
+4. **Progress to Business Questions**: `"What are my top selling products?"`
+5. **Dive into Analysis**: `"Show me trends and patterns in my sales data"`
+
+### 📝 **Example Full Conversation**
+
+```
+You: "What workspaces do I have access to?"
+AI: [Lists your workspaces using the MCP server]
+
+You: "Show me the datasets in my 'Sales Analytics' workspace"
+AI: [Lists datasets in that workspace]
+
+You: "Get the structure of my 'Sales Model' dataset"
+AI: [Retrieves TMDL definition showing tables, measures, relationships]
+
+You: "Now run a query to show me sales by product category"
+AI: [Executes DAX query and shows results]
+
+You: "That's interesting - can you show me the trend for the 'Electronics' category over time?"
+AI: [Creates and runs a more specific DAX query for Electronics trends]
+```
+
+Remember: The AI assistant will use the MCP server tools automatically when you mention data analysis, DAX queries, or semantic model exploration in your prompts!
+
 ## Model Context Protocol (MCP)
 
 This server implements the Model Context Protocol, allowing AI assistants and other tools to:

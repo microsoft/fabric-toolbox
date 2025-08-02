@@ -4,7 +4,7 @@
 python -m venv .venv
 
 @echo "Step 2: Activating virtual environment..."
-call venv\Scripts\activate.bat
+call .venv\Scripts\activate.bat
 
 @echo "Step 3: Installing dependencies..."
 pip install -r requirements.txt
