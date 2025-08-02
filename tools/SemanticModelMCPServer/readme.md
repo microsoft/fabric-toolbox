@@ -34,6 +34,7 @@ cd fabric-toolbox/tools/SemanticModelMCPServer
 or for the dev version
 
 git clone --branch Semantic-Model-MCP-Server https://github.com/philseamark/fabric-toolbox.git
+cd fabric-toolbox/tools/SemanticModelMCPServer
 setup.bat
 
 ```
