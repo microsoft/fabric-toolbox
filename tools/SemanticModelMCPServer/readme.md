@@ -1,6 +1,12 @@
 # Semantic Model MCP Server
 
+Chat with your Semantic Model in VS Code Co-pilot using your own LLM!!!
+
 A Model Context Protocol (MCP) server for connecting to Microsoft Fabric and Power BI semantic models. This server provides tools to browse workspaces, list datasets, retrieve model definitions (TMDL/TMSL), and execute DAX queries against semantic models.
+
+This tool is most suited to be run in VS Code to be used as a *chat with your semantic model* feature using your own choice of LLM Server.
+
+Co-pilot in VS Code has far fewer limitations than some MCP Clients and can also allow you to tweak/improve this code for yourself.dir
 
 ## Features
 
@@ -19,12 +25,21 @@ A Model Context Protocol (MCP) server for connecting to Microsoft Fabric and Pow
 
 ## Installation
 
-### 1. Clone the Repository
+### 1. Clone the Repository from Prod
 
 ```bash
 git clone https://github.com/microsoft/fabric-toolbox.git
 cd fabric-toolbox/tools/SemanticModelMCPServer
+
+or
+
+git clone --branch Semantic-Model-MCP-Server https://github.com/microsoft/fabric-toolbox.git
+cd fabric-toolbox/tools/SemanticModelMCPServer
+
 ```
+###
+Run Setup.bat or run remaining steps
+
 
 ### 2. Create Virtual Environment
 
@@ -52,7 +67,7 @@ pip install -r requirements.txt
 
 ### 5. Configure MCP Client
 
-Add the server configuration to your MCP client settings (e.g., Claude Desktop `mcp.json`):
+Check the server configuration to your MCP client settings (e.g., Claude Desktop `mcp.json`):
 
 ```json
 {
@@ -64,6 +79,18 @@ Add the server configuration to your MCP client settings (e.g., Claude Desktop `
     }
 }
 ```
+
+### 6. Open folder in VS Code
+
+Check the server configuration to your MCP client settings (e.g., Claude Desktop `mcp.json`):
+
+```bash
+code .
+```
+### 7. Start the MCP Server
+
+Open the mcp.json using VS Code from the .vscode folder and click the start button (look between lines 2 and 3)
+
 
 ## Authentication
 

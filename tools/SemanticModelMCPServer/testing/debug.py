@@ -1,14 +1,24 @@
 import clr
 import os
 import sys
-from core.auth import get_access_token
 import urllib.parse
 
+# Add the parent directory to Python path to import from core
+current_dir = os.path.dirname(os.path.abspath(__file__))
+parent_dir = os.path.dirname(current_dir)
+sys.path.insert(0, parent_dir)
 
+from core.auth import get_access_token
+
+def get_directory():
+    """Returns the directory of the current script."""
+    return os.path.dirname(os.path.abspath(__file__))
 
 def runquery(workspace_name: str, dataset_name: str) -> str:
-    script_dir = os.path.dirname(os.path.abspath(__file__))
-    dotnet_dir = os.path.join(script_dir, "dotnet")
+    script_dir = get_directory()
+    # Go up one level to get to the SemanticModelMCPServer directory
+    server_dir = os.path.dirname(script_dir)
+    dotnet_dir = os.path.join(server_dir, "dotnet")
     
     print(f"Using .NET assemblies from: {dotnet_dir}")
     #clr.AddReference(os.path.join(dotnet_dir, "Microsoft.AnalysisServices.dll"))
@@ -90,6 +100,7 @@ def get_model_definition_direct(workspace_name: str, dataset_name: str) -> str:
 try:
     #result = get_model_definition_direct("DAX Performance Tuner Testing", "Contoso 100M")
     result = runquery("DAX Performance Tuner Testing", "Contoso 100M")
+    #result = get_directory()
     print(result)
 except Exception as e:
     print(f"Error: {e}")
