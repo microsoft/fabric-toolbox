@@ -3,6 +3,7 @@ import os
 import sys
 import urllib.parse
 
+
 # Add the parent directory to Python path to import from core
 current_dir = os.path.dirname(os.path.abspath(__file__))
 parent_dir = os.path.dirname(current_dir)
@@ -63,8 +64,9 @@ def runquery(workspace_name: str, dataset_name: str) -> str:
 
 def get_model_definition_direct(workspace_name: str, dataset_name: str) -> str:
     """Gets tmsl definition for an Analysis Services Model."""
-    
-    script_dir = os.path.dirname(os.path.abspath(__file__))
+
+    script_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    print(script_dir)
     dotnet_dir = os.path.join(script_dir, "dotnet")
     
     print(f"Using .NET assemblies from: {dotnet_dir}")
@@ -74,8 +76,6 @@ def get_model_definition_direct(workspace_name: str, dataset_name: str) -> str:
     clr.AddReference(os.path.join(dotnet_dir, "Microsoft.IdentityModel.Abstractions.dll"))
 
     from Microsoft.AnalysisServices.Tabular import Server, Model, Table, Column, Measure, Partition, Database, JsonSerializer, TmdlSerializer # type: ignore
-    #from Microsoft.AnalysisServices.Tabular.Extensions import ToTmdl # type: ignore
-
 
     access_token = get_access_token()
     if not access_token:
@@ -94,13 +94,97 @@ def get_model_definition_direct(workspace_name: str, dataset_name: str) -> str:
 
     tmdlDocuments = TmdlSerializer.SerializeDatabase(database)
 
-    return tmdlDocuments
+    return json_definition
+
+
+def update_tmsl_definition(workspace_name: str, dataset_name: str, tmsl_definition: str) -> str:
+    """Updates the TMSL definition for an Analysis Services Model."""   
+    script_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    dotnet_dir = os.path.join(script_dir, "dotnet") 
+    print(f"Using .NET assemblies from: {dotnet_dir}")
+    clr.AddReference(os.path.join(dotnet_dir, "Microsoft.AnalysisServices.dll"))
+    clr.AddReference(os.path.join(dotnet_dir, "Microsoft.AnalysisServices.Tabular.dll"))
+    clr.AddReference(os.path.join(dotnet_dir, "Microsoft.Identity.Client.dll"))
+    clr.AddReference(os.path.join(dotnet_dir, "Microsoft.IdentityModel.Abstractions.dll"))
+
+    clr.AddReference("System.IO")  # Ensure System.IO is referenced for StringIO
+    from System.IO import StringReader  # type: ignore
+
+    from Microsoft.AnalysisServices import UpdateMode ,UpdateOptions # type: ignore
+    from Microsoft.AnalysisServices.Tabular import Server, Model, Database, TmdlSerializer, JsonSerializer  # type: ignore
+    from Microsoft.AnalysisServices.Tabular.Serialization import MetadataSerializationContext ,MetadataSerializationStyle, MetadataSerializationOptions  # type: ignore
+
+    access_token = get_access_token()
+    if not access_token:
+        return "Error: No valid access token available"
+    workspace_name_encoded = urllib.parse.quote(workspace_name)
+    connection_string = f"Data Source=powerbi://api.powerbi.com/v1.0/myorg/{workspace_name_encoded};Password={access_token}"
+    server = Server()
+    server.Connect(connection_string)
+    database: Database = server.Databases.GetByName(dataset_name)
+    model: Model = database.Model
+    if not database:
+        return f"Error: Dataset '{dataset_name}' not found in workspace '{workspace_name}'."
+    try:
+
+        new_tmsl = f"""
+        {{
+            "createOrReplace": {{
+                "object": {{
+                    "database": "{dataset_name}"
+                }},
+            "database": {tmsl_definition}
+            }} 
+        }}       
+    """
+
+        new_tmsl = new_tmsl.replace("Family","FamilyGuy")
+        print(new_tmsl)
+
+        r = server.Execute(new_tmsl)
+        print("======================")
+        print(r)
+        print("======================")
+        # print(1111)
+        # #print (JsonSerializer.DeserializeDatabase(tmsl_definition))
+
+        # database = JsonSerializer.DeserializeDatabase(tmsl_definition)
+        # for c in database.Model.Tables["Item"].Columns:
+        #     print(c.Name, c.DataType, c.IsHidden, c.IsKey, c.Description)
+
+
+        # server.database = JsonSerializer.DeserializeDatabase(tmsl_definition)
+        # server.Update(UpdateOptions.Default,UpdateMode.Create)
+
+        #database.Model = context.ToModel()
+        #database.Model.SaveChanges()
+        # print(context)
+        # help(context)
+        # tmdl_definition_stream = Encoding.UTF8.GetBytes(tmdl_definition)
+        # Stream = MemoryStream(tmdl_definition_stream)
+
+        # context.ReadFromDocument(Stream)
+
+        # tmdl_model = context.UpdateModel()
+        # model = tmdl_model
+        # server.Update(database, "Update TMDL definition")
+        print("TMDL definition updated successfully.")
+        return f"TMDL definition updated successfully for dataset '{dataset_name}' in workspace '{workspace_name}'."
+    except Exception as e:
+        print(e)
+        return f"Error updating TMDL definition: {e}"
+
+
 
 # Run the function
 try:
-    #result = get_model_definition_direct("DAX Performance Tuner Testing", "Contoso 100M")
-    result = runquery("DAX Performance Tuner Testing", "Contoso 100M")
+    result = get_model_definition_direct("DAX Performance Tuner Testing", "Retail Analysis Sample PBIX")
+
+    update_tmsl_definition("DAX Performance Tuner Testing", "Retail Analysis Sample PBIX", result)
+    #print(result)
+
+    #result = runquery("DAX Performance Tuner Testing", "Contoso 100M")
     #result = get_directory()
-    print(result)
+    print("done")
 except Exception as e:
     print(f"Error: {e}")
