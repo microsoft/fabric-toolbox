@@ -1,18 +1,20 @@
 # Semantic Model MCP Server
 
-Chat with your Semantic Model in VS Code Co-pilot using your own LLM!!!
+A Model Context Protocol (MCP) server for connecting to Microsoft Fabric and Power BI semantic models. This server provides tools to browse workspaces, list datasets, retrieve model definitions (TMSL), and execute DAX queries against semantic models.
 
-A Model Context Protocol (MCP) server for connecting to Microsoft Fabric and Power BI semantic models. This server provides tools to browse workspaces, list datasets, retrieve model definitions (TMDL/TMSL), and execute DAX queries against semantic models.
+A tool designed for Semantic model authors to chat with your Semantic Model in VS Code Co-pilot using your own LLM!!!
+
+Use your local compute rather than your Premium capacity.
 
 This tool is most suited to be run in VS Code to be used as a *chat with your semantic model* feature using your own choice of LLM Server.
 
-Co-pilot in VS Code has far fewer limitations than some MCP Clients and can also allow you to tweak/improve this code for yourself.dir
+Co-pilot in VS Code has far fewer limitations than some MCP Clients and can also allow you to tweak/improve this code for yourself.
 
 ## Features
 
 - **Browse Power BI Workspaces**: List all available workspaces in your tenant
 - **Dataset Management**: List and explore datasets within workspaces
-- **Model Definition Retrieval**: Get TMDL (Tabular Model Definition Language) and TMSL (Tabular Model Scripting Language) definitions
+- **Model Definition Retrieval**: Get TMSL (Tabular Model Scripting Language) definitions
 - **DAX Query Execution**: Run DAX queries against semantic models and get results
 - **Workspace Navigation**: Get workspace IDs and navigate between different environments
 
