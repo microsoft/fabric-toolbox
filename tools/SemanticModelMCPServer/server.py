@@ -2,6 +2,7 @@ from fastmcp import FastMCP
 import logging
 import clr
 import os
+import json
 import sys
 from core.auth import get_access_token
 from tools.fabric_metadata import list_workspaces, list_datasets, get_workspace_id
@@ -24,9 +25,6 @@ mcp = FastMCP(
     - The tools will return JSON formatted data for easy parsing.
     ## Example Queries:
     - "Can you get a list of workspaces?"
-    - "What datasets are available in workspace 'Contoso 100M'?"
-    - "Get the workspace ID for 'DAX Performance Tuner Testing'."
-    - "Retrieve the model definition for 'Contoso 100M' in workspace 'DAX Performance Tuner Testing'."
 
     ## Note:
     - Ensure you have the necessary permissions to access Power BI resources.
@@ -123,18 +121,33 @@ def execute_dax_query(workspace_name:str, dataset_name: str, dax_query: str, dat
 
     connection = AdomdConnection(connection_string)
     connection.Open()
-    command = connection.CreateCommand()
-    command.CommandText = dax_query
-    reader: AdomdDataReader = command.ExecuteReader()
-    results = []
-    while reader.Read():
-        row = {}
-        for i in range(reader.FieldCount):
-            row[reader.GetName(i)] = reader.GetValue(i)
-        results.append(row)
-
+    try:
+        command = connection.CreateCommand()
+        command.CommandText = dax_query
+        reader: AdomdDataReader = command.ExecuteReader()
+        results = []
+        while reader.Read():
+            row = {}
+            for i in range(reader.FieldCount):
+                row[reader.GetName(i)] = reader.GetValue(i)
+            results.append(row)
+    except Exception as e:
+        print(f"Error executing DAX query: {e}")
+        results = []
     connection.Close()
     return results
+
+def count_nodes_with_name(data, target_name):
+    count = 0
+    if isinstance(data, dict):
+        for key, value in data.items():
+            if key == target_name:
+                count += 1
+            count += count_nodes_with_name(value, target_name)
+    elif isinstance(data, list):
+        for item in data:
+            count += count_nodes_with_name(item, target_name)
+    return count
 
 @mcp.tool
 def update_tmsl_definition(workspace_name: str, dataset_name: str, tmsl_definition: str) -> str:
@@ -163,10 +176,13 @@ def update_tmsl_definition(workspace_name: str, dataset_name: str, tmsl_definiti
     connection_string = f"Data Source=powerbi://api.powerbi.com/v1.0/myorg/{workspace_name_encoded};Password={access_token}"
     server = Server()
     server.Connect(connection_string)
+    tmsl = json.loads(tmsl_definition)
+    databaseCount = count_nodes_with_name(tmsl, "database")
+    tableCount = count_nodes_with_name(tmsl, "table")
 
     try:
         # Check if the tmsl_definition already has createOrReplace
-        if "createOrReplace" not in tmsl_definition:
+        if databaseCount==0:
             tmsl_definition = f"""
             {{
                 "createOrReplace": {{
@@ -177,6 +193,18 @@ def update_tmsl_definition(workspace_name: str, dataset_name: str, tmsl_definiti
                 }} 
             }}       
             """
+        elif tableCount==1:
+            tmsl_definition = f"""
+            {{
+                "createOrReplace": {{
+                    "object": {{
+                        "table": "{dataset_name}"
+                    }},
+                "table": {tmsl_definition}
+                }} 
+            }}
+            """
+
         retval = server.Execute(tmsl_definition)
         #server.Update()
         server.Disconnect()
