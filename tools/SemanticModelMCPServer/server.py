@@ -56,6 +56,8 @@ mcp = FastMCP(
     - The tool will return a success message or an error if the update fails.
     - Use this tool to modify the structure of your Power BI models dynamically.
     - eg. to add measures, calculated columns, or modify relationships in the model.
+    - if you need to update the TMDL definition, you can use the `update_tmdl_definition` tool.
+    - if you are only updating, adding or deleting a measure, only script the createOrReplace for the table object and now the entire database object if you can
 
     ## The model hierarchy ##
     - **Database**: The top-level container for the model.
@@ -65,10 +67,7 @@ mcp = FastMCP(
     - **Measure**: Represents a calculation or aggregation based on the data in the model.  
     - **Partition**: Represents a partition of data within a table, often used for performance optimization.
 
-    ## Example TMDL Definition:
-    - The TMDL definition should be a valid serialized string representing the model structure.
-    - It can include tables, columns, measures, relationships, and other model elements.
-    - Ensure the TMDL definition is correctly formatted to avoid errors during updates.
+
     """
 )
 
@@ -155,12 +154,7 @@ def update_tmsl_definition(workspace_name: str, dataset_name: str, tmsl_definiti
     clr.AddReference(os.path.join(dotnet_dir, "Microsoft.Identity.Client.dll"))
     clr.AddReference(os.path.join(dotnet_dir, "Microsoft.IdentityModel.Abstractions.dll"))
 
-    clr.AddReference("System.IO")  # Ensure System.IO is referenced for StringIO
-    from System.IO import StringReader  # type: ignore
-
-    from Microsoft.AnalysisServices import UpdateMode ,UpdateOptions # type: ignore
-    from Microsoft.AnalysisServices.Tabular import Server, Model, Database, TmdlSerializer, JsonSerializer  # type: ignore
-    from Microsoft.AnalysisServices.Tabular.Serialization import MetadataSerializationContext ,MetadataSerializationStyle, MetadataSerializationOptions  # type: ignore
+    from Microsoft.AnalysisServices.Tabular import Server# type: ignore
 
     access_token = get_access_token()
     if not access_token:
@@ -169,25 +163,24 @@ def update_tmsl_definition(workspace_name: str, dataset_name: str, tmsl_definiti
     connection_string = f"Data Source=powerbi://api.powerbi.com/v1.0/myorg/{workspace_name_encoded};Password={access_token}"
     server = Server()
     server.Connect(connection_string)
-    database: Database = server.Databases.GetByName(dataset_name)
-    model: Model = database.Model
-    if not database:
-        return f"Error: Dataset '{dataset_name}' not found in workspace '{workspace_name}'."
-    try:
 
-        createOrReplace_tmsl = f"""
-        {{
-            "createOrReplace": {{
-                "object": {{
-                    "database": "{dataset_name}"
-                }},
-            "database": {tmsl_definition}
-            }} 
-        }}       
-        """
-        retval = server.Execute(createOrReplace_tmsl)
-        return f"""TMDL definition updated successfully for dataset '{dataset_name}' in workspace '{workspace_name}'. 
-        {retval}"""
+    try:
+        # Check if the tmsl_definition already has createOrReplace
+        if "createOrReplace" not in tmsl_definition:
+            tmsl_definition = f"""
+            {{
+                "createOrReplace": {{
+                    "object": {{
+                        "database": "{dataset_name}"
+                    }},
+                "database": {tmsl_definition}
+                }} 
+            }}       
+            """
+        retval = server.Execute(tmsl_definition)
+        #server.Update()
+        server.Disconnect()
+        return f"""TMSL definition updated successfully for dataset '{dataset_name}' in workspace '{workspace_name}'. {retval} ✅ """
     except Exception as e:
         print(e)
         return f"Error updating TMSL definition: {e}"
@@ -293,7 +286,7 @@ def get_tmsl_model_definition(workspace_name:str = None, dataset_name:str=None) 
     clr.AddReference(os.path.join(dotnet_dir, "Microsoft.Identity.Client.dll"))
     clr.AddReference(os.path.join(dotnet_dir, "Microsoft.IdentityModel.Abstractions.dll"))
     
-    from Microsoft.AnalysisServices.Tabular import Server,Model, Table, Column, Measure, Partition, Database, JsonSerializer,TmdlSerializer # type: ignore
+    from Microsoft.AnalysisServices.Tabular import Server,Database, JsonSerializer,SerializeOptions # type: ignore
 
     access_token = get_access_token()
     if not access_token:
@@ -308,18 +301,11 @@ def get_tmsl_model_definition(workspace_name:str = None, dataset_name:str=None) 
     server.Connect(connection_string)
     database: Database = server.Databases.GetByName(dataset_name)
 
-    tmsl_definition = TmdlSerializer.SerializeDatabase(database)
+    options = SerializeOptions()
+    options.IgnoreTimestamps = True
+
+    tmsl_definition = JsonSerializer.SerializeDatabase(database, options)
     return tmsl_definition
-
-    # if definition_type is None or definition_type.lower() == "tmsl":
-    #     tmsl_definition = TmdlSerializer.SerializeDatabase(database)
-    #     return tmsl_definition
-    # elif definition_type.lower() == "tmdl":
-    #     tmdl_definition = TmdlSerializer.SerializeDatabase(database)
-    #     return tmdl_definition
-    # else:
-    #     return "Error: Invalid definition type specified. Use 'tmsl' or 'tmdl'."
-
 
 def main():
     """Main entry point for the Semantic Model MCP Server."""
