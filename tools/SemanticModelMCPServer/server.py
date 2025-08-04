@@ -8,12 +8,76 @@ from core.auth import get_access_token
 from tools.fabric_metadata import list_workspaces, list_datasets, get_workspace_id, list_notebooks, list_delta_tables, list_lakehouses, list_lakehouse_files, get_lakehouse_sql_connection_string as fabric_get_lakehouse_sql_connection_string
 import urllib.parse
 from src.helper import count_nodes_with_name
+import time
+from datetime import datetime, timedelta
 
 # Try to import pyodbc - it's needed for SQL Analytics Endpoint queries
 try:
     import pyodbc
 except ImportError:
     pyodbc = None
+
+# Token cache for Azure authentication
+# Structure: {scope: {"token": token_object, "expires_at": timestamp, "token_struct": packed_token}}
+_token_cache = {}
+
+def get_cached_azure_token(scope: str = "https://database.windows.net/.default"):
+    """
+    Get a cached Azure token or fetch a new one if not cached or expired.
+    
+    Args:
+        scope: The authentication scope for the token
+        
+    Returns:
+        Tuple of (token_struct, success_flag, error_message)
+    """
+    import struct
+    from azure import identity
+    
+    current_time = time.time()
+    
+    # Check if we have a valid cached token
+    if scope in _token_cache:
+        cached_entry = _token_cache[scope]
+        if current_time < cached_entry["expires_at"]:
+            # Token is still valid, return cached token_struct
+            logging.debug(f"Using cached Azure token for scope: {scope}")
+            return cached_entry["token_struct"], True, None
+        else:
+            logging.debug(f"Cached Azure token expired for scope: {scope}, fetching new token")
+    else:
+        logging.debug(f"No cached Azure token found for scope: {scope}, fetching new token")
+    
+    try:
+        # Get new token
+        credential = identity.DefaultAzureCredential(exclude_interactive_browser_credential=False)
+        token = credential.get_token(scope)
+        
+        # Calculate expiration time with 5-minute buffer
+        buffer_seconds = 300  # 5 minutes
+        expires_at = token.expires_on - buffer_seconds
+        
+        # Encode token for SQL Server authentication
+        token_bytes = token.token.encode("UTF-16-LE")
+        token_struct = struct.pack(f'<I{len(token_bytes)}s', len(token_bytes), token_bytes)
+        
+        # Cache the token
+        _token_cache[scope] = {
+            "token": token,
+            "expires_at": expires_at,
+            "token_struct": token_struct
+        }
+        
+        logging.debug(f"Cached new Azure token for scope: {scope}, expires at: {datetime.fromtimestamp(expires_at)}")
+        return token_struct, True, None
+        
+    except Exception as e:
+        return None, False, f"Failed to get Azure token: {str(e)}"
+
+def clear_token_cache():
+    """Clear the authentication token cache. Useful for debugging or forcing token refresh."""
+    global _token_cache
+    _token_cache.clear()
 
 mcp = FastMCP(
     name="Model Browser", 
@@ -109,20 +173,35 @@ mcp = FastMCP(
     - The TMSL definition should be a valid JSON string.
     - The table object should NOT have a mode property set to "directLake" if you are creating a new model.
     - the model object should NOT have a defaultMode property
-    - Every table object should have a partition.  Partitions are used here to define how the data is partitioned in the DirectLake model.
+    - **CRITICAL**: Every table object MUST have a partitions array with at least one partition. DirectLake models cannot function without partitions.
     - Each partition object should have a `mode` property set to "directLake".
-    - Each DirectLake model should have a `expressions` section with M code to define the data source and any transformations needed.
+    - Each partition must reference an entity name that matches the lakehouse table name.
+    - Each partition should include `"expressionSource": "DatabaseQuery"` to reference the M expression.
+    - **CRITICAL**: Every DirectLake model MUST have an `expressions` section with M code to define the data source connection.
+    - The expressions section must include a "DatabaseQuery" expression that uses `Sql.Database()` function.
+    - **IMPORTANT**: The Sql.Database function takes two arguments: (1) SQL Analytics Endpoint connection string, (2) SQL Analytics Endpoint ID (NOT the lakehouse name or lakehouse ID).
+    - Use `get_lakehouse_sql_connection_string` tool to get the correct endpoint ID for the Sql.Database function.
     - Do not use the same name for the model as the Lakehouse, as this can cause conflicts.
-    - the Sql.Database function in the expression takes two arguments.  The first is the sql analytics endpoint string, the second argument is the SQL Analytics Endpoint ID and not the lakehouse ID.
     - Relationships only need the following five properties: `name` , `fromTable` ,  `fromColumn` , `toTable` , `toColumn`
     - Do NOT use the crossFilterBehavior property in relationships.
     - When creating a new model, ensure each table only uses columns from the lakehouse tables and not any other source.  Validate if needed that the table names are not the same as any other source.
     - Do not create a column called rowNumber or rowNum, as this is a reserved name in DirectLake models.
     - When creating a new Directlake model, save the TMSL definition to a file for future reference or updates in the models subfolder.
     
+    ## DirectLake Model Creation Checklist ##
+    Before creating any DirectLake model, ensure ALL of the following are included:
+    1. ✅ Each table has a "partitions" array with at least one partition
+    2. ✅ Each partition has "mode": "directLake"
+    3. ✅ Each partition has "expressionSource": "DatabaseQuery"
+    4. ✅ Model includes "expressions" section with "DatabaseQuery" M code
+    5. ✅ Sql.Database() function uses SQL Analytics Endpoint ID (not lakehouse name/ID) as second parameter
+    6. ✅ All column names and data types validated against actual lakehouse tables
+    7. ✅ No table has "mode": "directLake" at table level (only in partitions)
+    
     ## CRITICAL: Schema Validation Before Model Creation ##
     - **ALWAYS** validate the actual table schemas in the lakehouse BEFORE creating a DirectLake model
     - Use the `query_lakehouse_sql_endpoint` tool to validate column names, data types, and table structures
+    - Do not query all the data in the Lakehouse table - this is not needed and can be slow, especially for large tables.  Use the TOP 5 or similar queries to validate the structure.
     - DirectLake models must exactly match the source Delta table schema - any mismatch will cause deployment failures
     - Example validation queries:
       * "SELECT COLUMN_NAME, DATA_TYPE FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = 'your_table_name'"
@@ -1955,12 +2034,14 @@ def query_lakehouse_sql_endpoint(workspace_id: str, sql_query: str, lakehouse_id
     - "SHOW TABLES"
     """
     import json
-    from azure import identity
-    import struct
 
-    credential = identity.DefaultAzureCredential(exclude_interactive_browser_credential=False)
-    token_bytes = credential.get_token("https://database.windows.net/.default").token.encode("UTF-16-LE")
-    token_struct = struct.pack(f'<I{len(token_bytes)}s', len(token_bytes), token_bytes)
+    # Get cached or fresh authentication token
+    token_struct, success, error = get_cached_azure_token("https://database.windows.net/.default")
+    if not success:
+        return json.dumps({
+            "success": False,
+            "error": f"Authentication failed: {error}"
+        }, indent=2)
 
     # Check if pyodbc is available
     if pyodbc is None:
