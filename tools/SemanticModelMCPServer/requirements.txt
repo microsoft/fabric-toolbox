@@ -10,6 +10,9 @@ requests>=2.31.0
 # Python for .NET (for Analysis Services libraries)
 pythonnet>=3.0.0
 
+# ODBC driver for SQL Server connections
+pyodbc>=4.0.0
+
 # URL parsing (built-in, but ensuring compatibility)
 urllib3>=2.0.0
 

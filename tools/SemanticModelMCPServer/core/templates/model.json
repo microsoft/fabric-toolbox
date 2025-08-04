@@ -310,24 +310,21 @@
 		"fromTable": "FactInternetSales",
 		"fromColumn": "CustomerKey",
 		"toTable": "DimCustomer",
-		"toColumn": "CustomerKey",
-		"crossFilteringBehavior": "oneToMany"
+		"toColumn": "CustomerKey"
 	  },
 	  {
 		"name": "Product_Sales",
 		"fromTable": "FactInternetSales",
 		"fromColumn": "ProductKey",
 		"toTable": "DimProduct",
-		"toColumn": "ProductKey",
-		"crossFilteringBehavior": "oneToMany"
+		"toColumn": "ProductKey"
 	  },
 	  {
 		"name": "Date_Sales",
 		"fromTable": "FactInternetSales",
 		"fromColumn": "OrderDateKey",
 		"toTable": "DimDate",
-		"toColumn": "DateKey",
-		"crossFilteringBehavior": "oneToMany"
+		"toColumn": "DateKey"
 	  }
 	]
   }

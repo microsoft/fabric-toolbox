@@ -9,6 +9,12 @@ from tools.fabric_metadata import list_workspaces, list_datasets, get_workspace_
 import urllib.parse
 from src.helper import count_nodes_with_name
 
+# Try to import pyodbc - it's needed for SQL Analytics Endpoint queries
+try:
+    import pyodbc
+except ImportError:
+    pyodbc = None
+
 mcp = FastMCP(
     name="Model Browser", 
     instructions="""
@@ -57,12 +63,21 @@ mcp = FastMCP(
     - Use the `get_model_definition` tool to retrieve the TMSL definition of a model.
     - You can specify the workspace name and dataset name to get the model definition.
     - The tool will return the TMSL definition as a string, which can be used for further analysis or updates.
+    - Do not look at models that have the same name as a lakehouse.  This is likely a Default model so should be ignored.
 
     ## Running a DAX Query:
     - You can execute DAX queries against the Power BI model using the `execute_dax_query` tool.
     - Make sure you use the correct dataset name, not the dataset ID.
     - Provide the DAX query, the workspace name, and the dataset name to get results.
     - The results will be returned in JSON format for easy consumption.
+    - Do not use DAX queries to learn about columns in Lakehouse tables.
+    - NEVER use DAX queries when the user asks for SQL/T-SQL queries.
+
+    ## Running a T-SQL query against the Lakehouse SQL Analytics Endpoint
+    - Use the `query_lakehouse_sql_endpoint` tool to run T-SQL queries against the Lakehouse SQL Analytics Endpoint.
+    - This is the ONLY tool to use for SQL queries - never use execute_dax_query for SQL requests.
+    - If this fails, do not follow up with a DAX Query.
+    - Use this tool to validate table schemas, column names, and data types before creating DirectLake models.
 
     ## Updating the model:
     - The MCP Server uses TMSL sctripts to update the model.
@@ -102,6 +117,21 @@ mcp = FastMCP(
     - Relationships only need the following five properties: `name` , `fromTable` ,  `fromColumn` , `toTable` , `toColumn`
     - Do NOT use the crossFilterBehavior property in relationships.
     - When creating a new model, ensure each table only uses columns from the lakehouse tables and not any other source.  Validate if needed that the table names are not the same as any other source.
+    - Do not create a column called rowNumber or rowNum, as this is a reserved name in DirectLake models.
+    - When creating a new Directlake model, save the TMSL definition to a file for future reference or updates in the models subfolder.
+    
+    ## CRITICAL: Schema Validation Before Model Creation ##
+    - **ALWAYS** validate the actual table schemas in the lakehouse BEFORE creating a DirectLake model
+    - Use the `query_lakehouse_sql_endpoint` tool to validate column names, data types, and table structures
+    - DirectLake models must exactly match the source Delta table schema - any mismatch will cause deployment failures
+    - Example validation queries:
+      * "SELECT COLUMN_NAME, DATA_TYPE FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = 'your_table_name'"
+      * "SELECT TOP 5 * FROM your_table_name" (to see actual data and column names)
+      * "SHOW TABLES" (to see all available tables)
+    - Column names are case-sensitive and must match exactly
+    - Data types must be compatible between Delta Lake and DirectLake
+    - Never assume column names or structures - always validate first
+    
     ## Example TMSL Definition for a DirectLake model over Lakehouse tables##
     ## Use this example for guidance when creating a new model ##
     ```json
@@ -1899,6 +1929,158 @@ def get_model_definition(workspace_name:str = None, dataset_name:str=None) -> st
 
     tmsl_definition = JsonSerializer.SerializeDatabase(database, options)
     return tmsl_definition
+
+@mcp.tool
+def query_lakehouse_sql_endpoint(workspace_id: str, sql_query: str, lakehouse_id: str = None, lakehouse_name: str = None) -> str:
+    """Executes a SQL query against a Fabric Lakehouse SQL Analytics Endpoint to validate table schemas and data.
+    This tool connects to the specified Fabric Lakehouse SQL Analytics Endpoint and executes the provided SQL query.
+    Use this tool to:
+    - Validate actual column names and data types in lakehouse tables
+    - Query table schemas before creating DirectLake models
+    - Inspect data samples from lakehouse tables
+    - Verify table structures match your model expectations
+    
+    Args:
+        workspace_id: The Fabric workspace ID containing the lakehouse
+        sql_query: The SQL query to execute (e.g., "SELECT * FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = 'date'")
+        lakehouse_id: Optional specific lakehouse ID to query
+        lakehouse_name: Optional lakehouse name to query (alternative to lakehouse_id)
+    
+    Returns:
+        JSON string containing query results or error message
+    
+    Example queries for schema validation:
+    - "SELECT COLUMN_NAME, DATA_TYPE FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = 'sales_1'"
+    - "SELECT TOP 5 * FROM date"
+    - "SHOW TABLES"
+    """
+    import json
+    
+    # Check if pyodbc is available
+    if pyodbc is None:
+        return json.dumps({
+            "success": False,
+            "error": "pyodbc is not installed. Please install it using: pip install pyodbc"
+        }, indent=2)
+    
+    try:
+        # Get the SQL Analytics Endpoint connection string
+        connection_info = fabric_get_lakehouse_sql_connection_string(workspace_id, lakehouse_id, lakehouse_name)
+        
+        if "error" in connection_info.lower():
+            return f"Error getting connection string: {connection_info}"
+        
+        # Parse the connection info to get the server and endpoint ID
+        connection_data = json.loads(connection_info)
+        server_name = connection_data.get("sql_endpoint", {}).get("server_name")
+        endpoint_id = connection_data.get("sql_endpoint", {}).get("endpoint_id")
+        
+        if not server_name or not endpoint_id:
+            return "Error: Could not retrieve SQL Analytics Endpoint information"
+        
+        # Build connection string for SQL Analytics Endpoint
+        # For Fabric SQL Analytics Endpoints, use the lakehouse name as the database
+        lakehouse_name = connection_data.get("lakehouse_name")
+        if not lakehouse_name:
+            return json.dumps({
+                "success": False,
+                "error": "Could not determine lakehouse name for database connection"
+            }, indent=2)
+        
+        # Try different ODBC drivers in order of preference
+        available_drivers = [
+            "ODBC Driver 18 for SQL Server",
+            "ODBC Driver 17 for SQL Server", 
+            "SQL Server"
+        ]
+        
+        # Detect which driver is available
+        available_driver = None
+        available_pyodbc_drivers = pyodbc.drivers()
+        
+        for driver in available_drivers:
+            if driver in available_pyodbc_drivers:
+                available_driver = driver
+                break
+        
+        if not available_driver:
+            return json.dumps({
+                "success": False,
+                "error": "No compatible ODBC driver found. Please install ODBC Driver for SQL Server.",
+                "available_drivers": list(available_pyodbc_drivers),
+                "looking_for": available_drivers
+            }, indent=2)
+        
+        connection_string = (
+            f"Driver={{{available_driver}}};"
+            f"Server={server_name};"
+            f"Database={lakehouse_name};"
+            f"Authentication=ActiveDirectoryInteractive;"
+            f"Encrypt=yes;"
+            f"TrustServerCertificate=yes;"
+            f"Connection Timeout=30;"
+        )
+        
+        # Debug: log connection attempt
+        print(f"Attempting connection with driver: {available_driver}")
+        print(f"Connection string: {connection_string}")
+        
+        # Execute the query using ActiveDirectoryInteractive authentication
+        with pyodbc.connect(connection_string) as conn:
+            cursor = conn.cursor()
+            cursor.execute(sql_query)
+            
+            # Get column names
+            columns = [column[0] for column in cursor.description]
+            
+            # Fetch results
+            rows = cursor.fetchall()
+            
+            # Convert to list of dictionaries
+            results = []
+            for row in rows:
+                row_dict = {}
+                for i, value in enumerate(row):
+                    # Handle special data types
+                    if hasattr(value, 'isoformat'):  # datetime objects
+                        row_dict[columns[i]] = value.isoformat()
+                    elif isinstance(value, (bytes, bytearray)):  # binary data
+                        row_dict[columns[i]] = str(value)
+                    else:
+                        row_dict[columns[i]] = value
+                results.append(row_dict)
+            
+            return json.dumps({
+                "success": True,
+                "query": sql_query,
+                "columns": columns,
+                "row_count": len(results),
+                "results": results[:100],  # Limit to first 100 rows to avoid large responses
+                "note": f"Showing first 100 rows out of {len(results)} total rows" if len(results) > 100 else None
+            }, indent=2)
+            
+    except pyodbc.Error as e:
+        error_details = str(e)
+        return json.dumps({
+            "success": False,
+            "error": f"SQL Error: {error_details}",
+            "query": sql_query,
+            "debug_info": {
+                "server_name": server_name if 'server_name' in locals() else "Not available",
+                "lakehouse_name": lakehouse_name if 'lakehouse_name' in locals() else "Not available",
+                "available_driver": available_driver if 'available_driver' in locals() else "Not detected",
+                "connection_string": connection_string if 'connection_string' in locals() else "Not available"
+            }
+        }, indent=2)
+    except Exception as e:
+        return json.dumps({
+            "success": False,
+            "error": f"Connection Error: {str(e)}",
+            "query": sql_query,
+            "debug_info": {
+                "connection_info": connection_info if 'connection_info' in locals() else "Not available"
+            }
+        }, indent=2)
 
 
 def main():
