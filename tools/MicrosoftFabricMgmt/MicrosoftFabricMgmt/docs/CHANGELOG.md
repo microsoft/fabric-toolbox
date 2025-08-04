@@ -5,6 +5,18 @@ All notable changes to the MicrosoftFabricMgmt project will be documented in thi
 ## [Unreleased]
 
 ### Added
+### Fixed
+### Changed
+- 
+## [0.5.2] – 2025-08-04
+
+### Added
+- New Folder functions
+  - Get-FabricFolder
+  - Move-FabricFolder
+  - New-FabricFolder
+  - Remove-FabricFolder
+  - Update-FabricFolder
 - New Managed Private Endpoints functions
   - Get-FabricManagedPrivateEndpoint
   - New-FabricManagedPrivateEndpoint
@@ -15,24 +27,16 @@ All notable changes to the MicrosoftFabricMgmt project will be documented in thi
   - Remove-FabricOneLakeShortcut
   - Reset-FabricOneLakeShortcutCache
 
-### Fixed
-- Get-FabricWarehouse: Incorrect variable name used for input validation
-- New-FabricWarehouse: Remove the line breaks between parameters to enhance readability
-- New-FabricFolder: Make the folder name parameter mandatory
-- 
-## [0.5.1] – 2025-07-30
+### Changed
 
-### Added
-- New Folder functions
-  - Get-FabricFolder
-  - Move-FabricFolder
-  - New-FabricFolder
-  - Remove-FabricFolder
-  - Update-FabricFolder
+Invoke-FabricAPIRequest function now can return ETAG from the request header if exists
 
 ### Fixed
-    - Remove the -ForegroundColor parameter for Write-Error and Write-Warning in the Write-Message function
-
+  - Remove the -ForegroundColor parameter for Write-Error and Write-Warning in the Write-Message function
+  - Get-FabricWarehouse: Incorrect variable name used for input validation
+  - New-FabricWarehouse: Remove the line breaks between parameters to enhance readability
+  - New-FabricFolder: Make the folder name parameter mandatory
+  
 ## [0.5.0] – 2025-07-19
 
 ### Added
