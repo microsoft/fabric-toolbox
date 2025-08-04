@@ -1955,7 +1955,13 @@ def query_lakehouse_sql_endpoint(workspace_id: str, sql_query: str, lakehouse_id
     - "SHOW TABLES"
     """
     import json
-    
+    from azure import identity
+    import struct
+
+    credential = identity.DefaultAzureCredential(exclude_interactive_browser_credential=False)
+    token_bytes = credential.get_token("https://database.windows.net/.default").token.encode("UTF-16-LE")
+    token_struct = struct.pack(f'<I{len(token_bytes)}s', len(token_bytes), token_bytes)
+
     # Check if pyodbc is available
     if pyodbc is None:
         return json.dumps({
@@ -2015,7 +2021,6 @@ def query_lakehouse_sql_endpoint(workspace_id: str, sql_query: str, lakehouse_id
             f"Driver={{{available_driver}}};"
             f"Server={server_name};"
             f"Database={lakehouse_name};"
-            f"Authentication=ActiveDirectoryInteractive;"
             f"Encrypt=yes;"
             f"TrustServerCertificate=yes;"
             f"Connection Timeout=30;"
@@ -2026,7 +2031,7 @@ def query_lakehouse_sql_endpoint(workspace_id: str, sql_query: str, lakehouse_id
         print(f"Connection string: {connection_string}")
         
         # Execute the query using ActiveDirectoryInteractive authentication
-        with pyodbc.connect(connection_string) as conn:
+        with pyodbc.connect(connection_string, attrs_before={1256  : token_struct}) as conn:
             cursor = conn.cursor()
             cursor.execute(sql_query)
             
