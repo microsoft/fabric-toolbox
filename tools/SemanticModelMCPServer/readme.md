@@ -1,6 +1,6 @@
 # Semantic Model MCP Server
 
-A Model Context Protocol (MCP) server for connecting to Microsoft Fabric and Power BI semantic models. This server provides tools to browse workspaces, list datasets, retrieve model definitions (TMSL), and execute DAX queries against semantic models.
+A Model Context Protocol (MCP) server for connecting to Microsoft Fabric and Power BI semantic models. This server provides tools to browse workspaces, list datasets, retrieve model definitions (TMSL), execute DAX queries, and create or modify semantic models against semantic models.
 
 A tool designed for Semantic model authors to chat with your Semantic Model in VS Code Co-pilot using your own LLM!!!
 
@@ -16,6 +16,9 @@ Co-pilot in VS Code has far fewer limitations than some MCP Clients and can also
 - **Dataset Management**: List and explore datasets within workspaces
 - **Model Definition Retrieval**: Get TMSL (Tabular Model Scripting Language) definitions
 - **DAX Query Execution**: Run DAX queries against semantic models and get results
+- **Model Creation & Editing**: Create new semantic models and update existing models using TMSL
+- **Fabric Lakehouse Integration**: List lakehouses, Delta tables, and get SQL connection strings
+- **DirectLake Model Support**: Create and manage DirectLake models connected to Fabric lakehouses
 - **Workspace Navigation**: Get workspace IDs and navigate between different environments
 
 ## Prerequisites
@@ -130,6 +133,26 @@ The server uses Azure Active Directory authentication. Ensure you have:
 #semantic_model_mcp_server run DAX query against [dataset_name] in [workspace_name]
 ```
 
+### 6. Update Model using TMSL
+```
+#semantic_model_mcp_server update model [dataset_name] in [workspace_name] using TMSL definition
+```
+
+### 7. List Fabric Lakehouses
+```
+#semantic_model_mcp_server list lakehouses in [workspace_name]
+```
+
+### 8. List Delta Tables
+```
+#semantic_model_mcp_server list delta tables in lakehouse [lakehouse_name]
+```
+
+### 9. Get Lakehouse SQL Connection
+```
+#semantic_model_mcp_server get SQL connection string for lakehouse [lakehouse_name]
+```
+
 ## Usage Examples
 
 ### Example 1: Explore Available Workspaces
@@ -150,6 +173,16 @@ The server uses Azure Active Directory authentication. Ensure you have:
 ### Example 4: Analyze Data by Year
 ```
 #semantic_model_mcp_server run a DAX query sum quantity by year
+```
+
+### Example 5: Create a DirectLake Model
+```
+#semantic_model_mcp_server create a DirectLake model using tables from the GeneratedData lakehouse
+```
+
+### Example 6: Update Model Schema
+```
+#semantic_model_mcp_server add a new calculated column to the sales table in my model
 ```
 
 ## Getting Started: Chat Prompt Examples
@@ -224,6 +257,45 @@ Once you have the MCP server running in VS Code, you can start chatting with you
 #semantic_model_mcp_server write a DAX query to identify products with no sales in the last 180 days
 ```
 
+### 🛠️ **Model Creation & Management**
+
+**"Create a new DirectLake model from my lakehouse tables"**
+```
+#semantic_model_mcp_server create a DirectLake model using the business tables from my GeneratedData lakehouse
+```
+
+**"Add a new measure to my existing model"**
+```
+#semantic_model_mcp_server add a Total Profit measure to my sales model that calculates SalesAmount minus TotalCost
+```
+
+**"Update my model to include a new table"**
+```
+#semantic_model_mcp_server modify my semantic model to include the new customer demographics table
+```
+
+**"Create relationships between tables in my model"**
+```
+#semantic_model_mcp_server add a relationship between the sales table and the new product category table
+```
+
+### 🏗️ **Fabric Lakehouse Integration**
+
+**"What lakehouses are available in my workspace?"**
+```
+#semantic_model_mcp_server list all lakehouses in my workspace
+```
+
+**"Show me the Delta tables in my lakehouse"**
+```
+#semantic_model_mcp_server list all Delta tables in the GeneratedData lakehouse
+```
+
+**"Get the SQL connection string for my lakehouse"**
+```
+#semantic_model_mcp_server get the SQL endpoint connection for my lakehouse
+```
+
 ### 🛠️ **Model Optimization**
 
 **"What measures are defined in my model?"**
@@ -269,8 +341,14 @@ AI: [Lists datasets in that workspace]
 You: "Get the structure of my 'Sales Model' dataset"
 AI: [Retrieves TMDL definition showing tables, measures, relationships]
 
-You: "Now run a query to show me sales by product category"
-AI: [Executes DAX query and shows results]
+You: "Create a DirectLake model using the tables from my GeneratedData lakehouse"
+AI: [Uses MCP server to list lakehouse tables and creates TMSL definition for DirectLake model]
+
+You: "Now add a calculated measure for profit margin to this model"
+AI: [Modifies the TMSL to include new measure and updates the model]
+
+You: "Show me the relationships in this new model"
+AI: [Retrieves updated TMSL definition and displays the relationships]
 
 You: "That's interesting - can you show me the trend for the 'Electronics' category over time?"
 AI: [Creates and runs a more specific DAX query for Electronics trends]
@@ -285,6 +363,9 @@ This server implements the Model Context Protocol, allowing AI assistants and ot
 - **Discover** available semantic models and workspaces
 - **Inspect** model structure and metadata
 - **Query** data using DAX expressions
+- **Create** new semantic models from Fabric lakehouses or other data sources
+- **Modify** existing models by updating TMSL definitions
+- **Manage** DirectLake models connected to Fabric lakehouses
 - **Retrieve** complete model definitions for analysis
 
 ## Technical Architecture
@@ -299,6 +380,8 @@ This server implements the Model Context Protocol, allowing AI assistants and ot
 - Power BI Premium workspaces
 - Microsoft Fabric semantic models
 - Analysis Services tabular models
+- Fabric Lakehouses and Delta Tables
+- DirectLake storage mode
 - Any XMLA-compatible endpoint
 
 ## Troubleshooting
