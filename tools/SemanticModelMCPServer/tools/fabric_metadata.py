@@ -233,6 +233,28 @@ def list_delta_tables(workspace_id: str, lakehouse_id: str = None) -> str:
             # Return formatted JSON with proper indentation
             return json.dumps(delta_tables, indent=2)
             
+        elif response.status_code == 400:
+            # Handle the specific case of schema-enabled lakehouses
+            print(f"DEBUG: Got 400 error, checking for schema-enabled lakehouse error")
+            print(f"DEBUG: Response text: {response.text}")
+            try:
+                response_json = response.json()
+                print(f"DEBUG: Parsed JSON: {response_json}")
+                error_code = response_json.get("errorCode", "")
+                print(f"DEBUG: Error code: {error_code}")
+                
+                if error_code == "UnsupportedOperationForSchemasEnabledLakehouse":
+                    # Fall back to using SQL Analytics Endpoint for schema-enabled lakehouses
+                    print(f"DEBUG: Lakehouse has schemas enabled, falling back to SQL Analytics Endpoint")
+                    return _list_delta_tables_via_sql_endpoint(workspace_id, lakehouse_id)
+                else:
+                    print(f"DEBUG: Different 400 error: {error_code}")
+                    return f"Error: HTTP 400 - {response.text}"
+            except Exception as e:
+                print(f"DEBUG: Error parsing JSON response: {e}")
+                # If we can't parse the JSON, just return the raw error
+                return f"Error: HTTP 400 - {response.text}"
+                
         elif response.status_code == 401:
             # Authentication failed - token is invalid or expired
             return "Error: Unauthorized - Invalid or expired access token"
@@ -265,6 +287,120 @@ def list_delta_tables(workspace_id: str, lakehouse_id: str = None) -> str:
     except Exception as e:
         # Catch-all for any unexpected errors
         return f"Error: Unexpected error occurred - {str(e)}"
+
+def _list_delta_tables_via_sql_endpoint(workspace_id: str, lakehouse_id: str) -> str:
+    """Helper function to list Delta tables using SQL Analytics Endpoint for schema-enabled lakehouses.
+    
+    Args:
+        workspace_id (str): The unique identifier of the Fabric workspace
+        lakehouse_id (str): The unique identifier of the Lakehouse
+        
+    Returns:
+        str: JSON string containing table information from SQL endpoint
+    """
+    try:
+        # Import the SQL query function from the main server module
+        # We need to avoid circular imports, so we'll implement the SQL query logic here
+        
+        # Get lakehouse connection details first
+        lakehouse_info = get_lakehouse_sql_connection_string(workspace_id, lakehouse_id)
+        if not lakehouse_info:
+            return "Error: Could not get lakehouse SQL connection information"
+        
+        lakehouse_info_dict = json.loads(lakehouse_info)
+        server_name = lakehouse_info_dict.get("sql_endpoint", {}).get("server_name")
+        lakehouse_name = lakehouse_info_dict.get("lakehouse_name")
+        
+        if not server_name:
+            return "Error: Could not extract server name from lakehouse connection info"
+        
+        if not lakehouse_name:
+            return "Error: Could not extract lakehouse name from lakehouse connection info"
+        
+        # Query to get all user tables with their schemas
+        sql_query = """
+        SELECT 
+            TABLE_SCHEMA,
+            TABLE_NAME,
+            TABLE_TYPE
+        FROM INFORMATION_SCHEMA.TABLES 
+        WHERE TABLE_TYPE = 'BASE TABLE' 
+        AND TABLE_SCHEMA NOT IN ('INFORMATION_SCHEMA', 'sys', 'db_accessadmin', 'db_backupoperator', 
+                                'db_datareader', 'db_datawriter', 'db_ddladmin', 'db_denydatareader', 
+                                'db_denydatawriter', 'db_owner', 'db_securityadmin', 'guest', 'queryinsights')
+        ORDER BY TABLE_SCHEMA, TABLE_NAME
+        """
+        
+        # Use pyodbc to connect to the SQL Analytics Endpoint
+        try:
+            import pyodbc
+        except ImportError:
+            return "Error: pyodbc module is required for SQL Analytics Endpoint queries but is not installed"
+        
+        # Get access token for Azure SQL connection - use same token manager as the main function
+        from core.azure_token_manager import get_cached_azure_token
+        token_struct, success, error = get_cached_azure_token("https://database.windows.net/.default")
+        if not success:
+            return f"Error: Authentication failed: {error}"
+        
+        # Try different ODBC drivers in order of preference
+        available_drivers = [
+            "ODBC Driver 18 for SQL Server",
+            "ODBC Driver 17 for SQL Server", 
+            "SQL Server"
+        ]
+        
+        # Detect which driver is available
+        available_driver = None
+        available_pyodbc_drivers = pyodbc.drivers()
+        
+        for driver in available_drivers:
+            if driver in available_pyodbc_drivers:
+                available_driver = driver
+                break
+        
+        if not available_driver:
+            return f"Error: No compatible ODBC driver found. Available drivers: {list(available_pyodbc_drivers)}"
+        
+        # Connection string for Azure SQL with access token - use lakehouse_name as database
+        connection_string = (
+            f"Driver={{{available_driver}}};"
+            f"Server={server_name};"
+            f"Database={lakehouse_name};"
+            f"Encrypt=yes;"
+            f"TrustServerCertificate=yes;"
+            f"Connection Timeout=30;"
+        )
+        
+        # Execute the query
+        try:
+            # Connect using access token authentication
+            with pyodbc.connect(connection_string, attrs_before={1256: token_struct}) as conn:
+                cursor = conn.cursor()
+                cursor.execute(sql_query)
+                
+                # Fetch results and format as list of dictionaries
+                columns = [column[0] for column in cursor.description]
+                tables = []
+                for row in cursor.fetchall():
+                    table_info = dict(zip(columns, row))
+                    # Add additional information to match the expected format
+                    table_info['id'] = f"{table_info['TABLE_SCHEMA']}.{table_info['TABLE_NAME']}"
+                    table_info['type'] = 'Delta'
+                    table_info['format'] = 'Delta'
+                    table_info['displayName'] = f"{table_info['TABLE_SCHEMA']}.{table_info['TABLE_NAME']}"
+                    tables.append(table_info)
+                
+                if not tables:
+                    return "No tables found in this schema-enabled lakehouse"
+                
+                return json.dumps(tables, indent=2)
+                
+        except pyodbc.Error as e:
+            return f"Error connecting to SQL Analytics Endpoint: {str(e)}"
+        
+    except Exception as e:
+        return f"Error querying SQL endpoint for schema-enabled lakehouse: {str(e)}"
 
 def list_lakehouse_files(workspace_id: str, lakehouse_id: str = None) -> str:
     """Lists all files in the Files section of a specified Fabric Lakehouse.

@@ -28,6 +28,8 @@ Co-pilot in VS Code has far fewer limitations than some MCP Clients and can also
 - Valid Microsoft authentication (Azure AD)
 - .NET Framework dependencies for Analysis Services libraries
 
+- If you have access to Premium models in VS Code Copilot Chat, I recommend using Claude Sonnet 4 in ASK mode
+
 ## Installation
 
 ### 1. Clone the Repository from Prod
@@ -35,6 +37,7 @@ Co-pilot in VS Code has far fewer limitations than some MCP Clients and can also
 ```bash
 git clone https://github.com/microsoft/fabric-toolbox.git
 cd fabric-toolbox/tools/SemanticModelMCPServer
+setup.bat
 
 or for the dev version
 
@@ -43,57 +46,8 @@ cd fabric-toolbox/tools/SemanticModelMCPServer
 setup.bat
 
 ```
-###
-Run Setup.bat or run remaining steps
 
-
-### 2. Create Virtual Environment
-
-```bash
-python -m venv .venv
-```
-
-### 3. Activate Virtual Environment
-
-**Windows:**
-```powershell
-.\.venv\Scripts\activate
-```
-
-**macOS/Linux:**
-```bash
-source .venv/bin/activate
-```
-
-### 4. Install Dependencies
-
-```bash
-pip install -r requirements.txt
-```
-
-### 5. Configure MCP Client
-
-Check the server configuration to your MCP client settings (e.g., Claude Desktop `mcp.json`):
-
-```json
-{
-    "servers": {
-        "semantic_model_mcp_server": {
-            "command": "./.venv/Scripts/python",
-            "args": ["server.py"]
-        }
-    }
-}
-```
-
-### 6. Open folder in VS Code
-
-Check the server configuration to your MCP client settings (e.g., Claude Desktop `mcp.json`):
-
-```bash
-code .
-```
-### 7. Start the MCP Server
+### 2. Start the MCP Server
 
 Open the mcp.json using VS Code from the .vscode folder and click the start button (look between lines 2 and 3)
 

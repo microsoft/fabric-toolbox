@@ -79,6 +79,8 @@ def list_fabric_lakehouses(workspace_id: str) -> str:
 def list_fabric_delta_tables(workspace_id: str, lakehouse_id: str = None) -> str:
     """Lists all Delta Tables in a specified Fabric Lakehouse.
     If lakehouse_id is not provided, will use the first lakehouse found in the workspace.
+    This function now supports both regular lakehouses and schema-enabled lakehouses by automatically
+    falling back to SQL Analytics Endpoint queries when the Fabric API returns an error for schema-enabled lakehouses.
     """
     return list_delta_tables(workspace_id, lakehouse_id)
 
