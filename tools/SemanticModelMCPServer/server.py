@@ -5,74 +5,19 @@ import os
 import json
 import sys
 from core.auth import get_access_token
+from core.azure_token_manager import get_cached_azure_token, clear_token_cache
 from tools.fabric_metadata import list_workspaces, list_datasets, get_workspace_id, list_notebooks, list_delta_tables, list_lakehouses, list_lakehouse_files, get_lakehouse_sql_connection_string as fabric_get_lakehouse_sql_connection_string
 import urllib.parse
 from src.helper import count_nodes_with_name
 import time
 from datetime import datetime, timedelta
+from prompts import register_prompts
 
 # Try to import pyodbc - it's needed for SQL Analytics Endpoint queries
 try:
     import pyodbc
 except ImportError:
     pyodbc = None
-
-# Token cache for Azure authentication
-# Structure: {scope: {"token": token_object, "expires_at": timestamp, "token_struct": packed_token}}
-_token_cache = {}
-
-def get_cached_azure_token(scope: str = "https://database.windows.net/.default"):
-    """
-    Get a cached Azure token or fetch a new one if not cached or expired.
-    
-    Args:
-        scope: The authentication scope for the token
-        
-    Returns:
-        Tuple of (token_struct, success_flag, error_message)
-    """
-    import struct
-    from azure import identity
-    
-    current_time = time.time()
-    
-    # Check if we have a valid cached token
-    if scope in _token_cache:
-        cached_entry = _token_cache[scope]
-        if current_time < cached_entry["expires_at"]:
-            # Token is still valid, return cached token_struct
-            logging.debug(f"Using cached Azure token for scope: {scope}")
-            return cached_entry["token_struct"], True, None
-        else:
-            logging.debug(f"Cached Azure token expired for scope: {scope}, fetching new token")
-    else:
-        logging.debug(f"No cached Azure token found for scope: {scope}, fetching new token")
-    
-    try:
-        # Get new token
-        credential = identity.DefaultAzureCredential(exclude_interactive_browser_credential=False)
-        token = credential.get_token(scope)
-        
-        # Calculate expiration time with 5-minute buffer
-        buffer_seconds = 300  # 5 minutes
-        expires_at = token.expires_on - buffer_seconds
-        
-        # Encode token for SQL Server authentication
-        token_bytes = token.token.encode("UTF-16-LE")
-        token_struct = struct.pack(f'<I{len(token_bytes)}s', len(token_bytes), token_bytes)
-        
-        # Cache the token
-        _token_cache[scope] = {
-            "token": token,
-            "expires_at": expires_at,
-            "token_struct": token_struct
-        }
-        
-        logging.debug(f"Cached new Azure token for scope: {scope}, expires at: {datetime.fromtimestamp(expires_at)}")
-        return token_struct, True, None
-        
-    except Exception as e:
-        return None, False, f"Failed to get Azure token: {str(e)}"
 
 def load_instructions():
     """Load MCP instructions from external markdown file."""
@@ -97,80 +42,13 @@ def load_instructions():
         print(f"Warning: Could not load instructions from file: {e}")
         return "Model Browser MCP Server - See mcp_instructions.md for documentation."
 
-def clear_token_cache():
-    """Clear the authentication token cache. Useful for debugging or forcing token refresh."""
-    global _token_cache
-    _token_cache.clear()
-
 mcp = FastMCP(
     name="Model Browser", 
     instructions=load_instructions()
 )
 
-@mcp.prompt
-def ask_about_workspaces() -> str:
-    """Ask to get a list of Power BI workspaces"""
-    return f"Can you get a list of workspaces?"
-
-@mcp.prompt
-def ask_about_datasets() -> str:
-    """Ask to get a list of Power BI datasets"""
-    return f"Can you get a list of datasets?"
-
-@mcp.prompt
-def ask_about_lakehouses() -> str:
-    """Ask to get a list of Fabric lakehouses"""
-    return f"Can you show me the lakehouses in this workspace?"
-
-@mcp.prompt
-def ask_about_delta_tables() -> str:
-    """Ask to get a list of Delta Tables in a lakehouse"""
-    return f"Can you list the Delta Tables in this lakehouse?"
-
-@mcp.prompt
-def explore_workspace() -> str:
-    """Get a comprehensive overview of a workspace including datasets, lakehouses, and notebooks"""
-    return "Can you give me a complete overview of this workspace? Show me all datasets, lakehouses, notebooks, and Delta Tables."
-
-@mcp.prompt
-def analyze_model_structure() -> str:
-    """Ask to analyze the structure of a semantic model using TMSL"""
-    return "Can you get the TMSL definition for a model and explain its structure including tables, columns, measures, and relationships?"
-
-@mcp.prompt
-def sample_dax_queries() -> str:
-    """Get examples of useful DAX queries to run against a model"""
-    return "Can you show me some useful DAX queries I can run against this model? Include queries for basic measures, top values, and data exploration."
-
-@mcp.prompt
-def compare_models() -> str:
-    """Compare the structure of two different semantic models"""
-    return "Can you help me compare the structure of two different semantic models? Show me the differences in their tables, columns, and measures."
-
-@mcp.prompt
-def data_lineage_exploration() -> str:
-    """Explore data lineage from Delta Tables to semantic models"""
-    return "Can you help me understand the data lineage? Show me the Delta Tables in the lakehouse and how they might relate to the semantic models in this workspace."
-
-@mcp.prompt
-def model_optimization_suggestions() -> str:
-    """Analyze a model and suggest optimizations"""
-    return "Can you analyze this semantic model and suggest potential optimizations? Look at the table structure, relationships, and measures."
-
-@mcp.prompt
-def create_calculated_measure() -> str:
-    """Help create a new calculated measure in a model"""
-    return "Can you help me add a new calculated measure to this semantic model? I'll provide the measure definition and you can update the TMSL."
-
-@mcp.prompt
-def troubleshoot_model_issues() -> str:
-    """Help troubleshoot common model issues"""
-    return "Can you help me troubleshoot issues with this semantic model? Check the model structure and suggest solutions for common problems."
-
-@mcp.prompt
-def workspace_security_overview() -> str:
-    """Get an overview of workspace contents for security analysis"""
-    return "Can you provide a security-focused overview of this workspace? List all datasets, lakehouses, and their access patterns."
+# Register all MCP prompts from the prompts module
+register_prompts(mcp)
 
 @mcp.tool
 def list_powerbi_workspaces() -> str:
@@ -218,6 +96,38 @@ def get_lakehouse_sql_connection_string(workspace_id: str, lakehouse_id: str = N
     """
     return fabric_get_lakehouse_sql_connection_string(workspace_id, lakehouse_id, lakehouse_name)
 
+@mcp.tool
+def clear_azure_token_cache() -> str:
+    """Clears the Azure authentication token cache. 
+    Useful for debugging authentication issues or forcing token refresh.
+    """
+    from core.azure_token_manager import clear_token_cache, get_token_cache_status
+    
+    # Get status before clearing
+    status_before = get_token_cache_status()
+    
+    # Clear the cache
+    clear_token_cache()
+    
+    # Get status after clearing
+    status_after = get_token_cache_status()
+    
+    return f"Azure token cache cleared successfully. Had {len(status_before)} cached tokens, now has {len(status_after)} cached tokens."
+
+@mcp.tool
+def get_azure_token_status() -> str:
+    """Gets the current status of the Azure token cache.
+    Shows which tokens are cached, their expiration times, and validity status.
+    """
+    from core.azure_token_manager import get_token_cache_status
+    import json
+    
+    status = get_token_cache_status()
+    
+    if not status:
+        return "No Azure tokens currently cached."
+    
+    return json.dumps(status, indent=2)
 
 @mcp.tool
 def execute_dax_query(workspace_name:str, dataset_name: str, dax_query: str, dataset_id: str = None) -> list[dict]:

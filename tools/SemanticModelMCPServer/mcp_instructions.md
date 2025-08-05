@@ -63,6 +63,19 @@ A tool to browse and manage semantic models in Microsoft Fabric and Power BI.
     - This is the ONLY tool to use for SQL queries - never use execute_dax_query for SQL requests.
     - If this fails, do not follow up with a DAX Query.
     - Use this tool to validate table schemas, column names, and data types before creating DirectLake models.
+    
+    ## SQL Query Schema Considerations ##
+    - **Table Naming**: Lakehouse tables can be queried using different naming patterns:
+      * **Pattern 1**: `SELECT * FROM table_name` (when lakehouse has no default schema)
+      * **Pattern 2**: `SELECT * FROM dbo.table_name` (when lakehouse is schema-enabled with dbo as default)
+      * **Pattern 3**: `SELECT * FROM dbo_table_name` (tables prefixed with schema in their actual name)
+    - **Schema Detection**: Check lakehouse properties - if `"defaultSchema": "dbo"` exists, use schema-qualified names
+    - **Best Practice**: Try the table name as returned by `list_fabric_delta_tables` first, then try with schema prefix if needed
+    - **Common Patterns**:
+      * Tables named like `dbo_TableName` → Query as `FROM dbo_TableName`
+      * Tables in schema-enabled lakehouse → Query as `FROM dbo.TableName` or `FROM schema.TableName`
+    - **INFORMATION_SCHEMA queries**: Always work regardless of schema setup:
+      * `SELECT COLUMN_NAME, DATA_TYPE FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = 'table_name'`
 
     ## Updating the model:
     - The MCP Server uses TMSL sctripts to update the model.
@@ -158,13 +171,16 @@ A tool to browse and manage semantic models in Microsoft Fabric and Power BI.
     - Use the `query_lakehouse_sql_endpoint` tool to validate column names, data types, and table structures
     - Do not query all the data in the Lakehouse table - this is not needed and can be slow, especially for large tables.  Use the TOP 5 or similar queries to validate the structure.
     - DirectLake models must exactly match the source Delta table schema - any mismatch will cause deployment failures
-    - Example validation queries:
-      * "SELECT COLUMN_NAME, DATA_TYPE FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = 'your_table_name'"
-      * "SELECT TOP 5 * FROM your_table_name" (to see actual data and column names)
-      * "SHOW TABLES" (to see all available tables)
+    - **Schema-Aware Query Examples**:
+      * `"SELECT COLUMN_NAME, DATA_TYPE FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = 'your_table_name'"` (works with any schema setup)
+      * `"SELECT TOP 5 * FROM your_table_name"` (use exact table name from list_fabric_delta_tables)
+      * `"SELECT TOP 5 * FROM dbo.your_table_name"` (if lakehouse has defaultSchema: "dbo")
+      * `"SHOW TABLES"` (to see all available tables and their naming patterns)
+      * `"SELECT TABLE_SCHEMA, TABLE_NAME FROM INFORMATION_SCHEMA.TABLES"` (to see schema structure)
     - Column names are case-sensitive and must match exactly
     - Data types must be compatible between Delta Lake and DirectLake
     - Never assume column names or structures - always validate first
+    - **Troubleshooting**: If a query fails with "object not found", try alternative schema patterns (with/without dbo prefix)
     
     ## Example TMSL Definition for a DirectLake model over Lakehouse tables##
     ## Use this example for guidance when creating a new model ##
