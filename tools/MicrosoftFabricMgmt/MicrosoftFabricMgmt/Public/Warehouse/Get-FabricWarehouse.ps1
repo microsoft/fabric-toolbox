@@ -48,7 +48,7 @@ function Get-FabricWarehouse {
 
     try {
         # Validate input parameters
-        if ($WorkspaceId -and $WorkspaceName) {
+        if ($WarehouseId -and $WarehouseName) {
             Write-Message -Message "Specify only one parameter: either 'WarehouseId' or 'WarehouseName'." -Level Error
             return $null
         }
@@ -65,7 +65,7 @@ function Get-FabricWarehouse {
         $apiParams = @{
             BaseURI = $apiEndpointURI
             Headers = $FabricConfig.FabricHeaders
-            Method = 'Get'
+            Method  = 'Get'
         }
         $dataItems = Invoke-FabricAPIRequest @apiParams
 
@@ -102,5 +102,4 @@ function Get-FabricWarehouse {
         $errorDetails = $_.Exception.Message
         Write-Message -Message "Failed to retrieve Warehouse. Error: $errorDetails" -Level Error
     } 
- 
 }

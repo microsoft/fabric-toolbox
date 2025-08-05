@@ -1,0 +1,8 @@
+{
+    "servers": {
+        "semantic_model_mcp_server": {
+            "command": "./.venv/Scripts/python",
+            "args": ["server.py"]
+        }
+    }
+}

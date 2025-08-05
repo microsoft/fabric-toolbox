@@ -102,17 +102,30 @@ function Invoke-FabricAPIRequest {
             switch ($statusCode) {
                 200 {
                     Write-Message -Message "API call succeeded." -Level Debug 
+                    [string]$etag = $responseHeader["ETag"]
+                    
                     if ($response) {
                         # Determine response structure and add data to results
                         $propertyNames = $response.PSObject.Properties.Name
+                        $items = @()
                         switch ($true) {
-                            { $propertyNames -contains 'value' } { $results.AddRange($response.value); break }
-                            { $propertyNames -contains 'accessEntities' } { $results.AddRange($response.accessEntities); break }
-                            { $propertyNames -contains 'domains' } { $results.AddRange($response.domains); break }
-                            { $propertyNames -contains 'publishDetails' } { $results.AddRange($response.publishDetails); break }
-                            { $propertyNames -contains 'definition' } { $results.AddRange($response.definition.parts); break }
-                            { $propertyNames -contains 'data' } { $results.AddRange($response.data); break }
-                            default { $results.Add($response) }
+                            { $propertyNames -contains 'value' } { $items = $response.value; break }
+                            { $propertyNames -contains 'accessEntities' } { $items = $response.accessEntities; break }
+                            { $propertyNames -contains 'domains' } { $items = $response.domains; break }
+                            { $propertyNames -contains 'publishDetails' } { $items = $response.publishDetails; break }
+                            { $propertyNames -contains 'definition' } { $items = $response.definition.parts; break }
+                            { $propertyNames -contains 'data' } { $items = $response.data; break }
+                            default { $items = @($response) }
+                        }
+                        foreach ($item in $items) {
+                            if ($etag) {
+                                # Add ETag property to each item if not already present
+                                if ($item -isnot [PSCustomObject]) {
+                                    $item = [PSCustomObject]$item
+                                }
+                                $item | Add-Member -NotePropertyName 'ETag' -NotePropertyValue $etag -Force
+                            }
+                            $results.Add($item)
                         }
                         # Update continuation token for pagination
                         $continuationToken = $propertyNames -contains 'continuationToken' ? $response.continuationToken : $null
@@ -132,6 +145,7 @@ function Invoke-FabricAPIRequest {
                     [string]$operationId = $responseHeader["x-ms-operation-id"]
                     [string]$location = $responseHeader["Location"]
                     $retryAfter = $responseHeader["Retry-After"]
+                    
 
                     # If the response contains an operation ID or Location header, handle as a long-running operation (LRO)
                     if ($operationId -or $location) {

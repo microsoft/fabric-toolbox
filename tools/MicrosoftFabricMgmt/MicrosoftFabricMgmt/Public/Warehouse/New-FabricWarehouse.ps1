@@ -46,10 +46,8 @@ function New-FabricWarehouse {
 
         [Parameter(Mandatory = $false)]
         [ValidateNotNullOrEmpty()]
-        
         [ValidateSet('Latin1_General_100_BIN2_UTF8', 'Latin1_General_100_CI_AS_KS_WS_SC_UTF8')]
         [string]$WarehouseCollation = 'Latin1_General_100_BIN2_UTF8'
-
     )
     try {
         # Validate authentication token before proceeding.
@@ -84,15 +82,14 @@ function New-FabricWarehouse {
         $apiParams = @{
             BaseURI = $apiEndpointURI
             Headers = $FabricConfig.FabricHeaders
-            Method = 'Post'
-            Body = $bodyJson
+            Method  = 'Post'
+            Body    = $bodyJson
         }
         $response = Invoke-FabricAPIRequest @apiParams
 
         # Return the API response
         Write-Message -Message "Data Warehouse created successfully!" -Level Info        
         return $response
-     
     }
     catch {
         # Capture and log error details
