@@ -51,6 +51,7 @@ setup.bat
 
 Open the mcp.json using VS Code from the .vscode folder and click the start button (look between lines 2 and 3)
 
+[![Start your MCP Server](./images/start_mcp_server.png)]
 
 ## Authentication
 
