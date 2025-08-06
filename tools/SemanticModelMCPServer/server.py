@@ -4,11 +4,13 @@ import clr
 import os
 import json
 import sys
+from typing import List, Optional
 from core.auth import get_access_token
 from core.azure_token_manager import get_cached_azure_token, clear_token_cache
 from tools.fabric_metadata import list_workspaces, list_datasets, get_workspace_id, list_notebooks, list_delta_tables, list_lakehouses, list_lakehouse_files, get_lakehouse_sql_connection_string as fabric_get_lakehouse_sql_connection_string
 import urllib.parse
 from src.helper import count_nodes_with_name
+from src.tmsl_validator import validate_tmsl_structure
 import time
 from datetime import datetime, timedelta
 from prompts import register_prompts
@@ -19,32 +21,293 @@ try:
 except ImportError:
     pyodbc = None
 
-def load_instructions():
-    """Load MCP instructions from external markdown file."""
-    try:
-        instructions_path = os.path.join(os.path.dirname(__file__), 'mcp_instructions.md')
-        with open(instructions_path, 'r', encoding='utf-8') as f:
-            return f.read()
-    except FileNotFoundError:
-        # Fallback to basic instructions if file not found
-        return """
-        A tool to browse and manage semantic models in Microsoft Fabric and Power BI.
-        
-        ## Available Tools:
-        - List Power BI Workspaces
-        - List Power BI Datasets  
-        - Execute DAX Queries
-        - Update Model using TMSL
-        
-        See mcp_instructions.md for complete documentation.
-        """
-    except Exception as e:
-        print(f"Warning: Could not load instructions from file: {e}")
-        return "Model Browser MCP Server - See mcp_instructions.md for documentation."
-
 mcp = FastMCP(
     name="Model Browser", 
-    instructions=load_instructions()
+    instructions="""
+    ## Available Tools:
+    - List Power BI Workspaces
+    - List Power BI Datasets
+    - List Power BI Notebooks
+    - List Fabric Lakehouses
+    - List Fabric Delta Tables
+    - List Fabric Data Pipelines
+    - Get Power BI Workspace ID
+    - Get Model Definition
+    - Execute DAX Queries
+    - Update Model using TMSL (Enhanced with Validation)
+    - Generate DirectLake TMSL Template (NEW)
+    - Validate TMSL Structure (Built into update tool)
+
+    ## Usage:
+    - You can ask questions about Power BI workspaces, datasets, notebooks, and models.
+    - You can explore Fabric lakehouses and Delta Tables.
+    - Use the tools to retrieve information about your Power BI and Fabric environment.
+    - The tools will return JSON formatted data for easy parsing.
+    
+    ## Example Queries:
+    - "Can you get a list of workspaces?"
+    - "Can you list notebooks in workspace X?"
+    - "Show me the lakehouses in this workspace"
+    - "List all Delta Tables in lakehouse Y"
+    - "Show me the data pipelines in this workspace"
+
+    ## Fabric Lakehouse Support:
+    - Use `list_fabric_lakehouses` to see all lakehouses in a workspace
+    - Use `list_fabric_delta_tables` to see Delta Tables in a specific lakehouse
+    - If you don't specify a lakehouse ID, the tool will use the first lakehouse found
+    - Delta Tables are the primary table format used in Fabric lakehouses
+
+    ## Fabric Data Pipeline Support:
+    - Use `list_fabric_pipelines` to see all Data Pipelines in a workspace
+    - Data Pipelines are ETL/ELT workflows that can orchestrate data movement and transformation
+    - The tool returns pipeline information including ID, name, description, and workspace details
+    - Useful for discovering available data processing workflows in your Fabric workspace
+
+    ## Note:
+    - Ensure you have the necessary permissions to access Power BI and Fabric resources.
+    - The tools will return errors if access tokens are not valid or if resources are not found.
+    - The tools are designed to work with the Power BI REST API, Fabric REST API, and Microsoft Analysis Services.
+    - The model definition tool retrieves a TMSL definition for Analysis Services Models.
+
+    ## TMSL Definitions:
+    - TMSL (Tabular Model Scripting Language) is used to define and manage tabular models in Analysis Services.
+    - The `get_model_definition` tool retrieves a TMSL definition for the specified model in the given workspace.
+
+    ## Getting Model Definitions:
+    - Use the `get_model_definition` tool to retrieve the TMSL definition of a model.
+    - You can specify the workspace name and dataset name to get the model definition.
+    - The tool will return the TMSL definition as a string, which can be used for further analysis or updates.
+    - Do not look at models that have the same name as a lakehouse.  This is likely a Default model so should be ignored.
+
+    ## Running a DAX Query:
+    - You can execute DAX queries against the Power BI model using the `execute_dax_query` tool.
+    - Make sure you use the correct dataset name, not the dataset ID.
+    - Provide the DAX query, the workspace name, and the dataset name to get results.
+    - The results will be returned in JSON format for easy consumption.
+    - **IMPORTANT**: When returning a single value, use braces {} around the expression as a table constructor:
+      - CORRECT: EVALUATE {COUNTROWS(table)}
+      - INCORRECT: EVALUATE COUNTROWS(table)
+    - Do not use DAX queries to learn about columns in Lakehouse tables.
+    - NEVER use DAX queries when the user asks for SQL/T-SQL queries.
+
+    ## Running a T-SQL query against the Lakehouse SQL Analytics Endpoint
+    - Use the `query_lakehouse_sql_endpoint` tool to run T-SQL queries against the Lakehouse SQL Analytics Endpoint.
+    - This is the ONLY tool to use for SQL queries - never use execute_dax_query for SQL requests.
+    - If this fails, do not follow up with a DAX Query.
+    - Use this tool to validate table schemas, column names, and data types before creating DirectLake models.
+    
+    ## SQL Query Schema Considerations ##
+    - **Table Naming**: Lakehouse tables can be queried using different naming patterns:
+      * **Pattern 1**: `SELECT * FROM table_name` (when lakehouse has no default schema)
+      * **Pattern 2**: `SELECT * FROM dbo.table_name` (when lakehouse is schema-enabled with dbo as default)
+      * **Pattern 3**: `SELECT * FROM dbo_table_name` (tables prefixed with schema in their actual name)
+    - **Schema Detection**: Check lakehouse properties - if `"defaultSchema": "dbo"` exists, use schema-qualified names
+    - **Best Practice**: Try the table name as returned by `list_fabric_delta_tables` first, then try with schema prefix if needed
+    - **Common Patterns**:
+      * Tables named like `dbo_TableName` → Query as `FROM dbo_TableName`
+      * Tables in schema-enabled lakehouse → Query as `FROM dbo.TableName` or `FROM schema.TableName`
+    - **INFORMATION_SCHEMA queries**: Always work regardless of schema setup:
+      * `SELECT COLUMN_NAME, DATA_TYPE FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = 'table_name'`
+
+    ## 🚀 ENHANCED DirectLake Model Creation - NO MORE TRIAL AND ERROR! ##
+    
+    **🆕 RECOMMENDED APPROACH - Use generate_directlake_tmsl_template first!**
+    1. **Step 1**: Use `generate_directlake_tmsl_template` to auto-generate valid TMSL
+    2. **Step 2**: Use `update_model_using_tmsl` with `validate_only=True` to pre-validate
+    3. **Step 3**: Use `update_model_using_tmsl` with `validate_only=False` to deploy
+    
+    **Benefits of new approach:**
+    - ✅ Automatic schema validation against lakehouse tables
+    - ✅ Pre-validated TMSL structure with all required components
+    - ✅ Proper data type mapping from SQL to DirectLake
+    - ✅ Built-in validation before deployment
+    - ✅ Detailed error messages with fix suggestions
+    
+    ## Enhanced TMSL Validation ##
+    The `update_model_using_tmsl` tool now includes comprehensive validation that catches:
+    
+    **🚨 CRITICAL ERRORS (Prevent Deployment Failures):**
+    - ❌ Missing expressions block with DatabaseQuery
+    - ❌ Table-level "mode": "directLake" property (BREAKS DEPLOYMENT!)
+    - ❌ Missing partitions arrays
+    - ❌ Incorrect partition mode placement
+    - ❌ Invalid TMSL JSON syntax
+    
+    **⚠️ WARNINGS (May Cause Issues):**
+    - Missing Sql.Database() in DatabaseQuery expression
+    - Incorrect expressionSource values
+    - Suboptimal TMSL structure
+    
+    **💡 AUTOMATIC SUGGESTIONS:**
+    - Specific fixes for each error type
+    - Code examples for corrections
+    - References to required TMSL structure
+    
+    ## Validation-First Workflow ##
+    ```
+    # 1. Generate template (auto-validates schemas)
+    template = generate_directlake_tmsl_template(workspace_id, lakehouse_id, ["table1", "table2"], "MyModel")
+    
+    # 2. Validate before deployment
+    validation = update_model_using_tmsl(workspace, model_name, template, validate_only=True)
+    
+    # 3. Deploy if validation passes
+    result = update_model_using_tmsl(workspace, model_name, template, validate_only=False)
+    ```
+
+    ## Updating the model:
+    - The MCP Server uses TMSL scripts to update the model.
+    - The `get_model_definition` tool retrieves the TMSL definition for a specified model.  Use this to get the current model structure.
+    - The `update_model_using_tmsl` tool allows you to update the TMSL definition for a specified dataset in a Power BI workspace.
+    - **NEW**: Enhanced with pre-validation and detailed error reporting
+    - **NEW**: Use `validate_only=True` to test TMSL without deploying
+    - Provide the workspace name, dataset name, and the new TMSL definition as a string.
+    - The tool will return a success message or an error if the update fails.
+    - Use this tool to modify the structure of your Power BI models dynamically.
+    - eg. to add measures, calculated columns, or modify relationships in the model.
+    - Note:
+    - if you are updating the entire model, ensure the TMSL definition includes the `createOrReplace` for the database object.
+    - if you are only updating a table, include the `createOrReplace` for the table object.
+    - if you are only updating, adding or deleting a measure, only script the createOrReplace for the table object and not the entire database object if you can and be sure to include the columns.
+    
+    ## The model hierarchy ##
+    - **Database**: The top-level container for the model.
+    - **Model**: Represents the entire model within the database.   
+    - **Table**: Represents a table in the model, containing columns and measures.
+    - **Column**: Represents a column in a table, which can be a data column or a calculated column.
+    - **Measure**: Represents a calculation or aggregation based on the data in the model.  
+    - **Partition**: Represents a partition of data within a table, often used for performance optimization.
+
+    ## Creating TMSL for a new DirectLake semantic model ##
+    - **RECOMMENDED**: Use `generate_directlake_tmsl_template` for automatic generation
+    - **ALTERNATIVE**: You can use the file stored in the tmsl_model_template.json as an example to create a new DirectLake model.
+    - You will need to change the model name, dataset name, and workspace name to match your environment.
+    
+    ## 🚨 CRITICAL DIRECTLAKE REQUIREMENTS - VALIDATION ENFORCED! 🚨 ##
+
+    **The validation system now automatically checks for these critical requirements:**
+
+    **MANDATORY #1: TABLE MODE RESTRICTION**  
+    - ❌ **NEVER ADD**: "mode": "directLake" at the table level (AUTOMATICALLY DETECTED AND BLOCKED)
+    - ✅ ONLY ADD: "mode": "directLake" in the partition object inside partitions array
+    - 🚫 TABLE LEVEL: { "name": "TableName", "mode": "directLake" } ← VALIDATION ERROR!
+    - ✅ PARTITION LEVEL: { "name": "Partition", "mode": "directLake", "source": {...} } ← VALIDATED!
+
+    **MANDATORY #2: EXPRESSIONS BLOCK**
+    - ❌ NEVER FORGET: Every DirectLake model MUST have an "expressions" section (AUTOMATICALLY CHECKED)
+    - ✅ ALWAYS ADD: expressions block with "DatabaseQuery" using Sql.Database() function
+    - 🔧 FORMAT: expressions array with name:"DatabaseQuery", kind:"m", expression array
+
+    **MANDATORY #3: TABLE STRUCTURE**
+    - ✅ Table objects should ONLY have: name, source, columns, partitions, measures (optional)
+    - ❌ Table objects should NEVER have: mode, defaultMode, or any mode-related properties (BLOCKED BY VALIDATION)
+    
+    ## DirectLake Model Creation Checklist - NOW AUTOMATED! ##
+    The validation system automatically verifies ALL of these:
+    1. ✅ Model has "expressions" section with "DatabaseQuery" M expression
+    2. ✅ Sql.Database() function with connection string and SQL Analytics Endpoint ID
+    3. ✅ Each table has "partitions" array with at least one partition
+    4. ✅ Each partition has "mode": "directLake" (NOT at table level!)
+    5. ✅ Each partition has "expressionSource": "DatabaseQuery"
+    6. ✅ All column names and data types validated against actual lakehouse tables
+    7. ✅ **CRITICAL**: No table object has "mode": "directLake" property (BLOCKED!)
+    8. ✅ Table objects only contain: name, source, columns, partitions, measures (no mode properties)
+    
+    ## Common DirectLake Mistakes - NOW PREVENTED! ##
+    The validation system prevents these errors:
+    - 🚫 Missing expressions block entirely (VALIDATION ERROR)
+    - 🚫 **CRITICAL ERROR**: Adding "mode": "directLake" to table object (BLOCKED!)
+    - 🚫 Using lakehouse name instead of SQL Analytics Endpoint ID in Sql.Database() (DETECTED)
+    - 🚫 Missing partitions array (VALIDATION ERROR)
+    - 🚫 Wrong expressionSource value (WARNING PROVIDED)
+    
+    ## 🚨 NEVER ADD MODE TO TABLE OBJECTS - NOW ENFORCED! 🚨 ##
+    - ❌ WRONG: { "name": "TableName", "mode": "directLake", "source": {...} } ← VALIDATION BLOCKS THIS!
+    - ✅ CORRECT: { "name": "TableName", "source": {...}, "partitions": [{"mode": "directLake"}] } ← VALIDATION PASSES!
+    
+    ## Step-by-Step DirectLake Creation Process - ENHANCED! ##
+    1. **NEW**: Use `generate_directlake_tmsl_template` to auto-generate valid TMSL
+    2. **OPTIONAL**: Use `update_model_using_tmsl` with `validate_only=True` to pre-validate
+    3. **TRADITIONAL**: Get lakehouse SQL connection details using get_lakehouse_sql_connection_string
+    4. **TRADITIONAL**: Validate table schema using query_lakehouse_sql_endpoint 
+    5. **ENHANCED**: Create TMSL with expressions block and proper partition structure (or use template)
+    6. **ENHANCED**: Deploy using update_model_using_tmsl with automatic validation
+    7. Test with execute_dax_query but only against the model name that got created.  Do not query a different model
+    
+    ## Notes for creating a new DirectLake Model ##
+    - **RECOMMENDED**: Use the new `generate_directlake_tmsl_template` tool for automatic generation
+    - To create a new model, you can use the `update_model_using_tmsl` tool with a TMSL definition that includes the `createOrReplace` for the database object.
+    - **NEW**: Enhanced validation prevents common mistakes before deployment
+    - The TMSL definition should include the structure of the model, including tables, columns, and measures.
+    - Ensure you provide a valid dataset name and workspace name when creating a new model.
+    - The tool will return a success message or an error if the creation fails.
+    - Notes:
+    - The TMSL definition should be a valid JSON string.
+    - **IMPORTANT**: The Sql.Database function takes two arguments: (1) SQL Analytics Endpoint connection string, (2) SQL Analytics Endpoint ID (NOT the lakehouse name or lakehouse ID).
+    - Use `get_lakehouse_sql_connection_string` tool to get the correct endpoint ID for the Sql.Database function.
+    - Do not use the same name for the model as the Lakehouse, as this can cause conflicts.
+    - Relationships ONLY need the following five properties: `name` , `fromTable` ,  `fromColumn` , `toTable` , `toColumn`
+    - Do NOT use the crossFilterBehavior property in relationships for DirectLake models.
+    - When creating a new model, ensure each table only uses columns from the lakehouse tables and not any other source.  Validate if needed that the table names are not the same as any other source.
+    - Do not create a column called rowNumber or rowNum, as this is a reserved name in DirectLake models.
+    - When creating a new Directlake model, save the TMSL definition to a file for future reference or updates in the models subfolder.
+    - Do not attempt to modify an existing semantic model when asked to create a new semantic model.  This would be bad and may overwrite another model
+    
+    ## DirectLake Model Creation Checklist - FINAL VERIFICATION NOW AUTOMATED! ##
+    The enhanced validation system automatically verifies ALL of these before deployment:
+    1. ✅ Model has "expressions" section with "DatabaseQuery" M expression ← AUTOMATICALLY CHECKED!
+    2. ✅ Sql.Database() function with connection string and SQL Analytics Endpoint ID
+    3. ✅ Each table has "partitions" array with at least one partition
+    4. ✅ Each partition has "mode": "directLake" (NOT at table level!) ← AUTOMATICALLY ENFORCED!
+    5. ✅ Each partition has "expressionSource": "DatabaseQuery"
+    6. ✅ All column names and data types validated against actual lakehouse tables
+    7. ✅ **DEPLOYMENT BREAKER**: No table object has "mode": "directLake" property (BLOCKED!) ← AUTOMATICALLY PREVENTED!
+    8. ✅ **STRUCTURE CHECK**: Table objects only have allowed properties: name, source, columns, partitions, measures
+    
+    ## 🚨 TOP 3 MISTAKES NOW PREVENTED BY VALIDATION! 🚨
+    1. Missing expressions block = VALIDATION ERROR with fix suggestion
+    2. **Table-level "mode": "directLake" = BLOCKED before deployment with detailed error**
+    3. Wrong partition structure = VALIDATION ERROR with structure guidance
+    4. Wrong Sql.Database arguments = DETECTED with correction suggestion
+    
+    ## 🚫 FORBIDDEN TABLE PROPERTIES - NOW ENFORCED! 🚫
+    **The validation system blocks these properties in table objects:**
+    - "mode": "directLake" ← VALIDATION ERROR
+    - "defaultMode": "directLake" ← VALIDATION ERROR  
+    - Any mode-related property ← VALIDATION ERROR
+    
+    ## CRITICAL: Schema Validation Before Model Creation ##
+    - **ENHANCED**: The `generate_directlake_tmsl_template` tool automatically validates schemas
+    - **TRADITIONAL**: Use the `query_lakehouse_sql_endpoint` tool to validate table schemas manually
+    - Do not query all the data in the Lakehouse table - this is not needed and can be slow, especially for large tables.  Use the TOP 5 or similar queries to validate the structure.
+    - DirectLake models must exactly match the source Delta table schema - any mismatch will cause deployment failures
+    - **Schema-Aware Query Examples**:
+      * `"SELECT COLUMN_NAME, DATA_TYPE FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = 'your_table_name'"` (works with any schema setup)
+      * `"SELECT TOP 5 * FROM your_table_name"` (use exact table name from list_fabric_delta_tables)
+      * `"SELECT TOP 5 * FROM dbo.your_table_name"` (if lakehouse has defaultSchema: "dbo")
+      * `"SHOW TABLES"` (to see all available tables and their naming patterns)
+      * `"SELECT TABLE_SCHEMA, TABLE_NAME FROM INFORMATION_SCHEMA.TABLES"` (to see schema structure)
+    - Column names are case-sensitive and must match exactly
+    - Data types must be compatible between Delta Lake and DirectLake
+    - Never assume column names or structures - always validate first
+    - **Troubleshooting**: If a query fails with "object not found", try alternative schema patterns (with/without dbo prefix)
+    
+    ## Example Enhanced Workflow ##
+    ```
+    # NEW RECOMMENDED APPROACH:
+    1. template = generate_directlake_tmsl_template(workspace_id, lakehouse_id, ["dim_Date", "fact_Sales"], "MyModel")
+    2. validation = update_model_using_tmsl(workspace, "MyModel", template, validate_only=True)  
+    3. result = update_model_using_tmsl(workspace, "MyModel", template, validate_only=False)
+    
+    # TRADITIONAL APPROACH WITH VALIDATION:
+    1. connection_info = get_lakehouse_sql_connection_string(workspace_id, lakehouse_id)
+    2. schema_check = query_lakehouse_sql_endpoint(workspace_id, "INFORMATION_SCHEMA query")
+    3. tmsl = create_manual_tmsl_definition()
+    4. validation = update_model_using_tmsl(workspace, model, tmsl, validate_only=True)
+    5. deployment = update_model_using_tmsl(workspace, model, tmsl, validate_only=False)
+    ```
+
+"""
 )
 
 # Register all MCP prompts from the prompts module
@@ -178,14 +441,384 @@ def execute_dax_query(workspace_name:str, dataset_name: str, dax_query: str, dat
     connection.Close()
     return results
 
+# Internal helper function for SQL queries (not exposed as MCP tool)
+def _internal_query_lakehouse_sql_endpoint(workspace_id: str, sql_query: str, lakehouse_id: str = None, lakehouse_name: str = None) -> str:
+    """Executes a SQL query against a Fabric Lakehouse SQL Analytics Endpoint to validate table schemas and data.
+    This tool connects to the specified Fabric Lakehouse SQL Analytics Endpoint and executes the provided SQL query.
+    Use this tool to:
+    - Validate actual column names and data types in lakehouse tables
+    - Query table schemas before creating DirectLake models
+    - Inspect data samples from lakehouse tables
+    - Verify table structures match your model expectations
+    
+    Args:
+        workspace_id: The Fabric workspace ID containing the lakehouse
+        sql_query: The SQL query to execute (e.g., "SELECT * FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = 'date'")
+        lakehouse_id: Optional specific lakehouse ID to query
+        lakehouse_name: Optional lakehouse name to query (alternative to lakehouse_id)
+    
+    Returns:
+        JSON string containing query results or error message
+    
+    Example queries for schema validation:
+    - "SELECT COLUMN_NAME, DATA_TYPE FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = 'sales_1'"
+    - "SELECT TOP 5 * FROM date"
+    - "SHOW TABLES"
+    """
+    import json
+
+    # Get cached or fresh authentication token
+    token_struct, success, error = get_cached_azure_token("https://database.windows.net/.default")
+    if not success:
+        return json.dumps({
+            "success": False,
+            "error": f"Authentication failed: {error}"
+        }, indent=2)
+
+    # Check if pyodbc is available
+    if pyodbc is None:
+        return json.dumps({
+            "success": False,
+            "error": "pyodbc is not installed. Please install it using: pip install pyodbc"
+        }, indent=2)
+    
+    try:
+        # Get the SQL Analytics Endpoint connection string
+        connection_info = fabric_get_lakehouse_sql_connection_string(workspace_id, lakehouse_id, lakehouse_name)
+        
+        if "error" in connection_info.lower():
+            return f"Error getting connection string: {connection_info}"
+        
+        # Parse the connection info to get the server and endpoint ID
+        connection_data = json.loads(connection_info)
+        server_name = connection_data.get("sql_endpoint", {}).get("server_name")
+        endpoint_id = connection_data.get("sql_endpoint", {}).get("endpoint_id")
+        
+        if not server_name or not endpoint_id:
+            return "Error: Could not retrieve SQL Analytics Endpoint information"
+        
+        # Build connection string for SQL Analytics Endpoint
+        # For Fabric SQL Analytics Endpoints, use the lakehouse name as the database
+        lakehouse_name = connection_data.get("lakehouse_name")
+        if not lakehouse_name:
+            return json.dumps({
+                "success": False,
+                "error": "Could not determine lakehouse name for database connection"
+            }, indent=2)
+        
+        # Try different ODBC drivers in order of preference
+        available_drivers = [
+            "ODBC Driver 18 for SQL Server",
+            "ODBC Driver 17 for SQL Server", 
+            "SQL Server"
+        ]
+        
+        # Detect which driver is available
+        available_driver = None
+        available_pyodbc_drivers = pyodbc.drivers()
+        
+        for driver in available_drivers:
+            if driver in available_pyodbc_drivers:
+                available_driver = driver
+                break
+        
+        if not available_driver:
+            return json.dumps({
+                "success": False,
+                "error": "No compatible ODBC driver found. Please install ODBC Driver for SQL Server.",
+                "available_drivers": list(available_pyodbc_drivers),
+                "looking_for": available_drivers
+            }, indent=2)
+        
+        connection_string = (
+            f"Driver={{{available_driver}}};"
+            f"Server={server_name};"
+            f"Database={lakehouse_name};"
+            f"Encrypt=yes;"
+            f"TrustServerCertificate=yes;"
+            f"Connection Timeout=30;"
+        )
+        
+        # Debug: log connection attempt
+        print(f"Attempting connection with driver: {available_driver}")
+        print(f"Connection string: {connection_string}")
+        
+        # Execute the query using ActiveDirectoryInteractive authentication
+        with pyodbc.connect(connection_string, attrs_before={1256  : token_struct}) as conn:
+            cursor = conn.cursor()
+            cursor.execute(sql_query)
+            
+            # Get column names
+            columns = [column[0] for column in cursor.description]
+            
+            # Fetch results
+            rows = cursor.fetchall()
+            
+            # Convert to list of dictionaries
+            results = []
+            for row in rows:
+                row_dict = {}
+                for i, value in enumerate(row):
+                    # Handle special data types
+                    if hasattr(value, 'isoformat'):  # datetime objects
+                        row_dict[columns[i]] = value.isoformat()
+                    elif isinstance(value, (bytes, bytearray)):  # binary data
+                        row_dict[columns[i]] = str(value)
+                    else:
+                        row_dict[columns[i]] = value
+                results.append(row_dict)
+            
+            return json.dumps({
+                "success": True,
+                "query": sql_query,
+                "columns": columns,
+                "row_count": len(results),
+                "results": results[:100],  # Limit to first 100 rows to avoid large responses
+                "note": f"Showing first 100 rows out of {len(results)} total rows" if len(results) > 100 else None
+            }, indent=2)
+            
+    except pyodbc.Error as e:
+        error_details = str(e)
+        return json.dumps({
+            "success": False,
+            "error": f"SQL Error: {error_details}",
+            "query": sql_query,
+            "debug_info": {
+                "server_name": server_name if 'server_name' in locals() else "Not available",
+                "lakehouse_name": lakehouse_name if 'lakehouse_name' in locals() else "Not available",
+                "available_driver": available_driver if 'available_driver' in locals() else "Not detected",
+                "connection_string": connection_string if 'connection_string' in locals() else "Not available"
+            }
+        }, indent=2)
+    except Exception as e:
+        return json.dumps({
+            "success": False,
+            "error": f"Connection Error: {str(e)}",
+            "query": sql_query,
+            "debug_info": {
+                "connection_info": connection_info if 'connection_info' in locals() else "Not available"
+            }
+        }, indent=2)
+
 @mcp.tool
-def update_model_using_tmsl(workspace_name: str, dataset_name: str, tmsl_definition: str) -> str:
-    """Updates the TMSL definition for an Analysis Services Model.
-    This tool connects to the specified Power BI workspace and dataset name, updates the TMSL definition,
-    and returns a success message or an error if the update fails.
-    The function connects to the Power BI service using an access token, deserializes the TMSL definition,
-    updates the model, and returns the result.
-    Note: The TMSL definition should be a valid serialized TMSL string.
+def query_lakehouse_sql_endpoint(workspace_id: str, sql_query: str, lakehouse_id: str = None, lakehouse_name: str = None) -> str:
+    """Executes a SQL query against a Fabric Lakehouse SQL Analytics Endpoint to validate table schemas and data.
+    This tool connects to the specified Fabric Lakehouse SQL Analytics Endpoint and executes the provided SQL query.
+    Use this tool to:
+    - Validate actual column names and data types in lakehouse tables
+    - Query table schemas before creating DirectLake models
+    - Inspect data samples from lakehouse tables
+    - Verify table structures match your model expectations
+    
+    Args:
+        workspace_id: The Fabric workspace ID containing the lakehouse
+        sql_query: The SQL query to execute (e.g., "SELECT * FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = 'date'")
+        lakehouse_id: Optional specific lakehouse ID to query
+        lakehouse_name: Optional lakehouse name to query (alternative to lakehouse_id)
+    
+    Returns:
+        JSON string containing query results or error message
+    
+    Example queries for schema validation:
+    - "SELECT COLUMN_NAME, DATA_TYPE FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = 'sales_1'"
+    - "SELECT TOP 5 * FROM date"
+    - "SHOW TABLES"
+    """
+    return _internal_query_lakehouse_sql_endpoint(workspace_id, sql_query, lakehouse_id, lakehouse_name)
+
+@mcp.tool
+def generate_directlake_tmsl_template(workspace_id: str, lakehouse_id: str = None, lakehouse_name: str = None, table_names: Optional[List[str]] = None, model_name: str = "NewDirectLakeModel") -> str:
+    """Generates a valid DirectLake TMSL template with proper structure and validated schemas.
+    
+    This helper tool automatically creates a complete DirectLake TMSL definition by:
+    1. Connecting to the specified lakehouse
+    2. Validating table schemas using SQL Analytics Endpoint
+    3. Generating proper TMSL structure with all required components
+    4. Including validation-ready partitions and expressions
+    
+    Args:
+        workspace_id: The Fabric workspace ID containing the lakehouse
+        lakehouse_id: Optional specific lakehouse ID
+        lakehouse_name: Optional lakehouse name (alternative to lakehouse_id)
+        table_names: List of table names to include (if not provided, suggests available tables)
+        model_name: Name for the new DirectLake model
+    
+    Returns:
+        Complete TMSL JSON string ready for use with update_model_using_tmsl
+    """
+    
+    try:
+        # Get lakehouse connection information
+        connection_info = fabric_get_lakehouse_sql_connection_string(workspace_id, lakehouse_id, lakehouse_name)
+        if "error" in connection_info.lower():
+            return f"Error getting lakehouse connection: {connection_info}"
+        
+        connection_data = json.loads(connection_info)
+        server_name = connection_data.get("sql_endpoint", {}).get("server_name")
+        endpoint_id = connection_data.get("sql_endpoint", {}).get("endpoint_id")
+        actual_lakehouse_name = connection_data.get("lakehouse_name")
+        
+        if not server_name or not endpoint_id:
+            return "Error: Could not retrieve SQL Analytics Endpoint information"
+        
+        # If no table names provided, get available tables
+        if not table_names:
+            delta_tables_result = list_delta_tables(workspace_id, lakehouse_id)
+            try:
+                delta_tables = json.loads(delta_tables_result)
+                available_tables = [table["name"] for table in delta_tables]
+                return f"Available tables in lakehouse '{actual_lakehouse_name}':\n{json.dumps(available_tables, indent=2)}\n\nPlease call this function again with specific table_names parameter."
+            except:
+                return f"Error retrieving available tables: {delta_tables_result}"
+        
+        # Validate table schemas
+        validated_tables = []
+        for table_name in table_names:
+            schema_query = f"SELECT COLUMN_NAME, DATA_TYPE, IS_NULLABLE FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = '{table_name}' ORDER BY ORDINAL_POSITION"
+            schema_result = _internal_query_lakehouse_sql_endpoint(workspace_id, schema_query, lakehouse_id, lakehouse_name)
+            
+            try:
+                schema_data = json.loads(schema_result)
+                if schema_data.get("success"):
+                    columns = []
+                    for col in schema_data.get("results", []):
+                        # Map SQL types to DirectLake types
+                        sql_type = col["DATA_TYPE"].lower()
+                        if sql_type in ["varchar", "nvarchar", "char", "nchar", "text", "ntext"]:
+                            dl_type = "string"
+                        elif sql_type in ["int", "bigint", "smallint", "tinyint"]:
+                            dl_type = "int64"
+                        elif sql_type in ["decimal", "numeric", "float", "real", "money", "smallmoney"]:
+                            dl_type = "decimal"
+                        elif sql_type in ["datetime", "datetime2", "date", "time", "smalldatetime"]:
+                            dl_type = "dateTime"
+                        elif sql_type in ["bit"]:
+                            dl_type = "boolean"
+                        else:
+                            dl_type = "string"  # Default fallback
+                        
+                        columns.append({
+                            "name": col["COLUMN_NAME"],
+                            "dataType": dl_type,
+                            "sourceColumn": col["COLUMN_NAME"],
+                            "lineageTag": f"{table_name}_{col['COLUMN_NAME']}",
+                            "sourceLineageTag": col["COLUMN_NAME"],
+                            "summarizeBy": "sum" if dl_type in ["int64", "decimal"] and "quantity" in col["COLUMN_NAME"].lower() else "none"
+                        })
+                    
+                    validated_tables.append({
+                        "name": table_name,
+                        "columns": columns
+                    })
+                else:
+                    return f"Error validating schema for table '{table_name}': {schema_data.get('error', 'Unknown error')}"
+            except Exception as e:
+                return f"Error processing schema for table '{table_name}': {str(e)}"
+        
+        # Generate complete TMSL structure
+        tmsl_template = {
+            "createOrReplace": {
+                "object": {
+                    "database": model_name
+                },
+                "database": {
+                    "name": model_name,
+                    "compatibilityLevel": 1604,
+                    "model": {
+                        "culture": "en-US",
+                        "collation": "Latin1_General_100_BIN2_UTF8",
+                        "dataAccessOptions": {
+                            "legacyRedirects": True,
+                            "returnErrorValuesAsNull": True
+                        },
+                        "defaultPowerBIDataSourceVersion": "powerBI_V3",
+                        "sourceQueryCulture": "en-US",
+                        "tables": [],
+                        "expressions": [
+                            {
+                                "name": "DatabaseQuery",
+                                "kind": "m",
+                                "expression": [
+                                    "let",
+                                    f"    database = Sql.Database(\"{server_name}\", \"{endpoint_id}\")",
+                                    "in",
+                                    "    database"
+                                ],
+                                "lineageTag": "DatabaseQuery_expression",
+                                "annotations": [
+                                    {
+                                        "name": "PBI_IncludeFutureArtifacts",
+                                        "value": "False"
+                                    }
+                                ]
+                            }
+                        ],
+                        "annotations": [
+                            {
+                                "name": "__PBI_TimeIntelligenceEnabled",
+                                "value": "0"
+                            },
+                            {
+                                "name": "PBI_QueryOrder",
+                                "value": "[\"DatabaseQuery\"]"
+                            },
+                            {
+                                "name": "PBI_ProTooling",
+                                "value": "[\"WebModelingEdit\"]"
+                            }
+                        ]
+                    }
+                }
+            }
+        }
+        
+        # Add validated tables with proper DirectLake structure
+        for table_info in validated_tables:
+            table_def = {
+                "name": table_info["name"],
+                "lineageTag": f"{table_info['name']}_table",
+                "sourceLineageTag": f"[dbo].[{table_info['name']}]",
+                "columns": table_info["columns"],
+                "partitions": [
+                    {
+                        "name": f"{table_info['name']}_partition",
+                        "mode": "directLake",
+                        "source": {
+                            "type": "entity",
+                            "entityName": table_info["name"],
+                            "expressionSource": "DatabaseQuery"
+                        }
+                    }
+                ]
+            }
+            tmsl_template["createOrReplace"]["database"]["model"]["tables"].append(table_def)
+        
+        return json.dumps(tmsl_template, indent=2)
+        
+    except Exception as e:
+        return f"Error generating DirectLake TMSL template: {str(e)}"
+
+@mcp.tool
+def update_model_using_tmsl(workspace_name: str, dataset_name: str, tmsl_definition: str, validate_only: bool = False) -> str:
+    """Updates the TMSL definition for an Analysis Services Model with enhanced validation.
+    
+    This tool connects to the specified Power BI workspace and dataset name, validates and updates the TMSL definition,
+    and returns a success message or detailed error information if the update fails.
+    
+    Args:
+        workspace_name: The Power BI workspace name
+        dataset_name: The dataset/model name to update
+        tmsl_definition: Valid TMSL JSON string
+        validate_only: If True, only validates the TMSL without executing (default: False)
+    
+    Enhanced Features:
+    - Pre-validates TMSL structure before sending to server
+    - Checks for common DirectLake mistakes
+    - Provides detailed error messages with suggestions
+    - Validates required DirectLake components
+    
+    Returns:
+        Success message or detailed error with suggestions for fixes
     """   
     script_dir = os.path.dirname(os.path.abspath(__file__))
     dotnet_dir = os.path.join(script_dir, "dotnet")
@@ -209,6 +842,15 @@ def update_model_using_tmsl(workspace_name: str, dataset_name: str, tmsl_definit
     
     try:
         server.Connect(connection_string)
+        
+        # Enhanced TMSL validation before processing
+        validation_result = validate_tmsl_structure(tmsl_definition)
+        if not validation_result["valid"]:
+            return f"❌ TMSL Validation Failed:\n{validation_result['error']}\n\n💡 Suggestions:\n{validation_result['suggestions']}"
+        
+        # If validate_only is True, return validation success without executing
+        if validate_only:
+            return f"✅ TMSL Validation Passed:\n{validation_result['summary']}\n\n📋 Structure validated successfully - ready for deployment!"
         
         # Parse the TMSL definition to check its structure
         try:
@@ -391,164 +1033,7 @@ def get_model_definition(workspace_name:str = None, dataset_name:str=None) -> st
     tmsl_definition = JsonSerializer.SerializeDatabase(database, options)
     return tmsl_definition
 
-@mcp.tool
-def query_lakehouse_sql_endpoint(workspace_id: str, sql_query: str, lakehouse_id: str = None, lakehouse_name: str = None) -> str:
-    """Executes a SQL query against a Fabric Lakehouse SQL Analytics Endpoint to validate table schemas and data.
-    This tool connects to the specified Fabric Lakehouse SQL Analytics Endpoint and executes the provided SQL query.
-    Use this tool to:
-    - Validate actual column names and data types in lakehouse tables
-    - Query table schemas before creating DirectLake models
-    - Inspect data samples from lakehouse tables
-    - Verify table structures match your model expectations
-    
-    Args:
-        workspace_id: The Fabric workspace ID containing the lakehouse
-        sql_query: The SQL query to execute (e.g., "SELECT * FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = 'date'")
-        lakehouse_id: Optional specific lakehouse ID to query
-        lakehouse_name: Optional lakehouse name to query (alternative to lakehouse_id)
-    
-    Returns:
-        JSON string containing query results or error message
-    
-    Example queries for schema validation:
-    - "SELECT COLUMN_NAME, DATA_TYPE FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = 'sales_1'"
-    - "SELECT TOP 5 * FROM date"
-    - "SHOW TABLES"
-    """
-    import json
 
-    # Get cached or fresh authentication token
-    token_struct, success, error = get_cached_azure_token("https://database.windows.net/.default")
-    if not success:
-        return json.dumps({
-            "success": False,
-            "error": f"Authentication failed: {error}"
-        }, indent=2)
-
-    # Check if pyodbc is available
-    if pyodbc is None:
-        return json.dumps({
-            "success": False,
-            "error": "pyodbc is not installed. Please install it using: pip install pyodbc"
-        }, indent=2)
-    
-    try:
-        # Get the SQL Analytics Endpoint connection string
-        connection_info = fabric_get_lakehouse_sql_connection_string(workspace_id, lakehouse_id, lakehouse_name)
-        
-        if "error" in connection_info.lower():
-            return f"Error getting connection string: {connection_info}"
-        
-        # Parse the connection info to get the server and endpoint ID
-        connection_data = json.loads(connection_info)
-        server_name = connection_data.get("sql_endpoint", {}).get("server_name")
-        endpoint_id = connection_data.get("sql_endpoint", {}).get("endpoint_id")
-        
-        if not server_name or not endpoint_id:
-            return "Error: Could not retrieve SQL Analytics Endpoint information"
-        
-        # Build connection string for SQL Analytics Endpoint
-        # For Fabric SQL Analytics Endpoints, use the lakehouse name as the database
-        lakehouse_name = connection_data.get("lakehouse_name")
-        if not lakehouse_name:
-            return json.dumps({
-                "success": False,
-                "error": "Could not determine lakehouse name for database connection"
-            }, indent=2)
-        
-        # Try different ODBC drivers in order of preference
-        available_drivers = [
-            "ODBC Driver 18 for SQL Server",
-            "ODBC Driver 17 for SQL Server", 
-            "SQL Server"
-        ]
-        
-        # Detect which driver is available
-        available_driver = None
-        available_pyodbc_drivers = pyodbc.drivers()
-        
-        for driver in available_drivers:
-            if driver in available_pyodbc_drivers:
-                available_driver = driver
-                break
-        
-        if not available_driver:
-            return json.dumps({
-                "success": False,
-                "error": "No compatible ODBC driver found. Please install ODBC Driver for SQL Server.",
-                "available_drivers": list(available_pyodbc_drivers),
-                "looking_for": available_drivers
-            }, indent=2)
-        
-        connection_string = (
-            f"Driver={{{available_driver}}};"
-            f"Server={server_name};"
-            f"Database={lakehouse_name};"
-            f"Encrypt=yes;"
-            f"TrustServerCertificate=yes;"
-            f"Connection Timeout=30;"
-        )
-        
-        # Debug: log connection attempt
-        print(f"Attempting connection with driver: {available_driver}")
-        print(f"Connection string: {connection_string}")
-        
-        # Execute the query using ActiveDirectoryInteractive authentication
-        with pyodbc.connect(connection_string, attrs_before={1256  : token_struct}) as conn:
-            cursor = conn.cursor()
-            cursor.execute(sql_query)
-            
-            # Get column names
-            columns = [column[0] for column in cursor.description]
-            
-            # Fetch results
-            rows = cursor.fetchall()
-            
-            # Convert to list of dictionaries
-            results = []
-            for row in rows:
-                row_dict = {}
-                for i, value in enumerate(row):
-                    # Handle special data types
-                    if hasattr(value, 'isoformat'):  # datetime objects
-                        row_dict[columns[i]] = value.isoformat()
-                    elif isinstance(value, (bytes, bytearray)):  # binary data
-                        row_dict[columns[i]] = str(value)
-                    else:
-                        row_dict[columns[i]] = value
-                results.append(row_dict)
-            
-            return json.dumps({
-                "success": True,
-                "query": sql_query,
-                "columns": columns,
-                "row_count": len(results),
-                "results": results[:100],  # Limit to first 100 rows to avoid large responses
-                "note": f"Showing first 100 rows out of {len(results)} total rows" if len(results) > 100 else None
-            }, indent=2)
-            
-    except pyodbc.Error as e:
-        error_details = str(e)
-        return json.dumps({
-            "success": False,
-            "error": f"SQL Error: {error_details}",
-            "query": sql_query,
-            "debug_info": {
-                "server_name": server_name if 'server_name' in locals() else "Not available",
-                "lakehouse_name": lakehouse_name if 'lakehouse_name' in locals() else "Not available",
-                "available_driver": available_driver if 'available_driver' in locals() else "Not detected",
-                "connection_string": connection_string if 'connection_string' in locals() else "Not available"
-            }
-        }, indent=2)
-    except Exception as e:
-        return json.dumps({
-            "success": False,
-            "error": f"Connection Error: {str(e)}",
-            "query": sql_query,
-            "debug_info": {
-                "connection_info": connection_info if 'connection_info' in locals() else "Not available"
-            }
-        }, indent=2)
 
 
 def main():
