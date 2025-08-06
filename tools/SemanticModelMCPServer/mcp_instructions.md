@@ -8,6 +8,7 @@ A tool to browse and manage semantic models in Microsoft Fabric and Power BI.
     - List Power BI Notebooks
     - List Fabric Lakehouses
     - List Fabric Delta Tables
+    - List Fabric Data Pipelines
     - Get Power BI Workspace ID
     - Get Model Definition
     - Execute DAX Queries
@@ -24,12 +25,19 @@ A tool to browse and manage semantic models in Microsoft Fabric and Power BI.
     - "Can you list notebooks in workspace X?"
     - "Show me the lakehouses in this workspace"
     - "List all Delta Tables in lakehouse Y"
+    - "Show me the data pipelines in this workspace"
 
     ## Fabric Lakehouse Support:
     - Use `list_fabric_lakehouses` to see all lakehouses in a workspace
     - Use `list_fabric_delta_tables` to see Delta Tables in a specific lakehouse
     - If you don't specify a lakehouse ID, the tool will use the first lakehouse found
     - Delta Tables are the primary table format used in Fabric lakehouses
+
+    ## Fabric Data Pipeline Support:
+    - Use `list_fabric_pipelines` to see all Data Pipelines in a workspace
+    - Data Pipelines are ETL/ELT workflows that can orchestrate data movement and transformation
+    - The tool returns pipeline information including ID, name, description, and workspace details
+    - Useful for discovering available data processing workflows in your Fabric workspace
 
     ## Note:
     - Ensure you have the necessary permissions to access Power BI and Fabric resources.
@@ -108,10 +116,14 @@ A tool to browse and manage semantic models in Microsoft Fabric and Power BI.
     - 🔧 FORMAT: expressions array with name:"DatabaseQuery", kind:"m", expression array
     
     **MANDATORY #2: TABLE MODE RESTRICTION**  
-    - ❌ NEVER ADD: "mode": "directLake" at the table level (this is INVALID)
+    - ❌ **NEVER ADD**: "mode": "directLake" at the table level (this is INVALID and will break deployment)
     - ✅ ONLY ADD: "mode": "directLake" in the partition object inside partitions array
-    - 🚫 TABLE LEVEL: { "name": "TableName", "mode": "directLake" } ← WRONG!
+    - 🚫 TABLE LEVEL: { "name": "TableName", "mode": "directLake" } ← WRONG! CAUSES FAILURE!
     - ✅ PARTITION LEVEL: { "name": "Partition", "mode": "directLake", "source": {...} } ← CORRECT!
+    
+    **MANDATORY #3: TABLE STRUCTURE**
+    - ✅ Table objects should ONLY have: name, source, columns, partitions, measures (optional)
+    - ❌ Table objects should NEVER have: mode, defaultMode, or any mode-related properties
     
     ## DirectLake Model Creation Checklist - VERIFY EVERY TIME ##
     Before creating any DirectLake model, ensure ALL of the following are included:
@@ -121,20 +133,25 @@ A tool to browse and manage semantic models in Microsoft Fabric and Power BI.
     4. ✅ Each partition has "mode": "directLake" (NOT at table level!)
     5. ✅ Each partition has "expressionSource": "DatabaseQuery"
     6. ✅ All column names and data types validated against actual lakehouse tables
-    7. ✅ No table object has "mode": "directLake" property (INVALID!)
+    7. ✅ **CRITICAL**: No table object has "mode": "directLake" property (INVALID AND BREAKS DEPLOYMENT!)
+    8. ✅ Table objects only contain: name, source, columns, partitions, measures (no mode properties)
     
     ## Common DirectLake Mistakes to AVOID ##
     - 🚫 Missing expressions block entirely (model won't connect to data)
-    - 🚫 Adding "mode": "directLake" to table object (causes deployment failure)
+    - 🚫 **CRITICAL ERROR**: Adding "mode": "directLake" to table object (causes deployment failure)
     - 🚫 Using lakehouse name instead of SQL Analytics Endpoint ID in Sql.Database()
     - 🚫 Missing partitions array (DirectLake requires partitions)
     - 🚫 Wrong expressionSource value (must be "DatabaseQuery")
+    
+    ## 🚨 NEVER ADD MODE TO TABLE OBJECTS 🚨 ##
+    - ❌ WRONG: { "name": "TableName", "mode": "directLake", "source": {...} }
+    - ✅ CORRECT: { "name": "TableName", "source": {...}, "partitions": [{"mode": "directLake"}] }
     
     ## Step-by-Step DirectLake Creation Process ##
     1. Get lakehouse SQL connection details using get_lakehouse_sql_connection_string
     2. Validate table schema using query_lakehouse_sql_endpoint 
     3. Create TMSL with expressions block and proper partition structure
-    4. Deploy using update_model_using_tmsl
+    4. Create the new model using update_model_using_tmsl which will deploy the new model
     5. Test with execute_dax_query but only against the model name that got created.  Do not query a different model
     ## Notes for creating a new DirectLake Model ##
     - To create a new model, you can use the `update_model_using_tmsl` tool with a TMSL definition that includes the `createOrReplace` for the database object.
@@ -161,11 +178,19 @@ A tool to browse and manage semantic models in Microsoft Fabric and Power BI.
     4. ✅ Each partition has "mode": "directLake" (NOT at table level!) ← CRITICAL!
     5. ✅ Each partition has "expressionSource": "DatabaseQuery"
     6. ✅ All column names and data types validated against actual lakehouse tables
-    7. ✅ No table object has "mode": "directLake" property (INVALID!) ← CRITICAL!
+    7. ✅ **DEPLOYMENT BREAKER**: No table object has "mode": "directLake" property (INVALID!) ← CRITICAL!
+    8. ✅ **STRUCTURE CHECK**: Table objects only have allowed properties: name, source, columns, partitions, measures
     
-    ## 🚨 REMEMBER: These are the TOP 2 mistakes that break DirectLake models! 🚨
+    ## 🚨 REMEMBER: These are the TOP 3 mistakes that break DirectLake models! 🚨
     1. Missing expressions block = Model can't connect to data
-    2. Table-level "mode": "directLake" = Invalid TMSL causes deployment failure
+    2. **Table-level "mode": "directLake" = Invalid TMSL causes deployment failure**
+    3. Wrong partition structure = DirectLake mode not applied correctly
+    
+    ## 🚫 FORBIDDEN TABLE PROPERTIES 🚫
+    **NEVER add these properties to table objects in DirectLake TMSL:**
+    - "mode": "directLake" ← BREAKS DEPLOYMENT
+    - "defaultMode": "directLake" ← INVALID
+    - Any mode-related property ← WRONG PLACE
     
     ## CRITICAL: Schema Validation Before Model Creation ##
     - **ALWAYS** validate the actual table schemas in the lakehouse BEFORE creating a DirectLake model
