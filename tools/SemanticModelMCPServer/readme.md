@@ -80,7 +80,7 @@ The server uses Azure Active Directory authentication. Ensure you have:
 
 ### 4. Get Model Definition
 ```
-#semantic_model_mcp_server get TMDL definition for [workspace_name] and [dataset_name]
+#semantic_model_mcp_server get TMSL definition for [workspace_name] and [dataset_name]
 ```
 
 ### 5. Execute DAX Query
@@ -117,7 +117,7 @@ The server uses Azure Active Directory authentication. Ensure you have:
 
 ### Example 2: Get Model Definition
 ```
-#semantic_model_mcp_server get the TMDL definition for the DAX Performance Tuner Testing workspace and the Contoso 100M semantic model
+#semantic_model_mcp_server get the TMSL definition for the DAX Performance Tuner Testing workspace and the Contoso 100M semantic model
 ```
 
 ### Example 3: Execute DAX Query
@@ -158,7 +158,7 @@ Once you have the MCP server running in VS Code, you can start chatting with you
 
 **"What's the structure of my sales model?"**
 ```
-#semantic_model_mcp_server get the TMDL definition for [Workspace Name] and [Dataset Name]
+#semantic_model_mcp_server get the TMSL definition for [Workspace Name] and [Dataset Name]
 ```
 
 ### 📊 **Basic Data Analysis**
@@ -255,7 +255,7 @@ Once you have the MCP server running in VS Code, you can start chatting with you
 
 **"What measures are defined in my model?"**
 ```
-#semantic_model_mcp_server get the TMDL definition and show me all the measures
+#semantic_model_mcp_server get the TMSL definition and show me all the measures
 ```
 
 **"Are there any relationships I should be aware of?"**
@@ -265,7 +265,7 @@ Once you have the MCP server running in VS Code, you can start chatting with you
 
 **"What tables are hidden in my model?"**
 ```
-#semantic_model_mcp_server analyze the TMDL definition and list any hidden tables or columns
+#semantic_model_mcp_server analyze the TMSL definition and list any hidden tables or columns
 ```
 
 ### 💡 **Tips for Better Prompts**

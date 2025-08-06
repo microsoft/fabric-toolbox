@@ -197,6 +197,7 @@ def update_model_using_tmsl(workspace_name: str, dataset_name: str, tmsl_definit
     clr.AddReference(os.path.join(dotnet_dir, "Microsoft.IdentityModel.Abstractions.dll"))
 
     from Microsoft.AnalysisServices.Tabular import Server# type: ignore
+    from Microsoft.AnalysisServices import XmlaResultCollection  # type: ignore
 
     access_token = get_access_token()
     if not access_token:
@@ -267,12 +268,81 @@ def update_model_using_tmsl(workspace_name: str, dataset_name: str, tmsl_definit
                 }
             })
 
-        retval = server.Execute(final_tmsl)
-        return f"""TMSL definition updated successfully for dataset '{dataset_name}' in workspace '{workspace_name}'. {retval} ✅ """
+        retval: XmlaResultCollection = server.Execute(final_tmsl)
         
+        # Check if the execution was successful by examining the XmlaResultCollection
+        if retval is None:
+            return f"TMSL definition updated successfully for dataset '{dataset_name}' in workspace '{workspace_name}'. ✅"
+        
+        # Iterate through the XmlaResultCollection to check for errors or messages
+        errors = []
+        messages = []
+        warnings = []
+        
+        for result in retval:
+            # Check for errors in the result
+            if hasattr(result, 'HasErrors') and result.HasErrors:
+                if hasattr(result, 'Messages'):
+                    for message in result.Messages:
+                        if hasattr(message, 'MessageType'):
+                            if str(message.MessageType).lower() == 'error':
+                                errors.append(str(message.Description) if hasattr(message, 'Description') else str(message))
+                            elif str(message.MessageType).lower() == 'warning':
+                                warnings.append(str(message.Description) if hasattr(message, 'Description') else str(message))
+                            else:
+                                messages.append(str(message.Description) if hasattr(message, 'Description') else str(message))
+                        else:
+                            # If no MessageType, treat as general message
+                            messages.append(str(message.Description) if hasattr(message, 'Description') else str(message))
+            elif hasattr(result, 'Messages'):
+                # No explicit errors, but check messages anyway
+                for message in result.Messages:
+                    if hasattr(message, 'MessageType'):
+                        if str(message.MessageType).lower() == 'error':
+                            errors.append(str(message.Description) if hasattr(message, 'Description') else str(message))
+                        elif str(message.MessageType).lower() == 'warning':
+                            warnings.append(str(message.Description) if hasattr(message, 'Description') else str(message))
+                        else:
+                            messages.append(str(message.Description) if hasattr(message, 'Description') else str(message))
+                    else:
+                        messages.append(str(message.Description) if hasattr(message, 'Description') else str(message))
+        
+        # Determine the result based on what we found
+        if errors:
+            error_details = "; ".join(errors)
+            return f"Error updating TMSL definition for dataset '{dataset_name}' in workspace '{workspace_name}': {error_details}"
+        elif warnings:
+            warning_details = "; ".join(warnings)
+            success_msg = f"TMSL definition updated for dataset '{dataset_name}' in workspace '{workspace_name}' with warnings: {warning_details} ⚠️"
+            if messages:
+                success_msg += f" Additional info: {'; '.join(messages)}"
+            return success_msg
+        elif messages:
+            message_details = "; ".join(messages)
+            return f"TMSL definition updated for dataset '{dataset_name}' in workspace '{workspace_name}'. Server messages: {message_details} ✅"
+        else:
+            # No errors, warnings, or messages - successful execution
+            return f"TMSL definition updated successfully for dataset '{dataset_name}' in workspace '{workspace_name}'. ✅"
+        
+    except json.JSONDecodeError as e:
+        return f"Error: Invalid JSON in TMSL definition - {e}"
+    except ConnectionError as e:
+        print(f"Connection error in update_model_using_tmsl: {e}")
+        return f"Error connecting to Power BI service: {e}"
     except Exception as e:
+        # Check if it's an Analysis Services specific error that might contain useful details
+        error_message = str(e)
         print(f"Error in update_model_using_tmsl: {e}")
-        return f"Error updating TMSL definition: {e}"
+        
+        # Provide more context for common error scenarios
+        if "authentication" in error_message.lower() or "unauthorized" in error_message.lower():
+            return f"Authentication error: {error_message}. Please check your access token and permissions."
+        elif "not found" in error_message.lower():
+            return f"Dataset or workspace not found: {error_message}. Please verify the workspace name '{workspace_name}' and dataset name '{dataset_name}' are correct."
+        elif "permission" in error_message.lower() or "access" in error_message.lower():
+            return f"Permission error: {error_message}. You may not have sufficient permissions to modify this dataset."
+        else:
+            return f"Error updating TMSL definition: {error_message}"
     finally:
         # Ensure server connection is always closed
         try:

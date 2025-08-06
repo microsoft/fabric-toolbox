@@ -135,8 +135,8 @@ A tool to browse and manage semantic models in Microsoft Fabric and Power BI.
     2. Validate table schema using query_lakehouse_sql_endpoint 
     3. Create TMSL with expressions block and proper partition structure
     4. Deploy using update_model_using_tmsl
-    5. Test with execute_dax_query
-    
+    5. Test with execute_dax_query but only against the model name that got created.  Do not query a different model
+    ## Notes for creating a new DirectLake Model ##
     - To create a new model, you can use the `update_model_using_tmsl` tool with a TMSL definition that includes the `createOrReplace` for the database object.
     - The TMSL definition should include the structure of the model, including tables, columns, and measures.
     - Ensure you provide a valid dataset name and workspace name when creating a new model.
@@ -151,6 +151,7 @@ A tool to browse and manage semantic models in Microsoft Fabric and Power BI.
     - When creating a new model, ensure each table only uses columns from the lakehouse tables and not any other source.  Validate if needed that the table names are not the same as any other source.
     - Do not create a column called rowNumber or rowNum, as this is a reserved name in DirectLake models.
     - When creating a new Directlake model, save the TMSL definition to a file for future reference or updates in the models subfolder.
+    - Do not attempt to modify an existing semantic model when asked to create a new semantic model.  This would be bad and may overwrite another model
     
     ## DirectLake Model Creation Checklist - FINAL VERIFICATION ##
     Before deploying any DirectLake model, STOP and verify ALL of these:
