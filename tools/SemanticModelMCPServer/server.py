@@ -406,40 +406,97 @@ def execute_dax_query(workspace_name:str, dataset_name: str, dax_query: str, dat
     dotnet_dir = os.path.join(script_dir, "dotnet")
     
     print(f"Using .NET assemblies from: {dotnet_dir}")
-    #clr.AddReference(os.path.join(dotnet_dir, "Microsoft.AnalysisServices.dll"))
-    clr.AddReference(os.path.join(dotnet_dir, "Microsoft.AnalysisServices.Tabular.dll"))
-    clr.AddReference(os.path.join(dotnet_dir, "Microsoft.Identity.Client.dll"))
-    clr.AddReference(os.path.join(dotnet_dir, "Microsoft.IdentityModel.Abstractions.dll"))
-    clr.AddReference(os.path.join(dotnet_dir, "Microsoft.AnalysisServices.AdomdClient.dll"))
+    
+    try:
+        #clr.AddReference(os.path.join(dotnet_dir, "Microsoft.AnalysisServices.dll"))
+        clr.AddReference(os.path.join(dotnet_dir, "Microsoft.AnalysisServices.Tabular.dll"))
+        clr.AddReference(os.path.join(dotnet_dir, "Microsoft.Identity.Client.dll"))
+        clr.AddReference(os.path.join(dotnet_dir, "Microsoft.IdentityModel.Abstractions.dll"))
+        clr.AddReference(os.path.join(dotnet_dir, "Microsoft.AnalysisServices.AdomdClient.dll"))
+    except Exception as e:
+        return [{"error": f"Failed to load required .NET assemblies: {str(e)}", "error_type": "assembly_load_error"}]
 
-    from Microsoft.AnalysisServices.AdomdClient import AdomdConnection ,AdomdDataReader  # type: ignore
+    try:
+        from Microsoft.AnalysisServices.AdomdClient import AdomdConnection ,AdomdDataReader  # type: ignore
+    except ImportError as e:
+        return [{"error": f"Failed to import ADOMD libraries: {str(e)}", "error_type": "import_error"}]
 
+    # Validate authentication
     access_token = get_access_token()
     if not access_token:
-        return "Error: No valid access token available"
+        return [{"error": "No valid access token available. Please check authentication.", "error_type": "authentication_error"}]
+
+    # Validate required parameters
+    if not workspace_name or not workspace_name.strip():
+        return [{"error": "Workspace name is required and cannot be empty.", "error_type": "parameter_error"}]
+    
+    if not dataset_name or not dataset_name.strip():
+        return [{"error": "Dataset name is required and cannot be empty.", "error_type": "parameter_error"}]
+    
+    if not dax_query or not dax_query.strip():
+        return [{"error": "DAX query is required and cannot be empty.", "error_type": "parameter_error"}]
 
     workspace_name_encoded = urllib.parse.quote(workspace_name)
     # Use URL-encoded workspace name and standard XMLA connection format
     # The connection string format is: Data Source=powerbi://api.powerbi.com/v1.0/myorg/{workspace_name};Password={access_token};Catalog={dataset_name};
     connection_string = f"Data Source=powerbi://api.powerbi.com/v1.0/myorg/{workspace_name_encoded};Password={access_token};Catalog={dataset_name};"
 
-    connection = AdomdConnection(connection_string)
-    connection.Open()
+    connection = None
     try:
+        # Attempt to establish connection
+        connection = AdomdConnection(connection_string)
+        connection.Open()
+        
+        # Execute the DAX query
         command = connection.CreateCommand()
         command.CommandText = dax_query
         reader: AdomdDataReader = command.ExecuteReader()
+        
         results = []
         while reader.Read():
             row = {}
             for i in range(reader.FieldCount):
-                row[reader.GetName(i)] = reader.GetValue(i)
+                # Handle different data types and null values
+                value = reader.GetValue(i)
+                if value is None or str(value) == "":
+                    row[reader.GetName(i)] = None
+                elif hasattr(value, 'isoformat'):  # DateTime objects
+                    row[reader.GetName(i)] = value.isoformat()
+                else:
+                    row[reader.GetName(i)] = value
             results.append(row)
+        
+        reader.Close()
+        return results
+        
     except Exception as e:
-        print(f"Error executing DAX query: {e}")
-        results = []
-    connection.Close()
-    return results
+        error_msg = str(e).lower()
+        error_details = str(e)
+        
+        # Categorize different types of errors and provide helpful messages
+        if "authentication" in error_msg or "unauthorized" in error_msg or "login" in error_msg:
+            return [{"error": f"Authentication failed: {error_details}. Please check your access token and permissions.", "error_type": "authentication_error"}]
+        elif "workspace" in error_msg or "not found" in error_msg:
+            return [{"error": f"Workspace or dataset not found: {error_details}. Please verify workspace name '{workspace_name}' and dataset name '{dataset_name}' are correct.", "error_type": "not_found_error"}]
+        elif "permission" in error_msg or "access" in error_msg or "forbidden" in error_msg:
+            return [{"error": f"Permission denied: {error_details}. You may not have sufficient permissions to query this dataset.", "error_type": "permission_error"}]
+        elif "syntax" in error_msg or "parse" in error_msg or "invalid" in error_msg:
+            return [{"error": f"DAX query syntax error: {error_details}. Please check your DAX query syntax.", "error_type": "dax_syntax_error", "query": dax_query}]
+        elif "timeout" in error_msg or "timed out" in error_msg:
+            return [{"error": f"Query timeout: {error_details}. The query took too long to execute.", "error_type": "timeout_error"}]
+        elif "connection" in error_msg or "network" in error_msg:
+            return [{"error": f"Connection error: {error_details}. Please check your network connection and try again.", "error_type": "connection_error"}]
+        else:
+            return [{"error": f"Unexpected error executing DAX query: {error_details}", "error_type": "general_error", "query": dax_query}]
+    
+    finally:
+        # Ensure connection is always closed
+        try:
+            if connection is not None and hasattr(connection, 'State') and connection.State == 1:  # ConnectionState.Open = 1
+                connection.Close()
+        except Exception as cleanup_error:
+            print(f"Warning: Error during connection cleanup: {cleanup_error}")
+            # Don't return error here as it would mask the main error
 
 # Internal helper function for SQL queries (not exposed as MCP tool)
 def _internal_query_lakehouse_sql_endpoint(workspace_id: str, sql_query: str, lakehouse_id: str = None, lakehouse_name: str = None) -> str:
