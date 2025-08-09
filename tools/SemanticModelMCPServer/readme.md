@@ -1,4 +1,4 @@
-# Semantic Model MCP Server
+# Semantic Model MCP Server (v0.2.0)
 
 A Model Context Protocol (MCP) server for connecting to Microsoft Fabric and Power BI semantic models. This server provides tools to browse workspaces, list datasets, retrieve model definitions (TMSL), execute DAX queries, and create or modify semantic models against semantic models.
 
@@ -19,6 +19,9 @@ Co-pilot in VS Code has far fewer limitations than some MCP Clients and can also
 - **Model Creation & Editing**: Create new semantic models and update existing models using TMSL
 - **Fabric Lakehouse Integration**: List lakehouses, Delta tables, and get SQL connection strings
 - **DirectLake Model Support**: Create and manage DirectLake models connected to Fabric lakehouses
+- **SQL Analytics Endpoint**: Query lakehouse tables using SQL for schema validation and data exploration
+- **Microsoft Learn Integration**: Search and access official Microsoft documentation, tutorials, and best practices
+- **TMSL Validation**: Enhanced TMSL structure validation with detailed error reporting
 - **Workspace Navigation**: Get workspace IDs and navigate between different environments
 
 ## Prerequisites
@@ -28,6 +31,8 @@ Co-pilot in VS Code has far fewer limitations than some MCP Clients and can also
 - Valid Microsoft authentication (Azure AD)
 - .NET Framework dependencies for Analysis Services libraries
 
+- If you have access to Premium models in VS Code Copilot Chat, I recommend using Claude Sonnet 4 in ASK mode
+
 ## Installation
 
 ### 1. Clone the Repository from Prod
@@ -35,6 +40,7 @@ Co-pilot in VS Code has far fewer limitations than some MCP Clients and can also
 ```bash
 git clone https://github.com/microsoft/fabric-toolbox.git
 cd fabric-toolbox/tools/SemanticModelMCPServer
+setup.bat
 
 or for the dev version
 
@@ -43,60 +49,12 @@ cd fabric-toolbox/tools/SemanticModelMCPServer
 setup.bat
 
 ```
-###
-Run Setup.bat or run remaining steps
 
-
-### 2. Create Virtual Environment
-
-```bash
-python -m venv .venv
-```
-
-### 3. Activate Virtual Environment
-
-**Windows:**
-```powershell
-.\.venv\Scripts\activate
-```
-
-**macOS/Linux:**
-```bash
-source .venv/bin/activate
-```
-
-### 4. Install Dependencies
-
-```bash
-pip install -r requirements.txt
-```
-
-### 5. Configure MCP Client
-
-Check the server configuration to your MCP client settings (e.g., Claude Desktop `mcp.json`):
-
-```json
-{
-    "servers": {
-        "semantic_model_mcp_server": {
-            "command": "./.venv/Scripts/python",
-            "args": ["server.py"]
-        }
-    }
-}
-```
-
-### 6. Open folder in VS Code
-
-Check the server configuration to your MCP client settings (e.g., Claude Desktop `mcp.json`):
-
-```bash
-code .
-```
-### 7. Start the MCP Server
+### 2. Start the MCP Server
 
 Open the mcp.json using VS Code from the .vscode folder and click the start button (look between lines 2 and 3)
 
+[![Start your MCP Server](./images/start_mcp_server.png)]
 
 ## Authentication
 
@@ -125,7 +83,7 @@ The server uses Azure Active Directory authentication. Ensure you have:
 
 ### 4. Get Model Definition
 ```
-#semantic_model_mcp_server get TMDL definition for [workspace_name] and [dataset_name]
+#semantic_model_mcp_server get TMSL definition for [workspace_name] and [dataset_name]
 ```
 
 ### 5. Execute DAX Query
@@ -153,6 +111,21 @@ The server uses Azure Active Directory authentication. Ensure you have:
 #semantic_model_mcp_server get SQL connection string for lakehouse [lakehouse_name]
 ```
 
+### 10. Research Microsoft Learn Documentation
+```
+#semantic_model_mcp_server search Microsoft Learn for DirectLake best practices
+```
+
+### 11. Query Lakehouse with SQL
+```
+#semantic_model_mcp_server run SQL query against lakehouse to validate table schemas
+```
+
+### 12. Generate DirectLake TMSL Template
+```
+#semantic_model_mcp_server generate DirectLake TMSL template for tables in [lakehouse_name]
+```
+
 ## Usage Examples
 
 ### Example 1: Explore Available Workspaces
@@ -162,7 +135,7 @@ The server uses Azure Active Directory authentication. Ensure you have:
 
 ### Example 2: Get Model Definition
 ```
-#semantic_model_mcp_server get the TMDL definition for the DAX Performance Tuner Testing workspace and the Contoso 100M semantic model
+#semantic_model_mcp_server get the TMSL definition for the DAX Performance Tuner Testing workspace and the Contoso 100M semantic model
 ```
 
 ### Example 3: Execute DAX Query
@@ -203,7 +176,7 @@ Once you have the MCP server running in VS Code, you can start chatting with you
 
 **"What's the structure of my sales model?"**
 ```
-#semantic_model_mcp_server get the TMDL definition for [Workspace Name] and [Dataset Name]
+#semantic_model_mcp_server get the TMSL definition for [Workspace Name] and [Dataset Name]
 ```
 
 ### 📊 **Basic Data Analysis**
@@ -296,11 +269,53 @@ Once you have the MCP server running in VS Code, you can start chatting with you
 #semantic_model_mcp_server get the SQL endpoint connection for my lakehouse
 ```
 
+**"Validate table schemas before creating a DirectLake model"**
+```
+#semantic_model_mcp_server query the lakehouse SQL endpoint to check column names and data types for the sales table
+```
+
+### 📚 **Microsoft Learn Research & Documentation**
+
+**"Find the latest DAX best practices"**
+```
+#semantic_model_mcp_server search Microsoft Learn for DAX performance optimization best practices
+```
+
+**"Research DirectLake implementation guidance"**
+```
+#semantic_model_mcp_server find Microsoft Learn articles about DirectLake requirements and limitations
+```
+
+**"Get TMSL syntax documentation"**
+```
+#semantic_model_mcp_server search Microsoft Learn for TMSL tabular object reference and examples
+```
+
+**"Find Power BI feature updates"**
+```
+#semantic_model_mcp_server search Microsoft Learn for the latest Power BI features and capabilities
+```
+
+**"Explore Microsoft Fabric learning paths"**
+```
+#semantic_model_mcp_server get Microsoft Learn learning paths for Microsoft Fabric data engineering
+```
+
+**"Research data modeling patterns"**
+```
+#semantic_model_mcp_server search Microsoft Learn for star schema design best practices and patterns
+```
+
+**"Find troubleshooting guides"**
+```
+#semantic_model_mcp_server search Microsoft Learn for Power BI performance troubleshooting guides
+```
+
 ### 🛠️ **Model Optimization**
 
 **"What measures are defined in my model?"**
 ```
-#semantic_model_mcp_server get the TMDL definition and show me all the measures
+#semantic_model_mcp_server get the TMSL definition and show me all the measures
 ```
 
 **"Are there any relationships I should be aware of?"**
@@ -310,7 +325,7 @@ Once you have the MCP server running in VS Code, you can start chatting with you
 
 **"What tables are hidden in my model?"**
 ```
-#semantic_model_mcp_server analyze the TMDL definition and list any hidden tables or columns
+#semantic_model_mcp_server analyze the TMSL definition and list any hidden tables or columns
 ```
 
 ### 💡 **Tips for Better Prompts**
@@ -367,13 +382,19 @@ This server implements the Model Context Protocol, allowing AI assistants and ot
 - **Modify** existing models by updating TMSL definitions
 - **Manage** DirectLake models connected to Fabric lakehouses
 - **Retrieve** complete model definitions for analysis
+- **Research** official Microsoft documentation and best practices via Microsoft Learn integration
+- **Validate** table schemas using SQL Analytics Endpoint queries
+- **Generate** DirectLake TMSL templates with proper structure validation
 
 ## Technical Architecture
 
 - **FastMCP Framework**: Built using the FastMCP Python framework
 - **Analysis Services**: Leverages Microsoft Analysis Services .NET libraries
 - **XMLA Endpoint**: Connects to Power BI via XMLA endpoints
+- **Microsoft Learn API**: Integrates with Microsoft Learn for accessing official documentation and tutorials
+- **SQL Analytics Endpoint**: Connects to Fabric lakehouse SQL endpoints for schema validation and data exploration
 - **Authentication**: Uses Microsoft Identity Client for secure authentication
+- **TMSL Validation**: Enhanced validation engine for Tabular Model Scripting Language
 
 ## Supported Data Sources
 

@@ -124,3 +124,44 @@ def register_prompts(mcp):
     def troubleshoot_tmsl_errors() -> str:
         """Help troubleshoot TMSL deployment errors"""
         return "I'm getting errors when trying to deploy my TMSL definition. Can you help me troubleshoot and fix common TMSL issues, especially for DirectLake models?"
+
+    # Microsoft Learn research and documentation prompts
+    @mcp.prompt
+    def research_dax_best_practices() -> str:
+        """Research DAX best practices using Microsoft Learn"""
+        return "Can you search Microsoft Learn for the latest DAX best practices and performance optimization techniques? I want to improve my DAX measures."
+
+    @mcp.prompt
+    def find_tmsl_documentation() -> str:
+        """Find TMSL documentation and examples from Microsoft Learn"""
+        return "Can you search Microsoft Learn for TMSL documentation and examples? I need help understanding the correct syntax for DirectLake model definitions."
+
+    @mcp.prompt
+    def research_directlake_guidance() -> str:
+        """Research DirectLake implementation guidance from Microsoft Learn"""
+        return "Can you find Microsoft Learn articles about DirectLake implementation best practices? I want to understand the requirements and limitations."
+
+    @mcp.prompt
+    def explore_power_bi_features() -> str:
+        """Explore Power BI features and capabilities using Microsoft Learn"""
+        return "Can you search Microsoft Learn for information about the latest Power BI features and capabilities? I want to stay up to date with new functionality."
+
+    @mcp.prompt
+    def find_fabric_tutorials() -> str:
+        """Find Microsoft Fabric tutorials and learning paths"""
+        return "Can you find Microsoft Learn learning paths and tutorials for Microsoft Fabric? I want to improve my understanding of the platform."
+
+    @mcp.prompt
+    def research_data_modeling_patterns() -> str:
+        """Research data modeling patterns and best practices"""
+        return "Can you search Microsoft Learn for data modeling patterns and best practices for semantic models? I want to design better star schemas."
+
+    @mcp.prompt
+    def get_analysis_services_guidance() -> str:
+        """Get Analysis Services administration and optimization guidance"""
+        return "Can you find Microsoft Learn articles about Analysis Services tabular model administration and performance optimization?"
+
+    @mcp.prompt
+    def find_troubleshooting_guides() -> str:
+        """Find troubleshooting guides for common issues"""
+        return "Can you search Microsoft Learn for troubleshooting guides related to Power BI, Fabric, and semantic model issues I might be experiencing?"
