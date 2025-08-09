@@ -8,6 +8,7 @@ from typing import List, Optional
 from core.auth import get_access_token
 from core.azure_token_manager import get_cached_azure_token, clear_token_cache
 from tools.fabric_metadata import list_workspaces, list_datasets, get_workspace_id, list_notebooks, list_delta_tables, list_lakehouses, list_lakehouse_files, get_lakehouse_sql_connection_string as fabric_get_lakehouse_sql_connection_string
+from tools.microsoft_learn import search_microsoft_learn, get_microsoft_learn_paths, get_microsoft_learn_modules, get_microsoft_learn_content
 import urllib.parse
 from src.helper import count_nodes_with_name
 from src.tmsl_validator import validate_tmsl_structure
@@ -37,10 +38,29 @@ mcp = FastMCP(
     - Update Model using TMSL (Enhanced with Validation)
     - Generate DirectLake TMSL Template (NEW)
     - Validate TMSL Structure (Built into update tool)
+    - Search Microsoft Learn Content (NEW)
+    - Get Microsoft Learn Learning Paths (NEW)
+    - Get Microsoft Learn Modules (NEW)
+    - Get Microsoft Learn Content by URL (NEW)
+
+    ## Microsoft Learn Research Capabilities (NEW):
+    You now have access to Microsoft Learn documentation and research articles via the new MS Learn functions.
+    Use these tools to research and provide authoritative information about:
+    - **DAX (Data Analysis Expressions)** - Functions, syntax, best practices, and examples
+    - **TMSL (Tabular Model Scripting Language)** - Model definitions, schema updates, and scripting
+    - **DirectLake** - Implementation guides, best practices, and troubleshooting
+    - **Power BI** - Features, configuration, and advanced techniques
+    - **Microsoft Fabric** - Data engineering, analytics, and integration patterns
+    - **Analysis Services** - Tabular models, performance optimization, and administration
+    - **Data modeling** - Star schema design, relationships, and performance tuning
+    
+    When users ask questions about these topics, ALWAYS search Microsoft Learn first to provide the most 
+    current and authoritative Microsoft documentation before giving general advice.
 
     ## Usage:
     - You can ask questions about Power BI workspaces, datasets, notebooks, and models.
     - You can explore Fabric lakehouses and Delta Tables.
+    - You can search Microsoft Learn documentation and training content for authoritative answers.
     - Use the tools to retrieve information about your Power BI and Fabric environment.
     - The tools will return JSON formatted data for easy parsing.
     
@@ -48,6 +68,10 @@ mcp = FastMCP(
     - "Can you get a list of workspaces?"
     - "Can you list notebooks in workspace X?"
     - "Show me the lakehouses in this workspace"
+    - "Search Microsoft Learn for DirectLake best practices"
+    - "Find DAX documentation for time intelligence functions"
+    - "Research TMSL syntax for creating DirectLake models"
+    - "Look up Power BI performance optimization techniques"
     - "List all Delta Tables in lakehouse Y"
     - "Show me the data pipelines in this workspace"
 
@@ -1092,6 +1116,62 @@ def get_model_definition(workspace_name:str = None, dataset_name:str=None) -> st
 
 
 
+
+# Microsoft Learn API Tools
+@mcp.tool
+def search_learn_microsoft_content(query: str, locale: str = "en-us", top: int = 10, content_type: str = None) -> str:
+    """Search Microsoft Learn documentation and content.
+    
+    Args:
+        query: Search query for Microsoft Learn content
+        locale: Language locale (default: en-us)
+        top: Maximum number of results to return (default: 10)
+        content_type: Filter by content type (e.g., 'documentation', 'learning-path', 'module')
+    
+    Returns:
+        JSON string with search results from Microsoft Learn
+    """
+    return search_microsoft_learn(query, locale, top, content_type)
+
+@mcp.tool
+def get_learn_microsoft_paths(locale: str = "en-us", top: int = 20) -> str:
+    """Get Microsoft Learn learning paths.
+    
+    Args:
+        locale: Language locale (default: en-us)
+        top: Maximum number of results to return (default: 20)
+    
+    Returns:
+        JSON string with learning paths from Microsoft Learn
+    """
+    return get_microsoft_learn_paths(locale, top)
+
+@mcp.tool
+def get_learn_microsoft_modules(locale: str = "en-us", top: int = 20, learning_path_id: str = None) -> str:
+    """Get Microsoft Learn modules.
+    
+    Args:
+        locale: Language locale (default: en-us)
+        top: Maximum number of results to return (default: 20)
+        learning_path_id: Filter by specific learning path ID
+    
+    Returns:
+        JSON string with modules from Microsoft Learn
+    """
+    return get_microsoft_learn_modules(locale, top, learning_path_id)
+
+@mcp.tool
+def get_learn_microsoft_content(content_url: str, locale: str = "en-us") -> str:
+    """Get specific Microsoft Learn content by URL.
+    
+    Args:
+        content_url: Microsoft Learn content URL
+        locale: Language locale (default: en-us)
+    
+    Returns:
+        JSON string with content details from Microsoft Learn
+    """
+    return get_microsoft_learn_content(content_url, locale)
 
 def main():
     """Main entry point for the Semantic Model MCP Server."""
