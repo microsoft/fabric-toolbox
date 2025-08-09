@@ -48,11 +48,13 @@ mcp = FastMCP(
     Use these tools to research and provide authoritative information about:
     - **DAX (Data Analysis Expressions)** - Functions, syntax, best practices, and examples
     - **TMSL (Tabular Model Scripting Language)** - Model definitions, schema updates, and scripting
+      **IMPORTANT**: Always refer to https://learn.microsoft.com/en-us/analysis-services/tmsl/tmsl-reference-tabular-objects for authoritative TMSL syntax and schema validation
     - **DirectLake** - Implementation guides, best practices, and troubleshooting
     - **Power BI** - Features, configuration, and advanced techniques
     - **Microsoft Fabric** - Data engineering, analytics, and integration patterns
     - **Analysis Services** - Tabular models, performance optimization, and administration
     - **Data modeling** - Star schema design, relationships, and performance tuning
+    - **Write T-SQL** - Writing Transact-SQL statements
     
     When users ask questions about these topics, ALWAYS search Microsoft Learn first to provide the most 
     current and authoritative Microsoft documentation before giving general advice.

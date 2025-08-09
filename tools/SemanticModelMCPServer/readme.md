@@ -19,6 +19,9 @@ Co-pilot in VS Code has far fewer limitations than some MCP Clients and can also
 - **Model Creation & Editing**: Create new semantic models and update existing models using TMSL
 - **Fabric Lakehouse Integration**: List lakehouses, Delta tables, and get SQL connection strings
 - **DirectLake Model Support**: Create and manage DirectLake models connected to Fabric lakehouses
+- **SQL Analytics Endpoint**: Query lakehouse tables using SQL for schema validation and data exploration
+- **Microsoft Learn Integration**: Search and access official Microsoft documentation, tutorials, and best practices
+- **TMSL Validation**: Enhanced TMSL structure validation with detailed error reporting
 - **Workspace Navigation**: Get workspace IDs and navigate between different environments
 
 ## Prerequisites
@@ -106,6 +109,21 @@ The server uses Azure Active Directory authentication. Ensure you have:
 ### 9. Get Lakehouse SQL Connection
 ```
 #semantic_model_mcp_server get SQL connection string for lakehouse [lakehouse_name]
+```
+
+### 10. Research Microsoft Learn Documentation
+```
+#semantic_model_mcp_server search Microsoft Learn for DirectLake best practices
+```
+
+### 11. Query Lakehouse with SQL
+```
+#semantic_model_mcp_server run SQL query against lakehouse to validate table schemas
+```
+
+### 12. Generate DirectLake TMSL Template
+```
+#semantic_model_mcp_server generate DirectLake TMSL template for tables in [lakehouse_name]
 ```
 
 ## Usage Examples
@@ -251,6 +269,48 @@ Once you have the MCP server running in VS Code, you can start chatting with you
 #semantic_model_mcp_server get the SQL endpoint connection for my lakehouse
 ```
 
+**"Validate table schemas before creating a DirectLake model"**
+```
+#semantic_model_mcp_server query the lakehouse SQL endpoint to check column names and data types for the sales table
+```
+
+### 📚 **Microsoft Learn Research & Documentation**
+
+**"Find the latest DAX best practices"**
+```
+#semantic_model_mcp_server search Microsoft Learn for DAX performance optimization best practices
+```
+
+**"Research DirectLake implementation guidance"**
+```
+#semantic_model_mcp_server find Microsoft Learn articles about DirectLake requirements and limitations
+```
+
+**"Get TMSL syntax documentation"**
+```
+#semantic_model_mcp_server search Microsoft Learn for TMSL tabular object reference and examples
+```
+
+**"Find Power BI feature updates"**
+```
+#semantic_model_mcp_server search Microsoft Learn for the latest Power BI features and capabilities
+```
+
+**"Explore Microsoft Fabric learning paths"**
+```
+#semantic_model_mcp_server get Microsoft Learn learning paths for Microsoft Fabric data engineering
+```
+
+**"Research data modeling patterns"**
+```
+#semantic_model_mcp_server search Microsoft Learn for star schema design best practices and patterns
+```
+
+**"Find troubleshooting guides"**
+```
+#semantic_model_mcp_server search Microsoft Learn for Power BI performance troubleshooting guides
+```
+
 ### 🛠️ **Model Optimization**
 
 **"What measures are defined in my model?"**
@@ -322,13 +382,19 @@ This server implements the Model Context Protocol, allowing AI assistants and ot
 - **Modify** existing models by updating TMSL definitions
 - **Manage** DirectLake models connected to Fabric lakehouses
 - **Retrieve** complete model definitions for analysis
+- **Research** official Microsoft documentation and best practices via Microsoft Learn integration
+- **Validate** table schemas using SQL Analytics Endpoint queries
+- **Generate** DirectLake TMSL templates with proper structure validation
 
 ## Technical Architecture
 
 - **FastMCP Framework**: Built using the FastMCP Python framework
 - **Analysis Services**: Leverages Microsoft Analysis Services .NET libraries
 - **XMLA Endpoint**: Connects to Power BI via XMLA endpoints
+- **Microsoft Learn API**: Integrates with Microsoft Learn for accessing official documentation and tutorials
+- **SQL Analytics Endpoint**: Connects to Fabric lakehouse SQL endpoints for schema validation and data exploration
 - **Authentication**: Uses Microsoft Identity Client for secure authentication
+- **TMSL Validation**: Enhanced validation engine for Tabular Model Scripting Language
 
 ## Supported Data Sources
 
