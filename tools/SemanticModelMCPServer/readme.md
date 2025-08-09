@@ -1,4 +1,4 @@
-# Semantic Model MCP Server
+# Semantic Model MCP Server (v0.2.0)
 
 A Model Context Protocol (MCP) server for connecting to Microsoft Fabric and Power BI semantic models. This server provides tools to browse workspaces, list datasets, retrieve model definitions (TMSL), execute DAX queries, and create or modify semantic models against semantic models.
 

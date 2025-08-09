@@ -15,6 +15,7 @@ from src.tmsl_validator import validate_tmsl_structure
 import time
 from datetime import datetime, timedelta
 from prompts import register_prompts
+from __version__ import __version__, __description__
 
 # Try to import pyodbc - it's needed for SQL Analytics Endpoint queries
 try:
@@ -23,8 +24,10 @@ except ImportError:
     pyodbc = None
 
 mcp = FastMCP(
-    name="Model Browser", 
+    name="Semantic Model MCP Server", 
     instructions="""
+    A Model Context Protocol server for Microsoft Fabric and Power BI semantic models.
+    
     ## Available Tools:
     - List Power BI Workspaces
     - List Power BI Datasets
@@ -338,6 +341,11 @@ mcp = FastMCP(
 
 # Register all MCP prompts from the prompts module
 register_prompts(mcp)
+
+@mcp.tool
+def get_server_version() -> str:
+    """Get the version information for the Semantic Model MCP Server."""
+    return f"Semantic Model MCP Server v{__version__} - {__description__}"
 
 @mcp.tool
 def list_powerbi_workspaces() -> str:
