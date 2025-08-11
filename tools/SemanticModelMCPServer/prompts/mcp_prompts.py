@@ -59,7 +59,7 @@ def register_prompts(mcp):
     @mcp.prompt
     def model_optimization_suggestions() -> str:
         """Analyze a model and suggest optimizations"""
-        return "Can you analyze this semantic model and suggest potential optimizations? Look at the table structure, relationships, and measures."
+        return "Can you analyze this semantic model and suggest potential optimizations? Look at the table structure, relationships, and measures. Also run the Best Practice Analyzer to identify specific improvement opportunities."
 
     @mcp.prompt
     def create_calculated_measure() -> str:
@@ -75,6 +75,67 @@ def register_prompts(mcp):
     def model_performance_analysis() -> str:
         """Analyze model performance and suggest optimizations"""
         return "Can you analyze my semantic model for performance issues? Look at the DAX measures, table structures, and relationships to suggest optimizations."
+
+    # 🆕 Best Practice Analyzer (BPA) prompts
+    @mcp.prompt
+    def analyze_model_best_practices() -> str:
+        """Analyze a semantic model for best practice compliance using BPA"""
+        return "Can you analyze my semantic model for best practice violations? Run the Best Practice Analyzer to identify issues with performance, DAX expressions, formatting, and maintenance."
+
+    @mcp.prompt
+    def generate_bpa_report() -> str:
+        """Generate a comprehensive Best Practice Analyzer report"""
+        return "Can you generate a comprehensive Best Practice Analyzer report for my semantic model? Show me all violations categorized by severity and type."
+
+    @mcp.prompt
+    def focus_on_critical_bpa_issues() -> str:
+        """Focus on critical ERROR level BPA violations"""
+        return "Can you show me only the critical errors from the Best Practice Analyzer? I want to focus on the most important issues that need immediate attention."
+
+    @mcp.prompt
+    def performance_bpa_recommendations() -> str:
+        """Get performance-specific recommendations from BPA"""
+        return "Can you run BPA analysis and show me only the performance-related recommendations? I want to optimize my model's query performance."
+
+    @mcp.prompt
+    def dax_best_practices_analysis() -> str:
+        """Analyze DAX expressions for best practices using BPA"""
+        return "Can you analyze my DAX expressions using the Best Practice Analyzer? Show me any DAX syntax issues, unqualified references, or performance anti-patterns."
+
+    @mcp.prompt
+    def validate_tmsl_with_bpa() -> str:
+        """Validate TMSL definition with BPA before deployment"""
+        return "Before deploying this TMSL definition, can you run Best Practice Analyzer on it to check for any issues? I want to catch problems before deployment."
+
+    @mcp.prompt
+    def model_quality_assessment() -> str:
+        """Complete model quality assessment using BPA"""
+        return "Can you perform a complete quality assessment of my semantic model? Use the Best Practice Analyzer to check for issues across all categories: performance, DAX, formatting, naming, and maintenance."
+
+    @mcp.prompt
+    def bpa_category_analysis() -> str:
+        """Analyze specific BPA categories"""
+        return "Can you show me Best Practice Analyzer violations by category? I want to understand what types of issues are most common in my model."
+
+    @mcp.prompt
+    def fix_bpa_violations() -> str:
+        """Get guidance on fixing BPA violations"""
+        return "Can you help me fix the violations found by the Best Practice Analyzer? Show me specific examples of how to correct the issues and provide updated code."
+
+    @mcp.prompt
+    def bpa_development_workflow() -> str:
+        """Integrate BPA into development workflow"""
+        return "Can you show me how to integrate Best Practice Analyzer into my semantic model development workflow? I want to catch issues early in the development process."
+
+    @mcp.prompt
+    def compare_before_after_bpa() -> str:
+        """Compare model quality before and after changes using BPA"""
+        return "Can you run BPA analysis on my model before and after changes to see if I've improved the quality? Show me the difference in violations."
+
+    @mcp.prompt
+    def bpa_rules_information() -> str:
+        """Get information about available BPA rules and categories"""
+        return "Can you show me what Best Practice Analyzer rules are available? I want to understand the different categories and severity levels."
 
     # Security and governance prompts
     @mcp.prompt
@@ -102,7 +163,7 @@ def register_prompts(mcp):
     @mcp.prompt
     def create_directlake_model() -> str:
         """Help create a new DirectLake semantic model from lakehouse tables"""
-        return "Can you help me create a new DirectLake semantic model based on the tables in this lakehouse? Please validate the table schemas first and then generate the appropriate TMSL definition."
+        return "Can you help me create a new DirectLake semantic model based on the tables in this lakehouse? Please validate the table schemas first, generate the appropriate TMSL definition, and run Best Practice Analyzer to ensure quality."
 
     @mcp.prompt
     def migrate_to_directlake() -> str:
@@ -130,6 +191,16 @@ def register_prompts(mcp):
     def research_dax_best_practices() -> str:
         """Research DAX best practices using Microsoft Learn"""
         return "Can you search Microsoft Learn for the latest DAX best practices and performance optimization techniques? I want to improve my DAX measures."
+
+    @mcp.prompt
+    def research_bpa_violations() -> str:
+        """Research solutions for BPA violations using Microsoft Learn"""
+        return "Can you help me research solutions for the violations found by the Best Practice Analyzer? Search Microsoft Learn for official guidance on the specific issues identified."
+
+    @mcp.prompt
+    def find_model_optimization_guidance() -> str:
+        """Find semantic model optimization guidance for BPA issues"""
+        return "Can you search Microsoft Learn for semantic model optimization techniques that address the issues found by BPA? I want to understand the reasoning behind the best practice recommendations."
 
     @mcp.prompt
     def find_tmsl_documentation() -> str:

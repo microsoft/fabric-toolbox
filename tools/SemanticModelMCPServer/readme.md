@@ -1,6 +1,8 @@
-# Semantic Model MCP Server (v0.2.0)
+# Semantic Model MCP Server (v0.3.0)
 
 A Model Context Protocol (MCP) server for connecting to Microsoft Fabric and Power BI semantic models. This server provides tools to browse workspaces, list datasets, retrieve model definitions (TMSL), execute DAX queries, and create or modify semantic models against semantic models.
+
+**🆕 NEW: Best Practice Analyzer** - Now includes comprehensive analysis of semantic models against 71 industry best practice rules!
 
 A tool designed for Semantic model authors to chat with your Semantic Model in VS Code Co-pilot using your own LLM!!!
 
@@ -23,6 +25,283 @@ Co-pilot in VS Code has far fewer limitations than some MCP Clients and can also
 - **Microsoft Learn Integration**: Search and access official Microsoft documentation, tutorials, and best practices
 - **TMSL Validation**: Enhanced TMSL structure validation with detailed error reporting
 - **Workspace Navigation**: Get workspace IDs and navigate between different environments
+- **🆕 Best Practice Analyzer (BPA)**: Comprehensive analysis of semantic models against industry best practices and Microsoft recommendations
+
+## 🎯 Best Practice Analyzer (BPA)
+
+The Semantic Model MCP Server now includes a powerful **Best Practice Analyzer** that evaluates your semantic models against 71 comprehensive rules covering industry best practices and Microsoft recommendations.
+
+### What is the BPA?
+
+The Best Practice Analyzer automatically scans your semantic models (TMSL definitions) and identifies potential issues across multiple categories:
+
+- **🚀 Performance** - Optimization recommendations for better query performance
+- **💎 DAX Expressions** - Best practices for DAX syntax and patterns  
+- **🔧 Maintenance** - Rules for model maintainability and documentation
+- **📝 Naming Conventions** - Consistent naming standards
+- **🎨 Formatting** - Proper formatting and display properties
+- **⚠️ Error Prevention** - Common pitfalls and anti-patterns to avoid
+
+### BPA Severity Levels
+
+| Level | Name | Description | Example Issues |
+|-------|------|-------------|----------------|
+| 🔴 **ERROR (3)** | Critical | Must fix immediately | DAX syntax errors, model structure issues |
+| 🟡 **WARNING (2)** | Important | Should address soon | Performance issues, suboptimal patterns |
+| 🟢 **INFO (1)** | Suggestion | Continuous improvement | Formatting, documentation enhancements |
+
+### BPA Tools Available
+
+#### 1. **Analyze Deployed Models**
+```
+#semantic_model_mcp_server analyze my [dataset_name] model for best practice violations
+```
+
+#### 2. **Analyze TMSL During Development**
+```
+#semantic_model_mcp_server run BPA analysis on this TMSL definition before deployment
+```
+
+#### 3. **Generate Comprehensive Reports**
+```
+#semantic_model_mcp_server generate a detailed BPA report for [dataset_name]
+```
+
+#### 4. **Filter by Severity**
+```
+#semantic_model_mcp_server show me only critical BPA errors in my model
+#semantic_model_mcp_server get all WARNING level BPA issues
+```
+
+#### 5. **Filter by Category**
+```
+#semantic_model_mcp_server show me all performance-related BPA violations
+#semantic_model_mcp_server get DAX expression issues from BPA analysis
+```
+
+#### 6. **Get BPA Information**
+```
+#semantic_model_mcp_server what BPA rule categories are available?
+#semantic_model_mcp_server show me a summary of loaded BPA rules
+```
+
+### Common BPA Violations and Fixes
+
+#### 🚀 Performance Issues
+
+**❌ Problem**: Using `double` data type for financial amounts
+```json
+"dataType": "double"
+```
+**✅ Solution**: Use `decimal` data type instead
+```json
+"dataType": "decimal"
+```
+
+**❌ Problem**: Foreign keys not hidden from end users
+```json
+"isHidden": false
+```
+**✅ Solution**: Hide foreign key columns
+```json
+"isHidden": true
+```
+
+#### 💎 DAX Expression Issues
+
+**❌ Problem**: Using "/" operator for division
+```dax
+Average Price = [Total Sales] / [Total Quantity]
+```
+**✅ Solution**: Use DIVIDE() function to handle divide-by-zero
+```dax
+Average Price = DIVIDE([Total Sales], [Total Quantity])
+```
+
+**❌ Problem**: Unqualified column references
+```dax
+Total Sales = SUM(SalesAmount)
+```
+**✅ Solution**: Use fully qualified column references
+```dax
+Total Sales = SUM(Sales[SalesAmount])
+```
+
+#### 🎨 Formatting Issues
+
+**❌ Problem**: Missing format strings on measures
+```json
+{
+  "name": "Total Sales",
+  "expression": "SUM(Sales[SalesAmount])"
+}
+```
+**✅ Solution**: Add appropriate format string
+```json
+{
+  "name": "Total Sales", 
+  "expression": "SUM(Sales[SalesAmount])",
+  "formatString": "#,0"
+}
+```
+
+### BPA Integration Workflow
+
+#### 🔄 **Development Workflow with BPA**
+```
+1. Generate TMSL template
+   → #semantic_model_mcp_server generate DirectLake TMSL template
+
+2. Analyze before deployment  
+   → #semantic_model_mcp_server run BPA analysis on TMSL
+
+3. Fix violations
+   → Address critical errors and warnings
+
+4. Deploy model
+   → #semantic_model_mcp_server update model with validated TMSL
+
+5. Final verification
+   → #semantic_model_mcp_server analyze deployed model with BPA
+```
+
+#### 🚨 **Quality Gates**
+```
+1. Check for critical errors
+   → #semantic_model_mcp_server get ERROR level BPA violations
+
+2. Review performance issues
+   → #semantic_model_mcp_server show performance-related BPA issues
+
+3. Ensure documentation standards
+   → #semantic_model_mcp_server check maintenance category violations
+```
+
+### BPA Usage Examples
+
+#### **Example 1: Complete Model Health Check**
+```
+You: "Analyze my Sales Model for best practice violations"
+AI: [Runs BPA analysis and shows violations by category and severity]
+
+You: "Show me only the critical errors"
+AI: [Filters to ERROR level violations with specific recommendations]
+
+You: "Generate a detailed BPA report"  
+AI: [Creates comprehensive report with all findings]
+```
+
+#### **Example 2: Performance Optimization**
+```
+You: "My model is slow - what performance issues does BPA find?"
+AI: [Analyzes model and highlights performance-related violations]
+
+You: "Show me the specific DAX expressions that need fixing"
+AI: [Filters to DAX expression category with examples]
+
+You: "Research best practices for the issues you found"
+AI: [Uses Microsoft Learn integration to provide authoritative guidance]
+```
+
+#### **Example 3: Development Quality Assurance**
+```
+You: "I'm about to deploy this TMSL - run BPA analysis first"
+AI: [Analyzes TMSL definition before deployment]
+
+You: "Fix the critical issues and update the TMSL"
+AI: [Applies BPA recommendations and validates changes]
+
+You: "Now deploy the corrected model"
+AI: [Deploys with confidence knowing BPA requirements are met]
+```
+
+### BPA Rule Categories in Detail
+
+#### 🚀 **Performance (24 rules)**
+- Avoid floating point data types
+- Hide foreign keys and optimize column properties  
+- Partition large tables appropriately
+- Minimize calculated columns and use star schema
+- Optimize relationships and avoid excessive bi-directional connections
+- Reduce Power Query transformations
+
+#### 💎 **DAX Expressions (11 rules)**  
+- Use fully qualified column references
+- Use unqualified measure references
+- Prefer DIVIDE() over "/" operator
+- Avoid IFERROR() function for performance
+- Use TREATAS instead of INTERSECT
+- Proper time intelligence patterns
+
+#### 🔧 **Maintenance (9 rules)**
+- Ensure all tables have relationships
+- Add descriptions to visible objects
+- Remove unused perspectives and calculation groups
+- Clean up orphaned objects
+
+#### 📝 **Naming Conventions (3 rules)**
+- No special characters in object names
+- Trim whitespace from names
+- Consistent naming patterns
+
+#### 🎨 **Formatting (17 rules)**
+- Provide format strings for measures and date columns
+- Mark primary keys appropriately
+- Set proper data categories
+- Hide fact table columns used in measures
+- Use consistent capitalization
+
+#### ⚠️ **Error Prevention (7 rules)**
+- Avoid common anti-patterns
+- Prevent deployment-breaking configurations
+- Catch syntax and structure issues early
+
+### Advanced BPA Features
+
+#### **Automated Quality Pipelines**
+Integrate BPA into your CI/CD workflows:
+```
+# Quality gate: No critical errors
+if (bpa_errors > 0) block_deployment()
+
+# Performance threshold
+if (performance_violations > threshold) require_review()
+
+# Documentation standards  
+if (missing_descriptions > limit) require_documentation()
+```
+
+#### **Continuous Model Health Monitoring**
+```
+# Weekly health checks
+#semantic_model_mcp_server generate weekly BPA report for all models
+
+# Track improvements over time
+#semantic_model_mcp_server compare current BPA results with last month
+
+# Identify organization-wide patterns
+#semantic_model_mcp_server analyze BPA trends across workspace
+```
+
+#### **Integration with Microsoft Learn**
+The BPA seamlessly integrates with Microsoft Learn research:
+```
+You: "I have performance violations - research the best practices"
+AI: [Uses BPA results + Microsoft Learn to provide authoritative guidance]
+
+You: "Find official documentation for the DAX issues BPA found"
+AI: [Searches Microsoft Learn for specific DAX patterns and recommendations]
+```
+
+### Getting Started with BPA
+
+1. **🔍 Start with Analysis**: `"Analyze my model for best practice violations"`
+2. **🚨 Focus on Critical**: `"Show me only ERROR level BPA issues"`  
+3. **🎯 Target Categories**: `"What performance improvements does BPA suggest?"`
+4. **📚 Research Solutions**: `"Find Microsoft documentation for these BPA violations"`
+5. **✅ Verify Fixes**: `"Re-analyze the model after applying BPA recommendations"`
+
+The Best Practice Analyzer ensures your semantic models follow Microsoft's recommended patterns and industry standards, resulting in better performance, maintainability, and user experience! 🎉
 
 ## Prerequisites
 
@@ -124,6 +403,14 @@ The server uses Azure Active Directory authentication. Ensure you have:
 ### 12. Generate DirectLake TMSL Template
 ```
 #semantic_model_mcp_server generate DirectLake TMSL template for tables in [lakehouse_name]
+```
+
+### 13. 🆕 Best Practice Analyzer Tools
+```
+#semantic_model_mcp_server analyze my model for best practice violations
+#semantic_model_mcp_server generate BPA report for [dataset_name]
+#semantic_model_mcp_server show me critical BPA errors
+#semantic_model_mcp_server get performance-related BPA issues
 ```
 
 ## Usage Examples
@@ -343,6 +630,44 @@ Once you have the MCP server running in VS Code, you can start chatting with you
 3. **Ask Simple Questions**: `"How many rows of data do I have?"`
 4. **Progress to Business Questions**: `"What are my top selling products?"`
 5. **Dive into Analysis**: `"Show me trends and patterns in my sales data"`
+6. **🆕 Ensure Quality**: `"Analyze my model for best practice violations"`
+
+### 🎯 **Best Practice Analyzer Prompts**
+
+**"Is my model following best practices?"**
+```
+#semantic_model_mcp_server analyze my [dataset name] model for best practice violations
+```
+
+**"What are the most critical issues in my model?"**
+```
+#semantic_model_mcp_server show me only ERROR level BPA violations in my model
+```
+
+**"How can I improve my model's performance?"**
+```
+#semantic_model_mcp_server get all performance-related BPA recommendations for my model
+```
+
+**"Check my DAX expressions for best practices"**
+```
+#semantic_model_mcp_server analyze DAX expressions in my model using BPA rules
+```
+
+**"Generate a quality report for my model"**
+```
+#semantic_model_mcp_server create a comprehensive BPA report for [dataset name]
+```
+
+**"What BPA categories should I focus on?"**
+```
+#semantic_model_mcp_server show me BPA violation counts by category and severity
+```
+
+**"Validate my TMSL before deployment"**
+```
+#semantic_model_mcp_server run BPA analysis on this TMSL definition to check for issues
+```
 
 ### 📝 **Example Full Conversation**
 
@@ -385,6 +710,9 @@ This server implements the Model Context Protocol, allowing AI assistants and ot
 - **Research** official Microsoft documentation and best practices via Microsoft Learn integration
 - **Validate** table schemas using SQL Analytics Endpoint queries
 - **Generate** DirectLake TMSL templates with proper structure validation
+- **🆕 Analyze** semantic models for best practice compliance using comprehensive BPA rules
+- **🆕 Report** on model quality with detailed violations and recommendations
+- **🆕 Optimize** model performance through automated best practice analysis
 
 ## Technical Architecture
 

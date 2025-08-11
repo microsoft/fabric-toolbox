@@ -7,6 +7,7 @@ import sys
 from typing import List, Optional
 from core.auth import get_access_token
 from core.azure_token_manager import get_cached_azure_token, clear_token_cache
+from core.bpa_service import BPAService
 from tools.fabric_metadata import list_workspaces, list_datasets, get_workspace_id, list_notebooks, list_delta_tables, list_lakehouses, list_lakehouse_files, get_lakehouse_sql_connection_string as fabric_get_lakehouse_sql_connection_string
 from tools.microsoft_learn import search_microsoft_learn, get_microsoft_learn_paths, get_microsoft_learn_modules, get_microsoft_learn_content
 import urllib.parse
@@ -45,6 +46,46 @@ mcp = FastMCP(
     - Get Microsoft Learn Learning Paths (NEW)
     - Get Microsoft Learn Modules (NEW)
     - Get Microsoft Learn Content by URL (NEW)
+    - **🆕 Best Practice Analyzer (BPA) Tools (NEW)**
+
+    ## 🆕 Best Practice Analyzer (BPA) Features:
+    The server now includes a comprehensive Best Practice Analyzer that evaluates semantic models against industry best practices:
+    
+    **Available BPA Tools:**
+    - `analyze_model_bpa` - Analyze a deployed model by workspace/dataset name
+    - `analyze_tmsl_bpa` - Analyze TMSL definition directly  
+    - `generate_bpa_report` - Generate comprehensive BPA reports
+    - `get_bpa_violations_by_severity` - Filter violations by severity (INFO/WARNING/ERROR)
+    - `get_bpa_violations_by_category` - Filter violations by category
+    - `get_bpa_rules_summary` - Get overview of available BPA rules
+    - `get_bpa_categories` - List all available categories and severities
+    
+    **BPA Rule Categories:**
+    - **Performance** - Optimization recommendations for better query performance
+    - **DAX Expressions** - Best practices for DAX syntax and patterns
+    - **Maintenance** - Rules for model maintainability and documentation
+    - **Naming Conventions** - Consistent naming standards
+    - **Formatting** - Proper formatting and display properties
+    
+    **BPA Severity Levels:**
+    - **ERROR (Level 3)** - Critical issues that should be fixed immediately
+    - **WARNING (Level 2)** - Potential issues that should be addressed  
+    - **INFO (Level 1)** - Suggestions for improvement
+    
+    **Example BPA Usage:**
+    ```
+    # Analyze a deployed model
+    result = analyze_model_bpa("MyWorkspace", "MyDataset")
+    
+    # Generate detailed report
+    report = generate_bpa_report("MyWorkspace", "MyDataset", "detailed")
+    
+    # Get only critical errors
+    errors = get_bpa_violations_by_severity("ERROR")
+    
+    # Get performance-related issues
+    perf_issues = get_bpa_violations_by_category("Performance")
+    ```
 
     ## Microsoft Learn Research Capabilities (NEW):
     You now have access to Microsoft Learn documentation and research articles via the new MS Learn functions.
@@ -66,6 +107,7 @@ mcp = FastMCP(
     - You can ask questions about Power BI workspaces, datasets, notebooks, and models.
     - You can explore Fabric lakehouses and Delta Tables.
     - You can search Microsoft Learn documentation and training content for authoritative answers.
+    - **🆕 You can analyze semantic models for best practice compliance using BPA tools.**
     - Use the tools to retrieve information about your Power BI and Fabric environment.
     - The tools will return JSON formatted data for easy parsing.
     
@@ -79,6 +121,10 @@ mcp = FastMCP(
     - "Look up Power BI performance optimization techniques"
     - "List all Delta Tables in lakehouse Y"
     - "Show me the data pipelines in this workspace"
+    - **🆕 "Analyze my model for best practice violations"**
+    - **🆕 "Generate a BPA report for MyDataset"**
+    - **🆕 "Show me all performance-related issues in my model"**
+    - **🆕 "What are the critical errors in my TMSL definition?"**
 
     ## Fabric Lakehouse Support:
     - Use `list_fabric_lakehouses` to see all lakehouses in a workspace
@@ -302,6 +348,176 @@ mcp = FastMCP(
     ## 🚫 FORBIDDEN TABLE PROPERTIES - NOW ENFORCED! 🚫
     **The validation system blocks these properties in table objects:**
     - "mode": "directLake" ← VALIDATION ERROR
+    
+    ## 🎯 BEST PRACTICE ANALYZER - ENSURING MODEL QUALITY ##
+    
+    **🆕 INTEGRATED BPA WORKFLOW FOR MODEL DEVELOPMENT:**
+    The Best Practice Analyzer is now integrated into your model development workflow to ensure compliance with industry standards:
+    
+    **When to Use BPA:**
+    - ✅ **BEFORE deploying** new models - Run BPA on TMSL to catch issues early
+    - ✅ **AFTER model changes** - Validate updates follow best practices  
+    - ✅ **REGULAR audits** - Check existing models for optimization opportunities
+    - ✅ **TROUBLESHOOTING** - Identify performance bottlenecks and issues
+    - ✅ **CODE REVIEWS** - Validate TMSL changes before deployment
+    
+    **BPA Integration Points:**
+    ```
+    # Complete model development workflow with BPA
+    1. template = generate_directlake_tmsl_template(workspace_id, lakehouse_id, tables, "MyModel")
+    2. bpa_pre_check = analyze_tmsl_bpa(template)  # ← ANALYZE BEFORE DEPLOYMENT
+    3. validation = update_model_using_tmsl(workspace, "MyModel", template, validate_only=True)
+    4. deployment = update_model_using_tmsl(workspace, "MyModel", template, validate_only=False)
+    5. bpa_final_check = analyze_model_bpa(workspace, "MyModel")  # ← VERIFY DEPLOYED MODEL
+    ```
+    
+    **🚨 BPA PRIORITY RULES - FOCUS ON THESE FIRST:**
+    
+    **CRITICAL ERRORS (Fix Immediately):**
+    - 🔴 **DAX Syntax Issues** - Unqualified column references, improper measure references
+    - 🔴 **Performance Killers** - Double data types, unhidden foreign keys, excessive calculated columns
+    - 🔴 **Model Structure** - Missing relationships, orphaned tables, improper formatting
+    
+    **HIGH-IMPACT WARNINGS (Address Soon):**
+    - 🟡 **Performance Optimization** - Use DIVIDE() instead of "/", avoid IFERROR(), partition large tables
+    - 🟡 **DAX Best Practices** - Use TREATAS instead of INTERSECT, avoid certain time intelligence in DirectQuery
+    - 🟡 **Maintenance Issues** - Missing descriptions, improper naming conventions
+    
+    **OPTIMIZATION SUGGESTIONS (Continuous Improvement):**
+    - 🟢 **Formatting Standards** - Format strings, data categorization, proper capitalization
+    - 🟢 **Documentation** - Object descriptions, consistent naming patterns
+    - 🟢 **Model Hygiene** - Remove redundant objects, clean up unused elements
+    
+    **🔧 COMMON BPA FIXES FOR DIRECTLAKE MODELS:**
+    
+    **Performance Issues:**
+    ```
+    ❌ "dataType": "double"           → ✅ "dataType": "decimal"
+    ❌ "isHidden": false (foreign key) → ✅ "isHidden": true  
+    ❌ "summarizeBy": "sum"           → ✅ "summarizeBy": "none"
+    ```
+    
+    **DAX Expression Issues:**
+    ```
+    ❌ SUM(SalesAmount)               → ✅ SUM(Sales[SalesAmount])
+    ❌ [Sales] / [Quantity]          → ✅ DIVIDE([Sales], [Quantity])
+    ❌ IFERROR([Calc], 0)            → ✅ Use DIVIDE() or proper error handling
+    ```
+    
+    **Formatting Issues:**
+    ```
+    ❌ Missing formatString           → ✅ "formatString": "#,0"
+    ❌ "isKey": false (primary key)   → ✅ "isKey": true
+    ❌ Missing description            → ✅ "description": "Clear description"
+    ```
+    
+    **🎯 BPA-DRIVEN MODEL CREATION WORKFLOW:**
+    
+    **Step 1: Generate Clean Template**
+    ```
+    template = generate_directlake_tmsl_template(workspace_id, lakehouse_id, tables, "MyModel")
+    # ↳ This already follows many BPA best practices
+    ```
+    
+    **Step 2: Pre-Deployment BPA Check**
+    ```
+    bpa_analysis = analyze_tmsl_bpa(template)
+    critical_errors = get_bpa_violations_by_severity("ERROR")
+    # ↳ Fix any critical issues before deployment
+    ```
+    
+    **Step 3: Address BPA Violations**
+    ```
+    # Fix issues in template based on BPA recommendations
+    # Common fixes: data types, format strings, hiding keys, etc.
+    ```
+    
+    **Step 4: Deploy and Final Verification**
+    ```
+    deployment = update_model_using_tmsl(workspace, "MyModel", fixed_template)
+    final_bpa = analyze_model_bpa(workspace, "MyModel")
+    performance_issues = get_bpa_violations_by_category("Performance")
+    ```
+    
+    **🔍 BPA TROUBLESHOOTING SCENARIOS:**
+    
+    **Scenario: Model Performance Issues**
+    ```
+    # 1. Get performance-specific recommendations
+    perf_issues = get_bpa_violations_by_category("Performance")
+    
+    # 2. Focus on high-impact fixes first
+    critical_perf = get_bpa_violations_by_severity("ERROR") # Filter to performance category
+    
+    # 3. Research specific optimizations
+    docs = search_learn_microsoft_content("Power BI performance optimization")
+    ```
+    
+    **Scenario: DAX Code Review**
+    ```
+    # 1. Check DAX best practices compliance
+    dax_issues = get_bpa_violations_by_category("DAX Expressions")
+    
+    # 2. Generate detailed report for review
+    report = generate_bpa_report(workspace, dataset, "detailed")
+    
+    # 3. Research DAX patterns
+    dax_docs = search_learn_microsoft_content("DAX best practices")
+    ```
+    
+    **Scenario: Model Maintenance Audit**
+    ```
+    # 1. Full model analysis
+    full_analysis = analyze_model_bpa(workspace, dataset)
+    
+    # 2. Categorize by maintenance areas
+    maintenance = get_bpa_violations_by_category("Maintenance")
+    formatting = get_bpa_violations_by_category("Formatting")
+    naming = get_bpa_violations_by_category("Naming Conventions")
+    
+    # 3. Prioritize fixes
+    summary_report = generate_bpa_report(workspace, dataset, "summary")
+    ```
+    
+    **💡 BPA INTEGRATION TIPS:**
+    
+    - **Always run BPA** on TMSL templates before deployment
+    - **Focus on ERROR severity** violations first - these are critical
+    - **Use BPA categories** to organize improvement efforts
+    - **Integrate BPA checks** into your development workflow
+    - **Research violations** using Microsoft Learn integration
+    - **Document BPA compliance** as part of model documentation
+    - **Regular BPA audits** help maintain model quality over time
+    - **Use BPA reports** for stakeholder communication about model health
+    
+    **🚀 ADVANCED BPA USAGE:**
+    
+    **Automated Quality Gates:**
+    ```
+    # Gate 1: No critical errors allowed
+    errors = get_bpa_violations_by_severity("ERROR")
+    if len(errors) > 0: block_deployment()
+    
+    # Gate 2: Performance threshold
+    perf_issues = get_bpa_violations_by_category("Performance")  
+    if len(perf_issues) > threshold: require_review()
+    
+    # Gate 3: Documentation standards
+    maintenance = get_bpa_violations_by_category("Maintenance")
+    if missing_descriptions > limit: require_documentation()
+    ```
+    
+    **Continuous Improvement:**
+    ```
+    # Weekly model health check
+    weekly_report = generate_bpa_report(workspace, dataset, "by_category")
+    
+    # Track improvement over time
+    compare_bpa_results(current_analysis, previous_analysis)
+    
+    # Identify model-wide patterns
+    analyze_all_models_in_workspace(workspace)
+    ```
     - "defaultMode": "directLake" ← VALIDATION ERROR  
     - Any mode-related property ← VALIDATION ERROR
     
@@ -341,6 +557,10 @@ mcp = FastMCP(
 
 # Register all MCP prompts from the prompts module
 register_prompts(mcp)
+
+# Initialize BPA Service
+current_dir = os.path.dirname(os.path.abspath(__file__))
+bpa_service = BPAService(current_dir)
 
 @mcp.tool
 def get_server_version() -> str:
@@ -1182,6 +1402,223 @@ def get_learn_microsoft_content(content_url: str, locale: str = "en-us") -> str:
         JSON string with content details from Microsoft Learn
     """
     return get_microsoft_learn_content(content_url, locale)
+
+# Best Practice Analyzer Tools
+
+@mcp.tool
+def analyze_model_bpa(workspace_name: str, dataset_name: str) -> str:
+    """
+    Analyze a semantic model against Best Practice Analyzer (BPA) rules.
+    
+    This tool retrieves the TMSL definition of a model and runs it through
+    a comprehensive set of best practice rules to identify potential issues.
+    
+    Args:
+        workspace_name: The Power BI workspace name
+        dataset_name: The dataset/model name to analyze
+    
+    Returns:
+        JSON string with BPA analysis results including violations and summary
+    """
+    try:
+        # First get the model definition
+        tmsl_definition = get_model_definition(workspace_name, dataset_name)
+        
+        # Parse the response to extract the actual TMSL
+        tmsl_response = json.loads(tmsl_definition)
+        if not tmsl_response.get('success', False):
+            return json.dumps({
+                'error': f"Failed to get model definition: {tmsl_response.get('error', 'Unknown error')}",
+                'success': False
+            })
+        
+        actual_tmsl = tmsl_response.get('tmsl_definition', '')
+        if not actual_tmsl:
+            return json.dumps({
+                'error': "No TMSL definition found in response",
+                'success': False
+            })
+        
+        # Run BPA analysis
+        analysis_result = bpa_service.analyze_model_from_tmsl(actual_tmsl)
+        
+        return json.dumps(analysis_result, indent=2)
+        
+    except Exception as e:
+        logging.error(f"Error in BPA analysis: {str(e)}")
+        return json.dumps({
+            'error': f"BPA analysis failed: {str(e)}",
+            'success': False
+        })
+
+@mcp.tool  
+def analyze_tmsl_bpa(tmsl_definition: str) -> str:
+    """
+    Analyze a TMSL definition directly against Best Practice Analyzer (BPA) rules.
+    
+    This tool takes a TMSL JSON string and analyzes it against a comprehensive
+    set of best practice rules to identify potential issues.
+    
+    Args:
+        tmsl_definition: Valid TMSL JSON string to analyze
+    
+    Returns:
+        JSON string with BPA analysis results including violations and summary
+    """
+    try:
+        analysis_result = bpa_service.analyze_model_from_tmsl(tmsl_definition)
+        return json.dumps(analysis_result, indent=2)
+        
+    except Exception as e:
+        logging.error(f"Error in TMSL BPA analysis: {str(e)}")
+        return json.dumps({
+            'error': f"TMSL BPA analysis failed: {str(e)}",
+            'success': False
+        })
+
+@mcp.tool
+def get_bpa_violations_by_severity(severity: str) -> str:
+    """
+    Get BPA violations filtered by severity level.
+    
+    Note: You must run analyze_model_bpa or analyze_tmsl_bpa first to generate violations.
+    
+    Args:
+        severity: Severity level to filter by (INFO, WARNING, ERROR)
+    
+    Returns:
+        JSON string with filtered violations
+    """
+    try:
+        violations = bpa_service.get_violations_by_severity(severity)
+        return json.dumps({
+            'severity': severity,
+            'violations': violations,
+            'count': len(violations)
+        }, indent=2)
+        
+    except Exception as e:
+        logging.error(f"Error getting violations by severity: {str(e)}")
+        return json.dumps({
+            'error': f"Failed to get violations by severity: {str(e)}",
+            'success': False
+        })
+
+@mcp.tool
+def get_bpa_violations_by_category(category: str) -> str:
+    """
+    Get BPA violations filtered by category.
+    
+    Note: You must run analyze_model_bpa or analyze_tmsl_bpa first to generate violations.
+    
+    Args:
+        category: Category to filter by (Performance, DAX Expressions, Maintenance, Naming Conventions, Formatting)
+    
+    Returns:
+        JSON string with filtered violations
+    """
+    try:
+        violations = bpa_service.get_violations_by_category(category)
+        return json.dumps({
+            'category': category,
+            'violations': violations,
+            'count': len(violations)
+        }, indent=2)
+        
+    except Exception as e:
+        logging.error(f"Error getting violations by category: {str(e)}")
+        return json.dumps({
+            'error': f"Failed to get violations by category: {str(e)}",
+            'success': False
+        })
+
+@mcp.tool
+def get_bpa_rules_summary() -> str:
+    """
+    Get summary information about loaded BPA rules.
+    
+    Returns:
+        JSON string with rules summary including counts by category and severity
+    """
+    try:
+        summary = bpa_service.get_rules_summary()
+        return json.dumps(summary, indent=2)
+        
+    except Exception as e:
+        logging.error(f"Error getting BPA rules summary: {str(e)}")
+        return json.dumps({
+            'error': f"Failed to get BPA rules summary: {str(e)}",
+            'success': False
+        })
+
+@mcp.tool
+def get_bpa_categories() -> str:
+    """
+    Get list of available BPA rule categories.
+    
+    Returns:
+        JSON string with list of available categories
+    """
+    try:
+        categories = bpa_service.get_available_categories()
+        severities = bpa_service.get_available_severities()
+        
+        return json.dumps({
+            'categories': categories,
+            'severities': severities,
+            'total_categories': len(categories)
+        }, indent=2)
+        
+    except Exception as e:
+        logging.error(f"Error getting BPA categories: {str(e)}")
+        return json.dumps({
+            'error': f"Failed to get BPA categories: {str(e)}",
+            'success': False
+        })
+
+@mcp.tool
+def generate_bpa_report(workspace_name: str, dataset_name: str, format_type: str = 'summary') -> str:
+    """
+    Generate a comprehensive Best Practice Analyzer report for a semantic model.
+    
+    Args:
+        workspace_name: The Power BI workspace name
+        dataset_name: The dataset/model name to analyze  
+        format_type: Report format ('summary', 'detailed', 'by_category')
+    
+    Returns:
+        JSON string with comprehensive BPA report
+    """
+    try:
+        # First get the model definition
+        tmsl_definition = get_model_definition(workspace_name, dataset_name)
+        
+        # Parse the response to extract the actual TMSL
+        tmsl_response = json.loads(tmsl_definition)
+        if not tmsl_response.get('success', False):
+            return json.dumps({
+                'error': f"Failed to get model definition: {tmsl_response.get('error', 'Unknown error')}",
+                'success': False
+            })
+        
+        actual_tmsl = tmsl_response.get('tmsl_definition', '')
+        if not actual_tmsl:
+            return json.dumps({
+                'error': "No TMSL definition found in response",
+                'success': False
+            })
+        
+        # Generate comprehensive report
+        report = bpa_service.generate_bpa_report(actual_tmsl, format_type)
+        
+        return json.dumps(report, indent=2)
+        
+    except Exception as e:
+        logging.error(f"Error generating BPA report: {str(e)}")
+        return json.dumps({
+            'error': f"Failed to generate BPA report: {str(e)}",
+            'success': False
+        })
 
 def main():
     """Main entry point for the Semantic Model MCP Server."""
