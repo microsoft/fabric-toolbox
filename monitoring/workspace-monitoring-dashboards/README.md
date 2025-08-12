@@ -3,12 +3,16 @@
 
 ![Fabric Workspace Monitoring component overview with report templates](./media/general/fwm_overview_cover.png)
 
-Current Template Version: **2025.7.1**
+Current template version: **2025.8.1**
 
 ## Introduction
 
 ### Workspace Monitoring (preview)
-Large data solutions typically generate disparate and complicated data that can be difficult to converge into a single view. Workspace Monitoring provides a seamless, consistent experience with end-to-end visibility across Fabric workloads. Fabric Workspace Monitoring enables users to correlate events from origination to subsequent operations and queries across Fabric experiences and services.
+Large data solutions typically generate disparate and complicated data that can be difficult to converge into a single view. 
+Workspace Monitoring provides a seamless, consistent experience with end-to-end visibility across Fabric workloads. 
+
+Fabric Workspace Monitoring enables users to correlate events from origination to subsequent operations and queries across Fabric experiences and services.
+
 
 Workspace Monitoring is a built-in solution that enables users to:
 
@@ -19,9 +23,13 @@ Workspace Monitoring is a built-in solution that enables users to:
 
 When Workspace Monitoring is enabled at the workspace level, the workspace will start sending the selected diagnostics to a KQL database within Fabric that can be queried using KQL or SQL.
 
+
+![Fabric Workspace Monitoring component overview with report templates](./media/general/fwm_feature_architecture_overview.png)
+
+
 ----------- 
 
-### Report templates (preview)
+### Templates
 **for Workspace Monitoring**
 
 This module of the Fabric toolbox provides a set of pre-built reports (Real-Time Dashboard and Power BI Report) on top of the Fabric Workspace Monitoring feature to be able to easily monitor your workspace from day one.
@@ -30,35 +38,74 @@ There are two monitoring template options available:
 
 | Real-Time Dashboard | Power BI Report|
 | ------ | ------ |
-| This template allows users to track workspace activities in real-time. It provides an operational tool for users to analyze issues within seconds, and zoom in to exact time periods that an event occured. | This template allows users to configure connections to the Monitoring Eventhouse to retain detailed historical activity data. |
+| This template allows users to track workspace activities in real-time. It provides an operational tool for users to analyze issues within seconds, and zoom in to exact time periods that an event occured. | This template has been designed like a Diagnostic tool. The UI helps you to navigate through with a top-bottom analytical approach, to get detailed historical trace logs from the supported Fabric items. |
 |[How to deploy **RTI Dashboard**](./how-to/How_to_deploy_Workspace_Monitoring_RTI_Dashboard.md)| [How to deploy **PBI Report**](./how-to/How_to_deploy_Workspace_Monitoring_PBI_Report.md)  |
 |[Documentation to **RTI Dashboard**](./documentation/Workspace_Monitoring_RTI_Dashboard.md) | [Documentation to **PBI Report**](./documentation/Workspace_Monitoring_PBI_Report.md) |
 
 
-### It is real. In Real-Time Dashboard
+------------------------
 
-This template, in combination with Workspace Monitoring features, allows users to track workspace activities in real-time. It connects directly to the underlying monitoring Eventhouse KQL database, providing an overview of items, operations, and users. Users can also compare DAX improvements between semantic models. Users can deep dive an analyze the Query and Ingestion patterns of Eventhouses. 
+## Deployment scenarios
+
+### General
+
+In the current version of the Workspace Monitoring, the feature can be enabled on workspace level. However the templates has been designed with support of multiple workspaces.
+
+| Scenario | Primary Audience | Recommended templates & features |
+| ------ | ------ | ------ |
+| A) **Single Workspace** deployment (one-to-one)       |    Workspace Administrators, Pro developers focusing on one single workspace.    |   Real-Time Dashboard, Power BI Report     |
+| B) **Multiple Workspace** deployment (one-to-many)       |    Workspace Administrators, Capacity Owners, Domain Administrators focusing on sub-set of workspaces.    |    Real-Time Dashboard    |
+| C) **Critical Workloads**       |    Data Product Owners, Workspace Owners    |    Real-Time Dashboard + Data Activator    |
+| D) **Integration with FUAM**       |    Fabric Administrators, Capacity Owners    |    Power BI Report    |
+
+### Details
+
+#### A) Single Workspace deployment (one-to-one)
+
+In this scenario, the templates can be published in the same workspace next to the customer workload.
 
 
-The Real-Time Dashboard template is structured on the following way:
+**Primary audience:** Workspace Administrators, Pro developers focusing on one single workspace.
 
-![Workspace Monitoring Real Time Dashboard template structure](./media/general/fwm_rtid_template_0_structure.png)
+**Recommended templates:**
+- Real-Time Dashboard
+- Power BI Report
+
+-------- 
+
+#### B) Multiple Workspace deployment (one-to-many)
+
+In this scenario, the templates can be published in one "central" workspace, which helps to isolate the customer workload from the monitoring templates.
+
+**Primary audience:** Workspace Administrators, Capacity Owners, Domain Administrators focusing on sub-set of workspaces.
+
+**Recommended templates:**
+- Real-Time Dashboard
 
 
-### Log Insights in Power BI Report
+-------- 
+#### C) Critical Workloads
 
-The Power BI allows users to configure connections to Monitoring Eventhouse where they can retain detailed historical activity data. This repo hosts **Power BI report** templates (.pbit) that you can point to your Monitoring Eventhouse databases to load data and get insights.
+In this scenario, the template will be deployed in a separated workspace (attached to an F-SKU) for monitoring purposes.
+This workspaces can contain the Real-Time Dashboard with multiple Datasources (Monitoring Eventhouses from multiple Workspaces) and a pro-active alerting solution can be configured. 
 
-We have ported and enhanced the 'Fabric Log Analytics for Analysis Service Engine report template', which retrieved the data with the BYOLA approach.
+We recommend this deployment scenario, whenever a high critical workload has to be monitored in near-real-time.
 
-Now, you can seamlessy connect and track your workspace items, operations, visuals etc. without leaving the SaaS experience from Microsoft Fabric.
+**Primary audience:** Data Product Owners, Workspace Owners
 
-The Power BI Report template is structured on the following way:
-![Workspace Monitoring Power BI Dashboard template structure](./media/general/fwm_pbi_template_0_structure.png)
+**Recommended templates & features:**
+- Real-Time Dashboard + Data Activator
 
+-------- 
+#### D) Integration with FUAM
+The other solution accelerator within the Fabric toolbox is FUAM (Fabric Unified Admin Monitoring), which aims a tenant level monitoring of your environment. Note that FUAM requires Fabric Administrator EntraID rights.
 
-### Migrate from BYOLA
-We recommend to use the Power BI report template for the new Workspace Monitoring feature in Microsoft Fabric, whenever you are migrating your workspace monitoring solution from (BYOLA) Log Analytics Workspace monitoring.
+**Primary audience:** Fabric Administrators, Capacity Owners
+
+**Recommended templates:**
+- Power BI Report
+
+### 
 
 ------------------------
 

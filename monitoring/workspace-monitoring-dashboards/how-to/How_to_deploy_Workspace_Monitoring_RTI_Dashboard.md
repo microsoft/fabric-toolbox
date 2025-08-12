@@ -1,4 +1,17 @@
 
+
+
+### It is real. In Real-Time Dashboard
+
+This template, in combination with Workspace Monitoring features, allows users to track workspace activities in real-time. It connects directly to the underlying monitoring Eventhouse KQL database, providing an overview of items, operations, and users. Users can also compare DAX improvements between semantic models. Users can deep dive an analyze the Query and Ingestion patterns of Eventhouses. 
+
+
+The Real-Time Dashboard template is structured on the following way:
+
+![Workspace Monitoring Real Time Dashboard template structure](./media/general/fwm_rtid_template_0_structure.png)
+
+
+
 # Setup | Real-Time Dashboard template for Fabric Workspace Monitoring
 
 ## Steps
