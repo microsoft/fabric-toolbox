@@ -26,6 +26,7 @@ Co-pilot in VS Code has far fewer limitations than some MCP Clients and can also
 - **TMSL Validation**: Enhanced TMSL structure validation with detailed error reporting
 - **Workspace Navigation**: Get workspace IDs and navigate between different environments
 - **🆕 Best Practice Analyzer (BPA)**: Comprehensive analysis of semantic models against industry best practices and Microsoft recommendations
+- **🆕 Power BI Desktop Detection**: Automatically detect and connect to local Power BI Desktop instances for development and testing
 
 ## 🎯 Best Practice Analyzer (BPA)
 
@@ -311,6 +312,103 @@ The Best Practice Analyzer ensures your semantic models follow Microsoft's recom
 - .NET Framework dependencies for Analysis Services libraries
 
 - If you have access to Premium models in VS Code Copilot Chat, I recommend using Claude Sonnet 4 in ASK mode
+
+## 🖥️ Power BI Desktop Integration
+
+The Semantic Model MCP Server now includes powerful **Power BI Desktop Detection** capabilities that enable seamless integration with local Power BI Desktop instances for development and testing workflows.
+
+### What is Power BI Desktop Detection?
+
+This feature automatically discovers running Power BI Desktop processes and their associated Analysis Services instances, enabling you to:
+
+- **Connect to Local Models**: Access semantic models currently open in Power BI Desktop
+- **Development Testing**: Test changes against local instances before publishing
+- **Local BPA Analysis**: Run Best Practice Analyzer against models in development
+- **Debugging**: Analyze and troubleshoot models during development
+
+### Key Capabilities
+
+#### 🔍 **Automatic Discovery**
+- Detects all running Power BI Desktop processes
+- Identifies Analysis Services port numbers for each instance
+- Locates .pbix files currently open
+- Generates ready-to-use connection strings
+
+#### 🔌 **Connection Testing**
+- Validates connectivity to local Analysis Services instances
+- Tests authentication and access
+- Provides detailed connection diagnostics
+
+#### 🎯 **Development Integration**
+- Use BPA tools with local models
+- Execute DAX queries against local instances
+- Analyze TMSL definitions from local Power BI Desktop models
+
+### Available Tools
+
+#### 1. **Detect Running Instances**
+```
+#semantic_model_mcp_server detect local Power BI Desktop instances
+```
+
+#### 2. **Test Local Connections**
+```
+#semantic_model_mcp_server test connection to Power BI Desktop on port 55001
+```
+
+#### 3. **Local BPA Analysis**
+```
+#semantic_model_mcp_server analyze my local Power BI Desktop model for best practices
+```
+
+### How It Works
+
+Power BI Desktop runs a local Analysis Services instance for each open .pbix file:
+
+- **Process Detection**: Scans for `PBIDesktop.exe` and `msmdsrv.exe` processes
+- **Port Discovery**: Identifies dynamic ports (typically > 50000)
+- **Connection Strings**: Formats as `Data Source=localhost:{port}`
+- **File Association**: Links processes to their corresponding .pbix files
+
+### Use Cases
+
+#### 🚀 **Development Workflow**
+1. Open your .pbix file in Power BI Desktop
+2. Use the MCP server to detect the local instance
+3. Run BPA analysis during development
+4. Test DAX queries before publishing
+5. Validate model changes locally
+
+#### 🧪 **Testing & Validation**
+- Verify model performance with local data
+- Test new calculations and measures
+- Validate relationships and hierarchies
+- Check formatting and display properties
+
+#### 🔧 **Debugging & Troubleshooting**
+- Analyze models that won't publish
+- Debug DAX expression issues
+- Investigate performance problems
+- Validate TMSL structure before deployment
+
+### Example Workflow
+
+```bash
+# 1. Detect local Power BI Desktop instances
+instances = detect_local_powerbi_desktop()
+
+# 2. Get connection information
+# Result: localhost:55001 (example port)
+
+# 3. Test the connection
+test_result = test_local_powerbi_connection(55001)
+
+# 4. Run BPA analysis on local model
+# Use the connection string with existing BPA tools
+
+# 5. Execute DAX queries for testing
+# Use local connection for development queries
+```
 
 ## Installation
 

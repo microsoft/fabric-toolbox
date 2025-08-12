@@ -236,3 +236,39 @@ def register_prompts(mcp):
     def find_troubleshooting_guides() -> str:
         """Find troubleshooting guides for common issues"""
         return "Can you search Microsoft Learn for troubleshooting guides related to Power BI, Fabric, and semantic model issues I might be experiencing?"
+
+    # Power BI Desktop Integration and Local Development Prompts
+    @mcp.prompt
+    def detect_local_powerbi() -> str:
+        """Detect running Power BI Desktop instances"""
+        return "Can you detect any Power BI Desktop instances running on my local machine? Show me the processes and connection information."
+
+    @mcp.prompt
+    def test_local_powerbi_connection() -> str:
+        """Test connection to local Power BI Desktop instance"""
+        return "Can you test the connection to my local Power BI Desktop instance? I want to verify I can connect for development purposes."
+
+    @mcp.prompt
+    def analyze_local_model_bpa() -> str:
+        """Run Best Practice Analyzer on local Power BI Desktop model"""
+        return "Can you run a Best Practice Analyzer scan on my local Power BI Desktop model? I want to check for issues before publishing."
+
+    @mcp.prompt
+    def local_development_workflow() -> str:
+        """Get guidance on local Power BI Desktop development workflow"""
+        return "Can you help me set up a local development workflow with Power BI Desktop? Show me how to detect instances and run analysis tools."
+
+    @mcp.prompt
+    def troubleshoot_local_connection() -> str:
+        """Troubleshoot connection issues with local Power BI Desktop"""
+        return "I'm having trouble connecting to my local Power BI Desktop instance. Can you help me detect the correct port and test the connection?"
+
+    @mcp.prompt
+    def local_testing_workflow() -> str:
+        """Set up local testing workflow for Power BI models"""
+        return "Can you help me set up a testing workflow using local Power BI Desktop instances? I want to validate models before publishing to the service."
+
+    @mcp.prompt
+    def compare_connection_types() -> str:
+        """Compare different Analysis Services connection approaches"""
+        return "Can you explain the differences between connecting to Power BI Desktop, Power BI Service, and Analysis Services? Show me the connection requirements and use cases."

@@ -13,6 +13,9 @@ pythonnet>=3.0.0
 # ODBC driver for SQL Server connections
 pyodbc>=4.0.0
 
+# Process monitoring for Power BI Desktop detection
+psutil>=5.9.0
+
 # URL parsing (built-in, but ensuring compatibility)
 urllib3>=2.0.0
 

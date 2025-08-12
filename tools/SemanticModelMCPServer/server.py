@@ -10,6 +10,8 @@ from core.azure_token_manager import get_cached_azure_token, clear_token_cache
 from core.bpa_service import BPAService
 from tools.fabric_metadata import list_workspaces, list_datasets, get_workspace_id, list_notebooks, list_delta_tables, list_lakehouses, list_lakehouse_files, get_lakehouse_sql_connection_string as fabric_get_lakehouse_sql_connection_string
 from tools.microsoft_learn import search_microsoft_learn, get_microsoft_learn_paths, get_microsoft_learn_modules, get_microsoft_learn_content
+from tools.powerbi_desktop_detector import detect_powerbi_desktop_instances, test_powerbi_desktop_connection
+from tools.simple_dax_explorer import explore_local_powerbi_simple, execute_local_dax_query
 import urllib.parse
 from src.helper import count_nodes_with_name
 from src.tmsl_validator import validate_tmsl_structure
@@ -47,6 +49,7 @@ mcp = FastMCP(
     - Get Microsoft Learn Modules (NEW)
     - Get Microsoft Learn Content by URL (NEW)
     - **🆕 Best Practice Analyzer (BPA) Tools (NEW)**
+    - **🆕 Power BI Desktop Detection Tools (NEW)**
 
     ## 🆕 Best Practice Analyzer (BPA) Features:
     The server now includes a comprehensive Best Practice Analyzer that evaluates semantic models against industry best practices:
@@ -551,6 +554,76 @@ mcp = FastMCP(
     4. validation = update_model_using_tmsl(workspace, model, tmsl, validate_only=True)
     5. deployment = update_model_using_tmsl(workspace, model, tmsl, validate_only=False)
     ```
+
+    ## 🆕 Power BI Desktop Detection and Local Development ##
+    
+    **New Local Development Capabilities:**
+    The server now includes tools to detect and connect to local Power BI Desktop instances for development and testing:
+    
+    **Available Power BI Desktop Tools:**
+    - `detect_local_powerbi_desktop` - Scan for running Power BI Desktop instances
+    - `test_local_powerbi_connection` - Test connection to local Analysis Services
+    - `compare_analysis_services_connections` - Compare connection types and requirements
+    - `explore_local_powerbi_tables` - List tables in local Power BI Desktop models
+    - `explore_local_powerbi_columns` - List columns in local models (all or specific table)
+    - `explore_local_powerbi_measures` - List measures with DAX expressions
+    - `execute_local_powerbi_dax` - Execute DAX queries against local models
+    
+    **Key Features:**
+    - **Process Detection**: Automatically find running Power BI Desktop processes
+    - **Port Discovery**: Identify Analysis Services port numbers for each instance
+    - **Connection Strings**: Generate ready-to-use connection strings for local development
+    - **File Detection**: Identify which .pbix files are currently open
+    - **Connection Testing**: Validate connectivity to local instances
+    - **Model Exploration**: List tables, columns, and measures in local models
+    - **DAX Execution**: Run DAX queries against local instances without authentication
+    
+    **Use Cases:**
+    - **Local Development**: Connect to models being developed in Power BI Desktop
+    - **Testing**: Validate changes against local instances before publishing
+    - **Debugging**: Analyze local models using BPA tools
+    - **Model Exploration**: Examine table structures, columns, and measures locally
+    - **DAX Testing**: Test DAX expressions against local data
+    - **Integration**: Incorporate local Power BI Desktop models into development workflows
+    
+    **Example Power BI Desktop Usage:**
+    ```
+    # Detect all running Power BI Desktop instances
+    instances = detect_local_powerbi_desktop()
+    
+    # Test connection to a specific port
+    connection_test = test_local_powerbi_connection(55001)
+    
+    # Explore model structure
+    tables = explore_local_powerbi_tables("Data Source=localhost:55001")
+    columns = explore_local_powerbi_columns("Data Source=localhost:55001", "Sales")
+    measures = explore_local_powerbi_measures("Data Source=localhost:55001")
+    
+    # Execute DAX queries
+    dax_result = execute_local_powerbi_dax("Data Source=localhost:55001", "EVALUATE 'Sales'")
+    
+    # Compare different connection types
+    comparison = compare_analysis_services_connections()
+    
+    # Use local connection for BPA analysis
+    # (Note: BPA tools work with local instances using connection strings)
+    ```
+    
+    **Connection Simplicity:**
+    Power BI Desktop connections are much simpler than Power BI Service connections:
+    - **Power BI Desktop**: `Data Source=localhost:port` (no authentication required)
+    - **Power BI Service**: Complex connection string with tokens and authentication
+    - **Analysis Services**: Windows/SQL authentication required
+    
+    This makes Power BI Desktop ideal for development and testing scenarios where
+    you need quick, reliable access to semantic models without authentication complexity.
+    
+    **Power BI Desktop Connection Information:**
+    - Power BI Desktop runs a local Analysis Services instance
+    - Ports are typically dynamic (usually > 50000)
+    - Connection format: `Data Source=localhost:{port}`
+    - Each open .pbix file gets its own Analysis Services instance
+    - Instances are automatically detected when Power BI Desktop is running
 
 """
 )
@@ -1618,6 +1691,270 @@ def generate_bpa_report(workspace_name: str, dataset_name: str, format_type: str
         return json.dumps({
             'error': f"Failed to generate BPA report: {str(e)}",
             'success': False
+        })
+
+@mcp.tool
+def detect_local_powerbi_desktop() -> str:
+    """
+    Detect running Power BI Desktop instances and their Analysis Services connection information.
+    
+    This tool scans for running Power BI Desktop processes and their associated Analysis Services 
+    instances to enable local development and testing scenarios.
+    
+    Returns:
+        JSON string containing:
+        - List of Power BI Desktop instances with process information
+        - Analysis Services instances and their port numbers  
+        - Connection strings for local development
+        - Instructions for connecting to local instances
+    """
+    try:
+        return detect_powerbi_desktop_instances()
+    except Exception as e:
+        logging.error(f"Error detecting Power BI Desktop instances: {str(e)}")
+        return json.dumps({
+            'success': False,
+            'error': str(e),
+            'powerbi_desktop_instances': [],
+            'analysis_services_instances': []
+        })
+
+@mcp.tool  
+def test_local_powerbi_connection(port: int) -> str:
+    """
+    Test connection to a local Power BI Desktop Analysis Services instance.
+    
+    This tool attempts to connect to a Power BI Desktop Analysis Services instance
+    running on the specified port and validates the connection.
+    
+    Args:
+        port: The port number where Analysis Services is running (typically > 50000)
+        
+    Returns:
+        JSON string with connection test results including:
+        - Success/failure status
+        - Connection string used
+        - Server properties if connection successful
+        - Error details if connection failed
+    """
+    try:
+        return test_powerbi_desktop_connection(port)
+    except Exception as e:
+        logging.error(f"Error testing Power BI Desktop connection on port {port}: {str(e)}")
+        return json.dumps({
+            'success': False,
+            'port': port,
+            'error': str(e),
+            'message': 'Connection test failed'
+        })
+
+@mcp.tool
+def compare_analysis_services_connections() -> str:
+    """
+    Compare different types of Analysis Services connections and their requirements.
+    
+    This tool provides detailed information about connecting to:
+    - Power BI Desktop (local, no authentication)
+    - Power BI Service (cloud, token-based authentication)  
+    - Analysis Services (on-premises/Azure, Windows/SQL authentication)
+    
+    Returns:
+        JSON string with comprehensive comparison of connection types,
+        authentication requirements, use cases, and implementation examples
+    """
+    try:
+        from tools.powerbi_desktop_detector import PowerBIDesktopDetector
+        detector = PowerBIDesktopDetector()
+        
+        # Get connection type comparison
+        comparison = detector.compare_connection_types()
+        
+        # Add practical examples and current status
+        result = {
+            'success': True,
+            'connection_types': comparison,
+            'summary': {
+                'power_bi_desktop': {
+                    'complexity': 'Very Simple',
+                    'authentication': 'None',
+                    'example': 'Data Source=localhost:51542',
+                    'best_for': 'Development and testing'
+                },
+                'power_bi_service': {
+                    'complexity': 'Complex',
+                    'authentication': 'Access Token Required',
+                    'example': 'Data Source=powerbi://api.powerbi.com/v1.0/myorg/workspace;Initial Catalog=dataset;User ID=app:id@tenant;Password=token',
+                    'best_for': 'Production and collaboration'
+                },
+                'analysis_services': {
+                    'complexity': 'Moderate',
+                    'authentication': 'Windows/SQL Authentication',
+                    'example': 'Data Source=server;Initial Catalog=database;Integrated Security=SSPI',
+                    'best_for': 'Enterprise and on-premises'
+                }
+            },
+            'key_differences': {
+                'authentication_complexity': {
+                    'power_bi_desktop': 'No authentication needed - runs under user context',
+                    'power_bi_service': 'Requires Azure AD token with Power BI permissions',
+                    'analysis_services': 'Requires Windows or SQL Server authentication'
+                },
+                'network_requirements': {
+                    'power_bi_desktop': 'Localhost only - no network connectivity required',
+                    'power_bi_service': 'Internet connection required for API access',
+                    'analysis_services': 'Network access to server required'
+                },
+                'use_case_scenarios': {
+                    'power_bi_desktop': 'Local development, debugging, testing before publish',
+                    'power_bi_service': 'Published models, shared datasets, production environments',
+                    'analysis_services': 'Enterprise tabular models, on-premises or Azure AS'
+                }
+            },
+            'implementation_tips': {
+                'power_bi_desktop': [
+                    'Use automatic detection to find running instances',
+                    'No credential management needed',
+                    'Perfect for iterative development',
+                    'Test frequently during model development'
+                ],
+                'power_bi_service': [
+                    'Implement token refresh mechanisms',
+                    'Handle authentication errors gracefully',
+                    'Cache connections when possible',
+                    'Monitor token expiration'
+                ],
+                'analysis_services': [
+                    'Use connection pooling for performance',
+                    'Implement proper error handling',
+                    'Monitor connection health',
+                    'Use Windows Authentication when possible'
+                ]
+            }
+        }
+        
+        return json.dumps(result, indent=2)
+        
+    except Exception as e:
+        logging.error(f"Error comparing connection types: {str(e)}")
+        return json.dumps({
+            'success': False,
+            'error': str(e),
+            'message': 'Failed to compare connection types'
+        })
+
+@mcp.tool
+def explore_local_powerbi_tables(connection_string: str) -> str:
+    """
+    List all tables in a local Power BI Desktop model.
+    
+    This tool connects directly to a local Power BI Desktop Analysis Services instance
+    and retrieves table information without requiring Power BI Service authentication.
+    
+    Args:
+        connection_string: Local connection string (e.g., "Data Source=localhost:51542")
+        
+    Returns:
+        JSON string containing:
+        - List of tables with names, types, and row counts
+        - Table visibility and description information
+        - Success/failure status and connection details
+    """
+    try:
+        return explore_local_powerbi_simple(connection_string, 'tables')
+    except Exception as e:
+        logging.error(f"Error exploring local Power BI tables: {str(e)}")
+        return json.dumps({
+            'success': False,
+            'error': str(e),
+            'connection_string': connection_string,
+            'operation': 'tables'
+        })
+
+@mcp.tool
+def explore_local_powerbi_columns(connection_string: str, table_name: str = None) -> str:
+    """
+    List columns in a local Power BI Desktop model.
+    
+    This tool connects directly to a local Power BI Desktop Analysis Services instance
+    and retrieves column information for a specific table or all tables.
+    
+    Args:
+        connection_string: Local connection string (e.g., "Data Source=localhost:51542")
+        table_name: Optional table name to filter columns (if not provided, returns all columns)
+        
+    Returns:
+        JSON string containing:
+        - List of columns with names, types, and cardinality
+        - Column visibility and description information
+        - Table association for each column
+    """
+    try:
+        return explore_local_powerbi_simple(connection_string, 'columns', table_name)
+    except Exception as e:
+        logging.error(f"Error exploring local Power BI columns: {str(e)}")
+        return json.dumps({
+            'success': False,
+            'error': str(e),
+            'connection_string': connection_string,
+            'operation': 'columns',
+            'table_name': table_name
+        })
+
+@mcp.tool
+def explore_local_powerbi_measures(connection_string: str) -> str:
+    """
+    List all measures in a local Power BI Desktop model.
+    
+    This tool connects directly to a local Power BI Desktop Analysis Services instance
+    and retrieves measure information including DAX expressions.
+    
+    Args:
+        connection_string: Local connection string (e.g., "Data Source=localhost:51542")
+        
+    Returns:
+        JSON string containing:
+        - List of measures with names, captions, and aggregators
+        - DAX expressions and data types
+        - Measure visibility and description information
+    """
+    try:
+        return explore_local_powerbi_simple(connection_string, 'measures')
+    except Exception as e:
+        logging.error(f"Error exploring local Power BI measures: {str(e)}")
+        return json.dumps({
+            'success': False,
+            'error': str(e),
+            'connection_string': connection_string,
+            'operation': 'measures'
+        })
+
+@mcp.tool
+def execute_local_powerbi_dax(connection_string: str, dax_query: str) -> str:
+    """
+    Execute a DAX query against a local Power BI Desktop model.
+    
+    This tool connects directly to a local Power BI Desktop Analysis Services instance
+    and executes DAX queries without requiring Power BI Service authentication.
+    
+    Args:
+        connection_string: Local connection string (e.g., "Data Source=localhost:51542")
+        dax_query: DAX query to execute
+        
+    Returns:
+        JSON string containing:
+        - Query results with columns and rows
+        - Column information and data types
+        - Success/failure status and error details
+    """
+    try:
+        return execute_local_dax_query(connection_string, dax_query)
+    except Exception as e:
+        logging.error(f"Error executing local DAX query: {str(e)}")
+        return json.dumps({
+            'success': False,
+            'error': str(e),
+            'connection_string': connection_string,
+            'query': dax_query
         })
 
 def main():
