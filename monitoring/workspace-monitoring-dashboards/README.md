@@ -7,9 +7,8 @@ Current template version: **2025.8.1**
 
 ## Introduction
 
-### Workspace Monitoring (preview)
-Large data solutions typically generate disparate and complicated data that can be difficult to converge into a single view. 
-Workspace Monitoring provides a seamless, consistent experience with end-to-end visibility across Fabric workloads. 
+### Workspace Monitoring
+Large data solutions typically generate disparate and complicated data that can be difficult to converge into a single view. Workspace Monitoring provides a seamless, consistent experience with end-to-end visibility across Fabric workloads. 
 
 Fabric Workspace Monitoring enables users to correlate events from origination to subsequent operations and queries across Fabric experiences and services.
 
@@ -37,26 +36,21 @@ This module of the Fabric toolbox provides a set of pre-built reports (Real-Time
 There are two monitoring template options available:
 
 
-| Power BI Report | Real-Time Dashboard |
+| Power BI Report template | Real-Time Dashboard template |
 | ------ | ------ | 
-| This template has been designed like a Diagnostic tool. The UI helps you to navigate through with a top-bottom analytical approach, to get detailed historical trace logs from the supported Fabric items. | This template allows users to track workspace activities in real-time. It provides an operational tool for users to analyze issues within seconds, and zoom in to exact time periods that an event occured. |
+| This template has been designed like a diagnostic tool. The UI helps you to navigate through with a top-bottom analytical approach, to get detailed historical trace logs from the supported Fabric items. | This template allows users to track workspace activities in real-time. It provides an operational tool for users to analyze issues within seconds, and zoom in to exact time periods that an event occured. |
 | [How to deploy **PBI Report**](./how-to/How_to_deploy_Workspace_Monitoring_PBI_Report.md) | [How to deploy **RTI Dashboard**](./how-to/How_to_deploy_Workspace_Monitoring_RTI_Dashboard.md) |
 | [Documentation to **PBI Report**](./documentation/Workspace_Monitoring_PBI_Report.md) | [Documentation to **RTI Dashboard**](./documentation/Workspace_Monitoring_RTI_Dashboard.md)  |
-
+|**Included trace logs:** Semantic Models, Eventhouse Databases, Mirrored Databases, API for GraphQL | **Included trace logs:** Semantic Models, Eventhouse Databases | 
+|**Connectivity mode:** Composite mode (helper tables are imported, other trace logs are direct query) | **Connectivity mode:** each visual queries individually the Monitoring Eventhouse data|
+| **Main benefits:** Analysing performance trends over time, deep dive investigations about historical operations, queries, etc.| **Main benefits:** Tracking current/running operations, enabling pro-active alerting based on pre-defined scenarios. |
 
 ![Fabric Workspace Monitoring component overview with report templates](./media/general/fwm_template_structure.png)
-
-The templates gather and visualizes collected trace logs from Monitoring Eventhouse for the following items:
-- Semantic Model
-- Eventhouse Database
-- Mirrored Database
-- API for GraphQL
 
 ------------------------
 
 ### Deployment scenarios
 
-#### General
 
 In the current version of the Workspace Monitoring, the feature can be enabled on workspace level. However the templates has been designed with support of multiple workspaces.
 
@@ -64,17 +58,23 @@ In the current version of the Workspace Monitoring, the feature can be enabled o
 | ------ | ------ | ------ |
 | A) **Single Workspace** deployment (one-to-one)       |    Workspace Administrators, Pro developers focusing on one single workspace.    |   Real-Time Dashboard, Power BI Report     |
 | B) **Multiple Workspace** deployment (one-to-many)       |    Workspace Administrators, Capacity Owners, Domain Administrators focusing on sub-set of workspaces.    |    Real-Time Dashboard    |
-| C) **Critical Workloads**       |    Data Product Owners, Workspace Owners    |    Real-Time Dashboard + Data Activator    |
+| C) Deployment for **critical workloads**       |    Data Product Owners, Workspace Owners    |    Real-Time Dashboard + Data Activator    |
 | D) **Integration with FUAM**       |    Fabric Administrators, Capacity Owners    |    Power BI Report    |
 
 
 
-#### Scenario discussion
-
-##### A) Single Workspace deployment (one-to-one)
+#### A) Single Workspace deployment (one-to-one)
 
 In this scenario, the templates can be published in the same workspace next to the customer workload.
 
+![Screenshot](./media/general/fwm_deployment_scenario_A.png)
+
+|Item|Description|
+|--|--|
+|1|Once the Workspace Monitoring feature has been enabled for the workspace, the feature will stream the collected trace logs to the Monitoring Eventhouse KQL database.|
+|2|The Monitoring Eventhouse KQL database provides a Query URI endpoint, which will be used by the templates. The user can configure the Query URI endpoint manually by changing the paramaters in the template |
+|3| The Real-Time Dashboard template can be published into the given workspace by the user.|
+|4| The Power BI report template can be imported into the given workspace by the user.|
 
 **Primary audience:** Workspace Administrators, Pro developers focusing on one single workspace.
 
@@ -84,9 +84,17 @@ In this scenario, the templates can be published in the same workspace next to t
 
 -------- 
 
-##### B) Multiple Workspace deployment (one-to-many)
+#### B) Multiple Workspace deployment (one-to-many)
 
 In this scenario, the templates can be published in one "central" workspace, which helps to isolate the customer workload from the monitoring templates.
+
+![Screenshot](./media/general/fwm_deployment_scenario_B.png)
+
+|Item|Description|
+|--|--|
+|1|Once the Workspace Monitoring feature has been enabled for the workspace, the feature will stream the collected trace logs to the Monitoring Eventhouse KQL database.|
+|2|The Monitoring Eventhouse KQL database provides a Query URI endpoint, which will be used by the templates. The user can configure the Query URI endpoint manually by changing the paramaters in the template. |
+|3| The Real-Time Dashboard template can be published into the given workspace by the user. We recommend to use this template, because changing the parameters (QueryURI) can happen directly on the UI of the dashboard by the user.|
 
 **Primary audience:** Workspace Administrators, Capacity Owners, Domain Administrators focusing on sub-set of workspaces.
 
@@ -95,12 +103,26 @@ In this scenario, the templates can be published in one "central" workspace, whi
 
 
 -------- 
-##### C) Critical Workloads
+#### C) Deployment for critical workloads
 
 In this scenario, the template will be deployed in a separated workspace (attached to an F-SKU) for monitoring purposes.
 This workspaces can contain the Real-Time Dashboard with multiple Datasources (Monitoring Eventhouses from multiple Workspaces) and a pro-active alerting solution can be configured. 
 
-We recommend this deployment scenario, whenever a high critical workload has to be monitored in near-real-time.
+We recommend this deployment scenario, whenever a high critical workload has to be monitored in near-real-time for one or multiple workspaces.
+
+![Screenshot](./media/general/fwm_deployment_scenario_C.png)
+
+
+|Item|Description|
+|--|--|
+|1|Let's assume you have identified workspaces with high criticality in your organisation, which requires a continuosly monitoring. In this scenario these sub-set of your workspaces will be configured and extended with the Workspace Monitoring feature and the templates.|
+|2|Let's assume you have other workspaces, which are out of scope in this scenario.|
+|3|Once the Workspace Monitoring feature has been enabled for the workspace, the feature will stream the collected trace logs to the Monitoring Eventhouse KQL database.|
+|4|The Monitoring Eventhouse KQL database provides a Query URI endpoint, which will be used by the templates. The user can configure the Query URI endpoint manually by changing the paramaters in the template.|
+|5|In this scenario, there is a separat workspace, which the user creates to store the monitoring templates only.|
+|6|The Real-Time Dashboard template can be published into this separat workspace by the user. We recommend to use this template, because changing the parameters (QueryURI) can happen directly on the UI of the dashboard by the user.|
+|7|Optionally, a set of rules can be configured based on the Real-Time Dashboard within a Data Activator item, which sends proactivelly notifications about peaks, anomalies, long-running operations with high CPU, Memory consumption.|
+|8|User, team of people will be notified in near-real-time to be able to take action on the alerted items.|
 
 **Primary audience:** Data Product Owners, Workspace Owners
 
@@ -108,7 +130,7 @@ We recommend this deployment scenario, whenever a high critical workload has to 
 - Real-Time Dashboard + Data Activator
 
 -------- 
-##### D) Integration with FUAM
+#### D) Integration with FUAM
 The other solution accelerator within the Fabric toolbox is FUAM (Fabric Unified Admin Monitoring), which aims a tenant level monitoring of your environment. Note that FUAM requires Fabric Administrator EntraID rights.
 
 **Primary audience:** Fabric Administrators, Capacity Owners
@@ -122,9 +144,17 @@ The other solution accelerator within the Fabric toolbox is FUAM (Fabric Unified
 
 ## Considerations and limitations
 
-**Power BI report template**
-- **Eventhouse Query Limits**
-    - If the template refresh fails due to the data volume, you can filter the data by configuring the Fabric Item Id parameter.
+##### Support of the templates
+
+- The Workspace Monitoring feature itself is Microsoft Fabric feature
+- The Templates from this repository page is a solution accelerator, which is not an official Microsoft asset/service.
+
+##### Capacity consumption of Workspace Monitoring feature with templates
+
+- 
+
+##### Power BI report template
+- The Power BI report template has been optimised and refactored since the last version. It uses now DirectQuery for the 
 
 
 
