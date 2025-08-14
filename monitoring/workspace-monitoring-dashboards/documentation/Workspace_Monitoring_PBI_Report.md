@@ -20,11 +20,11 @@ There are some common questions where Workspace Monitoring can help with the Pow
 
 |Workload|Question|Approach|Analytical Pathway|
 |----|----|----|----|
-|All supported |„What has happened on my workspace recently?“|Trend analysis by workload|Diagnostic Overview|
-|Semantic model|„We got a call from management, because yesterday someone throttled the capacity“|The report is designed in way, where users can troubleshoot heavy operations and find the root cause of the e.g. consumption peak with ease.| [Query Analysis](#analytical-pathway--query-analysis) & [Refresh Analysis](#analytical-pathway--refresh-analysis)|
-|Semantic model|“A semantic model refresh took very long yesterday. What caused the delay?”|Analyze refresh duration and resource usage|[Refresh Analysis](#analytical-pathway--refresh-analysis)|
-|Semantic model|“One semantic model is causing capacity issues. What queries are hitting it?”|Investigate query patterns and CPU usage per model|[Query Analysis](#analytical-pathway--query-analysis)|
-|Eventhouse|“Which Eventhouse queries are consuming the most resources or failing frequently?”|Query performance analysis and error tracking|Query Performance & [Query Analysis](#analytical-pathway--query-analysis)|
+|All supported |„What has happened on my workspace recently?“|Trend analysis by workload|[Diagnostic Overview](#analytical-pathway--diagnostic-overview)|
+|Semantic model|„We got a call from management, because yesterday someone throttled the capacity“|The report is designed in way, where users can troubleshoot heavy operations and find the root cause of the e.g. consumption peak with ease.| [Query Analysis](#analytical-pathway--sm--query-analysis) & [Refresh Analysis](#analytical-pathway--sm--refresh-analysis)|
+|Semantic model|“A semantic model refresh took very long yesterday. What caused the delay?”|Analyze refresh duration and resource usage|[Refresh Analysis](#analytical-pathway--sm--refresh-analysis)|
+|Semantic model|“One semantic model is causing capacity issues. What queries are hitting it?”|Investigate query patterns and CPU usage per model|[Query Analysis](#analytical-pathway--sm--query-analysis)|
+|Eventhouse|“Which Eventhouse queries are consuming the most resources or failing frequently?”|Query performance analysis and error tracking|Query Performance & [Query Analysis]|
 |Eventhouse|“Are there ingestion pipelines that are failing or running slower than expected?”|Monitor ingestion success rates, durations, and retry patterns|Ingestion Analysis|
 |Mirrored database|“Why is the mirrored database table execution impacting performance?”|Analyze execution logs, query volumes, and CPU usage|Table Execution Analysis|
 |API for GraphQL|“What is the success ratio of my production GraphQL API request over time?”|Track API call frequency, response times, and error rates|GraphQL Performance Analysis|
@@ -35,21 +35,37 @@ There are some common questions where Workspace Monitoring can help with the Pow
 
 |Workload|Name|
 |---|---|
-|Semantic model|Key Metrics Overview|
-|Semantic model|[Query Analysis](#analytical-pathway--query-analysis)|
-|Semantic model|[Refresh Analysis](#analytical-pathway--refresh-analysis)|
+|All supported|[Diagnostic Overview](#analytical-pathway--diagnostic-overview)|
+|Semantic model|[Key Metrics Overview](#analytical-pathway--sm--key-metrics-overview)||
+|Semantic model|[Query Analysis](#analytical-pathway--sm--query-analysis)|
+|Semantic model|[Refresh Analysis](#analytical-pathway--sm--refresh-analysis)|
 |Eventhouse|Query Performance|
 |Eventhouse|Ingestion Performance|
 |API for GraphQL|GraphQL Performance|
 |Mirrored database|Table Execution Analysis|
 
+### Analytical Pathway | Diagnostic Overview
+
+|Step|Description|
+|---|---|
+|1.|"In scope bar". This static visual asset helps you to identify the scope of a given report page. Other Fabric Toolbox solution accelerators use also this approach. <br> In this report, there are two levels available: **Workspace level** and **Item level**. |
+|2.|The buttons **Explore Fabric Toolbox** and **Open Disclaimer** helps you and other users in your organisation to get more information about the templates, its nature etc.|
+|3.|**Define** the considered time window (**Date**) on the filter pane <br> Available interval: between 1 and 30 days|
+|4.|**Define** the "Time Unit" filter, which helps you to convert all time related measures. <br> Available units: _millisecond_, _second_, _minute_, _hour_|
+|5.|**Define** the "Size Unit" filter, which helps you to convert all the data size/volume related measures. <br> Available units: _byte_, _kilobyte_, _megabyte_, _gigabyte_|
+|6.|**Semantic Model Metrics** card acts a starting point of the analytical pathways. <br> _Semantic model operation logs are part of the workspace monitoring logs and are registered in the Eventhouse KQL database, which is part of the Real-Time Intelligence solution. You can use these logs to monitor the usage and performance of your workspace._  Link: [Semantic model operation logs](https://learn.microsoft.com/en-us/fabric/enterprise/powerbi/semantic-model-operations)|
+|7.|**Eventhouse Metrics** card acts a starting point of the analytical pathways. <br> _This report visualizes data from the **metrics table**, which contains the details of ingestions, materialized views, and continuous exports of an Eventhouse KQL database and the **query logs** tables, which contains the list of queries run on an Eventhouse KQL database._  Links: [Query logs](https://learn.microsoft.com/en-us/fabric/real-time-intelligence/monitor-logs-query) and [Metric operation logs](https://learn.microsoft.com/en-us/fabric/real-time-intelligence/monitor-metrics)|
+|8.|**GraphQL Metrics** card acts a starting point of the analytical pathways. <br> _GraphQL operation logs are part of the workspace monitoring logs and are registered in the Eventhouse KQL database, which is part of the Real-Time Intelligence solution. You can use these logs to monitor the usage and performance of your workspace._  Link: [GraphQL operation logs](https://learn.microsoft.com/en-us/fabric/data-engineering/graphql-operations)|
+|9.|**Mirrored Database Metrics** card acts a starting point of the analytical pathways. <br> _Mirrored database operation logs are part of the workspace monitoring logs and are registered in the Eventhouse KQL database, which is part of the Real-Time Intelligence solution. You can use these logs to monitor the execution and performance of your mirrored database._  Link: [Mirrored database table exectuion logs](https://learn.microsoft.com/en-us/fabric/database/mirrored-database/monitor-logs) |
+
+![Screenshot](/monitoring/workspace-monitoring-dashboards/media/documentation/pbi/fwm_pbi_ap_100.png)
 
 ### Semantic Model Logs
 
 Workspace admins, users, BI developers etc. would like to analyse the operations of all the semantic models within a given workspace.
 They want to investigate which semantic model had in the recent time (max last 30 days, because of Monitoring Eventhouse retention period) significant problems with queries and refreshes.
 
-#### Analytical Pathway | Key Metrics Overview
+### Analytical Pathway | SM | Key Metrics Overview
 **for Semantic Model logs**
 
 
@@ -79,7 +95,7 @@ They want to investigate which semantic model had in the recent time (max last 3
 
 
 
-#### Analytical Pathway | Query analysis
+### Analytical Pathway | SM | Query analysis
 **for Semantic Model logs**
 
 |Step|Description|
@@ -104,20 +120,29 @@ They want to investigate which semantic model had in the recent time (max last 3
 
 ![Screenshot](/monitoring/workspace-monitoring-dashboards/media/documentation/pbi/fwm_pbi_ap_11.png)
 
+
 |Step|Description|
 |---|---|
-|6.|Review the summary of the "Query History" page, which has been filtered for the selected semantic model. Since this page will be used in another analytical pathway, just ignore the "Selected Date" tile. There is a link embedded to understand more your specific Memory limits for Queries.|
-|7.|Review the Query History table on the page. This visual show more detailed metrics from each query, which has been executed against the selected semantic model within the selected time window. In this example, we go with that one failed DAX query.|
-|8.|After you highlighted the row in the table, click on the "Go to Query Analysis" button to see all the metrics and raw trace logs about this query.|
+|7.|**Hover** over the bar to see the more details about the given day for the given semantic model in the tooltip.|
+|8.|**Click** on the "Go to Historical Queries" button, once one bar has been highlighted to jump to the next analysis page.|
+
+![Screenshot](/monitoring/workspace-monitoring-dashboards/media/documentation/pbi/fwm_pbi_ap_12.png)
+
+
+|Step|Description|
+|---|---|
+|9.|**Review** the summary of the "Query History" page, which has been filtered for the selected semantic model. Since this page will be used in another analytical pathway, just ignore the "Selected Date" tile. There is a link embedded to understand more your specific Memory limits for Queries.|
+|10.|**Review** the "Query History" table on the page. This visual show more detailed metrics from each query, which has been executed against the selected semantic model within the selected time window. In this example, we go with that one failed DAX query.|
+|11.|**Highlight** a row in the table and **click** on the **Go to Query Analysis** button to see all the metrics and raw trace logs about this query.|
 
 ![Screenshot](/monitoring/workspace-monitoring-dashboards/media/documentation/pbi/fwm_pbi_ap_2.png)
 
 
 |Step|Description|
 |---|---|
-|9.|On the "Query Details" page, the data has been filtered for one single operation. This page provides all the relevant information about the given query. |
-|10.|The cards provide you detailed information about the query, similarly like on the previos page. These numbers helps you to understand the resource footprint, duration and other metrics of the query.|
-|11.| The table visual on the bottom is sorted by Timestamp ascending. This is important to keep it like that, because you will see chronological trace logs. In this example the last raw log (exluded the Execution Metrics, which is an additional trace log event) was an Error event. The column _EventText_ provides you the raw trace log value, which has been reported by the engine. In this case the user has cancelled the query.|
+|12.|On the "Query Details" page, the data has been filtered for one single operation. This page provides all the relevant information about the given query. |
+|13.|The cards provide you detailed information about the query, similarly like on the previos page. These numbers helps you to understand the resource footprint, duration and other metrics of the query.|
+|14.| The table visual on the bottom is sorted by Timestamp ascending. This is important to keep it like that, because you will see chronological trace logs. In this example the last raw log (excluded the "Execution Metrics" operation, which is an additional trace log event) was an Error event. The column _EventText_ provides you the raw trace log value, which has been reported by the engine. In this case the user has cancelled the query.|
 
 ![Screenshot](/monitoring/workspace-monitoring-dashboards/media/documentation/pbi/fwm_pbi_ap_3.png)
 
@@ -126,7 +151,7 @@ You finished the analytical pathway "Query analysis" for semantic models.
 
 ------------------------------------------------------------------------------------------------
 
-#### Analytical Pathway | Refresh analysis
+### Analytical Pathway | SM | Refresh analysis
 **for Semantic Model logs**
 
 |Step|Description|
