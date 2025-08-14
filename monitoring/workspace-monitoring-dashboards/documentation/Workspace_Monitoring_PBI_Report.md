@@ -3,15 +3,16 @@
 ## General
 
 The Power BI allows users to configure connections to Monitoring Eventhouse where they can retain detailed historical activity data. This repo hosts **Power BI report** templates (.pbit) that you can point to your Monitoring Eventhouse databases to load data and get insights.
-
-We have ported and enhanced the 'Fabric Log Analytics for Analysis Service Engine report template', which retrieved the data with the BYOLA approach.
-
 Now, you can seamlessy connect and track your workspace items, operations, visuals etc. without leaving the SaaS experience from Microsoft Fabric.
 
 The Power BI Report template is structured on the following way:
 
-![Screenshot](/media/documentation/pbi/fwm_pbi_template_structure.png)
+![Screenshot](/monitoring/workspace-monitoring-dashboards/media/documentation/pbi/fwm_pbi_template_structure.png)
 
+
+## How to deploy
+
+Follow the documentation here
 
 ## Common scenarios 
 
@@ -20,7 +21,7 @@ There are some common questions where Workspace Monitoring can help with the Pow
 |Workload|Question|Approach|Analytical Pathway|
 |----|----|----|----|
 |All supported |„What has happened on my workspace recently?“|Trend analysis by workload|Diagnostic Overview|
-|Semantic model|„We got a call from management, because yesterday someone throttled the capacity“|The report is designed in way, where users can troubleshoot heavy operations and find the root cause of the e.g. consumption peak with ease.|Query Analysis & Refresh Analysis|
+|Semantic model|„We got a call from management, because yesterday someone throttled the capacity“|The report is designed in way, where users can troubleshoot heavy operations and find the root cause of the e.g. consumption peak with ease.|Query Analysis & Refresh Analysis [Link to Section](#Analytical Pathway: Query analysis)|
 |Semantic model|“A semantic model refresh took very long yesterday. What caused the delay?”|Analyze refresh duration and resource usage|Refresh Analysis|
 |Semantic model|“One semantic model is causing capacity issues. What queries are hitting it?”|Investigate query patterns and CPU usage per model|Query Analysis|
 |Eventhouse|“Which Eventhouse queries are consuming the most resources or failing frequently?”|Query performance analysis and error tracking|Query Performance & Query Analysis|
@@ -32,23 +33,31 @@ There are some common questions where Workspace Monitoring can help with the Pow
 
 ## Analytical Pathways
 
+|Workload|Name|
+|---|---|
+|Semantic model|Key Metrics Overview|
+|Semantic model|Query Analysis|
+|Semantic model|Refresh Analysis|
+|Eventhouse|Query Performance|
+|Eventhouse|Ingestion Performance|
+|API for GraphQL|GraphQL Performance|
+|Mirrored database|Table Execution Analysis|
 
-### Analysis of Semantic Model Logs (AS Engine)
 
-#### Scenario
+### Semantic Model Logs
 
 Workspace admins, users, BI developers etc. would like to analyse the operations of all the semantic models within a given workspace.
 They want to investigate which semantic model had in the recent time (max last 30 days, because of Monitoring Eventhouse retention period) significant problems with queries and refreshes.
 
 
-#### Analytical Pathway: Query analysis
+#### Analytical Pathway | Query analysis
 
 |Step|Description|
 |---|---|
 |1.|Define the considered time window on the filter pane [min: 1, max: 30] in days|
 |2.|Click on the "Key Metrics Overview" button within the "Semantic Model Metrics" tile to begin the analytical pathway.|
 
-![Screenshot](/media/documentation/pbi/fwm_pbi_ap_0.png)
+![Screenshot](/monitoring/workspace-monitoring-dashboards/media/documentation/pbi/fwm_pbi_ap_0.png)
 
 |Step|Description|
 |---|---|
@@ -58,7 +67,7 @@ They want to investigate which semantic model had in the recent time (max last 3
 
 >**Note:** Other metrics with high values like _Max Execution Delay_, or _Max Memory Peak_ or count of _Errors_ are indicators to continue the investigation.
 
-![Screenshot](/media/documentation/pbi/fwm_pbi_ap_1.png)
+![Screenshot](/monitoring/workspace-monitoring-dashboards/media/documentation/pbi/fwm_pbi_ap_1.png)
 
 |Step|Description|
 |---|---|
@@ -66,7 +75,7 @@ They want to investigate which semantic model had in the recent time (max last 3
 |7.|Review the Query History table on the page. This visual show more detailed metrics from each query, which has been executed against the selected semantic model within the selected time window. In this example, we go with that one failed DAX query.|
 |8.|After you highlighted the row in the table, click on the "Go to Query Analysis" button to see all the metrics and raw trace logs about this query.|
 
-![Screenshot](/media/documentation/pbi/fwm_pbi_ap_2.png)
+![Screenshot](/monitoring/workspace-monitoring-dashboards/media/documentation/pbi/fwm_pbi_ap_2.png)
 
 
 |Step|Description|
@@ -75,14 +84,14 @@ They want to investigate which semantic model had in the recent time (max last 3
 |10.|The cards provide you detailed information about the query, similarly like on the previos page. These numbers helps you to understand the resource footprint, duration and other metrics of the query.|
 |11.| The table visual on the bottom is sorted by Timestamp ascending. This is important to keep it like that, because you will see chronological trace logs. In this example the last raw log (exluded the Execution Metrics, which is an additional trace log event) was an Error event. The column _EventText_ provides you the raw trace log value, which has been reported by the engine. In this case the user has cancelled the query.|
 
-![Screenshot](/media/documentation/pbi/fwm_pbi_ap_3.png)
+![Screenshot](/monitoring/workspace-monitoring-dashboards/media/documentation/pbi/fwm_pbi_ap_3.png)
 
 **Very well done!**
 You finished the analytical pathway "Query analysis" for semantic models.
 
 ------------------------------------------------------------------------------------------------
 
-#### Analytical Pathway: Refresh analysis
+#### Analytical Pathway | Refresh analysis
 
 |Step|Description|
 |---|---|
@@ -90,7 +99,7 @@ You finished the analytical pathway "Query analysis" for semantic models.
 |2.|Review the Semantic Model Metrics card.|
 |3.|Click on the "Refresh Analysis" button within the "Semantic Model Metrics" tile to begin the analytical pathway.|
 
-![Screenshot](/media/documentation/pbi/fwm_pbi_ap_4.png)
+![Screenshot](/monitoring/workspace-monitoring-dashboards/media/documentation/pbi/fwm_pbi_ap_4.png)
 
 |Step|Description|
 |---|---|
@@ -101,14 +110,14 @@ You finished the analytical pathway "Query analysis" for semantic models.
 
 >**Example 2:** The CPU duration (bar) is **low**, however the memory consumption (color) is **red**. This would mean that on that day at least one refresh operation was **Memory intensive**.
 
-![Screenshot](/media/documentation/pbi/fwm_pbi_ap_5.png)
+![Screenshot](/monitoring/workspace-monitoring-dashboards/media/documentation/pbi/fwm_pbi_ap_5.png)
 
 |Step|Description|
 |---|---|
 |6.|Hover over the bar to see the more details about the given day for the given semantic model in the tooltip.|
 |7.|Click on the "Continue Refresh Analysis" button, once one bar has been highlighted to jump to the next analysis page.|
 
-![Screenshot](/media/documentation/pbi/fwm_pbi_ap_6.png)
+![Screenshot](/monitoring/workspace-monitoring-dashboards/media/documentation/pbi/fwm_pbi_ap_6.png)
 
 
 |Step|Description|
@@ -117,7 +126,7 @@ You finished the analytical pathway "Query analysis" for semantic models.
 |9.|Expand an OperationId to see the refreshed table metrics.|
 |10.|Expand a _Table Name_ and the _Object Type_ to identify, which object was very resource intensive. |
 
-![Screenshot](/media/documentation/pbi/fwm_pbi_ap_7.png)
+![Screenshot](/monitoring/workspace-monitoring-dashboards/media/documentation/pbi/fwm_pbi_ap_7.png)
 
 |Step|Description|
 |---|---|
@@ -125,7 +134,7 @@ You finished the analytical pathway "Query analysis" for semantic models.
 |11.|Highlight a Refresh Operation.|
 |12.|Click on the "Navigate to Refresh GANTT" button.|
 
-![Screenshot](/media/documentation/pbi/fwm_pbi_ap_8.png)
+![Screenshot](/monitoring/workspace-monitoring-dashboards/media/documentation/pbi/fwm_pbi_ap_8.png)
 
 |Step|Description|
 |---|---|
@@ -135,7 +144,7 @@ You finished the analytical pathway "Query analysis" for semantic models.
 |16.| In the 'Refresh Details' table visual below, you can identify the resource footprint for each sub-operation (Operation Detail Name) by _Table_ by _Object Type_ by _Object Name_. In this example the "Tabular Refresh" and the "Read Data" sub-operations had the highest CPU consumption. |
 |Optional|If you are interested on other assets like "Memory Analyzer", "Best Practice Analyzer" or "Semantic Model Meta Data Analyzer" to optimize the semantic model, you can explore those assets by clicking on the button on the right-bottom corner of the report page.|
 
-![Screenshot](/media/documentation/pbi/fwm_pbi_ap_9.png)
+![Screenshot](/monitoring/workspace-monitoring-dashboards/media/documentation/pbi/fwm_pbi_ap_9.png)
 
 
 **Very well done!**
@@ -143,10 +152,10 @@ You finished the analytical pathway "Refresh analysis" for semantic models.
 
 ------------------------------------------------------------------------------------------------
 
-### Analysis of Eventhouse Logs (Kusto Engine)
+### Analysis of Eventhouse Logs
 
 
-### Analysis of Mirrored Database Table Execution Logs (Replication Engine)
+### Analysis of Mirrored Database Table Execution Logs
 
 
 
