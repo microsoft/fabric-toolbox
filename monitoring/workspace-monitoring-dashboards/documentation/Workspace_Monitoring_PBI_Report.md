@@ -21,10 +21,10 @@ There are some common questions where Workspace Monitoring can help with the Pow
 |Workload|Question|Approach|Analytical Pathway|
 |----|----|----|----|
 |All supported |„What has happened on my workspace recently?“|Trend analysis by workload|Diagnostic Overview|
-|Semantic model|„We got a call from management, because yesterday someone throttled the capacity“|The report is designed in way, where users can troubleshoot heavy operations and find the root cause of the e.g. consumption peak with ease.|Query Analysis & Refresh Analysis [Link to Section](#Analytical Pathway: Query analysis)|
-|Semantic model|“A semantic model refresh took very long yesterday. What caused the delay?”|Analyze refresh duration and resource usage|Refresh Analysis|
-|Semantic model|“One semantic model is causing capacity issues. What queries are hitting it?”|Investigate query patterns and CPU usage per model|Query Analysis|
-|Eventhouse|“Which Eventhouse queries are consuming the most resources or failing frequently?”|Query performance analysis and error tracking|Query Performance & Query Analysis|
+|Semantic model|„We got a call from management, because yesterday someone throttled the capacity“|The report is designed in way, where users can troubleshoot heavy operations and find the root cause of the e.g. consumption peak with ease.| [Query Analysis](#analytical-pathway--query-analysis) & [Refresh Analysis](#analytical-pathway--refresh-analysis)|
+|Semantic model|“A semantic model refresh took very long yesterday. What caused the delay?”|Analyze refresh duration and resource usage|[Refresh Analysis](#analytical-pathway--refresh-analysis)|
+|Semantic model|“One semantic model is causing capacity issues. What queries are hitting it?”|Investigate query patterns and CPU usage per model|[Query Analysis](#analytical-pathway--query-analysis)|
+|Eventhouse|“Which Eventhouse queries are consuming the most resources or failing frequently?”|Query performance analysis and error tracking|Query Performance & [Query Analysis](#analytical-pathway--query-analysis)|
 |Eventhouse|“Are there ingestion pipelines that are failing or running slower than expected?”|Monitor ingestion success rates, durations, and retry patterns|Ingestion Analysis|
 |Mirrored database|“Why is the mirrored database table execution impacting performance?”|Analyze execution logs, query volumes, and CPU usage|Table Execution Analysis|
 |API for GraphQL|“What is the success ratio of my production GraphQL API request over time?”|Track API call frequency, response times, and error rates|GraphQL Performance Analysis|
@@ -36,8 +36,8 @@ There are some common questions where Workspace Monitoring can help with the Pow
 |Workload|Name|
 |---|---|
 |Semantic model|Key Metrics Overview|
-|Semantic model|Query Analysis|
-|Semantic model|Refresh Analysis|
+|Semantic model|[Query Analysis](#analytical-pathway--query-analysis)|
+|Semantic model|[Refresh Analysis](#analytical-pathway--refresh-analysis)|
 |Eventhouse|Query Performance|
 |Eventhouse|Ingestion Performance|
 |API for GraphQL|GraphQL Performance|
