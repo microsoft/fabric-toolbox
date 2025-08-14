@@ -47,6 +47,23 @@ The prompts are organized into logical categories:
 - `debug_connection_issues` - Authentication and connection troubleshooting
 - `troubleshoot_tmsl_errors` - TMSL deployment error troubleshooting
 
+### 🎯 **Best Practice Analyzer (BPA)**
+- `analyze_model_for_bpa` - Run BPA analysis on a deployed model
+- `analyze_tmsl_for_bpa` - Run BPA analysis on TMSL definition
+- `get_bpa_critical_issues` - Find critical BPA violations
+- `get_bpa_performance_issues` - Find performance-related BPA issues
+- `get_bpa_dax_issues` - Find DAX expression BPA issues
+- `generate_bpa_summary` - Get overview of BPA rules and categories
+- `fix_bpa_violations` - Get guidance on fixing BPA violations
+
+### 🖥️ **Power BI Desktop Integration**
+- `detect_local_powerbi` - Detect running Power BI Desktop instances
+- `test_local_powerbi_connection` - Test connection to local instances
+- `analyze_local_model_bpa` - Run BPA on local Power BI Desktop models
+- `local_development_workflow` - Get local development workflow guidance
+- `troubleshoot_local_connection` - Troubleshoot local connection issues
+- `local_testing_workflow` - Set up local testing workflows
+
 ## Usage
 
 The prompts are automatically registered when the server starts. Users can access them through their MCP client to get guided assistance with common tasks.

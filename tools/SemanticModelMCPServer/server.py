@@ -7,8 +7,11 @@ import sys
 from typing import List, Optional
 from core.auth import get_access_token
 from core.azure_token_manager import get_cached_azure_token, clear_token_cache
+from core.bpa_service import BPAService
 from tools.fabric_metadata import list_workspaces, list_datasets, get_workspace_id, list_notebooks, list_delta_tables, list_lakehouses, list_lakehouse_files, get_lakehouse_sql_connection_string as fabric_get_lakehouse_sql_connection_string
-from tools.microsoft_learn import search_microsoft_learn, get_microsoft_learn_paths, get_microsoft_learn_modules, get_microsoft_learn_content
+from tools.bpa_tools import register_bpa_tools
+from tools.powerbi_desktop_tools import register_powerbi_desktop_tools
+from tools.microsoft_learn_tools import register_microsoft_learn_tools
 import urllib.parse
 from src.helper import count_nodes_with_name
 from src.tmsl_validator import validate_tmsl_structure
@@ -45,6 +48,47 @@ mcp = FastMCP(
     - Get Microsoft Learn Learning Paths (NEW)
     - Get Microsoft Learn Modules (NEW)
     - Get Microsoft Learn Content by URL (NEW)
+    - **🆕 Best Practice Analyzer (BPA) Tools (NEW)**
+    - **🆕 Power BI Desktop Detection Tools (NEW)**
+
+    ## 🆕 Best Practice Analyzer (BPA) Features:
+    The server now includes a comprehensive Best Practice Analyzer that evaluates semantic models against industry best practices:
+    
+    **Available BPA Tools:**
+    - `analyze_model_bpa` - Analyze a deployed model by workspace/dataset name
+    - `analyze_tmsl_bpa` - Analyze TMSL definition directly (with automatic JSON formatting)
+    - `generate_bpa_report` - Generate comprehensive BPA reports
+    - `get_bpa_violations_by_severity` - Filter violations by severity (INFO/WARNING/ERROR)
+    - `get_bpa_violations_by_category` - Filter violations by category
+    - `get_bpa_rules_summary` - Get overview of available BPA rules
+    - `get_bpa_categories` - List all available categories and severities
+    
+    **BPA Rule Categories:**
+    - **Performance** - Optimization recommendations for better query performance
+    - **DAX Expressions** - Best practices for DAX syntax and patterns
+    - **Maintenance** - Rules for model maintainability and documentation
+    - **Naming Conventions** - Consistent naming standards
+    - **Formatting** - Proper formatting and display properties
+    
+    **BPA Severity Levels:**
+    - **ERROR (Level 3)** - Critical issues that should be fixed immediately
+    - **WARNING (Level 2)** - Potential issues that should be addressed  
+    - **INFO (Level 1)** - Suggestions for improvement
+    
+    **Example BPA Usage:**
+    ```
+    # Analyze a deployed model
+    result = analyze_model_bpa("MyWorkspace", "MyDataset")
+    
+    # Generate detailed report
+    report = generate_bpa_report("MyWorkspace", "MyDataset", "detailed")
+    
+    # Get only critical errors
+    errors = get_bpa_violations_by_severity("ERROR")
+    
+    # Get performance-related issues
+    perf_issues = get_bpa_violations_by_category("Performance")
+    ```
 
     ## Microsoft Learn Research Capabilities (NEW):
     You now have access to Microsoft Learn documentation and research articles via the new MS Learn functions.
@@ -66,6 +110,7 @@ mcp = FastMCP(
     - You can ask questions about Power BI workspaces, datasets, notebooks, and models.
     - You can explore Fabric lakehouses and Delta Tables.
     - You can search Microsoft Learn documentation and training content for authoritative answers.
+    - **🆕 You can analyze semantic models for best practice compliance using BPA tools.**
     - Use the tools to retrieve information about your Power BI and Fabric environment.
     - The tools will return JSON formatted data for easy parsing.
     
@@ -79,6 +124,10 @@ mcp = FastMCP(
     - "Look up Power BI performance optimization techniques"
     - "List all Delta Tables in lakehouse Y"
     - "Show me the data pipelines in this workspace"
+    - **🆕 "Analyze my model for best practice violations"**
+    - **🆕 "Generate a BPA report for MyDataset"**
+    - **🆕 "Show me all performance-related issues in my model"**
+    - **🆕 "What are the critical errors in my TMSL definition?"**
 
     ## Fabric Lakehouse Support:
     - Use `list_fabric_lakehouses` to see all lakehouses in a workspace
@@ -227,9 +276,11 @@ mcp = FastMCP(
     - ✅ ALWAYS ADD: expressions block with "DatabaseQuery" using Sql.Database() function
     - 🔧 FORMAT: expressions array with name:"DatabaseQuery", kind:"m", expression array
 
-    **MANDATORY #3: TABLE STRUCTURE**
-    - ✅ Table objects should ONLY have: name, source, columns, partitions, measures (optional)
-    - ❌ Table objects should NEVER have: mode, defaultMode, or any mode-related properties (BLOCKED BY VALIDATION)
+    **MANDATORY #4: SCHEMA QUALIFICATION (CRITICAL FIX)**
+    - ✅ ALWAYS ADD: "schemaName" property in DirectLake partition sources (AUTOMATICALLY DETECTED!)
+    - ❌ NEVER OMIT: Schema qualification leads to table connection failures
+    - 🔧 AUTO-DETECTION: System detects 'gold', 'dbo', or first available schema automatically
+    - 🎯 VALIDATED: Schema name validation prevents common lakehouse connection issues
     
     ## DirectLake Model Creation Checklist - NOW AUTOMATED! ##
     The validation system automatically verifies ALL of these:
@@ -302,6 +353,176 @@ mcp = FastMCP(
     ## 🚫 FORBIDDEN TABLE PROPERTIES - NOW ENFORCED! 🚫
     **The validation system blocks these properties in table objects:**
     - "mode": "directLake" ← VALIDATION ERROR
+    
+    ## 🎯 BEST PRACTICE ANALYZER - ENSURING MODEL QUALITY ##
+    
+    **🆕 INTEGRATED BPA WORKFLOW FOR MODEL DEVELOPMENT:**
+    The Best Practice Analyzer is now integrated into your model development workflow to ensure compliance with industry standards:
+    
+    **When to Use BPA:**
+    - ✅ **BEFORE deploying** new models - Run BPA on TMSL to catch issues early
+    - ✅ **AFTER model changes** - Validate updates follow best practices  
+    - ✅ **REGULAR audits** - Check existing models for optimization opportunities
+    - ✅ **TROUBLESHOOTING** - Identify performance bottlenecks and issues
+    - ✅ **CODE REVIEWS** - Validate TMSL changes before deployment
+    
+    **BPA Integration Points:**
+    ```
+    # Complete model development workflow with BPA
+    1. template = generate_directlake_tmsl_template(workspace_id, lakehouse_id, tables, "MyModel")
+    2. bpa_pre_check = analyze_tmsl_bpa(template)  # ← ANALYZE BEFORE DEPLOYMENT
+    3. validation = update_model_using_tmsl(workspace, "MyModel", template, validate_only=True)
+    4. deployment = update_model_using_tmsl(workspace, "MyModel", template, validate_only=False)
+    5. bpa_final_check = analyze_model_bpa(workspace, "MyModel")  # ← VERIFY DEPLOYED MODEL
+    ```
+    
+    **🚨 BPA PRIORITY RULES - FOCUS ON THESE FIRST:**
+    
+    **CRITICAL ERRORS (Fix Immediately):**
+    - 🔴 **DAX Syntax Issues** - Unqualified column references, improper measure references
+    - 🔴 **Performance Killers** - Double data types, unhidden foreign keys, excessive calculated columns
+    - 🔴 **Model Structure** - Missing relationships, orphaned tables, improper formatting
+    
+    **HIGH-IMPACT WARNINGS (Address Soon):**
+    - 🟡 **Performance Optimization** - Use DIVIDE() instead of "/", avoid IFERROR(), partition large tables
+    - 🟡 **DAX Best Practices** - Use TREATAS instead of INTERSECT, avoid certain time intelligence in DirectQuery
+    - 🟡 **Maintenance Issues** - Missing descriptions, improper naming conventions
+    
+    **OPTIMIZATION SUGGESTIONS (Continuous Improvement):**
+    - 🟢 **Formatting Standards** - Format strings, data categorization, proper capitalization
+    - 🟢 **Documentation** - Object descriptions, consistent naming patterns
+    - 🟢 **Model Hygiene** - Remove redundant objects, clean up unused elements
+    
+    **🔧 COMMON BPA FIXES FOR DIRECTLAKE MODELS:**
+    
+    **Performance Issues:**
+    ```
+    ❌ "dataType": "double"           → ✅ "dataType": "decimal"
+    ❌ "isHidden": false (foreign key) → ✅ "isHidden": true  
+    ❌ "summarizeBy": "sum"           → ✅ "summarizeBy": "none"
+    ```
+    
+    **DAX Expression Issues:**
+    ```
+    ❌ SUM(SalesAmount)               → ✅ SUM(Sales[SalesAmount])
+    ❌ [Sales] / [Quantity]          → ✅ DIVIDE([Sales], [Quantity])
+    ❌ IFERROR([Calc], 0)            → ✅ Use DIVIDE() or proper error handling
+    ```
+    
+    **Formatting Issues:**
+    ```
+    ❌ Missing formatString           → ✅ "formatString": "#,0"
+    ❌ "isKey": false (primary key)   → ✅ "isKey": true
+    ❌ Missing description            → ✅ "description": "Clear description"
+    ```
+    
+    **🎯 BPA-DRIVEN MODEL CREATION WORKFLOW:**
+    
+    **Step 1: Generate Clean Template**
+    ```
+    template = generate_directlake_tmsl_template(workspace_id, lakehouse_id, tables, "MyModel")
+    # ↳ This already follows many BPA best practices
+    ```
+    
+    **Step 2: Pre-Deployment BPA Check**
+    ```
+    bpa_analysis = analyze_tmsl_bpa(template)
+    critical_errors = get_bpa_violations_by_severity("ERROR")
+    # ↳ Fix any critical issues before deployment
+    ```
+    
+    **Step 3: Address BPA Violations**
+    ```
+    # Fix issues in template based on BPA recommendations
+    # Common fixes: data types, format strings, hiding keys, etc.
+    ```
+    
+    **Step 4: Deploy and Final Verification**
+    ```
+    deployment = update_model_using_tmsl(workspace, "MyModel", fixed_template)
+    final_bpa = analyze_model_bpa(workspace, "MyModel")
+    performance_issues = get_bpa_violations_by_category("Performance")
+    ```
+    
+    **🔍 BPA TROUBLESHOOTING SCENARIOS:**
+    
+    **Scenario: Model Performance Issues**
+    ```
+    # 1. Get performance-specific recommendations
+    perf_issues = get_bpa_violations_by_category("Performance")
+    
+    # 2. Focus on high-impact fixes first
+    critical_perf = get_bpa_violations_by_severity("ERROR") # Filter to performance category
+    
+    # 3. Research specific optimizations
+    docs = search_learn_microsoft_content("Power BI performance optimization")
+    ```
+    
+    **Scenario: DAX Code Review**
+    ```
+    # 1. Check DAX best practices compliance
+    dax_issues = get_bpa_violations_by_category("DAX Expressions")
+    
+    # 2. Generate detailed report for review
+    report = generate_bpa_report(workspace, dataset, "detailed")
+    
+    # 3. Research DAX patterns
+    dax_docs = search_learn_microsoft_content("DAX best practices")
+    ```
+    
+    **Scenario: Model Maintenance Audit**
+    ```
+    # 1. Full model analysis
+    full_analysis = analyze_model_bpa(workspace, dataset)
+    
+    # 2. Categorize by maintenance areas
+    maintenance = get_bpa_violations_by_category("Maintenance")
+    formatting = get_bpa_violations_by_category("Formatting")
+    naming = get_bpa_violations_by_category("Naming Conventions")
+    
+    # 3. Prioritize fixes
+    summary_report = generate_bpa_report(workspace, dataset, "summary")
+    ```
+    
+    **💡 BPA INTEGRATION TIPS:**
+    
+    - **Always run BPA** on TMSL templates before deployment
+    - **Focus on ERROR severity** violations first - these are critical
+    - **Use BPA categories** to organize improvement efforts
+    - **Integrate BPA checks** into your development workflow
+    - **Research violations** using Microsoft Learn integration
+    - **Document BPA compliance** as part of model documentation
+    - **Regular BPA audits** help maintain model quality over time
+    - **Use BPA reports** for stakeholder communication about model health
+    
+    **🚀 ADVANCED BPA USAGE:**
+    
+    **Automated Quality Gates:**
+    ```
+    # Gate 1: No critical errors allowed
+    errors = get_bpa_violations_by_severity("ERROR")
+    if len(errors) > 0: block_deployment()
+    
+    # Gate 2: Performance threshold
+    perf_issues = get_bpa_violations_by_category("Performance")  
+    if len(perf_issues) > threshold: require_review()
+    
+    # Gate 3: Documentation standards
+    maintenance = get_bpa_violations_by_category("Maintenance")
+    if missing_descriptions > limit: require_documentation()
+    ```
+    
+    **Continuous Improvement:**
+    ```
+    # Weekly model health check
+    weekly_report = generate_bpa_report(workspace, dataset, "by_category")
+    
+    # Track improvement over time
+    compare_bpa_results(current_analysis, previous_analysis)
+    
+    # Identify model-wide patterns
+    analyze_all_models_in_workspace(workspace)
+    ```
     - "defaultMode": "directLake" ← VALIDATION ERROR  
     - Any mode-related property ← VALIDATION ERROR
     
@@ -336,11 +557,85 @@ mcp = FastMCP(
     5. deployment = update_model_using_tmsl(workspace, model, tmsl, validate_only=False)
     ```
 
+    ## 🆕 Power BI Desktop Detection and Local Development ##
+    
+    **New Local Development Capabilities:**
+    The server now includes tools to detect and connect to local Power BI Desktop instances for development and testing:
+    
+    **Available Power BI Desktop Tools:**
+    - `detect_local_powerbi_desktop` - Scan for running Power BI Desktop instances
+    - `test_local_powerbi_connection` - Test connection to local Analysis Services
+    - `compare_analysis_services_connections` - Compare connection types and requirements
+    - `explore_local_powerbi_tables` - List tables in local Power BI Desktop models
+    - `explore_local_powerbi_columns` - List columns in local models (all or specific table)
+    - `explore_local_powerbi_measures` - List measures with DAX expressions
+    - `execute_local_powerbi_dax` - Execute DAX queries against local models
+    
+    **Key Features:**
+    - **Process Detection**: Automatically find running Power BI Desktop processes
+    - **Port Discovery**: Identify Analysis Services port numbers for each instance
+    - **Connection Strings**: Generate ready-to-use connection strings for local development
+    - **File Detection**: Identify which .pbix files are currently open
+    - **Connection Testing**: Validate connectivity to local instances
+    - **Model Exploration**: List tables, columns, and measures in local models
+    - **DAX Execution**: Run DAX queries against local instances without authentication
+    
+    **Use Cases:**
+    - **Local Development**: Connect to models being developed in Power BI Desktop
+    - **Testing**: Validate changes against local instances before publishing
+    - **Debugging**: Analyze local models using BPA tools
+    - **Model Exploration**: Examine table structures, columns, and measures locally
+    - **DAX Testing**: Test DAX expressions against local data
+    - **Integration**: Incorporate local Power BI Desktop models into development workflows
+    
+    **Example Power BI Desktop Usage:**
+    ```
+    # Detect all running Power BI Desktop instances
+    instances = detect_local_powerbi_desktop()
+    
+    # Test connection to a specific port
+    connection_test = test_local_powerbi_connection(55001)
+    
+    # Explore model structure
+    tables = explore_local_powerbi_tables("Data Source=localhost:55001")
+    columns = explore_local_powerbi_columns("Data Source=localhost:55001", "Sales")
+    measures = explore_local_powerbi_measures("Data Source=localhost:55001")
+    
+    # Execute DAX queries
+    dax_result = execute_local_powerbi_dax("Data Source=localhost:55001", "EVALUATE 'Sales'")
+    
+    # Compare different connection types
+    comparison = compare_analysis_services_connections()
+    
+    # Use local connection for BPA analysis
+    # (Note: BPA tools work with local instances using connection strings)
+    ```
+    
+    **Connection Simplicity:**
+    Power BI Desktop connections are much simpler than Power BI Service connections:
+    - **Power BI Desktop**: `Data Source=localhost:port` (no authentication required)
+    - **Power BI Service**: Complex connection string with tokens and authentication
+    - **Analysis Services**: Windows/SQL authentication required
+    
+    This makes Power BI Desktop ideal for development and testing scenarios where
+    you need quick, reliable access to semantic models without authentication complexity.
+    
+    **Power BI Desktop Connection Information:**
+    - Power BI Desktop runs a local Analysis Services instance
+    - Ports are typically dynamic (usually > 50000)
+    - Connection format: `Data Source=localhost:{port}`
+    - Each open .pbix file gets its own Analysis Services instance
+    - Instances are automatically detected when Power BI Desktop is running
+
 """
 )
 
 # Register all MCP prompts from the prompts module
 register_prompts(mcp)
+
+# Initialize BPA Service
+current_dir = os.path.dirname(os.path.abspath(__file__))
+bpa_service = BPAService(current_dir)
 
 @mcp.tool
 def get_server_version() -> str:
@@ -762,6 +1057,28 @@ def generate_directlake_tmsl_template(workspace_id: str, lakehouse_id: str = Non
             except:
                 return f"Error retrieving available tables: {delta_tables_result}"
         
+        # First, detect available schemas in the lakehouse
+        schema_detection_query = "SELECT DISTINCT TABLE_SCHEMA FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_TYPE = 'BASE TABLE' ORDER BY TABLE_SCHEMA"
+        schema_result = _internal_query_lakehouse_sql_endpoint(workspace_id, schema_detection_query, lakehouse_id, lakehouse_name)
+        
+        detected_schema = "dbo"  # Default schema
+        try:
+            schema_data = json.loads(schema_result)
+            if schema_data.get("success"):
+                schemas = [row["TABLE_SCHEMA"] for row in schema_data.get("results", [])]
+                # Prefer 'gold' schema if available, otherwise use first non-system schema
+                if "gold" in schemas:
+                    detected_schema = "gold"
+                elif schemas:
+                    # Filter out system schemas and use the first available
+                    user_schemas = [s for s in schemas if s not in ["INFORMATION_SCHEMA", "sys", "db_accessadmin", "db_backupoperator", 
+                                                                   "db_datareader", "db_datawriter", "db_ddladmin", "db_denydatareader", 
+                                                                   "db_denydatawriter", "db_owner", "db_securityadmin", "guest"]]
+                    if user_schemas:
+                        detected_schema = user_schemas[0]
+        except Exception as e:
+            print(f"Warning: Could not detect schema, using default 'dbo': {e}")
+        
         # Validate table schemas
         validated_tables = []
         for table_name in table_names:
@@ -799,7 +1116,8 @@ def generate_directlake_tmsl_template(workspace_id: str, lakehouse_id: str = Non
                     
                     validated_tables.append({
                         "name": table_name,
-                        "columns": columns
+                        "columns": columns,
+                        "schema": detected_schema  # Add schema information to each table
                     })
                 else:
                     return f"Error validating schema for table '{table_name}': {schema_data.get('error', 'Unknown error')}"
@@ -868,7 +1186,7 @@ def generate_directlake_tmsl_template(workspace_id: str, lakehouse_id: str = Non
             table_def = {
                 "name": table_info["name"],
                 "lineageTag": f"{table_info['name']}_table",
-                "sourceLineageTag": f"[dbo].[{table_info['name']}]",
+                "sourceLineageTag": f"[{table_info['schema']}].[{table_info['name']}]",
                 "columns": table_info["columns"],
                 "partitions": [
                     {
@@ -876,6 +1194,7 @@ def generate_directlake_tmsl_template(workspace_id: str, lakehouse_id: str = Non
                         "mode": "directLake",
                         "source": {
                             "type": "entity",
+                            "schemaName": table_info["schema"],  # Add schema qualification
                             "entityName": table_info["name"],
                             "expressionSource": "DatabaseQuery"
                         }
@@ -1126,65 +1445,13 @@ def get_model_definition(workspace_name:str = None, dataset_name:str=None) -> st
 
 
 
-
-# Microsoft Learn API Tools
-@mcp.tool
-def search_learn_microsoft_content(query: str, locale: str = "en-us", top: int = 10, content_type: str = None) -> str:
-    """Search Microsoft Learn documentation and content.
-    
-    Args:
-        query: Search query for Microsoft Learn content
-        locale: Language locale (default: en-us)
-        top: Maximum number of results to return (default: 10)
-        content_type: Filter by content type (e.g., 'documentation', 'learning-path', 'module')
-    
-    Returns:
-        JSON string with search results from Microsoft Learn
-    """
-    return search_microsoft_learn(query, locale, top, content_type)
-
-@mcp.tool
-def get_learn_microsoft_paths(locale: str = "en-us", top: int = 20) -> str:
-    """Get Microsoft Learn learning paths.
-    
-    Args:
-        locale: Language locale (default: en-us)
-        top: Maximum number of results to return (default: 20)
-    
-    Returns:
-        JSON string with learning paths from Microsoft Learn
-    """
-    return get_microsoft_learn_paths(locale, top)
-
-@mcp.tool
-def get_learn_microsoft_modules(locale: str = "en-us", top: int = 20, learning_path_id: str = None) -> str:
-    """Get Microsoft Learn modules.
-    
-    Args:
-        locale: Language locale (default: en-us)
-        top: Maximum number of results to return (default: 20)
-        learning_path_id: Filter by specific learning path ID
-    
-    Returns:
-        JSON string with modules from Microsoft Learn
-    """
-    return get_microsoft_learn_modules(locale, top, learning_path_id)
-
-@mcp.tool
-def get_learn_microsoft_content(content_url: str, locale: str = "en-us") -> str:
-    """Get specific Microsoft Learn content by URL.
-    
-    Args:
-        content_url: Microsoft Learn content URL
-        locale: Language locale (default: en-us)
-    
-    Returns:
-        JSON string with content details from Microsoft Learn
-    """
-    return get_microsoft_learn_content(content_url, locale)
-
 def main():
     """Main entry point for the Semantic Model MCP Server."""
+
+    # Register tool modules
+    register_bpa_tools(mcp)
+    register_powerbi_desktop_tools(mcp)
+    register_microsoft_learn_tools(mcp)
 
     logging.info("Starting Semantic Model MCP Server")
     mcp.run()

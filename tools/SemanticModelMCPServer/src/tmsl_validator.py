@@ -121,6 +121,16 @@ def validate_tmsl_structure(tmsl_definition: str) -> Dict[str, Any]:
                                 if source.get("expressionSource") != "DatabaseQuery":
                                     warnings.append(f"⚠️ Partition in table '{table_name}' should use expressionSource='DatabaseQuery'")
                                     suggestions.append(f"Set expressionSource to 'DatabaseQuery' in table '{table_name}' partition")
+                                
+                                # Check for schema name in DirectLake partition source
+                                if "schemaName" not in source:
+                                    warnings.append(f"⚠️ DirectLake partition in table '{table_name}' missing 'schemaName' - may cause connection issues")
+                                    suggestions.append(f"Add 'schemaName' property to DirectLake partition source in table '{table_name}' (e.g., 'dbo', 'gold')")
+                                
+                                # Check entity name exists
+                                if "entityName" not in source:
+                                    errors.append(f"❌ DirectLake partition in table '{table_name}' missing 'entityName'")
+                                    suggestions.append(f"Add 'entityName' property to DirectLake partition source in table '{table_name}'")
                     
                     if not directlake_partition_found:
                         errors.append(f"❌ CRITICAL: Table '{table_name}' has no DirectLake partition")
@@ -194,6 +204,16 @@ def validate_single_table_tmsl(tmsl: Dict[str, Any]) -> Dict[str, Any]:
                     if source.get("expressionSource") != "DatabaseQuery":
                         warnings.append(f"⚠️ Partition in table '{table_name}' should use expressionSource='DatabaseQuery'")
                         suggestions.append(f"Set expressionSource to 'DatabaseQuery' in table '{table_name}' partition")
+                    
+                    # Check for schema name in DirectLake partition source
+                    if "schemaName" not in source:
+                        warnings.append(f"⚠️ DirectLake partition in table '{table_name}' missing 'schemaName' - may cause connection issues")
+                        suggestions.append(f"Add 'schemaName' property to DirectLake partition source in table '{table_name}' (e.g., 'dbo', 'gold')")
+                    
+                    # Check entity name exists
+                    if "entityName" not in source:
+                        errors.append(f"❌ DirectLake partition in table '{table_name}' missing 'entityName'")
+                        suggestions.append(f"Add 'entityName' property to DirectLake partition source in table '{table_name}'")
             elif "mode" not in partition:
                 suggestions.append(f"Add 'mode': 'directLake' to partition in table '{table_name}'")
         
