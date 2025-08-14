@@ -43,8 +43,11 @@ class BPAService:
             }
         
         try:
+            # Preprocess TMSL definition to handle formatting issues
+            cleaned_tmsl = self._clean_tmsl_json(tmsl_definition)
+            
             # Parse TMSL
-            tmsl_model = json.loads(tmsl_definition)
+            tmsl_model = json.loads(cleaned_tmsl)
             
             # Run analysis
             violations = self.analyzer.analyze_model(tmsl_model)
@@ -255,3 +258,49 @@ class BPAService:
             report['violations_by_category'] = categories
         
         return report
+    
+    def _clean_tmsl_json(self, tmsl_definition: str) -> str:
+        """
+        Clean and preprocess TMSL JSON string to handle common formatting issues
+        
+        Args:
+            tmsl_definition: Raw TMSL JSON string
+            
+        Returns:
+            Cleaned JSON string ready for parsing
+        """
+        # Remove carriage returns and normalize line endings
+        cleaned = tmsl_definition.replace('\r\n', '\n').replace('\r', '\n')
+        
+        # Remove any leading/trailing whitespace
+        cleaned = cleaned.strip()
+        
+        # If the string is already valid JSON, try parsing it first
+        try:
+            # Test if it's already valid JSON
+            json.loads(cleaned)
+            return cleaned
+        except json.JSONDecodeError:
+            # If not valid, try additional cleaning steps
+            pass
+        
+        # Handle common issues with escaped JSON strings
+        # If the string starts and ends with quotes, it might be a JSON string containing JSON
+        if cleaned.startswith('"') and cleaned.endswith('"'):
+            try:
+                # Try to decode it as a JSON string
+                decoded = json.loads(cleaned)
+                if isinstance(decoded, str):
+                    # If successful and result is a string, use that as the TMSL
+                    cleaned = decoded
+            except json.JSONDecodeError:
+                # If that fails, remove the outer quotes manually
+                cleaned = cleaned[1:-1]
+        
+        # Handle escaped quotes and backslashes
+        cleaned = cleaned.replace('\\"', '"').replace('\\\\', '\\')
+        
+        # Handle escaped newlines in JSON strings
+        cleaned = cleaned.replace('\\n', '\n').replace('\\t', '\t')
+        
+        return cleaned

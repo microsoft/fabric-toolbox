@@ -8,6 +8,8 @@ and analyzing local Power BI Desktop instances.
 from fastmcp import FastMCP
 import json
 from tools.powerbi_desktop_detector import detect_powerbi_desktop_instances, test_powerbi_desktop_connection
+from tools.fast_powerbi_detector import detect_powerbi_desktop_instances_fast
+from tools.ultra_fast_powerbi_detector import detect_powerbi_desktop_instances_ultra_fast
 from tools.improved_dax_explorer import get_local_tmsl_definition, update_local_model_using_tmsl
 from tools.simple_dax_explorer import explore_local_powerbi_simple, execute_local_dax_query
 
@@ -19,23 +21,27 @@ def register_powerbi_desktop_tools(mcp: FastMCP):
         """Detect running Power BI Desktop instances and their Analysis Services connection information.
 
         This tool scans for running Power BI Desktop processes and their associated Analysis Services 
-        instances to enable local development and testing scenarios.
+        instances to enable local development and testing scenarios. Uses optimized fast detection
+        methods for improved performance.
 
         Returns:
             JSON string containing:
             - List of Power BI Desktop instances with process information
             - Analysis Services instances and their port numbers  
             - Connection strings for local development
+            - Performance metrics and detection method used
             - Instructions for connecting to local instances
         """
         try:
-            result = detect_powerbi_desktop_instances()
-            return json.dumps(result, indent=2)
+            # Use the ultra-fast detector for maximum performance
+            result = detect_powerbi_desktop_instances_ultra_fast()
+            return json.dumps(result, indent=2, default=str)  # Convert dict to JSON string
         except Exception as e:
             return json.dumps({
                 'success': False,
                 'error': f'Error detecting Power BI Desktop instances: {str(e)}',
-                'error_type': 'powerbi_detection_error'
+                'error_type': 'powerbi_detection_error',
+                'fallback_attempted': False
             })
 
     @mcp.tool
@@ -360,4 +366,169 @@ def register_powerbi_desktop_tools(mcp: FastMCP):
                 'success': False,
                 'error': f'Error comparing connection types: {str(e)}',
                 'error_type': 'connection_comparison_error'
+            })
+
+    @mcp.tool
+    def compare_powerbi_detection_methods() -> str:
+        """Compare performance between ultra-fast, fast, and standard Power BI Desktop detection methods.
+        
+        This tool runs all three detection methods (ultra-fast optimized, fast netstat-based, 
+        and standard psutil-based) to provide comprehensive performance metrics and validate 
+        that all methods return consistent results.
+        
+        Returns:
+            JSON string with:
+            - Performance comparison metrics for all three methods
+            - Detection results from each method
+            - Consistency analysis across methods
+            - Recommendations for optimal usage
+        """
+        try:
+            import time
+            
+            result = {
+                'comparison_timestamp': time.time(),
+                'methods_compared': ['ultra_fast_optimized', 'fast_netstat', 'standard_psutil'],
+                'performance_metrics': {},
+                'consistency_analysis': {},
+                'recommendations': []
+            }
+            
+            # Test ultra-fast method
+            start_time = time.time()
+            try:
+                ultra_fast_result = detect_powerbi_desktop_instances_ultra_fast()
+                ultra_fast_time = (time.time() - start_time) * 1000
+                
+                result['performance_metrics']['ultra_fast_method'] = {
+                    'detection_time_ms': round(ultra_fast_time, 2),
+                    'success': ultra_fast_result.get('success', False),
+                    'instances_found': len(ultra_fast_result.get('powerbi_desktop_instances', [])),
+                    'as_instances_found': len(ultra_fast_result.get('analysis_services_instances', []))
+                }
+                
+            except Exception as e:
+                result['performance_metrics']['ultra_fast_method'] = {
+                    'error': str(e),
+                    'success': False
+                }
+            
+            # Test fast method
+            start_time = time.time()
+            try:
+                fast_result = detect_powerbi_desktop_instances_fast()
+                fast_time = (time.time() - start_time) * 1000
+                
+                result['performance_metrics']['fast_method'] = {
+                    'detection_time_ms': round(fast_time, 2),
+                    'success': fast_result.get('success', False),
+                    'instances_found': len(fast_result.get('powerbi_desktop_instances', [])),
+                    'as_instances_found': len(fast_result.get('analysis_services_instances', []))
+                }
+                
+            except Exception as e:
+                result['performance_metrics']['fast_method'] = {
+                    'error': str(e),
+                    'success': False
+                }
+            
+            # Test standard method
+            start_time = time.time()
+            try:
+                standard_result = detect_powerbi_desktop_instances()
+                standard_time = (time.time() - start_time) * 1000
+                
+                result['performance_metrics']['standard_method'] = {
+                    'detection_time_ms': round(standard_time, 2),
+                    'success': standard_result.get('success', False),
+                    'instances_found': len(standard_result.get('powerbi_desktop_instances', [])),
+                    'as_instances_found': len(standard_result.get('analysis_services_instances', []))
+                }
+                
+            except Exception as e:
+                result['performance_metrics']['standard_method'] = {
+                    'error': str(e),
+                    'success': False
+                }
+            
+            # Performance comparison analysis
+            ultra_fast_metrics = result['performance_metrics'].get('ultra_fast_method', {})
+            fast_metrics = result['performance_metrics'].get('fast_method', {})
+            standard_metrics = result['performance_metrics'].get('standard_method', {})
+            
+            if ultra_fast_metrics.get('success') and standard_metrics.get('success'):
+                ultra_fast_time = ultra_fast_metrics.get('detection_time_ms', 0)
+                standard_time = standard_metrics.get('detection_time_ms', 0)
+                
+                if standard_time > 0 and ultra_fast_time > 0:
+                    speedup = round(standard_time / ultra_fast_time, 1)
+                    time_saved = round(standard_time - ultra_fast_time, 1)
+                    
+                    result['performance_comparison'] = {
+                        'ultra_fast_detection_time_ms': ultra_fast_time,
+                        'standard_detection_time_ms': standard_time,
+                        'speedup_factor': f"{speedup}x faster",
+                        'time_saved_ms': time_saved,
+                        'performance_improvement': f"{round((time_saved / standard_time) * 100, 1)}% faster"
+                    }
+                    
+                    # Add fast method comparison if available
+                    if fast_metrics.get('success'):
+                        fast_time = fast_metrics.get('detection_time_ms', 0)
+                        result['performance_comparison']['fast_detection_time_ms'] = fast_time
+                
+                # Consistency check across all successful methods
+                methods_data = []
+                for method_name, metrics in result['performance_metrics'].items():
+                    if metrics.get('success'):
+                        methods_data.append({
+                            'name': method_name,
+                            'instances': metrics.get('instances_found', 0),
+                            'as_instances': metrics.get('as_instances_found', 0)
+                        })
+                
+                if len(methods_data) > 1:
+                    first_method = methods_data[0]
+                    consistent = all(
+                        m['instances'] == first_method['instances'] and 
+                        m['as_instances'] == first_method['as_instances']
+                        for m in methods_data
+                    )
+                    
+                    result['consistency_analysis'] = {
+                        'all_methods_consistent': consistent,
+                        'methods_tested': [m['name'] for m in methods_data],
+                        'instances_found_per_method': {m['name']: m['instances'] for m in methods_data},
+                        'as_instances_found_per_method': {m['name']: m['as_instances'] for m in methods_data}
+                    }
+                
+                # Recommendations
+                if ultra_fast_time < standard_time * 0.1:  # 10x faster
+                    result['recommendations'].append("Ultra-fast method is dramatically faster - strongly recommended")
+                elif ultra_fast_time < standard_time * 0.5:  # 2x faster
+                    result['recommendations'].append("Ultra-fast method provides significant performance improvement")
+                
+                if result['consistency_analysis'].get('all_methods_consistent', False):
+                    result['recommendations'].append("All methods return consistent results - ultra-fast method is safe to use")
+                else:
+                    result['recommendations'].append("Results differ between methods - investigate detection logic")
+            
+            result['summary'] = {
+                'recommended_method': 'ultra_fast_optimized' if ultra_fast_metrics.get('success') else 'fast_netstat',
+                'performance_tested': True,
+                'consistency_verified': result.get('consistency_analysis', {}).get('all_methods_consistent', False),
+                'best_time_ms': min([
+                    m.get('detection_time_ms', float('inf')) 
+                    for m in result['performance_metrics'].values() 
+                    if m.get('success')
+                ], default=0)
+            }
+            
+            return json.dumps(result, indent=2)
+            
+        except Exception as e:
+            return json.dumps({
+                'success': False,
+                'error': f'Error comparing detection methods: {str(e)}',
+                'error_type': 'detection_comparison_error'
             })

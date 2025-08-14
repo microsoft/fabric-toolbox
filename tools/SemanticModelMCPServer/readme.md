@@ -62,6 +62,7 @@ The Best Practice Analyzer automatically scans your semantic models (TMSL defini
 ```
 #semantic_model_mcp_server run BPA analysis on this TMSL definition before deployment
 ```
+*Note: Automatically handles JSON formatting issues including carriage returns, escaped quotes, and nested JSON strings.*
 
 #### 3. **Generate Comprehensive Reports**
 ```

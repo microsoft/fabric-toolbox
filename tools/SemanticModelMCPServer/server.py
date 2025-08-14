@@ -56,7 +56,7 @@ mcp = FastMCP(
     
     **Available BPA Tools:**
     - `analyze_model_bpa` - Analyze a deployed model by workspace/dataset name
-    - `analyze_tmsl_bpa` - Analyze TMSL definition directly  
+    - `analyze_tmsl_bpa` - Analyze TMSL definition directly (with automatic JSON formatting)
     - `generate_bpa_report` - Generate comprehensive BPA reports
     - `get_bpa_violations_by_severity` - Filter violations by severity (INFO/WARNING/ERROR)
     - `get_bpa_violations_by_category` - Filter violations by category
@@ -276,9 +276,11 @@ mcp = FastMCP(
     - ✅ ALWAYS ADD: expressions block with "DatabaseQuery" using Sql.Database() function
     - 🔧 FORMAT: expressions array with name:"DatabaseQuery", kind:"m", expression array
 
-    **MANDATORY #3: TABLE STRUCTURE**
-    - ✅ Table objects should ONLY have: name, source, columns, partitions, measures (optional)
-    - ❌ Table objects should NEVER have: mode, defaultMode, or any mode-related properties (BLOCKED BY VALIDATION)
+    **MANDATORY #4: SCHEMA QUALIFICATION (CRITICAL FIX)**
+    - ✅ ALWAYS ADD: "schemaName" property in DirectLake partition sources (AUTOMATICALLY DETECTED!)
+    - ❌ NEVER OMIT: Schema qualification leads to table connection failures
+    - 🔧 AUTO-DETECTION: System detects 'gold', 'dbo', or first available schema automatically
+    - 🎯 VALIDATED: Schema name validation prevents common lakehouse connection issues
     
     ## DirectLake Model Creation Checklist - NOW AUTOMATED! ##
     The validation system automatically verifies ALL of these:
@@ -1055,6 +1057,28 @@ def generate_directlake_tmsl_template(workspace_id: str, lakehouse_id: str = Non
             except:
                 return f"Error retrieving available tables: {delta_tables_result}"
         
+        # First, detect available schemas in the lakehouse
+        schema_detection_query = "SELECT DISTINCT TABLE_SCHEMA FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_TYPE = 'BASE TABLE' ORDER BY TABLE_SCHEMA"
+        schema_result = _internal_query_lakehouse_sql_endpoint(workspace_id, schema_detection_query, lakehouse_id, lakehouse_name)
+        
+        detected_schema = "dbo"  # Default schema
+        try:
+            schema_data = json.loads(schema_result)
+            if schema_data.get("success"):
+                schemas = [row["TABLE_SCHEMA"] for row in schema_data.get("results", [])]
+                # Prefer 'gold' schema if available, otherwise use first non-system schema
+                if "gold" in schemas:
+                    detected_schema = "gold"
+                elif schemas:
+                    # Filter out system schemas and use the first available
+                    user_schemas = [s for s in schemas if s not in ["INFORMATION_SCHEMA", "sys", "db_accessadmin", "db_backupoperator", 
+                                                                   "db_datareader", "db_datawriter", "db_ddladmin", "db_denydatareader", 
+                                                                   "db_denydatawriter", "db_owner", "db_securityadmin", "guest"]]
+                    if user_schemas:
+                        detected_schema = user_schemas[0]
+        except Exception as e:
+            print(f"Warning: Could not detect schema, using default 'dbo': {e}")
+        
         # Validate table schemas
         validated_tables = []
         for table_name in table_names:
@@ -1092,7 +1116,8 @@ def generate_directlake_tmsl_template(workspace_id: str, lakehouse_id: str = Non
                     
                     validated_tables.append({
                         "name": table_name,
-                        "columns": columns
+                        "columns": columns,
+                        "schema": detected_schema  # Add schema information to each table
                     })
                 else:
                     return f"Error validating schema for table '{table_name}': {schema_data.get('error', 'Unknown error')}"
@@ -1161,7 +1186,7 @@ def generate_directlake_tmsl_template(workspace_id: str, lakehouse_id: str = Non
             table_def = {
                 "name": table_info["name"],
                 "lineageTag": f"{table_info['name']}_table",
-                "sourceLineageTag": f"[dbo].[{table_info['name']}]",
+                "sourceLineageTag": f"[{table_info['schema']}].[{table_info['name']}]",
                 "columns": table_info["columns"],
                 "partitions": [
                     {
@@ -1169,6 +1194,7 @@ def generate_directlake_tmsl_template(workspace_id: str, lakehouse_id: str = Non
                         "mode": "directLake",
                         "source": {
                             "type": "entity",
+                            "schemaName": table_info["schema"],  # Add schema qualification
                             "entityName": table_info["name"],
                             "expressionSource": "DatabaseQuery"
                         }

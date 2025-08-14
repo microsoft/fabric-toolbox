@@ -27,10 +27,11 @@ result = analyze_model_bpa("Sales Workspace", "Sales Model")
 
 #### `analyze_tmsl_bpa(tmsl_definition)`
 Analyzes TMSL definition directly without requiring a deployed model.
+**Automatically handles JSON formatting issues** including carriage returns, escaped quotes, and nested JSON strings.
 
 ```python
-# Analyze TMSL during development
-result = analyze_tmsl_bpa(tmsl_json_string)
+# Analyze TMSL during development - handles formatting automatically
+result = analyze_tmsl_bpa(tmsl_json_string)  # Works with raw or escaped JSON
 ```
 
 ### Reporting Tools

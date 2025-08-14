@@ -116,6 +116,7 @@
                 "mode": "directLake",
                 "source": {
                   "type": "entity",
+                  "schemaName": "dbo",
                   "entityName": "DimDate",
                   "expressionSource": "DatabaseQuery"
                 }
@@ -294,6 +295,7 @@
                 "mode": "directLake",
                 "source": {
                   "type": "entity",
+                  "schemaName": "dbo",
                   "entityName": "FactSales",
                   "expressionSource": "DatabaseQuery"
                 }
