@@ -1,5 +1,4 @@
-# Fabric Workspace Monitoring Report templates (preview)
-
+# Fabric Workspace Monitoring Report templates
 
 ![Fabric Workspace Monitoring component overview with report templates](./media/general/fwm_overview_cover.png)
 
@@ -144,17 +143,37 @@ The other solution accelerator within the Fabric toolbox is FUAM (Fabric Unified
 
 ## Considerations and limitations
 
-##### Support of the templates
+#### Support of the templates
 
 - The Workspace Monitoring feature itself is Microsoft Fabric feature
 - The Templates from this repository page is a solution accelerator, which is not an official Microsoft asset/service.
 
-##### Capacity consumption of Workspace Monitoring feature with templates
+#### Capacity consumption of Workspace Monitoring feature with templates
+Similarly like before, the end-to-end solution should be considered in two parts:
+1) **Workspace Monitoring feature**
+2) **Templates** for Workspace Monitoring 
 
-- 
+The CU consumption of **feature (point 1)** can be evaluated based on the following operations by item kind:
+- **Eventhouse:**
+    - Eventhouse UpTime
+- **Eventstream:**
+    - Eventstream Per Hour
+    - Eventstream Data Traffic Per GB
+    - Eventstream Connector Per vCore-hour
+    - Eventstream Processor Per Hour
 
-##### Power BI report template
-- The Power BI report template has been optimised and refactored since the last version. It uses now DirectQuery for the 
+The CU consumption of the **templates (point 2)** can be evaluated based on the following operations by item kind:
+- **Real-Time Dashboard:**
+    - OneLake Write via Proxy
+    - OneLake Read via Proxy
+    - OneLake Other Operations
+- **Semantic Model:**
+    - Query
+    - Dataset Scheduled Refresh
+
+#### Power BI report template
+- The Power BI report template has been optimised and refactored since the last version. It uses now DirectQuery for the large transactional tables like 'SemanticModelLogs' or 'Eventhouse Metrics', which enables users to analyse big workspaces.
+- If you are facing issues with the template, please raise an issue in this Github repository.
 
 
 

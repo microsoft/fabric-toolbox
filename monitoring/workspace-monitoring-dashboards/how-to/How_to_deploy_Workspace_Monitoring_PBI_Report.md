@@ -1,21 +1,5 @@
 
 
-### Log Insights in Power BI Report
-
-The Power BI allows users to configure connections to Monitoring Eventhouse where they can retain detailed historical activity data. This repo hosts **Power BI report** templates (.pbit) that you can point to your Monitoring Eventhouse databases to load data and get insights.
-
-We have ported and enhanced the 'Fabric Log Analytics for Analysis Service Engine report template', which retrieved the data with the BYOLA approach.
-
-Now, you can seamlessy connect and track your workspace items, operations, visuals etc. without leaving the SaaS experience from Microsoft Fabric.
-
-The Power BI Report template is structured on the following way:
-![Workspace Monitoring Power BI Dashboard template structure](./media/general/fwm_pbi_template_0_structure.png)
-
-
-### Migrate from BYOLA
-We recommend to use the Power BI report template for the new Workspace Monitoring feature in Microsoft Fabric, whenever you are migrating your workspace monitoring solution from (BYOLA) Log Analytics Workspace monitoring.
-
-
 # Setup | Power BI template for Fabric Workspace Monitoring
 
 
