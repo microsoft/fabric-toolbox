@@ -12,7 +12,7 @@ The Power BI Report template is structured on the following way:
 
 ## How to deploy
 
-Follow the documentation here
+Follow the documentation [here](/monitoring/workspace-monitoring-dashboards/how-to/How_to_deploy_Workspace_Monitoring_PBI_Report.md).
 
 ## Common scenarios 
 
@@ -49,25 +49,60 @@ There are some common questions where Workspace Monitoring can help with the Pow
 Workspace admins, users, BI developers etc. would like to analyse the operations of all the semantic models within a given workspace.
 They want to investigate which semantic model had in the recent time (max last 30 days, because of Monitoring Eventhouse retention period) significant problems with queries and refreshes.
 
+#### Analytical Pathway | Key Metrics Overview
+**for Semantic Model logs**
 
-#### Analytical Pathway | Query analysis
 
 |Step|Description|
 |---|---|
-|1.|Define the considered time window on the filter pane [min: 1, max: 30] in days|
-|2.|Click on the "Key Metrics Overview" button within the "Semantic Model Metrics" tile to begin the analytical pathway.|
+|1.|**Define** the considered time window (**Date**) on the filter pane <br> Available interval: between 1 and 30 days|
+|2.|**Define** the "Time Unit" filter, which helps you to convert all time related measures. <br> Available units: _millisecond_, _second_, _minute_, _hour_|
+|3.|**Define** the "Size Unit" filter, which helps you to convert all the data size/volume related measures. <br> Available units: _byte_, _kilobyte_, _megabyte_, _gigabyte_|
+|4.|**Review** the "Semantic Model Metrics" card. Once there are any collected logs for semantic models, this card will be available.|
+|5.|**Click** on the **Key Metrics Overview** button within the "Semantic Model Metrics" tile to begin the analytical pathway.|
 
 ![Screenshot](/monitoring/workspace-monitoring-dashboards/media/documentation/pbi/fwm_pbi_ap_0.png)
 
 |Step|Description|
 |---|---|
-|3.|Review the Metrics table on the page.  This visual shows the key raw CPU, Memory and Duration metrics for each semantic models, which have been used within the defined time window. _See the Measure description below._|
-|4.|Highlight a semantic model, which you are interested in. In this example, we go with the "Simple_Import_Mode_SQL_Demo" semantic model, because it had the highest _CPU Time_ across all semantic models in the given workspace in the last 30 days. |
-|5.|In this step, there are two options to continue the analysis. Based on the metrics _Query Operations_ and _Refresh Operations_, you can identify, how many different operations has run for each scenarios. Click on the "Go to Query Analysis" button to continue the analysis. |
+|6.|The cards provide you aggregated insights about all semantic models in the selected time window. <br> **Important:** The report includes query and refresh operations only.|
+|7.|The underlying logs provide also information about _Execution Delay_ and _Capacity Throttling_ which was caused by a semantic model by operation. <br> **Important:** This visual contains those information on workspace level only. To monitor delays, rejections and throttling, please use the Capacity Metrics App.|
+|8.|Review the Metrics table on the page.  This visual shows the key raw CPU, Memory and Duration and other key metrics for each semantic models, which have been used within the defined time window. <br> _See the Measure description below._ <br> **Highlight** a semantic model in the visual to activate the buttons for step 9 and 10. |
+|9.|The analytical pathway _Query Analysis_ allows you to deep dive into the query execution details for the selected semantic model. |
+|10.|The analytical pathway _Refresh Analysis_ allows you to deep dive into the refresh execution details for the selected semantic model. |
 
 >**Note:** Other metrics with high values like _Max Execution Delay_, or _Max Memory Peak_ or count of _Errors_ are indicators to continue the investigation.
 
+
+
 ![Screenshot](/monitoring/workspace-monitoring-dashboards/media/documentation/pbi/fwm_pbi_ap_1.png)
+
+
+
+#### Analytical Pathway | Query analysis
+**for Semantic Model logs**
+
+|Step|Description|
+|---|---|
+|1.|**Define** the considered time window (**Date**) on the filter pane <br> Available interval: between 1 and 30 days|
+|2.|**Review** the "Semantic Model Metrics" card. Once there are any collected logs for semantic models, this card will be available.|
+|3.|**Click** on the **Query Analysis** button within the "Semantic Model Metrics" tile to begin the analytical pathway.|
+
+![Screenshot](/monitoring/workspace-monitoring-dashboards/media/documentation/pbi/fwm_pbi_ap_10.png)
+
+|Step|Description|
+|---|---|
+|4.|The filter pane on this page contains two filters: _OperationId_ and _Semantic Model_. <br> **Important:** The _Semantic Model_ filters shows the latest name of the model. For instance if you renamed the semantic model several times in the past days, the report will gather the latest, current name of it. The data model behind the report uses ItemIds, which are consistent for each deployed semantic model.|
+|5.|**Review** the visual. Each stacked bar chart shows metrics by semantic model by day. The bar size shows the _Max CPU Time_, the color of the bar shows the _Max Peak Memory_ consumption. This combination provides you a comprehesive view, where you can put the CPU time and the memory consumption into correlation. _See examples below_. |
+|6.| **Highlight a bar** on the chart for the next step. |
+
+
+>**Example 1:** The CPU duration (bar) is **high**, however the memory consumption (color) is **green**. This would mean that on that day at least one query operation was **CPU intensive**. 
+
+>**Example 2:** The CPU duration (bar) is **low**, however the memory consumption (color) is **red**. This would mean that on that day at least one query operation was **Memory intensive**.
+
+
+![Screenshot](/monitoring/workspace-monitoring-dashboards/media/documentation/pbi/fwm_pbi_ap_11.png)
 
 |Step|Description|
 |---|---|
@@ -92,6 +127,7 @@ You finished the analytical pathway "Query analysis" for semantic models.
 ------------------------------------------------------------------------------------------------
 
 #### Analytical Pathway | Refresh analysis
+**for Semantic Model logs**
 
 |Step|Description|
 |---|---|
