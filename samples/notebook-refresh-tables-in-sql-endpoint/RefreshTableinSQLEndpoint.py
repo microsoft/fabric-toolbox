@@ -31,7 +31,8 @@ def refresh_sql_endpoint(sqlendpoint_id, header, workspaceId)-> str:
     Calls the SQL Endpoint refresh API for the specified SQL Endpoint ID.
     Handles both synchronous and asynchronous responses.
     """
-    refresh_url = f'https://api.powerbi.com/v1/workspaces/{workspaceId}/sqlEndpoints/{sqlendpoint_id}/refreshMetadata?preview=true'
+    #refresh_url = f'https://api.powerbi.com/v1/workspaces/{workspaceId}/sqlEndpoints/{sqlendpoint_id}/refreshMetadata?preview=true' #preview=true is not needed anymore
+    refresh_url = f'https://api.powerbi.com/v1/workspaces/{workspaceId}/sqlEndpoints/{sqlendpoint_id}/refreshMetadata'
     logging.info(refresh_url)
     payload = {}
     response = requests.post(url=refresh_url, headers=header, json=payload)

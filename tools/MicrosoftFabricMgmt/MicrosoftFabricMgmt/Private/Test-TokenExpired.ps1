@@ -25,7 +25,6 @@ Tiago Balabuch
 function Test-TokenExpired {
     [CmdletBinding()]
     param ()
-
     try {
         # Ensure required properties have valid values
         if ([string]::IsNullOrWhiteSpace($FabricConfig.TenantIdGlobal) -or 
@@ -40,17 +39,18 @@ function Test-TokenExpired {
         # Check if the token is expired
         if ($tokenExpiryDate -le [datetimeoffset]::Now) {
             Write-Message -Message "Your authentication token has expired. Please sign in again to refresh your session." -Level Warning
-            #throw "TokenExpiredException: Token has expired."
-            #Set-FabricApiHeaders -tenantId $FabricConfig.TenantIdGlobal
+            throw "TokenExpiredException: Token has expired."
         }
 
         # Log valid token status
         Write-Message -Message "Token is still valid. Expiry time: $($tokenExpiryDate.ToString("u"))" -Level Debug
-    } catch [System.FormatException] {
+    }
+    catch [System.FormatException] {
         Write-Message -Message "Invalid 'TokenExpiresOn' format in the FabricConfig object. Ensure it is a valid datetime string." -Level Error
         throw "FormatException: Invalid TokenExpiresOn value."
-    } catch {
-        # Log unexpected errors with details
+    }
+    catch {
+        # Capture and log error details
         Write-Message -Message "An unexpected error occurred: $_" -Level Error
         throw $_
     }

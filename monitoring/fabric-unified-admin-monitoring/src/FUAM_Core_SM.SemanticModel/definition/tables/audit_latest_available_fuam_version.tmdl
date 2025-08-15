@@ -1,0 +1,67 @@
+table audit_latest_available_fuam_version
+	lineageTag: 138fabf8-56d1-4e36-a49d-dfec70842d96
+	sourceLineageTag: [dbo].[audit_latest_available_fuam_version]
+
+	column build_version
+		dataType: int64
+		formatString: 0
+		sourceProviderType: bigint
+		lineageTag: 6ec0c6bb-5de1-404f-ac8e-15d0fec823ee
+		sourceLineageTag: build_version
+		summarizeBy: sum
+		sourceColumn: build_version
+
+		annotation SummarizationSetBy = Automatic
+
+	column current_fuam_version
+		dataType: string
+		sourceProviderType: varchar(8000)
+		lineageTag: c8344869-bf97-40aa-9850-5a17c581be05
+		sourceLineageTag: current_fuam_version
+		summarizeBy: none
+		sourceColumn: current_fuam_version
+
+		annotation SummarizationSetBy = Automatic
+
+	column major_version
+		dataType: int64
+		formatString: 0
+		sourceProviderType: bigint
+		lineageTag: a3aa494c-412f-45a3-ba18-27a9805d936b
+		sourceLineageTag: major_version
+		summarizeBy: sum
+		sourceColumn: major_version
+
+		annotation SummarizationSetBy = Automatic
+
+	column minor_version
+		dataType: int64
+		formatString: 0
+		sourceProviderType: bigint
+		lineageTag: f0a0cd45-e246-4652-9c79-5c9eb38d294d
+		sourceLineageTag: minor_version
+		summarizeBy: sum
+		sourceColumn: minor_version
+
+		annotation SummarizationSetBy = Automatic
+
+	column last_check_timestamp
+		dataType: dateTime
+		formatString: General Date
+		sourceProviderType: datetime2
+		lineageTag: 60d30e65-f36a-425c-b5e3-a503646e5b0f
+		sourceLineageTag: last_check_timestamp
+		summarizeBy: none
+		sourceColumn: last_check_timestamp
+
+		annotation SummarizationSetBy = Automatic
+
+	partition audit_latest_available_fuam_version = entity
+		mode: directLake
+		source
+			entityName: audit_latest_available_fuam_version
+			schemaName: dbo
+			expressionSource: DatabaseQuery
+
+	annotation PBI_ResultType = Table
+

@@ -1,0 +1,331 @@
+{
+  "name": "AdventureWorks_DirectLake_V3",
+  "compatibilityLevel": 1604,
+  "model": {
+	"name": "AdventureWorks Direct Lake Model V3",
+	"culture": "en-US",
+	"collation": "Latin1_General_100_BIN2_UTF8",
+	"dataAccessOptions": {
+	  "legacyRedirects": true,
+	  "returnErrorValuesAsNull": true
+	},
+	"defaultPowerBIDataSourceVersion": "powerBI_V3",
+	"sourceQueryCulture": "en-US",
+	"defaultMode": "directLake",
+	"annotations": [
+	  {
+		"name": "__PBI_TimeIntelligenceEnabled",
+		"value": "1"
+	  }
+	],
+	"tables": [
+	  {
+		"name": "DimCustomer",
+		"mode": "directLake",
+		"source": {
+		  "type": "entity",
+		  "entityName": "adw_DimCustomer"
+		},
+		"columns": [
+		  {
+			"name": "CustomerKey",
+			"dataType": "int64",
+			"sourceColumn": "CustomerKey",
+			"isKey": true
+		  },
+		  {
+			"name": "FirstName",
+			"dataType": "string",
+			"sourceColumn": "FirstName"
+		  },
+		  {
+			"name": "LastName",
+			"dataType": "string",
+			"sourceColumn": "LastName"
+		  },
+		  {
+			"name": "EmailAddress",
+			"dataType": "string",
+			"sourceColumn": "EmailAddress"
+		  },
+		  {
+			"name": "Gender",
+			"dataType": "string",
+			"sourceColumn": "Gender"
+		  },
+		  {
+			"name": "MaritalStatus",
+			"dataType": "string",
+			"sourceColumn": "MaritalStatus"
+		  },
+		  {
+			"name": "YearlyIncome",
+			"dataType": "decimal",
+			"sourceColumn": "YearlyIncome",
+			"formatString": "\\$#,0.00;(\\$#,0.00);\\$#,0.00"
+		  },
+		  {
+			"name": "City",
+			"dataType": "string",
+			"sourceColumn": "City"
+		  },
+		  {
+			"name": "StateProvinceName",
+			"dataType": "string",
+			"sourceColumn": "StateProvinceName"
+		  },
+		  {
+			"name": "CountryRegionName",
+			"dataType": "string",
+			"sourceColumn": "CountryRegionName"
+		  },
+		  {
+			"name": "Education",
+			"dataType": "string",
+			"sourceColumn": "Education"
+		  },
+		  {
+			"name": "Occupation",
+			"dataType": "string",
+			"sourceColumn": "Occupation"
+		  }
+		]
+	  },
+	  {
+		"name": "DimProduct",
+		"mode": "directLake",
+		"source": {
+		  "type": "entity",
+		  "entityName": "adw_DimProduct"
+		},
+		"columns": [
+		  {
+			"name": "ProductKey",
+			"dataType": "int64",
+			"sourceColumn": "ProductKey",
+			"isKey": true
+		  },
+		  {
+			"name": "EnglishProductName",
+			"dataType": "string",
+			"sourceColumn": "EnglishProductName"
+		  },
+		  {
+			"name": "StandardCost",
+			"dataType": "decimal",
+			"sourceColumn": "StandardCost",
+			"formatString": "\\$#,0.00;(\\$#,0.00);\\$#,0.00"
+		  },
+		  {
+			"name": "ListPrice",
+			"dataType": "decimal",
+			"sourceColumn": "ListPrice",
+			"formatString": "\\$#,0.00;(\\$#,0.00);\\$#,0.00"
+		  },
+		  {
+			"name": "Color",
+			"dataType": "string",
+			"sourceColumn": "Color"
+		  },
+		  {
+			"name": "Size",
+			"dataType": "string",
+			"sourceColumn": "Size"
+		  },
+		  {
+			"name": "ProductLine",
+			"dataType": "string",
+			"sourceColumn": "ProductLine"
+		  },
+		  {
+			"name": "Class",
+			"dataType": "string",
+			"sourceColumn": "Class"
+		  },
+		  {
+			"name": "Style",
+			"dataType": "string",
+			"sourceColumn": "Style"
+		  },
+		  {
+			"name": "ModelName",
+			"dataType": "string",
+			"sourceColumn": "ModelName"
+		  }
+		]
+	  },
+	  {
+		"name": "DimDate",
+		"mode": "directLake",
+		"source": {
+		  "type": "entity",
+		  "entityName": "adw_DimDate"
+		},
+		"columns": [
+		  {
+			"name": "DateKey",
+			"dataType": "int64",
+			"sourceColumn": "DateKey",
+			"isKey": true
+		  },
+		  {
+			"name": "FullDateAlternateKey",
+			"dataType": "dateTime",
+			"sourceColumn": "FullDateAlternateKey"
+		  },
+		  {
+			"name": "EnglishDayNameOfWeek",
+			"dataType": "string",
+			"sourceColumn": "EnglishDayNameOfWeek"
+		  },
+		  {
+			"name": "EnglishMonthName",
+			"dataType": "string",
+			"sourceColumn": "EnglishMonthName"
+		  },
+		  {
+			"name": "MonthNumberOfYear",
+			"dataType": "int64",
+			"sourceColumn": "MonthNumberOfYear"
+		  },
+		  {
+			"name": "CalendarQuarter",
+			"dataType": "int64",
+			"sourceColumn": "CalendarQuarter"
+		  },
+		  {
+			"name": "CalendarYear",
+			"dataType": "int64",
+			"sourceColumn": "CalendarYear"
+		  },
+		  {
+			"name": "FiscalQuarter",
+			"dataType": "int64",
+			"sourceColumn": "FiscalQuarter"
+		  },
+		  {
+			"name": "FiscalYear",
+			"dataType": "int64",
+			"sourceColumn": "FiscalYear"
+		  }
+		]
+	  },
+	  {
+		"name": "FactInternetSales",
+		"mode": "directLake",
+		"source": {
+		  "type": "entity",
+		  "entityName": "adw_FactInternetSales"
+		},
+		"columns": [
+		  {
+			"name": "ProductKey",
+			"dataType": "int64",
+			"sourceColumn": "ProductKey"
+		  },
+		  {
+			"name": "OrderDateKey",
+			"dataType": "int64",
+			"sourceColumn": "OrderDateKey"
+		  },
+		  {
+			"name": "CustomerKey",
+			"dataType": "int64",
+			"sourceColumn": "CustomerKey"
+		  },
+		  {
+			"name": "SalesOrderNumber",
+			"dataType": "string",
+			"sourceColumn": "SalesOrderNumber"
+		  },
+		  {
+			"name": "OrderQuantity",
+			"dataType": "int64",
+			"sourceColumn": "OrderQuantity"
+		  },
+		  {
+			"name": "UnitPrice",
+			"dataType": "decimal",
+			"sourceColumn": "UnitPrice",
+			"formatString": "\\$#,0.00;(\\$#,0.00);\\$#,0.00"
+		  },
+		  {
+			"name": "SalesAmount",
+			"dataType": "decimal",
+			"sourceColumn": "SalesAmount",
+			"formatString": "\\$#,0.00;(\\$#,0.00);\\$#,0.00"
+		  },
+		  {
+			"name": "TotalProductCost",
+			"dataType": "decimal",
+			"sourceColumn": "TotalProductCost",
+			"formatString": "\\$#,0.00;(\\$#,0.00);\\$#,0.00"
+		  },
+		  {
+			"name": "OrderDate",
+			"dataType": "dateTime",
+			"sourceColumn": "OrderDate"
+		  }
+		],
+		"measures": [
+		  {
+			"name": "Total Sales",
+			"expression": "SUM(FactInternetSales[SalesAmount])",
+			"formatString": "\\$#,0.00;(\\$#,0.00);\\$#,0.00"
+		  },
+		  {
+			"name": "Total Orders",
+			"expression": "DISTINCTCOUNT(FactInternetSales[SalesOrderNumber])"
+		  },
+		  {
+			"name": "Total Quantity",
+			"expression": "SUM(FactInternetSales[OrderQuantity])"
+		  },
+		  {
+			"name": "Average Order Value",
+			"expression": "DIVIDE([Total Sales], [Total Orders])",
+			"formatString": "\\$#,0.00;(\\$#,0.00);\\$#,0.00"
+		  },
+		  {
+			"name": "Total Cost",
+			"expression": "SUM(FactInternetSales[TotalProductCost])",
+			"formatString": "\\$#,0.00;(\\$#,0.00);\\$#,0.00"
+		  },
+		  {
+			"name": "Gross Profit",
+			"expression": "[Total Sales] - [Total Cost]",
+			"formatString": "\\$#,0.00;(\\$#,0.00);\\$#,0.00"
+		  },
+		  {
+			"name": "Gross Profit Margin",
+			"expression": "DIVIDE([Gross Profit], [Total Sales])",
+			"formatString": "0.00%;-0.00%;0.00%"
+		  }
+		]
+	  }
+	],
+	"relationships": [
+	  {
+		"name": "Customer_Sales",
+		"fromTable": "FactInternetSales",
+		"fromColumn": "CustomerKey",
+		"toTable": "DimCustomer",
+		"toColumn": "CustomerKey"
+	  },
+	  {
+		"name": "Product_Sales",
+		"fromTable": "FactInternetSales",
+		"fromColumn": "ProductKey",
+		"toTable": "DimProduct",
+		"toColumn": "ProductKey"
+	  },
+	  {
+		"name": "Date_Sales",
+		"fromTable": "FactInternetSales",
+		"fromColumn": "OrderDateKey",
+		"toTable": "DimDate",
+		"toColumn": "DateKey"
+	  }
+	]
+  }
+}

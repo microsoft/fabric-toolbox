@@ -10,7 +10,7 @@ model Model
 
 annotation __PBI_TimeIntelligenceEnabled = 0
 
-annotation PBIDesktopVersion = 2.142.7627.6 (Main)+12378a3b51a63d36fded4ef866d1d94d4d0715e0
+annotation PBIDesktopVersion = 2.146.7727.7 (Main)+bc5f9142edb5be5beb4b90d87b320b00b8f2d382
 
 annotation PBI_QueryOrder = ["DatabaseQuery"]
 
@@ -44,7 +44,6 @@ ref table Metrics
 ref table tenant_settings
 ref table delegated_tenant_settings_overrides
 ref table capacity_refreshable_details
-ref table capacity_refreshable_summaries
 ref table git_connections
 ref table semantic_model_bpa_results
 ref table capacity_regions
@@ -56,6 +55,8 @@ ref table semantic_model_content_types
 ref table semantic_model_vertipaq_tables
 ref table semantic_model_vertipaq_relationships
 ref table calendar_timepoints
+ref table capacity_refreshable_summaries
+ref table audit_latest_available_fuam_version
 
 ref cultureInfo en-US
 

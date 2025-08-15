@@ -1,0 +1,818 @@
+# Pipeline: Deploy-To-Fabric.yml
+#
+# Description:
+#   Automates deployment of Fabric resources and SQL projects across dev, test, and prod environments.
+#   1. Retrieves PR details, determines source & target branches, and maps to workspace names.
+#   2. Sets up Python and Azure CLI, authenticates to Fabric, and obtains API tokens.
+#   3. Installs the fabric-cicd library to deploy notebooks, lakehouse, semantic models, reports, and SQL databases.
+#   4. Builds and deploys DACPACs for Lakehouse, Warehouse, and SQL databases.
+#   5. Supports optional steps for user schema notebooks, data pipelines, and lakehouse data copying or shortcut creation.
+#
+# Triggers:
+#   - Push and PR events on branches: dev, test, prod
+#   - Excludes changes to README.md for PR triggers
+#
+# Parameters:
+#   items_in_scope             : JSON array of Fabric resource types to deploy
+#   user_schema_notebook       : Boolean flag to include user schema notebook deployment
+#   run_data_pipeline          : Boolean flag to execute a Data Pipeline notebook
+#   copy_lakehouse_data        : Boolean flag to run lakehouse data copy notebook
+#   create_lakehouse_shortcuts : Boolean flag to create lakehouse shortcuts when not copying data
+#
+# Variable Groups:
+#   Fabric_Deployment_Group_NS : Workspace names and gitFolder for NS branch convention
+#   Fabric_Deployment_Group_S  : Workspace names and gitFolder for S branch convention
+#
+# Stages:
+#   1. DeployToFabric
+#      - Checkout code and gather PR metadata via Bash scripts & REST API
+#      - Determine source/target branches and workspace names
+#      - Install Python 3.12, pip dependencies, and azure-cli
+#      - Authenticate to Fabric and fetch workspace connection strings
+#      - Run deploy-to-fabric.py to provision resources and export outputs
+#
+#   2. BuildSQL (depends on DeployToFabric)
+#      - Import output variables from DeployToFabric stage
+#      - Acquire Azure access token for SQL deployments
+#      - Extract Lakehouse DACPAC, modify Warehouse .sqlproj to reference it
+#      - Install .NET SDK, restore NuGet packages, build SQL projects
+#      - Publish DACPAC artifacts for subsequent deployment
+#
+#   3. DeploySQL (depends on DeployToFabric & BuildSQL)
+#      Pre-deployment jobs:
+#        - Conditionally run user schema notebook or lakehouse copy/shortcut logic
+#      Deployment jobs per environment (Dev, Test, Prod):
+#        - Download DACPAC artifacts, acquire SQL tokens, execute sqlpackage publish commands
+#        - Apply conditional logic based on target_env and PR vs CI triggers
+#      Post-deployment:
+#        - Optionally run Data Pipeline notebook job if enabled
+#
+# Key Notes:
+#   - Uses Azure DevOps logging commands (##vso) to set and propagate variables
+#   - Service connection and PAT (AZURE_DEVOPS_EXT_PAT) must be configured in the pipeline environment
+#   - Customize variable groups, service connections, script paths, and parameter defaults per project
+#
+# Usage:
+#   - Store this file in your ADO repo (e.g., .azure-pipelines/)
+#   - Update variable group names, service connections, and parameters for the target ADO project
+#   - Trigger deployments by pushing changes or creating PRs against dev/test/prod branches
+
+trigger:
+  branches:
+    include: [dev,test,prod]
+
+pr:
+  branches:
+    include: [dev,test,prod]
+  paths:
+    exclude:
+    - README.md
+
+parameters:
+- name: items_in_scope
+  displayName: Enter Fabric items to be deployed
+  type: string
+  default: '["Notebook","DataPipeline","Lakehouse","SemanticModel","Report","Warehouse"]'
+- name: user_schema_notebook
+  displayName: Use User Schema Notebook (enter True or False)
+  type: boolean
+  default: false
+- name: run_data_pipeline
+  displayName: Run Data Pipeline Notebook (enter True or False)
+  type: boolean
+  default: false
+- name: copy_lakehouse_data
+  displayName: Use Copy Lakehouse Data Notebook (enter True or False)
+  type: boolean
+  default: false
+- name: create_lakehouse_shortcuts
+  displayName: Use Create lakehouse shortcuts Notebook (only if copy lakehouse data set to False)
+  type: boolean
+  default: false
+
+variables:
+  # This variable group contains the workspace names based on naming convention "[branch]WorkspaceName". It also contains the gitFolder to be referenced in the python script.
+  - group: Fabric_Deployment_Group_NS
+  - group: Fabric_Deployment_Group_S
+
+stages:
+  - stage: DeployToFabric
+    displayName: "Deploy to Fabric Workspace"
+    jobs:
+      - job: Deployment
+        displayName: "Deploy Resources"
+        pool:
+          name: Azure Pipelines
+        steps:
+          - checkout: self
+          # This Bash task determines the pull request number (via commit message or Azure DevOps REST API), fetches the PR’s source/target branches 
+          # This could be replaced by using Variables
+          - task: Bash@3
+            name: GetPRBranches
+            env:
+              AZURE_DEVOPS_EXT_PAT: $(System.AccessToken)
+            inputs:
+              targetType: 'inline'
+              script: |
+                echo "$(ADO Uri: System.CollectionUri)"
+                echo "$(ADO Project: System.TeamProject)"
+                echo "$(ADO Repo: Build.Repository.Name)"
+                echo "$(ADO Source Branch: Build.SourceBranch)"
+                echo "$(ADO Build Reason: Build.Reason)"
+
+                if [ "$(Build.Reason)" = "PullRequest" ]; then
+                  # Extract PR number from commit message
+                  commit_message="$(Build.SourceVersionMessage)"
+                  echo "Commit Message: $commit_message"
+                  if [[ $commit_message =~ (Merged\ PR\ ([0-9]+):|Merge\ pull\ request\ ([0-9]+)) ]]; then
+                    # Handle both "Merged PR [number]:" and "Merge pull request [number]" formats
+                    if [[ -n "${BASH_REMATCH[2]}" ]]; then
+                      pr_number="${BASH_REMATCH[2]}"
+                    else
+                      pr_number="${BASH_REMATCH[3]}"
+                    fi
+                    echo "Extracted PR Number: $pr_number"
+                  fi
+                else
+                  # Set the authorization header
+                  header="Authorization: Bearer $AZURE_DEVOPS_EXT_PAT"
+                  # Build the URL
+                  url="$(System.CollectionUri)$(System.TeamProject)/_apis/git/repositories/$(Build.Repository.Name)/pullrequests/?searchCriteria.status=3&top=50&searchCriteria.targetRefName=$(Build.SourceBranch)&api-version=6.1"
+                  # Make the REST API call and parse the response
+                  response=$(curl -s -H "$header" -H "Content-Type: application/json" "$url")
+                  # Extract the first pull request ID using jq
+                  pullRequestId=$(echo "$response" | jq -r '.value[0].pullRequestId')
+                  echo "Last PR completed to $(Build.SourceBranch) is: $pullRequestId"
+                  #pullRequestId=$((pullRequestId + 1))
+                  echo "Current PR ID: $pullRequestId"
+                  pr_number="$pullRequestId"
+                fi
+                echo "##vso[task.setvariable variable=pr_number]$pr_number"
+                
+                echo "Fetching PR details for PR # $pr_number..."
+                response=$(curl -s -u :$AZURE_DEVOPS_EXT_PAT \
+                  "$(System.CollectionUri)$(System.TeamProject)/_apis/git/repositories/$(Build.Repository.ID)/pullrequests/$pr_number?api-version=7.0")
+
+                # Check if the API call was successful
+                if [ $? -eq 0 ]; then
+                  echo "API Response: $response"
+                  
+                  # Parse the response - the API returns a single PR object, not an array
+                  sourceBranch=$(echo $response | jq -r '.sourceRefName')
+                  targetBranch=$(echo $response | jq -r '.targetRefName')
+                  
+                  if [ "$sourceBranch" != "null" ] && [ "$targetBranch" != "null" ]; then
+                    # Extract branch names by removing refs/heads/ prefix
+                    sourceBranchName=$(echo $sourceBranch | sed 's|refs/heads/||')
+                    targetBranchName=$(echo $targetBranch | sed 's|refs/heads/||')
+                    
+                    echo "Successfully retrieved PR details:"
+                    echo "Source Branch (full): $sourceBranch"
+                    echo "Target Branch (full): $targetBranch"
+                    echo "Source Branch Name: $sourceBranchName"
+                    echo "Target Branch Name: $targetBranchName"
+                    
+                    # Set variables for both full refs and branch names
+                    echo "##vso[task.setvariable variable=sourceBranch]$sourceBranch"
+                    echo "##vso[task.setvariable variable=targetBranch]$targetBranch"
+                    echo "##vso[task.setvariable variable=sourceBranchName]$sourceBranchName"
+                    echo "##vso[task.setvariable variable=targetBranchName]$targetBranchName"
+                  else
+                    echo "Failed to parse PR details from API response"
+                    echo "API Response: $response"
+                  fi
+                else
+                  echo "Failed to fetch PR details from API"
+                fi
+          # The following script then assigns target_env and source_workspace_name based on whether it’s a PR or CI build, mapping branch names (dev/test/prod) to workspace names and exporting them as outputs.
+          - script: |
+              # Set target_env based on build reason
+              if [ "$(Build.Reason)" = "PullRequest" ]; then
+                echo "Setting target_env to $(System.PullRequest.targetBranchName) (from PR)"
+                echo "##vso[task.setvariable variable=target_env;isOutput=true]$(System.PullRequest.targetBranchName)"
+              else
+                echo "Setting target_env to $(targetBranchName) (from extracted PR info)"
+                echo "##vso[task.setvariable variable=target_env;isOutput=true]$(targetBranchName)"
+              fi
+              # Set source_workspace_name based on build reason
+              if [ "$(Build.Reason)" = "PullRequest" ]; then
+                # For PR builds, extract branch name from System.PullRequest.SourceBranch
+                source_branch="$(System.PullRequest.SourceBranch)"
+                echo "Source Branch (full): $source_branch"
+                source_branch_name=$(echo "$source_branch" | sed 's|refs/heads/||')
+                echo "Source Branch Name: $source_branch_name"
+                if [ "$source_branch_name" = "dev" ]; then
+                    workspaceName="$(devWorkspaceName)"
+                elif [ "$source_branch_name" = "test" ]; then
+                    workspaceName="$(testWorkspaceName)"
+                elif [ "$source_branch_name" = "prod" ]; then
+                    workspaceName="$(prodWorkspaceName)"
+                else
+                    workspaceName="$source_branch_name"
+                fi
+                echo "Workspace Name: $workspaceName"
+                echo "##vso[task.setvariable variable=source_workspace_name;isOutput=true]$workspaceName"
+              else
+                # For CI builds, use the extracted source branch name from PR info
+                source_branch_name="$(sourceBranchName)"
+                echo "Source Branch Name: $source_branch_name"
+                # Append WorkspaceName to create the variable name for lookup
+                if [ "$source_branch_name" = "dev" ]; then
+                    workspaceName="$(devWorkspaceName)"
+                elif [ "$source_branch_name" = "test" ]; then
+                    workspaceName="$(testWorkspaceName)"
+                elif [ "$source_branch_name" = "prod" ]; then
+                    workspaceName="$(prodWorkspaceName)"
+                else
+                    workspaceName="$source_branch_name"
+                fi
+                echo "Workspace Name: $workspaceName"
+                echo "##vso[task.setvariable variable=source_workspace_name;isOutput=true]$workspaceName"
+              fi
+            name: SetVariables
+            displayName: 'Set variables'
+          - script: |
+              echo "source workspace name: $(SetVariables.source_workspace_name)"
+              echo "target_env: $(SetVariables.target_env)"
+              echo "PR Number: $(pr_number)"
+              echo "Source Branch (full): $(sourceBranch)"
+              echo "Target Branch (full): $(targetBranch)"
+              echo "Source Branch Name: $(sourceBranchName)"
+              echo "Target Branch Name: $(targetBranchName)"
+            displayName: 'Display variables'
+          # Use Python Version 3.12
+          - task: UsePythonVersion@0
+            inputs:
+              versionSpec: '3.12'
+              addToPath: true
+            displayName: "Set up Python Environment"
+          # Install Dependencies
+          - script: |
+              python -m pip install --upgrade pip
+              pip install fabric-cicd 
+            displayName: "Install Fabric CICD Library"
+          # Get Fabric/Power BI API token using Azure CLI
+          - task: AzureCLI@2
+            displayName: 'Get Fabric Access Token'
+            inputs:
+              azureSubscription: 'customerServiceConnection'
+              scriptType: 'bash'
+              scriptLocation: 'inlineScript'
+              inlineScript: |
+                TOKEN=$(az account get-access-token --resource=https://analysis.windows.net/powerbi/api --query accessToken -o tsv)
+                echo "##vso[task.setvariable variable=FABRIC_TOKEN]$TOKEN"              
+              name: GetFabricToken          
+          # Get Source Workspace Connection string
+          - task: PythonScript@0
+            name: GetSourceWorkspaceConnStr
+            inputs:
+              scriptSource: 'filePath'
+              scriptPath: 'scripts/deploy/wks-src-connection.py'
+              arguments: '$(SetVariables.source_workspace_name)'
+            env:
+              FABRIC_TOKEN: $(FABRIC_TOKEN)
+            displayName: 'Get Source Workspace Connection String'
+          # Run deployment using fabric-cicd  
+          - task: PythonScript@0
+            name: SetFabricDwhConnStr
+            inputs:
+              scriptSource: 'filePath'
+              scriptPath: 'scripts/deploy/deploy-to-fabric.py'
+              arguments: '--items_in_scope ${{ parameters.items_in_scope }} --target_env $(SetVariables.target_env)'
+            env:
+              FABRIC_TOKEN: $(FABRIC_TOKEN)
+            displayName: 'Run deployment using fabric-cicd'
+          - script: |
+              echo "##vso[task.setvariable variable=FABRIC_DWH_NAMES;isOutput=true]$(FABRIC_DWH_NAMES)"
+              echo "##vso[task.setvariable variable=FABRIC_LAKEHOUSE_NAMES;isOutput=true]$(FABRIC_LAKEHOUSE_NAMES)"
+              echo "##vso[task.setvariable variable=FABRIC_SQLDB_NAMES;isOutput=true]$(FABRIC_SQLDB_NAMES)"
+              echo "##vso[task.setvariable variable=WORKSPACE_SQL_ENDPOINT;isOutput=true]$(WORKSPACE_SQL_ENDPOINT)"
+              echo "##vso[task.setvariable variable=SQLDB_ENDPOINT;isOutput=true]$(SQLDB_ENDPOINT)"
+              echo "##vso[task.setvariable variable=SQLDB_NAME;isOutput=true]$(SQLDB_NAME)"
+              echo "##vso[task.setvariable variable=SRC_LAKEHOUSE_CONNECTION;isOutput=true]$(SRC_LAKEHOUSE_CONNECTION)"
+              echo "##vso[task.setvariable variable=TARGET_ENV;isOutput=true]$(SetVariables.target_env)"
+            name: ExportFabricDwhConnStr
+            displayName: 'Set output variables'
+          - script: |
+              echo "Fabric Warehouse Names: $(FABRIC_DWH_NAMES)"
+              echo "Fabric Lakehouse Names: $(FABRIC_LAKEHOUSE_NAMES)"
+              echo "Fabric SQL Database Names: $(FABRIC_SQLDB_NAMES)"
+              echo "Workspace SQL Endpoint: $(WORKSPACE_SQL_ENDPOINT)"
+              echo "SQL Database Endpoint: $(SQLDB_ENDPOINT)"
+              echo "SQL Database Name: $(SQLDB_NAME)"
+              echo "Source Lakehouse Connection: $(SRC_LAKEHOUSE_CONNECTION)"
+            displayName: 'Show Fabric Names and Workspace SQL Endpoint'
+
+  - stage: BuildSQL
+    displayName: "Build SQL Project"
+    dependsOn: DeployToFabric
+    variables:
+      FABRIC_DWH_NAMES: $[ stageDependencies.DeployToFabric.Deployment.outputs['ExportFabricDwhConnStr.FABRIC_DWH_NAMES'] ]
+      FABRIC_LAKEHOUSE_NAMES: $[ stageDependencies.DeployToFabric.Deployment.outputs['ExportFabricDwhConnStr.FABRIC_LAKEHOUSE_NAMES'] ]
+      FABRIC_SQLDB_NAMES: $[ stageDependencies.DeployToFabric.Deployment.outputs['ExportFabricDwhConnStr.FABRIC_SQLDB_NAMES'] ]
+      WORKSPACE_SQL_ENDPOINT: $[ stageDependencies.DeployToFabric.Deployment.outputs['ExportFabricDwhConnStr.WORKSPACE_SQL_ENDPOINT'] ]
+      SRC_LAKEHOUSE_CONNECTION: $[ stageDependencies.DeployToFabric.Deployment.outputs['ExportFabricDwhConnStr.SRC_LAKEHOUSE_CONNECTION'] ]
+      target_env: $[ stageDependencies.DeployToFabric.Deployment.outputs['ExportFabricDwhConnStr.TARGET_ENV'] ]
+    jobs:
+      - job: Build
+        displayName: "Build DACPAC"
+        pool:
+          vmImage: 'windows-latest'
+        steps:
+          - checkout: self
+          - script: |
+              echo "FABRIC_DWH_NAMES: $(FABRIC_DWH_NAMES)"
+              echo "FABRIC_LAKEHOUSE_NAMES: $(FABRIC_LAKEHOUSE_NAMES)"
+              echo "FABRIC_SQLDB_NAMES: $(FABRIC_SQLDB_NAMES)"
+              echo "WORKSPACE_SQL_ENDPOINT: $(WORKSPACE_SQL_ENDPOINT)"
+            displayName: 'Print Fabric Names and Workspace SQL Endpoint'
+          - task: AzureCLI@2
+            displayName: 'Get Fabric Access Token'
+            inputs:
+              azureSubscription: 'customerServiceConnection'
+              scriptType: 'bash'
+              scriptLocation: 'inlineScript'
+              inlineScript: |
+                TOKEN=$(az account get-access-token --resource=https://analysis.windows.net/powerbi/api --query accessToken -o tsv)
+                echo "##vso[task.setvariable variable=LKH_ACCESS_TOKEN]$TOKEN"
+          - script: mkdir -p $(Build.SourcesDirectory)\$(GITDIRECTORY)\$(FABRIC_LAKEHOUSE_NAMES).Lakehouse\bin\Debug
+            displayName: 'Create directory for lakehouse DACPAC'
+          - task: PowerShell@2 
+            displayName: 'Download lakehouse DACPAC'
+            inputs: 
+              targetType: inline 
+              script: | 
+                dotnet tool install -g Microsoft.sqlpackage --version 162.* 
+                $accessToken = "$(LKH_ACCESS_TOKEN)"
+                $serverName = "$(SRC_LAKEHOUSE_CONNECTION)" 
+                $databaseName = "$(FABRIC_LAKEHOUSE_NAMES)" 
+                & "$env:USERPROFILE\.dotnet\tools\sqlpackage.exe" /Action:Extract /TargetFile:$(Build.SourcesDirectory)/$(GITDIRECTORY)/$databaseName.Lakehouse/bin/Debug/$databaseName.dacpac /SourceServerName:$serverName /SourceDatabaseName:$databaseName /AccessToken:$accessToken
+          - task: PowerShell@2
+            name: 'ModifyDwhProject'
+            displayName: 'Modify $(FABRIC_DWH_NAMES).sqlproj to add lakehouse reference'
+            inputs:
+              targetType: inline
+              script: |
+                $lakehouseDb = "$(FABRIC_LAKEHOUSE_NAMES)"
+                $warehouseDb = "$(FABRIC_DWH_NAMES)"
+                $projectPath = "$(Build.SourcesDirectory)\$(GITDIRECTORY)\$warehouseDb.Warehouse\$warehouseDb.sqlproj"
+                Write-Host "Modifying project file: $projectPath"
+
+                # Read the project file
+                [xml]$projectXml = Get-Content $projectPath
+                
+                # Create ItemGroup for ArtifactReference if it doesn't exist
+                $itemGroup = $projectXml.Project.ItemGroup | Where-Object { $_.ArtifactReference }
+                if (-not $itemGroup) {
+                    $itemGroup = $projectXml.CreateElement("ItemGroup")
+                    $projectXml.Project.AppendChild($itemGroup)
+                }
+                
+                # Add ArtifactReference for the lakehouse DACPAC
+                $artifactRef = $projectXml.CreateElement("ArtifactReference")
+                $artifactRef.SetAttribute("Include", "`$(Build.SourcesDirectory)\$(GITDIRECTORY)\$lakehouseDb.Lakehouse\bin\Debug\$lakehouseDb.dacpac")
+
+                $dbVariable = $projectXml.CreateElement("DatabaseVariableLiteralValue")
+                $dbVariable.InnerText = $lakehouseDb
+                $artifactRef.AppendChild($dbVariable)
+                
+                $dbSqlCmdVariable = $projectXml.CreateElement("DatabaseSqlCmdVariable")
+                $dbSqlCmdVariable.InnerText = $lakehouseDb
+                $artifactRef.AppendChild($dbSqlCmdVariable)
+                
+                $itemGroup.AppendChild($artifactRef)
+                
+                # Save the modified project file
+                $projectXml.Save($projectPath)
+
+                Write-Host "Modified $warehouseDb.sqlproj to include lakehouse reference"
+                Write-Host "=== Modified XML Content ==="
+                Write-Host $projectXml.OuterXml
+                Write-Host "=== End XML Content ==="
+          - task: UseDotNet@2
+            displayName: 'Install .NET SDK'
+            inputs:
+              packageType: 'sdk'
+              version: '8.x'
+          - task: NuGetToolInstaller@1
+            displayName: 'Install NuGet'
+          - task: NuGetCommand@2
+            displayName: 'Restore NuGet packages'
+            inputs:
+              restoreSolution: '**/*.sln'
+          - task: MSBuild@1 
+            inputs: 
+              solution: '**/*.sqlproj' 
+              msbuildArchitecture: 'x64'
+          - task: CopyFiles@2 
+            inputs: 
+              SourceFolder: '$(Build.SourcesDirectory)' 
+              Contents: '**/*.dacpac' 
+              TargetFolder: '$(Build.ArtifactStagingDirectory)/DB' 
+          - task: PublishBuildArtifacts@1 
+            inputs: 
+              PathtoPublish: '$(Build.ArtifactStagingDirectory)/DB' 
+              ArtifactName: 'drop'
+
+  - stage: DeploySQL
+    dependsOn: 
+      - DeployToFabric
+      - BuildSQL
+    variables:
+      FABRIC_DWH_NAMES: $[ stageDependencies.DeployToFabric.Deployment.outputs['ExportFabricDwhConnStr.FABRIC_DWH_NAMES'] ]
+      FABRIC_LAKEHOUSE_NAMES: $[ stageDependencies.DeployToFabric.Deployment.outputs['ExportFabricDwhConnStr.FABRIC_LAKEHOUSE_NAMES'] ]
+      FABRIC_SQLDB_NAMES: $[ stageDependencies.DeployToFabric.Deployment.outputs['ExportFabricDwhConnStr.FABRIC_SQLDB_NAMES'] ]
+      WORKSPACE_SQL_ENDPOINT: $[ stageDependencies.DeployToFabric.Deployment.outputs['ExportFabricDwhConnStr.WORKSPACE_SQL_ENDPOINT'] ]
+      SQLDB_ENDPOINT: $[ stageDependencies.DeployToFabric.Deployment.outputs['ExportFabricDwhConnStr.SQLDB_ENDPOINT'] ]
+      SQLDB_NAME: $[ stageDependencies.DeployToFabric.Deployment.outputs['ExportFabricDwhConnStr.SQLDB_NAME'] ]
+      target_env: $[ stageDependencies.DeployToFabric.Deployment.outputs['ExportFabricDwhConnStr.TARGET_ENV'] ]
+    condition: succeeded() 
+    jobs:
+    - job: Deploy
+      displayName: "Pre Deployment Steps"
+      pool:
+        vmImage: 'windows-latest'
+      steps:
+      - checkout: self
+      - ${{ if eq(parameters.user_schema_notebook, true) }}:
+        - script: echo "Calling notebook to deploy lakehouse schema..."
+          displayName: 'Deploy Lakehouse Schema via Notebook'
+        - task: UsePythonVersion@0
+          inputs:
+            versionSpec: '3.12'
+            addToPath: true
+          displayName: "Set up Python Environment"
+        - script: |
+            python -m pip install --upgrade pip
+            pip install ms-fabric-cli
+          displayName: "Install Fabric CICD Library"
+        - script: fab auth login -u $(serviceAccountClientId) -p $(serviceAccountSecretFabric) --tenant $(serviceAccountTenantId)
+          displayName: 'Authenticate to Fabric Workspace'  
+        - script: fab ls
+          displayName: 'List Fabric Workspaces' 
+        - task: PowerShell@2
+          inputs:
+            targetType: 'inline'
+            script: |
+              $env:PYTHONIOENCODING = "utf-8"
+
+              # get target environment name
+              $tgtenv = "$(target_env)"
+              Write-Host "Target environment set to $tgtenv"
+              
+              # determine the target workspace using variable group naming convention
+              $ws_name = "${tgtenv}WorkspaceName"
+              Write-Host "Variable group to determine workspace is set to $ws_name"
+              
+              # retrieve workspace name from environment
+              $workspaceName = [Environment]::GetEnvironmentVariable($ws_name)
+              Write-Host "Workspace Name: $workspaceName"
+              $lakehouseId = fab get "$workspaceName.Workspace/$(FABRIC_LAKEHOUSE_NAMES).Lakehouse" -q id
+              Write-Host "Lakehouse ID: $lakehouseId"
+              
+              # Build config object and convert to JSON
+              $configObj = @{
+                defaultLakehouse = @{
+                  name = "$(FABRIC_LAKEHOUSE_NAMES)"
+                  id   = $lakehouseId
+                }
+              }
+              $configJson = $configObj | ConvertTo-Json -Compress
+              Write-Host "Config JSON: $configJson"
+              
+              $path = "$workspaceName.Workspace/$(notebookLHTableSchema).Notebook"
+              Write-Host "Notebook Path: $path"
+
+              # Pass the JSON directly as a string (properly escaped)
+              Write-Host "Running notebook job with direct JSON config"
+              $escapedJson = $configJson.Replace('"', '\"')
+              & fab job run "$path" -C "$escapedJson"
+          displayName: 'Powershell Run Notebook for Lakehouse Schema'
+      - ${{ if and(eq(parameters.user_schema_notebook, false), or(eq(parameters.copy_lakehouse_data, true), eq(parameters.create_lakehouse_shortcuts, true))) }}:
+        - script: |
+            echo "Proceeding with LKHCopyorShortcut.py"
+            echo "Work Pendinsg: Implement logic to handle both copy and shortcut creation based on parameters."
+          displayName: 'Run LKHCopyorShortcut.py'
+
+    - deployment: DeployJobDev
+      displayName: "Deploy DACPAC to Dev"
+      dependsOn: Deploy
+      condition: and(succeeded(),or(eq(variables['target_env'], 'dev'), and(eq(variables['Build.Reason'], 'PullRequest'), eq(variables['System.PullRequest.targetBranch'], 'refs/heads/dev'))))
+      environment: 'dev'
+      pool:
+        vmImage: 'windows-latest'
+      strategy: 
+        runOnce: 
+          deploy: 
+            steps: 
+            - checkout: self
+            - download: current
+              artifact: drop
+            - script: |
+                echo "FABRIC_DWH_NAMES: $(FABRIC_DWH_NAMES)"
+                echo "FABRIC_LAKEHOUSE_NAMES: $(FABRIC_LAKEHOUSE_NAMES)"
+                echo "FABRIC_SQLDB_NAMES: $(FABRIC_SQLDB_NAMES)"
+                echo "WORKSPACE_SQL_ENDPOINT: $(WORKSPACE_SQL_ENDPOINT)"
+                echo "SQLDB_ENDPOINT: $(SQLDB_ENDPOINT)"
+                echo "SQLDB_NAME: $(SQLDB_NAME)"
+                echo "Deploying to Dev environment"
+              displayName: 'Display deployment info'
+            - task: AzureCLI@2
+              displayName: 'Get SQL Access Token'
+              inputs:
+                azureSubscription: 'customerServiceConnection'
+                scriptType: 'bash'
+                scriptLocation: 'inlineScript'
+                inlineScript: |
+                  TOKEN=$(az account get-access-token --resource=https://analysis.windows.net/powerbi/api --query accessToken -o tsv)
+                  echo "##vso[task.setvariable variable=SQL_ACCESS_TOKEN]$TOKEN"
+            - task: PowerShell@2
+              displayName: 'Deploy Lakehouse DACPAC'
+              condition: and(succeeded(), ne(variables['FABRIC_LAKEHOUSE_NAMES'], ''))
+              inputs:
+                targetType: inline
+                script: |
+                  dotnet tool install -g Microsoft.sqlpackage --version 162.* 
+                  
+                  $accessToken = "$(SQL_ACCESS_TOKEN)"
+                  $serverName = "$(WORKSPACE_SQL_ENDPOINT)"
+                  $databaseName = "$(FABRIC_LAKEHOUSE_NAMES)"
+                  $dacpacPath = Get-ChildItem "$(Pipeline.Workspace)/drop" -Recurse -Filter "$databaseName.dacpac" | Select-Object -First 1 -ExpandProperty FullName
+                  echo "DACPAC Path: $dacpacPath"
+                  if (-not $dacpacPath) {
+                    Write-Host "No Lakehouse DACPAC found, skipping deployment"
+                    exit 0
+                  }
+                  Write-Host "Deploying Lakehouse DACPAC to $databaseName"
+                  & "$env:USERPROFILE\.dotnet\tools\sqlpackage.exe" /Action:Publish /SourceFile:$dacpacPath /TargetServerName:$serverName /TargetDatabaseName:$databaseName /AccessToken:$accessToken /p:ExcludeObjectTypes="Tables;" 
+    
+            - task: PowerShell@2
+              displayName: 'Deploy Warehouse DACPAC'
+              condition: and(succeeded(), ne(variables['FABRIC_DWH_NAMES'], ''))
+              inputs: 
+                targetType: inline 
+                script: | 
+                  dotnet tool install -g Microsoft.sqlpackage --version 162.*
+                  $serverName = "$(WORKSPACE_SQL_ENDPOINT)" 
+                  $databaseName = "$(FABRIC_DWH_NAMES)"
+                  $accessToken = "$(SQL_ACCESS_TOKEN)"
+                  $dacpacPath = Get-ChildItem "$(Pipeline.Workspace)/drop" -Recurse -Filter "$databaseName.dacpac" | Select-Object -First 1 -ExpandProperty FullName
+                  echo "DACPAC Path: $dacpacPath"
+                  if (-not $dacpacPath) {
+                    Write-Host "No Warehouse DACPAC found, skipping deployment"
+                    exit 0
+                  }
+                  Write-Host "Deploying Warehouse DACPAC to $databaseName"
+                  & "$env:USERPROFILE\.dotnet\tools\sqlpackage.exe" /Action:Publish /SourceFile:$dacpacPath /TargetServerName:$serverName /TargetDatabaseName:$databaseName /AccessToken:$accessToken
+
+            - task: PowerShell@2
+              displayName: 'Deploy SQL Database DACPAC'
+              condition: and(succeeded(), ne(variables['FABRIC_SQLDB_NAMES'], ''))
+              inputs:
+                targetType: inline
+                script: |
+                  dotnet tool install -g Microsoft.sqlpackage --version 162.*
+                  $accessToken = "$(SQL_ACCESS_TOKEN)"
+                  $serverName = "$(SQLDB_ENDPOINT)"
+                  $dpdatabaseName = "$(FABRIC_SQLDB_NAMES)"
+                  $dplydatabaseName = "$(SQLDB_NAME)"
+                  $dacpacPath = Get-ChildItem "$(Pipeline.Workspace)/drop" -Recurse -Filter "$dpdatabaseName.dacpac" | Select-Object -First 1 -ExpandProperty FullName
+                  echo "DACPAC Path: $dacpacPath"
+                  if (-not $dacpacPath) {
+                    Write-Host "No SQL Database DACPAC found, skipping deployment"
+                    exit 0
+                  }
+                  Write-Host "Deploying SQL Database DACPAC to $dplydatabaseName"
+                  & "$env:USERPROFILE\.dotnet\tools\sqlpackage.exe" /Action:Publish /SourceFile:$dacpacPath /TargetServerName:$serverName /TargetDatabaseName:$dplydatabaseName /AccessToken:$accessToken
+    
+    - deployment: DeployJobTest
+      displayName: "Deploy DACPAC to Test"
+      dependsOn: Deploy
+      condition: and(succeeded(),or(eq(variables['target_env'], 'test'), and(eq(variables['Build.Reason'], 'PullRequest'), eq(variables['System.PullRequest.targetBranch'], 'refs/heads/test'))))
+      environment: 'test'
+      pool:
+        vmImage: 'windows-latest'
+      strategy: 
+        runOnce: 
+          deploy: 
+            steps: 
+            - checkout: self
+            - download: current
+              artifact: drop
+            - script: |
+                echo "FABRIC_DWH_NAMES: $(FABRIC_DWH_NAMES)"
+                echo "FABRIC_LAKEHOUSE_NAMES: $(FABRIC_LAKEHOUSE_NAMES)"
+                echo "FABRIC_SQLDB_NAMES: $(FABRIC_SQLDB_NAMES)"
+                echo "WORKSPACE_SQL_ENDPOINT: $(WORKSPACE_SQL_ENDPOINT)"
+                echo "SQLDB_ENDPOINT: $(SQLDB_ENDPOINT)"
+                echo "SQLDB_NAME: $(SQLDB_NAME)"
+                echo "Deploying to Test environment"
+              displayName: 'Display deployment info'
+            - task: AzureCLI@2
+              displayName: 'Get SQL Access Token'
+              inputs:
+                azureSubscription: 'customerServiceConnection'
+                scriptType: 'bash'
+                scriptLocation: 'inlineScript'
+                inlineScript: |
+                  TOKEN=$(az account get-access-token --resource=https://analysis.windows.net/powerbi/api --query accessToken -o tsv)
+                  echo "##vso[task.setvariable variable=SQL_ACCESS_TOKEN]$TOKEN"
+            - task: PowerShell@2 
+              displayName: 'Deploy Warehouse DACPAC'
+              condition: and(succeeded(), ne(variables['FABRIC_DWH_NAMES'], ''))
+              inputs: 
+                targetType: inline 
+                script: | 
+                  dotnet tool install -g Microsoft.sqlpackage --version 162.* 
+                  $serverName = "$(WORKSPACE_SQL_ENDPOINT)" 
+                  $databaseName = "$(FABRIC_DWH_NAMES)"
+                  $accessToken = "$(SQL_ACCESS_TOKEN)"
+                  $dacpacPath = Get-ChildItem "$(Pipeline.Workspace)/drop" -Recurse -Filter "$databaseName.dacpac" | Select-Object -First 1 -ExpandProperty FullName
+                  echo "DACPAC Path: $dacpacPath"
+                  if (-not $dacpacPath) {
+                    Write-Host "No Warehouse DACPAC found, skipping deployment"
+                    exit 0                  }
+                  Write-Host "Deploying Warehouse DACPAC to $databaseName"
+                  & "$env:USERPROFILE\.dotnet\tools\sqlpackage.exe" /Action:Publish /SourceFile:$dacpacPath /TargetServerName:$serverName /TargetDatabaseName:$databaseName /AccessToken:$accessToken
+            
+            - task: PowerShell@2
+              displayName: 'Deploy Lakehouse DACPAC'
+              condition: and(succeeded(), ne(variables['FABRIC_LAKEHOUSE_NAMES'], ''))
+              inputs:
+                targetType: inline
+                script: |
+                  $accessToken = "$(SQL_ACCESS_TOKEN)"
+                  $serverName = "$(WORKSPACE_SQL_ENDPOINT)"
+                  $databaseName = "$(FABRIC_LAKEHOUSE_NAMES)"
+                  $dacpacPath = Get-ChildItem "$(Pipeline.Workspace)/drop" -Recurse -Filter "$databaseName.dacpac" | Select-Object -First 1 -ExpandProperty FullName
+                  echo "DACPAC Path: $dacpacPath"
+                  if (-not $dacpacPath) {
+                    Write-Host "No Lakehouse DACPAC found, skipping deployment"
+                    exit 0
+                  }
+                  Write-Host "Deploying Lakehouse DACPAC to $databaseName"
+                  & "$env:USERPROFILE\.dotnet\tools\sqlpackage.exe" /Action:Publish /SourceFile:$dacpacPath /TargetServerName:$serverName /TargetDatabaseName:$databaseName /AccessToken:$accessToken /p:ExcludeObjectTypes="Tables;" 
+
+            - task: PowerShell@2
+              displayName: 'Deploy SQL Database DACPAC'
+              condition: and(succeeded(), ne(variables['FABRIC_SQLDB_NAMES'], ''))
+              inputs:
+                targetType: inline
+                script: |
+                  $accessToken = "$(SQL_ACCESS_TOKEN)"
+                  $serverName = "$(SQLDB_ENDPOINT)"
+                  $dpdatabaseName = "$(FABRIC_SQLDB_NAMES)"
+                  $dplydatabaseName = "$(SQLDB_NAME)"
+                  $dacpacPath = Get-ChildItem "$(Pipeline.Workspace)/drop" -Recurse -Filter "$dpdatabaseName.dacpac" | Select-Object -First 1 -ExpandProperty FullName
+                  echo "DACPAC Path: $dacpacPath"
+                  if (-not $dacpacPath) {
+                    Write-Host "No SQL Database DACPAC found, skipping deployment"
+                    exit 0
+                  }
+                  Write-Host "Deploying SQL Database DACPAC to $dplydatabaseName"
+                  & "$env:USERPROFILE\.dotnet\tools\sqlpackage.exe" /Action:Publish /SourceFile:$dacpacPath /TargetServerName:$serverName /TargetDatabaseName:$dplydatabaseName /AccessToken:$accessToken
+    
+    - deployment: DeployJobProd
+      displayName: "Deploy DACPAC to Prod"
+      dependsOn: Deploy
+      condition: and(succeeded(),or(eq(variables['target_env'], 'prod'), and(eq(variables['Build.Reason'], 'PullRequest'), eq(variables['System.PullRequest.targetBranch'], 'refs/heads/prod'))))
+      environment: 'prod'
+      pool:
+        vmImage: 'windows-latest'
+      strategy: 
+        runOnce: 
+          deploy: 
+            steps: 
+            - download: current
+              artifact: drop
+            - script: |
+                echo "FABRIC_DWH_NAMES: $(FABRIC_DWH_NAMES)"
+                echo "FABRIC_LAKEHOUSE_NAMES: $(FABRIC_LAKEHOUSE_NAMES)"
+                echo "FABRIC_SQLDB_NAMES: $(FABRIC_SQLDB_NAMES)"
+                echo "WORKSPACE_SQL_ENDPOINT: $(WORKSPACE_SQL_ENDPOINT)"
+                echo "SQLDB_ENDPOINT: $(SQLDB_ENDPOINT)"
+                echo "SQLDB_NAME: $(SQLDB_NAME)"
+                echo "Deploying to Prod environment"
+              displayName: 'Display deployment info'
+            - task: AzureCLI@2
+              displayName: 'Get SQL Access Token'
+              inputs:
+                azureSubscription: 'customerServiceConnection'
+                scriptType: 'bash'
+                scriptLocation: 'inlineScript'
+                inlineScript: |
+                  TOKEN=$(az account get-access-token --resource=https://analysis.windows.net/powerbi/api --query accessToken -o tsv)
+                  echo "##vso[task.setvariable variable=SQL_ACCESS_TOKEN]$TOKEN"
+            - task: PowerShell@2 
+              displayName: 'Deploy Warehouse DACPAC'
+              condition: and(succeeded(), ne(variables['FABRIC_DWH_NAMES'], ''))
+              inputs: 
+                targetType: inline 
+                script: | 
+                  dotnet tool install -g Microsoft.sqlpackage --version 162.* 
+                  $serverName = "$(WORKSPACE_SQL_ENDPOINT)" 
+                  $databaseName = "$(FABRIC_DWH_NAMES)"
+                  $accessToken = "$(SQL_ACCESS_TOKEN)"
+                  $dacpacPath = Get-ChildItem "$(Pipeline.Workspace)/drop" -Recurse -Filter "$databaseName.dacpac" | Select-Object -First 1 -ExpandProperty FullName
+                  echo "DACPAC Path: $dacpacPath"
+                  if (-not $dacpacPath) {
+                    Write-Host "No Warehouse DACPAC found, skipping deployment"
+                    exit 0
+                  }
+                  Write-Host "Deploying Warehouse DACPAC to $databaseName"
+                  & "$env:USERPROFILE\.dotnet\tools\sqlpackage.exe" /Action:Publish /SourceFile:$dacpacPath /TargetServerName:$serverName /TargetDatabaseName:$databaseName /AccessToken:$accessToken
+            
+            - task: PowerShell@2
+              displayName: 'Deploy Lakehouse DACPAC'
+              condition: and(succeeded(), ne(variables['FABRIC_LAKEHOUSE_NAMES'], ''))
+              inputs:
+                targetType: inline
+                script: |
+                  $accessToken = "$(SQL_ACCESS_TOKEN)"
+                  $serverName = "$(WORKSPACE_SQL_ENDPOINT)"
+                  $databaseName = "$(FABRIC_LAKEHOUSE_NAMES)"
+                  $dacpacPath = Get-ChildItem "$(Pipeline.Workspace)/drop" -Recurse -Filter "$databaseName.dacpac" | Select-Object -First 1 -ExpandProperty FullName
+                  echo "DACPAC Path: $dacpacPath"
+                  if (-not $dacpacPath) {
+                    Write-Host "No Lakehouse DACPAC found, skipping deployment"
+                    exit 0
+                  }
+                  Write-Host "Deploying Lakehouse DACPAC to $databaseName"
+                  & "$env:USERPROFILE\.dotnet\tools\sqlpackage.exe" /Action:Publish /SourceFile:$dacpacPath /TargetServerName:$serverName /TargetDatabaseName:$databaseName /AccessToken:$accessToken /p:ExcludeObjectTypes="Tables;" 
+
+            - task: PowerShell@2
+              displayName: 'Deploy SQL Database DACPAC'
+              condition: and(succeeded(), ne(variables['FABRIC_SQLDB_NAMES'], ''))
+              inputs:
+                targetType: inline
+                script: |
+                  $accessToken = "$(SQL_ACCESS_TOKEN)"
+                  $serverName = "$(SQLDB_ENDPOINT)"
+                  $dpdatabaseName = "$(FABRIC_SQLDB_NAMES)"
+                  $dplydatabaseName = "$(SQLDB_NAME)"
+                  $dacpacPath = Get-ChildItem "$(Pipeline.Workspace)/drop" -Recurse -Filter "$dpdatabaseName.dacpac" | Select-Object -First 1 -ExpandProperty FullName
+                  echo "DACPAC Path: $dacpacPath"
+                  if (-not $dacpacPath) {
+                    Write-Host "No SQL Database DACPAC found, skipping deployment"
+                    exit 0
+                  }
+                  Write-Host "Deploying SQL Database DACPAC to $dplydatabaseName"
+                  & "$env:USERPROFILE\.dotnet\tools\sqlpackage.exe" /Action:Publish /SourceFile:$dacpacPath /TargetServerName:$serverName /TargetDatabaseName:$dplydatabaseName /AccessToken:$accessToken
+
+    - job: PostDeploy
+      displayName: "Post Deployment Steps"
+      pool:
+        vmImage: 'windows-latest'
+      dependsOn: 
+        - Deploy
+        - DeployJobDev
+        - DeployJobTest 
+        - DeployJobProd
+      condition: |
+        and(
+          in(dependencies.Deploy.result, 'Succeeded'),
+          or(
+            in(dependencies.DeployJobDev.result, 'Succeeded'),
+            in(dependencies.DeployJobTest.result, 'Succeeded'), 
+            in(dependencies.DeployJobProd.result, 'Succeeded')
+          )
+        )
+      steps:
+      - checkout: self
+      - ${{ if eq(parameters.run_data_pipeline, true) }}:
+        - task: UsePythonVersion@0
+          inputs:
+            versionSpec: '3.12'
+            addToPath: true
+          displayName: "Set up Python Environment"
+        - script: |
+            python -m pip install --upgrade pip
+            pip install ms-fabric-cli
+          displayName: "Install Fabric CICD Library"
+        - script: fab auth login -u $(serviceAccountClientId) -p $(serviceAccountSecretFabric) --tenant $(serviceAccountTenantId)
+          displayName: 'Authenticate to Fabric Workspace'  
+        - script: fab ls
+          displayName: 'List Fabric Workspaces' 
+        - task: PowerShell@2
+          inputs:
+            targetType: 'inline'
+            script: |
+              $env:PYTHONIOENCODING = "utf-8"
+
+              # get target environment name
+              $tgtenv = "$(target_env)"
+              Write-Host "Target environment set to $tgtenv"
+              
+              # determine the target workspace using variable group naming convention
+              $ws_name = "${tgtenv}WorkspaceName"
+              Write-Host "Variable group to determine workspace is set to $ws_name"
+              
+              # retrieve workspace name from environment
+              $workspaceName = [Environment]::GetEnvironmentVariable($ws_name)
+              Write-Host "Workspace Name: $workspaceName"
+
+              $path = "$workspaceName.Workspace/$(dataPipeline).DataPipeline"
+              Write-Host "Data Pipeline Path: $path"
+
+              fab job run "$path"
+          displayName: 'Powershell Run Data Pipeline'

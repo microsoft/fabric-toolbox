@@ -50,16 +50,16 @@ function Update-FabricEventhouse {
         [string]$EventhouseDescription
     )
     try {
-        # Step 1: Ensure token validity
-        Write-Message -Message "Validating token..." -Level Debug
+        # Validate authentication token before proceeding.
+        Write-Message -Message "Validating authentication token..." -Level Debug
         Test-TokenExpired
-        Write-Message -Message "Token validation completed." -Level Debug
+        Write-Message -Message "Authentication token is valid." -Level Debug
 
-        # Step 2: Construct the API URL
-        $apiEndpointUrl = "{0}/workspaces/{1}/eventhouses/{2}" -f $FabricConfig.BaseUrl, $WorkspaceId, $EventhouseId
-        Write-Message -Message "API Endpoint: $apiEndpointUrl" -Level Debug
+        # Construct the API endpoint URI
+        $apiEndpointURI = "{0}/workspaces/{1}/eventhouses/{2}" -f $FabricConfig.BaseUrl, $WorkspaceId, $EventhouseId
+        Write-Message -Message "API Endpoint: $apiEndpointURI" -Level Debug
 
-        # Step 3: Construct the request body
+        # Construct the request body
         $body = @{
             displayName = $EventhouseName
         }
@@ -72,33 +72,21 @@ function Update-FabricEventhouse {
         $bodyJson = $body | ConvertTo-Json
         Write-Message -Message "Request Body: $bodyJson" -Level Debug
 
-        # Step 4: Make the API request
-        $response = Invoke-RestMethod `
-            -Headers $FabricConfig.FabricHeaders `
-            -Uri $apiEndpointUrl `
-            -Method Patch `
-            -Body $bodyJson `
-            -ContentType "application/json" `
-            -ErrorAction Stop `
-            -SkipHttpErrorCheck `
-            -ResponseHeadersVariable "responseHeader" `
-            -StatusCodeVariable "statusCode"
-
-        # Step 5: Validate the response code
-        if ($statusCode -ne 200) {
-            Write-Message -Message "Unexpected response code: $statusCode from the API." -Level Error
-            Write-Message -Message "Error: $($response.message)" -Level Error
-            Write-Message -Message "Error Details: $($response.moreDetails)" -Level Error
-            Write-Message "Error Code: $($response.errorCode)" -Level Error
-            return $null
+        # Make the API request
+        $apiParams = @{
+            Headers = $FabricConfig.FabricHeaders
+            BaseURI = $apiEndpointURI
+            Method = 'Patch'
+            Body = $bodyJson
         }
+        $response = Invoke-FabricAPIRequest @apiParams 
 
-        # Step 6: Handle results
+        # Return the API response
         Write-Message -Message "Eventhouse '$EventhouseName' updated successfully!" -Level Info
         return $response
     }
     catch {
-        # Step 7: Handle and log errors
+        # Capture and log error details
         $errorDetails = $_.Exception.Message
         Write-Message -Message "Failed to update Eventhouse. Error: $errorDetails" -Level Error
     }

@@ -125,6 +125,67 @@ table aggregated_activities_last_30days
 
 		annotation SummarizationSetBy = Automatic
 
+	column CreationHour
+		dataType: string
+		sourceProviderType: varchar(8000)
+		lineageTag: a80539ee-60e5-4247-bb6d-127a076c57a7
+		sourceLineageTag: CreationHour
+		summarizeBy: none
+		sourceColumn: CreationHour
+
+		annotation SummarizationSetBy = Automatic
+
+	column GatewayId
+		dataType: string
+		sourceProviderType: varchar(8000)
+		lineageTag: 17ddc5f4-3649-400d-a36a-f9b4adc48687
+		sourceLineageTag: GatewayId
+		summarizeBy: none
+		sourceColumn: GatewayId
+
+		annotation SummarizationSetBy = Automatic
+
+	column fuam_item_id
+		dataType: string
+		sourceProviderType: varchar(8000)
+		lineageTag: 7abde423-3ae2-41c2-9c6c-b6f274718484
+		sourceLineageTag: fuam_item_id
+		summarizeBy: none
+		sourceColumn: fuam_item_id
+
+		annotation SummarizationSetBy = Automatic
+
+	column fuam_item_kind
+		dataType: string
+		sourceProviderType: varchar(8000)
+		lineageTag: 58fa9bb5-d198-48d9-b0c5-4983f5822087
+		sourceLineageTag: fuam_item_kind
+		summarizeBy: none
+		sourceColumn: fuam_item_kind
+
+		annotation SummarizationSetBy = Automatic
+
+	column fuam_activity_status
+		dataType: string
+		sourceProviderType: varchar(8000)
+		lineageTag: 5d0b2eee-7ade-4787-955c-ea4df28f1429
+		sourceLineageTag: fuam_activity_status
+		summarizeBy: none
+		sourceColumn: fuam_activity_status
+
+		annotation SummarizationSetBy = Automatic
+
+	column DistinctCountOfUsers
+		dataType: int64
+		formatString: 0
+		sourceProviderType: bigint
+		lineageTag: 8ab78716-2294-4155-b8b4-41f51e8d17da
+		sourceLineageTag: DistinctCountOfUsers
+		summarizeBy: sum
+		sourceColumn: DistinctCountOfUsers
+
+		annotation SummarizationSetBy = Automatic
+
 	partition aggregated_activities_last_30days = entity
 		mode: directLake
 		source

@@ -20,8 +20,8 @@
                     "secureInput": false
                 },
                 "typeProperties": {
-                    "notebookId": "d587f38d-ef29-54e5-ab85-2703576c8db9",
-                    "workspaceId": "eb764c8b-cf3b-55be-adf4-348fe9233657",
+                    "notebookId": "9484d28e-31dc-3609-a333-c13a6b7e996b",
+                    "workspaceId": "88c8d9fa-2c24-3fad-8f46-b36431c7ba1d",
                     "parameters": {
                         "display_data": {
                             "value": {
@@ -72,7 +72,7 @@
                             },
                             "schema": [],
                             "externalReferences": {
-                                "connection": "ea79859d-a1fb-5a17-a815-da0602762a8a"
+                                "connection": "e665127a-bc6f-3487-b0ce-d3b2141df298"
                             }
                         }
                     },
@@ -94,8 +94,8 @@
                                     "annotations": [],
                                     "type": "Lakehouse",
                                     "typeProperties": {
-                                        "workspaceId": "eb764c8b-cf3b-55be-adf4-348fe9233657",
-                                        "artifactId": "729eb8a2-8070-5ed8-ad43-dccbc00b32af",
+                                        "workspaceId": "88c8d9fa-2c24-3fad-8f46-b36431c7ba1d",
+                                        "artifactId": "6cff634b-88f7-3505-bed2-c03a36776a8b",
                                         "rootFolder": "Files"
                                     }
                                 }
@@ -134,8 +134,8 @@
                                 "annotations": [],
                                 "type": "Lakehouse",
                                 "typeProperties": {
-                                    "workspaceId": "eb764c8b-cf3b-55be-adf4-348fe9233657",
-                                    "artifactId": "729eb8a2-8070-5ed8-ad43-dccbc00b32af",
+                                    "workspaceId": "88c8d9fa-2c24-3fad-8f46-b36431c7ba1d",
+                                    "artifactId": "6cff634b-88f7-3505-bed2-c03a36776a8b",
                                     "rootFolder": "Files"
                                 }
                             }

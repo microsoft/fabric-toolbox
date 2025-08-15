@@ -158,15 +158,17 @@ function Update-FabricSparkSettings {
         Write-Message -Message "Request Body: $bodyJson" -Level Debug
 
         # Step 4: Make the API request
-        $response = Invoke-RestMethod `
-            -Headers $FabricConfig.FabricHeaders `
-            -Uri $apiEndpointUrl `
-            -Method Patch `
-            -Body $bodyJson `
-            -ContentType "application/json" `
-            -ErrorAction Stop `
-            -SkipHttpErrorCheck `
-            -StatusCodeVariable "statusCode"
+        $restParams = @{
+            Headers = $FabricConfig.FabricHeaders
+            Uri = $apiEndpointUrl
+            Method = 'Patch'
+            Body = $bodyJson
+            ContentType = 'application/json'
+            ErrorAction = 'Stop'
+            SkipHttpErrorCheck = $true
+            StatusCodeVariable = 'statusCode'
+        }
+        $response = Invoke-RestMethod @restParams
 
         # Step 5: Validate the response code
         if ($statusCode -ne 200) {

@@ -1,13 +1,14 @@
 # FUAM Update
 
-This page describes how to upgrade FUAM to the latest version.
+To update FUAM (Fabric Unified Admin Monitoring) to the latest version, follow the documented steps below.
 
 ![FUAM update process overview](/monitoring/fabric-unified-admin-monitoring/media/deployment/update_fuam_process_cover.png)
 
 
 **Important:**
 
-- This update **overwrites all FUAM-provided items** based on the item name.
+- FUAM updates **overwrite all FUAM-provided items** based on the item name.
+- FUAM updates **do not** affect your collected data within the `FUAM_Lakehouse`, just the meta data will be overwritten.
 
 - If you **have made custom changes to pipelines, notebooks, semantic models, and reports**, please **create a backup or rename your custom items**
 
@@ -20,9 +21,13 @@ This page describes how to upgrade FUAM to the latest version.
 
 # Steps
 
-## 1. Run Notebook
-- Check if you have the latest "Deploy_FUAM.ipynb" Notebook
-- Run the [Deploy_FUAM.ipynb](/monitoring/fabric-unified-admin-monitoring/scripts/Deploy_FUAM.ipynb) from your FUAM workspace
+## 1. Update Instructions
+
+1. **Download** the latest version of the [Deploy_FUAM.ipynb](/monitoring/fabric-unified-admin-monitoring/scripts/Deploy_FUAM.ipynb) notebook.
+2. **Remove** the old `Deploy_FUAM` notebook from your workspace.
+3. **Import** the updated notebook into your FUAM workspace.
+4. **Run** the `Deploy_FUAM.ipynb` notebook from within your FUAM workspace.
+
 
     ![](/monitoring/fabric-unified-admin-monitoring/media/deployment/FUAM_basic_deployment_process_3_2.png)
 

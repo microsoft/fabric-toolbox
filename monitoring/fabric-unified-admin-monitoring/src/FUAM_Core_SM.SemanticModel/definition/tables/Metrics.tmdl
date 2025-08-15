@@ -1420,7 +1420,7 @@ table Metrics
 		displayFolder: Semantic Models\Optimization Module\BPA
 		lineageTag: 71119d44-d242-4b1c-aa17-8606d39b8bc3
 
-	measure 'FUAM Release' = "2025.4.1"
+	measure 'FUAM Release' = "2025.7.2"
 		displayFolder: Meta
 		lineageTag: 186c2aac-d73b-4371-88ae-423e22b84179
 
@@ -1940,8 +1940,8 @@ table Metrics
 			
 			// Get Analyzer report workspaceId and ReportId from FUAM Workspace
 			// For specific semantic model workloads
-			VAR _workspace_id = "eb764c8b-cf3b-55be-adf4-348fe9233657"
-			VAR _reportId = "84b6a5b7-4150-5a30-b2d3-07ffdca8f818"
+			VAR _workspace_id = "88c8d9fa-2c24-3fad-8f46-b36431c7ba1d"
+			VAR _reportId = "41a9ccda-72ca-36b4-bbf6-c3d607014485"
 			
 			RETURN
 			IF(
@@ -2126,8 +2126,6 @@ table Metrics
 			    [Daily CU vs Avg CU IOD OA] - [Avg CU by Item by Day Relative 14d IOD OA],
 			    [Avg CU by Item by Day Relative 14d IOD OA], BLANK()
 			    )
-			
-			//DIVIDE( [Daily CU vs AVG CU] - [STDEV CU by Item by Day Relative 14d IOD] , [Avg CU by Item by Day Relative 14d IOD], BLANK())
 		displayFolder: Capacity IOD Metrics\Outlier Analysis
 		lineageTag: 9306521f-42db-489a-a49f-8dd45b2429cc
 
@@ -2137,8 +2135,8 @@ table Metrics
 			
 			// Get Analyzer report workspaceId and ReportId from FUAM Workspace
 			// For every workload
-			VAR _workspace_id = "eb764c8b-cf3b-55be-adf4-348fe9233657"
-			VAR _reportId = "84b6a5b7-4150-5a30-b2d3-07ffdca8f818"
+			VAR _workspace_id = "88c8d9fa-2c24-3fad-8f46-b36431c7ba1d"
+			VAR _reportId = "41a9ccda-72ca-36b4-bbf6-c3d607014485"
 			
 			// Put URL link together for selected item
 			RETURN
@@ -2188,6 +2186,36 @@ table Metrics
 		formatString: 0
 		displayFolder: Capacity TimePoint Metrics\Calculated
 		lineageTag: e33353ea-dbac-4d43-91dc-4ea7fe62ac33
+
+	measure 'Select Capacity Label' = ```
+			
+			VAR _selected = SELECTEDVALUE(capacities[displayName])
+			RETURN 
+			    IF(
+			        _selected = BLANK(), 
+			        "Select a capacity", 
+			        _selected
+			    )
+			```
+		displayFolder: Helper
+		lineageTag: d38536bf-5137-4117-9bc1-0c4d6ef4bcc1
+
+	measure 'FUAM Update Available' =
+			
+			IF([FUAM Release] == MAX(audit_latest_available_fuam_version[current_fuam_version]), 0, 1)
+		formatString: 0
+		displayFolder: Meta
+		lineageTag: 8d5c9da8-7820-4822-abac-4f604d6fbe11
+
+	measure 'FUAM Release Message' =
+			
+			IF(
+			    [FUAM Release] == MAX(audit_latest_available_fuam_version[current_fuam_version]),
+			     "FUAM is up-to-date",
+			     "Update is available"
+			    )
+		displayFolder: Meta
+		lineageTag: 551c2d6c-79d7-4f74-b0cc-d5ebe6616b9b
 
 	column Value
 		isHidden

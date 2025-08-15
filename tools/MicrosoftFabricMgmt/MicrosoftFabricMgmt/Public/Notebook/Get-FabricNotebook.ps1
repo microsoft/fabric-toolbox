@@ -28,7 +28,6 @@ Retrieves all Notebooks in workspace "12345".
 Author: Tiago Balabuch  
 
 #>
-
 function Get-FabricNotebook {
     [CmdletBinding()]
     param (
@@ -45,111 +44,62 @@ function Get-FabricNotebook {
         [ValidatePattern('^[a-zA-Z0-9_ ]*$')]
         [string]$NotebookName
     )
-
     try {
-        # Step 1: Handle ambiguous input
+        # Validate input parameters
         if ($NotebookId -and $NotebookName) {
-            Write-Message -Message "Both 'NotebookId' and 'NotebookName' were provided. Please specify only one." -Level Error
+            Write-Message -Message "Specify only one parameter: either 'NotebookId' or 'NotebookName'." -Level Error
+            return $null
+        }
+        
+        # Validate authentication token before proceeding.
+        Write-Message -Message "Validating authentication token..." -Level Debug
+        Test-TokenExpired
+        Write-Message -Message "Authentication token is valid." -Level Debug
+                
+        # Construct the API endpoint URI 
+        $apiEndpointURI = "{0}/workspaces/{1}/notebooks" -f $FabricConfig.BaseUrl, $WorkspaceId
+        Write-Message -Message "API Endpoint: $apiEndpointURI" -Level Debug
+
+        # Make the API request
+        # Make the API request
+        $apiParams = @{
+            BaseURI = $apiEndpointURI
+            Headers = $FabricConfig.FabricHeaders
+            Method = 'Get'
+        }
+        $dataItems = Invoke-FabricAPIRequest @apiParams
+           
+        # Immediately handle empty response
+        if (-not $dataItems) {
+            Write-Message -Message "No data returned from the API." -Level Warning
             return $null
         }
 
-        # Step 2: Ensure token validity
-        Write-Message -Message "Validating token..." -Level Debug
-        Test-TokenExpired
-        Write-Message -Message "Token validation completed." -Level Debug
-        # Step 3: Initialize variables
-        $continuationToken = $null
-        $notebooks = @()
-        
-        if (-not ([AppDomain]::CurrentDomain.GetAssemblies() | Where-Object { $_.GetName().Name -eq "System.Web" })) {
-            Add-Type -AssemblyName System.Web
-        }
- 
-        # Step 4: Loop to retrieve all capacities with continuation token
-        Write-Message -Message "Loop started to get continuation token" -Level Debug
-        $baseApiEndpointUrl = "{0}/workspaces/{1}/notebooks" -f $FabricConfig.BaseUrl, $WorkspaceId
-        
-
-        do {
-            # Step 5: Construct the API URL
-            $apiEndpointUrl = $baseApiEndpointUrl
-        
-            if ($null -ne $continuationToken) {
-                # URL-encode the continuation token
-                $encodedToken = [System.Web.HttpUtility]::UrlEncode($continuationToken)
-                $apiEndpointUrl = "{0}?continuationToken={1}" -f $apiEndpointUrl, $encodedToken
-            }
-            Write-Message -Message "API Endpoint: $apiEndpointUrl" -Level Debug
-         
-            # Step 6: Make the API request
-            $response = Invoke-RestMethod `
-                -Headers $FabricConfig.FabricHeaders `
-                -Uri $apiEndpointUrl `
-                -Method Get `
-                -ErrorAction Stop `
-                -SkipHttpErrorCheck `
-                -ResponseHeadersVariable "responseHeader" `
-                -StatusCodeVariable "statusCode"
-         
-            # Step 7: Validate the response code
-            if ($statusCode -ne 200) {
-                Write-Message -Message "Unexpected response code: $statusCode from the API." -Level Error
-                Write-Message -Message "Error: $($response.message)" -Level Error
-                Write-Message -Message "Error Details: $($response.moreDetails)" -Level Error
-                Write-Message "Error Code: $($response.errorCode)" -Level Error
-                return $null
-            }
-         
-            # Step 8: Add data to the list
-            if ($null -ne $response) {
-                Write-Message -Message "Adding data to the list" -Level Debug
-                $notebooks += $response.value
-                 
-                # Update the continuation token if present
-                if ($response.PSObject.Properties.Match("continuationToken")) {
-                    Write-Message -Message "Updating the continuation token" -Level Debug
-                    $continuationToken = $response.continuationToken
-                    Write-Message -Message "Continuation token: $continuationToken" -Level Debug
-                }
-                else {
-                    Write-Message -Message "Updating the continuation token to null" -Level Debug
-                    $continuationToken = $null
-                }
-            }
-            else {
-                Write-Message -Message "No data received from the API." -Level Warning
-                break
-            }
-        } while ($null -ne $continuationToken)
-        Write-Message -Message "Loop finished and all data added to the list" -Level Debug
-       
-        # Step 8: Filter results based on provided parameters
-        $notebook = if ($NotebookId) {
-            $notebooks | Where-Object { $_.Id -eq $NotebookId }
+        # Apply filtering logic efficiently
+        if ($NotebookId) {
+            $matchedItems = $dataItems.Where({ $_.Id -eq $NotebookId }, 'First')
         }
         elseif ($NotebookName) {
-            $notebooks | Where-Object { $_.DisplayName -eq $NotebookName }
+            $matchedItems = $dataItems.Where({ $_.DisplayName -eq $NotebookName }, 'First')
         }
         else {
-            # Return all notebooks if no filter is provided
-            Write-Message -Message "No filter provided. Returning all Notebooks." -Level Debug
-            $notebooks
+            Write-Message -Message "No filter provided. Returning all items." -Level Debug
+            $matchedItems = $dataItems
         }
 
-        # Step 9: Handle results
-        if ($notebook) {
-            Write-Message -Message "Notebook found matching the specified criteria." -Level Debug
-            return $notebook
+        # Handle results
+        if ($matchedItems) {
+            Write-Message -Message "Item(s) found matching the specified criteria." -Level Debug
+            return $matchedItems
         }
         else {
-            Write-Message -Message "No notebook found matching the provided criteria." -Level Warning
+            Write-Message -Message "No item found matching the provided criteria." -Level Warning
             return $null
         }
     }
     catch {
-        # Step 10: Capture and log error details
+        # Capture and log error details
         $errorDetails = $_.Exception.Message
         Write-Message -Message "Failed to retrieve Notebook. Error: $errorDetails" -Level Error
     } 
- 
 }

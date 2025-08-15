@@ -51,14 +51,16 @@ function Get-FabricTenantSettingOverridesCapacity {
             Write-Message -Message "API Endpoint: $apiEndpointUrl" -Level Debug
          
             # Step 6: Make the API request
-            $response = Invoke-RestMethod `
-                -Headers $FabricConfig.FabricHeaders `
-                -Uri $apiEndpointUrl `
-                -Method Get `
-                -ErrorAction Stop `
-                -SkipHttpErrorCheck `
-                -ResponseHeadersVariable "responseHeader" `
-                -StatusCodeVariable "statusCode"
+            $restParams = @{
+                Headers = $FabricConfig.FabricHeaders
+                Uri = $apiEndpointUrl
+                Method = 'Get'
+                ErrorAction = 'Stop'
+                SkipHttpErrorCheck = $true
+                ResponseHeadersVariable = 'responseHeader'
+                StatusCodeVariable = 'statusCode'
+            }
+            $response = Invoke-RestMethod @restParams
          
             # Step 7: Validate the response code
             if ($statusCode -ne 200) {
