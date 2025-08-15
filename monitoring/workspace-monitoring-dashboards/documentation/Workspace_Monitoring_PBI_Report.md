@@ -40,67 +40,9 @@ There are some common questions where Workspace Monitoring can help with the Pow
 |Semantic model|[Query Analysis](#analytical-pathway--sm--query-analysis)|
 |Semantic model|[Refresh Analysis](#analytical-pathway--sm--refresh-analysis)|
 |Eventhouse|[Query Performance](#analytical-pathway--eh--query-performance)|
-|Eventhouse|Ingestion Performance|
+|Eventhouse|[Ingestion Performance](#analytical-pathway--eh--ingestion-performance)|
 |API for GraphQL|GraphQL Performance|
 |Mirrored database|Table Execution Analysis|
-
-
-### Analytical Pathway | EH | Query Performance
-
-
-![Screenshot](/monitoring/workspace-monitoring-dashboards/media/documentation/pbi/fwm_pbi_ap_eh_0.png)
-
-|Step|Description|
-|---|---|
-|1.|**Define** the considered time window (**Date**) on the filter pane <br> Available interval: between 1 and 30 days|
-|2.|**Review** the "Eventhouse Metrics" card. Once there are any collected logs for Eventhouse KQL databases, this card will be available.|
-|3.|**Click** on the **Query Performance** button within the "Eventhouse Metrics" tile to begin the analytical pathway.|
-
-
-
-![Screenshot](/monitoring/workspace-monitoring-dashboards/media/documentation/pbi/fwm_pbi_ap_eh_1.png)
-
-|Step|Description|
-|---|---|
-|Info|This page guides you through to analyze Eventhouse KQL database queries with a top-bottom approach.|
-|4.|**Review** the aggregated insights about query operations, which have been executed against all Eventhouse KQL databases within the selected time window. **Review** the _Query Success Ratio_ measur. |
-|5.|**Review** the performance trends charts about query operations. The charts are structured horizontally from left to right. <br> The two charts on the bottom of this step provide insights about the raw CPU time and operation duration as an average but also as a max aggregated value by day. <br> The two charts on the bottom of this step provide insights about the memory consumption and count of unique users as an average but also as a max aggregated value by day. |
-|6.|**Review** the bar charts. The charts provides you an aggregated view by KQL database for the selected time window by _Query count_ (top), by _Max CPU Time_ (middle) and by _Max Memory Consumption_ (bottom). |
-
-![Screenshot](/monitoring/workspace-monitoring-dashboards/media/documentation/pbi/fwm_pbi_ap_eh_2.png)
-
-|Step|Description|
-|---|---|
-|7.|**Highlight** a KQL database within one of the bar charts from the previous step. |
-|8.|**Click** on the **Continue with Historical Query Analysis** button to continue the analytical pathway for the selected KQL database.|
-
-
-![Screenshot](/monitoring/workspace-monitoring-dashboards/media/documentation/pbi/fwm_pbi_ap_eh_3.png)
-
-|Step|Description|
-|---|---|
-|9.|**Review** the table visual. Each row represents a single query operation for the selected KQL database within the selected time window. _See definition and description of measures here_|
-
-![Screenshot](/monitoring/workspace-monitoring-dashboards/media/documentation/pbi/fwm_pbi_ap_eh_4.png)
-
-|Step|Description|
-|---|---|
-|10.|**Highlight** a row based on a measure where you identified as an outlier. |
-|11.|**Click** on the **Go to Query Details** button to continue the analytical pathway.|
-
-![Screenshot](/monitoring/workspace-monitoring-dashboards/media/documentation/pbi/fwm_pbi_ap_eh_5.png)
-
-|Step|Description|
-|---|---|
-|Info|This page shows all the collected insights, properties for a given query.|
-|12.|The cards provide you some basic properties about the query like _Application Name_, _Execution User_ or _Status_ of the query operation. |
-|13.|The key metrics cards provide you the key measures about the executed query. _See definition and description of measures here_ |
-|14.|This set of cards shows the different cache accesses, hits. <br> _Max Available Hot Cache_ is the max amount of data that was available for the query in hot cache. The max amount of data stored in hot cache is defined by the database or table caching policy. <br> _Max Unavailable Hot Cache_ is max amount of data that wasn't available for the query in hot cache. <br> _Max Available Cold Cache_ is the max amount of cold storage data that was available for the query in cold cache due to data prefetching. <br> _Max Unavailable Cold Cache_ is the max amount of cold storage data that wasn't available for the query in cold cache.
-|15.|This set of cards shows metrics about "Engine Scans" and "Query Results". <br> _Max Scanned Rows_ is the number of rows scanned by the query. A high number might indicate the cause of a query latency issue. <br> _Max Scanned Extents_ is the max number of extents scanned by the query. A high number might indicate the cause of a query latency issue. <br> _Max Result Tables_ is the number of tables result sets. <br> _Max Query Rows_ is the max number of rows in the result set. |
-|16.|The "Queries" visual shows the start and end time of the query, raw query text and failure reason.|
-
-**Very well done!**
-You finished the analytical pathway "Query analysis" for Eventhouse KQL databases.
 
 
 ### Analytical Pathway | Diagnostic Overview
@@ -283,13 +225,151 @@ You finished the analytical pathway "Refresh analysis" for semantic models.
 
 ------------------------------------------------------------------------------------------------
 
-### Analysis of Eventhouse Logs
+### Eventhouse Logs
+
+
+
+### Analytical Pathway | EH | Query Performance
+
+
+![Screenshot](/monitoring/workspace-monitoring-dashboards/media/documentation/pbi/fwm_pbi_ap_eh_0.png)
+
+|Step|Description|
+|---|---|
+|1.|**Define** the considered time window (**Date**) on the filter pane <br> Available interval: between 1 and 30 days|
+|2.|**Review** the "Eventhouse Metrics" card. Once there are any collected logs for Eventhouse KQL databases, this card will be available.|
+|3.|**Click** on the **Query Performance** button within the "Eventhouse Metrics" tile to begin the analytical pathway.|
+
+
+
+![Screenshot](/monitoring/workspace-monitoring-dashboards/media/documentation/pbi/fwm_pbi_ap_eh_1.png)
+
+|Step|Description|
+|---|---|
+|Info|This page guides you through to analyze Eventhouse KQL database queries with a top-bottom approach.|
+|4.|**Review** the aggregated insights about query operations, which have been executed against all Eventhouse KQL databases within the selected time window. **Review** the _Query Success Ratio_ measure. |
+|5.|**Review** the performance trends charts about query operations. The charts are structured horizontally from left to right. <br> The two charts on the bottom of this step provide insights about the raw CPU time and operation duration as an average but also as a max aggregated value by day. <br> The two charts on the bottom of this step provide insights about the memory consumption and count of unique users as an average but also as a max aggregated value by day. |
+|6.|**Review** the bar charts. The charts provides you an aggregated view by KQL database for the selected time window by _Query count_ (top), by _Max CPU Time_ (middle) and by _Max Memory Consumption_ (bottom). |
+
+![Screenshot](/monitoring/workspace-monitoring-dashboards/media/documentation/pbi/fwm_pbi_ap_eh_2.png)
+
+|Step|Description|
+|---|---|
+|7.|**Highlight** a KQL database within one of the bar charts from the previous step. |
+|8.|**Click** on the **Continue with Historical Query Analysis** button to continue the analytical pathway for the selected KQL database.|
+
+
+![Screenshot](/monitoring/workspace-monitoring-dashboards/media/documentation/pbi/fwm_pbi_ap_eh_3.png)
+
+|Step|Description|
+|---|---|
+|9.|**Review** the table visual. Each row represents a single query operation for the selected KQL database within the selected time window. _See definition and description of measures here_|
+
+![Screenshot](/monitoring/workspace-monitoring-dashboards/media/documentation/pbi/fwm_pbi_ap_eh_4.png)
+
+|Step|Description|
+|---|---|
+|10.|**Highlight** a row based on a measure where you identified as an outlier. |
+|11.|**Click** on the **Go to Query Details** button to continue the analytical pathway.|
+
+![Screenshot](/monitoring/workspace-monitoring-dashboards/media/documentation/pbi/fwm_pbi_ap_eh_5.png)
+
+|Step|Description|
+|---|---|
+|Info|This page shows all the collected insights, properties for a given query.|
+|12.|The cards provide you some basic properties about the query like _Application Name_, _Execution User_ or _Status_ of the query operation. |
+|13.|The key metrics cards provide you the key measures about the executed query. _See definition and description of measures here_ |
+|14.|This set of cards shows the different cache accesses, hits. <br> _Max Available Hot Cache_ is the max amount of data that was available for the query in hot cache. The max amount of data stored in hot cache is defined by the database or table caching policy. <br> _Max Unavailable Hot Cache_ is max amount of data that wasn't available for the query in hot cache. <br> _Max Available Cold Cache_ is the max amount of cold storage data that was available for the query in cold cache due to data prefetching. <br> _Max Unavailable Cold Cache_ is the max amount of cold storage data that wasn't available for the query in cold cache.
+|15.|This set of cards shows metrics about "Engine Scans" and "Query Results". <br> _Max Scanned Rows_ is the number of rows scanned by the query. A high number might indicate the cause of a query latency issue. <br> _Max Scanned Extents_ is the max number of extents scanned by the query. A high number might indicate the cause of a query latency issue. <br> _Max Result Tables_ is the number of tables result sets. <br> _Max Query Rows_ is the max number of rows in the result set. |
+|16.|The "Queries" visual shows the start and end time of the query, raw query text and failure reason.|
+
+**Very well done!**
+You finished the analytical pathway "Query Performance" for Eventhouse KQL databases.
+
+------------------------------------------------------------------------------------------------
+
+
+### Analytical Pathway | EH | Ingestion Performance
+
+
+![Screenshot](/monitoring/workspace-monitoring-dashboards/media/documentation/pbi/fwm_pbi_ap_eh_6.png)
+
+|Step|Description|
+|---|---|
+|1.|**Define** the considered time window (**Date**) on the filter pane <br> Available interval: between 1 and 30 days|
+|2.|**Review** the "Eventhouse Metrics" card. Once there are any collected logs for Eventhouse KQL databases, this card will be available.|
+|3.|**Click** on the **Ingestion Performance** button within the "Eventhouse Metrics" tile to begin the analytical pathway.|
+
+
+
+![Screenshot](/monitoring/workspace-monitoring-dashboards/media/documentation/pbi/fwm_pbi_ap_eh_7.png)
+
+|Step|Description|
+|---|---|
+|Info|This page guides you through to analyze Eventhouse KQL database ingestions with a top-bottom approach.|
+|4.|**Review** the aggregated insights about ingestion operations, which have happend across all Eventhouse KQL databases within the selected time window within the monitored Workspace. <br> This page shows insights about **Batch Ingestions** and **Streaming Ingestion** operations |
+|5.|**Review** the performance trends charts about ingestion operations. <br> The chart on the top shows the total _Batch Ingestion Volume_ and _Streaming Ingestion Volume_ in the selected unit over time.|
+|6.|**Review** the bar chart. The chart provides you an aggregated view by KQL database for the selected time window by _Batch Ingestion Volume_ and _Streaming Ingestion Volume_ in the selected unit. <br> **Highlight** a KQL database within the bar chart. |
+|7.|_In this example, we will continue with batch ingestion analysis._ <br> **Click** on the **Go to Batch Ingesiton Analysis** button to continue the analytical pathway for the selected KQL database.|
+
+
+![Screenshot](/monitoring/workspace-monitoring-dashboards/media/documentation/pbi/fwm_pbi_ap_eh_8.png)
+
+|Step|Description|
+|---|---|
+|8.|**Review** the chart. It shows the total amount of ingested data volume over time for the selected KQL database within the selected time window.|
+|9.|**Review** the line charts. <br> The _Average Batch Size over time_ chart shows the average of expected uncompressed data size in an aggregated ingestion batch. <br> The _Average Batch Blob Count over time_ chart shows the average number of data sources ingested in a completed batch. <br> The _Average Batch Ingestion Latency over time_ chart shows the average time taken from when data is received in the cluster until it's ready for query. _**Note:** In this visual the underlying data has been filtered for the ingestion type "Queued Ingestion"._ |
+|10.|The "Ingestion Volume by Database" visual provides insights on table level.|
+
+**Let's continue with streaming ingestion**
+**Click** on the **back** button to go back to the "Eventhouse | Query Performance" report page.
+
+
+![Screenshot](/monitoring/workspace-monitoring-dashboards/media/documentation/pbi/fwm_pbi_ap_eh_9.png)
+ 
+|Step|Description|
+|---|---|
+11.|**Review** the bar chart. The chart provides you an aggregated view by KQL database for the selected time window by _Batch Ingestion Volume_ and _Streaming Ingestion Volume_ in the selected unit. <br> **Highlight** a KQL database within the bar chart. |
+|12.|_In this example, we will continue with streaming ingestion analysis._ <br> **Click** on the **Go to Streaming Ingestion Analysis** button to continue the analytical pathway for the selected KQL database.|
+
+![Screenshot](/monitoring/workspace-monitoring-dashboards/media/documentation/pbi/fwm_pbi_ap_eh_10.png)
+
+|Step|Description|
+|---|---|
+|12.|**Review** the chart. It shows the total amount of ingested data volume and average streaming ingestion latency over time for the selected KQL database within the selected time window.|
+
+
+**Very well done!**
+You finished the analytical pathway "Ingestion Performance" for Eventhouse KQL databases.
+
+
+------------------------------------------------------------------------------------------------
+
+### API for GraphQL
+
+### Analytical Pathway | GraphQL Performance
+**for GraphQL requests**
+
+![Screenshot](/monitoring/workspace-monitoring-dashboards/media/documentation/pbi/fwm_pbi_ap_gql_0.png)
+
+
+|Step|Description|
+|---|---|
+|1.|**Define** the considered time window (**Date**) on the filter pane <br> Available interval: between 1 and 30 days <br> **Define** the "Time Unit" filter, which helps you to convert all time related measures. <br> Available units: _millisecond_, _second_, _minute_, _hour_ <br> **Define** the "Size Unit" filter, which helps you to convert all the data size/volume related measures. <br> Available units: _byte_, _kilobyte_, _megabyte_, _gigabyte_|
+|2.|**Review** the "GraphQL Metrics" card. Once there are any collected logs for semantic models, this card will be available.|
+|3.|**Click** on the **GraphQL Performance** button within the "GraphQL Metrics" tile to begin the analytical pathway.|
+
+
+![Screenshot](/monitoring/workspace-monitoring-dashboards/media/documentation/pbi/fwm_pbi_ap_gql_1.png)
+
+
+|Step|Description|
+|---|---|
+|4.|The cards provide you aggregated insights about all GraphQL requests in the selected time window.|
+|5.|**Review** the line charts. The visual "Request Duration over time" includes two metrics: <br> _Total Request Duration_ <br> _Total Overhead Duration_ is the GraphQL overhead time for a dataplane request. |
+|6.|**Review** the "GraphQL | API Requests" table on the page.  This visual shows the key raw CPU, Memory and Duration and other key metrics for each semantic models, which have been used within the defined time window. <br> _See the Measure description below._ <br> **Highlight** a semantic model in the visual to activate the buttons for step 9 and 10. |
+|9.|The analytical pathway _Query Analysis_ allows you to deep dive into the query execution details for the selected semantic model. |
+|10.|The analytical pathway _Refresh Analysis_ allows you to deep dive into the refresh execution details for the selected semantic model. |
 
 
 ### Analysis of Mirrored Database Table Execution Logs
-
-
-
-
-### Migrate from BYOLA
-We recommend to use the Power BI report template for the new Workspace Monitoring feature in Microsoft Fabric, whenever you are migrating your workspace monitoring solution from (BYOLA) Log Analytics Workspace monitoring.
