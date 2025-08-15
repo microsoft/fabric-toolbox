@@ -39,12 +39,74 @@ There are some common questions where Workspace Monitoring can help with the Pow
 |Semantic model|[Key Metrics Overview](#analytical-pathway--sm--key-metrics-overview)||
 |Semantic model|[Query Analysis](#analytical-pathway--sm--query-analysis)|
 |Semantic model|[Refresh Analysis](#analytical-pathway--sm--refresh-analysis)|
-|Eventhouse|Query Performance|
+|Eventhouse|[Query Performance](#analytical-pathway--eh--query-performance)|
 |Eventhouse|Ingestion Performance|
 |API for GraphQL|GraphQL Performance|
 |Mirrored database|Table Execution Analysis|
 
+
+### Analytical Pathway | EH | Query Performance
+
+
+![Screenshot](/monitoring/workspace-monitoring-dashboards/media/documentation/pbi/fwm_pbi_ap_eh_0.png)
+
+|Step|Description|
+|---|---|
+|1.|**Define** the considered time window (**Date**) on the filter pane <br> Available interval: between 1 and 30 days|
+|2.|**Review** the "Eventhouse Metrics" card. Once there are any collected logs for Eventhouse KQL databases, this card will be available.|
+|3.|**Click** on the **Query Performance** button within the "Eventhouse Metrics" tile to begin the analytical pathway.|
+
+
+
+![Screenshot](/monitoring/workspace-monitoring-dashboards/media/documentation/pbi/fwm_pbi_ap_eh_1.png)
+
+|Step|Description|
+|---|---|
+|Info|This page guides you through to analyze Eventhouse KQL database queries with a top-bottom approach.|
+|4.|**Review** the aggregated insights about query operations, which have been executed against all Eventhouse KQL databases within the selected time window. **Review** the _Query Success Ratio_ measur. |
+|5.|**Review** the performance trends charts about query operations. The charts are structured horizontally from left to right. <br> The two charts on the bottom of this step provide insights about the raw CPU time and operation duration as an average but also as a max aggregated value by day. <br> The two charts on the bottom of this step provide insights about the memory consumption and count of unique users as an average but also as a max aggregated value by day. |
+|6.|**Review** the bar charts. The charts provides you an aggregated view by KQL database for the selected time window by _Query count_ (top), by _Max CPU Time_ (middle) and by _Max Memory Consumption_ (bottom). |
+
+![Screenshot](/monitoring/workspace-monitoring-dashboards/media/documentation/pbi/fwm_pbi_ap_eh_2.png)
+
+|Step|Description|
+|---|---|
+|7.|**Highlight** a KQL database within one of the bar charts from the previous step. |
+|8.|**Click** on the **Continue with Historical Query Analysis** button to continue the analytical pathway for the selected KQL database.|
+
+
+![Screenshot](/monitoring/workspace-monitoring-dashboards/media/documentation/pbi/fwm_pbi_ap_eh_3.png)
+
+|Step|Description|
+|---|---|
+|9.|**Review** the table visual. Each row represents a single query operation for the selected KQL database within the selected time window. _See definition and description of measures here_|
+
+![Screenshot](/monitoring/workspace-monitoring-dashboards/media/documentation/pbi/fwm_pbi_ap_eh_4.png)
+
+|Step|Description|
+|---|---|
+|10.|**Highlight** a row based on a measure where you identified as an outlier. |
+|11.|**Click** on the **Go to Query Details** button to continue the analytical pathway.|
+
+![Screenshot](/monitoring/workspace-monitoring-dashboards/media/documentation/pbi/fwm_pbi_ap_eh_5.png)
+
+|Step|Description|
+|---|---|
+|Info|This page shows all the collected insights, properties for a given query.|
+|12.|The cards provide you some basic properties about the query like _Application Name_, _Execution User_ or _Status_ of the query operation. |
+|13.|The key metrics cards provide you the key measures about the executed query. _See definition and description of measures here_ |
+|14.|This set of cards shows the different cache accesses, hits. <br> _Max Available Hot Cache_ is the max amount of data that was available for the query in hot cache. The max amount of data stored in hot cache is defined by the database or table caching policy. <br> _Max Unavailable Hot Cache_ is max amount of data that wasn't available for the query in hot cache. <br> _Max Available Cold Cache_ is the max amount of cold storage data that was available for the query in cold cache due to data prefetching. <br> _Max Unavailable Cold Cache_ is the max amount of cold storage data that wasn't available for the query in cold cache.
+|15.|This set of cards shows metrics about "Engine Scans" and "Query Results". <br> _Max Scanned Rows_ is the number of rows scanned by the query. A high number might indicate the cause of a query latency issue. <br> _Max Scanned Extents_ is the max number of extents scanned by the query. A high number might indicate the cause of a query latency issue. <br> _Max Result Tables_ is the number of tables result sets. <br> _Max Query Rows_ is the max number of rows in the result set. |
+|16.|The "Queries" visual shows the start and end time of the query, raw query text and failure reason.|
+
+**Very well done!**
+You finished the analytical pathway "Query analysis" for Eventhouse KQL databases.
+
+
 ### Analytical Pathway | Diagnostic Overview
+
+
+![Screenshot](/monitoring/workspace-monitoring-dashboards/media/documentation/pbi/fwm_pbi_ap_100.png)
 
 |Step|Description|
 |---|---|
@@ -58,8 +120,6 @@ There are some common questions where Workspace Monitoring can help with the Pow
 |8.|**GraphQL Metrics** card acts a starting point of the analytical pathways. <br> _GraphQL operation logs are part of the workspace monitoring logs and are registered in the Eventhouse KQL database, which is part of the Real-Time Intelligence solution. You can use these logs to monitor the usage and performance of your workspace._  Link: [GraphQL operation logs](https://learn.microsoft.com/en-us/fabric/data-engineering/graphql-operations)|
 |9.|**Mirrored Database Metrics** card acts a starting point of the analytical pathways. <br> _Mirrored database operation logs are part of the workspace monitoring logs and are registered in the Eventhouse KQL database, which is part of the Real-Time Intelligence solution. You can use these logs to monitor the execution and performance of your mirrored database._  Link: [Mirrored database table exectuion logs](https://learn.microsoft.com/en-us/fabric/database/mirrored-database/monitor-logs) |
 
-![Screenshot](/monitoring/workspace-monitoring-dashboards/media/documentation/pbi/fwm_pbi_ap_100.png)
-
 ### Semantic Model Logs
 
 Workspace admins, users, BI developers etc. would like to analyse the operations of all the semantic models within a given workspace.
@@ -67,6 +127,8 @@ They want to investigate which semantic model had in the recent time (max last 3
 
 ### Analytical Pathway | SM | Key Metrics Overview
 **for Semantic Model logs**
+
+![Screenshot](/monitoring/workspace-monitoring-dashboards/media/documentation/pbi/fwm_pbi_ap_0.png)
 
 
 |Step|Description|
@@ -77,7 +139,9 @@ They want to investigate which semantic model had in the recent time (max last 3
 |4.|**Review** the "Semantic Model Metrics" card. Once there are any collected logs for semantic models, this card will be available.|
 |5.|**Click** on the **Key Metrics Overview** button within the "Semantic Model Metrics" tile to begin the analytical pathway.|
 
-![Screenshot](/monitoring/workspace-monitoring-dashboards/media/documentation/pbi/fwm_pbi_ap_0.png)
+
+![Screenshot](/monitoring/workspace-monitoring-dashboards/media/documentation/pbi/fwm_pbi_ap_1.png)
+
 
 |Step|Description|
 |---|---|
@@ -91,12 +155,11 @@ They want to investigate which semantic model had in the recent time (max last 3
 
 
 
-![Screenshot](/monitoring/workspace-monitoring-dashboards/media/documentation/pbi/fwm_pbi_ap_1.png)
-
-
-
 ### Analytical Pathway | SM | Query analysis
 **for Semantic Model logs**
+
+
+![Screenshot](/monitoring/workspace-monitoring-dashboards/media/documentation/pbi/fwm_pbi_ap_10.png)
 
 |Step|Description|
 |---|---|
@@ -104,7 +167,10 @@ They want to investigate which semantic model had in the recent time (max last 3
 |2.|**Review** the "Semantic Model Metrics" card. Once there are any collected logs for semantic models, this card will be available.|
 |3.|**Click** on the **Query Analysis** button within the "Semantic Model Metrics" tile to begin the analytical pathway.|
 
-![Screenshot](/monitoring/workspace-monitoring-dashboards/media/documentation/pbi/fwm_pbi_ap_10.png)
+
+
+![Screenshot](/monitoring/workspace-monitoring-dashboards/media/documentation/pbi/fwm_pbi_ap_11.png)
+
 
 |Step|Description|
 |---|---|
@@ -118,7 +184,7 @@ They want to investigate which semantic model had in the recent time (max last 3
 >**Example 2:** The CPU duration (bar) is **low**, however the memory consumption (color) is **red**. This would mean that on that day at least one query operation was **Memory intensive**.
 
 
-![Screenshot](/monitoring/workspace-monitoring-dashboards/media/documentation/pbi/fwm_pbi_ap_11.png)
+![Screenshot](/monitoring/workspace-monitoring-dashboards/media/documentation/pbi/fwm_pbi_ap_12.png)
 
 
 |Step|Description|
@@ -126,8 +192,8 @@ They want to investigate which semantic model had in the recent time (max last 3
 |7.|**Hover** over the bar to see the more details about the given day for the given semantic model in the tooltip.|
 |8.|**Click** on the "Go to Historical Queries" button, once one bar has been highlighted to jump to the next analysis page.|
 
-![Screenshot](/monitoring/workspace-monitoring-dashboards/media/documentation/pbi/fwm_pbi_ap_12.png)
 
+![Screenshot](/monitoring/workspace-monitoring-dashboards/media/documentation/pbi/fwm_pbi_ap_2.png)
 
 |Step|Description|
 |---|---|
@@ -135,16 +201,14 @@ They want to investigate which semantic model had in the recent time (max last 3
 |10.|**Review** the "Query History" table on the page. This visual show more detailed metrics from each query, which has been executed against the selected semantic model within the selected time window. In this example, we go with that one failed DAX query.|
 |11.|**Highlight** a row in the table and **click** on the **Go to Query Analysis** button to see all the metrics and raw trace logs about this query.|
 
-![Screenshot](/monitoring/workspace-monitoring-dashboards/media/documentation/pbi/fwm_pbi_ap_2.png)
 
+![Screenshot](/monitoring/workspace-monitoring-dashboards/media/documentation/pbi/fwm_pbi_ap_3.png)
 
 |Step|Description|
 |---|---|
 |12.|On the "Query Details" page, the data has been filtered for one single operation. This page provides all the relevant information about the given query. |
 |13.|The cards provide you detailed information about the query, similarly like on the previos page. These numbers helps you to understand the resource footprint, duration and other metrics of the query.|
 |14.| The table visual on the bottom is sorted by Timestamp ascending. This is important to keep it like that, because you will see chronological trace logs. In this example the last raw log (excluded the "Execution Metrics" operation, which is an additional trace log event) was an Error event. The column _EventText_ provides you the raw trace log value, which has been reported by the engine. In this case the user has cancelled the query.|
-
-![Screenshot](/monitoring/workspace-monitoring-dashboards/media/documentation/pbi/fwm_pbi_ap_3.png)
 
 **Very well done!**
 You finished the analytical pathway "Query analysis" for semantic models.
@@ -154,13 +218,18 @@ You finished the analytical pathway "Query analysis" for semantic models.
 ### Analytical Pathway | SM | Refresh analysis
 **for Semantic Model logs**
 
+
+![Screenshot](/monitoring/workspace-monitoring-dashboards/media/documentation/pbi/fwm_pbi_ap_4.png)
+
 |Step|Description|
 |---|---|
 |1.|Define the considered time window on the filter pane [min: 1, max: 30] in days|
 |2.|Review the Semantic Model Metrics card.|
 |3.|Click on the "Refresh Analysis" button within the "Semantic Model Metrics" tile to begin the analytical pathway.|
 
-![Screenshot](/monitoring/workspace-monitoring-dashboards/media/documentation/pbi/fwm_pbi_ap_4.png)
+
+![Screenshot](/monitoring/workspace-monitoring-dashboards/media/documentation/pbi/fwm_pbi_ap_5.png)
+
 
 |Step|Description|
 |---|---|
@@ -171,14 +240,16 @@ You finished the analytical pathway "Query analysis" for semantic models.
 
 >**Example 2:** The CPU duration (bar) is **low**, however the memory consumption (color) is **red**. This would mean that on that day at least one refresh operation was **Memory intensive**.
 
-![Screenshot](/monitoring/workspace-monitoring-dashboards/media/documentation/pbi/fwm_pbi_ap_5.png)
+
+![Screenshot](/monitoring/workspace-monitoring-dashboards/media/documentation/pbi/fwm_pbi_ap_6.png)
+
 
 |Step|Description|
 |---|---|
 |6.|Hover over the bar to see the more details about the given day for the given semantic model in the tooltip.|
 |7.|Click on the "Continue Refresh Analysis" button, once one bar has been highlighted to jump to the next analysis page.|
 
-![Screenshot](/monitoring/workspace-monitoring-dashboards/media/documentation/pbi/fwm_pbi_ap_6.png)
+![Screenshot](/monitoring/workspace-monitoring-dashboards/media/documentation/pbi/fwm_pbi_ap_7.png)
 
 
 |Step|Description|
@@ -187,7 +258,7 @@ You finished the analytical pathway "Query analysis" for semantic models.
 |9.|Expand an OperationId to see the refreshed table metrics.|
 |10.|Expand a _Table Name_ and the _Object Type_ to identify, which object was very resource intensive. |
 
-![Screenshot](/monitoring/workspace-monitoring-dashboards/media/documentation/pbi/fwm_pbi_ap_7.png)
+![Screenshot](/monitoring/workspace-monitoring-dashboards/media/documentation/pbi/fwm_pbi_ap_8.png)
 
 |Step|Description|
 |---|---|
@@ -195,7 +266,9 @@ You finished the analytical pathway "Query analysis" for semantic models.
 |11.|Highlight a Refresh Operation.|
 |12.|Click on the "Navigate to Refresh GANTT" button.|
 
-![Screenshot](/monitoring/workspace-monitoring-dashboards/media/documentation/pbi/fwm_pbi_ap_8.png)
+
+![Screenshot](/monitoring/workspace-monitoring-dashboards/media/documentation/pbi/fwm_pbi_ap_9.png)
+
 
 |Step|Description|
 |---|---|
@@ -204,9 +277,6 @@ You finished the analytical pathway "Query analysis" for semantic models.
 |15.|Review the GANTT visual. In this example we analyse the table _SalesTable_. The sub-operations (Operation Detail Name) _TabularRefresh_, _ExecuteSql_, _ReadData_, _CompressSegment_, etc. helps you to understand at which sub-operation the refresh sequence took the longest time.  |
 |16.| In the 'Refresh Details' table visual below, you can identify the resource footprint for each sub-operation (Operation Detail Name) by _Table_ by _Object Type_ by _Object Name_. In this example the "Tabular Refresh" and the "Read Data" sub-operations had the highest CPU consumption. |
 |Optional|If you are interested on other assets like "Memory Analyzer", "Best Practice Analyzer" or "Semantic Model Meta Data Analyzer" to optimize the semantic model, you can explore those assets by clicking on the button on the right-bottom corner of the report page.|
-
-![Screenshot](/monitoring/workspace-monitoring-dashboards/media/documentation/pbi/fwm_pbi_ap_9.png)
-
 
 **Very well done!**
 You finished the analytical pathway "Refresh analysis" for semantic models.
