@@ -33,8 +33,8 @@ Workspace Monitoring with the Real-Time Dashboard template can help answer commo
 
 |Workload|Name|
 |---|---|
-|Semantic model|[Semantic Models Analysis](#analytical-pathway--sm--key-metrics-overview)|
-|Eventhouse|[Eventhouse Analysis](#analytical-pathway--eh--query-performance)|
+|Semantic model|[Semantic Models Analysis](#analytical-pathway--semantic-model-analysis-in-near-real-time)|
+|Eventhouse|[Eventhouse Analysis](#analytical-pathway--eventhouse-analysis-in-near-real-time)|
 
 
 ### Overview page
