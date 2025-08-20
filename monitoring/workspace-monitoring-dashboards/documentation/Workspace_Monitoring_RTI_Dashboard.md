@@ -144,4 +144,13 @@ For such scenarios, the _Executing User_ determines the associted user for refre
 
 ### Analytical Pathway | Eventhouse Analysis in near real-time
 
-<TODO>
+![Screenshot](/monitoring/workspace-monitoring-dashboards/media/documentation/rti/fwm_rti_ap_eh_0.png)
+
+
+![Screenshot](/monitoring/workspace-monitoring-dashboards/media/documentation/rti/fwm_rti_ap_eh_1.png)
+
+
+![Screenshot](/monitoring/workspace-monitoring-dashboards/media/documentation/rti/fwm_rti_ap_eh_2.png)
+
+
+![Screenshot](/monitoring/workspace-monitoring-dashboards/media/documentation/rti/fwm_rti_ap_eh_3.png)
