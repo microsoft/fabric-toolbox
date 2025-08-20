@@ -24,10 +24,10 @@ There are some common questions where Workspace Monitoring can help with the Pow
 |Semantic model|„We got a call from management, because yesterday someone throttled the capacity“|The report is designed in way, where users can troubleshoot heavy operations and find the root cause of the e.g. consumption peak with ease.| [Query Analysis](#analytical-pathway--sm--query-analysis) & [Refresh Analysis](#analytical-pathway--sm--refresh-analysis)|
 |Semantic model|“A semantic model refresh took very long yesterday. What caused the delay?”|Analyze refresh duration and resource usage|[Refresh Analysis](#analytical-pathway--sm--refresh-analysis)|
 |Semantic model|“One semantic model is causing capacity issues. What queries are hitting it?”|Investigate query patterns and CPU usage per model|[Query Analysis](#analytical-pathway--sm--query-analysis)|
-|Eventhouse|“Which Eventhouse queries are consuming the most resources or failing frequently?”|Query performance analysis and error tracking|Query Performance & [Query Analysis]|
-|Eventhouse|“Are there ingestion pipelines that are failing or running slower than expected?”|Monitor ingestion success rates, durations, and retry patterns|Ingestion Analysis|
-|Mirrored database|“Why is the mirrored database table execution impacting performance?”|Analyze execution logs, query volumes, and CPU usage|Table Execution Analysis|
-|API for GraphQL|“What is the success ratio of my production GraphQL API request over time?”|Track API call frequency, response times, and error rates|GraphQL Performance Analysis|
+|Eventhouse|“Which Eventhouse queries are consuming the most resources or failing frequently?”|Query performance analysis and error tracking|[Query Performance Analysis](#analytical-pathway--eh--query-performance) |
+|Eventhouse|“Are there ingestion pipelines that are failing or running slower than expected?”|Monitor ingestion success rates, durations, and retry patterns|[Ingestion Analysis](#analytical-pathway--eh--ingestion-performance)|
+|Mirrored database|“Why is the mirrored database table execution impacting performance?”|Analyze execution logs, query volumes, and CPU usage|[Table Execution Analysis](#analytical-pathway--mirrored-database-table-execution)|
+|API for GraphQL|“What is the success ratio of my production GraphQL API request over time?”|Track API call frequency, response times, and error rates|[GraphQL Performance Analysis](#analytical-pathway--graphql-performance)|
 
 -----
 
@@ -41,8 +41,8 @@ There are some common questions where Workspace Monitoring can help with the Pow
 |Semantic model|[Refresh Analysis](#analytical-pathway--sm--refresh-analysis)|
 |Eventhouse|[Query Performance](#analytical-pathway--eh--query-performance)|
 |Eventhouse|[Ingestion Performance](#analytical-pathway--eh--ingestion-performance)|
-|API for GraphQL|GraphQL Performance|
-|Mirrored database|Table Execution Analysis|
+|API for GraphQL|[GraphQL Performance](#analytical-pathway--graphql-performance)|
+|Mirrored database|[Table Execution Analysis](#analytical-pathway--mirrored-database-table-execution)|
 
 
 ### Analytical Pathway | Diagnostic Overview
@@ -367,9 +367,59 @@ You finished the analytical pathway "Ingestion Performance" for Eventhouse KQL d
 |---|---|
 |4.|The cards provide you aggregated insights about all GraphQL requests in the selected time window.|
 |5.|**Review** the line charts. The visual "Request Duration over time" includes two metrics: <br> _Total Request Duration_ <br> _Total Overhead Duration_ is the GraphQL overhead time for a dataplane request. |
-|6.|**Review** the "GraphQL | API Requests" table on the page.  This visual shows the key raw CPU, Memory and Duration and other key metrics for each semantic models, which have been used within the defined time window. <br> _See the Measure description below._ <br> **Highlight** a semantic model in the visual to activate the buttons for step 9 and 10. |
+|6.|**Review** the "GraphQL API Requests" table on the page.  This visual shows the key raw CPU, Memory and Duration and other key metrics for each semantic models, which have been used within the defined time window. <br> _See the Measure description below._ <br> **Highlight** a semantic model in the visual to activate the buttons for step 9 and 10. |
 |9.|The analytical pathway _Query Analysis_ allows you to deep dive into the query execution details for the selected semantic model. |
 |10.|The analytical pathway _Refresh Analysis_ allows you to deep dive into the refresh execution details for the selected semantic model. |
 
+**Very well done!**
+You finished the analytical pathway "Query Performance" for Eventhouse KQL databases.
 
-### Analysis of Mirrored Database Table Execution Logs
+------------------------------------------------------------------------------------------------
+
+
+### Mirrored Databases
+
+### Analytical Pathway | Mirrored Database Table Execution
+**for Mirrored Databases**
+
+![Screenshot](/monitoring/workspace-monitoring-dashboards/media/documentation/pbi/fwm_pbi_ap_mdb_0.png)
+
+
+|Step|Description|
+|---|---|
+|1.|**Define** the considered time window (**Date**) on the filter pane <br> Available interval: between 1 and 30 days <br> **Define** the "Time Unit" filter, which helps you to convert all time related measures. <br> Available units: _millisecond_, _second_, _minute_, _hour_ <br> **Define** the "Size Unit" filter, which helps you to convert all the data size/volume related measures. <br> Available units: _byte_, _kilobyte_, _megabyte_, _gigabyte_|
+|2.|**Review** the "Mirrored Database Metrics" card. Once there are any collected logs for semantic models, this card will be available.|
+|3.|**Click** on the **Table Execution Analysis** button within the "Mirrored Database Metrics" tile to begin the analytical pathway.|
+
+
+![Screenshot](/monitoring/workspace-monitoring-dashboards/media/documentation/pbi/fwm_pbi_ap_mdb_1.png)
+
+
+|Step|Description|
+|---|---|
+|4.|The cards provide you aggregated insights about all Table Executions in the selected time window.|
+|5.|**Review** the line charts. The visual "Mirroring Latency over time" includes two metrics from Replicator engine: <br> _Avg Mirroring Latency_ is the average latency to replicate the batch of data during mirroring. <br> _Max Mirroring Latency_ is the max latency to replicate the batch of data during mirroring. |
+|6.|**Review** the "Mirrored Databases - Table Execution Logs" table on the page.  This visual shows the mirroring related key metrics for each mirroring items within your workspace, which have been used within the defined time window. <br> _See the Measure description below._|
+
+
+![Screenshot](/monitoring/workspace-monitoring-dashboards/media/documentation/pbi/fwm_pbi_ap_mdb_2.png)
+
+|Step|Description|
+|---|---|
+|7.|**Highlight** a Mirrored Database Item in the visual to activate the button |
+|8.|**Click** on the "Go to Table/Operation Level Mirroring Analysis" button to continue the analytical pathway.|
+
+
+
+![Screenshot](/monitoring/workspace-monitoring-dashboards/media/documentation/pbi/fwm_pbi_ap_mdb_3.png)
+
+|Step|Description|
+|---|---|
+|9.|The cards provide you aggregated insights about all Table Executions in the selected time window for the selected Mirrored Database item.|
+|10.|**Review** the "Table Execution Log Summary" visual. One row within the visual represents a table in the selected Mirrored Database item. Other relevant insights are included to get a better understanding about each replicated table. |
+|11.|**Review** the "Mirrored Databases - Table Execution Log Detaild" table on the page.  This visual shows all the executed operations (OperationName) by mirrored table (SourceTableName). For operations like _Snapshotting_, metrics like _Processed Data_ and _Mirroring Latency_ are available. In case of error by operation by table, the columns _ErrorType_ and _ErrorMessage_ will show details.
+
+**Very well done!**
+You finished the analytical pathway "Query Performance" for Eventhouse KQL databases.
+
+------------------------------------------------------------------------------------------------
