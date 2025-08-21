@@ -21,11 +21,11 @@ Workspace Monitoring with the Real-Time Dashboard template can help answer commo
 
 |Workload|Question|Approach|Analytical Pathway|
 |----|----|----|----|
-|Semantic model|"We got a call from management, because yesterday someone throttled the capacity"|The report is designed in a way that allows users to troubleshoot heavy operations and find the root cause of, e.g., a consumption peak with ease.| [Query Analysis](#analytical-pathway--sm--query-analysis) & [Refresh Analysis](#analytical-pathway--sm--refresh-analysis)|
-|Semantic model|"A semantic model refresh took very long yesterday. What caused the delay?"|Analyze refresh duration and resource usage|[Refresh Analysis](#analytical-pathway--sm--refresh-analysis)|
-|Semantic model|"One semantic model is causing capacity issues. What queries are hitting it?"|Investigate query patterns and CPU usage per model|[Query Analysis](#analytical-pathway--sm--query-analysis)|
-|Eventhouse|"Which Eventhouse queries are consuming the most resources or failing frequently?"|Query performance analysis and error tracking|[Query Performance Analysis](#analytical-pathway--eh--query-performance) |
-|Eventhouse|"Are there ingestion pipelines that are failing or running slower than expected?"|Monitor ingestion success rates, durations, and retry patterns|[Ingestion Analysis](#analytical-pathway--eh--ingestion-performance)|
+|Semantic model|"We would like to see all the currently running queries and refreshes on the workspace."| Tracking started/running query and refresh operations. | [Semantic Models Analysis](#analytical-pathway--semantic-model-analysis-in-near-real-time)|
+|Semantic model|"Which user utilizes actively the semantic models in this workspace?" | Analyzing resource metrics on the "SM - Users" dashboard page |[Semantic Models Analysis](#analytical-pathway--semantic-model-analysis-in-near-real-time)|
+|Semantic model|"Which semantic models used significant resources for refresh operations in the recent period on the workspace?"|Investigate query patterns and CPU usage per model|[Semantic Models Analysis](#analytical-pathway--semantic-model-analysis-in-near-real-time)|
+|Eventhouse|"Which Eventhouse queries are consuming the most resources or failing frequently?"|Query performance analysis and error tracking|[Eventhouse Analysis](#analytical-pathway--eventhouse-analysis-in-near-real-time) |
+|Eventhouse|"Are there ingestion pipelines that are failing or running slower than expected?"|Monitor ingestion success rates, durations, and retry patterns|[Eventhouse Analysis](#analytical-pathway--eventhouse-analysis-in-near-real-time)|
 
 -----
 
