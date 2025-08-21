@@ -142,15 +142,71 @@ For such scenarios, the _Executing User_ determines the associted user for refre
 |---|---|
 |20.|Key insights of refreshes by semantic models by Operation end time.|
 
+
+**Very well done!**
+You finished the analytical pathway for semantic model analysis.
+
+------------------------------------------------------------------------------------------------
+
+
 ### Analytical Pathway | Eventhouse Analysis in near real-time
+
+
+Let's begin to analyse the Eventhouse related operations in this analytical pathway.
+
+#### Overview | Eventhouse KQL databases
+
+This dashboard page is your landing page to start analysis of Eventhouse KQL queries, batch/streamn ingestions and item activities. 
+
+>**Note**: The item activities/activity times within this analytical pathway determines the Eventhouse engine related activities. <br> Those activities are **not** the activity logs from the Fabric service. 
 
 ![Screenshot](/monitoring/workspace-monitoring-dashboards/media/documentation/rti/fwm_rti_ap_eh_0.png)
 
+|Step|Description|
+|---|---|
+|Info|The parameter _EventhouseName_ can filter the dashboard page visuals.|
+|1.|The top section of the dashboard page shows aggregated insights about queries from multiple point of views. |
+|2.|The bottom section of the dashboard page shows aggregated insights about batch and streaming ingestions from multiple point of views.|
+
+#### Queries | Eventhouse KQL databases
+
+The "EH | Queries" dashboard page focuses on the executed queries within the given time window for the selected workspace.
 
 ![Screenshot](/monitoring/workspace-monitoring-dashboards/media/documentation/rti/fwm_rti_ap_eh_1.png)
 
+|Step|Description|
+|---|---|
+|3.|The cards shows an aggregated view of executed queries against all the selected Eventhouse items. <br> The **Queries by status over time** visual shows the metric _QueriesCount_ by status over time, which determines the unique count of queries. <br> The **Cache Hit Misses % over time** visual contains the metric _CacheHitMissesPerc_, which is a calculated metric from 'Cold Cache Hits', 'Hot Cache Hits', 'Cold Cache Misses' and 'Hot Cache Misses' information. It helps you to understand the behavior of the query caches. _Hint: If you see an increase in Cache Hit misses check your Caching policy and the time ranges of your queries_ <br> The **Daily Query Duration (Sec) Percentile over time** visual shows the  _percentile_DurationSec_X_ metric. Currently there are three buckets are defined: _50 sec_, _75 sec_ and _90 sec_. |
+|4.|The **Most active users** visual provides you the unique query count by Executing User.|
+|5.|The table provides key metrics of each query operations. <br> _Hint: You can define the sorting rule of the table with the parameter 'Top Queries - table order by'_. |
+
+#### Table Ingestions | Eventhouse KQL databases
+
+The "EH | Table Ingestions" dashboard page focuses on the ingestion operations within the given time window for the selected workspace.
 
 ![Screenshot](/monitoring/workspace-monitoring-dashboards/media/documentation/rti/fwm_rti_ap_eh_2.png)
 
+|Step|Description|
+|---|---|
+|6.|The top section consolidates the key metrics for **batch** and **streaming** ingestions.|
+|7.|The bottom section provides details about ingestion results, failures, latencies. <br> _Hint: To see more granular details, you can filter the insights by KQL database with the parameter 'Database Name'_. |
+
+#### Activity time | Eventhouse KQL databases
+
+The "EH | Activity time" dashboard page focuses on the activity operations within the given time window for the selected workspace.
+
+>**Note**: The item activities/activity times within this analytical pathway determines the Eventhouse engine related activities. <br> Those activities are **not** the activity logs from the Fabric service. 
 
 ![Screenshot](/monitoring/workspace-monitoring-dashboards/media/documentation/rti/fwm_rti_ap_eh_3.png)
+
+|Step|Description|
+|---|---|
+|8.|CPU Activity times by operations and over time visuals show how the Eventhouses within the givne time windows for the selected workspace.|
+|9. |The bottom section provides CPU times for the following scenarios: <br> - Update policies <br> - Materialized Views <br> - Commands |
+
+
+
+**Very well done!**
+You finished the analytical pathway for Eventhouse analysis.
+
+------------------------------------------------------------------------------------------------
