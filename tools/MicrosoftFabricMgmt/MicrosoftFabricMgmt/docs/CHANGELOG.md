@@ -3,11 +3,44 @@
 All notable changes to the MicrosoftFabricMgmt project will be documented in this file.
 
 ## [Unreleased]
-
 ### Added
 ### Fixed
 ### Changed
+
 - 
+
+## [0.5.3] – 2025-08-xxx
+### Added
+- New Connections functions
+  - Add-FabricConnectionRoleAssignment
+  - Get-FabricConnection
+  - Get-FabricConnectionSupportedType
+  - Remove-FabricConnection
+  - Remove-FabricConnectionRoleAssignment
+  - Update-FabricConnectionRoleAssignment
+- New Eventstream functions
+  - Get-FabricEventstreamDestination
+  - Get-FabricEventstreamDestinationConnection
+  - Get-FabricEventstreamSource
+  - Get-FabricEventstreamSourceConnection
+  - Get-FabricEventstreamTopology
+  - Resume-FabricEventstream
+  - Resume-FabricEventstreamDestination
+  - Resume-FabricEventstreamSource
+  - Suspend-FabricEventstream
+  - Suspend-FabricEventstreamDestination
+  - Suspend-FabricEventstreamSource
+- New Lakehouse functions
+  - Start-FabricLakehouseRefreshMaterializedLakeView
+  - Get-FabricLakehouseLivySession
+- New Notebook functions
+  - Get-FabricNotebookLivySession
+
+### Fixed
+
+### Changed
+Changed comment-based help in the Start-FabricLakehouseTableMaintenance function
+
 ## [0.5.2] – 2025-08-04
 
 ### Added

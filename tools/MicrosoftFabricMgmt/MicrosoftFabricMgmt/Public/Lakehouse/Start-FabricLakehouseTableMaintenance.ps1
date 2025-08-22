@@ -1,3 +1,50 @@
+<#
+.SYNOPSIS
+Starts a table maintenance job for a specified Lakehouse table in Microsoft Fabric.
+
+.DESCRIPTION
+Start-FabricLakehouseTableMaintenance initiates a table maintenance operation (such as optimization or vacuum) on a table within a Lakehouse. You can specify options like schema, table name, optimization settings (vOrder, zOrderBy), and retention period for vacuuming. The function validates authentication, constructs the API request, and optionally waits for job completion.
+
+.PARAMETER WorkspaceId
+[string] (Mandatory) The ID of the workspace containing the Lakehouse.
+
+.PARAMETER LakehouseId
+[string] (Mandatory) The ID of the Lakehouse where the table resides.
+
+.PARAMETER JobType
+[string] (Optional) The type of maintenance job. Default is "TableMaintenance".
+
+.PARAMETER SchemaName
+[string] (Optional) The schema name if the Lakehouse uses schemas.
+
+.PARAMETER TableName
+[string] (Optional) The name of the table to maintain.
+
+.PARAMETER IsVOrder
+[bool] (Optional) Enables vOrder optimization if set to $true.
+
+.PARAMETER ColumnsZOrderBy
+[string[]] (Optional) Columns to use for zOrder optimization. Accepts a comma-separated string or array.
+
+.PARAMETER retentionPeriod
+[string] (Optional) Retention period for vacuum operation (format: HH:mm:ss).
+
+.PARAMETER WaitForCompletion
+[switch] (Optional) If specified, waits for the maintenance job to complete before returning.
+
+.EXAMPLE
+Start-FabricLakehouseTableMaintenance -WorkspaceId "12345" -LakehouseId "67890" -TableName "Sales" -IsVOrder $true -ColumnsZOrderBy "ProductId,Date"
+
+.OUTPUTS
+Returns the API response object with job details, or $null if the operation fails.
+
+.NOTES
+- Requires $FabricConfig with BaseUrl and FabricHeaders.
+- Validates authentication using Test-TokenExpired.
+- Logs errors and returns $null on failure.
+
+Author: Tiago Balabuch
+#>
 function Start-FabricLakehouseTableMaintenance {
     [CmdletBinding()]
     param (
