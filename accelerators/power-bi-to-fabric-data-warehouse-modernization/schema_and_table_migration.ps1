@@ -46,7 +46,7 @@ DECLARE @sql VARCHAR(MAX) = '',
 
 SELECT @sql = @sql + 'CREATE TABLE ['  + @schema + '].[' + TABLE_NAME + '] (' + CHAR(13) + CHAR(10) +
     STRING_AGG(
-        '[' + COLUMN_NAME + '] ' + 
+        '[' + cast(COLUMN_NAME as varchar(max)) + '] ' + 
         CASE 
             WHEN DATA_TYPE = 'nvarchar' THEN 'varchar'
             WHEN DATA_TYPE = 'nchar' THEN 'char'
