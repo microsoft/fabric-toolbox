@@ -1,0 +1,371 @@
+{
+  "createOrReplace": {
+    "object": {
+      "database": "MyDirectLakeModel"
+    },
+    "database": {
+      "name": "MyDirectLakeModel",
+      "compatibilityLevel": 1604,
+      "model": {
+        "culture": "en-US",
+        "collation": "Latin1_General_100_BIN2_UTF8",
+        "dataAccessOptions": {
+          "legacyRedirects": true,
+          "returnErrorValuesAsNull": true
+        },
+        "defaultPowerBIDataSourceVersion": "powerBI_V3",
+        "sourceQueryCulture": "en-US",
+        "tables": [
+          {
+            "name": "DimDate",
+            "lineageTag": "DimDate_table",
+            "sourceLineageTag": "[dbo].[DimDate]",
+            "columns": [
+              {
+                "name": "DateKey",
+                "dataType": "int64",
+                "sourceColumn": "DateKey",
+                "lineageTag": "DimDate_DateKey",
+                "sourceLineageTag": "DateKey",
+                "summarizeBy": "none"
+              },
+              {
+                "name": "FullDateAlternateKey",
+                "dataType": "dateTime",
+                "sourceColumn": "FullDateAlternateKey",
+                "lineageTag": "DimDate_FullDateAlternateKey", 
+                "sourceLineageTag": "FullDateAlternateKey",
+                "summarizeBy": "none"
+              },
+              {
+                "name": "DayNumberOfWeek",
+                "dataType": "int64",
+                "sourceColumn": "DayNumberOfWeek",
+                "lineageTag": "DimDate_DayNumberOfWeek",
+                "sourceLineageTag": "DayNumberOfWeek",
+                "summarizeBy": "none"
+              },
+              {
+                "name": "EnglishDayNameOfWeek",
+                "dataType": "string",
+                "sourceColumn": "EnglishDayNameOfWeek",
+                "lineageTag": "DimDate_EnglishDayNameOfWeek",
+                "sourceLineageTag": "EnglishDayNameOfWeek",
+                "summarizeBy": "none"
+              },
+              {
+                "name": "DayNumberOfMonth",
+                "dataType": "int64",
+                "sourceColumn": "DayNumberOfMonth",
+                "lineageTag": "DimDate_DayNumberOfMonth",
+                "sourceLineageTag": "DayNumberOfMonth",
+                "summarizeBy": "none"
+              },
+              {
+                "name": "DayNumberOfYear",
+                "dataType": "int64",
+                "sourceColumn": "DayNumberOfYear",
+                "lineageTag": "DimDate_DayNumberOfYear",
+                "sourceLineageTag": "DayNumberOfYear",
+                "summarizeBy": "none"
+              },
+              {
+                "name": "WeekNumberOfYear",
+                "dataType": "int64",
+                "sourceColumn": "WeekNumberOfYear",
+                "lineageTag": "DimDate_WeekNumberOfYear",
+                "sourceLineageTag": "WeekNumberOfYear",
+                "summarizeBy": "none"
+              },
+              {
+                "name": "EnglishMonthName",
+                "dataType": "string",
+                "sourceColumn": "EnglishMonthName",
+                "lineageTag": "DimDate_EnglishMonthName",
+                "sourceLineageTag": "EnglishMonthName",
+                "summarizeBy": "none"
+              },
+              {
+                "name": "MonthNumberOfYear",
+                "dataType": "int64",
+                "sourceColumn": "MonthNumberOfYear",
+                "lineageTag": "DimDate_MonthNumberOfYear",
+                "sourceLineageTag": "MonthNumberOfYear",
+                "summarizeBy": "none"
+              },
+              {
+                "name": "CalendarQuarter",
+                "dataType": "int64",
+                "sourceColumn": "CalendarQuarter",
+                "lineageTag": "DimDate_CalendarQuarter",
+                "sourceLineageTag": "CalendarQuarter",
+                "summarizeBy": "none"
+              },
+              {
+                "name": "CalendarYear",
+                "dataType": "int64",
+                "sourceColumn": "CalendarYear",
+                "lineageTag": "DimDate_CalendarYear",
+                "sourceLineageTag": "CalendarYear",
+                "summarizeBy": "none"
+              }
+            ],
+            "partitions": [
+              {
+                "name": "DimDate_partition",
+                "mode": "directLake",
+                "source": {
+                  "type": "entity",
+                  "schemaName": "dbo",
+                  "entityName": "DimDate",
+                  "expressionSource": "DatabaseQuery"
+                }
+              }
+            ]
+          },
+          {
+            "name": "FactSales",
+            "lineageTag": "FactSales_table",
+            "sourceLineageTag": "[dbo].[FactSales]",
+            "columns": [
+              {
+                "name": "SalesOrderNumber",
+                "dataType": "string",
+                "sourceColumn": "SalesOrderNumber",
+                "lineageTag": "FactSales_SalesOrderNumber",
+                "sourceLineageTag": "SalesOrderNumber",
+                "summarizeBy": "none"
+              },
+              {
+                "name": "SalesOrderLineNumber",
+                "dataType": "int64",
+                "sourceColumn": "SalesOrderLineNumber",
+                "lineageTag": "FactSales_SalesOrderLineNumber",
+                "sourceLineageTag": "SalesOrderLineNumber",
+                "summarizeBy": "none"
+              },
+              {
+                "name": "OrderDateKey",
+                "dataType": "int64",
+                "sourceColumn": "OrderDateKey",
+                "lineageTag": "FactSales_OrderDateKey",
+                "sourceLineageTag": "OrderDateKey",
+                "summarizeBy": "none"
+              },
+              {
+                "name": "DueDateKey",
+                "dataType": "int64",
+                "sourceColumn": "DueDateKey",
+                "lineageTag": "FactSales_DueDateKey",
+                "sourceLineageTag": "DueDateKey",
+                "summarizeBy": "none"
+              },
+              {
+                "name": "ShipDateKey",
+                "dataType": "int64",
+                "sourceColumn": "ShipDateKey",
+                "lineageTag": "FactSales_ShipDateKey",
+                "sourceLineageTag": "ShipDateKey",
+                "summarizeBy": "none"
+              },
+              {
+                "name": "ProductKey",
+                "dataType": "int64",
+                "sourceColumn": "ProductKey",
+                "lineageTag": "FactSales_ProductKey",
+                "sourceLineageTag": "ProductKey",
+                "summarizeBy": "none"
+              },
+              {
+                "name": "CustomerKey",
+                "dataType": "int64",
+                "sourceColumn": "CustomerKey",
+                "lineageTag": "FactSales_CustomerKey",
+                "sourceLineageTag": "CustomerKey",
+                "summarizeBy": "none"
+              },
+              {
+                "name": "PromotionKey",
+                "dataType": "int64",
+                "sourceColumn": "PromotionKey",
+                "lineageTag": "FactSales_PromotionKey",
+                "sourceLineageTag": "PromotionKey",
+                "summarizeBy": "none"
+              },
+              {
+                "name": "CurrencyKey",
+                "dataType": "int64",
+                "sourceColumn": "CurrencyKey",
+                "lineageTag": "FactSales_CurrencyKey",
+                "sourceLineageTag": "CurrencyKey",
+                "summarizeBy": "none"
+              },
+              {
+                "name": "SalesTerritoryKey",
+                "dataType": "int64",
+                "sourceColumn": "SalesTerritoryKey",
+                "lineageTag": "FactSales_SalesTerritoryKey",
+                "sourceLineageTag": "SalesTerritoryKey",
+                "summarizeBy": "none"
+              },
+              {
+                "name": "OrderQuantity",
+                "dataType": "int64",
+                "sourceColumn": "OrderQuantity",
+                "lineageTag": "FactSales_OrderQuantity",
+                "sourceLineageTag": "OrderQuantity",
+                "summarizeBy": "sum"
+              },
+              {
+                "name": "UnitPrice",
+                "dataType": "decimal",
+                "sourceColumn": "UnitPrice",
+                "lineageTag": "FactSales_UnitPrice",
+                "sourceLineageTag": "UnitPrice",
+                "summarizeBy": "none"
+              },
+              {
+                "name": "ExtendedAmount",
+                "dataType": "decimal",
+                "sourceColumn": "ExtendedAmount",
+                "lineageTag": "FactSales_ExtendedAmount",
+                "sourceLineageTag": "ExtendedAmount",
+                "summarizeBy": "sum"
+              },
+              {
+                "name": "UnitPriceDiscountPct",
+                "dataType": "decimal",
+                "sourceColumn": "UnitPriceDiscountPct",
+                "lineageTag": "FactSales_UnitPriceDiscountPct",
+                "sourceLineageTag": "UnitPriceDiscountPct",
+                "summarizeBy": "none"
+              },
+              {
+                "name": "DiscountAmount",
+                "dataType": "decimal",
+                "sourceColumn": "DiscountAmount",
+                "lineageTag": "FactSales_DiscountAmount",
+                "sourceLineageTag": "DiscountAmount",
+                "summarizeBy": "sum"
+              },
+              {
+                "name": "ProductStandardCost",
+                "dataType": "decimal",
+                "sourceColumn": "ProductStandardCost",
+                "lineageTag": "FactSales_ProductStandardCost",
+                "sourceLineageTag": "ProductStandardCost",
+                "summarizeBy": "none"
+              },
+              {
+                "name": "TotalProductCost",
+                "dataType": "decimal",
+                "sourceColumn": "TotalProductCost",
+                "lineageTag": "FactSales_TotalProductCost",
+                "sourceLineageTag": "TotalProductCost",
+                "summarizeBy": "sum"
+              },
+              {
+                "name": "SalesAmount",
+                "dataType": "decimal",
+                "sourceColumn": "SalesAmount",
+                "lineageTag": "FactSales_SalesAmount",
+                "sourceLineageTag": "SalesAmount",
+                "summarizeBy": "sum"
+              },
+              {
+                "name": "TaxAmt",
+                "dataType": "decimal",
+                "sourceColumn": "TaxAmt",
+                "lineageTag": "FactSales_TaxAmt",
+                "sourceLineageTag": "TaxAmt",
+                "summarizeBy": "sum"
+              },
+              {
+                "name": "Freight",
+                "dataType": "decimal",
+                "sourceColumn": "Freight",
+                "lineageTag": "FactSales_Freight",
+                "sourceLineageTag": "Freight",
+                "summarizeBy": "sum"
+              }
+            ],
+            "partitions": [
+              {
+                "name": "FactSales_partition",
+                "mode": "directLake",
+                "source": {
+                  "type": "entity",
+                  "schemaName": "dbo",
+                  "entityName": "FactSales",
+                  "expressionSource": "DatabaseQuery"
+                }
+              }
+            ],
+            "measures": [
+              {
+                "name": "Total Sales Amount",
+                "expression": "SUM(FactSales[SalesAmount])",
+                "lineageTag": "FactSales_TotalSalesAmount",
+                "formatString": "\\$#,0.00;(\\$#,0.00);\\$#,0.00"
+              },
+              {
+                "name": "Total Order Quantity",
+                "expression": "SUM(FactSales[OrderQuantity])",
+                "lineageTag": "FactSales_TotalOrderQuantity",
+                "formatString": "#,0"
+              },
+              {
+                "name": "Average Unit Price",
+                "expression": "AVERAGE(FactSales[UnitPrice])",
+                "lineageTag": "FactSales_AverageUnitPrice",
+                "formatString": "\\$#,0.00;(\\$#,0.00);\\$#,0.00"
+              }
+            ]
+          }
+        ],
+        "relationships": [
+          {
+            "name": "FactSales_OrderDateKey_DimDate_DateKey",
+            "fromTable": "FactSales",
+            "fromColumn": "OrderDateKey",
+            "toTable": "DimDate",
+            "toColumn": "DateKey"
+          }
+        ],
+        "expressions": [
+          {
+            "name": "DatabaseQuery",
+            "kind": "m",
+            "expression": [
+              "let",
+              "    database = Sql.Database(\"your-server-name.datawarehouse.fabric.microsoft.com\", \"your-sql-analytics-endpoint-id\")",
+              "in",
+              "    database"
+            ],
+            "lineageTag": "DatabaseQuery_expression",
+            "annotations": [
+              {
+                "name": "PBI_IncludeFutureArtifacts",
+                "value": "False"
+              }
+            ]
+          }
+        ],
+        "annotations": [
+          {
+            "name": "__PBI_TimeIntelligenceEnabled",
+            "value": "0"
+          },
+          {
+            "name": "PBI_QueryOrder",
+            "value": "[\"DatabaseQuery\"]"
+          },
+          {
+            "name": "PBI_ProTooling",
+            "value": "[\"WebModelingEdit\"]"
+          }
+        ]
+      }
+    }
+  }
+}

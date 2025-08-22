@@ -1,0 +1,47 @@
+# Core MCP Framework
+fastmcp>=0.1.0
+
+# Microsoft Authentication Library
+msal>=1.24.0
+
+# HTTP requests
+requests>=2.31.0
+
+# Python for .NET (for Analysis Services libraries)
+pythonnet>=3.0.0
+
+# ODBC driver for SQL Server connections
+pyodbc>=4.0.0
+
+# Process monitoring for Power BI Desktop detection
+psutil>=5.9.0
+
+# URL parsing (built-in, but ensuring compatibility)
+urllib3>=2.0.0
+
+# JSON handling (built-in, but for compatibility)
+# json - built-in
+
+# Operating system interface (built-in)
+# os - built-in
+
+# System-specific parameters (built-in)
+# sys - built-in
+
+# Logging (built-in)
+# logging - built-in
+
+# Threading support (built-in)
+# threading - built-in
+
+# Time utilities (built-in)
+# time - built-in
+
+# Type hints (built-in in Python 3.8+)
+# typing - built-in
+
+# Optional: Development and testing dependencies
+# pytest>=7.0.0
+# black>=23.0.0
+# pylint>=2.17.0
+azure-identity

@@ -1,0 +1,545 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>Microsoft.AnalysisServices.SPClient.Interfaces</name>
+    </assembly>
+    <members>
+        <member name="T:Microsoft.AnalysisServices.SPClient.Interfaces.ConnectionStyle">
+            <summary>
+            Indicates the method that AS client libraries should use to connect to a workbook model.
+            </summary>
+        </member>
+        <member name="F:Microsoft.AnalysisServices.SPClient.Interfaces.ConnectionStyle.Direct">
+            <summary>
+            Client libraries should connect directly to the database.
+            </summary>
+        </member>
+        <member name="F:Microsoft.AnalysisServices.SPClient.Interfaces.ConnectionStyle.ProxyStream">
+            <summary>
+            Client libraries should communicate with the database through a proxy Stream that is redirected through the AS SharePoint addin.
+            </summary>
+        </member>
+        <member name="T:Microsoft.AnalysisServices.SPClient.Interfaces.ILinkFile">
+            <summary>
+            Represents a BISM Connection (.aslx / .bism) file within a SharePoint farm.
+            </summary>
+        </member>
+        <member name="P:Microsoft.AnalysisServices.SPClient.Interfaces.ILinkFile.Database">
+            <summary>
+            Gets the database associated with the .bism file.
+            </summary>
+        </member>
+        <member name="P:Microsoft.AnalysisServices.SPClient.Interfaces.ILinkFile.Description">
+            <summary>
+            Gets the description associated with the .bism file.
+            </summary>
+        </member>
+        <member name="P:Microsoft.AnalysisServices.SPClient.Interfaces.ILinkFile.IsDelegationAllowed">
+            <summary>
+            Gets the flag from the .bism file indicating if delegation of credentials is allowed.
+            </summary>
+        </member>
+        <member name="P:Microsoft.AnalysisServices.SPClient.Interfaces.ILinkFile.IsInFarm">
+            <summary>
+            Gets a flag indicating if this is a .bism file located in the current SharePoint farm.
+            </summary>
+        </member>
+        <member name="P:Microsoft.AnalysisServices.SPClient.Interfaces.ILinkFile.IsFileMalformed">
+            <summary>
+            Gets a flag indicating if the .bism file is malformed or otherwise syntactically invalid.
+            </summary>
+        </member>
+        <member name="P:Microsoft.AnalysisServices.SPClient.Interfaces.ILinkFile.Server">
+            <summary>
+            Gets the server associated with the .bism file.
+            </summary>
+        </member>
+        <member name="T:Microsoft.AnalysisServices.SPClient.Interfaces.IASSPClientProxy">
+            <summary>
+            Defines dependency-free methods and properties to load workbook models within SharePoint and to interact with existing Excel Services sessions.
+            </summary>
+        </member>
+        <member name="M:Microsoft.AnalysisServices.SPClient.Interfaces.IASSPClientProxy.IsWorkbookInFarm(System.String)">
+            <summary>
+            Test whether or not a given workbook is hosted in the local SharePoint farm.
+            </summary>
+            <param name="in_bstrWorkbookPath">The absolute path of the workbook.</param>
+            <returns>True, if the specified path is the absolute path of an Excel workbook hosted in the current SharePoint farm; otherwise, false.</returns>
+        </member>
+        <member name="M:Microsoft.AnalysisServices.SPClient.Interfaces.IASSPClientProxy.IsFarmRunning">
+            <summary>
+            Test whether or not a given workbook is hosted in the local SharePoint farm.
+            </summary>
+            <returns>True, if the machine is running SharePoint 2013 or 2016 farm with a configured version of the PowerPivot for SharePoint addin; otherwise, false.</returns>
+        </member>
+        <member name="M:Microsoft.AnalysisServices.SPClient.Interfaces.IASSPClientProxy.GetLinkFile(System.String)">
+            <summary>
+            Gets a metadata about a BISM Connection (.aslx) file located in the local SharePoint farm.
+            </summary>
+            <param name="in_bstrLinkFilePath">The absolute path of the .aslx file.</param>
+            <returns>The set of metadata about the file and the connection described therein.</returns>
+        </member>
+        <member name="M:Microsoft.AnalysisServices.SPClient.Interfaces.IASSPClientProxy.OpenWorkbookModel(System.String)">
+            <summary>
+            Open a connection to a specific workbook's model and return metadata that can be used to interact with the resulting session.
+            </summary>
+            <param name="in_bstrWorkbookPath">The absolute path to the workbook within the SharePoint site.</param>
+            <returns>The set of session metadata that describes the resulting connection.</returns>
+        </member>
+        <member name="M:Microsoft.AnalysisServices.SPClient.Interfaces.IASSPClientProxy.OpenWorkbookModelForRefresh(System.String)">
+            <summary>
+            Open an exclusive, writable connection to a specific workbook's model and return metadata that can be used to interact with the resulting session.
+            </summary>
+            <param name="in_bstrWorkbookPath">The absolute path to the workbook within the SharePoint site.</param>
+            <returns>The set of session metadata that describes the resulting connection.</returns>
+        </member>
+        <member name="M:Microsoft.AnalysisServices.SPClient.Interfaces.IASSPClientProxy.OpenWorkbookSession(System.String,System.String)">
+            <summary>
+            Open a new connection to a specific workbook's model within the scope of a given Excel Services session, and return metadata that can be used
+            to interact with the session.
+            </summary>
+            <param name="in_bstrWorkbookPath">The absolute path of the workbook within the SharePoint site.</param>
+            <param name="in_bstrSessionId">The ID of the Excel Services session that holds an existing connection to this workbook model.</param>
+            <returns>The set of session metadata that describes the connection.</returns>
+        </member>
+        <member name="M:Microsoft.AnalysisServices.SPClient.Interfaces.IASSPClientProxy.Log(System.Diagnostics.TraceLevel,System.String)">
+            <summary>
+            Adds a trace entry to the log.
+            </summary>
+            <param name="e_inTraceLevel">The trace entry level.</param>
+            <param name="bstr_inMsg">The trace entry message.</param>
+        </member>
+        <member name="M:Microsoft.AnalysisServices.SPClient.Interfaces.IASSPClientProxy.Log1(System.Diagnostics.TraceLevel,System.String,System.String)">
+            <summary>
+            Adds a trace entry to the log.
+            </summary>
+            <param name="e_inTraceLevel">The trace entry level.</param>
+            <param name="bstr_inMsg">The trace entry message.</param>
+            <param name="bstr_inParam1">A parameter for the trace entry message.</param>
+        </member>
+        <member name="M:Microsoft.AnalysisServices.SPClient.Interfaces.IASSPClientProxy.Log2(System.Diagnostics.TraceLevel,System.String,System.String,System.String)">
+            <summary>
+            Adds a trace entry to the log.
+            </summary>
+            <param name="e_inTraceLevel">The trace entry level.</param>
+            <param name="bstr_inMsg">The trace entry message.</param>
+            <param name="bstr_inParam1">The first parameter for the trace entry message.</param>
+            <param name="bstr_inParam2">The second parameter for the trace entry message.</param>
+        </member>
+        <member name="M:Microsoft.AnalysisServices.SPClient.Interfaces.IASSPClientProxy.Log3(System.Diagnostics.TraceLevel,System.String,System.String,System.String,System.String)">
+            <summary>
+            Adds a trace entry to the log.
+            </summary>
+            <param name="e_inTraceLevel">The trace entry level.</param>
+            <param name="bstr_inMsg">The trace entry message.</param>
+            <param name="bstr_inParam1">The first parameter for the trace entry message.</param>
+            <param name="bstr_inParam2">The second parameter for the trace entry message.</param>
+            <param name="bstr_inParam3">The third parameter for the trace entry message.</param>
+        </member>
+        <member name="M:Microsoft.AnalysisServices.SPClient.Interfaces.IASSPClientProxy.Log4(System.Diagnostics.TraceLevel,System.String,System.String,System.String,System.String,System.String)">
+            <summary>
+            Adds a trace entry to the log.
+            </summary>
+            <param name="e_inTraceLevel">The trace entry level.</param>
+            <param name="bstr_inMsg">The trace entry message.</param>
+            <param name="bstr_inParam1">The first parameter for the trace entry message.</param>
+            <param name="bstr_inParam2">The second parameter for the trace entry message.</param>
+            <param name="bstr_inParam3">The third parameter for the trace entry message.</param>
+            <param name="bstr_inParam4">The forth parameter for the trace entry message.</param>
+        </member>
+        <member name="M:Microsoft.AnalysisServices.SPClient.Interfaces.IASSPClientProxy.OpenWorkbookModel(System.String,Microsoft.AnalysisServices.SPClient.Interfaces.SessionLifetimePolicy)">
+            <summary>
+            Open a connection to a specific workbook's model and return metadata that can be used to interact with the resulting session.
+            </summary>
+            <param name="in_bstrWorkbookPath">The absolute path to the workbook within the SharePoint site.</param>
+            <param name="in_lifetimePolicy">The <see cref="T:Microsoft.AnalysisServices.SPClient.Interfaces.SessionLifetimePolicy" /> that governs how (and if) the IWorkbookSession should manage the newly-created Excel Services session.</param>
+            <returns>The set of session metadata that describes the resulting connection.</returns>
+        </member>
+        <member name="M:Microsoft.AnalysisServices.SPClient.Interfaces.IASSPClientProxy.OpenWorkbookModelForRefresh(System.String,Microsoft.AnalysisServices.SPClient.Interfaces.SessionLifetimePolicy)">
+            <summary>
+            Open an exclusive, writable connection to a specific workbook's model and return metadata that can be used to interact with the resulting session.
+            </summary>
+            <param name="in_bstrWorkbookPath">The absolute path to the workbook within the SharePoint site.</param>
+            <param name="in_lifetimePolicy">The <see cref="T:Microsoft.AnalysisServices.SPClient.Interfaces.SessionLifetimePolicy" /> that governs how (and if) the IWorkbookSession should manage the newly-created Excel Services session.</param>
+            <returns>The set of session metadata that describes the resulting connection.</returns>
+        </member>
+        <member name="M:Microsoft.AnalysisServices.SPClient.Interfaces.IASSPClientProxy.OpenWorkbookSession(System.String,System.String,Microsoft.AnalysisServices.SPClient.Interfaces.SessionLifetimePolicy)">
+            <summary>
+            Open a new connection to a specific workbook's model within the scope of a given Excel Services session, and return metadata that can be used
+            to interact with the session.
+            </summary>
+            <param name="in_bstrWorkbookPath">The absolute path of the workbook within the SharePoint site.</param>
+            <param name="in_bstrSessionId">The ID of the Excel Services session that holds an existing connection to this workbook model.</param>
+            <param name="in_lifetimePolicy">The <see cref="T:Microsoft.AnalysisServices.SPClient.Interfaces.SessionLifetimePolicy" /> that governs how (and if) the IWorkbookSession should manage the specified session.</param>
+            <returns>The set of session metadata that describes the connection.</returns>
+        </member>
+        <member name="M:Microsoft.AnalysisServices.SPClient.Interfaces.IASSPClientProxy.IsRunningInFarm(System.Int32)">
+            <summary>
+            Indicates whether the application is running on a machine which has SharePoint, with at least with this version of SharePoint installed.
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="M:Microsoft.AnalysisServices.SPClient.Interfaces.IASSPClientProxy.GetWindowsIdentityFromCurrentPrincipal">
+            <summary>
+            This method is used when the caller needs to construct a WindowsIdentity from the Thread.CurrentPrincipal. 
+            This uses SharePoint apis to reconstruct the WindowIdentity
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="M:Microsoft.AnalysisServices.SPClient.Interfaces.IASSPClientProxy.TraceError(System.String,System.Object[])">
+            <summary>
+            Write an error to the ULS log.
+            </summary>
+            <param name="message">The parameterized error message.</param>
+            <param name="args">Parameters for the error message.</param>
+        </member>
+        <member name="M:Microsoft.AnalysisServices.SPClient.Interfaces.IASSPClientProxy.TraceVerbose(System.String,System.Object[])">
+            <summary>
+            Write a verbose message to the ULS log.
+            </summary>
+            <param name="message">The parameterized message.</param>
+            <param name="args">Parameters for the message.</param>
+        </member>
+        <member name="M:Microsoft.AnalysisServices.SPClient.Interfaces.IASSPClientProxy.TraceWarning(System.String,System.Object[])">
+            <summary>
+            Write a warning to the ULS log.
+            </summary>
+            <param name="message">The parameterized warning message.</param>
+            <param name="args">Parameters for the error message.</param>
+        </member>
+        <member name="T:Microsoft.AnalysisServices.SPClient.Interfaces.IWorkbookSession">
+            <summary>
+            Defines dependency-free methods and properties to interact with a workbook model that has been loaded in a SharePoint farm.
+            </summary>
+        </member>
+        <member name="P:Microsoft.AnalysisServices.SPClient.Interfaces.IWorkbookSession.ConnectionStyle">
+            <summary>
+            Gets a value indicating how client libraries are expected to communicate with the Analysis Services database hosting the loaded workbook model.
+            </summary>
+        </member>
+        <member name="P:Microsoft.AnalysisServices.SPClient.Interfaces.IWorkbookSession.Database">
+            <summary>
+            Gets the name of the Analysis Services database containing the loaded workbook model.
+            </summary>
+        </member>
+        <member name="P:Microsoft.AnalysisServices.SPClient.Interfaces.IWorkbookSession.Server">
+            <summary>
+            Gets the name of the Analysis Services instance containing the loaded workbook model.
+            </summary>
+        </member>
+        <member name="P:Microsoft.AnalysisServices.SPClient.Interfaces.IWorkbookSession.SessionId">
+            <summary>
+            Gets the Excel Services session identifier for the current workbook model connection.
+            </summary>
+        </member>
+        <member name="P:Microsoft.AnalysisServices.SPClient.Interfaces.IWorkbookSession.UserName">
+            <summary>
+            Gets the user name as per the SharePoint context
+            </summary>
+        </member>
+        <member name="P:Microsoft.AnalysisServices.SPClient.Interfaces.IWorkbookSession.WorkbookFormatVersion">
+            <summary>
+            Gets the file format version of the loaded workbook.
+            </summary>
+        </member>
+        <member name="P:Microsoft.AnalysisServices.SPClient.Interfaces.IWorkbookSession.WorkbookPath">
+            <summary>
+            Gets the absolute path of the workbook within the SharePoint farm.
+            </summary>
+        </member>
+        <member name="M:Microsoft.AnalysisServices.SPClient.Interfaces.IWorkbookSession.BeginActivity">
+            <summary>
+            Signal that a query or other action is in progress and that Excel Services should not time out the session.
+            </summary>
+        </member>
+        <member name="M:Microsoft.AnalysisServices.SPClient.Interfaces.IWorkbookSession.CreateNativeStream">
+            <summary>
+            Gets a native IStream that can be used to communicate with the AS instance hosting the current session's model.
+            </summary>
+            <returns>An IStream that acts as a proxy to the hosting AS instance.</returns>
+        </member>
+        <member name="M:Microsoft.AnalysisServices.SPClient.Interfaces.IWorkbookSession.EndActivity">
+            <summary>
+            Signal that activity has ceased (for the moment) and that Excel Services is free to time out the session.
+            </summary>
+        </member>
+        <member name="M:Microsoft.AnalysisServices.SPClient.Interfaces.IWorkbookSession.EndSession">
+            <summary>
+            Signal that the caller is permanently releasing interest in the session and will not resume activity.
+            </summary>
+        </member>
+        <member name="M:Microsoft.AnalysisServices.SPClient.Interfaces.IWorkbookSession.Refresh(System.String,System.String)">
+            <summary>
+            Execute a shallow refresh of the workbook model's data sources using credentials that have been cached in a given Secure Store target application.
+            </summary>
+            <param name="in_bstrTargetApplicationId">The ID of the Secure Store target application containing the credentials to be used for the refresh operation.</param>
+            <param name="in_bstrConnectionName">The name of the specific connection within the workbook to be refreshed.</param>
+        </member>
+        <member name="M:Microsoft.AnalysisServices.SPClient.Interfaces.IWorkbookSession.ReportQueryExecution(System.Int32,System.String)">
+            <summary>
+            Reports a query execution.
+            </summary>
+            <param name="elapsedTime">The time that the query elapsed.</param>
+            <param name="in_bstrQuery">The query.</param>
+        </member>
+        <member name="M:Microsoft.AnalysisServices.SPClient.Interfaces.IWorkbookSession.Log(System.Diagnostics.TraceLevel,System.String)">
+            <summary>
+            Adds a trace entry to the log.
+            </summary>
+            <param name="e_inTraceLevel">The trace entry level.</param>
+            <param name="bstr_inMsg">The trace entry message.</param>
+        </member>
+        <member name="M:Microsoft.AnalysisServices.SPClient.Interfaces.IWorkbookSession.Log1(System.Diagnostics.TraceLevel,System.String,System.String)">
+            <summary>
+            Adds a trace entry to the log.
+            </summary>
+            <param name="e_inTraceLevel">The trace entry level.</param>
+            <param name="bstr_inMsg">The trace entry message.</param>
+            <param name="bstr_inParam1">A parameter for the trace entry message.</param>
+        </member>
+        <member name="M:Microsoft.AnalysisServices.SPClient.Interfaces.IWorkbookSession.Log2(System.Diagnostics.TraceLevel,System.String,System.String,System.String)">
+            <summary>
+            Adds a trace entry to the log.
+            </summary>
+            <param name="e_inTraceLevel">The trace entry level.</param>
+            <param name="bstr_inMsg">The trace entry message.</param>
+            <param name="bstr_inParam1">The first parameter for the trace entry message.</param>
+            <param name="bstr_inParam2">The second parameter for the trace entry message.</param>
+        </member>
+        <member name="M:Microsoft.AnalysisServices.SPClient.Interfaces.IWorkbookSession.Log3(System.Diagnostics.TraceLevel,System.String,System.String,System.String,System.String)">
+            <summary>
+            Adds a trace entry to the log.
+            </summary>
+            <param name="e_inTraceLevel">The trace entry level.</param>
+            <param name="bstr_inMsg">The trace entry message.</param>
+            <param name="bstr_inParam1">The first parameter for the trace entry message.</param>
+            <param name="bstr_inParam2">The second parameter for the trace entry message.</param>
+            <param name="bstr_inParam3">The third parameter for the trace entry message.</param>
+        </member>
+        <member name="M:Microsoft.AnalysisServices.SPClient.Interfaces.IWorkbookSession.Log4(System.Diagnostics.TraceLevel,System.String,System.String,System.String,System.String,System.String)">
+            <summary>
+            Adds a trace entry to the log.
+            </summary>
+            <param name="e_inTraceLevel">The trace entry level.</param>
+            <param name="bstr_inMsg">The trace entry message.</param>
+            <param name="bstr_inParam1">The first parameter for the trace entry message.</param>
+            <param name="bstr_inParam2">The second parameter for the trace entry message.</param>
+            <param name="bstr_inParam3">The third parameter for the trace entry message.</param>
+            <param name="bstr_inParam4">The forth parameter for the trace entry message.</param>
+        </member>
+        <member name="M:Microsoft.AnalysisServices.SPClient.Interfaces.IWorkbookSession.EnsureValidSession">
+            <summary>
+            Ensures that the session is valid.
+            </summary>
+        </member>
+        <member name="M:Microsoft.AnalysisServices.SPClient.Interfaces.IWorkbookSession.CreateManagedStream">
+            <summary>
+            Get a managed Stream that can be used to communicate with the AS instance hosting the current session's model.
+            </summary>
+            <returns>A Stream that acts as a proxy to the hosting AS instance.</returns>
+        </member>
+        <member name="M:Microsoft.AnalysisServices.SPClient.Interfaces.IWorkbookSession.GetWorkbookConnections">
+            <summary>
+            Get the names of the embedded connections.
+            </summary>
+            <returns>The names of the embedded connections.</returns>
+        </member>
+        <member name="M:Microsoft.AnalysisServices.SPClient.Interfaces.IWorkbookSession.RefreshEmbeddedModel">
+            <summary>
+            Do a shallow refresh of the embedded model. This is only needed when working against O14 models
+            </summary>
+        </member>
+        <member name="M:Microsoft.AnalysisServices.SPClient.Interfaces.IWorkbookSession.Save">
+            <summary>
+            After refresh, save the workbook back into SharePoint.
+            </summary>
+        </member>
+        <member name="M:Microsoft.AnalysisServices.SPClient.Interfaces.IWorkbookSession.TraceError(System.String,System.Object[])">
+            <summary>
+            Write an error to the ULS log.
+            </summary>
+            <param name="message">The parameterized error message.</param>
+            <param name="args">Parameters for the error message.</param>
+        </member>
+        <member name="M:Microsoft.AnalysisServices.SPClient.Interfaces.IWorkbookSession.TraceVerbose(System.String,System.Object[])">
+            <summary>
+            Write a verbose message to the ULS log.
+            </summary>
+            <param name="message">The parameterized message.</param>
+            <param name="args">Parameters for the message.</param>
+        </member>
+        <member name="M:Microsoft.AnalysisServices.SPClient.Interfaces.IWorkbookSession.TraceWarning(System.String,System.Object[])">
+            <summary>
+            Write a warning to the ULS log.
+            </summary>
+            <param name="message">The parameterized warning message.</param>
+            <param name="args">Parameters for the error message.</param>
+        </member>
+        <member name="T:Microsoft.AnalysisServices.SPClient.Interfaces.SessionLifetimePolicy">
+            <summary>
+            Describes the possible actions that the SPClient should use to manage the lifetime of an Excel Services session.
+            </summary>
+        </member>
+        <member name="F:Microsoft.AnalysisServices.SPClient.Interfaces.SessionLifetimePolicy.None">
+            <summary>
+            Do not actively manage the Excel Services session.
+            </summary>
+        </member>
+        <member name="F:Microsoft.AnalysisServices.SPClient.Interfaces.SessionLifetimePolicy.CloseSessionOnDispose">
+            <summary>
+            Close the Excel Services session when the containing object (i.e. the IWorkbookSession) is disposed.
+            </summary>
+        </member>
+        <member name="F:Microsoft.AnalysisServices.SPClient.Interfaces.SessionLifetimePolicy.KeepActiveSessionAlive">
+            <summary>
+            Keep the Excel Services session from being closed (i.e. via periodic calls to EnsureWorkbookModel) while the containing object is in use.
+            </summary>
+        </member>
+        <member name="F:Microsoft.AnalysisServices.SPClient.Interfaces.SessionLifetimePolicy.VersionCheckOnSave">
+            <summary>
+            Capture the file Etag information on open and validate that the file has not changed if a Save command is issued.
+            </summary>
+        </member>
+        <member name="T:Microsoft.AnalysisServices.SPClient.Interfaces.WorkbookFileFormat">
+            <summary>
+            Represents a specific file format of an Excel workbook, generally corresponding to a major version number of the Excel product.
+            </summary>
+        </member>
+        <member name="F:Microsoft.AnalysisServices.SPClient.Interfaces.WorkbookFileFormat.Unknown">
+            <summary>
+            An unknown recognized workbook version.
+            </summary>
+        </member>
+        <member name="F:Microsoft.AnalysisServices.SPClient.Interfaces.WorkbookFileFormat.Excel2010">
+            <summary>
+            An Excel 2010 (Office 14) workbook.
+            </summary>
+        </member>
+        <member name="F:Microsoft.AnalysisServices.SPClient.Interfaces.WorkbookFileFormat.Excel2013">
+            <summary>
+            An Excel 2013 (Office 15) workbook.
+            </summary>
+        </member>
+        <member name="F:Microsoft.AnalysisServices.SPClient.Interfaces.WorkbookFileFormat.Excel2016">
+            <summary>
+            An Excel 2016 (Office 16) workbook.
+            </summary>
+        </member>
+        <member name="T:Microsoft.AnalysisServices.SPClient.Interfaces.ASSPClientProxyFactory">
+            <summary>
+            Do not use this type or its members, it has been deprecated!
+            </summary>
+        </member>
+        <member name="M:Microsoft.AnalysisServices.SPClient.Interfaces.ASSPClientProxyFactory.CreateProxy">
+            <summary>
+            Do not use this type or its members, it has been deprecated!
+            </summary>
+        </member>
+        <member name="T:Microsoft.AnalysisServices.SPClient.Interfaces.ExcelServicesException">
+            <summary>
+            An exception that wraps an error condition that bubbled up from an Excel Services API call.
+            </summary>
+        </member>
+        <member name="M:Microsoft.AnalysisServices.SPClient.Interfaces.ExcelServicesException.#ctor">
+            <summary>
+            Initializes a new instance of the ExcelServicesException class.
+            </summary>
+        </member>
+        <member name="M:Microsoft.AnalysisServices.SPClient.Interfaces.ExcelServicesException.#ctor(System.String)">
+            <summary>
+            Initializes a new instance of the ExcelServicesException class with a specified error message.
+            </summary>
+            <param name="message">The message that describes the error.</param>
+        </member>
+        <member name="M:Microsoft.AnalysisServices.SPClient.Interfaces.ExcelServicesException.#ctor(System.String,System.Exception)">
+            <summary>
+            Initializes a new instance of the ExcelServicesException class with a specified error message and a reference to the inner exception that is the cause of this exception.
+            </summary>
+            <param name="message">The error message that explains the reason for the exception.</param>
+            <param name="innerException">The exception that is the cause of the current exception, or a null reference (Nothing in Visual Basic) if no inner exception is specified.</param>
+        </member>
+        <member name="M:Microsoft.AnalysisServices.SPClient.Interfaces.ExcelServicesException.#ctor(System.String,System.String,System.String)">
+            <summary>
+            Initializes a new instance of the ExcelServicesException class with an error message based on Excel error information.
+            </summary>
+            <param name="name">The error name</param>
+            <param name="excelStatusMessage">The Excel status message</param>
+            <param name="severity">The error severity</param>
+        </member>
+        <member name="M:Microsoft.AnalysisServices.SPClient.Interfaces.ExcelServicesException.#ctor(System.String,System.Exception,System.String,System.String,System.String)">
+            <summary>
+            Initializes a new instance of the ExcelServicesException class with a specified error message and a reference to the inner exception that is the cause of this exception, as well as Excell error information.
+            </summary>
+            <param name="message">The error message that explains the reason for the exception.</param>
+            <param name="innerException">The exception that is the cause of the current exception, or a null reference (Nothing in Visual Basic) if no inner exception is specified.</param>
+            <param name="name">The error name</param>
+            <param name="excelStatusMessage">The Excel status message</param>
+            <param name="severity">The error severity</param>
+        </member>
+        <member name="M:Microsoft.AnalysisServices.SPClient.Interfaces.ExcelServicesException.GetObjectData(System.Runtime.Serialization.SerializationInfo,System.Runtime.Serialization.StreamingContext)">
+            <summary>
+            Sets the SerializationInfo with information about the exception.
+            </summary>
+            <param name="info">The SerializationInfo that holds the serialized object data about the exception being thrown.</param>
+            <param name="context">The StreamingContext that contains contextual information about the source or destination.</param>
+        </member>
+        <member name="P:Microsoft.AnalysisServices.SPClient.Interfaces.ExcelServicesException.ExcelStatusMessage">
+            <summary>
+            Gets the associated Excel status message
+            </summary>
+            <value>The status message; null if unknown</value>
+        </member>
+        <member name="P:Microsoft.AnalysisServices.SPClient.Interfaces.ExcelServicesException.Name">
+            <summary>
+            Gets the associated Excel error name
+            </summary>
+            <value>The error name; null if unknown</value>
+        </member>
+        <member name="P:Microsoft.AnalysisServices.SPClient.Interfaces.ExcelServicesException.Severity">
+            <summary>
+            Gets the associated Excel error severity
+            </summary>
+            <value>The error severity; null if unknown</value>
+        </member>
+        <member name="T:NoAvailableStreamingServerException">
+            <summary>
+            Do not use this type or its members, it has been deprecated!
+            </summary>
+        </member>
+        <member name="M:NoAvailableStreamingServerException.#ctor">
+            <summary>
+            Do not use this type or its members, it has been deprecated!
+            </summary>
+        </member>
+        <member name="M:NoAvailableStreamingServerException.#ctor(System.String)">
+            <summary>
+            Do not use this type or its members, it has been deprecated!
+            </summary>
+        </member>
+        <member name="M:NoAvailableStreamingServerException.#ctor(System.String,System.Exception)">
+            <summary>
+            Do not use this type or its members, it has been deprecated!
+            </summary>
+        </member>
+        <member name="T:WorkbookModifiedException">
+            <summary>
+            Do not use this type or its members, it has been deprecated!
+            </summary>
+        </member>
+        <member name="M:WorkbookModifiedException.#ctor">
+            <summary>
+            Do not use this type or its members, it has been deprecated!
+            </summary>
+        </member>
+        <member name="M:WorkbookModifiedException.#ctor(System.String)">
+            <summary>
+            Do not use this type or its members, it has been deprecated!
+            </summary>
+        </member>
+        <member name="M:WorkbookModifiedException.#ctor(System.String,System.Exception)">
+            <summary>
+            Do not use this type or its members, it has been deprecated!
+            </summary>
+        </member>
+    </members>
+</doc>
