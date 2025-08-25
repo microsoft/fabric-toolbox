@@ -1420,7 +1420,7 @@ table Metrics
 		displayFolder: Semantic Models\Optimization Module\BPA
 		lineageTag: 71119d44-d242-4b1c-aa17-8606d39b8bc3
 
-	measure 'FUAM Release' = "2025.7.2"
+	measure 'FUAM Release' = "2025.9.1"
 		displayFolder: Meta
 		lineageTag: 186c2aac-d73b-4371-88ae-423e22b84179
 

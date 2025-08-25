@@ -3,7 +3,7 @@
     "version": "4.0",
     "datasetReference": {
         "byConnection": {
-            "connectionString": "Data Source=\"powerbi://api.powerbi.com/v1.0/myorg/FUAM Version 2025-07\";initial catalog=FUAM_SQL_Endpoint_Analyzer_SM;integrated security=ClaimsToken",
+            "connectionString": "Data Source=\"powerbi://api.powerbi.com/v1.0/myorg/FUAM Version 2025.9.1\";initial catalog=FUAM_SQL_Endpoint_Analyzer_SM;integrated security=ClaimsToken",
             "pbiServiceModelId": null,
             "pbiModelVirtualServerName": "sobe_wowvirtualserver",
             "pbiModelDatabaseName": "edca53fc-3c5e-3bae-a64a-4d08db919fb1",

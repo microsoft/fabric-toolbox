@@ -1,10 +1,8 @@
 relationship f6e19d1f-841c-58c8-3502-6427e0c713bc
-	crossFilteringBehavior: bothDirections
 	fromColumn: QueryStartReport_EvaluationContext.RequestTrackingKey
 	toColumn: QueryStartReport.RequestTrackingKey
 
 relationship 922c4691-a018-0c24-10ff-a52a4afe60fa
-	crossFilteringBehavior: bothDirections
 	fromColumn: QueryStartReport_DataSources.RequestTrackingKey
 	toColumn: QueryStartReport.RequestTrackingKey
 
@@ -36,6 +34,7 @@ relationship 5ce9e153-db98-f79e-6b2e-7a62d82f0c0d
 	toColumn: 'Dim Date'.Date
 
 relationship 7bbdaf55-6702-e145-a92d-6c2e7994dcd9
+	crossFilteringBehavior: bothDirections
 	fromColumn: QueryExecutionReport.QueryExecutionEndDate
 	toColumn: 'Dim Date'.Date
 

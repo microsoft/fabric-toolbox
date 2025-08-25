@@ -276,7 +276,7 @@ table Metrics
 			    DIVIDE(AVERAGE(MashupEvaluationReport[AveragePercentProcessorTime]),100),
 			    USERELATIONSHIP(MashupEvaluationReport[EndDate], 'Dim Date'[Date])
 			)
-		formatString: 0.00%;-0.00%;0.00%
+		formatString: 0.00
 		displayFolder: Mashup Evaluation
 		lineageTag: 3e493a7d-4dbf-4197-ad4d-f21d18a9edac
 
@@ -286,7 +286,7 @@ table Metrics
 			    DIVIDE(MAX(MashupEvaluationReport[MaxPercentProcessorTime]),100),
 			    USERELATIONSHIP(MashupEvaluationReport[EndDate], 'Dim Date'[Date])
 			)
-		formatString: 0.00%;-0.00%;0.00%
+		formatString: 0.00
 		displayFolder: Mashup Evaluation
 		lineageTag: 0b24e433-7441-49d0-86dc-987758546ecd
 
@@ -340,6 +340,16 @@ table Metrics
 			```
 		displayFolder: Query Starts
 		lineageTag: 82d1baa9-c6b8-4d2e-9bf6-2a269f72fb30
+
+	measure 'Failed Requests' =
+			
+			CALCULATE(
+			    [Requests],
+			    QueryExecutionReport[Success] = "N"
+			)
+		formatString: #,0
+		displayFolder: Query Execution
+		lineageTag: a5d02728-7191-40db-8af5-e0ca1dbd58fe
 
 	column Value
 		isHidden

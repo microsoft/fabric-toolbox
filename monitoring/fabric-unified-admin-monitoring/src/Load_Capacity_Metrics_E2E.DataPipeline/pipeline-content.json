@@ -164,11 +164,11 @@
             },
             "metric_workspace": {
                 "type": "string",
-                "defaultValue": "FUAM Master DEV"
+                "defaultValue": "Capacity Metrics V44"
             },
             "metric_dataset": {
                 "type": "string",
-                "defaultValue": "CapacityMetricCloneDQ2"
+                "defaultValue": "Fabric Capacity Metrics"
             },
             "display_data": {
                 "type": "bool",

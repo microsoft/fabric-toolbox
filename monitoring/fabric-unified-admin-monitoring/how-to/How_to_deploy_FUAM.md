@@ -35,7 +35,7 @@ The deployment of FUAM can be done with very little effort, since we tried to au
     - _Users can create Fabric items_ for FUAM workspace admin(s) - [learn.microsoft.com](https://learn.microsoft.com/en-us/fabric/admin/fabric-switch)
     - _Allow XMLA endpoints and Analyze in Excel with on-premises semantic models_ – [learn.microsoft.com](https://learn.microsoft.com/en-us/fabric/admin/service-admin-portal-integration#allow-xmla-endpoints-and-analyze-in-excel-with-on-premises-datasets)
 - Fabric Capacity Metrics app (workspace) **with attached P or F-capacity** with **enabled XMLA endpoint** (at least 'Read')
-     - Compatible Versions of the Capacity Metrics App: v.37 or earlier
+     - Compatible Versions of the Capacity Metrics App: v44 or earlier
     - Before updating, please check [this site] to verify which versions of the Capacity Metrics app are compatible with FUAM.
 
 - **Optional:** Ability to access an Azure Key Vault on your tenant
@@ -137,8 +137,8 @@ The Pipeline has different parameters, which are controlling the data load flow:
 |has_tenant_domains|If **true**, the tenant inventory is enriched with domain information. Use it only, if domains are in use at your tenant. **Default is false**        | true or false            |
 |extract_powerbi_artifacts_only|If **true**, the tenant inventory contains **only** semantic models, dataflows, datamarts, reports, dashboard and apps. If **false** the pipeline extracts Power BI **and** Fabric items. Currently, first-party workloads are supported only. **Default is false** | true or false |
 |metric_days_in_scope|Defines how many days should be extracted from the capacity metrics app. A maximum of 14 days can be extracted. For an initial load you can set it to the maximum and in subsequent runs reduce it to 2 days|range between **1** and **14**|
-|metric_workspace|This is the name/id of the workspace where the capacity metrics app was deployed|string|
-|metric_dataset|This is the name/id of the semantic model of the capacity metrics app |string|
+|metric_workspace|This is the name _or_ id of the workspace where the capacity metrics app was deployed|string|
+|metric_dataset|This is the name _or_ id of the semantic model of the capacity metrics app |string|
 |activity_days_in_scope|It defines how many days in the past the activity must be retrieved from the API. Recommended to **use 28 for the initial load** and change the value to **2 for daily load**.| range between **2** and **28** |
 |display_data|If **true**, the notebooks will display more information about each relevant step at runtime. This is useful for debugging. **Default is false**| true or false |
 |optional_keyvault_name|**Optional**: If you have configured a key vault, enter the name of the key vault. Otherwise, simply leave this field blank. In this case, the Load_Inventory module will use the Notebook owner's identity.| empty or string|
