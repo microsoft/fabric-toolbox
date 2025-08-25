@@ -11,7 +11,7 @@ Date: 2025-08-25
 ### 📈 Enhancements
 
 - **Report updates**:
-    - Updated report pages, design, logic of the    
+    - Updated report pages, design, logic of the
         - `FUAM_Gateway_Monitoring_Report_From_Files`
         - `FUAM_SQL_Endpoint_Analyzer_Report`
         - `FUAM_Semantic_Model_Meta_Data_Analyzer_Report`
