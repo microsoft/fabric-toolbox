@@ -2,8 +2,7 @@
     "$schema": "https://developer.microsoft.com/json-schemas/fabric/gitIntegration/platformProperties/2.0.0/schema.json",
     "metadata": {
         "type": "Report",
-        "displayName": "FUAM_Gateway_Monitoring_From_Files_Report",
-        "description": "Imported from fab"
+        "displayName": "FUAM_Gateway_Monitoring_From_Files_Report"
     },
     "config": {
         "version": "2.0",

@@ -112,7 +112,7 @@ table Metrics
 		displayFolder: Helpers
 		lineageTag: 4982637d-2789-45c3-8aee-c3e195d2cd44
 
-	measure 'FUAM Release' = "2025.3.1"
+	measure 'FUAM Release' = "2025.9.1"
 		lineageTag: dd7d61f6-b05f-446e-b555-9239e0fec136
 
 	column Value

@@ -2,7 +2,7 @@ cultureInfo en-US
 
 	linguisticMetadata =
 			{
-			  "Version": "3.5.0",
+			  "Version": "4.1.0",
 			  "Language": "en-US",
 			  "Entities": {
 			    "system_counter_aggregation_report": {
@@ -587,6 +587,16 @@ cultureInfo en-US
 			              "Agent": "Thesaurus"
 			            },
 			            "Weight": 0.599
+			          }
+			        },
+			        {
+			          "Date filter for System Counters": {
+			            "State": "Suggested",
+			            "Source": {
+			              "Type": "External",
+			              "Agent": "PowerBI.VisualColumnRename"
+			            },
+			            "Weight": 0.9
 			          }
 			        }
 			      ],
@@ -1825,17 +1835,7 @@ cultureInfo en-US
 			          }
 			        },
 			        {
-			          "Query Execution EndTime UTC": {
-			            "State": "Suggested",
-			            "Source": {
-			              "Type": "External",
-			              "Agent": "PowerBI.VisualColumnRename"
-			            },
-			            "Weight": 0.9
-			          }
-			        },
-			        {
-			          "Async Requested Query Execution EndTime UTC": {
+			          "End Time UTC (Query Execution)": {
 			            "State": "Suggested",
 			            "Source": {
 			              "Type": "External",
@@ -1994,6 +1994,16 @@ cultureInfo en-US
 			              "Agent": "Thesaurus"
 			            },
 			            "Weight": 0.727
+			          }
+			        },
+			        {
+			          "Request Type": {
+			            "State": "Suggested",
+			            "Source": {
+			              "Type": "External",
+			              "Agent": "PowerBI.VisualColumnRename"
+			            },
+			            "Weight": 0.9
 			          }
 			        }
 			      ]
@@ -2718,6 +2728,16 @@ cultureInfo en-US
 			        },
 			        {
 			          "Data Source Kind": {
+			            "State": "Suggested",
+			            "Source": {
+			              "Type": "External",
+			              "Agent": "PowerBI.VisualColumnRename"
+			            },
+			            "Weight": 0.9
+			          }
+			        },
+			        {
+			          "Data source Kind & Path": {
 			            "State": "Suggested",
 			            "Source": {
 			              "Type": "External",
@@ -4822,16 +4842,6 @@ cultureInfo en-US
 			            },
 			            "Weight": 0.714
 			          }
-			        },
-			        {
-			          "Date (System Counters)": {
-			            "State": "Suggested",
-			            "Source": {
-			              "Type": "External",
-			              "Agent": "PowerBI.VisualColumnRename"
-			            },
-			            "Weight": 0.9
-			          }
 			        }
 			      ],
 			      "SemanticType": "Time"
@@ -5930,7 +5940,7 @@ cultureInfo en-US
 			        }
 			      ]
 			    },
-			    "metrics.query_tracking_ids": {
+			    "metrics.query_trackings": {
 			      "Definition": {
 			        "Binding": {
 			          "ConceptualEntity": "Metrics",
@@ -7897,6 +7907,16 @@ cultureInfo en-US
 			            },
 			            "Weight": 0.714
 			          }
+			        },
+			        {
+			          "Request Status": {
+			            "State": "Suggested",
+			            "Source": {
+			              "Type": "External",
+			              "Agent": "PowerBI.VisualColumnRename"
+			            },
+			            "Weight": 0.9
+			          }
 			        }
 			      ]
 			    },
@@ -8206,6 +8226,16 @@ cultureInfo en-US
 			              "Agent": "Thesaurus"
 			            },
 			            "Weight": 0.739
+			          }
+			        },
+			        {
+			          "Query Execution End Time UTC | 5 Min bin": {
+			            "State": "Suggested",
+			            "Source": {
+			              "Type": "External",
+			              "Agent": "PowerBI.VisualColumnRename"
+			            },
+			            "Weight": 0.9
 			          }
 			        }
 			      ],
@@ -9113,12 +9143,6 @@ cultureInfo en-US
 			          }
 			        },
 			        {
-			          "date": {
-			            "State": "Generated",
-			            "Weight": 0.7
-			          }
-			        },
-			        {
 			          "timestamp": {
 			            "State": "Generated",
 			            "Weight": 0.97
@@ -9622,1384 +9646,6 @@ cultureInfo en-US
 			          }
 			        }
 			      ]
-			    },
-			    "open_connection_report": {
-			      "Definition": {
-			        "Binding": {
-			          "ConceptualEntity": "OpenConnectionReport"
-			        }
-			      },
-			      "State": "Generated",
-			      "Terms": [
-			        {
-			          "open connection report": {
-			            "State": "Generated"
-			          }
-			        },
-			        {
-			          "OpenConnectionReport": {
-			            "Type": "Noun",
-			            "State": "Generated",
-			            "Weight": 0.99
-			          }
-			        },
-			        {
-			          "report": {
-			            "State": "Generated",
-			            "Weight": 0.97
-			          }
-			        },
-			        {
-			          "connection report": {
-			            "State": "Generated",
-			            "Weight": 0.97
-			          }
-			        },
-			        {
-			          "open connection information": {
-			            "Type": "Noun",
-			            "State": "Suggested",
-			            "Source": {
-			              "Agent": "Thesaurus"
-			            },
-			            "Weight": 0.762
-			          }
-			        },
-			        {
-			          "open connection commentary": {
-			            "Type": "Noun",
-			            "State": "Suggested",
-			            "Source": {
-			              "Agent": "Thesaurus"
-			            },
-			            "Weight": 0.762
-			          }
-			        },
-			        {
-			          "open connection description": {
-			            "Type": "Noun",
-			            "State": "Suggested",
-			            "Source": {
-			              "Agent": "Thesaurus"
-			            },
-			            "Weight": 0.762
-			          }
-			        },
-			        {
-			          "open connection presentation": {
-			            "Type": "Noun",
-			            "State": "Suggested",
-			            "Source": {
-			              "Agent": "Thesaurus"
-			            },
-			            "Weight": 0.762
-			          }
-			        },
-			        {
-			          "open connection statement": {
-			            "Type": "Noun",
-			            "State": "Suggested",
-			            "Source": {
-			              "Agent": "Thesaurus"
-			            },
-			            "Weight": 0.762
-			          }
-			        },
-			        {
-			          "connection information": {
-			            "Type": "Noun",
-			            "State": "Suggested",
-			            "Source": {
-			              "Agent": "Thesaurus"
-			            },
-			            "Weight": 0.75
-			          }
-			        },
-			        {
-			          "connection commentary": {
-			            "Type": "Noun",
-			            "State": "Suggested",
-			            "Source": {
-			              "Agent": "Thesaurus"
-			            },
-			            "Weight": 0.75
-			          }
-			        },
-			        {
-			          "connection description": {
-			            "Type": "Noun",
-			            "State": "Suggested",
-			            "Source": {
-			              "Agent": "Thesaurus"
-			            },
-			            "Weight": 0.75
-			          }
-			        },
-			        {
-			          "connection presentation": {
-			            "Type": "Noun",
-			            "State": "Suggested",
-			            "Source": {
-			              "Agent": "Thesaurus"
-			            },
-			            "Weight": 0.75
-			          }
-			        },
-			        {
-			          "connection statement": {
-			            "Type": "Noun",
-			            "State": "Suggested",
-			            "Source": {
-			              "Agent": "Thesaurus"
-			            },
-			            "Weight": 0.75
-			          }
-			        }
-			      ]
-			    },
-			    "open_connection_report.gateway_object_id": {
-			      "Definition": {
-			        "Binding": {
-			          "ConceptualEntity": "OpenConnectionReport",
-			          "ConceptualProperty": "GatewayObjectId"
-			        }
-			      },
-			      "State": "Generated",
-			      "Terms": [
-			        {
-			          "gateway object id": {
-			            "State": "Generated"
-			          }
-			        },
-			        {
-			          "GatewayObjectId": {
-			            "Type": "Noun",
-			            "State": "Generated",
-			            "Weight": 0.99
-			          }
-			        },
-			        {
-			          "object": {
-			            "State": "Generated",
-			            "Weight": 0.97
-			          }
-			        },
-			        {
-			          "gateway object": {
-			            "State": "Generated",
-			            "Weight": 0.97
-			          }
-			        },
-			        {
-			          "object id": {
-			            "State": "Generated",
-			            "Weight": 0.97
-			          }
-			        },
-			        {
-			          "gateway object identification": {
-			            "Type": "Noun",
-			            "State": "Suggested",
-			            "Source": {
-			              "Agent": "Thesaurus"
-			            },
-			            "Weight": 0.762
-			          }
-			        },
-			        {
-			          "gateway object identity": {
-			            "Type": "Noun",
-			            "State": "Suggested",
-			            "Source": {
-			              "Agent": "Thesaurus"
-			            },
-			            "Weight": 0.762
-			          }
-			        },
-			        {
-			          "gateway object identifier": {
-			            "Type": "Noun",
-			            "State": "Suggested",
-			            "Source": {
-			              "Agent": "Thesaurus"
-			            },
-			            "Weight": 0.762
-			          }
-			        },
-			        {
-			          "object identification": {
-			            "Type": "Noun",
-			            "State": "Suggested",
-			            "Source": {
-			              "Agent": "Thesaurus"
-			            },
-			            "Weight": 0.75
-			          }
-			        },
-			        {
-			          "object identity": {
-			            "Type": "Noun",
-			            "State": "Suggested",
-			            "Source": {
-			              "Agent": "Thesaurus"
-			            },
-			            "Weight": 0.75
-			          }
-			        },
-			        {
-			          "object identifier": {
-			            "Type": "Noun",
-			            "State": "Suggested",
-			            "Source": {
-			              "Agent": "Thesaurus"
-			            },
-			            "Weight": 0.75
-			          }
-			        },
-			        {
-			          "gateway object credential": {
-			            "Type": "Noun",
-			            "State": "Suggested",
-			            "Source": {
-			              "Agent": "Thesaurus"
-			            },
-			            "Weight": 0.739
-			          }
-			        },
-			        {
-			          "object credential": {
-			            "Type": "Noun",
-			            "State": "Suggested",
-			            "Source": {
-			              "Agent": "Thesaurus"
-			            },
-			            "Weight": 0.727
-			          }
-			        },
-			        {
-			          "gateway thing": {
-			            "Type": "Noun",
-			            "State": "Suggested",
-			            "Source": {
-			              "Agent": "Thesaurus"
-			            },
-			            "Weight": 0.5
-			          }
-			        },
-			        {
-			          "gateway entity": {
-			            "Type": "Noun",
-			            "State": "Suggested",
-			            "Source": {
-			              "Agent": "Thesaurus"
-			            },
-			            "Weight": 0.5
-			          }
-			        }
-			      ]
-			    },
-			    "open_connection_report.request_id": {
-			      "Definition": {
-			        "Binding": {
-			          "ConceptualEntity": "OpenConnectionReport",
-			          "ConceptualProperty": "RequestId"
-			        }
-			      },
-			      "State": "Generated",
-			      "Terms": [
-			        {
-			          "request id": {
-			            "State": "Generated"
-			          }
-			        },
-			        {
-			          "RequestId": {
-			            "Type": "Noun",
-			            "State": "Generated",
-			            "Weight": 0.99
-			          }
-			        },
-			        {
-			          "request": {
-			            "State": "Generated",
-			            "Weight": 0.97
-			          }
-			        },
-			        {
-			          "request identification": {
-			            "Type": "Noun",
-			            "State": "Suggested",
-			            "Source": {
-			              "Agent": "Thesaurus"
-			            },
-			            "Weight": 0.75
-			          }
-			        },
-			        {
-			          "request identity": {
-			            "Type": "Noun",
-			            "State": "Suggested",
-			            "Source": {
-			              "Agent": "Thesaurus"
-			            },
-			            "Weight": 0.75
-			          }
-			        },
-			        {
-			          "request identifier": {
-			            "Type": "Noun",
-			            "State": "Suggested",
-			            "Source": {
-			              "Agent": "Thesaurus"
-			            },
-			            "Weight": 0.75
-			          }
-			        },
-			        {
-			          "request credential": {
-			            "Type": "Noun",
-			            "State": "Suggested",
-			            "Source": {
-			              "Agent": "Thesaurus"
-			            },
-			            "Weight": 0.727
-			          }
-			        },
-			        {
-			          "entreaty": {
-			            "Type": "Noun",
-			            "State": "Suggested",
-			            "Source": {
-			              "Agent": "Thesaurus"
-			            },
-			            "Weight": 0.491
-			          }
-			        },
-			        {
-			          "invitation": {
-			            "Type": "Noun",
-			            "State": "Suggested",
-			            "Source": {
-			              "Agent": "Thesaurus"
-			            },
-			            "Weight": 0.491
-			          }
-			        },
-			        {
-			          "appeal": {
-			            "Type": "Noun",
-			            "State": "Suggested",
-			            "Source": {
-			              "Agent": "Thesaurus"
-			            },
-			            "Weight": 0.476
-			          }
-			        },
-			        {
-			          "demand": {
-			            "Type": "Noun",
-			            "State": "Suggested",
-			            "Source": {
-			              "Agent": "Thesaurus"
-			            },
-			            "Weight": 0.476
-			          }
-			        },
-			        {
-			          "application": {
-			            "Type": "Noun",
-			            "State": "Suggested",
-			            "Source": {
-			              "Agent": "Thesaurus"
-			            },
-			            "Weight": 0.476
-			          }
-			        },
-			        {
-			          "wish": {
-			            "Type": "Noun",
-			            "State": "Suggested",
-			            "Source": {
-			              "Agent": "Thesaurus"
-			            },
-			            "Weight": 0.476
-			          }
-			        }
-			      ]
-			    },
-			    "open_connection_report.data_source": {
-			      "Definition": {
-			        "Binding": {
-			          "ConceptualEntity": "OpenConnectionReport",
-			          "ConceptualProperty": "DataSource"
-			        }
-			      },
-			      "State": "Generated",
-			      "Terms": [
-			        {
-			          "data source": {
-			            "State": "Generated"
-			          }
-			        },
-			        {
-			          "DataSource": {
-			            "Type": "Noun",
-			            "State": "Generated",
-			            "Weight": 0.99
-			          }
-			        },
-			        {
-			          "source": {
-			            "State": "Generated",
-			            "Weight": 0.97
-			          }
-			        },
-			        {
-			          "data origin": {
-			            "Type": "Noun",
-			            "State": "Suggested",
-			            "Source": {
-			              "Agent": "Thesaurus"
-			            },
-			            "Weight": 0.6
-			          }
-			        },
-			        {
-			          "data resource": {
-			            "Type": "Noun",
-			            "State": "Suggested",
-			            "Source": {
-			              "Agent": "Thesaurus"
-			            },
-			            "Weight": 0.6
-			          }
-			        },
-			        {
-			          "data src": {
-			            "Type": "Noun",
-			            "State": "Suggested",
-			            "Source": {
-			              "Agent": "Thesaurus"
-			            },
-			            "Weight": 0.6
-			          }
-			        },
-			        {
-			          "database source": {
-			            "Type": "Noun",
-			            "State": "Suggested",
-			            "Source": {
-			              "Agent": "Thesaurus"
-			            },
-			            "Weight": 0.6
-			          }
-			        },
-			        {
-			          "information source": {
-			            "Type": "Noun",
-			            "State": "Suggested",
-			            "Source": {
-			              "Agent": "Thesaurus"
-			            },
-			            "Weight": 0.6
-			          }
-			        },
-			        {
-			          "fact source": {
-			            "Type": "Noun",
-			            "State": "Suggested",
-			            "Source": {
-			              "Agent": "Thesaurus"
-			            },
-			            "Weight": 0.6
-			          }
-			        },
-			        {
-			          "info source": {
-			            "Type": "Noun",
-			            "State": "Suggested",
-			            "Source": {
-			              "Agent": "Thesaurus"
-			            },
-			            "Weight": 0.6
-			          }
-			        },
-			        {
-			          "statistic source": {
-			            "Type": "Noun",
-			            "State": "Suggested",
-			            "Source": {
-			              "Agent": "Thesaurus"
-			            },
-			            "Weight": 0.6
-			          }
-			        },
-			        {
-			          "document source": {
-			            "Type": "Noun",
-			            "State": "Suggested",
-			            "Source": {
-			              "Agent": "Thesaurus"
-			            },
-			            "Weight": 0.582
-			          }
-			        },
-			        {
-			          "figure source": {
-			            "Type": "Noun",
-			            "State": "Suggested",
-			            "Source": {
-			              "Agent": "Thesaurus"
-			            },
-			            "Weight": 0.582
-			          }
-			        }
-			      ]
-			    },
-			    "open_connection_report.provider_name": {
-			      "Definition": {
-			        "Binding": {
-			          "ConceptualEntity": "OpenConnectionReport",
-			          "ConceptualProperty": "ProviderName"
-			        }
-			      },
-			      "State": "Generated",
-			      "Terms": [
-			        {
-			          "provider name": {
-			            "State": "Generated"
-			          }
-			        },
-			        {
-			          "ProviderName": {
-			            "Type": "Noun",
-			            "State": "Generated",
-			            "Weight": 0.99
-			          }
-			        },
-			        {
-			          "provider": {
-			            "State": "Generated",
-			            "Weight": 0.97
-			          }
-			        },
-			        {
-			          "provider nickname": {
-			            "Type": "Noun",
-			            "State": "Suggested",
-			            "Source": {
-			              "Agent": "Thesaurus"
-			            },
-			            "Weight": 0.727
-			          }
-			        },
-			        {
-			          "provider title": {
-			            "Type": "Noun",
-			            "State": "Suggested",
-			            "Source": {
-			              "Agent": "Thesaurus"
-			            },
-			            "Weight": 0.727
-			          }
-			        },
-			        {
-			          "provider label": {
-			            "Type": "Noun",
-			            "State": "Suggested",
-			            "Source": {
-			              "Agent": "Thesaurus"
-			            },
-			            "Weight": 0.727
-			          }
-			        },
-			        {
-			          "provider tag": {
-			            "Type": "Noun",
-			            "State": "Suggested",
-			            "Source": {
-			              "Agent": "Thesaurus"
-			            },
-			            "Weight": 0.727
-			          }
-			        },
-			        {
-			          "breadwinner": {
-			            "Type": "Noun",
-			            "State": "Suggested",
-			            "Source": {
-			              "Agent": "Thesaurus"
-			            },
-			            "Weight": 0.491
-			          }
-			        },
-			        {
-			          "earner": {
-			            "Type": "Noun",
-			            "State": "Suggested",
-			            "Source": {
-			              "Agent": "Thesaurus"
-			            },
-			            "Weight": 0.491
-			          }
-			        },
-			        {
-			          "worker": {
-			            "Type": "Noun",
-			            "State": "Suggested",
-			            "Source": {
-			              "Agent": "Thesaurus"
-			            },
-			            "Weight": 0.491
-			          }
-			        },
-			        {
-			          "benefactor": {
-			            "Type": "Noun",
-			            "State": "Suggested",
-			            "Source": {
-			              "Agent": "Thesaurus"
-			            },
-			            "Weight": 0.491
-			          }
-			        },
-			        {
-			          "wage-earner": {
-			            "Type": "Noun",
-			            "State": "Suggested",
-			            "Source": {
-			              "Agent": "Thesaurus"
-			            },
-			            "Weight": 0.476
-			          }
-			        },
-			        {
-			          "supplier": {
-			            "Type": "Noun",
-			            "State": "Suggested",
-			            "Source": {
-			              "Agent": "Thesaurus"
-			            },
-			            "Weight": 0.466
-			          }
-			        }
-			      ]
-			    },
-			    "open_connection_report.open_connection_tracking_id": {
-			      "Definition": {
-			        "Binding": {
-			          "ConceptualEntity": "OpenConnectionReport",
-			          "ConceptualProperty": "OpenConnectionTrackingId"
-			        }
-			      },
-			      "State": "Generated",
-			      "Terms": [
-			        {
-			          "open connection tracking id": {
-			            "State": "Generated"
-			          }
-			        },
-			        {
-			          "OpenConnectionTrackingId": {
-			            "Type": "Noun",
-			            "State": "Generated",
-			            "Weight": 0.99
-			          }
-			        },
-			        {
-			          "tracking": {
-			            "State": "Generated",
-			            "Weight": 0.97
-			          }
-			        },
-			        {
-			          "connection tracking": {
-			            "State": "Generated",
-			            "Weight": 0.97
-			          }
-			        },
-			        {
-			          "open connection tracking": {
-			            "State": "Generated",
-			            "Weight": 0.97
-			          }
-			        },
-			        {
-			          "tracking id": {
-			            "State": "Generated",
-			            "Weight": 0.97
-			          }
-			        },
-			        {
-			          "connection tracking id": {
-			            "State": "Generated",
-			            "Weight": 0.97
-			          }
-			        },
-			        {
-			          "open connection tracking identification": {
-			            "Type": "Noun",
-			            "State": "Suggested",
-			            "Source": {
-			              "Agent": "Thesaurus"
-			            },
-			            "Weight": 0.771
-			          }
-			        },
-			        {
-			          "open connection tracking identity": {
-			            "Type": "Noun",
-			            "State": "Suggested",
-			            "Source": {
-			              "Agent": "Thesaurus"
-			            },
-			            "Weight": 0.771
-			          }
-			        },
-			        {
-			          "open connection tracking identifier": {
-			            "Type": "Noun",
-			            "State": "Suggested",
-			            "Source": {
-			              "Agent": "Thesaurus"
-			            },
-			            "Weight": 0.771
-			          }
-			        },
-			        {
-			          "connection tracking identification": {
-			            "Type": "Noun",
-			            "State": "Suggested",
-			            "Source": {
-			              "Agent": "Thesaurus"
-			            },
-			            "Weight": 0.762
-			          }
-			        },
-			        {
-			          "connection tracking identity": {
-			            "Type": "Noun",
-			            "State": "Suggested",
-			            "Source": {
-			              "Agent": "Thesaurus"
-			            },
-			            "Weight": 0.762
-			          }
-			        },
-			        {
-			          "connection tracking identifier": {
-			            "Type": "Noun",
-			            "State": "Suggested",
-			            "Source": {
-			              "Agent": "Thesaurus"
-			            },
-			            "Weight": 0.762
-			          }
-			        },
-			        {
-			          "tracking identification": {
-			            "Type": "Noun",
-			            "State": "Suggested",
-			            "Source": {
-			              "Agent": "Thesaurus"
-			            },
-			            "Weight": 0.75
-			          }
-			        },
-			        {
-			          "tracking identity": {
-			            "Type": "Noun",
-			            "State": "Suggested",
-			            "Source": {
-			              "Agent": "Thesaurus"
-			            },
-			            "Weight": 0.75
-			          }
-			        },
-			        {
-			          "tracking identifier": {
-			            "Type": "Noun",
-			            "State": "Suggested",
-			            "Source": {
-			              "Agent": "Thesaurus"
-			            },
-			            "Weight": 0.75
-			          }
-			        },
-			        {
-			          "open connection tracking credential": {
-			            "Type": "Noun",
-			            "State": "Suggested",
-			            "Source": {
-			              "Agent": "Thesaurus"
-			            },
-			            "Weight": 0.748
-			          }
-			        }
-			      ]
-			    },
-			    "open_connection_report.open_connection_start_time_UTC": {
-			      "Definition": {
-			        "Binding": {
-			          "ConceptualEntity": "OpenConnectionReport",
-			          "ConceptualProperty": "OpenConnectionStartTimeUTC"
-			        }
-			      },
-			      "State": "Generated",
-			      "Terms": [
-			        {
-			          "open connection start time UTC": {
-			            "State": "Generated"
-			          }
-			        },
-			        {
-			          "OpenConnectionStartTimeUTC": {
-			            "Type": "Noun",
-			            "State": "Generated",
-			            "Weight": 0.99
-			          }
-			        },
-			        {
-			          "date": {
-			            "State": "Generated",
-			            "Weight": 0.7
-			          }
-			        },
-			        {
-			          "UTC": {
-			            "State": "Generated",
-			            "Weight": 0.97
-			          }
-			        },
-			        {
-			          "time UTC": {
-			            "State": "Generated",
-			            "Weight": 0.97
-			          }
-			        },
-			        {
-			          "start time UTC": {
-			            "State": "Generated",
-			            "Weight": 0.97
-			          }
-			        },
-			        {
-			          "connection start time UTC": {
-			            "State": "Generated",
-			            "Weight": 0.97
-			          }
-			        },
-			        {
-			          "open connection start duration utc": {
-			            "Type": "Noun",
-			            "State": "Suggested",
-			            "Source": {
-			              "Agent": "Thesaurus"
-			            },
-			            "Weight": 0.624
-			          }
-			        },
-			        {
-			          "open connection start interval utc": {
-			            "Type": "Noun",
-			            "State": "Suggested",
-			            "Source": {
-			              "Agent": "Thesaurus"
-			            },
-			            "Weight": 0.624
-			          }
-			        },
-			        {
-			          "open connection start moment utc": {
-			            "Type": "Noun",
-			            "State": "Suggested",
-			            "Source": {
-			              "Agent": "Thesaurus"
-			            },
-			            "Weight": 0.624
-			          }
-			        },
-			        {
-			          "connection start duration utc": {
-			            "Type": "Noun",
-			            "State": "Suggested",
-			            "Source": {
-			              "Agent": "Thesaurus"
-			            },
-			            "Weight": 0.617
-			          }
-			        },
-			        {
-			          "connection start interval utc": {
-			            "Type": "Noun",
-			            "State": "Suggested",
-			            "Source": {
-			              "Agent": "Thesaurus"
-			            },
-			            "Weight": 0.617
-			          }
-			        },
-			        {
-			          "connection start moment utc": {
-			            "Type": "Noun",
-			            "State": "Suggested",
-			            "Source": {
-			              "Agent": "Thesaurus"
-			            },
-			            "Weight": 0.617
-			          }
-			        },
-			        {
-			          "start duration utc": {
-			            "Type": "Noun",
-			            "State": "Suggested",
-			            "Source": {
-			              "Agent": "Thesaurus"
-			            },
-			            "Weight": 0.609
-			          }
-			        },
-			        {
-			          "start interval utc": {
-			            "Type": "Noun",
-			            "State": "Suggested",
-			            "Source": {
-			              "Agent": "Thesaurus"
-			            },
-			            "Weight": 0.609
-			          }
-			        },
-			        {
-			          "start moment utc": {
-			            "Type": "Noun",
-			            "State": "Suggested",
-			            "Source": {
-			              "Agent": "Thesaurus"
-			            },
-			            "Weight": 0.609
-			          }
-			        },
-			        {
-			          "open connection start period utc": {
-			            "Type": "Noun",
-			            "State": "Suggested",
-			            "Source": {
-			              "Agent": "Thesaurus"
-			            },
-			            "Weight": 0.605
-			          }
-			        }
-			      ],
-			      "SemanticType": "Time"
-			    },
-			    "open_connection_report.OpenConnectionDurationms": {
-			      "Definition": {
-			        "Binding": {
-			          "ConceptualEntity": "OpenConnectionReport",
-			          "ConceptualProperty": "OpenConnectionDuration(ms)"
-			        }
-			      },
-			      "State": "Generated",
-			      "Terms": [
-			        {
-			          "OpenConnectionDuration(ms)": {
-			            "State": "Generated"
-			          }
-			        },
-			        {
-			          "OpenConnectionDuration": {
-			            "State": "Generated",
-			            "Weight": 0.75
-			          }
-			        }
-			      ]
-			    },
-			    "open_connection_report.success": {
-			      "Definition": {
-			        "Binding": {
-			          "ConceptualEntity": "OpenConnectionReport",
-			          "ConceptualProperty": "Success"
-			        }
-			      },
-			      "State": "Generated",
-			      "Terms": [
-			        {
-			          "success": {
-			            "State": "Generated"
-			          }
-			        },
-			        {
-			          "achievement": {
-			            "Type": "Noun",
-			            "State": "Suggested",
-			            "Source": {
-			              "Agent": "Thesaurus"
-			            },
-			            "Weight": 0.491
-			          }
-			        },
-			        {
-			          "accomplishment": {
-			            "Type": "Noun",
-			            "State": "Suggested",
-			            "Source": {
-			              "Agent": "Thesaurus"
-			            },
-			            "Weight": 0.491
-			          }
-			        },
-			        {
-			          "realization": {
-			            "Type": "Noun",
-			            "State": "Suggested",
-			            "Source": {
-			              "Agent": "Thesaurus"
-			            },
-			            "Weight": 0.491
-			          }
-			        },
-			        {
-			          "attainment": {
-			            "Type": "Noun",
-			            "State": "Suggested",
-			            "Source": {
-			              "Agent": "Thesaurus"
-			            },
-			            "Weight": 0.491
-			          }
-			        },
-			        {
-			          "victory": {
-			            "Type": "Noun",
-			            "State": "Suggested",
-			            "Source": {
-			              "Agent": "Thesaurus"
-			            },
-			            "Weight": 0.476
-			          }
-			        },
-			        {
-			          "triumph": {
-			            "Type": "Noun",
-			            "State": "Suggested",
-			            "Source": {
-			              "Agent": "Thesaurus"
-			            },
-			            "Weight": 0.476
-			          }
-			        },
-			        {
-			          "feat": {
-			            "Type": "Noun",
-			            "State": "Suggested",
-			            "Source": {
-			              "Agent": "Thesaurus"
-			            },
-			            "Weight": 0.476
-			          }
-			        },
-			        {
-			          "winner": {
-			            "Type": "Noun",
-			            "State": "Suggested",
-			            "Source": {
-			              "Agent": "Thesaurus"
-			            },
-			            "Weight": 0.466
-			          }
-			        },
-			        {
-			          "sensation": {
-			            "Type": "Noun",
-			            "State": "Suggested",
-			            "Source": {
-			              "Agent": "Thesaurus"
-			            },
-			            "Weight": 0.466
-			          }
-			        },
-			        {
-			          "hit": {
-			            "Type": "Noun",
-			            "State": "Suggested",
-			            "Source": {
-			              "Agent": "Thesaurus"
-			            },
-			            "Weight": 0.452
-			          }
-			        }
-			      ]
-			    },
-			    "open_connection_report.error_message": {
-			      "Definition": {
-			        "Binding": {
-			          "ConceptualEntity": "OpenConnectionReport",
-			          "ConceptualProperty": "ErrorMessage"
-			        }
-			      },
-			      "State": "Generated",
-			      "Terms": [
-			        {
-			          "error message": {
-			            "State": "Generated"
-			          }
-			        },
-			        {
-			          "ErrorMessage": {
-			            "Type": "Noun",
-			            "State": "Generated",
-			            "Weight": 0.99
-			          }
-			        },
-			        {
-			          "message": {
-			            "State": "Generated",
-			            "Weight": 0.97
-			          }
-			        },
-			        {
-			          "error memo": {
-			            "Type": "Noun",
-			            "State": "Suggested",
-			            "Source": {
-			              "Agent": "Thesaurus"
-			            },
-			            "Weight": 0.5
-			          }
-			        },
-			        {
-			          "error memorandum": {
-			            "Type": "Noun",
-			            "State": "Suggested",
-			            "Source": {
-			              "Agent": "Thesaurus"
-			            },
-			            "Weight": 0.5
-			          }
-			        },
-			        {
-			          "error missive": {
-			            "Type": "Noun",
-			            "State": "Suggested",
-			            "Source": {
-			              "Agent": "Thesaurus"
-			            },
-			            "Weight": 0.5
-			          }
-			        },
-			        {
-			          "memo": {
-			            "Type": "Noun",
-			            "State": "Suggested",
-			            "Source": {
-			              "Agent": "Thesaurus"
-			            },
-			            "Weight": 0.491
-			          }
-			        },
-			        {
-			          "memorandum": {
-			            "Type": "Noun",
-			            "State": "Suggested",
-			            "Source": {
-			              "Agent": "Thesaurus"
-			            },
-			            "Weight": 0.491
-			          }
-			        },
-			        {
-			          "missive": {
-			            "Type": "Noun",
-			            "State": "Suggested",
-			            "Source": {
-			              "Agent": "Thesaurus"
-			            },
-			            "Weight": 0.491
-			          }
-			        },
-			        {
-			          "error communication": {
-			            "Type": "Noun",
-			            "State": "Suggested",
-			            "Source": {
-			              "Agent": "Thesaurus"
-			            },
-			            "Weight": 0.485
-			          }
-			        },
-			        {
-			          "error note": {
-			            "Type": "Noun",
-			            "State": "Suggested",
-			            "Source": {
-			              "Agent": "Thesaurus"
-			            },
-			            "Weight": 0.485
-			          }
-			        },
-			        {
-			          "error letter": {
-			            "Type": "Noun",
-			            "State": "Suggested",
-			            "Source": {
-			              "Agent": "Thesaurus"
-			            },
-			            "Weight": 0.485
-			          }
-			        },
-			        {
-			          "error dispatch": {
-			            "Type": "Noun",
-			            "State": "Suggested",
-			            "Source": {
-			              "Agent": "Thesaurus"
-			            },
-			            "Weight": 0.485
-			          }
-			        }
-			      ]
-			    },
-			    "open_connection_report.open_connection_start_date": {
-			      "Definition": {
-			        "Binding": {
-			          "ConceptualEntity": "OpenConnectionReport",
-			          "ConceptualProperty": "OpenConnectionStartDate"
-			        }
-			      },
-			      "State": "Generated",
-			      "Terms": [
-			        {
-			          "open connection start date": {
-			            "State": "Generated"
-			          }
-			        },
-			        {
-			          "OpenConnectionStartDate": {
-			            "Type": "Noun",
-			            "State": "Generated",
-			            "Weight": 0.99
-			          }
-			        },
-			        {
-			          "date": {
-			            "State": "Generated",
-			            "Weight": 0.7
-			          }
-			        },
-			        {
-			          "start date": {
-			            "State": "Generated",
-			            "Weight": 0.97
-			          }
-			        },
-			        {
-			          "connection start date": {
-			            "State": "Generated",
-			            "Weight": 0.97
-			          }
-			        },
-			        {
-			          "open connection start moment": {
-			            "Type": "Noun",
-			            "State": "Suggested",
-			            "Source": {
-			              "Agent": "Thesaurus"
-			            },
-			            "Weight": 0.771
-			          }
-			        },
-			        {
-			          "connection start moment": {
-			            "Type": "Noun",
-			            "State": "Suggested",
-			            "Source": {
-			              "Agent": "Thesaurus"
-			            },
-			            "Weight": 0.762
-			          }
-			        },
-			        {
-			          "start moment": {
-			            "Type": "Noun",
-			            "State": "Suggested",
-			            "Source": {
-			              "Agent": "Thesaurus"
-			            },
-			            "Weight": 0.75
-			          }
-			        },
-			        {
-			          "open connection start period": {
-			            "Type": "Noun",
-			            "State": "Suggested",
-			            "Source": {
-			              "Agent": "Thesaurus"
-			            },
-			            "Weight": 0.748
-			          }
-			        },
-			        {
-			          "connection start period": {
-			            "Type": "Noun",
-			            "State": "Suggested",
-			            "Source": {
-			              "Agent": "Thesaurus"
-			            },
-			            "Weight": 0.739
-			          }
-			        },
-			        {
-			          "start period": {
-			            "Type": "Noun",
-			            "State": "Suggested",
-			            "Source": {
-			              "Agent": "Thesaurus"
-			            },
-			            "Weight": 0.727
-			          }
-			        },
-			        {
-			          "open connection commencement date": {
-			            "Type": "Noun",
-			            "State": "Suggested",
-			            "Source": {
-			              "Agent": "Thesaurus"
-			            },
-			            "Weight": 0.629
-			          }
-			        },
-			        {
-			          "open connection inception date": {
-			            "Type": "Noun",
-			            "State": "Suggested",
-			            "Source": {
-			              "Agent": "Thesaurus"
-			            },
-			            "Weight": 0.629
-			          }
-			        },
-			        {
-			          "open connection kickoff date": {
-			            "Type": "Noun",
-			            "State": "Suggested",
-			            "Source": {
-			              "Agent": "Thesaurus"
-			            },
-			            "Weight": 0.629
-			          }
-			        },
-			        {
-			          "connection commencement date": {
-			            "Type": "Noun",
-			            "State": "Suggested",
-			            "Source": {
-			              "Agent": "Thesaurus"
-			            },
-			            "Weight": 0.615
-			          }
-			        }
-			      ],
-			      "SemanticType": "Time"
 			    },
 			    "mashup_evaluation_report": {
 			      "Definition": {
@@ -11827,6 +10473,16 @@ cultureInfo en-US
 			              "Agent": "Thesaurus"
 			            },
 			            "Weight": 0.582
+			          }
+			        },
+			        {
+			          "TotalRows Array": {
+			            "State": "Suggested",
+			            "Source": {
+			              "Type": "External",
+			              "Agent": "PowerBI.VisualColumnRename"
+			            },
+			            "Weight": 0.9
 			          }
 			        }
 			      ]
@@ -12836,990 +11492,6 @@ cultureInfo en-US
 			      ],
 			      "SemanticType": "Time"
 			    },
-			    "concurrent_operation_aggregation_report": {
-			      "Definition": {
-			        "Binding": {
-			          "ConceptualEntity": "ConcurrentOperationAggregationReport"
-			        }
-			      },
-			      "State": "Generated",
-			      "Terms": [
-			        {
-			          "concurrent operation aggregation report": {
-			            "State": "Generated"
-			          }
-			        },
-			        {
-			          "ConcurrentOperationAggregationReport": {
-			            "Type": "Noun",
-			            "State": "Generated",
-			            "Weight": 0.99
-			          }
-			        },
-			        {
-			          "report": {
-			            "State": "Generated",
-			            "Weight": 0.97
-			          }
-			        },
-			        {
-			          "aggregation report": {
-			            "State": "Generated",
-			            "Weight": 0.97
-			          }
-			        },
-			        {
-			          "operation aggregation report": {
-			            "State": "Generated",
-			            "Weight": 0.97
-			          }
-			        },
-			        {
-			          "concurrent operation aggregation information": {
-			            "Type": "Noun",
-			            "State": "Suggested",
-			            "Source": {
-			              "Agent": "Thesaurus"
-			            },
-			            "Weight": 0.771
-			          }
-			        },
-			        {
-			          "concurrent operation aggregation commentary": {
-			            "Type": "Noun",
-			            "State": "Suggested",
-			            "Source": {
-			              "Agent": "Thesaurus"
-			            },
-			            "Weight": 0.771
-			          }
-			        },
-			        {
-			          "concurrent operation aggregation description": {
-			            "Type": "Noun",
-			            "State": "Suggested",
-			            "Source": {
-			              "Agent": "Thesaurus"
-			            },
-			            "Weight": 0.771
-			          }
-			        },
-			        {
-			          "concurrent operation aggregation presentation": {
-			            "Type": "Noun",
-			            "State": "Suggested",
-			            "Source": {
-			              "Agent": "Thesaurus"
-			            },
-			            "Weight": 0.771
-			          }
-			        },
-			        {
-			          "concurrent operation aggregation statement": {
-			            "Type": "Noun",
-			            "State": "Suggested",
-			            "Source": {
-			              "Agent": "Thesaurus"
-			            },
-			            "Weight": 0.771
-			          }
-			        },
-			        {
-			          "operation aggregation information": {
-			            "Type": "Noun",
-			            "State": "Suggested",
-			            "Source": {
-			              "Agent": "Thesaurus"
-			            },
-			            "Weight": 0.762
-			          }
-			        },
-			        {
-			          "operation aggregation commentary": {
-			            "Type": "Noun",
-			            "State": "Suggested",
-			            "Source": {
-			              "Agent": "Thesaurus"
-			            },
-			            "Weight": 0.762
-			          }
-			        },
-			        {
-			          "operation aggregation description": {
-			            "Type": "Noun",
-			            "State": "Suggested",
-			            "Source": {
-			              "Agent": "Thesaurus"
-			            },
-			            "Weight": 0.762
-			          }
-			        },
-			        {
-			          "operation aggregation presentation": {
-			            "Type": "Noun",
-			            "State": "Suggested",
-			            "Source": {
-			              "Agent": "Thesaurus"
-			            },
-			            "Weight": 0.762
-			          }
-			        },
-			        {
-			          "operation aggregation statement": {
-			            "Type": "Noun",
-			            "State": "Suggested",
-			            "Source": {
-			              "Agent": "Thesaurus"
-			            },
-			            "Weight": 0.762
-			          }
-			        }
-			      ]
-			    },
-			    "concurrent_operation_aggregation_report.gateway_object_id": {
-			      "Definition": {
-			        "Binding": {
-			          "ConceptualEntity": "ConcurrentOperationAggregationReport",
-			          "ConceptualProperty": "GatewayObjectId"
-			        }
-			      },
-			      "State": "Generated",
-			      "Terms": [
-			        {
-			          "gateway object id": {
-			            "State": "Generated"
-			          }
-			        },
-			        {
-			          "GatewayObjectId": {
-			            "Type": "Noun",
-			            "State": "Generated",
-			            "Weight": 0.99
-			          }
-			        },
-			        {
-			          "object": {
-			            "State": "Generated",
-			            "Weight": 0.97
-			          }
-			        },
-			        {
-			          "gateway object": {
-			            "State": "Generated",
-			            "Weight": 0.97
-			          }
-			        },
-			        {
-			          "object id": {
-			            "State": "Generated",
-			            "Weight": 0.97
-			          }
-			        },
-			        {
-			          "gateway object identification": {
-			            "Type": "Noun",
-			            "State": "Suggested",
-			            "Source": {
-			              "Agent": "Thesaurus"
-			            },
-			            "Weight": 0.762
-			          }
-			        },
-			        {
-			          "gateway object identity": {
-			            "Type": "Noun",
-			            "State": "Suggested",
-			            "Source": {
-			              "Agent": "Thesaurus"
-			            },
-			            "Weight": 0.762
-			          }
-			        },
-			        {
-			          "gateway object identifier": {
-			            "Type": "Noun",
-			            "State": "Suggested",
-			            "Source": {
-			              "Agent": "Thesaurus"
-			            },
-			            "Weight": 0.762
-			          }
-			        },
-			        {
-			          "object identification": {
-			            "Type": "Noun",
-			            "State": "Suggested",
-			            "Source": {
-			              "Agent": "Thesaurus"
-			            },
-			            "Weight": 0.75
-			          }
-			        },
-			        {
-			          "object identity": {
-			            "Type": "Noun",
-			            "State": "Suggested",
-			            "Source": {
-			              "Agent": "Thesaurus"
-			            },
-			            "Weight": 0.75
-			          }
-			        },
-			        {
-			          "object identifier": {
-			            "Type": "Noun",
-			            "State": "Suggested",
-			            "Source": {
-			              "Agent": "Thesaurus"
-			            },
-			            "Weight": 0.75
-			          }
-			        },
-			        {
-			          "gateway object credential": {
-			            "Type": "Noun",
-			            "State": "Suggested",
-			            "Source": {
-			              "Agent": "Thesaurus"
-			            },
-			            "Weight": 0.739
-			          }
-			        },
-			        {
-			          "object credential": {
-			            "Type": "Noun",
-			            "State": "Suggested",
-			            "Source": {
-			              "Agent": "Thesaurus"
-			            },
-			            "Weight": 0.727
-			          }
-			        },
-			        {
-			          "gateway thing": {
-			            "Type": "Noun",
-			            "State": "Suggested",
-			            "Source": {
-			              "Agent": "Thesaurus"
-			            },
-			            "Weight": 0.5
-			          }
-			        },
-			        {
-			          "gateway entity": {
-			            "Type": "Noun",
-			            "State": "Suggested",
-			            "Source": {
-			              "Agent": "Thesaurus"
-			            },
-			            "Weight": 0.5
-			          }
-			        }
-			      ]
-			    },
-			    "concurrent_operation_aggregation_report.aggregation_start_time_UTC": {
-			      "Definition": {
-			        "Binding": {
-			          "ConceptualEntity": "ConcurrentOperationAggregationReport",
-			          "ConceptualProperty": "AggregationStartTimeUTC"
-			        }
-			      },
-			      "State": "Generated",
-			      "Terms": [
-			        {
-			          "aggregation start time UTC": {
-			            "State": "Generated"
-			          }
-			        },
-			        {
-			          "AggregationStartTimeUTC": {
-			            "Type": "Noun",
-			            "State": "Generated",
-			            "Weight": 0.99
-			          }
-			        },
-			        {
-			          "date": {
-			            "State": "Generated",
-			            "Weight": 0.7
-			          }
-			        },
-			        {
-			          "UTC": {
-			            "State": "Generated",
-			            "Weight": 0.97
-			          }
-			        },
-			        {
-			          "time UTC": {
-			            "State": "Generated",
-			            "Weight": 0.97
-			          }
-			        },
-			        {
-			          "start time UTC": {
-			            "State": "Generated",
-			            "Weight": 0.97
-			          }
-			        },
-			        {
-			          "aggregation start duration utc": {
-			            "Type": "Noun",
-			            "State": "Suggested",
-			            "Source": {
-			              "Agent": "Thesaurus"
-			            },
-			            "Weight": 0.617
-			          }
-			        },
-			        {
-			          "aggregation start interval utc": {
-			            "Type": "Noun",
-			            "State": "Suggested",
-			            "Source": {
-			              "Agent": "Thesaurus"
-			            },
-			            "Weight": 0.617
-			          }
-			        },
-			        {
-			          "aggregation start moment utc": {
-			            "Type": "Noun",
-			            "State": "Suggested",
-			            "Source": {
-			              "Agent": "Thesaurus"
-			            },
-			            "Weight": 0.617
-			          }
-			        },
-			        {
-			          "start duration utc": {
-			            "Type": "Noun",
-			            "State": "Suggested",
-			            "Source": {
-			              "Agent": "Thesaurus"
-			            },
-			            "Weight": 0.609
-			          }
-			        },
-			        {
-			          "start interval utc": {
-			            "Type": "Noun",
-			            "State": "Suggested",
-			            "Source": {
-			              "Agent": "Thesaurus"
-			            },
-			            "Weight": 0.609
-			          }
-			        },
-			        {
-			          "start moment utc": {
-			            "Type": "Noun",
-			            "State": "Suggested",
-			            "Source": {
-			              "Agent": "Thesaurus"
-			            },
-			            "Weight": 0.609
-			          }
-			        },
-			        {
-			          "duration utc": {
-			            "Type": "Noun",
-			            "State": "Suggested",
-			            "Source": {
-			              "Agent": "Thesaurus"
-			            },
-			            "Weight": 0.6
-			          }
-			        },
-			        {
-			          "interval utc": {
-			            "Type": "Noun",
-			            "State": "Suggested",
-			            "Source": {
-			              "Agent": "Thesaurus"
-			            },
-			            "Weight": 0.6
-			          }
-			        },
-			        {
-			          "moment utc": {
-			            "Type": "Noun",
-			            "State": "Suggested",
-			            "Source": {
-			              "Agent": "Thesaurus"
-			            },
-			            "Weight": 0.6
-			          }
-			        },
-			        {
-			          "aggregation start period utc": {
-			            "Type": "Noun",
-			            "State": "Suggested",
-			            "Source": {
-			              "Agent": "Thesaurus"
-			            },
-			            "Weight": 0.599
-			          }
-			        }
-			      ],
-			      "SemanticType": "Time"
-			    },
-			    "concurrent_operation_aggregation_report.aggregation_end_time_UTC": {
-			      "Definition": {
-			        "Binding": {
-			          "ConceptualEntity": "ConcurrentOperationAggregationReport",
-			          "ConceptualProperty": "AggregationEndTimeUTC"
-			        }
-			      },
-			      "State": "Generated",
-			      "Terms": [
-			        {
-			          "aggregation end time UTC": {
-			            "State": "Generated"
-			          }
-			        },
-			        {
-			          "AggregationEndTimeUTC": {
-			            "Type": "Noun",
-			            "State": "Generated",
-			            "Weight": 0.99
-			          }
-			        },
-			        {
-			          "date": {
-			            "State": "Generated",
-			            "Weight": 0.7
-			          }
-			        },
-			        {
-			          "UTC": {
-			            "State": "Generated",
-			            "Weight": 0.97
-			          }
-			        },
-			        {
-			          "time UTC": {
-			            "State": "Generated",
-			            "Weight": 0.97
-			          }
-			        },
-			        {
-			          "aggregation completion time utc": {
-			            "Type": "Noun",
-			            "State": "Suggested",
-			            "Source": {
-			              "Agent": "Thesaurus"
-			            },
-			            "Weight": 0.617
-			          }
-			        },
-			        {
-			          "aggregation conclusion time utc": {
-			            "Type": "Noun",
-			            "State": "Suggested",
-			            "Source": {
-			              "Agent": "Thesaurus"
-			            },
-			            "Weight": 0.617
-			          }
-			        },
-			        {
-			          "aggregation expiration time utc": {
-			            "Type": "Noun",
-			            "State": "Suggested",
-			            "Source": {
-			              "Agent": "Thesaurus"
-			            },
-			            "Weight": 0.617
-			          }
-			        },
-			        {
-			          "aggregation end duration utc": {
-			            "Type": "Noun",
-			            "State": "Suggested",
-			            "Source": {
-			              "Agent": "Thesaurus"
-			            },
-			            "Weight": 0.617
-			          }
-			        },
-			        {
-			          "aggregation end interval utc": {
-			            "Type": "Noun",
-			            "State": "Suggested",
-			            "Source": {
-			              "Agent": "Thesaurus"
-			            },
-			            "Weight": 0.617
-			          }
-			        },
-			        {
-			          "aggregation end moment utc": {
-			            "Type": "Noun",
-			            "State": "Suggested",
-			            "Source": {
-			              "Agent": "Thesaurus"
-			            },
-			            "Weight": 0.617
-			          }
-			        },
-			        {
-			          "duration utc": {
-			            "Type": "Noun",
-			            "State": "Suggested",
-			            "Source": {
-			              "Agent": "Thesaurus"
-			            },
-			            "Weight": 0.6
-			          }
-			        },
-			        {
-			          "interval utc": {
-			            "Type": "Noun",
-			            "State": "Suggested",
-			            "Source": {
-			              "Agent": "Thesaurus"
-			            },
-			            "Weight": 0.6
-			          }
-			        },
-			        {
-			          "moment utc": {
-			            "Type": "Noun",
-			            "State": "Suggested",
-			            "Source": {
-			              "Agent": "Thesaurus"
-			            },
-			            "Weight": 0.6
-			          }
-			        },
-			        {
-			          "aggregation close time utc": {
-			            "Type": "Noun",
-			            "State": "Suggested",
-			            "Source": {
-			              "Agent": "Thesaurus"
-			            },
-			            "Weight": 0.599
-			          }
-			        }
-			      ],
-			      "SemanticType": "Time"
-			    },
-			    "concurrent_operation_aggregation_report.counter_name": {
-			      "Definition": {
-			        "Binding": {
-			          "ConceptualEntity": "ConcurrentOperationAggregationReport",
-			          "ConceptualProperty": "CounterName"
-			        }
-			      },
-			      "State": "Generated",
-			      "Terms": [
-			        {
-			          "counter name": {
-			            "State": "Generated"
-			          }
-			        },
-			        {
-			          "CounterName": {
-			            "Type": "Noun",
-			            "State": "Generated",
-			            "Weight": 0.99
-			          }
-			        },
-			        {
-			          "counter": {
-			            "State": "Generated",
-			            "Weight": 0.97
-			          }
-			        },
-			        {
-			          "counter nickname": {
-			            "Type": "Noun",
-			            "State": "Suggested",
-			            "Source": {
-			              "Agent": "Thesaurus"
-			            },
-			            "Weight": 0.727
-			          }
-			        },
-			        {
-			          "counter title": {
-			            "Type": "Noun",
-			            "State": "Suggested",
-			            "Source": {
-			              "Agent": "Thesaurus"
-			            },
-			            "Weight": 0.727
-			          }
-			        },
-			        {
-			          "counter label": {
-			            "Type": "Noun",
-			            "State": "Suggested",
-			            "Source": {
-			              "Agent": "Thesaurus"
-			            },
-			            "Weight": 0.727
-			          }
-			        },
-			        {
-			          "counter tag": {
-			            "Type": "Noun",
-			            "State": "Suggested",
-			            "Source": {
-			              "Agent": "Thesaurus"
-			            },
-			            "Weight": 0.727
-			          }
-			        },
-			        {
-			          "hostage": {
-			            "Type": "Noun",
-			            "State": "Suggested",
-			            "Source": {
-			              "Agent": "Thesaurus"
-			            },
-			            "Weight": 0.491
-			          }
-			        },
-			        {
-			          "security": {
-			            "Type": "Noun",
-			            "State": "Suggested",
-			            "Source": {
-			              "Agent": "Thesaurus"
-			            },
-			            "Weight": 0.491
-			          }
-			        },
-			        {
-			          "pawn": {
-			            "Type": "Noun",
-			            "State": "Suggested",
-			            "Source": {
-			              "Agent": "Thesaurus"
-			            },
-			            "Weight": 0.476
-			          }
-			        },
-			        {
-			          "pledge": {
-			            "Type": "Noun",
-			            "State": "Suggested",
-			            "Source": {
-			              "Agent": "Thesaurus"
-			            },
-			            "Weight": 0.476
-			          }
-			        },
-			        {
-			          "kiosk": {
-			            "Type": "Noun",
-			            "State": "Suggested",
-			            "Source": {
-			              "Agent": "Thesaurus"
-			            },
-			            "Weight": 0.466
-			          }
-			        },
-			        {
-			          "booth": {
-			            "Type": "Noun",
-			            "State": "Suggested",
-			            "Source": {
-			              "Agent": "Thesaurus"
-			            },
-			            "Weight": 0.466
-			          }
-			        }
-			      ]
-			    },
-			    "concurrent_operation_aggregation_report.max": {
-			      "Definition": {
-			        "Binding": {
-			          "ConceptualEntity": "ConcurrentOperationAggregationReport",
-			          "ConceptualProperty": "Max"
-			        }
-			      },
-			      "State": "Generated",
-			      "Terms": [
-			        {
-			          "max": {
-			            "State": "Generated"
-			          }
-			        }
-			      ]
-			    },
-			    "concurrent_operation_aggregation_report.min": {
-			      "Definition": {
-			        "Binding": {
-			          "ConceptualEntity": "ConcurrentOperationAggregationReport",
-			          "ConceptualProperty": "Min"
-			        }
-			      },
-			      "State": "Generated",
-			      "Terms": [
-			        {
-			          "min": {
-			            "State": "Generated"
-			          }
-			        }
-			      ]
-			    },
-			    "concurrent_operation_aggregation_report.average": {
-			      "Definition": {
-			        "Binding": {
-			          "ConceptualEntity": "ConcurrentOperationAggregationReport",
-			          "ConceptualProperty": "Average"
-			        }
-			      },
-			      "State": "Generated",
-			      "Terms": [
-			        {
-			          "average": {
-			            "State": "Generated"
-			          }
-			        },
-			        {
-			          "regular": {
-			            "Type": "Noun",
-			            "State": "Suggested",
-			            "Source": {
-			              "Agent": "Thesaurus"
-			            },
-			            "Weight": 0.476
-			          }
-			        },
-			        {
-			          "usual": {
-			            "Type": "Noun",
-			            "State": "Suggested",
-			            "Source": {
-			              "Agent": "Thesaurus"
-			            },
-			            "Weight": 0.476
-			          }
-			        },
-			        {
-			          "middling": {
-			            "Type": "Noun",
-			            "State": "Suggested",
-			            "Source": {
-			              "Agent": "Thesaurus"
-			            },
-			            "Weight": 0.476
-			          }
-			        },
-			        {
-			          "run-of-the-mill": {
-			            "Type": "Noun",
-			            "State": "Suggested",
-			            "Source": {
-			              "Agent": "Thesaurus"
-			            },
-			            "Weight": 0.476
-			          }
-			        },
-			        {
-			          "ordinary": {
-			            "Type": "Noun",
-			            "State": "Suggested",
-			            "Source": {
-			              "Agent": "Thesaurus"
-			            },
-			            "Weight": 0.476
-			          }
-			        },
-			        {
-			          "common": {
-			            "Type": "Noun",
-			            "State": "Suggested",
-			            "Source": {
-			              "Agent": "Thesaurus"
-			            },
-			            "Weight": 0.476
-			          }
-			        },
-			        {
-			          "standard": {
-			            "Type": "Noun",
-			            "State": "Suggested",
-			            "Source": {
-			              "Agent": "Thesaurus"
-			            },
-			            "Weight": 0.476
-			          }
-			        },
-			        {
-			          "mode": {
-			            "Type": "Noun",
-			            "State": "Suggested",
-			            "Source": {
-			              "Agent": "Thesaurus"
-			            },
-			            "Weight": 0.466
-			          }
-			        },
-			        {
-			          "norm": {
-			            "Type": "Noun",
-			            "State": "Suggested",
-			            "Source": {
-			              "Agent": "Thesaurus"
-			            },
-			            "Weight": 0.466
-			          }
-			        },
-			        {
-			          "mean": {
-			            "Type": "Noun",
-			            "State": "Suggested",
-			            "Source": {
-			              "Agent": "Thesaurus"
-			            },
-			            "Weight": 0.452
-			          }
-			        }
-			      ]
-			    },
-			    "concurrent_operation_aggregation_report.aggregation_start_date": {
-			      "Definition": {
-			        "Binding": {
-			          "ConceptualEntity": "ConcurrentOperationAggregationReport",
-			          "ConceptualProperty": "AggregationStartDate"
-			        }
-			      },
-			      "State": "Generated",
-			      "Terms": [
-			        {
-			          "aggregation start date": {
-			            "State": "Generated"
-			          }
-			        },
-			        {
-			          "AggregationStartDate": {
-			            "Type": "Noun",
-			            "State": "Generated",
-			            "Weight": 0.99
-			          }
-			        },
-			        {
-			          "date": {
-			            "State": "Generated",
-			            "Weight": 0.7
-			          }
-			        },
-			        {
-			          "start date": {
-			            "State": "Generated",
-			            "Weight": 0.97
-			          }
-			        },
-			        {
-			          "aggregation start moment": {
-			            "Type": "Noun",
-			            "State": "Suggested",
-			            "Source": {
-			              "Agent": "Thesaurus"
-			            },
-			            "Weight": 0.762
-			          }
-			        },
-			        {
-			          "start moment": {
-			            "Type": "Noun",
-			            "State": "Suggested",
-			            "Source": {
-			              "Agent": "Thesaurus"
-			            },
-			            "Weight": 0.75
-			          }
-			        },
-			        {
-			          "aggregation start period": {
-			            "Type": "Noun",
-			            "State": "Suggested",
-			            "Source": {
-			              "Agent": "Thesaurus"
-			            },
-			            "Weight": 0.739
-			          }
-			        },
-			        {
-			          "start period": {
-			            "Type": "Noun",
-			            "State": "Suggested",
-			            "Source": {
-			              "Agent": "Thesaurus"
-			            },
-			            "Weight": 0.727
-			          }
-			        },
-			        {
-			          "aggregation commencement date": {
-			            "Type": "Noun",
-			            "State": "Suggested",
-			            "Source": {
-			              "Agent": "Thesaurus"
-			            },
-			            "Weight": 0.615
-			          }
-			        },
-			        {
-			          "aggregation inception date": {
-			            "Type": "Noun",
-			            "State": "Suggested",
-			            "Source": {
-			              "Agent": "Thesaurus"
-			            },
-			            "Weight": 0.615
-			          }
-			        },
-			        {
-			          "aggregation kickoff date": {
-			            "Type": "Noun",
-			            "State": "Suggested",
-			            "Source": {
-			              "Agent": "Thesaurus"
-			            },
-			            "Weight": 0.615
-			          }
-			        },
-			        {
-			          "commencement date": {
-			            "Type": "Noun",
-			            "State": "Suggested",
-			            "Source": {
-			              "Agent": "Thesaurus"
-			            },
-			            "Weight": 0.6
-			          }
-			        },
-			        {
-			          "inception date": {
-			            "Type": "Noun",
-			            "State": "Suggested",
-			            "Source": {
-			              "Agent": "Thesaurus"
-			            },
-			            "Weight": 0.6
-			          }
-			        },
-			        {
-			          "kickoff date": {
-			            "Type": "Noun",
-			            "State": "Suggested",
-			            "Source": {
-			              "Agent": "Thesaurus"
-			            },
-			            "Weight": 0.6
-			          }
-			        }
-			      ],
-			      "SemanticType": "Time"
-			    },
 			    "query_start_report": {
 			      "Definition": {
 			        "Binding": {
@@ -14498,6 +12170,16 @@ cultureInfo en-US
 			        },
 			        {
 			          "Query Execution StartTime UTC": {
+			            "State": "Suggested",
+			            "Source": {
+			              "Type": "External",
+			              "Agent": "PowerBI.VisualColumnRename"
+			            },
+			            "Weight": 0.9
+			          }
+			        },
+			        {
+			          "Start Time UTC (Query Execution)": {
 			            "State": "Suggested",
 			            "Source": {
 			              "Type": "External",
@@ -18359,7 +16041,7 @@ cultureInfo en-US
 			        }
 			      ]
 			    },
-			    "query_start_report_application_context.dataset_id": {
+			    "query_start_report_application_context.semantic_model_id": {
 			      "Definition": {
 			        "Binding": {
 			          "ConceptualEntity": "QueryStartReport_ApplicationContext",
@@ -19302,7 +16984,7 @@ cultureInfo en-US
 			        }
 			      ]
 			    },
-			    "metrics.evaluation_contexts": {
+			    "metrics.evaluation_contexts_QSR": {
 			      "Definition": {
 			        "Binding": {
 			          "ConceptualEntity": "Metrics",
@@ -20161,7 +17843,7 @@ cultureInfo en-US
 			        }
 			      ]
 			    },
-			    "metrics.average_percent_processor_time": {
+			    "metrics.average_percent_processor_time_ME": {
 			      "Definition": {
 			        "Binding": {
 			          "ConceptualEntity": "Metrics",
@@ -20292,20 +17974,10 @@ cultureInfo en-US
 			            },
 			            "Weight": 0.757
 			          }
-			        },
-			        {
-			          "Average Percent Processor Time": {
-			            "State": "Suggested",
-			            "Source": {
-			              "Type": "External",
-			              "Agent": "PowerBI.VisualColumnRename"
-			            },
-			            "Weight": 0.9
-			          }
 			        }
 			      ]
 			    },
-			    "metrics.max_percent_processor_time_EM": {
+			    "metrics.max_percent_processor_time_ME": {
 			      "Definition": {
 			        "Binding": {
 			          "ConceptualEntity": "Metrics",
@@ -20627,16 +18299,6 @@ cultureInfo en-US
 			              "Agent": "Thesaurus"
 			            },
 			            "Weight": 0.5
-			          }
-			        },
-			        {
-			          "Total Rows (returned/processed)": {
-			            "State": "Suggested",
-			            "Source": {
-			              "Type": "External",
-			              "Agent": "PowerBI.VisualColumnRename"
-			            },
-			            "Weight": 0.9
 			          }
 			        },
 			        {
@@ -21102,7 +18764,7 @@ cultureInfo en-US
 			        }
 			      ]
 			    },
-			    "query_start_report_evaluation_context_service_mapping.dataset_id": {
+			    "query_start_report_evaluation_context_service_mapping.semantic_model_id": {
 			      "Definition": {
 			        "Binding": {
 			          "ConceptualEntity": "QueryStartReport_EvaluationContext_Service_Mapping",
@@ -21727,6 +19389,122 @@ cultureInfo en-US
 			        }
 			      ],
 			      "SemanticType": "Time"
+			    },
+			    "metrics.failed_requests": {
+			      "Definition": {
+			        "Binding": {
+			          "ConceptualEntity": "Metrics",
+			          "ConceptualProperty": "Failed Requests"
+			        }
+			      },
+			      "State": "Generated",
+			      "Terms": [
+			        {
+			          "failed requests": {
+			            "State": "Generated"
+			          }
+			        },
+			        {
+			          "failed requirement": {
+			            "Type": "Noun",
+			            "State": "Suggested",
+			            "Source": {
+			              "Agent": "Thesaurus"
+			            },
+			            "Weight": 0.5
+			          }
+			        },
+			        {
+			          "failed need": {
+			            "Type": "Noun",
+			            "State": "Suggested",
+			            "Source": {
+			              "Agent": "Thesaurus"
+			            },
+			            "Weight": 0.485
+			          }
+			        },
+			        {
+			          "failed desire": {
+			            "Type": "Noun",
+			            "State": "Suggested",
+			            "Source": {
+			              "Agent": "Thesaurus"
+			            },
+			            "Weight": 0.485
+			          }
+			        },
+			        {
+			          "failed wish": {
+			            "Type": "Noun",
+			            "State": "Suggested",
+			            "Source": {
+			              "Agent": "Thesaurus"
+			            },
+			            "Weight": 0.485
+			          }
+			        },
+			        {
+			          "failed entreaties": {
+			            "Type": "Noun",
+			            "State": "Suggested",
+			            "Source": {
+			              "Agent": "Thesaurus"
+			            },
+			            "Weight": 0.475
+			          }
+			        },
+			        {
+			          "failed invitation": {
+			            "Type": "Noun",
+			            "State": "Suggested",
+			            "Source": {
+			              "Agent": "Thesaurus"
+			            },
+			            "Weight": 0.475
+			          }
+			        },
+			        {
+			          "failed appeal": {
+			            "Type": "Noun",
+			            "State": "Suggested",
+			            "Source": {
+			              "Agent": "Thesaurus"
+			            },
+			            "Weight": 0.461
+			          }
+			        },
+			        {
+			          "failed demand": {
+			            "Type": "Noun",
+			            "State": "Suggested",
+			            "Source": {
+			              "Agent": "Thesaurus"
+			            },
+			            "Weight": 0.461
+			          }
+			        },
+			        {
+			          "failed application": {
+			            "Type": "Noun",
+			            "State": "Suggested",
+			            "Source": {
+			              "Agent": "Thesaurus"
+			            },
+			            "Weight": 0.461
+			          }
+			        },
+			        {
+			          "failed bid": {
+			            "Type": "Noun",
+			            "State": "Suggested",
+			            "Source": {
+			              "Agent": "Thesaurus"
+			            },
+			            "Weight": 0.461
+			          }
+			        }
+			      ]
 			    }
 			  },
 			  "Relationships": {
@@ -22283,6 +20061,39 @@ cultureInfo en-US
 			        }
 			      ]
 			    },
+			    "query_execution_report_has_metrics_failed_requests": {
+			      "Binding": {
+			        "ConceptualEntity": "QueryExecutionReport"
+			      },
+			      "State": "Generated",
+			      "Roles": {
+			        "query_execution_report": {
+			          "Target": {
+			            "Entity": "query_execution_report"
+			          }
+			        },
+			        "metrics.failed_requests": {
+			          "Target": {
+			            "Entity": "metrics.failed_requests"
+			          }
+			        }
+			      },
+			      "Phrasings": [
+			        {
+			          "Attribute": {
+			            "Subject": {
+			              "Role": "query_execution_report"
+			            },
+			            "Object": {
+			              "Role": "metrics.failed_requests"
+			            }
+			          },
+			          "State": "Generated",
+			          "Weight": 0.99,
+			          "ID": "query_execution_reports_have_failed_requests"
+			        }
+			      ]
+			    },
 			    "query_start_report_has_QueryExecutionStartTimeUTC_5_min": {
 			      "Binding": {
 			        "ConceptualEntity": "QueryStartReport"
@@ -22415,7 +20226,7 @@ cultureInfo en-US
 			        }
 			      ]
 			    },
-			    "query_start_report_evaluation_context_service_mapping_has_dataset_id": {
+			    "query_start_report_evaluation_context_service_mapping_has_semantic_model_id": {
 			      "Binding": {
 			        "ConceptualEntity": "QueryStartReport_EvaluationContext_Service_Mapping"
 			      },
@@ -22426,9 +20237,9 @@ cultureInfo en-US
 			            "Entity": "query_start_report_evaluation_context_service_mapping"
 			          }
 			        },
-			        "query_start_report_evaluation_context_service_mapping.dataset_id": {
+			        "query_start_report_evaluation_context_service_mapping.semantic_model_id": {
 			          "Target": {
-			            "Entity": "query_start_report_evaluation_context_service_mapping.dataset_id"
+			            "Entity": "query_start_report_evaluation_context_service_mapping.semantic_model_id"
 			          }
 			        }
 			      },
@@ -22439,7 +20250,7 @@ cultureInfo en-US
 			              "Role": "query_start_report_evaluation_context_service_mapping"
 			            },
 			            "Object": {
-			              "Role": "query_start_report_evaluation_context_service_mapping.dataset_id"
+			              "Role": "query_start_report_evaluation_context_service_mapping.semantic_model_id"
 			            }
 			          },
 			          "State": "Generated",
@@ -22679,7 +20490,7 @@ cultureInfo en-US
 			        }
 			      ]
 			    },
-			    "mashup_evaluation_report_has_metrics_max_percent_processor_time_EM": {
+			    "mashup_evaluation_report_has_metrics_max_percent_processor_time_ME": {
 			      "Binding": {
 			        "ConceptualEntity": "MashupEvaluationReport"
 			      },
@@ -22690,9 +20501,9 @@ cultureInfo en-US
 			            "Entity": "mashup_evaluation_report"
 			          }
 			        },
-			        "metrics.max_percent_processor_time_EM": {
+			        "metrics.max_percent_processor_time_ME": {
 			          "Target": {
-			            "Entity": "metrics.max_percent_processor_time_EM"
+			            "Entity": "metrics.max_percent_processor_time_ME"
 			          }
 			        }
 			      },
@@ -22703,7 +20514,7 @@ cultureInfo en-US
 			              "Role": "mashup_evaluation_report"
 			            },
 			            "Object": {
-			              "Role": "metrics.max_percent_processor_time_EM"
+			              "Role": "metrics.max_percent_processor_time_ME"
 			            }
 			          },
 			          "State": "Generated",
@@ -22712,7 +20523,7 @@ cultureInfo en-US
 			        }
 			      ]
 			    },
-			    "mashup_evaluation_report_has_metrics_average_percent_processor_time": {
+			    "mashup_evaluation_report_has_metrics_average_percent_processor_time_ME": {
 			      "Binding": {
 			        "ConceptualEntity": "MashupEvaluationReport"
 			      },
@@ -22723,9 +20534,9 @@ cultureInfo en-US
 			            "Entity": "mashup_evaluation_report"
 			          }
 			        },
-			        "metrics.average_percent_processor_time": {
+			        "metrics.average_percent_processor_time_ME": {
 			          "Target": {
-			            "Entity": "metrics.average_percent_processor_time"
+			            "Entity": "metrics.average_percent_processor_time_ME"
 			          }
 			        }
 			      },
@@ -22736,7 +20547,7 @@ cultureInfo en-US
 			              "Role": "mashup_evaluation_report"
 			            },
 			            "Object": {
-			              "Role": "metrics.average_percent_processor_time"
+			              "Role": "metrics.average_percent_processor_time_ME"
 			            }
 			          },
 			          "State": "Generated",
@@ -22745,15 +20556,15 @@ cultureInfo en-US
 			        }
 			      ]
 			    },
-			    "metrics_has_total_processor_time_ME": {
+			    "time_unit_has_metrics_total_processor_time_ME": {
 			      "Binding": {
-			        "ConceptualEntity": "Metrics"
+			        "ConceptualEntity": "Time Units"
 			      },
 			      "State": "Generated",
 			      "Roles": {
-			        "metrics": {
+			        "time_unit": {
 			          "Target": {
-			            "Entity": "metrics"
+			            "Entity": "time_unit"
 			          }
 			        },
 			        "metrics.total_processor_time_ME": {
@@ -22766,7 +20577,7 @@ cultureInfo en-US
 			        {
 			          "Attribute": {
 			            "Subject": {
-			              "Role": "metrics"
+			              "Role": "time_unit"
 			            },
 			            "Object": {
 			              "Role": "metrics.total_processor_time_ME"
@@ -22774,19 +20585,52 @@ cultureInfo en-US
 			          },
 			          "State": "Generated",
 			          "Weight": 0.99,
-			          "ID": "metrics_have_total_processor_time_ME"
+			          "ID": "time_units_have_total_processor_time_ME"
 			        }
 			      ]
 			    },
-			    "metrics_has_max_commit_size_ME": {
+			    "mashup_evaluation_report_has_metrics_total_processor_time_ME": {
 			      "Binding": {
-			        "ConceptualEntity": "Metrics"
+			        "ConceptualEntity": "MashupEvaluationReport"
 			      },
 			      "State": "Generated",
 			      "Roles": {
-			        "metrics": {
+			        "mashup_evaluation_report": {
 			          "Target": {
-			            "Entity": "metrics"
+			            "Entity": "mashup_evaluation_report"
+			          }
+			        },
+			        "metrics.total_processor_time_ME": {
+			          "Target": {
+			            "Entity": "metrics.total_processor_time_ME"
+			          }
+			        }
+			      },
+			      "Phrasings": [
+			        {
+			          "Attribute": {
+			            "Subject": {
+			              "Role": "mashup_evaluation_report"
+			            },
+			            "Object": {
+			              "Role": "metrics.total_processor_time_ME"
+			            }
+			          },
+			          "State": "Generated",
+			          "Weight": 0.99,
+			          "ID": "mashup_evaluation_reports_have_total_processor_time_ME"
+			        }
+			      ]
+			    },
+			    "size_unit_has_metrics_max_commit_size_ME": {
+			      "Binding": {
+			        "ConceptualEntity": "Size Units"
+			      },
+			      "State": "Generated",
+			      "Roles": {
+			        "size_unit": {
+			          "Target": {
+			            "Entity": "size_unit"
 			          }
 			        },
 			        "metrics.max_commit_size_ME": {
@@ -22799,7 +20643,7 @@ cultureInfo en-US
 			        {
 			          "Attribute": {
 			            "Subject": {
-			              "Role": "metrics"
+			              "Role": "size_unit"
 			            },
 			            "Object": {
 			              "Role": "metrics.max_commit_size_ME"
@@ -22807,19 +20651,52 @@ cultureInfo en-US
 			          },
 			          "State": "Generated",
 			          "Weight": 0.99,
-			          "ID": "metrics_have_max_commit_size_ME"
+			          "ID": "size_units_have_max_commit_size_ME"
 			        }
 			      ]
 			    },
-			    "metrics_has_max_working_set_size_ME": {
+			    "mashup_evaluation_report_has_metrics_max_commit_size_ME": {
 			      "Binding": {
-			        "ConceptualEntity": "Metrics"
+			        "ConceptualEntity": "MashupEvaluationReport"
 			      },
 			      "State": "Generated",
 			      "Roles": {
-			        "metrics": {
+			        "mashup_evaluation_report": {
 			          "Target": {
-			            "Entity": "metrics"
+			            "Entity": "mashup_evaluation_report"
+			          }
+			        },
+			        "metrics.max_commit_size_ME": {
+			          "Target": {
+			            "Entity": "metrics.max_commit_size_ME"
+			          }
+			        }
+			      },
+			      "Phrasings": [
+			        {
+			          "Attribute": {
+			            "Subject": {
+			              "Role": "mashup_evaluation_report"
+			            },
+			            "Object": {
+			              "Role": "metrics.max_commit_size_ME"
+			            }
+			          },
+			          "State": "Generated",
+			          "Weight": 0.99,
+			          "ID": "mashup_evaluation_reports_have_max_commit_size_ME"
+			        }
+			      ]
+			    },
+			    "size_unit_has_metrics_max_working_set_size_ME": {
+			      "Binding": {
+			        "ConceptualEntity": "Size Units"
+			      },
+			      "State": "Generated",
+			      "Roles": {
+			        "size_unit": {
+			          "Target": {
+			            "Entity": "size_unit"
 			          }
 			        },
 			        "metrics.max_working_set_size_ME": {
@@ -22832,7 +20709,7 @@ cultureInfo en-US
 			        {
 			          "Attribute": {
 			            "Subject": {
-			              "Role": "metrics"
+			              "Role": "size_unit"
 			            },
 			            "Object": {
 			              "Role": "metrics.max_working_set_size_ME"
@@ -22840,19 +20717,52 @@ cultureInfo en-US
 			          },
 			          "State": "Generated",
 			          "Weight": 0.99,
-			          "ID": "metrics_have_max_working_set_size_ME"
+			          "ID": "size_units_have_max_working_set_size_ME"
 			        }
 			      ]
 			    },
-			    "metrics_has_average_working_set_size_ME": {
+			    "mashup_evaluation_report_has_metrics_max_working_set_size_ME": {
 			      "Binding": {
-			        "ConceptualEntity": "Metrics"
+			        "ConceptualEntity": "MashupEvaluationReport"
 			      },
 			      "State": "Generated",
 			      "Roles": {
-			        "metrics": {
+			        "mashup_evaluation_report": {
 			          "Target": {
-			            "Entity": "metrics"
+			            "Entity": "mashup_evaluation_report"
+			          }
+			        },
+			        "metrics.max_working_set_size_ME": {
+			          "Target": {
+			            "Entity": "metrics.max_working_set_size_ME"
+			          }
+			        }
+			      },
+			      "Phrasings": [
+			        {
+			          "Attribute": {
+			            "Subject": {
+			              "Role": "mashup_evaluation_report"
+			            },
+			            "Object": {
+			              "Role": "metrics.max_working_set_size_ME"
+			            }
+			          },
+			          "State": "Generated",
+			          "Weight": 0.99,
+			          "ID": "mashup_evaluation_reports_have_max_working_set_size_ME"
+			        }
+			      ]
+			    },
+			    "size_unit_has_metrics_average_working_set_size_ME": {
+			      "Binding": {
+			        "ConceptualEntity": "Size Units"
+			      },
+			      "State": "Generated",
+			      "Roles": {
+			        "size_unit": {
+			          "Target": {
+			            "Entity": "size_unit"
 			          }
 			        },
 			        "metrics.average_working_set_size_ME": {
@@ -22865,7 +20775,7 @@ cultureInfo en-US
 			        {
 			          "Attribute": {
 			            "Subject": {
-			              "Role": "metrics"
+			              "Role": "size_unit"
 			            },
 			            "Object": {
 			              "Role": "metrics.average_working_set_size_ME"
@@ -22873,19 +20783,52 @@ cultureInfo en-US
 			          },
 			          "State": "Generated",
 			          "Weight": 0.99,
-			          "ID": "metrics_have_average_working_set_size_ME"
+			          "ID": "size_units_have_average_working_set_size_ME"
 			        }
 			      ]
 			    },
-			    "metrics_has_average_commit_size_ME": {
+			    "mashup_evaluation_report_has_metrics_average_working_set_size_ME": {
 			      "Binding": {
-			        "ConceptualEntity": "Metrics"
+			        "ConceptualEntity": "MashupEvaluationReport"
 			      },
 			      "State": "Generated",
 			      "Roles": {
-			        "metrics": {
+			        "mashup_evaluation_report": {
 			          "Target": {
-			            "Entity": "metrics"
+			            "Entity": "mashup_evaluation_report"
+			          }
+			        },
+			        "metrics.average_working_set_size_ME": {
+			          "Target": {
+			            "Entity": "metrics.average_working_set_size_ME"
+			          }
+			        }
+			      },
+			      "Phrasings": [
+			        {
+			          "Attribute": {
+			            "Subject": {
+			              "Role": "mashup_evaluation_report"
+			            },
+			            "Object": {
+			              "Role": "metrics.average_working_set_size_ME"
+			            }
+			          },
+			          "State": "Generated",
+			          "Weight": 0.99,
+			          "ID": "mashup_evaluation_reports_have_average_working_set_size_ME"
+			        }
+			      ]
+			    },
+			    "size_unit_has_metrics_average_commit_size_ME": {
+			      "Binding": {
+			        "ConceptualEntity": "Size Units"
+			      },
+			      "State": "Generated",
+			      "Roles": {
+			        "size_unit": {
+			          "Target": {
+			            "Entity": "size_unit"
 			          }
 			        },
 			        "metrics.average_commit_size_ME": {
@@ -22898,7 +20841,7 @@ cultureInfo en-US
 			        {
 			          "Attribute": {
 			            "Subject": {
-			              "Role": "metrics"
+			              "Role": "size_unit"
 			            },
 			            "Object": {
 			              "Role": "metrics.average_commit_size_ME"
@@ -22906,7 +20849,40 @@ cultureInfo en-US
 			          },
 			          "State": "Generated",
 			          "Weight": 0.99,
-			          "ID": "metrics_have_average_commit_size_ME"
+			          "ID": "size_units_have_average_commit_size_ME"
+			        }
+			      ]
+			    },
+			    "mashup_evaluation_report_has_metrics_average_commit_size_ME": {
+			      "Binding": {
+			        "ConceptualEntity": "MashupEvaluationReport"
+			      },
+			      "State": "Generated",
+			      "Roles": {
+			        "mashup_evaluation_report": {
+			          "Target": {
+			            "Entity": "mashup_evaluation_report"
+			          }
+			        },
+			        "metrics.average_commit_size_ME": {
+			          "Target": {
+			            "Entity": "metrics.average_commit_size_ME"
+			          }
+			        }
+			      },
+			      "Phrasings": [
+			        {
+			          "Attribute": {
+			            "Subject": {
+			              "Role": "mashup_evaluation_report"
+			            },
+			            "Object": {
+			              "Role": "metrics.average_commit_size_ME"
+			            }
+			          },
+			          "State": "Generated",
+			          "Weight": 0.99,
+			          "ID": "mashup_evaluation_reports_have_average_commit_size_ME"
 			        }
 			      ]
 			    },
@@ -22943,7 +20919,7 @@ cultureInfo en-US
 			        }
 			      ]
 			    },
-			    "query_start_report_evaluation_context_has_metrics_evaluation_contexts": {
+			    "query_start_report_evaluation_context_has_metrics_evaluation_contexts_QSR": {
 			      "Binding": {
 			        "ConceptualEntity": "QueryStartReport_EvaluationContext"
 			      },
@@ -22954,9 +20930,9 @@ cultureInfo en-US
 			            "Entity": "query_start_report_evaluation_context"
 			          }
 			        },
-			        "metrics.evaluation_contexts": {
+			        "metrics.evaluation_contexts_QSR": {
 			          "Target": {
-			            "Entity": "metrics.evaluation_contexts"
+			            "Entity": "metrics.evaluation_contexts_QSR"
 			          }
 			        }
 			      },
@@ -22967,7 +20943,7 @@ cultureInfo en-US
 			              "Role": "query_start_report_evaluation_context"
 			            },
 			            "Object": {
-			              "Role": "metrics.evaluation_contexts"
+			              "Role": "metrics.evaluation_contexts_QSR"
 			            }
 			          },
 			          "State": "Generated",
@@ -23174,7 +21150,7 @@ cultureInfo en-US
 			        }
 			      ]
 			    },
-			    "query_start_report_application_context_has_dataset_id": {
+			    "query_start_report_application_context_has_semantic_model_id": {
 			      "Binding": {
 			        "ConceptualEntity": "QueryStartReport_ApplicationContext"
 			      },
@@ -23185,9 +21161,9 @@ cultureInfo en-US
 			            "Entity": "query_start_report_application_context"
 			          }
 			        },
-			        "query_start_report_application_context.dataset_id": {
+			        "query_start_report_application_context.semantic_model_id": {
 			          "Target": {
-			            "Entity": "query_start_report_application_context.dataset_id"
+			            "Entity": "query_start_report_application_context.semantic_model_id"
 			          }
 			        }
 			      },
@@ -23198,7 +21174,7 @@ cultureInfo en-US
 			              "Role": "query_start_report_application_context"
 			            },
 			            "Object": {
-			              "Role": "query_start_report_application_context.dataset_id"
+			              "Role": "query_start_report_application_context.semantic_model_id"
 			            }
 			          },
 			          "State": "Generated",
@@ -24131,270 +22107,6 @@ cultureInfo en-US
 			        }
 			      ]
 			    },
-			    "concurrent_operation_aggregation_report_has_aggregation_start_date": {
-			      "Binding": {
-			        "ConceptualEntity": "ConcurrentOperationAggregationReport"
-			      },
-			      "State": "Generated",
-			      "Roles": {
-			        "concurrent_operation_aggregation_report": {
-			          "Target": {
-			            "Entity": "concurrent_operation_aggregation_report"
-			          }
-			        },
-			        "concurrent_operation_aggregation_report.aggregation_start_date": {
-			          "Target": {
-			            "Entity": "concurrent_operation_aggregation_report.aggregation_start_date"
-			          }
-			        }
-			      },
-			      "Phrasings": [
-			        {
-			          "Attribute": {
-			            "Subject": {
-			              "Role": "concurrent_operation_aggregation_report"
-			            },
-			            "Object": {
-			              "Role": "concurrent_operation_aggregation_report.aggregation_start_date"
-			            }
-			          },
-			          "State": "Generated",
-			          "Weight": 0.99,
-			          "ID": "concurrent_operation_aggregation_reports_have_aggregation_start_dates"
-			        }
-			      ]
-			    },
-			    "concurrent_operation_aggregation_report_has_average": {
-			      "Binding": {
-			        "ConceptualEntity": "ConcurrentOperationAggregationReport"
-			      },
-			      "State": "Generated",
-			      "Roles": {
-			        "concurrent_operation_aggregation_report": {
-			          "Target": {
-			            "Entity": "concurrent_operation_aggregation_report"
-			          }
-			        },
-			        "concurrent_operation_aggregation_report.average": {
-			          "Target": {
-			            "Entity": "concurrent_operation_aggregation_report.average"
-			          }
-			        }
-			      },
-			      "Phrasings": [
-			        {
-			          "Attribute": {
-			            "Subject": {
-			              "Role": "concurrent_operation_aggregation_report"
-			            },
-			            "Object": {
-			              "Role": "concurrent_operation_aggregation_report.average"
-			            }
-			          },
-			          "State": "Generated",
-			          "Weight": 0.99,
-			          "ID": "concurrent_operation_aggregation_reports_have_averages"
-			        }
-			      ]
-			    },
-			    "concurrent_operation_aggregation_report_has_min": {
-			      "Binding": {
-			        "ConceptualEntity": "ConcurrentOperationAggregationReport"
-			      },
-			      "State": "Generated",
-			      "Roles": {
-			        "concurrent_operation_aggregation_report": {
-			          "Target": {
-			            "Entity": "concurrent_operation_aggregation_report"
-			          }
-			        },
-			        "concurrent_operation_aggregation_report.min": {
-			          "Target": {
-			            "Entity": "concurrent_operation_aggregation_report.min"
-			          }
-			        }
-			      },
-			      "Phrasings": [
-			        {
-			          "Attribute": {
-			            "Subject": {
-			              "Role": "concurrent_operation_aggregation_report"
-			            },
-			            "Object": {
-			              "Role": "concurrent_operation_aggregation_report.min"
-			            }
-			          },
-			          "State": "Generated",
-			          "Weight": 0.99,
-			          "ID": "concurrent_operation_aggregation_reports_have_mins"
-			        }
-			      ]
-			    },
-			    "concurrent_operation_aggregation_report_has_max": {
-			      "Binding": {
-			        "ConceptualEntity": "ConcurrentOperationAggregationReport"
-			      },
-			      "State": "Generated",
-			      "Roles": {
-			        "concurrent_operation_aggregation_report": {
-			          "Target": {
-			            "Entity": "concurrent_operation_aggregation_report"
-			          }
-			        },
-			        "concurrent_operation_aggregation_report.max": {
-			          "Target": {
-			            "Entity": "concurrent_operation_aggregation_report.max"
-			          }
-			        }
-			      },
-			      "Phrasings": [
-			        {
-			          "Attribute": {
-			            "Subject": {
-			              "Role": "concurrent_operation_aggregation_report"
-			            },
-			            "Object": {
-			              "Role": "concurrent_operation_aggregation_report.max"
-			            }
-			          },
-			          "State": "Generated",
-			          "Weight": 0.99,
-			          "ID": "concurrent_operation_aggregation_reports_have_maxes"
-			        }
-			      ]
-			    },
-			    "concurrent_operation_aggregation_report_has_counter_name": {
-			      "Binding": {
-			        "ConceptualEntity": "ConcurrentOperationAggregationReport"
-			      },
-			      "State": "Generated",
-			      "Roles": {
-			        "concurrent_operation_aggregation_report": {
-			          "Target": {
-			            "Entity": "concurrent_operation_aggregation_report"
-			          }
-			        },
-			        "concurrent_operation_aggregation_report.counter_name": {
-			          "Target": {
-			            "Entity": "concurrent_operation_aggregation_report.counter_name"
-			          }
-			        }
-			      },
-			      "Phrasings": [
-			        {
-			          "Attribute": {
-			            "Subject": {
-			              "Role": "concurrent_operation_aggregation_report"
-			            },
-			            "Object": {
-			              "Role": "concurrent_operation_aggregation_report.counter_name"
-			            }
-			          },
-			          "State": "Generated",
-			          "Weight": 0.99,
-			          "ID": "concurrent_operation_aggregation_reports_have_counter_names"
-			        }
-			      ]
-			    },
-			    "concurrent_operation_aggregation_report_has_aggregation_end_time_UTC": {
-			      "Binding": {
-			        "ConceptualEntity": "ConcurrentOperationAggregationReport"
-			      },
-			      "State": "Generated",
-			      "Roles": {
-			        "concurrent_operation_aggregation_report": {
-			          "Target": {
-			            "Entity": "concurrent_operation_aggregation_report"
-			          }
-			        },
-			        "concurrent_operation_aggregation_report.aggregation_end_time_UTC": {
-			          "Target": {
-			            "Entity": "concurrent_operation_aggregation_report.aggregation_end_time_UTC"
-			          }
-			        }
-			      },
-			      "Phrasings": [
-			        {
-			          "Attribute": {
-			            "Subject": {
-			              "Role": "concurrent_operation_aggregation_report"
-			            },
-			            "Object": {
-			              "Role": "concurrent_operation_aggregation_report.aggregation_end_time_UTC"
-			            }
-			          },
-			          "State": "Generated",
-			          "Weight": 0.99,
-			          "ID": "concurrent_operation_aggregation_reports_have_aggregation_end_time_UTCs"
-			        }
-			      ]
-			    },
-			    "concurrent_operation_aggregation_report_has_aggregation_start_time_UTC": {
-			      "Binding": {
-			        "ConceptualEntity": "ConcurrentOperationAggregationReport"
-			      },
-			      "State": "Generated",
-			      "Roles": {
-			        "concurrent_operation_aggregation_report": {
-			          "Target": {
-			            "Entity": "concurrent_operation_aggregation_report"
-			          }
-			        },
-			        "concurrent_operation_aggregation_report.aggregation_start_time_UTC": {
-			          "Target": {
-			            "Entity": "concurrent_operation_aggregation_report.aggregation_start_time_UTC"
-			          }
-			        }
-			      },
-			      "Phrasings": [
-			        {
-			          "Attribute": {
-			            "Subject": {
-			              "Role": "concurrent_operation_aggregation_report"
-			            },
-			            "Object": {
-			              "Role": "concurrent_operation_aggregation_report.aggregation_start_time_UTC"
-			            }
-			          },
-			          "State": "Generated",
-			          "Weight": 0.99,
-			          "ID": "concurrent_operation_aggregation_reports_have_aggregation_start_time_UTCs"
-			        }
-			      ]
-			    },
-			    "concurrent_operation_aggregation_report_has_gateway_object_id": {
-			      "Binding": {
-			        "ConceptualEntity": "ConcurrentOperationAggregationReport"
-			      },
-			      "State": "Generated",
-			      "Roles": {
-			        "concurrent_operation_aggregation_report": {
-			          "Target": {
-			            "Entity": "concurrent_operation_aggregation_report"
-			          }
-			        },
-			        "concurrent_operation_aggregation_report.gateway_object_id": {
-			          "Target": {
-			            "Entity": "concurrent_operation_aggregation_report.gateway_object_id"
-			          }
-			        }
-			      },
-			      "Phrasings": [
-			        {
-			          "Attribute": {
-			            "Subject": {
-			              "Role": "concurrent_operation_aggregation_report"
-			            },
-			            "Object": {
-			              "Role": "concurrent_operation_aggregation_report.gateway_object_id"
-			            }
-			          },
-			          "State": "Generated",
-			          "Weight": 0.99,
-			          "ID": "concurrent_operation_aggregation_reports_have_gateway_object_ids"
-			        }
-			      ]
-			    },
 			    "mashup_evaluation_report_has_end_date": {
 			      "Binding": {
 			        "ConceptualEntity": "MashupEvaluationReport"
@@ -24989,378 +22701,15 @@ cultureInfo en-US
 			        }
 			      ]
 			    },
-			    "open_connection_report_has_open_connection_start_date": {
+			    "time_unit_has_metrics_spooling_disk_writing_duration": {
 			      "Binding": {
-			        "ConceptualEntity": "OpenConnectionReport"
+			        "ConceptualEntity": "Time Units"
 			      },
 			      "State": "Generated",
 			      "Roles": {
-			        "open_connection_report": {
+			        "time_unit": {
 			          "Target": {
-			            "Entity": "open_connection_report"
-			          }
-			        },
-			        "open_connection_report.open_connection_start_date": {
-			          "Target": {
-			            "Entity": "open_connection_report.open_connection_start_date"
-			          }
-			        }
-			      },
-			      "Phrasings": [
-			        {
-			          "Attribute": {
-			            "Subject": {
-			              "Role": "open_connection_report"
-			            },
-			            "Object": {
-			              "Role": "open_connection_report.open_connection_start_date"
-			            }
-			          },
-			          "State": "Generated",
-			          "Weight": 0.99,
-			          "ID": "open_connection_reports_have_open_connection_start_dates"
-			        }
-			      ]
-			    },
-			    "open_connection_report_has_error_message": {
-			      "Binding": {
-			        "ConceptualEntity": "OpenConnectionReport"
-			      },
-			      "State": "Generated",
-			      "Roles": {
-			        "open_connection_report": {
-			          "Target": {
-			            "Entity": "open_connection_report"
-			          }
-			        },
-			        "open_connection_report.error_message": {
-			          "Target": {
-			            "Entity": "open_connection_report.error_message"
-			          }
-			        }
-			      },
-			      "Phrasings": [
-			        {
-			          "Attribute": {
-			            "Subject": {
-			              "Role": "open_connection_report"
-			            },
-			            "Object": {
-			              "Role": "open_connection_report.error_message"
-			            }
-			          },
-			          "State": "Generated",
-			          "Weight": 0.99,
-			          "ID": "open_connection_reports_have_error_messages"
-			        }
-			      ]
-			    },
-			    "open_connection_report_has_success": {
-			      "Binding": {
-			        "ConceptualEntity": "OpenConnectionReport"
-			      },
-			      "State": "Generated",
-			      "Roles": {
-			        "open_connection_report": {
-			          "Target": {
-			            "Entity": "open_connection_report"
-			          }
-			        },
-			        "open_connection_report.success": {
-			          "Target": {
-			            "Entity": "open_connection_report.success"
-			          }
-			        }
-			      },
-			      "Phrasings": [
-			        {
-			          "Attribute": {
-			            "Subject": {
-			              "Role": "open_connection_report"
-			            },
-			            "Object": {
-			              "Role": "open_connection_report.success"
-			            }
-			          },
-			          "State": "Generated",
-			          "Weight": 0.99,
-			          "ID": "open_connection_reports_have_successes"
-			        }
-			      ]
-			    },
-			    "open_connection_report_has_OpenConnectionDurationms": {
-			      "Binding": {
-			        "ConceptualEntity": "OpenConnectionReport"
-			      },
-			      "State": "Generated",
-			      "Roles": {
-			        "open_connection_report": {
-			          "Target": {
-			            "Entity": "open_connection_report"
-			          }
-			        },
-			        "open_connection_report.OpenConnectionDurationms": {
-			          "Target": {
-			            "Entity": "open_connection_report.OpenConnectionDurationms"
-			          }
-			        }
-			      },
-			      "Phrasings": [
-			        {
-			          "Attribute": {
-			            "Subject": {
-			              "Role": "open_connection_report"
-			            },
-			            "Object": {
-			              "Role": "open_connection_report.OpenConnectionDurationms"
-			            }
-			          },
-			          "State": "Generated",
-			          "Weight": 0.99,
-			          "ID": "open_connection_reports_have_OpenConnectionDurationms"
-			        }
-			      ]
-			    },
-			    "open_connection_report_has_open_connection_start_time_UTC": {
-			      "Binding": {
-			        "ConceptualEntity": "OpenConnectionReport"
-			      },
-			      "State": "Generated",
-			      "Roles": {
-			        "open_connection_report": {
-			          "Target": {
-			            "Entity": "open_connection_report"
-			          }
-			        },
-			        "open_connection_report.open_connection_start_time_UTC": {
-			          "Target": {
-			            "Entity": "open_connection_report.open_connection_start_time_UTC"
-			          }
-			        }
-			      },
-			      "Phrasings": [
-			        {
-			          "Attribute": {
-			            "Subject": {
-			              "Role": "open_connection_report"
-			            },
-			            "Object": {
-			              "Role": "open_connection_report.open_connection_start_time_UTC"
-			            }
-			          },
-			          "State": "Generated",
-			          "Weight": 0.99,
-			          "ID": "open_connection_reports_have_open_connection_start_time_UTCs"
-			        }
-			      ]
-			    },
-			    "open_connection_report_has_open_connection_tracking_id": {
-			      "Binding": {
-			        "ConceptualEntity": "OpenConnectionReport"
-			      },
-			      "State": "Generated",
-			      "Roles": {
-			        "open_connection_report": {
-			          "Target": {
-			            "Entity": "open_connection_report"
-			          }
-			        },
-			        "open_connection_report.open_connection_tracking_id": {
-			          "Target": {
-			            "Entity": "open_connection_report.open_connection_tracking_id"
-			          }
-			        }
-			      },
-			      "Phrasings": [
-			        {
-			          "Attribute": {
-			            "Subject": {
-			              "Role": "open_connection_report"
-			            },
-			            "Object": {
-			              "Role": "open_connection_report.open_connection_tracking_id"
-			            }
-			          },
-			          "State": "Generated",
-			          "Weight": 0.99,
-			          "ID": "open_connection_reports_have_open_connection_tracking_ids"
-			        }
-			      ]
-			    },
-			    "open_connection_report_has_provider_name": {
-			      "Binding": {
-			        "ConceptualEntity": "OpenConnectionReport"
-			      },
-			      "State": "Generated",
-			      "Roles": {
-			        "open_connection_report": {
-			          "Target": {
-			            "Entity": "open_connection_report"
-			          }
-			        },
-			        "open_connection_report.provider_name": {
-			          "Target": {
-			            "Entity": "open_connection_report.provider_name"
-			          }
-			        }
-			      },
-			      "Phrasings": [
-			        {
-			          "Attribute": {
-			            "Subject": {
-			              "Role": "open_connection_report"
-			            },
-			            "Object": {
-			              "Role": "open_connection_report.provider_name"
-			            }
-			          },
-			          "State": "Generated",
-			          "Weight": 0.99,
-			          "ID": "open_connection_reports_have_provider_names"
-			        },
-			        {
-			          "Verb": {
-			            "Subject": {
-			              "Role": "open_connection_report.provider_name"
-			            },
-			            "Verbs": [
-			              {
-			                "provide": {
-			                  "State": "Generated"
-			                }
-			              }
-			            ],
-			            "Object": {
-			              "Role": "open_connection_report"
-			            }
-			          },
-			          "State": "Generated",
-			          "Weight": 0.75,
-			          "ID": "provider_names_provide_open_connection_reports"
-			        },
-			        {
-			          "Attribute": {
-			            "Subject": {
-			              "Role": "open_connection_report.provider_name"
-			            },
-			            "Object": {
-			              "Role": "open_connection_report"
-			            }
-			          },
-			          "State": "Generated",
-			          "Weight": 0.99,
-			          "ID": "provider_names_have_open_connection_reports"
-			        }
-			      ]
-			    },
-			    "open_connection_report_has_data_source": {
-			      "Binding": {
-			        "ConceptualEntity": "OpenConnectionReport"
-			      },
-			      "State": "Generated",
-			      "Roles": {
-			        "open_connection_report": {
-			          "Target": {
-			            "Entity": "open_connection_report"
-			          }
-			        },
-			        "open_connection_report.data_source": {
-			          "Target": {
-			            "Entity": "open_connection_report.data_source"
-			          }
-			        }
-			      },
-			      "Phrasings": [
-			        {
-			          "Attribute": {
-			            "Subject": {
-			              "Role": "open_connection_report"
-			            },
-			            "Object": {
-			              "Role": "open_connection_report.data_source"
-			            }
-			          },
-			          "State": "Generated",
-			          "Weight": 0.99,
-			          "ID": "open_connection_reports_have_data_sources"
-			        }
-			      ]
-			    },
-			    "open_connection_report_has_request_id": {
-			      "Binding": {
-			        "ConceptualEntity": "OpenConnectionReport"
-			      },
-			      "State": "Generated",
-			      "Roles": {
-			        "open_connection_report": {
-			          "Target": {
-			            "Entity": "open_connection_report"
-			          }
-			        },
-			        "open_connection_report.request_id": {
-			          "Target": {
-			            "Entity": "open_connection_report.request_id"
-			          }
-			        }
-			      },
-			      "Phrasings": [
-			        {
-			          "Attribute": {
-			            "Subject": {
-			              "Role": "open_connection_report"
-			            },
-			            "Object": {
-			              "Role": "open_connection_report.request_id"
-			            }
-			          },
-			          "State": "Generated",
-			          "Weight": 0.99,
-			          "ID": "open_connection_reports_have_request_ids"
-			        }
-			      ]
-			    },
-			    "open_connection_report_has_gateway_object_id": {
-			      "Binding": {
-			        "ConceptualEntity": "OpenConnectionReport"
-			      },
-			      "State": "Generated",
-			      "Roles": {
-			        "open_connection_report": {
-			          "Target": {
-			            "Entity": "open_connection_report"
-			          }
-			        },
-			        "open_connection_report.gateway_object_id": {
-			          "Target": {
-			            "Entity": "open_connection_report.gateway_object_id"
-			          }
-			        }
-			      },
-			      "Phrasings": [
-			        {
-			          "Attribute": {
-			            "Subject": {
-			              "Role": "open_connection_report"
-			            },
-			            "Object": {
-			              "Role": "open_connection_report.gateway_object_id"
-			            }
-			          },
-			          "State": "Generated",
-			          "Weight": 0.99,
-			          "ID": "open_connection_reports_have_gateway_object_ids"
-			        }
-			      ]
-			    },
-			    "metrics_has_spooling_disk_writing_duration": {
-			      "Binding": {
-			        "ConceptualEntity": "Metrics"
-			      },
-			      "State": "Generated",
-			      "Roles": {
-			        "metrics": {
-			          "Target": {
-			            "Entity": "metrics"
+			            "Entity": "time_unit"
 			          }
 			        },
 			        "metrics.spooling_disk_writing_duration": {
@@ -25373,7 +22722,7 @@ cultureInfo en-US
 			        {
 			          "Attribute": {
 			            "Subject": {
-			              "Role": "metrics"
+			              "Role": "time_unit"
 			            },
 			            "Object": {
 			              "Role": "metrics.spooling_disk_writing_duration"
@@ -25381,19 +22730,52 @@ cultureInfo en-US
 			          },
 			          "State": "Generated",
 			          "Weight": 0.99,
-			          "ID": "metrics_have_spooling_disk_writing_duration"
+			          "ID": "time_units_have_spooling_disk_writing_duration"
 			        }
 			      ]
 			    },
-			    "metrics_has_spooling_disk_reading_duration": {
+			    "query_execution_report_has_metrics_spooling_disk_writing_duration": {
 			      "Binding": {
-			        "ConceptualEntity": "Metrics"
+			        "ConceptualEntity": "QueryExecutionReport"
 			      },
 			      "State": "Generated",
 			      "Roles": {
-			        "metrics": {
+			        "query_execution_report": {
 			          "Target": {
-			            "Entity": "metrics"
+			            "Entity": "query_execution_report"
+			          }
+			        },
+			        "metrics.spooling_disk_writing_duration": {
+			          "Target": {
+			            "Entity": "metrics.spooling_disk_writing_duration"
+			          }
+			        }
+			      },
+			      "Phrasings": [
+			        {
+			          "Attribute": {
+			            "Subject": {
+			              "Role": "query_execution_report"
+			            },
+			            "Object": {
+			              "Role": "metrics.spooling_disk_writing_duration"
+			            }
+			          },
+			          "State": "Generated",
+			          "Weight": 0.99,
+			          "ID": "query_execution_reports_have_spooling_disk_writing_duration"
+			        }
+			      ]
+			    },
+			    "time_unit_has_metrics_spooling_disk_reading_duration": {
+			      "Binding": {
+			        "ConceptualEntity": "Time Units"
+			      },
+			      "State": "Generated",
+			      "Roles": {
+			        "time_unit": {
+			          "Target": {
+			            "Entity": "time_unit"
 			          }
 			        },
 			        "metrics.spooling_disk_reading_duration": {
@@ -25406,7 +22788,7 @@ cultureInfo en-US
 			        {
 			          "Attribute": {
 			            "Subject": {
-			              "Role": "metrics"
+			              "Role": "time_unit"
 			            },
 			            "Object": {
 			              "Role": "metrics.spooling_disk_reading_duration"
@@ -25414,7 +22796,40 @@ cultureInfo en-US
 			          },
 			          "State": "Generated",
 			          "Weight": 0.99,
-			          "ID": "metrics_have_spooling_disk_reading_duration"
+			          "ID": "time_units_have_spooling_disk_reading_duration"
+			        }
+			      ]
+			    },
+			    "query_execution_report_has_metrics_spooling_disk_reading_duration": {
+			      "Binding": {
+			        "ConceptualEntity": "QueryExecutionReport"
+			      },
+			      "State": "Generated",
+			      "Roles": {
+			        "query_execution_report": {
+			          "Target": {
+			            "Entity": "query_execution_report"
+			          }
+			        },
+			        "metrics.spooling_disk_reading_duration": {
+			          "Target": {
+			            "Entity": "metrics.spooling_disk_reading_duration"
+			          }
+			        }
+			      },
+			      "Phrasings": [
+			        {
+			          "Attribute": {
+			            "Subject": {
+			              "Role": "query_execution_report"
+			            },
+			            "Object": {
+			              "Role": "metrics.spooling_disk_reading_duration"
+			            }
+			          },
+			          "State": "Generated",
+			          "Weight": 0.99,
+			          "ID": "query_execution_reports_have_spooling_disk_reading_duration"
 			        }
 			      ]
 			    },
@@ -25649,15 +23064,15 @@ cultureInfo en-US
 			        }
 			      ]
 			    },
-			    "metrics_has_selected_size_unit_value_from_KB": {
+			    "size_unit_has_metrics_selected_size_unit_value_from_KB": {
 			      "Binding": {
-			        "ConceptualEntity": "Metrics"
+			        "ConceptualEntity": "Size Units"
 			      },
 			      "State": "Generated",
 			      "Roles": {
-			        "metrics": {
+			        "size_unit": {
 			          "Target": {
-			            "Entity": "metrics"
+			            "Entity": "size_unit"
 			          }
 			        },
 			        "metrics.selected_size_unit_value_from_KB": {
@@ -25670,7 +23085,7 @@ cultureInfo en-US
 			        {
 			          "Attribute": {
 			            "Subject": {
-			              "Role": "metrics"
+			              "Role": "size_unit"
 			            },
 			            "Object": {
 			              "Role": "metrics.selected_size_unit_value_from_KB"
@@ -25678,7 +23093,7 @@ cultureInfo en-US
 			          },
 			          "State": "Generated",
 			          "Weight": 0.99,
-			          "ID": "metrics_have_selected_size_unit_value_from_KB"
+			          "ID": "size_units_have_selected_size_unit_value_from_KB"
 			        }
 			      ]
 			    },
@@ -25748,15 +23163,15 @@ cultureInfo en-US
 			        }
 			      ]
 			    },
-			    "metrics_has_avg__gateway_memory": {
+			    "system_counter_aggregation_report_has_metrics_avg__gateway_memory": {
 			      "Binding": {
-			        "ConceptualEntity": "Metrics"
+			        "ConceptualEntity": "SystemCounterAggregationReport"
 			      },
 			      "State": "Generated",
 			      "Roles": {
-			        "metrics": {
+			        "system_counter_aggregation_report": {
 			          "Target": {
-			            "Entity": "metrics"
+			            "Entity": "system_counter_aggregation_report"
 			          }
 			        },
 			        "metrics.avg__gateway_memory": {
@@ -25769,7 +23184,7 @@ cultureInfo en-US
 			        {
 			          "Attribute": {
 			            "Subject": {
-			              "Role": "metrics"
+			              "Role": "system_counter_aggregation_report"
 			            },
 			            "Object": {
 			              "Role": "metrics.avg__gateway_memory"
@@ -25777,7 +23192,40 @@ cultureInfo en-US
 			          },
 			          "State": "Generated",
 			          "Weight": 0.99,
-			          "ID": "metrics_have_avg__gateway_memory"
+			          "ID": "system_counter_aggregation_reports_have_avg__gateway_memory"
+			        }
+			      ]
+			    },
+			    "size_unit_has_metrics_avg__gateway_memory": {
+			      "Binding": {
+			        "ConceptualEntity": "Size Units"
+			      },
+			      "State": "Generated",
+			      "Roles": {
+			        "size_unit": {
+			          "Target": {
+			            "Entity": "size_unit"
+			          }
+			        },
+			        "metrics.avg__gateway_memory": {
+			          "Target": {
+			            "Entity": "metrics.avg__gateway_memory"
+			          }
+			        }
+			      },
+			      "Phrasings": [
+			        {
+			          "Attribute": {
+			            "Subject": {
+			              "Role": "size_unit"
+			            },
+			            "Object": {
+			              "Role": "metrics.avg__gateway_memory"
+			            }
+			          },
+			          "State": "Generated",
+			          "Weight": 0.99,
+			          "ID": "size_units_have_avg__gateway_memory"
 			        }
 			      ]
 			    },
@@ -25847,15 +23295,15 @@ cultureInfo en-US
 			        }
 			      ]
 			    },
-			    "metrics_has_avg__mashup_memory": {
+			    "system_counter_aggregation_report_has_metrics_avg__mashup_memory": {
 			      "Binding": {
-			        "ConceptualEntity": "Metrics"
+			        "ConceptualEntity": "SystemCounterAggregationReport"
 			      },
 			      "State": "Generated",
 			      "Roles": {
-			        "metrics": {
+			        "system_counter_aggregation_report": {
 			          "Target": {
-			            "Entity": "metrics"
+			            "Entity": "system_counter_aggregation_report"
 			          }
 			        },
 			        "metrics.avg__mashup_memory": {
@@ -25868,7 +23316,7 @@ cultureInfo en-US
 			        {
 			          "Attribute": {
 			            "Subject": {
-			              "Role": "metrics"
+			              "Role": "system_counter_aggregation_report"
 			            },
 			            "Object": {
 			              "Role": "metrics.avg__mashup_memory"
@@ -25876,7 +23324,40 @@ cultureInfo en-US
 			          },
 			          "State": "Generated",
 			          "Weight": 0.99,
-			          "ID": "metrics_have_avg__mashup_memory"
+			          "ID": "system_counter_aggregation_reports_have_avg__mashup_memory"
+			        }
+			      ]
+			    },
+			    "size_unit_has_metrics_avg__mashup_memory": {
+			      "Binding": {
+			        "ConceptualEntity": "Size Units"
+			      },
+			      "State": "Generated",
+			      "Roles": {
+			        "size_unit": {
+			          "Target": {
+			            "Entity": "size_unit"
+			          }
+			        },
+			        "metrics.avg__mashup_memory": {
+			          "Target": {
+			            "Entity": "metrics.avg__mashup_memory"
+			          }
+			        }
+			      },
+			      "Phrasings": [
+			        {
+			          "Attribute": {
+			            "Subject": {
+			              "Role": "size_unit"
+			            },
+			            "Object": {
+			              "Role": "metrics.avg__mashup_memory"
+			            }
+			          },
+			          "State": "Generated",
+			          "Weight": 0.99,
+			          "ID": "size_units_have_avg__mashup_memory"
 			        }
 			      ]
 			    },
@@ -26012,15 +23493,15 @@ cultureInfo en-US
 			        }
 			      ]
 			    },
-			    "metrics_has_selected_size_unit_name": {
+			    "size_unit_has_metrics_selected_size_unit_name": {
 			      "Binding": {
-			        "ConceptualEntity": "Metrics"
+			        "ConceptualEntity": "Size Units"
 			      },
 			      "State": "Generated",
 			      "Roles": {
-			        "metrics": {
+			        "size_unit": {
 			          "Target": {
-			            "Entity": "metrics"
+			            "Entity": "size_unit"
 			          }
 			        },
 			        "metrics.selected_size_unit_name": {
@@ -26033,7 +23514,7 @@ cultureInfo en-US
 			        {
 			          "Attribute": {
 			            "Subject": {
-			              "Role": "metrics"
+			              "Role": "size_unit"
 			            },
 			            "Object": {
 			              "Role": "metrics.selected_size_unit_name"
@@ -26041,19 +23522,19 @@ cultureInfo en-US
 			          },
 			          "State": "Generated",
 			          "Weight": 0.99,
-			          "ID": "metrics_have_selected_size_unit_name"
+			          "ID": "size_units_have_selected_size_unit_name"
 			        }
 			      ]
 			    },
-			    "metrics_has_selected_size_unit_value": {
+			    "size_unit_has_metrics_selected_size_unit_value": {
 			      "Binding": {
-			        "ConceptualEntity": "Metrics"
+			        "ConceptualEntity": "Size Units"
 			      },
 			      "State": "Generated",
 			      "Roles": {
-			        "metrics": {
+			        "size_unit": {
 			          "Target": {
-			            "Entity": "metrics"
+			            "Entity": "size_unit"
 			          }
 			        },
 			        "metrics.selected_size_unit_value": {
@@ -26066,7 +23547,7 @@ cultureInfo en-US
 			        {
 			          "Attribute": {
 			            "Subject": {
-			              "Role": "metrics"
+			              "Role": "size_unit"
 			            },
 			            "Object": {
 			              "Role": "metrics.selected_size_unit_value"
@@ -26074,19 +23555,19 @@ cultureInfo en-US
 			          },
 			          "State": "Generated",
 			          "Weight": 0.99,
-			          "ID": "metrics_have_selected_size_unit_value"
+			          "ID": "size_units_have_selected_size_unit_value"
 			        }
 			      ]
 			    },
-			    "metrics_has_spooling_total_data_size": {
+			    "size_unit_has_metrics_spooling_total_data_size": {
 			      "Binding": {
-			        "ConceptualEntity": "Metrics"
+			        "ConceptualEntity": "Size Units"
 			      },
 			      "State": "Generated",
 			      "Roles": {
-			        "metrics": {
+			        "size_unit": {
 			          "Target": {
-			            "Entity": "metrics"
+			            "Entity": "size_unit"
 			          }
 			        },
 			        "metrics.spooling_total_data_size": {
@@ -26099,7 +23580,7 @@ cultureInfo en-US
 			        {
 			          "Attribute": {
 			            "Subject": {
-			              "Role": "metrics"
+			              "Role": "size_unit"
 			            },
 			            "Object": {
 			              "Role": "metrics.spooling_total_data_size"
@@ -26107,7 +23588,40 @@ cultureInfo en-US
 			          },
 			          "State": "Generated",
 			          "Weight": 0.99,
-			          "ID": "metrics_have_spooling_total_data_size"
+			          "ID": "size_units_have_spooling_total_data_size"
+			        }
+			      ]
+			    },
+			    "query_execution_report_has_metrics_spooling_total_data_size": {
+			      "Binding": {
+			        "ConceptualEntity": "QueryExecutionReport"
+			      },
+			      "State": "Generated",
+			      "Roles": {
+			        "query_execution_report": {
+			          "Target": {
+			            "Entity": "query_execution_report"
+			          }
+			        },
+			        "metrics.spooling_total_data_size": {
+			          "Target": {
+			            "Entity": "metrics.spooling_total_data_size"
+			          }
+			        }
+			      },
+			      "Phrasings": [
+			        {
+			          "Attribute": {
+			            "Subject": {
+			              "Role": "query_execution_report"
+			            },
+			            "Object": {
+			              "Role": "metrics.spooling_total_data_size"
+			            }
+			          },
+			          "State": "Generated",
+			          "Weight": 0.99,
+			          "ID": "query_execution_reports_have_spooling_total_data_size"
 			        }
 			      ]
 			    },
@@ -26375,15 +23889,15 @@ cultureInfo en-US
 			        }
 			      ]
 			    },
-			    "metrics_has_data_reading_and_serialization_duration": {
+			    "time_unit_has_metrics_data_reading_and_serialization_duration": {
 			      "Binding": {
-			        "ConceptualEntity": "Metrics"
+			        "ConceptualEntity": "Time Units"
 			      },
 			      "State": "Generated",
 			      "Roles": {
-			        "metrics": {
+			        "time_unit": {
 			          "Target": {
-			            "Entity": "metrics"
+			            "Entity": "time_unit"
 			          }
 			        },
 			        "metrics.data_reading_and_serialization_duration": {
@@ -26396,7 +23910,7 @@ cultureInfo en-US
 			        {
 			          "Attribute": {
 			            "Subject": {
-			              "Role": "metrics"
+			              "Role": "time_unit"
 			            },
 			            "Object": {
 			              "Role": "metrics.data_reading_and_serialization_duration"
@@ -26404,7 +23918,40 @@ cultureInfo en-US
 			          },
 			          "State": "Generated",
 			          "Weight": 0.99,
-			          "ID": "metrics_have_data_reading_and_serialization_duration"
+			          "ID": "time_units_have_data_reading_and_serialization_duration"
+			        }
+			      ]
+			    },
+			    "query_execution_report_has_metrics_data_reading_and_serialization_duration": {
+			      "Binding": {
+			        "ConceptualEntity": "QueryExecutionReport"
+			      },
+			      "State": "Generated",
+			      "Roles": {
+			        "query_execution_report": {
+			          "Target": {
+			            "Entity": "query_execution_report"
+			          }
+			        },
+			        "metrics.data_reading_and_serialization_duration": {
+			          "Target": {
+			            "Entity": "metrics.data_reading_and_serialization_duration"
+			          }
+			        }
+			      },
+			      "Phrasings": [
+			        {
+			          "Attribute": {
+			            "Subject": {
+			              "Role": "query_execution_report"
+			            },
+			            "Object": {
+			              "Role": "metrics.data_reading_and_serialization_duration"
+			            }
+			          },
+			          "State": "Generated",
+			          "Weight": 0.99,
+			          "ID": "query_execution_reports_have_data_reading_and_serialization_duration"
 			        }
 			      ]
 			    },
@@ -26441,7 +23988,7 @@ cultureInfo en-US
 			        }
 			      ]
 			    },
-			    "query_execution_report_has_metrics_query_tracking_ids": {
+			    "query_execution_report_has_metrics_query_trackings": {
 			      "Binding": {
 			        "ConceptualEntity": "QueryExecutionReport"
 			      },
@@ -26452,9 +23999,9 @@ cultureInfo en-US
 			            "Entity": "query_execution_report"
 			          }
 			        },
-			        "metrics.query_tracking_ids": {
+			        "metrics.query_trackings": {
 			          "Target": {
-			            "Entity": "metrics.query_tracking_ids"
+			            "Entity": "metrics.query_trackings"
 			          }
 			        }
 			      },
@@ -26465,7 +24012,7 @@ cultureInfo en-US
 			              "Role": "query_execution_report"
 			            },
 			            "Object": {
-			              "Role": "metrics.query_tracking_ids"
+			              "Role": "metrics.query_trackings"
 			            }
 			          },
 			          "State": "Generated",
@@ -26474,15 +24021,15 @@ cultureInfo en-US
 			        }
 			      ]
 			    },
-			    "metrics_has_data_processing_duration": {
+			    "time_unit_has_metrics_data_processing_duration": {
 			      "Binding": {
-			        "ConceptualEntity": "Metrics"
+			        "ConceptualEntity": "Time Units"
 			      },
 			      "State": "Generated",
 			      "Roles": {
-			        "metrics": {
+			        "time_unit": {
 			          "Target": {
-			            "Entity": "metrics"
+			            "Entity": "time_unit"
 			          }
 			        },
 			        "metrics.data_processing_duration": {
@@ -26495,7 +24042,7 @@ cultureInfo en-US
 			        {
 			          "Attribute": {
 			            "Subject": {
-			              "Role": "metrics"
+			              "Role": "time_unit"
 			            },
 			            "Object": {
 			              "Role": "metrics.data_processing_duration"
@@ -26503,19 +24050,52 @@ cultureInfo en-US
 			          },
 			          "State": "Generated",
 			          "Weight": 0.99,
-			          "ID": "metrics_have_data_processing_duration"
+			          "ID": "time_units_have_data_processing_duration"
 			        }
 			      ]
 			    },
-			    "metrics_has_query_execution_duration": {
+			    "query_execution_report_has_metrics_data_processing_duration": {
 			      "Binding": {
-			        "ConceptualEntity": "Metrics"
+			        "ConceptualEntity": "QueryExecutionReport"
 			      },
 			      "State": "Generated",
 			      "Roles": {
-			        "metrics": {
+			        "query_execution_report": {
 			          "Target": {
-			            "Entity": "metrics"
+			            "Entity": "query_execution_report"
+			          }
+			        },
+			        "metrics.data_processing_duration": {
+			          "Target": {
+			            "Entity": "metrics.data_processing_duration"
+			          }
+			        }
+			      },
+			      "Phrasings": [
+			        {
+			          "Attribute": {
+			            "Subject": {
+			              "Role": "query_execution_report"
+			            },
+			            "Object": {
+			              "Role": "metrics.data_processing_duration"
+			            }
+			          },
+			          "State": "Generated",
+			          "Weight": 0.99,
+			          "ID": "query_execution_reports_have_data_processing_duration"
+			        }
+			      ]
+			    },
+			    "time_unit_has_metrics_query_execution_duration": {
+			      "Binding": {
+			        "ConceptualEntity": "Time Units"
+			      },
+			      "State": "Generated",
+			      "Roles": {
+			        "time_unit": {
+			          "Target": {
+			            "Entity": "time_unit"
 			          }
 			        },
 			        "metrics.query_execution_duration": {
@@ -26528,7 +24108,7 @@ cultureInfo en-US
 			        {
 			          "Attribute": {
 			            "Subject": {
-			              "Role": "metrics"
+			              "Role": "time_unit"
 			            },
 			            "Object": {
 			              "Role": "metrics.query_execution_duration"
@@ -26536,19 +24116,52 @@ cultureInfo en-US
 			          },
 			          "State": "Generated",
 			          "Weight": 0.99,
-			          "ID": "metrics_have_query_execution_duration"
+			          "ID": "time_units_have_query_execution_duration"
 			        }
 			      ]
 			    },
-			    "metrics_has_max_data_processing_duration": {
+			    "query_execution_report_has_metrics_query_execution_duration": {
 			      "Binding": {
-			        "ConceptualEntity": "Metrics"
+			        "ConceptualEntity": "QueryExecutionReport"
 			      },
 			      "State": "Generated",
 			      "Roles": {
-			        "metrics": {
+			        "query_execution_report": {
 			          "Target": {
-			            "Entity": "metrics"
+			            "Entity": "query_execution_report"
+			          }
+			        },
+			        "metrics.query_execution_duration": {
+			          "Target": {
+			            "Entity": "metrics.query_execution_duration"
+			          }
+			        }
+			      },
+			      "Phrasings": [
+			        {
+			          "Attribute": {
+			            "Subject": {
+			              "Role": "query_execution_report"
+			            },
+			            "Object": {
+			              "Role": "metrics.query_execution_duration"
+			            }
+			          },
+			          "State": "Generated",
+			          "Weight": 0.99,
+			          "ID": "query_execution_reports_have_query_execution_duration"
+			        }
+			      ]
+			    },
+			    "time_unit_has_metrics_max_data_processing_duration": {
+			      "Binding": {
+			        "ConceptualEntity": "Time Units"
+			      },
+			      "State": "Generated",
+			      "Roles": {
+			        "time_unit": {
+			          "Target": {
+			            "Entity": "time_unit"
 			          }
 			        },
 			        "metrics.max_data_processing_duration": {
@@ -26561,7 +24174,7 @@ cultureInfo en-US
 			        {
 			          "Attribute": {
 			            "Subject": {
-			              "Role": "metrics"
+			              "Role": "time_unit"
 			            },
 			            "Object": {
 			              "Role": "metrics.max_data_processing_duration"
@@ -26569,19 +24182,52 @@ cultureInfo en-US
 			          },
 			          "State": "Generated",
 			          "Weight": 0.99,
-			          "ID": "metrics_have_max_data_processing_duration"
+			          "ID": "time_units_have_max_data_processing_duration"
 			        }
 			      ]
 			    },
-			    "metrics_has_max_query_execution_duration": {
+			    "query_execution_aggregation_report_has_metrics_max_data_processing_duration": {
 			      "Binding": {
-			        "ConceptualEntity": "Metrics"
+			        "ConceptualEntity": "QueryExecutionAggregationReport"
 			      },
 			      "State": "Generated",
 			      "Roles": {
-			        "metrics": {
+			        "query_execution_aggregation_report": {
 			          "Target": {
-			            "Entity": "metrics"
+			            "Entity": "query_execution_aggregation_report"
+			          }
+			        },
+			        "metrics.max_data_processing_duration": {
+			          "Target": {
+			            "Entity": "metrics.max_data_processing_duration"
+			          }
+			        }
+			      },
+			      "Phrasings": [
+			        {
+			          "Attribute": {
+			            "Subject": {
+			              "Role": "query_execution_aggregation_report"
+			            },
+			            "Object": {
+			              "Role": "metrics.max_data_processing_duration"
+			            }
+			          },
+			          "State": "Generated",
+			          "Weight": 0.99,
+			          "ID": "query_execution_aggregation_reports_have_max_data_processing_duration"
+			        }
+			      ]
+			    },
+			    "time_unit_has_metrics_max_query_execution_duration": {
+			      "Binding": {
+			        "ConceptualEntity": "Time Units"
+			      },
+			      "State": "Generated",
+			      "Roles": {
+			        "time_unit": {
+			          "Target": {
+			            "Entity": "time_unit"
 			          }
 			        },
 			        "metrics.max_query_execution_duration": {
@@ -26594,7 +24240,7 @@ cultureInfo en-US
 			        {
 			          "Attribute": {
 			            "Subject": {
-			              "Role": "metrics"
+			              "Role": "time_unit"
 			            },
 			            "Object": {
 			              "Role": "metrics.max_query_execution_duration"
@@ -26602,7 +24248,40 @@ cultureInfo en-US
 			          },
 			          "State": "Generated",
 			          "Weight": 0.99,
-			          "ID": "metrics_have_max_query_execution_duration"
+			          "ID": "time_units_have_max_query_execution_duration"
+			        }
+			      ]
+			    },
+			    "query_execution_aggregation_report_has_metrics_max_query_execution_duration": {
+			      "Binding": {
+			        "ConceptualEntity": "QueryExecutionAggregationReport"
+			      },
+			      "State": "Generated",
+			      "Roles": {
+			        "query_execution_aggregation_report": {
+			          "Target": {
+			            "Entity": "query_execution_aggregation_report"
+			          }
+			        },
+			        "metrics.max_query_execution_duration": {
+			          "Target": {
+			            "Entity": "metrics.max_query_execution_duration"
+			          }
+			        }
+			      },
+			      "Phrasings": [
+			        {
+			          "Attribute": {
+			            "Subject": {
+			              "Role": "query_execution_aggregation_report"
+			            },
+			            "Object": {
+			              "Role": "metrics.max_query_execution_duration"
+			            }
+			          },
+			          "State": "Generated",
+			          "Weight": 0.99,
+			          "ID": "query_execution_aggregation_reports_have_max_query_execution_duration"
 			        }
 			      ]
 			    },
@@ -26639,15 +24318,15 @@ cultureInfo en-US
 			        }
 			      ]
 			    },
-			    "metrics_has_selected_time_unit_value": {
+			    "time_unit_has_metrics_selected_time_unit_value": {
 			      "Binding": {
-			        "ConceptualEntity": "Metrics"
+			        "ConceptualEntity": "Time Units"
 			      },
 			      "State": "Generated",
 			      "Roles": {
-			        "metrics": {
+			        "time_unit": {
 			          "Target": {
-			            "Entity": "metrics"
+			            "Entity": "time_unit"
 			          }
 			        },
 			        "metrics.selected_time_unit_value": {
@@ -26660,7 +24339,7 @@ cultureInfo en-US
 			        {
 			          "Attribute": {
 			            "Subject": {
-			              "Role": "metrics"
+			              "Role": "time_unit"
 			            },
 			            "Object": {
 			              "Role": "metrics.selected_time_unit_value"
@@ -26668,19 +24347,19 @@ cultureInfo en-US
 			          },
 			          "State": "Generated",
 			          "Weight": 0.99,
-			          "ID": "metrics_have_selected_time_unit_value"
+			          "ID": "time_units_have_selected_time_unit_value"
 			        }
 			      ]
 			    },
-			    "metrics_has_selected_time_unit_name": {
+			    "time_unit_has_metrics_selected_time_unit_name": {
 			      "Binding": {
-			        "ConceptualEntity": "Metrics"
+			        "ConceptualEntity": "Time Units"
 			      },
 			      "State": "Generated",
 			      "Roles": {
-			        "metrics": {
+			        "time_unit": {
 			          "Target": {
-			            "Entity": "metrics"
+			            "Entity": "time_unit"
 			          }
 			        },
 			        "metrics.selected_time_unit_name": {
@@ -26693,7 +24372,7 @@ cultureInfo en-US
 			        {
 			          "Attribute": {
 			            "Subject": {
-			              "Role": "metrics"
+			              "Role": "time_unit"
 			            },
 			            "Object": {
 			              "Role": "metrics.selected_time_unit_name"
@@ -26701,7 +24380,7 @@ cultureInfo en-US
 			          },
 			          "State": "Generated",
 			          "Weight": 0.99,
-			          "ID": "metrics_have_selected_time_unit_name"
+			          "ID": "time_units_have_selected_time_unit_name"
 			        }
 			      ]
 			    },
@@ -28454,48 +26133,6 @@ cultureInfo en-US
 			        }
 			      ]
 			    },
-			    "concurrent_operation_aggregation_report_is_started_on_aggregation_start_date": {
-			      "Binding": {
-			        "ConceptualEntity": "ConcurrentOperationAggregationReport"
-			      },
-			      "State": "Generated",
-			      "Roles": {
-			        "concurrent_operation_aggregation_report": {
-			          "Target": {
-			            "Entity": "concurrent_operation_aggregation_report"
-			          }
-			        },
-			        "concurrent_operation_aggregation_report.aggregation_start_date": {
-			          "Target": {
-			            "Entity": "concurrent_operation_aggregation_report.aggregation_start_date"
-			          }
-			        }
-			      },
-			      "SemanticSlots": {
-			        "When": {
-			          "Role": "concurrent_operation_aggregation_report.aggregation_start_date"
-			        }
-			      },
-			      "Phrasings": [
-			        {
-			          "Verb": {
-			            "Verbs": [
-			              {
-			                "start": {
-			                  "State": "Generated"
-			                }
-			              }
-			            ],
-			            "Object": {
-			              "Role": "concurrent_operation_aggregation_report"
-			            }
-			          },
-			          "State": "Generated",
-			          "Weight": 0.9,
-			          "ID": "concurrent_operation_aggregation_reports_are_started_on_aggregation_start_dates"
-			        }
-			      ]
-			    },
 			    "mashup_evaluation_report_is_ended_on_end_date": {
 			      "Binding": {
 			        "ConceptualEntity": "MashupEvaluationReport"
@@ -28535,90 +26172,6 @@ cultureInfo en-US
 			          "State": "Generated",
 			          "Weight": 0.9,
 			          "ID": "mashup_evaluation_reports_are_ended_on_end_dates"
-			        }
-			      ]
-			    },
-			    "open_connection_report_is_started_on_open_connection_start_date": {
-			      "Binding": {
-			        "ConceptualEntity": "OpenConnectionReport"
-			      },
-			      "State": "Generated",
-			      "Roles": {
-			        "open_connection_report": {
-			          "Target": {
-			            "Entity": "open_connection_report"
-			          }
-			        },
-			        "open_connection_report.open_connection_start_date": {
-			          "Target": {
-			            "Entity": "open_connection_report.open_connection_start_date"
-			          }
-			        }
-			      },
-			      "SemanticSlots": {
-			        "When": {
-			          "Role": "open_connection_report.open_connection_start_date"
-			        }
-			      },
-			      "Phrasings": [
-			        {
-			          "Verb": {
-			            "Verbs": [
-			              {
-			                "start": {
-			                  "State": "Generated"
-			                }
-			              }
-			            ],
-			            "Object": {
-			              "Role": "open_connection_report"
-			            }
-			          },
-			          "State": "Generated",
-			          "Weight": 0.9,
-			          "ID": "open_connection_reports_are_started_on_open_connection_start_dates"
-			        }
-			      ]
-			    },
-			    "query_execution_report_is_Requested_on_query_execution_end_time_UTC": {
-			      "Binding": {
-			        "ConceptualEntity": "QueryExecutionReport"
-			      },
-			      "State": "Generated",
-			      "Roles": {
-			        "query_execution_report": {
-			          "Target": {
-			            "Entity": "query_execution_report"
-			          }
-			        },
-			        "query_execution_report.query_execution_end_time_UTC": {
-			          "Target": {
-			            "Entity": "query_execution_report.query_execution_end_time_UTC"
-			          }
-			        }
-			      },
-			      "SemanticSlots": {
-			        "When": {
-			          "Role": "query_execution_report.query_execution_end_time_UTC"
-			        }
-			      },
-			      "Phrasings": [
-			        {
-			          "Verb": {
-			            "Verbs": [
-			              {
-			                "Request": {
-			                  "State": "Generated"
-			                }
-			              }
-			            ],
-			            "Object": {
-			              "Role": "query_execution_report"
-			            }
-			          },
-			          "State": "Generated",
-			          "Weight": 0.9,
-			          "ID": "query_execution_reports_are_Requested_on_query_execution_end_time_UTCs"
 			        }
 			      ]
 			    },
@@ -28718,6 +26271,11 @@ cultureInfo en-US
 			          "ID": "query_start_report_evaluation_context_host_connection_types_have_query_start_reports"
 			        }
 			      ]
+			    }
+			  },
+			  "Agents": {
+			    "Internal": {
+			      "Version": "1.1.0"
 			    }
 			  }
 			}

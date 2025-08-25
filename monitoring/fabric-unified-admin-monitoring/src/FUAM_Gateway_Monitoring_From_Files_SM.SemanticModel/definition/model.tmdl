@@ -24,11 +24,11 @@ queryGroup MashupEvaluationReport
 
 annotation __PBI_TimeIntelligenceEnabled = 0
 
-annotation PBIDesktopVersion = 2.137.751.0 (24.10)
-
-annotation PBI_QueryOrder = ["Folder Path","SystemCounterAggregationReport","QueryExecutionReport","QueryExecutionAggregationReport","Size Units","Time Units","DataError","OpenConnectionReport","MashupEvaluationReport","ConcurrentOperationAggregationReport","QueryStartReport","QueryStartReport_DataSources","QueryStartReport_QueryTexts","QueryStartReport_EvaluationContext","QueryStartReport_ApplicationContext","QueryStartReport_EvaluationContext_Service_Mapping","QueryStartReport_EvaluationContext_HostConnectionTypes"]
+annotation PBI_QueryOrder = ["Folder Path","SystemCounterAggregationReport","QueryExecutionReport","QueryExecutionAggregationReport","Size Units","Time Units","DataError","MashupEvaluationReport","QueryStartReport","QueryStartReport_DataSources","QueryStartReport_QueryTexts","QueryStartReport_EvaluationContext","QueryStartReport_ApplicationContext","QueryStartReport_EvaluationContext_Service_Mapping","QueryStartReport_EvaluationContext_HostConnectionTypes"]
 
 annotation PBI_ProTooling = ["DaxQueryView_Desktop"]
+
+annotation PBIDesktopVersion = 2.146.1026.0 (25.08)+fb98ab832373de81dccd5c01cd96306a48477556
 
 ref table SystemCounterAggregationReport
 ref table QueryExecutionReport
@@ -39,9 +39,7 @@ ref table Metrics
 ref table 'Size Units'
 ref table 'Time Units'
 ref table 'CPU Cores Helper'
-ref table OpenConnectionReport
 ref table MashupEvaluationReport
-ref table ConcurrentOperationAggregationReport
 ref table QueryStartReport
 ref table QueryStartReport_DataSources
 ref table QueryStartReport_QueryTexts
