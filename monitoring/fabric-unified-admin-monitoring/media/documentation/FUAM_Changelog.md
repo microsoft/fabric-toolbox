@@ -25,6 +25,9 @@ Date: 2025-08-25
     - Updated notebooks to support the latest version (v44) of Capacity Metrics
 
 
+Best Regards!
+Kevin & Gellért
+
 --------------------------
 
 ## 📦 2025.7.2
