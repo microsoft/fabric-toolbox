@@ -2,7 +2,7 @@
 
 ![Fabric Workspace Monitoring component overview with report templates](./media/general/fwm_overview_cover.png)
 
-Current template version: **2025.8.1**
+Current template version: **2025.8.2**
 
 ## Introduction
 

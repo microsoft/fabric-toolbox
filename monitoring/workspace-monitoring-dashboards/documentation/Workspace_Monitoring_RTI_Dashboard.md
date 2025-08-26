@@ -32,8 +32,9 @@ Workspace Monitoring with the Real-Time Dashboard template can help answer commo
 
 |Workload|Name|
 |---|---|
-|Semantic model|[Semantic Models Analysis](#analytical-pathway--semantic-model-analysis-in-near-real-time)|
 |Eventhouse|[Eventhouse Analysis](#analytical-pathway--eventhouse-analysis-in-near-real-time)|
+|Semantic model|[Semantic Models Analysis](#analytical-pathway--semantic-model-analysis-in-near-real-time)|
+
 
 ### Overview page
 
@@ -47,101 +48,6 @@ Workspace Monitoring with the Real-Time Dashboard template can help answer commo
 |4.|Eventhouse KQL database log-related dashboard pages.|
 |5.|**Explore** the help page, which helps you and other users in your organization get more information about the templates and their purpose, etc.|
 |6.|Available log cards show which workload logs are available in the current time window for the selected workspace.|
-
-### Analytical Pathway | Semantic Model Analysis in near real-time
-
-#### Overview | Semantic Models
-![Screenshot](/monitoring/workspace-monitoring-dashboards/media/documentation/rti/fwm_rti_ap_1.png)
-
-|Step|Description|
-|---|---|
-|1.|**Workspace** parameter: **Select** a connected workspace to set the scope of the report. The overview page also shows the name of the selected workspace.|
-|2.|**Other** parameters: Each dashboard page contains context-specific parameters you can select. <br> The **UTC offset** parameter adjusts all time-related insights to the selected time zone. <br> The **Time range** parameter filters all visuals on the page (maximum available interval: 30 days).|
-|3.|The cards provide you with aggregated insights about all semantic models in the selected time window. <br> **Important:** The dashboard includes query and refresh operations only.|
-|4.|Basic capacity-related insights about semantic models: <br>_Total Execution Delay_ and _Total Throttling_ time in the selected time unit.|
-|5.|Basic insights about semantic models, such as "Operations by status over time" and "Operations by Application".|
-
-![Screenshot](/monitoring/workspace-monitoring-dashboards/media/documentation/rti/fwm_rti_ap_2.png)
-
-|Step|Description|
-|---|---|
-|Info|Let's focus on the provided illustration and the associated visuals on the "Semantic Models" dashboard page. <br><br> The Analysis Services engine (for semantic models) collects different trace log events to the same OperationId. The illustration shows which kinds of trace logs will be collected during the lifecycle of a query or refresh operation.|
-|6.|The first part of the illustration shows that some trace log events will already be collected before the operation ends. This information doesn't contain all the different key metrics of an operation, like memory consumption or CPU time; however, it allows us to visualize on this Real-Time Dashboard the count of currently running queries and refreshes, which haven't finished yet.|
-|7.|At the end of each query or refresh operation, another trace log event entry will be collected by the Workspace Monitoring feature, which is the "ExecutionMetrics". This event contains a summary of all key metrics of an operation. However, this is only available once the operation has finished with status "succeeded" or "failed".|
-
->**Example A**: A semantic model **query** within a Power BI report takes on average around 1.5 minutes. To identify this operation as soon as possible, this dashboard visualizes the "Running Queries" metric. This metric shows how many different query operations have been started on this monitored workspace within the selected time window, but not finished yet.
-
->**Example B**: A semantic model **refresh** takes on average around 2 hours. To identify this operation as soon as possible, this dashboard visualizes the "Started Refreshes" metric. This metric shows how many different refresh operations have been started on this monitored workspace within the selected time window, but not finished yet.
-
-**Important to know:** If we visualized only the insights extracted from the "ExecutionMetrics" event, we wouldn't see any information about a given operation until it has finished.
-
-<br>
-
-#### Active Queries | Semantic Models
-
-Let's continue with the **SM | Active Queries** dashboard page, which is especially helpful in situations where you need to understand which queries are currently running against the semantic models within the monitored workspace.
-
-![Screenshot](/monitoring/workspace-monitoring-dashboards/media/documentation/rti/fwm_rti_ap_3.png)
-
-|Step|Description|
-|---|---|
-|Info|We recommend filtering this dashboard page for a small time window, such as: last _15 min_, _30 min_, or _1-2 hours_.|
-|9.|All the highlighted visuals show you who and which query is currently executing on the workspace. <br> The table query (row) will be highlighted in blue if the "CurrentStatus" is "Started".|
-
->**Note:** Please be aware that one Power BI report page can contain multiple visuals. Each visual crafts its own DAX query behind the scenes. <br> The metric _# Running Queries_ shows the number of each unique running DAX and MDX query that has been called by the user or by a process (like a subscription).
-
-Let's deep dive into this example query:
-
-![Screenshot](/monitoring/workspace-monitoring-dashboards/media/documentation/rti/fwm_rti_ap_4.png)
-
-|Step|Description|
-|---|---|
-|10.|Once you expand a row within the table, you can see the raw DAX query that has been called against the semantic model.|
-|11.|**Review** the value of the "EventText" attribute/column. This value is the raw text, which you can also use in, e.g., the DAX editor in Power BI Desktop.|
-|12.|Let's assume that you have already identified a semantic model where a user is calling a heavy visual (DAX query). You would like to take action to analyze and optimize the semantic model further. <br> **Explore** three options, which can help you start an in-depth investigation.|
-
-#### Users | Semantic Models
-
-The next dashboard page is **SM | Users**, which consolidates all the semantic model operations (queries and refreshes) from the _Executing User_ perspective.
-
->**Info**: Within the SemanticModelLogs table, there are two different user-related columns. It might occur that a user schedules a semantic model refresh, which will be executed automatically by the service; however, this operation is associated with the user who owns the semantic model. 
-For such scenarios, the _Executing User_ determines the associated user for refreshes, but also defines the user who executes a query ("User opens the Power BI report page, which has 4 visuals -> 4 query operations will be logged.")
-
-![Screenshot](/monitoring/workspace-monitoring-dashboards/media/documentation/rti/fwm_rti_ap_5.png)
-
-|Step|Description|
-|---|---|
-|13.|This is an aggregated view of all the query interactions and refreshes with the key metrics by user.|
-|Info|In many cases, when we troubleshoot a semantic model, we would like to understand the behaviors of the user.|
-|14.|This heatmap shows the _Max CPU Time_ of operations by _Executing User_ by _Usage_ for all the selected semantic models within the selected time window.|
-|15.|This heatmap shows the _Max Duration_ of operations by _Executing User_ by _Usage_ for all the selected semantic models within the selected time window.|
-|16.|This heatmap shows the _Max Memory Peak_ of operations by _Executing User_ by _Usage_ for all the selected semantic models within the selected time window.|
-
-![Screenshot](/monitoring/workspace-monitoring-dashboards/media/documentation/rti/fwm_rti_ap_6.png)
-
-|Step|Description|
-|---|---|
-|17.|The table "Top 50 Failed Operations sorted by CPU Time desc" shows all the recently failed operations with the key metrics by _Executing User_, _Semantic Model_ (with link), and _OperationId_.
-
-#### Refreshes | Semantic Models
-
-![Screenshot](/monitoring/workspace-monitoring-dashboards/media/documentation/rti/fwm_rti_ap_7.png)
-
-|Step|Description|
-|---|---|
-|18.|Overview of the count of unique refreshes.|
-|19.|Key insights of refreshes by semantic models. <br> _Max CPU Time_, _Max Duration_, _Max Power Query CPU Time_, and _Max Processed Objects_ by semantic models within the selected time window for the selected workspace.|
-
-![Screenshot](/monitoring/workspace-monitoring-dashboards/media/documentation/rti/fwm_rti_ap_8.png)
-
-|Step|Description|
-|---|---|
-|20.|Key insights of refreshes by semantic models by operation end time.|
-
-**Very well done!**
-You finished the analytical pathway for semantic model analysis.
-
-------------------------------------------------------------------------------------------------
 
 ### Analytical Pathway | Eventhouse Analysis in near real-time
 
@@ -198,4 +104,171 @@ The "EH | Activity time" dashboard page focuses on the activity operations withi
 |9.|The bottom section provides CPU times for the following scenarios: <br> - Update policies <br> - Materialized Views <br> - Commands|
 
 **Very well done!**
-You finished the
+You finished the analytical pathway "Eventhouse KQL database analysis".
+
+
+----------------
+
+
+### Analytical Pathway | Semantic Model Analysis in near real-time
+
+#### Overview | Semantic Models
+![Screenshot](/monitoring/workspace-monitoring-dashboards/media/documentation/rti/fwm_rti_ap_1.png)
+|Step|Description|
+|---|---|
+|1.|**Workspace** parameter: **Select** a connected workspace to set the scope of the report. The overview page also shows the name of the selected workspace.|
+|2.|**Other** parameters: Each dashboard page contains context-specific parameters you can select. <br> The **UTC offset** parameter adjusts all time-related insights to the selected time zone. <br> The **Time range** parameter filters all visuals on the page (maximum available interval: 30 days).|
+|3.|The cards provide you with aggregated insights about all semantic models in the selected time window. <br> **Important:** The dashboard includes query and refresh operations only.|
+|4.|Basic capacity-related insights about semantic models: <br>_Total Execution Delay_ and _Total Throttling_ time in the selected time unit.|
+|5.|Basic insights about semantic models, such as "Operations by status over time" and "Operations by Application".|
+|6.||
+
+![Screenshot](/monitoring/workspace-monitoring-dashboards/media/documentation/rti/fwm_rti_ap_2.png)
+
+|Step|Description|
+|---|---|
+|Info|Let's focus on the provided illustration and the associated visuals on the "Semantic Models" dashboard page. <br><br> The Analysis Services engine (for semantic models) collects different trace log events to the same OperationId. The illustration shows which kinds of trace logs will be collected during the lifecycle of a query or refresh operation.|
+|7.|The first part of the illustration shows that some trace log events will already be collected before the operation ends. This information doesn't contain all the different key metrics of an operation, like memory consumption or CPU time; however, it allows us to visualize on this Real-Time Dashboard the count of currently running queries and refreshes, which haven't finished yet.|
+|8.|At the end of each query or refresh operation, another trace log event entry will be collected by the Workspace Monitoring feature, which is the "ExecutionMetrics". This event contains a summary of all key metrics of an operation. However, this is only available once the operation has finished with status "succeeded" or "failed".|
+
+>**Example A**: A semantic model **query** within a Power BI report takes on average around 1.5 minutes. To identify this operation as soon as possible, this dashboard visualizes the "Running Queries" metric. This metric shows how many different query operations have been started on this monitored workspace within the selected time window, but not finished yet.
+
+>**Example B**: A semantic model **refresh** takes on average around 2 hours. To identify this operation as soon as possible, this dashboard visualizes the "Started Refreshes" metric. This metric shows how many different refresh operations have been started on this monitored workspace within the selected time window, but not finished yet.
+
+**Important to know:** If we visualized only the insights extracted from the "ExecutionMetrics" event, we wouldn't see any information about a given operation until it has finished.
+
+
+**Very well done!**
+You finished the introductory analytical pathway "Semantic model near-real time analysis".
+
+----------------
+
+<br>
+
+
+### Analytical Pathway | Most active Users
+**for near-real time monitoring/troubleshooting**
+
+
+The next dashboard page is **SM | Users**, which consolidates all the semantic model operations (queries and refreshes) from the _Executing User_ perspective.
+
+>**Info**: Within the SemanticModelLogs table, there are two different user-related columns. 
+>
+>It might occur that a user schedules a semantic model refresh, which will be executed automatically by the service; however, this operation is associated with the user who owns the semantic model. 
+>
+>For such scenarios, the _Executing User_ determines the associated user for refreshes, but also defines the user who executes a query ("User opens the Power BI report page, which has 4 visuals -> 4 query operations will be logged.")
+
+
+![Screenshot](/monitoring/workspace-monitoring-dashboards/media/documentation/rti/fwm_rti_ap_5.png)
+
+|Step|Description|
+|---|---|
+|1.|This is an aggregated view of all the query interactions and refreshes with the key metrics by user.|
+|Info|In many cases, when we troubleshoot a semantic model, we would like to understand the behaviors of the user.|
+|2.||
+|3.||
+
+![Screenshot](/monitoring/workspace-monitoring-dashboards/media/documentation/rti/fwm_rti_ap_6.png)
+
+|Step|Description|
+|---|---|
+|4.|**Review** the heatmaps: <br> - This heatmap shows the _Max CPU Time_ of operations by _Executing User_ by _Semantic model_ for all the selected semantic models within the selected time window. <br> - This heatmap shows the _Max Duration_ of operations by _Executing User_ by _Semantic model_ for all the selected semantic models within the selected time window. <br> - This heatmap shows the _Max Memory Peak_ of operations by _Executing User_ by _Semantic model_ for all the selected semantic models within the selected time window. <br> This step helps you to focus on the most active users by the three key metrics. |
+|5.|**Review** the table for more details. This table visual shows Users initiated/related query and refresh operation metrics. <br> _**Info:** Filtered for top 10 Users based on _Max CPU Time_ descending._ |
+
+
+![Screenshot](/monitoring/workspace-monitoring-dashboards/media/documentation/rti/fwm_rti_ap_7.png)
+
+|Step|Description|
+|---|---|
+|| _In this example, we could identify one User, who had some resource peaks, 167 failed operations, execution delay etc. in the recent period._|
+|5a.|**Right-click** (secondary mouse click) on the User name in the table. |
+||**Click** in the menu th "Drillthrough to" option and **click** on "SM User Details". <br> _This will guide you the the "SM - User Details" dashboard page and will filter the next page for the selected User._ |
+
+
+![Screenshot](/monitoring/workspace-monitoring-dashboards/media/documentation/rti/fwm_rti_ap_8.png)
+
+|Step|Description|
+|---|---|
+|Info| _This dashboard page is essential for another scenario, where you as a Power BI developer wants to see resource footprint/utilization of queries during the development/optimization process._|
+|6.|**Review** this set of visuals. It summarizes in near-real time the current executing queries and started refreshes, initiated by the selected User. <br>|
+|7.|**Review** the execution intensity related insights, initated by the selected User.|
+|8.|**Investigate** which semantic model within the selected workspace will be used by the User with high resource footprints. <br> _This overview in combination of the visuals from Step 9 will help you understand the usage patterns of the User._ |
+|9.|**Review** the heatmaps: <br> - This heatmap shows the _Max CPU Time_ of operations by _Semantic model_ by _Usage Scenario_ for all the selected semantic models within the selected time window  by the selected User. <br> - This heatmap shows the _Max Duration_ of operations by _Semantic model_ by _Usage Scenario_ for all the selected semantic models within the selected time window by the selected User. <br> - This heatmap shows the _Max Memory Peak_ of operations by _Semantic model_ by _Usage Scenario_ for all the selected semantic models within the selected time window  by the selected User. <br> _This step helps you to decide with which detail analysis path should you continue in the next step._ |
+
+
+![Screenshot](/monitoring/workspace-monitoring-dashboards/media/documentation/rti/fwm_rti_ap_9.png)
+
+
+|Step|Description|
+|---|---|
+|Info|_Before you continue, we **recommend to filter** some semantic models based on the learned insights from the previous step._|
+|10.|This section consolidates the **query** and **refresh** operations for the filtered context. |
+
+![Screenshot](/monitoring/workspace-monitoring-dashboards/media/documentation/rti/fwm_rti_ap_10.png)
+
+|Step|Description|
+|---|---|
+|10q.|_Continue with this sub-step, if the previous investigation showed that the selected user's interaction with the semantic model comes mainly from queries._ <br> To understand, how the selected User interacts (queries) with the semantic model, **review** the insights of the last 50 queries initiated by the selected User, like raw query dialect and query text (EventText), status etc. |
+|10r.|_Continue with this sub-step, if the previous investigation showed that semantic model(s) have resource intensive refresh operations initiated by the select User._ <br> To understand, how and how often the selected User triggered a refresh of the semantic model, **review** the insights of the last 50 refreshes with all the detailed performance metrics like _Total CPU Time_, _Total Power Query CPU Time_, _Total_ Power Query Memory Peak_ or _Total Processed Objects (mainly rows)_. <br> _**Info:** In this version of the dashboard, the user is not directly connected to this table visual's data._|
+
+You can now use those facts of the usage-patterns and can think on the next possible actions:
+
+(Optional) **Understanding DAX/MDX query**:
+You can copy the query to your organisation Copilot to ask about a description with complexity risks.
+
+(Optional) **Optimization of semantic model**:
+- Analyse semantic model with built-in [Model health](https://learn.microsoft.com/en-us/power-bi/transform-model/service-notebooks) features.
+- Third-party tools
+
+
+**Amazing!**
+You finished the analytical pathway "Most active User logs near-real time analysis".
+
+----------------
+
+<br>
+
+
+#### Active Queries | Semantic Models
+
+Let's continue with the **SM | Active Queries** dashboard page, which is especially helpful in situations where you need to understand which queries are currently running against the semantic models within the monitored workspace.
+
+![Screenshot](/monitoring/workspace-monitoring-dashboards/media/documentation/rti/fwm_rti_ap_.png)
+
+|Step|Description|
+|---|---|
+|Info|We recommend filtering this dashboard page for a small time window, such as: last _15 min_, _30 min_, or _1-2 hours_.|
+|9.|All the highlighted visuals show you who and which query is currently executing on the workspace. <br> The table query (row) will be highlighted in blue if the "CurrentStatus" is "Started".|
+
+>**Note:** Please be aware that one Power BI report page can contain multiple visuals. Each visual crafts its own DAX query behind the scenes. <br> The metric _# Running Queries_ shows the number of each unique running DAX and MDX query that has been called by the user or by a process (like a subscription).
+
+Let's deep dive into this example query:
+
+![Screenshot](/monitoring/workspace-monitoring-dashboards/media/documentation/rti/fwm_rti_ap_.png)
+
+|Step|Description|
+|---|---|
+|10.|Once you expand a row within the table, you can see the raw DAX query that has been called against the semantic model.|
+|11.|**Review** the value of the "EventText" attribute/column. This value is the raw text, which you can also use in, e.g., the DAX editor in Power BI Desktop.|
+|12.|Let's assume that you have already identified a semantic model where a user is calling a heavy visual (DAX query). You would like to take action to analyze and optimize the semantic model further. <br> **Explore** three options, which can help you start an in-depth investigation.|
+
+
+#### Refreshes | Semantic Models
+
+![Screenshot](/monitoring/workspace-monitoring-dashboards/media/documentation/rti/fwm_rti_ap_.png)
+
+|Step|Description|
+|---|---|
+|18.|Overview of the count of unique refreshes.|
+|19.|Key insights of refreshes by semantic models. <br> _Max CPU Time_, _Max Duration_, _Max Power Query CPU Time_, and _Max Processed Objects_ by semantic models within the selected time window for the selected workspace.|
+
+![Screenshot](/monitoring/workspace-monitoring-dashboards/media/documentation/rti/fwm_rti_ap_.png)
+
+|Step|Description|
+|---|---|
+|20.|Key insights of refreshes by semantic models by operation end time.|
+
+**Very well done!**
+You finished the analytical pathway for semantic model analysis.
+
+--------------------------------------------------------
