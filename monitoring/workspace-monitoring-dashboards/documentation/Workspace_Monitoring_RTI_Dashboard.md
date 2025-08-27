@@ -4,7 +4,7 @@
 
 The Real-Time Dashboard in Microsoft Fabric enables users to configure live connections to Monitoring Eventhouse, providing real-time visibility into workspace activity and operations. This repository hosts **Real-Time Dashboard** templates that you can connect directly to your Monitoring Eventhouse databases to visualize and monitor real-time data and insights.
 
-With this dashboard, you can seamlessly track your workspace items, operations, visuals, and more—all within the Microsoft Fabric SaaS experience—enabling proactive monitoring and immediate response to events as they happen.
+With this dashboard, you can seamlessly track your workspace items, operations, visuals, and more - all within the Microsoft Fabric SaaS experience - enabling proactive monitoring and immediate response to events as they happen.
 
 The Real-Time Dashboard template is structured as follows:
 
@@ -49,7 +49,11 @@ Workspace Monitoring with the Real-Time Dashboard template can help answer commo
 |5.|**Explore** the help page, which helps you and other users in your organization get more information about the templates and their purpose, etc.|
 |6.|Available log cards show which workload logs are available in the current time window for the selected workspace.|
 
-### Analytical Pathway | Eventhouse Analysis in near real-time
+------
+
+### Analytical Pathway | Eventhouse log analysis
+**for near-real time monitoring/troubleshooting**
+
 
 Let's begin to analyze the Eventhouse-related operations in this analytical pathway.
 
@@ -109,10 +113,11 @@ You finished the analytical pathway "Eventhouse KQL database analysis".
 
 ----------------
 
+### Analytical Pathway | Semantic model log analysis
+**for near-real time monitoring/troubleshooting**
 
-### Analytical Pathway | Semantic Model Analysis in near real-time
+#### Overview | Semantic models
 
-#### Overview | Semantic Models
 ![Screenshot](/monitoring/workspace-monitoring-dashboards/media/documentation/rti/fwm_rti_ap_1.png)
 |Step|Description|
 |---|---|
@@ -146,7 +151,7 @@ You finished the introductory analytical pathway "Semantic model near-real time 
 <br>
 
 
-### Analytical Pathway | SM | Most active Users
+### Analytical Pathway | Semantic models | Most active Users
 **for near-real time monitoring/troubleshooting**
 
 
@@ -228,7 +233,7 @@ You finished the analytical pathway "Most active User logs near-real time analys
 
 <br>
 
-### Analytical Pathway | SM | Refresh & Query Analysis
+### Analytical Pathway | Semantic models | Refreshes & queries
 **for near-real time monitoring/troubleshooting**
 
 
@@ -264,24 +269,24 @@ Within the Real-Time Dashboard template, the Refreshes page aims to provide high
 
 Let's continue with the **SM | Active Queries** dashboard page, which is especially helpful in situations where you need to understand which queries are currently running against the semantic models within the monitored workspace.
 
-![Screenshot](/monitoring/workspace-monitoring-dashboards/media/documentation/rti/fwm_rti_ap_.png)
+![Screenshot](/monitoring/workspace-monitoring-dashboards/media/documentation/rti/fwm_rti_ap_13.png)
 
 |Step|Description|
 |---|---|
 |Info|We recommend filtering this dashboard page for a small time window, such as: last _15 min_, _30 min_, or _1-2 hours_.|
-|9.|All the highlighted visuals show you who and which query is currently executing on the workspace. <br> The table query (row) will be highlighted in blue if the "CurrentStatus" is "Started".|
+|4.|**Review** the visuals. The cards show you the unique count ouf queries by status. <br> The visual in the middle of this section shows you who and which query is currently executing on the workspace. <br> The illustration on the right hand side of this section explains which data is available for this kind of analysis, and which scope is defined of the entire AS engine query execution.|
 
->**Note:** Please be aware that one Power BI report page can contain multiple visuals. Each visual crafts its own DAX query behind the scenes. <br> The metric _# Running Queries_ shows the number of each unique running DAX and MDX query that has been called by the user or by a process (like a subscription).
+>**Note:** Please be aware that one Power BI report page can contain multiple visuals. Each visual crafts its own DAX query behind the scenes. <br> The metric _# Running Queries_ shows the number of each unique running DAX and MDX query that has been called by the user or by a process (like a report subscription).
 
 Let's deep dive into this example query:
 
-![Screenshot](/monitoring/workspace-monitoring-dashboards/media/documentation/rti/fwm_rti_ap_.png)
+![Screenshot](/monitoring/workspace-monitoring-dashboards/media/documentation/rti/fwm_rti_ap_14.png)
 
 |Step|Description|
 |---|---|
-|10.|Once you expand a row within the table, you can see the raw DAX query that has been called against the semantic model.|
-|11.|**Review** the value of the "EventText" attribute/column. This value is the raw text, which you can also use in, e.g., the DAX editor in Power BI Desktop.|
-|12.|Let's assume that you have already identified a semantic model where a user is calling a heavy visual (DAX query). You would like to take action to analyze and optimize the semantic model further. <br> **Explore** three options, which can help you start an in-depth investigation.|
+|Info|Once you expand a row within the table, you can see the raw DAX query that has been called against the semantic model.|
+|5d.|**Review** the value of the "EventText" attribute/column. This value is the raw text, which you can also use in, e.g., the DAX editor in Power BI Desktop.|
+|6.|Let's assume that you have already identified a semantic model where a user is calling a heavy visual (DAX query). You would like to take action to analyze and optimize the semantic model further. <br> **Explore** three options, which can help you start an in-depth investigation.|
 
 
 
