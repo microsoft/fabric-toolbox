@@ -146,7 +146,7 @@ You finished the introductory analytical pathway "Semantic model near-real time 
 <br>
 
 
-### Analytical Pathway | Most active Users
+### Analytical Pathway | SM | Most active Users
 **for near-real time monitoring/troubleshooting**
 
 
@@ -180,9 +180,9 @@ The next dashboard page is **SM | Users**, which consolidates all the semantic m
 
 |Step|Description|
 |---|---|
-|| _In this example, we could identify one User, who had some resource peaks, 167 failed operations, execution delay etc. in the recent period._|
+|Info| _In this example, we could identify one User, who had some resource peaks, 167 failed operations, execution delay etc. in the recent period._|
 |5a.|**Right-click** (secondary mouse click) on the User name in the table. |
-||**Click** in the menu th "Drillthrough to" option and **click** on "SM User Details". <br> _This will guide you the the "SM - User Details" dashboard page and will filter the next page for the selected User._ |
+|5b.|**Click** in the menu th "Drillthrough to" option and **click** on "SM User Details". <br> _This will guide you the the "SM - User Details" dashboard page and will filter the next page for the selected User._ |
 
 
 ![Screenshot](/monitoring/workspace-monitoring-dashboards/media/documentation/rti/fwm_rti_ap_8.png)
@@ -228,8 +228,39 @@ You finished the analytical pathway "Most active User logs near-real time analys
 
 <br>
 
+### Analytical Pathway | SM | Refresh & Query Analysis
+**for near-real time monitoring/troubleshooting**
 
-#### Active Queries | Semantic Models
+
+#### Refreshes | Semantic model logs
+
+
+**High level explanation:**
+A refresh process (full, partial, etc.) has a unique OperationId. For example in case of a full refresh, the process includes multiple sub-operations, every sub-operation has also sub-operation sequences. In other words, every single source table, every column, hierarchy, relationship etc. has to be refreshed/recalculated to get a properly refresh semantic model. This logic happens automatically within the semantic model engine.  
+
+
+Within the Real-Time Dashboard template, the Refreshes page aims to provide high level insights about semantic model refreshes as soon as possible. It means, that the Workspace Monitoring database contains already logs about a semantic model refresh, before it fully finishes. With that said, in combination of these logs and the Real-Time Dashboard template, we are able to get the logs of a refresh operation from the very beginning and we can track in near-real time for instance the processed objects (mainly rows).
+
+>**Note:** This page is a preview page. Currently, it doesn't contains **failed** refreshes and the **associated** executing **Users**.
+
+
+![Screenshot](/monitoring/workspace-monitoring-dashboards/media/documentation/rti/fwm_rti_ap_11.png)
+
+|Step|Description|
+|---|---|
+|1.|**Review** the unique count of refreshes cards. <br> _Started Refreshes_ is the count of refresh operations within the selected time window for the selected workspace, which have not been finished yet. <br> _Succeeded Refreshes_ is the count of unique refresh operations within the selected time window for the selected workspace. |
+|2.|**Review** the chart visuals of refreshes by semantic models. It helps you to understand, which semantic model took long time to refresh, consumed much memory etc. <br> Metrics: _Max CPU Time_, _Max Duration_, _Max Power Query CPU Time_, _Max Power Query Peak Memory_ and _Max Processed Objects_ by semantic model within the selected time window for the selected workspace.|
+
+![Screenshot](/monitoring/workspace-monitoring-dashboards/media/documentation/rti/fwm_rti_ap_12.png)
+
+|Step|Description|
+|---|---|
+|3.|**Track** the currently running refreshes in the table. This table shows all the available aggregated insights of refreshes by semantic models by operationId. <br><br> Refresh entry with status **Started**: <br> In this case the EndTime represents the end time of the latest sub-operation sequence. <br> _In this example, the semantic model "Storm_Import_Base" is still running, however the operation has already processed 50,000 rows, which is one of the table within the semantic model._  <br><br> Refresh entry with status **Succeeded**: <br> In this case the StartTime and EndTime represent the active time window, where the engine logged information for the most important sub-operations _(See the illustration "High level process of Semantic model refreshes" on the dashboard page at Step 1 to understand, what these sub-operations are)_. |
+
+>**Tip:** If you are interested on more detailed insights of refreshes like processed tables, partitions, please explore the [Power BI report template for Workspace Monitoring](/monitoring/workspace-monitoring-dashboards/documentation/Workspace_Monitoring_PBI_Report.md).
+
+
+#### Queries | Semantic model logs
 
 Let's continue with the **SM | Active Queries** dashboard page, which is especially helpful in situations where you need to understand which queries are currently running against the semantic models within the monitored workspace.
 
@@ -253,20 +284,6 @@ Let's deep dive into this example query:
 |12.|Let's assume that you have already identified a semantic model where a user is calling a heavy visual (DAX query). You would like to take action to analyze and optimize the semantic model further. <br> **Explore** three options, which can help you start an in-depth investigation.|
 
 
-#### Refreshes | Semantic Models
-
-![Screenshot](/monitoring/workspace-monitoring-dashboards/media/documentation/rti/fwm_rti_ap_.png)
-
-|Step|Description|
-|---|---|
-|18.|Overview of the count of unique refreshes.|
-|19.|Key insights of refreshes by semantic models. <br> _Max CPU Time_, _Max Duration_, _Max Power Query CPU Time_, and _Max Processed Objects_ by semantic models within the selected time window for the selected workspace.|
-
-![Screenshot](/monitoring/workspace-monitoring-dashboards/media/documentation/rti/fwm_rti_ap_.png)
-
-|Step|Description|
-|---|---|
-|20.|Key insights of refreshes by semantic models by operation end time.|
 
 **Very well done!**
 You finished the analytical pathway for semantic model analysis.
