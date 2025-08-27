@@ -1,9 +1,15 @@
 
 
-# Setup | Power BI template for Fabric Workspace Monitoring
+# Setup | Power BI template 
+**for Fabric Workspace Monitoring**
 
+### General
 
-## Steps
+The Power BI allows users to configure connections to Monitoring Eventhouse where they can retain detailed historical activity data. This repo hosts **Power BI report** templates (.pbit) that you can point to your Monitoring Eventhouse databases to load data and get insights.
+
+![Workspace Monitoring Real Time Dashboard template structure](/monitoring/workspace-monitoring-dashboards/media/documentation/pbi/fwm_pbi_template_structure.png)
+
+-----
 
 ### Parameters
 
@@ -12,30 +18,45 @@ The following parameters are defined in the template:
 |**Parameter**  |**Description**  |
 |---------|---------|
 | **Query URI** * | Globally unique identifier uri of the Eventhouse Monitoring database containing the Semantic model logs. |
-| **Days Ago To Start** * | Load data from the specified day to the time the call was initiated. The maximum value you can select is 30 days. However, your Premium capacity/Fabric SKU memory limits apply to this parameter. If those limits are exceeded, the template might fail to refresh. |
-| **Days Ago To Finish** * | Load data up to the specified number of days ago. Use 0 for today. |
-| **UTC Offset Hours** * | An hourly offset used to convert the data from Coordinate Universal Time (UTC) to a local time zone. |
-| **Fabric Item Id**  | Optionally enter a fabric artifact (semantic model) Id. |
-| **RangeStart** | Optionally enter the start date for incremental refreshes |
-| **RangeEnd** | Optionally enter the end date for incremental refreshes |
+| **Eventhouse Name** * | Default value: **Monitoring Eventhouse** | 
 
 --------------
 
-### Deployment
+# Deployment Steps
 
-1. Download the '**Fabric Workspace Monitoring.pbit**' file from the repository
+1. Download the [Fabric Workspace Monitoring.pbit](/monitoring/workspace-monitoring-dashboards/Fabric%20Workspace%20Monitoring%20Report.pbit) file from the repository
 2. **Open** the report in Power BI Desktop
-3. **Paste** the **URI** of the Monitoring Database to the first parameter
-![Screenshot](/media/deployment/pbi/fwm_pbi_template_1_getting_queryuri.png)
-4. **Sign-in** with your Microsoft Account
-5. Click on '**Load**'
-6. **Save** the report (for instance as a '.pbix' file)
-7. **Publish** the report in a preferred workspace
-8. **Navigate** to the settings of the semantic model
-9. **Edit** the credentials of the data source in Fabric
-10. Trigger the first initial refresh in Fabric
-    - Optionally - Schedule the semantic model refresh, if preferred
-11. Once the refresh has been succedeed, open the report
+3. **Paste** the **URI** of the Monitoring Database to the **Query URI** parameter
+![Screenshot](/monitoring/workspace-monitoring-dashboards/media/deployment/pbi/fwm_pbi_template_1_getting_queryuri.png)
+4. **Paste** the value `Monitoring Eventhouse` to the **Eventhouse Name** parameter 
+5. **Sign-in** with your Microsoft Account
+6. Click on '**Load**'
+7. **Save** the report (for instance as a '.pbix' file)
+8. **Publish** the report in a preferred workspace
+9. **Navigate** to the settings of the semantic model
+10. **Edit** the credentials of the data source in Fabric
+11. Trigger the first initial refresh in Fabric
+    - **Important:** Schedule the semantic model refresh, on daily basis. _The calendar table has to be refreshed every day._
+12. Once the refresh has been succedeed, open the report
 
-**Optimize Power BI refreshes for the template**
-Additionally, you can optimize the Power BI report template usage, you can configure the incremental refresh for each table.
+**Congratulations!** You are ready to go!
+
+----------------
+
+## Other helpful resources
+
+##### Workspace Monitoring Templates
+- [Documentation - Real-Time Dashboard template for Workspace Monitoring](/monitoring/workspace-monitoring-dashboards/documentation/Workspace_Monitoring_RTI_Dashboard.md)
+- [Documentation - Power BI template for Workspace Monitoring](/monitoring/workspace-monitoring-dashboards/documentation/Workspace_Monitoring_PBI_Report.md)
+
+##### Microsoft Fabric features
+- [Workspace monitoring overview](https://learn.microsoft.com/en-us/fabric/fundamentals/workspace-monitoring-overview)
+- [Enable workspace monitoring](https://learn.microsoft.com/en-us/fabric/fundamentals/enable-workspace-monitoring)
+
+
+##### Other Fabric Toolbox assets
+- [Overview - FUAM solution accelerator for tenant level monitoring](/monitoring/fabric-unified-admin-monitoring/README.md)
+- [Overview - Semantic Model Audit tool](/tools/SemanticModelAudit/README.md)
+
+
+----------------
