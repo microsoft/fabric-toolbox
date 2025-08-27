@@ -16,6 +16,8 @@ Please update any references to the old REST API, to use this new one.
 
 [Using a service principal](./MDSyncNewRESTPIAPISP.ipynb) - This allows you to use a service prinipal
 
+[Using users context and search Lakehouse by name instead of using the attached one] (./MDSyncNewRESTAPI_byName.ipynb) - - This uses the authenication token of the current user and searches the Lakehouse by name
+
 
 ## Old
 [REST API](./refresh-tables-in-sql-endpoint.ipynb) is an example of using the 'old' REST API. (This is here for reference only)
