@@ -33,7 +33,7 @@ The Real-Time Dashboard template is structured on the following way:
 
 8. Click on '**Data sources**'
 9. Click on '**Add**' on the side bar
-10. Select the **OneLake data hub**
+10. Select the **Eventhouse / KQL Database**
     - Select the preferred Monitoring KQL database from OneLake catalog
 11. Click on '**Connect**'
 
