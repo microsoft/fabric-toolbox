@@ -34,22 +34,22 @@ The Real-Time Dashboard template is structured on the following way:
 8. Click on '**Data sources**'
 9. Click on '**Add**' on the side bar
 10. Select the **OneLake data hub**
-11. Select the preferred Monitoring KQL database from OneLake catalog
-12. Click on '**Connect**'
+    - Select the preferred Monitoring KQL database from OneLake catalog
+11. Click on '**Connect**'
 
 ![Screenshot](/monitoring/workspace-monitoring-dashboards/media/deployment/rti/fwm_rtid_template_1_getting_started_2.png)
 
-13. Provide a data source name
-14. The data source shall be connected to several tiles, parameters and base queries
-15. Select the initial value of the **Workspace** parameter on the menu bar
+12. Provide a data source name
+13. The data source shall be connected to several tiles, parameters and base queries
+14. Select the initial value of the **Workspace** parameter on the menu bar
     - Optionally: Set Default value for Workspace parameter
         - Navigate to '**Parameters**' on the '**Manage**' tab
         - Click on '**Edit**' at the '**Workspace**' parameter
         - Select a '**Default value**'
-16. '**Save**' the Dashboard
-17. '**Refresh**' the Dashboard
+15. '**Save**' the Dashboard
+16. '**Refresh**' the Dashboard
     
-18. Switch the UI experience to '**Viewing**' mode
+17. Switch the UI experience to '**Viewing**' mode
 ![Screenshot](/monitoring/workspace-monitoring-dashboards/media/deployment/rti/fwm_rtid_template_1_getting_started_3.png)
 
 **Congratulations!** You are ready to go!
