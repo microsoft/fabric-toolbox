@@ -163,7 +163,7 @@ We recommend this scenario for **Platform Owners, Fabric Administrators, teams**
 
 |Item|Description|
 |--|--|
-|1.|Let's assume that FUAM has been already deployed for your organisation. In this case FUAM (version 2025.8.1 or above) tracks workspaces with deployed Eventhouse|
+|1.|Let's assume that FUAM has been already deployed for your organisation. In this case FUAM (version 2025.9.2 or above) tracks workspaces with deployed Eventhouse|
 |2.|Let's assume there are workspaces, where the workspace monitoring feature have been/will be deployed with the workspace monitoring report templates. These are candidates to extend the monitoring experience within FUAM with advanced workload engine level performance insights.|
 |3.|Let's assume there are other workspaces, which do not have enabled the workspace monitoring feature yet. Those are out of scope in this scenario.|
 |4.|Once other workspaces have enabled the workspace monitoring feature and deployed the workspace monitoring templates, [FUAM](/monitoring/fabric-unified-admin-monitoring/README.md) will detect all those workspaces and will show a link in the [FUAM_Core_Report](/monitoring/fabric-unified-admin-monitoring/how-to/FUAM_Architecture.md#reports) which is pointing to the configured workspace monitoring report template link. In other words, a link will be automatically created by [FUAM](/monitoring/fabric-unified-admin-monitoring/README.md) to the workspace monitoring reports. It opens another level of seamless monitoring and troubleshooting possibilities on your tenant. |
