@@ -2,7 +2,7 @@ cultureInfo en-US
 
 	linguisticMetadata =
 			{
-			  "Version": "3.5.0",
+			  "Version": "4.1.0",
 			  "Language": "en-US",
 			  "Entities": {
 			    "metrics": {
@@ -1064,16 +1064,6 @@ cultureInfo en-US
 			            },
 			            "Weight": 0.714
 			          }
-			        },
-			        {
-			          "Time Units": {
-			            "State": "Suggested",
-			            "Source": {
-			              "Type": "External",
-			              "Agent": "PowerBI.VisualColumnRename"
-			            },
-			            "Weight": 0.9
-			          }
 			        }
 			      ]
 			    },
@@ -1719,16 +1709,6 @@ cultureInfo en-US
 			          }
 			        },
 			        {
-			          "Selected Time Unit": {
-			            "State": "Suggested",
-			            "Source": {
-			              "Type": "External",
-			              "Agent": "PowerBI.VisualColumnRename"
-			            },
-			            "Weight": 0.9
-			          }
-			        },
-			        {
 			          "Time Unit": {
 			            "State": "Suggested",
 			            "Source": {
@@ -1739,7 +1719,7 @@ cultureInfo en-US
 			          }
 			        },
 			        {
-			          "Unit": {
+			          "Selected Time Unit": {
 			            "State": "Suggested",
 			            "Source": {
 			              "Type": "External",
@@ -4522,6 +4502,16 @@ cultureInfo en-US
 			          }
 			        },
 			        {
+			          "Size Unit": {
+			            "State": "Suggested",
+			            "Source": {
+			              "Type": "External",
+			              "Agent": "PowerBI.VisualColumnRename"
+			            },
+			            "Weight": 0.9
+			          }
+			        },
+			        {
 			          "Selected Size Unit": {
 			            "State": "Suggested",
 			            "Source": {
@@ -5329,64 +5319,21 @@ cultureInfo en-US
 			            },
 			            "Weight": 0.475
 			          }
+			        },
+			        {
+			          "FUAM Version": {
+			            "State": "Suggested",
+			            "Source": {
+			              "Type": "External",
+			              "Agent": "PowerBI.VisualColumnRename"
+			            },
+			            "Weight": 0.9
+			          }
 			        }
 			      ]
 			    }
 			  },
 			  "Relationships": {
-			    "queryinsights_exec_requests_history_has_dim_hour": {
-			      "Binding": {
-			        "ConceptualEntity": "queryinsights exec_requests_history"
-			      },
-			      "State": "Generated",
-			      "Roles": {
-			        "queryinsights_exec_requests_history": {
-			          "Target": {
-			            "Entity": "queryinsights_exec_requests_history"
-			          }
-			        },
-			        "dim_hour": {
-			          "Target": {
-			            "Entity": "dim_hour"
-			          },
-			          "Nouns": [
-			            {
-			              "start hour": {
-			                "State": "Generated"
-			              }
-			            }
-			          ]
-			        }
-			      },
-			      "Phrasings": [
-			        {
-			          "Attribute": {
-			            "Subject": {
-			              "Role": "queryinsights_exec_requests_history"
-			            },
-			            "Object": {
-			              "Role": "dim_hour"
-			            }
-			          },
-			          "State": "Generated",
-			          "Weight": 0.99,
-			          "ID": "queryinsights_exec_requests_histories_have_dim_hours"
-			        },
-			        {
-			          "Attribute": {
-			            "Subject": {
-			              "Role": "dim_hour"
-			            },
-			            "Object": {
-			              "Role": "queryinsights_exec_requests_history"
-			            }
-			          },
-			          "State": "Generated",
-			          "Weight": 0.99,
-			          "ID": "dim_hours_have_queryinsights_exec_requests_histories"
-			        }
-			      ]
-			    },
 			    "queryinsights_exec_requests_history_has_dim_date": {
 			      "Binding": {
 			        "ConceptualEntity": "queryinsights exec_requests_history"
@@ -5631,15 +5578,15 @@ cultureInfo en-US
 			        }
 			      ]
 			    },
-			    "metrics_has_selected_size_unit_value": {
+			    "size_unit_has_metrics_selected_size_unit_value": {
 			      "Binding": {
-			        "ConceptualEntity": "Metrics"
+			        "ConceptualEntity": "Size Units"
 			      },
 			      "State": "Generated",
 			      "Roles": {
-			        "metrics": {
+			        "size_unit": {
 			          "Target": {
-			            "Entity": "metrics"
+			            "Entity": "size_unit"
 			          }
 			        },
 			        "metrics.selected_size_unit_value": {
@@ -5652,7 +5599,7 @@ cultureInfo en-US
 			        {
 			          "Attribute": {
 			            "Subject": {
-			              "Role": "metrics"
+			              "Role": "size_unit"
 			            },
 			            "Object": {
 			              "Role": "metrics.selected_size_unit_value"
@@ -5660,19 +5607,19 @@ cultureInfo en-US
 			          },
 			          "State": "Generated",
 			          "Weight": 0.99,
-			          "ID": "metrics_have_selected_size_unit_value"
+			          "ID": "size_units_have_selected_size_unit_value"
 			        }
 			      ]
 			    },
-			    "metrics_has_selected_size_unit_name": {
+			    "size_unit_has_metrics_selected_size_unit_name": {
 			      "Binding": {
-			        "ConceptualEntity": "Metrics"
+			        "ConceptualEntity": "Size Units"
 			      },
 			      "State": "Generated",
 			      "Roles": {
-			        "metrics": {
+			        "size_unit": {
 			          "Target": {
-			            "Entity": "metrics"
+			            "Entity": "size_unit"
 			          }
 			        },
 			        "metrics.selected_size_unit_name": {
@@ -5685,7 +5632,7 @@ cultureInfo en-US
 			        {
 			          "Attribute": {
 			            "Subject": {
-			              "Role": "metrics"
+			              "Role": "size_unit"
 			            },
 			            "Object": {
 			              "Role": "metrics.selected_size_unit_name"
@@ -5693,19 +5640,19 @@ cultureInfo en-US
 			          },
 			          "State": "Generated",
 			          "Weight": 0.99,
-			          "ID": "metrics_have_selected_size_unit_name"
+			          "ID": "size_units_have_selected_size_unit_name"
 			        }
 			      ]
 			    },
-			    "metrics_has_max_elapsed_duration_RH": {
+			    "queryinsights_exec_requests_history_has_metrics_max_elapsed_duration_RH": {
 			      "Binding": {
-			        "ConceptualEntity": "Metrics"
+			        "ConceptualEntity": "queryinsights exec_requests_history"
 			      },
 			      "State": "Generated",
 			      "Roles": {
-			        "metrics": {
+			        "queryinsights_exec_requests_history": {
 			          "Target": {
-			            "Entity": "metrics"
+			            "Entity": "queryinsights_exec_requests_history"
 			          }
 			        },
 			        "metrics.max_elapsed_duration_RH": {
@@ -5718,7 +5665,7 @@ cultureInfo en-US
 			        {
 			          "Attribute": {
 			            "Subject": {
-			              "Role": "metrics"
+			              "Role": "queryinsights_exec_requests_history"
 			            },
 			            "Object": {
 			              "Role": "metrics.max_elapsed_duration_RH"
@@ -5726,7 +5673,40 @@ cultureInfo en-US
 			          },
 			          "State": "Generated",
 			          "Weight": 0.99,
-			          "ID": "metrics_have_max_elapsed_duration_RH"
+			          "ID": "queryinsights_exec_requests_histories_have_max_elapsed_duration_RH"
+			        }
+			      ]
+			    },
+			    "time_unit_has_metrics_max_elapsed_duration_RH": {
+			      "Binding": {
+			        "ConceptualEntity": "Time Units"
+			      },
+			      "State": "Generated",
+			      "Roles": {
+			        "time_unit": {
+			          "Target": {
+			            "Entity": "time_unit"
+			          }
+			        },
+			        "metrics.max_elapsed_duration_RH": {
+			          "Target": {
+			            "Entity": "metrics.max_elapsed_duration_RH"
+			          }
+			        }
+			      },
+			      "Phrasings": [
+			        {
+			          "Attribute": {
+			            "Subject": {
+			              "Role": "time_unit"
+			            },
+			            "Object": {
+			              "Role": "metrics.max_elapsed_duration_RH"
+			            }
+			          },
+			          "State": "Generated",
+			          "Weight": 0.99,
+			          "ID": "time_units_have_max_elapsed_duration_RH"
 			        }
 			      ]
 			    },
@@ -5763,15 +5743,15 @@ cultureInfo en-US
 			        }
 			      ]
 			    },
-			    "metrics_has_data_scanned_remote_storage_RH": {
+			    "queryinsights_exec_requests_history_has_metrics_data_scanned_remote_storage_RH": {
 			      "Binding": {
-			        "ConceptualEntity": "Metrics"
+			        "ConceptualEntity": "queryinsights exec_requests_history"
 			      },
 			      "State": "Generated",
 			      "Roles": {
-			        "metrics": {
+			        "queryinsights_exec_requests_history": {
 			          "Target": {
-			            "Entity": "metrics"
+			            "Entity": "queryinsights_exec_requests_history"
 			          }
 			        },
 			        "metrics.data_scanned_remote_storage_RH": {
@@ -5784,7 +5764,7 @@ cultureInfo en-US
 			        {
 			          "Attribute": {
 			            "Subject": {
-			              "Role": "metrics"
+			              "Role": "queryinsights_exec_requests_history"
 			            },
 			            "Object": {
 			              "Role": "metrics.data_scanned_remote_storage_RH"
@@ -5792,19 +5772,52 @@ cultureInfo en-US
 			          },
 			          "State": "Generated",
 			          "Weight": 0.99,
-			          "ID": "metrics_have_data_scanned_remote_storage_RH"
+			          "ID": "queryinsights_exec_requests_histories_have_data_scanned_remote_storage_RH"
 			        }
 			      ]
 			    },
-			    "metrics_has_data_scanned_disk_RH": {
+			    "size_unit_has_metrics_data_scanned_remote_storage_RH": {
 			      "Binding": {
-			        "ConceptualEntity": "Metrics"
+			        "ConceptualEntity": "Size Units"
 			      },
 			      "State": "Generated",
 			      "Roles": {
-			        "metrics": {
+			        "size_unit": {
 			          "Target": {
-			            "Entity": "metrics"
+			            "Entity": "size_unit"
+			          }
+			        },
+			        "metrics.data_scanned_remote_storage_RH": {
+			          "Target": {
+			            "Entity": "metrics.data_scanned_remote_storage_RH"
+			          }
+			        }
+			      },
+			      "Phrasings": [
+			        {
+			          "Attribute": {
+			            "Subject": {
+			              "Role": "size_unit"
+			            },
+			            "Object": {
+			              "Role": "metrics.data_scanned_remote_storage_RH"
+			            }
+			          },
+			          "State": "Generated",
+			          "Weight": 0.99,
+			          "ID": "size_units_have_data_scanned_remote_storage_RH"
+			        }
+			      ]
+			    },
+			    "queryinsights_exec_requests_history_has_metrics_data_scanned_disk_RH": {
+			      "Binding": {
+			        "ConceptualEntity": "queryinsights exec_requests_history"
+			      },
+			      "State": "Generated",
+			      "Roles": {
+			        "queryinsights_exec_requests_history": {
+			          "Target": {
+			            "Entity": "queryinsights_exec_requests_history"
 			          }
 			        },
 			        "metrics.data_scanned_disk_RH": {
@@ -5817,7 +5830,7 @@ cultureInfo en-US
 			        {
 			          "Attribute": {
 			            "Subject": {
-			              "Role": "metrics"
+			              "Role": "queryinsights_exec_requests_history"
 			            },
 			            "Object": {
 			              "Role": "metrics.data_scanned_disk_RH"
@@ -5825,19 +5838,52 @@ cultureInfo en-US
 			          },
 			          "State": "Generated",
 			          "Weight": 0.99,
-			          "ID": "metrics_have_data_scanned_disk_RH"
+			          "ID": "queryinsights_exec_requests_histories_have_data_scanned_disk_RH"
 			        }
 			      ]
 			    },
-			    "metrics_has_allocated_CPU_time_RH": {
+			    "size_unit_has_metrics_data_scanned_disk_RH": {
 			      "Binding": {
-			        "ConceptualEntity": "Metrics"
+			        "ConceptualEntity": "Size Units"
 			      },
 			      "State": "Generated",
 			      "Roles": {
-			        "metrics": {
+			        "size_unit": {
 			          "Target": {
-			            "Entity": "metrics"
+			            "Entity": "size_unit"
+			          }
+			        },
+			        "metrics.data_scanned_disk_RH": {
+			          "Target": {
+			            "Entity": "metrics.data_scanned_disk_RH"
+			          }
+			        }
+			      },
+			      "Phrasings": [
+			        {
+			          "Attribute": {
+			            "Subject": {
+			              "Role": "size_unit"
+			            },
+			            "Object": {
+			              "Role": "metrics.data_scanned_disk_RH"
+			            }
+			          },
+			          "State": "Generated",
+			          "Weight": 0.99,
+			          "ID": "size_units_have_data_scanned_disk_RH"
+			        }
+			      ]
+			    },
+			    "queryinsights_exec_requests_history_has_metrics_allocated_CPU_time_RH": {
+			      "Binding": {
+			        "ConceptualEntity": "queryinsights exec_requests_history"
+			      },
+			      "State": "Generated",
+			      "Roles": {
+			        "queryinsights_exec_requests_history": {
+			          "Target": {
+			            "Entity": "queryinsights_exec_requests_history"
 			          }
 			        },
 			        "metrics.allocated_CPU_time_RH": {
@@ -5850,7 +5896,7 @@ cultureInfo en-US
 			        {
 			          "Attribute": {
 			            "Subject": {
-			              "Role": "metrics"
+			              "Role": "queryinsights_exec_requests_history"
 			            },
 			            "Object": {
 			              "Role": "metrics.allocated_CPU_time_RH"
@@ -5858,7 +5904,40 @@ cultureInfo en-US
 			          },
 			          "State": "Generated",
 			          "Weight": 0.99,
-			          "ID": "metrics_have_allocated_CPU_time_RH"
+			          "ID": "queryinsights_exec_requests_histories_have_allocated_CPU_time_RH"
+			        }
+			      ]
+			    },
+			    "time_unit_has_metrics_allocated_CPU_time_RH": {
+			      "Binding": {
+			        "ConceptualEntity": "Time Units"
+			      },
+			      "State": "Generated",
+			      "Roles": {
+			        "time_unit": {
+			          "Target": {
+			            "Entity": "time_unit"
+			          }
+			        },
+			        "metrics.allocated_CPU_time_RH": {
+			          "Target": {
+			            "Entity": "metrics.allocated_CPU_time_RH"
+			          }
+			        }
+			      },
+			      "Phrasings": [
+			        {
+			          "Attribute": {
+			            "Subject": {
+			              "Role": "time_unit"
+			            },
+			            "Object": {
+			              "Role": "metrics.allocated_CPU_time_RH"
+			            }
+			          },
+			          "State": "Generated",
+			          "Weight": 0.99,
+			          "ID": "time_units_have_allocated_CPU_time_RH"
 			        }
 			      ]
 			    },
@@ -6027,15 +6106,15 @@ cultureInfo en-US
 			        }
 			      ]
 			    },
-			    "metrics_has_total_elapsed_duration_RH": {
+			    "queryinsights_exec_requests_history_has_metrics_total_elapsed_duration_RH": {
 			      "Binding": {
-			        "ConceptualEntity": "Metrics"
+			        "ConceptualEntity": "queryinsights exec_requests_history"
 			      },
 			      "State": "Generated",
 			      "Roles": {
-			        "metrics": {
+			        "queryinsights_exec_requests_history": {
 			          "Target": {
-			            "Entity": "metrics"
+			            "Entity": "queryinsights_exec_requests_history"
 			          }
 			        },
 			        "metrics.total_elapsed_duration_RH": {
@@ -6048,7 +6127,7 @@ cultureInfo en-US
 			        {
 			          "Attribute": {
 			            "Subject": {
-			              "Role": "metrics"
+			              "Role": "queryinsights_exec_requests_history"
 			            },
 			            "Object": {
 			              "Role": "metrics.total_elapsed_duration_RH"
@@ -6056,24 +6135,24 @@ cultureInfo en-US
 			          },
 			          "State": "Generated",
 			          "Weight": 0.99,
-			          "ID": "metrics_have_total_elapsed_duration_RH"
+			          "ID": "queryinsights_exec_requests_histories_have_total_elapsed_duration_RH"
 			        }
 			      ]
 			    },
-			    "metrics_has_avg_total_elapsed_duration_FRQ": {
+			    "time_unit_has_metrics_total_elapsed_duration_RH": {
 			      "Binding": {
-			        "ConceptualEntity": "Metrics"
+			        "ConceptualEntity": "Time Units"
 			      },
 			      "State": "Generated",
 			      "Roles": {
-			        "metrics": {
+			        "time_unit": {
 			          "Target": {
-			            "Entity": "metrics"
+			            "Entity": "time_unit"
 			          }
 			        },
-			        "metrics.avg_total_elapsed_duration_FRQ": {
+			        "metrics.total_elapsed_duration_RH": {
 			          "Target": {
-			            "Entity": "metrics.avg_total_elapsed_duration_FRQ"
+			            "Entity": "metrics.total_elapsed_duration_RH"
 			          }
 			        }
 			      },
@@ -6081,114 +6160,15 @@ cultureInfo en-US
 			        {
 			          "Attribute": {
 			            "Subject": {
-			              "Role": "metrics"
+			              "Role": "time_unit"
 			            },
 			            "Object": {
-			              "Role": "metrics.avg_total_elapsed_duration_FRQ"
+			              "Role": "metrics.total_elapsed_duration_RH"
 			            }
 			          },
 			          "State": "Generated",
 			          "Weight": 0.99,
-			          "ID": "metrics_have_avg_total_elapsed_duration_FRQ"
-			        }
-			      ]
-			    },
-			    "metrics_has_min_run_total_elapsed_duration_FRQ": {
-			      "Binding": {
-			        "ConceptualEntity": "Metrics"
-			      },
-			      "State": "Generated",
-			      "Roles": {
-			        "metrics": {
-			          "Target": {
-			            "Entity": "metrics"
-			          }
-			        },
-			        "metrics.min_run_total_elapsed_duration_FRQ": {
-			          "Target": {
-			            "Entity": "metrics.min_run_total_elapsed_duration_FRQ"
-			          }
-			        }
-			      },
-			      "Phrasings": [
-			        {
-			          "Attribute": {
-			            "Subject": {
-			              "Role": "metrics"
-			            },
-			            "Object": {
-			              "Role": "metrics.min_run_total_elapsed_duration_FRQ"
-			            }
-			          },
-			          "State": "Generated",
-			          "Weight": 0.99,
-			          "ID": "metrics_have_min_run_total_elapsed_duration_FRQ"
-			        }
-			      ]
-			    },
-			    "metrics_has_max_run_total_elapsed_duration_FRQ": {
-			      "Binding": {
-			        "ConceptualEntity": "Metrics"
-			      },
-			      "State": "Generated",
-			      "Roles": {
-			        "metrics": {
-			          "Target": {
-			            "Entity": "metrics"
-			          }
-			        },
-			        "metrics.max_run_total_elapsed_duration_FRQ": {
-			          "Target": {
-			            "Entity": "metrics.max_run_total_elapsed_duration_FRQ"
-			          }
-			        }
-			      },
-			      "Phrasings": [
-			        {
-			          "Attribute": {
-			            "Subject": {
-			              "Role": "metrics"
-			            },
-			            "Object": {
-			              "Role": "metrics.max_run_total_elapsed_duration_FRQ"
-			            }
-			          },
-			          "State": "Generated",
-			          "Weight": 0.99,
-			          "ID": "metrics_have_max_run_total_elapsed_duration_FRQ"
-			        }
-			      ]
-			    },
-			    "metrics_has_last_run_total_elapsed_duration_FRQ": {
-			      "Binding": {
-			        "ConceptualEntity": "Metrics"
-			      },
-			      "State": "Generated",
-			      "Roles": {
-			        "metrics": {
-			          "Target": {
-			            "Entity": "metrics"
-			          }
-			        },
-			        "metrics.last_run_total_elapsed_duration_FRQ": {
-			          "Target": {
-			            "Entity": "metrics.last_run_total_elapsed_duration_FRQ"
-			          }
-			        }
-			      },
-			      "Phrasings": [
-			        {
-			          "Attribute": {
-			            "Subject": {
-			              "Role": "metrics"
-			            },
-			            "Object": {
-			              "Role": "metrics.last_run_total_elapsed_duration_FRQ"
-			            }
-			          },
-			          "State": "Generated",
-			          "Weight": 0.99,
-			          "ID": "metrics_have_last_run_total_elapsed_duration_FRQ"
+			          "ID": "time_units_have_total_elapsed_duration_RH"
 			        }
 			      ]
 			    },
@@ -6931,15 +6911,15 @@ cultureInfo en-US
 			        }
 			      ]
 			    },
-			    "metrics_has_selected_time_unit_name": {
+			    "time_unit_has_metrics_selected_time_unit_name": {
 			      "Binding": {
-			        "ConceptualEntity": "Metrics"
+			        "ConceptualEntity": "Time Units"
 			      },
 			      "State": "Generated",
 			      "Roles": {
-			        "metrics": {
+			        "time_unit": {
 			          "Target": {
-			            "Entity": "metrics"
+			            "Entity": "time_unit"
 			          }
 			        },
 			        "metrics.selected_time_unit_name": {
@@ -6952,7 +6932,7 @@ cultureInfo en-US
 			        {
 			          "Attribute": {
 			            "Subject": {
-			              "Role": "metrics"
+			              "Role": "time_unit"
 			            },
 			            "Object": {
 			              "Role": "metrics.selected_time_unit_name"
@@ -6960,85 +6940,19 @@ cultureInfo en-US
 			          },
 			          "State": "Generated",
 			          "Weight": 0.99,
-			          "ID": "metrics_have_selected_time_unit_name"
+			          "ID": "time_units_have_selected_time_unit_name"
 			        }
 			      ]
 			    },
-			    "metrics_has_last_total_elapsed_duration": {
+			    "time_unit_has_metrics_selected_time_unit_value": {
 			      "Binding": {
-			        "ConceptualEntity": "Metrics"
+			        "ConceptualEntity": "Time Units"
 			      },
 			      "State": "Generated",
 			      "Roles": {
-			        "metrics": {
+			        "time_unit": {
 			          "Target": {
-			            "Entity": "metrics"
-			          }
-			        },
-			        "metrics.last_total_elapsed_duration": {
-			          "Target": {
-			            "Entity": "metrics.last_total_elapsed_duration"
-			          }
-			        }
-			      },
-			      "Phrasings": [
-			        {
-			          "Attribute": {
-			            "Subject": {
-			              "Role": "metrics"
-			            },
-			            "Object": {
-			              "Role": "metrics.last_total_elapsed_duration"
-			            }
-			          },
-			          "State": "Generated",
-			          "Weight": 0.99,
-			          "ID": "metrics_have_last_total_elapsed_duration_LRQ"
-			        }
-			      ]
-			    },
-			    "metrics_has_median_total_elapsed_duration": {
-			      "Binding": {
-			        "ConceptualEntity": "Metrics"
-			      },
-			      "State": "Generated",
-			      "Roles": {
-			        "metrics": {
-			          "Target": {
-			            "Entity": "metrics"
-			          }
-			        },
-			        "metrics.median_total_elapsed_duration": {
-			          "Target": {
-			            "Entity": "metrics.median_total_elapsed_duration"
-			          }
-			        }
-			      },
-			      "Phrasings": [
-			        {
-			          "Attribute": {
-			            "Subject": {
-			              "Role": "metrics"
-			            },
-			            "Object": {
-			              "Role": "metrics.median_total_elapsed_duration"
-			            }
-			          },
-			          "State": "Generated",
-			          "Weight": 0.99,
-			          "ID": "metrics_have_median_total_elapsed_duration_LRQ"
-			        }
-			      ]
-			    },
-			    "metrics_has_selected_time_unit_value": {
-			      "Binding": {
-			        "ConceptualEntity": "Metrics"
-			      },
-			      "State": "Generated",
-			      "Roles": {
-			        "metrics": {
-			          "Target": {
-			            "Entity": "metrics"
+			            "Entity": "time_unit"
 			          }
 			        },
 			        "metrics.selected_time_unit_value": {
@@ -7051,7 +6965,7 @@ cultureInfo en-US
 			        {
 			          "Attribute": {
 			            "Subject": {
-			              "Role": "metrics"
+			              "Role": "time_unit"
 			            },
 			            "Object": {
 			              "Role": "metrics.selected_time_unit_value"
@@ -7059,7 +6973,7 @@ cultureInfo en-US
 			          },
 			          "State": "Generated",
 			          "Weight": 0.99,
-			          "ID": "metrics_have_selected_time_unit_value"
+			          "ID": "time_units_have_selected_time_unit_value"
 			        }
 			      ]
 			    },
@@ -7527,6 +7441,64 @@ cultureInfo en-US
 			          "ID": "queryinsights_exec_requests_histories_are_submitted_on_submit_time"
 			        }
 			      ]
+			    },
+			    "queryinsights_exec_requests_history_has_dim_hour": {
+			      "Binding": {
+			        "ConceptualEntity": "queryinsights exec_requests_history"
+			      },
+			      "State": "Generated",
+			      "Roles": {
+			        "queryinsights_exec_requests_history": {
+			          "Target": {
+			            "Entity": "queryinsights_exec_requests_history"
+			          }
+			        },
+			        "dim_hour": {
+			          "Target": {
+			            "Entity": "dim_hour"
+			          },
+			          "Nouns": [
+			            {
+			              "start hour": {
+			                "State": "Generated"
+			              }
+			            }
+			          ]
+			        }
+			      },
+			      "Phrasings": [
+			        {
+			          "Attribute": {
+			            "Subject": {
+			              "Role": "queryinsights_exec_requests_history"
+			            },
+			            "Object": {
+			              "Role": "dim_hour"
+			            }
+			          },
+			          "State": "Generated",
+			          "Weight": 0.99,
+			          "ID": "queryinsights_exec_requests_histories_have_dim_hours"
+			        },
+			        {
+			          "Attribute": {
+			            "Subject": {
+			              "Role": "dim_hour"
+			            },
+			            "Object": {
+			              "Role": "queryinsights_exec_requests_history"
+			            }
+			          },
+			          "State": "Generated",
+			          "Weight": 0.99,
+			          "ID": "dim_hours_have_queryinsights_exec_requests_histories"
+			        }
+			      ]
+			    }
+			  },
+			  "Agents": {
+			    "Internal": {
+			      "Version": "1.1.0"
 			    }
 			  }
 			}

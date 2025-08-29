@@ -371,11 +371,11 @@
             },
             "metric_workspace": {
                 "type": "string",
-                "defaultValue": "FUAM Capacity Metrics v37"
+                "defaultValue": "CHANGE HERE"
             },
             "metric_dataset": {
                 "type": "string",
-                "defaultValue": "Fabric Capacity Metrics"
+                "defaultValue": "CHANGE HERE"
             },
             "activity_days_in_scope": {
                 "type": "int",
@@ -386,8 +386,7 @@
                 "defaultValue": false
             },
             "optional_keyvault_name": {
-                "type": "string",
-                "defaultValue": "fuamkv"
+                "type": "string"
             },
             "optional_keyvault_sp_tenantId_secret_name": {
                 "type": "string"
