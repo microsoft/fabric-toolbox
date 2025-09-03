@@ -1,0 +1,109 @@
+/// FCA Version Table
+table audit_latest_available_fca_version
+	lineageTag: 73ef1116-064e-4550-8c98-f45b50ca8628
+	sourceLineageTag: [dbo].[audit_latest_available_fca_version]
+
+	/// Indicates whether an FCA update is available by comparing the current FCA version with the latest available version.
+	measure 'FCA Update Available' = ```
+			
+						IF([FCA Release] == MAX(audit_latest_available_fca_version[current_fca_version]), 0, 1)
+			```
+		formatString: 0
+		lineageTag: 8f8ddc82-e24d-493e-a6b3-203142979dfa
+
+		changedProperty = Name
+
+		changedProperty = Description
+
+	/// A static string value for FCA Release.
+	measure 'FCA Release' = "2025.9.2"
+		lineageTag: ba9a1bef-cb0e-42f4-8d14-ad6467ada7b7
+
+		changedProperty = Name
+
+		changedProperty = Description
+
+	/// Displays a string message based on whether the FCA Release is equal to the maximum current FCA version.
+	measure 'FCA Release Message' = ```
+			
+						IF(
+						    [FCA Release]== MAX(audit_latest_available_fca_version[current_fca_version]),
+						     "FCA is up-to-date",
+						     "Update is available"
+						    )
+			```
+		lineageTag: 0fc23fce-bf93-42a8-bb4c-84a204691719
+
+		changedProperty = Name
+
+		changedProperty = Description
+
+	/// Build Version
+	column build_version
+		dataType: int64
+		formatString: 0
+		sourceProviderType: bigint
+		lineageTag: e1007905-a339-4e7a-9423-5e6373ce0f78
+		sourceLineageTag: build_version
+		summarizeBy: sum
+		sourceColumn: build_version
+
+		changedProperty = Description
+
+		annotation SummarizationSetBy = Automatic
+
+	/// Current FCA Version
+	column current_fca_version
+		dataType: string
+		sourceProviderType: varchar(8000)
+		lineageTag: 40612bd4-0393-4b99-b2df-2dd89367b85a
+		sourceLineageTag: current_fca_version
+		summarizeBy: none
+		sourceColumn: current_fca_version
+
+		changedProperty = Description
+
+		annotation SummarizationSetBy = Automatic
+
+	column major_version
+		dataType: int64
+		formatString: 0
+		sourceProviderType: bigint
+		lineageTag: 9a50dea1-bc87-4534-a86e-9f30d9679754
+		sourceLineageTag: major_version
+		summarizeBy: sum
+		sourceColumn: major_version
+
+		annotation SummarizationSetBy = Automatic
+
+	column minor_version
+		dataType: int64
+		formatString: 0
+		sourceProviderType: bigint
+		lineageTag: 3c9469c0-56e0-4dfe-98ab-2cc66f3bf9d4
+		sourceLineageTag: minor_version
+		summarizeBy: sum
+		sourceColumn: minor_version
+
+		annotation SummarizationSetBy = Automatic
+
+	column last_check_timestamp
+		dataType: dateTime
+		formatString: General Date
+		sourceProviderType: datetime2
+		lineageTag: 74f0b757-c2f8-4107-bd5b-67a526dcdd4d
+		sourceLineageTag: last_check_timestamp
+		summarizeBy: none
+		sourceColumn: last_check_timestamp
+
+		annotation SummarizationSetBy = Automatic
+
+	partition audit_latest_available_fca_version = entity
+		mode: directLake
+		source
+			entityName: audit_latest_available_fca_version
+			schemaName: dbo
+			expressionSource: DatabaseQuery
+
+	changedProperty = Description
+

@@ -1,0 +1,26 @@
+{
+  "name": "Accessible Tidal",
+  "dataColors": [
+    "#0F3D6E",
+    "#1F84FF",
+    "#19423F",
+    "#59A472",
+    "#0F3A69",
+    "#0E94FF",
+    "#0B2623",
+    "#59A472"
+  ],
+  "foreground": "#121212",
+  "background": "#FFFFFF",
+  "foregroundNeutralSecondary": "#6C6966",
+  "backgroundLight": "#E5E0DA",
+  "foregroundNeutralTertiary": "#ABA7A2",
+  "backgroundNeutral": "#C6C2BE",
+  "tableAccent": "#4E9466",
+  "maximum": "#0B2F54",
+  "center": "#59A472",
+  "minimum": "#0E94FF",
+  "bad": "#0F3D6E",
+  "neutral": "#186DD5",
+  "good": "#46835A"
+}

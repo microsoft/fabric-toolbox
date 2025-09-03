@@ -1,0 +1,136 @@
+{
+  "name": "Frontier",
+  "dataColors": [
+    "#426871",
+    "#D2B04C",
+    "#A3623A",
+    "#C25A3D",
+    "#C39B6A",
+    "#016E51",
+    "#998F85",
+    "#FFA500",
+    "#87ACB6",
+    "#B8A901",
+    "#FDB15D",
+    "#F48459",
+    "#B09E6A",
+    "#35B854",
+    "#DFCFBF",
+    "#F1C484",
+    "#4F717B",
+    "#897F16",
+    "#BB824A",
+    "#B54C25",
+    "#756947",
+    "#1B5C2A",
+    "#A79B8F",
+    "#C4760B",
+    "#344C52",
+    "#5C540F",
+    "#7D5731",
+    "#793418",
+    "#524934",
+    "#0D2E14",
+    "#706860",
+    "#90520D"
+  ],
+  "background": "#F9F7F2",
+  "foreground": "#252423",
+  "tableAccent": "#426871",
+  "good": "#1AAB40",
+  "neutral": "#D9B300",
+  "bad": "#D64554",
+  "maximum": "#426871",
+  "center": "#C25A3D",
+  "minimum": "#D3F6FF",
+  "null": "#FF7F48",
+  "hyperlink": "#0078d4",
+  "visitedHyperlink": "#0078d4",
+  "textClasses": {
+    "callout": {
+      "fontFace": "Verdana"
+    },
+    "title": {
+      "fontFace": "Verdana"
+    },
+    "header": {
+      "fontFace": "Verdana"
+    },
+    "label": {
+      "fontFace": "Verdana"
+    }
+  },
+  "visualStyles": {
+    "*": {
+      "*": {
+        "background": [
+          {
+            "color": {
+              "solid": {
+                "color": "#F9F7F2"
+              }
+            }
+          }
+        ],
+        "outspacePane": [
+          {
+            "backgroundColor": {
+              "solid": {
+                "color": "#F9F7F2"
+              }
+            }
+          }
+        ],
+        "filterCard": [
+          {
+            "$id": "Applied",
+            "foregroundColor": {
+              "solid": {
+                "color": "#252423"
+              }
+            }
+          },
+          {
+            "$id": "Available",
+            "backgroundColor": {
+              "solid": {
+                "color": "#F9F7F2"
+              }
+            }
+          }
+        ]
+      }
+    },
+    "slicer": {
+      "*": {
+        "items": [
+          {
+            "background": {
+              "solid": {
+                "color": "#F9F7F2"
+              }
+            }
+          }
+        ]
+      }
+    },
+    "page": {
+      "*": {
+        "outspace": [
+          {
+            "color": {
+              "solid": {
+                "color": "#F9F7F2"
+              }
+            }
+          }
+        ],
+        "background": [
+          {
+            "transparency": 0
+          }
+        ]
+      }
+    }
+  }
+}

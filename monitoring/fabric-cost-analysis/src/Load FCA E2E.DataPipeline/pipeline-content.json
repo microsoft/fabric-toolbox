@@ -1,0 +1,107 @@
+{
+  "properties": {
+    "activities": [
+      {
+        "name": "Focus Data",
+        "type": "TridentNotebook",
+        "dependsOn": [
+          {
+            "activity": "Load Meters",
+            "dependencyConditions": [
+              "Succeeded"
+            ]
+          }
+        ],
+        "policy": {
+          "timeout": "0.1:00:00",
+          "retry": 0,
+          "retryIntervalInSeconds": 30,
+          "secureOutput": false,
+          "secureInput": false
+        },
+        "typeProperties": {
+          "notebookId": "cdbee726-e9ff-46ca-b58a-6d798e226f2f",
+          "workspaceId": "d7ae03b3-c53b-4ee6-af7e-0091be2e7cc4",
+          "parameters": {
+            "fromMonth": {
+              "value": {
+                "value": "@pipeline().parameters.FromMonth",
+                "type": "Expression"
+              },
+              "type": "int"
+            },
+            "toMonth": {
+              "value": {
+                "value": "@pipeline().parameters.ToMonth",
+                "type": "Expression"
+              },
+              "type": "int"
+            }
+          },
+          "sessionTag": "fca"
+        }
+      },
+      {
+        "name": "Calendar Data",
+        "type": "TridentNotebook",
+        "dependsOn": [],
+        "policy": {
+          "timeout": "0.1:00:00",
+          "retry": 0,
+          "retryIntervalInSeconds": 30,
+          "secureOutput": false,
+          "secureInput": false
+        },
+        "typeProperties": {
+          "notebookId": "f8dc5bd3-3a57-4974-8e14-b90f6b53785a",
+          "workspaceId": "d7ae03b3-c53b-4ee6-af7e-0091be2e7cc4",
+          "sessionTag": "fca"
+        }
+      },
+      {
+        "name": "FCA Version",
+        "type": "TridentNotebook",
+        "dependsOn": [],
+        "policy": {
+          "timeout": "0.1:00:00",
+          "retry": 0,
+          "retryIntervalInSeconds": 30,
+          "secureOutput": false,
+          "secureInput": false
+        },
+        "typeProperties": {
+          "notebookId": "a49cea59-ab55-492c-8b93-047a937a1ea1",
+          "workspaceId": "d7ae03b3-c53b-4ee6-af7e-0091be2e7cc4",
+          "sessionTag": "fca"
+        }
+      },
+      {
+        "name": "Load Meters",
+        "type": "TridentNotebook",
+        "dependsOn": [],
+        "policy": {
+          "timeout": "0.1:00:00",
+          "retry": 0,
+          "retryIntervalInSeconds": 30,
+          "secureOutput": false,
+          "secureInput": false
+        },
+        "typeProperties": {
+          "notebookId": "545fa991-79e2-4b2c-abcc-3bc46648b9f1",
+          "workspaceId": "d7ae03b3-c53b-4ee6-af7e-0091be2e7cc4",
+          "sessionTag": "fca"
+        }
+      }
+    ],
+    "parameters": {
+      "FromMonth": {
+        "type": "int",
+        "defaultValue": -6
+      },
+      "ToMonth": {
+        "type": "int",
+        "defaultValue": 0
+      }
+    }
+  }
+}
