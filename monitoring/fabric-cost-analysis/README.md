@@ -126,7 +126,7 @@ To create reservation export, on the Azure portal , search for **Cost Management
 ### 2 - Configure Fabric items
 
 - Create a new workspace "FCA" (name can be changed), which is backed by a P or F-capacity
-- Download the ([Workspace logo](https://github.com/Pulsweb/FCA/blob/main/monitoring/fabric-cost-analysis/media/FCA%20Logo%20Small.png)) and add the logo to the workspace
+- Download the ([Workspace logo](./media/FCA%20Logo%20Small.png)) and add the logo to the workspace
 - Download and import the **[00_Deploy_FCA.ipynb](https://github.com/Pulsweb/FCA/blob/main/monitoring/fabric-cost-analysis/script/00_Deploy_FCA.ipynb)** Notebook into your FCA workspace ([Import existing notebooks](https://learn.microsoft.com/en-us/fabric/data-engineering/how-to-use-notebook#import-existing-notebooks))
 - Click "Run All" in the Notebook
 
