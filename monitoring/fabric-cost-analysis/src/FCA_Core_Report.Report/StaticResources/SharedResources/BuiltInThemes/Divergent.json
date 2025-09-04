@@ -1,0 +1,127 @@
+{
+  "name": "Divergent",
+  "dataColors": [
+    "#B73A3A",
+    "#EC5656",
+    "#F28A90",
+    "#F8BCBD",
+    "#99E472",
+    "#23C26F",
+    "#0AAC00",
+    "#026645",
+    "#D48989",
+    "#F49A9A",
+    "#F7B9BC",
+    "#FBD7D7",
+    "#C2EFAA",
+    "#7BDAA9",
+    "#6CCD66",
+    "#67A38F",
+    "#892C2C",
+    "#B14141",
+    "#B6686C",
+    "#BA8D8E",
+    "#73AB56",
+    "#1A9253",
+    "#088100",
+    "#024D34"
+  ],
+  "foreground": "#252423",
+  "background": "#F4F4F4",
+  "tableAccent": "#B73A3A",
+  "maximum": "#B73A3A",
+  "center": "#026645",
+  "minimum": "#D2D3D5",
+  "textClasses": {
+    "title": {
+      "fontFace": "Trebuchet MS"
+    },
+    "callout": {
+      "fontFace": "Trebuchet MS"
+    },
+    "label": {
+      "fontFace": "Trebuchet MS"
+    },
+    "header": {
+      "fontFace": "Trebuchet MS"
+    }
+  },
+  "visualStyles": {
+    "*": {
+      "*": {
+        "visualHeader": [
+          {
+            "border": {
+              "solid": {
+                "color": "#F4F4F4"
+              }
+            },
+            "background": {
+              "solid": {
+                "color": "#F4F4F4"
+              }
+            }
+          }
+        ],
+        "background": [
+          {
+            "color": {
+              "solid": {
+                "color": "#F4F4F4"
+              }
+            }
+          }
+        ],
+        "outspacePane": [
+          {
+            "backgroundColor": {
+              "solid": {
+                "color": "#F4F4F4"
+              }
+            }
+          }
+        ],
+        "filterCard": [
+          {
+            "$id": "Applied",
+            "backgroundColor": {
+              "solid": {
+                "color": "#E6E6E6"
+              }
+            }
+          },
+          {
+            "$id": "Available",
+            "transparency": 100
+          }
+        ]
+      }
+    },
+    "slicer": {
+      "*": {
+        "items": [
+          {
+            "background": {
+              "solid": {
+                "color": "#F4F4F4"
+              }
+            }
+          }
+        ]
+      }
+    },
+    "page": {
+      "*": {
+        "outspace": [
+          {
+            "color": {
+              "solid": {
+                "color": "#F4F4F4"
+              }
+            }
+          }
+        ]
+      }
+    }
+  }
+}

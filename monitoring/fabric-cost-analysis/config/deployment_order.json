@@ -1,0 +1,50 @@
+[
+  {
+    "name": "Focus",
+    "id": "d7ae03b3-c53b-4ee6-af7e-0091be2e7cc4"
+  },
+  {
+    "name": "FCA.Lakehouse",
+    "id": "edea360e-6c6d-4761-aeca-d57df8bd7b91"
+  },
+  {
+    "name": "01_Load_Focus.Notebook",
+    "id": "cdbee726-e9ff-46ca-b58a-6d798e226f2f"
+  },
+  {
+    "name": "01_Load_Calandar.Notebook",
+    "id": "f8dc5bd3-3a57-4974-8e14-b90f6b53785a"
+  },
+  {
+    "name": "01_Load_FCAVersion.Notebook",
+    "id": "a49cea59-ab55-492c-8b93-047a937a1ea1"
+  },
+  {
+    "name": "03_Optimization.Notebook",
+    "id": "a2bc83ae-4541-4255-83f4-2b5516590f31"
+  },
+  {
+    "name": "01_Load_Meters.Notebook",
+    "id": "545fa991-79e2-4b2c-abcc-3bc46648b9f1"
+  },
+  {
+    "name": "02_Create_DataAgent.Notebook",
+    "id": "b83d4530-1b57-46e3-8d77-65121eafa135"
+  },
+  {
+    "name": "Init_FCA_Lakehouse_Tables.Notebook",
+    "id": "b54f8c98-0759-48e0-a28a-d9c582157208"
+  },
+  {
+    "name": "FCA_Core_SM.SemanticModel",
+    "id": "26c9f0b0-fc20-4eaf-8309-b38bba897b6e"
+  },
+  {
+    "name": "FCA_Core_Report.Report",
+    "id": "bdb9aa02-a5b6-49b5-b0e9-e1b0aec578c5"
+  },
+  {
+    "name": "Load FCA E2E.DataPipeline",
+    "id": "0e7d0e0b-fe13-4453-8763-911a986e8eeb"
+  }
+]

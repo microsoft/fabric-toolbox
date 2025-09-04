@@ -1,0 +1,84 @@
+﻿Name,Description,State,Main,Included,Category
+Activator - Event Analytics,Represents Data Activator on your capacity,GA,FALSE,TRUE,Activator
+Activator - Event Analytics Capacity Usage CU,Represents Data Activator on your capacity,GA,FALSE,TRUE,Activator
+Apache Airflow job,Represents Apache Airflow on your capacity,GA,FALSE,TRUE,Apache Airflow
+Apache Airflow job Capacity Usage CU,Represents Apache Airflow on your capacity,GA,FALSE,TRUE,Apache Airflow
+API for GraphQL Query,Represents GraphQL Query API for your capacity,GA,FALSE,TRUE,GraphQL
+API for GraphQL Query Capacity Usage CU,Represents GraphQL Query API for your capacity,GA,FALSE,TRUE,GraphQL
+Autoscale for Spark,Represents autoscale for Spark on your capacity,GA,FALSE,FALSE,Spark
+autoscale for Spark Capacity Usage CU,Represents autoscale for Spark on your capacity,Preview,FALSE,FALSE,Spark
+BCDR Storage Data Stored,BCDR Storage Data Stored,GA,FALSE,TRUE,BCDR
+Compute Pool Capacity Usage CU,Represents the available capacity,GA,TRUE,TRUE,Fabric CU
+Copilot and AI,Represents Copilot and AI on your capacity,GA,FALSE,TRUE,Copilot
+Copilot and AI Capacity Usage CU,Represents Copilot and AI on your capacity,GA,FALSE,TRUE,Copilot
+Cosmos DB backup storage Data Stored,Cosmos DB backup storage Data Stored,Preview,FALSE,TRUE,Cosmos DB
+Cosmos DB data restore Data Stored,Cosmos DB data restore Data Stored,Preview,FALSE,TRUE,Cosmos DB
+Cosmos DB storage Data Stored,Cosmos DB storage Data Stored,Preview,FALSE,TRUE,Cosmos DB
+Csms DB in MS Fabric Capacity Usage CU,Csms DB in MS Fabric Capacity Usage CU,Preview,FALSE,TRUE,Cosmos DB
+Data Movement - Incremental copy Capacity Usage CU,Data Movement - Incremental copy Capacity Usage CU,GA,FALSE,TRUE,Data Movement
+Data Movement Capacity Usage CU,Represents the Pipelines Data Movement usage on your capacity,GA,FALSE,TRUE,Data Movement
+Data Orchestration Capacity Usage CU,Represents the Pipelines Data Orchestration usage on your capacity,GA,FALSE,TRUE,Data Orchestration
+Data Warehouse Capacity Usage CU,Represents the Fabric Data Warehouse usage on your capacity,GA,FALSE,TRUE,Data Warehouse
+Dataflows High Scale Compute Capacity Usage CU,Represents the Dataflows High Scale Compute used for staging items on your capacity,GA,FALSE,TRUE,Dataflows
+Dataflows Standard Compute Capacity Usage CU,Represents the Dataflows Standard Compute usage on your capacity,GA,FALSE,TRUE,Dataflows
+Digital Twin Builder Capacity Usage CU,Digital Twin Builder Capacity Usage CU,GA,FALSE,TRUE,Digital Twin
+Digital Twin Builder Operation Capacity Usage CU,Represents the on-demand and scheduled digital twin builder flow operations usage on your capacity,Preview,FALSE,TRUE,Digital Twin
+Digital Twin Builder Query Capacity Usage CU,Digital Twin Builder Query Capacity Usage CU,GA,FALSE,TRUE,Digital Twin
+Eventhouse,Represents Row Level Eventhouse on your capacity,GA,FALSE,TRUE,RTI
+Eventhouse Capacity Usage CU,Eventhouse Capacity Usage CU,GA,FALSE,TRUE,RTI
+Eventstream Capacity Usage CU,Represents the ingestion or processing usage for eventstreams on your capacity,GA,FALSE,TRUE,RTI
+Eventstream Connector,Represents Eventstream Row Level Connector EV your capacity,GA,FALSE,TRUE,RTI
+Eventstream Connector Capacity Usage CU,Eventstream Connector Capacity Usage CU,GA,FALSE,TRUE,RTI
+eventstream Data Traffic Capacity Usage CU,eventstream Data Traffic Capacity Usage CU,GA,FALSE,TRUE,RTI
+Eventstream Data Traffic per GB Capacity Usage CU,Represents the data ingress and egress usage on your capacity,GA,FALSE,TRUE,RTI
+Eventstream Flat,Represents Eventstream Row Level Flat EV your capacity,GA,FALSE,TRUE,RTI
+Eventstream Flat Capacity Usage CU,Represents Eventstream Row Level Flat EV your capacity,GA,FALSE,TRUE,RTI
+Eventstream Processor Capacity Usage CU,Represents the ASA processing usage on your capacity,GA,FALSE,TRUE,RTI
+Eventstreams Processor Capacity Usage CU,Represents the ASA processing usage on your capacity,GA,FALSE,TRUE,RTI
+Fabric Capacity CU,Fabric Capacity CU,GA,FALSE,TRUE,Fabric CU
+High Scale Dataflow Compute Capacity Usage CU,High Scale Dataflow Compute Capacity Usage CU,GA,FALSE,TRUE,Dataflows
+KQL Database Capacity Usage CU,Represents the KQL database up time usage on your capacity,GA,FALSE,TRUE,RTI
+ML Model Endpoint,Represents ML Model Endpoint on your capacity,GA,FALSE,TRUE,ML
+ML Model Endpoint Capacity Usage CU,Represents ML Model Endpoint on your capacity,GA,FALSE,TRUE,ML
+OneLake BCDR Iterative Read Operation via proxy Capacity Usage CU,OneLake BCDR Iterative Read Operation via proxy Capacity Usage CU,GA,FALSE,TRUE,BCDR
+OneLake BCDR Iterative Read Operations Capacity Usage CU,Represents the OneLake BCDR Iterative Read via Redirect transaction compute usage on your capacity,GA,FALSE,TRUE,BCDR
+OneLake BCDR Iterative Read Operations via API Capacity Usage CU,Represents the OneLake BCDR Iterative Read via Proxy transaction compute usage on your capacity,GA,FALSE,TRUE,BCDR
+OneLake BCDR Iterative Write Operations Capacity Usage CU,Represents the OneLake BCDR Iterative Write via Redirect transaction compute usage on your capacity,GA,FALSE,TRUE,BCDR
+OneLake BCDR Iterative Write Operations via API Capacity Usage CU,Represents the OneLake BCDR Iterative Write via Proxy transaction compute usage on your capacity,GA,FALSE,TRUE,BCDR
+OneLake BCDR Other Operations Capacity Usage CU,Represents the OneLake BCDR Other transactions compute usage on your capacity,GA,FALSE,TRUE,BCDR
+OneLake BCDR Other Operations via API Capacity Usage CU,Represents the OneLake BCDR Other transactions via Redirect compute usage on your capacity,GA,FALSE,TRUE,BCDR
+OneLake BCDR Read Operations Capacity Usage CU,Represents the OneLake BCDR Read via Redirect & Shortcut Read via Redirect transaction compute usage on your capacity,GA,FALSE,TRUE,BCDR
+OneLake BCDR Read Operations via API Capacity Usage CU,Represents the OneLake BCDR Read via Proxy & Shortcut Read via Proxy transaction compute usage on your capacity,GA,FALSE,TRUE,BCDR
+OneLake BCDR Write Operations Capacity Usage CU,Represents the OneLake BCDR Write via Redirect & Shortcut Write via Redirect transaction compute usage on your capacity,GA,FALSE,TRUE,BCDR
+OneLake BCDR Write Operations via proxy Capacity Usage CU,OneLake BCDR Write Operations via proxy Capacity Usage CU,GA,FALSE,TRUE,BCDR
+OneLake Cache Data Stored,OneLake Cache Data Stored,GA,FALSE,TRUE,OneLake
+OneLake Iterative Read Operations Capacity Usage CU,Represents the OneLake Iterative Read via Redirect transaction compute usage on your capacity,GA,FALSE,TRUE,OneLake
+OneLake Iterative Read Operations via API Capacity Usage CU,Represents the OneLake Iterative Read via Proxy transaction compute usage on your capacity,GA,FALSE,TRUE,OneLake
+OneLake Iterative Read Operations via proxy Capacity Usage CU,OneLake Iterative Read Operations via proxy Capacity Usage CU,GA,FALSE,TRUE,OneLake
+OneLake Iterative Write Operations Capacity Usage CU,Represents the OneLake Iterative Write via Redirect transaction compute usage on your capacity,GA,FALSE,TRUE,OneLake
+OneLake Iterative Write Operations via API Capacity Usage CU,Represents the OneLake Iterative Write via Proxy transaction compute usage on your capacity,GA,FALSE,TRUE,OneLake
+OneLake Other Operations Capacity Usage CU,Represents the OneLake Other transactions compute usage on your capacity,GA,FALSE,TRUE,OneLake
+OneLake Other Operations via API Capacity Usage CU,Represents the OneLake Other transactions via Redirect compute usage on your capacity,GA,FALSE,TRUE,OneLake
+OneLake Other Operations via proxy Capacity Usage CU,OneLake Other Operations via proxy Capacity Usage CU,GA,FALSE,TRUE,OneLake
+OneLake Read Operations Capacity Usage CU,Represents the OneLake Read via Redirect & Shortcut Read via Redirect transaction compute usage on your capacity,GA,FALSE,TRUE,OneLake
+OneLake Read Operations via API Capacity Usage CU,Represents the OneLake Read via Proxy & Shortcut Read via Proxy transaction compute usage on your capacity,GA,FALSE,TRUE,OneLake
+OneLake Read Operations via proxy Capacity Usage CU,OneLake Read Operations via proxy Capacity Usage CU,GA,FALSE,TRUE,OneLake
+OneLake Security Capacity Usage CU,OneLake Security Capacity Usage CU,GA,FALSE,TRUE,OneLake
+OneLake Storage Data Stored,OneLake Storage Data Stored,GA,FALSE,FALSE,OneLake
+OneLake Write Operations Capacity Usage CU,Represents the OneLake Write via Redirect & Shortcut Write via Redirect transaction compute usage on your capacity,GA,FALSE,TRUE,OneLake
+OneLake Write Operations via proxy Capacity Usage CU,OneLake Write Operations via proxy Capacity Usage CU,GA,FALSE,TRUE,OneLake
+Power BI Capacity Usage CU,Represents the Power BI usage on your capacity,GA,FALSE,TRUE,Power BI
+Power BI Usage CU,Represents the Power BI usage on your capacity,GA,FALSE,TRUE,Power BI
+Real-Time Intelligence - Event Listener & Alert,Represents Event Listener and Alerts for Real-Time Intelligence on your capacity,GA,FALSE,TRUE,RTI
+Real-Time Intelligence - Event Listener & Alert Capacity Usage CU,Represents Event Listener and Alerts for Real-Time Intelligence on your capacity,GA,FALSE,TRUE,RTI
+Real-Time Intelligence - Event Operations,Represents Event Operations for Real-Time Intelligence on your capacity,GA,FALSE,TRUE,RTI
+Real-Time Intelligence - Event Operations Capacity Usage CU,Real-Time Intelligence - Event Operations Capacity Usage CU,GA,FALSE,TRUE,RTI
+Spark Memory Optimized Capacity Usage CU,Represents the Spark usage on your capacity,GA,FALSE,TRUE,Spark
+SQL Backup Storage Data Stored,SQL Backup Storage Data Stored,GA,FALSE,TRUE,SQL
+SQL database in Microsoft Fabric,Represents SQL database in Microsoft Fabric on your capacity,GA,FALSE,TRUE,SQL
+SQL database in Microsoft Fabric Capacity Usage CU,SQL database in Microsoft Fabric Capacity Usage CU,GA,FALSE,TRUE,SQL
+SQL Storage Data Stored,SQL Storage Data Stored,GA,FALSE,TRUE,SQL
+Storage Mirroring Data Stored,Storage Mirroring Data Stored,GA,FALSE,FALSE,Mirroring
+Storage Mirroring Free Data Stored,Storage Mirroring Free Data Stored,GA,FALSE,TRUE,Mirroring
+user data functions Capacity Usage CU,user data functions Capacity Usage CU,GA,FALSE,TRUE,UDF
+VNet Data Gateway Capacity Usage CU,VNet Data Gateway Capacity Usage CU,GA,FALSE,TRUE,VNET

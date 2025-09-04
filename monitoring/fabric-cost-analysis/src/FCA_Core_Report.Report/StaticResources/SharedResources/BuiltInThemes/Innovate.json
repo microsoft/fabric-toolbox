@@ -1,0 +1,227 @@
+{
+  "name": "Innovate",
+  "dataColors": [
+    "#70B0E0",
+    "#FCB714",
+    "#2878BD",
+    "#0EB194",
+    "#108372",
+    "#AF916D",
+    "#C4B07B",
+    "#F15628",
+    "#6F9EDB",
+    "#FEE266",
+    "#5DA9FD",
+    "#4AC5BB",
+    "#35B895",
+    "#B69087",
+    "#B6A887",
+    "#F48459",
+    "#1D5C95",
+    "#BDA750",
+    "#4A82BB",
+    "#168980",
+    "#288A6F",
+    "#A67668",
+    "#7B6E4F",
+    "#B54C25",
+    "#164672",
+    "#7E6F36",
+    "#31567D",
+    "#0F5C55",
+    "#0D2E25",
+    "#7B594F",
+    "#524934",
+    "#793418"
+  ],
+  "foreground": "#FFFFFF",
+  "foregroundNeutralSecondary": "#D2D0CE",
+  "foregroundNeutralTertiary": "#979593",
+  "background": "#3a3a3a",
+  "backgroundLight": "#3B3A39",
+  "backgroundNeutral": "#605E5C",
+  "tableAccent": "#2878BD",
+  "maximum": "#2878BD",
+  "center": "#FCB714",
+  "minimum": "#D0E4F5",
+  "hyperlink": "#2878BD",
+  "visitedHyperlink": "#D0E4F5",
+  "textClasses": {
+    "callout": {
+      "fontFace": "Arial",
+      "color": "#FFFFFF"
+    },
+    "title": {
+      "fontFace": "Arial",
+      "color": "#FFFFFF"
+    },
+    "header": {
+      "fontFace": "Arial",
+      "color": "#FFFFFF"
+    },
+    "label": {
+      "fontFace": "Arial",
+      "color": "#FFFFFF"
+    }
+  },
+  "visualStyles": {
+    "*": {
+      "*": {
+        "background": [
+          {
+            "color": {
+              "solid": {
+                "color": "#3a3a3a"
+              }
+            }
+          }
+        ],
+        "visualHeader": [
+          {
+            "foreground": {
+              "solid": {
+                "color": "#FFFFFF"
+              }
+            },
+            "border": {
+              "solid": {
+                "color": "#3a3a3a"
+              }
+            },
+            "background": {
+              "solid": {
+                "color": "#3a3a3a"
+              }
+            }
+          }
+        ],
+        "outspacePane": [
+          {
+            "backgroundColor": {
+              "solid": {
+                "color": "#3a3a3a"
+              }
+            },
+            "foregroundColor": {
+              "solid": {
+                "color": "#FFFFFF"
+              }
+            },
+            "transparency": 0,
+            "border": true,
+            "borderColor": {
+              "solid": {
+                "color": "#979593"
+              }
+            }
+          }
+        ],
+        "filterCard": [
+          {
+            "$id": "Applied",
+            "transparency": 0,
+            "foregroundColor": {
+              "solid": {
+                "color": "#FFFFFF"
+              }
+            },
+            "backgroundColor": {
+              "solid": {
+                "color": "#605E5C"
+              }
+            },
+            "inputBoxColor": {
+              "solid": {
+                "color": "#605E5C"
+              }
+            },
+            "borderColor": {
+              "solid": {
+                "color": "#979593"
+              }
+            },
+            "border": true
+          },
+          {
+            "$id": "Available",
+            "transparency": 0,
+            "foregroundColor": {
+              "solid": {
+                "color": "#FFFFFF"
+              }
+            },
+            "backgroundColor": {
+              "solid": {
+                "color": "#3a3a3a"
+              }
+            },
+            "inputBoxColor": {
+              "solid": {
+                "color": "#3a3a3a"
+              }
+            },
+            "borderColor": {
+              "solid": {
+                "color": "#979593"
+              }
+            },
+            "border": true
+          }
+        ]
+      }
+    },
+    "slicer": {
+      "*": {
+        "items": [
+          {
+            "background": {
+              "solid": {
+                "color": "#3a3a3a"
+              }
+            }
+          }
+        ],
+        "numericInputStyle": [
+          {
+            "background": {
+              "solid": {
+                "color": "#3a3a3a"
+              }
+            }
+          }
+        ]
+      }
+    },
+    "keyDriversVisual": {
+      "*": {
+        "keyInfluencersVisual": [
+          {
+            "canvasColor": {
+              "solid": {
+                "color": "#3B3A39"
+              }
+            }
+          }
+        ]
+      }
+    },
+    "page": {
+      "*": {
+        "outspace": [
+          {
+            "color": {
+              "solid": {
+                "color": "#3a3a3a"
+              }
+            }
+          }
+        ],
+        "background": [
+          {
+            "transparency": 0
+          }
+        ]
+      }
+    }
+  }
+}
