@@ -2,7 +2,7 @@
 
 ## General
 
-These templates are deployed with FUAM automatically; however, the configuration of these can be done manually by the user.
+These templates are deployed with FUAM automatically; however, their configuration can be done manually by the user.
 
 The goal of these templates is to provide more granular insights about a given item.
 
@@ -124,44 +124,67 @@ Inspired by the report template [Gateway performance monitoring (public preview)
 
 >**Important:** This template **does not** support VNET gateway logs. It may come in a future release of FUAM. If you have this scenario, please let us know and raise an issue in this repository.
 
+#### Recommended usage
+We recommend using this template for on-demand analysis of a single gateway instance. (However, the data model of the report supports analyzing logs from multiple gateway instances.)
+
+>**Tip:** Download the report from your FUAM workspace and copy the pbix file to the gateway host machine. Open the report there to be able to access the folder where the gateway populates the log files.
+
+>**Note:** The report (semantic model) connects via the [Folder](https://learn.microsoft.com/en-us/power-query/connectors/folder) data connector to your local machine, which may cause performance issues on the gateway host when you refresh it against a huge log folder (5-10GB or above).
+
 #### Configure connection
 
-1) **Navigate** to the `FUAM_Gateway_Monitoring_Report_From_Files` item within the workspace where FUAM has been deployed.
-2) **Open** the report.
-3) **Navigate** to the "Getting Started" report page.
-4) **Follow** the steps described on that report page.
+![image](/monitoring/fabric-unified-admin-monitoring/media/general/engine_level_analyzers/fuam_gateway_monitoring_setup.png)
+
+#### FUAM_Gateway_Monitoring_Report_From_Files
 
 On the **Start** page, you will see two analytical pathways to troubleshoot/monitor the performance and health of your gateway instance.
 
 ![image](/monitoring/fabric-unified-admin-monitoring/media/general/engine_level_analyzers/fuam_gateway_monitoring_0.png)
 
-The **System counters** report page, shows different telemetry metrics about the host, gateway service and mashup engine. 
+The **System counters** report page shows different telemetry metrics about the host, gateway service, and mashup engine. 
 
->**Important:** The calculation of the values on this page will be correct only, if you set the right number of VM CPU Cores of your gateway host in the "CPU Core Helper" slicer.
+>**Important:** The calculation of the values on this page will be correct only if you set the right number of VM CPU cores of your gateway host in the "CPU Core Helper" slicer.
 
 ![image](/monitoring/fabric-unified-admin-monitoring/media/general/engine_level_analyzers/fuam_gateway_monitoring_1.png)
 
-
-The **Overview** page provides insights about the direct queries and semantic model refreshes, which have been executed on the gateway.
+The **Overview** page provides insights about the direct queries and semantic model refreshes that have been executed on the gateway.
 
 ![image](/monitoring/fabric-unified-admin-monitoring/media/general/engine_level_analyzers/fuam_gateway_monitoring_2.png)
 
-With the help of the chart on the **Requests by Data Connector** page, you can identify which data connector have been used in the selected time window. 
+With the help of the chart on the **Requests by Data Connector** page, you can identify which data connector has been used in the selected time window. 
 
->**Note:** The chart uses the "small multiples" feature from Power BI. When more than 9 different data connectors has been used on the gateway, please scroll down within the visual to see more.
-
+>**Note:** The chart uses the "small multiples" feature from Power BI. When more than 9 different data connectors have been used on the gateway, please scroll down within the visual to see more.
 
 ![image](/monitoring/fabric-unified-admin-monitoring/media/general/engine_level_analyzers/fuam_gateway_monitoring_3.png)
 
+The **Historical Request Analysis** report page is another view of the insights over time.
 
 ![image](/monitoring/fabric-unified-admin-monitoring/media/general/engine_level_analyzers/fuam_gateway_monitoring_4.png)
 
-The **Requests** report page is the starting point to deep into the details of the executed requests on the gateway. Use the drill through function on the table visual to continue with the **Query diagnostic** report page.
+The **Requests** report page is the starting point to dive into the details of the executed requests on the gateway. 
+Use the drillthrough function on the table visual to continue with the **Query diagnostic** report page.
 
 ![image](/monitoring/fabric-unified-admin-monitoring/media/general/engine_level_analyzers/fuam_gateway_monitoring_5.png)
 
-This advanced diagnostic report page
+This advanced diagnostic report page, called **Query Diagnostic Board**, collects all the granular logs of a given request.
+
 ![image](/monitoring/fabric-unified-admin-monitoring/media/general/engine_level_analyzers/fuam_gateway_monitoring_6.png)
+
+**The page has two sections:**
+
+**Left** hand side:
+Follow the predefined analytical steps to see:
+- the origin and type of the request, 
+- performance metrics of each QueryTrackingId entry, 
+- executed request text (DAX/MDX query text or refresh command)
+- once a sub-operation (QueryTrackingId) loaded/transferred data within a refresh request
+
+**Right** hand side:
+This section is not connected to the filtered requests. The goal here is to see the entire load of the gateway within the period when the request has been executed. It is helpful especially in scenarios where a semantic model refresh takes multiple hours.
+
+>**Important:** The calculation of the values on this page will be correct only if you set the right number of VM CPU cores of your gateway host in the "CPU Core Helper" slicer.
+
+-------
 
 ## Other helpful resources
 
