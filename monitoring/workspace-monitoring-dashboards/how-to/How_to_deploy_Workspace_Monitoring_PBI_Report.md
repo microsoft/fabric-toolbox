@@ -24,7 +24,7 @@ The following parameters are defined in the template:
 
 # Deployment Steps
 
-1. Download the [Fabric Workspace Monitoring.pbit](/monitoring/workspace-monitoring-dashboards/Fabric%20Workspace%20Monitoring%20Report.pbit) file from the repository
+1. Download the [Fabric Workspace Monitoring Report.pbit](/monitoring/workspace-monitoring-dashboards/Fabric%20Workspace%20Monitoring%20Report.pbit) file from the repository
 2. **Open** the report in Power BI Desktop
 3. **Paste** the **URI** of the Monitoring Database to the **Query URI** parameter
 ![Screenshot](/monitoring/workspace-monitoring-dashboards/media/deployment/pbi/fwm_pbi_template_1_getting_queryuri.png)

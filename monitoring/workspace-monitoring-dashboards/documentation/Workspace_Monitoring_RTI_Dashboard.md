@@ -284,3 +284,26 @@ Let's deep dive into an example query:
 You finished the analytical pathway for "Semantic model refreshes & queries".
 
 --------------------------------------------------------
+
+
+## Other helpful resources
+
+##### Microsoft Fabric features
+- [Workspace monitoring overview](https://learn.microsoft.com/en-us/fabric/fundamentals/workspace-monitoring-overview)
+- [Enable workspace monitoring](https://learn.microsoft.com/en-us/fabric/fundamentals/enable-workspace-monitoring)
+
+##### Workspace Monitoring Templates
+- [Documentation - Real-Time Dashboard template for Workspace Monitoring](/monitoring/workspace-monitoring-dashboards/documentation/Workspace_Monitoring_RTI_Dashboard.md)
+- [Documentation - Power BI template for Workspace Monitoring](/monitoring/workspace-monitoring-dashboards/documentation/Workspace_Monitoring_PBI_Report.md)
+
+##### Some other Fabric Toolbox assets
+- [Overview - Fabric Cost Analysis](/monitoring/fabric-cost-analysis/README.md)
+- [Overview - FUAM solution accelerator for tenant level monitoring](/monitoring/fabric-unified-admin-monitoring/README.md)
+- [Overview - Semantic Model MCP Server](https://github.com/microsoft/fabric-toolbox/tree/main/tools/SemanticModelMCPServer)
+- [Overview - Semantic Model Audit tool](/tools/SemanticModelAudit/README.md)
+
+##### Semantic Link & Semantic Link Lab
+- [What is semantic link?](https://learn.microsoft.com/en-us/fabric/data-science/semantic-link-overview)
+- [Overview - Semantic Link Labs](https://github.com/microsoft/semantic-link-labs/blob/main/README.md)
+
+----------------
