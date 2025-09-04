@@ -89,7 +89,7 @@ They want to investigate which semantic model recently (max last 30 days, becaus
 |---|---|
 |6.|The cards provide you with aggregated insights about all semantic models in the selected time window. <br> **Important:** The report includes query and refresh operations only.|
 |7.|The underlying logs also provide information about _Execution Delay_ and _Capacity Throttling_ caused by a semantic model operation. <br> **Important:** This visual contains that information at the workspace level only. To monitor delays, rejections, and throttling, please use the Capacity Metrics App.|
-|8.|Review the Metrics table on the page. This visual shows the key raw CPU, Memory, Duration, and other key metrics for each semantic model used within the defined time window. <br> _See the Measure description below._ <br> **Highlight** a semantic model in the visual to activate the buttons for step 9 and 10. |
+|8.|Review the Metrics table on the page. This visual shows the key raw CPU, Memory, Duration, and other key metrics for each semantic model used within the defined time window. <br> See _[Measure description](/monitoring/workspace-monitoring-dashboards/documentation/Workspace_Monitoring_Templates_Metrics.md)._ <br> **Highlight** a semantic model in the visual to activate the buttons for step 9 and 10. |
 |9.|The analytical pathway _Query Analysis_ allows you to deep dive into the query execution details for the selected semantic model. |
 |10.|The analytical pathway _Refresh Analysis_ allows you to deep dive into the refresh execution details for the selected semantic model. |
 
@@ -278,7 +278,7 @@ You finished the analytical pathway "Refresh analysis" for semantic models.
 |---|---|
 |Info|This page shows all the collected insights and properties for a given query.|
 |12.|The cards provide you with some basic properties about the query, like _Application Name_, _Execution User_, or _Status_ of the query operation. |
-|13.|The key metrics cards provide you with the key measures about the executed query. _See definition and description of measures here_ |
+|13.|The key metrics cards provide you with the key measures about the executed query. <br> See _[Measure description](/monitoring/workspace-monitoring-dashboards/documentation/Workspace_Monitoring_Templates_Metrics.md)._ |
 |14.|This set of cards shows the different cache accesses and hits. <br> _Max Available Hot Cache_ is the max amount of data that was available for the query in hot cache. The max amount of data stored in hot cache is defined by the database or table caching policy. <br> _Max Unavailable Hot Cache_ is the max amount of data that wasn't available for the query in hot cache. <br> _Max Available Cold Cache_ is the max amount of cold storage data that was available for the query in cold cache due to data prefetching. <br> _Max Unavailable Cold Cache_ is the max amount of cold storage data that wasn't available for the query in cold cache.|
 |15.|This set of cards shows metrics about "Engine Scans" and "Query Results". <br> _Max Scanned Rows_ is the number of rows scanned by the query. A high number might indicate the cause of a query latency issue. <br> _Max Scanned Extents_ is the max number of extents scanned by the query. A high number might indicate the cause of a query latency issue. <br> _Max Result Tables_ is the number of tables result sets. <br> _Max Query Rows_ is the max number of rows in the result set. |
 |16.|The "Queries" visual shows the start and end time of the query, raw query text, and failure reason.|
@@ -367,7 +367,7 @@ You finished the analytical pathway "Ingestion Performance" for Eventhouse KQL d
 |---|---|
 |4.|The cards provide you with aggregated insights about all GraphQL requests in the selected time window.|
 |5.|**Review** the line charts. The visual "Request Duration over time" includes two metrics: <br> _Total Request Duration_ <br> _Total Overhead Duration_ is the GraphQL overhead time for a dataplane request. |
-|6.|**Review** the "GraphQL API Requests" table on the page. This visual shows the key raw CPU, Memory, Duration, and other key metrics for each semantic model used within the defined time window. <br> _See the Measure description below._ <br> **Highlight** a semantic model in the visual to activate the buttons for step 9 and 10. |
+|6.|**Review** the "GraphQL API Requests" table on the page. This visual shows the key raw CPU, Memory, Duration, and other key metrics for each semantic model used within the defined time window. <br> See _[Measure description](/monitoring/workspace-monitoring-dashboards/documentation/Workspace_Monitoring_Templates_Metrics.md)._ <br> **Highlight** a semantic model in the visual to activate the buttons for step 9 and 10. |
 |9.|The analytical pathway _Query Analysis_ allows you to deep dive into the query execution details for the selected semantic model. |
 |10.|The analytical pathway _Refresh Analysis_ allows you to deep dive into the refresh execution details for the selected semantic model. |
 
@@ -399,7 +399,7 @@ You finished the analytical pathway "Query Performance" for Eventhouse KQL datab
 |---|---|
 |4.|The cards provide you with aggregated insights about all Table Executions in the selected time window.|
 |5.|**Review** the line charts. The visual "Mirroring Latency over time" includes two metrics from the Replicator engine: <br> _Avg Mirroring Latency_ is the average latency to replicate the batch of data during mirroring. <br> _Max Mirroring Latency_ is the max latency to replicate the batch of data during mirroring. |
-|6.|**Review** the "Mirrored Databases - Table Execution Logs" table on the page. This visual shows the key mirroring-related metrics for each mirrored item within your workspace that has been used within the defined time window. <br> _See the Measure description below._|
+|6.|**Review** the "Mirrored Databases - Table Execution Logs" table on the page. This visual shows the key mirroring-related metrics for each mirrored item within your workspace that has been used within the defined time window. <br> See _[Measure description](/monitoring/workspace-monitoring-dashboards/documentation/Workspace_Monitoring_Templates_Metrics.md)._|
 
 
 ![Screenshot](/monitoring/workspace-monitoring-dashboards/media/documentation/pbi/fwm_pbi_ap_mdb_2.png)
