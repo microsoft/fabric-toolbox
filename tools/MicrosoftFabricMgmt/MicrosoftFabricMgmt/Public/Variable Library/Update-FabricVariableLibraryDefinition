@@ -1,0 +1,106 @@
+<#
+.SYNOPSIS
+    Updates the definition of a VariableLibrary in a Microsoft Fabric workspace.
+
+.DESCRIPTION
+    Updates an existing VariableLibrary's definition by sending a request to the Microsoft Fabric API. 
+    Supports updating both the main definition and an optional platform-specific definition file.
+
+.PARAMETER WorkspaceId
+    The ID of the workspace containing the VariableLibrary.
+
+.PARAMETER VariableLibraryId
+    The ID of the VariableLibrary to update.
+
+.PARAMETER VariableLibraryPathDefinition
+    Path to the VariableLibrary definition file (required).
+
+.PARAMETER VariableLibraryPathPlatformDefinition
+    Path to an optional platform-specific definition file.
+
+.EXAMPLE
+    Update-FabricVariableLibraryDefinition -WorkspaceId "workspace-12345" -VariableLibraryId "VariableLibrary-67890" -VariableLibraryPathDefinition "C:\Path\To\VariableLibraryDefinition.json"
+
+.NOTES
+    Requires `$FabricConfig` with `BaseUrl` and `FabricHeaders`.
+    Validates authentication with `Test-TokenExpired` before proceeding.
+    Author: Tiago Balabuch
+#>
+function Update-FabricVariableLibraryDefinition {
+    [CmdletBinding()]
+    param (
+        [Parameter(Mandatory = $true)]
+        [ValidateNotNullOrEmpty()]
+        [string]$WorkspaceId,
+
+        [Parameter(Mandatory = $true)]
+        [ValidateNotNullOrEmpty()]
+        [string]$VariableLibraryId,
+
+        [Parameter(Mandatory = $true)]
+        [ValidateNotNullOrEmpty()]
+        [string]$VariableLibraryPathDefinition
+    )
+    try {
+        # Validate authentication token before proceeding.
+        Write-Message -Message "Validating authentication token..." -Level Debug
+        Test-TokenExpired
+        Write-Message -Message "Authentication token is valid." -Level Debug
+
+        # Construct the API endpoint URI with filtering logic     
+        $apiEndpointURI = "{0}/workspaces/{1}/VariableLibraries/{2}/updateDefinition" -f $FabricConfig.BaseUrl, $WorkspaceId, $VariableLibraryId
+        
+        # Step 3: Construct the request body
+        $body = @{
+            definition = @{
+                parts = @()
+            } 
+        }
+
+        if ($VariableLibraryPathDefinition) {
+            if (-not $body.definition) {
+                $body.definition = @{
+                    parts = @()
+                }
+            }
+            $jsonObjectParts = Get-FileDefinitionParts -sourceDirectory $VariableLibraryPathDefinition
+            # Add new part to the parts array
+            $body.definition.parts = $jsonObjectParts.parts
+        }
+        # Check if any path is .platform
+        foreach ($part in $jsonObjectParts.parts) {
+            if ($part.path -eq ".platform") {
+                $hasPlatformFile = $true
+                Write-Message -Message "Platform File: $hasPlatformFile" -Level Debug
+            }
+        }
+
+        # If the platform file exists, append the query parameter to the URL
+        if ($hasPlatformFile -eq $true) {
+            $apiEndpointURI += "?updateMetadata=true" -f $apiEndpointURI 
+        }
+        Write-Message -Message "API Endpoint: $apiEndpointURI" -Level Debug
+        
+        # Convert the body to JSON
+        $bodyJson = $body | ConvertTo-Json -Depth 10
+        Write-Message -Message "Request Body: $bodyJson" -Level Debug
+
+        # Make the API request
+        $apiParams = @{
+            BaseURI = $apiEndpointURI
+            Headers = $FabricConfig.FabricHeaders
+            Method  = 'Post'
+            Body    = $bodyJson
+        }
+        $response = Invoke-FabricAPIRequest @apiParams
+       
+        # Return the API response
+        Write-Message -Message "Successfully updated the definition for VariableLibrary with ID '$VariableLibraryId' in workspace '$WorkspaceId'." -Level Info 
+        return $response
+    }
+    catch {
+        # Capture and log error details
+        $errorDetails = $_.Exception.Message
+        Write-Message -Message "Failed to update VariableLibrary. Error: $errorDetails" -Level Error
+    }
+}
