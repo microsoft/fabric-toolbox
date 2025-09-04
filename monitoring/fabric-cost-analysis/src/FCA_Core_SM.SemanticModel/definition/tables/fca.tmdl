@@ -1,0 +1,1061 @@
+/// FCA Fact Table
+table fca
+	lineageTag: 31521cc0-d265-4575-8480-9e7f2c780945
+	sourceLineageTag: [dbo].[focus_fabric]
+
+	/// Counts the distinct number of capacity
+	/// 
+	measure #Capacities = DISTINCTCOUNT(fca[ResourceName])
+		formatString: 0
+		lineageTag: 1c73cf80-e14d-46e9-adb5-007d9f3e7463
+
+		changedProperty = Name
+
+		changedProperty = IsHidden
+
+		changedProperty = FormatString
+
+		changedProperty = FormatStringDefinition
+
+		changedProperty = Description
+
+	/// Counts the distinct number of regions in the RegionName column of the FCA table
+	measure #Regions = DISTINCTCOUNT(fca[RegionName])
+		formatString: 0
+		lineageTag: 3c4e578e-5232-4564-95f0-9686647d2ef5
+
+		changedProperty = Name
+
+		changedProperty = IsHidden
+
+		changedProperty = Description
+
+	/// Calculates the sum of EffectiveCost from the FCA table for meter representing the available capacity
+	measure #AvailableCapacity = CALCULATE(SUM(fca[EffectiveCost]), meters[Main]=TRUE())
+		lineageTag: 2c0d08ae-a7a5-43dd-a3c8-37ac4930c91d
+
+		formatStringDefinition =
+				SWITCH( MAX(fca[BillingCurrency]),
+				"USD", "\$#,0.00;(\$#,0.00);\$#,0.00",
+				"EUR", "\€#,0.00;(\€#,0.00);\€#,0.00",
+				"#,0.00;(#,0.00);#,0.00")
+
+		changedProperty = Name
+
+		changedProperty = IsHidden
+
+		changedProperty = FormatString
+
+		changedProperty = FormatStringDefinition
+
+		changedProperty = Description
+
+	/// Calculates the sum of effective costs for included meters with a specific commitment discount type, adjusted by pause costs
+	measure #CapacityPAYG = CALCULATE(SUM(fca[EffectiveCost]),meters[Included]=TRUE(),fca[CommitmentDiscountType]<>"Reservation")-[#PauseCost]+0
+		lineageTag: e739fabf-5c72-4db9-9c58-c0c8e018373a
+
+		formatStringDefinition =
+				SWITCH( MAX(fca[BillingCurrency]),
+				"USD", "\$#,0.00;(\$#,0.00);\$#,0.00",
+				"EUR", "\€#,0.00;(\€#,0.00);\€#,0.00",
+				"#,0.00;(#,0.00);#,0.00")
+
+		changedProperty = Name
+
+		changedProperty = IsHidden
+
+		changedProperty = FormatString
+
+		changedProperty = FormatStringDefinition
+
+		changedProperty = Description
+
+	/// Calculates the total cost without RI by summing the commitment savings and the total cost
+	measure #CostWithoutRI = SUM(fca[CommitmentSavings]) + [#TotalCost]
+		lineageTag: 5e359efb-c7c6-4887-8f0c-797bedf82afe
+
+		formatStringDefinition =
+				SWITCH( MAX(fca[BillingCurrency]),
+				"USD", "\$#,0.00;(\$#,0.00);\$#,0.00",
+				"EUR", "\€#,0.00;(\€#,0.00);\€#,0.00",
+				"#,0.00;(#,0.00);#,0.00")
+
+		changedProperty = Name
+
+		changedProperty = IsHidden
+
+		changedProperty = FormatString
+
+		changedProperty = FormatStringDefinition
+
+		changedProperty = Description
+
+	/// Calculates the sum of EffectiveCost from OneLake relative meters
+	measure #OneLake = CALCULATE(SUM(fca[EffectiveCost]),meters[Category]="OneLake",meters[Included]=FALSE())
+		lineageTag: 7e8285be-14f6-4663-9d49-f5183b8ca80d
+
+		formatStringDefinition =
+				SWITCH( MAX(fca[BillingCurrency]),
+				"USD", "\$#,0.00;(\$#,0.00);\$#,0.00",
+				"EUR", "\€#,0.00;(\€#,0.00);\€#,0.00",
+				"#,0.00;(#,0.00);#,0.00")
+
+		changedProperty = Name
+
+		changedProperty = IsHidden
+
+		changedProperty = FormatString
+
+		changedProperty = FormatStringDefinition
+
+		changedProperty = Description
+
+	/// Calculates the sum of Pause Cost and Spark Auto Scale
+	measure #OtherPAYG = [#PauseCost]+[#SparkAutoScale]
+		lineageTag: c190a166-984d-4729-a7dc-f4de903108ad
+
+		formatStringDefinition =
+				SWITCH( MAX(fca[BillingCurrency]),
+				"USD", "\$#,0.00;(\$#,0.00);\$#,0.00",
+				"EUR", "\€#,0.00;(\€#,0.00);\€#,0.00",
+				"#,0.00;(#,0.00);#,0.00")
+
+		changedProperty = Name
+
+		changedProperty = IsHidden
+
+		changedProperty = FormatString
+
+		changedProperty = FormatStringDefinition
+
+		changedProperty = Description
+
+	/// Calculates the sum of EffectiveCost for Capacity Pause deleting surcharge relative meters
+	measure #PauseCost = CALCULATE(SUM(fca[EffectiveCost]),fca[BillingType]="Capacity Pause/Delete Surcharge") + 0
+		lineageTag: d8b89ec9-27f2-4aca-8d6c-35787778d176
+
+		formatStringDefinition =
+				SWITCH( MAX(fca[BillingCurrency]),
+				"USD", "\$#,0.00;(\$#,0.00);\$#,0.00",
+				"EUR", "\€#,0.00;(\€#,0.00);\€#,0.00",
+				"#,0.00;(#,0.00);#,0.00")
+
+		changedProperty = Name
+
+		changedProperty = IsHidden
+
+		changedProperty = FormatString
+
+		changedProperty = FormatStringDefinition
+
+		changedProperty = Description
+
+	/// Calculates the total effective cost for provisioned capacity for meters included in capacity price
+	measure #ProvisionedCapacity = CALCULATE(SUM(fca[EffectiveCost]),meters[Included]=TRUE())
+		lineageTag: 9a310e2c-fece-473c-8872-a4ee11729d6f
+
+		formatStringDefinition =
+				SWITCH( MAX(fca[BillingCurrency]),
+				"USD", "\$#,0.00;(\$#,0.00);\$#,0.00",
+				"EUR", "\€#,0.00;(\€#,0.00);\€#,0.00",
+				"#,0.00;(#,0.00);#,0.00")
+
+		changedProperty = Name
+
+		changedProperty = IsHidden
+
+		changedProperty = FormatString
+
+		changedProperty = FormatStringDefinition
+
+		changedProperty = Description
+
+	/// Calculates the sum of EffectiveCost relative to the RI
+	measure #Reservation = CALCULATE(SUM(fca[EffectiveCost]),fca[CommitmentDiscountType]="Reservation",meters[Included]=TRUE())+0
+		lineageTag: 25adad74-50b7-4a4e-bd58-741a65f35ba5
+
+		formatStringDefinition =
+				SWITCH( MAX(fca[BillingCurrency]),
+				"USD", "\$#,0.00;(\$#,0.00);\$#,0.00",
+				"EUR", "\€#,0.00;(\€#,0.00);\€#,0.00",
+				"#,0.00;(#,0.00);#,0.00")
+
+		changedProperty = Name
+
+		changedProperty = IsHidden
+
+		changedProperty = FormatString
+
+		changedProperty = FormatStringDefinition
+
+		changedProperty = Description
+
+	/// Calculates the total effective cost by summing the EffectiveCost column in the FCA table
+	measure #TotalCost = CALCULATE(SUM(fca[EffectiveCost]))
+		lineageTag: 526c4716-9009-4d64-bf6b-b35036b22651
+
+		formatStringDefinition =
+				SWITCH( MAX(fca[BillingCurrency]),
+				"USD", "\$#,0.00;(\$#,0.00);\$#,0.00",
+				"EUR", "\€#,0.00;(\€#,0.00);\€#,0.00",
+				"#,0.00;(#,0.00);#,0.00")
+
+		changedProperty = Name
+
+		changedProperty = IsHidden
+
+		changedProperty = FormatString
+
+		changedProperty = FormatStringDefinition
+
+		changedProperty = Description
+
+	/// Calculates the ratio of used capacity to provisioned capacity
+	measure #UsageRatioCapacity = Divide([#UsedCapacity],[#ProvisionedCapacity])
+		formatString: 0.00\ %;-0.00\ %;0.00\ %
+		lineageTag: 87bdfc32-0142-4217-94ff-6c0ee7738be6
+
+		changedProperty = Name
+
+		changedProperty = IsHidden
+
+		changedProperty = FormatString
+
+		changedProperty = Description
+
+	/// Calculates the total cost for the month to date
+	measure 'Total Cost MTD' = TOTALMTD( [#TotalCost], 'calendar'[Date])
+		lineageTag: c7b6001e-1623-4dd5-86ec-5b92fc8b08b4
+
+		formatStringDefinition =
+				SWITCH( MAX(fca[BillingCurrency]),
+				"USD", "\$#,0.00;(\$#,0.00);\$#,0.00",
+				"EUR", "\€#,0.00;(\€#,0.00);\€#,0.00",
+				"#,0.00;(#,0.00);#,0.00")
+
+		changedProperty = Name
+
+		changedProperty = FormatString
+
+		changedProperty = FormatStringDefinition
+
+		changedProperty = Description
+
+	/// Calculates the total cost from the beginning of the year to the current date
+	measure 'Total Cost YTD' = TOTALYTD( [#TotalCost], 'calendar'[Date])
+		lineageTag: 1d49cdb4-cee4-45a2-b0b1-46d592722ceb
+
+		formatStringDefinition =
+				SWITCH( MAX(fca[BillingCurrency]),
+				"USD", "\$#,0.00;(\$#,0.00);\$#,0.00",
+				"EUR", "\€#,0.00;(\€#,0.00);\€#,0.00",
+				"#,0.00;(#,0.00);#,0.00")
+
+		changedProperty = Name
+
+		changedProperty = FormatString
+
+		changedProperty = FormatStringDefinition
+
+		changedProperty = Description
+
+	/// Calculates the percentage of Spark AutoScale by dividing the number of Spark AutoScale instances by the number of Other PAYG instances
+	measure 'SparkAutoScale %' = DIVIDE( [#SparkAutoScale], [#TotalCost])
+		formatString: 0.00\ %;-0.00\ %;0.00\ %
+		lineageTag: 8b61dd62-4e7c-462a-9e9c-e37ebb691624
+
+		changedProperty = Name
+
+		changedProperty = FormatString
+
+		changedProperty = Description
+
+	/// Calculates the percentage of reservations by dividing the number of reservations by the total cost
+	measure 'Reservation %' = DIVIDE( [#Reservation], [#TotalCost])
+		formatString: 0.00\ %;-0.00\ %;0.00\ %
+		lineageTag: 07901cd1-e387-457e-b861-0fcfa0901b47
+
+		changedProperty = Name
+
+		changedProperty = FormatString
+
+		changedProperty = Description
+
+	/// Calculates the percentage of Pause Cost relative to Capacity PAYG
+	measure 'PauseCost %' = DIVIDE( [#PauseCost], [#CapacityPAYG])
+		formatString: 0.00\ %;-0.00\ %;0.00\ %
+		lineageTag: 3c913747-fa14-4861-bb53-f72504573826
+
+		changedProperty = Name
+
+		changedProperty = FormatString
+
+		changedProperty = Description
+
+	/// Calculates the sum of the EffectiveCost for Spark autoscale relative meters
+	measure #SparkAutoScale = CALCULATE(SUM(fca[EffectiveCost]), meters[Name]= "autoscale for Spark Capacity Usage CU")+0
+		lineageTag: cb1772af-2ede-49b1-a23d-b67ac9320a09
+
+		formatStringDefinition =
+				SWITCH( MAX(fca[BillingCurrency]),
+				"USD", "\$#,0.00;(\$#,0.00);\$#,0.00",
+				"EUR", "\€#,0.00;(\€#,0.00);\€#,0.00",
+				"#,0.00;(#,0.00);#,0.00")
+
+		changedProperty = Name
+
+		changedProperty = FormatString
+
+		changedProperty = FormatStringDefinition
+
+		changedProperty = Description
+
+	/// Calculates the used capacity by subtracting the available capacity from the provisioned capacity
+	measure #UsedCapacity = [#ProvisionedCapacity] - [#AvailableCapacity]
+		lineageTag: 82eb1070-e49a-411b-a020-d3fa1e82ac2f
+
+		formatStringDefinition =
+				SWITCH( MAX(fca[BillingCurrency]),
+				"USD", "\$#,0.00;(\$#,0.00);\$#,0.00",
+				"EUR", "\€#,0.00;(\€#,0.00);\€#,0.00",
+				"#,0.00;(#,0.00);#,0.00")
+
+		changedProperty = Name
+
+		changedProperty = FormatString
+
+		changedProperty = FormatStringDefinition
+
+		changedProperty = Description
+
+	/// Counts the number of rows in the FCA table
+	measure #FCACountRows = COUNTROWS(fca)
+		formatString: 0
+		lineageTag: 760209bc-7b4e-46cf-83c7-744a473c1ee3
+
+		changedProperty = Name
+
+		changedProperty = Description
+
+	/// Calculates the total commitment savings if the sum of commitment savings is greater than 1; otherwise, returns 0
+	measure #CommitmentSavings = IF(SUM(fca[CommitmentSavings]) > 1, SUM(fca[CommitmentSavings]), 0)
+		lineageTag: 501f93a1-3a46-434a-afbc-80eee5ba509e
+
+		formatStringDefinition =
+				SWITCH( MAX(fca[BillingCurrency]),
+				"USD", "\$#,0.00;(\$#,0.00);\$#,0.00",
+				"EUR", "\€#,0.00;(\€#,0.00);\€#,0.00",
+				"#,0.00;(#,0.00);#,0.00")
+
+		changedProperty = Name
+
+		changedProperty = FormatString
+
+		changedProperty = FormatStringDefinition
+
+		changedProperty = Description
+
+	/// Calculates the total effective costs from the FCA table for BCDR relative meters
+	measure #BCDRCost = CALCULATE(SUM(fca[EffectiveCost]),SEARCH("BCDR",meters[Name],1,0))+0
+		lineageTag: dfbdc4c7-34ed-421a-83c4-232a543380f1
+
+		formatStringDefinition =
+				SWITCH( MAX(fca[BillingCurrency]),
+				"USD", "\$#,0.00;(\$#,0.00);\$#,0.00",
+				"EUR", "\€#,0.00;(\€#,0.00);\€#,0.00",
+				"#,0.00;(#,0.00);#,0.00")
+
+		changedProperty = Name
+
+		changedProperty = FormatString
+
+		changedProperty = FormatStringDefinition
+
+		changedProperty = Description
+
+	/// Calculates the sum of EffectiveCost for Mirroring relative meters
+	measure #Mirroring = CALCULATE(SUM(fca[EffectiveCost]),fca[ChargeCategory]="Mirroring")+0
+		lineageTag: cd489ad5-a884-48bb-90a5-8982fd759758
+
+		formatStringDefinition =
+				SWITCH( MAX(fca[BillingCurrency]),
+				"USD", "\$#,0.00;(\$#,0.00);\$#,0.00",
+				"EUR", "\€#,0.00;(\€#,0.00);\€#,0.00",
+				"#,0.00;(#,0.00);#,0.00")
+
+		changedProperty = Name
+
+		changedProperty = FormatString
+
+		changedProperty = FormatStringDefinition
+
+		changedProperty = Description
+
+	column BilledCost
+		dataType: double
+		sourceProviderType: decimal(38, 18)
+		lineageTag: ab5ff8d1-d75c-47ee-bb80-0d580d3117e6
+		sourceLineageTag: BilledCost
+		summarizeBy: sum
+		sourceColumn: BilledCost
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column BillingAccountId
+		dataType: string
+		isHidden
+		sourceProviderType: varchar(8000)
+		lineageTag: 07cbead3-bc3d-4ec7-afd7-b24dc40429d2
+		sourceLineageTag: BillingAccountId
+		summarizeBy: none
+		sourceColumn: BillingAccountId
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	column BillingAccountName
+		dataType: string
+		sourceProviderType: varchar(8000)
+		lineageTag: d51eb2cb-43c4-4307-aa67-df20f341e70d
+		sourceLineageTag: BillingAccountName
+		summarizeBy: none
+		sourceColumn: BillingAccountName
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	column BillingAccountType
+		dataType: string
+		sourceProviderType: varchar(8000)
+		lineageTag: 2d5518d8-6554-401a-9565-53d2a2518f6c
+		sourceLineageTag: BillingAccountType
+		summarizeBy: none
+		sourceColumn: BillingAccountType
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	column BillingCurrency
+		dataType: string
+		sourceProviderType: varchar(8000)
+		lineageTag: b4d41bc4-f962-4fc3-9f2f-c95b1bcf5489
+		sourceLineageTag: BillingCurrency
+		summarizeBy: none
+		sourceColumn: BillingCurrency
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	column BillingPeriodEnd
+		dataType: dateTime
+		formatString: General Date
+		sourceProviderType: datetime2
+		lineageTag: 16b7f6c0-acb7-4d55-b897-3284ae95b8a1
+		sourceLineageTag: BillingPeriodEnd
+		summarizeBy: none
+		sourceColumn: BillingPeriodEnd
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	column BillingPeriodStart
+		dataType: dateTime
+		formatString: General Date
+		sourceProviderType: datetime2
+		lineageTag: f9016afa-4853-4103-96c5-393e261f7d4a
+		sourceLineageTag: BillingPeriodStart
+		summarizeBy: none
+		sourceColumn: BillingPeriodStart
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	column ChargeCategory
+		dataType: string
+		sourceProviderType: varchar(8000)
+		lineageTag: 31a58c5a-489e-46cb-aacd-3c99c3ed3373
+		sourceLineageTag: ChargeCategory
+		summarizeBy: none
+		sourceColumn: ChargeCategory
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	column ChargeClass
+		dataType: string
+		sourceProviderType: varchar(8000)
+		lineageTag: e6758078-4a58-4273-99b3-aa4686c842c4
+		sourceLineageTag: ChargeClass
+		summarizeBy: none
+		sourceColumn: ChargeClass
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	column ChargeDescription
+		dataType: string
+		sourceProviderType: varchar(8000)
+		lineageTag: 37db6c44-44f2-4442-ab42-5308b6c24651
+		sourceLineageTag: ChargeDescription
+		summarizeBy: none
+		sourceColumn: ChargeDescription
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	column ChargeFrequency
+		dataType: string
+		sourceProviderType: varchar(8000)
+		lineageTag: 3e7706af-b1ad-4f90-8c05-1ac6b1dd5fe0
+		sourceLineageTag: ChargeFrequency
+		summarizeBy: none
+		sourceColumn: ChargeFrequency
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	column ChargePeriodEnd
+		dataType: dateTime
+		formatString: General Date
+		sourceProviderType: datetime2
+		lineageTag: a3b59582-7dcf-459f-992b-f72d2baf4ed0
+		sourceLineageTag: ChargePeriodEnd
+		summarizeBy: none
+		sourceColumn: ChargePeriodEnd
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	column ChargePeriodStart
+		dataType: dateTime
+		formatString: General Date
+		sourceProviderType: datetime2
+		lineageTag: 8103c149-3cd4-4a46-bcc6-1a111e93be5f
+		sourceLineageTag: ChargePeriodStart
+		summarizeBy: none
+		sourceColumn: ChargePeriodStart
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	column CommitmentDiscountCategory
+		dataType: string
+		sourceProviderType: varchar(8000)
+		lineageTag: b4c94c25-9322-4bf2-9814-35d9f98a9f62
+		sourceLineageTag: CommitmentDiscountCategory
+		summarizeBy: none
+		sourceColumn: CommitmentDiscountCategory
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	column CommitmentDiscountId
+		dataType: string
+		sourceProviderType: varchar(8000)
+		lineageTag: aa78364f-7812-45a1-884a-d8ab5c6bbac1
+		sourceLineageTag: CommitmentDiscountId
+		summarizeBy: none
+		sourceColumn: CommitmentDiscountId
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	column CommitmentDiscountName
+		dataType: string
+		sourceProviderType: varchar(8000)
+		lineageTag: ece4b8dc-23d7-43e1-852f-df7725bcb152
+		sourceLineageTag: CommitmentDiscountName
+		summarizeBy: none
+		sourceColumn: CommitmentDiscountName
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	column CommitmentDiscountStatus
+		dataType: string
+		sourceProviderType: varchar(8000)
+		lineageTag: 12326ba4-9b79-4a06-9093-32acff8c0949
+		sourceLineageTag: CommitmentDiscountStatus
+		summarizeBy: none
+		sourceColumn: CommitmentDiscountStatus
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	column CommitmentDiscountType
+		dataType: string
+		sourceProviderType: varchar(8000)
+		lineageTag: 1500bf16-9f9b-4036-893c-b5d308736d49
+		sourceLineageTag: CommitmentDiscountType
+		summarizeBy: none
+		sourceColumn: CommitmentDiscountType
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	column ConsumedQuantity
+		dataType: decimal
+		sourceProviderType: decimal(38, 18)
+		lineageTag: e6aed109-9129-4465-a22b-4b62ac72210e
+		sourceLineageTag: ConsumedQuantity
+		summarizeBy: sum
+		sourceColumn: ConsumedQuantity
+
+		changedProperty = IsHidden
+
+		changedProperty = DataType
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column ConsumedUnit
+		dataType: string
+		sourceProviderType: varchar(8000)
+		lineageTag: e5abd7f5-451f-4925-8ba3-a00849a7a6b4
+		sourceLineageTag: ConsumedUnit
+		summarizeBy: none
+		sourceColumn: ConsumedUnit
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	column ContractedCost
+		dataType: decimal
+		sourceProviderType: decimal(38, 18)
+		lineageTag: 10a4f006-aa9b-48bb-a3c9-e17b43dcf4a0
+		sourceLineageTag: ContractedCost
+		summarizeBy: sum
+		sourceColumn: ContractedCost
+
+		changedProperty = IsHidden
+
+		changedProperty = DataType
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column ContractedUnitPrice
+		dataType: decimal
+		sourceProviderType: decimal(38, 18)
+		lineageTag: c6a02873-f38b-4d49-b95d-1805dc5c2da6
+		sourceLineageTag: ContractedUnitPrice
+		summarizeBy: sum
+		sourceColumn: ContractedUnitPrice
+
+		changedProperty = IsHidden
+
+		changedProperty = DataType
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column EffectiveCost
+		dataType: decimal
+		sourceProviderType: decimal(38, 18)
+		lineageTag: f51a9e04-c97c-4098-9d1c-2f61881bfbcf
+		sourceLineageTag: EffectiveCost
+		summarizeBy: sum
+		sourceColumn: EffectiveCost
+
+		changedProperty = IsHidden
+
+		changedProperty = DataType
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column InvoiceIssuerName
+		dataType: string
+		sourceProviderType: varchar(8000)
+		lineageTag: 56d5d031-c3f6-43b6-9144-d742398200a4
+		sourceLineageTag: InvoiceIssuerName
+		summarizeBy: none
+		sourceColumn: InvoiceIssuerName
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	column ListCost
+		dataType: decimal
+		sourceProviderType: decimal(38, 18)
+		lineageTag: f27cf0dd-f864-4d6d-9a36-a5611b658a05
+		sourceLineageTag: ListCost
+		summarizeBy: sum
+		sourceColumn: ListCost
+
+		changedProperty = IsHidden
+
+		changedProperty = DataType
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column ListUnitPrice
+		dataType: decimal
+		sourceProviderType: decimal(38, 18)
+		lineageTag: 6b1ed701-e0fd-43be-8d21-77e5782832fc
+		sourceLineageTag: ListUnitPrice
+		summarizeBy: sum
+		sourceColumn: ListUnitPrice
+
+		changedProperty = IsHidden
+
+		changedProperty = DataType
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column PricingCategory
+		dataType: string
+		sourceProviderType: varchar(8000)
+		lineageTag: 2713ca2d-5b24-4c78-8ac5-57d59a489705
+		sourceLineageTag: PricingCategory
+		summarizeBy: none
+		sourceColumn: PricingCategory
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	column PricingQuantity
+		dataType: decimal
+		sourceProviderType: decimal(38, 18)
+		lineageTag: b4bf37f6-6953-4197-bafd-b193e2e59a94
+		sourceLineageTag: PricingQuantity
+		summarizeBy: sum
+		sourceColumn: PricingQuantity
+
+		changedProperty = IsHidden
+
+		changedProperty = DataType
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column PricingUnit
+		dataType: string
+		sourceProviderType: varchar(8000)
+		lineageTag: 2a21d85b-55b3-4501-a694-19da8cb099f3
+		sourceLineageTag: PricingUnit
+		summarizeBy: none
+		sourceColumn: PricingUnit
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	column ProviderName
+		dataType: string
+		sourceProviderType: varchar(8000)
+		lineageTag: 223b4996-97f6-4067-9dbe-82b13ae7bb51
+		sourceLineageTag: ProviderName
+		summarizeBy: none
+		sourceColumn: ProviderName
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	column PublisherName
+		dataType: string
+		sourceProviderType: varchar(8000)
+		lineageTag: c0805cdc-6dcc-46ff-b55d-e380587f747e
+		sourceLineageTag: PublisherName
+		summarizeBy: none
+		sourceColumn: PublisherName
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	column RegionId
+		dataType: string
+		isHidden
+		sourceProviderType: varchar(8000)
+		lineageTag: a76dd31d-b5c5-4fe5-b9a8-d96cf505ebc2
+		sourceLineageTag: RegionId
+		summarizeBy: none
+		sourceColumn: RegionId
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	column RegionName
+		dataType: string
+		isHidden
+		sourceProviderType: varchar(8000)
+		lineageTag: 4d6f5fba-0790-48a1-9dc7-6f6e7e285772
+		sourceLineageTag: RegionName
+		summarizeBy: none
+		sourceColumn: RegionName
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	column ResourceId
+		dataType: string
+		sourceProviderType: varchar(8000)
+		lineageTag: 308de181-641a-4bef-acc8-6a127fc2bf93
+		sourceLineageTag: ResourceId
+		summarizeBy: none
+		sourceColumn: ResourceId
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	column ResourceName
+		dataType: string
+		sourceProviderType: varchar(8000)
+		lineageTag: 22e0f656-0d51-4cab-bb8c-4ab6788637bf
+		sourceLineageTag: ResourceName
+		summarizeBy: none
+		sourceColumn: ResourceName
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	column ResourceType
+		dataType: string
+		sourceProviderType: varchar(8000)
+		lineageTag: 582e622b-59be-488c-898e-4876893d7b66
+		sourceLineageTag: ResourceType
+		summarizeBy: none
+		sourceColumn: ResourceType
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	column ServiceCategory
+		dataType: string
+		sourceProviderType: varchar(8000)
+		lineageTag: dfc4fd56-837d-4ce1-91a1-e46f08f0a208
+		sourceLineageTag: ServiceCategory
+		summarizeBy: none
+		sourceColumn: ServiceCategory
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	column ServiceName
+		dataType: string
+		sourceProviderType: varchar(8000)
+		lineageTag: 505fc315-2966-4bbf-87b6-5697e901279b
+		sourceLineageTag: ServiceName
+		summarizeBy: none
+		sourceColumn: ServiceName
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	column SkuId
+		dataType: string
+		sourceProviderType: varchar(8000)
+		lineageTag: 7b373f95-65d1-41d5-b099-405af0b221ea
+		sourceLineageTag: SkuId
+		summarizeBy: none
+		sourceColumn: SkuId
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	column SkuPriceId
+		dataType: string
+		sourceProviderType: varchar(8000)
+		lineageTag: f9ab472f-95ae-485b-b212-c83b3532c5f3
+		sourceLineageTag: SkuPriceId
+		summarizeBy: none
+		sourceColumn: SkuPriceId
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	column SubAccountId
+		dataType: string
+		sourceProviderType: varchar(8000)
+		lineageTag: 329599b0-63f6-496d-b6a9-5a0ad11df1a6
+		sourceLineageTag: SubAccountId
+		summarizeBy: none
+		sourceColumn: SubAccountId
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	column SubAccountName
+		dataType: string
+		sourceProviderType: varchar(8000)
+		lineageTag: d6fc55d6-4c8e-4dd5-9865-25813b99bba8
+		sourceLineageTag: SubAccountName
+		summarizeBy: none
+		sourceColumn: SubAccountName
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	column SubAccountType
+		dataType: string
+		sourceProviderType: varchar(8000)
+		lineageTag: aebca1af-e749-402d-b860-d164aa7927b3
+		sourceLineageTag: SubAccountType
+		summarizeBy: none
+		sourceColumn: SubAccountType
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	column Tags
+		dataType: string
+		sourceProviderType: varchar(8000)
+		lineageTag: c9544adb-7e90-49ff-8681-b98891c05efb
+		sourceLineageTag: Tags
+		summarizeBy: none
+		sourceColumn: Tags
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	column x_SkuMeterName
+		dataType: string
+		sourceProviderType: varchar(8000)
+		lineageTag: 949a4f33-685b-4d9f-bfac-bee3d6388ebd
+		sourceLineageTag: x_SkuMeterName
+		summarizeBy: none
+		sourceColumn: x_SkuMeterName
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	column x_SkuMeterSubcategory
+		dataType: string
+		sourceProviderType: varchar(8000)
+		lineageTag: 3e723776-cb89-45cd-9b33-71af13012032
+		sourceLineageTag: x_SkuMeterSubcategory
+		summarizeBy: none
+		sourceColumn: x_SkuMeterSubcategory
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	column BillingType
+		dataType: string
+		sourceProviderType: varchar(8000)
+		lineageTag: 6be65ba4-bb7e-4264-8155-e3b92843dc10
+		sourceLineageTag: BillingType
+		summarizeBy: none
+		sourceColumn: BillingType
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	column ChargePeriodStart_DateKey
+		dataType: int64
+		isHidden
+		formatString: 0
+		sourceProviderType: int
+		lineageTag: 40f3e12d-635a-41d5-a7fb-d9511204a253
+		sourceLineageTag: ChargePeriodStart_DateKey
+		summarizeBy: none
+		sourceColumn: ChargePeriodStart_DateKey
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	column MeterKey
+		dataType: int64
+		isHidden
+		formatString: 0
+		sourceProviderType: int
+		lineageTag: 50668fd0-6c95-4192-9f78-9195cff44526
+		sourceLineageTag: MeterKey
+		summarizeBy: none
+		sourceColumn: MeterKey
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	column CommitmentSavings
+		dataType: decimal
+		lineageTag: ceab9491-1b54-4d01-9e01-fa485f945327
+		sourceLineageTag: CommitmentSavings
+		summarizeBy: sum
+		sourceColumn: CommitmentSavings
+
+		changedProperty = IsHidden
+
+		changedProperty = DataType
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column x_ResourceGroupName
+		dataType: string
+		lineageTag: aecb4bdf-7ddc-4878-a770-2491ed32acd5
+		sourceLineageTag: x_ResourceGroupName
+		summarizeBy: none
+		sourceColumn: x_ResourceGroupName
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	partition fca = entity
+		mode: directLake
+		source
+			entityName: focus_fabric
+			schemaName: dbo
+			expressionSource: DatabaseQuery
+
+	changedProperty = Name
+
+	changedProperty = IsHidden
+
+	changedProperty = Description
+

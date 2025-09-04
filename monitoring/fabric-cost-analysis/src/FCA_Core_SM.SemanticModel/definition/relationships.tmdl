@@ -1,0 +1,12 @@
+relationship c012636f-ab04-5d40-959b-302f7f8c24a1
+	fromColumn: fca.MeterKey
+	toColumn: meters.MeterKey
+
+relationship c5137560-7461-4f58-3599-9a62c860ced0
+	fromColumn: fca.ChargePeriodStart_DateKey
+	toColumn: calendar.DateKey
+
+relationship 295d416c-6893-63f4-4e56-6e0033d19ccb
+	fromColumn: fca.RegionName
+	toColumn: capacity_regions.FabricRegion
+
