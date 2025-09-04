@@ -184,20 +184,36 @@ This section is not connected to the filtered requests. The goal here is to see 
 
 >**Important:** The calculation of the values on this page will be correct only if you set the right number of VM CPU cores of your gateway host in the "CPU Core Helper" slicer.
 
--------
+
+----------------
 
 ## Other helpful resources
 
-##### Fabric capacities
+##### Built-in Fabric monitoring features
+- [Microsoft Fabric Capacity Metrics app ](https://learn.microsoft.com/en-us/fabric/enterprise/metrics-app)
 - [Capacity Metrics - Troubleshooting guide: Monitor and identify capacity usage](https://learn.microsoft.com/en-us/fabric/enterprise/capacity-planning-troubleshoot-consumption)
 
+- [What is the admin monitoring workspace? (preview)](https://learn.microsoft.com/en-us/fabric/admin/monitoring-workspace)
+- [Microsoft Fabric Chargeback app (preview)](https://learn.microsoft.com/en-us/fabric/enterprise/chargeback-app)
+
+##### FUAM related videos
+- [Video - FUAM in Guy in a Cube](https://www.youtube.com/watch?v=G_-N2VMO8C0&themeRefresh=1)
+- [Video - Brief introduction to FUAM](https://youtu.be/CmHMOsQcMGI)
+
 ##### Other FUAM articles
+- [Overview - FUAM](/monitoring/fabric-unified-admin-monitoring/README.md)
 - [Documentation - FUAM's Authorization & Authentication](/monitoring/fabric-unified-admin-monitoring/media/documentation/FUAM_Authorization.md)
 - [Documentation - FUAM Architecture](/monitoring/fabric-unified-admin-monitoring/media/documentation/FUAM_Architecture.md)
 - [Documentation - FUAM Lakehouse table lineage](/monitoring/fabric-unified-admin-monitoring/media/documentation/FUAM_Documentation_Lakehouse_table_lineage.pdf)
 
-##### Other Fabric Toolbox assets
+##### Some other Fabric Toolbox assets
+- [Overview - Fabric Cost Analysis](/monitoring/fabric-cost-analysis/README.md)
 - [Overview - Fabric Workspace Monitoring report templates](/monitoring/workspace-monitoring-dashboards/README.md)
+- [Overview - Semantic Model MCP Server](https://github.com/microsoft/fabric-toolbox/tree/main/tools/SemanticModelMCPServer)
 - [Overview - Semantic Model Audit tool](/tools/SemanticModelAudit/README.md)
+
+##### Semantic Link & Semantic Link Lab
+- [What is semantic link?](https://learn.microsoft.com/en-us/fabric/data-science/semantic-link-overview)
+- [Overview - Semantic Link Labs](https://github.com/microsoft/semantic-link-labs/blob/main/README.md)
 
 ----------------

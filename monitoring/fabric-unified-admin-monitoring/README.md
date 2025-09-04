@@ -89,18 +89,30 @@ The FUAM solution accelerator template **is not an official Microsoft service**.
 
 ## Other helpful resources
 
-##### Videos about FUAM
+##### Built-in Fabric monitoring features
+- [Microsoft Fabric Capacity Metrics app ](https://learn.microsoft.com/en-us/fabric/enterprise/metrics-app)
+- [What is the admin monitoring workspace? (preview)](https://learn.microsoft.com/en-us/fabric/admin/monitoring-workspace)
+- [Microsoft Fabric Chargeback app (preview)](https://learn.microsoft.com/en-us/fabric/enterprise/chargeback-app)
+
+##### FUAM related videos
+- [Video - FUAM in Guy in a Cube](https://www.youtube.com/watch?v=G_-N2VMO8C0&themeRefresh=1)
 - [Video - Brief introduction to FUAM](https://youtu.be/CmHMOsQcMGI)
 
 ##### Other FUAM articles
+- [Overview - FUAM](/monitoring/fabric-unified-admin-monitoring/README.md)
 - [Documentation - FUAM's Authorization & Authentication](/monitoring/fabric-unified-admin-monitoring/media/documentation/FUAM_Authorization.md)
 - [Documentation - FUAM Architecture](/monitoring/fabric-unified-admin-monitoring/media/documentation/FUAM_Architecture.md)
 - [Documentation - FUAM Lakehouse table lineage](/monitoring/fabric-unified-admin-monitoring/media/documentation/FUAM_Documentation_Lakehouse_table_lineage.pdf)
 - [Documentation - FUAM Engine level analyzer reports](/monitoring/fabric-unified-admin-monitoring/media/documentation/FUAM_Engine_Level_Analyzer_Reports.md)
 
-
-##### Other Fabric Toolbox assets
+##### Some other Fabric Toolbox assets
+- [Overview - Fabric Cost Analysis](/monitoring/fabric-cost-analysis/README.md)
 - [Overview - Fabric Workspace Monitoring report templates](/monitoring/workspace-monitoring-dashboards/README.md)
+- [Overview - Semantic Model MCP Server](https://github.com/microsoft/fabric-toolbox/tree/main/tools/SemanticModelMCPServer)
 - [Overview - Semantic Model Audit tool](/tools/SemanticModelAudit/README.md)
+
+##### Semantic Link & Semantic Link Lab
+- [What is semantic link?](https://learn.microsoft.com/en-us/fabric/data-science/semantic-link-overview)
+- [Overview - Semantic Link Labs](https://github.com/microsoft/semantic-link-labs/blob/main/README.md)
 
 ----------------
