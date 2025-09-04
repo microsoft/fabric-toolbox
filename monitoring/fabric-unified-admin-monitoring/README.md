@@ -85,13 +85,22 @@ The FUAM solution accelerator template **is not an official Microsoft service**.
 **Important:** Please do not open a support ticket in case of an issue regarding the templates. In case of any questions or issues regarding the templates, please create an issue in this repository.
 
 
-
 ----------------
 
 ## Other helpful resources
+
+##### Videos about FUAM
 - [Video - Brief introduction to FUAM](https://youtu.be/CmHMOsQcMGI)
+
+##### Other FUAM articles
 - [Documentation - FUAM's Authorization & Authentication](/monitoring/fabric-unified-admin-monitoring/media/documentation/FUAM_Authorization.md)
 - [Documentation - FUAM Architecture](/monitoring/fabric-unified-admin-monitoring/media/documentation/FUAM_Architecture.md)
 - [Documentation - FUAM Lakehouse table lineage](/monitoring/fabric-unified-admin-monitoring/media/documentation/FUAM_Documentation_Lakehouse_table_lineage.pdf)
+- [Documentation - FUAM Engine level analyzer reports](/monitoring/fabric-unified-admin-monitoring/media/documentation/FUAM_Engine_Level_Analyzer_Reports.md)
+
+
+##### Other Fabric Toolbox assets
+- [Overview - Fabric Workspace Monitoring report templates](/monitoring/workspace-monitoring-dashboards/README.md)
+- [Overview - Semantic Model Audit tool](/tools/SemanticModelAudit/README.md)
 
 ----------------
