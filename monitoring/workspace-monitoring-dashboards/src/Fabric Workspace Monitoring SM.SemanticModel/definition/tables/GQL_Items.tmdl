@@ -1,0 +1,59 @@
+/// Dimension | Catalog of GraphQL Items
+table GQL_Items
+	lineageTag: dda3c968-39b4-4d06-b13d-35d0c41c9f8c
+
+	measure 'GQL Items Unique' = DISTINCTCOUNT(GQL_Items[ItemId])
+		formatString: 0
+		displayFolder: _General
+		lineageTag: 565de26a-76b1-4499-9ac7-a8c40b28208e
+
+	column ItemId
+		dataType: string
+		isKey
+		sourceProviderType: nvarchar(max)
+		lineageTag: 19037487-4041-4912-8fbf-5fce625870ae
+		summarizeBy: none
+		sourceColumn: ItemId
+
+		annotation SummarizationSetBy = Automatic
+
+	column ItemName
+		dataType: string
+		sourceProviderType: nvarchar(max)
+		lineageTag: d8a1ccec-5351-480f-b433-d0b18ee89c7c
+		summarizeBy: none
+		sourceColumn: ItemName
+
+		annotation SummarizationSetBy = Automatic
+
+	column ItemKind
+		dataType: string
+		sourceProviderType: nvarchar(max)
+		lineageTag: 97730808-ffa9-4dff-9959-e1745d414de0
+		summarizeBy: none
+		sourceColumn: ItemKind
+
+		annotation SummarizationSetBy = Automatic
+
+	column WorkspaceId
+		dataType: string
+		sourceProviderType: nvarchar(max)
+		lineageTag: 873711d5-17b3-4f4d-852a-a7cb1cc6795f
+		summarizeBy: none
+		sourceColumn: WorkspaceId
+
+		annotation SummarizationSetBy = Automatic
+
+	partition GQL_Items = m
+		mode: directQuery
+		queryGroup: 'Graph QL'
+		source =
+				let
+				    Source = AzureDataExplorer.Contents(#"Query URI", #"Eventhouse Name", "GraphQLMetrics#(lf)| summarize arg_max(ItemName, ItemKind, WorkspaceId) by ItemId", [MaxRows=null, MaxSize=null, NoTruncate=null, AdditionalSetStatements=null])
+				in
+				    Source
+
+	annotation PBI_NavigationStepName = Navigation
+
+	annotation PBI_ResultType = Exception
+

@@ -1,0 +1,440 @@
+/// Fact | Execution logs of Mirrored Database Items
+table MDB_TableExecutionLogs
+	lineageTag: e76ee685-ae1e-408a-9fcf-13a53d1d081e
+
+	measure 'MDB Duration Avg' =
+			
+			DIVIDE(
+			    AVERAGE(MDB_TableExecutionLogs[DurationMs]),
+			    [SelectedTimeUnit]
+			)
+		displayFolder: _Mirrored Databases
+		lineageTag: 61ef5729-f1bc-4e5c-9696-8e96c7948b88
+
+		formatStringDefinition = SELECTEDVALUE ( TimeUnits[Format], "\#,0.00;(\#,0.00);\#,0.00" )
+
+	measure 'MDB Duration Max' =
+			
+			DIVIDE(
+			    MAX(MDB_TableExecutionLogs[DurationMs]),
+			    [SelectedTimeUnit]
+			)
+		displayFolder: _Mirrored Databases
+		lineageTag: 983714fd-a802-4226-bd03-dd699bd556f4
+
+		formatStringDefinition = SELECTEDVALUE ( TimeUnits[Format], "\#,0.00;(\#,0.00);\#,0.00" )
+
+	measure 'MDB Duration Total' =
+			
+			DIVIDE(
+			    SUM(MDB_TableExecutionLogs[DurationMs]),
+			    [SelectedTimeUnit]
+			)
+		displayFolder: _Mirrored Databases
+		lineageTag: fc0ce5f2-3834-4d87-b722-e9e88608328f
+
+		formatStringDefinition = SELECTEDVALUE ( TimeUnits[Format], "\#,0.00;(\#,0.00);\#,0.00" )
+
+	measure 'MDB Items Unique' = DISTINCTCOUNT(MDB_Items[ItemId])
+		formatString: #,0
+		displayFolder: _Mirrored Databases
+		lineageTag: ed3f3709-0f5d-458a-8a6c-2ced1c353e77
+
+	measure 'MDB Logs' = COUNTROWS(MDB_TableExecutionLogs)
+		formatString: 0
+		displayFolder: _Mirrored Databases
+		lineageTag: f90c2307-5ec7-41df-a32f-e7bd5645df08
+
+	measure 'MDB Mirrored Tables' = DISTINCTCOUNT(MDB_TableExecutionLogs[SourceTableName])
+		formatString: 0
+		displayFolder: _Mirrored Databases
+		lineageTag: b603ceda-e22e-4eb1-9310-03c8980ad59a
+
+	measure 'MDB Operation Success Ratio' = ```
+			
+			VAR _success = CALCULATE(COUNTROWS(MDB_TableExecutionLogs), MDB_TableExecutionLogs[HasError] == 0)
+			VAR _all = COUNTROWS(MDB_TableExecutionLogs)
+			VAR _result = DIVIDE(_success, _all)
+			RETURN 
+			_result
+			```
+		formatString: 0.00%;-0.00%;0.00%
+		displayFolder: _Mirrored Databases
+		lineageTag: 013a6cb7-45df-44b1-b199-5feade776f8f
+
+	measure 'MDB Operations' = DISTINCTCOUNT(MDB_TableExecutionLogs[OperationId])
+		formatString: #,0
+		displayFolder: _Mirrored Databases
+		lineageTag: e7b7d573-af56-44e6-bed9-569d4cf73555
+
+	measure 'MDB Processed Data Max' =
+			
+			DIVIDE(
+			    MAX(MDB_TableExecutionLogs[ProcessedBytes])*0.0009765625,
+			    [SelectedSizeUnit]
+			)
+		displayFolder: _Mirrored Databases
+		lineageTag: e83543da-183c-47da-97ce-d6b30a1fefad
+
+		formatStringDefinition = SELECTEDVALUE ( SizeUnits[Format], "\#,0.00;(\#,0.00);\#,0.00" )
+
+	measure 'MDB Processed Data Total' =
+			
+			DIVIDE(
+			    SUM(MDB_TableExecutionLogs[ProcessedBytes])*0.0009765625,
+			    [SelectedSizeUnit]
+			)
+		displayFolder: _Mirrored Databases
+		lineageTag: db6fbaa5-da73-4947-948d-c8d64b1a1407
+
+		formatStringDefinition = SELECTEDVALUE ( SizeUnits[Format], "\#,0.00;(\#,0.00);\#,0.00" )
+
+	measure 'MDB Processed Rows Max' = MAX(MDB_TableExecutionLogs[ProcessedRows])
+		formatString: #,0
+		displayFolder: _Mirrored Databases
+		lineageTag: ab82e66b-7dac-4430-a5d9-9ea83ec2904b
+
+	measure 'MDB Processed Rows Total' = SUM(MDB_TableExecutionLogs[ProcessedRows])
+		formatString: #,0
+		displayFolder: _Mirrored Databases
+		lineageTag: d1225641-8a17-4ab1-a8e8-75f490cb852f
+
+	measure 'MDB Replicator Batch Latency Avg' =
+			
+			DIVIDE(
+			    AVERAGE(MDB_TableExecutionLogs[ReplicatorBatchLatency])*1000,
+			    [SelectedTimeUnit]
+			)
+		displayFolder: _Mirrored Databases
+		lineageTag: ba06d5a2-58ba-4315-8b37-1a48a9894e48
+
+		formatStringDefinition = SELECTEDVALUE ( TimeUnits[Format], "\#,0.00;(\#,0.00);\#,0.00" )
+
+	measure 'MDB Replicator Batch Latency Max' =
+			
+			DIVIDE(
+			    MAX(MDB_TableExecutionLogs[ReplicatorBatchLatency])*1000,
+			    [SelectedTimeUnit]
+			)
+		displayFolder: _Mirrored Databases
+		lineageTag: c41c295f-346f-4c08-add5-7d77257603bd
+
+		formatStringDefinition = SELECTEDVALUE ( TimeUnits[Format], "\#,0.00;(\#,0.00);\#,0.00" )
+
+	measure 'MDB Replicator Batch Latency Total' =
+			
+			DIVIDE(
+			    SUM(MDB_TableExecutionLogs[ReplicatorBatchLatency])*1000,
+			    [SelectedTimeUnit]
+			)
+		displayFolder: _Mirrored Databases
+		lineageTag: 1af7207e-7fdf-4c4e-be0f-9bb4c2744836
+
+		formatStringDefinition = SELECTEDVALUE ( TimeUnits[Format], "\#,0.00;(\#,0.00);\#,0.00" )
+
+	measure 'MDB Source Mirroring Types' = DISTINCTCOUNT(MDB_TableExecutionLogs[MirroringSourceType])
+		formatString: 0
+		displayFolder: _Mirrored Databases
+		lineageTag: e32e1f38-6581-458e-ba81-648e2f4e50c4
+
+	column Timestamp
+		dataType: dateTime
+		formatString: General Date
+		sourceProviderType: datetimeoffset
+		lineageTag: 691a091d-d993-456f-9313-901f5e2c0579
+		summarizeBy: none
+		sourceColumn: Timestamp
+
+		annotation SummarizationSetBy = Automatic
+
+	column OperationName
+		dataType: string
+		sourceProviderType: nvarchar(max)
+		lineageTag: 64338b4b-1c44-4e1f-9f9c-b30535d0a318
+		summarizeBy: none
+		sourceColumn: OperationName
+
+		annotation SummarizationSetBy = Automatic
+
+	column ItemId
+		dataType: string
+		sourceProviderType: nvarchar(max)
+		lineageTag: 9ef40b68-a45a-4746-aabb-e417154b8177
+		summarizeBy: none
+		sourceColumn: ItemId
+
+		annotation SummarizationSetBy = Automatic
+
+	column ItemKind
+		dataType: string
+		sourceProviderType: nvarchar(max)
+		lineageTag: abd06c0c-76ae-4cd5-b21e-5e3dfcb1a845
+		summarizeBy: none
+		sourceColumn: ItemKind
+
+		annotation SummarizationSetBy = Automatic
+
+	column ItemName
+		dataType: string
+		sourceProviderType: nvarchar(max)
+		lineageTag: f8e8ef5a-7292-4247-a181-471ab7e19333
+		summarizeBy: none
+		sourceColumn: ItemName
+
+		annotation SummarizationSetBy = Automatic
+
+	column WorkspaceId
+		dataType: string
+		sourceProviderType: nvarchar(max)
+		lineageTag: e4c84d89-0bfc-4cf1-976f-aa26e9196f2d
+		summarizeBy: none
+		sourceColumn: WorkspaceId
+
+		annotation SummarizationSetBy = Automatic
+
+	column WorkspaceName
+		dataType: string
+		sourceProviderType: nvarchar(max)
+		lineageTag: f1576a07-4c71-4f2f-a430-90b0488eed87
+		summarizeBy: none
+		sourceColumn: WorkspaceName
+
+		annotation SummarizationSetBy = Automatic
+
+	column CapacityId
+		dataType: string
+		sourceProviderType: nvarchar(max)
+		lineageTag: 2369ddba-3f16-462b-8d8b-5feca4ee03e2
+		summarizeBy: none
+		sourceColumn: CapacityId
+
+		annotation SummarizationSetBy = Automatic
+
+	column CorrelationId
+		dataType: string
+		sourceProviderType: nvarchar(max)
+		lineageTag: ca15b116-91ac-4dd0-bcec-37c14932ed27
+		summarizeBy: none
+		sourceColumn: CorrelationId
+
+		annotation SummarizationSetBy = Automatic
+
+	column OperationId
+		dataType: string
+		sourceProviderType: nvarchar(max)
+		lineageTag: f35da152-8487-4797-9209-121fb53a9dae
+		summarizeBy: none
+		sourceColumn: OperationId
+
+		annotation SummarizationSetBy = Automatic
+
+	column Identity
+		dataType: string
+		lineageTag: 47f5e3ac-d197-4a4e-896a-7428d44c05c2
+		summarizeBy: none
+		sourceColumn: Identity
+
+		annotation SummarizationSetBy = Automatic
+
+	column CustomerTenantId
+		dataType: string
+		sourceProviderType: nvarchar(max)
+		lineageTag: 58bae27c-3575-4897-83c5-9e303195da3b
+		summarizeBy: none
+		sourceColumn: CustomerTenantId
+
+		annotation SummarizationSetBy = Automatic
+
+	column DurationMs
+		dataType: int64
+		isHidden
+		formatString: 0
+		sourceProviderType: bigint
+		lineageTag: b6fe6b28-cb18-480e-a8b3-67410c07f374
+		summarizeBy: sum
+		sourceColumn: DurationMs
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	column Status
+		dataType: string
+		sourceProviderType: nvarchar(max)
+		lineageTag: f4d58cc9-287d-45c9-9f5d-6eb8be8da049
+		summarizeBy: none
+		sourceColumn: Status
+
+		annotation SummarizationSetBy = Automatic
+
+	column Level
+		dataType: string
+		sourceProviderType: nvarchar(max)
+		lineageTag: abe3351d-c872-4b99-8a8d-3bc7176fa40b
+		summarizeBy: none
+		sourceColumn: Level
+
+		annotation SummarizationSetBy = Automatic
+
+	column Region
+		dataType: string
+		sourceProviderType: nvarchar(max)
+		lineageTag: 13b67983-c155-417b-b3d2-f526984f7654
+		summarizeBy: none
+		sourceColumn: Region
+
+		annotation SummarizationSetBy = Automatic
+
+	column WorkspaceMonitoringTableName
+		dataType: string
+		sourceProviderType: nvarchar(max)
+		lineageTag: 846d8c9d-a3f5-48b5-8871-780efa881516
+		summarizeBy: none
+		sourceColumn: WorkspaceMonitoringTableName
+
+		annotation SummarizationSetBy = Automatic
+
+	column OperationStartTime
+		dataType: dateTime
+		formatString: yyyy-mm-dd hh:nn:ss
+		sourceProviderType: datetimeoffset
+		lineageTag: 1e9de378-0bb7-41c8-b53d-810d56760f37
+		summarizeBy: none
+		sourceColumn: OperationStartTime
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isCustom":true}
+
+	column OperationEndTime
+		dataType: dateTime
+		formatString: yyyy-mm-dd hh:nn:ss
+		sourceProviderType: datetimeoffset
+		lineageTag: f3a03824-e51f-45f8-879f-e40c33dde0c6
+		summarizeBy: none
+		sourceColumn: OperationEndTime
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isCustom":true}
+
+	column MirroringSourceType
+		dataType: string
+		sourceProviderType: nvarchar(max)
+		lineageTag: 1a9683e8-bff2-46dc-a62a-6a8dd756d5ce
+		summarizeBy: none
+		sourceColumn: MirroringSourceType
+
+		annotation SummarizationSetBy = Automatic
+
+	column SourceTableName
+		dataType: string
+		sourceProviderType: nvarchar(max)
+		lineageTag: b270b1bc-0a49-4c08-8214-5a2abbaea1a8
+		summarizeBy: none
+		sourceColumn: SourceTableName
+
+		annotation SummarizationSetBy = Automatic
+
+	column SourceSchemaName
+		dataType: string
+		sourceProviderType: nvarchar(max)
+		lineageTag: 92a4e45e-6752-40e2-ae94-4b5a63ebf0f5
+		summarizeBy: none
+		sourceColumn: SourceSchemaName
+
+		annotation SummarizationSetBy = Automatic
+
+	column ProcessedRows
+		dataType: int64
+		isHidden
+		formatString: 0
+		sourceProviderType: bigint
+		lineageTag: e3e1510f-29d9-4462-b9be-810d8674dac8
+		summarizeBy: sum
+		sourceColumn: ProcessedRows
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	column ProcessedBytes
+		dataType: int64
+		isHidden
+		formatString: 0
+		sourceProviderType: bigint
+		lineageTag: 74ea57d1-74cf-411f-b2a0-c6e75797d4a4
+		summarizeBy: sum
+		sourceColumn: ProcessedBytes
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	column ReplicatorBatchLatency
+		dataType: int64
+		isHidden
+		formatString: 0
+		sourceProviderType: bigint
+		lineageTag: c5f1fdd9-49fd-4181-a0af-ef0a295d326f
+		summarizeBy: sum
+		sourceColumn: ReplicatorBatchLatency
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	column ErrorType
+		dataType: string
+		sourceProviderType: nvarchar(max)
+		lineageTag: 08a5301c-63d8-4c89-a269-585999bfbaa9
+		summarizeBy: none
+		sourceColumn: ErrorType
+
+		annotation SummarizationSetBy = Automatic
+
+	column ErrorMessage
+		dataType: string
+		sourceProviderType: nvarchar(max)
+		lineageTag: de7bb335-ad6f-40a7-bf38-133b42323d9b
+		summarizeBy: none
+		sourceColumn: ErrorMessage
+
+		annotation SummarizationSetBy = Automatic
+
+	column DateKey
+		dataType: dateTime
+		formatString: General Date
+		sourceProviderType: datetimeoffset
+		lineageTag: c39f53a6-258b-4707-befb-8149d0cec8a7
+		summarizeBy: none
+		sourceColumn: DateKey
+
+		annotation SummarizationSetBy = Automatic
+
+	column HasError
+		dataType: int64
+		isHidden
+		formatString: 0
+		sourceProviderType: bigint
+		lineageTag: 40631416-8bfd-4f41-a3f3-7218b4b9279e
+		summarizeBy: sum
+		sourceColumn: HasError
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	partition MDB_TableExecutionLogs = m
+		mode: directQuery
+		queryGroup: 'Mirrored Database'
+		source =
+				let
+				    Source = AzureDataExplorer.Contents(#"Query URI", #"Eventhouse Name", "#(lf)MirroredDatabaseTableExecutionLogs#(lf)| extend #(lf)    DateKey = bin(Timestamp, 1d),#(lf)    HasError = iif(isnull(ErrorType) or ErrorType == """", 0, 1),#(lf)    Identity = tostring(Identity)", [MaxRows=null, MaxSize=null, NoTruncate=null, AdditionalSetStatements=null])
+				in
+				    Source
+
+	annotation PBI_NavigationStepName = Navigation
+
+	annotation PBI_ResultType = Exception
+

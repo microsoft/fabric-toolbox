@@ -1,0 +1,453 @@
+/// Fact | Metrics of Eventhouse KQL Database Items
+table EH_Metrics
+	lineageTag: 72d037fd-6584-4609-8585-dcf9ca942641
+
+	measure 'EH Streaming Latency Avg' =
+			
+			VAR _calculated = CALCULATE(
+			        AVERAGE(EH_Metrics[MetricMaxValue]),
+			        EH_Metrics[MetricName] = "StreamingIngestDuration"
+			    )
+			
+			RETURN
+			DIVIDE(
+			    _calculated,
+			    [SelectedTimeUnit]
+			)
+		displayFolder: _Ingestions
+		lineageTag: e4a9e339-8acd-4a1d-b8a1-0f6c8f4f5699
+
+		formatStringDefinition = SELECTEDVALUE ( TimeUnits[Format], "\#,0.00;(\#,0.00);\#,0.00" )
+
+	measure 'EH Ingestion Streaming Volume' = ```
+			
+			DIVIDE(
+			    CALCULATE( 
+			        SUM(EH_Metrics[MetricSumValue])*0.0009765625,
+			        EH_Metrics[MetricName] = "StreamingIngestDataRate"
+			    ),
+			    [SelectedSizeUnit]
+			)
+			```
+		displayFolder: _Ingestions
+		lineageTag: 031cac2d-b4ca-4a03-ae50-3ff79b5b4536
+
+		formatStringDefinition = SELECTEDVALUE ( SizeUnits[Format], "\$#,0.00;(\$#,0.00);\$#,0.00" )
+
+	measure 'EH Ingestion Batch Volume' = ```
+			
+			DIVIDE(
+			    CALCULATE( 
+			        SUM(EH_Metrics[MetricSumValue])*0.0009765625,
+			        EH_Metrics[MetricName] = "IngestionVolumeInBytes"
+			    ),
+			    [SelectedSizeUnit]
+			)
+			```
+		displayFolder: _Ingestions
+		lineageTag: fc427d92-3ac7-4c39-a8f6-5dc5f26c0e32
+
+		formatStringDefinition = SELECTEDVALUE ( SizeUnits[Format], "\$#,0.00;(\$#,0.00);\$#,0.00" )
+
+	measure 'EH Ingestion Batch Result' = ```
+			
+			CALCULATE( 
+			        SUM(EH_Metrics[MetricSumValue]),
+			        EH_Metrics[MetricName] = "IngestionResult",
+			        EH_Metrics[Database] <> "$copilot" && EH_Metrics[Database] <> BLANK(),
+			        EH_Metrics[IngestionStatus] <> "Temp Failure"
+			    )
+			```
+		formatString: 0
+		displayFolder: _Ingestions
+		lineageTag: 4deaf87c-73e2-407e-9093-bfe60200ed93
+
+	measure 'EH Batch Size Max' =
+			
+			DIVIDE(
+			    CALCULATE(
+			        MAX(EH_Metrics[MetricMaxValue])*0.0009765625,
+			        EH_Metrics[MetricName] = "BatchSizeBytes"
+			    ),
+			    [SelectedSizeUnit]
+			)
+		displayFolder: _Ingestions
+		lineageTag: 2c6ebc69-dc6f-48cf-a42d-89e4d9d3d5f4
+
+		formatStringDefinition = SELECTEDVALUE ( SizeUnits[Format], "\#,0.00;(\#,0.00);\#,0.00" )
+
+	measure 'EH Batch Size Avg' =
+			
+			DIVIDE(
+			    CALCULATE(
+			        AVERAGE(EH_Metrics[MetricMaxValue])*0.0009765625,
+			        EH_Metrics[MetricName] = "BatchSizeBytes"
+			    ),
+			    [SelectedSizeUnit]
+			)
+		displayFolder: _Ingestions
+		lineageTag: 0c876b91-b0b2-45b3-951b-e784809109f6
+
+		formatStringDefinition = SELECTEDVALUE ( SizeUnits[Format], "\#,0.00;(\#,0.00);\#,0.00" )
+
+	measure 'EH Batch Latency Max' =
+			
+			DIVIDE(
+			    CALCULATE(
+			        MAX(EH_Metrics[MetricMaxValue])*1000,
+			        EH_Metrics[MetricName] = "BatchDurationInSeconds"
+			    ),
+			    [SelectedTimeUnit]
+			)
+		displayFolder: _Ingestions
+		lineageTag: 0339b0fe-2156-4684-8aa7-10076b57a542
+
+		formatStringDefinition = SELECTEDVALUE ( TimeUnits[Format], "\#,0.00;(\#,0.00);\#,0.00" )
+
+	measure 'EH Batch Latency Avg' =
+			
+			DIVIDE(
+			    CALCULATE(
+			        AVERAGE(EH_Metrics[MetricMaxValue])*1000,
+			        EH_Metrics[MetricName] = "BatchDurationInSeconds"
+			    ),
+			    [SelectedTimeUnit]
+			)
+		displayFolder: _Ingestions
+		lineageTag: c683c348-0787-4f82-9d17-7d0eceacb078
+
+		formatStringDefinition = SELECTEDVALUE ( TimeUnits[Format], "\#,0.00;(\#,0.00);\#,0.00" )
+
+	measure 'EH Batch Ingestion Success Ratio' = ```
+			
+			VAR _success = CALCULATE([EH Ingestion Batch Result], EH_Metrics[IngestionStatus] = "Succeeded")
+			VAR _all = [EH Ingestion Batch Result]
+			VAR _result = DIVIDE(_success, _all)
+			RETURN 
+			_result
+			```
+		formatString: 0.00%;-0.00%;0.00%
+		displayFolder: _Ingestions
+		lineageTag: 67048d4d-fcaa-45fd-a502-ae852c1ef1d1
+
+	measure 'EH Batch Ingestion Latency Avg' =
+			
+			VAR _calculated = CALCULATE(
+			        AVERAGE(EH_Metrics[MetricMaxValue])*1000,
+			        EH_Metrics[MetricName] = "IngestionLatencyInSeconds",
+			        EH_Metrics[Database] <> "$copilot",
+			        EH_Metrics[IngestionKind] = "Queued Ingestion"
+			    )
+			
+			RETURN
+			DIVIDE(
+			    _calculated,
+			    [SelectedTimeUnit]
+			)
+		displayFolder: _Ingestions
+		lineageTag: 13783fd9-2a71-4611-9a78-78b6c4675aba
+
+		formatStringDefinition = SELECTEDVALUE ( TimeUnits[Format], "\#,0.00;(\#,0.00);\#,0.00" )
+
+	measure 'EH Batch Blob Count Max' =
+			
+			CALCULATE(
+			        MAX(EH_Metrics[MetricMaxValue]),
+			        EH_Metrics[MetricName] = "BatchBlobCount"
+			    )
+		formatString: #,0
+		displayFolder: _Ingestions
+		lineageTag: 2ef768a1-a686-4f9c-b92e-af1e41f60190
+
+	measure 'EH Batch Blob Count Avg' =
+			
+			CALCULATE(
+			        AVERAGE(EH_Metrics[MetricMaxValue]),
+			        EH_Metrics[MetricName] = "BatchBlobCount"
+			    )
+		formatString: #,0.00
+		displayFolder: _Ingestions
+		lineageTag: a9e3c874-984f-4193-be64-70ca72333c20
+
+	measure 'EH Metric Total' =
+			
+			SUM(EH_Metrics[MetricSumValue])
+		displayFolder: _General
+		lineageTag: 39d4c8cf-aa44-4e2b-be5e-2c2cfa0c20a8
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column Timestamp
+		dataType: dateTime
+		formatString: General Date
+		sourceProviderType: datetimeoffset
+		lineageTag: a38062aa-2d80-4352-8afc-2c4ab37bf4b4
+		summarizeBy: none
+		sourceColumn: Timestamp
+
+		annotation SummarizationSetBy = Automatic
+
+	column OperationName
+		dataType: string
+		sourceProviderType: nvarchar(max)
+		lineageTag: eb6efc7c-3007-4bf3-90f7-16b51da83593
+		summarizeBy: none
+		sourceColumn: OperationName
+
+		annotation SummarizationSetBy = Automatic
+
+	column ItemId
+		dataType: string
+		sourceProviderType: nvarchar(max)
+		lineageTag: 88df63aa-d007-4fc8-a6e8-9a9b4fb514b8
+		summarizeBy: none
+		sourceColumn: ItemId
+
+		annotation SummarizationSetBy = Automatic
+
+	column ItemKind
+		dataType: string
+		sourceProviderType: nvarchar(max)
+		lineageTag: 5d64d594-cedb-42b4-8c32-736f86209a7a
+		summarizeBy: none
+		sourceColumn: ItemKind
+
+		annotation SummarizationSetBy = Automatic
+
+	column ItemName
+		dataType: string
+		sourceProviderType: nvarchar(max)
+		lineageTag: bed61335-5263-486e-b925-409b50ea2d91
+		summarizeBy: none
+		sourceColumn: ItemName
+
+		annotation SummarizationSetBy = Automatic
+
+	column WorkspaceId
+		dataType: string
+		sourceProviderType: nvarchar(max)
+		lineageTag: 3c01551b-4a3a-4d4d-bce4-20b0f4b58972
+		summarizeBy: none
+		sourceColumn: WorkspaceId
+
+		annotation SummarizationSetBy = Automatic
+
+	column WorkspaceName
+		dataType: string
+		sourceProviderType: nvarchar(max)
+		lineageTag: 101b0dc4-862e-44bc-addf-a4604cf25d2d
+		summarizeBy: none
+		sourceColumn: WorkspaceName
+
+		annotation SummarizationSetBy = Automatic
+
+	column CapacityId
+		dataType: string
+		sourceProviderType: nvarchar(max)
+		lineageTag: 21bb1d47-d94f-4c1c-81c7-e7f8e281a023
+		summarizeBy: none
+		sourceColumn: CapacityId
+
+		annotation SummarizationSetBy = Automatic
+
+	column CustomerTenantId
+		dataType: string
+		sourceProviderType: nvarchar(max)
+		lineageTag: 802ca193-d820-4bd0-9c8c-230da7029c57
+		summarizeBy: none
+		sourceColumn: CustomerTenantId
+
+		annotation SummarizationSetBy = Automatic
+
+	column DurationMs
+		dataType: int64
+		isHidden
+		formatString: 0
+		isAvailableInMdx: false
+		sourceProviderType: bigint
+		lineageTag: 75cb6745-7de1-4fe1-947c-910034ee252a
+		summarizeBy: none
+		sourceColumn: DurationMs
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	column Level
+		dataType: string
+		sourceProviderType: nvarchar(max)
+		lineageTag: 4cdbbfbf-5237-416e-84d5-5892504e0ef3
+		summarizeBy: none
+		sourceColumn: Level
+
+		annotation SummarizationSetBy = Automatic
+
+	column Region
+		dataType: string
+		sourceProviderType: nvarchar(max)
+		lineageTag: a9fcc0c1-7038-430f-88b0-e0ed66331d0a
+		summarizeBy: none
+		sourceColumn: Region
+
+		annotation SummarizationSetBy = Automatic
+
+	column WorkspaceMonitoringTableName
+		dataType: string
+		sourceProviderType: nvarchar(max)
+		lineageTag: aea9cbe5-5186-4656-983c-2ce1778c6850
+		summarizeBy: none
+		sourceColumn: WorkspaceMonitoringTableName
+
+		annotation SummarizationSetBy = Automatic
+
+	column MetricName
+		dataType: string
+		sourceProviderType: nvarchar(max)
+		lineageTag: 1ae09a9e-f699-42fa-9b9a-3b3013acd700
+		summarizeBy: none
+		sourceColumn: MetricName
+
+		annotation SummarizationSetBy = Automatic
+
+	column MetricMinValue
+		dataType: int64
+		isHidden
+		formatString: 0
+		isAvailableInMdx: false
+		sourceProviderType: bigint
+		lineageTag: cb71df16-61a6-4a42-88f1-2af2c1b17285
+		summarizeBy: none
+		sourceColumn: MetricMinValue
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	column MetricMaxValue
+		dataType: int64
+		isHidden
+		formatString: 0
+		isAvailableInMdx: false
+		sourceProviderType: bigint
+		lineageTag: 5e02105a-8d7b-4754-9769-413f1d30a855
+		summarizeBy: none
+		sourceColumn: MetricMaxValue
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	column MetricSumValue
+		dataType: int64
+		isHidden
+		formatString: 0
+		isAvailableInMdx: false
+		sourceProviderType: bigint
+		lineageTag: c7bb6223-270a-4a07-8e6a-2a21051078a5
+		summarizeBy: none
+		sourceColumn: MetricSumValue
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	column MetricCount
+		dataType: int64
+		isHidden
+		formatString: 0
+		isAvailableInMdx: false
+		sourceProviderType: bigint
+		lineageTag: 7ae349e2-198a-48b2-a239-17c476657b6a
+		summarizeBy: none
+		sourceColumn: MetricCount
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	column DateKey
+		dataType: dateTime
+		formatString: General Date
+		sourceProviderType: datetimeoffset
+		lineageTag: 226fb0ee-17e7-41af-843d-dbbdd8cf6446
+		summarizeBy: none
+		sourceColumn: DateKey
+
+		annotation SummarizationSetBy = Automatic
+
+	column DatabaseId
+		dataType: string
+		sourceProviderType: nvarchar(max)
+		lineageTag: eb8ffddd-aba9-448e-879f-cde5e8e77e43
+		summarizeBy: none
+		sourceColumn: DatabaseId
+
+		annotation SummarizationSetBy = Automatic
+
+	column Result
+		dataType: string
+		sourceProviderType: nvarchar(max)
+		lineageTag: 74348dff-9e08-4616-b8b9-187a16ebf421
+		summarizeBy: none
+		sourceColumn: Result
+
+		annotation SummarizationSetBy = Automatic
+
+	column Database
+		dataType: string
+		sourceProviderType: nvarchar(max)
+		lineageTag: b92b1816-b533-4291-a13d-b5078974ddbc
+		summarizeBy: none
+		sourceColumn: Database
+
+		annotation SummarizationSetBy = Automatic
+
+	column FailureKind
+		dataType: string
+		sourceProviderType: nvarchar(max)
+		lineageTag: d9ef11de-b862-47da-8ce0-c17dbdee9aaa
+		summarizeBy: none
+		sourceColumn: FailureKind
+
+		annotation SummarizationSetBy = Automatic
+
+	column IngestionStatus
+		dataType: string
+		sourceProviderType: nvarchar(max)
+		lineageTag: 8e9c462a-45b0-4a72-9e6c-0afaf7ab3951
+		summarizeBy: none
+		sourceColumn: IngestionStatus
+
+		annotation SummarizationSetBy = Automatic
+
+	column Table
+		dataType: string
+		sourceProviderType: nvarchar(max)
+		lineageTag: 671e4994-8076-4662-bbce-c8c89957dc0f
+		summarizeBy: none
+		sourceColumn: Table
+
+		annotation SummarizationSetBy = Automatic
+
+	column IngestionKind
+		dataType: string
+		sourceProviderType: nvarchar(max)
+		lineageTag: 6a8299be-c33c-4a4c-a82f-e62ccf9bef6f
+		summarizeBy: none
+		sourceColumn: IngestionKind
+
+		annotation SummarizationSetBy = Automatic
+
+	partition EH_Metrics = m
+		mode: directQuery
+		queryGroup: Eventhouse
+		source =
+				let
+				    Source = AzureDataExplorer.Contents(#"Query URI", #"Eventhouse Name", "EventhouseMetrics#(lf)| extend#(lf)    DateKey = bin(Timestamp, 1d),#(lf)    MetricDimensions = todynamic(tostring(MetricSpecificDimensions)),#(lf)    Database = tostring(todynamic(tostring(MetricSpecificDimensions)).DatabaseName),#(lf)    DatabaseId = tostring(todynamic(tostring(MetricSpecificDimensions)).DatabaseId),#(lf)    Table = tostring(todynamic(tostring(MetricSpecificDimensions)).Table),#(lf)    Result = tostring(todynamic(tostring(MetricSpecificDimensions)).Result)#(lf)| extend #(lf)    IngestionKind=tostring(MetricDimensions.IngestionKind),#(lf)    IngestionResult =tostring(MetricDimensions.IngestionResultDetails),#(lf)    FailureKind = tostring(todynamic(tostring(MetricSpecificDimensions)).FailureKind)#(lf)| extend#(lf)    IngestionStatus=case((IngestionResult !=""Success"" and  FailureKind ==""Permanent""), ""Failed (Permanent)"", IngestionResult ==""Success"", ""Succeeded"", ""Temp Failure"")#(lf)    | project-away IngestionResult, MetricSpecificDimensions, MetricDimensions", [MaxRows=null, MaxSize=null, NoTruncate=null, AdditionalSetStatements=null])
+				in
+				    Source
+
+	annotation PBI_NavigationStepName = Navigation
+
+	annotation PBI_ResultType = Exception
+

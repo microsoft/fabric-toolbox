@@ -1,0 +1,54 @@
+/// Fact | Collected engine errors of Semantic Model Items
+table SM_EngineErrors
+	lineageTag: 778a69ff-ec27-4a6d-b6de-9df238aa35c8
+
+	column OperationId
+		dataType: string
+		sourceProviderType: nvarchar(max)
+		lineageTag: 603f911f-f33e-49b4-8d06-d0f152cce970
+		summarizeBy: none
+		sourceColumn: OperationId
+
+		annotation SummarizationSetBy = Automatic
+
+	column CorrelationId
+		dataType: string
+		sourceProviderType: nvarchar(max)
+		lineageTag: b159d81c-7297-4a45-9939-75fa12ebdba5
+		summarizeBy: none
+		sourceColumn: CorrelationId
+
+		annotation SummarizationSetBy = Automatic
+
+	column Timestamp
+		dataType: dateTime
+		formatString: General Date
+		sourceProviderType: datetimeoffset
+		lineageTag: 1646a083-5d14-4d0a-829a-43bb0e6d1bf3
+		summarizeBy: none
+		sourceColumn: Timestamp
+
+		annotation SummarizationSetBy = Automatic
+
+	column ErrorMessage
+		dataType: string
+		sourceProviderType: nvarchar(max)
+		lineageTag: a0efa3b8-61fc-4e3d-9b12-2ae199a0d9f1
+		summarizeBy: none
+		sourceColumn: ErrorMessage
+
+		annotation SummarizationSetBy = Automatic
+
+	partition SM_EngineErrors = m
+		mode: directQuery
+		queryGroup: 'Semantic Model'
+		source =
+				let
+				    Source = AzureDataExplorer.Contents(#"Query URI", #"Eventhouse Name", " SemanticModelLogs#(lf)    | where OperationId != '00000000-0000-0000-0000-000000000000'#(lf)    | where OperationDetailName == 'Error'#(lf)    | summarize arg_max(Timestamp, ErrorMessage=EventText) by OperationId, CorrelationId", [MaxRows=null, MaxSize=null, NoTruncate=true, AdditionalSetStatements=null])
+				in
+				    Source
+
+	annotation PBI_NavigationStepName = Navigation
+
+	annotation PBI_ResultType = Exception
+

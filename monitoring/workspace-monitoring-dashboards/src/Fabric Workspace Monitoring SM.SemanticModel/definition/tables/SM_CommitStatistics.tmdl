@@ -1,0 +1,111 @@
+/// Fact | Refresh/change commit statistics of Semantic Model Items
+table SM_CommitStatistics
+	lineageTag: b4635612-38a2-4c90-8a4e-b9652168b5f0
+
+	column OperationId
+		dataType: string
+		sourceProviderType: nvarchar(max)
+		lineageTag: 08982538-12c4-4d4a-b3da-84fbc962c3bb
+		summarizeBy: none
+		sourceColumn: OperationId
+
+		annotation SummarizationSetBy = Automatic
+
+	column SequencePointCount
+		dataType: int64
+		isHidden
+		formatString: 0
+		sourceProviderType: bigint
+		lineageTag: e64d7884-eaef-4d6a-8927-a81a82ebb261
+		summarizeBy: sum
+		sourceColumn: SequencePointCount
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	column SequencePointBegin
+		dataType: dateTime
+		formatString: General Date
+		sourceProviderType: datetimeoffset
+		lineageTag: ebbe1a89-c0f2-467c-a9f2-3111920a4d03
+		summarizeBy: none
+		sourceColumn: SequencePointBegin
+
+		annotation SummarizationSetBy = Automatic
+
+	column SequencePointEnd
+		dataType: dateTime
+		formatString: General Date
+		sourceProviderType: datetimeoffset
+		lineageTag: e2d24bde-ca11-4088-a5de-1165dfa9000d
+		summarizeBy: none
+		sourceColumn: SequencePointEnd
+
+		annotation SummarizationSetBy = Automatic
+
+	column SequencePointMs
+		dataType: int64
+		isHidden
+		formatString: 0
+		sourceProviderType: bigint
+		lineageTag: 0810162a-a52d-4bae-9132-d6585aacc0f9
+		summarizeBy: sum
+		sourceColumn: SequencePointMs
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	column Phase1CommitMs
+		dataType: int64
+		isHidden
+		formatString: 0
+		sourceProviderType: bigint
+		lineageTag: 7059aa99-1c5e-4dd9-98fd-3340ac5e6938
+		summarizeBy: sum
+		sourceColumn: Phase1CommitMs
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	column Phase2CommitMs
+		dataType: int64
+		isHidden
+		formatString: 0
+		sourceProviderType: bigint
+		lineageTag: 9de88780-5e1c-42ce-bc27-891be12c6b3b
+		summarizeBy: sum
+		sourceColumn: Phase2CommitMs
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	column CommitMs
+		dataType: int64
+		isHidden
+		formatString: 0
+		sourceProviderType: bigint
+		lineageTag: af9c0a45-c191-44f2-9d5d-36aa670920cf
+		summarizeBy: sum
+		sourceColumn: CommitMs
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	partition SM_CommitStatistics = m
+		mode: directQuery
+		queryGroup: 'Semantic Model'
+		source =
+				let
+				    Source = AzureDataExplorer.Contents(#"Query URI", #"Eventhouse Name", "SemanticModelLogs#(lf)    | where OperationId != '00000000-0000-0000-0000-000000000000'#(lf)    | where OperationDetailName in ('Commit', 'TabularCommit', 'TabularSequencePoint')#(lf)    | summarize#(lf)        SequencePointCount=dcountif(CorrelationId, OperationDetailName == 'TabularSequencePoint'),#(lf)        SequencePointBegin=maxif(Timestamp, OperationName == 'ProgressReportBegin' and OperationDetailName == 'TabularSequencePoint'),#(lf)        SequencePointEnd=maxif(Timestamp, OperationName == 'ProgressReportEnd' and OperationDetailName == 'TabularSequencePoint'),#(lf)        SequencePointMs=maxif(DurationMs, OperationName == 'ProgressReportEnd' and OperationDetailName == 'TabularSequencePoint'),#(lf)        Phase1CommitMs=maxif(DurationMs, OperationDetailName == 'TabularCommit' and EventText has ' 1 '),#(lf)        Phase2CommitMs=maxif(DurationMs, OperationDetailName == 'TabularCommit' and EventText has ' 2 '),#(lf)        CommitMs=maxif(DurationMs, OperationDetailName == 'Commit')#(lf)        by OperationId", [MaxRows=null, MaxSize=null, NoTruncate=true, AdditionalSetStatements=null])
+				in
+				    Source
+
+	annotation PBI_NavigationStepName = Navigation
+
+	annotation PBI_ResultType = Exception
+

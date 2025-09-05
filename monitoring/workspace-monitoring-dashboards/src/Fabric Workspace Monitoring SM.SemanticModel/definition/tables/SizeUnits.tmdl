@@ -1,0 +1,81 @@
+/// Helper | It allows users to change data volume units for data related measures
+table SizeUnits
+	lineageTag: 3c4dc56d-0005-496b-86b4-d82f391d89f0
+
+	measure SelectedSizeUnit = SELECTEDVALUE(SizeUnits[UnitValueFromKB])
+		lineageTag: c4cec6b5-3799-49ae-8ff1-11712d6b064e
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure SelectedSizeUnitName = SELECTEDVALUE(SizeUnits[UnitShort])
+		lineageTag: 895d4623-8f1b-490c-a1c0-fca75d373e4b
+
+	column UnitKey
+		dataType: int64
+		formatString: 0
+		lineageTag: e43e3b4d-f89a-4771-995f-7c5e312df7c5
+		summarizeBy: count
+		sourceColumn: UnitKey
+
+		annotation SummarizationSetBy = Automatic
+
+	column Unit
+		dataType: string
+		lineageTag: 640acbe7-b2a1-4de5-add5-193b1775732e
+		summarizeBy: none
+		sourceColumn: Unit
+		sortByColumn: UnitKey
+
+		changedProperty = SortByColumn
+
+		annotation SummarizationSetBy = Automatic
+
+	column UnitValue
+		dataType: int64
+		formatString: 0
+		lineageTag: 03f10ef6-e4d4-4038-92a5-89adca7fc180
+		summarizeBy: sum
+		sourceColumn: UnitValue
+
+		annotation SummarizationSetBy = Automatic
+
+	column UnitValueFromKB
+		dataType: double
+		lineageTag: 898a7352-f524-4369-a1e9-1e3a17d2acc1
+		summarizeBy: sum
+		sourceColumn: UnitValueFromKB
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column UnitShort
+		dataType: string
+		lineageTag: aefd0449-d93a-47a2-bf31-dbb1258ed469
+		summarizeBy: none
+		sourceColumn: UnitShort
+
+		annotation SummarizationSetBy = Automatic
+
+	column Format
+		dataType: string
+		lineageTag: 4ded39d1-d662-41dd-9dff-47dcdbd41ce9
+		summarizeBy: none
+		sourceColumn: Format
+
+		annotation SummarizationSetBy = Automatic
+
+	partition SizeUnits = m
+		mode: import
+		queryGroup: Units
+		source =
+				let
+				    Source = Table.FromRows(Json.Document(Binary.Decompress(Binary.FromText("i45WMlTSUUqqLEktBtIgtoGegYGBpbmZqZmRKZDrBJVS1gFJKIC4SrE60UpGQLHszJx8uFYDIxOoCd5OCPVANki1MVAkNzU9EaHaxMLU3AyhzxdJjy9ED0g4PRNZj7mxuYmhBcQeuAHuSDqB7NhYAA==", BinaryEncoding.Base64), Compression.Deflate)), let _t = ((type nullable text) meta [Serialized.Text = true]) in type table [UnitKey = _t, Unit = _t, UnitValue = _t, UnitValueFromKB = _t, UnitShort = _t, Format = _t]),
+				    #"Changed Type" = Table.TransformColumnTypes(Source,{{"UnitKey", Int64.Type}, {"Unit", type text}, {"UnitValue", Int64.Type}, {"UnitValueFromKB", type number}, {"UnitShort", type text}})
+				in
+				    #"Changed Type"
+
+	annotation PBI_NavigationStepName = Navigation
+
+	annotation PBI_ResultType = Table
+

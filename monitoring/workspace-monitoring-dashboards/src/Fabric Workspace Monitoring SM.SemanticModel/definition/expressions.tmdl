@@ -1,0 +1,28 @@
+/// [NOT REQUIRED] Specific Operation ID will be used as a dynamic M-Paramater on drillthrough report page.
+expression SM_OperationId = null meta [IsParameterQuery=true, Type="Text", IsParameterQueryRequired=false]
+	lineageTag: 4dcdf54c-db64-40cc-ac18-da1f26c65df9
+	queryGroup: 'Semantic Model'
+	parameterValuesColumn: SM_ExecutionMetrics.OperationId
+
+	annotation PBI_NavigationStepName = Navigation
+
+	annotation PBI_ResultType = Null
+
+/// [REQUIRED] - The Query URI of the Monitoring Eventhouse
+expression 'Query URI' = "CUSTOM_MONITORING_QUERY_URI" meta [IsParameterQuery=true, Type="Text", IsParameterQueryRequired=true]
+	lineageTag: 07a0813f-89ee-40ea-972c-e5c2320009d6
+	queryGroup: Parameters
+
+	annotation PBI_NavigationStepName = Navigation
+
+	annotation PBI_ResultType = Text
+
+/// [REQUIRED] - Default value is "Monitoring Eventhouse"
+expression 'Eventhouse Name' = "Monitoring Eventhouse" meta [IsParameterQuery=true, Type="Text", IsParameterQueryRequired=true]
+	lineageTag: 62e3e631-18ca-4dda-b1ce-d3bd6799231a
+	queryGroup: Parameters
+
+	annotation PBI_NavigationStepName = Navigation
+
+	annotation PBI_ResultType = Text
+

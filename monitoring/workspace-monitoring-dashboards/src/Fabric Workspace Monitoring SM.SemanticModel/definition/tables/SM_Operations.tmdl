@@ -1,0 +1,351 @@
+/// Fact | Raw trace logs of Semantic Model Items | Optional Filter from SM_ExecutionMetrics OperationID Dynamic M-Parameter
+table SM_Operations
+	lineageTag: 0c287185-192f-4803-a882-07dfefae0018
+
+	column Timestamp
+		dataType: dateTime
+		formatString: General Date
+		sourceProviderType: datetimeoffset
+		lineageTag: 42ef3ded-eee1-442e-95bd-1b7ba9cc7069
+		summarizeBy: none
+		sourceColumn: Timestamp
+
+		annotation SummarizationSetBy = Automatic
+
+	column OperationName
+		dataType: string
+		sourceProviderType: nvarchar(max)
+		lineageTag: 2e1e4a99-d27c-44d4-86a4-9d5d8d5e45a0
+		summarizeBy: none
+		sourceColumn: OperationName
+
+		annotation SummarizationSetBy = Automatic
+
+	column ItemId
+		dataType: string
+		sourceProviderType: nvarchar(max)
+		lineageTag: 33574279-0296-452e-b342-3e2cd4cc5971
+		summarizeBy: none
+		sourceColumn: ItemId
+
+		annotation SummarizationSetBy = Automatic
+
+	column ItemKind
+		dataType: string
+		sourceProviderType: nvarchar(max)
+		lineageTag: 9f126c07-4726-4e20-bc9c-0fccd8e6b48e
+		summarizeBy: none
+		sourceColumn: ItemKind
+
+		annotation SummarizationSetBy = Automatic
+
+	column ItemName
+		dataType: string
+		sourceProviderType: nvarchar(max)
+		lineageTag: 3a1f04b4-bb64-49f7-94c1-372a1afc22be
+		summarizeBy: none
+		sourceColumn: ItemName
+
+		annotation SummarizationSetBy = Automatic
+
+	column WorkspaceId
+		dataType: string
+		sourceProviderType: nvarchar(max)
+		lineageTag: 33eccd16-033e-4ef9-aa68-0abb70ba2c2d
+		summarizeBy: none
+		sourceColumn: WorkspaceId
+
+		annotation SummarizationSetBy = Automatic
+
+	column WorkspaceName
+		dataType: string
+		sourceProviderType: nvarchar(max)
+		lineageTag: 7156b9a7-d6f5-4189-955f-28b28e260455
+		summarizeBy: none
+		sourceColumn: WorkspaceName
+
+		annotation SummarizationSetBy = Automatic
+
+	column CapacityId
+		dataType: string
+		sourceProviderType: nvarchar(max)
+		lineageTag: aba18d2c-028b-40ff-aab2-16622231b7c5
+		summarizeBy: none
+		sourceColumn: CapacityId
+
+		annotation SummarizationSetBy = Automatic
+
+	column CorrelationId
+		dataType: string
+		sourceProviderType: nvarchar(max)
+		lineageTag: e7235607-2bee-4bdd-90e3-10cd8c44833b
+		summarizeBy: none
+		sourceColumn: CorrelationId
+
+		annotation SummarizationSetBy = Automatic
+
+	column OperationId
+		dataType: string
+		sourceProviderType: nvarchar(max)
+		lineageTag: c957e538-b24a-4d7a-ac5f-491888beeb4b
+		summarizeBy: none
+		sourceColumn: OperationId
+
+		annotation SummarizationSetBy = Automatic
+
+	column Identity
+		dataType: string
+		lineageTag: 5b4d8ffc-63dc-45af-a54a-a7273512dae6
+		summarizeBy: none
+		sourceColumn: Identity
+
+		annotation SummarizationSetBy = Automatic
+
+	column CustomerTenantId
+		dataType: string
+		sourceProviderType: nvarchar(max)
+		lineageTag: e28d0f48-4b6b-4fad-9cda-28bec7903ec0
+		summarizeBy: none
+		sourceColumn: CustomerTenantId
+
+		annotation SummarizationSetBy = Automatic
+
+	column DurationMs
+		dataType: int64
+		isHidden
+		formatString: 0
+		isAvailableInMdx: false
+		sourceProviderType: bigint
+		lineageTag: 23f14a62-f4e6-4b62-a064-9e5320f2be80
+		summarizeBy: none
+		sourceColumn: DurationMs
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	column Status
+		dataType: string
+		sourceProviderType: nvarchar(max)
+		lineageTag: 54feabaa-9f23-433c-ac38-56946b088291
+		summarizeBy: none
+		sourceColumn: Status
+
+		annotation SummarizationSetBy = Automatic
+
+	column Level
+		dataType: string
+		sourceProviderType: nvarchar(max)
+		lineageTag: 6bb4881e-373b-4ec8-b361-690f04aa3143
+		summarizeBy: none
+		sourceColumn: Level
+
+		annotation SummarizationSetBy = Automatic
+
+	column Region
+		dataType: string
+		sourceProviderType: nvarchar(max)
+		lineageTag: 730476f5-668c-415c-bd36-25710c35b1ca
+		summarizeBy: none
+		sourceColumn: Region
+
+		annotation SummarizationSetBy = Automatic
+
+	column Category
+		dataType: string
+		sourceProviderType: nvarchar(max)
+		lineageTag: 00a486eb-467f-4c2f-a571-5ad6e1c173df
+		summarizeBy: none
+		sourceColumn: Category
+
+		annotation SummarizationSetBy = Automatic
+
+	column CallerIpAddress
+		dataType: string
+		sourceProviderType: nvarchar(max)
+		lineageTag: 266dc5f7-e02b-496f-b2f3-35aa0c4f7f9c
+		summarizeBy: none
+		sourceColumn: CallerIpAddress
+
+		annotation SummarizationSetBy = Automatic
+
+	column WorkspaceMonitoringTableName
+		dataType: string
+		sourceProviderType: nvarchar(max)
+		lineageTag: 16b0d097-e85d-440e-87a3-c3fd01214239
+		summarizeBy: none
+		sourceColumn: WorkspaceMonitoringTableName
+
+		annotation SummarizationSetBy = Automatic
+
+	column ApplicationContext
+		dataType: string
+		lineageTag: 88d92911-b1cf-49ac-8642-6f6a49421dd9
+		summarizeBy: none
+		sourceColumn: ApplicationContext
+
+		annotation SummarizationSetBy = Automatic
+
+	column ApplicationName
+		dataType: string
+		sourceProviderType: nvarchar(max)
+		lineageTag: e191f458-22a2-40b1-92d3-d23bfc37d90a
+		summarizeBy: none
+		sourceColumn: ApplicationName
+
+		annotation SummarizationSetBy = Automatic
+
+	column DatasetMode
+		dataType: string
+		sourceProviderType: nvarchar(max)
+		lineageTag: 359e4774-ead0-4567-89fe-c352ae4457e1
+		summarizeBy: none
+		sourceColumn: DatasetMode
+
+		annotation SummarizationSetBy = Automatic
+
+	column EventText
+		dataType: string
+		sourceProviderType: nvarchar(max)
+		lineageTag: caac2c75-6dc7-4eac-b826-1a397f2c81a3
+		summarizeBy: none
+		sourceColumn: EventText
+
+		annotation SummarizationSetBy = Automatic
+
+	column OperationDetailName
+		dataType: string
+		sourceProviderType: nvarchar(max)
+		lineageTag: b3389879-82d2-47f5-8411-56f31a9112a3
+		summarizeBy: none
+		sourceColumn: OperationDetailName
+
+		annotation SummarizationSetBy = Automatic
+
+	column ProgressCounter
+		dataType: int64
+		isHidden
+		formatString: 0
+		isAvailableInMdx: false
+		sourceProviderType: bigint
+		lineageTag: c8653880-330d-4ab7-ada8-87927d326ec2
+		summarizeBy: none
+		sourceColumn: ProgressCounter
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	column ReplicaId
+		dataType: string
+		sourceProviderType: nvarchar(max)
+		lineageTag: 7e33bfe1-d305-4e93-afc9-314f3185b4b9
+		summarizeBy: none
+		sourceColumn: ReplicaId
+
+		annotation SummarizationSetBy = Automatic
+
+	column StatusCode
+		dataType: int64
+		isHidden
+		formatString: 0
+		sourceProviderType: int
+		lineageTag: 74494c38-49eb-4c9e-aea3-d97e83be8943
+		summarizeBy: count
+		sourceColumn: StatusCode
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	column User
+		dataType: string
+		sourceProviderType: nvarchar(max)
+		lineageTag: 3605b32c-37cd-4278-aacb-334b7b403c2d
+		summarizeBy: none
+		sourceColumn: User
+
+		annotation SummarizationSetBy = Automatic
+
+	column XmlaObjectPath
+		dataType: string
+		sourceProviderType: nvarchar(max)
+		lineageTag: 91f4e47d-54b0-404f-af78-1e2584f112dc
+		summarizeBy: none
+		sourceColumn: XmlaObjectPath
+
+		annotation SummarizationSetBy = Automatic
+
+	column XmlaProperties
+		dataType: string
+		sourceProviderType: nvarchar(max)
+		lineageTag: 75524935-4a71-42f0-9c70-d57dd19ca84a
+		summarizeBy: none
+		sourceColumn: XmlaProperties
+
+		annotation SummarizationSetBy = Automatic
+
+	column XmlaSessionId
+		dataType: string
+		sourceProviderType: nvarchar(max)
+		lineageTag: f7c84062-a95e-42e7-b6f1-1ad0e2dadbb7
+		summarizeBy: none
+		sourceColumn: XmlaSessionId
+
+		annotation SummarizationSetBy = Automatic
+
+	column CpuTimeMs
+		dataType: int64
+		isHidden
+		formatString: 0
+		isAvailableInMdx: false
+		sourceProviderType: bigint
+		lineageTag: 6baebb35-1c90-4573-ad12-28c5be4557b2
+		summarizeBy: none
+		sourceColumn: CpuTimeMs
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	column ExecutingUser
+		dataType: string
+		sourceProviderType: nvarchar(max)
+		lineageTag: 7c4c7321-4c7b-4305-9fd4-f302ad0b8e7e
+		summarizeBy: none
+		sourceColumn: ExecutingUser
+
+		annotation SummarizationSetBy = Automatic
+
+	column DateKey
+		dataType: dateTime
+		formatString: General Date
+		sourceProviderType: datetimeoffset
+		lineageTag: db2051ab-75fe-4826-af8c-62da06b47c87
+		summarizeBy: none
+		sourceColumn: DateKey
+
+		annotation SummarizationSetBy = Automatic
+
+	partition SM_Operations = m
+		mode: directQuery
+		queryGroup: 'Semantic Model'
+		source = ```
+				let
+				    KustoParameterDeclareQuery = Text.Combine({"declare query_parameters(",
+				    "operationId:string = '", SM_OperationId,"');"
+				    }),
+				    ActualQueryWithKustoParameters = "SemanticModelLogs 
+				    | extend DateKey = bin(Timestamp, 1d)
+				    | where OperationId has operationId",
+				    FinalQuery = Text.Combine({KustoParameterDeclareQuery, ActualQueryWithKustoParameters}),
+				
+				    Source = AzureDataExplorer.Contents(#"Query URI", #"Eventhouse Name", FinalQuery, [MaxRows=null, MaxSize=null, NoTruncate=true, AdditionalSetStatements=null])
+				in
+				    Source
+				```
+
+	annotation PBI_NavigationStepName = Navigation
+
+	annotation PBI_ResultType = Exception
+

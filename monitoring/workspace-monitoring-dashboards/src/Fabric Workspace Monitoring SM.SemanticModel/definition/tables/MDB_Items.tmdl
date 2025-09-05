@@ -1,0 +1,53 @@
+/// Dimension | Catalog of Mirrored Database Items
+table MDB_Items
+	lineageTag: 504268bd-1f90-48e1-b9c7-731bc40d7d53
+
+	column ItemId
+		dataType: string
+		sourceProviderType: nvarchar(max)
+		lineageTag: d174ed01-b32d-4df5-b86a-b28a85982d98
+		summarizeBy: none
+		sourceColumn: ItemId
+
+		annotation SummarizationSetBy = Automatic
+
+	column ItemKind
+		dataType: string
+		sourceProviderType: nvarchar(max)
+		lineageTag: aaa7475d-29f4-4ed4-98da-1798e98381ae
+		summarizeBy: none
+		sourceColumn: ItemKind
+
+		annotation SummarizationSetBy = Automatic
+
+	column ItemName
+		dataType: string
+		sourceProviderType: nvarchar(max)
+		lineageTag: c9392560-9f89-4fd2-8580-aec6dad3c995
+		summarizeBy: none
+		sourceColumn: ItemName
+
+		annotation SummarizationSetBy = Automatic
+
+	column WorkspaceId
+		dataType: string
+		sourceProviderType: nvarchar(max)
+		lineageTag: cc2a147d-35f2-49de-bbaa-ae5a5ea98779
+		summarizeBy: none
+		sourceColumn: WorkspaceId
+
+		annotation SummarizationSetBy = Automatic
+
+	partition MDB_Items = m
+		mode: directQuery
+		queryGroup: 'Mirrored Database'
+		source =
+				let
+				    Source = AzureDataExplorer.Contents(#"Query URI", #"Eventhouse Name", "MirroredDatabaseTableExecutionLogs#(lf)| distinct ItemId, ItemKind, ItemName, WorkspaceId", [MaxRows=null, MaxSize=null, NoTruncate=null, AdditionalSetStatements=null, IsDimension=true])
+				in
+				    Source
+
+	annotation PBI_NavigationStepName = Navigation
+
+	annotation PBI_ResultType = Exception
+

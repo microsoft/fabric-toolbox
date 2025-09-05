@@ -1,0 +1,79 @@
+relationship 6ca46a89-c62e-27fa-f2d0-ed5c030d3580
+	fromColumn: SM_ExecutionMetrics.ItemId
+	toColumn: SM_Items.ItemId
+
+relationship c1498170-d71b-b5f6-a1b8-f2f059ec84ca
+	fromColumn: SM_ProgressReport.ItemId
+	toColumn: SM_Items.ItemId
+
+relationship 568b5ee8-cac8-675b-74b2-3ffda2e4e2c7
+	fromColumn: SM_Operations.ItemId
+	toColumn: SM_Items.ItemId
+
+relationship 8b007f18-1b71-1b42-0221-c56d7f426761
+	relyOnReferentialIntegrity
+	fromColumn: SM_ExecutionMetrics.DateKey
+	toColumn: Dim_Date.DateKey
+
+relationship 9cf41014-a0e4-be34-901a-d6f501a6cb82
+	relyOnReferentialIntegrity
+	fromColumn: SM_ProgressReport.StartDateKey
+	toColumn: Dim_Date.DateKey
+
+relationship 4dba4df5-11e0-2d6d-b9d7-b41ea2e38601
+	relyOnReferentialIntegrity
+	fromColumn: SM_Operations.DateKey
+	toColumn: Dim_Date.DateKey
+
+relationship bcb4fb09-ad9a-4ba5-aa5c-f03fb4710edc
+	fromColumn: EH_QueryLogs.DateKey
+	toColumn: Dim_Date.DateKey
+
+relationship 562e5833-35df-a0e4-150f-8689e3190bd8
+	fromColumn: EH_Metrics.DateKey
+	toColumn: Dim_Date.DateKey
+
+relationship 110ccea6-dd81-c6a7-3116-27ca0159e832
+	relyOnReferentialIntegrity
+	fromColumn: EH_QueryLogs.ItemId
+	toColumn: EH_Items.ItemId
+
+relationship 80978263-057f-9a4c-bd55-2ce33a8f3c2a
+	relyOnReferentialIntegrity
+	fromColumn: EH_Metrics.ItemId
+	toColumn: EH_Items.ItemId
+
+relationship 3ea92951-423b-0a03-911a-5d2809fd711a
+	fromColumn: GQL_Metrics.DateKey
+	toColumn: Dim_Date.DateKey
+
+relationship 43bd5072-c85e-2cc7-e0f0-cf6f6434390a
+	fromColumn: GQL_Logs.DateKey
+	toColumn: Dim_Date.DateKey
+
+relationship 1929bf41-c5ea-142d-13f1-5a1d9251d8d6
+	relyOnReferentialIntegrity
+	fromColumn: GQL_Metrics.ItemId
+	toColumn: GQL_Items.ItemId
+
+relationship 7e9a1ebf-4243-69be-b2bf-a5b43607e514
+	fromColumn: GQL_Logs.ItemId
+	toColumn: GQL_Items.ItemId
+
+relationship 5f7a6356-03ee-a284-155b-7a53216c3211
+	fromColumn: MDB_TableExecutionLogs.DateKey
+	toColumn: Dim_Date.DateKey
+
+relationship 1f16c0d3-a136-7940-aef8-e2ff9f2018fc
+	relyOnReferentialIntegrity
+	fromColumn: MDB_TableExecutionLogs.ItemId
+	toColumn: MDB_Items.ItemId
+
+relationship 4edccc6c-0c53-f5e2-9479-0e1f65ccd505
+	fromColumn: SM_ExecutionMetricsSummary.ItemId
+	toColumn: SM_Items.ItemId
+
+relationship 80daa62f-08d6-a35b-51cc-1982e01bde39
+	fromColumn: SM_ExecutionMetricsSummary.DateKey
+	toColumn: Dim_Date.DateKey
+

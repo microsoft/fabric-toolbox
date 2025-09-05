@@ -1,0 +1,9 @@
+{
+    "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definitionProperties/2.0.0/schema.json",
+    "version": "4.0",
+    "datasetReference": {
+        "byConnection": {
+            "connectionString": "Data Source=\"powerbi://api.powerbi.com/v1.0/myorg/CUSTOM_WORKSPACE_NAME\";initial catalog=\"CUSTOM_MONITORING_SEMANTIC_MODEL_NAME\";integrated security=ClaimsToken;semanticmodelid=CUSTOM_MONITORING_SEMANTIC_MODEL_ID"
+        }
+    }
+}

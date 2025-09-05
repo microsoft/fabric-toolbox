@@ -1,0 +1,3088 @@
+cultureInfo en-US
+
+	linguisticMetadata =
+			{
+			  "Version": "2.0.0",
+			  "Language": "en-US",
+			  "Entities": {
+			    "metrics.effectiveclaim_count": {
+			      "Definition": {
+			        "Binding": {
+			          "ConceptualEntity": "Meta",
+			          "ConceptualProperty": "effectiveClaim Count"
+			        }
+			      },
+			      "State": "Generated"
+			    },
+			    "metrics.sm_operations": {
+			      "Definition": {
+			        "Binding": {
+			          "ConceptualEntity": "SM_ExecutionMetrics",
+			          "ConceptualProperty": "SM Operations"
+			        }
+			      },
+			      "State": "Generated",
+			      "Terms": [
+			        {
+			          "Unique Operations": {
+			            "State": "Suggested",
+			            "Source": {
+			              "Type": "External",
+			              "Agent": "PowerBI.VisualColumnRename"
+			            },
+			            "Weight": 0.9
+			          }
+			        },
+			        {
+			          "Operations": {
+			            "State": "Suggested",
+			            "Source": {
+			              "Type": "External",
+			              "Agent": "PowerBI.VisualColumnRename"
+			            },
+			            "Weight": 0.9
+			          }
+			        },
+			        {
+			          "Query Operations": {
+			            "State": "Suggested",
+			            "Source": {
+			              "Type": "External",
+			              "Agent": "PowerBI.VisualColumnRename"
+			            },
+			            "Weight": 0.9
+			          }
+			        }
+			      ]
+			    },
+			    "metrics.eh_databases": {
+			      "Definition": {
+			        "Binding": {
+			          "ConceptualEntity": "Meta",
+			          "ConceptualProperty": "EH Databases"
+			        }
+			      },
+			      "State": "Generated"
+			    },
+			    "metrics.eh_users": {
+			      "Definition": {
+			        "Binding": {
+			          "ConceptualEntity": "Meta",
+			          "ConceptualProperty": "EH Users"
+			        }
+			      },
+			      "State": "Generated"
+			    },
+			    "sm_semantic_models.item": {
+			      "Definition": {
+			        "Binding": {
+			          "ConceptualEntity": "SM_Semantic_Models",
+			          "ConceptualProperty": "Item"
+			        }
+			      },
+			      "State": "Generated"
+			    },
+			    "metrics.sm_users_unique": {
+			      "Definition": {
+			        "Binding": {
+			          "ConceptualEntity": "SM_ExecutionMetrics",
+			          "ConceptualProperty": "SM Users Unique"
+			        }
+			      },
+			      "State": "Generated",
+			      "Terms": [
+			        {
+			          "Active Users": {
+			            "State": "Suggested",
+			            "Source": {
+			              "Type": "External",
+			              "Agent": "PowerBI.VisualColumnRename"
+			            },
+			            "Weight": 0.9
+			          }
+			        }
+			      ]
+			    },
+			    "metrics.sm_items_unique": {
+			      "Definition": {
+			        "Binding": {
+			          "ConceptualEntity": "SM_Items",
+			          "ConceptualProperty": "SM Items Unique"
+			        }
+			      },
+			      "State": "Generated",
+			      "Terms": [
+			        {
+			          "Semantic Models": {
+			            "State": "Suggested",
+			            "Source": {
+			              "Type": "External",
+			              "Agent": "PowerBI.VisualColumnRename"
+			            },
+			            "Weight": 0.9
+			          }
+			        }
+			      ]
+			    },
+			    "metrics.total_duration": {
+			      "Definition": {
+			        "Binding": {
+			          "ConceptualEntity": "Meta",
+			          "ConceptualProperty": "Total Duration"
+			        }
+			      },
+			      "State": "Generated"
+			    },
+			    "timeunits.selectedtimeunitname": {
+			      "Definition": {
+			        "Binding": {
+			          "ConceptualEntity": "TimeUnits",
+			          "ConceptualProperty": "SelectedTimeUnitName"
+			        }
+			      },
+			      "State": "Generated",
+			      "Terms": [
+			        {
+			          "Time Unit": {
+			            "State": "Suggested",
+			            "Source": {
+			              "Type": "External",
+			              "Agent": "PowerBI.VisualColumnRename"
+			            },
+			            "Weight": 0.9
+			          }
+			        }
+			      ]
+			    },
+			    "sm_executionmetrics.querydialect": {
+			      "Definition": {
+			        "Binding": {
+			          "ConceptualEntity": "SM_ExecutionMetrics",
+			          "ConceptualProperty": "queryDialect"
+			        }
+			      },
+			      "State": "Generated"
+			    },
+			    "sizeunits.selectedsizeunitname": {
+			      "Definition": {
+			        "Binding": {
+			          "ConceptualEntity": "SizeUnits",
+			          "ConceptualProperty": "SelectedSizeUnitName"
+			        }
+			      },
+			      "State": "Generated",
+			      "Terms": [
+			        {
+			          "Size Unit": {
+			            "State": "Suggested",
+			            "Source": {
+			              "Type": "External",
+			              "Agent": "PowerBI.VisualColumnRename"
+			            },
+			            "Weight": 0.9
+			          }
+			        }
+			      ]
+			    },
+			    "sm_executionmetrics.executinguser": {
+			      "Definition": {
+			        "Binding": {
+			          "ConceptualEntity": "SM_ExecutionMetrics",
+			          "ConceptualProperty": "ExecutingUser"
+			        }
+			      },
+			      "State": "Generated",
+			      "Terms": [
+			        {
+			          "Executing User": {
+			            "State": "Suggested",
+			            "Source": {
+			              "Type": "External",
+			              "Agent": "PowerBI.VisualColumnRename"
+			            },
+			            "Weight": 0.9
+			          }
+			        }
+			      ]
+			    },
+			    "sm_executionmetrics.operationid": {
+			      "Definition": {
+			        "Binding": {
+			          "ConceptualEntity": "SM_ExecutionMetrics",
+			          "ConceptualProperty": "OperationId"
+			        }
+			      },
+			      "State": "Generated"
+			    },
+			    "sm_executionmetrics.itemname": {
+			      "Definition": {
+			        "Binding": {
+			          "ConceptualEntity": "SM_ExecutionMetrics",
+			          "ConceptualProperty": "ItemName"
+			        }
+			      },
+			      "State": "Generated"
+			    },
+			    "sm_progress_report.operationdetailname": {
+			      "Definition": {
+			        "Binding": {
+			          "ConceptualEntity": "SM_Progress_Report",
+			          "ConceptualProperty": "OperationDetailName"
+			        }
+			      },
+			      "State": "Generated"
+			    },
+			    "sm_progress_report.tablename": {
+			      "Definition": {
+			        "Binding": {
+			          "ConceptualEntity": "SM_Progress_Report",
+			          "ConceptualProperty": "TableName"
+			        }
+			      },
+			      "State": "Generated"
+			    },
+			    "sm_progress_report.objecttype": {
+			      "Definition": {
+			        "Binding": {
+			          "ConceptualEntity": "SM_Progress_Report",
+			          "ConceptualProperty": "ObjectType"
+			        }
+			      },
+			      "State": "Generated"
+			    },
+			    "sm_progress_report.objectname": {
+			      "Definition": {
+			        "Binding": {
+			          "ConceptualEntity": "SM_Progress_Report",
+			          "ConceptualProperty": "ObjectName"
+			        }
+			      },
+			      "State": "Generated"
+			    },
+			    "metrics.progress_time": {
+			      "Definition": {
+			        "Binding": {
+			          "ConceptualEntity": "Meta",
+			          "ConceptualProperty": "Progress Time"
+			        }
+			      },
+			      "State": "Generated"
+			    },
+			    "metrics.eh_items_unique": {
+			      "Definition": {
+			        "Binding": {
+			          "ConceptualEntity": "EH_Items",
+			          "ConceptualProperty": "EH Items Unique"
+			        }
+			      },
+			      "State": "Generated",
+			      "Terms": [
+			        {
+			          "KQL Databases": {
+			            "State": "Suggested",
+			            "Source": {
+			              "Type": "External",
+			              "Agent": "PowerBI.VisualColumnRename"
+			            },
+			            "Weight": 0.9
+			          }
+			        },
+			        {
+			          "Eventhouse Items": {
+			            "State": "Suggested",
+			            "Source": {
+			              "Type": "External",
+			              "Agent": "PowerBI.VisualColumnRename"
+			            },
+			            "Weight": 0.9
+			          }
+			        }
+			      ]
+			    },
+			    "metrics.gql_items_unique": {
+			      "Definition": {
+			        "Binding": {
+			          "ConceptualEntity": "GQL_Items",
+			          "ConceptualProperty": "GQL Items Unique"
+			        }
+			      },
+			      "State": "Generated",
+			      "Terms": [
+			        {
+			          "GraphQL Items": {
+			            "State": "Suggested",
+			            "Source": {
+			              "Type": "External",
+			              "Agent": "PowerBI.VisualColumnRename"
+			            },
+			            "Weight": 0.9
+			          }
+			        }
+			      ]
+			    },
+			    "metrics.sm_operation_error_ratio": {
+			      "Definition": {
+			        "Binding": {
+			          "ConceptualEntity": "SM_ExecutionMetricsSummary",
+			          "ConceptualProperty": "SM Operation Success Ratio Aggregated"
+			        }
+			      },
+			      "State": "Generated",
+			      "Terms": [
+			        {
+			          "Success Ratio": {
+			            "State": "Suggested",
+			            "Source": {
+			              "Type": "External",
+			              "Agent": "PowerBI.VisualColumnRename"
+			            },
+			            "Weight": 0.9
+			          }
+			        },
+			        {
+			          "Operation Success Ratio": {
+			            "State": "Suggested",
+			            "Source": {
+			              "Type": "External",
+			              "Agent": "PowerBI.VisualColumnRename"
+			            },
+			            "Weight": 0.9
+			          }
+			        }
+			      ]
+			    },
+			    "metrics.eh_operation_error_ratio": {
+			      "Definition": {
+			        "Binding": {
+			          "ConceptualEntity": "EH_QueryLogs",
+			          "ConceptualProperty": "EH Query Operation Success Ratio"
+			        }
+			      },
+			      "State": "Generated",
+			      "Terms": [
+			        {
+			          "Success Ratio (Queries)": {
+			            "State": "Suggested",
+			            "Source": {
+			              "Type": "External",
+			              "Agent": "PowerBI.VisualColumnRename"
+			            },
+			            "Weight": 0.9
+			          }
+			        },
+			        {
+			          "Query Success Ratio": {
+			            "State": "Suggested",
+			            "Source": {
+			              "Type": "External",
+			              "Agent": "PowerBI.VisualColumnRename"
+			            },
+			            "Weight": 0.9
+			          }
+			        },
+			        {
+			          "Success Ratio": {
+			            "State": "Suggested",
+			            "Source": {
+			              "Type": "External",
+			              "Agent": "PowerBI.VisualColumnRename"
+			            },
+			            "Weight": 0.9
+			          }
+			        }
+			      ]
+			    },
+			    "metrics.gql_operation_error_ratio": {
+			      "Definition": {
+			        "Binding": {
+			          "ConceptualEntity": "GQL_Logs",
+			          "ConceptualProperty": "GQL Operation Success Ratio"
+			        }
+			      },
+			      "State": "Generated",
+			      "Terms": [
+			        {
+			          "Success Ratio": {
+			            "State": "Suggested",
+			            "Source": {
+			              "Type": "External",
+			              "Agent": "PowerBI.VisualColumnRename"
+			            },
+			            "Weight": 0.9
+			          }
+			        }
+			      ]
+			    },
+			    "metrics.sm_cpu_time_total": {
+			      "Definition": {
+			        "Binding": {
+			          "ConceptualEntity": "SM_ExecutionMetrics",
+			          "ConceptualProperty": "SM CPU Time Total"
+			        }
+			      },
+			      "State": "Generated",
+			      "Terms": [
+			        {
+			          "Total CPU Time": {
+			            "State": "Suggested",
+			            "Source": {
+			              "Type": "External",
+			              "Agent": "PowerBI.VisualColumnRename"
+			            },
+			            "Weight": 0.9
+			          }
+			        }
+			      ]
+			    },
+			    "metrics.sm_duration_total": {
+			      "Definition": {
+			        "Binding": {
+			          "ConceptualEntity": "SM_ExecutionMetrics",
+			          "ConceptualProperty": "SM Duration Total"
+			        }
+			      },
+			      "State": "Generated",
+			      "Terms": [
+			        {
+			          "Total Duration": {
+			            "State": "Suggested",
+			            "Source": {
+			              "Type": "External",
+			              "Agent": "PowerBI.VisualColumnRename"
+			            },
+			            "Weight": 0.9
+			          }
+			        }
+			      ]
+			    },
+			    "metrics.sm_query_processing_cpu_time_total": {
+			      "Definition": {
+			        "Binding": {
+			          "ConceptualEntity": "SM_ExecutionMetrics",
+			          "ConceptualProperty": "SM Query Processing CPU Time Total"
+			        }
+			      },
+			      "State": "Generated",
+			      "Terms": [
+			        {
+			          "Query Processing CPU Time": {
+			            "State": "Suggested",
+			            "Source": {
+			              "Type": "External",
+			              "Agent": "PowerBI.VisualColumnRename"
+			            },
+			            "Weight": 0.9
+			          }
+			        }
+			      ]
+			    },
+			    "metrics.sm_request_peak_memory_total": {
+			      "Definition": {
+			        "Binding": {
+			          "ConceptualEntity": "SM_ExecutionMetrics",
+			          "ConceptualProperty": "SM Operation Peak Memory Total"
+			        }
+			      },
+			      "State": "Generated",
+			      "Terms": [
+			        {
+			          "Memory Peak": {
+			            "State": "Suggested",
+			            "Source": {
+			              "Type": "External",
+			              "Agent": "PowerBI.VisualColumnRename"
+			            },
+			            "Weight": 0.9
+			          }
+			        }
+			      ]
+			    },
+			    "metrics.sm_query_result_rows_total": {
+			      "Definition": {
+			        "Binding": {
+			          "ConceptualEntity": "SM_ExecutionMetrics",
+			          "ConceptualProperty": "SM Query Result Rows Total"
+			        }
+			      },
+			      "State": "Generated",
+			      "Terms": [
+			        {
+			          "Query Result Rows": {
+			            "State": "Suggested",
+			            "Source": {
+			              "Type": "External",
+			              "Agent": "PowerBI.VisualColumnRename"
+			            },
+			            "Weight": 0.9
+			          }
+			        }
+			      ]
+			    },
+			    "metrics.sm_execution_delay_time_total": {
+			      "Definition": {
+			        "Binding": {
+			          "ConceptualEntity": "SM_ExecutionMetrics",
+			          "ConceptualProperty": "SM Execution Delay Time Total"
+			        }
+			      },
+			      "State": "Generated",
+			      "Terms": [
+			        {
+			          "Execution Delay": {
+			            "State": "Suggested",
+			            "Source": {
+			              "Type": "External",
+			              "Agent": "PowerBI.VisualColumnRename"
+			            },
+			            "Weight": 0.9
+			          }
+			        }
+			      ]
+			    },
+			    "metrics.gql_users_unique": {
+			      "Definition": {
+			        "Binding": {
+			          "ConceptualEntity": "GQL_Logs",
+			          "ConceptualProperty": "GQL Users Unique"
+			        }
+			      },
+			      "State": "Generated",
+			      "Terms": [
+			        {
+			          "Active Users": {
+			            "State": "Suggested",
+			            "Source": {
+			              "Type": "External",
+			              "Agent": "PowerBI.VisualColumnRename"
+			            },
+			            "Weight": 0.9
+			          }
+			        }
+			      ]
+			    },
+			    "metrics.eh_users_unique": {
+			      "Definition": {
+			        "Binding": {
+			          "ConceptualEntity": "EH_QueryLogs",
+			          "ConceptualProperty": "EH Query Users Unique"
+			        }
+			      },
+			      "State": "Generated",
+			      "Terms": [
+			        {
+			          "Active Users (Queries)": {
+			            "State": "Suggested",
+			            "Source": {
+			              "Type": "External",
+			              "Agent": "PowerBI.VisualColumnRename"
+			            },
+			            "Weight": 0.9
+			          }
+			        },
+			        {
+			          "Unique Query Users": {
+			            "State": "Suggested",
+			            "Source": {
+			              "Type": "External",
+			              "Agent": "PowerBI.VisualColumnRename"
+			            },
+			            "Weight": 0.9
+			          }
+			        },
+			        {
+			          "Active Users": {
+			            "State": "Suggested",
+			            "Source": {
+			              "Type": "External",
+			              "Agent": "PowerBI.VisualColumnRename"
+			            },
+			            "Weight": 0.9
+			          }
+			        }
+			      ]
+			    },
+			    "metrics.sm_request_peak_memory_max": {
+			      "Definition": {
+			        "Binding": {
+			          "ConceptualEntity": "SM_ExecutionMetrics",
+			          "ConceptualProperty": "SM Operation Peak Memory Max"
+			        }
+			      },
+			      "State": "Generated",
+			      "Terms": [
+			        {
+			          "Max Peak Memory": {
+			            "State": "Suggested",
+			            "Source": {
+			              "Type": "External",
+			              "Agent": "PowerBI.VisualColumnRename"
+			            },
+			            "Weight": 0.9
+			          }
+			        },
+			        {
+			          "Max Memory Peak": {
+			            "State": "Suggested",
+			            "Source": {
+			              "Type": "External",
+			              "Agent": "PowerBI.VisualColumnRename"
+			            },
+			            "Weight": 0.9
+			          }
+			        }
+			      ]
+			    },
+			    "metrics.sm_query_processing_cpu_time_max": {
+			      "Definition": {
+			        "Binding": {
+			          "ConceptualEntity": "SM_ExecutionMetrics",
+			          "ConceptualProperty": "SM Query Processing CPU Time Max"
+			        }
+			      },
+			      "State": "Generated",
+			      "Terms": [
+			        {
+			          "Max Query CPU Time": {
+			            "State": "Suggested",
+			            "Source": {
+			              "Type": "External",
+			              "Agent": "PowerBI.VisualColumnRename"
+			            },
+			            "Weight": 0.9
+			          }
+			        }
+			      ]
+			    },
+			    "sm_items.itemname": {
+			      "Definition": {
+			        "Binding": {
+			          "ConceptualEntity": "SM_Items",
+			          "ConceptualProperty": "ItemName"
+			        }
+			      },
+			      "State": "Generated",
+			      "Terms": [
+			        {
+			          "Semantic Model": {
+			            "State": "Suggested",
+			            "Source": {
+			              "Type": "External",
+			              "Agent": "PowerBI.VisualColumnRename"
+			            },
+			            "Weight": 0.9
+			          }
+			        }
+			      ]
+			    },
+			    "metrics.sm_query_result_rows_max": {
+			      "Definition": {
+			        "Binding": {
+			          "ConceptualEntity": "SM_ExecutionMetrics",
+			          "ConceptualProperty": "SM Query Result Rows Max"
+			        }
+			      },
+			      "State": "Generated",
+			      "Terms": [
+			        {
+			          "Max Query Result Rows": {
+			            "State": "Suggested",
+			            "Source": {
+			              "Type": "External",
+			              "Agent": "PowerBI.VisualColumnRename"
+			            },
+			            "Weight": 0.9
+			          }
+			        }
+			      ]
+			    },
+			    "timeunits.selectedtimeunit": {
+			      "Definition": {
+			        "Binding": {
+			          "ConceptualEntity": "TimeUnits",
+			          "ConceptualProperty": "SelectedTimeUnit"
+			        }
+			      },
+			      "State": "Generated"
+			    },
+			    "sizeunits.selectedsizeunit": {
+			      "Definition": {
+			        "Binding": {
+			          "ConceptualEntity": "SizeUnits",
+			          "ConceptualProperty": "SelectedSizeUnit"
+			        }
+			      },
+			      "State": "Generated"
+			    },
+			    "metrics.sm_progress_cpu_time_max": {
+			      "Definition": {
+			        "Binding": {
+			          "ConceptualEntity": "SM_ProgressReport",
+			          "ConceptualProperty": "SM Progress CPU Time Max"
+			        }
+			      },
+			      "State": "Generated"
+			    },
+			    "metrics.sm__progress_mengine_peak_memory_max": {
+			      "Definition": {
+			        "Binding": {
+			          "ConceptualEntity": "SM_ProgressReport",
+			          "ConceptualProperty": "SM  Progress PowerQuery Peak Memory Max"
+			        }
+			      },
+			      "State": "Generated",
+			      "Terms": [
+			        {
+			          "Max PowerQuery Memory": {
+			            "State": "Suggested",
+			            "Source": {
+			              "Type": "External",
+			              "Agent": "PowerBI.VisualColumnRename"
+			            },
+			            "Weight": 0.9
+			          }
+			        }
+			      ]
+			    },
+			    "metrics.sm_progress_duration_max": {
+			      "Definition": {
+			        "Binding": {
+			          "ConceptualEntity": "SM_ProgressReport",
+			          "ConceptualProperty": "SM Progress Duration Max"
+			        }
+			      },
+			      "State": "Generated"
+			    },
+			    "sm_progressreport.tablename": {
+			      "Definition": {
+			        "Binding": {
+			          "ConceptualEntity": "SM_ProgressReport",
+			          "ConceptualProperty": "TableName"
+			        }
+			      },
+			      "State": "Generated",
+			      "Terms": [
+			        {
+			          "Table Name": {
+			            "State": "Suggested",
+			            "Source": {
+			              "Type": "External",
+			              "Agent": "PowerBI.VisualColumnRename"
+			            },
+			            "Weight": 0.9
+			          }
+			        }
+			      ]
+			    },
+			    "sm_progressreport.objecttype": {
+			      "Definition": {
+			        "Binding": {
+			          "ConceptualEntity": "SM_ProgressReport",
+			          "ConceptualProperty": "ObjectType"
+			        }
+			      },
+			      "State": "Generated",
+			      "Terms": [
+			        {
+			          "Object Type": {
+			            "State": "Suggested",
+			            "Source": {
+			              "Type": "External",
+			              "Agent": "PowerBI.VisualColumnRename"
+			            },
+			            "Weight": 0.9
+			          }
+			        }
+			      ]
+			    },
+			    "sm_progressreport.objectname": {
+			      "Definition": {
+			        "Binding": {
+			          "ConceptualEntity": "SM_ProgressReport",
+			          "ConceptualProperty": "ObjectName"
+			        }
+			      },
+			      "State": "Generated",
+			      "Terms": [
+			        {
+			          "Object Name": {
+			            "State": "Suggested",
+			            "Source": {
+			              "Type": "External",
+			              "Agent": "PowerBI.VisualColumnRename"
+			            },
+			            "Weight": 0.9
+			          }
+			        }
+			      ]
+			    },
+			    "metrics.sm_progress_mashup_cpu_time_max": {
+			      "Definition": {
+			        "Binding": {
+			          "ConceptualEntity": "SM_ProgressReport",
+			          "ConceptualProperty": "SM Progress PowerQuery CPU Time Max"
+			        }
+			      },
+			      "State": "Generated",
+			      "Terms": [
+			        {
+			          "Max PowerQuery CPU Time": {
+			            "State": "Suggested",
+			            "Source": {
+			              "Type": "External",
+			              "Agent": "PowerBI.VisualColumnRename"
+			            },
+			            "Weight": 0.9
+			          }
+			        }
+			      ]
+			    },
+			    "metrics.sm_errors": {
+			      "Definition": {
+			        "Binding": {
+			          "ConceptualEntity": "SM_ExecutionMetrics",
+			          "ConceptualProperty": "SM Errors"
+			        }
+			      },
+			      "State": "Generated",
+			      "Terms": [
+			        {
+			          "Errors": {
+			            "State": "Suggested",
+			            "Source": {
+			              "Type": "External",
+			              "Agent": "PowerBI.VisualColumnRename"
+			            },
+			            "Weight": 0.9
+			          }
+			        }
+			      ]
+			    },
+			    "metrics.sm_cpu_time_avg": {
+			      "Definition": {
+			        "Binding": {
+			          "ConceptualEntity": "SM_ExecutionMetrics",
+			          "ConceptualProperty": "SM CPU Time Avg"
+			        }
+			      },
+			      "State": "Generated"
+			    },
+			    "metrics.sm_duration_avg": {
+			      "Definition": {
+			        "Binding": {
+			          "ConceptualEntity": "SM_ExecutionMetrics",
+			          "ConceptualProperty": "SM Duration Avg"
+			        }
+			      },
+			      "State": "Generated"
+			    },
+			    "metrics.sm_request_peak_memory_avg": {
+			      "Definition": {
+			        "Binding": {
+			          "ConceptualEntity": "SM_ExecutionMetrics",
+			          "ConceptualProperty": "SM Operation Peak Memory Avg"
+			        }
+			      },
+			      "State": "Generated"
+			    },
+			    "metrics.sm_cpu_time_max": {
+			      "Definition": {
+			        "Binding": {
+			          "ConceptualEntity": "SM_ExecutionMetrics",
+			          "ConceptualProperty": "SM CPU Time Max"
+			        }
+			      },
+			      "State": "Generated",
+			      "Terms": [
+			        {
+			          "Max CPU Time": {
+			            "State": "Suggested",
+			            "Source": {
+			              "Type": "External",
+			              "Agent": "PowerBI.VisualColumnRename"
+			            },
+			            "Weight": 0.9
+			          }
+			        }
+			      ]
+			    },
+			    "metrics.sm_duration_max": {
+			      "Definition": {
+			        "Binding": {
+			          "ConceptualEntity": "SM_ExecutionMetrics",
+			          "ConceptualProperty": "SM Duration Max"
+			        }
+			      },
+			      "State": "Generated",
+			      "Terms": [
+			        {
+			          "Max Duration": {
+			            "State": "Suggested",
+			            "Source": {
+			              "Type": "External",
+			              "Agent": "PowerBI.VisualColumnRename"
+			            },
+			            "Weight": 0.9
+			          }
+			        }
+			      ]
+			    },
+			    "metrics.sm_vertipaq_cpu_time_total": {
+			      "Definition": {
+			        "Binding": {
+			          "ConceptualEntity": "SM_ExecutionMetrics",
+			          "ConceptualProperty": "SM VertiPaq CPU Time Total"
+			        }
+			      },
+			      "State": "Generated",
+			      "Terms": [
+			        {
+			          "VertiPaq CPU Time": {
+			            "State": "Suggested",
+			            "Source": {
+			              "Type": "External",
+			              "Agent": "PowerBI.VisualColumnRename"
+			            },
+			            "Weight": 0.9
+			          }
+			        }
+			      ]
+			    },
+			    "metrics.sm_execution_delay_time_max": {
+			      "Definition": {
+			        "Binding": {
+			          "ConceptualEntity": "SM_ExecutionMetrics",
+			          "ConceptualProperty": "SM Execution Delay Time Max"
+			        }
+			      },
+			      "State": "Generated",
+			      "Terms": [
+			        {
+			          "Max Execution Delay": {
+			            "State": "Suggested",
+			            "Source": {
+			              "Type": "External",
+			              "Agent": "PowerBI.VisualColumnRename"
+			            },
+			            "Weight": 0.9
+			          }
+			        }
+			      ]
+			    },
+			    "metrics.sm_directquery_rows_max": {
+			      "Definition": {
+			        "Binding": {
+			          "ConceptualEntity": "SM_ExecutionMetrics",
+			          "ConceptualProperty": "SM DirectQuery Rows Max"
+			        }
+			      },
+			      "State": "Generated",
+			      "Terms": [
+			        {
+			          "Max DirectQuery Rows": {
+			            "State": "Suggested",
+			            "Source": {
+			              "Type": "External",
+			              "Agent": "PowerBI.VisualColumnRename"
+			            },
+			            "Weight": 0.9
+			          }
+			        }
+			      ]
+			    },
+			    "metrics.sm_powerquery_cpu_time_max": {
+			      "Definition": {
+			        "Binding": {
+			          "ConceptualEntity": "SM_ExecutionMetrics",
+			          "ConceptualProperty": "SM PowerQuery CPU Time Max"
+			        }
+			      },
+			      "State": "Generated",
+			      "Terms": [
+			        {
+			          "Max PowerQuery CPU Time": {
+			            "State": "Suggested",
+			            "Source": {
+			              "Type": "External",
+			              "Agent": "PowerBI.VisualColumnRename"
+			            },
+			            "Weight": 0.9
+			          }
+			        }
+			      ]
+			    },
+			    "metrics.sm_vertipaq_cpu_time_max": {
+			      "Definition": {
+			        "Binding": {
+			          "ConceptualEntity": "SM_ExecutionMetrics",
+			          "ConceptualProperty": "SM VertiPaq CPU Time Max"
+			        }
+			      },
+			      "State": "Generated",
+			      "Terms": [
+			        {
+			          "Max VertiPaq CPU Time": {
+			            "State": "Suggested",
+			            "Source": {
+			              "Type": "External",
+			              "Agent": "PowerBI.VisualColumnRename"
+			            },
+			            "Weight": 0.9
+			          }
+			        }
+			      ]
+			    },
+			    "metrics.sm_progress_cpu_time_total": {
+			      "Definition": {
+			        "Binding": {
+			          "ConceptualEntity": "SM_ProgressReport",
+			          "ConceptualProperty": "SM Progress CPU Time Total"
+			        }
+			      },
+			      "State": "Generated",
+			      "Terms": [
+			        {
+			          "Total CPU Time": {
+			            "State": "Suggested",
+			            "Source": {
+			              "Type": "External",
+			              "Agent": "PowerBI.VisualColumnRename"
+			            },
+			            "Weight": 0.9
+			          }
+			        },
+			        {
+			          "Progress CPU Time": {
+			            "State": "Suggested",
+			            "Source": {
+			              "Type": "External",
+			              "Agent": "PowerBI.VisualColumnRename"
+			            },
+			            "Weight": 0.9
+			          }
+			        }
+			      ]
+			    },
+			    "metrics.sm_progress_duration_total": {
+			      "Definition": {
+			        "Binding": {
+			          "ConceptualEntity": "SM_ProgressReport",
+			          "ConceptualProperty": "SM Progress Duration Total"
+			        }
+			      },
+			      "State": "Generated",
+			      "Terms": [
+			        {
+			          "Total Duration": {
+			            "State": "Suggested",
+			            "Source": {
+			              "Type": "External",
+			              "Agent": "PowerBI.VisualColumnRename"
+			            },
+			            "Weight": 0.9
+			          }
+			        }
+			      ]
+			    },
+			    "metrics.sm_progress_mashup_cpu_time_total": {
+			      "Definition": {
+			        "Binding": {
+			          "ConceptualEntity": "SM_ProgressReport",
+			          "ConceptualProperty": "SM Progress PowerQuery CPU Time Total"
+			        }
+			      },
+			      "State": "Generated",
+			      "Terms": [
+			        {
+			          "PowerQuery CPU Time": {
+			            "State": "Suggested",
+			            "Source": {
+			              "Type": "External",
+			              "Agent": "PowerBI.VisualColumnRename"
+			            },
+			            "Weight": 0.9
+			          }
+			        }
+			      ]
+			    },
+			    "metrics.sm_progress_object_count": {
+			      "Definition": {
+			        "Binding": {
+			          "ConceptualEntity": "SM_ProgressReport",
+			          "ConceptualProperty": "SM Progress Object Count"
+			        }
+			      },
+			      "State": "Generated",
+			      "Terms": [
+			        {
+			          "Progress Object Count": {
+			            "State": "Suggested",
+			            "Source": {
+			              "Type": "External",
+			              "Agent": "PowerBI.VisualColumnRename"
+			            },
+			            "Weight": 0.9
+			          }
+			        }
+			      ]
+			    },
+			    "metrics.sm__progress_mashup_peak_memory_total": {
+			      "Definition": {
+			        "Binding": {
+			          "ConceptualEntity": "SM_ProgressReport",
+			          "ConceptualProperty": "SM Progress PowerQuery Peak Memory Total"
+			        }
+			      },
+			      "State": "Generated",
+			      "Terms": [
+			        {
+			          "PowerQuery Peak Memory": {
+			            "State": "Suggested",
+			            "Source": {
+			              "Type": "External",
+			              "Agent": "PowerBI.VisualColumnRename"
+			            },
+			            "Weight": 0.9
+			          }
+			        }
+			      ]
+			    },
+			    "metrics.sm_capacity_throttling_total": {
+			      "Definition": {
+			        "Binding": {
+			          "ConceptualEntity": "SM_ExecutionMetrics",
+			          "ConceptualProperty": "SM Capacity Throttling Total"
+			        }
+			      },
+			      "State": "Generated",
+			      "Terms": [
+			        {
+			          "Capacity Throttling": {
+			            "State": "Suggested",
+			            "Source": {
+			              "Type": "External",
+			              "Agent": "PowerBI.VisualColumnRename"
+			            },
+			            "Weight": 0.9
+			          }
+			        }
+			      ]
+			    },
+			    "metrics.sm_powerquery_cpu_time_total": {
+			      "Definition": {
+			        "Binding": {
+			          "ConceptualEntity": "SM_ExecutionMetrics",
+			          "ConceptualProperty": "SM PowerQuery CPU Time Total"
+			        }
+			      },
+			      "State": "Generated",
+			      "Terms": [
+			        {
+			          "PowerQuery CPU Time": {
+			            "State": "Suggested",
+			            "Source": {
+			              "Type": "External",
+			              "Agent": "PowerBI.VisualColumnRename"
+			            },
+			            "Weight": 0.9
+			          }
+			        }
+			      ]
+			    },
+			    "sm_operations.eventtext": {
+			      "Definition": {
+			        "Binding": {
+			          "ConceptualEntity": "SM_Operations",
+			          "ConceptualProperty": "EventText"
+			        }
+			      },
+			      "State": "Generated"
+			    },
+			    "metrics.sm_external_query_execution_time_max": {
+			      "Definition": {
+			        "Binding": {
+			          "ConceptualEntity": "SM_ExecutionMetrics",
+			          "ConceptualProperty": "SM External Query Execution Time Max"
+			        }
+			      },
+			      "State": "Generated"
+			    },
+			    "metrics.mdb_operation_success_ratio": {
+			      "Definition": {
+			        "Binding": {
+			          "ConceptualEntity": "MDB_TableExecutionLogs",
+			          "ConceptualProperty": "MDB Operation Success Ratio"
+			        }
+			      },
+			      "State": "Generated",
+			      "Terms": [
+			        {
+			          "Success Ratio": {
+			            "State": "Suggested",
+			            "Source": {
+			              "Type": "External",
+			              "Agent": "PowerBI.VisualColumnRename"
+			            },
+			            "Weight": 0.9
+			          }
+			        }
+			      ]
+			    },
+			    "metrics.mdb_operations": {
+			      "Definition": {
+			        "Binding": {
+			          "ConceptualEntity": "MDB_TableExecutionLogs",
+			          "ConceptualProperty": "MDB Operations"
+			        }
+			      },
+			      "State": "Generated",
+			      "Terms": [
+			        {
+			          "Operations": {
+			            "State": "Suggested",
+			            "Source": {
+			              "Type": "External",
+			              "Agent": "PowerBI.VisualColumnRename"
+			            },
+			            "Weight": 0.9
+			          }
+			        }
+			      ]
+			    },
+			    "metrics.mdb_items_unique": {
+			      "Definition": {
+			        "Binding": {
+			          "ConceptualEntity": "MDB_TableExecutionLogs",
+			          "ConceptualProperty": "MDB Items Unique"
+			        }
+			      },
+			      "State": "Generated",
+			      "Terms": [
+			        {
+			          "Mirrored Database Items": {
+			            "State": "Suggested",
+			            "Source": {
+			              "Type": "External",
+			              "Agent": "PowerBI.VisualColumnRename"
+			            },
+			            "Weight": 0.9
+			          }
+			        }
+			      ]
+			    },
+			    "metrics.gql_operations": {
+			      "Definition": {
+			        "Binding": {
+			          "ConceptualEntity": "GQL_Logs",
+			          "ConceptualProperty": "GQL Operations"
+			        }
+			      },
+			      "State": "Generated",
+			      "Terms": [
+			        {
+			          "API Requests (Operations)": {
+			            "State": "Suggested",
+			            "Source": {
+			              "Type": "External",
+			              "Agent": "PowerBI.VisualColumnRename"
+			            },
+			            "Weight": 0.9
+			          }
+			        },
+			        {
+			          "API Requests": {
+			            "State": "Suggested",
+			            "Source": {
+			              "Type": "External",
+			              "Agent": "PowerBI.VisualColumnRename"
+			            },
+			            "Weight": 0.9
+			          }
+			        }
+			      ]
+			    },
+			    "metrics.gql_operation_duration_max": {
+			      "Definition": {
+			        "Binding": {
+			          "ConceptualEntity": "GQL_Logs",
+			          "ConceptualProperty": "GQL Operation Duration Max"
+			        }
+			      },
+			      "State": "Generated",
+			      "Terms": [
+			        {
+			          "Max Request Duration": {
+			            "State": "Suggested",
+			            "Source": {
+			              "Type": "External",
+			              "Agent": "PowerBI.VisualColumnRename"
+			            },
+			            "Weight": 0.9
+			          }
+			        },
+			        {
+			          "Request Duration": {
+			            "State": "Suggested",
+			            "Source": {
+			              "Type": "External",
+			              "Agent": "PowerBI.VisualColumnRename"
+			            },
+			            "Weight": 0.9
+			          }
+			        }
+			      ]
+			    },
+			    "metrics.gql_overhead_duration_max": {
+			      "Definition": {
+			        "Binding": {
+			          "ConceptualEntity": "GQL_Logs",
+			          "ConceptualProperty": "GQL Overhead Duration Max"
+			        }
+			      },
+			      "State": "Generated",
+			      "Terms": [
+			        {
+			          "Max Overhead Duration": {
+			            "State": "Suggested",
+			            "Source": {
+			              "Type": "External",
+			              "Agent": "PowerBI.VisualColumnRename"
+			            },
+			            "Weight": 0.9
+			          }
+			        },
+			        {
+			          "Overhead Duration": {
+			            "State": "Suggested",
+			            "Source": {
+			              "Type": "External",
+			              "Agent": "PowerBI.VisualColumnRename"
+			            },
+			            "Weight": 0.9
+			          }
+			        }
+			      ]
+			    },
+			    "metrics.gql_processed_data_max": {
+			      "Definition": {
+			        "Binding": {
+			          "ConceptualEntity": "GQL_Logs",
+			          "ConceptualProperty": "GQL Processed Data Max"
+			        }
+			      },
+			      "State": "Generated",
+			      "Terms": [
+			        {
+			          "Max Processed Data": {
+			            "State": "Suggested",
+			            "Source": {
+			              "Type": "External",
+			              "Agent": "PowerBI.VisualColumnRename"
+			            },
+			            "Weight": 0.9
+			          }
+			        }
+			      ]
+			    },
+			    "metrics.gql_processed_data_total": {
+			      "Definition": {
+			        "Binding": {
+			          "ConceptualEntity": "GQL_Logs",
+			          "ConceptualProperty": "GQL Processed Data Total"
+			        }
+			      },
+			      "State": "Generated",
+			      "Terms": [
+			        {
+			          "Total Processed Data": {
+			            "State": "Suggested",
+			            "Source": {
+			              "Type": "External",
+			              "Agent": "PowerBI.VisualColumnRename"
+			            },
+			            "Weight": 0.9
+			          }
+			        },
+			        {
+			          "Processed Data": {
+			            "State": "Suggested",
+			            "Source": {
+			              "Type": "External",
+			              "Agent": "PowerBI.VisualColumnRename"
+			            },
+			            "Weight": 0.9
+			          }
+			        }
+			      ]
+			    },
+			    "metrics.gql_operation_duration_total": {
+			      "Definition": {
+			        "Binding": {
+			          "ConceptualEntity": "GQL_Logs",
+			          "ConceptualProperty": "GQL Operation CPU Time Total"
+			        }
+			      },
+			      "State": "Generated",
+			      "Terms": [
+			        {
+			          "Total Request CPU Time": {
+			            "State": "Suggested",
+			            "Source": {
+			              "Type": "External",
+			              "Agent": "PowerBI.VisualColumnRename"
+			            },
+			            "Weight": 0.9
+			          }
+			        }
+			      ]
+			    },
+			    "metrics.gql_overhead_duration_total": {
+			      "Definition": {
+			        "Binding": {
+			          "ConceptualEntity": "GQL_Logs",
+			          "ConceptualProperty": "GQL Overhead Duration Total"
+			        }
+			      },
+			      "State": "Generated",
+			      "Terms": [
+			        {
+			          "Total Overhead Duration": {
+			            "State": "Suggested",
+			            "Source": {
+			              "Type": "External",
+			              "Agent": "PowerBI.VisualColumnRename"
+			            },
+			            "Weight": 0.9
+			          }
+			        }
+			      ]
+			    },
+			    "gql_items.itemname": {
+			      "Definition": {
+			        "Binding": {
+			          "ConceptualEntity": "GQL_Items",
+			          "ConceptualProperty": "ItemName"
+			        }
+			      },
+			      "State": "Generated",
+			      "Terms": [
+			        {
+			          "GraphQL Item": {
+			            "State": "Suggested",
+			            "Source": {
+			              "Type": "External",
+			              "Agent": "PowerBI.VisualColumnRename"
+			            },
+			            "Weight": 0.9
+			          }
+			        },
+			        {
+			          "Item Name": {
+			            "State": "Suggested",
+			            "Source": {
+			              "Type": "External",
+			              "Agent": "PowerBI.VisualColumnRename"
+			            },
+			            "Weight": 0.9
+			          }
+			        }
+			      ]
+			    },
+			    "gql_logs.transportprotocol": {
+			      "Definition": {
+			        "Binding": {
+			          "ConceptualEntity": "GQL_Logs",
+			          "ConceptualProperty": "TransportProtocol"
+			        }
+			      },
+			      "State": "Generated",
+			      "Terms": [
+			        {
+			          "Transport Protocol": {
+			            "State": "Suggested",
+			            "Source": {
+			              "Type": "External",
+			              "Agent": "PowerBI.VisualColumnRename"
+			            },
+			            "Weight": 0.9
+			          }
+			        }
+			      ]
+			    },
+			    "mdb_items.itemname": {
+			      "Definition": {
+			        "Binding": {
+			          "ConceptualEntity": "MDB_Items",
+			          "ConceptualProperty": "ItemName"
+			        }
+			      },
+			      "State": "Generated",
+			      "Terms": [
+			        {
+			          "Mirrored Database Item": {
+			            "State": "Suggested",
+			            "Source": {
+			              "Type": "External",
+			              "Agent": "PowerBI.VisualColumnRename"
+			            },
+			            "Weight": 0.9
+			          }
+			        }
+			      ]
+			    },
+			    "metrics.mdb_source_mirroring_types": {
+			      "Definition": {
+			        "Binding": {
+			          "ConceptualEntity": "MDB_TableExecutionLogs",
+			          "ConceptualProperty": "MDB Source Mirroring Types"
+			        }
+			      },
+			      "State": "Generated",
+			      "Terms": [
+			        {
+			          "Used Mirroring Types": {
+			            "State": "Suggested",
+			            "Source": {
+			              "Type": "External",
+			              "Agent": "PowerBI.VisualColumnRename"
+			            },
+			            "Weight": 0.9
+			          }
+			        }
+			      ]
+			    },
+			    "metrics.mdb_mirrored_tables": {
+			      "Definition": {
+			        "Binding": {
+			          "ConceptualEntity": "MDB_TableExecutionLogs",
+			          "ConceptualProperty": "MDB Mirrored Tables"
+			        }
+			      },
+			      "State": "Generated",
+			      "Terms": [
+			        {
+			          "Mirrored Tables": {
+			            "State": "Suggested",
+			            "Source": {
+			              "Type": "External",
+			              "Agent": "PowerBI.VisualColumnRename"
+			            },
+			            "Weight": 0.9
+			          }
+			        }
+			      ]
+			    },
+			    "metrics.mdb_processed_data_max": {
+			      "Definition": {
+			        "Binding": {
+			          "ConceptualEntity": "MDB_TableExecutionLogs",
+			          "ConceptualProperty": "MDB Processed Data Max"
+			        }
+			      },
+			      "State": "Generated",
+			      "Terms": [
+			        {
+			          "Max Processed Data": {
+			            "State": "Suggested",
+			            "Source": {
+			              "Type": "External",
+			              "Agent": "PowerBI.VisualColumnRename"
+			            },
+			            "Weight": 0.9
+			          }
+			        }
+			      ]
+			    },
+			    "metrics.mdb_processed_rows_max": {
+			      "Definition": {
+			        "Binding": {
+			          "ConceptualEntity": "MDB_TableExecutionLogs",
+			          "ConceptualProperty": "MDB Processed Rows Max"
+			        }
+			      },
+			      "State": "Generated",
+			      "Terms": [
+			        {
+			          "Max Processed Rows": {
+			            "State": "Suggested",
+			            "Source": {
+			              "Type": "External",
+			              "Agent": "PowerBI.VisualColumnRename"
+			            },
+			            "Weight": 0.9
+			          }
+			        }
+			      ]
+			    },
+			    "metrics.mdb_replicator_batch_latency_max": {
+			      "Definition": {
+			        "Binding": {
+			          "ConceptualEntity": "MDB_TableExecutionLogs",
+			          "ConceptualProperty": "MDB Replicator Batch Latency Max"
+			        }
+			      },
+			      "State": "Generated",
+			      "Terms": [
+			        {
+			          "Max Mirroring Latency": {
+			            "State": "Suggested",
+			            "Source": {
+			              "Type": "External",
+			              "Agent": "PowerBI.VisualColumnRename"
+			            },
+			            "Weight": 0.9
+			          }
+			        }
+			      ]
+			    },
+			    "metrics.mdb_processed_data_total": {
+			      "Definition": {
+			        "Binding": {
+			          "ConceptualEntity": "MDB_TableExecutionLogs",
+			          "ConceptualProperty": "MDB Processed Data Total"
+			        }
+			      },
+			      "State": "Generated",
+			      "Terms": [
+			        {
+			          "Total Processed Data": {
+			            "State": "Suggested",
+			            "Source": {
+			              "Type": "External",
+			              "Agent": "PowerBI.VisualColumnRename"
+			            },
+			            "Weight": 0.9
+			          }
+			        },
+			        {
+			          "Processed Data": {
+			            "State": "Suggested",
+			            "Source": {
+			              "Type": "External",
+			              "Agent": "PowerBI.VisualColumnRename"
+			            },
+			            "Weight": 0.9
+			          }
+			        }
+			      ]
+			    },
+			    "metrics.mdb_replicator_batch_latency_avg": {
+			      "Definition": {
+			        "Binding": {
+			          "ConceptualEntity": "MDB_TableExecutionLogs",
+			          "ConceptualProperty": "MDB Replicator Batch Latency Avg"
+			        }
+			      },
+			      "State": "Generated",
+			      "Terms": [
+			        {
+			          "Avg Mirroring Latency": {
+			            "State": "Suggested",
+			            "Source": {
+			              "Type": "External",
+			              "Agent": "PowerBI.VisualColumnRename"
+			            },
+			            "Weight": 0.9
+			          }
+			        }
+			      ]
+			    },
+			    "metrics.mdb_logs": {
+			      "Definition": {
+			        "Binding": {
+			          "ConceptualEntity": "MDB_TableExecutionLogs",
+			          "ConceptualProperty": "MDB Logs"
+			        }
+			      },
+			      "State": "Generated",
+			      "Terms": [
+			        {
+			          "# Logs": {
+			            "State": "Suggested",
+			            "Source": {
+			              "Type": "External",
+			              "Agent": "PowerBI.VisualColumnRename"
+			            },
+			            "Weight": 0.9
+			          }
+			        }
+			      ]
+			    },
+			    "mdb_tableexecutionlogs.mirroringsourcetype": {
+			      "Definition": {
+			        "Binding": {
+			          "ConceptualEntity": "MDB_TableExecutionLogs",
+			          "ConceptualProperty": "MirroringSourceType"
+			        }
+			      },
+			      "State": "Generated",
+			      "Terms": [
+			        {
+			          "Mirroring Source Type": {
+			            "State": "Suggested",
+			            "Source": {
+			              "Type": "External",
+			              "Agent": "PowerBI.VisualColumnRename"
+			            },
+			            "Weight": 0.9
+			          }
+			        }
+			      ]
+			    },
+			    "metrics.mdb_replicator_batch_latency_total": {
+			      "Definition": {
+			        "Binding": {
+			          "ConceptualEntity": "MDB_TableExecutionLogs",
+			          "ConceptualProperty": "MDB Replicator Batch Latency Total"
+			        }
+			      },
+			      "State": "Generated",
+			      "Terms": [
+			        {
+			          "Mirroring Latency": {
+			            "State": "Suggested",
+			            "Source": {
+			              "Type": "External",
+			              "Agent": "PowerBI.VisualColumnRename"
+			            },
+			            "Weight": 0.9
+			          }
+			        }
+			      ]
+			    },
+			    "mdb_tableexecutionlogs.sourcetablename": {
+			      "Definition": {
+			        "Binding": {
+			          "ConceptualEntity": "MDB_TableExecutionLogs",
+			          "ConceptualProperty": "SourceTableName"
+			        }
+			      },
+			      "State": "Generated",
+			      "Terms": [
+			        {
+			          "Source Table Name": {
+			            "State": "Suggested",
+			            "Source": {
+			              "Type": "External",
+			              "Agent": "PowerBI.VisualColumnRename"
+			            },
+			            "Weight": 0.9
+			          }
+			        }
+			      ]
+			    },
+			    "metrics.sm_directquery_connection_time_total": {
+			      "Definition": {
+			        "Binding": {
+			          "ConceptualEntity": "SM_ExecutionMetrics",
+			          "ConceptualProperty": "SM DirectQuery Connection Time Total"
+			        }
+			      },
+			      "State": "Generated",
+			      "Terms": [
+			        {
+			          "DirectQuery Connection Time": {
+			            "State": "Suggested",
+			            "Source": {
+			              "Type": "External",
+			              "Agent": "PowerBI.VisualColumnRename"
+			            },
+			            "Weight": 0.9
+			          }
+			        }
+			      ]
+			    },
+			    "metrics.sm_directquery_iteration_time_total": {
+			      "Definition": {
+			        "Binding": {
+			          "ConceptualEntity": "SM_ExecutionMetrics",
+			          "ConceptualProperty": "SM DirectQuery Iteration Time Total"
+			        }
+			      },
+			      "State": "Generated",
+			      "Terms": [
+			        {
+			          "DirectQuery Iteration Time": {
+			            "State": "Suggested",
+			            "Source": {
+			              "Type": "External",
+			              "Agent": "PowerBI.VisualColumnRename"
+			            },
+			            "Weight": 0.9
+			          }
+			        }
+			      ]
+			    },
+			    "metrics.sm_directquery_request_count_total": {
+			      "Definition": {
+			        "Binding": {
+			          "ConceptualEntity": "SM_ExecutionMetrics",
+			          "ConceptualProperty": "SM DirectQuery Request Count Total"
+			        }
+			      },
+			      "State": "Generated",
+			      "Terms": [
+			        {
+			          "DirectQuery Request Count": {
+			            "State": "Suggested",
+			            "Source": {
+			              "Type": "External",
+			              "Agent": "PowerBI.VisualColumnRename"
+			            },
+			            "Weight": 0.9
+			          }
+			        }
+			      ]
+			    },
+			    "metrics.sm_directquery_rows_total": {
+			      "Definition": {
+			        "Binding": {
+			          "ConceptualEntity": "SM_ExecutionMetrics",
+			          "ConceptualProperty": "SM DirectQuery Rows Total"
+			        }
+			      },
+			      "State": "Generated",
+			      "Terms": [
+			        {
+			          "DirectQuery Rows": {
+			            "State": "Suggested",
+			            "Source": {
+			              "Type": "External",
+			              "Agent": "PowerBI.VisualColumnRename"
+			            },
+			            "Weight": 0.9
+			          }
+			        }
+			      ]
+			    },
+			    "metrics.sm_directquery_time_total": {
+			      "Definition": {
+			        "Binding": {
+			          "ConceptualEntity": "SM_ExecutionMetrics",
+			          "ConceptualProperty": "SM DirectQuery Time Total"
+			        }
+			      },
+			      "State": "Generated",
+			      "Terms": [
+			        {
+			          "Total DirectQuery Time": {
+			            "State": "Suggested",
+			            "Source": {
+			              "Type": "External",
+			              "Agent": "PowerBI.VisualColumnRename"
+			            },
+			            "Weight": 0.9
+			          }
+			        }
+			      ]
+			    },
+			    "metrics.sm_directquery_timeout_total": {
+			      "Definition": {
+			        "Binding": {
+			          "ConceptualEntity": "SM_ExecutionMetrics",
+			          "ConceptualProperty": "SM DirectQuery Timeout Total"
+			        }
+			      },
+			      "State": "Generated",
+			      "Terms": [
+			        {
+			          "DirectQuery Timeout": {
+			            "State": "Suggested",
+			            "Source": {
+			              "Type": "External",
+			              "Agent": "PowerBI.VisualColumnRename"
+			            },
+			            "Weight": 0.9
+			          }
+			        }
+			      ]
+			    },
+			    "metrics.sm_external_query_execution_time_total": {
+			      "Definition": {
+			        "Binding": {
+			          "ConceptualEntity": "SM_ExecutionMetrics",
+			          "ConceptualProperty": "SM External Query Execution Time Total"
+			        }
+			      },
+			      "State": "Generated",
+			      "Terms": [
+			        {
+			          "External Query Execution Time": {
+			            "State": "Suggested",
+			            "Source": {
+			              "Type": "External",
+			              "Agent": "PowerBI.VisualColumnRename"
+			            },
+			            "Weight": 0.9
+			          }
+			        }
+			      ]
+			    },
+			    "metrics.sm_tabular_connection_timeout_total": {
+			      "Definition": {
+			        "Binding": {
+			          "ConceptualEntity": "SM_ExecutionMetrics",
+			          "ConceptualProperty": "SM Tabular Connection Timeout Total"
+			        }
+			      },
+			      "State": "Generated",
+			      "Terms": [
+			        {
+			          "Tabular Connection Timeout": {
+			            "State": "Suggested",
+			            "Source": {
+			              "Type": "External",
+			              "Agent": "PowerBI.VisualColumnRename"
+			            },
+			            "Weight": 0.9
+			          }
+			        }
+			      ]
+			    },
+			    "metrics.sm_datasource_connection_throttle_time_total": {
+			      "Definition": {
+			        "Binding": {
+			          "ConceptualEntity": "SM_ExecutionMetrics",
+			          "ConceptualProperty": "SM Datasource Connection Throttle Time Total"
+			        }
+			      },
+			      "State": "Generated",
+			      "Terms": [
+			        {
+			          "Datasource Connection Throttle Time": {
+			            "State": "Suggested",
+			            "Source": {
+			              "Type": "External",
+			              "Agent": "PowerBI.VisualColumnRename"
+			            },
+			            "Weight": 0.9
+			          }
+			        }
+			      ]
+			    },
+			    "metrics.eh_query_operations": {
+			      "Definition": {
+			        "Binding": {
+			          "ConceptualEntity": "EH_QueryLogs",
+			          "ConceptualProperty": "EH Query Operations"
+			        }
+			      },
+			      "State": "Generated",
+			      "Terms": [
+			        {
+			          "Query Operations": {
+			            "State": "Suggested",
+			            "Source": {
+			              "Type": "External",
+			              "Agent": "PowerBI.VisualColumnRename"
+			            },
+			            "Weight": 0.9
+			          }
+			        },
+			        {
+			          "Queries": {
+			            "State": "Suggested",
+			            "Source": {
+			              "Type": "External",
+			              "Agent": "PowerBI.VisualColumnRename"
+			            },
+			            "Weight": 0.9
+			          }
+			        }
+			      ]
+			    },
+			    "eh_querylogs.databasename": {
+			      "Definition": {
+			        "Binding": {
+			          "ConceptualEntity": "EH_QueryLogs",
+			          "ConceptualProperty": "DatabaseName"
+			        }
+			      },
+			      "State": "Generated",
+			      "Terms": [
+			        {
+			          "Database": {
+			            "State": "Suggested",
+			            "Source": {
+			              "Type": "External",
+			              "Agent": "PowerBI.VisualColumnRename"
+			            },
+			            "Weight": 0.9
+			          }
+			        }
+			      ]
+			    },
+			    "metrics.eh_ingestion_batch": {
+			      "Definition": {
+			        "Binding": {
+			          "ConceptualEntity": "EH_Metrics",
+			          "ConceptualProperty": "EH Ingestion Batch Volume"
+			        }
+			      },
+			      "State": "Generated",
+			      "Terms": [
+			        {
+			          "Batch Ingestion Volume": {
+			            "State": "Suggested",
+			            "Source": {
+			              "Type": "External",
+			              "Agent": "PowerBI.VisualColumnRename"
+			            },
+			            "Weight": 0.9
+			          }
+			        },
+			        {
+			          "Batch Ingestion": {
+			            "State": "Suggested",
+			            "Source": {
+			              "Type": "External",
+			              "Agent": "PowerBI.VisualColumnRename"
+			            },
+			            "Weight": 0.9
+			          }
+			        },
+			        {
+			          "Total Batch Ingestion Volume": {
+			            "State": "Suggested",
+			            "Source": {
+			              "Type": "External",
+			              "Agent": "PowerBI.VisualColumnRename"
+			            },
+			            "Weight": 0.9
+			          }
+			        }
+			      ]
+			    },
+			    "metrics.eh_ingestion_streaming": {
+			      "Definition": {
+			        "Binding": {
+			          "ConceptualEntity": "EH_Metrics",
+			          "ConceptualProperty": "EH Ingestion Streaming Volume"
+			        }
+			      },
+			      "State": "Generated",
+			      "Terms": [
+			        {
+			          "Streaming Ingestion Volume": {
+			            "State": "Suggested",
+			            "Source": {
+			              "Type": "External",
+			              "Agent": "PowerBI.VisualColumnRename"
+			            },
+			            "Weight": 0.9
+			          }
+			        }
+			      ]
+			    },
+			    "metrics.eh_batch_size_avg": {
+			      "Definition": {
+			        "Binding": {
+			          "ConceptualEntity": "EH_Metrics",
+			          "ConceptualProperty": "EH Batch Size Avg"
+			        }
+			      },
+			      "State": "Generated",
+			      "Terms": [
+			        {
+			          "Average Batch Size": {
+			            "State": "Suggested",
+			            "Source": {
+			              "Type": "External",
+			              "Agent": "PowerBI.VisualColumnRename"
+			            },
+			            "Weight": 0.9
+			          }
+			        },
+			        {
+			          "Avg Batch Size": {
+			            "State": "Suggested",
+			            "Source": {
+			              "Type": "External",
+			              "Agent": "PowerBI.VisualColumnRename"
+			            },
+			            "Weight": 0.9
+			          }
+			        }
+			      ]
+			    },
+			    "metrics.eh_batch_latency_avg": {
+			      "Definition": {
+			        "Binding": {
+			          "ConceptualEntity": "EH_Metrics",
+			          "ConceptualProperty": "EH Batch Latency Avg"
+			        }
+			      },
+			      "State": "Generated",
+			      "Terms": [
+			        {
+			          "Avg Batch Latency": {
+			            "State": "Suggested",
+			            "Source": {
+			              "Type": "External",
+			              "Agent": "PowerBI.VisualColumnRename"
+			            },
+			            "Weight": 0.9
+			          }
+			        }
+			      ]
+			    },
+			    "metrics.eh_batch_blob_count": {
+			      "Definition": {
+			        "Binding": {
+			          "ConceptualEntity": "EH_Metrics",
+			          "ConceptualProperty": "EH Batch Blob Count Avg"
+			        }
+			      },
+			      "State": "Generated",
+			      "Terms": [
+			        {
+			          "Average Batch Blob Count": {
+			            "State": "Suggested",
+			            "Source": {
+			              "Type": "External",
+			              "Agent": "PowerBI.VisualColumnRename"
+			            },
+			            "Weight": 0.9
+			          }
+			        },
+			        {
+			          "Avg Batch Blob Count": {
+			            "State": "Suggested",
+			            "Source": {
+			              "Type": "External",
+			              "Agent": "PowerBI.VisualColumnRename"
+			            },
+			            "Weight": 0.9
+			          }
+			        }
+			      ]
+			    },
+			    "metrics.eh_batch_ingestion_success_ratio": {
+			      "Definition": {
+			        "Binding": {
+			          "ConceptualEntity": "EH_Metrics",
+			          "ConceptualProperty": "EH Batch Ingestion Success Ratio"
+			        }
+			      },
+			      "State": "Generated",
+			      "Terms": [
+			        {
+			          "Batch Ingestion Success Ratio": {
+			            "State": "Suggested",
+			            "Source": {
+			              "Type": "External",
+			              "Agent": "PowerBI.VisualColumnRename"
+			            },
+			            "Weight": 0.9
+			          }
+			        }
+			      ]
+			    },
+			    "eh_metrics.ingestionstatus": {
+			      "Definition": {
+			        "Binding": {
+			          "ConceptualEntity": "EH_Metrics",
+			          "ConceptualProperty": "IngestionStatus"
+			        }
+			      },
+			      "State": "Generated"
+			    },
+			    "metrics.eh_streaming_latency_avg": {
+			      "Definition": {
+			        "Binding": {
+			          "ConceptualEntity": "EH_Metrics",
+			          "ConceptualProperty": "EH Streaming Latency Avg"
+			        }
+			      },
+			      "State": "Generated",
+			      "Terms": [
+			        {
+			          "Avg Streaming Latency": {
+			            "State": "Suggested",
+			            "Source": {
+			              "Type": "External",
+			              "Agent": "PowerBI.VisualColumnRename"
+			            },
+			            "Weight": 0.9
+			          }
+			        },
+			        {
+			          "Streaming Latency": {
+			            "State": "Suggested",
+			            "Source": {
+			              "Type": "External",
+			              "Agent": "PowerBI.VisualColumnRename"
+			            },
+			            "Weight": 0.9
+			          }
+			        }
+			      ]
+			    },
+			    "metrics.eh_batch_ingestion_latency_avg": {
+			      "Definition": {
+			        "Binding": {
+			          "ConceptualEntity": "EH_Metrics",
+			          "ConceptualProperty": "EH Batch Ingestion Latency Avg"
+			        }
+			      },
+			      "State": "Generated",
+			      "Terms": [
+			        {
+			          "Avg Batch Ingestion Latency": {
+			            "State": "Suggested",
+			            "Source": {
+			              "Type": "External",
+			              "Agent": "PowerBI.VisualColumnRename"
+			            },
+			            "Weight": 0.9
+			          }
+			        },
+			        {
+			          "Average Batch Ingestion Latency": {
+			            "State": "Suggested",
+			            "Source": {
+			              "Type": "External",
+			              "Agent": "PowerBI.VisualColumnRename"
+			            },
+			            "Weight": 0.9
+			          }
+			        }
+			      ]
+			    },
+			    "metrics.eh_batch_latency_max": {
+			      "Definition": {
+			        "Binding": {
+			          "ConceptualEntity": "EH_Metrics",
+			          "ConceptualProperty": "EH Batch Latency Max"
+			        }
+			      },
+			      "State": "Generated",
+			      "Terms": [
+			        {
+			          "Max Batch Latency": {
+			            "State": "Suggested",
+			            "Source": {
+			              "Type": "External",
+			              "Agent": "PowerBI.VisualColumnRename"
+			            },
+			            "Weight": 0.9
+			          }
+			        }
+			      ]
+			    },
+			    "metrics.eh_batch_size_max": {
+			      "Definition": {
+			        "Binding": {
+			          "ConceptualEntity": "EH_Metrics",
+			          "ConceptualProperty": "EH Batch Size Max"
+			        }
+			      },
+			      "State": "Generated",
+			      "Terms": [
+			        {
+			          "Max Batch Size": {
+			            "State": "Suggested",
+			            "Source": {
+			              "Type": "External",
+			              "Agent": "PowerBI.VisualColumnRename"
+			            },
+			            "Weight": 0.9
+			          }
+			        }
+			      ]
+			    },
+			    "metrics.eh_query_cpu_time_avg": {
+			      "Definition": {
+			        "Binding": {
+			          "ConceptualEntity": "EH_QueryLogs",
+			          "ConceptualProperty": "EH Query CPU Time Avg"
+			        }
+			      },
+			      "State": "Generated",
+			      "Terms": [
+			        {
+			          "Avg Query CPU Time": {
+			            "State": "Suggested",
+			            "Source": {
+			              "Type": "External",
+			              "Agent": "PowerBI.VisualColumnRename"
+			            },
+			            "Weight": 0.9
+			          }
+			        }
+			      ]
+			    },
+			    "metrics.eh_query_peak_memory_avg": {
+			      "Definition": {
+			        "Binding": {
+			          "ConceptualEntity": "EH_QueryLogs",
+			          "ConceptualProperty": "EH Query Peak Memory Avg"
+			        }
+			      },
+			      "State": "Generated",
+			      "Terms": [
+			        {
+			          "Avg Query Peak Memory Consumption": {
+			            "State": "Suggested",
+			            "Source": {
+			              "Type": "External",
+			              "Agent": "PowerBI.VisualColumnRename"
+			            },
+			            "Weight": 0.9
+			          }
+			        }
+			      ]
+			    },
+			    "metrics.eh_query_duration_avg": {
+			      "Definition": {
+			        "Binding": {
+			          "ConceptualEntity": "EH_QueryLogs",
+			          "ConceptualProperty": "EH Query Duration Avg"
+			        }
+			      },
+			      "State": "Generated",
+			      "Terms": [
+			        {
+			          "Avg Query Duration": {
+			            "State": "Suggested",
+			            "Source": {
+			              "Type": "External",
+			              "Agent": "PowerBI.VisualColumnRename"
+			            },
+			            "Weight": 0.9
+			          }
+			        }
+			      ]
+			    },
+			    "metrics.eh_query_cpu_time_max": {
+			      "Definition": {
+			        "Binding": {
+			          "ConceptualEntity": "EH_QueryLogs",
+			          "ConceptualProperty": "EH Query CPU Time Max"
+			        }
+			      },
+			      "State": "Generated",
+			      "Terms": [
+			        {
+			          "Max Query CPU Time": {
+			            "State": "Suggested",
+			            "Source": {
+			              "Type": "External",
+			              "Agent": "PowerBI.VisualColumnRename"
+			            },
+			            "Weight": 0.9
+			          }
+			        },
+			        {
+			          "Max CPU Time": {
+			            "State": "Suggested",
+			            "Source": {
+			              "Type": "External",
+			              "Agent": "PowerBI.VisualColumnRename"
+			            },
+			            "Weight": 0.9
+			          }
+			        }
+			      ]
+			    },
+			    "metrics.eh_query_duration_max": {
+			      "Definition": {
+			        "Binding": {
+			          "ConceptualEntity": "EH_QueryLogs",
+			          "ConceptualProperty": "EH Query Duration Max"
+			        }
+			      },
+			      "State": "Generated",
+			      "Terms": [
+			        {
+			          "Max Query Duration": {
+			            "State": "Suggested",
+			            "Source": {
+			              "Type": "External",
+			              "Agent": "PowerBI.VisualColumnRename"
+			            },
+			            "Weight": 0.9
+			          }
+			        }
+			      ]
+			    },
+			    "metrics.eh_query_peak_memory_max": {
+			      "Definition": {
+			        "Binding": {
+			          "ConceptualEntity": "EH_QueryLogs",
+			          "ConceptualProperty": "EH Query Peak Memory Max"
+			        }
+			      },
+			      "State": "Generated",
+			      "Terms": [
+			        {
+			          "Max Query Peak Memory": {
+			            "State": "Suggested",
+			            "Source": {
+			              "Type": "External",
+			              "Agent": "PowerBI.VisualColumnRename"
+			            },
+			            "Weight": 0.9
+			          }
+			        },
+			        {
+			          "Max Query Memory Peak": {
+			            "State": "Suggested",
+			            "Source": {
+			              "Type": "External",
+			              "Agent": "PowerBI.VisualColumnRename"
+			            },
+			            "Weight": 0.9
+			          }
+			        },
+			        {
+			          "Max Memory Peak": {
+			            "State": "Suggested",
+			            "Source": {
+			              "Type": "External",
+			              "Agent": "PowerBI.VisualColumnRename"
+			            },
+			            "Weight": 0.9
+			          }
+			        }
+			      ]
+			    },
+			    "gql_logs.queryresultmessage": {
+			      "Definition": {
+			        "Binding": {
+			          "ConceptualEntity": "GQL_Logs",
+			          "ConceptualProperty": "QueryResultMessage"
+			        }
+			      },
+			      "State": "Generated",
+			      "Terms": [
+			        {
+			          "Query Result Message": {
+			            "State": "Suggested",
+			            "Source": {
+			              "Type": "External",
+			              "Agent": "PowerBI.VisualColumnRename"
+			            },
+			            "Weight": 0.9
+			          }
+			        }
+			      ]
+			    },
+			    "gql_logs.querytext": {
+			      "Definition": {
+			        "Binding": {
+			          "ConceptualEntity": "GQL_Logs",
+			          "ConceptualProperty": "QueryText"
+			        }
+			      },
+			      "State": "Generated",
+			      "Terms": [
+			        {
+			          "Query Text": {
+			            "State": "Suggested",
+			            "Source": {
+			              "Type": "External",
+			              "Agent": "PowerBI.VisualColumnRename"
+			            },
+			            "Weight": 0.9
+			          }
+			        }
+			      ]
+			    },
+			    "metrics.eh_query_cpu_time_total": {
+			      "Definition": {
+			        "Binding": {
+			          "ConceptualEntity": "EH_QueryLogs",
+			          "ConceptualProperty": "EH Query CPU Time Total"
+			        }
+			      },
+			      "State": "Generated",
+			      "Terms": [
+			        {
+			          "Total CPU Time": {
+			            "State": "Suggested",
+			            "Source": {
+			              "Type": "External",
+			              "Agent": "PowerBI.VisualColumnRename"
+			            },
+			            "Weight": 0.9
+			          }
+			        }
+			      ]
+			    },
+			    "metrics.eh_query_duration_total": {
+			      "Definition": {
+			        "Binding": {
+			          "ConceptualEntity": "EH_QueryLogs",
+			          "ConceptualProperty": "EH Query Duration Total"
+			        }
+			      },
+			      "State": "Generated",
+			      "Terms": [
+			        {
+			          "Query Duration": {
+			            "State": "Suggested",
+			            "Source": {
+			              "Type": "External",
+			              "Agent": "PowerBI.VisualColumnRename"
+			            },
+			            "Weight": 0.9
+			          }
+			        }
+			      ]
+			    },
+			    "metrics.eh_query_peak_memory_total": {
+			      "Definition": {
+			        "Binding": {
+			          "ConceptualEntity": "EH_QueryLogs",
+			          "ConceptualProperty": "EH Query Peak Memory Total"
+			        }
+			      },
+			      "State": "Generated",
+			      "Terms": [
+			        {
+			          "Memory Peak": {
+			            "State": "Suggested",
+			            "Source": {
+			              "Type": "External",
+			              "Agent": "PowerBI.VisualColumnRename"
+			            },
+			            "Weight": 0.9
+			          }
+			        }
+			      ]
+			    },
+			    "metrics.eh_query_available_cold_cache_max": {
+			      "Definition": {
+			        "Binding": {
+			          "ConceptualEntity": "EH_QueryLogs",
+			          "ConceptualProperty": "EH Query Available Cold Cache Max"
+			        }
+			      },
+			      "State": "Generated",
+			      "Terms": [
+			        {
+			          "Available Cold Cache": {
+			            "State": "Suggested",
+			            "Source": {
+			              "Type": "External",
+			              "Agent": "PowerBI.VisualColumnRename"
+			            },
+			            "Weight": 0.9
+			          }
+			        },
+			        {
+			          "Max Available Cold Cache": {
+			            "State": "Suggested",
+			            "Source": {
+			              "Type": "External",
+			              "Agent": "PowerBI.VisualColumnRename"
+			            },
+			            "Weight": 0.9
+			          }
+			        }
+			      ]
+			    },
+			    "metrics.eh_query_available_hot_cache_max": {
+			      "Definition": {
+			        "Binding": {
+			          "ConceptualEntity": "EH_QueryLogs",
+			          "ConceptualProperty": "EH Query Available Hot Cache Max"
+			        }
+			      },
+			      "State": "Generated",
+			      "Terms": [
+			        {
+			          "Available Hot Cache": {
+			            "State": "Suggested",
+			            "Source": {
+			              "Type": "External",
+			              "Agent": "PowerBI.VisualColumnRename"
+			            },
+			            "Weight": 0.9
+			          }
+			        },
+			        {
+			          "Max Available Hot Cache": {
+			            "State": "Suggested",
+			            "Source": {
+			              "Type": "External",
+			              "Agent": "PowerBI.VisualColumnRename"
+			            },
+			            "Weight": 0.9
+			          }
+			        }
+			      ]
+			    },
+			    "metrics.eh_query_unavailable_cold_cache_max": {
+			      "Definition": {
+			        "Binding": {
+			          "ConceptualEntity": "EH_QueryLogs",
+			          "ConceptualProperty": "EH Query Unavailable Cold Cache Max"
+			        }
+			      },
+			      "State": "Generated",
+			      "Terms": [
+			        {
+			          "Unavailable Cold Cache": {
+			            "State": "Suggested",
+			            "Source": {
+			              "Type": "External",
+			              "Agent": "PowerBI.VisualColumnRename"
+			            },
+			            "Weight": 0.9
+			          }
+			        },
+			        {
+			          "Max Unavailable Cold Cache": {
+			            "State": "Suggested",
+			            "Source": {
+			              "Type": "External",
+			              "Agent": "PowerBI.VisualColumnRename"
+			            },
+			            "Weight": 0.9
+			          }
+			        }
+			      ]
+			    },
+			    "metrics.eh_query_unavailable_hot_cache_max": {
+			      "Definition": {
+			        "Binding": {
+			          "ConceptualEntity": "EH_QueryLogs",
+			          "ConceptualProperty": "EH Query Unavailable Hot Cache Max"
+			        }
+			      },
+			      "State": "Generated",
+			      "Terms": [
+			        {
+			          "Unavailable Hot Cache": {
+			            "State": "Suggested",
+			            "Source": {
+			              "Type": "External",
+			              "Agent": "PowerBI.VisualColumnRename"
+			            },
+			            "Weight": 0.9
+			          }
+			        },
+			        {
+			          "Max Unavailable Hot Cache": {
+			            "State": "Suggested",
+			            "Source": {
+			              "Type": "External",
+			              "Agent": "PowerBI.VisualColumnRename"
+			            },
+			            "Weight": 0.9
+			          }
+			        }
+			      ]
+			    },
+			    "metrics.selected_eventhouse_database": {
+			      "Definition": {
+			        "Binding": {
+			          "ConceptualEntity": "Meta",
+			          "ConceptualProperty": "Selected Eventhouse Database"
+			        }
+			      },
+			      "State": "Generated",
+			      "Terms": [
+			        {
+			          "Selected KQL Database": {
+			            "State": "Suggested",
+			            "Source": {
+			              "Type": "External",
+			              "Agent": "PowerBI.VisualColumnRename"
+			            },
+			            "Weight": 0.9
+			          }
+			        }
+			      ]
+			    },
+			    "eh_querylogs.operationstarttime": {
+			      "Definition": {
+			        "Binding": {
+			          "ConceptualEntity": "EH_QueryLogs",
+			          "ConceptualProperty": "OperationStartTime"
+			        }
+			      },
+			      "State": "Generated",
+			      "Terms": [
+			        {
+			          "Operation Start Time": {
+			            "State": "Suggested",
+			            "Source": {
+			              "Type": "External",
+			              "Agent": "PowerBI.VisualColumnRename"
+			            },
+			            "Weight": 0.9
+			          }
+			        }
+			      ]
+			    },
+			    "eh_querylogs.operationendtime": {
+			      "Definition": {
+			        "Binding": {
+			          "ConceptualEntity": "EH_QueryLogs",
+			          "ConceptualProperty": "OperationEndTime"
+			        }
+			      },
+			      "State": "Generated",
+			      "Terms": [
+			        {
+			          "Operation End Time": {
+			            "State": "Suggested",
+			            "Source": {
+			              "Type": "External",
+			              "Agent": "PowerBI.VisualColumnRename"
+			            },
+			            "Weight": 0.9
+			          }
+			        }
+			      ]
+			    },
+			    "metrics.eh_batch_blob_count_max": {
+			      "Definition": {
+			        "Binding": {
+			          "ConceptualEntity": "EH_Metrics",
+			          "ConceptualProperty": "EH Batch Blob Count Max"
+			        }
+			      },
+			      "State": "Generated",
+			      "Terms": [
+			        {
+			          "Max Batch Blob Count": {
+			            "State": "Suggested",
+			            "Source": {
+			              "Type": "External",
+			              "Agent": "PowerBI.VisualColumnRename"
+			            },
+			            "Weight": 0.9
+			          }
+			        }
+			      ]
+			    },
+			    "sm_executionmetricssummary.sm_operations_aggregated": {
+			      "Definition": {
+			        "Binding": {
+			          "ConceptualEntity": "SM_ExecutionMetricsSummary",
+			          "ConceptualProperty": "SM Operations Aggregated"
+			        }
+			      },
+			      "State": "Generated",
+			      "Terms": [
+			        {
+			          "Operations": {
+			            "State": "Suggested",
+			            "Source": {
+			              "Type": "External",
+			              "Agent": "PowerBI.VisualColumnRename"
+			            },
+			            "Weight": 0.9
+			          }
+			        }
+			      ]
+			    },
+			    "sm_executionmetricssummary.sm_errors_aggregated": {
+			      "Definition": {
+			        "Binding": {
+			          "ConceptualEntity": "SM_ExecutionMetricsSummary",
+			          "ConceptualProperty": "SM Errors Aggregated"
+			        }
+			      },
+			      "State": "Generated",
+			      "Terms": [
+			        {
+			          "Errors": {
+			            "State": "Suggested",
+			            "Source": {
+			              "Type": "External",
+			              "Agent": "PowerBI.VisualColumnRename"
+			            },
+			            "Weight": 0.9
+			          }
+			        },
+			        {
+			          "Operation Errors": {
+			            "State": "Suggested",
+			            "Source": {
+			              "Type": "External",
+			              "Agent": "PowerBI.VisualColumnRename"
+			            },
+			            "Weight": 0.9
+			          }
+			        }
+			      ]
+			    },
+			    "sm_executionmetricssummary.sm_duration_max_aggregated": {
+			      "Definition": {
+			        "Binding": {
+			          "ConceptualEntity": "SM_ExecutionMetricsSummary",
+			          "ConceptualProperty": "SM Duration Max Aggregated"
+			        }
+			      },
+			      "State": "Generated",
+			      "Terms": [
+			        {
+			          "Max Duration": {
+			            "State": "Suggested",
+			            "Source": {
+			              "Type": "External",
+			              "Agent": "PowerBI.VisualColumnRename"
+			            },
+			            "Weight": 0.9
+			          }
+			        }
+			      ]
+			    },
+			    "sm_executionmetricssummary.sm_capacity_throttling_max_aggregated": {
+			      "Definition": {
+			        "Binding": {
+			          "ConceptualEntity": "SM_ExecutionMetricsSummary",
+			          "ConceptualProperty": "SM Capacity Throttling Max Aggregated"
+			        }
+			      },
+			      "State": "Generated",
+			      "Terms": [
+			        {
+			          "Max Capacity Throttling": {
+			            "State": "Suggested",
+			            "Source": {
+			              "Type": "External",
+			              "Agent": "PowerBI.VisualColumnRename"
+			            },
+			            "Weight": 0.9
+			          }
+			        }
+			      ]
+			    },
+			    "sm_executionmetricssummary.sm_execution_delay_time_max_aggregated": {
+			      "Definition": {
+			        "Binding": {
+			          "ConceptualEntity": "SM_ExecutionMetricsSummary",
+			          "ConceptualProperty": "SM Execution Delay Time Max Aggregated"
+			        }
+			      },
+			      "State": "Generated",
+			      "Terms": [
+			        {
+			          "Max Execution Delay": {
+			            "State": "Suggested",
+			            "Source": {
+			              "Type": "External",
+			              "Agent": "PowerBI.VisualColumnRename"
+			            },
+			            "Weight": 0.9
+			          }
+			        }
+			      ]
+			    },
+			    "sm_executionmetricssummary.sm_cpu_time_max_aggregated": {
+			      "Definition": {
+			        "Binding": {
+			          "ConceptualEntity": "SM_ExecutionMetricsSummary",
+			          "ConceptualProperty": "SM CPU Time Max Aggregated"
+			        }
+			      },
+			      "State": "Generated",
+			      "Terms": [
+			        {
+			          "Max CPU Time": {
+			            "State": "Suggested",
+			            "Source": {
+			              "Type": "External",
+			              "Agent": "PowerBI.VisualColumnRename"
+			            },
+			            "Weight": 0.9
+			          }
+			        }
+			      ]
+			    },
+			    "sm_executionmetricssummary.sm_operation_peak_memory_max_aggregated": {
+			      "Definition": {
+			        "Binding": {
+			          "ConceptualEntity": "SM_ExecutionMetricsSummary",
+			          "ConceptualProperty": "SM Operation Peak Memory Max Aggregated"
+			        }
+			      },
+			      "State": "Generated",
+			      "Terms": [
+			        {
+			          "Max Memory Peak": {
+			            "State": "Suggested",
+			            "Source": {
+			              "Type": "External",
+			              "Agent": "PowerBI.VisualColumnRename"
+			            },
+			            "Weight": 0.9
+			          }
+			        },
+			        {
+			          "Max Peak Memory": {
+			            "State": "Suggested",
+			            "Source": {
+			              "Type": "External",
+			              "Agent": "PowerBI.VisualColumnRename"
+			            },
+			            "Weight": 0.9
+			          }
+			        }
+			      ]
+			    },
+			    "sm_executionmetricssummary.sm_query_operations_aggregated": {
+			      "Definition": {
+			        "Binding": {
+			          "ConceptualEntity": "SM_ExecutionMetricsSummary",
+			          "ConceptualProperty": "SM Query Operations Aggregated"
+			        }
+			      },
+			      "State": "Generated",
+			      "Terms": [
+			        {
+			          "Query Operations": {
+			            "State": "Suggested",
+			            "Source": {
+			              "Type": "External",
+			              "Agent": "PowerBI.VisualColumnRename"
+			            },
+			            "Weight": 0.9
+			          }
+			        }
+			      ]
+			    },
+			    "sm_executionmetricssummary.sm_refresh_operations_aggregated": {
+			      "Definition": {
+			        "Binding": {
+			          "ConceptualEntity": "SM_ExecutionMetricsSummary",
+			          "ConceptualProperty": "SM Refresh Operations Aggregated"
+			        }
+			      },
+			      "State": "Generated",
+			      "Terms": [
+			        {
+			          "Refresh Operations": {
+			            "State": "Suggested",
+			            "Source": {
+			              "Type": "External",
+			              "Agent": "PowerBI.VisualColumnRename"
+			            },
+			            "Weight": 0.9
+			          }
+			        }
+			      ]
+			    },
+			    "sm_executionmetrics.querydialect1": {
+			      "Definition": {
+			        "Binding": {
+			          "ConceptualEntity": "SM_ExecutionMetrics",
+			          "ConceptualProperty": "QueryDialect"
+			        }
+			      },
+			      "State": "Generated",
+			      "Terms": [
+			        {
+			          "Query Dialect": {
+			            "State": "Suggested",
+			            "Source": {
+			              "Type": "External",
+			              "Agent": "PowerBI.VisualColumnRename"
+			            },
+			            "Weight": 0.9
+			          }
+			        }
+			      ]
+			    },
+			    "sm_progressreport.operationdetailname": {
+			      "Definition": {
+			        "Binding": {
+			          "ConceptualEntity": "SM_ProgressReport",
+			          "ConceptualProperty": "OperationDetailName"
+			        }
+			      },
+			      "State": "Generated",
+			      "Terms": [
+			        {
+			          "Operation Detail Name": {
+			            "State": "Suggested",
+			            "Source": {
+			              "Type": "External",
+			              "Agent": "PowerBI.VisualColumnRename"
+			            },
+			            "Weight": 0.9
+			          }
+			        }
+			      ]
+			    },
+			    "gql_logs.identity": {
+			      "Definition": {
+			        "Binding": {
+			          "ConceptualEntity": "GQL_Logs",
+			          "ConceptualProperty": "Identity"
+			        }
+			      },
+			      "State": "Generated"
+			    },
+			    "sm_executionmetrics.sm_report_link": {
+			      "Definition": {
+			        "Binding": {
+			          "ConceptualEntity": "SM_ExecutionMetrics",
+			          "ConceptualProperty": "SM Report Link"
+			        }
+			      },
+			      "State": "Generated",
+			      "Terms": [
+			        {
+			          "Report Link": {
+			            "State": "Suggested",
+			            "Source": {
+			              "Type": "External",
+			              "Agent": "PowerBI.VisualColumnRename"
+			            },
+			            "Weight": 0.9
+			          }
+			        }
+			      ]
+			    },
+			    "sm_executionmetrics.sm_visualid_link": {
+			      "Definition": {
+			        "Binding": {
+			          "ConceptualEntity": "SM_ExecutionMetrics",
+			          "ConceptualProperty": "SM VisualId Link"
+			        }
+			      },
+			      "State": "Generated",
+			      "Terms": [
+			        {
+			          "Visual Link": {
+			            "State": "Suggested",
+			            "Source": {
+			              "Type": "External",
+			              "Agent": "PowerBI.VisualColumnRename"
+			            },
+			            "Weight": 0.9
+			          }
+			        }
+			      ]
+			    },
+			    "sm_executionmetrics.applicationname": {
+			      "Definition": {
+			        "Binding": {
+			          "ConceptualEntity": "SM_ExecutionMetrics",
+			          "ConceptualProperty": "ApplicationName"
+			        }
+			      },
+			      "State": "Generated",
+			      "Terms": [
+			        {
+			          "Application": {
+			            "State": "Suggested",
+			            "Source": {
+			              "Type": "External",
+			              "Agent": "PowerBI.VisualColumnRename"
+			            },
+			            "Weight": 0.9
+			          }
+			        }
+			      ]
+			    }
+			  }
+			}
+		contentType: json
+

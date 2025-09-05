@@ -1,0 +1,59 @@
+/// Dimension | Catalog of KQL Database Items
+table EH_Items
+	lineageTag: a84d7940-54f9-4e75-aaee-f061a1578d49
+
+	measure 'EH Items Unique' = DISTINCTCOUNT(EH_Items[ItemId])
+		formatString: 0
+		displayFolder: _General
+		lineageTag: e1f14fca-c281-4746-84bb-ec39d831dabe
+
+	column ItemId
+		dataType: string
+		isKey
+		sourceProviderType: nvarchar(max)
+		lineageTag: 42d22025-ce13-4508-bef2-d9bc9a6be051
+		summarizeBy: none
+		sourceColumn: ItemId
+
+		annotation SummarizationSetBy = Automatic
+
+	column ItemKind
+		dataType: string
+		sourceProviderType: nvarchar(max)
+		lineageTag: a04a8397-689d-4e0e-a0ef-f596fc68ddc9
+		summarizeBy: none
+		sourceColumn: ItemKind
+
+		annotation SummarizationSetBy = Automatic
+
+	column ItemName
+		dataType: string
+		sourceProviderType: nvarchar(max)
+		lineageTag: ffeafdd6-cbb6-4530-85f6-62cc9071c191
+		summarizeBy: none
+		sourceColumn: ItemName
+
+		annotation SummarizationSetBy = Automatic
+
+	column WorkspaceId
+		dataType: string
+		sourceProviderType: nvarchar(max)
+		lineageTag: adfb7ea5-0323-4382-ac95-fefe95a5ccf3
+		summarizeBy: none
+		sourceColumn: WorkspaceId
+
+		annotation SummarizationSetBy = Automatic
+
+	partition EH_Items = m
+		mode: directQuery
+		queryGroup: Eventhouse
+		source =
+				let
+				    Source = AzureDataExplorer.Contents(#"Query URI", #"Eventhouse Name", "EventhouseQueryLogs#(lf)| distinct ItemId, ItemKind, ItemName, WorkspaceId", [MaxRows=null, MaxSize=null, NoTruncate=null, AdditionalSetStatements=null, IsDimension=true])
+				in
+				    Source
+
+	annotation PBI_NavigationStepName = Navigation
+
+	annotation PBI_ResultType = Exception
+

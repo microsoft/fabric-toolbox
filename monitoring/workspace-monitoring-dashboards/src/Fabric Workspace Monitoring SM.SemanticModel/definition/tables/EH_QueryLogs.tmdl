@@ -1,0 +1,549 @@
+/// Fact | Query logs of Eventhouse KQL Database Items
+table EH_QueryLogs
+	lineageTag: ef48bd78-3c40-4bcc-8335-dfade24ff875
+
+	measure 'EH Query Available Cold Cache Max' =
+			
+			DIVIDE(
+			    MAX(EH_QueryLogs[CacheColdHitsBytes]),
+			    [SelectedSizeUnit]
+			)
+		displayFolder: _Queries
+		lineageTag: 486217ca-f1ad-4439-9731-e1b8c1c5fbea
+
+		formatStringDefinition = SELECTEDVALUE ( SizeUnits[Format], "\#,0.00;(\#,0.00);\#,0.00" )
+
+	measure 'EH Query Available Hot Cache Max' =
+			
+			DIVIDE(
+			    MAX(EH_QueryLogs[CacheHotHitsBytes]),
+			    [SelectedSizeUnit]
+			)
+		displayFolder: _Queries
+		lineageTag: 61ebc7ee-75e3-4bf5-9ab0-d41c86f143e5
+
+		formatStringDefinition = SELECTEDVALUE ( SizeUnits[Format], "\#,0.00;(\#,0.00);\#,0.00" )
+
+	measure 'EH Query CPU Time Avg' =
+			
+			DIVIDE(
+			    AVERAGE(EH_QueryLogs[CpuTimeMs]),
+			    [SelectedTimeUnit]
+			)
+		displayFolder: _Queries
+		lineageTag: 8cdfaee8-b0e3-4dfa-b750-872e3674c107
+
+		formatStringDefinition = SELECTEDVALUE ( TimeUnits[Format], "\#,0.00;(\#,0.00);\#,0.00" )
+
+	measure 'EH Query CPU Time Max' =
+			
+			DIVIDE(
+			    MAX(EH_QueryLogs[CpuTimeMs]),
+			    [SelectedTimeUnit]
+			)
+		displayFolder: _Queries
+		lineageTag: e845decb-7c24-4cc2-95fe-cca302a01172
+
+		formatStringDefinition = SELECTEDVALUE ( TimeUnits[Format], "\#,0.00;(\#,0.00);\#,0.00" )
+
+	measure 'EH Query CPU Time Total' =
+			
+			DIVIDE(
+			    SUM(EH_QueryLogs[CpuTimeMs]),
+			    [SelectedTimeUnit]
+			)
+		displayFolder: _Queries
+		lineageTag: 91174d87-921c-4cbb-891b-14af5e27a58e
+
+		formatStringDefinition = SELECTEDVALUE ( TimeUnits[Format], "\#,0.00;(\#,0.00);\#,0.00" )
+
+	measure 'EH Query Duration Avg' =
+			
+			DIVIDE(
+			    AVERAGE(EH_QueryLogs[DurationMs]),
+			    [SelectedTimeUnit]
+			)
+		displayFolder: _Queries
+		lineageTag: 003fbd88-816c-4fc1-93bf-ec0207697066
+
+		formatStringDefinition = SELECTEDVALUE ( TimeUnits[Format], "\#,0.00;(\#,0.00);\#,0.00" )
+
+	measure 'EH Query Duration Max' =
+			
+			DIVIDE(
+			    MAX(EH_QueryLogs[DurationMs]),
+			    [SelectedTimeUnit]
+			)
+		displayFolder: _Queries
+		lineageTag: eaa433cb-d743-4422-867e-dae083f71730
+
+		formatStringDefinition = SELECTEDVALUE ( TimeUnits[Format], "\#,0.00;(\#,0.00);\#,0.00" )
+
+	measure 'EH Query Duration Total' =
+			
+			DIVIDE(
+			    SUM(EH_QueryLogs[DurationMs]),
+			    [SelectedTimeUnit]
+			)
+		displayFolder: _Queries
+		lineageTag: bb538b28-2fb5-4a34-9d98-894409c8b746
+
+		formatStringDefinition = SELECTEDVALUE ( TimeUnits[Format], "\#,0.00;(\#,0.00);\#,0.00" )
+
+	measure 'EH Query Operation Success Ratio' = ```
+			
+			VAR _success = CALCULATE([EH Query Operations], EH_QueryLogs[Status] == "Succeeded")
+			VAR _all = [EH Query Operations]
+			VAR _result = DIVIDE(_success, _all)
+			RETURN 
+			_result
+			```
+		formatString: 0.00%;-0.00%;0.00%
+		displayFolder: _Queries
+		lineageTag: eb986ce5-61b0-4edf-a5bd-4d017d294ec8
+
+	measure 'EH Query Operations' = DISTINCTCOUNT(EH_QueryLogs[OperationId])
+		formatString: #,0
+		displayFolder: _Queries
+		lineageTag: b065ff59-2d67-4760-a5e8-cd46045d56b0
+
+	measure 'EH Query Peak Memory Avg' =
+			
+			DIVIDE(
+			    AVERAGE(EH_QueryLogs[MemoryPeakBytes]),
+			    [SelectedSizeUnit]
+			)
+		displayFolder: _Queries
+		lineageTag: b4f34a93-e85c-41e5-b592-08a62791485a
+
+		formatStringDefinition = SELECTEDVALUE ( SizeUnits[Format], "\#,0.00;(\#,0.00);\#,0.00" )
+
+	measure 'EH Query Peak Memory Max' =
+			
+			DIVIDE(
+			    MAX(EH_QueryLogs[MemoryPeakBytes]),
+			    [SelectedSizeUnit]
+			)
+		displayFolder: _Queries
+		lineageTag: 749fb341-bba9-402c-8cbd-65511849adb4
+
+		formatStringDefinition = SELECTEDVALUE ( SizeUnits[Format], "\#,0.00;(\#,0.00);\#,0.00" )
+
+	measure 'EH Query Peak Memory Total' =
+			
+			DIVIDE(
+			    SUM(EH_QueryLogs[MemoryPeakBytes]),
+			    [SelectedSizeUnit]
+			)
+		displayFolder: _Queries
+		lineageTag: 79bd8cc4-e784-41c9-9d73-d91f86649a48
+
+		formatStringDefinition = SELECTEDVALUE ( SizeUnits[Format], "\#,0.00;(\#,0.00);\#,0.00" )
+
+	measure 'EH Query Unavailable Cold Cache Max' =
+			
+			DIVIDE(
+			    MAX(EH_QueryLogs[CacheColdMissesBytes]),
+			    [SelectedSizeUnit]
+			)
+		displayFolder: _Queries
+		lineageTag: 781a8f82-c21e-47be-bfc8-cee409def631
+
+		formatStringDefinition = SELECTEDVALUE ( SizeUnits[Format], "\#,0.00;(\#,0.00);\#,0.00" )
+
+	measure 'EH Query Unavailable Hot Cache Max' =
+			
+			DIVIDE(
+			    MAX(EH_QueryLogs[CacheHotMissesBytes]),
+			    [SelectedSizeUnit]
+			)
+		displayFolder: _Queries
+		lineageTag: f50b8244-a834-4f7f-965d-abbdeccd98b0
+
+		formatStringDefinition = SELECTEDVALUE ( SizeUnits[Format], "\#,0.00;(\#,0.00);\#,0.00" )
+
+	measure 'EH Query Users Unique' = DISTINCTCOUNT(EH_QueryLogs[User])
+		formatString: 0
+		displayFolder: _Queries
+		lineageTag: 8379556f-b601-4645-8c0d-d9e655d70742
+
+	column Timestamp
+		dataType: dateTime
+		formatString: General Date
+		sourceProviderType: datetimeoffset
+		lineageTag: e3cb0939-6c94-4361-bea6-559b134ae94d
+		summarizeBy: none
+		sourceColumn: Timestamp
+
+		annotation SummarizationSetBy = Automatic
+
+	column OperationName
+		dataType: string
+		sourceProviderType: nvarchar(max)
+		lineageTag: d68c32b4-ed3f-4e44-a8ae-48d961ae6cb0
+		summarizeBy: none
+		sourceColumn: OperationName
+
+		annotation SummarizationSetBy = Automatic
+
+	column ItemId
+		dataType: string
+		sourceProviderType: nvarchar(max)
+		lineageTag: f697f63c-e033-46ae-847a-8ba0a8fe42e6
+		summarizeBy: none
+		sourceColumn: ItemId
+
+		annotation SummarizationSetBy = Automatic
+
+	column CapacityId
+		dataType: string
+		sourceProviderType: nvarchar(max)
+		lineageTag: 6c530f1a-dce4-4798-b9f0-999410a71aac
+		summarizeBy: none
+		sourceColumn: CapacityId
+
+		annotation SummarizationSetBy = Automatic
+
+	column OperationId
+		dataType: string
+		sourceProviderType: nvarchar(max)
+		lineageTag: 2192cf3f-0be0-41b1-8268-40798f765b77
+		summarizeBy: none
+		sourceColumn: OperationId
+
+		annotation SummarizationSetBy = Automatic
+
+	column DurationMs
+		dataType: int64
+		isHidden
+		formatString: 0
+		isAvailableInMdx: false
+		sourceProviderType: bigint
+		lineageTag: c6dc37b1-b5fd-46b6-a6c0-b21f1f5f13f4
+		summarizeBy: none
+		sourceColumn: DurationMs
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	column Status
+		dataType: string
+		sourceProviderType: nvarchar(max)
+		lineageTag: 8b1d896c-9e3f-4474-a22e-b2a4e5ef8db5
+		summarizeBy: none
+		sourceColumn: Status
+
+		annotation SummarizationSetBy = Automatic
+
+	column OperationStartTime
+		dataType: dateTime
+		formatString: General Date
+		sourceProviderType: datetimeoffset
+		lineageTag: a94e4f9f-32cf-4d30-999b-ad21bef2c2f5
+		summarizeBy: none
+		sourceColumn: OperationStartTime
+
+		annotation SummarizationSetBy = Automatic
+
+	column OperationEndTime
+		dataType: dateTime
+		formatString: General Date
+		sourceProviderType: datetimeoffset
+		lineageTag: 944b4610-ce50-4370-aa28-e04cf7c91bf7
+		summarizeBy: none
+		sourceColumn: OperationEndTime
+
+		annotation SummarizationSetBy = Automatic
+
+	column DatabaseId
+		dataType: string
+		sourceProviderType: nvarchar(max)
+		lineageTag: 5623d142-4ed5-4222-beed-f72eba2e0012
+		summarizeBy: none
+		sourceColumn: DatabaseId
+
+		annotation SummarizationSetBy = Automatic
+
+	column DatabaseName
+		dataType: string
+		sourceProviderType: nvarchar(max)
+		lineageTag: fad98323-86d9-4881-a253-4fbbdbde27dc
+		summarizeBy: none
+		sourceColumn: DatabaseName
+
+		annotation SummarizationSetBy = Automatic
+
+	column QueryText
+		dataType: string
+		sourceProviderType: nvarchar(max)
+		lineageTag: 759e00af-aa16-421f-ae4a-e8f6f80e54b8
+		summarizeBy: none
+		sourceColumn: QueryText
+
+		annotation SummarizationSetBy = Automatic
+
+	column CacheHotHitsBytes
+		dataType: int64
+		isHidden
+		formatString: 0
+		isAvailableInMdx: false
+		sourceProviderType: bigint
+		lineageTag: 18d8c147-0758-4e14-90ea-919f4a1d688f
+		summarizeBy: none
+		sourceColumn: CacheHotHitsBytes
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	column CacheHotMissesBytes
+		dataType: int64
+		isHidden
+		formatString: 0
+		isAvailableInMdx: false
+		sourceProviderType: bigint
+		lineageTag: bcdc9130-6889-4c7a-81db-31a7ead08c04
+		summarizeBy: none
+		sourceColumn: CacheHotMissesBytes
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	column CacheColdHitsBytes
+		dataType: int64
+		isHidden
+		formatString: 0
+		isAvailableInMdx: false
+		sourceProviderType: bigint
+		lineageTag: 299142d1-59a1-41a7-a101-25b66356d77e
+		summarizeBy: none
+		sourceColumn: CacheColdHitsBytes
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	column CacheColdMissesBytes
+		dataType: int64
+		isHidden
+		formatString: 0
+		isAvailableInMdx: false
+		sourceProviderType: bigint
+		lineageTag: 7e8e2f0a-c828-465b-9d4c-2827b13da227
+		summarizeBy: none
+		sourceColumn: CacheColdMissesBytes
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	column ScannedRowsCount
+		dataType: int64
+		isHidden
+		formatString: #,0
+		isAvailableInMdx: false
+		sourceProviderType: bigint
+		lineageTag: 3194cf2b-ec81-48bd-bd2c-bfca0a1414bb
+		summarizeBy: none
+		sourceColumn: ScannedRowsCount
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	column ScannedExtentsCount
+		dataType: int64
+		isHidden
+		formatString: #,0
+		isAvailableInMdx: false
+		sourceProviderType: bigint
+		lineageTag: c34f29ed-6151-48b0-a7d4-45bdbd9edb08
+		summarizeBy: none
+		sourceColumn: ScannedExtentsCount
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	column ExtentsMaxScannedTime
+		dataType: dateTime
+		formatString: General Date
+		sourceProviderType: datetimeoffset
+		lineageTag: 1ea1b771-8d9f-4a20-b2f6-f923b92408bf
+		summarizeBy: none
+		sourceColumn: ExtentsMaxScannedTime
+
+		annotation SummarizationSetBy = Automatic
+
+	column ExtentsMinScannedTime
+		dataType: dateTime
+		formatString: General Date
+		sourceProviderType: datetimeoffset
+		lineageTag: 01711858-44a2-49e4-9de1-c4fad3ff92d7
+		summarizeBy: none
+		sourceColumn: ExtentsMinScannedTime
+
+		annotation SummarizationSetBy = Automatic
+
+	column ResultTableCount
+		dataType: int64
+		isHidden
+		formatString: #,0
+		isAvailableInMdx: false
+		sourceProviderType: int
+		lineageTag: ad3c3979-d13b-4d6b-a8f7-e76a2fe9fca5
+		summarizeBy: none
+		sourceColumn: ResultTableCount
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	column TotalRowsCount
+		dataType: int64
+		isHidden
+		formatString: #,0
+		isAvailableInMdx: false
+		sourceProviderType: bigint
+		lineageTag: 8085806b-73d5-47bd-98b3-ebd9bec1e565
+		summarizeBy: none
+		sourceColumn: TotalRowsCount
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	column TotalExtentsCount
+		dataType: int64
+		isHidden
+		formatString: 0
+		isAvailableInMdx: false
+		sourceProviderType: bigint
+		lineageTag: c61710b2-159e-45bd-8631-d252f7452d0a
+		summarizeBy: none
+		sourceColumn: TotalExtentsCount
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	column MemoryPeakBytes
+		dataType: int64
+		isHidden
+		formatString: #,0
+		isAvailableInMdx: false
+		sourceProviderType: bigint
+		lineageTag: cb3ae1d9-7181-480f-87d7-42fdb1796ff6
+		summarizeBy: none
+		sourceColumn: MemoryPeakBytes
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	column CpuTimeMs
+		dataType: int64
+		isHidden
+		isAvailableInMdx: false
+		sourceProviderType: bigint
+		lineageTag: 2deeb6b8-6e30-46bc-8c20-9a78718e20ed
+		summarizeBy: none
+		sourceColumn: CpuTimeMs
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column ComponentFault
+		dataType: string
+		sourceProviderType: nvarchar(max)
+		lineageTag: c726c9e6-5b9c-4850-bcb1-dc97efd6e2e2
+		summarizeBy: none
+		sourceColumn: ComponentFault
+
+		annotation SummarizationSetBy = Automatic
+
+	column FailureReason
+		dataType: string
+		sourceProviderType: nvarchar(max)
+		lineageTag: 59cd3b52-98ab-4a03-ab99-af2a3a7b0611
+		summarizeBy: none
+		sourceColumn: FailureReason
+
+		annotation SummarizationSetBy = Automatic
+
+	column UPN
+		dataType: string
+		lineageTag: b4c209b5-c05a-4a19-8e8b-2ecc92a81732
+		summarizeBy: none
+		sourceColumn: UPN
+
+		annotation SummarizationSetBy = Automatic
+
+	column User
+		dataType: string
+		lineageTag: d62c0f55-3df3-4f94-89a6-e957d073a171
+		summarizeBy: none
+		sourceColumn: User
+
+		annotation SummarizationSetBy = Automatic
+
+	column PrincipalUserType
+		dataType: string
+		sourceProviderType: nvarchar(max)
+		lineageTag: 2de66986-743f-4f88-9f98-f532deb9b1cc
+		summarizeBy: none
+		sourceColumn: PrincipalUserType
+
+		annotation SummarizationSetBy = Automatic
+
+	column CacheStorageAccessBytes
+		dataType: int64
+		isHidden
+		formatString: 0
+		isAvailableInMdx: false
+		sourceProviderType: bigint
+		lineageTag: 9f4aac41-cbd5-4d63-b509-6bc51b44f7ac
+		summarizeBy: none
+		sourceColumn: CacheStorageAccessBytes
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	column Application
+		dataType: string
+		sourceProviderType: nvarchar(max)
+		lineageTag: 1aa6f396-7b2e-45f2-875b-eb5621f1a6d2
+		summarizeBy: none
+		sourceColumn: Application
+
+		annotation SummarizationSetBy = Automatic
+
+	column DateKey
+		dataType: dateTime
+		formatString: General Date
+		sourceProviderType: datetimeoffset
+		lineageTag: f7988fca-c5c9-4dd5-aaff-007c8de2cdc4
+		summarizeBy: none
+		sourceColumn: DateKey
+
+		annotation SummarizationSetBy = Automatic
+
+	partition EH_QueryLogs = m
+		mode: directQuery
+		queryGroup: Eventhouse
+		source =
+				let
+				    Source = AzureDataExplorer.Contents(#"Query URI", #"Eventhouse Name", "EventhouseQueryLogs#(lf)| extend #(lf)    UPN=todynamic(tostring(Identity)).claims.upn, #(lf)    AppId=todynamic(tostring(Identity)).claims.AppId#(lf)| extend #(lf)    DateKey = bin(Timestamp, 1d),#(lf)    User = iff(isempty(UPN), AppId, UPN), PrincipalUserType=iff(isempty(UPN), ""Application"", ""User""),#(lf)    CacheStorageAccessBytes = CacheColdHitsBytes+ CacheColdMissesBytes,#(lf)    FailureReason= iff(FailureReason ==""[none]"", """",FailureReason),#(lf)    Application = case(#(lf)            SourceApplication ==""PowerBI"", ""PowerBI"", #(lf)            SourceApplication ==""Kusto Web Explorer"", #(lf)            ""Kusto Web Explorer"", #(lf)            CorrelationId startswith ""Kusto.Web.RTA.Query"", ""KQL QuerySet"", #(lf)            CorrelationId startswith ""Kusto.Web.RTA.Dashboards"", ""RT Dashboard"", #(lf)            CorrelationId startswith ""KD2RunQuery"", ""Data Activator/SDK"",#(lf)            CorrelationId startswith ""DataActivator"", ""Data Activator"",#(lf)            CorrelationId startswith ""KustoWebV2"",""Fabric metadata query"",#(lf)            ""Unknown"")#(lf)| extend #(lf)    User = tostring(User)#(lf)| project-away #(lf)    Identity,#(lf)    CustomerTenantId,#(lf)    WorkspaceMonitoringTableName,#(lf)    Region,#(lf)    ResultTableStatistics,#(lf)    ItemKind,#(lf)    Level,#(lf)    ItemName,#(lf)    WorkspaceId,#(lf)    WorkspaceName,#(lf)    CorrelationId,#(lf)    SourceApplication,#(lf)    AppId", [MaxRows=null, MaxSize=null, NoTruncate=null, AdditionalSetStatements=null])
+				in
+				    Source
+
+	annotation PBI_NavigationStepName = Navigation
+
+	annotation PBI_ResultType = Exception
+

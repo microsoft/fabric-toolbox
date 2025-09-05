@@ -1,0 +1,168 @@
+/// Fact | Metrics of GraphQL Items
+table GQL_Metrics
+	lineageTag: 7e59ee96-5508-4516-9981-8b8b049a2e2d
+
+	column Timestamp
+		dataType: dateTime
+		formatString: General Date
+		lineageTag: 33815990-29b4-421b-b82b-2505d76d59b7
+		summarizeBy: none
+		sourceColumn: Timestamp
+
+		annotation SummarizationSetBy = Automatic
+
+	column ItemId
+		dataType: string
+		lineageTag: 636ae352-6061-4c06-bca3-54c0b29c3797
+		summarizeBy: none
+		sourceColumn: ItemId
+
+		annotation SummarizationSetBy = Automatic
+
+	column ItemKind
+		dataType: string
+		lineageTag: 34846f47-e662-4878-b931-47fb57b98066
+		summarizeBy: none
+		sourceColumn: ItemKind
+
+		annotation SummarizationSetBy = Automatic
+
+	column ItemName
+		dataType: string
+		lineageTag: 00ca7385-50aa-4901-89b9-1b7536f43404
+		summarizeBy: none
+		sourceColumn: ItemName
+
+		annotation SummarizationSetBy = Automatic
+
+	column WorkspaceId
+		dataType: string
+		lineageTag: ccf27fc9-47f9-4996-8954-7c13c44ddf4e
+		summarizeBy: none
+		sourceColumn: WorkspaceId
+
+		annotation SummarizationSetBy = Automatic
+
+	column WorkspaceName
+		dataType: string
+		lineageTag: 35792064-7d21-4a98-b92a-5126c03490cf
+		summarizeBy: none
+		sourceColumn: WorkspaceName
+
+		annotation SummarizationSetBy = Automatic
+
+	column CapacityId
+		dataType: string
+		lineageTag: 36c9c905-fbdb-4b17-b0e1-f530d344b58a
+		summarizeBy: none
+		sourceColumn: CapacityId
+
+		annotation SummarizationSetBy = Automatic
+
+	column CustomerTenantId
+		dataType: string
+		lineageTag: 01f9af0f-3d46-409a-b0ce-8f7d46da3e05
+		summarizeBy: none
+		sourceColumn: CustomerTenantId
+
+		annotation SummarizationSetBy = Automatic
+
+	column WorkspaceMonitoringTableName
+		dataType: string
+		lineageTag: f0708a83-c46a-490c-986e-42edfc1172dd
+		summarizeBy: none
+		sourceColumn: WorkspaceMonitoringTableName
+
+		annotation SummarizationSetBy = Automatic
+
+	column Region
+		dataType: string
+		lineageTag: c1a25f18-5072-4950-8a0a-dab0a6283bab
+		summarizeBy: none
+		sourceColumn: Region
+
+		annotation SummarizationSetBy = Automatic
+
+	column MetricName
+		dataType: string
+		lineageTag: 930fe276-ba2c-4743-ad91-552bc7a6acba
+		summarizeBy: none
+		sourceColumn: MetricName
+
+		annotation SummarizationSetBy = Automatic
+
+	column MetricTimeGrain
+		dataType: string
+		lineageTag: 3e222e78-1e3e-451c-8348-6dd39d147dc9
+		summarizeBy: none
+		sourceColumn: MetricTimeGrain
+
+		annotation SummarizationSetBy = Automatic
+
+	column MetricUnitName
+		dataType: string
+		lineageTag: 5f5f8791-08b4-4f50-a9ec-2a6739055135
+		summarizeBy: none
+		sourceColumn: MetricUnitName
+
+		annotation SummarizationSetBy = Automatic
+
+	column MetricSumValue
+		dataType: int64
+		isHidden
+		formatString: 0
+		isAvailableInMdx: false
+		lineageTag: 7c313b00-20ba-426d-acf2-c790bad6d79f
+		summarizeBy: none
+		sourceColumn: MetricSumValue
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	column DatasourceTypes
+		dataType: string
+		lineageTag: a64c845d-3ec2-4375-8527-659910a9a8e1
+		summarizeBy: none
+		sourceColumn: DatasourceTypes
+
+		annotation SummarizationSetBy = Automatic
+
+	column ResultCode
+		dataType: string
+		lineageTag: 66ecec17-607c-48c4-bc20-23d4172cff39
+		summarizeBy: none
+		sourceColumn: ResultCode
+
+		annotation SummarizationSetBy = Automatic
+
+	column Status
+		dataType: string
+		lineageTag: 33076d93-9aff-464d-bb91-abbee6efff5e
+		summarizeBy: none
+		sourceColumn: Status
+
+		annotation SummarizationSetBy = Automatic
+
+	column DateKey
+		dataType: dateTime
+		formatString: General Date
+		lineageTag: cf910b82-50d1-495e-954e-60a0cf1d0875
+		summarizeBy: none
+		sourceColumn: DateKey
+
+		annotation SummarizationSetBy = Automatic
+
+	partition GQL_Metrics = m
+		mode: directQuery
+		queryGroup: 'Graph QL'
+		source =
+				let
+				    Source = AzureDataExplorer.Contents(#"Query URI", #"Eventhouse Name", "GraphQLMetrics#(lf)| extend DateKey = bin(Timestamp, 1d)", [MaxRows=null, MaxSize=null, NoTruncate=null, AdditionalSetStatements=null])
+				in
+				    Source
+
+	annotation PBI_NavigationStepName = Navigation
+
+	annotation PBI_ResultType = Exception
+

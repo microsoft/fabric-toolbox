@@ -1,0 +1,316 @@
+/// Fact | Logs of GraphQL API requests
+table GQL_Logs
+	lineageTag: 76972a30-a1e1-40f1-bf68-3573c8e40576
+
+	measure 'GQL Users Unique' = DISTINCTCOUNT(GQL_Logs[Identity])
+		formatString: 0
+		displayFolder: _GraphQL Logs
+		lineageTag: be34f02c-0192-4e4f-89d9-4458fe76aa37
+
+	measure 'GQL Processed Data Total' =
+			
+			DIVIDE(
+			    SUM(GQL_Logs[ProcessedBytes])*0.0009765625,
+			    [SelectedSizeUnit]
+			)
+		displayFolder: _GraphQL Logs
+		lineageTag: 96da3057-cd59-4212-ae9c-4b7174370d7b
+
+		formatStringDefinition = SELECTEDVALUE ( SizeUnits[Format], "\#,0.00;(\#,0.00);\#,0.00" )
+
+	measure 'GQL Processed Data Max' =
+			
+			DIVIDE(
+			    MAX(GQL_Logs[ProcessedBytes])*0.0009765625,
+			    [SelectedSizeUnit]
+			)
+		displayFolder: _GraphQL Logs
+		lineageTag: b0153069-9b0b-42cb-a440-f90f3c2130eb
+
+		formatStringDefinition = SELECTEDVALUE ( SizeUnits[Format], "\#,0.00;(\#,0.00);\#,0.00" )
+
+	measure 'GQL Overhead Duration Total' =
+			
+			DIVIDE(
+			    SUM(GQL_Logs[GraphQLOverheadDurationMs]),
+			    [SelectedTimeUnit]
+			)
+		displayFolder: _GraphQL Logs
+		lineageTag: daa73227-b7f4-4fa4-bfe9-669d80711f3f
+
+		formatStringDefinition = SELECTEDVALUE ( TimeUnits[Format], "\#,0.00;(\#,0.00);\#,0.00" )
+
+	measure 'GQL Overhead Duration Max' =
+			
+			DIVIDE(
+			    MAX(GQL_Logs[GraphQLOverheadDurationMs]),
+			    [SelectedTimeUnit]
+			)
+		displayFolder: _GraphQL Logs
+		lineageTag: 4d50d885-eb54-438a-9173-037f2b295501
+
+		formatStringDefinition = SELECTEDVALUE ( TimeUnits[Format], "\#,0.00;(\#,0.00);\#,0.00" )
+
+	measure 'GQL Operations' = DISTINCTCOUNT(GQL_Logs[OperationId])
+		formatString: 0
+		displayFolder: _GraphQL Logs
+		lineageTag: 960d8c98-b080-440b-8ba0-842740d35b7d
+
+	measure 'GQL Operation Success Ratio' = ```
+			
+			VAR _success = CALCULATE([GQL Operations], GQL_Logs[Status] == "Success")
+			VAR _all = [GQL Operations]
+			VAR _result = DIVIDE(_success, _all)
+			RETURN 
+			_result
+			```
+		formatString: 0.00%;-0.00%;0.00%
+		displayFolder: _GraphQL Logs
+		lineageTag: fc7f65df-1597-4c4d-a8c8-7f2c3248e754
+
+	measure 'GQL Operation CPU Time Total' =
+			
+			DIVIDE(
+			    SUM(GQL_Logs[DurationMs]),
+			    [SelectedTimeUnit]
+			)
+		displayFolder: _GraphQL Logs
+		lineageTag: 4abea00f-6f09-4b3b-909f-365922b931b4
+
+		formatStringDefinition = SELECTEDVALUE ( TimeUnits[Format], "\#,0.00;(\#,0.00);\#,0.00" )
+
+	measure 'GQL Operation Duration Max' =
+			
+			DIVIDE(
+			    MAX(GQL_Logs[DurationMs]),
+			    [SelectedTimeUnit]
+			)
+		displayFolder: _GraphQL Logs
+		lineageTag: 4a6de3c8-8c72-4d91-b9af-4ad6d14ba61a
+
+		formatStringDefinition = SELECTEDVALUE ( TimeUnits[Format], "\#,0.00;(\#,0.00);\#,0.00" )
+
+	column Timestamp
+		dataType: dateTime
+		formatString: General Date
+		lineageTag: 83f3c9ae-14e3-4840-b831-4883b378bd47
+		summarizeBy: none
+		sourceColumn: Timestamp
+
+		annotation SummarizationSetBy = Automatic
+
+	column OperationName
+		dataType: string
+		lineageTag: bded7e1b-548d-4dda-8af1-d7694706ce07
+		summarizeBy: none
+		sourceColumn: OperationName
+
+		annotation SummarizationSetBy = Automatic
+
+	column ItemId
+		dataType: string
+		lineageTag: 1540c475-2ea4-4cdf-8ccd-35c8c667b2eb
+		summarizeBy: none
+		sourceColumn: ItemId
+
+		annotation SummarizationSetBy = Automatic
+
+	column ItemKind
+		dataType: string
+		lineageTag: 364bbdfd-1d17-4772-8bef-6a736547b2a7
+		summarizeBy: none
+		sourceColumn: ItemKind
+
+		annotation SummarizationSetBy = Automatic
+
+	column ItemName
+		dataType: string
+		lineageTag: fddf8ce3-a3ac-47bc-977d-e4beec35d4bb
+		summarizeBy: none
+		sourceColumn: ItemName
+
+		annotation SummarizationSetBy = Automatic
+
+	column WorkspaceId
+		dataType: string
+		lineageTag: 4b593e99-2a3f-43e5-8d59-8cc9c040ac83
+		summarizeBy: none
+		sourceColumn: WorkspaceId
+
+		annotation SummarizationSetBy = Automatic
+
+	column WorkspaceName
+		dataType: string
+		lineageTag: 52a9721f-ba1e-4d32-9f8b-d50445b23ace
+		summarizeBy: none
+		sourceColumn: WorkspaceName
+
+		annotation SummarizationSetBy = Automatic
+
+	column CapacityId
+		dataType: string
+		lineageTag: 401082d8-7ebf-4013-a073-79fb1c7bb2a2
+		summarizeBy: none
+		sourceColumn: CapacityId
+
+		annotation SummarizationSetBy = Automatic
+
+	column CorrelationId
+		dataType: string
+		lineageTag: 18285eb8-fbd3-42b8-a8f7-988774c8490a
+		summarizeBy: none
+		sourceColumn: CorrelationId
+
+		annotation SummarizationSetBy = Automatic
+
+	column OperationId
+		dataType: string
+		lineageTag: 68fa1d51-2d6d-4ad8-aced-3417ab73b490
+		summarizeBy: none
+		sourceColumn: OperationId
+
+		annotation SummarizationSetBy = Automatic
+
+	column Identity
+		dataType: string
+		lineageTag: 00226032-c5e4-4bb5-869b-a283cb02c8c6
+		summarizeBy: none
+		sourceColumn: Identity
+
+		annotation SummarizationSetBy = Automatic
+
+	column CustomerTenantId
+		dataType: string
+		lineageTag: 75e8c10e-3b19-460b-9218-6c858057be35
+		summarizeBy: none
+		sourceColumn: CustomerTenantId
+
+		annotation SummarizationSetBy = Automatic
+
+	column DurationMs
+		dataType: int64
+		isHidden
+		formatString: 0
+		isAvailableInMdx: false
+		lineageTag: aa40a9a2-1ae4-4888-9a71-c0e833dca470
+		summarizeBy: none
+		sourceColumn: DurationMs
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	column Status
+		dataType: string
+		lineageTag: aebfbe80-d4c4-47ce-81c8-573226ffc25e
+		summarizeBy: none
+		sourceColumn: Status
+
+		annotation SummarizationSetBy = Automatic
+
+	column Level
+		dataType: string
+		lineageTag: a04f36eb-bc0d-4491-b365-61022329d179
+		summarizeBy: none
+		sourceColumn: Level
+
+		annotation SummarizationSetBy = Automatic
+
+	column Region
+		dataType: string
+		lineageTag: 3570beee-42bf-4657-ad2c-436e9f8029cb
+		summarizeBy: none
+		sourceColumn: Region
+
+		annotation SummarizationSetBy = Automatic
+
+	column WorkspaceMonitoringTableName
+		dataType: string
+		lineageTag: e07092ba-993c-477a-b7cf-3500c650044d
+		summarizeBy: none
+		sourceColumn: WorkspaceMonitoringTableName
+
+		annotation SummarizationSetBy = Automatic
+
+	column QueryText
+		dataType: string
+		lineageTag: edeb0a0e-b68b-40a0-99aa-4dc21dd9a694
+		summarizeBy: none
+		sourceColumn: QueryText
+
+		annotation SummarizationSetBy = Automatic
+
+	column GraphQLOverheadDurationMs
+		dataType: int64
+		isHidden
+		formatString: 0
+		isAvailableInMdx: false
+		lineageTag: 4030ca34-14ba-421b-8f3b-b1ae48e761df
+		summarizeBy: none
+		sourceColumn: GraphQLOverheadDurationMs
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	column ProcessedBytes
+		dataType: int64
+		isHidden
+		formatString: 0
+		isAvailableInMdx: false
+		lineageTag: d081d808-6322-4017-b949-aa0b4298af09
+		summarizeBy: none
+		sourceColumn: ProcessedBytes
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	column TransportProtocol
+		dataType: string
+		lineageTag: f8513bfd-c88a-4310-a007-bbd5c1bd4c76
+		summarizeBy: none
+		sourceColumn: TransportProtocol
+
+		annotation SummarizationSetBy = Automatic
+
+	column QueryResultMessage
+		dataType: string
+		lineageTag: acd4a917-05fb-497a-ac68-c12fb02e428d
+		summarizeBy: none
+		sourceColumn: QueryResultMessage
+
+		annotation SummarizationSetBy = Automatic
+
+	column DateKey
+		dataType: dateTime
+		formatString: General Date
+		lineageTag: 9ebef23d-6657-49ae-bfa8-6ac25fc50606
+		summarizeBy: none
+		sourceColumn: DateKey
+
+		annotation SummarizationSetBy = Automatic
+
+	column DateTime15Min
+		dataType: dateTime
+		formatString: General Date
+		sourceProviderType: datetimeoffset
+		lineageTag: 1f73e0d9-f1a9-4f5d-b350-6a46dafe6f4a
+		summarizeBy: none
+		sourceColumn: DateTime15Min
+
+		annotation SummarizationSetBy = Automatic
+
+	partition GQL_Logs = m
+		mode: directQuery
+		queryGroup: 'Graph QL'
+		source =
+				let
+				    Source = AzureDataExplorer.Contents(#"Query URI", #"Eventhouse Name", "GraphQLLogs#(lf)| extend #(lf)    DateKey = bin(Timestamp, 1d),#(lf)    DateTime15Min = bin(Timestamp, 15m),#(lf)    Identity = tostring(Identity)", [MaxRows=null, MaxSize=null, NoTruncate=null, AdditionalSetStatements=null])
+				in
+				    Source
+
+	annotation PBI_NavigationStepName = Navigation
+
+	annotation PBI_ResultType = Exception
+

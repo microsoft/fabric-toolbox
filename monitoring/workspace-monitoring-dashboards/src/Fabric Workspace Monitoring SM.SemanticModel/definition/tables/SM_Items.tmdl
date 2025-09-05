@@ -1,0 +1,58 @@
+/// Dimension | Catalog of Semantic Model Items
+table SM_Items
+	lineageTag: 2ef00062-783f-4562-b843-66998fb3e2c6
+
+	measure 'SM Items Unique' = DISTINCTCOUNT(SM_Items[ItemId])
+		formatString: #,0
+		displayFolder: Semantic Models\Execution Metrics
+		lineageTag: 488c01ab-ec6f-44a9-8939-c6b2f2f4058e
+
+	column ItemId
+		dataType: string
+		isKey
+		sourceProviderType: nvarchar(max)
+		lineageTag: 9e4d1d7c-e7bd-48dc-8100-42f76cdc281a
+		summarizeBy: none
+		sourceColumn: ItemId
+
+		annotation SummarizationSetBy = Automatic
+
+	column ItemName
+		dataType: string
+		sourceProviderType: nvarchar(max)
+		lineageTag: 31e522ec-fe2c-495f-868a-8d310cf55ddf
+		summarizeBy: none
+		sourceColumn: ItemName
+
+		annotation SummarizationSetBy = Automatic
+
+	column WorkspaceId
+		dataType: string
+		sourceProviderType: nvarchar(max)
+		lineageTag: 5d456c5a-d9f4-4bd5-b443-fcea0d13b2b0
+		summarizeBy: none
+		sourceColumn: WorkspaceId
+
+		annotation SummarizationSetBy = Automatic
+
+	column ItemKind
+		dataType: string
+		lineageTag: 93251125-2873-4eba-8908-c7543253f52c
+		summarizeBy: none
+		sourceColumn: ItemKind
+
+		annotation SummarizationSetBy = Automatic
+
+	partition SM_Items = m
+		mode: import
+		queryGroup: 'Semantic Model'
+		source =
+				let
+				    Source = AzureDataExplorer.Contents(#"Query URI", #"Eventhouse Name", "SemanticModelLogs#(lf)    | where OperationId != '00000000-0000-0000-0000-000000000000'#(lf)    | where ItemId != '' and isnotempty(ItemName)#(lf)    | summarize arg_max(ItemName, ItemKind, WorkspaceId) by ItemId#(lf)", [MaxRows=null, MaxSize=null, NoTruncate=null, AdditionalSetStatements=null, IsDimension=true])
+				in
+				    Source
+
+	annotation PBI_ResultType = Exception
+
+	annotation PBI_NavigationStepName = Navigation
+

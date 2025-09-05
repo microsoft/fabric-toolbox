@@ -1,0 +1,935 @@
+/// Fact | Detailed execution performance metrics of Semantic Model Items
+table SM_ExecutionMetrics
+	lineageTag: 9997c25a-9524-4762-9af9-197330031401
+
+	measure 'SM Capacity Throttling Max' =
+			
+			DIVIDE(
+			    MAX(SM_ExecutionMetrics[CapacityThrottlingMs]),
+			    [SelectedTimeUnit]
+			)
+		displayFolder: _Execution Metrics
+		lineageTag: ef677061-536c-41f8-bafc-38baf95b867d
+
+		formatStringDefinition = SELECTEDVALUE ( TimeUnits[Format], "\#,0.00;(\#,0.00);\#,0.00" )
+
+	measure 'SM Capacity Throttling Total' =
+			
+			VAR _result =
+			DIVIDE(
+			    SUM(SM_ExecutionMetrics[CapacityThrottlingMs]),
+			    [SelectedTimeUnit]
+			)
+			
+			RETURN
+			IF(_result = 0, BLANK(), _result)
+		displayFolder: _Execution Metrics
+		lineageTag: 94eb5352-2ffb-4e54-915f-184bd790e157
+
+		formatStringDefinition = SELECTEDVALUE ( TimeUnits[Format], "\#,0.00;(\#,0.00);\#,0.00" )
+
+	measure 'SM CPU Time Avg' = ```
+			
+			    DIVIDE(
+			        AVERAGE(SM_ExecutionMetrics[TotalCpuTimeMs]),
+			        [SelectedTimeUnit]
+			    )
+			```
+		displayFolder: _Execution Metrics
+		lineageTag: c122bfa6-c99d-49f9-ba37-f1a0be68d86b
+
+		formatStringDefinition = SELECTEDVALUE ( TimeUnits[Format], "\#,0.00;(\#,0.00);\#,0.00" )
+
+	measure 'SM CPU Time Max' =
+			
+			DIVIDE(
+			    MAX(SM_ExecutionMetrics[TotalCpuTimeMs]),
+			    [SelectedTimeUnit]
+			)
+		displayFolder: _Execution Metrics
+		lineageTag: f595c9bd-cfa4-457c-a433-f5cf1862af2e
+
+		formatStringDefinition = SELECTEDVALUE ( TimeUnits[Format], "\#,0.00;(\#,0.00);\#,0.00" )
+
+	measure 'SM CPU Time Total' =
+			
+			DIVIDE(
+			    SUM(SM_ExecutionMetrics[TotalCpuTimeMs]),
+			    [SelectedTimeUnit]
+			)
+		displayFolder: _Execution Metrics
+		lineageTag: 24acc07d-f60e-4e04-8f2e-5d609dfcc133
+
+		formatStringDefinition = SELECTEDVALUE ( TimeUnits[Format], "\#,0.00;(\#,0.00);\#,0.00" )
+
+	measure 'SM Datasource Connection Throttle Time Total' =
+			
+			DIVIDE(
+			    SUM(SM_ExecutionMetrics[DatasourceConnectionThrottleTimeMs]),
+			    [SelectedTimeUnit]
+			)
+		displayFolder: _Execution Metrics
+		lineageTag: 6687920f-191f-46e8-8adc-5b88295d3016
+
+		formatStringDefinition = SELECTEDVALUE ( TimeUnits[Format], "\#,0.00;(\#,0.00);\#,0.00" )
+
+	measure 'SM DirectQuery Connection Time Total' =
+			
+			DIVIDE(
+			    SUM(SM_ExecutionMetrics[DirectQueryConnectionTimeMs]),
+			    [SelectedTimeUnit]
+			)
+		displayFolder: _Execution Metrics
+		lineageTag: 8a39a386-359e-47a1-a6e2-0f99777bef40
+
+		formatStringDefinition = SELECTEDVALUE ( TimeUnits[Format], "\#,0.00;(\#,0.00);\#,0.00" )
+
+	measure 'SM DirectQuery Iteration Time Total' =
+			
+			DIVIDE(
+			    SUM(SM_ExecutionMetrics[DirectQueryIterationTimeMs]),
+			    [SelectedTimeUnit]
+			)
+		displayFolder: _Execution Metrics
+		lineageTag: ea310bef-680f-472b-bfab-5e17066f28c1
+
+		formatStringDefinition = SELECTEDVALUE ( TimeUnits[Format], "\#,0.00;(\#,0.00);\#,0.00" )
+
+	measure 'SM DirectQuery Request Count Total' = SUM(SM_ExecutionMetrics[DirectQueryRequestCount])
+		formatString: 0
+		displayFolder: _Execution Metrics
+		lineageTag: ec823c1d-0238-484e-8bb0-e0929441444b
+
+	measure 'SM DirectQuery Rows Max' = MAX(SM_ExecutionMetrics[DirectQueryTotalRows])
+		formatString: #,0
+		displayFolder: _Execution Metrics
+		lineageTag: 2b1e3ad2-f78c-40c3-9972-105838d93bf4
+
+	measure 'SM DirectQuery Rows Total' = SUM(SM_ExecutionMetrics[DirectQueryTotalRows])
+		formatString: #,0
+		displayFolder: _Execution Metrics
+		lineageTag: 342edefb-067a-4824-906c-6bf6c8703a2e
+
+	measure 'SM DirectQuery Time Total' =
+			
+			DIVIDE(
+			    SUM(SM_ExecutionMetrics[DirectQueryTotalTimeMs]),
+			    [SelectedTimeUnit]
+			)
+		displayFolder: _Execution Metrics
+		lineageTag: 39f90607-4409-46bc-acff-674dd25c4da7
+
+		formatStringDefinition = SELECTEDVALUE ( TimeUnits[Format], "\#,0.00;(\#,0.00);\#,0.00" )
+
+	measure 'SM DirectQuery Timeout Total' =
+			
+			DIVIDE(
+			    SUM(SM_ExecutionMetrics[DirectQueryTimeoutMs]),
+			    [SelectedTimeUnit]
+			)
+		displayFolder: _Execution Metrics
+		lineageTag: f1f21c62-740f-4f14-ac40-0e9aa2b950b1
+
+		formatStringDefinition = SELECTEDVALUE ( TimeUnits[Format], "\#,0.00;(\#,0.00);\#,0.00" )
+
+	measure 'SM Duration Avg' =
+			
+			DIVIDE(
+			    AVERAGE(SM_ExecutionMetrics[TotalDurationMs]),
+			    [SelectedTimeUnit]
+			)
+		displayFolder: _Execution Metrics
+		lineageTag: 8fc08d49-b88a-4fb7-9542-75306cbe9fbf
+
+		formatStringDefinition = SELECTEDVALUE ( TimeUnits[Format], "\#,0.00;(\#,0.00);\#,0.00" )
+
+	measure 'SM Duration Max' =
+			
+			DIVIDE(
+			    MAX(SM_ExecutionMetrics[TotalDurationMs]),
+			    [SelectedTimeUnit]
+			)
+		displayFolder: _Execution Metrics
+		lineageTag: e5b4a494-a32f-4855-afca-8f609112edb8
+
+		formatStringDefinition = SELECTEDVALUE ( TimeUnits[Format], "\#,0.00;(\#,0.00);\#,0.00" )
+
+	measure 'SM Duration Total' =
+			
+			DIVIDE(
+			    SUM(SM_ExecutionMetrics[TotalDurationMs]),
+			    [SelectedTimeUnit]
+			)
+		displayFolder: _Execution Metrics
+		lineageTag: f84a9ba4-19f9-4720-acb0-a0b557b92d7f
+
+		formatStringDefinition = SELECTEDVALUE ( TimeUnits[Format], "\#,0.00;(\#,0.00);\#,0.00" )
+
+	measure 'SM Errors' = SUM(SM_ExecutionMetrics[ErrorCount])
+		formatString: #,0
+		displayFolder: _Execution Metrics
+		lineageTag: 5216b244-3462-470f-be48-e2404510d807
+
+	measure 'SM Execution Delay Time Max' =
+			
+			VAR _result =
+			DIVIDE(
+			    MAX(SM_ExecutionMetrics[ExecutionDelayMs]),
+			    [SelectedTimeUnit]
+			)
+			
+			RETURN
+			IF(_result = 0, BLANK(), _result)
+		displayFolder: _Execution Metrics
+		lineageTag: 0bff1816-8d0b-4178-9553-faace37c2174
+
+		formatStringDefinition = SELECTEDVALUE ( TimeUnits[Format], "\#,0.00;(\#,0.00);\#,0.00" )
+
+	measure 'SM Execution Delay Time Total' =
+			
+			VAR _result =
+			DIVIDE(
+			    SUM(SM_ExecutionMetrics[ExecutionDelayMs]),
+			    [SelectedTimeUnit]
+			)
+			
+			RETURN
+			IF(_result = 0, BLANK(), _result)
+		displayFolder: _Execution Metrics
+		lineageTag: ab57b27d-1741-4f5c-b244-e11fa7ed2e99
+
+		formatStringDefinition = SELECTEDVALUE ( TimeUnits[Format], "\#,0.00;(\#,0.00);\#,0.00" )
+
+	measure 'SM External Query Execution Time Max' = ```
+			
+			    DIVIDE(
+			        MAX(SM_ExecutionMetrics[ExternalQueryExecutionTimeMs]),
+			        [SelectedTimeUnit]
+			    )
+			```
+		displayFolder: _Execution Metrics
+		lineageTag: 91e11b6e-d531-4ebf-90f4-cae5a1fd4b6f
+
+		formatStringDefinition = SELECTEDVALUE ( TimeUnits[Format], "\#,0.00;(\#,0.00);\#,0.00" )
+
+	measure 'SM External Query Execution Time Total' = ```
+			
+			    DIVIDE(
+			        SUM(SM_ExecutionMetrics[ExternalQueryExecutionTimeMs]),
+			        [SelectedTimeUnit]
+			    )
+			```
+		displayFolder: _Execution Metrics
+		lineageTag: 8cd275c5-23ec-497d-96bf-d4644df02810
+
+		formatStringDefinition = SELECTEDVALUE ( TimeUnits[Format], "\#,0.00;(\#,0.00);\#,0.00" )
+
+	measure 'SM Operation Peak Memory Avg' =
+			
+			DIVIDE(
+			    AVERAGE(SM_ExecutionMetrics[ApproximatePeakMemConsumptionKB]),
+			    [SelectedSizeUnit]
+			)
+		displayFolder: _Execution Metrics
+		lineageTag: 701f82e5-f6e4-425a-8b97-18bf151109a3
+
+		formatStringDefinition = SELECTEDVALUE ( SizeUnits[Format], "\#,0.00;(\#,0.00);\#,0.00" )
+
+	measure 'SM Operation Peak Memory Max' =
+			
+			DIVIDE(
+			    MAX(SM_ExecutionMetrics[ApproximatePeakMemConsumptionKB]),
+			    [SelectedSizeUnit]
+			)
+		displayFolder: _Execution Metrics
+		lineageTag: 1a6a11d3-2ec4-4643-98da-f04c53844eef
+
+		formatStringDefinition = SELECTEDVALUE ( SizeUnits[Format], "\#,0.00;(\#,0.00);\#,0.00" )
+
+	measure 'SM Operation Peak Memory Total' =
+			
+			DIVIDE(
+			    SUM(SM_ExecutionMetrics[ApproximatePeakMemConsumptionKB]),
+			    [SelectedSizeUnit]
+			)
+		displayFolder: _Execution Metrics
+		lineageTag: 8f795967-4a28-433e-9a85-72cfe6969421
+
+		formatStringDefinition = SELECTEDVALUE ( SizeUnits[Format], "\#,0.00;(\#,0.00);\#,0.00" )
+
+	measure 'SM Operations' = DISTINCTCOUNT(SM_ExecutionMetrics[OperationId])
+		formatString: #,0
+		displayFolder: _Execution Metrics
+		lineageTag: 5381cccc-269a-486a-9c23-617d75a9490f
+
+	measure 'SM PowerQuery CPU Time Average' =
+			
+			DIVIDE(
+			    AVERAGE(SM_ExecutionMetrics[MEngineCpuTimeMs]),
+			    [SelectedTimeUnit]
+			)
+		displayFolder: _Execution Metrics
+		lineageTag: 4fd90b7a-1d6a-4502-97f6-ae9f5912203f
+
+		formatStringDefinition = SELECTEDVALUE ( TimeUnits[Format], "\#,0.00;(\#,0.00);\#,0.00" )
+
+	measure 'SM PowerQuery CPU Time Max' =
+			
+			DIVIDE(
+			    MAX(SM_ExecutionMetrics[MEngineCpuTimeMs]),
+			    [SelectedTimeUnit]
+			)
+		displayFolder: _Execution Metrics
+		lineageTag: 48cc4075-f33f-4984-a993-c3f199ef7c14
+
+		formatStringDefinition = SELECTEDVALUE ( TimeUnits[Format], "\#,0.00;(\#,0.00);\#,0.00" )
+
+	measure 'SM PowerQuery CPU Time Total' =
+			
+			DIVIDE(
+			    SUM(SM_ExecutionMetrics[MEngineCpuTimeMs]),
+			    [SelectedTimeUnit]
+			)
+		displayFolder: _Execution Metrics
+		lineageTag: a7984c02-6dbb-4845-954a-ac23361c11cf
+
+		formatStringDefinition = SELECTEDVALUE ( TimeUnits[Format], "\#,0.00;(\#,0.00);\#,0.00" )
+
+	measure 'SM PowerQuery Peak Memory Max' =
+			
+			DIVIDE(
+			    MAX(SM_ExecutionMetrics[MEnginePeakMemoryKB]),
+			    [SelectedSizeUnit]
+			)
+		displayFolder: _Execution Metrics
+		lineageTag: 92761306-7dc0-4595-b5f4-cb422f117c0f
+
+		formatStringDefinition = SELECTEDVALUE ( SizeUnits[Format], "\#,0.00;(\#,0.00);\#,0.00" )
+
+	measure 'SM PowerQuery Peak Memory Total' =
+			
+			DIVIDE(
+			    SUM(SM_ExecutionMetrics[MEnginePeakMemoryKB]),
+			    [SelectedSizeUnit]
+			)
+		displayFolder: _Execution Metrics
+		lineageTag: 4055c363-20cf-4676-8647-ff7e82396beb
+
+		formatStringDefinition = SELECTEDVALUE ( SizeUnits[Format], "\#,0.00;(\#,0.00);\#,0.00" )
+
+	measure 'SM Query Processing CPU Time Avg' = ```
+			
+			    DIVIDE(
+			        AVERAGE(SM_ExecutionMetrics[QueryProcessingCpuTimeMs]),
+			        [SelectedTimeUnit]
+			    )
+			```
+		displayFolder: _Execution Metrics
+		lineageTag: 7f5aed4a-611d-45ee-953f-15df31556eb7
+
+		formatStringDefinition = SELECTEDVALUE ( TimeUnits[Format], "\#,0.00;(\#,0.00);\#,0.00" )
+
+	measure 'SM Query Processing CPU Time Max' = ```
+			
+			    DIVIDE(
+			        MAX(SM_ExecutionMetrics[QueryProcessingCpuTimeMs]),
+			        [SelectedTimeUnit]
+			    )
+			```
+		displayFolder: _Execution Metrics
+		lineageTag: a2c157e1-68bb-4c07-ba37-c7744e414e53
+
+		formatStringDefinition = SELECTEDVALUE ( TimeUnits[Format], "\#,0.00;(\#,0.00);\#,0.00" )
+
+	measure 'SM Query Processing CPU Time Total' = ```
+			
+			    DIVIDE(
+			        SUM(SM_ExecutionMetrics[QueryProcessingCpuTimeMs]),
+			        [SelectedTimeUnit]
+			    )
+			```
+		displayFolder: _Execution Metrics
+		lineageTag: 8d7b0300-2fd0-4005-96a1-c4997fe4ecef
+
+		formatStringDefinition = SELECTEDVALUE ( TimeUnits[Format], "\#,0.00;(\#,0.00);\#,0.00" )
+
+	measure 'SM Query Result Rows Max' = MAX(SM_ExecutionMetrics[QueryResultRows])
+		formatString: #,0
+		displayFolder: _Execution Metrics
+		lineageTag: aac79154-2dba-4eef-9548-d0776a5230a7
+
+	measure 'SM Query Result Rows Total' = SUM(SM_ExecutionMetrics[QueryResultRows])
+		formatString: #,0
+		displayFolder: _Execution Metrics
+		lineageTag: e78605b1-a150-41aa-bf0f-c92d8f3dfd88
+
+	measure 'SM Tabular Connection Timeout Total' =
+			
+			DIVIDE(
+			    SUM(SM_ExecutionMetrics[TabularConnectionTimeoutMs]),
+			    [SelectedTimeUnit]
+			)
+		displayFolder: _Execution Metrics
+		lineageTag: 21d6a9f9-e347-4092-8fa4-a3106c3d6808
+
+		formatStringDefinition = SELECTEDVALUE ( TimeUnits[Format], "\#,0.00;(\#,0.00);\#,0.00" )
+
+	measure 'SM Users Unique' = DISTINCTCOUNT(SM_ExecutionMetrics[ExecutingUser])
+		formatString: #,0
+		displayFolder: _Execution Metrics
+		lineageTag: 135d17fe-198c-4b88-b3a6-3e469e922b6f
+
+	measure 'SM VertiPaq CPU Time Avg' = ```
+			
+			    DIVIDE(
+			        AVERAGE(SM_ExecutionMetrics[VertipaqJobCpuTimeMs]),
+			        [SelectedTimeUnit]
+			    )
+			```
+		displayFolder: _Execution Metrics
+		lineageTag: 19e8e51f-96ed-44d6-a4b2-26a0fcec755d
+
+		formatStringDefinition = SELECTEDVALUE ( TimeUnits[Format], "\#,0.00;(\#,0.00);\#,0.00" )
+
+	measure 'SM VertiPaq CPU Time Max' = ```
+			
+			    DIVIDE(
+			        MAX(SM_ExecutionMetrics[VertipaqJobCpuTimeMs]),
+			        [SelectedTimeUnit]
+			    )
+			```
+		displayFolder: _Execution Metrics
+		lineageTag: 4f43483e-c6b3-452e-b86a-76650e6a456f
+
+		formatStringDefinition = SELECTEDVALUE ( TimeUnits[Format], "\#,0.00;(\#,0.00);\#,0.00" )
+
+	measure 'SM VertiPaq CPU Time Total' = ```
+			
+			    DIVIDE(
+			        SUM(SM_ExecutionMetrics[VertipaqJobCpuTimeMs]),
+			        [SelectedTimeUnit]
+			    )
+			```
+		displayFolder: _Execution Metrics
+		lineageTag: 8c304792-98f4-47f7-8104-df701cec4f59
+
+		formatStringDefinition = SELECTEDVALUE ( TimeUnits[Format], "\#,0.00;(\#,0.00);\#,0.00" )
+
+	measure 'SM VertiPaq Rows Total' = SUM(SM_ExecutionMetrics[VertipaqTotalRows])
+		formatString: #,0
+		displayFolder: _Execution Metrics
+		lineageTag: f0e70770-4bf9-4df7-af02-dc0154594f56
+
+	measure 'SM Report Link' = "https://app.powerbi.com/groups/" & MIN(SM_Items[WorkspaceId]) & "/reports/" & MIN(SM_ExecutionMetrics[ReportId]) & "?experience=power-bi"
+		lineageTag: ce5c7106-d460-47e3-82a6-28bf0c26922b
+		dataCategory: WebUrl
+
+	measure 'SM VisualId Link' = "https://app.powerbi.com/groups/" & MIN(SM_Items[WorkspaceId]) & "/reports/" & MIN(SM_ExecutionMetrics[ReportId]) & "?experience=power-bi&visual=" & MIN(SM_ExecutionMetrics[VisualId])
+		lineageTag: 79e055d8-281f-4a17-8132-36e91a7b097e
+		dataCategory: WebUrl
+
+	column OperationId
+		dataType: string
+		isKey
+		isNullable: false
+		isAvailableInMdx: false
+		keepUniqueRows
+		sourceProviderType: nvarchar(max)
+		lineageTag: 678c72eb-2002-4aa7-aa1c-957120f272f3
+		summarizeBy: none
+		sourceColumn: OperationId
+
+		extendedProperty ParameterMetadata =
+				{
+				  "version": 2,
+				  "kind": 1,
+				  "selectAllValue": "__SelectAll__"
+				}
+
+		annotation SummarizationSetBy = Automatic
+
+	column ItemId
+		dataType: string
+		isHidden
+		sourceProviderType: nvarchar(max)
+		lineageTag: 02d27711-b87c-4ba7-963f-83de89970a59
+		summarizeBy: none
+		sourceColumn: ItemId
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	column ApplicationName
+		dataType: string
+		sourceProviderType: nvarchar(max)
+		lineageTag: c08bcf29-9b33-4e63-a059-38736ba2b155
+		summarizeBy: none
+		sourceColumn: ApplicationName
+
+		annotation SummarizationSetBy = Automatic
+
+	column ReplicaId
+		dataType: string
+		sourceProviderType: nvarchar(max)
+		lineageTag: c0929101-c6a6-4c9a-9045-42daca2a9cc1
+		summarizeBy: none
+		sourceColumn: ReplicaId
+
+		annotation SummarizationSetBy = Automatic
+
+	column User
+		dataType: string
+		sourceProviderType: nvarchar(max)
+		lineageTag: 348a422c-94cc-4524-b661-a19796777c27
+		summarizeBy: none
+		sourceColumn: User
+
+		annotation SummarizationSetBy = Automatic
+
+	column ExecutingUser
+		dataType: string
+		sourceProviderType: nvarchar(max)
+		lineageTag: 766f29aa-2d37-4508-8b81-b92456400592
+		summarizeBy: none
+		sourceColumn: ExecutingUser
+
+		annotation SummarizationSetBy = Automatic
+
+	column ApproximatePeakMemConsumptionKB
+		dataType: int64
+		isHidden
+		formatString: 0
+		isAvailableInMdx: false
+		sourceProviderType: int
+		lineageTag: 9df60682-a15e-4296-a4d8-32ecfd62b871
+		summarizeBy: none
+		sourceColumn: ApproximatePeakMemConsumptionKB
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	column ExecutionDelayMs
+		dataType: int64
+		isHidden
+		formatString: 0
+		isAvailableInMdx: false
+		sourceProviderType: int
+		lineageTag: a4c0b288-e304-48f8-9163-c7a61f0f17e3
+		summarizeBy: none
+		sourceColumn: ExecutionDelayMs
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	column VertipaqJobCpuTimeMs
+		dataType: int64
+		isHidden
+		formatString: 0
+		isAvailableInMdx: false
+		sourceProviderType: int
+		lineageTag: f3e4c03e-1213-4b1d-99d0-4540d699753c
+		summarizeBy: none
+		sourceColumn: VertipaqJobCpuTimeMs
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	column ErrorCount
+		dataType: int64
+		isHidden
+		formatString: 0
+		isAvailableInMdx: false
+		sourceProviderType: int
+		lineageTag: b0511f68-4cd4-45ff-b752-15e805411dea
+		summarizeBy: none
+		sourceColumn: ErrorCount
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	column RefreshParallelism
+		dataType: int64
+		isHidden
+		formatString: 0
+		isAvailableInMdx: false
+		sourceProviderType: int
+		lineageTag: 9b96479f-1b89-4807-9006-edae2ee4bb56
+		summarizeBy: none
+		sourceColumn: RefreshParallelism
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	column VertipaqTotalRows
+		dataType: int64
+		isHidden
+		formatString: 0
+		isAvailableInMdx: false
+		sourceProviderType: int
+		lineageTag: 7ba98862-bdd5-4276-80ca-724d839497ca
+		summarizeBy: none
+		sourceColumn: VertipaqTotalRows
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	column MEngineCpuTimeMs
+		dataType: int64
+		isHidden
+		formatString: 0
+		isAvailableInMdx: false
+		sourceProviderType: int
+		lineageTag: ac1835cd-955e-4db3-8bc2-feaaf7b2666d
+		summarizeBy: none
+		sourceColumn: MEngineCpuTimeMs
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	column MEnginePeakMemoryKB
+		dataType: int64
+		isHidden
+		formatString: 0
+		isAvailableInMdx: false
+		sourceProviderType: int
+		lineageTag: 7cbec08e-3a68-4b71-80b9-7cbdeb91b733
+		summarizeBy: none
+		sourceColumn: MEnginePeakMemoryKB
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	column TabularConnectionTimeoutMs
+		dataType: int64
+		isHidden
+		formatString: 0
+		isAvailableInMdx: false
+		sourceProviderType: int
+		lineageTag: d9a08e74-bf19-45b0-b464-badd0c57f347
+		summarizeBy: none
+		sourceColumn: TabularConnectionTimeoutMs
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	column QueryResultRows
+		dataType: int64
+		isHidden
+		formatString: 0
+		isAvailableInMdx: false
+		sourceProviderType: int
+		lineageTag: 5d038854-c890-488e-9104-2155fce60d5d
+		summarizeBy: none
+		sourceColumn: QueryResultRows
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	column QueryProcessingCpuTimeMs
+		dataType: int64
+		isHidden
+		formatString: 0
+		isAvailableInMdx: false
+		sourceProviderType: int
+		lineageTag: 4dafcf4c-3be3-4431-b4da-c8cf3b8161d8
+		summarizeBy: none
+		sourceColumn: QueryProcessingCpuTimeMs
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	column CapacityThrottlingMs
+		dataType: int64
+		isHidden
+		formatString: 0
+		isAvailableInMdx: false
+		sourceProviderType: int
+		lineageTag: 1a2d0493-0ef3-4395-ba4b-afefb49e4f6f
+		summarizeBy: none
+		sourceColumn: CapacityThrottlingMs
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	column DirectQueryRequestCount
+		dataType: int64
+		isHidden
+		formatString: 0
+		isAvailableInMdx: false
+		sourceProviderType: int
+		lineageTag: 0753c147-15b1-4266-97c9-0ebdf8afa729
+		summarizeBy: none
+		sourceColumn: DirectQueryRequestCount
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	column DirectQueryTotalRows
+		dataType: int64
+		isHidden
+		formatString: 0
+		isAvailableInMdx: false
+		sourceProviderType: int
+		lineageTag: 4b8e632b-c1e3-4abf-bcbb-a1ab14bc7d14
+		summarizeBy: none
+		sourceColumn: DirectQueryTotalRows
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	column DatasourceConnectionThrottleTimeMs
+		dataType: int64
+		isHidden
+		formatString: 0
+		isAvailableInMdx: false
+		sourceProviderType: int
+		lineageTag: 8df4f9a2-32dd-4cb7-a605-174b22c15158
+		summarizeBy: none
+		sourceColumn: DatasourceConnectionThrottleTimeMs
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	column DirectQueryConnectionTimeMs
+		dataType: int64
+		isHidden
+		formatString: 0
+		isAvailableInMdx: false
+		sourceProviderType: int
+		lineageTag: 980fdfa2-37e5-43cf-b5e4-b85a06ee2b9e
+		summarizeBy: none
+		sourceColumn: DirectQueryConnectionTimeMs
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	column DirectQueryExecutionTimeMs
+		dataType: int64
+		isHidden
+		formatString: 0
+		isAvailableInMdx: false
+		sourceProviderType: int
+		lineageTag: a67512ca-8ac5-454c-89ba-721217799d1c
+		summarizeBy: none
+		sourceColumn: DirectQueryExecutionTimeMs
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	column DirectQueryIterationTimeMs
+		dataType: int64
+		isHidden
+		formatString: 0
+		isAvailableInMdx: false
+		sourceProviderType: int
+		lineageTag: edf26cd0-6e05-4c44-ad9c-9ba2b1ecad50
+		summarizeBy: none
+		sourceColumn: DirectQueryIterationTimeMs
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	column DirectQueryTotalTimeMs
+		dataType: int64
+		isHidden
+		formatString: 0
+		isAvailableInMdx: false
+		sourceProviderType: int
+		lineageTag: b9fc2844-d35c-42ff-aa7a-1d8b74e3e243
+		summarizeBy: none
+		sourceColumn: DirectQueryTotalTimeMs
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	column DirectQueryTimeoutMs
+		dataType: int64
+		isHidden
+		formatString: 0
+		isAvailableInMdx: false
+		sourceProviderType: int
+		lineageTag: 405b61fc-209a-41e6-b1bb-c2940dddd2bf
+		summarizeBy: none
+		sourceColumn: DirectQueryTimeoutMs
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	column SemanticModelId
+		dataType: string
+		lineageTag: bb39ca31-c0ef-4b28-be81-707293bf03a0
+		summarizeBy: none
+		sourceColumn: SemanticModelId
+
+		annotation SummarizationSetBy = Automatic
+
+	column ReportId
+		dataType: string
+		lineageTag: d028d31b-ce98-4738-abc3-7289613b49bb
+		summarizeBy: none
+		sourceColumn: ReportId
+
+		annotation SummarizationSetBy = Automatic
+
+	column VisualId
+		dataType: string
+		lineageTag: 24405292-29c9-4aff-b831-310eb4878599
+		summarizeBy: none
+		sourceColumn: VisualId
+
+		annotation SummarizationSetBy = Automatic
+
+	column Operation
+		dataType: string
+		lineageTag: fbd92c1b-31f3-4dda-ab6c-ba125c81b182
+		summarizeBy: none
+		sourceColumn: Operation
+
+		annotation SummarizationSetBy = Automatic
+
+	column ConsumptionMethod
+		dataType: string
+		lineageTag: ca34860b-ca6f-4ac8-bae8-913602209581
+		summarizeBy: none
+		sourceColumn: ConsumptionMethod
+
+		annotation SummarizationSetBy = Automatic
+
+	column Status
+		dataType: string
+		sourceProviderType: nvarchar(max)
+		lineageTag: 15454664-3852-435e-93ac-6229e71667cf
+		summarizeBy: none
+		sourceColumn: Status
+
+		annotation SummarizationSetBy = Automatic
+
+	column TimeStart
+		dataType: dateTime
+		formatString: yyyy-mm-dd hh:nn:ss
+		sourceProviderType: datetimeoffset
+		lineageTag: 5afd2409-8ff4-4460-aba0-95c37ba14fc7
+		summarizeBy: none
+		sourceColumn: TimeStart
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isCustom":true}
+
+	column TimeEnd
+		dataType: dateTime
+		formatString: yyyy-mm-dd hh:nn:ss
+		sourceProviderType: datetimeoffset
+		lineageTag: 22a6d021-ba2f-4945-b404-9c9f499ec9b1
+		summarizeBy: none
+		sourceColumn: TimeEnd
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isCustom":true}
+
+	column DateKey
+		dataType: dateTime
+		isHidden
+		formatString: yyyy-mm-dd
+		sourceProviderType: datetimeoffset
+		lineageTag: 3ed1cef3-61e7-4d1d-b3dc-2be47f01d29c
+		summarizeBy: none
+		sourceColumn: DateKey
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isCustom":true}
+
+	column TotalCpuTimeMs
+		dataType: decimal
+		isHidden
+		isAvailableInMdx: false
+		lineageTag: dca7378c-10ec-426a-9e75-b35e0768c523
+		summarizeBy: none
+		sourceColumn: TotalCpuTimeMs
+
+		changedProperty = DataType
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column TotalDurationMs
+		dataType: decimal
+		isHidden
+		formatString: \$#,0.###############;(\$#,0.###############);\$#,0.###############
+		isAvailableInMdx: false
+		lineageTag: 75a12d0a-47fb-43ed-a4ad-3ad78e74c02a
+		summarizeBy: none
+		sourceColumn: TotalDurationMs
+
+		changedProperty = DataType
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"currencyCulture":"en-US"}
+
+	column ExternalQueryExecutionTimeMs
+		dataType: int64
+		isHidden
+		formatString: 0
+		isAvailableInMdx: false
+		sourceProviderType: int
+		lineageTag: 3e1d1fe7-3c1b-4929-b3d3-15c922f48e23
+		summarizeBy: none
+		sourceColumn: ExternalQueryExecutionTimeMs
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	column QueryDialect
+		dataType: string
+		sourceProviderType: nvarchar(max)
+		lineageTag: 17c40f32-cc65-4501-be4e-b8bf803b853c
+		summarizeBy: none
+		sourceColumn: QueryDialect
+
+		annotation SummarizationSetBy = Automatic
+
+	partition SM_ExecutionMetrics = m
+		mode: directQuery
+		queryGroup: 'Semantic Model'
+		source =
+				let
+				    Source = AzureDataExplorer.Contents(#"Query URI", #"Eventhouse Name", "// SM_ExecutionMetrics#(lf)let ConvertQueryDialect = (enum: int) { case(enum == -1, 'Unknown', enum == 0, 'MDX', enum == 1, 'DMX', enum == 2, 'SQL', enum == 3, 'DAX', enum == 4, 'JSON', 'NA') };#(lf)let ConvertIntendedUsage = (enum: int) { case(enum == 0, 'Default', enum == 1, 'Scheduled', enum == 2, 'Interactive', enum == 3, 'Service', 'NA') };#(lf)let OperationTypes = #(lf)SemanticModelLogs#(lf)    | where OperationId != '00000000-0000-0000-0000-000000000000'#(lf)    | where ItemId != '' and isnotempty(ItemName)#(lf)    | where OperationName == 'ProgressReportBegin' or OperationName == 'QueryBegin'#(lf)    | distinct #(lf)        OperationId,#(lf)        OperationName;#(lf)let ExecutionMetrics =#(lf)SemanticModelLogs#(lf)    | where OperationId != '00000000-0000-0000-0000-000000000000'#(lf)    //| where OperationId  in ('ebc4e588-f3e0-4943-b21f-12640d74a1b1')#(lf)    | where ItemId != '' and isnotempty(ItemName)#(lf)    | where OperationName == 'ExecutionMetrics'#(lf)    | extend #(lf)        e = parse_json(EventText),#(lf)        ApplicationContext = todynamic(tostring(ApplicationContext))#(lf)    | extend ApplicationName = case(ApplicationName startswith 'PowerBI - Model Change Tracker', 'Power BI - Model Change Tracker', ApplicationName startswith 'Power BI Desktop', 'Power BI Desktop', ApplicationName startswith 'DAX Studio', 'DAX Studio', ApplicationName startswith 'Deployment Utility', 'Deployment Utility', ApplicationName startswith 'PowerBI - ExploreService', 'PowerBI - ExploreService', ApplicationName startswith 'Microsoft SQL Server Management Studio', 'Microsoft SQL Server Management Studio', ApplicationName startswith 'Tabular', 'TabularEditor', ApplicationName startswith 'PowerBI - NaturalLanguageService', 'PowerBI - NaturalLanguageService', ApplicationName startswith 'SQL Server Profiler', 'SQL Server Profiler', ApplicationName startswith 'Web Modeling', 'Web Modeling', ApplicationName)#(lf)    | extend // Extend EventText#(lf)    TimeStart = todatetime(e.timeStart),#(lf)    TimeEnd = todatetime(e.timeEnd),#(lf)    ApproximatePeakMemConsumptionKB = toint(e.approximatePeakMemConsumptionKB),#(lf)    ExternalQueryExecutionTimeMs = toint(e.externalQueryExecutionTimeMs),#(lf)    ExecutionDelayMs = toint(e.executionDelayMs),#(lf)    VertipaqJobCpuTimeMs = toint(e.vertipaqJobCpuTimeMs),#(lf)    //CommandType = tostring(e.commandType),#(lf)    ErrorCount = toint(e.errorCount),#(lf)    //DiscoverType = toint(e.discoverType),#(lf)    RefreshParallelism = toint(e.refreshParallelism),#(lf)    VertipaqTotalRows = toint(e.vertipaqTotalRows),#(lf)    MEngineCpuTimeMs = toint(e.mEngineCpuTimeMs),#(lf)    MEnginePeakMemoryKB = toint(e.mEnginePeakMemoryKB),#(lf)    TabularConnectionTimeoutMs = toint(e.tabularConnectionTimeoutMs),#(lf)    QueryResultRows = toint(e.queryResultRows),#(lf)    QueryProcessingCpuTimeMs = toint(e.queryProcessingCpuTimeMs),#(lf)    CapacityThrottlingMs = toint(e.capacityThrottlingMs),#(lf)    DirectQueryRequestCount = toint(e.directQueryRequestCount),#(lf)    DirectQueryTotalRows = toint(e.directQueryTotalRows),#(lf)    DatasourceConnectionThrottleTimeMs = toint(e.datasourceConnectionThrottleTimeMs),#(lf)    DirectQueryConnectionTimeMs = toint(e.directQueryConnectionTimeMs),#(lf)    DirectQueryExecutionTimeMs = toint(e.directQueryExecutionTimeMs),#(lf)    DirectQueryIterationTimeMs = toint(e.directQueryIterationTimeMs),#(lf)    DirectQueryTotalTimeMs = toint(e.directQueryTotalTimeMs),#(lf)    DirectQueryTimeoutMs = toint(e.directQueryTimeoutMs),#(lf)    QueryDialect = ConvertQueryDialect(e.queryDialect),#(lf)    //IntendedUsage = ConvertIntendedUsage(e.intendedUsage),#(lf)    Status = iif(e has 'errorCount', 'Failed', 'Succeeded'),#(lf)    TotalCpuTimeMs = e.totalCpuTimeMs,#(lf)    TotalDurationMs = e.durationMs#(lf)    | where TotalCpuTimeMs > 0#(lf)    | extend // Extend Application Context#(lf)        SemanticModelId = ApplicationContext.DatasetId,#(lf)        ReportId = ApplicationContext.Sources.[0].ReportId,#(lf)        VisualId = ApplicationContext.Sources.[0].VisualId,#(lf)        Operation = ApplicationContext.Sources.[0].Operation,#(lf)        ConsumptionMethod = ApplicationContext.Sources.[0].HostProperties.ConsumptionMethod,#(lf)        UserSession = ApplicationContext.Sources.[0].HostProperties.UserSession#(lf)    | summarize arg_max(Timestamp, *) by OperationId // Eliminate duplicates#(lf)    | join kind=inner OperationTypes on OperationId;#(lf)ExecutionMetrics#(lf)    | project#(lf)        //Timestamp,#(lf)        DateKey = bin(Timestamp, 1d),#(lf)        OperationId,#(lf)        ItemId,#(lf)        ApplicationName,#(lf)        ReplicaId,#(lf)        User,#(lf)        ExecutingUser,#(lf)        Operation = OperationName1,#(lf)        QueryDialect,#(lf)        //IntendedUsage,#(lf)        Status,#(lf)        // Extracted EventText properties#(lf)        TimeStart,#(lf)        TimeEnd,#(lf)        ApproximatePeakMemConsumptionKB,#(lf)        ExternalQueryExecutionTimeMs,#(lf)        ExecutionDelayMs,#(lf)        VertipaqJobCpuTimeMs,#(lf)        //CommandType,#(lf)        ErrorCount,#(lf)        //DiscoverType,#(lf)        RefreshParallelism,#(lf)        VertipaqTotalRows,#(lf)        MEngineCpuTimeMs,#(lf)        MEnginePeakMemoryKB,#(lf)        TabularConnectionTimeoutMs,#(lf)        QueryResultRows,#(lf)        QueryProcessingCpuTimeMs,#(lf)        CapacityThrottlingMs,#(lf)        DirectQueryRequestCount,#(lf)        DirectQueryTotalRows,#(lf)        DatasourceConnectionThrottleTimeMs,#(lf)        DirectQueryConnectionTimeMs,#(lf)        DirectQueryExecutionTimeMs,#(lf)        DirectQueryIterationTimeMs,#(lf)        DirectQueryTotalTimeMs,#(lf)        DirectQueryTimeoutMs,#(lf)        TotalCpuTimeMs = todecimal(TotalCpuTimeMs),#(lf)        TotalDurationMs = todecimal(TotalDurationMs),#(lf)        // Extracted Application Context#(lf)        SemanticModelId = tostring(SemanticModelId),#(lf)        ReportId= tostring(ReportId),#(lf)        VisualId = tostring(VisualId),#(lf)        //Operation = tostring(Operation),#(lf)        ConsumptionMethod = tostring(ConsumptionMethod)#(lf)        //UserSession = tostring(UserSession)", [MaxRows=null, MaxSize=null, NoTruncate=null, AdditionalSetStatements=null])
+				in
+				    Source
+
+	annotation PBI_NavigationStepName = Navigation
+
+	annotation PBI_ResultType = Exception
+

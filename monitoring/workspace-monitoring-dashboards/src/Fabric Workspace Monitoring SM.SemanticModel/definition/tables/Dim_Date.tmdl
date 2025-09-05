@@ -1,0 +1,40 @@
+/// Dimension | Calendar table
+table Dim_Date
+	lineageTag: 989584a1-625c-424a-b061-f9a78aa0bd51
+
+	column DateKey
+		dataType: dateTime
+		isHidden
+		isKey
+		formatString: General Date
+		lineageTag: 6031b743-8b5f-42a8-a574-da0ded0d43d1
+		summarizeBy: none
+		sourceColumn: DateKey
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	column Date
+		dataType: dateTime
+		formatString: yyyy-mm-dd
+		lineageTag: 128c4802-b3ab-45c2-ac01-dd55ba14aef2
+		summarizeBy: none
+		sourceColumn: Date
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isCustom":true}
+
+	partition Dim_Date = m
+		mode: import
+		source =
+				let
+				    Source = AzureDataExplorer.Contents(#"Query URI", #"Eventhouse Name", "// UniversalDate#(lf)let startDate = ago(30d);#(lf)let endDate = ago(0d);#(lf)range Date from startDate to endDate step 1d#(lf)| extend #(lf)    DateKey = bin(Date, 1d)#(lf)| extend #(lf)    Date = todatetime(DateKey) #(lf)    //WeekOfYear = datetime_part(""week_of_year"", DateKey),#(lf)    //Day = datetime_part(""day"", DateKey)", [MaxRows=null, MaxSize=null, NoTruncate=null, AdditionalSetStatements=null, IsDimension=true])
+				in
+				    Source
+
+	annotation PBI_NavigationStepName = Navigation
+
+	annotation PBI_ResultType = Table
+

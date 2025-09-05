@@ -1,0 +1,255 @@
+/// Fact | Daily execution performance metrics of Semantic Model Items
+table SM_ExecutionMetricsSummary
+	lineageTag: a6485ee0-1629-459b-824e-16057ff11c11
+
+	measure 'SM Operations Aggregated' = SUM(SM_ExecutionMetricsSummary[CountOfOperations])
+		formatString: #,0
+		displayFolder: _Execution Metrics Summary
+		lineageTag: 54a238a3-2500-4f86-8114-dc306f7cc098
+
+	measure 'SM Errors Aggregated' = SUM(SM_ExecutionMetricsSummary[CountOfErrors])
+		formatString: 0
+		displayFolder: _Execution Metrics Summary
+		lineageTag: 86f5fdf7-42c8-4591-8d8c-1989f423f1a0
+
+	measure 'SM Duration Max Aggregated' =
+			
+			DIVIDE(
+			    MAX(SM_ExecutionMetricsSummary[MaxDurationMs]),
+			    [SelectedTimeUnit]
+			)
+		displayFolder: _Execution Metrics Summary
+		lineageTag: 50a50a04-2c0a-4d0e-995e-f4fae4240bac
+
+		formatStringDefinition = SELECTEDVALUE ( TimeUnits[Format], "\#,0.00;(\#,0.00);\#,0.00" )
+
+	measure 'SM Capacity Throttling Max Aggregated' =
+			
+			VAR _result =
+			DIVIDE(
+			    MAX(SM_ExecutionMetricsSummary[MaxCapacityThrottlingMs]),
+			    [SelectedTimeUnit]
+			)
+			
+			RETURN
+			IF(_result = 0, BLANK(), _result)
+		displayFolder: _Execution Metrics Summary
+		lineageTag: d3f14d16-80f0-4b69-b4a7-0001961a92ab
+
+		formatStringDefinition = SELECTEDVALUE ( TimeUnits[Format], "\#,0.00;(\#,0.00);\#,0.00" )
+
+	measure 'SM Execution Delay Time Max Aggregated' =
+			
+			VAR _result =
+			DIVIDE(
+			    MAX(SM_ExecutionMetricsSummary[MaxExecutionDelayMs]),
+			    [SelectedTimeUnit]
+			)
+			
+			RETURN
+			IF(_result = 0, BLANK(), _result)
+		displayFolder: _Execution Metrics Summary
+		lineageTag: e80c21d3-8a4e-4902-b5ca-64f4a765966d
+
+		formatStringDefinition = SELECTEDVALUE ( TimeUnits[Format], "\#,0.00;(\#,0.00);\#,0.00" )
+
+	measure 'SM CPU Time Max Aggregated' = ```
+			
+			    DIVIDE(
+			        MAX(SM_ExecutionMetricsSummary[MaxCPUTimeMs]),
+			        [SelectedTimeUnit]
+			    )
+			```
+		displayFolder: _Execution Metrics Summary
+		lineageTag: ead945c5-01bb-4e60-ac25-6558c4825684
+
+		formatStringDefinition = SELECTEDVALUE ( TimeUnits[Format], "\#,0.00;(\#,0.00);\#,0.00" )
+
+	measure 'SM Operation Peak Memory Max Aggregated' =
+			
+			DIVIDE(
+			    MAX(SM_ExecutionMetricsSummary[MaxApproximatePeakMemConsumptionKB]),
+			    [SelectedSizeUnit]
+			)
+		displayFolder: _Execution Metrics Summary
+		lineageTag: 9749fe9f-7dd4-4f5d-a899-628af285cc3b
+
+		formatStringDefinition = SELECTEDVALUE ( SizeUnits[Format], "\#,0.00;(\#,0.00);\#,0.00" )
+
+	measure 'SM Operation Success Ratio Aggregated' = ```
+			
+			VAR _errors = SUM(SM_ExecutionMetricsSummary[CountOfErrors])
+			VAR _all = SUM(SM_ExecutionMetricsSummary[CountOfOperations])
+			VAR _result = 1-DIVIDE(_errors, _all)
+			RETURN 
+			_result
+			```
+		formatString: 0.00%;-0.00%;0.00%
+		displayFolder: _Execution Metrics Summary
+		lineageTag: 080cc3e1-a908-4cce-a82e-5aff6677e600
+
+	measure 'SM Query Operations Aggregated' =
+			
+			CALCULATE(
+			    SUM(SM_ExecutionMetricsSummary[CountOfOperations]),
+			    SM_ExecutionMetricsSummary[Operation] = "QueryBegin"
+			)
+		formatString: 0
+		displayFolder: _Execution Metrics Summary
+		lineageTag: 44059782-a916-4e88-8bd2-2fac8164d9f5
+
+	measure 'SM Refresh Operations Aggregated' =
+			
+			CALCULATE(
+			    SUM(SM_ExecutionMetricsSummary[CountOfOperations]),
+			    SM_ExecutionMetricsSummary[Operation] = "ProgressReportBegin"
+			)
+		formatString: #,0
+		displayFolder: _Execution Metrics Summary
+		lineageTag: 7923712c-03ce-4e6c-86f1-0527dbda4d0e
+
+	column ItemId
+		dataType: string
+		isHidden
+		sourceProviderType: nvarchar(max)
+		lineageTag: ba2fa2a4-9378-4426-ac2c-1093979fb7d1
+		summarizeBy: none
+		sourceColumn: ItemId
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	column CountOfOperations
+		dataType: int64
+		isHidden
+		formatString: 0
+		isAvailableInMdx: false
+		sourceProviderType: bigint
+		lineageTag: 51c67e7a-a4ca-45b5-984b-e3ac1676ecf2
+		summarizeBy: min
+		sourceColumn: CountOfOperations
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	column CountOfErrors
+		dataType: int64
+		isHidden
+		formatString: 0
+		isAvailableInMdx: false
+		sourceProviderType: bigint
+		lineageTag: 56c43db4-8c29-4177-b99b-ae508b032a65
+		summarizeBy: min
+		sourceColumn: CountOfErrors
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	column MaxCPUTimeMs
+		dataType: int64
+		isHidden
+		formatString: 0
+		isAvailableInMdx: false
+		sourceProviderType: int
+		lineageTag: f7a99f87-c5ac-4712-b12b-a4c1bbdf9c6b
+		summarizeBy: min
+		sourceColumn: MaxCPUTimeMs
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	column MaxDurationMs
+		dataType: int64
+		isHidden
+		formatString: 0
+		isAvailableInMdx: false
+		sourceProviderType: int
+		lineageTag: 51c3a460-df91-4eb0-9b91-30ea6abb930a
+		summarizeBy: min
+		sourceColumn: MaxDurationMs
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	column MaxApproximatePeakMemConsumptionKB
+		dataType: int64
+		isHidden
+		formatString: 0
+		isAvailableInMdx: false
+		sourceProviderType: int
+		lineageTag: f3c6a3fb-f699-4e35-80fa-6136a6567021
+		summarizeBy: min
+		sourceColumn: MaxApproximatePeakMemConsumptionKB
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	column MaxCapacityThrottlingMs
+		dataType: int64
+		isHidden
+		formatString: 0
+		isAvailableInMdx: false
+		sourceProviderType: int
+		lineageTag: 3fa832cf-fca6-4485-aaaf-16a4ce61d8cd
+		summarizeBy: min
+		sourceColumn: MaxCapacityThrottlingMs
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	column MaxExecutionDelayMs
+		dataType: int64
+		isHidden
+		formatString: 0
+		isAvailableInMdx: false
+		sourceProviderType: int
+		lineageTag: 20922dab-b75d-49a3-8bd2-f4d1b4210586
+		summarizeBy: min
+		sourceColumn: MaxExecutionDelayMs
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	column DateKey
+		dataType: dateTime
+		isHidden
+		formatString: General Date
+		sourceProviderType: datetimeoffset
+		lineageTag: 6e93e59d-c214-4a1b-9da1-396c7cefd8d1
+		summarizeBy: none
+		sourceColumn: DateKey
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	column Operation
+		dataType: string
+		sourceProviderType: nvarchar(max)
+		lineageTag: 1600aafb-77f6-41bb-901c-901f9503cd7b
+		summarizeBy: none
+		sourceColumn: Operation
+
+		annotation SummarizationSetBy = Automatic
+
+	partition SM_ExecutionMetricsSummary = m
+		mode: directQuery
+		queryGroup: 'Semantic Model'
+		source =
+				let
+				    Source = AzureDataExplorer.Contents(#"Query URI", #"Eventhouse Name", "// Semantic Model - Execution Metrics - Summary#(lf)let OperationTypes = #(lf)SemanticModelLogs#(lf)    | where OperationId != '00000000-0000-0000-0000-000000000000'#(lf)    | where ItemId != '' and isnotempty(ItemName)#(lf)    | where OperationName == 'ProgressReportBegin' or OperationName == 'QueryBegin'#(lf)    | distinct #(lf)        OperationId,#(lf)        OperationName;#(lf)let ExecutionMetrics = #(lf)SemanticModelLogs#(lf)    | where OperationId != '00000000-0000-0000-0000-000000000000'#(lf)    | where ItemId != '' and isnotempty(ItemName)#(lf)    | where OperationName == 'ExecutionMetrics'#(lf)    | extend #(lf)        e = parse_json(EventText)#(lf)    | extend #(lf)        ApplicationName = case(ApplicationName startswith 'PowerBI - Model Change Tracker', 'Power BI - Model Change Tracker', ApplicationName startswith 'Power BI Desktop', 'Power BI Desktop', ApplicationName startswith 'DAX Studio', 'DAX Studio', ApplicationName startswith 'Deployment Utility', 'Deployment Utility', ApplicationName startswith 'PowerBI - ExploreService', 'PowerBI - ExploreService', ApplicationName startswith 'Microsoft SQL Server Management Studio', 'Microsoft SQL Server Management Studio', ApplicationName startswith 'Tabular', 'TabularEditor', ApplicationName startswith 'PowerBI - NaturalLanguageService', 'PowerBI - NaturalLanguageService', ApplicationName startswith 'SQL Server Profiler', 'SQL Server Profiler', ApplicationName startswith 'Web Modeling', 'Web Modeling', ApplicationName)#(lf)    | extend // Extend EventText#(lf)        DateKey = bin(Timestamp, 1d),#(lf)        ApproximatePeakMemConsumptionKB = toint(e.approximatePeakMemConsumptionKB),#(lf)        HasError = iff(toint(e.errorCount)>0, 1, 0),#(lf)        CapacityThrottlingMs = toint(e.capacityThrottlingMs),#(lf)        TotalCpuTimeMs = toint(e.totalCpuTimeMs),#(lf)        TotalDurationMs = toint(e.durationMs),#(lf)        ExecutionDelayMs = toint(e.executionDelayMs),#(lf)        OperationCount = 1#(lf)    | join kind=inner OperationTypes on OperationId;#(lf)ExecutionMetrics#(lf)    | summarize #(lf)        CountOfOperations = sum(OperationCount), #(lf)        CountOfErrors = sum(HasError), #(lf)        MaxCPUTimeMs = max(TotalCpuTimeMs), #(lf)        MaxDurationMs = max(TotalDurationMs), #(lf)        MaxApproximatePeakMemConsumptionKB = max(ApproximatePeakMemConsumptionKB), #(lf)        MaxCapacityThrottlingMs = max(CapacityThrottlingMs), #(lf)        MaxExecutionDelayMs = max(ExecutionDelayMs) #(lf)        by #(lf)            DateKey,#(lf)            ItemId,#(lf)            Operation = OperationName1", [MaxRows=null, MaxSize=null, NoTruncate=null, AdditionalSetStatements=null])
+				in
+				    Source
+
+	annotation PBI_NavigationStepName = Navigation
+
+	annotation PBI_ResultType = Exception
+

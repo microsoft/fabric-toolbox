@@ -1,0 +1,62 @@
+model Model
+	culture: en-US
+	defaultPowerBIDataSourceVersion: powerBI_V3
+	sourceQueryCulture: en-US
+	dataAccessOptions
+		legacyRedirects
+		returnErrorValuesAsNull
+
+queryGroup Eventhouse
+
+	annotation PBI_QueryGroupOrder = 1
+
+queryGroup 'Semantic Model'
+
+	annotation PBI_QueryGroupOrder = 2
+
+queryGroup 'Graph QL'
+
+	annotation PBI_QueryGroupOrder = 3
+
+queryGroup Units
+
+	annotation PBI_QueryGroupOrder = 4
+
+queryGroup 'Mirrored Database'
+
+	annotation PBI_QueryGroupOrder = 5
+
+queryGroup Parameters
+
+	annotation PBI_QueryGroupOrder = 0
+
+annotation __PBI_TimeIntelligenceEnabled = 0
+
+annotation PBI_QueryOrder = ["SM_OperationId","SM_Items","SM_ExecutionMetrics","SM_ExecutionMetricsSummary","SM_EngineErrors","SM_ProgressReport","SM_CommitStatistics","SM_Operations","Dim_Date","EH_QueryLogs","EH_Metrics","EH_Items","GQL_Logs","GQL_Metrics","GQL_Items","SizeUnits","TimeUnits","MDB_Items","MDB_TableExecutionLogs","Query URI","Eventhouse Name"]
+
+annotation __TEdtr = 1
+
+annotation PBI_ProTooling = ["DaxQueryView_Desktop","TMDLView_Desktop","TMDL-Extension"]
+
+ref table SM_Items
+ref table SM_ExecutionMetrics
+ref table SM_EngineErrors
+ref table SM_ProgressReport
+ref table SM_CommitStatistics
+ref table SM_Operations
+ref table Dim_Date
+ref table EH_QueryLogs
+ref table EH_Metrics
+ref table EH_Items
+ref table GQL_Logs
+ref table GQL_Metrics
+ref table GQL_Items
+ref table Meta
+ref table SizeUnits
+ref table TimeUnits
+ref table MDB_Items
+ref table MDB_TableExecutionLogs
+ref table SM_ExecutionMetricsSummary
+
+ref cultureInfo en-US
+

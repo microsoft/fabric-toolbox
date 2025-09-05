@@ -1,0 +1,370 @@
+/// Fact | refresh (progress) performance metrics of Semantic Model Items
+table SM_ProgressReport
+	lineageTag: aa6e8dfc-92ea-4a11-a133-a647b861edc3
+
+	measure 'Progress Operation End' = MAX(SM_ProgressReport[EndTime])
+		formatString: yyyy-mm-dd hh:nn:ss
+		displayFolder: _ProgressReport
+		lineageTag: 49c8b36f-9d6b-468a-bbbd-0bf829553d7f
+
+		annotation PBI_FormatHint = {"isCustom":true}
+
+	measure 'Progress Operation Start' = MIN(SM_ProgressReport[StartTime])
+		formatString: yyyy-mm-dd hh:nn:ss
+		displayFolder: _ProgressReport
+		lineageTag: cb8476b8-fa91-4a6f-957a-7713bbf25cb2
+
+		annotation PBI_FormatHint = {"isCustom":true}
+
+	measure 'SM  Progress PowerQuery Peak Memory Max' =
+			
+			DIVIDE(
+			    MAX(SM_ProgressReport[MashupPeakMemory]),
+			    [SelectedSizeUnit]
+			)
+		displayFolder: _ProgressReport
+		lineageTag: f3d9e608-b855-4460-bf8e-932ef8ae66f6
+
+		formatStringDefinition = SELECTEDVALUE ( SizeUnits[Format], "\$#,0.00;(\$#,0.00);\$#,0.00" )
+
+	measure 'SM Progress CPU Time Max' =
+			
+			DIVIDE(
+			    MAX(SM_ProgressReport[CpuTimeMs]),
+			    [SelectedTimeUnit]
+			)
+		displayFolder: _ProgressReport
+		lineageTag: e597cda1-3eba-45ca-87e3-b6e03bf3d8f1
+
+		formatStringDefinition = SELECTEDVALUE ( TimeUnits[Format], "\#,0.00;(\#,0.00);\#,0.00" )
+
+	measure 'SM Progress CPU Time Total' =
+			
+			DIVIDE(
+			    SUM(SM_ProgressReport[CpuTimeMs]),
+			    [SelectedTimeUnit]
+			)
+		displayFolder: _ProgressReport
+		lineageTag: 0b5b5222-a10d-4481-9ece-c92d168e3826
+
+		formatStringDefinition = SELECTEDVALUE ( TimeUnits[Format], "\#,0.00;(\#,0.00);\#,0.00" )
+
+	measure 'SM Progress Duration Max' =
+			
+			DIVIDE(
+			    MAX(SM_ProgressReport[DurationMs]),
+			    [SelectedTimeUnit]
+			)
+		displayFolder: _ProgressReport
+		lineageTag: c6ece6fd-6959-4f6a-80f0-8f91cfe58fc5
+
+		formatStringDefinition = SELECTEDVALUE ( TimeUnits[Format], "\#,0.00;(\#,0.00);\#,0.00" )
+
+	measure 'SM Progress Duration Total' =
+			
+			DIVIDE(
+			    SUM(SM_ProgressReport[DurationMs]),
+			    [SelectedTimeUnit]
+			)
+		displayFolder: _ProgressReport
+		lineageTag: 5749713e-3d93-4437-9693-a1e975af3a6a
+
+		formatStringDefinition = SELECTEDVALUE ( TimeUnits[Format], "\#,0.00;(\#,0.00);\#,0.00" )
+
+	measure 'SM Progress Object Count' = SUM(SM_ProgressReport[ObjectCount])
+		formatString: #,0
+		displayFolder: _ProgressReport
+		lineageTag: 81d3e89f-99b7-4e01-8cf7-ee81bc42274e
+
+	measure 'SM Progress PowerQuery CPU Time Max' =
+			
+			DIVIDE(
+			    MAX(SM_ProgressReport[MashupCPUTime]),
+			    [SelectedTimeUnit]
+			)
+		displayFolder: _ProgressReport
+		lineageTag: 38d49a06-1e02-4c36-a87b-384e285ad94a
+
+		formatStringDefinition = SELECTEDVALUE ( TimeUnits[Format], "\#,0.00;(\#,0.00);\#,0.00" )
+
+	measure 'SM Progress PowerQuery CPU Time Total' =
+			
+			DIVIDE(
+			    SUM(SM_ProgressReport[MashupCPUTime]),
+			    [SelectedTimeUnit]
+			)
+		displayFolder: _ProgressReport
+		lineageTag: 388e877f-f6ca-43c0-a0ff-0d2f49e190c0
+
+		formatStringDefinition = SELECTEDVALUE ( TimeUnits[Format], "\#,0.00;(\#,0.00);\#,0.00" )
+
+	measure 'SM Progress PowerQuery Peak Memory Total' =
+			
+			DIVIDE(
+			    SUM(SM_ProgressReport[MashupPeakMemory]),
+			    [SelectedSizeUnit]
+			)
+		displayFolder: _ProgressReport
+		lineageTag: dce6e8ee-dc9e-42df-af3b-b2899c0a04e0
+
+		formatStringDefinition = SELECTEDVALUE ( SizeUnits[Format], "\$#,0.00;(\$#,0.00);\$#,0.00" )
+
+	column OperationId
+		dataType: string
+		sourceProviderType: nvarchar(max)
+		lineageTag: fbe86d99-4236-4ec4-976b-b5f595533690
+		summarizeBy: none
+		sourceColumn: OperationId
+
+		annotation SummarizationSetBy = Automatic
+
+	column OperationDetailName
+		dataType: string
+		sourceProviderType: nvarchar(max)
+		lineageTag: 8159a992-d9ea-47b4-a3e4-29d0e787da92
+		summarizeBy: none
+		sourceColumn: OperationDetailName
+
+		annotation SummarizationSetBy = Automatic
+
+	column ObjectType
+		dataType: string
+		sourceProviderType: nvarchar(max)
+		lineageTag: f1bcdff7-8424-4eed-80e7-0f79f3a122dc
+		summarizeBy: none
+		sourceColumn: ObjectType
+
+		annotation SummarizationSetBy = Automatic
+
+	column StartTime
+		dataType: dateTime
+		formatString: General Date
+		sourceProviderType: datetimeoffset
+		lineageTag: 92fcc327-0661-4ec0-8533-34838a82bfbb
+		summarizeBy: none
+		sourceColumn: StartTime
+
+		annotation SummarizationSetBy = Automatic
+
+	column EndTime
+		dataType: dateTime
+		formatString: General Date
+		sourceProviderType: datetimeoffset
+		lineageTag: 3876fe8f-9075-467a-8436-287e99125313
+		summarizeBy: none
+		sourceColumn: EndTime
+
+		annotation SummarizationSetBy = Automatic
+
+	column ObjectName
+		dataType: string
+		sourceProviderType: nvarchar(max)
+		lineageTag: 9b81c819-f59a-4ce5-ae4f-8eeb69088455
+		summarizeBy: none
+		sourceColumn: ObjectName
+
+		annotation SummarizationSetBy = Automatic
+
+	column CorrelationId
+		dataType: string
+		sourceProviderType: nvarchar(max)
+		lineageTag: a2a4d76b-7423-4e26-9570-2153596a84af
+		summarizeBy: none
+		sourceColumn: CorrelationId
+
+		annotation SummarizationSetBy = Automatic
+
+	column MashupCPUTime
+		dataType: int64
+		isHidden
+		formatString: 0
+		isAvailableInMdx: false
+		sourceProviderType: bigint
+		lineageTag: 6c231726-bde7-4d70-99b5-433e355f667a
+		summarizeBy: none
+		sourceColumn: MashupCPUTime
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	column MashupPeakMemory
+		dataType: int64
+		isHidden
+		formatString: 0
+		isAvailableInMdx: false
+		sourceProviderType: bigint
+		lineageTag: edd0e0df-cd99-40ca-b30e-c2e3e6894d52
+		summarizeBy: none
+		sourceColumn: MashupPeakMemory
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	column DurationMs
+		dataType: int64
+		isHidden
+		formatString: 0
+		isAvailableInMdx: false
+		sourceProviderType: bigint
+		lineageTag: 583913fb-23fa-4e02-a9de-1305831fcf2e
+		summarizeBy: none
+		sourceColumn: DurationMs
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	column CpuTimeMs
+		dataType: int64
+		isHidden
+		formatString: 0
+		isAvailableInMdx: false
+		sourceProviderType: bigint
+		lineageTag: 3e6c1172-facd-4cf7-a8ef-f72a5445e774
+		summarizeBy: none
+		sourceColumn: CpuTimeMs
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	column ObjectCount
+		dataType: int64
+		isHidden
+		formatString: 0
+		isAvailableInMdx: false
+		sourceProviderType: bigint
+		lineageTag: 6ee84a7c-fc64-4557-98d1-fcceb4fafa22
+		summarizeBy: none
+		sourceColumn: ObjectCount
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	column Status
+		dataType: string
+		sourceProviderType: nvarchar(max)
+		lineageTag: d7de00c1-ffe0-400a-af29-a42e7b13aea1
+		summarizeBy: none
+		sourceColumn: Status
+
+		annotation SummarizationSetBy = Automatic
+
+	column StatusCode
+		dataType: int64
+		isHidden
+		formatString: 0
+		sourceProviderType: int
+		lineageTag: 19869673-b607-4632-b723-748268bb222e
+		summarizeBy: count
+		sourceColumn: StatusCode
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	column ErrorTimeMs
+		dataType: int64
+		isHidden
+		formatString: 0
+		isAvailableInMdx: false
+		sourceProviderType: bigint
+		lineageTag: 1183fd45-6f16-4090-a107-7da55d63fe11
+		summarizeBy: none
+		sourceColumn: ErrorTimeMs
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	column TableTMID
+		dataType: string
+		sourceProviderType: nvarchar(max)
+		lineageTag: f6dfb26b-8950-4ba8-aeb1-411524da00ab
+		summarizeBy: none
+		sourceColumn: TableTMID
+
+		annotation SummarizationSetBy = Automatic
+
+	column PartitionTMID
+		dataType: string
+		sourceProviderType: nvarchar(max)
+		lineageTag: df20c965-c4e0-4aa7-8cd3-74179a2f687b
+		summarizeBy: none
+		sourceColumn: PartitionTMID
+
+		annotation SummarizationSetBy = Automatic
+
+	column TableName
+		dataType: string
+		sourceProviderType: nvarchar(max)
+		lineageTag: 4805f83a-ccfd-44c3-8f6d-2e7520e572aa
+		summarizeBy: none
+		sourceColumn: TableName
+
+		annotation SummarizationSetBy = Automatic
+
+	column PartitionName
+		dataType: string
+		sourceProviderType: nvarchar(max)
+		lineageTag: fc9e3a5d-6cca-4f02-bb59-3e04c5e31504
+		summarizeBy: none
+		sourceColumn: PartitionName
+
+		annotation SummarizationSetBy = Automatic
+
+	column ItemId
+		dataType: string
+		isHidden
+		isAvailableInMdx: false
+		sourceProviderType: nvarchar(max)
+		lineageTag: 510652db-5c50-49eb-bdd2-7af9a3d3bb3c
+		summarizeBy: none
+		sourceColumn: ItemId
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	column StartDateKey
+		dataType: dateTime
+		isHidden
+		formatString: General Date
+		sourceProviderType: datetimeoffset
+		lineageTag: e9660ffc-e645-4f8c-ac9b-4e3710656bb6
+		summarizeBy: none
+		sourceColumn: StartDateKey
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	column StartHour
+		dataType: int64
+		isHidden
+		formatString: 0
+		sourceProviderType: bigint
+		lineageTag: afdc5276-80c7-4a84-9da1-0eae869bbdba
+		summarizeBy: sum
+		sourceColumn: StartHour
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	partition SM_ProgressReport = m
+		mode: directQuery
+		queryGroup: 'Semantic Model'
+		source =
+				let
+				    Source = AzureDataExplorer.Contents(#"Query URI", #"Eventhouse Name", "// SM_Progress_Report - NEW#(lf)let window = SemanticModelLogs #(lf)| where OperationName in ('ProgressReportBegin', 'ProgressReportCurrent', 'ProgressReportEnd', 'ProgressReportError')#(lf)| where OperationDetailName in ('ReadData', 'ExecuteSql', 'CompressSegment', 'TabularRefresh')#(lf)| where not(OperationName =='ProgressReportError' and OperationDetailName =='TabularRefresh' and EventText !has 'Internal Error Code')#(lf)| extend ObjectName = tostring( split(XmlaObjectPath,'.').[3])#(lf)| project #(lf)    EndTime=Timestamp, #(lf)    ItemId,#(lf)    OperationId, #(lf)    CorrelationId, #(lf)    OperationDetailName, #(lf)    DurationMs, #(lf)    CpuTimeMs, #(lf)    ObjectCount=ProgressCounter, #(lf)    Status, #(lf)    StatusCode, #(lf)    XmlaObjectPath, #(lf)    ObjectName, #(lf)    EventText,#(lf)    ObjectType = case(OperationDetailName in ('ReadData', 'ExecuteSql', 'CompressSegment'), 'Partition',#(lf)        EventText contains ' parti' or EventText contains 'osion' or EventText contains 'partycji' or EventText contains 'skaidinio' or EventText contains 'дяла' or EventText contains 'διαμερίσματος' or EventText contains 'nodalījuma' or EventText contains 'oddílu' or EventText contains 'bölümünün' or EventText contains 'พาร์ติชั' or EventText contains '分区' or EventText contains 'パーティション' or EventText contains '파티션', 'Partition',#(lf)        EventText contains ' hiera' or EventText contains 'jerar' or EventText contains 'rarchi' or EventText contains 'erarh' or EventText contains 'ιεραρχίας' or EventText contains 'ерарх' or EventText contains 'hiyerarşisinin' or EventText contains 'ลำดับชั้น' or EventText contains '层次' or EventText contains '階層' or EventText contains '계층 구조', 'Hierarchy',#(lf)        EventText contains ' calc' or EventText contains 'beräknade' or EventText contains 'berechneten' or EventText contains 'beregne' or EventText contains 'počítaného' or EventText contains 'berekende' or EventText contains 'lasketun' or EventText contains 'izračun' or EventText contains 'apskaičiuotojo' or EventText contains 'obliczeniowej' or EventText contains 'числяе' or EventText contains 'υπολογισμένης' or EventText contains 'aprēķinātās' or EventText contains 'hesaplanmış' or EventText contains 'ารคำน' or EventText contains '算' or EventText contains '계산', 'Calculated column',#(lf)        XmlaObjectPath has 'CalculatedTable', 'Calculated Table',#(lf)        XmlaObjectPath has 'CalculationGroup', 'Calculation Group',#(lf)        OperationDetailName =='TabularRefresh' and split(XmlaObjectPath,'.').[3]=='', 'Relationship', '')#(lf)| extend #(lf)    TableName=iif(ObjectType != 'Relationship', split(XmlaObjectPath,'.').[2],''), #(lf)    PartitionName=iif(ObjectType == 'Partition', split(XmlaObjectPath,'.').[3],''),#(lf)    StartTime=datetime_add('millisecond', -DurationMs, EndTime)#(lf)| parse EventText with * '[MashupCPUTime: ' MashupCPUTime:long ' ms, MashupPeakMemory: '  MashupPeakMemory:long ' KB]'#(lf)| parse EventText with * 'Internal Error Code: \'' ErrorHex '\'' *#(lf)| extend #(lf)    TableTMID = extract(""TableTMID='([0-9]+)'"", 1, EventText), #(lf)    PartitionTMID = extract(""PartitionTMID='([0-9]+)'"", 1, EventText)#(lf);#(lf)let TMID = window #(lf)| where EventText has 'TableTMID='| summarize arg_min(StartTime, TableTMID, PartitionTMID) by CorrelationId;#(lf)let DataRefresh = window #(lf)| where OperationDetailName != 'CompressSegment'// in ('TabularRefresh')#(lf)| summarize #(lf)    StartTime=iif(isempty(min(StartTime)),min(EndTime), min(StartTime)), #(lf)    EndTime=arg_max(EndTime, ObjectName, CorrelationId, MashupCPUTime, MashupPeakMemory), #(lf)    DurationMs=sum(DurationMs), #(lf)    CpuTimeMs=sum(CpuTimeMs), #(lf)    ObjectCount=max(ObjectCount), #(lf)    TmObjCount=dcount(XmlaObjectPath), #(lf)    Status=max(Status), #(lf)    StatusCode = min_of(min(StatusCode), #(lf)    toint(min(ErrorHex))) #(lf)    by ItemId, TableName, PartitionName, OperationId, OperationDetailName, ObjectType#(lf)| extend #(lf)    ObjectCount=iff(ObjectType =='Partition', ObjectCount, TmObjCount), #(lf)    ErrorTimeMs=iif(StatusCode <0, datetime_part('millisecond',EndTime), toint(''))#(lf)| join kind=leftouter TMID on CorrelationId#(lf)| project-away TmObjCount, CorrelationId1, StartTime1#(lf);#(lf)let PartitionColumn = window | where OperationDetailName == 'CompressSegment'| parse EventText with * '<oii>' columnName '</oii>' *#(lf)| summarize #(lf)    arg_min(StartTime, ObjectType, ObjectName, OperationDetailName), #(lf)    EndTime=max(EndTime), #(lf)    DurationMs=sum(DurationMs), #(lf)    CpuTimeMs=sum(CpuTimeMs), #(lf)    ObjectCount=dcount(columnName), #(lf)    Status=max(Status), #(lf)    StatusCode = min(StatusCode) #(lf)    by TableName, PartitionName, OperationId, TableTMID, PartitionTMID#(lf);#(lf)let CompositeResult = DataRefresh | union PartitionColumn#(lf)| extend #(lf)    StartTime,#(lf)    StartDateKey = bin(StartTime, 1d),#(lf)    StartHour = datetime_part('hour', StartTime),#(lf)    EndTime;#(lf)let OperationsToItems = #(lf)SemanticModelLogs#(lf)    | where OperationId != '00000000-0000-0000-0000-000000000000'#(lf)    | where ItemId != '' and isnotempty(ItemName)#(lf)    | distinct ItemId, OperationId#(lf)| join kind=inner CompositeResult on OperationId#(lf)| project-away OperationId1, ItemId1#(lf);#(lf)OperationsToItems", [MaxRows=null, MaxSize=null, NoTruncate=true, AdditionalSetStatements=null])
+				in
+				    Source
+
+	annotation PBI_NavigationStepName = Navigation
+
+	annotation PBI_ResultType = Exception
+

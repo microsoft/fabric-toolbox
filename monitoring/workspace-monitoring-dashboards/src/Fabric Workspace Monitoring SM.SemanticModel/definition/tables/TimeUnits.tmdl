@@ -1,0 +1,70 @@
+/// Helper | It allows users to change time units for time related measures
+table TimeUnits
+	lineageTag: a1b71234-f8ad-4ca0-aa49-e874086bb602
+
+	measure SelectedTimeUnit = SELECTEDVALUE(TimeUnits[UnitValue])
+		formatString: 0
+		lineageTag: 18fbbb53-ca95-4c10-9fde-11b230920952
+
+	measure SelectedTimeUnitName = SELECTEDVALUE(TimeUnits[UnitShort])
+		lineageTag: 16fc5875-b1ac-4220-9034-49d532509ce2
+
+	column TimeUnitKey
+		dataType: int64
+		formatString: 0
+		lineageTag: 48e98233-d1cd-4281-aeba-633465c0da51
+		summarizeBy: count
+		sourceColumn: TimeUnitKey
+
+		annotation SummarizationSetBy = Automatic
+
+	column Unit
+		dataType: string
+		lineageTag: 3234453e-4851-476a-98b1-408d9a8b9fc8
+		summarizeBy: none
+		sourceColumn: Unit
+		sortByColumn: TimeUnitKey
+
+		changedProperty = SortByColumn
+
+		annotation SummarizationSetBy = Automatic
+
+	column UnitValue
+		dataType: int64
+		formatString: 0
+		lineageTag: c1f2c1ce-35e5-46d8-bea9-4d68f9a40ab8
+		summarizeBy: sum
+		sourceColumn: UnitValue
+
+		annotation SummarizationSetBy = Automatic
+
+	column UnitShort
+		dataType: string
+		lineageTag: 984d4ad8-a903-4b3d-b4ee-b3c97aa9ef7e
+		summarizeBy: none
+		sourceColumn: UnitShort
+
+		annotation SummarizationSetBy = Automatic
+
+	column Format
+		dataType: string
+		lineageTag: d2cf1133-d7e9-4d59-b702-f37553ecf463
+		summarizeBy: none
+		sourceColumn: Format
+
+		annotation SummarizationSetBy = Automatic
+
+	partition TimeUnits = m
+		mode: import
+		queryGroup: Units
+		source =
+				let
+				    Source = Table.FromRows(Json.Document(Binary.Decompress(Binary.FromText("TczBCoAgEATQX4ntusSW0c+IpxIUTEHz/9vVg95mhsdoDTsgvD4EX+yd4lO4tknCirQRLZwNajh4mRAR9WFAKSJV+4z1syIv6pSX6ZOL0JMnl2oWqJoU6vKQnI35AQ==", BinaryEncoding.Base64), Compression.Deflate)), let _t = ((type nullable text) meta [Serialized.Text = true]) in type table [TimeUnitKey = _t, Unit = _t, UnitValue = _t, UnitShort = _t, Format = _t]),
+				    #"Changed Type" = Table.TransformColumnTypes(Source,{{"TimeUnitKey", Int64.Type}, {"Unit", type text}, {"UnitValue", Int64.Type}, {"UnitShort", type text}})
+				in
+				    #"Changed Type"
+
+	annotation PBI_NavigationStepName = Navigation
+
+	annotation PBI_ResultType = Table
+

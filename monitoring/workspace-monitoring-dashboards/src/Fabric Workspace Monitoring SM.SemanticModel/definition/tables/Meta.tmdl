@@ -1,0 +1,123 @@
+/// Meta | Placeholder for helper and meta data measures
+table Meta
+	lineageTag: 3bb6e7c5-107d-4e8c-bc73-7639f08cc397
+
+	measure 'Report Version' = "2025.8.2"
+		lineageTag: 252ccfb8-bb44-42a7-bc41-e5772cfd9821
+
+	measure 'SM Logs Available' =
+			
+			VAR _check = [SM Logs Available Bool]
+			RETURN
+			IF(_check>0, "Actively used", "Not used")
+		displayFolder: Log Availability Check
+		lineageTag: 18302a8b-f7a0-4bab-9d54-e2192c3da4c4
+
+	measure 'EH Logs Available' =
+			
+			VAR _check = [EH Logs Available Bool]
+			RETURN
+			IF(_check>0, "Actively used", "Not used")
+		displayFolder: Log Availability Check
+		lineageTag: b37e4480-66c4-4d6c-96f3-65e78da461d9
+
+	measure 'GQL Logs Available' =
+			
+			VAR _check = [GQL Logs Available Bool]
+			RETURN
+			IF(_check>0, "Actively used", "Not used")
+		displayFolder: Log Availability Check
+		lineageTag: f6194268-10eb-4c54-8b6c-d454e305e4b6
+
+	measure 'MDB Logs Available' =
+			
+			VAR _check = [MDB Logs Available Bool]
+			RETURN
+			IF(_check>0, "Actively used", "Not used")
+		displayFolder: Log Availability Check
+		lineageTag: 465ea7a1-3b4b-4e02-9d78-af58c1e64ee7
+
+	measure 'EH Logs Available Bool' =
+			
+			IF(COUNTROWS(EH_Items)>0, 1, 0)
+		formatString: 0
+		displayFolder: Log Availability Check
+		lineageTag: 6b9e8fcc-6519-4fb9-b450-2ba74a68fe8d
+
+	measure 'GQL Logs Available Bool' =
+			
+			IF(COUNTROWS(GQL_Items)>0, 1,0)
+		formatString: 0
+		displayFolder: Log Availability Check
+		lineageTag: c0899b45-1b65-4fc0-a25f-c22b639cb14f
+
+	measure 'MDB Logs Available Bool' =
+			
+			IF(COUNTROWS(MDB_Items)>0, 1, 0)
+		formatString: 0
+		displayFolder: Log Availability Check
+		lineageTag: 8ac80337-da42-4eff-92b9-51d748f4d0e5
+
+	measure 'SM Logs Available Bool' =
+			
+			IF(COUNTROWS(SM_Items)>0, 1, 0)
+		formatString: 0
+		displayFolder: Log Availability Check
+		lineageTag: f43537fd-c65d-49bf-ad49-a6867f084f56
+
+	measure 'Start Date' = MIN(Dim_Date[Date])
+		formatString: yyyy-mm-dd
+		displayFolder: Date Filter Period
+		lineageTag: 628eec7e-2eca-42dd-b087-a4eaa7558c3e
+
+		annotation PBI_FormatHint = {"isCustom":true}
+
+	measure 'End Date' = MAX(Dim_Date[Date])
+		formatString: yyyy-mm-dd
+		displayFolder: Date Filter Period
+		lineageTag: e558ed13-ef55-4bf9-93bb-f229eb08b1d5
+
+		annotation PBI_FormatHint = {"isCustom":true}
+
+	measure 'Selected Semantic Model' =
+			
+			CALCULATE(
+			    MIN(SM_Items[ItemName]),
+			    CROSSFILTER(SM_Items[ItemId], SM_ExecutionMetrics[ItemId], Both)
+			)
+		displayFolder: Helpers
+		lineageTag: a6373e8f-37e5-4af2-8b04-af4c106e94c2
+
+	measure 'Selected Mirrored Database' =
+			
+			CALCULATE(
+			    MIN(MDB_Items[ItemName]),
+			    CROSSFILTER(MDB_Items[ItemId], MDB_TableExecutionLogs[ItemId], Both)
+			)
+		displayFolder: Helpers
+		lineageTag: cb11e9f4-ffd2-4fa5-8ddc-07fcbeb49cba
+
+	measure 'Selected Eventhouse Database' =
+			
+			CALCULATE(
+			    MIN(EH_Items[ItemName]),
+			    CROSSFILTER(EH_Items[ItemId], EH_QueryLogs[ItemId], Both)
+			)
+		displayFolder: Helpers
+		lineageTag: 61c15bed-ab33-46ba-ab84-e81b77392385
+
+	column Value
+		isHidden
+		lineageTag: bca537fc-abae-4f1e-b629-e3b2c035c125
+		summarizeBy: none
+		isNameInferred
+		sourceColumn: [Value]
+
+		annotation SummarizationSetBy = Automatic
+
+	partition Meta = calculated
+		mode: import
+		source = {"metrics"}
+
+	annotation PBI_Id = 99d1191295654806b89946153de6cd83
+
