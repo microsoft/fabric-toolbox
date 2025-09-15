@@ -66,9 +66,11 @@ And from Teams:
 
 ### 1 - Configure export
 
+ℹ️ **Skip those configurations steps if you're using FinOps Hub**
+
 #### 1.1 - FOCUS Data
 
-ℹ️ FCA will retain only data related to Fabric costs, no other Azure cost will be kept.
+ℹ️ FCA will display only data related to Fabric costs, no other Azure cost will be prepare for analyze.
 
 > To create an export (Create [Cost Management exports](https://learn.microsoft.com/en-us/azure/cost-management-billing/costs/tutorial-improved-exports#create-exports)) the [Cost Management Contributor role](https://learn.microsoft.com/en-us/azure/cost-management-billing/costs/understand-work-scopes#roles-used-in-cost-management-on-rbac-scopes) will be required.
 
@@ -140,11 +142,14 @@ To create reservation export, on the Azure portal , search for **Cost Management
   - Select the ellipsis (**...**) next to **Files**
   - Select **New shortcut**
   - Select Azure Data Lake Storage Gen 2 and provide the following settings:
-    - URL = **Data Lake Storage** URL of the Data Lake storage account. To get the Data Lake Storage URL, view the storage account where the export created a directory and the FOCUS cost file. Under **Settings**, select **Endpoints**. Copy the URL marked as **Data Lake Storage** it should look like this: *https://###.dfs.core.windows.net*.
+    - URL = **Data Lake Storage** URL of the Data Lake storage account. To get the Data Lake Storage URL, view the storage account where the export created a directory and the FOCUS cost file (If your're using **FinOps Hub**, use the existing storage account with the ingestion container). Under **Settings**, select **Endpoints**. Copy the URL marked as **Data Lake Storage** it should look like this: *https://###.dfs.core.windows.net*.
     - Connection = **Create a new connection**
     - Connection name = <*Any name of your choice*>
     - Authentication kind = **Organizational account**
-    - Sign in when prompted and select the Shortcut target sub path **fca-focus-cost** and click on Next (⚠️ Ensure the selected hierarchy is correct)
+    - Sign in when prompted
+    - Select the Shortcut target sub path:
+      -  For <u>Focus export configured previously</u>: **fca-focus-cost** and click on Next (⚠️ Ensure the selected hierarchy is correct)
+      -  For <u>FinOps Hub</u>: **Costs** in the ingestion container and click on Next
 
 ![FCA](./media/Setup-Export3.png)
 
