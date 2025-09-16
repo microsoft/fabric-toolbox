@@ -20,6 +20,14 @@
     "id": "a49cea59-ab55-492c-8b93-047a937a1ea1"
   },
   {
+    "name": "01_Load_Dimensions.Notebook",
+    "id": "99989ed6-47fb-4f95-acbc-1dccd383ce1a"
+  },
+  {
+    "name": "01_Load_Focus_Fabric.Notebook",
+    "id": "2f378bea-3354-4854-b7dd-7ff3ad7aad1f"
+  },
+  {
     "name": "03_Optimization.Notebook",
     "id": "a2bc83ae-4541-4255-83f4-2b5516590f31"
   },
