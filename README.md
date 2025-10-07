@@ -22,6 +22,7 @@ These assets should be treated as examples that you can use to create the soluti
 - [Power BI datamart to Fabric Data Warehouse Modernization](./accelerators/power-bi-to-fabric-data-warehouse-modernization)
 - [Real Time Intelligence Eventhouse](./accelerators/real-time-intelligence_eventhouse)
 - [Real Time Intelligence Eventstream](./accelerators/real-time-intelligence_eventstream)
+- $${\color{green}NEW!}$$ [Policy Weaver - Mirror Data Access Policies from Databricks and Snowflake to Fabric](./accelerators/policy-weaver)
 
 ## Samples
 - [Open Mirroring](./samples/open-mirroring)
