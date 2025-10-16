@@ -8,58 +8,41 @@ param(
 
 function Write-Header {
     Write-Host ""
-    Write-Host "========================================"
-    Write-Host "   DAX Performance Tuner Setup"
-    Write-Host "========================================"
+    Write-Host "========================================" -ForegroundColor Green
+    Write-Host "   DAX Performance Tuner Setup" -ForegroundColor Green
+    Write-Host "========================================" -ForegroundColor Green
     Write-Host ""
-    Write-Host "Setting up everything you need for DAX optimization..."
+    Write-Host "Setting up everything you need for DAX optimization..." -ForegroundColor Cyan
     Write-Host ""
 }
 
 function Write-Success {
     param($Message)
-    Write-Host "[SUCCESS] $Message"
+    Write-Host "[SUCCESS] $Message" -ForegroundColor Green
 }
 
 function Write-Warning {
     param($Message)
-    Write-Host "[WARNING] $Message"
+    Write-Host "[WARNING] $Message" -ForegroundColor Yellow
 }
 
 function Write-Error {
     param($Message)
-    Write-Host "[ERROR] $Message"
+    Write-Host "[ERROR] $Message" -ForegroundColor Red
 }
 
 function Write-Info {
     param($Message)
-    Write-Host "[INFO] $Message"
+    Write-Host "[INFO] $Message" -ForegroundColor Blue
 }
 
 function Write-Step {
     param($Message)
     Write-Host ""
-    Write-Host "[STEP] $Message"
+    Write-Host "[STEP] $Message" -ForegroundColor Cyan
 }
 
 Write-Header
-
-# Check if running from Downloads folder (common mistake)
-$currentPath = Get-Location
-if ($currentPath -like "*\Downloads\*") {
-    Write-Warning "You are running from the Downloads folder!"
-    Write-Info "For best results, extract the files to a permanent location first"
-    Write-Info "Example: C:\Projects\fabric-toolbox\tools\DAXPerformanceTunerMCPServer"
-    Write-Host ""
-    if (-not $NonInteractive) {
-        Write-Host "Continue anyway? (Y/N): " -NoNewline
-        $response = Read-Host
-        if ($response -ne "Y" -and $response -ne "y") {
-            Write-Info "Setup cancelled. Please extract to a permanent location and run again."
-            exit 0
-        }
-    }
-}
 
 # Check if running on Windows
 if ($PSVersionTable.Platform -and $PSVersionTable.Platform -ne "Win32NT") {
@@ -137,59 +120,30 @@ try {
     Write-Info "Continuing with available .NET version..."
 }
 
-# Create Python virtual environment
-Write-Step "Creating Python virtual environment..."
-$venvPath = ".venv"
-if (Test-Path $venvPath) {
-    Write-Info "Virtual environment already exists at $venvPath"
-} else {
-    try {
-        python -m venv $venvPath
-        Write-Success "Virtual environment created at $venvPath"
-    }
-    catch {
-        Write-Error "Failed to create virtual environment"
-        Write-Warning "Try running manually: python -m venv .venv"
-        exit 1
-    }
-}
-
-# Activate virtual environment
-Write-Step "Activating virtual environment..."
-$activateScript = Join-Path $venvPath "Scripts\Activate.ps1"
-if (Test-Path $activateScript) {
-    try {
-        & $activateScript
-        Write-Success "Virtual environment activated"
-    }
-    catch {
-        Write-Warning "Failed to activate virtual environment, continuing with system Python"
-    }
-} else {
-    Write-Warning "Activate script not found, using system Python"
-}
-
-# Determine Python executable path for later use
-$pythonExe = if (Test-Path (Join-Path $venvPath "Scripts\python.exe")) {
-    Join-Path $venvPath "Scripts\python.exe"
-} else {
-    "python"
-}
-
 # Install Python dependencies
-Write-Step "Installing Python dependencies into virtual environment..."
+Write-Step "Installing Python dependencies..."
 try {
     Write-Info "Upgrading pip..."
-    & $pythonExe -m pip install --upgrade pip --quiet
+    python -m pip install --upgrade pip --quiet
     Write-Success "Pip upgraded"
     
-    Write-Info "Installing required packages (including pythonnet for XMLA)..."
-    & $pythonExe -m pip install -r requirements.txt --quiet
-    Write-Success "Python dependencies installed in virtual environment"
+    Write-Info "Installing required packages..."
+    python -m pip install -r requirements.txt --quiet
+    Write-Success "Python dependencies installed"
+    # Ensure pythonnet installed for XMLA connectivity
+    Write-Info "Verifying pythonnet installation..."
+    python -c "import pythonnet" 2>$null
+    if ($LASTEXITCODE -eq 0) {
+        Write-Success "pythonnet is installed"
+    } else {
+        Write-Warning "pythonnet not detected, installing pythonnet..."
+        python -m pip install pythonnet>=3.0.0 --quiet
+        Write-Success "pythonnet installed"
+    }
 }
 catch {
     Write-Error "Failed to install Python dependencies"
-    Write-Warning "Try running manually: .venv\Scripts\python -m pip install -r requirements.txt"
+    Write-Warning "Try running manually: pip install -r requirements.txt"
     exit 1
 }
 
@@ -234,7 +188,7 @@ if (Test-Path $daxExecutorPath) {
 }
 
 # Unblock DLLs downloaded from the internet (Windows security feature)
-Write-Step "Unblocking ADOMD.NET DLLs (for XMLA connectivity)..."
+Write-Step "Unblocking DLLs from Windows security restrictions..."
 try {
     $dllsToUnblock = Get-ChildItem -Path "dotnet\*.dll" -ErrorAction SilentlyContinue
     if ($dllsToUnblock) {
@@ -243,9 +197,9 @@ try {
             Unblock-File -Path $dll.FullName -ErrorAction SilentlyContinue
             $unblockedCount++
         }
-        Write-Success "Unblocked $unblockedCount ADOMD.NET DLL(s) in dotnet\ folder"
+        Write-Success "Unblocked $unblockedCount DLL(s) in dotnet\ folder"
     } else {
-        Write-Warning "No DLLs found in dotnet\ folder - XMLA connectivity may not work"
+        Write-Info "No DLLs found in dotnet\ folder to unblock"
     }
     
     # Also unblock DaxExecutor's own DLLs if present
@@ -273,9 +227,9 @@ Write-Info "MCP server configured and ready to start"
 
 # Success message
 Write-Host ""
-Write-Host "========================================"
-Write-Host "   Setup Completed Successfully!"
-Write-Host "========================================"
+Write-Host "========================================" -ForegroundColor Green
+Write-Host "   Setup Completed Successfully!" -ForegroundColor Green  
+Write-Host "========================================" -ForegroundColor Green
 Write-Host ""
 
 Write-Host ""
@@ -297,66 +251,55 @@ if (-not (Test-Path $vsCodeDir)) {
         Write-Info ".vscode directory already exists"
 }
 
-# Create or update mcp.json with relative paths (like SemanticModelMCPServer)
+# Create or update mcp.json with absolute paths
 $mcpFile = Join-Path $vsCodeDir "mcp.json"
+$serverPath = Join-Path $scriptDir "server.py"
 
-# Use relative paths with cwd set to this directory
-# This matches the pattern used by SemanticModelMCPServer
+# Use forward slashes and escape backslashes for JSON
+$serverPathJson = $serverPath -replace '\\', '\\'
+
 $mcpContent = @"
 {
   "servers": {
     "dax-performance-tuner": {
-      "command": "./.venv/Scripts/python",
-      "args": ["src/server.py"],
-      "cwd": "$($scriptDir -replace '\\', '\\\\')"
+      "command": "python",
+      "args": [
+        "$serverPathJson"
+      ],
+      "env": {}
     }
   }
 }
 "@
 
 Set-Content -Path $mcpFile -Value $mcpContent -Encoding UTF8
-Write-Success "mcp.json configured (will work from: $scriptDir)"
-Write-Info "Configuration uses relative paths with working directory set"
+Write-Success "mcp.json configured with absolute path: $serverPath"
 
 Write-Host ""
-Write-Host "What's Ready:"
-Write-Success "Python virtual environment with all dependencies"
+Write-Host "What's Ready:" -ForegroundColor Cyan
+Write-Success "Python environment with all dependencies"
 Write-Success "DaxExecutor.exe ready for performance analysis"  
 Write-Success "4 streamlined MCP tools for DAX optimization"
 Write-Success "VS Code MCP config prepared (if missing)"
 
 Write-Host ""
-Write-Host "Next Steps:"
+Write-Host "Next Steps:" -ForegroundColor Cyan
 Write-Host ""
-Write-Host "1. Add this MCP server to your VS Code User Settings:"
+Write-Host "1. Start the MCP server whenever you need it:" -ForegroundColor Yellow
+Write-Host "   python src/server.py" -ForegroundColor Green
 Write-Host ""
-Write-Host "   Option A - Using VS Code UI:"
-Write-Host "   - Press Ctrl+Shift+P and search for 'Preferences: Open User Settings (JSON)'"
-Write-Host "   - Add the 'github.copilot.chat.mcp.servers' section (see below)"
+Write-Host "2. Configure your AI client:" -ForegroundColor Yellow
+Write-Host "   - VS Code / GitHub Copilot Chat: uses .vscode/mcp.json" -ForegroundColor Yellow
+Write-Host "   - Claude Desktop: copy the same command into claude_desktop_config.json" -ForegroundColor Yellow
+Write-Host "   - Other MCP clients: point at python + src/server.py" -ForegroundColor Yellow
 Write-Host ""
-Write-Host "   Option B - Manual configuration:"
-Write-Host "   - Copy the configuration from: $mcpFile"
-Write-Host "   - Paste into your VS Code User Settings JSON"
+Write-Host "3. Test it works:" -ForegroundColor Yellow
+Write-Host "   Ask your AI: 'Help me optimize a DAX query'" -ForegroundColor Yellow
+Write-Host "   You should see 4 streamlined DAX optimization tools available" -ForegroundColor Yellow
 Write-Host ""
-Write-Host "   The configuration to add:"
-Write-Host '   "github.copilot.chat.mcp.servers": {'
-Write-Host '     "dax-performance-tuner": {'
-Write-Host '       "command": "./.venv/Scripts/python",'
-Write-Host '       "args": ["src/server.py"],'
-Write-Host "       `"cwd`": `"$scriptDir`""
-Write-Host '     }'
-Write-Host '   }'
-Write-Host ""
-Write-Host "2. Restart VS Code (close all windows and reopen)"
-Write-Host ""
-Write-Host "3. Test the MCP server:"
-Write-Host "   - Open GitHub Copilot Chat"
-Write-Host "   - Ask: 'What MCP tools are available?'"
-Write-Host "   - You should see 4 DAX Performance Tuner tools"
-Write-Host ""
-Write-Host "4. Start optimizing DAX queries!"
-Write-Host "   - Ask: 'Help me optimize a DAX query'"
-Write-Host "   - Provide workspace, dataset, and your DAX query"
+Write-Host "4. Start optimizing:" -ForegroundColor Yellow
+Write-Host "   Provide your workspace, dataset, and DAX query" -ForegroundColor Yellow
+Write-Host "   Let the AI guide you through the optimization process" -ForegroundColor Yellow
 
 Write-Host ""
 Write-Info "Need help? Check:"
@@ -366,8 +309,7 @@ Write-Info "- setup.ps1 (this automation script)"
 
 if (-not $NonInteractive) {
     Write-Host ""
-    Write-Host "Setup complete! The virtual environment is ready."
-    Write-Host "Restart VS Code to activate the MCP server, or run: .venv\Scripts\python src/server.py"
-    Write-Host "Press any key to exit..."
+    Write-Host "Setup complete! Launch the MCP server with 'python src/server.py' when you're ready." -ForegroundColor Green
+    Write-Host "Press any key to exit..." -ForegroundColor Yellow
     $null = $Host.UI.RawUI.ReadKey('NoEcho,IncludeKeyDown')
 }
