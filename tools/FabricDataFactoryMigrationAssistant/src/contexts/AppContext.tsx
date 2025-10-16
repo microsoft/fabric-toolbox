@@ -19,6 +19,7 @@ import {
   FolderTreeNode,
   FolderDeploymentResult
 } from '../types';
+import { initializeScheduleTarget } from '../services/componentMappingService';
 import { ADFProfile } from '../types/profiling';
 import { createDefaultAppState } from '../lib/stateValidation';
 
@@ -86,10 +87,31 @@ function appReducer(state: AppState, action: AppAction): AppState {
     
     case 'SET_ADF_COMPONENTS':
       const components = action.payload || [];
+      // Auto-initialize schedule configs for triggers
+      const componentsWithScheduleConfigs = components.map(component => {
+        if (component.type === 'trigger' && component.triggerMetadata && !component.fabricTarget?.scheduleConfig) {
+          try {
+            const scheduleTarget = initializeScheduleTarget(component);
+            console.log(`Initialized schedule config for trigger ${component.name}:`, {
+              enabled: scheduleTarget.scheduleConfig?.enabled,
+              targetPipelines: scheduleTarget.scheduleConfig?.targetPipelines.length
+            });
+            return {
+              ...component,
+              fabricTarget: scheduleTarget
+            };
+          } catch (error) {
+            console.error(`Failed to initialize schedule config for trigger ${component.name}:`, error);
+            return component;
+          }
+        }
+        return component;
+      });
+      
       return { 
         ...state, 
-        adfComponents: components,
-        selectedComponents: components.filter(c => c && c.isSelected)
+        adfComponents: componentsWithScheduleConfigs,
+        selectedComponents: componentsWithScheduleConfigs.filter(c => c && c.isSelected)
       };
     
     case 'SET_ADF_PROFILE':

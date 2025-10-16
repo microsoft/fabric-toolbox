@@ -23,6 +23,7 @@ import {
 import type { ADFComponent, FabricTarget } from '../../../types';
 import type { ActivityLinkedServiceReference } from '../../../services/pipelineActivityAnalysisService';
 import { ExistingConnectionsService } from '../../../services/existingConnectionsService';
+import { ScheduleConfigPanel } from './ScheduleConfigPanel';
 
 interface ComponentMappingRowProps {
   component: ADFComponent & { mappingIndex: number; mappingStatus?: any };
@@ -30,6 +31,7 @@ interface ComponentMappingRowProps {
   onToggle: () => void;
   onTargetTypeChange: (index: number, value: string) => void;
   onTargetNameChange: (index: number, value: string) => void;
+  onTargetConfigChange?: (index: number, updatedTarget: FabricTarget) => void;
   onActivityConnectionMapping?: (pipelineName: string, uniqueId: string, connectionId: string, mappingInfo: any) => void;
   getPipelineActivityReferences?: (component: ADFComponent) => ActivityLinkedServiceReference[];
   pipelineConnectionMappings?: any;
@@ -60,6 +62,7 @@ export function ComponentMappingRow({
   onToggle,
   onTargetTypeChange,
   onTargetNameChange,
+  onTargetConfigChange,
   onActivityConnectionMapping,
   getPipelineActivityReferences,
   pipelineConnectionMappings = {},
@@ -73,6 +76,7 @@ export function ComponentMappingRow({
   const hasTarget = component.fabricTarget?.type && component.fabricTarget?.name;
   const warnings = component.warnings || [];
   const isPipeline = component.type === 'pipeline';
+  const isTrigger = component.type === 'trigger';
   
   const mappingStatus = component.mappingStatus || {
     required: 0,
@@ -361,7 +365,7 @@ export function ComponentMappingRow({
           )}
         </td>
         <td className="p-3 text-right">
-          {isPipeline && mappingStatus.required > 0 && (
+          {(isPipeline && mappingStatus.required > 0) || isTrigger ? (
             <Button
               variant="ghost"
               size="sm"
@@ -369,7 +373,7 @@ export function ComponentMappingRow({
             >
               {isExpanded ? 'Hide' : 'Show'} Details
             </Button>
-          )}
+          ) : null}
         </td>
       </tr>
       {isExpanded && isPipeline && mappingStatus.required > 0 && (
@@ -390,6 +394,26 @@ export function ComponentMappingRow({
               )}
               {renderPipelineActivities()}
             </div>
+          </td>
+        </tr>
+      )}
+      {isExpanded && isTrigger && component.fabricTarget?.scheduleConfig && onTargetConfigChange && (
+        <tr>
+          <td colSpan={showCheckbox ? 8 : 7} className="p-4 bg-muted/30">
+            <ScheduleConfigPanel
+              component={component}
+              fabricTarget={component.fabricTarget}
+              onConfigChange={(configUpdate) => {
+                const updatedTarget: FabricTarget = {
+                  ...component.fabricTarget!,
+                  scheduleConfig: {
+                    ...component.fabricTarget!.scheduleConfig!,
+                    ...configUpdate
+                  }
+                };
+                onTargetConfigChange(component.mappingIndex, updatedTarget);
+              }}
+            />
           </td>
         </tr>
       )}
