@@ -9,7 +9,7 @@ Transform slow DAX queries into lightning-fast optimized code using AI assistanc
 Before you begin, install:
 - ✅ **Python 3.8+** - [Download here](https://python.org/downloads/)
   - Important: Check "Add Python to PATH" during installation
-- ✅ **\.NET 8.0 Runtime** - [Download here](https://dotnet.microsoft.com/download/dotnet/8.0)
+- ✅ **\.NET 8.0 Runtime** - [Download here](https://dotnet.microsoft.com/en-us/download)
   - Choose ".NET 8.0 Runtime" (not SDK)
 
 ---
