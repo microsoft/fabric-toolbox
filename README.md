@@ -99,7 +99,17 @@ Supports 50+ connector types:
 - Maintains organizational logic
 - Supports nested folders
 
-### 6. **Deployment Features**
+### 6. **Smart Schedule Configuration** ✨ NEW
+
+- **Trigger State Detection**: Automatically detects Started/Stopped status from ADF triggers
+- **Visual Schedule Management**: See exactly which pipelines each schedule will activate
+- **Flexible Configuration**: Customize frequency, interval, start/end times, and time zones
+- **Safety-First Deployment**: All schedules deploy as **disabled by default** for testing
+- **Multi-Pipeline Support**: Creates separate schedules when one trigger activates multiple pipelines
+- **Full Control**: Review and adjust all schedule settings before deployment
+- **Runtime State Awareness**: Clearly indicates if source ADF trigger was running or stopped
+
+### 7. **Deployment Features**
 
 - **Progress Tracking**: Real-time deployment status
 - **Error Handling**: Detailed error messages with resolution guidance
@@ -107,7 +117,7 @@ Supports 50+ connector types:
 - **Batch Operations**: Deploy multiple components simultaneously
 - **Validation**: Pre-deployment compatibility checks
 
-### 7. **Synapse Support**
+### 8. **Synapse Support**
 
 - Full support for Azure Synapse Analytics pipelines
 - Synapse-specific activities (Notebook, Spark Job, SQL Pool)

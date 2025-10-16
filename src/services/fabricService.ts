@@ -139,6 +139,36 @@ export class FabricService {
     return connectionService.getConnectionDetails(adfLinkedService, connectorType);
   }
 
+  /**
+   * Extract pipeline name from ADF trigger pipeline reference
+   * Handles multiple formats:
+   * - { referenceName: 'PipelineName' }
+   * - { pipelineName: 'PipelineName' }
+   * - { name: 'PipelineName' }
+   */
+  private extractPipelineNameFromTriggerRef(pipelineRef: any): string | null {
+    if (!pipelineRef || typeof pipelineRef !== 'object') {
+      return null;
+    }
+    return pipelineRef.referenceName || pipelineRef.pipelineName || pipelineRef.name || null;
+  }
+
+  /**
+   * Map ADF recurrence frequency to Fabric schedule frequency type
+   * ADF: 'Minute' | 'Hour' | 'Day' | 'Week' | 'Month'
+   * Fabric: 'Minute' | 'Hour' | 'Daily' | 'Weekly' | 'Monthly'
+   */
+  private mapFrequencyType(adfFrequency: string): string {
+    const frequencyMap: Record<string, string> = {
+      'Minute': 'Minute',
+      'Hour': 'Hour',
+      'Day': 'Daily',
+      'Week': 'Weekly',
+      'Month': 'Monthly'
+    };
+    return frequencyMap[adfFrequency] || adfFrequency;
+  }
+
   // Generate deployment plan for download
   generateDeploymentPlan(
     mappedComponents: ComponentMapping[], 
@@ -255,24 +285,72 @@ export class FabricService {
       });
     });
 
-    // 5. Schedules
+    // 5. Schedules (one or more per trigger depending on pipeline count)
     schedules.forEach(mapping => {
       const component = mapping.component;
       if (component.definition?.type === 'ScheduleTrigger') {
-        const schedulePayload = {
-          displayName: `${mapping.fabricTarget?.name || component.name}_Schedule`,
-          description: `Migrated from ADF trigger: ${component.name}`,
-          schedule: this.transformSchedule(component.definition),
-          pipelineName: mapping.fabricTarget?.name || component.name
-        };
-
-        plan.components.schedules.push({
-          method: 'POST',
-          endpoint: `${this.baseUrl}/workspaces/${workspaceId}/schedules`,
-          payload: schedulePayload,
-          originalName: component.name,
-          targetName: mapping.fabricTarget?.name || component.name
-        });
+        // Extract pipeline references from trigger
+        const pipelines = component.definition?.properties?.typeProperties?.pipelines || [];
+        
+        if (pipelines.length === 0) {
+          // No pipelines referenced
+          plan.components.schedules.push({
+            method: 'SKIP',
+            reason: 'No pipelines referenced',
+            originalName: component.name,
+            targetName: mapping.fabricTarget?.name || component.name
+          });
+        } else if (pipelines.length === 1) {
+          // Single pipeline - one schedule
+          const pipelineName = this.extractPipelineNameFromTriggerRef(pipelines[0]) || 'Unknown';
+          const recurrence = component.definition?.properties?.typeProperties?.recurrence;
+          
+          plan.components.schedules.push({
+            method: 'POST',
+            endpoint: `${this.baseUrl}/workspaces/${workspaceId}/items/{pipelineId}/jobs/Pipeline/schedules`,
+            payload: {
+              displayName: `${pipelineName}_Schedule`,
+              description: `Migrated from ADF trigger: ${component.name}`,
+              enabled: true,
+              configuration: {
+                frequency: this.mapFrequencyType(recurrence?.frequency || 'Daily'),
+                interval: recurrence?.interval || 1,
+                startTime: recurrence?.startTime,
+                endTime: recurrence?.endTime,
+                timeZone: recurrence?.timeZone || 'UTC'
+              }
+            },
+            originalName: component.name,
+            targetPipeline: pipelineName,
+            note: 'pipelineId will be resolved at deployment time'
+          });
+        } else {
+          // Multiple pipelines - create one schedule entry per pipeline
+          pipelines.forEach((pipelineRef: any) => {
+            const pipelineName = this.extractPipelineNameFromTriggerRef(pipelineRef) || 'Unknown';
+            const recurrence = component.definition?.properties?.typeProperties?.recurrence;
+            
+            plan.components.schedules.push({
+              method: 'POST',
+              endpoint: `${this.baseUrl}/workspaces/${workspaceId}/items/{pipelineId}/jobs/Pipeline/schedules`,
+              payload: {
+                displayName: `${pipelineName}_Schedule`,
+                description: `Migrated from ADF trigger: ${component.name} (multi-pipeline)`,
+                enabled: true,
+                configuration: {
+                  frequency: this.mapFrequencyType(recurrence?.frequency || 'Daily'),
+                  interval: recurrence?.interval || 1,
+                  startTime: recurrence?.startTime,
+                  endTime: recurrence?.endTime,
+                  timeZone: recurrence?.timeZone || 'UTC'
+                }
+              },
+              originalName: component.name,
+              targetPipeline: pipelineName,
+              note: `Part of multi-pipeline trigger (${pipelines.length} pipelines total). pipelineId will be resolved at deployment time`
+            });
+          });
+        }
       }
     });
 
@@ -589,7 +667,135 @@ export class FabricService {
               case 'trigger':
                 try {
                   if (component.definition?.type === 'ScheduleTrigger') {
-                    result = await this.createSchedule(component, accessToken, workspaceId);
+                    // FIX: Use triggerMetadata instead of re-parsing from definition
+                    // triggerMetadata.referencedPipelines was already extracted by parser
+                    const pipelines = component.triggerMetadata?.referencedPipelines || [];
+                    
+                    console.log(`🔍 Deploying trigger "${component.name}":`, {
+                      hasTriggerMetadata: Boolean(component.triggerMetadata),
+                      referencedPipelines: pipelines,
+                      pipelineCount: pipelines.length
+                    });
+                    
+                    if (pipelines.length === 0) {
+                      // No pipelines referenced - skip
+                      const skipReason = 'No pipelines referenced by trigger';
+                      console.warn(`⚠️ Skipping trigger "${component.name}": ${skipReason}`);
+                      result = {
+                        componentName: component.name,
+                        componentType: component.type,
+                        status: 'skipped',
+                        note: skipReason,
+                        skipReason: skipReason
+                      };
+                    } else if (pipelines.length === 1) {
+                      // Single pipeline - create one schedule
+                      // Pipeline names are already extracted strings in triggerMetadata.referencedPipelines
+                      const pipelineName = pipelines[0];
+                      if (!pipelineName) {
+                        result = {
+                          componentName: component.name,
+                          componentType: component.type,
+                          status: 'failed',
+                          error: 'Could not extract pipeline name from trigger reference'
+                        };
+                      } else {
+                        const pipelineId = deployedPipelineIds.get(pipelineName);
+                        if (!pipelineId) {
+                          result = {
+                            componentName: component.name,
+                            componentType: component.type,
+                            status: 'failed',
+                            error: `Pipeline '${pipelineName}' not found in deployed pipelines. Ensure pipeline is deployed before trigger.`
+                          };
+                        } else {
+                          result = await scheduleService.createSchedule(
+                            component, 
+                            accessToken, 
+                            workspaceId,
+                            pipelineId,
+                            pipelineName
+                          );
+                        }
+                      }
+                    } else {
+                      // Multiple pipelines - create schedule for each
+                      const scheduleResults: { pipeline: string; success: boolean; error?: string }[] = [];
+                      let successCount = 0;
+                      let failCount = 0;
+
+                      // Pipeline names are already extracted strings in triggerMetadata.referencedPipelines
+                      for (const pipelineName of pipelines) {
+                        if (!pipelineName) {
+                          scheduleResults.push({ 
+                            pipeline: 'Unknown', 
+                            success: false, 
+                            error: 'Could not extract pipeline name' 
+                          });
+                          failCount++;
+                          continue;
+                        }
+
+                        const pipelineId = deployedPipelineIds.get(pipelineName);
+                        if (!pipelineId) {
+                          scheduleResults.push({ 
+                            pipeline: pipelineName, 
+                            success: false, 
+                            error: 'Pipeline not deployed' 
+                          });
+                          failCount++;
+                          continue;
+                        }
+
+                        const scheduleResult = await scheduleService.createSchedule(
+                          component,
+                          accessToken,
+                          workspaceId,
+                          pipelineId,
+                          pipelineName
+                        );
+
+                        if (scheduleResult.status === 'success') {
+                          scheduleResults.push({ pipeline: pipelineName, success: true });
+                          successCount++;
+                        } else {
+                          scheduleResults.push({ 
+                            pipeline: pipelineName, 
+                            success: false, 
+                            error: scheduleResult.error || scheduleResult.errorMessage 
+                          });
+                          failCount++;
+                        }
+                      }
+
+                      // Determine overall status
+                      if (successCount === pipelines.length) {
+                        result = {
+                          componentName: component.name,
+                          componentType: component.type,
+                          status: 'success',
+                          note: `Created ${successCount} schedules for ${pipelines.length} pipelines`,
+                          details: scheduleResults.map(r => `${r.pipeline}: ${r.success ? 'Success' : 'Failed - ' + r.error}`).join('; ')
+                        };
+                      } else if (successCount > 0) {
+                        result = {
+                          componentName: component.name,
+                          componentType: component.type,
+                          status: 'partial',
+                          note: `Created ${successCount}/${pipelines.length} schedules`,
+                          details: scheduleResults.map(r => `${r.pipeline}: ${r.success ? 'Success' : 'Failed - ' + r.error}`).join('; '),
+                          error: `${failCount} schedule(s) failed to create`
+                        };
+                      } else {
+                        result = {
+                          componentName: component.name,
+                          componentType: component.type,
+                          status: 'failed',
+                          error: `All ${pipelines.length} schedules failed to create`,
+                          details: scheduleResults.map(r => `${r.pipeline}: Failed - ${r.error}`).join('; ')
+                        };
+                      }
+                    }
                   } else {
                     const skipReason = 'Only schedule triggers are supported';
                     result = {
@@ -1506,11 +1712,6 @@ export class FabricService {
       failed: results.filter(r => r.status === 'failed').length,
       skipped: results.filter(r => r.status === 'skipped').length
     };
-  }
-
-  // Create a schedule in Fabric (delegated/preserved small helper)
-  private async createSchedule(component: ADFComponent, accessToken: string, workspaceId: string): Promise<DeploymentResult> {
-    return await scheduleService.createSchedule(component, accessToken, workspaceId);
   }
 
   // Order pipelines by dependencies for proper deployment sequence

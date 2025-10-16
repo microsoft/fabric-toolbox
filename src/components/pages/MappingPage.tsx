@@ -414,6 +414,22 @@ export function MappingPage() {
     }
   };
 
+  const handleTargetConfigChange = (index: number, updatedTarget: FabricTarget) => {
+    const component = filteredComponents[index];
+    if (!component) return;
+
+    const originalIndex = (state.adfComponents || []).findIndex(
+      c => c && c.name === component.name && c.type === component.type
+    );
+
+    if (originalIndex >= 0) {
+      dispatch({
+        type: 'UPDATE_COMPONENT_TARGET',
+        payload: { index: originalIndex, fabricTarget: updatedTarget }
+      });
+    }
+  };
+
   const toggleComponentExpansion = (index: number) => {
     setExpandedComponents(prev => {
       const next = new Set(prev);
@@ -673,6 +689,7 @@ export function MappingPage() {
                     onBulkToggle={handleBulkToggle}
                     onTargetTypeChange={handleTargetTypeChange}
                     onTargetNameChange={handleTargetNameChange}
+                    onTargetConfigChange={handleTargetConfigChange}
                     onActivityConnectionMapping={handleActivityConnectionMapping}
                     getPipelineActivityReferences={getPipelineActivityReferences}
                     pipelineConnectionMappings={pipelineConnectionMappings}
