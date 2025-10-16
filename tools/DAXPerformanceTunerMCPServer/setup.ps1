@@ -253,7 +253,7 @@ if (-not (Test-Path $vsCodeDir)) {
 
 # Create or update mcp.json with absolute paths
 $mcpFile = Join-Path $vsCodeDir "mcp.json"
-$serverPath = Join-Path $scriptDir "server.py"
+$serverPath = Join-Path $scriptDir "src\server.py"
 
 # Use forward slashes and escape backslashes for JSON
 $serverPathJson = $serverPath -replace '\\', '\\'
