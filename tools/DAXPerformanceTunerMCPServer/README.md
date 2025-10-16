@@ -2,6 +2,13 @@
 
 Transform slow DAX queries into lightning-fast optimized code using AI assistance and expert knowledge.
 
+## ⚠️ Important Disclaimer
+
+**Always test optimized DAX queries thoroughly before deploying to production.** While this tool performs semantic equivalence checking to verify that optimized queries return the same results as the original, this validation is **not comprehensive**. The semantic checking:
+- Compares results for the specific query context tested
+- May not cover all edge cases or data scenarios
+- Cannot guarantee identical behavior across all possible filter contexts, user interactions, or data states
+
 ## ⚡ Quick Setup
 
 ### **Prerequisites**
