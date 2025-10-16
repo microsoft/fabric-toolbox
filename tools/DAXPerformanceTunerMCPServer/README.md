@@ -2,104 +2,48 @@
 
 Transform slow DAX queries into lightning-fast optimized code using AI assistance and expert knowledge.
 
-## ⚡ Quick Install (2 Steps)
+## ⚡ 3-Step Setup (5 minutes)
 
-### **Option 1: One-Click Install (Easiest)** 🚀
+**Step 1: Install Requirements**
+- [Download Python 3.8+](https://python.org/downloads/) (~5 minutes)
+  - ✅ Check "Add Python to PATH" during install
+- [Download .NET 8.0 Runtime](https://dotnet.microsoft.com/download/dotnet/8.0) (~3 minutes)  
+  - ✅ Choose ".NET 8.0 Runtime" (not SDK - DaxExecutor is pre-built!)
 
-**Step 1: Download One File**
-- **Right-click and "Save As"**: [install.bat](https://raw.githubusercontent.com/DAXNoobJustin/fabric-toolbox/Add-DAX-Performance-Tuner-MCP/tools/DAXPerformanceTunerMCPServer/install.bat)
-- Save it anywhere on your computer (like your Desktop or Downloads folder)
+**Step 2: Setup Tool**
+- Download this repository (green "Code" button → "Download ZIP")
+- Extract anywhere on your computer
+- **Double-click `setup.bat`** (or run `setup.ps1` from PowerShell)
+- Setup script will:
+  - Install Python dependencies
+  - Verify DaxExecutor.exe (pre-built, no compilation needed)
+  - Unblock ADOMD.NET DLLs (in `dotnet/` folder for XMLA connectivity)
+  - Configure VS Code MCP settings
 
-**Step 2: Run It**
-- Double-click `install.bat`
-- It will automatically:
-  - ✅ Download all required files from GitHub (~43 MB)
-  - ✅ Create Python virtual environment
-  - ✅ Install dependencies
-  - ✅ Configure VS Code MCP settings
-  - ✅ Verify DaxExecutor.exe and ADOMD.NET DLLs
+**Step 3: Connect to Your AI**
+- Configure your AI client to point at this MCP server
+- VS Code (GitHub Copilot Chat / Claude): use `.vscode/mcp.json`
+- Claude Desktop: add the same command/args stanza to `claude_desktop_config.json`
 
-**That's it!** 🎉
+## 🎉 Start Optimizing
 
-The tool will be installed to: `%LOCALAPPDATA%\DAXPerformanceTuner`
+Ask your AI: **"Help me optimize this DAX query"**
 
----
+## 🔌 Configure Your AI Client
 
-### **Option 2: PowerShell One-Liner** 💻
+Once Python packages are installed you can start the MCP server manually:
 
-For power users, run this in PowerShell:
-```powershell
-irm https://raw.githubusercontent.com/DAXNoobJustin/fabric-toolbox/Add-DAX-Performance-Tuner-MCP/tools/DAXPerformanceTunerMCPServer/install.ps1 | iex
+```bash
+python src/server.py
 ```
 
----
+Point your AI client at that command:
 
-### **Option 3: Manual Download** 📦
+- **VS Code**: `.vscode/mcp.json` already includes a `dax-performance-tuner` entry.
+- **Claude Desktop**: add the same command and args inside `claude_desktop_config.json` under `servers`.
+- **Other MCP clients**: provide `python` with argument `src/server.py`.
 
-If you prefer to download the repository:
-1. Download this repository (green "Code" button → "Download ZIP")
-2. Extract to a folder
-3. Navigate to `tools\DAXPerformanceTunerMCPServer\`
-4. Run `setup.bat`
-
----
-
-## 📋 Prerequisites
-
-Before running the installer, make sure you have:
-- ✅ **Python 3.8+** - [Download here](https://python.org/downloads/)
-  - Important: Check "Add Python to PATH" during installation
-- ✅ **\.NET 8.0 Runtime** - [Download here](https://dotnet.microsoft.com/download/dotnet/8.0)
-  - Choose ".NET 8.0 Runtime" (not SDK)
-- ✅ **Internet connection** - For downloading dependencies
-
-The installer will check for these and guide you if anything is missing.
-
----
-
-## 🎉 What Happens After Installation?
-
-The installer will:
-1. ✅ Download the DAX Performance Tuner files
-2. ✅ Create a Python virtual environment (`.venv`)
-3. ✅ Install all required Python packages
-4. ✅ Generate your MCP configuration file (`.vscode/mcp.json`)
-
-**That's it!** The tool is ready to use with your AI client.
-
----
-
-## 🔌 Using with Your AI Client
-
-### **VS Code with GitHub Copilot** (Recommended)
-
-The installer creates `.vscode/mcp.json` automatically - just restart VS Code and you'll see the DAX Performance Tuner available in your AI chat.
-
-### **Claude Desktop**
-
-Add this to your `claude_desktop_config.json`:
-
-```json
-{
-  "mcpServers": {
-    "dax-performance-tuner": {
-      "command": "C:\\Users\\YourUsername\\AppData\\Local\\DAXPerformanceTuner\\.venv\\Scripts\\python.exe",
-      "args": ["src/server.py"]
-    }
-  }
-}
-```
-
-Replace `YourUsername` with your Windows username. Restart Claude Desktop to activate.
-
-### **Other MCP Clients**
-
-Point your client to:
-- **Command**: `{install_path}\.venv\Scripts\python.exe`
-- **Args**: `["src/server.py"]`
-- **Working Directory**: `{install_path}`
-
-Default install path: `%LOCALAPPDATA%\DAXPerformanceTuner`
+Restart your client after updating its config so it picks up the server.
 
 
 ## 🛠️ Tools You Get
