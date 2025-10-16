@@ -103,12 +103,13 @@ celerybeat.pid
 
 # Environments
 .env
-.venv
+.venv/
 env/
 venv/
 ENV/
 env.bak/
 venv.bak/
+.venv
 
 # Spyder project settings
 .spyderproject
@@ -139,14 +140,18 @@ token_cache.bin
 *.token
 secrets.json
 .secrets
+.msal_token_cache.bin
+*.msal_cache
 
 # Power BI specific
 *.pbix
 *.pbit
 
-# IDE files (keep .vscode/mcp.json for MCP configuration)
+# IDE files
 .vscode/
-!.vscode/mcp.json
+!.vscode/mcp.json.template
+.vscode/mcp.json
+.vscode/*.log
 .idea/
 *.swp
 *.swo

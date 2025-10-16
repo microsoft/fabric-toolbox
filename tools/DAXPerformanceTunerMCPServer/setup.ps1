@@ -120,20 +120,59 @@ try {
     Write-Info "Continuing with available .NET version..."
 }
 
+# Create Python virtual environment
+Write-Step "Creating Python virtual environment..."
+$venvPath = ".venv"
+if (Test-Path $venvPath) {
+    Write-Info "Virtual environment already exists at $venvPath"
+} else {
+    try {
+        python -m venv $venvPath
+        Write-Success "Virtual environment created at $venvPath"
+    }
+    catch {
+        Write-Error "Failed to create virtual environment"
+        Write-Warning "Try running manually: python -m venv .venv"
+        exit 1
+    }
+}
+
+# Activate virtual environment
+Write-Step "Activating virtual environment..."
+$activateScript = Join-Path $venvPath "Scripts\Activate.ps1"
+if (Test-Path $activateScript) {
+    try {
+        & $activateScript
+        Write-Success "Virtual environment activated"
+    }
+    catch {
+        Write-Warning "Failed to activate virtual environment, continuing with system Python"
+    }
+} else {
+    Write-Warning "Activate script not found, using system Python"
+}
+
+# Determine Python executable path for later use
+$pythonExe = if (Test-Path (Join-Path $venvPath "Scripts\python.exe")) {
+    Join-Path $venvPath "Scripts\python.exe"
+} else {
+    "python"
+}
+
 # Install Python dependencies
-Write-Step "Installing Python dependencies..."
+Write-Step "Installing Python dependencies into virtual environment..."
 try {
     Write-Info "Upgrading pip..."
-    python -m pip install --upgrade pip --quiet
+    & $pythonExe -m pip install --upgrade pip --quiet
     Write-Success "Pip upgraded"
     
     Write-Info "Installing required packages (including pythonnet for XMLA)..."
-    python -m pip install -r requirements.txt --quiet
-    Write-Success "Python dependencies installed"
+    & $pythonExe -m pip install -r requirements.txt --quiet
+    Write-Success "Python dependencies installed in virtual environment"
 }
 catch {
     Write-Error "Failed to install Python dependencies"
-    Write-Warning "Try running manually: pip install -r requirements.txt"
+    Write-Warning "Try running manually: .venv\Scripts\python -m pip install -r requirements.txt"
     exit 1
 }
 
@@ -241,20 +280,17 @@ if (-not (Test-Path $vsCodeDir)) {
         Write-Info ".vscode directory already exists"
 }
 
-# Create or update mcp.json with absolute paths
+# Create or update mcp.json with relative paths (workspace-relative)
 $mcpFile = Join-Path $vsCodeDir "mcp.json"
-$serverPath = Join-Path $scriptDir "src\server.py"
 
-# Use forward slashes and escape backslashes for JSON
-$serverPathJson = $serverPath -replace '\\', '\\'
-
+# Use relative paths for portability across different machines
 $mcpContent = @"
 {
   "servers": {
     "dax-performance-tuner": {
-      "command": "python",
+      "command": "./.venv/Scripts/python",
       "args": [
-        "$serverPathJson"
+        "src/server.py"
       ],
       "env": {}
     }
@@ -263,11 +299,12 @@ $mcpContent = @"
 "@
 
 Set-Content -Path $mcpFile -Value $mcpContent -Encoding UTF8
-Write-Success "mcp.json configured with absolute path: $serverPath"
+Write-Success "mcp.json configured with relative paths for portability"
+Write-Info "MCP server will use virtual environment Python"
 
 Write-Host ""
 Write-Host "What's Ready:" -ForegroundColor Cyan
-Write-Success "Python environment with all dependencies"
+Write-Success "Python virtual environment with all dependencies"
 Write-Success "DaxExecutor.exe ready for performance analysis"  
 Write-Success "4 streamlined MCP tools for DAX optimization"
 Write-Success "VS Code MCP config prepared (if missing)"
@@ -276,12 +313,13 @@ Write-Host ""
 Write-Host "Next Steps:" -ForegroundColor Cyan
 Write-Host ""
 Write-Host "1. Start the MCP server whenever you need it:" -ForegroundColor Yellow
-Write-Host "   python src/server.py" -ForegroundColor Green
+Write-Host "   .venv\Scripts\python src/server.py" -ForegroundColor Green
+Write-Host "   (Or just restart VS Code - it will auto-start via mcp.json)" -ForegroundColor Green
 Write-Host ""
 Write-Host "2. Configure your AI client:" -ForegroundColor Yellow
-Write-Host "   - VS Code / GitHub Copilot Chat: uses .vscode/mcp.json" -ForegroundColor Yellow
-Write-Host "   - Claude Desktop: copy the same command into claude_desktop_config.json" -ForegroundColor Yellow
-Write-Host "   - Other MCP clients: point at python + src/server.py" -ForegroundColor Yellow
+Write-Host "   - VS Code / GitHub Copilot Chat: Already configured via .vscode/mcp.json ✓" -ForegroundColor Yellow
+Write-Host "   - Claude Desktop: Copy config from .vscode/mcp.json to claude_desktop_config.json" -ForegroundColor Yellow
+Write-Host "   - Other MCP clients: Use .venv/Scripts/python with arg src/server.py" -ForegroundColor Yellow
 Write-Host ""
 Write-Host "3. Test it works:" -ForegroundColor Yellow
 Write-Host "   Ask your AI: 'Help me optimize a DAX query'" -ForegroundColor Yellow
@@ -299,7 +337,8 @@ Write-Info "- setup.ps1 (this automation script)"
 
 if (-not $NonInteractive) {
     Write-Host ""
-    Write-Host "Setup complete! Launch the MCP server with 'python src/server.py' when you're ready." -ForegroundColor Green
+    Write-Host "Setup complete! The virtual environment is ready." -ForegroundColor Green
+    Write-Host "Restart VS Code to activate the MCP server, or run: .venv\Scripts\python src/server.py" -ForegroundColor Green
     Write-Host "Press any key to exit..." -ForegroundColor Yellow
     $null = $Host.UI.RawUI.ReadKey('NoEcho,IncludeKeyDown')
 }
