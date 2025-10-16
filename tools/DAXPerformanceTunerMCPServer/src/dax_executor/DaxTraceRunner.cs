@@ -127,8 +127,19 @@ namespace DaxExecutor
 
                 using var server = new Server();
                 
-                // CRITICAL: Set access token on server object for authentication
-                server.AccessToken = new Microsoft.AnalysisServices.AccessToken(accessToken, DateTime.UtcNow.AddHours(1), "");
+                // Determine if this is a local/desktop connection by checking the connection string
+                bool isLocalConnection = connectionString.Contains("localhost:", StringComparison.OrdinalIgnoreCase);
+                
+                if (!isLocalConnection && !string.IsNullOrEmpty(accessToken) && accessToken != "desktop-no-auth-needed")
+                {
+                    server.AccessToken = new Microsoft.AnalysisServices.AccessToken(accessToken, DateTime.UtcNow.AddHours(1), "");
+                    Log.Debug("Set access token on Server object for cloud connection");
+                }
+                else
+                {
+                    Log.Debug("Skipping access token for local desktop connection");
+                }
+                
                 server.Connect(connectionString);
 
                 // Create trace with session-specific name (trace cleanup handled in finally block since it's not IDisposable)
@@ -140,22 +151,18 @@ namespace DaxExecutor
                 {
                     trace = server.Traces.Add(traceName);
                     
-                    // Apply session filter for accurate event collection
                     Log.Information("Applying session filter...");
                     trace.Filter = GetSessionIdFilter(sessionId, applicationName);
                     
                     // Set stop time for automatic cleanup
                     trace.StopTime = DateTime.UtcNow.AddHours(TRACE_AUTO_STOP_HOURS);
 
-                    // Setup trace events for Server Timings
                     SetupTraceEvents(trace, queryConnection);
 
-                    // 9. Setup trace event handler
                     trace.OnEvent += (sender, e) =>
                     {
                         try
                         {
-                            // Filter out internal ping queries (DISCOVER_SESSIONS)
                             var textData = e.TextData?.ToString() ?? "";
                             if (textData.Contains("$SYSTEM.DISCOVER_SESSIONS") || textData.StartsWith("/* PING */"))
                             {
@@ -175,11 +182,10 @@ namespace DaxExecutor
                                 SessionId = e.SessionID?.ToString(),
                                 ApplicationName = e.ApplicationName?.ToString(),
                                 ObjectName = e.ObjectName?.ToString(),
-                                ActivityId = e.SessionID?.ToString(), // Use SessionID as ActivityID may not be available
+                                ActivityId = e.SessionID?.ToString(),
                                 InternalBatchEvent = false
                             };
                             
-                            // Safely try to get EventSubclass
                             try
                             {
                                 traceEvent.EventSubclass = e.EventSubclass.ToString();
@@ -189,7 +195,6 @@ namespace DaxExecutor
                                 traceEvent.EventSubclass = null;
                             }
                             
-                            // Safely try to get StartTime
                             try
                             {
                                 traceEvent.StartTime = e.StartTime;
@@ -206,7 +211,6 @@ namespace DaxExecutor
                                 }
                             }
                             
-                            // Safely try to get EndTime
                             try
                             {
                                 traceEvent.EndTime = e.EndTime;
@@ -216,7 +220,6 @@ namespace DaxExecutor
                                 traceEvent.EndTime = null;
                             }
                             
-                            // Safely try to get Duration
                             try
                             {
                                 traceEvent.Duration = e.Duration;
@@ -226,7 +229,6 @@ namespace DaxExecutor
                                 traceEvent.Duration = null;
                             }
                             
-                            // Safely try to get CpuTime
                             try
                             {
                                 traceEvent.CpuTime = e.CpuTime;
@@ -236,7 +238,6 @@ namespace DaxExecutor
                                 traceEvent.CpuTime = null;
                             }
                             
-                            // Calculate NetParallelDuration (defaults to Duration)
                             traceEvent.NetParallelDuration = traceEvent.Duration;
                             
                             collectedEvents.Add(traceEvent);
@@ -255,19 +256,16 @@ namespace DaxExecutor
                     Log.Information("Starting trace...");
                     trace.Start();
 
-                    // CRITICAL: Clear cache before starting trace
                     Log.Information("Clearing dataset cache before executing query...");
                     await ClearDatasetCache(queryConnection, server, datasetName);
 
-                    // CRITICAL: Ping the connection repeatedly to activate trace events
                     Log.Information("Pinging connection to activate trace events...");
                     for (int i = 0; i < 5; i++)
                     {
                         PingTraceConnection(queryConnection);
-                        await Task.Delay(500); // Wait 500ms between pings (DAX Studio interval)
+                        await Task.Delay(500);
                     }
 
-                    // 11. Execute the DAX query using the same session
                     Log.Information("Executing DAX query in session {SessionId}...", sessionId);
                     queryStartTime = DateTime.UtcNow;
                     try
@@ -277,7 +275,6 @@ namespace DaxExecutor
 
                         using var reader = command.ExecuteReader();
                         
-                        // Get column information efficiently
                         var columns = new List<string>();
                         for (int i = 0; i < reader.FieldCount; i++)
                         {
@@ -285,14 +282,10 @@ namespace DaxExecutor
                         }
                         int columnCount = reader.FieldCount;
 
-                        // Get total row count first (efficient approach)
-                        int totalRowCount = 0;
                         var allRows = new List<List<object>>();
                         
                         while (reader.Read())
                         {
-                            totalRowCount++;
-                            
                             var row = new List<object>();
                             for (int i = 0; i < reader.FieldCount; i++)
                             {
@@ -302,27 +295,25 @@ namespace DaxExecutor
                             allRows.Add(row);
                         }
 
-                        // Sort by each column in order
                         IOrderedEnumerable<List<object>> sortedQuery = allRows.OrderBy(row => row[0]);
                         for (int i = 1; i < columnCount; i++)
                         {
-                            int columnIndex = i; // Capture for closure
+                            int columnIndex = i;
                             sortedQuery = sortedQuery.ThenBy(row => row[columnIndex]);
                         }
                         var sortedRows = sortedQuery.ToList();
 
-                        // Take only first 10 rows for sample data after sorting
                         var sampleRows = sortedRows.Take(10).ToList();
 
                         queryResult = new Dictionary<string, object>
                         {
                             ["Columns"] = columns,
-                            ["RowCount"] = totalRowCount,        // ✅ Total row count (not truncated)
-                            ["ColumnCount"] = columnCount,       // ✅ Direct column count
-                            ["Rows"] = sampleRows                // ✅ Sample data (fixed field name)
+                            ["RowCount"] = allRows.Count,
+                            ["ColumnCount"] = columnCount,
+                            ["Rows"] = sampleRows
                         };
 
-                        Log.Information("Query executed successfully. Total Rows: {TotalRowCount}, Sample Rows: {SampleRowCount}", totalRowCount, sampleRows.Count);
+                        Log.Information("Query executed successfully. Total Rows: {TotalRowCount}, Sample Rows: {SampleRowCount}", allRows.Count, sampleRows.Count);
                     }
                     finally
                     {
@@ -337,7 +328,6 @@ namespace DaxExecutor
                 }
                 finally
                 {
-                    // Cleanup trace (only resource not automatically handled by using statements)
                     if (trace != null)
                     {
                         Log.Information("Stopping trace...");
@@ -346,14 +336,10 @@ namespace DaxExecutor
                         try { trace.Drop(); } 
                         catch (Exception ex) { Log.Warning(ex, "Failed to drop trace"); }
                     }
-                    // Note: Server and AdomdConnection are automatically disposed by using statements
                 }
 
-                // Calculate performance metrics and event details using DAX Studio's exact logic
                 var timings = DaxStudioServerTimings.Calculate(collectedEvents, queryStartTime, queryEndTime, columnIdToNameMap, tableIdToNameMap);
 
-                // Return results in DAX Studio Server Timings format (property names and structure must match exactly)
-                // Create result with custom property name for data
                 var resultDict = new Dictionary<string, object>
                 {
                     ["Result"] = new Dictionary<string, object>
@@ -374,12 +360,10 @@ namespace DaxExecutor
 
         private static void SetupTraceEvents(Trace trace, AdomdConnection queryConnection)
         {
-            Log.Information("Setting up trace events using DAX Studio's approach...");
+            Log.Information("Setting up trace events...");
 
-            // Get supported event/column combinations like DAX Studio does
             var supportedEventColumns = GetSupportedTraceEventClasses(queryConnection);
 
-            // DAX Studio's desired columns (copied from TraceEventFactory.cs)
             var desiredColumns = new List<TraceColumn>
             {
                 TraceColumn.ActivityID,
@@ -405,10 +389,8 @@ namespace DaxExecutor
                 TraceColumn.TextData
             };
 
-            // Add heartbeat events first (always added in DAX Studio)
             trace.Events.Clear();
             
-            // DAX Studio always adds these events for the heartbeat mechanism
             var heartbeatEvents = new[]
             {
                 TraceEventClass.DiscoverBegin,
@@ -436,7 +418,6 @@ namespace DaxExecutor
                 }
             }
 
-            // Add the main trace events for performance analysis (matching DAX Studio exactly)
             var eventsToAdd = new[]
             {
                 TraceEventClass.QueryBegin,
@@ -472,10 +453,9 @@ namespace DaxExecutor
                 }
             }
 
-            Log.Information("Trace events configured successfully using DAX Studio approach");
+            Log.Information("Trace events configured successfully");
             
-            // CRITICAL: Update the trace definition on the server like DAX Studio does
-            trace.Update();
+            trace.Update(UpdateOptions.Default, UpdateMode.CreateOrReplace);
             Log.Information("Trace definition updated on server");
         }
 
@@ -517,7 +497,6 @@ namespace DaxExecutor
             catch (Exception ex)
             {
                 Log.Warning(ex, "Failed to get supported trace event classes, using fallback");
-                // Fallback to basic events if discovery fails
                 result = GetFallbackEventColumns();
             }
 
@@ -526,18 +505,16 @@ namespace DaxExecutor
 
         private static Dictionary<int, HashSet<int>> GetFallbackEventColumns()
         {
-            // Fallback with safe, commonly supported columns
             return new Dictionary<int, HashSet<int>>
             {
-                [(int)TraceEventClass.QueryBegin] = new HashSet<int> { 0, 15, 8, 1 }, // EventClass, StartTime, Duration, TextData
-                [(int)TraceEventClass.QueryEnd] = new HashSet<int> { 0, 15, 8, 1, 16 }, // + CpuTime
+                [(int)TraceEventClass.QueryBegin] = new HashSet<int> { 0, 15, 8, 1 },
+                [(int)TraceEventClass.QueryEnd] = new HashSet<int> { 0, 15, 8, 1, 16 },
                 [(int)TraceEventClass.VertiPaqSEQueryEnd] = new HashSet<int> { 0, 15, 8, 1 }
             };
         }
 
         private static XmlNode GetSessionIdFilter(string sessionId, string applicationName)
         {
-            // Simplified filter using only SessionID and ApplicationName (more universally supported)
             string filterTemplate =
                 "<Or xmlns=\"http://schemas.microsoft.com/analysisservices/2003/engine\">" +
                     "<Equal><ColumnID>{0}</ColumnID><Value>{1}</Value></Equal>" +
@@ -563,14 +540,29 @@ namespace DaxExecutor
             {
                 Log.Information("Clearing VertiPaq cache for dataset: {DatasetName}", datasetName);
                 
-                // Use the exact same XMLA command that DAX Studio uses (from ADOTabularDatabase.cs)
-                var database = server.Databases.FindByName(datasetName);
-                if (database != null)
+                // Determine database ID - try Server object first, fallback to dataset name for local connections
+                string databaseId = datasetName;
+                
+                try
                 {
-                    var databaseId = !string.IsNullOrEmpty(database.ID) ? database.ID : database.Name;
-                    
-                    await Task.Run(() => {
-                        var clearCacheXmla = string.Format(System.Globalization.CultureInfo.InvariantCulture, @"
+                    var database = server.Databases.FindByName(datasetName);
+                    if (database != null)
+                    {
+                        databaseId = !string.IsNullOrEmpty(database.ID) ? database.ID : database.Name;
+                        Log.Debug("Found database in server catalog. Using DatabaseID: {DatabaseId}", databaseId);
+                    }
+                    else
+                    {
+                        Log.Debug("Database not found in server catalog. Using dataset name as DatabaseID: {DatabaseId}", databaseId);
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Log.Debug(ex, "Could not access server databases collection (common for desktop connections). Using dataset name as DatabaseID: {DatabaseId}", databaseId);
+                }
+                
+                await Task.Run(() => {
+                    var clearCacheXmla = string.Format(System.Globalization.CultureInfo.InvariantCulture, @"
                 <Batch xmlns=""http://schemas.microsoft.com/analysisservices/2003/engine"">
                    <ClearCache>
                      <Object>
@@ -578,24 +570,17 @@ namespace DaxExecutor
                     </Object>
                    </ClearCache>
                  </Batch>", databaseId);
-                        
-                        // Execute using ADOMD connection like DAX Studio does
-                        using var command = connection.CreateCommand();
-                        command.CommandType = CommandType.Text;
-                        command.CommandText = clearCacheXmla;
-                        command.ExecuteNonQuery();
-                    });
-                    Log.Information("VertiPaq cache cleared successfully for dataset: {DatasetName}", datasetName);
-                }
-                else
-                {
-                    Log.Warning("Database {DatasetName} not found on server for cache clearing", datasetName);
-                }
+                    
+                    using var command = connection.CreateCommand();
+                    command.CommandType = CommandType.Text;
+                    command.CommandText = clearCacheXmla;
+                    command.ExecuteNonQuery();
+                });
+                Log.Information("VertiPaq cache cleared successfully for dataset: {DatasetName}", datasetName);
             }
             catch (Exception ex)
             {
                 Log.Warning(ex, "Failed to clear VertiPaq cache for dataset {DatasetName}: {ErrorMessage}", datasetName, ex.Message);
-                // Don't fail the trace if cache clearing fails - this is not critical
             }
         }
 
@@ -615,8 +600,6 @@ namespace DaxExecutor
                     var columnId = reader.GetString(0);
                     var columnName = reader.GetString(1);
                     
-                    // PowerPivot does not include the table id in the columnid so if two 
-                    // tables have a column with the same name this can throw a duplicate key error
                     if (!mapping.ContainsKey(columnId))
                     {
                         mapping.Add(columnId, columnName);
@@ -649,8 +632,6 @@ namespace DaxExecutor
                     var tableId = reader.GetString(0);
                     var tableName = reader.GetString(1);
                     
-                    // Safety check - if two tables have the same name
-                    // this can throw a duplicate key error
                     if (!mapping.ContainsKey(tableId))
                     {
                         mapping.Add(tableId, tableName);
@@ -671,14 +652,12 @@ namespace DaxExecutor
         {
             try
             {
-                // Execute DISCOVER_SESSIONS to trigger DiscoverBegin events (DAX Studio approach)
                 Log.Information("Pinging trace connection with DISCOVER_SESSIONS...");
                 using (var command = connection.CreateCommand())
                 {
                     command.CommandText = "SELECT * FROM $SYSTEM.DISCOVER_SESSIONS WHERE SESSION_ID = '" + connection.SessionID + "'";
                     using (var reader = command.ExecuteReader())
                     {
-                        // Just consume the results to trigger the trace event
                         while (reader.Read()) { }
                     }
                 }
@@ -763,23 +742,19 @@ namespace DaxExecutor
             var timings = new TimingsResult();
             if (!events.Any()) return timings;
 
-            // Sort events by StartTime
             var sorted = events.OrderBy(e => e.StartTime ?? DateTime.MinValue).ToList();
 
-            // Filter to only END events that DAX Studio processes (matching ServerTimesViewModel.cs logic)
             var endEvents = sorted.Where(e => 
-                e.EventClass == "QueryBegin" ||  // Need QueryBegin for proper start time
+                e.EventClass == "QueryBegin" ||
                 e.EventClass == "QueryEnd" ||
                 e.EventClass == "VertiPaqSEQueryEnd" ||
                 e.EventClass == "DirectQueryEnd" ||
                 e.EventClass == "VertiPaqSEQueryCacheMatch" ||
                 e.EventClass == "ExecutionMetrics").ToList();
 
-            // Calculate metrics exactly like DAX Studio does
             var queryBeginEvent = endEvents.FirstOrDefault(e => e.EventClass == "QueryBegin");
             var queryEndEvent = endEvents.LastOrDefault(e => e.EventClass == "QueryEnd");
             
-            // Total duration like DAX Studio: QueryEnd.CurrentTime - QueryBegin.StartTime
             double totalMs = 0;
             if (queryBeginEvent != null && queryEndEvent != null && queryEndEvent.EndTime.HasValue && queryBeginEvent.StartTime.HasValue)
             {
@@ -787,53 +762,24 @@ namespace DaxExecutor
             }
             else if (queryEndEvent != null)
             {
-                // Fallback to QueryEnd duration if no QueryBegin
                 totalMs = queryEndEvent.Duration ?? (queryEnd - queryStart).TotalMilliseconds;
             }
             else
             {
-                // Final fallback
                 totalMs = (queryEnd - queryStart).TotalMilliseconds;
             }
             
-            // SE Events: Only VertiPaqSEQueryEnd and DirectQueryEnd, but exclude Internal events like DAX Studio
             var seEvents = endEvents.Where(e => 
                 (e.EventClass == "VertiPaqSEQueryEnd" && e.EventSubclass != "VertiPaqScanInternal") || 
                 e.EventClass == "DirectQueryEnd").ToList();
 
-            // Debug: Log SE events to understand what we're counting
-            Log.Information("SE Events found: {Count}", seEvents.Count);
-            foreach (var se in seEvents)
-            {
-                Log.Information("SE Event: {EventClass}.{EventSubclass} - Duration: {Duration}ms, CPU: {CPU}ms", 
-                    se.EventClass, se.EventSubclass ?? "NULL", se.Duration ?? 0, se.CpuTime ?? 0);
-            }
-
-            // Calculate SE metrics using DAX Studio's logic (StorageEngineQueryCount includes all scan subclasses)
             int seQueries = seEvents.Count(e => 
                 e.EventClass == "VertiPaqSEQueryEnd" || 
-                e.EventClass == "DirectQueryEnd"); // Count actual SE queries (including scans)
+                e.EventClass == "DirectQueryEnd");
             int seCache = endEvents.Count(e => e.EventClass == "VertiPaqSEQueryCacheMatch");
-            
-            // Debug: Log cache events found
-            var cacheEvents = endEvents.Where(e => e.EventClass == "VertiPaqSEQueryCacheMatch").ToList();
-            Log.Information("Cache Events found: {Count}", cacheEvents.Count);
-            foreach (var cache in cacheEvents)
-            {
-                Log.Information("Cache Event: {EventClass}.{EventSubclass}", cache.EventClass, cache.EventSubclass ?? "NULL");
-            }
-            
-            Log.Information("seCache value being set to: {SeCacheValue}", seCache);
-            double seTotalDuration = seEvents.Sum(e => e.Duration ?? 0);
             double seCpu = seEvents.Sum(e => e.CpuTime ?? 0);
-
-            // Calculate net parallel duration using sweep-line algorithm (like DAX Studio)
             double seNetParallelMs = CalculateNetParallelDuration(seEvents);
-            
-            // FE = Total - SE Net Parallel (DAX Studio's calculation)
             double feMs = Math.Max(0, totalMs - seNetParallelMs);
-            
-            // SE CPU Factor = SE CPU / SE Net Parallel (DAX Studio's calculation)
             double seCpuFactor = seNetParallelMs > 0 ? seCpu / seNetParallelMs : 0;
 
             timings.Performance = new PerfMetrics
@@ -848,18 +794,13 @@ namespace DaxExecutor
                 SE_Cache = seCache
             };
 
-            // Build event details - Filter like DAX Studio (exclude QueryEnd and Internal events)
-            // Include only: Scan events and ExecutionMetrics (matching your screenshot)
             var displayEvents = endEvents.Where(e => 
                 (e.EventClass == "VertiPaqSEQueryEnd" && GetDisplaySubclass(e) == "Scan") ||
                 e.EventClass == "ExecutionMetrics"
             ).OrderBy(e => e.StartTime ?? queryStart).ToList();
             
-            // Calculate timeline data for waterfall visualization
             var actualQueryStartTime = queryEndEvent?.StartTime ?? queryStart;
             var queryTotalDuration = totalMs;
-            
-            // Create a comprehensive timeline including FE periods (yellow bars in DAX Studio)
             var timelineEvents = new List<EventDetail>();
             var currentTime = actualQueryStartTime;
             int line = 1;
@@ -869,14 +810,13 @@ namespace DaxExecutor
                 var eventStart = e.StartTime ?? actualQueryStartTime;
                 var eventEnd = e.EndTime ?? eventStart.AddMilliseconds(e.Duration ?? 0);
                 
-                // Add FE period before this SE event (if there's a gap)
                 if (eventStart > currentTime)
                 {
                     var feStartOffset = (currentTime - actualQueryStartTime).TotalMilliseconds;
                     var feEndOffset = (eventStart - actualQueryStartTime).TotalMilliseconds;
                     var feDuration = feEndOffset - feStartOffset;
                     
-                    if (feDuration > 1) // Only add FE periods > 1ms
+                    if (feDuration > 1)
                     {
                         var feEvent = new EventDetail
                         {
@@ -884,7 +824,7 @@ namespace DaxExecutor
                             Class = "FE",
                             Subclass = "Formula Engine",
                             Duration = Math.Round(feDuration, 0),
-                            CPU = 0, // FE CPU not tracked separately
+                            CPU = 0,
                             Par = 1.0,
                             Rows = 0,
                             KB = 0,
@@ -932,7 +872,6 @@ namespace DaxExecutor
                 currentTime = eventEnd;
             }
             
-            // Add final FE period after last SE event (if any)
             var queryEndTime = actualQueryStartTime.AddMilliseconds(queryTotalDuration);
             if (currentTime < queryEndTime)
             {
@@ -940,7 +879,7 @@ namespace DaxExecutor
                 var feEndOffset = queryTotalDuration;
                 var feDuration = feEndOffset - feStartOffset;
                 
-                if (feDuration > 1) // Only add FE periods > 1ms
+                if (feDuration > 1)
                 {
                     var feEvent = new EventDetail
                     {
@@ -976,14 +915,12 @@ namespace DaxExecutor
         {
             if (!seEvents.Any()) return 0;
 
-            // Create intervals for each SE event
             var intervals = seEvents.Select(e => new
             {
                 Start = e.StartTime ?? DateTime.MinValue,
                 End = e.EndTime ?? (e.StartTime?.AddMilliseconds(e.Duration ?? 0) ?? DateTime.MinValue)
             }).OrderBy(i => i.Start).ToList();
 
-            // Merge overlapping intervals (sweep-line algorithm)
             double totalMs = 0;
             DateTime currentEnd = DateTime.MinValue;
 
@@ -991,17 +928,14 @@ namespace DaxExecutor
             {
                 if (interval.Start > currentEnd)
                 {
-                    // No overlap, add full duration
                     totalMs += (interval.End - interval.Start).TotalMilliseconds;
                     currentEnd = interval.End;
                 }
                 else if (interval.End > currentEnd)
                 {
-                    // Partial overlap, add only non-overlapping part
                     totalMs += (interval.End - currentEnd).TotalMilliseconds;
                     currentEnd = interval.End;
                 }
-                // Full overlap: add nothing
             }
 
             return totalMs;
@@ -1022,7 +956,6 @@ namespace DaxExecutor
 
         private static string GetDisplaySubclass(TraceEvent e)
         {
-            // Map event subclasses like DAX Studio does
             if (e.EventSubclass != null)
             {
                 return e.EventSubclass switch
@@ -1035,7 +968,6 @@ namespace DaxExecutor
                 };
             }
 
-            // Fallback based on EventClass
             return e.EventClass switch
             {
                 "VertiPaqSEQueryEnd" => "Scan",
@@ -1048,7 +980,6 @@ namespace DaxExecutor
 
         private static double CalculateParallelism(TraceEvent e)
         {
-            // Calculate parallelism like DAX Studio individual events: CPU Time / Duration (not NetParallel)
             if ((e.Duration ?? 0) > 0 && (e.CpuTime ?? 0) > 0)
             {
                 return Math.Round((double)(e.CpuTime ?? 0) / (double)(e.Duration ?? 1), 1);
@@ -1064,14 +995,12 @@ namespace DaxExecutor
         {
             if (string.IsNullOrEmpty(text)) return 0;
             
-            // Try DAX Studio's pattern first: "Estimated size (volume, marshalling bytes): 12, 192"
             var sizeMatch = EstimatedSizeRegex.Match(text);
             if (sizeMatch.Success && long.TryParse(sizeMatch.Groups[1].Value, out var sizeRows))
             {
                 return sizeRows;
             }
             
-            // Fallback to old pattern
             var match = EstimatedRowsRegex.Match(text);
             if (match.Success && long.TryParse(match.Groups[1].Value.Replace(",", ""), out var rows))
             {
@@ -1084,18 +1013,16 @@ namespace DaxExecutor
         {
             if (string.IsNullOrEmpty(text)) return 0;
             
-            // Try DAX Studio's pattern first: "Estimated size (volume, marshalling bytes): 12, 192"
             var sizeMatch = EstimatedSizeRegex.Match(text);
             if (sizeMatch.Success && long.TryParse(sizeMatch.Groups[2].Value, out var sizeBytes))
             {
-                return Math.Max(1, sizeBytes / 1024); // Convert to KB, minimum 1
+                return Math.Max(1, sizeBytes / 1024);
             }
             
-            // Fallback to old pattern
             var match = EstimatedBytesRegex.Match(text);
             if (match.Success && long.TryParse(match.Groups[1].Value.Replace(",", ""), out var bytes))
             {
-                return Math.Max(1, bytes / 1024); // Convert to KB, minimum 1
+                return Math.Max(1, bytes / 1024);
             }
             return 0;
         }
@@ -1104,19 +1031,15 @@ namespace DaxExecutor
         {
             if (string.IsNullOrEmpty(textData)) return "";
 
-            // For ExecutionMetrics, return JSON directly
             if (eventClass == "ExecutionMetrics") return textData;
 
-            // For xmSQL queries (VertiPaqSEQueryEnd), clean the IDs to proper names
             if (eventClass == "VertiPaqSEQueryEnd")
             {
                 textData = CleanXmSqlQuery(textData, columnIdToNameMap, tableIdToNameMap);
             }
 
-            // For other events, just clean up formatting but don't truncate
             var cleaned = textData.Replace("\r\n", " ").Replace("\n", " ").Replace("\t", " ");
             
-            // Remove multiple spaces
             while (cleaned.Contains("  "))
                 cleaned = cleaned.Replace("  ", " ");
 
@@ -1125,7 +1048,6 @@ namespace DaxExecutor
 
         private static string CleanXmSqlQuery(string xmSqlQuery, Dictionary<string, string> columnIdToNameMap, Dictionary<string, string> tableIdToNameMap)
         {
-            // Replace column IDs with column names
             foreach (var kvp in columnIdToNameMap)
             {
                 if (xmSqlQuery.Contains(kvp.Key))
@@ -1134,7 +1056,6 @@ namespace DaxExecutor
                 }
             }
             
-            // Replace table IDs with table names
             foreach (var kvp in tableIdToNameMap)
             {
                 if (xmSqlQuery.Contains(kvp.Key))
@@ -1143,7 +1064,6 @@ namespace DaxExecutor
                 }
             }
             
-            // Apply DAX Studio's xmSQL simplification steps
             xmSqlQuery = RemoveXmSqlAliases(xmSqlQuery);
             xmSqlQuery = RemoveXmSqlSquareBrackets(xmSqlQuery);
             
@@ -1156,21 +1076,17 @@ namespace DaxExecutor
 
         private static string RemoveXmSqlAliases(string xmSqlQuery)
         {
-            // Remove " AS [alias]" patterns
             return XmSqlAliasRemoval.Replace(xmSqlQuery, "");
         }
 
         private static string RemoveXmSqlSquareBrackets(string xmSqlQuery)
         {
-            // Replace [Table].[Column] with 'Table'[Column]
-            // First, replace patterns like [Table] (not preceded by dot) with 'Table'
             xmSqlQuery = XmSqlSquareBracketsWithSpace.Replace(xmSqlQuery, m =>
             {
                 var content = m.Value.Trim('[', ']');
                 return $"'{content}'";
             });
             
-            // Then replace .[ with [  (so 'Table'.[Column] becomes 'Table'[Column])
             xmSqlQuery = XmSqlDotSeparator.Replace(xmSqlQuery, "[");
             
             return xmSqlQuery;
