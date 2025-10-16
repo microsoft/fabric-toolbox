@@ -18,47 +18,43 @@ Before you begin, install:
 
 1. **Download the Repository**
    - Click the green "Code" button → "Download ZIP"
-   - Extract to any folder on your computer
+   - Extract contents to folder
 
 2. **Run Setup**
    - Navigate to `tools\DAXPerformanceTunerMCPServer\`
    - Double-click `setup.bat` (or run `setup.ps1` in PowerShell)
    
    The setup will:
-   - ✅ Create a Python virtual environment
    - ✅ Install required Python packages
-   - ✅ Generate MCP configuration for VS Code
+   - ✅ Generate MCP configuration in `.vscode/mcp.json`
 
-3. **Configure Your AI Client**
-   
-   **For VS Code (GitHub Copilot/Claude):**
+3. **Use with VS Code / GitHub Copilot Chat**
    - Open VS Code in the `tools\DAXPerformanceTunerMCPServer\` folder
-   - The `.vscode/mcp.json` config is already created - just restart VS Code
-   - You'll see "DAX Performance Tuner" available in AI chat
-   
-   **For Claude Desktop:**
-   - Add to your `claude_desktop_config.json`:
-   ```json
-   {
-     "mcpServers": {
-       "dax-performance-tuner": {
-         "command": "C:\\path\\to\\DAXPerformanceTunerMCPServer\\.venv\\Scripts\\python.exe",
-         "args": ["src/server.py"]
-       }
-     }
-   }
-   ```
-   
-   **For Other MCP Clients:**
-   - Command: `{install_path}\.venv\Scripts\python.exe`
-   - Args: `["src/server.py"]`
-   - Working Directory: `{install_path}`
+   - The MCP server starts automatically when you use Copilot Chat
+   - Ask: **"Help me optimize this DAX query"**
 
 ---
 
-## 🎉 Start Optimizing
+## 📝 Configuration for Other MCP Clients
 
-Once configured, ask your AI: **"Help me optimize this DAX query"**
+**For Claude Desktop:**
+Add to your `claude_desktop_config.json`:
+```json
+{
+  "mcpServers": {
+    "dax-performance-tuner": {
+      "command": "C:\\path\\to\\DAXPerformanceTunerMCPServer\\.venv\\Scripts\\python.exe",
+      "args": ["src/server.py"]
+    }
+  }
+}
+```
+
+**For Other MCP Clients:**
+- Command: `{install_path}\.venv\Scripts\python.exe`
+- Args: `["src/server.py"]`
+
+---
 
 
 ## 🛠️ Tools You Get
@@ -82,20 +78,27 @@ Once configured, ask your AI: **"Help me optimize this DAX query"**
 - **Iterative**: Multiple optimization rounds achieve compound performance improvements
 - **Semantic Validation**: Guarantees optimized queries return identical results to baseline
 
-**Quick Development Setup:**
+## 📦 What's Included
+
+- **Pre-built `DaxExecutor.exe`** - No compilation needed, ready to use
+- **ADOMD.NET DLLs** - Located in `dotnet/` folder for XMLA connectivity
+- **Python MCP Server** - Complete implementation with 4 specialized tools
+- **Automated Setup Scripts** - `setup.bat` and `setup.ps1` for easy installation
+
+---
+
+## 🔧 Advanced Setup Options
+
+**Manual Setup (for development):**
 ```bash
 pip install -r requirements.txt
 python src/server.py
 ```
 
-**What's Included:**
-- Pre-built `DaxExecutor.exe` (no compilation needed)
-- ADOMD.NET DLLs in `dotnet/` folder (for XMLA connectivity)
-- Complete Python MCP server implementation
-
-**Optional: Automated Setup (Windows):**
-- `setup.bat` → launches the PowerShell helper
-- `setup.ps1 -NonInteractive` → skip prompts (handy for CI or advanced users)
+**Non-Interactive Setup (for automation/CI):**
+```bash
+setup.ps1 -NonInteractive
+```
 
 ## Attribution & Credits
 
