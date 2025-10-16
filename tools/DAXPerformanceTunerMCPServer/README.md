@@ -32,7 +32,8 @@ Before you begin, install:
 3. **Configure Your AI Client**
    
    **For VS Code (GitHub Copilot/Claude):**
-   - Restart VS Code - the `.vscode/mcp.json` config is already created
+   - Open VS Code in the `tools\DAXPerformanceTunerMCPServer\` folder
+   - The `.vscode/mcp.json` config is already created - just restart VS Code
    - You'll see "DAX Performance Tuner" available in AI chat
    
    **For Claude Desktop:**

@@ -8,41 +8,58 @@ param(
 
 function Write-Header {
     Write-Host ""
-    Write-Host "========================================" -ForegroundColor Green
-    Write-Host "   DAX Performance Tuner Setup" -ForegroundColor Green
-    Write-Host "========================================" -ForegroundColor Green
+    Write-Host "========================================"
+    Write-Host "   DAX Performance Tuner Setup"
+    Write-Host "========================================"
     Write-Host ""
-    Write-Host "Setting up everything you need for DAX optimization..." -ForegroundColor Cyan
+    Write-Host "Setting up everything you need for DAX optimization..."
     Write-Host ""
 }
 
 function Write-Success {
     param($Message)
-    Write-Host "[SUCCESS] $Message" -ForegroundColor Green
+    Write-Host "[SUCCESS] $Message"
 }
 
 function Write-Warning {
     param($Message)
-    Write-Host "[WARNING] $Message" -ForegroundColor Yellow
+    Write-Host "[WARNING] $Message"
 }
 
 function Write-Error {
     param($Message)
-    Write-Host "[ERROR] $Message" -ForegroundColor Red
+    Write-Host "[ERROR] $Message"
 }
 
 function Write-Info {
     param($Message)
-    Write-Host "[INFO] $Message" -ForegroundColor Blue
+    Write-Host "[INFO] $Message"
 }
 
 function Write-Step {
     param($Message)
     Write-Host ""
-    Write-Host "[STEP] $Message" -ForegroundColor Cyan
+    Write-Host "[STEP] $Message"
 }
 
 Write-Header
+
+# Check if running from Downloads folder (common mistake)
+$currentPath = Get-Location
+if ($currentPath -like "*\Downloads\*") {
+    Write-Warning "You are running from the Downloads folder!"
+    Write-Info "For best results, extract the files to a permanent location first"
+    Write-Info "Example: C:\Projects\fabric-toolbox\tools\DAXPerformanceTunerMCPServer"
+    Write-Host ""
+    if (-not $NonInteractive) {
+        Write-Host "Continue anyway? (Y/N): " -NoNewline
+        $response = Read-Host
+        if ($response -ne "Y" -and $response -ne "y") {
+            Write-Info "Setup cancelled. Please extract to a permanent location and run again."
+            exit 0
+        }
+    }
+}
 
 # Check if running on Windows
 if ($PSVersionTable.Platform -and $PSVersionTable.Platform -ne "Win32NT") {
@@ -256,9 +273,9 @@ Write-Info "MCP server configured and ready to start"
 
 # Success message
 Write-Host ""
-Write-Host "========================================" -ForegroundColor Green
-Write-Host "   Setup Completed Successfully!" -ForegroundColor Green  
-Write-Host "========================================" -ForegroundColor Green
+Write-Host "========================================"
+Write-Host "   Setup Completed Successfully!"
+Write-Host "========================================"
 Write-Host ""
 
 Write-Host ""
@@ -280,54 +297,66 @@ if (-not (Test-Path $vsCodeDir)) {
         Write-Info ".vscode directory already exists"
 }
 
-# Create or update mcp.json with relative paths (workspace-relative)
+# Create or update mcp.json with relative paths (like SemanticModelMCPServer)
 $mcpFile = Join-Path $vsCodeDir "mcp.json"
 
-# Use relative paths for portability across different machines
+# Use relative paths with cwd set to this directory
+# This matches the pattern used by SemanticModelMCPServer
 $mcpContent = @"
 {
   "servers": {
     "dax-performance-tuner": {
       "command": "./.venv/Scripts/python",
-      "args": [
-        "src/server.py"
-      ],
-      "env": {}
+      "args": ["src/server.py"],
+      "cwd": "$($scriptDir -replace '\\', '\\\\')"
     }
   }
 }
 "@
 
 Set-Content -Path $mcpFile -Value $mcpContent -Encoding UTF8
-Write-Success "mcp.json configured with relative paths for portability"
-Write-Info "MCP server will use virtual environment Python"
+Write-Success "mcp.json configured (will work from: $scriptDir)"
+Write-Info "Configuration uses relative paths with working directory set"
 
 Write-Host ""
-Write-Host "What's Ready:" -ForegroundColor Cyan
+Write-Host "What's Ready:"
 Write-Success "Python virtual environment with all dependencies"
 Write-Success "DaxExecutor.exe ready for performance analysis"  
 Write-Success "4 streamlined MCP tools for DAX optimization"
 Write-Success "VS Code MCP config prepared (if missing)"
 
 Write-Host ""
-Write-Host "Next Steps:" -ForegroundColor Cyan
+Write-Host "Next Steps:"
 Write-Host ""
-Write-Host "1. Start the MCP server whenever you need it:" -ForegroundColor Yellow
-Write-Host "   .venv\Scripts\python src/server.py" -ForegroundColor Green
-Write-Host "   (Or just restart VS Code - it will auto-start via mcp.json)" -ForegroundColor Green
+Write-Host "1. Add this MCP server to your VS Code User Settings:"
 Write-Host ""
-Write-Host "2. Configure your AI client:" -ForegroundColor Yellow
-Write-Host "   - VS Code / GitHub Copilot Chat: Already configured via .vscode/mcp.json ✓" -ForegroundColor Yellow
-Write-Host "   - Claude Desktop: Copy config from .vscode/mcp.json to claude_desktop_config.json" -ForegroundColor Yellow
-Write-Host "   - Other MCP clients: Use .venv/Scripts/python with arg src/server.py" -ForegroundColor Yellow
+Write-Host "   Option A - Using VS Code UI:"
+Write-Host "   - Press Ctrl+Shift+P and search for 'Preferences: Open User Settings (JSON)'"
+Write-Host "   - Add the 'github.copilot.chat.mcp.servers' section (see below)"
 Write-Host ""
-Write-Host "3. Test it works:" -ForegroundColor Yellow
-Write-Host "   Ask your AI: 'Help me optimize a DAX query'" -ForegroundColor Yellow
-Write-Host "   You should see 4 streamlined DAX optimization tools available" -ForegroundColor Yellow
+Write-Host "   Option B - Manual configuration:"
+Write-Host "   - Copy the configuration from: $mcpFile"
+Write-Host "   - Paste into your VS Code User Settings JSON"
 Write-Host ""
-Write-Host "4. Start optimizing:" -ForegroundColor Yellow
-Write-Host "   Provide your workspace, dataset, and DAX query" -ForegroundColor Yellow
-Write-Host "   Let the AI guide you through the optimization process" -ForegroundColor Yellow
+Write-Host "   The configuration to add:"
+Write-Host '   "github.copilot.chat.mcp.servers": {'
+Write-Host '     "dax-performance-tuner": {'
+Write-Host '       "command": "./.venv/Scripts/python",'
+Write-Host '       "args": ["src/server.py"],'
+Write-Host "       `"cwd`": `"$scriptDir`""
+Write-Host '     }'
+Write-Host '   }'
+Write-Host ""
+Write-Host "2. Restart VS Code (close all windows and reopen)"
+Write-Host ""
+Write-Host "3. Test the MCP server:"
+Write-Host "   - Open GitHub Copilot Chat"
+Write-Host "   - Ask: 'What MCP tools are available?'"
+Write-Host "   - You should see 4 DAX Performance Tuner tools"
+Write-Host ""
+Write-Host "4. Start optimizing DAX queries!"
+Write-Host "   - Ask: 'Help me optimize a DAX query'"
+Write-Host "   - Provide workspace, dataset, and your DAX query"
 
 Write-Host ""
 Write-Info "Need help? Check:"
@@ -337,8 +366,8 @@ Write-Info "- setup.ps1 (this automation script)"
 
 if (-not $NonInteractive) {
     Write-Host ""
-    Write-Host "Setup complete! The virtual environment is ready." -ForegroundColor Green
-    Write-Host "Restart VS Code to activate the MCP server, or run: .venv\Scripts\python src/server.py" -ForegroundColor Green
-    Write-Host "Press any key to exit..." -ForegroundColor Yellow
+    Write-Host "Setup complete! The virtual environment is ready."
+    Write-Host "Restart VS Code to activate the MCP server, or run: .venv\Scripts\python src/server.py"
+    Write-Host "Press any key to exit..."
     $null = $Host.UI.RawUI.ReadKey('NoEcho,IncludeKeyDown')
 }
