@@ -195,7 +195,33 @@ Steps to create the Data Agent:
 - Navigate to your FCA Workspace and refresh the browser to view the newly created artifact *FCA_Agent* and open it to chat with your data
 - Enhance custom agents in Microsoft Copilot Studio by leveraging insights from FCA Fabric Data Agent and chat in Teams, as demonstrated in following video: https://www.youtube.com/watch?v=GCtk2HPxZi8
 
-### Support
+## Update
+
+To update FCA (Fabric Cost Analysis) to the latest version, follow the documented steps below.
+
+☑️ Check the release notes of FCA to see enhanced, fixed, or new items and features: [FCA Release notes](https://github.com/microsoft/fabric-toolbox/blob/main/monitoring/fabric-cost-analysis/changelog/README.md)
+
+🚩 Important:
+
+- Updates overwrite all FCA provided items based on the item’s name
+- Updates do not affect your collected data within the Lakehouse only the metadata will be overwritten
+- If you have made custom changes to pipelines, notebooks, semantic models, and reports, please create a backup or rename your custom items
+- Use the same user to update FCA as you used during the initial deployment. It is important to do so because this user is the owner of all the related items
+
+Steps to update:
+
+- 1 - Download the latest version of the **[00_Deploy_FCA.ipynb](./script/00_Deploy_FCA.ipynb)** Notebook
+- 2 - Remove the old "00_Deploy_FCA" Notebook from your workspace
+- 3 - Import the updated notebook into your FCA workspace
+- 4 - Run the 00_Deploy_FCA.ipynb Notebook
+- 5 - Update Pipeline parameters
+- 6 - Open PBI report
+
+ℹ️ This notebook is designed to initially deploy or update all the items in your FCA workspace. You do not need to manually run the Load FCA E2E pipeline after an update. During the next pipeline run, FCA will also check and update the status of your FCA version on the first page of the FCA_Core_Report:
+
+![FCA](./media/VersionUpdate.png)
+
+## Support
 
 The FCA solution accelerator template is not an official Microsoft service.
 
