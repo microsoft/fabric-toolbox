@@ -99,19 +99,6 @@ Add to your `claude_desktop_config.json`:
 
 ---
 
-## 🔧 Advanced Setup Options
-
-**Manual Setup (for development):**
-```bash
-pip install -r requirements.txt
-python src/server.py
-```
-
-**Non-Interactive Setup (for automation/CI):**
-```bash
-setup.ps1 -NonInteractive
-```
-
 ## Attribution & Credits
 
 This project builds upon and references valuable DAX optimization knowledge from the community:
