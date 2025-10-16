@@ -16,22 +16,34 @@ Before you begin, install:
 
 ### **Installation Steps**
 
-1. **Download the Repository**
+1. **Download the Distribution**
+   
+   **Option A: Download Pre-Packaged Zip (Recommended)**
+   - Navigate to `tools\DAXPerformanceTunerMCPServer\` in the repository
+   - Download the `DAXPerformanceTunerMCPServer_YYYYMMDD.zip` file
+   - Extract to your preferred location
+   
+   **Option B: Clone Full Repository**
    - Click the green "Code" button → "Download ZIP"
-   - Extract contents to folder
+   - Extract and navigate to `tools\DAXPerformanceTunerMCPServer\`
+   - Use the included zip or run the files directly from this folder
 
 2. **Run Setup**
-   - Navigate to `tools\DAXPerformanceTunerMCPServer\`
    - Double-click `setup.bat` (or run `setup.ps1` in PowerShell)
    
    The setup will:
    - ✅ Install required Python packages
    - ✅ Generate MCP configuration in `.vscode/mcp.json`
 
-3. **Use with VS Code / GitHub Copilot Chat**
-   - Open VS Code in the `tools\DAXPerformanceTunerMCPServer\` folder
-   - The MCP server starts automatically when you use Copilot Chat
+3. **Start the MCP Server in VS Code**
+   - Open VS Code in the extracted `DAXPerformanceTunerMCPServer\` folder
+   - Open the `.vscode\mcp.json` file
+   - Click the `Start` button over the server name
+
+4. **Use with GitHub Copilot Chat**
+   - Open Copilot Chat
    - Ask: **"Help me optimize this DAX query"**
+   - The server will automatically provide optimization tools
 
 ---
 
