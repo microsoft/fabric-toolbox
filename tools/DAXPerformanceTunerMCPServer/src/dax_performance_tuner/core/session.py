@@ -1,5 +1,5 @@
 """
-Session management primitives for the DAX Query Tuner workflow.
+Session management primitives for the DAX Performance Tuner workflow.
 
 The module exposes a minimal in-memory session store that captures:
 - Connection metadata

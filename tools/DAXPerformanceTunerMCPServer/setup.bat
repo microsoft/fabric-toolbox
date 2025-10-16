@@ -1,12 +1,12 @@
 @echo off
-REM DAX Query Tuner - Windows bootstrap script
+REM DAX Performance Tuner - Windows bootstrap script
 REM Double-click this file to run the PowerShell setup helper
 
-title DAX Query Tuner Setup
+title DAX Performance Tuner Setup
 
 echo.
 echo ========================================
-echo    DAX Query Tuner Setup
+echo    DAX Performance Tuner Setup
 echo ========================================
 echo.
 echo This will automatically install everything you need.

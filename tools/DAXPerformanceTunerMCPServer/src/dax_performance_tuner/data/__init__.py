@@ -1,5 +1,5 @@
 """
-DAX Query Tuner - Data Module
+DAX Performance Tuner - Data Module
 
 Contains DAX optimization pattern definitions and research article configurations.
 

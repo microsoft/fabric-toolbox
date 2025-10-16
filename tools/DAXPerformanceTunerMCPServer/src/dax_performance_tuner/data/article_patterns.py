@@ -12,7 +12,7 @@ multiple sources in the DAX community:
     - Custom optimization guidance developed for this project
     - May be inspired by or build upon community knowledge and best practices
 
-This code is part of the DAX Query Tuner project and is intended for educational
+This code is part of the DAX Performance Tuner project and is intended for educational
 and analytical purposes. All external content remains the property of respective copyright
 holders. See ATTRIBUTION.md in the repository root for complete details.
 """

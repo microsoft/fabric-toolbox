@@ -1,4 +1,4 @@
-"""Performance analysis utilities for DAX Query Tuner.
+"""Performance analysis utilities for DAX Performance Tuner.
 
 Provides helpers for calculating performance deltas, judging semantic
 equivalence between baseline and optimized runs, and selecting the fastest

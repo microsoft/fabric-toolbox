@@ -1,4 +1,4 @@
-# DAX Query Tuner
+# DAX Performance Tuner
 
 Transform slow DAX queries into lightning-fast optimized code using AI assistance and expert knowledge.
 
@@ -39,7 +39,7 @@ python src/server.py
 
 Point your AI client at that command:
 
-- **VS Code**: `.vscode/mcp.json` already includes a `dax-query-tuner` entry.
+- **VS Code**: `.vscode/mcp.json` already includes a `dax-performance-tuner` entry.
 - **Claude Desktop**: add the same command and args inside `claude_desktop_config.json` under `servers`.
 - **Other MCP clients**: provide `python` with argument `src/server.py`.
 
@@ -96,7 +96,7 @@ This project uses **dual licensing**:
 
 ### MIT License
 Applies to:
-- Python MCP server (`src/server.py`, `src/dax_query_tuner/`)
+- Python MCP server (`src/server.py`, `src/dax_performance_tuner/`)
 - Configuration files
 - Setup scripts
 - Documentation (except third-party content)

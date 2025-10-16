@@ -1,5 +1,5 @@
 """
-DAX Query Tuner Core Package
+DAX Performance Tuner Core Package
 
 Core functionality for Power BI authentication, REST API client, XMLA connections,
 and real Analysis Services trace collection. Provides the foundational infrastructure

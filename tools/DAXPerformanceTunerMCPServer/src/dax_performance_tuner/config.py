@@ -1,4 +1,4 @@
-"""Central configuration constants for the DAX Query Tuner."""
+"""Central configuration constants for the DAX Performance Tuner."""
 
 from pathlib import Path
 

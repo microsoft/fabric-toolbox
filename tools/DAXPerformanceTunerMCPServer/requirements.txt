@@ -1,4 +1,4 @@
-# DAX Query Tuner MCP Server Dependencies
+# DAX Performance Tuner MCP Server Dependencies
 
 # Core MCP framework
 fastmcp>=0.5.0

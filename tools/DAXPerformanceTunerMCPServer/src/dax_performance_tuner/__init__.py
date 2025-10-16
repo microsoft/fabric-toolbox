@@ -1,5 +1,5 @@
 """
-DAX Query Tuner MCP Server
+DAX Performance Tuner MCP Server
 
 LLM-guided DAX optimization platform with research-based methodology
 and external knowledge research capabilities.

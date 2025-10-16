@@ -1,4 +1,4 @@
-"""FastMCP server entry point for the DAX Query Tuner toolkit.
+"""FastMCP server entry point for the DAX Performance Tuner toolkit.
 
 ATTRIBUTION NOTICE:
 This tool references optimization guidance and patterns from community sources including
@@ -7,14 +7,14 @@ See ATTRIBUTION.md in the repository root for complete attribution details.
 """
 
 from fastmcp import FastMCP
-from dax_query_tuner import __version__, __title__
+from dax_performance_tuner import __version__, __title__
 
 # Registry-based tool registration  
-from dax_query_tuner.mcp_server import register_tools_with_fastmcp
+from dax_performance_tuner.mcp_server import register_tools_with_fastmcp
 
 # Initialize FastMCP
 mcp = FastMCP(
-  "DAX Query Tuner - Workflow-Driven Optimization Framework",
+  "DAX Performance Tuner - Workflow-Driven Optimization Framework",
     instructions="""
 This is an MCP tool that enables a workflow-driven, research-driven, and testing-driven DAX optimization framework with specialized tools.
 

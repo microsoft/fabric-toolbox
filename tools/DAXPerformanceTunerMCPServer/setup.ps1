@@ -1,5 +1,5 @@
 #!/usr/bin/env pwsh
-# DAX Query Tuner - Windows Setup Script
+# DAX Performance Tuner - Windows Setup Script
 # This script automates the setup process for Windows users
 
 param(
@@ -9,7 +9,7 @@ param(
 function Write-Header {
     Write-Host ""
     Write-Host "========================================" -ForegroundColor Green
-    Write-Host "   DAX Query Tuner Setup" -ForegroundColor Green
+    Write-Host "   DAX Performance Tuner Setup" -ForegroundColor Green
     Write-Host "========================================" -ForegroundColor Green
     Write-Host ""
     Write-Host "Setting up everything you need for DAX optimization..." -ForegroundColor Cyan
@@ -251,7 +251,7 @@ $serverPathJson = $serverPath -replace '\\', '\\'
 $mcpContent = @"
 {
   "servers": {
-    "dax-query-tuner": {
+    "dax-performance-tuner": {
       "command": "python",
       "args": [
         "$serverPathJson"
