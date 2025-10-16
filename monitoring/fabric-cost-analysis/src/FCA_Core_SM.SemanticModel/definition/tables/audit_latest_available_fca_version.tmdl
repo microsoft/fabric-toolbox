@@ -16,7 +16,7 @@ table audit_latest_available_fca_version
 		changedProperty = Description
 
 	/// A static string value for FCA Release.
-	measure 'FCA Release' = "2025.9.2"
+	measure 'FCA Release' = "2025.10.15"
 		lineageTag: ba9a1bef-cb0e-42f4-8d14-ad6467ada7b7
 
 		changedProperty = Name
