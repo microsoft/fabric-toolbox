@@ -289,7 +289,7 @@ def execute_dax_query_core(
         fastest_run = select_fastest_run(runs)
         dax_executor_result = fastest_run.get("dax_executor_result", {})
         performance_data = dax_executor_result.get("Performance", {})
-        result_data = dax_executor_result.get("Result", {})
+        results = dax_executor_result.get("Results", [])
 
         performance_analysis = None
         semantic_equivalence = None
@@ -316,16 +316,8 @@ def execute_dax_query_core(
                     "meets_threshold": improvement_percent >= PERFORMANCE_THRESHOLDS["improvement_threshold_percent"],
                 }
                 
-                current_query_data = {
-                    "result_metadata": {
-                        "row_count": result_data.get("RowCount", 0),
-                        "column_count": result_data.get("ColumnCount", 0)
-                    },
-                    "data": {
-                        "columns": result_data.get("Columns", []),
-                        "rows": result_data.get("Rows", [])
-                    }
-                }
+                # Simple: just pass the results array
+                current_query_data = {"results": results}
                 
                 semantic_equivalence = compute_semantic_equivalence(session_state, current_query_data)
 
@@ -342,7 +334,7 @@ def execute_dax_query_core(
                 "se_cache": performance_data.get("SE_Cache", 0),
                 "query_end": performance_data.get("QueryEnd", "")
             },
-            result_data=result_data,
+            result_data=results,
             performance_analysis=performance_analysis if performance_analysis else None,
             semantic_equivalence=semantic_equivalence if semantic_equivalence else None
         )
@@ -358,7 +350,7 @@ def execute_dax_query_core(
             response_data["semantic_equivalence"] = semantic_equivalence
 
         response_data.update({
-            "Result": dax_executor_result.get("Result", {}),
+            "Results": results,
             "Performance": dax_executor_result.get("Performance", {}),
             "EventDetails": dax_executor_result.get("EventDetails", [])
         })

@@ -43,15 +43,11 @@ namespace DaxExecutor
         {
             var errorResult = new
             {
-                Result = new 
-                { 
-                    Status = "Error", 
-                    ErrorMessage = ex.Message,
-                    ErrorType = ex.GetType().Name
-                },
+                Results = new object[0],  // Empty results array on error
+                SessionId = "",
                 Performance = new 
                 { 
-                    TotalDurationMs = 0, 
+                    Total = 0, 
                     Error = true,
                     ErrorMessage = ex.Message
                 },
@@ -270,43 +266,62 @@ namespace DaxExecutor
 
                         using var reader = command.ExecuteReader();
                         
-                        var columns = new List<string>();
-                        for (int i = 0; i < reader.FieldCount; i++)
-                        {
-                            columns.Add(reader.GetName(i));
-                        }
-                        int columnCount = reader.FieldCount;
-
-                        var allRows = new List<List<object>>();
+                        // Handle N result sets (N EVALUATE statements)
+                        var allResults = new List<Dictionary<string, object>>();
+                        bool moreResults = true;
+                        int resultNumber = 1;
                         
-                        while (reader.Read())
+                        while (moreResults)
                         {
-                            var row = new List<object>();
+                            var columns = new List<string>();
                             for (int i = 0; i < reader.FieldCount; i++)
                             {
-                                var value = reader.GetValue(i);
-                                row.Add(value == DBNull.Value ? null! : value);
+                                columns.Add(reader.GetName(i));
                             }
-                            allRows.Add(row);
+                            int columnCount = reader.FieldCount;
+
+                            var allRows = new List<List<object>>();
+                            
+                            while (reader.Read())
+                            {
+                                var row = new List<object>();
+                                for (int i = 0; i < reader.FieldCount; i++)
+                                {
+                                    var value = reader.GetValue(i);
+                                    row.Add(value == DBNull.Value ? null! : value);
+                                }
+                                allRows.Add(row);
+                            }
+
+                            // Sort for consistent comparison
+                            IOrderedEnumerable<List<object>> sortedQuery = allRows.OrderBy(row => row[0]);
+                            for (int i = 1; i < columnCount; i++)
+                            {
+                                int columnIndex = i;
+                                sortedQuery = sortedQuery.ThenBy(row => row[columnIndex]);
+                            }
+                            var sortedRows = sortedQuery.ToList();
+
+                            var sampleRows = sortedRows.Take(50).ToList();
+
+                            var resultSet = new Dictionary<string, object>
+                            {
+                                ["ResultNumber"] = resultNumber,
+                                ["Columns"] = columns,
+                                ["RowCount"] = allRows.Count,
+                                ["ColumnCount"] = columnCount,
+                                ["Rows"] = sampleRows
+                            };
+                            
+                            allResults.Add(resultSet);
+                            
+                            // Move to next result set (next EVALUATE statement)
+                            moreResults = reader.NextResult();
+                            resultNumber++;
                         }
-
-                        IOrderedEnumerable<List<object>> sortedQuery = allRows.OrderBy(row => row[0]);
-                        for (int i = 1; i < columnCount; i++)
-                        {
-                            int columnIndex = i;
-                            sortedQuery = sortedQuery.ThenBy(row => row[columnIndex]);
-                        }
-                        var sortedRows = sortedQuery.ToList();
-
-                        var sampleRows = sortedRows.Take(10).ToList();
-
-                        queryResult = new Dictionary<string, object>
-                        {
-                            ["Columns"] = columns,
-                            ["RowCount"] = allRows.Count,
-                            ["ColumnCount"] = columnCount,
-                            ["Rows"] = sampleRows
-                        };
+                        
+                        // Store all results
+                        queryResult["Results"] = allResults;
 
 
                     }
@@ -335,17 +350,11 @@ namespace DaxExecutor
 
                 var timings = DaxStudioServerTimings.Calculate(collectedEvents, queryStartTime, queryEndTime, columnIdToNameMap, tableIdToNameMap);
 
+                // Simple structure: just results array and performance
                 var resultDict = new Dictionary<string, object>
                 {
-                    ["Result"] = new Dictionary<string, object>
-                    {
-                        ["Status"] = "Success",
-                        ["RowCount"] = queryResult["RowCount"],
-                        ["ColumnCount"] = queryResult["ColumnCount"],
-                        ["Columns"] = queryResult["Columns"],
-                        ["Rows"] = queryResult["Rows"],
-                        ["SessionId"] = sessionId
-                    },
+                    ["Results"] = queryResult["Results"],
+                    ["SessionId"] = sessionId,
                     ["Performance"] = timings.Performance,
                     ["EventDetails"] = timings.EventDetails
                 };

@@ -155,7 +155,7 @@ class SessionManager:
         dax_query: str,
         execution_mode: str,
         performance_data: Dict[str, Any],
-        result_data: Dict[str, Any],
+        result_data: Any,  # Now expects array of results
         error: Optional[str] = None,
         performance_analysis: Optional[Dict[str, Any]] = None,
         semantic_equivalence: Optional[Dict[str, Any]] = None
@@ -167,14 +167,7 @@ class SessionManager:
         with self._lock:
             query_results = {
                 "performance_metrics": performance_data,
-                "result_metadata": {
-                    "row_count": result_data.get("RowCount", 0),
-                    "column_count": result_data.get("ColumnCount", 0)
-                },
-                "data": {
-                    "columns": result_data.get("Columns", []),
-                    "rows": result_data.get("Rows", [])
-                }
+                "results": result_data  # Array of results, each with ResultNumber
             }
             
             if performance_analysis is not None:

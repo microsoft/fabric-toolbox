@@ -6,7 +6,7 @@ execution result recorded by the .NET DAX executor.
 """
 
 import json
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List
 
 
 def _row_signatures(rows: Any) -> List[str]:
@@ -44,6 +44,7 @@ def compute_semantic_equivalence(
     session_state: Any,
     current_query_data: Dict[str, Any]
 ) -> Dict[str, Any]:
+    """Compare results from current query with baseline results."""
     summary = getattr(session_state, "query_data", {}).get("summary", {})
     if not summary.get("baseline_established"):
         return {
@@ -53,7 +54,17 @@ def compute_semantic_equivalence(
         }
 
     baseline_record = getattr(session_state, "query_data", {}).get("baseline")
-    baseline_results = baseline_record.get("results") if baseline_record else None
+    if not baseline_record:
+        return {
+            "evaluated": False,
+            "is_equivalent": None,
+            "reasons": ["Baseline record not found"],
+        }
+    
+    # Extract baseline results array from the results dict
+    baseline_result_data = baseline_record.get("results", {})
+    baseline_results = baseline_result_data.get("results", [])
+    
     if not baseline_results:
         return {
             "evaluated": False,
@@ -61,38 +72,62 @@ def compute_semantic_equivalence(
             "reasons": ["Baseline data not found"],
         }
 
-    current_meta = current_query_data.get("result_metadata", {})
-    baseline_meta = baseline_results.get("result_metadata", {})
-
-    current_rows = current_meta.get("row_count")
-    baseline_rows = baseline_meta.get("row_count")
-    current_cols = current_meta.get("column_count")
-    baseline_cols = baseline_meta.get("column_count")
-    current_data = current_query_data.get("data", {})
-    baseline_data_content = baseline_results.get("data", {})
-
-    current_rows_data = current_data.get("rows", [])
-    baseline_rows_data = baseline_data_content.get("rows", [])
-
-    # Build equivalence analysis
-    reasons = []
-    if current_rows != baseline_rows:
-        reasons.append(
-            f"Row count differs (baseline={baseline_rows}, current={current_rows})"
+    # Get current results array
+    current_results = current_query_data.get("results", [])
+    
+    # Check result count matches
+    if len(current_results) != len(baseline_results):
+        return {
+            "evaluated": True,
+            "is_equivalent": False,
+            "reasons": [
+                f"Number of results differs (baseline={len(baseline_results)}, current={len(current_results)})"
+            ],
+        }
+    
+    # Compare each result by ResultNumber
+    all_reasons = []
+    
+    for current_result in current_results:
+        result_num = current_result.get("ResultNumber", 0)
+        
+        # Find matching baseline result by ResultNumber
+        baseline_result = next(
+            (r for r in baseline_results if r.get("ResultNumber") == result_num), 
+            None
         )
-    if current_cols != baseline_cols:
-        reasons.append(
-            f"Column count differs (baseline={baseline_cols}, current={current_cols})"
-        )
-
-    if not reasons:
-        if _row_signatures(current_rows_data) != _row_signatures(baseline_rows_data):
-            reasons.append("Data values differ")
+        
+        if not baseline_result:
+            all_reasons.append(f"Result #{result_num}: No matching baseline found")
+            continue
+        
+        # Use the same comparison logic as before
+        current_rows = current_result.get("RowCount", 0)
+        baseline_rows = baseline_result.get("RowCount", 0)
+        current_cols = current_result.get("ColumnCount", 0)
+        baseline_cols = baseline_result.get("ColumnCount", 0)
+        
+        if current_rows != baseline_rows:
+            all_reasons.append(
+                f"Result #{result_num}: Row count differs (baseline={baseline_rows}, current={current_rows})"
+            )
+        if current_cols != baseline_cols:
+            all_reasons.append(
+                f"Result #{result_num}: Column count differs (baseline={baseline_cols}, current={current_cols})"
+            )
+        
+        # Compare data if counts match
+        if current_rows == baseline_rows and current_cols == baseline_cols:
+            current_rows_data = current_result.get("Rows", [])
+            baseline_rows_data = baseline_result.get("Rows", [])
+            
+            if _row_signatures(current_rows_data) != _row_signatures(baseline_rows_data):
+                all_reasons.append(f"Result #{result_num}: Data values differ")
 
     return {
         "evaluated": True,
-        "is_equivalent": len(reasons) == 0,
-        "reasons": reasons,
+        "is_equivalent": len(all_reasons) == 0,
+        "reasons": all_reasons,
     }
 
 
