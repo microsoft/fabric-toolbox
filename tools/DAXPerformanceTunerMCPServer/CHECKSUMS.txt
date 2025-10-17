@@ -31,9 +31,3 @@ Get-Item *.dll | ForEach-Object {
     "$($_.Name): $($sig.Status)"
 }
 ```
-
-All third-party dependencies are now from Microsoft or .NET Foundation with valid digital signatures.
-
-## Note on Serilog
-Previous versions included Serilog (unsigned OSS library). As of this build, Serilog has been removed 
-to eliminate all unsigned third-party dependencies from the distribution.
