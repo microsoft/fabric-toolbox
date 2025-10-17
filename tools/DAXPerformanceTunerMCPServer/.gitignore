@@ -202,11 +202,17 @@ bin/
 !src/dax_executor/bin/Release/net8.0-windows/win-x64/*.exe
 !src/dax_executor/bin/Release/net8.0-windows/win-x64/*.dll
 !src/dax_executor/bin/Release/net8.0-windows/win-x64/*.json
-!src/dax_executor/bin/Release/net8.0-windows/win-x64/*.pdb
+
+# Exclude unnecessary build artifacts
+src/dax_executor/bin/Release/net8.0-windows/win-x64/*.pdb
+src/dax_executor/bin/Release/net8.0-windows/win-x64/*.xml
 
 # But exclude localization and publish folders within that directory
 src/dax_executor/bin/Release/net8.0-windows/win-x64/*/
 src/dax_executor/bin/Release/net8.0-windows/win-x64/publish/
+
+# Exclude XML documentation files from dotnet folder (regenerated from NuGet packages)
+dotnet/*.xml
 
 # MCP Test files and development artifacts
 test_*.py
