@@ -27,7 +27,7 @@ import { Label } from '../../ui/label';
 import { RadioGroup, RadioGroupItem } from '../../ui/radio-group';
 import { Checkbox } from '../../ui/checkbox';
 import { ComponentMappingRow } from './ComponentMappingRow';
-import type { ADFComponent } from '../../../types';
+import type { ADFComponent, FabricTarget } from '../../../types';
 import type { ActivityLinkedServiceReference } from '../../../services/pipelineActivityAnalysisService';
 
 interface ComponentMappingTableProps {
@@ -37,6 +37,7 @@ interface ComponentMappingTableProps {
   onBulkToggle?: (indices: number[], isSelected: boolean) => void;
   onTargetTypeChange: (index: number, value: string) => void;
   onTargetNameChange: (index: number, value: string) => void;
+  onTargetConfigChange?: (index: number, updatedTarget: FabricTarget) => void;
   onActivityConnectionMapping?: (pipelineName: string, uniqueId: string, connectionId: string, mappingInfo: any) => void;
   getPipelineActivityReferences?: (component: ADFComponent) => ActivityLinkedServiceReference[];
   pipelineConnectionMappings?: any;
@@ -59,6 +60,7 @@ export function ComponentMappingTable({
   onBulkToggle,
   onTargetTypeChange,
   onTargetNameChange,
+  onTargetConfigChange,
   onActivityConnectionMapping,
   getPipelineActivityReferences,
   pipelineConnectionMappings = {},
@@ -526,6 +528,7 @@ export function ComponentMappingTable({
                     onToggle={() => onToggle(component.mappingIndex)}
                     onTargetTypeChange={onTargetTypeChange}
                     onTargetNameChange={onTargetNameChange}
+                    onTargetConfigChange={onTargetConfigChange}
                     onActivityConnectionMapping={onActivityConnectionMapping}
                     getPipelineActivityReferences={getPipelineActivityReferences}
                     pipelineConnectionMappings={pipelineConnectionMappings}

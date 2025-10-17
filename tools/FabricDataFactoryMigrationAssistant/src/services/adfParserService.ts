@@ -541,15 +541,71 @@ class ADFParserService {
       };
     }
 
-    return {
+    // NEW: Extract resource-level dependsOn
+    const rawDependsOn = resource.dependsOn || [];
+    const parsedDependencies = this.parseResourceDependencies(rawDependsOn);
+
+    const component: ADFComponent = {
       name: extractComponentName(resource.name),
       type: componentType,
       definition: definition,
       isSelected: true, // Default to selected
       compatibilityStatus: 'supported', // Will be updated by validation
       warnings: [],
-      fabricTarget: this.generateDefaultFabricTarget(componentType, extractComponentName(resource.name), definition)
+      fabricTarget: this.generateDefaultFabricTarget(componentType, extractComponentName(resource.name), definition),
+      dependsOn: rawDependsOn,
+      resourceDependencies: parsedDependencies
     };
+
+    // NEW: Extract trigger metadata for Synapse triggers
+    if (componentType === 'trigger') {
+      const triggerProps = resource.properties || {};
+      const typeProps = triggerProps.typeProperties || {};
+      const recurrence = typeProps.recurrence;
+      // FIX: pipelines array is at properties.pipelines, NOT typeProperties.pipelines
+      const pipelines = triggerProps.pipelines || [];
+      
+      // Extract pipeline references WITH parameters
+      const pipelineParameters: Array<{ pipelineName: string; parameters: Record<string, any> }> = [];
+      const referencedPipelines = pipelines
+        .map((p: any) => {
+          const pipelineName = this.extractPipelineNameFromTriggerRef(p);
+          if (pipelineName) {
+            // Extract parameters if they exist (for documentation purposes)
+            pipelineParameters.push({
+              pipelineName,
+              parameters: p.parameters || {}
+            });
+          }
+          return pipelineName;
+        })
+        .filter(Boolean);
+
+      component.triggerMetadata = {
+        runtimeState: (triggerProps.runtimeState as 'Started' | 'Stopped') || 'Unknown',
+        type: triggerProps.type || 'Unknown',
+        recurrence: recurrence ? {
+          frequency: recurrence.frequency,
+          interval: recurrence.interval,
+          startTime: recurrence.startTime,
+          endTime: recurrence.endTime,
+          timeZone: recurrence.timeZone || 'UTC'
+        } : undefined,
+        referencedPipelines,
+        pipelineParameters  // NEW: Include parameters for documentation
+      };
+
+      console.log(`Extracted trigger metadata for Synapse trigger ${component.name}:`, {
+        runtimeState: component.triggerMetadata.runtimeState,
+        type: component.triggerMetadata.type,
+        hasRecurrence: Boolean(component.triggerMetadata.recurrence),
+        pipelineCount: referencedPipelines.length,
+        pipelines: referencedPipelines,
+        hasParameters: pipelineParameters.some(p => Object.keys(p.parameters).length > 0)
+      });
+    }
+
+    return component;
   }
 
   /**
@@ -874,6 +930,54 @@ class ADFParserService {
           segments: folderInfo.segments
         });
       }
+    }
+
+    // NEW: Extract trigger metadata for triggers
+    if (componentType === 'trigger') {
+      const triggerProps = resource.properties || {};
+      const typeProps = triggerProps.typeProperties || {};
+      const recurrence = typeProps.recurrence;
+      // FIX: pipelines array is at properties.pipelines, NOT typeProperties.pipelines
+      const pipelines = triggerProps.pipelines || [];
+      
+      // Extract pipeline references WITH parameters
+      const pipelineParameters: Array<{ pipelineName: string; parameters: Record<string, any> }> = [];
+      const referencedPipelines = pipelines
+        .map((p: any) => {
+          const pipelineName = this.extractPipelineNameFromTriggerRef(p);
+          if (pipelineName) {
+            // Extract parameters if they exist (for documentation purposes)
+            pipelineParameters.push({
+              pipelineName,
+              parameters: p.parameters || {}
+            });
+          }
+          return pipelineName;
+        })
+        .filter(Boolean);
+
+      component.triggerMetadata = {
+        runtimeState: (triggerProps.runtimeState as 'Started' | 'Stopped') || 'Unknown',
+        type: triggerProps.type || 'Unknown',
+        recurrence: recurrence ? {
+          frequency: recurrence.frequency,
+          interval: recurrence.interval,
+          startTime: recurrence.startTime,
+          endTime: recurrence.endTime,
+          timeZone: recurrence.timeZone || 'UTC'
+        } : undefined,
+        referencedPipelines,
+        pipelineParameters  // NEW: Include parameters for documentation
+      };
+
+      console.log(`Extracted trigger metadata for ${component.name}:`, {
+        runtimeState: component.triggerMetadata.runtimeState,
+        type: component.triggerMetadata.type,
+        hasRecurrence: Boolean(component.triggerMetadata.recurrence),
+        pipelineCount: referencedPipelines.length,
+        pipelines: referencedPipelines,
+        hasParameters: pipelineParameters.some(p => Object.keys(p.parameters).length > 0)
+      });
     }
 
     return component;

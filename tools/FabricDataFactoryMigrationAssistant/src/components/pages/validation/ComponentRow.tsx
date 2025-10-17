@@ -3,6 +3,7 @@ import { TableCell, TableRow } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Badge } from '@/components/ui/badge';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 import { 
   CaretRight, 
   CaretDown, 
@@ -10,7 +11,9 @@ import {
   CheckCircle, 
   XCircle,
   FolderOpen,
-  Folder
+  Folder,
+  ArrowRight,
+  Info
 } from '@phosphor-icons/react';
 import { ADFComponent } from '../../../types';
 
@@ -169,6 +172,130 @@ export function ComponentRow({ component, onToggle, componentType }: ComponentRo
                       {component.fabricTarget.name}
                     </div>
                   </div>
+                </div>
+              )}
+
+              {/* Trigger-Specific Details */}
+              {component.type === 'trigger' && component.triggerMetadata && (
+                <div className="space-y-3">
+                  {/* Runtime State */}
+                  <div className="space-y-2">
+                    <h4 className="font-medium text-sm">Runtime State</h4>
+                    <div className="pl-6 flex items-center gap-2">
+                      <Badge 
+                        variant={component.triggerMetadata.runtimeState === 'Started' ? 'default' : 'secondary'}
+                        className={component.triggerMetadata.runtimeState === 'Started' ? 'bg-green-500' : 'bg-gray-500'}
+                      >
+                        {component.triggerMetadata.runtimeState}
+                      </Badge>
+                      {component.triggerMetadata.runtimeState === 'Stopped' && (
+                        <span className="text-xs text-muted-foreground">
+                          (Trigger is currently disabled in ADF)
+                        </span>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Trigger Type */}
+                  <div className="space-y-2">
+                    <h4 className="font-medium text-sm">Trigger Type</h4>
+                    <div className="pl-6 text-sm text-muted-foreground">
+                      {component.triggerMetadata.type}
+                    </div>
+                  </div>
+
+                  {/* Referenced Pipelines */}
+                  {component.triggerMetadata.referencedPipelines.length > 0 && (
+                    <div className="space-y-2">
+                      <h4 className="font-medium text-sm">Activates Pipelines</h4>
+                      <div className="pl-6 space-y-1">
+                        {component.triggerMetadata.referencedPipelines.map((pipeline, idx) => (
+                          <div key={idx} className="text-sm text-muted-foreground flex items-center gap-2">
+                            <ArrowRight size={14} className="text-accent" />
+                            <span className="font-medium">{pipeline}</span>
+                          </div>
+                        ))}
+                      </div>
+                      {component.triggerMetadata.referencedPipelines.length > 1 && (
+                        <div className="pl-6 mt-2">
+                          <Badge variant="outline" className="gap-1">
+                            <Info size={12} />
+                            Multi-pipeline trigger - {component.triggerMetadata.referencedPipelines.length} schedules will be created
+                          </Badge>
+                        </div>
+                      )}
+                    </div>
+                  )}
+
+                  {/* Recurrence Schedule */}
+                  {component.triggerMetadata.recurrence && (
+                    <div className="space-y-2">
+                      <h4 className="font-medium text-sm">Schedule Configuration</h4>
+                      <div className="pl-6 space-y-1 text-sm">
+                        <div className="grid grid-cols-2 gap-x-4 gap-y-1">
+                          <div>
+                            <span className="font-medium text-muted-foreground">Frequency:</span>{' '}
+                            <span className="text-foreground">{component.triggerMetadata.recurrence.frequency}</span>
+                          </div>
+                          <div>
+                            <span className="font-medium text-muted-foreground">Interval:</span>{' '}
+                            <span className="text-foreground">{component.triggerMetadata.recurrence.interval}</span>
+                          </div>
+                          {component.triggerMetadata.recurrence.startTime && (
+                            <div className="col-span-2">
+                              <span className="font-medium text-muted-foreground">Start Time:</span>{' '}
+                              <span className="text-foreground">
+                                {new Date(component.triggerMetadata.recurrence.startTime).toLocaleString()}
+                              </span>
+                            </div>
+                          )}
+                          {component.triggerMetadata.recurrence.endTime && (
+                            <div className="col-span-2">
+                              <span className="font-medium text-muted-foreground">End Time:</span>{' '}
+                              <span className="text-foreground">
+                                {new Date(component.triggerMetadata.recurrence.endTime).toLocaleString()}
+                              </span>
+                            </div>
+                          )}
+                          <div className="col-span-2">
+                            <span className="font-medium text-muted-foreground">Time Zone:</span>{' '}
+                            <span className="text-foreground">{component.triggerMetadata.recurrence.timeZone || 'UTC'}</span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Parameter Warning for Triggers */}
+                  {component.triggerMetadata.pipelineParameters && 
+                   component.triggerMetadata.pipelineParameters.some(p => Object.keys(p.parameters).length > 0) && (
+                    <div className="mt-3">
+                      <Alert className="bg-warning/10 border-warning">
+                        <Warning size={16} />
+                        <AlertDescription className="text-sm">
+                          <strong>⚠️ Trigger Parameters Detected</strong>
+                          <p className="mt-1 text-xs">
+                            This trigger passes parameters to pipelines. Fabric Schedules do not support parameters,
+                            so these values will be lost during migration.
+                          </p>
+                          <div className="mt-2 space-y-1">
+                            {component.triggerMetadata.pipelineParameters.map((pp, idx) => {
+                              const paramCount = Object.keys(pp.parameters).length;
+                              if (paramCount === 0) return null;
+                              return (
+                                <div key={idx} className="text-xs">
+                                  <strong>{pp.pipelineName}:</strong> {paramCount} parameter{paramCount !== 1 ? 's' : ''}
+                                </div>
+                              );
+                            })}
+                          </div>
+                          <p className="mt-2 text-xs font-medium">
+                            💡 Workaround: Set default values in Fabric pipeline definitions or use Variable Libraries.
+                          </p>
+                        </AlertDescription>
+                      </Alert>
+                    </div>
+                  )}
                 </div>
               )}
 

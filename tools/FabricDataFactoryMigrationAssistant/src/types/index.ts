@@ -202,12 +202,45 @@ export interface ADFComponent {
     triggers: string[];
     other: string[];
   };
+  /** NEW: Trigger-specific metadata */
+  triggerMetadata?: {
+    runtimeState: 'Started' | 'Stopped' | 'Unknown';
+    type: string;
+    recurrence?: {
+      frequency: string;
+      interval: number;
+      startTime?: string;
+      endTime?: string;
+      timeZone?: string;
+    };
+    referencedPipelines: string[];  // Pipeline names this trigger activates
+    // NEW: Pipeline parameters (for documentation - Fabric doesn't support schedule parameters)
+    pipelineParameters?: Array<{
+      pipelineName: string;
+      parameters: Record<string, any>;
+    }>;
+  };
 }
 
 export interface FabricTarget {
   type: 'dataPipeline' | 'connector' | 'variable' | 'schedule' | 'notebook' | 'gateway' | 'workspaceIdentity';
   name: string;
   configuration?: Record<string, any> | undefined;
+  
+  // Schedule-specific configuration
+  scheduleConfig?: {
+    enabled: boolean;  // Default false - schedules deploy disabled for safety
+    frequency: 'Minute' | 'Hour' | 'Day' | 'Week' | 'Month';
+    interval: number;
+    startTime?: string;
+    endTime?: string;
+    timeZone?: string;
+    targetPipelines: Array<{
+      pipelineName: string;
+      pipelineId?: string;  // Will be populated during deployment
+    }>;
+  };
+  
   gatewayType?: 'VirtualNetwork' | 'OnPremises' | undefined;
   connectVia?: string | undefined; // Reference to Integration Runtime for connections
   connectorType?: string | undefined;
@@ -250,7 +283,7 @@ export interface ComponentMapping {
 export interface DeploymentResult {
   componentName: string;
   componentType: string;
-  status: 'success' | 'failed' | 'skipped';
+  status: 'success' | 'failed' | 'skipped' | 'partial';
   fabricResourceId?: string | undefined;
   errorMessage?: string | undefined;
   apiRequestDetails?: APIRequestDetails | undefined;
@@ -258,6 +291,7 @@ export interface DeploymentResult {
   note?: string | undefined;
   skipReason?: string | undefined;
   apiError?: ApiError | undefined;
+  details?: string | undefined; // For multi-pipeline triggers, stores success/failure details per pipeline
 }
 
 export interface WorkspaceInfo {
@@ -589,4 +623,118 @@ export interface WorkspaceCredentialState {
   workspaceIdentity?: WorkspaceIdentityInfo;
   isLoading: boolean;
   error: string | null;
+}
+
+// ============================================================================
+// FABRIC SCHEDULE TYPES (Based on Microsoft Fabric REST API Swagger Spec)
+// https://github.com/microsoft/fabric-rest-api-specs
+// ============================================================================
+
+export type FabricScheduleType = 'Cron' | 'Daily' | 'Weekly' | 'Monthly';
+export type DayOfWeek = 'Sunday' | 'Monday' | 'Tuesday' | 'Wednesday' | 'Thursday' | 'Friday' | 'Saturday';
+export type WeekIndex = 'First' | 'Second' | 'Third' | 'Fourth' | 'Fifth';
+export type OccurrenceType = 'DayOfMonth' | 'OrdinalWeekday';
+
+/**
+ * Base configuration for all Fabric schedule types
+ */
+export interface FabricScheduleConfigBase {
+  type: FabricScheduleType;
+  startDateTime: string; // ISO 8601 format: "YYYY-MM-DDTHH:mm:ssZ"
+  endDateTime: string;   // ISO 8601 format: "YYYY-MM-DDTHH:mm:ssZ"
+  localTimeZoneId: string; // Windows time zone ID (e.g., "Eastern Standard Time")
+}
+
+/**
+ * Cron schedule - triggers a job periodically
+ * Interval in minutes between executions
+ */
+export interface CronScheduleConfig extends FabricScheduleConfigBase {
+  type: 'Cron';
+  interval: number; // 1 to 5270400 minutes (10 years)
+}
+
+/**
+ * Daily schedule - triggers a job at specific times each day
+ */
+export interface DailyScheduleConfig extends FabricScheduleConfigBase {
+  type: 'Daily';
+  times: string[]; // Array of time slots in "HH:mm" format, max 100 slots
+}
+
+/**
+ * Weekly schedule - triggers a job on specific weekdays at specific times
+ */
+export interface WeeklyScheduleConfig extends FabricScheduleConfigBase {
+  type: 'Weekly';
+  times: string[];       // Array of time slots in "HH:mm" format, max 100 slots
+  weekdays: DayOfWeek[]; // Array of weekdays, max 7 elements
+}
+
+/**
+ * Day of Month occurrence - triggers on a specific date
+ */
+export interface DayOfMonthOccurrence {
+  occurrenceType: 'DayOfMonth';
+  dayOfMonth: number; // 1 to 31 (invalid dates like Feb 31 will be skipped)
+}
+
+/**
+ * Ordinal Weekday occurrence - triggers on a specific week and day
+ */
+export interface OrdinalWeekdayOccurrence {
+  occurrenceType: 'OrdinalWeekday';
+  weekIndex: WeekIndex;
+  weekday: DayOfWeek;
+}
+
+export type MonthlyOccurrence = DayOfMonthOccurrence | OrdinalWeekdayOccurrence;
+
+/**
+ * Monthly schedule - triggers a job on specific days of the month at specific times
+ */
+export interface MonthlyScheduleConfig extends FabricScheduleConfigBase {
+  type: 'Monthly';
+  recurrence: number;         // Monthly interval (1-12): 1 = every month, 2 = every 2 months, etc.
+  occurrence: MonthlyOccurrence;
+  times: string[];            // Array of time slots in "HH:mm" format, max 100 slots
+}
+
+/**
+ * Discriminated union of all Fabric schedule configuration types
+ */
+export type FabricScheduleConfig = 
+  | CronScheduleConfig 
+  | DailyScheduleConfig 
+  | WeeklyScheduleConfig 
+  | MonthlyScheduleConfig;
+
+// ============================================================================
+// ADF/SYNAPSE SCHEDULE TYPES (Source Format)
+// ============================================================================
+
+/**
+ * ADF nested schedule object for complex recurrence patterns
+ */
+export interface ADFScheduleDetail {
+  minutes?: number[];    // Specific minutes (0-59)
+  hours?: number[];      // Specific hours (0-23)
+  weekDays?: string[];   // Full weekday names: ["Monday", "Tuesday", etc.]
+  monthDays?: number[];  // Days of month (1-31)
+  monthlyOccurrences?: Array<{
+    day?: string;        // Weekday name
+    occurrence?: number; // Week of month (1-5)
+  }>;
+}
+
+/**
+ * ADF trigger recurrence configuration
+ */
+export interface ADFRecurrence {
+  frequency: 'Minute' | 'Hour' | 'Day' | 'Week' | 'Month';
+  interval: number;
+  startTime: string;
+  endTime?: string;
+  timeZone: string;
+  schedule?: ADFScheduleDetail; // Present for complex Day/Week/Month schedules
 }
