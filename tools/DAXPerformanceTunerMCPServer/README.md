@@ -9,6 +9,16 @@ Transform slow DAX queries into lightning-fast optimized code using AI assistanc
 - May not cover all edge cases or data scenarios
 - Cannot guarantee identical behavior across all possible filter contexts, user interactions, or data states
 
+## 🎥 Watch It In Action
+
+See the DAX Performance Tuner in action:
+
+[![DAX Performance Tuner Demo](https://img.youtube.com/vi/7CI0oShxGkU/maxresdefault.jpg)](https://www.youtube.com/watch?v=7CI0oShxGkU)
+
+*Click the image above to watch the demo video*
+
+---
+
 ## ⚡ Quick Setup
 
 ### **Prerequisites**
