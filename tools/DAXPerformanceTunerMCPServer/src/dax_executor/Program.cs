@@ -10,7 +10,6 @@
 using System;
 using System.CommandLine;
 using System.Threading.Tasks;
-using Serilog;
 
 namespace DaxExecutor
 {
@@ -18,11 +17,6 @@ namespace DaxExecutor
     {
         static async Task<int> Main(string[] args)
         {
-            // Configure Serilog - write to stderr to keep stdout clean for JSON output
-            Log.Logger = new LoggerConfiguration()
-                .WriteTo.Console(standardErrorFromLevel: Serilog.Events.LogEventLevel.Verbose)
-                .CreateLogger();
-
             var workspaceOption = new Option<string>("--workspace", "Power BI workspace name");
             var xmlaOption = new Option<string>("--xmla", "XMLA server connection string (alternative to --workspace)");
             var datasetOption = new Option<string>("--dataset", "Power BI dataset name") { IsRequired = true };
@@ -61,10 +55,7 @@ namespace DaxExecutor
 
                     if (verbose)
                     {
-                        Log.Logger = new LoggerConfiguration()
-                            .MinimumLevel.Debug()
-                            .WriteTo.Console(standardErrorFromLevel: Serilog.Events.LogEventLevel.Verbose)
-                            .CreateLogger();
+                        Console.Error.WriteLine("Verbose logging enabled");
                     }
 
                     // Convert workspace name to XMLA endpoint if needed
@@ -80,13 +71,8 @@ namespace DaxExecutor
                 }
                 catch (Exception ex)
                 {
-                    Log.Error(ex, "Unhandled error");
                     Console.Error.WriteLine($"Error: {ex.Message}");
                     Environment.Exit(1);
-                }
-                finally
-                {
-                    Log.CloseAndFlush();
                 }
             }, workspaceOption, xmlaOption, datasetOption, queryOption, tokenOption, verboseOption);
 

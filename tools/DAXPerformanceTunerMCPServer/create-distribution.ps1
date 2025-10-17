@@ -43,6 +43,7 @@ try {
         @{ Path = "README.md"; Type = "File" }
         @{ Path = "LICENSE"; Type = "File" }
         @{ Path = "ATTRIBUTION.md"; Type = "File" }
+        @{ Path = "CHECKSUMS.txt"; Type = "File" }
         @{ Path = "requirements.txt"; Type = "File" }
         @{ Path = "setup.bat"; Type = "File" }
         @{ Path = "setup.ps1"; Type = "File" }
@@ -50,13 +51,22 @@ try {
         @{ Path = "src"; Type = "Directory" }
     )
     
-    # Directories to exclude during copy
+    # Directories and patterns to exclude during copy
     $ExcludeDirs = @(
         "__pycache__",
         "obj",
         "bin\Debug",
         ".pytest_cache",
         "*.egg-info"
+    )
+    
+    # File patterns to exclude (aligned with .gitignore)
+    $ExcludeFilePatterns = @(
+        "*.xml",     # Documentation files
+        "*.pdb",     # Debug symbols
+        "*.cache",
+        "*.user",
+        "*.suo"
     )
     
     # Copy files and directories
@@ -91,6 +101,16 @@ try {
                     # Also exclude Debug builds but keep Release builds
                     if ($RelativePath -like "*\bin\Debug\*") {
                         $Exclude = $true
+                    }
+                    
+                    # Exclude files matching patterns (XML, PDB, etc.)
+                    if (-not $_.PSIsContainer) {
+                        foreach ($FilePattern in $ExcludeFilePatterns) {
+                            if ($_.Name -like $FilePattern) {
+                                $Exclude = $true
+                                break
+                            }
+                        }
                     }
                     
                     if (-not $Exclude) {

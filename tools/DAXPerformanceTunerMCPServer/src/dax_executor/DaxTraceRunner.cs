@@ -24,7 +24,6 @@ using System.Xml;
 using System.Xml.XPath;
 using Microsoft.AnalysisServices.AdomdClient;
 using Microsoft.AnalysisServices;
-using Serilog;
 using SystemJsonSerializer = System.Text.Json.JsonSerializer;
 using SystemJsonSerializerOptions = System.Text.Json.JsonSerializerOptions;
 using System.Text.RegularExpressions;
@@ -33,8 +32,6 @@ namespace DaxExecutor
 {
     public class DaxTraceRunner
     {
-        private static readonly ILogger Log = Serilog.Log.ForContext<DaxTraceRunner>();
-
         // Configuration constants
         private const int TRACE_PING_INTERVAL_MS = 500;           // DAX Studio uses 500ms between pings
         private const int TRACE_EVENT_COLLECTION_DELAY_MS = 3000; // Wait time for trace events to arrive
@@ -83,7 +80,7 @@ namespace DaxExecutor
         {
             try
             {
-                Log.Information("Starting server timing trace for XMLA server: {XmlaServer}, dataset: {DatasetName}", xmlaServer, datasetName);
+
 
                 // Setup connection string using the provided XMLA server
                 var connectionString = BuildConnectionString(xmlaServer, datasetName, accessToken);
@@ -92,7 +89,7 @@ namespace DaxExecutor
             }
             catch (Exception ex)
             {
-                Log.Error(ex, "Error executing DAX query with XMLA trace");
+
                 return CreateErrorResponse(ex);
             }
         }
@@ -117,13 +114,12 @@ namespace DaxExecutor
                 
                 // Get session ID from the connection - this is crucial for trace filtering
                 sessionId = queryConnection.SessionID;
-                Log.Information("Query connection established. SessionID: {SessionId}", sessionId);
+
 
                 // Get DMV mappings for cleaning xmSQL queries (like DAX Studio)
                 var columnIdToNameMap = GetColumnIdToNameMapping(queryConnection);
                 var tableIdToNameMap = GetTableIdToNameMapping(queryConnection);
-                Log.Debug("Retrieved {ColumnCount} column mappings and {TableCount} table mappings", 
-                    columnIdToNameMap.Count, tableIdToNameMap.Count);
+                
 
                 using var server = new Server();
                 
@@ -133,17 +129,17 @@ namespace DaxExecutor
                 if (!isLocalConnection && !string.IsNullOrEmpty(accessToken) && accessToken != "desktop-no-auth-needed")
                 {
                     server.AccessToken = new Microsoft.AnalysisServices.AccessToken(accessToken, DateTime.UtcNow.AddHours(1), "");
-                    Log.Debug("Set access token on Server object for cloud connection");
+
                 }
                 else
                 {
-                    Log.Debug("Skipping access token for local desktop connection");
+
                 }
                 
                 server.Connect(connectionString);
 
                 // Create trace with session-specific name (trace cleanup handled in finally block since it's not IDisposable)
-                Log.Information("Setting up trace with session filtering...");
+
                 var traceName = $"DaxExecutor_Session_{sessionId}_{Guid.NewGuid().ToString("N")[..8]}";
                 Trace? trace = null;
                 
@@ -151,7 +147,7 @@ namespace DaxExecutor
                 {
                     trace = server.Traces.Add(traceName);
                     
-                    Log.Information("Applying session filter...");
+
                     trace.Filter = GetSessionIdFilter(sessionId, applicationName);
                     
                     // Set stop time for automatic cleanup
@@ -166,7 +162,7 @@ namespace DaxExecutor
                             var textData = e.TextData?.ToString() ?? "";
                             if (textData.Contains("$SYSTEM.DISCOVER_SESSIONS") || textData.StartsWith("/* PING */"))
                             {
-                                Log.Verbose("Skipping ping event: {EventClass}", e.EventClass);
+
                                 return;
                             }
 
@@ -241,32 +237,31 @@ namespace DaxExecutor
                             traceEvent.NetParallelDuration = traceEvent.Duration;
                             
                             collectedEvents.Add(traceEvent);
-                            Log.Debug("Captured trace event: {EventClass}.{EventSubclass} - Duration: {Duration}ms - Session: {SessionId}", 
-                                traceEvent.EventClass, traceEvent.EventSubclass ?? "N/A", traceEvent.Duration ?? 0, traceEvent.SessionId);
+                            
                         }
                         catch (Exception ex)
                         {
-                            Log.Warning(ex, "Error processing trace event");
+
                         }
                     };
 
                     // Set trace stop time and start it
                     trace.StopTime = DateTime.UtcNow.AddHours(TRACE_AUTO_STOP_HOURS);
                     
-                    Log.Information("Starting trace...");
+
                     trace.Start();
 
-                    Log.Information("Clearing dataset cache before executing query...");
+
                     await ClearDatasetCache(queryConnection, server, datasetName);
 
-                    Log.Information("Pinging connection to activate trace events...");
+
                     for (int i = 0; i < 5; i++)
                     {
                         PingTraceConnection(queryConnection);
                         await Task.Delay(500);
                     }
 
-                    Log.Information("Executing DAX query in session {SessionId}...", sessionId);
+
                     queryStartTime = DateTime.UtcNow;
                     try
                     {
@@ -313,7 +308,7 @@ namespace DaxExecutor
                             ["Rows"] = sampleRows
                         };
 
-                        Log.Information("Query executed successfully. Total Rows: {TotalRowCount}, Sample Rows: {SampleRowCount}", allRows.Count, sampleRows.Count);
+
                     }
                     finally
                     {
@@ -321,20 +316,20 @@ namespace DaxExecutor
                     }
 
                     // Wait for trace events to be collected
-                    Log.Information("Waiting for trace events to be collected...");
+
                     await Task.Delay(TRACE_EVENT_COLLECTION_DELAY_MS);
 
-                    Log.Information("Trace completed. Collected {EventCount} events", collectedEvents.Count);
+
                 }
                 finally
                 {
                     if (trace != null)
                     {
-                        Log.Information("Stopping trace...");
+
                         try { trace.Stop(); } 
-                        catch (Exception ex) { Log.Warning(ex, "Failed to stop trace"); }
+                        catch (Exception ex) {  }
                         try { trace.Drop(); } 
-                        catch (Exception ex) { Log.Warning(ex, "Failed to drop trace"); }
+                        catch (Exception ex) {  }
                     }
                 }
 
@@ -360,7 +355,7 @@ namespace DaxExecutor
 
         private static void SetupTraceEvents(Trace trace, AdomdConnection queryConnection)
         {
-            Log.Information("Setting up trace events...");
+
 
             var supportedEventColumns = GetSupportedTraceEventClasses(queryConnection);
 
@@ -414,7 +409,7 @@ namespace DaxExecutor
                     }
                     
                     trace.Events.Add(traceEvent);
-                    Log.Information("Added heartbeat event: {EventClass} with {ColumnCount} columns", eventClass, traceEvent.Columns.Count);
+
                 }
             }
 
@@ -445,18 +440,18 @@ namespace DaxExecutor
                     }
                     
                     trace.Events.Add(traceEvent);
-                    Log.Debug("Added event {EventClass} with {ColumnCount} columns", eventClass, traceEvent.Columns.Count);
+
                 }
                 else
                 {
-                    Log.Warning("Event class {EventClass} not supported by server", eventClass);
+
                 }
             }
 
-            Log.Information("Trace events configured successfully");
+
             
             trace.Update(UpdateOptions.Default, UpdateMode.CreateOrReplace);
-            Log.Information("Trace definition updated on server");
+
         }
 
         private static Dictionary<int, HashSet<int>> GetSupportedTraceEventClasses(AdomdConnection connection)
@@ -496,7 +491,7 @@ namespace DaxExecutor
             }
             catch (Exception ex)
             {
-                Log.Warning(ex, "Failed to get supported trace event classes, using fallback");
+
                 result = GetFallbackEventColumns();
             }
 
@@ -538,7 +533,7 @@ namespace DaxExecutor
         {
             try
             {
-                Log.Information("Clearing VertiPaq cache for dataset: {DatasetName}", datasetName);
+
                 
                 // Determine database ID - try Server object first, fallback to dataset name for local connections
                 string databaseId = datasetName;
@@ -549,16 +544,16 @@ namespace DaxExecutor
                     if (database != null)
                     {
                         databaseId = !string.IsNullOrEmpty(database.ID) ? database.ID : database.Name;
-                        Log.Debug("Found database in server catalog. Using DatabaseID: {DatabaseId}", databaseId);
+
                     }
                     else
                     {
-                        Log.Debug("Database not found in server catalog. Using dataset name as DatabaseID: {DatabaseId}", databaseId);
+
                     }
                 }
                 catch (Exception ex)
                 {
-                    Log.Debug(ex, "Could not access server databases collection (common for desktop connections). Using dataset name as DatabaseID: {DatabaseId}", databaseId);
+
                 }
                 
                 await Task.Run(() => {
@@ -576,11 +571,11 @@ namespace DaxExecutor
                     command.CommandText = clearCacheXmla;
                     command.ExecuteNonQuery();
                 });
-                Log.Information("VertiPaq cache cleared successfully for dataset: {DatasetName}", datasetName);
+
             }
             catch (Exception ex)
             {
-                Log.Warning(ex, "Failed to clear VertiPaq cache for dataset {DatasetName}: {ErrorMessage}", datasetName, ex.Message);
+
             }
         }
 
@@ -606,11 +601,11 @@ namespace DaxExecutor
                     }
                 }
                 
-                Log.Debug("Retrieved {Count} column ID to name mappings", mapping.Count);
+
             }
             catch (Exception ex)
             {
-                Log.Warning(ex, "Failed to retrieve column ID to name mappings");
+
             }
             
             return mapping;
@@ -638,11 +633,11 @@ namespace DaxExecutor
                     }
                 }
                 
-                Log.Debug("Retrieved {Count} table ID to name mappings", mapping.Count);
+
             }
             catch (Exception ex)
             {
-                Log.Warning(ex, "Failed to retrieve table ID to name mappings");
+
             }
             
             return mapping;
@@ -652,7 +647,7 @@ namespace DaxExecutor
         {
             try
             {
-                Log.Information("Pinging trace connection with DISCOVER_SESSIONS...");
+
                 using (var command = connection.CreateCommand())
                 {
                     command.CommandText = "SELECT * FROM $SYSTEM.DISCOVER_SESSIONS WHERE SESSION_ID = '" + connection.SessionID + "'";
@@ -661,11 +656,11 @@ namespace DaxExecutor
                         while (reader.Read()) { }
                     }
                 }
-                Log.Information("Ping completed successfully");
+
             }
             catch (Exception ex)
             {
-                Log.Warning("Ping failed: {Error}", ex.Message);
+
             }
         }
 
@@ -1093,3 +1088,4 @@ namespace DaxExecutor
         }
     }
 }
+

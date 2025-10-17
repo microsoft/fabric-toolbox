@@ -1,0 +1,39 @@
+# DAX Performance Tuner MCP Server - Binary Checksums
+# Generated: 2025-10-17
+
+## DaxExecutor.exe
+SHA256: 3E650A8BBC939D65277B4BB61C82CF9C72DEFEC19FC7699FE1BE11B5CCB95153
+File: src/dax_executor/bin/Release/net8.0-windows/win-x64/DaxExecutor.exe
+
+## How to Verify
+
+### PowerShell:
+```powershell
+Get-FileHash "src\dax_executor\bin\Release\net8.0-windows\win-x64\DaxExecutor.exe" -Algorithm SHA256
+```
+
+### Expected Output:
+Algorithm : SHA256
+Hash      : 3E650A8BBC939D65277B4BB61C82CF9C72DEFEC19FC7699FE1BE11B5CCB95153
+
+## Digital Signatures
+
+All Microsoft and .NET DLLs are digitally signed:
+- Microsoft Analysis Services DLLs: Signed by Microsoft Corporation
+- Microsoft Identity DLLs: Signed by Microsoft Corporation  
+- System.*.dll: Signed by .NET Foundation
+
+To verify DLL signatures:
+```powershell
+cd src\dax_executor\bin\Release\net8.0-windows\win-x64
+Get-Item *.dll | ForEach-Object { 
+    $sig = Get-AuthenticodeSignature $_.FullName
+    "$($_.Name): $($sig.Status)"
+}
+```
+
+All third-party dependencies are now from Microsoft or .NET Foundation with valid digital signatures.
+
+## Note on Serilog
+Previous versions included Serilog (unsigned OSS library). As of this build, Serilog has been removed 
+to eliminate all unsigned third-party dependencies from the distribution.

@@ -9,8 +9,6 @@
     ".NETCoreApp,Version=v8.0/win-x64": {
       "DaxExecutor/1.0.0": {
         "dependencies": {
-          "Serilog": "4.3.0",
-          "Serilog.Sinks.Console": "5.0.1",
           "System.CommandLine": "2.0.0-beta4.22272.1",
           "System.Text.Json": "9.0.0",
           "Microsoft.AnalysisServices.AdomdClient": "19.101.1.0",
@@ -23,25 +21,6 @@
         },
         "runtime": {
           "DaxExecutor.dll": {}
-        }
-      },
-      "Serilog/4.3.0": {
-        "runtime": {
-          "lib/net8.0/Serilog.dll": {
-            "assemblyVersion": "4.3.0.0",
-            "fileVersion": "4.3.0.0"
-          }
-        }
-      },
-      "Serilog.Sinks.Console/5.0.1": {
-        "dependencies": {
-          "Serilog": "4.3.0"
-        },
-        "runtime": {
-          "lib/net7.0/Serilog.Sinks.Console.dll": {
-            "assemblyVersion": "5.0.1.0",
-            "fileVersion": "5.0.1.0"
-          }
         }
       },
       "System.CommandLine/2.0.0-beta4.22272.1": {
@@ -151,20 +130,6 @@
       "type": "project",
       "serviceable": false,
       "sha512": ""
-    },
-    "Serilog/4.3.0": {
-      "type": "package",
-      "serviceable": true,
-      "sha512": "sha512-+cDryFR0GRhsGOnZSKwaDzRRl4MupvJ42FhCE4zhQRVanX0Jpg6WuCBk59OVhVDPmab1bB+nRykAnykYELA9qQ==",
-      "path": "serilog/4.3.0",
-      "hashPath": "serilog.4.3.0.nupkg.sha512"
-    },
-    "Serilog.Sinks.Console/5.0.1": {
-      "type": "package",
-      "serviceable": true,
-      "sha512": "sha512-6Jt8jl9y2ey8VV7nVEUAyjjyxjAQuvd5+qj4XYAT9CwcsvR70HHULGBeD+K2WCALFXf7CFsNQT4lON6qXcu2AA==",
-      "path": "serilog.sinks.console/5.0.1",
-      "hashPath": "serilog.sinks.console.5.0.1.nupkg.sha512"
     },
     "System.CommandLine/2.0.0-beta4.22272.1": {
       "type": "package",
