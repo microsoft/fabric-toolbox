@@ -5,16 +5,29 @@
 SHA256: 3E650A8BBC939D65277B4BB61C82CF9C72DEFEC19FC7699FE1BE11B5CCB95153
 File: src/dax_executor/bin/Release/net8.0-windows/win-x64/DaxExecutor.exe
 
+## DaxExecutor.dll
+SHA256: 15B19089D08647C5AEE13A2CDE0932D69C765985DFC6A2CF2AF5EAA0214F4C47
+File: src/dax_executor/bin/Release/net8.0-windows/win-x64/DaxExecutor.dll
+
 ## How to Verify
 
 ### PowerShell:
 ```powershell
+# Verify DaxExecutor.exe
 Get-FileHash "src\dax_executor\bin\Release\net8.0-windows\win-x64\DaxExecutor.exe" -Algorithm SHA256
+
+# Verify DaxExecutor.dll
+Get-FileHash "src\dax_executor\bin\Release\net8.0-windows\win-x64\DaxExecutor.dll" -Algorithm SHA256
 ```
 
 ### Expected Output:
+# DaxExecutor.exe
 Algorithm : SHA256
 Hash      : 3E650A8BBC939D65277B4BB61C82CF9C72DEFEC19FC7699FE1BE11B5CCB95153
+
+# DaxExecutor.dll
+Algorithm : SHA256
+Hash      : 15B19089D08647C5AEE13A2CDE0932D69C765985DFC6A2CF2AF5EAA0214F4C47
 
 ## Digital Signatures
 
