@@ -14,7 +14,7 @@
         ],
         "policy": {
           "timeout": "0.1:00:00",
-          "retry": 0,
+          "retry": 1,
           "retryIntervalInSeconds": 30,
           "secureOutput": false,
           "secureInput": false
@@ -44,10 +44,17 @@
       {
         "name": "Calendar Data",
         "type": "TridentNotebook",
-        "dependsOn": [],
+        "dependsOn": [
+          {
+            "activity": "Focus Data",
+            "dependencyConditions": [
+              "Succeeded"
+            ]
+          }
+        ],
         "policy": {
           "timeout": "0.1:00:00",
-          "retry": 0,
+          "retry": 1,
           "retryIntervalInSeconds": 30,
           "secureOutput": false,
           "secureInput": false
@@ -64,7 +71,7 @@
         "dependsOn": [],
         "policy": {
           "timeout": "0.1:00:00",
-          "retry": 0,
+          "retry": 1,
           "retryIntervalInSeconds": 30,
           "secureOutput": false,
           "secureInput": false
@@ -81,13 +88,77 @@
         "dependsOn": [],
         "policy": {
           "timeout": "0.1:00:00",
-          "retry": 0,
+          "retry": 1,
           "retryIntervalInSeconds": 30,
           "secureOutput": false,
           "secureInput": false
         },
         "typeProperties": {
           "notebookId": "545fa991-79e2-4b2c-abcc-3bc46648b9f1",
+          "workspaceId": "d7ae03b3-c53b-4ee6-af7e-0091be2e7cc4",
+          "sessionTag": "fca"
+        }
+      },
+      {
+        "name": "Focus_Fabric Data",
+        "type": "TridentNotebook",
+        "dependsOn": [
+          {
+            "activity": "Load Dimensions",
+            "dependencyConditions": [
+              "Succeeded"
+            ]
+          }
+        ],
+        "policy": {
+          "timeout": "0.1:00:00",
+          "retry": 1,
+          "retryIntervalInSeconds": 30,
+          "secureOutput": false,
+          "secureInput": false
+        },
+        "typeProperties": {
+          "notebookId": "2f378bea-3354-4854-b7dd-7ff3ad7aad1f",
+          "workspaceId": "d7ae03b3-c53b-4ee6-af7e-0091be2e7cc4",
+          "parameters": {
+            "fromMonth": {
+              "value": {
+                "value": "@pipeline().parameters.FromMonth",
+                "type": "Expression"
+              },
+              "type": "int"
+            },
+            "toMonth": {
+              "value": {
+                "value": "@pipeline().parameters.ToMonth",
+                "type": "Expression"
+              },
+              "type": "int"
+            }
+          },
+          "sessionTag": "fca"
+        }
+      },
+      {
+        "name": "Load Dimensions",
+        "type": "TridentNotebook",
+        "dependsOn": [
+          {
+            "activity": "Focus Data",
+            "dependencyConditions": [
+              "Succeeded"
+            ]
+          }
+        ],
+        "policy": {
+          "timeout": "0.1:00:00",
+          "retry": 1,
+          "retryIntervalInSeconds": 30,
+          "secureOutput": false,
+          "secureInput": false
+        },
+        "typeProperties": {
+          "notebookId": "99989ed6-47fb-4f95-acbc-1dccd383ce1a",
           "workspaceId": "d7ae03b3-c53b-4ee6-af7e-0091be2e7cc4",
           "sessionTag": "fca"
         }

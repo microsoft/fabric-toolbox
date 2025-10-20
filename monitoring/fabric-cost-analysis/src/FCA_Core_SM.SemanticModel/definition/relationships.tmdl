@@ -6,7 +6,18 @@ relationship c5137560-7461-4f58-3599-9a62c860ced0
 	fromColumn: fca.ChargePeriodStart_DateKey
 	toColumn: calendar.DateKey
 
-relationship 295d416c-6893-63f4-4e56-6e0033d19ccb
-	fromColumn: fca.RegionName
-	toColumn: capacity_regions.FabricRegion
+relationship 0b3559d6-f6b2-b283-43ee-da6fb16256ed
+	fromColumn: resources.RegionId
+	toColumn: capacity_regions.RegionId
+
+relationship acb5b209-af79-b0c5-a64c-cece8fcee79a
+	relyOnReferentialIntegrity
+	fromColumn: fca.ResourceKey
+	toColumn: resources.ResourceKey
+
+relationship 615f9cfb-f224-4047-a9c8-8d3b2d2fe61f
+	relyOnReferentialIntegrity
+	fromColumn: fca.SubscriptionKey
+	toColumn: subscriptions.SubscriptionKey
+
 
