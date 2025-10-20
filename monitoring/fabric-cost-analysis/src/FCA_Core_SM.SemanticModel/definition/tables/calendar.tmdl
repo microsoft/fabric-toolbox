@@ -199,6 +199,17 @@ table calendar
 
 		annotation SummarizationSetBy = Automatic
 
+	column hasCostData
+		dataType: int64
+		formatString: 0
+		sourceProviderType: int
+		lineageTag: db023e79-63d8-4379-9718-3238987a3912
+		sourceLineageTag: hasCostData
+		summarizeBy: none
+		sourceColumn: hasCostData
+
+		annotation SummarizationSetBy = Automatic
+
 	partition calendar = entity
 		mode: directLake
 		source
@@ -207,4 +218,5 @@ table calendar
 			expressionSource: DatabaseQuery
 
 	changedProperty = Description
+
 
