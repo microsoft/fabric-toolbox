@@ -191,25 +191,10 @@ obj/
 *.cache
 .vs/
 
-# Exclude bin/ directories generally but with exceptions for DaxExecutor
+# Exclude bin/ and obj/ directories - these are build artifacts
+# Users should build from source using setup.bat/setup.ps1
 bin/
-
-# Exception: Include the specific DaxExecutor Release build
-!src/dax_executor/bin/
-!src/dax_executor/bin/Release/
-!src/dax_executor/bin/Release/net8.0-windows/
-!src/dax_executor/bin/Release/net8.0-windows/win-x64/
-!src/dax_executor/bin/Release/net8.0-windows/win-x64/*.exe
-!src/dax_executor/bin/Release/net8.0-windows/win-x64/*.dll
-!src/dax_executor/bin/Release/net8.0-windows/win-x64/*.json
-
-# Exclude unnecessary build artifacts
-src/dax_executor/bin/Release/net8.0-windows/win-x64/*.pdb
-src/dax_executor/bin/Release/net8.0-windows/win-x64/*.xml
-
-# But exclude localization and publish folders within that directory
-src/dax_executor/bin/Release/net8.0-windows/win-x64/*/
-src/dax_executor/bin/Release/net8.0-windows/win-x64/publish/
+obj/
 
 # Exclude XML documentation files from dotnet folder (regenerated from NuGet packages)
 dotnet/*.xml

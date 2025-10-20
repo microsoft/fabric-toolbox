@@ -43,7 +43,6 @@ try {
         @{ Path = "README.md"; Type = "File" }
         @{ Path = "LICENSE"; Type = "File" }
         @{ Path = "ATTRIBUTION.md"; Type = "File" }
-        @{ Path = "CHECKSUMS.txt"; Type = "File" }
         @{ Path = "requirements.txt"; Type = "File" }
         @{ Path = "setup.bat"; Type = "File" }
         @{ Path = "setup.ps1"; Type = "File" }
@@ -55,7 +54,7 @@ try {
     $ExcludeDirs = @(
         "__pycache__",
         "obj",
-        "bin\Debug",
+        "bin",  # Exclude all bin folders - users will build from source
         ".pytest_cache",
         "*.egg-info"
     )
@@ -98,11 +97,6 @@ try {
                         }
                     }
                     
-                    # Also exclude Debug builds but keep Release builds
-                    if ($RelativePath -like "*\bin\Debug\*") {
-                        $Exclude = $true
-                    }
-                    
                     # Exclude files matching patterns (XML, PDB, etc.)
                     if (-not $_.PSIsContainer) {
                         foreach ($FilePattern in $ExcludeFilePatterns) {
@@ -137,8 +131,10 @@ try {
     
     # Verify critical files exist
     $CriticalFiles = @(
-        "src\dax_executor\bin\Release\net8.0-windows\win-x64\DaxExecutor.exe",
-        "dotnet\Microsoft.AnalysisServices.AdomdClient.dll"
+        "src\dax_executor\Program.cs",  # C# source code (not compiled exe)
+        "src\dax_executor\DaxExecutor.csproj",
+        "dotnet\Microsoft.AnalysisServices.AdomdClient.dll",
+        "setup.ps1"
     )
     
     $MissingCritical = @()

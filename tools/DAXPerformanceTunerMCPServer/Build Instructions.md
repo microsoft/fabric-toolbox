@@ -1,54 +1,61 @@
 # Build Instructions
 
-## Quick Distribution Build
+## For End Users
 
-If you've only changed Python code, configuration files, or documentation:
+Run the setup script - it automatically builds everything:
+
+```powershell
+.\setup.bat
+```
+
+The setup will:
+- Check for .NET 8.0 SDK (required for building)
+- Build DaxExecutor.exe from C# source code
+- Install Python dependencies
+- Configure VS Code MCP settings
+
+## For Developers
+
+### Quick Distribution Build
+
+If you've only changed Python code or documentation:
 
 ```powershell
 .\create-distribution.ps1
 ```
 
-This will create a new distribution ZIP with all current files.
+This creates a distribution ZIP. The executable will be built automatically during first setup.
 
-## Full Rebuild (when C# code changes)
+### Full Rebuild After C# Changes
 
-When you modify the C# DAX executor, you need to rebuild the executable and update security checksums:
+When you modify C# code in `src/dax_executor/`:
 
-### 1. Build the C# executable
 ```powershell
 cd src\dax_executor
 dotnet clean
 dotnet build -c Release
-```
-
-Verify the build succeeded and test the executable:
-```powershell
-.\bin\Release\net8.0-windows\win-x64\DaxExecutor.exe --help
-```
-
-### 2. Update security checksums
-Navigate back to the root directory and calculate new hashes:
-```powershell
 cd ..\..
-$exeHash = (Get-FileHash src\dax_executor\bin\Release\net8.0-windows\win-x64\DaxExecutor.exe).Hash
-$dllHash = (Get-FileHash src\dax_executor\bin\Release\net8.0-windows\win-x64\DaxExecutor.dll).Hash
-Write-Host "EXE Hash: $exeHash"
-Write-Host "DLL Hash: $dllHash"
 ```
 
-Edit `CHECKSUMS.txt` and replace the SHA256 hash values in both the declaration section and the expected output section.
+Test the executable:
+```powershell
+.\src\dax_executor\bin\Release\net8.0-windows\win-x64\DaxExecutor.exe --help
+```
 
-### 3. Create distribution
+Then create distribution:
 ```powershell
 .\create-distribution.ps1
 ```
 
-## Output
+## Distribution Output
 
-The distribution ZIP will be created in the current directory as `DAXPerformanceTunerMCPServer_YYYYMMDD.zip` (approximately 8.4 MB).
+Creates `DAXPerformanceTunerMCPServer_YYYYMMDD.zip` in the current directory.
 
-## Notes
+## Build Artifacts
 
-- All Microsoft DLLs are digitally signed and don't require checksum updates
-- Only the user-compiled `DaxExecutor.exe` and `DaxExecutor.dll` need checksum verification
-- The distribution script automatically excludes XML documentation and PDB debug files
+Build artifacts are excluded from source control:
+- `bin/` - Created during build, contains compiled executables and DLLs
+- `obj/` - Created during build, contains intermediate files
+- `dotnet/` - **Included in source** (Microsoft ADOMD.NET libraries)
+
+Users building from source must have .NET 8.0 SDK installed. The setup script handles this automatically.

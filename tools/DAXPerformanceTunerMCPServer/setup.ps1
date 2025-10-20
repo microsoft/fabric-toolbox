@@ -152,38 +152,79 @@ Write-Step "Checking DaxExecutor..."
 $daxExecutorPath = "src\dax_executor\bin\Release\net8.0-windows\win-x64\DaxExecutor.exe"
 
 if (Test-Path $daxExecutorPath) {
-    $fileSize = (Get-Item $daxExecutorPath).Length / 1MB
-    Write-Success "DaxExecutor ready! ($($fileSize.ToString('F1'))MB)"
-    Write-Info "Pre-built executable - no building required"
-} else {
-    Write-Warning "DaxExecutor not found at expected location"
-    Write-Warning "This should be included in the repository"
-    Write-Info "Expected location: $daxExecutorPath"
+    # Verify it's executable and not corrupted
+    try {
+        $testOutput = & $daxExecutorPath --help 2>&1
+        if ($LASTEXITCODE -eq 0) {
+            $fileSize = (Get-Item $daxExecutorPath).Length / 1MB
+            Write-Success "DaxExecutor ready and verified! ($($fileSize.ToString('F1'))MB)"
+        } else {
+            Write-Warning "DaxExecutor exists but failed verification, rebuilding..."
+            throw "Verification failed"
+        }
+    }
+    catch {
+        Write-Warning "Rebuilding DaxExecutor..."
+        Remove-Item $daxExecutorPath -Force -ErrorAction SilentlyContinue
+    }
+}
+
+if (-not (Test-Path $daxExecutorPath)) {
+    Write-Info "DaxExecutor not found, building from source..."
     
-    # Try to build if we have SDK
-    $dotnetSdks = dotnet --list-sdks 2>&1 | Select-String "8\."
-    if ($dotnetSdks) {
-        Write-Info "Attempting to build DaxExecutor..."
-        Push-Location "src\dax_executor"
-        try {
-            dotnet publish -c Release -r win-x64 --no-self-contained
-            if ($LASTEXITCODE -eq 0) {
-                Write-Success "DaxExecutor built successfully!"
-            } else {
-                throw "Build failed"
-            }
-        }
-        catch {
-            Write-Error "Failed to build DaxExecutor"
-            Pop-Location
-            exit 1
-        }
-        finally {
-            Pop-Location
-        }
-    } else {
-        Write-Error "Cannot build DaxExecutor (no .NET SDK) and pre-built version missing"
+    # Check for .NET SDK (8.0 or higher required for building)
+    $dotnetSdks = dotnet --list-sdks 2>&1
+    $hasCompatibleSdk = $dotnetSdks | Where-Object { 
+        $_ -match "(\d+)\." -and [int]$matches[1] -ge 8 
+    }
+    
+    if (-not $hasCompatibleSdk) {
+        Write-Error ".NET SDK 8.0 or higher required to build DaxExecutor"
+        Write-Info "You currently have:"
+        dotnet --list-sdks 2>&1 | ForEach-Object { Write-Info "  $_" }
+        Write-Warning "Options:"
+        Write-Warning "1. Install .NET 8.0+ SDK from: https://dotnet.microsoft.com/download/dotnet"
+        Write-Warning "2. Download pre-built release from GitHub"
         exit 1
+    }
+    
+    $sdkVersion = ($hasCompatibleSdk | Select-Object -First 1) -replace '\s.*$', ''
+    Write-Success "Found compatible .NET SDK: $sdkVersion"
+    Write-Info "Building DaxExecutor (this may take 30-60 seconds)..."
+    
+    Push-Location "src\dax_executor"
+    try {
+        # Clean first to ensure fresh build
+        dotnet clean -c Release --verbosity quiet | Out-Null
+        
+        # Build the project
+        dotnet build -c Release --verbosity quiet
+        
+        if ($LASTEXITCODE -eq 0 -and (Test-Path "bin\Release\net8.0-windows\win-x64\DaxExecutor.exe")) {
+            Write-Success "DaxExecutor built successfully!"
+            
+            # Verify the built executable
+            $testOutput = & "bin\Release\net8.0-windows\win-x64\DaxExecutor.exe" --help 2>&1
+            if ($LASTEXITCODE -eq 0) {
+                Write-Success "Build verified and working"
+            } else {
+                throw "Built executable failed verification"
+            }
+        } else {
+            throw "Build completed but executable not found"
+        }
+    }
+    catch {
+        Write-Error "Failed to build DaxExecutor: $_"
+        Write-Warning "Please check:"
+        Write-Warning "1. .NET 8.0 SDK is properly installed"
+        Write-Warning "2. All source files are present in src/dax_executor/"
+        Write-Warning "3. Microsoft Analysis Services DLLs are in dotnet/ folder"
+        Pop-Location
+        exit 1
+    }
+    finally {
+        Pop-Location
     }
 }
 

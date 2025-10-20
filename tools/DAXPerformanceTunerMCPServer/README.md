@@ -26,8 +26,8 @@ See the DAX Performance Tuner in action:
 Before you begin, install:
 - ✅ **Python 3.8+** - [Download here](https://python.org/downloads/)
   - Important: Check "Add Python to PATH" during installation
-- ✅ **\.NET 8.0 Runtime** - [Download here](https://dotnet.microsoft.com/en-us/download)
-  - Choose ".NET 8.0 Runtime" (not SDK)
+- ✅ **\.NET SDK 8.0+** - [Download here](https://dotnet.microsoft.com/en-us/download)
+  - Required for building DaxExecutor from source (.NET 8.0 or higher)
 
 ---
 
@@ -109,10 +109,10 @@ Add to your `claude_desktop_config.json`:
 
 ## 📦 What's Included
 
-- **Pre-built `DaxExecutor.exe`** - No compilation needed, ready to use
-- **ADOMD.NET DLLs** - Located in `dotnet/` folder for XMLA connectivity
+- **C# Source Code** - DaxExecutor built automatically during setup
+- **ADOMD.NET Libraries** - Microsoft DLLs in `dotnet/` folder for XMLA connectivity
 - **Python MCP Server** - Complete implementation with 4 specialized tools
-- **Automated Setup Scripts** - `setup.bat` and `setup.ps1` for easy installation
+- **Automated Setup Scripts** - `setup.bat` and `setup.ps1` handle building and installation
 
 ---
 
