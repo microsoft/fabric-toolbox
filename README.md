@@ -44,6 +44,7 @@ These assets should be treated as examples that you can use to create the soluti
 - [DW SP Kill Queries](./scripts/dw-sp-kill-queries)
 
 ## Tools
+- $${\color{green}NEW!}$$ [DAX Performance Tuner MCP Server](./tools/DAXPerformanceTunerMCPServer)
 - $${\color{green}NEW!}$$ [Semantic Model MCP Server](./tools/SemanticModelMCPServer)
 - $${\color{green}NEW!}$$ [Open Mirroring SDK](./tools/OpenMirroringPythonSDK)
 - [MicrosoftFabricMgmt PowerShell Module](./tools/MicrosoftFabricMgmt)
