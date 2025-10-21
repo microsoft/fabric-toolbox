@@ -3,7 +3,8 @@
 # This script automates the setup process for Windows users
 
 param(
-    [switch]$NonInteractive = $false
+    [switch]$NonInteractive = $false,
+    [switch]$SkipInstall = $false
 )
 
 function Write-Header {
@@ -62,170 +63,187 @@ function Test-Command($command) {
 
 # Check Python
 Write-Step "Checking Python installation..."
-if (-not (Test-Command "python")) {
-    Write-Error "Python not found!"
-    Write-Warning "Please install Python 3.8+ from: https://python.org/downloads/"
-    Write-Warning "Make sure to check 'Add Python to PATH' during installation"
-    exit 1
-}
-
-$pythonVersion = python --version 2>&1
-Write-Success "Found: $pythonVersion"
-
-# Verify Python version
-try {
-    $versionOutput = python -c "import sys; print(f'{sys.version_info.major}.{sys.version_info.minor}')" 2>&1
-    $majorMinor = $versionOutput.Split('.')
-    $major = [int]$majorMinor[0]
-    $minor = [int]$majorMinor[1]
-    
-    if ($major -eq 3 -and $minor -ge 8) {
-        Write-Success "Python version is supported (3.$minor)"
-    } elseif ($major -gt 3) {
-        Write-Success "Python version is supported ($major.$minor)"
-    } else {
-        Write-Error "Python 3.8+ required, found $major.$minor"
-        Write-Warning "Please upgrade Python from: https://python.org/downloads/"
+if (-not $SkipInstall) {
+    if (-not (Test-Command "python")) {
+        Write-Error "Python not found!"
+        Write-Warning "Please install Python 3.8+ from: https://python.org/downloads/"
+        Write-Warning "Make sure to check 'Add Python to PATH' during installation"
         exit 1
     }
-} catch {
-    Write-Warning "Could not verify Python version, continuing..."
+
+    $pythonVersion = python --version 2>&1
+    Write-Success "Found: $pythonVersion"
+
+    # Verify Python version
+    try {
+        $versionOutput = python -c "import sys; print(f'{sys.version_info.major}.{sys.version_info.minor}')" 2>&1
+        $majorMinor = $versionOutput.Split('.')
+        $major = [int]$majorMinor[0]
+        $minor = [int]$majorMinor[1]
+        
+        if ($major -eq 3 -and $minor -ge 8) {
+            Write-Success "Python version is supported (3.$minor)"
+        } elseif ($major -gt 3) {
+            Write-Success "Python version is supported ($major.$minor)"
+        } else {
+            Write-Error "Python 3.8+ required, found $major.$minor"
+            Write-Warning "Please upgrade Python from: https://python.org/downloads/"
+            exit 1
+        }
+    } catch {
+        Write-Warning "Could not verify Python version, continuing..."
+    }
+} else {
+    Write-Info "Skipping Python check (installation handled by setup.bat)"
 }
 
 # Check .NET
 Write-Step "Checking .NET installation..."
-if (-not (Test-Command "dotnet")) {
-    Write-Error ".NET not found!"
-    Write-Warning "Please install .NET 8.0 Runtime from:"
-    Write-Warning "https://dotnet.microsoft.com/download/dotnet/8.0"
-    Write-Warning "Choose: '.NET 8.0 Runtime' (not SDK - DaxExecutor is already built!)"
-    exit 1
-}
-
-$dotnetVersion = dotnet --version 2>&1
-Write-Success "Found .NET: $dotnetVersion"
-
-# Check for .NET 8.0 specifically
-try {
-    $runtimes = dotnet --list-runtimes 2>&1 | Select-String "Microsoft.NETCore.App.*8\."
-    if ($runtimes) {
-        Write-Success ".NET 8.0 Runtime available"
-    } else {
-        Write-Warning ".NET 8.0 Runtime not found"
-        Write-Warning "Please install .NET 8.0 Runtime from:"
+if (-not $SkipInstall) {
+    if (-not (Test-Command "dotnet")) {
+        Write-Error ".NET not found!"
+        Write-Warning "Please install .NET SDK 8.0+ from:"
         Write-Warning "https://dotnet.microsoft.com/download/dotnet/8.0"
-        Write-Info "Current .NET version ($dotnetVersion) might work, continuing..."
+        exit 1
     }
-} catch {
-    Write-Info "Continuing with available .NET version..."
+
+    $dotnetVersion = dotnet --version 2>&1
+    Write-Success "Found .NET: $dotnetVersion"
+
+    # Check for .NET SDK 8.0 or higher
+    try {
+        $dotnetSdks = dotnet --list-sdks 2>&1
+        $hasCompatibleSdk = $dotnetSdks | Where-Object { 
+            $_ -match "(\d+)\." -and [int]$matches[1] -ge 8 
+        }
+        
+        if ($hasCompatibleSdk) {
+            Write-Success ".NET SDK 8.0+ available for building"
+        } else {
+            Write-Warning ".NET SDK 8.0+ not found for building"
+            Write-Info "Current SDKs: $dotnetSdks"
+        }
+    } catch {
+        Write-Info "Continuing with available .NET version..."
+    }
+} else {
+    Write-Info "Skipping .NET check (installation handled by setup.bat)"
 }
 
 # Install Python dependencies
 Write-Step "Installing Python dependencies..."
-try {
-    Write-Info "Upgrading pip..."
-    python -m pip install --upgrade pip --quiet
-    Write-Success "Pip upgraded"
-    
-    Write-Info "Installing required packages..."
-    python -m pip install -r requirements.txt --quiet
-    Write-Success "Python dependencies installed"
-    # Ensure pythonnet installed for XMLA connectivity
-    Write-Info "Verifying pythonnet installation..."
-    python -c "import pythonnet" 2>$null
-    if ($LASTEXITCODE -eq 0) {
-        Write-Success "pythonnet is installed"
-    } else {
-        Write-Warning "pythonnet not detected, installing pythonnet..."
-        python -m pip install pythonnet>=3.0.0 --quiet
-        Write-Success "pythonnet installed"
+if (-not $SkipInstall) {
+    try {
+        Write-Info "Upgrading pip..."
+        python -m pip install --upgrade pip --quiet
+        Write-Success "Pip upgraded"
+        
+        Write-Info "Installing required packages..."
+        python -m pip install -r requirements.txt --quiet
+        Write-Success "Python dependencies installed"
+        # Ensure pythonnet installed for XMLA connectivity
+        Write-Info "Verifying pythonnet installation..."
+        python -c "import pythonnet" 2>$null
+        if ($LASTEXITCODE -eq 0) {
+            Write-Success "pythonnet is installed"
+        } else {
+            Write-Warning "pythonnet not detected, installing pythonnet..."
+            python -m pip install pythonnet>=3.0.0 --quiet
+            Write-Success "pythonnet installed"
+        }
     }
-}
-catch {
-    Write-Error "Failed to install Python dependencies"
-    Write-Warning "Try running manually: pip install -r requirements.txt"
-    exit 1
+    catch {
+        Write-Error "Failed to install Python dependencies"
+        Write-Warning "Try running manually: pip install -r requirements.txt"
+        exit 1
+    }
+} else {
+    Write-Info "Skipping Python package installation (handled by setup.bat)"
 }
 
 # Check DaxExecutor
 Write-Step "Checking DaxExecutor..."
-$daxExecutorPath = "src\dax_executor\bin\Release\net8.0-windows\win-x64\DaxExecutor.exe"
+if (-not $SkipInstall) {
+    $daxExecutorPath = "src\dax_executor\bin\Release\net8.0-windows\win-x64\DaxExecutor.exe"
 
-if (Test-Path $daxExecutorPath) {
-    # Verify it's executable and not corrupted
-    try {
-        $testOutput = & $daxExecutorPath --help 2>&1
-        if ($LASTEXITCODE -eq 0) {
-            $fileSize = (Get-Item $daxExecutorPath).Length / 1MB
-            Write-Success "DaxExecutor ready and verified! ($($fileSize.ToString('F1'))MB)"
-        } else {
-            Write-Warning "DaxExecutor exists but failed verification, rebuilding..."
-            throw "Verification failed"
-        }
-    }
-    catch {
-        Write-Warning "Rebuilding DaxExecutor..."
-        Remove-Item $daxExecutorPath -Force -ErrorAction SilentlyContinue
-    }
-}
-
-if (-not (Test-Path $daxExecutorPath)) {
-    Write-Info "DaxExecutor not found, building from source..."
-    
-    # Check for .NET SDK (8.0 or higher required for building)
-    $dotnetSdks = dotnet --list-sdks 2>&1
-    $hasCompatibleSdk = $dotnetSdks | Where-Object { 
-        $_ -match "(\d+)\." -and [int]$matches[1] -ge 8 
-    }
-    
-    if (-not $hasCompatibleSdk) {
-        Write-Error ".NET SDK 8.0 or higher required to build DaxExecutor"
-        Write-Info "You currently have:"
-        dotnet --list-sdks 2>&1 | ForEach-Object { Write-Info "  $_" }
-        Write-Warning "Options:"
-        Write-Warning "1. Install .NET 8.0+ SDK from: https://dotnet.microsoft.com/download/dotnet"
-        Write-Warning "2. Download pre-built release from GitHub"
-        exit 1
-    }
-    
-    $sdkVersion = ($hasCompatibleSdk | Select-Object -First 1) -replace '\s.*$', ''
-    Write-Success "Found compatible .NET SDK: $sdkVersion"
-    Write-Info "Building DaxExecutor (this may take 30-60 seconds)..."
-    
-    Push-Location "src\dax_executor"
-    try {
-        # Clean first to ensure fresh build
-        dotnet clean -c Release --verbosity quiet | Out-Null
-        
-        # Build the project
-        dotnet build -c Release --verbosity quiet
-        
-        if ($LASTEXITCODE -eq 0 -and (Test-Path "bin\Release\net8.0-windows\win-x64\DaxExecutor.exe")) {
-            Write-Success "DaxExecutor built successfully!"
-            
-            # Verify the built executable
-            $testOutput = & "bin\Release\net8.0-windows\win-x64\DaxExecutor.exe" --help 2>&1
+    if (Test-Path $daxExecutorPath) {
+        # Verify it's executable and not corrupted
+        try {
+            $null = & $daxExecutorPath --help 2>&1
             if ($LASTEXITCODE -eq 0) {
-                Write-Success "Build verified and working"
+                $fileSize = (Get-Item $daxExecutorPath).Length / 1MB
+                Write-Success "DaxExecutor ready and verified! ($($fileSize.ToString('F1'))MB)"
             } else {
-                throw "Built executable failed verification"
+                Write-Warning "DaxExecutor exists but failed verification, rebuilding..."
+                throw "Verification failed"
             }
-        } else {
-            throw "Build completed but executable not found"
+        }
+        catch {
+            Write-Warning "Rebuilding DaxExecutor..."
+            Remove-Item $daxExecutorPath -Force -ErrorAction SilentlyContinue
         }
     }
-    catch {
-        Write-Error "Failed to build DaxExecutor: $_"
-        Write-Warning "Please check:"
-        Write-Warning "1. .NET 8.0 SDK is properly installed"
-        Write-Warning "2. All source files are present in src/dax_executor/"
-        Write-Warning "3. Microsoft Analysis Services DLLs are in dotnet/ folder"
-        Pop-Location
-        exit 1
+
+    if (-not (Test-Path $daxExecutorPath)) {
+        Write-Info "DaxExecutor not found, building from source..."
+        
+        # Check for .NET SDK (8.0 or higher required for building)
+        $dotnetSdks = dotnet --list-sdks 2>&1
+        $hasCompatibleSdk = $dotnetSdks | Where-Object { 
+            $_ -match "(\d+)\." -and [int]$matches[1] -ge 8 
+        }
+        
+        if (-not $hasCompatibleSdk) {
+            Write-Error ".NET SDK 8.0 or higher required to build DaxExecutor"
+            Write-Info "You currently have:"
+            dotnet --list-sdks 2>&1 | ForEach-Object { Write-Info "  $_" }
+            Write-Warning "Options:"
+            Write-Warning "1. Install .NET 8.0+ SDK from: https://dotnet.microsoft.com/download/dotnet"
+            Write-Warning "2. Download pre-built release from GitHub"
+            exit 1
+        }
+        
+        $sdkVersion = ($hasCompatibleSdk | Select-Object -First 1) -replace '\s.*$', ''
+        Write-Success "Found compatible .NET SDK: $sdkVersion"
+        Write-Info "Building DaxExecutor (this may take 30-60 seconds)..."
+        
+        Push-Location "src\dax_executor"
+        try {
+            # Clean first to ensure fresh build
+            dotnet clean -c Release --verbosity quiet | Out-Null
+            
+            # Build the project
+            dotnet build -c Release --verbosity quiet
+            
+            if ($LASTEXITCODE -eq 0 -and (Test-Path "bin\Release\net8.0-windows\win-x64\DaxExecutor.exe")) {
+                Write-Success "DaxExecutor built successfully!"
+                
+                # Verify the built executable
+                $null = & "bin\Release\net8.0-windows\win-x64\DaxExecutor.exe" --help 2>&1
+                if ($LASTEXITCODE -eq 0) {
+                    Write-Success "Build verified and working"
+                } else {
+                    throw "Built executable failed verification"
+                }
+            } else {
+                throw "Build completed but executable not found"
+            }
+        }
+        catch {
+            Write-Error "Failed to build DaxExecutor: $_"
+            Write-Warning "Please check:"
+            Write-Warning "1. .NET 8.0 SDK is properly installed"
+            Write-Warning "2. All source files are present in src/dax_executor/"
+            Write-Warning "3. Microsoft Analysis Services DLLs are in dotnet/ folder"
+            Pop-Location
+            exit 1
+        }
+        finally {
+            Pop-Location
+        }
     }
-    finally {
-        Pop-Location
-    }
+} else {
+    Write-Info "Skipping DaxExecutor check (build handled by setup.bat)"
 }
 
 # Unblock DLLs downloaded from the internet (Windows security feature)
@@ -295,15 +313,17 @@ if (-not (Test-Path $vsCodeDir)) {
 # Create or update mcp.json with absolute paths
 $mcpFile = Join-Path $vsCodeDir "mcp.json"
 $serverPath = Join-Path $scriptDir "src\server.py"
+$venvPython = Join-Path $scriptDir ".venv\Scripts\python.exe"
 
 # Use forward slashes and escape backslashes for JSON
 $serverPathJson = $serverPath -replace '\\', '\\'
+$venvPythonJson = $venvPython -replace '\\', '\\'
 
 $mcpContent = @"
 {
   "servers": {
     "dax-performance-tuner": {
-      "command": "python",
+      "command": "$venvPythonJson",
       "args": [
         "$serverPathJson"
       ],
@@ -314,33 +334,32 @@ $mcpContent = @"
 "@
 
 Set-Content -Path $mcpFile -Value $mcpContent -Encoding UTF8
-Write-Success "mcp.json configured with absolute path: $serverPath"
+Write-Success "mcp.json configured to use virtual environment Python"
 
 Write-Host ""
 Write-Host "What's Ready:" -ForegroundColor Cyan
-Write-Success "Python environment with all dependencies"
+Write-Success "Isolated Python virtual environment with all dependencies"
 Write-Success "DaxExecutor.exe ready for performance analysis"  
 Write-Success "4 streamlined MCP tools for DAX optimization"
-Write-Success "VS Code MCP config prepared (if missing)"
+Write-Success "VS Code MCP config prepared"
 
 Write-Host ""
 Write-Host "Next Steps:" -ForegroundColor Cyan
 Write-Host ""
-Write-Host "1. Start the MCP server whenever you need it:" -ForegroundColor Yellow
-Write-Host "   python src/server.py" -ForegroundColor Green
+Write-Host "1. Open VS Code in this folder" -ForegroundColor Yellow
 Write-Host ""
-Write-Host "2. Configure your AI client:" -ForegroundColor Yellow
-Write-Host "   - VS Code / GitHub Copilot Chat: uses .vscode/mcp.json" -ForegroundColor Yellow
-Write-Host "   - Claude Desktop: copy the same command into claude_desktop_config.json" -ForegroundColor Yellow
-Write-Host "   - Other MCP clients: point at python + src/server.py" -ForegroundColor Yellow
+Write-Host "2. Open .vscode/mcp.json and click 'Start' on the server" -ForegroundColor Yellow
 Write-Host ""
 Write-Host "3. Test it works:" -ForegroundColor Yellow
-Write-Host "   Ask your AI: 'Help me optimize a DAX query'" -ForegroundColor Yellow
-Write-Host "   You should see 4 streamlined DAX optimization tools available" -ForegroundColor Yellow
+Write-Host "   Ask Copilot: 'Help me optimize a DAX query'" -ForegroundColor Yellow
 Write-Host ""
-Write-Host "4. Start optimizing:" -ForegroundColor Yellow
-Write-Host "   Provide your workspace, dataset, and DAX query" -ForegroundColor Yellow
-Write-Host "   Let the AI guide you through the optimization process" -ForegroundColor Yellow
+Write-Host "4. For other MCP clients (Claude Desktop, etc.):" -ForegroundColor Yellow
+Write-Host "   Command: " -NoNewline -ForegroundColor Yellow
+Write-Host "$scriptDir\.venv\Scripts\python.exe" -ForegroundColor Green
+Write-Host "   Args: " -NoNewline -ForegroundColor Yellow  
+Write-Host '["' -NoNewline -ForegroundColor Green
+Write-Host "$serverPathJson" -NoNewline -ForegroundColor Green
+Write-Host '"]' -ForegroundColor Green
 
 Write-Host ""
 Write-Info "Need help? Check:"

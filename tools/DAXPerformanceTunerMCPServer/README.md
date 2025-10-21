@@ -26,6 +26,7 @@ See the DAX Performance Tuner in action:
 Before you begin, install:
 - ✅ **Python 3.8+** - [Download here](https://python.org/downloads/)
   - Important: Check "Add Python to PATH" during installation
+  - Used to create isolated virtual environment
 - ✅ **\.NET SDK 8.0+** - [Download here](https://dotnet.microsoft.com/en-us/download)
   - Required for building DaxExecutor from source (.NET 8.0 or higher)
 
@@ -49,7 +50,9 @@ Before you begin, install:
    - Double-click `setup.bat` (or run `setup.ps1` in PowerShell)
    
    The setup will:
-   - ✅ Install required Python packages
+   - ✅ Create isolated Python virtual environment
+   - ✅ Install required Python packages in the virtual environment
+   - ✅ Build DaxExecutor.exe from source
    - ✅ Generate MCP configuration in `.vscode/mcp.json`
 
 3. **Start the MCP Server in VS Code**
