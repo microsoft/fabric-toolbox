@@ -160,8 +160,7 @@ try {
         "DAXPerformanceTunerMCPServer_$(Get-Date -Format 'yyyyMMdd').zip"
     }
     
-    $OutputPath = $ExecutionContext.SessionState.Path.GetUnresolvedProviderPathFromPSPath($OutputPath)
-    $ZipPath = Join-Path $OutputPath $ZipFileName
+    $ZipPath = Join-Path $ScriptDir $ZipFileName
     
     # Remove existing zip if present
     if (Test-Path $ZipPath) {

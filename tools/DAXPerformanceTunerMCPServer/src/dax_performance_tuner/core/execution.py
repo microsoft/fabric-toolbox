@@ -394,12 +394,11 @@ def prepare_query_for_optimization_core(query: str) -> Dict[str, Any]:
             measures_data = metadata_result.get("measures", [])
 
             if not measures_data:
-                return {
-                    "status": "error", 
-                    "error": "The model does not contain any measures to define"
-                }
-
-            measures_info, measure_lookup = _build_measure_catalog(measures_data)
+                # No measures in model - just use the query as-is
+                measures_info = []
+                measure_lookup = {}
+            else:
+                measures_info, measure_lookup = _build_measure_catalog(measures_data)
             
             functions_query = "SELECT * FROM $SYSTEM.TMSCHEMA_FUNCTIONS"
             functions_result = execute_dmv_query(xmla_endpoint, dataset_name, functions_query)
