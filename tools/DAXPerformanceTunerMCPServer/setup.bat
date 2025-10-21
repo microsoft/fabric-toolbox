@@ -1,7 +1,7 @@
 @echo off
 setlocal enabledelayedexpansion
 REM DAX Performance Tuner - Windows setup script
-REM Creates virtual environment and installs all dependencies (Python 3.8–3.13)
+REM Creates virtual environment and installs all dependencies (Python 3.8-3.13)
 
 title DAX Performance Tuner Setup
 
@@ -26,7 +26,7 @@ echo.
 echo Starting setup...
 echo.
 
-REM ---------- Find a compatible Python (3.8–3.13) ----------
+REM ---------- Find a compatible Python (3.8-3.13) ----------
 set "PYTHON_CMD="
 set "PYTHON_VERSION="
 set "PY_MAJOR="
@@ -40,15 +40,19 @@ if not errorlevel 1 (
     set "PY_MAJOR=%%a"
     set "PY_MINOR=%%b"
   )
-  if "%PY_MAJOR%"=="3" (
-    if %PY_MINOR% GEQ 8 if %PY_MINOR% LEQ 13 (
-      set "PYTHON_CMD=python"
-      echo [SUCCESS] Using default Python %PYTHON_VERSION%
+  if defined PY_MAJOR if defined PY_MINOR (
+    if "%PY_MAJOR%"=="3" (
+      if !PY_MINOR! GEQ 8 if !PY_MINOR! LEQ 13 (
+        set "PYTHON_CMD=python"
+        echo [SUCCESS] Using default Python %PYTHON_VERSION%
+      ) else (
+        echo [WARNING] Default Python %PYTHON_VERSION% not compatible (need 3.8-3.13)
+      )
     ) else (
-      echo [WARNING] Default Python %PYTHON_VERSION% not compatible (need 3.8–3.13)
+      echo [WARNING] Default Python %PYTHON_VERSION% is not Python 3.x
     )
   ) else (
-    echo [WARNING] Default Python %PYTHON_VERSION% is not Python 3.x
+    echo [WARNING] Could not parse Python version
   )
 ) else (
   echo [WARNING] Python not found on PATH
@@ -71,7 +75,7 @@ if not defined PYTHON_CMD (
 
 if not defined PYTHON_CMD (
   echo.
-  echo [ERROR] No compatible Python version found (need 3.8–3.13).
+  echo [ERROR] No compatible Python version found (need 3.8-3.13).
   echo Your default Python is: %PYTHON_VERSION%
   echo.
   echo Solutions:

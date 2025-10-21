@@ -57,7 +57,7 @@ if (-not $SkipInstall) {
                 $SelectedVersion = $versionOutput
                 Write-Success "Using default Python $versionOutput"
             } else {
-                Write-Warning "Default Python $versionOutput not compatible (need 3.8–3.13)"
+                Write-Warning "Default Python $versionOutput not compatible (need 3.8-3.13)"
             }
         }
     } else {
@@ -78,7 +78,7 @@ if (-not $SkipInstall) {
     }
 
     if (-not $SelectedPython) {
-        Write-Error "No compatible Python (3.8–3.13) found."
+        Write-Error "No compatible Python (3.8-3.13) found."
         Write-Info  "Install Python 3.13 or 3.12 from https://python.org/downloads/"
         exit 1
     }
@@ -182,7 +182,7 @@ try {
     foreach ($d in $dlls) { Unblock-File -Path $d.FullName -ErrorAction SilentlyContinue }
     if ($dlls.Count -gt 0) { Write-Success "Unblocked $($dlls.Count) DLL(s)" } else { Write-Info "No DLLs to unblock" }
 } catch {
-    Write-Warning "Could not unblock some DLLs — consider running as Administrator"
+    Write-Warning "Could not unblock some DLLs - consider running as Administrator"
 }
 
 # ---------- Configure VS Code MCP ----------
