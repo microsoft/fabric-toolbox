@@ -24,9 +24,10 @@ See the DAX Performance Tuner in action:
 ### **Prerequisites**
 
 Before you begin, install:
-- ✅ **Python 3.8+** - [Download here](https://python.org/downloads/)
+- ✅ **Python 3.8 - 3.13** - [Download here](https://python.org/downloads/)
   - Important: Check "Add Python to PATH" during installation
   - Used to create isolated virtual environment
+  - **Note**: Python 3.14+ not yet supported (pythonnet compatibility)
 - ✅ **\.NET SDK 8.0+** - [Download here](https://dotnet.microsoft.com/en-us/download)
   - Required for building DaxExecutor from source (.NET 8.0 or higher)
 

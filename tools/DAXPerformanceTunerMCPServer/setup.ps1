@@ -81,13 +81,21 @@ if (-not $SkipInstall) {
         $major = [int]$majorMinor[0]
         $minor = [int]$majorMinor[1]
         
-        if ($major -eq 3 -and $minor -ge 8) {
+        if ($major -eq 3 -and $minor -ge 8 -and $minor -le 13) {
             Write-Success "Python version is supported (3.$minor)"
-        } elseif ($major -gt 3) {
-            Write-Success "Python version is supported ($major.$minor)"
-        } else {
+        } elseif ($major -eq 3 -and $minor -gt 13) {
+            Write-Error "Python $major.$minor is too new for pythonnet"
+            Write-Warning "pythonnet 3.0.x supports Python 3.8 through 3.13"
+            Write-Warning "Please install Python 3.13 or earlier from: https://python.org/downloads/"
+            Write-Info "Recommended: Python 3.12.x (most stable)"
+            exit 1
+        } elseif ($major -eq 3 -and $minor -lt 8) {
             Write-Error "Python 3.8+ required, found $major.$minor"
             Write-Warning "Please upgrade Python from: https://python.org/downloads/"
+            exit 1
+        } else {
+            Write-Error "Python 3.x required, found $major.$minor"
+            Write-Warning "Please install Python 3.8-3.13 from: https://python.org/downloads/"
             exit 1
         }
     } catch {

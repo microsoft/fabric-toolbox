@@ -30,7 +30,7 @@ python --version >nul 2>&1
 if errorlevel 1 (
     echo [ERROR] Python not found
     echo.
-    echo Please install Python 3.8 or higher:
+    echo Please install Python 3.8-3.13:
     echo  Download from: https://python.org/downloads/
     echo  Important: Check "Add Python to PATH" during installation
     echo.
