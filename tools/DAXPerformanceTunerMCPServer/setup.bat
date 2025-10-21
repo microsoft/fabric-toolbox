@@ -1,4 +1,5 @@
 @echo off
+setlocal enabledelayedexpansion
 REM DAX Performance Tuner - Windows setup script
 REM Creates virtual environment and installs all dependencies
 
@@ -38,6 +39,48 @@ if errorlevel 1 (
 )
 
 echo [SUCCESS] Python found
+
+REM Check Python version before creating venv (must be 3.8-3.13 for pythonnet)
+for /f "tokens=2 delims= " %%v in ('python --version 2^>^&1') do set PYTHON_VERSION=%%v
+echo Python version: %PYTHON_VERSION%
+
+REM Extract major.minor (e.g., 3.14 from 3.14.0)
+for /f "tokens=1,2 delims=." %%a in ("%PYTHON_VERSION%") do (
+    set PY_MAJOR=%%a
+    set PY_MINOR=%%b
+)
+
+if "%PY_MAJOR%" NEQ "3" (
+    echo [ERROR] Python 3.x required, found Python %PYTHON_VERSION%
+    echo.
+    echo Please install Python 3.8-3.13 from: https://python.org/downloads/
+    goto :error
+)
+
+if %PY_MINOR% LSS 8 (
+    echo [ERROR] Python %PYTHON_VERSION% is too old
+    echo.
+    echo This tool requires Python 3.8 through 3.13
+    echo Please install a newer version: https://python.org/downloads/
+    goto :error
+)
+
+if %PY_MINOR% GTR 13 (
+    echo [ERROR] Python %PYTHON_VERSION% is too new
+    echo.
+    echo pythonnet currently supports Python 3.8 through 3.13
+    echo You have Python %PYTHON_VERSION% which is not yet supported
+    echo.
+    echo Solutions:
+    echo  1. Install Python 3.13 or 3.12 alongside Python %PYTHON_VERSION%
+    echo     Download: https://python.org/downloads/
+    echo  2. During install, UNCHECK "Add to PATH" to keep %PYTHON_VERSION% as default
+    echo  3. Use py launcher: py -3.13 -m venv .venv
+    echo.
+    goto :error
+)
+
+echo [SUCCESS] Python %PYTHON_VERSION% is compatible
 echo.
 
 REM Check if .NET SDK is available
@@ -65,8 +108,49 @@ if not exist ".venv" (
     echo [SUCCESS] Virtual environment created
     echo.
 ) else (
-    echo [SUCCESS] Virtual environment already exists
-    echo.
+    echo Checking existing virtual environment...
+    
+    REM Check if the venv Python version is compatible
+    if exist ".venv\Scripts\python.exe" (
+        for /f "tokens=2 delims= " %%v in ('.venv\Scripts\python.exe --version 2^>^&1') do set VENV_VERSION=%%v
+        echo Virtual environment Python: !VENV_VERSION!
+        
+        REM Extract venv major.minor
+        for /f "tokens=1,2 delims=." %%a in ("!VENV_VERSION!") do (
+            set VENV_MAJOR=%%a
+            set VENV_MINOR=%%b
+        )
+        
+        REM Check if venv Python is 3.8-3.13
+        if "!VENV_MAJOR!" NEQ "3" (
+            echo [WARNING] Virtual environment has incompatible Python !VENV_VERSION!
+            echo Recreating with Python %PYTHON_VERSION%...
+            rmdir /s /q .venv
+            python -m venv .venv
+            echo [SUCCESS] Virtual environment recreated
+            echo.
+        ) else if !VENV_MINOR! LSS 8 (
+            echo [WARNING] Virtual environment Python !VENV_VERSION! is too old
+            echo Recreating with Python %PYTHON_VERSION%...
+            rmdir /s /q .venv
+            python -m venv .venv
+            echo [SUCCESS] Virtual environment recreated
+            echo.
+        ) else if !VENV_MINOR! GTR 13 (
+            echo [WARNING] Virtual environment has Python !VENV_VERSION! which is incompatible
+            echo Recreating with Python %PYTHON_VERSION%...
+            rmdir /s /q .venv
+            python -m venv .venv
+            echo [SUCCESS] Virtual environment recreated
+            echo.
+        ) else (
+            echo [SUCCESS] Virtual environment Python !VENV_VERSION! is compatible
+            echo.
+        )
+    ) else (
+        echo [SUCCESS] Virtual environment exists
+        echo.
+    )
 )
 
 REM Activate virtual environment and install packages
