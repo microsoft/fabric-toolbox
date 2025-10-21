@@ -3,6 +3,9 @@ setlocal enabledelayedexpansion
 REM DAX Performance Tuner - Windows setup script
 REM Creates virtual environment and installs all dependencies (Python 3.8-3.13)
 
+REM Change to the script's directory
+cd /d "%~dp0"
+
 title DAX Performance Tuner Setup
 
 echo.
