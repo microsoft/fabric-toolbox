@@ -72,7 +72,13 @@ Before you begin, install:
 
 **For Claude Desktop:**
 
-1. **Add Configuration**
+1. **Run Setup First**
+   - Extract the zip file to your preferred location
+   - Double-click `setup.bat` (or run `setup.ps1` in PowerShell)
+   - This creates the virtual environment and builds required components
+   - Wait for setup to complete successfully
+
+2. **Add Configuration**
    - Open your `claude_desktop_config.json` file
    - Add the following configuration (replace paths with your actual installation location):
    ```json
