@@ -18,6 +18,8 @@ FCA is fully developed utilizing Fabric capabilities, with Pipelines and Noteboo
 
 ⚠️ Caution: The FCA solution accelerator is not an official Microsoft product! It is a solution accelerator, which can help you implement a cost monitoring solution within and for Fabric. Consequently, there is no official support provided, and there remains a potential risk of failures.
 
+[![Fabric Cost Analysis](https://youtu.be/ZRtxJgFGfi4)](https://youtu.be/ZRtxJgFGfi4)
+
 ## Content
 
 > 🏗️ The solution is still in Preview and may receive major updates.
