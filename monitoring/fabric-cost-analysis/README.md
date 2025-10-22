@@ -161,6 +161,10 @@ To create reservation export, on the Azure portal , search for **Cost Management
 
 ![FCA](./media/Setup-Export5.png)
 
+#### (Optional) Reservation Data
+
+
+
 ### 3 - Run the Pipeline
 
 - Open the **Load FCA E2E** Data pipeline and Run the Pipeline once
@@ -199,7 +203,7 @@ Steps to create the Data Agent:
 
 To update FCA (Fabric Cost Analysis) to the latest version, follow the documented steps below.
 
-☑️ Check the release notes of FCA to see enhanced, fixed, or new items and features: [FCA Release notes](https://github.com/microsoft/fabric-toolbox/blob/main/monitoring/fabric-cost-analysis/changelog/README.md)
+☑️ Review FCA release notes for the roadmap and updates: [FCA Release notes](https://github.com/microsoft/fabric-toolbox/blob/main/monitoring/fabric-cost-analysis/changelog/README.md)
 
 🚩 Important:
 
