@@ -19,7 +19,7 @@
           "firstRowOnly": false,
           "datasetSettings": {
             "annotations": [],
-            "connectionSettings": {
+            "linkedService": {
               "name": "FCA",
               "properties": {
                 "annotations": [],
@@ -28,9 +28,6 @@
                   "workspaceId": "d7ae03b3-c53b-4ee6-af7e-0091be2e7cc4",
                   "artifactId": "edea360e-6c6d-4761-aeca-d57df8bd7b91",
                   "rootFolder": "Tables"
-                },
-                "externalReferences": {
-                  "connection": "94a8d412-ebe9-4d37-bc3d-99c9b31a388b"
                 }
               }
             },
@@ -129,7 +126,7 @@
                   },
                   "datasetSettings": {
                     "annotations": [],
-                    "connectionSettings": {
+                    "linkedService": {
                       "name": "FCA",
                       "properties": {
                         "annotations": [],
@@ -138,9 +135,6 @@
                           "workspaceId": "d7ae03b3-c53b-4ee6-af7e-0091be2e7cc4",
                           "artifactId": "edea360e-6c6d-4761-aeca-d57df8bd7b91",
                           "rootFolder": "Files"
-                        },
-                        "externalReferences": {
-                          "connection": "94a8d412-ebe9-4d37-bc3d-99c9b31a388b"
                         }
                       }
                     },
@@ -214,7 +208,7 @@
                   },
                   "datasetSettings": {
                     "annotations": [],
-                    "connectionSettings": {
+                    "linkedService": {
                       "name": "FCA",
                       "properties": {
                         "annotations": [],
@@ -223,9 +217,6 @@
                           "workspaceId": "d7ae03b3-c53b-4ee6-af7e-0091be2e7cc4",
                           "artifactId": "edea360e-6c6d-4761-aeca-d57df8bd7b91",
                           "rootFolder": "Files"
-                        },
-                        "externalReferences": {
-                          "connection": "94a8d412-ebe9-4d37-bc3d-99c9b31a388b"
                         }
                       }
                     },
@@ -299,7 +290,7 @@
                   },
                   "datasetSettings": {
                     "annotations": [],
-                    "connectionSettings": {
+                    "linkedService": {
                       "name": "FCA",
                       "properties": {
                         "annotations": [],
@@ -308,9 +299,6 @@
                           "workspaceId": "d7ae03b3-c53b-4ee6-af7e-0091be2e7cc4",
                           "artifactId": "edea360e-6c6d-4761-aeca-d57df8bd7b91",
                           "rootFolder": "Files"
-                        },
-                        "externalReferences": {
-                          "connection": "94a8d412-ebe9-4d37-bc3d-99c9b31a388b"
                         }
                       }
                     },
