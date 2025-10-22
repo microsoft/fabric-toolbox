@@ -181,7 +181,8 @@ To Add credentials to connections:
 - Set the credentials of the connections with your Oauth2 account or a service principal:
 
     ![](/monitoring/fabric-cost-analysis/media/FCACconnectionUpdate.png)
-> **Info:** This connection is used in FCA pipeline to retrieve data from REST APIs. If the credentials are incorrect or the secret has expired, the pipeline will fail.
+> **Info:** This connection is used in FCA pipeline to retrieve Quota data from Azure Management REST APIs. If the credentials are incorrect or the secret has expired, the pipeline will fail.
+> **Permissions:** To view your Fabric quota, you need an Azure account with the contributor role, or another role that includes contributor access ([Microsoft Fabric quotas](https://learn.microsoft.com/en-us/fabric/enterprise/fabric-quotas?tabs=Azure)).
 
 ### 3 - Run the Pipeline
 
