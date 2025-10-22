@@ -46,7 +46,7 @@
         "type": "TridentNotebook",
         "dependsOn": [
           {
-            "activity": "Focus Data",
+            "activity": "Focus_Fabric Data",
             "dependencyConditions": [
               "Succeeded"
             ]
@@ -118,7 +118,7 @@
           "secureInput": false
         },
         "typeProperties": {
-          "notebookId": "2f378bea-3354-4854-b7dd-7ff3ad7aad1f",
+          "notebookId": "21fc1419-a95d-4b7c-a5f7-a06edca9dd68",
           "workspaceId": "d7ae03b3-c53b-4ee6-af7e-0091be2e7cc4",
           "parameters": {
             "fromMonth": {
@@ -158,9 +158,32 @@
           "secureInput": false
         },
         "typeProperties": {
-          "notebookId": "99989ed6-47fb-4f95-acbc-1dccd383ce1a",
+          "notebookId": "6f42b014-252a-4b06-bfb1-bf622d332250",
           "workspaceId": "d7ae03b3-c53b-4ee6-af7e-0091be2e7cc4",
           "sessionTag": "fca"
+        }
+      },
+      {
+        "name": "Load Quotas",
+        "type": "ExecutePipeline",
+        "dependsOn": [
+          {
+            "activity": "Load Dimensions",
+            "dependencyConditions": [
+              "Succeeded"
+            ]
+          }
+        ],
+        "policy": {
+          "secureInput": false
+        },
+        "typeProperties": {
+          "pipeline": {
+            "referenceName": "bc560572-054f-49e6-8601-2505da5bea6a",
+            "type": "PipelineReference"
+          },
+          "waitOnCompletion": true,
+          "parameters": {}
         }
       }
     ],
