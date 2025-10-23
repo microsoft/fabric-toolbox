@@ -1,7 +1,11 @@
 [
   {
-    "name": "Focus",
+    "name": "FCA.Workspace",
     "id": "d7ae03b3-c53b-4ee6-af7e-0091be2e7cc4"
+  },
+  {
+    "name": "fca azure management",
+    "id": "2bf7bfae-a5e1-43ca-b5a5-a5afd3169198"
   },
   {
     "name": "FCA.Lakehouse",
@@ -12,7 +16,7 @@
     "id": "cdbee726-e9ff-46ca-b58a-6d798e226f2f"
   },
   {
-    "name": "01_Load_Calandar.Notebook",
+    "name": "01_Load_Calendar.Notebook",
     "id": "f8dc5bd3-3a57-4974-8e14-b90f6b53785a"
   },
   {
@@ -21,11 +25,11 @@
   },
   {
     "name": "01_Load_Dimensions.Notebook",
-    "id": "99989ed6-47fb-4f95-acbc-1dccd383ce1a"
+    "id": "6f42b014-252a-4b06-bfb1-bf622d332250"
   },
   {
     "name": "01_Load_Focus_Fabric.Notebook",
-    "id": "2f378bea-3354-4854-b7dd-7ff3ad7aad1f"
+    "id": "21fc1419-a95d-4b7c-a5f7-a06edca9dd68"
   },
   {
     "name": "03_Optimization.Notebook",
@@ -44,12 +48,20 @@
     "id": "b54f8c98-0759-48e0-a28a-d9c582157208"
   },
   {
+    "name": "01_Load_Quota_Fabric.Notebook",
+    "id": "488547fd-54ac-4c77-8690-4af36ac9a6b0"
+  },
+  {
     "name": "FCA_Core_SM.SemanticModel",
     "id": "26c9f0b0-fc20-4eaf-8309-b38bba897b6e"
   },
   {
     "name": "FCA_Core_Report.Report",
     "id": "bdb9aa02-a5b6-49b5-b0e9-e1b0aec578c5"
+  },
+  {
+    "name": "Load Quota.DataPipeline",
+    "id": "bc560572-054f-49e6-8601-2505da5bea6a"
   },
   {
     "name": "Load FCA E2E.DataPipeline",
