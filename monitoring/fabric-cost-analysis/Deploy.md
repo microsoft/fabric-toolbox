@@ -10,7 +10,7 @@
 
 ### 1.1 - Cost FOCUS Data
 
->🚩 Skip this 1.1 steps if you're using FinOps Hub.
+>🚩 If you've already deployed [FinOps hubs](https://learn.microsoft.com/en-us/cloud-computing/finops/toolkit/hubs/finops-hubs-overview), you can plug the FCA on top and so you can skip this 1.1 steps.
 
 To create an export (Create [Cost Management exports](https://learn.microsoft.com/en-us/azure/cost-management-billing/costs/tutorial-improved-exports#create-exports)) the [Cost Management Contributor role](https://learn.microsoft.com/en-us/azure/cost-management-billing/costs/understand-work-scopes#roles-used-in-cost-management-on-rbac-scopes) will be required.
 
