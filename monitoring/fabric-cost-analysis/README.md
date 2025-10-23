@@ -12,7 +12,7 @@ Customers may not always clearly distinguish between costs that are included or 
 
 Fabric Cost Analysis (short: FCA) is a solution to enable holistic monitoring of Microsoft Fabric Cost with the help of Microsoft Fabric.
 
-FCA has the goal to provide a holistic view specified on Microsoft Fabric aspects and particularities (joining Financial and Operational forces) on top of the various information, which can be extracted from Azure Cost Management, personal enriched source of information, … allowing its users to analyze at a very high level, but also to deep dive into specific usage, reservations and particularity of the platform for a more finer data analysis.
+FCA has the goal to provide a holistic view specified on Microsoft Fabric aspects and particularities (joining Financial and Operational forces) on top of the various information, which can be extracted from Azure Cost Management, personal enriched source of information, … allowing its users to analyze at a very high level, but also to deep dive into specific usage, Azure quotas, reservations and particularity of the platform for a more finer data analysis.
 
 FCA is fully developed utilizing Fabric capabilities, with Pipelines and Notebooks serving as key tools for data extraction and transformation. Data is maintained both in its raw format and as Delta Parquet, allowing users to access it directly through Power BI Direct Lake. FCA includes standard reports that provide an overview of data and allow users to customize or create their own reports using the data model. Fabric's open platform enables integration with external data sources for further analysis as needed.
 
@@ -21,8 +21,6 @@ FCA is fully developed utilizing Fabric capabilities, with Pipelines and Noteboo
 🎬 Demo presentation available on YouTube : [Fabric Cost Analysis](https://youtu.be/ZRtxJgFGfi4)
 
 ## Content
-
-> 🏗️ The solution is still in Preview and may receive major updates.
 
 ### Architecture
 
@@ -34,6 +32,7 @@ FCA gathers diverse data in Lakehouse to provide cost insights:
 - FCA extracts Azure Cost in [FOCUS](https://focus.finops.org/) format (a Unified Standard for Cloud Billing Data)
 - FCA extracts enriched Microsoft Learn documentation data
 - (optional) FCA extracts Azure Reservations details
+- (optional) FCA extracts Azure Quotas
 
 >ℹ️  Azure Cost export is available for various Azure account types, including Enterprise Agreement (EA) and Microsoft Customer Agreement (MCA) customers. To view the full list of supported account types, see [Understand Cost Management data](https://learn.microsoft.com/en-us/azure/cost-management-billing/costs/understand-cost-mgt-data).
 
@@ -48,7 +47,8 @@ FCA gathers diverse data in Lakehouse to provide cost insights:
 | **Capacity Usage** | Optimize | The page is designed to enhance efficiency by illustrating how capacity is being utilized, enabling stakeholders to monitor and optimize resource allocation effectively | ![Capacity Usage Page](./media/Report_CapacityUsage.png) |
 | **Reservation** | Optimize | The page aims to reduce cloud waste by providing a comprehensive view of reservation-related data to verify the total usage of the reservation across the different capacities and a specified timeframe | ![Reservation Page](./media/Report_Reservation.png) |
 | **Cost Detail** | Operate | The page offers a detailed view of cost distributions across different categories and resources and includes Year-to-Date calculations to help stakeholders to define, track, and monitor expenses effectively | ![Cost Details Page](./media/Report_CostDetails.png) |
-| **Support** |                                                              | This page is designed to facilitate the learning and comprehension of the specific aspects of fabric costs and the contents of this report. | ![Support Page](./media/Report_Support.png) |
+| **Quota** | Operate | The page offers a detailed view of Azure Quotas per subscriptions | ...IMAGE... |
+| **Support** |                                                              | This page is designed to facilitate the learning and comprehension of the specific aspects of fabric costs and the contents of this report | ![Support Page](./media/Report_Support.png) |
 
 #### Data Agent
 
