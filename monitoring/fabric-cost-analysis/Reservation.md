@@ -70,7 +70,7 @@ And from Teams:
 
 >🚩 Skip those configurations steps if you're using FinOps Hub.
 
-#### 1.1 - Cost FOCUS Data
+#### 1.1 - FOCUS Data
 
 >ℹ️  Azure Cost export is available for various Azure account types, including Enterprise Agreement (EA) and Microsoft Customer Agreement (MCA) customers. To view the full list of supported account types, see [Understand Cost Management data](https://learn.microsoft.com/en-us/azure/cost-management-billing/costs/understand-cost-mgt-data).
 
@@ -103,11 +103,29 @@ Once Data Lake Gen 2 storage account created here are the high levels steps to c
 - On the Review + Create tab, select **Create**
 - Run the export by selecting **Run now** on the export page
 
+#### 1.2 - (Optional) Reservation Data
+
+> ℹ️  Reservation Data are not already used within this first Preview Version release.
+
+To create reservation export, on the Azure portal , search for **Cost Management**
+- Select the required scope and select **Exports** in the left navigation menu
+- Select **+ Create**
+- On the Basics tab, select the template = **All reservation data**
+- On the Datasets tab, fill in **Export prefix** with "fca"
+- On the Destination tab, select:
+  - Storage type = **Azure blob storage**
+  - Destination and storage = **Use existing**
+  - Subscription = Your subscription
+  - Storage account = Your storage account
+  - Container = **fca**
+  - Directory = **reservation**
+  - Format = **csv**
+  - Compression type = **none**
+  - Overwrite data = **Enabled**
+- On the Review + Create tab, select **Create**
+- Run the export by selecting **Run now** on the export page
+
 >ℹ️ When performing the export, you have the option to retrieve one year of historical data in one-month chunks.
-
-#### 1.2 - (Optional) Reservation Data : [Reservation Data configuration](./script/Reservation.md)
-
-#### 1.3 - (Optional) Azure Quota Data : [Reservation Data configuration](./script/Quota.md)
 
 ### 2 - Configure Fabric items
 
