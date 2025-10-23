@@ -20,4 +20,15 @@ relationship 615f9cfb-f224-4047-a9c8-8d3b2d2fe61f
 	fromColumn: fca.SubscriptionKey
 	toColumn: subscriptions.SubscriptionKey
 
+relationship 137636c1-df56-827f-d0ba-1da71b11bd02
+	fromColumn: quota_fabric.DateKey
+	toColumn: calendar.DateKey
+
+relationship 16d56a41-73e7-91fb-b1f0-a357e1327b14
+	fromColumn: quota_fabric.SubscriptionKey
+	toColumn: subscriptions.SubscriptionKey
+
+relationship a65b5438-15cf-fa50-3470-0de5f9cff6dc
+	fromColumn: quota_fabric.RegionId
+	toColumn: capacity_regions.RegionId
 
