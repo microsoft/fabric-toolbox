@@ -184,6 +184,40 @@
                     },
                     "waitOnCompletion": true
                 }
+            },
+            {
+                "name": "Load Reservations",
+                "type": "ExecutePipeline",
+                "state": "Inactive",
+                "onInactiveMarkAs": "Succeeded",
+                "dependsOn": [
+                    {
+                        "activity": "Load Dimensions",
+                        "dependencyConditions": [
+                            "Succeeded"
+                        ]
+                    }
+                ],
+                "policy": {
+                    "secureInput": false
+                },
+                "typeProperties": {
+                    "pipeline": {
+                        "referenceName": "3ae0e494-a3b5-449e-9a36-d674ba07dcb2",
+                        "type": "PipelineReference"
+                    },
+                    "waitOnCompletion": true,
+                    "parameters": {
+                        "FromMonth": {
+                            "value": "@pipeline().parameters.FromMonth",
+                            "type": "Expression"
+                        },
+                        "ToMonth": {
+                            "value": "@pipeline().parameters.ToMonth",
+                            "type": "Expression"
+                        }
+                    }
+                }
             }
         ],
     "parameters": {
