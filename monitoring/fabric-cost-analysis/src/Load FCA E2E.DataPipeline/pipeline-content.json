@@ -20,7 +20,7 @@
                     "secureInput": false
                 },
                 "typeProperties": {
-                    "notebookId": "d2ee1fd4-ea56-470a-9fa6-1ab5356fac61",
+                    "notebookId": "cdbee726-e9ff-46ca-b58a-6d798e226f2f",
                     "workspaceId": "d7ae03b3-c53b-4ee6-af7e-0091be2e7cc4",
                     "parameters": {
                         "fromMonth": {
@@ -60,7 +60,7 @@
                     "secureInput": false
                 },
                 "typeProperties": {
-                    "notebookId": "f8dc5bd3-3a57-4974-8e14-b90f6b53785a",
+                    "notebookId": "21fc1419-a95d-4b7c-a5f7-a06edca9dd68",
                     "workspaceId": "d7ae03b3-c53b-4ee6-af7e-0091be2e7cc4",
                     "sessionTag": "fca"
                 }
