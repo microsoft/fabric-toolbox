@@ -64,9 +64,7 @@ And from Teams:
 
 ## Setup
 
-🏃‍♂️‍➡️ Are you ready to try FCA? Let's follow these simple steps:
-
-🎬 Setup demo available on YouTube : [Fabric Cost Analysis](https://youtu.be/ehxiauTPvkA)
+🏃‍♂️‍➡️ Are you ready to try FCA?
 
 ➡️ [Click here to deploy or update FCA](./Deploy.md)
 

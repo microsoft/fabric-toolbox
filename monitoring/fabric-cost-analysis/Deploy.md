@@ -2,6 +2,10 @@
 
 🎬 Setup demo available on YouTube : [Fabric Cost Analysis](https://youtu.be/ehxiauTPvkA)
 
+> Since not all users will be interested in analyzing reservations or quotas, nor in using a Data Agent on top of the FCA, we have added additional optional steps that can be followed during the initial deployment or added later.
+
+🏃‍♂️‍➡️ Are you ready to try FCA? Let's follow these simple steps:
+
 ## 1 - Configure export
 
 ### 1.1 - Cost FOCUS Data
