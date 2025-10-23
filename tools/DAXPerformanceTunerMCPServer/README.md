@@ -71,21 +71,42 @@ Before you begin, install:
 ## 📝 Configuration for Other MCP Clients
 
 **For Claude Desktop:**
-Add to your `claude_desktop_config.json`:
-```json
-{
-  "mcpServers": {
-    "dax-performance-tuner": {
-      "command": "C:\\path\\to\\DAXPerformanceTunerMCPServer\\.venv\\Scripts\\python.exe",
-      "args": ["src/server.py"]
-    }
-  }
-}
-```
+
+1. **Run Setup First**
+   - Extract the zip file to your preferred location
+   - Double-click `setup.bat` (or run `setup.ps1` in PowerShell)
+   - This creates the virtual environment and builds required components
+   - Wait for setup to complete successfully
+
+2. **Add Configuration**
+   - Open your `claude_desktop_config.json` file
+   - Add the following configuration (replace paths with your actual installation location):
+   ```json
+   {
+     "mcpServers": {
+       "dax-performance-tuner": {
+         "command": "C:\\path\\to\\DAXPerformanceTunerMCPServer\\.venv\\Scripts\\python.exe",
+         "args": ["C:\\path\\to\\DAXPerformanceTunerMCPServer\\src\\server.py"]
+       }
+     }
+   }
+   ```
+   **Important**: 
+   - Use absolute paths for both `command` and `args`
+   - Use double backslashes (`\\`) in the JSON paths
+   - Replace `C:\\path\\to\\` with your actual installation directory
+
+2. **Start the Server**
+   - Save the `claude_desktop_config.json` file
+   - The server will start automatically when Claude Desktop launches
+
+3. **Reset Claude Desktop**
+   - After updating the config and running the server, reset Claude Desktop
 
 **For Other MCP Clients:**
-- Command: `{install_path}\.venv\Scripts\python.exe`
-- Args: `["src/server.py"]`
+- Command: `{install_path}\.venv\Scripts\python.exe` (absolute path)
+- Args: `["{install_path}\\src\\server.py"]` (absolute path)
+- Restart the MCP client after configuration changes
 
 ---
 
