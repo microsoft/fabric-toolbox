@@ -99,11 +99,11 @@ In case of **Weekly or Monthly runs**, configure "FromMonth" = -1 and "ToMonth" 
 
 ## 4 - Open the report
 
-- Navigate to your FCA workspace.
+- Navigate to your FCA workspace
 
-- Search for the item FCA_Core_Report.
+- Search for the item FCA_Core_Report
 
-- Open the FCA_Core_Report Power BI report.
+- Open the FCA_Core_Report Power BI report
 
 - Feel free to explore the report pages
 
