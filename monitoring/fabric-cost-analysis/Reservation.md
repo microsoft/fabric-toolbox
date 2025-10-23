@@ -27,25 +27,19 @@ To create reservation export, on the Azure portal , search for **Cost Management
 ## 2 - Create Shortcut
 
 - Create a new File Shortcut on the FCA Lakehouse ([Create an Azure Data Lake Storage Gen2 shortcut](https://learn.microsoft.com/en-us/fabric/onelake/create-adls-shortcut))
-  - Select the ellipsis (**...**) next to **Files**
-  - Select **New shortcut**
-  - Select Azure Data Lake Storage Gen 2 and provide the following settings:
-    - URL = **Data Lake Storage** URL of the Data Lake storage account. To get the Data Lake Storage URL, view the storage account where the export created a directory and the FOCUS cost file (If your're using **FinOps Hub**, use the existing storage account with the ingestion container). Under **Settings**, select **Endpoints**. Copy the URL marked as **Data Lake Storage** it should look like this: *https://###.dfs.core.windows.net*.
-    - Connection = **Create a new connection**
-    - Connection name = <*Any name of your choice*>
-    - Authentication kind = **Organizational account**
-    - Sign in when prompted
-    - Select the Shortcut target sub path:
-      -  For <u>Focus export configured previously</u>: **fca-focus-cost** and click on Next (⚠️ Ensure the selected hierarchy is correct)
-      -  For <u>FinOps Hub</u>: **Costs** in the ingestion container and click on Next
-
-![FCA](./media/Setup-Export3.png)
-
-- Verify and rename if required the Shortcuts to **focuscost** and click on Create
-
-![FCA](./media/Setup-Export4.png)
+- Select the ellipsis (**...**) next to **Files**
+- Select **New shortcut**
+- Select Azure Data Lake Storage Gen 2 and provide the following settings:
+  - Connection = Reuse **Existing connection** or create a new one specifying **Data Lake Storage** URL of the Data Lake storage account. 
+  - Select the Shortcuts target sub path: **reservation-details** and **reservation-transactions**
+  ![FCA](./media/reservationexport.png)
+  - Click on Next
+  ![FCA](./media/reservationexport2.png)
+  - Verify and rename if required the Shortcuts and click on Create
 
 - Verify access to the data
+
+![FCA](./media/reservationexport3.png)
 
 ## 3 - Enable activity in the Pipeline
 
