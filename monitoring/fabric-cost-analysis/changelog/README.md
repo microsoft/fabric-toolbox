@@ -2,8 +2,8 @@
 
 ## Roadmap
 
-- Azure Quotas analysis
-- Promotion video
+- Installation video
+- Update video
 - Tags analysis
 - Warehouse Auto Scale cost analysis
 - Forecast
@@ -14,7 +14,9 @@
 
 ## 📦 2025.10.31
 
+- Promotion video
 - Reservation analysis
+- Azure Quotas analysis
 - FinOps hubs support
 - Meters analysis
 - Fixes
