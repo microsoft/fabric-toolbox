@@ -14,7 +14,7 @@
                 },
                 "typeProperties": {
                     "notebookId": "4961b159-193c-497a-8aa7-77a91cfb626c",
-                    "workspaceId": "b5e66845-fd73-4d5d-b28c-da7dbc2d17ec",
+                    "workspaceId": "d7ae03b3-c53b-4ee6-af7e-0091be2e7cc4",
                     "parameters": {
                         "fromMonth": {
                             "value": {
@@ -54,7 +54,7 @@
                 },
                 "typeProperties": {
                     "notebookId": "eb7c3419-2189-4aff-98b9-474035739a88",
-                    "workspaceId": "b5e66845-fd73-4d5d-b28c-da7dbc2d17ec",
+                    "workspaceId": "d7ae03b3-c53b-4ee6-af7e-0091be2e7cc4",
                     "parameters": {
                         "fromMonth": {
                             "value": {
@@ -94,7 +94,7 @@
                 },
                 "typeProperties": {
                     "notebookId": "61bc484b-996d-457f-8d8e-4f8e0fef0e33",
-                    "workspaceId": "b5e66845-fd73-4d5d-b28c-da7dbc2d17ec",
+                    "workspaceId": "d7ae03b3-c53b-4ee6-af7e-0091be2e7cc4",
                     "parameters": {
                         "fromMonth": {
                             "value": {
