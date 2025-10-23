@@ -66,15 +66,17 @@ And from Teams:
 
 🏃‍♂️‍➡️ Are you ready to try FCA? Let's follow these simple steps:
 
-### 1 - Configure export
+🎬 Setup demo available on YouTube : [Fabric Cost Analysis](https://youtu.be/ehxiauTPvkA)
 
->🚩 Skip those configurations steps if you're using FinOps Hub.
+### 1 - Configure export
 
 #### 1.1 - Cost FOCUS Data
 
->ℹ️  Azure Cost export is available for various Azure account types, including Enterprise Agreement (EA) and Microsoft Customer Agreement (MCA) customers. To view the full list of supported account types, see [Understand Cost Management data](https://learn.microsoft.com/en-us/azure/cost-management-billing/costs/understand-cost-mgt-data).
+>🚩 Skip those configurations steps if you're using FinOps Hub.
 
 To create an export (Create [Cost Management exports](https://learn.microsoft.com/en-us/azure/cost-management-billing/costs/tutorial-improved-exports#create-exports)) the [Cost Management Contributor role](https://learn.microsoft.com/en-us/azure/cost-management-billing/costs/understand-work-scopes#roles-used-in-cost-management-on-rbac-scopes) will be required.
+
+>ℹ️ Azure Cost export is available for various Azure account types, including Enterprise Agreement (EA) and Microsoft Customer Agreement (MCA) customers. To view the full list of supported account types, see [Understand Cost Management data](https://learn.microsoft.com/en-us/azure/cost-management-billing/costs/understand-cost-mgt-data).
 
 An Azure Data Lake Storage Gen2 is necessary for saving exported data, the following steps outline how to create a storage account: [Create a storage account](https://learn.microsoft.com/en-us/azure/storage/blobs/create-data-lake-storage-account).
 
@@ -105,9 +107,9 @@ Once Data Lake Gen 2 storage account created here are the high levels steps to c
 
 >ℹ️ When performing the export, you have the option to retrieve one year of historical data in one-month chunks.
 
-#### 1.2 - (Optional) Reservation Data : [Reservation Data configuration](./script/Reservation.md)
+#### 1.2 - (Optional) Reservation Data : [Reservation Data export configuration](./Reservation.md)
 
-#### 1.3 - (Optional) Azure Quota Data : [Reservation Data configuration](./script/Quota.md)
+#### 1.3 - (Optional) Azure Quota Data : [Quota Data export configuration](./Quota.md)
 
 ### 2 - Configure Fabric items
 
