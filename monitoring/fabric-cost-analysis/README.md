@@ -16,7 +16,7 @@ FCA has the goal to provide a holistic view specified on Microsoft Fabric aspect
 
 FCA is fully developed utilizing Fabric capabilities, with Pipelines and Notebooks serving as key tools for data extraction and transformation. Data is maintained both in its raw format and as Delta Parquet, allowing users to access it directly through Power BI Direct Lake. FCA includes standard reports that provide an overview of data and allow users to customize or create their own reports using the data model. Fabric's open platform enables integration with external data sources for further analysis as needed.
 
-⚠️ Caution: The FCA solution accelerator is not an official Microsoft product! It is a solution accelerator, which can help you implement a cost monitoring solution within and for Fabric. Consequently, there is no official support provided, and there remains a potential risk of failures.
+>⚠️ Caution: The FCA solution accelerator is not an official Microsoft product! It is a solution accelerator, which can help you implement a cost monitoring solution within and for Fabric. Consequently, there is no official support provided, and there remains a potential risk of failures.
 
 🎬 Demo presentation available on YouTube : [Fabric Cost Analysis](https://youtu.be/ZRtxJgFGfi4)
 
@@ -35,7 +35,7 @@ FCA gathers diverse data in Lakehouse to provide cost insights:
 - FCA extracts enriched Microsoft Learn documentation data
 - (optional) FCA extracts Azure Reservations details
 
-ℹ️ Azure Cost export is available for various Azure account types, including Enterprise Agreement (EA) and Microsoft Customer Agreement (MCA) customers. To view the full list of supported account types, see [Understand Cost Management data](https://learn.microsoft.com/en-us/azure/cost-management-billing/costs/understand-cost-mgt-data).
+>ℹ️  Azure Cost export is available for various Azure account types, including Enterprise Agreement (EA) and Microsoft Customer Agreement (MCA) customers. To view the full list of supported account types, see [Understand Cost Management data](https://learn.microsoft.com/en-us/azure/cost-management-billing/costs/understand-cost-mgt-data).
 
 ### FCA Outputs
 
@@ -68,13 +68,13 @@ And from Teams:
 
 ### 1 - Configure export
 
-ℹ️ **Skip those configurations steps if you're using FinOps Hub**
+>🚩 Skip those configurations steps if you're using FinOps Hub.
+
+>ℹ️ FCA will display only data related to Fabric costs, no other Azure cost will be prepare for analyze.
 
 #### 1.1 - FOCUS Data
 
-ℹ️ FCA will display only data related to Fabric costs, no other Azure cost will be prepare for analyze.
-
-> To create an export (Create [Cost Management exports](https://learn.microsoft.com/en-us/azure/cost-management-billing/costs/tutorial-improved-exports#create-exports)) the [Cost Management Contributor role](https://learn.microsoft.com/en-us/azure/cost-management-billing/costs/understand-work-scopes#roles-used-in-cost-management-on-rbac-scopes) will be required.
+To create an export (Create [Cost Management exports](https://learn.microsoft.com/en-us/azure/cost-management-billing/costs/tutorial-improved-exports#create-exports)) the [Cost Management Contributor role](https://learn.microsoft.com/en-us/azure/cost-management-billing/costs/understand-work-scopes#roles-used-in-cost-management-on-rbac-scopes) will be required.
 
 An Azure Data Lake Storage Gen2 is necessary for saving exported data, the following steps outline how to create a storage account: [Create a storage account](https://learn.microsoft.com/en-us/azure/storage/blobs/create-data-lake-storage-account).
 
@@ -105,7 +105,7 @@ Once Data Lake Gen 2 storage account created here are the high levels steps to c
 
 #### 1.2 - (Optional) Reservation Data
 
-ℹ️ Reservation Data are not already used within this first Preview Version release.
+> ℹ️  Reservation Data are not already used within this first Preview Version release.
 
 To create reservation export, on the Azure portal , search for **Cost Management**
 - Select the required scope and select **Exports** in the left navigation menu
@@ -125,7 +125,7 @@ To create reservation export, on the Azure portal , search for **Cost Management
 - On the Review + Create tab, select **Create**
 - Run the export by selecting **Run now** on the export page
 
- ℹ️ When performing the export, you have the option to retrieve one year of historical data in one-month chunks.
+>ℹ️ When performing the export, you have the option to retrieve one year of historical data in one-month chunks.
 
 ### 2 - Configure Fabric items
 
@@ -165,9 +165,9 @@ To create reservation export, on the Azure portal , search for **Cost Management
 
 - Configure the data connexion
 
-  > **Info:** The notebook will **automatically create** a new cloud connections (without credentials):
+The notebook will **automatically create** the new following cloud connections (without credentials):
 
-| | Connection 1  |
+| | Connection  |
 |-------------| ------------- |
 |Connection Name| fca azure management  |
 |Connection Type| Web v2  |
@@ -175,16 +175,16 @@ To create reservation export, on the Azure portal , search for **Cost Management
 |Token Audience Url| https://management.azure.com|
 |Authentification|Oauth2 or SPN|
 
-> **Error handling:** In case of an error, you'll be able to run the notebook again. It has an update mechanism, which will act as an item update.
-
 To Add credentials to connections:
 
 - Navigate under Settings to 'Manage connections and gateways' in Fabric
 - Set the credentials of the connections with your Oauth2 account or a service principal:
 
     ![](/monitoring/fabric-cost-analysis/media/FCACconnectionUpdate.png)
-> **Info:** This connection is used in FCA pipeline to retrieve Quota data from Azure Management REST APIs. If the credentials are incorrect or the secret has expired, the pipeline will fail.
-> **Permissions:** To view your Fabric quota, you need an Azure account with the contributor role, or another role that includes contributor access ([Microsoft Fabric quotas](https://learn.microsoft.com/en-us/fabric/enterprise/fabric-quotas?tabs=Azure)).
+
+
+> ℹ️ This connection is used in FCA pipeline to retrieve Quota data from Azure Management REST APIs. If the credentials are incorrect or the secret has expired, the pipeline will fail. In case of an error, you'll be able to run the notebook again. It has an update mechanism, which will act as an item update. To view your Fabric quota, you need an Azure account with the contributor role, or another role that includes contributor access ([Microsoft Fabric quotas](https://learn.microsoft.com/en-us/fabric/enterprise/fabric-quotas?tabs=Azure)).
+
 
 ### 3 - Run the Pipeline
 
@@ -192,7 +192,7 @@ To Add credentials to connections:
 
 ![Load FCA E2E Notebook](./media/Setup_NotebookExecution.png)
 
-ℹ️ The parameters "FromMonth" and "ToMonth" in the Data pipeline can be configured to specify the historical time frame of data processing. For example, setting FromMonth = -3 and ToMonth = 0 will load data from the previous three months.
+>ℹ️ The parameters "FromMonth" and "ToMonth" in the Data pipeline can be configured to specify the historical time frame of data processing. For example, setting FromMonth = -3 and ToMonth = 0 will load data from the previous three months.
 
 The pipeline can be scheduled for daily loads ([Scheduled data pipeline runs](https://learn.microsoft.com/en-us/fabric/data-factory/pipeline-runs#scheduled-data-pipeline-runs)).
 In case of **Daily runs**, configure "FromMonth" = 0 and "ToMonth" = 0.
