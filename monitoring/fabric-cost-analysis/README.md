@@ -34,6 +34,8 @@ FCA gathers diverse data in Lakehouse to provide cost insights:
 - (optional) FCA extracts Azure Reservations details
 - (optional) FCA extracts Azure Quotas
 
+>ℹ️ FCA will display only data related to Fabric costs, no other Azure cost will be prepare for analyze.
+
 ### FCA Outputs
 
 #### Report
@@ -68,13 +70,11 @@ And from Teams:
 
 >🚩 Skip those configurations steps if you're using FinOps Hub.
 
->ℹ️ FCA will display only data related to Fabric costs, no other Azure cost will be prepare for analyze.
-
 #### 1.1 - FOCUS Data
 
-To create an export (Create [Cost Management exports](https://learn.microsoft.com/en-us/azure/cost-management-billing/costs/tutorial-improved-exports#create-exports)) the [Cost Management Contributor role](https://learn.microsoft.com/en-us/azure/cost-management-billing/costs/understand-work-scopes#roles-used-in-cost-management-on-rbac-scopes) will be required.
-
 >ℹ️  Azure Cost export is available for various Azure account types, including Enterprise Agreement (EA) and Microsoft Customer Agreement (MCA) customers. To view the full list of supported account types, see [Understand Cost Management data](https://learn.microsoft.com/en-us/azure/cost-management-billing/costs/understand-cost-mgt-data).
+
+To create an export (Create [Cost Management exports](https://learn.microsoft.com/en-us/azure/cost-management-billing/costs/tutorial-improved-exports#create-exports)) the [Cost Management Contributor role](https://learn.microsoft.com/en-us/azure/cost-management-billing/costs/understand-work-scopes#roles-used-in-cost-management-on-rbac-scopes) will be required.
 
 An Azure Data Lake Storage Gen2 is necessary for saving exported data, the following steps outline how to create a storage account: [Create a storage account](https://learn.microsoft.com/en-us/azure/storage/blobs/create-data-lake-storage-account).
 
@@ -175,13 +175,11 @@ The notebook will **automatically create** the new following cloud connections (
 |Token Audience Url| https://management.azure.com|
 |Authentification|Oauth2 or SPN|
 
-To Add credentials to connections:
-
-- Navigate under Settings to 'Manage connections and gateways' in Fabric
-- Set the credentials of the connections with your Oauth2 account or a service principal:
+  - To Add credentials to connections:
+    - Navigate under Settings to 'Manage connections and gateways' in Fabric
+    - Set the credentials of the connections with your Oauth2 account or a service principal:
 
     ![](/monitoring/fabric-cost-analysis/media/FCACconnectionUpdate.png)
-
 
 > ℹ️ This connection is used in FCA pipeline to retrieve Quota data from Azure Management REST APIs. If the credentials are incorrect or the secret has expired, the pipeline will fail. In case of an error, you'll be able to run the notebook again. It has an update mechanism, which will act as an item update. To view your Fabric quota, you need an Azure account with the contributor role, or another role that includes contributor access ([Microsoft Fabric quotas](https://learn.microsoft.com/en-us/fabric/enterprise/fabric-quotas?tabs=Azure)).
 
