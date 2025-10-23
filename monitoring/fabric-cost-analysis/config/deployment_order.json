@@ -40,6 +40,18 @@
     "id": "545fa991-79e2-4b2c-abcc-3bc46648b9f1"
   },
   {
+    "name": "01_Load_DimReservation.Notebook",
+    "id": "c8f3a2d1-7b4e-4e9f-9c2a-3e1f7d8b6a4c"
+  },
+    {
+    "name": "01_Load_Reservation.Notebook",
+    "id": "e3b7c9f0-8a2d-4c3e-9f6a-1d2b7e4a5c9d"
+  },
+  {
+    "name": "02_Load_Reservation_Fabric.Notebook",
+    "id": "9d6a3b7e-5f21-4c8a-8e3d-2a7f1c4b9d60"
+  },
+  {
     "name": "02_Create_DataAgent.Notebook",
     "id": "b83d4530-1b57-46e3-8d77-65121eafa135"
   },
