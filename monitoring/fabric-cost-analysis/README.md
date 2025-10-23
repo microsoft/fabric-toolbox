@@ -175,9 +175,10 @@ The notebook will **automatically create** the new following cloud connections (
 |Token Audience Url| https://management.azure.com|
 |Authentification|Oauth2 or SPN|
 
-  - To Add credentials to connections:
-    - Navigate under Settings to 'Manage connections and gateways' in Fabric
-    - Set the credentials of the connections with your Oauth2 account or a service principal:
+- Add credentials to connections
+
+  - Navigate under Settings to 'Manage connections and gateways' in Fabric
+  - Set the credentials of the connections with your Oauth2 account or a service principal:
 
     ![](/monitoring/fabric-cost-analysis/media/FCACconnectionUpdate.png)
 
@@ -240,7 +241,7 @@ Steps to update:
 - 5 - Update Pipeline parameters
 - 6 - Open PBI report
 
-ℹ️ This notebook is designed to initially deploy or update all the items in your FCA workspace. You do not need to manually run the Load FCA E2E pipeline after an update. During the next pipeline run, FCA will also check and update the status of your FCA version on the first page of the FCA_Core_Report:
+>ℹ️ This notebook is designed to initially deploy or update all the items in your FCA workspace. You do not need to manually run the Load FCA E2E pipeline after an update. During the next pipeline run, FCA will also check and update the status of your FCA version on the first page of the FCA_Core_Report:
 
 ![FCA](./media/VersionUpdate.png)
 
