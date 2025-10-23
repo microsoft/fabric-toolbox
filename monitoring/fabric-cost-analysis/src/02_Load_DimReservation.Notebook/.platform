@@ -2,7 +2,7 @@
   "$schema": "https://developer.microsoft.com/json-schemas/fabric/gitIntegration/platformProperties/2.0.0/schema.json",
   "metadata": {
     "type": "Notebook",
-    "displayName": "01_Load_Reservation",
+    "displayName": "02_Load_DimReservation",
     "description": "New notebook"
   },
   "config": {
