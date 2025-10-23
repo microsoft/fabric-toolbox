@@ -1,16 +1,12 @@
-![FCA](./media/FCA.png)
-
-# **Solution accelerator for Fabric platform to monitor cost**
-
-## Setup
+# Deploy
 
 🏃‍♂️‍➡️ Are you ready to try FCA? Let's follow these simple steps:
 
 🎬 Setup demo available on YouTube : [Fabric Cost Analysis](https://youtu.be/ehxiauTPvkA)
 
-### 1 - Configure export
+## 1 - Configure export
 
-#### 1.1 - Cost FOCUS Data
+### 1.1 - Cost FOCUS Data
 
 >🚩 Skip those configurations steps if you're using FinOps Hub.
 
@@ -47,11 +43,11 @@ Once Data Lake Gen 2 storage account created here are the high levels steps to c
 
 >ℹ️ When performing the export, you have the option to retrieve one year of historical data in one-month chunks.
 
-#### 1.2 - (Optional) Reservation Data : [Reservation Data export configuration](./Reservation.md)
+### 1.2 - (Optional) Reservation Data : [Reservation Data export configuration](./Reservation.md)
 
-#### 1.3 - (Optional) Azure Quota Data : [Quota Data export configuration](./Quota.md)
+### 1.3 - (Optional) Azure Quota Data : [Quota Data export configuration](./Quota.md)
 
-### 2 - Configure Fabric items
+## 2 - Configure Fabric items
 
 - Create a new workspace "FCA" (name can be changed), which is backed by a P or F-capacity
 - Download the ([Workspace logo](./media/FCA%20Logo%20Small.png)) and add the logo to the workspace
@@ -108,7 +104,7 @@ The notebook will **automatically create** the new following cloud connections (
 
 > ℹ️ This connection is used in FCA pipeline to retrieve Quota data from Azure Management REST APIs. If the credentials are incorrect or the secret has expired, the pipeline will fail. In case of an error, you'll be able to run the notebook again. It has an update mechanism, which will act as an item update. To view your Fabric quota, you need an Azure account with the contributor role, or another role that includes contributor access ([Microsoft Fabric quotas](https://learn.microsoft.com/en-us/fabric/enterprise/fabric-quotas?tabs=Azure)).
 
-### 3 - Run the Pipeline
+## 3 - Run the Pipeline
 
 - Open the **Load FCA E2E** Data pipeline and Run the Pipeline once
 
@@ -120,7 +116,7 @@ The pipeline can be scheduled for daily loads ([Scheduled data pipeline runs](ht
 In case of **Daily runs**, configure "FromMonth" = 0 and "ToMonth" = 0.
 In case of **Weekly or Monthly runs**, configure "FromMonth" = -1 and "ToMonth" = 0.
 
-### 4 - Open the report
+## 4 - Open the report
 
 - Navigate to your FCA workspace.
 
@@ -132,7 +128,7 @@ In case of **Weekly or Monthly runs**, configure "FromMonth" = -1 and "ToMonth" 
 
 ℹ️ Refresh the SQL Endpoint of the Lakehouse and update the semantic model in case of errors.
 
-### 5 - (Optional) Create the Data Agent
+## 5 - (Optional) Create the Data Agent
 
 Since it's required additional prerequisites, the creation of the Data Agent is optional ([Data Agent prerequisites](https://learn.microsoft.com/en-us/fabric/data-science/how-to-create-data-agent#prerequisites)).
 
@@ -142,7 +138,7 @@ Steps to create the Data Agent:
 - Navigate to your FCA Workspace and refresh the browser to view the newly created artifact *FCA_Agent* and open it to chat with your data
 - Enhance custom agents in Microsoft Copilot Studio by leveraging insights from FCA Fabric Data Agent and chat in Teams, as demonstrated in following video: https://www.youtube.com/watch?v=GCtk2HPxZi8
 
-## Update
+# Update
 
 To update FCA (Fabric Cost Analysis) to the latest version, follow the documented steps below.
 
