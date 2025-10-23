@@ -1,14 +1,12 @@
 # Deploy
 
-🏃‍♂️‍➡️ Are you ready to try FCA? Let's follow these simple steps:
-
 🎬 Setup demo available on YouTube : [Fabric Cost Analysis](https://youtu.be/ehxiauTPvkA)
 
 ## 1 - Configure export
 
 ### 1.1 - Cost FOCUS Data
 
->🚩 Skip those configurations steps if you're using FinOps Hub.
+>🚩 Skip this 1.1 steps if you're using FinOps Hub.
 
 To create an export (Create [Cost Management exports](https://learn.microsoft.com/en-us/azure/cost-management-billing/costs/tutorial-improved-exports#create-exports)) the [Cost Management Contributor role](https://learn.microsoft.com/en-us/azure/cost-management-billing/costs/understand-work-scopes#roles-used-in-cost-management-on-rbac-scopes) will be required.
 
@@ -43,9 +41,13 @@ Once Data Lake Gen 2 storage account created here are the high levels steps to c
 
 >ℹ️ When performing the export, you have the option to retrieve one year of historical data in one-month chunks.
 
-### 1.2 - (Optional) Reservation Data : [Reservation Data export configuration](./Reservation.md)
+### 1.2 - (Optional) Reservation Data
 
-### 1.3 - (Optional) Azure Quota Data : [Quota Data export configuration](./Quota.md)
+➡️ [Click here to configure reservation analysis](./Reservation.md)
+
+### 1.3 - (Optional) Azure Quota Data
+
+➡️ [Click here to configure quota analysis](./Quota.md)
 
 ## 2 - Configure Fabric items
 
