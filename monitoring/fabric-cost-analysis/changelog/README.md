@@ -1,17 +1,29 @@
 # FCA Release notes
 
-for Fabric Cost Analysis solution accelerator.
+## Roadmap
 
---------------------------
+- Azure Quotas analysis
+- Promotion video
+- Tags analysis
+- Warehouse Auto Scale cost analysis
+- Forecast
+- What if analysis
+- Corellate cost with CU
 
-## 📦 2025.9.2
-
-First Release
-
-## 📦 2025.10.15
-
-Quick fixes
+## Release
 
 ## 📦 2025.10.31
 
-Major updates
+- Reservation analysis
+- FinOps hubs support
+- Meters analysis
+- Fixes
+
+## 📦 2025.10.15
+
+- Data Agent updates
+- Fixes
+
+## 📦 2025.9.2
+
+- First Release

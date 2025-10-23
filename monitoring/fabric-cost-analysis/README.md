@@ -18,6 +18,8 @@ FCA is fully developed utilizing Fabric capabilities, with Pipelines and Noteboo
 
 ⚠️ Caution: The FCA solution accelerator is not an official Microsoft product! It is a solution accelerator, which can help you implement a cost monitoring solution within and for Fabric. Consequently, there is no official support provided, and there remains a potential risk of failures.
 
+🎬 Demo presentation available on YouTube : [Fabric Cost Analysis](https://youtu.be/ZRtxJgFGfi4)
+
 ## Content
 
 > 🏗️ The solution is still in Preview and may receive major updates.
@@ -222,7 +224,7 @@ Steps to create the Data Agent:
 
 To update FCA (Fabric Cost Analysis) to the latest version, follow the documented steps below.
 
-☑️ Check the release notes of FCA to see enhanced, fixed, or new items and features: [FCA Release notes](https://github.com/microsoft/fabric-toolbox/blob/main/monitoring/fabric-cost-analysis/changelog/README.md)
+☑️ Review FCA release notes for the roadmap and updates: [FCA Release notes](https://github.com/microsoft/fabric-toolbox/blob/main/monitoring/fabric-cost-analysis/changelog/README.md)
 
 🚩 Important:
 
