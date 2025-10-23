@@ -30,7 +30,7 @@ To create reservation export, on the Azure portal , search for **Cost Management
 - Select the ellipsis (**...**) next to **Files**
 - Select **New shortcut**
 - Select Azure Data Lake Storage Gen 2 and provide the following settings:
-  - Connection = Reuse **Existing connection** or create a new one specifying **Data Lake Storage** URL of the Data Lake storage account. 
+  - Connection = Reuse **Existing connection** or create a new one specifying **Data Lake Storage** URL of the Data Lake storage account
   - Select the Shortcuts target sub path: **reservation-details** and **reservation-transactions**
   ![FCA](./media/reservationexport.png)
   - Click on Next

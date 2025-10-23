@@ -70,7 +70,7 @@ Once Data Lake Gen 2 storage account created here are the high levels steps to c
   - Select the ellipsis (**...**) next to **Files**
   - Select **New shortcut**
   - Select Azure Data Lake Storage Gen 2 and provide the following settings:
-    - URL = **Data Lake Storage** URL of the Data Lake storage account. To get the Data Lake Storage URL, view the storage account where the export created a directory and the FOCUS cost file (If your're using **FinOps Hub**, use the existing storage account with the ingestion container). Under **Settings**, select **Endpoints**. Copy the URL marked as **Data Lake Storage** it should look like this: *https://###.dfs.core.windows.net*.
+    - URL = **Data Lake Storage** URL of the Data Lake storage account. To get the Data Lake Storage URL, view the storage account where the export created a directory and the FOCUS cost file (If your're using **FinOps Hub**, use the existing storage account with the ingestion container). Under **Settings**, select **Endpoints**. Copy the URL marked as **Data Lake Storage** it should look like this: *https://###.dfs.core.windows.net*
     - Connection = **Create a new connection**
     - Connection name = <*Any name of your choice*>
     - Authentication kind = **Organizational account**
