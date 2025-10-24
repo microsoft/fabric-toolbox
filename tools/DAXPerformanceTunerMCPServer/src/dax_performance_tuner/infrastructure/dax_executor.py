@@ -82,6 +82,7 @@ def execute_with_dax_executor(
     
     is_desktop = is_desktop_connection(xmla_endpoint)
     
+    # Get token for service connections
     if not access_token and not is_desktop:
         access_token = get_access_token()
         if not access_token:
@@ -91,17 +92,19 @@ def execute_with_dax_executor(
         access_token = "desktop-no-auth-needed"
     
     try:
+        # Build command WITHOUT token in args (security improvement)
         cmd = [
-            executor_path,
+            str(executor_path),
             "--xmla", xmla_endpoint,
             "--dataset", dataset_name,
-            "--token", access_token,
             "--query", query,
             "--verbose"
         ]
         
+        # Pass token via stdin instead of command-line args (more secure)
         result = subprocess.run(
             cmd,
+            input=access_token,  # Token passed via stdin
             capture_output=True,
             text=True,
             timeout=timeout_seconds,
@@ -133,7 +136,14 @@ def execute_with_dax_executor(
         
         return True, result_data, None
     
-    except subprocess.TimeoutExpired:
+    except subprocess.TimeoutExpired as e:
+        # Ensure process is terminated on timeout
+        if e.process:
+            try:
+                e.process.kill()
+                e.process.wait(timeout=5)
+            except Exception:
+                pass
         return False, {}, f"DaxExecutor execution timed out after {timeout_seconds} seconds"
     except Exception as e:
         return False, {}, f"Unexpected error executing DaxExecutor: {str(e)}"

@@ -21,7 +21,6 @@ namespace DaxExecutor
             var xmlaOption = new Option<string>("--xmla", "XMLA server connection string (alternative to --workspace)");
             var datasetOption = new Option<string>("--dataset", "Power BI dataset name") { IsRequired = true };
             var queryOption = new Option<string>("--query", "DAX query to execute") { IsRequired = true };
-            var tokenOption = new Option<string>("--token", "Access token for authentication") { IsRequired = true };
             var verboseOption = new Option<bool>("--verbose", "Enable verbose logging");
 
             var rootCommand = new RootCommand("DAX Executor - Execute DAX queries with server timing traces")
@@ -30,11 +29,10 @@ namespace DaxExecutor
                 xmlaOption,
                 datasetOption,
                 queryOption,
-                tokenOption,
                 verboseOption
             };
 
-            rootCommand.SetHandler(async (workspaceName, xmlaServer, datasetName, daxQuery, accessToken, verbose) =>
+            rootCommand.SetHandler(async (workspaceName, xmlaServer, datasetName, daxQuery, verbose) =>
             {
                 try
                 {
@@ -56,6 +54,22 @@ namespace DaxExecutor
                     if (verbose)
                     {
                         Console.Error.WriteLine("Verbose logging enabled");
+                        Console.Error.WriteLine("Reading access token from stdin...");
+                    }
+
+                    // Read access token from stdin (more secure than command-line args)
+                    string accessToken = Console.In.ReadToEnd().Trim();
+                    
+                    if (string.IsNullOrEmpty(accessToken))
+                    {
+                        Console.Error.WriteLine("Error: No access token provided via stdin");
+                        Environment.Exit(1);
+                        return;
+                    }
+
+                    if (verbose)
+                    {
+                        Console.Error.WriteLine($"Token received (length: {accessToken.Length})");
                     }
 
                     // Convert workspace name to XMLA endpoint if needed
@@ -74,7 +88,7 @@ namespace DaxExecutor
                     Console.Error.WriteLine($"Error: {ex.Message}");
                     Environment.Exit(1);
                 }
-            }, workspaceOption, xmlaOption, datasetOption, queryOption, tokenOption, verboseOption);
+            }, workspaceOption, xmlaOption, datasetOption, queryOption, verboseOption);
 
             return await rootCommand.InvokeAsync(args);
         }

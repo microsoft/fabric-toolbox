@@ -120,3 +120,22 @@ def get_access_token() -> Optional[str]:
             return None
         except Exception:
             return None
+
+
+def get_access_token_with_expiry() -> Optional[tuple[str, float]]:
+    """Return a valid access token and its expiry timestamp.
+    
+    Returns:
+        Tuple of (access_token, expiry_timestamp) or None if auth fails.
+        expiry_timestamp is Unix epoch time (seconds since 1970-01-01 UTC).
+    """
+    global _access_token, _token_expiry
+    
+    # Ensure we have a valid token
+    token = get_access_token()
+    if not token:
+        return None
+    
+    # Return token and expiry time (already set by get_access_token)
+    with _token_lock:
+        return (_access_token, _token_expiry) if _access_token and _token_expiry else None
