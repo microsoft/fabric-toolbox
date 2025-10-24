@@ -1,6 +1,6 @@
 # Quota
 
-🎬 Quota setup demo available on YouTube : [Fabric Cost Analysis](https://youtu.be/ehxiauTPvkA)
+🎬 Quota setup demo available on YouTube : [Fabric Cost Analysis - Setup Azure Quotas](https://youtu.be/ZVzkk7rq9u0)
 
 ## 1 - Configure the data connexion
 
