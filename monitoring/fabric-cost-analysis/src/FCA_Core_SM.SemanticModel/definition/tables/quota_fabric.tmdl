@@ -3,11 +3,12 @@ table quota_fabric
 	sourceLineageTag: [dbo].[quota_fabric]
 
 	measure 'Quota Consumed' = DIVIDE(SUM(quota_fabric[Usage]),SUM(quota_fabric[Limit]))
+		formatString: 0.00%;-0.00%;0.00%
 		lineageTag: a34ff0cf-3aa9-4c75-9eb5-cf7bea6b6a86
 
 		changedProperty = Name
 
-		annotation PBI_FormatHint = {"isGeneralNumber":true}
+		changedProperty = FormatString
 
 	measure 'Quota Limit' = SUM(quota_fabric[Limit])
 		formatString: 0

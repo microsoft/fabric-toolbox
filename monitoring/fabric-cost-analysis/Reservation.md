@@ -21,6 +21,14 @@ To create reservation export, on the Azure portal , search for **Cost Management
   - Overwrite data = **Enabled**
 - On the Review + Create tab, select **Create**
 - Run the export by selecting **Run now** on the export page
+- Verify the exports
+
+![Reservation export](./media/ReservationExportStorage1.png)
+
+![Reservation export](./media/ReservationExportStorage2.png)
+
+![Reservation export](./media/ReservationExportStorage3.png)
+
 
 >ℹ️ When performing the export, you have the option to retrieve one year of historical data in one-month chunks.
 
@@ -37,7 +45,7 @@ To create reservation export, on the Azure portal , search for **Cost Management
   ![FCA](./media/reservationexport.png)
   - Click on Next
   ![FCA](./media/reservationexport2.png)
-  - Verify and rename if required the Shortcuts and click on Create
+  - Verify and rename if required the Shortcuts to **reservation-details** and **reservation-transactions** and click on Create
 
 - Verify access to the data
 
