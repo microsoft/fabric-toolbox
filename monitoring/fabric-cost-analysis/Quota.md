@@ -29,9 +29,10 @@ Add credentials to connections :
 
 - Open the **Load FCA E2E** Data pipeline
 - Activate the **...** activity
-- Run the Pipeline once
 
-![Load FCA E2E Notebook](./media/Setup_NotebookExecution.png)
+![Load FCA E2E Notebook](./media/PipelineQuota.png)
+
+- Run the Pipeline once
 
 ## 3 - Open the report
 
