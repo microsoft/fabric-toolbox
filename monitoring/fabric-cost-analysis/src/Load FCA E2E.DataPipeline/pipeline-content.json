@@ -166,6 +166,8 @@
             {
                 "name": "Load Quotas",
                 "type": "ExecutePipeline",
+                "state": "Inactive",
+                "onInactiveMarkAs": "Succeeded",
                 "dependsOn": [
                     {
                         "activity": "Load Dimensions",
@@ -188,6 +190,8 @@
             {
                 "name": "Load Reservations",
                 "type": "ExecutePipeline",
+                "state": "Inactive",
+                "onInactiveMarkAs": "Succeeded",
                 "dependsOn": [
                     {
                         "activity": "Load Dimensions",
