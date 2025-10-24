@@ -91,7 +91,7 @@ Once Data Lake Gen 2 storage account created here are the high levels steps to c
 
 ## 3 - Run the Pipeline
 
-- Open the **Load FCA E2E** Data pipeline and Run the Pipeline once
+- Open the **Load FCA E2E** Data pipeline and Run the Pipeline once (Optional activities are deactivated by default and can be enabled if needed)
 
 ![Load FCA E2E Notebook](./media/Setup_NotebookExecution.png)
 
