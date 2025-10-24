@@ -125,7 +125,9 @@ namespace DaxExecutor
                 if (!isLocalConnection && !string.IsNullOrEmpty(accessToken) && accessToken != "desktop-no-auth-needed")
                 {
                     // Power BI validates the token - we just pass it through
-                    server.AccessToken = new Microsoft.AnalysisServices.AccessToken(accessToken, DateTime.MaxValue, "");
+                    // Use 1 hour expiry (token validation happens server-side anyway)
+                    var tokenExpiry = DateTime.UtcNow.AddHours(1);
+                    server.AccessToken = new Microsoft.AnalysisServices.AccessToken(accessToken, tokenExpiry, "");
 
                 }
                 else
