@@ -34,7 +34,7 @@ Add credentials to connections :
 
 ![Load FCA E2E Notebook](./media/PipelineQuota.png)
 
-- Run the Pipeline once
+- Run the Pipeline
 
 ## 4 - Open the report
 

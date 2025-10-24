@@ -2,7 +2,7 @@
 
 🎬 Reservation setup demo available on YouTube : [Fabric Cost Analysis](https://youtu.be/ZRtxJgFGfi4)
 
-# 1 - Configure reservation export
+## 1 - Configure reservation export
 
 To create reservation export, on the Azure portal , search for **Cost Management**
 - Select the required scope and select **Exports** in the left navigation menu
@@ -50,11 +50,11 @@ To create reservation export, on the Azure portal , search for **Cost Management
 
 ![Load FCA E2E Notebook](./media/PipelineReservation.png)
 
-- Run the Pipeline once
+- Run the Pipeline
 
 ## 5 - Open the report
 
 - Navigate to your FCA workspace
 - Search for the item FCA_Core_Report
 - Open the FCA_Core_Report Power BI report
-- Open the Quota page and begin your analysis
+- Open the Reservation page and begin your analysis
