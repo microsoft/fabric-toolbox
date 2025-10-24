@@ -17,7 +17,6 @@ table quota_fabric
 
 	measure 'Quota Ratio' =
 			
-			
 			var color = switch(true(),
 			    [Quota Consumed] < .5, "#EB895F",
 			    "#9071CE")
@@ -30,8 +29,11 @@ table quota_fabric
 			
 			return start_String & svg_full
 		lineageTag: a7fb0274-8744-4dd7-a36e-4455784a9f5f
+		dataCategory: ImageUrl
 
 		changedProperty = Name
+
+		changedProperty = DataCategory
 
 	measure 'Quota Used' = SUM(quota_fabric[Usage])
 		formatString: 0
