@@ -70,7 +70,6 @@ table resources
 
 	column ResourceKey
 		dataType: int64
-		isHidden
 		isNullable: false
 		formatString: 0
 		lineageTag: c6138365-f517-4594-abd1-f1505931ef95
@@ -91,4 +90,5 @@ table resources
 			schemaName: dbo
 			expressionSource: DatabaseQuery
 
+	annotation PBI_ResultType = Table
 

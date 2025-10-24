@@ -964,4 +964,5 @@ table fca
 
 	changedProperty = Description
 
+	annotation PBI_ResultType = Table
 
