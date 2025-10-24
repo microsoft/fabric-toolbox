@@ -4,6 +4,8 @@
 
 ## 1 - Configure reservation export
 
+>ℹ️ Azure offers RBAC roles for reservations, the Reservation reader role lets users view reservations in their Microsoft Entra tenant without being able to edit them, this role is sufficient. More details are available at: https://learn.microsoft.com/en-us/azure/cost-management-billing/reservations/view-reservations
+
 To create reservation export, on the Azure portal , search for **Cost Management**
 - Select the required scope and select **Exports** in the left navigation menu
 - Select **+ Create**
@@ -28,7 +30,6 @@ To create reservation export, on the Azure portal , search for **Cost Management
 ![Reservation export](./media/ReservationExportStorage2.png)
 
 ![Reservation export](./media/ReservationExportStorage3.png)
-
 
 >ℹ️ When performing the export, you have the option to retrieve one year of historical data in one-month chunks.
 
