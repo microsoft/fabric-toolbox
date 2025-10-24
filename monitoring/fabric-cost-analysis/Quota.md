@@ -1,6 +1,6 @@
 # Quota
 
-🎬 Quota setup demo available on YouTube : [Fabric Cost Analysis](https://youtu.be/ehxiauTPvkA)
+🎬 Quota setup demo available on YouTube : [Fabric Cost Analysis - Setup Azure Quotas](https://youtu.be/ZVzkk7rq9u0)
 
 ## 1 - Configure the data connexion
 
@@ -42,3 +42,5 @@ Add credentials to connections :
 - Search for the item FCA_Core_Report
 - Open the FCA_Core_Report Power BI report
 - Open the Quota page and begin your analysis
+
+![Azure Quotas Page](./media/AzureQuotas.png)
