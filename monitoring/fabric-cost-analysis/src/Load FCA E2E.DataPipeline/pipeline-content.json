@@ -179,7 +179,7 @@
                 },
                 "typeProperties": {
                     "pipeline": {
-                        "referenceName": "0cf962ea-57aa-41d4-a218-a8bd4f6a0d63",
+                        "referenceName": "bc560572-054f-49e6-8601-2505da5bea6a",
                         "type": "PipelineReference"
                     },
                     "waitOnCompletion": true
