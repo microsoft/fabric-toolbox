@@ -42,3 +42,5 @@ Add credentials to connections :
 - Search for the item FCA_Core_Report
 - Open the FCA_Core_Report Power BI report
 - Open the Quota page and begin your analysis
+
+![Azure Quotas Page](./media/AzureQuotas.png)
