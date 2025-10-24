@@ -24,7 +24,9 @@ To create reservation export, on the Azure portal , search for **Cost Management
 
 >ℹ️ When performing the export, you have the option to retrieve one year of historical data in one-month chunks.
 
-## 2 - Create Shortcut
+## 2 - [Configure Fabric items](./Deploy.md)
+
+## 3 - Create Shortcut
 
 - Create a new File Shortcut on the FCA Lakehouse ([Create an Azure Data Lake Storage Gen2 shortcut](https://learn.microsoft.com/en-us/fabric/onelake/create-adls-shortcut))
 - Select the ellipsis (**...**) next to **Files**
@@ -41,7 +43,7 @@ To create reservation export, on the Azure portal , search for **Cost Management
 
 ![FCA](./media/reservationexport3.png)
 
-## 3 - Enable activity in the Pipeline
+## 4 - Enable activity in the Pipeline
 
 - Open the **Load FCA E2E** Data pipeline
 - Activate the **...** activity
@@ -50,7 +52,7 @@ To create reservation export, on the Azure portal , search for **Cost Management
 
 - Run the Pipeline once
 
-## 4 - Open the report
+## 5 - Open the report
 
 - Navigate to your FCA workspace
 - Search for the item FCA_Core_Report
