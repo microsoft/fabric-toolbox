@@ -45,6 +45,7 @@ relationship 22abce86-f705-62b3-c4cc-38c38a6a8a62
 	toColumn: subscriptions.SubscriptionKey
 
 relationship 99f411ba-d0bf-3786-953c-1dd9e891c20e
+	crossFilteringBehavior: bothDirections
 	fromColumn: reservation_usage.ReservationOrderKey
 	toColumn: reservations.ReservationOrderKey
 

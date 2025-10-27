@@ -2,15 +2,35 @@ table reservations
 	lineageTag: 048955a8-8999-437f-aae7-c9fde20286fe
 	sourceLineageTag: [dbo].[reservations]
 
+	measure 'RI Amount' = SUM(reservations[Amount])
+		lineageTag: 529c3627-05f8-4a8f-80f6-d2a7099e527d
+
+		formatStringDefinition =
+				SWITCH( MAX(reservations[Currency]),
+				"USD", "\$#,0.00;(\$#,0.00);\$#,0.00",
+				"EUR", "\€#,0.00;(\€#,0.00);\€#,0.00",
+				"#,0.00;(#,0.00);#,0.00")
+
+		changedProperty = Name
+
+		changedProperty = FormatString
+
+		changedProperty = FormatStringDefinition
+
 	column Amount
 		dataType: double
+		isHidden
 		sourceProviderType: float
 		lineageTag: 8cf536ed-6d12-4c39-b6a3-407175f81a73
 		sourceLineageTag: Amount
-		summarizeBy: none
+		summarizeBy: sum
 		sourceColumn: Amount
 
-		annotation SummarizationSetBy = Automatic
+		changedProperty = SummarizeBy
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = User
 
 		annotation PBI_FormatHint = {"isGeneralNumber":true}
 
@@ -76,14 +96,18 @@ table reservations
 		annotation SummarizationSetBy = Automatic
 
 	column Quantity
-		dataType: double
+		dataType: int64
 		sourceProviderType: float
 		lineageTag: 297ed799-e7bc-4437-bd24-8ecbe0522a7f
 		sourceLineageTag: Quantity
-		summarizeBy: none
+		summarizeBy: sum
 		sourceColumn: Quantity
 
-		annotation SummarizationSetBy = Automatic
+		changedProperty = SummarizeBy
+
+		changedProperty = DataType
+
+		annotation SummarizationSetBy = User
 
 		annotation PBI_FormatHint = {"isGeneralNumber":true}
 

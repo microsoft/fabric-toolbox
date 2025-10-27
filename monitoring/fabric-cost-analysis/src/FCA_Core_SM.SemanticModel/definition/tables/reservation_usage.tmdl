@@ -8,6 +8,36 @@ table reservation_usage
 
 		changedProperty = Name
 
+	measure 'Reservation used ratio %' = ```
+			
+			var _table = 
+			SUMMARIZE(reservation_usage, 
+			          reservation_usage[UsageDate], 
+			          reservations[ReservationOrderKey], 
+			          "used", SUM(reservation_usage[UsedHours]), 
+			          "reserved", MAX(reservation_usage[ReservedHours]))
+			
+			RETURN
+			
+			AVERAGEX(_table,
+			DIVIDE([used], [reserved])
+			)
+			```
+		formatString: 0.00%;-0.00%;0.00%
+		lineageTag: 98ee3276-1438-433c-b46d-b058148b6cfd
+
+		changedProperty = Name
+
+		changedProperty = FormatString
+
+	measure 'Reservation unused ratio %' = 1 - reservation_usage[Reservation used ratio %]
+		formatString: 0.00%;-0.00%;0.00%
+		lineageTag: 3a4e40ae-a0ad-497c-810d-0e47c999fa57
+
+		changedProperty = Name
+
+		changedProperty = FormatString
+
 	column ResourceName
 		dataType: string
 		sourceProviderType: varchar(8000)
@@ -20,11 +50,14 @@ table reservation_usage
 
 	column SubAccountId
 		dataType: string
+		isHidden
 		sourceProviderType: varchar(8000)
 		lineageTag: 8d5331c6-d4fa-4cbe-b55b-d4483cc6cfe7
 		sourceLineageTag: SubAccountId
 		summarizeBy: none
 		sourceColumn: SubAccountId
+
+		changedProperty = IsHidden
 
 		annotation SummarizationSetBy = Automatic
 
@@ -93,6 +126,7 @@ table reservation_usage
 
 	column ReservationOrderKey
 		dataType: int64
+		isHidden
 		formatString: 0
 		sourceProviderType: int
 		lineageTag: 0ba66608-ac7b-41d0-b51f-53155743b9ef
@@ -106,6 +140,7 @@ table reservation_usage
 
 	column SubscriptionKey
 		dataType: int64
+		isHidden
 		formatString: 0
 		sourceProviderType: int
 		lineageTag: a8400a37-bcc1-4c5a-81f5-7fd4cfadd11d
@@ -119,6 +154,7 @@ table reservation_usage
 
 	column ResourceKey
 		dataType: int64
+		isHidden
 		formatString: 0
 		sourceProviderType: int
 		lineageTag: f4ac61c9-b686-4ff9-8bbb-39fd7825da32
