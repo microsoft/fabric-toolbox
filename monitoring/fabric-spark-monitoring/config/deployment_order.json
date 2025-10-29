@@ -1,0 +1,69 @@
+[
+    {
+        "name": "Workspace.src",
+        "id": "63b564e3-bc45-46b0-aa00-31e28a727076",
+        "type": "Core"
+    },
+    {
+        "name": "Spark Monitoring.Eventhouse",
+        "id": "624cd6fe-37ab-ba30-44fa-145a04c0f2c3",
+        "kustoQueryUri": "kusto_query_uri",
+        "kustoIngestUri": "kusto_ingest_uri"
+    },
+    {
+        "name": "Spark Monitoring.KQLDatabase",
+        "id": "8323dfe0-6c03-a3ce-4a50-dc0604cff8ed",
+        "parent": "Spark Monitoring.Eventhouse"
+    },
+    {
+        "name": "SparkMonitoring.Eventstream",
+        "id": "7f6adb5e-d190-87a9-4b9f-e67bdc9b774f",
+        "customEndpointName":[
+            "IngestionEndpoint"
+        ],
+        "destinations": [
+            {
+                "name": "Eventhouse",
+                "itemName": "Spark Monitoring.KQLDatabase",
+                "type": "Eventhouse"
+            }
+        ]
+    },
+    {
+        "name": "Spark Monitoring.KQLQueryset",
+        "id": "7e34015e-f128-9242-4aa8-432d9815fb97",
+        "datasources": [
+            {
+                "name": "SparkMonitoring",
+                "itemName": "Spark Monitoring.KQLDatabase"
+            }
+        ]
+    },
+    {
+        "name": "Spark Monitoring Recommedations.Notebook",
+        "id": "093565d0-c052-a2bc-44ca-d5ddb248dfe8"
+    },
+    {
+        "name": "SparkLensPipeline.DataPipeline",
+        "id": "d1bc910b-62fd-8e0f-4df5-a38e1e53bf93",
+        "parameters": [
+            {
+                "name": "KustoURIfqdn",
+                "type": "kusto_query_uri",
+                "source": "Spark Monitoring.Eventhouse"
+            },
+            {
+                "name": "KQLDatabase",
+                "type": "kusto_database",
+                "source": "Spark Monitoring.KQLDatabase"
+            }
+        ],
+        "acitivities": [
+            {
+                "name": "SparkLens",
+                "type": "TridentNotebook",
+                "itemName": "Spark Monitoring Recommedations.Notebook"
+            }
+        ]
+    }
+]

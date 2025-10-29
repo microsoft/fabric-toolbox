@@ -1,0 +1,12 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/gitIntegration/platformProperties/2.0.0/schema.json",
+  "metadata": {
+    "type": "DataPipeline",
+    "displayName": "SparkLensPipeline",
+    "description": "Imported from fab"
+  },
+  "config": {
+    "version": "2.0",
+    "logicalId": "c4aeae7c-988a-8088-47c0-9aace5c7a925"
+  }
+}
