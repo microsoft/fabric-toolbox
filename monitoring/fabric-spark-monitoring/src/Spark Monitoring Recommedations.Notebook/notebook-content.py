@@ -5,13 +5,6 @@
 # META {
 # META   "kernel_info": {
 # META     "name": "synapse_pyspark"
-# META   },
-# META   "dependencies": {
-# META     "lakehouse": {
-# META       "default_lakehouse_name": "",
-# META       "default_lakehouse_workspace_id": ""
-# META     },
-# META     "environment": {}
 # META   }
 # META }
 
@@ -77,7 +70,7 @@ from pyspark.sql.functions import (
 import pandas as pd
 from pyspark.sql.types import StructType, StructField, StringType, IntegerType, DoubleType
 from pyspark.sql import Row
-
+from pyspark.sql.functions import col, get_json_object
 
 
 def compute_application_runtime(event_log_df):
@@ -115,7 +108,7 @@ def compute_executor_wall_clock_time(event_log_df):
     return sum(end - start for start, end in merged_intervals)
 
 
-def estimate_runtime_scaling(task_df, executor_wall_clock_sec, driver_wall_clock_sec, current_executors, critical_path_sec):
+def estimate_runtime_scaling(app_id,task_df, executor_wall_clock_sec, driver_wall_clock_sec, current_executors, critical_path_sec):
     critical_path_ms = critical_path_sec * 1000
     total_task_time_ms = task_df.agg(spark_sum("executor_run_time_ms")).first()[0]
     parallelizable_ms = total_task_time_ms - critical_path_ms
@@ -138,8 +131,9 @@ def estimate_runtime_scaling(task_df, executor_wall_clock_sec, driver_wall_clock
         overlap_weight = 1 - driver_wall_clock_sec / (driver_wall_clock_sec + estimated_executor_sec)
 
         # Weighted estimate: somewhere between max and sum
-        app_duration_sec = max(driver_wall_clock_sec, estimated_executor_sec) + overlap_weight * min(driver_wall_clock_sec, estimated_executor_sec)
+        # app_duration_sec = max(driver_wall_clock_sec, estimated_executor_sec) + overlap_weight * min(driver_wall_clock_sec, estimated_executor_sec)
 
+        app_duration_sec = driver_wall_clock_sec + estimated_executor_sec
         # Adjust app duration with driver-executor mix
         # app_duration_sec = driver_ratio * driver_wall_clock_sec + (1 - driver_ratio) * estimated_executor_sec + driver_wall_clock_sec
 
@@ -154,7 +148,6 @@ def estimate_runtime_scaling(task_df, executor_wall_clock_sec, driver_wall_clock
     # print(predictions)
 
     schema = StructType([
-    StructField("app_id", StringType(), False),
     StructField("Executor_Count", IntegerType(), False),
     StructField("Executor_Multiplier", DoubleType(), False),
     StructField("Estimated_Executor_WallClock", StringType(), False),
@@ -168,13 +161,18 @@ def estimate_runtime_scaling(task_df, executor_wall_clock_sec, driver_wall_clock
     #     # --- Show the DataFrame ---
     # df.show(truncate=False)
 
+    predictions_df = pd.DataFrame(predictions)
+    predictions_df["app_id"] = app_id
+
+    # spark_predictions_df = spark.createDataFrame(predictions_df, schema=schema)
+
     # display(pd.DataFrame(predictions))
 
-    return pd.DataFrame(predictions)
+    return predictions_df
 
 
 
-def generate_recommendations(app_duration_sec, driver_wall_clock_sec, executor_wall_clock_sec, metadata_df, task_df):
+def generate_recommendations(app_id,app_duration_sec, driver_wall_clock_sec, executor_wall_clock_sec, metadata_df, task_df):
     recs = []
 
     driver_pct = 100 * driver_wall_clock_sec / app_duration_sec
@@ -276,6 +274,8 @@ def compute_stage_task_summary(event_log_df, metadata_df, app_id):
         stage_duration_df, on=["stage_id", "stage_attempt_id"], how="left"
     ).orderBy(col("stage_execution_time_sec").desc()).limit(5)
 
+    final_summary_df = final_summary_df.withColumn("app_id", lit(app_id))
+
     app_duration_sec = compute_application_runtime(event_log_df)
     executor_wall_clock_sec = compute_executor_wall_clock_time(event_log_df)
     driver_wall_clock_sec = app_duration_sec - executor_wall_clock_sec
@@ -304,8 +304,8 @@ def compute_stage_task_summary(event_log_df, metadata_df, app_id):
     empty_df = spark.createDataFrame([], schema)
 
     if critical_path_sec:
-        print(f"Critical Path Time: {critical_path_sec:.2f} sec")
-        predictions_df=estimate_runtime_scaling(task_df, executor_wall_clock_sec, driver_wall_clock_sec, max_executors, critical_path_sec)
+        # print(f"Critical Path Time: {critical_path_sec:.2f} sec")
+        predictions_df=estimate_runtime_scaling(app_id,task_df, executor_wall_clock_sec, driver_wall_clock_sec, max_executors, critical_path_sec)
     else:
         predictions_df=empty_df
         print("Critical Path could not be computed.")
@@ -320,7 +320,7 @@ def compute_stage_task_summary(event_log_df, metadata_df, app_id):
         ("Executor Time % of App Time", round(100 * executor_wall_clock_sec / app_duration_sec, 2)),
         ("Driver Time % of App Time", round(100 * driver_wall_clock_sec / app_duration_sec, 2)),
         ("Max Executors", max_executors),
-        ("Critical Path Time (sec)", round(critical_path_sec, 2))
+        # ("Critical Path Time (sec)", round(critical_path_sec, 2))
     ]
 
     # Convert metrics to rows with app_id
@@ -339,7 +339,7 @@ def compute_stage_task_summary(event_log_df, metadata_df, app_id):
     # # Show the DataFrame
     # display(metrics_df)
 
-    recommendations_df=generate_recommendations(app_duration_sec, driver_wall_clock_sec, executor_wall_clock_sec, metadata_df, task_df)
+    recommendations_df=generate_recommendations(app_id,app_duration_sec, driver_wall_clock_sec, executor_wall_clock_sec, metadata_df, task_df)
 
     return final_summary_df, metrics_df, predictions_df, recommendations_df
 
@@ -359,15 +359,19 @@ def compute_stage_task_summary(event_log_df, metadata_df, app_id):
 from pyspark.sql import SparkSession, Row
 from pyspark.sql.functions import col, from_json, lit, length
 import logging
+from pyspark.sql import functions as F
 
-# Setup logging
-logging.basicConfig(level=logging.INFO)
 
 # === Configuration ===
 # kustoQuery = "['ingestionTable']"
 kustoQuery = """
 RawLogs
-| where applicationId !in (sparklens_metadata | project applicationId)
+"""
+
+applicationIDs = """
+sparklens_metadata
+| project applicationId
+| distinct applicationId
 """
 # The query URI for reading the data e.g. https://<>.kusto.data.microsoft.com.
 #kustoUri = "https://trd-ektwgkvj37tkhsvrky.z4.kusto.fabric.microsoft.com"
@@ -382,136 +386,184 @@ kustoDf  = spark.read\
     .option("kustoDatabase", database)\
     .option("kustoQuery", kustoQuery).load()
 
-# # Show all distinct categories first
-# kustoDf.select("category").distinct().show()
+# Try to load previously processed application IDs
+try:
+    applicationIDs = spark.read\
+        .format("com.microsoft.kusto.spark.synapse.datasource")\
+        .option("accessToken", accessToken)\
+        .option("kustoCluster", kustoUri)\
+        .option("kustoDatabase", database)\
+        .option("kustoQuery", applicationIDs).load()
+    print("Successfully loaded applicationIDs.")
+except Exception as e:
+    print("Warning: Failed to load applicationIDs from sparklens_metadata table. Check if it exists.")
+    applicationIDs = spark.createDataFrame([], StructType([]))
 
-# Filter the Kusto DataFrame for rows where category is "EventLog"
-filtered_df = kustoDf.filter(col("category") == "EventLog")
 
-# Optionally show a few rows to verify
-filtered_df.count()
+kustoDf.cache()
+applicationIDs.cache()
 
-# === 2.1 Infer Schema from Properties ===
-json_rdd = (
-    filtered_df
-    .filter(col("properties").isNotNull())
-    .selectExpr("CAST(properties AS STRING) as json_str")
-    .rdd
-    .map(lambda row: row["json_str"])
-)
+filtered_df = kustoDf.filter(get_json_object(col("records"), "$.category") == "EventLog")
 
-sample_df = spark.read.json(json_rdd)
+sample_json_df = filtered_df.select("records").limit(1000)  # you can adjust the sample size
+json_rdd = sample_json_df.rdd.map(lambda r: r[0])
+inferred_schema = spark.read.json(json_rdd).schema
+print("📘 Inferred schema:")
+print(inferred_schema.simpleString())
+parsed_df = kustoDf.withColumn("records_parsed", F.from_json(F.col("records"), inferred_schema))
+flattened_df = parsed_df.select("*", "records_parsed.*").drop("records_parsed")
+filtered_df=flattened_df
 
-# sample_df.show()
-
-sample_schema = sample_df.schema
-
-event_log_df = filtered_df.withColumn("properties", from_json(col("properties"), sample_schema))
-
-# === 3. Extract Metadata ===
-def extract_app_metadata(df):
-    native_enabled_df = df.selectExpr("properties.`Spark Properties`.`spark.native.enabled` AS spark_native_enabled") \
-                          .filter(col("spark_native_enabled").isNotNull()) \
-                          .distinct() \
-                          .limit(1)
-
-    native_enabled = native_enabled_df.collect()[0]["spark_native_enabled"] if not native_enabled_df.rdd.isEmpty() else None
-
-    return df.select(
-        "applicationId", "applicationName", "artifactId", "artifactType", "capacityId",
-        "executorMax", "executorMin", "fabricEnvId", "fabricLivyId", "fabricTenantId",
-        "fabricWorkspaceId", "isHighConcurrencyEnabled"
-    ).distinct().withColumn("spark.native.enabled", lit(native_enabled))
-
-metadata_df = extract_app_metadata(event_log_df)
-# metadata_df.show(truncate=False)
-
-# === 4. Process Each Application ID ===
-app_ids = metadata_df.select("applicationId").distinct().rdd.flatMap(lambda x: x).collect()
-
-logging.info(f"Found {len(app_ids)} applications.")
-
+metadata_df = []
 summary_dfs = []
 metrics_df = []
 predictions_df =[]
 recommendations_df = []
 
-# # app_ids=["application_1747957044383_0001"]
 
-i=0
+# Filter out application IDs that have already been processed (if any)
+if not applicationIDs.rdd.isEmpty():
+    existing_ids = [row["applicationId"] for row in applicationIDs.select("applicationId").distinct().collect()]
+    if existing_ids:
+        filtered_df = filtered_df.filter(~col("applicationId").isin(existing_ids))
 
-for app_id in app_ids:
-    i += 1
-    logging.info(f"Processing application ID: {app_id}, application number: {i}")
+# Final check if anything to process
+if filtered_df.rdd.isEmpty():
+    print("No new records to process in this run")
+else:
+    # Optionally show a few rows to verify
+    filtered_df.count()
 
-    filtered_event_log_df = event_log_df.filter(col("applicationId") == app_id)
-    filtered_metadata_df = metadata_df.filter(col("applicationId") == app_id)
+    # === 2.1 Infer Schema from Properties ===
+    json_rdd = (
+        filtered_df
+        .filter(col("properties").isNotNull())
+        .selectExpr("CAST(properties AS STRING) as json_str")
+        .rdd
+        .map(lambda row: row["json_str"])
+    )
 
-    start_events = filtered_event_log_df \
-        .filter(col("properties.Event") == "SparkListenerApplicationStart") \
-        .select("properties.Timestamp") \
-        .limit(1) \
-        .collect()
+    sample_df = spark.read.json(json_rdd)
 
-    if not start_events:
-        logging.warning(f"Missing SparkListenerApplicationStart event for {app_id}")
-        error_row = Row(applicationID=app_id, error="Missing SparkListenerApplicationStart event")
-        summary_dfs.append(spark.createDataFrame([error_row]))
-        continue
+    # sample_df.show()
 
-    try:
-        app_summary_df_list = compute_stage_task_summary(filtered_event_log_df, filtered_metadata_df, app_id)
-        # app_summary_df = app_summary_df_list[0]
-        metrics_df.append(app_summary_df_list[1])
-        predictions_df.append(app_summary_df_list[2])
-        recommendations_df.append(app_summary_df_list[3])
-        summary_dfs.append(app_summary_df_list[0])
-    except Exception as e:
-        logging.error(f"Error processing application {app_id}: {str(e)}")
-        error_row = Row(applicationID=app_id, error=str(e))
-        summary_dfs.append(spark.createDataFrame([error_row]))
+    sample_schema = sample_df.schema
 
-from pyspark.sql import DataFrame as SparkDataFrame
+    event_log_df = filtered_df
 
-# Combine all DataFrames in summary_dfs list
-summary_df = None
-if summary_dfs:
-    summary_df = summary_dfs[0]
-    for sdf in summary_dfs[1:]:
-        summary_df = summary_df.unionByName(sdf, allowMissingColumns=True)
+    # === 3. Extract Metadata ===
+    def extract_app_metadata(df):
+        native_enabled_df = df.selectExpr("properties.`Spark Properties`.`spark.native.enabled` AS spark_native_enabled") \
+                            .filter(col("spark_native_enabled").isNotNull()) \
+                            .distinct() \
+                            .limit(1)
 
-# Convert metrics_df items if needed
-for i, df in enumerate(metrics_df):
-    if isinstance(df, pd.DataFrame):
-        metrics_df[i] = spark.createDataFrame(df)
-    elif not isinstance(df, SparkDataFrame):
-        raise TypeError(f"metrics_df[{i}] is not a valid DataFrame.")
+        native_enabled = native_enabled_df.collect()[0]["spark_native_enabled"] if not native_enabled_df.rdd.isEmpty() else None
 
-metrics_df_combined = metrics_df[0]
-for df in metrics_df[1:]:
-    metrics_df_combined = metrics_df_combined.unionByName(df, allowMissingColumns=True)
+        return df.select(
+            "applicationId", "applicationName", "artifactId", "artifactType", "capacityId",
+            "executorMax", "executorMin", "fabricEnvId", "fabricLivyId", "fabricTenantId",
+            "fabricWorkspaceId", "isHighConcurrencyEnabled"
+        ).distinct().withColumn("spark.native.enabled", lit(native_enabled))
 
-# Convert predictions_df items if needed
-for i, df in enumerate(predictions_df):
-    if isinstance(df, pd.DataFrame):
-        predictions_df[i] = spark.createDataFrame(df)
-    elif not isinstance(df, SparkDataFrame):
-        raise TypeError(f"predictions_df[{i}] is not a valid DataFrame.")
+    metadata_df = extract_app_metadata(filtered_df)
+    # metadata_df.show(truncate=False)
 
-predictions_df_combined = predictions_df[0]
-for df in predictions_df[1:]:
-    predictions_df_combined = predictions_df_combined.unionByName(df, allowMissingColumns=True)
+    # === 4. Process Each Application ID ===
+    app_ids = metadata_df.select("applicationId").distinct().rdd.flatMap(lambda x: x).collect()
 
-# Convert recommendations_df items if needed
-for i, df in enumerate(recommendations_df):
-    if isinstance(df, pd.DataFrame):
-        recommendations_df[i] = spark.createDataFrame(df)
-    elif not isinstance(df, SparkDataFrame):
-        raise TypeError(f"recommendations_df[{i}] is not a valid DataFrame.")
+    print(f"Found {len(app_ids)} applications.")
 
-recommendations_df_combined = recommendations_df[0]
-for df in recommendations_df[1:]:
-    recommendations_df_combined = recommendations_df_combined.unionByName(df, allowMissingColumns=True)
+    i=0
+
+    for app_id in app_ids:
+        accessToken = mssparkutils.credentials.getToken(kustoUri)
+        i += 1
+        print(f"Processing application ID: {app_id}, application number: {i}")
+
+        filtered_event_log_df = event_log_df.filter(col("applicationId") == app_id)
+        filtered_metadata_df = metadata_df.filter(col("applicationId") == app_id)
+
+        start_events = filtered_event_log_df \
+            .filter(col("properties.Event") == "SparkListenerApplicationStart") \
+            .select("properties.Timestamp") \
+            .limit(1) \
+            .collect()
+
+        if not start_events:
+            logging.warning(f"Missing SparkListenerApplicationStart event for {app_id}")
+            schema = StructType([
+                StructField("applicationID", StringType(), True),
+                StructField("error", StringType(), True),
+            ])
+            error_row = {"applicationID": app_id, "error": "Missing SparkListenerApplicationStart event"}
+            summary_dfs.append(spark.createDataFrame([error_row], schema=schema))
+            continue
+
+        try:
+            print("Starting summary")
+            app_summary_df_list = compute_stage_task_summary(filtered_event_log_df, filtered_metadata_df, app_id)
+            print("writing results to EventHouse")
+            filtered_metadata_df.write \
+                .format("com.microsoft.kusto.spark.synapse.datasource") \
+                .option("accessToken", accessToken) \
+                .option("kustoCluster", kustoUri)\
+                .option("kustoDatabase", database)\
+                .option("kustoTable", "sparklens_metadata") \
+                .option("tableCreateOptions", "CreateIfNotExist") \
+                .mode("Append") \
+                .save()
+
+            app_summary_df_list[0].write \
+                .format("com.microsoft.kusto.spark.synapse.datasource") \
+                .option("accessToken", accessToken) \
+                .option("kustoCluster", kustoUri)\
+                .option("kustoDatabase", database)\
+                .option("kustoTable", "sparklens_summary") \
+                .option("tableCreateOptions", "CreateIfNotExist") \
+                .mode("Append") \
+                .save()
+
+            app_summary_df_list[1].write \
+                .format("com.microsoft.kusto.spark.synapse.datasource") \
+                .option("accessToken", accessToken) \
+                .option("kustoCluster", kustoUri)\
+                .option("kustoDatabase", database)\
+                .option("kustoTable", "sparklens_metrics") \
+                .option("tableCreateOptions", "CreateIfNotExist") \
+                .mode("Append") \
+                .save()
+
+            spark.createDataFrame(app_summary_df_list[2]).write \
+                .format("com.microsoft.kusto.spark.synapse.datasource") \
+                .option("accessToken", accessToken) \
+                .option("kustoCluster", kustoUri)\
+                .option("kustoDatabase", database)\
+                .option("kustoTable", "sparklens_predictions") \
+                .option("tableCreateOptions", "CreateIfNotExist") \
+                .mode("Append") \
+                .save()
+
+            app_summary_df_list[3].write \
+                .format("com.microsoft.kusto.spark.synapse.datasource") \
+                .option("accessToken", accessToken) \
+                .option("kustoCluster", kustoUri)\
+                .option("kustoDatabase", database)\
+                .option("kustoTable", "sparklens_recommedations") \
+                .option("tableCreateOptions", "CreateIfNotExist") \
+                .mode("Append") \
+                .save()
+
+        except Exception as e:
+            print(f"Error processing application {app_id}: {str(e)}")
+            schema = StructType([
+                StructField("applicationID", StringType(), True),
+                StructField("error", StringType(), True),
+            ])
+            error_row = {"applicationID": app_id, "error": str(e)}
+            summary_dfs.append(spark.createDataFrame([error_row], schema=schema))
+
+
 
 # METADATA ********************
 
@@ -522,57 +574,6 @@ for df in recommendations_df[1:]:
 
 # CELL ********************
 
-
-print("writing results to EventHouse")
-metadata_df.write \
-    .format("com.microsoft.kusto.spark.synapse.datasource") \
-    .option("accessToken", accessToken) \
-    .option("kustoCluster", kustoUri)\
-    .option("kustoDatabase", database)\
-    .option("kustoTable", "sparklens_metadata") \
-    .option("tableCreateOptions", "CreateIfNotExist") \
-    .mode("Append") \
-    .save()
-
-summary_df.write \
-    .format("com.microsoft.kusto.spark.synapse.datasource") \
-    .option("accessToken", accessToken) \
-    .option("kustoCluster", kustoUri)\
-    .option("kustoDatabase", database)\
-    .option("kustoTable", "sparklens_summary") \
-    .option("tableCreateOptions", "CreateIfNotExist") \
-    .mode("Append") \
-    .save()
-
-metrics_df_combined.write \
-    .format("com.microsoft.kusto.spark.synapse.datasource") \
-    .option("accessToken", accessToken) \
-    .option("kustoCluster", kustoUri)\
-    .option("kustoDatabase", database)\
-    .option("kustoTable", "sparklens_metrics") \
-    .option("tableCreateOptions", "CreateIfNotExist") \
-    .mode("Append") \
-    .save()
-
-predictions_df_combined.write \
-    .format("com.microsoft.kusto.spark.synapse.datasource") \
-    .option("accessToken", accessToken) \
-    .option("kustoCluster", kustoUri)\
-    .option("kustoDatabase", database)\
-    .option("kustoTable", "sparklens_predictions") \
-    .option("tableCreateOptions", "CreateIfNotExist") \
-    .mode("Append") \
-    .save()
-
-recommendations_df_combined.write \
-    .format("com.microsoft.kusto.spark.synapse.datasource") \
-    .option("accessToken", accessToken) \
-    .option("kustoCluster", kustoUri)\
-    .option("kustoDatabase", database)\
-    .option("kustoTable", "sparklens_recommedations") \
-    .option("tableCreateOptions", "CreateIfNotExist") \
-    .mode("Append") \
-    .save()
 
 # METADATA ********************
 

@@ -1,0 +1,27 @@
+table RecordsRead_First
+	lineageTag: 707ba0b7-2f7d-4966-b0bd-1f6899f06fa2
+
+	column sum_props_count
+		dataType: int64
+		formatString: 0
+		sourceProviderType: bigint
+		lineageTag: d6429f4b-d0b6-4e1d-8191-ff69d054614a
+		summarizeBy: sum
+		sourceColumn: sum_props_count
+
+		annotation SummarizationSetBy = Automatic
+
+	partition RecordsRead_First = m
+		mode: directQuery
+		queryGroup: Comparer
+		source =
+				let
+				    Source = AzureDataExplorer.Contents(RTIfqdn, "eventHouseTelemetry", "RawLogs | extend props = parse_json(properties) | where applicationId == '"&ApplicationFirst&"' |  where props.name contains 'executor.recordsRead' | summarize sum(tolong(props.count))")
+				
+				in
+				    Source
+
+	annotation PBI_NavigationStepName = Navigation
+
+	annotation PBI_ResultType = Table
+

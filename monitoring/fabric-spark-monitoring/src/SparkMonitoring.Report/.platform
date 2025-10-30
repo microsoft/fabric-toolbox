@@ -1,12 +1,11 @@
 {
   "$schema": "https://developer.microsoft.com/json-schemas/fabric/gitIntegration/platformProperties/2.0.0/schema.json",
   "metadata": {
-    "type": "Notebook",
-    "displayName": "Spark Monitoring Recommedations",
-    "description": "New notebook"
+    "type": "Report",
+    "displayName": "SparkMonitoring"
   },
   "config": {
     "version": "2.0",
-    "logicalId": "9b7cc66d-40b7-8a6f-4a38-2bcdda7eb24a"
+    "logicalId": "3d2d086a-214b-b66c-40a6-fc405ce09362"
   }
 }

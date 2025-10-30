@@ -6,18 +6,18 @@
     },
     {
         "name": "Spark Monitoring.Eventhouse",
-        "id": "624cd6fe-37ab-ba30-44fa-145a04c0f2c3",
+        "id": "61e0280c-4975-8bf6-4e6d-cc748ab5be27",
         "kustoQueryUri": "kusto_query_uri",
         "kustoIngestUri": "kusto_ingest_uri"
     },
     {
         "name": "Spark Monitoring.KQLDatabase",
-        "id": "8323dfe0-6c03-a3ce-4a50-dc0604cff8ed",
+        "id": "3e46dcfb-d099-b0ef-4861-4603e64229bd",
         "parent": "Spark Monitoring.Eventhouse"
     },
     {
         "name": "SparkMonitoring.Eventstream",
-        "id": "7f6adb5e-d190-87a9-4b9f-e67bdc9b774f",
+        "id": "3d2fdfb1-601b-8f71-4e11-34ed0a2c79aa",
         "customEndpointName":[
             "IngestionEndpoint"
         ],
@@ -30,22 +30,12 @@
         ]
     },
     {
-        "name": "Spark Monitoring.KQLQueryset",
-        "id": "7e34015e-f128-9242-4aa8-432d9815fb97",
-        "datasources": [
-            {
-                "name": "SparkMonitoring",
-                "itemName": "Spark Monitoring.KQLDatabase"
-            }
-        ]
-    },
-    {
         "name": "Spark Monitoring Recommedations.Notebook",
-        "id": "093565d0-c052-a2bc-44ca-d5ddb248dfe8"
+        "id": "9b7cc66d-40b7-8a6f-4a38-2bcdda7eb24a"
     },
     {
         "name": "SparkLensPipeline.DataPipeline",
-        "id": "d1bc910b-62fd-8e0f-4df5-a38e1e53bf93",
+        "id": "599af237-f1cc-863d-481e-22001aacb285",
         "parameters": [
             {
                 "name": "KustoURIfqdn",
@@ -58,11 +48,21 @@
                 "source": "Spark Monitoring.KQLDatabase"
             }
         ],
-        "acitivities": [
+        "activities": [
             {
                 "name": "SparkLens",
                 "type": "TridentNotebook",
                 "itemName": "Spark Monitoring Recommedations.Notebook"
+            }
+        ]
+    },
+	{
+        "name": "Spark Monitoring.KQLDashboard",
+        "id": "94b0dac6-cc63-8c9d-4a4b-40404f12bf39",
+		"datasources": [
+            {
+                "name": "Spark Monitoring",
+                "itemName": "Spark Monitoring.KQLDatabase"
             }
         ]
     }

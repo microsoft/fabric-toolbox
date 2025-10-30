@@ -1,0 +1,38 @@
+table SparkVersionSecond
+	lineageTag: ab316182-8620-476c-9b6e-dcb6ea87c8a4
+
+	column applicationId
+		dataType: string
+		sourceProviderType: nvarchar(max)
+		lineageTag: 3cb5ecef-5f86-4aa1-9ea1-8b451d1ebb80
+		summarizeBy: none
+		sourceColumn: applicationId
+
+		annotation SummarizationSetBy = Automatic
+
+	column props_message
+		dataType: string
+		sourceProviderType: nvarchar(max)
+		lineageTag: d241615a-9c56-4181-a50a-b197f29fa6bf
+		summarizeBy: none
+		sourceColumn: props_message
+
+		annotation SummarizationSetBy = Automatic
+
+	partition SparkVersionSecond = m
+		mode: directQuery
+		queryGroup: Comparer
+		source = ```
+				let
+				    Source = AzureDataExplorer.Contents(RTIfqdn, "eventHouseTelemetry", "RawLogs
+				| extend props = parse_json(properties) 
+				| where  properties contains ""Running Spark Version""  and applicationId contains '"&ApplicationSecond&"'
+				| project applicationId, tostring(props.message)", [MaxRows=null, MaxSize=null, NoTruncate=null, AdditionalSetStatements=null])
+				in
+				    Source
+				```
+
+	annotation PBI_NavigationStepName = Navigation
+
+	annotation PBI_ResultType = Table
+

@@ -9,15 +9,15 @@
   ],
   "destinations": [
     {
-      "id": "c9a90794-af2b-45d4-8305-ac9ef14675df",
+      "id": "a96a9cde-dc4e-4637-9f2d-c98c6755f4b9",
       "name": "Eventhouse",
       "type": "Eventhouse",
       "properties": {
         "dataIngestionMode": "DirectIngestion",
         "workspaceId": "00000000-0000-0000-0000-000000000000",
-        "itemId": "c8a9e2f9-b417-9731-4a7d-ed9b6cefd5a3",
+        "itemId": "3e46dcfb-d099-b0ef-4861-4603e64229bd",
         "tableName": "RawLogs",
-        "connectionName": "SparkMonitoring-Ingestion",
+        "connectionName": "Monitoring-RawLogs",
         "mappingRuleName": "RawLogs_mapping"
       },
       "inputNodes": [

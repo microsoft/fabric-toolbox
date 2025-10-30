@@ -1,0 +1,33 @@
+table ExecutorsFailure_
+	lineageTag: 8f00168f-7548-4837-b346-d7076e712ca8
+
+	column max_props_value
+		dataType: int64
+		formatString: 0
+		sourceProviderType: bigint
+		lineageTag: 8c8109bf-06f4-456d-b150-aaffa3b34d19
+		summarizeBy: sum
+		sourceColumn: max_props_value
+
+		annotation SummarizationSetBy = Automatic
+
+	partition ExecutorsFailure_ = m
+		mode: directQuery
+		queryGroup: appStatsOutsideTable
+		source = ```
+				let
+				    Source = AzureDataExplorer.Contents(RTIfqdn, "eventHouseTelemetry", "RawLogs
+				| where applicationId == '"&ApplicationWithoutTable&"'
+				| extend props = parse_json(properties) 
+				| where properties contains 'applicationMaster.numExecutorsFailed'
+				| summarize max(tolong(props.value))
+				", [MaxRows=null, MaxSize=null, NoTruncate=null, AdditionalSetStatements=null])
+				
+				in
+				    Source
+				```
+
+	annotation PBI_NavigationStepName = Navigation
+
+	annotation PBI_ResultType = Table
+

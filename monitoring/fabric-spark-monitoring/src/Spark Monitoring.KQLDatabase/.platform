@@ -3,10 +3,10 @@
   "metadata": {
     "type": "KQLDatabase",
     "displayName": "Spark Monitoring",
-    "description": "Spark Monitoring"
+    "description": "Imported from fab"
   },
   "config": {
     "version": "2.0",
-    "logicalId": "8323dfe0-6c03-a3ce-4a50-dc0604cff8ed"
+    "logicalId": "3e46dcfb-d099-b0ef-4861-4603e64229bd"
   }
 }
