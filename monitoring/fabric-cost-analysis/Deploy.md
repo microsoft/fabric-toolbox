@@ -1,6 +1,6 @@
 # Deploy
 
-🎬 Setup demo available on YouTube : [Fabric Cost Analysis](https://youtu.be/ehxiauTPvkA)
+🎬 Setup demo available on YouTube: [Fabric Cost Analysis - Deployment](https://youtu.be/ehxiauTPvkA)
 
 > Since not all users will be interested in analyzing reservations or quotas, nor in using a Data Agent on top of the FCA, we have added additional optional steps that can be followed during the initial deployment or added later.
 
@@ -10,7 +10,7 @@
 
 ### 1.1 - Cost FOCUS Data
 
->🚩 If you've already deployed [FinOps hubs](https://learn.microsoft.com/en-us/cloud-computing/finops/toolkit/hubs/finops-hubs-overview), you can plug the FCA on top and so you can skip this 1.1 steps.
+🚩 If you've already deployed [FinOps hubs](https://learn.microsoft.com/en-us/cloud-computing/finops/toolkit/hubs/finops-hubs-overview), you can plug the FCA on top and so you can skip this 1.1 steps.
 
 To create an export (Create [Cost Management exports](https://learn.microsoft.com/en-us/azure/cost-management-billing/costs/tutorial-improved-exports#create-exports)) the [Cost Management Contributor role](https://learn.microsoft.com/en-us/azure/cost-management-billing/costs/understand-work-scopes#roles-used-in-cost-management-on-rbac-scopes) will be required.
 
@@ -44,6 +44,7 @@ Once Data Lake Gen 2 storage account created here are the high levels steps to c
 - Run the export by selecting **Run now** on the export page
 
 >ℹ️ When performing the export, you have the option to retrieve one year of historical data in one-month chunks.
+> ![Historical data in one-month chunks export](./media/ChunkExport.png)
 
 ### 1.2 - (Optional) Reservation Data
 
