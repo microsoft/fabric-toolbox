@@ -57,7 +57,7 @@ To create reservation export, on the Azure portal , search for **Cost Management
 ## 4 - Enable activity in the Pipeline
 
 - Open the **Load FCA E2E** Data pipeline
-- Activate the **...** activity
+- Activate the **Load Reservations** activity
 
 ![Load FCA E2E Notebook](./media/PipelineReservation.png)
 
@@ -69,3 +69,5 @@ To create reservation export, on the Azure portal , search for **Cost Management
 - Search for the item FCA_Core_Report
 - Open the FCA_Core_Report Power BI report
 - Open the Reservation page and begin your analysis
+
+![Reservation Page](./media/ReservationPage.png)

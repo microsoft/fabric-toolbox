@@ -47,13 +47,13 @@ Once Data Lake Gen 2 storage account created here are the high levels steps to c
 >
 > ![Historical data in one-month chunks export](./media/ChunkExport.png)
 
-### 1.2 - (Optional) Reservation Data
-
-➡️ [Click here to configure reservation analysis](./Reservation.md)
-
-### 1.3 - (Optional) Azure Quota Data
+### 1.2 - (Optional) Azure Quota Data
 
 ➡️ [Click here to configure quota analysis](./Quota.md)
+
+### 1.3 - (Optional) Reservation Data
+
+➡️ [Click here to configure reservation analysis](./Reservation.md)
 
 ## 2 - Configure Fabric items
 
