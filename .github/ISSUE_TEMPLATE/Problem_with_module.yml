@@ -1,0 +1,102 @@
+name: Problem with the module
+description: If you have a problem using this module, want to report a bug, or suggest an enhancement to this module.
+labels: []
+assignees: []
+body:
+  - type: markdown
+    attributes:
+      value: |
+        TITLE: Please be descriptive not sensationalist.
+
+        Your feedback and support is greatly appreciated, thanks for contributing!
+
+        Please provide information regarding your issue under each section below.
+        **Write N/A in sections that do not apply, or if the information is not available.**
+  - type: textarea
+    id: description
+    attributes:
+      label: Problem description
+      description: Details of the scenario you tried and the problem that is occurring, or the enhancement you are suggesting.
+    validations:
+      required: true
+  - type: textarea
+    id: logs
+    attributes:
+      label: Verbose logs
+      description: |
+        Verbose logs showing the problem. **NOTE! Sensitive information should be obfuscated.** _Will be automatically formatted as plain text._
+      placeholder: |
+        Paste verbose logs here
+      render: text
+    validations:
+      required: true
+  - type: textarea
+    id: reproducible
+    attributes:
+      label: How to reproduce
+      description: Provide the steps to reproduce the problem.
+    validations:
+      required: true
+  - type: textarea
+    id: expectedBehavior
+    attributes:
+      label: Expected behavior
+      description: Describe what you expected to happen.
+    validations:
+      required: true
+  - type: textarea
+    id: currentBehavior
+    attributes:
+      label: Current behavior
+      description: Describe what actually happens.
+    validations:
+      required: true
+  - type: textarea
+    id: suggestedSolution
+    attributes:
+      label: Suggested solution
+      description: Do you have any suggestions how to solve the issue?
+    validations:
+      required: true
+  - type: textarea
+    id: targetNodeOS
+    attributes:
+      label: Operating system you are running FabricTools on
+      description: |
+        Please provide as much as possible about the node running FabricTools. _Will be automatically formatted as plain text._
+
+        To help with this information:
+        - On a Linux distribution, please provide the distribution name, version, and release. The following command can help get this information: `cat /etc/*-release && cat /proc/version`
+        - On macOS, please provide the product version and build version. The following command can help get this information: `sw_vers`
+        - On a Windows OS please provide edition, version, build, and language. The following command can help get this information: `Get-ComputerInfo -Property @('OsName','OsOperatingSystemSKU','OSArchitecture','WindowsVersion','WindowsBuildLabEx','OsLanguage','OsMuiLanguages')`
+      placeholder: |
+        Add operating system information here
+      render: text
+    validations:
+      required: true
+  - type: textarea
+    id: targetNodePS
+    attributes:
+      label: PowerShell version and build the target node is running
+      description: |
+        Please provide the version and build of PowerShell the target node is running. _Will be automatically formatted as plain text._
+
+        To help with this information, please run this command: `$PSVersionTable`
+      placeholder: |
+        Add PowerShell information here
+      render: text
+    validations:
+      required: true
+  - type: textarea
+    id: moduleVersion
+    attributes:
+      label: Module version used
+      description: |
+        Please provide the version of the FabricTools module that was used. _Will be automatically formatted as plain text._
+
+        To help with this information, please run this command: `Get-Module -Name 'FabricTools' -ListAvailable | ft Name,Version,Path`
+      placeholder: |
+        Add module information here
+      render: text
+    validations:
+      required: true

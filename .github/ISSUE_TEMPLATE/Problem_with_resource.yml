@@ -1,0 +1,47 @@
+name: Problem with a function
+description: If you have a problem, bug, or enhancement with a function in this module.
+labels: []
+assignees: []
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Please prefix the issue title (above) with the function name, e.g. 'FunctionName: Short description of my issue'!
+
+        Your feedback and support is greatly appreciated, thanks for contributing!
+  - type: textarea
+    id: description
+    attributes:
+      label: Problem description
+      description: Details of the scenario you tried and the problem that is occurring.
+    validations:
+      required: true
+  - type: textarea
+    id: logs
+    attributes:
+      label: Verbose logs
+      description: |
+        Verbose logs showing the problem. **NOTE! Sensitive information should be obfuscated.** _Will be automatically formatted as plain text._
+      placeholder: |
+        Paste verbose logs here
+      render: text
+    validations:
+      required: true
+  - type: textarea
+    id: version
+    attributes:
+      label: Module Version
+      description: |
+        The version of the FabricTools module you are using. _Will be automatically formatted as plain text._
+        To help with this information, please run this command: `Get-Module -Name 'FabricTools' | ft Name,Version,Path`
+      placeholder: |
+        Paste output here
+    validations:
+      required: true
+  - type: textarea
+    id: suggestedSolution
+    attributes:
+      label: Suggested solution
+      description: Do you have any suggestions how to solve the issue?
+    validations:
+      required: true
