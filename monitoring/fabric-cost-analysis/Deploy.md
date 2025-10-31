@@ -43,7 +43,8 @@ Once Data Lake Gen 2 storage account created here are the high levels steps to c
 - On the Review + Create tab, select **Create**
 - Run the export by selecting **Run now** on the export page
 
->ℹ️ When performing the export, you have the option to retrieve one year of historical data in one-month chunks.
+>ℹ️ When performing the export, you have the option to retrieve one year of historical data in one-month chunks:
+>
 > ![Historical data in one-month chunks export](./media/ChunkExport.png)
 
 ### 1.2 - (Optional) Reservation Data
@@ -56,7 +57,7 @@ Once Data Lake Gen 2 storage account created here are the high levels steps to c
 
 ## 2 - Configure Fabric items
 
-- Create a new workspace "FCA" (name can be changed), which is backed by a P or F-capacity
+- In Microsoft Fabric portal, create a new workspace "FCA" (name can be changed), which is backed by a capacity (Trial, P# or F#)
 - Download the ([Workspace logo](./media/FCA%20Logo%20Small.png)) and add the logo to the workspace
 - Download and import the **[00_Deploy_FCA.ipynb](./script/00_Deploy_FCA.ipynb)** Notebook into your FCA workspace ([Import existing notebooks](https://learn.microsoft.com/en-us/fabric/data-engineering/how-to-use-notebook#import-existing-notebooks))
 - Click "Run All" in the Notebook

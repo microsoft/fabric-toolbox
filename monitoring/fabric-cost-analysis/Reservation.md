@@ -2,6 +2,8 @@
 
 🎬 Reservation setup demo available on YouTube: [Fabric Cost Analysis - Reservation deployment](https://youtu.be/ZRtxJgFGfi4)
 
+🏗️ The reservation analysis is still in Preview and may receive major updates.
+
 ## 1 - Configure reservation export
 
 >ℹ️ Azure offers RBAC roles for reservations, the Reservation reader role lets users view reservations in their Microsoft Entra tenant without being able to edit them, this role is sufficient. More details are available at: https://learn.microsoft.com/en-us/azure/cost-management-billing/reservations/view-reservations
@@ -59,7 +61,7 @@ To create reservation export, on the Azure portal , search for **Cost Management
 
 ![Load FCA E2E Notebook](./media/PipelineReservation.png)
 
-- Run the Pipeline
+- Save and Run the Pipeline
 
 ## 5 - Open the report
 

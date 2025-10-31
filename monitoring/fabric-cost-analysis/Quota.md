@@ -30,11 +30,11 @@ Add credentials to connections :
 ## 3 - Enable activity and run the Pipeline
 
 - Open the **Load FCA E2E** Data pipeline
-- Activate the **...** activity
+- Activate the **Load Quotas** activity
 
 ![Load FCA E2E Notebook](./media/PipelineQuota.png)
 
-- Run the Pipeline
+- Save and Run the Pipeline
 
 ## 4 - Open the report
 
