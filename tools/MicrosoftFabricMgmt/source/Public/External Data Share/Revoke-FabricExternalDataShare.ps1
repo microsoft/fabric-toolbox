@@ -26,7 +26,7 @@
     - Author: Tiago Balabuch
 #>
 function Revoke-FabricExternalDataShare {
-    [CmdletBinding()]
+    [CmdletBinding(SupportsShouldProcess = $true, ConfirmImpact = 'High')]
     param (
         [Parameter(Mandatory = $true)]
         [ValidateNotNullOrEmpty()]
@@ -35,7 +35,7 @@ function Revoke-FabricExternalDataShare {
         [Parameter(Mandatory = $true)]
         [ValidateNotNullOrEmpty()]
         [string]$ItemId,
-        
+
         [Parameter(Mandatory = $true)]
         [ValidateNotNullOrEmpty()]
         [string]$ExternalDataShareId
@@ -45,26 +45,28 @@ function Revoke-FabricExternalDataShare {
         Write-Message -Message "Validating authentication token..." -Level Debug
         Test-TokenExpired
         Write-Message -Message "Authentication token is valid." -Level Debug
-        
-        # Construct the API endpoint URI  
+
+        # Construct the API endpoint URI
         Write-Message -Message "Constructing API endpoint URI..." -Level Debug
         $apiEndpointURI = "{0}/admin/workspaces/{1}/items/{2}/externalDataShares/{3}/revoke" -f $FabricConfig.BaseUrl, $WorkspaceId, $ItemId, $ExternalDataShareId
-                
-        $apiParams = @{
-            BaseURI = $apiEndpointURI
-            Headers = $FabricConfig.FabricHeaders
-            Method = 'Post'
-        }
-        $dataItems = Invoke-FabricAPIRequest @apiParams 
 
-        # Return the API response
-        Write-Message -Message "External data share with ID '$ExternalDataShareId' successfully revoked in workspace '$WorkspaceId', item '$ItemId'." -Level Info
-        return $dataItems
+        if ($PSCmdlet.ShouldProcess($ExternalDataShareId, "Revoke external data share for item '$ItemId' in workspace '$WorkspaceId'")) {
+            $apiParams = @{
+                BaseURI = $apiEndpointURI
+                Headers = $FabricConfig.FabricHeaders
+                Method  = 'Post'
+            }
+            $dataItems = Invoke-FabricAPIRequest @apiParams
+
+            # Return the API response
+            Write-Message -Message "External data share with ID '$ExternalDataShareId' successfully revoked in workspace '$WorkspaceId', item '$ItemId'." -Level Info
+            return $dataItems
+        }
     }
     catch {
         # Capture and log error details
         $errorDetails = $_.Exception.Message
         Write-Message -Message "Failed to retrieve External Data Shares. Error: $errorDetails" -Level Error
-    } 
- 
+    }
+
 }
