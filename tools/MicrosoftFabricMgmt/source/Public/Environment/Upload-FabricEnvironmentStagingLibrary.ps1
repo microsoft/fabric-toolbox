@@ -24,7 +24,8 @@ Author: Tiago Balabuch
 
 #>
 function Upload-FabricEnvironmentStagingLibrary {
-    [CmdletBinding()]
+    [Diagnostics.CodeAnalysis.SuppressMessage('PSUseApprovedVerbs', '')]
+    [CmdletBinding(SupportsShouldProcess = $true, ConfirmImpact = 'Medium')]
     param (
         [Parameter(Mandatory = $true)]
         [ValidateNotNullOrEmpty()]
@@ -44,20 +45,21 @@ function Upload-FabricEnvironmentStagingLibrary {
         $apiEndpointURI = "{0}/workspaces/{1}/environments/{2}/staging/libraries" -f $FabricConfig.BaseUrl, $WorkspaceId, $EnvironmentId
         Write-Message -Message "API Endpoint: $apiEndpointURI" -Level Debug
 
-        # Construct the request body
+        # Construct the request body (not yet implemented in Fabric docs)
         
-        # Make the API request
-        $apiParams = @{
-            BaseURI = $apiEndpointURI
-            Headers = $FabricConfig.FabricHeaders
-            Method = 'Post'
-            Body = $bodyJson
-        }
-        $response = Invoke-FabricAPIRequest @apiParams
+        # Make the API request (guarded by ShouldProcess)
+        if ($PSCmdlet.ShouldProcess($EnvironmentId, "Upload staging library placeholder in workspace '$WorkspaceId'")) {
+            $apiParams = @{
+                BaseURI = $apiEndpointURI
+                Headers = $FabricConfig.FabricHeaders
+                Method  = 'Post'
+            }
+            $response = Invoke-FabricAPIRequest @apiParams
 
-        # Return the API response
-        Write-Message -Message "Environment staging library uploaded successfully!" -Level Info
-        return $response
+            # Return the API response
+            Write-Message -Message "Environment staging library uploaded successfully!" -Level Info
+            return $response
+        }
     }
     catch {
         # Capture and log error details

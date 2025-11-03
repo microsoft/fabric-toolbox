@@ -32,7 +32,7 @@ Author: Tiago Balabuch
 
 #>
 function Update-FabricEnvironment {
-    [CmdletBinding()]
+    [CmdletBinding(SupportsShouldProcess = $true, ConfirmImpact = 'Medium')]
     param (
         [Parameter(Mandatory = $true)]
         [ValidateNotNullOrEmpty()]
@@ -74,18 +74,20 @@ function Update-FabricEnvironment {
         $bodyJson = $body | ConvertTo-Json
         Write-Message -Message "Request Body: $bodyJson" -Level Debug
 
-        # Make the API request
-        $apiParams = @{
-            Headers = $FabricConfig.FabricHeaders
-            BaseURI = $apiEndpointURI
-            Method = 'Patch'
-            Body = $bodyJson
-        }
-        $response = Invoke-FabricAPIRequest @apiParams 
+        # Make the API request (guarded by ShouldProcess)
+        if ($PSCmdlet.ShouldProcess($EnvironmentId, "Update Fabric environment '$EnvironmentName' in workspace '$WorkspaceId'")) {
+            $apiParams = @{
+                Headers = $FabricConfig.FabricHeaders
+                BaseURI = $apiEndpointURI
+                Method  = 'Patch'
+                Body    = $bodyJson
+            }
+            $response = Invoke-FabricAPIRequest @apiParams 
 
-        # Return the API response
-        Write-Message -Message "Environment '$EnvironmentName' updated successfully!" -Level Info
-        return $response
+            # Return the API response
+            Write-Message -Message "Environment '$EnvironmentName' updated successfully!" -Level Info
+            return $response
+        }
     }
     catch {
         # Capture and log error details

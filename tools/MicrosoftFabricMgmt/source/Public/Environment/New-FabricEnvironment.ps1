@@ -28,7 +28,7 @@ Author: Tiago Balabuch
 #>
 
 function New-FabricEnvironment {
-    [CmdletBinding()]
+    [CmdletBinding(SupportsShouldProcess = $true, ConfirmImpact = 'Medium')]
     param (
         [Parameter(Mandatory = $true)]
         [ValidateNotNullOrEmpty()]
@@ -66,18 +66,20 @@ function New-FabricEnvironment {
         $bodyJson = $body | ConvertTo-Json -Depth 2
         Write-Message -Message "Request Body: $bodyJson" -Level Debug
 
-        # Make the API request
-        $apiParams = @{
-            BaseURI = $apiEndpointURI
-            Headers = $FabricConfig.FabricHeaders
-            Method = 'Post'
-            Body = $bodyJson
-        }
-        $response = Invoke-FabricAPIRequest @apiParams
+        # Make the API request (guarded by ShouldProcess)
+        if ($PSCmdlet.ShouldProcess($EnvironmentName, "Create Fabric environment in workspace '$WorkspaceId'")) {
+            $apiParams = @{
+                BaseURI = $apiEndpointURI
+                Headers = $FabricConfig.FabricHeaders
+                Method  = 'Post'
+                Body    = $bodyJson
+            }
+            $response = Invoke-FabricAPIRequest @apiParams
 
-        # Return the API response
-        Write-Message -Message "Environment '$EnvironmentName' created successfully!" -Level Info
-        return $response
+            # Return the API response
+            Write-Message -Message "Environment '$EnvironmentName' created successfully!" -Level Info
+            return $response
+        }
     }
     catch {
         # Capture and log error details
