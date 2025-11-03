@@ -11,13 +11,24 @@ The MicrosoftFabricMgmt is a collection of PowerShell scripts designed to intera
 - [License](#license)
 
 ## Installation
-To install the MicrosoftFabricMgmt, clone the repository and import the module in your PowerShell session:
-```sh
+As with all PowerShell modules, you can either clone the repository and import the module manually, or use the PowerShell Gallery to install it directly. We recommend using the PowerShell Gallery for easier updates and management.
+
+```powershell
+# Install from PowerShell Gallery
+Install-Module -Name MicrosoftFabricMgmt
+```
+IF you prefer to clone the repository, you can do so with the following commands:
+
+```powershell
+# Clone the repository
 git clone https://github.com/microsoft/fabric-toolbox.git
+# Import the module
 Import-Module ./tools/MicrosoftFabricMgmt/MicrosoftFabricMGMT/MicrosoftFabricMgmt.psm1
 ```
 
 ## Prerequisites
+
+The MicrosoftFabricMgmt toolkit requires the Az.Accounts PowerShell modules to interact with Azure services. These will be automatically installed when you install the MicrosoftFabricMgmt module from the PowerShell Gallery.
 
 You can install the entire Azure PowerShell module or just the Az.Accounts module, which is required for this toolkit.
 
@@ -32,12 +43,6 @@ Install-Module -Name Az -Repository PSGallery -Force
 Install-Module -Name Az.Accounts -Force -AllowClobber
 ```
 
-> [!NOTE]
-> After install or update you can import the Az.Accounts module
-
-```powershell
-Import-Module Az.Accounts -Force
-```
 
 ## Configuration
 

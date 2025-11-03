@@ -1,0 +1,159 @@
+---
+####################################################
+#          ModuleBuilder Configuration             #
+####################################################
+# Path to the Module Manifest to build (where path will be resolved from)
+# SourcePath: ./Sampler/Sampler.psd1
+# Output Directory where ModuleBuilder will build the Module, relative to module manifest
+# OutputDirectory: ../output/Sampler
+BuiltModuleSubdirectory: module
+CopyPaths:
+  - en-US
+
+Encoding: UTF8
+# Can be used to manually specify module's semantic version if the preferred method of
+# using GitVersion is not available, and it is not possible to set the session environment
+# variable `$env:ModuleVersion`, nor setting the variable `$ModuleVersion`, in the
+# PowerShell session (parent scope) before running the task `build`.
+#SemVer: '99.0.0-preview1'
+
+# Suffix to add to Root module PSM1 after merge (here, the Set-Alias exporting IB tasks)
+# suffix: suffix.ps1
+# prefix: prefix.ps1
+VersionedOutputDirectory: true
+
+####################################################
+#      ModuleBuilder Submodules Configuration      #
+####################################################
+
+NestedModule:
+#  HelperSubmodule: # This is the first submodule to build into the output
+#    Path: ./*/Modules/HelperSubmodule/HelperSubmodule.psd1
+#    #  is trimmed (remove metadata & Prerelease tag) and OutputDirectory expanded (the only one)
+#    OutputDirectory: ///Modules/HelperSubmodule
+#    VersionedOutputDirectory: false
+#    AddToManifest: false
+#    SemVer:
+#    # suffix:
+#    # prefix:
+
+####################################################
+#       Sampler Pipeline Configuration             #
+####################################################
+# Defining 'Workflows' (suite of InvokeBuild tasks) to be run using their alias
+BuildWorkflow:
+  '.': # "." is the default Invoke-Build workflow. It is called when no -Tasks is specified to the build.ps1
+    - build
+    - test
+
+  build:
+    - Clean
+    - Build_Module_ModuleBuilder
+    - Build_NestedModules_ModuleBuilder
+    - Create_changelog_release_output
+
+
+  pack:
+    - build
+    - package_module_nupkg
+
+
+
+  # Defining test task to be run when invoking `./build.ps1 -Tasks test`
+  test:
+    # Uncomment to modify the PSModulePath in the test pipeline (also requires the build configuration section SetPSModulePath).
+    #- Set_PSModulePath
+    - Pester_Tests_Stop_On_Fail
+    # Use this task if pipeline uses code coverage and the module is using the
+    # pattern of Public, Private, Enum, Classes.
+    #- Convert_Pester_Coverage
+    - Pester_if_Code_Coverage_Under_Threshold
+
+  # Use this task when you have multiple parallel tests, which produce multiple
+  # code coverage files and needs to get merged into one file.
+  #merge:
+    #- Merge_CodeCoverage_Files
+
+  publish:
+    - Publish_Release_To_GitHub # Runs first, if token is expired it will fail early
+    # - Publish_GitHub_Wiki_Content
+    - publish_module_to_gallery
+    # - Create_Changelog_Branch
+
+
+####################################################
+#       PESTER  Configuration                      #
+####################################################
+
+Pester:
+  OutputFormat: NUnitXML
+  # Excludes one or more paths from being used to calculate code coverage.
+  ExcludeFromCodeCoverage:
+
+  # If no scripts are defined the default is to use all the tests under the project's
+  # tests folder or source folder (if present). Test script paths can be defined to
+  # only run tests in certain folders, or run specific test files, or can be use to
+  # specify the order tests are run.
+  Script:
+  # - tests/QA/module.tests.ps1
+  # - tests/QA
+  # - tests/Unit
+  # - tests/Integration
+  ExcludeTag:
+  #  - helpQuality
+  #  - FunctionalQuality
+  #  - TestQuality
+  Tag:
+  CodeCoverageThreshold: 0.30 # 85 # Set to 0 to bypass
+  #CodeCoverageOutputFile: JaCoCo_$OsShortName.xml
+  #CodeCoverageOutputFileEncoding: ascii
+  # Use this if code coverage should be merged from several pipeline test jobs.
+  # Any existing keys above should be replaced. See also CodeCoverage below.
+  # CodeCoverageOutputFile is the file that is created for each pipeline test job.
+  #CodeCoverageOutputFile: JaCoCo_Merge.xml
+
+# Use this to merged code coverage from several pipeline test jobs.
+# CodeCoverageFilePattern      - the pattern used to search all pipeline test job artifacts
+#                                after the file specified in CodeCoverageOutputFile.
+# CodeCoverageMergedOutputFile - the file that is created by the merge build task and
+#                                is the file that should be uploaded to code coverage services.
+#CodeCoverage:
+  #CodeCoverageFilePattern: JaCoCo_Merge.xml # the pattern used to search all pipeline test job artifacts
+  #CodeCoverageMergedOutputFile: JaCoCo_coverage.xml # the file that is created for the merged code coverage
+
+# Import ModuleBuilder tasks from a specific PowerShell module using the build
+# task's alias. Wildcard * can be used to specify all tasks that has a similar
+# prefix and or suffix. The module contain the task must be added as a required
+# module in the file RequiredModules.psd1.
+ModuleBuildTasks:
+  Sampler:
+    - '*.build.Sampler.ib.tasks'
+  Sampler.GitHubTasks:
+    - '*.ib.tasks'
+
+
+# Invoke-Build Header to be used to 'decorate' the terminal output of the tasks.
+TaskHeader: |
+  param($Path)
+  ""
+  "=" * 79
+  Write-Build Cyan "`t`t`t$($Task.Name.replace("_"," ").ToUpper())"
+  Write-Build DarkGray  "$(Get-BuildSynopsis $Task)"
+  "-" * 79
+  Write-Build DarkGray "  $Path"
+  Write-Build DarkGray "  $($Task.InvocationInfo.ScriptName):$($Task.InvocationInfo.ScriptLineNumber)"
+  ""
+####################################################
+#             Changelog Configuration              #
+####################################################
+ChangelogConfig:
+  FilesToAdd:
+    - 'CHANGELOG.md'
+  UpdateChangelogOnPrerelease: false
+
+####################################################
+#                Git Configuration                 #
+####################################################
+GitConfig:
+  UserName: Automation Bot
+  UserEmail: automation_bot@jessandrob.io

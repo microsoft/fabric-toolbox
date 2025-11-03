@@ -1,0 +1,33 @@
+**.bak
+*.local.*
+!**/README.md
+.kitchen/
+
+~*.*
+*.nupkg
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+
+# Build results
+[Oo]utput/
+
+# MSTest test Results
+[Tt]est[Rr]esult*/
+[Bb]uild[Ll]og.*
+
+# NUNIT
+*.VisualState.xml
+TestResult.xml
+
+# Visual Studio code coverage results
+*.coverage
+.vs
+.psproj
+.sln
+markdownissues.txt
+node_modules
+package-lock.json
+
+# just a comment
