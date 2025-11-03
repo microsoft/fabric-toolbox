@@ -55,13 +55,13 @@ function Write-Message {
             # Construct log message
             $logMessage = "[$timestamp] [$Level] $Message"
 
-            # Write log message to console with colors
+            # Write log message to appropriate PowerShell streams
             switch ($Level) {
-                "Message" { Write-Host $logMessage -ForegroundColor White }
-                "Info" { Write-Host $logMessage -ForegroundColor Green }
+                "Message" { Write-Information -MessageData $logMessage }
+                "Info" { Write-Information -MessageData $logMessage }
                 "Error" { Write-Error $logMessage }
-                "Warning" { Write-Warning $logMessage } 
-                "Critical" { Write-Host $logMessage -ForegroundColor Red }
+                "Warning" { Write-Warning $logMessage }
+                "Critical" { Write-Error $logMessage }
                 "Verbose" { Write-Verbose $logMessage }
                 "Debug" { Write-Debug $logMessage }
 
@@ -74,12 +74,12 @@ function Write-Message {
                 }
                 catch {
                     # Catch and log any errors when writing to file
-                    Write-Host "[ERROR] Failed to write to log file '$LogFile': $_" -ForegroundColor Red
+                    Write-Error "Failed to write to log file '$LogFile': $_"
                 }
             }
         }
         catch {
-            Write-Host "[ERROR] An unexpected error occurred: $_" -ForegroundColor Red
+            Write-Error "An unexpected error occurred: $_"
         }
     }
 }
