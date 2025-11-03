@@ -28,7 +28,7 @@
 #>
 
 function New-FabricDataPipeline {
-    [CmdletBinding()]
+    [CmdletBinding(SupportsShouldProcess = $true, ConfirmImpact = 'Medium')]
     param (
         [Parameter(Mandatory = $true)]
         [ValidateNotNullOrEmpty()]
@@ -67,18 +67,20 @@ function New-FabricDataPipeline {
         $bodyJson = $body | ConvertTo-Json -Depth 10
         Write-Message -Message "Request Body: $bodyJson" -Level Debug
 
-        # Make the API request
-        $apiParams = @{
-            BaseURI = $apiEndpointURI
-            Headers = $FabricConfig.FabricHeaders
-            Method = 'Post'
-            Body = $bodyJson
+        if ($PSCmdlet.ShouldProcess("workspace '$WorkspaceId'", "Create Data Pipeline '$DataPipelineName'")) {
+            # Make the API request
+            $apiParams = @{
+                BaseURI = $apiEndpointURI
+                Headers = $FabricConfig.FabricHeaders
+                Method = 'Post'
+                Body = $bodyJson
+            }
+            $response = Invoke-FabricAPIRequest @apiParams
+        
+            # Return the API response
+            Write-Message -Message "Data Pipeline created successfully!" -Level Info        
+            return $response
         }
-        $response = Invoke-FabricAPIRequest @apiParams
-    
-        # Return the API response
-        Write-Message -Message "Data Pipeline created successfully!" -Level Info        
-        return $response
     }
     catch {
         # Capture and log error details
