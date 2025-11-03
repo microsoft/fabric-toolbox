@@ -34,7 +34,7 @@
     Author: Tiago Balabuch
 #>
 function New-FabricApacheAirflowJob {
-    [CmdletBinding()]
+    [CmdletBinding(SupportsShouldProcess = $true, ConfirmImpact = 'Medium')]
     param (
         [Parameter(Mandatory = $true)]
         [ValidateNotNullOrEmpty()]
@@ -52,7 +52,7 @@ function New-FabricApacheAirflowJob {
         [Parameter(Mandatory = $false)]
         [ValidateNotNullOrEmpty()]
         [string]$ApacheAirflowJobPathDefinition,
-        
+
         [Parameter(Mandatory = $false)]
         [ValidateNotNullOrEmpty()]
         [string]$ApacheAirflowJobPathPlatformDefinition
@@ -128,19 +128,21 @@ function New-FabricApacheAirflowJob {
         $bodyJson = $body | ConvertTo-Json -Depth 10
         Write-Message -Message "Request Body: $bodyJson" -Level Debug
 
-        # Make the API request
-        $apiParams = @{
-            BaseURI = $apiEndpointURI
-            Headers = $FabricConfig.FabricHeaders
-            Method = 'Post'
-            Body = $bodyJson
-        }
-        $response = Invoke-FabricAPIRequest @apiParams
+        if ($PSCmdlet.ShouldProcess("workspace '$WorkspaceId'", "Create Apache Airflow Job '$ApacheAirflowJobName'")) {
+            # Make the API request
+            $apiParams = @{
+                BaseURI = $apiEndpointURI
+                Headers = $FabricConfig.FabricHeaders
+                Method = 'Post'
+                Body = $bodyJson
+            }
+            $response = Invoke-FabricAPIRequest @apiParams
 
-        # Return the API response
-        Write-Message -Message "Apache Airflow Job created successfully!" -Level Info        
-        return $response
-     
+            # Return the API response
+            Write-Message -Message "Apache Airflow Job created successfully!" -Level Info
+            return $response
+        }
+
     }
     catch {
         # Capture and log error details
