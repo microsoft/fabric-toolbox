@@ -19,7 +19,7 @@
     Author: Tiago Balabuch
 #>
 function Remove-FabricConnection {
-    [CmdletBinding()]
+    [CmdletBinding(SupportsShouldProcess = $true, ConfirmImpact = 'Medium')]
     param (
         [Parameter(Mandatory = $true)]
         [ValidateNotNullOrEmpty()]
@@ -35,22 +35,24 @@ function Remove-FabricConnection {
         $apiEndpointURI = "{0}/connections/{1}" -f $FabricConfig.BaseUrl, $ConnectionId
         Write-Message -Message "API Endpoint: $apiEndpointURI" -Level Debug
 
-        # Make the API request
-        $apiParams = @{
-            Headers = $FabricConfig.FabricHeaders
-            BaseURI = $apiEndpointURI
-            Method = 'Delete'
+        if ($PSCmdlet.ShouldProcess("Connection '$ConnectionId'", "Delete")) {
+            # Make the API request
+            $apiParams = @{
+                Headers = $FabricConfig.FabricHeaders
+                BaseURI = $apiEndpointURI
+                Method = 'Delete'
+            }
+            $response = Invoke-FabricAPIRequest @apiParams
+            
+            # Return the API response
+            Write-Message -Message "Connection '$ConnectionId' deleted successfully." -Level Info
+            return $response
         }
-        $response = Invoke-FabricAPIRequest @apiParams
-        
-        # Return the API response
-        Write-Message -Message "Connection '$ConnectionId' deleted successfully." -Level Info
-        return $response
 
     }
     catch {
         # Capture and log error details
         $errorDetails = $_.Exception.Message
-        Write-Message -Message "Failed to delete Connection '$ConnectionId' from workspace '$WorkspaceId'. Error: $errorDetails" -Level Error
+        Write-Message -Message "Failed to delete Connection '$ConnectionId'. Error: $errorDetails" -Level Error
     }
 }
