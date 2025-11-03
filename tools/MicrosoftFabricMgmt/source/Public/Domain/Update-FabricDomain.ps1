@@ -31,7 +31,7 @@ Author: Tiago Balabuch
 #>
 
 function Update-FabricDomain {
-    [CmdletBinding()]
+    [CmdletBinding(SupportsShouldProcess = $true, ConfirmImpact = 'Medium')]
     param (
         [Parameter(Mandatory = $true)]
         [ValidateNotNullOrEmpty()]
@@ -79,18 +79,20 @@ function Update-FabricDomain {
         $bodyJson = $body | ConvertTo-Json -Depth 10
         Write-Message -Message "Request Body: $bodyJson" -Level Debug
 
-        #Make the API request
-        $apiParams = @{
-            Headers = $FabricConfig.FabricHeaders
-            BaseURI = $apiEndpointURI
-            Method = 'Patch'
-            Body = $bodyJson
+        # Make the API request (guarded by ShouldProcess)
+        if ($PSCmdlet.ShouldProcess($DomainId, "Update Fabric domain '$DomainName'")) {
+            $apiParams = @{
+                Headers = $FabricConfig.FabricHeaders
+                BaseURI = $apiEndpointURI
+                Method  = 'Patch'
+                Body    = $bodyJson
+            }
+            $response = Invoke-FabricAPIRequest @apiParams 
+                
+            # Return the API response
+            Write-Message -Message "Domain '$DomainName' updated successfully!" -Level Info
+            return $response
         }
-        $response = Invoke-FabricAPIRequest @apiParams 
-            
-        # Return the API response
-        Write-Message -Message "Domain '$DomainName' updated successfully!" -Level Info
-        return $response
     }
     catch {
         # Capture and log error details

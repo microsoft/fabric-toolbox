@@ -24,7 +24,8 @@ Author: Tiago Balabuch
 #>
 
 function Assign-FabricDomainWorkspaceByCapacity {
-    [CmdletBinding()]
+    [Diagnostics.CodeAnalysis.SuppressMessage('PSUseApprovedVerbs', '')]
+    [CmdletBinding(SupportsShouldProcess = $true, ConfirmImpact = 'Medium')]
     param (
         [Parameter(Mandatory = $true)]
         [ValidateNotNullOrEmpty()]
@@ -54,18 +55,20 @@ function Assign-FabricDomainWorkspaceByCapacity {
         $bodyJson = $body | ConvertTo-Json -Depth 2
         Write-Message -Message "Request Body: $bodyJson" -Level Debug
 
-        # Make the API request
-        $apiParams = @{
-            BaseURI = $apiEndpointURI
-            Headers = $FabricConfig.FabricHeaders
-            Method = 'Post'
-            Body = $bodyJson
-        }
-        $response = Invoke-FabricAPIRequest @apiParams
+        # Make the API request (guarded by ShouldProcess)
+        if ($PSCmdlet.ShouldProcess($DomainId, 'Assign workspaces to domain by capacities')) {
+            $apiParams = @{
+                BaseURI = $apiEndpointURI
+                Headers = $FabricConfig.FabricHeaders
+                Method  = 'Post'
+                Body    = $bodyJson
+            }
+            $response = Invoke-FabricAPIRequest @apiParams
 
-        # Return the API response
-        Write-Message -Message "Assigning domain workspaces by capacity completed successfully!" -Level Info
-        return $response
+            # Return the API response
+            Write-Message -Message "Assigning domain workspaces by capacity completed successfully!" -Level Info
+            return $response
+        }
     }
     catch {
         # Capture and log error details

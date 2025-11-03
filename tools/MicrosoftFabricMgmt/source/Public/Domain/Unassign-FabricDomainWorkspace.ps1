@@ -32,7 +32,8 @@ Author: Tiago Balabuch
 
 #>
 function Unassign-FabricDomainWorkspace {
-    [CmdletBinding()]
+    [Diagnostics.CodeAnalysis.SuppressMessage('PSUseApprovedVerbs', '')]
+    [CmdletBinding(SupportsShouldProcess = $true, ConfirmImpact = 'Medium')]
     param (
         [Parameter(Mandatory = $true)]
         [ValidateNotNullOrEmpty()]
@@ -67,18 +68,20 @@ function Unassign-FabricDomainWorkspace {
         Write-Message -Message "API Endpoint: $apiEndpointURI" -Level Debug
         Write-Message -Message "Request Body: $bodyJson" -Level Debug
 
-        # Make the API request 
-        $apiParams = @{
-            BaseURI = $apiEndpointURI
-            Headers = $FabricConfig.FabricHeaders
-            Method = 'Post'
-            Body = $bodyJson
+        # Make the API request (guarded by ShouldProcess)
+        if ($PSCmdlet.ShouldProcess($DomainId, 'Unassign workspaces from domain')) {
+            $apiParams = @{
+                BaseURI = $apiEndpointURI
+                Headers = $FabricConfig.FabricHeaders
+                Method  = 'Post'
+                Body    = $bodyJson
+            }
+            $response = Invoke-FabricAPIRequest @apiParams
+            
+            # Return the API response
+            Write-Message -Message "Successfully unassigned workspaces to the domain with ID '$DomainId'." -Level Info
+            return $response
         }
-        $response = Invoke-FabricAPIRequest @apiParams
-        
-        # Return the API response
-        Write-Message -Message "Successfully unassigned workspaces to the domain with ID '$DomainId'." -Level Info
-        return $response
     }
     catch {
         # Capture and log error details

@@ -28,7 +28,7 @@ Author: Tiago Balabuch
 #>
 
 function New-FabricDomain {
-    [CmdletBinding()]
+    [CmdletBinding(SupportsShouldProcess = $true, ConfirmImpact = 'Medium')]
     param (
         [Parameter(Mandatory = $true)]
         [ValidateNotNullOrEmpty()]
@@ -71,18 +71,20 @@ function New-FabricDomain {
         $bodyJson = $body | ConvertTo-Json -Depth 2
         Write-Message -Message "Request Body: $bodyJson" -Level Debug
 
-        # Make the API request
-        $apiParams = @{
-            BaseURI = $apiEndpointURI
-            Headers = $FabricConfig.FabricHeaders
-            Method = 'Post'
-            Body = $bodyJson
+        # Make the API request (guarded by ShouldProcess)
+        if ($PSCmdlet.ShouldProcess($DomainName, 'Create Fabric domain')) {
+            $apiParams = @{
+                BaseURI = $apiEndpointURI
+                Headers = $FabricConfig.FabricHeaders
+                Method  = 'Post'
+                Body    = $bodyJson
+            }
+            $response = Invoke-FabricAPIRequest @apiParams
+
+            # Return the API response
+            Write-Message -Message "Domain created successfully!" -Level Info        
+            return $response
         }
-        $response = Invoke-FabricAPIRequest @apiParams
-       
-        # Return the API response
-        Write-Message -Message "Domain created successfully!" -Level Info        
-        return $response
     }
     catch {
         # Capture and log error details

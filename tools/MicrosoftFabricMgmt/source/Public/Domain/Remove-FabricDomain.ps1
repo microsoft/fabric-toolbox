@@ -22,7 +22,7 @@ Author: Tiago Balabuch
 #>
 
 function Remove-FabricDomain {
-    [CmdletBinding()]
+    [CmdletBinding(SupportsShouldProcess = $true, ConfirmImpact = 'High')]
     param (
         [Parameter(Mandatory = $true)]
         [ValidateNotNullOrEmpty()]
@@ -39,17 +39,19 @@ function Remove-FabricDomain {
         $apiEndpointURI = "{0}/admin/domains/{1}" -f $FabricConfig.BaseUrl, $DomainId
         Write-Message -Message "API Endpoint: $apiEndpointURI" -Level Debug
 
-        # Make the API request
-        $apiParams = @{
-            Headers = $FabricConfig.FabricHeaders
-            BaseURI = $apiEndpointURI
-            Method = 'Delete'
-        }
-        $response = Invoke-FabricAPIRequest @apiParams 
+        # Make the API request (guarded by ShouldProcess)
+        if ($PSCmdlet.ShouldProcess($DomainId, 'Delete Fabric domain')) {
+            $apiParams = @{
+                Headers = $FabricConfig.FabricHeaders
+                BaseURI = $apiEndpointURI
+                Method  = 'Delete'
+            }
+            $response = Invoke-FabricAPIRequest @apiParams 
 
-        # Return the API response
-        Write-Message -Message "Domain '$DomainId' deleted successfully!" -Level Info
-        return $response
+            # Return the API response
+            Write-Message -Message "Domain '$DomainId' deleted successfully!" -Level Info
+            return $response
+        }
     }
     catch {
         # Capture and log error details

@@ -24,7 +24,8 @@ Author: Tiago Balabuch
 #>
 
 function Assign-FabricDomainWorkspaceById {
-    [CmdletBinding()]
+    [Diagnostics.CodeAnalysis.SuppressMessage('PSUseApprovedVerbs', '')]
+    [CmdletBinding(SupportsShouldProcess = $true, ConfirmImpact = 'Medium')]
     param (
         [Parameter(Mandatory = $true)]
         [ValidateNotNullOrEmpty()]
@@ -54,18 +55,20 @@ function Assign-FabricDomainWorkspaceById {
         $bodyJson = $body | ConvertTo-Json -Depth 2
         Write-Message -Message "Request Body: $bodyJson" -Level Debug
 
-        #  Make the API request
-        $apiParams = @{
-            BaseURI = $apiEndpointURI
-            Headers = $FabricConfig.FabricHeaders
-            Method = 'Post'
-            Body = $bodyJson
-        }
-        $response = Invoke-FabricAPIRequest @apiParams
+        #  Make the API request (guarded by ShouldProcess)
+        if ($PSCmdlet.ShouldProcess($DomainId, 'Assign workspaces to domain by IDs')) {
+            $apiParams = @{
+                BaseURI = $apiEndpointURI
+                Headers = $FabricConfig.FabricHeaders
+                Method  = 'Post'
+                Body    = $bodyJson
+            }
+            $response = Invoke-FabricAPIRequest @apiParams
 
-        # Return the API response
-        Write-Message -Message "Successfully assigned workspaces to the domain with ID '$DomainId'." -Level Info
-        return $response
+            # Return the API response
+            Write-Message -Message "Successfully assigned workspaces to the domain with ID '$DomainId'." -Level Info
+            return $response
+        }
     }
     catch {
         # Capture and log error details

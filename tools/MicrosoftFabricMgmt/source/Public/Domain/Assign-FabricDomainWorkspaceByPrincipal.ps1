@@ -29,7 +29,8 @@ Author: Tiago Balabuch
 #>
 
 function Assign-FabricDomainWorkspaceByPrincipal {
-    [CmdletBinding()]
+    [Diagnostics.CodeAnalysis.SuppressMessage('PSUseApprovedVerbs', '')]
+    [CmdletBinding(SupportsShouldProcess = $true, ConfirmImpact = 'Medium')]
     param (
         [Parameter(Mandatory = $true)]
         [ValidateNotNullOrEmpty()]
@@ -66,18 +67,19 @@ function Assign-FabricDomainWorkspaceByPrincipal {
         $bodyJson = $body | ConvertTo-Json -Depth 2
         Write-Message -Message "Request Body: $bodyJson" -Level Debug
 
-        # Make the API request
-        $apiParams = @{
-            BaseURI = $apiEndpointURI
-            Headers = $FabricConfig.FabricHeaders
-            Method = 'Post'
-            Body = $bodyJson
-        }
-        Invoke-FabricAPIRequest @apiParams
+        # Make the API request (guarded by ShouldProcess)
+        if ($PSCmdlet.ShouldProcess($DomainId, 'Assign workspaces to domain by principals')) {
+            $apiParams = @{
+                BaseURI = $apiEndpointURI
+                Headers = $FabricConfig.FabricHeaders
+                Method  = 'Post'
+                Body    = $bodyJson
+            }
+            $null = Invoke-FabricAPIRequest @apiParams
 
-        # Return the API response
-        Write-Message -Message "Assigning domain workspaces by principal completed successfully!" -Level Info
-       
+            # Return the API response
+            Write-Message -Message "Assigning domain workspaces by principal completed successfully!" -Level Info
+        }
     }
     catch {
         # Capture and log error details
