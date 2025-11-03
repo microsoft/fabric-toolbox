@@ -29,7 +29,7 @@
     Author: Tiago Balabuch
 #>
 function Update-FabricCopyJob {
-    [CmdletBinding()]
+    [CmdletBinding(SupportsShouldProcess = $true, ConfirmImpact = 'Medium')]
     param (
         [Parameter(Mandatory = $true)]
         [ValidateNotNullOrEmpty()]
@@ -71,17 +71,19 @@ function Update-FabricCopyJob {
         $bodyJson = $body | ConvertTo-Json
         Write-Message -Message "Request Body: $bodyJson" -Level Debug
         
-        # Make the API request
-        $apiParams = @{
-            Headers = $FabricConfig.FabricHeaders
-            BaseURI = $apiEndpointURI
-            Method = 'Patch'
-            Body = $bodyJson
-        }
-        $response = Invoke-FabricAPIRequest @apiParams 
+        if ($PSCmdlet.ShouldProcess("Copy Job '$CopyJobId' in workspace '$WorkspaceId'", "Update properties")) {
+            # Make the API request
+            $apiParams = @{
+                Headers = $FabricConfig.FabricHeaders
+                BaseURI = $apiEndpointURI
+                Method = 'Patch'
+                Body = $bodyJson
+            }
+            $response = Invoke-FabricAPIRequest @apiParams 
 
-        Write-Message -Message "Copy Job '$CopyJobName' updated successfully!" -Level Info
-        return $response
+            Write-Message -Message "Copy Job '$CopyJobName' updated successfully!" -Level Info
+            return $response
+        }
     }
     catch {
         # Handle and log errors

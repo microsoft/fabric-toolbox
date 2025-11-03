@@ -38,7 +38,7 @@ Author: Tiago Balabuch
 #>
 
 function Update-FabricCopyJobDefinition {
-    [CmdletBinding()]
+    [CmdletBinding(SupportsShouldProcess = $true, ConfirmImpact = 'Medium')]
     param (
         [Parameter(Mandatory = $true)]
         [ValidateNotNullOrEmpty()]
@@ -63,12 +63,12 @@ function Update-FabricCopyJobDefinition {
         Write-Message -Message "Token validation completed." -Level Debug
 
         # Step 2: Construct the API URL
-        $apiEndpointUrl = "{0}/workspaces/{1}/copyJobs/{2}/updateDefinition" -f $FabricConfig.BaseUrl, $WorkspaceId, $CopyJobId
+        $apiEndpointURI = "{0}/workspaces/{1}/copyJobs/{2}/updateDefinition" -f $FabricConfig.BaseUrl, $WorkspaceId, $CopyJobId
 
         if ($CopyJobPathPlatformDefinition) {
-            $apiEndpointUrl = "?updateMetadata=true" -f $apiEndpointUrl 
+            $apiEndpointURI = "$apiEndpointURI?updateMetadata=true"
         }
-        Write-Message -Message "API Endpoint: $apiEndpointUrl" -Level Debug
+        Write-Message -Message "API Endpoint: $apiEndpointURI" -Level Debug
 
         # Step 3: Construct the request body
         $body = @{
@@ -113,17 +113,19 @@ function Update-FabricCopyJobDefinition {
         $bodyJson = $body | ConvertTo-Json -Depth 10
         Write-Message -Message "Request Body: $bodyJson" -Level Debug
 
-        # Step 4: Make the API request
-        $apiParams = @{
-            BaseURI = $apiEndpointURI
-            Headers = $FabricConfig.FabricHeaders
-            Method = 'Post'
-            Body = $bodyJson
-        }
-        $response = Invoke-FabricAPIRequest @apiParams
+        if ($PSCmdlet.ShouldProcess("Copy Job '$CopyJobId' in workspace '$WorkspaceId'", "Update definition/metadata")) {
+            # Step 4: Make the API request
+            $apiParams = @{
+                BaseURI = $apiEndpointURI
+                Headers = $FabricConfig.FabricHeaders
+                Method = 'Post'
+                Body = $bodyJson
+            }
+            $response = Invoke-FabricAPIRequest @apiParams
 
-       Write-Message -Message "Successfully updated the definition for Copy Job with ID '$CopyJobId' in workspace '$WorkspaceId'." -Level Info  
-        return $response
+            Write-Message -Message "Successfully updated the definition for Copy Job with ID '$CopyJobId' in workspace '$WorkspaceId'." -Level Info  
+            return $response
+        }
     }
     catch {
         # Step 6: Handle and log errors
