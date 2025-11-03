@@ -1,0 +1,47 @@
+{
+    "powershell.codeFormatting.openBraceOnSameLine": false,
+    "powershell.codeFormatting.newLineAfterOpenBrace": true,
+    "powershell.codeFormatting.newLineAfterCloseBrace": true,
+    "powershell.codeFormatting.whitespaceBeforeOpenBrace": true,
+    "powershell.codeFormatting.whitespaceBeforeOpenParen": true,
+    "powershell.codeFormatting.whitespaceAroundOperator": true,
+    "powershell.codeFormatting.whitespaceAfterSeparator": true,
+    "powershell.codeFormatting.ignoreOneLineBlock": false,
+    "powershell.codeFormatting.pipelineIndentationStyle": "IncreaseIndentationAfterEveryPipeline",
+    "powershell.codeFormatting.preset": "Custom",
+    "powershell.codeFormatting.alignPropertyValuePairs": true,
+    "powershell.developer.bundledModulesPath": "${cwd}/output/RequiredModules",
+    "powershell.scriptAnalysis.settingsPath": ".vscode\\analyzersettings.psd1",
+    "powershell.scriptAnalysis.enable": true,
+    "files.trimTrailingWhitespace": true,
+    "files.trimFinalNewlines": true,
+    "files.insertFinalNewline": true,
+    "files.associations": {
+        "*.ps1xml": "xml"
+    },
+    "cSpell.words": [
+        "Balabuch",
+        "buildhelpers",
+        "COMPANYNAME",
+        "endregion",
+        "gitversion",
+        "icontains",
+        "ICONURI",
+        "keepachangelog",
+        "LICENSEURI",
+        "notin",
+        "PROJECTURI",
+        "pscmdlet",
+        "RELEASENOTES",
+        "steppable"
+    ],
+    "[markdown]": {
+        "files.trimTrailingWhitespace": false,
+        "files.encoding": "utf8"
+    },
+    "github.copilot.chat.commitMessageGeneration.instructions": [
+        {
+            "file": ".github/copilot-commit-message-instructions.md"
+        }
+    ]
+}
