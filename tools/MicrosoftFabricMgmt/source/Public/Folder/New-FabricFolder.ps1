@@ -30,7 +30,7 @@
     Author: Tiago Balabuch
 #>
 function New-FabricFolder {
-    [CmdletBinding()]
+    [CmdletBinding(SupportsShouldProcess = $true, ConfirmImpact = 'Medium')]
     param (
         [Parameter(Mandatory = $true)]
         [ValidateNotNullOrEmpty()]
@@ -92,18 +92,20 @@ function New-FabricFolder {
         $bodyJson = $body | ConvertTo-Json -Depth 4
         Write-Message -Message "Request Body: $bodyJson" -Level Debug
 
-        # Make the API request
-        $apiParams = @{
-            BaseURI = $apiEndpointURI
-            Headers = $FabricConfig.FabricHeaders
-            Method  = 'Post'
-            Body    = $bodyJson
-        }
-        $response = Invoke-FabricAPIRequest @apiParams
+        # Make the API request (guarded by ShouldProcess)
+        if ($PSCmdlet.ShouldProcess($FolderName, "Create folder in workspace '$WorkspaceId'")) {
+            $apiParams = @{
+                BaseURI = $apiEndpointURI
+                Headers = $FabricConfig.FabricHeaders
+                Method  = 'Post'
+                Body    = $bodyJson
+            }
+            $response = Invoke-FabricAPIRequest @apiParams
 
-        # Return the API response
-        Write-Message -Message "Folder created successfully!" -Level Info        
-        return $response
+            # Return the API response
+            Write-Message -Message "Folder created successfully!" -Level Info        
+            return $response
+        }
      
     }
     catch {

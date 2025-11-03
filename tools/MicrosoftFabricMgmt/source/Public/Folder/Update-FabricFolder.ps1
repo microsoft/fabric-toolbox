@@ -28,7 +28,7 @@
     Author: Tiago Balabuch
 #>
 function Update-FabricFolder {
-    [CmdletBinding()]
+    [CmdletBinding(SupportsShouldProcess = $true, ConfirmImpact = 'Medium')]
     param (
         [Parameter(Mandatory = $true)]
         [ValidateNotNullOrEmpty()]
@@ -85,17 +85,19 @@ function Update-FabricFolder {
         $bodyJson = $body | ConvertTo-Json
         Write-Message -Message "Request Body: $bodyJson" -Level Debug
         
-        # Make the API request
-        $apiParams = @{
-            Headers = $FabricConfig.FabricHeaders
-            BaseURI = $apiEndpointURI
-            Method  = 'Patch'
-            Body    = $bodyJson
+        if ($PSCmdlet.ShouldProcess($FolderId, "Update folder '$FolderName' in workspace '$WorkspaceId'")) {
+            # Make the API request
+            $apiParams = @{
+                Headers = $FabricConfig.FabricHeaders
+                BaseURI = $apiEndpointURI
+                Method  = 'Patch'
+                Body    = $bodyJson
+            }
+            $response = Invoke-FabricAPIRequest @apiParams 
+            # Return the API response
+            Write-Message -Message "Folder '$FolderName' updated successfully!" -Level Info
+            return $response
         }
-        $response = Invoke-FabricAPIRequest @apiParams 
-        # Return the API response
-        Write-Message -Message "Folder '$FolderName' updated successfully!" -Level Info
-        return $response
     }
     catch {
         # Capture and log error details
