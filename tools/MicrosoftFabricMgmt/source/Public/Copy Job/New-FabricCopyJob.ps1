@@ -31,7 +31,7 @@
     Author: Tiago Balabuch
 #>
 function New-FabricCopyJob {
-    [CmdletBinding()]
+    [CmdletBinding(SupportsShouldProcess = $true, ConfirmImpact = 'Medium')]
     param (
         [Parameter(Mandatory = $true)]
         [ValidateNotNullOrEmpty()]
@@ -125,18 +125,20 @@ function New-FabricCopyJob {
         $bodyJson = $body | ConvertTo-Json -Depth 10
         Write-Message -Message "Request Body: $bodyJson" -Level Debug
 
-        # Make the API request
-        $apiParams = @{
-            BaseURI = $apiEndpointURI
-            Headers = $FabricConfig.FabricHeaders
-            Method = 'Post'
-            Body = $bodyJson
-        }
-        $response = Invoke-FabricAPIRequest @apiParams
+        if ($PSCmdlet.ShouldProcess("workspace '$WorkspaceId'", "Create Copy Job '$CopyJobName'")) {
+            # Make the API request
+            $apiParams = @{
+                BaseURI = $apiEndpointURI
+                Headers = $FabricConfig.FabricHeaders
+                Method = 'Post'
+                Body = $bodyJson
+            }
+            $response = Invoke-FabricAPIRequest @apiParams
 
-        # Return the API response
-        Write-Message -Message "Copy Job created successfully!" -Level Info        
-        return $response
+            # Return the API response
+            Write-Message -Message "Copy Job created successfully!" -Level Info        
+            return $response
+        }
      
     }
     catch {

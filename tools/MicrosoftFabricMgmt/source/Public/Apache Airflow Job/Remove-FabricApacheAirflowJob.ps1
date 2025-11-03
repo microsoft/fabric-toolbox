@@ -22,7 +22,7 @@
     - Author: Tiago Balabuch
 #>
 function Remove-FabricApacheAirflowJob {
-    [CmdletBinding()]
+    [CmdletBinding(SupportsShouldProcess = $true, ConfirmImpact = 'Medium')]
     param (
         [Parameter(Mandatory = $true)]
         [ValidateNotNullOrEmpty()]
@@ -42,17 +42,19 @@ function Remove-FabricApacheAirflowJob {
         $apiEndpointURI = "{0}/workspaces/{1}/ApacheAirflowJobs/{2}" -f $FabricConfig.BaseUrl, $WorkspaceId, $ApacheAirflowJobId
         Write-Message -Message "API Endpoint: $apiEndpointURI" -Level Debug
 
-        # Make the API request
-        $apiParams = @{
-            Headers = $FabricConfig.FabricHeaders
-            BaseURI = $apiEndpointURI
-            Method = 'Delete'
-        }
-        $response = Invoke-FabricAPIRequest @apiParams 
+        if ($PSCmdlet.ShouldProcess("Apache Airflow Job '$ApacheAirflowJobId' in workspace '$WorkspaceId'", "Delete")) {
+            # Make the API request
+            $apiParams = @{
+                Headers = $FabricConfig.FabricHeaders
+                BaseURI = $apiEndpointURI
+                Method = 'Delete'
+            }
+            $response = Invoke-FabricAPIRequest @apiParams
 
-             # Return the API response   
-        Write-Message -Message "Apache Airflow Job '$ApacheAirflowJobId' deleted successfully from workspace '$WorkspaceId'." -Level Info
-        return $response
+            # Return the API response
+            Write-Message -Message "Apache Airflow Job '$ApacheAirflowJobId' deleted successfully from workspace '$WorkspaceId'." -Level Info
+            return $response
+        }
 
     }
     catch {

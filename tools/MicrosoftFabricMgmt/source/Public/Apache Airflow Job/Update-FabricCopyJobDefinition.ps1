@@ -38,7 +38,7 @@ Author: Tiago Balabuch
 #>
 
 function Update-FabricApacheAirflowJobDefinition {
-    [CmdletBinding()]
+    [CmdletBinding(SupportsShouldProcess = $true, ConfirmImpact = 'Medium')]
     param (
         [Parameter(Mandatory = $true)]
         [ValidateNotNullOrEmpty()]
@@ -63,12 +63,12 @@ function Update-FabricApacheAirflowJobDefinition {
         Write-Message -Message "Token validation completed." -Level Debug
 
         # Step 2: Construct the API URL
-        $apiEndpointUrl = "{0}/workspaces/{1}/ApacheAirflowJobs/{2}/updateDefinition" -f $FabricConfig.BaseUrl, $WorkspaceId, $ApacheAirflowJobId
+        $apiEndpointURI = "{0}/workspaces/{1}/ApacheAirflowJobs/{2}/updateDefinition" -f $FabricConfig.BaseUrl, $WorkspaceId, $ApacheAirflowJobId
 
         if ($ApacheAirflowJobPathPlatformDefinition) {
-            $apiEndpointUrl = "?updateMetadata=true" -f $apiEndpointUrl 
+            $apiEndpointURI = "$apiEndpointURI?updateMetadata=true"
         }
-        Write-Message -Message "API Endpoint: $apiEndpointUrl" -Level Debug
+        Write-Message -Message "API Endpoint: $apiEndpointURI" -Level Debug
 
         # Step 3: Construct the request body
         $body = @{
@@ -113,17 +113,19 @@ function Update-FabricApacheAirflowJobDefinition {
         $bodyJson = $body | ConvertTo-Json -Depth 10
         Write-Message -Message "Request Body: $bodyJson" -Level Debug
 
-        # Step 4: Make the API request
-        $apiParams = @{
-            BaseURI = $apiEndpointURI
-            Headers = $FabricConfig.FabricHeaders
-            Method = 'Post'
-            Body = $bodyJson
-        }
-        $response = Invoke-FabricAPIRequest @apiParams
+        if ($PSCmdlet.ShouldProcess("Apache Airflow Job '$ApacheAirflowJobId' in workspace '$WorkspaceId'", "Update definition/metadata")) {
+            # Step 4: Make the API request
+            $apiParams = @{
+                BaseURI = $apiEndpointURI
+                Headers = $FabricConfig.FabricHeaders
+                Method = 'Post'
+                Body = $bodyJson
+            }
+            $response = Invoke-FabricAPIRequest @apiParams
 
-       Write-Message -Message "Successfully updated the definition for Apache Airflow Job with ID '$ApacheAirflowJobId' in workspace '$WorkspaceId'." -Level Info  
-        return $response
+            Write-Message -Message "Successfully updated the definition for Apache Airflow Job with ID '$ApacheAirflowJobId' in workspace '$WorkspaceId'." -Level Info  
+            return $response
+        }
     }
     catch {
         # Step 6: Handle and log errors

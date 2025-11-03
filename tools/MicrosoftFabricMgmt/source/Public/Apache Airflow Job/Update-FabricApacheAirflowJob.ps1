@@ -28,12 +28,12 @@
     - Author: Tiago Balabuch
 #>
 function Update-FabricApacheAirflowJob {
-    [CmdletBinding()]
+    [CmdletBinding(SupportsShouldProcess = $true, ConfirmImpact = 'Medium')]
     param (
         [Parameter(Mandatory = $true)]
         [ValidateNotNullOrEmpty()]
-        [string]$WorkspaceId,   
-        
+        [string]$WorkspaceId,
+
         [Parameter(Mandatory = $true)]
         [ValidateNotNullOrEmpty()]
         [string]$ApacheAirflowJobId,
@@ -56,7 +56,7 @@ function Update-FabricApacheAirflowJob {
         # Construct the API endpoint URI
         $apiEndpointURI = "{0}/workspaces/{1}/ApacheAirflowJobs/{2}" -f $FabricConfig.BaseUrl, $WorkspaceId, $ApacheAirflowJobId
         Write-Message -Message "API Endpoint: $apiEndpointURI" -Level Debug
-        
+
         # Construct the request body
         $body = @{
             displayName = $ApacheAirflowJobName
@@ -69,19 +69,21 @@ function Update-FabricApacheAirflowJob {
         # Convert the body to JSON
         $bodyJson = $body | ConvertTo-Json
         Write-Message -Message "Request Body: $bodyJson" -Level Debug
-        
-        # Make the API request
-        $apiParams = @{
-            Headers = $FabricConfig.FabricHeaders
-            BaseURI = $apiEndpointURI
-            Method = 'Patch'
-            Body = $bodyJson
-        }
-        $response = Invoke-FabricAPIRequest @apiParams 
 
-        # Return the API response
-        Write-Message -Message "Apache Airflow Job '$ApacheAirflowJobName' updated successfully!" -Level Info
-        return $response
+        if ($PSCmdlet.ShouldProcess("Apache Airflow Job '$ApacheAirflowJobId' in workspace '$WorkspaceId'", "Update properties")) {
+            # Make the API request
+            $apiParams = @{
+                Headers = $FabricConfig.FabricHeaders
+                BaseURI = $apiEndpointURI
+                Method = 'Patch'
+                Body = $bodyJson
+            }
+            $response = Invoke-FabricAPIRequest @apiParams
+
+            # Return the API response
+            Write-Message -Message "Apache Airflow Job '$ApacheAirflowJobName' updated successfully!" -Level Info
+            return $response
+        }
     }
     catch {
         # Handle and log errors
