@@ -28,16 +28,16 @@ Updates both the name and description of the Eventstream "Eventstream123".
 - Requires `$FabricConfig` global configuration, including `BaseUrl` and `FabricHeaders`.
 - Calls `Test-TokenExpired` to ensure token validity before making the API request.
 
-Author: Tiago Balabuch  
+Author: Tiago Balabuch
 
 #>
 function Update-FabricEventstream {
-    [CmdletBinding()]
+    [CmdletBinding(SupportsShouldProcess = $true, ConfirmImpact = 'Medium')]
     param (
         [Parameter(Mandatory = $true)]
         [ValidateNotNullOrEmpty()]
-        [string]$WorkspaceId,   
-        
+        [string]$WorkspaceId,
+
         [Parameter(Mandatory = $true)]
         [ValidateNotNullOrEmpty()]
         [string]$EventstreamId,
@@ -75,18 +75,20 @@ function Update-FabricEventstream {
         $bodyJson = $body | ConvertTo-Json
         Write-Message -Message "Request Body: $bodyJson" -Level Debug
 
-        # Make the API request
-        $apiParams = @{
-            Headers = $FabricConfig.FabricHeaders
-            BaseURI = $apiEndpointURI
-            Method = 'Patch'
-            Body = $bodyJson
-        }
-        $response = Invoke-FabricAPIRequest @apiParams 
+        if ($PSCmdlet.ShouldProcess($EventstreamId, "Update Eventstream '$EventstreamName' in workspace '$WorkspaceId'")) {
+            # Make the API request
+            $apiParams = @{
+                Headers = $FabricConfig.FabricHeaders
+                BaseURI = $apiEndpointURI
+                Method  = 'Patch'
+                Body    = $bodyJson
+            }
+            $response = Invoke-FabricAPIRequest @apiParams
 
-        # Return the API response
-        Write-Message -Message "Eventstream '$EventstreamName' updated successfully!" -Level Info
-        return $response
+            # Return the API response
+            Write-Message -Message "Eventstream '$EventstreamName' updated successfully!" -Level Info
+            return $response
+        }
     }
     catch {
         # Capture and log error details

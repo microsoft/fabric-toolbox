@@ -20,12 +20,12 @@ Deletes the Eventstream with ID "67890" from workspace "12345".
 - Requires `$FabricConfig` global configuration, including `BaseUrl` and `FabricHeaders`.
 - Validates token expiration before making the API request.
 
-Author: Tiago Balabuch  
+Author: Tiago Balabuch
 
 #>
 
 function Remove-FabricEventstream {
-    [CmdletBinding()]
+    [CmdletBinding(SupportsShouldProcess = $true, ConfirmImpact = 'High')]
     param (
         [Parameter(Mandatory = $true)]
         [ValidateNotNullOrEmpty()]
@@ -46,17 +46,19 @@ function Remove-FabricEventstream {
         $apiEndpointURI = "{0}/workspaces/{1}/eventstreams/{2}" -f $FabricConfig.BaseUrl, $WorkspaceId, $EventstreamId
         Write-Message -Message "API Endpoint: $apiEndpointURI" -Level Debug
 
-        # Make the API request
-        $apiParams = @{
-            Headers = $FabricConfig.FabricHeaders
-            BaseURI = $apiEndpointURI
-            Method = 'Delete'
+        if ($PSCmdlet.ShouldProcess($EventstreamId, "Delete Eventstream in workspace '$WorkspaceId'")) {
+            # Make the API request
+            $apiParams = @{
+                Headers = $FabricConfig.FabricHeaders
+                BaseURI = $apiEndpointURI
+                Method  = 'Delete'
+            }
+            $response = Invoke-FabricAPIRequest @apiParams
+
+            # Return the API response
+            Write-Message -Message "Eventstream '$EventstreamId' deleted successfully from workspace '$WorkspaceId'." -Level Info
+            return $response
         }
-        $response = Invoke-FabricAPIRequest @apiParams 
-        
-        # Return the API response
-        Write-Message -Message "Eventstream '$EventstreamId' deleted successfully from workspace '$WorkspaceId'." -Level Info
-        return $response
     }
     catch {
         # Capture and log error details

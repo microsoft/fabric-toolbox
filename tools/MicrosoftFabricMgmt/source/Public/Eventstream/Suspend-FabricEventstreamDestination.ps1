@@ -27,7 +27,7 @@ Tiago Balabuch
 #>
 
 function Suspend-FabricEventstreamDestination {
-    [CmdletBinding()]
+    [CmdletBinding(SupportsShouldProcess = $true, ConfirmImpact = 'Medium')]
     param (
         [Parameter(Mandatory = $true)]
         [ValidateNotNullOrEmpty()]
@@ -47,21 +47,23 @@ function Suspend-FabricEventstreamDestination {
         Test-TokenExpired
         Write-Message -Message "Authentication token is valid." -Level Debug
 
-        # Construct the API endpoint URI 
+        # Construct the API endpoint URI
         $apiEndpointURI = "{0}/workspaces/{1}/eventstreams/{2}/destinations/{3}/pause" -f $FabricConfig.BaseUrl, $WorkspaceId, $EventstreamId, $DestinationId
         Write-Message -Message "API Endpoint: $apiEndpointURI" -Level Debug
 
-        # Make the API request
-        $apiParams = @{
-            BaseURI = $apiEndpointURI
-            Headers = $FabricConfig.FabricHeaders
-            Method  = 'Post'
+        if ($PSCmdlet.ShouldProcess($DestinationId, "Pause Eventstream destination in workspace '$WorkspaceId' (Eventstream '$EventstreamId')")) {
+            # Make the API request
+            $apiParams = @{
+                BaseURI = $apiEndpointURI
+                Headers = $FabricConfig.FabricHeaders
+                Method  = 'Post'
+            }
+            $response = Invoke-FabricAPIRequest @apiParams
+
+            # Return the API response
+            Write-Message -Message "Eventstream '$EventstreamId' destination '$DestinationId' paused successfully!" -Level Info
+            return $response
         }
-        $response = Invoke-FabricAPIRequest @apiParams
-        
-        # Return the API response
-        Write-Message -Message "Eventstream '$EventstreamId' destination '$DestinationId' paused successfully!" -Level Info
-        return $response
     }
     catch {
         # Capture and log error details

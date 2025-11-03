@@ -3,7 +3,7 @@
 Updates the definition of a Eventstream in a Microsoft Fabric workspace.
 
 .DESCRIPTION
-This function allows updating the content or metadata of a Eventstream in a Microsoft Fabric workspace. 
+This function allows updating the content or metadata of a Eventstream in a Microsoft Fabric workspace.
 The Eventstream content can be provided as file paths, and metadata updates can optionally be enabled.
 
 .PARAMETER WorkspaceId
@@ -19,7 +19,7 @@ The Eventstream content can be provided as file paths, and metadata updates can 
 (Optional) The file path to the Eventstream's platform-specific definition file. The content will be encoded as Base64 and sent in the request.
 
 .PARAMETER UpdateMetadata
-(Optional)A boolean flag indicating whether to update the Eventstream's metadata. 
+(Optional)A boolean flag indicating whether to update the Eventstream's metadata.
 Default: `$false`.
 
 .EXAMPLE
@@ -38,11 +38,11 @@ Updates both the content and metadata of the Eventstream with ID `67890` in the 
 - The Eventstream content is encoded as Base64 before being sent to the Fabric API.
 - This function handles asynchronous operations and retrieves operation results if required.
 
-Author: Tiago Balabuch  
+Author: Tiago Balabuch
 
 #>
 function Update-FabricEventstreamDefinition {
-    [CmdletBinding()]
+    [CmdletBinding(SupportsShouldProcess = $true, ConfirmImpact = 'Medium')]
     param (
         [Parameter(Mandatory = $true)]
         [ValidateNotNullOrEmpty()]
@@ -55,7 +55,7 @@ function Update-FabricEventstreamDefinition {
         [Parameter(Mandatory = $true)]
         [ValidateNotNullOrEmpty()]
         [string]$EventstreamPathDefinition,
-        
+
         [Parameter(Mandatory = $false)]
         [ValidateNotNullOrEmpty()]
         [string]$EventstreamPathPlatformDefinition
@@ -67,10 +67,10 @@ function Update-FabricEventstreamDefinition {
         Test-TokenExpired
         Write-Message -Message "Authentication token is valid." -Level Debug
 
-        # Construct the API endpoint URI with filtering logic   
+        # Construct the API endpoint URI with filtering logic
         $apiEndpointURI = "{0}/workspaces/{1}/eventstreams/{2}/updateDefinition" -f $FabricConfig.BaseUrl, $WorkspaceId, $EventstreamId
         if ($EventstreamPathPlatformDefinition) {
-            $apiEndpointURI = "?updateMetadata=true" -f $apiEndpointURI 
+            $apiEndpointURI = "$apiEndpointURI?updateMetadata=true"
         }
         Write-Message -Message "API Endpoint: $apiEndpointURI" -Level Debug
 
@@ -78,12 +78,12 @@ function Update-FabricEventstreamDefinition {
         $body = @{
             definition = @{
                 parts = @()
-            } 
+            }
         }
-      
+
         if ($EventstreamPathDefinition) {
             $EventstreamEncodedContent = Convert-ToBase64 -filePath $EventstreamPathDefinition
-            
+
             if (-not [string]::IsNullOrEmpty($EventstreamEncodedContent)) {
                 # Add new part to the parts array
                 $body.definition.parts += @{
@@ -117,19 +117,21 @@ function Update-FabricEventstreamDefinition {
         # Convert the body to JSON
         $bodyJson = $body | ConvertTo-Json -Depth 10
         Write-Message -Message "Request Body: $bodyJson" -Level Debug
- 
-        # Make the API request
-        $apiParams = @{
-            BaseURI = $apiEndpointURI
-            Headers = $FabricConfig.FabricHeaders
-            Method = 'Post'
-            Body = $bodyJson
-        }
-        $response = Invoke-FabricAPIRequest @apiParams
 
-        # Return the API response
-        Write-Message -Message "Successfully updated the definition for Eventstream with ID '$EventstreamId' in workspace '$WorkspaceId'." -Level Info 
-        return $response
+        if ($PSCmdlet.ShouldProcess($EventstreamId, "Update Eventstream definition in workspace '$WorkspaceId'")) {
+            # Make the API request
+            $apiParams = @{
+                BaseURI = $apiEndpointURI
+                Headers = $FabricConfig.FabricHeaders
+                Method = 'Post'
+                Body = $bodyJson
+            }
+            $response = Invoke-FabricAPIRequest @apiParams
+
+            # Return the API response
+            Write-Message -Message "Successfully updated the definition for Eventstream with ID '$EventstreamId' in workspace '$WorkspaceId'." -Level Info
+            return $response
+        }
     }
     catch {
         # Capture and log error details
