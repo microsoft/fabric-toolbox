@@ -33,7 +33,7 @@
     
 #>
 function New-FabricEventhouse {
-    [CmdletBinding()]
+    [CmdletBinding(SupportsShouldProcess = $true, ConfirmImpact = 'Medium')]
     param (
         [Parameter(Mandatory = $true)]
         [ValidateNotNullOrEmpty()]
@@ -126,17 +126,19 @@ function New-FabricEventhouse {
         $bodyJson = $body | ConvertTo-Json -Depth 10
         Write-Message -Message "Request Body: $bodyJson" -Level Debug
 
-        $apiParams = @{
-            BaseURI = $apiEndpointURI
-            Headers = $FabricConfig.FabricHeaders
-            Method = 'Post'
-            Body = $bodyJson
+        if ($PSCmdlet.ShouldProcess($EventhouseName, "Create Eventhouse in workspace '$WorkspaceId'")) {
+            $apiParams = @{
+                BaseURI = $apiEndpointURI
+                Headers = $FabricConfig.FabricHeaders
+                Method  = 'Post'
+                Body    = $bodyJson
+            }
+            $response = Invoke-FabricAPIRequest @apiParams
+            
+            # Return the API response
+            Write-Message -Message "Eventhouse '$EventhouseName' created successfully!" -Level Info
+            return $response
         }
-        $response = Invoke-FabricAPIRequest @apiParams
-        
-        # Return the API response
-        Write-Message -Message "Eventhouse '$EventhouseName' created successfully!" -Level Info
-        return $response
     }
     catch {
         # Capture and log error details

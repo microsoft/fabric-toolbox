@@ -3,7 +3,7 @@
     Updates the definition of an existing Eventhouse in a specified Microsoft Fabric workspace.
 
 .DESCRIPTION
-    This function sends a PATCH request to the Microsoft Fabric API to update the definition of an existing Eventhouse 
+    This function sends a PATCH request to the Microsoft Fabric API to update the definition of an existing Eventhouse
     in the specified workspace. It supports optional parameters for Eventhouse definition and platform-specific definition.
 
 .PARAMETER WorkspaceId
@@ -27,10 +27,10 @@
     - Calls `Test-TokenExpired` to ensure token validity before making the API request.
 
     Author: Tiago Balabuch
-    
+
 #>
 function Update-FabricEventhouseDefinition {
-    [CmdletBinding()]
+    [CmdletBinding(SupportsShouldProcess = $true, ConfirmImpact = 'Medium')]
     param (
         [Parameter(Mandatory = $true)]
         [ValidateNotNullOrEmpty()]
@@ -43,7 +43,7 @@ function Update-FabricEventhouseDefinition {
         [Parameter(Mandatory = $true)]
         [ValidateNotNullOrEmpty()]
         [string]$EventhousePathDefinition,
-        
+
         [Parameter(Mandatory = $false)]
         [ValidateNotNullOrEmpty()]
         [string]$EventhousePathPlatformDefinition
@@ -54,10 +54,10 @@ function Update-FabricEventhouseDefinition {
         Test-TokenExpired
         Write-Message -Message "Authentication token is valid." -Level Debug
 
-        # Construct the API endpoint URI with filtering logic     
+        # Construct the API endpoint URI with filtering logic
         $apiEndpointURI = "{0}/workspaces/{1}/eventhouses/{2}/updateDefinition" -f $FabricConfig.BaseUrl, $WorkspaceId, $EventhouseId
         if ($EventhousePathPlatformDefinition) {
-            $apiEndpointURI = "?updateMetadata=true" -f $apiEndpointURI 
+            $apiEndpointURI = "$apiEndpointURI?updateMetadata=true"
         }
         Write-Message -Message "API Endpoint: $apiEndpointURI" -Level Debug
 
@@ -65,12 +65,12 @@ function Update-FabricEventhouseDefinition {
         $body = @{
             definition = @{
                 parts = @()
-            } 
+            }
         }
-      
+
         if ($EventhousePathDefinition) {
             $EventhouseEncodedContent = Convert-ToBase64 -filePath $EventhousePathDefinition
-            
+
             if (-not [string]::IsNullOrEmpty($EventhouseEncodedContent)) {
                 # Add new part to the parts array
                 $body.definition.parts += @{
@@ -100,23 +100,25 @@ function Update-FabricEventhouseDefinition {
                 return $null
             }
         }
-        
+
         # Convert the body to JSON
         $bodyJson = $body | ConvertTo-Json -Depth 10
         Write-Message -Message "Request Body: $bodyJson" -Level Debug
 
-        # Make the API request
-        $apiParams = @{
-            BaseURI = $apiEndpointURI
-            Headers = $FabricConfig.FabricHeaders
-            Method = 'Post'
-            Body = $bodyJson
+        if ($PSCmdlet.ShouldProcess($EventhouseId, "Update Eventhouse definition in workspace '$WorkspaceId'")) {
+            # Make the API request
+            $apiParams = @{
+                BaseURI = $apiEndpointURI
+                Headers = $FabricConfig.FabricHeaders
+                Method  = 'Post'
+                Body    = $bodyJson
+            }
+            $response = Invoke-FabricAPIRequest @apiParams
+
+            # Return the API response
+            Write-Message -Message "Successfully updated the definition for Eventhouse with ID '$EventhouseId' in workspace '$WorkspaceId'." -Level Info
+            return $response
         }
-        $response = Invoke-FabricAPIRequest @apiParams
-       
-        # Return the API response
-        Write-Message -Message "Successfully updated the definition for Eventhouse with ID '$EventhouseId' in workspace '$WorkspaceId'." -Level Info 
-        return $response
     }
     catch {
         # Capture and log error details

@@ -3,7 +3,7 @@
     Removes an Eventhouse from a specified Microsoft Fabric workspace.
 
 .DESCRIPTION
-    This function sends a DELETE request to the Microsoft Fabric API to remove an Eventhouse 
+    This function sends a DELETE request to the Microsoft Fabric API to remove an Eventhouse
     from the specified workspace using the provided WorkspaceId and EventhouseId.
 
 .PARAMETER WorkspaceId
@@ -21,10 +21,10 @@
     - Calls `Test-TokenExpired` to ensure token validity before making the API request.
 
     Author: Tiago Balabuch
-    
+
 #>
 function Remove-FabricEventhouse {
-    [CmdletBinding()]
+    [CmdletBinding(SupportsShouldProcess = $true, ConfirmImpact = 'High')]
     param (
         [Parameter(Mandatory = $true)]
         [ValidateNotNullOrEmpty()]
@@ -44,18 +44,20 @@ function Remove-FabricEventhouse {
         $apiEndpointURI = "{0}/workspaces/{1}/eventhouses/{2}" -f $FabricConfig.BaseUrl, $WorkspaceId, $EventhouseId
         Write-Message -Message "API Endpoint: $apiEndpointURI" -Level Debug
 
-        # Make the API request
-        $apiParams = @{
-            Headers = $FabricConfig.FabricHeaders
-            BaseURI = $apiEndpointURI
-            Method = 'Delete'
+        if ($PSCmdlet.ShouldProcess($EventhouseId, "Delete Eventhouse in workspace '$WorkspaceId'")) {
+            # Make the API request
+            $apiParams = @{
+                Headers = $FabricConfig.FabricHeaders
+                BaseURI = $apiEndpointURI
+                Method  = 'Delete'
+            }
+            $response = Invoke-FabricAPIRequest @apiParams
+
+            # Return the API response
+            Write-Message -Message "Eventhouse '$EventhouseId' deleted successfully from workspace '$WorkspaceId'." -Level Info
+            return $response
         }
-        $response = Invoke-FabricAPIRequest @apiParams 
-        
-        # Return the API response
-        Write-Message -Message "Eventhouse '$EventhouseId' deleted successfully from workspace '$WorkspaceId'." -Level Info  
-        return $response
-       
+
     }
     catch {
         # Capture and log error details

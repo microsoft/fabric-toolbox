@@ -30,7 +30,7 @@
     
 #>
 function Update-FabricEventhouse {
-    [CmdletBinding()]
+    [CmdletBinding(SupportsShouldProcess = $true, ConfirmImpact = 'Medium')]
     param (
         [Parameter(Mandatory = $true)]
         [ValidateNotNullOrEmpty()]
@@ -72,18 +72,20 @@ function Update-FabricEventhouse {
         $bodyJson = $body | ConvertTo-Json
         Write-Message -Message "Request Body: $bodyJson" -Level Debug
 
-        # Make the API request
-        $apiParams = @{
-            Headers = $FabricConfig.FabricHeaders
-            BaseURI = $apiEndpointURI
-            Method = 'Patch'
-            Body = $bodyJson
-        }
-        $response = Invoke-FabricAPIRequest @apiParams 
+        if ($PSCmdlet.ShouldProcess($EventhouseId, "Update Eventhouse '$EventhouseName' in workspace '$WorkspaceId'")) {
+            # Make the API request
+            $apiParams = @{
+                Headers = $FabricConfig.FabricHeaders
+                BaseURI = $apiEndpointURI
+                Method  = 'Patch'
+                Body    = $bodyJson
+            }
+            $response = Invoke-FabricAPIRequest @apiParams 
 
-        # Return the API response
-        Write-Message -Message "Eventhouse '$EventhouseName' updated successfully!" -Level Info
-        return $response
+            # Return the API response
+            Write-Message -Message "Eventhouse '$EventhouseName' updated successfully!" -Level Info
+            return $response
+        }
     }
     catch {
         # Capture and log error details
