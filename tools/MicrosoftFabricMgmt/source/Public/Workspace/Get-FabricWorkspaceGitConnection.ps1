@@ -38,12 +38,11 @@ function Get-FabricWorkspaceGitConnection {
         Write-Message -Message "Validating authentication token..." -Level Debug
         Test-TokenExpired
         Write-Message -Message "Authentication token is valid." -Level Debug
-                
+
         # Construct the API endpoint URI
         $apiEndpointURI = "{0}/admin/workspaces/discoverGitConnections" -f $FabricConfig.BaseUrl
         Write-Message -Message "API Endpoint: $apiEndpointURI" -Level Debug
-               
-        # Make the API request
+
         # Make the API request
         $apiParams = @{
             BaseURI = $apiEndpointURI

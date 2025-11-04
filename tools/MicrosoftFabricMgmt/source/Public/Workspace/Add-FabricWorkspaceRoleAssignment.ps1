@@ -26,7 +26,7 @@ Assigns the Admin role to the user with ID "principal123" in the workspace "work
 - Requires `$FabricConfig` global configuration, including `BaseUrl` and `FabricHeaders`.
 - Calls `Test-TokenExpired` to ensure token validity before making the API request.
 
-Author: Tiago Balabuch  
+Author: Tiago Balabuch
 #>
 
 function Add-FabricWorkspaceRoleAssignment {
@@ -85,7 +85,7 @@ function Add-FabricWorkspaceRoleAssignment {
 
         # Return the API response
         Write-Message -Message "Role '$WorkspaceRole' assigned to principal '$PrincipalId' successfully in workspace '$WorkspaceId'." -Level Info
-        return $response        
+        return $response
     }
     catch {
         # Capture and log error details

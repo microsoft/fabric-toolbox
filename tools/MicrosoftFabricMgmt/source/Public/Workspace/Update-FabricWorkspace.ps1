@@ -32,7 +32,7 @@ Author: Tiago Balabuch
 #>
 
 function Update-FabricWorkspace {
-    [CmdletBinding()]
+    [CmdletBinding(SupportsShouldProcess=$true, ConfirmImpact = 'Medium')]
     param (
         [Parameter(Mandatory = $true)]
         [ValidateNotNullOrEmpty()]
@@ -78,11 +78,14 @@ function Update-FabricWorkspace {
             Method = 'Patch'
             Body = $bodyJson
         }
-        $response = Invoke-FabricAPIRequest @apiParams 
 
-        # Return the API response  
-        Write-Message -Message "Workspace '$WorkspaceName' updated successfully!" -Level Info
-        return $response
+        if ($PSCmdlet.ShouldProcess("Workspace '$WorkspaceId' to '$WorkspaceName'", 'Update')) {
+            $response = Invoke-FabricAPIRequest @apiParams
+
+            # Return the API response
+            Write-Message -Message "Workspace '$WorkspaceName' updated successfully!" -Level Info
+            return $response
+        }
     }
     catch {
         # Capture and log error details

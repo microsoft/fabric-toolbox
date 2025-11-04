@@ -25,7 +25,7 @@ Fetches the role assignment with the ID "role123" for the workspace "workspace12
 - Requires `$FabricConfig` global configuration, including `BaseUrl` and `FabricHeaders`.
 - Calls `Test-TokenExpired` to ensure token validity before making the API request.
 
-Author: Tiago Balabuch  
+Author: Tiago Balabuch
 #>
 
 function Get-FabricWorkspaceRoleAssignment {
@@ -45,12 +45,11 @@ function Get-FabricWorkspaceRoleAssignment {
         Write-Message -Message "Validating authentication token..." -Level Debug
         Test-TokenExpired
         Write-Message -Message "Authentication token is valid." -Level Debug
-    
+
         # Construct the API endpoint URI
         $apiEndpointURI = "{0}/workspaces/{1}/roleAssignments" -f $FabricConfig.BaseUrl, $WorkspaceId
         Write-Message -Message "API Endpoint: $apiEndpointURI" -Level Debug
-             
-        # Make the API request
+
         # Make the API request
         $apiParams = @{
             BaseURI = $apiEndpointURI
@@ -58,7 +57,7 @@ function Get-FabricWorkspaceRoleAssignment {
             Method = 'Get'
         }
         $dataItems = Invoke-FabricAPIRequest @apiParams
-        
+
         # Immediately handle empty response
         if (-not $dataItems) {
             Write-Message -Message "No data returned from the API." -Level Warning
@@ -77,7 +76,7 @@ function Get-FabricWorkspaceRoleAssignment {
         # Handle results
         if ($matchedItems) {
             Write-Message -Message "Found $($matchedItems.Count) role assignments for WorkspaceId '$WorkspaceId'." -Level Debug
-            
+
             # Transform data into custom objects
             $customResults = foreach ($obj in $matchedItems) {
                 [PSCustomObject]@{

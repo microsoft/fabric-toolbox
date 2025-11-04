@@ -1,12 +1,6 @@
 <#
 .SYNOPSIS
-Unassigns a Fabric worksp        # Make the API request
-        $apiParams = @{
-            BaseURI = $apiEndpointURI
-            Headers = $FabricConfig.FabricHeaders
-            Method = 'Delete'
-        }
-        $response = Invoke-FabricAPIRequest @apiParamsfrom its capacity.
+Unassigns a Fabric workspace from its capacity.
 
 .DESCRIPTION
 The `Unassign-FabricWorkspaceCapacity` function sends a POST request to unassign a workspace from its assigned capacity.
@@ -49,8 +43,8 @@ function Unassign-FabricWorkspaceCapacity {
             -Headers $FabricConfig.FabricHeaders `
             -Method Post
 
-        # Return the API response    
-        Write-Message -Message "Workspace capacity has been successfully unassigned from workspace '$WorkspaceId'." -Level Info         
+        # Return the API response
+        Write-Message -Message "Workspace capacity has been successfully unassigned from workspace '$WorkspaceId'." -Level Info
         return $response
     }
     catch {

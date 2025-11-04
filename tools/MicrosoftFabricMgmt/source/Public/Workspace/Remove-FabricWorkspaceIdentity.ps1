@@ -17,11 +17,11 @@ Deprovisions the Managed Identity for the workspace with ID "workspace123".
 - Requires `$FabricConfig` global configuration, including `BaseUrl` and `FabricHeaders`.
 - Calls `Test-TokenExpired` to ensure token validity before making the API request.
 
-Author: Tiago Balabuch  
+Author: Tiago Balabuch
 #>
 
 function Remove-FabricWorkspaceIdentity {
-    [CmdletBinding()]
+    [CmdletBinding(SupportsShouldProcess=$true, ConfirmImpact = 'High')]
     param (
         [Parameter(Mandatory = $true)]
         [ValidateNotNullOrEmpty()]
@@ -45,10 +45,13 @@ function Remove-FabricWorkspaceIdentity {
             Method = 'Post'
             Body = $bodyJson
         }
-        Invoke-FabricAPIRequest @apiParams
 
-        # Return the API response
-        Write-Message -Message "Workspace identity was successfully deprovisioned for workspace '$WorkspaceId'." -Level Info
+        if ($PSCmdlet.ShouldProcess("Workspace identity for '$WorkspaceId'", 'Deprovision')) {
+            Invoke-FabricAPIRequest @apiParams
+
+            # Return the API response
+            Write-Message -Message "Workspace identity was successfully deprovisioned for workspace '$WorkspaceId'." -Level Info
+        }
     }
     catch {
         # Capture and log error details
