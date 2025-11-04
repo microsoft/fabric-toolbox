@@ -32,7 +32,7 @@ Author: Tiago Balabuch
 
 #>
 function Update-FabricKQLDatabase {
-    [CmdletBinding()]
+    [CmdletBinding(SupportsShouldProcess = $true, ConfirmImpact = 'Medium')]
     param (
         [Parameter(Mandatory = $true)]
         [ValidateNotNullOrEmpty()]
@@ -82,11 +82,13 @@ function Update-FabricKQLDatabase {
             Method = 'Patch'
             Body = $bodyJson
         }
-        $response = Invoke-FabricAPIRequest @apiParams 
+        if ($PSCmdlet.ShouldProcess($KQLDatabaseId, "Update KQL Database in workspace '$WorkspaceId'")) {
+            $response = Invoke-FabricAPIRequest @apiParams 
 
-        # Return the API response
-        Write-Message -Message "KQLDatabase '$KQLDatabaseName' updated successfully!" -Level Info
-        return $response
+            # Return the API response
+            Write-Message -Message "KQLDatabase '$KQLDatabaseName' updated successfully!" -Level Info
+            return $response
+        }
     }
     catch {
         # Capture and log error details
