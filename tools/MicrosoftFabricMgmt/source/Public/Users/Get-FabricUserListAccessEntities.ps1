@@ -43,14 +43,14 @@ function Get-FabricUserListAccessEntities {
         Write-Message -Message "Validating authentication token..." -Level Debug
         Test-TokenExpired
         Write-Message -Message "Authentication token is valid." -Level Debug
-                
+
         # Construct the API endpoint URI with filtering logic
         $apiEndpointURI = "{0}admin/users/{1}/access" -f $FabricConfig.BaseUrl, $UserId
         if ($Type) {
             $apiEndpointURI += "?type=$Type"
         }
         Write-Message -Message "API Endpoint: $apiEndpointURI" -Level Debug
-                
+
         # Make the API request
         # Make the API request
         $apiParams = @{
@@ -75,5 +75,5 @@ function Get-FabricUserListAccessEntities {
         # Capture and log error details
         $errorDetails = $_.Exception.Message
         Write-Message -Message "Failed to retrieve Warehouse. Error: $errorDetails" -Level Error
-    } 
+    }
 }
