@@ -18,7 +18,7 @@ An array of objects, each containing 'id' and 'type' properties, representing th
 Author: Tiago Balabuch
 #>
 function Remove-FabricLabel {
-    [CmdletBinding()]
+    [CmdletBinding(SupportsShouldProcess = $true, ConfirmImpact = 'High')]
     param (
         [Parameter(Mandatory = $true)]
         [ValidateNotNullOrEmpty()]
@@ -57,11 +57,13 @@ function Remove-FabricLabel {
             Method = 'Post'
             Body = $bodyJson
         }
-        $response = Invoke-FabricAPIRequest @apiParams
-        
-        # Return the API response
-        Write-Message -Message "Bulk label removal completed successfully." -Level Info
-        return $response
+        if ($PSCmdlet.ShouldProcess("Bulk label removal", "Remove labels from $($Items.Count) item(s)")) {
+            $response = Invoke-FabricAPIRequest @apiParams
+            
+            # Return the API response
+            Write-Message -Message "Bulk label removal completed successfully." -Level Info
+            return $response
+        }
     }
     catch {
         # Capture and log error details
