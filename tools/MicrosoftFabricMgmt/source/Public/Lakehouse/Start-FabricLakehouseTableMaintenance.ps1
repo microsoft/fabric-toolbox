@@ -46,7 +46,7 @@ Returns the API response object with job details, or $null if the operation fail
 Author: Tiago Balabuch
 #>
 function Start-FabricLakehouseTableMaintenance {
-    [CmdletBinding()]
+    [CmdletBinding(SupportsShouldProcess = $true, ConfirmImpact = 'Medium')]
     param (
         [Parameter(Mandatory = $true)]
         [ValidateNotNullOrEmpty()]
@@ -164,18 +164,20 @@ function Start-FabricLakehouseTableMaintenance {
         if ($WaitForCompletion.IsPresent) {
             $apiParams.WaitForCompletion = $true
         }
-        $response = Invoke-FabricAPIRequest @apiParams  
-      
-        if ($WaitForCompletion) {
-            Write-Message -Message "Table maintenance job for Lakehouse '$($lakehouse.displayName)' has completed." -Level Info
-            Write-Message -Message "Job details: $($response | ConvertTo-Json -Depth 5)" -Level Debug
+        if ($PSCmdlet.ShouldProcess($LakehouseId, "Start lakehouse table maintenance job in workspace '$WorkspaceId'")) {
+            $response = Invoke-FabricAPIRequest @apiParams  
+          
+            if ($WaitForCompletion) {
+                Write-Message -Message "Table maintenance job for Lakehouse '$LakehouseId' has completed." -Level Info
+                Write-Message -Message "Job details: $($response | ConvertTo-Json -Depth 5)" -Level Debug
+            }
+            else {
+                Write-Message -Message "Table maintenance job for Lakehouse '$LakehouseId' has been started and is running asynchronously." -Level Info
+                Write-Message -Message "You can monitor the job status using the job ID from the response." -Level Debug
+            }
+            # Return the API response
+            return $response
         }
-        else {
-            Write-Message -Message "Table maintenance job for Lakehouse '$($lakehouse.displayName)' has been started and is running asynchronously." -Level Info
-            Write-Message -Message "You can monitor the job status using the job ID from the response." -Level Debug
-        }
-        # Return the API response
-        return $response
     }
     catch {
         # Capture and log error details

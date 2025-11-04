@@ -31,7 +31,7 @@ Author: Tiago Balabuch
 #>
 
 function New-FabricLakehouse {
-    [CmdletBinding()]
+    [CmdletBinding(SupportsShouldProcess = $true, ConfirmImpact = 'Medium')]
     param (
         [Parameter(Mandatory = $true)]
         [ValidateNotNullOrEmpty()]
@@ -86,11 +86,13 @@ function New-FabricLakehouse {
             Method = 'Post'
             Body = $bodyJson
         }
-        $response = Invoke-FabricAPIRequest @apiParams
+        if ($PSCmdlet.ShouldProcess($LakehouseName, "Create Lakehouse in workspace '$WorkspaceId'")) {
+            $response = Invoke-FabricAPIRequest @apiParams
 
-        # Return the API response
-        Write-Message -Message "Lakehouse '$LakehouseName' created successfully!" -Level Info
-        return $response
+            # Return the API response
+            Write-Message -Message "Lakehouse '$LakehouseName' created successfully!" -Level Info
+            return $response
+        }
     }
     catch {
         # Capture and log error details
