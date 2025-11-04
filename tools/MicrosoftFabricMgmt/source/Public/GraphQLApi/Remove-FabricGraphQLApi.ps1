@@ -23,7 +23,7 @@
     Author: Tiago Balabuch
 #>
 function Remove-FabricGraphQLApi {
-    [CmdletBinding()]
+    [CmdletBinding(SupportsShouldProcess = $true, ConfirmImpact = 'High')]
     param (
         [Parameter(Mandatory = $true)]
         [ValidateNotNullOrEmpty()]
@@ -49,12 +49,14 @@ function Remove-FabricGraphQLApi {
             BaseURI = $apiEndpointURI
             Method  = 'Delete'
         }
-        $response = Invoke-FabricAPIRequest @apiParams 
-        
-        # Return the API response
-        Write-Message -Message "GraphQLApi '$GraphQLApiId' deleted successfully from workspace '$WorkspaceId'." -Level Info
-        return $response
-       
+        if ($PSCmdlet.ShouldProcess($GraphQLApiId, "Delete GraphQL API in workspace '$WorkspaceId'")) {
+            $response = Invoke-FabricAPIRequest @apiParams
+
+            # Return the API response
+            Write-Message -Message "GraphQLApi '$GraphQLApiId' deleted successfully from workspace '$WorkspaceId'." -Level Info
+            return $response
+        }
+
     }
     catch {
         # Capture and log error details

@@ -3,7 +3,7 @@
     Updates the definition of a GraphQLApi in a Microsoft Fabric workspace.
 
 .DESCRIPTION
-    Updates an existing GraphQLApi's definition by sending a request to the Microsoft Fabric API. 
+    Updates an existing GraphQLApi's definition by sending a request to the Microsoft Fabric API.
     Supports updating both the main definition and an optional platform-specific definition file.
 
 .PARAMETER WorkspaceId
@@ -27,7 +27,7 @@
     Author: Tiago Balabuch
 #>
 function Update-FabricGraphQLApiDefinition {
-    [CmdletBinding()]
+    [CmdletBinding(SupportsShouldProcess = $true, ConfirmImpact = 'Medium')]
     param (
         [Parameter(Mandatory = $true)]
         [ValidateNotNullOrEmpty()]
@@ -40,7 +40,7 @@ function Update-FabricGraphQLApiDefinition {
         [Parameter(Mandatory = $true)]
         [ValidateNotNullOrEmpty()]
         [string]$GraphQLApiPathDefinition,
-        
+
         [Parameter(Mandatory = $false)]
         [ValidateNotNullOrEmpty()]
         [string]$GraphQLApiPathPlatformDefinition
@@ -51,10 +51,11 @@ function Update-FabricGraphQLApiDefinition {
         Test-TokenExpired
         Write-Message -Message "Authentication token is valid." -Level Debug
 
-        # Construct the API endpoint URI with filtering logic     
+        # Construct the API endpoint URI with filtering logic
         $apiEndpointURI = "{0}/workspaces/{1}/GraphQLApis/{2}/updateDefinition" -f $FabricConfig.BaseUrl, $WorkspaceId, $GraphQLApiId
         if ($GraphQLApiPathPlatformDefinition) {
-            $apiEndpointURI = "?updateMetadata=true" -f $apiEndpointURI 
+            # Append query parameter correctly instead of replacing the endpoint
+            $apiEndpointURI = "$apiEndpointURI?updateMetadata=true"
         }
         Write-Message -Message "API Endpoint: $apiEndpointURI" -Level Debug
 
@@ -63,12 +64,12 @@ function Update-FabricGraphQLApiDefinition {
             definition = @{
                 format = "GraphQLApiV1"
                 parts  = @()
-            } 
+            }
         }
-      
+
         if ($GraphQLApiPathDefinition) {
             $GraphQLApiEncodedContent = Convert-ToBase64 -filePath $GraphQLApiPathDefinition
-            
+
             if (-not [string]::IsNullOrEmpty($GraphQLApiEncodedContent)) {
                 # Add new part to the parts array
                 $body.definition.parts += @{
@@ -98,7 +99,7 @@ function Update-FabricGraphQLApiDefinition {
                 return $null
             }
         }
-        
+
         # Convert the body to JSON
         $bodyJson = $body | ConvertTo-Json -Depth 10
         Write-Message -Message "Request Body: $bodyJson" -Level Debug
@@ -110,11 +111,13 @@ function Update-FabricGraphQLApiDefinition {
             Method  = 'Post'
             Body    = $bodyJson
         }
-        $response = Invoke-FabricAPIRequest @apiParams
-       
-        # Return the API response
-        Write-Message -Message "Successfully updated the definition for GraphQLApi with ID '$GraphQLApiId' in workspace '$WorkspaceId'." -Level Info 
-        return $response
+        if ($PSCmdlet.ShouldProcess($GraphQLApiId, "Update GraphQL API definition in workspace '$WorkspaceId'")) {
+            $response = Invoke-FabricAPIRequest @apiParams
+
+            # Return the API response
+            Write-Message -Message "Successfully updated the definition for GraphQLApi with ID '$GraphQLApiId' in workspace '$WorkspaceId'." -Level Info
+            return $response
+        }
     }
     catch {
         # Capture and log error details

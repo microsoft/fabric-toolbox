@@ -35,7 +35,7 @@
     Author: Tiago Balabuch
 #>
 function New-FabricGraphQLApi {
-    [CmdletBinding()]
+    [CmdletBinding(SupportsShouldProcess = $true, ConfirmImpact = 'Medium')]
     param (
         [Parameter(Mandatory = $true)]
         [ValidateNotNullOrEmpty()]
@@ -144,11 +144,13 @@ function New-FabricGraphQLApi {
             Method  = 'Post'
             Body    = $bodyJson
         }
-        $response = Invoke-FabricAPIRequest @apiParams
-        
-        # Return the API response
-        Write-Message -Message "GraphQLApi '$GraphQLApiName' created successfully!" -Level Info
-        return $response
+        if ($PSCmdlet.ShouldProcess("GraphQL API '$GraphQLApiName' in workspace '$WorkspaceId'", "Create")) {
+            $response = Invoke-FabricAPIRequest @apiParams
+            
+            # Return the API response
+            Write-Message -Message "GraphQLApi '$GraphQLApiName' created successfully!" -Level Info
+            return $response
+        }
     }
     catch {
         # Capture and log error details
