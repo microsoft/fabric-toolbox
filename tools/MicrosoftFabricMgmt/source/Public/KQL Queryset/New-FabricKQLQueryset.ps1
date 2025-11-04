@@ -33,7 +33,7 @@ Author: Tiago Balabuch
 
 #>
 function New-FabricKQLQueryset {
-    [CmdletBinding()]
+    [CmdletBinding(SupportsShouldProcess = $true, ConfirmImpact = 'Medium')]
     param (
         [Parameter(Mandatory = $true)]
         [ValidateNotNullOrEmpty()]
@@ -136,11 +136,13 @@ function New-FabricKQLQueryset {
             Method = 'Post'
             Body = $bodyJson
         }
-        $response = Invoke-FabricAPIRequest @apiParams
+        if ($PSCmdlet.ShouldProcess($KQLQuerysetName, "Create KQL Queryset in workspace '$WorkspaceId'")) {
+            $response = Invoke-FabricAPIRequest @apiParams
 
-        # Return the API response
-        Write-Message -Message "KQLQueryset '$KQLQuerysetName' created successfully!" -Level Info
-        return $response
+            # Return the API response
+            Write-Message -Message "KQLQueryset '$KQLQuerysetName' created successfully!" -Level Info
+            return $response
+        }
   
     }
     catch {
