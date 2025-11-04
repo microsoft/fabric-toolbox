@@ -28,12 +28,12 @@
     Author: Tiago Balabuch
 #>
 function Update-FabricVariableLibrary {
-    [CmdletBinding()]
+    [CmdletBinding(SupportsShouldProcess=$true, ConfirmImpact='Medium')]
     param (
         [Parameter(Mandatory = $true)]
         [ValidateNotNullOrEmpty()]
-        [string]$WorkspaceId,   
-        
+        [string]$WorkspaceId,
+
         [Parameter(Mandatory = $true)]
         [ValidateNotNullOrEmpty()]
         [string]$VariableLibraryId,
@@ -81,17 +81,19 @@ function Update-FabricVariableLibrary {
         Write-Message -Message "Request Body: $bodyJson" -Level Debug
 
         # Make the API request
-        $apiParams = @{
-            Headers = $FabricConfig.FabricHeaders
-            BaseURI = $apiEndpointURI
-            Method  = 'Patch'
-            Body    = $bodyJson
-        }
-        $response = Invoke-FabricAPIRequest @apiParams 
+        if ($PSCmdlet.ShouldProcess("Variable Library '$VariableLibraryName' in workspace '$WorkspaceId'", "Update")) {
+            $apiParams = @{
+                Headers = $FabricConfig.FabricHeaders
+                BaseURI = $apiEndpointURI
+                Method  = 'Patch'
+                Body    = $bodyJson
+            }
+            $response = Invoke-FabricAPIRequest @apiParams
 
-        # Return the API response
-        Write-Message -Message "Variable Library '$VariableLibraryName' updated successfully!" -Level Info
-        return $response
+            # Return the API response
+            Write-Message -Message "Variable Library '$VariableLibraryName' updated successfully!" -Level Info
+            return $response
+        }
     }
     catch {
         # Capture and log error details

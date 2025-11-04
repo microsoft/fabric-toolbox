@@ -23,7 +23,7 @@
     Author: Tiago Balabuch
 #>
 function Remove-FabricVariableLibrary {
-    [CmdletBinding()]
+    [CmdletBinding(SupportsShouldProcess=$true, ConfirmImpact='High')]
     param (
         [Parameter(Mandatory = $true)]
         [ValidateNotNullOrEmpty()]
@@ -44,17 +44,19 @@ function Remove-FabricVariableLibrary {
         Write-Message -Message "API Endpoint: $apiEndpointURI" -Level Debug
 
         # Make the API request
-        $apiParams = @{
-            Headers = $FabricConfig.FabricHeaders
-            BaseURI = $apiEndpointURI
-            Method  = 'Delete'
+        if ($PSCmdlet.ShouldProcess("Variable Library '$VariableLibraryId' in workspace '$WorkspaceId'", "Remove")) {
+            $apiParams = @{
+                Headers = $FabricConfig.FabricHeaders
+                BaseURI = $apiEndpointURI
+                Method  = 'Delete'
+            }
+            $response = Invoke-FabricAPIRequest @apiParams
+
+            # Return the API response
+            Write-Message -Message "Variable Library '$VariableLibraryId' deleted successfully from workspace '$WorkspaceId'." -Level Info
+            return $response
         }
-        $response = Invoke-FabricAPIRequest @apiParams 
-        
-        # Return the API response
-        Write-Message -Message "Variable Library '$VariableLibraryId' deleted successfully from workspace '$WorkspaceId'." -Level Info
-        return $response
-       
+
     }
     catch {
         # Capture and log error details

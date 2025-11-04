@@ -56,11 +56,11 @@ function Get-FabricVariableLibrary {
         Write-Message -Message "Validating authentication token..." -Level Debug
         Test-TokenExpired
         Write-Message -Message "Authentication token is valid." -Level Debug
-        
-        # Construct the API endpoint URI   
+
+        # Construct the API endpoint URI
         $apiEndpointURI = "{0}/workspaces/{1}/VariableLibraries" -f $FabricConfig.BaseUrl, $WorkspaceId
         Write-Message -Message "API Endpoint: $apiEndpointURI" -Level Debug
-        
+
         # Make the API request
         $apiParams = @{
             BaseURI = $apiEndpointURI
@@ -68,13 +68,13 @@ function Get-FabricVariableLibrary {
             Method  = 'Get'
         }
         $dataItems = Invoke-FabricAPIRequest @apiParams
-       
+
         # Immediately handle empty response
         if (-not $dataItems) {
             Write-Message -Message "No data returned from the API." -Level Warning
             return $null
         }
-  
+
         # Apply filtering logic efficiently
         if ($VariableLibraryId) {
             $matchedItems = $dataItems.Where({ $_.Id -eq $VariableLibraryId }, 'First')
@@ -86,7 +86,7 @@ function Get-FabricVariableLibrary {
             Write-Message -Message "No filter provided. Returning all items." -Level Debug
             $matchedItems = $dataItems
         }
-  
+
         # Handle results
         if ($matchedItems) {
             Write-Message -Message "Item(s) found matching the specified criteria." -Level Debug

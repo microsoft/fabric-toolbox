@@ -32,7 +32,7 @@
     Author: Tiago Balabuch
 #>
 function New-FabricVariableLibrary {
-    [CmdletBinding()]
+    [CmdletBinding(SupportsShouldProcess=$true, ConfirmImpact='Medium')]
     param (
         [Parameter(Mandatory = $true)]
         [ValidateNotNullOrEmpty()]
@@ -50,7 +50,7 @@ function New-FabricVariableLibrary {
         [Parameter(Mandatory = $false)]
         [ValidateNotNullOrEmpty()]
         [string]$VariableLibraryPathDefinition,
-        
+
         [Parameter(Mandatory = $false)]
         [ValidateNotNullOrEmpty()]
         [string]$FolderId
@@ -61,7 +61,7 @@ function New-FabricVariableLibrary {
         Test-TokenExpired
         Write-Message -Message "Authentication token is valid." -Level Debug
 
-        # Construct the API endpoint URI 
+        # Construct the API endpoint URI
         $apiEndpointURI = "{0}/workspaces/{1}/VariableLibraries" -f $FabricConfig.BaseUrl, $WorkspaceId
         Write-Message -Message "API Endpoint: $apiEndpointURI" -Level Debug
 
@@ -77,7 +77,7 @@ function New-FabricVariableLibrary {
         if ($VariableLibraryDescription) {
             $body.description = $VariableLibraryDescription
         }
-        
+
         if ($VariableLibraryPathDefinition) {
             if (-not $body.definition) {
                 $body.definition = @{
@@ -91,22 +91,24 @@ function New-FabricVariableLibrary {
             # Add new part to the parts array
             $body.definition.parts = $jsonObjectParts.parts
         }
-  
+
         # Convert the body to JSON
         $bodyJson = $body | ConvertTo-Json -Depth 10
         Write-Message -Message "Request Body: $bodyJson" -Level Debug
 
-        $apiParams = @{
-            BaseURI = $apiEndpointURI
-            Headers = $FabricConfig.FabricHeaders
-            Method  = 'Post'
-            Body    = $bodyJson
+        if ($PSCmdlet.ShouldProcess("Variable Library '$VariableLibraryName' in workspace '$WorkspaceId'", "Create")) {
+            $apiParams = @{
+                BaseURI = $apiEndpointURI
+                Headers = $FabricConfig.FabricHeaders
+                Method  = 'Post'
+                Body    = $bodyJson
+            }
+            $response = Invoke-FabricAPIRequest @apiParams
+
+            # Return the API response
+            Write-Message -Message "Variable Library '$VariableLibraryName' created successfully!" -Level Info
+            return $response
         }
-        $response = Invoke-FabricAPIRequest @apiParams
-        
-        # Return the API response
-        Write-Message -Message "Variable Library '$VariableLibraryName' created successfully!" -Level Info
-        return $response
     }
     catch {
         # Capture and log error details

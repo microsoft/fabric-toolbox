@@ -47,21 +47,21 @@ function Get-FabricVariableLibraryDefinition {
         Test-TokenExpired
         Write-Message -Message "Authentication token is valid." -Level Debug
 
-        # Construct the API endpoint URI with filtering logic     
+        # Construct the API endpoint URI with filtering logic
         $apiEndpointURI = "{0}/workspaces/{1}/VariableLibraries/{2}/getDefinition" -f $FabricConfig.BaseUrl, $WorkspaceId, $VariableLibraryId
         if ($VariableLibraryFormat) {
             $apiEndpointURI = "{0}?format={1}" -f $apiEndpointURI, $VariableLibraryFormat
         }
         Write-Message -Message "API Endpoint: $apiEndpointURI" -Level Debug
-    
+
         # Make the API request
         $apiParams = @{
             BaseURI = $apiEndpointURI
             Headers = $FabricConfig.FabricHeaders
             Method  = 'Post'
         }
-        $response = Invoke-FabricAPIRequest @apiParams 
-        
+        $response = Invoke-FabricAPIRequest @apiParams
+
         # Return the API response
         Write-Message -Message "Variable Library '$VariableLibraryId' definition retrieved successfully!" -Level Debug
         return $response
@@ -70,5 +70,5 @@ function Get-FabricVariableLibraryDefinition {
         # Capture and log error details
         $errorDetails = $_.Exception.Message
         Write-Message -Message "Failed to retrieve Variable Library. Error: $errorDetails" -Level Error
-    } 
+    }
 }
