@@ -3,7 +3,7 @@
     Updates an existing warehouse in a specified Microsoft Fabric workspace.
 
 .DESCRIPTION
-    This function sends a PATCH request to the Microsoft Fabric API to update an existing warehouse 
+    This function sends a PATCH request to the Microsoft Fabric API to update an existing warehouse
     in the specified workspace. It supports optional parameters for warehouse description.
 
 .PARAMETER WorkspaceId
@@ -27,15 +27,15 @@
     - Calls `Test-TokenExpired` to ensure token validity before making the API request.
 
     Author: Tiago Balabuch
-    
+
 #>
 function Update-FabricWarehouse {
-    [CmdletBinding()]
+    [CmdletBinding(SupportsShouldProcess=$true, ConfirmImpact='Medium')]
     param (
         [Parameter(Mandatory = $true)]
         [ValidateNotNullOrEmpty()]
-        [string]$WorkspaceId,   
-        
+        [string]$WorkspaceId,
+
         [Parameter(Mandatory = $true)]
         [ValidateNotNullOrEmpty()]
         [string]$WarehouseId,
@@ -54,7 +54,7 @@ function Update-FabricWarehouse {
         Write-Message -Message "Validating authentication token..." -Level Debug
         Test-TokenExpired
         Write-Message -Message "Authentication token is valid." -Level Debug
-                
+
         # Construct the API endpoint URI
         $apiEndpointURI = "{0}/workspaces/{1}/warehouses/{2}" -f $FabricConfig.BaseUrl, $WorkspaceId, $WarehouseId
         Write-Message -Message "API Endpoint: $apiEndpointURI" -Level Debug
@@ -71,7 +71,7 @@ function Update-FabricWarehouse {
         # Convert the body to JSON
         $bodyJson = $body | ConvertTo-Json
         Write-Message -Message "Request Body: $bodyJson" -Level Debug
-        
+
         # Make the API request
         $apiParams = @{
             Headers = $FabricConfig.FabricHeaders
@@ -79,10 +79,13 @@ function Update-FabricWarehouse {
             Method = 'Patch'
             Body = $bodyJson
         }
-        $response = Invoke-FabricAPIRequest @apiParams 
-        # Return the API response
-        Write-Message -Message "Warehouse '$WarehouseName' updated successfully!" -Level Info
-        return $response
+
+        if ($PSCmdlet.ShouldProcess("Warehouse '$WarehouseId' to '$WarehouseName' in workspace '$WorkspaceId'", 'Update')) {
+            $response = Invoke-FabricAPIRequest @apiParams
+            # Return the API response
+            Write-Message -Message "Warehouse '$WarehouseName' updated successfully!" -Level Info
+            return $response
+        }
     }
     catch {
         # Capture and log error details

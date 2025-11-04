@@ -57,7 +57,7 @@ function Get-FabricWarehouse {
         Write-Message -Message "Validating authentication token..." -Level Debug
         Test-TokenExpired
         Write-Message -Message "Authentication token is valid." -Level Debug
-                
+
         # Construct the API endpoint URI
         $apiEndpointURI = "{0}/workspaces/{1}/warehouses" -f $FabricConfig.BaseUrl, $WorkspaceId
 
@@ -101,5 +101,5 @@ function Get-FabricWarehouse {
         # Capture and log error details
         $errorDetails = $_.Exception.Message
         Write-Message -Message "Failed to retrieve Warehouse. Error: $errorDetails" -Level Error
-    } 
+    }
 }

@@ -23,7 +23,7 @@
     Author: Tiago Balabuch
 #>
 function Remove-FabricWarehouseSnapshot {
-    [CmdletBinding()]
+    [CmdletBinding(SupportsShouldProcess=$true, ConfirmImpact='High')]
     param (
         [Parameter(Mandatory = $true)]
         [ValidateNotNullOrEmpty()]
@@ -49,11 +49,14 @@ function Remove-FabricWarehouseSnapshot {
             BaseURI = $apiEndpointURI
             Method  = 'Delete'
         }
-        $response = Invoke-FabricAPIRequest @apiParams
-        
-        # Return the API response
-        Write-Message -Message "Warehouse Snapshot '$WarehouseSnapshotId' deleted successfully from workspace '$WorkspaceId'." -Level Info
-        return $response
+
+        if ($PSCmdlet.ShouldProcess("Warehouse Snapshot '$WarehouseSnapshotId' in workspace '$WorkspaceId'", 'Delete')) {
+            $response = Invoke-FabricAPIRequest @apiParams
+
+            # Return the API response
+            Write-Message -Message "Warehouse Snapshot '$WarehouseSnapshotId' deleted successfully from workspace '$WorkspaceId'." -Level Info
+            return $response
+        }
 
     }
     catch {

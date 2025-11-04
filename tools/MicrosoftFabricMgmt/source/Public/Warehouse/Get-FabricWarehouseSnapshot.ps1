@@ -57,7 +57,7 @@ function Get-FabricWarehouseSnapshot {
         Write-Message -Message "Validating authentication token..." -Level Debug
         Test-TokenExpired
         Write-Message -Message "Authentication token is valid." -Level Debug
-                
+
         # Construct the API endpoint URI
         $apiEndpointURI = "{0}/workspaces/{1}/warehousesnapshots" -f $FabricConfig.BaseUrl, $WorkspaceId
 

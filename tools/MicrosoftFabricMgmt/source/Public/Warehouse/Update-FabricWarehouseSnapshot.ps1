@@ -30,12 +30,12 @@
     Author: Tiago Balabuch
 #>
 function Update-FabricWarehouseSnapshot {
-    [CmdletBinding()]
+    [CmdletBinding(SupportsShouldProcess=$true, ConfirmImpact='Medium')]
     param (
         [Parameter(Mandatory = $true)]
         [ValidateNotNullOrEmpty()]
-        [string]$WorkspaceId,   
-        
+        [string]$WorkspaceId,
+
         [Parameter(Mandatory = $true)]
         [ValidateNotNullOrEmpty()]
         [string]$WarehouseSnapshotId,
@@ -59,7 +59,7 @@ function Update-FabricWarehouseSnapshot {
         Write-Message -Message "Validating authentication token..." -Level Debug
         Test-TokenExpired
         Write-Message -Message "Authentication token is valid." -Level Debug
-                
+
         # Construct the API endpoint URI
         $apiEndpointURI = "{0}/workspaces/{1}/warehouses/{2}" -f $FabricConfig.BaseUrl, $WorkspaceId, $WarehouseId
         Write-Message -Message "API Endpoint: $apiEndpointURI" -Level Debug
@@ -83,7 +83,7 @@ function Update-FabricWarehouseSnapshot {
         # Convert the body to JSON
         $bodyJson = $body | ConvertTo-Json
         Write-Message -Message "Request Body: $bodyJson" -Level Debug
-        
+
         # Make the API request
         $apiParams = @{
             Headers = $FabricConfig.FabricHeaders
@@ -91,10 +91,13 @@ function Update-FabricWarehouseSnapshot {
             Method  = 'Patch'
             Body    = $bodyJson
         }
-        $response = Invoke-FabricAPIRequest @apiParams 
-        # Return the API response
-        Write-Message -Message "Warehouse Snapshot '$WarehouseSnapshotName' updated successfully!" -Level Info
-        return $response
+
+        if ($PSCmdlet.ShouldProcess("Warehouse Snapshot '$WarehouseSnapshotId' to '$WarehouseSnapshotName' in workspace '$WorkspaceId'", 'Update')) {
+            $response = Invoke-FabricAPIRequest @apiParams
+            # Return the API response
+            Write-Message -Message "Warehouse Snapshot '$WarehouseSnapshotName' updated successfully!" -Level Info
+            return $response
+        }
     }
     catch {
         # Capture and log error details

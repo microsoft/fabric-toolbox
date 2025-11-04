@@ -3,7 +3,7 @@
     Creates a new warehouse in a specified Microsoft Fabric workspace.
 
 .DESCRIPTION
-    This function sends a POST request to the Microsoft Fabric API to create a new warehouse 
+    This function sends a POST request to the Microsoft Fabric API to create a new warehouse
     in the specified workspace. It supports optional parameters for warehouse description.
 
 .PARAMETER WorkspaceId
@@ -29,7 +29,7 @@
     Author: Tiago Balabuch
 #>
 function New-FabricWarehouse {
-    [CmdletBinding()]
+    [CmdletBinding(SupportsShouldProcess=$true, ConfirmImpact='Medium')]
     param (
         [Parameter(Mandatory = $true)]
         [ValidateNotNullOrEmpty()]
@@ -85,11 +85,14 @@ function New-FabricWarehouse {
             Method  = 'Post'
             Body    = $bodyJson
         }
-        $response = Invoke-FabricAPIRequest @apiParams
 
-        # Return the API response
-        Write-Message -Message "Data Warehouse created successfully!" -Level Info        
-        return $response
+        if ($PSCmdlet.ShouldProcess("Warehouse '$WarehouseName' in workspace '$WorkspaceId'", 'Create')) {
+            $response = Invoke-FabricAPIRequest @apiParams
+
+            # Return the API response
+            Write-Message -Message "Data Warehouse created successfully!" -Level Info
+            return $response
+        }
     }
     catch {
         # Capture and log error details

@@ -3,7 +3,7 @@
     Removes a warehouse from a specified Microsoft Fabric workspace.
 
 .DESCRIPTION
-    This function sends a DELETE request to the Microsoft Fabric API to remove a warehouse 
+    This function sends a DELETE request to the Microsoft Fabric API to remove a warehouse
     from the specified workspace using the provided WorkspaceId and WarehouseId.
 
 .PARAMETER WorkspaceId
@@ -23,7 +23,7 @@
     Author: Tiago Balabuch
 #>
 function Remove-FabricWarehouse {
-    [CmdletBinding()]
+    [CmdletBinding(SupportsShouldProcess=$true, ConfirmImpact='High')]
     param (
         [Parameter(Mandatory = $true)]
         [ValidateNotNullOrEmpty()]
@@ -49,11 +49,14 @@ function Remove-FabricWarehouse {
             BaseURI = $apiEndpointURI
             Method = 'Delete'
         }
-        $response = Invoke-FabricAPIRequest @apiParams
-        
-        # Return the API response
-        Write-Message -Message "Warehouse '$WarehouseId' deleted successfully from workspace '$WorkspaceId'." -Level Info
-        return $response
+
+        if ($PSCmdlet.ShouldProcess("Warehouse '$WarehouseId' in workspace '$WorkspaceId'", 'Delete')) {
+            $response = Invoke-FabricAPIRequest @apiParams
+
+            # Return the API response
+            Write-Message -Message "Warehouse '$WarehouseId' deleted successfully from workspace '$WorkspaceId'." -Level Info
+            return $response
+        }
 
     }
     catch {
