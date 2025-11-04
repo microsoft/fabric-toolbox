@@ -27,7 +27,7 @@ Set-FabricLabel -Items @(@{id='item1';type='dataset'}, @{id='item2';type='report
 Author: Tiago Balabuch
 #>
 function Set-FabricLabel {
-    [CmdletBinding()]
+    [CmdletBinding(SupportsShouldProcess = $true, ConfirmImpact = 'Medium')]
     param (
         [Parameter(Mandatory = $true)]
         [ValidateNotNullOrEmpty()]
@@ -88,11 +88,13 @@ function Set-FabricLabel {
             Method = 'Post'
             Body = $bodyJson
         }
-        $response = Invoke-FabricAPIRequest @apiParams
-        
-        # Return the API response
-        Write-Message -Message "Bulk label assignment completed successfully for $($Items.Count) item(s) with LabelId '$LabelId'." -Level Info
-        return $response
+        if ($PSCmdlet.ShouldProcess("Bulk label assignment", "Assign label '$LabelId' to $($Items.Count) item(s)")) {
+            $response = Invoke-FabricAPIRequest @apiParams
+            
+            # Return the API response
+            Write-Message -Message "Bulk label assignment completed successfully for $($Items.Count) item(s) with LabelId '$LabelId'." -Level Info
+            return $response
+        }
     }
     catch {
         # Capture and log error details

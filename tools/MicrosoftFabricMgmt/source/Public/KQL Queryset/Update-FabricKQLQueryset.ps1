@@ -32,7 +32,7 @@ Author: Tiago Balabuch
 
 #>
 function Update-FabricKQLQueryset {
-    [CmdletBinding()]
+    [CmdletBinding(SupportsShouldProcess = $true, ConfirmImpact = 'Medium')]
     param (
         [Parameter(Mandatory = $true)]
         [ValidateNotNullOrEmpty()]
@@ -81,11 +81,13 @@ function Update-FabricKQLQueryset {
             Method = 'Patch'
             Body = $bodyJson
         }
-        $response = Invoke-FabricAPIRequest @apiParams 
+        if ($PSCmdlet.ShouldProcess($KQLQuerysetId, "Update KQL Queryset in workspace '$WorkspaceId'")) {
+            $response = Invoke-FabricAPIRequest @apiParams 
 
-        # Return the API response
-        Write-Message -Message "KQLQueryset '$KQLQuerysetName' updated successfully!" -Level Info
-        return $response
+            # Return the API response
+            Write-Message -Message "KQLQueryset '$KQLQuerysetName' updated successfully!" -Level Info
+            return $response
+        }
     }
     catch {
         # Capture and log error details

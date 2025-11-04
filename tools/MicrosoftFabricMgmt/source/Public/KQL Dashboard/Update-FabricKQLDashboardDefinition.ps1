@@ -39,7 +39,7 @@ Author: Tiago Balabuch
 
 #>
 function Update-FabricKQLDashboardDefinition {
-    [CmdletBinding()]
+    [CmdletBinding(SupportsShouldProcess = $true, ConfirmImpact = 'Medium')]
     param (
         [Parameter(Mandatory = $true)]
         [ValidateNotNullOrEmpty()]
@@ -66,7 +66,8 @@ function Update-FabricKQLDashboardDefinition {
         # Construct the API endpoint URI with filtering logic  
         $apiEndpointURI = "{0}/workspaces/{1}/KQLDashboards/{2}/updateDefinition" -f $FabricConfig.BaseUrl, $WorkspaceId, $KQLDashboardId
         if ($KQLDashboardPathPlatformDefinition) {
-            $apiEndpointURI = "?updateMetadata=true" -f $apiEndpointURI 
+            # Append the query parameter correctly
+            $apiEndpointURI = "$apiEndpointURI?updateMetadata=true"
         }
         Write-Message -Message "API Endpoint: $apiEndpointURI" -Level Debug
 
@@ -122,11 +123,13 @@ function Update-FabricKQLDashboardDefinition {
             Method = 'Post'
             Body = $bodyJson
         }
-        $response = Invoke-FabricAPIRequest @apiParams
+        if ($PSCmdlet.ShouldProcess($KQLDashboardId, "Update KQL Dashboard definition in workspace '$WorkspaceId'")) {
+            $response = Invoke-FabricAPIRequest @apiParams
 
-        # Return the API response
-        Write-Message -Message "Successfully updated the definition for KQL Dashboard with ID '$KQLDashboardId' in workspace '$WorkspaceId'." -Level Info        
-        return $response
+            # Return the API response
+            Write-Message -Message "Successfully updated the definition for KQL Dashboard with ID '$KQLDashboardId' in workspace '$WorkspaceId'." -Level Info        
+            return $response
+        }
     }
     catch {
         # Capture and log error details

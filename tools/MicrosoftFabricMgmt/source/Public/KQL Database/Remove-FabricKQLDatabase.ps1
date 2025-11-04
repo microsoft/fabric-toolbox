@@ -24,7 +24,7 @@ Author: Tiago Balabuch
 
 #>
 function Remove-FabricKQLDatabase {
-    [CmdletBinding()]
+    [CmdletBinding(SupportsShouldProcess = $true, ConfirmImpact = 'High')]
     param (
         [Parameter(Mandatory = $true)]
         [ValidateNotNullOrEmpty()]
@@ -51,11 +51,13 @@ function Remove-FabricKQLDatabase {
             BaseURI = $apiEndpointURI
             Method = 'Delete'
         }
-        $response = Invoke-FabricAPIRequest @apiParams 
+        if ($PSCmdlet.ShouldProcess($KQLDatabaseId, "Delete KQL Database in workspace '$WorkspaceId'")) {
+            $response = Invoke-FabricAPIRequest @apiParams 
 
-        # Return the API response
-        Write-Message -Message "KQLDatabase '$KQLDatabaseId' deleted successfully from workspace '$WorkspaceId'." -Level Info
-        return $response
+            # Return the API response
+            Write-Message -Message "KQLDatabase '$KQLDatabaseId' deleted successfully from workspace '$WorkspaceId'." -Level Info
+            return $response
+        }
     }
     catch {
         # Capture and log error details

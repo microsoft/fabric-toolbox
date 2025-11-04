@@ -38,7 +38,7 @@ Author: Tiago Balabuch
 #>
 
 function New-FabricKQLDatabase {
-    [CmdletBinding()]
+    [CmdletBinding(SupportsShouldProcess = $true, ConfirmImpact = 'Medium')]
     param (
         [Parameter(Mandatory = $true)]
         [ValidateNotNullOrEmpty()]
@@ -228,11 +228,13 @@ function New-FabricKQLDatabase {
             Method = 'Post'
             Body = $bodyJson
         }
-        $response = Invoke-FabricAPIRequest @apiParams
-        
-        # Return the API response
-        Write-Message -Message "KQLDatabase '$KQLDatabaseName' created successfully!" -Level Info
-        return $response
+        if ($PSCmdlet.ShouldProcess($KQLDatabaseName, "Create KQL Database in workspace '$WorkspaceId'")) {
+            $response = Invoke-FabricAPIRequest @apiParams
+            
+            # Return the API response
+            Write-Message -Message "KQLDatabase '$KQLDatabaseName' created successfully!" -Level Info
+            return $response
+        }
     }
     catch {
         # Capture and log error details

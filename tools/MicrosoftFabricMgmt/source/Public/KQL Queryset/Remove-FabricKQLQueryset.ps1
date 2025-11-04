@@ -24,7 +24,7 @@ Author: Tiago Balabuch
 
 #>
 function Remove-FabricKQLQueryset {
-    [CmdletBinding()]
+    [CmdletBinding(SupportsShouldProcess = $true, ConfirmImpact = 'High')]
     param (
         [Parameter(Mandatory = $true)]
         [ValidateNotNullOrEmpty()]
@@ -50,11 +50,13 @@ function Remove-FabricKQLQueryset {
             BaseURI = $apiEndpointURI
             Method = 'Delete'
         }
-        $response = Invoke-FabricAPIRequest @apiParams 
+        if ($PSCmdlet.ShouldProcess($KQLQuerysetId, "Delete KQL Queryset in workspace '$WorkspaceId'")) {
+            $response = Invoke-FabricAPIRequest @apiParams 
 
-        # Return the API response
-        Write-Message -Message "KQLQueryset '$KQLQuerysetId' deleted successfully from workspace '$WorkspaceId'." -Level Info
-        return $response
+            # Return the API response
+            Write-Message -Message "KQLQueryset '$KQLQuerysetId' deleted successfully from workspace '$WorkspaceId'." -Level Info
+            return $response
+        }
     }
     catch {
         # Capture and log error details

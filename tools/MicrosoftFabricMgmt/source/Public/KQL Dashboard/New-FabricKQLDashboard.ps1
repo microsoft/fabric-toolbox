@@ -33,7 +33,7 @@ Author: Tiago Balabuch
 
 #>
 function New-FabricKQLDashboard {
-    [CmdletBinding()]
+    [CmdletBinding(SupportsShouldProcess = $true, ConfirmImpact = 'Medium')]
     param (
         [Parameter(Mandatory = $true)]
         [ValidateNotNullOrEmpty()]
@@ -136,11 +136,13 @@ function New-FabricKQLDashboard {
             Method = 'Post'
             Body = $bodyJson
         }
-        $response = Invoke-FabricAPIRequest @apiParams
-        
-        # Return the API response
-        Write-Message -Message "KQLDashboard '$KQLDashboardName' created successfully!" -Level Info
-        return $response
+        if ($PSCmdlet.ShouldProcess($KQLDashboardName, "Create KQL Dashboard in workspace '$WorkspaceId'")) {
+            $response = Invoke-FabricAPIRequest @apiParams
+            
+            # Return the API response
+            Write-Message -Message "KQLDashboard '$KQLDashboardName' created successfully!" -Level Info
+            return $response
+        }
     }
     catch {
         # Capture and log error details
