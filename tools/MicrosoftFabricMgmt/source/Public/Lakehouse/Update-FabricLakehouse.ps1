@@ -32,7 +32,7 @@ Author: Tiago Balabuch
 
 #>
 function Update-FabricLakehouse {
-    [CmdletBinding()]
+    [CmdletBinding(SupportsShouldProcess = $true, ConfirmImpact = 'Medium')]
     param (
         [Parameter(Mandatory = $true)]
         [ValidateNotNullOrEmpty()]
@@ -81,11 +81,13 @@ function Update-FabricLakehouse {
             Method = 'Patch'
             Body = $bodyJson
         }
-        $response = Invoke-FabricAPIRequest @apiParams
+        if ($PSCmdlet.ShouldProcess($LakehouseId, "Update Lakehouse in workspace '$WorkspaceId'")) {
+            $response = Invoke-FabricAPIRequest @apiParams
 
-        # Return the API response
-        Write-Message -Message "Lakehouse '$LakehouseName' updated successfully!" -Level Info
-        return $response
+            # Return the API response
+            Write-Message -Message "Lakehouse '$LakehouseName' updated successfully!" -Level Info
+            return $response
+        }
     }
     catch {
         # Capture and log error details

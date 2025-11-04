@@ -1,5 +1,6 @@
 function Load-FabricLakehouseTable {
-    [CmdletBinding()]
+    [Diagnostics.CodeAnalysis.SuppressMessage('PSUseApprovedVerbs','')]
+    [CmdletBinding(SupportsShouldProcess = $true, ConfirmImpact = 'Medium')]
     param (
         [Parameter(Mandatory = $true)]
         [ValidateNotNullOrEmpty()]
@@ -83,11 +84,13 @@ function Load-FabricLakehouseTable {
             Body    = $bodyJson
             #HasResults = $false
         }
-        $response = Invoke-FabricAPIRequest @apiParams
-            
-        # Return the API response
-        Write-Message -Message "Table '$TableName' loaded successfully into Lakehouse '$LakehouseId' in Workspace '$WorkspaceId'." -Level Info
-        return $response
+        if ($PSCmdlet.ShouldProcess($TableName, "Load data into table in Lakehouse '$LakehouseId' (workspace '$WorkspaceId')")) {
+            $response = Invoke-FabricAPIRequest @apiParams
+                
+            # Return the API response
+            Write-Message -Message "Table '$TableName' loaded successfully into Lakehouse '$LakehouseId' in Workspace '$WorkspaceId'." -Level Info
+            return $response
+        }
     }
     catch {
         # Capture and log error details
