@@ -17,10 +17,10 @@ Deletes the workspace with the ID "workspace123".
 - Requires `$FabricConfig` global configuration, including `BaseUrl` and `FabricHeaders`.
 - Calls `Test-TokenExpired` to ensure token validity before making the API request.
 
-Author: Tiago Balabuch 
+Author: Tiago Balabuch
 #>
 function Remove-FabricWorkspace {
-    [CmdletBinding()]
+    [CmdletBinding(SupportsShouldProcess=$true, ConfirmImpact = 'High')]
     param (
         [Parameter(Mandatory = $true)]
         [ValidateNotNullOrEmpty()]
@@ -43,11 +43,14 @@ function Remove-FabricWorkspace {
             BaseURI = $apiEndpointURI
             Method = 'Delete'
         }
-        $response = Invoke-FabricAPIRequest @apiParams 
 
-        # Return the API response
-        Write-Message -Message "Workspace '$WorkspaceId' deleted successfully!" -Level Info
-        return $response
+        if ($PSCmdlet.ShouldProcess("Workspace '$WorkspaceId'", 'Delete')) {
+            $response = Invoke-FabricAPIRequest @apiParams
+
+            # Return the API response
+            Write-Message -Message "Workspace '$WorkspaceId' deleted successfully!" -Level Info
+            return $response
+        }
 
     }
     catch {

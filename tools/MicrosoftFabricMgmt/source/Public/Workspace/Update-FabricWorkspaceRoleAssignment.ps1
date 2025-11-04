@@ -31,7 +31,7 @@ Author: Tiago Balabuch
 #>
 
 function Update-FabricWorkspaceRoleAssignment {
-    [CmdletBinding()]
+    [CmdletBinding(SupportsShouldProcess=$true, ConfirmImpact = 'Medium')]
     param (
         [Parameter(Mandatory = $true)]
         [ValidateNotNullOrEmpty()]
@@ -72,11 +72,14 @@ function Update-FabricWorkspaceRoleAssignment {
             Method = 'Patch'
             Body = $bodyJson
         }
-        $response = Invoke-FabricAPIRequest @apiParams 
 
-        # Return the API response      
-        Write-Message -Message "Role assignment $WorkspaceRoleAssignmentId updated successfully in workspace '$WorkspaceId'." -Level Info
-        return $response
+        if ($PSCmdlet.ShouldProcess("Role assignment '$WorkspaceRoleAssignmentId' in workspace '$WorkspaceId' to '$WorkspaceRole'", 'Update')) {
+            $response = Invoke-FabricAPIRequest @apiParams
+
+            # Return the API response
+            Write-Message -Message "Role assignment $WorkspaceRoleAssignmentId updated successfully in workspace '$WorkspaceId'." -Level Info
+            return $response
+        }
     }
     catch {
         # Capture and log error details

@@ -35,7 +35,7 @@
     Author: Tiago Balabuch
 #>
 function New-FabricWarehouseSnapshot {
-    [CmdletBinding()]
+    [CmdletBinding(SupportsShouldProcess=$true, ConfirmImpact='Medium')]
     param (
         [Parameter(Mandatory = $true)]
         [ValidateNotNullOrEmpty()]
@@ -109,11 +109,14 @@ function New-FabricWarehouseSnapshot {
             Method  = 'Post'
             Body    = $bodyJson
         }
-        $response = Invoke-FabricAPIRequest @apiParams
 
-        # Return the API response
-        Write-Message -Message "Data Warehouse Snapshot created successfully!" -Level Info        
-        return $response
+        if ($PSCmdlet.ShouldProcess("Warehouse Snapshot '$WarehouseSnapshotName' in workspace '$WorkspaceId'", 'Create')) {
+            $response = Invoke-FabricAPIRequest @apiParams
+
+            # Return the API response
+            Write-Message -Message "Data Warehouse Snapshot created successfully!" -Level Info
+            return $response
+        }
     }
     catch {
         # Capture and log error details

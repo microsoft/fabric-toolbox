@@ -54,8 +54,8 @@ function Get-FabricWarehouseConnectionString {
         Write-Message -Message "Validating authentication token..." -Level Debug
         Test-TokenExpired
         Write-Message -Message "Authentication token is valid." -Level Debug
-                
-        # Construct the API endpoint URI 
+
+        # Construct the API endpoint URI
         $apiEndpointURI = "{0}/workspaces/{1}/warehouses/{2}/connectionString" -f $FabricConfig.BaseUrl, $WorkspaceId, $WarehouseId
         # Append query parameters if GuestTenantId or PrivateLinkType are provided
         $queryParams = @()
@@ -70,7 +70,7 @@ function Get-FabricWarehouseConnectionString {
         }
 
         Write-Message -Message "API Endpoint: $apiEndpointURI" -Level Debug
-         
+
         # Make the API request
         $apiParams = @{
             BaseURI = $apiEndpointURI
@@ -78,7 +78,7 @@ function Get-FabricWarehouseConnectionString {
             Method  = 'Get'
         }
         $dataItems = Invoke-FabricAPIRequest @apiParams
-           
+
         # Immediately handle empty response
         if (-not $dataItems) {
             Write-Message -Message "No data returned from the API." -Level Warning
@@ -93,5 +93,5 @@ function Get-FabricWarehouseConnectionString {
         # Capture and log error details
         $errorDetails = $_.Exception.Message
         Write-Message -Message "Failed to retrieve Warehouse connection string. Error: $errorDetails" -Level Error
-    } 
+    }
 }

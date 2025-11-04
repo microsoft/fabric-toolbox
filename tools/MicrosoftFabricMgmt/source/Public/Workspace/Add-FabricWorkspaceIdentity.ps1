@@ -17,7 +17,7 @@ Provisions a Managed Identity for the workspace with ID "workspace123".
 - Requires `$FabricConfig` global configuration, including `BaseUrl` and `FabricHeaders`.
 - Calls `Test-TokenExpired` to ensure token validity before making the API request.
 
-Author: Tiago Balabuch  
+Author: Tiago Balabuch
 #>
 
 function Add-FabricWorkspaceIdentity {
@@ -44,12 +44,12 @@ function Add-FabricWorkspaceIdentity {
             Headers = $FabricConfig.FabricHeaders
             Method = 'Post'
         }
-        $response = Invoke-FabricAPIRequest @apiParams 
-        
+        $response = Invoke-FabricAPIRequest @apiParams
+
         # Return the API response.
         Write-Message -Message "Workspace identity was successfully provisioned for workspace '$WorkspaceId'." -Level Info
         return $response
-          
+
     }
     catch {
         # Capture and log error details
