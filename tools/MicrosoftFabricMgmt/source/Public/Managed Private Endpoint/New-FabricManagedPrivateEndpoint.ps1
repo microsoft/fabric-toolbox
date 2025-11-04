@@ -35,7 +35,7 @@
     Author: Tiago Balabuch
 #>
 function New-FabricManagedPrivateEndpoint {
-    [CmdletBinding()]
+    [CmdletBinding(SupportsShouldProcess = $true, ConfirmImpact = 'Medium')]
     param (
         [Parameter(Mandatory = $true)]
         [ValidateNotNullOrEmpty()]
@@ -102,11 +102,13 @@ function New-FabricManagedPrivateEndpoint {
             Method  = 'Post'
             Body    = $bodyJson
         }
-        $response = Invoke-FabricAPIRequest @apiParams
+        if ($PSCmdlet.ShouldProcess($ManagedPrivateEndpointName, "Create Managed Private Endpoint in workspace '$WorkspaceId'")) {
+            $response = Invoke-FabricAPIRequest @apiParams
 
-        # Return the API response
-        Write-Message -Message "Managed Private Endpoint created successfully!" -Level Info        
-        return $response     
+            # Return the API response
+            Write-Message -Message "Managed Private Endpoint created successfully!" -Level Info        
+            return $response     
+        }
     }
     catch {
         # Capture and log error details
