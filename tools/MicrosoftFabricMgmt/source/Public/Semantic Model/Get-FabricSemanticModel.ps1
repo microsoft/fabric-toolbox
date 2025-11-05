@@ -28,7 +28,7 @@
     - Calls `Test-TokenExpired` to ensure token validity before making the API request.
 
     Author: Tiago Balabuch
-    
+
 #>
 function Get-FabricSemanticModel {
     [CmdletBinding()]
@@ -52,16 +52,16 @@ function Get-FabricSemanticModel {
             Write-Message -Message "Specify only one parameter: either 'SemanticModelId' or 'SemanticModelName'." -Level Error
             return $null
         }
-        
+
         # Validate authentication token before proceeding.
         Write-Message -Message "Validating token..." -Level Debug
         Test-TokenExpired
         Write-Message -Message "Token validation completed." -Level Debug
-        
-        # Construct the API endpoint URI 
+
+        # Construct the API endpoint URI
         $apiEndpointURI = "{0}/workspaces/{1}/semanticModels" -f $FabricConfig.BaseUrl, $WorkspaceId
         Write-Message -Message "API Endpoint: $apiEndpointURI" -Level Debug
- 
+
         # Make the API request
         # Make the API request
         $apiParams = @{
@@ -70,7 +70,7 @@ function Get-FabricSemanticModel {
             Method = 'Get'
         }
         $dataItems = Invoke-FabricAPIRequest @apiParams
-           
+
         # Immediately handle empty response
         if (-not $dataItems) {
             Write-Message -Message "No data returned from the API." -Level Warning
@@ -103,6 +103,6 @@ function Get-FabricSemanticModel {
         # Capture and log error details
         $errorDetails = $_.Exception.Message
         Write-Message -Message "Failed to retrieve SemanticModel. Error: $errorDetails" -Level Error
-    } 
- 
+    }
+
 }

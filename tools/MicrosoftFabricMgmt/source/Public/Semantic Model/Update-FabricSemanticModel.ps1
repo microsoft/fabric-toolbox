@@ -3,7 +3,7 @@
     Updates an existing SemanticModel in a specified Microsoft Fabric workspace.
 
 .DESCRIPTION
-    This function sends a PATCH request to the Microsoft Fabric API to update an existing SemanticModel 
+    This function sends a PATCH request to the Microsoft Fabric API to update an existing SemanticModel
     in the specified workspace. It supports optional parameters for SemanticModel description.
 
 .PARAMETER WorkspaceId
@@ -27,15 +27,15 @@
     - Calls `Test-TokenExpired` to ensure token validity before making the API request.
 
     Author: Tiago Balabuch
-    
+
 #>
 function Update-FabricSemanticModel {
-    [CmdletBinding()]
+    [CmdletBinding(SupportsShouldProcess=$true, ConfirmImpact='Medium')]
     param (
         [Parameter(Mandatory = $true)]
         [ValidateNotNullOrEmpty()]
-        [string]$WorkspaceId,   
-        
+        [string]$WorkspaceId,
+
         [Parameter(Mandatory = $true)]
         [ValidateNotNullOrEmpty()]
         [string]$SemanticModelId,
@@ -49,7 +49,7 @@ function Update-FabricSemanticModel {
         [ValidateNotNullOrEmpty()]
         [string]$SemanticModelDescription
     )
-    try { 
+    try {
         # Validate authentication token before proceeding.
         Write-Message -Message "Validating authentication token..." -Level Debug
         Test-TokenExpired
@@ -73,17 +73,19 @@ function Update-FabricSemanticModel {
         Write-Message -Message "Request Body: $bodyJson" -Level Debug
 
         # Make the API request
-        $apiParams = @{
-            Headers = $FabricConfig.FabricHeaders
-            BaseURI = $apiEndpointURI
-            Method = 'Patch'
-            Body = $bodyJson
+        if ($PSCmdlet.ShouldProcess("Semantic Model '$SemanticModelName' in workspace '$WorkspaceId'", "Update")) {
+            $apiParams = @{
+                Headers = $FabricConfig.FabricHeaders
+                BaseURI = $apiEndpointURI
+                Method = 'Patch'
+                Body = $bodyJson
+            }
+            $response = Invoke-FabricAPIRequest @apiParams
+
+            # Return the API response
+            Write-Message -Message "SemanticModel '$SemanticModelName' updated successfully!" -Level Info
+            return $response
         }
-        $response = Invoke-FabricAPIRequest @apiParams 
-      
-        # Return the API response
-        Write-Message -Message "SemanticModel '$SemanticModelName' updated successfully!" -Level Info
-        return $response
     }
     catch {
         # Capture and log error details

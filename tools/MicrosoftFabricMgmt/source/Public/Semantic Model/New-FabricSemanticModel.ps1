@@ -3,7 +3,7 @@
     Creates a new SemanticModel in a specified Microsoft Fabric workspace.
 
 .DESCRIPTION
-    This function sends a POST request to the Microsoft Fabric API to create a new SemanticModel 
+    This function sends a POST request to the Microsoft Fabric API to create a new SemanticModel
     in the specified workspace. It supports optional parameters for SemanticModel description and path definitions.
 
 .PARAMETER WorkspaceId
@@ -27,10 +27,10 @@
     - Calls `Test-TokenExpired` to ensure token validity before making the API request.
 
     Author: Tiago Balabuch
-    
+
 #>
 function New-FabricSemanticModel {
-    [CmdletBinding()]
+    [CmdletBinding(SupportsShouldProcess=$true, ConfirmImpact='Medium')]
     param (
         [Parameter(Mandatory = $true)]
         [ValidateNotNullOrEmpty()]
@@ -49,7 +49,7 @@ function New-FabricSemanticModel {
         [ValidateNotNullOrEmpty()]
         [string]$SemanticModelPathDefinition
     )
-    try { 
+    try {
         # Validate authentication token before proceeding.
         Write-Message -Message "Validating authentication token..." -Level Debug
         Test-TokenExpired
@@ -66,7 +66,7 @@ function New-FabricSemanticModel {
             }
         }
 
-        # As Report has multiple parts, we need to get the definition parts  
+        # As Report has multiple parts, we need to get the definition parts
         $jsonObjectParts = Get-FileDefinitionParts -sourceDirectory $SemanticModelPathDefinition
         # Add new part to the parts array
         $body.definition.parts = $jsonObjectParts.parts
@@ -74,24 +74,26 @@ function New-FabricSemanticModel {
         if ($SemanticModelDescription) {
             $body.description = $SemanticModelDescription
         }
-        
+
         # Convert the body to JSON
         $bodyJson = $body | ConvertTo-Json -Depth 10
         Write-Message -Message "Request Body: $bodyJson" -Level Debug
 
         # Make the API request
-        $apiParams = @{
-            BaseURI = $apiEndpointURI
-            Headers = $FabricConfig.FabricHeaders
-            Method = 'Post'
-            Body = $bodyJson
-        }
-        $response = Invoke-FabricAPIRequest @apiParams
+        if ($PSCmdlet.ShouldProcess("Semantic Model '$SemanticModelName' in workspace '$WorkspaceId'", "Create")) {
+            $apiParams = @{
+                BaseURI = $apiEndpointURI
+                Headers = $FabricConfig.FabricHeaders
+                Method = 'Post'
+                Body = $bodyJson
+            }
+            $response = Invoke-FabricAPIRequest @apiParams
 
-        # Return the API response   
-        Write-Message -Message "SemanticModel '$SemanticModelName' created successfully!" -Level Info
-        return $response
-      
+            # Return the API response
+            Write-Message -Message "SemanticModel '$SemanticModelName' created successfully!" -Level Info
+            return $response
+        }
+
     }
     catch {
         # Capture and log error details
