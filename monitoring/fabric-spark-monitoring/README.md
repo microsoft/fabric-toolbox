@@ -1,6 +1,6 @@
 # ⚡ Fabric Spark Monitoring
 
-A project designed to accelerate the deployment and experience of the Spark Monitoring solution in Microsoft Fabric. It provides a visual overview of cluster health, resource constraints, and enables comparison between two Spark applications.
+A project designed to accelerate the deployment and experience of the Spark Monitoring solution in Microsoft Fabric. It provides a visual overview of cluster health, resource constraints, enables comparison between two Spark applications and recommedations like if increasing resources will improve the performance.
 
 ---
 
@@ -8,7 +8,7 @@ A project designed to accelerate the deployment and experience of the Spark Moni
 > The SparkMonitoring solution accelerator is not an official Microsoft product! It is a solution accelerator, which can help you implement a monitoring solution within Fabric. As such there is no offical support available and there is a risk that things might break. 
 
 > [!CAUTION]  
-> This solution does not work with spark starter pools as it is not possible to configure the emitters on those. As part of the setup configuration we add the spark property spark.fabric.pools.skipStarterPools - true.
+> This solution does not work with spark starter pools as it is not possible to configure the emitters on those. As part of the setup configuration we add the spark property spark.fabric.pools.skipStarterPools - true. The reason is that the diagnostic library requires specific configurations to be applied at Spark session startup a process only supported by On-Demand Pools, as they are dynamically created during startup.
 
 ---
 

@@ -1735,6 +1735,32 @@
         "crossFilter": [],
         "drillthrough": []
       }
+    },
+    {
+      "id": "d47bdd29-f2d2-49a2-8755-5eb3ef2a0ea2",
+      "title": "Stage Summary",
+      "visualType": "table",
+      "pageId": "3ef28cb0-8700-40a7-b0d7-2adfd4ac0f1a",
+      "layout": {
+        "x": 0,
+        "y": 26,
+        "width": 24,
+        "height": 7
+      },
+      "queryRef": {
+        "kind": "query",
+        "queryId": "376e7171-35e0-45a9-8c76-3a3f51583b74"
+      },
+      "visualOptions": {
+        "table__enableRenderLinks": true,
+        "colorRulesDisabled": true,
+        "crossFilter": [],
+        "crossFilterDisabled": false,
+        "drillthroughDisabled": false,
+        "drillthrough": [],
+        "table__renderLinks": [],
+        "colorRules": []
+      }
     }
   ],
   "baseQueries": [
@@ -1940,7 +1966,7 @@
       "id": "82abfa0d-7aa4-485a-bf5a-7089d8a07a0d",
       "kind": "kusto-trident",
       "clusterUri": "",
-      "database": "23f5f662-edd4-a9e3-4623-143e85fad3c1",
+      "database": "0de204d3-fb2d-8c80-4645-2f61e0dc9d87",
       "name": "Spark Monitoring",
       "scopeId": "kusto-trident",
       "workspace": "00000000-0000-0000-0000-000000000000"
@@ -2568,6 +2594,17 @@
       "usedVariables": [
         "_applicationId",
         "_nodeSelected"
+      ]
+    },
+    {
+      "dataSource": {
+        "kind": "inline",
+        "dataSourceId": "82abfa0d-7aa4-485a-bf5a-7089d8a07a0d"
+      },
+      "text": "sparklens_summary\n| where app_id == _applicationId\n| order by toint(stage_id) asc\n",
+      "id": "376e7171-35e0-45a9-8c76-3a3f51583b74",
+      "usedVariables": [
+        "_applicationId"
       ]
     },
     {
