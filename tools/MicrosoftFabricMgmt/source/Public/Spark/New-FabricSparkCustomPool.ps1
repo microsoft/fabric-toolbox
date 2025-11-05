@@ -3,7 +3,7 @@
     Creates a new Spark custom pool in a specified Microsoft Fabric workspace.
 
 .DESCRIPTION
-    This function sends a POST request to the Microsoft Fabric API to create a new Spark custom pool 
+    This function sends a POST request to the Microsoft Fabric API to create a new Spark custom pool
     in the specified workspace. It supports various parameters for Spark custom pool configuration.
 
 .PARAMETER WorkspaceId
@@ -45,10 +45,10 @@
     - Calls `Test-TokenExpired` to ensure token validity before making the API request.
 
     Author: Tiago Balabuch
-    
+
 #>
 function New-FabricSparkCustomPool {
-    [CmdletBinding()]
+    [CmdletBinding(SupportsShouldProcess=$true, ConfirmImpact='Medium')]
     param (
         [Parameter(Mandatory = $true)]
         [ValidateNotNullOrEmpty()]
@@ -63,7 +63,7 @@ function New-FabricSparkCustomPool {
         [ValidateNotNullOrEmpty()]
         [ValidateSet('MemoryOptimized')]
         [string]$NodeFamily,
-        
+
         [Parameter(Mandatory = $true)]
         [ValidateNotNullOrEmpty()]
         [ValidateSet('Large', 'Medium', 'Small', 'XLarge', 'XXLarge')]
@@ -125,18 +125,19 @@ function New-FabricSparkCustomPool {
         Write-Message -Message "Request Body: $bodyJson" -Level Debug
 
         # Make the API request
-        # Make the API request
-        $apiParams = @{
-            BaseURI = $apiEndpointURI
-            Headers = $FabricConfig.FabricHeaders
-            Method = 'Post'
-            Body = $bodyJson
-        }
-        $response = Invoke-FabricAPIRequest @apiParams
+        if ($PSCmdlet.ShouldProcess("Spark Custom Pool '$SparkCustomPoolName' in workspace '$WorkspaceId'", "Create")) {
+            $apiParams = @{
+                BaseURI = $apiEndpointURI
+                Headers = $FabricConfig.FabricHeaders
+                Method = 'Post'
+                Body = $bodyJson
+            }
+            $response = Invoke-FabricAPIRequest @apiParams
 
-        # Return the API response 
-        Write-Message -Message "SparkCustomPool '$SparkCustomPoolName' created successfully!" -Level Info
-        return $response       
+            # Return the API response
+            Write-Message -Message "SparkCustomPool '$SparkCustomPoolName' created successfully!" -Level Info
+            return $response
+        }
     }
     catch {
         # Capture and log error details

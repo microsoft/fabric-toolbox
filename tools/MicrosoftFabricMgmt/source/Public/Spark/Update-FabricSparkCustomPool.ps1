@@ -3,7 +3,7 @@
     Updates an existing Spark custom pool in a specified Microsoft Fabric workspace.
 
 .DESCRIPTION
-    This function sends a PATCH request to the Microsoft Fabric API to update an existing Spark custom pool 
+    This function sends a PATCH request to the Microsoft Fabric API to update an existing Spark custom pool
     in the specified workspace. It supports various parameters for Spark custom pool configuration.
 
 .PARAMETER WorkspaceId
@@ -48,15 +48,15 @@
     - Calls `Test-TokenExpired` to ensure token validity before making the API request.
 
     Author: Tiago Balabuch
-    
+
 #>
 function Update-FabricSparkCustomPool {
-    [CmdletBinding()]
+    [CmdletBinding(SupportsShouldProcess=$true, ConfirmImpact='Medium')]
     param (
         [Parameter(Mandatory = $true)]
         [ValidateNotNullOrEmpty()]
-        [string]$WorkspaceId,   
-        
+        [string]$WorkspaceId,
+
         [Parameter(Mandatory = $true)]
         [ValidateNotNullOrEmpty()]
         [string]$SparkCustomPoolId,
@@ -70,7 +70,7 @@ function Update-FabricSparkCustomPool {
         [ValidateNotNullOrEmpty()]
         [ValidateSet('MemoryOptimized')]
         [string]$NodeFamily,
-        
+
         [Parameter(Mandatory = $true)]
         [ValidateNotNullOrEmpty()]
         [ValidateSet('Large', 'Medium', 'Small', 'XLarge', 'XXLarge')]
@@ -132,17 +132,19 @@ function Update-FabricSparkCustomPool {
         Write-Message -Message "Request Body: $bodyJson" -Level Debug
 
         # Make the API request
-        $apiParams = @{
-            Headers = $FabricConfig.FabricHeaders
-            BaseURI = $apiEndpointURI
-            Method = 'Patch'
-            Body = $bodyJson
+        if ($PSCmdlet.ShouldProcess("Spark Custom Pool '$InstancePoolName' in workspace '$WorkspaceId'", "Update")) {
+            $apiParams = @{
+                Headers = $FabricConfig.FabricHeaders
+                BaseURI = $apiEndpointURI
+                Method = 'Patch'
+                Body = $bodyJson
+            }
+            $response = Invoke-FabricAPIRequest @apiParams
+
+            # Return the API response
+            Write-Message -Message "Spark Custom Pool '$SparkCustomPoolName' updated successfully!" -Level Info
+            return $response
         }
-        $response = Invoke-FabricAPIRequest @apiParams 
-      
-        # Return the API response
-        Write-Message -Message "Spark Custom Pool '$SparkCustomPoolName' updated successfully!" -Level Info
-        return $response
     }
     catch {
         # Capture and log error details

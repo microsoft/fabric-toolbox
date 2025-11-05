@@ -3,7 +3,7 @@
     Updates an existing Spark custom pool in a specified Microsoft Fabric workspace.
 
 .DESCRIPTION
-    This function sends a PATCH request to the Microsoft Fabric API to update an existing Spark custom pool 
+    This function sends a PATCH request to the Microsoft Fabric API to update an existing Spark custom pool
     in the specified workspace. It supports various parameters for Spark custom pool configuration.
 
 .PARAMETER WorkspaceId
@@ -48,14 +48,14 @@
     - Calls `Test-TokenExpired` to ensure token validity before making the API request.
 
     Author: Tiago Balabuch
-    
+
 #>
 function Update-FabricSparkWorkspaceSettings {
-    [CmdletBinding()]
+    [CmdletBinding(SupportsShouldProcess=$true, ConfirmImpact='Medium')]
     param (
         [Parameter(Mandatory = $true)]
         [ValidateNotNullOrEmpty()]
-        [string]$WorkspaceId,   
+        [string]$WorkspaceId,
 
         [Parameter(Mandatory = $false)]
         [ValidateNotNullOrEmpty()]
@@ -64,7 +64,7 @@ function Update-FabricSparkWorkspaceSettings {
         [Parameter(Mandatory = $false)]
         [ValidateNotNullOrEmpty()]
         [bool]$notebookInteractiveRunEnabled,
-        
+
         [Parameter(Mandatory = $false)]
         [ValidateNotNullOrEmpty()]
         [bool]$customizeComputeEnabled,
@@ -95,19 +95,19 @@ function Update-FabricSparkWorkspaceSettings {
         [string]$EnvironmentRuntimeVersion
     )
 
-    try { 
+    try {
         # Validate authentication token before proceeding.
         Write-Message -Message "Validating authentication token..." -Level Debug
         Test-TokenExpired
         Write-Message -Message "Authentication token is valid." -Level Debug
 
-        # Construct the API endpoint URI with filtering logic  
+        # Construct the API endpoint URI with filtering logic
         $apiEndpointURI = "{0}/workspaces/{1}/spark/settings" -f $FabricConfig.BaseUrl, $WorkspaceId, $SparkSettingsId
         Write-Message -Message "API Endpoint: $apiEndpointURI" -Level Debug
 
         # Construct the request body
         $body = @{}
-        
+
         if ($PSBoundParameters.ContainsKey('automaticLogEnabled')) {
             $body.automaticLog = @{
                 enabled = $automaticLogEnabled
@@ -136,10 +136,10 @@ function Update-FabricSparkWorkspaceSettings {
             }
             else {
                 Write-Message -Message "Both 'defaultPoolName' and 'defaultPoolType' must be provided together." -Level Error
-                throw 
+                throw
             }
         }
-        
+
         if ($PSBoundParameters.ContainsKey('EnvironmentName') -or $PSBoundParameters.ContainsKey('EnvironmentRuntimeVersion')) {
             $body.environment = @{
                 name = $EnvironmentName
@@ -156,18 +156,19 @@ function Update-FabricSparkWorkspaceSettings {
         Write-Message -Message "Request Body: $bodyJson" -Level Debug
 
         # Make the API request
-        # Make the API request
-        $apiParams = @{
-            BaseURI = $apiEndpointURI
-            Headers = $FabricConfig.FabricHeaders
-            Method = 'Patch'
-            Body = $bodyJson
-        }
-        $response = Invoke-FabricAPIRequest @apiParams 
+        if ($PSCmdlet.ShouldProcess("Spark Workspace settings '$SparkSettingsName' in workspace '$WorkspaceId'", "Update")) {
+            $apiParams = @{
+                BaseURI = $apiEndpointURI
+                Headers = $FabricConfig.FabricHeaders
+                Method = 'Patch'
+                Body = $bodyJson
+            }
+            $response = Invoke-FabricAPIRequest @apiParams
 
-        # Return the API response
-        Write-Message -Message "Spark Workspace Pool '$SparkSettingsName' updated successfully!" -Level Info
-        return $response
+            # Return the API response
+            Write-Message -Message "Spark Workspace Pool '$SparkSettingsName' updated successfully!" -Level Info
+            return $response
+        }
     }
     catch {
         # Capture and log error details

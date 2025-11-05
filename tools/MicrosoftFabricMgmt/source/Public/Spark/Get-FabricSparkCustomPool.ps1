@@ -57,16 +57,16 @@ function Get-FabricSparkCustomPool {
             Write-Message -Message "Specify only one parameter: either 'SparkCustomPoolId' or 'SparkCustomPoolName'." -Level Error
             return $null
         }
-        
+
         # Validate authentication token before proceeding.
         Write-Message -Message "Validating authentication token..." -Level Debug
         Test-TokenExpired
         Write-Message -Message "Authentication token is valid." -Level Debug
-                
-        # Construct the API endpoint URI 
+
+        # Construct the API endpoint URI
         $apiEndpointURI = "{0}/workspaces/{1}/spark/pools" -f $FabricConfig.BaseUrl, $WorkspaceId
         Write-Message -Message "API Endpoint: $apiEndpointURI" -Level Debug
-         
+
         # Make the API request
         # Make the API request
         $apiParams = @{
@@ -75,7 +75,7 @@ function Get-FabricSparkCustomPool {
             Method = 'Get'
         }
         $dataItems = Invoke-FabricAPIRequest @apiParams
-        
+
         # Immediately handle empty response
         if (-not $dataItems) {
             Write-Message -Message "No data returned from the API." -Level Warning
@@ -108,6 +108,6 @@ function Get-FabricSparkCustomPool {
         # Capture and log error details
         $errorDetails = $_.Exception.Message
         Write-Message -Message "Failed to retrieve SparkCustomPool. Error: $errorDetails" -Level Error
-    } 
- 
+    }
+
 }

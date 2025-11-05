@@ -3,7 +3,7 @@
     Updates an existing Spark custom pool in a specified Microsoft Fabric workspace.
 
 .DESCRIPTION
-    This function sends a PATCH request to the Microsoft Fabric API to update an existing Spark custom pool 
+    This function sends a PATCH request to the Microsoft Fabric API to update an existing Spark custom pool
     in the specified workspace. It supports various parameters for Spark custom pool configuration.
 
 .PARAMETER WorkspaceId
@@ -48,15 +48,15 @@
     - Calls `Test-TokenExpired` to ensure token validity before making the API request.
 
     Author: Tiago Balabuch
-    
+
 #>
 function Update-FabricSparkSettings {
-    [CmdletBinding()]
+    [CmdletBinding(SupportsShouldProcess=$true, ConfirmImpact='Medium')]
     param (
         [Parameter(Mandatory = $true)]
         [ValidateNotNullOrEmpty()]
-        [string]$WorkspaceId,   
-        
+        [string]$WorkspaceId,
+
 
         [Parameter(Mandatory = $false)]
         [ValidateNotNullOrEmpty()]
@@ -65,7 +65,7 @@ function Update-FabricSparkSettings {
         [Parameter(Mandatory = $false)]
         [ValidateNotNullOrEmpty()]
         [bool]$notebookInteractiveRunEnabled,
-        
+
         [Parameter(Mandatory = $false)]
         [ValidateNotNullOrEmpty()]
         [bool]$customizeComputeEnabled,
@@ -110,7 +110,7 @@ function Update-FabricSparkSettings {
         # Construct the request body with optional properties
 
         $body = @{}
-        
+
         if ($PSBoundParameters.ContainsKey('automaticLogEnabled')) {
             $body.automaticLog = @{
                 enabled = $automaticLogEnabled
@@ -138,10 +138,10 @@ function Update-FabricSparkSettings {
             }
             } else {
                 Write-Message -Message "Both 'defaultPoolName' and 'defaultPoolType' must be provided together." -Level Error
-                throw 
+                throw
             }
         }
-        
+
         if ($PSBoundParameters.ContainsKey('EnvironmentName') -or $PSBoundParameters.ContainsKey('EnvironmentRuntimeVersion')) {
             $body.environment = @{
                 name = $EnvironmentName
@@ -158,30 +158,32 @@ function Update-FabricSparkSettings {
         Write-Message -Message "Request Body: $bodyJson" -Level Debug
 
         # Step 4: Make the API request
-        $restParams = @{
-            Headers = $FabricConfig.FabricHeaders
-            Uri = $apiEndpointUrl
-            Method = 'Patch'
-            Body = $bodyJson
-            ContentType = 'application/json'
-            ErrorAction = 'Stop'
-            SkipHttpErrorCheck = $true
-            StatusCodeVariable = 'statusCode'
-        }
-        $response = Invoke-RestMethod @restParams
+        if ($PSCmdlet.ShouldProcess("Spark settings '$SparkSettingsName' in workspace '$WorkspaceId'", "Update")) {
+            $restParams = @{
+                Headers = $FabricConfig.FabricHeaders
+                Uri = $apiEndpointUrl
+                Method = 'Patch'
+                Body = $bodyJson
+                ContentType = 'application/json'
+                ErrorAction = 'Stop'
+                SkipHttpErrorCheck = $true
+                StatusCodeVariable = 'statusCode'
+            }
+            $response = Invoke-RestMethod @restParams
 
-        # Step 5: Validate the response code
-        if ($statusCode -ne 200) {
-            Write-Message -Message "Unexpected response code: $statusCode from the API." -Level Error
-            Write-Message -Message "Error: $($response.message)" -Level Error
-            Write-Message -Message "Error Details: $($response.moreDetails)" -Level Error
-            Write-Message "Error Code: $($response.errorCode)" -Level Error
-            return $null
-        }
+            # Step 5: Validate the response code
+            if ($statusCode -ne 200) {
+                Write-Message -Message "Unexpected response code: $statusCode from the API." -Level Error
+                Write-Message -Message "Error: $($response.message)" -Level Error
+                Write-Message -Message "Error Details: $($response.moreDetails)" -Level Error
+                Write-Message "Error Code: $($response.errorCode)" -Level Error
+                return $null
+            }
 
-        # Step 6: Handle results
-        Write-Message -Message "Spark Custom Pool '$SparkSettingsName' updated successfully!" -Level Info
-        return $response
+            # Step 6: Handle results
+            Write-Message -Message "Spark Custom Pool '$SparkSettingsName' updated successfully!" -Level Info
+            return $response
+        }
     }
     catch {
         # Step 7: Handle and log errors

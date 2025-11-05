@@ -18,10 +18,11 @@
     - Calls `Test-TokenExpired` to ensure token validity before making the API request.
 
     Author: Tiago Balabuch
-    
+
 #>
 function Get-FabricSparkSettings {
     [CmdletBinding()]
+    [OutputType([object[]])]
     param (
         [Parameter(Mandatory = $true)]
         [ValidateNotNullOrEmpty()]
@@ -37,26 +38,26 @@ function Get-FabricSparkSettings {
         # Step 3: Initialize variables
         $continuationToken = $null
         $SparkSettings = @()
-        
+
         if (-not ([AppDomain]::CurrentDomain.GetAssemblies() | Where-Object { $_.GetName().Name -eq "System.Web" })) {
             Add-Type -AssemblyName System.Web
         }
- 
+
         # Step 4: Loop to retrieve all capacities with continuation token
         Write-Message -Message "Loop started to get continuation token" -Level Debug
         $baseApiEndpointUrl = "{0}/workspaces/{1}/spark/settings" -f $FabricConfig.BaseUrl, $WorkspaceId
-        
+
         do {
             # Step 5: Construct the API URL
             $apiEndpointUrl = $baseApiEndpointUrl
-        
+
             if ($null -ne $continuationToken) {
                 # URL-encode the continuation token
                 $encodedToken = [System.Web.HttpUtility]::UrlEncode($continuationToken)
                 $apiEndpointUrl = "{0}?continuationToken={1}" -f $apiEndpointUrl, $encodedToken
             }
             Write-Message -Message "API Endpoint: $apiEndpointUrl" -Level Debug
-         
+
             # Step 6: Make the API request
             $restParams = @{
                 Headers = $FabricConfig.FabricHeaders
@@ -68,7 +69,7 @@ function Get-FabricSparkSettings {
                 StatusCodeVariable = 'statusCode'
             }
             $response = Invoke-RestMethod @restParams
-         
+
             # Step 7: Validate the response code
             if ($statusCode -ne 200) {
                 Write-Message -Message "Unexpected response code: $statusCode from the API." -Level Error
@@ -77,12 +78,12 @@ function Get-FabricSparkSettings {
                 Write-Message "Error Code: $($response.errorCode)" -Level Error
                 return $null
             }
-         
+
             # Step 8: Add data to the list
             if ($null -ne $response) {
                 Write-Message -Message "Adding data to the list" -Level Debug
                 $SparkSettings += $response
-                 
+
                 # Update the continuation token if present
                 if ($response.PSObject.Properties.Match("continuationToken")) {
                     Write-Message -Message "Updating the continuation token" -Level Debug
@@ -100,11 +101,11 @@ function Get-FabricSparkSettings {
             }
         } while ($null -ne $continuationToken)
         Write-Message -Message "Loop finished and all data added to the list" -Level Debug
-       
+
         # Step 9: Handle results
         if ($SparkSettings) {
             Write-Message -Message " Returning all Spark Settings." -Level Debug
-            # Return all Spark Settings 
+            # Return all Spark Settings
             return $SparkSettings
         }
         else {
@@ -116,6 +117,6 @@ function Get-FabricSparkSettings {
         # Step 10: Capture and log error details
         $errorDetails = $_.Exception.Message
         Write-Message -Message "Failed to retrieve SparkSettings. Error: $errorDetails" -Level Error
-    } 
- 
+    }
+
 }
