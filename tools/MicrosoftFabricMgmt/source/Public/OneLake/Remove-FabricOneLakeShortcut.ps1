@@ -28,7 +28,7 @@
     Author: Tiago Balabuch
 #>
 function Remove-FabricOneLakeShortcut {
-    [CmdletBinding()]
+    [CmdletBinding(SupportsShouldProcess = $true, ConfirmImpact = 'High')]
     param (
         [Parameter(Mandatory = $true)]
         [ValidateNotNullOrEmpty()]
@@ -56,17 +56,21 @@ function Remove-FabricOneLakeShortcut {
         $apiEndpointURI = "{0}/workspaces/{1}/items/{2}/shortcuts/{3}/{4}" -f $FabricConfig.BaseUrl, $WorkspaceId, $ItemId, $ShortcutPath, $ShortcutName
         Write-Message -Message "API Endpoint: $apiEndpointURI" -Level Debug
 
-        # Make the API request
-        $apiParams = @{
-            Headers = $FabricConfig.FabricHeaders
-            BaseURI = $apiEndpointURI
-            Method  = 'Delete'
+        # Make the API request when confirmed
+        $target = "Shortcut '$ShortcutName' at path '$ShortcutPath' on item '$ItemId' in workspace '$WorkspaceId'"
+        $action = "Delete OneLake Shortcut"
+        if ($PSCmdlet.ShouldProcess($target, $action)) {
+            $apiParams = @{
+                Headers = $FabricConfig.FabricHeaders
+                BaseURI = $apiEndpointURI
+                Method  = 'Delete'
+            }
+            $response = Invoke-FabricAPIRequest @apiParams
+            
+            # Return the API response
+            Write-Message -Message "OneLake Shortcut '$ShortcutName' was successfully deleted from item '$ItemId' in workspace '$WorkspaceId'." -Level Info
+            return $response
         }
-        $response = Invoke-FabricAPIRequest @apiParams
-        
-        # Return the API response
-        Write-Message -Message "OneLake Shortcut '$ShortcutName' was successfully deleted from item '$ItemId' in workspace '$WorkspaceId'." -Level Info
-        return $response
 
     }
     catch {

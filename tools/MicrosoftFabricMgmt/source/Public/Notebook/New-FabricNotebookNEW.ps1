@@ -34,7 +34,7 @@ Author: Tiago Balabuch
 #>
 
 function New-FabricNotebookNEW {
-    [CmdletBinding()]
+    [CmdletBinding(SupportsShouldProcess = $true, ConfirmImpact = 'Medium')]
     param (
         [Parameter(Mandatory = $true)]
         [ValidateNotNullOrEmpty()]
@@ -95,17 +95,21 @@ function New-FabricNotebookNEW {
         $bodyJson = $body | ConvertTo-Json -Depth 10
         Write-Message -Message "Request Body: $bodyJson" -Level Debug
 
-        # Step 4: Make the API request
-        $response = Invoke-RestMethod `
-            -Headers $FabricConfig.FabricHeaders `
-            -Uri $apiEndpointUrl `
-            -Method Post `
-            -Body $bodyJson `
-            -ContentType "application/json" `
-            -ErrorAction Stop `
-            -SkipHttpErrorCheck `
-            -ResponseHeadersVariable "responseHeader" `
-            -StatusCodeVariable "statusCode"
+        # Step 4: Make the API request when confirmed
+        $target = "Workspace '$WorkspaceId'"
+        $action = "Create Notebook '$NotebookName'"
+        if ($PSCmdlet.ShouldProcess($target, $action)) {
+            $response = Invoke-RestMethod `
+                -Headers $FabricConfig.FabricHeaders `
+                -Uri $apiEndpointUrl `
+                -Method Post `
+                -Body $bodyJson `
+                -ContentType "application/json" `
+                -ErrorAction Stop `
+                -SkipHttpErrorCheck `
+                -ResponseHeadersVariable "responseHeader" `
+                -StatusCodeVariable "statusCode"
+        }
 
         # Step 5: Handle and log the response
         switch ($statusCode) {

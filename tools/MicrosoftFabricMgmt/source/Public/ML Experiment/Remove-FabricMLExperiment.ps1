@@ -24,7 +24,7 @@
     
 #>
 function Remove-FabricMLExperiment {
-    [CmdletBinding()]
+    [CmdletBinding(SupportsShouldProcess = $true, ConfirmImpact = 'High')]
     param (
         [Parameter(Mandatory = $true)]
         [ValidateNotNullOrEmpty()]
@@ -44,17 +44,21 @@ function Remove-FabricMLExperiment {
         $apiEndpointURI = "{0}/workspaces/{1}/mlExperiments/{2}" -f $FabricConfig.BaseUrl, $WorkspaceId, $MLExperimentId
         Write-Message -Message "API Endpoint: $apiEndpointURI" -Level Debug
 
-        # Make the API request
-        $apiParams = @{
-            Headers = $FabricConfig.FabricHeaders
-            BaseURI = $apiEndpointURI
-            Method = 'Delete'
-        }
-        $response = Invoke-FabricAPIRequest @apiParams 
+        # Make the API request when confirmed
+        $target = "ML Experiment '$MLExperimentId' in workspace '$WorkspaceId'"
+        $action = "Delete ML Experiment"
+        if ($PSCmdlet.ShouldProcess($target, $action)) {
+            $apiParams = @{
+                Headers = $FabricConfig.FabricHeaders
+                BaseURI = $apiEndpointURI
+                Method = 'Delete'
+            }
+            $response = Invoke-FabricAPIRequest @apiParams 
 
-        # Return the API response
-        Write-Message -Message "ML Experiment '$MLExperimentId' deleted successfully from workspace '$WorkspaceId'." -Level Info
-        return $response
+            # Return the API response
+            Write-Message -Message "ML Experiment '$MLExperimentId' deleted successfully from workspace '$WorkspaceId'." -Level Info
+            return $response
+        }
     }
     catch {
         # Capture and log error details

@@ -35,7 +35,7 @@
     Author: Tiago Balabuch
 #>
 function New-FabricMountedDataFactory {
-    [CmdletBinding()]
+    [CmdletBinding(SupportsShouldProcess = $true, ConfirmImpact = 'Medium')]
     param (
         [Parameter(Mandatory = $true)]
         [ValidateNotNullOrEmpty()]
@@ -138,17 +138,21 @@ function New-FabricMountedDataFactory {
         $bodyJson = $body | ConvertTo-Json -Depth 10
         Write-Message -Message "Request Body: $bodyJson" -Level Debug
 
-        $apiParams = @{
-            BaseURI = $apiEndpointURI
-            Headers = $FabricConfig.FabricHeaders
-            Method  = 'Post'
-            Body    = $bodyJson
+        $target = "Workspace '$WorkspaceId'"
+        $action = "Create Mounted Data Factory '$MountedDataFactoryName'"
+        if ($PSCmdlet.ShouldProcess($target, $action)) {
+            $apiParams = @{
+                BaseURI = $apiEndpointURI
+                Headers = $FabricConfig.FabricHeaders
+                Method  = 'Post'
+                Body    = $bodyJson
+            }
+            $response = Invoke-FabricAPIRequest @apiParams
+            
+            # Return the API response
+            Write-Message -Message "Mounted Data Factory '$MountedDataFactoryName' created successfully!" -Level Info
+            return $response
         }
-        $response = Invoke-FabricAPIRequest @apiParams
-        
-        # Return the API response
-        Write-Message -Message "Mounted Data Factory '$MountedDataFactoryName' created successfully!" -Level Info
-        return $response
     }
     catch {
         # Capture and log error details

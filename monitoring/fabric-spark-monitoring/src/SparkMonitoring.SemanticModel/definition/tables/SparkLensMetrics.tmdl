@@ -1,0 +1,48 @@
+table SparkLensMetrics
+	lineageTag: bb8f30e5-247f-47e0-ba16-6a436f0d4c62
+
+	column app_id
+		dataType: string
+		sourceProviderType: nvarchar(max)
+		lineageTag: 58c95a10-678d-4f05-9b7a-b0d4938a4d43
+		summarizeBy: none
+		sourceColumn: app_id
+
+		annotation SummarizationSetBy = Automatic
+
+	column metric
+		dataType: string
+		sourceProviderType: nvarchar(max)
+		lineageTag: bfed5078-7738-4f59-aeae-bd35f5ffdc1a
+		summarizeBy: none
+		sourceColumn: metric
+
+		annotation SummarizationSetBy = Automatic
+
+	column value
+		dataType: double
+		sourceProviderType: double
+		lineageTag: 3b81a0c7-a44f-47de-87cb-69acb5e00de5
+		summarizeBy: sum
+		sourceColumn: value
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	partition SparkLensMetrics = m
+		mode: directQuery
+		source =
+				let
+				    Source = AzureDataExplorer.Contents(RTIfqdn, "eventHouseTelemetry", "
+				    sparklens_metrics
+				    | where app_id =~ '"&ApplicationWithoutTable&"'
+				    ", [MaxRows=null, MaxSize=null, NoTruncate=null, AdditionalSetStatements=null])
+				
+				in
+				    Source
+
+	annotation PBI_NavigationStepName = Navigation
+
+	annotation PBI_ResultType = Table
+

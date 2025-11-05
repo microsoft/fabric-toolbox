@@ -1,0 +1,80 @@
+table StageComparer
+	lineageTag: a6da62d8-8c20-40e7-9e19-e2049538c0a9
+
+	column timestamp
+		dataType: dateTime
+		formatString: General Date
+		sourceProviderType: datetimeoffset
+		lineageTag: 177e57b2-0549-459d-a6ee-248f06abded2
+		summarizeBy: none
+		sourceColumn: timestamp
+
+		annotation SummarizationSetBy = Automatic
+
+	column applicationId
+		dataType: string
+		sourceProviderType: nvarchar(max)
+		lineageTag: 8bae07e5-b7bf-4b5c-9684-404f6b7a0e73
+		summarizeBy: none
+		sourceColumn: applicationId
+
+		annotation SummarizationSetBy = Automatic
+
+	column stageID
+		dataType: string
+		lineageTag: 6fbea916-bac6-4fa5-bf48-0678417d82aa
+		summarizeBy: none
+		sourceColumn: stageID
+
+		annotation SummarizationSetBy = Automatic
+
+	column taskId
+		dataType: string
+		lineageTag: da896d13-d965-4db1-8424-70b65b864b72
+		summarizeBy: none
+		sourceColumn: taskId
+
+		annotation SummarizationSetBy = Automatic
+
+	column key
+		dataType: string
+		lineageTag: 4970dccb-fec8-4592-89af-cc9ecaba78bb
+		summarizeBy: none
+		sourceColumn: key
+
+		annotation SummarizationSetBy = Automatic
+
+	column val
+		dataType: int64
+		formatString: 0
+		sourceProviderType: bigint
+		lineageTag: c68aef3e-fd84-4410-ae81-fd36c8768ef3
+		summarizeBy: sum
+		sourceColumn: val
+
+		annotation SummarizationSetBy = Automatic
+
+	partition StageComparer = m
+		mode: directQuery
+		queryGroup: Comparer
+		source = ```
+				let
+				    Source = AzureDataExplorer.Contents(RTIfqdn, "eventHouseTelemetry", "
+				    RawLogs
+				| where applicationId  in ('"&ApplicationFirst&"','"&ApplicationSecond&"')
+				| where  properties contains 'SparkListenerTaskEnd'
+				| extend props = parse_json(properties)
+				| project timestamp,applicationId,stageID=props.[""Stage ID""], taskId=props.[""Task Info""].[""Task ID""],accumulables=props.[""Task Info""].[""Accumulables""]
+				| mv-expand kind=array accumulables 
+				| project timestamp,applicationId,tostring(stageID),tostring(taskId), key = tostring(accumulables[""Name""]), val=tolong(accumulables[""Value""])
+				
+				")
+				
+				in
+				    Source
+				```
+
+	annotation PBI_NavigationStepName = Navigation
+
+	annotation PBI_ResultType = Table
+

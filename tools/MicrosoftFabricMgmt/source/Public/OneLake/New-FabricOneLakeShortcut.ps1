@@ -61,7 +61,8 @@
     Author: Tiago Balabuch
 #>
 function New-FabricOneLakeShortcut {
-    [CmdletBinding()]
+    [CmdletBinding(SupportsShouldProcess = $true, ConfirmImpact = 'Medium')]
+    [Diagnostics.CodeAnalysis.SuppressMessage('PSReviewUnusedParameter','', Justification='Parameters are dynamically consumed via Get-Variable based on Target selection')]
     param (
         [Parameter(Mandatory = $true)]
         [ValidateNotNullOrEmpty()]
@@ -198,18 +199,22 @@ function New-FabricOneLakeShortcut {
         $bodyJson = $body | ConvertTo-Json -Depth 4
         Write-Message -Message "Request Body: $bodyJson" -Level Debug
 
-        # Make the API request
-        $apiParams = @{
-            BaseURI = $apiEndpointURI
-            Headers = $FabricConfig.FabricHeaders
-            Method  = 'Post'
-            Body    = $bodyJson
-        }
-        $response = Invoke-FabricAPIRequest @apiParams
+        # Make the API request when confirmed
+        $target = "Item '$ItemId' in workspace '$WorkspaceId'"
+        $action = "Create OneLake Shortcut '$ShortcutName'"
+        if ($PSCmdlet.ShouldProcess($target, $action)) {
+            $apiParams = @{
+                BaseURI = $apiEndpointURI
+                Headers = $FabricConfig.FabricHeaders
+                Method  = 'Post'
+                Body    = $bodyJson
+            }
+            $response = Invoke-FabricAPIRequest @apiParams
 
-        # Return the API response
-        Write-Message -Message "OneLake Shortcut created successfully!" -Level Info        
-        return $response     
+            # Return the API response
+            Write-Message -Message "OneLake Shortcut created successfully!" -Level Info        
+            return $response
+        }
     }
     catch {
         # Capture and log error details

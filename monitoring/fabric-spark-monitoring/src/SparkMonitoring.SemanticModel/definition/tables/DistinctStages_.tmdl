@@ -1,0 +1,34 @@
+table DistinctStages_
+	lineageTag: 829874d1-7aba-4e70-802e-a8ac14050e17
+
+	column count_distinct_rsn
+		dataType: int64
+		formatString: 0
+		sourceProviderType: bigint
+		lineageTag: 5c09949e-18d2-4d69-882a-1ff9ae6ea777
+		summarizeBy: sum
+		sourceColumn: count_distinct_rsn
+
+		annotation SummarizationSetBy = Automatic
+
+	partition DistinctStages_ = m
+		mode: directQuery
+		queryGroup: appStatsOutsideTable
+		source = ```
+				let
+				    Source = AzureDataExplorer.Contents(RTIfqdn, "eventHouseTelemetry", "
+				RawLogs
+				| where applicationId == '"&ApplicationWithoutTable&"'
+				| extend props = parse_json(properties) 
+				| where  properties contains 'SparkListenerTaskEnd'
+				| project  rsn=props['Stage ID']
+				| summarize count_distinct(tostring(rsn))", [MaxRows=null, MaxSize=null, NoTruncate=null, AdditionalSetStatements=null])
+				
+				in
+				    Source
+				```
+
+	annotation PBI_NavigationStepName = Navigation
+
+	annotation PBI_ResultType = Table
+

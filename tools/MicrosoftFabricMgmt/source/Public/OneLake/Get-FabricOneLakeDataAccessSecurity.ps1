@@ -59,8 +59,8 @@ function Get-FabricOneLakeDataAccessSecurity {
         [ValidateNotNullOrEmpty()]
         [string]$ItemId,
 
-        [Parameter(Mandatory = $false)]
-        [string]$RoleName    )
+    [Parameter(Mandatory = $false)]
+    [string]$RoleName    )
     try {
         # Validate authentication token before proceeding.
         Write-Message -Message "Validating authentication token..." -Level Debug
@@ -76,9 +76,26 @@ function Get-FabricOneLakeDataAccessSecurity {
             BaseURI = $apiEndpointURI
             Headers = $FabricConfig.FabricHeaders
             Method  = 'Get'
-            Body    = $bodyJson
         }
-        $response = Invoke-FabricAPIRequest @apiParams              
+        $response = Invoke-FabricAPIRequest @apiParams  
+
+        # Optionally filter by RoleName if provided
+        if ($RoleName) {
+            Write-Message -Message "Filtering roles by name '$RoleName'." -Level Debug
+            try {
+                # Support both array and envelope shapes
+                if ($response -is [System.Collections.IEnumerable]) {
+                    return ($response | Where-Object { $_.name -eq $RoleName -or $_.RoleName -eq $RoleName })
+                }
+                elseif ($response.value) {
+                    return ($response.value | Where-Object { $_.name -eq $RoleName -or $_.RoleName -eq $RoleName })
+                }
+            }
+            catch {
+                Write-Message -Message "Unable to filter response by RoleName due to unexpected shape." -Level Debug
+            }
+        }
+
         return $response     
     }
     catch {

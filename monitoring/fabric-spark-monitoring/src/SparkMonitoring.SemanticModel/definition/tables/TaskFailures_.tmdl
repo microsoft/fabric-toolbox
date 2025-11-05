@@ -1,0 +1,31 @@
+table TaskFailures_
+	lineageTag: 3f6cae44-10b9-4124-9faf-287fd7cfb49e
+
+	column 'sum_props_Task Info_Attempt'
+		dataType: int64
+		formatString: 0
+		sourceProviderType: bigint
+		lineageTag: 056c46eb-ff18-49b7-bdc5-4e5ee9c852c7
+		summarizeBy: sum
+		sourceColumn: sum_props_Task Info_Attempt
+
+		annotation SummarizationSetBy = Automatic
+
+	partition TaskFailures_ = m
+		mode: directQuery
+		queryGroup: appStatsOutsideTable
+		source = ```
+				let
+				    Source = AzureDataExplorer.Contents(RTIfqdn, "eventHouseTelemetry", "RawLogs
+				    | where applicationId == '"&ApplicationWithoutTable&"'
+				    | extend props = parse_json(properties) 
+				    | where properties contains 'task' and properties contains 'attempt' and properties contains 'SparkListenerTaskEnd'
+				    | summarize  sum(tolong(props['Task Info']['Attempt']))", [MaxRows=null, MaxSize=null, NoTruncate=null, AdditionalSetStatements=null])
+				in
+				    Source
+				```
+
+	annotation PBI_NavigationStepName = Navigation
+
+	annotation PBI_ResultType = Table
+

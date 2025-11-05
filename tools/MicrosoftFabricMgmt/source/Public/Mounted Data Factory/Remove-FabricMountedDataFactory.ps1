@@ -23,7 +23,7 @@
     Author: Tiago Balabuch
 #>
 function Remove-FabricMountedDataFactory {
-    [CmdletBinding()]
+    [CmdletBinding(SupportsShouldProcess = $true, ConfirmImpact = 'High')]
     param (
         [Parameter(Mandatory = $true)]
         [ValidateNotNullOrEmpty()]
@@ -43,17 +43,21 @@ function Remove-FabricMountedDataFactory {
         $apiEndpointURI = "{0}/workspaces/{1}/mountedDataFactories/{2}" -f $FabricConfig.BaseUrl, $WorkspaceId, $MountedDataFactoryId
         Write-Message -Message "API Endpoint: $apiEndpointURI" -Level Debug
 
-        # Make the API request
-        $apiParams = @{
-            Headers = $FabricConfig.FabricHeaders
-            BaseURI = $apiEndpointURI
-            Method  = 'Delete'
+        # Make the API request when confirmed
+        $target = "Mounted Data Factory '$MountedDataFactoryId' in workspace '$WorkspaceId'"
+        $action = "Delete Mounted Data Factory"
+        if ($PSCmdlet.ShouldProcess($target, $action)) {
+            $apiParams = @{
+                Headers = $FabricConfig.FabricHeaders
+                BaseURI = $apiEndpointURI
+                Method  = 'Delete'
+            }
+            $response = Invoke-FabricAPIRequest @apiParams 
+            
+            # Return the API response
+            Write-Message -Message "Mounted Data Factory '$MountedDataFactoryId' deleted successfully from workspace '$WorkspaceId'." -Level Info
+            return $response
         }
-        $response = Invoke-FabricAPIRequest @apiParams 
-        
-        # Return the API response
-        Write-Message -Message "Mounted Data Factory '$MountedDataFactoryId' deleted successfully from workspace '$WorkspaceId'." -Level Info
-        return $response
        
     }
     catch {

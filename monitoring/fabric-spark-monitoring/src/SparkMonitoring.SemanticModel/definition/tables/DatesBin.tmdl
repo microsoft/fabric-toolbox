@@ -1,0 +1,25 @@
+table DatesBin
+	lineageTag: 3dcf35d3-1600-4f82-9580-244242915868
+
+	column BinDate
+		dataType: dateTime
+		formatString: General Date
+		lineageTag: cf206a17-e135-4478-b286-3612c2af30aa
+		summarizeBy: none
+		sourceColumn: BinDate
+
+		annotation SummarizationSetBy = Automatic
+
+	partition DatesBin = m
+		mode: import
+		source =
+				let
+				    Source = AzureDataExplorer.Contents(RTIfqdn, "eventHouseTelemetry", "let startDate = now() - 50d;#(lf)range Date from startDate to now() step 1m#(lf)| extend BinDate = bin(Date, 1m)#(lf)| project BinDate#(lf)", [MaxRows=null, MaxSize=null, NoTruncate=null, AdditionalSetStatements=null]),
+				    #"Changed Type" = Table.TransformColumnTypes(Source,{{"BinDate", type datetime}})
+				in
+				    #"Changed Type"
+
+	annotation PBI_NavigationStepName = Navigation
+
+	annotation PBI_ResultType = Table
+
