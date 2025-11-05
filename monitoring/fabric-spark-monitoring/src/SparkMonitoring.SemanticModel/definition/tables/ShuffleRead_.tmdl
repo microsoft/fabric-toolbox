@@ -1,0 +1,52 @@
+table ShuffleRead_
+	lineageTag: f7661206-a838-4db0-aea8-374bede6cf6c
+
+	column timestamp
+		dataType: dateTime
+		formatString: General Date
+		sourceProviderType: datetimeoffset
+		lineageTag: af8cdbf0-d1bb-42f2-bbfa-6a79f1380672
+		summarizeBy: none
+		sourceColumn: timestamp
+
+		annotation SummarizationSetBy = Automatic
+
+	column cnt_
+		dataType: int64
+		formatString: 0
+		sourceProviderType: bigint
+		lineageTag: 9cbc35ec-c965-4ee5-944d-e39006b14e37
+		summarizeBy: sum
+		sourceColumn: cnt_
+
+		annotation SummarizationSetBy = Automatic
+
+	column props_name
+		dataType: string
+		lineageTag: d597972d-3de9-41e2-8088-7c005b94181d
+		summarizeBy: none
+		sourceColumn: props_name
+
+		annotation SummarizationSetBy = Automatic
+
+	partition ShuffleRead_ = m
+		mode: directQuery
+		queryGroup: appStatsOutsideTable
+		source = ```
+				let
+				    Source = AzureDataExplorer.Contents(RTIfqdn, "eventHouseTelemetry", "RawLogs
+				    | extend props = parse_json(properties) 
+				    | where applicationId =='"&ApplicationWithoutTable&"'
+				    | where properties contains ""shuffleWriteTime"" or properties contains ""shuffleFetchWaitTime""
+				    | project timestamp,cnt_=tolong(props.count),tostring(props.name)
+				    | where cnt_!=0
+				")
+				
+				in
+				    Source
+				```
+
+	annotation PBI_NavigationStepName = Navigation
+
+	annotation PBI_ResultType = Table
+

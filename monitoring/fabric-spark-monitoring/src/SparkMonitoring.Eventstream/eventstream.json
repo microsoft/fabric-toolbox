@@ -1,0 +1,45 @@
+{
+  "sources": [
+    {
+      "id": "88614454-c7be-4f08-b67b-cf09f413086e",
+      "name": "IngestionEndpoint",
+      "type": "CustomEndpoint",
+      "properties": {}
+    }
+  ],
+  "destinations": [
+    {
+      "id": "a96a9cde-dc4e-4637-9f2d-c98c6755f4b9",
+      "name": "Eventhouse",
+      "type": "Eventhouse",
+      "properties": {
+        "dataIngestionMode": "DirectIngestion",
+        "workspaceId": "00000000-0000-0000-0000-000000000000",
+        "itemId": "3e46dcfb-d099-b0ef-4861-4603e64229bd",
+        "tableName": "RawLogs",
+        "connectionName": "Monitoring-RawLogs",
+        "mappingRuleName": "RawLogs_mapping"
+      },
+      "inputNodes": [
+        {
+          "name": "SparkMonitoring-stream"
+        }
+      ]
+    }
+  ],
+  "streams": [
+    {
+      "id": "467e199c-a512-42ea-aac5-a00742a6fc2b",
+      "name": "SparkMonitoring-stream",
+      "type": "DefaultStream",
+      "properties": {},
+      "inputNodes": [
+        {
+          "name": "IngestionEndpoint"
+        }
+      ]
+    }
+  ],
+  "operators": [],
+  "compatibilityLevel": "1.0"
+}

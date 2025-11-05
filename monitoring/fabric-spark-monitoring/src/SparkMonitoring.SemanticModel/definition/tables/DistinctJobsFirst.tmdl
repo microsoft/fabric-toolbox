@@ -1,0 +1,33 @@
+table DistinctJobsFirst
+	lineageTag: fa9e098d-755d-4d20-b541-801df308d94d
+
+	column count_distinct_JobID
+		dataType: int64
+		formatString: 0
+		sourceProviderType: bigint
+		lineageTag: 51e2c29d-36f9-4563-a006-ed32fd9cdfc3
+		summarizeBy: count
+		sourceColumn: count_distinct_JobID
+
+		annotation SummarizationSetBy = Automatic
+
+	partition DistinctJobsFirst = m
+		mode: directQuery
+		queryGroup: Comparer
+		source =
+				let
+				    Source = AzureDataExplorer.Contents(RTIfqdn, "eventHouseTelemetry", "
+				    RawLogs
+				| where applicationId  in ('"&ApplicationFirst&"')
+				| where  properties contains 'SparkListenerJobStart'
+				| extend props = parse_json(properties)
+				| project timestamp,applicationId,JobID=props.[""Job ID""]
+				| summarize count_distinct(tostring(JobID))", [MaxRows=null, MaxSize=null, NoTruncate=null, AdditionalSetStatements=null])
+				
+				in
+				    Source
+
+	annotation PBI_NavigationStepName = Navigation
+
+	annotation PBI_ResultType = Table
+

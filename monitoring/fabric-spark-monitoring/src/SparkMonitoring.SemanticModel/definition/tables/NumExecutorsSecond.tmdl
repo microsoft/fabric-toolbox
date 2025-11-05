@@ -1,0 +1,51 @@
+table NumExecutorsSecond
+	lineageTag: fe326520-b63f-46ce-8f97-c69708e22f97
+
+	column timestamp
+		dataType: dateTime
+		formatString: General Date
+		sourceProviderType: datetimeoffset
+		lineageTag: af323cd8-95e6-4887-bfce-766aadbd064e
+		summarizeBy: none
+		sourceColumn: timestamp
+
+		annotation SummarizationSetBy = Automatic
+
+	column applicationId
+		dataType: string
+		sourceProviderType: nvarchar(max)
+		lineageTag: 601f3d88-1749-4050-9920-3e86ada46e6e
+		summarizeBy: none
+		sourceColumn: applicationId
+
+		annotation SummarizationSetBy = Automatic
+
+	column dcount_props_name
+		dataType: int64
+		formatString: 0
+		sourceProviderType: bigint
+		lineageTag: b3c795ad-bbf1-4089-96dc-2d33c4c0bf78
+		summarizeBy: sum
+		sourceColumn: dcount_props_name
+
+		annotation SummarizationSetBy = Automatic
+
+	partition NumExecutorsSecond = m
+		mode: directQuery
+		queryGroup: Comparer
+		source = ```
+				let
+				    Source = AzureDataExplorer.Contents(RTIfqdn, "eventHouseTelemetry", "RawLogs 
+				| extend props = parse_json(properties) 
+				| where applicationId == '"&ApplicationSecond&"'
+				|  where props.name contains 'jvm.heap.used' or props.name contains 'jvm.heap.max' 
+				| summarize dcount(tostring(props.name)) by bin(timestamp,1m),applicationId", [MaxRows=null, MaxSize=null, NoTruncate=null, AdditionalSetStatements=null])
+				
+				in
+				    Source
+				```
+
+	annotation PBI_NavigationStepName = Navigation
+
+	annotation PBI_ResultType = Table
+

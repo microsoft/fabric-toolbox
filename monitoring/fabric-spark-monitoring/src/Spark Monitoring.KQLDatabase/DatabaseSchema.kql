@@ -1,0 +1,279 @@
+// KQL script
+// Use management commands in this script to configure your database items, such as tables, functions, materialized views, and more.
+
+
+.create-merge table RawLogsOld (timestamp:datetime, category:string, fabricLivyId:guid, applicationId:string, applicationName:string, executorId:string, userId:guid, fabricTenantId:guid, capacityId:guid, artifactType:string, artifactId:guid, fabricWorkspaceId:guid, fabricEnvId:guid, executorMin:long, executorMax:long, isHighConcurrencyEnabled:bool, properties:dynamic) with (folder = "Raw") 
+.create-merge table sparklens_metadata (applicationId:string, applicationName:string, artifactId:string, artifactType:string, capacityId:string, executorMax:long, executorMin:long, fabricEnvId:string, fabricLivyId:string, fabricTenantId:string, fabricWorkspaceId:string, isHighConcurrencyEnabled:bool, ['spark.native.enabled']:string) with (folder = "SparkLens") 
+.create-merge table sparklens_summary (stage_id:long, stage_attempt_id:long, num_tasks:long, successful_tasks:long, failed_tasks:long, min_duration_sec:real, max_duration_sec:real, avg_duration_sec:real, p75_duration_sec:real, avg_shuffle_read_mb:real, max_shuffle_read_mb:real, avg_shuffle_read_records:real, max_shuffle_read_records:long, avg_shuffle_write_mb:real, max_shuffle_write_mb:real, avg_shuffle_write_records:real, max_shuffle_write_records:long, avg_input_mb:real, max_input_mb:real, avg_input_records:real, max_input_records:long, avg_output_mb:real, max_output_mb:real, avg_output_records:real, max_output_records:long, min_launch_time:long, max_finish_time:long, num_executors:long, stage_execution_time_sec:real, app_id:string) with (folder = "SparkLens") 
+.create-merge table sparklens_metrics (app_id:string, metric:string, value:real) with (folder = "SparkLens") 
+.create-merge table sparklens_predictions (['Executor Count']:long, ['Executor Multiplier']:string, ['Estimated Executor WallClock']:string, ['Estimated Total Duration']:string, app_id:string) with (folder = "SparkLens") 
+.create-merge table sparklens_recommedations (app_id:string, recommendation:string) with (folder = "SparkLens") 
+.create-merge table RawLogs (records:dynamic) with (folder = "Raw") 
+.create-or-alter table RawLogs ingestion json mapping 'RawLogs_mapping'
+```
+[{"Properties":{"Path":"$"},"column":"records","datatype":""}]
+```
+.create-merge table SparkDriverLogs (Timestamp:datetime, OperationName:string, ItemId:guid, ItemKind:string, ItemName:string, WorkspaceId:guid, WorkspaceName:string, CapacityId:guid, CapacityName:string, CorrelationId:guid, OperationId:guid, Identity:dynamic, CustomerTenantId:guid, Status:string, Level:string, Region:string, Category:string, WorkspaceMonitoringTable:string, LogTime:datetime, AppId:string, AppName:string, DriverId:string, LogLevel:string, LoggerName:string, Thread:string, Message:string, Exception:dynamic, Hostname:string, LogSource:string) 
+.create-merge table SparkExecutorLogs (Timestamp:datetime, OperationName:string, ItemId:guid, ItemKind:string, ItemName:string, WorkspaceId:guid, WorkspaceName:string, CapacityId:guid, CapacityName:string, CorrelationId:guid, OperationId:guid, Identity:dynamic, CustomerTenantId:guid, Status:string, Level:string, Region:string, Category:string, WorkspaceMonitoringTable:string, LogTime:datetime, AppId:string, AppName:string, ExecutorId:string, Host:string, LogLevel:string, LoggerName:string, Thread:string, Message:string, Exception:dynamic, TaskId:string, StageId:string, LogSource:string) 
+.create-merge table SparkSQLExecutionEvents (Timestamp:datetime, OperationName:string, ItemId:guid, ItemKind:string, ItemName:string, WorkspaceId:guid, WorkspaceName:string, CapacityId:guid, CapacityName:string, CorrelationId:guid, OperationId:guid, Identity:dynamic, CustomerTenantId:guid, Status:string, Level:string, Region:string, Category:string, WorkspaceMonitoringTable:string, EventType:string, AppId:string, AppName:string, ExecutorId:string, StartTime:datetime, EndTime:datetime, PhysicalPlanDescription:string, SparkPlanInfo:dynamic, Role:string, RoleInstance:string, PreciseTimeStamp:datetime, SourceNamespace:string, SourceMoniker:string, SourceVersion:string, AppKind:string, SessionType:string) 
+.create-merge table SparkDerivedTaskMetrics (Timestamp:datetime, OperationName:string, ItemId:guid, ItemKind:string, ItemName:string, WorkspaceId:guid, WorkspaceName:string, CapacityId:guid, CapacityName:string, CorrelationId:guid, OperationId:guid, Identity:dynamic, CustomerTenantId:guid, Status:string, Level:string, Region:string, Category:string, WorkspaceMonitoringTable:string, AppId:string, AppName:string, StageId:int, TaskId:int, EfficiencyRatio:real, GcOverheadRatio:real, ShuffleOverheadRatio:real, WasSpilled:long, TaskDurationMs:long) 
+.create-merge table SparkMetrics (Timestamp:datetime, OperationName:string, ItemId:guid, ItemKind:string, ItemName:string, WorkspaceId:guid, WorkspaceName:string, CapacityId:guid, CapacityName:string, CorrelationId:guid, OperationId:guid, Identity:dynamic, CustomerTenantId:guid, Status:string, Level:string, Region:string, Category:string, WorkspaceMonitoringTable:string, AppId:string, AppName:string, ExecutorId:string, Process:string, Metric:string, MetricType:string, DurationUnits:string, RateUnits:string, Value:real, Count:long, Min:real, Max:real, Mean:real, StdDev:real, MeanRate:real, M1Rate:real, M5Rate:real, M15Rate:real, P50:real, P75:real, P95:real, P98:real, P99:real, P999:real) 
+.create-merge table SparkEventLogs (Timestamp:datetime, OperationName:string, ItemId:guid, ItemKind:string, ItemName:string, WorkspaceId:guid, WorkspaceName:string, CapacityId:guid, CapacityName:string, CorrelationId:guid, OperationId:guid, Identity:dynamic, CustomerTenantId:guid, DurationMs:long, Status:string, Level:string, Region:string, Category:string, WorkspaceMonitoringTable:string, LogTime:datetime, EventType:string, AppId:string, AppName:string, User:guid, JobId:int, StageId:int, StageAttemptId:int, TaskId:int, TaskAttempt:int, ExecutorId:string, Host:string, FailureReason:string, MetricsJson:dynamic, PropertiesJson:dynamic, EventDetailsJson:dynamic) 
+.create-or-alter function with (skipvalidation = "true") Update_SparkEventLogs() {    
+     RawLogs
+    | where records["category"] == "EventLog"
+    | project
+        Timestamp=todatetime(records["timestamp"]),
+        OperationName=tostring(records["category"]),
+        ItemId=toguid(records["artifactId"]),
+        ItemKind=tostring(records["artifactType"]),
+        ItemName=tostring(""),
+        WorkspaceId=toguid(records["fabricWorkspaceId"]),
+        WorkspaceName=tostring(""),
+        CapacityId=toguid(records["capacityId"]),
+        CapacityName=tostring(""),	
+        CorrelationId=toguid(records["fabricLivyId"]),
+        OperationId=toguid(records["fabricLivyId"]),
+        Identity= bag_pack("UseId", tostring(records["userId"])),	
+        CustomerTenantId=toguid(records["fabricTenantId"]),
+        DurationMs=iff(records["properties"].["Event"] == "SparkListenerTaskEnd", tolong(records["properties"].["Task Info"].["Finish Time"]) - tolong(records["properties"].["Task Info"].["Launch Time"]), long(null)),
+        Status=tostring(records["properties"].["Task End Reason"].["Reason"]),
+        Level=tostring(""),
+        Region=tostring(""),
+        Category=tostring(records["category"]),
+        WorkspaceMonitoringTable=tostring("SparkEventLogs"),
+        //End of Common columns
+        LogTime=todatetime(records["timestamp"]),
+        EventType=tostring(records["properties"].["Event"]),
+        AppId=tostring(records["applicationId"]),
+        AppName=tostring(records["applicationName"]),
+        User=toguid(records["userId"]),
+        JobId=toint(records["properties"].["Job ID"]),
+        StageId=toint(records["properties"].["Stage ID"]),
+        StageAttemptId=toint(records["properties"].["Stage Attempt ID"]),
+        TaskId=toint(records["properties"].["Task Info"].["Task ID"]),
+        TaskAttempt=toint(records["properties"].["Task Info"].["Attempt"]),
+        ExecutorId=tostring(records["executorId"]),
+        Host=tostring(records["properties"].["Task Info"].["Host"]),
+        FailureReason= iff(tostring(records["properties"].["Task End Reason"].["Reason"]) == "Success", "", tostring(records["properties"].["Task End Reason"])),
+        MetricsJson=todynamic(records["properties"].["Task Metrics"]),
+        PropertiesJson=todynamic(records["properties"]),
+        EventDetailsJson=todynamic(records)
+ }
+.create-or-alter function with (skipvalidation = "true") Update_SparkDriverLogs() {
+     RawLogs
+    | where records["category"] in ("Log")
+    | where records["executorId"] == "driver"
+    | project
+    Timestamp=todatetime(records["timestamp"]),
+        OperationName=tostring(records["category"]),
+        ItemId=toguid(records["artifactId"]),
+        ItemKind=tostring(records["artifactType"]),
+        ItemName=tostring(""),
+        WorkspaceId=toguid(records["fabricWorkspaceId"]),
+        WorkspaceName=tostring(""),
+        CapacityId=toguid(records["capacityId"]),
+        CapacityName=tostring(""),	
+        CorrelationId=toguid(records["fabricLivyId"]),
+        OperationId=toguid(records["fabricLivyId"]),
+        Identity= bag_pack("UseId", tostring(records["userId"])),	
+        CustomerTenantId=toguid(records["fabricTenantId"]),
+        Status=tostring(records["properties"].["Task End Reason"].["Reason"]),
+        Level=tostring(records["properties"].["level"]),
+        Region=tostring(""),
+        Category=tostring(records["category"]),
+        WorkspaceMonitoringTable=tostring("SparkDriverLogs"),
+        //End Common Columns
+        LogTime=todatetime(records["timestamp"]),
+        AppId=tostring(records["applicationId"]),
+        AppName=tostring(records["applicationName"]),
+        DriverId=tostring(records["executorId"]),
+        LogLevel=tostring(records["properties"].["level"]),
+        LoggerName=tostring(records["properties"].["logger_name"]),
+        Thread=tostring(records["properties"].["thread_name"]),
+        Message=tostring(records["properties"].["message"]),
+        Exception=todynamic(records["properties"].["exception"]),
+        Hostname=tostring(""),
+        LogSource=tostring("")
+ }
+.create-or-alter function with (skipvalidation = "true") Update_SparkExecutorLogs() {
+    RawLogs
+    | where records["category"] in ("Log")
+    | where records["executorId"] != "driver"
+    | project
+        Timestamp=todatetime(records["timestamp"]),
+        OperationName=tostring(records["category"]),
+        ItemId=toguid(records["artifactId"]),
+        ItemKind=tostring(records["artifactType"]),
+        ItemName=tostring(""),
+        WorkspaceId=toguid(records["fabricWorkspaceId"]),
+        WorkspaceName=tostring(""),
+        CapacityId=toguid(records["capacityId"]),
+        CapacityName=tostring(""),	
+        CorrelationId=toguid(records["fabricLivyId"]),
+        OperationId=toguid(records["fabricLivyId"]),
+        Identity= bag_pack("UseId", tostring(records["userId"])),	
+        CustomerTenantId=toguid(records["fabricTenantId"]),
+        Status=tostring(records["properties"].["Task End Reason"].["Reason"]),
+        Level=tostring(records["properties"].["level"]),
+        Region=tostring(""),
+        Category=tostring(records["category"]),
+        WorkspaceMonitoringTable=tostring("SparkExecutorLogs"),
+        //End Common Columns
+        LogTime=todatetime(records["timestamp"]),
+        AppId=tostring(records["applicationId"]),
+        AppName=tostring(records["applicationName"]),
+        ExecutorId=tostring(records["executorId"]),
+        Host=tostring(""),
+        LogLevel=tostring(records["properties"].["level"]),
+        LoggerName=tostring(records["properties"].["logger_name"]),
+        Thread=tostring(records["properties"].["thread_name"]),
+        Message=tostring(records["properties"].["message"]),
+        Exception=todynamic(records["properties"].["exception"]),
+        TaskId=tostring(""),
+        StageId=tostring(""),
+        LogSource=tostring("")
+ }
+.create-or-alter function with (skipvalidation = "true") Update_SparkSQLExecutionEvents() {    
+     RawLogs
+    | where records["properties"].["Event"] in ("org.apache.spark.sql.execution.ui.SparkListenerSQLExecutionStart", "org.apache.spark.sql.execution.ui.SparkListenerSQLExecutionPhaseUpdates", "org.apache.spark.sql.execution.ui.SparkListenerSQLExecutionEnd")
+    | project
+        Timestamp=todatetime(records["timestamp"]),
+        OperationName=tostring(records["category"]),
+        ItemId=toguid(records["artifactId"]),
+        ItemKind=tostring(records["artifactType"]),
+        ItemName=tostring(""),
+        WorkspaceId=toguid(records["fabricWorkspaceId"]),
+        WorkspaceName=tostring(""),
+        CapacityId=toguid(records["capacityId"]),
+        CapacityName=tostring(""),	
+        CorrelationId=toguid(records["fabricLivyId"]),
+        OperationId=toguid(records["fabricLivyId"]),
+        Identity= bag_pack("UseId", tostring(records["userId"])),	
+        CustomerTenantId=toguid(records["fabricTenantId"]),
+        Status=tostring(records["properties"].["Task End Reason"].["Reason"]),
+        Level=tostring(records["properties"].["level"]),
+        Region=tostring(""),
+        Category=tostring(records["category"]),
+        WorkspaceMonitoringTable=tostring("SparkSQLExecutionEvents"),
+        //End Common Columns
+        EventType=tostring(records["properties"].["Event"]),
+        AppId = tostring(records["applicationId"]),
+        AppName = tostring(records["applicationName"]),
+        ExecutorId = tostring(records["executorId"]),
+        StartTime = iff(records["properties"].["Event"] == "org.apache.spark.sql.execution.ui.SparkListenerSQLExecutionStart", unixtime_milliseconds_todatetime(tolong(records["properties"].["time"])), datetime(null)),
+        EndTime=iff(records["properties"].["Event"] == "org.apache.spark.sql.execution.ui.SparkListenerSQLExecutionEnd", unixtime_milliseconds_todatetime(tolong(records["properties"].["time"])), datetime(null)),
+        PhysicalPlanDescription=tostring(records["properties"].["physicalPlanDescription"]),
+        SparkPlanInfo=todynamic(records["properties"].["SparkPlanInfo"]),
+        Role="",
+        RoleInstance="",
+        PreciseTimeStamp=todatetime(records["timestamp"]),
+        SourceNamespace="",
+        SourceMoniker="",
+        SourceVersion="",
+        AppKind="",
+        SessionType=""
+ }
+.create-or-alter function with (skipvalidation = "true") Update_SparkDerivedTaskMetrics() {
+RawLogs
+| where records["properties"].["Event"] == "SparkListenerTaskEnd"
+| where toint(records["properties"].["Task Info"].["Task ID"]) > 0
+| extend taskDuration = todouble(records["properties"].["Task Info"].["Finish Time"]) - todouble(records["properties"].["Task Info"].["Launch Time"])
+| project
+    Timestamp=todatetime(records["timestamp"]),
+    OperationName=tostring(records["category"]),
+    ItemId=toguid(records["artifactId"]),
+    ItemKind=tostring(records["artifactType"]),
+    ItemName=tostring(""),
+    WorkspaceId=toguid(records["fabricWorkspaceId"]),
+    WorkspaceName=tostring(""),
+    CapacityId=toguid(records["capacityId"]),
+    CapacityName=tostring(""),	
+    CorrelationId=toguid(records["fabricLivyId"]),
+    OperationId=toguid(records["fabricLivyId"]),
+    Identity= bag_pack("UseId", tostring(records["userId"])),	
+    CustomerTenantId=toguid(records["fabricTenantId"]),
+    Status=tostring(records["properties"].["Task End Reason"].["Reason"]),
+    Level=tostring(records["properties"].["level"]),
+    Region=tostring(""),
+    Category=tostring(records["category"]),
+    WorkspaceMonitoringTable=tostring("SparkDerivedTaskMetrics"),
+    //End Common Columns
+    AppId = tostring(records["applicationId"]),
+    AppName = tostring(records["applicationName"]),
+    StageId = toint(records["properties"].["Stage ID"]),
+    TaskId = toint(records["properties"].["Task Info"].["Task ID"]),
+    EfficiencyRatio = 100.0 * todouble(records["properties"].["Task Metrics"].["Executor CPU Time"]) / 1000000 / tolong(records["properties"].["Task Metrics"].["Executor Run Time"]),
+    GcOverheadRatio = 100.0 * todouble(tolong(records["properties"].["Task Metrics"].["JVM GC Time"]) / (taskDuration)),
+    ShuffleOverheadRatio = iff(
+                           todouble(records["properties"].["Task Metrics"]["Input Metrics"].["Bytes Read"]) == 0.0,
+                           0.0,
+                           (
+    todouble(records["properties"].["Task Metrics"]["Shuffle Read Metrics"].["Remote Bytes Read"]) + 
+    todouble(records["properties"].["Task Metrics"]["Shuffle Read Metrics"].["Local Bytes Read"]) + 
+    todouble(records["properties"].["Task Metrics"]["Shuffle Write Metrics"].["Shuffle Bytes Written"])
+    ) / todouble(records["properties"].["Task Metrics"]["Input Metrics"].["Bytes Read"])
+                       ),
+    WasSpilled = tolong(records["properties"].["Task Metrics"].["Memory Bytes Spilled"]) + tolong(records["properties"].["Task Metrics"].["Disk Bytes Spilled"]),
+    TaskDurationMs = tolong(taskDuration * 1000)
+}
+.create-or-alter function with (skipvalidation = "true") Update_SparkMetrics() {
+RawLogs
+| where records["category"] == "Metrics"
+| extend name = records["properties"].["name"]
+| parse name with applicationId_p: string "." process: string "." metric: string
+| project 
+    Timestamp=todatetime(records["timestamp"]),
+    OperationName=tostring(records["category"]),
+    ItemId=toguid(records["artifactId"]),
+    ItemKind=tostring(records["artifactType"]),
+    ItemName=tostring(""),
+    WorkspaceId=toguid(records["fabricWorkspaceId"]),
+    WorkspaceName=tostring(""),
+    CapacityId=toguid(records["capacityId"]),
+    CapacityName=tostring(""),	
+    CorrelationId=toguid(records["fabricLivyId"]),
+    OperationId=toguid(records["fabricLivyId"]),
+    Identity= bag_pack("UseId", tostring(records["userId"])),	
+    CustomerTenantId=toguid(records["fabricTenantId"]),
+    Status=tostring(records["properties"].["Task End Reason"].["Reason"]),
+    Level=tostring(records["properties"].["level"]),
+    Region=tostring(""),
+    Category=tostring(records["category"]),
+    WorkspaceMonitoringTable=tostring("SparkMetrics"),
+    //End Common Columns
+    AppId = tostring(records["applicationId"]),
+    AppName = tostring(records["applicationName"]),
+    ExecutorId = tostring(records["executorId"]),
+    Process = tostring(process),
+    Metric = tostring(metric),
+    MetricType = tostring(records["properties"].["metric_type"]),
+    DurationUnits = tostring(records["properties"].["duration_units"]),
+    RateUnits = tostring(records["properties"].["rate_units"]),
+    Value = toreal(records["properties"].["value"]),
+    Count = tolong(records["properties"].["count"]),    
+    Min = toreal(records["properties"].["min"]),
+    Max = toreal(records["properties"].["max"]),
+    Mean = toreal(records["properties"].["mean"]),
+    StdDev = toreal(records["properties"].["stddev"]),
+    MeanRate = toreal(records["properties"].["mean_rate"]),
+    M1Rate = toreal(records["properties"].["m1_rate"]),
+    M5Rate = toreal(records["properties"].["m5_rate"]),
+    M15Rate = toreal(records["properties"].["m15_rate"]),
+    P50 = toreal(records["properties"].["p50"]),
+    P75 = toreal(records["properties"].["p75"]),
+    P95 = toreal(records["properties"].["p95"]),
+    P98 = toreal(records["properties"].["p98"]),
+    P99 = toreal(records["properties"].["p99"]),
+    P999 = toreal(records["properties"].["p999"])
+}
+.alter table RawLogsOld policy retention @'{"SoftDeletePeriod":"730.00:00:00","Recoverability":"Enabled"}'
+.alter table RawLogsOld policy caching hotdata = time(1.00:00:00) hotindex = time(1.00:00:00)
+.alter table RawLogs policy retention @'{"SoftDeletePeriod":"3.00:00:00","Recoverability":"Enabled"}'
+.alter table RawLogs policy caching hotdata = time(1.00:00:00) hotindex = time(1.00:00:00)
+.alter table SparkDriverLogs policy update "[{\"IsEnabled\":true,\"Source\":\"RawLogs\",\"Query\":\"Update_SparkDriverLogs\",\"IsTransactional\":false,\"PropagateIngestionProperties\":true,\"ManagedIdentity\":null}]"
+.alter table SparkExecutorLogs policy update "[{\"IsEnabled\":true,\"Source\":\"RawLogs\",\"Query\":\"Update_SparkExecutorLogs\",\"IsTransactional\":false,\"PropagateIngestionProperties\":true,\"ManagedIdentity\":null}]"
+.alter table SparkSQLExecutionEvents policy update "[{\"IsEnabled\":true,\"Source\":\"RawLogs\",\"Query\":\"Update_SparkSQLExecutionEvents\",\"IsTransactional\":false,\"PropagateIngestionProperties\":true,\"ManagedIdentity\":null}]"
+.alter table SparkDerivedTaskMetrics policy update "[{\"IsEnabled\":true,\"Source\":\"RawLogs\",\"Query\":\"Update_SparkDerivedTaskMetrics\",\"IsTransactional\":false,\"PropagateIngestionProperties\":true,\"ManagedIdentity\":null}]"
+.alter table SparkMetrics policy update "[{\"IsEnabled\":true,\"Source\":\"RawLogs\",\"Query\":\"Update_SparkMetrics\",\"IsTransactional\":false,\"PropagateIngestionProperties\":true,\"ManagedIdentity\":null}]"
+.alter table SparkEventLogs policy update "[{\"IsEnabled\":true,\"Source\":\"RawLogs\",\"Query\":\"Update_SparkEventLogs\",\"IsTransactional\":false,\"PropagateIngestionProperties\":true,\"ManagedIdentity\":null}]"

@@ -1,0 +1,46 @@
+table GCTimeImport_
+	lineageTag: 3062ae89-d58b-4864-be70-ce1f114cccf8
+
+	column timestamp
+		dataType: dateTime
+		formatString: General Date
+		sourceProviderType: datetimeoffset
+		lineageTag: 6dc869c6-230c-4796-a050-35f5cdfa79e9
+		summarizeBy: none
+		sourceColumn: timestamp
+
+		annotation SummarizationSetBy = Automatic
+
+	column props_name
+		dataType: string
+		sourceProviderType: nvarchar(max)
+		lineageTag: acd603cc-a3e1-40a8-a916-ffd16709c9fb
+		summarizeBy: none
+		sourceColumn: props_name
+
+		annotation SummarizationSetBy = Automatic
+
+	column sum_props_value
+		dataType: int64
+		formatString: 0
+		sourceProviderType: bigint
+		lineageTag: 7036c56c-2572-4796-976c-474f049fb018
+		summarizeBy: sum
+		sourceColumn: sum_props_value
+
+		annotation SummarizationSetBy = Automatic
+
+	partition GCTimeImport_ = m
+		mode: directQuery
+		queryGroup: appStatsOutsideTable
+		source =
+				let
+				    Source = AzureDataExplorer.Contents(RTIfqdn, "eventHouseTelemetry", "RawLogs | extend props = parse_json(properties) | where applicationId == '"&ApplicationWithoutTable&"' |  where props.name contains 'ExecutorMetrics.TotalGCTime' | summarize sum(tolong(props.value)) by bin(timestamp,1m) ,tostring(props.name)", [MaxRows=null, MaxSize=null, NoTruncate=null, AdditionalSetStatements=null])
+				
+				in
+				    Source
+
+	annotation PBI_NavigationStepName = Navigation
+
+	annotation PBI_ResultType = Table
+

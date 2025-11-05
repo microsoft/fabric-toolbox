@@ -1,0 +1,28 @@
+table SparkLensRecommendation
+	lineageTag: c49492ed-58d8-4e65-b3fc-7e3f6f258c8a
+
+	column recommendation
+		dataType: string
+		sourceProviderType: nvarchar(max)
+		lineageTag: d7aeb48e-8069-4d0c-bf49-e5736d90e21d
+		summarizeBy: none
+		sourceColumn: recommendation
+
+		annotation SummarizationSetBy = Automatic
+
+	partition SparkLensRecommendation = m
+		mode: directQuery
+		source =
+				let
+				    Source = AzureDataExplorer.Contents(RTIfqdn, "eventHouseTelemetry", "
+				    sparklens_recommedations
+				    | where app_id contains '"&ApplicationWithoutTable&"'
+				    | distinct recommendation", [MaxRows=null, MaxSize=null, NoTruncate=null, AdditionalSetStatements=null])
+				
+				in
+				    Source
+
+	annotation PBI_NavigationStepName = Navigation
+
+	annotation PBI_ResultType = Table
+

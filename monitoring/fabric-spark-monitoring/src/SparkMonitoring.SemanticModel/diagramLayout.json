@@ -1,0 +1,541 @@
+{
+  "version": "1.1.0",
+  "diagrams": [
+    {
+      "ordinal": 0,
+      "scrollPosition": {
+        "x": 0,
+        "y": 0
+      },
+      "nodes": [
+        {
+          "location": {
+            "x": 0,
+            "y": 60
+          },
+          "nodeIndex": "applications",
+          "nodeLineageTag": "4db8d64f-f2d8-45e1-8673-27aeae19bcb1",
+          "size": {
+            "height": 152,
+            "width": 234
+          },
+          "zIndex": 0
+        },
+        {
+          "location": {
+            "x": 284,
+            "y": 60
+          },
+          "nodeIndex": "applicationsFirst",
+          "nodeLineageTag": "67e2633e-ca89-4d1a-a540-6e991277ec0b",
+          "size": {
+            "height": 152,
+            "width": 234
+          },
+          "zIndex": 0
+        },
+        {
+          "location": {
+            "x": 568,
+            "y": 60
+          },
+          "nodeIndex": "applicationsSecond",
+          "nodeLineageTag": "d1a8b528-152f-4b1c-a9dd-243222388d8f",
+          "size": {
+            "height": 152,
+            "width": 234
+          },
+          "zIndex": 0
+        },
+        {
+          "location": {
+            "x": 852,
+            "y": 24
+          },
+          "nodeIndex": "CPUsage_",
+          "nodeLineageTag": "cb0ab5dc-e0f4-49ab-b467-09c2c9ed3f89",
+          "size": {
+            "height": 224,
+            "width": 234
+          },
+          "zIndex": 0
+        },
+        {
+          "location": {
+            "x": 1136,
+            "y": 84
+          },
+          "nodeIndex": "DatesBin",
+          "nodeLineageTag": "3dcf35d3-1600-4f82-9580-244242915868",
+          "size": {
+            "height": 104,
+            "width": 234
+          },
+          "zIndex": 0
+        },
+        {
+          "location": {
+            "x": 1420,
+            "y": 84
+          },
+          "nodeIndex": "DistinctStages_",
+          "nodeLineageTag": "829874d1-7aba-4e70-802e-a8ac14050e17",
+          "size": {
+            "height": 104,
+            "width": 234
+          },
+          "zIndex": 0
+        },
+        {
+          "location": {
+            "x": 1704,
+            "y": 84
+          },
+          "nodeIndex": "ExecutorsFailure_",
+          "nodeLineageTag": "8f00168f-7548-4837-b346-d7076e712ca8",
+          "size": {
+            "height": 104,
+            "width": 234
+          },
+          "zIndex": 0
+        },
+        {
+          "location": {
+            "x": 1988,
+            "y": 84
+          },
+          "nodeIndex": "ExecutorsFailureFirst",
+          "nodeLineageTag": "462fa335-a441-4c20-8020-161538cbf6b5",
+          "size": {
+            "height": 104,
+            "width": 234
+          },
+          "zIndex": 0
+        },
+        {
+          "location": {
+            "x": 2272,
+            "y": 84
+          },
+          "nodeIndex": "ExecutorsFailureSecond",
+          "nodeLineageTag": "71b1b455-aaa5-4d0f-910e-9a9e967dff7a",
+          "size": {
+            "height": 104,
+            "width": 234
+          },
+          "zIndex": 0
+        },
+        {
+          "location": {
+            "x": 2556,
+            "y": 60
+          },
+          "nodeIndex": "GCTimeImport_",
+          "nodeLineageTag": "3062ae89-d58b-4864-be70-ce1f114cccf8",
+          "size": {
+            "height": 152,
+            "width": 234
+          },
+          "zIndex": 0
+        },
+        {
+          "location": {
+            "x": 2840,
+            "y": 84
+          },
+          "nodeIndex": "MemoryJvmUsageExecSizeFirst",
+          "nodeLineageTag": "2e7714dd-3ada-4eaf-babf-4fadac2b97d2",
+          "size": {
+            "height": 104,
+            "width": 234
+          },
+          "zIndex": 0
+        },
+        {
+          "location": {
+            "x": 3124,
+            "y": 84
+          },
+          "nodeIndex": "MemoryJvmUsageExecSizeSecond",
+          "nodeLineageTag": "aac5e189-0e1a-4b90-a949-d98c3d37d4b6",
+          "size": {
+            "height": 104,
+            "width": 234
+          },
+          "zIndex": 0
+        },
+        {
+          "location": {
+            "x": 3408,
+            "y": 60
+          },
+          "nodeIndex": "MemoryJvmUsageOutsideTableImport_",
+          "nodeLineageTag": "5471b204-61d5-4410-996f-85f4b35ea1bc",
+          "size": {
+            "height": 152,
+            "width": 234
+          },
+          "zIndex": 0
+        },
+        {
+          "location": {
+            "x": 3692,
+            "y": 60
+          },
+          "nodeIndex": "MemoryJvmUsageOutsideTableImportFirstDriver",
+          "nodeLineageTag": "58af674b-fdc4-49d8-8644-081c257a368e",
+          "size": {
+            "height": 152,
+            "width": 234
+          },
+          "zIndex": 0
+        },
+        {
+          "location": {
+            "x": 3976,
+            "y": 60
+          },
+          "nodeIndex": "MemoryJvmUsageOutsideTableImportSecondDriver",
+          "nodeLineageTag": "ccd9ce20-2736-4934-90d8-afc334324d96",
+          "size": {
+            "height": 152,
+            "width": 234
+          },
+          "zIndex": 0
+        },
+        {
+          "location": {
+            "x": 4260,
+            "y": 48
+          },
+          "nodeIndex": "MemoryJvmUsagePercentFirstExecs",
+          "nodeLineageTag": "a8f03d70-f8d5-430e-bd33-bb2ee23171cd",
+          "size": {
+            "height": 176,
+            "width": 234
+          },
+          "zIndex": 0
+        },
+        {
+          "location": {
+            "x": 4544,
+            "y": 48
+          },
+          "nodeIndex": "MemoryJvmUsagePercentSecondExecs",
+          "nodeLineageTag": "f1736379-c3ce-4d34-a9b5-802190764402",
+          "size": {
+            "height": 176,
+            "width": 234
+          },
+          "zIndex": 0
+        },
+        {
+          "location": {
+            "x": 4828,
+            "y": 48
+          },
+          "nodeIndex": "NEE",
+          "nodeLineageTag": "05a460a5-1933-4391-b90c-ff187b3fdb5b",
+          "size": {
+            "height": 176,
+            "width": 234
+          },
+          "zIndex": 0
+        },
+        {
+          "location": {
+            "x": 5112,
+            "y": 60
+          },
+          "nodeIndex": "NumExecutorsFirst",
+          "nodeLineageTag": "690253b1-cdff-47e8-82b4-b500e930485c",
+          "size": {
+            "height": 152,
+            "width": 234
+          },
+          "zIndex": 0
+        },
+        {
+          "location": {
+            "x": 5396,
+            "y": 60
+          },
+          "nodeIndex": "NumExecutorsSecond",
+          "nodeLineageTag": "fe326520-b63f-46ce-8f97-c69708e22f97",
+          "size": {
+            "height": 152,
+            "width": 234
+          },
+          "zIndex": 0
+        },
+        {
+          "location": {
+            "x": 5680,
+            "y": 60
+          },
+          "nodeIndex": "RecordsRead_",
+          "nodeLineageTag": "324e271d-f44b-4018-8e20-58c8eef5c05b",
+          "size": {
+            "height": 152,
+            "width": 234
+          },
+          "zIndex": 0
+        },
+        {
+          "location": {
+            "x": 5964,
+            "y": 84
+          },
+          "nodeIndex": "RecordsRead_First",
+          "nodeLineageTag": "707ba0b7-2f7d-4966-b0bd-1f6899f06fa2",
+          "size": {
+            "height": 104,
+            "width": 234
+          },
+          "zIndex": 0
+        },
+        {
+          "location": {
+            "x": 6248,
+            "y": 84
+          },
+          "nodeIndex": "RecordsRead_Second",
+          "nodeLineageTag": "f6ded73c-6281-4386-81fc-d6cb76d59a36",
+          "size": {
+            "height": 104,
+            "width": 234
+          },
+          "zIndex": 0
+        },
+        {
+          "location": {
+            "x": 6532,
+            "y": 60
+          },
+          "nodeIndex": "ShuffleRead_",
+          "nodeLineageTag": "f7661206-a838-4db0-aea8-374bede6cf6c",
+          "size": {
+            "height": 152,
+            "width": 234
+          },
+          "zIndex": 0
+        },
+        {
+          "location": {
+            "x": 6816,
+            "y": 60
+          },
+          "nodeIndex": "SparkLensMetrics",
+          "nodeLineageTag": "bb8f30e5-247f-47e0-ba16-6a436f0d4c62",
+          "size": {
+            "height": 152,
+            "width": 234
+          },
+          "zIndex": 0
+        },
+        {
+          "location": {
+            "x": 7100,
+            "y": 84
+          },
+          "nodeIndex": "SparkLensRecommendation",
+          "nodeLineageTag": "c49492ed-58d8-4e65-b3fc-7e3f6f258c8a",
+          "size": {
+            "height": 104,
+            "width": 234
+          },
+          "zIndex": 0
+        },
+        {
+          "location": {
+            "x": 7384,
+            "y": 72
+          },
+          "nodeIndex": "SparkVersionFirst",
+          "nodeLineageTag": "1d97f9aa-efb4-4359-b0c4-894b64711690",
+          "size": {
+            "height": 128,
+            "width": 234
+          },
+          "zIndex": 0
+        },
+        {
+          "location": {
+            "x": 7668,
+            "y": 72
+          },
+          "nodeIndex": "SparkVersionSecond",
+          "nodeLineageTag": "ab316182-8620-476c-9b6e-dcb6ea87c8a4",
+          "size": {
+            "height": 128,
+            "width": 234
+          },
+          "zIndex": 0
+        },
+        {
+          "location": {
+            "x": 7952,
+            "y": 60
+          },
+          "nodeIndex": "SpillToDiskImport_",
+          "nodeLineageTag": "f5fd1875-9132-43a4-b62d-9b1dc3790e8e",
+          "size": {
+            "height": 152,
+            "width": 234
+          },
+          "zIndex": 0
+        },
+        {
+          "location": {
+            "x": 8236,
+            "y": 24
+          },
+          "nodeIndex": "StageComparer",
+          "nodeLineageTag": "a6da62d8-8c20-40e7-9e19-e2049538c0a9",
+          "size": {
+            "height": 224,
+            "width": 234
+          },
+          "zIndex": 0
+        },
+        {
+          "location": {
+            "x": 8520,
+            "y": 0
+          },
+          "nodeIndex": "Stages",
+          "nodeLineageTag": "3d62ada8-7bef-4553-aa30-d2557e4eb861",
+          "size": {
+            "height": 272,
+            "width": 234
+          },
+          "zIndex": 0
+        },
+        {
+          "location": {
+            "x": 8804,
+            "y": 72
+          },
+          "nodeIndex": "TaskEndFailures_",
+          "nodeLineageTag": "b828010c-fe18-4c37-b41f-abaf217b2560",
+          "size": {
+            "height": 128,
+            "width": 234
+          },
+          "zIndex": 0
+        },
+        {
+          "location": {
+            "x": 9088,
+            "y": 72
+          },
+          "nodeIndex": "TaskEndFailures_First",
+          "nodeLineageTag": "ccb569fc-4550-4067-8bdf-55eb96308dff",
+          "size": {
+            "height": 128,
+            "width": 234
+          },
+          "zIndex": 0
+        },
+        {
+          "location": {
+            "x": 9372,
+            "y": 72
+          },
+          "nodeIndex": "TaskEndFailures_Second",
+          "nodeLineageTag": "1faa8831-ba80-4c9e-8c89-fec2c30c1053",
+          "size": {
+            "height": 128,
+            "width": 234
+          },
+          "zIndex": 0
+        },
+        {
+          "location": {
+            "x": 9656,
+            "y": 84
+          },
+          "nodeIndex": "TaskFailures_",
+          "nodeLineageTag": "3f6cae44-10b9-4124-9faf-287fd7cfb49e",
+          "size": {
+            "height": 104,
+            "width": 234
+          },
+          "zIndex": 0
+        },
+        {
+          "location": {
+            "x": 9940,
+            "y": 84
+          },
+          "nodeIndex": "DistinctJobsFirst",
+          "nodeLineageTag": "fa9e098d-755d-4d20-b541-801df308d94d",
+          "size": {
+            "height": 104,
+            "width": 234
+          },
+          "zIndex": 0
+        },
+        {
+          "location": {
+            "x": 10224,
+            "y": 84
+          },
+          "nodeIndex": "DistinctJobsSecond",
+          "nodeLineageTag": "84ce1c6c-10d3-4ca6-a5ce-322d9ba2d961",
+          "size": {
+            "height": 104,
+            "width": 234
+          },
+          "zIndex": 0
+        },
+        {
+          "location": {
+            "x": 10508,
+            "y": 84
+          },
+          "nodeIndex": "DistinctStageFirst",
+          "nodeLineageTag": "0a51e35a-ca5c-475f-ab03-4c267833a685",
+          "size": {
+            "height": 104,
+            "width": 234
+          },
+          "zIndex": 0
+        },
+        {
+          "location": {
+            "x": 10792,
+            "y": 84
+          },
+          "nodeIndex": "DistinctStageSecond",
+          "nodeLineageTag": "1f1b20ad-1a01-42f2-b467-393542bd4002",
+          "size": {
+            "height": 104,
+            "width": 234
+          },
+          "zIndex": 0
+        },
+        {
+          "location": {
+            "x": 11076,
+            "y": 36
+          },
+          "nodeIndex": "JobComparerProperties",
+          "size": {
+            "height": 200,
+            "width": 234
+          },
+          "zIndex": 0
+        }
+      ],
+      "name": "All tables",
+      "zoomValue": 100,
+      "pinKeyFieldsToTop": false,
+      "showExtraHeaderInfo": false,
+      "hideKeyFieldsWhenCollapsed": false,
+      "tablesLocked": false
+    }
+  ],
+  "selectedDiagram": "All tables",
+  "defaultDiagram": "All tables"
+}
