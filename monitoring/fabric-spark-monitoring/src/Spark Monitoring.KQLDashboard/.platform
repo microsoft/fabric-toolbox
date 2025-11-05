@@ -1,0 +1,12 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/gitIntegration/platformProperties/2.0.0/schema.json",
+  "metadata": {
+    "type": "KQLDashboard",
+    "displayName": "Spark Monitoring",
+    "description": "Spark Monitoring Rodrigo2"
+  },
+  "config": {
+    "version": "2.0",
+    "logicalId": "94b0dac6-cc63-8c9d-4a4b-40404f12bf39"
+  }
+}

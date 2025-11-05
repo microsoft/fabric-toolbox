@@ -1,0 +1,61 @@
+table MemoryJvmUsagePercentSecondExecs
+	lineageTag: f1736379-c3ce-4d34-a9b5-802190764402
+
+	column timestamp
+		dataType: dateTime
+		formatString: General Date
+		sourceProviderType: datetimeoffset
+		lineageTag: 2975180f-0dad-4dc0-86be-a25993c6b046
+		summarizeBy: none
+		sourceColumn: timestamp
+
+		annotation SummarizationSetBy = Automatic
+
+	column applicationId
+		dataType: string
+		sourceProviderType: nvarchar(max)
+		lineageTag: 2c90525e-a06b-4163-b64b-9a1809a1ccb7
+		summarizeBy: none
+		sourceColumn: applicationId
+
+		annotation SummarizationSetBy = Automatic
+
+	column Column1
+		dataType: double
+		formatString: 0
+		sourceProviderType: double
+		lineageTag: 131e4c07-2c6f-40ed-b5c1-aa86b5ca0ab0
+		summarizeBy: sum
+		sourceColumn: Column1
+
+		annotation SummarizationSetBy = Automatic
+
+	column extracted
+		dataType: string
+		sourceProviderType: nvarchar(max)
+		lineageTag: 9ed7948f-9146-49d4-8569-6a8a7686cabf
+		summarizeBy: none
+		sourceColumn: extracted
+
+		annotation SummarizationSetBy = Automatic
+
+	partition MemoryJvmUsagePercentSecondExecs = m
+		mode: directQuery
+		queryGroup: Comparer
+		source = ```
+				let
+				    Source = AzureDataExplorer.Contents(RTIfqdn, "eventHouseTelemetry", "
+				RawLogs 
+				| extend props = parse_json(properties) 
+				| where applicationId == '"&ApplicationSecond&"'
+				|  where (props.name contains 'jvm.heap.used' or props.name contains 'jvm.heap.max' ) and props.name !contains 'driver'
+				| extend extracted = extract(@""(application_\d+_\d+\.\d+\.jvm\.heap)"", 1, tostring(props.name))
+				| summarize sumif(todouble(props.value),props.name contains 'jvm.heap.used')/sumif(todouble(props.value),props.name contains 'jvm.heap.max') by bin(timestamp,5m),applicationId,tostring(extracted)", [MaxRows=null, MaxSize=null, NoTruncate=null, AdditionalSetStatements=null])
+				in
+				    Source
+				```
+
+	annotation PBI_NavigationStepName = Navigation
+
+	annotation PBI_ResultType = Table
+

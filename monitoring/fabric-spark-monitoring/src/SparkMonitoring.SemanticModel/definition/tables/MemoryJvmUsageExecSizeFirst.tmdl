@@ -1,0 +1,32 @@
+table MemoryJvmUsageExecSizeFirst
+	lineageTag: 2e7714dd-3ada-4eaf-babf-4fadac2b97d2
+
+	column Column1
+		dataType: int64
+		formatString: 0
+		sourceProviderType: bigint
+		lineageTag: 9170cc55-3999-43fc-9d56-a7ac92ef64e3
+		summarizeBy: sum
+		sourceColumn: Column1
+
+		annotation SummarizationSetBy = Automatic
+
+	partition MemoryJvmUsageExecSizeFirst = m
+		mode: directQuery
+		queryGroup: Comparer
+		source = ```
+				let
+				    Source = AzureDataExplorer.Contents(RTIfqdn, "eventHouseTelemetry", "RawLogs 
+				| extend props = parse_json(properties) 
+				| where applicationId == '"&ApplicationFirst&"'
+				|  where (props.name contains 'jvm.heap.max' ) and props.name !contains ""driver""
+				| project tolong(props.value)/1073741824 | limit 1", [MaxRows=null, MaxSize=null, NoTruncate=null, AdditionalSetStatements=null])
+				
+				in
+				    Source
+				```
+
+	annotation PBI_NavigationStepName = Navigation
+
+	annotation PBI_ResultType = Table
+
