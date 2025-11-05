@@ -3,7 +3,7 @@
     Updates an existing Reflex in a specified Microsoft Fabric workspace.
 
 .DESCRIPTION
-    This function sends a PATCH request to the Microsoft Fabric API to update an existing Reflex 
+    This function sends a PATCH request to the Microsoft Fabric API to update an existing Reflex
     in the specified workspace. It supports optional parameters for Reflex description.
 
 .PARAMETER WorkspaceId
@@ -27,15 +27,15 @@
     - Calls `Test-TokenExpired` to ensure token validity before making the API request.
 
     Author: Tiago Balabuch
-    
+
 #>
 function Update-FabricReflex {
-    [CmdletBinding()]
+    [CmdletBinding(SupportsShouldProcess=$true, ConfirmImpact='Medium')]
     param (
         [Parameter(Mandatory = $true)]
         [ValidateNotNullOrEmpty()]
-        [string]$WorkspaceId,   
-        
+        [string]$WorkspaceId,
+
         [Parameter(Mandatory = $true)]
         [ValidateNotNullOrEmpty()]
         [string]$ReflexId,
@@ -73,17 +73,19 @@ function Update-FabricReflex {
         Write-Message -Message "Request Body: $bodyJson" -Level Debug
 
         # Make the API request
-        $apiParams = @{
-            Headers = $FabricConfig.FabricHeaders
-            BaseURI = $apiEndpointURI
-            Method = 'Patch'
-            Body = $bodyJson
+        if ($PSCmdlet.ShouldProcess("Reflex '$ReflexName' (ID: $ReflexId) in workspace '$WorkspaceId'", "Update")) {
+            $apiParams = @{
+                Headers = $FabricConfig.FabricHeaders
+                BaseURI = $apiEndpointURI
+                Method = 'Patch'
+                Body = $bodyJson
+            }
+            $response = Invoke-FabricAPIRequest @apiParams
+
+            # Return the API response
+            Write-Message -Message "Reflex '$ReflexName' updated successfully!" -Level Info
+            return $response
         }
-        $response = Invoke-FabricAPIRequest @apiParams 
-      
-        # Return the API response
-        Write-Message -Message "Reflex '$ReflexName' updated successfully!" -Level Info
-        return $response
     }
     catch {
         # Capture and log error details

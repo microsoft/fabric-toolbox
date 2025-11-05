@@ -3,7 +3,7 @@
     Updates the definition of an existing Reflex in a specified Microsoft Fabric workspace.
 
 .DESCRIPTION
-    This function sends a PATCH request to the Microsoft Fabric API to update the definition of an existing Reflex 
+    This function sends a PATCH request to the Microsoft Fabric API to update the definition of an existing Reflex
     in the specified workspace. It supports optional parameters for Reflex definition and platform-specific definition.
 
 .PARAMETER WorkspaceId
@@ -27,10 +27,10 @@
     - Calls `Test-TokenExpired` to ensure token validity before making the API request.
 
     Author: Tiago Balabuch
-    
+
 #>
 function Update-FabricReflexDefinition {
-    [CmdletBinding()]
+    [CmdletBinding(SupportsShouldProcess=$true, ConfirmImpact='Medium')]
     param (
         [Parameter(Mandatory = $true)]
         [ValidateNotNullOrEmpty()]
@@ -43,7 +43,7 @@ function Update-FabricReflexDefinition {
         [Parameter(Mandatory = $true)]
         [ValidateNotNullOrEmpty()]
         [string]$ReflexPathDefinition,
-        
+
         [Parameter(Mandatory = $false)]
         [ValidateNotNullOrEmpty()]
         [string]$ReflexPathPlatformDefinition
@@ -54,10 +54,10 @@ function Update-FabricReflexDefinition {
         Test-TokenExpired
         Write-Message -Message "Authentication token is valid." -Level Debug
 
-        # Construct the API endpoint URI with filtering logic  
+        # Construct the API endpoint URI with filtering logic
         $apiEndpointURI = "{0}/workspaces/{1}/reflexes/{2}/updateDefinition" -f $FabricConfig.BaseUrl, $WorkspaceId, $ReflexId
         if ($ReflexPathPlatformDefinition) {
-            $apiEndpointURI = "?updateMetadata=true" -f $apiEndpointURI 
+            $apiEndpointURI = "?updateMetadata=true" -f $apiEndpointURI
         }
         Write-Message -Message "API Endpoint: $apiEndpointURI" -Level Debug
 
@@ -65,12 +65,12 @@ function Update-FabricReflexDefinition {
         $body = @{
             definition = @{
                 parts = @()
-            } 
+            }
         }
-      
+
         if ($ReflexPathDefinition) {
             $ReflexEncodedContent = Convert-ToBase64 -filePath $ReflexPathDefinition
-            
+
             if (-not [string]::IsNullOrEmpty($ReflexEncodedContent)) {
                 # Add new part to the parts array
                 $body.definition.parts += @{
@@ -106,17 +106,19 @@ function Update-FabricReflexDefinition {
         Write-Message -Message "Request Body: $bodyJson" -Level Debug
 
         # Make the API request
-        $apiParams = @{
-            BaseURI = $apiEndpointURI
-            Headers = $FabricConfig.FabricHeaders
-            Method = 'Post'
-            Body = $bodyJson
+        if ($PSCmdlet.ShouldProcess("Reflex definition for Reflex ID '$ReflexId' in workspace '$WorkspaceId'", "Update")) {
+            $apiParams = @{
+                BaseURI = $apiEndpointURI
+                Headers = $FabricConfig.FabricHeaders
+                Method = 'Post'
+                Body = $bodyJson
+            }
+            $response = Invoke-FabricAPIRequest @apiParams
+
+            # Return the API response
+            Write-Message -Message "Successfully updated the definition for Reflex with ID '$ReflexId' in workspace '$WorkspaceId'." -Level Info
+            return $response
         }
-        $response = Invoke-FabricAPIRequest @apiParams
-       
-        # Return the API response
-        Write-Message -Message "Successfully updated the definition for Reflex with ID '$ReflexId' in workspace '$WorkspaceId'." -Level Info
-        return $response
     }
     catch {
         # Capture and log error details

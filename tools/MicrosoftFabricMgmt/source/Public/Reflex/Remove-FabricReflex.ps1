@@ -3,7 +3,7 @@
     Removes an Reflex from a specified Microsoft Fabric workspace.
 
 .DESCRIPTION
-    This function sends a DELETE request to the Microsoft Fabric API to remove an Reflex 
+    This function sends a DELETE request to the Microsoft Fabric API to remove an Reflex
     from the specified workspace using the provided WorkspaceId and ReflexId.
 
 .PARAMETER WorkspaceId
@@ -21,10 +21,10 @@
     - Calls `Test-TokenExpired` to ensure token validity before making the API request.
 
     Author: Tiago Balabuch
-    
+
 #>
 function Remove-FabricReflex {
-    [CmdletBinding()]
+    [CmdletBinding(SupportsShouldProcess=$true, ConfirmImpact='High')]
     param (
         [Parameter(Mandatory = $true)]
         [ValidateNotNullOrEmpty()]
@@ -45,16 +45,18 @@ function Remove-FabricReflex {
         Write-Message -Message "API Endpoint: $apiEndpointURI" -Level Debug
 
         # Make the API request
-        $apiParams = @{
-            Headers = $FabricConfig.FabricHeaders
-            BaseURI = $apiEndpointURI
-            Method = 'Delete'
-        }
-        $response = Invoke-FabricAPIRequest @apiParams 
+        if ($PSCmdlet.ShouldProcess("Reflex '$ReflexId' in workspace '$WorkspaceId'", "Remove")) {
+            $apiParams = @{
+                Headers = $FabricConfig.FabricHeaders
+                BaseURI = $apiEndpointURI
+                Method = 'Delete'
+            }
+            $response = Invoke-FabricAPIRequest @apiParams
 
-        # Return the API response
-        Write-Message -Message "Reflex '$ReflexId' deleted successfully from workspace '$WorkspaceId'." -Level Info  
-        return $response
+            # Return the API response
+            Write-Message -Message "Reflex '$ReflexId' deleted successfully from workspace '$WorkspaceId'." -Level Info
+            return $response
+        }
     }
     catch {
         # Capture and log error details

@@ -28,7 +28,7 @@
     - Calls `Test-TokenExpired` to ensure token validity before making the API request.
 
     Author: Tiago Balabuch
-    
+
 #>
 function Get-FabricReflexDefinition {
     [CmdletBinding()]
@@ -51,11 +51,11 @@ function Get-FabricReflexDefinition {
         Test-TokenExpired
         Write-Message -Message "Authentication token is valid." -Level Debug
 
-        # Construct the API endpoint URI with filtering logic    
+        # Construct the API endpoint URI with filtering logic
         $apiEndpointURI = "{0}/workspaces/{1}/reflexes/{2}/getDefinition" -f $FabricConfig.BaseUrl, $WorkspaceId, $ReflexId
         if ($ReflexFormat) {
             $apiEndpointURI = "{0}?format={1}" -f $apiEndpointURI, $ReflexFormat
-        }   
+        }
         Write-Message -Message "API Endpoint: $apiEndpointURI" -Level Debug
 
         # Make the API request
@@ -64,8 +64,8 @@ function Get-FabricReflexDefinition {
             Headers = $FabricConfig.FabricHeaders
             Method = 'Post'
         }
-        $response = Invoke-FabricAPIRequest @apiParams 
-        
+        $response = Invoke-FabricAPIRequest @apiParams
+
         # Return the API response
         Write-Message -Message "Reflex '$ReflexId' definition retrieved successfully!" -Level Debug
         return $response
@@ -74,6 +74,6 @@ function Get-FabricReflexDefinition {
         # Capture and log error details
         $errorDetails = $_.Exception.Message
         Write-Message -Message "Failed to retrieve Reflex. Error: $errorDetails" -Level Error
-    } 
- 
+    }
+
 }
