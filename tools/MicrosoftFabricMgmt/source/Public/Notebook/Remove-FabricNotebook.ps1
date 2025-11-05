@@ -24,7 +24,7 @@ Author: Tiago Balabuch
 
 #>
 function Remove-FabricNotebook {
-    [CmdletBinding()]
+    [CmdletBinding(SupportsShouldProcess = $true, ConfirmImpact = 'High')]
     param (
         [Parameter(Mandatory = $true)]
         [ValidateNotNullOrEmpty()]
@@ -45,17 +45,21 @@ function Remove-FabricNotebook {
         $apiEndpointURI = "{0}/workspaces/{1}/notebooks/{2}" -f $FabricConfig.BaseUrl, $WorkspaceId, $NotebookId
         Write-Message -Message "API Endpoint: $apiEndpointURI" -Level Debug
 
-        # Make the API request
-        $apiParams = @{
-            Headers = $FabricConfig.FabricHeaders
-            BaseURI = $apiEndpointURI
-            Method = 'Delete'
-        }
-        $response = Invoke-FabricAPIRequest @apiParams 
+        # Make the API request when confirmed
+        $target = "Notebook '$NotebookId' in workspace '$WorkspaceId'"
+        $action = "Delete Notebook"
+        if ($PSCmdlet.ShouldProcess($target, $action)) {
+            $apiParams = @{
+                Headers = $FabricConfig.FabricHeaders
+                BaseURI = $apiEndpointURI
+                Method = 'Delete'
+            }
+            $response = Invoke-FabricAPIRequest @apiParams 
 
-        # Return the API response
-        Write-Message -Message "Notebook '$NotebookId' deleted successfully from workspace '$WorkspaceId'." -Level Info
-        return $response
+            # Return the API response
+            Write-Message -Message "Notebook '$NotebookId' deleted successfully from workspace '$WorkspaceId'." -Level Info
+            return $response
+        }
     }
     catch {
         # Capture and log error details

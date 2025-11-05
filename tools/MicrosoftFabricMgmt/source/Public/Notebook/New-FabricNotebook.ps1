@@ -33,7 +33,7 @@ Author: Tiago Balabuch
 
 #>
 function New-FabricNotebook {
-    [CmdletBinding()]
+    [CmdletBinding(SupportsShouldProcess = $true, ConfirmImpact = 'Medium')]
     param (
         [Parameter(Mandatory = $true)]
         [ValidateNotNullOrEmpty()]
@@ -58,7 +58,7 @@ function New-FabricNotebook {
         
         [Parameter(Mandatory = $false)]
         [ValidateNotNullOrEmpty()]
-        [ValidateSet('ipynb', 'fabricGitSource ')]
+    [ValidateSet('ipynb', 'fabricGitSource')]
         [string]$NotebookFormat = 'ipynb'
     )
 
@@ -135,19 +135,22 @@ function New-FabricNotebook {
         $bodyJson = $body | ConvertTo-Json -Depth 10
         Write-Message -Message "Request Body: $bodyJson" -Level Debug
 
-        # Make the API request
-        # Make the API request
-        $apiParams = @{
-            BaseURI = $apiEndpointURI
-            Headers = $FabricConfig.FabricHeaders
-            Method = 'Post'
-            Body = $bodyJson
-        }
-        $response = Invoke-FabricAPIRequest @apiParams
+        # Make the API request when confirmed
+        $target = "Workspace '$WorkspaceId'"
+        $action = "Create Notebook '$NotebookName'"
+        if ($PSCmdlet.ShouldProcess($target, $action)) {
+            $apiParams = @{
+                BaseURI = $apiEndpointURI
+                Headers = $FabricConfig.FabricHeaders
+                Method = 'Post'
+                Body = $bodyJson
+            }
+            $response = Invoke-FabricAPIRequest @apiParams
 
-        # Return the API response   
-        Write-Message -Message "Notebook '$NotebookName' created successfully!" -Level Info
-        return $response
+            # Return the API response   
+            Write-Message -Message "Notebook '$NotebookName' created successfully!" -Level Info
+            return $response
+        }
     }
     catch {
         # Capture and log error details

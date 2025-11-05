@@ -32,7 +32,7 @@ Author: Tiago Balabuch
 
 #>
 function Update-FabricNotebook {
-    [CmdletBinding()]
+    [CmdletBinding(SupportsShouldProcess = $true, ConfirmImpact = 'Medium')]
     param (
         [Parameter(Mandatory = $true)]
         [ValidateNotNullOrEmpty()]
@@ -74,18 +74,22 @@ function Update-FabricNotebook {
         $bodyJson = $body | ConvertTo-Json
         Write-Message -Message "Request Body: $bodyJson" -Level Debug
 
-       # Make the API request
-        $apiParams = @{
-            Headers = $FabricConfig.FabricHeaders
-            BaseURI = $apiEndpointURI
-            Method = 'Patch'
-            Body = $bodyJson
+       # Make the API request when confirmed
+        $target = "Notebook '$NotebookId' in workspace '$WorkspaceId'"
+        $action = "Update Notebook display name/description"
+        if ($PSCmdlet.ShouldProcess($target, $action)) {
+            $apiParams = @{
+                Headers = $FabricConfig.FabricHeaders
+                BaseURI = $apiEndpointURI
+                Method = 'Patch'
+                Body = $bodyJson
+            }
+            $response = Invoke-FabricAPIRequest @apiParams 
+          
+            # Return the API response
+            Write-Message -Message "Notebook '$NotebookName' updated successfully!" -Level Info
+            return $response
         }
-        $response = Invoke-FabricAPIRequest @apiParams 
-      
-        # Return the API response
-        Write-Message -Message "Notebook '$NotebookName' updated successfully!" -Level Info
-        return $response
     }
     catch {
         # Capture and log error details
