@@ -20,7 +20,7 @@
     Author: Tiago Balabuch
 #>
 function Reset-FabricOneLakeShortcutCache {
-    [CmdletBinding()]
+    [CmdletBinding(SupportsShouldProcess = $true, ConfirmImpact = 'Medium')]
     param (
         [Parameter(Mandatory = $true)]
         [ValidateNotNullOrEmpty()]
@@ -35,17 +35,21 @@ function Reset-FabricOneLakeShortcutCache {
         # Construct the API endpoint URI
         $apiEndpointURI = "{0}/workspaces/{1}/onelake/resetShortcutCache" -f $FabricConfig.BaseUrl, $WorkspaceId
         Write-Message -Message "API Endpoint: $apiEndpointURI" -Level Debug
-        # Make the API request
-        $apiParams = @{
-            BaseURI = $apiEndpointURI
-            Headers = $FabricConfig.FabricHeaders
-            Method  = 'Post'
-        }
-        $response = Invoke-FabricAPIRequest @apiParams
+        # Make the API request when confirmed
+        $target = "Workspace '$WorkspaceId'"
+        $action = "Reset OneLake shortcut cache"
+        if ($PSCmdlet.ShouldProcess($target, $action)) {
+            $apiParams = @{
+                BaseURI = $apiEndpointURI
+                Headers = $FabricConfig.FabricHeaders
+                Method  = 'Post'
+            }
+            $response = Invoke-FabricAPIRequest @apiParams
 
-        # Return the API response
-        Write-Message -Message "Successfully reset the OneLake shortcut cache for workspace '$WorkspaceId'." -Level Info
-        return $response
+            # Return the API response
+            Write-Message -Message "Successfully reset the OneLake shortcut cache for workspace '$WorkspaceId'." -Level Info
+            return $response
+        }
     }
     catch {
         # Capture and log error details
