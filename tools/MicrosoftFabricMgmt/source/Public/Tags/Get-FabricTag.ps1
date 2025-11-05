@@ -51,7 +51,7 @@ function Get-FabricTag {
         Write-Message -Message "Validating authentication token..." -Level Debug
         Test-TokenExpired
         Write-Message -Message "Authentication token is valid." -Level Debug
-                
+
         # Construct the API endpoint URI
         $apiEndpointURI = "{0}/admin/tags" -f $FabricConfig.BaseUrl
 
@@ -96,6 +96,6 @@ function Get-FabricTag {
         # Capture and log error details
         $errorDetails = $_.Exception.Message
         Write-Message -Message "Failed to retrieve Tags. Error: $errorDetails" -Level Error
-    } 
- 
+    }
+
 }

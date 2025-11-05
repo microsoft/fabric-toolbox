@@ -23,7 +23,7 @@
     Author: Tiago Balabuch
 #>
 function Update-FabricTag {
-    [CmdletBinding()]
+    [CmdletBinding(SupportsShouldProcess=$true, ConfirmImpact='Medium')]
     param (
         [Parameter(Mandatory = $false)]
         [ValidateNotNullOrEmpty()]
@@ -52,19 +52,21 @@ function Update-FabricTag {
         # Convert the body to JSON
         $bodyJson = $body | ConvertTo-Json
         Write-Message -Message "Request Body: $bodyJson" -Level Debug
-        
+
         # Make the API request
-        $apiParams = @{
-            Headers = $FabricConfig.FabricHeaders
-            BaseURI = $apiEndpointURI
-            Method = 'Patch'
-            Body = $bodyJson
-        }
-        $response = Invoke-FabricAPIRequest @apiParams 
-        
+        if ($PSCmdlet.ShouldProcess("tag '$TagId' with name '$TagName'", "Update")) {
+            $apiParams = @{
+                Headers = $FabricConfig.FabricHeaders
+                BaseURI = $apiEndpointURI
+                Method = 'Patch'
+                Body = $bodyJson
+            }
+            $response = Invoke-FabricAPIRequest @apiParams
+
             # Return the API response
-        Write-Message -Message "Tag '$TagName' updated successfully!" -Level Info
-        return $response
+            Write-Message -Message "Tag '$TagName' updated successfully!" -Level Info
+            return $response
+        }
     }
     catch {
         # Capture and log error details

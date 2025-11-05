@@ -23,11 +23,11 @@
     - Author: Tiago Balabuch
 #>
 function New-FabricTag {
-    [CmdletBinding()]
+    [CmdletBinding(SupportsShouldProcess=$true, ConfirmImpact='Medium')]
     param (
         [Parameter(Mandatory = $true)]
         [ValidateNotNullOrEmpty()]
-        [System.Object]$Tags # Array with 'displayName' 
+        [System.Object]$Tags # Array with 'displayName'
     )
     try {
         # Validate Items structure
@@ -51,18 +51,19 @@ function New-FabricTag {
         Write-Message -Message "Request Body: $bodyJson" -Level Debug
 
         # Make the API request
-        # Make the API request
-        $apiParams = @{
-            BaseURI = $apiEndpointURI
-            Headers = $FabricConfig.FabricHeaders
-            Method = 'Post'
-            Body = $bodyJson
-        }
-        $response = Invoke-FabricAPIRequest @apiParams
+        if ($PSCmdlet.ShouldProcess("Fabric tags", "Create tags in bulk")) {
+            $apiParams = @{
+                BaseURI = $apiEndpointURI
+                Headers = $FabricConfig.FabricHeaders
+                Method = 'Post'
+                Body = $bodyJson
+            }
+            $response = Invoke-FabricAPIRequest @apiParams
 
-        # Return the API response
-        Write-Message -Message "Tags created successfully!" -Level Info        
-        return $response
+            # Return the API response
+            Write-Message -Message "Tags created successfully!" -Level Info
+            return $response
+        }
     }
     catch {
         # Capture and log error details
