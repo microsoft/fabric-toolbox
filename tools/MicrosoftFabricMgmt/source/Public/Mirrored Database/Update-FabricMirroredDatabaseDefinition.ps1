@@ -42,7 +42,7 @@ Author: Tiago Balabuch
 
 #>
 function Update-FabricMirroredDatabaseDefinition {
-    [CmdletBinding()]
+    [CmdletBinding(SupportsShouldProcess = $true, ConfirmImpact = 'Medium')]
     param (
         [Parameter(Mandatory = $true)]
         [ValidateNotNullOrEmpty()]
@@ -70,7 +70,8 @@ function Update-FabricMirroredDatabaseDefinition {
         # Construct the API endpoint URI with filtering logic  
         $apiEndpointURI = "{0}/workspaces/{1}/mirroredDatabases/{2}/updateDefinition" -f $FabricConfig.BaseUrl, $WorkspaceId, $MirroredDatabaseId
         if ($MirroredDatabasePathPlatformDefinition) {
-            $apiEndpointURI = "?updateMetadata=true" -f $apiEndpointURI 
+            # Append query parameter correctly
+            $apiEndpointURI = "$apiEndpointURI?updateMetadata=true"
         }
         Write-Message -Message "API Endpoint: $apiEndpointURI" -Level Debug
 
@@ -125,12 +126,14 @@ function Update-FabricMirroredDatabaseDefinition {
             Method = 'Post'
             Body = $bodyJson
         }
-        $response = Invoke-FabricAPIRequest @apiParams
+        if ($PSCmdlet.ShouldProcess($MirroredDatabaseId, "Update Mirrored Database definition in workspace '$WorkspaceId'")) {
+            $response = Invoke-FabricAPIRequest @apiParams
 
-        # Return the API response
-        
-        Write-Message -Message "Successfully updated the definition for Mirrored Database with ID '$MirroredDatabaseId' in workspace '$WorkspaceId'." -Level Info
-        return $response   
+            # Return the API response
+            
+            Write-Message -Message "Successfully updated the definition for Mirrored Database with ID '$MirroredDatabaseId' in workspace '$WorkspaceId'." -Level Info
+            return $response   
+        }
     }
     catch {
         # Capture and log error details
