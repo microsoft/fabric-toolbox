@@ -28,7 +28,7 @@
     - Calls `Test-TokenExpired` to ensure token validity before making the API request.
 
     Author: Tiago Balabuch
-    
+
 #>
 function Get-FabricReportDefinition {
     [CmdletBinding()]
@@ -51,7 +51,7 @@ function Get-FabricReportDefinition {
         Test-TokenExpired
         Write-Message -Message "Authentication token is valid." -Level Debug
 
-        # Construct the API endpoint URI with filtering logic 
+        # Construct the API endpoint URI with filtering logic
         $apiEndpointURI = "{0}/workspaces/{1}/reports/{2}/getDefinition" -f $FabricConfig.BaseUrl, $WorkspaceId, $ReportId
         if ($ReportFormat) {
             $apiEndpointURI = "{0}?format={1}" -f $apiEndpointURI, $ReportFormat
@@ -65,8 +65,8 @@ function Get-FabricReportDefinition {
             Headers = $FabricConfig.FabricHeaders
             Method = 'Post'
         }
-        $response = Invoke-FabricAPIRequest @apiParams 
-        
+        $response = Invoke-FabricAPIRequest @apiParams
+
         # Return the API response
         Write-Message -Message "Report '$ReportId' definition retrieved successfully!" -Level Debug
         return $response
@@ -75,5 +75,5 @@ function Get-FabricReportDefinition {
         # Capture and log error details
         $errorDetails = $_.Exception.Message
         Write-Message -Message "Failed to retrieve Report. Error: $errorDetails" -Level Error
-    } 
+    }
 }

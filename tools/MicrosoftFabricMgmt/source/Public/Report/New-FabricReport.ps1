@@ -3,7 +3,7 @@
     Creates a new Report in a specified Microsoft Fabric workspace.
 
 .DESCRIPTION
-    This function sends a POST request to the Microsoft Fabric API to create a new Report 
+    This function sends a POST request to the Microsoft Fabric API to create a new Report
     in the specified workspace. It supports optional parameters for Report description and path definitions.
 
 .PARAMETER WorkspaceId
@@ -28,10 +28,10 @@
     - Calls `Test-TokenExpired` to ensure token validity before making the API request.
 
     Author: Tiago Balabuch
-    
+
 #>
 function New-FabricReport {
-    [CmdletBinding()]
+    [CmdletBinding(SupportsShouldProcess=$true, ConfirmImpact='Medium')]
     param (
         [Parameter(Mandatory = $true)]
         [ValidateNotNullOrEmpty()]
@@ -74,30 +74,31 @@ function New-FabricReport {
                     parts = @()
                 }
             }
-            
-            # As Report has multiple parts, we need to get the definition parts  
+
+            # As Report has multiple parts, we need to get the definition parts
             $jsonObjectParts = Get-FileDefinitionParts -sourceDirectory $ReportPathDefinition
             # Add new part to the parts array
             $body.definition.parts = $jsonObjectParts.parts
         }
-       
+
         # Convert the body to JSON
         $bodyJson = $body | ConvertTo-Json -Depth 10
         Write-Message -Message "Request Body: $bodyJson" -Level Debug
 
         # Make the API request
-        # Make the API request
-        $apiParams = @{
-            BaseURI = $apiEndpointURI
-            Headers = $FabricConfig.FabricHeaders
-            Method = 'Post'
-            Body = $bodyJson
-        }
-        $response = Invoke-FabricAPIRequest @apiParams
+        if ($PSCmdlet.ShouldProcess("Report '$ReportName' in workspace '$WorkspaceId'", "Create")) {
+            $apiParams = @{
+                BaseURI = $apiEndpointURI
+                Headers = $FabricConfig.FabricHeaders
+                Method = 'Post'
+                Body = $bodyJson
+            }
+            $response = Invoke-FabricAPIRequest @apiParams
 
-        # Return the API response   
-        Write-Message -Message "Report '$ReportName' created successfully!" -Level Info
-        return $response
+            # Return the API response
+            Write-Message -Message "Report '$ReportName' created successfully!" -Level Info
+            return $response
+        }
     }
     catch {
         # Capture and log error details

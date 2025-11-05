@@ -3,7 +3,7 @@
     Updates the definition of an existing Report in a specified Microsoft Fabric workspace.
 
 .DESCRIPTION
-    This function sends a PATCH request to the Microsoft Fabric API to update the definition of an existing Report 
+    This function sends a PATCH request to the Microsoft Fabric API to update the definition of an existing Report
     in the specified workspace. It supports optional parameters for Report definition and platform-specific definition.
 
 .PARAMETER WorkspaceId
@@ -24,10 +24,10 @@
     - Calls `Test-TokenExpired` to ensure token validity before making the API request.
 
     Author: Tiago Balabuch
-    
+
 #>
 function Update-FabricReportDefinition {
-    [CmdletBinding()]
+    [CmdletBinding(SupportsShouldProcess=$true, ConfirmImpact='Medium')]
     param (
         [Parameter(Mandatory = $true)]
         [ValidateNotNullOrEmpty()]
@@ -47,16 +47,16 @@ function Update-FabricReportDefinition {
         Test-TokenExpired
         Write-Message -Message "Authentication token is valid." -Level Debug
 
-        # Construct the API endpoint URI with filtering logic  
+        # Construct the API endpoint URI with filtering logic
         $apiEndpointURI = "{0}/workspaces/{1}/Reports/{2}/updateDefinition" -f $FabricConfig.BaseUrl, $WorkspaceId, $ReportId
 
         # Construct the request body
         $body = @{
             definition = @{
                 parts = @()
-            } 
+            }
         }
-      
+
         if ($ReportPathDefinition) {
             if (-not $body.definition) {
                 $body.definition = @{
@@ -77,7 +77,7 @@ function Update-FabricReportDefinition {
 
         # If the platform file exists, append the query parameter to the URL
         if ($hasPlatformFile -eq $true) {
-            $apiEndpointURI += "?updateMetadata=true" -f $apiEndpointURI 
+            $apiEndpointURI += "?updateMetadata=true" -f $apiEndpointURI
         }
         Write-Message -Message "API Endpoint: $apiEndpointURI" -Level Debug
 
@@ -86,18 +86,19 @@ function Update-FabricReportDefinition {
         Write-Message -Message "Request Body: $bodyJson" -Level Debug
 
         # Make the API request
-        # Make the API request
-        $apiParams = @{
-            BaseURI = $apiEndpointURI
-            Headers = $FabricConfig.FabricHeaders
-            Method = 'Post'
-            Body = $bodyJson
+        if ($PSCmdlet.ShouldProcess("Report definition for Report ID '$ReportId' in workspace '$WorkspaceId'", "Update")) {
+            $apiParams = @{
+                BaseURI = $apiEndpointURI
+                Headers = $FabricConfig.FabricHeaders
+                Method = 'Post'
+                Body = $bodyJson
+            }
+            $response = Invoke-FabricAPIRequest @apiParams
+
+            # Return the API response
+            Write-Message -Message "Successfully updated the definition for Report with ID '$ReportId' in workspace '$WorkspaceId'." -Level Info
+            return $response
         }
-        $response = Invoke-FabricAPIRequest @apiParams
-       
-        # Return the API response
-        Write-Message -Message "Successfully updated the definition for Report with ID '$ReportId' in workspace '$WorkspaceId'." -Level Info
-        return $response
     }
     catch {
         # Capture and log error details
