@@ -34,7 +34,7 @@ Author: Tiago Balabuch
 #>
 
 function New-FabricMirroredDatabase {
-    [CmdletBinding()]
+    [CmdletBinding(SupportsShouldProcess = $true, ConfirmImpact = 'Medium')]
     param (
         [Parameter(Mandatory = $true)]
         [ValidateNotNullOrEmpty()]
@@ -136,11 +136,13 @@ function New-FabricMirroredDatabase {
             Method = 'Post'
             Body = $bodyJson
         }
-        $response = Invoke-FabricAPIRequest @apiParams
+        if ($PSCmdlet.ShouldProcess($MirroredDatabaseName, "Create Mirrored Database in workspace '$WorkspaceId'")) {
+            $response = Invoke-FabricAPIRequest @apiParams
 
-        # Return the API response
-        Write-Message -Message "Mirrored Database '$MirroredDatabaseName' created successfully!" -Level Info
-        return $response
+            # Return the API response
+            Write-Message -Message "Mirrored Database '$MirroredDatabaseName' created successfully!" -Level Info
+            return $response
+        }
     
     }
     catch {
