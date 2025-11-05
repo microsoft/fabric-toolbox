@@ -3,8 +3,8 @@
 Retrieves the connection string for a specific SQL Endpoint in a Fabric workspace.
 
 .DESCRIPTION
-The Get-FabricSQLEndpointConnectionString function retrieves the connection string for a given SQL Endpoint within a specified Fabric workspace. 
-It supports optional parameters for guest tenant access and private link type. The function validates authentication, constructs the appropriate API endpoint, 
+The Get-FabricSQLEndpointConnectionString function retrieves the connection string for a given SQL Endpoint within a specified Fabric workspace.
+It supports optional parameters for guest tenant access and private link type. The function validates authentication, constructs the appropriate API endpoint,
 and returns the connection string or handles errors as needed.
 
 .PARAMETER WorkspaceId
@@ -54,8 +54,8 @@ function Get-FabricSQLEndpointConnectionString {
         Write-Message -Message "Validating authentication token..." -Level Debug
         Test-TokenExpired
         Write-Message -Message "Authentication token is valid." -Level Debug
-                
-        # Construct the API endpoint URI 
+
+        # Construct the API endpoint URI
         $apiEndpointURI = "{0}/workspaces/{1}/sqlEndpoints/{2}/connectionString" -f $FabricConfig.BaseUrl, $WorkspaceId, $SQLEndpointId
         # Append query parameters if GuestTenantId or PrivateLinkType are provided
         $queryParams = @()
@@ -70,7 +70,7 @@ function Get-FabricSQLEndpointConnectionString {
         }
 
         Write-Message -Message "API Endpoint: $apiEndpointURI" -Level Debug
-         
+
         # Make the API request
         $apiParams = @{
             BaseURI = $apiEndpointURI
@@ -78,7 +78,7 @@ function Get-FabricSQLEndpointConnectionString {
             Method  = 'Get'
         }
         $dataItems = Invoke-FabricAPIRequest @apiParams
-           
+
         # Immediately handle empty response
         if (-not $dataItems) {
             Write-Message -Message "No data returned from the API." -Level Warning
@@ -93,5 +93,5 @@ function Get-FabricSQLEndpointConnectionString {
         # Capture and log error details
         $errorDetails = $_.Exception.Message
         Write-Message -Message "Failed to retrieve SQL Endpoint connection string. Error: $errorDetails" -Level Error
-    } 
+    }
 }
