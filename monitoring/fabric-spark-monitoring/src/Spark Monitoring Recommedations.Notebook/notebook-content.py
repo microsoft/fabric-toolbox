@@ -561,8 +561,17 @@ else:
                 StructField("error", StringType(), True),
             ])
             error_row = {"applicationID": app_id, "error": str(e)}
-            summary_dfs.append(spark.createDataFrame([error_row], schema=schema))
-
+            error_df=spark.createDataFrame([error_row], schema=schema)
+            #summary_dfs.append(spark.createDataFrame([error_row], schema=schema))
+            error_df.write \
+                .format("com.microsoft.kusto.spark.synapse.datasource") \
+                .option("accessToken", accessToken) \
+                .option("kustoCluster", kustoUri)\
+                .option("kustoDatabase", database)\
+                .option("kustoTable", "sparklens_errors") \
+                .option("tableCreateOptions", "CreateIfNotExist") \
+                .mode("Append") \
+                .save()
 
 
 # METADATA ********************
