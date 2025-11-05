@@ -26,7 +26,7 @@ Specifies the type of sharing link to remove. Default is 'OrgLink'. Only support
 Author: Tiago Balabuch
 #>
 function Remove-FabricSharingLinks {
-    [CmdletBinding()]
+    [CmdletBinding(SupportsShouldProcess=$true, ConfirmImpact='High')]
     param (
         [Parameter(Mandatory = $false)]
         [ValidateNotNullOrEmpty()]
@@ -40,13 +40,13 @@ function Remove-FabricSharingLinks {
                 throw "Each Item must contain 'id' and 'type' properties. Found: $item"
             }
         }
-        
+
         # Validate authentication token before proceeding.
         Write-Message -Message "Validating authentication token..." -Level Debug
         Test-TokenExpired
         Write-Message -Message "Authentication token is valid." -Level Debug
 
-        # Construct the API endpoint URI 
+        # Construct the API endpoint URI
         $apiEndpointURI = "{0}/admin/items/removeAllSharingLinks" -f $FabricConfig.BaseUrl, $WorkspaceId
         Write-Message -Message "API Endpoint: $apiEndpointURI" -Level Debug
 
@@ -54,21 +54,23 @@ function Remove-FabricSharingLinks {
         $body = @{
             sharingLinkType = $sharingLinkType
         }
-       
+
         # Convert the body to JSON
         $bodyJson = $body | ConvertTo-Json -Depth 2
         Write-Message -Message "Request Body: $bodyJson" -Level Debug
 
         # Make the API request
-        $response = Invoke-FabricAPIRequest `
-            -BaseURI $apiEndpointURI `
-            -Headers $FabricConfig.FabricHeaders `
-            -Method Post `
-            -Body $bodyJson
-        
-        # Return the API response
-        Write-Message -Message "All sharing links have been removed successfully from the specified items." -Level Info
-        return $response
+        if ($PSCmdlet.ShouldProcess("all items with sharing link type '$sharingLinkType'", "Remove all sharing links")) {
+            $response = Invoke-FabricAPIRequest `
+                -BaseURI $apiEndpointURI `
+                -Headers $FabricConfig.FabricHeaders `
+                -Method Post `
+                -Body $bodyJson
+
+            # Return the API response
+            Write-Message -Message "All sharing links have been removed successfully from the specified items." -Level Info
+            return $response
+        }
     }
     catch {
         # Capture and log error details

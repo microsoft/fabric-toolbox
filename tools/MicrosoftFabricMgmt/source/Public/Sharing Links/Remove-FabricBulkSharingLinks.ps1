@@ -28,12 +28,12 @@ The type of sharing link to remove. Currently, only 'OrgLink' is supported. Defa
 Author: Tiago Balabuch
 #>
 function Remove-FabricSharingLinksBulk {
-    [CmdletBinding()]
+    [CmdletBinding(SupportsShouldProcess=$true, ConfirmImpact='High')]
     param (
         [Parameter(Mandatory = $true)]
         [ValidateNotNullOrEmpty()]
-        [System.Object]$Items, # Array with 'id' and 'type' 
-    
+        [System.Object]$Items, # Array with 'id' and 'type'
+
         [Parameter(Mandatory = $false)]
         [ValidateNotNullOrEmpty()]
         [ValidateSet('OrgLink')]
@@ -46,13 +46,13 @@ function Remove-FabricSharingLinksBulk {
                 throw "Each Item must contain 'id' and 'type' properties. Found: $item"
             }
         }
-        
+
         # Validate authentication token before proceeding.
         Write-Message -Message "Validating authentication token..." -Level Debug
         Test-TokenExpired
         Write-Message -Message "Authentication token is valid." -Level Debug
 
-        # Construct the API endpoint URI 
+        # Construct the API endpoint URI
         $apiEndpointURI = "{0}/admin/items/bulkRemoveSharingLinks" -f $FabricConfig.BaseUrl, $WorkspaceId
         Write-Message -Message "API Endpoint: $apiEndpointURI" -Level Debug
 
@@ -61,21 +61,23 @@ function Remove-FabricSharingLinksBulk {
             items = $Items
             sharingLinkType = $sharingLinkType
         }
-       
+
         # Convert the body to JSON
         $bodyJson = $body | ConvertTo-Json -Depth 2
         Write-Message -Message "Request Body: $bodyJson" -Level Debug
 
         # Make the API request
-        $response = Invoke-FabricAPIRequest `
-            -BaseURI $apiEndpointURI `
-            -Headers $FabricConfig.FabricHeaders `
-            -Method Post `
-            -Body $bodyJson
-        
-        # Return the API response
-        Write-Message -Message "Bulk sharing link removal completed successfully for $($Items.Count) item(s)." -Level Info
-        return $response
+        if ($PSCmdlet.ShouldProcess("$($Items.Count) item(s) with sharing link type '$sharingLinkType'", "Remove sharing links in bulk")) {
+            $response = Invoke-FabricAPIRequest `
+                -BaseURI $apiEndpointURI `
+                -Headers $FabricConfig.FabricHeaders `
+                -Method Post `
+                -Body $bodyJson
+
+            # Return the API response
+            Write-Message -Message "Bulk sharing link removal completed successfully for $($Items.Count) item(s)." -Level Info
+            return $response
+        }
     }
     catch {
         # Capture and log error details
