@@ -24,8 +24,8 @@ function Get-FabricWorkspaceTenantSettingOverrides {
         Write-Message -Message "Validating authentication token..." -Level Debug
         Test-TokenExpired
         Write-Message -Message "Authentication token is valid." -Level Debug
-                
-        # Construct the API endpoint URI 
+
+        # Construct the API endpoint URI
         $apiEndpointURI = "{0}/admin/workspaces/delegatedTenantSettingOverrides" -f $FabricConfig.BaseUrl
         Write-Message -Message "Constructed API Endpoint: $apiEndpointURI" -Level Debug
 

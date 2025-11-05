@@ -3,14 +3,7 @@
 Updates tenant setting overrides for a specified capacity ID.
 
 .DESCRIPTION
-The `Update-FabricCapacityTena        # Make the API request
-        $apiParams = @{
-            BaseURI = $apiEndpointURI
-            Headers = $FabricConfig.FabricHeaders
-            Method = 'Patch'
-            Body = $bodyJson
-        }
-        $response = Invoke-FabricAPIRequest @apiParamstingOverrides` function updates tenant setting overrides in a Fabric environment by making a POST request to the appropriate API endpoint. It allows specifying settings such as enabling tenant settings, delegating to a workspace, and including or excluding security groups.
+Updates tenant setting overrides for a specified capacity ID.
 
 .PARAMETER CapacityId
 (Mandatory) The ID of the capacity for which the tenant setting overrides are being updated.
@@ -48,7 +41,7 @@ Author: Tiago Balabuch
 
 #>
 function Update-FabricCapacityTenantSettingOverrides {
-    [CmdletBinding()]
+    [CmdletBinding(SupportsShouldProcess=$true, ConfirmImpact='Medium')]
     param (
         [Parameter(Mandatory = $true)]
         [ValidateNotNullOrEmpty()]
@@ -65,7 +58,7 @@ function Update-FabricCapacityTenantSettingOverrides {
         [Parameter(Mandatory = $false)]
         [ValidateNotNullOrEmpty()]
         [bool]$DelegateToWorkspace,
-        
+
         [Parameter(Mandatory = $false)]
         [ValidateNotNullOrEmpty()]
         [System.Object]$EnabledSecurityGroups,
@@ -80,7 +73,7 @@ function Update-FabricCapacityTenantSettingOverrides {
         Write-Message -Message "Validating authentication token..." -Level Debug
         Test-TokenExpired
         Write-Message -Message "Authentication token is valid." -Level Debug
-                
+
         # Validate Security Groups if provided
         # This uses a .NET HashSet to accelerate lookup even more, especially useful in large collections.
         if ($EnabledSecurityGroups) {
@@ -91,7 +84,7 @@ function Update-FabricCapacityTenantSettingOverrides {
                 }
             }
         }
-        
+
         # Validate Security Groups if provided
         if ($ExcludedSecurityGroups) {
             foreach ($excludedGroup in $ExcludedSecurityGroups) {
@@ -129,15 +122,17 @@ function Update-FabricCapacityTenantSettingOverrides {
         Write-Message -Message "Request Body: $bodyJson" -Level Debug
 
         # Make the API request
-        $response = Invoke-FabricAPIRequest `
-            -BaseURI $apiEndpointURI `
-            -Headers $FabricConfig.FabricHeaders `
-            -Method Post `
-            -Body $bodyJson  
-        
-        # Return the API response
-        Write-Message -Message "Successfully updated capacity tenant setting overrides for CapacityId: $CapacityId and SettingTitle: $SettingTitle." -Level Info
-        return $response
+        if ($PSCmdlet.ShouldProcess("capacity '$CapacityId' setting '$SettingTitle'", "Update delegated tenant setting overrides")) {
+            $response = Invoke-FabricAPIRequest `
+                -BaseURI $apiEndpointURI `
+                -Headers $FabricConfig.FabricHeaders `
+                -Method Post `
+                -Body $bodyJson
+
+            # Return the API response
+            Write-Message -Message "Successfully updated capacity tenant setting overrides for CapacityId: $CapacityId and SettingTitle: $SettingTitle." -Level Info
+            return $response
+        }
     }
     catch {
         # Capture and log error details
@@ -145,4 +140,3 @@ function Update-FabricCapacityTenantSettingOverrides {
         Write-Message -Message "Error updating tenant settings: $errorDetails" -Level Error
     }
 }
-

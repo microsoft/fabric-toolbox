@@ -3,7 +3,7 @@
 Retrieves capacities tenant settings overrides from the Fabric tenant.
 
 .DESCRIPTION
-The `Get-FabricTenantSetting` function retrieves capacities tenant settings overrides for a Fabric tenant by making a GET request to the appropriate API endpoint. 
+The `Get-FabricTenantSetting` function retrieves capacities tenant settings overrides for a Fabric tenant by making a GET request to the appropriate API endpoint.
 
 .EXAMPLE
 Get-FabricTenantSettingOverridesCapacity
@@ -14,12 +14,13 @@ Returns all capacities tenant settings overrides.
 - Requires `$FabricConfig` global configuration, including `BaseUrl` and `FabricHeaders`.
 - Calls `Is-TokenExpired` to ensure token validity before making the API request.
 
-Author: Tiago Balabuch  
+Author: Tiago Balabuch
 
 #>
 
 function Get-FabricTenantSettingOverridesCapacity {
     [CmdletBinding()]
+    [OutputType([object[]])]
     param ()
     try {
         # Step 1: Ensure token validity
@@ -34,22 +35,22 @@ function Get-FabricTenantSettingOverridesCapacity {
         if (-not ([AppDomain]::CurrentDomain.GetAssemblies() | Where-Object { $_.GetName().Name -eq "System.Web" })) {
             Add-Type -AssemblyName System.Web
         }
- 
+
         # Step 4: Loop to retrieve all capacities with continuation token
         Write-Message -Message "Loop started to get continuation token" -Level Debug
         $baseApiEndpointUrl = "{0}/admin/capacities/delegatedTenantSettingOverrides" -f $FabricConfig.BaseUrl
-        
+
         do {
             # Step 5: Construct the API URL
             $apiEndpointUrl = $baseApiEndpointUrl
-        
+
             if ($null -ne $continuationToken) {
                 # URL-encode the continuation token
                 $encodedToken = [System.Web.HttpUtility]::UrlEncode($continuationToken)
                 $apiEndpointUrl = "{0}?continuationToken={1}" -f $apiEndpointUrl, $encodedToken
             }
             Write-Message -Message "API Endpoint: $apiEndpointUrl" -Level Debug
-         
+
             # Step 6: Make the API request
             $restParams = @{
                 Headers = $FabricConfig.FabricHeaders
@@ -61,7 +62,7 @@ function Get-FabricTenantSettingOverridesCapacity {
                 StatusCodeVariable = 'statusCode'
             }
             $response = Invoke-RestMethod @restParams
-         
+
             # Step 7: Validate the response code
             if ($statusCode -ne 200) {
                 Write-Message -Message "Unexpected response code: $statusCode from the API." -Level Error
@@ -70,12 +71,12 @@ function Get-FabricTenantSettingOverridesCapacity {
                 Write-Message "Error Code: $($response.errorCode)" -Level Error
                 return $null
             }
-         
+
             # Step 8: Add data to the list
             if ($null -ne $response) {
                 Write-Message -Message "Adding data to the list" -Level Debug
                 $capacitiesOverrides += $response.value
-                 
+
                 # Update the continuation token if present
                 if ($response.PSObject.Properties.Match("continuationToken")) {
                     Write-Message -Message "Updating the continuation token" -Level Debug

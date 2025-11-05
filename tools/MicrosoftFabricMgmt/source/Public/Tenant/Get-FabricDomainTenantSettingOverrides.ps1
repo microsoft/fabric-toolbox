@@ -25,7 +25,7 @@ function Get-FabricDomainTenantSettingOverrides {
         Write-Message -Message "Validating authentication token..." -Level Debug
         Test-TokenExpired
         Write-Message -Message "Authentication token is valid." -Level Debug
-                
+
         # Construct the API endpoint URI
         $apiEndpointURI = "{0}/admin/domains/delegatedTenantSettingOverrides" -f $FabricConfig.BaseUrl
         Write-Message -Message "API Endpoint: $apiEndpointURI" -Level Debug
@@ -37,7 +37,7 @@ function Get-FabricDomainTenantSettingOverrides {
             Headers = $FabricConfig.FabricHeaders
             Method = 'Get'
         }
-        $dataItems = Invoke-FabricAPIRequest @apiParams 
+        $dataItems = Invoke-FabricAPIRequest @apiParams
 
         # Immediately handle empty response
         if (-not $dataItems) {

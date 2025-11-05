@@ -22,7 +22,7 @@ Returns the tenant setting with the title "SomeSetting".
 - Requires `$FabricConfig` global configuration, including `BaseUrl` and `FabricHeaders`.
 - Calls `Is-TokenExpired` to ensure token validity before making the API request.
 
-Author: Tiago Balabuch  
+Author: Tiago Balabuch
 
 #>
 
@@ -39,8 +39,8 @@ function Get-FabricTenantSetting {
         Write-Message -Message "Validating authentication token..." -Level Debug
         Test-TokenExpired
         Write-Message -Message "Authentication token is valid." -Level Debug
-                
-        # Construct the API endpoint URI 
+
+        # Construct the API endpoint URI
         $apiEndpointURI = "{0}/admin/tenantsettings" -f $FabricConfig.BaseUrl
         Write-Message -Message "Constructed API Endpoint: $apiEndpointURI" -Level Debug
 
@@ -52,7 +52,7 @@ function Get-FabricTenantSetting {
             Method = 'Get'
         }
         $dataItems = Invoke-FabricAPIRequest @apiParams
-        
+
         # Immediately handle empty response
         if (-not $dataItems) {
             Write-Message -Message "No data returned from the API." -Level Warning

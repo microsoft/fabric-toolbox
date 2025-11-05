@@ -3,14 +3,8 @@
 Updates tenant setting overrides for a specified capacity ID.
 
 .DESCRIPTION
-The `Update-FabricCapacityTenantSettingOverrides` func        # Make the API request
-        $apiParams = @{
-            BaseURI = $apiEndpointURI
-            Headers = $FabricConfig.FabricHeaders
-            Method = 'Patch'
-            Body = $bodyJson
-        }
-        $response = Invoke-FabricAPIRequest @apiParamsupdates tenant setting overrides in a Fabric environment by making a POST request to the appropriate API endpoint. It allows specifying settings such as enabling tenant settings, delegating to a workspace, and including or excluding security groups.
+The `Update-FabricCapacityTenantSettingOverrides` function updates tenant setting overrides in a Fabric environment by making a POST request to the appropriate API endpoint.
+It allows specifying settings such as enabling tenant settings, delegating to a workspace, and including or excluding security groups.
 
 .PARAMETER CapacityId
 (Mandatory) The ID of the capacity for which the tenant setting overrides are being updated.
@@ -49,7 +43,7 @@ Author: Tiago Balabuch
 #>
 
 function Update-FabricTenantSetting {
-    [CmdletBinding()]
+    [CmdletBinding(SupportsShouldProcess=$true, ConfirmImpact='Medium')]
     param (
         [Parameter(Mandatory = $true)]
         [ValidateNotNullOrEmpty()]
@@ -70,7 +64,7 @@ function Update-FabricTenantSetting {
         [Parameter(Mandatory = $false)]
         [ValidateNotNullOrEmpty()]
         [bool]$DelegateToWorkspace,
-        
+
         [Parameter(Mandatory = $false)]
         [ValidateNotNullOrEmpty()]
         [System.Object]$EnabledSecurityGroups,
@@ -153,15 +147,17 @@ function Update-FabricTenantSetting {
         Write-Message -Message "Request Body: $bodyJson" -Level Debug
 
         # Invoke Fabric API request
-        $response = Invoke-FabricAPIRequest `
-            -BaseURI $apiEndpointURI `
-            -Headers $FabricConfig.FabricHeaders `
-            -Method Post `
-            -Body $bodyJson  
+        if ($PSCmdlet.ShouldProcess("tenant setting '$TenantSettingName'", "Update tenant setting")) {
+            $response = Invoke-FabricAPIRequest `
+                -BaseURI $apiEndpointURI `
+                -Headers $FabricConfig.FabricHeaders `
+                -Method Post `
+                -Body $bodyJson
 
-        # Return the API response
-        Write-Message -Message "Successfully updated tenant setting." -Level Info
-        return $response
+            # Return the API response
+            Write-Message -Message "Successfully updated tenant setting." -Level Info
+            return $response
+        }
     }
     catch {
         # Capture and log error details
@@ -169,4 +165,3 @@ function Update-FabricTenantSetting {
         Write-Message -Message "Error updating tenant settings: $errorDetails" -Level Error
     }
 }
-
