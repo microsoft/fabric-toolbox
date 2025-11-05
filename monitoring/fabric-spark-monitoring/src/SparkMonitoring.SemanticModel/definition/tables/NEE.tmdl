@@ -1,0 +1,59 @@
+table NEE
+	lineageTag: 05a460a5-1933-4391-b90c-ff187b3fdb5b
+
+	column applicationId
+		dataType: string
+		sourceProviderType: nvarchar(max)
+		lineageTag: 9ca84ae7-a764-4ef7-8505-c936ec492973
+		summarizeBy: none
+		sourceColumn: applicationId
+
+		annotation SummarizationSetBy = Automatic
+
+	column props_numGlutenNodes
+		dataType: int64
+		formatString: 0
+		sourceProviderType: int
+		lineageTag: dad96c15-8918-4a43-8de9-1523503a990b
+		summarizeBy: sum
+		sourceColumn: props_numGlutenNodes
+
+		annotation SummarizationSetBy = Automatic
+
+	column props_numFallbackNodes
+		dataType: int64
+		formatString: 0
+		sourceProviderType: int
+		lineageTag: eb30b398-3f13-4513-9ecc-61046bbbde6e
+		summarizeBy: sum
+		sourceColumn: props_numFallbackNodes
+
+		annotation SummarizationSetBy = Automatic
+
+	column props_physicalPlanDescription
+		dataType: string
+		lineageTag: b9672cca-b854-4a5a-88cf-9b000e567100
+		summarizeBy: none
+		sourceColumn: props_physicalPlanDescription
+
+		annotation SummarizationSetBy = Automatic
+
+	partition NEE = m
+		mode: directQuery
+		source =
+				let
+				    Source = AzureDataExplorer.Contents(RTIfqdn, "eventHouseTelemetry", "
+				    RawLogs
+				    | where applicationId contains '"&ApplicationWithoutTable&"'
+				    | extend props = parse_json(properties)
+				    | where properties contains ""numGlutenNodes""
+				    | project  applicationId,toint(props.numGlutenNodes), toint(props.numFallbackNodes), tostring(props.physicalPlanDescription)
+				    ", [MaxRows=null, MaxSize=null, NoTruncate=null, AdditionalSetStatements=null])
+				
+				in
+				   Source
+
+	annotation PBI_NavigationStepName = Navigation
+
+	annotation PBI_ResultType = Table
+

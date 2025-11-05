@@ -1,0 +1,104 @@
+table Stages
+	lineageTag: 3d62ada8-7bef-4553-aa30-d2557e4eb861
+
+	column stageId
+		dataType: string
+		sourceProviderType: nvarchar(max)
+		lineageTag: 40a6fa00-f4f2-4d6a-b878-cbb9560b8baf
+		summarizeBy: none
+		sourceColumn: stageId
+
+		annotation SummarizationSetBy = Automatic
+
+	column accumName
+		dataType: string
+		sourceProviderType: nvarchar(max)
+		lineageTag: a8dc9c23-24ed-4967-9417-22694359bb07
+		summarizeBy: none
+		sourceColumn: accumName
+
+		annotation SummarizationSetBy = Automatic
+
+	column min_val
+		dataType: int64
+		formatString: 0
+		sourceProviderType: bigint
+		lineageTag: b3cd275b-b58e-44d9-9742-4083ee1f66d7
+		summarizeBy: sum
+		sourceColumn: min_val
+
+		annotation SummarizationSetBy = Automatic
+
+	column percentile_val_25
+		dataType: int64
+		formatString: 0
+		sourceProviderType: bigint
+		lineageTag: 0f1de785-7dbd-492d-840d-38c8474d6c40
+		summarizeBy: sum
+		sourceColumn: percentile_val_25
+
+		annotation SummarizationSetBy = Automatic
+
+	column percentile_val_50
+		dataType: int64
+		formatString: 0
+		sourceProviderType: bigint
+		lineageTag: aa00e65c-7310-4291-967a-2876e27728f1
+		summarizeBy: sum
+		sourceColumn: percentile_val_50
+
+		annotation SummarizationSetBy = Automatic
+
+	column percentile_val_75
+		dataType: int64
+		formatString: 0
+		sourceProviderType: bigint
+		lineageTag: 7dbfdd2c-f7a5-4ede-b34b-88df62af354c
+		summarizeBy: sum
+		sourceColumn: percentile_val_75
+
+		annotation SummarizationSetBy = Automatic
+
+	column max_val
+		dataType: int64
+		formatString: 0
+		sourceProviderType: bigint
+		lineageTag: 50b61ad9-d5d4-4269-8c69-ea204b56a168
+		summarizeBy: sum
+		sourceColumn: max_val
+
+		annotation SummarizationSetBy = Automatic
+
+	column applicationId
+		dataType: string
+		sourceProviderType: nvarchar(max)
+		lineageTag: dd612f62-3e25-454e-86c8-07c68fe9c28f
+		summarizeBy: none
+		sourceColumn: applicationId
+
+		annotation SummarizationSetBy = Automatic
+
+	partition Stages = m
+		mode: directQuery
+		queryGroup: appStatsOutsideTable
+		source = ```
+				let
+				    Source = AzureDataExplorer.Contents(RTIfqdn, "eventHouseTelemetry", "RawLogs
+				    | where applicationId == '"&ApplicationWithoutTable&"'
+				    | extend props = parse_json(properties) 
+				    | where  properties contains 'SparkListenerTaskEnd'
+				    | project stageId=props[""Stage ID""], props[""Task Info""][""Partition ID""], accum= props[""Task Info""][""Accumulables""],applicationId
+				    | mv-expand accum
+				    | extend AccumParsed = parse_json(accum) 
+				    | project tostring(stageId),accumName=tostring(AccumParsed[""Name""]), val=tolong(AccumParsed[""Value""]),applicationId
+				    | summarize min(val),percentile(val,25),percentile(val,50),percentile(val,75),max(val) by applicationId,stageId,accumName
+				")
+				
+				in
+				    Source
+				```
+
+	annotation PBI_NavigationStepName = Navigation
+
+	annotation PBI_ResultType = Table
+

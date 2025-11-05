@@ -1,0 +1,52 @@
+table MemoryJvmUsageOutsideTableImport_
+	lineageTag: 5471b204-61d5-4410-996f-85f4b35ea1bc
+
+	column timestamp
+		dataType: dateTime
+		formatString: General Date
+		sourceProviderType: datetimeoffset
+		lineageTag: fd40a4c4-fb07-4337-94a1-2a036f83697c
+		summarizeBy: none
+		sourceColumn: timestamp
+
+		annotation SummarizationSetBy = Automatic
+
+	column props_name
+		dataType: string
+		sourceProviderType: nvarchar(max)
+		lineageTag: e21a4ad1-a2d0-47a8-84b0-13b41f7f154c
+		summarizeBy: none
+		sourceColumn: props_name
+
+		annotation SummarizationSetBy = Automatic
+
+	column avg_props_value
+		dataType: double
+		sourceProviderType: double
+		lineageTag: 5eae5e1d-2f33-4491-92ba-35b0b244d036
+		summarizeBy: sum
+		sourceColumn: avg_props_value
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	partition MemoryJvmUsageOutsideTableImport_ = m
+		mode: directQuery
+		queryGroup: appStatsOutsideTable
+		source = ```
+				let
+				    Source = AzureDataExplorer.Contents(RTIfqdn, "eventHouseTelemetry", "RawLogs 
+				| extend props = parse_json(properties) 
+				| where applicationId == '"&ApplicationWithoutTable&"'
+				|  where props.name contains 'jvm.heap.used' or props.name contains 'jvm.heap.max' 
+				| summarize avg(tolong(props.value)) by bin(timestamp,1m),tostring(props.name)", [MaxRows=null, MaxSize=null, NoTruncate=null, AdditionalSetStatements=null])
+				
+				in
+				    Source
+				```
+
+	annotation PBI_NavigationStepName = Navigation
+
+	annotation PBI_ResultType = Table
+

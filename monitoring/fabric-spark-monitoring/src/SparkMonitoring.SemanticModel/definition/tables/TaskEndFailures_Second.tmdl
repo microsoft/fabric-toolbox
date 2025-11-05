@@ -1,0 +1,41 @@
+table TaskEndFailures_Second
+	lineageTag: 1faa8831-ba80-4c9e-8c89-fec2c30c1053
+
+	column rsn
+		dataType: string
+		sourceProviderType: nvarchar(max)
+		lineageTag: c6c29b53-9d96-4126-ab36-60a96c804ef0
+		summarizeBy: none
+		sourceColumn: rsn
+
+		annotation SummarizationSetBy = Automatic
+
+	column count_
+		dataType: int64
+		formatString: 0
+		sourceProviderType: bigint
+		lineageTag: 9301c6ae-0dbf-49f0-8493-b0f8708b7550
+		summarizeBy: sum
+		sourceColumn: count_
+
+		annotation SummarizationSetBy = Automatic
+
+	partition TaskEndFailures_Second = m
+		mode: directQuery
+		queryGroup: Comparer
+		source = ```
+				let
+				    Source = AzureDataExplorer.Contents(RTIfqdn, "eventHouseTelemetry", "RawLogs
+				        | where applicationId == '"&ApplicationSecond&"'
+				        | extend props = parse_json(properties) 
+				        | where properties contains 'task' and properties contains 'attempt' and properties contains 'SparkListenerTaskEnd'
+				        | project   rsn=props['Task End Reason']['Reason']
+				        | summarize count() by tostring(rsn)", [MaxRows=null, MaxSize=null, NoTruncate=null, AdditionalSetStatements=null])
+				in
+				    Source
+				```
+
+	annotation PBI_NavigationStepName = Navigation
+
+	annotation PBI_ResultType = Table
+
