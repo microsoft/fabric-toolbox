@@ -3,7 +3,7 @@
     Updates an existing paginated report in a specified Microsoft Fabric workspace.
 
 .DESCRIPTION
-    This function sends a PATCH request to the Microsoft Fabric API to update an existing paginated report 
+    This function sends a PATCH request to the Microsoft Fabric API to update an existing paginated report
     in the specified workspace. It supports optional parameters for paginated report description.
 
 .PARAMETER WorkspaceId
@@ -27,15 +27,15 @@
     - Calls `Test-TokenExpired` to ensure token validity before making the API request.
 
     Author: Tiago Balabuch
-    
+
 #>
 function Update-FabricPaginatedReport {
-    [CmdletBinding()]
+    [CmdletBinding(SupportsShouldProcess = $true, ConfirmImpact = 'Medium')]
     param (
         [Parameter(Mandatory = $true)]
         [ValidateNotNullOrEmpty()]
-        [string]$WorkspaceId,   
-        
+        [string]$WorkspaceId,
+
         [Parameter(Mandatory = $true)]
         [ValidateNotNullOrEmpty()]
         [string]$PaginatedReportId,
@@ -55,9 +55,9 @@ function Update-FabricPaginatedReport {
         Test-TokenExpired
         Write-Message -Message "Authentication token is valid." -Level Debug
 
-        # Construct the API endpoint URI
-        $apiEndpointUrl = "{0}/workspaces/{1}/paginatedReports/{2}" -f $FabricConfig.BaseUrl, $WorkspaceId, $PaginatedReportId
-        Write-Message -Message "API Endpoint: $apiEndpointUrl" -Level Debug
+    # Construct the API endpoint URI
+    $apiEndpointUrl = "{0}/workspaces/{1}/paginatedReports/{2}" -f $FabricConfig.BaseUrl, $WorkspaceId, $PaginatedReportId
+    Write-Message -Message "API Endpoint: $apiEndpointUrl" -Level Debug
 
         # Construct the request body
         $body = @{
@@ -72,18 +72,22 @@ function Update-FabricPaginatedReport {
         $bodyJson = $body | ConvertTo-Json
         Write-Message -Message "Request Body: $bodyJson" -Level Debug
 
-       # Make the API request
-        $apiParams = @{
-            Headers = $FabricConfig.FabricHeaders
-            BaseURI = $apiEndpointURI
-            Method = 'Patch'
-            Body = $bodyJson
+       # Make the API request when confirmed
+        $target = "Paginated Report '$PaginatedReportId' in workspace '$WorkspaceId'"
+        $action = "Update Paginated Report display name/description"
+        if ($PSCmdlet.ShouldProcess($target, $action)) {
+            $apiParams = @{
+                Headers = $FabricConfig.FabricHeaders
+                BaseURI = $apiEndpointUrl
+                Method = 'Patch'
+                Body = $bodyJson
+            }
+            $response = Invoke-FabricAPIRequest @apiParams
+
+            # Return the API response
+            Write-Message -Message "Paginated Report '$PaginatedReportName' updated successfully!" -Level Info
+            return $response
         }
-        $response = Invoke-FabricAPIRequest @apiParams 
-      
-        # Return the API response
-        Write-Message -Message "Paginated Report '$PaginatedReportName' updated successfully!" -Level Info
-        return $response
     }
     catch {
         # Capture and log error details
