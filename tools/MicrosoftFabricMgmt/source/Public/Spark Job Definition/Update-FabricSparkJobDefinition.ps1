@@ -3,7 +3,7 @@
     Updates an existing SparkJobDefinition in a specified Microsoft Fabric workspace.
 
 .DESCRIPTION
-    This function sends a PATCH request to the Microsoft Fabric API to update an existing SparkJobDefinition 
+    This function sends a PATCH request to the Microsoft Fabric API to update an existing SparkJobDefinition
     in the specified workspace. It supports optional parameters for SparkJobDefinition description.
 
 .PARAMETER WorkspaceId
@@ -29,12 +29,12 @@
     Author: Tiago Balabuch
 #>
 function Update-FabricSparkJobDefinition {
-    [CmdletBinding()]
+    [CmdletBinding(SupportsShouldProcess=$true, ConfirmImpact='Medium')]
     param (
         [Parameter(Mandatory = $true)]
         [ValidateNotNullOrEmpty()]
-        [string]$WorkspaceId,   
-        
+        [string]$WorkspaceId,
+
         [Parameter(Mandatory = $true)]
         [ValidateNotNullOrEmpty()]
         [string]$SparkJobDefinitionId,
@@ -72,17 +72,19 @@ function Update-FabricSparkJobDefinition {
         Write-Message -Message "Request Body: $bodyJson" -Level Debug
 
         # Make the API request
-        $apiParams = @{
-            Headers = $FabricConfig.FabricHeaders
-            BaseURI = $apiEndpointURI
-            Method = 'Patch'
-            Body = $bodyJson
-        }
-        $response = Invoke-FabricAPIRequest @apiParams 
+        if ($PSCmdlet.ShouldProcess("Spark Job Definition '$SparkJobDefinitionName' in workspace '$WorkspaceId'", "Update")) {
+            $apiParams = @{
+                Headers = $FabricConfig.FabricHeaders
+                BaseURI = $apiEndpointURI
+                Method = 'Patch'
+                Body = $bodyJson
+            }
+            $response = Invoke-FabricAPIRequest @apiParams
 
-        # Return the API response
-        Write-Message -Message "Spark Job Definition '$SparkJobDefinitionName' updated successfully!" -Level Info
-        return $response
+            # Return the API response
+            Write-Message -Message "Spark Job Definition '$SparkJobDefinitionName' updated successfully!" -Level Info
+            return $response
+        }
     }
     catch {
         # Capture and log error details

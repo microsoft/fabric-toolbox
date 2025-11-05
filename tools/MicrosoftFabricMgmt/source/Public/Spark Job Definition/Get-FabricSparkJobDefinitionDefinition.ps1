@@ -57,7 +57,7 @@ function Get-FabricSparkJobDefinitionDefinition {
         Test-TokenExpired
         Write-Message -Message "Authentication token is valid." -Level Debug
 
-        # Construct the API endpoint URI with filtering logic 
+        # Construct the API endpoint URI with filtering logic
         $apiEndpointURI = "{0}/workspaces/{1}/sparkJobDefinitions/{2}/getDefinition" -f $FabricConfig.BaseUrl, $WorkspaceId, $SparkJobDefinitionId
         if ($SparkJobDefinitionFormat) {
             $apiEndpointURI = "{0}?format={1}" -f $apiEndpointURI, $SparkJobDefinitionFormat
@@ -68,8 +68,8 @@ function Get-FabricSparkJobDefinitionDefinition {
         $response = Invoke-FabricAPIRequest `
             -BaseURI $apiEndpointURI `
             -Headers $FabricConfig.FabricHeaders `
-            -Method Post 
-        
+            -Method Post
+
         # Return the API response
         Write-Message -Message "Spark Job Definition '$SparkJobDefinitionId' definition retrieved successfully!" -Level Debug
         return $response
@@ -78,5 +78,5 @@ function Get-FabricSparkJobDefinitionDefinition {
         # Capture and log error details
         $errorDetails = $_.Exception.Message
         Write-Message -Message "Failed to retrieve Spark Job Definition. Error: $errorDetails" -Level Error
-    } 
+    }
 }

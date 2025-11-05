@@ -3,7 +3,7 @@
     Removes an SparkJobDefinition from a specified Microsoft Fabric workspace.
 
 .DESCRIPTION
-    This function sends a DELETE request to the Microsoft Fabric API to remove an SparkJobDefinition 
+    This function sends a DELETE request to the Microsoft Fabric API to remove an SparkJobDefinition
     from the specified workspace using the provided WorkspaceId and SparkJobDefinitionId.
 
 .PARAMETER WorkspaceId
@@ -23,7 +23,7 @@
     Author: Tiago Balabuch
 #>
 function Remove-FabricSparkJobDefinition {
-    [CmdletBinding()]
+    [CmdletBinding(SupportsShouldProcess=$true, ConfirmImpact='High')]
     param (
         [Parameter(Mandatory = $true)]
         [ValidateNotNullOrEmpty()]
@@ -33,7 +33,7 @@ function Remove-FabricSparkJobDefinition {
         [ValidateNotNullOrEmpty()]
         [string]$SparkJobDefinitionId
     )
-    try { 
+    try {
         # Validate authentication token before proceeding.
         Write-Message -Message "Validating authentication token..." -Level Debug
         Test-TokenExpired
@@ -44,16 +44,18 @@ function Remove-FabricSparkJobDefinition {
         Write-Message -Message "API Endpoint: $apiEndpointURI" -Level Debug
 
         ## Make the API request
-        $apiParams = @{
-            Headers = $FabricConfig.FabricHeaders
-            BaseURI = $apiEndpointURI
-            Method = 'Delete'
-        }
-        $response = Invoke-FabricAPIRequest @apiParams 
+        if ($PSCmdlet.ShouldProcess("Spark Job Definition '$SparkJobDefinitionId' in workspace '$WorkspaceId'", "Remove")) {
+            $apiParams = @{
+                Headers = $FabricConfig.FabricHeaders
+                BaseURI = $apiEndpointURI
+                Method = 'Delete'
+            }
+            $response = Invoke-FabricAPIRequest @apiParams
 
-        # Return the API response
-        Write-Message -Message "Spark Job Definition '$SparkJobDefinitionId' deleted successfully from workspace '$WorkspaceId'." -Level Info  
-        return $response
+            # Return the API response
+            Write-Message -Message "Spark Job Definition '$SparkJobDefinitionId' deleted successfully from workspace '$WorkspaceId'." -Level Info
+            return $response
+        }
     }
     catch {
         # Capture and log error details

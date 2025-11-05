@@ -3,7 +3,7 @@
     Creates a new SparkJobDefinition in a specified Microsoft Fabric workspace.
 
 .DESCRIPTION
-    This function sends a POST request to the Microsoft Fabric API to create a new SparkJobDefinition 
+    This function sends a POST request to the Microsoft Fabric API to create a new SparkJobDefinition
     in the specified workspace. It supports optional parameters for SparkJobDefinition description and path definitions.
 
 .PARAMETER WorkspaceId
@@ -32,7 +32,7 @@
     Author: Tiago Balabuch
 #>
 function New-FabricSparkJobDefinition {
-    [CmdletBinding()]
+    [CmdletBinding(SupportsShouldProcess=$true, ConfirmImpact='Medium')]
     param (
         [Parameter(Mandatory = $true)]
         [ValidateNotNullOrEmpty()]
@@ -50,12 +50,12 @@ function New-FabricSparkJobDefinition {
         [Parameter(Mandatory = $false)]
         [ValidateNotNullOrEmpty()]
         [string]$SparkJobDefinitionPathDefinition,
-        
+
         [Parameter(Mandatory = $false)]
         [ValidateNotNullOrEmpty()]
         [string]$SparkJobDefinitionPathPlatformDefinition
     )
-    try { 
+    try {
         # Validate authentication token before proceeding.
         Write-Message -Message "Validating authentication token..." -Level Debug
         Test-TokenExpired
@@ -128,18 +128,19 @@ function New-FabricSparkJobDefinition {
         Write-Message -Message "Request Body: $bodyJson" -Level Debug
 
         # Make the API request
-        # Make the API request
-        $apiParams = @{
-            BaseURI = $apiEndpointURI
-            Headers = $FabricConfig.FabricHeaders
-            Method = 'Post'
-            Body = $bodyJson
-        }
-        $response = Invoke-FabricAPIRequest @apiParams
+        if ($PSCmdlet.ShouldProcess("Spark Job Definition '$SparkJobDefinitionName' in workspace '$WorkspaceId'", "Create")) {
+            $apiParams = @{
+                BaseURI = $apiEndpointURI
+                Headers = $FabricConfig.FabricHeaders
+                Method = 'Post'
+                Body = $bodyJson
+            }
+            $response = Invoke-FabricAPIRequest @apiParams
 
-        # Return the API response   
-        Write-Message -Message "Spark Job Definition '$SparkJobDefinitionName' created successfully!" -Level Info
-        return $response
+            # Return the API response
+            Write-Message -Message "Spark Job Definition '$SparkJobDefinitionName' created successfully!" -Level Info
+            return $response
+        }
     }
     catch {
         # Capture and log error details

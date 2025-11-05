@@ -3,7 +3,7 @@
     Updates the definition of an existing SparkJobDefinition in a specified Microsoft Fabric workspace.
 
 .DESCRIPTION
-    This function sends a PATCH request to the Microsoft Fabric API to update the definition of an existing SparkJobDefinition 
+    This function sends a PATCH request to the Microsoft Fabric API to update the definition of an existing SparkJobDefinition
     in the specified workspace. It supports optional parameters for SparkJobDefinition definition and platform-specific definition.
 
 .PARAMETER WorkspaceId
@@ -29,7 +29,7 @@
     Author: Tiago Balabuch
 #>
 function Update-FabricSparkJobDefinitionDefinition {
-    [CmdletBinding()]
+    [CmdletBinding(SupportsShouldProcess=$true, ConfirmImpact='Medium')]
     param (
         [Parameter(Mandatory = $true)]
         [ValidateNotNullOrEmpty()]
@@ -42,7 +42,7 @@ function Update-FabricSparkJobDefinitionDefinition {
         [Parameter(Mandatory = $true)]
         [ValidateNotNullOrEmpty()]
         [string]$SparkJobDefinitionPathDefinition,
-        
+
         [Parameter(Mandatory = $false)]
         [ValidateNotNullOrEmpty()]
         [string]$SparkJobDefinitionPathPlatformDefinition
@@ -53,10 +53,10 @@ function Update-FabricSparkJobDefinitionDefinition {
         Test-TokenExpired
         Write-Message -Message "Authentication token is valid." -Level Debug
 
-        # Construct the API endpoint URI with filtering logic  
+        # Construct the API endpoint URI with filtering logic
         $apiEndpointURI = "{0}/workspaces/{1}/SparkJobDefinitions/{2}/updateDefinition" -f $FabricConfig.BaseUrl, $WorkspaceId, $SparkJobDefinitionId
         if ($SparkJobDefinitionPathPlatformDefinition) {
-            $apiEndpointURI = "?updateMetadata=true" -f $apiEndpointURI 
+            $apiEndpointURI = "?updateMetadata=true" -f $apiEndpointURI
         }
         Write-Message -Message "API Endpoint: $apiEndpointURI" -Level Debug
 
@@ -65,12 +65,12 @@ function Update-FabricSparkJobDefinitionDefinition {
             definition = @{
                 format = "SparkJobDefinitionV1"
                 parts  = @()
-            } 
+            }
         }
-      
+
         if ($SparkJobDefinitionPathDefinition) {
             $SparkJobDefinitionEncodedContent = Convert-ToBase64 -filePath $SparkJobDefinitionPathDefinition
-            
+
             if (-not [string]::IsNullOrEmpty($SparkJobDefinitionEncodedContent)) {
                 # Add new part to the parts array
                 $body.definition.parts += @{
@@ -105,18 +105,19 @@ function Update-FabricSparkJobDefinitionDefinition {
         Write-Message -Message "Request Body: $bodyJson" -Level Debug
 
         # Make the API request
-        # Make the API request
-        $apiParams = @{
-            BaseURI = $apiEndpointURI
-            Headers = $FabricConfig.FabricHeaders
-            Method = 'Post'
-            Body = $bodyJson
+        if ($PSCmdlet.ShouldProcess("Spark Job Definition definition '$SparkJobDefinitionId' in workspace '$WorkspaceId'", "Update")) {
+            $apiParams = @{
+                BaseURI = $apiEndpointURI
+                Headers = $FabricConfig.FabricHeaders
+                Method = 'Post'
+                Body = $bodyJson
+            }
+            $response = Invoke-FabricAPIRequest @apiParams
+
+            # Return the API response
+            Write-Message -Message "Successfully updated the definition for Spark Job Definition with ID '$SparkJobDefinitionId' in workspace '$WorkspaceId'." -Level Info
+            return $response
         }
-        $response = Invoke-FabricAPIRequest @apiParams 
-       
-        # Return the API response
-        Write-Message -Message "Successfully updated the definition for Spark Job Definition with ID '$SparkJobDefinitionId' in workspace '$WorkspaceId'." -Level Info
-        return $response
     }
     catch {
         # Step 6: Handle and log errors
