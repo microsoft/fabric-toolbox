@@ -27,7 +27,7 @@
     Author: Tiago Balabuch
 #>
 function Update-FabricMountedDataFactoryDefinition {
-    [CmdletBinding()]
+    [CmdletBinding(SupportsShouldProcess = $true, ConfirmImpact = 'Medium')]
     param (
         [Parameter(Mandatory = $true)]
         [ValidateNotNullOrEmpty()]
@@ -54,7 +54,7 @@ function Update-FabricMountedDataFactoryDefinition {
         # Construct the API endpoint URI with filtering logic     
         $apiEndpointURI = "{0}/workspaces/{1}/mountedDataFactories/{2}/updateDefinition" -f $FabricConfig.BaseUrl, $WorkspaceId, $MountedDataFactoryId
         if ($MountedDataFactoryPathPlatformDefinition) {
-            $apiEndpointURI = "?updateMetadata=true" -f $apiEndpointURI 
+            $apiEndpointURI = "$apiEndpointURI?updateMetadata=true"
         }
         Write-Message -Message "API Endpoint: $apiEndpointURI" -Level Debug
 
@@ -103,18 +103,22 @@ function Update-FabricMountedDataFactoryDefinition {
         $bodyJson = $body | ConvertTo-Json -Depth 10
         Write-Message -Message "Request Body: $bodyJson" -Level Debug
 
-        # Make the API request
-        $apiParams = @{
-            BaseURI = $apiEndpointURI
-            Headers = $FabricConfig.FabricHeaders
-            Method  = 'Post'
-            Body    = $bodyJson
+        # Make the API request when confirmed
+        $target = "Mounted Data Factory '$MountedDataFactoryId' in workspace '$WorkspaceId'"
+        $action = "Update Mounted Data Factory definition"
+        if ($PSCmdlet.ShouldProcess($target, $action)) {
+            $apiParams = @{
+                BaseURI = $apiEndpointURI
+                Headers = $FabricConfig.FabricHeaders
+                Method  = 'Post'
+                Body    = $bodyJson
+            }
+            $response = Invoke-FabricAPIRequest @apiParams
+           
+            # Return the API response
+            Write-Message -Message "Successfully updated the definition for Mounted Data Factory with ID '$MountedDataFactoryId' in workspace '$WorkspaceId'." -Level Info
+            return $response
         }
-        $response = Invoke-FabricAPIRequest @apiParams
-       
-        # Return the API response
-        Write-Message -Message "Successfully updated the definition for Mounted Data Factory with ID '$MountedDataFactoryId' in workspace '$WorkspaceId'." -Level Info
-        return $response
     }
     catch {
         # Capture and log error details

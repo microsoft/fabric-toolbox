@@ -28,7 +28,7 @@
     Author: Tiago Balabuch
 #>
 function Update-FabricMountedDataFactory {
-    [CmdletBinding()]
+    [CmdletBinding(SupportsShouldProcess = $true, ConfirmImpact = 'Medium')]
     param (
         [Parameter(Mandatory = $true)]
         [ValidateNotNullOrEmpty()]
@@ -70,18 +70,22 @@ function Update-FabricMountedDataFactory {
         $bodyJson = $body | ConvertTo-Json
         Write-Message -Message "Request Body: $bodyJson" -Level Debug
 
-        # Make the API request
-        $apiParams = @{
-            Headers = $FabricConfig.FabricHeaders
-            BaseURI = $apiEndpointURI
-            Method  = 'Patch'
-            Body    = $bodyJson
-        }
-        $response = Invoke-FabricAPIRequest @apiParams 
+        # Make the API request when confirmed
+        $target = "Mounted Data Factory '$MountedDataFactoryId' in workspace '$WorkspaceId'"
+        $action = "Update Mounted Data Factory display name/description"
+        if ($PSCmdlet.ShouldProcess($target, $action)) {
+            $apiParams = @{
+                Headers = $FabricConfig.FabricHeaders
+                BaseURI = $apiEndpointURI
+                Method  = 'Patch'
+                Body    = $bodyJson
+            }
+            $response = Invoke-FabricAPIRequest @apiParams 
 
-        # Return the API response
-        Write-Message -Message "Mounted Data Factory '$MountedDataFactoryName' updated successfully!" -Level Info
-        return $response
+            # Return the API response
+            Write-Message -Message "Mounted Data Factory '$MountedDataFactoryName' updated successfully!" -Level Info
+            return $response
+        }
     }
     catch {
         # Capture and log error details
