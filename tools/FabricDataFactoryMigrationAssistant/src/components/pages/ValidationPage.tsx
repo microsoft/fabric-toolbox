@@ -74,7 +74,7 @@ export function ValidationPage() {
   return (
     <WizardLayout
       title="Validate Compatibility"
-      description="Review ADF components for Fabric compatibility and select items to migrate. LinkedServices are configured separately in the previous step."
+      description="Review Data Factory components for Fabric compatibility and select items to migrate. LinkedServices are configured separately in the previous step."
     >
       <div className="space-y-6">
         {/* Summary */}

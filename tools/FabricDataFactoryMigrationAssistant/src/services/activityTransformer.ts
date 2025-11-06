@@ -1,5 +1,6 @@
 import { connectionService } from './connectionService';
 import { copyActivityTransformer } from './copyActivityTransformer';
+import { customActivityTransformer } from './customActivityTransformer';
 
 export class ActivityTransformer {
   // Transform LinkedService references to Fabric format - comprehensive implementation
@@ -9,6 +10,11 @@ export class ActivityTransformer {
     // Skip Copy activities - they are handled by specialized copyActivityTransformer
     if (activity.type === 'Copy') {
       return; // Do not process Copy activities here
+    }
+
+    // Skip Custom activities - they are handled by specialized customActivityTransformer
+    if (activity.type === 'Custom') {
+      return; // Do not process Custom activities here
     }
 
     // 1. Remove ADF-specific linkedServiceName references and replace with Fabric externalReferences
@@ -459,6 +465,12 @@ export class ActivityTransformer {
 
   activityReferencesFailedConnector(activity: any): boolean {
     if (!activity || typeof activity !== 'object') return false;
+
+    // Special handling for Custom activities
+    if (activity.type === 'Custom') {
+      return customActivityTransformer.activityReferencesFailedConnector(activity);
+    }
+
     const typeProperties = activity.typeProperties || {};
     const datasets = [typeProperties.dataset, typeProperties.source?.dataset, typeProperties.sink?.dataset, ...(typeProperties.datasets || [])].filter(Boolean);
     for (const dataset of datasets) {

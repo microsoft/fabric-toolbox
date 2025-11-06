@@ -30,7 +30,7 @@ export function DeploymentPage() {
   const [progress, setProgress] = useState(0);
   const [deploymentLog, setDeploymentLog] = useState<string[]>([]);
 
-  // NOTE: This page now only handles ADF component deployment.
+  // NOTE: This page now only handles Data Factory component deployment.
   // Connection deployment is handled by the separate DeployConnectionsPage component.
 
   const startDeployment = async () => {
@@ -40,12 +40,12 @@ export function DeploymentPage() {
 
     setIsDeploying(true);
     setProgress(0);
-    setDeploymentLog(['Starting ADF component deployment...', 'Deploying: Variables → Pipelines → Schedules']);
+    setDeploymentLog(['Starting Data Factory component deployment...', 'Deploying: Variables → Pipelines → Schedules']);
     dispatch({ type: 'SET_DEPLOYMENT_RESULTS', payload: [] });
 
     try {
       // Deploy Components (excluding connections which are handled separately)
-      setDeploymentLog(prev => [...prev, '🏗️ Deploying ADF components...']);
+      setDeploymentLog(prev => [...prev, '🏗️ Deploying Data Factory components...']);
       
       // Filter out linkedServices and integrationRuntimes as they are handled in the DeployConnectionsPage
       const nonConnectionComponents = (state.selectedComponents || []).filter(component => 
@@ -67,7 +67,7 @@ export function DeploymentPage() {
           setProgress((progress.current / progress.total) * 100);
           setCurrentStep({
             id: `deploy-components`,
-            title: 'Deploying ADF Components',
+            title: 'Deploying Data Factory Components',
             description: progress.status,
             status: 'inProgress'
           });
@@ -75,8 +75,14 @@ export function DeploymentPage() {
         },
         // Connection results are handled by separate deployment flow
         [],
-        // Pipeline connection mappings for activity transformation
-        state.pipelineConnectionMappings || {}
+        // Pipeline connection mappings for activity transformation (OLD format - backward compatibility)
+        state.pipelineConnectionMappings || {},
+        // Pipeline reference mappings for Custom activity transformation (NEW referenceId-based)
+        state.pipelineReferenceMappings || {},
+        // LinkedService bridge for Custom activity fallback
+        state.linkedServiceConnectionBridge || {},
+        // Variable Library configuration for global parameter transformation
+        state.variableLibraryConfig || undefined
       );
 
       // Process all results
@@ -121,7 +127,7 @@ export function DeploymentPage() {
         description: `Processed ${totalComponents} components`
       });
 
-      setDeploymentLog(prev => [...prev, 'ADF component deployment completed!']);
+      setDeploymentLog(prev => [...prev, 'Data Factory component deployment completed!']);
     } catch (error) {
       const errorMessage = `Deployment failed: ${error instanceof Error ? error.message : 'Unknown error'}`;
       setDeploymentLog(prev => [...prev, errorMessage]);
@@ -167,7 +173,7 @@ export function DeploymentPage() {
       document.body.removeChild(a);
       URL.revokeObjectURL(url);
 
-      toast.success('ADF components deployment plan downloaded successfully');
+      toast.success('Data Factory components deployment plan downloaded successfully');
     } catch (error) {
       console.error('Error generating deployment plan:', error);
       toast.error('Failed to generate deployment plan');
@@ -213,7 +219,7 @@ export function DeploymentPage() {
                   const nonConnectionComponents = (state.selectedComponents || []).filter(component => 
                     component.type !== 'linkedService' && component.type !== 'integrationRuntime'
                   );
-                  return `${nonConnectionComponents.length} ADF components will be migrated to your Fabric workspace (connections are deployed separately)`;
+                  return `${nonConnectionComponents.length} Data Factory components will be migrated to your Fabric workspace (connections are deployed separately)`;
                 })()}
               </CardDescription>
             </CardHeader>
@@ -346,7 +352,7 @@ export function DeploymentPage() {
             <CardContent className="space-y-4">
               {/* Component Results Summary */}
               <div className="space-y-3">
-                <h4 className="font-medium">ADF Components</h4>
+                <h4 className="font-medium">Data Factory Components</h4>
                 <div className="grid grid-cols-3 gap-4 text-center">
                   <div className="p-3 bg-accent/10 rounded-lg">
                     <div className="text-xl font-bold text-accent">{successfulDeployments.length}</div>

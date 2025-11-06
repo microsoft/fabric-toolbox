@@ -74,7 +74,10 @@ export function SystemValidationPage() {
                 <ul className="text-sm text-muted-foreground space-y-1">
                   <li>• Created SupportedConnectionTypesService</li>
                   <li>• Fixed localeCompare safety issues</li>
-                  <li>• Added centralized ADF→Fabric type mapping</li>
+                  <li>• Custom activity LinkedService tracking with 3-tier reference detection</li>
+                  <li>• Enhanced dependency graphs with all resource-level relationships</li>
+                  <li>• Added centralized Data Factory→Fabric type mapping</li>
+                  <li>• Comprehensive profiling metrics and warning system</li>
                   <li>• Integrated dynamic API-based validation</li>
                   <li>• Updated FabricService to use new service</li>
                   <li>• Enhanced error messages with real API data</li>

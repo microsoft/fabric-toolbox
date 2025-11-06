@@ -19,7 +19,8 @@ import {
   MagnifyingGlassMinus,
   ArrowsOut,
   ArrowsIn,
-  Lightning
+  Lightning,
+  Network
 } from '@phosphor-icons/react';
 import { DependencyGraph, GraphNode } from '@/types/profiling';
 import {
@@ -36,6 +37,25 @@ interface DependencyGraphViewProps {
 }
 
 export function DependencyGraphView({ dependencies }: DependencyGraphViewProps) {
+  // Add null safety check FIRST, before any other code
+  if (!dependencies || !dependencies.nodes || dependencies.nodes.length === 0) {
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle>Dependency Graph</CardTitle>
+          <CardDescription>No dependencies found</CardDescription>
+        </CardHeader>
+        <CardContent className="flex items-center justify-center h-96 text-muted-foreground">
+          <div className="text-center space-y-2">
+            <Network size={48} className="mx-auto opacity-50" />
+            <p>This ARM template has no detectable dependencies between components</p>
+            <p className="text-sm">Components exist in isolation without references</p>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
+
   const svgRef = useRef<SVGSVGElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);

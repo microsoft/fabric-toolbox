@@ -4,7 +4,15 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Progress } from '@/components/ui/progress';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { CloudArrowUp, FilePlus, CheckCircle, Warning, ChartBar } from '@phosphor-icons/react';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
+import { CloudArrowUp, FilePlus, CheckCircle, Warning, ChartBar, GitBranch } from '@phosphor-icons/react';
 import { WizardLayout } from '../WizardLayout';
 import { useAppContext } from '../../contexts/AppContext';
 import { adfParserService } from '../../services/adfParserService';
@@ -25,6 +33,11 @@ export function UploadPage() {
   const [summary, setSummary] = useState<ComponentSummary | null>(null);
   const [profile, setProfile] = useState<ADFProfile | null>(null);
   const [activeView, setActiveView] = useState<'summary' | 'profile'>('summary');
+  const [showReuploadWarning, setShowReuploadWarning] = useState(false);
+  const [pendingFile, setPendingFile] = useState<File | null>(null);
+
+  // Check if user has progressed past upload (authenticated)
+  const hasProgressedPastUpload = Boolean(state.auth?.isAuthenticated);
 
   // Cache: Restore profile from AppContext if returning to page
   useEffect(() => {
@@ -39,7 +52,7 @@ export function UploadPage() {
     }
   }, [state.adfProfile, state.uploadedFile, state.adfComponents, profile, summary]);
 
-  const handleFileUpload = useCallback(async (file: File) => {
+  const performFileUpload = useCallback(async (file: File) => {
     if (!validateFileInput(file)) {
       setError('Please upload a valid JSON file');
       return;
@@ -56,7 +69,7 @@ export function UploadPage() {
       
       // Validate we have components
       if (!components || components.length === 0) {
-        throw new Error('No ADF components found in the ARM template');
+        throw new Error('No Data Factory components found in the ARM template');
       }
       
       const componentSummary = adfParserService.getComponentSummary(components);
@@ -78,6 +91,29 @@ export function UploadPage() {
       dispatch({ type: 'SET_UPLOADED_FILE', payload: file });
       dispatch({ type: 'SET_ADF_COMPONENTS', payload: components });
       
+      // Extract global parameter references from detected components (NEW)
+      const pipelineComponents = components.filter(c => c.type === 'pipeline');
+      if (pipelineComponents.length > 0 && pipelineComponents[0].globalParameterReferences) {
+        const globalParams = pipelineComponents[0].globalParameterReferences;
+        console.log(`[UploadPage] Found ${globalParams.length} global parameters`);
+        dispatch({ type: 'SET_GLOBAL_PARAMETER_REFERENCES', payload: globalParams });
+        
+        if (globalParams.length > 0) {
+          toast.success(`Detected ${globalParams.length} global parameter(s) for migration`);
+        }
+      }
+      
+      // Check for parameterized LinkedServices (NEW)
+      if (componentSummary.parameterizedLinkedServicesCount && componentSummary.parameterizedLinkedServicesCount > 0) {
+        console.log(`[UploadPage] Found ${componentSummary.parameterizedLinkedServicesCount} parameterized LinkedServices`);
+        toast.warning(
+          `Detected ${componentSummary.parameterizedLinkedServicesCount} LinkedService(s) with parameters`,
+          {
+            description: 'These will require manual reconfiguration in Fabric. Connections do not support parameters yet.'
+          }
+        );
+      }
+      
       if (generatedProfile) {
         dispatch({ type: 'SET_ADF_PROFILE', payload: generatedProfile });
         setProfile(generatedProfile);
@@ -92,6 +128,42 @@ export function UploadPage() {
       setIsProcessing(false);
     }
   }, [dispatch]);
+
+  const handleFileUpload = useCallback((file: File) => {
+    // If user has already authenticated/progressed and is re-uploading, show warning
+    if (hasProgressedPastUpload && state.uploadedFile) {
+      setPendingFile(file);
+      setShowReuploadWarning(true);
+    } else {
+      // First upload or no progress yet - proceed directly
+      performFileUpload(file);
+    }
+  }, [hasProgressedPastUpload, state.uploadedFile, performFileUpload]);
+
+  const confirmReupload = useCallback(() => {
+    if (pendingFile) {
+      // Clear all downstream state - reset to fresh state but keep minimal auth
+      dispatch({ type: 'SET_SELECTED_WORKSPACE', payload: null });
+      dispatch({ type: 'SET_GLOBAL_PARAMETER_REFERENCES', payload: [] });
+      dispatch({ type: 'SET_GLOBAL_PARAMETER_CONFIG_COMPLETED', payload: false });
+      dispatch({ type: 'SET_DEPLOYMENT_RESULTS', payload: [] });
+      dispatch({ type: 'SET_CURRENT_STEP', payload: 0 }); // Reset to upload step
+      
+      // Perform the upload
+      performFileUpload(pendingFile);
+      
+      // Close dialog and clear pending file
+      setShowReuploadWarning(false);
+      setPendingFile(null);
+      
+      toast.info('Previous configuration cleared. You may need to reconfigure connections and mappings.');
+    }
+  }, [pendingFile, dispatch, performFileUpload]);
+
+  const cancelReupload = useCallback(() => {
+    setShowReuploadWarning(false);
+    setPendingFile(null);
+  }, []);
 
   const handleDrop = useCallback((e: React.DragEvent) => {
     e.preventDefault();
@@ -130,8 +202,9 @@ export function UploadPage() {
 
   return (
     <WizardLayout
-      title="Upload ADF Template"
-      description="Upload your Azure Data Factory ARM template to begin the migration process"
+      title="Upload ARM Template"
+      description="Upload your ARM template to begin the migration process"
+      nextButtonText="Proceed with Migration"
     >
       <div className="space-y-4">
         {/* Compact Upload Area */}
@@ -162,7 +235,7 @@ export function UploadPage() {
                   {isProcessing ? 'Processing file...' : 'Upload ARM Template'}
                 </h3>
                 <p className="text-sm text-muted-foreground mb-3">
-                  Drag and drop your ADF ARM template JSON file here, or click to browse
+                  Drag and drop your ARM template JSON file here, or click to browse
                 </p>
                 <Button variant="outline" size="sm" disabled={isProcessing}>
                   <FilePlus size={14} className="mr-1.5" />
@@ -257,6 +330,56 @@ export function UploadPage() {
                       </div>
                     </div>
                   )}
+                  
+                  {/* Custom Activity Detection Alert */}
+                  {profile && profile.metrics.customActivitiesCount > 0 && (
+                    <Alert className="mt-3 bg-fuchsia-50 dark:bg-fuchsia-950/30 border-fuchsia-300 dark:border-fuchsia-700">
+                      <GitBranch size={14} className="text-fuchsia-600 dark:text-fuchsia-400" />
+                      <AlertDescription className="text-sm">
+                        <div className="font-semibold text-fuchsia-900 dark:text-fuchsia-100 mb-1">
+                          Custom Activities Detected: {profile.metrics.customActivitiesCount}
+                        </div>
+                        <div className="text-fuchsia-800 dark:text-fuchsia-200 space-y-1">
+                          <div>
+                            Found <strong>{profile.metrics.totalCustomActivityReferences} LinkedService references</strong> across {profile.metrics.customActivitiesCount} Custom activities.
+                          </div>
+                          {profile.metrics.customActivitiesWithMultipleReferences > 0 && (
+                            <div className="text-xs">
+                              ⚠️ {profile.metrics.customActivitiesWithMultipleReferences} activities have multiple references requiring special attention.
+                            </div>
+                          )}
+                          <div className="text-xs mt-2 pt-2 border-t border-fuchsia-300 dark:border-fuchsia-700">
+                            <strong>Action Required:</strong> Custom activities reference LinkedServices in up to 3 locations. 
+                            You'll need to map each reference on the <strong>Map Components</strong> page.
+                          </div>
+                        </div>
+                      </AlertDescription>
+                    </Alert>
+                  )}
+                  
+                  {/* Parameterized LinkedServices Warning Alert */}
+                  {summary.parameterizedLinkedServicesCount && summary.parameterizedLinkedServicesCount > 0 && (
+                    <Alert className="mt-3 bg-orange-50 dark:bg-orange-950/30 border-orange-300 dark:border-orange-700">
+                      <Warning size={14} className="text-orange-600 dark:text-orange-400" />
+                      <AlertDescription className="text-sm">
+                        <div className="font-semibold text-orange-900 dark:text-orange-100 mb-1">
+                          Parameterized LinkedServices Detected: {summary.parameterizedLinkedServicesCount}
+                        </div>
+                        <div className="text-orange-800 dark:text-orange-200 space-y-1">
+                          <div>
+                            Found <strong>{summary.parameterizedLinkedServicesNames?.join(', ')}</strong> with parameters.
+                          </div>
+                          <div>
+                            Affects <strong>{summary.parameterizedLinkedServicesPipelineCount} pipeline(s)</strong> that will require manual reconfiguration.
+                          </div>
+                          <div className="text-xs mt-2 pt-2 border-t border-orange-300 dark:border-orange-700">
+                            <strong>Note:</strong> Fabric Connections don't support parameters yet (feature on roadmap). 
+                            You can deploy unaffected pipelines immediately.
+                          </div>
+                        </div>
+                      </AlertDescription>
+                    </Alert>
+                  )}
                 </CardContent>
               </Card>
             </TabsContent>
@@ -286,6 +409,40 @@ export function UploadPage() {
           </Tabs>
         )}
       </div>
+
+      {/* Re-upload Warning Dialog */}
+      <Dialog open={showReuploadWarning} onOpenChange={setShowReuploadWarning}>
+        <DialogContent className="sm:max-w-[500px]">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-destructive">
+              <Warning size={24} weight="fill" />
+              Warning: This will clear all your work
+            </DialogTitle>
+            <DialogDescription className="space-y-3 pt-4">
+              <p className="text-base">
+                Uploading a different ARM template will reset:
+              </p>
+              <ul className="list-disc list-inside space-y-1 text-sm pl-2">
+                <li>Authentication and workspace selection</li>
+                <li>Connection configurations</li>
+                <li>Component mappings</li>
+                <li>All deployment progress</li>
+              </ul>
+              <p className="text-sm font-medium pt-2">
+                Are you sure you want to continue?
+              </p>
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="gap-2 sm:gap-0">
+            <Button variant="outline" onClick={cancelReupload}>
+              Cancel
+            </Button>
+            <Button variant="destructive" onClick={confirmReupload}>
+              Clear Everything & Re-upload
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </WizardLayout>
   );
 }

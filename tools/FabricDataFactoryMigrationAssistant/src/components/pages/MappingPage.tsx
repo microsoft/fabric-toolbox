@@ -6,12 +6,12 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { ArrowRight, CaretDown, CaretRight, Gear, Info, CheckCircle, Warning } from '@phosphor-icons/react';
+import { ArrowRight, CaretDown, CaretRight, Gear, Info, CheckCircle, Warning, GitBranch } from '@phosphor-icons/react';
 import { WizardLayout } from '../WizardLayout';
 import { WorkspaceDisplay } from '../WorkspaceDisplay';
 import { NavigationDebug } from '../NavigationDebug';
 import { useAppContext } from '../../contexts/AppContext';
-import { ActivityConnectionMapping, FabricTarget, PipelineConnectionMappings } from '../../types';
+import { ActivityConnectionMapping, FabricTarget, PipelineConnectionMappings, CustomActivityMapping } from '../../types';
 import { extractString } from '../../lib/validation';
 import {
   PipelineActivityAnalysisService,
@@ -24,8 +24,13 @@ import {
 import { 
   LinkedServiceMappingBridgeService 
 } from '../../services/linkedServiceMappingBridgeService';
+import { customActivityMappingService } from '../../services/customActivityMappingService';
 import { toast } from 'sonner';
 import { ComponentMappingTable } from './mapping/ComponentMappingTable';
+import { ComponentMappingTableV2 } from './mapping/ComponentMappingTableV2';
+// import { PipelineMappingCard } from './mapping/PipelineMappingCard'; // DEPRECATED: Replaced by ComponentMappingTableV2
+import { unifiedActivityMappingService } from '../../services/unifiedActivityMappingService';
+import { PipelineMappingSummary } from '../../types';
 
 const TARGET_TYPE_OPTIONS: Record<string, Array<{ value: FabricTarget['type']; label: string }>> = {
   pipeline: [{ value: 'dataPipeline', label: 'Data Pipeline' }],
@@ -73,17 +78,159 @@ const buildActivityUniqueId = (
 export function MappingPage() {
   const { state, dispatch } = useAppContext();
   const [expandedComponents, setExpandedComponents] = useState<Set<number>>(new Set());
-  const [expandedPipelines, setExpandedPipelines] = useState<Set<string>>(new Set());
+  // const [expandedPipelines, setExpandedPipelines] = useState<Set<string>>(new Set()); // DEPRECATED: Table manages its own expansion
   const [existingConnections, setExistingConnections] = useState<ExistingFabricConnection[]>([]);
   const [loadingConnections, setLoadingConnections] = useState(false);
   const [pipelineConnectionMappings, setPipelineConnectionMappings] = useState<PipelineConnectionMappings>({});
+  
+  // NEW: ReferenceId-based mappings (fixes dropdown persistence bug)
+  const [pipelineReferenceMappings, setPipelineReferenceMappings] = useState<Record<string, Record<string, string>>>({});
+  
   const [autoSelectedMappings, setAutoSelectedMappings] = useState<string[]>([]);
+  
+  // NEW: Unified pipeline summaries (replaces customActivityMappings)
+  const [pipelineSummaries, setPipelineSummaries] = useState<PipelineMappingSummary[]>([]);
+  const [generatingSummaries, setGeneratingSummaries] = useState(false);
 
   useEffect(() => {
     if (state.pipelineConnectionMappings) {
       setPipelineConnectionMappings(state.pipelineConnectionMappings);
     }
   }, [state.pipelineConnectionMappings]);
+
+  // Helper function to recursively extract all activities from nested structures
+  const extractAllActivities = (activities: any[]): any[] => {
+    const allActivities: any[] = [];
+    
+    const traverse = (activityList: any[]) => {
+      if (!Array.isArray(activityList)) return;
+      
+      activityList.forEach((activity: any) => {
+        // Add current activity
+        allActivities.push(activity);
+        
+        // Recursively check for nested activities in different container types
+        
+        // ForEach activities
+        if (activity.type === 'ForEach' && activity.typeProperties?.activities) {
+          traverse(activity.typeProperties.activities);
+        }
+        
+        // IfCondition activities
+        if (activity.type === 'IfCondition') {
+          if (activity.typeProperties?.ifTrueActivities) {
+            traverse(activity.typeProperties.ifTrueActivities);
+          }
+          if (activity.typeProperties?.ifFalseActivities) {
+            traverse(activity.typeProperties.ifFalseActivities);
+          }
+        }
+        
+        // Switch activities
+        if (activity.type === 'Switch' && activity.typeProperties?.cases) {
+          activity.typeProperties.cases.forEach((caseItem: any) => {
+            if (caseItem.activities) {
+              traverse(caseItem.activities);
+            }
+          });
+          // Also check default activities
+          if (activity.typeProperties.defaultActivities) {
+            traverse(activity.typeProperties.defaultActivities);
+          }
+        }
+        
+        // Until activities
+        if (activity.type === 'Until' && activity.typeProperties?.activities) {
+          traverse(activity.typeProperties.activities);
+        }
+      });
+    };
+    
+    traverse(activities);
+    return allActivities;
+  };
+
+  // NEW: Generate unified pipeline summaries when components or mappings change
+  useEffect(() => {
+    if (!state.selectedComponents || state.selectedComponents.length === 0) {
+      setPipelineSummaries([]);
+      return;
+    }
+
+    const pipelines = state.selectedComponents.filter(c => c.type === 'pipeline');
+    if (pipelines.length === 0) {
+      setPipelineSummaries([]);
+      return;
+    }
+
+    setGeneratingSummaries(true);
+    
+    // Use setTimeout to allow UI to update before heavy computation
+    setTimeout(() => {
+      const datasets = state.adfComponents?.filter(c => c.type === 'dataset') || [];
+      
+      // Use the new referenceId-based mappings (fixes dropdown persistence)
+      // Fall back to old format for backwards compatibility
+      const existingMappingsFormatted: Record<string, Record<string, string>> = {};
+      
+      // Priority 1: Use new referenceId-based mappings
+      Object.entries(pipelineReferenceMappings).forEach(([pipelineName, refMappings]) => {
+        existingMappingsFormatted[pipelineName] = { ...refMappings };
+      });
+      
+      // Priority 2: Merge in old activity-based mappings (backwards compatibility)
+      Object.entries(pipelineConnectionMappings).forEach(([pipelineName, activities]) => {
+        if (!existingMappingsFormatted[pipelineName]) {
+          existingMappingsFormatted[pipelineName] = {};
+        }
+        Object.entries(activities).forEach(([activityName, mapping]: [string, any]) => {
+          // Extract connection IDs from various mapping formats
+          if (mapping.selectedConnectionId) {
+            // Store by linkedServiceName as fallback (service will try referenceId first)
+            if (mapping.linkedServiceReference?.name) {
+              existingMappingsFormatted[pipelineName][mapping.linkedServiceReference.name] = mapping.selectedConnectionId;
+            }
+          }
+          // Handle custom activity references
+          if (mapping.customActivityReferences) {
+            mapping.customActivityReferences.forEach((ref: any) => {
+              if (ref.selectedConnectionId) {
+                existingMappingsFormatted[pipelineName][ref.linkedServiceName] = ref.selectedConnectionId;
+              }
+            });
+          }
+        });
+      });
+
+      const summaries = pipelines.map(pipeline => {
+        try {
+          return unifiedActivityMappingService.createPipelineSummary(
+            pipeline,
+            datasets,
+            existingMappingsFormatted
+          );
+        } catch (error) {
+          console.error(`Error creating summary for pipeline ${pipeline.name}:`, error);
+          // Return a minimal summary on error
+          return {
+            pipelineName: pipeline.name,
+            folderPath: pipeline.folder?.path,
+            totalActivities: 0,
+            totalReferences: 0,
+            mappedReferences: 0,
+            mappingPercentage: 0,
+            activityGroups: [],
+            isFullyMapped: false,
+            validationErrors: [`Error analyzing pipeline: ${error}`]
+          } as PipelineMappingSummary;
+        }
+      });
+
+      setPipelineSummaries(summaries);
+      setGeneratingSummaries(false);
+      console.log(`Generated ${summaries.length} pipeline summaries with unified activity mappings`);
+    }, 0);
+  }, [state.selectedComponents, state.adfComponents, pipelineConnectionMappings, pipelineReferenceMappings]);
 
   // NEW: Build LinkedService Connection Bridge
   useEffect(() => {
@@ -223,8 +370,10 @@ export function MappingPage() {
     loadConnections();
   }, [state.auth?.accessToken, state.selectedWorkspace?.id]);
 
+  // FIXED: Use adfComponents as source instead of selectedComponents
+  // This prevents components from disappearing when unchecked
   const filteredComponents = useMemo(() => {
-    return (state.selectedComponents || []).filter(
+    return (state.adfComponents || []).filter(
       component =>
         component &&
         component.type !== 'dataset' &&
@@ -232,7 +381,7 @@ export function MappingPage() {
         component.type !== 'managedIdentity' &&
         !isWorkspaceIdentityCredential(component)
     );
-  }, [state.selectedComponents]);
+  }, [state.adfComponents]);
 
   const componentsByType = useMemo(() => {
     return filteredComponents.reduce(
@@ -248,16 +397,11 @@ export function MappingPage() {
     );
   }, [filteredComponents]);
 
+  // FIXED: Use filteredComponents (derived from adfComponents) instead of selectedComponents
+  // This ensures consistent behavior - only selected components need targets for deployment
   const componentsNeedingTargets = useMemo(() => {
-    return (state.selectedComponents || []).filter(
-      component =>
-        component &&
-        component.type !== 'dataset' &&
-        component.type !== 'linkedService' &&
-        component.type !== 'managedIdentity' &&
-        !isWorkspaceIdentityCredential(component)
-    );
-  }, [state.selectedComponents]);
+    return filteredComponents.filter(component => component?.isSelected);
+  }, [filteredComponents]);
 
   const allComponentsHaveTargets = useMemo(() => {
     return componentsNeedingTargets.every(component => Boolean(component?.fabricTarget));
@@ -442,9 +586,22 @@ export function MappingPage() {
     });
   };
 
+  // OLD: Index-based toggle (deprecated, has filtering bug)
   const handleToggle = (index: number) => {
     const component = (state.adfComponents || [])[index];
     if (component) {
+      dispatch({
+        type: 'UPDATE_COMPONENT_SELECTION',
+        payload: { index, isSelected: !component.isSelected }
+      });
+    }
+  };
+
+  // NEW: ID-based toggle (fixes filtering bug)
+  const handleToggleById = (componentId: string) => {
+    const index = (state.adfComponents || []).findIndex(c => c.name === componentId);
+    if (index !== -1) {
+      const component = state.adfComponents![index];
       dispatch({
         type: 'UPDATE_COMPONENT_SELECTION',
         payload: { index, isSelected: !component.isSelected }
@@ -459,17 +616,41 @@ export function MappingPage() {
     });
   };
 
-  const togglePipelineExpansion = (pipelineName: string) => {
-    setExpandedPipelines(prev => {
-      const next = new Set(prev);
-      if (next.has(pipelineName)) {
-        next.delete(pipelineName);
-      } else {
-        next.add(pipelineName);
-      }
-      return next;
-    });
+  // NEW: ID-based bulk toggle (fixes filtering bug)
+  const handleBulkToggleById = (componentIds: string[], isSelected: boolean) => {
+    const indices = componentIds
+      .map(id => (state.adfComponents || []).findIndex(c => c.name === id))
+      .filter(index => index !== -1);
+    
+    if (indices.length > 0) {
+      dispatch({
+        type: 'BULK_UPDATE_COMPONENT_SELECTION',
+        payload: { indices, isSelected }
+      });
+    }
   };
+
+  // NEW: Pipeline selection handlers
+  const handlePipelineToggle = (pipelineName: string) => {
+    handleToggleById(pipelineName);
+  };
+
+  const handleBulkPipelineToggle = (pipelineNames: string[], isSelected: boolean) => {
+    handleBulkToggleById(pipelineNames, isSelected);
+  };
+
+  // DEPRECATED: togglePipelineExpansion - no longer needed, table manages its own expansion
+  // const togglePipelineExpansion = (pipelineName: string) => {
+  //   setExpandedPipelines(prev => {
+  //     const next = new Set(prev);
+  //     if (next.has(pipelineName)) {
+  //       next.delete(pipelineName);
+  //     } else {
+  //       next.add(pipelineName);
+  //     }
+  //     return next;
+  //   });
+  // };
 
   const handleActivityConnectionMapping = (
     pipelineName: string,
@@ -500,6 +681,75 @@ export function MappingPage() {
         activityName: uniqueId,
         mapping: updatedMapping
       }
+    });
+  };
+
+  // NEW: Handle unified activity mapping changes (replaces handleCustomActivityMappingChange)
+  const handleUnifiedActivityMappingChange = (
+    pipelineName: string,
+    activityName: string,
+    referenceId: string,
+    connectionId: string
+  ) => {
+    console.log(`Mapping change: ${pipelineName}.${activityName} -> ${referenceId} -> ${connectionId}`);
+    
+    // Update the pipelineConnectionMappings state
+    setPipelineConnectionMappings(prev => {
+      const pipelineMappings = prev[pipelineName] || {};
+      const activityMapping = pipelineMappings[activityName] || {};
+      
+      // Store the connection ID for this reference
+      const updatedMapping = {
+        ...activityMapping,
+        selectedConnectionId: connectionId,
+        activityName,
+        referenceId
+      };
+      
+      return {
+        ...prev,
+        [pipelineName]: {
+          ...pipelineMappings,
+          [activityName]: updatedMapping
+        }
+      };
+    });
+
+    // Dispatch to global state
+    dispatch({
+      type: 'UPDATE_PIPELINE_CONNECTION_MAPPING',
+      payload: {
+        pipelineName,
+        activityName,
+        mapping: {
+          activityName,
+          activityType: 'unified', // Will be determined from summary
+          selectedConnectionId: connectionId,
+          referenceId
+        }
+      }
+    });
+  };
+
+  // NEW: Simplified handler for referenceId-based mappings (used by ComponentMappingTableV2)
+  const handleReferenceMapping = (
+    pipelineName: string,
+    referenceId: string,
+    connectionId: string
+  ) => {
+    console.log(`Reference mapping: ${pipelineName} -> ${referenceId} -> ${connectionId}`);
+    
+    // Update the new referenceId-based mappings (fixes dropdown persistence)
+    setPipelineReferenceMappings(prev => {
+      const pipelineMappings = prev[pipelineName] || {};
+      
+      return {
+        ...prev,
+        [pipelineName]: {
+          ...pipelineMappings,
+          [referenceId]: connectionId
+        }
+      };
     });
   };
 
@@ -546,7 +796,7 @@ export function MappingPage() {
   return (
     <WizardLayout
       title="Map Components"
-      description="Configure how ADF components will be created in Microsoft Fabric"
+      description="Configure how Data Factory components will be created in Microsoft Fabric"
     >
       <div className="space-y-6">
         <WorkspaceDisplay />
@@ -630,7 +880,7 @@ export function MappingPage() {
           <CardHeader>
             <CardTitle>Migration Mapping</CardTitle>
             <CardDescription>
-              Review and customize how each ADF component will be migrated to Fabric
+              Review and customize how each Data Factory component will be migrated to Fabric
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -663,6 +913,61 @@ export function MappingPage() {
               }).length
             };
 
+            // NEW: Use ComponentMappingTableV2 for pipelines (unified table UI)
+            if (type === 'pipeline') {
+              return (
+                <Card key={type}>
+                  <CardHeader>
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <CardTitle className="flex items-center gap-2 capitalize">
+                          Pipeline Activities & LinkedService Mappings
+                          <Badge variant="secondary">{typeStats.total}</Badge>
+                        </CardTitle>
+                        <CardDescription className="mt-1">
+                          {typeStats.selected} selected pipelines • Map all activity LinkedService references to Fabric connections
+                          {typeStats.needsMapping > 0 && (
+                            <span className="text-warning"> • {typeStats.needsMapping} need mapping</span>
+                          )}
+                        </CardDescription>
+                      </div>
+                    </div>
+                  </CardHeader>
+                  <CardContent>
+                    {generatingSummaries ? (
+                      <div className="flex flex-col items-center justify-center py-12 text-gray-500">
+                        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-900 mb-4"></div>
+                        <p className="text-sm">Analyzing pipeline activities...</p>
+                      </div>
+                    ) : pipelineSummaries.length === 0 ? (
+                      <Alert>
+                        <Info size={16} />
+                        <AlertDescription>
+                          No pipelines selected or no activity mappings required.
+                        </AlertDescription>
+                      </Alert>
+                    ) : (
+                      <ComponentMappingTableV2
+                        pipelineSummaries={pipelineSummaries}
+                        selectedPipelines={state.selectedComponents?.filter(c => c.type === 'pipeline').map(p => p.name) || []}
+                        onPipelineToggle={handlePipelineToggle}
+                        onBulkPipelineToggle={handleBulkPipelineToggle}
+                        onActivityConnectionMapping={handleReferenceMapping}
+                        pipelineConnectionMappings={pipelineReferenceMappings}
+                        existingConnections={existingConnections}
+                        loadingConnections={loadingConnections}
+                        autoSelectedMappings={autoSelectedMappings}
+                        componentType="pipeline"
+                        showActivityDetails={true}
+                        enableExpandAll={true}
+                      />
+                    )}
+                  </CardContent>
+                </Card>
+              );
+            }
+
+            // Use ComponentMappingTable for non-pipeline components
             return (
               <Card key={type}>
                 <CardHeader>
@@ -703,9 +1008,8 @@ export function MappingPage() {
             );
           })}
         </div>
-                            <div className="rounded-lg bg-muted p-3">
 
-        </div>
+        {/* REMOVED: Old Custom Activities Section - now integrated into pipeline cards */}
 
         <Card>
           <CardHeader>
