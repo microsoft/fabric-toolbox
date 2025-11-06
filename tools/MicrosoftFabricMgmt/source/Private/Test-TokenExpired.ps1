@@ -3,8 +3,8 @@
 Checks if the Fabric token is expired and logs appropriate messages.
 
 .DESCRIPTION
-The `Test-TokenExpired` function checks the expiration status of the Fabric token stored in the `$FabricConfig.TokenExpiresOn` variable. 
-If the token is expired, it logs an error message and provides guidance for refreshing the token. 
+The `Test-TokenExpired` function checks the expiration status of the Fabric token stored in the `$FabricConfig.TokenExpiresOn` variable.
+If the token is expired, it logs an error message and provides guidance for refreshing the token.
 Otherwise, it logs that the token is still valid.
 
 .PARAMETER FabricConfig
@@ -27,7 +27,7 @@ function Test-TokenExpired {
     param ()
     try {
         # Ensure required properties have valid values
-        if ([string]::IsNullOrWhiteSpace($FabricConfig.TenantIdGlobal) -or 
+        if ([string]::IsNullOrWhiteSpace($FabricConfig.TenantIdGlobal) -or
             [string]::IsNullOrWhiteSpace($FabricConfig.TokenExpiresOn)) {
             Write-Message -Message "Token details are missing. Please run 'Set-FabricApiHeaders' to configure them." -Level Error
             throw "MissingTokenDetailsException: Token details are missing."
