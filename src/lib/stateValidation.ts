@@ -133,7 +133,7 @@ export function validateAppState(obj: any): obj is AppState {
     obj !== null &&
     typeof obj.currentStep === 'number' &&
     obj.currentStep >= 0 &&
-    obj.currentStep <= 9 && // Updated to include managed identity step
+    obj.currentStep <= 10 && // 11 total steps: upload through complete
     validateAuthState(obj.auth) &&
     (obj.selectedWorkspace === null || validateWorkspaceInfo(obj.selectedWorkspace)) &&
     Array.isArray(obj.availableWorkspaces) &&
@@ -157,7 +157,7 @@ export function sanitizeAppStateUpdate(update: Partial<AppState>): Partial<AppSt
   const sanitized: Partial<AppState> = {};
   
   if (update.currentStep !== undefined) {
-    const step = Math.max(0, Math.min(9, Math.floor(Number(update.currentStep) || 0))); // Updated max step
+    const step = Math.max(0, Math.min(10, Math.floor(Number(update.currentStep) || 0))); // Max step is 10 (complete)
     sanitized.currentStep = step;
   }
   
@@ -229,6 +229,7 @@ export function createDefaultAppState(): AppState {
       error: null
     },
     pipelineConnectionMappings: {},
+    pipelineReferenceMappings: {},
     linkedServiceConnectionBridge: {},
     workspaceCredentials: {
       credentials: [],
@@ -242,6 +243,10 @@ export function createDefaultAppState(): AppState {
     /** NEW: Folder-related state initialization */
     folderHierarchy: [],
     folderMappings: {},
-    folderDeploymentResults: []
+    folderDeploymentResults: [],
+    /** NEW: Global parameter state initialization */
+    globalParameterReferences: [],
+    variableLibraryConfig: null,
+    globalParameterConfigCompleted: false
   };
 }

@@ -104,7 +104,7 @@ export function WorkspaceSelectionPage(): React.JSX.Element {
           <div className="text-center space-y-2">
             <h1 className="text-3xl font-bold tracking-tight">Select Fabric Workspace</h1>
             <p className="text-muted-foreground">
-              Choose the Microsoft Fabric workspace where you want to deploy your migrated ADF components
+              Choose the Microsoft Fabric workspace where you want to deploy your migrated Data Factory components
             </p>
           </div>
 

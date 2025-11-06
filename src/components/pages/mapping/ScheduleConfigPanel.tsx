@@ -75,7 +75,7 @@ export function ScheduleConfigPanel({ component, fabricTarget, onConfigChange }:
         <Alert className="bg-warning/10 border-warning">
           <Info size={16} />
           <AlertDescription className="text-xs">
-            <strong>Original ADF Trigger State: Stopped</strong><br />
+            <strong>Original Trigger State: Stopped</strong><br />
             The source trigger was disabled in ADF. Schedule will be created disabled by default.
           </AlertDescription>
         </Alert>
@@ -83,19 +83,19 @@ export function ScheduleConfigPanel({ component, fabricTarget, onConfigChange }:
 
       {/* Fabric Schedule Type Information */}
       {fabricScheduleInfo && (
-        <div className="space-y-2 p-3 border rounded-md bg-blue-50/50 dark:bg-blue-950/20">
+        <div className="space-y-2 p-3 border border-blue-200 rounded-md bg-blue-50">
           <div className="flex items-center gap-2 mb-2">
-            <Clock size={16} className="text-blue-600 dark:text-blue-400" />
-            <span className="font-semibold text-sm text-blue-900 dark:text-blue-100">
+            <Clock size={16} className="text-blue-600" />
+            <span className="font-semibold text-sm text-gray-900">
               Fabric Schedule Type: {fabricScheduleInfo.summary.type}
             </span>
           </div>
-          <p className="text-sm text-blue-700 dark:text-blue-300 font-medium">
+          <p className="text-sm text-gray-800 font-medium">
             {fabricScheduleInfo.summary.description}
           </p>
           <div className="mt-2 space-y-1 pl-4 border-l-2 border-blue-300">
             {fabricScheduleInfo.summary.details.map((detail, idx) => (
-              <p key={idx} className="text-xs text-blue-600 dark:text-blue-400">
+              <p key={idx} className="text-xs text-gray-700">
                 {detail}
               </p>
             ))}
@@ -103,36 +103,36 @@ export function ScheduleConfigPanel({ component, fabricTarget, onConfigChange }:
           
           {/* Additional type-specific info */}
           {fabricScheduleInfo.config.type === 'Cron' && (
-            <Alert className="mt-2 bg-blue-50 border-blue-200">
+            <Alert className="mt-2 bg-blue-50 border-blue-300">
               <Info size={14} />
-              <AlertDescription className="text-xs text-blue-700">
+              <AlertDescription className="text-xs text-gray-800">
                 <strong>Cron Schedule:</strong> Executes periodically every {fabricScheduleInfo.config.interval} minutes
               </AlertDescription>
             </Alert>
           )}
           
           {fabricScheduleInfo.config.type === 'Daily' && (
-            <Alert className="mt-2 bg-blue-50 border-blue-200">
+            <Alert className="mt-2 bg-blue-50 border-blue-300">
               <Info size={14} />
-              <AlertDescription className="text-xs text-blue-700">
+              <AlertDescription className="text-xs text-gray-800">
                 <strong>Daily Schedule:</strong> {fabricScheduleInfo.config.times.length} time slot{fabricScheduleInfo.config.times.length > 1 ? 's' : ''} per day
               </AlertDescription>
             </Alert>
           )}
           
           {fabricScheduleInfo.config.type === 'Weekly' && (
-            <Alert className="mt-2 bg-blue-50 border-blue-200">
+            <Alert className="mt-2 bg-blue-50 border-blue-300">
               <Info size={14} />
-              <AlertDescription className="text-xs text-blue-700">
+              <AlertDescription className="text-xs text-gray-800">
                 <strong>Weekly Schedule:</strong> {fabricScheduleInfo.config.weekdays.length} day{fabricScheduleInfo.config.weekdays.length > 1 ? 's' : ''} × {fabricScheduleInfo.config.times.length} time slot{fabricScheduleInfo.config.times.length > 1 ? 's' : ''}
               </AlertDescription>
             </Alert>
           )}
           
           {fabricScheduleInfo.config.type === 'Monthly' && (
-            <Alert className="mt-2 bg-blue-50 border-blue-200">
+            <Alert className="mt-2 bg-blue-50 border-blue-300">
               <Info size={14} />
-              <AlertDescription className="text-xs text-blue-700">
+              <AlertDescription className="text-xs text-gray-800">
                 <strong>Monthly Schedule:</strong> Repeats every {fabricScheduleInfo.config.recurrence} month{fabricScheduleInfo.config.recurrence > 1 ? 's' : ''}
               </AlertDescription>
             </Alert>
@@ -229,7 +229,7 @@ export function ScheduleConfigPanel({ component, fabricTarget, onConfigChange }:
 
       {/* Schedule Name Preview - Enhanced Display */}
       {config.targetPipelines.length > 0 && (
-        <div className="space-y-3 p-3 border rounded-md bg-blue-50/50 dark:bg-blue-950/20">
+        <div className="space-y-3 p-3 border border-blue-200 dark:border-blue-800 rounded-md bg-blue-50 dark:bg-blue-950/30">
           <Label className="text-xs font-medium flex items-center gap-2">
             <Info size={14} className="text-blue-600 dark:text-blue-400" />
             Schedule Name{config.targetPipelines.length > 1 ? 's' : ''} (Preview)
@@ -240,7 +240,7 @@ export function ScheduleConfigPanel({ component, fabricTarget, onConfigChange }:
                 key={idx} 
                 className="flex items-center gap-2 p-2 bg-white dark:bg-slate-800 border border-blue-200 dark:border-blue-800 rounded"
               >
-                <code className="text-sm font-mono font-semibold text-blue-700 dark:text-blue-300 flex-1">
+                <code className="text-sm font-mono font-semibold text-blue-900 dark:text-blue-100 flex-1">
                   {component.name}_{tp.pipelineName}
                 </code>
                 {config.targetPipelines.length > 1 && (

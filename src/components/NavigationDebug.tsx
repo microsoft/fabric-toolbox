@@ -60,7 +60,7 @@ export function NavigationDebug({ customConditions = [], stepOverride }: Navigat
         conditions.push({
           label: 'Components Parsed',
           condition: (state.adfComponents?.length || 0) > 0,
-          description: 'ARM template must contain valid ADF components'
+          description: 'ARM template must contain valid Data Factory components'
         });
         break;
         
@@ -98,6 +98,19 @@ export function NavigationDebug({ customConditions = [], stepOverride }: Navigat
           label: 'Components Available',
           condition: validatableComponents.length > 0,
           description: `${validatableComponents.length} component(s) available for migration (excluding LinkedServices and Datasets)`
+        });
+        break;
+        
+      case 'global-parameters':
+        const hasGlobalParams = (state.globalParameterReferences?.length || 0) > 0;
+        const isConfigCompleted = state.globalParameterConfigCompleted === true;
+        
+        conditions.push({
+          label: 'Global Parameters Handled',
+          condition: !hasGlobalParams || isConfigCompleted,
+          description: hasGlobalParams 
+            ? 'Variable Library must be deployed or skipped' 
+            : 'No global parameters detected (auto-skip)'
         });
         break;
         

@@ -317,4 +317,38 @@ export class PipelineConnectionTransformerService {
     const pipelineJson = JSON.stringify(pipelineDefinition);
     return btoa(pipelineJson);
   }
+
+  /**
+   * Cleans pipeline definition by removing ADF-specific properties that Fabric doesn't support
+   * @param pipelineDefinition The pipeline definition to clean
+   * @returns Cleaned pipeline definition ready for Fabric deployment
+   */
+  static cleanPipelineForFabric(pipelineDefinition: any): any {
+    if (!pipelineDefinition || typeof pipelineDefinition !== 'object') {
+      return pipelineDefinition;
+    }
+
+    // Deep clone to avoid mutating the original
+    const cleaned = JSON.parse(JSON.stringify(pipelineDefinition));
+
+    // Clean activities array
+    if (Array.isArray(cleaned.properties?.activities)) {
+      cleaned.properties.activities = cleaned.properties.activities.map((activity: any) => {
+        if (!activity || typeof activity !== 'object') return activity;
+
+        // Remove IntegrationRuntimeReference from connectVia
+        if (activity.connectVia?.type === 'IntegrationRuntimeReference') {
+          activity.connectVia = {};
+        }
+
+        // Remove ADF-specific properties
+        delete activity.linkedServiceName;
+        delete activity.linkedService;
+
+        return activity;
+      });
+    }
+
+    return cleaned;
+  }
 }

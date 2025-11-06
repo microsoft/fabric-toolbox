@@ -1,0 +1,25 @@
+{
+  "name": "ADF to Fabric Migration Assistant",
+  "short_name": "ADF2Fabric",
+  "description": "Automated migration tool for Azure Data Factory pipelines to Microsoft Fabric",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "theme_color": "#0078D4",
+  "background_color": "#ffffff",
+  "orientation": "any",
+  "icons": [
+    {
+      "src": "/android-chrome-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/android-chrome-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    }
+  ]
+}

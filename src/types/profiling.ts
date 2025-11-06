@@ -38,6 +38,15 @@ export interface ProfileMetrics {
   maxActivitiesPerPipeline: number;
   maxActivitiesPipelineName: string;
   
+  // NEW: Parameterized LinkedService statistics
+  parameterizedLinkedServicesCount: number;
+  totalParameterizedLinkedServiceParameters: number;
+  
+  // Custom activity statistics
+  customActivitiesCount: number;
+  totalCustomActivityReferences: number; // Total LinkedService references across all Custom activities
+  customActivitiesWithMultipleReferences: number; // Count of Custom activities with 2+ references
+  
   // Dependencies
   pipelineDependencies: number; // Execute Pipeline activities
   triggerPipelineMappings: number;
@@ -55,6 +64,8 @@ export interface ArtifactBreakdown {
   linkedServices: LinkedServiceArtifact[];
   triggers: TriggerArtifact[];
   dataflows: DataflowArtifact[];
+  parameterizedLinkedServices: ParameterizedLinkedServiceSummary[]; // NEW
+  globalParameters?: GlobalParameterArtifact[]; // NEW: Global parameters detected
 }
 
 export interface PipelineArtifact {
@@ -77,12 +88,21 @@ export interface PipelineArtifact {
   dependsOnPipelines?: string[];
   // NEW: Linked service dependencies from resource-level dependsOn
   dependsOnLinkedServices?: string[];
+  // NEW: Dataflow dependencies from resource-level dependsOn
+  dependsOnDataflows?: string[];
 }
 
 export interface ActivitySummary {
   name: string;
   type: string;
   description?: string;
+  // Custom activity metadata
+  isCustomActivity?: boolean;
+  customActivityReferences?: {
+    activityLevel?: string;
+    resource?: string;
+    referenceObjects?: string[];
+  };
 }
 
 export interface DatasetArtifact {
@@ -105,8 +125,55 @@ export interface LinkedServiceArtifact {
   usageScore: number; // Criticality score based on usage
   fabricMapping?: {
     targetType: 'connector' | 'gateway' | 'workspaceIdentity';
-    connectorType?: string;
+    connectorType: string;
     requiresGateway: boolean;
+  };
+  // NEW: Parameterized LinkedService detection
+  hasParameters?: boolean;
+  parameterCount?: number;
+  parameterNames?: string[];
+  affectedPipelinesCount?: number;
+}
+
+/**
+ * Parameterized LinkedService summary for profiling
+ */
+export interface ParameterizedLinkedServiceSummary {
+  /** LinkedService name */
+  name: string;
+  /** LinkedService type */
+  type: string;
+  /** Number of parameters */
+  parameterCount: number;
+  /** Parameter names */
+  parameters: string[];
+  /** Pipeline names affected by this LinkedService */
+  affectedPipelines: string[];
+  /** Number of affected pipelines */
+  affectedPipelinesCount: number;
+}
+
+/**
+ * Global Parameter artifact for profiling and export
+ * Represents a detected global parameter in ADF/Synapse
+ */
+export interface GlobalParameterArtifact {
+  /** Parameter name */
+  name: string;
+  /** Data type (String, Int, Float, Bool, Array, Object, SecureString) */
+  dataType: string;
+  /** Default value from ARM template (if available) */
+  defaultValue?: any;
+  /** Pipelines that reference this parameter */
+  usedByPipelines?: string[];
+  /** Number of times this parameter is referenced */
+  referenceCount?: number;
+  /** Fabric mapping details */
+  fabricMapping?: {
+    /** Target Variable Library name */
+    variableLibraryName: string;
+    /** Transformed expression format */
+    transformedExpression: string;
   };
 }
 

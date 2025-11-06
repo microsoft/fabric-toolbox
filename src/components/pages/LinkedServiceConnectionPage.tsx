@@ -1460,7 +1460,7 @@ export function LinkedServiceConnectionPage() {
             <div>
               <h1 className="text-3xl font-bold">Configure LinkedService Connections</h1>
               <p className="text-muted-foreground mt-2">
-                Set up Fabric connections for your Azure Data Factory LinkedServices
+                Set up Fabric connections for your Data Factory LinkedServices
               </p>
             </div>
             <div className="flex items-center space-x-2">

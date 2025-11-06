@@ -81,7 +81,7 @@ export function ProfilingDashboard({ profile, onExport }: ProfilingDashboardProp
         <CardHeader className="pb-3">
           <div className="flex items-center justify-between">
             <div>
-              <CardTitle className="text-lg">ADF Template Profile</CardTitle>
+              <CardTitle className="text-lg">Data Factory Template Profile</CardTitle>
               <CardDescription className="text-sm mt-1">
                 {profile.metadata.fileName} • {(profile.metadata.fileSize / 1024).toFixed(2)} KB • 
                 {' '}{profile.metrics.totalPipelines} pipelines, {profile.metrics.totalActivities} activities

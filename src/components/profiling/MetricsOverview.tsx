@@ -99,6 +99,19 @@ export function MetricsOverview({ metrics }: MetricsOverviewProps) {
     });
   }
 
+  // Add Custom activity metrics if they exist
+  if (metrics.customActivitiesCount > 0) {
+    coreMetrics.push({
+      label: 'Custom Activities',
+      value: metrics.customActivitiesCount,
+      icon: GitBranch,
+      description: `${metrics.totalCustomActivityReferences} total connection refs`,
+      fabricTarget: '3 LinkedService Locations',
+      color: 'text-fuchsia-600 dark:text-fuchsia-400',
+      bgColor: 'bg-fuchsia-50 dark:bg-fuchsia-950'
+    });
+  }
+
   return (
     <div className="space-y-4">
       {/* Core Metrics Grid */}
@@ -249,6 +262,75 @@ export function MetricsOverview({ metrics }: MetricsOverviewProps) {
                   </div>
                 </div>
               )}
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Custom Activity Statistics */}
+      {metrics.customActivitiesCount > 0 && (
+        <Card className="bg-fuchsia-50/50 dark:bg-fuchsia-950/20 border-fuchsia-200 dark:border-fuchsia-800">
+          <CardHeader className="pb-3">
+            <CardTitle className="text-base flex items-center gap-2">
+              <GitBranch size={18} className="text-fuchsia-600 dark:text-fuchsia-400" />
+              Custom Activity Connection Analysis
+            </CardTitle>
+            <CardDescription>
+              Custom activities require special attention due to multiple LinkedService reference locations
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+              <div className="text-center p-4 bg-white dark:bg-slate-900 rounded-lg border border-fuchsia-200 dark:border-fuchsia-800">
+                <div className="text-3xl font-bold text-fuchsia-600 dark:text-fuchsia-400">
+                  {metrics.customActivitiesCount}
+                </div>
+                <div className="text-sm text-muted-foreground mt-1">
+                  Custom Activities
+                </div>
+                <div className="text-xs text-muted-foreground mt-0.5">
+                  Total count in all pipelines
+                </div>
+              </div>
+              
+              <div className="text-center p-4 bg-white dark:bg-slate-900 rounded-lg border border-fuchsia-200 dark:border-fuchsia-800">
+                <div className="text-3xl font-bold text-fuchsia-600 dark:text-fuchsia-400">
+                  {metrics.totalCustomActivityReferences}
+                </div>
+                <div className="text-sm text-muted-foreground mt-1">
+                  Total References
+                </div>
+                <div className="text-xs text-muted-foreground mt-0.5">
+                  Across all 3 locations
+                </div>
+              </div>
+              
+              <div className="text-center p-4 bg-white dark:bg-slate-900 rounded-lg border border-fuchsia-200 dark:border-fuchsia-800">
+                <div className="text-3xl font-bold text-fuchsia-600 dark:text-fuchsia-400">
+                  {metrics.customActivitiesWithMultipleReferences}
+                </div>
+                <div className="text-sm text-muted-foreground mt-1">
+                  Multiple Refs
+                </div>
+                <div className="text-xs text-muted-foreground mt-0.5">
+                  Activities with 2+ references
+                </div>
+              </div>
+            </div>
+            
+            {/* Info Box */}
+            <div className="mt-4 p-3 bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800 rounded-lg">
+              <div className="text-xs text-amber-900 dark:text-amber-100">
+                <strong>⚠️ Migration Note:</strong> Custom activities reference LinkedServices in up to 3 locations:
+                <ul className="mt-1 ml-4 space-y-0.5">
+                  <li className="text-blue-700 dark:text-blue-300">• <strong>Activity-level</strong> (linkedServiceName) - Required</li>
+                  <li className="text-orange-700 dark:text-orange-300">• <strong>Resource</strong> (typeProperties.resourceLinkedService) - Optional</li>
+                  <li className="text-purple-700 dark:text-purple-300">• <strong>Reference Objects</strong> (typeProperties.referenceObjects.linkedServices[]) - Optional</li>
+                </ul>
+                <div className="mt-2">
+                  Each reference must be mapped to a Fabric Connection on the Mapping page.
+                </div>
+              </div>
             </div>
           </CardContent>
         </Card>
