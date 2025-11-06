@@ -13,7 +13,9 @@
     "powershell.developer.bundledModulesPath": "${cwd}/output/RequiredModules",
     "powershell.scriptAnalysis.settingsPath": ".vscode\\analyzersettings.psd1",
     "powershell.scriptAnalysis.enable": true,
-    "files.trimTrailingWhitespace": true,
+    "[powershell]": {
+        "files.trimTrailingWhitespace":true
+    },
     "files.trimFinalNewlines": true,
     "files.insertFinalNewline": true,
     "files.associations": {
