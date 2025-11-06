@@ -22,8 +22,10 @@
 .NOTES
     Requires the Convert-ToBase64 and Write-Message helper functions to be available in the session.
 #>
-function Get-FileDefinitionParts {
+function Get-FileDefinitionPart {
     [CmdletBinding()]
+    [OutputType([hashtable])]
+    [Alias("Get-FileDefinitionParts")]
     param (
         [Parameter(Mandatory = $true)]
         [ValidateNotNullOrEmpty()]
@@ -33,7 +35,7 @@ function Get-FileDefinitionParts {
     try {
         # Validate if the provided directory exists
         if (-Not (Test-Path $sourceDirectory)) {
-            Write-Message -Message "The specified source directory does not exist: $sourceDirectory" -Level Error 
+            Write-Message -Message "The specified source directory does not exist: $sourceDirectory" -Level Error
             throw
         }
 
