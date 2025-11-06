@@ -66,7 +66,7 @@ function Get-FabricOneLakeDataAccessSecurity {
         Write-Message -Message "Validating authentication token..." -Level Debug
         Test-TokenExpired
         Write-Message -Message "Authentication token is valid." -Level Debug
-    
+
         # Construct the API endpoint URI
         $apiEndpointURI = "{0}/workspaces/{1}/items/{2}/dataAccessRoles" -f $FabricConfig.BaseUrl, $WorkspaceId, $ItemId
         Write-Message -Message "API Endpoint: $apiEndpointURI" -Level Debug
@@ -77,7 +77,7 @@ function Get-FabricOneLakeDataAccessSecurity {
             Headers = $FabricConfig.FabricHeaders
             Method  = 'Get'
         }
-        $response = Invoke-FabricAPIRequest @apiParams  
+        $response = Invoke-FabricAPIRequest @apiParams
 
         # Optionally filter by RoleName if provided
         if ($RoleName) {
@@ -96,7 +96,7 @@ function Get-FabricOneLakeDataAccessSecurity {
             }
         }
 
-        return $response     
+        return $response
     }
     catch {
         # Capture and log error details

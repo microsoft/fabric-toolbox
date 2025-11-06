@@ -84,7 +84,7 @@ function Set-FabricOneLakeDataAccessSecurity {
 
         [Parameter(Mandatory = $false)]
         [string]$TenantId,
-        
+
         [Parameter(Mandatory = $false)]
         [switch]$DryRun
     )
@@ -93,13 +93,13 @@ function Set-FabricOneLakeDataAccessSecurity {
         Write-Message -Message "Validating authentication token..." -Level Debug
         Test-TokenExpired
         Write-Message -Message "Authentication token is valid." -Level Debug
-    
+
         # Construct the API endpoint URI
         $apiEndpointURI = "{0}/workspaces/{1}/items/{2}/dataAccessRoles" -f $FabricConfig.BaseUrl, $WorkspaceId, $ItemId
         if ($DryRun.IsPresent) {
             $apiEndpointURI += "?dryRun=true"
         }
-        
+
         Write-Message -Message "API Endpoint: $apiEndpointURI" -Level Debug
 
         # Build decision rule
@@ -171,9 +171,9 @@ function Set-FabricOneLakeDataAccessSecurity {
                 Write-Message -Message "Dry run completed. No changes were made." -Level Info
             }
             else {
-                Write-Message -Message "OneLake Data Access Security set up successfully!" -Level Info   
+                Write-Message -Message "OneLake Data Access Security set up successfully!" -Level Info
             }
-                  
+
             return $response
         }
     }

@@ -3,7 +3,7 @@
     Resets the OneLake shortcut cache for a specified Microsoft Fabric workspace.
 
 .DESCRIPTION
-    Triggers a reset of the shortcut cache for OneLake within the given workspace. 
+    Triggers a reset of the shortcut cache for OneLake within the given workspace.
     Validates authentication, constructs the API endpoint, sends the reset request, and returns the API response.
 
 .PARAMETER WorkspaceId
@@ -31,7 +31,7 @@ function Reset-FabricOneLakeShortcutCache {
         Write-Message -Message "Validating authentication token..." -Level Debug
         Test-TokenExpired
         Write-Message -Message "Authentication token is valid." -Level Debug
-                
+
         # Construct the API endpoint URI
         $apiEndpointURI = "{0}/workspaces/{1}/onelake/resetShortcutCache" -f $FabricConfig.BaseUrl, $WorkspaceId
         Write-Message -Message "API Endpoint: $apiEndpointURI" -Level Debug
@@ -55,5 +55,5 @@ function Reset-FabricOneLakeShortcutCache {
         # Capture and log error details
         $errorDetails = $_.Exception.Message
         Write-Message -Message "Failed to retrieve OneLake Shortcut(s). Error details: $errorDetails" -Level Error
-    } 
+    }
 }

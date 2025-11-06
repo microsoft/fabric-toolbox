@@ -37,7 +37,7 @@ function Remove-FabricOneLakeShortcut {
         [Parameter(Mandatory = $true)]
         [ValidateNotNullOrEmpty()]
         [string]$ItemId,
-        
+
         [Parameter(Mandatory = $true)]
         [ValidateNotNullOrEmpty()]
         [string]$ShortcutPath,
@@ -66,7 +66,7 @@ function Remove-FabricOneLakeShortcut {
                 Method  = 'Delete'
             }
             $response = Invoke-FabricAPIRequest @apiParams
-            
+
             # Return the API response
             Write-Message -Message "OneLake Shortcut '$ShortcutName' was successfully deleted from item '$ItemId' in workspace '$WorkspaceId'." -Level Info
             return $response

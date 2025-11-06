@@ -135,7 +135,7 @@ function New-FabricOneLakeShortcut {
         [string]$Bucket
     )
     try {
-       
+
         # Validate required parameters for specific targets using a hashtable for efficiency
         $requiredParamsByTarget = @{
             adlsGen2           = @("Location", "SubPath")
@@ -194,7 +194,7 @@ function New-FabricOneLakeShortcut {
                 $Target = $targetBody
             }
         }
-        
+
         # Convert the body to JSON format
         $bodyJson = $body | ConvertTo-Json -Depth 4
         Write-Message -Message "Request Body: $bodyJson" -Level Debug
@@ -212,7 +212,7 @@ function New-FabricOneLakeShortcut {
             $response = Invoke-FabricAPIRequest @apiParams
 
             # Return the API response
-            Write-Message -Message "OneLake Shortcut created successfully!" -Level Info        
+            Write-Message -Message "OneLake Shortcut created successfully!" -Level Info
             return $response
         }
     }

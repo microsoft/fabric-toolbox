@@ -56,14 +56,14 @@ function Get-FabricOneLakeShortcut {
         Write-Message -Message "Validating authentication token..." -Level Debug
         Test-TokenExpired
         Write-Message -Message "Authentication token is valid." -Level Debug
-                
+
         # Construct the API endpoint URI
         $apiEndpointURI = "{0}/workspaces/{1}/items/{2}/shortcuts" -f $FabricConfig.BaseUrl, $WorkspaceId, $ItemId
         if ($ParentPath) {
             $apiEndpointURI += "?parentPath={0}" -f $ParentPath
         }
         Write-Message -Message "API Endpoint: $apiEndpointURI" -Level Debug
-        
+
         # Make the API request
         $apiParams = @{
             BaseURI = $apiEndpointURI
@@ -101,5 +101,5 @@ function Get-FabricOneLakeShortcut {
         # Capture and log error details
         $errorDetails = $_.Exception.Message
         Write-Message -Message "Failed to retrieve OneLake Shortcut(s). Error details: $errorDetails" -Level Error
-    } 
+    }
 }
