@@ -1,4 +1,4 @@
-import { ADFComponent, DeploymentResult, WorkspaceInfo, ComponentMapping, ApiError, SupportedConnectionType, PipelineConnectionMappings } from '../types';
+import { ADFComponent, DeploymentResult, WorkspaceInfo, ComponentMapping, ApiError, SupportedConnectionType, PipelineConnectionMappings, LinkedServiceConnectionBridge } from '../types';
 import { gatewayService } from './gatewayService';
 import { connectionService } from './connectionService';
 import { pipelineTransformer } from './pipelineTransformer';
@@ -369,15 +369,30 @@ export class FabricService {
     workspaceId: string,
     onProgress?: (progress: { current: number; total: number; status: string }) => void,
     connectionResults?: import('../types').ConnectionDeploymentResult[],
-    pipelineConnectionMappings?: PipelineConnectionMappings
+    pipelineConnectionMappings?: PipelineConnectionMappings,
+    pipelineReferenceMappings?: Record<string, Record<string, string>>,
+    linkedServiceBridge?: LinkedServiceConnectionBridge,
+    variableLibraryConfig?: import('../types').VariableLibraryConfig
   ): Promise<DeploymentResult[]> {
     console.log('FabricService.deployComponents starting with:', {
       componentsCount: mappedComponents.length,
       workspaceId,
       hasAccessToken: Boolean(accessToken),
       hasConnectionResults: Boolean(connectionResults),
-      hasPipelineConnectionMappings: Boolean(pipelineConnectionMappings)
+      hasPipelineConnectionMappings: Boolean(pipelineConnectionMappings),
+      hasPipelineReferenceMappings: Boolean(pipelineReferenceMappings),
+      hasLinkedServiceBridge: Boolean(linkedServiceBridge)
     });
+
+    // Set reference mappings and bridge for Custom activity transformation
+    if (pipelineReferenceMappings) {
+      pipelineTransformer.setReferenceMappings(pipelineReferenceMappings);
+      console.log('✓ Set pipelineReferenceMappings for Custom activity transformation');
+    }
+    if (linkedServiceBridge) {
+      pipelineTransformer.setLinkedServiceBridge(linkedServiceBridge);
+      console.log('✓ Set linkedServiceBridge for Custom activity transformation');
+    }
 
     try {
       const results: DeploymentResult[] = [];
@@ -641,7 +656,8 @@ export class FabricService {
                     pipelineConnectionMappings,
                     deployedPipelineIds,
                     connectionResults,
-                    folderMappings
+                    folderMappings,
+                    variableLibraryConfig
                   );
                   
                   // Track successful pipeline deployment for dependency resolution
@@ -1805,7 +1821,8 @@ export class FabricService {
     pipelineConnectionMappings?: PipelineConnectionMappings,
     deployedPipelineIds?: Map<string, string>,
     connectionResults?: import('../types').ConnectionDeploymentResult[],
-    folderMappings?: Record<string, string>
+    folderMappings?: Record<string, string>,
+    variableLibraryConfig?: import('../types').VariableLibraryConfig
   ): Promise<DeploymentResult> {
     try {
       console.log(`Starting pipeline creation for '${component.name}' with dependency resolution`, {
@@ -1827,6 +1844,36 @@ export class FabricService {
           component.name, 
           pipelineConnectionMappings
         );
+      }
+
+      // NEW: Apply global parameter transformations if Variable Library is configured
+      if (variableLibraryConfig && variableLibraryConfig.deploymentStatus === 'success') {
+        console.log(`[FabricService] Applying global parameter transformations for pipeline '${component.name}'`);
+        
+        // Step 1: Transform expressions from @pipeline().globalParameters.X to @pipeline().libraryVariables.LibName_VariableLibrary_X
+        const parameterNames = variableLibraryConfig.variables.map(v => v.name);
+        pipelineDefinition = pipelineTransformer.transformGlobalParameterExpressions(
+          pipelineDefinition,
+          parameterNames,
+          variableLibraryConfig.displayName // Pass library name for proper key formatting
+        );
+        
+        // Step 2: Inject libraryVariables section into pipeline
+        // Build variableNamesWithTypes array with proper type mapping
+        const variableNamesWithTypes = variableLibraryConfig.variables.map(v => ({
+          name: v.name,
+          fabricType: v.fabricDataType === 'Boolean' ? 'Bool' : 
+                      v.fabricDataType === 'Integer' ? 'Int' :
+                      v.fabricDataType === 'Number' ? 'Float' : 'String'
+        }));
+        
+        pipelineDefinition = pipelineTransformer.injectLibraryVariables(
+          pipelineDefinition,
+          variableLibraryConfig.displayName,
+          variableNamesWithTypes
+        );
+        
+        console.log(`[FabricService] Global parameter transformations applied for pipeline '${component.name}': ${variableNamesWithTypes.length} variables`);
       }
 
       // Resolve InvokePipeline activity dependencies

@@ -41,9 +41,10 @@ export const msalConfig: Configuration = {
 // Required scopes for Microsoft Fabric API access - Enhanced with all required permissions
 export const fabricScopes: string[] = [
   'https://analysis.windows.net/powerbi/api/Connection.ReadWrite.All',
+  'https://analysis.windows.net/powerbi/api/DataPipeline.ReadWrite.All',
   'https://analysis.windows.net/powerbi/api/Gateway.ReadWrite.All',
   'https://analysis.windows.net/powerbi/api/Item.ReadWrite.All',
-  'https://analysis.windows.net/powerbi/api/DataPipeline.ReadWrite.All',
+  'https://analysis.windows.net/powerbi/api/Workspace.ReadWrite.All',
   'openid',
   'profile',
   'email'

@@ -8,6 +8,32 @@
 import { ADFProfile } from '../types/profiling';
 
 /**
+ * Safely convert a value to string, handling null/undefined
+ * @param value The value to convert
+ * @param fallback Fallback string if value is null/undefined
+ * @returns Safe string value
+ */
+function safeString(value: any, fallback: string = 'N/A'): string {
+  if (value === null || value === undefined) {
+    return fallback;
+  }
+  return String(value);
+}
+
+/**
+ * Safely convert a value to number, handling null/undefined
+ * @param value The value to convert
+ * @param fallback Fallback number if value is null/undefined
+ * @returns Safe number value
+ */
+function safeNumber(value: any, fallback: number = 0): number {
+  if (value === null || value === undefined || isNaN(value)) {
+    return fallback;
+  }
+  return Number(value);
+}
+
+/**
  * Export ADF profile to Markdown format with Mermaid diagrams
  * @param profile The ADF profile to export
  * @returns Markdown-formatted string
@@ -52,6 +78,57 @@ export function exportProfileToMarkdown(profile: ADFProfile): string {
     sections.push(``);
   }
 
+  // Parameterized Linked Services Warning
+  if (profile.artifacts.parameterizedLinkedServices && profile.artifacts.parameterizedLinkedServices.length > 0) {
+    sections.push(`\n## ⚠️ Parameterized Linked Services Warning\n`);
+    sections.push(`**Note:** Fabric Connections do not currently support parameters (feature on roadmap). The following Linked Services use parameters and will require manual reconfiguration:\n`);
+    sections.push(`| Linked Service | Type | Parameters | Affected Pipelines |`);
+    sections.push(`|----------------|------|----------:|--------------------|`);
+    profile.artifacts.parameterizedLinkedServices.forEach(pls => {
+      const pipelinesList = pls.affectedPipelines.length > 0 
+        ? pls.affectedPipelines.join(', ') 
+        : 'None';
+      sections.push(`| ${pls.name} | ${pls.type} | ${pls.parameterCount} | ${pipelinesList} |`);
+    });
+    sections.push(``);
+  }
+
+  // Global Parameters Section
+  if (profile.metrics.totalGlobalParameters > 0) {
+    sections.push(`\n## 🌐 Global Parameters (${profile.metrics.totalGlobalParameters})\n`);
+    sections.push(`**Migration Path:** Global Parameters → Fabric Variable Library\n`);
+    sections.push(``);
+    
+    // Check if we have global parameter details in artifacts
+    if (profile.artifacts.globalParameters && profile.artifacts.globalParameters.length > 0) {
+      sections.push(`| Parameter Name | Data Type | Default Value | Referenced By | Variable Library Name |`);
+      sections.push(`|----------------|-----------|---------------|---------------|-----------------------|`);
+      
+      profile.artifacts.globalParameters.forEach(gp => {
+        const pipelinesList = gp.usedByPipelines && gp.usedByPipelines.length > 0 
+          ? gp.usedByPipelines.slice(0, 3).join(', ') + (gp.usedByPipelines.length > 3 ? ` (+${gp.usedByPipelines.length - 3} more)` : '')
+          : 'None detected';
+        const varLibName = gp.fabricMapping?.transformedExpression || `VariableLibrary_${gp.name}`;
+        const defaultVal = gp.defaultValue !== undefined && gp.defaultValue !== null
+          ? String(gp.defaultValue).substring(0, 30) + (String(gp.defaultValue).length > 30 ? '...' : '')
+          : 'Not set';
+        
+        sections.push(`| ${gp.name} | ${gp.dataType} | ${defaultVal} | ${pipelinesList} | ${varLibName} |`);
+      });
+      sections.push(``);
+      
+      sections.push(`### 📋 Migration Notes\n`);
+      sections.push(`- Global Parameters will be migrated to a Fabric Variable Library`);
+      sections.push(`- All \`@pipeline().globalParameters.X\` expressions will be transformed to \`@pipeline().libraryVariables.VariableLibrary_X\``);
+      sections.push(`- Variable Library must be deployed **BEFORE** pipelines for proper reference resolution`);
+      sections.push(`- SecureString parameters require actual values (not placeholders) during Variable Library creation`);
+      sections.push(`- Step 7 of the migration wizard will guide you through Variable Library configuration\n`);
+    } else {
+      sections.push(`*Global Parameters detected in pipeline expressions but detailed analysis not available.*`);
+      sections.push(`*Navigate to Step 7 in the migration wizard to configure Variable Library mapping.*\n`);
+    }
+  }
+
   // Insights
   if (profile.insights.length > 0) {
     sections.push(`\n## 💡 Key Insights\n`);
@@ -71,9 +148,10 @@ export function exportProfileToMarkdown(profile: ADFProfile): string {
     sections.push(`| Pipeline Name | Activities | Triggered By | Uses Datasets | Fabric Status |`);
     sections.push(`|--------------|----------:|--------------|---------------|---------------|`);
     profile.artifacts.pipelines.forEach(p => {
-      const status = p.fabricMapping?.compatibilityStatus || 'unknown';
-      const triggers = p.triggeredBy.length > 0 ? p.triggeredBy.join(', ') : 'None';
-      sections.push(`| ${p.name} | ${p.activityCount} | ${triggers} | ${p.usesDatasets.length} | ${status} |`);
+      const status = safeString(p.fabricMapping?.compatibilityStatus, 'unknown');
+      const triggers = p.triggeredBy && p.triggeredBy.length > 0 ? p.triggeredBy.join(', ') : 'None';
+      const datasetCount = safeNumber(p.usesDatasets?.length, 0);
+      sections.push(`| ${safeString(p.name)} | ${safeNumber(p.activityCount)} | ${triggers} | ${datasetCount} | ${status} |`);
     });
     sections.push(``);
   }
@@ -84,7 +162,7 @@ export function exportProfileToMarkdown(profile: ADFProfile): string {
     sections.push(`| Dataset Name | Type | Linked Service | Used By Pipelines |`);
     sections.push(`|-------------|------|----------------|------------------:|`);
     profile.artifacts.datasets.forEach(d => {
-      sections.push(`| ${d.name} | ${d.type} | ${d.linkedService} | ${d.usageCount} |`);
+      sections.push(`| ${safeString(d.name)} | ${safeString(d.type)} | ${safeString(d.linkedService)} | ${safeNumber(d.usageCount)} |`);
     });
     sections.push(``);
   }
@@ -96,7 +174,8 @@ export function exportProfileToMarkdown(profile: ADFProfile): string {
     sections.push(`|--------------------|------|----------------:|-----------:|:----------------:|`);
     profile.artifacts.linkedServices.forEach(ls => {
       const requiresGateway = ls.fabricMapping?.requiresGateway ? '✓' : '';
-      sections.push(`| ${ls.name} | ${ls.type} | ${ls.usedByDatasets.length} | ${ls.usageScore} | ${requiresGateway} |`);
+      const datasetCount = safeNumber(ls.usedByDatasets?.length, 0);
+      sections.push(`| ${safeString(ls.name)} | ${safeString(ls.type)} | ${datasetCount} | ${safeNumber(ls.usageScore)} | ${requiresGateway} |`);
     });
     sections.push(``);
   }
@@ -107,8 +186,9 @@ export function exportProfileToMarkdown(profile: ADFProfile): string {
     sections.push(`| Trigger Name | Type | Status | Target Pipelines | Fabric Support |`);
     sections.push(`|-------------|------|--------|-----------------|----------------|`);
     profile.artifacts.triggers.forEach(t => {
-      const supportLevel = t.fabricMapping?.supportLevel || 'unknown';
-      sections.push(`| ${t.name} | ${t.type} | ${t.status} | ${t.pipelines.join(', ')} | ${supportLevel} |`);
+      const supportLevel = safeString(t.fabricMapping?.supportLevel, 'unknown');
+      const pipelinesList = t.pipelines && t.pipelines.length > 0 ? t.pipelines.join(', ') : 'None';
+      sections.push(`| ${safeString(t.name)} | ${safeString(t.type)} | ${safeString(t.status)} | ${pipelinesList} | ${supportLevel} |`);
     });
     sections.push(``);
   }
@@ -119,8 +199,8 @@ export function exportProfileToMarkdown(profile: ADFProfile): string {
     sections.push(`| Dataflow Name | Sources | Sinks | Transformations | Migration Path |`);
     sections.push(`|--------------|--------:|------:|----------------:|----------------|`);
     profile.artifacts.dataflows.forEach(df => {
-      const migrationPath = df.fabricMapping?.targetType || 'Manual';
-      sections.push(`| ${df.name} | ${df.sourceCount} | ${df.sinkCount} | ${df.transformationCount} | ${migrationPath} |`);
+      const migrationPath = safeString(df.fabricMapping?.targetType, 'Manual');
+      sections.push(`| ${safeString(df.name)} | ${safeNumber(df.sourceCount)} | ${safeNumber(df.sinkCount)} | ${safeNumber(df.transformationCount)} | ${migrationPath} |`);
     });
     sections.push(``);
   }
@@ -152,26 +232,34 @@ export function exportProfileToMarkdown(profile: ADFProfile): string {
   sections.push(`| Linked Services | ${profile.dependencies.nodes.filter(n => n.type === 'linkedService').length} |`);
   sections.push(`| Dataflows | ${profile.dependencies.nodes.filter(n => n.type === 'dataflow').length} |\n`);
   
-  // Diagram 1: High-Level Architecture (Top nodes by connections)
-  sections.push(`### 🏗️ Architecture Overview (Top 50 Components)\n`);
-  sections.push(`This diagram shows the most connected components in your data factory.\n`);
-  sections.push(`\`\`\`mermaid`);
-  sections.push(`flowchart TB`);
-  
-  // Calculate node importance (number of connections)
-  const nodeConnections = new Map<string, number>();
-  profile.dependencies.nodes.forEach(node => {
-    const connections = profile.dependencies.edges.filter(e => e.source === node.id || e.target === node.id).length;
-    nodeConnections.set(node.id, connections);
+  // Filter out invalid edges before diagram generation
+  const validEdges = profile.dependencies.edges.filter(edge => {
+    const hasValidSource = edge.source !== null && edge.source !== undefined;
+    const hasValidTarget = edge.target !== null && edge.target !== undefined;
+    return hasValidSource && hasValidTarget;
   });
   
-  // Get top 50 most connected nodes
-  const topNodes = profile.dependencies.nodes
-    .sort((a, b) => (nodeConnections.get(b.id) || 0) - (nodeConnections.get(a.id) || 0))
-    .slice(0, 50);
-  
-  const maxNodesToShow = 50;
-  const nodesToShow = topNodes;
+  try {
+    // Diagram 1: High-Level Architecture (Top nodes by connections)
+    sections.push(`### 🏗️ Architecture Overview (Top 50 Components)\n`);
+    sections.push(`This diagram shows the most connected components in your data factory.\n`);
+    sections.push(`\`\`\`mermaid`);
+    sections.push(`flowchart TB`);
+    
+    // Calculate node importance (number of connections)
+    const nodeConnections = new Map<string, number>();
+    profile.dependencies.nodes.forEach(node => {
+      const connections = validEdges.filter(e => e.source === node.id || e.target === node.id).length;
+      nodeConnections.set(node.id, connections);
+    });
+    
+    // Get top 50 most connected nodes
+    const topNodes = profile.dependencies.nodes
+      .sort((a, b) => (nodeConnections.get(b.id) || 0) - (nodeConnections.get(a.id) || 0))
+      .slice(0, 50);
+    
+    const maxNodesToShow = 50;
+    const nodesToShow = topNodes;
   
   nodesToShow.forEach(node => {
     const nodeId = sanitizeNodeId(node.id);
@@ -334,6 +422,10 @@ export function exportProfileToMarkdown(profile: ADFProfile): string {
     sections.push(`\`\`\``);
     sections.push(``);
   }
+  } catch (error) {
+    console.error('[ProfileExport] Error generating Mermaid diagrams:', error);
+    sections.push(`\n*Note: Error generating dependency diagrams. Please view the interactive dependency graph in the UI for full visualization.*\n`);
+  }
 
   // Interactive HTML Export Note
   if (profile.dependencies.nodes.length > 100) {
@@ -371,10 +463,29 @@ export function exportProfileToMarkdown(profile: ADFProfile): string {
 
 /**
  * Sanitize node ID for Mermaid diagram compatibility
- * @param id Original node ID
+ * Handles objects, numbers, and non-string values
+ * @param id Original node ID (can be string, object, number, etc.)
  * @returns Sanitized ID safe for Mermaid
  */
-function sanitizeNodeId(id: string): string {
+function sanitizeNodeId(id: any): string {
+  // Handle null/undefined
+  if (id === null || id === undefined) {
+    return 'unknown_node';
+  }
+  
+  // Handle objects (extract name/id property)
+  if (typeof id === 'object') {
+    // Try common property names for ADF/Synapse resources
+    const extractedId = id.id || id.name || id.referenceName || id.pipelineName || JSON.stringify(id);
+    return String(extractedId).replace(/[^a-zA-Z0-9_]/g, '_');
+  }
+  
+  // Handle numbers, booleans, and other primitives
+  if (typeof id !== 'string') {
+    return String(id).replace(/[^a-zA-Z0-9_]/g, '_');
+  }
+  
+  // Handle strings (original logic)
   return id.replace(/[^a-zA-Z0-9_]/g, '_');
 }
 

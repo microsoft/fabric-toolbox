@@ -34,9 +34,9 @@ export function ArtifactTables({ artifacts }: ArtifactTablesProps) {
   const getCompatibilityBadge = (status?: string) => {
     switch (status) {
       case 'supported':
-        return <Badge variant="default" className="bg-green-500/10 text-green-700 dark:text-green-400 border-green-500/20">Supported</Badge>;
+        return <Badge variant="default" className="bg-green-50 text-gray-900 border-green-200">Supported</Badge>;
       case 'partiallySupported':
-        return <Badge variant="default" className="bg-yellow-500/10 text-yellow-700 dark:text-yellow-400 border-yellow-500/20">Partial</Badge>;
+        return <Badge variant="default" className="bg-yellow-50 text-gray-900 border-yellow-200">Partial</Badge>;
       case 'unsupported':
         return <Badge variant="destructive">Unsupported</Badge>;
       default:
@@ -125,15 +125,25 @@ export function ArtifactTables({ artifacts }: ArtifactTablesProps) {
                     No pipelines found
                   </div>
                 ) : (
-                  filteredPipelines.map((pipeline) => (
+                  filteredPipelines.map((pipeline) => {
+                    // Check if pipeline has Custom activities
+                    const customActivities = pipeline.activities.filter(a => a.isCustomActivity);
+                    const hasCustomActivities = customActivities.length > 0;
+                    
+                    return (
                     <div
                       key={pipeline.name}
                       className="p-3 border rounded-lg hover:bg-accent/5 transition-colors"
                     >
                       <div className="flex items-start justify-between gap-2 mb-2">
                         <div className="flex-1 min-w-0">
-                          <div className="font-semibold text-sm truncate" title={pipeline.name}>
+                          <div className="font-semibold text-sm truncate flex items-center gap-2" title={pipeline.name}>
                             {pipeline.name}
+                            {hasCustomActivities && (
+                              <Badge variant="outline" className="bg-fuchsia-50 dark:bg-fuchsia-950 text-fuchsia-700 dark:text-fuchsia-300 border-fuchsia-300 dark:border-fuchsia-700 text-[10px] px-1.5 py-0">
+                                {customActivities.length} Custom
+                              </Badge>
+                            )}
                           </div>
                           {pipeline.folder && (
                             <div className="text-xs text-muted-foreground flex items-center gap-1 mt-1">
@@ -171,8 +181,54 @@ export function ArtifactTables({ artifacts }: ArtifactTablesProps) {
                           <span className="font-medium">Triggered by:</span> {pipeline.triggeredBy.join(', ')}
                         </div>
                       )}
+                      
+                      {/* Custom Activities Detail Section */}
+                      {hasCustomActivities && (
+                        <div className="mt-3 pt-3 border-t border-fuchsia-200 dark:border-fuchsia-800">
+                          <div className="text-xs font-semibold text-fuchsia-700 dark:text-fuchsia-300 mb-2 flex items-center gap-1">
+                            <GitBranch size={14} />
+                            Custom Activities ({customActivities.length})
+                          </div>
+                          <div className="space-y-2">
+                            {customActivities.map((activity, idx) => {
+                              const refs = activity.customActivityReferences;
+                              return (
+                                <div 
+                                  key={idx}
+                                  className="p-2 bg-fuchsia-50/50 dark:bg-fuchsia-950/30 border border-fuchsia-200 dark:border-fuchsia-800 rounded"
+                                >
+                                  <div className="text-xs font-medium text-foreground mb-1">
+                                    {activity.name}
+                                  </div>
+                                  <div className="space-y-1 text-[11px]">
+                                    {refs?.activityLevel && (
+                                      <div className="flex items-start gap-1 text-blue-700 dark:text-blue-300">
+                                        <span className="font-medium min-w-[80px]">Activity-level:</span>
+                                        <span className="font-mono">{refs.activityLevel}</span>
+                                      </div>
+                                    )}
+                                    {refs?.resource && (
+                                      <div className="flex items-start gap-1 text-orange-700 dark:text-orange-300">
+                                        <span className="font-medium min-w-[80px]">Resource:</span>
+                                        <span className="font-mono">{refs.resource}</span>
+                                      </div>
+                                    )}
+                                    {refs?.referenceObjects && refs.referenceObjects.length > 0 && (
+                                      <div className="flex items-start gap-1 text-purple-700 dark:text-purple-300">
+                                        <span className="font-medium min-w-[80px]">Ref Objects:</span>
+                                        <span className="font-mono">{refs.referenceObjects.join(', ')}</span>
+                                      </div>
+                                    )}
+                                  </div>
+                                </div>
+                              );
+                            })}
+                          </div>
+                        </div>
+                      )}
                     </div>
-                  ))
+                    );
+                  })
                 )}
               </div>
             </CardContent>

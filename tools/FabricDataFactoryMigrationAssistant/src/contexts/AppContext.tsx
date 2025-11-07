@@ -17,7 +17,9 @@ import {
   WorkspaceCredentialMapping, 
   WorkspaceIdentityInfo,
   FolderTreeNode,
-  FolderDeploymentResult
+  FolderDeploymentResult,
+  GlobalParameterReference,
+  VariableLibraryConfig
 } from '../types';
 import { initializeScheduleTarget } from '../services/componentMappingService';
 import { ADFProfile } from '../types/profiling';
@@ -52,6 +54,7 @@ type AppAction =
   | { type: 'ADD_CONNECTION_DEPLOYMENT_RESULT'; payload: ConnectionDeploymentResult }
   | { type: 'SET_PIPELINE_CONNECTION_MAPPINGS'; payload: PipelineConnectionMappings }
   | { type: 'UPDATE_PIPELINE_CONNECTION_MAPPING'; payload: { pipelineName: string; activityName: string; mapping: any } }
+  | { type: 'UPDATE_CUSTOM_ACTIVITY_MAPPING'; payload: { pipelineName: string; activityName: string; reference: any } }
   | { type: 'BUILD_LINKEDSERVICE_CONNECTION_BRIDGE'; payload: any }
   | { type: 'UPDATE_BRIDGE_MAPPING'; payload: { linkedServiceName: string; mapping: any } }
   | { type: 'SET_WORKSPACE_CREDENTIALS'; payload: WorkspaceCredentialState }
@@ -64,14 +67,18 @@ type AppAction =
   | { type: 'SET_FOLDER_HIERARCHY'; payload: FolderTreeNode[] }
   | { type: 'SET_FOLDER_MAPPINGS'; payload: Record<string, string> }
   | { type: 'ADD_FOLDER_DEPLOYMENT_RESULT'; payload: FolderDeploymentResult }
-  | { type: 'SET_FOLDER_DEPLOYMENT_RESULTS'; payload: FolderDeploymentResult[] };
+  | { type: 'SET_FOLDER_DEPLOYMENT_RESULTS'; payload: FolderDeploymentResult[] }
+  /** NEW: Global parameter actions */
+  | { type: 'SET_GLOBAL_PARAMETER_REFERENCES'; payload: GlobalParameterReference[] }
+  | { type: 'SET_VARIABLE_LIBRARY_CONFIG'; payload: VariableLibraryConfig }
+  | { type: 'SET_GLOBAL_PARAMETER_CONFIG_COMPLETED'; payload: boolean };
 
 const initialState: AppState = createDefaultAppState();
 
 function appReducer(state: AppState, action: AppAction): AppState {
   switch (action.type) {
     case 'SET_CURRENT_STEP':
-      return { ...state, currentStep: Math.max(0, Math.min(9, action.payload)) };
+      return { ...state, currentStep: Math.max(0, Math.min(10, action.payload)) };
     
     case 'SET_AUTH':
       return { ...state, auth: action.payload };
@@ -283,6 +290,38 @@ function appReducer(state: AppState, action: AppAction): AppState {
         }
       };
     
+    case 'UPDATE_CUSTOM_ACTIVITY_MAPPING': {
+      const { pipelineName: customPipelineName, activityName: customActivityName, reference } = action.payload;
+      const existingMapping = state.pipelineConnectionMappings[customPipelineName]?.[customActivityName] || {};
+      const existingReferences = existingMapping.customActivityReferences || [];
+      
+      // Update or add the reference based on location and arrayIndex
+      const updatedReferences = [...existingReferences];
+      const existingIndex = updatedReferences.findIndex(
+        ref => ref.location === reference.location && ref.arrayIndex === reference.arrayIndex
+      );
+      
+      if (existingIndex >= 0) {
+        updatedReferences[existingIndex] = reference;
+      } else {
+        updatedReferences.push(reference);
+      }
+      
+      return {
+        ...state,
+        pipelineConnectionMappings: {
+          ...state.pipelineConnectionMappings,
+          [customPipelineName]: {
+            ...state.pipelineConnectionMappings[customPipelineName],
+            [customActivityName]: {
+              ...existingMapping,
+              customActivityReferences: updatedReferences
+            }
+          }
+        }
+      };
+    }
+    
     case 'BUILD_LINKEDSERVICE_CONNECTION_BRIDGE':
       return { 
         ...state, 
@@ -354,6 +393,16 @@ function appReducer(state: AppState, action: AppAction): AppState {
     case 'SET_FOLDER_DEPLOYMENT_RESULTS':
       return { ...state, folderDeploymentResults: action.payload || [] };
     
+    /** NEW: Global parameter reducer cases */
+    case 'SET_GLOBAL_PARAMETER_REFERENCES':
+      return { ...state, globalParameterReferences: action.payload || [] };
+    
+    case 'SET_VARIABLE_LIBRARY_CONFIG':
+      return { ...state, variableLibraryConfig: action.payload };
+    
+    case 'SET_GLOBAL_PARAMETER_CONFIG_COMPLETED':
+      return { ...state, globalParameterConfigCompleted: action.payload };
+    
     default:
       return state;
   }
@@ -387,19 +436,20 @@ export function useAppContext() {
 export function useWizardNavigation() {
   const { state, dispatch } = useAppContext();
   
-  const wizardSteps: WizardStep[] = ['login', 'workspace', 'upload', 'managed-identity', 'connections', 'deploy-connections', 'validation', 'mapping', 'deployment', 'complete'];
-  const currentStepName = wizardSteps[state.currentStep] || 'login';
+  const wizardSteps: WizardStep[] = ['upload', 'login', 'workspace', 'managed-identity', 'connections', 'deploy-connections', 'validation', 'global-parameters', 'mapping', 'deployment', 'complete'];
+  const currentStepName = wizardSteps[state.currentStep] || 'upload';
   
   const canGoNext = (): boolean => {
     switch (currentStepName) {
+      case 'upload':
+        return state.uploadedFile !== null && (state.adfComponents?.length || 0) > 0;
+        
       case 'login':
         return Boolean(state.auth?.isAuthenticated);
         
       case 'workspace':
         return Boolean(state.selectedWorkspace?.id && state.selectedWorkspace?.hasContributorAccess);
         
-      case 'upload':
-        return state.uploadedFile !== null && (state.adfComponents?.length || 0) > 0;
       case 'managed-identity':
         // Allow proceeding if no managed identity credentials or workspace identity is configured
         const managedIdentityCredentials = state.workspaceCredentials?.credentials || [];
@@ -423,6 +473,16 @@ export function useWizardNavigation() {
           c?.type !== 'managedIdentity'
         );
         return migrateableComponents.length > 0;
+        
+      case 'global-parameters':
+        // Allow proceeding if:
+        // 1. No global parameters detected (auto-skip), OR
+        // 2. Variable Library deployed or explicitly skipped
+        const hasGlobalParams = (state.globalParameterReferences?.length || 0) > 0;
+        if (!hasGlobalParams) return true; // No global params, auto-skip this step
+        
+        // If we have global params, check if they're handled (deployed or skipped)
+        return state.globalParameterConfigCompleted === true;
         
       case 'mapping':
         // All migrateable components must have fabric targets configured
@@ -539,6 +599,13 @@ export function useWizardNavigation() {
         );
         if (migrateableComponents.length === 0) {
           return 'Please select at least one component to migrate.';
+        }
+        break;
+        
+      case 'global-parameters':
+        const hasGlobalParams = (state.globalParameterReferences?.length || 0) > 0;
+        if (hasGlobalParams && !state.globalParameterConfigCompleted) {
+          return 'Please deploy Variable Library or skip this step to continue.';
         }
         break;
         

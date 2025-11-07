@@ -200,6 +200,7 @@ export interface ADFComponent {
     pipelines: string[];
     datasets: string[];
     triggers: string[];
+    dataflows: string[];
     other: string[];
   };
   /** NEW: Trigger-specific metadata */
@@ -220,6 +221,46 @@ export interface ADFComponent {
       parameters: Record<string, any>;
     }>;
   };
+  /** NEW: For globalParameter type, stores detected references */
+  globalParameterReferences?: GlobalParameterReference[];
+  /** NEW: For linkedService type, tracks if it has parameters (not supported in Fabric) */
+  parameterizedLinkedServiceInfo?: ParameterizedLinkedServiceInfo;
+}
+
+/**
+ * Parameterized LinkedService Detection
+ * Tracks LinkedServices that have parameters (not supported in Fabric connections)
+ */
+export interface ParameterizedLinkedServiceInfo {
+  /** LinkedService name */
+  linkedServiceName: string;
+  /** LinkedService type (e.g., AzureBatch, HttpServer, etc.) */
+  linkedServiceType: string;
+  /** Parameter definitions from LinkedService */
+  parameters: LinkedServiceParameter[];
+  /** Datasets that reference this LinkedService */
+  usedByDatasets: string[];
+  /** Activities that use the datasets */
+  usedByActivities: Array<{
+    pipelineName: string;
+    activityName: string;
+    activityType: string;
+  }>;
+  /** Pipelines that contain affected activities */
+  affectedPipelines: string[];
+  /** Count of total usages */
+  totalUsageCount: number;
+  /** Warning message for user */
+  warningMessage: string;
+}
+
+export interface LinkedServiceParameter {
+  /** Parameter name */
+  name: string;
+  /** Parameter data type */
+  type: string;
+  /** Whether parameter has default value */
+  hasDefaultValue?: boolean;
 }
 
 export interface FabricTarget {
@@ -313,6 +354,8 @@ export interface AppState {
   adfProfile: import('./profiling').ADFProfile | null;
   connectionMappings: ConnectionMappingState;
   pipelineConnectionMappings: PipelineConnectionMappings;
+  /** NEW: ReferenceId-based mappings for Custom activity transformation */
+  pipelineReferenceMappings: PipelineReferenceMappings;
   /** NEW: Bridge between LinkedService mappings and Pipeline activities */
   linkedServiceConnectionBridge: LinkedServiceConnectionBridge;
   workspaceCredentials: WorkspaceCredentialState;
@@ -324,6 +367,10 @@ export interface AppState {
   folderHierarchy: FolderTreeNode[];
   folderMappings: Record<string, string>; // path -> folderId
   folderDeploymentResults: FolderDeploymentResult[];
+  /** NEW: Global parameter detection and configuration */
+  globalParameterReferences: GlobalParameterReference[];
+  variableLibraryConfig: VariableLibraryConfig | null;
+  globalParameterConfigCompleted: boolean;
 }
 
 /**
@@ -342,13 +389,14 @@ export interface LinkedServiceConnectionBridge {
 }
 
 export type WizardStep = 
+  | 'upload'
   | 'login'
   | 'workspace'
-  | 'upload'
   | 'managed-identity'
   | 'connections'
   | 'deploy-connections'
   | 'validation'
+  | 'global-parameters'
   | 'mapping'
   | 'deployment'
   | 'complete';
@@ -366,6 +414,10 @@ export interface ComponentSummary {
   partiallySupported: number;
   unsupported: number;
   byType: Record<string, number>;
+  // NEW: Parameterized LinkedServices
+  parameterizedLinkedServicesCount?: number;
+  parameterizedLinkedServicesPipelineCount?: number;
+  parameterizedLinkedServicesNames?: string[];
 }
 
 export interface DeploymentPlan {
@@ -476,18 +528,282 @@ export interface ConnectionMappingState {
   error: string | null;
 }
 
+// Custom activity LinkedService reference location types
+export type CustomActivityReferenceLocation = 
+  | 'activity-level'       // linkedServiceName.referenceName
+  | 'resource'             // typeProperties.resourceLinkedService.referenceName
+  | 'reference-object';    // typeProperties.referenceObjects.linkedServices[i]
+
+/**
+ * Individual Custom activity LinkedService reference
+ */
+export interface CustomActivityLinkedServiceReference {
+  /** Location of this reference in ADF definition */
+  location: CustomActivityReferenceLocation;
+  
+  /** ADF LinkedService name */
+  linkedServiceName: string;
+  
+  /** Selected Fabric connection ID (from UI mapping) */
+  selectedConnectionId?: string;
+  
+  /** Whether this reference is required */
+  isRequired: boolean;
+  
+  /** For reference-object location: array index */
+  arrayIndex?: number;
+  
+  /** Unique identifier for this reference (for UI key) */
+  referenceId: string;
+}
+
+/**
+ * Complete Custom activity mapping information
+ */
+export interface CustomActivityMapping {
+  /** Pipeline name containing this activity */
+  pipelineName: string;
+  
+  /** Activity name */
+  activityName: string;
+  
+  /** All LinkedService references in this activity */
+  references: CustomActivityLinkedServiceReference[];
+  
+  /** Total count of references */
+  totalReferences: number;
+  
+  /** Count of mapped references */
+  mappedReferences: number;
+  
+  /** Whether all required references are mapped */
+  isFullyMapped: boolean;
+  
+  /** Unique activity identifier */
+  activityId: string;
+}
+
 // Pipeline connection mappings for activities to Fabric connections
 export interface ActivityConnectionMapping {
   activityName: string;
   activityType: string;
   linkedServiceReference?: { name: string; type?: string };
   selectedConnectionId?: string;
+  
+  // For Custom activities with multiple references
+  customActivityReferences?: CustomActivityLinkedServiceReference[];
 }
 
 export interface PipelineConnectionMappings {
   [pipelineName: string]: {
     [activityName: string]: ActivityConnectionMapping;
   };
+}
+
+/**
+ * Improved pipeline connection mappings using referenceId as key
+ * This fixes dropdown persistence issues when same LinkedService appears multiple times
+ */
+export interface PipelineReferenceMappings {
+  [pipelineName: string]: {
+    [referenceId: string]: string; // referenceId -> connectionId
+  };
+}
+
+// ============================================================================
+// UNIFIED ACTIVITY MAPPING TYPES (UI Modernization)
+// ============================================================================
+
+/**
+ * Unified activity type enum for UI categorization
+ */
+export type ActivityTypeEnum = 
+  | 'Copy'
+  | 'Custom'
+  | 'Lookup'
+  | 'ExecutePipeline'
+  | 'Web'
+  | 'AzureFunctionActivity'
+  | 'ForEach'
+  | 'IfCondition'
+  | 'Switch'
+  | 'Until'
+  | 'SqlServerStoredProcedure'
+  | 'AzureDataExplorerCommand'
+  | 'GetMetadata'
+  | 'Delete'
+  | 'SetVariable'
+  | 'AppendVariable'
+  | 'Wait'
+  | 'Validation'
+  | 'Filter'
+  | 'WebHook'
+  | 'ExecuteDataFlow'
+  | 'DatabricksNotebook'
+  | 'DatabricksSparkJar'
+  | 'DatabricksSparkPython'
+  | 'HDInsightSpark'
+  | 'HDInsightHive'
+  | 'SynapseNotebook'
+  | 'SynapseSparkJob'
+  | 'Script'
+  | 'Other';
+
+/**
+ * Unified reference location extending Custom activity locations
+ */
+export type ActivityReferenceLocation =
+  | 'activity-level'        // Standard linkedServiceName
+  | 'dataset'               // Via dataset reference (Copy, Lookup)
+  | 'resource'              // Custom: resourceLinkedService
+  | 'reference-object'      // Custom: referenceObjects array
+  | 'invoke-pipeline'       // ExecutePipeline
+  | 'stored-procedure';     // StoredProcedure linkedService
+
+/**
+ * Unified activity reference for all activity types
+ */
+export interface ActivityReference {
+  /** Unique identifier for this reference */
+  referenceId: string;
+  
+  /** Location type of this reference */
+  location: ActivityReferenceLocation;
+  
+  /** ADF LinkedService name */
+  linkedServiceName: string;
+  
+  /** Friendly display name for UI */
+  displayName?: string;
+  
+  /** Whether this reference is required for activity execution */
+  isRequired: boolean;
+  
+  /** Flag for Custom activity references */
+  isCustomActivity?: boolean;
+  
+  /** For reference-object arrays: array index */
+  arrayIndex?: number;
+  
+  /** Selected Fabric connection ID (from UI mapping) */
+  selectedConnectionId?: string;
+  
+  /** Validation errors for this reference */
+  validationErrors?: string[];
+  
+  /** Dataset name (for dataset-based references) */
+  datasetName?: string;
+  
+  /** Dataset type (for additional context) */
+  datasetType?: string;
+}
+
+/**
+ * Activity with all its LinkedService references
+ */
+export interface ActivityWithReferences {
+  /** Unique activity identifier (pipeline_activityName) */
+  activityId: string;
+  
+  /** Activity name from ADF */
+  activityName: string;
+  
+  /** Unified activity type for UI grouping */
+  activityType: ActivityTypeEnum;
+  
+  /** Original ADF activity type string */
+  originalActivityType: string;
+  
+  /** Parent pipeline name */
+  pipelineName: string;
+  
+  /** All LinkedService references for this activity */
+  references: ActivityReference[];
+  
+  /** Total reference count */
+  totalReferences: number;
+  
+  /** Count of mapped references */
+  mappedReferences: number;
+  
+  /** Whether all required references are mapped */
+  isFullyMapped: boolean;
+  
+  /** Whether this activity is nested in a container */
+  isNested: boolean;
+  
+  /** Nesting path for display (e.g., "ForEach1 > IfCondition2") */
+  nestingPath?: string;
+  
+  /** Activity description from ADF */
+  description?: string;
+  
+  /** Validation warnings */
+  warnings?: string[];
+}
+
+/**
+ * Activity group for UI organization by type
+ */
+export interface ActivityGroup {
+  /** Activity type for this group */
+  type: ActivityTypeEnum;
+  
+  /** Display label for UI */
+  label: string;
+  
+  /** Color hex code for UI theming */
+  color: string;
+  
+  /** Lucide icon name */
+  iconName: string;
+  
+  /** Activities in this group */
+  activities: ActivityWithReferences[];
+  
+  /** Total reference count across all activities */
+  totalReferences: number;
+  
+  /** Mapped reference count across all activities */
+  mappedReferences: number;
+  
+  /** Percentage of references mapped (0-100) */
+  mappingPercentage: number;
+  
+  /** Whether this group is expanded in UI */
+  isExpanded: boolean;
+}
+
+/**
+ * Pipeline summary with activity groupings
+ */
+export interface PipelineMappingSummary {
+  /** Pipeline name */
+  pipelineName: string;
+  
+  /** Folder path */
+  folderPath?: string;
+  
+  /** Total activities (including nested) */
+  totalActivities: number;
+  
+  /** Total LinkedService references across all activities */
+  totalReferences: number;
+  
+  /** Mapped reference count */
+  mappedReferences: number;
+  
+  /** Mapping percentage (0-100) */
+  mappingPercentage: number;
+  
+  /** Activity groups organized by type */
+  activityGroups: ActivityGroup[];
+  
+  /** Whether all required mappings are complete */
+  isFullyMapped: boolean;
+  
+  /** Validation errors for this pipeline */
+  validationErrors: string[];
 }
 
 export interface ConnectionDeploymentResult {
@@ -737,4 +1053,108 @@ export interface ADFRecurrence {
   endTime?: string;
   timeZone: string;
   schedule?: ADFScheduleDetail; // Present for complex Day/Week/Month schedules
+}
+
+// ============================================================================
+// Global Parameter & Variable Library Types
+// ============================================================================
+
+/**
+ * Represents a detected global parameter reference from ADF pipelines
+ */
+export interface GlobalParameterReference {
+  /** Original parameter name from ADF (e.g., 'gp_MigrationTest') */
+  name: string;
+  
+  /** Detected ADF data type */
+  adfDataType: 'String' | 'Int' | 'Float' | 'Bool' | 'Array' | 'Object' | 'SecureString';
+  
+  /** Mapped Fabric data type */
+  fabricDataType: 'String' | 'Integer' | 'Number' | 'Boolean';
+  
+  /** Default value (user-provided or empty) */
+  defaultValue: string | number | boolean;
+  
+  /** Optional note/description for the variable */
+  note?: string;
+  
+  /** List of pipeline names that reference this parameter */
+  referencedByPipelines: string[];
+  
+  /** Is this a SecureString that needs manual configuration? */
+  isSecure: boolean;
+}
+
+/**
+ * Configuration for the Fabric Variable Library to be created
+ */
+export interface VariableLibraryConfig {
+  /** Display name for the Variable Library */
+  displayName: string;
+  
+  /** Optional description */
+  description?: string;
+  
+  /** Folder ID (null = workspace root) */
+  folderId?: string;
+  
+  /** Array of variable configurations */
+  variables: GlobalParameterReference[];
+  
+  /** Fabric workspace ID where library will be deployed */
+  workspaceId: string;
+  
+  /** Deployment status */
+  deploymentStatus?: 'pending' | 'deploying' | 'success' | 'failed';
+  
+  /** Deployed Fabric item ID (after successful deployment) */
+  fabricItemId?: string;
+  
+  /** Error message if deployment failed */
+  deploymentError?: string;
+}
+
+/**
+ * Variable Library definition parts for Fabric API
+ */
+export interface VariableLibraryDefinition {
+  parts: VariableLibraryPart[];
+}
+
+export interface VariableLibraryPart {
+  path: string;
+  payload: string; // Base64 encoded
+  payloadType: 'InlineBase64';
+}
+
+/**
+ * Structure for variables.json (before encoding)
+ */
+export interface VariablesJsonSchema {
+  $schema: string;
+  variables: VariableDefinition[];
+}
+
+export interface VariableDefinition {
+  name: string;
+  note?: string;
+  type: 'String' | 'Integer' | 'Number' | 'Boolean';
+  value: string | number | boolean;
+}
+
+/**
+ * Structure for settings.json (before encoding)
+ */
+export interface SettingsJsonSchema {
+  $schema: string;
+  valueSetsOrder: string[]; // Empty array for now
+}
+
+/**
+ * Pipeline library variable reference (injected into transformed pipelines)
+ */
+export interface PipelineLibraryVariable {
+  type: 'String' | 'Integer' | 'Number' | 'Boolean';
+  variableName: string;
+  libraryName: string;
 }

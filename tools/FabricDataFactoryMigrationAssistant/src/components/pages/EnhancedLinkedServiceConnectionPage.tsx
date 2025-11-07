@@ -185,7 +185,7 @@ export function EnhancedLinkedServiceConnectionPage() {
           <div>
             <h1 className="text-3xl font-bold">Configure LinkedService Connections</h1>
             <p className="text-muted-foreground mt-2">
-              Map each ADF LinkedService to either an existing Fabric connection or configure a new one
+              Map each Data Factory LinkedService to either an existing Fabric connection or configure a new one
             </p>
           </div>
           <div className="flex gap-2">
@@ -293,10 +293,10 @@ export function EnhancedLinkedServiceConnectionPage() {
 
                 {/* Existing Connection Selection */}
                 {linkedService.connectionOption === 'existing' && (
-                  <div className="space-y-4 p-4 border rounded-lg bg-blue-50">
+                  <div className="space-y-4 p-4 border border-blue-200 rounded-lg bg-blue-50">
                     <div className="flex items-center gap-2">
                       <ExternalLink className="w-4 h-4 text-blue-600" />
-                      <Label className="font-medium text-blue-900">Select Existing Connection</Label>
+                      <Label className="font-medium text-gray-900">Select Existing Connection</Label>
                     </div>
                     {isLoadingConnections ? (
                       <div className="text-center py-4">
@@ -330,10 +330,10 @@ export function EnhancedLinkedServiceConnectionPage() {
 
                 {/* New Connection Configuration */}
                 {linkedService.connectionOption === 'new' && (
-                  <div className="space-y-4 p-4 border rounded-lg bg-green-50">
+                  <div className="space-y-4 p-4 border border-green-200 rounded-lg bg-green-50">
                     <div className="flex items-center gap-2">
                       <span className="w-4 h-4 text-green-600">+</span>
-                      <Label className="font-medium text-green-900">Configure New Connection</Label>
+                      <Label className="font-medium text-gray-900">Configure New Connection</Label>
                     </div>
                     
                     {/* Simplified new connection form - you can expand this */}
@@ -412,17 +412,17 @@ export function EnhancedLinkedServiceConnectionPage() {
             </CardHeader>
             <CardContent>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
-                <div className="text-center p-3 bg-blue-50 rounded-lg">
-                  <div className="text-2xl font-bold text-blue-600">{deploymentPlan.summary.totalNew}</div>
-                  <div className="text-sm text-blue-800">New Connections</div>
+                <div className="text-center p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                  <div className="text-2xl font-bold text-gray-900">{deploymentPlan.summary.totalNew}</div>
+                  <div className="text-sm text-gray-700">New Connections</div>
                 </div>
-                <div className="text-center p-3 bg-green-50 rounded-lg">
-                  <div className="text-2xl font-bold text-green-600">{deploymentPlan.summary.totalExisting}</div>
-                  <div className="text-sm text-green-800">Existing Mappings</div>
+                <div className="text-center p-3 bg-green-50 border border-green-200 rounded-lg">
+                  <div className="text-2xl font-bold text-gray-900">{deploymentPlan.summary.totalExisting}</div>
+                  <div className="text-sm text-gray-700">Existing Mappings</div>
                 </div>
-                <div className="text-center p-3 bg-purple-50 rounded-lg">
-                  <div className="text-2xl font-bold text-purple-600">{deploymentPlan.summary.totalMappings}</div>
-                  <div className="text-sm text-purple-800">Total Mappings</div>
+                <div className="text-center p-3 bg-purple-50 border border-purple-200 rounded-lg">
+                  <div className="text-2xl font-bold text-gray-900">{deploymentPlan.summary.totalMappings}</div>
+                  <div className="text-sm text-gray-700">Total Mappings</div>
                 </div>
               </div>
               

@@ -10,7 +10,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
-import { Spinner, Building, CheckCircle, XCircle, Warning, Info, Shield, Plus } from '@phosphor-icons/react';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Spinner, Building, CheckCircle, XCircle, Warning, Info, Shield, Plus, FileArrowUp } from '@phosphor-icons/react';
 import { toast } from 'sonner';
 import { NavigationDebug } from '../NavigationDebug';
 
@@ -111,7 +112,7 @@ export function WorkspacePage() {
 
   const handleContinue = (): void => {
     if (state.selectedWorkspace && state.selectedWorkspace.hasContributorAccess) {
-      dispatch({ type: 'SET_CURRENT_STEP', payload: 2 }); // Move to upload step
+      dispatch({ type: 'SET_CURRENT_STEP', payload: 3 }); // Move to managed identity step
     } else {
       toast.error('Please select a workspace with Contributor access to continue.');
     }
@@ -205,10 +206,34 @@ export function WorkspacePage() {
             Select Fabric Workspace
           </h1>
           <p className="text-muted-foreground">
-            Choose the Microsoft Fabric workspace where you want to deploy your migrated ADF pipelines.
+            Choose the Microsoft Fabric workspace where you want to deploy your migrated Data Factory pipelines.
             You need Contributor or higher permissions to perform migrations.
           </p>
         </div>
+
+        {/* Uploaded File Summary Banner */}
+        {state.uploadedFile && state.adfComponents.length > 0 && (
+          <div className="mb-6">
+            <Alert className="bg-blue-50 dark:bg-blue-950/30 border-blue-300 dark:border-blue-700">
+              <FileArrowUp size={16} className="text-blue-600 dark:text-blue-400" />
+              <AlertDescription>
+                <div className="flex items-start justify-between">
+                  <div>
+                    <div className="font-semibold text-blue-900 dark:text-blue-100 mb-1">
+                      📄 Uploaded: {state.uploadedFile.name}
+                    </div>
+                    <div className="text-sm text-blue-800 dark:text-blue-200">
+                      {state.adfComponents.filter(c => c.type === 'pipeline').length} pipelines • {' '}
+                      {state.adfComponents.filter(c => c.type === 'dataset').length} datasets • {' '}
+                      {state.adfComponents.filter(c => c.type === 'linkedService').length} linked services • {' '}
+                      {state.adfComponents.filter(c => c.type === 'trigger').length} triggers
+                    </div>
+                  </div>
+                </div>
+              </AlertDescription>
+            </Alert>
+          </div>
+        )}
 
         {/* Progress Indicator */}
         <div className="mb-8">
@@ -365,7 +390,7 @@ export function WorkspacePage() {
                           Create New Workspace
                         </CardTitle>
                         <CardDescription>
-                          Create a new Microsoft Fabric workspace for your ADF migration
+                          Create a new Microsoft Fabric workspace for your Data Factory migration
                         </CardDescription>
                       </CardHeader>
                       <CardContent className="space-y-4">
@@ -541,7 +566,7 @@ export function WorkspacePage() {
             onClick={handleContinue}
             disabled={!state.selectedWorkspace || !state.selectedWorkspace.hasContributorAccess || validatingPermissions || isCreatingWorkspace}
           >
-            Continue to Upload
+            Continue
           </Button>
         </div>
       </div>

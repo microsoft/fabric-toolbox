@@ -53,7 +53,7 @@ export function CompletePage() {
   return (
     <WizardLayout
       title="Migration Complete"
-      description="Your ADF to Fabric migration has finished"
+      description="Your Data Factory to Fabric migration has finished"
       showNavigation={false}
     >
       <div className="space-y-6">
