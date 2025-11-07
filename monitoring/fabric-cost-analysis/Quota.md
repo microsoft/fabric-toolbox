@@ -25,22 +25,11 @@ Add credentials to connections :
 
 > ℹ️ This connection is used in FCA pipeline to retrieve Quota data from Azure Management REST APIs. If the credentials are incorrect or the secret has expired, the pipeline will fail. In case of an error, you'll be able to run the notebook again. It has an update mechanism, which will act as an item update. To view your Fabric quota, you need an Azure account with the contributor role, or another role that includes contributor access ([Microsoft Fabric quotas](https://learn.microsoft.com/en-us/fabric/enterprise/fabric-quotas?tabs=Azure)).
 
-## 2 - [Configure Fabric items](./Deploy.md)
-
-## 3 - Enable activity and run the Pipeline
+## 2 - Enable activity and run the Pipeline
 
 - Open the **Load FCA E2E** Data pipeline
 - Activate the **Load Quotas** activity
 
 ![Load FCA E2E Notebook](./media/PipelineQuota.png)
 
-- Save and Run the Pipeline
-
-## 4 - Open the report
-
-- Navigate to your FCA workspace
-- Search for the item FCA_Core_Report
-- Open the FCA_Core_Report Power BI report
-- Open the Quota page and begin your analysis
-
-![Azure Quotas Page](./media/AzureQuotas.png)
+- Save and go back to deployment documentation : [Click here to configure quota analysis](./Deploy.md)
