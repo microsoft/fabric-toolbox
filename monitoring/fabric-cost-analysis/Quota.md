@@ -32,4 +32,4 @@ Add credentials to connections :
 
 ![Load FCA E2E Notebook](./media/PipelineQuota.png)
 
-- Save and go back to deployment documentation : [Click here to configure quota analysis](./Deploy.md)
+- Save and go back to deployment documentation : [Deployment documentation](./Deploy.md#optional-steps)

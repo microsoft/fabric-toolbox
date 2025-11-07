@@ -83,7 +83,7 @@ Once Data Lake Gen 2 storage account created here are the high levels steps to c
 
 ![FCA](./media/Setup-Export5.png)
 
-### Optional Steps
+### 📍 Optional Steps
 
 Azure Quota Data : [Click here to configure quota analysis](./Quota.md)
 
