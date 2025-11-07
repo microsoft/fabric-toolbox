@@ -27,25 +27,19 @@
     Author: Tiago Balabuch
 #>
 function Get-FabricConnection {
-    [CmdletBinding()]
+    [CmdletBinding(DefaultParameterSetName = 'Id')]
     param (
-        [Parameter(Mandatory = $false)]
+        [Parameter(Mandatory = $false, ParameterSetName = 'Id')]
         [ValidateNotNullOrEmpty()]
         [string]$ConnectionId,
 
-        [Parameter(Mandatory = $false)]
+        [Parameter(Mandatory = $false, ParameterSetName = 'Name')]
         [ValidateNotNullOrEmpty()]
         [ValidatePattern('^[a-zA-Z0-9_ ]*$')]
         [string]$ConnectionName
     )
 
     try {
-        # Validate input parameters
-        if ($ConnectionId -and $ConnectionName) {
-            Write-Message -Message "Specify only one parameter: either 'ConnectionId' or 'ConnectionName'." -Level Error
-            return $null
-        }
-
         # Validate authentication token before proceeding.
         Write-Message -Message "Validating authentication token..." -Level Debug
         Test-TokenExpired
