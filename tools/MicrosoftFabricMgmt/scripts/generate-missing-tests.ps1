@@ -2,7 +2,7 @@
 # Usage: Run from repository root or this module folder.
 
 $moduleRoot = Join-Path $PSScriptRoot ".."
-$sourceRoot = Resolve-Path (Join-Path $moduleRoot 'source\Public')
+$sourceRoot = Resolve-Path (Join-Path $moduleRoot 'source\Private')
 $testsRoot = Resolve-Path (Join-Path $moduleRoot 'tests\Unit')
 $templatePath = Join-Path $testsRoot 'Get-FabricNotebookDefinition.Tests.ps1'
 if (-not (Test-Path $templatePath)) {
@@ -54,7 +54,6 @@ param(
     `$expectedParams = @(
 $expected
     )
-)
 "@
         $newTest = $template -replace 'Get-FabricNotebookDefinition', $info.Function
         # Replace the param(...) block in the template with our generated one
