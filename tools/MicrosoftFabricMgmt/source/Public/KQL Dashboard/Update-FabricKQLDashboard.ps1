@@ -28,7 +28,7 @@ Updates both the name and description of the KQLDashboard "KQLDashboard123".
 - Requires `$FabricConfig` global configuration, including `BaseUrl` and `FabricHeaders`.
 - Calls `Test-TokenExpired` to ensure token validity before making the API request.
 
-Author: Tiago Balabuch  
+Author: Tiago Balabuch
 
 #>
 function Update-FabricKQLDashboard {
@@ -36,8 +36,8 @@ function Update-FabricKQLDashboard {
     param (
         [Parameter(Mandatory = $true)]
         [ValidateNotNullOrEmpty()]
-        [string]$WorkspaceId,   
-        
+        [string]$WorkspaceId,
+
         [Parameter(Mandatory = $true)]
         [ValidateNotNullOrEmpty()]
         [string]$KQLDashboardId,
@@ -82,7 +82,7 @@ function Update-FabricKQLDashboard {
             Body = $bodyJson
         }
         if ($PSCmdlet.ShouldProcess($KQLDashboardId, "Update KQL Dashboard in workspace '$WorkspaceId'")) {
-            $response = Invoke-FabricAPIRequest @apiParams 
+            $response = Invoke-FabricAPIRequest @apiParams
 
             # Return the API response
             Write-Message -Message "KQLDashboard '$KQLDashboardName' updated successfully!" -Level Info

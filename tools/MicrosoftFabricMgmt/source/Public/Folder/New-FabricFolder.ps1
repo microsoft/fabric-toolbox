@@ -69,7 +69,7 @@ function New-FabricFolder {
                 return $null
             }
         }
-        
+
         # Validate authentication token before proceeding.
         Write-Message -Message "Validating authentication token..." -Level Debug
         Test-TokenExpired
@@ -87,7 +87,7 @@ function New-FabricFolder {
         if ($ParentFolderId) {
             $body.parentFolderId = $ParentFolderId
         }
-        
+
         # Convert the body to JSON format
         $bodyJson = $body | ConvertTo-Json -Depth 4
         Write-Message -Message "Request Body: $bodyJson" -Level Debug
@@ -103,10 +103,10 @@ function New-FabricFolder {
             $response = Invoke-FabricAPIRequest @apiParams
 
             # Return the API response
-            Write-Message -Message "Folder created successfully!" -Level Info        
+            Write-Message -Message "Folder created successfully!" -Level Info
             return $response
         }
-     
+
     }
     catch {
         # Capture and log error details

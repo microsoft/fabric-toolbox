@@ -3,7 +3,7 @@
 Publishes a staging environment in a specified Microsoft Fabric workspace.
 
 .DESCRIPTION
-This function interacts with the Microsoft Fabric API to initiate the publishing process for a staging environment. 
+This function interacts with the Microsoft Fabric API to initiate the publishing process for a staging environment.
 It validates the authentication token, constructs the API request, and handles both immediate and long-running operations.
 
 
@@ -22,7 +22,7 @@ Initiates the publishing process for the specified staging environment.
 - Requires the `$FabricConfig` global object, including `BaseUrl` and `FabricHeaders`.
 - Uses `Test-TokenExpired` to validate the token before making API calls.
 
-Author: Tiago Balabuch  
+Author: Tiago Balabuch
 #>
 function Publish-FabricEnvironment {
     [Diagnostics.CodeAnalysis.SuppressMessage('PSUseApprovedVerbs', '')]
@@ -41,7 +41,7 @@ function Publish-FabricEnvironment {
         Write-Message -Message "Validating authentication token..." -Level Debug
         Test-TokenExpired
         Write-Message -Message "Authentication token is valid." -Level Debug
-                
+
         # Construct the API endpoint URI
         $apiEndpointURI = "{0}/workspaces/{1}/environments/{2}/staging/publish" -f $FabricConfig.BaseUrl, $WorkspaceId, $EnvironmentId
         Write-Message -Message "API Endpoint: $apiEndpointURI" -Level Debug

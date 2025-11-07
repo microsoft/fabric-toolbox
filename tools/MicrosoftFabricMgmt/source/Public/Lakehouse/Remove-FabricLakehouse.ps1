@@ -20,7 +20,7 @@ Deletes the Lakehouse with ID "67890" from workspace "12345".
 - Requires `$FabricConfig` global configuration, including `BaseUrl` and `FabricHeaders`.
 - Validates token expiration before making the API request.
 
-Author: Tiago Balabuch  
+Author: Tiago Balabuch
 
 #>
 function Remove-FabricLakehouse {
@@ -51,14 +51,14 @@ function Remove-FabricLakehouse {
             Method = 'Delete'
         }
         if ($PSCmdlet.ShouldProcess($LakehouseId, "Delete Lakehouse in workspace '$WorkspaceId'")) {
-            $response = Invoke-FabricAPIRequest @apiParams 
+            $response = Invoke-FabricAPIRequest @apiParams
 
             # Return the API response
             Write-Message -Message "Lakehouse '$LakehouseId' deleted successfully from workspace '$WorkspaceId'." -Level Info
             return $response
         }
-        
-        
+
+
     }
     catch {
         # Capture and log error details

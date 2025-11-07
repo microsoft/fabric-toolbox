@@ -3,8 +3,8 @@
 Creates a new KQLDatabase in a specified Microsoft Fabric workspace.
 
 .DESCRIPTION
-This function sends a POST request to the Microsoft Fabric API to create a new KQLDatabase 
-in the specified workspace. It supports optional parameters for KQLDatabase description 
+This function sends a POST request to the Microsoft Fabric API to create a new KQLDatabase
+in the specified workspace. It supports optional parameters for KQLDatabase description
 and path definitions for the KQLDatabase content.
 
 .PARAMETER WorkspaceId
@@ -33,7 +33,7 @@ An optional path to the platform-specific definition (e.g., .platform file) to u
     - CreationPayload is evaluate only if Definition file is not provided.
         - invitationToken has priority over all other payload fields.
 
-Author: Tiago Balabuch  
+Author: Tiago Balabuch
 
 #>
 
@@ -77,7 +77,7 @@ function New-FabricKQLDatabase {
         [Parameter(Mandatory = $false)]
         [ValidateNotNullOrEmpty()]
         [string]$KQLDatabasePathDefinition,
-        
+
         [Parameter(Mandatory = $false)]
         [ValidateNotNullOrEmpty()]
         [string]$KQLDatabasePathPlatformDefinition,
@@ -92,7 +92,7 @@ function New-FabricKQLDatabase {
         Test-TokenExpired
         Write-Message -Message "Authentication token is valid." -Level Debug
 
-        # Construct the API endpoint URI 
+        # Construct the API endpoint URI
         $apiEndpointURI = "{0}/workspaces/{1}/kqlDatabases" -f $FabricConfig.BaseUrl, $WorkspaceId
         Write-Message -Message "API Endpoint: $apiEndpointURI" -Level Debug
 
@@ -111,9 +111,9 @@ function New-FabricKQLDatabase {
             $body.definition = @{
                 parts = @()
             }
-  
+
             if (-not [string]::IsNullOrEmpty($KQLDatabaseEncodedContent)) {
-                
+
 
                 # Add new part to the parts array
                 $body.definition.parts += @{
@@ -126,7 +126,7 @@ function New-FabricKQLDatabase {
                 Write-Message -Message "Invalid or empty content in KQLDatabase definition." -Level Error
                 return $null
             }
-   
+
             if ($KQLDatabasePathPlatformDefinition) {
                 $KQLDatabaseEncodedPlatformContent = Convert-ToBase64 -filePath $KQLDatabasePathPlatformDefinition
 
@@ -143,7 +143,7 @@ function New-FabricKQLDatabase {
                     Write-Message -Message "Invalid or empty content in platform definition." -Level Error
                     return $null
                 }
-        
+
             }
             if ($KQLDatabasePathSchemaDefinition) {
                 $KQLDatabaseEncodedSchemaContent = Convert-ToBase64 -filePath $KQLDatabasePathSchemaDefinition
@@ -216,7 +216,7 @@ function New-FabricKQLDatabase {
                 }
             }
         }
-        
+
         # Convert the body to JSON
         $bodyJson = $body | ConvertTo-Json -Depth 10
         Write-Message -Message "Request Body: $bodyJson" -Level Debug
@@ -230,7 +230,7 @@ function New-FabricKQLDatabase {
         }
         if ($PSCmdlet.ShouldProcess($KQLDatabaseName, "Create KQL Database in workspace '$WorkspaceId'")) {
             $response = Invoke-FabricAPIRequest @apiParams
-            
+
             # Return the API response
             Write-Message -Message "KQLDatabase '$KQLDatabaseName' created successfully!" -Level Info
             return $response

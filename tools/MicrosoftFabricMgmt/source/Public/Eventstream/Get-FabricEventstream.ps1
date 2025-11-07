@@ -25,7 +25,7 @@ Retrieves all Eventstreams in workspace "12345".
 - Requires `$FabricConfig` global configuration, including `BaseUrl` and `FabricHeaders`.
 - Calls `Test-TokenExpired` to ensure token validity before making the API request.
 
-Author: Tiago Balabuch  
+Author: Tiago Balabuch
 
 #>
 
@@ -57,11 +57,11 @@ function Get-FabricEventstream {
         Write-Message -Message "Validating authentication token..." -Level Debug
         Test-TokenExpired
         Write-Message -Message "Authentication token is valid." -Level Debug
-        
-        # Construct the API endpoint URI   
+
+        # Construct the API endpoint URI
         $apiEndpointURI = "{0}/workspaces/{1}/eventstreams" -f $FabricConfig.BaseUrl, $WorkspaceId
         Write-Message -Message "API Endpoint: $apiEndpointURI" -Level Debug
-         
+
         # Make the API request
         # Make the API request
         $apiParams = @{
@@ -70,7 +70,7 @@ function Get-FabricEventstream {
             Method = 'Get'
         }
         $dataItems = Invoke-FabricAPIRequest @apiParams
-   
+
         # Immediately handle empty response
         if (-not $dataItems) {
             Write-Message -Message "No data returned from the API." -Level Warning
@@ -103,6 +103,6 @@ function Get-FabricEventstream {
         # Capture and log error details
         $errorDetails = $_.Exception.Message
         Write-Message -Message "Failed to retrieve Eventstream. Error: $errorDetails" -Level Error
-    } 
- 
+    }
+
 }

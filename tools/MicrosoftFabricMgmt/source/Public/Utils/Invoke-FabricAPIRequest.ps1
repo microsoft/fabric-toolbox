@@ -37,19 +37,19 @@ function Invoke-FabricAPIRequest {
         [Parameter(Mandatory = $true)]
         [ValidateNotNullOrEmpty()]
         [hashtable]$Headers,
-        
+
         [Parameter(Mandatory = $true)]
         [ValidateNotNullOrEmpty()]
         [string]$BaseURI,
 
-        [Parameter(Mandatory = $true)] 
-        [ValidateSet('Get', 'Post', 'Delete', 'Put', 'Patch')] 
+        [Parameter(Mandatory = $true)]
+        [ValidateSet('Get', 'Post', 'Delete', 'Put', 'Patch')]
         [string] $Method,
-        
-        [Parameter(Mandatory = $false)] 
+
+        [Parameter(Mandatory = $false)]
         [string] $Body,
 
-        [Parameter(Mandatory = $false)] 
+        [Parameter(Mandatory = $false)]
         [string] $ContentType = "application/json; charset=utf-8",
 
         [Parameter(Mandatory = $false)]
@@ -101,9 +101,9 @@ function Invoke-FabricAPIRequest {
             # Handle response based on HTTP status code
             switch ($statusCode) {
                 200 {
-                    Write-Message -Message "API call succeeded." -Level Debug 
+                    Write-Message -Message "API call succeeded." -Level Debug
                     [string]$etag = $responseHeader["ETag"]
-                    
+
                     if ($response) {
                         # Determine response structure and add data to results
                         $propertyNames = $response.PSObject.Properties.Name
@@ -136,7 +136,7 @@ function Invoke-FabricAPIRequest {
                     }
                 }
                 201 {
-                    Write-Message -Message "Resource created successfully." -Level Debug 
+                    Write-Message -Message "Resource created successfully." -Level Debug
                     return $response
                 }
                 202 {
@@ -145,7 +145,7 @@ function Invoke-FabricAPIRequest {
                     [string]$operationId = $responseHeader["x-ms-operation-id"]
                     [string]$location = $responseHeader["Location"]
                     $retryAfter = $responseHeader["Retry-After"]
-                    
+
 
                     # If the response contains an operation ID or Location header, handle as a long-running operation (LRO)
                     if ($operationId -or $location) {
@@ -215,6 +215,6 @@ function Invoke-FabricAPIRequest {
     }
     catch {
         Write-Message -Message "Invoke Fabric API error. Error: $($_.Exception.Message)" -Level Error
-        throw 
+        throw
     }
 }

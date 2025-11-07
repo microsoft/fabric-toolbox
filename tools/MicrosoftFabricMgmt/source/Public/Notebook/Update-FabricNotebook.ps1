@@ -28,7 +28,7 @@ Updates both the name and description of the Notebook "Notebook123".
 - Requires `$FabricConfig` global configuration, including `BaseUrl` and `FabricHeaders`.
 - Calls `Test-TokenExpired` to ensure token validity before making the API request.
 
-Author: Tiago Balabuch  
+Author: Tiago Balabuch
 
 #>
 function Update-FabricNotebook {
@@ -36,8 +36,8 @@ function Update-FabricNotebook {
     param (
         [Parameter(Mandatory = $true)]
         [ValidateNotNullOrEmpty()]
-        [string]$WorkspaceId,   
-        
+        [string]$WorkspaceId,
+
         [Parameter(Mandatory = $true)]
         [ValidateNotNullOrEmpty()]
         [string]$NotebookId,
@@ -84,8 +84,8 @@ function Update-FabricNotebook {
                 Method = 'Patch'
                 Body = $bodyJson
             }
-            $response = Invoke-FabricAPIRequest @apiParams 
-          
+            $response = Invoke-FabricAPIRequest @apiParams
+
             # Return the API response
             Write-Message -Message "Notebook '$NotebookName' updated successfully!" -Level Info
             return $response

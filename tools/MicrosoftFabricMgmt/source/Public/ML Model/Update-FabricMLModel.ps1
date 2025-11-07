@@ -3,7 +3,7 @@
     Updates an existing ML Model in a specified Microsoft Fabric workspace.
 
 .DESCRIPTION
-    This function sends a PATCH request to the Microsoft Fabric API to update an existing ML Model 
+    This function sends a PATCH request to the Microsoft Fabric API to update an existing ML Model
     in the specified workspace. It supports optional parameters for ML Model description.
 
 .PARAMETER WorkspaceId
@@ -24,15 +24,15 @@
     - Calls `Test-TokenExpired` to ensure token validity before making the API request.
 
     Author: Tiago Balabuch
-    
+
 #>
 function Update-FabricMLModel {
     [CmdletBinding(SupportsShouldProcess = $true, ConfirmImpact = 'Medium')]
     param (
         [Parameter(Mandatory = $true)]
         [ValidateNotNullOrEmpty()]
-        [string]$WorkspaceId,   
-        
+        [string]$WorkspaceId,
+
         [Parameter(Mandatory = $true)]
         [ValidateNotNullOrEmpty()]
         [string]$MLModelId,
@@ -70,8 +70,8 @@ function Update-FabricMLModel {
                 Method = 'Patch'
                 Body = $bodyJson
             }
-            $response = Invoke-FabricAPIRequest @apiParams 
-          
+            $response = Invoke-FabricAPIRequest @apiParams
+
             # Return the API response
             Write-Message -Message "ML Model '$MLModelId' updated successfully!" -Level Info
             return $response

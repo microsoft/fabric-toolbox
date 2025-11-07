@@ -64,11 +64,11 @@ function Start-FabricLakehouseTableMaintenance {
         [Parameter(Mandatory = $false)]
         [ValidateNotNullOrEmpty()]
         [string]$SchemaName,
-        
+
         [Parameter(Mandatory = $false)]
         [ValidateNotNullOrEmpty()]
         [string]$TableName,
-        
+
         [Parameter(Mandatory = $false)]
         [ValidateNotNullOrEmpty()]
         [bool]$IsVOrder,
@@ -83,7 +83,7 @@ function Start-FabricLakehouseTableMaintenance {
         [string]$retentionPeriod,
 
         [Parameter(Mandatory = $false)]
-        [switch]$WaitForCompletion        
+        [switch]$WaitForCompletion
     )
     try {
         # Validate authentication token before proceeding.
@@ -92,13 +92,13 @@ function Start-FabricLakehouseTableMaintenance {
         Write-Message -Message "Authentication token is valid." -Level Debug
 
         # Validate input parameters
-        $lakehouse = Get-FabricLakehouse -WorkspaceId $WorkspaceId -LakehouseId $LakehouseId   
+        $lakehouse = Get-FabricLakehouse -WorkspaceId $WorkspaceId -LakehouseId $LakehouseId
         if ($lakehouse.properties.PSObject.Properties['defaultSchema'] -and -not $SchemaName) {
             Write-Error "The Lakehouse '$lakehouse.displayName' has schema enabled, but no schema name was provided. Please specify the 'SchemaName' parameter to proceed."
             return $null
         }
-        
-        # Construct the API endpoint URI 
+
+        # Construct the API endpoint URI
         $apiEndpointURI = "{0}/workspaces/{1}/lakehouses/{2}/jobs/instances?jobType={3}" -f $FabricConfig.BaseUrl, $WorkspaceId , $LakehouseId, $JobType
         Write-Message -Message "API Endpoint: $apiEndpointURI" -Level Debug
 
@@ -115,7 +115,7 @@ function Start-FabricLakehouseTableMaintenance {
         if ($IsVOrder) {
             $body.executionData.optimizeSettings.vOrder = $IsVOrder
         }
-       
+
 
         if ($ColumnsZOrderBy) {
             Write-Message -Message "Original ColumnsZOrderBy input: $ColumnsZOrderBy" -Level Debug
@@ -138,7 +138,7 @@ function Start-FabricLakehouseTableMaintenance {
             }
         }
 
-       
+
         if ($retentionPeriod) {
             if (-not $body.executionData.PSObject.Properties['vacuumSettings']) {
                 $body.executionData.vacuumSettings = @{
@@ -146,7 +146,7 @@ function Start-FabricLakehouseTableMaintenance {
                 }
             }
             $body.executionData.vacuumSettings.retentionPeriod = $retentionPeriod
-    
+
         }
 
         # Convert the body to JSON
@@ -160,13 +160,13 @@ function Start-FabricLakehouseTableMaintenance {
             Method  = 'Post'
             Body    = $bodyJson
         }
-        
+
         if ($WaitForCompletion.IsPresent) {
             $apiParams.WaitForCompletion = $true
         }
         if ($PSCmdlet.ShouldProcess($LakehouseId, "Start lakehouse table maintenance job in workspace '$WorkspaceId'")) {
-            $response = Invoke-FabricAPIRequest @apiParams  
-          
+            $response = Invoke-FabricAPIRequest @apiParams
+
             if ($WaitForCompletion) {
                 Write-Message -Message "Table maintenance job for Lakehouse '$LakehouseId' has completed." -Level Info
                 Write-Message -Message "Job details: $($response | ConvertTo-Json -Depth 5)" -Level Debug

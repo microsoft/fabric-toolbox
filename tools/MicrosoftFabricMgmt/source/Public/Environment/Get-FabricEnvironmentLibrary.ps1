@@ -3,8 +3,8 @@
 Retrieves the list of libraries associated with a specific environment in a Microsoft Fabric workspace.
 
 .DESCRIPTION
-The Get-FabricEnvironmentLibrary function fetches library information for a given workspace and environment 
-using the Microsoft Fabric API. It ensures the authentication token is valid and validates the response 
+The Get-FabricEnvironmentLibrary function fetches library information for a given workspace and environment
+using the Microsoft Fabric API. It ensures the authentication token is valid and validates the response
 to handle errors gracefully.
 
 .PARAMETER WorkspaceId
@@ -22,7 +22,7 @@ Retrieves the libraries associated with the specified environment in the given w
 - Requires the `$FabricConfig` global object, including `BaseUrl` and `FabricHeaders`.
 - Uses `Test-TokenExpired` to validate the token before making API calls.
 
-Author: Tiago Balabuch  
+Author: Tiago Balabuch
 #>
 function Get-FabricEnvironmentLibrary {
     [CmdletBinding()]
@@ -40,7 +40,7 @@ function Get-FabricEnvironmentLibrary {
         Write-Message -Message "Validating authentication token..." -Level Debug
         Test-TokenExpired
         Write-Message -Message "Authentication token is valid." -Level Debug
-                
+
         # Construct the API endpoint URI
         $apiEndpointURI = "{0}/workspaces/{1}/environments/{2}/libraries" -f $FabricConfig.BaseUrl, $WorkspaceId, $EnvironmentId
         Write-Message -Message "API Endpoint: $apiEndpointURI" -Level Debug
@@ -52,7 +52,7 @@ function Get-FabricEnvironmentLibrary {
             Method = 'Get'
         }
         $dataItems = Invoke-FabricAPIRequest @apiParams
-                    
+
         # Handle results
         return $dataItems
     }
@@ -60,6 +60,6 @@ function Get-FabricEnvironmentLibrary {
         # Capture and log error details
         $errorDetails = $_.Exception.Message
         Write-Message -Message "Failed to retrieve environment libraries. Error: $errorDetails" -Level Error
-    } 
- 
+    }
+
 }

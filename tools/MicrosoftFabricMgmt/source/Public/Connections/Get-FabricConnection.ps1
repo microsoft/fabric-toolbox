@@ -50,7 +50,7 @@ function Get-FabricConnection {
         Write-Message -Message "Validating authentication token..." -Level Debug
         Test-TokenExpired
         Write-Message -Message "Authentication token is valid." -Level Debug
-                
+
         # Construct the API endpoint URI
         $apiEndpointURI = "{0}/connections" -f $FabricConfig.BaseUrl
 
@@ -94,5 +94,5 @@ function Get-FabricConnection {
         # Capture and log error details
         $errorDetails = $_.Exception.Message
         Write-Message -Message "Failed to retrieve Connection. Error: $errorDetails" -Level Error
-    } 
+    }
 }

@@ -3,7 +3,7 @@
     Removes an ML Model from a specified Microsoft Fabric workspace.
 
 .DESCRIPTION
-    This function sends a DELETE request to the Microsoft Fabric API to remove an ML Model 
+    This function sends a DELETE request to the Microsoft Fabric API to remove an ML Model
     from the specified workspace using the provided WorkspaceId and MLModelId.
 
 .PARAMETER WorkspaceId
@@ -21,7 +21,7 @@
     - Calls `Test-TokenExpired` to ensure token validity before making the API request.
 
     Author: Tiago Balabuch
-    
+
 #>
 function Remove-FabricMLModel {
     [CmdletBinding(SupportsShouldProcess = $true, ConfirmImpact = 'High')]
@@ -53,7 +53,7 @@ function Remove-FabricMLModel {
                 BaseURI = $apiEndpointURI
                 Method = 'Delete'
             }
-            $response = Invoke-FabricAPIRequest @apiParams 
+            $response = Invoke-FabricAPIRequest @apiParams
 
             # Return the API response
             Write-Message -Message "ML Model '$MLModelId' deleted successfully from workspace '$WorkspaceId'." -Level Info

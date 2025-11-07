@@ -20,7 +20,7 @@ Deletes the environment with ID "67890" from workspace "12345".
 - Requires `$FabricConfig` global configuration, including `BaseUrl` and `FabricHeaders`.
 - Validates token expiration before making the API request.
 
-Author: Tiago Balabuch  
+Author: Tiago Balabuch
 
 #>
 function Remove-FabricEnvironment {
@@ -39,7 +39,7 @@ function Remove-FabricEnvironment {
         Write-Message -Message "Validating authentication token..." -Level Debug
         Test-TokenExpired
         Write-Message -Message "Authentication token is valid." -Level Debug
-                
+
         # Construct the API endpoint URI
         $apiEndpointURI = "{0}/workspaces/{1}/environments/{2}" -f $FabricConfig.BaseUrl, $WorkspaceId, $EnvironmentId
         Write-Message -Message "API Endpoint: $apiEndpointURI" -Level Debug
@@ -51,7 +51,7 @@ function Remove-FabricEnvironment {
                 BaseURI = $apiEndpointURI
                 Method  = 'Delete'
             }
-            $response = Invoke-FabricAPIRequest @apiParams 
+            $response = Invoke-FabricAPIRequest @apiParams
 
             # Return the API response
             Write-Message -Message "Environment '$EnvironmentId' deleted successfully from workspace '$WorkspaceId'." -Level Info

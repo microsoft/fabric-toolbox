@@ -3,7 +3,7 @@
     Updates an existing ML Experiment in a specified Microsoft Fabric workspace.
 
 .DESCRIPTION
-    This function sends a PATCH request to the Microsoft Fabric API to update an existing ML Experiment 
+    This function sends a PATCH request to the Microsoft Fabric API to update an existing ML Experiment
     in the specified workspace. It supports optional parameters for ML Experiment description.
 
 .PARAMETER WorkspaceId
@@ -27,15 +27,15 @@
     - Calls `Test-TokenExpired` to ensure token validity before making the API request.
 
     Author: Tiago Balabuch
-    
+
 #>
 function Update-FabricMLExperiment {
     [CmdletBinding(SupportsShouldProcess = $true, ConfirmImpact = 'Medium')]
     param (
         [Parameter(Mandatory = $true)]
         [ValidateNotNullOrEmpty()]
-        [string]$WorkspaceId,   
-        
+        [string]$WorkspaceId,
+
         [Parameter(Mandatory = $true)]
         [ValidateNotNullOrEmpty()]
         [string]$MLExperimentId,
@@ -83,8 +83,8 @@ function Update-FabricMLExperiment {
                 Method = 'Patch'
                 Body = $bodyJson
             }
-            $response = Invoke-FabricAPIRequest @apiParams 
-          
+            $response = Invoke-FabricAPIRequest @apiParams
+
             # Return the API response
             Write-Message -Message "ML Experiment '$MLExperimentName' updated successfully!" -Level Info
             return $response

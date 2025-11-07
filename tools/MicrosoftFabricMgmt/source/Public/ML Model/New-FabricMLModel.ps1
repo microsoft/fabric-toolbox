@@ -3,7 +3,7 @@
     Creates a new ML Model in a specified Microsoft Fabric workspace.
 
 .DESCRIPTION
-    This function sends a POST request to the Microsoft Fabric API to create a new ML Model 
+    This function sends a POST request to the Microsoft Fabric API to create a new ML Model
     in the specified workspace. It supports optional parameters for ML Model description.
 
 .PARAMETER WorkspaceId
@@ -24,7 +24,7 @@
     - Calls `Test-TokenExpired` to ensure token validity before making the API request.
 
     Author: Tiago Balabuch
-    
+
 #>
 function New-FabricMLModel {
     [CmdletBinding(SupportsShouldProcess = $true, ConfirmImpact = 'Medium')]
@@ -48,7 +48,7 @@ function New-FabricMLModel {
         Test-TokenExpired
         Write-Message -Message "Authentication token is valid." -Level Debug
 
-        # Construct the API endpoint URI 
+        # Construct the API endpoint URI
         $apiEndpointURI = "{0}/workspaces/{1}/mlModels" -f $FabricConfig.BaseUrl, $WorkspaceId
         Write-Message -Message "API Endpoint: $apiEndpointURI" -Level Debug
 
@@ -60,7 +60,7 @@ function New-FabricMLModel {
         if ($MLModelDescription) {
             $body.description = $MLModelDescription
         }
-        
+
         # Convert the body to JSON
         $bodyJson = $body | ConvertTo-Json -Depth 10
         Write-Message -Message "Request Body: $bodyJson" -Level Debug
@@ -77,7 +77,7 @@ function New-FabricMLModel {
             }
             $response = Invoke-FabricAPIRequest @apiParams
 
-            # Return the API response   
+            # Return the API response
             Write-Message -Message "ML Model '$MLModelName' created successfully!" -Level Info
             return $response
         }

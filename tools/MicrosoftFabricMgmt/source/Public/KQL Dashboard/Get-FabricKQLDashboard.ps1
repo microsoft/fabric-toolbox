@@ -25,7 +25,7 @@ Retrieves all KQLDashboards in workspace "12345".
 - Requires `$FabricConfig` global configuration, including `BaseUrl` and `FabricHeaders`.
 - Calls `Test-TokenExpired` to ensure token validity before making the API request.
 
-Author: Tiago Balabuch  
+Author: Tiago Balabuch
 
 #>
 
@@ -51,13 +51,13 @@ function Get-FabricKQLDashboard {
             Write-Message -Message "Specify only one parameter: either 'KQLDashboardId' or 'KQLDashboardName'." -Level Error
             return $null
         }
-        
+
         # Validate authentication token before proceeding.
         Write-Message -Message "Validating authentication token..." -Level Debug
         Test-TokenExpired
         Write-Message -Message "Authentication token is valid." -Level Debug
-                
-        # Construct the API endpoint URI   
+
+        # Construct the API endpoint URI
         $apiEndpointURI = "{0}/workspaces/{1}/kqlDashboards" -f $FabricConfig.BaseUrl, $WorkspaceId
         Write-Message -Message "API Endpoint: $apiEndpointURI" -Level Debug
 
@@ -101,6 +101,6 @@ function Get-FabricKQLDashboard {
         # Capture and log error details
         $errorDetails = $_.Exception.Message
         Write-Message -Message "Failed to retrieve KQLDashboard. Error: $errorDetails" -Level Error
-    } 
- 
+    }
+
 }

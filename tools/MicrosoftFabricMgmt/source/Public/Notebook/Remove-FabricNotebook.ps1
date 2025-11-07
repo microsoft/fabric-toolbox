@@ -20,7 +20,7 @@ Deletes the Notebook with ID "67890" from workspace "12345".
 - Requires `$FabricConfig` global configuration, including `BaseUrl` and `FabricHeaders`.
 - Validates token expiration before making the API request.
 
-Author: Tiago Balabuch  
+Author: Tiago Balabuch
 
 #>
 function Remove-FabricNotebook {
@@ -54,7 +54,7 @@ function Remove-FabricNotebook {
                 BaseURI = $apiEndpointURI
                 Method = 'Delete'
             }
-            $response = Invoke-FabricAPIRequest @apiParams 
+            $response = Invoke-FabricAPIRequest @apiParams
 
             # Return the API response
             Write-Message -Message "Notebook '$NotebookId' deleted successfully from workspace '$WorkspaceId'." -Level Info

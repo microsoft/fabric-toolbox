@@ -43,7 +43,7 @@ function Remove-FabricConnection {
                 Method = 'Delete'
             }
             $response = Invoke-FabricAPIRequest @apiParams
-            
+
             # Return the API response
             Write-Message -Message "Connection '$ConnectionId' deleted successfully." -Level Info
             return $response

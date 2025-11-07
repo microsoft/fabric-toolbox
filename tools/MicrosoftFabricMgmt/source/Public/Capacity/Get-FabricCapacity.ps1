@@ -49,7 +49,7 @@ function Get-FabricCapacity {
         Write-Message -Message "Validating authentication token..." -Level Debug
         Test-TokenExpired
         Write-Message -Message "Authentication token is valid." -Level Debug
- 
+
         # Construct the API endpoint URI
         $apiEndpointURI = "{0}/capacities" -f $FabricConfig.BaseUrl
         Write-Message -Message "API Endpoint: $apiEndpointURI" -Level Debug
@@ -60,13 +60,13 @@ function Get-FabricCapacity {
             Method = 'Get'
         }
         $dataItems = Invoke-FabricAPIRequest @apiParams
- 
+
         # Immediately handle empty response
         if (-not $dataItems) {
             Write-Message -Message "No data returned from the API." -Level Warning
             return $null
         }
- 
+
         # Apply filtering logic efficiently
         if ($CapacityId) {
             $matchedItems = $dataItems.Where({ $_.Id -eq $CapacityId }, 'First')
@@ -78,7 +78,7 @@ function Get-FabricCapacity {
             Write-Message -Message "No filter provided. Returning all items." -Level Debug
             $matchedItems = $dataItems
         }
- 
+
         # Handle results
         if ($matchedItems) {
             Write-Message -Message "Item(s) found matching the specified criteria." -Level Debug
@@ -94,4 +94,4 @@ function Get-FabricCapacity {
         $errorDetails = $_.Exception.Message
         Write-Message -Message "Failed to retrieve capacity. Error: $errorDetails" -Level Error
     }
-} 
+}

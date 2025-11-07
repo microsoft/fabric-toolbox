@@ -61,7 +61,7 @@ function Get-FabricManagedPrivateEndpoint {
         Write-Message -Message "Validating authentication token..." -Level Debug
         Test-TokenExpired
         Write-Message -Message "Authentication token is valid." -Level Debug
-                
+
         # Construct the API endpoint URI
         $apiEndpointURI = "{0}/workspaces/{1}/managedPrivateEndpoints" -f $FabricConfig.BaseUrl, $WorkspaceId
 
@@ -105,5 +105,5 @@ function Get-FabricManagedPrivateEndpoint {
         # Capture and log error details
         $errorDetails = $_.Exception.Message
         Write-Message -Message "Failed to retrieve Managed Private Endpoints. Error: $errorDetails" -Level Error
-    } 
+    }
 }

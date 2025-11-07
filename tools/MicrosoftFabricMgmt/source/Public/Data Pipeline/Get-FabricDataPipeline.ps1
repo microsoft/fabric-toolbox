@@ -51,15 +51,15 @@ function Get-FabricDataPipeline {
             Write-Message -Message "Specify only one parameter: either 'DataPipelineId' or 'DataPipelineName'." -Level Error
             return $null
         }
-        
+
         # Validate authentication token before proceeding.
         Write-Message -Message "Validating authentication token..." -Level Debug
         Test-TokenExpired
         Write-Message -Message "Authentication token is valid." -Level Debug
-                
+
         # Construct the API endpoint URI
         $apiEndpointURI = "{0}/workspaces/{1}/dataPipelines" -f $FabricConfig.BaseUrl, $WorkspaceId
-        
+
         # Make the API request
         $apiParams = @{
             BaseURI = $apiEndpointURI
@@ -100,5 +100,5 @@ function Get-FabricDataPipeline {
         # Capture and log error details
         $errorDetails = $_.Exception.Message
         Write-Message -Message "Failed to retrieve DataPipeline. Error: $errorDetails" -Level Error
-    } 
+    }
 }

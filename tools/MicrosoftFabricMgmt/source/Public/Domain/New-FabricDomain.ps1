@@ -23,7 +23,7 @@ Creates a "Finance" domain under the parent domain with ID "12345".
 - Requires `$FabricConfig` global configuration, including `BaseUrl` and `FabricHeaders`.
 - Calls `Test-TokenExpired` to ensure token validity before making the API request.
 
-Author: Tiago Balabuch  
+Author: Tiago Balabuch
 
 #>
 
@@ -49,7 +49,7 @@ function New-FabricDomain {
         Write-Message -Message "Validating authentication token..." -Level Debug
         Test-TokenExpired
         Write-Message -Message "Authentication token is valid." -Level Debug
-                
+
         # Construct the API endpoint URI
         $apiEndpointURI = "{0}/admin/domains" -f $FabricConfig.BaseUrl
         Write-Message -Message "API Endpoint: $apiEndpointURI" -Level Debug
@@ -82,7 +82,7 @@ function New-FabricDomain {
             $response = Invoke-FabricAPIRequest @apiParams
 
             # Return the API response
-            Write-Message -Message "Domain created successfully!" -Level Info        
+            Write-Message -Message "Domain created successfully!" -Level Info
             return $response
         }
     }

@@ -20,7 +20,7 @@ Deletes the KQLDatabase with ID "67890" from workspace "12345".
 - Requires `$FabricConfig` global configuration, including `BaseUrl` and `FabricHeaders`.
 - Validates token expiration before making the API request.
 
-Author: Tiago Balabuch  
+Author: Tiago Balabuch
 
 #>
 function Remove-FabricKQLDatabase {
@@ -52,7 +52,7 @@ function Remove-FabricKQLDatabase {
             Method = 'Delete'
         }
         if ($PSCmdlet.ShouldProcess($KQLDatabaseId, "Delete KQL Database in workspace '$WorkspaceId'")) {
-            $response = Invoke-FabricAPIRequest @apiParams 
+            $response = Invoke-FabricAPIRequest @apiParams
 
             # Return the API response
             Write-Message -Message "KQLDatabase '$KQLDatabaseId' deleted successfully from workspace '$WorkspaceId'." -Level Info

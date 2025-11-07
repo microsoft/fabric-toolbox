@@ -51,7 +51,7 @@ function Remove-FabricFolder {
                 Method  = 'Delete'
             }
             $response = Invoke-FabricAPIRequest @apiParams
-            
+
             # Return the API response
             Write-Message -Message "Folder '$FolderId' deleted successfully from workspace '$WorkspaceId'." -Level Info
             return $response

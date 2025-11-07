@@ -4,7 +4,7 @@
 Deletes a specified library from the staging environment in a Microsoft Fabric workspace.
 
 .DESCRIPTION
-This function allows for the deletion of a library from the staging environment, one file at a time. 
+This function allows for the deletion of a library from the staging environment, one file at a time.
 It ensures token validity, constructs the appropriate API request, and handles both success and failure responses.
 
 .PARAMETER WorkspaceId
@@ -25,7 +25,7 @@ Deletes the specified library from the staging environment in the specified work
 - Requires `$FabricConfig` global configuration, including `BaseUrl` and `FabricHeaders`.
 - Validates token expiration before making the API request.
 - This function currently supports deleting one library at a time.
-Author: Tiago Balabuch  
+Author: Tiago Balabuch
 
 #>
 function Remove-FabricEnvironmentStagingLibrary {
@@ -38,7 +38,7 @@ function Remove-FabricEnvironmentStagingLibrary {
         [Parameter(Mandatory = $true)]
         [ValidateNotNullOrEmpty()]
         [string]$EnvironmentId,
-        
+
         [Parameter(Mandatory = $true)]
         [ValidateNotNullOrEmpty()]
         [string]$LibraryName
@@ -48,7 +48,7 @@ function Remove-FabricEnvironmentStagingLibrary {
         Write-Message -Message "Validating authentication token..." -Level Debug
         Test-TokenExpired
         Write-Message -Message "Authentication token is valid." -Level Debug
-                
+
         # Construct the API endpoint URI
         $apiEndpointURI = "{0}/workspaces/{1}/environments/{2}/staging/libraries?libraryToDelete={3}" -f $FabricConfig.BaseUrl, $WorkspaceId, $EnvironmentId, $LibraryName
         Write-Message -Message "API Endpoint: $apiEndpointURI" -Level Debug
@@ -60,8 +60,8 @@ function Remove-FabricEnvironmentStagingLibrary {
                 BaseURI = $apiEndpointURI
                 Method  = 'Delete'
             }
-            $response = Invoke-FabricAPIRequest @apiParams 
-            
+            $response = Invoke-FabricAPIRequest @apiParams
+
             # Return the API response
             Write-Message -Message "Staging library $LibraryName for the Environment '$EnvironmentId' deleted successfully from workspace '$WorkspaceId'." -Level Info
             return $response

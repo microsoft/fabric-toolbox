@@ -3,7 +3,7 @@
 Monitors the status of a long-running operation in Microsoft Fabric.
 
 .DESCRIPTION
-The Get-FabricLongRunningOperation function queries the Microsoft Fabric API to check the status of a 
+The Get-FabricLongRunningOperation function queries the Microsoft Fabric API to check the status of a
 long-running operation. It periodically polls the operation until it reaches a terminal state (Succeeded or Failed).
 
 .PARAMETER operationId
@@ -24,11 +24,11 @@ This command polls the status of the operation with the given operationId every 
 Tiago Balabuch
 
 #>
-function Get-FabricLongRunningOperation { 
+function Get-FabricLongRunningOperation {
     param (
         [Parameter(Mandatory = $false)]
         [string]$operationId,
-       
+
         [Parameter(Mandatory = $false)]
         [string]$location,
 
@@ -47,13 +47,13 @@ function Get-FabricLongRunningOperation {
     Write-Message -Message "Validating authentication token..." -Level Debug
     Test-TokenExpired
     Write-Message -Message "Authentication token is valid." -Level Debug
-    
-    # Construct the API endpoint URI 
+
+    # Construct the API endpoint URI
     $apiEndpointURI = if ($operationId) {
         "https://api.fabric.microsoft.com/v1/operations/{0}" -f $operationId
     }
     else {
-        $location 
+        $location
     }
     Write-Message -Message "API Endpoint: $apiEndpointURI" -Level Debug
 

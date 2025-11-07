@@ -3,8 +3,8 @@
 Creates a new notebook in a specified Microsoft Fabric workspace.
 
 .DESCRIPTION
-This function sends a POST request to the Microsoft Fabric API to create a new notebook 
-in the specified workspace. It supports optional parameters for notebook description 
+This function sends a POST request to the Microsoft Fabric API to create a new notebook
+in the specified workspace. It supports optional parameters for notebook description
 and path definitions for the notebook content.
 
 .PARAMETER WorkspaceId
@@ -29,7 +29,7 @@ An optional path to the platform-specific definition (e.g., .platform file) to u
 - Requires `$FabricConfig` global configuration, including `BaseUrl` and `FabricHeaders`.
 - Calls `Test-TokenExpired` to ensure token validity before making the API request.
 
-Author: Tiago Balabuch  
+Author: Tiago Balabuch
 
 #>
 function New-FabricNotebook {
@@ -51,11 +51,11 @@ function New-FabricNotebook {
         [Parameter(Mandatory = $false)]
         [ValidateNotNullOrEmpty()]
         [string]$NotebookPathDefinition,
-        
+
         [Parameter(Mandatory = $false)]
         [ValidateNotNullOrEmpty()]
         [string]$NotebookPathPlatformDefinition,
-        
+
         [Parameter(Mandatory = $false)]
         [ValidateNotNullOrEmpty()]
     [ValidateSet('ipynb', 'fabricGitSource')]
@@ -68,7 +68,7 @@ function New-FabricNotebook {
         Test-TokenExpired
         Write-Message -Message "Authentication token is valid." -Level Debug
 
-        # Construct the API endpoint URI 
+        # Construct the API endpoint URI
         $apiEndpointURI = "{0}/workspaces/{1}/notebooks" -f $FabricConfig.BaseUrl, $WorkspaceId
         Write-Message -Message "API Endpoint: $apiEndpointURI" -Level Debug
 
@@ -147,7 +147,7 @@ function New-FabricNotebook {
             }
             $response = Invoke-FabricAPIRequest @apiParams
 
-            # Return the API response   
+            # Return the API response
             Write-Message -Message "Notebook '$NotebookName' created successfully!" -Level Info
             return $response
         }

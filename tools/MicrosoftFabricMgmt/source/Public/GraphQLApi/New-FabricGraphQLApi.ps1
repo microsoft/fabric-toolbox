@@ -53,7 +53,7 @@ function New-FabricGraphQLApi {
         [Parameter(Mandatory = $false)]
         [ValidateNotNullOrEmpty()]
         [string]$GraphQLApiPathDefinition,
-        
+
         [Parameter(Mandatory = $false)]
         [ValidateNotNullOrEmpty()]
         [string]$GraphQLApiPathPlatformDefinition,
@@ -68,7 +68,7 @@ function New-FabricGraphQLApi {
         Test-TokenExpired
         Write-Message -Message "Authentication token is valid." -Level Debug
 
-        # Construct the API endpoint URI 
+        # Construct the API endpoint URI
         $apiEndpointURI = "{0}/workspaces/{1}/GraphQLApis" -f $FabricConfig.BaseUrl, $WorkspaceId
         Write-Message -Message "API Endpoint: $apiEndpointURI" -Level Debug
 
@@ -146,7 +146,7 @@ function New-FabricGraphQLApi {
         }
         if ($PSCmdlet.ShouldProcess("GraphQL API '$GraphQLApiName' in workspace '$WorkspaceId'", "Create")) {
             $response = Invoke-FabricAPIRequest @apiParams
-            
+
             # Return the API response
             Write-Message -Message "GraphQLApi '$GraphQLApiName' created successfully!" -Level Info
             return $response

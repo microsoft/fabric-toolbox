@@ -3,8 +3,8 @@
     Decodes a Base64-encoded string into its original text representation.
 
 .DESCRIPTION
-    The Convert-FromBase64 function takes a Base64-encoded string as input, decodes it into a byte array, 
-    and converts it back into a UTF-8 encoded string. It is useful for reversing Base64 encoding applied 
+    The Convert-FromBase64 function takes a Base64-encoded string as input, decodes it into a byte array,
+    and converts it back into a UTF-8 encoded string. It is useful for reversing Base64 encoding applied
     to text or other data.
 
 .PARAMETER Base64String

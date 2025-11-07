@@ -3,7 +3,7 @@
 Updates the definition of a KQLDashboard in a Microsoft Fabric workspace.
 
 .DESCRIPTION
-This function allows updating the content or metadata of a KQLDashboard in a Microsoft Fabric workspace. 
+This function allows updating the content or metadata of a KQLDashboard in a Microsoft Fabric workspace.
 The KQLDashboard content can be provided as file paths, and metadata updates can optionally be enabled.
 
 .PARAMETER WorkspaceId
@@ -25,7 +25,7 @@ Update-FabricKQLDashboardDefinition -WorkspaceId "12345" -KQLDashboardId "67890"
 Updates the content of the KQLDashboard with ID `67890` in the workspace `12345` using the specified KQLDashboard file.
 
 .EXAMPLE
-Update-FabricKQLDashboardDefinition -WorkspaceId "12345" -KQLDashboardId "67890" -KQLDashboardPathDefinition "C:\KQLDashboards\KQLDashboard.ipynb" 
+Update-FabricKQLDashboardDefinition -WorkspaceId "12345" -KQLDashboardId "67890" -KQLDashboardPathDefinition "C:\KQLDashboards\KQLDashboard.ipynb"
 
 Updates both the content and metadata of the KQLDashboard with ID `67890` in the workspace `12345`.
 
@@ -35,7 +35,7 @@ Updates both the content and metadata of the KQLDashboard with ID `67890` in the
 - The KQLDashboard content is encoded as Base64 before being sent to the Fabric API.
 - This function handles asynchronous operations and retrieves operation results if required.
 
-Author: Tiago Balabuch  
+Author: Tiago Balabuch
 
 #>
 function Update-FabricKQLDashboardDefinition {
@@ -52,7 +52,7 @@ function Update-FabricKQLDashboardDefinition {
         [Parameter(Mandatory = $true)]
         [ValidateNotNullOrEmpty()]
         [string]$KQLDashboardPathDefinition,
-        
+
         [Parameter(Mandatory = $false)]
         [ValidateNotNullOrEmpty()]
         [string]$KQLDashboardPathPlatformDefinition
@@ -63,7 +63,7 @@ function Update-FabricKQLDashboardDefinition {
         Test-TokenExpired
         Write-Message -Message "Authentication token is valid." -Level Debug
 
-        # Construct the API endpoint URI with filtering logic  
+        # Construct the API endpoint URI with filtering logic
         $apiEndpointURI = "{0}/workspaces/{1}/KQLDashboards/{2}/updateDefinition" -f $FabricConfig.BaseUrl, $WorkspaceId, $KQLDashboardId
         if ($KQLDashboardPathPlatformDefinition) {
             # Append the query parameter correctly
@@ -76,12 +76,12 @@ function Update-FabricKQLDashboardDefinition {
             definition = @{
                 format = $null
                 parts  = @()
-            } 
+            }
         }
-      
+
         if ($KQLDashboardPathDefinition) {
             $KQLDashboardEncodedContent = Convert-ToBase64 -filePath $KQLDashboardPathDefinition
-            
+
             if (-not [string]::IsNullOrEmpty($KQLDashboardEncodedContent)) {
                 # Add new part to the parts array
                 $body.definition.parts += @{
@@ -127,7 +127,7 @@ function Update-FabricKQLDashboardDefinition {
             $response = Invoke-FabricAPIRequest @apiParams
 
             # Return the API response
-            Write-Message -Message "Successfully updated the definition for KQL Dashboard with ID '$KQLDashboardId' in workspace '$WorkspaceId'." -Level Info        
+            Write-Message -Message "Successfully updated the definition for KQL Dashboard with ID '$KQLDashboardId' in workspace '$WorkspaceId'." -Level Info
             return $response
         }
     }

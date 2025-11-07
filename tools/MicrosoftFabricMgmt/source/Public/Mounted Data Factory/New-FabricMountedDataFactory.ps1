@@ -53,7 +53,7 @@ function New-FabricMountedDataFactory {
         [Parameter(Mandatory = $false)]
         [ValidateNotNullOrEmpty()]
         [string]$MountedDataFactoryPathDefinition,
-        
+
         [Parameter(Mandatory = $false)]
         [ValidateNotNullOrEmpty()]
         [string]$MountedDataFactoryPathPlatformDefinition,
@@ -68,7 +68,7 @@ function New-FabricMountedDataFactory {
         Test-TokenExpired
         Write-Message -Message "Authentication token is valid." -Level Debug
 
-        # Construct the API endpoint URI 
+        # Construct the API endpoint URI
         $apiEndpointURI = "{0}/workspaces/{1}/mountedDataFactories" -f $FabricConfig.BaseUrl, $WorkspaceId
         Write-Message -Message "API Endpoint: $apiEndpointURI" -Level Debug
 
@@ -148,7 +148,7 @@ function New-FabricMountedDataFactory {
                 Body    = $bodyJson
             }
             $response = Invoke-FabricAPIRequest @apiParams
-            
+
             # Return the API response
             Write-Message -Message "Mounted Data Factory '$MountedDataFactoryName' created successfully!" -Level Info
             return $response

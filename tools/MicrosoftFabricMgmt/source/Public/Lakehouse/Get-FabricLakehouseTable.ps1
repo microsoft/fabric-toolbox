@@ -16,14 +16,14 @@ function Get-FabricLakehouseTable {
         Write-Message -Message "Validating authentication token..." -Level Debug
         Test-TokenExpired
         Write-Message -Message "Authentication token is valid." -Level Debug
-                
+
         # Initialize variables
         $maxResults = 1
-      
-        # Construct the API endpoint URI  
+
+        # Construct the API endpoint URI
         $apiEndpointURI = "{0}/workspaces/{1}/lakehouses/{2}/tables?maxResults={3}" -f $FabricConfig.BaseUrl, $WorkspaceId, $LakehouseId, $maxResults
         Write-Message -Message "API Endpoint: $apiEndpointURI" -Level Debug
-      
+
         # Make the API request
         $apiParams = @{
             BaseURI = $apiEndpointURI
@@ -31,7 +31,7 @@ function Get-FabricLakehouseTable {
             Method = 'Get'
         }
         $dataItems = Invoke-FabricAPIRequest @apiParams
-           
+
         # Handle results
         if ($dataItems) {
             Write-Message -Message "Item(s) found matching the specified criteria." -Level Debug
@@ -46,6 +46,6 @@ function Get-FabricLakehouseTable {
         # Capture and log error details
         $errorDetails = $_.Exception.Message
         Write-Message -Message "Failed to retrieve Lakehouse. Error: $errorDetails" -Level Error
-    } 
- 
+    }
+
 }

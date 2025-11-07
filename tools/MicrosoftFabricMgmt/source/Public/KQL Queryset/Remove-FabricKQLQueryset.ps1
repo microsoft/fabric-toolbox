@@ -20,7 +20,7 @@ Deletes the KQLQueryset with ID "67890" from workspace "12345".
 - Requires `$FabricConfig` global configuration, including `BaseUrl` and `FabricHeaders`.
 - Validates token expiration before making the API request.
 
-Author: Tiago Balabuch  
+Author: Tiago Balabuch
 
 #>
 function Remove-FabricKQLQueryset {
@@ -51,7 +51,7 @@ function Remove-FabricKQLQueryset {
             Method = 'Delete'
         }
         if ($PSCmdlet.ShouldProcess($KQLQuerysetId, "Delete KQL Queryset in workspace '$WorkspaceId'")) {
-            $response = Invoke-FabricAPIRequest @apiParams 
+            $response = Invoke-FabricAPIRequest @apiParams
 
             # Return the API response
             Write-Message -Message "KQLQueryset '$KQLQuerysetId' deleted successfully from workspace '$WorkspaceId'." -Level Info

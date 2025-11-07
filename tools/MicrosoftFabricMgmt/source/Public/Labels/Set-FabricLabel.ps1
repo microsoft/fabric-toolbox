@@ -32,16 +32,16 @@ function Set-FabricLabel {
         [Parameter(Mandatory = $true)]
         [ValidateNotNullOrEmpty()]
         [System.Object]$Items, # Array with 'id' and 'type'
-        
+
         [Parameter(Mandatory = $true)]
         [ValidateNotNullOrEmpty()]
         [string]$LabelId,
-        
+
         [Parameter(Mandatory = $false)]
         [ValidateNotNullOrEmpty()]
         [ValidateSet('Priviledged', 'Standard')]
         [string]$AssignmentMethod = 'Standard',
-        
+
         [Parameter(Mandatory = $false)]
         [ValidateNotNullOrEmpty()]
         [System.Object]$DelegatedPrincipal
@@ -53,13 +53,13 @@ function Set-FabricLabel {
                 throw "Each Item must contain 'id' and 'type' properties. Found: $item"
             }
         }
-        
+
         # Validate authentication token before proceeding.
         Write-Message -Message "Validating authentication token..." -Level Debug
         Test-TokenExpired
         Write-Message -Message "Authentication token is valid." -Level Debug
 
-        # Construct the API endpoint URI 
+        # Construct the API endpoint URI
         $apiEndpointURI = "{0}/admin/items/bulkSetLabels" -f $FabricConfig.BaseUrl, $WorkspaceId
         Write-Message -Message "API Endpoint: $apiEndpointURI" -Level Debug
 
@@ -76,7 +76,7 @@ function Set-FabricLabel {
         if ($DelegatedPrincipal) {
             $body.delegatedPrincipal = $DelegatedPrincipal
         }
-       
+
         # Convert the body to JSON
         $bodyJson = $body | ConvertTo-Json -Depth 5
         Write-Message -Message "Request Body: $bodyJson" -Level Debug
@@ -90,7 +90,7 @@ function Set-FabricLabel {
         }
         if ($PSCmdlet.ShouldProcess("Bulk label assignment", "Assign label '$LabelId' to $($Items.Count) item(s)")) {
             $response = Invoke-FabricAPIRequest @apiParams
-            
+
             # Return the API response
             Write-Message -Message "Bulk label assignment completed successfully for $($Items.Count) item(s) with LabelId '$LabelId'." -Level Info
             return $response

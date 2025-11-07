@@ -50,7 +50,7 @@ function Remove-FabricMirroredDatabase {
             Method = 'Delete'
         }
         if ($PSCmdlet.ShouldProcess($MirroredDatabaseId, "Delete Mirrored Database in workspace '$WorkspaceId'")) {
-            $response = Invoke-FabricAPIRequest @apiParams 
+            $response = Invoke-FabricAPIRequest @apiParams
 
             # Return the API response
             Write-Message -Message "Mirrored Database '$MirroredDatabaseId' deleted successfully from workspace '$WorkspaceId'." -Level Info

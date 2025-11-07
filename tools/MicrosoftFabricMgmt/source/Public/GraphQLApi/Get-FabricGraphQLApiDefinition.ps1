@@ -49,21 +49,21 @@ function Get-FabricGraphQLApiDefinition {
         Test-TokenExpired
         Write-Message -Message "Authentication token is valid." -Level Debug
 
-        # Construct the API endpoint URI with filtering logic     
+        # Construct the API endpoint URI with filtering logic
         $apiEndpointURI = "{0}/workspaces/{1}/GraphQLApis/{2}/getDefinition" -f $FabricConfig.BaseUrl, $WorkspaceId, $GraphQLApiId
         if ($GraphQLApiFormat) {
             $apiEndpointURI = "{0}?format={1}" -f $apiEndpointURI, $GraphQLApiFormat
         }
         Write-Message -Message "API Endpoint: $apiEndpointURI" -Level Debug
-    
+
         # Make the API request
         $apiParams = @{
             BaseURI = $apiEndpointURI
             Headers = $FabricConfig.FabricHeaders
             Method  = 'Post'
         }
-        $response = Invoke-FabricAPIRequest @apiParams 
-        
+        $response = Invoke-FabricAPIRequest @apiParams
+
         # Return the API response
         Write-Message -Message "GraphQLApi '$GraphQLApiId' definition retrieved successfully!" -Level Debug
         return $response
@@ -72,5 +72,5 @@ function Get-FabricGraphQLApiDefinition {
         # Capture and log error details
         $errorDetails = $_.Exception.Message
         Write-Message -Message "Failed to retrieve GraphQLApi. Error: $errorDetails" -Level Error
-    } 
+    }
  }

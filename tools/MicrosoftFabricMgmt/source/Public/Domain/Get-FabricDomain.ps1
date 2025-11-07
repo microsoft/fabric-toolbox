@@ -28,7 +28,7 @@ Fetches the domain with the display name "Finance".
 - Requires `$FabricConfig` global configuration, including `BaseUrl` and `FabricHeaders`.
 - Calls `Test-TokenExpired` to ensure token validity before making the API request.
 
-Author: Tiago Balabuch  
+Author: Tiago Balabuch
 
 #>
 function Get-FabricDomain {
@@ -57,8 +57,8 @@ function Get-FabricDomain {
         Write-Message -Message "Validating authentication token..." -Level Debug
         Test-TokenExpired
         Write-Message -Message "Authentication token is valid." -Level Debug
-                
-        # Construct the API endpoint URI with filtering logic        
+
+        # Construct the API endpoint URI with filtering logic
         $apiEndpointURI = "{0}/admin/domains" -f $FabricConfig.BaseUrl
         if ($NonEmptyDomainsOnly) {
             $apiEndpointURI = "{0}?nonEmptyOnly=true" -f $apiEndpointURI
@@ -72,7 +72,7 @@ function Get-FabricDomain {
             Method = 'Get'
         }
         $dataItems = Invoke-FabricAPIRequest @apiParams
-       
+
         # Immediately handle empty response
         if (-not $dataItems) {
             Write-Message -Message "No data returned from the API." -Level Warning

@@ -4,7 +4,7 @@
 Retrieves the definition of a Eventstream from a specific workspace in Microsoft Fabric.
 
 .DESCRIPTION
-This function fetches the Eventstream's content or metadata from a workspace. 
+This function fetches the Eventstream's content or metadata from a workspace.
 Handles both synchronous and asynchronous operations, with detailed logging and error handling.
 
 .PARAMETER WorkspaceId
@@ -54,7 +54,7 @@ function Get-FabricEventstreamDefinition {
         Test-TokenExpired
         Write-Message -Message "Authentication token is valid." -Level Debug
 
-        # Construct the API endpoint URI with filtering logic    
+        # Construct the API endpoint URI with filtering logic
         $apiEndpointURI = "{0}/workspaces/{1}/Eventstreams/{2}/getDefinition" -f $FabricConfig.BaseUrl, $WorkspaceId, $EventstreamId
         if ($EventstreamFormat) {
             $apiEndpointURI = "{0}?format={1}" -f $apiEndpointURI, $EventstreamFormat
@@ -67,16 +67,16 @@ function Get-FabricEventstreamDefinition {
             Headers = $FabricConfig.FabricHeaders
             Method = 'Post'
         }
-        $response = Invoke-FabricAPIRequest @apiParams 
-        
+        $response = Invoke-FabricAPIRequest @apiParams
+
         # Return the API response
         Write-Message -Message "Eventstream '$EventstreamId' definition retrieved successfully!" -Level Info
-        return $response   
+        return $response
     }
     catch {
         # Capture and log error details
         $errorDetails = $_.Exception.Message
         Write-Message -Message "Failed to retrieve Eventstream. Error: $errorDetails" -Level Error
-    } 
- 
+    }
+
 }

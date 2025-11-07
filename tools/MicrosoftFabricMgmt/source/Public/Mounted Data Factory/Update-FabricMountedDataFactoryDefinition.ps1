@@ -40,7 +40,7 @@ function Update-FabricMountedDataFactoryDefinition {
         [Parameter(Mandatory = $true)]
         [ValidateNotNullOrEmpty()]
         [string]$MountedDataFactoryPathDefinition,
-        
+
         [Parameter(Mandatory = $false)]
         [ValidateNotNullOrEmpty()]
         [string]$MountedDataFactoryPathPlatformDefinition
@@ -51,7 +51,7 @@ function Update-FabricMountedDataFactoryDefinition {
         Test-TokenExpired
         Write-Message -Message "Authentication token is valid." -Level Debug
 
-        # Construct the API endpoint URI with filtering logic     
+        # Construct the API endpoint URI with filtering logic
         $apiEndpointURI = "{0}/workspaces/{1}/mountedDataFactories/{2}/updateDefinition" -f $FabricConfig.BaseUrl, $WorkspaceId, $MountedDataFactoryId
         if ($MountedDataFactoryPathPlatformDefinition) {
             $apiEndpointURI = "$apiEndpointURI?updateMetadata=true"
@@ -63,12 +63,12 @@ function Update-FabricMountedDataFactoryDefinition {
             definition = @{
                 format = "MountedDataFactoryV1"
                 parts  = @()
-            } 
+            }
         }
-      
+
         if ($MountedDataFactoryPathDefinition) {
             $MountedDataFactoryEncodedContent = Convert-ToBase64 -filePath $MountedDataFactoryPathDefinition
-            
+
             if (-not [string]::IsNullOrEmpty($MountedDataFactoryEncodedContent)) {
                 # Add new part to the parts array
                 $body.definition.parts += @{
@@ -98,7 +98,7 @@ function Update-FabricMountedDataFactoryDefinition {
                 return $null
             }
         }
-        
+
         # Convert the body to JSON
         $bodyJson = $body | ConvertTo-Json -Depth 10
         Write-Message -Message "Request Body: $bodyJson" -Level Debug
@@ -114,7 +114,7 @@ function Update-FabricMountedDataFactoryDefinition {
                 Body    = $bodyJson
             }
             $response = Invoke-FabricAPIRequest @apiParams
-           
+
             # Return the API response
             Write-Message -Message "Successfully updated the definition for Mounted Data Factory with ID '$MountedDataFactoryId' in workspace '$WorkspaceId'." -Level Info
             return $response
