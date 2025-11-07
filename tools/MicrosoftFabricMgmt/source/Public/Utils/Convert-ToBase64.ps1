@@ -31,6 +31,7 @@ Tiago Balabuch
 #>
 function Convert-ToBase64 {
     [CmdletBinding()]
+    [OutputType([string])]
     param (
         [Parameter(Mandatory = $true)]
         [ValidateNotNullOrEmpty()]
