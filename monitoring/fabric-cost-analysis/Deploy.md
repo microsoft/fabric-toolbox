@@ -100,8 +100,7 @@ Once Data Lake Gen 2 storage account created here are the high levels steps to c
 >ℹ️ The parameters "FromMonth" and "ToMonth" in the Data pipeline can be configured to specify the historical time frame of data processing. For example, setting FromMonth = -3 and ToMonth = 0 will load data from the previous three months.
 
 The pipeline can be scheduled for daily loads ([Scheduled data pipeline runs](https://learn.microsoft.com/en-us/fabric/data-factory/pipeline-runs#scheduled-data-pipeline-runs)).
-In case of **Daily runs**, configure "FromMonth" = 0 and "ToMonth" = 0.
-In case of **Weekly or Monthly runs**, configure "FromMonth" = -1 and "ToMonth" = 0.
+We recommend configuring "FromMonth" = -1 and "ToMonth" = 0 to manage the FOCUS updates of the previous month that occurred during the first week of the current month.
 
 ## 4 - Open the report
 
