@@ -51,6 +51,8 @@ Once Data Lake Gen 2 storage account created here are the high levels steps to c
 
 - In Microsoft Fabric portal, create a new workspace "FCA" (name can be changed), which is backed by a capacity (Trial, P# or F#)
 - Download the ([Workspace logo](./media/FCA%20Logo%20Small.png)) and add the logo to the workspace
+- You can configure the Workspace to allow the share of a high concurrency session during the pipeline execution to limit the Spark vCore needs during the execution of parallel notebooks
+  ![alt text](./media/pipelinehc.png)
 - Download and import the **[00_Deploy_FCA.ipynb](./script/00_Deploy_FCA.ipynb)** Notebook into your FCA workspace ([Import existing notebooks](https://learn.microsoft.com/en-us/fabric/data-engineering/how-to-use-notebook#import-existing-notebooks))
 - Click "Run All" in the Notebook
 
