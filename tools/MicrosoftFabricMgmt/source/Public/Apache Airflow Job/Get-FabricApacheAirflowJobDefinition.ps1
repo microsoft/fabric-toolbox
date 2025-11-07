@@ -26,6 +26,7 @@ Retrieves the definition of the Apache Airflow Job with ID `67890` from the work
 - Handles long-running operations asynchronously.
 - Logs detailed information for debugging purposes.
 
+Author: Updated by Jess Pomfret and Rob Sewell November 2026
 #>
 function Get-FabricApacheAirflowJobDefinition {
     [CmdletBinding()]

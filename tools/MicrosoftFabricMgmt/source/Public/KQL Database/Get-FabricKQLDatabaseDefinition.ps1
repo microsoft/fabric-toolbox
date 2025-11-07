@@ -33,6 +33,7 @@ Retrieves the definitions of all KQLDatabases in the workspace with ID `12345` i
 - Calls `Test-TokenExpired` to ensure token validity before making the API request.
 - Handles long-running operations asynchronously.
 
+Author: Updated by Jess Pomfret and Rob Sewell November 2026
 #>
 function Get-FabricKQLDatabaseDefinition {
     [CmdletBinding()]

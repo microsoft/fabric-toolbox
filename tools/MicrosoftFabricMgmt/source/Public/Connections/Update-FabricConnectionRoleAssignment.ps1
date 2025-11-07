@@ -20,6 +20,7 @@ Update-FabricConnectionRoleAssignment -ConnectionId "Connection123" -ConnectionR
 .NOTES
 Requires global $FabricConfig with BaseUrl and FabricHeaders.
 Validates authentication token before request.
+Author: Updated by Jess Pomfret and Rob Sewell November 2026
 #>
 
 function Update-FabricConnectionRoleAssignment {

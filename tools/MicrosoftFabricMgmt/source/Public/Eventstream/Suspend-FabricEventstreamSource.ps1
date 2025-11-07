@@ -24,7 +24,9 @@ Calls Test-TokenExpired to validate the authentication token before making the r
 
 .AUTHOR
 Tiago Balabuch
+         Updated by Jess Pomfret and Rob Sewell November 2026
 #>
+
 
 function Suspend-FabricEventstreamSource {
     [CmdletBinding(SupportsShouldProcess = $true, ConfirmImpact = 'Medium')]

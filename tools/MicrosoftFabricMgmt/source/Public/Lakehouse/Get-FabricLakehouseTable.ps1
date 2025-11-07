@@ -1,5 +1,12 @@
+<#
+.SYNOPSIS
+Retrieves one or more tables from a Lakehouse in a specific workspace in Microsoft Fabric.
 
+.DESCRIPTION
+This function fetches Lakehouse table metadata from a workspace.
 
+Author: Updated by Jess Pomfret and Rob Sewell November 2026
+#>
 function Get-FabricLakehouseTable {
     [CmdletBinding()]
     param (

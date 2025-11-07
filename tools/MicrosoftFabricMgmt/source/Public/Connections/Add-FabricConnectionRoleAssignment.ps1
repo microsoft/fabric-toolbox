@@ -25,6 +25,7 @@ Assigns the Owner role to the user with ID "user456" in the connection "abc123".
 .NOTES
 - Requires $FabricConfig with BaseUrl and FabricHeaders.
 - Validates authentication token using Test-TokenExpired before making the API call.
+Author: Updated by Jess Pomfret and Rob Sewell November 2026
 #>
 
 function Add-FabricConnectionRoleAssignment {

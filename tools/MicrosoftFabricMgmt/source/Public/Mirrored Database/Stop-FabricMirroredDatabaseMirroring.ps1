@@ -1,5 +1,12 @@
 
+<#
+.SYNOPSIS
+Stops mirroring for a specified MirroredDatabase in a workspace.
 
+.DESCRIPTION
+Stops mirroring on the MirroredDatabase via the Fabric API with proper authentication and confirmation support.
+Author: Updated by Jess Pomfret and Rob Sewell November 2026
+#>
 function Stop-FabricMirroredDatabaseMirroring {
     [CmdletBinding(SupportsShouldProcess = $true, ConfirmImpact = 'Medium')]
     param (

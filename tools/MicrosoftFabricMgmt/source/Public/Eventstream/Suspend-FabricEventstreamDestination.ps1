@@ -24,6 +24,7 @@ Calls Test-TokenExpired to ensure the authentication token is valid before makin
 
 .AUTHOR
 Tiago Balabuch
+     Updated by Jess Pomfret and Rob Sewell November 2026
 #>
 
 function Suspend-FabricEventstreamDestination {

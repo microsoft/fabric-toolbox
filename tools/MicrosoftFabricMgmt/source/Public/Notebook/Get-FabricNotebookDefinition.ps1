@@ -32,7 +32,7 @@ Retrieves the definitions of all notebooks in the workspace with ID `12345` in t
 - Requires `$FabricConfig` global configuration, including `BaseUrl` and `FabricHeaders`.
 - Calls `Test-TokenExpired` to ensure token validity before making the API request.
 - Handles long-running operations asynchronously.
-
+Author: Updated by Jess Pomfret and Rob Sewell November 2026
 #>
 function Get-FabricNotebookDefinition {
     [CmdletBinding()]

@@ -27,7 +27,7 @@
     - Large files may cause memory constraints due to full loading into memory.
 
 .AUTHOR
-Tiago Balabuch
+Author: Jess Pomfret and Rob Sewell updated November 2026
 #>
 function Convert-ToBase64 {
     [CmdletBinding()]

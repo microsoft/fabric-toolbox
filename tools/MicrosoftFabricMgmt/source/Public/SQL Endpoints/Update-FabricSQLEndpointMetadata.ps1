@@ -25,6 +25,9 @@ Update-FabricSQLEndpointMetadata -WorkspaceId "workspace123" -SQLEndpointId "end
 .NOTES
     - Requires `$FabricConfig` global configuration, including `BaseUrl` and `FabricHeaders`.
     - Calls `Test-TokenExpired` to ensure token validity before making the API request.
+#
+.AUTHOR
+Author: Jess Pomfret and Rob Sewell updated November 2026
 #>
 function Update-FabricSQLEndpointMetadata {
     [CmdletBinding(SupportsShouldProcess=$true, ConfirmImpact='Medium')]

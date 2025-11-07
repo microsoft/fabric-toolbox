@@ -34,7 +34,7 @@ Logs in to Azure with the specified tenant ID, retrieves an access token for the
 - Relies on a global `$FabricConfig` object for storing headers and token metadata.
 
 .AUTHOR
-Tiago Balabuch
+Author: Jess Pomfret and Rob Sewell updated November 2026
 #>
 
 function Set-FabricApiHeaders {

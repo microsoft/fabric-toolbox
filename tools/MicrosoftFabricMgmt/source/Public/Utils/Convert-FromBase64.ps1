@@ -28,7 +28,7 @@
     - Any decoding errors will throw a descriptive error message.
 
 .AUTHOR
-Tiago Balabuch
+Author: Jess Pomfret and Rob Sewell updated November 2026
 #>
 function Convert-FromBase64 {
     param (

@@ -16,11 +16,8 @@ The unique identifier of the Eventstream to suspend.
 Suspend-FabricEventstream -WorkspaceId "workspace-12345" -EventstreamId "eventstream-67890"
 
 .NOTES
-- Requires the global $FabricConfig (BaseUrl and FabricHeaders).
-- Calls Test-TokenExpired to ensure the authentication token is valid before making the request.
 
-.AUTHOR
-Tiago Balabuch
+Author: Updated by Jess Pomfret and Rob Sewell November 2026
 #>
 
 function Suspend-FabricEventstream {

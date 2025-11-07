@@ -19,7 +19,7 @@ This command fetches the result of the operation with the specified operationId.
 - This function does not handle polling. Ensure the operation is in a terminal state before calling this function.
 
 .AUTHOR
-Tiago Balabuch
+Author: Jess Pomfret and Rob Sewell updated November 2026
 
 #>
 function Get-FabricLongRunningOperationResult {

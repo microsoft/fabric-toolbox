@@ -1,3 +1,11 @@
+<#
+.SYNOPSIS
+Retrieves mirroring status for tables in a MirroredDatabase within a workspace.
+
+.DESCRIPTION
+Fetches table-level mirroring status and handles empty results and errors.
+Author: Updated by Jess Pomfret and Rob Sewell November 2026
+#>
 function Get-FabricMirroredDatabaseTableStatus {
     [CmdletBinding()]
     param (

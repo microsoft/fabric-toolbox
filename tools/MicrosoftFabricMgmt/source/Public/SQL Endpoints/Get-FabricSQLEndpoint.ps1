@@ -27,6 +27,9 @@ Get-FabricSQLEndpoint -WorkspaceId "workspace123" -SQLEndpointName "MySQLEndpoin
     - Requires `$FabricConfig` global configuration, including `BaseUrl` and `FabricHeaders`.
     - Calls `Test-TokenExpired` to ensure token validity before making the API request.
 
+.AUTHOR
+Author: Jess Pomfret and Rob Sewell updated November 2026
+
 #>
 function Get-FabricSQLEndpoint {
     [CmdletBinding()]

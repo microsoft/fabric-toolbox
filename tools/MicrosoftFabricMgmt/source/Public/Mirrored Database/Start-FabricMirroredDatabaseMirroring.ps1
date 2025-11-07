@@ -1,3 +1,11 @@
+<#
+.SYNOPSIS
+Starts mirroring for a specified MirroredDatabase in a workspace.
+
+.DESCRIPTION
+Initiates mirroring on the MirroredDatabase via the Fabric API with proper authentication and confirmation support.
+Author: Updated by Jess Pomfret and Rob Sewell November 2026
+#>
 function Start-FabricMirroredDatabaseMirroring {
     [CmdletBinding(SupportsShouldProcess = $true, ConfirmImpact = 'Medium')]
     param (

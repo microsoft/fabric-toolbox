@@ -18,10 +18,9 @@ Get-FabricLongRunningOperation -operationId "12345-abcd-67890-efgh" -retryAfter 
 This command polls the status of the operation with the given operationId every 10 seconds until it completes.
 
 .NOTES
-- Requires the `$FabricConfig` global object, including `BaseUrl` and `FabricHeaders`.
 
 .AUTHOR
-Tiago Balabuch
+Author: Jess Pomfret and Rob Sewell updated November 2026
 
 #>
 function Get-FabricLongRunningOperation {

@@ -27,7 +27,7 @@ Retrieves the definitions of all MirroredDatabases in the workspace with ID `123
 - Requires `$FabricConfig` global configuration, including `BaseUrl` and `FabricHeaders`.
 - Calls `Test-TokenExpired` to ensure token validity before making the API request.
 - Handles long-running operations asynchronously.
-
+Author: Updated by Jess Pomfret and Rob Sewell November 2026
 #>
 function Get-FabricMirroredDatabaseDefinition {
     [CmdletBinding()]

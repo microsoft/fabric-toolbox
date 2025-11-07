@@ -1,3 +1,11 @@
+<#
+.SYNOPSIS
+Loads data into a Lakehouse table in a specific workspace in Microsoft Fabric.
+
+.DESCRIPTION
+This function triggers loading data files into a specified Lakehouse table.
+Author: Updated by Jess Pomfret and Rob Sewell November 2026
+#>
 function Load-FabricLakehouseTable {
     [Diagnostics.CodeAnalysis.SuppressMessage('PSUseApprovedVerbs','')]
     [CmdletBinding(SupportsShouldProcess = $true, ConfirmImpact = 'Medium')]

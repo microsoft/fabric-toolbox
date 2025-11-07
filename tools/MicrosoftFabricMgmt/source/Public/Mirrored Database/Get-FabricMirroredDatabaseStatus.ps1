@@ -1,3 +1,12 @@
+<#
+.SYNOPSIS
+
+Retrieves the mirroring status of a MirroredDatabase from a specific workspace in Microsoft Fabric.
+
+.DESCRIPTION
+This function fetches the MirroredDatabase mirroring status from a workspace and handles authentication and API requests.
+Author: Updated by Jess Pomfret and Rob Sewell November 2026
+#>
 function Get-FabricMirroredDatabaseStatus {
     [CmdletBinding()]
     param (

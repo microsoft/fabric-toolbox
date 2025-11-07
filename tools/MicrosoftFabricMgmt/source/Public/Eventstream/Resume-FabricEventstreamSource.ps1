@@ -22,7 +22,7 @@ Resume-FabricEventstreamSource -WorkspaceId "workspace-12345" -EventstreamId "ev
 Requires the global $FabricConfig (BaseUrl and FabricHeaders).
 Calls Test-TokenExpired to ensure the authentication token is valid before making the request.
 
-.AUTHOR
+Author: Updated by Jess Pomfret and Rob Sewell November 2026
 Tiago Balabuch
 #>
 
