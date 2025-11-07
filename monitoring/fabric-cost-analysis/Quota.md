@@ -32,4 +32,4 @@ Add credentials to connections :
 
 ![Load FCA E2E Notebook](./media/PipelineQuota.png)
 
-- Save and go back to deployment documentation : [Deployment documentation](./Deploy.md#optional-steps)
+- Save and go back to deployment documentation : [Deployment documentation](./Deploy.md#-optional-steps)

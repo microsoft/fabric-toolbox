@@ -59,4 +59,4 @@ To create reservation export, on the Azure portal , search for **Cost Management
 
 ![Load FCA E2E Notebook](./media/PipelineReservation.png)
 
-- Save and go back to deployment documentation : [Deployment documentation](./Deploy.md#optional-steps)
+- Save and go back to deployment documentation : [Deployment documentation](./Deploy.md#-optional-steps)
