@@ -3,18 +3,18 @@ param(
     $ModuleName = "MicrosoftFabricMgmt",
     $expectedParams = @(
         "Verbose"
-                "Debug"
-                "ErrorAction"
-                "WarningAction"
-                "InformationAction"
-                "ProgressAction"
-                "ErrorVariable"
-                "WarningVariable"
-                "InformationVariable"
-                "OutVariable"
-                "OutBuffer"
-                "PipelineVariable"
-
+        "Debug"
+        "ErrorAction"
+        "WarningAction"
+        "InformationAction"
+        "ProgressAction"
+        "ErrorVariable"
+        "WarningVariable"
+        "InformationVariable"
+        "OutVariable"
+        "OutBuffer"
+        "PipelineVariable"
+        "ExternalDataShareId"
     )
 )
 
@@ -42,7 +42,7 @@ Describe "Get-FabricExternalDataShares" -Tag "UnitTests" {
         }
     }
 
-     Context "Alias validation" {
+    Context "Alias validation" {
         $testCases = @('Get-FabricExternalDataShares')
 
         It "Should have the alias <_>" -TestCases $TestCases {
