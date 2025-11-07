@@ -1,21 +1,33 @@
 #Requires -Module @{ ModuleName="Pester"; ModuleVersion="5.0"}
 param(
     $ModuleName = "MicrosoftFabricMgmt",
-    $expectedParams = @(
-        'Verbose'
-        'Debug'
-        'ErrorAction'
-        'WarningAction'
-        'InformationAction'
-        'ProgressAction'
-        'ErrorVariable'
-        'WarningVariable'
-        'InformationVariable'
-        'OutVariable'
-        'OutBuffer'
-        'PipelineVariable'
-
-    )
+$expectedParams = @(
+    "WorkspaceId"
+    "ItemId"
+    "RoleName"
+    "Paths"
+    "Actions"
+    "ItemAccess"
+    "FabricSourcePath"
+    "ObjectType"
+    "ObjectId"
+    "TenantId"
+    "DryRun"
+    "ProgressAction"
+    "Verbose"
+    "Debug"
+    "ErrorAction"
+    "WarningAction"
+    "InformationAction"
+    "InformationVariable"
+    "OutVariable"
+    "OutBuffer"
+    "PipelineVariable"
+    "ErrorVariable"
+    "WarningVariable"
+    "Confirm"
+    "WhatIf"
+)
 )
 
 Describe "Set-FabricOneLakeDataAccessSecurity" -Tag "UnitTests" {

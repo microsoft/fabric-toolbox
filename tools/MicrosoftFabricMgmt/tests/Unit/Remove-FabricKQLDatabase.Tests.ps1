@@ -1,24 +1,24 @@
 #Requires -Module @{ ModuleName="Pester"; ModuleVersion="5.0"}
 param(
     $ModuleName = "MicrosoftFabricMgmt",
-    $expectedParams = @(
-        "WorkspaceId"
-        "KQLDatabaseId"
-        "Verbose"
-        "Debug"
-        "ErrorAction"
-        "WarningAction"
-        "InformationAction"
-        "ProgressAction"
-        "ErrorVariable"
-        "WarningVariable"
-        "InformationVariable"
-        "OutVariable"
-        "OutBuffer"
-        "PipelineVariable"
-        "Confirm"
-        "WhatIf"
-    )
+$expectedParams = @(
+    "WorkspaceId"
+    "KQLDatabaseId"
+    "ProgressAction"
+    "Verbose"
+    "Debug"
+    "ErrorAction"
+    "WarningAction"
+    "InformationAction"
+    "InformationVariable"
+    "OutVariable"
+    "OutBuffer"
+    "PipelineVariable"
+    "ErrorVariable"
+    "WarningVariable"
+    "Confirm"
+    "WhatIf"
+)
 )
 
 Describe "Remove-FabricKQLDatabase" -Tag "UnitTests" {

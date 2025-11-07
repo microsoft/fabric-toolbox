@@ -1,26 +1,26 @@
 #Requires -Module @{ ModuleName="Pester"; ModuleVersion="5.0"}
 param(
     $ModuleName = "MicrosoftFabricMgmt",
-    $expectedParams = @(
-        "DomainId"
-        "DomainName"
-        "DomainDescription"
-        "DomainContributorsScope"
-        "Verbose"
-        "Debug"
-        "ErrorAction"
-        "WarningAction"
-        "InformationAction"
-        "ProgressAction"
-        "ErrorVariable"
-        "WarningVariable"
-        "InformationVariable"
-        "OutVariable"
-        "OutBuffer"
-        "PipelineVariable"
-        "WhatIf"
-        "Confirm"
-    )
+$expectedParams = @(
+    "DomainId"
+    "DomainName"
+    "DomainDescription"
+    "DomainContributorsScope"
+    "ProgressAction"
+    "Verbose"
+    "Debug"
+    "ErrorAction"
+    "WarningAction"
+    "InformationAction"
+    "InformationVariable"
+    "OutVariable"
+    "OutBuffer"
+    "PipelineVariable"
+    "ErrorVariable"
+    "WarningVariable"
+    "Confirm"
+    "WhatIf"
+)
 )
 
 Describe "Update-FabricDomain" -Tag "UnitTests" {

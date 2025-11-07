@@ -1,28 +1,28 @@
 #Requires -Module @{ ModuleName="Pester"; ModuleVersion="5.0"}
 param(
     $ModuleName = "MicrosoftFabricMgmt",
-    $expectedParams = @(
-        "CapacityId"
-        "SettingTitle"
-        "EnableTenantSetting"
-        "DelegateToWorkspace"
-        "EnabledSecurityGroups"
-        "ExcludedSecurityGroups"
-        "Verbose"
-        "Debug"
-        "ErrorAction"
-        "WarningAction"
-        "InformationAction"
-        "ProgressAction"
-        "ErrorVariable"
-        "WarningVariable"
-        "InformationVariable"
-        "OutVariable"
-        "OutBuffer"
-        "PipelineVariable"
-        "WhatIf"
-        "Confirm"
-    )
+$expectedParams = @(
+    "CapacityId"
+    "SettingTitle"
+    "EnableTenantSetting"
+    "DelegateToWorkspace"
+    "EnabledSecurityGroups"
+    "ExcludedSecurityGroups"
+    "ProgressAction"
+    "Verbose"
+    "Debug"
+    "ErrorAction"
+    "WarningAction"
+    "InformationAction"
+    "InformationVariable"
+    "OutVariable"
+    "OutBuffer"
+    "PipelineVariable"
+    "ErrorVariable"
+    "WarningVariable"
+    "Confirm"
+    "WhatIf"
+)
 )
 
 Describe "Update-FabricCapacityTenantSettingOverrides" -Tag "UnitTests" {

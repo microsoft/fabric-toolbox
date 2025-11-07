@@ -21,16 +21,16 @@ param(
     )
 )
 
-Describe "Assign-FabricDomainWorkspaceByPrincipal" -Tag "UnitTests" {
+Describe "Assign-FabricDomainWorkspaceByRoleAssignment" -Tag "UnitTests" {
 
     BeforeDiscovery {
-        $command = Get-Command -Name Assign-FabricDomainWorkspaceByPrincipal
+        $command = Get-Command -Name Assign-FabricDomainWorkspaceByRoleAssignment
         $expected = $expectedParams
     }
 
     Context "Parameter validation" {
         BeforeAll {
-            $command = Get-Command -Name Assign-FabricDomainWorkspaceByPrincipal
+            $command = Get-Command -Name Assign-FabricDomainWorkspaceByRoleAssignment
             $expected = $expectedParams
         }
 

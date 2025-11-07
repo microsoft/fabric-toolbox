@@ -1,27 +1,27 @@
 #Requires -Module @{ ModuleName="Pester"; ModuleVersion="5.0"}
 param(
     $ModuleName = "MicrosoftFabricMgmt",
-    $expectedParams = @(
-        "WorkspaceId"
-        "ReflexName"
-        "ReflexDescription"
-        "ReflexPathDefinition"
-        "ReflexPathPlatformDefinition"
-        "Verbose"
-        "Debug"
-        "ErrorAction"
-        "WarningAction"
-        "InformationAction"
-        "ProgressAction"
-        "ErrorVariable"
-        "WarningVariable"
-        "InformationVariable"
-        "OutVariable"
-        "OutBuffer"
-        "PipelineVariable"
-        "Confirm"
-        "WhatIf"
-    )
+$expectedParams = @(
+    "WorkspaceId"
+    "ReflexName"
+    "ReflexDescription"
+    "ReflexPathDefinition"
+    "ReflexPathPlatformDefinition"
+    "ProgressAction"
+    "Verbose"
+    "Debug"
+    "ErrorAction"
+    "WarningAction"
+    "InformationAction"
+    "InformationVariable"
+    "OutVariable"
+    "OutBuffer"
+    "PipelineVariable"
+    "ErrorVariable"
+    "WarningVariable"
+    "Confirm"
+    "WhatIf"
+)
 )
 
 Describe "New-FabricReflex" -Tag "UnitTests" {

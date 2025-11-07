@@ -1,31 +1,31 @@
 #Requires -Module @{ ModuleName="Pester"; ModuleVersion="5.0"}
 param(
     $ModuleName = "MicrosoftFabricMgmt",
-    $expectedParams = @(
-        "WorkspaceId"
-        "LakehouseId"
-        "JobType"
-        "SchemaName"
-        "TableName"
-        "IsVOrder"
-        "ColumnsZOrderBy"
-        "retentionPeriod"
-        "waitForCompletion"
-        "Verbose"
-        "Debug"
-        "ErrorAction"
-        "WarningAction"
-        "InformationAction"
-        "ProgressAction"
-        "ErrorVariable"
-        "WarningVariable"
-        "InformationVariable"
-        "OutVariable"
-        "OutBuffer"
-        "PipelineVariable"
-        "WhatIf"
-        "Confirm"
-    )
+$expectedParams = @(
+    "WorkspaceId"
+    "LakehouseId"
+    "JobType"
+    "SchemaName"
+    "TableName"
+    "IsVOrder"
+    "ColumnsZOrderBy"
+    "retentionPeriod"
+    "WaitForCompletion"
+    "ProgressAction"
+    "Verbose"
+    "Debug"
+    "ErrorAction"
+    "WarningAction"
+    "InformationAction"
+    "InformationVariable"
+    "OutVariable"
+    "OutBuffer"
+    "PipelineVariable"
+    "ErrorVariable"
+    "WarningVariable"
+    "Confirm"
+    "WhatIf"
+)
 )
 
 Describe "Start-FabricLakehouseTableMaintenance" -Tag "UnitTests" {

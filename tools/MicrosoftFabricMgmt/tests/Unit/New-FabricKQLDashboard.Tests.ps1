@@ -1,27 +1,27 @@
 #Requires -Module @{ ModuleName="Pester"; ModuleVersion="5.0"}
 param(
     $ModuleName = "MicrosoftFabricMgmt",
-    $expectedParams = @(
-        "WorkspaceId"
-        "KQLDashboardName"
-        "KQLDashboardDescription"
-        "KQLDashboardPathDefinition"
-        "KQLDashboardPathPlatformDefinition"
-        "Verbose"
-        "Debug"
-        "ErrorAction"
-        "WarningAction"
-        "InformationAction"
-        "ProgressAction"
-        "ErrorVariable"
-        "WarningVariable"
-        "InformationVariable"
-        "OutVariable"
-        "OutBuffer"
-        "PipelineVariable"
-        "Confirm"
-        "WhatIf"
-    )
+$expectedParams = @(
+    "WorkspaceId"
+    "KQLDashboardName"
+    "KQLDashboardDescription"
+    "KQLDashboardPathDefinition"
+    "KQLDashboardPathPlatformDefinition"
+    "ProgressAction"
+    "Verbose"
+    "Debug"
+    "ErrorAction"
+    "WarningAction"
+    "InformationAction"
+    "InformationVariable"
+    "OutVariable"
+    "OutBuffer"
+    "PipelineVariable"
+    "ErrorVariable"
+    "WarningVariable"
+    "Confirm"
+    "WhatIf"
+)
 )
 
 Describe "New-FabricKQLDashboard" -Tag "UnitTests" {
