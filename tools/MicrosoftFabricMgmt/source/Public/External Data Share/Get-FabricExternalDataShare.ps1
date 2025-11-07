@@ -23,6 +23,7 @@
 #>
 function Get-FabricExternalDataShare {
     [CmdletBinding()]
+    [Alias("Get-FabricExternalDataShares")]
     param (
         [Parameter(Mandatory = $False)]
         [ValidateNotNullOrEmpty()]
