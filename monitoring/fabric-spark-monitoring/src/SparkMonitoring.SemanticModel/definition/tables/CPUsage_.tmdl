@@ -1,0 +1,87 @@
+table CPUsage_
+	lineageTag: cb0ab5dc-e0f4-49ab-b467-09c2c9ed3f89
+
+	column utilization
+		dataType: double
+		sourceProviderType: double
+		lineageTag: 49cae961-e697-4830-8b8e-5520e2947228
+		summarizeBy: sum
+		sourceColumn: utilization
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column max_props_value
+		dataType: int64
+		formatString: 0
+		sourceProviderType: bigint
+		lineageTag: 45678ca6-c80a-4520-a5ad-9b40fdd7f7e7
+		summarizeBy: sum
+		sourceColumn: max_props_value
+
+		annotation SummarizationSetBy = Automatic
+
+	column nanosecondsSoFar
+		dataType: int64
+		formatString: 0
+		sourceProviderType: bigint
+		lineageTag: 20e602f5-419b-4bb6-bd5f-3abfc1884417
+		summarizeBy: sum
+		sourceColumn: nanosecondsSoFar
+
+		annotation SummarizationSetBy = Automatic
+
+	column name_
+		dataType: string
+		sourceProviderType: nvarchar(max)
+		lineageTag: 7cee07d1-d909-4dda-951e-d16997a9cbde
+		summarizeBy: none
+		sourceColumn: name_
+
+		annotation SummarizationSetBy = Automatic
+
+	column timestamp
+		dataType: dateTime
+		formatString: General Date
+		sourceProviderType: datetimeoffset
+		lineageTag: 7157366e-f322-4741-8bae-dd2a18bed620
+		summarizeBy: none
+		sourceColumn: timestamp
+
+		annotation SummarizationSetBy = Automatic
+
+	column Rank
+		dataType: int64
+		formatString: 0
+		sourceProviderType: bigint
+		lineageTag: 0dbbd950-9c2b-40c7-ad4e-ca5e2cba2d0d
+		summarizeBy: sum
+		sourceColumn: Rank
+
+		annotation SummarizationSetBy = Automatic
+
+	partition CPUsage_ = m
+		mode: directQuery
+		queryGroup: appStatsOutsideTable
+		source = ```
+				let
+				    Source = AzureDataExplorer.Contents(RTIfqdn, "eventHouseTelemetry", "RawLogs 
+				        | extend props = parse_json(properties)
+				        | where applicationId == '"&ApplicationWithoutTable&"' 
+				        |  where props.name contains 'JVMCPU.jvmcpuTime' 
+				        | summarize max(tolong(props.value)) by bin(timestamp,1m) , name_ = tostring(props.name) 
+				        | sort by name_ asc, timestamp asc
+				        | extend Rank = row_number(1, prev(name_) != name_)
+				        | extend nanosecondsSoFar = Rank * 60000000000
+				        | extend utilization = round(toreal(max_props_value) / toreal(nanosecondsSoFar), 5)
+				        | project utilization, max_props_value, nanosecondsSoFar, name_, timestamp, Rank", [MaxRows=null, MaxSize=null, NoTruncate=null, AdditionalSetStatements=null])
+				
+				in
+				    Source
+				```
+
+	annotation PBI_NavigationStepName = Navigation
+
+	annotation PBI_ResultType = Table
+

@@ -1,0 +1,648 @@
+expression tableNam = "dim_jj" meta [IsParameterQuery=true, Type="Any", IsParameterQueryRequired=true]
+	lineageTag: 4355b6ee-c1c4-46d8-a4b0-2062b132f8e6
+	queryGroup: MetricsTables
+
+	annotation PBI_NavigationStepName = Navigation
+
+	annotation PBI_ResultType = Text
+
+expression ApplicationInsert = "xxx" meta [IsParameterQuery=true, Type="Any", IsParameterQueryRequired=true]
+	lineageTag: 453dd34b-10e8-4517-b84a-4d8df1dffe96
+	queryGroup: appStatsWithTableContext
+
+	annotation PBI_NavigationStepName = Navigation
+
+	annotation PBI_ResultType = Text
+
+expression ApplicationWithoutTable = "application_1747974143425_0001" meta [IsParameterQuery=true, Type="Any", IsParameterQueryRequired=true]
+	lineageTag: 1c3b06db-87fd-49b8-b9e5-a48380290b3a
+	queryGroup: appStatsOutsideTable
+	parameterValuesColumn: applications.applicationId
+
+	annotation PBI_NavigationStepName = Navigation
+
+	annotation PBI_ResultType = Text
+
+expression ApplicationMerge = "aaa" meta [IsParameterQuery=true, Type="Text", IsParameterQueryRequired=true]
+	lineageTag: 4112c384-0327-4fdc-a37d-c139f4b63faa
+	queryGroup: appStatsWithTableContext
+
+	annotation PBI_NavigationStepName = Navigation
+
+	annotation PBI_ResultType = Text
+
+expression MetricsTableInsert = ```
+		let
+		    Source = AzureDataExplorer.Contents("https://trd-ektwgkvj37tkhsvrky.z4.kusto.fabric.microsoft.com", "eventHouseTelemetry", "RawLogs
+		        | where properties contains 'insert'
+		        | where properties contains '"&tableNam&"'
+		        | where properties contains ""Total Time (End-to-End Duration) for Loading Data from"" or properties contains ""Size of Source DataFrame"" or properties contains ""Row Count in Source Table""
+		        | extend duration = extract(@""(\d+\.\d+) seconds"", 1, properties)
+		        | extend rowCount = extract(@""Row Count in Source Table '([^']+)': (\d+)"", 2, properties)
+		        | extend sizeMBs = extract(@""Size of Source DataFrame .*?: (\d+\.\d+) MB"", 1, properties)
+		        | extend Operation = extract(""Workload - ([^-]+) - Application ID"", 1, properties)
+		        | project timestamp, todecimal(duration), toint(rowCount), todecimal(sizeMBs),tostring(Operation), properties, applicationId
+		        | summarize 
+		            max('"&tableNam&"'),
+		            sum(duration),
+		            sum(rowCount),
+		            sum(sizeMBs)
+		            by bin(timestamp, 1m), applicationId,Operation
+		        | where Operation != """"
+		", [MaxRows=null, MaxSize=null, NoTruncate=null, AdditionalSetStatements=null])
+		
+		in
+		    Source
+		```
+	lineageTag: 8ef66d21-5296-4723-ae1f-5367aac7a422
+	queryGroup: MetricsTables
+
+	annotation PBI_NavigationStepName = Navigation
+
+	annotation PBI_ResultType = Table
+
+expression ApplicationFirst = "sss" meta [IsParameterQuery=true, Type="Text", IsParameterQueryRequired=true]
+	lineageTag: 4acb699c-e576-4b88-b365-8d160fff1bd3
+	queryGroup: Comparer
+	parameterValuesColumn: applicationsFirst.applicationId
+
+	annotation PBI_NavigationStepName = Navigation
+
+	annotation PBI_ResultType = Text
+
+expression ApplicationSecond = "sss" meta [IsParameterQuery=true, Type="Text", IsParameterQueryRequired=true]
+	lineageTag: 20a9b7a0-5a0c-4851-a686-73d2d1659ca9
+	queryGroup: Comparer
+	parameterValuesColumn: applicationsSecond.applicationId
+
+	annotation PBI_NavigationStepName = Navigation
+
+	annotation PBI_ResultType = Text
+
+expression Tables =
+		let
+		    Source = AzureDataExplorer.Contents("https://trd-ektwgkvj37tkhsvrky.z4.kusto.fabric.microsoft.com", "eventHouseTelemetry", "RawLogs
+		| where properties contains ""Source Table ""
+		|  extend tableNames = extract(@""Source Table '([^']+)'"", 1, properties)
+		| summarize by  tableNames", [MaxRows=null, MaxSize=null, NoTruncate=null, AdditionalSetStatements=null])
+		
+		in
+		    Source
+	lineageTag: 9e48eb83-dcac-42bc-9cd7-c731db82ac76
+	queryGroup: MetricsTables
+
+	annotation PBI_NavigationStepName = Navigation
+
+	annotation PBI_ResultType = Table
+
+expression MetricsTableMerge = ```
+		let
+		    Source = AzureDataExplorer.Contents("https://trd-ektwgkvj37tkhsvrky.z4.kusto.fabric.microsoft.com", "eventHouseTelemetry", "RawLogs
+		        | where properties contains 'merge'
+		        | where properties contains '"&tableNam&"'
+		        | where properties contains ""Total Time (End-to-End Duration) for Loading Data from"" or properties contains ""Size of Source DataFrame"" or properties contains ""Row Count in Source Table""
+		        | extend duration = extract(@""(\d+\.\d+) seconds"", 1, properties)
+		        | extend rowCount = extract(@""Row Count in Source Table '([^']+)': (\d+)"", 2, properties)
+		        | extend sizeMBs = extract(@""Size of Source DataFrame .*?: (\d+\.\d+) MB"", 1, properties)
+		        | extend Operation = extract(""Workload - ([^-]+) - Application ID"", 1, properties)
+		        | project timestamp, todecimal(duration), toint(rowCount), todecimal(sizeMBs),tostring(Operation), properties, applicationId
+		        | summarize 
+		            max('"&tableNam&"'),
+		            sum(duration),
+		            sum(rowCount),
+		            sum(sizeMBs)
+		            by bin(timestamp, 1m), applicationId,Operation
+		        | where Operation != """"
+		", [MaxRows=null, MaxSize=null, NoTruncate=null, AdditionalSetStatements=null])
+		
+		in
+		    Source
+		```
+	lineageTag: 8b94de71-45d3-4089-8cbe-20a90303e43c
+	queryGroup: MetricsTables
+
+	annotation PBI_NavigationStepName = Navigation
+
+	annotation PBI_ResultType = Table
+
+expression WriteTableHistory =
+		let
+		    Source = AzureDataExplorer.Contents("https://trd-ektwgkvj37tkhsvrky.z4.kusto.fabric.microsoft.com", "eventHouseTelemetry", "
+		    RawLogs
+		    | where timestamp >= ago(2d) //Assuming the notebook runs every day
+		    | where properties contains ""WRITE""
+		    | where properties contains ""// tableName - "&tableNam&" //""
+		    | distinct properties
+		    | extend timestamp = extract(@""timestamp (\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2})"", 1, properties)
+		    | extend tableName = extract(@""tableName - ([^ ]+)"", 1, properties)
+		    | extend numOutputRows = extract(@""'numOutputRows': '(\d+)'"" , 1, properties)
+		    | project timestamp, tableName, tolong(numOutputRows)
+		    | summarize sum(numOutputRows) by tableName, bin(todatetime(timestamp),1m)
+		    ", [MaxRows=null, MaxSize=null, NoTruncate=null, AdditionalSetStatements=null])
+		in
+		    Source
+	lineageTag: e3ece152-b11b-4fad-858e-1f3da1111a74
+	queryGroup: MetricsTables
+
+	annotation PBI_NavigationStepName = Navigation
+
+	annotation PBI_ResultType = Table
+
+expression MemoryJvmHeapUsage_withTableContext = ```
+		let
+		    Source = AzureDataExplorer.Contents("https://trd-ektwgkvj37tkhsvrky.z4.kusto.fabric.microsoft.com", "eventHouseTelemetry", "RawLogs 
+		| extend props = parse_json(properties) 
+		| where applicationId == '"&ApplicationInsert&"'
+		|  where props.name contains 'jvm.heap.used' or props.name contains 'jvm.heap.max' 
+		| summarize avg(tolong(props.value)) by bin(timestamp,1m),tostring(props.name)", [MaxRows=null, MaxSize=null, NoTruncate=null, AdditionalSetStatements=null])
+		
+		in
+		    Source
+		```
+	lineageTag: 7c98b1d8-085c-4dd1-ae05-ac1321b405a7
+	queryGroup: appStatsWithTableContext
+
+	annotation PBI_NavigationStepName = Navigation
+
+	annotation PBI_ResultType = Table
+
+expression GCtime_withTableContext =
+		let
+		    Source = AzureDataExplorer.Contents("https://trd-ektwgkvj37tkhsvrky.z4.kusto.fabric.microsoft.com", "eventHouseTelemetry", "RawLogs | extend props = parse_json(properties) | where applicationId == '"&ApplicationInsert&"' |  where props.name contains 'ExecutorMetrics.TotalGCTime' | summarize sum(tolong(props.value)) by bin(timestamp,1m) ,tostring(props.name)", [MaxRows=null, MaxSize=null, NoTruncate=null, AdditionalSetStatements=null])
+		
+		in
+		    Source
+	lineageTag: 7499ec73-7a02-466f-a3f2-57634c1242e0
+	queryGroup: appStatsWithTableContext
+
+	annotation PBI_NavigationStepName = Navigation
+
+	annotation PBI_ResultType = Table
+
+expression SpillToDisk_withTableContext =
+		let
+		    Source = AzureDataExplorer.Contents("https://trd-ektwgkvj37tkhsvrky.z4.kusto.fabric.microsoft.com", "eventHouseTelemetry", "RawLogs | extend props = parse_json(properties) | where applicationId == '"&ApplicationInsert&"' |  where props.name contains 'executor.diskBytesSpilled' | project timestamp,tostring(props.name),tolong(props.count)", [MaxRows=null, MaxSize=null, NoTruncate=null, AdditionalSetStatements=null])
+		
+		in
+		    Source
+	lineageTag: 5033b719-f861-4af8-b751-554594488fe2
+	queryGroup: appStatsWithTableContext
+
+	annotation PBI_NavigationStepName = Navigation
+
+	annotation PBI_ResultType = Table
+
+expression RecordsRead_withTableContext =
+		let
+		    Source = AzureDataExplorer.Contents("https://trd-ektwgkvj37tkhsvrky.z4.kusto.fabric.microsoft.com", "eventHouseTelemetry", "RawLogs | extend props = parse_json(properties) | where applicationId == '"&ApplicationInsert&"' |  where props.name contains 'executor.recordsRead' | project timestamp,tostring(props.name),tolong(props.count)", [MaxRows=null, MaxSize=null, NoTruncate=null, AdditionalSetStatements=null])
+		
+		in
+		    Source
+	lineageTag: 2c9c8692-3eb0-4163-b1d7-a19826bd1e6f
+	queryGroup: appStatsWithTableContext
+
+	annotation PBI_NavigationStepName = Navigation
+
+	annotation PBI_ResultType = Table
+
+expression executorsFailure_withTableContext = ```
+		let
+		    Source = AzureDataExplorer.Contents("https://trd-ektwgkvj37tkhsvrky.z4.kusto.fabric.microsoft.com", "eventHouseTelemetry", "RawLogs
+		| where applicationId == '"&ApplicationInsert&"'
+		| extend props = parse_json(properties) 
+		| where properties contains 'applicationMaster.numExecutorsFailed'
+		| summarize max(tolong(props.value))
+		", [MaxRows=null, MaxSize=null, NoTruncate=null, AdditionalSetStatements=null])
+		
+		in
+		    Source
+		```
+	lineageTag: fb2da148-6d16-4dae-9ecd-c64b32eb35d4
+	queryGroup: appStatsWithTableContext
+
+	annotation PBI_NavigationStepName = Navigation
+
+	annotation PBI_ResultType = Table
+
+expression MemoryJvmHeapUsage_withTableContextMerge = ```
+		let
+		    Source = AzureDataExplorer.Contents("https://trd-ektwgkvj37tkhsvrky.z4.kusto.fabric.microsoft.com", "eventHouseTelemetry", "RawLogs 
+		| extend props = parse_json(properties) 
+		| where applicationId == '"&ApplicationMerge&"'
+		|  where props.name contains 'jvm.heap.used' or props.name contains 'jvm.heap.max' 
+		| summarize avg(tolong(props.value)) by bin(timestamp,1m),tostring(props.name)", [MaxRows=null, MaxSize=null, NoTruncate=null, AdditionalSetStatements=null])
+		
+		in
+		    Source
+		```
+	lineageTag: 8f3a947a-0fd7-4dd8-a1d7-e94c7978364d
+	queryGroup: appStatsWithTableContext
+
+	annotation PBI_NavigationStepName = Navigation
+
+	annotation PBI_ResultType = Table
+
+expression GCtime_withTableContextMerge =
+		let
+		    Source = AzureDataExplorer.Contents("https://trd-ektwgkvj37tkhsvrky.z4.kusto.fabric.microsoft.com", "eventHouseTelemetry", "RawLogs | extend props = parse_json(properties) | where applicationId == '"&ApplicationMerge&"' |  where props.name contains 'ExecutorMetrics.TotalGCTime' | summarize sum(tolong(props.value)) by bin(timestamp,1m) ,tostring(props.name)", [MaxRows=null, MaxSize=null, NoTruncate=null, AdditionalSetStatements=null])
+		
+		in
+		    Source
+	lineageTag: 114b2399-8f3b-47d7-bc84-b0146484ad84
+	queryGroup: appStatsWithTableContext
+
+	annotation PBI_NavigationStepName = Navigation
+
+	annotation PBI_ResultType = Exception
+
+expression SpillToDisk_withTableContextMerge =
+		let
+		    Source = AzureDataExplorer.Contents("https://trd-ektwgkvj37tkhsvrky.z4.kusto.fabric.microsoft.com", "eventHouseTelemetry", "RawLogs | extend props = parse_json(properties) | where applicationId == '"&ApplicationMerge&"' |  where props.name contains 'executor.diskBytesSpilled' | project timestamp,tostring(props.name),tolong(props.count)", [MaxRows=null, MaxSize=null, NoTruncate=null, AdditionalSetStatements=null])
+		
+		in
+		    Source
+	lineageTag: 7bfc1f01-0d13-46d2-91e7-72e8d06a7e66
+	queryGroup: appStatsWithTableContext
+
+	annotation PBI_NavigationStepName = Navigation
+
+	annotation PBI_ResultType = Table
+
+expression executorsFailure_withTableContextMerge = ```
+		let
+		    Source = AzureDataExplorer.Contents("https://trd-ektwgkvj37tkhsvrky.z4.kusto.fabric.microsoft.com", "eventHouseTelemetry", "RawLogs
+		| where applicationId == '"&ApplicationMerge&"'
+		| extend props = parse_json(properties) 
+		| where properties contains 'applicationMaster.numExecutorsFailed'
+		| summarize max(tolong(props.value))
+		", [MaxRows=null, MaxSize=null, NoTruncate=null, AdditionalSetStatements=null])
+		
+		in
+		    Source
+		```
+	lineageTag: 374a25cf-a452-4361-873c-983cfacce148
+	queryGroup: appStatsWithTableContext
+
+	annotation PBI_NavigationStepName = Navigation
+
+	annotation PBI_ResultType = Table
+
+expression RecordsRead_withTableContextMerge =
+		let
+		    Source = AzureDataExplorer.Contents("https://trd-ektwgkvj37tkhsvrky.z4.kusto.fabric.microsoft.com", "eventHouseTelemetry", "RawLogs | extend props = parse_json(properties) | where applicationId == '"&ApplicationMerge&"' |  where props.name contains 'executor.recordsRead' | project timestamp,tostring(props.name),tolong(props.count)", [MaxRows=null, MaxSize=null, NoTruncate=null, AdditionalSetStatements=null])
+		
+		in
+		    Source
+	lineageTag: 22ab5880-5ed4-49f3-97f0-32512c8f4f7f
+	queryGroup: appStatsWithTableContext
+
+	annotation PBI_NavigationStepName = Navigation
+
+	annotation PBI_ResultType = Table
+
+expression CPUusage_withTableContext = ```
+		let
+		    Source = AzureDataExplorer.Contents("https://trd-ektwgkvj37tkhsvrky.z4.kusto.fabric.microsoft.com", "eventHouseTelemetry", "RawLogs 
+		        | extend props = parse_json(properties)
+		        | where applicationId == '"&ApplicationInsert&"' 
+		        |  where props.name contains 'JVMCPU.jvmcpuTime' 
+		        | summarize max(tolong(props.value)) by bin(timestamp,1m) , name_ = tostring(props.name) 
+		        | sort by name_ asc, timestamp asc
+		        | extend Rank = row_number(1, prev(name_) != name_)
+		        | extend nanosecondsSoFar = Rank * 60000000000
+		        | extend utilization = round(toreal(max_props_value) / toreal(nanosecondsSoFar), 5)
+		        | project utilization, max_props_value, nanosecondsSoFar, name_, timestamp, Rank", [MaxRows=null, MaxSize=null, NoTruncate=null, AdditionalSetStatements=null])
+		
+		in
+		    Source
+		```
+	lineageTag: 7972edd8-fa36-4c66-98d3-4fcd80f25d87
+	queryGroup: appStatsWithTableContext
+
+	annotation PBI_NavigationStepName = Navigation
+
+	annotation PBI_ResultType = Table
+
+expression CPUusage_withTableContextMerge = ```
+		let
+		    Source = AzureDataExplorer.Contents("https://trd-ektwgkvj37tkhsvrky.z4.kusto.fabric.microsoft.com", "eventHouseTelemetry", "RawLogs 
+		        | extend props = parse_json(properties)
+		        | where applicationId == '"&ApplicationMerge&"' 
+		        |  where props.name contains 'JVMCPU.jvmcpuTime' 
+		        | summarize max(tolong(props.value)) by bin(timestamp,1m) , name_ = tostring(props.name) 
+		        | sort by name_ asc, timestamp asc
+		        | extend Rank = row_number(1, prev(name_) != name_)
+		        | extend nanosecondsSoFar = Rank * 60000000000
+		        | extend utilization = round(toreal(max_props_value) / toreal(nanosecondsSoFar), 5)
+		        | project utilization, max_props_value, nanosecondsSoFar, name_, timestamp, Rank", [MaxRows=null, MaxSize=null, NoTruncate=null, AdditionalSetStatements=null])
+		
+		in
+		    Source
+		```
+	lineageTag: e6501ae0-fc3b-40dc-b4d7-79d8e01bc4e0
+	queryGroup: appStatsWithTableContext
+
+	annotation PBI_NavigationStepName = Navigation
+
+	annotation PBI_ResultType = Table
+
+expression DQ =
+		let
+		    Source = AzureDataExplorer.Contents("https://trd-ektwgkvj37tkhsvrky.z4.kusto.fabric.microsoft.com", "eventHouseTelemetry", "RawLogs
+		    | where properties contains 'datasource' and properties contains 'is_success'
+		    | extend datasource=extract(@'datasource:\s+([^|]+)', 1, properties)
+		    | extend run_time = extract(@'run_time:\s([^\|]+)', 1, properties)
+		    | extend is_success = extract(@'is_success:\s(\w+)', 1, properties)
+		    | extend expectation_type = extract(@'expectation_type:\s([^\|]+)', 1, properties)
+		    | extend element_count = toint(extract(@'element_count:\s(\d+)', 1, properties))
+		    | extend unexpected_count = toint(extract(@'unexpected_count:\s(\d+)', 1, properties))
+		    | project applicationId,run_time, datasource, is_success, expectation_type, element_count, unexpected_count
+		    ", [MaxRows=null, MaxSize=null, NoTruncate=null, AdditionalSetStatements=null]),
+		    #"Changed Type" = Table.TransformColumnTypes(Source,{{"run_time", type datetime}})
+		
+		in
+		    #"Changed Type"
+	lineageTag: 57c2cb6e-2357-4fe4-8976-0a6b8ee8fd68
+
+	annotation PBI_NavigationStepName = Navigation
+
+	annotation PBI_ResultType = Table
+
+expression MetricsTableOnly = ```
+		let
+		    Source = AzureDataExplorer.Contents("https://trd-ektwgkvj37tkhsvrky.z4.kusto.fabric.microsoft.com", "eventHouseTelemetry", "RawLogs
+		        | where properties contains '"&tableNam&"'
+		        | where properties contains ""Total Time (End-to-End Duration) for Loading Data from"" or properties contains ""Size of Source DataFrame"" or properties contains ""Row Count in Source Table""
+		        | extend duration = extract(@""(\d+\.\d+) seconds"", 1, properties)
+		        | extend rowCount = extract(@""Row Count in Source Table '([^']+)': (\d+)"", 2, properties)
+		        | extend sizeMBs = extract(@""Size of Source DataFrame .*?: (\d+\.\d+) MB"", 1, properties)
+		        | extend Operation = extract(""Workload - ([^-]+) - Application ID"", 1, properties)
+		        | project timestamp, todecimal(duration), toint(rowCount), todecimal(sizeMBs),tostring(Operation), properties, applicationId
+		        | summarize 
+		            max('"&tableNam&"'),
+		            sum(duration),
+		            sum(rowCount),
+		            sum(sizeMBs)
+		            by bin(timestamp, 1m), applicationId,Operation
+		        | where Operation != """"
+		", [MaxRows=null, MaxSize=null, NoTruncate=null, AdditionalSetStatements=null]),
+		    #"Changed Type" = Table.TransformColumnTypes(Source,{{"sum_rowCount", Int64.Type}, {"timestamp", type datetime}})
+		
+		in
+		    #"Changed Type"
+		```
+	lineageTag: 5d36efdd-f0ed-4ac4-9ae5-bda009d4ee6b
+	queryGroup: MetricsTables
+
+	annotation PBI_NavigationStepName = Navigation
+
+	annotation PBI_ResultType = Exception
+
+expression HistoryTableOnly =
+		let
+		    Source = AzureDataExplorer.Contents("https://trd-ektwgkvj37tkhsvrky.z4.kusto.fabric.microsoft.com", "eventHouseTelemetry", "
+		    RawLogs
+		    | where timestamp >= ago(2d) //assuming that the notebook runs every day
+		    //| where properties contains ""WRITE""
+		    | where properties contains ""// tableName - "&tableNam&" //""
+		    | distinct properties
+		    | extend timestamp = extract(@""timestamp (\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2})"", 1, properties)
+		    | extend tableName = extract(@""tableName - ([^ ]+)"", 1, properties)
+		    | extend numOutputRows = extract(@""'numOutputRows': '(\d+)'"" , 1, properties)
+		    | extend operationType = extract(""operation - ([^ ]+)"", 1, properties)
+		    | project timestamp, tableName, tolong(numOutputRows),operationType
+		    | summarize sum(numOutputRows) by tableName, bin(todatetime(timestamp),1m),operationType
+		    ", [MaxRows=null, MaxSize=null, NoTruncate=null, AdditionalSetStatements=null])
+		in
+		    Source
+	lineageTag: 72c0bf38-83e8-4fa6-bf32-e5439c756762
+	queryGroup: MetricsTables
+
+	annotation PBI_NavigationStepName = Navigation
+
+	annotation PBI_ResultType = Table
+
+expression LakehouseSizes =
+		let
+		    Source = AzureDataExplorer.Contents("https://trd-ektwgkvj37tkhsvrky.z4.kusto.fabric.microsoft.com", "eventHouseTelemetry", "
+		    RawLogs
+		    | where timestamp >= ago(30d) //assuming the notebook runs every day
+		    | where properties contains ""table size:""
+		    | extend tableSize = extract(@""table size:\s*(\d+)"", 1, properties)
+		    | extend tableName = extract(@""Tables/([^|]+)"", 1, properties)
+		    | project timestamp, tableName=trim("" "",tableName), tableSize = tolong(tableSize)
+		    | sort by tableName,timestamp desc
+		    | extend Rank=row_number(1, prev(tableName) != tableName)
+		    | where Rank ==1
+		    ", [MaxRows=null, MaxSize=null, NoTruncate=null, AdditionalSetStatements=null])
+		in
+		    Source
+	lineageTag: 4025be0f-96fe-4602-813c-9d8a35d18eeb
+
+	annotation PBI_NavigationStepName = Navigation
+
+	annotation PBI_ResultType = Table
+
+expression TaskEndFailuresWithTableContext = ```
+		let
+		    Source = AzureDataExplorer.Contents("https://trd-ektwgkvj37tkhsvrky.z4.kusto.fabric.microsoft.com", "eventHouseTelemetry", "RawLogs
+		        | where applicationId == '"&ApplicationInsert&"'
+		        | extend props = parse_json(properties) 
+		        | where properties contains 'task' and properties contains 'attempt' and properties contains 'SparkListenerTaskEnd'
+		        | project   rsn=props['Task End Reason']['Reason']
+		        | summarize count() by tostring(rsn)", [MaxRows=null, MaxSize=null, NoTruncate=null, AdditionalSetStatements=null])
+		in
+		    Source
+		```
+	lineageTag: 5b0d1122-a3ed-4ba6-9fd3-42295d0cab0d
+	queryGroup: appStatsWithTableContext
+
+	annotation PBI_NavigationStepName = Navigation
+
+	annotation PBI_ResultType = Table
+
+expression TaskEndFailuresWithTableContextMerge = ```
+		let
+		    Source = AzureDataExplorer.Contents("https://trd-ektwgkvj37tkhsvrky.z4.kusto.fabric.microsoft.com", "eventHouseTelemetry", "RawLogs
+		        | where applicationId == '"&ApplicationMerge&"'
+		        | extend props = parse_json(properties) 
+		        | where properties contains 'task' and properties contains 'attempt' and properties contains 'SparkListenerTaskEnd'
+		        | project   rsn=props['Task End Reason']['Reason']
+		        | summarize count() by tostring(rsn)", [MaxRows=null, MaxSize=null, NoTruncate=null, AdditionalSetStatements=null])
+		in
+		    Source
+		```
+	lineageTag: 85ea13be-bf97-4484-9c47-54ee8d9c262d
+	queryGroup: appStatsWithTableContext
+
+	annotation PBI_NavigationStepName = Navigation
+
+	annotation PBI_ResultType = Table
+
+expression TaskFailuresWithTableContext = ```
+		let
+		    Source = AzureDataExplorer.Contents("https://trd-ektwgkvj37tkhsvrky.z4.kusto.fabric.microsoft.com", "eventHouseTelemetry", "RawLogs
+		    | where applicationId == '"&ApplicationInsert&"'
+		    | extend props = parse_json(properties) 
+		    | where properties contains 'task' and properties contains 'attempt' and properties contains 'SparkListenerTaskEnd'
+		    | summarize  sum(tolong(props['Task Info']['Attempt']))", [MaxRows=null, MaxSize=null, NoTruncate=null, AdditionalSetStatements=null])
+		in
+		    Source
+		```
+	lineageTag: 713c15ae-1d4f-49ac-b0ea-036f06bde357
+	queryGroup: appStatsWithTableContext
+
+	annotation PBI_NavigationStepName = Navigation
+
+	annotation PBI_ResultType = Table
+
+expression TaskFailuresWithTableContextMerge = ```
+		let
+		    Source = AzureDataExplorer.Contents("https://trd-ektwgkvj37tkhsvrky.z4.kusto.fabric.microsoft.com", "eventHouseTelemetry", "RawLogs
+		    | where applicationId == '"&ApplicationMerge&"'
+		    | extend props = parse_json(properties) 
+		    | where properties contains 'task' and properties contains 'attempt' and properties contains 'SparkListenerTaskEnd'
+		    | summarize  sum(tolong(props['Task Info']['Attempt']))", [MaxRows=null, MaxSize=null, NoTruncate=null, AdditionalSetStatements=null])
+		in
+		    Source
+		```
+	lineageTag: 97fed988-4550-4821-bce3-fcdb42e21bac
+	queryGroup: appStatsWithTableContext
+
+	annotation PBI_NavigationStepName = Navigation
+
+	annotation PBI_ResultType = Table
+
+expression DistinctStagesWithTableContext = ```
+		let
+		    Source = AzureDataExplorer.Contents("https://trd-ektwgkvj37tkhsvrky.z4.kusto.fabric.microsoft.com", "eventHouseTelemetry", "
+		RawLogs
+		| where applicationId == '"&ApplicationInsert&"'
+		| extend props = parse_json(properties) 
+		| where  properties contains 'SparkListenerTaskEnd'
+		| project  rsn=props['Stage ID']
+		| summarize count_distinct(tostring(rsn))", [MaxRows=null, MaxSize=null, NoTruncate=null, AdditionalSetStatements=null])
+		
+		in
+		    Source
+		```
+	lineageTag: 7af8d87c-4c06-4035-8f75-0a01aabea84e
+	queryGroup: appStatsWithTableContext
+
+	annotation PBI_NavigationStepName = Navigation
+
+	annotation PBI_ResultType = Table
+
+expression DistinctStagesWithTableContextMerge = ```
+		let
+		    Source = AzureDataExplorer.Contents("https://trd-ektwgkvj37tkhsvrky.z4.kusto.fabric.microsoft.com", "eventHouseTelemetry", "
+		RawLogs
+		| where applicationId == '"&ApplicationMerge&"'
+		| extend props = parse_json(properties) 
+		| where  properties contains 'SparkListenerTaskEnd'
+		| project  rsn=props['Stage ID']
+		| summarize count_distinct(tostring(rsn))", [MaxRows=null, MaxSize=null, NoTruncate=null, AdditionalSetStatements=null])
+		
+		in
+		    Source
+		```
+	lineageTag: 3f05bde1-7029-4a4b-818d-4ccd6d80e68e
+	queryGroup: appStatsWithTableContext
+
+	annotation PBI_NavigationStepName = Navigation
+
+	annotation PBI_ResultType = Table
+
+expression ShuffleReadWithTableContext = ```
+		let
+		    Source = AzureDataExplorer.Contents("https://trd-ektwgkvj37tkhsvrky.z4.kusto.fabric.microsoft.com", "eventHouseTelemetry", "RawLogs
+		    | extend props = parse_json(properties) 
+		    | where applicationId =='"&ApplicationInsert&"'
+		    | where properties contains ""shuffleWriteTime"" or properties contains ""shuffleFetchWaitTime""
+		    | project timestamp,cnt_=tolong(props.count),tostring(props.name)
+		    | where cnt_!=0
+		")
+		
+		in
+		    Source
+		```
+	lineageTag: e6659e7e-5e31-4c5e-940d-ba505a234125
+	queryGroup: appStatsWithTableContext
+
+	annotation PBI_NavigationStepName = Navigation
+
+	annotation PBI_ResultType = Table
+
+expression ShuffleReadWithTableContextMerge = ```
+		let
+		    Source = AzureDataExplorer.Contents("https://trd-ektwgkvj37tkhsvrky.z4.kusto.fabric.microsoft.com", "eventHouseTelemetry", "RawLogs
+		    | extend props = parse_json(properties) 
+		    | where applicationId =='"&ApplicationMerge&"'
+		    | where properties contains ""shuffleWriteTime"" or properties contains ""shuffleFetchWaitTime""
+		    | project timestamp,cnt_=tolong(props.count),tostring(props.name)
+		    | where cnt_!=0
+		")
+		
+		in
+		    Source
+		```
+	lineageTag: 6e366dc1-5a22-4469-a5de-0b2cb9641444
+	queryGroup: appStatsWithTableContext
+
+	annotation PBI_NavigationStepName = Navigation
+
+	annotation PBI_ResultType = Table
+
+expression MergeTableHistory =
+		let
+		    Source = AzureDataExplorer.Contents("https://trd-ektwgkvj37tkhsvrky.z4.kusto.fabric.microsoft.com", "eventHouseTelemetry", "
+		    RawLogs
+		    | where timestamp >= ago(2d) //assuming that the notebook is run every day
+		    | where properties contains ""MERGE""
+		    | where properties contains ""// tableName - "&tableNam&" //""
+		    | distinct properties
+		    | extend timestamp = extract(@""timestamp (\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2})"", 1, properties)
+		    | extend tableName = extract(@""tableName - ([^ ]+)"", 1, properties)
+		    | extend numTargetRowsCopied = extract(@""'numTargetRowsCopied': '(\d+)'"" , 1, properties)
+		    | extend numTargetRowsUpdated = extract(@""'numTargetRowsUpdated': '(\d+)'"" , 1, properties)
+		    | extend numTargetRowsInserted = extract(@""'numTargetRowsInserted': '(\d+)'"" , 1, properties)
+		    | extend numOutputRows = extract(@""'numOutputRows': '(\d+)'"" , 1, properties)
+		    | project timestamp, tableName, tolong(numTargetRowsCopied), tolong(numTargetRowsUpdated), tolong(numTargetRowsInserted), tolong(numOutputRows)
+		    | summarize sum(numTargetRowsCopied),sum(numTargetRowsUpdated),sum(numTargetRowsInserted),sum(numOutputRows) by tableName, bin(todatetime(timestamp),1m)
+		    ", [MaxRows=null, MaxSize=null, NoTruncate=null, AdditionalSetStatements=null])
+		in
+		    Source
+	lineageTag: f3551bef-3a6f-4c29-affe-23b062fa5479
+	queryGroup: MetricsTables
+
+	annotation PBI_NavigationStepName = Navigation
+
+	annotation PBI_ResultType = Table
+
+expression LakehouseSizesHistory =
+		let
+		    Source = AzureDataExplorer.Contents("https://trd-ektwgkvj37tkhsvrky.z4.kusto.fabric.microsoft.com", "eventHouseTelemetry", "
+		    RawLogs
+		    | where timestamp >= ago(30d) //assuming runs every day
+		    | where properties contains ""table size:""
+		    | extend tableSize = extract(@""table size:\s*(\d+)"", 1, properties)
+		    | extend tableName = extract(@""Tables/([^|]+)"", 1, properties)
+		    | project timestamp, tableName=trim("" "",tableName), tableSize = tolong(tableSize)
+		    | sort by tableName,timestamp desc
+		    | extend Rank=row_number(1, prev(tableName) != tableName)
+		    ", [MaxRows=null, MaxSize=null, NoTruncate=null, AdditionalSetStatements=null])
+		in
+		    Source
+	lineageTag: 5114bd51-6ad7-468c-b9da-7c0f90409397
+
+	annotation PBI_NavigationStepName = Navigation
+
+	annotation PBI_ResultType = Table
+
+expression RTIfqdn = "kusto_query_uri" meta [IsParameterQuery=true, Type="Text", IsParameterQueryRequired=true]
+	lineageTag: b5a79fce-0fae-4dd2-9bcb-260e4a7de1bd
+
+	annotation PBI_NavigationStepName = Navigation
+
+	annotation PBI_ResultType = Text
+

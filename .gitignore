@@ -409,4 +409,6 @@ FodyWeavers.xsd
 
 # JetBrains Rider
 *.sln.iml
-.vscode/settings.json
+
+# Ignore duplicated dependabot tools/FabricDataFactoryMigrationAssistant/.github/dependabot.yml
+tools/FabricDataFactoryMigrationAssistant/.github/dependabot.yml

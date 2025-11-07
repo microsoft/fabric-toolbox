@@ -53,7 +53,7 @@ table calendar
 		sourceProviderType: int
 		lineageTag: b5afd93a-2e9f-4a40-9e63-eb381c03176d
 		sourceLineageTag: Year
-		summarizeBy: none
+		summarizeBy: sum
 		sourceColumn: Year
 
 		annotation SummarizationSetBy = Automatic
@@ -64,7 +64,7 @@ table calendar
 		sourceProviderType: int
 		lineageTag: c112a980-381e-4342-9f50-20a9c16437ff
 		sourceLineageTag: Month
-		summarizeBy: none
+		summarizeBy: sum
 		sourceColumn: Month
 
 		annotation SummarizationSetBy = Automatic
@@ -75,7 +75,7 @@ table calendar
 		sourceProviderType: int
 		lineageTag: 8bb551f9-43f6-45e2-b6f3-7c45713d4f45
 		sourceLineageTag: Day
-		summarizeBy: none
+		summarizeBy: sum
 		sourceColumn: Day
 
 		annotation SummarizationSetBy = Automatic
@@ -86,7 +86,7 @@ table calendar
 		sourceProviderType: int
 		lineageTag: 3e07a86b-8c8b-4d27-ac52-33ebb62cf18e
 		sourceLineageTag: WeekOfYear
-		summarizeBy: none
+		summarizeBy: sum
 		sourceColumn: WeekOfYear
 
 		annotation SummarizationSetBy = Automatic
@@ -117,7 +117,7 @@ table calendar
 		sourceProviderType: int
 		lineageTag: 92029c3a-2186-45c3-9d3b-f8921201161e
 		sourceLineageTag: DayOfWeekNum
-		summarizeBy: none
+		summarizeBy: sum
 		sourceColumn: DayOfWeekNum
 
 		annotation SummarizationSetBy = Automatic
@@ -128,7 +128,7 @@ table calendar
 		sourceProviderType: int
 		lineageTag: defa8f53-1a66-47fd-8a72-55e3e2a34988
 		sourceLineageTag: IsCurrentYear
-		summarizeBy: none
+		summarizeBy: sum
 		sourceColumn: IsCurrentYear
 
 		annotation SummarizationSetBy = Automatic
@@ -139,7 +139,7 @@ table calendar
 		sourceProviderType: int
 		lineageTag: d4173649-9a8b-4bed-9402-43108bfa0f78
 		sourceLineageTag: IsPreviousYear
-		summarizeBy: none
+		summarizeBy: sum
 		sourceColumn: IsPreviousYear
 
 		annotation SummarizationSetBy = Automatic
@@ -150,7 +150,7 @@ table calendar
 		sourceProviderType: int
 		lineageTag: 38f83752-d69e-49f0-95e8-79b0e225931d
 		sourceLineageTag: IsCurrentQuarter
-		summarizeBy: none
+		summarizeBy: sum
 		sourceColumn: IsCurrentQuarter
 
 		annotation SummarizationSetBy = Automatic
@@ -161,7 +161,7 @@ table calendar
 		sourceProviderType: int
 		lineageTag: 0bf0963a-8eb2-4133-baeb-73c5a76f2fc6
 		sourceLineageTag: IsCurrentMonth
-		summarizeBy: none
+		summarizeBy: sum
 		sourceColumn: IsCurrentMonth
 
 		annotation SummarizationSetBy = Automatic
@@ -172,7 +172,7 @@ table calendar
 		sourceProviderType: int
 		lineageTag: 1b754323-a855-4e18-b4cf-6ec17eb4e779
 		sourceLineageTag: IsPreviousMonth
-		summarizeBy: none
+		summarizeBy: sum
 		sourceColumn: IsPreviousMonth
 
 		annotation SummarizationSetBy = Automatic
@@ -183,7 +183,7 @@ table calendar
 		sourceProviderType: int
 		lineageTag: 4bf38577-f64f-46a3-b71c-9f64cba6b53d
 		sourceLineageTag: IsInLast14Days
-		summarizeBy: none
+		summarizeBy: sum
 		sourceColumn: IsInLast14Days
 
 		annotation SummarizationSetBy = Automatic
@@ -194,7 +194,7 @@ table calendar
 		sourceProviderType: int
 		lineageTag: e02de4c0-5ab1-45c1-86fa-a692b8e2f44b
 		sourceLineageTag: IsInLast30Days
-		summarizeBy: none
+		summarizeBy: sum
 		sourceColumn: IsInLast30Days
 
 		annotation SummarizationSetBy = Automatic
@@ -205,7 +205,7 @@ table calendar
 		sourceProviderType: int
 		lineageTag: db023e79-63d8-4379-9718-3238987a3912
 		sourceLineageTag: hasCostData
-		summarizeBy: none
+		summarizeBy: sum
 		sourceColumn: hasCostData
 
 		annotation SummarizationSetBy = Automatic
@@ -219,4 +219,5 @@ table calendar
 
 	changedProperty = Description
 
+	annotation PBI_ResultType = Table
 

@@ -94,4 +94,5 @@ table capacity_regions
 			schemaName: dbo
 			expressionSource: DatabaseQuery
 
+	annotation PBI_ResultType = Table
 

@@ -1,0 +1,15 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definitionProperties/1.0.0/schema.json",
+  "version": "4.0",
+  "datasetReference": {
+    "byPath": null,
+	"byConnection": {
+      "connectionString": "Data Source=powerbi://api.powerbi.com/v1.0/myorg/xxxxxzzzzzz;Initial Catalog=cnfEventStreamEventhousedestination-Latest;Integrated Security=ClaimsToken",
+      "pbiServiceModelId": null,
+      "pbiModelVirtualServerName": "sobe_wowvirtualserver",
+      "pbiModelDatabaseName": "f92c0fcd-cbe2-9904-40b0-693179aaad5c",
+      "connectionType": "pbiServiceXmlaStyleLive",
+      "name": "EntityDataSource"
+    }
+  }
+}

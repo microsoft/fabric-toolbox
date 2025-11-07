@@ -123,4 +123,5 @@ table meters
 
 	changedProperty = Description
 
+	annotation PBI_ResultType = Table
 

@@ -20,8 +20,8 @@
                     "secureInput": false
                 },
                 "typeProperties": {
-                    "notebookId": "d2ee1fd4-ea56-470a-9fa6-1ab5356fac61",
-                    "workspaceId": "b5e66845-fd73-4d5d-b28c-da7dbc2d17ec",
+                    "notebookId": "0c96d0e9-ea78-4c25-848a-8c581c9c7b24",
+                    "workspaceId": "57bceddc-a995-44a7-bfb5-1d5f11ad1e98",
                     "parameters": {
                         "fromMonth": {
                             "value": {
@@ -60,8 +60,8 @@
                     "secureInput": false
                 },
                 "typeProperties": {
-                    "notebookId": "183fa386-5a59-48a2-9ae2-5fd9779cc8f8",
-                    "workspaceId": "b5e66845-fd73-4d5d-b28c-da7dbc2d17ec",
+                    "notebookId": "aa881633-c031-433b-8420-d569fd1965b8",
+                    "workspaceId": "57bceddc-a995-44a7-bfb5-1d5f11ad1e98",
                     "sessionTag": "fca"
                 }
             },
@@ -77,8 +77,8 @@
                     "secureInput": false
                 },
                 "typeProperties": {
-                    "notebookId": "c662d87b-5c52-4e5b-bbad-1d4c93bb9b1f",
-                    "workspaceId": "b5e66845-fd73-4d5d-b28c-da7dbc2d17ec",
+                    "notebookId": "3d735ef3-2014-424f-99e2-832fca1291ce",
+                    "workspaceId": "57bceddc-a995-44a7-bfb5-1d5f11ad1e98",
                     "sessionTag": "fca"
                 }
             },
@@ -94,8 +94,8 @@
                     "secureInput": false
                 },
                 "typeProperties": {
-                    "notebookId": "ee411930-b04d-4749-b4b6-fda995e915ed",
-                    "workspaceId": "b5e66845-fd73-4d5d-b28c-da7dbc2d17ec",
+                    "notebookId": "681520b2-2265-4927-979a-b0ef804f8f8e",
+                    "workspaceId": "57bceddc-a995-44a7-bfb5-1d5f11ad1e98",
                     "sessionTag": "fca"
                 }
             },
@@ -118,8 +118,8 @@
                     "secureInput": false
                 },
                 "typeProperties": {
-                    "notebookId": "ec725c31-74b0-4fe6-8ab5-37eb3d03f207",
-                    "workspaceId": "b5e66845-fd73-4d5d-b28c-da7dbc2d17ec",
+                    "notebookId": "7a5dec37-ce1a-445c-8315-60d06305aefc",
+                    "workspaceId": "57bceddc-a995-44a7-bfb5-1d5f11ad1e98",
                     "parameters": {
                         "fromMonth": {
                             "value": {
@@ -158,14 +158,16 @@
                     "secureInput": false
                 },
                 "typeProperties": {
-                    "notebookId": "bd4c81cf-3e39-4eeb-b21a-7a48fa28d4f9",
-                    "workspaceId": "b5e66845-fd73-4d5d-b28c-da7dbc2d17ec",
+                    "notebookId": "0e29a4cd-d9b6-4cab-8049-1d2123f4b3d7",
+                    "workspaceId": "57bceddc-a995-44a7-bfb5-1d5f11ad1e98",
                     "sessionTag": "fca"
                 }
             },
             {
                 "name": "Load Quotas",
                 "type": "ExecutePipeline",
+                "state": "Inactive",
+                "onInactiveMarkAs": "Succeeded",
                 "dependsOn": [
                     {
                         "activity": "Load Dimensions",
@@ -179,15 +181,17 @@
                 },
                 "typeProperties": {
                     "pipeline": {
-                        "referenceName": "dbedc9a0-7d67-4289-963e-2687f78c6891",
+                        "referenceName": "bc560572-054f-49e6-8601-2505da5bea6a",
                         "type": "PipelineReference"
                     },
                     "waitOnCompletion": true
                 }
             },
             {
-                "name": "Dim Reservation",
-                "type": "TridentNotebook",
+                "name": "Load Reservations",
+                "type": "ExecutePipeline",
+                "state": "Inactive",
+                "onInactiveMarkAs": "Succeeded",
                 "dependsOn": [
                     {
                         "activity": "Load Dimensions",
@@ -197,161 +201,36 @@
                     }
                 ],
                 "policy": {
-                    "timeout": "0.12:00:00",
-                    "retry": 0,
-                    "retryIntervalInSeconds": 30,
-                    "secureOutput": false,
                     "secureInput": false
                 },
                 "typeProperties": {
-                    "notebookId": "4961b159-193c-497a-8aa7-77a91cfb626c",
-                    "workspaceId": "b5e66845-fd73-4d5d-b28c-da7dbc2d17ec",
-                    "sessionTag": "fca"
-                }
-            },
-            {
-                "name": "Reservation data",
-                "type": "TridentNotebook",
-                "dependsOn": [
-                    {
-                        "activity": "Dim Reservation",
-                        "dependencyConditions": [
-                            "Succeeded"
-                        ]
-                    }
-                ],
-                "policy": {
-                    "timeout": "0.12:00:00",
-                    "retry": 0,
-                    "retryIntervalInSeconds": 30,
-                    "secureOutput": false,
-                    "secureInput": false
-                },
-                "typeProperties": {
-                    "notebookId": "eb7c3419-2189-4aff-98b9-474035739a88",
-                    "workspaceId": "b5e66845-fd73-4d5d-b28c-da7dbc2d17ec",
+                    "pipeline": {
+                        "referenceName": "973f5bba-e075-4055-8949-eb9b36801737",
+                        "type": "PipelineReference"
+                    },
+                    "waitOnCompletion": true,
                     "parameters": {
-                        "fromMonth": {
+                        "FromMonth": {
                             "value": "@pipeline().parameters.FromMonth",
-                            "type": "int"
+                            "type": "Expression"
                         },
-                        "toMonth": {
-                            "value": {
-                                "value": "@pipeline().parameters.ToMonth",
-                                "type": "Expression"
-                            },
-                            "type": "int"
+                        "ToMonth": {
+                            "value": "@pipeline().parameters.ToMonth",
+                            "type": "Expression"
                         }
-                    },
-                    "sessionTag": "fca"
-                }
-            },
-            {
-                "name": "Reservation Usage Fabric",
-                "type": "TridentNotebook",
-                "dependsOn": [
-                    {
-                        "activity": "Reservation data",
-                        "dependencyConditions": [
-                            "Succeeded"
-                        ]
                     }
-                ],
-                "policy": {
-                    "timeout": "0.12:00:00",
-                    "retry": 0,
-                    "retryIntervalInSeconds": 30,
-                    "secureOutput": false,
-                    "secureInput": false
-                },
-                "typeProperties": {
-                    "notebookId": "61bc484b-996d-457f-8d8e-4f8e0fef0e33",
-                    "workspaceId": "b5e66845-fd73-4d5d-b28c-da7dbc2d17ec",
-                    "parameters": {
-                        "fromMonth": {
-                            "value": {
-                                "value": "@pipeline().parameters.FromMonth",
-                                "type": "Expression"
-                            },
-                            "type": "int"
-                        },
-                        "toMonth": {
-                            "value": {
-                                "value": "@pipeline().parameters.ToMonth",
-                                "type": "Expression"
-                            },
-                            "type": "int"
-                        }
-                    },
-                    "sessionTag": "fca"
-                }
-            },
-            {
-                "name": "Get Metadata1",
-                "type": "GetMetadata",
-                "dependsOn": [],
-                "policy": {
-                    "timeout": "0.12:00:00",
-                    "retry": 0,
-                    "retryIntervalInSeconds": 30,
-                    "secureOutput": false,
-                    "secureInput": false
-                }
-            },
-            {
-                "name": "Lookup1",
-                "type": "Lookup",
-                "dependsOn": [],
-                "policy": {
-                    "timeout": "0.12:00:00",
-                    "retry": 0,
-                    "retryIntervalInSeconds": 30,
-                    "secureOutput": false,
-                    "secureInput": false
-                }
-            },
-            {
-                "name": "Script1",
-                "type": "Script",
-                "dependsOn": [],
-                "policy": {
-                    "timeout": "0.12:00:00",
-                    "retry": 0,
-                    "retryIntervalInSeconds": 30,
-                    "secureOutput": false,
-                    "secureInput": false
-                },
-                "typeProperties": {
-                    "scripts": [],
-                    "scriptBlockExecutionTimeout": "02:00:00"
-                }
-            },
-            {
-                "name": "Script2",
-                "type": "Script",
-                "dependsOn": [],
-                "policy": {
-                    "timeout": "0.12:00:00",
-                    "retry": 0,
-                    "retryIntervalInSeconds": 30,
-                    "secureOutput": false,
-                    "secureInput": false
-                },
-                "typeProperties": {
-                    "scripts": [],
-                    "scriptBlockExecutionTimeout": "02:00:00"
                 }
             }
         ],
-    "parameters": {
-      "FromMonth": {
-        "type": "int",
-        "defaultValue": -6
-      },
-      "ToMonth": {
-        "type": "int",
-        "defaultValue": 0
-      }
-    }
+        "parameters": {
+            "FromMonth": {
+                "type": "int",
+                "defaultValue": -6
+            },
+            "ToMonth": {
+                "type": "int",
+                "defaultValue": 0
+            }
+        }
   }
 }
