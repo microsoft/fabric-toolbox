@@ -1,0 +1,87 @@
+@import 'tailwindcss';
+@import "tw-animate-css";
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  
+  body {
+    font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, 'Roboto', 'Helvetica Neue', Arial, sans-serif;
+  }
+}
+
+:root {
+  /* Modern compact color palette with higher contrast */
+  --background: oklch(98.8% 0.002 240);
+  --foreground: oklch(0.09 0 0);
+  
+  --card: oklch(99.2% 0.001 240);
+  --card-foreground: oklch(0.09 0 0);
+  --popover: oklch(99.5% 0 0);
+  --popover-foreground: oklch(0.09 0 0);
+  
+  /* Microsoft Blue with better contrast */
+  --primary: oklch(0.42 0.18 240);
+  --primary-foreground: oklch(0.98 0 0);
+  
+  /* Subtle gray secondary */
+  --secondary: oklch(96.5% 0.004 240);
+  --secondary-foreground: oklch(0.15 0 0);
+  
+  --muted: oklch(95.5% 0.003 240);
+  --muted-foreground: oklch(0.38 0.002 240);
+  
+  /* Success green with better visibility */
+  --accent: oklch(0.55 0.18 145);
+  --accent-foreground: oklch(0.98 0 0);
+  
+  /* Warning red for destructive actions */
+  --destructive: oklch(0.52 0.22 15);
+  --destructive-foreground: oklch(0.98 0 0);
+  
+  --border: oklch(88% 0.008 240);
+  --input: oklch(96% 0.003 240);
+  --ring: oklch(0.42 0.18 240);
+  
+  --radius: 0.375rem;
+  
+  /* Custom variables for migration app */
+  --warning: oklch(0.62 0.18 65);
+  --warning-foreground: oklch(0.98 0 0);
+  --info: oklch(0.48 0.18 225);
+  --info-foreground: oklch(0.98 0 0);
+}
+
+@theme {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-warning: var(--warning);
+  --color-warning-foreground: var(--warning-foreground);
+  --color-info: var(--info);
+  --color-info-foreground: var(--info-foreground);
+
+  --radius-sm: calc(var(--radius) * 0.5);
+  --radius-md: var(--radius);
+  --radius-lg: calc(var(--radius) * 1.5);
+  --radius-xl: calc(var(--radius) * 2);
+  --radius-2xl: calc(var(--radius) * 3);
+  --radius-full: 9999px;
+}

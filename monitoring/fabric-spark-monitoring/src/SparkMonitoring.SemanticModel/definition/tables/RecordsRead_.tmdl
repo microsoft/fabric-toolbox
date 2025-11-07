@@ -1,0 +1,46 @@
+table RecordsRead_
+	lineageTag: 324e271d-f44b-4018-8e20-58c8eef5c05b
+
+	column timestamp
+		dataType: dateTime
+		formatString: General Date
+		sourceProviderType: datetimeoffset
+		lineageTag: a0f4238d-089a-4069-9b30-450c803a2ed4
+		summarizeBy: none
+		sourceColumn: timestamp
+
+		annotation SummarizationSetBy = Automatic
+
+	column props_name
+		dataType: string
+		sourceProviderType: nvarchar(max)
+		lineageTag: 3ba2d0da-15ac-47e9-9a7d-5fc17bc3f80c
+		summarizeBy: none
+		sourceColumn: props_name
+
+		annotation SummarizationSetBy = Automatic
+
+	column props_count
+		dataType: int64
+		formatString: 0
+		sourceProviderType: bigint
+		lineageTag: f54998a2-e80d-4792-9698-5139c4c47496
+		summarizeBy: sum
+		sourceColumn: props_count
+
+		annotation SummarizationSetBy = Automatic
+
+	partition RecordsRead_ = m
+		mode: directQuery
+		queryGroup: appStatsOutsideTable
+		source =
+				let
+				    Source = AzureDataExplorer.Contents(RTIfqdn, "eventHouseTelemetry", "RawLogs | extend props = parse_json(properties) | where applicationId == '"&ApplicationWithoutTable&"' |  where props.name contains 'executor.recordsRead' | project timestamp,tostring(props.name),tolong(props.count)")
+				
+				in
+				    Source
+
+	annotation PBI_NavigationStepName = Navigation
+
+	annotation PBI_ResultType = Table
+

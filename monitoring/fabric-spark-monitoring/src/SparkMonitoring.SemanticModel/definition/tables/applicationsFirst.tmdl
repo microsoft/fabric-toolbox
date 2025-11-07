@@ -1,0 +1,53 @@
+table applicationsFirst
+	lineageTag: 67e2633e-ca89-4d1a-a540-6e991277ec0b
+
+	column applicationId
+		dataType: string
+		sourceProviderType: nvarchar(max)
+		lineageTag: f554d007-efd8-477a-87bf-89ba8f267098
+		summarizeBy: none
+		sourceColumn: applicationId
+
+		extendedProperty ParameterMetadata =
+				{
+				  "version": 2,
+				  "kind": 1,
+				  "selectAllValue": "__SelectAll__"
+				}
+
+		annotation SummarizationSetBy = Automatic
+
+	column max_timestamp
+		dataType: dateTime
+		formatString: General Date
+		sourceProviderType: datetimeoffset
+		lineageTag: ad757fed-4bec-4e48-9f98-37f58b6f2fd6
+		summarizeBy: none
+		sourceColumn: max_timestamp
+
+		annotation SummarizationSetBy = Automatic
+
+	column min_timestamp
+		dataType: dateTime
+		formatString: General Date
+		sourceProviderType: datetimeoffset
+		lineageTag: 54b48a1d-65dc-4eb8-8c19-2f0860ff5495
+		summarizeBy: none
+		sourceColumn: min_timestamp
+
+		annotation SummarizationSetBy = Automatic
+
+	partition applicationsFirst = m
+		mode: directQuery
+		queryGroup: Comparer
+		source =
+				let
+				    Source = AzureDataExplorer.Contents(RTIfqdn, "eventHouseTelemetry", "RawLogs | summarize max(timestamp),min(timestamp) by applicationId | where applicationId != """"", [MaxRows=null, MaxSize=null, NoTruncate=null, AdditionalSetStatements=null])
+				
+				in
+				    Source
+
+	annotation PBI_NavigationStepName = Navigation
+
+	annotation PBI_ResultType = Table
+

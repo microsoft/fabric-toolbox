@@ -1,0 +1,75 @@
+model Model
+	culture: en-GB
+	defaultPowerBIDataSourceVersion: powerBI_V3
+	sourceQueryCulture: en-GB
+	dataAccessOptions
+		legacyRedirects
+		returnErrorValuesAsNull
+
+queryGroup MetricsTables
+
+	annotation PBI_QueryGroupOrder = 1
+
+queryGroup appStatsOutsideTable
+
+	annotation PBI_QueryGroupOrder = 2
+
+queryGroup appStatsWithTableContext
+
+	annotation PBI_QueryGroupOrder = 3
+
+queryGroup Comparer
+
+	annotation PBI_QueryGroupOrder = 0
+
+annotation __PBI_TimeIntelligenceEnabled = 0
+
+annotation PBIDesktopVersion = 2.144.1378.0 (25.06)+cba1e61f16ea36d44901f06fa446299040122394
+
+annotation PBI_QueryOrder = ["tableNam","Tables","MetricsTableMerge","DatesBin","ApplicationInsert","ApplicationWithoutTable","MetricsTableInsert","WriteTableHistory","MemoryJvmHeapUsage_withTableContext","GCtime_withTableContext","SpillToDisk_withTableContext","RecordsRead_withTableContext","executorsFailure_withTableContext","MemoryJvmHeapUsage_withTableContextMerge","GCtime_withTableContextMerge","SpillToDisk_withTableContextMerge","executorsFailure_withTableContextMerge","RecordsRead_withTableContextMerge","ApplicationMerge","CPUusage_withTableContext","CPUusage_withTableContextMerge","DQ","applications","MetricsTableOnly","RecordsRead_","SpillToDiskImport_","GCTimeImport_","CPUsage_","TaskFailures_","TaskEndFailures_","DistinctStages_","ExecutorsFailure_","MemoryJvmUsageOutsideTableImport_","ShuffleRead_","HistoryTableOnly","LakehouseSizes","TaskEndFailuresWithTableContext","TaskEndFailuresWithTableContextMerge","TaskFailuresWithTableContext","TaskFailuresWithTableContextMerge","DistinctStagesWithTableContext","DistinctStagesWithTableContextMerge","ShuffleReadWithTableContext","ShuffleReadWithTableContextMerge","MergeTableHistory","LakehouseSizesHistory","NEE","Stages","SparkLensRecommendation","SparkLensMetrics","applicationsFirst","applicationsSecond","ApplicationFirst","ApplicationSecond","TaskEndFailures_First","TaskEndFailures_Second","SparkVersionFirst","SparkVersionSecond","ExecutorsFailureFirst","ExecutorsFailureSecond","MemoryJvmUsagePercentFirstExecs","MemoryJvmUsagePercentSecondExecs","MemoryJvmUsageOutsideTableImportFirstDriver","MemoryJvmUsageOutsideTableImportSecondDriver","MemoryJvmUsageExecSizeFirst","MemoryJvmUsageExecSizeSecond","NumExecutorsFirst","NumExecutorsSecond","RecordsRead_First","RecordsRead_Second","StageComparer","RTIfqdn","DistinctStageFirst","DistinctStageSecond","DistinctJobsFirst","DistinctJobsSecond","JobComparerProperties"]
+
+annotation PBI_ProTooling = ["DevMode"]
+
+ref table DatesBin
+ref table applications
+ref table RecordsRead_
+ref table SpillToDiskImport_
+ref table GCTimeImport_
+ref table CPUsage_
+ref table TaskFailures_
+ref table TaskEndFailures_
+ref table DistinctStages_
+ref table ExecutorsFailure_
+ref table MemoryJvmUsageOutsideTableImport_
+ref table ShuffleRead_
+ref table NEE
+ref table Stages
+ref table SparkLensRecommendation
+ref table SparkLensMetrics
+ref table applicationsFirst
+ref table applicationsSecond
+ref table TaskEndFailures_First
+ref table TaskEndFailures_Second
+ref table SparkVersionFirst
+ref table SparkVersionSecond
+ref table ExecutorsFailureFirst
+ref table ExecutorsFailureSecond
+ref table MemoryJvmUsagePercentFirstExecs
+ref table MemoryJvmUsagePercentSecondExecs
+ref table MemoryJvmUsageOutsideTableImportFirstDriver
+ref table MemoryJvmUsageOutsideTableImportSecondDriver
+ref table MemoryJvmUsageExecSizeFirst
+ref table MemoryJvmUsageExecSizeSecond
+ref table NumExecutorsFirst
+ref table NumExecutorsSecond
+ref table RecordsRead_First
+ref table RecordsRead_Second
+ref table StageComparer
+ref table DistinctStageFirst
+ref table DistinctStageSecond
+ref table DistinctJobsFirst
+ref table DistinctJobsSecond
+ref table JobComparerProperties
+
+ref cultureInfo en-GB
+

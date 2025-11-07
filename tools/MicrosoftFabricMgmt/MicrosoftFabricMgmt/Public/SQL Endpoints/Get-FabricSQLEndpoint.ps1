@@ -24,9 +24,8 @@ Get-FabricSQLEndpoint -WorkspaceId "workspace123" -SQLEndpointId "endpoint456"
 Get-FabricSQLEndpoint -WorkspaceId "workspace123" -SQLEndpointName "MySQLEndpoint"
 
 .NOTES
-- This function requires the FabricConfig object to be properly configured with BaseUrl and FabricHeaders.
-- The function uses continuation tokens to handle paginated API responses.
-- If no filter parameters are provided, all SQL Endpoints in the specified workspace are returned.
+    - Requires `$FabricConfig` global configuration, including `BaseUrl` and `FabricHeaders`.
+    - Calls `Test-TokenExpired` to ensure token validity before making the API request.
 
 #>
 function Get-FabricSQLEndpoint {
@@ -62,11 +61,10 @@ function Get-FabricSQLEndpoint {
         Write-Message -Message "API Endpoint: $apiEndpointURI" -Level Debug
          
         # Make the API request
-        # Make the API request
         $apiParams = @{
             BaseURI = $apiEndpointURI
             Headers = $FabricConfig.FabricHeaders
-            Method = 'Get'
+            Method  = 'Get'
         }
         $dataItems = Invoke-FabricAPIRequest @apiParams
            
@@ -101,6 +99,6 @@ function Get-FabricSQLEndpoint {
     catch {
         # Capture and log error details
         $errorDetails = $_.Exception.Message
-        Write-Message -Message "Failed to retrieve Paginated Report. Error: $errorDetails" -Level Error
+        Write-Message -Message "Failed to retrieve SQL Endpoint. Error: $errorDetails" -Level Error
     } 
 }

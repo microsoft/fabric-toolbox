@@ -1,0 +1,51 @@
+table MemoryJvmUsageOutsideTableImportFirstDriver
+	lineageTag: 58af674b-fdc4-49d8-8644-081c257a368e
+
+	column timestamp
+		dataType: dateTime
+		formatString: General Date
+		sourceProviderType: datetimeoffset
+		lineageTag: 0cdcd750-bfb0-4fbb-ba8f-d098a330f015
+		summarizeBy: none
+		sourceColumn: timestamp
+
+		annotation SummarizationSetBy = Automatic
+
+	column applicationId
+		dataType: string
+		sourceProviderType: nvarchar(max)
+		lineageTag: 7022a79e-0b6e-4aaf-8258-7066cec5b338
+		summarizeBy: none
+		sourceColumn: applicationId
+
+		annotation SummarizationSetBy = Automatic
+
+	column Column1
+		dataType: double
+		formatString: 0
+		sourceProviderType: double
+		lineageTag: a2d38089-0b1a-4da5-b3df-d673f18bb82b
+		summarizeBy: sum
+		sourceColumn: Column1
+
+		annotation SummarizationSetBy = Automatic
+
+	partition MemoryJvmUsageOutsideTableImportFirstDriver = m
+		mode: directQuery
+		queryGroup: Comparer
+		source = ```
+				let
+				    Source = AzureDataExplorer.Contents(RTIfqdn, "eventHouseTelemetry", "RawLogs 
+				| extend props = parse_json(properties) 
+				| where applicationId == '"&ApplicationFirst&"'
+				|  where (props.name contains 'jvm.heap.used' or props.name contains 'jvm.heap.max' ) and props.name contains ""driver""
+				| summarize sumif(todouble(props.value),props.name contains 'jvm.heap.used')/sumif(todouble(props.value),props.name contains 'jvm.heap.max') by bin(timestamp,1m),applicationId", [MaxRows=null, MaxSize=null, NoTruncate=null, AdditionalSetStatements=null])
+				
+				in
+				    Source
+				```
+
+	annotation PBI_NavigationStepName = Navigation
+
+	annotation PBI_ResultType = Table
+

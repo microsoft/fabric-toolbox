@@ -9,8 +9,9 @@ Fabric toolbox is a repository of tools, accelerators, scripts, and samples to h
 These assets should be treated as examples that you can use to create the solutions that are appropriate for your use case. If you have any issues, please use the [issues](https://github.com/microsoft/fabric-toolbox/issues) tab of this repository and we will work to address issues on a best effort basis. 
 
 ## Monitoring
+- $${\color{green}NEW!}$$ [Fabric Cost Analysis (FCA)](./monitoring/fabric-cost-analysis)
 - [Fabric Unified Admin Monitoring (FUAM)](./monitoring/fabric-unified-admin-monitoring)
-- [Workspace Monitoring Report Templates](./monitoring/workspace-monitoring-dashboards)
+- $${\color{yellow}UPDATED!}$$ [Workspace Monitoring Report Templates](./monitoring/workspace-monitoring-dashboards)
 
 ## Accelerators
 - $${\color{green}NEW!}$$ [BCDR Accelerator](./accelerators/BCDR)
@@ -21,6 +22,7 @@ These assets should be treated as examples that you can use to create the soluti
 - [Power BI datamart to Fabric Data Warehouse Modernization](./accelerators/power-bi-to-fabric-data-warehouse-modernization)
 - [Real Time Intelligence Eventhouse](./accelerators/real-time-intelligence_eventhouse)
 - [Real Time Intelligence Eventstream](./accelerators/real-time-intelligence_eventstream)
+- $${\color{green}NEW!}$$ [Policy Weaver - Mirror Data Access Policies from Databricks and Snowflake to Fabric](./accelerators/policy-weaver)
 
 ## Samples
 - [Open Mirroring](./samples/open-mirroring)
@@ -42,6 +44,8 @@ These assets should be treated as examples that you can use to create the soluti
 - [DW SP Kill Queries](./scripts/dw-sp-kill-queries)
 
 ## Tools
+- $${\color{green}NEW!}$$ [DAX Performance Tuner MCP Server](./tools/DAXPerformanceTunerMCPServer)
+- $${\color{green}NEW!}$$ [Semantic Model MCP Server](./tools/SemanticModelMCPServer)
 - $${\color{green}NEW!}$$ [Open Mirroring SDK](./tools/OpenMirroringPythonSDK)
 - [MicrosoftFabricMgmt PowerShell Module](./tools/MicrosoftFabricMgmt)
 - [Gen2 Dedicated Pool to Fabric DW Table Copy](./tools/Gen2toFabricDW)

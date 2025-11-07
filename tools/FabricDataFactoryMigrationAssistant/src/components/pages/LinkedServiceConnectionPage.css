@@ -1,0 +1,173 @@
+.ls-page {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  padding: 0 1rem 3rem;
+}
+
+.ls-toolbar {
+  position: sticky;
+  top: 0;
+  z-index: 5;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  align-items: center;
+  background: var(--color-bg-elevated, #fff);
+  padding: 0.75rem 0.75rem;
+  border: 1px solid var(--color-border, #dcdfe3);
+  border-radius: 6px;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.06);
+}
+
+.ls-search {
+  flex: 1 1 240px;
+  min-width: 200px;
+  padding: 0.5rem 0.65rem;
+  border: 1px solid var(--color-border, #c8ccd0);
+  border-radius: 4px;
+  font-size: 0.9rem;
+}
+
+.ls-search:focus {
+  outline: 2px solid var(--color-accent, #3b82f6);
+  outline-offset: 1px;
+}
+
+.ls-filter {
+  flex: 0 0 180px;
+  padding: 0.5rem 0.4rem;
+  border: 1px solid var(--color-border, #c8ccd0);
+  border-radius: 4px;
+  background: #fff;
+  font-size: 0.85rem;
+}
+
+.ls-count {
+  font-size: 0.75rem;
+  opacity: 0.7;
+  margin-left: auto;
+  padding: 0 0.25rem;
+}
+
+.ls-grid {
+  display: grid;
+  gap: 0.9rem;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  align-items: start;
+}
+
+.ls-cardWrapper {
+  position: relative;
+  transition: transform 0.15s ease, box-shadow 0.2s ease;
+}
+
+.ls-cardWrapper--expanded {
+  grid-column: span 2;
+}
+
+@media (min-width: 1400px) {
+  .ls-cardWrapper--expanded {
+    grid-column: span 3;
+  }
+}
+
+.ls-cardShell {
+  background: var(--color-card-bg, #fff);
+  border: 1px solid var(--color-border, #d4d8dd);
+  border-radius: 8px;
+  padding: 0.75rem 0.75rem 0.9rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.55rem;
+  min-height: 120px;
+  position: relative;
+  transition: box-shadow .25s ease, background .25s ease, border-color .25s ease;
+}
+
+.ls-cardShell:hover {
+  box-shadow: 0 2px 6px rgba(0,0,0,0.08);
+}
+
+.ls-cardShell--expanded {
+  background: linear-gradient(180deg,#f9fbff,#f2f6fc);
+  border: 1px solid var(--color-accent,#3b82f6) !important;
+  box-shadow:
+    0 2px 6px rgba(0,0,0,0.08),
+    0 0 0 3px rgba(59,130,246,0.25);
+}
+
+.ls-cardHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+.ls-cardTitle {
+  font-size: 0.92rem;
+  font-weight: 600;
+  line-height: 1.2;
+  color: #1f2430;
+  flex: 1;
+  word-break: break-word;
+}
+
+.ls-expandBtn {
+  border: 1px solid var(--color-border, #cfd3d8);
+  background: #fff;
+  font-size: 0.7rem;
+  padding: 0.35rem 0.55rem;
+  border-radius: 4px;
+  cursor: pointer;
+  line-height: 1;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.ls-expandBtn:hover {
+  background: #f3f5f8;
+}
+
+.ls-cardExpandedArea {
+  margin-top: 0.4rem;
+  padding: 0.75rem 0.6rem;
+  border: 1px solid rgba(59,130,246,0.25);
+  background: #ffffffc9;
+  backdrop-filter: blur(2px);
+  border-radius: 6px;
+  box-shadow: inset 0 0 0 1px rgba(255,255,255,0.6);
+}
+
+.ls-loadMoreRow {
+  display: flex;
+  justify-content: center;
+  margin-top: 1.25rem;
+}
+
+.ls-loadMoreBtn {
+  padding: 0.6rem 1.2rem;
+  border-radius: 6px;
+  border: 1px solid var(--color-border, #cbd0d6);
+  background: linear-gradient(#fff,#f5f7fa);
+  cursor: pointer;
+  font-size: 0.85rem;
+  font-weight: 500;
+}
+
+.ls-loadMoreBtn:hover {
+  background: #f0f4f9;
+}
+
+.ls-empty {
+  text-align: center;
+  font-size: 0.85rem;
+  opacity: 0.65;
+  padding: 2rem 0;
+}
+
+/* Scroll optimization hint for large sets */
+.ls-grid {
+  contain: content;
+}
