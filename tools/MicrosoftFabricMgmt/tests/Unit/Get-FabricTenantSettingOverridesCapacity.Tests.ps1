@@ -16,7 +16,7 @@ param(
         'PipelineVariable'
 
     )
-))
+)
 
 Describe "Get-FabricTenantSettingOverridesCapacity" -Tag "UnitTests" {
 
@@ -42,4 +42,3 @@ Describe "Get-FabricTenantSettingOverridesCapacity" -Tag "UnitTests" {
         }
     }
 }
-

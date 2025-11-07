@@ -2,7 +2,6 @@
 param(
     $ModuleName = "MicrosoftFabricMgmt",
     $expectedParams = @(
-        'true'
         'Verbose'
         'Debug'
         'ErrorAction'

@@ -2,7 +2,6 @@
 param(
     $ModuleName = "MicrosoftFabricMgmt",
     $expectedParams = @(
-        'false'
         'Verbose'
         'Debug'
         'ErrorAction'
@@ -17,7 +16,7 @@ param(
         'PipelineVariable'
 
     )
-))
+)
 
 Describe "Update-FabricTag" -Tag "UnitTests" {
 
@@ -43,4 +42,3 @@ Describe "Update-FabricTag" -Tag "UnitTests" {
         }
     }
 }
-

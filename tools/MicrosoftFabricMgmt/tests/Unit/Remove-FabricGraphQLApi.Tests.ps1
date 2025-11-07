@@ -2,7 +2,6 @@
 param(
     $ModuleName = "MicrosoftFabricMgmt",
     $expectedParams = @(
-        'true'
         'Verbose'
         'Debug'
         'ErrorAction'
@@ -17,7 +16,7 @@ param(
         'PipelineVariable'
 
     )
-))
+)
 
 Describe "Remove-FabricGraphQLApi" -Tag "UnitTests" {
 
@@ -43,4 +42,3 @@ Describe "Remove-FabricGraphQLApi" -Tag "UnitTests" {
         }
     }
 }
-
