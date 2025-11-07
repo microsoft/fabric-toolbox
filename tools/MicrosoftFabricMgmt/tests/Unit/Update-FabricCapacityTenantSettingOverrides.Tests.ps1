@@ -2,14 +2,12 @@
 param(
     $ModuleName = "MicrosoftFabricMgmt",
     $expectedParams = @(
-        "TenantSettingName"
+        "CapacityId"
+        "SettingTitle"
         "EnableTenantSetting"
-        "DelegateToCapacity"
-        "DelegateToDomain"
         "DelegateToWorkspace"
         "EnabledSecurityGroups"
         "ExcludedSecurityGroups"
-        "Properties"
         "Verbose"
         "Debug"
         "ErrorAction"

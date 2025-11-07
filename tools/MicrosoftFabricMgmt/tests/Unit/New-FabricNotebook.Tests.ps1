@@ -5,6 +5,7 @@ param(
         "WorkspaceId"
         "NotebookName"
         "NotebookDescription"
+        "NotebookFormat"
         "NotebookPathDefinition"
         "NotebookPathPlatformDefinition"
         "Verbose"

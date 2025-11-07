@@ -3,6 +3,7 @@ param(
     $ModuleName = "MicrosoftFabricMgmt",
     $expectedParams = @(
         "WorkspaceId"
+        "NotebookFormat"
         "NotebookId"
         "NotebookPathDefinition"
         "NotebookPathPlatformDefinition"
