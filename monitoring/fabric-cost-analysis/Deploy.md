@@ -83,13 +83,11 @@ Once Data Lake Gen 2 storage account created here are the high levels steps to c
 
 ![FCA](./media/Setup-Export5.png)
 
-### 2.1 - (Optional) Azure Quota Data
+### Optional Steps
 
-➡️ [Click here to configure quota analysis](./Quota.md)
+Azure Quota Data : [Click here to configure quota analysis](./Quota.md)
 
-### 2.2 - (Optional) Reservation Data
-
-➡️ [Click here to configure reservation analysis](./Reservation.md)
+Reservation : [Click here to configure reservation analysis](./Reservation.md)
 
 ## 3 - Run the Pipeline
 
