@@ -28,7 +28,7 @@ Updates both the name and description of the MirroredDatabase "MirroredDatabase1
 - Requires `$FabricConfig` global configuration, including `BaseUrl` and `FabricHeaders`.
 - Calls `Test-TokenExpired` to ensure token validity before making the API request.
 
-Author: Tiago Balabuch  
+Author: Tiago Balabuch
 
 #>
 function Update-FabricMirroredDatabase {
@@ -36,8 +36,8 @@ function Update-FabricMirroredDatabase {
     param (
         [Parameter(Mandatory = $true)]
         [ValidateNotNullOrEmpty()]
-        [string]$WorkspaceId,   
-        
+        [string]$WorkspaceId,
+
         [Parameter(Mandatory = $true)]
         [ValidateNotNullOrEmpty()]
         [string]$MirroredDatabaseId,
@@ -82,7 +82,7 @@ function Update-FabricMirroredDatabase {
             Body = $bodyJson
         }
         if ($PSCmdlet.ShouldProcess($MirroredDatabaseId, "Update Mirrored Database in workspace '$WorkspaceId'")) {
-            $response = Invoke-FabricAPIRequest @apiParams 
+            $response = Invoke-FabricAPIRequest @apiParams
 
             # Return the API response
             Write-Message -Message "Mirrored Database '$MirroredDatabaseName' updated successfully!" -Level Info

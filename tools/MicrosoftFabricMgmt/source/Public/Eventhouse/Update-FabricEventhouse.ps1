@@ -3,7 +3,7 @@
     Updates an existing Eventhouse in a specified Microsoft Fabric workspace.
 
 .DESCRIPTION
-    This function sends a PATCH request to the Microsoft Fabric API to update an existing Eventhouse 
+    This function sends a PATCH request to the Microsoft Fabric API to update an existing Eventhouse
     in the specified workspace. It supports optional parameters for Eventhouse description.
 
 .PARAMETER WorkspaceId
@@ -27,15 +27,15 @@
     - Calls `Test-TokenExpired` to ensure token validity before making the API request.
 
     Author: Tiago Balabuch
-    
+
 #>
 function Update-FabricEventhouse {
     [CmdletBinding(SupportsShouldProcess = $true, ConfirmImpact = 'Medium')]
     param (
         [Parameter(Mandatory = $true)]
         [ValidateNotNullOrEmpty()]
-        [string]$WorkspaceId,   
-        
+        [string]$WorkspaceId,
+
         [Parameter(Mandatory = $true)]
         [ValidateNotNullOrEmpty()]
         [string]$EventhouseId,
@@ -80,7 +80,7 @@ function Update-FabricEventhouse {
                 Method  = 'Patch'
                 Body    = $bodyJson
             }
-            $response = Invoke-FabricAPIRequest @apiParams 
+            $response = Invoke-FabricAPIRequest @apiParams
 
             # Return the API response
             Write-Message -Message "Eventhouse '$EventhouseName' updated successfully!" -Level Info

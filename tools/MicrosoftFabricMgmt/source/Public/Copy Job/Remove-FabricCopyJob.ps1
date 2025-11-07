@@ -3,7 +3,7 @@
     Deletes a Copy Job from a specified Microsoft Fabric workspace.
 
 .DESCRIPTION
-    This function performs a DELETE operation on the Microsoft Fabric API to remove a Copy Job 
+    This function performs a DELETE operation on the Microsoft Fabric API to remove a Copy Job
     from the specified workspace using the provided WorkspaceId and CopyJobId parameters.
 
 .PARAMETER WorkspaceId
@@ -50,8 +50,8 @@ function Remove-FabricCopyJob {
                 BaseURI = $apiEndpointURI
                 Method = 'Delete'
             }
-            $response = Invoke-FabricAPIRequest @apiParams 
-            
+            $response = Invoke-FabricAPIRequest @apiParams
+
             Write-Message -Message "Copy Job '$CopyJobId' deleted successfully from workspace '$WorkspaceId'." -Level Info
             return $response
         }

@@ -3,7 +3,7 @@
 Retrieves the result of a completed long-running operation from the Microsoft Fabric API.
 
 .DESCRIPTION
-The Get-FabricLongRunningOperationResult function queries the Microsoft Fabric API to fetch the result 
+The Get-FabricLongRunningOperationResult function queries the Microsoft Fabric API to fetch the result
 of a specific long-running operation. This is typically used after confirming the operation has completed successfully.
 
 .PARAMETER operationId
@@ -31,7 +31,7 @@ function Get-FabricLongRunningOperationResult {
     Write-Message -Message "Validating authentication token..." -Level Debug
     Test-TokenExpired
     Write-Message -Message "Authentication token is valid." -Level Debug
-        
+
     # Construct the API endpoint URI
     $apiEndpointURI = "https://api.fabric.microsoft.com/v1/operations/{0}/result" -f $operationId
     Write-Message -Message "API Endpoint: $apiEndpointURI" -Level Debug
@@ -47,7 +47,7 @@ function Get-FabricLongRunningOperationResult {
 
         # Return the API response
         Write-Message -Message "LRO result return: $($response)" -Level Debug
-        return $response 
+        return $response
     }
     catch {
         # Capture and log error details

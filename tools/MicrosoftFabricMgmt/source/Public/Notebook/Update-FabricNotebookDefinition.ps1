@@ -3,7 +3,7 @@
 Updates the definition of a notebook in a Microsoft Fabric workspace.
 
 .DESCRIPTION
-This function allows updating the content or metadata of a notebook in a Microsoft Fabric workspace. 
+This function allows updating the content or metadata of a notebook in a Microsoft Fabric workspace.
 The notebook content can be provided as file paths, and metadata updates can optionally be enabled.
 
 .PARAMETER WorkspaceId
@@ -34,7 +34,7 @@ Updates both the content and metadata of the notebook with ID `67890` in the wor
 - The notebook content is encoded as Base64 before being sent to the Fabric API.
 - This function handles asynchronous operations and retrieves operation results if required.
 
-Author: Tiago Balabuch  
+Author: Tiago Balabuch
 
 #>
 function Update-FabricNotebookDefinition {
@@ -51,7 +51,7 @@ function Update-FabricNotebookDefinition {
         [Parameter(Mandatory = $true)]
         [ValidateNotNullOrEmpty()]
         [string]$NotebookPathDefinition,
-        
+
         [Parameter(Mandatory = $false)]
         [ValidateNotNullOrEmpty()]
         [string]$NotebookPathPlatformDefinition,
@@ -68,7 +68,7 @@ function Update-FabricNotebookDefinition {
         Test-TokenExpired
         Write-Message -Message "Authentication token is valid." -Level Debug
 
-        # Construct the API endpoint URI with filtering logic  
+        # Construct the API endpoint URI with filtering logic
         $apiEndpointURI = "{0}/workspaces/{1}/notebooks/{2}/updateDefinition" -f $FabricConfig.BaseUrl, $WorkspaceId, $NotebookId
         if ($NotebookPathPlatformDefinition) {
             $apiEndpointURI = "$apiEndpointURI?updateMetadata=true"
@@ -80,12 +80,12 @@ function Update-FabricNotebookDefinition {
             definition = @{
                 format = $NotebookFormat
                 parts  = @()
-            } 
+            }
         }
-      
+
         if ($NotebookPathDefinition) {
             $notebookEncodedContent = Convert-ToBase64 -filePath $NotebookPathDefinition
-            
+
             if (-not [string]::IsNullOrEmpty($notebookEncodedContent)) {
                 # Add new part to the parts array
                 $body.definition.parts += @{
@@ -131,7 +131,7 @@ function Update-FabricNotebookDefinition {
                 Body = $bodyJson
             }
             $response = Invoke-FabricAPIRequest @apiParams
-           
+
             # Return the API response
             Write-Message -Message "Successfully updated the definition for Notebook with ID '$NotebookId' in workspace '$WorkspaceId'." -Level Info
             return $response

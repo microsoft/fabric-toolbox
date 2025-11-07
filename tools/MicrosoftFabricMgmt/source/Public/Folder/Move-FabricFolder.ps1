@@ -46,7 +46,7 @@ function Move-FabricFolder {
         [string]$TargetFolderId
     )
     try {
-        
+
         # Validate authentication token before proceeding.
         Write-Message -Message "Validating authentication token..." -Level Debug
         Test-TokenExpired
@@ -55,17 +55,17 @@ function Move-FabricFolder {
         # Construct the API endpoint URI
         $apiEndpointURI = "{0}/workspaces/{1}/folders/{2}/move" -f $FabricConfig.BaseUrl, $WorkspaceId, $FolderId
         Write-Message -Message "API Endpoint: $apiEndpointURI" -Level Debug
-        
+
         # Construct the request body only if TargetFolderId is provided
         if ($TargetFolderId) {
-            $body = @{ 
-                targetFolderId = $TargetFolderId 
+            $body = @{
+                targetFolderId = $TargetFolderId
             }
         }
         else {
             $body = @{}
         }
-        
+
         # Convert the body to JSON format
         $bodyJson = $body | ConvertTo-Json -Depth 4
         Write-Message -Message "Request Body: $bodyJson" -Level Debug
@@ -81,10 +81,10 @@ function Move-FabricFolder {
             $response = Invoke-FabricAPIRequest @apiParams
 
             # Return the API response
-            Write-Message -Message "Folder moved successfully!" -Level Info        
+            Write-Message -Message "Folder moved successfully!" -Level Info
             return $response
         }
-     
+
     }
     catch {
         # Capture and log error details

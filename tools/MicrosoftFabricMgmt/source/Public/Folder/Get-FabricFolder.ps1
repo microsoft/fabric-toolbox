@@ -47,7 +47,7 @@ function Get-FabricFolder {
         [Parameter(Mandatory = $false)]
         [ValidateNotNullOrEmpty()]
         [string]$RootFolderId,
-        
+
         [Parameter(Mandatory = $false)]
         [switch]$Recursive
     )
@@ -87,7 +87,7 @@ function Get-FabricFolder {
         Write-Message -Message "Validating authentication token..." -Level Debug
         Test-TokenExpired
         Write-Message -Message "Authentication token is valid." -Level Debug
-                
+
         # Construct the API endpoint URI
         $queryParams = @()
         if ($RootFolderId) {
@@ -134,5 +134,5 @@ function Get-FabricFolder {
         # Capture and log error details
         $errorDetails = $_.Exception.Message
         Write-Message -Message "Failed to retrieve Warehouse. Error: $errorDetails" -Level Error
-    } 
+    }
 }

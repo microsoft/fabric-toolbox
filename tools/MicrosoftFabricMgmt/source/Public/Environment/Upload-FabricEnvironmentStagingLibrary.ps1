@@ -20,7 +20,7 @@ Upload-FabricEnvironmentStagingLibrary -WorkspaceId "workspace-12345" -Environme
 - Requires `$FabricConfig` global configuration, including `BaseUrl` and `FabricHeaders`.
 - Calls `Test-TokenExpired` to ensure token validity before making the API request.
 
-Author: Tiago Balabuch  
+Author: Tiago Balabuch
 
 #>
 function Upload-FabricEnvironmentStagingLibrary {
@@ -30,7 +30,7 @@ function Upload-FabricEnvironmentStagingLibrary {
         [Parameter(Mandatory = $true)]
         [ValidateNotNullOrEmpty()]
         [string]$WorkspaceId,
-        
+
         [Parameter(Mandatory = $true)]
         [ValidateNotNullOrEmpty()]
         [string]$EnvironmentId
@@ -40,13 +40,13 @@ function Upload-FabricEnvironmentStagingLibrary {
         Write-Message -Message "Validating authentication token..." -Level Debug
         Test-TokenExpired
         Write-Message -Message "Authentication token is valid." -Level Debug
-                
+
         # Construct the API endpoint URI
         $apiEndpointURI = "{0}/workspaces/{1}/environments/{2}/staging/libraries" -f $FabricConfig.BaseUrl, $WorkspaceId, $EnvironmentId
         Write-Message -Message "API Endpoint: $apiEndpointURI" -Level Debug
 
         # Construct the request body (not yet implemented in Fabric docs)
-        
+
         # Make the API request (guarded by ShouldProcess)
         if ($PSCmdlet.ShouldProcess($EnvironmentId, "Upload staging library placeholder in workspace '$WorkspaceId'")) {
             $apiParams = @{

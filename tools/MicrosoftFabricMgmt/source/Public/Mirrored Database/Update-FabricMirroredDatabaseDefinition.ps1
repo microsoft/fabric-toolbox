@@ -3,7 +3,7 @@
 Updates the definition of a MirroredDatabase in a Microsoft Fabric workspace.
 
 .DESCRIPTION
-This function allows updating the content or metadata of a MirroredDatabase in a Microsoft Fabric workspace. 
+This function allows updating the content or metadata of a MirroredDatabase in a Microsoft Fabric workspace.
 The MirroredDatabase content can be provided as file paths, and metadata updates can optionally be enabled.
 
 .PARAMETER WorkspaceId
@@ -19,7 +19,7 @@ The MirroredDatabase content can be provided as file paths, and metadata updates
 (Optional) The file path to the MirroredDatabase's platform-specific definition file. The content will be encoded as Base64 and sent in the request.
 
 .PARAMETER UpdateMetadata
-(Optional)A boolean flag indicating whether to update the MirroredDatabase's metadata. 
+(Optional)A boolean flag indicating whether to update the MirroredDatabase's metadata.
 Default: `$false`.
 
 .EXAMPLE
@@ -38,7 +38,7 @@ Updates both the content and metadata of the MirroredDatabase with ID `67890` in
 - The MirroredDatabase content is encoded as Base64 before being sent to the Fabric API.
 - This function handles asynchronous operations and retrieves operation results if required.
 
-Author: Tiago Balabuch  
+Author: Tiago Balabuch
 
 #>
 function Update-FabricMirroredDatabaseDefinition {
@@ -55,7 +55,7 @@ function Update-FabricMirroredDatabaseDefinition {
         [Parameter(Mandatory = $true)]
         [ValidateNotNullOrEmpty()]
         [string]$MirroredDatabasePathDefinition,
-        
+
         [Parameter(Mandatory = $false)]
         [ValidateNotNullOrEmpty()]
         [string]$MirroredDatabasePathPlatformDefinition
@@ -67,7 +67,7 @@ function Update-FabricMirroredDatabaseDefinition {
         Test-TokenExpired
         Write-Message -Message "Authentication token is valid." -Level Debug
 
-        # Construct the API endpoint URI with filtering logic  
+        # Construct the API endpoint URI with filtering logic
         $apiEndpointURI = "{0}/workspaces/{1}/mirroredDatabases/{2}/updateDefinition" -f $FabricConfig.BaseUrl, $WorkspaceId, $MirroredDatabaseId
         if ($MirroredDatabasePathPlatformDefinition) {
             # Append query parameter correctly
@@ -79,12 +79,12 @@ function Update-FabricMirroredDatabaseDefinition {
         $body = @{
             definition = @{
                 parts = @()
-            } 
+            }
         }
-      
+
         if ($MirroredDatabasePathDefinition) {
             $MirroredDatabaseEncodedContent = Convert-ToBase64 -filePath $MirroredDatabasePathDefinition
-            
+
             if (-not [string]::IsNullOrEmpty($MirroredDatabaseEncodedContent)) {
                 # Add new part to the parts array
                 $body.definition.parts += @{
@@ -130,9 +130,9 @@ function Update-FabricMirroredDatabaseDefinition {
             $response = Invoke-FabricAPIRequest @apiParams
 
             # Return the API response
-            
+
             Write-Message -Message "Successfully updated the definition for Mirrored Database with ID '$MirroredDatabaseId' in workspace '$WorkspaceId'." -Level Info
-            return $response   
+            return $response
         }
     }
     catch {

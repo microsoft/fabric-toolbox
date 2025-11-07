@@ -22,7 +22,7 @@ function Remove-FabricLabel {
     param (
         [Parameter(Mandatory = $true)]
         [ValidateNotNullOrEmpty()]
-        [System.Object]$Items # Array with 'id' and 'type' 
+        [System.Object]$Items # Array with 'id' and 'type'
     )
     try {
         # Validate Items structure
@@ -31,13 +31,13 @@ function Remove-FabricLabel {
                 throw "Each Item must contain 'id' and 'type' properties. Found: $item"
             }
         }
-        
+
         # Validate authentication token before proceeding.
         Write-Message -Message "Validating authentication token..." -Level Debug
         Test-TokenExpired
         Write-Message -Message "Authentication token is valid." -Level Debug
 
-        # Construct the API endpoint URI 
+        # Construct the API endpoint URI
         $apiEndpointURI = "{0}/admin/items/bulkRemoveLabels" -f $FabricConfig.BaseUrl, $WorkspaceId
         Write-Message -Message "API Endpoint: $apiEndpointURI" -Level Debug
 
@@ -45,7 +45,7 @@ function Remove-FabricLabel {
         $body = @{
             items = $Items
         }
-       
+
         # Convert the body to JSON
         $bodyJson = $body | ConvertTo-Json -Depth 2
         Write-Message -Message "Request Body: $bodyJson" -Level Debug
@@ -59,7 +59,7 @@ function Remove-FabricLabel {
         }
         if ($PSCmdlet.ShouldProcess("Bulk label removal", "Remove labels from $($Items.Count) item(s)")) {
             $response = Invoke-FabricAPIRequest @apiParams
-            
+
             # Return the API response
             Write-Message -Message "Bulk label removal completed successfully." -Level Info
             return $response

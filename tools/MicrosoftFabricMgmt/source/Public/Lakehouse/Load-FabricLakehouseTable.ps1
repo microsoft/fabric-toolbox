@@ -4,8 +4,8 @@ function Load-FabricLakehouseTable {
     param (
         [Parameter(Mandatory = $true)]
         [ValidateNotNullOrEmpty()]
-        [string]$WorkspaceId,   
-        
+        [string]$WorkspaceId,
+
         [Parameter(Mandatory = $true)]
         [ValidateNotNullOrEmpty()]
         [string]$LakehouseId,
@@ -32,7 +32,7 @@ function Load-FabricLakehouseTable {
         [Parameter(Mandatory = $false)]
         [ValidateNotNullOrEmpty()]
         [string]$CsvDelimiter = ",",
-        
+
         [Parameter(Mandatory = $false)]
         [ValidateNotNullOrEmpty()]
         [bool]$CsvHeader = $false,
@@ -41,7 +41,7 @@ function Load-FabricLakehouseTable {
         [ValidateNotNullOrEmpty()]
         [ValidateSet('append', 'overwrite')]
         [string]$Mode = "append",
-        
+
         [Parameter(Mandatory = $false)]
         [ValidateNotNullOrEmpty()]
         [bool]$Recursive = $false
@@ -52,7 +52,7 @@ function Load-FabricLakehouseTable {
         Test-TokenExpired
         Write-Message -Message "Authentication token is valid." -Level Debug
 
-        # Construct the API endpoint URI  
+        # Construct the API endpoint URI
         $apiEndpointURI = "{0}/workspaces/{1}/lakehouses/{2}/tables/{3}/load" -f $FabricConfig.BaseUrl, $WorkspaceId, $LakehouseId, $TableName
         Write-Message -Message "API Endpoint: $apiEndpointURI" -Level Debug
 
@@ -66,7 +66,7 @@ function Load-FabricLakehouseTable {
                 format = $FileFormat
             }
         }
-        
+
         if ($FileFormat -eq "Csv") {
             $body.formatOptions.delimiter = $CsvDelimiter
             $body.formatOptions.header = $CsvHeader
@@ -86,7 +86,7 @@ function Load-FabricLakehouseTable {
         }
         if ($PSCmdlet.ShouldProcess($TableName, "Load data into table in Lakehouse '$LakehouseId' (workspace '$WorkspaceId')")) {
             $response = Invoke-FabricAPIRequest @apiParams
-                
+
             # Return the API response
             Write-Message -Message "Table '$TableName' loaded successfully into Lakehouse '$LakehouseId' in Workspace '$WorkspaceId'." -Level Info
             return $response

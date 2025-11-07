@@ -3,7 +3,7 @@
 Updates the definition of a KQLQueryset in a Microsoft Fabric workspace.
 
 .DESCRIPTION
-This function allows updating the content or metadata of a KQLQueryset in a Microsoft Fabric workspace. 
+This function allows updating the content or metadata of a KQLQueryset in a Microsoft Fabric workspace.
 The KQLQueryset content can be provided as file paths, and metadata updates can optionally be enabled.
 
 .PARAMETER WorkspaceId
@@ -25,7 +25,7 @@ Update-FabricKQLQuerysetDefinition -WorkspaceId "12345" -KQLQuerysetId "67890" -
 Updates the content of the KQLQueryset with ID `67890` in the workspace `12345` using the specified KQLQueryset file.
 
 .EXAMPLE
-Update-FabricKQLQuerysetDefinition -WorkspaceId "12345" -KQLQuerysetId "67890" -KQLQuerysetPathDefinition "C:\KQLQuerysets\KQLQueryset.ipynb" 
+Update-FabricKQLQuerysetDefinition -WorkspaceId "12345" -KQLQuerysetId "67890" -KQLQuerysetPathDefinition "C:\KQLQuerysets\KQLQueryset.ipynb"
 
 Updates both the content and metadata of the KQLQueryset with ID `67890` in the workspace `12345`.
 
@@ -35,7 +35,7 @@ Updates both the content and metadata of the KQLQueryset with ID `67890` in the 
 - The KQLQueryset content is encoded as Base64 before being sent to the Fabric API.
 - This function handles asynchronous operations and retrieves operation results if required.
 
-Author: Tiago Balabuch  
+Author: Tiago Balabuch
 
 #>
 function Update-FabricKQLQuerysetDefinition {
@@ -52,7 +52,7 @@ function Update-FabricKQLQuerysetDefinition {
         [Parameter(Mandatory = $true)]
         [ValidateNotNullOrEmpty()]
         [string]$KQLQuerysetPathDefinition,
-        
+
         [Parameter(Mandatory = $false)]
         [ValidateNotNullOrEmpty()]
         [string]$KQLQuerysetPathPlatformDefinition
@@ -64,7 +64,7 @@ function Update-FabricKQLQuerysetDefinition {
         Test-TokenExpired
         Write-Message -Message "Authentication token is valid." -Level Debug
 
-        # Construct the API endpoint URI with filtering logic  
+        # Construct the API endpoint URI with filtering logic
         $apiEndpointURI = "{0}/workspaces/{1}/kqlQuerysets/{2}/updateDefinition" -f $FabricConfig.BaseUrl, $WorkspaceId, $KQLQuerysetId
         if ($KQLQuerysetPathPlatformDefinition) {
             # Append query parameter correctly
@@ -77,12 +77,12 @@ function Update-FabricKQLQuerysetDefinition {
             definition = @{
                 format = $null
                 parts  = @()
-            } 
+            }
         }
-      
+
         if ($KQLQuerysetPathDefinition) {
             $KQLQuerysetEncodedContent = Convert-ToBase64 -filePath $KQLQuerysetPathDefinition
-            
+
             if (-not [string]::IsNullOrEmpty($KQLQuerysetEncodedContent)) {
                 # Add new part to the parts array
                 $body.definition.parts += @{
@@ -128,8 +128,8 @@ function Update-FabricKQLQuerysetDefinition {
             $response = Invoke-FabricAPIRequest @apiParams
 
             # Return the API response
-            Write-Message -Message "Successfully updated the definition for KQL Queryset with ID '$KQLQuerysetId' in workspace '$WorkspaceId'." -Level Info        
-            return $response         
+            Write-Message -Message "Successfully updated the definition for KQL Queryset with ID '$KQLQuerysetId' in workspace '$WorkspaceId'." -Level Info
+            return $response
         }
     }
     catch {

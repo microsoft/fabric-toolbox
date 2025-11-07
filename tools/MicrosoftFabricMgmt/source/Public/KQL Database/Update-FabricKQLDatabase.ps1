@@ -28,7 +28,7 @@ Updates both the name and description of the KQLDatabase "KQLDatabase123".
 - Requires `$FabricConfig` global configuration, including `BaseUrl` and `FabricHeaders`.
 - Calls `Test-TokenExpired` to ensure token validity before making the API request.
 
-Author: Tiago Balabuch  
+Author: Tiago Balabuch
 
 #>
 function Update-FabricKQLDatabase {
@@ -36,8 +36,8 @@ function Update-FabricKQLDatabase {
     param (
         [Parameter(Mandatory = $true)]
         [ValidateNotNullOrEmpty()]
-        [string]$WorkspaceId,   
-        
+        [string]$WorkspaceId,
+
         [Parameter(Mandatory = $true)]
         [ValidateNotNullOrEmpty()]
         [string]$KQLDatabaseId,
@@ -83,7 +83,7 @@ function Update-FabricKQLDatabase {
             Body = $bodyJson
         }
         if ($PSCmdlet.ShouldProcess($KQLDatabaseId, "Update KQL Database in workspace '$WorkspaceId'")) {
-            $response = Invoke-FabricAPIRequest @apiParams 
+            $response = Invoke-FabricAPIRequest @apiParams
 
             # Return the API response
             Write-Message -Message "KQLDatabase '$KQLDatabaseName' updated successfully!" -Level Info

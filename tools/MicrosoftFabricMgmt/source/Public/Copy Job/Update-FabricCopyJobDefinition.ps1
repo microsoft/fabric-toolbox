@@ -3,7 +3,7 @@
 Updates the definition of a Copy Job in a Microsoft Fabric workspace.
 
 .DESCRIPTION
-This function updates the content or metadata of a Copy Job within a Microsoft Fabric workspace. 
+This function updates the content or metadata of a Copy Job within a Microsoft Fabric workspace.
 The Copy Job content and platform-specific definitions can be provided as file paths, which will be encoded as Base64 and sent in the request.
 
 .PARAMETER WorkspaceId
@@ -51,7 +51,7 @@ function Update-FabricCopyJobDefinition {
         [Parameter(Mandatory = $true)]
         [ValidateNotNullOrEmpty()]
         [string]$CopyJobPathDefinition,
-        
+
         [Parameter(Mandatory = $false)]
         [ValidateNotNullOrEmpty()]
         [string]$CopyJobPathPlatformDefinition
@@ -74,12 +74,12 @@ function Update-FabricCopyJobDefinition {
         $body = @{
             definition = @{
                 parts = @()
-            } 
+            }
         }
-      
+
         if ($CopyJobPathDefinition) {
             $CopyJobEncodedContent = Convert-ToBase64 -filePath $CopyJobPathDefinition
-            
+
             if (-not [string]::IsNullOrEmpty($CopyJobEncodedContent)) {
                 # Add new part to the parts array
                 $body.definition.parts += @{
@@ -123,7 +123,7 @@ function Update-FabricCopyJobDefinition {
             }
             $response = Invoke-FabricAPIRequest @apiParams
 
-            Write-Message -Message "Successfully updated the definition for Copy Job with ID '$CopyJobId' in workspace '$WorkspaceId'." -Level Info  
+            Write-Message -Message "Successfully updated the definition for Copy Job with ID '$CopyJobId' in workspace '$WorkspaceId'." -Level Info
             return $response
         }
     }

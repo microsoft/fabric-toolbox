@@ -83,7 +83,7 @@ function Add-FabricConnectionRoleAssignment {
 
         # Return the API response
         Write-Message -Message "Role '$ConnectionRole' assigned to principal '$PrincipalId' successfully in connection '$ConnectionId'." -Level Info
-        return $response        
+        return $response
     }
     catch {
         # Capture and log error details

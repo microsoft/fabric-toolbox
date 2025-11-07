@@ -3,7 +3,7 @@
 Updates the definition or metadata of an Apache Airflow Job in a Microsoft Fabric workspace.
 
 .DESCRIPTION
-Updates the content and/or platform-specific metadata of an Apache Airflow Job within a Microsoft Fabric workspace. 
+Updates the content and/or platform-specific metadata of an Apache Airflow Job within a Microsoft Fabric workspace.
 Accepts file paths for the job definition and optional platform definition, encodes their contents as Base64, and submits them to the Fabric API.
 
 .PARAMETER WorkspaceId
@@ -51,7 +51,7 @@ function Update-FabricApacheAirflowJobDefinition {
         [Parameter(Mandatory = $true)]
         [ValidateNotNullOrEmpty()]
         [string]$ApacheAirflowJobPathDefinition,
-        
+
         [Parameter(Mandatory = $false)]
         [ValidateNotNullOrEmpty()]
         [string]$ApacheAirflowJobPathPlatformDefinition
@@ -74,12 +74,12 @@ function Update-FabricApacheAirflowJobDefinition {
         $body = @{
             definition = @{
                 parts = @()
-            } 
+            }
         }
-      
+
         if ($ApacheAirflowJobPathDefinition) {
             $ApacheAirflowJobEncodedContent = Convert-ToBase64 -filePath $ApacheAirflowJobPathDefinition
-            
+
             if (-not [string]::IsNullOrEmpty($ApacheAirflowJobEncodedContent)) {
                 # Add new part to the parts array
                 $body.definition.parts += @{
@@ -123,7 +123,7 @@ function Update-FabricApacheAirflowJobDefinition {
             }
             $response = Invoke-FabricAPIRequest @apiParams
 
-            Write-Message -Message "Successfully updated the definition for Apache Airflow Job with ID '$ApacheAirflowJobId' in workspace '$WorkspaceId'." -Level Info  
+            Write-Message -Message "Successfully updated the definition for Apache Airflow Job with ID '$ApacheAirflowJobId' in workspace '$WorkspaceId'." -Level Info
             return $response
         }
     }

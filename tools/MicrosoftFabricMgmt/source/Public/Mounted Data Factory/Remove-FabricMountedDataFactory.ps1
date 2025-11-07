@@ -52,13 +52,13 @@ function Remove-FabricMountedDataFactory {
                 BaseURI = $apiEndpointURI
                 Method  = 'Delete'
             }
-            $response = Invoke-FabricAPIRequest @apiParams 
-            
+            $response = Invoke-FabricAPIRequest @apiParams
+
             # Return the API response
             Write-Message -Message "Mounted Data Factory '$MountedDataFactoryId' deleted successfully from workspace '$WorkspaceId'." -Level Info
             return $response
         }
-       
+
     }
     catch {
         # Capture and log error details

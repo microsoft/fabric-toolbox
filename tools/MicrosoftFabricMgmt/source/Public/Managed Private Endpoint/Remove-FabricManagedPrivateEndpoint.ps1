@@ -50,7 +50,7 @@ function Remove-FabricManagedPrivateEndpoint {
         }
         if ($PSCmdlet.ShouldProcess($ManagedPrivateEndpointId, "Delete Managed Private Endpoint in workspace '$WorkspaceId'")) {
             $response = Invoke-FabricAPIRequest @apiParams
-            
+
             # Return the API response
             Write-Message -Message "Managed Private Endpoint '$ManagedPrivateEndpointId' deleted successfully from workspace '$WorkspaceId'." -Level Info
             return $response

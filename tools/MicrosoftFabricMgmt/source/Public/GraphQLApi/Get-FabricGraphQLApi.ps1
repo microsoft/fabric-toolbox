@@ -56,11 +56,11 @@ function Get-FabricGraphQLApi {
         Write-Message -Message "Validating authentication token..." -Level Debug
         Test-TokenExpired
         Write-Message -Message "Authentication token is valid." -Level Debug
-        
-        # Construct the API endpoint URI   
+
+        # Construct the API endpoint URI
         $apiEndpointURI = "{0}/workspaces/{1}/GraphQLApis" -f $FabricConfig.BaseUrl, $WorkspaceId
         Write-Message -Message "API Endpoint: $apiEndpointURI" -Level Debug
-        
+
         # Make the API request
         $apiParams = @{
             BaseURI = $apiEndpointURI
@@ -68,13 +68,13 @@ function Get-FabricGraphQLApi {
             Method  = 'Get'
         }
         $dataItems = Invoke-FabricAPIRequest @apiParams
-       
+
         # Immediately handle empty response
         if (-not $dataItems) {
             Write-Message -Message "No data returned from the API." -Level Warning
             return $null
         }
-  
+
         # Apply filtering logic efficiently
         if ($GraphQLApiId) {
             $matchedItems = $dataItems.Where({ $_.Id -eq $GraphQLApiId }, 'First')
@@ -86,7 +86,7 @@ function Get-FabricGraphQLApi {
             Write-Message -Message "No filter provided. Returning all items." -Level Debug
             $matchedItems = $dataItems
         }
-  
+
         # Handle results
         if ($matchedItems) {
             Write-Message -Message "Item(s) found matching the specified criteria." -Level Debug

@@ -32,8 +32,8 @@ function Update-FabricMountedDataFactory {
     param (
         [Parameter(Mandatory = $true)]
         [ValidateNotNullOrEmpty()]
-        [string]$WorkspaceId,   
-        
+        [string]$WorkspaceId,
+
         [Parameter(Mandatory = $true)]
         [ValidateNotNullOrEmpty()]
         [string]$MountedDataFactoryId,
@@ -80,7 +80,7 @@ function Update-FabricMountedDataFactory {
                 Method  = 'Patch'
                 Body    = $bodyJson
             }
-            $response = Invoke-FabricAPIRequest @apiParams 
+            $response = Invoke-FabricAPIRequest @apiParams
 
             # Return the API response
             Write-Message -Message "Mounted Data Factory '$MountedDataFactoryName' updated successfully!" -Level Info

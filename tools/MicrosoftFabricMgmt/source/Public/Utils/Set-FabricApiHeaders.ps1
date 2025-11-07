@@ -3,7 +3,7 @@
 Sets the Fabric API headers with a valid token for the specified Azure tenant.
 
 .DESCRIPTION
-The `Set-FabricApiHeaders` function logs into the specified Azure tenant, retrieves an access token for the Fabric API, and sets the necessary headers for subsequent API requests. 
+The `Set-FabricApiHeaders` function logs into the specified Azure tenant, retrieves an access token for the Fabric API, and sets the necessary headers for subsequent API requests.
 It also updates the token expiration time and global tenant ID.
 
 .PARAMETER TenantId

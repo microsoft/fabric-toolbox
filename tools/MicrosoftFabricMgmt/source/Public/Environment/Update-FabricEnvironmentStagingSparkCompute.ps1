@@ -52,7 +52,7 @@ Update-FabricEnvironmentStagingSparkCompute -WorkspaceId "workspace-12345" -Envi
 - Requires `$FabricConfig` global configuration, including `BaseUrl` and `FabricHeaders`.
 - Calls `Test-TokenExpired` to ensure token validity before making the API request.
 
-Author: Tiago Balabuch  
+Author: Tiago Balabuch
 
 #>
 function Update-FabricEnvironmentStagingSparkCompute {
@@ -61,7 +61,7 @@ function Update-FabricEnvironmentStagingSparkCompute {
         [Parameter(Mandatory = $true)]
         [ValidateNotNullOrEmpty()]
         [string]$WorkspaceId,
-        
+
         [Parameter(Mandatory = $true)]
         [ValidateNotNullOrEmpty()]
         [string]$EnvironmentId,
@@ -116,7 +116,7 @@ function Update-FabricEnvironmentStagingSparkCompute {
         Write-Message -Message "Validating authentication token..." -Level Debug
         Test-TokenExpired
         Write-Message -Message "Authentication token is valid." -Level Debug
-                
+
         # Construct the API endpoint URI
         $apiEndpointURI = "{0}/workspaces/{1}/environments/{2}/staging/sparkcompute" -f $FabricConfig.BaseUrl, $WorkspaceId, $EnvironmentId
         Write-Message -Message "API Endpoint: $apiEndpointURI" -Level Debug
@@ -152,8 +152,8 @@ function Update-FabricEnvironmentStagingSparkCompute {
                 Method  = 'Patch'
                 Body    = $bodyJson
             }
-            $response = Invoke-FabricAPIRequest @apiParams 
-            
+            $response = Invoke-FabricAPIRequest @apiParams
+
             # Return the API response
             Write-Message -Message "Environment staging Spark compute updated successfully!" -Level Info
             return $response

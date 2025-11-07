@@ -27,7 +27,7 @@ Unassign the `Admins` role to the specified principals in the domain with ID "12
 - Requires `$FabricConfig` global configuration, including `BaseUrl` and `FabricHeaders`.
 - Calls `Test-TokenExpired` to ensure token validity before making the API request.
 
-Author: Tiago Balabuch  
+Author: Tiago Balabuch
 
 #>
 
@@ -56,13 +56,13 @@ function Unassign-FabricDomainWorkspaceRoleAssignment {
             if (-not ($principal.id -and $principal.type)) {
                 throw "Each Principal must contain 'id' and 'type' properties. Found: $principal"
             }
-        }      
+        }
 
         # Validate authentication token before proceeding.
         Write-Message -Message "Validating authentication token..." -Level Debug
         Test-TokenExpired
         Write-Message -Message "Authentication token is valid." -Level Debug
-                
+
         # Construct the API endpoint URI
         $apiEndpointURI = "{0}/admin/domains/{1}/roleAssignments/bulkUnassign" -f $FabricConfig.BaseUrl, $DomainId
         Write-Message -Message "API Endpoint: $apiEndpointURI" -Level Debug

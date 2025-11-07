@@ -3,8 +3,8 @@
     Encodes the content of a file into a Base64-encoded string.
 
 .DESCRIPTION
-    The Convert-ToBase64  function takes a file path as input, reads the file's content as a byte array, 
-    and converts it into a Base64-encoded string. This is useful for embedding binary data (e.g., images, 
+    The Convert-ToBase64  function takes a file path as input, reads the file's content as a byte array,
+    and converts it into a Base64-encoded string. This is useful for embedding binary data (e.g., images,
     documents) in text-based formats such as JSON or XML.
 
 .PARAMETER filePath
@@ -31,6 +31,7 @@ Tiago Balabuch
 #>
 function Convert-ToBase64 {
     [CmdletBinding()]
+    [OutputType([string])]
     param (
         [Parameter(Mandatory = $true)]
         [ValidateNotNullOrEmpty()]

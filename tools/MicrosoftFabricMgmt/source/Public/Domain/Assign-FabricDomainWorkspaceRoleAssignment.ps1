@@ -27,7 +27,7 @@ Assigns the `Admins` role to the specified principals in the domain with ID "123
 - Requires `$FabricConfig` global configuration, including `BaseUrl` and `FabricHeaders`.
 - Calls `Test-TokenExpired` to ensure token validity before making the API request.
 
-Author: Tiago Balabuch 
+Author: Tiago Balabuch
 #>
 
 function Assign-FabricDomainWorkspaceRoleAssignment {
@@ -55,12 +55,12 @@ function Assign-FabricDomainWorkspaceRoleAssignment {
                 throw "Each Principal must contain 'id' and 'type' properties. Found: $principal"
             }
         }
-        
+
         # Validate authentication token before proceeding.
         Write-Message -Message "Validating authentication token..." -Level Debug
         Test-TokenExpired
         Write-Message -Message "Authentication token is valid." -Level Debug
-                
+
         # Construct the API endpoint URI
         $apiEndpointURI = "{0}/admin/domains/{1}/roleAssignments/bulkAssign" -f $FabricConfig.BaseUrl, $DomainId
         Write-Message -Message "API Endpoint: $apiEndpointURI" -Level Debug
@@ -70,7 +70,7 @@ function Assign-FabricDomainWorkspaceRoleAssignment {
             type       = $DomainRole
             principals = $PrincipalIds
         }
-        
+
         # Convert the body to JSON
         $bodyJson = $body | ConvertTo-Json -Depth 2
         Write-Message -Message "Request Body: $bodyJson" -Level Debug
@@ -84,7 +84,7 @@ function Assign-FabricDomainWorkspaceRoleAssignment {
                 Body    = $bodyJson
             }
             $response = Invoke-FabricAPIRequest @apiParams
-          
+
             # Return the API response
             Write-Message -Message "Bulk role assignment for domain '$DomainId' completed successfully!" -Level Info
             return $response

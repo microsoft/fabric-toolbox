@@ -70,7 +70,7 @@ function New-FabricManagedPrivateEndpoint {
                 return $null
             }
         }
-        
+
         # Validate authentication token before proceeding.
         Write-Message -Message "Validating authentication token..." -Level Debug
         Test-TokenExpired
@@ -90,7 +90,7 @@ function New-FabricManagedPrivateEndpoint {
         if ($RequestMessage) {
             $body.requestMessage = $RequestMessage
         }
-        
+
         # Convert the body to JSON format
         $bodyJson = $body | ConvertTo-Json -Depth 4
         Write-Message -Message "Request Body: $bodyJson" -Level Debug
@@ -106,8 +106,8 @@ function New-FabricManagedPrivateEndpoint {
             $response = Invoke-FabricAPIRequest @apiParams
 
             # Return the API response
-            Write-Message -Message "Managed Private Endpoint created successfully!" -Level Info        
-            return $response     
+            Write-Message -Message "Managed Private Endpoint created successfully!" -Level Info
+            return $response
         }
     }
     catch {

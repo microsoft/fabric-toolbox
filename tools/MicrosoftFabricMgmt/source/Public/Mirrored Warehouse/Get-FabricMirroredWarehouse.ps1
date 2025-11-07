@@ -25,7 +25,7 @@ Retrieves all MirroredWarehouses in workspace "12345".
 - Requires `$FabricConfig` global configuration, including `BaseUrl` and `FabricHeaders`.
 - Calls `Test-TokenExpired` to ensure token validity before making the API request.
 
-Author: Tiago Balabuch  
+Author: Tiago Balabuch
 
 #>
 function Get-FabricMirroredWarehouse {
@@ -50,24 +50,24 @@ function Get-FabricMirroredWarehouse {
             Write-Message -Message "Specify only one parameter: either 'MirroredWarehouseId' or 'MirroredWarehouseName'." -Level Error
             return $null
         }
-        
+
         # Validate authentication token before proceeding.
         Write-Message -Message "Validating authentication token..." -Level Debug
         Test-TokenExpired
         Write-Message -Message "Authentication token is valid." -Level Debug
-                
-        # Construct the API endpoint URI   
+
+        # Construct the API endpoint URI
         $apiEndpointURI = "{0}/workspaces/{1}/MirroredWarehouses" -f $FabricConfig.BaseUrl, $WorkspaceId
         Write-Message -Message "API Endpoint: $apiEndpointURI" -Level Debug
 
-        # Make the API request        
+        # Make the API request
         $apiParams = @{
             BaseURI = $apiEndpointURI
             Headers = $FabricConfig.FabricHeaders
             Method = 'Get'
         }
         $dataItems = Invoke-FabricAPIRequest @apiParams
-           
+
         # Immediately handle empty response
         if (-not $dataItems) {
             Write-Message -Message "No data returned from the API." -Level Warning
@@ -100,6 +100,6 @@ function Get-FabricMirroredWarehouse {
         # Step 10: Capture and log error details
         $errorDetails = $_.Exception.Message
         Write-Message -Message "Failed to retrieve MirroredWarehouse. Error: $errorDetails" -Level Error
-    } 
- 
+    }
+
 }

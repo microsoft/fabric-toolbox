@@ -3,8 +3,8 @@
 Creates a new Lakehouse in a specified Microsoft Fabric workspace.
 
 .DESCRIPTION
-This function sends a POST request to the Microsoft Fabric API to create a new Lakehouse 
-in the specified workspace. It supports optional parameters for Lakehouse description 
+This function sends a POST request to the Microsoft Fabric API to create a new Lakehouse
+in the specified workspace. It supports optional parameters for Lakehouse description
 and path definitions for the Lakehouse content.
 
 .PARAMETER WorkspaceId
@@ -17,7 +17,7 @@ The name of the Lakehouse to be created.
 An optional description for the Lakehouse.
 
 .PARAMETER LakehouseEnableSchemas
-An optional path to enable schemas in the Lakehouse 
+An optional path to enable schemas in the Lakehouse
 
 .EXAMPLE
  Add-FabricLakehouse -WorkspaceId "workspace-12345" -LakehouseName "New Lakehouse" -LakehouseEnableSchemas $true
@@ -26,7 +26,7 @@ An optional path to enable schemas in the Lakehouse
 - Requires `$FabricConfig` global configuration, including `BaseUrl` and `FabricHeaders`.
 - Calls `Test-TokenExpired` to ensure token validity before making the API request.
 
-Author: Tiago Balabuch  
+Author: Tiago Balabuch
 
 #>
 
@@ -56,7 +56,7 @@ function New-FabricLakehouse {
         Test-TokenExpired
         Write-Message -Message "Authentication token is valid." -Level Debug
 
-        # Construct the API endpoint URI 
+        # Construct the API endpoint URI
         $apiEndpointURI = "{0}/workspaces/{1}/lakehouses" -f $FabricConfig.BaseUrl, $WorkspaceId
         Write-Message -Message "API Endpoint: $apiEndpointURI" -Level Debug
 
@@ -75,7 +75,7 @@ function New-FabricLakehouse {
             }
         }
 
-        # Convert the body to JSON 
+        # Convert the body to JSON
         $bodyJson = $body | ConvertTo-Json -Depth 10
         Write-Message -Message "Request Body: $bodyJson" -Level Debug
 

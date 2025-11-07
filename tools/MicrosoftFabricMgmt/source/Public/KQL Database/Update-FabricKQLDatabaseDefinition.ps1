@@ -3,7 +3,7 @@
 Updates the definition of a KQLDatabase in a Microsoft Fabric workspace.
 
 .DESCRIPTION
-This function allows updating the content or metadata of a KQLDatabase in a Microsoft Fabric workspace. 
+This function allows updating the content or metadata of a KQLDatabase in a Microsoft Fabric workspace.
 The KQLDatabase content can be provided as file paths, and metadata updates can optionally be enabled.
 
 .PARAMETER WorkspaceId
@@ -19,7 +19,7 @@ The KQLDatabase content can be provided as file paths, and metadata updates can 
 (Optional) The file path to the KQLDatabase's platform-specific definition file. The content will be encoded as Base64 and sent in the request.
 
 .PARAMETER UpdateMetadata
-(Optional)A boolean flag indicating whether to update the KQLDatabase's metadata. 
+(Optional)A boolean flag indicating whether to update the KQLDatabase's metadata.
 Default: `$false`.
 
 .EXAMPLE
@@ -38,7 +38,7 @@ Updates both the content and metadata of the KQLDatabase with ID `67890` in the 
 - The KQLDatabase content is encoded as Base64 before being sent to the Fabric API.
 - This function handles asynchronous operations and retrieves operation results if required.
 
-Author: Tiago Balabuch  
+Author: Tiago Balabuch
 
 #>
 
@@ -56,7 +56,7 @@ function Update-FabricKQLDatabaseDefinition {
         [Parameter(Mandatory = $true)]
         [ValidateNotNullOrEmpty()]
         [string]$KQLDatabasePathDefinition,
-        
+
         [Parameter(Mandatory = $false)]
         [ValidateNotNullOrEmpty()]
         [string]$KQLDatabasePathPlatformDefinition,
@@ -71,7 +71,7 @@ function Update-FabricKQLDatabaseDefinition {
         Test-TokenExpired
         Write-Message -Message "Authentication token is valid." -Level Debug
 
-        # Construct the API endpoint URI with filtering logic  
+        # Construct the API endpoint URI with filtering logic
         $apiEndpointURI = "{0}/workspaces/{1}/kqlDatabases/{2}/updateDefinition" -f $FabricConfig.BaseUrl, $WorkspaceId, $KQLDatabaseId
         if ($KQLDatabasePathPlatformDefinition) {
             # Append query parameter correctly
@@ -83,12 +83,12 @@ function Update-FabricKQLDatabaseDefinition {
         $body = @{
             definition = @{
                 parts = @()
-            } 
+            }
         }
-      
+
         if ($KQLDatabasePathDefinition) {
             $KQLDatabaseEncodedContent = Convert-ToBase64 -filePath $KQLDatabasePathDefinition
-            
+
             if (-not [string]::IsNullOrEmpty($KQLDatabaseEncodedContent)) {
                 # Add new part to the parts array
                 $body.definition.parts += @{
@@ -152,8 +152,8 @@ function Update-FabricKQLDatabaseDefinition {
             $response = Invoke-FabricAPIRequest @apiParams
 
             # Return the API response
-            Write-Message -Message "Successfully updated the definition for KQL Database with ID '$KQLDatabaseId' in workspace '$WorkspaceId'." -Level Info        
-            return $response        
+            Write-Message -Message "Successfully updated the definition for KQL Database with ID '$KQLDatabaseId' in workspace '$WorkspaceId'." -Level Info
+            return $response
         }
     }
     catch {

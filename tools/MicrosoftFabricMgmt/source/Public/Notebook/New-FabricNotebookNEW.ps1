@@ -3,8 +3,8 @@
 Creates a new notebook in a specified Microsoft Fabric workspace.
 
 .DESCRIPTION
-This function sends a POST request to the Microsoft Fabric API to create a new notebook 
-in the specified workspace. It supports optional parameters for notebook description 
+This function sends a POST request to the Microsoft Fabric API to create a new notebook
+in the specified workspace. It supports optional parameters for notebook description
 and path definitions for the notebook content.
 
 .PARAMETER WorkspaceId
@@ -29,7 +29,7 @@ An optional path to the platform-specific definition (e.g., .platform file) to u
 - Requires `$FabricConfig` global configuration, including `BaseUrl` and `FabricHeaders`.
 - Calls `Test-TokenExpired` to ensure token validity before making the API request.
 
-Author: Tiago Balabuch  
+Author: Tiago Balabuch
 
 #>
 
@@ -119,33 +119,33 @@ function New-FabricNotebookNEW {
             }
             202 {
                 Write-Message -Message "Notebook '$NotebookName' creation accepted. Provisioning in progress!" -Level Info
-               
+
                 [string]$operationId = $responseHeader["x-ms-operation-id"]
                 [string]$location = $responseHeader["Location"]
-                [string]$retryAfter = $responseHeader["Retry-After"] 
+                [string]$retryAfter = $responseHeader["Retry-After"]
 
                 Write-Message -Message "Operation ID: '$operationId'" -Level Debug
                 Write-Message -Message "Location: '$location'" -Level Debug
                 Write-Message -Message "Retry-After: '$retryAfter'" -Level Debug
                 Write-Message -Message "Getting Long Running Operation status" -Level Debug
-               
-                $operationStatus = Get-FabricLongRunningOperation -operationId $operationId 
+
+                $operationStatus = Get-FabricLongRunningOperation -operationId $operationId
                 Write-Message -Message "Long Running Operation status: $operationStatus" -Level Debug
                 # Handle operation result
                 if ($operationStatus.status -eq "Succeeded") {
                     Write-Message -Message "Operation Succeeded" -Level Debug
                     Write-Message -Message "Getting Long Running Operation result" -Level Debug
-                
+
                     $operationResult = Get-FabricLongRunningOperationResult -operationId $operationId
                     Write-Message -Message "Long Running Operation status: $operationResult" -Level Debug
-                
+
                     return $operationResult
-                } 
+                }
                 else {
                     Write-Message -Message "Operation failed. Status: $($operationStatus)" -Level Debug
                     Write-Message -Message "Operation failed. Status: $($operationStatus)" -Level Error
                     return $operationStatus
-                }  
+                }
             }
             default {
                 Write-Message -Message "Unexpected response code: $statusCode" -Level Error

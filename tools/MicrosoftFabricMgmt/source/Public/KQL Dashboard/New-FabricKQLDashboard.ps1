@@ -3,8 +3,8 @@
 Creates a new KQLDashboard in a specified Microsoft Fabric workspace.
 
 .DESCRIPTION
-This function sends a POST request to the Microsoft Fabric API to create a new KQLDashboard 
-in the specified workspace. It supports optional parameters for KQLDashboard description 
+This function sends a POST request to the Microsoft Fabric API to create a new KQLDashboard
+in the specified workspace. It supports optional parameters for KQLDashboard description
 and path definitions for the KQLDashboard content.
 
 .PARAMETER WorkspaceId
@@ -29,7 +29,7 @@ An optional path to the platform-specific definition (e.g., .platform file) to u
 - Requires `$FabricConfig` global configuration, including `BaseUrl` and `FabricHeaders`.
 - Calls `Test-TokenExpired` to ensure token validity before making the API request.
 
-Author: Tiago Balabuch  
+Author: Tiago Balabuch
 
 #>
 function New-FabricKQLDashboard {
@@ -51,7 +51,7 @@ function New-FabricKQLDashboard {
         [Parameter(Mandatory = $false)]
         [ValidateNotNullOrEmpty()]
         [string]$KQLDashboardPathDefinition,
-        
+
         [Parameter(Mandatory = $false)]
         [ValidateNotNullOrEmpty()]
         [string]$KQLDashboardPathPlatformDefinition
@@ -62,7 +62,7 @@ function New-FabricKQLDashboard {
         Test-TokenExpired
         Write-Message -Message "Authentication token is valid." -Level Debug
 
-        # Construct the API endpoint URI 
+        # Construct the API endpoint URI
         $apiEndpointURI = "{0}/workspaces/{1}/kqlDashboards" -f $FabricConfig.BaseUrl, $WorkspaceId
         Write-Message -Message "API Endpoint: $apiEndpointURI" -Level Debug
 
@@ -124,7 +124,7 @@ function New-FabricKQLDashboard {
                 return $null
             }
         }
-       
+
         # Convert the body to JSON
         $bodyJson = $body | ConvertTo-Json -Depth 10
         Write-Message -Message "Request Body: $bodyJson" -Level Debug
@@ -138,7 +138,7 @@ function New-FabricKQLDashboard {
         }
         if ($PSCmdlet.ShouldProcess($KQLDashboardName, "Create KQL Dashboard in workspace '$WorkspaceId'")) {
             $response = Invoke-FabricAPIRequest @apiParams
-            
+
             # Return the API response
             Write-Message -Message "KQLDashboard '$KQLDashboardName' created successfully!" -Level Info
             return $response

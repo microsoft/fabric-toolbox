@@ -32,8 +32,8 @@ function Update-FabricGraphQLApi {
     param (
         [Parameter(Mandatory = $true)]
         [ValidateNotNullOrEmpty()]
-        [string]$WorkspaceId,   
-        
+        [string]$WorkspaceId,
+
         [Parameter(Mandatory = $true)]
         [ValidateNotNullOrEmpty()]
         [string]$GraphQLApiId,
@@ -78,7 +78,7 @@ function Update-FabricGraphQLApi {
             Body    = $bodyJson
         }
         if ($PSCmdlet.ShouldProcess("GraphQL API '$GraphQLApiId' in workspace '$WorkspaceId'", "Update")) {
-            $response = Invoke-FabricAPIRequest @apiParams 
+            $response = Invoke-FabricAPIRequest @apiParams
 
             # Return the API response
             Write-Message -Message "GraphQL API '$GraphQLApiName' updated successfully!" -Level Info

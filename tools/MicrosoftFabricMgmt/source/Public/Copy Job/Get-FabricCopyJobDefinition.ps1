@@ -3,7 +3,7 @@
 Retrieves the definition of a Copy Job from a specific workspace in Microsoft Fabric.
 
 .DESCRIPTION
-This function fetches the Copy Job's content or metadata from a workspace. 
+This function fetches the Copy Job's content or metadata from a workspace.
 It supports both synchronous and asynchronous operations, with detailed logging and error handling.
 
 .PARAMETER WorkspaceId
@@ -63,7 +63,7 @@ function Get-FabricCopyJobDefinition {
             Headers = $FabricConfig.FabricHeaders
             Method = 'Post'
         }
-        $response = Invoke-FabricAPIRequest @apiParams 
+        $response = Invoke-FabricAPIRequest @apiParams
 
         # Return the API response
         return $response
@@ -72,5 +72,5 @@ function Get-FabricCopyJobDefinition {
         # Capture and log error details
         $errorDetails = $_.Exception.Message
         Write-Message -Message "Failed to retrieve Copy Job definition. Error: $errorDetails" -Level Error
-    } 
+    }
 }

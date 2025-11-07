@@ -13,16 +13,17 @@
     Get-FabricExternalDataShares -ExternalDataShareId "12345"
     This example retrieves the External Data Share with ID "12345".
 .EXAMPLE
-    Get-FabricExternalDataShares 
+    Get-FabricExternalDataShares
     This example retrieves the External Data Shares details.
 .NOTES
     - Requires `$FabricConfig` global configuration, including `BaseUrl` and `FabricHeaders`.
     - Calls `Test-TokenExpired` to ensure token validity before making the API request.
 
     Author: Tiago Balabuch
-#> 
+#>
 function Get-FabricExternalDataShare {
     [CmdletBinding()]
+    [Alias("Get-FabricExternalDataShares")]
     param (
         [Parameter(Mandatory = $False)]
         [ValidateNotNullOrEmpty()]
@@ -59,7 +60,7 @@ function Get-FabricExternalDataShare {
             Write-Message -Message "No filter provided. Returning all items." -Level Debug
             $matchedItems = $dataItems
         }
-        
+
         # Handle results
         if ($matchedItems) {
             Write-Message -Message "Item(s) found matching the specified criteria." -Level Debug

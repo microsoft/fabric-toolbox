@@ -3,8 +3,8 @@
 Creates a new MirroredDatabase in a specified Microsoft Fabric workspace.
 
 .DESCRIPTION
-This function sends a POST request to the Microsoft Fabric API to create a new MirroredDatabase 
-in the specified workspace. It supports optional parameters for MirroredDatabase description 
+This function sends a POST request to the Microsoft Fabric API to create a new MirroredDatabase
+in the specified workspace. It supports optional parameters for MirroredDatabase description
 and path definitions for the MirroredDatabase content.
 
 .PARAMETER WorkspaceId
@@ -29,7 +29,7 @@ An optional path to the platform-specific definition (e.g., .platform file) to u
 - Requires `$FabricConfig` global configuration, including `BaseUrl` and `FabricHeaders`.
 - Calls `Test-TokenExpired` to ensure token validity before making the API request.
 
-Author: Tiago Balabuch  
+Author: Tiago Balabuch
 
 #>
 
@@ -52,7 +52,7 @@ function New-FabricMirroredDatabase {
         [Parameter(Mandatory = $false)]
         [ValidateNotNullOrEmpty()]
         [string]$MirroredDatabasePathDefinition,
-        
+
         [Parameter(Mandatory = $false)]
         [ValidateNotNullOrEmpty()]
         [string]$MirroredDatabasePathPlatformDefinition
@@ -63,7 +63,7 @@ function New-FabricMirroredDatabase {
         Test-TokenExpired
         Write-Message -Message "Authentication token is valid." -Level Debug
 
-        # Construct the API endpoint URI 
+        # Construct the API endpoint URI
         $apiEndpointURI = "{0}/workspaces/{1}/mirroredDatabases" -f $FabricConfig.BaseUrl, $WorkspaceId
         Write-Message -Message "API Endpoint: $apiEndpointURI" -Level Debug
 
@@ -143,7 +143,7 @@ function New-FabricMirroredDatabase {
             Write-Message -Message "Mirrored Database '$MirroredDatabaseName' created successfully!" -Level Info
             return $response
         }
-    
+
     }
     catch {
         # Capture and log error details

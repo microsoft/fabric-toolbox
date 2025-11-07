@@ -3,8 +3,8 @@
 Creates a new KQLQueryset in a specified Microsoft Fabric workspace.
 
 .DESCRIPTION
-This function sends a POST request to the Microsoft Fabric API to create a new KQLQueryset 
-in the specified workspace. It supports optional parameters for KQLQueryset description 
+This function sends a POST request to the Microsoft Fabric API to create a new KQLQueryset
+in the specified workspace. It supports optional parameters for KQLQueryset description
 and path definitions for the KQLQueryset content.
 
 .PARAMETER WorkspaceId
@@ -29,7 +29,7 @@ An optional path to the platform-specific definition (e.g., .platform file) to u
 - Requires `$FabricConfig` global configuration, including `BaseUrl` and `FabricHeaders`.
 - Calls `Test-TokenExpired` to ensure token validity before making the API request.
 
-Author: Tiago Balabuch  
+Author: Tiago Balabuch
 
 #>
 function New-FabricKQLQueryset {
@@ -51,7 +51,7 @@ function New-FabricKQLQueryset {
         [Parameter(Mandatory = $false)]
         [ValidateNotNullOrEmpty()]
         [string]$KQLQuerysetPathDefinition,
-        
+
         [Parameter(Mandatory = $false)]
         [ValidateNotNullOrEmpty()]
         [string]$KQLQuerysetPathPlatformDefinition
@@ -62,7 +62,7 @@ function New-FabricKQLQueryset {
         Test-TokenExpired
         Write-Message -Message "Authentication token is valid." -Level Debug
 
-        # Construct the API endpoint URI 
+        # Construct the API endpoint URI
         $apiEndpointURI = "{0}/workspaces/{1}/kqlQuerysets" -f $FabricConfig.BaseUrl, $WorkspaceId
         Write-Message -Message "API Endpoint: $apiEndpointURI" -Level Debug
 
@@ -143,7 +143,7 @@ function New-FabricKQLQueryset {
             Write-Message -Message "KQLQueryset '$KQLQuerysetName' created successfully!" -Level Info
             return $response
         }
-  
+
     }
     catch {
         # Capture and log error details

@@ -17,10 +17,10 @@ function Stop-FabricMirroredDatabaseMirroring {
         Test-TokenExpired
         Write-Message -Message "Authentication token is valid." -Level Debug
 
-        # Construct the API endpoint URI 
+        # Construct the API endpoint URI
         $apiEndpointURI = "{0}/workspaces/{1}/mirroredDatabases/{2}/stopMirroring" -f $FabricConfig.BaseUrl, $WorkspaceId, $MirroredDatabaseId
         Write-Message -Message "API Endpoint: $apiEndpointURI" -Level Debug
-         
+
         # Make the API request
         $apiParams = @{
             BaseURI = $apiEndpointURI
@@ -28,10 +28,10 @@ function Stop-FabricMirroredDatabaseMirroring {
             Method = 'Post'
         }
         if ($PSCmdlet.ShouldProcess($MirroredDatabaseId, "Stop mirroring for mirrored database in workspace '$WorkspaceId'")) {
-            $response = Invoke-FabricAPIRequest @apiParams 
+            $response = Invoke-FabricAPIRequest @apiParams
 
             # Return the API response
-            Write-Message -Message "Database mirroring stopped successfully for MirroredDatabaseId: $MirroredDatabaseId" -Level Info   
+            Write-Message -Message "Database mirroring stopped successfully for MirroredDatabaseId: $MirroredDatabaseId" -Level Info
             return $response
         }
     }
@@ -39,6 +39,6 @@ function Stop-FabricMirroredDatabaseMirroring {
         # Capture and log error details
         $errorDetails = $_.Exception.Message
         Write-Message -Message "Failed to stop MirroredDatabase. Error: $errorDetails" -Level Error
-    } 
- 
+    }
+
 }

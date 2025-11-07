@@ -3,7 +3,7 @@
     Updates an existing Copy Job in a specified Microsoft Fabric workspace.
 
 .DESCRIPTION
-    Sends a PATCH request to the Microsoft Fabric API to update an existing Copy Job 
+    Sends a PATCH request to the Microsoft Fabric API to update an existing Copy Job
     in the specified workspace. Allows updating the Copy Job's name and optionally its description.
 
 .PARAMETER WorkspaceId
@@ -33,8 +33,8 @@ function Update-FabricCopyJob {
     param (
         [Parameter(Mandatory = $true)]
         [ValidateNotNullOrEmpty()]
-        [string]$WorkspaceId,   
-        
+        [string]$WorkspaceId,
+
         [Parameter(Mandatory = $true)]
         [ValidateNotNullOrEmpty()]
         [string]$CopyJobId,
@@ -57,7 +57,7 @@ function Update-FabricCopyJob {
         # Construct the API endpoint URI
         $apiEndpointURI = "{0}/workspaces/{1}/copyJobs/{2}" -f $FabricConfig.BaseUrl, $WorkspaceId, $CopyJobId
         Write-Message -Message "API Endpoint: $apiEndpointURI" -Level Debug
-        
+
         # Construct the request body
         $body = @{
             displayName = $CopyJobName
@@ -70,7 +70,7 @@ function Update-FabricCopyJob {
         # Convert the body to JSON
         $bodyJson = $body | ConvertTo-Json
         Write-Message -Message "Request Body: $bodyJson" -Level Debug
-        
+
         if ($PSCmdlet.ShouldProcess("Copy Job '$CopyJobId' in workspace '$WorkspaceId'", "Update properties")) {
             # Make the API request
             $apiParams = @{
@@ -79,7 +79,7 @@ function Update-FabricCopyJob {
                 Method = 'Patch'
                 Body = $bodyJson
             }
-            $response = Invoke-FabricAPIRequest @apiParams 
+            $response = Invoke-FabricAPIRequest @apiParams
 
             Write-Message -Message "Copy Job '$CopyJobName' updated successfully!" -Level Info
             return $response

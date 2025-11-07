@@ -41,16 +41,16 @@ function Assign-FabricDomainWorkspaceById {
         Write-Message -Message "Validating authentication token..." -Level Debug
         Test-TokenExpired
         Write-Message -Message "Authentication token is valid." -Level Debug
-                
+
         # Construct the API endpoint URI
         $apiEndpointURI = "{0}/admin/domains/{1}/assignWorkspaces" -f $FabricConfig.BaseUrl, $DomainId
         Write-Message -Message "API Endpoint: $apiEndpointURI" -Level Debug
-        
+
         # Construct the request body
         $body = @{
             workspacesIds = $WorkspaceIds
         }
-      
+
         # Convert the body to JSON
         $bodyJson = $body | ConvertTo-Json -Depth 2
         Write-Message -Message "Request Body: $bodyJson" -Level Debug

@@ -47,7 +47,7 @@ function Start-FabricLakehouseRefreshMaterializedLakeView {
         [string]$JobType = "RefreshMaterializedLakeViews",
 
         [Parameter(Mandatory = $false)]
-        [switch]$WaitForCompletion        
+        [switch]$WaitForCompletion
     )
     try {
         # Validate authentication token before proceeding.
@@ -56,13 +56,13 @@ function Start-FabricLakehouseRefreshMaterializedLakeView {
         Write-Message -Message "Authentication token is valid." -Level Debug
 
         # Validate input parameters
-        #$lakehouse = Get-FabricLakehouse -WorkspaceId $WorkspaceId -LakehouseId $LakehouseId   
+        #$lakehouse = Get-FabricLakehouse -WorkspaceId $WorkspaceId -LakehouseId $LakehouseId
         #if ($lakehouse.properties.PSObject.Properties['defaultSchema'] -and -not $SchemaName) {
         #    Write-Error "The Lakehouse '$lakehouse.displayName' has schema enabled, but no schema name was provided. Please specify the 'SchemaName' parameter to proceed."
         #    return $null
         #}
-        
-        # Construct the API endpoint URI 
+
+        # Construct the API endpoint URI
         $apiEndpointURI = "{0}/workspaces/{1}/lakehouses/{2}/jobs/instances?jobType={3}" -f $FabricConfig.BaseUrl, $WorkspaceId , $LakehouseId, $JobType
         Write-Message -Message "API Endpoint: $apiEndpointURI" -Level Debug
 
@@ -72,13 +72,13 @@ function Start-FabricLakehouseRefreshMaterializedLakeView {
             Headers = $FabricConfig.FabricHeaders
             Method  = 'Post'
         }
-        
+
         if ($WaitForCompletion.IsPresent) {
             $apiParams.WaitForCompletion = $true
         }
         if ($PSCmdlet.ShouldProcess($LakehouseId, "Start refresh materialized lake views job in workspace '$WorkspaceId'")) {
-            $response = Invoke-FabricAPIRequest @apiParams  
-          
+            $response = Invoke-FabricAPIRequest @apiParams
+
             if ($WaitForCompletion) {
                 Write-Message -Message "Refresh MLV job for Lakehouse '$LakehouseId' has completed." -Level Info
                 Write-Message -Message "Job details: $($response | ConvertTo-Json -Depth 5)" -Level Debug

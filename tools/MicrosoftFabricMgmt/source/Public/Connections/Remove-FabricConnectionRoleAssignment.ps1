@@ -52,9 +52,9 @@ function Remove-FabricConnectionRoleAssignment {
                 BaseURI = $apiEndpointURI
                 Method = 'Delete'
             }
-            $response = Invoke-FabricAPIRequest @apiParams 
+            $response = Invoke-FabricAPIRequest @apiParams
 
-            # Return the API response        
+            # Return the API response
             Write-Message -Message "Role assignment '$ConnectionRoleAssignmentId' successfully removed from Connection '$ConnectionId'." -Level Info
             return $response
         }

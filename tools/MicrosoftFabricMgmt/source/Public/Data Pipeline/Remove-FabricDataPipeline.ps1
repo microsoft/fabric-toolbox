@@ -3,7 +3,7 @@
     Removes a DataPipeline from a specified Microsoft Fabric workspace.
 
 .DESCRIPTION
-    This function sends a DELETE request to the Microsoft Fabric API to remove a DataPipeline 
+    This function sends a DELETE request to the Microsoft Fabric API to remove a DataPipeline
     from the specified workspace using the provided WorkspaceId and DataPipelineId.
 
 .PARAMETER WorkspaceId
@@ -51,8 +51,8 @@ function Remove-FabricDataPipeline {
                 BaseURI = $apiEndpointURI
                 Method = 'Delete'
             }
-            $response = Invoke-FabricAPIRequest @apiParams 
-            
+            $response = Invoke-FabricAPIRequest @apiParams
+
             # Return the API response
             Write-Message -Message "DataPipeline '$DataPipelineId' deleted successfully from workspace '$WorkspaceId'." -Level Info
             return $response

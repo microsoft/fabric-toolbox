@@ -49,21 +49,21 @@ function Get-FabricMountedDataFactoryDefinition {
         Test-TokenExpired
         Write-Message -Message "Authentication token is valid." -Level Debug
 
-        # Construct the API endpoint URI with filtering logic     
+        # Construct the API endpoint URI with filtering logic
         $apiEndpointURI = "{0}/workspaces/{1}/mountedDataFactories/{2}/getDefinition" -f $FabricConfig.BaseUrl, $WorkspaceId, $MountedDataFactoryId
         if ($MountedDataFactoryFormat) {
             $apiEndpointURI = "{0}?format={1}" -f $apiEndpointURI, $MountedDataFactoryFormat
         }
         Write-Message -Message "API Endpoint: $apiEndpointURI" -Level Debug
-    
+
         # Make the API request
         $apiParams = @{
             BaseURI = $apiEndpointURI
             Headers = $FabricConfig.FabricHeaders
             Method  = 'Post'
         }
-        $response = Invoke-FabricAPIRequest @apiParams 
-        
+        $response = Invoke-FabricAPIRequest @apiParams
+
         # Return the API response
         Write-Message -Message "Mounted Data Factory '$MountedDataFactoryId' definition retrieved successfully!" -Level Debug
         return $response
@@ -72,5 +72,5 @@ function Get-FabricMountedDataFactoryDefinition {
         # Capture and log error details
         $errorDetails = $_.Exception.Message
         Write-Message -Message "Failed to retrieve Mounted Data Factory. Error: $errorDetails" -Level Error
-    } 
+    }
  }

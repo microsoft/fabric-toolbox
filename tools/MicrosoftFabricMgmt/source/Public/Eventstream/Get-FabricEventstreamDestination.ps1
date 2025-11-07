@@ -50,7 +50,7 @@ function Get-FabricEventstreamDestination {
         # Construct the API endpoint URI
         $apiEndpointURI = "{0}/workspaces/{1}/eventstreams/{2}/destinations/{3}" -f $FabricConfig.BaseUrl, $WorkspaceId, $EventstreamId, $DestinationId
         Write-Message -Message "API Endpoint: $apiEndpointURI" -Level Debug
-         
+
         # Make the API request
         $apiParams = @{
             BaseURI = $apiEndpointURI
@@ -58,7 +58,7 @@ function Get-FabricEventstreamDestination {
             Method  = 'Get'
         }
         $dataItems = Invoke-FabricAPIRequest @apiParams
-   
+
         # Immediately handle empty response
         if (-not $dataItems) {
             Write-Message -Message "No data returned from the API." -Level Warning
@@ -73,5 +73,5 @@ function Get-FabricEventstreamDestination {
         # Capture and log error details
         $errorDetails = $_.Exception.Message
         Write-Message -Message "Failed to retrieve Eventstream Destination. Error: $errorDetails" -Level Error
-    } 
+    }
 }

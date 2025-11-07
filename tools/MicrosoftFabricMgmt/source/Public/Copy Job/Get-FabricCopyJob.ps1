@@ -61,11 +61,11 @@ function Get-FabricCopyJob {
         Write-Message -Message "Validating authentication token..." -Level Debug
         Test-TokenExpired
         Write-Message -Message "Authentication token is valid." -Level Debug
-        
+
         # Construct the API endpoint URI
         $apiEndpointURI = "{0}/workspaces/{1}/copyJobs" -f $FabricConfig.BaseUrl, $WorkspaceId
         Write-Message -Message "API Endpoint: $apiEndpointURI" -Level Debug
-        
+
         # Make the API request
         $apiParams = @{
             BaseURI = $apiEndpointURI
@@ -73,13 +73,13 @@ function Get-FabricCopyJob {
             Method = 'Get'
         }
         $dataItems = Invoke-FabricAPIRequest @apiParams
-  
+
         # Immediately handle empty response
         if (-not $dataItems) {
             Write-Message -Message "No data returned from the API." -Level Warning
             return $null
         }
-  
+
         # Apply filtering logic efficiently
         if ($CopyJobId) {
             $matchedItems = $dataItems.Where({ $_.Id -eq $CopyJobId }, 'First')
@@ -91,7 +91,7 @@ function Get-FabricCopyJob {
             Write-Message -Message "No filter provided. Returning all items." -Level Debug
             $matchedItems = $dataItems
         }
-  
+
         # Handle results
         if ($matchedItems) {
             Write-Message -Message "Item(s) found matching the specified criteria." -Level Debug
@@ -106,5 +106,5 @@ function Get-FabricCopyJob {
         # Capture and log error details
         $errorDetails = $_.Exception.Message
         Write-Message -Message "Failed to retrieve CopyJob. Error: $errorDetails" -Level Error
-    } 
+    }
 }
