@@ -26,9 +26,22 @@ Please be aware that we added a few visuals from the KQL dashboard perspective b
 
 ## 📦 Installation
 
-1. Download the setup notebook which is located under setup/Spark Monitoring Setup.ipynb
-2. Open the notebook and **update the settings at the top - please add the environments that you want the emitters configuration to be applied**
-3. Run the notebook Platform_Monitoring_Setup.Notebook
+### 1. Download the Setup Notebook
+Download the setup notebook which is located under setup/fabric-spark-monitoring-setup.ipynb
+
+### 2. Update Configuration Settings
+Open the notebook and **update the settings at the top**.
+   In **Cell #2**, update the following parameters to update the following settings to match the environments where you want the emitters’ configuration to be applied:
+   - **`workspace_id`** — Workspace ID (1 or more)
+   - **`environment_id`** — Environment ID (1 or more)
+   ~~~
+   environments = [
+    {"workspace_id": "<workspace_id>", "environment_id": "<environment_id>"},]
+   ~~~
+   - **`workspace_name`** — Workspace name where Spark monitoring artifacts will be created  
+   - **`capacity_name`** — Capacity name to link the target workspace
+### 3. Run the Setup Notebook
+Run the notebook fabric-spark-monitoring-setup.ipynb
    
 Once executed, this will:
 
