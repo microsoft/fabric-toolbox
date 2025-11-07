@@ -12,13 +12,15 @@ table capacity_regions
 
 		annotation SummarizationSetBy = Automatic
 
-	column FabricRegion
+	column RegionName
 		dataType: string
 		sourceProviderType: varchar(8000)
 		lineageTag: 785f6ff8-0fae-47f8-87a9-f6be285d0682
 		sourceLineageTag: FabricRegion
 		summarizeBy: none
 		sourceColumn: FabricRegion
+
+		changedProperty = Name
 
 		annotation SummarizationSetBy = Automatic
 
@@ -27,8 +29,11 @@ table capacity_regions
 		sourceProviderType: float
 		lineageTag: 130d651e-80be-48a8-867b-d5e2235ba359
 		sourceLineageTag: Latitude
+		dataCategory: Latitude
 		summarizeBy: none
 		sourceColumn: Latitude
+
+		changedProperty = DataCategory
 
 		annotation SummarizationSetBy = Automatic
 
@@ -39,8 +44,11 @@ table capacity_regions
 		sourceProviderType: float
 		lineageTag: f5602f59-b674-4f3a-82ac-46b717d3a224
 		sourceLineageTag: Longitude
+		dataCategory: Longitude
 		summarizeBy: none
 		sourceColumn: Longitude
+
+		changedProperty = DataCategory
 
 		annotation SummarizationSetBy = Automatic
 
@@ -56,10 +64,35 @@ table capacity_regions
 
 		annotation SummarizationSetBy = Automatic
 
+	column RegionId
+		dataType: string
+		isHidden
+		sourceProviderType: varchar(8000)
+		lineageTag: f29f7098-2bf0-42c0-a2be-564076db4558
+		sourceLineageTag: RegionId
+		summarizeBy: none
+		sourceColumn: RegionId
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	column Geography
+		dataType: string
+		sourceProviderType: varchar(8000)
+		lineageTag: 49c4e231-6807-4a53-b5d2-64c4f2efa6ca
+		sourceLineageTag: Geography
+		summarizeBy: none
+		sourceColumn: Geography
+
+		annotation SummarizationSetBy = Automatic
+
 	partition capacity_regions = entity
 		mode: directLake
 		source
 			entityName: capacity_regions
 			schemaName: dbo
 			expressionSource: DatabaseQuery
+
+	annotation PBI_ResultType = Table
 

@@ -5,7 +5,7 @@ table fca
 
 	/// Counts the distinct number of capacity
 	/// 
-	measure #Capacities = DISTINCTCOUNT(fca[ResourceName])
+	measure #Capacities = DISTINCTCOUNT(fca[ResourceKey])
 		formatString: 0
 		lineageTag: 1c73cf80-e14d-46e9-adb5-007d9f3e7463
 
@@ -20,7 +20,14 @@ table fca
 		changedProperty = Description
 
 	/// Counts the distinct number of regions in the RegionName column of the FCA table
-	measure #Regions = DISTINCTCOUNT(fca[RegionName])
+	measure #Regions =
+			
+			VAR RegionsFromFCA =
+			    SUMMARIZE ( fca, 'resources'[RegionId])
+			VAR Result =
+			    SUMX ( RegionsFromFCA, 1 )     -- optimization for COUNTROWS
+			RETURN
+			    Result
 		formatString: 0
 		lineageTag: 3c4e578e-5232-4564-95f0-9686647d2ef5
 
@@ -798,92 +805,6 @@ table fca
 
 		annotation SummarizationSetBy = Automatic
 
-	column RegionId
-		dataType: string
-		isHidden
-		sourceProviderType: varchar(8000)
-		lineageTag: a76dd31d-b5c5-4fe5-b9a8-d96cf505ebc2
-		sourceLineageTag: RegionId
-		summarizeBy: none
-		sourceColumn: RegionId
-
-		changedProperty = IsHidden
-
-		annotation SummarizationSetBy = Automatic
-
-	column RegionName
-		dataType: string
-		isHidden
-		sourceProviderType: varchar(8000)
-		lineageTag: 4d6f5fba-0790-48a1-9dc7-6f6e7e285772
-		sourceLineageTag: RegionName
-		summarizeBy: none
-		sourceColumn: RegionName
-
-		changedProperty = IsHidden
-
-		annotation SummarizationSetBy = Automatic
-
-	column ResourceId
-		dataType: string
-		sourceProviderType: varchar(8000)
-		lineageTag: 308de181-641a-4bef-acc8-6a127fc2bf93
-		sourceLineageTag: ResourceId
-		summarizeBy: none
-		sourceColumn: ResourceId
-
-		changedProperty = IsHidden
-
-		annotation SummarizationSetBy = Automatic
-
-	column ResourceName
-		dataType: string
-		sourceProviderType: varchar(8000)
-		lineageTag: 22e0f656-0d51-4cab-bb8c-4ab6788637bf
-		sourceLineageTag: ResourceName
-		summarizeBy: none
-		sourceColumn: ResourceName
-
-		changedProperty = IsHidden
-
-		annotation SummarizationSetBy = Automatic
-
-	column ResourceType
-		dataType: string
-		sourceProviderType: varchar(8000)
-		lineageTag: 582e622b-59be-488c-898e-4876893d7b66
-		sourceLineageTag: ResourceType
-		summarizeBy: none
-		sourceColumn: ResourceType
-
-		changedProperty = IsHidden
-
-		annotation SummarizationSetBy = Automatic
-
-	column ServiceCategory
-		dataType: string
-		sourceProviderType: varchar(8000)
-		lineageTag: dfc4fd56-837d-4ce1-91a1-e46f08f0a208
-		sourceLineageTag: ServiceCategory
-		summarizeBy: none
-		sourceColumn: ServiceCategory
-
-		changedProperty = IsHidden
-
-		annotation SummarizationSetBy = Automatic
-
-	column ServiceName
-		dataType: string
-		sourceProviderType: varchar(8000)
-		lineageTag: 505fc315-2966-4bbf-87b6-5697e901279b
-		sourceLineageTag: ServiceName
-		summarizeBy: none
-		sourceColumn: ServiceName
-
-		changedProperty = IsHidden
-
-		annotation SummarizationSetBy = Automatic
-
 	column SkuId
 		dataType: string
 		sourceProviderType: varchar(8000)
@@ -903,42 +824,6 @@ table fca
 		sourceLineageTag: SkuPriceId
 		summarizeBy: none
 		sourceColumn: SkuPriceId
-
-		changedProperty = IsHidden
-
-		annotation SummarizationSetBy = Automatic
-
-	column SubAccountId
-		dataType: string
-		sourceProviderType: varchar(8000)
-		lineageTag: 329599b0-63f6-496d-b6a9-5a0ad11df1a6
-		sourceLineageTag: SubAccountId
-		summarizeBy: none
-		sourceColumn: SubAccountId
-
-		changedProperty = IsHidden
-
-		annotation SummarizationSetBy = Automatic
-
-	column SubAccountName
-		dataType: string
-		sourceProviderType: varchar(8000)
-		lineageTag: d6fc55d6-4c8e-4dd5-9865-25813b99bba8
-		sourceLineageTag: SubAccountName
-		summarizeBy: none
-		sourceColumn: SubAccountName
-
-		changedProperty = IsHidden
-
-		annotation SummarizationSetBy = Automatic
-
-	column SubAccountType
-		dataType: string
-		sourceProviderType: varchar(8000)
-		lineageTag: aebca1af-e749-402d-b860-d164aa7927b3
-		sourceLineageTag: SubAccountType
-		summarizeBy: none
-		sourceColumn: SubAccountType
 
 		changedProperty = IsHidden
 
@@ -1035,16 +920,36 @@ table fca
 
 		annotation PBI_FormatHint = {"isGeneralNumber":true}
 
-	column x_ResourceGroupName
-		dataType: string
-		lineageTag: aecb4bdf-7ddc-4878-a770-2491ed32acd5
-		sourceLineageTag: x_ResourceGroupName
+	column SubscriptionKey
+		dataType: int64
+		isHidden
+		formatString: 0
+		sourceProviderType: int
+		lineageTag: 3b2991f6-51c8-423c-b3a4-4ed808c64580
+		sourceLineageTag: SubscriptionKey
 		summarizeBy: none
-		sourceColumn: x_ResourceGroupName
+		sourceColumn: SubscriptionKey
 
 		changedProperty = IsHidden
 
-		annotation SummarizationSetBy = Automatic
+		changedProperty = SummarizeBy
+
+		annotation SummarizationSetBy = User
+
+	column ResourceKey
+		dataType: int64
+		isHidden
+		formatString: 0
+		lineageTag: 91ae2878-1867-4412-be9d-79e4dfcd9a28
+		sourceLineageTag: ResourceKey
+		summarizeBy: none
+		sourceColumn: ResourceKey
+
+		changedProperty = IsHidden
+
+		changedProperty = SummarizeBy
+
+		annotation SummarizationSetBy = User
 
 	partition fca = entity
 		mode: directLake
@@ -1058,4 +963,6 @@ table fca
 	changedProperty = IsHidden
 
 	changedProperty = Description
+
+	annotation PBI_ResultType = Table
 

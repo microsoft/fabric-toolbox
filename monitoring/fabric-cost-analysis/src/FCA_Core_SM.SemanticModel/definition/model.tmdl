@@ -21,6 +21,11 @@ ref table meters
 ref table fca
 ref table audit_latest_available_fca_version
 ref table capacity_regions
+ref table subscriptions
+ref table resources
+ref table quota_fabric
+ref table reservations
+ref table reservation_usage
 
 ref cultureInfo en-US
 
