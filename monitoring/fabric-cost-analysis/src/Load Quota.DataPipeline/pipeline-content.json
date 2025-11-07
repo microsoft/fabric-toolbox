@@ -365,7 +365,8 @@
                 },
                 "typeProperties": {
                     "notebookId": "c128d9a2-9832-4742-aabb-67f4bd999b47",
-                    "workspaceId": "57bceddc-a995-44a7-bfb5-1d5f11ad1e98"
+                    "workspaceId": "57bceddc-a995-44a7-bfb5-1d5f11ad1e98",
+                    "sessionTag": "fca"
                 }
             }
         ],
