@@ -16,7 +16,7 @@ It supports both synchronous and asynchronous operations, with detailed logging 
 (Optional) Specifies the format of the Apache Airflow Job definition. For example, 'json' or 'xml'.
 
 .EXAMPLE
-Get-FabricCopyJobDefinition -WorkspaceId "12345" -ApacheAirflowJobId "67890"
+Get-FabricApacheAirflowJobDefinition -WorkspaceId "12345" -ApacheAirflowJobId "67890"
 
 Retrieves the definition of the Apache Airflow Job with ID `67890` from the workspace with ID `12345`.
 
