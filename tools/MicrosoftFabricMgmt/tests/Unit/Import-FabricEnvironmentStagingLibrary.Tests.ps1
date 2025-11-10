@@ -3,15 +3,7 @@ param(
     $ModuleName = "MicrosoftFabricMgmt",
 $expectedParams = @(
     "WorkspaceId"
-    "LakehouseId"
-    "TableName"
-    "PathType"
-    "RelativePath"
-    "FileFormat"
-    "CsvDelimiter"
-    "CsvHeader"
-    "Mode"
-    "Recursive"
+    "EnvironmentId"
     "ProgressAction"
     "Verbose"
     "Debug"
@@ -29,16 +21,16 @@ $expectedParams = @(
 )
 )
 
-Describe "Load-FabricLakehouseTable" -Tag "UnitTests" {
+Describe "Import-FabricEnvironmentStagingLibrary" -Tag "UnitTests" {
 
     BeforeDiscovery {
-        $command = Get-Command -Name Load-FabricLakehouseTable
+        $command = Get-Command -Name Import-FabricEnvironmentStagingLibrary
         $expected = $expectedParams
     }
 
     Context "Parameter validation" {
         BeforeAll {
-            $command = Get-Command -Name Load-FabricLakehouseTable
+            $command = Get-Command -Name Import-FabricEnvironmentStagingLibrary
             $expected = $expectedParams
         }
 

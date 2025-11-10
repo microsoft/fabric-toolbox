@@ -3,13 +3,13 @@
 Unassigns a Fabric workspace from its capacity.
 
 .DESCRIPTION
-The `Unassign-FabricWorkspaceCapacity` function sends a POST request to unassign a workspace from its assigned capacity.
+The `Remove-FabricWorkspaceCapacity` function sends a POST request to unassign a workspace from its assigned capacity.
 
 .PARAMETER WorkspaceId
 The unique identifier of the workspace to be unassigned from its capacity.
 
 .EXAMPLE
-Unassign-FabricWorkspaceCapacity -WorkspaceId "workspace123"
+Remove-FabricWorkspaceCapacity -WorkspaceId "workspace123"
 
 Unassigns the workspace with ID "workspace123" from its capacity.
 
@@ -20,8 +20,8 @@ Unassigns the workspace with ID "workspace123" from its capacity.
 Author: Tiago Balabuch
 #>
 
-function Unassign-FabricWorkspaceCapacity {
-    [CmdletBinding()]
+function Remove-FabricWorkspaceCapacity {
+    [CmdletBinding(SupportsShouldProcess = $true, ConfirmImpact = 'Medium')]
     param (
         [Parameter(Mandatory = $true)]
         [ValidateNotNullOrEmpty()]
@@ -37,11 +37,14 @@ function Unassign-FabricWorkspaceCapacity {
         $apiEndpointURI = "{0}/workspaces/{1}/unassignFromCapacity" -f $FabricConfig.BaseUrl, $WorkspaceId
         Write-Message -Message "API Endpoint: $apiEndpointURI" -Level Debug
 
-        # Make the API request
+        if ($PSCmdlet.ShouldProcess("$WorkspaceId" , "Remove from Capacity")) {
+            # Make the API request
         $response = Invoke-FabricAPIRequest `
             -BaseURI $apiEndpointURI `
             -Headers $FabricConfig.FabricHeaders `
             -Method Post
+        }
+
 
         # Return the API response
         Write-Message -Message "Workspace capacity has been successfully unassigned from workspace '$WorkspaceId'." -Level Info

@@ -2,8 +2,16 @@
 param(
     $ModuleName = "MicrosoftFabricMgmt",
 $expectedParams = @(
-    "DomainId"
-    "CapacitiesIds"
+    "WorkspaceId"
+    "LakehouseId"
+    "TableName"
+    "PathType"
+    "RelativePath"
+    "FileFormat"
+    "CsvDelimiter"
+    "CsvHeader"
+    "Mode"
+    "Recursive"
     "ProgressAction"
     "Verbose"
     "Debug"
@@ -21,16 +29,16 @@ $expectedParams = @(
 )
 )
 
-Describe "Assign-FabricDomainWorkspaceByCapacity" -Tag "UnitTests" {
+Describe "Write-FabricLakehouseTableData" -Tag "UnitTests" {
 
     BeforeDiscovery {
-        $command = Get-Command -Name Assign-FabricDomainWorkspaceByCapacity
+        $command = Get-Command -Name Write-FabricLakehouseTableData
         $expected = $expectedParams
     }
 
     Context "Parameter validation" {
         BeforeAll {
-            $command = Get-Command -Name Assign-FabricDomainWorkspaceByCapacity
+            $command = Get-Command -Name Write-FabricLakehouseTableData
             $expected = $expectedParams
         }
 

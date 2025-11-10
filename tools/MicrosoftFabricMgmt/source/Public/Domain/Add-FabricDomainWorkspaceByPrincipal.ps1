@@ -3,7 +3,7 @@
 Assigns workspaces to a domain based on principal IDs in Microsoft Fabric.
 
 .DESCRIPTION
-The `Assign-FabricDomainWorkspaceByPrincipal` function sends a request to assign workspaces to a specified domain using a JSON object of principal IDs and types.
+The `Add-FabricDomainWorkspaceByPrincipal` function sends a request to assign workspaces to a specified domain using a JSON object of principal IDs and types.
 
 .PARAMETER DomainId
 The ID of the domain to which workspaces will be assigned. This parameter is mandatory.
@@ -17,7 +17,7 @@ $PrincipalIds = @(
     @{id = "b5b9495c-685a-447a-b4d3-2d8e963e6288"; type = "User"}
     )
 
-Assign-FabricDomainWorkspaceByPrincipal -DomainId "12345" -PrincipalIds $principals
+Add-FabricDomainWorkspaceByPrincipal -DomainId "12345" -PrincipalIds $principals
 
 Assigns the workspaces based on the provided principal IDs and types.
 
@@ -28,9 +28,9 @@ Assigns the workspaces based on the provided principal IDs and types.
 Author: Tiago Balabuch
 #>
 
-function Assign-FabricDomainWorkspaceByPrincipal {
-    [Diagnostics.CodeAnalysis.SuppressMessage('PSUseApprovedVerbs', '')]
+function Add-FabricDomainWorkspaceByPrincipal {
     [CmdletBinding(SupportsShouldProcess = $true, ConfirmImpact = 'Medium')]
+    [Alias('Add-FabricDomainWorkspaceByPrincipal')]
     param (
         [Parameter(Mandatory = $true)]
         [ValidateNotNullOrEmpty()]

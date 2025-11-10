@@ -14,12 +14,12 @@ The unique identifier of the Fabric domain.
 (Optional) An array of workspace IDs to unassign. If not provided, all workspaces will be unassigned.
 
 .EXAMPLE
-Unassign-FabricDomainWorkspace -DomainId "12345"
+Remove-FabricDomainWorkspace -DomainId "12345"
 
 Unassigns all workspaces from the domain with ID "12345".
 
 .EXAMPLE
-Unassign-FabricDomainWorkspace -DomainId "12345" -WorkspaceIds @("workspace1", "workspace2")
+Remove-FabricDomainWorkspace -DomainId "12345" -WorkspaceIds @("workspace1", "workspace2")
 
 Unassigns the specified workspaces from the domain with ID "12345".
 
@@ -31,9 +31,9 @@ Unassigns the specified workspaces from the domain with ID "12345".
 Author: Tiago Balabuch
 
 #>
-function Unassign-FabricDomainWorkspace {
-    [Diagnostics.CodeAnalysis.SuppressMessage('PSUseApprovedVerbs', '')]
+function Remove-FabricDomainWorkspace {
     [CmdletBinding(SupportsShouldProcess = $true, ConfirmImpact = 'Medium')]
+    [Alias('Unassign-FabricDomainWorkspace')]
     param (
         [Parameter(Mandatory = $true)]
         [ValidateNotNullOrEmpty()]

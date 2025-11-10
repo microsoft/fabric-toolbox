@@ -1,37 +1,37 @@
 #Requires -Module @{ ModuleName="Pester"; ModuleVersion="5.0"}
 param(
     $ModuleName = "MicrosoftFabricMgmt",
-    $expectedParams = @(
-        "DomainId"
-        "DomainRole"
-        "PrincipalIds"
-        "Verbose"
-        "Debug"
-        "ErrorAction"
-        "WarningAction"
-        "InformationAction"
-        "ProgressAction"
-        "ErrorVariable"
-        "WarningVariable"
-        "InformationVariable"
-        "OutVariable"
-        "OutBuffer"
-        "PipelineVariable"
-        "WhatIf"
-        "Confirm"
-    )
+$expectedParams = @(
+    "DomainId"
+    "DomainRole"
+    "PrincipalIds"
+    "ProgressAction"
+    "Verbose"
+    "Debug"
+    "ErrorAction"
+    "WarningAction"
+    "InformationAction"
+    "InformationVariable"
+    "OutVariable"
+    "OutBuffer"
+    "PipelineVariable"
+    "ErrorVariable"
+    "WarningVariable"
+    "Confirm"
+    "WhatIf"
+)
 )
 
-Describe "Assign-FabricDomainWorkspaceByRoleAssignment" -Tag "UnitTests" {
+Describe "Remove-FabricDomainWorkspaceRoleAssignment" -Tag "UnitTests" {
 
     BeforeDiscovery {
-        $command = Get-Command -Name Assign-FabricDomainWorkspaceByRoleAssignment
+        $command = Get-Command -Name Remove-FabricDomainWorkspaceRoleAssignment
         $expected = $expectedParams
     }
 
     Context "Parameter validation" {
         BeforeAll {
-            $command = Get-Command -Name Assign-FabricDomainWorkspaceByRoleAssignment
+            $command = Get-Command -Name Remove-FabricDomainWorkspaceRoleAssignment
             $expected = $expectedParams
         }
 

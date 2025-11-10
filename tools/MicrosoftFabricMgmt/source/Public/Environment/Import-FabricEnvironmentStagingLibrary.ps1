@@ -13,7 +13,7 @@ The unique identifier of the workspace where the environment exists.
 The unique identifier of the environment where the library will be uploaded.
 
 .EXAMPLE
-Upload-FabricEnvironmentStagingLibrary -WorkspaceId "workspace-12345" -EnvironmentId "env-67890"
+Import-FabricEnvironmentStagingLibrary -WorkspaceId "workspace-12345" -EnvironmentId "env-67890"
 
 .NOTES
 - This is not working code. It is a placeholder for future development. Fabric documentation is missing some important details on how to upload libraries.
@@ -23,8 +23,7 @@ Upload-FabricEnvironmentStagingLibrary -WorkspaceId "workspace-12345" -Environme
 Author: Tiago Balabuch
 
 #>
-function Upload-FabricEnvironmentStagingLibrary {
-    [Diagnostics.CodeAnalysis.SuppressMessage('PSUseApprovedVerbs', '')]
+function Import-FabricEnvironmentStagingLibrary {
     [CmdletBinding(SupportsShouldProcess = $true, ConfirmImpact = 'Medium')]
     param (
         [Parameter(Mandatory = $true)]

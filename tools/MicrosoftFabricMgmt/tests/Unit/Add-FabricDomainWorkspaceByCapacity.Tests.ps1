@@ -3,8 +3,7 @@ param(
     $ModuleName = "MicrosoftFabricMgmt",
 $expectedParams = @(
     "DomainId"
-    "DomainRole"
-    "PrincipalIds"
+    "CapacitiesIds"
     "ProgressAction"
     "Verbose"
     "Debug"
@@ -22,16 +21,16 @@ $expectedParams = @(
 )
 )
 
-Describe "Unassign-FabricDomainWorkspaceRoleAssignment" -Tag "UnitTests" {
+Describe "Add-FabricDomainWorkspaceByCapacity" -Tag "UnitTests" {
 
     BeforeDiscovery {
-        $command = Get-Command -Name Unassign-FabricDomainWorkspaceRoleAssignment
+        $command = Get-Command -Name Add-FabricDomainWorkspaceByCapacity
         $expected = $expectedParams
     }
 
     Context "Parameter validation" {
         BeforeAll {
-            $command = Get-Command -Name Unassign-FabricDomainWorkspaceRoleAssignment
+            $command = Get-Command -Name Add-FabricDomainWorkspaceByCapacity
             $expected = $expectedParams
         }
 

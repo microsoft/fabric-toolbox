@@ -3,7 +3,7 @@
 Assigns workspaces to a Fabric domain based on specified capacities.
 
 .DESCRIPTION
-The `Assign-FabricDomainWorkspaceByCapacity` function assigns workspaces to a Fabric domain using a list of capacity IDs by making a POST request to the relevant API endpoint.
+The `Add-FabricDomainWorkspaceByCapacity` function assigns workspaces to a Fabric domain using a list of capacity IDs by making a POST request to the relevant API endpoint.
 
 .PARAMETER DomainId
 The unique identifier of the Fabric domain to which the workspaces will be assigned.
@@ -12,7 +12,7 @@ The unique identifier of the Fabric domain to which the workspaces will be assig
 An array of capacity IDs used to assign workspaces to the domain.
 
 .EXAMPLE
-Assign-FabricDomainWorkspaceByCapacity -DomainId "12345" -CapacitiesIds @("capacity1", "capacity2")
+Add-FabricDomainWorkspaceByCapacity -DomainId "12345" -CapacitiesIds @("capacity1", "capacity2")
 
 Assigns workspaces to the domain with ID "12345" based on the specified capacities.
 
@@ -23,9 +23,9 @@ Assigns workspaces to the domain with ID "12345" based on the specified capaciti
 Author: Tiago Balabuch
 #>
 
-function Assign-FabricDomainWorkspaceByCapacity {
-    [Diagnostics.CodeAnalysis.SuppressMessage('PSUseApprovedVerbs', '')]
+function Add-FabricDomainWorkspaceByCapacity {
     [CmdletBinding(SupportsShouldProcess = $true, ConfirmImpact = 'Medium')]
+    [Alias('Assign-FabricDomainWorkspaceByCapacity')]
     param (
         [Parameter(Mandatory = $true)]
         [ValidateNotNullOrEmpty()]

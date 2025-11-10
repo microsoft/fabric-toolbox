@@ -3,7 +3,6 @@ param(
     $ModuleName = "MicrosoftFabricMgmt",
 $expectedParams = @(
     "WorkspaceId"
-    "EnvironmentId"
     "ProgressAction"
     "Verbose"
     "Debug"
@@ -16,21 +15,19 @@ $expectedParams = @(
     "PipelineVariable"
     "ErrorVariable"
     "WarningVariable"
-    "Confirm"
-    "WhatIf"
 )
 )
 
-Describe "Upload-FabricEnvironmentStagingLibrary" -Tag "UnitTests" {
+Describe "Remove-FabricWorkspaceCapacity" -Tag "UnitTests" {
 
     BeforeDiscovery {
-        $command = Get-Command -Name Upload-FabricEnvironmentStagingLibrary
+        $command = Get-Command -Name Remove-FabricWorkspaceCapacity
         $expected = $expectedParams
     }
 
     Context "Parameter validation" {
         BeforeAll {
-            $command = Get-Command -Name Upload-FabricEnvironmentStagingLibrary
+            $command = Get-Command -Name Remove-FabricWorkspaceCapacity
             $expected = $expectedParams
         }
 

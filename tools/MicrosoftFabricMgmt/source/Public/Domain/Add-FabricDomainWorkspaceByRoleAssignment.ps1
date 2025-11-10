@@ -1,9 +1,9 @@
 <#
 .SYNOPSIS
-Bulk unUnassign roles to principals for workspaces in a Fabric domain.
+Bulk assigns roles to principals for workspaces in a Fabric domain.
 
 .DESCRIPTION
-The `AssignFabricDomainWorkspaceRoleAssignment` function performs bulk role assignments for principals in a specific Fabric domain. It sends a POST request to the relevant API endpoint.
+The `Add-FabricDomainWorkspaceByRoleAssignment` function performs bulk role assignments for principals in a specific Fabric domain. It sends a POST request to the relevant API endpoint.
 
 .PARAMETER DomainId
 The unique identifier of the Fabric domain where roles will be assigned.
@@ -19,21 +19,20 @@ An array of principals to assign roles to. Each principal must include:
 - `type`: The type of the principal (e.g., `User`, `Group`).
 
 .EXAMPLE
-AssignFabricDomainWorkspaceRoleAssignment -DomainId "12345" -DomainRole "Admins" -PrincipalIds @(@{id="user1"; type="User"}, @{id="group1"; type="Group"})
+Add-FabricDomainWorkspaceByRoleAssignment -DomainId "12345" -DomainRole "Admins" -PrincipalIds @(@{id="user1"; type="User"}, @{id="group1"; type="Group"})
 
-Unassign the `Admins` role to the specified principals in the domain with ID "12345".
+Assigns the `Admins` role to the specified principals in the domain with ID "12345".
 
 .NOTES
 - Requires `$FabricConfig` global configuration, including `BaseUrl` and `FabricHeaders`.
 - Calls `Test-TokenExpired` to ensure token validity before making the API request.
 
 Author: Tiago Balabuch
-
 #>
 
-function Unassign-FabricDomainWorkspaceRoleAssignment {
-    [Diagnostics.CodeAnalysis.SuppressMessage('PSUseApprovedVerbs', '')]
+function Add-FabricDomainWorkspaceByRoleAssignment {
     [CmdletBinding(SupportsShouldProcess = $true, ConfirmImpact = 'Medium')]
+    [Alias('Assign-FabricDomainWorkspaceByRoleAssignment')]
     param (
         [Parameter(Mandatory = $true)]
         [ValidateNotNullOrEmpty()]
@@ -46,12 +45,11 @@ function Unassign-FabricDomainWorkspaceRoleAssignment {
 
         [Parameter(Mandatory = $true)]
         [ValidateNotNullOrEmpty()]
-        [System.Object]$PrincipalIds #Must contain a JSON array of principals with 'id' and 'type' properties
+        [System.Object]$PrincipalIds # Array with 'id' and 'type'
     )
 
     try {
         # Validate PrincipalIds structure
-        # This uses a .NET HashSet to accelerate lookup even more, especially useful in large collections.
         foreach ($principal in $PrincipalIds) {
             if (-not ($principal.id -and $principal.type)) {
                 throw "Each Principal must contain 'id' and 'type' properties. Found: $principal"
@@ -64,7 +62,7 @@ function Unassign-FabricDomainWorkspaceRoleAssignment {
         Write-Message -Message "Authentication token is valid." -Level Debug
 
         # Construct the API endpoint URI
-        $apiEndpointURI = "{0}/admin/domains/{1}/roleAssignments/bulkUnassign" -f $FabricConfig.BaseUrl, $DomainId
+        $apiEndpointURI = "{0}/admin/domains/{1}/roleAssignments/bulkAssign" -f $FabricConfig.BaseUrl, $DomainId
         Write-Message -Message "API Endpoint: $apiEndpointURI" -Level Debug
 
         # Construct the request body
@@ -72,11 +70,13 @@ function Unassign-FabricDomainWorkspaceRoleAssignment {
             type       = $DomainRole
             principals = $PrincipalIds
         }
+
+        # Convert the body to JSON
         $bodyJson = $body | ConvertTo-Json -Depth 2
         Write-Message -Message "Request Body: $bodyJson" -Level Debug
 
         # Make the API request (guarded by ShouldProcess)
-        if ($PSCmdlet.ShouldProcess($DomainId, "Unassign role '$DomainRole' from principals")) {
+        if ($PSCmdlet.ShouldProcess($DomainId, "Assign role '$DomainRole' to principals")) {
             $apiParams = @{
                 BaseURI = $apiEndpointURI
                 Headers = $FabricConfig.FabricHeaders
@@ -86,7 +86,7 @@ function Unassign-FabricDomainWorkspaceRoleAssignment {
             $response = Invoke-FabricAPIRequest @apiParams
 
             # Return the API response
-            Write-Message -Message "Bulk role unassignment for domain '$DomainId' completed successfully!" -Level Info
+            Write-Message -Message "Bulk role assignment for domain '$DomainId' completed successfully!" -Level Info
             return $response
         }
     }

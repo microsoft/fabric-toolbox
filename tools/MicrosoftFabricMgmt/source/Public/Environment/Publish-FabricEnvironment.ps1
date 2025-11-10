@@ -25,7 +25,6 @@ Initiates the publishing process for the specified staging environment.
 Author: Tiago Balabuch
 #>
 function Publish-FabricEnvironment {
-    [Diagnostics.CodeAnalysis.SuppressMessage('PSUseApprovedVerbs', '')]
     [CmdletBinding(SupportsShouldProcess = $true, ConfirmImpact = 'Medium')]
     param (
         [Parameter(Mandatory = $true)]
