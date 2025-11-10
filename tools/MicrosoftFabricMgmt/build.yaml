@@ -19,7 +19,7 @@ Encoding: UTF8
 
 # Suffix to add to Root module PSM1 after merge (here, the Set-Alias exporting IB tasks)
 # suffix: suffix.ps1
-# prefix: prefix.ps1
+prefix: prefix.ps1
 VersionedOutputDirectory: true
 
 ####################################################
