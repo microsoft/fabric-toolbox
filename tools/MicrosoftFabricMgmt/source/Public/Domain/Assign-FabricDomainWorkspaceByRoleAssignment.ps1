@@ -3,7 +3,7 @@
 Bulk assigns roles to principals for workspaces in a Fabric domain.
 
 .DESCRIPTION
-The `AssignFabricDomainWorkspaceRoleAssignment` function performs bulk role assignments for principals in a specific Fabric domain. It sends a POST request to the relevant API endpoint.
+The `Assign-FabricDomainWorkspaceByRoleAssignment` function performs bulk role assignments for principals in a specific Fabric domain. It sends a POST request to the relevant API endpoint.
 
 .PARAMETER DomainId
 The unique identifier of the Fabric domain where roles will be assigned.
@@ -19,7 +19,7 @@ An array of principals to assign roles to. Each principal must include:
 - `type`: The type of the principal (e.g., `User`, `Group`).
 
 .EXAMPLE
-AssignFabricDomainWorkspaceRoleAssignment -DomainId "12345" -DomainRole "Admins" -PrincipalIds @(@{id="user1"; type="User"}, @{id="group1"; type="Group"})
+Assign-FabricDomainWorkspaceByRoleAssignment -DomainId "12345" -DomainRole "Admins" -PrincipalIds @(@{id="user1"; type="User"}, @{id="group1"; type="Group"})
 
 Assigns the `Admins` role to the specified principals in the domain with ID "12345".
 
@@ -30,7 +30,7 @@ Assigns the `Admins` role to the specified principals in the domain with ID "123
 Author: Tiago Balabuch
 #>
 
-function Assign-FabricDomainWorkspaceRoleAssignment {
+function Assign-FabricDomainWorkspaceByRoleAssignment {
     [Diagnostics.CodeAnalysis.SuppressMessage('PSUseApprovedVerbs', '')]
     [CmdletBinding(SupportsShouldProcess = $true, ConfirmImpact = 'Medium')]
     param (
