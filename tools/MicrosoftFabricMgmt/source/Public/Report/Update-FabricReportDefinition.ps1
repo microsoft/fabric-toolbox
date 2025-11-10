@@ -63,7 +63,7 @@ function Update-FabricReportDefinition {
                     parts = @()
                 }
             }
-            $jsonObjectParts = Get-FileDefinitionParts -sourceDirectory $ReportPathDefinition
+            $jsonObjectParts = Get-FileDefinitionPart -sourceDirectory $ReportPathDefinition
             # Add new part to the parts array
             $body.definition.parts = $jsonObjectParts.parts
         }

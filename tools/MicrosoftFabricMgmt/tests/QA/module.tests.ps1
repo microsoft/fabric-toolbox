@@ -90,7 +90,7 @@ BeforeDiscovery {
             $_.Name -notin (
                 'Confirm-TokenState',
                 'Get-FabricUri',
-                'Get-FileDefinitionParts',
+                'Get-FileDefinitionPart',
                 'Set-FabConfig',
                 'Write-Message',
                 'Invoke-FabricAPIRequest_duplicate'

@@ -87,7 +87,7 @@ function New-FabricVariableLibrary {
             }
 
             # As VariableLibrary has multiple parts, we need to get the definition parts
-            $jsonObjectParts = Get-FileDefinitionParts -sourceDirectory $VariableLibraryPathDefinition
+            $jsonObjectParts = Get-FileDefinitionPart -sourceDirectory $VariableLibraryPathDefinition
             # Add new part to the parts array
             $body.definition.parts = $jsonObjectParts.parts
         }

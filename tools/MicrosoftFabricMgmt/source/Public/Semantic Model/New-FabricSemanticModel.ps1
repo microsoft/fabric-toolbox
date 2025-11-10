@@ -67,7 +67,7 @@ function New-FabricSemanticModel {
         }
 
         # As Report has multiple parts, we need to get the definition parts
-        $jsonObjectParts = Get-FileDefinitionParts -sourceDirectory $SemanticModelPathDefinition
+        $jsonObjectParts = Get-FileDefinitionPart -sourceDirectory $SemanticModelPathDefinition
         # Add new part to the parts array
         $body.definition.parts = $jsonObjectParts.parts
 

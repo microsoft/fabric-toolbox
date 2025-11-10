@@ -57,7 +57,7 @@ function Update-FabricSemanticModelDefinition {
             }
         }
 
-        $jsonObjectParts = Get-FileDefinitionParts -sourceDirectory $SemanticModelPathDefinition
+        $jsonObjectParts = Get-FileDefinitionPart -sourceDirectory $SemanticModelPathDefinition
         # Add new part to the parts array
         $body.definition.parts = $jsonObjectParts.parts
         # Check if any path is .platform

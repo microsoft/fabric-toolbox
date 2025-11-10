@@ -15,7 +15,7 @@
         - payloadType: Indicates the type of payload, set as "InlineBase64".
 
 .EXAMPLE
-    Get-FileDefinitionParts -sourceDirectory "C:\MyFiles"
+    Get-FileDefinitionPart -sourceDirectory "C:\MyFiles"
 
     Retrieves all files from "C:\MyFiles", encodes their contents to Base64, and returns the structured result.
 

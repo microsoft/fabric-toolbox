@@ -76,7 +76,7 @@ function New-FabricReport {
             }
 
             # As Report has multiple parts, we need to get the definition parts
-            $jsonObjectParts = Get-FileDefinitionParts -sourceDirectory $ReportPathDefinition
+            $jsonObjectParts = Get-FileDefinitionPart -sourceDirectory $ReportPathDefinition
             # Add new part to the parts array
             $body.definition.parts = $jsonObjectParts.parts
         }

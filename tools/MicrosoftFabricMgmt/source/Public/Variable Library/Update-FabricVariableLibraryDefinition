@@ -3,7 +3,7 @@
     Updates the definition of a VariableLibrary in a Microsoft Fabric workspace.
 
 .DESCRIPTION
-    Updates an existing VariableLibrary's definition by sending a request to the Microsoft Fabric API. 
+    Updates an existing VariableLibrary's definition by sending a request to the Microsoft Fabric API.
     Supports updating both the main definition and an optional platform-specific definition file.
 
 .PARAMETER WorkspaceId
@@ -47,14 +47,14 @@ function Update-FabricVariableLibraryDefinition {
         Test-TokenExpired
         Write-Message -Message "Authentication token is valid." -Level Debug
 
-        # Construct the API endpoint URI with filtering logic     
+        # Construct the API endpoint URI with filtering logic
         $apiEndpointURI = "{0}/workspaces/{1}/VariableLibraries/{2}/updateDefinition" -f $FabricConfig.BaseUrl, $WorkspaceId, $VariableLibraryId
-        
+
         # Step 3: Construct the request body
         $body = @{
             definition = @{
                 parts = @()
-            } 
+            }
         }
 
         if ($VariableLibraryPathDefinition) {
@@ -63,7 +63,7 @@ function Update-FabricVariableLibraryDefinition {
                     parts = @()
                 }
             }
-            $jsonObjectParts = Get-FileDefinitionParts -sourceDirectory $VariableLibraryPathDefinition
+            $jsonObjectParts = Get-FileDefinitionPart -sourceDirectory $VariableLibraryPathDefinition
             # Add new part to the parts array
             $body.definition.parts = $jsonObjectParts.parts
         }
@@ -77,10 +77,10 @@ function Update-FabricVariableLibraryDefinition {
 
         # If the platform file exists, append the query parameter to the URL
         if ($hasPlatformFile -eq $true) {
-            $apiEndpointURI += "?updateMetadata=true" -f $apiEndpointURI 
+            $apiEndpointURI += "?updateMetadata=true" -f $apiEndpointURI
         }
         Write-Message -Message "API Endpoint: $apiEndpointURI" -Level Debug
-        
+
         # Convert the body to JSON
         $bodyJson = $body | ConvertTo-Json -Depth 10
         Write-Message -Message "Request Body: $bodyJson" -Level Debug
@@ -93,9 +93,9 @@ function Update-FabricVariableLibraryDefinition {
             Body    = $bodyJson
         }
         $response = Invoke-FabricAPIRequest @apiParams
-       
+
         # Return the API response
-        Write-Message -Message "Successfully updated the definition for VariableLibrary with ID '$VariableLibraryId' in workspace '$WorkspaceId'." -Level Info 
+        Write-Message -Message "Successfully updated the definition for VariableLibrary with ID '$VariableLibraryId' in workspace '$WorkspaceId'." -Level Info
         return $response
     }
     catch {

@@ -80,7 +80,7 @@ function New-FabricNotebookNEW {
                     parts  = @()
                 }
             }
-            $jsonObjectParts = Get-FileDefinitionParts -sourceDirectory $NotebookPathDefinition
+            $jsonObjectParts = Get-FileDefinitionPart -sourceDirectory $NotebookPathDefinition
             # Add new part to the parts array
             $body.definition.parts = $jsonObjectParts.parts
         }
