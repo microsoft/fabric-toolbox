@@ -19,16 +19,16 @@ $expectedParams = @(
 )
 )
 
-Describe "Assign-FabricWorkspaceCapacity" -Tag "UnitTests" {
+Describe "Add-FabricWorkspaceCapacity" -Tag "UnitTests" {
 
     BeforeDiscovery {
-        $command = Get-Command -Name Assign-FabricWorkspaceCapacity
+        $command = Get-Command -Name Add-FabricWorkspaceCapacity
         $expected = $expectedParams
     }
 
     Context "Parameter validation" {
         BeforeAll {
-            $command = Get-Command -Name Assign-FabricWorkspaceCapacity
+            $command = Get-Command -Name Add-FabricWorkspaceCapacity
             $expected = $expectedParams
         }
 
