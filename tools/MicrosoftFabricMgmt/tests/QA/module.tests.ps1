@@ -245,7 +245,7 @@ BeforeDiscovery {
     }
 }
 
-Describe 'Author for functions' {
+Describe 'Author for functions'  -Tags 'attributionQuality' {
     It 'Should have an author for <Name>' -ForEach ($testCases) {
         $scriptFileRawContent = Get-Content -Raw -Path $FullName
 
