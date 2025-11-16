@@ -1,0 +1,214 @@
+table 'Gateway Node Info'
+	lineageTag: d1a67ead-1764-4134-bd7e-8e362d2a1488
+
+	column 'Gateway ID'
+		dataType: string
+		sourceProviderType: nvarchar(max)
+		lineageTag: d2ec7bba-d1fd-43ba-a31b-1dc54fea3d79
+		summarizeBy: none
+		sourceColumn: Gateway ID
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Last Information Date'
+		dataType: dateTime
+		formatString: General Date
+		sourceProviderType: datetimeoffset
+		lineageTag: 715cab92-8d90-4d64-a99b-abe93617313e
+		summarizeBy: none
+		sourceColumn: Last Information Date
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Cluster ID'
+		dataType: string
+		sourceProviderType: nvarchar(max)
+		lineageTag: 292248d2-6faa-4ba8-bc9a-c81965601376
+		summarizeBy: none
+		sourceColumn: Cluster ID
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Cluster Name'
+		dataType: string
+		sourceProviderType: nvarchar(max)
+		lineageTag: 22683849-3eba-4623-b806-972fae93279b
+		summarizeBy: none
+		sourceColumn: Cluster Name
+
+		extendedProperty ParameterMetadata =
+				{
+				  "version": 2,
+				  "kind": 1,
+				  "supportsMultipleValues": true,
+				  "selectAllValue": "__SelectAll__"
+				}
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Node Name'
+		dataType: string
+		sourceProviderType: nvarchar(max)
+		lineageTag: bdb7a3f0-2824-4b6c-82c2-b797da77fcba
+		summarizeBy: none
+		sourceColumn: Node Name
+
+		extendedProperty ParameterMetadata =
+				{
+				  "version": 2,
+				  "kind": 1,
+				  "supportsMultipleValues": true,
+				  "selectAllValue": "__SelectAll__"
+				}
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Cloud Datasource Refresh'
+		dataType: boolean
+		formatString: """TRUE"";""TRUE"";""FALSE"""
+		sourceProviderType: bit
+		lineageTag: 79351fae-db73-4c9f-a80b-1cf75be3b460
+		summarizeBy: none
+		sourceColumn: Cloud Datasource Refresh
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Contact Information'
+		dataType: string
+		sourceProviderType: nvarchar(max)
+		lineageTag: 5597a941-e748-49bf-8871-576886dd3f22
+		summarizeBy: none
+		sourceColumn: Contact Information
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Custom Connectors'
+		dataType: boolean
+		formatString: """TRUE"";""TRUE"";""FALSE"""
+		sourceProviderType: bit
+		lineageTag: 45616f08-5e6d-42bd-b474-2d81e01c30c1
+		summarizeBy: none
+		sourceColumn: Custom Connectors
+
+		annotation SummarizationSetBy = Automatic
+
+	column Status
+		dataType: string
+		sourceProviderType: nvarchar(max)
+		lineageTag: 1dc4fb96-d23c-4e48-9c5d-4fab656bdd39
+		summarizeBy: none
+		sourceColumn: Status
+
+		annotation SummarizationSetBy = Automatic
+
+	column Type
+		dataType: string
+		sourceProviderType: nvarchar(max)
+		lineageTag: 2f270d43-32ee-4c72-96fa-4f4a85271b2e
+		summarizeBy: none
+		sourceColumn: Type
+
+		annotation SummarizationSetBy = Automatic
+
+	column Version
+		dataType: string
+		sourceProviderType: nvarchar(max)
+		lineageTag: 7204c909-3b00-42eb-93e9-47a35fdb2c1a
+		summarizeBy: none
+		sourceColumn: Version
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Version Status'
+		dataType: string
+		sourceProviderType: nvarchar(max)
+		lineageTag: 5721a306-8988-4a88-bec0-06ebf66cba6e
+		summarizeBy: none
+		sourceColumn: Version Status
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'OS Name'
+		dataType: string
+		sourceProviderType: nvarchar(max)
+		lineageTag: f312cf2a-3414-4fff-886c-8732d05c4e44
+		summarizeBy: none
+		sourceColumn: OS Name
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'OS Version'
+		dataType: string
+		sourceProviderType: nvarchar(max)
+		lineageTag: f1553ef6-3777-42fb-9c62-66544b60ea05
+		summarizeBy: none
+		sourceColumn: OS Version
+
+		annotation SummarizationSetBy = Automatic
+
+	column Cores
+		dataType: int64
+		formatString: 0
+		sourceProviderType: bigint
+		lineageTag: 58c51056-b5d1-4691-b6a5-eb015a343cbe
+		summarizeBy: sum
+		sourceColumn: Cores
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Logical Cores'
+		dataType: int64
+		formatString: 0
+		sourceProviderType: bigint
+		lineageTag: 7b4f07ee-9f1d-4fcd-843f-2622aeb00c20
+		summarizeBy: sum
+		sourceColumn: Logical Cores
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Memory Gb'
+		dataType: double
+		sourceProviderType: double
+		lineageTag: 04053a12-5b11-48e2-912c-dbe23c103c1f
+		summarizeBy: sum
+		sourceColumn: Memory Gb
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column 'Last Status Date'
+		dataType: dateTime
+		formatString: General Date
+		sourceProviderType: datetimeoffset
+		lineageTag: f1bab1ae-7c53-40a7-a115-707a23876076
+		summarizeBy: none
+		sourceColumn: Last Status Date
+
+		annotation SummarizationSetBy = Automatic
+
+	column Responding
+		dataType: int64
+		formatString: 0
+		sourceProviderType: bigint
+		lineageTag: 56773478-09b3-45db-beea-d40fa06d7547
+		summarizeBy: sum
+		sourceColumn: Responding
+
+		annotation SummarizationSetBy = Automatic
+
+	partition 'Gateway Node Info' = m
+		mode: directQuery
+		source =
+				let
+				    Source = AzureDataExplorer.Contents(KustoURL, KustoDB),
+				    GatewayNodeInfoView1 = Source{[Name="GatewayNodeStatusWithInfo"]}[Data],
+				    #"Renamed Columns" = Table.RenameColumns(GatewayNodeInfoView1,{{"nodeId", "Gateway ID"}, {"logDate", "Last Information Date"}, {"clusterId", "Cluster ID"}, {"clusterName", "Cluster Name"}, {"machine", "Node Name"}, {"cloudDatasourceRefresh", "Cloud Datasource Refresh"}, {"contactInformation", "Contact Information"}, {"customConnectors", "Custom Connectors"}, {"status", "Status"}, {"type", "Type"}, {"version", "Version"}, {"versionStatus", "Version Status"}, {"osName", "OS Name"}, {"osVersion", "OS Version"}, {"cores", "Cores"}, {"logicalCores", "Logical Cores"}, {"memoryGb", "Memory Gb"}, {"lastStatusDate", "Last Status Date"}}),
+				    #"Changed Type" = Table.TransformColumnTypes(#"Renamed Columns",{{"Responding", Int64.Type}})
+				in
+				    #"Changed Type"
+
+	annotation PBI_NavigationStepName = Navigation
+
+	annotation PBI_ResultType = Exception
+
