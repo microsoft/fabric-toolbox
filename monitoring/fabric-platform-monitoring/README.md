@@ -9,7 +9,7 @@ To address this, a solution has been developed based on Fabric Real-Time Intelli
 
 The following architecture illustrates how the solution interacts with different components to receive, process, store, present dashboards, and react to the platform's information. It also enables longer retention of logs for historical purposes and allows comparison of the current state with previous states to create custom solutions.
 
-![image](/Images/01_PlatformObservabilityArchitecture.png)
+![image](/monitoring/fabric-platform-monitoring/Images/01_PlatformObservabilityArchitecture.png)
 
 This solution uses Microsoft Fabric to address these issues by providing: 
 
@@ -114,7 +114,7 @@ To implement this solution, we have some step to follow. This steps will cover t
 
 ## Fabric initial setup 
 
-Create a workspace and import the [Platform Monitoring Setup Notebook](/setup/Platform%20Monitoring%20Setup.ipynb). Follow the instructions for the first run.
+Create a workspace and import the [Platform Monitoring Setup Notebook](/monitoring/fabric-platform-monitoring/setup/Platform%20Monitoring%20Setup.ipynb). Follow the instructions for the first run.
 
 > [!CAUTION]
 > No change are made to any additional item in the workspace or eventhouse. But if you customize the default ones (Notebook, Policies, Tables, Functions, etc), the change could be reverted back or the update could fail.
@@ -123,18 +123,18 @@ Create a workspace and import the [Platform Monitoring Setup Notebook](/setup/Pl
 
 These are available scripts to retrieve and process logs from on-premises gateways. These scripts help in managing and processing logs. 
 
-You can find the gateway scripts in the subfolder [/gateway/PowerShellScript](/gateway/PowerShellScript)
+You can find the gateway scripts in the subfolder [/gateway/PowerShellScript](/monitoring/fabric-platform-monitoring/gateway/PowerShellScript)
 
 Requerements:
 - PowerShell 7+
 
 ### The setup-configuration 
 
-First use the [Gateway Config Notebook](/setup/Gateway%20Config.ipynb) to generate the configuration script for the PowerShell application.
+First use the [Gateway Config Notebook](/monitoring/fabric-platform-monitoring/setup/Gateway%20Config.ipynb) to generate the configuration script for the PowerShell application.
 
 Download the config.json created in the “Built-in Resources” of the notebook and create a folder "/configs/" in the scripts root folder and copy the JSON file.
 
-![image](/Images/02_Notebook_Builtin_Resources_Example.png)
+![image](/monitoring/fabric-platform-monitoring/Images/02_Notebook_Builtin_Resources_Example.png)
 
 Execute the Setup-UpdateConfiguration Script. The script will first ask you whether you still need to install the necessary PowerShell Modules needed for Lakehouse connectivity (Az.Accounts, Az.Storage, DataGateway).  
 
@@ -165,7 +165,7 @@ It will get the Gateway Node info, we can run this once per week or even lower r
 
 ### Schedule the Scripts
 
-We can use the Task Scheduler in Windows to automate the script. You will fin a template of the Task Schedulers in the folder [\TaskSchedulers](/gateway/TaskSchedulers)
+We can use the Task Scheduler in Windows to automate the script. You will fin a template of the Task Schedulers in the folder [\TaskSchedulers](/monitoring/fabric-platform-monitoring/gateway/TaskSchedulers)
 
 
 ## Power BI Gateway Report (Optional)
@@ -178,7 +178,7 @@ You will find the following pages.
 
 Description of the gateway and the indicator if the heartbeat has been received in the last minute.
 
-<img width="1543" alt="image" src="/Images/13%20-%20Report%20Gateway%20Information.png">
+<img width="1543" alt="image" src="/monitoring/fabric-platform-monitoring/Images/13%20-%20Report%20Gateway%20Information.png">
 
 ### Jobs
 
@@ -188,7 +188,7 @@ You can filter by the date you want to look into, how many days you want to look
 
 Selecting a Job in the list will allow you to do a "Drill through" to the Job Details.
 
-<img width="1543" alt="image" src="/Images/14%20-%20Report%20Jobs.png">
+<img width="1543" alt="image" src="/monitoring/fabric-platform-monitoring/Images/14%20-%20Report%20Jobs.png">
 
 ### Job Details
 
@@ -203,23 +203,23 @@ The details of the job, where you can find:
 - Summary of connections kind and the path
 - Query details with the full information of the query
 
-<img width="1508" alt="image" src="/Images/15%20-%20Report%20Job%20Details.png">
+<img width="1508" alt="image" src="/monitoring/fabric-platform-monitoring/Images/15%20-%20Report%20Job%20Details.png">
 
 
 ### Queries
 
 General information of all queries that ran in the gateways
 
-<img width="1418" alt="image" src="/Images/16%20-%20Report%20Queries.png">
+<img width="1418" alt="image" src="/monitoring/fabric-platform-monitoring/Images/16%20-%20Report%20Queries.png">
 
 ### Running Jobs
 
 Will show only the jobs that are running in the gateways. Selecting a job and going to the details will give you the information on the job and related queries.
 
-<img width="1412" alt="image" src="/Images/17%20-%20Report%20Running%20Jobs.png">
+<img width="1412" alt="image" src="/monitoring/fabric-platform-monitoring/Images/17%20-%20Report%20Running%20Jobs.png">
 
 ### System Counters
 
 Overview of the system counters report generated by the Gateways.
 
-<img width="1406" alt="image" src="/Images/18%20-%20Report%20System%20Information.png">
+<img width="1406" alt="image" src="/monitoring/fabric-platform-monitoring/Images/18%20-%20Report%20System%20Information.png">
