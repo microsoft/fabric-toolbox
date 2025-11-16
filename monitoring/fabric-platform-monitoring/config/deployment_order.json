@@ -15,7 +15,7 @@
     {
         "name": "Fabric Platform Monitoring.VariableLibrary",
         "id": "9578b1f0-81e6-bc8a-4c31-f90acb439807",
-        "folder": "Extractrs",
+        "folder": "Extractors",
         "type": "Core",
         "variables": [
             {
@@ -73,13 +73,13 @@
     {
         "name": "Capacity Events Update Eventstream.Notebook",
         "id": "e56ab424-bc5c-859b-409a-e7e1534f8a10",
-        "folder": "Extractrs",
+        "folder": "Extractors",
         "type": "Capacity"
     },
     {
         "name": "Capacity Events Update Eventstream.DataPipeline",
         "id": "16d8ab6f-dc8c-a981-4d14-4c5aea8fcf15",
-        "folder": "Extractrs",
+        "folder": "Extractors",
         "type": "Capacity",
         "acitivities": [
             {
@@ -159,13 +159,13 @@
     {
         "name": "Monitoring Activity Events.Notebook",
         "id": "5ec5fe5b-62fc-bb83-43a5-62710ccb023c",
-        "folder": "Extractrs",
+        "folder": "Extractors",
         "type": "ActivityEvents"
     },
     {
         "name": "Refresh Activity Events.DataPipeline",
         "id": "52101d8a-14aa-89e4-4826-f722b61817b9",
-        "folder": "Extractrs",
+        "folder": "Extractors",
         "type": "ActivityEvents",
         "parameters": [
             {
@@ -203,25 +203,25 @@
     {
         "name": "Monitoring Extraction Inventory.Notebook",
         "id": "505b4c37-0557-a70e-404c-02d18abdd261",
-        "folder": "Extractrs",
+        "folder": "Extractors",
         "type": "Inventory"
     },
     {
         "name": "Monitoring Extraction Scanner.Notebook",
         "id": "a09748a4-ab11-9a40-4567-bffd9c19595e",
-        "folder": "Extractrs",
+        "folder": "Extractors",
         "type": "Inventory"
     },
     {
         "name": "Monitoring Extraction Refreshables.Notebook",
         "id": "754f754a-4d28-8d57-48b5-705db14578f8",
-        "folder": "Extractrs",
+        "folder": "Extractors",
         "type": "Inventory"
     },
     {
         "name": "Refresh Inventory.DataPipeline",
         "id": "c769baa6-1bdf-8ab5-4902-9ccd2aa4e257",
-        "folder": "Extractrs",
+        "folder": "Extractors",
         "type": "Inventory",
         "parameters": [
             {
@@ -241,7 +241,7 @@
     {
         "name": "Refresh Refreshables.DataPipeline",
         "id": "c86cea31-e199-90b0-4878-ff97449030a6",
-        "folder": "Extractrs",
+        "folder": "Extractors",
         "type": "Inventory",
         "parameters": [
             {
@@ -291,7 +291,7 @@
     {
         "name": "Refresh Scanner API.DataPipeline",
         "id": "58736594-839f-aa8c-45e7-db9b01bda786",
-        "folder": "Extractrs",
+        "folder": "Extractors",
         "type": "Inventory",
         "parameters": [
             {
