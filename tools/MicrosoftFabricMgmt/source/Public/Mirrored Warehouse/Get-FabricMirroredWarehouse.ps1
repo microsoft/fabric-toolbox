@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
 Gets a Mirrored Warehouse or lists all Mirrored Warehouses in a workspace.
 

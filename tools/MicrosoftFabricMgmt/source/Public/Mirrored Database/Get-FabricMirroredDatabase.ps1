@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
 Gets a Mirrored Database or lists all Mirrored Databases in a workspace.
 

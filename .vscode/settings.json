@@ -14,7 +14,8 @@
     "powershell.scriptAnalysis.settingsPath": ".vscode\\analyzersettings.psd1",
     "powershell.scriptAnalysis.enable": true,
     "[powershell]": {
-        "files.trimTrailingWhitespace":true
+        "files.trimTrailingWhitespace": true,
+        "files.encoding": "utf8bom"
     },
     "files.trimFinalNewlines": true,
     "files.insertFinalNewline": true,
