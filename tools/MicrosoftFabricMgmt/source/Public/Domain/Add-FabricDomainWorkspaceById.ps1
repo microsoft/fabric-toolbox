@@ -26,7 +26,6 @@ Author: Tiago Balabuch
 function Add-FabricDomainWorkspaceById {
 
     [CmdletBinding(SupportsShouldProcess = $true, ConfirmImpact = 'Medium')]
-    [Alias('Add-FabricDomainWorkspaceById')]
     param (
         [Parameter(Mandatory = $true)]
         [ValidateNotNullOrEmpty()]

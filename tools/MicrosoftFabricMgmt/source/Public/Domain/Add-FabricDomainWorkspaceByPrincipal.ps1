@@ -30,7 +30,6 @@ Author: Tiago Balabuch
 
 function Add-FabricDomainWorkspaceByPrincipal {
     [CmdletBinding(SupportsShouldProcess = $true, ConfirmImpact = 'Medium')]
-    [Alias('Add-FabricDomainWorkspaceByPrincipal')]
     param (
         [Parameter(Mandatory = $true)]
         [ValidateNotNullOrEmpty()]
