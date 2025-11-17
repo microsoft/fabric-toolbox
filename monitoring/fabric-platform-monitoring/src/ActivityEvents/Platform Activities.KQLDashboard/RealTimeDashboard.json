@@ -1,0 +1,391 @@
+{
+  "schema_version": "60",
+  "pagesNavWidth": 287.33331298828125,
+  "autoRefresh": {
+    "enabled": true,
+    "defaultInterval": "30s"
+  },
+  "tiles": [
+    {
+      "id": "ce38ea36-eef6-4cdc-bdd5-75ead397482a",
+      "title": "Top 10 Activities",
+      "visualType": "pie",
+      "pageId": "85a9420d-d8f9-4850-b417-078eb48d75d6",
+      "layout": {
+        "x": 0,
+        "y": 0,
+        "width": 10,
+        "height": 9
+      },
+      "queryRef": {
+        "kind": "query",
+        "queryId": "133b91fc-0de4-444e-9be3-f3a5efe9783f"
+      },
+      "visualOptions": {
+        "hideLegend": false,
+        "legendLocation": "right",
+        "xColumn": null,
+        "yColumns": null,
+        "seriesColumns": null,
+        "crossFilterDisabled": false,
+        "drillthroughDisabled": false,
+        "labelDisabled": false,
+        "pie__label": [
+          "name",
+          "percentage"
+        ],
+        "tooltipDisabled": false,
+        "pie__tooltip": [
+          "name",
+          "percentage",
+          "value"
+        ],
+        "pie__orderBy": "size",
+        "pie__kind": "donut",
+        "pie__topNSlices": null,
+        "crossFilter": [],
+        "drillthrough": []
+      }
+    },
+    {
+      "id": "a86562e6-4660-4103-adfd-55e0e431d5ae",
+      "title": "Top 20 Activities by Time",
+      "visualType": "line",
+      "pageId": "85a9420d-d8f9-4850-b417-078eb48d75d6",
+      "layout": {
+        "x": 10,
+        "y": 0,
+        "width": 14,
+        "height": 9
+      },
+      "queryRef": {
+        "kind": "query",
+        "queryId": "3ac5ba3a-ca1f-481d-a310-c35e3a11d9f9"
+      },
+      "visualOptions": {
+        "multipleYAxes": {
+          "base": {
+            "id": "-1",
+            "label": "",
+            "columns": [],
+            "yAxisMaximumValue": null,
+            "yAxisMinimumValue": null,
+            "yAxisScale": "linear",
+            "horizontalLines": []
+          },
+          "additional": [],
+          "showMultiplePanels": false
+        },
+        "hideLegend": false,
+        "legendLocation": "bottom",
+        "xColumnTitle": "",
+        "xColumn": "CreationTime",
+        "yColumns": [
+          "Acitivities"
+        ],
+        "seriesColumns": [
+          "Activity"
+        ],
+        "xAxisScale": "linear",
+        "verticalLine": "",
+        "crossFilterDisabled": false,
+        "drillthroughDisabled": false,
+        "crossFilter": [],
+        "drillthrough": [],
+        "selectedDataOnLoad": {
+          "all": true,
+          "limit": 10
+        },
+        "dataPointsTooltip": {
+          "all": true,
+          "limit": 5
+        }
+      }
+    },
+    {
+      "id": "3ac50266-611f-426f-b311-921301b6f08a",
+      "title": "Items Views",
+      "visualType": "area",
+      "pageId": "85a9420d-d8f9-4850-b417-078eb48d75d6",
+      "layout": {
+        "x": 0,
+        "y": 9,
+        "width": 24,
+        "height": 11
+      },
+      "queryRef": {
+        "kind": "query",
+        "queryId": "77e8c991-078f-4258-b96d-5287d37af947"
+      },
+      "visualOptions": {
+        "multipleYAxes": {
+          "base": {
+            "id": "-1",
+            "label": "",
+            "columns": [],
+            "yAxisMaximumValue": null,
+            "yAxisMinimumValue": null,
+            "yAxisScale": "linear",
+            "horizontalLines": []
+          },
+          "additional": [],
+          "showMultiplePanels": false
+        },
+        "hideLegend": false,
+        "legendLocation": "right",
+        "xColumnTitle": "",
+        "xColumn": null,
+        "yColumns": [
+          "Views"
+        ],
+        "seriesColumns": null,
+        "xAxisScale": "linear",
+        "verticalLine": "",
+        "crossFilterDisabled": false,
+        "drillthroughDisabled": false,
+        "crossFilter": [],
+        "drillthrough": [],
+        "selectedDataOnLoad": {
+          "all": true,
+          "limit": 10
+        },
+        "dataPointsTooltip": {
+          "all": false,
+          "limit": 1
+        }
+      }
+    },
+    {
+      "id": "415aed12-93a5-4b13-820c-be460c23e7b4",
+      "title": "Events by Location",
+      "visualType": "map",
+      "pageId": "85a9420d-d8f9-4850-b417-078eb48d75d6",
+      "layout": {
+        "x": 0,
+        "y": 20,
+        "width": 24,
+        "height": 15
+      },
+      "queryRef": {
+        "kind": "query",
+        "queryId": "51ae83bc-ba06-486d-a6ca-b44b72948ef9"
+      },
+      "visualOptions": {
+        "map__type": "bubble",
+        "map__latitudeColumn": "latitude",
+        "map__longitudeColumn": "longitude",
+        "map__labelColumn": "ItemType",
+        "map__sizeColumn": null,
+        "map__sizeDisabled": false,
+        "map__geoType": "numeric",
+        "map__geoPointColumn": null
+      }
+    }
+  ],
+  "baseQueries": [
+    {
+      "id": "952f73d4-42f8-42f2-b69d-b6a0c5ebc51f",
+      "queryId": "c09adb1c-1644-48da-af50-cced5a19cf25",
+      "variableName": "_capacityBase"
+    },
+    {
+      "id": "9949ad0c-33d5-4601-a4c6-31b22b2b2146",
+      "queryId": "f0e17fe2-a3de-45e2-be40-7fe29d450ddb",
+      "variableName": "_workspaceQuery"
+    },
+    {
+      "id": "0f580744-5476-4d92-9952-d068418a95d4",
+      "queryId": "a40a67d4-afa7-4899-b173-7e8658adb90c",
+      "variableName": "_tenantSettingBase"
+    },
+    {
+      "id": "95cbbaa9-f6e0-49b5-bbbb-a871c8aa917b",
+      "queryId": "617ce60e-7bdd-4fe9-b35f-2bc3e06d5110",
+      "variableName": "_activities"
+    }
+  ],
+  "parameters": [
+    {
+      "kind": "duration",
+      "id": "b5502e34-f456-4421-8006-f487e5896867",
+      "displayName": "Time range",
+      "description": "",
+      "beginVariableName": "_startTime",
+      "endVariableName": "_endTime",
+      "defaultValue": {
+        "kind": "dynamic",
+        "count": 1,
+        "unit": "hours"
+      },
+      "showOnPages": {
+        "kind": "selection",
+        "pageIds": [
+          "e5e21d78-33e3-471d-8e8b-57df0c3695fb",
+          "a1c59cad-7d9d-435a-b176-0a4cbaed8244",
+          "1c4f2529-4172-40aa-9d15-0847f70d4224",
+          "18e30e2b-75d2-4a6a-96af-33afe350a391",
+          "85a9420d-d8f9-4850-b417-078eb48d75d6"
+        ]
+      }
+    },
+    {
+      "kind": "string",
+      "id": "ed12ecb0-77dc-4cf9-885c-efe31a0cedb0",
+      "displayName": "Activity",
+      "description": "",
+      "variableName": "_activity",
+      "selectionType": "array",
+      "includeAllOption": true,
+      "defaultValue": {
+        "kind": "all"
+      },
+      "dataSource": {
+        "kind": "query",
+        "columns": {
+          "value": "Activity"
+        },
+        "queryRef": {
+          "kind": "query",
+          "queryId": "59a08a4a-4b7d-41b8-8950-11058cf28772"
+        },
+        "autoReset": true
+      },
+      "showOnPages": {
+        "kind": "all"
+      },
+      "allIsNull": false
+    }
+  ],
+  "dataSources": [
+    {
+      "kind": "kusto-trident",
+      "scopeId": "kusto-trident",
+      "clusterUri": "",
+      "database": "bd6dc6be-ec5f-a6d8-4389-cabd6b73c509",
+      "name": "Activity Events",
+      "id": "dd58a502-08f8-44cb-848e-832d94d1de53",
+      "workspace": "00000000-0000-0000-0000-000000000000"
+    }
+  ],
+  "pages": [
+    {
+      "name": "Activities Overview",
+      "id": "85a9420d-d8f9-4850-b417-078eb48d75d6"
+    }
+  ],
+  "queries": [
+    {
+      "dataSource": {
+        "kind": "inline",
+        "dataSourceId": "dd58a502-08f8-44cb-848e-832d94d1de53"
+      },
+      "text": "_activities\n| summarize Activities=count() by Activity\n| top 10 by Activities",
+      "id": "133b91fc-0de4-444e-9be3-f3a5efe9783f",
+      "usedVariables": [
+        "_activities"
+      ]
+    },
+    {
+      "dataSource": {
+        "kind": "inline",
+        "dataSourceId": "dd58a502-08f8-44cb-848e-832d94d1de53"
+      },
+      "text": "// let _workspaces = _workspaceQuery |project id;\nlet _timespan = case(\n    _endTime - _startTime >= timespan(730d), timespan(1d),\n    _endTime - _startTime >= timespan(365d), timespan(1d),\n    _endTime - _startTime >= timespan(60d), timespan(1d),\n    _endTime - _startTime >= timespan(14d), timespan(6h),\n    _endTime - _startTime >= timespan(1d), timespan(30m),\n    timespan(1m)\n);\n_activities\n// | summarize Acitivities=count() by bin(CreationTime,_timespan), Activity\n| make-series Acitivities=count() on CreationTime step _timespan by Activity\n| top 20 by array_length(Acitivities)",
+      "id": "3ac5ba3a-ca1f-481d-a310-c35e3a11d9f9",
+      "usedVariables": [
+        "_activities",
+        "_endTime",
+        "_startTime"
+      ]
+    },
+    {
+      "dataSource": {
+        "kind": "inline",
+        "dataSourceId": "dd58a502-08f8-44cb-848e-832d94d1de53"
+      },
+      "text": "let _timespan = case(\n    _endTime - _startTime >= timespan(730d), timespan(1d),\n    _endTime - _startTime >= timespan(365d), timespan(1d),\n    _endTime - _startTime >= timespan(60d), timespan(6h),\n    _endTime - _startTime >= timespan(14d), timespan(1h),\n    _endTime - _startTime >= timespan(1d), timespan(30m),\n    timespan(1m)\n);\nItemsViews(_endTime - _startTime)\n| summarize Views=count() by ItemType,bin(CreationTime,_timespan)",
+      "id": "77e8c991-078f-4258-b96d-5287d37af947",
+      "usedVariables": [
+        "_endTime",
+        "_startTime"
+      ]
+    },
+    {
+      "dataSource": {
+        "kind": "inline",
+        "dataSourceId": "dd58a502-08f8-44cb-848e-832d94d1de53"
+      },
+      "text": "ItemsViews(_endTime - _startTime)\n| project IPLocation=geo_info_from_ip_address(tostring(details.ClientIP)), ItemType\n| project latitude=toreal(IPLocation.latitude), longitude=toreal(IPLocation.longitude), ItemType\n| summarize Events=count() by latitude,longitude,ItemType\n| where isnotempty( latitude) or isnotempty(longitude)",
+      "id": "51ae83bc-ba06-486d-a6ca-b44b72948ef9",
+      "usedVariables": [
+        "_endTime",
+        "_startTime"
+      ]
+    },
+    {
+      "id": "c09adb1c-1644-48da-af50-cced5a19cf25",
+      "dataSource": {
+        "kind": "inline",
+        "dataSourceId": "8a9a70d8-02b9-4236-85be-90fa83a60c8e"
+      },
+      "text": "Capacities\n| where CapacityId in (_capacities)\n| where Sku in (_capacityType)",
+      "usedVariables": [
+        "_capacities",
+        "_capacityType"
+      ]
+    },
+    {
+      "id": "f0e17fe2-a3de-45e2-be40-7fe29d450ddb",
+      "dataSource": {
+        "kind": "inline",
+        "dataSourceId": "8a9a70d8-02b9-4236-85be-90fa83a60c8e"
+      },
+      "text": "let _wsId = Items | where itemType in (_itemType) | summarize by workspaceId;\nWorkspaces\n| where id in (_wsId)\n| where isOnDedicatedCapacity in (_isOnCapacity)\n    and type in (_type)\n    and name contains _workspaceName\n    and state in (_state)\n    and case(\n        isnotempty(_workspaceName) and isnotempty(_workspaceNameExact), id in (_workspaceNameExact),\n        true\n    )\n| where iff(\n    false in (_isOnCapacity),\n    isempty(capacityId) or capacityId in (_capacities),\n    capacityId in (_capacities)\n    )",
+      "usedVariables": [
+        "_capacities",
+        "_isOnCapacity",
+        "_itemType",
+        "_state",
+        "_type",
+        "_workspaceName",
+        "_workspaceNameExact"
+      ]
+    },
+    {
+      "id": "a40a67d4-afa7-4899-b173-7e8658adb90c",
+      "dataSource": {
+        "kind": "inline",
+        "dataSourceId": "8a9a70d8-02b9-4236-85be-90fa83a60c8e"
+      },
+      "text": "TenantSettings\n| where Enabled in (_tenantSettingEnabled)",
+      "usedVariables": [
+        "_tenantSettingEnabled"
+      ]
+    },
+    {
+      "id": "617ce60e-7bdd-4fe9-b35f-2bc3e06d5110",
+      "dataSource": {
+        "kind": "inline",
+        "dataSourceId": "dd58a502-08f8-44cb-848e-832d94d1de53"
+      },
+      "text": "ActivityEvents\n| where CreationTime between (_startTime .. _endTime)\n| where Activity in (_activity)",
+      "usedVariables": [
+        "_activity",
+        "_endTime",
+        "_startTime"
+      ]
+    },
+    {
+      "dataSource": {
+        "kind": "inline",
+        "dataSourceId": "dd58a502-08f8-44cb-848e-832d94d1de53"
+      },
+      "text": "ActivityEvents\n| where CreationTime between (_startTime .. _endTime)\n| summarize by Activity\n| order by Activity asc ",
+      "id": "59a08a4a-4b7d-41b8-8950-11058cf28772",
+      "usedVariables": [
+        "_endTime",
+        "_startTime"
+      ]
+    }
+  ]
+}

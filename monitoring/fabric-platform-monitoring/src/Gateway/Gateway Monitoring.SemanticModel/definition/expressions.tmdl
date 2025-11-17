@@ -1,0 +1,54 @@
+/// URL od the Eventhouse Cluster
+expression KustoURL = "kusto_query_uri" meta [IsParameterQuery=true, Type="Text", IsParameterQueryRequired=true]
+	lineageTag: 69a90fe3-c582-4c20-a98b-0b4930d995c4
+	queryGroup: Parameters
+
+	annotation PBI_NavigationStepName = Navigation
+
+	annotation PBI_ResultType = Text
+
+/// Name of the KQL DB
+expression KustoDB = "Gateway Monitoring" meta [IsParameterQuery = true, IsParameterQueryRequired = true, Type = "Text"]
+	lineageTag: add3430a-6ad1-4ba5-a95a-7fe358e5dcb6
+	queryGroup: Parameters
+
+	annotation PBI_NavigationStepName = Navigation
+
+	annotation PBI_ResultType = Text
+
+expression DaysBack = null meta [IsParameterQuery=true, Type="Number", IsParameterQueryRequired=false]
+	lineageTag: f27daff9-939a-4920-b526-c1094ddcef00
+	queryGroup: Parameters
+	parameterValuesColumn: Period.'Days Back'
+
+	annotation PBI_NavigationStepName = Navigation
+
+	annotation PBI_ResultType = Null
+
+expression DateToSearch = null meta [IsParameterQuery=true, Type="DateTime", IsParameterQueryRequired=false]
+	lineageTag: 5b4a36ca-20f6-410c-9dae-33c164f5c0e1
+	queryGroup: Parameters
+	parameterValuesColumn: Calendar.Date
+
+	annotation PBI_NavigationStepName = Navigation
+
+	annotation PBI_ResultType = Null
+
+expression SelectedGateways = null meta [IsParameterQuery=true, Type="Text", IsParameterQueryRequired=false]
+	lineageTag: b01fd9ab-b809-4514-9708-c7c91f887853
+	queryGroup: Parameters
+	parameterValuesColumn: 'Gateway Node Info'.'Node Name'
+
+	annotation PBI_NavigationStepName = Navigation
+
+	annotation PBI_ResultType = Null
+
+expression SelectedClusters = null meta [IsParameterQuery=true, Type="Text", IsParameterQueryRequired=false]
+	lineageTag: f2fadb58-bb52-4861-af2c-785979ea0fad
+	queryGroup: Parameters
+	parameterValuesColumn: 'Gateway Node Info'.'Cluster Name'
+
+	annotation PBI_NavigationStepName = Navigation
+
+	annotation PBI_ResultType = Null
+

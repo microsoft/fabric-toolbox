@@ -1,0 +1,997 @@
+{
+  "schema_version": "60",
+  "pagesNavWidth": 287.33331298828125,
+  "autoRefresh": {
+    "enabled": true,
+    "defaultInterval": "30s"
+  },
+  "tiles": [
+    {
+      "id": "2f8141f2-99ce-4140-8523-af89658a8dd7",
+      "title": "Gateways and Number of Nodes",
+      "visualType": "pie",
+      "pageId": "e5e21d78-33e3-471d-8e8b-57df0c3695fb",
+      "layout": {
+        "x": 3,
+        "y": 0,
+        "width": 10,
+        "height": 9
+      },
+      "queryRef": {
+        "kind": "query",
+        "queryId": "e248ec4c-593c-4242-b994-ec2ee54f2e85"
+      },
+      "visualOptions": {
+        "hideLegend": true,
+        "legendLocation": "bottom",
+        "xColumn": "Status",
+        "yColumns": [
+          "Jobs"
+        ],
+        "seriesColumns": null,
+        "crossFilterDisabled": false,
+        "drillthroughDisabled": false,
+        "labelDisabled": false,
+        "pie__label": [
+          "name",
+          "percentage"
+        ],
+        "tooltipDisabled": false,
+        "pie__tooltip": [
+          "name",
+          "percentage",
+          "value"
+        ],
+        "pie__orderBy": "size",
+        "pie__kind": "donut",
+        "pie__topNSlices": null,
+        "crossFilter": [
+          {
+            "interaction": "column",
+            "property": "gatewayId",
+            "parameterId": "4d82042a-0b81-4bf1-8896-1a5479b627b4",
+            "disabled": false
+          }
+        ],
+        "drillthrough": []
+      }
+    },
+    {
+      "id": "801c3839-161a-406f-8f96-5ec82f4d1103",
+      "title": "Gateways Status",
+      "visualType": "table",
+      "pageId": "e5e21d78-33e3-471d-8e8b-57df0c3695fb",
+      "layout": {
+        "x": 0,
+        "y": 9,
+        "width": 24,
+        "height": 6
+      },
+      "queryRef": {
+        "kind": "query",
+        "queryId": "db24d4ff-3969-41fd-b5aa-6a99a16677b3"
+      },
+      "visualOptions": {
+        "table__enableRenderLinks": true,
+        "colorRulesDisabled": false,
+        "colorStyle": "light",
+        "crossFilterDisabled": false,
+        "drillthroughDisabled": false,
+        "crossFilter": [
+          {
+            "interaction": "column",
+            "property": "Gateway Id",
+            "parameterId": "4d82042a-0b81-4bf1-8896-1a5479b627b4",
+            "disabled": false
+          },
+          {
+            "interaction": "column",
+            "property": "Node Id",
+            "parameterId": "11906270-ffb7-479c-b354-23ea2df05aa6",
+            "disabled": false
+          }
+        ],
+        "drillthrough": [],
+        "table__renderLinks": [],
+        "colorRules": [
+          {
+            "id": "c570f46e-7801-4238-a702-cc07e31157c2",
+            "ruleType": "colorByCondition",
+            "applyToColumn": "Responding",
+            "hideText": true,
+            "applyTo": "cells",
+            "conditions": [
+              {
+                "operator": "==",
+                "column": "Responding",
+                "values": [
+                  "true"
+                ]
+              }
+            ],
+            "chainingOperator": "and",
+            "colorStyle": "bold",
+            "color": "green",
+            "tag": "",
+            "icon": "completed",
+            "ruleName": "",
+            "visualType": "table"
+          },
+          {
+            "id": "611d71fc-821e-4c4a-ba30-bb67a42a3f40",
+            "ruleType": "colorByCondition",
+            "applyToColumn": null,
+            "hideText": true,
+            "applyTo": "cells",
+            "conditions": [
+              {
+                "operator": "==",
+                "column": "Responding",
+                "values": [
+                  "false"
+                ]
+              }
+            ],
+            "chainingOperator": "and",
+            "colorStyle": "bold",
+            "color": "yellow",
+            "tag": "",
+            "icon": "warning",
+            "ruleName": "",
+            "visualType": "table"
+          }
+        ]
+      }
+    },
+    {
+      "id": "4f186691-fb7c-44e8-afa3-1966b2496049",
+      "title": "Nodes",
+      "visualType": "card",
+      "pageId": "e5e21d78-33e3-471d-8e8b-57df0c3695fb",
+      "layout": {
+        "x": 0,
+        "y": 0,
+        "width": 3,
+        "height": 3
+      },
+      "queryRef": {
+        "kind": "query",
+        "queryId": "2d7dadee-7a32-4299-9f93-ff23ea5ce008"
+      },
+      "visualOptions": {
+        "multiStat__textSize": "auto",
+        "multiStat__valueColumn": null,
+        "colorRulesDisabled": false,
+        "colorStyle": "light",
+        "colorRules": []
+      }
+    },
+    {
+      "id": "55d15e19-5bd8-4d3a-a65d-144e41b807fe",
+      "title": "Queries",
+      "visualType": "card",
+      "pageId": "e5e21d78-33e3-471d-8e8b-57df0c3695fb",
+      "layout": {
+        "x": 0,
+        "y": 6,
+        "width": 3,
+        "height": 3
+      },
+      "queryRef": {
+        "kind": "query",
+        "queryId": "b9a46c57-740e-46f7-897a-6179cd4d9106"
+      },
+      "visualOptions": {
+        "multiStat__textSize": "auto",
+        "multiStat__valueColumn": null,
+        "colorRulesDisabled": false,
+        "colorStyle": "light",
+        "colorRules": []
+      }
+    },
+    {
+      "id": "2a0c43a5-8ffb-4daf-8357-34d72544d3f1",
+      "title": "Jobs",
+      "visualType": "card",
+      "pageId": "e5e21d78-33e3-471d-8e8b-57df0c3695fb",
+      "layout": {
+        "x": 0,
+        "y": 3,
+        "width": 3,
+        "height": 3
+      },
+      "queryRef": {
+        "kind": "query",
+        "queryId": "8ec4ef70-ede4-4ac6-8057-ae496c18e886"
+      },
+      "visualOptions": {
+        "multiStat__textSize": "auto",
+        "multiStat__valueColumn": null,
+        "colorRulesDisabled": false,
+        "colorStyle": "light",
+        "colorRules": []
+      }
+    },
+    {
+      "id": "c2b7a1f5-c7db-42fe-ba9c-91e679953d51",
+      "title": "Jobs Summary",
+      "visualType": "table",
+      "pageId": "e5e21d78-33e3-471d-8e8b-57df0c3695fb",
+      "layout": {
+        "x": 13,
+        "y": 0,
+        "width": 11,
+        "height": 9
+      },
+      "queryRef": {
+        "kind": "query",
+        "queryId": "1f96b0c8-572a-4c32-9306-83fa24f85ccf"
+      },
+      "visualOptions": {
+        "table__enableRenderLinks": true,
+        "colorRulesDisabled": false,
+        "colorStyle": "light",
+        "crossFilterDisabled": false,
+        "drillthroughDisabled": false,
+        "crossFilter": [],
+        "drillthrough": [],
+        "table__renderLinks": [],
+        "colorRules": [
+          {
+            "id": "d32f98a5-f9fb-4804-94c2-a5c9dd5b478e",
+            "ruleType": "colorByCondition",
+            "applyToColumn": null,
+            "hideText": true,
+            "applyTo": "cells",
+            "conditions": [
+              {
+                "operator": "==",
+                "column": "Status",
+                "values": [
+                  "Success"
+                ]
+              }
+            ],
+            "chainingOperator": "and",
+            "colorStyle": "bold",
+            "color": "green",
+            "tag": "",
+            "icon": "completed",
+            "ruleName": "",
+            "visualType": "table"
+          },
+          {
+            "id": "7e661e41-2338-423c-8e6d-4cf7639a0982",
+            "ruleType": "colorByCondition",
+            "applyToColumn": null,
+            "hideText": true,
+            "applyTo": "cells",
+            "conditions": [
+              {
+                "operator": "==",
+                "column": "Status",
+                "values": [
+                  "Failed"
+                ]
+              }
+            ],
+            "chainingOperator": "and",
+            "colorStyle": "bold",
+            "color": "red",
+            "tag": "",
+            "icon": "warning",
+            "ruleName": "",
+            "visualType": "table"
+          },
+          {
+            "id": "65c6f90c-70fd-411d-9be8-c11015f0f4c5",
+            "ruleType": "colorByCondition",
+            "applyToColumn": null,
+            "hideText": true,
+            "applyTo": "cells",
+            "conditions": [
+              {
+                "operator": "==",
+                "column": "Status",
+                "values": [
+                  "In Progress"
+                ]
+              }
+            ],
+            "chainingOperator": "and",
+            "colorStyle": "bold",
+            "color": "blue",
+            "tag": "",
+            "icon": "contrast",
+            "ruleName": "",
+            "visualType": "table"
+          }
+        ]
+      }
+    }
+  ],
+  "baseQueries": [
+    {
+      "id": "952f73d4-42f8-42f2-b69d-b6a0c5ebc51f",
+      "queryId": "c09adb1c-1644-48da-af50-cced5a19cf25",
+      "variableName": "_capacityBase"
+    },
+    {
+      "id": "9949ad0c-33d5-4601-a4c6-31b22b2b2146",
+      "queryId": "f0e17fe2-a3de-45e2-be40-7fe29d450ddb",
+      "variableName": "_workspaceQuery"
+    },
+    {
+      "id": "6d9c96a4-2f14-4b18-83be-97d03aba25e5",
+      "queryId": "4d717879-3c09-4078-8afa-f03196247f21",
+      "variableName": "_capacitySummary"
+    },
+    {
+      "id": "b22e8769-a5b4-4c82-96e7-255683472388",
+      "queryId": "24a09133-bec6-4998-bc00-69da895bf0c4",
+      "variableName": "_capacityOperations"
+    },
+    {
+      "id": "e6462eac-5869-4e16-a455-e5fa13d47f1a",
+      "queryId": "c195089f-b0a8-4162-84b8-f25800a72489",
+      "variableName": "_gatewayBase"
+    },
+    {
+      "id": "d9fb4447-5ee4-49c8-a11e-12de95032f7d",
+      "queryId": "66aa00f1-de1e-405f-bfe4-da5de321ddb0",
+      "variableName": "_gatewayNodesBase"
+    },
+    {
+      "id": "32792e80-2721-4880-9724-3d31840cfbc2",
+      "queryId": "86ee3ae4-8d95-42a4-ac43-aab89680d5ed",
+      "variableName": "_queriesBase"
+    },
+    {
+      "id": "0f580744-5476-4d92-9952-d068418a95d4",
+      "queryId": "a40a67d4-afa7-4899-b173-7e8658adb90c",
+      "variableName": "_tenantSettingBase"
+    }
+  ],
+  "parameters": [
+    {
+      "kind": "string",
+      "id": "bb8c5d1f-d6c8-41e4-a275-19b4fe180abf",
+      "displayName": "Workspace Type",
+      "description": "",
+      "variableName": "_type",
+      "selectionType": "array",
+      "includeAllOption": true,
+      "defaultValue": {
+        "kind": "values",
+        "values": [
+          "Workspace"
+        ]
+      },
+      "dataSource": {
+        "kind": "static",
+        "values": [
+          {
+            "value": "Workspace"
+          },
+          {
+            "displayText": "Personal Workspaces",
+            "value": "Personal"
+          },
+          {
+            "displayText": "Admin Workspace",
+            "value": "AdminWorkspace"
+          }
+        ]
+      },
+      "showOnPages": {
+        "kind": "selection",
+        "pageIds": [
+          "18e30e2b-75d2-4a6a-96af-33afe350a391",
+          "1c4f2529-4172-40aa-9d15-0847f70d4224",
+          "a1c59cad-7d9d-435a-b176-0a4cbaed8244"
+        ]
+      },
+      "allIsNull": false
+    },
+    {
+      "kind": "string",
+      "id": "4ab33326-30b4-4848-b859-e46a6b468958",
+      "displayName": "Workspace State",
+      "description": "",
+      "variableName": "_state",
+      "selectionType": "array",
+      "includeAllOption": true,
+      "defaultValue": {
+        "kind": "values",
+        "values": [
+          "Active"
+        ]
+      },
+      "dataSource": {
+        "kind": "static",
+        "values": [
+          {
+            "value": "Active"
+          },
+          {
+            "value": "Deleted"
+          }
+        ]
+      },
+      "showOnPages": {
+        "kind": "selection",
+        "pageIds": [
+          "18e30e2b-75d2-4a6a-96af-33afe350a391",
+          "1c4f2529-4172-40aa-9d15-0847f70d4224",
+          "a1c59cad-7d9d-435a-b176-0a4cbaed8244"
+        ]
+      },
+      "allIsNull": false
+    },
+    {
+      "kind": "string",
+      "selectionType": "freetext",
+      "id": "76eeb2c3-ac8f-47a3-a121-231100464801",
+      "displayName": "Workspace Name",
+      "variableName": "_workspaceName",
+      "description": "",
+      "defaultValue": {
+        "kind": "all"
+      },
+      "showOnPages": {
+        "kind": "selection",
+        "pageIds": [
+          "18e30e2b-75d2-4a6a-96af-33afe350a391"
+        ]
+      }
+    },
+    {
+      "kind": "string",
+      "id": "c679ed27-182d-4448-b3c5-b0f5a57eaaf0",
+      "displayName": "Workspace Name Exact (Limit 1000)",
+      "description": "",
+      "variableName": "_workspaceNameExact",
+      "selectionType": "array",
+      "includeAllOption": true,
+      "defaultValue": {
+        "kind": "all"
+      },
+      "dataSource": {
+        "kind": "query",
+        "columns": {
+          "value": "id",
+          "label": "name"
+        },
+        "queryRef": {
+          "kind": "query",
+          "queryId": "430479e6-69ae-4a84-b5bb-46b8bcffb4f7"
+        },
+        "autoReset": true
+      },
+      "showOnPages": {
+        "kind": "selection",
+        "pageIds": [
+          "18e30e2b-75d2-4a6a-96af-33afe350a391"
+        ]
+      }
+    },
+    {
+      "kind": "bool",
+      "id": "89826f28-e5db-446c-a9b7-5ac75de16d7e",
+      "displayName": "Is On Capacity",
+      "description": "",
+      "variableName": "_isOnCapacity",
+      "selectionType": "array",
+      "includeAllOption": true,
+      "defaultValue": {
+        "kind": "all"
+      },
+      "dataSource": {
+        "kind": "static",
+        "values": [
+          {
+            "value": true
+          },
+          {
+            "value": false
+          }
+        ]
+      },
+      "showOnPages": {
+        "kind": "selection",
+        "pageIds": [
+          "18e30e2b-75d2-4a6a-96af-33afe350a391"
+        ]
+      },
+      "allIsNull": false
+    },
+    {
+      "kind": "string",
+      "id": "cc0f1e7c-ce27-4119-8af9-aef51bd5b588",
+      "displayName": "Capacity Sku",
+      "description": "",
+      "variableName": "_capacityType",
+      "selectionType": "array",
+      "includeAllOption": true,
+      "defaultValue": {
+        "kind": "all"
+      },
+      "dataSource": {
+        "kind": "query",
+        "columns": {
+          "value": "Sku"
+        },
+        "queryRef": {
+          "kind": "query",
+          "queryId": "5710b390-579e-4d9c-b636-744f4da0e879"
+        },
+        "autoReset": true
+      },
+      "showOnPages": {
+        "kind": "selection",
+        "pageIds": [
+          "1c4f2529-4172-40aa-9d15-0847f70d4224",
+          "18e30e2b-75d2-4a6a-96af-33afe350a391",
+          "a1c59cad-7d9d-435a-b176-0a4cbaed8244"
+        ]
+      },
+      "allIsNull": false
+    },
+    {
+      "kind": "string",
+      "id": "606524c1-03d6-44c4-9646-c463f112007c",
+      "displayName": "Capacity",
+      "description": "",
+      "variableName": "_capacities",
+      "selectionType": "array",
+      "includeAllOption": true,
+      "defaultValue": {
+        "kind": "all"
+      },
+      "dataSource": {
+        "kind": "query",
+        "columns": {
+          "value": "CapacityId",
+          "label": "CapacityName"
+        },
+        "queryRef": {
+          "kind": "query",
+          "queryId": "83eb2ef4-88ac-4ba3-8e10-19327bcd5a3d"
+        },
+        "autoReset": true
+      },
+      "showOnPages": {
+        "kind": "selection",
+        "pageIds": [
+          "1c4f2529-4172-40aa-9d15-0847f70d4224",
+          "18e30e2b-75d2-4a6a-96af-33afe350a391",
+          "a1c59cad-7d9d-435a-b176-0a4cbaed8244"
+        ]
+      },
+      "allIsNull": false
+    },
+    {
+      "kind": "duration",
+      "id": "b5502e34-f456-4421-8006-f487e5896867",
+      "displayName": "Time range",
+      "description": "",
+      "beginVariableName": "_startTime",
+      "endVariableName": "_endTime",
+      "defaultValue": {
+        "kind": "dynamic",
+        "count": 1,
+        "unit": "hours"
+      },
+      "showOnPages": {
+        "kind": "selection",
+        "pageIds": [
+          "e5e21d78-33e3-471d-8e8b-57df0c3695fb",
+          "a1c59cad-7d9d-435a-b176-0a4cbaed8244",
+          "1c4f2529-4172-40aa-9d15-0847f70d4224",
+          "18e30e2b-75d2-4a6a-96af-33afe350a391"
+        ]
+      }
+    },
+    {
+      "kind": "string",
+      "id": "4d82042a-0b81-4bf1-8896-1a5479b627b4",
+      "displayName": "Gateways",
+      "description": "",
+      "variableName": "_gateways",
+      "selectionType": "array",
+      "includeAllOption": true,
+      "defaultValue": {
+        "kind": "all"
+      },
+      "dataSource": {
+        "kind": "query",
+        "columns": {
+          "value": "gatewayId",
+          "label": "gatewayName"
+        },
+        "queryRef": {
+          "kind": "query",
+          "queryId": "788fb926-4efb-4676-8366-0f2635c7e9c3"
+        }
+      },
+      "showOnPages": {
+        "kind": "selection",
+        "pageIds": [
+          "e5e21d78-33e3-471d-8e8b-57df0c3695fb"
+        ]
+      },
+      "allIsNull": false
+    },
+    {
+      "kind": "string",
+      "id": "11906270-ffb7-479c-b354-23ea2df05aa6",
+      "displayName": "Gateway Nodes",
+      "description": "",
+      "variableName": "_gatewayNodes",
+      "selectionType": "array",
+      "includeAllOption": true,
+      "defaultValue": {
+        "kind": "all"
+      },
+      "dataSource": {
+        "kind": "query",
+        "columns": {
+          "value": "memberId",
+          "label": "memberName"
+        },
+        "queryRef": {
+          "kind": "query",
+          "queryId": "f752b78f-54e2-408f-b6bd-17d03d40f2b5"
+        },
+        "autoReset": true
+      },
+      "showOnPages": {
+        "kind": "selection",
+        "pageIds": [
+          "e5e21d78-33e3-471d-8e8b-57df0c3695fb"
+        ]
+      },
+      "allIsNull": false
+    },
+    {
+      "kind": "bool",
+      "id": "325d6c8c-af01-422b-981e-5e158f99b29b",
+      "displayName": "Tenant Setting State",
+      "description": "",
+      "variableName": "_tenantSettingEnabled",
+      "selectionType": "array",
+      "includeAllOption": true,
+      "defaultValue": {
+        "kind": "all"
+      },
+      "dataSource": {
+        "kind": "static",
+        "values": [
+          {
+            "value": true
+          },
+          {
+            "value": false
+          }
+        ]
+      },
+      "showOnPages": {
+        "kind": "selection",
+        "pageIds": [
+          "1de25296-8923-4f37-a572-d81d3a261f5a"
+        ]
+      },
+      "allIsNull": false
+    },
+    {
+      "kind": "datetime",
+      "id": "3346818d-6cc9-4d5a-b49a-f200723c9627",
+      "displayName": "Date",
+      "description": "",
+      "variableName": "_date",
+      "selectionType": "scalar",
+      "includeAllOption": false,
+      "defaultValue": {
+        "kind": "query-result"
+      },
+      "dataSource": {
+        "kind": "query",
+        "columns": {
+          "value": "scanTime"
+        },
+        "queryRef": {
+          "kind": "query",
+          "queryId": "b85f210a-0218-4b3d-af67-255b5fe65f64"
+        }
+      },
+      "showOnPages": {
+        "kind": "selection",
+        "pageIds": [
+          "1de25296-8923-4f37-a572-d81d3a261f5a"
+        ]
+      }
+    },
+    {
+      "kind": "string",
+      "id": "34e75136-fe42-4819-bbed-a38401e18a0a",
+      "displayName": "Item Type",
+      "description": "",
+      "variableName": "_itemType",
+      "selectionType": "array",
+      "includeAllOption": true,
+      "defaultValue": {
+        "kind": "all"
+      },
+      "dataSource": {
+        "kind": "query",
+        "columns": {
+          "value": "itemType"
+        },
+        "queryRef": {
+          "kind": "query",
+          "queryId": "0541e32c-be34-4891-b047-18f7def8410b"
+        },
+        "autoReset": true
+      },
+      "showOnPages": {
+        "kind": "all"
+      },
+      "allIsNull": false
+    }
+  ],
+  "dataSources": [
+    {
+      "kind": "kusto-trident",
+      "scopeId": "kusto-trident",
+      "clusterUri": "",
+      "database": "476e80c9-35ca-afd8-4b01-94875b5a2475",
+      "name": "PlatformMonitoring",
+      "id": "8a9a70d8-02b9-4236-85be-90fa83a60c8e",
+      "workspace": "00000000-0000-0000-0000-000000000000"
+    }
+  ],
+  "pages": [
+    {
+      "name": "Gateway Summary",
+      "id": "e5e21d78-33e3-471d-8e8b-57df0c3695fb"
+    }
+  ],
+  "queries": [
+    {
+      "dataSource": {
+        "kind": "inline",
+        "dataSourceId": "8a9a70d8-02b9-4236-85be-90fa83a60c8e"
+      },
+      "text": "_queriesBase\n| extend Status = case(\n    Success == \"Y\", \"Success\",\n    Success == \"N\", \"Failed\",\n    \"In Progress\"\n)\n| summarize Jobs=count() by Status\n| order by Jobs",
+      "id": "e248ec4c-593c-4242-b994-ec2ee54f2e85",
+      "usedVariables": [
+        "_queriesBase"
+      ]
+    },
+    {
+      "dataSource": {
+        "kind": "inline",
+        "dataSourceId": "8a9a70d8-02b9-4236-85be-90fa83a60c8e"
+      },
+      "text": "_gatewayNodesBase\n| join GatewayNodeInfo on $left.memberId == $right.nodeId\n| join GatewaysHeartbeat on $left.memberId == $right.GatewayId\n| summarize arg_max(ServerTimestampUTC, *) by GatewayId\n| project\n    Responding=\n    case(\n    ServerTimestampUTC < ago(10s),\n    false,\n    Responding\n),\n    ['Gateway Name'] = gatewayName, ['Gateway Id']=gatewayId,\n    ['Node Name']=memberName, ['Node Id']=memberId,\n    ['Gateway Version']=version1,\n    ['Last Heartbeat Time']=ServerTimestampUTC,\n    ['Node Cores']=cores,\n    ['Node Memory']=round(memoryGb,0),\n    ['OS Name']=osName,\n    ['OS Version']=osVersion",
+      "id": "db24d4ff-3969-41fd-b5aa-6a99a16677b3",
+      "usedVariables": [
+        "_gatewayNodesBase"
+      ]
+    },
+    {
+      "dataSource": {
+        "kind": "inline",
+        "dataSourceId": "8a9a70d8-02b9-4236-85be-90fa83a60c8e"
+      },
+      "text": "_gatewayNodesBase\n| summarize ['Nodes']=count()",
+      "id": "2d7dadee-7a32-4299-9f93-ff23ea5ce008",
+      "usedVariables": [
+        "_gatewayNodesBase"
+      ]
+    },
+    {
+      "dataSource": {
+        "kind": "inline",
+        "dataSourceId": "8a9a70d8-02b9-4236-85be-90fa83a60c8e"
+      },
+      "text": "_queriesBase\n| count ",
+      "id": "b9a46c57-740e-46f7-897a-6179cd4d9106",
+      "usedVariables": [
+        "_queriesBase"
+      ]
+    },
+    {
+      "dataSource": {
+        "kind": "inline",
+        "dataSourceId": "8a9a70d8-02b9-4236-85be-90fa83a60c8e"
+      },
+      "text": "_queriesBase\n| summarize count_distinct(RequestId)",
+      "id": "8ec4ef70-ede4-4ac6-8057-ae496c18e886",
+      "usedVariables": [
+        "_queriesBase"
+      ]
+    },
+    {
+      "dataSource": {
+        "kind": "inline",
+        "dataSourceId": "8a9a70d8-02b9-4236-85be-90fa83a60c8e"
+      },
+      "text": "_queriesBase\n| summarize min(QueryExecutionStartTimeUTC), max(QueryExecutionEndTimeUTC), Progress=countif(isempty(Success)),count(), Successes=countif(Success == \"Y\") by RequestId\n| project ['Start Time']=min_QueryExecutionStartTimeUTC,\n['End Time']=iff(Progress > 0, datetime(null), max_QueryExecutionEndTimeUTC),\n['Duration']=totimespan(max_QueryExecutionEndTimeUTC - min_QueryExecutionStartTimeUTC),\nStatus = case(\n    Progress > 0, \"In Progress\",\n    Successes==count_, \"Success\",\n    \"Failed\"\n)\n| order by ['Start Time']",
+      "id": "1f96b0c8-572a-4c32-9306-83fa24f85ccf",
+      "usedVariables": [
+        "_queriesBase"
+      ]
+    },
+    {
+      "id": "c09adb1c-1644-48da-af50-cced5a19cf25",
+      "dataSource": {
+        "kind": "inline",
+        "dataSourceId": "8a9a70d8-02b9-4236-85be-90fa83a60c8e"
+      },
+      "text": "Capacities\n| where CapacityId in (_capacities)\n| where Sku in (_capacityType)",
+      "usedVariables": [
+        "_capacities",
+        "_capacityType"
+      ]
+    },
+    {
+      "id": "f0e17fe2-a3de-45e2-be40-7fe29d450ddb",
+      "dataSource": {
+        "kind": "inline",
+        "dataSourceId": "8a9a70d8-02b9-4236-85be-90fa83a60c8e"
+      },
+      "text": "let _wsId = Items | where itemType in (_itemType) | summarize by workspaceId;\nWorkspaces\n| where id in (_wsId)\n| where isOnDedicatedCapacity in (_isOnCapacity)\n    and type in (_type)\n    and name contains _workspaceName\n    and state in (_state)\n    and case(\n        isnotempty(_workspaceName) and isnotempty(_workspaceNameExact), id in (_workspaceNameExact),\n        true\n    )\n| where iff(\n    false in (_isOnCapacity),\n    isempty(capacityId) or capacityId in (_capacities),\n    capacityId in (_capacities)\n    )",
+      "usedVariables": [
+        "_capacities",
+        "_isOnCapacity",
+        "_itemType",
+        "_state",
+        "_type",
+        "_workspaceName",
+        "_workspaceNameExact"
+      ]
+    },
+    {
+      "id": "4d717879-3c09-4078-8afa-f03196247f21",
+      "dataSource": {
+        "kind": "inline",
+        "dataSourceId": "8a9a70d8-02b9-4236-85be-90fa83a60c8e"
+      },
+      "text": "CapacitySummary\n| where windowStartTime between (_startTime .. _endTime)\n| where capacityId in (_capacities)\n| lookup Capacities on $left.capacityId == $right.CapacityId",
+      "usedVariables": [
+        "_capacities",
+        "_endTime",
+        "_startTime"
+      ]
+    },
+    {
+      "id": "24a09133-bec6-4998-bc00-69da895bf0c4",
+      "dataSource": {
+        "kind": "inline",
+        "dataSourceId": "8a9a70d8-02b9-4236-85be-90fa83a60c8e"
+      },
+      "text": "CapacityOperations\n| where windowStartTime  between (_startTime .. _endTime)\n| where capacityId in (_capacities)\n| lookup Capacities on $left.capacityId == $right.CapacityId",
+      "usedVariables": [
+        "_capacities",
+        "_endTime",
+        "_startTime"
+      ]
+    },
+    {
+      "id": "c195089f-b0a8-4162-84b8-f25800a72489",
+      "dataSource": {
+        "kind": "inline",
+        "dataSourceId": "8a9a70d8-02b9-4236-85be-90fa83a60c8e"
+      },
+      "text": "Gateways\n| where gatewayId in (_gateways)",
+      "usedVariables": [
+        "_gateways"
+      ]
+    },
+    {
+      "id": "66aa00f1-de1e-405f-bfe4-da5de321ddb0",
+      "dataSource": {
+        "kind": "inline",
+        "dataSourceId": "8a9a70d8-02b9-4236-85be-90fa83a60c8e"
+      },
+      "text": "GatewayMembers\n| where memberId in (_gatewayNodes)\n| lookup Gateways on $left.gatewayId == $right.gatewayId",
+      "usedVariables": [
+        "_gatewayNodes"
+      ]
+    },
+    {
+      "id": "86ee3ae4-8d95-42a4-ac43-aab89680d5ed",
+      "dataSource": {
+        "kind": "inline",
+        "dataSourceId": "8a9a70d8-02b9-4236-85be-90fa83a60c8e"
+      },
+      "text": "let _queryExecutionReport = QueryExecutionReport | where QueryExecutionEndTimeUTC > _startTime and GatewayObjectId in (_gatewayNodes) | project RequestId,QueryTrackingId,QueryExecutionEndTimeUTC,QueryExecutionDuration_ms_,Success,ErrorMessage,QueryType, GatewayObjectId;\nQueryStartReport\n| where QueryExecutionStartTimeUTC between (_startTime .. _endTime) and GatewayObjectId in (_gatewayNodes)\n| project GatewayObjectId,QueryTrackingId,OperationType,ServiceName,CurrentActivityId,ItemId,RootActivityId,WorkspaceId,QueryExecutionStartTimeUTC,RequestId\n| join kind=leftouter hint.strategy=shuffle hint.shufflekey=RequestId hint.num_partitions=6 _queryExecutionReport on QueryTrackingId and GatewayObjectId and RequestId\n| lookup GatewayMembers on $left.GatewayObjectId == $right.memberId\n| lookup Gateways on $left.gatewayId == $right.gatewayId\n| project NodeId=GatewayObjectId, RequestId, QueryTrackingId, QueryExecutionStartTimeUTC, QueryExecutionEndTimeUTC, QueryExecutionDuration_ms_, OperationType, ServiceName, CurrentActivityId, ItemId, QueryType, RootActivityId, WorkspaceId,Success, ErrorMessage, memberName,gatewayName, gatewayId",
+      "usedVariables": [
+        "_endTime",
+        "_gatewayNodes",
+        "_startTime"
+      ]
+    },
+    {
+      "id": "a40a67d4-afa7-4899-b173-7e8658adb90c",
+      "dataSource": {
+        "kind": "inline",
+        "dataSourceId": "8a9a70d8-02b9-4236-85be-90fa83a60c8e"
+      },
+      "text": "TenantSettings\n| where Enabled in (_tenantSettingEnabled)",
+      "usedVariables": [
+        "_tenantSettingEnabled"
+      ]
+    },
+    {
+      "dataSource": {
+        "kind": "inline",
+        "dataSourceId": "8a9a70d8-02b9-4236-85be-90fa83a60c8e"
+      },
+      "text": "Workspaces\n| where name contains _workspaceName\n| project id,name\n| take 1000",
+      "id": "430479e6-69ae-4a84-b5bb-46b8bcffb4f7",
+      "usedVariables": [
+        "_workspaceName"
+      ]
+    },
+    {
+      "dataSource": {
+        "kind": "inline",
+        "dataSourceId": "8a9a70d8-02b9-4236-85be-90fa83a60c8e"
+      },
+      "text": "Capacities\n| summarize by Sku\n| where Sku != \"PP3\"",
+      "id": "5710b390-579e-4d9c-b636-744f4da0e879",
+      "usedVariables": []
+    },
+    {
+      "dataSource": {
+        "kind": "inline",
+        "dataSourceId": "8a9a70d8-02b9-4236-85be-90fa83a60c8e"
+      },
+      "text": "Capacities\n| where Sku in (_capacityType)\n| project CapacityId,CapacityName",
+      "id": "83eb2ef4-88ac-4ba3-8e10-19327bcd5a3d",
+      "usedVariables": [
+        "_capacityType"
+      ]
+    },
+    {
+      "dataSource": {
+        "kind": "inline",
+        "dataSourceId": "8a9a70d8-02b9-4236-85be-90fa83a60c8e"
+      },
+      "text": "Gateways\n| project gatewayName, gatewayId",
+      "id": "788fb926-4efb-4676-8366-0f2635c7e9c3",
+      "usedVariables": []
+    },
+    {
+      "dataSource": {
+        "kind": "inline",
+        "dataSourceId": "8a9a70d8-02b9-4236-85be-90fa83a60c8e"
+      },
+      "text": "_gatewayBase\n| join hint.strategy=broadcast GatewayMembers on gatewayId\n| project memberId, memberName",
+      "id": "f752b78f-54e2-408f-b6bd-17d03d40f2b5",
+      "usedVariables": [
+        "_gatewayBase"
+      ]
+    },
+    {
+      "dataSource": {
+        "kind": "inline",
+        "dataSourceId": "8a9a70d8-02b9-4236-85be-90fa83a60c8e"
+      },
+      "text": "TenantSettingsHistory\n| summarize by scanTime\n| order by scanTime desc ",
+      "id": "b85f210a-0218-4b3d-af67-255b5fe65f64",
+      "usedVariables": []
+    },
+    {
+      "dataSource": {
+        "kind": "inline",
+        "dataSourceId": "8a9a70d8-02b9-4236-85be-90fa83a60c8e"
+      },
+      "text": "Items\n| summarize by itemType",
+      "id": "0541e32c-be34-4891-b047-18f7def8410b",
+      "usedVariables": []
+    }
+  ]
+}
