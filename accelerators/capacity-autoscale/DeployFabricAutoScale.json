@@ -1,0 +1,116 @@
+//Author: Breght Van Baelen
+//Description: ARM template to deploy an Automation Account with a Runbook and Schedules to auto scale Azure Fabric Capacity
+{
+    "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "location": {
+            "type": "string",
+            "defaultValue": "uksouth"
+        },
+        "automationAccountName": {
+            "type": "string",
+            "defaultValue": "automationaccountfabricautoscale"
+        },
+        "runbookName": {
+            "type": "string",
+            "defaultValue": "runbookfabricautoscale"
+        },
+        "capacityName": {
+            "type": "string"
+        },
+        "schedules": {
+            "type": "array"
+        }
+    },
+    "resources": [
+        {
+            "type": "Microsoft.Automation/automationAccounts",
+            "apiVersion": "2024-10-23",
+            "name": "[parameters('automationAccountName')]",
+            "location": "[parameters('location')]",
+            "identity": {
+                "type": "SystemAssigned"
+            },
+            "properties": {
+                "sku": {
+                    "name": "Basic"
+                }
+            }
+        },
+        {
+            "type": "Microsoft.Automation/automationAccounts/runbooks",
+            "apiVersion": "2024-10-23",
+            "name": "[concat(parameters('automationAccountName'), '/', parameters('runbookName'))]",
+            "location": "[parameters('location')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Automation/automationAccounts', parameters('automationAccountName'))]"
+            ],
+            "properties": {
+                "runbookType": "Python3",
+                "logVerbose": true,
+                "logProgress": true,
+                "publishContentLink": {
+                    "uri": "https://raw.githubusercontent.com/breght-van-baelen/FabricAutoScaling/refs/heads/main/ManageFabricCapacity.py",
+                    "contentVersion": "1.0.0.0"
+                }
+            }
+        },
+        {
+            "copy": {
+                "name": "scheduleAndJobSchedules",
+                "count": "[length(parameters('schedules'))]"
+            },
+            "type": "Microsoft.Automation/automationAccounts/schedules",
+            "apiVersion": "2024-10-23",
+            "name": "[concat(parameters('automationAccountName'), '/', parameters('schedules')[copyIndex()].name)]",
+            "location": "[parameters('location')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Automation/automationAccounts', parameters('automationAccountName'))]"
+            ],
+            "properties": {
+                "description": "[concat('Schedule for ', parameters('schedules')[copyIndex()].name)]",
+                "startTime": "[parameters('schedules')[copyIndex()].startTime]",
+                "expiryTime": "[if(contains(parameters('schedules')[copyIndex()], 'expiryTime'), parameters('schedules')[copyIndex()].expiryTime, '9999-12-31T23:59:00+00:00')]",
+                "interval": "[parameters('schedules')[copyIndex()].interval]",
+                "frequency": "[parameters('schedules')[copyIndex()].frequency]",
+                "timeZone": "[parameters('schedules')[copyIndex()].timeZone]",
+                "advancedSchedule": "[if(contains(parameters('schedules')[copyIndex()], 'advancedSchedule'), parameters('schedules')[copyIndex()].advancedSchedule, json('{}'))]"
+            }
+        },
+        {
+            "copy": {
+                "name": "jobSchedules",
+                "count": "[length(parameters('schedules'))]"
+            },
+            "type": "Microsoft.Automation/automationAccounts/jobSchedules",
+            "apiVersion": "2024-10-23",
+            "name": "[concat(parameters('automationAccountName'), '/', guid(parameters('schedules')[copyIndex()].name, 'JobSchedule'))]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Automation/automationAccounts/runbooks', parameters('automationAccountName'), parameters('runbookName'))]",
+                "[resourceId('Microsoft.Automation/automationAccounts/schedules', parameters('automationAccountName'), parameters('schedules')[copyIndex()].name)]"
+            ],
+            "properties": {
+                "runbook": {
+                    "name": "[parameters('runbookName')]"
+                },
+                "schedule": {
+                    "name": "[parameters('schedules')[copyIndex()].name]"
+                },
+                "parameters": "[union(
+                    json(concat('{',
+                        '\"[Parameter 1]\": \"', resourceId('Microsoft.Fabric/capacities', parameters('capacityName')), '\",',
+                        '\"[Parameter 2]\": \"', parameters('schedules')[copyIndex()].operation, '\"',
+                    '}')),
+                    if(contains(parameters('schedules')[copyIndex()], 'sku'), 
+                        json(concat('{',
+                            '\"[Parameter 3]\": \"', parameters('schedules')[copyIndex()].sku, '\"',
+                        '}')),
+                        json('{}')
+                    )
+                )]"
+            }
+        }
+    ]
+
+}
