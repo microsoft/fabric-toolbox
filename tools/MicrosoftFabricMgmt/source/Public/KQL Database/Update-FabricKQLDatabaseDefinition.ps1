@@ -3,39 +3,39 @@
 Updates the definition of a KQLDatabase in a Microsoft Fabric workspace.
 
 .DESCRIPTION
-This function allows updating the content or metadata of a KQLDatabase in a Microsoft Fabric workspace.
-The KQLDatabase content can be provided as file paths, and metadata updates can optionally be enabled.
+Updates the definition of a KQLDatabase by sending one or more definition parts to the Fabric API.
+You can provide the primary database properties, an optional platform definition, and an optional schema definition.
+Each file path you provide is read, encoded as Base64, and included in the request payload.
 
 .PARAMETER WorkspaceId
-(Mandatory) The unique identifier of the workspace where the KQLDatabase resides.
+Mandatory. The unique identifier of the workspace that contains the KQL Database. Use the workspace GUID, not the display name.
 
 .PARAMETER KQLDatabaseId
-(Mandatory) The unique identifier of the KQLDatabase to be updated.
+Mandatory. The unique identifier (GUID) of the KQL Database whose definition should be updated.
 
 .PARAMETER KQLDatabasePathDefinition
-(Mandatory) The file path to the KQLDatabase content definition file. The content will be encoded as Base64 and sent in the request.
+Mandatory. Full path to the primary definition file for the database (for example, DatabaseProperties.json). The file is read and Base64-encoded before being sent.
 
 .PARAMETER KQLDatabasePathPlatformDefinition
-(Optional) The file path to the KQLDatabase's platform-specific definition file. The content will be encoded as Base64 and sent in the request.
+Optional. Full path to a platform-specific definition file (for example, .platform). When provided, the file content is encoded and submitted as an additional definition part.
 
-.PARAMETER UpdateMetadata
-(Optional)A boolean flag indicating whether to update the KQLDatabase's metadata.
-Default: `$false`.
-
-.EXAMPLE
-Update-FabricKQLDatabaseDefinition -WorkspaceId "12345" -KQLDatabaseId "67890" -KQLDatabasePathDefinition "C:\KQLDatabases\KQLDatabase.ipynb"
-
-Updates the content of the KQLDatabase with ID `67890` in the workspace `12345` using the specified KQLDatabase file.
+.PARAMETER KQLDatabasePathSchemaDefinition
+Optional. Full path to a schema definition file (for example, DatabaseSchema.kql). When provided, the schema is included as another definition part in the update request.
 
 .EXAMPLE
-Update-FabricKQLDatabaseDefinition -WorkspaceId "12345" -KQLDatabaseId "67890" -KQLDatabasePathDefinition "C:\KQLDatabases\KQLDatabase.ipynb" -UpdateMetadata $true
+Update-FabricKQLDatabaseDefinition -WorkspaceId "12345" -KQLDatabaseId "67890" -KQLDatabasePathDefinition "C:\\KQL\DatabaseProperties.json"
 
-Updates both the content and metadata of the KQLDatabase with ID `67890` in the workspace `12345`.
+Updates the KQL Database definition using only the primary definition file. This replaces properties using the provided JSON file.
+
+.EXAMPLE
+Update-FabricKQLDatabaseDefinition -WorkspaceId "12345" -KQLDatabaseId "67890" -KQLDatabasePathDefinition "C:\\KQL\DatabaseProperties.json" -KQLDatabasePathSchemaDefinition "C:\\KQL\DatabaseSchema.kql"
+
+Updates the KQL Database and includes an updated schema definition by attaching both the properties and schema files to the request.
 
 .NOTES
 - Requires `$FabricConfig` global configuration, including `BaseUrl` and `FabricHeaders`.
 - Calls `Test-TokenExpired` to ensure token validity before making the API request.
-- The KQLDatabase content is encoded as Base64 before being sent to the Fabric API.
+- Each provided file is encoded as Base64 before being sent to the Fabric API.
 - This function handles asynchronous operations and retrieves operation results if required.
 
 Author: Tiago Balabuch

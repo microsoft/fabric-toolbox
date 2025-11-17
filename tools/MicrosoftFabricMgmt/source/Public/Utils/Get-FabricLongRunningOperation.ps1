@@ -1,23 +1,40 @@
 <#
 .SYNOPSIS
-Monitors the status of a long-running operation in Microsoft Fabric.
+Polls and returns the final status of a Fabric long-running operation.
 
 .DESCRIPTION
-The Get-FabricLongRunningOperation function queries the Microsoft Fabric API to check the status of a
-long-running operation. It periodically polls the operation until it reaches a terminal state (Succeeded or Failed).
+The Get-FabricLongRunningOperation cmdlet repeatedly queries a Fabric long-running operation endpoint until the
+operation reaches a terminal state (Succeeded, Completed, or Failed) or a timeout is exceeded. You can supply either
+the operationId (preferred) or a full location URL returned by a prior asynchronous API call.
 
 .PARAMETER operationId
-The unique identifier of the long-running operation to be monitored.
+The GUID identifying the long-running operation. Provide this when the previous API response returned an operationId.
+If specified, the cmdlet constructs the operation status URL automatically.
+
+.PARAMETER location
+The full operation status URL (Location header) returned by some asynchronous Fabric API responses. Use this only when
+an operationId was not provided, or you captured the raw Location header directly.
 
 .PARAMETER retryAfter
-The interval (in seconds) to wait between polling the operation status. The default is 5 seconds.
+The number of seconds to wait between status polls. Increasing this reduces API calls at the cost of slower feedback.
+Defaults to 5 seconds which balances responsiveness with request volume.
+
+.PARAMETER timeoutInSeconds
+Maximum number of seconds to wait before aborting with a timeout error. The default of 900 seconds (15 minutes) helps
+prevent indefinite polling if the service stops updating status.
 
 .EXAMPLE
-Get-FabricLongRunningOperation -operationId "12345-abcd-67890-efgh" -retryAfter 10
+Get-FabricLongRunningOperation -operationId "12345-abcd-67890-efgh" -retryAfter 10 -timeoutInSeconds 1200
 
-This command polls the status of the operation with the given operationId every 10 seconds until it completes.
+Polls the specified operation every 10 seconds for up to 20 minutes before timing out.
+
+.EXAMPLE
+Get-FabricLongRunningOperation -location "https://api.fabric.microsoft.com/v1/operations/12345-abcd/status" -retryAfter 3
+
+Uses a raw location URL to track an operation, polling every 3 seconds.
 
 .NOTES
+Either operationId or location must be provided (but not both). Token validity is validated before polling.
 
 .AUTHOR
 Author: Jess Pomfret and Rob Sewell updated November 2026

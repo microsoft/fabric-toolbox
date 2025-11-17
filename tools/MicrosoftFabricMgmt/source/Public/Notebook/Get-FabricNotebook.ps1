@@ -1,29 +1,40 @@
 <#
 .SYNOPSIS
-Retrieves an Notebook or a list of Notebooks from a specified workspace in Microsoft Fabric.
+Gets a Notebook or lists all Notebooks in a workspace.
 
 .DESCRIPTION
-The `Get-FabricNotebook` function sends a GET request to the Fabric API to retrieve Notebook details for a given workspace. It can filter the results by `NotebookName`.
+The Get-FabricNotebook cmdlet retrieves Notebook items for a specific Microsoft Fabric workspace. You can list all
+notebooks or filter by an exact display name or resource Id. Only one of NotebookId or NotebookName can be specified.
 
 .PARAMETER WorkspaceId
-(Mandatory) The ID of the workspace to query Notebooks.
+The GUID of the workspace to query for notebooks. This parameter is required to scope the API request.
+
+.PARAMETER NotebookId
+Optional. When supplied, returns only the notebook whose Id matches this value. Use this when you already know the
+resource Id from a prior call.
 
 .PARAMETER NotebookName
-(Optional) The name of the specific Notebook to retrieve.
+Optional. When supplied, returns only the notebook whose display name exactly matches this string. Do not combine with
+NotebookId.
+
+.EXAMPLE
+Get-FabricNotebook -WorkspaceId "12345" -NotebookId "aaaaaaaa-bbbb-cccc-dddd-ffffffffffff"
+
+Returns the notebook matching the provided Id.
 
 .EXAMPLE
 Get-FabricNotebook -WorkspaceId "12345" -NotebookName "Development"
 
-Retrieves the "Development" Notebook from workspace "12345".
+Retrieves the notebook named Development from workspace 12345.
 
 .EXAMPLE
 Get-FabricNotebook -WorkspaceId "12345"
 
-Retrieves all Notebooks in workspace "12345".
+Lists all notebooks in the workspace.
 
 .NOTES
-- Requires `$FabricConfig` global configuration, including `BaseUrl` and `FabricHeaders`.
-- Calls `Test-TokenExpired` to ensure token validity before making the API request.
+- Requires `$FabricConfig` global configuration, including BaseUrl and FabricHeaders.
+- Calls Test-TokenExpired to ensure token validity before making the API request.
 
 Author: Tiago Balabuch
 

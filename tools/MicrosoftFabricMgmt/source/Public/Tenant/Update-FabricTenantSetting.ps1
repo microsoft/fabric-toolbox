@@ -1,44 +1,44 @@
 <#
 .SYNOPSIS
-Updates tenant setting overrides for a specified capacity ID.
+Updates a Fabric tenant setting.
 
 .DESCRIPTION
-The `Update-FabricCapacityTenantSettingOverrides` function updates tenant setting overrides in a Fabric environment by making a POST request to the appropriate API endpoint.
-It allows specifying settings such as enabling tenant settings, delegating to a workspace, and including or excluding security groups.
+Posts an update to a specific tenant setting using its internal name. You can enable/disable the setting, optionally delegate control to capacities, domains, or workspaces (when supported), and include or exclude specific security groups. Some settings also accept additional property objects.
 
-.PARAMETER CapacityId
-(Mandatory) The ID of the capacity for which the tenant setting overrides are being updated.
-
-.PARAMETER SettingTitle
-(Mandatory) The title of the tenant setting to be updated.
+.PARAMETER TenantSettingName
+Mandatory. Internal name/key for the tenant setting being modified. Used to compose the API route.
 
 .PARAMETER EnableTenantSetting
-(Mandatory) Indicates whether the tenant setting should be enabled.
+Mandatory. Enables ($true) or disables ($false) the tenant setting.
+
+.PARAMETER DelegateToCapacity
+Optional. When $true, allows capacity-level delegation for this setting (if applicable).
+
+.PARAMETER DelegateToDomain
+Optional. When $true, allows domain-level delegation for this setting (if applicable).
 
 .PARAMETER DelegateToWorkspace
-(Optional) Specifies the workspace to which the setting should be delegated.
+Optional. When $true, allows workspace-level delegation for this setting (if applicable).
 
 .PARAMETER EnabledSecurityGroups
-(Optional) A JSON array of security groups to be enabled, each containing `graphId` and `name` properties.
+Optional. Array of security group objects that are explicitly allowed. Each object must contain 'graphId' and 'name'.
 
 .PARAMETER ExcludedSecurityGroups
-(Optional) A JSON array of security groups to be excluded, each containing `graphId` and `name` properties.
+Optional. Array of security group objects that are explicitly excluded. Each object must contain 'graphId' and 'name'.
+
+.PARAMETER Properties
+Optional. Array of advanced property objects for certain settings. Each object must include 'name', 'type', and 'value'.
 
 .EXAMPLE
-Update-FabricCapacityTenantSettingOverrides -CapacityId "12345" -SettingTitle "SomeSetting" -EnableTenantSetting "true"
+Update-FabricTenantSetting -TenantSettingName "SomeSetting" -EnableTenantSetting $true -EnabledSecurityGroups @(@{graphId="1";name="Group1"})
 
-Updates the tenant setting "SomeSetting" for the capacity with ID "12345" and enables it.
-
-.EXAMPLE
-Update-FabricCapacityTenantSettingOverrides -CapacityId "12345" -SettingTitle "SomeSetting" -EnableTenantSetting "true" -EnabledSecurityGroups @(@{graphId="1";name="Group1"},@{graphId="2";name="Group2"})
-
-Updates the tenant setting "SomeSetting" for the capacity with ID "12345", enables it, and specifies security groups to include.
+Enables the setting and includes a single security group by graphId.
 
 .NOTES
-- Requires `$FabricConfig` global configuration, including `BaseUrl` and `FabricHeaders`.
-- Calls `Test-TokenExpired` to ensure token validity before making the API request.
+- Requires `$FabricConfig` (BaseUrl, FabricHeaders).
+- Calls `Test-TokenExpired` before invoking the API.
 
-Author: Tiago Balabuch
+Author: Tiago Balabuch; Help updated by Copilot.
 
 #>
 

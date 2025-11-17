@@ -8,7 +8,7 @@
     to text or other data.
 
 .PARAMETER Base64String
-    The Base64-encoded string that you want to decode.
+    Mandatory. The Base64-encoded input string to decode back to its original UTF-8 text form. Supply a valid Base64 value; invalid padding or illegal characters will raise an error before returning a result.
 
 .EXAMPLE
     Convert-FromBase64 -Base64String "SGVsbG8sIFdvcmxkIQ=="

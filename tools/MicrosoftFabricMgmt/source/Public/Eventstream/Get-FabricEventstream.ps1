@@ -1,29 +1,39 @@
 <#
 .SYNOPSIS
-Retrieves an Eventstream or a list of Eventstreams from a specified workspace in Microsoft Fabric.
+Retrieves a specific Eventstream or all Eventstreams from a workspace in Microsoft Fabric.
 
 .DESCRIPTION
-The `Get-FabricEventstream` function sends a GET request to the Fabric API to retrieve Eventstream details for a given workspace. It can filter the results by `EventstreamName`.
+Queries the Fabric API for Eventstream resources in a given workspace. You can filter by EventstreamId (GUID) or EventstreamName.
+If neither filter is supplied, all Eventstreams in the workspace are returned. Supplying both filters is not allowed.
 
 .PARAMETER WorkspaceId
-(Mandatory) The ID of the workspace to query Eventstreams.
+Mandatory. The GUID of the workspace that contains the Eventstream(s) to retrieve.
+
+.PARAMETER EventstreamId
+Optional. The GUID of a single Eventstream to return. Use this when you already know the identifier and want a direct lookup.
 
 .PARAMETER EventstreamName
-(Optional) The name of the specific Eventstream to retrieve.
+Optional. The display name of the Eventstream to retrieve. Use this when you prefer to match by its friendly name instead of the GUID.
 
 .EXAMPLE
 Get-FabricEventstream -WorkspaceId "12345" -EventstreamName "Development"
 
-Retrieves the "Development" Eventstream from workspace "12345".
+Returns the Eventstream named "Development" from workspace "12345" if it exists.
+
+.EXAMPLE
+Get-FabricEventstream -WorkspaceId "12345" -EventstreamId "b7c1e7de-1111-2222-3333-444455556666"
+
+Returns the Eventstream whose Id matches the provided GUID from workspace "12345".
 
 .EXAMPLE
 Get-FabricEventstream -WorkspaceId "12345"
 
-Retrieves all Eventstreams in workspace "12345".
+Returns all Eventstreams that currently exist in workspace "12345".
 
 .NOTES
 - Requires `$FabricConfig` global configuration, including `BaseUrl` and `FabricHeaders`.
 - Calls `Test-TokenExpired` to ensure token validity before making the API request.
+- Only one of EventstreamId or EventstreamName can be specified; not both simultaneously.
 
 Author: Tiago Balabuch
 

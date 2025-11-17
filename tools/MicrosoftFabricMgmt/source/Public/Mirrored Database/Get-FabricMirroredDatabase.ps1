@@ -1,29 +1,42 @@
 <#
 .SYNOPSIS
-Retrieves an MirroredDatabase or a list of MirroredDatabases from a specified workspace in Microsoft Fabric.
+Gets a Mirrored Database or lists all Mirrored Databases in a workspace.
 
 .DESCRIPTION
-The `Get-FabricMirroredDatabase` function sends a GET request to the Fabric API to retrieve MirroredDatabase details for a given workspace. It can filter the results by `MirroredDatabaseName`.
+The Get-FabricMirroredDatabase cmdlet retrieves Mirrored Database items from a specified Microsoft Fabric workspace.
+You can return all mirrored databases in the workspace, or filter the results by an exact display name or a specific item Id.
+Only one of MirroredDatabaseId or MirroredDatabaseName can be provided at a time.
 
 .PARAMETER WorkspaceId
-(Mandatory) The ID of the workspace to query MirroredDatabases.
+The GUID of the workspace to query for mirrored databases. This identifies the scope of the request and is required
+for every call so the API can resolve which workspace’s mirrored resources to enumerate.
+
+.PARAMETER MirroredDatabaseId
+When supplied, returns only the mirrored database that matches the provided resource Id. Use this when you already
+know the item’s Id and want to avoid an additional client-side name filter across all items.
 
 .PARAMETER MirroredDatabaseName
-(Optional) The name of the specific MirroredDatabase to retrieve.
+When supplied, returns only the mirrored database whose display name exactly matches this value. This is useful when
+you don’t have the Id available. Do not use with MirroredDatabaseId; only one filter may be specified.
+
+.EXAMPLE
+Get-FabricMirroredDatabase -WorkspaceId "12345" -MirroredDatabaseId "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee"
+
+Returns the single mirrored database with the specified Id from the workspace.
 
 .EXAMPLE
 Get-FabricMirroredDatabase -WorkspaceId "12345" -MirroredDatabaseName "Development"
 
-Retrieves the "Development" MirroredDatabase from workspace "12345".
+Retrieves the mirrored database named "Development" from workspace "12345".
 
 .EXAMPLE
 Get-FabricMirroredDatabase -WorkspaceId "12345"
 
-Retrieves all MirroredDatabases in workspace "12345".
+Lists all mirrored databases available in workspace "12345".
 
 .NOTES
-- Requires `$FabricConfig` global configuration, including `BaseUrl` and `FabricHeaders`.
-- Calls `Test-TokenExpired` to ensure token validity before making the API request.
+- Requires `$FabricConfig` global configuration, including BaseUrl and FabricHeaders.
+- Calls Test-TokenExpired to ensure token validity before making the API request.
 
 Author: Tiago Balabuch
 

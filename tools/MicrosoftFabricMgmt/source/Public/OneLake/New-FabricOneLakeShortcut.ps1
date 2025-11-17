@@ -15,6 +15,12 @@
 .PARAMETER ShortcutConflictPolicy
     (Optional) Policy for handling shortcut name conflicts. Valid values: Abort, GenerateUniqueName, CreateOrOverwrite, OverwriteOnly.
 
+.PARAMETER ShortcutName
+    Mandatory. Friendly name for the shortcut as it will appear under the Lakehouse 'Files' tree. Must be unique within the item unless a conflict policy allows overwrite or automatic renaming.
+
+.PARAMETER Path
+    Mandatory. The relative path inside the Lakehouse Files hierarchy where the shortcut will be mounted (e.g. 'Files/external/data'). This becomes the visible folder representing the external data source.
+
 .PARAMETER Target
     The type of target for the shortcut (e.g., adlsGen2, amazonS3, azureBlobStorage, dataverse, googleCloudStorage, oneLake, s3Compatible). Mandatory.
 
@@ -39,8 +45,8 @@
 .PARAMETER TargetItemId
     (Optional) The target item ID, required for onelake target.
 
-.PARAMETER Path
-    (Optional) The path within the target item, required for onelake target.
+.PARAMETER TargetPath
+    (Optional) Path inside the target OneLake item when Target is 'oneLake'. Defines which subfolder of the remote Lakehouse is exposed via this shortcut.
 
 .PARAMETER TargetWorkspaceId
     (Optional) The workspace ID of the target, required for onelake target.

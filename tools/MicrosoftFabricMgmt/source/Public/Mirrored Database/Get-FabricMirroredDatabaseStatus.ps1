@@ -1,10 +1,23 @@
 <#
 .SYNOPSIS
-
-Retrieves the mirroring status of a MirroredDatabase from a specific workspace in Microsoft Fabric.
+Gets the current mirroring status for a specific Mirrored Database.
 
 .DESCRIPTION
-This function fetches the MirroredDatabase mirroring status from a workspace and handles authentication and API requests.
+The Get-FabricMirroredDatabaseStatus cmdlet calls the Fabric API to return the current mirroring state for a mirrored
+database in a given workspace. Use this to verify whether mirroring is healthy, lagging, or encountering errors.
+
+.PARAMETER WorkspaceId
+The GUID of the workspace that contains the mirrored database. This value scopes the request to the correct Fabric
+workspace and is required.
+
+.PARAMETER MirroredDatabaseId
+The Id of the mirrored database to check. Provide the resource Id so the API can return status for that specific item.
+
+.EXAMPLE
+Get-FabricMirroredDatabaseStatus -WorkspaceId 11111111-2222-3333-4444-555555555555 -MirroredDatabaseId aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee
+
+Returns the current mirroring status for the specified mirrored database.
+
 Author: Updated by Jess Pomfret and Rob Sewell November 2026
 #>
 function Get-FabricMirroredDatabaseStatus {

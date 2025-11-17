@@ -1,53 +1,50 @@
 <#
 .SYNOPSIS
-    Updates an existing Spark custom pool in a specified Microsoft Fabric workspace.
+Updates Spark settings at the workspace scope.
 
 .DESCRIPTION
-    This function sends a PATCH request to the Microsoft Fabric API to update an existing Spark custom pool
-    in the specified workspace. It supports various parameters for Spark custom pool configuration.
+Sends a PATCH request to the Fabric API to modify workspace-level Spark settings. You can enable automatic logging, configure high-concurrency notebook behavior, choose or customize a default compute pool, and set the default environment/runtime.
 
 .PARAMETER WorkspaceId
-    The unique identifier of the workspace where the Spark custom pool exists. This parameter is mandatory.
+Mandatory. The GUID of the workspace whose Spark settings will be updated.
 
-.PARAMETER SparkSettingsId
-    The unique identifier of the Spark custom pool to be updated. This parameter is mandatory.
+.PARAMETER automaticLogEnabled
+Optional. When $true, enables automatic Spark session logging in the workspace. When $false, disables auto logging.
 
-.PARAMETER InstancePoolName
-    The new name of the Spark custom pool. This parameter is mandatory.
+.PARAMETER notebookInteractiveRunEnabled
+Optional. Enables high-concurrency interactive notebook runs when set to $true.
 
-.PARAMETER NodeFamily
-    The family of nodes to be used in the Spark custom pool. This parameter is mandatory and must be 'MemoryOptimized'.
+.PARAMETER customizeComputeEnabled
+Optional. When $true, allows customizing the compute pool settings for Spark jobs in this workspace.
 
-.PARAMETER NodeSize
-    The size of the nodes to be used in the Spark custom pool. This parameter is mandatory and must be one of 'Large', 'Medium', 'Small', 'XLarge', 'XXLarge'.
+.PARAMETER defaultPoolName
+Optional. The name of the default compute pool. Must be provided together with defaultPoolType.
 
-.PARAMETER AutoScaleEnabled
-    Specifies whether auto-scaling is enabled for the Spark custom pool. This parameter is mandatory.
+.PARAMETER defaultPoolType
+Optional. The scope of the default compute pool. Allowed values are 'Workspace' or 'Capacity'. Must be provided together with defaultPoolName.
 
-.PARAMETER AutoScaleMinNodeCount
-    The minimum number of nodes for auto-scaling in the Spark custom pool. This parameter is mandatory.
+.PARAMETER starterPoolMaxNode
+Optional. Maximum node count for the starter pool configuration.
 
-.PARAMETER AutoScaleMaxNodeCount
-    The maximum number of nodes for auto-scaling in the Spark custom pool. This parameter is mandatory.
+.PARAMETER starterPoolMaxExecutors
+Optional. Maximum executors for the starter pool configuration.
 
-.PARAMETER DynamicExecutorAllocationEnabled
-    Specifies whether dynamic executor allocation is enabled for the Spark custom pool. This parameter is mandatory.
+.PARAMETER EnvironmentName
+Optional. The display name of the default Spark environment to use.
 
-.PARAMETER DynamicExecutorAllocationMinExecutors
-    The minimum number of executors for dynamic executor allocation in the Spark custom pool. This parameter is mandatory.
-
-.PARAMETER DynamicExecutorAllocationMaxExecutors
-    The maximum number of executors for dynamic executor allocation in the Spark custom pool. This parameter is mandatory.
+.PARAMETER EnvironmentRuntimeVersion
+Optional. The runtime version identifier for the default Spark environment.
 
 .EXAMPLE
-    Update-FabricSparkSettings -WorkspaceId "workspace-12345" -SparkSettingsId "pool-67890" -InstancePoolName "Updated Spark Pool" -NodeFamily "MemoryOptimized" -NodeSize "Large" -AutoScaleEnabled $true -AutoScaleMinNodeCount 1 -AutoScaleMaxNodeCount 10 -DynamicExecutorAllocationEnabled $true -DynamicExecutorAllocationMinExecutors 1 -DynamicExecutorAllocationMaxExecutors 10
-    This example updates the Spark custom pool with ID "pool-67890" in the workspace with ID "workspace-12345" with a new name and configuration.
+Update-FabricSparkSettings -WorkspaceId $wId -automaticLogEnabled $true -defaultPoolName 'StarterPool' -defaultPoolType Workspace
+
+Enables automatic logging and sets the default pool to 'StarterPool' scoped at the workspace.
 
 .NOTES
-    - Requires `$FabricConfig` global configuration, including `BaseUrl` and `FabricHeaders`.
-    - Calls `Test-TokenExpired` to ensure token validity before making the API request.
+- Requires `$FabricConfig` (BaseUrl, FabricHeaders).
+- Calls `Test-TokenExpired` before invoking the API.
 
-    Author: Tiago Balabuch
+Author: Tiago Balabuch; Help updated by Copilot.
 
 #>
 function Update-FabricSparkSettings {

@@ -1,31 +1,40 @@
 <#
 .SYNOPSIS
-Retrieves an KQLDashboard or a list of KQLDashboards from a specified workspace in Microsoft Fabric.
+Retrieves a specific KQL Dashboard or all KQL Dashboards from a workspace.
 
 .DESCRIPTION
-The `Get-FabricKQLDashboard` function sends a GET request to the Fabric API to retrieve KQLDashboard details for a given workspace. It can filter the results by `KQLDashboardName`.
+Calls the Fabric API to list KQL Dashboards in the target workspace. You can filter by either the dashboard GUID (KQLDashboardId) or the display name (KQLDashboardName). If neither filter is provided all dashboards are returned. Supplying both filters is not allowed.
 
 .PARAMETER WorkspaceId
-(Mandatory) The ID of the workspace to query KQLDashboards.
+Mandatory. The GUID of the workspace containing the KQL Dashboards.
+
+.PARAMETER KQLDashboardId
+Optional. The GUID of a single KQL Dashboard to retrieve directly. Use this when you already know its identifier.
 
 .PARAMETER KQLDashboardName
-(Optional) The name of the specific KQLDashboard to retrieve.
+Optional. The display name of a KQL Dashboard to retrieve. Provide this when the Id is unknown and you want to match by name.
 
 .EXAMPLE
-Get-FabricKQLDashboard -WorkspaceId "12345" -KQLDashboardName "Development"
+Get-FabricKQLDashboard -WorkspaceId $wId -KQLDashboardId '1a2b3c4d-5555-6666-7777-88889999aaaa'
 
-Retrieves the "Development" KQLDashboard from workspace "12345".
+Returns only the dashboard whose Id matches the given GUID.
 
 .EXAMPLE
-Get-FabricKQLDashboard -WorkspaceId "12345"
+Get-FabricKQLDashboard -WorkspaceId $wId -KQLDashboardName 'Operations Overview'
 
-Retrieves all KQLDashboards in workspace "12345".
+Returns the single dashboard named 'Operations Overview' if it exists.
+
+.EXAMPLE
+Get-FabricKQLDashboard -WorkspaceId $wId
+
+Returns all dashboards in the specified workspace.
 
 .NOTES
-- Requires `$FabricConfig` global configuration, including `BaseUrl` and `FabricHeaders`.
-- Calls `Test-TokenExpired` to ensure token validity before making the API request.
+- Requires `$FabricConfig` (BaseUrl, FabricHeaders).
+- Validates token freshness via `Test-TokenExpired` before request.
+- Only one of KQLDashboardId or KQLDashboardName can be specified.
 
-Author: Tiago Balabuch
+Author: Tiago Balabuch; Help extended by Copilot.
 
 #>
 

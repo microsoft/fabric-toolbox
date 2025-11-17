@@ -1,29 +1,42 @@
 <#
 .SYNOPSIS
-Retrieves an MirroredWarehouse or a list of MirroredWarehouses from a specified workspace in Microsoft Fabric.
+Gets a Mirrored Warehouse or lists all Mirrored Warehouses in a workspace.
 
 .DESCRIPTION
-The `Get-FabricMirroredWarehouse` function sends a GET request to the Fabric API to retrieve MirroredWarehouse details for a given workspace. It can filter the results by `MirroredWarehouseName`.
+The Get-FabricMirroredWarehouse cmdlet retrieves Mirrored Warehouse items from a Microsoft Fabric workspace.
+You can return every mirrored warehouse or filter by an exact display name or Id. Only one of MirroredWarehouseId or
+MirroredWarehouseName may be provided; specifying both will result in a validation error.
 
 .PARAMETER WorkspaceId
-(Mandatory) The ID of the workspace to query MirroredWarehouses.
+The GUID of the workspace to query. This is required for all calls and determines which Fabric workspace’s mirrored
+warehouses will be returned.
+
+.PARAMETER MirroredWarehouseId
+Optional. When supplied, returns only the mirrored warehouse matching this resource Id. Prefer using the Id when you
+already captured it from a prior listing operation for more precise retrieval.
 
 .PARAMETER MirroredWarehouseName
-(Optional) The name of the specific MirroredWarehouse to retrieve.
+Optional. When supplied, returns only the mirrored warehouse whose display name exactly matches this string. Use this
+when the Id is not known. Do not combine with MirroredWarehouseId.
+
+.EXAMPLE
+Get-FabricMirroredWarehouse -WorkspaceId "12345" -MirroredWarehouseId "aaaaaaaa-bbbb-cccc-dddd-ffffffffffff"
+
+Returns the single mirrored warehouse matching the provided Id.
 
 .EXAMPLE
 Get-FabricMirroredWarehouse -WorkspaceId "12345" -MirroredWarehouseName "Development"
 
-Retrieves the "Development" MirroredWarehouse from workspace "12345".
+Retrieves the mirrored warehouse named "Development" from workspace 12345.
 
 .EXAMPLE
 Get-FabricMirroredWarehouse -WorkspaceId "12345"
 
-Retrieves all MirroredWarehouses in workspace "12345".
+Lists all mirrored warehouses present in the specified workspace.
 
 .NOTES
-- Requires `$FabricConfig` global configuration, including `BaseUrl` and `FabricHeaders`.
-- Calls `Test-TokenExpired` to ensure token validity before making the API request.
+- Requires `$FabricConfig` global configuration, including BaseUrl and FabricHeaders.
+- Calls Test-TokenExpired to ensure token validity before making the API request.
 
 Author: Tiago Balabuch
 

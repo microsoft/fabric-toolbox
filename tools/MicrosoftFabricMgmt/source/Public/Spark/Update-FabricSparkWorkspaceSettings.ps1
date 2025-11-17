@@ -1,53 +1,50 @@
 <#
 .SYNOPSIS
-    Updates an existing Spark custom pool in a specified Microsoft Fabric workspace.
+Updates Spark settings for a workspace (workspace-scope variant).
 
 .DESCRIPTION
-    This function sends a PATCH request to the Microsoft Fabric API to update an existing Spark custom pool
-    in the specified workspace. It supports various parameters for Spark custom pool configuration.
+Patches workspace-level Spark configuration including automatic logging, interactive notebook concurrency, default compute pool settings, and environment/runtime defaults.
 
 .PARAMETER WorkspaceId
-    The unique identifier of the workspace where the Spark custom pool exists. This parameter is mandatory.
+Mandatory. The GUID of the workspace whose Spark settings will be updated.
 
-.PARAMETER SparkSettingsId
-    The unique identifier of the Spark custom pool to be updated. This parameter is mandatory.
+.PARAMETER automaticLogEnabled
+Optional. When $true, enables automatic logging of Spark sessions.
 
-.PARAMETER InstancePoolName
-    The new name of the Spark custom pool. This parameter is mandatory.
+.PARAMETER notebookInteractiveRunEnabled
+Optional. Enables interactive high-concurrency notebook execution when set to $true.
 
-.PARAMETER NodeFamily
-    The family of nodes to be used in the Spark custom pool. This parameter is mandatory and must be 'MemoryOptimized'.
+.PARAMETER customizeComputeEnabled
+Optional. Allows customization of compute pool behavior for Spark jobs.
 
-.PARAMETER NodeSize
-    The size of the nodes to be used in the Spark custom pool. This parameter is mandatory and must be one of 'Large', 'Medium', 'Small', 'XLarge', 'XXLarge'.
+.PARAMETER defaultPoolName
+Optional. Name of the default compute pool, provided together with defaultPoolType.
 
-.PARAMETER AutoScaleEnabled
-    Specifies whether auto-scaling is enabled for the Spark custom pool. This parameter is mandatory.
+.PARAMETER defaultPoolType
+Optional. Scope of the default compute pool: 'Workspace' or 'Capacity'. Must accompany defaultPoolName.
 
-.PARAMETER AutoScaleMinNodeCount
-    The minimum number of nodes for auto-scaling in the Spark custom pool. This parameter is mandatory.
+.PARAMETER starterPoolMaxNode
+Optional. Maximum node count for the starter pool.
 
-.PARAMETER AutoScaleMaxNodeCount
-    The maximum number of nodes for auto-scaling in the Spark custom pool. This parameter is mandatory.
+.PARAMETER starterPoolMaxExecutors
+Optional. Maximum executor count for the starter pool.
 
-.PARAMETER DynamicExecutorAllocationEnabled
-    Specifies whether dynamic executor allocation is enabled for the Spark custom pool. This parameter is mandatory.
+.PARAMETER EnvironmentName
+Optional. Friendly name of the default Spark environment.
 
-.PARAMETER DynamicExecutorAllocationMinExecutors
-    The minimum number of executors for dynamic executor allocation in the Spark custom pool. This parameter is mandatory.
-
-.PARAMETER DynamicExecutorAllocationMaxExecutors
-    The maximum number of executors for dynamic executor allocation in the Spark custom pool. This parameter is mandatory.
+.PARAMETER EnvironmentRuntimeVersion
+Optional. Runtime version identifier for the environment.
 
 .EXAMPLE
-    Update-FabricSparkSettings -WorkspaceId "workspace-12345" -SparkSettingsId "pool-67890" -InstancePoolName "Updated Spark Pool" -NodeFamily "MemoryOptimized" -NodeSize "Large" -AutoScaleEnabled $true -AutoScaleMinNodeCount 1 -AutoScaleMaxNodeCount 10 -DynamicExecutorAllocationEnabled $true -DynamicExecutorAllocationMinExecutors 1 -DynamicExecutorAllocationMaxExecutors 10
-    This example updates the Spark custom pool with ID "pool-67890" in the workspace with ID "workspace-12345" with a new name and configuration.
+Update-FabricSparkWorkspaceSettings -WorkspaceId $wId -automaticLogEnabled $true -notebookInteractiveRunEnabled $true
+
+Enables automatic logging and interactive notebook concurrency for the workspace.
 
 .NOTES
-    - Requires `$FabricConfig` global configuration, including `BaseUrl` and `FabricHeaders`.
-    - Calls `Test-TokenExpired` to ensure token validity before making the API request.
+- Requires `$FabricConfig` (BaseUrl, FabricHeaders).
+- Calls `Test-TokenExpired` before invoking the API.
 
-    Author: Tiago Balabuch
+Author: Tiago Balabuch; Help updated by Copilot.
 
 #>
 function Update-FabricSparkWorkspaceSettings {

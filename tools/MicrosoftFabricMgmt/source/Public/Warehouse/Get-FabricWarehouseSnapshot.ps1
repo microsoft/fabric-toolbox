@@ -1,31 +1,40 @@
 <#
 .SYNOPSIS
-    Retrieves warehouse details from a specified Microsoft Fabric workspace.
+Gets Warehouse Snapshots or a specific Warehouse Snapshot in a workspace.
 
 .DESCRIPTION
-    This function retrieves warehouse details from a specified workspace using either the provided WarehouseId or WarehouseName.
-    It handles token validation, constructs the API URL, makes the API request, and processes the response.
+The Get-FabricWarehouseSnapshot cmdlet retrieves Warehouse Snapshot items for a given workspace. You can list all
+snapshots or filter by snapshot Id or display name. Only one of WarehouseSnapshotId or WarehouseSnapshotName may be used.
 
 .PARAMETER WorkspaceId
-    The unique identifier of the workspace where the warehouse exists. This parameter is mandatory.
+The GUID of the workspace that contains the warehouse snapshots. Required to scope the API request.
 
-.PARAMETER WarehouseId
-    The unique identifier of the warehouse to retrieve. This parameter is optional.
+.PARAMETER WarehouseSnapshotId
+Optional. When provided, returns only the snapshot matching this resource Id. Prefer this for exact retrieval when the
+Id is already known from a previous call.
 
-.PARAMETER WarehouseName
-    The name of the warehouse to retrieve. This parameter is optional.
-
-.EXAMPLE
-     Get-FabricWarehouse -WorkspaceId "workspace-12345" -WarehouseId "warehouse-67890"
-    This example retrieves the warehouse details for the warehouse with ID "warehouse-67890" in the workspace with ID "workspace-12345".
+.PARAMETER WarehouseSnapshotName
+Optional. When provided, returns only the snapshot whose display name exactly matches this value. Do not combine with
+WarehouseSnapshotId.
 
 .EXAMPLE
-     Get-FabricWarehouse -WorkspaceId "workspace-12345" -WarehouseName "My Warehouse"
-    This example retrieves the warehouse details for the warehouse named "My Warehouse" in the workspace with ID "workspace-12345".
+Get-FabricWarehouseSnapshot -WorkspaceId "workspace-12345" -WarehouseSnapshotId "snap-67890"
+
+Returns the specific warehouse snapshot with the given Id.
+
+.EXAMPLE
+Get-FabricWarehouseSnapshot -WorkspaceId "workspace-12345" -WarehouseSnapshotName "Nightly Backup"
+
+Returns the snapshot named "Nightly Backup" if present.
+
+.EXAMPLE
+Get-FabricWarehouseSnapshot -WorkspaceId "workspace-12345"
+
+Lists all warehouse snapshots in the workspace.
 
 .NOTES
-    - Requires `$FabricConfig` global configuration, including `BaseUrl` and `FabricHeaders`.
-    - Calls `Test-TokenExpired` to ensure token validity before making the API request.
+    - Requires `$FabricConfig` global configuration, including BaseUrl and FabricHeaders.
+    - Calls Test-TokenExpired to ensure token validity before making the API request.
 
     Author: Tiago Balabuch
 #>

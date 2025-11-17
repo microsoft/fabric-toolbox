@@ -12,6 +12,9 @@
 .PARAMETER ConnectionName
     Optional. The display name of the connection.
 
+.PARAMETER ShowAllCreationMethods
+    Optional. When set, includes all available creation methods for each supported connection type in the response. This is useful to discover which connection types can be created programmatically or through the UI.
+
 .EXAMPLE
     Get-FabricConnection -GatewayId "Connection-67890"
     Returns details for the connection with ID "Connection-67890".

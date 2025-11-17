@@ -18,6 +18,9 @@ The notebook content can be provided as file paths, and metadata updates can opt
 .PARAMETER NotebookPathPlatformDefinition
 (Optional) The file path to the notebook's platform-specific definition file. The content will be encoded as Base64 and sent in the request.
 
+.PARAMETER NotebookFormat
+Optional. Specifies the format of the notebook content being submitted in the definition. Use 'ipynb' for Jupyter notebooks or 'fabricGitSource' for Fabric Git-sourced content. Defaults to 'ipynb'.
+
 .EXAMPLE
 Update-FabricNotebookDefinition -WorkspaceId "12345" -NotebookId "67890" -NotebookPathDefinition "C:\Notebooks\Notebook.ipynb"
 

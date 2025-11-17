@@ -1,37 +1,73 @@
 <#
 .SYNOPSIS
-Creates a new KQLDatabase in a specified Microsoft Fabric workspace.
+Creates a new KQL Database in a workspace.
 
 .DESCRIPTION
-This function sends a POST request to the Microsoft Fabric API to create a new KQLDatabase
-in the specified workspace. It supports optional parameters for KQLDatabase description
-and path definitions for the KQLDatabase content.
+The New-FabricKQLDatabase cmdlet provisions a new KQL Database resource inside a specified Fabric workspace. You can
+create either a ReadWrite database or a Shortcut database that points to an existing Kusto source via invitation token
+or cluster/database references. If definition files are supplied they take precedence and are sent as multi-part inline
+Base64 payloads. For Shortcut or ReadWrite types, parentEventhouseId is required to associate the database with its
+Eventhouse container.
 
 .PARAMETER WorkspaceId
-The unique identifier of the workspace where the KQLDatabase will be created.
+The GUID of the workspace in which the KQL Database will be created. Required for all calls.
 
 .PARAMETER KQLDatabaseName
-The name of the KQLDatabase to be created.
+The display name of the KQL Database. Must use only letters, numbers, spaces, and underscores. Choose a name that
+clearly reflects analytical purpose.
 
 .PARAMETER KQLDatabaseDescription
-An optional description for the KQLDatabase.
+Optional descriptive text to explain the database’s contents, data domain, or usage patterns for discoverability.
+
+.PARAMETER parentEventhouseId
+The GUID of the parent Eventhouse. Required for both ReadWrite and Shortcut types so the service can link the database
+to its logical container.
+
+.PARAMETER KQLDatabaseType
+Specifies the database type. Use ReadWrite for a standard editable database or Shortcut when referencing an external
+Kusto database via invitation token or cluster/database pair.
+
+.PARAMETER KQLInvitationToken
+Optional invitation token granting access to an external Kusto database. When provided it overrides SourceClusterUri
+and SourceDatabaseName parameters.
+
+.PARAMETER KQLSourceClusterUri
+Optional source cluster URI for Shortcut creation when an invitation token is not used. Must be combined with
+KQLSourceDatabaseName.
+
+.PARAMETER KQLSourceDatabaseName
+Optional source database name for Shortcut creation when using cluster URI instead of invitation token. Required if
+KQLSourceClusterUri is specified.
 
 .PARAMETER KQLDatabasePathDefinition
-An optional path to the KQLDatabase definition file (e.g., .ipynb file) to upload.
+Optional path to a database properties definition file. When provided, the file content is Base64 encoded and sent as a
+definition part named DatabaseProperties.json.
 
 .PARAMETER KQLDatabasePathPlatformDefinition
-An optional path to the platform-specific definition (e.g., .platform file) to upload.
+Optional path to a .platform file providing platform-specific configuration. Added as a Base64 encoded part when present.
+
+.PARAMETER KQLDatabasePathSchemaDefinition
+Optional path to a KQL schema definition file (e.g. DatabaseSchema.kql). Added as a Base64 encoded part when present.
 
 .EXAMPLE
- Add-FabricKQLDatabase -WorkspaceId "workspace-12345" -KQLDatabaseName "New KQLDatabase" -KQLDatabasePathDefinition "C:\KQLDatabases\example.ipynb"
+New-FabricKQLDatabase -WorkspaceId "workspace-12345" -KQLDatabaseName "SalesOps" -parentEventhouseId "eventhouse-1111" -KQLDatabaseType ReadWrite -KQLDatabaseDescription "Sales operational metrics and usage logs"
 
- .NOTES
-- Requires `$FabricConfig` global configuration, including `BaseUrl` and `FabricHeaders`.
-- Calls `Test-TokenExpired` to ensure token validity before making the API request.
-- Precedent Request Body
-    - Definition file high priority.
-    - CreationPayload is evaluate only if Definition file is not provided.
-        - invitationToken has priority over all other payload fields.
+Creates a standard ReadWrite KQL Database associated with an Eventhouse and adds a descriptive summary.
+
+.EXAMPLE
+New-FabricKQLDatabase -WorkspaceId "workspace-12345" -KQLDatabaseName "ExternalRef" -parentEventhouseId "eventhouse-1111" -KQLDatabaseType Shortcut -KQLInvitationToken "invitation-token-value"
+
+Creates a Shortcut KQL Database pointing to an external Kusto source using an invitation token.
+
+.EXAMPLE
+New-FabricKQLDatabase -WorkspaceId "workspace-12345" -KQLDatabaseName "Marketing" -parentEventhouseId "eventhouse-1111" -KQLDatabaseType ReadWrite -KQLDatabasePathDefinition "C:\defs\DatabaseProperties.json" -KQLDatabasePathSchemaDefinition "C:\defs\DatabaseSchema.kql"
+
+Creates a ReadWrite KQL Database using provided definition and schema file parts.
+
+.NOTES
+- Requires `$FabricConfig` global configuration, including BaseUrl and FabricHeaders.
+- Calls Test-TokenExpired to ensure token validity before making the API request.
+- Definition file parts take precedence over creation payload shortcuts. Invitation token overrides source cluster info.
 
 Author: Tiago Balabuch
 

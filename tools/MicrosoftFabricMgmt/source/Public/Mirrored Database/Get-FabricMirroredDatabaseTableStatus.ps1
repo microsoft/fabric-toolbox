@@ -1,9 +1,24 @@
 <#
 .SYNOPSIS
-Retrieves mirroring status for tables in a MirroredDatabase within a workspace.
+Gets per-table mirroring status details for a mirrored database.
 
 .DESCRIPTION
-Fetches table-level mirroring status and handles empty results and errors.
+The Get-FabricMirroredDatabaseTableStatus cmdlet returns the table-level mirroring status for the specified mirrored
+database. Use this command to identify which tables are healthy, delayed, or failing replication so you can target
+remediation efforts precisely.
+
+.PARAMETER WorkspaceId
+The GUID of the workspace that contains the mirrored database. This is required to scope the API request.
+
+.PARAMETER MirroredDatabaseId
+The Id of the mirrored database whose table-level status you want to inspect. Provide the resource Id to retrieve the
+status collection for all mirrored tables.
+
+.EXAMPLE
+Get-FabricMirroredDatabaseTableStatus -WorkspaceId 11111111-2222-3333-4444-555555555555 -MirroredDatabaseId aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee
+
+Returns a list of table status objects showing replication health, last sync times, or lag metrics (when exposed).
+
 Author: Updated by Jess Pomfret and Rob Sewell November 2026
 #>
 function Get-FabricMirroredDatabaseTableStatus {

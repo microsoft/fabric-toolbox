@@ -1,31 +1,40 @@
 <#
 .SYNOPSIS
-Retrieves an KQLQueryset or a list of KQLQuerysets from a specified workspace in Microsoft Fabric.
+Retrieves a specific KQL Queryset or all KQL Querysets from a workspace.
 
 .DESCRIPTION
-The `Get-FabricKQLQueryset` function sends a GET request to the Fabric API to retrieve KQLQueryset details for a given workspace. It can filter the results by `KQLQuerysetName`.
+Calls the Fabric API to list KQL Querysets in the target workspace. You can filter by either the queryset GUID (KQLQuerysetId) or the display name (KQLQuerysetName). If neither filter is provided all querysets are returned. Supplying both filters is not allowed.
 
 .PARAMETER WorkspaceId
-(Mandatory) The ID of the workspace to query KQLQuerysets.
+Mandatory. The GUID of the workspace containing the KQL Querysets.
+
+.PARAMETER KQLQuerysetId
+Optional. The GUID of a single KQL Queryset to retrieve directly. Use this for direct lookup when you know the identifier.
 
 .PARAMETER KQLQuerysetName
-(Optional) The name of the specific KQLQueryset to retrieve.
+Optional. The display name of a KQL Queryset to retrieve. Provide this when the Id is unknown and you want to match by name.
 
 .EXAMPLE
-Get-FabricKQLQueryset -WorkspaceId "12345" -KQLQuerysetName "Development"
+Get-FabricKQLQueryset -WorkspaceId $wId -KQLQuerysetId '1a2b3c4d-5555-6666-7777-88889999aaaa'
 
-Retrieves the "Development" KQLQueryset from workspace "12345".
+Returns only the queryset whose Id matches the given GUID.
 
 .EXAMPLE
-Get-FabricKQLQueryset -WorkspaceId "12345"
+Get-FabricKQLQueryset -WorkspaceId $wId -KQLQuerysetName 'User Activity'
 
-Retrieves all KQLQuerysets in workspace "12345".
+Returns the single queryset named 'User Activity' if it exists.
+
+.EXAMPLE
+Get-FabricKQLQueryset -WorkspaceId $wId
+
+Returns all querysets in the specified workspace.
 
 .NOTES
-- Requires `$FabricConfig` global configuration, including `BaseUrl` and `FabricHeaders`.
-- Calls `Test-TokenExpired` to ensure token validity before making the API request.
+- Requires `$FabricConfig` (BaseUrl, FabricHeaders).
+- Validates token freshness via `Test-TokenExpired` before request.
+- Only one of KQLQuerysetId or KQLQuerysetName can be specified.
 
-Author: Tiago Balabuch
+Author: Tiago Balabuch; Help extended by Copilot.
 
 #>
 function Get-FabricKQLQueryset {

@@ -1,31 +1,40 @@
 <#
 .SYNOPSIS
-Retrieves an KQLDatabase or a list of KQLDatabases from a specified workspace in Microsoft Fabric.
+Retrieves a specific KQL Database or all KQL Databases from a workspace.
 
 .DESCRIPTION
-The `Get-FabricKQLDatabase` function sends a GET request to the Fabric API to retrieve KQLDatabase details for a given workspace. It can filter the results by `KQLDatabaseName`.
+Calls the Fabric API to list KQL Databases in the target workspace. You can filter by either the database GUID (KQLDatabaseId) or the display name (KQLDatabaseName). If neither filter is provided all databases are returned. Supplying both filters is not allowed.
 
 .PARAMETER WorkspaceId
-(Mandatory) The ID of the workspace to query KQLDatabases.
+Mandatory. The GUID of the workspace containing the KQL Databases.
+
+.PARAMETER KQLDatabaseId
+Optional. The GUID of a single KQL Database to retrieve directly. Use this when you already know its identifier.
 
 .PARAMETER KQLDatabaseName
-(Optional) The name of the specific KQLDatabase to retrieve.
+Optional. The display name of a KQL Database to retrieve. Provide this when the Id is unknown and you want to match by name.
 
 .EXAMPLE
-Get-FabricKQLDatabase -WorkspaceId "12345" -KQLDatabaseName "Development"
+Get-FabricKQLDatabase -WorkspaceId $wId -KQLDatabaseId '1a2b3c4d-5555-6666-7777-88889999aaaa'
 
-Retrieves the "Development" KQLDatabase from workspace "12345".
+Returns only the database whose Id matches the given GUID.
 
 .EXAMPLE
-Get-FabricKQLDatabase -WorkspaceId "12345"
+Get-FabricKQLDatabase -WorkspaceId $wId -KQLDatabaseName 'Telemetry'
 
-Retrieves all KQLDatabases in workspace "12345".
+Returns the single database named 'Telemetry' if it exists.
+
+.EXAMPLE
+Get-FabricKQLDatabase -WorkspaceId $wId
+
+Returns all databases in the specified workspace.
 
 .NOTES
-- Requires `$FabricConfig` global configuration, including `BaseUrl` and `FabricHeaders`.
-- Calls `Test-TokenExpired` to ensure token validity before making the API request.
+- Requires `$FabricConfig` (BaseUrl, FabricHeaders).
+- Validates token freshness via `Test-TokenExpired` before request.
+- Only one of KQLDatabaseId or KQLDatabaseName can be specified.
 
-Author: Tiago Balabuch
+Author: Tiago Balabuch; Help extended by Copilot.
 
 #>
 function Get-FabricKQLDatabase {

@@ -9,6 +9,12 @@
 .PARAMETER WorkspaceId
     The ID of the workspace from which to retrieve datamarts. This parameter is mandatory.
 
+.PARAMETER DatamartId
+    Optional. The GUID of the datamart to retrieve. Provide this when you want to fetch a single, specific datamart by its identifier.
+
+.PARAMETER DatamartName
+    Optional. The display name of the datamart to retrieve. Use this to fetch a single datamart by name when the Id is not known.
+
 .EXAMPLE
      Get-FabricDatamart -WorkspaceId "12345"
     This example retrieves all datamarts from the workspace with ID "12345".
@@ -37,7 +43,7 @@ function Get-FabricDatamart {
 
     try {
         # Validate input parameters
-        if ($DataPipelineId -and $DataPipelineName) {
+        if ($DatamartId -and $DatamartName) {
             Write-Message -Message "Specify only one parameter: either 'DatamartId' or 'DatamartName'." -Level Error
             return $null
         }

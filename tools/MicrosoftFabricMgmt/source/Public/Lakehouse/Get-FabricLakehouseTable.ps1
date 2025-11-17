@@ -1,9 +1,22 @@
 <#
 .SYNOPSIS
-Retrieves one or more tables from a Lakehouse in a specific workspace in Microsoft Fabric.
+Gets table metadata for a Lakehouse.
 
 .DESCRIPTION
-This function fetches Lakehouse table metadata from a workspace.
+The Get-FabricLakehouseTable cmdlet retrieves table metadata for a specified Lakehouse within a workspace. Use this to
+inspect available tables or validate that ingestion has produced expected table objects.
+
+.PARAMETER WorkspaceId
+The GUID of the workspace hosting the Lakehouse. Required so the API can locate the Lakehouse resource scope.
+
+.PARAMETER LakehouseId
+The Id of the Lakehouse whose tables you want to enumerate. Required for the request URL. Provide the Lakehouse Id
+returned from a prior Get-FabricLakehouse call.
+
+.EXAMPLE
+Get-FabricLakehouseTable -WorkspaceId 11111111-2222-3333-4444-555555555555 -LakehouseId aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee
+
+Returns one or more table metadata objects for the specified Lakehouse.
 
 Author: Updated by Jess Pomfret and Rob Sewell November 2026
 #>

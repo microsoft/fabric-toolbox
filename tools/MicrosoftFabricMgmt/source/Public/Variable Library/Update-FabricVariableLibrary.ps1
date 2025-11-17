@@ -6,16 +6,19 @@
     Sends a PATCH request to the Microsoft Fabric API to update the specified Variable Library's name and optionally its description within a workspace.
 
 .PARAMETER WorkspaceId
-    The unique identifier of the workspace containing the Variable Library.
+    Mandatory. The GUID of the workspace that contains the Variable Library being updated.
 
 .PARAMETER VariableLibraryId
-    The unique identifier of the Variable Library to update.
+    Mandatory. The unique identifier (GUID) of the Variable Library to update.
 
 .PARAMETER VariableLibraryName
-    The new display name for the Variable Library.
+    Mandatory. The new display name to assign to the Variable Library.
 
 .PARAMETER VariableLibraryDescription
-    An optional new description for the Variable Library.
+    Optional. A longer description that explains the purpose or scope of the Variable Library.
+
+.PARAMETER ActiveValueSetName
+    Optional. The name of the active value set to select for this Variable Library. This determines which set of variable values is effective for dependent items within the workspace.
 
 .EXAMPLE
     Update-FabricVariableLibrary -WorkspaceId "workspace-12345" -VariableLibraryId "VariableLibrary-67890" -VariableLibraryName "Updated API" -VariableLibraryDescription "Updated description"

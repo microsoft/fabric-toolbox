@@ -1,31 +1,35 @@
 <#
 .SYNOPSIS
-Refreshes the metadata for a specific SQL Endpoint in a Fabric workspace.
+Refreshes metadata for a SQL Endpoint.
 
 .DESCRIPTION
-The Update-FabricSQLEndpointMetadata function triggers a metadata refresh for a given SQL Endpoint within a specified Fabric workspace.
-It validates authentication, constructs the appropriate API endpoint, and initiates the refresh operation.
-Optionally, it can wait for the operation to complete before returning.
+The Update-FabricSQLEndpointMetadata cmdlet triggers a metadata refresh for a SQL Endpoint in a specified Fabric
+workspace. Use -WaitForCompletion to block until the server completes the refresh operation and returns final status.
 
 .PARAMETER WorkspaceId
-The ID of the workspace containing the SQL Endpoint. This parameter is required.
+The GUID of the workspace hosting the SQL Endpoint. Required to construct the refresh endpoint URL.
 
 .PARAMETER SQLEndpointId
-The ID of the SQL Endpoint whose metadata will be refreshed. This parameter is required.
+The resource Id of the SQL Endpoint to refresh. Required so the service can identify which endpoint to process.
 
 .PARAMETER WaitForCompletion
-If specified, the function waits for the metadata refresh operation to complete before returning.
+Switch parameter. When present, waits for the refresh job to complete and returns final details. If omitted, the cmdlet
+starts the job and returns immediately with the async operation metadata.
 
 .EXAMPLE
 Update-FabricSQLEndpointMetadata -WorkspaceId "workspace123" -SQLEndpointId "endpoint456"
 
+Starts an asynchronous metadata refresh and returns immediately.
+
 .EXAMPLE
 Update-FabricSQLEndpointMetadata -WorkspaceId "workspace123" -SQLEndpointId "endpoint456" -WaitForCompletion
 
+Starts a refresh and waits until it completes before returning.
+
 .NOTES
-    - Requires `$FabricConfig` global configuration, including `BaseUrl` and `FabricHeaders`.
-    - Calls `Test-TokenExpired` to ensure token validity before making the API request.
-#
+    - Requires `$FabricConfig` global configuration, including BaseUrl and FabricHeaders.
+    - Calls Test-TokenExpired to ensure token validity before making the API request.
+
 .AUTHOR
 Author: Jess Pomfret and Rob Sewell updated November 2026
 #>

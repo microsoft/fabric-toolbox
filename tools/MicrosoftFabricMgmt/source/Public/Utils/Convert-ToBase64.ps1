@@ -8,7 +8,7 @@
     documents) in text-based formats such as JSON or XML.
 
 .PARAMETER filePath
-    The full path to the file whose contents you want to encode into Base64.
+    Mandatory. Full path to the file whose contents will be read as bytes and encoded into a Base64 string. The path must exist and refer to a file; directories or missing paths will cause the command to fail.
 
 .EXAMPLE
      Convert-ToBase64  -filePath "C:\Path\To\File.txt"

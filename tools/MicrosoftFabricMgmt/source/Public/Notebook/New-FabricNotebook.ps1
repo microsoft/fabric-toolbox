@@ -22,6 +22,9 @@ An optional path to the notebook definition file (e.g., .ipynb file) to upload.
 .PARAMETER NotebookPathPlatformDefinition
 An optional path to the platform-specific definition (e.g., .platform file) to upload.
 
+.PARAMETER NotebookFormat
+Optional. Specifies the format of the notebook definition being uploaded. Use 'ipynb' for standard Jupyter notebooks or 'fabricGitSource' when providing content from a Fabric Git source. Defaults to 'ipynb'.
+
 .EXAMPLE
  Add-FabricNotebook -WorkspaceId "workspace-12345" -NotebookName "New Notebook" -NotebookPathDefinition "C:\notebooks\example.ipynb"
 

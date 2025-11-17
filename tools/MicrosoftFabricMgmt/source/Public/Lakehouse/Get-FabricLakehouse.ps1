@@ -1,29 +1,40 @@
 <#
 .SYNOPSIS
-Retrieves an Lakehouse or a list of Lakehouses from a specified workspace in Microsoft Fabric.
+Gets a Lakehouse or lists all Lakehouses in a workspace.
 
 .DESCRIPTION
-The `Get-FabricLakehouse` function sends a GET request to the Fabric API to retrieve Lakehouse details for a given workspace. It can filter the results by `LakehouseName`.
+The Get-FabricLakehouse cmdlet retrieves Lakehouse items from a specified Microsoft Fabric workspace. You can list all
+Lakehouses or filter by a specific lakehouse Id or display name. Only one of LakehouseId or LakehouseName can be used.
 
 .PARAMETER WorkspaceId
-(Mandatory) The ID of the workspace to query Lakehouses.
+The GUID of the workspace containing the Lakehouse resources you wish to enumerate. This is required for every call.
+
+.PARAMETER LakehouseId
+Optional. Returns only the Lakehouse matching this resource Id. Use this when you previously captured the Id from a
+listing and want a direct lookup without client filtering.
 
 .PARAMETER LakehouseName
-(Optional) The name of the specific Lakehouse to retrieve.
+Optional. Returns only the Lakehouse whose display name exactly matches this value. Provide this when the Id is not
+known. Do not combine with LakehouseId.
+
+.EXAMPLE
+Get-FabricLakehouse -WorkspaceId "12345" -LakehouseId "aaaaaaaa-bbbb-cccc-dddd-ffffffffffff"
+
+Returns the single Lakehouse with the specified Id.
 
 .EXAMPLE
 Get-FabricLakehouse -WorkspaceId "12345" -LakehouseName "Development"
 
-Retrieves the "Development" Lakehouse from workspace "12345".
+Retrieves the Lakehouse named Development from workspace 12345.
 
 .EXAMPLE
 Get-FabricLakehouse -WorkspaceId "12345"
 
-Retrieves all Lakehouses in workspace "12345".
+Lists all Lakehouses available in the workspace.
 
 .NOTES
-- Requires `$FabricConfig` global configuration, including `BaseUrl` and `FabricHeaders`.
-- Calls `Test-TokenExpired` to ensure token validity before making the API request.
+- Requires `$FabricConfig` global configuration, including BaseUrl and FabricHeaders.
+- Calls Test-TokenExpired to ensure token validity before making the API request.
 
 Author: Tiago Balabuch
 

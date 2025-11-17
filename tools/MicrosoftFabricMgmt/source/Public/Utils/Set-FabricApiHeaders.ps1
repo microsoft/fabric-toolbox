@@ -7,13 +7,13 @@ The `Set-FabricApiHeaders` function logs into the specified Azure tenant, retrie
 It also updates the token expiration time and global tenant ID.
 
 .PARAMETER TenantId
-The Azure tenant ID for which the access token is requested.
+Mandatory. The Azure Active Directory tenant (directory) GUID used to scope authentication and obtain a Fabric API access token. This value determines which tenant context is set for subsequent Fabric operations.
 
 .PARAMETER AppId
-The Azure app ID for which the service principal access token is requested.
+Optional. Client/Application ID (GUID) of the Azure AD application (service principal) to authenticate with instead of the current user. Provide together with AppSecret for non-interactive automation scenarios.
 
 .PARAMETER AppSecret
-The Azure App secret for which the service principal access token is requested.
+Optional. Secure string containing the client secret associated with the AppId service principal. Convert a plain text secret using `ConvertTo-SecureString -AsPlainText -Force` before passing. When supplied with AppId enables service principal authentication.
 
 .EXAMPLE
 Set-FabricApiHeaders -TenantId "your-tenant-id"
