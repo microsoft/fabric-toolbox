@@ -15,6 +15,8 @@ $expectedParams = @(
     "PipelineVariable"
     "ErrorVariable"
     "WarningVariable"
+    "Confirm"
+    "WhatIf"
 )
 )
 
