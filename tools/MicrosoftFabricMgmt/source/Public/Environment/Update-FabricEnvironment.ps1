@@ -5,6 +5,9 @@ Updates the properties of a Fabric Environment.
 .DESCRIPTION
 The `Update-FabricEnvironment` function updates the name and/or description of a specified Fabric Environment by making a PATCH request to the API.
 
+.PARAMETER WorkspaceId
+The ID of the Microsoft Fabric workspace that contains the Environment to update. Required to scope the API request.
+
 .PARAMETER EnvironmentId
 The unique identifier of the Environment to be updated.
 

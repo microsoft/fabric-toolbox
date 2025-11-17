@@ -5,6 +5,11 @@ Starts mirroring for a specified MirroredDatabase in a workspace.
 .DESCRIPTION
 Initiates mirroring on the MirroredDatabase via the Fabric API with proper authentication and confirmation support.
 Author: Updated by Jess Pomfret and Rob Sewell November 2026
+.PARAMETER WorkspaceId
+The ID of the Microsoft Fabric workspace that contains the Mirrored Database to start mirroring for. This value is required to scope the API request.
+
+.PARAMETER MirroredDatabaseId
+The identifier of the Mirrored Database to start mirroring. Provide the resource ID of the target mirrored database within the specified workspace.
 #>
 function Start-FabricMirroredDatabaseMirroring {
     [CmdletBinding(SupportsShouldProcess = $true, ConfirmImpact = 'Medium')]

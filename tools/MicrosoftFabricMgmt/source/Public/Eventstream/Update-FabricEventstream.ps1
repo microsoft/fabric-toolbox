@@ -5,6 +5,9 @@ Updates the properties of a Fabric Eventstream.
 .DESCRIPTION
 The `Update-FabricEventstream` function updates the name and/or description of a specified Fabric Eventstream by making a PATCH request to the API.
 
+.PARAMETER WorkspaceId
+The ID of the Microsoft Fabric workspace that contains the Eventstream to update. Required to scope the API request.
+
 .PARAMETER EventstreamId
 The unique identifier of the Eventstream to be updated.
 

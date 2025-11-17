@@ -8,6 +8,9 @@ The `Get-FabricEnvironment` function sends a GET request to the Fabric API to re
 .PARAMETER WorkspaceId
 (Mandatory) The ID of the workspace to query environments.
 
+.PARAMETER EnvironmentId
+(Optional) The unique identifier of the Environment to retrieve. Use this to fetch a single environment by its ID.
+
 .PARAMETER EnvironmentName
 (Optional) The name of the specific environment to retrieve.
 

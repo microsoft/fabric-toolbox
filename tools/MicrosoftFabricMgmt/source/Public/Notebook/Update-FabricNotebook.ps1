@@ -5,6 +5,9 @@ Updates the properties of a Fabric Notebook.
 .DESCRIPTION
 The `Update-FabricNotebook` function updates the name and/or description of a specified Fabric Notebook by making a PATCH request to the API.
 
+.PARAMETER WorkspaceId
+The ID of the Microsoft Fabric workspace that contains the Notebook to update. Required to scope the API request.
+
 .PARAMETER NotebookId
 The unique identifier of the Notebook to be updated.
 

@@ -9,11 +9,11 @@
 .PARAMETER WorkspaceId
     The unique identifier of the workspace where the Data Pipeline exists. This parameter is mandatory.
 
-.PARAMETER Data PipelineId
-    The unique identifier of the Data Pipeline to retrieve. This parameter is optional.
+.PARAMETER DataPipelineId
+    The unique identifier of the Data Pipeline to retrieve. This parameter is optional and filters the results to a single pipeline when provided.
 
-.PARAMETER Data PipelineName
-    The name of the Data Pipeline to retrieve. This parameter is optional.
+.PARAMETER DataPipelineName
+    The display name of the Data Pipeline to retrieve. This parameter is optional and filters the results by name.
 
 .EXAMPLE
      Get-FabricData Pipeline -WorkspaceId "workspace-12345" -Data PipelineId "Data Pipeline-67890"

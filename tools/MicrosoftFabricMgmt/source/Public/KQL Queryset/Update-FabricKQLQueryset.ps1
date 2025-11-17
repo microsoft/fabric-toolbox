@@ -5,6 +5,9 @@ Updates the properties of a Fabric KQLQueryset.
 .DESCRIPTION
 The `Update-FabricKQLQueryset` function updates the name and/or description of a specified Fabric KQLQueryset by making a PATCH request to the API.
 
+.PARAMETER WorkspaceId
+The ID of the Microsoft Fabric workspace that contains the KQL Queryset to update. Required to scope the API request.
+
 .PARAMETER KQLQuerysetId
 The unique identifier of the KQLQueryset to be updated.
 

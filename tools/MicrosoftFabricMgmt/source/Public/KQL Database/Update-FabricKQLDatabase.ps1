@@ -5,6 +5,9 @@ Updates the properties of a Fabric KQLDatabase.
 .DESCRIPTION
 The `Update-FabricKQLDatabase` function updates the name and/or description of a specified Fabric KQLDatabase by making a PATCH request to the API.
 
+.PARAMETER WorkspaceId
+The ID of the Microsoft Fabric workspace that contains the KQL Database to update. Required to scope the API request.
+
 .PARAMETER KQLDatabaseId
 The unique identifier of the KQLDatabase to be updated.
 

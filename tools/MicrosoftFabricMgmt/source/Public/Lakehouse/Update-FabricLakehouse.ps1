@@ -5,6 +5,9 @@ Updates the properties of a Fabric Lakehouse.
 .DESCRIPTION
 The `Update-FabricLakehouse` function updates the name and/or description of a specified Fabric Lakehouse by making a PATCH request to the API.
 
+.PARAMETER WorkspaceId
+The ID of the Microsoft Fabric workspace that contains the Lakehouse to update. Required to scope the API request.
+
 .PARAMETER LakehouseId
 The unique identifier of the Lakehouse to be updated.
 

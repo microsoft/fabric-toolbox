@@ -5,6 +5,9 @@ Updates the properties of a Fabric MirroredDatabase.
 .DESCRIPTION
 The `Update-FabricMirroredDatabase` function updates the name and/or description of a specified Fabric MirroredDatabase by making a PATCH request to the API.
 
+.PARAMETER WorkspaceId
+The ID of the Microsoft Fabric workspace that contains the Mirrored Database to update. Required to scope the API request.
+
 .PARAMETER MirroredDatabaseId
 The unique identifier of the MirroredDatabase to be updated.
 
