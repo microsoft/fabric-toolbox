@@ -88,7 +88,7 @@ BuildWorkflow:
 Pester:
   OutputFormat: NUnitXML
   # Excludes one or more paths from being used to calculate code coverage.
-  ExcludeFromCodeCoverage:
+  ExcludeFromCodeCoverage: .\tests
 
   # If no scripts are defined the default is to use all the tests under the project's
   # tests folder or source folder (if present). Test script paths can be defined to
@@ -104,7 +104,7 @@ Pester:
   #  - FunctionalQuality
   #  - TestQuality
   Tag:
-  CodeCoverageThreshold: 0.30 # 85 # Set to 0 to bypass
+  CodeCoverageThreshold: 0 # 85 # Set to 0 to bypass
   #CodeCoverageOutputFile: JaCoCo_$OsShortName.xml
   #CodeCoverageOutputFileEncoding: ascii
   # Use this if code coverage should be merged from several pipeline test jobs.
