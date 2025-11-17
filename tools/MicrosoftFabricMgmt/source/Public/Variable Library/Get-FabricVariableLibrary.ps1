@@ -27,6 +27,7 @@
     - Requires a `$FabricConfig` global variable with `BaseUrl` and `FabricHeaders`.
     - Uses `Test-TokenExpired` to validate authentication before making the API call.
 
+    Author: Updated by Jess Pomfret and Rob Sewell November 2026
     Author: Tiago Balabuch
 #>
 function Get-FabricVariableLibrary {

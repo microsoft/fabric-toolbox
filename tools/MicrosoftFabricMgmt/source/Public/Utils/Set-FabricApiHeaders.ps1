@@ -32,9 +32,8 @@ Logs in to Azure with the specified tenant ID, retrieves an access token for the
 .NOTES
 - Ensure the `Connect-AzAccount` and `Get-AzAccessToken` commands are available (Azure PowerShell module required).
 - Relies on a global `$FabricConfig` object for storing headers and token metadata.
+    Author: Updated by Jess Pomfret and Rob Sewell November 2026
 
-.AUTHOR
-Author: Jess Pomfret and Rob Sewell updated November 2026
 #>
 function Set-FabricApiHeaders {
     [CmdletBinding(SupportsShouldProcess=$true, ConfirmImpact='Medium')]

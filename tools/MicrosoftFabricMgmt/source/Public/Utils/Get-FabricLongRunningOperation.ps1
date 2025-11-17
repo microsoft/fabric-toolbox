@@ -35,9 +35,8 @@ Uses a raw location URL to track an operation, polling every 3 seconds.
 
 .NOTES
 Either operationId or location must be provided (but not both). Token validity is validated before polling.
+    Author: Updated by Jess Pomfret and Rob Sewell November 2026
 
-.AUTHOR
-Author: Jess Pomfret and Rob Sewell updated November 2026
 
 #>
 function Get-FabricLongRunningOperation {

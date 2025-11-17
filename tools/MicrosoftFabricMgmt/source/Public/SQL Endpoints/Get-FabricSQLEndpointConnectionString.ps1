@@ -28,6 +28,8 @@ Get-FabricSQLEndpointConnectionString -WorkspaceId "workspace123" -SQLEndpointId
 .NOTES
     - Requires `$FabricConfig` global configuration, including `BaseUrl` and `FabricHeaders`.
     - Calls `Test-TokenExpired` to ensure token validity before making the API request.
+    Author: Updated by Jess Pomfret and Rob Sewell November 2026
+
 #>
 function Get-FabricSQLEndpointConnectionString {
     [CmdletBinding()]

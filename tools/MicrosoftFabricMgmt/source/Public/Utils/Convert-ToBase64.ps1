@@ -25,9 +25,8 @@
 .NOTES
     - Ensure the file exists at the specified path before running this function.
     - Large files may cause memory constraints due to full loading into memory.
+    Author: Updated by Jess Pomfret and Rob Sewell November 2026
 
-.AUTHOR
-Author: Jess Pomfret and Rob Sewell updated November 2026
 #>
 function Convert-ToBase64 {
     [CmdletBinding()]

@@ -1,34 +1,32 @@
 <#
 .SYNOPSIS
-    Decodes a Base64-encoded string into its original text representation.
+Decodes a Base64-encoded string into its original text representation.
 
 .DESCRIPTION
-    The Convert-FromBase64 function takes a Base64-encoded string as input, decodes it into a byte array,
-    and converts it back into a UTF-8 encoded string. It is useful for reversing Base64 encoding applied
-    to text or other data.
+The Convert-FromBase64 function takes a Base64-encoded string as input, decodes it into a byte array,and converts it back into a UTF-8 encoded string. It is useful for reversing Base64 encoding applied to text or other data.
 
 .PARAMETER Base64String
-    Mandatory. The Base64-encoded input string to decode back to its original UTF-8 text form. Supply a valid Base64 value; invalid padding or illegal characters will raise an error before returning a result.
+Mandatory. The Base64-encoded input string to decode back to its original UTF-8 text form. Supply a valid Base64 value; invalid padding or illegal characters will raise an error before returning a result.
 
 .EXAMPLE
-    Convert-FromBase64 -Base64String "SGVsbG8sIFdvcmxkIQ=="
+Convert-FromBase64 -Base64String "SGVsbG8sIFdvcmxkIQ=="
 
-    Output:
+Output
     Hello, World!
 
 .EXAMPLE
-    $encodedString = "U29tZSBlbmNvZGVkIHRleHQ="
-    Convert-FromBase64 -Base64String $encodedString
+$encodedString = "U29tZSBlbmNvZGVkIHRleHQ="
+Convert-FromBase64 -Base64String $encodedString
 
-    Output:
+Output
     Some encoded text
 
 .NOTES
-    - This function assumes the Base64 input is a valid UTF-8 encoded string.
-    - Any decoding errors will throw a descriptive error message.
+This function assumes the Base64 input is a valid UTF-8 encoded string.
+Any decoding errors will throw a descriptive error message.
+    Author: Updated by Jess Pomfret and Rob Sewell November 2026
 
-.AUTHOR
-Author: Jess Pomfret and Rob Sewell updated November 2026
+
 #>
 function Convert-FromBase64 {
     param (

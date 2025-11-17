@@ -18,9 +18,7 @@ Checks the token expiration status using the provided `$config` object.
 .NOTES
 - Ensure the `FabricConfig` object includes a valid `TokenExpiresOn` property of type `DateTimeOffset`.
 - Requires the `Write-Message` function for logging.
-
-.AUTHOR
-Tiago Balabuch
+    :     AUTHOR: - Tiago Balabuch
 #>
 function Test-TokenExpired {
     [CmdletBinding()]

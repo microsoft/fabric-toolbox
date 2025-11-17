@@ -25,6 +25,8 @@
 .NOTES
     Ensure that the necessary authentication tokens are valid before running this function.
     The function logs detailed messages for debugging and informational purposes.
+    Author: Updated by Jess Pomfret and Rob Sewell November 2026
+
 #>
 function Start-FabricSparkJobDefinitionOnDemand {
     [CmdletBinding(SupportsShouldProcess=$true, ConfirmImpact='Medium')]

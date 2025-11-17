@@ -10,6 +10,14 @@ The ID of the Microsoft Fabric workspace that contains the Mirrored Database to 
 
 .PARAMETER MirroredDatabaseId
 The identifier of the Mirrored Database to start mirroring. Provide the resource ID of the target mirrored database within the specified workspace.
+
+.EXAMPLE
+Start-FabricMirroredDatabaseMirroring -WorkspaceId "workspace123" -MirroredDatabase
+Starts mirroring for the Mirrored Database with the ID "MirroredDatabase123" in the workspace "workspace123".
+.NOTES
+- Requires `$FabricConfig` global configuration, including `BaseUrl` and `FabricHeaders`.
+- Author: Updated by Jess Pomfret and Rob Sewell November 2026
+
 #>
 function Start-FabricMirroredDatabaseMirroring {
     [CmdletBinding(SupportsShouldProcess = $true, ConfirmImpact = 'Medium')]

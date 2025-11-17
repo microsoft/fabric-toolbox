@@ -1,33 +1,26 @@
 <#
 .SYNOPSIS
 Suspends (pauses) a source of an Eventstream in a Microsoft Fabric workspace.
-
 .DESCRIPTION
 Sends a POST request to the Microsoft Fabric API to pause a specific source of an Eventstream within a workspace.
 Ensures the authentication token is valid before making the API call.
-
 .PARAMETER WorkspaceId
-The ID of the Microsoft Fabric workspace.
-
+The ID of the Microsoft Fabric workspace containing the Eventstream.
 .PARAMETER EventstreamId
-The ID of the Eventstream containing the source.
-
+The unique identifier of the Eventstream whose source is to be paused.
 .PARAMETER SourceId
-The ID of the source to pause.
-
+The unique identifier of the source within the Eventstream to be paused.
 .EXAMPLE
-Suspend-FabricEventstreamSource -WorkspaceId "workspace-12345" -EventstreamId "eventstream-67890" -SourceId "source-abcde"
+Suspend-FabricEventstreamSource -WorkspaceId "Workspace123" -EventstreamId "Eventstream123" -SourceId "Source123"
+Pauses the source with ID "Source123" of the Eventstream "Eventstream123"
 
 .NOTES
-Requires the global $FabricConfig (BaseUrl and FabricHeaders).
-Calls Test-TokenExpired to validate the authentication token before making the request.
+- Requires `$FabricConfig` global configuration, including `BaseUrl` and `FabricHeaders`.
+- Calls `Test-TokenExpired` to ensure token validity before making the API request.
+Author: Tiago Balabuch
+Updated by Jess Pomfret and Rob Sewell November 2026
 
-.AUTHOR
-Tiago Balabuch
-         Updated by Jess Pomfret and Rob Sewell November 2026
 #>
-
-
 function Suspend-FabricEventstreamSource {
     [CmdletBinding(SupportsShouldProcess = $true, ConfirmImpact = 'Medium')]
     param (
