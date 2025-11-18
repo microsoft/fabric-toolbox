@@ -1,4 +1,4 @@
-﻿Name,Description,State,Main,Included,Category
+Name,Description,State,Main,Included,Category
 Activator - Event Analytics,Represents Data Activator on your capacity,GA,FALSE,TRUE,Activator
 Activator - Event Analytics Capacity Usage CU,Represents Data Activator on your capacity,GA,FALSE,TRUE,Activator
 Apache Airflow job,Represents Apache Airflow on your capacity,GA,FALSE,TRUE,Apache Airflow
@@ -7,7 +7,7 @@ API for GraphQL Query,Represents GraphQL Query API for your capacity,GA,FALSE,TR
 API for GraphQL Query Capacity Usage CU,Represents GraphQL Query API for your capacity,GA,FALSE,TRUE,GraphQL
 Autoscale for Spark,Represents autoscale for Spark on your capacity,GA,FALSE,FALSE,Spark
 autoscale for Spark Capacity Usage CU,Represents autoscale for Spark on your capacity,Preview,FALSE,FALSE,Spark
-BCDR Storage Data Stored,BCDR Storage Data Stored,GA,FALSE,TRUE,BCDR
+OneLake Cache Data Stored,OneLake Cache Data Stored,GA,FALSE,FALSE,OneLake
 Compute Pool Capacity Usage CU,Represents the available capacity,GA,TRUE,TRUE,Fabric CU
 Copilot and AI,Represents Copilot and AI on your capacity,GA,FALSE,TRUE,Copilot
 Copilot and AI Capacity Usage CU,Represents Copilot and AI on your capacity,GA,FALSE,TRUE,Copilot
@@ -40,6 +40,8 @@ High Scale Dataflow Compute Capacity Usage CU,High Scale Dataflow Compute Capaci
 KQL Database Capacity Usage CU,Represents the KQL database up time usage on your capacity,GA,FALSE,TRUE,RTI
 ML Model Endpoint,Represents ML Model Endpoint on your capacity,GA,FALSE,TRUE,ML
 ML Model Endpoint Capacity Usage CU,Represents ML Model Endpoint on your capacity,GA,FALSE,TRUE,ML
+OneLake Storage Data Stored,OneLake Storage Data Stored,GA,FALSE,FALSE,OneLake
+BCDR Storage Data Stored,BCDR Storage Data Stored,GA,FALSE,FALSE,OneLake
 OneLake BCDR Iterative Read Operation via proxy Capacity Usage CU,OneLake BCDR Iterative Read Operation via proxy Capacity Usage CU,GA,FALSE,TRUE,BCDR
 OneLake BCDR Iterative Read Operations Capacity Usage CU,Represents the OneLake BCDR Iterative Read via Redirect transaction compute usage on your capacity,GA,FALSE,TRUE,BCDR
 OneLake BCDR Iterative Read Operations via API Capacity Usage CU,Represents the OneLake BCDR Iterative Read via Proxy transaction compute usage on your capacity,GA,FALSE,TRUE,BCDR
@@ -51,7 +53,6 @@ OneLake BCDR Read Operations Capacity Usage CU,Represents the OneLake BCDR Read 
 OneLake BCDR Read Operations via API Capacity Usage CU,Represents the OneLake BCDR Read via Proxy & Shortcut Read via Proxy transaction compute usage on your capacity,GA,FALSE,TRUE,BCDR
 OneLake BCDR Write Operations Capacity Usage CU,Represents the OneLake BCDR Write via Redirect & Shortcut Write via Redirect transaction compute usage on your capacity,GA,FALSE,TRUE,BCDR
 OneLake BCDR Write Operations via proxy Capacity Usage CU,OneLake BCDR Write Operations via proxy Capacity Usage CU,GA,FALSE,TRUE,BCDR
-OneLake Cache Data Stored,OneLake Cache Data Stored,GA,FALSE,TRUE,OneLake
 OneLake Iterative Read Operations Capacity Usage CU,Represents the OneLake Iterative Read via Redirect transaction compute usage on your capacity,GA,FALSE,TRUE,OneLake
 OneLake Iterative Read Operations via API Capacity Usage CU,Represents the OneLake Iterative Read via Proxy transaction compute usage on your capacity,GA,FALSE,TRUE,OneLake
 OneLake Iterative Read Operations via proxy Capacity Usage CU,OneLake Iterative Read Operations via proxy Capacity Usage CU,GA,FALSE,TRUE,OneLake
@@ -64,7 +65,6 @@ OneLake Read Operations Capacity Usage CU,Represents the OneLake Read via Redire
 OneLake Read Operations via API Capacity Usage CU,Represents the OneLake Read via Proxy & Shortcut Read via Proxy transaction compute usage on your capacity,GA,FALSE,TRUE,OneLake
 OneLake Read Operations via proxy Capacity Usage CU,OneLake Read Operations via proxy Capacity Usage CU,GA,FALSE,TRUE,OneLake
 OneLake Security Capacity Usage CU,OneLake Security Capacity Usage CU,GA,FALSE,TRUE,OneLake
-OneLake Storage Data Stored,OneLake Storage Data Stored,GA,FALSE,FALSE,OneLake
 OneLake Write Operations Capacity Usage CU,Represents the OneLake Write via Redirect & Shortcut Write via Redirect transaction compute usage on your capacity,GA,FALSE,TRUE,OneLake
 OneLake Write Operations via proxy Capacity Usage CU,OneLake Write Operations via proxy Capacity Usage CU,GA,FALSE,TRUE,OneLake
 Power BI Capacity Usage CU,Represents the Power BI usage on your capacity,GA,FALSE,TRUE,Power BI
@@ -74,11 +74,13 @@ Real-Time Intelligence - Event Listener & Alert Capacity Usage CU,Represents Eve
 Real-Time Intelligence - Event Operations,Represents Event Operations for Real-Time Intelligence on your capacity,GA,FALSE,TRUE,RTI
 Real-Time Intelligence - Event Operations Capacity Usage CU,Real-Time Intelligence - Event Operations Capacity Usage CU,GA,FALSE,TRUE,RTI
 Spark Memory Optimized Capacity Usage CU,Represents the Spark usage on your capacity,GA,FALSE,TRUE,Spark
-SQL Backup Storage Data Stored,SQL Backup Storage Data Stored,GA,FALSE,TRUE,SQL
+SQL Backup Storage Data Stored,SQL Backup Storage Data Stored,GA,FALSE,FALSE,OneLake
 SQL database in Microsoft Fabric,Represents SQL database in Microsoft Fabric on your capacity,GA,FALSE,TRUE,SQL
 SQL database in Microsoft Fabric Capacity Usage CU,SQL database in Microsoft Fabric Capacity Usage CU,GA,FALSE,TRUE,SQL
-SQL Storage Data Stored,SQL Storage Data Stored,GA,FALSE,TRUE,SQL
+SQL Storage Data Stored,SQL Storage Data Stored,GA,FALSE,FALSE,OneLake
 Storage Mirroring Data Stored,Storage Mirroring Data Stored,GA,FALSE,FALSE,Mirroring
 Storage Mirroring Free Data Stored,Storage Mirroring Free Data Stored,GA,FALSE,TRUE,Mirroring
 user data functions Capacity Usage CU,user data functions Capacity Usage CU,GA,FALSE,TRUE,UDF
 VNet Data Gateway Capacity Usage CU,VNet Data Gateway Capacity Usage CU,GA,FALSE,TRUE,VNET
+OneLake BCDR Other Operations via proxy Capacity Usage CU,OneLake BCDR Other Operations via proxy Capacity Usage CU,GA,FALSE,TRUE,OneLake
+OneLake BCDR Read Operations via Proxy Capacity Usage CU,OneLake BCDR Read Operations via Proxy Capacity Usage CU,GA,FALSE,TRUE,OneLake
