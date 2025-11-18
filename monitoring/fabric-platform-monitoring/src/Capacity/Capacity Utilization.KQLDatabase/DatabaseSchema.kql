@@ -34,7 +34,8 @@
         utilizationBackgroundPreview=toreal(data.utilizationBackgroundPreview),
         utilizationInteractivePreview=toreal(data.utilizationInteractivePreview),
         processedOverageCapacityUnitsMs=toreal(data.processedOverageCapacityUnitsMs),
-        capacityUnitUtilizationBreakdown=parse_json(tostring(data.capacityUnitUtilizationBreakdown))
+        capacityUnitUtilizationBreakdown=data.capacityUnitUtilizationBreakdown,
+        overageBillingLimitCapacityUnitsMs=toreal(data.overageBillingLimitCapacityUnitsMs)
     | extend
         timepointCapacityUnits = baseCapacityUnits * 30,
         capacityUnitSecond=capacityUnitMs / 1000.0
@@ -68,7 +69,8 @@
         utilizationBackgroundPreview,
         utilizationInteractivePreview,
         processedOverageCapacityUnitsMs,
-        capacityUnitUtilizationBreakdown
+        capacityUnitUtilizationBreakdown,
+        overageBillingLimitCapacityUnitsMs
  }
 .create-or-alter function with (folder = "UpdatePolicyFunctions", skipvalidation = "true") parse_CapacityEventsState() {
      CapacityEventsRaw
@@ -112,7 +114,7 @@
         windowEndTime=todatetime(data.windowEndTime),
         windowStartTime=todatetime(data.windowStartTime),
         baseCapacityUnits=tolong(data.baseCapacityUnits),  
-        cuBreakdown=parse_json(tostring(data.capacityUnitUtilizationBreakdown))
+        cuBreakdown=data.capacityUnitUtilizationBreakdown
     | mv-expand cuBreakdown
     | project
         id,
