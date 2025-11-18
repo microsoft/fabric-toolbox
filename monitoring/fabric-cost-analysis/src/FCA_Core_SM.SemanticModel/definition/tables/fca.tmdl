@@ -58,7 +58,16 @@ table fca
 		changedProperty = Description
 
 	/// Calculates the sum of effective costs for included meters with a specific commitment discount type, adjusted by pause costs
-	measure #CapacityPAYG = CALCULATE(SUM(fca[EffectiveCost]),meters[Included]=TRUE(),fca[CommitmentDiscountType]<>"Reservation")-[#PauseCost]+0
+	measure #CapacityPAYG = ```
+			
+			Var Reservation = CALCULATE(SUM(fca[EffectiveCost]),fca[EffectiveCost]>0.1,meters[Included]=TRUE(),fca[CommitmentDiscountType]<>"Reservation")+0-[#PauseCost]
+			RETURN
+			IF (
+			    Reservation < 0, 
+			    0, 
+			    Reservation
+			)
+			```
 		lineageTag: e739fabf-5c72-4db9-9c58-c0c8e018373a
 
 		formatStringDefinition =
@@ -289,7 +298,7 @@ table fca
 		changedProperty = Description
 
 	/// Calculates the percentage of Pause Cost relative to Capacity PAYG
-	measure 'PauseCost %' = DIVIDE( [#PauseCost], [#CapacityPAYG])
+	measure 'PauseCost %' = DIVIDE( [#PauseCost], ([#CapacityPAYG] + [#Reservation]) )
 		formatString: 0.00\ %;-0.00\ %;0.00\ %
 		lineageTag: 3c913747-fa14-4861-bb53-f72504573826
 
