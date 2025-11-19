@@ -78,12 +78,12 @@
     "libraryVariables": {
       "FabricPlatformMonitoring_cluster_ingest": {
         "type": "String",
-        "variableName": "cluster_ingest",
+        "variableName": "kusto_ingest_uri",
         "libraryName": "Fabric Platform Monitoring"
       },
       "FabricPlatformMonitoring_cluster_query": {
         "type": "String",
-        "variableName": "cluster_query",
+        "variableName": "kusto_query_uri",
         "libraryName": "Fabric Platform Monitoring"
       },
       "FabricPlatformMonitoring_key_vault_uri": {

@@ -12,7 +12,7 @@
 
 # CELL ********************
 
-%pip install fabric-deployment-tool==0.1.2 --quiet
+%pip install fabric-deployment-tool --quiet
 
 # METADATA ********************
 
