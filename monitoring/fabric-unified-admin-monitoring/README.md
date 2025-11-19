@@ -38,6 +38,7 @@ FUAM extracts the following data from the tenant:
 - Tenant meta data (Scanner API)
 - Capacity Refreshables
 - Git Connections
+- **Feature Releases & Preview Tracking** (NEW)
 - Engine level insights (coming soon in optimization module)
 
 
@@ -104,6 +105,7 @@ The FUAM solution accelerator template **is not an official Microsoft service**.
 - [Documentation - FUAM Architecture](/monitoring/fabric-unified-admin-monitoring/media/documentation/FUAM_Architecture.md)
 - [Documentation - FUAM Lakehouse table lineage](/monitoring/fabric-unified-admin-monitoring/media/documentation/FUAM_Documentation_Lakehouse_table_lineage.pdf)
 - [Documentation - FUAM Engine level analyzer reports](/monitoring/fabric-unified-admin-monitoring/media/documentation/FUAM_Engine_Level_Analyzer_Reports.md)
+- [Documentation - FUAM Feature Release Tracking](/monitoring/fabric-unified-admin-monitoring/media/documentation/Feature_Release_Tracking_Documentation.md)
 
 ##### Some other Fabric Toolbox assets
 - [Overview - Fabric Cost Analysis](/monitoring/fabric-cost-analysis/README.md)
