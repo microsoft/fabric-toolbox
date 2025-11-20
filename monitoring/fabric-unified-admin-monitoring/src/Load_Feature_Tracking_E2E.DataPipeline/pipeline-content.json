@@ -1,0 +1,114 @@
+{
+    "properties": {
+        "activities": [
+            {
+                "name": "01_Transfer_Feature_Releases_Unit",
+                "type": "TridentNotebook",
+                "dependsOn": [],
+                "policy": {
+                    "timeout": "0.12:00:00",
+                    "retry": 0,
+                    "retryIntervalInSeconds": 30,
+                    "secureOutput": false,
+                    "secureInput": false
+                },
+                "typeProperties": {
+                    "notebookId": "REPLACE_WITH_NOTEBOOK_ID",
+                    "workspaceId": "REPLACE_WITH_WORKSPACE_ID",
+                    "parameters": {
+                        "whats_new_url": {
+                            "value": {
+                                "value": "@pipeline().parameters.whats_new_url",
+                                "type": "Expression"
+                            },
+                            "type": "string"
+                        },
+                        "lookback_days": {
+                            "value": {
+                                "value": "@pipeline().parameters.lookback_days",
+                                "type": "Expression"
+                            },
+                            "type": "int"
+                        }
+                    },
+                    "sessionTag": "fuam_feature_tracking"
+                }
+            },
+            {
+                "name": "02_Transfer_Preview_Features_Unit",
+                "type": "TridentNotebook",
+                "dependsOn": [
+                    {
+                        "activity": "01_Transfer_Feature_Releases_Unit",
+                        "dependencyConditions": [
+                            "Succeeded"
+                        ]
+                    }
+                ],
+                "policy": {
+                    "timeout": "0.12:00:00",
+                    "retry": 0,
+                    "retryIntervalInSeconds": 30,
+                    "secureOutput": false,
+                    "secureInput": false
+                },
+                "typeProperties": {
+                    "notebookId": "REPLACE_WITH_NOTEBOOK_ID",
+                    "workspaceId": "REPLACE_WITH_WORKSPACE_ID",
+                    "parameters": {},
+                    "sessionTag": "fuam_feature_tracking"
+                }
+            },
+            {
+                "name": "03_Transfer_Feature_Alerts_Unit",
+                "type": "TridentNotebook",
+                "dependsOn": [
+                    {
+                        "activity": "02_Transfer_Preview_Features_Unit",
+                        "dependencyConditions": [
+                            "Succeeded"
+                        ]
+                    }
+                ],
+                "policy": {
+                    "timeout": "0.12:00:00",
+                    "retry": 0,
+                    "retryIntervalInSeconds": 30,
+                    "secureOutput": false,
+                    "secureInput": false
+                },
+                "typeProperties": {
+                    "notebookId": "REPLACE_WITH_NOTEBOOK_ID",
+                    "workspaceId": "REPLACE_WITH_WORKSPACE_ID",
+                    "parameters": {
+                        "alert_days_threshold": {
+                            "value": {
+                                "value": "@pipeline().parameters.alert_days_threshold",
+                                "type": "Expression"
+                            },
+                            "type": "int"
+                        }
+                    },
+                    "sessionTag": "fuam_feature_tracking"
+                }
+            }
+        ],
+        "parameters": {
+            "whats_new_url": {
+                "type": "String",
+                "defaultValue": "https://learn.microsoft.com/en-us/fabric/get-started/whats-new"
+            },
+            "lookback_days": {
+                "type": "Int",
+                "defaultValue": 90
+            },
+            "alert_days_threshold": {
+                "type": "Int",
+                "defaultValue": 90
+            }
+        },
+        "annotations": [],
+        "lastPublishTime": "2025-10-31T00:00:00Z"
+    },
+    "name": "Load_Feature_Tracking_E2E"
+}
