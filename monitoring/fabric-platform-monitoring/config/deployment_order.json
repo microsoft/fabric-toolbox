@@ -81,7 +81,7 @@
         "id": "16d8ab6f-dc8c-a981-4d14-4c5aea8fcf15",
         "folder": "Extractors",
         "type": "Capacity",
-        "acitivities": [
+        "activities": [
             {
                 "name": "Update Eventstream",
                 "type": "TridentNotebook",
@@ -136,6 +136,7 @@
     {
         "name": "Gateway Monitoring.SemanticModel",
         "id": "b391ddbe-a2ac-aece-4d20-6801657d3a6a",
+        "folder": "Storage",
         "type": "Gateway",
         "datasources": [
             {
@@ -174,7 +175,7 @@
                 "source": "Activity Events.KQLDatabase"
             }
         ],
-        "acitivities": [
+        "activities": [
             {
                 "name": "Activity Events",
                 "type": "TridentNotebook",
@@ -230,7 +231,7 @@
                 "source": "Platform Inventory.KQLDatabase"
             }
         ],
-        "acitivities": [
+        "activities": [
             {
                 "name": "Inventory",
                 "type": "TridentNotebook",
@@ -280,7 +281,7 @@
                 "source": "key_vault_client_secret"
             }
         ],
-        "acitivities": [
+        "activities": [
             {
                 "name": "Refreshables",
                 "type": "TridentNotebook",
@@ -300,7 +301,7 @@
                 "source": "Platform Inventory.KQLDatabase"
             }
         ],
-        "acitivities": [
+        "activities": [
             {
                 "name": "Scanner API",
                 "type": "TridentNotebook",
