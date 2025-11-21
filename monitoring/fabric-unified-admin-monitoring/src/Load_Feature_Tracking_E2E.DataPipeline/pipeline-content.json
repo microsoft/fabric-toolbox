@@ -1,0 +1,26 @@
+{
+    "properties": {
+        "activities": [
+            {
+                "name": "02_Load_Feature_Tracking",
+                "type": "TridentNotebook",
+                "dependsOn": [],
+                "policy": {
+                    "timeout": "0.12:00:00",
+                    "retry": 0,
+                    "retryIntervalInSeconds": 30,
+                    "secureOutput": false,
+                    "secureInput": false
+                },
+                "typeProperties": {
+                    "notebookId": "REPLACE_WITH_NOTEBOOK_ID",
+                    "workspaceId": "REPLACE_WITH_WORKSPACE_ID",
+                    "parameters": {},
+                    "sessionTag": "fuam_feature_tracking"
+                }
+            }
+        ],
+        "parameters": {},
+        "annotations": []
+    }
+}
