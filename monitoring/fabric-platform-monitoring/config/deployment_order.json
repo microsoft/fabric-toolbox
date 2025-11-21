@@ -136,6 +136,7 @@
     {
         "name": "Gateway Monitoring.SemanticModel",
         "id": "b391ddbe-a2ac-aece-4d20-6801657d3a6a",
+        "folder": "Storage",
         "type": "Gateway",
         "datasources": [
             {
