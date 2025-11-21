@@ -1,11 +1,11 @@
 > [!CAUTION]
-> This solution accelerator is not an official Microsoft product! It is a solution accelerator, which can help you implement a monitoring solution within Fabric. As such there is no offical support available and there is a risk that things might break.
+> This solution accelerator is not an official Microsoft product! It is a solution accelerator, which can help you implement a monitoring solution within Fabric. As such there is no official support available and there is a risk that things might break.
 
 # Introduction 
 
-Platform administrators face the challenge of observing the activities within the entire platform. There are multiple sources that provide information, such as capacity events, gateway locks, audit logs, and the platform inventory itself. Additionally, there is a need to obtain this data quickly to observe and react to events automatically.
+Platform administrators face the challenge of observing the activities within the entire platform. There are multiple sources that provide information, such as capacity events, gateway logs, audit logs, and the platform inventory itself. Additionally, there is a need to obtain this data quickly to observe and react to events automatically.
 
-To address this, a solution has been developed based on Fabric Real-Time Intelligence (RTI). This solution extracts information from sources like the new capacity events available in the Real Time Hub (RTH), audit logs through the API, gateway locks via a script included in the solution, and the inventory of the whole platform through the API.
+To address this, a solution has been developed based on Fabric Real-Time Intelligence (RTI). This solution extracts information from sources like the new capacity events available in the Real Time Hub (RTH), audit logs through the API, gateway logs via a script included in the solution, and the inventory of the whole platform through the API.
 
 The following architecture illustrates how the solution interacts with different components to receive, process, store, present dashboards, and react to the platform's information. It also enables longer retention of logs for historical purposes and allows comparison of the current state with previous states to create custom solutions.
 
@@ -20,7 +20,7 @@ This solution uses Microsoft Fabric to address these issues by providing:
 
 Benefits include faster incident response, improved health analytics, and streamlined operations, consequently enhancing overall efficiency and reducing downtime. 
 
-The solution is divided in several modules that can be used independtly or together.
+The solution is divided in several modules that can be used independently or together.
 
 # Modules included with the Fabric Platform Monitoring 
 
@@ -30,7 +30,7 @@ The solution is divided in several modules that can be used independtly or toget
    - To receive the information of the Gateway in real-time. It requires a PowerShell script deployed in the Gateway Machine. Only works with On-Premise Data Gateway and not with VNET Gateways.
 - Activity Events
    - Extract and store as fast as possible the Activity Events of the platform, using Eventhouse for handling semi-structure data. You could extract the logs with a frequency as low as 2 minutes.
-- Inventiry
+- Inventory
    - Extract the information of the tenant, keeping a semi-structure format for some details like specific item details that could be added or change over time.
 
 > [!CAUTION]
@@ -45,7 +45,7 @@ The following Fabric items are deployed and used:
    - GatewayMonitoringHeartbeat
       - To receive the gateway heartbeat
    - GatewayMonitoringReports
-      - To receoive the gateway reports
+      - To receive the gateway reports
 - Eventhouse:
    - Fabric Platform Monitoring
       - To process, store and query all the information ingested. It divides the information by module, creating a KQL DB for each of the modules.
@@ -108,7 +108,7 @@ To implement this solution, we have some step to follow. This steps will cover t
    - [Enhance admin APIs responses with DAX and mashup expressions](https://learn.microsoft.com/en-us/fabric/admin/tenant-settings-index#admin-api-settings)
    - [Member Role over the workspace to use](https://learn.microsoft.com/en-us/fabric/fundamentals/roles-workspaces)
    - [Admin Role over the On-Premise Data Gateways to monitor](https://learn.microsoft.com/en-us/data-integration/gateway/manage-security-roles)
-- Frabic Workspace with the Service Principal added to the Workspace. Add the Service Principal explicitly
+- Fabric Workspace with the Service Principal added to the Workspace. Add the Service Principal explicitly
 - Microsoft Fabric Capacity of F8 or higher, recommended F16 (the capacity size needed will depend on the amount of logs sent and processed by the system)
 
 
@@ -125,7 +125,7 @@ These are available scripts to retrieve and process logs from on-premises gatewa
 
 You can find the gateway scripts in the subfolder [/gateway/PowerShellScript](/monitoring/fabric-platform-monitoring/gateway/PowerShellScript)
 
-Requerements:
+Requirements:
 - PowerShell 7+
 
 ### The setup-configuration 
@@ -170,7 +170,7 @@ We can use the Task Scheduler in Windows to automate the script. You will fin a 
 
 ## Power BI Gateway Report (Optional)
 
-The report is deployed automaticaly with the solution, and the only acction needed is to setup an user in the Semantic Model to connec to the KQL DB.
+The report is deployed automatically with the solution, and the only action needed is to setup an user in the Semantic Model to connect to the KQL DB.
 
 You will find the following pages.
 
