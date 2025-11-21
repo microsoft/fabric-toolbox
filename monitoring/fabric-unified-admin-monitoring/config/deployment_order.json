@@ -190,5 +190,17 @@
     {
         "name": "FUAM_Gateway_Monitoring_From_Files_Report.Report",
         "fuam_id": "3695cd0e-da7e-3b40-ad28-5bd1bcd33eb6"
+    },
+    {
+        "name": "01_Setup_Feature_Tracking.Notebook",
+        "fuam_id": "f8a2b1c3-4d5e-6f7a-8b9c-0d1e2f3a4b5c"
+    },
+    {
+        "name": "02_Load_Feature_Tracking.Notebook",
+        "fuam_id": "a1b2c3d4-5e6f-7a8b-9c0d-1e2f3a4b5c6d"
+    },
+    {
+        "name": "Load_Feature_Tracking_E2E.DataPipeline",
+        "fuam_id": "b2c3d4e5-6f7a-8b9c-0d1e-2f3a4b5c6d7e"
     }
 ]
