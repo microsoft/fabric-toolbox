@@ -339,7 +339,7 @@
         "xColumnTitle": "",
         "xColumn": "TaskId",
         "yColumns": [
-          "EfficiencyRatio"
+          "avg_EfficiencyRatio"
         ],
         "seriesColumns": null,
         "xAxisScale": "linear",
@@ -384,7 +384,7 @@
         "xColumnTitle": "",
         "xColumn": "TaskId",
         "yColumns": [
-          "MemoryUsed"
+          "avg_MemoryUsed"
         ],
         "seriesColumns": [
           "executorID"
@@ -442,7 +442,7 @@
     },
     {
       "id": "9d9e0714-e46b-4c35-bcdc-ffbf0f2300b9",
-      "title": "Shuffle overhead - to change",
+      "title": "Shuffle overhead",
       "visualType": "line",
       "pageId": "2dce368a-dba0-4088-bef6-05f79fc60c96",
       "layout": {
@@ -474,10 +474,9 @@
         "xColumnTitle": "",
         "xColumn": null,
         "yColumns": [
-          "ShuffleOverheadRatio",
-          "TotalShuffleWrite",
-          "TotalShuffleRead",
-          "BytesRead"
+          "sum_BytesRead",
+          "sum_TotalShuffleWrite",
+          "sum_TotalShuffleRead"
         ],
         "seriesColumns": null,
         "xAxisScale": "linear",
@@ -522,8 +521,8 @@
         "xColumnTitle": "",
         "xColumn": null,
         "yColumns": [
-          "MetricsJson_Disk Bytes Spilled",
-          "MetricsJson_Memory Bytes Spilled"
+          "avg_MetricsJson_Memory Bytes Spilled",
+          "avg_MetricsJson_Disk Bytes Spilled"
         ],
         "seriesColumns": null,
         "xAxisScale": "linear",
@@ -848,7 +847,7 @@
         "xColumnTitle": "",
         "xColumn": "TaskId",
         "yColumns": [
-          "MetricsJson_Input Metrics_Bytes Read"
+          "sum_MetricsJson_Input Metrics_Bytes Read"
         ],
         "seriesColumns": null,
         "xAxisScale": "linear",
@@ -893,7 +892,8 @@
         "xColumnTitle": "",
         "xColumn": "TaskId",
         "yColumns": [
-          "MetricsJson_Input Metrics_Bytes Read"
+          "MetricsJson_Input Metrics_Bytes Read",
+          "sum_MetricsJson_Input Metrics_Bytes Read"
         ],
         "seriesColumns": null,
         "xAxisScale": "linear",
@@ -990,9 +990,10 @@
         "xColumnTitle": "",
         "xColumn": "TaskId",
         "yColumns": [
-          "TotalShuffleRead",
-          "TotalShuffleWrite",
-          "BytesRead"
+          "sum_ShuffleOverheadRatio",
+          "sum_BytesRead",
+          "sum_TotalShuffleWrite",
+          "sum_TotalShuffleRead"
         ],
         "seriesColumns": null,
         "xAxisScale": "linear",
@@ -1037,9 +1038,9 @@
         "xColumnTitle": "",
         "xColumn": "TaskId",
         "yColumns": [
-          "TotalShuffleRead",
-          "TotalShuffleWrite",
-          "BytesRead"
+          "sum_BytesRead",
+          "sum_TotalShuffleWrite",
+          "sum_TotalShuffleRead"
         ],
         "seriesColumns": null,
         "xAxisScale": "linear",
@@ -1084,7 +1085,7 @@
         "xColumnTitle": "",
         "xColumn": "Timestamp",
         "yColumns": [
-          "Percent"
+          "avg_Percent"
         ],
         "seriesColumns": [
           "Metric"
@@ -1131,7 +1132,7 @@
         "xColumnTitle": "",
         "xColumn": "Timestamp",
         "yColumns": [
-          "Percent"
+          "avg_Percent"
         ],
         "seriesColumns": [
           "Metric"
@@ -1221,7 +1222,9 @@
         "legendLocation": "bottom",
         "xColumnTitle": "",
         "xColumn": null,
-        "yColumns": null,
+        "yColumns": [
+          "avg_GcOverheadRatio"
+        ],
         "seriesColumns": null,
         "xAxisScale": "linear",
         "verticalLine": "",
@@ -1264,7 +1267,9 @@
         "legendLocation": "bottom",
         "xColumnTitle": "",
         "xColumn": null,
-        "yColumns": null,
+        "yColumns": [
+          "avg_GcOverheadRatio"
+        ],
         "seriesColumns": null,
         "xAxisScale": "linear",
         "verticalLine": "",
@@ -1583,7 +1588,9 @@
         "legendLocation": "bottom",
         "xColumnTitle": "",
         "xColumn": "Timestamp",
-        "yColumns": null,
+        "yColumns": [
+          "avg_Percent"
+        ],
         "seriesColumns": [
           "Metric"
         ],
@@ -1629,7 +1636,7 @@
         "xColumnTitle": "",
         "xColumn": "Timestamp",
         "yColumns": [
-          "Percent"
+          "avg_Percent"
         ],
         "seriesColumns": [
           "Metric"
@@ -1676,7 +1683,7 @@
         "xColumnTitle": "",
         "xColumn": "Timestamp",
         "yColumns": [
-          "Percent"
+          "avg_Percent"
         ],
         "seriesColumns": [
           "Metric"
@@ -1723,7 +1730,7 @@
         "xColumnTitle": "",
         "xColumn": "Timestamp",
         "yColumns": [
-          "Percent"
+          "avg_Percent"
         ],
         "seriesColumns": [
           "Metric"
@@ -1754,9 +1761,9 @@
       "visualOptions": {
         "table__enableRenderLinks": true,
         "colorRulesDisabled": true,
-        "crossFilter": [],
         "crossFilterDisabled": false,
         "drillthroughDisabled": false,
+        "crossFilter": [],
         "drillthrough": [],
         "table__renderLinks": [],
         "colorRules": []
@@ -1903,6 +1910,37 @@
     },
     {
       "kind": "long",
+      "id": "59f95bc6-9be4-426d-8a97-ea9f75668286",
+      "displayName": "PrecisionTasks",
+      "description": "",
+      "variableName": "_precision_2",
+      "selectionType": "scalar",
+      "includeAllOption": false,
+      "defaultValue": {
+        "kind": "value",
+        "value": "1"
+      },
+      "dataSource": {
+        "kind": "query",
+        "columns": {
+          "value": "Value",
+          "label": "Description"
+        },
+        "queryRef": {
+          "kind": "query",
+          "queryId": "94465d57-1a64-43a7-aede-05c0c9174d95"
+        }
+      },
+      "showOnPages": {
+        "kind": "selection",
+        "pageIds": [
+          "2dce368a-dba0-4088-bef6-05f79fc60c96",
+          "59c4e435-f230-4d7b-85ee-74621daf4b45"
+        ]
+      }
+    },
+    {
+      "kind": "long",
       "id": "1f1f9452-e787-49ce-8ff3-6dd4fb5b8400",
       "displayName": "Executor",
       "description": "",
@@ -1966,7 +2004,7 @@
       "id": "82abfa0d-7aa4-485a-bf5a-7089d8a07a0d",
       "kind": "kusto-trident",
       "clusterUri": "",
-      "database": "0de204d3-fb2d-8c80-4645-2f61e0dc9d87",
+      "database": "2b1f8040-91cf-889f-4cb4-89285484fbbe",
       "name": "Spark Monitoring",
       "scopeId": "kusto-trident",
       "workspace": "00000000-0000-0000-0000-000000000000"
@@ -2104,10 +2142,11 @@
         "kind": "inline",
         "dataSourceId": "82abfa0d-7aa4-485a-bf5a-7089d8a07a0d"
       },
-      "text": "SparkDerivedTaskMetrics \n| where AppId =~_applicationId\n| project TaskId,EfficiencyRatio\n| order by TaskId asc ",
+      "text": "let interval_ = case(\n    _precision_2 == 1, 1,\n    _precision_2 == 10, 10,\n    _precision_2 == 100, 100,\n    _precision_2 == 1000, 1000,\n    1 // default\n);\nSparkDerivedTaskMetrics \n| where AppId =~_applicationId\n| project TaskId,EfficiencyRatio\n| where isfinite(EfficiencyRatio)\n| order by TaskId asc \n| summarize avg(EfficiencyRatio) by bin(TaskId,interval_)",
       "id": "b0b97977-19d0-4de3-b4fc-2fddb08d18fc",
       "usedVariables": [
-        "_applicationId"
+        "_applicationId",
+        "_precision_2"
       ]
     },
     {
@@ -2115,12 +2154,13 @@
         "kind": "inline",
         "dataSourceId": "82abfa0d-7aa4-485a-bf5a-7089d8a07a0d"
       },
-      "text": "TaskEndEvents_Filtered\n| where Timestamp between (_startTime .. _endTime)\n| where AppId =~_applicationId\n| extend EventDetails = parse_json(EventDetailsJson)\n| project TaskId,executorID = EventDetails.[\"properties\"].[\"Task Info\"].[\"Executor ID\"] , MemoryUsed = todouble(EventDetails.[\"properties\"].[\"Task Metrics\"].[\"Peak Executor Memory Used\"])/1048576\n| order by TaskId",
+      "text": "let interval_ = case(\n    _precision_2 == 1, 1,\n    _precision_2 == 10, 10,\n    _precision_2 == 100, 100,\n    _precision_2 == 1000, 1000,\n    1 // default\n);\nTaskEndEvents_Filtered\n| where Timestamp between (_startTime .. _endTime)\n| where AppId =~_applicationId\n| extend EventDetails = parse_json(EventDetailsJson)\n| project TaskId,executorID = EventDetails.[\"properties\"].[\"Task Info\"].[\"Executor ID\"] , MemoryUsed = todouble(EventDetails.[\"properties\"].[\"Task Metrics\"].[\"Peak Executor Memory Used\"])/1048576\n| order by TaskId\n| summarize avg(MemoryUsed) by bin(TaskId,interval_), tostring(executorID) ",
       "id": "0a4e9a42-8610-437e-b3ea-18fa99ac9003",
       "usedVariables": [
         "TaskEndEvents_Filtered",
         "_applicationId",
         "_endTime",
+        "_precision_2",
         "_startTime"
       ]
     },
@@ -2129,10 +2169,11 @@
         "kind": "inline",
         "dataSourceId": "82abfa0d-7aa4-485a-bf5a-7089d8a07a0d"
       },
-      "text": "SparkDerivedTaskMetrics \n| where AppId == _applicationId\n| project TaskId,GcOverheadRatio\n| order by TaskId asc",
+      "text": "let interval_ = case(\n    _precision_2 == 1, 1,\n    _precision_2 == 10, 10,\n    _precision_2 == 100, 100,\n    _precision_2 == 1000, 1000,\n    1 // default\n);\nSparkDerivedTaskMetrics \n| where AppId == _applicationId\n| project TaskId,GcOverheadRatio\n| order by TaskId asc\n| summarize avg(GcOverheadRatio) by bin(TaskId,interval_)",
       "id": "90561941-1e27-4ce3-ab9e-b684c594522f",
       "usedVariables": [
-        "_applicationId"
+        "_applicationId",
+        "_precision_2"
       ]
     },
     {
@@ -2140,11 +2181,12 @@
         "kind": "inline",
         "dataSourceId": "82abfa0d-7aa4-485a-bf5a-7089d8a07a0d"
       },
-      "text": "SparkEventLogs\n| where Timestamp between (_startTime .. _endTime)\n| where AppId =~_applicationId\n| where EventDetailsJson contains \"SparkListenerTaskEnd\"\n| extend MetricsJson=parse_json(MetricsJson),EventDetailsJson=parse_json(EventDetailsJson)\n| extend TaskId=toint(TaskId),TotalShuffleRead=tolong(MetricsJson[\"Shuffle Read Metrics\"].[\"Remote Bytes Read\"])+tolong(MetricsJson[\"Shuffle Read Metrics\"].[\"Local Bytes Read\"]),TotalShuffleWrite=tolong(MetricsJson[\"Shuffle Write Metrics\"].[\"Shuffle Bytes Written\"])  ,BytesRead= (tolong(MetricsJson[\"Input Metrics\"].[\"Bytes Read\"])) ,ShuffleOverheadRatio= todouble(todouble(tolong(MetricsJson[\"Shuffle Read Metrics\"].[\"Remote Bytes Read\"])+tolong(MetricsJson[\"Shuffle Read Metrics\"].[\"Local Bytes Read\"])+tolong(MetricsJson[\"Shuffle Write Metrics\"].[\"Shuffle Bytes Written\"]))) /todouble((tolong(MetricsJson[\"Input Metrics\"].[\"Bytes Read\"])))\n| order by TaskId asc\n| project TaskId,TotalShuffleRead,TotalShuffleWrite,BytesRead,ShuffleOverheadRatio",
+      "text": "let interval_ = case(\n    _precision_2 == 1, 1,\n    _precision_2 == 10, 10,\n    _precision_2 == 100, 100,\n    _precision_2 == 1000, 1000,\n    1 // default\n);\nSparkEventLogs\n| where Timestamp between (_startTime .. _endTime)\n| where AppId =~_applicationId\n| where EventDetailsJson contains \"SparkListenerTaskEnd\"\n| extend MetricsJson=parse_json(MetricsJson),EventDetailsJson=parse_json(EventDetailsJson)\n| extend TaskId=toint(TaskId),TotalShuffleRead=tolong(MetricsJson[\"Shuffle Read Metrics\"].[\"Remote Bytes Read\"])+tolong(MetricsJson[\"Shuffle Read Metrics\"].[\"Local Bytes Read\"]),TotalShuffleWrite=tolong(MetricsJson[\"Shuffle Write Metrics\"].[\"Shuffle Bytes Written\"])  ,BytesRead= (tolong(MetricsJson[\"Input Metrics\"].[\"Bytes Read\"])) ,ShuffleOverheadRatio= todouble(todouble(tolong(MetricsJson[\"Shuffle Read Metrics\"].[\"Remote Bytes Read\"])+tolong(MetricsJson[\"Shuffle Read Metrics\"].[\"Local Bytes Read\"])+tolong(MetricsJson[\"Shuffle Write Metrics\"].[\"Shuffle Bytes Written\"]))) /todouble((tolong(MetricsJson[\"Input Metrics\"].[\"Bytes Read\"])))\n| summarize sum(TotalShuffleRead),sum(TotalShuffleWrite),sum(BytesRead) by bin( TaskId,interval_)\n| order by TaskId asc",
       "id": "0d94eb7b-3f99-4fb7-b4c5-fce4b07fd27d",
       "usedVariables": [
         "_applicationId",
         "_endTime",
+        "_precision_2",
         "_startTime"
       ]
     },
@@ -2153,11 +2195,12 @@
         "kind": "inline",
         "dataSourceId": "82abfa0d-7aa4-485a-bf5a-7089d8a07a0d"
       },
-      "text": "SparkEventLogs\n| where Timestamp between (_startTime .. _endTime)\n| where AppId =~ _applicationId\n| extend EventDetailsJson=parse_json(EventDetailsJson),MetricsJson=parse_json(MetricsJson)\n| where EventDetailsJson contains \"SparkListenerTaskEnd\"\n| project AppId,TaskId=toint(EventDetailsJson.[\"Task Info\"].[\"Task ID\"]),tolong(MetricsJson.[\"Memory Bytes Spilled\"]) , tolong(MetricsJson.[\"Disk Bytes Spilled\"])\n| order by TaskId",
+      "text": "let interval_ = case(\n    _precision_2 == 1, 1,\n    _precision_2 == 10, 10,\n    _precision_2 == 100, 100,\n    _precision_2 == 1000, 1000,\n    1 // default\n);\nSparkEventLogs\n| where Timestamp between (_startTime .. _endTime)\n| where AppId =~ _applicationId\n| extend EventDetailsJson=parse_json(EventDetailsJson),MetricsJson=parse_json(MetricsJson)\n| where EventDetailsJson contains \"SparkListenerTaskEnd\"\n| project AppId,TaskId=toint(EventDetailsJson.[\"Task Info\"].[\"Task ID\"]),tolong(MetricsJson.[\"Memory Bytes Spilled\"]) , tolong(MetricsJson.[\"Disk Bytes Spilled\"])\n| summarize avg(['MetricsJson_Memory Bytes Spilled']), avg(['MetricsJson_Disk Bytes Spilled']) by bin(TaskId,interval_)",
       "id": "d0bb50fe-d942-4287-a1fd-56a163158dd9",
       "usedVariables": [
         "_applicationId",
         "_endTime",
+        "_precision_2",
         "_startTime"
       ]
     },
@@ -2298,11 +2341,12 @@
         "kind": "inline",
         "dataSourceId": "82abfa0d-7aa4-485a-bf5a-7089d8a07a0d"
       },
-      "text": "SparkEventLogs\n| where Timestamp between (_startTime .. _endTime)\n| where AppId =~ _applicationId\n| where EventDetailsJson contains \"SparkListenerTaskEnd\"\n| extend MetricsJson=parse_json(MetricsJson)\n| project  tolong(MetricsJson.[\"Input Metrics\"].[\"Bytes Read\"]), TaskId\n| order by TaskId asc",
+      "text": "let interval_ = case(\n    _precision_2 == 1, 1,\n    _precision_2 == 10, 10,\n    _precision_2 == 100, 100,\n    _precision_2 == 1000, 1000,\n    1 // default\n);\nSparkEventLogs\n| where Timestamp between (_startTime .. _endTime)\n| where AppId =~ _applicationId\n| where EventDetailsJson contains \"SparkListenerTaskEnd\"\n| extend MetricsJson=parse_json(MetricsJson)\n| project  tolong(MetricsJson.[\"Input Metrics\"].[\"Bytes Read\"]), TaskId\n| order by TaskId asc\n| summarize sum(['MetricsJson_Input Metrics_Bytes Read']) by bin(TaskId,interval_)",
       "id": "d9697a52-c9fe-4533-a39a-20f333c5a2ff",
       "usedVariables": [
         "_applicationId",
         "_endTime",
+        "_precision_2",
         "_startTime"
       ]
     },
@@ -2311,11 +2355,12 @@
         "kind": "inline",
         "dataSourceId": "82abfa0d-7aa4-485a-bf5a-7089d8a07a0d"
       },
-      "text": "SparkEventLogs\n| where Timestamp between (_startTime .. _endTime)\n| where AppId =~ _applicationId_2\n| where EventDetailsJson contains \"SparkListenerTaskEnd\"\n| extend MetricsJson=parse_json(MetricsJson)\n| project  tolong(MetricsJson.[\"Input Metrics\"].[\"Bytes Read\"]), TaskId\n| order by TaskId asc",
+      "text": "let interval_ = case(\n    _precision_2 == 1, 1,\n    _precision_2 == 10, 10,\n    _precision_2 == 100, 100,\n    _precision_2 == 1000, 1000,\n    1 // default\n);\nSparkEventLogs\n| where Timestamp between (_startTime .. _endTime)\n| where AppId =~ _applicationId_2\n| where EventDetailsJson contains \"SparkListenerTaskEnd\"\n| extend MetricsJson=parse_json(MetricsJson)\n| project  tolong(MetricsJson.[\"Input Metrics\"].[\"Bytes Read\"]), TaskId\n| order by TaskId asc\n| summarize sum(['MetricsJson_Input Metrics_Bytes Read']) by bin(TaskId,interval_)",
       "id": "4da6bf54-826c-4640-9cc8-e512bb66a607",
       "usedVariables": [
         "_applicationId_2",
         "_endTime",
+        "_precision_2",
         "_startTime"
       ]
     },
@@ -2348,11 +2393,12 @@
         "kind": "inline",
         "dataSourceId": "82abfa0d-7aa4-485a-bf5a-7089d8a07a0d"
       },
-      "text": "SparkEventLogs\n| where Timestamp between (_startTime .. _endTime)\n| where AppId =~_applicationId\n| where EventDetailsJson contains \"SparkListenerTaskEnd\"\n| extend MetricsJson=parse_json(MetricsJson),EventDetailsJson=parse_json(EventDetailsJson)\n| extend TaskId=toint(TaskId),TotalShuffleRead=tolong(MetricsJson[\"Shuffle Read Metrics\"].[\"Remote Bytes Read\"])+tolong(MetricsJson[\"Shuffle Read Metrics\"].[\"Local Bytes Read\"]),TotalShuffleWrite=tolong(MetricsJson[\"Shuffle Write Metrics\"].[\"Shuffle Bytes Written\"])  ,BytesRead= (tolong(MetricsJson[\"Input Metrics\"].[\"Bytes Read\"])) ,ShuffleOverheadRatio= todouble(todouble(tolong(MetricsJson[\"Shuffle Read Metrics\"].[\"Remote Bytes Read\"])+tolong(MetricsJson[\"Shuffle Read Metrics\"].[\"Local Bytes Read\"])+tolong(MetricsJson[\"Shuffle Write Metrics\"].[\"Shuffle Bytes Written\"]))) /todouble((tolong(MetricsJson[\"Input Metrics\"].[\"Bytes Read\"])))\n| order by TaskId asc\n| project TaskId,TotalShuffleRead,TotalShuffleWrite,BytesRead,ShuffleOverheadRatio",
+      "text": "let interval_ = case(\n    _precision_2 == 1, 1,\n    _precision_2 == 10, 10,\n    _precision_2 == 100, 100,\n    _precision_2 == 1000, 1000,\n    1 // default\n);\nSparkEventLogs\n| where Timestamp between (_startTime .. _endTime)\n| where AppId =~_applicationId\n| where EventDetailsJson contains \"SparkListenerTaskEnd\"\n| extend MetricsJson=parse_json(MetricsJson),EventDetailsJson=parse_json(EventDetailsJson)\n| extend TaskId=toint(TaskId),TotalShuffleRead=tolong(MetricsJson[\"Shuffle Read Metrics\"].[\"Remote Bytes Read\"])+tolong(MetricsJson[\"Shuffle Read Metrics\"].[\"Local Bytes Read\"]),TotalShuffleWrite=tolong(MetricsJson[\"Shuffle Write Metrics\"].[\"Shuffle Bytes Written\"])  ,BytesRead= (tolong(MetricsJson[\"Input Metrics\"].[\"Bytes Read\"])) ,ShuffleOverheadRatio= todouble(todouble(tolong(MetricsJson[\"Shuffle Read Metrics\"].[\"Remote Bytes Read\"])+tolong(MetricsJson[\"Shuffle Read Metrics\"].[\"Local Bytes Read\"])+tolong(MetricsJson[\"Shuffle Write Metrics\"].[\"Shuffle Bytes Written\"]))) /todouble((tolong(MetricsJson[\"Input Metrics\"].[\"Bytes Read\"])))\n| order by TaskId asc\n| project TaskId,TotalShuffleRead,TotalShuffleWrite,BytesRead,ShuffleOverheadRatio\n| summarize sum(TotalShuffleRead),sum(TotalShuffleWrite),sum(BytesRead) by bin(TaskId,interval_)",
       "id": "5ae22e00-d53d-4bf7-a8f5-7887d9c9d298",
       "usedVariables": [
         "_applicationId",
         "_endTime",
+        "_precision_2",
         "_startTime"
       ]
     },
@@ -2361,11 +2407,12 @@
         "kind": "inline",
         "dataSourceId": "82abfa0d-7aa4-485a-bf5a-7089d8a07a0d"
       },
-      "text": "SparkEventLogs\n| where Timestamp between (_startTime .. _endTime)\n| where AppId =~_applicationId_2\n| where EventDetailsJson contains \"SparkListenerTaskEnd\"\n| extend MetricsJson=parse_json(MetricsJson),EventDetailsJson=parse_json(EventDetailsJson)\n| extend TaskId=toint(TaskId),TotalShuffleRead=tolong(MetricsJson[\"Shuffle Read Metrics\"].[\"Remote Bytes Read\"])+tolong(MetricsJson[\"Shuffle Read Metrics\"].[\"Local Bytes Read\"]),TotalShuffleWrite=tolong(MetricsJson[\"Shuffle Write Metrics\"].[\"Shuffle Bytes Written\"])  ,BytesRead= (tolong(MetricsJson[\"Input Metrics\"].[\"Bytes Read\"])) \n//,ShuffleOverheadRatio= todouble(todouble(tolong(MetricsJson[\"Shuffle Read Metrics\"].[\"Remote Bytes Read\"])+tolong(MetricsJson[\"Shuffle Read Metrics\"].[\"Local Bytes Read\"])+tolong(MetricsJson[\"Shuffle Write Metrics\"].[\"Shuffle Bytes Written\"]))) /todouble((tolong(MetricsJson[\"Input Metrics\"].[\"Bytes Read\"])))\n| order by TaskId asc\n| project TaskId,TotalShuffleRead,TotalShuffleWrite,BytesRead",
+      "text": "let interval_ = case(\n    _precision_2 == 1, 1,\n    _precision_2 == 10, 10,\n    _precision_2 == 100, 100,\n    _precision_2 == 1000, 1000,\n    1 // default\n);\nSparkEventLogs\n| where Timestamp between (_startTime .. _endTime)\n| where AppId =~_applicationId_2\n| where EventDetailsJson contains \"SparkListenerTaskEnd\"\n| extend MetricsJson=parse_json(MetricsJson),EventDetailsJson=parse_json(EventDetailsJson)\n| extend TaskId=toint(TaskId),TotalShuffleRead=tolong(MetricsJson[\"Shuffle Read Metrics\"].[\"Remote Bytes Read\"])+tolong(MetricsJson[\"Shuffle Read Metrics\"].[\"Local Bytes Read\"]),TotalShuffleWrite=tolong(MetricsJson[\"Shuffle Write Metrics\"].[\"Shuffle Bytes Written\"])  ,BytesRead= (tolong(MetricsJson[\"Input Metrics\"].[\"Bytes Read\"])) ,ShuffleOverheadRatio= todouble(todouble(tolong(MetricsJson[\"Shuffle Read Metrics\"].[\"Remote Bytes Read\"])+tolong(MetricsJson[\"Shuffle Read Metrics\"].[\"Local Bytes Read\"])+tolong(MetricsJson[\"Shuffle Write Metrics\"].[\"Shuffle Bytes Written\"]))) /todouble((tolong(MetricsJson[\"Input Metrics\"].[\"Bytes Read\"])))\n| order by TaskId asc\n| project TaskId,TotalShuffleRead,TotalShuffleWrite,BytesRead,ShuffleOverheadRatio\n| summarize sum(TotalShuffleRead),sum(TotalShuffleWrite),sum(BytesRead) by bin(TaskId,interval_)",
       "id": "e0b0141c-5d9a-4605-bfdd-7c27c67c7b40",
       "usedVariables": [
         "_applicationId_2",
         "_endTime",
+        "_precision_2",
         "_startTime"
       ]
     },
@@ -2374,10 +2421,11 @@
         "kind": "inline",
         "dataSourceId": "82abfa0d-7aa4-485a-bf5a-7089d8a07a0d"
       },
-      "text": "SparkMetrics\n| where AppId == _applicationId\n| where (Metric == \"jvm.heap.usage\" or Metric == \"jvm.non-heap.usage\") and ExecutorId == \"driver\"\n| project Timestamp,ExecutorId, Metric, Percent=toreal(Value)*100\n",
+      "text": "let interval_ = case(\n    _precision == 10000000, 1s,\n    _precision == 300000000, 30s,\n    _precision == 600000000, 1m,\n    _precision == 36000000000, 1h,\n    1m // default\n);\nSparkMetrics\n| where AppId == _applicationId\n| where (Metric == \"jvm.heap.usage\" or Metric == \"jvm.non-heap.usage\") and ExecutorId == \"driver\"\n| project Timestamp,ExecutorId, Metric, Percent=toreal(Value)*100\n| summarize avg(Percent) by bin(Timestamp,interval_),ExecutorId,Metric",
       "id": "ede3065c-f18a-45bd-8313-072af5bdb287",
       "usedVariables": [
-        "_applicationId"
+        "_applicationId",
+        "_precision"
       ]
     },
     {
@@ -2385,10 +2433,11 @@
         "kind": "inline",
         "dataSourceId": "82abfa0d-7aa4-485a-bf5a-7089d8a07a0d"
       },
-      "text": "SparkMetrics\n| where AppId == _applicationId_2\n| where (Metric == \"jvm.heap.usage\" or Metric == \"jvm.non-heap.usage\") and ExecutorId == \"driver\"\n| project Timestamp,ExecutorId, Metric, Percent=toreal(Value)*100\n",
+      "text": "let interval_ = case(\n    _precision == 10000000, 1s,\n    _precision == 300000000, 30s,\n    _precision == 600000000, 1m,\n    _precision == 36000000000, 1h,\n    1m // default\n);\nSparkMetrics\n| where AppId == _applicationId_2\n| where (Metric == \"jvm.heap.usage\" or Metric == \"jvm.non-heap.usage\") and ExecutorId == \"driver\"\n| project Timestamp,ExecutorId, Metric, Percent=toreal(Value)*100\n| summarize avg(Percent) by bin(Timestamp,interval_),ExecutorId,Metric",
       "id": "2c7e681a-491e-43e8-9bc2-1972da7aec0f",
       "usedVariables": [
-        "_applicationId_2"
+        "_applicationId_2",
+        "_precision"
       ]
     },
     {
@@ -2422,10 +2471,11 @@
         "kind": "inline",
         "dataSourceId": "82abfa0d-7aa4-485a-bf5a-7089d8a07a0d"
       },
-      "text": "SparkDerivedTaskMetrics \n| where AppId == _applicationId\n| project TaskId,GcOverheadRatio\n| order by TaskId asc",
+      "text": "let interval_ = case(\n    _precision_2 == 1, 1,\n    _precision_2 == 10, 10,\n    _precision_2 == 100, 100,\n    _precision_2 == 1000, 1000,\n    1 // default\n);\nSparkDerivedTaskMetrics \n| where AppId == _applicationId\n| project TaskId,GcOverheadRatio\n| order by TaskId asc\n| summarize avg(GcOverheadRatio) by bin(TaskId,interval_)",
       "id": "faaff297-30fe-4afc-aa0c-af588f8bb1a0",
       "usedVariables": [
-        "_applicationId"
+        "_applicationId",
+        "_precision_2"
       ]
     },
     {
@@ -2433,10 +2483,11 @@
         "kind": "inline",
         "dataSourceId": "82abfa0d-7aa4-485a-bf5a-7089d8a07a0d"
       },
-      "text": "SparkDerivedTaskMetrics \n| where AppId == _applicationId_2\n| project TaskId,GcOverheadRatio\n| order by TaskId asc",
+      "text": "let interval_ = case(\n    _precision_2 == 1, 1,\n    _precision_2 == 10, 10,\n    _precision_2 == 100, 100,\n    _precision_2 == 1000, 1000,\n    1 // default\n);\nSparkDerivedTaskMetrics \n| where AppId == _applicationId_2\n| project TaskId,GcOverheadRatio\n| order by TaskId asc\n| summarize avg(GcOverheadRatio) by bin(TaskId,interval_)",
       "id": "8ee46e3d-e873-4067-bb23-e32d729ddac7",
       "usedVariables": [
-        "_applicationId_2"
+        "_applicationId_2",
+        "_precision_2"
       ]
     },
     {
@@ -2554,11 +2605,12 @@
         "kind": "inline",
         "dataSourceId": "82abfa0d-7aa4-485a-bf5a-7089d8a07a0d"
       },
-      "text": "SparkMetrics\n| where AppId == _applicationId\n| where (Metric == \"jvm.heap.usage\" or Metric == \"jvm.non-heap.usage\") and ExecutorId in (_nodeSelected)\n| project Timestamp,ExecutorId, Metric, Percent=toreal(Value)*100\n",
+      "text": "let interval_ = case(\n    _precision == 10000000, 1s,\n    _precision == 300000000, 30s,\n    _precision == 600000000, 1m,\n    _precision == 36000000000, 1h,\n    1m // default\n);\nSparkMetrics\n| where AppId == _applicationId\n| where (Metric == \"jvm.heap.usage\" or Metric == \"jvm.non-heap.usage\") and ExecutorId in (_nodeSelected)\n| project Timestamp,ExecutorId, Metric, Percent=toreal(Value)*100\n| summarize avg(Percent) by bin(Timestamp,interval_),ExecutorId,Metric\n",
       "id": "5e331c66-a194-418b-852d-5dd46b3f04e7",
       "usedVariables": [
         "_applicationId",
-        "_nodeSelected"
+        "_nodeSelected",
+        "_precision"
       ]
     },
     {
@@ -2566,11 +2618,12 @@
         "kind": "inline",
         "dataSourceId": "82abfa0d-7aa4-485a-bf5a-7089d8a07a0d"
       },
-      "text": "SparkMetrics\n| where AppId == _applicationId_2\n| where (Metric == \"jvm.heap.usage\" or Metric == \"jvm.non-heap.usage\") and ExecutorId in (_nodeSelected_2)\n| project Timestamp,ExecutorId, Metric, Percent=toreal(Value)*100\n",
+      "text": "let interval_ = case(\n    _precision == 10000000, 1s,\n    _precision == 300000000, 30s,\n    _precision == 600000000, 1m,\n    _precision == 36000000000, 1h,\n    1m // default\n);\nSparkMetrics\n| where AppId == _applicationId_2\n| where (Metric == \"jvm.heap.usage\" or Metric == \"jvm.non-heap.usage\") and ExecutorId in (_nodeSelected_2)\n| project Timestamp,ExecutorId, Metric, Percent=toreal(Value)*100\n| summarize avg(Percent) by bin(Timestamp,interval_),ExecutorId,Metric\n",
       "id": "d5465047-6fee-413e-9c16-d10699469916",
       "usedVariables": [
         "_applicationId_2",
-        "_nodeSelected_2"
+        "_nodeSelected_2",
+        "_precision"
       ]
     },
     {
@@ -2578,10 +2631,11 @@
         "kind": "inline",
         "dataSourceId": "82abfa0d-7aa4-485a-bf5a-7089d8a07a0d"
       },
-      "text": "SparkMetrics\n| where AppId == _applicationId\n| where (Metric == \"jvm.heap.usage\" or Metric == \"jvm.non-heap.usage\") and ExecutorId == \"driver\"\n| project Timestamp,ExecutorId, Metric, Percent=toreal(Value)*100\n\n\n",
+      "text": "let interval_ = case(\n    _precision == 10000000, 1s,\n    _precision == 300000000, 30s,\n    _precision == 600000000, 1m,\n    _precision == 36000000000, 1h,\n    1m // default\n);\nSparkMetrics\n| where AppId == _applicationId\n| where (Metric == \"jvm.heap.usage\" or Metric == \"jvm.non-heap.usage\") and ExecutorId == \"driver\"\n| project Timestamp,ExecutorId, Metric, Percent=toreal(Value)*100\n| summarize avg(Percent) by bin(Timestamp,interval_),ExecutorId,Metric\n\n\n",
       "id": "126ebbfa-bf09-46ec-8f9f-9218eb2ac832",
       "usedVariables": [
-        "_applicationId"
+        "_applicationId",
+        "_precision"
       ]
     },
     {
@@ -2589,11 +2643,12 @@
         "kind": "inline",
         "dataSourceId": "82abfa0d-7aa4-485a-bf5a-7089d8a07a0d"
       },
-      "text": "SparkMetrics\n| where AppId == _applicationId\n| where (Metric == \"jvm.heap.usage\" or Metric == \"jvm.non-heap.usage\") and ExecutorId in (_nodeSelected)\n| project Timestamp,ExecutorId, Metric, Percent=toreal(Value)*100\n\n\n",
+      "text": "let interval_ = case(\n    _precision == 10000000, 1s,\n    _precision == 300000000, 30s,\n    _precision == 600000000, 1m,\n    _precision == 36000000000, 1h,\n    1m // default\n);\nSparkMetrics\n| where AppId == _applicationId\n| where (Metric == \"jvm.heap.usage\" or Metric == \"jvm.non-heap.usage\") and ExecutorId in (_nodeSelected)\n| project Timestamp,ExecutorId, Metric, Percent=toreal(Value)*100\n| summarize avg(Percent) by bin(Timestamp,interval_),Metric,ExecutorId",
       "id": "13d7ef32-e30f-4584-9acd-060629b784bb",
       "usedVariables": [
         "_applicationId",
-        "_nodeSelected"
+        "_nodeSelected",
+        "_precision"
       ]
     },
     {
@@ -2674,6 +2729,15 @@
       },
       "text": "datatable(Description:string,Value:long )[\n    \"1s\",10000000,\n    \"30s\",300000000,\n    \"1m\",600000000,\n    \"1h\",36000000000\n]",
       "id": "2fb87458-15cf-4e4b-8bd2-3f8fc4bfac53",
+      "usedVariables": []
+    },
+    {
+      "dataSource": {
+        "kind": "inline",
+        "dataSourceId": "82abfa0d-7aa4-485a-bf5a-7089d8a07a0d"
+      },
+      "text": "datatable(Description:string,Value:long )[\n    \"1\",1,\n    \"10\",10,\n    \"100\",100,\n    \"1000\",1000\n]",
+      "id": "94465d57-1a64-43a7-aede-05c0c9174d95",
       "usedVariables": []
     },
     {
