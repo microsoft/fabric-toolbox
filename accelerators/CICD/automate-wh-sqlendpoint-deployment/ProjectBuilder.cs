@@ -14,7 +14,9 @@ internal static class ProjectBuilder
         if (!File.Exists(sqlprojPath))
             throw new FileNotFoundException("SQL project file not found.", sqlprojPath);
         
-        string projectDir = Path.GetDirectoryName(sqlprojPath)!;
+        string? projectDir = Path.GetDirectoryName(sqlprojPath);
+        if (projectDir == null)
+            throw new ArgumentException("The provided SQL project path does not contain directory information.", nameof(sqlprojPath));
         
         var psi = new ProcessStartInfo
         {
