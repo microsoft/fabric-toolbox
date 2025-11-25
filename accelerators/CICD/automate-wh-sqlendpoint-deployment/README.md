@@ -160,7 +160,6 @@ AutomateWarehouseProject.exe \
 | `--base-url` | ✅ | Fabric API base URL for your environment | `https://msitapi.fabric.microsoft.com/v1` |
 | `--force-extract` | ✅ | Force re-extraction even if DACPAC exists | (flag only) |
 | `--publish` | ✅ | Deploy to target after building projects | (flag only) |
-| `--sqlpackage-path` | ❌ | Custom path to SqlPackage executable | `C:\Tools\SqlPackage\SqlPackage.exe` |
 
 ### Parameter Setup Instructions
 
