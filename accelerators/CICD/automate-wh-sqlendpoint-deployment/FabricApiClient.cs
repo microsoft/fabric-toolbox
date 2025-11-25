@@ -89,7 +89,7 @@ public class SqlEndpointRefreshRequest
 public class FabricApiClient : IDisposable
 {
     private readonly HttpClient _httpClient;
-    private readonly string _baseUrl = "https://dailyapi.fabric.microsoft.com/v1";
+    private readonly string _baseUrl;
     private bool _disposed = false;
 
     public FabricApiClient(string BaseUrl)
