@@ -759,7 +759,7 @@ internal sealed class AppOptions
         // opts.ForceExtract = hasFlag("--force-extract");
         opts.Publish = args.Contains("--publish", StringComparer.OrdinalIgnoreCase);
 
-        opts.BaseUrl = getArgValue("--base-url") ?? "https://dailyapi.fabric.microsoft.com/v1";
+        opts.BaseUrl = getArgValue("--base-url") ?? "https://api.fabric.microsoft.com/v1";
 
         var credential = new AzureCliCredential();
 
