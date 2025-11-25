@@ -137,11 +137,11 @@ dotnet run -- --server "your-server" --database "your-db" --working-dir "C:\Outp
 ```bash
 AutomateWarehouseProject.exe \
   --source-fabric-workspace-id "dd56cce8-94f4-4365-b34b-0eb72163a18b" \
-  --server "x6eps4xrq2xudenlfv6naeo3i4-5dgfnxpusrsuhm2lb23scy5brm.msit-datawarehouse.fabric.microsoft.com" \
+  --server "your-workspace-id-1.datawarehouse.fabric.microsoft.com" \
   --database "test_lh" \
   --working-dir "C:\Users\pvenkat\source\repos\Automate_deployment_FabricDW\working_dir" \
   --target-fabric-workspace-id "9c022a04-8cc4-4b52-b28e-3ae6794f63e6" \
-  --target-server "x6eps4xrq2xudenlfv6naeo3i4-aqvafhgerrjexmuohlthst3d4y.msit-datawarehouse.fabric.microsoft.com" \
+  --target-server "your-workspace-id-2.datawarehouse.fabric.microsoft.com" \
   --base-url "https://msitapi.fabric.microsoft.com/v1" \
   --force-extract \
   --publish
