@@ -79,6 +79,30 @@ This .NET application is a comprehensive automation tool designed for Microsoft 
 4. Test Fabric access by navigating to your Fabric workspace in browser
 5. Ensure SqlPackage is in PATH or note its installation location
 
+
+## Authentication & Authorization
+
+This tool uses the Azure CLI (`az`) to authenticate with Azure and Microsoft Fabric resources. When you run `az login`, you authenticate your user account and obtain access tokens that the application uses to make REST API calls to Fabric workspaces, warehouses, and SQL endpoints.
+
+**How Authentication Works:**
+- The application relies on the Azure CLI to provide access tokens for REST API requests.
+- You must run `az login` before using the tool. This command authenticates your account and caches tokens locally.
+- The tool uses these tokens to access both source and target Fabric workspaces and their items.
+- You can verify your current subscription and account with `az account show`.
+
+**Required Azure Roles & Permissions:**
+- You must have the **Fabric workspace contributor** role on both the source and target workspaces.
+- This role grants permission to read workspace metadata, list items, and perform deployments.
+- If you do not have sufficient permissions, REST API calls will fail with authorization errors.
+- For more information on Fabric roles, see [Fabric workspace roles documentation](https://learn.microsoft.com/en-us/fabric/service-admin/service-admin-roles).
+
+**Multi-Tenant & Service Principal Use:**
+- If you are using a service principal or automating deployments in CI/CD, use `az login --service-principal` and ensure the service principal has the required roles assigned.
+- For multi-tenant scenarios, ensure you are logged into the correct tenant and subscription.
+
+**Troubleshooting:**
+- If you encounter authentication errors, re-run `az login` and verify your account and subscription.
+- Ensure your user or service principal has the required permissions on all relevant Fabric workspaces.
 ### For Development & Contributing
 
 **Additional Development Requirements:**
