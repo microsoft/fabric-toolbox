@@ -160,7 +160,7 @@ public class FabricApiClient : IDisposable
         );
         
         // Get target workspace items if target workspace is provided
-        List<FabricItem> targetRelevantItems = new();
+        List<FabricItem> targetRelevantItems;
         if (!string.IsNullOrEmpty(targetWorkspaceId))
         {
             Console.WriteLine($"   Scanning target workspace...");
