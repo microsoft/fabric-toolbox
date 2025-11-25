@@ -68,8 +68,8 @@ This .NET application is a comprehensive automation tool designed for Microsoft 
 
 **Azure & Fabric Access:**
 
-2. Fabric workspace contributor role on source workspaces with access to all items
-3. Fabric workspace contributor role on target workspaces with access to all items
+1. Fabric workspace contributor role on source workspaces with access to all items
+2. Fabric workspace contributor role on target workspaces with access to all items
 
 
 **Setup Steps:**
