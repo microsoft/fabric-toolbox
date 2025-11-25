@@ -1,0 +1,280 @@
+// KQL script
+// Use management commands in this script to configure your database items, such as tables, functions, materialized views, and more.
+
+
+.create-merge table DatasourceInstancesHistory (DatasourceInstances:dynamic, scanTime:datetime, misconfigured:bool) with (folder = "History/Inventory") 
+.create-merge table DatasourceInstance (gatewayId:guid, datasourceId:guid, scanTime:datetime, datasourceType:string, connectionDetails:dynamic, misconfigured:bool) with (folder = "Inventory") 
+.create-merge table TenantSettingsHistory (SettingName:string, Title:string, Enabled:bool, CanSpecifySecurityGroups:bool, TenantSettingGroup:string, EnabledSecurityGroups:dynamic, scanTime:datetime) with (folder = "History/Inventory") 
+.create-merge table TenantSettings (SettingName:string, Title:string, Enabled:bool, CanSpecifySecurityGroups:bool, TenantSettingGroup:string, EnabledSecurityGroups:dynamic, scanTime:datetime) with (folder = "Inventory") 
+.create-merge table CapacitiesHistory (CapacityId:guid, CapacityName:string, Sku:string, Region:string, State:string, Admins:dynamic, Users:dynamic, scanTime:datetime) with (folder = "History/Inventory") 
+.create-merge table Capacities (CapacityId:guid, CapacityName:string, Sku:string, Region:string, State:string, Admins:dynamic, Users:dynamic, scanTime:datetime) with (folder = "Inventory") 
+.create-merge table DomainsHistory (DomainID:guid, DomainName:string, Description:string, ParentDomainID:string, ContributorsScope:string, scanTime:datetime) with (folder = "History/Inventory") 
+.create-merge table Domains (DomainID:guid, DomainName:string, Description:string, ParentDomainID:string, ContributorsScope:string, scanTime:datetime) with (folder = "Inventory") 
+.create-merge table WorkspacesHistory (id:guid, name:string, description:string, domainId:guid, state:string, type:string, defaultDatasetStorageFormat:string, isOnDedicatedCapacity:bool, capacityId:guid, dataRetrievalState:string, details:dynamic, scanTime:datetime) with (folder = "History/Inventory") 
+.create-merge table WorkspacesUsersHistory (workspaceId:guid, workspaceName:string, graphId:guid, displayName:string, emailAddress:string, identifier:dynamic, principalType:string, userType:string, groupUserAccessRight:string, details:dynamic, scanTime:datetime) with (folder = "History/Inventory") 
+.create-merge table ItemsUsersHistory (workspaceId:guid, workspaceName:string, itemType:string, itemId:guid, itemName:string, graphId:guid, displayName:string, emailAddress:string, identifier:string, principalType:string, userType:string, userAccessRight:string, details:dynamic, scanTime:datetime) with (folder = "History/Inventory") 
+.create-merge table Workspaces (id:guid, name:string, description:string, domainId:guid, state:string, type:string, defaultDatasetStorageFormat:string, isOnDedicatedCapacity:bool, capacityId:guid, dataRetrievalState:string, details:dynamic, scanTime:datetime) with (folder = "Inventory") 
+.create-merge table ItemsHistory (workspaceId:guid, workspaceName:string, itemType:string, itemId:guid, itemName:string, details:dynamic, scanTime:datetime) with (folder = "History/Inventory") 
+.create-merge table Items (workspaceId:guid, workspaceName:string, itemType:string, itemId:guid, itemName:string, details:dynamic, scanTime:datetime) with (folder = "Inventory") 
+.create-merge table WorkspacesUsers (workspaceId:guid, workspaceName:string, graphId:guid, displayName:string, emailAddress:string, identifier:dynamic, principalType:string, userType:string, groupUserAccessRight:string, details:dynamic, scanTime:datetime) with (folder = "Inventory") 
+.create-merge table ItemsUsers (workspaceId:guid, workspaceName:string, itemType:string, itemId:guid, itemName:string, graphId:guid, displayName:string, emailAddress:string, identifier:string, principalType:string, userType:string, userAccessRight:string, details:dynamic, scanTime:datetime) with (folder = "Inventory") 
+.create-merge table CapacityDelegatedSettings (CapacityId:guid, SettingName:string, SettingTitle:string, SettingEnabled:bool, CanSpecifySecurityGroups:bool, EnabledSecurityGroups:dynamic, TenantSettingGroup:string, TenantSettingProperties:dynamic, DelegateToWorkspace:bool, DelegatedFrom:string, scanTime:datetime) with (folder = "Inventory") 
+.create-merge table CapacityDelegatedSettingsHistory (CapacityId:guid, SettingName:string, SettingTitle:string, SettingEnabled:bool, CanSpecifySecurityGroups:bool, EnabledSecurityGroups:dynamic, TenantSettingGroup:string, TenantSettingProperties:dynamic, DelegateToWorkspace:bool, DelegatedFrom:string, scanTime:datetime) with (folder = "History/Inventory") 
+.create-merge table GatewaysHistory (gatewayName:string, gatewayId:guid, type:string, publicKeyExponent:string, publicKeyModulus:string, version:string, numberOfMemebers:int, loadBalancingSetting:string, allowCloudConnectionRefresh:bool, allowCustomConnectors:bool, scanTime:datetime) with (folder = "History/Inventory") 
+.create-merge table Gateways (gatewayName:string, gatewayId:guid, type:string, publicKeyExponent:string, publicKeyModulus:string, version:string, numberOfMemebers:int, loadBalancingSetting:string, allowCloudConnectionRefresh:bool, allowCustomConnectors:bool, scanTime:datetime) with (folder = "Inventory") 
+.create-merge table GatewayMembers (gatewayId:guid, memberId:guid, memberName:string, publicKeyExponent:string, publicKeyModulus:string, version:string, memberEnabled:bool, scanTime:datetime) with (folder = "Inventory") 
+.create-merge table GatewayMembersHistory (gatewayId:guid, memberId:guid, memberName:string, publicKeyExponent:string, publicKeyModulus:string, version:string, memberEnabled:bool, scanTime:datetime) with (folder = "History/Inventory") 
+.create-merge table ConnectionsHistory (connectionId:guid, connectionName:string, gatewayId:guid, connectivityType:string, connectionPath:string, connectionType:string, privacyLevel:string, credentialType:string, singleSignOnType:string, connectionEncryption:string, skipTestConnection:bool, scanTime:datetime) with (folder = "History/Inventory") 
+.create-merge table Connections (connectionId:guid, connectionName:string, gatewayId:guid, connectivityType:string, connectionPath:string, connectionType:string, privacyLevel:string, credentialType:string, singleSignOnType:string, connectionEncryption:string, skipTestConnection:bool, scanTime:datetime) with (folder = "Inventory") 
+.create-merge table SemanticModelDetailsHistory (workspaceId:guid, workspaceName:string, itemType:string, itemId:guid, itemName:string, tables:dynamic, relationships:dynamic, expressions:dynamic, roles:dynamic, upstreamDataflows:dynamic, scanTime:datetime) with (folder = "History/Inventory") 
+.create-merge table SemanticModelDetails (workspaceId:guid, workspaceName:string, itemType:string, itemId:guid, itemName:string, tables:dynamic, relationships:dynamic, expressions:dynamic, roles:dynamic, upstreamDataflows:dynamic, scanTime:datetime) with (folder = "Inventory") 
+.create-merge table DomainDelegatedSettingsHistory (DomainId:guid, SettingName:string, Title:string, Enabled:bool, CanSpecifySecurityGroups:bool, EnabledSecurityGroups:dynamic, TenantSettingGroup:string, DelegatedToWorkspace:bool, DelegatedFrom:string, scanTime:datetime) with (folder = "History/Inventory") 
+.create-merge table DomainDelegatedSettings (DomainId:guid, SettingName:string, Title:string, Enabled:bool, CanSpecifySecurityGroups:bool, EnabledSecurityGroups:dynamic, TenantSettingGroup:string, DelegatedToWorkspace:bool, DelegatedFrom:string, scanTime:datetime) with (folder = "Inventory") 
+.create-merge table WorkspaceDelegatedSettingsHistory (WorkspaceId:guid, SettingName:string, Title:string, Enabled:bool, CanSpecifySecurityGroups:bool, EnabledSecurityGroups:dynamic, TenantSettingGroup:string, DelegatedFrom:string, scanTime:datetime) with (folder = "History/Inventory") 
+.create-merge table WorkspaceDelegatedSettings (WorkspaceId:guid, SettingName:string, Title:string, Enabled:bool, CanSpecifySecurityGroups:bool, EnabledSecurityGroups:dynamic, TenantSettingGroup:string, DelegatedFrom:string, scanTime:datetime) with (folder = "Inventory") 
+.create-merge table AppsHistory (AppName:string, AppId:guid, Description:string, PublishedBy:string, LastUpdate:datetime, scanTime:datetime) with (folder = "History/Inventory") 
+.create-merge table Apps (AppName:string, AppId:guid, Description:string, PublishedBy:string, LastUpdate:datetime, scanTime:datetime) with (folder = "Inventory") 
+.create-merge table RefreshablesRaw (['Workspace Id']:guid, ['Workspace Name']:string, ['Item Id']:guid, ['Item Name']:string, ['Item Kind']:string, ['Capacity Id']:guid, ['Capacity Name']:string, ['Capacity SKU']:string, ['Refresh Count']:int, ['Refresh Failures']:int, ['Average Duration']:decimal, ['Median Duration']:decimal, ['Refreshes Per Day']:int, ['Refresh Type']:string, ['Start Time']:string, ['End Time']:string, Status:string, ['Request Id']:guid, ['Service Exception Json']:string, ['Extended Status']:dynamic, ['Refresh Attempts']:dynamic, ['Refresh Schedule Days']:dynamic, ['Refresh Schedule Times']:dynamic, ['Refresh Schedule Enabled']:bool, ['Refresh Schedule Local Timezone Id']:string, ['Refresh Schedule Notify Option']:string, ['Configured By']:dynamic) with (folder = "History/Inventory") 
+.create-merge table ItemRefreshes (['Request Id']:guid, IngestionTime:datetime, ['Workspace Id']:guid, ['Workspace Name']:string, ['Item Id']:guid, ['Item Name']:string, ['Item Kind']:string, ['Capacity Id']:guid, ['Capacity Name']:string, ['Capacity SKU']:string, ['Refresh Type']:string, ['Start Time']:datetime, ['End Time']:datetime, Status:string, ['Service Exception Json']:string, ['Extended Status']:dynamic, ['Refresh Attempts']:dynamic, Duration:timespan, DurationMs:real) with (folder = "Events") 
+.create-merge table GitConnectionsHistory (['Workspace Id']:guid, ['Workspace Name']:string, ['Organization Name']:string, ['Owner Name']:string, ['Project Name']:string, ['Git Provider Type']:string, ['Repository Name']:string, ['Branch Name']:string, ['Directory Name']:string, scanTime:datetime) with (folder = "History/Inventory") 
+.create-merge table GitConnections (['Workspace Id']:guid, ['Workspace Name']:string, ['Organization Name']:string, ['Owner Name']:string, ['Project Name']:string, ['Git Provider Type']:string, ['Repository Name']:string, ['Branch Name']:string, ['Directory Name']:string, scanTime:datetime) with (folder = "Inventory") 
+.create-or-alter function with (folder = "Inventory", skipvalidation = "true") SemanticModel() {
+Items
+| where itemType  == 'SemanticModel'
+| extend targetStorageMode = tostring(details.targetStorageMode),contentProviderType=tostring(details.contentProviderType),configuredBy=tostring(details.configuredBy),createdDate=todatetime(details.createdDate)
+| lookup SemanticModelDetails on itemId
+| project-away workspaceId1,workspaceName1,itemName1,scanTime1,itemType1
+| project-reorder workspaceId,workspaceName,itemType,itemId,itemName,createdDate,configuredBy,targetStorageMode,contentProviderType,tables,relationships,expressions,roles,upstreamDataflows
+}
+.create-or-alter function with (folder = "Inventory", skipvalidation = "true") Reports() {
+Items
+| where itemType == "Reports" and itemName !startswith "[App]"
+| extend webUrl = strcat("https://app.powerbi.com/",workspaceId,"/reports/",itemId),
+    embededUrl = strcat("https://app.powerbi.com/reportEmbed?reportId=",itemId),
+    modifiedDateTime = todatetime(details.modifiedDateTime),
+    createdDateTime = todatetime(details.createdDateTime)
+| lookup ItemsLastView on $left.itemId == $right.ItemId
+| project-rename lastViewDate = CreationTime
+}
+.create-or-alter function with (folder = "Inventory", skipvalidation = "true") Dataflows() {
+Items
+| where itemType == "Dataflows"
+| extend generation = toint(details.generation),configuredBy=tostring(details.configuredBy),modifiedDateTime=todatetime(details.modifiedDateTime),modifiedBy=tostring(details.modifiedBy)
+| project-reorder workspaceId,workspaceName,itemType,itemId,itemName,generation,configuredBy,modifiedDateTime,modifiedBy
+}
+.create-or-alter function with (folder = "Inventory", skipvalidation = "true") ExpandSemanticModelObjectExpressions(p_itemIds:string="") {
+let v_itemIds = iff(isempty(p_itemIds), dynamic([]), split(p_itemIds, ","));
+let Foreground =
+SemanticModelDetails
+| where array_length(tables) > 0
+| where iff(array_length(v_itemIds) > 0, itemId in (p_itemIds), true)
+| mv-expand smObjects = tables
+| extend
+    smObjectName = tostring(smObjects.name),
+    smObjectStorageMode = coalesce(tostring(smObjects.storageMode), 'Missing')
+| mv-expand with_itemindex=partition sources = smObjects.source
+| extend smObjectExpression = tostring(sources.expression)
+| extend
+    smObjectExpressionClean =
+    replace(@"(?:[^:]|^)//.*(\r?\n|$)", "", // remove multi-line comments
+    replace(@"/\*[\s\S]*?\*/", "", smObjectExpression)) // remove double-slash comments
+| extend smObjectType = case(
+    smObjectExpression == smObjectName, 'DQtoAS',
+    isempty(smObjectExpression), 'DQtoAS',
+    smObjectExpression matches regex @"\b(IsParameterQuery)\b", 'MParameter',
+    partition > 0, 'MQuery',
+    smObjectExpression matches regex @"\b(let)\b", 'MQuery',
+    smObjectExpression matches regex @"[a-z]\.[A-Z]" and
+    not(smObjectExpression matches regex @"\b(?i)(calculatetable|generate|calendar|calendarauto|distinct|datatable|filter|return|union|nameof|summarize|summarizecolumns|selectcolumns|values|row|groupby|all)\b"), 'MQuery',
+    smObjectStorageMode == 'DirectQuery', 'DQtoAS',
+    'DAX' )
+| project-away relationships, roles, upstreamDataflows, tables, expressions, smObjects, sources ;
+let Background =
+SemanticModelDetails
+| where array_length(expressions) > 0
+| where iff(array_length(v_itemIds) > 0, itemId in (p_itemIds), true)
+| mv-expand smObjects = expressions
+| extend
+    smObjectName = tostring(smObjects.name),
+    smObjectStorageMode = 'Background',
+    partition = 0,
+    smObjectExpression = tostring(smObjects.expression)
+| extend
+    smObjectExpressionClean =
+    replace(@"(?:[^:]|^)//.*(\r?\n|$)", "", // remove multi-line comments
+    replace(@"/\*[\s\S]*?\*/", "", smObjectExpression)) // remove double-slash comments
+| extend smObjectType = case(
+    smObjectName == 'ScorecardId', 'pbiGoals',
+    smObjectExpression matches regex @"\b(IsParameterQuery)\b", 'MParameter',
+    smObjectExpression matches regex @"\b(let)\b", 'MQuery',
+    'MQuery' )
+| project-away relationships, roles, upstreamDataflows, tables, expressions, smObjects ;
+Foreground | union Background
+| extend firstStepContents = case(
+    smObjectType == 'MParameter', extract(@"^(.*?)\s+meta\b", 1, smObjectExpressionClean),
+    extract(@"^(?:[^\n]*\n?){1,2}", 0, smObjectExpressionClean) matches regex @"=>\s", extract(@"^[^=]*=\s*([^,]*=>)", 1, smObjectExpressionClean),
+    smObjectType == 'MQuery', extract(@"=\s*([^,]*)", 1, smObjectExpressionClean),
+    ""
+)
+| extend dataAccessFunction = case(
+    smObjectType !startswith "M", "Not M",
+    smObjectType == "MParameter", strcat(extract(@'Type\s*=\s*"([^"]*)"', 1, smObjectExpressionClean), ' Parameter'),
+    smObjectExpression matches regex @"\b(Snowflake\.Databases)\b", 'Snowflake',
+    smObjectExpression matches regex @"\b(SapHana\.Database)\b", 'SAP HANA',
+    smObjectExpression matches regex @"\b(SapBusinessWarehouse\.Cubes)\b", 'SAP BW',
+    smObjectExpression matches regex @"\b(\.Dataflows)\b", 'Dataflows',
+    smObjectExpression matches regex @"\b(Databricks\.)\b", 'Databricks',
+    smObjectExpression matches regex @"\b(AzureStorage\.)\b", 'Azure Storage',
+    smObjectExpression matches regex @"\b(AnalysisServices\.)\b", 'Analysis Services',
+    smObjectExpression matches regex @"\b(Sql\.Database|Sql\.Databases)\b", 'SQL Server',
+    smObjectExpression matches regex @"\b(GoogleAnalytics\.Accounts|GoogleBigQuery\.Database)\b", 'Google Analytics',
+    smObjectExpression matches regex @"\b(Salesforce\.)\b", 'Salesforce',
+    smObjectExpression matches regex @"\b(SharePoint\.)\b", 'SharePoint',
+    smObjectExpression matches regex @"\b(TeamsAnalytics\.)\b", 'Teams Analytics',
+    smObjectExpression matches regex @"\b(Excel\.Workbook)\b", 'Excel',
+    smObjectExpression matches regex @"\b(Csv\.Document)\b", 'csv',
+    smObjectExpression matches regex @"\b(Folder\.)\b", 'Folder',
+    smObjectExpression matches regex @"\b(File\.Contents)\b", 'File',
+    smObjectExpression matches regex @"\b(Web\.)\b", 'Web',
+    smObjectExpression matches regex @"\b(Json\.Document\(Binary\.Decompress\(Binary\.FromText)\b", 'Entered Data',
+    smObjectExpression matches regex @"\b(OData|OleDb|Odbc)\b", 'OData, ODBC or OLE DB',
+    smObjectExpression matches regex @"\b(Oracle\.Database)\b", 'Oracle',
+    smObjectExpression matches regex @"\b(Table\.Combine|Table\.NestedJoin)\b", 'Query reference',
+    firstStepContents matches regex @"=>", 'Custom function',
+    firstStepContents matches regex @"^[\s]*#"".*""[\s]*$", 'Query reference',  // Matches #"QueryName"
+    firstStepContents matches regex @"^[\s]*"".*""[\s]*$", 'Text reference',  // Matches "text"
+    firstStepContents !contains "." and firstStepContents !contains "(" and firstStepContents !contains "{", 'Query reference',  // No dots or parentheses
+    'Other M Formula'
+)}
+.create-or-alter function with (folder = "UpdatePolicyFunctions", skipvalidation = "true") parse_ItemRefreshes() {
+RefreshablesRaw
+| where ['Request Id'] != "None" and isnotempty(['Request Id'])
+| where Status != "Unknown"
+| extend IngestionTime=ingestion_time()
+| summarize arg_max(IngestionTime, ['Workspace Id'], ['Workspace Name'], ['Item Id'], ['Item Name'], ['Item Kind'], ['Capacity Id'], ['Capacity Name'],['Capacity SKU'], ['Refresh Type'], ['Start Time']=todatetime(['Start Time']), ['End Time']=todatetime(['End Time']), Status, ['Service Exception Json'], ['Extended Status'], ['Refresh Attempts']) by ['Request Id']
+| extend Duration=totimespan(['End Time'] - ['Start Time'])
+| extend DurationMs=round(tolong(Duration)/10000,0)
+| join kind=leftanti ItemRefreshes on ['Start Time'] and ['Request Id']
+}
+.create-or-alter function with (folder = "Auxtiliar", skipvalidation = "true") Calendar(DaysBack:timespan=time(730.00:00:00), Precision:timespan=time(1.00:00:00)) {
+     let _startDate = startofday(ago(DaysBack));
+     let _endDate = startofday(now());
+     range Date from _startDate to _endDate step Precision
+    | extend
+        ["Year"]=getyear(["Date"]),
+        ["Month"]=getmonth(["Date"]),
+        ["Week of Year"]=week_of_year(["Date"]),
+        ["Week of Month"]=(dayofmonth(["Date"]) / 7) + 1,
+        ["Day"]=datepart('day', ["Date"])
+ }
+.create-or-alter function with (folder = "Auxiliar", skipvalidation = "true") CapacityRegions() {
+    datatable(Continent:string,
+        FabricRegion:string,
+        Latitude:real ,
+        Longitude:real,	
+        Location:string )[
+    "Asia Pacific", "Australia East", 31.2532, 146.9211, "New South Wales",
+    "Asia Pacific", "Australia Southeast", 36.9848, 143.3906, "Victoria",
+    "Asia Pacific", "Central India", 18.5204, 73.8567, "Pune",
+    "Asia Pacific", "East Asia", 22.3193, 114.1694, "Hong Kong",
+    "Asia Pacific", "Japan East", 35.6764, 139.65, "Tokyo",
+    "Asia Pacific", "Korea Central", 37.5519, 126.9918, "Seoul",
+    "Asia Pacific", "Southeast Asia", 1.3521, 103.8198, "Singapore",
+    "Asia Pacific", "South India", 13.0827, 80.2707, "Chennai",
+    "Europe", "North Europe", 53.7798, 7.3055, "Ireland",
+    "Europe", "West Europe", 52.1326, 5.2913, "Netherlands",
+    "Europe", "France Central", 48.8566, 2.3522, "Paris",
+    "Europe", "Germany West Central", 50.1109, 8.6821, "Frankfurt am Main",
+    "Europe", "Norway East", 59.9139, 10.7522, "Oslo",
+    "Europe", "Sweden Central", 60.6749, 17.1413, "Gävle",
+    "Europe", "Switzerland North", 47.3769, 8.5417, "Zürich",
+    "Europe", "Switzerland West", 46.2044, 6.1432, "Geneva",
+    "Europe", "UK South", 51.5072, -0.1276, "London",
+    "Europe", "UK West", 51.4837, -3.1681, "Cardiff",
+    "Americas", "Brazil South", -23.5558, -46.6396, "São Paulo State",
+    "Americas", "Canada Central", 43.6532, -79.3832, "Toronto",
+    "Americas", "Canada East", 46.8131, -71.2075, "Quebec City",
+    "Americas", "East US", 37.4316, -78.6569, "Virginia",
+    "Americas", "East US 2", 37.4316, -78.6569, "Virginia",
+    "Americas", "North Central US", 40.6331, -89.3985, "Illinois",
+    "Americas", "South Central US", 31.9686, -99.9018, "Texas",
+    "Americas", "West US", 36.7783, -119.4179, "California",
+    "Americas", "West US 2", 47.7511, -120.7401, "Washington",
+    "Americas", "West US 3", 34.0489, -111.0937, "Arizona",
+    "Middle East and Africa", "South Africa North", -26.2056, 28.0337, "Johannesburg",
+    "Middle East and Africa", "UAE North", 25.2048, 55.2708, "Dubai"
+    ]
+}
+.create-or-alter function with (folder = "Auxiliar", skipvalidation = "true") SemanticModelContentTypes() {
+    datatable(
+    ContentProviderType:string,
+    MappedName:string,
+    IsIncludedInOptimizationModule:bool,
+    IsDefaultSemanticModel:bool
+    )
+ [
+    "InCompositeMode",             "Composite Mode",           false, true,
+    "InDirectQueryMode",           "DirectQuery Mode",         false, true,
+    "InImportMode",                "Import Mode",              false, true,
+    "PbixInCompositeMode",         "Composite Mode",           true,  false,
+    "PbixInDirectQueryMode",       "DirectQuery Mode",         true,  false,
+    "PbixInImportMode",            "Import Mode",              true,  false,
+    "PbixInLiveConnectionMode",    "Live Connection Mode",     false, false,
+    "RealTimeInPushMode",          "Push Mode",                false, false,
+    "RealTimeInStreamingMode",     "Streaming Mode",           false, false,
+    "Unknown",                     "Semantic Model in App",    false, false,
+    "UsageMetricsUserReport",      "Usage Metrics",            false, false,
+    "UsageMetricsUserDashboard",   "Usage Metrics",            false, false,
+    "CSV",                         "CSV",                      false, false,
+    "Excel",                       "Excel",                    false, false,
+]
+}
+.create-or-alter materialized-view with (Folder = "Inventory")  Refreshables on table RefreshablesRaw { RefreshablesRaw
+| project-away ['Refresh Type'], ['Start Time'], ['End Time'], Status, ['Request Id'],['Service Exception Json'], ['Extended Status'], ['Refresh Attempts']
+| extend IngestionTime = ingestion_time()
+| summarize arg_max(IngestionTime,['Workspace Name'],['Item Name'],['Item Kind'],['Refresh Count'],['Refresh Failures'],['Average Duration'],['Median Duration'],['Refreshes Per Day'],['Refresh Schedule Days'],['Refresh Schedule Times'],['Refresh Schedule Enabled'],['Refresh Schedule Notify Option'],['Configured By']) by ['Workspace Id'], ['Item Id'] }
+.alter table DatasourceInstancesHistory policy retention @'{"SoftDeletePeriod":"730.00:00:00","Recoverability":"Disabled"}'
+.alter table DatasourceInstancesHistory policy caching hotdata = time(730.00:00:00) hotindex = time(730.00:00:00)
+.alter table DatasourceInstancesHistory policy streamingingestion "{\"IsEnabled\":false,\"HintAllocatedRate\":null,\"NumberOfRowStores\":null,\"SealIntervalLimit\":null,\"SealThresholdBytes\":null,\"UsageTags\":[],\"IsMaintenanceActive\":false}"
+.alter table TenantSettingsHistory policy retention @'{"SoftDeletePeriod":"730.00:00:00","Recoverability":"Disabled"}'
+.alter table TenantSettingsHistory policy caching hotdata = time(730.00:00:00) hotindex = time(730.00:00:00)
+.alter table CapacitiesHistory policy retention @'{"SoftDeletePeriod":"730.00:00:00","Recoverability":"Disabled"}'
+.alter table CapacitiesHistory policy caching hotdata = time(730.00:00:00) hotindex = time(730.00:00:00)
+.alter table DomainsHistory policy retention @'{"SoftDeletePeriod":"730.00:00:00","Recoverability":"Disabled"}'
+.alter table DomainsHistory policy caching hotdata = time(730.00:00:00) hotindex = time(730.00:00:00)
+.alter table WorkspacesHistory policy retention @'{"SoftDeletePeriod":"730.00:00:00","Recoverability":"Disabled"}'
+.alter table WorkspacesUsersHistory policy retention @'{"SoftDeletePeriod":"730.00:00:00","Recoverability":"Disabled"}'
+.alter table ItemsUsersHistory policy retention @'{"SoftDeletePeriod":"730.00:00:00","Recoverability":"Disabled"}'
+.alter table ItemsHistory policy retention @'{"SoftDeletePeriod":"730.00:00:00","Recoverability":"Disabled"}'
+.alter table CapacityDelegatedSettingsHistory policy retention @'{"SoftDeletePeriod":"730.00:00:00","Recoverability":"Disabled"}'
+.alter table CapacityDelegatedSettingsHistory policy caching hotdata = time(730.00:00:00) hotindex = time(730.00:00:00)
+.alter table GatewaysHistory policy retention @'{"SoftDeletePeriod":"730.00:00:00","Recoverability":"Disabled"}'
+.alter table GatewaysHistory policy caching hotdata = time(730.00:00:00) hotindex = time(730.00:00:00)
+.alter table GatewayMembersHistory policy retention @'{"SoftDeletePeriod":"730.00:00:00","Recoverability":"Disabled"}'
+.alter table GatewayMembersHistory policy caching hotdata = time(730.00:00:00) hotindex = time(730.00:00:00)
+.alter table ConnectionsHistory policy retention @'{"SoftDeletePeriod":"730.00:00:00","Recoverability":"Disabled"}'
+.alter table ConnectionsHistory policy caching hotdata = time(730.00:00:00) hotindex = time(730.00:00:00)
+.alter table SemanticModelDetailsHistory policy retention @'{"SoftDeletePeriod":"730.00:00:00","Recoverability":"Disabled"}'
+.alter column SemanticModelDetailsHistory.['tables'] policy encoding type = 'BigObject32'
+.alter column SemanticModelDetailsHistory.['relationships'] policy encoding type = 'BigObject32'
+.alter column SemanticModelDetailsHistory.['expressions'] policy encoding type = 'BigObject32'
+.alter column SemanticModelDetailsHistory.['roles'] policy encoding type = 'BigObject32'
+.alter column SemanticModelDetailsHistory.['upstreamDataflows'] policy encoding type = 'BigObject32'
+.alter column SemanticModelDetails.['tables'] policy encoding type = 'BigObject32'
+.alter column SemanticModelDetails.['relationships'] policy encoding type = 'BigObject32'
+.alter column SemanticModelDetails.['expressions'] policy encoding type = 'BigObject32'
+.alter column SemanticModelDetails.['roles'] policy encoding type = 'BigObject32'
+.alter column SemanticModelDetails.['upstreamDataflows'] policy encoding type = 'BigObject32'
+.alter table DomainDelegatedSettingsHistory policy retention @'{"SoftDeletePeriod":"730.00:00:00","Recoverability":"Disabled"}'
+.alter table DomainDelegatedSettingsHistory policy caching hotdata = time(730.00:00:00) hotindex = time(730.00:00:00)
+.alter table WorkspaceDelegatedSettingsHistory policy retention @'{"SoftDeletePeriod":"730.00:00:00","Recoverability":"Disabled"}'
+.alter table WorkspaceDelegatedSettingsHistory policy caching hotdata = time(730.00:00:00) hotindex = time(730.00:00:00)
+.alter table AppsHistory policy retention @'{"SoftDeletePeriod":"730.00:00:00","Recoverability":"Disabled"}'
+.alter table AppsHistory policy caching hotdata = time(730.00:00:00) hotindex = time(730.00:00:00)
+.alter table RefreshablesRaw policy retention @'{"SoftDeletePeriod":"00:00:01","Recoverability":"Disabled"}'
+.alter table RefreshablesRaw policy caching hotdata = time(00:01:00) hotindex = time(00:01:00)
+.alter table RefreshablesRaw policy streamingingestion "{\"IsEnabled\":false,\"HintAllocatedRate\":null,\"NumberOfRowStores\":null,\"SealIntervalLimit\":null,\"SealThresholdBytes\":null,\"UsageTags\":[],\"IsMaintenanceActive\":false}"
+.alter table ItemRefreshes policy retention @'{"SoftDeletePeriod":"750.00:00:00","Recoverability":"Disabled"}'
+.alter table ItemRefreshes policy caching hotdata = time(90.00:00:00) hotindex = time(90.00:00:00)
+.alter table GitConnectionsHistory policy retention @'{"SoftDeletePeriod":"750.00:00:00","Recoverability":"Disabled"}'
+.alter table ItemRefreshes policy update "[{\"IsEnabled\":true,\"Source\":\"RefreshablesRaw\",\"Query\":\"parse_ItemRefreshes()\",\"IsTransactional\":true,\"PropagateIngestionProperties\":false,\"ManagedIdentity\":null}]"

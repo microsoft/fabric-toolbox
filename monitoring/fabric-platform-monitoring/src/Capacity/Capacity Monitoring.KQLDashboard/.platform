@@ -1,0 +1,12 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/gitIntegration/platformProperties/2.0.0/schema.json",
+  "metadata": {
+    "type": "KQLDashboard",
+    "displayName": "Capacity Monitoring",
+    "description": "Capacity Monitoring"
+  },
+  "config": {
+    "version": "2.0",
+    "logicalId": "297e6a7e-2f76-8797-4b8e-d55141156547"
+  }
+}

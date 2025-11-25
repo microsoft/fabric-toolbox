@@ -1,0 +1,330 @@
+table Calendar
+	lineageTag: d6048dfd-be35-4d75-8897-1723f95bdcb8
+
+	column Date
+		dataType: dateTime
+		formatString: mmmm d\, yyyy
+		lineageTag: 77cdafee-cdde-493e-ba16-ec4ef80f9224
+		summarizeBy: none
+		sourceColumn: Date
+
+		variation Variation
+			isDefault
+			relationship: e92960a5-6de4-41b0-bd15-0b6795cd59f7
+			defaultHierarchy: LocalDateTable_806bfee6-7282-4e7c-bc5c-1f501d4227f2.'Date Hierarchy'
+
+		extendedProperty ParameterMetadata =
+				{
+				  "version": 2,
+				  "kind": 1,
+				  "selectAllValue": "__SelectAll__"
+				}
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isDateTimeCustom":true}
+
+	column DateId
+		dataType: int64
+		formatString: 0
+		lineageTag: c23c30f6-8ff2-4def-bcfb-05a7187aa5b2
+		summarizeBy: count
+		sourceColumn: DateId
+
+		annotation SummarizationSetBy = Automatic
+
+	column Day
+		dataType: int64
+		formatString: 0
+		lineageTag: 90d05077-9b67-4b2e-8173-ffb9d3bd740d
+		summarizeBy: sum
+		sourceColumn: Day
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Week Day (#)'
+		dataType: int64
+		formatString: 0
+		lineageTag: 2596f265-4b29-4b42-8c92-b254f1d9d03b
+		summarizeBy: sum
+		sourceColumn: Week Day (#)
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Week Day'
+		dataType: string
+		lineageTag: 4f93c7a9-0e75-4fe4-bf8a-62a621abfd11
+		summarizeBy: none
+		sourceColumn: Week Day
+
+		annotation SummarizationSetBy = Automatic
+
+	column Week
+		dataType: int64
+		formatString: 0
+		lineageTag: b83388ec-ae1d-4ddb-b1fc-a228466bef05
+		summarizeBy: sum
+		sourceColumn: Week
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Month (Long)'
+		dataType: string
+		lineageTag: 9f5fedef-f44d-4e75-9c27-df634f16723a
+		summarizeBy: none
+		sourceColumn: Month (Long)
+
+		annotation SummarizationSetBy = Automatic
+
+	column Month
+		dataType: string
+		lineageTag: 62669f7b-7230-42f5-9681-d9530b6fc2f1
+		summarizeBy: none
+		sourceColumn: Month
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Month (#)'
+		dataType: int64
+		formatString: 0
+		lineageTag: 0fe40394-50d3-42ce-a114-355d375fadb7
+		summarizeBy: sum
+		sourceColumn: Month (#)
+
+		annotation SummarizationSetBy = Automatic
+
+	column Quarter
+		dataType: int64
+		formatString: 0
+		lineageTag: 7075102d-9d4a-4e5e-b680-ceca2d81276e
+		summarizeBy: sum
+		sourceColumn: Quarter
+
+		annotation SummarizationSetBy = Automatic
+
+	column Semester
+		dataType: int64
+		formatString: 0
+		lineageTag: 69aaa30c-1a2d-4377-97d3-f6763dd11f68
+		summarizeBy: sum
+		sourceColumn: Semester
+
+		annotation SummarizationSetBy = Automatic
+
+	column Year
+		dataType: int64
+		formatString: 0
+		lineageTag: 9ea73039-6f15-482e-9f5a-e3380f2d3d1d
+		summarizeBy: sum
+		sourceColumn: Year
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Week (Year)'
+		dataType: string
+		lineageTag: d55574f9-0d03-4a6a-81e5-3069660fdebd
+		summarizeBy: none
+		sourceColumn: Week (Year)
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Month (Year)'
+		dataType: string
+		lineageTag: 5bad3d70-01c6-4be1-9c6b-9c391f962705
+		summarizeBy: none
+		sourceColumn: Month (Year)
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Quarter (Year)'
+		dataType: string
+		lineageTag: 0f06355c-abad-4b96-8d07-7a2ea79c748e
+		summarizeBy: none
+		sourceColumn: Quarter (Year)
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Semester (Year)'
+		dataType: string
+		lineageTag: b0188f5f-627c-4538-ac7a-0c98ee0fe1a0
+		summarizeBy: none
+		sourceColumn: Semester (Year)
+
+		annotation SummarizationSetBy = Automatic
+
+	column WeekYearId
+		dataType: int64
+		formatString: 0
+		lineageTag: b24bbeb4-48b5-4623-b50b-60f91c424845
+		summarizeBy: count
+		sourceColumn: WeekYearId
+
+		annotation SummarizationSetBy = Automatic
+
+	column MonthYearId
+		dataType: int64
+		formatString: 0
+		lineageTag: 7ec63bb8-da87-4ddc-807f-fff8fef0a03c
+		summarizeBy: count
+		sourceColumn: MonthYearId
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Week Start Date'
+		dataType: dateTime
+		formatString: Long Date
+		lineageTag: fdc3c8a7-ce8b-4b66-8914-0da99e6e330c
+		summarizeBy: none
+		sourceColumn: Week Start Date
+
+		variation Variation
+			isDefault
+			relationship: 25763145-c4b0-4f83-864e-4204e7bf2ac6
+			defaultHierarchy: LocalDateTable_758ae1f6-73ea-4834-a83d-5f63daa0003d.'Date Hierarchy'
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation UnderlyingDateTimeDataType = Date
+
+	column 'Week End Date'
+		dataType: dateTime
+		formatString: Long Date
+		lineageTag: 9bea4f9c-d04d-4d5f-bc80-221b6c9279b0
+		summarizeBy: none
+		sourceColumn: Week End Date
+
+		variation Variation
+			isDefault
+			relationship: 4c22e8d7-66a4-46be-ac81-69af3eaa6e95
+			defaultHierarchy: LocalDateTable_21295484-02b4-41dc-a118-481a9522f4e8.'Date Hierarchy'
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation UnderlyingDateTimeDataType = Date
+
+	column QuarterYearId
+		dataType: int64
+		formatString: 0
+		lineageTag: 2f53e878-ede2-48d1-853a-85827e7dc29d
+		summarizeBy: count
+		sourceColumn: QuarterYearId
+
+		annotation SummarizationSetBy = Automatic
+
+	column SemesterYearId
+		dataType: int64
+		formatString: 0
+		lineageTag: 90e33735-eb14-45b8-9174-d65beb5ddf61
+		summarizeBy: count
+		sourceColumn: SemesterYearId
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Day (Relative)'
+		dataType: int64
+		formatString: 0
+		lineageTag: e40b3678-5b67-41d0-ad40-5fa6b6ac2677
+		summarizeBy: sum
+		sourceColumn: Day (Relative)
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Week (Relative)'
+		dataType: int64
+		formatString: 0
+		lineageTag: 6a987a97-833c-47c5-b43d-737e9323661c
+		summarizeBy: sum
+		sourceColumn: Week (Relative)
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Month (Relative)'
+		dataType: int64
+		formatString: 0
+		lineageTag: 917c3fce-a35e-439a-9db2-e2a6d3dd9bae
+		summarizeBy: sum
+		sourceColumn: Month (Relative)
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Year (Relative)'
+		dataType: int64
+		formatString: 0
+		lineageTag: 0dfdbe26-ea2a-4b4c-9c21-9fa137765ebe
+		summarizeBy: sum
+		sourceColumn: Year (Relative)
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Work Day'
+		dataType: string
+		lineageTag: ad2bf8f0-252d-4a9c-bea1-f9de5737ae8b
+		summarizeBy: none
+		sourceColumn: Work Day
+
+		annotation SummarizationSetBy = Automatic
+
+	partition Calendar = m
+		mode: import
+		source = ```
+				let 
+				
+				    P_Today =  DateTime.LocalNow(),
+				    P_StartDate = #date(Date.Year(P_Today)-1,1,1),
+				    P_EndDate  = Date.From(P_Today)
+				,    
+				    P_FirstDayOfWeek = 1,
+				    P_IsCarnivalHoliday = true,
+				    P_UseIsoWeek = true,
+				    P_Culture = "en-US",
+				    DayCount = Duration.Days(Duration.From(P_EndDate - P_StartDate)) + 1,
+				    Source = List.Dates(P_StartDate,DayCount,#duration(1,0,0,0)),
+				    TableFromList = Table.FromList(Source, Splitter.SplitByNothing()),    
+				    ChangedType = Table.TransformColumnTypes(TableFromList,{{"Column1", type date}}),
+				    RenamedColumns = Table.RenameColumns(ChangedType,{{"Column1", "Date"}}),
+				    InsertId = Table.AddColumn(RenamedColumns, "DateId", each Date.Year([Date])*10000 + Date.Month([Date])*100 +Date.Day([Date])),
+				    InsertYear = Table.AddColumn(InsertId, "Year", each Date.Year([Date])),
+				    InsertQuarter = Table.AddColumn(InsertYear, "Quarter", each Date.QuarterOfYear([Date])),
+				    InsertSemester = Table.AddColumn(InsertQuarter, "Semester", each if [Quarter] < 3 then 1 else 2),
+				    InsertMonth = Table.AddColumn(InsertSemester, "Month (#)", each Date.Month([Date])),
+				        // Simple week
+				    InsertWeekYear = Table.AddColumn(InsertMonth, "WeekYear", each [Year]),
+				    InsertWeek = Table.AddColumn(InsertWeekYear, "Week", each Date.WeekOfYear([Date], P_FirstDayOfWeek )),
+				    // ISO Week
+				    InsertIsoYear = Table.AddColumn(InsertMonth, "WeekYear", each Date.Year(Date.AddDays([Date], 4-(Date.DayOfWeek([Date], Day.Monday) + 1)))),
+				    InsertIsoWeek = Table.AddColumn(InsertIsoYear, "Week", each Duration.Days(Date.AddDays( [Date], 4-(Date.DayOfWeek([Date], Day.Monday) + 1)) - #date([WeekYear], 1 , 7 - Date.DayOfWeek( #date([WeekYear],1,4), Day.Monday)) ) / 7  + 1),
+				    // Choose beetween simple Week and Iso Week according to parameter
+				    ChosenWeek = if P_UseIsoWeek = true then InsertIsoWeek else InsertWeek,
+				    
+				    InsertDay = Table.AddColumn(ChosenWeek, "Day", each Date.Day([Date])),    
+				    InsertMonthName = Table.AddColumn(InsertDay, "Month (Long)", each Date.ToText([Date], "MMMM", P_Culture), type text),
+				    InsertShortMonthName = Table.AddColumn(InsertMonthName, "Month", each try(Text.Range([#"Month (Long)"],0,3)) otherwise [#"Month (Long)"]),
+				    InsertCalendarWeek = Table.AddColumn(InsertShortMonthName, "Week (Year)", each "W" & Number.ToText([Week]) & " " & Number.ToText([WeekYear])),
+				    InsertCalendarMonth = Table.AddColumn(InsertCalendarWeek, "Month (Year)", each [#"Month"] & " " & Number.ToText([Year])),
+				    InsertCalendarQtr = Table.AddColumn(InsertCalendarMonth, "Quarter (Year)", each "Q" & Number.ToText([Quarter]) & " " & Number.ToText([Year])),    
+				    InsertCalendarSem = Table.AddColumn(InsertCalendarQtr, "Semester (Year)", each "S" & Number.ToText([Semester]) & " " & Number.ToText([Year])),    
+				    InsertDayWeek = Table.AddColumn(InsertCalendarSem , "Week Day (#)", each Date.DayOfWeek([Date], P_FirstDayOfWeek ) + 1),
+				    InsertDayName = Table.AddColumn(InsertDayWeek, "Week Day", each Date.ToText([Date], "dddd", P_Culture), type text),
+				    InsertWeekYearId = Table.AddColumn(InsertDayName, "WeekYearId", each [WeekYear] * 100 + [Week]),
+				    InsertMonthYear = Table.AddColumn(InsertWeekYearId, "MonthYearId", each [Year] *100 + [#"Month (#)"]),
+				    InsertWeekStartDate = Table.AddColumn(InsertMonthYear , "Week Start Date", each Date.StartOfWeek([Date], P_FirstDayOfWeek), type date),
+				    InsertWeekEndDate = Table.AddColumn(InsertWeekStartDate , "Week End Date", each Date.EndOfWeek([Date], P_FirstDayOfWeek), type date),
+				    InsertQuarterYear = Table.AddColumn(InsertWeekEndDate, "QuarterYearId", each [Year] * 100 + [Quarter]),
+				    InsertSemesterYear = Table.AddColumn(InsertQuarterYear, "SemesterYearId", each [Year] * 100 + [Semester]),
+				    #"Capitalized Each Word" = Table.TransformColumns(InsertSemesterYear,{{"Month (Long)", Text.Proper}, {"Month", Text.Proper}, {"Month (Year)", Text.Proper}, {"Week Day", Text.Proper}}),
+				    #"Relative (Year)" = Table.AddColumn(#"Capitalized Each Word", "Year (Relative)", each [Year] - Date.Year(P_Today)),
+				    #"Relative (Month)" = Table.AddColumn(#"Relative (Year)", "Month (Relative)", each [#"Year (Relative)"] * 12 + ([#"Month (#)"] - Date.Month(P_Today))),
+				    #"Relative (Week)" = Table.AddColumn(#"Relative (Month)", "Week (Relative)", each Duration.TotalDays(DateTime.Date(Date.StartOfWeek([Date])) - DateTime.Date(Date.StartOfWeek(P_Today))) / 7),
+				    #"Relative (Day)" = Table.AddColumn(#"Relative (Week)", "Day (Relative)", each Duration.TotalDays([Date] - DateTime.Date(P_Today))),
+				    AddedWorkDay =Table.AddColumn(#"Relative (Day)", "Work Day", each if [#"Week Day (#)"] > 5 then "Weekend" else "WorkDay"),
+				    #"Reordered Columns" = Table.ReorderColumns(AddedWorkDay,{"Date", "Day", "Week Day (#)", "Week Day", "Week", "Month (Long)", "Month", "Month (#)", "Quarter", "Semester", "Year", "Week (Year)", "Month (Year)", "Quarter (Year)", "Semester (Year)", "WeekYearId", "MonthYearId", "QuarterYearId", "SemesterYearId", "Day (Relative)", "Week (Relative)", "Month (Relative)", "Year (Relative)", "Work Day"}),
+				    #"Removed Columns" = Table.RemoveColumns(#"Reordered Columns",{"WeekYear"}),
+				    #"Changed Type" = Table.TransformColumnTypes(#"Removed Columns",{{"Day", Int64.Type}, {"Week Day (#)", Int64.Type}, {"Week", Int64.Type}, {"Month (#)", Int64.Type}, {"Quarter", Int64.Type}, {"Semester", Int64.Type}, {"Year", Int64.Type}, {"Week (Year)", type text}, {"Quarter (Year)", type text}, {"Semester (Year)", type text}, {"WeekYearId", Int64.Type}, {"SemesterYearId", Int64.Type}, {"MonthYearId", Int64.Type}, {"QuarterYearId", Int64.Type}, {"Day (Relative)", Int64.Type}, {"Month (Relative)", Int64.Type}, {"Year (Relative)", Int64.Type}, {"Work Day", type text}, {"DateId", Int64.Type}, {"Week (Relative)", Int64.Type}, {"Date", type datetime}})
+				in
+				    #"Changed Type"
+				```
+
+	annotation PBI_NavigationStepName = Navigation
+
+	annotation PBI_ResultType = Table
+

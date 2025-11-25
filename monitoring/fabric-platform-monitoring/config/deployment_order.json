@@ -1,0 +1,327 @@
+[
+    {
+        "name": "Workspace.src",
+        "id": "63b564e3-bc45-46b0-aa00-31e28a727076",
+        "type": "Core"
+    },
+    {
+        "name": "Fabric Platform Monitoring.Eventhouse",
+        "id": "569fc432-6c1c-b12c-4955-5bc489624da3",
+        "type": "Core",
+        "folder": "Storage",
+        "kustoQueryUri": "kusto_query_uri",
+        "kustoIngestUri": "kusto_ingest_uri"
+    },
+    {
+        "name": "Fabric Platform Monitoring.VariableLibrary",
+        "id": "9578b1f0-81e6-bc8a-4c31-f90acb439807",
+        "folder": "Extractors",
+        "type": "Core",
+        "variables": [
+            {
+                "name": "kusto_query_uri",
+                "type": "kusto_query_uri",
+                "source": "Fabric Platform Monitoring.Eventhouse"
+            },
+            {
+                "name": "kusto_ingest_uri",
+                "type": "kusto_ingest_uri",
+                "source": "Fabric Platform Monitoring.Eventhouse"
+            },
+            {
+                "name": "key_vault_uri",
+                "type": "variable",
+                "source": "key_vault_uri"
+            },
+            {
+                "name": "key_vault_tenant_id",
+                "type": "variable",
+                "source": "key_vault_tenant_id"
+            },
+            {
+                "name": "key_vault_client_id",
+                "type": "variable",
+                "source": "key_vault_client_id"
+            },
+            {
+                "name": "key_vault_client_secret",
+                "type": "variable",
+                "source": "key_vault_client_secret"
+            }
+        ]
+    },
+    {
+        "name": "Capacity Utilization.KQLDatabase",
+        "id": "efe0982e-e191-beef-4eb1-a7d34c90d39a",
+        "folder": "Storage",
+        "type": "Capacity",
+        "parent": "Fabric Platform Monitoring.Eventhouse"
+    },
+    {
+        "name": "CapacityEvents.Eventstream",
+        "id": "d156c61a-5f5d-bf9c-4f99-69a0e68705a4",
+        "folder": "Stream",
+        "type": "Capacity",
+        "destinations": [
+            {
+                "name": "Eventhouse",
+                "itemName": "Capacity Utilization.KQLDatabase",
+                "type": "Eventhouse"
+            }
+        ]
+    },
+    {
+        "name": "Capacity Events Update Eventstream.Notebook",
+        "id": "e56ab424-bc5c-859b-409a-e7e1534f8a10",
+        "folder": "Extractors",
+        "type": "Capacity"
+    },
+    {
+        "name": "Capacity Events Update Eventstream.DataPipeline",
+        "id": "16d8ab6f-dc8c-a981-4d14-4c5aea8fcf15",
+        "folder": "Extractors",
+        "type": "Capacity",
+        "activities": [
+            {
+                "name": "Update Eventstream",
+                "type": "TridentNotebook",
+                "itemName": "Capacity Events Update Eventstream.Notebook"
+            }
+        ]
+    },
+    {
+        "name": "Capacity Monitoring.KQLDashboard",
+        "id": "297e6a7e-2f76-8797-4b8e-d55141156547",
+        "type": "Capacity",
+        "datasources": [
+            {
+                "name": "CapacityMonitoring",
+                "itemName": "Capacity Utilization.KQLDatabase"
+            }
+        ]
+    },
+    {
+        "name": "Gateway Monitoring.KQLDatabase",
+        "id": "476e80c9-35ca-afd8-4b01-94875b5a2475",
+        "folder": "Storage",
+        "type": "Gateway",
+        "parent": "Fabric Platform Monitoring.Eventhouse"
+    },
+    {
+        "name": "GatewayMonitoringHeartbeat.Eventstream",
+        "id": "cfe1aab3-5375-b47d-4d90-14218c85299d",
+        "folder": "Stream",
+        "type": "Gateway",
+        "destinations": [
+            {
+                "name": "Eventhouse",
+                "itemName": "Gateway Monitoring.KQLDatabase",
+                "type": "Eventhouse"
+            }
+        ]
+    },
+    {
+        "name": "GatewayMonitoringReports.Eventstream",
+        "id": "83273f3e-80b8-97e9-47e0-f5174d357deb",
+        "folder": "Stream",
+        "type": "Gateway",
+        "destinations": [
+            {
+                "name": "Eventhouse",
+                "itemName": "Gateway Monitoring.KQLDatabase",
+                "type": "Eventhouse"
+            }
+        ]
+    },
+    {
+        "name": "Gateway Monitoring.SemanticModel",
+        "id": "b391ddbe-a2ac-aece-4d20-6801657d3a6a",
+        "folder": "Storage",
+        "type": "Gateway",
+        "datasources": [
+            {
+                "itemName": "Gateway Monitoring.KQLDatabase"
+            }
+        ]
+    },
+    {
+        "name": "Gateway Monitoring.Report",
+        "id": "cffc4313-6aa8-805d-4a27-e8aeb4ffb74b",
+        "type": "Gateway",
+        "datasource":  "Gateway Monitoring.SemanticModel"
+    },
+    {
+        "name": "Activity Events.KQLDatabase",
+        "id": "476e80c9-35ca-afd8-4b01-94875b5a2475",
+        "folder": "Storage",
+        "type": "ActivityEvents",
+        "parent": "Fabric Platform Monitoring.Eventhouse"
+    },
+    {
+        "name": "Monitoring Activity Events.Notebook",
+        "id": "5ec5fe5b-62fc-bb83-43a5-62710ccb023c",
+        "folder": "Extractors",
+        "type": "ActivityEvents"
+    },
+    {
+        "name": "Refresh Activity Events.DataPipeline",
+        "id": "52101d8a-14aa-89e4-4826-f722b61817b9",
+        "folder": "Extractors",
+        "type": "ActivityEvents",
+        "parameters": [
+            {
+                "name": "kusto_db",
+                "type": "kusto_database",
+                "source": "Activity Events.KQLDatabase"
+            }
+        ],
+        "activities": [
+            {
+                "name": "Activity Events",
+                "type": "TridentNotebook",
+                "itemName": "Monitoring Activity Events.Notebook"
+            }
+        ]
+    },
+    {
+        "name": "Platform Activities.KQLDashboard",
+        "id": "4d12c5a4-cdae-9c30-48a6-2e792ab5119b",
+        "type": "ActivityEvents",
+        "datasources": [
+            {
+                "name": "Activity Events",
+                "itemName": "Activity Events.KQLDatabase"
+            }
+        ]
+    },
+    {
+        "name": "Platform Inventory.KQLDatabase",
+        "id": "36fc7e5f-a842-baf4-41c2-fea04f878458",
+        "folder": "Storage",
+        "type": "Inventory",
+        "parent": "Fabric Platform Monitoring.Eventhouse"
+    },
+    {
+        "name": "Monitoring Extraction Inventory.Notebook",
+        "id": "505b4c37-0557-a70e-404c-02d18abdd261",
+        "folder": "Extractors",
+        "type": "Inventory"
+    },
+    {
+        "name": "Monitoring Extraction Scanner.Notebook",
+        "id": "a09748a4-ab11-9a40-4567-bffd9c19595e",
+        "folder": "Extractors",
+        "type": "Inventory"
+    },
+    {
+        "name": "Monitoring Extraction Refreshables.Notebook",
+        "id": "754f754a-4d28-8d57-48b5-705db14578f8",
+        "folder": "Extractors",
+        "type": "Inventory"
+    },
+    {
+        "name": "Refresh Inventory.DataPipeline",
+        "id": "c769baa6-1bdf-8ab5-4902-9ccd2aa4e257",
+        "folder": "Extractors",
+        "type": "Inventory",
+        "parameters": [
+            {
+                "name": "kusto_db",
+                "type": "kusto_database",
+                "source": "Platform Inventory.KQLDatabase"
+            }
+        ],
+        "activities": [
+            {
+                "name": "Inventory",
+                "type": "TridentNotebook",
+                "itemName": "Monitoring Extraction Inventory.Notebook"
+            }
+        ]
+    },
+    {
+        "name": "Refresh Refreshables.DataPipeline",
+        "id": "c86cea31-e199-90b0-4878-ff97449030a6",
+        "folder": "Extractors",
+        "type": "Inventory",
+        "parameters": [
+            {
+                "name": "kusto_query_uri",
+                "type": "kusto_query_uri",
+                "source": "Platform Inventory.KQLDatabase"
+            },
+            {
+                "name": "kusto_ingest_uri",
+                "type": "kusto_ingest_uri",
+                "source": "Platform Inventory.KQLDatabase"
+            },
+            {
+                "name": "kusto_db",
+                "type": "kusto_database",
+                "source": "Platform Inventory.KQLDatabase"
+            },
+            {
+                "name": "key_vault_uri",
+                "type": "variable",
+                "source": "key_vault_uri"
+            },
+            {
+                "name": "key_vault_tenant_id",
+                "type": "variable",
+                "source": "key_vault_tenant_id"
+            },
+            {
+                "name": "key_vault_client_id",
+                "type": "variable",
+                "source": "key_vault_client_id"
+            },
+            {
+                "name": "key_vault_client_secret",
+                "type": "variable",
+                "source": "key_vault_client_secret"
+            }
+        ],
+        "activities": [
+            {
+                "name": "Refreshables",
+                "type": "TridentNotebook",
+                "itemName": "Monitoring Extraction Refreshables.Notebook"
+            }
+        ]
+    },
+    {
+        "name": "Refresh Scanner API.DataPipeline",
+        "id": "58736594-839f-aa8c-45e7-db9b01bda786",
+        "folder": "Extractors",
+        "type": "Inventory",
+        "parameters": [
+            {
+                "name": "kusto_db",
+                "type": "kusto_database",
+                "source": "Platform Inventory.KQLDatabase"
+            }
+        ],
+        "activities": [
+            {
+                "name": "Scanner API",
+                "type": "TridentNotebook",
+                "itemName": "Monitoring Extraction Scanner.Notebook"
+            }
+        ]
+    },
+    {
+        "name": "Platform Monitoring.KQLDashboard",
+        "id": "95ac7fd2-7032-88aa-413d-f195f8397f91",
+        "type": "Inventory",
+        "datasources": [
+            {
+                "name": "Activity Events",
+                "itemName": "Activity Events.KQLDatabase"
+            },
+            {
+                "name": "Platform Inventory",
+                "itemName": "Platform Inventory.KQLDatabase"
+            }
+        ]
+    }
+]

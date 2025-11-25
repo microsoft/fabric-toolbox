@@ -1,0 +1,12 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/gitIntegration/platformProperties/2.0.0/schema.json",
+  "metadata": {
+    "type": "KQLDatabase",
+    "displayName": "Platform Inventory",
+    "description": "PlatformInventory"
+  },
+  "config": {
+    "version": "2.0",
+    "logicalId": "36fc7e5f-a842-baf4-41c2-fea04f878458"
+  }
+}

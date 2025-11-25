@@ -1,0 +1,38 @@
+table Period
+	isHidden
+	lineageTag: 6121945d-f230-4506-8cf7-b3e3af688cbe
+
+	column 'Days Back'
+		dataType: int64
+		isHidden
+		formatString: 0
+		lineageTag: 7c81eef8-aab6-4675-a550-f0be2ba0a3c2
+		summarizeBy: sum
+		sourceColumn: Days Back
+
+		extendedProperty ParameterMetadata =
+				{
+				  "version": 2,
+				  "kind": 1,
+				  "selectAllValue": "__SelectAll__"
+				}
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	partition Period = m
+		mode: import
+		source =
+				let
+				    Source = Table.FromRows(Json.Document(Binary.Decompress(Binary.FromText("i45WMlCK1YlWMgST5mDSGCJkBqRiAQ==", BinaryEncoding.Base64), Compression.Deflate)), let _t = ((type nullable text) meta [Serialized.Text = true]) in type table [#"Days Back" = _t]),
+				    #"Changed Type" = Table.TransformColumnTypes(Source,{{"Days Back", Int64.Type}})
+				in
+				    #"Changed Type"
+
+	changedProperty = IsHidden
+
+	annotation PBI_NavigationStepName = Navigation
+
+	annotation PBI_ResultType = Table
+

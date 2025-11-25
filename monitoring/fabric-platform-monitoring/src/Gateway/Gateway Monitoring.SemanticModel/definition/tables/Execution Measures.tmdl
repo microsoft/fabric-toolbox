@@ -1,0 +1,99 @@
+table 'Execution Measures'
+	lineageTag: 698d98b6-55f2-41f8-95c3-5b81c70ecc16
+
+	measure '# Activities' = COUNT('Query Execution'[RequestId])
+		formatString: 0
+		lineageTag: 2e1489da-9b7e-44de-a9e7-1620515860e3
+
+	measure '# Nodes' = DISTINCTCOUNT('Query Execution'[GatewayObjectId])
+		formatString: 0
+		lineageTag: 05304a60-46a5-4a15-949b-28cb904d65f3
+
+	measure '# Queries' = DISTINCTCOUNT('Query Execution'[QueryTrackingId])
+		formatString: 0
+		lineageTag: 18b6e964-aba0-4bc8-810d-6a9611706b06
+
+	measure '# Queries (DirectQuery)' = CALCULATE([# Queries],KEEPFILTERS('Query Execution'[OperationType] = "DirectQuery"))
+		formatString: 0
+		lineageTag: 70d728a1-f29e-47ef-9bfb-d7cca6d1f2ef
+
+	measure '# Queries (errors)' = CALCULATE([# Queries],'Query Execution'[Success]="N")
+		formatString: 0
+		lineageTag: 36664ce6-b76f-4db5-9d6a-6436ffdaa874
+
+	measure '# Queries (Refresh)' = CALCULATE([# Queries],KEEPFILTERS('Query Execution'[OperationType] = "Refresh"))
+		formatString: 0
+		lineageTag: 3bc836d4-b986-45e1-8c85-c8d1b0a66645
+
+	measure '# Jobs' = DISTINCTCOUNT('Query Execution'[RootActivityId])
+		formatString: 0
+		lineageTag: 078b61d1-3388-41ef-a419-1fd0a821181c
+
+	measure 'Perc. 0.9 Query Duration (s)' = DIVIDE(PERCENTILE.INC('Query Execution'[QueryExecutionDuration_ms_],0.9),1000)
+		lineageTag: 42ca3c53-d66e-4940-bfab-a31a7126088a
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'Disk Read Avg. (byte/sec)' = AVERAGEX('Query Execution', DIVIDE('Query Execution'[SpoolingTotalDataSize_byte_] , 'Query Execution'[SpoolingDiskReadingDuration_ms_] / 1000))
+		lineageTag: f6f643df-78b0-4afd-bbef-40786ad957fc
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'Disk Write Avg. (byte/sec)' = AVERAGEX('Query Execution', DIVIDE('Query Execution'[SpoolingTotalDataSize_byte_] , 'Query Execution'[SpoolingDiskWritingDuration_ms_] / 1000))
+		lineageTag: 22f4b23f-000d-4530-8d1c-18018a3936a5
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'Duration (s)' = DATEDIFF(MIN('Query Execution'[QueryExecutionStartTimeUTC]),MAX('Query Execution'[QueryExecutionEndTimeUTC]),SECOND)
+		formatString: 0
+		lineageTag: 1a104915-bc4c-40fe-aa5f-4b1afc1e3977
+
+	measure 'Query Avg. Execution - DirectQuery (ms)' = CALCULATE([Perc. 0.9 Query Duration (s)], KEEPFILTERS('Query Execution'[OperationType] = "DirectQuery"))
+		lineageTag: a17045f4-fe60-4a29-8c95-d81cd5dab879
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'Query Avg. Execution - Refresh (ms)' = CALCULATE([Perc. 0.9 Query Duration (s)], KEEPFILTERS('Query Execution'[OperationType] = "Refresh"))
+		lineageTag: 485eebcb-e350-4dc8-a5b5-fbfe307208db
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'Workspace ID' = MAX('Query Execution'[WorkspaceId])
+		lineageTag: 79bbef09-795d-4d51-9b1c-a9a11ee6d069
+
+	measure 'Max. Query Duration (s)' = DIVIDE(MAXX('Query Execution', 'Query Execution'[QueryExecutionDuration_ms_]),1000)
+		lineageTag: f8ab922d-b806-40bd-aa67-407cebcb8430
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure '# Queries (success)' = CALCULATE([# Queries],'Query Execution'[Success]="Y")
+		formatString: 0
+		lineageTag: d0ef603c-916e-4fb9-86a9-7a4c2d0b48bb
+
+	measure '# Queries (running)' = [# Queries]-[# Queries (success)]-[# Queries (errors)]
+		formatString: 0
+		lineageTag: 5764549e-271a-4339-a143-7d2684360797
+
+	measure 'Job Success' =
+			SWITCH(
+			    TRUE(),
+			    [# Queries (running)]>0,"R",
+			    [# Queries (errors)]>0,"N",
+			    "Y"
+			)
+		lineageTag: 39ffdb01-0f51-49a1-a30f-7f0197b8c73f
+
+	partition 'Execution Measures' = m
+		mode: import
+		source =
+				let
+				    Source = Table.FromRows(Json.Document(Binary.Decompress(Binary.FromText("i44FAA==", BinaryEncoding.Base64), Compression.Deflate)), let _t = ((type nullable text) meta [Serialized.Text = true]) in type table [Column1 = _t]),
+				    #"Changed Type" = Table.TransformColumnTypes(Source,{{"Column1", type text}}),
+				    #"Removed Columns" = Table.RemoveColumns(#"Changed Type",{"Column1"})
+				in
+				    #"Removed Columns"
+
+	annotation PBI_ResultType = Table
+
+	annotation PBI_NavigationStepName = Navigation
+
