@@ -1,0 +1,76 @@
+[build-system]
+requires = ["setuptools>=61.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "adf-fabric-migrator"
+version = "0.1.0"
+description = "Python library for Azure Data Factory to Microsoft Fabric migration"
+readme = "adf_fabric_migrator/README.md"
+license = {text = "MIT"}
+requires-python = ">=3.8"
+authors = [
+    {name = "Microsoft Fabric Team"}
+]
+keywords = [
+    "azure",
+    "data-factory",
+    "fabric",
+    "migration",
+    "etl",
+    "data-pipelines",
+]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Software Development :: Libraries :: Python Modules",
+    "Topic :: Database",
+]
+
+dependencies = []
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.0.0",
+    "pytest-cov>=4.0.0",
+    "black>=23.0.0",
+    "isort>=5.0.0",
+    "mypy>=1.0.0",
+]
+
+[project.urls]
+"Homepage" = "https://github.com/microsoft/fabric-toolbox"
+"Bug Tracker" = "https://github.com/microsoft/fabric-toolbox/issues"
+"Documentation" = "https://github.com/microsoft/fabric-toolbox/tree/main/tools/FabricDataFactoryMigrationAssistant"
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["adf_fabric_migrator*"]
+
+[tool.black]
+line-length = 100
+target-version = ["py38", "py39", "py310", "py311", "py312"]
+
+[tool.isort]
+profile = "black"
+line_length = 100
+
+[tool.mypy]
+python_version = "3.8"
+warn_return_any = true
+warn_unused_configs = true
+ignore_missing_imports = true
+
+[tool.pytest.ini_options]
+testpaths = ["adf_fabric_migrator/tests"]
+python_files = ["test_*.py"]
+python_classes = ["Test*"]
+python_functions = ["test_*"]
