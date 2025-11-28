@@ -30,3 +30,14 @@ packages
 pids
 .file-manifest
 .devcontainer/
+
+# Python build artifacts
+*.egg-info/
+*.egg
+__pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/
+.mypy_cache/
+build/
+*.whl
