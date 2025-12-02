@@ -1,0 +1,174 @@
+{
+  "_comment": "This is a sample Fabric Data Pipeline definition generated from the migration tool. Use this as a template for the Fabric REST API.",
+  "_api_endpoint": "POST https://api.fabric.microsoft.com/v1/workspaces/{workspaceId}/items",
+  "_documentation": "https://learn.microsoft.com/en-us/rest/api/fabric/datapipeline/items/create-data-pipeline",
+  "properties": {
+    "activities": [
+      {
+        "name": "CopyFromBlobToSQL",
+        "type": "Copy",
+        "dependsOn": [],
+        "policy": {
+          "timeout": "0.12:00:00",
+          "retry": 3,
+          "retryIntervalInSeconds": 30,
+          "secureOutput": false,
+          "secureInput": false
+        },
+        "userProperties": [],
+        "typeProperties": {
+          "source": {
+            "type": "DelimitedTextSource",
+            "storeSettings": {
+              "type": "AzureBlobStorageReadSettings",
+              "recursive": true
+            },
+            "formatSettings": {
+              "type": "DelimitedTextReadSettings"
+            },
+            "datasetSettings": {
+              "type": "DelimitedText",
+              "typeProperties": {
+                "location": {
+                  "type": "AzureBlobStorageLocation",
+                  "container": "data",
+                  "folderPath": "input"
+                },
+                "columnDelimiter": ",",
+                "firstRowAsHeader": true
+              },
+              "externalReferences": {
+                "connection": "<FABRIC_BLOB_STORAGE_CONNECTION_ID>"
+              }
+            }
+          },
+          "sink": {
+            "type": "AzureSqlSink",
+            "writeBatchSize": 10000,
+            "datasetSettings": {
+              "type": "AzureSqlTable",
+              "typeProperties": {
+                "tableName": "ProcessedData"
+              },
+              "externalReferences": {
+                "connection": "<FABRIC_AZURE_SQL_CONNECTION_ID>"
+              }
+            }
+          },
+          "enableStaging": false
+        },
+        "connectVia": {}
+      },
+      {
+        "name": "LookupConfig",
+        "type": "Lookup",
+        "dependsOn": [
+          {
+            "activity": "CopyFromBlobToSQL",
+            "dependencyConditions": [
+              "Succeeded"
+            ]
+          }
+        ],
+        "policy": {
+          "timeout": "0.00:10:00",
+          "retry": 1,
+          "secureOutput": false,
+          "secureInput": false
+        },
+        "userProperties": [],
+        "typeProperties": {
+          "source": {
+            "type": "AzureSqlSource",
+            "sqlReaderQuery": "SELECT COUNT(*) as RecordCount FROM ProcessedData"
+          },
+          "datasetSettings": {
+            "type": "AzureSqlTable",
+            "typeProperties": {
+              "tableName": "ProcessedData"
+            },
+            "externalReferences": {
+              "connection": "<FABRIC_AZURE_SQL_CONNECTION_ID>"
+            }
+          },
+          "firstRowOnly": true
+        },
+        "connectVia": {}
+      },
+      {
+        "name": "SendNotification",
+        "type": "WebActivity",
+        "dependsOn": [
+          {
+            "activity": "LookupConfig",
+            "dependencyConditions": [
+              "Succeeded"
+            ]
+          }
+        ],
+        "policy": {
+          "timeout": "0.00:05:00",
+          "retry": 2,
+          "secureOutput": false,
+          "secureInput": false
+        },
+        "userProperties": [],
+        "typeProperties": {
+          "url": "@{pipeline().libraryVariables.SampleDataFactory_VariableLibrary_apiBaseUrl}/notify",
+          "method": "POST",
+          "headers": {
+            "Content-Type": "application/json"
+          },
+          "body": {
+            "message": "ETL completed",
+            "recordCount": "@activity('LookupConfig').output.firstRow.RecordCount",
+            "environment": "@pipeline().libraryVariables.SampleDataFactory_VariableLibrary_environment"
+          }
+        },
+        "connectVia": {}
+      }
+    ],
+    "parameters": {
+      "sourcePath": {
+        "type": "String",
+        "defaultValue": "input/data.csv"
+      },
+      "targetTable": {
+        "type": "String",
+        "defaultValue": "ProcessedData"
+      }
+    },
+    "variables": {
+      "processedRecords": {
+        "type": "Integer",
+        "defaultValue": 0
+      }
+    },
+    "libraryVariables": {
+      "SampleDataFactory_VariableLibrary_environment": {
+        "type": "String",
+        "variableName": "VariableLibrary_environment",
+        "libraryName": "SampleDataFactory_GlobalParameters"
+      },
+      "SampleDataFactory_VariableLibrary_maxRetries": {
+        "type": "Integer",
+        "variableName": "VariableLibrary_maxRetries",
+        "libraryName": "SampleDataFactory_GlobalParameters"
+      },
+      "SampleDataFactory_VariableLibrary_apiBaseUrl": {
+        "type": "String",
+        "variableName": "VariableLibrary_apiBaseUrl",
+        "libraryName": "SampleDataFactory_GlobalParameters"
+      }
+    },
+    "folder": {
+      "name": "Production/ETL"
+    },
+    "annotations": [
+      "ETL",
+      "Production"
+    ],
+    "concurrency": 1,
+    "policy": {}
+  }
+}

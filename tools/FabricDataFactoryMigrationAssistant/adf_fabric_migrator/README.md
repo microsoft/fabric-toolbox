@@ -240,6 +240,54 @@ from adf_fabric_migrator import (
 )
 ```
 
+## Sample JSON Templates
+
+The `samples/` directory contains JSON templates for manual API calls:
+
+| File | Description |
+|------|-------------|
+| `sample_adf_arm_template.json` | Sample ADF ARM template (input format) |
+| `sample_fabric_pipeline.json` | Transformed Fabric Data Pipeline definition (output format) |
+| `fabric_api_request_template.json` | Template for the Fabric REST API request |
+
+See [`samples/README.md`](samples/README.md) for detailed usage instructions on how to manually deploy pipelines using the Fabric REST API.
+
+Quick example to deploy a pipeline:
+
+```python
+import base64
+import json
+import requests
+
+# Load the sample Fabric pipeline
+with open("samples/sample_fabric_pipeline.json", "r") as f:
+    pipeline_def = json.load(f)
+
+# Remove metadata comments
+for key in ["_comment", "_api_endpoint", "_documentation"]:
+    pipeline_def.pop(key, None)
+
+# Base64 encode
+payload = base64.b64encode(json.dumps(pipeline_def).encode()).decode()
+
+# Deploy via Fabric API
+response = requests.post(
+    f"https://api.fabric.microsoft.com/v1/workspaces/{workspace_id}/items",
+    headers={"Authorization": f"Bearer {token}", "Content-Type": "application/json"},
+    json={
+        "displayName": "MyPipeline",
+        "type": "DataPipeline",
+        "definition": {
+            "parts": [{
+                "path": "pipeline-content.json",
+                "payload": payload,
+                "payloadType": "InlineBase64"
+            }]
+        }
+    }
+)
+```
+
 ## License
 
 MIT License - see the [LICENSE](../LICENSE) file for details.

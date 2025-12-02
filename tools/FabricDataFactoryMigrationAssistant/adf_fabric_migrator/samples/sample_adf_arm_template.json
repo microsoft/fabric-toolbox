@@ -1,0 +1,357 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "factoryName": {
+      "type": "string",
+      "defaultValue": "SampleDataFactory"
+    }
+  },
+  "resources": [
+    {
+      "type": "Microsoft.DataFactory/factories",
+      "name": "[parameters('factoryName')]",
+      "apiVersion": "2018-06-01",
+      "properties": {
+        "globalParameters": {
+          "environment": {
+            "type": "String",
+            "value": "development"
+          },
+          "maxRetries": {
+            "type": "Int",
+            "value": 3
+          },
+          "apiBaseUrl": {
+            "type": "String",
+            "value": "https://api.example.com"
+          }
+        }
+      },
+      "resources": [
+        {
+          "type": "Microsoft.DataFactory/factories/pipelines",
+          "name": "[concat(parameters('factoryName'), '/ETL_Pipeline')]",
+          "apiVersion": "2018-06-01",
+          "dependsOn": [
+            "[resourceId('Microsoft.DataFactory/factories/datasets', parameters('factoryName'), 'SourceDataset')]",
+            "[resourceId('Microsoft.DataFactory/factories/datasets', parameters('factoryName'), 'SinkDataset')]",
+            "[resourceId('Microsoft.DataFactory/factories/linkedServices', parameters('factoryName'), 'AzureBlobStorage_LS')]",
+            "[resourceId('Microsoft.DataFactory/factories/linkedServices', parameters('factoryName'), 'AzureSql_LS')]"
+          ],
+          "properties": {
+            "activities": [
+              {
+                "name": "CopyFromBlobToSQL",
+                "type": "Copy",
+                "dependsOn": [],
+                "policy": {
+                  "timeout": "0.12:00:00",
+                  "retry": 3,
+                  "retryIntervalInSeconds": 30
+                },
+                "userProperties": [],
+                "typeProperties": {
+                  "source": {
+                    "type": "DelimitedTextSource",
+                    "storeSettings": {
+                      "type": "AzureBlobStorageReadSettings",
+                      "recursive": true
+                    },
+                    "formatSettings": {
+                      "type": "DelimitedTextReadSettings"
+                    }
+                  },
+                  "sink": {
+                    "type": "AzureSqlSink",
+                    "writeBatchSize": 10000
+                  },
+                  "enableStaging": false
+                },
+                "inputs": [
+                  {
+                    "referenceName": "SourceDataset",
+                    "type": "DatasetReference"
+                  }
+                ],
+                "outputs": [
+                  {
+                    "referenceName": "SinkDataset",
+                    "type": "DatasetReference"
+                  }
+                ]
+              },
+              {
+                "name": "LookupConfig",
+                "type": "Lookup",
+                "dependsOn": [
+                  {
+                    "activity": "CopyFromBlobToSQL",
+                    "dependencyConditions": [
+                      "Succeeded"
+                    ]
+                  }
+                ],
+                "policy": {
+                  "timeout": "0.00:10:00",
+                  "retry": 1
+                },
+                "userProperties": [],
+                "typeProperties": {
+                  "source": {
+                    "type": "AzureSqlSource",
+                    "sqlReaderQuery": "SELECT COUNT(*) as RecordCount FROM ProcessedData"
+                  },
+                  "dataset": {
+                    "referenceName": "SinkDataset",
+                    "type": "DatasetReference"
+                  },
+                  "firstRowOnly": true
+                }
+              },
+              {
+                "name": "SendNotification",
+                "type": "WebActivity",
+                "dependsOn": [
+                  {
+                    "activity": "LookupConfig",
+                    "dependencyConditions": [
+                      "Succeeded"
+                    ]
+                  }
+                ],
+                "policy": {
+                  "timeout": "0.00:05:00",
+                  "retry": 2
+                },
+                "userProperties": [],
+                "typeProperties": {
+                  "url": "@{pipeline().globalParameters.apiBaseUrl}/notify",
+                  "method": "POST",
+                  "headers": {
+                    "Content-Type": "application/json"
+                  },
+                  "body": {
+                    "message": "ETL completed",
+                    "recordCount": "@activity('LookupConfig').output.firstRow.RecordCount",
+                    "environment": "@pipeline().globalParameters.environment"
+                  }
+                }
+              }
+            ],
+            "parameters": {
+              "sourcePath": {
+                "type": "String",
+                "defaultValue": "input/data.csv"
+              },
+              "targetTable": {
+                "type": "String",
+                "defaultValue": "ProcessedData"
+              }
+            },
+            "variables": {
+              "processedRecords": {
+                "type": "Integer",
+                "defaultValue": 0
+              }
+            },
+            "folder": {
+              "name": "Production/ETL"
+            },
+            "annotations": [
+              "ETL",
+              "Production"
+            ]
+          }
+        },
+        {
+          "type": "Microsoft.DataFactory/factories/pipelines",
+          "name": "[concat(parameters('factoryName'), '/Orchestration_Pipeline')]",
+          "apiVersion": "2018-06-01",
+          "dependsOn": [
+            "[resourceId('Microsoft.DataFactory/factories/pipelines', parameters('factoryName'), 'ETL_Pipeline')]"
+          ],
+          "properties": {
+            "activities": [
+              {
+                "name": "ExecuteETL",
+                "type": "ExecutePipeline",
+                "dependsOn": [],
+                "userProperties": [],
+                "typeProperties": {
+                  "pipeline": {
+                    "referenceName": "ETL_Pipeline",
+                    "type": "PipelineReference"
+                  },
+                  "waitOnCompletion": true,
+                  "parameters": {
+                    "sourcePath": "@pipeline().parameters.inputPath",
+                    "targetTable": "ProcessedData"
+                  }
+                }
+              },
+              {
+                "name": "ProcessResult",
+                "type": "IfCondition",
+                "dependsOn": [
+                  {
+                    "activity": "ExecuteETL",
+                    "dependencyConditions": [
+                      "Succeeded"
+                    ]
+                  }
+                ],
+                "userProperties": [],
+                "typeProperties": {
+                  "expression": {
+                    "value": "@equals(activity('ExecuteETL').Status, 'Succeeded')",
+                    "type": "Expression"
+                  },
+                  "ifTrueActivities": [
+                    {
+                      "name": "LogSuccess",
+                      "type": "SetVariable",
+                      "dependsOn": [],
+                      "userProperties": [],
+                      "typeProperties": {
+                        "variableName": "status",
+                        "value": "Success"
+                      }
+                    }
+                  ],
+                  "ifFalseActivities": [
+                    {
+                      "name": "LogFailure",
+                      "type": "SetVariable",
+                      "dependsOn": [],
+                      "userProperties": [],
+                      "typeProperties": {
+                        "variableName": "status",
+                        "value": "Failed"
+                      }
+                    }
+                  ]
+                }
+              }
+            ],
+            "parameters": {
+              "inputPath": {
+                "type": "String",
+                "defaultValue": "data/input.csv"
+              }
+            },
+            "variables": {
+              "status": {
+                "type": "String",
+                "defaultValue": "Pending"
+              }
+            },
+            "folder": {
+              "name": "Production/Orchestration"
+            }
+          }
+        },
+        {
+          "type": "Microsoft.DataFactory/factories/datasets",
+          "name": "[concat(parameters('factoryName'), '/SourceDataset')]",
+          "apiVersion": "2018-06-01",
+          "dependsOn": [
+            "[resourceId('Microsoft.DataFactory/factories/linkedServices', parameters('factoryName'), 'AzureBlobStorage_LS')]"
+          ],
+          "properties": {
+            "type": "DelimitedText",
+            "linkedServiceName": {
+              "referenceName": "AzureBlobStorage_LS",
+              "type": "LinkedServiceReference"
+            },
+            "typeProperties": {
+              "location": {
+                "type": "AzureBlobStorageLocation",
+                "container": "data",
+                "folderPath": "input"
+              },
+              "columnDelimiter": ",",
+              "firstRowAsHeader": true
+            }
+          }
+        },
+        {
+          "type": "Microsoft.DataFactory/factories/datasets",
+          "name": "[concat(parameters('factoryName'), '/SinkDataset')]",
+          "apiVersion": "2018-06-01",
+          "dependsOn": [
+            "[resourceId('Microsoft.DataFactory/factories/linkedServices', parameters('factoryName'), 'AzureSql_LS')]"
+          ],
+          "properties": {
+            "type": "AzureSqlTable",
+            "linkedServiceName": {
+              "referenceName": "AzureSql_LS",
+              "type": "LinkedServiceReference"
+            },
+            "typeProperties": {
+              "tableName": "ProcessedData"
+            }
+          }
+        },
+        {
+          "type": "Microsoft.DataFactory/factories/linkedServices",
+          "name": "[concat(parameters('factoryName'), '/AzureBlobStorage_LS')]",
+          "apiVersion": "2018-06-01",
+          "dependsOn": [],
+          "properties": {
+            "type": "AzureBlobStorage",
+            "typeProperties": {
+              "connectionString": "DefaultEndpointsProtocol=https;AccountName=<storage_account_name>;EndpointSuffix=core.windows.net"
+            },
+            "annotations": []
+          }
+        },
+        {
+          "type": "Microsoft.DataFactory/factories/linkedServices",
+          "name": "[concat(parameters('factoryName'), '/AzureSql_LS')]",
+          "apiVersion": "2018-06-01",
+          "dependsOn": [],
+          "properties": {
+            "type": "AzureSqlDatabase",
+            "typeProperties": {
+              "connectionString": "Server=<server_name>.database.windows.net;Database=<database_name>;Authentication=ActiveDirectoryManagedIdentity"
+            },
+            "annotations": []
+          }
+        },
+        {
+          "type": "Microsoft.DataFactory/factories/triggers",
+          "name": "[concat(parameters('factoryName'), '/DailyScheduleTrigger')]",
+          "apiVersion": "2018-06-01",
+          "dependsOn": [
+            "[resourceId('Microsoft.DataFactory/factories/pipelines', parameters('factoryName'), 'ETL_Pipeline')]"
+          ],
+          "properties": {
+            "type": "ScheduleTrigger",
+            "runtimeState": "Started",
+            "typeProperties": {
+              "recurrence": {
+                "frequency": "Day",
+                "interval": 1,
+                "startTime": "2024-01-01T06:00:00Z",
+                "timeZone": "UTC"
+              }
+            },
+            "pipelines": [
+              {
+                "pipelineReference": {
+                  "referenceName": "ETL_Pipeline",
+                  "type": "PipelineReference"
+                },
+                "parameters": {
+                  "sourcePath": "daily/data.csv",
+                  "targetTable": "ProcessedData"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

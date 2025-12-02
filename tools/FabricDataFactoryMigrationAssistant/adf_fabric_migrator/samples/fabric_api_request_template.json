@@ -1,0 +1,27 @@
+{
+  "_documentation": {
+    "description": "Template for creating a Data Pipeline in Microsoft Fabric using the REST API",
+    "api_endpoint": "POST https://api.fabric.microsoft.com/v1/workspaces/{workspaceId}/items",
+    "authentication": "Bearer token with DataPipeline.ReadWrite.All scope",
+    "content_type": "application/json",
+    "reference": "https://learn.microsoft.com/en-us/rest/api/fabric/datapipeline/items/create-data-pipeline"
+  },
+  "_placeholders": {
+    "{workspaceId}": "Replace with your Fabric workspace ID (GUID)",
+    "<BASE64_ENCODED_PIPELINE_DEFINITION>": "Replace with Base64-encoded pipeline definition from sample_fabric_pipeline.json",
+    "<FABRIC_BLOB_STORAGE_CONNECTION_ID>": "Replace with your Fabric connection ID for Azure Blob Storage",
+    "<FABRIC_AZURE_SQL_CONNECTION_ID>": "Replace with your Fabric connection ID for Azure SQL Database"
+  },
+  "displayName": "ETL_Pipeline",
+  "type": "DataPipeline",
+  "definition": {
+    "parts": [
+      {
+        "path": "pipeline-content.json",
+        "payload": "<BASE64_ENCODED_PIPELINE_DEFINITION>",
+        "payloadType": "InlineBase64"
+      }
+    ]
+  },
+  "description": "ETL Pipeline migrated from Azure Data Factory"
+}
