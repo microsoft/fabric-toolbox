@@ -557,3 +557,259 @@ class TestActivityTransformerConnectionMappings:
         """Test mapping returns None when not found."""
         result = self.transformer.map_linked_service_to_connection("NonExistentLS")
         assert result is None
+
+
+class TestDatabricksToTridentTransformation:
+    """Test DatabricksNotebook to TridentNotebook transformation."""
+
+    def setup_method(self):
+        """Set up test fixtures."""
+        self.transformer = ActivityTransformer(enable_databricks_to_trident=True)
+
+    def test_transform_databricks_to_trident_type_change(self):
+        """Test that DatabricksNotebook type is changed to TridentNotebook."""
+        activity = {
+            "name": "RunNotebook",
+            "type": "DatabricksNotebook",
+            "typeProperties": {
+                "notebookPath": "/path/to/notebook"
+            }
+        }
+
+        result = self.transformer.transform_activity(activity)
+
+        assert result["type"] == "TridentNotebook"
+        assert result["name"] == "RunNotebook"
+
+    def test_transform_databricks_removes_notebook_path(self):
+        """Test that notebookPath is removed from typeProperties."""
+        activity = {
+            "name": "RunNotebook",
+            "type": "DatabricksNotebook",
+            "typeProperties": {
+                "notebookPath": "/path/to/notebook"
+            }
+        }
+
+        result = self.transformer.transform_activity(activity)
+
+        assert "notebookPath" not in result["typeProperties"]
+
+    def test_transform_databricks_removes_linked_service_name(self):
+        """Test that linkedServiceName is removed from activity."""
+        activity = {
+            "name": "RunNotebook",
+            "type": "DatabricksNotebook",
+            "linkedServiceName": {
+                "referenceName": "AzureDatabricks",
+                "type": "LinkedServiceReference"
+            },
+            "typeProperties": {
+                "notebookPath": "/path/to/notebook"
+            }
+        }
+
+        result = self.transformer.transform_activity(activity)
+
+        assert "linkedServiceName" not in result
+
+    def test_transform_databricks_adds_notebook_and_workspace_id(self):
+        """Test that notebookId and workspaceId placeholders are added."""
+        activity = {
+            "name": "RunNotebook",
+            "type": "DatabricksNotebook",
+            "typeProperties": {
+                "notebookPath": "/path/to/notebook"
+            }
+        }
+
+        result = self.transformer.transform_activity(activity)
+
+        assert result["typeProperties"]["notebookId"] == "<PLACEHOLDER_NOTEBOOK_ID>"
+        assert result["typeProperties"]["workspaceId"] == "<PLACEHOLDER_WORKSPACE_ID>"
+
+    def test_transform_databricks_renames_base_parameters(self):
+        """Test that baseParameters is renamed to parameters."""
+        activity = {
+            "name": "RunNotebook",
+            "type": "DatabricksNotebook",
+            "typeProperties": {
+                "notebookPath": "/path/to/notebook",
+                "baseParameters": {
+                    "inputPath": "@pipeline().parameters.input",
+                    "outputPath": "/output/data"
+                }
+            }
+        }
+
+        result = self.transformer.transform_activity(activity)
+
+        assert "baseParameters" not in result["typeProperties"]
+        assert "parameters" in result["typeProperties"]
+
+    def test_transform_databricks_double_nested_parameters(self):
+        """Test that parameters use double nesting structure."""
+        activity = {
+            "name": "RunNotebook",
+            "type": "DatabricksNotebook",
+            "typeProperties": {
+                "notebookPath": "/path/to/notebook",
+                "baseParameters": {
+                    "inputPath": "@pipeline().parameters.input"
+                }
+            }
+        }
+
+        result = self.transformer.transform_activity(activity)
+
+        params = result["typeProperties"]["parameters"]
+        assert "inputPath" in params
+        
+        # Check double nesting structure
+        input_param = params["inputPath"]
+        assert input_param["type"] == "Expression"
+        assert isinstance(input_param["value"], dict)
+        assert input_param["value"]["type"] == "Expression"
+        assert input_param["value"]["value"] == "@pipeline().parameters.input"
+
+    def test_transform_databricks_expression_parameter(self):
+        """Test transformation of already-expression parameter."""
+        activity = {
+            "name": "RunNotebook",
+            "type": "DatabricksNotebook",
+            "typeProperties": {
+                "notebookPath": "/path/to/notebook",
+                "baseParameters": {
+                    "dynamicValue": {
+                        "value": "@concat('prefix_', pipeline().parameters.id)",
+                        "type": "Expression"
+                    }
+                }
+            }
+        }
+
+        result = self.transformer.transform_activity(activity)
+
+        params = result["typeProperties"]["parameters"]
+        dynamic_param = params["dynamicValue"]
+        
+        # Should unwrap the expression and re-wrap with double nesting
+        assert dynamic_param["type"] == "Expression"
+        assert dynamic_param["value"]["type"] == "Expression"
+        assert dynamic_param["value"]["value"] == "@concat('prefix_', pipeline().parameters.id)"
+
+    def test_transform_databricks_disabled_by_default(self):
+        """Test that transformation is disabled by default."""
+        transformer = ActivityTransformer()  # Default: enable_databricks_to_trident=False
+        
+        activity = {
+            "name": "RunNotebook",
+            "type": "DatabricksNotebook",
+            "typeProperties": {
+                "notebookPath": "/path/to/notebook"
+            }
+        }
+
+        result = transformer.transform_activity(activity)
+
+        # Type should NOT be changed when disabled
+        assert result["type"] == "DatabricksNotebook"
+
+    def test_set_databricks_to_trident_toggle(self):
+        """Test toggling the transformation on and off."""
+        transformer = ActivityTransformer()
+        
+        activity = {
+            "name": "RunNotebook",
+            "type": "DatabricksNotebook",
+            "typeProperties": {
+                "notebookPath": "/path/to/notebook"
+            }
+        }
+
+        # Initially disabled
+        result = transformer.transform_activity(activity.copy())
+        assert result["type"] == "DatabricksNotebook"
+
+        # Enable transformation
+        transformer.set_databricks_to_trident(True)
+        result = transformer.transform_activity(activity.copy())
+        assert result["type"] == "TridentNotebook"
+
+        # Disable transformation
+        transformer.set_databricks_to_trident(False)
+        result = transformer.transform_activity(activity.copy())
+        assert result["type"] == "DatabricksNotebook"
+
+    def test_transform_databricks_complete_example(self):
+        """Test complete DatabricksNotebook transformation."""
+        activity = {
+            "name": "ProcessData",
+            "type": "DatabricksNotebook",
+            "dependsOn": [
+                {"activity": "PrepareData", "dependencyConditions": ["Succeeded"]}
+            ],
+            "linkedServiceName": {
+                "referenceName": "AzureDatabricks_LS",
+                "type": "LinkedServiceReference"
+            },
+            "policy": {
+                "timeout": "7.00:00:00",
+                "retry": 0
+            },
+            "typeProperties": {
+                "notebookPath": "/notebooks/etl/process_data",
+                "baseParameters": {
+                    "inputPath": "@pipeline().parameters.sourcePath",
+                    "outputPath": "@pipeline().parameters.targetPath",
+                    "maxRecords": "1000"
+                }
+            }
+        }
+
+        result = self.transformer.transform_activity(activity)
+
+        # Verify type change
+        assert result["type"] == "TridentNotebook"
+        assert result["name"] == "ProcessData"
+
+        # Verify dependencies preserved
+        assert result["dependsOn"][0]["activity"] == "PrepareData"
+
+        # Verify policy preserved
+        assert result["policy"]["timeout"] == "7.00:00:00"
+
+        # Verify linkedServiceName removed
+        assert "linkedServiceName" not in result
+
+        # Verify typeProperties transformed
+        type_props = result["typeProperties"]
+        assert "notebookPath" not in type_props
+        assert type_props["notebookId"] == "<PLACEHOLDER_NOTEBOOK_ID>"
+        assert type_props["workspaceId"] == "<PLACEHOLDER_WORKSPACE_ID>"
+        
+        # Verify parameters with double nesting
+        assert "parameters" in type_props
+        assert "baseParameters" not in type_props
+        
+        for param_name in ["inputPath", "outputPath", "maxRecords"]:
+            param = type_props["parameters"][param_name]
+            assert param["type"] == "Expression"
+            assert param["value"]["type"] == "Expression"
+
+    def test_transform_preserves_other_type_properties(self):
+        """Test that other typeProperties are preserved."""
+        activity = {
+            "name": "RunNotebook",
+            "type": "DatabricksNotebook",
+            "typeProperties": {
+                "notebookPath": "/path/to/notebook",
+                "someOtherProperty": "preserved_value",
+                "nestedProperty": {"key": "value"}
+            }
+        }
+
+        result = self.transformer.transform_activity(activity)
+
+        assert result["typeProperties"]["someOtherProperty"] == "preserved_value"
+        assert result["typeProperties"]["nestedProperty"] == {"key": "value"}

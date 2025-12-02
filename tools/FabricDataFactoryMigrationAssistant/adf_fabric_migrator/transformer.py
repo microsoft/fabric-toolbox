@@ -31,12 +31,27 @@ class PipelineTransformer:
         >>> print(json.dumps(fabric_pipeline, indent=2))
     """
     
-    def __init__(self):
-        """Initialize the pipeline transformer."""
-        self._activity_transformer = activity_transformer
+    def __init__(self, enable_databricks_to_trident: bool = False):
+        """
+        Initialize the pipeline transformer.
+        
+        Args:
+            enable_databricks_to_trident: When True, transforms DatabricksNotebook 
+                activities to TridentNotebook format with appropriate property mappings.
+        """
+        self._activity_transformer = ActivityTransformer(enable_databricks_to_trident)
         self._current_pipeline_name = ""
         self._reference_mappings: Dict[str, Dict[str, str]] = {}
         self._linked_service_bridge: Dict[str, Dict[str, Any]] = {}
+    
+    def set_databricks_to_trident(self, enabled: bool) -> None:
+        """
+        Enable or disable DatabricksNotebook to TridentNotebook transformation.
+        
+        Args:
+            enabled: When True, transforms DatabricksNotebook activities to TridentNotebook.
+        """
+        self._activity_transformer.set_databricks_to_trident(enabled)
     
     def set_reference_mappings(
         self, 

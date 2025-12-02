@@ -20,10 +20,26 @@ class ActivityTransformer:
     and activity-specific property adjustments.
     """
     
-    def __init__(self):
-        """Initialize the activity transformer."""
+    def __init__(self, enable_databricks_to_trident: bool = False):
+        """
+        Initialize the activity transformer.
+        
+        Args:
+            enable_databricks_to_trident: When True, transforms DatabricksNotebook 
+                activities to TridentNotebook format with appropriate property mappings.
+        """
         self._failed_connectors: Set[str] = set()
         self._connection_mappings: Dict[str, str] = {}
+        self._enable_databricks_to_trident = enable_databricks_to_trident
+    
+    def set_databricks_to_trident(self, enabled: bool) -> None:
+        """
+        Enable or disable DatabricksNotebook to TridentNotebook transformation.
+        
+        Args:
+            enabled: When True, transforms DatabricksNotebook activities to TridentNotebook.
+        """
+        self._enable_databricks_to_trident = enabled
     
     def set_connection_mappings(self, mappings: Dict[str, str]) -> None:
         """
@@ -82,6 +98,10 @@ class ActivityTransformer:
         # Skip Copy and Custom activities - they have specialized transformers
         if activity_type in ("Copy", "Custom"):
             return activity
+        
+        # Transform DatabricksNotebook to TridentNotebook if enabled
+        if self._enable_databricks_to_trident and activity_type == "DatabricksNotebook":
+            activity = self._transform_databricks_to_trident(activity)
         
         # Transform LinkedService references
         self._remove_linked_service_references_and_set_external_refs(activity)
@@ -153,6 +173,101 @@ class ActivityTransformer:
             self._convert_lookup_expressions(type_properties)
         else:
             self._convert_common_string_expressions(type_properties)
+    
+    def _transform_databricks_to_trident(self, activity: Dict[str, Any]) -> Dict[str, Any]:
+        """
+        Transform DatabricksNotebook activity to TridentNotebook for Fabric.
+        
+        This transformation:
+        - Changes type from "DatabricksNotebook" to "TridentNotebook"
+        - Removes: linkedServiceName, notebookPath
+        - Adds: notebookId and workspaceId inside typeProperties (placeholders)
+        - Renames "baseParameters" to "parameters"
+        - Uses double nesting structure for parameters:
+          "param": { "value": { "value": "@expr", "type": "Expression" }, "type": "Expression" }
+        
+        Args:
+            activity: The DatabricksNotebook activity definition.
+            
+        Returns:
+            Transformed TridentNotebook activity definition.
+        """
+        import copy
+        transformed = copy.deepcopy(activity)
+        
+        # Change type
+        transformed["type"] = "TridentNotebook"
+        
+        # Get typeProperties
+        type_properties = transformed.get("typeProperties", {})
+        
+        # Remove notebookPath
+        if "notebookPath" in type_properties:
+            del type_properties["notebookPath"]
+        
+        # Remove linkedServiceName from activity and typeProperties
+        if "linkedServiceName" in transformed:
+            del transformed["linkedServiceName"]
+        if "linkedServiceName" in type_properties:
+            del type_properties["linkedServiceName"]
+        
+        # Add placeholders for notebookId and workspaceId
+        type_properties["notebookId"] = "<PLACEHOLDER_NOTEBOOK_ID>"
+        type_properties["workspaceId"] = "<PLACEHOLDER_WORKSPACE_ID>"
+        
+        # Transform baseParameters to parameters with double nesting
+        if "baseParameters" in type_properties:
+            base_params = type_properties["baseParameters"]
+            new_params = {}
+            
+            if isinstance(base_params, dict):
+                for param_name, param_value in base_params.items():
+                    # Apply double nesting structure
+                    new_params[param_name] = self._create_double_nested_expression(param_value)
+            
+            type_properties["parameters"] = new_params
+            del type_properties["baseParameters"]
+        
+        transformed["typeProperties"] = type_properties
+        
+        logger.info(
+            f"Transformed DatabricksNotebook '{activity.get('name')}' to TridentNotebook"
+        )
+        
+        return transformed
+    
+    def _create_double_nested_expression(self, value: Any) -> Dict[str, Any]:
+        """
+        Create double nested expression structure for TridentNotebook parameters.
+        
+        Creates structure: { "value": { "value": "@expr", "type": "Expression" }, "type": "Expression" }
+        
+        Args:
+            value: The original parameter value.
+            
+        Returns:
+            Double nested expression structure.
+        """
+        # Determine the inner value
+        if isinstance(value, dict):
+            # If it's already an expression object, extract the value
+            if value.get("type") == "Expression" and "value" in value:
+                inner_value = value["value"]
+            else:
+                # Convert dict to string representation
+                import json
+                inner_value = json.dumps(value)
+        else:
+            inner_value = str(value) if value is not None else ""
+        
+        # Create double nested structure
+        return {
+            "value": {
+                "value": inner_value,
+                "type": "Expression"
+            },
+            "type": "Expression"
+        }
     
     def _convert_script_expressions(self, type_properties: Dict[str, Any]) -> None:
         """Convert Script activity expressions."""

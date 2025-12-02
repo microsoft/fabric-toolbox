@@ -87,6 +87,46 @@ def main():
         for activity in activities:
             print(f"       - {activity.get('name')} ({activity.get('type')})")
     
+    # Step 4b: Demonstrate DatabricksNotebook to TridentNotebook transformation
+    print("\n4b. DatabricksNotebook to TridentNotebook Transformation:")
+    databricks_transformer = PipelineTransformer(enable_databricks_to_trident=True)
+    
+    # Create a sample pipeline with DatabricksNotebook activity
+    databricks_pipeline = {
+        "properties": {
+            "activities": [
+                {
+                    "name": "RunDatabricksProcess",
+                    "type": "DatabricksNotebook",
+                    "linkedServiceName": {
+                        "referenceName": "AzureDatabricks_LS",
+                        "type": "LinkedServiceReference"
+                    },
+                    "typeProperties": {
+                        "notebookPath": "/notebooks/etl/process_data",
+                        "baseParameters": {
+                            "inputPath": "@pipeline().parameters.sourcePath",
+                            "outputPath": "@pipeline().parameters.targetPath"
+                        }
+                    }
+                }
+            ]
+        }
+    }
+    
+    transformed_databricks = databricks_transformer.transform_pipeline_definition(
+        databricks_pipeline, 
+        "DatabricksPipeline"
+    )
+    
+    db_activity = transformed_databricks["properties"]["activities"][0]
+    print(f"   Original type: DatabricksNotebook -> Transformed type: {db_activity['type']}")
+    print(f"   notebookId: {db_activity['typeProperties'].get('notebookId', 'N/A')}")
+    print(f"   workspaceId: {db_activity['typeProperties'].get('workspaceId', 'N/A')}")
+    print(f"   Parameters with double nesting:")
+    for param_name, param_value in db_activity["typeProperties"].get("parameters", {}).items():
+        print(f"     - {param_name}: nested structure verified")
+    
     # Step 5: Detect global parameters
     print("\n5. Global Parameter Detection:")
     detector = GlobalParameterDetector()
