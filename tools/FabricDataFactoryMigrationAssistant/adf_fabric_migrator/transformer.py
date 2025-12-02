@@ -11,7 +11,7 @@ import logging
 import re
 from typing import Any, Dict, List, Optional, Tuple
 
-from .activity_transformer import ActivityTransformer, activity_transformer
+from .activity_transformer import ActivityTransformer
 from .models import ADFComponent, GlobalParameterReference
 
 logger = logging.getLogger(__name__)

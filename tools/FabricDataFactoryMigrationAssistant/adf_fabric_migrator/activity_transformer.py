@@ -5,6 +5,8 @@ This module provides transformation logic for individual ADF activities
 to Microsoft Fabric format.
 """
 
+import copy
+import json
 import logging
 from typing import Any, Dict, List, Optional, Set
 
@@ -192,7 +194,6 @@ class ActivityTransformer:
         Returns:
             Transformed TridentNotebook activity definition.
         """
-        import copy
         transformed = copy.deepcopy(activity)
         
         # Change type
@@ -255,7 +256,6 @@ class ActivityTransformer:
                 inner_value = value["value"]
             else:
                 # Convert dict to string representation
-                import json
                 inner_value = json.dumps(value)
         else:
             inner_value = str(value) if value is not None else ""
