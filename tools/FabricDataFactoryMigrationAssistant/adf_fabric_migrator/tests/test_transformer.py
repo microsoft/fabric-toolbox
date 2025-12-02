@@ -296,3 +296,122 @@ class TestPipelineTransformerPayload:
         
         assert "resourceMetadata" not in parsed
         assert "dependsOn" not in parsed
+
+
+class TestPipelineTransformerDatabricksToTrident:
+    """Test DatabricksNotebook to TridentNotebook transformation at pipeline level."""
+    
+    def setup_method(self):
+        """Set up test fixtures."""
+        self.transformer = PipelineTransformer(enable_databricks_to_trident=True)
+    
+    def test_transform_pipeline_with_databricks_activity(self):
+        """Test pipeline transformation with DatabricksNotebook activity."""
+        definition = {
+            "properties": {
+                "activities": [
+                    {
+                        "name": "RunDatabricksNotebook",
+                        "type": "DatabricksNotebook",
+                        "linkedServiceName": {
+                            "referenceName": "AzureDatabricks_LS",
+                            "type": "LinkedServiceReference"
+                        },
+                        "typeProperties": {
+                            "notebookPath": "/notebooks/process",
+                            "baseParameters": {
+                                "inputPath": "@pipeline().parameters.sourcePath"
+                            }
+                        }
+                    }
+                ]
+            }
+        }
+        
+        result = self.transformer.transform_pipeline_definition(definition, "TestPipeline")
+        activities = result["properties"]["activities"]
+        
+        assert len(activities) == 1
+        activity = activities[0]
+        
+        # Verify transformation
+        assert activity["type"] == "TridentNotebook"
+        assert "linkedServiceName" not in activity
+        assert "notebookPath" not in activity.get("typeProperties", {})
+        assert activity["typeProperties"]["notebookId"] == "<PLACEHOLDER_NOTEBOOK_ID>"
+        assert activity["typeProperties"]["workspaceId"] == "<PLACEHOLDER_WORKSPACE_ID>"
+        assert "parameters" in activity["typeProperties"]
+        assert "baseParameters" not in activity["typeProperties"]
+    
+    def test_transform_pipeline_with_mixed_activities(self):
+        """Test pipeline with both DatabricksNotebook and other activity types."""
+        definition = {
+            "properties": {
+                "activities": [
+                    {
+                        "name": "WaitActivity",
+                        "type": "Wait",
+                        "typeProperties": {"waitTimeInSeconds": 10}
+                    },
+                    {
+                        "name": "RunNotebook",
+                        "type": "DatabricksNotebook",
+                        "typeProperties": {
+                            "notebookPath": "/notebooks/process"
+                        }
+                    },
+                    {
+                        "name": "CallPipeline",
+                        "type": "ExecutePipeline",
+                        "typeProperties": {
+                            "pipeline": {"referenceName": "ChildPipeline"},
+                            "waitOnCompletion": True
+                        }
+                    }
+                ]
+            }
+        }
+        
+        result = self.transformer.transform_pipeline_definition(definition, "TestPipeline")
+        activities = result["properties"]["activities"]
+        
+        assert len(activities) == 3
+        
+        # Wait activity should remain unchanged
+        assert activities[0]["type"] == "Wait"
+        
+        # DatabricksNotebook should be transformed to TridentNotebook
+        assert activities[1]["type"] == "TridentNotebook"
+        
+        # ExecutePipeline should be transformed to InvokePipeline
+        assert activities[2]["type"] == "InvokePipeline"
+    
+    def test_toggle_databricks_to_trident(self):
+        """Test toggling transformation at pipeline level."""
+        transformer = PipelineTransformer()
+        
+        definition = {
+            "properties": {
+                "activities": [
+                    {
+                        "name": "RunNotebook",
+                        "type": "DatabricksNotebook",
+                        "typeProperties": {"notebookPath": "/notebooks/test"}
+                    }
+                ]
+            }
+        }
+        
+        # Initially disabled - DatabricksNotebook should remain
+        result = transformer.transform_pipeline_definition(definition, "Test")
+        assert result["properties"]["activities"][0]["type"] == "DatabricksNotebook"
+        
+        # Enable transformation
+        transformer.set_databricks_to_trident(True)
+        result = transformer.transform_pipeline_definition(definition, "Test")
+        assert result["properties"]["activities"][0]["type"] == "TridentNotebook"
+        
+        # Disable transformation
+        transformer.set_databricks_to_trident(False)
+        result = transformer.transform_pipeline_definition(definition, "Test")
+        assert result["properties"]["activities"][0]["type"] == "DatabricksNotebook"

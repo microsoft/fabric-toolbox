@@ -122,6 +122,44 @@ fabric_definition = transformer.transform_pipeline_with_global_parameters(
 payload = transformer.generate_fabric_pipeline_payload(fabric_definition)
 ```
 
+#### DatabricksNotebook to TridentNotebook Transformation
+
+Enable the transformation of ADF DatabricksNotebook activities to Fabric TridentNotebook format:
+
+```python
+from adf_fabric_migrator import PipelineTransformer
+
+# Enable during initialization
+transformer = PipelineTransformer(enable_databricks_to_trident=True)
+
+# Or toggle at runtime
+transformer.set_databricks_to_trident(True)
+
+# Transform pipeline with DatabricksNotebook activities
+fabric_definition = transformer.transform_pipeline_definition(
+    adf_definition,
+    pipeline_name="MyDatabricksPipeline"
+)
+```
+
+When enabled, this transformation:
+- Changes activity type from `DatabricksNotebook` to `TridentNotebook`
+- Removes `linkedServiceName` and `notebookPath` properties
+- Adds `notebookId` and `workspaceId` placeholders in `typeProperties`
+- Renames `baseParameters` to `parameters`
+- Applies double nesting structure for parameters:
+  ```json
+  {
+    "param": {
+      "value": {
+        "value": "@expression",
+        "type": "Expression"
+      },
+      "type": "Expression"
+    }
+  }
+  ```
+
 ### ConnectorMapper
 
 Map ADF LinkedService types to Fabric connectors.
