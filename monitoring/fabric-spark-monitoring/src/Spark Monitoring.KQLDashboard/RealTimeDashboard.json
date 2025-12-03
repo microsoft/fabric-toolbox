@@ -2004,7 +2004,7 @@
       "id": "82abfa0d-7aa4-485a-bf5a-7089d8a07a0d",
       "kind": "kusto-trident",
       "clusterUri": "",
-      "database": "2b1f8040-91cf-889f-4cb4-89285484fbbe",
+      "database": "ada7a865-99cb-bb36-4f70-6d77b684e5a4",
       "name": "Spark Monitoring",
       "scopeId": "kusto-trident",
       "workspace": "00000000-0000-0000-0000-000000000000"
@@ -2045,7 +2045,7 @@
         "kind": "inline",
         "dataSourceId": "82abfa0d-7aa4-485a-bf5a-7089d8a07a0d"
       },
-      "text": "_applicationSummary\n| extend AppName_ = extract(@\"^([^_]+)_\", 1, AppName)\n| summarize dcount(AppName) by AppName_",
+      "text": "_applicationSummary\n| extend LastPart = extract(@\"([^_]+)$\",0, AppName)\n| extend FirstPart = substring(AppName, 0, strlen(AppName) - strlen(LastPart) - 1)\n| summarize dcount(AppName) by FirstPart",
       "id": "60712cac-dfff-4b27-9dd1-8d5d090ccb30",
       "usedVariables": [
         "_applicationSummary"
