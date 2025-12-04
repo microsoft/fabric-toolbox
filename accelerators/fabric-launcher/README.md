@@ -1,5 +1,5 @@
   <p align="center">
-  <img src="./docs/Fabric-Launcher.png" alt="Fabric Launcher icon" width="200"/>
+  <img src="./assets/Fabric-Launcher.png" alt="Fabric Launcher icon" width="200"/>
 </p>
 
 </p>
