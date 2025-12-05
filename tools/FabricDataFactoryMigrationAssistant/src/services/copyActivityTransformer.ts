@@ -8,10 +8,17 @@ export class CopyActivityTransformer {
   /**
    * Transforms an ADF Copy activity to Fabric format
    * @param activity The ADF Copy activity
-   * @param connectionMappings The connection mappings from the UI
+   * @param connectionMappings The OLD format connection mappings (deprecated)
+   * @param pipelineReferenceMappings The NEW format reference mappings
+   * @param pipelineName The current pipeline name
    * @returns The transformed Fabric Copy activity
    */
-  transformCopyActivity(activity: any, connectionMappings?: any): any {
+  transformCopyActivity(
+    activity: any, 
+    connectionMappings?: any,
+    pipelineReferenceMappings?: Record<string, Record<string, string>>,
+    pipelineName?: string
+  ): any {
     if (!activity || activity.type !== 'Copy') {
       return activity;
     }
@@ -30,7 +37,13 @@ export class CopyActivityTransformer {
 
     const transformedActivity = {
       ...activity,
-      typeProperties: this.transformCopyTypeProperties(activity, datasetMappings, connectionMappings)
+      typeProperties: this.transformCopyTypeProperties(
+        activity, 
+        datasetMappings, 
+        connectionMappings,
+        pipelineReferenceMappings,
+        pipelineName
+      )
     };
 
     // Remove ADF-specific properties that are not used in Fabric pipelines
@@ -72,17 +85,31 @@ export class CopyActivityTransformer {
    * Transforms the typeProperties of a Copy activity
    * @param activity The full Copy activity (including inputs/outputs)
    * @param datasetMappings The dataset mappings from parser
-   * @param pipelineConnectionMappings The connection mappings
+   * @param pipelineConnectionMappings The OLD format connection mappings (deprecated)
+   * @param pipelineReferenceMappings The NEW format reference mappings
+   * @param pipelineName The current pipeline name
    * @returns The transformed typeProperties for Fabric
    */
-  private transformCopyTypeProperties(activity: any, datasetMappings: any, pipelineConnectionMappings?: any): any {
+  private transformCopyTypeProperties(
+    activity: any, 
+    datasetMappings: any, 
+    pipelineConnectionMappings?: any,
+    pipelineReferenceMappings?: Record<string, Record<string, string>>,
+    pipelineName?: string
+  ): any {
     const typeProperties = activity.typeProperties || {};
     
     const transformed: any = {
       source: this.transformCopySource(typeProperties.source || {}, datasetMappings, pipelineConnectionMappings),
       sink: this.transformCopySink(typeProperties.sink || {}, datasetMappings, pipelineConnectionMappings),
       enableStaging: typeProperties.enableStaging || false,
-      stagingSettings: this.transformStagingSettings(typeProperties.stagingSettings, pipelineConnectionMappings),
+      stagingSettings: this.transformStagingSettings(
+        typeProperties.stagingSettings, 
+        pipelineConnectionMappings,
+        pipelineReferenceMappings,
+        pipelineName,
+        activity.name
+      ),
       parallelCopies: typeProperties.parallelCopies || undefined,
       dataIntegrationUnits: typeProperties.dataIntegrationUnits || undefined,
       translator: typeProperties.translator || undefined,
@@ -810,14 +837,42 @@ export class CopyActivityTransformer {
   /**
    * Transforms staging settings for Copy activities
    * @param stagingSettings The ADF staging settings
-   * @param pipelineConnectionMappings The connection mappings
+   * @param pipelineConnectionMappings The OLD format connection mappings (deprecated)
+   * @param pipelineReferenceMappings The NEW format reference mappings
+   * @param pipelineName The current pipeline name
+   * @param activityName The current activity name
    * @returns The transformed staging settings for Fabric
    */
-  private transformStagingSettings(stagingSettings: any, pipelineConnectionMappings?: any): any {
+  private transformStagingSettings(
+    stagingSettings: any, 
+    pipelineConnectionMappings?: any,
+    pipelineReferenceMappings?: Record<string, Record<string, string>>,
+    pipelineName?: string,
+    activityName?: string
+  ): any {
     if (!stagingSettings) return undefined;
 
     const linkedServiceName = stagingSettings.linkedServiceName?.referenceName;
-    const connectionId = this.getConnectionIdForLinkedService(linkedServiceName, pipelineConnectionMappings);
+    let connectionId: string | undefined;
+
+    // Try NEW format first (pipelineReferenceMappings with referenceId)
+    if (pipelineReferenceMappings && pipelineName && activityName) {
+      const referenceId = `${pipelineName}_${activityName}_staging`;
+      const pipelineMappings = pipelineReferenceMappings[pipelineName];
+      connectionId = pipelineMappings?.[referenceId];
+      
+      if (connectionId) {
+        console.log(`Using NEW format staging connection mapping: ${referenceId} -> ${connectionId}`);
+      }
+    }
+
+    // Fallback to OLD format for backward compatibility
+    if (!connectionId && linkedServiceName) {
+      connectionId = this.getConnectionIdForLinkedService(linkedServiceName, pipelineConnectionMappings);
+      if (connectionId) {
+        console.log(`Using OLD format staging connection mapping: ${linkedServiceName} -> ${connectionId}`);
+      }
+    }
 
     const result: any = {};
     

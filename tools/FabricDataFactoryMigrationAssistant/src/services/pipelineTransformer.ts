@@ -1,6 +1,9 @@
 import { activityTransformer } from './activityTransformer';
 import { copyActivityTransformer } from './copyActivityTransformer';
 import { customActivityTransformer } from './customActivityTransformer';
+import { hdinsightActivityTransformer } from './hdinsightActivityTransformer';
+import { lookupActivityTransformer } from './lookupActivityTransformer';
+import { getMetadataActivityTransformer } from './getMetadataActivityTransformer';
 import { connectionService } from './connectionService';
 import { fabricApiClient } from './fabricApiClient';
 import { ADFComponent, DeploymentResult, PipelineConnectionMappings, LinkedServiceConnectionBridge } from '../types';
@@ -20,6 +23,14 @@ export class PipelineTransformer {
   setReferenceMappings(mappings: Record<string, Record<string, string>>) {
     this.referenceMappings = mappings;
     customActivityTransformer.setReferenceMappings(mappings);
+    hdinsightActivityTransformer.setReferenceMappings(mappings);
+  }
+
+  /**
+   * Get reference mappings (for passing to transformer services)
+   */
+  getReferenceMappings(): Record<string, Record<string, string>> | undefined {
+    return this.referenceMappings;
   }
 
   /**
@@ -28,6 +39,14 @@ export class PipelineTransformer {
   setLinkedServiceBridge(bridge: LinkedServiceConnectionBridge) {
     this.linkedServiceBridge = bridge;
     customActivityTransformer.setLinkedServiceBridge(bridge);
+    hdinsightActivityTransformer.setLinkedServiceBridge(bridge);
+  }
+
+  /**
+   * Get LinkedService bridge (for passing to transformer services)
+   */
+  getLinkedServiceBridge(): LinkedServiceConnectionBridge | undefined {
+    return this.linkedServiceBridge;
   }
 
   transformPipelineDefinition(definition: any, connectionMappings?: PipelineConnectionMappings, pipelineName?: string): any {
@@ -141,8 +160,8 @@ export class PipelineTransformer {
     return activities.map(activity => {
       if (!activity || typeof activity !== 'object') return activity;
 
-      // Apply activity-level transformations (skip Copy and Custom - they have specialized transformers)
-      if (activity.type !== 'Copy' && activity.type !== 'Custom') {
+      // Apply activity-level transformations (skip Copy, Custom, and HDInsight - they have specialized transformers)
+      if (activity.type !== 'Copy' && activity.type !== 'Custom' && !this.isHDInsightActivity(activity.type)) {
         activityTransformer.transformLinkedServiceReferencesToFabric(activity);
       }
 
@@ -156,9 +175,48 @@ export class PipelineTransformer {
       if (activity.type === 'Copy') {
         // Pass connection mappings to Copy activity transformer
         transformedActivity = copyActivityTransformer.transformCopyActivity(activity, connectionMappings);
+      } else if (activity.type === 'Lookup') {
+        console.log(`Transforming Lookup activity '${activity.name}' with mappings:`, {
+          pipelineName: this.currentPipelineName,
+          hasConnectionMappings: Boolean(connectionMappings),
+          hasReferenceMappings: Boolean(this.referenceMappings),
+          referenceMappingsForPipeline: this.referenceMappings && this.currentPipelineName ? 
+            Object.keys(this.referenceMappings[this.currentPipelineName] || {}) : []
+        });
+        
+        // Transform Lookup activities with dataset to datasetSettings
+        transformedActivity = lookupActivityTransformer.transformLookupActivity(
+          activity,
+          connectionMappings,
+          this.referenceMappings,
+          this.currentPipelineName
+        );
+      } else if (activity.type === 'GetMetadata') {
+        console.log(`Transforming GetMetadata activity '${activity.name}' with mappings:`, {
+          pipelineName: this.currentPipelineName,
+          hasConnectionMappings: Boolean(connectionMappings),
+          hasReferenceMappings: Boolean(this.referenceMappings),
+          referenceMappingsForPipeline: this.referenceMappings && this.currentPipelineName ? 
+            Object.keys(this.referenceMappings[this.currentPipelineName] || {}) : []
+        });
+        
+        // Transform GetMetadata activities with dataset to datasetSettings
+        transformedActivity = getMetadataActivityTransformer.transformGetMetadataActivity(
+          activity,
+          connectionMappings,
+          this.referenceMappings,
+          this.currentPipelineName
+        );
       } else if (activity.type === 'Custom') {
-        // NEW: Transform Custom activities with connection mappings
+        // Transform Custom activities with connection mappings
         transformedActivity = customActivityTransformer.transformCustomActivity(
+          activity,
+          pipelineName,
+          connectionMappings
+        );
+      } else if (this.isHDInsightActivity(activity.type)) {
+        // NEW: Transform HDInsight activities with connection mappings
+        transformedActivity = hdinsightActivityTransformer.transformHDInsightActivity(
           activity,
           pipelineName,
           connectionMappings
@@ -205,8 +263,11 @@ export class PipelineTransformer {
         // Custom activities are already fully transformed by customActivityTransformer
         // Return as-is to avoid overriding the detailed transformation
         return typeProperties;
+      case 'AzureHDInsight':
+        // HDInsight activities are already fully transformed by hdinsightActivityTransformer
+        // Return as-is to avoid overriding the detailed transformation
+        return typeProperties;
       case 'ExecutePipeline': return this.transformExecutePipelineProperties(typeProperties);
-      case 'Lookup': return this.transformLookupActivityProperties(typeProperties);
       case 'ForEach': return this.transformForEachActivityProperties(typeProperties);
       case 'If': return this.transformIfActivityProperties(typeProperties);
       case 'Wait': return this.transformWaitActivityProperties(typeProperties);
@@ -221,6 +282,25 @@ export class PipelineTransformer {
     if (!result.parameters) result.parameters = {};
     if (result.waitOnCompletion === undefined) result.waitOnCompletion = true;
     return result;
+  }
+
+  /**
+   * Get the mapped FabricDataPipelines connection ID for an ExecutePipeline activity
+   * Looks up in referenceMappings[pipelineName][pipelineName_activityName_invoke]
+   */
+  private getConnectionIdForExecutePipeline(activityName: string): string | undefined {
+    if (!this.referenceMappings || !this.currentPipelineName) {
+      return undefined;
+    }
+
+    const pipelineMappings = this.referenceMappings[this.currentPipelineName];
+    if (!pipelineMappings) {
+      return undefined;
+    }
+
+    // Build referenceId: pipelineName_activityName_invoke
+    const referenceId = `${this.currentPipelineName}_${activityName}_invoke`;
+    return pipelineMappings[referenceId];
   }
 
   /**
@@ -254,9 +334,9 @@ export class PipelineTransformer {
         parameters: activity.typeProperties?.parameters || {}
       },
       externalReferences: {
-        // This will be populated with the FabricDataPipelines connection ID during deployment
-        // DO NOT use default GUIDs - this must be resolved during deployment
-        connection: '' // Will be populated during deployment with actual connection ID
+        // Look up the mapped FabricDataPipelines connection from pipelineReferenceMappings
+        // Format: pipelineReferenceMappings[pipelineName][pipelineName_activityName_invoke]
+        connection: this.getConnectionIdForExecutePipeline(activity.name) || '' // Resolved from mappings
       },
       // Store original reference for deployment logic
       _originalTargetPipeline: activity.typeProperties?.pipeline?.referenceName
@@ -265,14 +345,6 @@ export class PipelineTransformer {
     console.log(`Transformed ExecutePipeline '${activity.name}' to InvokePipeline targeting pipeline '${activity.typeProperties?.pipeline?.referenceName}' - IDs will be resolved during deployment`);
     
     return transformedActivity;
-  }
-  
-  transformLookupActivityProperties(properties: any): any { 
-    const result: any = { ...properties };
-    if (!result.source) result.source = {};
-    if (!result.dataset) result.dataset = {};
-    if (result.firstRowOnly === undefined) result.firstRowOnly = true;
-    return result;
   }
   
   transformForEachActivityProperties(properties: any): any { 
@@ -461,7 +533,9 @@ export class PipelineTransformer {
         pipelineDefinition = PipelineConnectionTransformerService.transformPipelineWithConnections(
           pipelineDefinition, 
           component.name, 
-          connectionMappings
+          connectionMappings,
+          this.referenceMappings, // Pass NEW format mappings
+          this.linkedServiceBridge // Pass bridge from Configure Connections
         );
       }
       
@@ -546,6 +620,20 @@ export class PipelineTransformer {
       }
     }
     return updatedDefinition;
+  }
+
+  /**
+   * Helper method to check if an activity is an HDInsight activity type
+   */
+  private isHDInsightActivity(activityType: string): boolean {
+    const hdinsightTypes = [
+      'HDInsightHive',
+      'HDInsightPig',
+      'HDInsightMapReduce',
+      'HDInsightSpark',
+      'HDInsightStreaming'
+    ];
+    return hdinsightTypes.includes(activityType);
   }
 }
 

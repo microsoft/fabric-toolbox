@@ -39,6 +39,9 @@ const ACTIVITY_TYPE_COLORS: Record<ActivityTypeEnum, { color: string; iconName: 
   'DatabricksSparkPython': { color: '#f97316', iconName: 'Code', label: 'Databricks Spark Python' },
   'HDInsightSpark': { color: '#f97316', iconName: 'Flame', label: 'HDInsight Spark' },
   'HDInsightHive': { color: '#f97316', iconName: 'Database', label: 'HDInsight Hive' },
+  'HDInsightPig': { color: '#ea580c', iconName: 'Code', label: 'HDInsight Pig' },
+  'HDInsightMapReduce': { color: '#dc2626', iconName: 'Function', label: 'HDInsight MapReduce' },
+  'HDInsightStreaming': { color: '#fb923c', iconName: 'Flow', label: 'HDInsight Streaming' },
   'SynapseNotebook': { color: '#f97316', iconName: 'FileCode', label: 'Synapse Notebooks' },
   'SynapseSparkJob': { color: '#f97316', iconName: 'Zap', label: 'Synapse Spark Jobs' },
   'Script': { color: '#8b5cf6', iconName: 'FileText', label: 'Script Activities' },
@@ -84,6 +87,9 @@ export class UnifiedActivityMappingService {
       'DatabricksSparkPython': 'DatabricksSparkPython',
       'HDInsightSpark': 'HDInsightSpark',
       'HDInsightHive': 'HDInsightHive',
+      'HDInsightPig': 'HDInsightPig',
+      'HDInsightMapReduce': 'HDInsightMapReduce',
+      'HDInsightStreaming': 'HDInsightStreaming',
       'SynapseNotebook': 'SynapseNotebook',
       'SynapseSparkJob': 'SynapseSparkJob',
       'Script': 'Script'
@@ -159,6 +165,25 @@ export class UnifiedActivityMappingService {
     const references: ActivityReference[] = [];
     const activityType = this.getActivityType(activity);
 
+    // Handle ExecutePipeline activities - require FabricDataPipelines connection
+    // ADF: activity.typeProperties.pipeline.referenceName
+    // Fabric: Needs InvokePipeline with FabricDataPipelines connection for cross-pipeline invocation
+    if (activityType === 'ExecutePipeline') {
+      const targetPipelineName = activity.typeProperties?.pipeline?.referenceName;
+      if (targetPipelineName) {
+        const referenceId = `${pipelineName}_${activity.name}_invoke`;
+        references.push({
+          referenceId,
+          location: 'invoke-pipeline',
+          linkedServiceName: 'FabricDataPipelines', // Synthetic name for Fabric pipeline connection
+          displayName: `Invoke Pipeline: ${targetPipelineName}`,
+          isRequired: true,
+          selectedConnectionId: existingMappings?.[referenceId]
+        });
+      }
+      return references; // Early return - ExecutePipeline only has this one connection requirement
+    }
+
     // Handle Custom activities with 3 reference locations
     if (activityType === 'Custom') {
       // 1. Activity-level LinkedService
@@ -217,48 +242,79 @@ export class UnifiedActivityMappingService {
 
     // Handle Copy activities (source and sink datasets)
     if (activityType === 'Copy') {
-      // Source dataset
-      const sourceDatasetRef = activity.inputs?.[0]?.referenceName;
-      if (sourceDatasetRef) {
-        const sourceDataset = datasets.find(d => d.name === sourceDatasetRef);
-        const sourceLinkedService = sourceDataset?.definition?.properties?.linkedServiceName?.referenceName;
-        
-        if (sourceLinkedService) {
-          const referenceId = `${pipelineName}_${activity.name}_source`;
-          references.push({
-            referenceId,
-            location: 'dataset',
-            linkedServiceName: sourceLinkedService,
-            displayName: 'Source',
-            isRequired: true,
-            datasetName: sourceDatasetRef,
-            datasetType: sourceDataset?.definition?.properties?.type,
-            // Try referenceId first, then fallback to linkedServiceName for backwards compatibility
-            selectedConnectionId: existingMappings?.[referenceId] || existingMappings?.[sourceLinkedService]
-          });
+      // Source datasets - loop through ALL inputs (not just [0])
+      const inputs = activity.inputs || [];
+      inputs.forEach((input: any, index: number) => {
+        const sourceDatasetRef = input?.referenceName;
+        if (sourceDatasetRef) {
+          const sourceDataset = datasets.find(d => d.name === sourceDatasetRef);
+          const sourceLinkedService = sourceDataset?.definition?.properties?.linkedServiceName?.referenceName;
+          
+          if (sourceLinkedService) {
+            // Use index-based referenceId for multiple inputs
+            const referenceId = inputs.length > 1 
+              ? `${pipelineName}_${activity.name}_source_${index}`
+              : `${pipelineName}_${activity.name}_source`;
+            
+            references.push({
+              referenceId,
+              location: 'dataset',
+              linkedServiceName: sourceLinkedService,
+              displayName: inputs.length > 1 ? `Source ${index + 1}` : 'Source',
+              isRequired: true,
+              datasetName: sourceDatasetRef,
+              datasetType: sourceDataset?.definition?.properties?.type,
+              arrayIndex: inputs.length > 1 ? index : undefined,
+              selectedConnectionId: existingMappings?.[referenceId] || existingMappings?.[sourceLinkedService]
+            });
+          }
         }
-      }
+      });
 
-      // Sink dataset
-      const sinkDatasetRef = activity.outputs?.[0]?.referenceName;
-      if (sinkDatasetRef) {
-        const sinkDataset = datasets.find(d => d.name === sinkDatasetRef);
-        const sinkLinkedService = sinkDataset?.definition?.properties?.linkedServiceName?.referenceName;
-        
-        if (sinkLinkedService) {
-          const referenceId = `${pipelineName}_${activity.name}_sink`;
-          references.push({
-            referenceId,
-            location: 'dataset',
-            linkedServiceName: sinkLinkedService,
-            displayName: 'Sink',
-            isRequired: true,
-            datasetName: sinkDatasetRef,
-            datasetType: sinkDataset?.definition?.properties?.type,
-            // Try referenceId first, then fallback to linkedServiceName for backwards compatibility
-            selectedConnectionId: existingMappings?.[referenceId] || existingMappings?.[sinkLinkedService]
-          });
+      // Sink datasets - loop through ALL outputs (not just [0])
+      const outputs = activity.outputs || [];
+      outputs.forEach((output: any, index: number) => {
+        const sinkDatasetRef = output?.referenceName;
+        if (sinkDatasetRef) {
+          const sinkDataset = datasets.find(d => d.name === sinkDatasetRef);
+          const sinkLinkedService = sinkDataset?.definition?.properties?.linkedServiceName?.referenceName;
+          
+          if (sinkLinkedService) {
+            // Use index-based referenceId for multiple outputs
+            const referenceId = outputs.length > 1
+              ? `${pipelineName}_${activity.name}_sink_${index}`
+              : `${pipelineName}_${activity.name}_sink`;
+            
+            references.push({
+              referenceId,
+              location: 'dataset',
+              linkedServiceName: sinkLinkedService,
+              displayName: outputs.length > 1 ? `Sink ${index + 1}` : 'Sink',
+              isRequired: true,
+              datasetName: sinkDatasetRef,
+              datasetType: sinkDataset?.definition?.properties?.type,
+              arrayIndex: outputs.length > 1 ? index : undefined,
+              selectedConnectionId: existingMappings?.[referenceId] || existingMappings?.[sinkLinkedService]
+            });
+          }
         }
+      });
+
+      // Staging LinkedService (when enableStaging is true)
+      // ADF: activity.typeProperties.enableStaging + activity.typeProperties.stagingSettings.linkedServiceName
+      if (activity.typeProperties?.stagingSettings?.linkedServiceName?.referenceName) {
+        const stagingLinkedService = activity.typeProperties.stagingSettings.linkedServiceName.referenceName;
+        const referenceId = `${pipelineName}_${activity.name}_staging`;
+        const enableStaging = activity.typeProperties.enableStaging === true;
+        
+        references.push({
+          referenceId,
+          location: 'staging',
+          linkedServiceName: stagingLinkedService,
+          displayName: 'Staging Storage',
+          isRequired: enableStaging, // Required only when staging is enabled
+          selectedConnectionId: existingMappings?.[referenceId] || existingMappings?.[stagingLinkedService]
+        });
       }
 
       return references;
@@ -361,8 +417,86 @@ export class UnifiedActivityMappingService {
       return references;
     }
 
-    // Handle Web activities (activity-level linkedService, optional)
+    // Handle HDInsight activities (dual connections: cluster + storage)
+    if (['HDInsightSpark', 'HDInsightHive', 'HDInsightPig', 'HDInsightMapReduce', 'HDInsightStreaming'].includes(activityType)) {
+      // 1. Cluster connection (activity-level)
+      if (activity.linkedServiceName?.referenceName) {
+        const linkedServiceName = activity.linkedServiceName.referenceName;
+        const referenceId = `${pipelineName}_${activity.name}_cluster`;
+        references.push({
+          referenceId,
+          location: 'activity-level',
+          linkedServiceName,
+          displayName: 'HDInsight Cluster',
+          isRequired: true,
+          // Try referenceId first, then fallback to linkedServiceName for backwards compatibility
+          selectedConnectionId: existingMappings?.[referenceId] || existingMappings?.[linkedServiceName]
+        });
+      }
+      
+      // 2. Storage connections - HDInsight activities can have multiple storage LinkedServices
+      // ADF: typeProperties.scriptLinkedService (for script files)
+      if (activity.typeProperties?.scriptLinkedService?.referenceName) {
+        const linkedServiceName = activity.typeProperties.scriptLinkedService.referenceName;
+        const referenceId = `${pipelineName}_${activity.name}_script`;
+        references.push({
+          referenceId,
+          location: 'script',
+          linkedServiceName,
+          displayName: 'Script Storage',
+          isRequired: false, // Optional - script may be inline or stored elsewhere
+          selectedConnectionId: existingMappings?.[referenceId] || existingMappings?.[linkedServiceName]
+        });
+      }
+
+      // ADF: typeProperties.jarLinkedService (for JAR files in MapReduce/Spark)
+      if (activity.typeProperties?.jarLinkedService?.referenceName) {
+        const linkedServiceName = activity.typeProperties.jarLinkedService.referenceName;
+        const referenceId = `${pipelineName}_${activity.name}_jar`;
+        references.push({
+          referenceId,
+          location: 'jar',
+          linkedServiceName,
+          displayName: 'JAR Storage',
+          isRequired: false,
+          selectedConnectionId: existingMappings?.[referenceId] || existingMappings?.[linkedServiceName]
+        });
+      }
+
+      // ADF: typeProperties.fileLinkedService (for file dependencies)
+      if (activity.typeProperties?.fileLinkedService?.referenceName) {
+        const linkedServiceName = activity.typeProperties.fileLinkedService.referenceName;
+        const referenceId = `${pipelineName}_${activity.name}_file`;
+        references.push({
+          referenceId,
+          location: 'file',
+          linkedServiceName,
+          displayName: 'File Storage',
+          isRequired: false,
+          selectedConnectionId: existingMappings?.[referenceId] || existingMappings?.[linkedServiceName]
+        });
+      }
+
+      // ADF: typeProperties.sparkJobLinkedService (for Spark job definitions)
+      if (activity.typeProperties?.sparkJobLinkedService?.referenceName) {
+        const linkedServiceName = activity.typeProperties.sparkJobLinkedService.referenceName;
+        const referenceId = `${pipelineName}_${activity.name}_sparkJob`;
+        references.push({
+          referenceId,
+          location: 'sparkJob',
+          linkedServiceName,
+          displayName: 'Spark Job Storage',
+          isRequired: false,
+          selectedConnectionId: existingMappings?.[referenceId] || existingMappings?.[linkedServiceName]
+        });
+      }
+      
+      return references;
+    }
+
+    // Handle Web activities (activity-level linkedService or linkedServices array, optional)
     if (activityType === 'Web' || activityType === 'WebHook') {
+      // Single activity-level linkedService
       if (activity.linkedServiceName?.referenceName) {
         const linkedServiceName = activity.linkedServiceName.referenceName;
         const referenceId = `${pipelineName}_${activity.name}_activity`;
@@ -372,10 +506,26 @@ export class UnifiedActivityMappingService {
           linkedServiceName,
           displayName: 'Web Service',
           isRequired: false, // Web activities can use URL without linkedService
-          // Try referenceId first, then fallback to linkedServiceName for backwards compatibility
           selectedConnectionId: existingMappings?.[referenceId] || existingMappings?.[linkedServiceName]
         });
       }
+
+      // LinkedServices array (ADF: typeProperties.linkedServices)
+      const linkedServices = activity.typeProperties?.linkedServices || [];
+      linkedServices.forEach((ls: any, index: number) => {
+        if (ls.referenceName) {
+          const referenceId = `${pipelineName}_${activity.name}_linkedService_${index}`;
+          references.push({
+            referenceId,
+            location: 'linkedServices',
+            linkedServiceName: ls.referenceName,
+            displayName: `Web LinkedService ${index + 1}`,
+            isRequired: false,
+            arrayIndex: index,
+            selectedConnectionId: existingMappings?.[referenceId] || existingMappings?.[ls.referenceName]
+          });
+        }
+      });
 
       return references;
     }
