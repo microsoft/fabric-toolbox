@@ -10,6 +10,10 @@
 
 ## Release
 
+## 📦 2025.12.05
+
+- Fixes
+
 ## 📦 2025.10.31
 
 - Reservation analysis
