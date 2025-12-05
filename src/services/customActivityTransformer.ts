@@ -54,14 +54,16 @@ export class CustomActivityTransformer {
       pipelineName,
       customReferences,
       'activity-level',
-      activity.linkedServiceName?.referenceName
+      activity.linkedServiceName?.referenceName,
+      activity.name
     );
 
     const resourceConnectionId = this.getConnectionIdForLocation(
       pipelineName,
       customReferences,
       'resource',
-      activity.typeProperties?.resourceLinkedService?.referenceName
+      activity.typeProperties?.resourceLinkedService?.referenceName,
+      activity.name
     );
 
     // Build transformed typeProperties
@@ -112,22 +114,33 @@ export class CustomActivityTransformer {
     customReferences: any[],
     location: string,
     linkedServiceName?: string,
+    activityName?: string,
     arrayIndex?: number
   ): string | undefined {
     if (!linkedServiceName) return undefined;
 
-    // Construct referenceId based on location
+    // Import buildReferenceId utility inline to avoid circular dependencies
+    const buildReferenceId = (pipeline: string, activity: string, loc: string): string => {
+      return `${pipeline}_${activity}_${loc}`;
+    };
+
+    // Construct referenceId based on location using standardized format
     let referenceId: string;
+    let standardLocation: string;
+    
     if (location === 'activity-level') {
-      referenceId = `linkedService_${linkedServiceName}`;
+      standardLocation = 'activity';
     } else if (location === 'resource') {
-      referenceId = `resource_${linkedServiceName}`;
+      standardLocation = 'resource';
     } else if (location === 'reference-object') {
-      referenceId = `referenceObject_${arrayIndex}_${linkedServiceName}`;
+      standardLocation = `refobj_${arrayIndex ?? 0}`;
     } else {
       console.warn(`Unknown Custom activity reference location: ${location}`);
       return undefined;
     }
+    
+    // Build referenceId using standard format: pipelineName_activityName_location
+    referenceId = buildReferenceId(pipelineName, activityName || 'UnknownActivity', standardLocation);
 
     // PRIORITY 1: Try NEW referenceMappings (referenceId-based)
     const referenceMapping = this.referenceMappings?.[pipelineName]?.[referenceId];

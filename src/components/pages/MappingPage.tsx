@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState, useCallback } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -6,13 +6,15 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { ArrowRight, CaretDown, CaretRight, Gear, Info, CheckCircle, Warning, GitBranch } from '@phosphor-icons/react';
+import { ArrowRight, CaretDown, CaretRight, Gear, Info, CheckCircle, Warning, GitBranch, ArrowCounterClockwise, Code } from '@phosphor-icons/react';
 import { WizardLayout } from '../WizardLayout';
 import { WorkspaceDisplay } from '../WorkspaceDisplay';
 import { NavigationDebug } from '../NavigationDebug';
 import { useAppContext } from '../../contexts/AppContext';
-import { ActivityConnectionMapping, FabricTarget, PipelineConnectionMappings, CustomActivityMapping } from '../../types';
+import { ActivityConnectionMapping, FabricTarget, CustomActivityMapping, PipelineConnectionMappings } from '../../types';
 import { extractString } from '../../lib/validation';
+import { debounce } from '../../lib/debounce';
+import { buildReferenceId, buildLegacyUniqueId } from '../../lib/utils';
 import {
   PipelineActivityAnalysisService,
   ActivityLinkedServiceReference
@@ -81,16 +83,64 @@ export function MappingPage() {
   // const [expandedPipelines, setExpandedPipelines] = useState<Set<string>>(new Set()); // DEPRECATED: Table manages its own expansion
   const [existingConnections, setExistingConnections] = useState<ExistingFabricConnection[]>([]);
   const [loadingConnections, setLoadingConnections] = useState(false);
-  const [pipelineConnectionMappings, setPipelineConnectionMappings] = useState<PipelineConnectionMappings>({});
+  const [showDebugMetrics, setShowDebugMetrics] = useState(false);
   
-  // NEW: ReferenceId-based mappings (fixes dropdown persistence bug)
+  // ReferenceId-based mappings (NEW format only)
   const [pipelineReferenceMappings, setPipelineReferenceMappings] = useState<Record<string, Record<string, string>>>({});
+  const [pipelineConnectionMappings, setPipelineConnectionMappings] = useState<PipelineConnectionMappings>({});
   
   const [autoSelectedMappings, setAutoSelectedMappings] = useState<string[]>([]);
   
   // NEW: Unified pipeline summaries (replaces customActivityMappings)
   const [pipelineSummaries, setPipelineSummaries] = useState<PipelineMappingSummary[]>([]);
   const [generatingSummaries, setGeneratingSummaries] = useState(false);
+
+  // Step 10: Reset Auto-Mapping handler
+  const handleResetAutoMapping = useCallback(() => {
+    const mappingsCount = Object.values(pipelineReferenceMappings)
+      .reduce((sum, refs) => sum + Object.keys(refs).length, 0);
+    
+    if (mappingsCount === 0) {
+      toast.info('No mappings to reset');
+      return;
+    }
+    
+    const confirmed = window.confirm(
+      `Reset all ${mappingsCount} auto-mappings?\\n\\n` +
+      'This will clear both automatic and manual mappings. ' +
+      'You can re-run auto-mapping after clearing.'
+    );
+    
+    if (!confirmed) return;
+    
+    // Clear all mapping state
+    setPipelineReferenceMappings({});
+    setPipelineConnectionMappings({});
+    setAutoSelectedMappings([]);
+    
+    // Clear from AppContext too
+    dispatch({
+      type: 'SET_PIPELINE_CONNECTION_MAPPINGS',
+      payload: {}
+    });
+    
+    dispatch({
+      type: 'MARK_BRIDGE_PROCESSED',
+      payload: 0
+    });
+    
+    dispatch({
+      type: 'SET_AUTO_MAPPED_REFERENCES',
+      payload: []
+    });
+    
+    toast.success('All mappings cleared', {
+      description: 'Auto-mapping will re-run automatically',
+      duration: 3000
+    });
+    
+    console.log('🔄 Reset complete - auto-mapping will re-run on next render');
+  }, [pipelineReferenceMappings, dispatch]);
 
   useEffect(() => {
     if (state.pipelineConnectionMappings) {
@@ -151,7 +201,8 @@ export function MappingPage() {
   };
 
   // NEW: Generate unified pipeline summaries when components or mappings change
-  useEffect(() => {
+  // Wrapped in useCallback for stable reference
+  const regenerateSummaries = useCallback(() => {
     if (!state.selectedComponents || state.selectedComponents.length === 0) {
       setPipelineSummaries([]);
       return;
@@ -231,6 +282,22 @@ export function MappingPage() {
       console.log(`Generated ${summaries.length} pipeline summaries with unified activity mappings`);
     }, 0);
   }, [state.selectedComponents, state.adfComponents, pipelineConnectionMappings, pipelineReferenceMappings]);
+  
+  // Debounced version - batches rapid changes to prevent excessive re-renders
+  const debouncedRegenerateSummaries = useMemo(
+    () => debounce(regenerateSummaries, 500),
+    [regenerateSummaries]
+  );
+  
+  // Trigger debounced regeneration when mappings change
+  useEffect(() => {
+    debouncedRegenerateSummaries();
+    
+    // Cleanup on unmount
+    return () => {
+      debouncedRegenerateSummaries.cancel();
+    };
+  }, [debouncedRegenerateSummaries]);
 
   // NEW: Build LinkedService Connection Bridge
   useEffect(() => {
@@ -247,93 +314,275 @@ export function MappingPage() {
     }
   }, [state.connectionMappings, dispatch]);
 
-  // NEW: Auto-apply bridge mappings to pipeline activities
+  // NOTE: We use UnifiedActivityMappingService for UI state generation because it provides
+  // referenceId-aware ActivityReference objects. PipelineActivityAnalysisService is still used
+  // in deployment pipelines (pipelineConnectionTransformerService) for lightweight reference extraction.
+  
+  // Helper: Find connection for LinkedService with fallback to existing connections
+  // Handles both ExecutePipeline (individual/shared) and standard LinkedService activities
+  const findConnectionForLinkedService = useCallback((
+    linkedServiceName: string, 
+    referenceLocation: string, 
+    referenceId: string
+  ): { connectionId: string, source: string } | undefined => {
+    // Special handling for ExecutePipeline activities (invoke-pipeline)
+    if (referenceLocation === 'invoke-pipeline') {
+      // Priority 1: Check for individual per-activity connection (uses referenceId as key)
+      const individualBridgeEntry = state.linkedServiceConnectionBridge?.[referenceId];
+      if (individualBridgeEntry?.connectionId) {
+        // Allow pending/new connections for FabricDataPipelines (they need mapping before deployment)
+        return { 
+          connectionId: individualBridgeEntry.connectionId, 
+          source: '🎯 bridge (individual)' 
+        };
+      }
+      
+      // Priority 2: Check for shared FabricDataPipelines connection
+      const sharedBridgeEntry = state.linkedServiceConnectionBridge?.['FabricDataPipelines_Shared'];
+      if (sharedBridgeEntry?.connectionId) {
+        // Allow pending/new connections for shared FabricDataPipelines too
+        return { 
+          connectionId: sharedBridgeEntry.connectionId, 
+          source: '🎯 bridge (shared)' 
+        };
+      }
+      
+      // Priority 3: Fallback to existing deployed FabricDataPipelines connections
+      if (existingConnections.length > 0) {
+        const matchedConnection = existingConnections.find(
+          connection => connection.connectionDetails.type === 'FabricDataPipelines'
+        );
+        if (matchedConnection) {
+          return { connectionId: matchedConnection.id, source: '🔗 deployed connection' };
+        }
+      }
+      
+      return undefined;
+    }
+    
+    // Standard handling for all other activity types (Copy, Lookup, Custom, etc.)
+    // Priority 1: Check bridge for LinkedService name (shared LinkedServices)
+    const bridgeEntry = state.linkedServiceConnectionBridge?.[linkedServiceName];
+    if (bridgeEntry?.connectionId && 
+        !bridgeEntry.connectionId.startsWith('pending-') &&
+        !bridgeEntry.connectionId.startsWith('new-')) {
+      return { connectionId: bridgeEntry.connectionId, source: '🎯 bridge' };
+    }
+
+    // Priority 2: Case-insensitive name match in existingConnections
+    if (existingConnections.length > 0) {
+      const matchedConnection = existingConnections.find(
+        connection => 
+          connection.displayName.toLowerCase() === linkedServiceName.toLowerCase() &&
+          connection.connectionDetails.type !== 'FabricDataPipelines'
+      );
+
+      if (matchedConnection) {
+        return { connectionId: matchedConnection.id, source: '🔗 name-match' };
+      }
+    }
+
+    return undefined;
+  }, [state.linkedServiceConnectionBridge, existingConnections]);
+  
+  // NEW: Auto-apply bridge mappings to pipeline activities with fallback to existing connections
   useEffect(() => {
-    // Skip if:
-    // - No bridge exists
-    // - No selected components
-    // - Mappings already populated (manual mappings exist)
-    // - Bridge is empty
-    if (
-      !state.linkedServiceConnectionBridge || 
-      !state.selectedComponents ||
-      Object.keys(state.linkedServiceConnectionBridge).length === 0
-    ) {
+    // Skip if no selected components
+    if (!state.selectedComponents) {
       return;
     }
 
-    // Check if we already have mappings - don't override manual work
-    const existingMappingsCount = Object.keys(pipelineConnectionMappings).length;
-    if (existingMappingsCount > 0) {
-      console.log('Skipping bridge auto-apply: manual mappings already exist');
+    // Skip if both bridge AND existingConnections are empty (safe no-op)
+    const hasBridge = state.linkedServiceConnectionBridge && Object.keys(state.linkedServiceConnectionBridge).length > 0;
+    const hasExistingConnections = existingConnections.length > 0;
+    if (!hasBridge && !hasExistingConnections) {
       return;
     }
 
-    const autoMappings: PipelineConnectionMappings = {};
-    let autoMappedCount = 0;
+    // Skip if we've already processed this bridge version
+    if (state.lastProcessedBridgeVersion === state.bridgeVersion) {
+      console.log(`✓ Bridge v${state.bridgeVersion} already processed`);
+      return;
+    }
+
+    console.log(`🔄 Auto-mapping pipelines with bridge v${state.bridgeVersion}...`);
+    console.log(`  - Bridge entries: ${hasBridge ? Object.keys(state.linkedServiceConnectionBridge!).length : 0}`);
+    console.log(`  - Existing connections: ${existingConnections.length}`);
+
+    const autoMappings: PipelineConnectionMappings = {}; // Old format for deployment
+    const referenceMappings: Record<string, Record<string, string>> = {}; // New format for UI
+    const autoMappedSet = new Set<string>();
+    let bridgeMappedCount = 0;
+    let nameMatchedCount = 0;
+    let preservedMappingsCount = 0;
     let totalActivitiesNeedingMapping = 0;
     const autoMappingDetails: string[] = [];
+
+    // Get datasets for activity reference extraction
+    const datasets = (state.adfComponents || []).filter(c => c.type === 'dataset');
 
     state.selectedComponents.forEach(component => {
       if (component?.type !== 'pipeline') return;
 
-      const activityReferences = getPipelineActivityReferences(component);
-      if (activityReferences.length === 0) return;
-
-      totalActivitiesNeedingMapping += activityReferences.length;
-
-      const appliedMappings = LinkedServiceMappingBridgeService.applyBridgeToPipeline(
-        component.name,
-        activityReferences,
-        state.linkedServiceConnectionBridge
+      // Use unifiedActivityMappingService for consistent referenceId format
+      const activitiesWithReferences = unifiedActivityMappingService.extractActivitiesWithReferences(
+        component,
+        datasets,
+        pipelineReferenceMappings // Pass full mappings structure
       );
 
-      // Convert to pipeline connection mappings format
-      const pipelineMappings: Record<string, ActivityConnectionMapping> = {};
-      appliedMappings.forEach((mapping, index) => {
-        const ref = activityReferences[index];
-        const uniqueId = buildActivityUniqueId(ref, index);
+      if (activitiesWithReferences.length === 0) return;
 
-        if (mapping.selectedConnectionId && 
-            !mapping.selectedConnectionId.startsWith('pending-') &&
-            !mapping.selectedConnectionId.startsWith('new-')) {
-          pipelineMappings[uniqueId] = mapping;
-          autoMappedCount++;
+      let refIndex = 0;
+      activitiesWithReferences.forEach(activityWithRefs => {
+        activityWithRefs.references.forEach(ref => {
+          totalActivitiesNeedingMapping++;
+
+          // Check if this reference already has a manual mapping
+          const existingMapping = pipelineReferenceMappings[component.name]?.[ref.referenceId];
           
-          const linkedServiceName = ref.linkedServiceName || ref.datasetLinkedServiceName || 'Unknown';
-          const bridgeEntry = state.linkedServiceConnectionBridge[linkedServiceName];
-          autoMappingDetails.push(
-            `${component.name}.${ref.activityName} → ${bridgeEntry?.connectionDisplayName || mapping.selectedConnectionId}`
-          );
-        }
+          if (existingMapping) {
+            // Preserve manual edit - don't override
+            preservedMappingsCount++;
+            console.log(`💾 Preserving manual mapping: ${ref.referenceId} -> ${existingMapping}`);
+            
+            // Still include in old format for deployment compatibility
+            const legacyUniqueId = buildLegacyUniqueId(activityWithRefs.activityName, ref.linkedServiceName, refIndex);
+            if (!autoMappings[component.name]) {
+              autoMappings[component.name] = {};
+            }
+            autoMappings[component.name][legacyUniqueId] = {
+              activityName: activityWithRefs.activityName,
+              activityType: activityWithRefs.activityType,
+              linkedServiceReference: { name: ref.linkedServiceName },
+              selectedConnectionId: existingMapping
+            };
+          } else {
+            // Try to find connection using bridge or name-match fallback
+            const connectionResult = findConnectionForLinkedService(ref.linkedServiceName, ref.location, ref.referenceId);
+            
+            if (connectionResult) {
+              // Auto-map: NEW FORMAT (UI)
+              if (!referenceMappings[component.name]) {
+                referenceMappings[component.name] = {};
+              }
+              referenceMappings[component.name][ref.referenceId] = connectionResult.connectionId;
+              
+              // Auto-map: OLD FORMAT (Deployment)
+              const legacyUniqueId = buildLegacyUniqueId(activityWithRefs.activityName, ref.linkedServiceName, refIndex);
+              if (!autoMappings[component.name]) {
+                autoMappings[component.name] = {};
+              }
+              autoMappings[component.name][legacyUniqueId] = {
+                activityName: activityWithRefs.activityName,
+                activityType: activityWithRefs.activityType,
+                linkedServiceReference: { name: ref.linkedServiceName },
+                selectedConnectionId: connectionResult.connectionId
+              };
+              
+              // Track as auto-mapped
+              autoMappedSet.add(`${component.name}:${ref.referenceId}`);
+              
+              // Track source
+              if (connectionResult.source === '🎯 bridge') {
+                bridgeMappedCount++;
+                const bridgeEntry = state.linkedServiceConnectionBridge![ref.linkedServiceName];
+                autoMappingDetails.push(
+                  `🎯 ${component.name}.${activityWithRefs.activityName} → ${bridgeEntry.connectionDisplayName}`
+                );
+              } else {
+                nameMatchedCount++;
+                const matchedConn = existingConnections.find(c => c.id === connectionResult.connectionId);
+                autoMappingDetails.push(
+                  `🔗 ${component.name}.${activityWithRefs.activityName} → ${matchedConn?.displayName || connectionResult.connectionId}`
+                );
+              }
+              
+              console.log(`${connectionResult.source} ${ref.linkedServiceName} → ${connectionResult.connectionId} (referenceId: ${ref.referenceId})`);
+            }
+          }
+          
+          refIndex++;
+        });
       });
-
-      if (Object.keys(pipelineMappings).length > 0) {
-        autoMappings[component.name] = pipelineMappings;
-      }
     });
 
-    if (Object.keys(autoMappings).length > 0) {
+    // Merge with existing pipelineReferenceMappings
+    const mergedReferenceMappings = { ...pipelineReferenceMappings };
+    Object.keys(referenceMappings).forEach(pipelineName => {
+      mergedReferenceMappings[pipelineName] = {
+        ...mergedReferenceMappings[pipelineName],
+        ...referenceMappings[pipelineName]
+      };
+    });
+
+    const totalNewMappings = bridgeMappedCount + nameMatchedCount;
+    if (totalNewMappings > 0 || preservedMappingsCount > 0) {
       setPipelineConnectionMappings(autoMappings);
+      setPipelineReferenceMappings(mergedReferenceMappings);
       setAutoSelectedMappings(autoMappingDetails);
       
       dispatch({
         type: 'SET_PIPELINE_CONNECTION_MAPPINGS',
         payload: autoMappings
       });
+      
+      dispatch({
+        type: 'SET_PIPELINE_REFERENCE_MAPPINGS',
+        payload: mergedReferenceMappings
+      });
+      
+      dispatch({
+        type: 'SET_AUTO_MAPPED_REFERENCES',
+        payload: Array.from(autoMappedSet)
+      });
+      
+      dispatch({
+        type: 'MARK_BRIDGE_PROCESSED',
+        payload: state.bridgeVersion
+      });
 
-      const coveragePercent = Math.round((autoMappedCount / totalActivitiesNeedingMapping) * 100);
+      const totalNewMappings = bridgeMappedCount + nameMatchedCount;
+      const coveragePercent = totalActivitiesNeedingMapping > 0 
+        ? Math.round(((totalNewMappings + preservedMappingsCount) / totalActivitiesNeedingMapping) * 100)
+        : 100;
       
-      toast.success(
-        `Auto-applied ${autoMappedCount} of ${totalActivitiesNeedingMapping} connection mappings (${coveragePercent}%) from Configure Connections`,
-        { 
-          duration: 6000,
-          description: 'Review and adjust mappings as needed'
-        }
-      );
+      console.log(`🔄 Auto-mapping complete:`);
+      console.log(`  - ${bridgeMappedCount} from bridge`);
+      console.log(`  - ${nameMatchedCount} from name-matching`);
+      console.log(`  - ${preservedMappingsCount} manual edits preserved`);
+      console.log(`  - Total: ${totalNewMappings + preservedMappingsCount}/${totalActivitiesNeedingMapping} (${coveragePercent}%)`);
+      console.log('Auto-mapped references:', Array.from(autoMappedSet));
       
-      console.log(`Auto-applied ${autoMappedCount}/${totalActivitiesNeedingMapping} mappings`);
-      console.log('Auto-mapping details:', autoMappingDetails);
+      if (preservedMappingsCount > 0) {
+        const sourceBreakdown = bridgeMappedCount > 0 && nameMatchedCount > 0
+          ? `${bridgeMappedCount} from bridge, ${nameMatchedCount} by name`
+          : bridgeMappedCount > 0
+          ? `${bridgeMappedCount} from bridge`
+          : `${nameMatchedCount} by name`;
+        
+        toast.success(
+          `Auto-mapped ${totalNewMappings} connections (${sourceBreakdown})`,
+          { 
+            duration: 6000,
+            description: `Preserved ${preservedMappingsCount} manual selections`
+          }
+        );
+      } else {
+        const sourceBreakdown = bridgeMappedCount > 0 && nameMatchedCount > 0
+          ? `${bridgeMappedCount} from bridge, ${nameMatchedCount} by name`
+          : bridgeMappedCount > 0
+          ? `all from bridge`
+          : `all by name`;
+        
+        toast.success(
+          `Auto-mapped ${totalNewMappings} of ${totalActivitiesNeedingMapping} connections (${coveragePercent}%)`,
+          { 
+            duration: 6000,
+            description: `Mapped ${sourceBreakdown}`
+          }
+        );
+      }
     } else if (totalActivitiesNeedingMapping > 0) {
       toast.info(
         `${totalActivitiesNeedingMapping} pipeline activities require connection mapping`,
@@ -342,8 +591,164 @@ export function MappingPage() {
           duration: 5000
         }
       );
+      
+      dispatch({
+        type: 'MARK_BRIDGE_PROCESSED',
+        payload: state.bridgeVersion
+      });
     }
-  }, [state.linkedServiceConnectionBridge, state.selectedComponents, state.adfComponents, dispatch]);
+  }, [state.linkedServiceConnectionBridge, state.bridgeVersion, state.lastProcessedBridgeVersion, state.selectedComponents, state.adfComponents, pipelineReferenceMappings, existingConnections, dispatch, findConnectionForLinkedService]);
+
+  // NEW: Re-run auto-mapping when bridge is updated with deployed connection IDs
+  useEffect(() => {
+    // Only re-run if:
+    // 1. We're on the Map Components page (have pipelines)
+    // 2. Bridge has been updated (version > 1 means it was rebuilt)
+    // 3. We have a bridge
+    if (!state.selectedComponents || 
+        state.bridgeVersion <= 1 || 
+        !state.linkedServiceConnectionBridge ||
+        Object.keys(state.linkedServiceConnectionBridge).length === 0) {
+      return;
+    }
+
+    console.log(`Bridge updated to v${state.bridgeVersion}, re-running auto-mapping...`);
+
+    // Filter to only pipelines
+    const pipelines = state.selectedComponents.filter(c => c.type === 'pipeline');
+    if (pipelines.length === 0) return;
+
+    const oldFormatMappings: PipelineConnectionMappings = {};
+    const newFormatMappings: Record<string, Record<string, string>> = {};
+    const autoMappedSet = new Set<string>();
+    let newMappingsCount = 0;
+    let preservedMappingsCount = 0;
+    const autoMappingDetails: string[] = [];
+
+    // Get datasets for activity reference extraction
+    const datasets = (state.adfComponents || []).filter(c => c.type === 'dataset');
+
+    let globalRefIndex = 0;
+    pipelines.forEach(component => {
+      const activitiesWithReferences = unifiedActivityMappingService.extractActivitiesWithReferences(
+        component,
+        datasets,
+        pipelineReferenceMappings // Pass full mappings structure
+      );
+
+      activitiesWithReferences.forEach(activityWithRefs => {
+        activityWithRefs.references.forEach(ref => {
+          // Check if this reference already has a manual mapping
+          const existingMapping = pipelineReferenceMappings[component.name]?.[ref.referenceId];
+          
+          if (existingMapping) {
+            // Preserve manual edit
+            preservedMappingsCount++;
+            
+            // Still include in old format for deployment compatibility
+            const legacyUniqueId = buildLegacyUniqueId(activityWithRefs.activityName, ref.linkedServiceName, globalRefIndex);
+            if (!oldFormatMappings[component.name]) {
+              oldFormatMappings[component.name] = {};
+            }
+            oldFormatMappings[component.name][legacyUniqueId] = {
+              activityName: activityWithRefs.activityName,
+              activityType: activityWithRefs.activityType,
+              linkedServiceReference: { name: ref.linkedServiceName },
+              selectedConnectionId: existingMapping
+            };
+          } else {
+            // Try to find connection using bridge (handles both ExecutePipeline and standard activities)
+            const connectionResult = findConnectionForLinkedService(ref.linkedServiceName, ref.location, ref.referenceId);
+            
+            if (connectionResult && 
+                !connectionResult.connectionId.startsWith('pending-') &&
+                !connectionResult.connectionId.startsWith('new-')) {
+              // Auto-map newly deployed connection
+              if (!newFormatMappings[component.name]) {
+                newFormatMappings[component.name] = {};
+              }
+              newFormatMappings[component.name][ref.referenceId] = connectionResult.connectionId;
+              
+              // OLD FORMAT (Deployment)
+              const legacyUniqueId = buildLegacyUniqueId(activityWithRefs.activityName, ref.linkedServiceName, globalRefIndex);
+              if (!oldFormatMappings[component.name]) {
+                oldFormatMappings[component.name] = {};
+              }
+              oldFormatMappings[component.name][legacyUniqueId] = {
+                activityName: activityWithRefs.activityName,
+                activityType: activityWithRefs.activityType,
+                linkedServiceReference: { name: ref.linkedServiceName },
+                selectedConnectionId: connectionResult.connectionId
+              };
+              
+              autoMappedSet.add(`${component.name}:${ref.referenceId}`);
+              newMappingsCount++;
+              
+              autoMappingDetails.push(
+                `${component.name}.${activityWithRefs.activityName} → ${connectionResult.connectionId} (${connectionResult.source})`
+              );
+              
+              console.log(`Auto-mapped after deployment: ${ref.linkedServiceName} → ${connectionResult.connectionId} (${connectionResult.source})`);
+            }
+          }
+          
+          globalRefIndex++;
+        });
+      });
+    });
+
+    if (newMappingsCount > 0) {
+      console.log(`✓ Re-mapped ${newMappingsCount} activity references after connection deployment`);
+      
+      // Merge with existing mappings
+      const mergedMappings = { ...pipelineReferenceMappings };
+      Object.keys(newFormatMappings).forEach(pipelineName => {
+        mergedMappings[pipelineName] = {
+          ...mergedMappings[pipelineName],
+          ...newFormatMappings[pipelineName]
+        };
+      });
+      
+      setPipelineReferenceMappings(mergedMappings);
+      setPipelineConnectionMappings(oldFormatMappings);
+      
+      dispatch({
+        type: 'SET_PIPELINE_CONNECTION_MAPPINGS',
+        payload: oldFormatMappings
+      });
+      
+      dispatch({
+        type: 'SET_AUTO_MAPPED_REFERENCES',
+        payload: Array.from(autoMappedSet)
+      });
+      
+      dispatch({
+        type: 'MARK_BRIDGE_PROCESSED',
+        payload: state.bridgeVersion
+      });
+      
+      // Show success notification to user
+      if (preservedMappingsCount > 0) {
+        toast.success(
+          `Auto-mapped ${newMappingsCount} additional connections after deployment`,
+          {
+            duration: 5000,
+            description: `Preserved ${preservedMappingsCount} manual selections`
+          }
+        );
+      } else {
+        toast.success(
+          `Auto-mapped ${newMappingsCount} additional connections after deployment`,
+          {
+            duration: 5000,
+            description: 'Newly deployed connections are now mapped to activities'
+          }
+        );
+      }
+      
+      console.log('Post-deployment auto-mapping details:', autoMappingDetails);
+    }
+  }, [state.bridgeVersion, state.linkedServiceConnectionBridge, state.selectedComponents, state.adfComponents, pipelineReferenceMappings, dispatch, findConnectionForLinkedService]);
 
   useEffect(() => {
     const loadConnections = async () => {
@@ -423,99 +828,64 @@ export function MappingPage() {
     const required: Array<{
       pipelineName: string;
       activityName: string;
-      uniqueId: string;
+      referenceId: string;
       linkedServiceName: string;
     }> = [];
 
-    (state.selectedComponents || []).forEach(component => {
-      if (component?.type !== 'pipeline') return;
-      const references = getPipelineActivityReferences(component);
-      references.forEach((reference, index) => {
-        const uniqueId = buildActivityUniqueId(reference, index);
-        const linkedServiceName =
-          reference.linkedServiceName || reference.datasetLinkedServiceName || 'Unknown';
-        required.push({
-          pipelineName: component.name,
-          activityName: reference.activityName,
-          uniqueId,
-          linkedServiceName
+    // Use pipelineSummaries to get referenceIds from unifiedActivityMappingService
+    pipelineSummaries.forEach(summary => {
+      summary.activityGroups.forEach(group => {
+        group.activities.forEach(activity => {
+          activity.references.forEach(ref => {
+            required.push({
+              pipelineName: summary.pipelineName,
+              activityName: activity.activityName,
+              referenceId: ref.referenceId,
+              linkedServiceName: ref.linkedServiceName
+            });
+          });
         });
       });
     });
 
     return required;
-  }, [state.selectedComponents, state.adfComponents]);
+  }, [pipelineSummaries]);
 
   const incompleteMappings = useMemo(() => {
     return allRequiredMappings.filter(required => {
-      const selected = pipelineConnectionMappings[required.pipelineName]?.[required.uniqueId];
-      return !selected?.selectedConnectionId;
+      const selected = pipelineReferenceMappings[required.pipelineName]?.[required.referenceId];
+      return !selected;
     });
-  }, [allRequiredMappings, pipelineConnectionMappings]);
+  }, [allRequiredMappings, pipelineReferenceMappings]);
 
   const allMappingsComplete = incompleteMappings.length === 0;
 
-  useEffect(() => {
-    if (!existingConnections.length || !(state.selectedComponents || []).length) {
-      return;
-    }
+  // Step 12: Debug metrics for deployment layer compatibility
+  const deploymentLayerMetrics = useMemo(() => {
+    const totalOldFormatMappings = Object.values(pipelineConnectionMappings)
+      .reduce((sum, pipeline) => sum + Object.keys(pipeline).length, 0);
+    
+    const totalNewFormatMappings = Object.values(pipelineReferenceMappings)
+      .reduce((sum, refs) => sum + Object.keys(refs).length, 0);
+    
+    const pipelinesInOldFormat = Object.keys(pipelineConnectionMappings).length;
+    const pipelinesInNewFormat = Object.keys(pipelineReferenceMappings).length;
+    
+    const formatConsistency = totalOldFormatMappings === totalNewFormatMappings;
+    
+    return {
+      totalOldFormatMappings,
+      totalNewFormatMappings,
+      pipelinesInOldFormat,
+      pipelinesInNewFormat,
+      formatConsistency,
+      discrepancy: Math.abs(totalOldFormatMappings - totalNewFormatMappings)
+    };
+  }, [pipelineConnectionMappings, pipelineReferenceMappings]);
 
-    const newMappings: PipelineConnectionMappings = { ...pipelineConnectionMappings };
-    const autoSelections: string[] = [];
-    let hasUpdates = false;
-
-    (state.selectedComponents || []).forEach(component => {
-      if (component?.type !== 'pipeline') return;
-
-      const references = getPipelineActivityReferences(component);
-      references.forEach((reference, index) => {
-        const uniqueId = buildActivityUniqueId(reference, index);
-        const currentMapping = newMappings[component.name]?.[uniqueId];
-        if (currentMapping?.selectedConnectionId) return;
-
-        let matchedConnection: ExistingFabricConnection | undefined;
-        if (reference.referenceLocation === 'invokePipeline') {
-          matchedConnection = existingConnections.find(
-            connection => connection.connectionDetails.type === 'FabricDataPipelines'
-          );
-        } else {
-          const linkedServiceName =
-            reference.linkedServiceName || reference.datasetLinkedServiceName;
-          matchedConnection = existingConnections.find(
-            connection =>
-              connection.displayName === linkedServiceName &&
-              connection.connectionDetails.type !== 'FabricDataPipelines'
-          );
-        }
-
-        if (!matchedConnection) return;
-
-        if (!newMappings[component.name]) {
-          newMappings[component.name] = {};
-        }
-
-        newMappings[component.name][uniqueId] = {
-          activityName: reference.activityName,
-          activityType: reference.activityType,
-          linkedServiceReference: reference.linkedServiceName
-            ? { name: reference.linkedServiceName, type: reference.linkedServiceType }
-            : undefined,
-          selectedConnectionId: matchedConnection.id
-        };
-
-        autoSelections.push(
-          `${component.name}.${reference.activityName} → ${matchedConnection.displayName}`
-        );
-        hasUpdates = true;
-      });
-    });
-
-    if (hasUpdates) {
-      setPipelineConnectionMappings(newMappings);
-      setAutoSelectedMappings(autoSelections);
-      dispatch({ type: 'SET_PIPELINE_CONNECTION_MAPPINGS', payload: newMappings });
-    }
-  }, [existingConnections, state.selectedComponents, state.adfComponents]);
+  // REMOVED: Redundant OLD format auto-mapping effect
+  // This functionality is now consolidated into the main auto-mapping effect above
+  // which handles both bridge mappings and name-match fallback in NEW + OLD format
 
   const handleTargetTypeChange = (index: number, value: string) => {
     const component = filteredComponents[index];
@@ -813,21 +1183,40 @@ export function MappingPage() {
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="grid gap-4 md:grid-cols-3">
+              <div className="grid gap-4 md:grid-cols-4">
                 <div className="space-y-1">
                   <div className="text-sm font-medium text-muted-foreground">
-                    LinkedServices Mapped
+                    LinkedServices Available
                   </div>
                   <div className="text-2xl font-bold text-accent">
                     {Object.keys(state.linkedServiceConnectionBridge).length}
                   </div>
+                  <div className="text-xs text-muted-foreground">
+                    From Configure Connections
+                  </div>
                 </div>
                 <div className="space-y-1">
                   <div className="text-sm font-medium text-muted-foreground">
-                    Auto-Applied Mappings
+                    Activity References Mapped
                   </div>
                   <div className="text-2xl font-bold text-accent">
                     {autoSelectedMappings.length}
+                  </div>
+                  <div className="text-xs text-muted-foreground">
+                    Auto-applied to pipelines
+                  </div>
+                </div>
+                <div className="space-y-1">
+                  <div className="text-sm font-medium text-muted-foreground">
+                    Activities Needing Mapping
+                  </div>
+                  <div className={`text-2xl font-bold ${
+                    incompleteMappings.length === 0 ? 'text-green-600' : 'text-orange-600'
+                  }`}>
+                    {incompleteMappings.length}
+                  </div>
+                  <div className="text-xs text-muted-foreground">
+                    Require manual mapping
                   </div>
                 </div>
                 <div className="space-y-1">
@@ -841,11 +1230,120 @@ export function MappingPage() {
                   </div>
                 </div>
               </div>
-              <div className="mt-4 text-sm text-muted-foreground">
-                <Info size={14} className="inline mr-1" />
-                Manual adjustments can be made below. The bridge automatically maps LinkedServices to their configured Fabric Connections.
+              <div className="mt-4 flex items-center justify-between">
+                <div className="text-sm text-muted-foreground">
+                  <Info size={14} className="inline mr-1" />
+                  Manual adjustments can be made below. The bridge automatically maps LinkedServices to their configured Fabric Connections.
+                </div>
+                
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handleResetAutoMapping}
+                  className="text-xs"
+                >
+                  <ArrowCounterClockwise size={14} className="mr-1" />
+                  Reset Auto-Mapping
+                </Button>
               </div>
             </CardContent>
+          </Card>
+        )}
+
+        {/* Step 12: Collapsible Developer Debug Panel */}
+        {state.linkedServiceConnectionBridge && Object.keys(state.linkedServiceConnectionBridge).length > 0 && (
+          <Card className="border-dashed">
+            <CardHeader className="pb-3">
+              <button
+                onClick={() => setShowDebugMetrics(!showDebugMetrics)}
+                className="flex items-center justify-between w-full text-left hover:bg-muted/30 rounded p-2 -m-2 transition-colors"
+              >
+                <div className="flex items-center gap-2">
+                  <Code size={16} className="text-muted-foreground" />
+                  <CardTitle className="text-sm font-medium text-muted-foreground">
+                    Developer Metrics
+                  </CardTitle>
+                  <Badge variant="outline" className="text-xs">
+                    {deploymentLayerMetrics.formatConsistency ? 'Synced' : 'Out of Sync'}
+                  </Badge>
+                </div>
+                <CaretDown 
+                  size={16} 
+                  className={`text-muted-foreground transition-transform ${showDebugMetrics ? 'rotate-180' : ''}`}
+                />
+              </button>
+            </CardHeader>
+            
+            {showDebugMetrics && (
+              <CardContent className="pt-0">
+                <div className="grid gap-4 md:grid-cols-4 text-sm">
+                  <div className="space-y-1">
+                    <div className="text-xs font-medium text-muted-foreground">
+                      Old Format (Deployment)
+                    </div>
+                    <div className="text-lg font-mono">
+                      {deploymentLayerMetrics.totalOldFormatMappings}
+                    </div>
+                    <div className="text-xs text-muted-foreground">
+                      {deploymentLayerMetrics.pipelinesInOldFormat} pipelines
+                    </div>
+                  </div>
+                  
+                  <div className="space-y-1">
+                    <div className="text-xs font-medium text-muted-foreground">
+                      New Format (UI)
+                    </div>
+                    <div className="text-lg font-mono">
+                      {deploymentLayerMetrics.totalNewFormatMappings}
+                    </div>
+                    <div className="text-xs text-muted-foreground">
+                      {deploymentLayerMetrics.pipelinesInNewFormat} pipelines
+                    </div>
+                  </div>
+                  
+                  <div className="space-y-1">
+                    <div className="text-xs font-medium text-muted-foreground">
+                      Format Sync Status
+                    </div>
+                    <div className={`text-lg font-semibold ${
+                      deploymentLayerMetrics.formatConsistency 
+                        ? 'text-green-600' 
+                        : 'text-orange-600'
+                    }`}>
+                      {deploymentLayerMetrics.formatConsistency ? '✓ Synced' : '⚠ Mismatch'}
+                    </div>
+                    {!deploymentLayerMetrics.formatConsistency && (
+                      <div className="text-xs text-orange-600">
+                        {deploymentLayerMetrics.discrepancy} mapping difference
+                      </div>
+                    )}
+                  </div>
+                  
+                  <div className="space-y-1">
+                    <div className="text-xs font-medium text-muted-foreground">
+                      Bridge Version
+                    </div>
+                    <div className="text-lg font-mono">
+                      v{state.bridgeVersion}
+                    </div>
+                    <div className="text-xs text-muted-foreground">
+                      Last processed: v{state.lastProcessedBridgeVersion || 0}
+                    </div>
+                  </div>
+                </div>
+                
+                {!deploymentLayerMetrics.formatConsistency && (
+                  <Alert className="mt-4 border-orange-200 bg-orange-50">
+                    <Warning size={16} className="text-orange-600" />
+                    <AlertDescription className="text-sm text-orange-800">
+                      Format mismatch detected. Deployment layer has {deploymentLayerMetrics.totalOldFormatMappings} mappings 
+                      but UI layer has {deploymentLayerMetrics.totalNewFormatMappings}. This may indicate a bug in the 
+                      dual-format population logic.
+                    </AlertDescription>
+                  </Alert>
+                )}
+              </CardContent>
+            )}
           </Card>
         )}
 
@@ -957,6 +1455,7 @@ export function MappingPage() {
                         existingConnections={existingConnections}
                         loadingConnections={loadingConnections}
                         autoSelectedMappings={autoSelectedMappings}
+                        autoMappedReferences={state.autoMappedReferences}
                         componentType="pipeline"
                         showActivityDetails={true}
                         enableExpandAll={true}
