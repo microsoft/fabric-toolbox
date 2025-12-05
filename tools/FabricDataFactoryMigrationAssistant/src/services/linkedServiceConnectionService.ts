@@ -382,7 +382,7 @@ class LinkedServiceConnectionService {
         connectivityType: linkedService.selectedConnectivityType || 'ShareableCloud',
         connectionDetails: {
           type: linkedService.selectedConnectionType || 'Generic',
-          creationMethod: linkedService.selectedConnectionType || 'Generic',
+          creationMethod: creationMethod?.name || linkedService.selectedConnectionType || 'Generic',
           parameters
         },
         credentialDetails: {
@@ -665,6 +665,15 @@ class LinkedServiceConnectionService {
     // Get FabricDataPipelines connections for ExecutePipeline activities
     const executePipelineConnections: LinkedServiceConnection[] = [];
     
+    // Phase 1: Collect all ExecutePipeline activities across all pipelines
+    const allExecutePipelineActivities: Array<{
+      pipelineName: string;
+      activityName: string;
+      targetPipelineName: string;
+      waitOnCompletion: boolean;
+      parameters: Record<string, any>;
+    }> = [];
+
     adfComponents
       .filter(component => component.type === 'pipeline')
       .forEach(pipeline => {
@@ -673,38 +682,55 @@ class LinkedServiceConnectionService {
           if (activity.type === 'ExecutePipeline') {
             const targetPipelineName = activity.typeProperties?.pipeline?.referenceName;
             if (targetPipelineName) {
-              // Create a FabricDataPipelines connection for this ExecutePipeline activity
-              const connectionName = `${pipeline.name}_${activity.name}_FabricDataPipeline`;
-              executePipelineConnections.push({
-                linkedServiceName: connectionName,
-                linkedServiceType: 'FabricDataPipelines',
-                linkedServiceDefinition: {
-                  type: 'FabricDataPipelines',
-                  parentPipeline: pipeline.name,
-                  activityName: activity.name,
-                  targetPipelineName: targetPipelineName,
-                  waitOnCompletion: activity.typeProperties?.waitOnCompletion !== false,
-                  parameters: activity.typeProperties?.parameters || {}
-                },
-                mappingMode: 'new' as const,
-                existingConnectionId: undefined,
-                existingConnection: undefined,
-                selectedConnectivityType: 'ShareableCloud' as const, // FabricDataPipelines is always cloud
-                selectedGatewayId: undefined,
-                selectedConnectionType: 'FabricDataPipelines',
-                connectionParameters: {},
-                credentialType: 'WorkspaceIdentity', // FabricDataPipelines uses workspace identity
-                credentials: {},
-                skipTestConnection: false,
-                status: 'pending' as const,
-                validationErrors: []
+              allExecutePipelineActivities.push({
+                pipelineName: pipeline.name,
+                activityName: activity.name,
+                targetPipelineName,
+                waitOnCompletion: activity.typeProperties?.waitOnCompletion !== false,
+                parameters: activity.typeProperties?.parameters || {}
               });
             }
           }
         });
       });
 
-    console.log(`Found ${regularLinkedServices.length} regular LinkedServices and ${executePipelineConnections.length} FabricDataPipelines connections`);
+    // Phase 2: Create single shared connection if any ExecutePipeline activities exist
+    if (allExecutePipelineActivities.length > 0) {
+      executePipelineConnections.push({
+        linkedServiceName: 'FabricDataPipelines_Shared',
+        linkedServiceType: 'FabricDataPipelines',
+        linkedServiceDefinition: {
+          type: 'FabricDataPipelines',
+          isSharedConnection: true,
+          affectedActivities: allExecutePipelineActivities,
+          useSeparateConnections: false, // Default: use shared connection
+          // Legacy properties for backward compatibility (use first activity as representative)
+          parentPipeline: allExecutePipelineActivities[0].pipelineName,
+          activityName: allExecutePipelineActivities[0].activityName,
+          targetPipelineName: allExecutePipelineActivities[0].targetPipelineName,
+          waitOnCompletion: allExecutePipelineActivities[0].waitOnCompletion,
+          parameters: allExecutePipelineActivities[0].parameters
+        },
+        mappingMode: 'new' as const,
+        existingConnectionId: undefined,
+        existingConnection: undefined,
+        selectedConnectivityType: 'ShareableCloud' as const, // FabricDataPipelines is always cloud
+        selectedGatewayId: undefined,
+        selectedConnectionType: 'FabricDataPipelines',
+        connectionParameters: {},
+        credentialType: 'WorkspaceIdentity', // FabricDataPipelines uses workspace identity
+        credentials: {},
+        skipTestConnection: false,
+        status: 'pending' as const,
+        validationErrors: []
+      });
+    }
+
+    console.log(
+      `Found ${regularLinkedServices.length} regular LinkedServices and ` +
+      `${executePipelineConnections.length > 0 ? '1 shared FabricDataPipelines connection' : '0 FabricDataPipelines connections'} ` +
+      `(for ${allExecutePipelineActivities.length} ExecutePipeline activities)`
+    );
     
     return [...regularLinkedServices, ...executePipelineConnections];
   }
