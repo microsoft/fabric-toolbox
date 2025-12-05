@@ -60,7 +60,7 @@ table fca
 	/// Calculates the sum of effective costs for included meters with a specific commitment discount type, adjusted by pause costs
 	measure #CapacityPAYG = ```
 			
-			Var Reservation = CALCULATE(SUM(fca[EffectiveCost]),fca[EffectiveCost]>0.1,meters[Included]=TRUE(),fca[CommitmentDiscountType]<>"Reservation")+0-[#PauseCost]
+			Var Reservation = CALCULATE(SUM(fca[EffectiveCost]),meters[Included]=TRUE(),fca[CommitmentDiscountType]<>"Reservation")+0-[#PauseCost]
 			RETURN
 			IF (
 			    Reservation < 0, 
