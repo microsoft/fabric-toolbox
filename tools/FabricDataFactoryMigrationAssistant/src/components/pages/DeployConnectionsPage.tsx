@@ -124,7 +124,8 @@ export function DeployConnectionsPage({}: DeployConnectionsPageProps) {
       const results = await connectionDeploymentService.deployNewConnections(
         deployableConnections,
         state.auth.accessToken,
-        state.selectedWorkspace.id
+        state.selectedWorkspace.id,
+        state.connectionMappings?.supportedConnectionTypes
       );
 
       // Update progress as deployment progresses
@@ -146,6 +147,77 @@ export function DeployConnectionsPage({}: DeployConnectionsPageProps) {
       // Store results
       dispatch({ type: 'SET_CONNECTION_DEPLOYMENT_RESULTS', payload: results });
       addLog('Deployment completed');
+      
+      // NEW: Update connection mappings with deployed connection IDs
+      console.log('Updating connection mappings with deployed IDs...');
+      const updatedLinkedServices = state.connectionMappings.linkedServices.map(ls => {
+        // Find the deployment result for this LinkedService
+        const deploymentResult = results.find(r => r.linkedServiceName === ls.linkedServiceName);
+        
+        if (deploymentResult?.status === 'success' && deploymentResult.fabricConnectionId) {
+          console.log(`✓ Updating ${ls.linkedServiceName}: ${deploymentResult.fabricConnectionId}`);
+          addLog(`Updated mapping: ${ls.linkedServiceName} → ${deploymentResult.fabricConnectionId}`);
+          return {
+            ...ls,
+            status: 'deployed' as const,
+            deployedConnectionId: deploymentResult.fabricConnectionId,
+            deployedConnectionName: deploymentResult.fabricConnectionName || ls.linkedServiceName,
+            deploymentTimestamp: new Date().toISOString()
+          };
+        } else if (deploymentResult?.status === 'failed') {
+          console.warn(`✗ Deployment failed for ${ls.linkedServiceName}: ${deploymentResult.error}`);
+          return {
+            ...ls,
+            status: 'failed' as const,
+            deploymentError: deploymentResult.error
+          };
+        }
+        
+        return ls;
+      });
+
+      // Update the connection mappings in state
+      dispatch({
+        type: 'SET_CONNECTION_MAPPINGS',
+        payload: {
+          ...state.connectionMappings,
+          linkedServices: updatedLinkedServices
+        }
+      });
+
+      // NEW: Rebuild the LinkedService bridge with deployed connection IDs
+      console.log('Rebuilding LinkedService connection bridge with deployed IDs...');
+      addLog('Rebuilding connection bridge...');
+      const { LinkedServiceMappingBridgeService } = await import('../../services/linkedServiceMappingBridgeService');
+      const updatedBridge = LinkedServiceMappingBridgeService.buildBridge({
+        ...state.connectionMappings,
+        linkedServices: updatedLinkedServices
+      });
+
+      console.log('Updated bridge:', updatedBridge);
+
+      dispatch({
+        type: 'BUILD_LINKEDSERVICE_CONNECTION_BRIDGE',
+        payload: updatedBridge
+      });
+
+      console.log('✓ Connection mappings and bridge updated with deployed IDs');
+      addLog('✓ Connection bridge updated with deployed IDs');
+      
+      // Log deployment statistics
+      const successCount = results.filter(r => r.status === 'success').length;
+      const failedCount = results.filter(r => r.status === 'failed').length;
+
+      if (successCount > 0) {
+        console.log(`✓ ${successCount} connection(s) deployed successfully`);
+        console.log('→ Auto-mapping will be updated in Map Components page');
+        addLog(`✓ ${successCount} connection(s) deployed successfully`);
+      }
+
+      if (failedCount > 0) {
+        console.warn(`✗ ${failedCount} connection(s) failed to deploy`);
+        addLog(`✗ ${failedCount} connection(s) failed to deploy`);
+      }
       
       if (results.some(r => r.status === 'success')) {
         toast.success('Connection deployment completed');

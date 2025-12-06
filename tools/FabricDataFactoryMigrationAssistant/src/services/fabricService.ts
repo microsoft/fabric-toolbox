@@ -257,7 +257,7 @@ export class FabricService {
     // 4. Pipelines
     pipelines.forEach(mapping => {
       const component = mapping.component;
-      const pipelineDefinition = pipelineTransformer.transformPipelineDefinition(component.definition, pipelineConnectionMappings);
+      const pipelineDefinition = pipelineTransformer.transformPipelineDefinition(component.definition, pipelineConnectionMappings, component.name);
       const base64Payload = btoa(JSON.stringify(pipelineDefinition));
 
       const payload = {
@@ -1834,7 +1834,7 @@ export class FabricService {
       });
 
       // Transform the pipeline definition and resolve dependencies
-      let pipelineDefinition = pipelineTransformer.transformPipelineDefinition(component.definition, pipelineConnectionMappings);
+      let pipelineDefinition = pipelineTransformer.transformPipelineDefinition(component.definition, pipelineConnectionMappings, component.name);
       
       // Apply connection mappings if provided
       if (pipelineConnectionMappings) {
@@ -1842,7 +1842,9 @@ export class FabricService {
         pipelineDefinition = PipelineConnectionTransformerService.transformPipelineWithConnections(
           pipelineDefinition, 
           component.name, 
-          pipelineConnectionMappings
+          pipelineConnectionMappings,
+          pipelineTransformer.getReferenceMappings(), // Pass NEW format mappings
+          pipelineTransformer.getLinkedServiceBridge() // Pass bridge from Configure Connections
         );
       }
 

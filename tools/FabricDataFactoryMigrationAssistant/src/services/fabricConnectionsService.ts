@@ -5,7 +5,8 @@
 import type { 
   LinkedServiceConnection, 
   ExistingFabricConnection,
-  APIRequestDetails 
+  APIRequestDetails,
+  SupportedConnectionType
 } from '../types';
 
 export interface FabricConnectionResult {
@@ -29,10 +30,21 @@ export class FabricConnectionsService {
    */
   async createConnection(
     accessToken: string,
-    linkedService: LinkedServiceConnection
+    linkedService: LinkedServiceConnection,
+    supportedConnectionTypes?: SupportedConnectionType[]
   ): Promise<FabricConnectionResult> {
     try {
-      const payload = this.buildConnectionPayload(linkedService);
+      // Find creation method name from supportedConnectionTypes
+      let creationMethodName: string | undefined;
+      
+      if (supportedConnectionTypes && linkedService.selectedConnectionType) {
+        const connectionType = supportedConnectionTypes.find(
+          ct => ct.type === linkedService.selectedConnectionType
+        );
+        creationMethodName = connectionType?.creationMethods?.[0]?.name;
+      }
+      
+      const payload = this.buildConnectionPayload(linkedService, creationMethodName);
       
       const response = await fetch(`${this.baseUrl}/connections`, {
         method: 'POST',
@@ -83,7 +95,10 @@ export class FabricConnectionsService {
   /**
    * Build connection payload for Fabric API
    */
-  buildConnectionPayload(linkedService: LinkedServiceConnection): any {
+  buildConnectionPayload(
+    linkedService: LinkedServiceConnection,
+    creationMethodName?: string
+  ): any {
     const payload: any = {
       displayName: linkedService.linkedServiceName,
       description: `Migrated from ADF LinkedService: ${linkedService.linkedServiceName}`,
@@ -99,7 +114,7 @@ export class FabricConnectionsService {
     // Build connection details
     payload.connectionDetails = {
       type: linkedService.selectedConnectionType,
-      creationMethod: linkedService.selectedConnectionType, // Default to same as type
+      creationMethod: creationMethodName || linkedService.selectedConnectionType,
       parameters: []
     };
 
@@ -111,6 +126,14 @@ export class FabricConnectionsService {
         value: String(value)
       });
     });
+
+    // FabricDataPipelines should have empty parameters array
+    if (linkedService.selectedConnectionType === 'FabricDataPipelines' && 
+        payload.connectionDetails.parameters.length > 0) {
+      console.warn('[Payload] FabricDataPipelines should not have connection parameters, clearing:', 
+        payload.connectionDetails.parameters);
+      payload.connectionDetails.parameters = [];
+    }
 
     // Build credential details
     payload.credentialDetails = {
@@ -141,6 +164,12 @@ export class FabricConnectionsService {
    * Build credentials object based on credential type
    */
   private buildCredentials(credentialType: string, credentials: Record<string, any>): any {
+    // Early return for credential types that don't need additional properties
+    if (credentialType === 'WorkspaceIdentity' || credentialType === 'WindowsWithoutImpersonation') {
+      console.log('[Credentials] Using credential type without additional properties:', credentialType);
+      return { credentialType };
+    }
+
     const credentialsObj: any = {
       credentialType
     };
