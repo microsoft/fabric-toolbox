@@ -1,0 +1,37 @@
+{
+  "MyAzureSqlDB": {
+    "connectionType": "AzureSqlDatabase",
+    "description": "Azure SQL Database connection",
+    "connectionDetails": {
+      "server": "myserver.database.windows.net",
+      "database": "mydb",
+      "authenticationType": "SQL"
+    }
+  },
+  "MyBlobStorage": {
+    "connectionType": "AzureBlobStorage",
+    "description": "Azure Blob Storage connection",
+    "connectionDetails": {
+      "accountName": "mystorageaccount",
+      "containerName": "mycontainer"
+    }
+  },
+  "MyADLSGen2": {
+    "connectionType": "AzureDataLakeStorageGen2",
+    "description": "ADLS Gen2 connection",
+    "connectionDetails": {
+      "endpoint": "https://mystorageaccount.dfs.core.windows.net",
+      "fileSystem": "myfilesystem"
+    }
+  },
+  "MySnowflake": {
+    "connectionType": "Snowflake",
+    "description": "Snowflake connection",
+    "connectionDetails": {
+      "account": "myaccount",
+      "warehouse": "mywarehouse",
+      "database": "mydb",
+      "schema": "public"
+    }
+  }
+}

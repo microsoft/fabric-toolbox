@@ -1,0 +1,14 @@
+# Requirements for ADF to Fabric Migration CLI Tool
+
+# Core library (install with: pip install -e .)
+# adf-fabric-migrator
+
+# Required for Fabric API integration
+requests>=2.31.0
+
+# Optional but recommended for development
+pytest>=7.0.0
+pytest-cov>=4.0.0
+
+# Note: Azure CLI must be installed separately for authentication
+# Install from: https://aka.ms/azure-cli
