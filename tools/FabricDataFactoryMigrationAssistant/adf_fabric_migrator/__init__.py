@@ -31,6 +31,8 @@ from .parser import ADFParser
 from .transformer import PipelineTransformer
 from .connector_mapper import ConnectorMapper
 from .global_parameter_detector import GlobalParameterDetector
+from .global_parameter_transformer import GlobalParameterExpressionTransformer
+from .custom_activity_resolver import CustomActivityResolver
 from .activity_transformer import ActivityTransformer
 
 __version__ = "0.1.0"
@@ -40,6 +42,8 @@ __all__ = [
     "PipelineTransformer", 
     "ConnectorMapper",
     "GlobalParameterDetector",
+    "GlobalParameterExpressionTransformer",
+    "CustomActivityResolver",
     "ActivityTransformer",
     # Models
     "ADFComponent",

@@ -32,6 +32,8 @@ from adf_fabric_migrator import (
     PipelineTransformer,
     ConnectorMapper,
     GlobalParameterDetector,
+    GlobalParameterExpressionTransformer,
+    CustomActivityResolver,
     ComponentType,
     CompatibilityStatus,
     MappingConfidence,
@@ -216,6 +218,9 @@ class MigrationCLI:
         self.transformer = PipelineTransformer()
         self.connector_mapper = ConnectorMapper()
         self.global_param_detector = GlobalParameterDetector()
+        self.expression_transformer = GlobalParameterExpressionTransformer()
+        self.custom_activity_resolver = CustomActivityResolver()
+        self.global_param_library_name = None
     
     def analyze_arm_template(self, template_path: str) -> None:
         """
@@ -489,6 +494,16 @@ class MigrationCLI:
                         connection_id = fabric_client.create_connection(connection_def)
                         if connection_id:
                             connection_mappings[ls_name] = connection_id
+                
+                # Initialize custom activity resolver with connection mappings
+                self.custom_activity_resolver.set_connection_bridge(
+                    {ls.name: {
+                        "fabric_type": self.connector_mapper.map_connector({
+                            "type": ls.definition.get("properties", {}).get("type")
+                        }).fabric_type,
+                        "connection_id": connection_mappings.get(ls.name, "")
+                    } for ls in self.parser_obj.get_components_by_type(ComponentType.LINKED_SERVICE)}
+                )
             
             # Step 3: Detect and migrate global parameters
             if deploy_global_params:
@@ -503,7 +518,7 @@ class MigrationCLI:
                     for param in global_params:
                         variables[param.name] = {
                             "type": param.fabric_data_type,
-                            "value": param.value
+                            "value": param.default_value  # Fixed: was param.value
                         }
                     
                     factory_name = template_path.split('/')[-1].replace('.json', '')
@@ -513,8 +528,12 @@ class MigrationCLI:
                         logger.info(f"[DRY RUN] Would create variable library: {library_name}")
                     else:
                         fabric_client.create_variable_library(library_name, variables)
+                    
+                    # Store library name for expression transformation
+                    self.global_param_library_name = library_name
                 else:
                     logger.info("No global parameters detected")
+                    self.global_param_library_name = None
             
             # Step 4: Transform and deploy pipelines
             if deploy_pipelines:
@@ -533,11 +552,33 @@ class MigrationCLI:
                 
                 for pipeline in pipelines:
                     try:
+                        # Set context for custom activity resolver
+                        self.custom_activity_resolver.set_current_pipeline(pipeline.name)
+                        
                         # Transform pipeline
                         fabric_def = self.transformer.transform_pipeline_definition(
                             pipeline.definition,
                             pipeline.name
                         )
+                        
+                        # Apply global parameter expression transformation if global params detected
+                        if self.global_param_library_name:
+                            logger.info(f"Transforming global parameter expressions in {pipeline.name}")
+                            fabric_def = self.expression_transformer.transform_pipeline_expressions(
+                                fabric_def,
+                                self.global_param_library_name
+                            )
+                            
+                            # Log validation result
+                            validation = self.expression_transformer.validate_transformation(
+                                pipeline.definition,
+                                fabric_def,
+                                self.global_param_library_name
+                            )
+                            if validation["success"]:
+                                logger.debug(f"  ✓ Transformation validated: {validation['new_variable_library_references']} Variable Library references")
+                            else:
+                                logger.warning(f"  ⚠ Transformation incomplete: {validation['remaining_old_expressions']} old-style expressions remain")
                         
                         # Generate deployment payload
                         payload = self.transformer.generate_fabric_pipeline_payload(fabric_def)
@@ -561,6 +602,18 @@ class MigrationCLI:
             print(f"\nWorkspace ID: {workspace_id}")
             print(f"Connections created: {len(connection_mappings)}")
             print(f"Pipelines processed: {len(self.parser_obj.get_components_by_type(ComponentType.PIPELINE))}")
+            if self.global_param_library_name:
+                print(f"Global Parameters migrated to: {self.global_param_library_name}")
+            
+            # Print custom activity resolution statistics
+            custom_activities = [a for p in self.parser_obj.get_components_by_type(ComponentType.PIPELINE)
+                                 for a in p.definition.get("properties", {}).get("activities", [])
+                                 if a.get("type") == "Custom"]
+            if custom_activities:
+                print(f"\nCustom Activities processed: {len(custom_activities)}")
+                stats = self.custom_activity_resolver.get_resolution_statistics()
+                if sum(stats.values()) > 0:
+                    print(f"  Connection resolutions - Tier 1: {stats['tier1']}, Tier 2: {stats['tier2']}, Tier 3: {stats['tier3']}, Tier 4: {stats['tier4']}, Failed: {stats['failed']}")
             
             if dry_run:
                 print("\n⚠ This was a DRY RUN - no changes were made to Fabric")
