@@ -1,0 +1,68 @@
+{
+    "name": "SCAN_MOVEMENT_STORE_MKTG_MASTER_PP",
+    "properties": {
+        "activities": [
+            {
+                "name": "copysmsfilefromblobtoraw",
+                "type": "ExecutePipeline",
+                "dependsOn": [],
+                "policy": {
+                    "secureInput": false
+                },
+                "userProperties": [],
+                "typeProperties": {
+                    "pipeline": {
+                        "referenceName": "GENERIC_MKTG_LOADDATA_PP",
+                        "type": "PipelineReference"
+                    },
+                    "waitOnCompletion": true,
+                    "parameters": {
+                        "containerName": "scanmovementstore",
+                        "destinationPath": "raw/scanmovementstore/current",
+                        "fileName": {
+                            "value": "@concat('scanmovementstore_',formatDateTime(convertTimeZone(utcNow(),'UTC','Pacific Standard Time'),'yyyyMMdd'),'*.TXT')",
+                            "type": "Expression"
+                        }
+                    }
+                }
+            },
+            {
+                "name": "loadcuratedtorawlayer",
+                "type": "ExecutePipeline",
+                "dependsOn": [
+                    {
+                        "activity": "copysmsfilefromblobtoraw",
+                        "dependencyConditions": [
+                            "Succeeded"
+                        ]
+                    }
+                ],
+                "policy": {
+                    "secureInput": false
+                },
+                "userProperties": [],
+                "typeProperties": {
+                    "pipeline": {
+                        "referenceName": "GENERIC_MKTG_NOTEBOOK_PP",
+                        "type": "PipelineReference"
+                    },
+                    "waitOnCompletion": true,
+                    "parameters": {
+                        "notebookpath": "/Shared/Marketing/SCAN_MOVEMENT_STORE",
+                        "Source_Filename": {
+                            "value": "scanmovementstore*",
+                            "type": "Expression"
+                        },
+                        "Curated_Filename": "scanmovementstore"
+                    }
+                }
+            }
+        ],
+        "folder": {
+            "name": "SBM_Marketing"
+        },
+        "annotations": [],
+        "lastPublishTime": "2022-12-05T10:59:06Z"
+    },
+    "type": "Microsoft.DataFactory/factories/pipelines"
+}

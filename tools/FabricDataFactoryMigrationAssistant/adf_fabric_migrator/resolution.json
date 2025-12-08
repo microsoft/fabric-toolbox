@@ -1,0 +1,18 @@
+{
+  "objectId": "a1b2c3d4-e5f6-7890-1234-567890abcdef", 
+  "workspaceId": "95e132cd-cf5f-4e15-a9e1-7506994aa23c",
+  "defaultNotebookId": "your_default_fabric_notebook_id",
+  "warehouseConnectionId": "06f15094-5415-40ca-9647-985fa72a41fe",
+  "fileServerConnectionId": "e31de1f3-905a-400e-8c21-1bfcc5c7719c",
+  "sftpConnectionId": "a014a117-8080-4495-b50c-723b92fbc87b",
+  "lakehouseConnectionId": "449ffab5-44e7-4a08-ad8f-2c4c18039a71",
+  "lakehouseArtifactId": "2d07daef-8c0b-454d-9a31-28faec11c440",
+  "notebookIdByActivityName": {
+    "aptos_media_rec": "specific_notebook_id_1",
+    "SendFailEmail": "specific_notebook_id_2"
+  },
+  "linkedServiceToConnectionId": {
+    "synapsedb": "06f15094-5415-40ca-9647-985fa72a41fe",
+    "SBM_MKTG_DB_LINKEDSERVICE": "06f15094-5415-40ca-9647-985fa72a41fe"
+  }
+}

@@ -1,0 +1,346 @@
+import json
+import uuid
+import argparse
+import sys
+from copy import deepcopy
+
+# ==========================================
+# CONFIGURATION & MAPPINGS
+# ==========================================
+# Replace these with your actual Fabric IDs
+CONFIG = {
+    "workspace_id": "95e132cd-cf5f-4e15-a9e1-7506994aa23c",
+    "notebook_id": "your_fabric_notebook_id",
+    
+    # Connections
+    "warehouse_connection_id": "06f15094-5415-40ca-9647-985fa72a41fe", # Synapse/SQL
+    "lakehouse_connection_id": "e31de1f3-905a-400e-8c21-1bfcc5c7719c", # Blob/ADLS/Lakehouse
+    "oracle_connection_id": "1320ffbd-c314-4267-be68-d3e63f7ff4df",    # Oracle
+    
+    # Artifacts
+    "warehouse_artifact_id": "6068bf54-5806-44df-996b-f19fac38d18c",
+    "warehouse_endpoint": "uz5qo3w55cyebj7ffmgl7aydcm-zuzodfk7z4ku5kpboudjssvchq.datawarehouse.fabric.microsoft.com",
+    "lakehouse_artifact_id": "2d07daef-8c0b-454d-9a31-28faec11c440",
+    "lakehouse_name": "lh_sbm_bronze_dev"
+}
+
+# ==========================================
+# HELPER FUNCTIONS
+# ==========================================
+
+def get_expr_string(val):
+    """Safely extracts the string value from a potential expression object."""
+    if isinstance(val, dict) and "value" in val:
+        return val["value"]
+    return val
+
+def format_param_double_nest(val):
+    """
+    For Notebooks: {"value": {"value": "@expr", "type": "Expression"}, "type": "Expression"}
+    """
+    raw_val = get_expr_string(val)
+    is_expr = str(raw_val).startswith("@")
+    
+    return {
+        "value": {
+            "value": raw_val,
+            "type": "Expression" if is_expr else "String"
+        },
+        "type": "Expression"
+    }
+
+def format_param_single_nest(val, force_type=None):
+    """
+    For Stored Procs/Pipelines: {"value": "@expr", "type": "String/Expression"}
+    """
+    raw_val = get_expr_string(val)
+    is_expr = str(raw_val).startswith("@")
+    
+    return {
+        "value": raw_val,
+        "type": "Expression" if is_expr else (force_type or "String")
+    }
+
+# ==========================================
+# ACTIVITY CONVERTERS
+# ==========================================
+
+def convert_notebook(act):
+    """DatabricksNotebook -> TridentNotebook"""
+    new_act = _base_activity(act, "TridentNotebook")
+    
+    new_act["typeProperties"] = {
+        "notebookId": CONFIG["notebook_id"],
+        "workspaceId": CONFIG["workspace_id"],
+        "parameters": {}
+    }
+    
+    # Map parameters with double nesting
+    base_params = act.get("typeProperties", {}).get("baseParameters", {})
+    for k, v in base_params.items():
+        new_act["typeProperties"]["parameters"][k] = format_param_double_nest(v)
+        
+    return new_act
+
+def convert_stored_proc(act):
+    """SqlServerStoredProcedure -> SqlServerStoredProcedure (Fabric Schema)"""
+    new_act = _base_activity(act, "SqlServerStoredProcedure")
+    
+    # 1. Properties
+    sp_name = act.get("typeProperties", {}).get("storedProcedureName", "")
+    sp_params = act.get("typeProperties", {}).get("storedProcedureParameters", {})
+    
+    new_act["typeProperties"] = {
+        "storedProcedureName": format_param_single_nest(sp_name, "String"),
+        "storedProcedureParameters": {}
+    }
+    
+    for k, v in sp_params.items():
+        new_act["typeProperties"]["storedProcedureParameters"][k] = format_param_single_nest(v)
+
+    # 2. Connection Settings (Critical for Warehouse)
+    new_act["connectionSettings"] = {
+        "name": "wh_sbm_gold_dev",
+        "properties": {
+            "annotations": [],
+            "type": "DataWarehouse",
+            "typeProperties": {
+                "endpoint": CONFIG["warehouse_endpoint"],
+                "artifactId": CONFIG["warehouse_artifact_id"],
+                "workspaceId": CONFIG["workspace_id"]
+            },
+            "externalReferences": {"connection": CONFIG["warehouse_connection_id"]}
+        }
+    }
+    
+    # 3. External Reference
+    new_act["externalReferences"] = {"connection": CONFIG["warehouse_connection_id"]}
+    
+    return new_act
+
+def convert_lookup(act):
+    """Lookup -> Lookup (Warehouse Source)"""
+    new_act = _base_activity(act, "Lookup")
+    src = act.get("typeProperties", {}).get("source", {})
+    
+    # Convert Source to DataWarehouseSource
+    new_act["typeProperties"] = {
+        "source": {
+            "type": "DataWarehouseSource",
+            "sqlReaderQuery": format_param_single_nest(src.get("sqlReaderQuery", ""), "Expression"),
+            "queryTimeout": src.get("queryTimeout", "02:00:00"),
+            "partitionOption": "None"
+        },
+        "datasetSettings": {
+            "annotations": [],
+            "type": "DataWarehouseTable",
+            "schema": [],
+            "externalReferences": {"connection": CONFIG["warehouse_connection_id"]}
+        }
+    }
+    return new_act
+
+def convert_copy(act):
+    """Copy -> Copy (Blob/Oracle -> Lakehouse)"""
+    new_act = _base_activity(act, "Copy")
+    tp = act.get("typeProperties", {})
+    source = tp.get("source", {})
+    sink = tp.get("sink", {})
+    
+    # 1. Handle Source (Generic or Oracle)
+    new_source = deepcopy(source)
+    if source.get("type") == "OracleSource":
+        new_source["datasetSettings"] = {
+            "annotations": [],
+            "type": "OracleTable",
+            "schema": [],
+            "externalReferences": {"connection": CONFIG["oracle_connection_id"]}
+        }
+    else:
+        # Default/Blob source
+        new_source["datasetSettings"] = {
+            "annotations": [],
+            "type": "DelimitedText",
+            "typeProperties": {
+                "location": {
+                    "type": "AzureBlobStorageLocation",
+                    "container": {"value": "@pipeline().parameters.containerName", "type": "Expression"},
+                    "folderPath": {"value": "raw", "type": "String"}
+                },
+                "columnDelimiter": ",",
+                "escapeChar": "\\",
+                "firstRowAsHeader": True,
+                "quoteChar": "\""
+            },
+            "externalReferences": {"connection": CONFIG["lakehouse_connection_id"]}
+        }
+    
+    # 2. Handle Sink (Force Lakehouse)
+    new_sink = {
+        "type": "DelimitedTextSink",
+        "storeSettings": {"type": "LakehouseWriteSettings"},
+        "formatSettings": {"type": "DelimitedTextWriteSettings", "quoteAllText": True, "fileExtension": ".txt"},
+        "datasetSettings": {
+            "type": "DelimitedText",
+            "connectionSettings": {
+                "name": CONFIG["lakehouse_name"],
+                "properties": {
+                    "type": "Lakehouse",
+                    "typeProperties": {
+                        "workspaceId": CONFIG["workspace_id"],
+                        "artifactId": CONFIG["lakehouse_artifact_id"],
+                        "rootFolder": "Files"
+                    },
+                    "externalReferences": {"connection": CONFIG["lakehouse_connection_id"]}
+                }
+            },
+            "typeProperties": {
+                "location": {
+                    "type": "LakehouseLocation",
+                    "folderPath": {"value": "@pipeline().parameters.destinationPath", "type": "Expression"},
+                    # Try to find filename from source params or default
+                    "fileName": {"value": "@concat('output_', pipeline().RunId, '.txt')", "type": "Expression"}
+                },
+                "columnDelimiter": "|",
+                "escapeChar": "\\",
+                "firstRowAsHeader": True,
+                "quoteChar": ""
+            }
+        }
+    }
+
+    new_act["typeProperties"] = {
+        "source": new_source,
+        "sink": new_sink,
+        "enableStaging": tp.get("enableStaging", False),
+        "translator": tp.get("translator", {"type": "TabularTranslator", "typeConversion": True})
+    }
+    
+    return new_act
+
+def convert_invoke_pipeline(act):
+    """ExecutePipeline -> InvokePipeline"""
+    new_act = _base_activity(act, "InvokePipeline")
+    
+    new_act["typeProperties"] = {
+        "waitOnCompletion": act.get("typeProperties", {}).get("waitOnCompletion", True),
+        "operationType": "InvokeFabricPipeline",
+        "pipelineId": "placeholder_pipeline_id",
+        "workspaceId": CONFIG["workspace_id"],
+        "parameters": {}
+    }
+    
+    old_params = act.get("typeProperties", {}).get("parameters", {})
+    for k, v in old_params.items():
+        new_act["typeProperties"]["parameters"][k] = format_param_single_nest(v)
+        
+    new_act["externalReferences"] = {"connection": CONFIG["lakehouse_connection_id"]}
+    
+    return new_act
+
+def _base_activity(old_act, new_type):
+    """Common properties copy"""
+    return {
+        "name": old_act["name"],
+        "type": new_type,
+        "dependsOn": deepcopy(old_act.get("dependsOn", [])),
+        "policy": deepcopy(old_act.get("policy", {})),
+        "userProperties": deepcopy(old_act.get("userProperties", []))
+    }
+
+# ==========================================
+# MAIN LOGIC
+# ==========================================
+
+def convert_activity_list(activities):
+    converted = []
+    for act in activities:
+        atype = act["type"]
+        new_act = None
+        
+        # Route to specific converters
+        if atype == "DatabricksNotebook":
+            new_act = convert_notebook(act)
+        elif atype == "SqlServerStoredProcedure":
+            new_act = convert_stored_proc(act)
+        elif atype == "ExecutePipeline":
+            new_act = convert_invoke_pipeline(act)
+        elif atype == "Copy":
+            new_act = convert_copy(act)
+        elif atype == "Lookup":
+            new_act = convert_lookup(act)
+        else:
+            # Generic handling (If, ForEach, Wait, etc.)
+            new_act = deepcopy(act)
+            # Strip linked service
+            if "linkedServiceName" in new_act: del new_act["linkedServiceName"]
+            if "typeProperties" in new_act and "dataset" in new_act["typeProperties"]:
+                 # Basic dataset inline cleanup
+                 new_act["typeProperties"]["datasetSettings"] = {
+                     "annotations": [],
+                     "type": "Binary", 
+                     "typeProperties": {
+                         "location": {
+                             "type": "SftpLocation", 
+                             "folderPath": {"value": "raw", "type": "String"}
+                         }
+                     },
+                     "externalReferences": {"connection": CONFIG["lakehouse_connection_id"]}
+                 }
+                 del new_act["typeProperties"]["dataset"]
+
+        # Recursive Processing for Container Activities
+        if new_act and "typeProperties" in new_act:
+            tp = new_act["typeProperties"]
+            if "ifTrueActivities" in tp:
+                tp["ifTrueActivities"] = convert_activity_list(tp["ifTrueActivities"])
+            if "ifFalseActivities" in tp:
+                tp["ifFalseActivities"] = convert_activity_list(tp["ifFalseActivities"])
+            if "activities" in tp: # ForEach
+                tp["activities"] = convert_activity_list(tp["activities"])
+            if "cases" in tp: # Switch
+                for case in tp["cases"]:
+                    if "activities" in case:
+                        case["activities"] = convert_activity_list(case["activities"])
+            if "defaultActivities" in tp: # Switch
+                tp["defaultActivities"] = convert_activity_list(tp["defaultActivities"])
+        
+        converted.append(new_act)
+        
+    return converted
+
+def process_pipeline(source_json):
+    target = {
+        "name": source_json.get("name", "ConvertedPipeline"),
+        "objectId": str(uuid.uuid4()),
+        "properties": deepcopy(source_json.get("properties", {}))
+    }
+    
+    # Run conversion
+    if "activities" in target["properties"]:
+        target["properties"]["activities"] = convert_activity_list(target["properties"]["activities"])
+        
+    return target
+
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser()
+    parser.add_argument("-f", "--file", required=True, help="Input ADF JSON file")
+    parser.add_argument("-o", "--output", help="Output Fabric JSON file")
+    args = parser.parse_args()
+
+    try:
+        with open(args.file, 'r', encoding='utf-8') as f:
+            source_data = json.load(f)
+            
+        print(f"Converting pipeline: {source_data.get('name')}...")
+        result = process_pipeline(source_data)
+        
+        if args.output:
+            with open(args.output, 'w', encoding='utf-8') as f:
+                json.dump(result, f, indent=4)
+            print(f"Success! Output saved to {args.output}")
+        else:
+            print(json.dumps(result, indent=4))
+            
+    except Exception as e:
+        print(f"Error: {str(e)}")
