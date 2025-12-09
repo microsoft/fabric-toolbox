@@ -153,7 +153,7 @@
         "hideLegend": false,
         "legendLocation": "bottom",
         "xColumnTitle": "",
-        "xColumn": "AppName_",
+        "xColumn": "FirstPart",
         "yColumns": [
           "sum_duration"
         ],
@@ -2067,7 +2067,7 @@
         "kind": "inline",
         "dataSourceId": "82abfa0d-7aa4-485a-bf5a-7089d8a07a0d"
       },
-      "text": "SparkDriverLogs\n| where Timestamp between (_startTime .. _endTime)\n| extend AppName_ = extract(@\"^([^_]+)_\", 1, AppName)\n| summarize duration=toint((max(Timestamp)-min(Timestamp))/1m) by AppName_,AppId,WorkspaceId\n| summarize sum(duration) by AppName_",
+      "text": "SparkDriverLogs\n| where Timestamp between (_startTime .. _endTime)\n| extend LastPart = extract(@\"([^_]+)$\",0, AppName)\n| extend FirstPart = substring(AppName, 0, strlen(AppName) - strlen(LastPart) - 1)\n| summarize duration=toint((max(Timestamp)-min(Timestamp))/1m) by FirstPart,AppId,WorkspaceId\n| summarize sum(duration) by FirstPart\n\n",
       "id": "37236a92-1be4-489d-ab92-48790c7f9fab",
       "usedVariables": [
         "_endTime",
