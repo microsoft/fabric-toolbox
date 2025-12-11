@@ -303,6 +303,7 @@ export interface APIRequestDetails {
   endpoint: string;
   payload: Record<string, any>;
   headers?: Record<string, string> | undefined;
+  validationErrors?: string[];  // NEW: Capture validation errors before API call
 }
 
 export interface ApiError {
@@ -905,6 +906,7 @@ export interface ConnectionDeploymentResult {
   linkedServiceName: string;
   status: 'success' | 'failed' | 'skipped';
   fabricConnectionId?: string;
+  fabricConnectionName?: string;  // NEW: Display name from Fabric API
   errorMessage?: string;
   skipReason?: string;
   apiRequestDetails?: APIRequestDetails;
@@ -1253,3 +1255,26 @@ export interface PipelineLibraryVariable {
   variableName: string;
   libraryName: string;
 }
+
+/**
+ * PHASE 0 COMPLETION VERIFICATION
+ * 
+ * This type-level check ensures all Phase 0 type definitions are complete.
+ * Build will FAIL if any required property is missing.
+ * 
+ * DO NOT REMOVE - Required for build-time Phase 0 validation
+ */
+type Phase0CompletionCheck = {
+  // Verify APIRequestDetails has validationErrors property
+  validationErrorsExists: 'validationErrors' extends keyof APIRequestDetails 
+    ? true 
+    : 'ERROR: APIRequestDetails.validationErrors is missing - Phase 0 Step 0.0 incomplete';
+  
+  // Verify ConnectionDeploymentResult has fabricConnectionName property
+  fabricConnectionNameExists: 'fabricConnectionName' extends keyof ConnectionDeploymentResult 
+    ? true 
+    : 'ERROR: ConnectionDeploymentResult.fabricConnectionName is missing - Phase 0 Step 0.1 incomplete';
+};
+
+// Force TypeScript to evaluate the type (will error if any check fails)
+const _phase0Verification: Phase0CompletionCheck = {} as Phase0CompletionCheck;

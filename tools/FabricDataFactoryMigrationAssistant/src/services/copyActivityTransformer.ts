@@ -617,8 +617,15 @@ export class CopyActivityTransformer {
     // Handle @{dataset().parameterName} format
     result = result.replace(/@\{dataset\(\)\.(\w+)\}/g, (match, paramName) => {
       if (parameters && parameters.hasOwnProperty(paramName)) {
-        console.log(`Replacing parameter ${paramName} with value: ${parameters[paramName]}`);
-        return parameters[paramName];
+        let paramValue = parameters[paramName];
+        
+        // Extract .value from Expression objects FIRST
+        if (typeof paramValue === 'object' && paramValue !== null && 'value' in paramValue && paramValue.type === 'Expression') {
+          paramValue = paramValue.value;
+        }
+        
+        console.log(`Replacing parameter ${paramName} with value: ${paramValue}`);
+        return String(paramValue);
       }
       return match;
     });
@@ -626,8 +633,15 @@ export class CopyActivityTransformer {
     // Handle @dataset().parameterName format (without curly braces)
     result = result.replace(/@dataset\(\)\.(\w+)/g, (match, paramName) => {
       if (parameters && parameters.hasOwnProperty(paramName)) {
-        console.log(`Replacing parameter ${paramName} with value: ${parameters[paramName]}`);
-        return parameters[paramName];
+        let paramValue = parameters[paramName];
+        
+        // Extract .value from Expression objects FIRST
+        if (typeof paramValue === 'object' && paramValue !== null && 'value' in paramValue && paramValue.type === 'Expression') {
+          paramValue = paramValue.value;
+        }
+        
+        console.log(`Replacing parameter ${paramName} with value: ${paramValue}`);
+        return String(paramValue);
       }
       return match;
     });

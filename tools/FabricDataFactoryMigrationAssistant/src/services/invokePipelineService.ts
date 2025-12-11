@@ -171,6 +171,31 @@ export class InvokePipelineService {
   }
 
   /**
+   * Sanitize parameter values by extracting .value from Expression objects
+   */
+  private sanitizeParameters(params: Record<string, any>): Record<string, { value: string; type: string }> {
+    const sanitized: Record<string, { value: string; type: string }> = {};
+    
+    for (const [key, value] of Object.entries(params)) {
+      if (typeof value === 'object' && value !== null && 'value' in value) {
+        // Extract .value from Expression objects
+        const extractedValue = value.type === 'Expression' ? value.value : value;
+        sanitized[key] = {
+          value: String(extractedValue.value || extractedValue),
+          type: 'Expression'
+        };
+      } else {
+        sanitized[key] = {
+          value: String(value),
+          type: 'Expression'
+        };
+      }
+    }
+    
+    return sanitized;
+  }
+
+  /**
    * Transforms an ExecutePipeline activity to an InvokePipeline activity for Fabric
    */
   transformExecutePipelineToInvokePipeline(
@@ -200,7 +225,9 @@ export class InvokePipelineService {
         operationType: 'InvokeFabricPipeline',
         pipelineId: targetPipelineId,
         workspaceId: workspaceId,
-        parameters: activity.typeProperties?.parameters || {}
+        parameters: activity.typeProperties?.parameters 
+          ? this.sanitizeParameters(activity.typeProperties.parameters)
+          : {}
       },
       externalReferences: {
         connection: connectionId

@@ -76,50 +76,75 @@ export class PipelineConnectionTransformerService {
       return undefined;
     };
 
-    // Transform each activity
-    activities.forEach((activity: any) => {
+    /**
+     * Recursive function to process activity and ALL nested activities
+     * Applies connection mappings at all nesting depths
+     * @param activity Activity to process
+     * @param depth Recursion depth (0 = top-level, 1+ = nested)
+     */
+    const processActivity = (activity: any, depth: number = 0): void => {
       if (!activity?.name) return;
 
-      console.log(`Processing activity '${activity.name}':`, {
+      const indent = '  '.repeat(depth);
+      console.log(`${indent}[Depth ${depth}] Processing activity '${activity.name}':`, {
         type: activity.type,
         hasDatasetSettings: Boolean(activity.typeProperties?.datasetSettings),
         hasLinkedServiceRefs: this.activityHasLinkedServiceReferences(activity)
       });
 
-      // Special handling for Lookup and GetMetadata activities with datasetSettings
+      // ============================================================================
+      // VALIDATION HANDLER (from Phase 0)
+      // ============================================================================
+      if (activity.type === 'Validation') {
+        console.warn(`${indent}[VALIDATION] Activity '${activity.name}' not supported in Fabric - marking as Inactive`);
+        
+        activity.state = 'Inactive';
+        activity.onInactiveMarkAs = 'Succeeded';
+        
+        if (activity.typeProperties?.dataset) {
+          const datasetRef = activity.typeProperties.dataset.referenceName || 'unknown';
+          console.warn(`${indent}  → Removing dataset reference: ${datasetRef}`);
+          delete activity.typeProperties.dataset;
+        }
+        
+        console.log(`${indent}  ✅ Validation activity '${activity.name}' marked as Inactive`);
+        return;
+      }
+
+      // ============================================================================
+      // LOOKUP/GETMETADATA HANDLER (existing)
+      // ============================================================================
       if ((activity.type === 'Lookup' || activity.type === 'GetMetadata') && 
           activity.typeProperties?.datasetSettings) {
         
-        console.log(`Applying dataset-level connection for ${activity.type} activity '${activity.name}'`);
+        console.log(`${indent}Applying dataset-level connection for ${activity.type} activity '${activity.name}'`);
         
-        // For these activities, the connection goes in datasetSettings.externalReferences
         const datasetReferenceId = `${pipelineName}_${activity.name}_dataset`;
         
         const connectionId = findConnectionIdForActivity(
           activity.name,
           datasetReferenceId,
-          undefined // LinkedService name not needed as referenceId is more specific
+          undefined
         );
 
         if (connectionId) {
-          console.log(`  ✅ Found connection for dataset: ${datasetReferenceId} → ${connectionId}`);
+          console.log(`${indent}  ✅ Found connection: ${datasetReferenceId} → ${connectionId}`);
           
-          // Apply connection to datasetSettings.externalReferences (not activity level)
           if (!activity.typeProperties.datasetSettings.externalReferences) {
             activity.typeProperties.datasetSettings.externalReferences = {};
           }
           activity.typeProperties.datasetSettings.externalReferences.connection = connectionId;
 
-          console.log(`  ✅ Applied dataset connection: ${activity.name}.datasetSettings.externalReferences.connection = ${connectionId}`);
+          console.log(`${indent}  ✅ Applied dataset connection to ${activity.name}`);
         } else {
-          console.warn(`  ❌ No connection mapping found for ${activity.type} activity '${activity.name}' dataset (referenceId: ${datasetReferenceId})`);
-          
-          // Mark as inactive if no connection found
+          console.warn(`${indent}  ❌ No connection mapping found - marking as Inactive`);
           activity.state = 'Inactive';
           activity.onInactiveMarkAs = 'Succeeded';
         }
       } else {
-        // Standard activity-level connection handling for other activity types
+        // ========================================================================
+        // STANDARD ACTIVITY-LEVEL CONNECTION HANDLER (existing)
+        // ========================================================================
         const activityLevelReferenceId = `${pipelineName}_${activity.name}_activity`;
         const linkedServiceName = activity.linkedServiceName?.referenceName;
         
@@ -130,21 +155,85 @@ export class PipelineConnectionTransformerService {
         );
 
         if (connectionId) {
-          // Apply the connection mapping to this activity
           this.applyConnectionMappingToActivity(activity, connectionId, activityLevelReferenceId);
         } else {
-          // No mapping found - check if this activity has LinkedService references that need to be handled
           this.handleUnmappedLinkedServiceReferences(activity, pipelineName);
         }
       }
 
-      // Apply standard activity transformations (convert text to expressions, etc.)
+      // ============================================================================
+      // STANDARD TRANSFORMATIONS (existing)
+      // ============================================================================
       try {
         activityTransformer.transformLinkedServiceReferencesToFabric(activity, connectionMappings);
       } catch (error) {
-        console.warn(`Failed to transform activity ${activity.name}:`, error);
+        console.warn(`${indent}Failed to transform activity ${activity.name}:`, error);
       }
-    });
+
+      // ============================================================================
+      // RECURSION: Process nested activities based on container type
+      // ============================================================================
+      const nextDepth = depth + 1;
+
+      // Container Type 1: ForEach
+      if (activity.type === 'ForEach' && activity.typeProperties?.activities) {
+        const nestedActivities = activity.typeProperties.activities;
+        console.log(`${indent}  ↳ ForEach '${activity.name}': Processing ${nestedActivities.length} nested activities`);
+        nestedActivities.forEach((nested: any) => processActivity(nested, nextDepth));
+      }
+
+      // Container Type 2: IfCondition
+      if (activity.type === 'IfCondition') {
+        if (activity.typeProperties?.ifTrueActivities?.length > 0) {
+          const trueActivities = activity.typeProperties.ifTrueActivities;
+          console.log(`${indent}  ↳ IfCondition '${activity.name}': Processing ${trueActivities.length} TRUE branch activities`);
+          trueActivities.forEach((nested: any) => processActivity(nested, nextDepth));
+        }
+
+        if (activity.typeProperties?.ifFalseActivities?.length > 0) {
+          const falseActivities = activity.typeProperties.ifFalseActivities;
+          console.log(`${indent}  ↳ IfCondition '${activity.name}': Processing ${falseActivities.length} FALSE branch activities`);
+          falseActivities.forEach((nested: any) => processActivity(nested, nextDepth));
+        }
+      }
+
+      // Container Type 3: Switch
+      if (activity.type === 'Switch') {
+        if (activity.typeProperties?.cases?.length > 0) {
+          const cases = activity.typeProperties.cases;
+          console.log(`${indent}  ↳ Switch '${activity.name}': Processing ${cases.length} cases`);
+          
+          cases.forEach((caseItem: any, caseIndex: number) => {
+            if (caseItem.activities?.length > 0) {
+              console.log(`${indent}    ↳ Case ${caseIndex}: Processing ${caseItem.activities.length} activities`);
+              caseItem.activities.forEach((nested: any) => processActivity(nested, nextDepth));
+            }
+          });
+        }
+
+        if (activity.typeProperties?.defaultActivities?.length > 0) {
+          const defaultActivities = activity.typeProperties.defaultActivities;
+          console.log(`${indent}  ↳ Switch '${activity.name}': Processing ${defaultActivities.length} default activities`);
+          defaultActivities.forEach((nested: any) => processActivity(nested, nextDepth));
+        }
+      }
+
+      // Container Type 4: Until
+      if (activity.type === 'Until' && activity.typeProperties?.activities?.length > 0) {
+        const nestedActivities = activity.typeProperties.activities;
+        console.log(`${indent}  ↳ Until '${activity.name}': Processing ${nestedActivities.length} nested activities`);
+        nestedActivities.forEach((nested: any) => processActivity(nested, nextDepth));
+      }
+
+      console.log(`${indent}✓ Completed '${activity.name}' (${activity.type}, depth ${depth})`);
+    };
+
+    // ============================================================================
+    // ENTRY POINT: Process all top-level activities
+    // ============================================================================
+    console.log(`Starting recursive activity processing for pipeline '${pipelineName}'`);
+    activities.forEach((activity: any) => processActivity(activity, 0));
+    console.log(`Completed recursive activity processing for pipeline '${pipelineName}'`);
 
     console.log(`Completed connection mapping application for pipeline '${pipelineName}'`);
     return transformedDefinition;

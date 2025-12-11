@@ -132,10 +132,18 @@ export class ConnectionDeploymentService {
           );
 
           if (connectionResult.success && connectionResult.connectionId) {
+            console.log(`✓ Propagating connection result:`, {
+              linkedServiceName: linkedService.linkedServiceName,
+              fabricConnectionId: connectionResult.connectionId,
+              fabricConnectionName: connectionResult.connectionName,
+              hasConnectionName: !!connectionResult.connectionName
+            });
+
             results.push({
               linkedServiceName: linkedService.linkedServiceName,
               status: 'success',
               fabricConnectionId: connectionResult.connectionId,
+              fabricConnectionName: connectionResult.connectionName,  // NEW: Propagate from API
               apiRequestDetails: connectionResult.apiRequestDetails
             });
           } else {

@@ -19,12 +19,28 @@ export class ConnectionService {
 
   setConnectionMapping(connectionResults: { linkedServiceName: string; status: string; fabricConnectionId?: string }[]) {
     this.connectionMapping.clear();
+    
+    console.log('Setting connection mappings:', {
+      totalResults: connectionResults.length,
+      successfulResults: connectionResults.filter(r => r.status === 'success').length
+    });
+    
+    let mappedCount = 0;
     connectionResults.forEach(result => {
       if (result.status === 'success' && result.fabricConnectionId) {
         this.connectionMapping.set(result.linkedServiceName, result.fabricConnectionId);
-        console.log(`Mapped LinkedService ${result.linkedServiceName} to Fabric connection ${result.fabricConnectionId}`);
+        console.log(`  ✓ Mapped LinkedService '${result.linkedServiceName}' → Connection '${result.fabricConnectionId}'`);
+        mappedCount++;
+      } else {
+        console.warn(`  ✗ Skipped LinkedService '${result.linkedServiceName}' (status: ${result.status}, hasId: ${!!result.fabricConnectionId})`);
       }
     });
+    
+    console.log(`Connection mapping complete: ${mappedCount}/${connectionResults.length} mappings created`);
+    
+    if (mappedCount === 0 && connectionResults.length > 0) {
+      console.error('⚠️ WARNING: No connection mappings created despite having results. Pipeline deployment will likely fail.');
+    }
   }
 
   mapLinkedServiceToConnection(linkedServiceName?: string): string | undefined {
