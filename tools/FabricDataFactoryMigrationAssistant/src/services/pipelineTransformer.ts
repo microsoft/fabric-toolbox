@@ -49,6 +49,131 @@ export class PipelineTransformer {
     return this.linkedServiceBridge;
   }
 
+  /**
+   * Finds all LinkedService references in activities (including nested)
+   * Used for validation and debugging
+   */
+  private findLinkedServiceReferences(activities: any[]): string[] {
+    const linkedServices = new Set<string>();
+    
+    const scanActivity = (activity: any) => {
+      // Check direct linkedServiceName reference
+      if (activity.linkedServiceName) {
+        linkedServices.add(activity.linkedServiceName);
+      }
+      
+      // Check typeProperties for linkedService references
+      if (activity.typeProperties?.linkedServiceName) {
+        linkedServices.add(activity.typeProperties.linkedServiceName);
+      }
+      
+      // Scan nested activities in container types
+      if (activity.type === 'ForEach' && activity.typeProperties?.activities) {
+        activity.typeProperties.activities.forEach(scanActivity);
+      }
+      
+      if (activity.type === 'IfCondition') {
+        if (activity.typeProperties?.ifTrueActivities) {
+          activity.typeProperties.ifTrueActivities.forEach(scanActivity);
+        }
+        if (activity.typeProperties?.ifFalseActivities) {
+          activity.typeProperties.ifFalseActivities.forEach(scanActivity);
+        }
+      }
+      
+      if (activity.type === 'Switch') {
+        if (activity.typeProperties?.cases) {
+          activity.typeProperties.cases.forEach((c: any) => {
+            if (c.activities) {
+              c.activities.forEach(scanActivity);
+            }
+          });
+        }
+        if (activity.typeProperties?.defaultActivities) {
+          activity.typeProperties.defaultActivities.forEach(scanActivity);
+        }
+      }
+      
+      if (activity.type === 'Until' && activity.typeProperties?.activities) {
+        activity.typeProperties.activities.forEach(scanActivity);
+      }
+    };
+    
+    activities.forEach(scanActivity);
+    return Array.from(linkedServices);
+  }
+
+  /**
+   * Validates that nested Copy activities don't have inputs/outputs arrays
+   * Recursively checks all container activity types
+   */
+  private validateNestedActivities(activity: any, depth: number = 0): string[] {
+    const errors: string[] = [];
+    const indent = '  '.repeat(depth);
+    
+    // Check if this is a Copy activity with inputs/outputs (SHOULD NOT EXIST after transformation)
+    if (activity.type === 'Copy') {
+      if (activity.inputs && Array.isArray(activity.inputs)) {
+        errors.push(`${indent}Copy activity '${activity.name}' has inputs array (depth ${depth})`);
+      }
+      if (activity.outputs && Array.isArray(activity.outputs)) {
+        errors.push(`${indent}Copy activity '${activity.name}' has outputs array (depth ${depth})`);
+      }
+    }
+    
+    // Recursively validate nested activities in containers
+    const typeProps = activity.typeProperties;
+    if (!typeProps) return errors;
+    
+    // ForEach container (ENHANCED - existing method now supports recursion)
+    if (activity.type === 'ForEach' && typeProps.activities) {
+      typeProps.activities.forEach((nested: any) => {
+        errors.push(...this.validateNestedActivities(nested, depth + 1));
+      });
+    }
+    
+    // IfCondition container (ENHANCED - existing method now supports recursion)
+    if (activity.type === 'If') {
+      if (typeProps.ifTrueActivities) {
+        typeProps.ifTrueActivities.forEach((nested: any) => {
+          errors.push(...this.validateNestedActivities(nested, depth + 1));
+        });
+      }
+      if (typeProps.ifFalseActivities) {
+        typeProps.ifFalseActivities.forEach((nested: any) => {
+          errors.push(...this.validateNestedActivities(nested, depth + 1));
+        });
+      }
+    }
+    
+    // Switch container (NEW - method created in Step 1.1)
+    if (activity.type === 'Switch') {
+      if (typeProps.cases) {
+        typeProps.cases.forEach((switchCase: any) => {
+          if (switchCase.activities) {
+            switchCase.activities.forEach((nested: any) => {
+              errors.push(...this.validateNestedActivities(nested, depth + 1));
+            });
+          }
+        });
+      }
+      if (typeProps.defaultActivities) {
+        typeProps.defaultActivities.forEach((nested: any) => {
+          errors.push(...this.validateNestedActivities(nested, depth + 1));
+        });
+      }
+    }
+    
+    // Until container (NEW - method created in Step 1.2)
+    if (activity.type === 'Until' && typeProps.activities) {
+      typeProps.activities.forEach((nested: any) => {
+        errors.push(...this.validateNestedActivities(nested, depth + 1));
+      });
+    }
+    
+    return errors;
+  }
+
   transformPipelineDefinition(definition: any, connectionMappings?: PipelineConnectionMappings, pipelineName?: string): any {
     // Store pipeline name for activity transformation
     this.currentPipelineName = pipelineName || 'unknown';
@@ -71,9 +196,53 @@ export class PipelineTransformer {
     const parameters = this.extractParametersFromDefinition(pipelineProperties);
     const variables = this.extractVariablesFromDefinition(pipelineProperties);
 
+    // NEW: Validate connection mappings availability
+    if (connectionMappings && pipelineName) {
+      const linkedServiceRefs = this.findLinkedServiceReferences(activities);
+      
+      if (linkedServiceRefs.length > 0) {
+        console.log(`Pipeline '${pipelineName}' references ${linkedServiceRefs.length} LinkedServices:`, linkedServiceRefs);
+        
+        const unmappedServices: string[] = [];
+        linkedServiceRefs.forEach(lsName => {
+          const mappedId = connectionMappings[lsName];
+          if (mappedId) {
+            console.log(`  ✓ ${lsName} → ${mappedId}`);
+          } else {
+            console.error(`  ✗ ${lsName} → NOT MAPPED`);
+            unmappedServices.push(lsName);
+          }
+        });
+        
+        if (unmappedServices.length > 0) {
+          console.error(
+            `⚠️ Pipeline '${pipelineName}' has ${unmappedServices.length} unmapped LinkedServices. ` +
+            `Deployment will likely fail with "invalid reference" errors.`
+          );
+        }
+      }
+    }
+
+    const transformedActivities = this.transformActivities(activities, connectionMappings);
+    
+    // NEW: Validate nested activities
+    if (pipelineName) {
+      const validationErrors: string[] = [];
+      transformedActivities.forEach(activity => {
+        validationErrors.push(...this.validateNestedActivities(activity));
+      });
+      
+      if (validationErrors.length > 0) {
+        console.error(`Pipeline '${pipelineName}' has ${validationErrors.length} nested activity validation errors:`);
+        validationErrors.forEach(err => console.error(`  ${err}`));
+      } else {
+        console.log(`✓ Pipeline '${pipelineName}' passed nested activity validation`);
+      }
+    }
+
     const fabricPipelineDefinition = {
       properties: {
-        activities: this.transformActivities(activities, connectionMappings),
+        activities: transformedActivities,
         parameters,
         variables,
         annotations: pipelineProperties.annotations || [],
@@ -268,8 +437,10 @@ export class PipelineTransformer {
         // Return as-is to avoid overriding the detailed transformation
         return typeProperties;
       case 'ExecutePipeline': return this.transformExecutePipelineProperties(typeProperties);
-      case 'ForEach': return this.transformForEachActivityProperties(typeProperties);
-      case 'If': return this.transformIfActivityProperties(typeProperties);
+      case 'ForEach': return this.transformForEachActivityProperties(typeProperties, connectionMappings);
+      case 'If': return this.transformIfActivityProperties(typeProperties, connectionMappings);
+      case 'Switch': return this.transformSwitchActivityProperties(typeProperties, connectionMappings);
+      case 'Until': return this.transformUntilActivityProperties(typeProperties, connectionMappings);
       case 'Wait': return this.transformWaitActivityProperties(typeProperties);
       case 'WebActivity': return this.transformWebActivityProperties(typeProperties);
       default: return typeProperties;
@@ -347,23 +518,84 @@ export class PipelineTransformer {
     return transformedActivity;
   }
   
-  transformForEachActivityProperties(properties: any): any { 
+  transformForEachActivityProperties(properties: any, connectionMappings?: PipelineConnectionMappings): any { 
     const result: any = { ...properties };
     if (!result.items) result.items = {};
     if (!result.activities) result.activities = [];
-    else result.activities = this.transformActivities(result.activities);
+    else {
+      console.log(`Transforming ForEach activity with ${result.activities.length} nested activities`);
+      result.activities = this.transformActivities(result.activities, connectionMappings);
+    }
     if (result.isSequential === undefined) result.isSequential = false;
     // Don't set batchCount default - let Fabric handle it
     return result;
   }
   
-  transformIfActivityProperties(properties: any): any { 
+  transformIfActivityProperties(properties: any, connectionMappings?: PipelineConnectionMappings): any { 
     const result: any = { ...properties };
     if (!result.expression) result.expression = {};
     if (!result.ifTrueActivities) result.ifTrueActivities = [];
-    else result.ifTrueActivities = this.transformActivities(result.ifTrueActivities);
+    else {
+      console.log(`Transforming If activity: ${result.ifTrueActivities.length} true activities`);
+      result.ifTrueActivities = this.transformActivities(result.ifTrueActivities, connectionMappings);
+    }
     if (!result.ifFalseActivities) result.ifFalseActivities = [];
-    else result.ifFalseActivities = this.transformActivities(result.ifFalseActivities);
+    else {
+      console.log(`Transforming If activity: ${result.ifFalseActivities.length} false activities`);
+      result.ifFalseActivities = this.transformActivities(result.ifFalseActivities, connectionMappings);
+    }
+    return result;
+  }
+  
+  /**
+   * Transform Switch activity properties - RECURSIVELY transforms nested activities in all cases
+   * NEW METHOD - Switch containers were not previously supported
+   */
+  private transformSwitchActivityProperties(
+    properties: any,
+    connectionMappings?: PipelineConnectionMappings
+  ): any {
+    const result = { ...properties };
+    
+    // Transform activities in each case
+    if (result.cases && Array.isArray(result.cases)) {
+      console.log(`Transforming Switch activity with ${result.cases.length} cases`);
+      result.cases = result.cases.map((switchCase: any) => {
+        if (switchCase.activities && Array.isArray(switchCase.activities)) {
+          console.log(`  Transforming ${switchCase.activities.length} activities in case '${switchCase.value}'`);
+          return {
+            ...switchCase,
+            activities: this.transformActivities(switchCase.activities, connectionMappings)
+          };
+        }
+        return switchCase;
+      });
+    }
+    
+    // Transform default activities
+    if (result.defaultActivities && Array.isArray(result.defaultActivities)) {
+      console.log(`  Transforming ${result.defaultActivities.length} default activities`);
+      result.defaultActivities = this.transformActivities(result.defaultActivities, connectionMappings);
+    }
+    
+    return result;
+  }
+
+  /**
+   * Transform Until activity properties - RECURSIVELY transforms nested activities
+   * NEW METHOD - Until containers were not previously supported
+   */
+  private transformUntilActivityProperties(
+    properties: any,
+    connectionMappings?: PipelineConnectionMappings
+  ): any {
+    const result = { ...properties };
+    
+    if (result.activities && Array.isArray(result.activities)) {
+      console.log(`Transforming Until activity with ${result.activities.length} nested activities`);
+      result.activities = this.transformActivities(result.activities, connectionMappings);
+    }
+    
     return result;
   }
   
@@ -504,9 +736,75 @@ export class PipelineTransformer {
 
     // Parse back to object
     const transformedDefinition = JSON.parse(pipelineJson);
-    console.log(`[PipelineTransformer] Expression transformation complete`);
+    
+    // Unwrap Expression objects that now contain library variable references
+    // This prevents Fabric API from receiving { value: "...", type: "Expression" } objects
+    // which would serialize to "[object Object]"
+    this.unwrapLibraryVariableExpressions(transformedDefinition);
+    
+    console.log(`[PipelineTransformer] Expression transformation complete (with unwrapping)`);
 
     return transformedDefinition;
+  }
+
+  /**
+   * Recursively unwraps Expression objects that contain library variable references
+   * Converts { value: "@pipeline().libraryVariables.X", type: "Expression" } → "@pipeline().libraryVariables.X"
+   * 
+   * This is necessary because:
+   * 1. Activity transformers (Copy, Lookup, etc.) preserve Expression objects when substituting dataset parameters
+   * 2. Global parameter transformation does regex replacement on JSON.stringify'd pipeline
+   * 3. Expression objects get transformed but remain as objects after JSON.parse
+   * 4. Fabric API would serialize these to "[object Object]"
+   * 
+   * @param obj The object to recursively process (typically pipeline definition)
+   * @param visited WeakSet to track visited objects and prevent infinite loops on circular references
+   */
+  private unwrapLibraryVariableExpressions(obj: any, visited = new WeakSet()): void {
+    if (!obj || typeof obj !== 'object') {
+      return;
+    }
+
+    // Prevent infinite loops on circular references
+    if (visited.has(obj)) {
+      return;
+    }
+    visited.add(obj);
+
+    // Handle arrays
+    if (Array.isArray(obj)) {
+      obj.forEach(item => this.unwrapLibraryVariableExpressions(item, visited));
+      return;
+    }
+
+    // Process each property
+    for (const [key, value] of Object.entries(obj)) {
+      if (value && typeof value === 'object') {
+        // Check if this is an Expression object with a library variable reference
+        if (
+          (value as any).type === 'Expression' &&
+          typeof (value as any).value === 'string' &&
+          (value as any).value.includes('@pipeline().libraryVariables.')
+        ) {
+          // Unwrap to plain string
+          const unwrappedValue = (value as any).value;
+          obj[key] = unwrappedValue;
+          console.log(`[PipelineTransformer] Unwrapped Expression object at "${key}": ${unwrappedValue.substring(0, 80)}...`);
+        } else if (
+          (value as any).type === 'Expression' &&
+          typeof (value as any).value === 'string' &&
+          (value as any).value.includes('pipeline().libraryVariables.')
+        ) {
+          // Also handle cases without @ prefix (e.g., inside concat/string functions)
+          const unwrappedValue = (value as any).value;
+          obj[key] = unwrappedValue;
+          console.log(`[PipelineTransformer] Unwrapped Expression object (no @ prefix) at "${key}": ${unwrappedValue.substring(0, 80)}...`);
+        } else {
+          // Recurse into nested objects/arrays
+          this.unwrapLibraryVariableExpressions(value, visited);
+        }
+      }
+    }
   }
 
   // Create pipeline in Fabric using the api client with connection mappings support
