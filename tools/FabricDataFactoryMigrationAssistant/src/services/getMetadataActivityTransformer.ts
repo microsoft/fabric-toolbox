@@ -302,16 +302,20 @@ export class GetMetadataActivityTransformer {
       return typeProperties;
     }
 
-    // Simple parameter substitution (shallow merge)
-    const result = { ...typeProperties };
-    
+    // Extract .value from Expression objects before merging
+    const sanitizedParams: Record<string, any> = {};
     for (const [key, value] of Object.entries(parameters)) {
-      if (value !== undefined) {
-        result[key] = value;
+      if (typeof value === 'object' && value !== null && 'value' in value && value.type === 'Expression') {
+        sanitizedParams[key] = value.value;
+      } else {
+        sanitizedParams[key] = value;
       }
     }
 
-    return result;
+    return {
+      ...typeProperties,
+      ...sanitizedParams
+    };
   }
 }
 

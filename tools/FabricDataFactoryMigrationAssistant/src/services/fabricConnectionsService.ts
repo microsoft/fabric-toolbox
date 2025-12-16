@@ -12,6 +12,7 @@ import type {
 export interface FabricConnectionResult {
   success: boolean;
   connectionId?: string;
+  connectionName?: string;  // NEW: Display name from Fabric API
   error?: string;
   apiRequestDetails?: APIRequestDetails;
 }
@@ -46,6 +47,47 @@ export class FabricConnectionsService {
       
       const payload = this.buildConnectionPayload(linkedService, creationMethodName);
       
+      // NEW: Validate parameters against schema BEFORE API call
+      if (supportedConnectionTypes && linkedService.selectedConnectionType) {
+        const connectionType = supportedConnectionTypes.find(
+          ct => ct.type === linkedService.selectedConnectionType
+        );
+        
+        if (connectionType?.creationMethods && connectionType.creationMethods.length > 0) {
+          const creationMethod = connectionType.creationMethods[0];
+          if (creationMethod?.parameters && payload.connectionDetails?.parameters) {
+            // Convert parameters array to Record for validation
+            const parametersRecord: Record<string, any> = {};
+            payload.connectionDetails.parameters.forEach((p: any) => {
+              parametersRecord[p.name] = p.value;
+            });
+            
+            const validationErrors = this.validatePayloadParameters(
+              parametersRecord,
+              creationMethod.parameters
+            );
+            
+            if (validationErrors.length > 0) {
+              console.error(`❌ Parameter validation failed for ${payload.displayName}:`, validationErrors);
+              return {
+                success: false,
+                error: 'Parameter validation failed',
+                errorDetails: validationErrors,
+                apiRequestDetails: {
+                  method: 'POST',
+                  endpoint: `${this.baseUrl}/connections`,
+                  payload: this.maskSensitiveData(payload),
+                  headers: { 'Authorization': 'Bearer [REDACTED]', 'Content-Type': 'application/json' },
+                  validationErrors: validationErrors  // NEW: Capture validation errors
+                }
+              };
+            } else {
+              console.log(`✓ Parameter validation passed for ${payload.displayName}`);
+            }
+          }
+        }
+      }
+      
       const response = await fetch(`${this.baseUrl}/connections`, {
         method: 'POST',
         headers: {
@@ -69,9 +111,21 @@ export class FabricConnectionsService {
         };
       }
 
+      // Capture connection name from API response
+      const connectionName = responseData.displayName || payload.displayName || 'Unknown';
+
+      console.log(`✓ Fabric API returned connection:`, {
+        id: responseData.id,
+        displayName: responseData.displayName,
+        payloadName: payload.displayName,
+        capturedName: connectionName,
+        hasDisplayName: !!responseData.displayName
+      });
+
       return {
         success: true,
         connectionId: responseData.id,
+        connectionName: connectionName,  // NEW: Captured from API response
         apiRequestDetails: {
           method: 'POST',
           endpoint: `${this.baseUrl}/connections`,
@@ -90,6 +144,35 @@ export class FabricConnectionsService {
         }
       };
     }
+  }
+
+  /**
+   * Validates connection payload parameters against schema
+   * Returns array of validation error messages (empty if valid)
+   */
+  private validatePayloadParameters(
+    parameters: Record<string, any>,
+    schemaParameters: Array<{ name: string; required?: boolean }>
+  ): string[] {
+    const errors: string[] = [];
+    const schemaParamNames = new Set(schemaParameters.map(p => p.name));
+    
+    // Check for unexpected parameters (not in schema)
+    Object.keys(parameters).forEach(paramName => {
+      if (!schemaParamNames.has(paramName)) {
+        errors.push(`Unexpected parameter '${paramName}' not in schema`);
+      }
+    });
+    
+    // Check for missing or empty required parameters
+    schemaParameters.forEach(schemaParam => {
+      if (schemaParam.required && (!parameters[schemaParam.name] || 
+          (typeof parameters[schemaParam.name] === 'string' && parameters[schemaParam.name].trim() === ''))) {
+        errors.push(`Required parameter '${schemaParam.name}' is missing or empty`);
+      }
+    });
+    
+    return errors;
   }
 
   /**

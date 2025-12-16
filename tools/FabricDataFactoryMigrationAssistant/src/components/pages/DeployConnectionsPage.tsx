@@ -157,6 +157,15 @@ export function DeployConnectionsPage({}: DeployConnectionsPageProps) {
         if (deploymentResult?.status === 'success' && deploymentResult.fabricConnectionId) {
           console.log(`✓ Updating ${ls.linkedServiceName}: ${deploymentResult.fabricConnectionId}`);
           addLog(`Updated mapping: ${ls.linkedServiceName} → ${deploymentResult.fabricConnectionId}`);
+          
+          // Add validation logging
+          console.log(`Connection name for ${ls.linkedServiceName}:`, {
+            fromFabricAPI: deploymentResult.fabricConnectionName,
+            fallback: ls.linkedServiceName,
+            usingFallback: !deploymentResult.fabricConnectionName,
+            finalValue: deploymentResult.fabricConnectionName || ls.linkedServiceName
+          });
+          
           return {
             ...ls,
             status: 'deployed' as const,
@@ -199,6 +208,16 @@ export function DeployConnectionsPage({}: DeployConnectionsPageProps) {
       dispatch({
         type: 'BUILD_LINKEDSERVICE_CONNECTION_BRIDGE',
         payload: updatedBridge
+      });
+
+      // DEFENSIVE: Also update connectionService singleton immediately
+      // This ensures mapping is available even if user navigates away and back
+      console.log('Updating connectionService with deployed connection IDs...');
+      const { connectionService } = await import('../../services/connectionService');
+      connectionService.setConnectionMapping(results);
+      console.log('✓ connectionService updated with deployed mappings:', {
+        mappingCount: results.filter(r => r.status === 'success').length,
+        totalResults: results.length
       });
 
       console.log('✓ Connection mappings and bridge updated with deployed IDs');
