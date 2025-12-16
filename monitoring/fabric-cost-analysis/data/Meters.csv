@@ -84,3 +84,6 @@ user data functions Capacity Usage CU,user data functions Capacity Usage CU,GA,F
 VNet Data Gateway Capacity Usage CU,VNet Data Gateway Capacity Usage CU,GA,FALSE,TRUE,VNET
 OneLake BCDR Other Operations via proxy Capacity Usage CU,OneLake BCDR Other Operations via proxy Capacity Usage CU,GA,FALSE,TRUE,OneLake
 OneLake BCDR Read Operations via Proxy Capacity Usage CU,OneLake BCDR Read Operations via Proxy Capacity Usage CU,GA,FALSE,TRUE,OneLake
+Operations Agents Compute Capacity Usage CU,Operations Agents Compute,GA,FALSE,TRUE,Operations Agents
+Copilot and AI Capacity Usage CU,Represents Copilot and AI on your capacity,GA,FALSE,TRUE,Copilot
+Operations Agents Autonomous Reasoning Capacity Usage CU,Operations Agents Autonomous Reasoning Capacity Usage CU,GA,FALSE,TRUE,Operations Agents
