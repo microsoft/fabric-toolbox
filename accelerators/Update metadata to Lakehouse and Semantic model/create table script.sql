@@ -7,14 +7,16 @@ CREATE TABLE IF NOT EXISTS Policyholder (
     phone STRING,
     email STRING,
     date_of_birth DATE
-);
+)
+USING DELTA;
 
 CREATE TABLE IF NOT EXISTS Vehicle (
     vin STRING,
     make STRING,
     model STRING,
     year INT
-);
+)
+USING DELTA;
 
 CREATE TABLE IF NOT EXISTS Policy (
     policy_number STRING,
@@ -24,14 +26,16 @@ CREATE TABLE IF NOT EXISTS Policy (
     end_date DATE,
     coverage_type STRING,
     premium DOUBLE
-);
+)
+USING DELTA;
 
 CREATE TABLE IF NOT EXISTS Adjuster (
     id BIGINT,
     name STRING,
     phone STRING,
     email STRING
-);
+)
+USING DELTA;
 
 CREATE TABLE IF NOT EXISTS Accident (
     accident_id BIGINT,
@@ -41,7 +45,8 @@ CREATE TABLE IF NOT EXISTS Accident (
     location STRING,
     accident_type STRING,
     severity STRING
-);
+)
+USING DELTA;
 
 CREATE TABLE IF NOT EXISTS Claim (
     claim_number STRING,
@@ -52,7 +57,8 @@ CREATE TABLE IF NOT EXISTS Claim (
     adjuster_id BIGINT,
     claim_amount DOUBLE,
     payout_amount DOUBLE
-);
+)
+USING DELTA;
 
 CREATE TABLE IF NOT EXISTS Driver_Telemetry_Data (
     Trip_ID STRING,
