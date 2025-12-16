@@ -98,17 +98,32 @@ export class CopyActivityTransformer {
     pipelineName?: string
   ): any {
     const typeProperties = activity.typeProperties || {};
+    const activityName = activity.name;
     
     const transformed: any = {
-      source: this.transformCopySource(typeProperties.source || {}, datasetMappings, pipelineConnectionMappings),
-      sink: this.transformCopySink(typeProperties.sink || {}, datasetMappings, pipelineConnectionMappings),
+      source: this.transformCopySource(
+        typeProperties.source || {}, 
+        datasetMappings, 
+        pipelineConnectionMappings,
+        pipelineReferenceMappings,
+        pipelineName,
+        activityName
+      ),
+      sink: this.transformCopySink(
+        typeProperties.sink || {}, 
+        datasetMappings, 
+        pipelineConnectionMappings,
+        pipelineReferenceMappings,
+        pipelineName,
+        activityName
+      ),
       enableStaging: typeProperties.enableStaging || false,
       stagingSettings: this.transformStagingSettings(
         typeProperties.stagingSettings, 
         pipelineConnectionMappings,
         pipelineReferenceMappings,
         pipelineName,
-        activity.name
+        activityName
       ),
       parallelCopies: typeProperties.parallelCopies || undefined,
       dataIntegrationUnits: typeProperties.dataIntegrationUnits || undefined,
@@ -133,7 +148,14 @@ export class CopyActivityTransformer {
    * @param pipelineConnectionMappings The connection mappings
    * @returns The transformed source with datasetSettings
    */
-  private transformCopySource(source: any, datasetMappings: any, pipelineConnectionMappings?: any): any {
+  private transformCopySource(
+    source: any, 
+    datasetMappings: any, 
+    pipelineConnectionMappings?: any,
+    pipelineReferenceMappings?: Record<string, Record<string, string>>,
+    pipelineName?: string,
+    activityName?: string
+  ): any {
     const sourceDataset = datasetMappings.sourceDataset;
     const sourceParameters = datasetMappings.sourceParameters || {};
 
@@ -172,7 +194,10 @@ export class CopyActivityTransformer {
       sourceParameters,
       'source',
       linkedServiceName,
-      pipelineConnectionMappings
+      pipelineConnectionMappings,
+      pipelineReferenceMappings,
+      pipelineName,
+      activityName
     );
 
     return {
@@ -189,7 +214,14 @@ export class CopyActivityTransformer {
    * @param pipelineConnectionMappings The connection mappings
    * @returns The transformed sink with datasetSettings
    */
-  private transformCopySink(sink: any, datasetMappings: any, pipelineConnectionMappings?: any): any {
+  private transformCopySink(
+    sink: any, 
+    datasetMappings: any, 
+    pipelineConnectionMappings?: any,
+    pipelineReferenceMappings?: Record<string, Record<string, string>>,
+    pipelineName?: string,
+    activityName?: string
+  ): any {
     const sinkDataset = datasetMappings.sinkDataset;
     const sinkParameters = datasetMappings.sinkParameters || {};
 
@@ -228,7 +260,10 @@ export class CopyActivityTransformer {
       sinkParameters,
       'sink',
       linkedServiceName,
-      pipelineConnectionMappings
+      pipelineConnectionMappings,
+      pipelineReferenceMappings,
+      pipelineName,
+      activityName
     );
 
     return {
@@ -291,56 +326,75 @@ export class CopyActivityTransformer {
 
   /**
    * Gets the connection ID for a LinkedService from the pipeline connection mappings
+   * Uses 4-tier fallback: Priority 1 = NEW referenceMappings, Priority 2 = OLD pipelineConnectionMappings
    * @param linkedServiceName The LinkedService name
-   * @param pipelineConnectionMappings The connection mappings
-   * @returns The Fabric connection ID or undefined
+   * @param pipelineConnectionMappings The OLD format connection mappings
+   * @param pipelineReferenceMappings The NEW format reference mappings
+   * @param pipelineName The current pipeline name
+   * @param activityName The current activity name
+   * @param role The dataset role (source or sink)
+   * @returns The connection ID if found, undefined otherwise
    */
-  private getConnectionIdForLinkedService(linkedServiceName?: string, pipelineConnectionMappings?: any): string | undefined {
-    if (!linkedServiceName || !pipelineConnectionMappings) {
-      console.warn(`Missing parameters for connection lookup: linkedServiceName=${linkedServiceName}, hasMappings=${Boolean(pipelineConnectionMappings)}`);
+  private getConnectionIdForLinkedService(
+    linkedServiceName?: string, 
+    pipelineConnectionMappings?: any,
+    pipelineReferenceMappings?: Record<string, Record<string, string>>,
+    pipelineName?: string,
+    activityName?: string,
+    role?: 'source' | 'sink'
+  ): string | undefined {
+    if (!linkedServiceName) {
+      console.warn('No LinkedService name provided for connection lookup');
+      return undefined;
+    }
+
+    // PRIORITY 1: Try NEW referenceMappings (referenceId-based format)
+    if (pipelineReferenceMappings && pipelineName && activityName && role) {
+      const pipelineMappings = pipelineReferenceMappings[pipelineName];
+      if (pipelineMappings) {
+        const referenceId = `${pipelineName}_${activityName}_${role}`;
+        const connectionId = pipelineMappings[referenceId];
+        if (connectionId) {
+          console.log(`🎯 Found connection via NEW referenceMappings: ${referenceId} -> ${connectionId}`);
+          return connectionId;
+        }
+      }
+    }
+
+    // PRIORITY 2: Try OLD pipelineConnectionMappings (backward compatibility)
+    if (!pipelineConnectionMappings) {
+      console.warn('No connection mappings available');
       return undefined;
     }
 
     console.log(`Looking for connection mapping for LinkedService: ${linkedServiceName}`);
-    console.log(`Available pipeline mappings:`, Object.keys(pipelineConnectionMappings));
 
     // Look through all pipeline mappings to find the connection ID for this LinkedService
-    for (const pipelineName in pipelineConnectionMappings) {
-      const pipelineMappings = pipelineConnectionMappings[pipelineName];
-      console.log(`Checking pipeline '${pipelineName}' with ${Object.keys(pipelineMappings).length} mappings`);
+    for (const pName in pipelineConnectionMappings) {
+      const pipelineMappings = pipelineConnectionMappings[pName];
       
       for (const activityKey in pipelineMappings) {
         const mapping = pipelineMappings[activityKey];
         
-        console.log(`Checking mapping for key '${activityKey}':`, {
-          hasLinkedServiceRef: Boolean(mapping?.linkedServiceReference),
-          linkedServiceRefName: mapping?.linkedServiceReference?.name,
-          hasSelectedConnectionId: Boolean(mapping?.selectedConnectionId),
-          selectedConnectionId: mapping?.selectedConnectionId,
-          activityName: mapping?.activityName,
-          activityType: mapping?.activityType
-        });
-        
         // Check by LinkedService reference name
         if (mapping?.linkedServiceReference?.name === linkedServiceName && mapping?.selectedConnectionId) {
-          console.log(`✅ Found connection mapping by LinkedService reference: ${linkedServiceName} -> ${mapping.selectedConnectionId} (via ${pipelineName}.${activityKey})`);
+          console.log(`✅ Found connection via OLD mappings (LinkedService match): ${linkedServiceName} -> ${mapping.selectedConnectionId}`);
           return mapping.selectedConnectionId;
         }
         
-        // Check if the activity key contains the LinkedService name (for unique ID mappings like activityName_linkedServiceName_index)
+        // Check if the activity key contains the LinkedService name
         if (activityKey.includes(linkedServiceName) && mapping?.selectedConnectionId) {
-          console.log(`✅ Found connection mapping by activity key pattern: ${linkedServiceName} -> ${mapping.selectedConnectionId} (via ${pipelineName}.${activityKey})`);
+          console.log(`✅ Found connection via OLD mappings (key pattern): ${linkedServiceName} -> ${mapping.selectedConnectionId}`);
           return mapping.selectedConnectionId;
         }
 
-        // Additional check: look for LinkedService name in the mapping structure itself
+        // Check mapping structure for LinkedService name
         if (mapping?.selectedConnectionId) {
-          // Check if this mapping is for the LinkedService we're looking for
           const mappingLinkedServiceName = mapping?.linkedServiceReference?.name || 
-                                          (activityKey.split('_').find(part => part === linkedServiceName));
+                                          (activityKey.split('_').find((part: string) => part === linkedServiceName));
           
           if (mappingLinkedServiceName === linkedServiceName) {
-            console.log(`✅ Found connection mapping by deep search: ${linkedServiceName} -> ${mapping.selectedConnectionId} (via ${pipelineName}.${activityKey})`);
+            console.log(`✅ Found connection via OLD mappings (deep search): ${linkedServiceName} -> ${mapping.selectedConnectionId}`);
             return mapping.selectedConnectionId;
           }
         }
@@ -348,7 +402,6 @@ export class CopyActivityTransformer {
     }
 
     console.warn(`❌ No connection mapping found for LinkedService: ${linkedServiceName}`);
-    console.log(`Available mappings for debugging:`, JSON.stringify(pipelineConnectionMappings, null, 2));
     return undefined;
   }
 

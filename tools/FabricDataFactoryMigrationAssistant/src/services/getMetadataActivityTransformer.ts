@@ -278,20 +278,48 @@ export class GetMetadataActivityTransformer {
     const originalTypeProperties = datasetComponent.definition?.properties?.typeProperties || {};
     const datasetType = datasetComponent.definition?.properties?.type;
 
-    // Apply parameter substitution
-    const typePropertiesWithParams = this.applyParametersToTypeProperties(originalTypeProperties, parameters);
+    // Extract parameter values from Expression objects
+    const extractValue = (param: any): any => {
+      if (param && typeof param === 'object' && 'value' in param && param.type === 'Expression') {
+        return param.value;
+      }
+      return param;
+    };
 
-    // For SQL datasets, ensure we have the required properties
-    if (datasetType === 'SqlServerTable' || datasetType === 'AzureSqlTable') {
+    // For Binary/Blob datasets (used by GetMetadata), build proper location structure
+    if (datasetType === 'Binary' || datasetType === 'AzureBlobStorage' || datasetType === 'AzureBlob') {
+      const container = extractValue(parameters.Container) || extractValue(originalTypeProperties.container);
+      const directory = extractValue(parameters.Directory) || extractValue(parameters.Folder) || extractValue(originalTypeProperties.folderPath);
+      
       return {
-        schema: typePropertiesWithParams.schema,
-        table: typePropertiesWithParams.table,
-        database: typePropertiesWithParams.database
+        location: {
+          type: originalTypeProperties.location?.type || 'AzureBlobStorageLocation',
+          folderPath: directory 
+            ? { value: `@{dataset().Directory}`, type: 'Expression' }
+            : originalTypeProperties.location?.folderPath,
+          container: container
+            ? { value: `@{dataset().Container}`, type: 'Expression' }
+            : originalTypeProperties.location?.container
+        }
+        // DO NOT include Container/Directory at top level - they go in location only
       };
     }
 
-    // For other types, return as-is
-    return typePropertiesWithParams;
+    // For SQL datasets, return minimal required properties
+    if (datasetType === 'SqlServerTable' || datasetType === 'AzureSqlTable') {
+      const schema = extractValue(parameters.SchemaName) || extractValue(parameters.schema) || originalTypeProperties.schema;
+      const table = extractValue(parameters.TableName) || extractValue(parameters.table) || originalTypeProperties.table;
+      const database = extractValue(parameters.Database) || extractValue(parameters.database) || originalTypeProperties.database;
+      
+      return {
+        schema,
+        table,
+        database
+      };
+    }
+
+    // For other types, apply parameter substitution without duplicates
+    return this.applyParametersToTypeProperties(originalTypeProperties, parameters);
   }
 
   /**
