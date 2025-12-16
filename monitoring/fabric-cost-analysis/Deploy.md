@@ -145,7 +145,7 @@ Steps to update:
 - 2 - Remove the old "00_Deploy_FCA" Notebook from your workspace
 - 3 - Import the updated notebook into your FCA workspace
 - 4 - Run the 00_Deploy_FCA.ipynb Notebook
-- 5 - Update Pipeline parameters
+- 5 - Update Pipeline activities and parameters
 - 6 - Open PBI report
 
 >ℹ️ This notebook is designed to initially deploy or update all the items in your FCA workspace. You do not need to manually run the Load FCA E2E pipeline after an update. During the next pipeline run, FCA will also check and update the status of your FCA version on the first page of the FCA_Core_Report:
