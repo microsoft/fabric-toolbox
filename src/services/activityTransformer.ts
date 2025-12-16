@@ -93,16 +93,26 @@ export class ActivityTransformer {
   }
 
   convertStoredProcedureActivityExpressions(typeProperties: any): void {
+    // Only wrap storedProcedureName if it contains dynamic expressions (starts with @)
+    // ADF keeps static procedure names as plain strings
     if (typeProperties.storedProcedureName && typeof typeProperties.storedProcedureName === 'string') {
-      typeProperties.storedProcedureName = { value: typeProperties.storedProcedureName, type: 'Expression' };
+      if (typeProperties.storedProcedureName.includes('@')) {
+        console.log(`Wrapping dynamic storedProcedureName as Expression: ${typeProperties.storedProcedureName}`);
+        typeProperties.storedProcedureName = { 
+          value: typeProperties.storedProcedureName, 
+          type: 'Expression' 
+        };
+      } else {
+        console.log(`Keeping static storedProcedureName as plain string: ${typeProperties.storedProcedureName}`);
+        // Keep as plain string - no transformation needed
+      }
     }
 
+    // Parameters in ADF are already Expression objects or need to be wrapped
+    // Don't re-wrap if already wrapped
     if (typeProperties.storedProcedureParameters && typeof typeProperties.storedProcedureParameters === 'object') {
-      for (const [paramName, paramValue] of Object.entries(typeProperties.storedProcedureParameters)) {
-        if (typeof paramValue === 'string') {
-          typeProperties.storedProcedureParameters[paramName] = { value: paramValue, type: 'Expression' };
-        }
-      }
+      // Parameters are already properly formatted in ADF, no transformation needed
+      // They come as objects with { value: ..., type: "Int16" } structure
     }
   }
 
