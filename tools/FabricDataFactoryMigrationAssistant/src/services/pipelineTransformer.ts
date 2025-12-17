@@ -265,7 +265,190 @@ export class PipelineTransformer {
       });
     }
 
+    // Validate transformed activities
+    if (pipelineName) {
+      console.log(`\n🔍 Validating transformed pipeline: ${pipelineName}`);
+      const validationErrors: string[] = [];
+      fabricPipelineDefinition.properties.activities.forEach((activity: any) => {
+        validationErrors.push(...this.validateActivity(activity, 0));
+      });
+
+      if (validationErrors.length > 0) {
+        console.error(`\n❌ Pipeline '${pipelineName}' has ${validationErrors.length} validation errors:`);
+        validationErrors.forEach(error => console.error(error));
+        
+        // Don't throw - log errors but allow deployment (some may be warnings)
+        console.warn(`⚠️ Pipeline '${pipelineName}' has validation issues but transformation will continue`);
+      } else {
+        console.log(`✅ Pipeline '${pipelineName}' validated successfully (${outputActivitiesCount} activities)`);
+      }
+    }
+
     return fabricPipelineDefinition;
+  }
+
+  /**
+   * Recursively validates transformed activities for common issues
+   * @param activity The activity to validate
+   * @param depth Nesting depth for logging
+   * @returns Array of validation error messages
+   */
+  private validateActivity(activity: any, depth: number = 0): string[] {
+    const errors: string[] = [];
+    const indent = '  '.repeat(depth);
+    
+    if (!activity || !activity.name || !activity.type) {
+      errors.push(`${indent}❌ Activity missing required name or type`);
+      return errors;
+    }
+    
+    // 1. Validate Copy activities
+    if (activity.type === 'Copy') {
+      if (activity.inputs || activity.outputs) {
+        errors.push(`${indent}❌ Copy '${activity.name}' still has inputs/outputs arrays (should use datasetSettings)`);
+      }
+      if (!activity.typeProperties?.source?.datasetSettings) {
+        errors.push(`${indent}❌ Copy '${activity.name}' missing source.datasetSettings`);
+      }
+      if (!activity.typeProperties?.sink?.datasetSettings) {
+        errors.push(`${indent}❌ Copy '${activity.name}' missing sink.datasetSettings`);
+      }
+      if (activity.typeProperties?.source?.datasetSettings && 
+          !activity.typeProperties.source.datasetSettings.externalReferences?.connection) {
+        errors.push(`${indent}❌ Copy '${activity.name}' missing source connection reference`);
+      }
+      if (activity.typeProperties?.sink?.datasetSettings && 
+          !activity.typeProperties.sink.datasetSettings.externalReferences?.connection) {
+        errors.push(`${indent}❌ Copy '${activity.name}' missing sink connection reference`);
+      }
+    }
+    
+    // 2. Validate ExecutePipeline was converted
+    if (activity.type === 'ExecutePipeline') {
+      errors.push(`${indent}❌ ExecutePipeline '${activity.name}' not converted to InvokePipeline`);
+    }
+    
+    // 3. Validate InvokePipeline has required properties
+    if (activity.type === 'InvokePipeline') {
+      if (!activity.externalReferences?.connection) {
+        errors.push(`${indent}⚠️ InvokePipeline '${activity.name}' missing externalReferences.connection (may fail deployment)`);
+      }
+      if (!activity.typeProperties?.operationType) {
+        errors.push(`${indent}❌ InvokePipeline '${activity.name}' missing typeProperties.operationType`);
+      }
+      if (activity.typeProperties?.operationType && activity.typeProperties.operationType !== 'InvokeFabricPipeline') {
+        errors.push(`${indent}❌ InvokePipeline '${activity.name}' has wrong operationType: ${activity.typeProperties.operationType}`);
+      }
+    }
+    
+    // 4. Validate Lookup has datasetSettings
+    if (activity.type === 'Lookup') {
+      if (activity.typeProperties?.dataset) {
+        errors.push(`${indent}❌ Lookup '${activity.name}' still has dataset reference (should be datasetSettings)`);
+      }
+      if (!activity.typeProperties?.datasetSettings) {
+        errors.push(`${indent}❌ Lookup '${activity.name}' missing datasetSettings`);
+      }
+      if (activity.typeProperties?.datasetSettings && 
+          !activity.typeProperties.datasetSettings.externalReferences?.connection) {
+        errors.push(`${indent}❌ Lookup '${activity.name}' missing connection reference`);
+      }
+    }
+    
+    // 5. Validate GetMetadata has datasetSettings
+    if (activity.type === 'GetMetadata') {
+      if (activity.typeProperties?.dataset) {
+        errors.push(`${indent}❌ GetMetadata '${activity.name}' still has dataset reference (should be datasetSettings)`);
+      }
+      if (!activity.typeProperties?.datasetSettings) {
+        errors.push(`${indent}❌ GetMetadata '${activity.name}' missing datasetSettings`);
+      }
+      if (activity.typeProperties?.datasetSettings && 
+          !activity.typeProperties.datasetSettings.externalReferences?.connection) {
+        errors.push(`${indent}❌ GetMetadata '${activity.name}' missing connection reference`);
+      }
+      
+      // Check for duplicate Container/Directory parameters
+      const typeProps = activity.typeProperties?.datasetSettings?.typeProperties;
+      if (typeProps) {
+        if (typeProps.Container && typeProps.location?.container) {
+          errors.push(`${indent}⚠️ GetMetadata '${activity.name}' has duplicate Container parameter`);
+        }
+        if (typeProps.Directory && typeProps.location?.folderPath) {
+          errors.push(`${indent}⚠️ GetMetadata '${activity.name}' has duplicate Directory parameter`);
+        }
+      }
+    }
+    
+    // 6. Validate StoredProcedure
+    if (activity.type === 'SqlServerStoredProcedure') {
+      const spName = activity.typeProperties?.storedProcedureName;
+      if (spName && typeof spName === 'object' && spName.type === 'Expression') {
+        // Only warn if it's a static string wrapped as Expression
+        if (!spName.value.includes('@')) {
+          errors.push(`${indent}⚠️ StoredProcedure '${activity.name}' has static name wrapped as Expression: ${spName.value}`);
+        }
+      }
+      if (!activity.externalReferences?.connection) {
+        errors.push(`${indent}❌ StoredProcedure '${activity.name}' missing externalReferences.connection`);
+      }
+    }
+    
+    // 7. Recursively validate nested activities
+    const typeProps = activity.typeProperties;
+    if (typeProps) {
+      // ForEach container
+      if (activity.type === 'ForEach' && typeProps.activities && Array.isArray(typeProps.activities)) {
+        console.log(`${indent}  Validating ForEach with ${typeProps.activities.length} nested activities...`);
+        typeProps.activities.forEach((nested: any) => {
+          errors.push(...this.validateActivity(nested, depth + 1));
+        });
+      }
+      
+      // IfCondition container
+      if (activity.type === 'IfCondition' || activity.type === 'If') {
+        if (typeProps.ifTrueActivities && Array.isArray(typeProps.ifTrueActivities)) {
+          console.log(`${indent}  Validating IfCondition.ifTrueActivities (${typeProps.ifTrueActivities.length} activities)...`);
+          typeProps.ifTrueActivities.forEach((nested: any) => {
+            errors.push(...this.validateActivity(nested, depth + 1));
+          });
+        }
+        if (typeProps.ifFalseActivities && Array.isArray(typeProps.ifFalseActivities)) {
+          console.log(`${indent}  Validating IfCondition.ifFalseActivities (${typeProps.ifFalseActivities.length} activities)...`);
+          typeProps.ifFalseActivities.forEach((nested: any) => {
+            errors.push(...this.validateActivity(nested, depth + 1));
+          });
+        }
+      }
+      
+      // Switch container
+      if (activity.type === 'Switch' && typeProps.cases) {
+        typeProps.cases.forEach((caseItem: any, index: number) => {
+          if (caseItem.activities && Array.isArray(caseItem.activities)) {
+            console.log(`${indent}  Validating Switch.case[${index}] (${caseItem.activities.length} activities)...`);
+            caseItem.activities.forEach((nested: any) => {
+              errors.push(...this.validateActivity(nested, depth + 1));
+            });
+          }
+        });
+        if (typeProps.defaultActivities && Array.isArray(typeProps.defaultActivities)) {
+          console.log(`${indent}  Validating Switch.defaultActivities (${typeProps.defaultActivities.length} activities)...`);
+          typeProps.defaultActivities.forEach((nested: any) => {
+            errors.push(...this.validateActivity(nested, depth + 1));
+          });
+        }
+      }
+      
+      // Until container
+      if (activity.type === 'Until' && typeProps.activities && Array.isArray(typeProps.activities)) {
+        console.log(`${indent}  Validating Until with ${typeProps.activities.length} nested activities...`);
+        typeProps.activities.forEach((nested: any) => {
+          errors.push(...this.validateActivity(nested, depth + 1));
+        });
+      }
+    }
+    
+    return errors;
   }
 
   extractActivitiesFromDefinition(properties: any): any[] {
@@ -392,7 +575,12 @@ export class PipelineTransformer {
         );
       } else if (activity.type === 'ExecutePipeline') {
         // Transform ExecutePipeline to InvokePipeline
-        transformedActivity = this.transformExecutePipelineToInvokePipeline(activity, connectionMappings);
+        transformedActivity = this.transformExecutePipelineToInvokePipeline(
+          activity, 
+          connectionMappings,
+          this.referenceMappings,
+          this.currentPipelineName
+        );
       }
 
       const finalActivity = {
@@ -411,8 +599,14 @@ export class PipelineTransformer {
       delete (finalActivity as any).linkedServiceName;
       delete (finalActivity as any).linkedService;
 
-      // Transform inputs/outputs for non-Copy and non-Custom activities
-      if (activity.type !== 'Copy' && activity.type !== 'Custom') {
+      // For Copy and Custom activities, explicitly delete inputs/outputs after transformation
+      // This guards against the spread operator reintroducing these properties
+      if (activity.type === 'Copy' || activity.type === 'Custom') {
+        console.log(`✅ Removed inputs/outputs from ${activity.type} activity: ${activity.name}`);
+        delete (finalActivity as any).inputs;
+        delete (finalActivity as any).outputs;
+      } else {
+        // Transform inputs/outputs for non-Copy and non-Custom activities
         finalActivity.inputs = activityTransformer.transformActivityInputs(activity.inputs || []);
         finalActivity.outputs = activityTransformer.transformActivityOutputs(activity.outputs || []);
       }
@@ -436,9 +630,13 @@ export class PipelineTransformer {
         // HDInsight activities are already fully transformed by hdinsightActivityTransformer
         // Return as-is to avoid overriding the detailed transformation
         return typeProperties;
+      case 'InvokePipeline':
+        // InvokePipeline activities are already fully transformed by transformExecutePipelineToInvokePipeline
+        // Return as-is to avoid overriding the detailed transformation (especially _originalTargetPipeline)
+        return typeProperties;
       case 'ExecutePipeline': return this.transformExecutePipelineProperties(typeProperties);
       case 'ForEach': return this.transformForEachActivityProperties(typeProperties, connectionMappings);
-      case 'If': return this.transformIfActivityProperties(typeProperties, connectionMappings);
+      case 'IfCondition': return this.transformIfActivityProperties(typeProperties, connectionMappings);
       case 'Switch': return this.transformSwitchActivityProperties(typeProperties, connectionMappings);
       case 'Until': return this.transformUntilActivityProperties(typeProperties, connectionMappings);
       case 'Wait': return this.transformWaitActivityProperties(typeProperties);
@@ -458,26 +656,50 @@ export class PipelineTransformer {
   /**
    * Get the mapped FabricDataPipelines connection ID for an ExecutePipeline activity
    * Looks up in referenceMappings[pipelineName][pipelineName_activityName_invoke]
+   * Prioritizes method parameters over class properties for flexibility
    */
-  private getConnectionIdForExecutePipeline(activityName: string): string | undefined {
-    if (!this.referenceMappings || !this.currentPipelineName) {
+  private getConnectionIdForExecutePipeline(
+    activityName: string,
+    pipelineReferenceMappings?: Record<string, Record<string, string>>,
+    pipelineName?: string
+  ): string | undefined {
+    // Prioritize passed parameters over class properties
+    const mappings = pipelineReferenceMappings || this.referenceMappings;
+    const currentPipeline = pipelineName || this.currentPipelineName;
+
+    if (!mappings || !currentPipeline) {
+      console.warn(`Cannot lookup ExecutePipeline connection: mappings=${Boolean(mappings)}, pipeline=${currentPipeline}`);
       return undefined;
     }
 
-    const pipelineMappings = this.referenceMappings[this.currentPipelineName];
+    const pipelineMappings = mappings[currentPipeline];
     if (!pipelineMappings) {
+      console.warn(`No reference mappings found for pipeline: ${currentPipeline}`);
       return undefined;
     }
 
     // Build referenceId: pipelineName_activityName_invoke
-    const referenceId = `${this.currentPipelineName}_${activityName}_invoke`;
-    return pipelineMappings[referenceId];
+    const referenceId = `${currentPipeline}_${activityName}_invoke`;
+    const connectionId = pipelineMappings[referenceId];
+    
+    if (connectionId) {
+      console.log(`🎯 Found FabricDataPipelines connection: ${referenceId} -> ${connectionId}`);
+    } else {
+      console.warn(`❌ No FabricDataPipelines connection found for ExecutePipeline: ${referenceId}`);
+    }
+    
+    return connectionId;
   }
 
   /**
    * Transform ExecutePipeline activity to InvokePipeline activity for Fabric
    */
-  transformExecutePipelineToInvokePipeline(activity: any, connectionMappings?: PipelineConnectionMappings): any {
+  transformExecutePipelineToInvokePipeline(
+    activity: any, 
+    connectionMappings?: PipelineConnectionMappings,
+    pipelineReferenceMappings?: Record<string, Record<string, string>>,
+    pipelineName?: string
+  ): any {
     if (!activity || activity.type !== 'ExecutePipeline') {
       return activity;
     }
@@ -507,7 +729,7 @@ export class PipelineTransformer {
       externalReferences: {
         // Look up the mapped FabricDataPipelines connection from pipelineReferenceMappings
         // Format: pipelineReferenceMappings[pipelineName][pipelineName_activityName_invoke]
-        connection: this.getConnectionIdForExecutePipeline(activity.name) || '' // Resolved from mappings
+        connection: this.getConnectionIdForExecutePipeline(activity.name, pipelineReferenceMappings, pipelineName) || ''
       },
       // Store original reference for deployment logic
       _originalTargetPipeline: activity.typeProperties?.pipeline?.referenceName
