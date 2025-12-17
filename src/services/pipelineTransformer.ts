@@ -630,9 +630,13 @@ export class PipelineTransformer {
         // HDInsight activities are already fully transformed by hdinsightActivityTransformer
         // Return as-is to avoid overriding the detailed transformation
         return typeProperties;
+      case 'InvokePipeline':
+        // InvokePipeline activities are already fully transformed by transformExecutePipelineToInvokePipeline
+        // Return as-is to avoid overriding the detailed transformation (especially _originalTargetPipeline)
+        return typeProperties;
       case 'ExecutePipeline': return this.transformExecutePipelineProperties(typeProperties);
       case 'ForEach': return this.transformForEachActivityProperties(typeProperties, connectionMappings);
-      case 'If': return this.transformIfActivityProperties(typeProperties, connectionMappings);
+      case 'IfCondition': return this.transformIfActivityProperties(typeProperties, connectionMappings);
       case 'Switch': return this.transformSwitchActivityProperties(typeProperties, connectionMappings);
       case 'Until': return this.transformUntilActivityProperties(typeProperties, connectionMappings);
       case 'Wait': return this.transformWaitActivityProperties(typeProperties);

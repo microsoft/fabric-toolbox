@@ -328,6 +328,40 @@ export interface AppState {
   
   /** Bridge mapping LinkedService names to Fabric connection IDs */
   linkedServiceConnectionBridge?: Record<string, {
+
+---
+
+## Common Pitfalls
+
+### Activity Type Name Mismatches ⚠️
+
+**Issue:** Switch statements must use exact ADF activity type names from ARM templates.
+
+**Wrong:**
+```typescript
+switch (activityType) {
+  case 'If': return transformIfProperties(...);  // ❌ ADF uses 'IfCondition'
+  case 'Web': return transformWebProperties(...); // ❌ Verify: might be 'WebActivity'
+}
+```
+
+**Correct:**
+```typescript
+switch (activityType) {
+  case 'IfCondition': return transformIfProperties(...); // ✅ Matches ADF ARM template
+  case 'ForEach': return transformForEachProperties(...); // ✅ Matches ADF ARM template
+}
+```
+
+**How to Verify:**
+1. Check actual ARM template: `grep -r '"type":' [template.json]`
+2. Search console logs: Activity processing logs show actual type values
+3. Add test coverage: Include real ARM template examples in tests
+
+**Real Example:**
+The IfCondition bug (Dec 2025) was caused by using `case 'If':` instead of `case 'IfCondition':`, preventing nested activities from being transformed and causing deployment failures with "ExternalReferences cannot be null" errors.
+
+---
     connectionId: string;
     connectionDisplayName?: string;
     linkedServiceName: string;

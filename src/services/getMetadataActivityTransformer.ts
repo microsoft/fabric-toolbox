@@ -1,4 +1,5 @@
 import { adfParserService } from './adfParserService';
+import { DatasetParameterSubstitution } from './utils/datasetParameterSubstitution';
 
 /**
  * Service for transforming ADF GetMetadata activities to Fabric format
@@ -121,11 +122,22 @@ export class GetMetadataActivityTransformer {
   ): any {
     const properties = datasetComponent.definition?.properties || {};
 
+    // Build initial datasetSettings structure
+    let datasetTypeProperties = this.buildDatasetTypeProperties(datasetComponent, parameters);
+    
+    // Apply parameter substitution to replace ALL @dataset() references
+    // This handles cases like: { value: "@dataset().p_Container", type: "Expression" } → "containerName"
+    console.log(`[GetMetadata] Applying parameter substitution for activity with parameters:`, parameters);
+    datasetTypeProperties = DatasetParameterSubstitution.applyParametersToTypeProperties(
+      datasetTypeProperties,
+      parameters
+    );
+    
     const datasetSettings = {
       annotations: properties.annotations || [],
       type: this.convertADFDatasetTypeToFabricType(properties.type || 'Unknown'),
       schema: properties.schema || [],
-      typeProperties: this.buildDatasetTypeProperties(datasetComponent, parameters),
+      typeProperties: datasetTypeProperties,
       externalReferences: connectionId ? { connection: connectionId } : undefined
     };
 
@@ -295,10 +307,10 @@ export class GetMetadataActivityTransformer {
         location: {
           type: originalTypeProperties.location?.type || 'AzureBlobStorageLocation',
           folderPath: directory 
-            ? { value: `@{dataset().Directory}`, type: 'Expression' }
+            ? { value: directory, type: 'Expression' }
             : originalTypeProperties.location?.folderPath,
           container: container
-            ? { value: `@{dataset().Container}`, type: 'Expression' }
+            ? { value: container, type: 'Expression' }
             : originalTypeProperties.location?.container
         }
         // DO NOT include Container/Directory at top level - they go in location only
