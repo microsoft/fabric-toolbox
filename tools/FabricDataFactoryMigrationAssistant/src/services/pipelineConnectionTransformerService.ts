@@ -112,9 +112,9 @@ export class PipelineConnectionTransformerService {
       }
 
       // ============================================================================
-      // LOOKUP/GETMETADATA HANDLER (existing)
+      // LOOKUP/GETMETADATA/DELETE HANDLER (existing + Delete added)
       // ============================================================================
-      if ((activity.type === 'Lookup' || activity.type === 'GetMetadata') && 
+      if ((activity.type === 'Lookup' || activity.type === 'GetMetadata' || activity.type === 'Delete') && 
           activity.typeProperties?.datasetSettings) {
         
         console.log(`${indent}Applying dataset-level connection for ${activity.type} activity '${activity.name}'`);

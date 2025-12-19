@@ -97,6 +97,46 @@ class ADFParserService {
     }
   ];
 
+  /**
+   * Unescape ARM template bracket escaping
+   * ARM templates use [[ to represent literal [ character
+   * This recursively walks the object and converts [[ back to [
+   * 
+   * Examples:
+   * - "[[dbo].[getOrderKeys]" → "[dbo].[getOrderKeys]"
+   * - Handles nested objects and arrays (activities, parameters, etc.)
+   * 
+   * @param obj Any object/value from ARM template
+   * @returns Same object with ARM bracket escaping removed
+   */
+  private unescapeARMBrackets(obj: any): any {
+    if (obj === null || obj === undefined) {
+      return obj;
+    }
+
+    // Handle strings - replace [[ with [
+    if (typeof obj === 'string') {
+      return obj.replace(/\[\[/g, '[');
+    }
+
+    // Handle arrays recursively
+    if (Array.isArray(obj)) {
+      return obj.map(item => this.unescapeARMBrackets(item));
+    }
+
+    // Handle objects recursively
+    if (typeof obj === 'object') {
+      const result: any = {};
+      for (const [key, value] of Object.entries(obj)) {
+        result[key] = this.unescapeARMBrackets(value);
+      }
+      return result;
+    }
+
+    // Return primitives as-is
+    return obj;
+  }
+
   async parseARMTemplate(fileContent: string): Promise<ADFComponent[]> {
     const parseResult = safeJsonParse<ARMTemplate>(fileContent);
     
@@ -145,8 +185,12 @@ class ADFParserService {
       }
     }
 
+    // Unescape ARM template brackets in all components (fixes [[ -> [)
+    console.log('[ADFParserService] Unescaping ARM template brackets...');
+    const unescapedComponents = components.map(component => this.unescapeARMBrackets(component));
+
     // Apply validation rules to each component
-    const validatedComponents = components.map(component => this.validateComponent(component));
+    const validatedComponents = unescapedComponents.map(component => this.validateComponent(component));
     
     // Detect global parameters from pipelines (NEW)
     console.log('[ADFParserService] Detecting global parameters...');
