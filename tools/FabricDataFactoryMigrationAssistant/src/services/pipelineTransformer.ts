@@ -1,6 +1,7 @@
 import { activityTransformer } from './activityTransformer';
 import { copyActivityTransformer } from './copyActivityTransformer';
 import { customActivityTransformer } from './customActivityTransformer';
+import { deleteActivityTransformer } from './deleteActivityTransformer';
 import { hdinsightActivityTransformer } from './hdinsightActivityTransformer';
 import { lookupActivityTransformer } from './lookupActivityTransformer';
 import { getMetadataActivityTransformer } from './getMetadataActivityTransformer';
@@ -380,7 +381,21 @@ export class PipelineTransformer {
       }
     }
     
-    // 6. Validate StoredProcedure
+    // 6. Validate Delete has datasetSettings
+    if (activity.type === 'Delete') {
+      if (activity.typeProperties?.dataset) {
+        errors.push(`${indent}❌ Delete '${activity.name}' still has dataset reference (should be datasetSettings)`);
+      }
+      if (!activity.typeProperties?.datasetSettings) {
+        errors.push(`${indent}❌ Delete '${activity.name}' missing datasetSettings`);
+      }
+      if (activity.typeProperties?.datasetSettings && 
+          !activity.typeProperties.datasetSettings.externalReferences?.connection) {
+        errors.push(`${indent}❌ Delete '${activity.name}' missing connection reference`);
+      }
+    }
+    
+    // 7. Validate StoredProcedure
     if (activity.type === 'SqlServerStoredProcedure') {
       const spName = activity.typeProperties?.storedProcedureName;
       if (spName && typeof spName === 'object' && spName.type === 'Expression') {
@@ -554,6 +569,22 @@ export class PipelineTransformer {
         
         // Transform GetMetadata activities with dataset to datasetSettings
         transformedActivity = getMetadataActivityTransformer.transformGetMetadataActivity(
+          activity,
+          connectionMappings,
+          this.referenceMappings,
+          this.currentPipelineName
+        );
+      } else if (activity.type === 'Delete') {
+        console.log(`Transforming Delete activity '${activity.name}' with mappings:`, {
+          pipelineName: this.currentPipelineName,
+          hasConnectionMappings: Boolean(connectionMappings),
+          hasReferenceMappings: Boolean(this.referenceMappings),
+          referenceMappingsForPipeline: this.referenceMappings && this.currentPipelineName ? 
+            Object.keys(this.referenceMappings[this.currentPipelineName] || {}) : []
+        });
+        
+        // Transform Delete activities with dataset to datasetSettings
+        transformedActivity = deleteActivityTransformer.transformDeleteActivity(
           activity,
           connectionMappings,
           this.referenceMappings,
