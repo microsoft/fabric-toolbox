@@ -31,13 +31,5 @@ pids
 .file-manifest
 .devcontainer/
 
-# Temporary files for deletion
-DELETEME/
 
-# GitHub configuration and documentation
-.github/agents
-.github/collections
-.github/instructions
-.github/prompts
-docs/features/delete-activity-transformer
 
