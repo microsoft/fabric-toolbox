@@ -1,0 +1,317 @@
+{
+    "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.5.0/schema.json",
+    "name": "3ee39fb3c6627697f90b",
+    "position": {
+        "x": 180.67151061791944,
+        "y": 775.0047153504297,
+        "z": 64005,
+        "height": 51.66666666666667,
+        "width": 67.5,
+        "tabOrder": 64005
+    },
+    "visual": {
+        "visualType": "card",
+        "query": {
+            "queryState": {
+                "Values": {
+                    "projections": [
+                        {
+                            "field": {
+                                "Measure": {
+                                    "Expression": {
+                                        "SourceRef": {
+                                            "Entity": "Metrics"
+                                        }
+                                    },
+                                    "Property": "Widely Shared Organisation Links"
+                                }
+                            },
+                            "queryRef": "Metrics.Widely Shared Organisation Links",
+                            "nativeQueryRef": "Widely Shared Organisation Links"
+                        }
+                    ]
+                }
+            },
+            "sortDefinition": {
+                "sort": [
+                    {
+                        "field": {
+                            "Measure": {
+                                "Expression": {
+                                    "SourceRef": {
+                                        "Entity": "Metrics"
+                                    }
+                                },
+                                "Property": "Widely Shared Organisation Links"
+                            }
+                        },
+                        "direction": "Descending"
+                    }
+                ],
+                "isDefaultSort": true
+            }
+        },
+        "objects": {
+            "general": [
+                {
+                    "properties": {}
+                }
+            ],
+            "labels": [
+                {
+                    "properties": {
+                        "fontSize": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "15D"
+                                }
+                            }
+                        },
+                        "labelDisplayUnits": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "1D"
+                                }
+                            }
+                        }
+                    }
+                }
+            ],
+            "categoryLabels": [
+                {
+                    "properties": {
+                        "fontSize": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "9D"
+                                }
+                            }
+                        },
+                        "show": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "false"
+                                }
+                            }
+                        }
+                    }
+                }
+            ]
+        },
+        "visualContainerObjects": {
+            "dropShadow": [
+                {
+                    "properties": {
+                        "show": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "false"
+                                }
+                            }
+                        },
+                        "color": {
+                            "solid": {
+                                "color": {
+                                    "expr": {
+                                        "ThemeDataColor": {
+                                            "ColorId": 0,
+                                            "Percent": -0.2
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            ],
+            "border": [
+                {
+                    "properties": {
+                        "radius": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "5D"
+                                }
+                            }
+                        },
+                        "show": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "false"
+                                }
+                            }
+                        }
+                    }
+                }
+            ],
+            "background": [
+                {
+                    "properties": {
+                        "show": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "false"
+                                }
+                            }
+                        }
+                    }
+                }
+            ],
+            "title": [
+                {
+                    "properties": {
+                        "show": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "true"
+                                }
+                            }
+                        },
+                        "fontSize": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "8D"
+                                }
+                            }
+                        },
+                        "alignment": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "'center'"
+                                }
+                            }
+                        },
+                        "text": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "'Organisation Links'"
+                                }
+                            }
+                        }
+                    }
+                }
+            ]
+        },
+        "drillFilterOtherVisuals": true
+    },
+    "filterConfig": {
+        "filters": [
+            {
+                "name": "1eb6a8a14e3592fb36f2",
+                "field": {
+                    "Measure": {
+                        "Expression": {
+                            "SourceRef": {
+                                "Entity": "Metrics"
+                            }
+                        },
+                        "Property": "Widely Shared Organisation Links"
+                    }
+                },
+                "type": "Advanced"
+            },
+            {
+                "name": "1afe77f0cf18c2372489",
+                "field": {
+                    "Column": {
+                        "Expression": {
+                            "SourceRef": {
+                                "Entity": "widelyshared_organization_links"
+                            }
+                        },
+                        "Property": "TransferDateTime"
+                    }
+                },
+                "type": "TopN",
+                "filter": {
+                    "Version": 2,
+                    "From": [
+                        {
+                            "Name": "subquery",
+                            "Expression": {
+                                "Subquery": {
+                                    "Query": {
+                                        "Version": 2,
+                                        "From": [
+                                            {
+                                                "Name": "w",
+                                                "Entity": "widelyshared_organization_links",
+                                                "Type": 0
+                                            }
+                                        ],
+                                        "Select": [
+                                            {
+                                                "Column": {
+                                                    "Expression": {
+                                                        "SourceRef": {
+                                                            "Source": "w"
+                                                        }
+                                                    },
+                                                    "Property": "TransferDateTime"
+                                                },
+                                                "Name": "field"
+                                            }
+                                        ],
+                                        "OrderBy": [
+                                            {
+                                                "Direction": 2,
+                                                "Expression": {
+                                                    "Aggregation": {
+                                                        "Expression": {
+                                                            "Column": {
+                                                                "Expression": {
+                                                                    "SourceRef": {
+                                                                        "Source": "w"
+                                                                    }
+                                                                },
+                                                                "Property": "TransferDateTime"
+                                                            }
+                                                        },
+                                                        "Function": 4
+                                                    }
+                                                }
+                                            }
+                                        ],
+                                        "Top": 1
+                                    }
+                                }
+                            },
+                            "Type": 2
+                        },
+                        {
+                            "Name": "w",
+                            "Entity": "widelyshared_organization_links",
+                            "Type": 0
+                        }
+                    ],
+                    "Where": [
+                        {
+                            "Condition": {
+                                "In": {
+                                    "Expressions": [
+                                        {
+                                            "Column": {
+                                                "Expression": {
+                                                    "SourceRef": {
+                                                        "Source": "w"
+                                                    }
+                                                },
+                                                "Property": "TransferDateTime"
+                                            }
+                                        }
+                                    ],
+                                    "Table": {
+                                        "SourceRef": {
+                                            "Source": "subquery"
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    ]
+                },
+                "howCreated": "User"
+            }
+        ]
+    }
+}

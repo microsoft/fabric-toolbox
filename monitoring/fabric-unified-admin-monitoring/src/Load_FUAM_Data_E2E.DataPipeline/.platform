@@ -2,8 +2,7 @@
     "$schema": "https://developer.microsoft.com/json-schemas/fabric/gitIntegration/platformProperties/2.0.0/schema.json",
     "metadata": {
         "type": "DataPipeline",
-        "displayName": "Load_FUAM_Data_E2E",
-        "description": "Imported from fab"
+        "displayName": "Load_FUAM_Data_E2E"
     },
     "config": {
         "version": "2.0",

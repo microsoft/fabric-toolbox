@@ -160,11 +160,11 @@
         "parameters": {
             "metric_days_in_scope": {
                 "type": "int",
-                "defaultValue": 1
+                "defaultValue": 2
             },
             "metric_workspace": {
                 "type": "string",
-                "defaultValue": "Capacity Metrics V44"
+                "defaultValue": "d0182223-a6a9-4aa1-bf5c-24d8ee582b9d"
             },
             "metric_dataset": {
                 "type": "string",

@@ -122,6 +122,26 @@ table datasource_instances
 
 		annotation SummarizationSetBy = Automatic
 
+	column FUAM_ConnectionString
+		dataType: string
+		sourceProviderType: varchar(8000)
+		lineageTag: 736b9dd0-bf3f-4037-85ee-5ea3f8c85ed3
+		sourceLineageTag: FUAM_ConnectionString
+		summarizeBy: none
+		sourceColumn: FUAM_ConnectionString
+
+		annotation SummarizationSetBy = Automatic
+
+	column fuam_datasourceKind
+		dataType: string
+		sourceProviderType: varchar(8000)
+		lineageTag: 9c78b3ec-c9a4-4fa1-9f60-4019b6cf6350
+		sourceLineageTag: fuam_datasourceKind
+		summarizeBy: none
+		sourceColumn: fuam_datasourceKind
+
+		annotation SummarizationSetBy = Automatic
+
 	partition datasource_instances = entity
 		mode: directLake
 		source

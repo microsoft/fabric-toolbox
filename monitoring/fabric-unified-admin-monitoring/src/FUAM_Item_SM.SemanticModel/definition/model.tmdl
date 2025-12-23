@@ -10,11 +10,9 @@ model Model
 
 annotation __PBI_TimeIntelligenceEnabled = 0
 
-annotation PBIDesktopVersion = 2.147.7761.2 (Main)+4fed62a961b3b674388272b595c56068c5925805
-
 annotation PBI_QueryOrder = ["DatabaseQuery"]
 
-annotation PBI_ProTooling = ["WebModelingEdit"]
+annotation PBI_ProTooling = ["WebModelingEdit","RemoteModeling"]
 
 annotation __PBIService_Versioning_SaveVersion = 2f4f74ca-375d-47e0-b841-bc9e794fc8b2
 

@@ -1,21 +1,31 @@
 table semantic_model_bpa_results
-	lineageTag: ce8bad35-c34f-492f-b7ef-65c74b9a619a
+	lineageTag: d5039322-0a1d-4e90-8867-e4de39aada43
 	sourceLineageTag: [dbo].[semantic_model_bpa_results]
 
-	column ObjectName
+	column RunName
 		dataType: string
 		sourceProviderType: varchar(8000)
-		lineageTag: 9cbdf406-7ec0-4b1a-a584-b74005c3f78c
-		sourceLineageTag: ObjectName
+		lineageTag: 18ea6925-7b4e-4edd-a8f6-ca6cec5578b5
+		sourceLineageTag: RunName
 		summarizeBy: none
-		sourceColumn: ObjectName
+		sourceColumn: RunName
+
+		annotation SummarizationSetBy = Automatic
+
+	column SemanticModelRunKey
+		dataType: string
+		sourceProviderType: varchar(8000)
+		lineageTag: 011b1c72-497e-4d80-8fde-4af8f846412b
+		sourceLineageTag: SemanticModelRunKey
+		summarizeBy: none
+		sourceColumn: SemanticModelRunKey
 
 		annotation SummarizationSetBy = Automatic
 
 	column Scope
 		dataType: string
 		sourceProviderType: varchar(8000)
-		lineageTag: bfb824ae-7338-46f1-9d6d-e64d050da5d7
+		lineageTag: ed398378-76c5-4029-9ce8-960698c2386f
 		sourceLineageTag: Scope
 		summarizeBy: none
 		sourceColumn: Scope
@@ -26,7 +36,7 @@ table semantic_model_bpa_results
 		dataType: int64
 		formatString: 0
 		sourceProviderType: bigint
-		lineageTag: ff926510-ecd4-4ab0-b43a-f2c6ce988dc1
+		lineageTag: 466589b5-9c46-4fc8-a58a-b42ecfcf8c44
 		sourceLineageTag: RuleId
 		summarizeBy: none
 		sourceColumn: RuleId
@@ -36,7 +46,7 @@ table semantic_model_bpa_results
 	column WorkspaceId
 		dataType: string
 		sourceProviderType: varchar(8000)
-		lineageTag: 0b9567da-2ab7-4a39-a821-85f49f58c439
+		lineageTag: 5c7b731b-7233-4954-a47f-7c6badd853c7
 		sourceLineageTag: WorkspaceId
 		summarizeBy: none
 		sourceColumn: WorkspaceId
@@ -46,7 +56,7 @@ table semantic_model_bpa_results
 	column SemanticModelId
 		dataType: string
 		sourceProviderType: varchar(8000)
-		lineageTag: 84e35adb-676c-472e-a4f7-a2dd2d7e8b90
+		lineageTag: bd06ea5e-91be-42bd-ac80-02de104b2ec7
 		sourceLineageTag: SemanticModelId
 		summarizeBy: none
 		sourceColumn: SemanticModelId
@@ -57,7 +67,7 @@ table semantic_model_bpa_results
 		dataType: dateTime
 		formatString: General Date
 		sourceProviderType: datetime2
-		lineageTag: 2cab8f05-b617-4d46-ac45-937ba3801d50
+		lineageTag: 23fbe2f0-16a6-4488-9995-dba00a7aba67
 		sourceLineageTag: Timestamp
 		summarizeBy: none
 		sourceColumn: Timestamp
@@ -68,30 +78,20 @@ table semantic_model_bpa_results
 		dataType: int64
 		formatString: 0
 		sourceProviderType: bigint
-		lineageTag: b5a0f27d-1dc1-4b05-9dea-f66cc687438d
+		lineageTag: 586a7bdb-9520-44f9-8b85-5acaa0c3ff05
 		sourceLineageTag: RunId
 		summarizeBy: count
 		sourceColumn: RunId
 
 		annotation SummarizationSetBy = Automatic
 
-	column RunName
+	column ObjectName
 		dataType: string
 		sourceProviderType: varchar(8000)
-		lineageTag: f3595419-5059-467c-82ce-ce1bf8640e13
-		sourceLineageTag: RunName
+		lineageTag: 7704ad6f-6a15-4f45-a788-99f7c25aed9f
+		sourceLineageTag: ObjectName
 		summarizeBy: none
-		sourceColumn: RunName
-
-		annotation SummarizationSetBy = Automatic
-
-	column SemanticModelRunKey
-		dataType: string
-		sourceProviderType: varchar(8000)
-		lineageTag: 682e3918-25e1-4555-b58c-5f23d0e4098b
-		sourceLineageTag: SemanticModelRunKey
-		summarizeBy: none
-		sourceColumn: SemanticModelRunKey
+		sourceColumn: ObjectName
 
 		annotation SummarizationSetBy = Automatic
 

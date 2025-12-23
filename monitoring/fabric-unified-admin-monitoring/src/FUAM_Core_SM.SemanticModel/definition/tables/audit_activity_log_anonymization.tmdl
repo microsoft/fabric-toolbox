@@ -1,0 +1,101 @@
+table audit_activity_log_anonymization
+	lineageTag: b13f7414-85fd-4dda-8029-9a2b986ba8cb
+	sourceLineageTag: [dbo].[audit_activity_log_anonymization]
+
+	column timestamp
+		dataType: dateTime
+		formatString: General Date
+		lineageTag: a8c66f6c-ae16-4fdc-b572-b84fd0e7225f
+		sourceLineageTag: timestamp
+		summarizeBy: none
+		sourceColumn: timestamp
+
+		annotation SummarizationSetBy = Automatic
+
+	column activity_days_in_scope
+		dataType: int64
+		formatString: 0
+		lineageTag: d02ecf11-e99a-46a4-971d-a7f86a8ac864
+		sourceLineageTag: activity_days_in_scope
+		summarizeBy: sum
+		sourceColumn: activity_days_in_scope
+
+		annotation SummarizationSetBy = Automatic
+
+	column type
+		dataType: string
+		lineageTag: aa822b4d-75ca-4b6a-8772-4389299fdfe6
+		sourceLineageTag: type
+		summarizeBy: none
+		sourceColumn: type
+
+		annotation SummarizationSetBy = Automatic
+
+	column affected_object
+		dataType: string
+		lineageTag: d996adfe-91be-4c44-8fd8-8cef65230390
+		sourceLineageTag: affected_object
+		summarizeBy: none
+		sourceColumn: affected_object
+
+		annotation SummarizationSetBy = Automatic
+
+	column affected_objects
+		dataType: string
+		lineageTag: 4519e60a-b3d2-48fb-9792-fc7594dfa658
+		sourceLineageTag: affected_objects
+		summarizeBy: none
+		sourceColumn: affected_objects
+
+		annotation SummarizationSetBy = Automatic
+
+	column reason
+		dataType: string
+		lineageTag: 66467499-a755-4530-a38d-ec6d477de8c0
+		sourceLineageTag: reason
+		summarizeBy: none
+		sourceColumn: reason
+
+		annotation SummarizationSetBy = Automatic
+
+	column anonymize_after_days
+		dataType: int64
+		formatString: 0
+		sourceProviderType: bigint
+		lineageTag: 04c46b6a-8b66-45ad-840b-38da71fec9f1
+		sourceLineageTag: anonymize_after_days
+		summarizeBy: sum
+		sourceColumn: anonymize_after_days
+
+		annotation SummarizationSetBy = Automatic
+
+	column algorithm
+		dataType: string
+		sourceProviderType: varchar(8000)
+		lineageTag: 89023044-3f92-43c2-8e00-22a61b1427a5
+		sourceLineageTag: algorithm
+		summarizeBy: none
+		sourceColumn: algorithm
+
+		annotation SummarizationSetBy = Automatic
+
+	column data_retention_time_in_days
+		dataType: int64
+		formatString: 0
+		sourceProviderType: bigint
+		lineageTag: e714acfb-e757-4446-ad05-753850185b09
+		sourceLineageTag: data_retention_time_in_days
+		summarizeBy: sum
+		sourceColumn: data_retention_time_in_days
+
+		annotation SummarizationSetBy = Automatic
+
+	partition audit_activity_log_anonymization = entity
+		mode: directLake
+		source
+			entityName: audit_activity_log_anonymization
+			schemaName: dbo
+			expressionSource: DatabaseQuery
+
+	annotation PBI_ResultType = Table
+

@@ -1,0 +1,75 @@
+{
+    "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.5.0/schema.json",
+    "name": "a460308d0de10a0ca3b5",
+    "position": {
+        "x": 1171.4285714285716,
+        "y": 5.9523809523809526,
+        "z": 15000,
+        "height": 59.523809523809526,
+        "width": 570.2380952380953,
+        "tabOrder": 12000
+    },
+    "visual": {
+        "visualType": "textbox",
+        "objects": {
+            "general": [
+                {
+                    "properties": {
+                        "paragraphs": [
+                            {
+                                "textRuns": [
+                                    {
+                                        "value": "Description:",
+                                        "textStyle": {
+                                            "fontWeight": "bold",
+                                            "fontSize": "13.3333px"
+                                        }
+                                    }
+                                ]
+                            },
+                            {
+                                "textRuns": [
+                                    {
+                                        "value": "This page helps you answer the question: \"What happened to the tenant on a specific day?\"",
+                                        "textStyle": {
+                                            "fontSize": "13.3333px"
+                                        }
+                                    }
+                                ]
+                            }
+                        ]
+                    }
+                }
+            ]
+        },
+        "visualContainerObjects": {
+            "background": [
+                {
+                    "properties": {
+                        "show": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "false"
+                                }
+                            }
+                        }
+                    }
+                }
+            ],
+            "border": [
+                {
+                    "properties": {
+                        "show": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "false"
+                                }
+                            }
+                        }
+                    }
+                }
+            ]
+        },
+        "drillFilterOtherVisuals": true
+    }
+}

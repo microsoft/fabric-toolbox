@@ -1,0 +1,40 @@
+table capacity_users
+	lineageTag: 5f025766-0f5f-459a-b123-5225a5c0048d
+	sourceLineageTag: [dbo].[capacity_users]
+
+	column CapacityId
+		dataType: string
+		lineageTag: 549ec9f8-1014-441e-a3c2-0024dbbd1a6f
+		sourceLineageTag: CapacityId
+		summarizeBy: none
+		sourceColumn: CapacityId
+
+		annotation SummarizationSetBy = Automatic
+
+	column role
+		dataType: string
+		lineageTag: 0e9b1270-2859-410c-8478-64543bda7839
+		sourceLineageTag: role
+		summarizeBy: none
+		sourceColumn: role
+
+		annotation SummarizationSetBy = Automatic
+
+	column user
+		dataType: string
+		lineageTag: b838da31-ad03-441d-b69d-56845b9602a5
+		sourceLineageTag: user
+		summarizeBy: none
+		sourceColumn: user
+
+		annotation SummarizationSetBy = Automatic
+
+	partition capacity_users = entity
+		mode: directLake
+		source
+			entityName: capacity_users
+			schemaName: dbo
+			expressionSource: DatabaseQuery
+
+	annotation PBI_ResultType = Table
+

@@ -1,0 +1,87 @@
+{
+    "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.5.0/schema.json",
+    "name": "0cbc3e65e44cad34c43c",
+    "position": {
+        "x": 485.9113300492611,
+        "y": 80.39408866995073,
+        "z": 1000,
+        "height": 88.66995073891626,
+        "width": 625.4187192118227,
+        "tabOrder": 8000
+    },
+    "visual": {
+        "visualType": "textbox",
+        "objects": {
+            "general": [
+                {
+                    "properties": {
+                        "paragraphs": [
+                            {
+                                "textRuns": [
+                                    {
+                                        "value": "Step 2) ",
+                                        "textStyle": {
+                                            "fontWeight": "bold",
+                                            "fontSize": "12pt",
+                                            "color": "#248a85"
+                                        }
+                                    },
+                                    {
+                                        "value": "Explore different workloads on the selected capacity",
+                                        "textStyle": {
+                                            "fontWeight": "bold",
+                                            "fontSize": "12pt"
+                                        }
+                                    }
+                                ]
+                            },
+                            {
+                                "textRuns": [
+                                    {
+                                        "value": "You can identify \"new-comer\" workloads, which are recently using more CU on the capacity.  "
+                                    }
+                                ]
+                            },
+                            {
+                                "textRuns": [
+                                    {
+                                        "value": "Look for workloads, where the red (14d) are is more outside of the radar area. Click on of the dots to continue with the next step."
+                                    }
+                                ]
+                            }
+                        ]
+                    }
+                }
+            ]
+        },
+        "visualContainerObjects": {
+            "border": [
+                {
+                    "properties": {
+                        "show": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "false"
+                                }
+                            }
+                        }
+                    }
+                }
+            ],
+            "background": [
+                {
+                    "properties": {
+                        "show": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "false"
+                                }
+                            }
+                        }
+                    }
+                }
+            ]
+        },
+        "drillFilterOtherVisuals": true
+    }
+}

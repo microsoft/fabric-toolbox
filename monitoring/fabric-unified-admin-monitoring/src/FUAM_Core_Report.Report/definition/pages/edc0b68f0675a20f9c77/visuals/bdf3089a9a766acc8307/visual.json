@@ -1,0 +1,67 @@
+{
+    "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.5.0/schema.json",
+    "name": "bdf3089a9a766acc8307",
+    "position": {
+        "x": 27.882960413080895,
+        "y": 85.50774526678141,
+        "z": 5000,
+        "height": 111.53184165232358,
+        "width": 324.37177280550776,
+        "tabOrder": 2000
+    },
+    "visual": {
+        "visualType": "textbox",
+        "objects": {
+            "general": [
+                {
+                    "properties": {
+                        "paragraphs": [
+                            {
+                                "textRuns": [
+                                    {
+                                        "value": "Description: ",
+                                        "textStyle": {
+                                            "fontWeight": "bold"
+                                        }
+                                    },
+                                    {
+                                        "value": "This page provides you insights into semantic models and referenced Power BI reports based on the collected activity logs. Change the 'ReportType' to see paginated reports also."
+                                    }
+                                ]
+                            }
+                        ]
+                    }
+                }
+            ]
+        },
+        "visualContainerObjects": {
+            "background": [
+                {
+                    "properties": {
+                        "show": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "false"
+                                }
+                            }
+                        }
+                    }
+                }
+            ],
+            "border": [
+                {
+                    "properties": {
+                        "show": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "false"
+                                }
+                            }
+                        }
+                    }
+                }
+            ]
+        },
+        "drillFilterOtherVisuals": true
+    }
+}

@@ -1,0 +1,852 @@
+{
+    "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.5.0/schema.json",
+    "name": "3966f4f71189ea88b766",
+    "position": {
+        "x": 3.6384213504586187,
+        "y": 154.6329073944913,
+        "z": 0,
+        "height": 922.3398123412599,
+        "width": 2150.3070181210437,
+        "tabOrder": 14000
+    },
+    "visual": {
+        "visualType": "tableEx",
+        "query": {
+            "queryState": {
+                "Values": {
+                    "projections": [
+                        {
+                            "field": {
+                                "Column": {
+                                    "Expression": {
+                                        "SourceRef": {
+                                            "Entity": "activities"
+                                        }
+                                    },
+                                    "Property": "CreationDate"
+                                }
+                            },
+                            "queryRef": "activities.CreationDate",
+                            "nativeQueryRef": "CreationDate"
+                        },
+                        {
+                            "field": {
+                                "Column": {
+                                    "Expression": {
+                                        "SourceRef": {
+                                            "Entity": "activities"
+                                        }
+                                    },
+                                    "Property": "CreationHour"
+                                }
+                            },
+                            "queryRef": "activities.CreationHour",
+                            "nativeQueryRef": "Hour",
+                            "displayName": "Hour"
+                        },
+                        {
+                            "field": {
+                                "Column": {
+                                    "Expression": {
+                                        "SourceRef": {
+                                            "Entity": "activities"
+                                        }
+                                    },
+                                    "Property": "CreationMinute"
+                                }
+                            },
+                            "queryRef": "activities.CreationMinute",
+                            "nativeQueryRef": "Minute",
+                            "displayName": "Minute"
+                        },
+                        {
+                            "field": {
+                                "Column": {
+                                    "Expression": {
+                                        "SourceRef": {
+                                            "Entity": "activities"
+                                        }
+                                    },
+                                    "Property": "Activity"
+                                }
+                            },
+                            "queryRef": "activities.Activity",
+                            "nativeQueryRef": "Activity"
+                        },
+                        {
+                            "field": {
+                                "Column": {
+                                    "Expression": {
+                                        "SourceRef": {
+                                            "Entity": "activities"
+                                        }
+                                    },
+                                    "Property": "ResultStatus"
+                                }
+                            },
+                            "queryRef": "activities.ResultStatus",
+                            "nativeQueryRef": "ResultStatus"
+                        },
+                        {
+                            "field": {
+                                "Column": {
+                                    "Expression": {
+                                        "SourceRef": {
+                                            "Entity": "activities"
+                                        }
+                                    },
+                                    "Property": "CapacityId"
+                                }
+                            },
+                            "queryRef": "activities.CapacityId",
+                            "nativeQueryRef": "CapacityId"
+                        },
+                        {
+                            "field": {
+                                "Column": {
+                                    "Expression": {
+                                        "SourceRef": {
+                                            "Entity": "activities"
+                                        }
+                                    },
+                                    "Property": "CapacityName"
+                                }
+                            },
+                            "queryRef": "activities.CapacityName",
+                            "nativeQueryRef": "CapacityName"
+                        },
+                        {
+                            "field": {
+                                "Column": {
+                                    "Expression": {
+                                        "SourceRef": {
+                                            "Entity": "activities"
+                                        }
+                                    },
+                                    "Property": "WorkspaceId"
+                                }
+                            },
+                            "queryRef": "activities.WorkspaceId",
+                            "nativeQueryRef": "WorkspaceId"
+                        },
+                        {
+                            "field": {
+                                "Column": {
+                                    "Expression": {
+                                        "SourceRef": {
+                                            "Entity": "activities"
+                                        }
+                                    },
+                                    "Property": "WorkSpaceName"
+                                }
+                            },
+                            "queryRef": "activities.WorkSpaceName",
+                            "nativeQueryRef": "WorkSpaceName"
+                        },
+                        {
+                            "field": {
+                                "Column": {
+                                    "Expression": {
+                                        "SourceRef": {
+                                            "Entity": "activities"
+                                        }
+                                    },
+                                    "Property": "ObjectType"
+                                }
+                            },
+                            "queryRef": "activities.ObjectType",
+                            "nativeQueryRef": "ObjectType"
+                        },
+                        {
+                            "field": {
+                                "Column": {
+                                    "Expression": {
+                                        "SourceRef": {
+                                            "Entity": "activities"
+                                        }
+                                    },
+                                    "Property": "ArtifactKind"
+                                }
+                            },
+                            "queryRef": "activities.ArtifactKind",
+                            "nativeQueryRef": "ArtifactKind"
+                        },
+                        {
+                            "field": {
+                                "Column": {
+                                    "Expression": {
+                                        "SourceRef": {
+                                            "Entity": "activities"
+                                        }
+                                    },
+                                    "Property": "ArtifactId"
+                                }
+                            },
+                            "queryRef": "activities.ArtifactId",
+                            "nativeQueryRef": "ArtifactId"
+                        },
+                        {
+                            "field": {
+                                "Column": {
+                                    "Expression": {
+                                        "SourceRef": {
+                                            "Entity": "activities"
+                                        }
+                                    },
+                                    "Property": "ItemId"
+                                }
+                            },
+                            "queryRef": "activities.ItemId",
+                            "nativeQueryRef": "ItemId"
+                        },
+                        {
+                            "field": {
+                                "Column": {
+                                    "Expression": {
+                                        "SourceRef": {
+                                            "Entity": "activities"
+                                        }
+                                    },
+                                    "Property": "ObjectId"
+                                }
+                            },
+                            "queryRef": "activities.ObjectId",
+                            "nativeQueryRef": "ObjectId"
+                        },
+                        {
+                            "field": {
+                                "Column": {
+                                    "Expression": {
+                                        "SourceRef": {
+                                            "Entity": "activities"
+                                        }
+                                    },
+                                    "Property": "ArtifactName"
+                                }
+                            },
+                            "queryRef": "activities.ArtifactName",
+                            "nativeQueryRef": "ArtifactName"
+                        },
+                        {
+                            "field": {
+                                "Column": {
+                                    "Expression": {
+                                        "SourceRef": {
+                                            "Entity": "activities"
+                                        }
+                                    },
+                                    "Property": "DataConnectivityMode"
+                                }
+                            },
+                            "queryRef": "activities.DataConnectivityMode",
+                            "nativeQueryRef": "DataConnectivityMode"
+                        },
+                        {
+                            "field": {
+                                "Column": {
+                                    "Expression": {
+                                        "SourceRef": {
+                                            "Entity": "activities"
+                                        }
+                                    },
+                                    "Property": "Experience"
+                                }
+                            },
+                            "queryRef": "activities.Experience",
+                            "nativeQueryRef": "Experience"
+                        },
+                        {
+                            "field": {
+                                "Column": {
+                                    "Expression": {
+                                        "SourceRef": {
+                                            "Entity": "activities"
+                                        }
+                                    },
+                                    "Property": "DistributionMethod"
+                                }
+                            },
+                            "queryRef": "activities.DistributionMethod",
+                            "nativeQueryRef": "DistributionMethod"
+                        },
+                        {
+                            "field": {
+                                "Column": {
+                                    "Expression": {
+                                        "SourceRef": {
+                                            "Entity": "activities"
+                                        }
+                                    },
+                                    "Property": "UserKey"
+                                }
+                            },
+                            "queryRef": "activities.UserKey",
+                            "nativeQueryRef": "UserKey"
+                        },
+                        {
+                            "field": {
+                                "Column": {
+                                    "Expression": {
+                                        "SourceRef": {
+                                            "Entity": "activities"
+                                        }
+                                    },
+                                    "Property": "UserId"
+                                }
+                            },
+                            "queryRef": "activities.UserId",
+                            "nativeQueryRef": "UserId"
+                        }
+                    ]
+                }
+            },
+            "sortDefinition": {
+                "sort": [
+                    {
+                        "field": {
+                            "Column": {
+                                "Expression": {
+                                    "SourceRef": {
+                                        "Entity": "activities"
+                                    }
+                                },
+                                "Property": "CreationDate"
+                            }
+                        },
+                        "direction": "Descending"
+                    }
+                ]
+            }
+        },
+        "objects": {
+            "columnHeaders": [
+                {
+                    "properties": {
+                        "fontFamily": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "'''Segoe UI Semibold'', wf_segoe-ui_semibold, helvetica, arial, sans-serif'"
+                                }
+                            }
+                        },
+                        "backColor": {
+                            "solid": {
+                                "color": {
+                                    "expr": {
+                                        "ThemeDataColor": {
+                                            "ColorId": 2,
+                                            "Percent": 0
+                                        }
+                                    }
+                                }
+                            }
+                        },
+                        "fontColor": {
+                            "solid": {
+                                "color": {
+                                    "expr": {
+                                        "ThemeDataColor": {
+                                            "ColorId": 0,
+                                            "Percent": 0
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            ],
+            "grid": [
+                {
+                    "properties": {
+                        "gridVertical": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "true"
+                                }
+                            }
+                        },
+                        "rowPadding": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "3D"
+                                }
+                            }
+                        }
+                    }
+                }
+            ],
+            "values": [
+                {
+                    "properties": {
+                        "backColorSecondary": {
+                            "solid": {
+                                "color": {
+                                    "expr": {
+                                        "Literal": {
+                                            "Value": "'#F5F6F5'"
+                                        }
+                                    }
+                                }
+                            }
+                        },
+                        "wordWrap": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "false"
+                                }
+                            }
+                        }
+                    }
+                }
+            ],
+            "columnWidth": [
+                {
+                    "properties": {
+                        "value": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "118.61536331515873D"
+                                }
+                            }
+                        }
+                    },
+                    "selector": {
+                        "metadata": "activities.WorkspaceId"
+                    }
+                },
+                {
+                    "properties": {
+                        "value": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "110.30773195676065D"
+                                }
+                            }
+                        }
+                    },
+                    "selector": {
+                        "metadata": "activities.ArtifactId"
+                    }
+                },
+                {
+                    "properties": {
+                        "value": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "162.76922850151422D"
+                                }
+                            }
+                        }
+                    },
+                    "selector": {
+                        "metadata": "activities.ArtifactName"
+                    }
+                },
+                {
+                    "properties": {
+                        "value": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "172.07692601966514D"
+                                }
+                            }
+                        }
+                    },
+                    "selector": {
+                        "metadata": "activities.WorkSpaceName"
+                    }
+                },
+                {
+                    "properties": {
+                        "value": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "105.2307779455904D"
+                                }
+                            }
+                        }
+                    },
+                    "selector": {
+                        "metadata": "activities.CapacityId"
+                    }
+                },
+                {
+                    "properties": {
+                        "value": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "158.5384391618664D"
+                                }
+                            }
+                        }
+                    },
+                    "selector": {
+                        "metadata": "activities.UserId"
+                    }
+                },
+                {
+                    "properties": {
+                        "value": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "83.80100250048307D"
+                                }
+                            }
+                        }
+                    },
+                    "selector": {
+                        "metadata": "activities.ItemId"
+                    }
+                },
+                {
+                    "properties": {
+                        "value": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "104.75081768911929D"
+                                }
+                            }
+                        }
+                    },
+                    "selector": {
+                        "metadata": "activities.ObjectId"
+                    }
+                }
+            ]
+        },
+        "visualContainerObjects": {
+            "title": [
+                {
+                    "properties": {
+                        "show": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "true"
+                                }
+                            }
+                        },
+                        "text": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "'Activities'"
+                                }
+                            }
+                        },
+                        "fontSize": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "12D"
+                                }
+                            }
+                        }
+                    }
+                }
+            ],
+            "border": [
+                {
+                    "properties": {
+                        "show": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "true"
+                                }
+                            }
+                        },
+                        "radius": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "5D"
+                                }
+                            }
+                        }
+                    }
+                }
+            ],
+            "dropShadow": [
+                {
+                    "properties": {
+                        "show": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "true"
+                                }
+                            }
+                        },
+                        "color": {
+                            "solid": {
+                                "color": {
+                                    "expr": {
+                                        "ThemeDataColor": {
+                                            "ColorId": 0,
+                                            "Percent": -0.1
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            ],
+            "subTitle": [
+                {
+                    "properties": {
+                        "show": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "false"
+                                }
+                            }
+                        },
+                        "text": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "''"
+                                }
+                            }
+                        }
+                    }
+                }
+            ]
+        },
+        "drillFilterOtherVisuals": true
+    },
+    "filterConfig": {
+        "filters": [
+            {
+                "name": "eae10d7d9140b4ec48da",
+                "ordinal": 0,
+                "field": {
+                    "Column": {
+                        "Expression": {
+                            "SourceRef": {
+                                "Entity": "activities"
+                            }
+                        },
+                        "Property": "Activity"
+                    }
+                },
+                "type": "Categorical"
+            },
+            {
+                "name": "581c9c50ef7e03c0451e",
+                "ordinal": 1,
+                "field": {
+                    "Column": {
+                        "Expression": {
+                            "SourceRef": {
+                                "Entity": "activities"
+                            }
+                        },
+                        "Property": "WorkSpaceName"
+                    }
+                },
+                "type": "Categorical"
+            },
+            {
+                "name": "609b1aa3e8687848ed85",
+                "ordinal": 2,
+                "field": {
+                    "Column": {
+                        "Expression": {
+                            "SourceRef": {
+                                "Entity": "activities"
+                            }
+                        },
+                        "Property": "WorkspaceId"
+                    }
+                },
+                "type": "Categorical"
+            },
+            {
+                "name": "fe2f682a74c3e7951826",
+                "ordinal": 3,
+                "field": {
+                    "Column": {
+                        "Expression": {
+                            "SourceRef": {
+                                "Entity": "activities"
+                            }
+                        },
+                        "Property": "ClientIP"
+                    }
+                },
+                "type": "Categorical",
+                "howCreated": "User"
+            },
+            {
+                "name": "9bc7a49d7445314995bd",
+                "ordinal": 4,
+                "field": {
+                    "Column": {
+                        "Expression": {
+                            "SourceRef": {
+                                "Entity": "activities"
+                            }
+                        },
+                        "Property": "CreationHour"
+                    }
+                },
+                "type": "Categorical"
+            },
+            {
+                "name": "d2c1e3fb511c78669e1c",
+                "ordinal": 5,
+                "field": {
+                    "Column": {
+                        "Expression": {
+                            "SourceRef": {
+                                "Entity": "activities"
+                            }
+                        },
+                        "Property": "CreationMinute"
+                    }
+                },
+                "type": "Categorical"
+            },
+            {
+                "name": "f7d1384ddb9ba7f3f045",
+                "ordinal": 6,
+                "field": {
+                    "Column": {
+                        "Expression": {
+                            "SourceRef": {
+                                "Entity": "activities"
+                            }
+                        },
+                        "Property": "CreationDate"
+                    }
+                },
+                "type": "Categorical"
+            },
+            {
+                "name": "0d1a3788e3f3ae97cc38",
+                "ordinal": 7,
+                "field": {
+                    "Column": {
+                        "Expression": {
+                            "SourceRef": {
+                                "Entity": "activities"
+                            }
+                        },
+                        "Property": "ArtifactKind"
+                    }
+                },
+                "type": "Categorical"
+            },
+            {
+                "name": "bbaae3817bf9985f27b6",
+                "ordinal": 8,
+                "field": {
+                    "Column": {
+                        "Expression": {
+                            "SourceRef": {
+                                "Entity": "activities"
+                            }
+                        },
+                        "Property": "CapacityId"
+                    }
+                },
+                "type": "Categorical"
+            },
+            {
+                "name": "a0e7a29cfcb5c17249db",
+                "ordinal": 9,
+                "field": {
+                    "Column": {
+                        "Expression": {
+                            "SourceRef": {
+                                "Entity": "activities"
+                            }
+                        },
+                        "Property": "CapacityName"
+                    }
+                },
+                "type": "Categorical"
+            },
+            {
+                "name": "4c99f11a1b604331aa95",
+                "ordinal": 10,
+                "field": {
+                    "Column": {
+                        "Expression": {
+                            "SourceRef": {
+                                "Entity": "activities"
+                            }
+                        },
+                        "Property": "ObjectType"
+                    }
+                },
+                "type": "Categorical"
+            },
+            {
+                "name": "fbbe8ef749201b67491e",
+                "ordinal": 11,
+                "field": {
+                    "Column": {
+                        "Expression": {
+                            "SourceRef": {
+                                "Entity": "activities"
+                            }
+                        },
+                        "Property": "ArtifactId"
+                    }
+                },
+                "type": "Categorical"
+            },
+            {
+                "name": "f77b34a62c4f95f97fba",
+                "ordinal": 12,
+                "field": {
+                    "Column": {
+                        "Expression": {
+                            "SourceRef": {
+                                "Entity": "activities"
+                            }
+                        },
+                        "Property": "ArtifactName"
+                    }
+                },
+                "type": "Categorical"
+            },
+            {
+                "name": "c8799a222f65fa187afa",
+                "ordinal": 13,
+                "field": {
+                    "Column": {
+                        "Expression": {
+                            "SourceRef": {
+                                "Entity": "activities"
+                            }
+                        },
+                        "Property": "DataConnectivityMode"
+                    }
+                },
+                "type": "Categorical",
+                "objects": {
+                    "general": [
+                        {
+                            "properties": {}
+                        }
+                    ]
+                }
+            },
+            {
+                "name": "2cfbf8b980a1cd514576",
+                "ordinal": 14,
+                "field": {
+                    "Column": {
+                        "Expression": {
+                            "SourceRef": {
+                                "Entity": "activities"
+                            }
+                        },
+                        "Property": "UserId"
+                    }
+                },
+                "type": "Categorical"
+            }
+        ],
+        "filterSortOrder": "Custom"
+    }
+}

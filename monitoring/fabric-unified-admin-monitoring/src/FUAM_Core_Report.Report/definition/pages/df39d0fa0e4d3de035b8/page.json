@@ -1,0 +1,77 @@
+{
+    "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/page/2.0.0/schema.json",
+    "name": "df39d0fa0e4d3de035b8",
+    "displayName": "Tenant Setting Enabled Security Groups",
+    "displayOption": "FitToPage",
+    "height": 1080,
+    "width": 1920,
+    "objects": {
+        "displayArea": [
+            {
+                "properties": {
+                    "verticalAlignment": {
+                        "expr": {
+                            "Literal": {
+                                "Value": "'Middle'"
+                            }
+                        }
+                    }
+                }
+            }
+        ],
+        "outspacePane": [
+            {
+                "properties": {
+                    "width": {
+                        "expr": {
+                            "Literal": {
+                                "Value": "256L"
+                            }
+                        }
+                    }
+                }
+            }
+        ],
+        "background": [
+            {
+                "properties": {
+                    "image": {
+                        "image": {
+                            "name": {
+                                "expr": {
+                                    "Literal": {
+                                        "Value": "'fuam_core_bg.png'"
+                                    }
+                                }
+                            },
+                            "url": {
+                                "expr": {
+                                    "ResourcePackageItem": {
+                                        "PackageName": "RegisteredResources",
+                                        "PackageType": 1,
+                                        "ItemName": "fuam_core_bg7823942798404996.png"
+                                    }
+                                }
+                            },
+                            "scaling": {
+                                "expr": {
+                                    "Literal": {
+                                        "Value": "'Fill'"
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "transparency": {
+                        "expr": {
+                            "Literal": {
+                                "Value": "0D"
+                            }
+                        }
+                    }
+                }
+            }
+        ]
+    },
+    "visibility": "HiddenInViewMode"
+}

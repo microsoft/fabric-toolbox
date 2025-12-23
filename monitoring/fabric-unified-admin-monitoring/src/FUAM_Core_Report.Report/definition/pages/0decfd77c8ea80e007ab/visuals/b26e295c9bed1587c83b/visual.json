@@ -1,0 +1,712 @@
+{
+    "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.5.0/schema.json",
+    "name": "b26e295c9bed1587c83b",
+    "position": {
+        "x": 19.710357383220455,
+        "y": 78.80688396003694,
+        "z": 8000,
+        "height": 268.4147157190635,
+        "width": 615,
+        "tabOrder": 0
+    },
+    "visual": {
+        "visualType": "lineClusteredColumnComboChart",
+        "query": {
+            "queryState": {
+                "Category": {
+                    "projections": [
+                        {
+                            "field": {
+                                "Column": {
+                                    "Expression": {
+                                        "SourceRef": {
+                                            "Entity": "calendar"
+                                        }
+                                    },
+                                    "Property": "Year"
+                                }
+                            },
+                            "queryRef": "calendar.Year",
+                            "nativeQueryRef": "Year",
+                            "active": false
+                        },
+                        {
+                            "field": {
+                                "Column": {
+                                    "Expression": {
+                                        "SourceRef": {
+                                            "Entity": "calendar"
+                                        }
+                                    },
+                                    "Property": "YearMonth"
+                                }
+                            },
+                            "queryRef": "calendar.YearMonth",
+                            "nativeQueryRef": "Year-Month",
+                            "active": true,
+                            "displayName": "Year-Month"
+                        }
+                    ]
+                },
+                "Y": {
+                    "projections": [
+                        {
+                            "field": {
+                                "Measure": {
+                                    "Expression": {
+                                        "SourceRef": {
+                                            "Entity": "Metrics"
+                                        }
+                                    },
+                                    "Property": "# Activities"
+                                }
+                            },
+                            "queryRef": "Metrics.# Activities",
+                            "nativeQueryRef": "# Activities"
+                        }
+                    ]
+                },
+                "Y2": {
+                    "projections": [
+                        {
+                            "field": {
+                                "Measure": {
+                                    "Expression": {
+                                        "SourceRef": {
+                                            "Entity": "Metrics"
+                                        }
+                                    },
+                                    "Property": "Activities Growth MoM"
+                                }
+                            },
+                            "queryRef": "Metrics.Activities Growth MoM",
+                            "nativeQueryRef": "Activities Growth MoM"
+                        }
+                    ]
+                }
+            },
+            "sortDefinition": {
+                "sort": [
+                    {
+                        "field": {
+                            "Column": {
+                                "Expression": {
+                                    "SourceRef": {
+                                        "Entity": "calendar"
+                                    }
+                                },
+                                "Property": "YearMonth"
+                            }
+                        },
+                        "direction": "Ascending"
+                    }
+                ]
+            }
+        },
+        "objects": {
+            "categoryAxis": [
+                {
+                    "properties": {
+                        "axisType": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "'Scalar'"
+                                }
+                            }
+                        },
+                        "gridlineColor": {
+                            "solid": {
+                                "color": {
+                                    "expr": {
+                                        "ThemeDataColor": {
+                                            "ColorId": 0,
+                                            "Percent": -0.5
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            ],
+            "labels": [
+                {
+                    "properties": {
+                        "show": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "true"
+                                }
+                            }
+                        }
+                    }
+                },
+                {
+                    "properties": {
+                        "showSeries": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "false"
+                                }
+                            }
+                        },
+                        "backgroundColor": {
+                            "solid": {
+                                "color": {
+                                    "expr": {
+                                        "ThemeDataColor": {
+                                            "ColorId": 1,
+                                            "Percent": 0.4
+                                        }
+                                    }
+                                }
+                            }
+                        },
+                        "color": {
+                            "solid": {
+                                "color": {
+                                    "expr": {
+                                        "ThemeDataColor": {
+                                            "ColorId": 0,
+                                            "Percent": 0
+                                        }
+                                    }
+                                }
+                            }
+                        },
+                        "backgroundTransparency": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "58L"
+                                }
+                            }
+                        }
+                    },
+                    "selector": {
+                        "metadata": "Metrics.# Activities"
+                    }
+                },
+                {
+                    "properties": {
+                        "backgroundColor": {
+                            "solid": {
+                                "color": {
+                                    "expr": {
+                                        "ThemeDataColor": {
+                                            "ColorId": 5,
+                                            "Percent": 0
+                                        }
+                                    }
+                                }
+                            }
+                        },
+                        "color": {
+                            "solid": {
+                                "color": {
+                                    "expr": {
+                                        "ThemeDataColor": {
+                                            "ColorId": 0,
+                                            "Percent": 0
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "selector": {
+                        "metadata": "Metrics.Activities Growth MoM"
+                    }
+                }
+            ],
+            "legend": [
+                {
+                    "properties": {
+                        "position": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "'BottomCenter'"
+                                }
+                            }
+                        }
+                    }
+                }
+            ],
+            "valueAxis": [
+                {
+                    "properties": {
+                        "gridlineColor": {
+                            "solid": {
+                                "color": {
+                                    "expr": {
+                                        "ThemeDataColor": {
+                                            "ColorId": 0,
+                                            "Percent": -0.5
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            ],
+            "lineStyles": [
+                {
+                    "properties": {
+                        "showMarker": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "true"
+                                }
+                            }
+                        },
+                        "strokeWidth": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "3D"
+                                }
+                            }
+                        },
+                        "markerSize": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "6D"
+                                }
+                            }
+                        },
+                        "markerShape": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "'square'"
+                                }
+                            }
+                        }
+                    }
+                }
+            ],
+            "dataPoint": [
+                {
+                    "properties": {
+                        "fill": {
+                            "solid": {
+                                "color": {
+                                    "expr": {
+                                        "ThemeDataColor": {
+                                            "ColorId": 5,
+                                            "Percent": -0.25
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "selector": {
+                        "metadata": "Metrics.Activities Growth MoM"
+                    }
+                },
+                {
+                    "properties": {
+                        "fill": {
+                            "solid": {
+                                "color": {
+                                    "expr": {
+                                        "ThemeDataColor": {
+                                            "ColorId": 4,
+                                            "Percent": -0.25
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            ]
+        },
+        "visualContainerObjects": {
+            "title": [
+                {
+                    "properties": {
+                        "show": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "true"
+                                }
+                            }
+                        },
+                        "text": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "'MCG | Monthly Consumption Growth (on dedicated Capacities)'"
+                                }
+                            }
+                        },
+                        "fontSize": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "12D"
+                                }
+                            }
+                        }
+                    }
+                }
+            ],
+            "border": [
+                {
+                    "properties": {
+                        "show": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "true"
+                                }
+                            }
+                        },
+                        "radius": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "5D"
+                                }
+                            }
+                        }
+                    }
+                }
+            ],
+            "dropShadow": [
+                {
+                    "properties": {
+                        "show": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "true"
+                                }
+                            }
+                        },
+                        "color": {
+                            "solid": {
+                                "color": {
+                                    "expr": {
+                                        "ThemeDataColor": {
+                                            "ColorId": 0,
+                                            "Percent": -0.1
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            ],
+            "subTitle": [
+                {
+                    "properties": {
+                        "show": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "true"
+                                }
+                            }
+                        },
+                        "text": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "'X-Axis hierarchy: Year-Month | Filtered for: ViewReport, ViewDashboard, AnalyzeInExcel, ExportReport'"
+                                }
+                            }
+                        },
+                        "fontSize": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "9D"
+                                }
+                            }
+                        }
+                    }
+                }
+            ],
+            "visualTooltip": [
+                {
+                    "properties": {
+                        "type": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "'Default'"
+                                }
+                            }
+                        }
+                    }
+                }
+            ]
+        },
+        "drillFilterOtherVisuals": true
+    },
+    "filterConfig": {
+        "filters": [
+            {
+                "name": "Filtera9c1fb716a35e193dc11",
+                "ordinal": 0,
+                "field": {
+                    "Column": {
+                        "Expression": {
+                            "SourceRef": {
+                                "Entity": "activities"
+                            }
+                        },
+                        "Property": "CapacityId"
+                    }
+                },
+                "type": "Categorical",
+                "filter": {
+                    "Version": 2,
+                    "From": [
+                        {
+                            "Name": "a",
+                            "Entity": "activities",
+                            "Type": 0
+                        }
+                    ],
+                    "Where": [
+                        {
+                            "Condition": {
+                                "Not": {
+                                    "Expression": {
+                                        "In": {
+                                            "Expressions": [
+                                                {
+                                                    "Column": {
+                                                        "Expression": {
+                                                            "SourceRef": {
+                                                                "Source": "a"
+                                                            }
+                                                        },
+                                                        "Property": "CapacityId"
+                                                    }
+                                                }
+                                            ],
+                                            "Values": [
+                                                [
+                                                    {
+                                                        "Literal": {
+                                                            "Value": "null"
+                                                        }
+                                                    }
+                                                ]
+                                            ]
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    ]
+                },
+                "howCreated": "User",
+                "objects": {
+                    "general": [
+                        {
+                            "properties": {
+                                "isInvertedSelectionMode": {
+                                    "expr": {
+                                        "Literal": {
+                                            "Value": "true"
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    ]
+                }
+            },
+            {
+                "name": "94b46bc35c26f6c2a875",
+                "ordinal": 1,
+                "field": {
+                    "Column": {
+                        "Expression": {
+                            "SourceRef": {
+                                "Entity": "calendar"
+                            }
+                        },
+                        "Property": "YearMonth"
+                    }
+                },
+                "type": "Categorical"
+            },
+            {
+                "name": "f20b83a8b58aff9f7406",
+                "ordinal": 2,
+                "field": {
+                    "Measure": {
+                        "Expression": {
+                            "SourceRef": {
+                                "Entity": "Metrics"
+                            }
+                        },
+                        "Property": "Activities Growth MoM"
+                    }
+                },
+                "type": "Advanced"
+            },
+            {
+                "name": "c020b04f0be4d2fac192",
+                "ordinal": 3,
+                "field": {
+                    "Measure": {
+                        "Expression": {
+                            "SourceRef": {
+                                "Entity": "Metrics"
+                            }
+                        },
+                        "Property": "# Activities"
+                    }
+                },
+                "type": "Advanced"
+            },
+            {
+                "name": "ae0d62bb20834b695a42",
+                "ordinal": 4,
+                "field": {
+                    "Column": {
+                        "Expression": {
+                            "SourceRef": {
+                                "Entity": "activities"
+                            }
+                        },
+                        "Property": "Activity"
+                    }
+                },
+                "type": "Categorical",
+                "filter": {
+                    "Version": 2,
+                    "From": [
+                        {
+                            "Name": "a",
+                            "Entity": "activities",
+                            "Type": 0
+                        }
+                    ],
+                    "Where": [
+                        {
+                            "Condition": {
+                                "In": {
+                                    "Expressions": [
+                                        {
+                                            "Column": {
+                                                "Expression": {
+                                                    "SourceRef": {
+                                                        "Source": "a"
+                                                    }
+                                                },
+                                                "Property": "Activity"
+                                            }
+                                        }
+                                    ],
+                                    "Values": [
+                                        [
+                                            {
+                                                "Literal": {
+                                                    "Value": "'ExportReport'"
+                                                }
+                                            }
+                                        ],
+                                        [
+                                            {
+                                                "Literal": {
+                                                    "Value": "'ViewDashboard'"
+                                                }
+                                            }
+                                        ],
+                                        [
+                                            {
+                                                "Literal": {
+                                                    "Value": "'ViewReport'"
+                                                }
+                                            }
+                                        ],
+                                        [
+                                            {
+                                                "Literal": {
+                                                    "Value": "'AnalyzeInExcel'"
+                                                }
+                                            }
+                                        ]
+                                    ]
+                                }
+                            }
+                        }
+                    ]
+                },
+                "howCreated": "User"
+            },
+            {
+                "name": "bbbf02049226d36b1cbe",
+                "ordinal": 5,
+                "field": {
+                    "Column": {
+                        "Expression": {
+                            "SourceRef": {
+                                "Entity": "calendar"
+                            }
+                        },
+                        "Property": "Date2Key"
+                    }
+                },
+                "type": "RelativeDate",
+                "filter": {
+                    "Version": 2,
+                    "From": [
+                        {
+                            "Name": "c",
+                            "Entity": "calendar",
+                            "Type": 0
+                        }
+                    ],
+                    "Where": [
+                        {
+                            "Condition": {
+                                "Between": {
+                                    "Expression": {
+                                        "Column": {
+                                            "Expression": {
+                                                "SourceRef": {
+                                                    "Source": "c"
+                                                }
+                                            },
+                                            "Property": "Date2Key"
+                                        }
+                                    },
+                                    "LowerBound": {
+                                        "DateSpan": {
+                                            "Expression": {
+                                                "DateAdd": {
+                                                    "Expression": {
+                                                        "DateAdd": {
+                                                            "Expression": {
+                                                                "Now": {}
+                                                            },
+                                                            "Amount": 1,
+                                                            "TimeUnit": 0
+                                                        }
+                                                    },
+                                                    "Amount": -2,
+                                                    "TimeUnit": 3
+                                                }
+                                            },
+                                            "TimeUnit": 0
+                                        }
+                                    },
+                                    "UpperBound": {
+                                        "DateSpan": {
+                                            "Expression": {
+                                                "Now": {}
+                                            },
+                                            "TimeUnit": 0
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    ]
+                },
+                "howCreated": "User"
+            }
+        ],
+        "filterSortOrder": "Custom"
+    }
+}

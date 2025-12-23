@@ -184,5 +184,3 @@ table semantic_models
 			schemaName: dbo
 			expressionSource: DatabaseQuery
 
-	annotation PBI_ResultType = Table
-

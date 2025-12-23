@@ -1,0 +1,227 @@
+{
+    "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.5.0/schema.json",
+    "name": "0970b5a523ce7524efc7",
+    "position": {
+        "x": 612.0689655172414,
+        "y": 1548.2758620689656,
+        "z": 23000,
+        "height": 631.0344827586207,
+        "width": 532.7586206896552,
+        "tabOrder": 24000
+    },
+    "visual": {
+        "visualType": "ribbonChart",
+        "query": {
+            "queryState": {
+                "Category": {
+                    "projections": [
+                        {
+                            "field": {
+                                "Column": {
+                                    "Expression": {
+                                        "SourceRef": {
+                                            "Entity": "semantic_model_analyzer_runs"
+                                        }
+                                    },
+                                    "Property": "RunName"
+                                }
+                            },
+                            "queryRef": "semantic_model_analyzer_runs.RunName",
+                            "nativeQueryRef": "RunName",
+                            "active": true
+                        }
+                    ]
+                },
+                "Series": {
+                    "projections": [
+                        {
+                            "field": {
+                                "Column": {
+                                    "Expression": {
+                                        "SourceRef": {
+                                            "Entity": "semantic_model_vertipaq_tables"
+                                        }
+                                    },
+                                    "Property": "Name"
+                                }
+                            },
+                            "queryRef": "semantic_model_vertipaq_tables.Name",
+                            "nativeQueryRef": "Name"
+                        }
+                    ]
+                },
+                "Tooltips": {
+                    "projections": [
+                        {
+                            "field": {
+                                "Measure": {
+                                    "Expression": {
+                                        "SourceRef": {
+                                            "Entity": "Metrics"
+                                        }
+                                    },
+                                    "Property": "Selected Unit Name"
+                                }
+                            },
+                            "queryRef": "Metrics.Selected Unit Name",
+                            "nativeQueryRef": "Unit",
+                            "displayName": "Unit"
+                        }
+                    ]
+                },
+                "Y": {
+                    "projections": [
+                        {
+                            "field": {
+                                "Measure": {
+                                    "Expression": {
+                                        "SourceRef": {
+                                            "Entity": "Metrics"
+                                        }
+                                    },
+                                    "Property": "Total Size (table)"
+                                }
+                            },
+                            "queryRef": "Metrics.Total Size (table)",
+                            "nativeQueryRef": "Total Size (table)"
+                        }
+                    ]
+                }
+            }
+        },
+        "objects": {
+            "layout": [
+                {
+                    "properties": {}
+                }
+            ],
+            "labels": [
+                {
+                    "properties": {
+                        "show": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "true"
+                                }
+                            }
+                        }
+                    }
+                }
+            ],
+            "legend": [
+                {
+                    "properties": {
+                        "show": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "false"
+                                }
+                            }
+                        }
+                    }
+                }
+            ]
+        },
+        "visualContainerObjects": {
+            "title": [
+                {
+                    "properties": {
+                        "text": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "'Semantic Model Sizes & Differences over Runs'"
+                                }
+                            }
+                        }
+                    }
+                }
+            ],
+            "subTitle": [
+                {
+                    "properties": {
+                        "show": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "true"
+                                }
+                            }
+                        },
+                        "text": {
+                            "expr": {
+                                "Measure": {
+                                    "Expression": {
+                                        "SourceRef": {
+                                            "Entity": "Metrics"
+                                        }
+                                    },
+                                    "Property": "Selected Unit Name"
+                                }
+                            }
+                        }
+                    }
+                }
+            ]
+        },
+        "drillFilterOtherVisuals": true
+    },
+    "filterConfig": {
+        "filters": [
+            {
+                "name": "723e8fbc67cb5e54b2c1",
+                "field": {
+                    "Column": {
+                        "Expression": {
+                            "SourceRef": {
+                                "Entity": "semantic_model_analyzer_runs"
+                            }
+                        },
+                        "Property": "RunName"
+                    }
+                },
+                "type": "Categorical"
+            },
+            {
+                "name": "178450477644dfcf3cb2",
+                "field": {
+                    "Column": {
+                        "Expression": {
+                            "SourceRef": {
+                                "Entity": "semantic_model_vertipaq_tables"
+                            }
+                        },
+                        "Property": "Name"
+                    }
+                },
+                "type": "Categorical"
+            },
+            {
+                "name": "843388cdcd84a5cfea93",
+                "field": {
+                    "Measure": {
+                        "Expression": {
+                            "SourceRef": {
+                                "Entity": "Metrics"
+                            }
+                        },
+                        "Property": "Selected Unit Name"
+                    }
+                },
+                "type": "Advanced"
+            },
+            {
+                "name": "6b3265ffe3e8c2201f45",
+                "field": {
+                    "Measure": {
+                        "Expression": {
+                            "SourceRef": {
+                                "Entity": "Metrics"
+                            }
+                        },
+                        "Property": "Total Size (table)"
+                    }
+                },
+                "type": "Advanced"
+            }
+        ]
+    }
+}

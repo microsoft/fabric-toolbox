@@ -1,0 +1,1299 @@
+{
+    "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.5.0/schema.json",
+    "name": "05bb4746d39f1c9b34e3",
+    "position": {
+        "x": 200,
+        "y": 756,
+        "z": 6000,
+        "height": 309,
+        "width": 1710,
+        "tabOrder": 6000
+    },
+    "visual": {
+        "visualType": "cardVisual",
+        "query": {
+            "queryState": {
+                "Data": {
+                    "projections": [
+                        {
+                            "field": {
+                                "Measure": {
+                                    "Expression": {
+                                        "SourceRef": {
+                                            "Entity": "Metrics"
+                                        }
+                                    },
+                                    "Property": "# Anomaly Detectors"
+                                }
+                            },
+                            "queryRef": "Metrics.# Anomaly Detectors",
+                            "nativeQueryRef": "# Anomaly Detectors"
+                        },
+                        {
+                            "field": {
+                                "Measure": {
+                                    "Expression": {
+                                        "SourceRef": {
+                                            "Entity": "Metrics"
+                                        }
+                                    },
+                                    "Property": "# Apache Airflow Jobs"
+                                }
+                            },
+                            "queryRef": "Metrics.# Apache Airflow Jobs",
+                            "nativeQueryRef": "# Apache Airflow Jobs"
+                        },
+                        {
+                            "field": {
+                                "Measure": {
+                                    "Expression": {
+                                        "SourceRef": {
+                                            "Entity": "Metrics"
+                                        }
+                                    },
+                                    "Property": "# Apps"
+                                }
+                            },
+                            "queryRef": "Metrics.# Apps",
+                            "nativeQueryRef": "# Apps"
+                        },
+                        {
+                            "field": {
+                                "Measure": {
+                                    "Expression": {
+                                        "SourceRef": {
+                                            "Entity": "Metrics"
+                                        }
+                                    },
+                                    "Property": "# Copy Jobs"
+                                }
+                            },
+                            "queryRef": "Metrics.# Copy Jobs",
+                            "nativeQueryRef": "# Copy Jobs"
+                        },
+                        {
+                            "field": {
+                                "Measure": {
+                                    "Expression": {
+                                        "SourceRef": {
+                                            "Entity": "Metrics"
+                                        }
+                                    },
+                                    "Property": "# Dashboards"
+                                }
+                            },
+                            "queryRef": "Metrics.# Dashboards",
+                            "nativeQueryRef": "# Dashboards"
+                        },
+                        {
+                            "field": {
+                                "Measure": {
+                                    "Expression": {
+                                        "SourceRef": {
+                                            "Entity": "Metrics"
+                                        }
+                                    },
+                                    "Property": "# Data Agents"
+                                }
+                            },
+                            "queryRef": "Metrics.# Data Agents",
+                            "nativeQueryRef": "# Data Agents"
+                        },
+                        {
+                            "field": {
+                                "Measure": {
+                                    "Expression": {
+                                        "SourceRef": {
+                                            "Entity": "Metrics"
+                                        }
+                                    },
+                                    "Property": "# Dataflows"
+                                }
+                            },
+                            "queryRef": "Metrics.# Dataflows",
+                            "nativeQueryRef": "# Dataflows"
+                        },
+                        {
+                            "field": {
+                                "Measure": {
+                                    "Expression": {
+                                        "SourceRef": {
+                                            "Entity": "Metrics"
+                                        }
+                                    },
+                                    "Property": "# Datamarts"
+                                }
+                            },
+                            "queryRef": "Metrics.# Datamarts",
+                            "nativeQueryRef": "# Datamarts"
+                        },
+                        {
+                            "field": {
+                                "Measure": {
+                                    "Expression": {
+                                        "SourceRef": {
+                                            "Entity": "Metrics"
+                                        }
+                                    },
+                                    "Property": "# Environments"
+                                }
+                            },
+                            "queryRef": "Metrics.# Environments",
+                            "nativeQueryRef": "# Environments"
+                        },
+                        {
+                            "field": {
+                                "Measure": {
+                                    "Expression": {
+                                        "SourceRef": {
+                                            "Entity": "Metrics"
+                                        }
+                                    },
+                                    "Property": "# Eventhouses"
+                                }
+                            },
+                            "queryRef": "Metrics.# Eventhouses",
+                            "nativeQueryRef": "# Eventhouses"
+                        },
+                        {
+                            "field": {
+                                "Measure": {
+                                    "Expression": {
+                                        "SourceRef": {
+                                            "Entity": "Metrics"
+                                        }
+                                    },
+                                    "Property": "# Eventstreams"
+                                }
+                            },
+                            "queryRef": "Metrics.# Eventstreams",
+                            "nativeQueryRef": "# Eventstreams"
+                        },
+                        {
+                            "field": {
+                                "Measure": {
+                                    "Expression": {
+                                        "SourceRef": {
+                                            "Entity": "Metrics"
+                                        }
+                                    },
+                                    "Property": "# Graph Models"
+                                }
+                            },
+                            "queryRef": "Metrics.# Graph Models",
+                            "nativeQueryRef": "# Graph Models"
+                        },
+                        {
+                            "field": {
+                                "Measure": {
+                                    "Expression": {
+                                        "SourceRef": {
+                                            "Entity": "Metrics"
+                                        }
+                                    },
+                                    "Property": "# GraphQL APIs"
+                                }
+                            },
+                            "queryRef": "Metrics.# GraphQL APIs",
+                            "nativeQueryRef": "# GraphQL APIs"
+                        },
+                        {
+                            "field": {
+                                "Measure": {
+                                    "Expression": {
+                                        "SourceRef": {
+                                            "Entity": "Metrics"
+                                        }
+                                    },
+                                    "Property": "# Healthcare Data Solutions"
+                                }
+                            },
+                            "queryRef": "Metrics.# Healthcare Data Solutions",
+                            "nativeQueryRef": "# Healthcare Data Solutions"
+                        },
+                        {
+                            "field": {
+                                "Measure": {
+                                    "Expression": {
+                                        "SourceRef": {
+                                            "Entity": "Metrics"
+                                        }
+                                    },
+                                    "Property": "# KQL Databases"
+                                }
+                            },
+                            "queryRef": "Metrics.# KQL Databases",
+                            "nativeQueryRef": "# KQL Databases"
+                        },
+                        {
+                            "field": {
+                                "Measure": {
+                                    "Expression": {
+                                        "SourceRef": {
+                                            "Entity": "Metrics"
+                                        }
+                                    },
+                                    "Property": "# KQL Querysets"
+                                }
+                            },
+                            "queryRef": "Metrics.# KQL Querysets",
+                            "nativeQueryRef": "# KQL Querysets"
+                        },
+                        {
+                            "field": {
+                                "Measure": {
+                                    "Expression": {
+                                        "SourceRef": {
+                                            "Entity": "Metrics"
+                                        }
+                                    },
+                                    "Property": "# Lakehouses"
+                                }
+                            },
+                            "queryRef": "Metrics.# Lakehouses",
+                            "nativeQueryRef": "# Lakehouses"
+                        },
+                        {
+                            "field": {
+                                "Measure": {
+                                    "Expression": {
+                                        "SourceRef": {
+                                            "Entity": "Metrics"
+                                        }
+                                    },
+                                    "Property": "# Maps"
+                                }
+                            },
+                            "queryRef": "Metrics.# Maps",
+                            "nativeQueryRef": "# Maps"
+                        },
+                        {
+                            "field": {
+                                "Measure": {
+                                    "Expression": {
+                                        "SourceRef": {
+                                            "Entity": "Metrics"
+                                        }
+                                    },
+                                    "Property": "# Mirrored Warehouses"
+                                }
+                            },
+                            "queryRef": "Metrics.# Mirrored Warehouses",
+                            "nativeQueryRef": "# Mirrored Warehouses"
+                        },
+                        {
+                            "field": {
+                                "Measure": {
+                                    "Expression": {
+                                        "SourceRef": {
+                                            "Entity": "Metrics"
+                                        }
+                                    },
+                                    "Property": "# ML Experiments"
+                                }
+                            },
+                            "queryRef": "Metrics.# ML Experiments",
+                            "nativeQueryRef": "# ML Experiments"
+                        },
+                        {
+                            "field": {
+                                "Measure": {
+                                    "Expression": {
+                                        "SourceRef": {
+                                            "Entity": "Metrics"
+                                        }
+                                    },
+                                    "Property": "# ML Models"
+                                }
+                            },
+                            "queryRef": "Metrics.# ML Models",
+                            "nativeQueryRef": "# ML Models"
+                        },
+                        {
+                            "field": {
+                                "Measure": {
+                                    "Expression": {
+                                        "SourceRef": {
+                                            "Entity": "Metrics"
+                                        }
+                                    },
+                                    "Property": "# Mounted Databases"
+                                }
+                            },
+                            "queryRef": "Metrics.# Mounted Databases",
+                            "nativeQueryRef": "# Mounted Databases"
+                        },
+                        {
+                            "field": {
+                                "Measure": {
+                                    "Expression": {
+                                        "SourceRef": {
+                                            "Entity": "Metrics"
+                                        }
+                                    },
+                                    "Property": "# Notebooks"
+                                }
+                            },
+                            "queryRef": "Metrics.# Notebooks",
+                            "nativeQueryRef": "# Notebooks"
+                        },
+                        {
+                            "field": {
+                                "Measure": {
+                                    "Expression": {
+                                        "SourceRef": {
+                                            "Entity": "Metrics"
+                                        }
+                                    },
+                                    "Property": "# Ontologies"
+                                }
+                            },
+                            "queryRef": "Metrics.# Ontologies",
+                            "nativeQueryRef": "# Ontologies"
+                        },
+                        {
+                            "field": {
+                                "Measure": {
+                                    "Expression": {
+                                        "SourceRef": {
+                                            "Entity": "Metrics"
+                                        }
+                                    },
+                                    "Property": "# Operations Agents"
+                                }
+                            },
+                            "queryRef": "Metrics.# Operations Agents",
+                            "nativeQueryRef": "# Operations Agents"
+                        },
+                        {
+                            "field": {
+                                "Measure": {
+                                    "Expression": {
+                                        "SourceRef": {
+                                            "Entity": "Metrics"
+                                        }
+                                    },
+                                    "Property": "# Pipelines"
+                                }
+                            },
+                            "queryRef": "Metrics.# Pipelines",
+                            "nativeQueryRef": "# Pipelines"
+                        },
+                        {
+                            "field": {
+                                "Measure": {
+                                    "Expression": {
+                                        "SourceRef": {
+                                            "Entity": "Metrics"
+                                        }
+                                    },
+                                    "Property": "# Reflex"
+                                }
+                            },
+                            "queryRef": "Metrics.# Reflex",
+                            "nativeQueryRef": "# Reflex"
+                        },
+                        {
+                            "field": {
+                                "Measure": {
+                                    "Expression": {
+                                        "SourceRef": {
+                                            "Entity": "Metrics"
+                                        }
+                                    },
+                                    "Property": "# Reports"
+                                }
+                            },
+                            "queryRef": "Metrics.# Reports",
+                            "nativeQueryRef": "# Reports"
+                        },
+                        {
+                            "field": {
+                                "Measure": {
+                                    "Expression": {
+                                        "SourceRef": {
+                                            "Entity": "Metrics"
+                                        }
+                                    },
+                                    "Property": "# RTI Dashboards"
+                                }
+                            },
+                            "queryRef": "Metrics.# RTI Dashboards",
+                            "nativeQueryRef": "# RTI Dashboards"
+                        },
+                        {
+                            "field": {
+                                "Measure": {
+                                    "Expression": {
+                                        "SourceRef": {
+                                            "Entity": "Metrics"
+                                        }
+                                    },
+                                    "Property": "# Semantic Models"
+                                }
+                            },
+                            "queryRef": "Metrics.# Semantic Models",
+                            "nativeQueryRef": "# Semantic Models"
+                        },
+                        {
+                            "field": {
+                                "Measure": {
+                                    "Expression": {
+                                        "SourceRef": {
+                                            "Entity": "Metrics"
+                                        }
+                                    },
+                                    "Property": "# Spark Job Definitions"
+                                }
+                            },
+                            "queryRef": "Metrics.# Spark Job Definitions",
+                            "nativeQueryRef": "# Spark Job Definitions"
+                        },
+                        {
+                            "field": {
+                                "Measure": {
+                                    "Expression": {
+                                        "SourceRef": {
+                                            "Entity": "Metrics"
+                                        }
+                                    },
+                                    "Property": "# SQL Endpoints"
+                                }
+                            },
+                            "queryRef": "Metrics.# SQL Endpoints",
+                            "nativeQueryRef": "# SQL Endpoints"
+                        },
+                        {
+                            "field": {
+                                "Measure": {
+                                    "Expression": {
+                                        "SourceRef": {
+                                            "Entity": "Metrics"
+                                        }
+                                    },
+                                    "Property": "# SQL Databases"
+                                }
+                            },
+                            "queryRef": "Metrics.# SQL Databases",
+                            "nativeQueryRef": "# SQL Databases"
+                        },
+                        {
+                            "field": {
+                                "Measure": {
+                                    "Expression": {
+                                        "SourceRef": {
+                                            "Entity": "Metrics"
+                                        }
+                                    },
+                                    "Property": "# Sustainability Data Solutions"
+                                }
+                            },
+                            "queryRef": "Metrics.# Sustainability Data Solutions",
+                            "nativeQueryRef": "# Sustainability Data Solutions"
+                        },
+                        {
+                            "field": {
+                                "Measure": {
+                                    "Expression": {
+                                        "SourceRef": {
+                                            "Entity": "Metrics"
+                                        }
+                                    },
+                                    "Property": "# User Data Function"
+                                }
+                            },
+                            "queryRef": "Metrics.# User Data Function",
+                            "nativeQueryRef": "# User Data Function"
+                        },
+                        {
+                            "field": {
+                                "Measure": {
+                                    "Expression": {
+                                        "SourceRef": {
+                                            "Entity": "Metrics"
+                                        }
+                                    },
+                                    "Property": "# Variable Libraries"
+                                }
+                            },
+                            "queryRef": "Metrics.# Variable Libraries",
+                            "nativeQueryRef": "# Variable Libraries"
+                        },
+                        {
+                            "field": {
+                                "Measure": {
+                                    "Expression": {
+                                        "SourceRef": {
+                                            "Entity": "Metrics"
+                                        }
+                                    },
+                                    "Property": "# Warehouses"
+                                }
+                            },
+                            "queryRef": "Metrics.# Warehouses",
+                            "nativeQueryRef": "# Warehouses"
+                        }
+                    ]
+                }
+            },
+            "sortDefinition": {
+                "sort": [
+                    {
+                        "field": {
+                            "Measure": {
+                                "Expression": {
+                                    "SourceRef": {
+                                        "Entity": "Metrics"
+                                    }
+                                },
+                                "Property": "# Anomaly Detectors"
+                            }
+                        },
+                        "direction": "Descending"
+                    }
+                ],
+                "isDefaultSort": true
+            }
+        },
+        "objects": {
+            "layout": [
+                {
+                    "properties": {
+                        "orientation": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "0D"
+                                }
+                            }
+                        },
+                        "style": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "'Cards'"
+                                }
+                            }
+                        },
+                        "maxTiles": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "14L"
+                                }
+                            }
+                        },
+                        "alignment": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "'top'"
+                                }
+                            }
+                        },
+                        "rowCount": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "4L"
+                                }
+                            }
+                        },
+                        "columnCount": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "10L"
+                                }
+                            }
+                        },
+                        "cellPadding": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "5L"
+                                }
+                            }
+                        }
+                    }
+                }
+            ],
+            "value": [
+                {
+                    "properties": {
+                        "fontSize": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "16D"
+                                }
+                            }
+                        },
+                        "fontFamily": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "'''Segoe UI Semibold'', wf_segoe-ui_semibold, helvetica, arial, sans-serif'"
+                                }
+                            }
+                        },
+                        "horizontalAlignment": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "'left'"
+                                }
+                            }
+                        }
+                    },
+                    "selector": {
+                        "id": "default"
+                    }
+                },
+                {
+                    "properties": {
+                        "labelDisplayUnits": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "1D"
+                                }
+                            }
+                        }
+                    },
+                    "selector": {
+                        "metadata": "Metrics.# Apps"
+                    }
+                },
+                {
+                    "properties": {
+                        "labelDisplayUnits": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "1D"
+                                }
+                            }
+                        }
+                    },
+                    "selector": {
+                        "metadata": "Metrics.# Dashboards"
+                    }
+                },
+                {
+                    "properties": {
+                        "labelDisplayUnits": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "1D"
+                                }
+                            }
+                        }
+                    },
+                    "selector": {
+                        "metadata": "Metrics.# Data Agents"
+                    }
+                },
+                {
+                    "properties": {
+                        "labelDisplayUnits": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "1D"
+                                }
+                            }
+                        }
+                    },
+                    "selector": {
+                        "metadata": "Metrics.# Dataflows"
+                    }
+                },
+                {
+                    "properties": {
+                        "labelDisplayUnits": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "1D"
+                                }
+                            }
+                        }
+                    },
+                    "selector": {
+                        "metadata": "Metrics.# Datamarts"
+                    }
+                },
+                {
+                    "properties": {
+                        "labelDisplayUnits": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "1D"
+                                }
+                            }
+                        }
+                    },
+                    "selector": {
+                        "metadata": "Metrics.# Environments"
+                    }
+                },
+                {
+                    "properties": {
+                        "labelDisplayUnits": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "1D"
+                                }
+                            }
+                        }
+                    },
+                    "selector": {
+                        "metadata": "Metrics.# Eventhouses"
+                    }
+                },
+                {
+                    "properties": {
+                        "labelDisplayUnits": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "1D"
+                                }
+                            }
+                        }
+                    },
+                    "selector": {
+                        "metadata": "Metrics.# Eventstreams"
+                    }
+                },
+                {
+                    "properties": {
+                        "labelDisplayUnits": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "1D"
+                                }
+                            }
+                        }
+                    },
+                    "selector": {
+                        "metadata": "Metrics.# GraphQL APIs"
+                    }
+                },
+                {
+                    "properties": {
+                        "labelDisplayUnits": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "1D"
+                                }
+                            }
+                        }
+                    },
+                    "selector": {
+                        "metadata": "Metrics.# Healthcare Data Solutions"
+                    }
+                },
+                {
+                    "properties": {
+                        "labelDisplayUnits": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "1D"
+                                }
+                            }
+                        }
+                    },
+                    "selector": {
+                        "metadata": "Metrics.# KQL Databases"
+                    }
+                },
+                {
+                    "properties": {
+                        "labelDisplayUnits": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "1D"
+                                }
+                            }
+                        }
+                    },
+                    "selector": {
+                        "metadata": "Metrics.# KQL Querysets"
+                    }
+                },
+                {
+                    "properties": {
+                        "labelDisplayUnits": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "1D"
+                                }
+                            }
+                        }
+                    },
+                    "selector": {
+                        "metadata": "Metrics.# Lakehouses"
+                    }
+                },
+                {
+                    "properties": {
+                        "labelDisplayUnits": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "1D"
+                                }
+                            }
+                        }
+                    },
+                    "selector": {
+                        "metadata": "Metrics.# Mirrored Warehouses"
+                    }
+                },
+                {
+                    "properties": {
+                        "labelDisplayUnits": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "1D"
+                                }
+                            }
+                        }
+                    },
+                    "selector": {
+                        "metadata": "Metrics.# ML Experiments"
+                    }
+                },
+                {
+                    "properties": {
+                        "labelDisplayUnits": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "1D"
+                                }
+                            }
+                        }
+                    },
+                    "selector": {
+                        "metadata": "Metrics.# ML Models"
+                    }
+                },
+                {
+                    "properties": {
+                        "labelDisplayUnits": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "1D"
+                                }
+                            }
+                        }
+                    },
+                    "selector": {
+                        "metadata": "Metrics.# Mounted Databases"
+                    }
+                },
+                {
+                    "properties": {
+                        "labelDisplayUnits": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "1D"
+                                }
+                            }
+                        }
+                    },
+                    "selector": {
+                        "metadata": "Metrics.# Notebooks"
+                    }
+                },
+                {
+                    "properties": {
+                        "labelDisplayUnits": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "1D"
+                                }
+                            }
+                        }
+                    },
+                    "selector": {
+                        "metadata": "Metrics.# Pipelines"
+                    }
+                },
+                {
+                    "properties": {
+                        "labelDisplayUnits": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "1D"
+                                }
+                            }
+                        }
+                    },
+                    "selector": {
+                        "metadata": "Metrics.# Reflex"
+                    }
+                },
+                {
+                    "properties": {
+                        "labelDisplayUnits": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "1D"
+                                }
+                            }
+                        }
+                    },
+                    "selector": {
+                        "metadata": "Metrics.# Reports"
+                    }
+                },
+                {
+                    "properties": {
+                        "labelDisplayUnits": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "1D"
+                                }
+                            }
+                        }
+                    },
+                    "selector": {
+                        "metadata": "Metrics.# Semantic Models"
+                    }
+                },
+                {
+                    "properties": {
+                        "labelDisplayUnits": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "1D"
+                                }
+                            }
+                        }
+                    },
+                    "selector": {
+                        "metadata": "Metrics.# Spark Job Definitions"
+                    }
+                },
+                {
+                    "properties": {
+                        "labelDisplayUnits": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "1D"
+                                }
+                            }
+                        }
+                    },
+                    "selector": {
+                        "metadata": "Metrics.# SQL Endpoints"
+                    }
+                },
+                {
+                    "properties": {
+                        "labelDisplayUnits": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "1D"
+                                }
+                            }
+                        }
+                    },
+                    "selector": {
+                        "metadata": "Metrics.# SQL Databases"
+                    }
+                },
+                {
+                    "properties": {
+                        "labelDisplayUnits": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "1D"
+                                }
+                            }
+                        }
+                    },
+                    "selector": {
+                        "metadata": "Metrics.# User Data Function"
+                    }
+                },
+                {
+                    "properties": {
+                        "labelDisplayUnits": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "1D"
+                                }
+                            }
+                        }
+                    },
+                    "selector": {
+                        "metadata": "Metrics.# Warehouses"
+                    }
+                }
+            ],
+            "label": [
+                {
+                    "properties": {
+                        "position": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "'belowValue'"
+                                }
+                            }
+                        },
+                        "fontSize": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "9D"
+                                }
+                            }
+                        },
+                        "fontFamily": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "'''Segoe UI Semibold'', wf_segoe-ui_semibold, helvetica, arial, sans-serif'"
+                                }
+                            }
+                        }
+                    },
+                    "selector": {
+                        "id": "default"
+                    }
+                }
+            ],
+            "shapeCustomRectangle": [
+                {
+                    "properties": {
+                        "tileShape": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "'rectangleRoundedByPixel'"
+                                }
+                            }
+                        },
+                        "rectangleRoundedCurve": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "7L"
+                                }
+                            }
+                        }
+                    },
+                    "selector": {
+                        "id": "default"
+                    }
+                }
+            ],
+            "fillCustom": [
+                {
+                    "properties": {
+                        "show": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "false"
+                                }
+                            }
+                        }
+                    }
+                },
+                {
+                    "properties": {
+                        "fillColor": {
+                            "solid": {
+                                "color": {
+                                    "expr": {
+                                        "Literal": {
+                                            "Value": "'#FFFFFF'"
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "selector": {
+                        "id": "default"
+                    }
+                }
+            ],
+            "outline": [
+                {
+                    "properties": {
+                        "show": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "true"
+                                }
+                            }
+                        },
+                        "lineColor": {
+                            "solid": {
+                                "color": {
+                                    "expr": {
+                                        "ThemeDataColor": {
+                                            "ColorId": 0,
+                                            "Percent": -0.1
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "selector": {
+                        "id": "default"
+                    }
+                }
+            ],
+            "shadowCustom": [
+                {
+                    "properties": {
+                        "show": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "false"
+                                }
+                            }
+                        }
+                    },
+                    "selector": {
+                        "id": "default"
+                    }
+                }
+            ],
+            "accentBar": [
+                {
+                    "properties": {
+                        "show": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "true"
+                                }
+                            }
+                        },
+                        "width": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "4L"
+                                }
+                            }
+                        },
+                        "color": {
+                            "solid": {
+                                "color": {
+                                    "expr": {
+                                        "ThemeDataColor": {
+                                            "ColorId": 2,
+                                            "Percent": 0
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "selector": {
+                        "id": "default"
+                    }
+                },
+                {
+                    "properties": {
+                        "color": {
+                            "solid": {
+                                "color": {
+                                    "expr": {
+                                        "Literal": {
+                                            "Value": "'#ED5757'"
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "selector": {
+                        "metadata": "Metrics.# Datamarts"
+                    }
+                }
+            ],
+            "glowCustom": [
+                {
+                    "properties": {
+                        "show": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "false"
+                                }
+                            }
+                        }
+                    },
+                    "selector": {
+                        "id": "default"
+                    }
+                }
+            ],
+            "padding": [
+                {
+                    "properties": {
+                        "paddingSelection": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "'Normal'"
+                                }
+                            }
+                        }
+                    },
+                    "selector": {
+                        "id": "default"
+                    }
+                }
+            ]
+        },
+        "visualContainerObjects": {
+            "background": [
+                {
+                    "properties": {
+                        "show": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "false"
+                                }
+                            }
+                        }
+                    }
+                }
+            ],
+            "border": [
+                {
+                    "properties": {
+                        "show": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "false"
+                                }
+                            }
+                        }
+                    }
+                }
+            ],
+            "title": [
+                {
+                    "properties": {
+                        "show": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "false"
+                                }
+                            }
+                        },
+                        "text": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "'Capacities, Workspaces and Active Items'"
+                                }
+                            }
+                        }
+                    }
+                }
+            ],
+            "visualTooltip": [
+                {
+                    "properties": {
+                        "show": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "true"
+                                }
+                            }
+                        }
+                    }
+                }
+            ]
+        },
+        "drillFilterOtherVisuals": true
+    }
+}

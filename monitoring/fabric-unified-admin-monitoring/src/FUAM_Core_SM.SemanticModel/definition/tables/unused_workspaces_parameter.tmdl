@@ -1,0 +1,27 @@
+/// Helper parameter value list for unused workspaces identification analytical pathway
+table unused_workspaces_parameter
+	lineageTag: 446e3ee4-439d-454f-8e3d-2e4b762e2004
+
+	measure unused_workspaces_days_in_scope_value = SELECTEDVALUE('unused_workspaces_parameter'[unused_workspaces_days_in_scope], 180)
+		formatString: 0
+		lineageTag: 8a2ad3e8-709f-44c2-a57b-3f15728d58e1
+
+	column unused_workspaces_days_in_scope
+		formatString: 0
+		lineageTag: 6b36498a-7dfb-4043-a7ea-c6b6665d45d7
+		summarizeBy: none
+		sourceColumn: [Value]
+
+		extendedProperty ParameterMetadata =
+				{
+				  "version": 0
+				}
+
+		annotation SummarizationSetBy = User
+
+	partition unused_workspaces_parameter = calculated
+		mode: import
+		source = GENERATESERIES(30, 190, 10)
+
+	annotation PBI_Id = 2ff3280102ff422f9d6ac8515059c689
+

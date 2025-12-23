@@ -1,144 +1,21 @@
 table semantic_model_vertipaq_relationships
-	lineageTag: c0f31c1d-6dae-4a9e-b842-9e73fa1a5e39
+	lineageTag: 91871bd4-981b-435e-a70a-dafe3a83f4a9
 	sourceLineageTag: [dbo].[semantic_model_vertipaq_relationships]
 
-	column Multiplicity
+	column SemanticModelRunKey
 		dataType: string
 		sourceProviderType: varchar(8000)
-		lineageTag: 6c00fa78-13b1-47ea-856f-c116f7c4dacd
-		sourceLineageTag: Multiplicity
+		lineageTag: b560ebb0-e18a-4ded-bc42-ccc4861e9297
+		sourceLineageTag: SemanticModelRunKey
 		summarizeBy: none
-		sourceColumn: Multiplicity
-
-		annotation SummarizationSetBy = Automatic
-
-	column FromTable
-		dataType: string
-		sourceProviderType: varchar(8000)
-		lineageTag: 1dfad764-965a-4755-854c-ed065465c078
-		sourceLineageTag: FromTable
-		summarizeBy: none
-		sourceColumn: FromTable
-
-		annotation SummarizationSetBy = Automatic
-
-	column FromColumn
-		dataType: string
-		sourceProviderType: varchar(8000)
-		lineageTag: b84c14e1-62e4-4e95-b49b-e9117bddee52
-		sourceLineageTag: FromColumn
-		summarizeBy: none
-		sourceColumn: FromColumn
-
-		annotation SummarizationSetBy = Automatic
-
-	column ToTable
-		dataType: string
-		sourceProviderType: varchar(8000)
-		lineageTag: 7c7d0306-36d7-49a0-a886-3062e68af727
-		sourceLineageTag: ToTable
-		summarizeBy: none
-		sourceColumn: ToTable
-
-		annotation SummarizationSetBy = Automatic
-
-	column ToColumn
-		dataType: string
-		sourceProviderType: varchar(8000)
-		lineageTag: 12b7df75-1c09-48a3-bf7e-448820f0922f
-		sourceLineageTag: ToColumn
-		summarizeBy: none
-		sourceColumn: ToColumn
-
-		annotation SummarizationSetBy = Automatic
-
-	column Active
-		dataType: boolean
-		formatString: """TRUE"";""TRUE"";""FALSE"""
-		sourceProviderType: bit
-		lineageTag: 8236a43f-e8f3-4bf6-a83b-a11e7d6c64b5
-		sourceLineageTag: Active
-		summarizeBy: none
-		sourceColumn: Active
-
-		annotation SummarizationSetBy = Automatic
-
-	column CrossFilteringBehavior
-		dataType: string
-		sourceProviderType: varchar(8000)
-		lineageTag: 10a9971a-a2ea-4cd0-ac98-b93d3ce97b69
-		sourceLineageTag: CrossFilteringBehavior
-		summarizeBy: none
-		sourceColumn: CrossFilteringBehavior
-
-		annotation SummarizationSetBy = Automatic
-
-	column SecurityFilteringBehavior
-		dataType: string
-		sourceProviderType: varchar(8000)
-		lineageTag: 6d1bbb5c-fe34-49d2-b1ac-27cda1a217bf
-		sourceLineageTag: SecurityFilteringBehavior
-		summarizeBy: none
-		sourceColumn: SecurityFilteringBehavior
-
-		annotation SummarizationSetBy = Automatic
-
-	column JoinOnDateBehavior
-		dataType: string
-		sourceProviderType: varchar(8000)
-		lineageTag: ec718198-45aa-4316-9089-ce0180686d2d
-		sourceLineageTag: JoinOnDateBehavior
-		summarizeBy: none
-		sourceColumn: JoinOnDateBehavior
-
-		annotation SummarizationSetBy = Automatic
-
-	column RelyOnReferentialIntegrity
-		dataType: boolean
-		formatString: """TRUE"";""TRUE"";""FALSE"""
-		sourceProviderType: bit
-		lineageTag: 9cb61009-c39b-4ae9-9ed6-e571e4a1c498
-		sourceLineageTag: RelyOnReferentialIntegrity
-		summarizeBy: none
-		sourceColumn: RelyOnReferentialIntegrity
-
-		annotation SummarizationSetBy = Automatic
-
-	column State
-		dataType: string
-		sourceProviderType: varchar(8000)
-		lineageTag: a91f0dbb-98da-4c24-a90f-ae1871d328b6
-		sourceLineageTag: State
-		summarizeBy: none
-		sourceColumn: State
-
-		annotation SummarizationSetBy = Automatic
-
-	column ModifiedTime
-		dataType: dateTime
-		formatString: General Date
-		sourceProviderType: datetime2
-		lineageTag: 38294f82-0602-4530-9e27-50667405376e
-		sourceLineageTag: ModifiedTime
-		summarizeBy: none
-		sourceColumn: ModifiedTime
-
-		annotation SummarizationSetBy = Automatic
-
-	column RelationshipName
-		dataType: string
-		sourceProviderType: varchar(8000)
-		lineageTag: e53f5afa-2310-40c9-8d13-916db9eac04b
-		sourceLineageTag: RelationshipName
-		summarizeBy: none
-		sourceColumn: RelationshipName
+		sourceColumn: SemanticModelRunKey
 
 		annotation SummarizationSetBy = Automatic
 
 	column FromObject
 		dataType: string
 		sourceProviderType: varchar(8000)
-		lineageTag: b3b991c2-31cf-4c46-8405-4b359b2da42e
+		lineageTag: 0af74e97-d6e4-4bd0-9433-94d6ec43bd5b
 		sourceLineageTag: FromObject
 		summarizeBy: none
 		sourceColumn: FromObject
@@ -148,7 +25,7 @@ table semantic_model_vertipaq_relationships
 	column ToObject
 		dataType: string
 		sourceProviderType: varchar(8000)
-		lineageTag: bb576e9d-e937-452f-ace4-36162b7c9855
+		lineageTag: 2578e8b9-5711-436f-bb31-a92261a3fea9
 		sourceLineageTag: ToObject
 		summarizeBy: none
 		sourceColumn: ToObject
@@ -159,7 +36,7 @@ table semantic_model_vertipaq_relationships
 		dataType: int64
 		formatString: 0
 		sourceProviderType: bigint
-		lineageTag: 7d6d1ab2-0a12-4e52-8fc1-8b3dfdff285a
+		lineageTag: 04ff314b-5f0d-446b-8d4d-6785f476c140
 		sourceLineageTag: UsedSize
 		summarizeBy: sum
 		sourceColumn: UsedSize
@@ -169,7 +46,7 @@ table semantic_model_vertipaq_relationships
 	column SemanticModelId
 		dataType: string
 		sourceProviderType: varchar(8000)
-		lineageTag: 9ddae0c7-4c18-4ede-b1c9-d52513208866
+		lineageTag: 8173c28e-5024-41ab-ad1c-b9d7aac2e315
 		sourceLineageTag: SemanticModelId
 		summarizeBy: none
 		sourceColumn: SemanticModelId
@@ -179,7 +56,7 @@ table semantic_model_vertipaq_relationships
 	column WorkspaceId
 		dataType: string
 		sourceProviderType: varchar(8000)
-		lineageTag: ce78b60a-9c35-4432-963d-7a540d124bb9
+		lineageTag: df9d49b4-2d87-4d38-854c-7e245a1fe9c7
 		sourceLineageTag: WorkspaceId
 		summarizeBy: none
 		sourceColumn: WorkspaceId
@@ -190,20 +67,143 @@ table semantic_model_vertipaq_relationships
 		dataType: int64
 		formatString: 0
 		sourceProviderType: bigint
-		lineageTag: 38db2bf9-6c87-4d98-b4fa-97d99f09433a
+		lineageTag: 663427b2-d917-4947-a434-31646dc12953
 		sourceLineageTag: RunId
 		summarizeBy: count
 		sourceColumn: RunId
 
 		annotation SummarizationSetBy = Automatic
 
-	column SemanticModelRunKey
+	column SecurityFilteringBehavior
 		dataType: string
-		sourceProviderType: varchar(2048)
-		lineageTag: 54ff82f2-fc41-45c4-afe3-508da4896c11
-		sourceLineageTag: SemanticModelRunKey
+		sourceProviderType: varchar(8000)
+		lineageTag: bd55f7d6-e55a-490e-a7dc-1d9cb73fc7b5
+		sourceLineageTag: SecurityFilteringBehavior
 		summarizeBy: none
-		sourceColumn: SemanticModelRunKey
+		sourceColumn: SecurityFilteringBehavior
+
+		annotation SummarizationSetBy = Automatic
+
+	column JoinOnDateBehavior
+		dataType: string
+		sourceProviderType: varchar(8000)
+		lineageTag: ba9994d6-6c77-4957-9adc-0569e99b7038
+		sourceLineageTag: JoinOnDateBehavior
+		summarizeBy: none
+		sourceColumn: JoinOnDateBehavior
+
+		annotation SummarizationSetBy = Automatic
+
+	column RelyOnReferentialIntegrity
+		dataType: boolean
+		formatString: """TRUE"";""TRUE"";""FALSE"""
+		sourceProviderType: bit
+		lineageTag: 8928a3df-e0a9-45eb-92de-2295b0e015e0
+		sourceLineageTag: RelyOnReferentialIntegrity
+		summarizeBy: none
+		sourceColumn: RelyOnReferentialIntegrity
+
+		annotation SummarizationSetBy = Automatic
+
+	column State
+		dataType: string
+		sourceProviderType: varchar(8000)
+		lineageTag: 252152d7-19ba-4c20-8cca-d754a1589bbb
+		sourceLineageTag: State
+		summarizeBy: none
+		sourceColumn: State
+
+		annotation SummarizationSetBy = Automatic
+
+	column ModifiedTime
+		dataType: dateTime
+		formatString: General Date
+		sourceProviderType: datetime2
+		lineageTag: 06c8f82b-b55f-4288-99cb-71e29d8f19ee
+		sourceLineageTag: ModifiedTime
+		summarizeBy: none
+		sourceColumn: ModifiedTime
+
+		annotation SummarizationSetBy = Automatic
+
+	column RelationshipName
+		dataType: string
+		sourceProviderType: varchar(8000)
+		lineageTag: 1da445e6-f9f5-40cb-8444-99850b652db9
+		sourceLineageTag: RelationshipName
+		summarizeBy: none
+		sourceColumn: RelationshipName
+
+		annotation SummarizationSetBy = Automatic
+
+	column FromTable
+		dataType: string
+		sourceProviderType: varchar(8000)
+		lineageTag: 05e6e09e-999a-4136-a793-3ab5cdc343bb
+		sourceLineageTag: FromTable
+		summarizeBy: none
+		sourceColumn: FromTable
+
+		annotation SummarizationSetBy = Automatic
+
+	column FromColumn
+		dataType: string
+		sourceProviderType: varchar(8000)
+		lineageTag: 2e84d9ea-a728-417c-950a-6cf435fb9398
+		sourceLineageTag: FromColumn
+		summarizeBy: none
+		sourceColumn: FromColumn
+
+		annotation SummarizationSetBy = Automatic
+
+	column ToTable
+		dataType: string
+		sourceProviderType: varchar(8000)
+		lineageTag: 696d612f-1f87-4604-9a4c-e6dbc419e09d
+		sourceLineageTag: ToTable
+		summarizeBy: none
+		sourceColumn: ToTable
+
+		annotation SummarizationSetBy = Automatic
+
+	column ToColumn
+		dataType: string
+		sourceProviderType: varchar(8000)
+		lineageTag: aa30879a-cd41-4eb0-9455-456891d50097
+		sourceLineageTag: ToColumn
+		summarizeBy: none
+		sourceColumn: ToColumn
+
+		annotation SummarizationSetBy = Automatic
+
+	column Active
+		dataType: boolean
+		formatString: """TRUE"";""TRUE"";""FALSE"""
+		sourceProviderType: bit
+		lineageTag: 006d10dd-d5b1-41ca-8082-0f1104cced8f
+		sourceLineageTag: Active
+		summarizeBy: none
+		sourceColumn: Active
+
+		annotation SummarizationSetBy = Automatic
+
+	column CrossFilteringBehavior
+		dataType: string
+		sourceProviderType: varchar(8000)
+		lineageTag: 02817fb5-74c7-4076-a034-577b00473e75
+		sourceLineageTag: CrossFilteringBehavior
+		summarizeBy: none
+		sourceColumn: CrossFilteringBehavior
+
+		annotation SummarizationSetBy = Automatic
+
+	column Multiplicity
+		dataType: string
+		sourceProviderType: varchar(8000)
+		lineageTag: 89b4bfab-5855-4108-a3f7-c294533c762b
+		sourceLineageTag: Multiplicity
+		summarizeBy: none
+		sourceColumn: Multiplicity
 
 		annotation SummarizationSetBy = Automatic
 

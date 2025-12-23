@@ -1,0 +1,699 @@
+{
+    "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.5.0/schema.json",
+    "name": "6df84f2a4552207045ad",
+    "position": {
+        "x": 23.52941176470588,
+        "y": 588.2352941176471,
+        "z": 11001,
+        "height": 463.235294117647,
+        "width": 1872.0588235294117,
+        "tabOrder": 11001
+    },
+    "visual": {
+        "visualType": "tableEx",
+        "query": {
+            "queryState": {
+                "Values": {
+                    "projections": [
+                        {
+                            "field": {
+                                "Column": {
+                                    "Expression": {
+                                        "SourceRef": {
+                                            "Entity": "widelyshared_organization_links"
+                                        }
+                                    },
+                                    "Property": "TransferDate"
+                                }
+                            },
+                            "queryRef": "widelyshared_organization_links.TransferDate",
+                            "nativeQueryRef": "TransferDate"
+                        },
+                        {
+                            "field": {
+                                "Column": {
+                                    "Expression": {
+                                        "SourceRef": {
+                                            "Entity": "widelyshared_organization_links"
+                                        }
+                                    },
+                                    "Property": "artifactType"
+                                }
+                            },
+                            "queryRef": "widelyshared_organization_links.artifactType",
+                            "nativeQueryRef": "artifactType"
+                        },
+                        {
+                            "field": {
+                                "Column": {
+                                    "Expression": {
+                                        "SourceRef": {
+                                            "Entity": "widelyshared_organization_links"
+                                        }
+                                    },
+                                    "Property": "ItemId"
+                                }
+                            },
+                            "queryRef": "widelyshared_organization_links.ItemId",
+                            "nativeQueryRef": "ItemId"
+                        },
+                        {
+                            "field": {
+                                "Column": {
+                                    "Expression": {
+                                        "SourceRef": {
+                                            "Entity": "widelyshared_organization_links"
+                                        }
+                                    },
+                                    "Property": "item_displayName"
+                                }
+                            },
+                            "queryRef": "widelyshared_organization_links.item_displayName",
+                            "nativeQueryRef": "item_displayName"
+                        },
+                        {
+                            "field": {
+                                "Column": {
+                                    "Expression": {
+                                        "SourceRef": {
+                                            "Entity": "widelyshared_organization_links"
+                                        }
+                                    },
+                                    "Property": "shareType"
+                                }
+                            },
+                            "queryRef": "widelyshared_organization_links.shareType",
+                            "nativeQueryRef": "shareType"
+                        },
+                        {
+                            "field": {
+                                "Column": {
+                                    "Expression": {
+                                        "SourceRef": {
+                                            "Entity": "widelyshared_organization_links"
+                                        }
+                                    },
+                                    "Property": "accessRight"
+                                }
+                            },
+                            "queryRef": "widelyshared_organization_links.accessRight",
+                            "nativeQueryRef": "accessRight"
+                        },
+                        {
+                            "field": {
+                                "Column": {
+                                    "Expression": {
+                                        "SourceRef": {
+                                            "Entity": "widelyshared_organization_links"
+                                        }
+                                    },
+                                    "Property": "sharer_principalType"
+                                }
+                            },
+                            "queryRef": "widelyshared_organization_links.sharer_principalType",
+                            "nativeQueryRef": "sharer_principalType"
+                        },
+                        {
+                            "field": {
+                                "Column": {
+                                    "Expression": {
+                                        "SourceRef": {
+                                            "Entity": "widelyshared_organization_links"
+                                        }
+                                    },
+                                    "Property": "sharer_displayName"
+                                }
+                            },
+                            "queryRef": "widelyshared_organization_links.sharer_displayName",
+                            "nativeQueryRef": "sharer_displayName"
+                        },
+                        {
+                            "field": {
+                                "Column": {
+                                    "Expression": {
+                                        "SourceRef": {
+                                            "Entity": "widelyshared_organization_links"
+                                        }
+                                    },
+                                    "Property": "sharer_emailAddress"
+                                }
+                            },
+                            "queryRef": "widelyshared_organization_links.sharer_emailAddress",
+                            "nativeQueryRef": "sharer_emailAddress"
+                        },
+                        {
+                            "field": {
+                                "Column": {
+                                    "Expression": {
+                                        "SourceRef": {
+                                            "Entity": "widelyshared_organization_links"
+                                        }
+                                    },
+                                    "Property": "sharer_graphId"
+                                }
+                            },
+                            "queryRef": "widelyshared_organization_links.sharer_graphId",
+                            "nativeQueryRef": "sharer_graphId"
+                        }
+                    ]
+                }
+            }
+        },
+        "objects": {
+            "grid": [
+                {
+                    "properties": {
+                        "rowPadding": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "5D"
+                                }
+                            }
+                        },
+                        "gridVertical": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "true"
+                                }
+                            }
+                        },
+                        "gridHorizontal": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "true"
+                                }
+                            }
+                        }
+                    }
+                }
+            ],
+            "columnHeaders": [
+                {
+                    "properties": {
+                        "fontFamily": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "'''Segoe UI Semibold'', wf_segoe-ui_semibold, helvetica, arial, sans-serif'"
+                                }
+                            }
+                        }
+                    }
+                }
+            ],
+            "general": [
+                {
+                    "properties": {}
+                }
+            ],
+            "columnWidth": [
+                {
+                    "properties": {
+                        "value": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "46.178634911918145D"
+                                }
+                            }
+                        }
+                    },
+                    "selector": {
+                        "data": [
+                            {
+                                "scopeId": {
+                                    "Comparison": {
+                                        "ComparisonKind": 0,
+                                        "Left": {
+                                            "Column": {
+                                                "Expression": {
+                                                    "SourceRef": {
+                                                        "Entity": "activities"
+                                                    }
+                                                },
+                                                "Property": "ArtifactKind"
+                                            }
+                                        },
+                                        "Right": {
+                                            "Literal": {
+                                                "Value": "null"
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        ]
+                    }
+                },
+                {
+                    "properties": {
+                        "value": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "79.06548208622225D"
+                                }
+                            }
+                        }
+                    },
+                    "selector": {
+                        "data": [
+                            {
+                                "scopeId": {
+                                    "Comparison": {
+                                        "ComparisonKind": 0,
+                                        "Left": {
+                                            "Column": {
+                                                "Expression": {
+                                                    "SourceRef": {
+                                                        "Entity": "activities"
+                                                    }
+                                                },
+                                                "Property": "ArtifactKind"
+                                            }
+                                        },
+                                        "Right": {
+                                            "Literal": {
+                                                "Value": "'Dashboard'"
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        ]
+                    }
+                },
+                {
+                    "properties": {
+                        "value": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "52.06548334034658D"
+                                }
+                            }
+                        }
+                    },
+                    "selector": {
+                        "data": [
+                            {
+                                "scopeId": {
+                                    "Comparison": {
+                                        "ComparisonKind": 0,
+                                        "Left": {
+                                            "Column": {
+                                                "Expression": {
+                                                    "SourceRef": {
+                                                        "Entity": "activities"
+                                                    }
+                                                },
+                                                "Property": "ArtifactKind"
+                                            }
+                                        },
+                                        "Right": {
+                                            "Literal": {
+                                                "Value": "'Model'"
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        ]
+                    }
+                },
+                {
+                    "properties": {
+                        "value": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "56.19645048246346D"
+                                }
+                            }
+                        }
+                    },
+                    "selector": {
+                        "data": [
+                            {
+                                "scopeId": {
+                                    "Comparison": {
+                                        "ComparisonKind": 0,
+                                        "Left": {
+                                            "Column": {
+                                                "Expression": {
+                                                    "SourceRef": {
+                                                        "Entity": "activities"
+                                                    }
+                                                },
+                                                "Property": "ArtifactKind"
+                                            }
+                                        },
+                                        "Right": {
+                                            "Literal": {
+                                                "Value": "'Report'"
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        ]
+                    }
+                }
+            ]
+        },
+        "visualContainerObjects": {
+            "title": [
+                {
+                    "properties": {
+                        "show": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "true"
+                                }
+                            }
+                        },
+                        "text": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "'Widely Shared Organization Links'"
+                                }
+                            }
+                        },
+                        "fontSize": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "12D"
+                                }
+                            }
+                        }
+                    }
+                }
+            ],
+            "border": [
+                {
+                    "properties": {
+                        "show": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "true"
+                                }
+                            }
+                        },
+                        "color": {
+                            "solid": {
+                                "color": {
+                                    "expr": {
+                                        "ThemeDataColor": {
+                                            "ColorId": 0,
+                                            "Percent": 0
+                                        }
+                                    }
+                                }
+                            }
+                        },
+                        "radius": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "10D"
+                                }
+                            }
+                        }
+                    }
+                }
+            ],
+            "dropShadow": [
+                {
+                    "properties": {
+                        "show": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "true"
+                                }
+                            }
+                        },
+                        "color": {
+                            "solid": {
+                                "color": {
+                                    "expr": {
+                                        "ThemeDataColor": {
+                                            "ColorId": 0,
+                                            "Percent": -0.1
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            ]
+        },
+        "drillFilterOtherVisuals": true
+    },
+    "filterConfig": {
+        "filters": [
+            {
+                "name": "cb2139e13a0709079168",
+                "ordinal": 0,
+                "field": {
+                    "Measure": {
+                        "Expression": {
+                            "SourceRef": {
+                                "Entity": "Metrics"
+                            }
+                        },
+                        "Property": "# Users"
+                    }
+                },
+                "type": "Advanced",
+                "howCreated": "User"
+            },
+            {
+                "name": "d18e8f003d3b0062da7b",
+                "ordinal": 1,
+                "field": {
+                    "Column": {
+                        "Expression": {
+                            "SourceRef": {
+                                "Entity": "activities"
+                            }
+                        },
+                        "Property": "WorkSpaceName"
+                    }
+                },
+                "type": "Categorical",
+                "howCreated": "User"
+            },
+            {
+                "name": "2d0ed9c9ba2b0de4ac8c",
+                "ordinal": 2,
+                "field": {
+                    "Column": {
+                        "Expression": {
+                            "SourceRef": {
+                                "Entity": "activities"
+                            }
+                        },
+                        "Property": "ArtifactKind"
+                    }
+                },
+                "type": "Categorical",
+                "filter": {
+                    "Version": 2,
+                    "From": [
+                        {
+                            "Name": "a",
+                            "Entity": "activities",
+                            "Type": 0
+                        }
+                    ],
+                    "Where": [
+                        {
+                            "Condition": {
+                                "Not": {
+                                    "Expression": {
+                                        "In": {
+                                            "Expressions": [
+                                                {
+                                                    "Column": {
+                                                        "Expression": {
+                                                            "SourceRef": {
+                                                                "Source": "a"
+                                                            }
+                                                        },
+                                                        "Property": "ArtifactKind"
+                                                    }
+                                                }
+                                            ],
+                                            "Values": [
+                                                [
+                                                    {
+                                                        "Literal": {
+                                                            "Value": "null"
+                                                        }
+                                                    }
+                                                ]
+                                            ]
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    ]
+                },
+                "howCreated": "User",
+                "isLockedInViewMode": true,
+                "objects": {
+                    "general": [
+                        {
+                            "properties": {
+                                "isInvertedSelectionMode": {
+                                    "expr": {
+                                        "Literal": {
+                                            "Value": "true"
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    ]
+                }
+            },
+            {
+                "name": "1c0b834a4e3dc73cb09c",
+                "field": {
+                    "Column": {
+                        "Expression": {
+                            "SourceRef": {
+                                "Entity": "widelyshared_organization_links"
+                            }
+                        },
+                        "Property": "artifactType"
+                    }
+                },
+                "type": "Categorical"
+            },
+            {
+                "name": "85853227b491c34a156f",
+                "field": {
+                    "Column": {
+                        "Expression": {
+                            "SourceRef": {
+                                "Entity": "widelyshared_organization_links"
+                            }
+                        },
+                        "Property": "ItemId"
+                    }
+                },
+                "type": "Categorical"
+            },
+            {
+                "name": "6fe20994d7cb8010c5a1",
+                "field": {
+                    "Column": {
+                        "Expression": {
+                            "SourceRef": {
+                                "Entity": "widelyshared_organization_links"
+                            }
+                        },
+                        "Property": "item_displayName"
+                    }
+                },
+                "type": "Categorical"
+            },
+            {
+                "name": "766d0b00ae0aa40ee0a2",
+                "field": {
+                    "Column": {
+                        "Expression": {
+                            "SourceRef": {
+                                "Entity": "widelyshared_organization_links"
+                            }
+                        },
+                        "Property": "sharer_displayName"
+                    }
+                },
+                "type": "Categorical"
+            },
+            {
+                "name": "43475827007b860e1091",
+                "field": {
+                    "Column": {
+                        "Expression": {
+                            "SourceRef": {
+                                "Entity": "widelyshared_organization_links"
+                            }
+                        },
+                        "Property": "accessRight"
+                    }
+                },
+                "type": "Categorical"
+            },
+            {
+                "name": "2e07fd3577ea7a6c4e61",
+                "field": {
+                    "Column": {
+                        "Expression": {
+                            "SourceRef": {
+                                "Entity": "widelyshared_organization_links"
+                            }
+                        },
+                        "Property": "sharer_principalType"
+                    }
+                },
+                "type": "Categorical"
+            },
+            {
+                "name": "d35f336e49ecbbdb5d8b",
+                "field": {
+                    "Column": {
+                        "Expression": {
+                            "SourceRef": {
+                                "Entity": "widelyshared_organization_links"
+                            }
+                        },
+                        "Property": "sharer_emailAddress"
+                    }
+                },
+                "type": "Categorical"
+            },
+            {
+                "name": "f40cf129a44e3b2f47bf",
+                "field": {
+                    "Column": {
+                        "Expression": {
+                            "SourceRef": {
+                                "Entity": "widelyshared_organization_links"
+                            }
+                        },
+                        "Property": "shareType"
+                    }
+                },
+                "type": "Categorical"
+            },
+            {
+                "name": "a6ebc595060ee12db396",
+                "field": {
+                    "Column": {
+                        "Expression": {
+                            "SourceRef": {
+                                "Entity": "widelyshared_organization_links"
+                            }
+                        },
+                        "Property": "sharer_graphId"
+                    }
+                },
+                "type": "Categorical"
+            },
+            {
+                "name": "d63407fe7b40ad3530f8",
+                "field": {
+                    "Column": {
+                        "Expression": {
+                            "SourceRef": {
+                                "Entity": "widelyshared_organization_links"
+                            }
+                        },
+                        "Property": "TransferDate"
+                    }
+                },
+                "type": "Categorical"
+            }
+        ],
+        "filterSortOrder": "Custom"
+    }
+}

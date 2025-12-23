@@ -298,6 +298,34 @@
                                 "type": "Expression"
                             },
                             "type": "bool"
+                        },
+                        "activity_days_in_scope": {
+                            "value": {
+                                "value": "@pipeline().parameters.fromDateDayAgo",
+                                "type": "Expression"
+                            },
+                            "type": "int"
+                        },
+                        "anonymize_tables": {
+                            "value": {
+                                "value": "@pipeline().parameters.anonymize_tables",
+                                "type": "Expression"
+                            },
+                            "type": "bool"
+                        },
+                        "anonymize_files": {
+                            "value": {
+                                "value": "@pipeline().parameters.anonymize_files",
+                                "type": "Expression"
+                            },
+                            "type": "bool"
+                        },
+                        "anonymize_after_days": {
+                            "value": {
+                                "value": "@pipeline().parameters.anonymize_after_days",
+                                "type": "Expression"
+                            },
+                            "type": "int"
                         }
                     },
                     "sessionTag": "fuam"
@@ -345,6 +373,18 @@
             "display_data": {
                 "type": "bool",
                 "defaultValue": false
+            },
+            "anonymize_tables": {
+                "type": "bool",
+                "defaultValue": false
+            },
+            "anonymize_files": {
+                "type": "bool",
+                "defaultValue": false
+            },
+            "anonymize_after_days": {
+                "type": "int",
+                "defaultValue": 0
             }
         },
         "variables": {

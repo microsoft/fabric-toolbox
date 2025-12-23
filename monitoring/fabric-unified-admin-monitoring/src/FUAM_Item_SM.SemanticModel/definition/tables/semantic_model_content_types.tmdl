@@ -51,5 +51,3 @@ table semantic_model_content_types
 			schemaName: dbo
 			expressionSource: DatabaseQuery
 
-	annotation PBI_ResultType = Table
-

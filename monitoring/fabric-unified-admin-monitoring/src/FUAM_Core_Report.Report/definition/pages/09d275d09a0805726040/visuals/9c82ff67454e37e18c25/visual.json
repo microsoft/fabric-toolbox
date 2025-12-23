@@ -1,0 +1,2787 @@
+{
+    "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.5.0/schema.json",
+    "name": "9c82ff67454e37e18c25",
+    "position": {
+        "x": 19.793459552495698,
+        "y": 422.5903614457831,
+        "z": 2000,
+        "height": 705.6368330464716,
+        "width": 2065.447504302926,
+        "tabOrder": 12000
+    },
+    "visual": {
+        "visualType": "pivotTable",
+        "query": {
+            "queryState": {
+                "Rows": {
+                    "projections": [
+                        {
+                            "field": {
+                                "Column": {
+                                    "Expression": {
+                                        "SourceRef": {
+                                            "Entity": "capacities"
+                                        }
+                                    },
+                                    "Property": "displayName"
+                                }
+                            },
+                            "queryRef": "capacities.displayName",
+                            "nativeQueryRef": "Capacity -> Workspace",
+                            "active": true,
+                            "displayName": "Capacity -> Workspace"
+                        },
+                        {
+                            "field": {
+                                "Column": {
+                                    "Expression": {
+                                        "SourceRef": {
+                                            "Entity": "workspaces"
+                                        }
+                                    },
+                                    "Property": "WorkspaceName"
+                                }
+                            },
+                            "queryRef": "workspaces.WorkspaceName",
+                            "nativeQueryRef": "WorkspaceName1",
+                            "active": false
+                        }
+                    ]
+                },
+                "Values": {
+                    "projections": [
+                        {
+                            "field": {
+                                "Measure": {
+                                    "Expression": {
+                                        "SourceRef": {
+                                            "Entity": "Metrics"
+                                        }
+                                    },
+                                    "Property": "# Active Artifacts"
+                                }
+                            },
+                            "queryRef": "Metrics.# Active Artifacts",
+                            "nativeQueryRef": "# Active Items",
+                            "displayName": "# Active Items"
+                        },
+                        {
+                            "field": {
+                                "Measure": {
+                                    "Expression": {
+                                        "SourceRef": {
+                                            "Entity": "Metrics"
+                                        }
+                                    },
+                                    "Property": "# Apps"
+                                }
+                            },
+                            "queryRef": "Metrics.# Apps",
+                            "nativeQueryRef": "# Apps"
+                        },
+                        {
+                            "field": {
+                                "Measure": {
+                                    "Expression": {
+                                        "SourceRef": {
+                                            "Entity": "Metrics"
+                                        }
+                                    },
+                                    "Property": "# Dashboards"
+                                }
+                            },
+                            "queryRef": "Metrics.# Dashboards",
+                            "nativeQueryRef": "# Dashboards"
+                        },
+                        {
+                            "field": {
+                                "Measure": {
+                                    "Expression": {
+                                        "SourceRef": {
+                                            "Entity": "Metrics"
+                                        }
+                                    },
+                                    "Property": "# Dataflows"
+                                }
+                            },
+                            "queryRef": "Metrics.# Dataflows",
+                            "nativeQueryRef": "# Dataflows"
+                        },
+                        {
+                            "field": {
+                                "Measure": {
+                                    "Expression": {
+                                        "SourceRef": {
+                                            "Entity": "Metrics"
+                                        }
+                                    },
+                                    "Property": "# Datamarts"
+                                }
+                            },
+                            "queryRef": "Metrics.# Datamarts",
+                            "nativeQueryRef": "# Datamarts"
+                        },
+                        {
+                            "field": {
+                                "Measure": {
+                                    "Expression": {
+                                        "SourceRef": {
+                                            "Entity": "Metrics"
+                                        }
+                                    },
+                                    "Property": "# Semantic Models"
+                                }
+                            },
+                            "queryRef": "Metrics.# Semantic Models",
+                            "nativeQueryRef": "# Semantic Models"
+                        },
+                        {
+                            "field": {
+                                "Measure": {
+                                    "Expression": {
+                                        "SourceRef": {
+                                            "Entity": "Metrics"
+                                        }
+                                    },
+                                    "Property": "# Reports"
+                                }
+                            },
+                            "queryRef": "Metrics.# Reports",
+                            "nativeQueryRef": "# Reports"
+                        },
+                        {
+                            "field": {
+                                "Measure": {
+                                    "Expression": {
+                                        "SourceRef": {
+                                            "Entity": "Metrics"
+                                        }
+                                    },
+                                    "Property": "# Anomaly Detectors"
+                                }
+                            },
+                            "queryRef": "Metrics.# Anomaly Detectors",
+                            "nativeQueryRef": "# Anomaly Detectors"
+                        },
+                        {
+                            "field": {
+                                "Measure": {
+                                    "Expression": {
+                                        "SourceRef": {
+                                            "Entity": "Metrics"
+                                        }
+                                    },
+                                    "Property": "# Data Agents"
+                                }
+                            },
+                            "queryRef": "Metrics.# Data Agents",
+                            "nativeQueryRef": "# Data Agents"
+                        },
+                        {
+                            "field": {
+                                "Measure": {
+                                    "Expression": {
+                                        "SourceRef": {
+                                            "Entity": "Metrics"
+                                        }
+                                    },
+                                    "Property": "# Eventhouses"
+                                }
+                            },
+                            "queryRef": "Metrics.# Eventhouses",
+                            "nativeQueryRef": "# Eventhouses"
+                        },
+                        {
+                            "field": {
+                                "Measure": {
+                                    "Expression": {
+                                        "SourceRef": {
+                                            "Entity": "Metrics"
+                                        }
+                                    },
+                                    "Property": "# Eventstreams"
+                                }
+                            },
+                            "queryRef": "Metrics.# Eventstreams",
+                            "nativeQueryRef": "# Eventstreams"
+                        },
+                        {
+                            "field": {
+                                "Measure": {
+                                    "Expression": {
+                                        "SourceRef": {
+                                            "Entity": "Metrics"
+                                        }
+                                    },
+                                    "Property": "# GraphQL APIs"
+                                }
+                            },
+                            "queryRef": "Metrics.# GraphQL APIs",
+                            "nativeQueryRef": "# GraphQL APIs"
+                        },
+                        {
+                            "field": {
+                                "Measure": {
+                                    "Expression": {
+                                        "SourceRef": {
+                                            "Entity": "Metrics"
+                                        }
+                                    },
+                                    "Property": "# Healthcare Data Solutions"
+                                }
+                            },
+                            "queryRef": "Metrics.# Healthcare Data Solutions",
+                            "nativeQueryRef": "# Healthcare Data Solutions"
+                        },
+                        {
+                            "field": {
+                                "Measure": {
+                                    "Expression": {
+                                        "SourceRef": {
+                                            "Entity": "Metrics"
+                                        }
+                                    },
+                                    "Property": "# KQL Databases"
+                                }
+                            },
+                            "queryRef": "Metrics.# KQL Databases",
+                            "nativeQueryRef": "# KQL Databases"
+                        },
+                        {
+                            "field": {
+                                "Measure": {
+                                    "Expression": {
+                                        "SourceRef": {
+                                            "Entity": "Metrics"
+                                        }
+                                    },
+                                    "Property": "# KQL Querysets"
+                                }
+                            },
+                            "queryRef": "Metrics.# KQL Querysets",
+                            "nativeQueryRef": "# KQL Querysets"
+                        },
+                        {
+                            "field": {
+                                "Measure": {
+                                    "Expression": {
+                                        "SourceRef": {
+                                            "Entity": "Metrics"
+                                        }
+                                    },
+                                    "Property": "# Lakehouses"
+                                }
+                            },
+                            "queryRef": "Metrics.# Lakehouses",
+                            "nativeQueryRef": "# Lakehouses"
+                        },
+                        {
+                            "field": {
+                                "Measure": {
+                                    "Expression": {
+                                        "SourceRef": {
+                                            "Entity": "Metrics"
+                                        }
+                                    },
+                                    "Property": "# Warehouses"
+                                }
+                            },
+                            "queryRef": "Metrics.# Warehouses",
+                            "nativeQueryRef": "# Warehouses"
+                        },
+                        {
+                            "field": {
+                                "Measure": {
+                                    "Expression": {
+                                        "SourceRef": {
+                                            "Entity": "Metrics"
+                                        }
+                                    },
+                                    "Property": "# Mounted Databases"
+                                }
+                            },
+                            "queryRef": "Metrics.# Mounted Databases",
+                            "nativeQueryRef": "# Mounted Databases"
+                        },
+                        {
+                            "field": {
+                                "Measure": {
+                                    "Expression": {
+                                        "SourceRef": {
+                                            "Entity": "Metrics"
+                                        }
+                                    },
+                                    "Property": "# Mirrored Warehouses"
+                                }
+                            },
+                            "queryRef": "Metrics.# Mirrored Warehouses",
+                            "nativeQueryRef": "# Mirrored Warehouses"
+                        },
+                        {
+                            "field": {
+                                "Measure": {
+                                    "Expression": {
+                                        "SourceRef": {
+                                            "Entity": "Metrics"
+                                        }
+                                    },
+                                    "Property": "# SQL Endpoints"
+                                }
+                            },
+                            "queryRef": "Metrics.# SQL Endpoints",
+                            "nativeQueryRef": "# SQL Endpoints"
+                        },
+                        {
+                            "field": {
+                                "Measure": {
+                                    "Expression": {
+                                        "SourceRef": {
+                                            "Entity": "Metrics"
+                                        }
+                                    },
+                                    "Property": "# ML Experiments"
+                                }
+                            },
+                            "queryRef": "Metrics.# ML Experiments",
+                            "nativeQueryRef": "# ML Experiments"
+                        },
+                        {
+                            "field": {
+                                "Measure": {
+                                    "Expression": {
+                                        "SourceRef": {
+                                            "Entity": "Metrics"
+                                        }
+                                    },
+                                    "Property": "# ML Models"
+                                }
+                            },
+                            "queryRef": "Metrics.# ML Models",
+                            "nativeQueryRef": "# ML Models"
+                        },
+                        {
+                            "field": {
+                                "Measure": {
+                                    "Expression": {
+                                        "SourceRef": {
+                                            "Entity": "Metrics"
+                                        }
+                                    },
+                                    "Property": "# Environments"
+                                }
+                            },
+                            "queryRef": "Metrics.# Environments",
+                            "nativeQueryRef": "# Environments"
+                        },
+                        {
+                            "field": {
+                                "Measure": {
+                                    "Expression": {
+                                        "SourceRef": {
+                                            "Entity": "Metrics"
+                                        }
+                                    },
+                                    "Property": "# Notebooks"
+                                }
+                            },
+                            "queryRef": "Metrics.# Notebooks",
+                            "nativeQueryRef": "# Notebooks"
+                        },
+                        {
+                            "field": {
+                                "Measure": {
+                                    "Expression": {
+                                        "SourceRef": {
+                                            "Entity": "Metrics"
+                                        }
+                                    },
+                                    "Property": "# Spark Job Definitions"
+                                }
+                            },
+                            "queryRef": "Metrics.# Spark Job Definitions",
+                            "nativeQueryRef": "# Spark Job Definitions"
+                        },
+                        {
+                            "field": {
+                                "Measure": {
+                                    "Expression": {
+                                        "SourceRef": {
+                                            "Entity": "Metrics"
+                                        }
+                                    },
+                                    "Property": "# Pipelines"
+                                }
+                            },
+                            "queryRef": "Metrics.# Pipelines",
+                            "nativeQueryRef": "# Pipelines"
+                        },
+                        {
+                            "field": {
+                                "Measure": {
+                                    "Expression": {
+                                        "SourceRef": {
+                                            "Entity": "Metrics"
+                                        }
+                                    },
+                                    "Property": "# Reflex"
+                                }
+                            },
+                            "queryRef": "Metrics.# Reflex",
+                            "nativeQueryRef": "# Reflex"
+                        },
+                        {
+                            "field": {
+                                "Measure": {
+                                    "Expression": {
+                                        "SourceRef": {
+                                            "Entity": "Metrics"
+                                        }
+                                    },
+                                    "Property": "# SQL Databases"
+                                }
+                            },
+                            "queryRef": "Metrics.# SQL Databases",
+                            "nativeQueryRef": "# SQL Databases"
+                        },
+                        {
+                            "field": {
+                                "Measure": {
+                                    "Expression": {
+                                        "SourceRef": {
+                                            "Entity": "Metrics"
+                                        }
+                                    },
+                                    "Property": "# User Data Function"
+                                }
+                            },
+                            "queryRef": "Metrics.# User Data Function",
+                            "nativeQueryRef": "# User Data Function"
+                        }
+                    ]
+                }
+            },
+            "sortDefinition": {
+                "sort": [
+                    {
+                        "field": {
+                            "Measure": {
+                                "Expression": {
+                                    "SourceRef": {
+                                        "Entity": "Metrics"
+                                    }
+                                },
+                                "Property": "# Active Artifacts"
+                            }
+                        },
+                        "direction": "Descending"
+                    }
+                ]
+            }
+        },
+        "expansionStates": [
+            {
+                "roles": [
+                    "Rows"
+                ],
+                "levels": [
+                    {
+                        "queryRefs": [
+                            "capacities.displayName"
+                        ],
+                        "isCollapsed": true,
+                        "identityKeys": [
+                            {
+                                "Column": {
+                                    "Expression": {
+                                        "SourceRef": {
+                                            "Entity": "capacities"
+                                        }
+                                    },
+                                    "Property": "displayName"
+                                }
+                            }
+                        ],
+                        "isPinned": true
+                    },
+                    {
+                        "queryRefs": [
+                            "workspaces.WorkspaceName"
+                        ],
+                        "isCollapsed": true,
+                        "isPinned": true
+                    }
+                ],
+                "root": {}
+            }
+        ],
+        "objects": {
+            "grid": [
+                {
+                    "properties": {
+                        "gridHorizontalColor": {
+                            "solid": {
+                                "color": {
+                                    "expr": {
+                                        "ThemeDataColor": {
+                                            "ColorId": 2,
+                                            "Percent": 0.6
+                                        }
+                                    }
+                                }
+                            }
+                        },
+                        "gridHorizontal": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "true"
+                                }
+                            }
+                        },
+                        "rowPadding": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "5D"
+                                }
+                            }
+                        },
+                        "textSize": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "10D"
+                                }
+                            }
+                        },
+                        "gridVertical": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "true"
+                                }
+                            }
+                        },
+                        "gridVerticalColor": {
+                            "solid": {
+                                "color": {
+                                    "expr": {
+                                        "ThemeDataColor": {
+                                            "ColorId": 2,
+                                            "Percent": 0.6
+                                        }
+                                    }
+                                }
+                            }
+                        },
+                        "outlineColor": {
+                            "solid": {
+                                "color": {
+                                    "expr": {
+                                        "ThemeDataColor": {
+                                            "ColorId": 2,
+                                            "Percent": 0.6
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            ],
+            "columnHeaders": [
+                {
+                    "properties": {
+                        "fontFamily": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "'''Segoe UI Semibold'', wf_segoe-ui_semibold, helvetica, arial, sans-serif'"
+                                }
+                            }
+                        },
+                        "fontSize": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "9D"
+                                }
+                            }
+                        },
+                        "backColor": {
+                            "solid": {
+                                "color": {
+                                    "expr": {
+                                        "ThemeDataColor": {
+                                            "ColorId": 2,
+                                            "Percent": 0
+                                        }
+                                    }
+                                }
+                            }
+                        },
+                        "fontColor": {
+                            "solid": {
+                                "color": {
+                                    "expr": {
+                                        "ThemeDataColor": {
+                                            "ColorId": 0,
+                                            "Percent": 0
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            ],
+            "values": [
+                {
+                    "properties": {
+                        "backColorSecondary": {
+                            "solid": {
+                                "color": {
+                                    "expr": {
+                                        "ThemeDataColor": {
+                                            "ColorId": 0,
+                                            "Percent": 0
+                                        }
+                                    }
+                                }
+                            }
+                        },
+                        "fontFamily": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "'''Segoe UI Semibold'', wf_segoe-ui_semibold, helvetica, arial, sans-serif'"
+                                }
+                            }
+                        },
+                        "fontSize": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "9D"
+                                }
+                            }
+                        }
+                    }
+                },
+                {
+                    "properties": {
+                        "backColor": {
+                            "solid": {
+                                "color": {
+                                    "expr": {
+                                        "FillRule": {
+                                            "Input": {
+                                                "Measure": {
+                                                    "Expression": {
+                                                        "SourceRef": {
+                                                            "Entity": "Metrics"
+                                                        }
+                                                    },
+                                                    "Property": "# Active Artifacts"
+                                                }
+                                            },
+                                            "FillRule": {
+                                                "linearGradient3": {
+                                                    "min": {
+                                                        "color": {
+                                                            "Literal": {
+                                                                "Value": "'#d5e2fa'"
+                                                            }
+                                                        }
+                                                    },
+                                                    "mid": {
+                                                        "color": {
+                                                            "Literal": {
+                                                                "Value": "'#ffdab3'"
+                                                            }
+                                                        }
+                                                    },
+                                                    "max": {
+                                                        "color": {
+                                                            "Literal": {
+                                                                "Value": "'#a7d0ce'"
+                                                            }
+                                                        }
+                                                    },
+                                                    "nullColoringStrategy": {
+                                                        "strategy": {
+                                                            "Literal": {
+                                                                "Value": "'noColor'"
+                                                            }
+                                                        }
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "selector": {
+                        "data": [
+                            {
+                                "dataViewWildcard": {
+                                    "matchingOption": 1
+                                }
+                            }
+                        ],
+                        "metadata": "Metrics.# Active Artifacts"
+                    }
+                },
+                {
+                    "properties": {
+                        "backColor": {
+                            "solid": {
+                                "color": {
+                                    "expr": {
+                                        "FillRule": {
+                                            "Input": {
+                                                "Measure": {
+                                                    "Expression": {
+                                                        "SourceRef": {
+                                                            "Entity": "Metrics"
+                                                        }
+                                                    },
+                                                    "Property": "# Apps"
+                                                }
+                                            },
+                                            "FillRule": {
+                                                "linearGradient2": {
+                                                    "min": {
+                                                        "color": {
+                                                            "Literal": {
+                                                                "Value": "'#e6e6e6'"
+                                                            }
+                                                        }
+                                                    },
+                                                    "max": {
+                                                        "color": {
+                                                            "Literal": {
+                                                                "Value": "'#bddbc7'"
+                                                            }
+                                                        }
+                                                    },
+                                                    "nullColoringStrategy": {
+                                                        "strategy": {
+                                                            "Literal": {
+                                                                "Value": "'noColor'"
+                                                            }
+                                                        }
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "selector": {
+                        "data": [
+                            {
+                                "dataViewWildcard": {
+                                    "matchingOption": 1
+                                }
+                            }
+                        ],
+                        "metadata": "Metrics.# Apps"
+                    }
+                },
+                {
+                    "properties": {
+                        "backColor": {
+                            "solid": {
+                                "color": {
+                                    "expr": {
+                                        "FillRule": {
+                                            "Input": {
+                                                "Measure": {
+                                                    "Expression": {
+                                                        "SourceRef": {
+                                                            "Entity": "Metrics"
+                                                        }
+                                                    },
+                                                    "Property": "# Dashboards"
+                                                }
+                                            },
+                                            "FillRule": {
+                                                "linearGradient2": {
+                                                    "min": {
+                                                        "color": {
+                                                            "Literal": {
+                                                                "Value": "'#e6e6e6'"
+                                                            }
+                                                        }
+                                                    },
+                                                    "max": {
+                                                        "color": {
+                                                            "Literal": {
+                                                                "Value": "'#bddbc7'"
+                                                            }
+                                                        }
+                                                    },
+                                                    "nullColoringStrategy": {
+                                                        "strategy": {
+                                                            "Literal": {
+                                                                "Value": "'noColor'"
+                                                            }
+                                                        }
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "selector": {
+                        "data": [
+                            {
+                                "dataViewWildcard": {
+                                    "matchingOption": 1
+                                }
+                            }
+                        ],
+                        "metadata": "Metrics.# Dashboards"
+                    }
+                },
+                {
+                    "properties": {
+                        "backColor": {
+                            "solid": {
+                                "color": {
+                                    "expr": {
+                                        "FillRule": {
+                                            "Input": {
+                                                "Measure": {
+                                                    "Expression": {
+                                                        "SourceRef": {
+                                                            "Entity": "Metrics"
+                                                        }
+                                                    },
+                                                    "Property": "# Dataflows"
+                                                }
+                                            },
+                                            "FillRule": {
+                                                "linearGradient2": {
+                                                    "min": {
+                                                        "color": {
+                                                            "Literal": {
+                                                                "Value": "'#e6e6e6'"
+                                                            }
+                                                        }
+                                                    },
+                                                    "max": {
+                                                        "color": {
+                                                            "Literal": {
+                                                                "Value": "'#bddbc7'"
+                                                            }
+                                                        }
+                                                    },
+                                                    "nullColoringStrategy": {
+                                                        "strategy": {
+                                                            "Literal": {
+                                                                "Value": "'noColor'"
+                                                            }
+                                                        }
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "selector": {
+                        "data": [
+                            {
+                                "dataViewWildcard": {
+                                    "matchingOption": 1
+                                }
+                            }
+                        ],
+                        "metadata": "Metrics.# Dataflows"
+                    }
+                },
+                {
+                    "properties": {
+                        "backColor": {
+                            "solid": {
+                                "color": {
+                                    "expr": {
+                                        "FillRule": {
+                                            "Input": {
+                                                "Measure": {
+                                                    "Expression": {
+                                                        "SourceRef": {
+                                                            "Entity": "Metrics"
+                                                        }
+                                                    },
+                                                    "Property": "# Datamarts"
+                                                }
+                                            },
+                                            "FillRule": {
+                                                "linearGradient2": {
+                                                    "min": {
+                                                        "color": {
+                                                            "Literal": {
+                                                                "Value": "'#e6e6e6'"
+                                                            }
+                                                        }
+                                                    },
+                                                    "max": {
+                                                        "color": {
+                                                            "Literal": {
+                                                                "Value": "'#bddbc7'"
+                                                            }
+                                                        }
+                                                    },
+                                                    "nullColoringStrategy": {
+                                                        "strategy": {
+                                                            "Literal": {
+                                                                "Value": "'noColor'"
+                                                            }
+                                                        }
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "selector": {
+                        "data": [
+                            {
+                                "dataViewWildcard": {
+                                    "matchingOption": 1
+                                }
+                            }
+                        ],
+                        "metadata": "Metrics.# Datamarts"
+                    }
+                },
+                {
+                    "properties": {
+                        "backColor": {
+                            "solid": {
+                                "color": {
+                                    "expr": {
+                                        "FillRule": {
+                                            "Input": {
+                                                "Measure": {
+                                                    "Expression": {
+                                                        "SourceRef": {
+                                                            "Entity": "Metrics"
+                                                        }
+                                                    },
+                                                    "Property": "# Semantic Models"
+                                                }
+                                            },
+                                            "FillRule": {
+                                                "linearGradient2": {
+                                                    "min": {
+                                                        "color": {
+                                                            "Literal": {
+                                                                "Value": "'#e6e6e6'"
+                                                            }
+                                                        }
+                                                    },
+                                                    "max": {
+                                                        "color": {
+                                                            "Literal": {
+                                                                "Value": "'#bddbc7'"
+                                                            }
+                                                        }
+                                                    },
+                                                    "nullColoringStrategy": {
+                                                        "strategy": {
+                                                            "Literal": {
+                                                                "Value": "'noColor'"
+                                                            }
+                                                        }
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "selector": {
+                        "data": [
+                            {
+                                "dataViewWildcard": {
+                                    "matchingOption": 1
+                                }
+                            }
+                        ],
+                        "metadata": "Metrics.# Semantic Models"
+                    }
+                },
+                {
+                    "properties": {
+                        "backColor": {
+                            "solid": {
+                                "color": {
+                                    "expr": {
+                                        "FillRule": {
+                                            "Input": {
+                                                "Measure": {
+                                                    "Expression": {
+                                                        "SourceRef": {
+                                                            "Entity": "Metrics"
+                                                        }
+                                                    },
+                                                    "Property": "# Reports"
+                                                }
+                                            },
+                                            "FillRule": {
+                                                "linearGradient2": {
+                                                    "min": {
+                                                        "color": {
+                                                            "Literal": {
+                                                                "Value": "'#e6e6e6'"
+                                                            }
+                                                        }
+                                                    },
+                                                    "max": {
+                                                        "color": {
+                                                            "Literal": {
+                                                                "Value": "'#bddbc7'"
+                                                            }
+                                                        }
+                                                    },
+                                                    "nullColoringStrategy": {
+                                                        "strategy": {
+                                                            "Literal": {
+                                                                "Value": "'noColor'"
+                                                            }
+                                                        }
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "selector": {
+                        "data": [
+                            {
+                                "dataViewWildcard": {
+                                    "matchingOption": 1
+                                }
+                            }
+                        ],
+                        "metadata": "Metrics.# Reports"
+                    }
+                },
+                {
+                    "properties": {
+                        "backColor": {
+                            "solid": {
+                                "color": {
+                                    "expr": {
+                                        "FillRule": {
+                                            "Input": {
+                                                "Measure": {
+                                                    "Expression": {
+                                                        "SourceRef": {
+                                                            "Entity": "Metrics"
+                                                        }
+                                                    },
+                                                    "Property": "# Eventhouses"
+                                                }
+                                            },
+                                            "FillRule": {
+                                                "linearGradient2": {
+                                                    "min": {
+                                                        "color": {
+                                                            "Literal": {
+                                                                "Value": "'#e6e6e6'"
+                                                            }
+                                                        }
+                                                    },
+                                                    "max": {
+                                                        "color": {
+                                                            "Literal": {
+                                                                "Value": "'#bddbc7'"
+                                                            }
+                                                        }
+                                                    },
+                                                    "nullColoringStrategy": {
+                                                        "strategy": {
+                                                            "Literal": {
+                                                                "Value": "'noColor'"
+                                                            }
+                                                        }
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "selector": {
+                        "data": [
+                            {
+                                "dataViewWildcard": {
+                                    "matchingOption": 1
+                                }
+                            }
+                        ],
+                        "metadata": "Metrics.# Eventhouses"
+                    }
+                },
+                {
+                    "properties": {
+                        "backColor": {
+                            "solid": {
+                                "color": {
+                                    "expr": {
+                                        "FillRule": {
+                                            "Input": {
+                                                "Measure": {
+                                                    "Expression": {
+                                                        "SourceRef": {
+                                                            "Entity": "Metrics"
+                                                        }
+                                                    },
+                                                    "Property": "# Eventstreams"
+                                                }
+                                            },
+                                            "FillRule": {
+                                                "linearGradient2": {
+                                                    "min": {
+                                                        "color": {
+                                                            "Literal": {
+                                                                "Value": "'#e6e6e6'"
+                                                            }
+                                                        }
+                                                    },
+                                                    "max": {
+                                                        "color": {
+                                                            "Literal": {
+                                                                "Value": "'#bddbc7'"
+                                                            }
+                                                        }
+                                                    },
+                                                    "nullColoringStrategy": {
+                                                        "strategy": {
+                                                            "Literal": {
+                                                                "Value": "'noColor'"
+                                                            }
+                                                        }
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "selector": {
+                        "data": [
+                            {
+                                "dataViewWildcard": {
+                                    "matchingOption": 1
+                                }
+                            }
+                        ],
+                        "metadata": "Metrics.# Eventstreams"
+                    }
+                },
+                {
+                    "properties": {
+                        "backColor": {
+                            "solid": {
+                                "color": {
+                                    "expr": {
+                                        "FillRule": {
+                                            "Input": {
+                                                "Measure": {
+                                                    "Expression": {
+                                                        "SourceRef": {
+                                                            "Entity": "Metrics"
+                                                        }
+                                                    },
+                                                    "Property": "# KQL Databases"
+                                                }
+                                            },
+                                            "FillRule": {
+                                                "linearGradient2": {
+                                                    "min": {
+                                                        "color": {
+                                                            "Literal": {
+                                                                "Value": "'#e6e6e6'"
+                                                            }
+                                                        }
+                                                    },
+                                                    "max": {
+                                                        "color": {
+                                                            "Literal": {
+                                                                "Value": "'#bddbc7'"
+                                                            }
+                                                        }
+                                                    },
+                                                    "nullColoringStrategy": {
+                                                        "strategy": {
+                                                            "Literal": {
+                                                                "Value": "'noColor'"
+                                                            }
+                                                        }
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "selector": {
+                        "data": [
+                            {
+                                "dataViewWildcard": {
+                                    "matchingOption": 1
+                                }
+                            }
+                        ],
+                        "metadata": "Metrics.# KQL Databases"
+                    }
+                },
+                {
+                    "properties": {
+                        "backColor": {
+                            "solid": {
+                                "color": {
+                                    "expr": {
+                                        "FillRule": {
+                                            "Input": {
+                                                "Measure": {
+                                                    "Expression": {
+                                                        "SourceRef": {
+                                                            "Entity": "Metrics"
+                                                        }
+                                                    },
+                                                    "Property": "# KQL Querysets"
+                                                }
+                                            },
+                                            "FillRule": {
+                                                "linearGradient2": {
+                                                    "min": {
+                                                        "color": {
+                                                            "Literal": {
+                                                                "Value": "'#e6e6e6'"
+                                                            }
+                                                        }
+                                                    },
+                                                    "max": {
+                                                        "color": {
+                                                            "Literal": {
+                                                                "Value": "'#bddbc7'"
+                                                            }
+                                                        }
+                                                    },
+                                                    "nullColoringStrategy": {
+                                                        "strategy": {
+                                                            "Literal": {
+                                                                "Value": "'noColor'"
+                                                            }
+                                                        }
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "selector": {
+                        "data": [
+                            {
+                                "dataViewWildcard": {
+                                    "matchingOption": 1
+                                }
+                            }
+                        ],
+                        "metadata": "Metrics.# KQL Querysets"
+                    }
+                },
+                {
+                    "properties": {
+                        "backColor": {
+                            "solid": {
+                                "color": {
+                                    "expr": {
+                                        "FillRule": {
+                                            "Input": {
+                                                "Measure": {
+                                                    "Expression": {
+                                                        "SourceRef": {
+                                                            "Entity": "Metrics"
+                                                        }
+                                                    },
+                                                    "Property": "# Lakehouses"
+                                                }
+                                            },
+                                            "FillRule": {
+                                                "linearGradient2": {
+                                                    "min": {
+                                                        "color": {
+                                                            "Literal": {
+                                                                "Value": "'#e6e6e6'"
+                                                            }
+                                                        }
+                                                    },
+                                                    "max": {
+                                                        "color": {
+                                                            "Literal": {
+                                                                "Value": "'#bddbc7'"
+                                                            }
+                                                        }
+                                                    },
+                                                    "nullColoringStrategy": {
+                                                        "strategy": {
+                                                            "Literal": {
+                                                                "Value": "'noColor'"
+                                                            }
+                                                        }
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "selector": {
+                        "data": [
+                            {
+                                "dataViewWildcard": {
+                                    "matchingOption": 1
+                                }
+                            }
+                        ],
+                        "metadata": "Metrics.# Lakehouses"
+                    }
+                },
+                {
+                    "properties": {
+                        "backColor": {
+                            "solid": {
+                                "color": {
+                                    "expr": {
+                                        "FillRule": {
+                                            "Input": {
+                                                "Measure": {
+                                                    "Expression": {
+                                                        "SourceRef": {
+                                                            "Entity": "Metrics"
+                                                        }
+                                                    },
+                                                    "Property": "# Mirrored Warehouses"
+                                                }
+                                            },
+                                            "FillRule": {
+                                                "linearGradient2": {
+                                                    "min": {
+                                                        "color": {
+                                                            "Literal": {
+                                                                "Value": "'#e6e6e6'"
+                                                            }
+                                                        }
+                                                    },
+                                                    "max": {
+                                                        "color": {
+                                                            "Literal": {
+                                                                "Value": "'#bddbc7'"
+                                                            }
+                                                        }
+                                                    },
+                                                    "nullColoringStrategy": {
+                                                        "strategy": {
+                                                            "Literal": {
+                                                                "Value": "'noColor'"
+                                                            }
+                                                        }
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "selector": {
+                        "data": [
+                            {
+                                "dataViewWildcard": {
+                                    "matchingOption": 1
+                                }
+                            }
+                        ],
+                        "metadata": "Metrics.# Mirrored Warehouses"
+                    }
+                },
+                {
+                    "properties": {
+                        "backColor": {
+                            "solid": {
+                                "color": {
+                                    "expr": {
+                                        "FillRule": {
+                                            "Input": {
+                                                "Measure": {
+                                                    "Expression": {
+                                                        "SourceRef": {
+                                                            "Entity": "Metrics"
+                                                        }
+                                                    },
+                                                    "Property": "# ML Experiments"
+                                                }
+                                            },
+                                            "FillRule": {
+                                                "linearGradient2": {
+                                                    "min": {
+                                                        "color": {
+                                                            "Literal": {
+                                                                "Value": "'#e6e6e6'"
+                                                            }
+                                                        }
+                                                    },
+                                                    "max": {
+                                                        "color": {
+                                                            "Literal": {
+                                                                "Value": "'#bddbc7'"
+                                                            }
+                                                        }
+                                                    },
+                                                    "nullColoringStrategy": {
+                                                        "strategy": {
+                                                            "Literal": {
+                                                                "Value": "'noColor'"
+                                                            }
+                                                        }
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "selector": {
+                        "data": [
+                            {
+                                "dataViewWildcard": {
+                                    "matchingOption": 1
+                                }
+                            }
+                        ],
+                        "metadata": "Metrics.# ML Experiments"
+                    }
+                },
+                {
+                    "properties": {
+                        "backColor": {
+                            "solid": {
+                                "color": {
+                                    "expr": {
+                                        "FillRule": {
+                                            "Input": {
+                                                "Measure": {
+                                                    "Expression": {
+                                                        "SourceRef": {
+                                                            "Entity": "Metrics"
+                                                        }
+                                                    },
+                                                    "Property": "# ML Models"
+                                                }
+                                            },
+                                            "FillRule": {
+                                                "linearGradient2": {
+                                                    "min": {
+                                                        "color": {
+                                                            "Literal": {
+                                                                "Value": "'#e6e6e6'"
+                                                            }
+                                                        }
+                                                    },
+                                                    "max": {
+                                                        "color": {
+                                                            "Literal": {
+                                                                "Value": "'#bddbc7'"
+                                                            }
+                                                        }
+                                                    },
+                                                    "nullColoringStrategy": {
+                                                        "strategy": {
+                                                            "Literal": {
+                                                                "Value": "'noColor'"
+                                                            }
+                                                        }
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "selector": {
+                        "data": [
+                            {
+                                "dataViewWildcard": {
+                                    "matchingOption": 1
+                                }
+                            }
+                        ],
+                        "metadata": "Metrics.# ML Models"
+                    }
+                },
+                {
+                    "properties": {
+                        "backColor": {
+                            "solid": {
+                                "color": {
+                                    "expr": {
+                                        "FillRule": {
+                                            "Input": {
+                                                "Measure": {
+                                                    "Expression": {
+                                                        "SourceRef": {
+                                                            "Entity": "Metrics"
+                                                        }
+                                                    },
+                                                    "Property": "# Mounted Databases"
+                                                }
+                                            },
+                                            "FillRule": {
+                                                "linearGradient2": {
+                                                    "min": {
+                                                        "color": {
+                                                            "Literal": {
+                                                                "Value": "'#e6e6e6'"
+                                                            }
+                                                        }
+                                                    },
+                                                    "max": {
+                                                        "color": {
+                                                            "Literal": {
+                                                                "Value": "'#bddbc7'"
+                                                            }
+                                                        }
+                                                    },
+                                                    "nullColoringStrategy": {
+                                                        "strategy": {
+                                                            "Literal": {
+                                                                "Value": "'noColor'"
+                                                            }
+                                                        }
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "selector": {
+                        "data": [
+                            {
+                                "dataViewWildcard": {
+                                    "matchingOption": 1
+                                }
+                            }
+                        ],
+                        "metadata": "Metrics.# Mounted Databases"
+                    }
+                },
+                {
+                    "properties": {
+                        "backColor": {
+                            "solid": {
+                                "color": {
+                                    "expr": {
+                                        "FillRule": {
+                                            "Input": {
+                                                "Measure": {
+                                                    "Expression": {
+                                                        "SourceRef": {
+                                                            "Entity": "Metrics"
+                                                        }
+                                                    },
+                                                    "Property": "# Notebooks"
+                                                }
+                                            },
+                                            "FillRule": {
+                                                "linearGradient2": {
+                                                    "min": {
+                                                        "color": {
+                                                            "Literal": {
+                                                                "Value": "'#e6e6e6'"
+                                                            }
+                                                        }
+                                                    },
+                                                    "max": {
+                                                        "color": {
+                                                            "Literal": {
+                                                                "Value": "'#bddbc7'"
+                                                            }
+                                                        }
+                                                    },
+                                                    "nullColoringStrategy": {
+                                                        "strategy": {
+                                                            "Literal": {
+                                                                "Value": "'noColor'"
+                                                            }
+                                                        }
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "selector": {
+                        "data": [
+                            {
+                                "dataViewWildcard": {
+                                    "matchingOption": 1
+                                }
+                            }
+                        ],
+                        "metadata": "Metrics.# Notebooks"
+                    }
+                },
+                {
+                    "properties": {
+                        "backColor": {
+                            "solid": {
+                                "color": {
+                                    "expr": {
+                                        "FillRule": {
+                                            "Input": {
+                                                "Measure": {
+                                                    "Expression": {
+                                                        "SourceRef": {
+                                                            "Entity": "Metrics"
+                                                        }
+                                                    },
+                                                    "Property": "# Pipelines"
+                                                }
+                                            },
+                                            "FillRule": {
+                                                "linearGradient2": {
+                                                    "min": {
+                                                        "color": {
+                                                            "Literal": {
+                                                                "Value": "'#e6e6e6'"
+                                                            }
+                                                        }
+                                                    },
+                                                    "max": {
+                                                        "color": {
+                                                            "Literal": {
+                                                                "Value": "'#bddbc7'"
+                                                            }
+                                                        }
+                                                    },
+                                                    "nullColoringStrategy": {
+                                                        "strategy": {
+                                                            "Literal": {
+                                                                "Value": "'noColor'"
+                                                            }
+                                                        }
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "selector": {
+                        "data": [
+                            {
+                                "dataViewWildcard": {
+                                    "matchingOption": 1
+                                }
+                            }
+                        ],
+                        "metadata": "Metrics.# Pipelines"
+                    }
+                },
+                {
+                    "properties": {
+                        "backColor": {
+                            "solid": {
+                                "color": {
+                                    "expr": {
+                                        "FillRule": {
+                                            "Input": {
+                                                "Measure": {
+                                                    "Expression": {
+                                                        "SourceRef": {
+                                                            "Entity": "Metrics"
+                                                        }
+                                                    },
+                                                    "Property": "# Reflex"
+                                                }
+                                            },
+                                            "FillRule": {
+                                                "linearGradient2": {
+                                                    "min": {
+                                                        "color": {
+                                                            "Literal": {
+                                                                "Value": "'#e6e6e6'"
+                                                            }
+                                                        }
+                                                    },
+                                                    "max": {
+                                                        "color": {
+                                                            "Literal": {
+                                                                "Value": "'#bddbc7'"
+                                                            }
+                                                        }
+                                                    },
+                                                    "nullColoringStrategy": {
+                                                        "strategy": {
+                                                            "Literal": {
+                                                                "Value": "'noColor'"
+                                                            }
+                                                        }
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "selector": {
+                        "data": [
+                            {
+                                "dataViewWildcard": {
+                                    "matchingOption": 1
+                                }
+                            }
+                        ],
+                        "metadata": "Metrics.# Reflex"
+                    }
+                },
+                {
+                    "properties": {
+                        "backColor": {
+                            "solid": {
+                                "color": {
+                                    "expr": {
+                                        "FillRule": {
+                                            "Input": {
+                                                "Measure": {
+                                                    "Expression": {
+                                                        "SourceRef": {
+                                                            "Entity": "Metrics"
+                                                        }
+                                                    },
+                                                    "Property": "# SQL Endpoints"
+                                                }
+                                            },
+                                            "FillRule": {
+                                                "linearGradient2": {
+                                                    "min": {
+                                                        "color": {
+                                                            "Literal": {
+                                                                "Value": "'#e6e6e6'"
+                                                            }
+                                                        }
+                                                    },
+                                                    "max": {
+                                                        "color": {
+                                                            "Literal": {
+                                                                "Value": "'#bddbc7'"
+                                                            }
+                                                        }
+                                                    },
+                                                    "nullColoringStrategy": {
+                                                        "strategy": {
+                                                            "Literal": {
+                                                                "Value": "'noColor'"
+                                                            }
+                                                        }
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "selector": {
+                        "data": [
+                            {
+                                "dataViewWildcard": {
+                                    "matchingOption": 1
+                                }
+                            }
+                        ],
+                        "metadata": "Metrics.# SQL Endpoints"
+                    }
+                },
+                {
+                    "properties": {
+                        "backColor": {
+                            "solid": {
+                                "color": {
+                                    "expr": {
+                                        "FillRule": {
+                                            "Input": {
+                                                "Measure": {
+                                                    "Expression": {
+                                                        "SourceRef": {
+                                                            "Entity": "Metrics"
+                                                        }
+                                                    },
+                                                    "Property": "# Warehouses"
+                                                }
+                                            },
+                                            "FillRule": {
+                                                "linearGradient2": {
+                                                    "min": {
+                                                        "color": {
+                                                            "Literal": {
+                                                                "Value": "'#e6e6e6'"
+                                                            }
+                                                        }
+                                                    },
+                                                    "max": {
+                                                        "color": {
+                                                            "Literal": {
+                                                                "Value": "'#bddbc7'"
+                                                            }
+                                                        }
+                                                    },
+                                                    "nullColoringStrategy": {
+                                                        "strategy": {
+                                                            "Literal": {
+                                                                "Value": "'noColor'"
+                                                            }
+                                                        }
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "selector": {
+                        "data": [
+                            {
+                                "dataViewWildcard": {
+                                    "matchingOption": 1
+                                }
+                            }
+                        ],
+                        "metadata": "Metrics.# Warehouses"
+                    }
+                },
+                {
+                    "properties": {
+                        "backColor": {
+                            "solid": {
+                                "color": {
+                                    "expr": {
+                                        "FillRule": {
+                                            "Input": {
+                                                "Measure": {
+                                                    "Expression": {
+                                                        "SourceRef": {
+                                                            "Entity": "Metrics"
+                                                        }
+                                                    },
+                                                    "Property": "# GraphQL APIs"
+                                                }
+                                            },
+                                            "FillRule": {
+                                                "linearGradient3": {
+                                                    "min": {
+                                                        "color": {
+                                                            "Literal": {
+                                                                "Value": "'#d5e2fa'"
+                                                            }
+                                                        }
+                                                    },
+                                                    "mid": {
+                                                        "color": {
+                                                            "Literal": {
+                                                                "Value": "'#ffdab3'"
+                                                            }
+                                                        }
+                                                    },
+                                                    "max": {
+                                                        "color": {
+                                                            "Literal": {
+                                                                "Value": "'#a7d0ce'"
+                                                            }
+                                                        }
+                                                    },
+                                                    "nullColoringStrategy": {
+                                                        "strategy": {
+                                                            "Literal": {
+                                                                "Value": "'noColor'"
+                                                            }
+                                                        }
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "selector": {
+                        "data": [
+                            {
+                                "dataViewWildcard": {
+                                    "matchingOption": 1
+                                }
+                            }
+                        ],
+                        "metadata": "Metrics.# GraphQL APIs"
+                    }
+                },
+                {
+                    "properties": {
+                        "backColor": {
+                            "solid": {
+                                "color": {
+                                    "expr": {
+                                        "FillRule": {
+                                            "Input": {
+                                                "Measure": {
+                                                    "Expression": {
+                                                        "SourceRef": {
+                                                            "Entity": "Metrics"
+                                                        }
+                                                    },
+                                                    "Property": "# Healthcare Data Solutions"
+                                                }
+                                            },
+                                            "FillRule": {
+                                                "linearGradient3": {
+                                                    "min": {
+                                                        "color": {
+                                                            "Literal": {
+                                                                "Value": "'#d5e2fa'"
+                                                            }
+                                                        }
+                                                    },
+                                                    "mid": {
+                                                        "color": {
+                                                            "Literal": {
+                                                                "Value": "'#ffdab3'"
+                                                            }
+                                                        }
+                                                    },
+                                                    "max": {
+                                                        "color": {
+                                                            "Literal": {
+                                                                "Value": "'#a7d0ce'"
+                                                            }
+                                                        }
+                                                    },
+                                                    "nullColoringStrategy": {
+                                                        "strategy": {
+                                                            "Literal": {
+                                                                "Value": "'noColor'"
+                                                            }
+                                                        }
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "selector": {
+                        "data": [
+                            {
+                                "dataViewWildcard": {
+                                    "matchingOption": 1
+                                }
+                            }
+                        ],
+                        "metadata": "Metrics.# Healthcare Data Solutions"
+                    }
+                },
+                {
+                    "properties": {
+                        "backColor": {
+                            "solid": {
+                                "color": {
+                                    "expr": {
+                                        "FillRule": {
+                                            "Input": {
+                                                "Measure": {
+                                                    "Expression": {
+                                                        "SourceRef": {
+                                                            "Entity": "Metrics"
+                                                        }
+                                                    },
+                                                    "Property": "# Anomaly Detectors"
+                                                }
+                                            },
+                                            "FillRule": {
+                                                "linearGradient2": {
+                                                    "min": {
+                                                        "color": {
+                                                            "Literal": {
+                                                                "Value": "'#FFFFFF'"
+                                                            }
+                                                        }
+                                                    },
+                                                    "max": {
+                                                        "color": {
+                                                            "Literal": {
+                                                                "Value": "'#BDDBC7'"
+                                                            }
+                                                        }
+                                                    },
+                                                    "nullColoringStrategy": {
+                                                        "strategy": {
+                                                            "Literal": {
+                                                                "Value": "'asZero'"
+                                                            }
+                                                        }
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "selector": {
+                        "data": [
+                            {
+                                "dataViewWildcard": {
+                                    "matchingOption": 1
+                                }
+                            }
+                        ],
+                        "metadata": "Metrics.# Anomaly Detectors"
+                    }
+                },
+                {
+                    "properties": {
+                        "backColor": {
+                            "solid": {
+                                "color": {
+                                    "expr": {
+                                        "FillRule": {
+                                            "Input": {
+                                                "Measure": {
+                                                    "Expression": {
+                                                        "SourceRef": {
+                                                            "Entity": "Metrics"
+                                                        }
+                                                    },
+                                                    "Property": "# Data Agents"
+                                                }
+                                            },
+                                            "FillRule": {
+                                                "linearGradient2": {
+                                                    "min": {
+                                                        "color": {
+                                                            "Literal": {
+                                                                "Value": "'#FFFFFF'"
+                                                            }
+                                                        }
+                                                    },
+                                                    "max": {
+                                                        "color": {
+                                                            "Literal": {
+                                                                "Value": "'#BDDBC7'"
+                                                            }
+                                                        }
+                                                    },
+                                                    "nullColoringStrategy": {
+                                                        "strategy": {
+                                                            "Literal": {
+                                                                "Value": "'asZero'"
+                                                            }
+                                                        }
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "selector": {
+                        "data": [
+                            {
+                                "dataViewWildcard": {
+                                    "matchingOption": 1
+                                }
+                            }
+                        ],
+                        "metadata": "Metrics.# Data Agents"
+                    }
+                },
+                {
+                    "properties": {
+                        "backColor": {
+                            "solid": {
+                                "color": {
+                                    "expr": {
+                                        "FillRule": {
+                                            "Input": {
+                                                "Measure": {
+                                                    "Expression": {
+                                                        "SourceRef": {
+                                                            "Entity": "Metrics"
+                                                        }
+                                                    },
+                                                    "Property": "# Environments"
+                                                }
+                                            },
+                                            "FillRule": {
+                                                "linearGradient2": {
+                                                    "min": {
+                                                        "color": {
+                                                            "Literal": {
+                                                                "Value": "'#FFFFFF'"
+                                                            }
+                                                        }
+                                                    },
+                                                    "max": {
+                                                        "color": {
+                                                            "Literal": {
+                                                                "Value": "'#BDDBC7'"
+                                                            }
+                                                        }
+                                                    },
+                                                    "nullColoringStrategy": {
+                                                        "strategy": {
+                                                            "Literal": {
+                                                                "Value": "'asZero'"
+                                                            }
+                                                        }
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "selector": {
+                        "data": [
+                            {
+                                "dataViewWildcard": {
+                                    "matchingOption": 1
+                                }
+                            }
+                        ],
+                        "metadata": "Metrics.# Environments"
+                    }
+                },
+                {
+                    "properties": {
+                        "backColor": {
+                            "solid": {
+                                "color": {
+                                    "expr": {
+                                        "FillRule": {
+                                            "Input": {
+                                                "Measure": {
+                                                    "Expression": {
+                                                        "SourceRef": {
+                                                            "Entity": "Metrics"
+                                                        }
+                                                    },
+                                                    "Property": "# Spark Job Definitions"
+                                                }
+                                            },
+                                            "FillRule": {
+                                                "linearGradient2": {
+                                                    "min": {
+                                                        "color": {
+                                                            "Literal": {
+                                                                "Value": "'#FFFFFF'"
+                                                            }
+                                                        }
+                                                    },
+                                                    "max": {
+                                                        "color": {
+                                                            "Literal": {
+                                                                "Value": "'#BDDBC7'"
+                                                            }
+                                                        }
+                                                    },
+                                                    "nullColoringStrategy": {
+                                                        "strategy": {
+                                                            "Literal": {
+                                                                "Value": "'asZero'"
+                                                            }
+                                                        }
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "selector": {
+                        "data": [
+                            {
+                                "dataViewWildcard": {
+                                    "matchingOption": 1
+                                }
+                            }
+                        ],
+                        "metadata": "Metrics.# Spark Job Definitions"
+                    }
+                },
+                {
+                    "properties": {
+                        "backColor": {
+                            "solid": {
+                                "color": {
+                                    "expr": {
+                                        "FillRule": {
+                                            "Input": {
+                                                "Measure": {
+                                                    "Expression": {
+                                                        "SourceRef": {
+                                                            "Entity": "Metrics"
+                                                        }
+                                                    },
+                                                    "Property": "# SQL Databases"
+                                                }
+                                            },
+                                            "FillRule": {
+                                                "linearGradient2": {
+                                                    "min": {
+                                                        "color": {
+                                                            "Literal": {
+                                                                "Value": "'#FFFFFF'"
+                                                            }
+                                                        }
+                                                    },
+                                                    "max": {
+                                                        "color": {
+                                                            "Literal": {
+                                                                "Value": "'#BDDBC7'"
+                                                            }
+                                                        }
+                                                    },
+                                                    "nullColoringStrategy": {
+                                                        "strategy": {
+                                                            "Literal": {
+                                                                "Value": "'asZero'"
+                                                            }
+                                                        }
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "selector": {
+                        "data": [
+                            {
+                                "dataViewWildcard": {
+                                    "matchingOption": 1
+                                }
+                            }
+                        ],
+                        "metadata": "Metrics.# SQL Databases"
+                    }
+                },
+                {
+                    "properties": {
+                        "backColor": {
+                            "solid": {
+                                "color": {
+                                    "expr": {
+                                        "FillRule": {
+                                            "Input": {
+                                                "Measure": {
+                                                    "Expression": {
+                                                        "SourceRef": {
+                                                            "Entity": "Metrics"
+                                                        }
+                                                    },
+                                                    "Property": "# User Data Function"
+                                                }
+                                            },
+                                            "FillRule": {
+                                                "linearGradient2": {
+                                                    "min": {
+                                                        "color": {
+                                                            "Literal": {
+                                                                "Value": "'#FFFFFF'"
+                                                            }
+                                                        }
+                                                    },
+                                                    "max": {
+                                                        "color": {
+                                                            "Literal": {
+                                                                "Value": "'#BDDBC7'"
+                                                            }
+                                                        }
+                                                    },
+                                                    "nullColoringStrategy": {
+                                                        "strategy": {
+                                                            "Literal": {
+                                                                "Value": "'asZero'"
+                                                            }
+                                                        }
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "selector": {
+                        "data": [
+                            {
+                                "dataViewWildcard": {
+                                    "matchingOption": 1
+                                }
+                            }
+                        ],
+                        "metadata": "Metrics.# User Data Function"
+                    }
+                }
+            ],
+            "rowHeaders": [
+                {
+                    "properties": {
+                        "fontFamily": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "'''Segoe UI Semibold'', wf_segoe-ui_semibold, helvetica, arial, sans-serif'"
+                                }
+                            }
+                        },
+                        "fontColor": {
+                            "solid": {
+                                "color": {
+                                    "expr": {
+                                        "ThemeDataColor": {
+                                            "ColorId": 1,
+                                            "Percent": 0
+                                        }
+                                    }
+                                }
+                            }
+                        },
+                        "fontSize": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "9D"
+                                }
+                            }
+                        }
+                    }
+                }
+            ],
+            "blankRows": [
+                {
+                    "properties": {
+                        "showBlankRows": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "false"
+                                }
+                            }
+                        }
+                    }
+                }
+            ],
+            "subTotals": [
+                {
+                    "properties": {
+                        "rowSubtotals": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "true"
+                                }
+                            }
+                        },
+                        "rowSubtotalsPosition": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "'Top'"
+                                }
+                            }
+                        }
+                    }
+                }
+            ],
+            "columnFormatting": [
+                {
+                    "properties": {},
+                    "selector": {
+                        "metadata": "Metrics.# Active Artifacts"
+                    }
+                }
+            ],
+            "columnWidth": [
+                {
+                    "properties": {
+                        "value": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "76.4903476543538D"
+                                }
+                            }
+                        }
+                    },
+                    "selector": {
+                        "metadata": "Metrics.# Mounted Databases"
+                    }
+                },
+                {
+                    "properties": {
+                        "value": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "83.6449786614406D"
+                                }
+                            }
+                        }
+                    },
+                    "selector": {
+                        "metadata": "Metrics.# Mirrored Warehouses"
+                    }
+                },
+                {
+                    "properties": {
+                        "value": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "77.07935631941308D"
+                                }
+                            }
+                        }
+                    },
+                    "selector": {
+                        "metadata": "Metrics.# KQL Querysets"
+                    }
+                },
+                {
+                    "properties": {
+                        "value": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "78.0793775042147D"
+                                }
+                            }
+                        }
+                    },
+                    "selector": {
+                        "metadata": "Metrics.# KQL Databases"
+                    }
+                },
+                {
+                    "properties": {
+                        "value": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "78.94432369408423D"
+                                }
+                            }
+                        }
+                    },
+                    "selector": {
+                        "metadata": "Metrics.# ML Experiments"
+                    }
+                },
+                {
+                    "properties": {
+                        "value": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "53.538839997921194D"
+                                }
+                            }
+                        }
+                    },
+                    "selector": {
+                        "metadata": "Metrics.# ML Models"
+                    }
+                },
+                {
+                    "properties": {
+                        "value": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "87.31746516091431D"
+                                }
+                            }
+                        }
+                    },
+                    "selector": {
+                        "metadata": "Metrics.# Semantic Models"
+                    }
+                },
+                {
+                    "properties": {
+                        "value": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "61.37037376229696D"
+                                }
+                            }
+                        }
+                    },
+                    "selector": {
+                        "metadata": "Metrics.# Active Artifacts"
+                    }
+                },
+                {
+                    "properties": {
+                        "value": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "68.9790242603551D"
+                                }
+                            }
+                        }
+                    },
+                    "selector": {
+                        "metadata": "Metrics.# SQL Endpoints"
+                    }
+                },
+                {
+                    "properties": {
+                        "value": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "151.30300243509834D"
+                                }
+                            }
+                        }
+                    },
+                    "selector": {
+                        "metadata": "capacities.displayName"
+                    }
+                },
+                {
+                    "properties": {
+                        "value": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "97.33337900816953D"
+                                }
+                            }
+                        }
+                    },
+                    "selector": {
+                        "metadata": "Metrics.# Healthcare Data Solutions"
+                    }
+                },
+                {
+                    "properties": {
+                        "value": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "74.04276713115196D"
+                                }
+                            }
+                        }
+                    },
+                    "selector": {
+                        "metadata": "Metrics.# GraphQL APIs"
+                    }
+                },
+                {
+                    "properties": {
+                        "value": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "80.61818541543656D"
+                                }
+                            }
+                        }
+                    },
+                    "selector": {
+                        "metadata": "Metrics.# Anomaly Detectors"
+                    }
+                },
+                {
+                    "properties": {
+                        "value": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "79.85457350921101D"
+                                }
+                            }
+                        }
+                    },
+                    "selector": {
+                        "metadata": "Metrics.# Spark Job Definitions"
+                    }
+                },
+                {
+                    "properties": {
+                        "value": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "93.79998781249525D"
+                                }
+                            }
+                        }
+                    },
+                    "selector": {
+                        "metadata": "Metrics.# User Data Function"
+                    }
+                }
+            ],
+            "rowTotal": [
+                {
+                    "properties": {
+                        "backColor": {
+                            "solid": {
+                                "color": {
+                                    "expr": {
+                                        "Literal": {
+                                            "Value": "'#F3F3F3'"
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            ]
+        },
+        "visualContainerObjects": {
+            "dropShadow": [
+                {
+                    "properties": {
+                        "show": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "true"
+                                }
+                            }
+                        },
+                        "color": {
+                            "solid": {
+                                "color": {
+                                    "expr": {
+                                        "ThemeDataColor": {
+                                            "ColorId": 0,
+                                            "Percent": -0.2
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            ],
+            "title": [
+                {
+                    "properties": {
+                        "text": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "'Heatmap based on Number of Artifacts by Workspace'"
+                                }
+                            }
+                        },
+                        "show": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "true"
+                                }
+                            }
+                        },
+                        "fontSize": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "12D"
+                                }
+                            }
+                        }
+                    }
+                }
+            ],
+            "border": [
+                {
+                    "properties": {
+                        "show": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "true"
+                                }
+                            }
+                        },
+                        "color": {
+                            "solid": {
+                                "color": {
+                                    "expr": {
+                                        "ThemeDataColor": {
+                                            "ColorId": 0,
+                                            "Percent": 0
+                                        }
+                                    }
+                                }
+                            }
+                        },
+                        "radius": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "5D"
+                                }
+                            }
+                        }
+                    }
+                }
+            ]
+        },
+        "drillFilterOtherVisuals": true
+    }
+}

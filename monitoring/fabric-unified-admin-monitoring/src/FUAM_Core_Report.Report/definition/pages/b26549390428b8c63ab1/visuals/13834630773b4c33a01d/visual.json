@@ -1,0 +1,89 @@
+{
+    "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.5.0/schema.json",
+    "name": "13834630773b4c33a01d",
+    "position": {
+        "x": 26.204819277108435,
+        "y": 646.9879518072289,
+        "z": 5000,
+        "height": 50.602409638554214,
+        "width": 400.3012048192771,
+        "tabOrder": 2000
+    },
+    "visual": {
+        "visualType": "textbox",
+        "objects": {
+            "general": [
+                {
+                    "properties": {
+                        "paragraphs": [
+                            {
+                                "textRuns": [
+                                    {
+                                        "value": "Analyzed Semantic Models ",
+                                        "textStyle": {
+                                            "fontWeight": "bold",
+                                            "fontFamily": "Calibri",
+                                            "fontSize": "12pt"
+                                        }
+                                    },
+                                    {
+                                        "value": "by Kind",
+                                        "textStyle": {
+                                            "fontWeight": "bold",
+                                            "fontFamily": "Calibri",
+                                            "fontSize": "12pt",
+                                            "color": "#694b75"
+                                        }
+                                    }
+                                ]
+                            },
+                            {
+                                "textRuns": [
+                                    {
+                                        "value": "Step 2) ",
+                                        "textStyle": {
+                                            "fontWeight": "bold",
+                                            "color": "#694b75"
+                                        }
+                                    },
+                                    {
+                                        "value": "Review kinds of semantic models"
+                                    }
+                                ]
+                            }
+                        ]
+                    }
+                }
+            ]
+        },
+        "visualContainerObjects": {
+            "background": [
+                {
+                    "properties": {
+                        "show": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "false"
+                                }
+                            }
+                        }
+                    }
+                }
+            ],
+            "border": [
+                {
+                    "properties": {
+                        "show": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "false"
+                                }
+                            }
+                        }
+                    }
+                }
+            ]
+        },
+        "drillFilterOtherVisuals": true
+    }
+}

@@ -1,0 +1,300 @@
+{
+    "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/page/2.0.0/schema.json",
+    "name": "b383e4af6c0024ed7e35",
+    "displayName": "DT | Workspace Characteristic",
+    "displayOption": "FitToPage",
+    "height": 1080,
+    "width": 1920,
+    "filterConfig": {
+        "filters": [
+            {
+                "name": "90611798c800b2eb879d",
+                "ordinal": 0,
+                "field": {
+                    "Column": {
+                        "Expression": {
+                            "SourceRef": {
+                                "Entity": "capacities"
+                            }
+                        },
+                        "Property": "displayName"
+                    }
+                },
+                "type": "Categorical",
+                "filter": {
+                    "Version": 2,
+                    "From": [
+                        {
+                            "Name": "c",
+                            "Entity": "capacities",
+                            "Type": 0
+                        }
+                    ],
+                    "Where": [
+                        {
+                            "Condition": {
+                                "In": {
+                                    "Expressions": [
+                                        {
+                                            "Column": {
+                                                "Expression": {
+                                                    "SourceRef": {
+                                                        "Source": "c"
+                                                    }
+                                                },
+                                                "Property": "displayName"
+                                            }
+                                        }
+                                    ],
+                                    "Values": [
+                                        [
+                                            {
+                                                "Literal": {
+                                                    "Value": "'kethfabric'"
+                                                }
+                                            }
+                                        ]
+                                    ]
+                                }
+                            }
+                        }
+                    ]
+                },
+                "howCreated": "Drillthrough"
+            },
+            {
+                "name": "703289e274162363e8e4",
+                "ordinal": 1,
+                "field": {
+                    "Column": {
+                        "Expression": {
+                            "SourceRef": {
+                                "Entity": "calendar"
+                            }
+                        },
+                        "Property": "YearMonth"
+                    }
+                },
+                "type": "Categorical",
+                "howCreated": "User"
+            },
+            {
+                "name": "cbf9aae9fb097672e67a",
+                "displayName": "Item Name",
+                "ordinal": 2,
+                "field": {
+                    "Column": {
+                        "Expression": {
+                            "SourceRef": {
+                                "Entity": "active_items"
+                            }
+                        },
+                        "Property": "name"
+                    }
+                },
+                "type": "Categorical",
+                "howCreated": "User"
+            },
+            {
+                "name": "b9211cc016fb62f59fe6",
+                "displayName": "Date",
+                "ordinal": 3,
+                "field": {
+                    "Column": {
+                        "Expression": {
+                            "SourceRef": {
+                                "Entity": "calendar"
+                            }
+                        },
+                        "Property": "Date2Key"
+                    }
+                },
+                "type": "Categorical",
+                "howCreated": "User"
+            },
+            {
+                "name": "83255cb879ce436bdac6",
+                "displayName": "ItemId",
+                "ordinal": 4,
+                "field": {
+                    "Column": {
+                        "Expression": {
+                            "SourceRef": {
+                                "Entity": "active_items"
+                            }
+                        },
+                        "Property": "id"
+                    }
+                },
+                "type": "Categorical",
+                "howCreated": "User"
+            },
+            {
+                "name": "b5b9dcbab2ac6d7c1bef",
+                "displayName": "Item Kind",
+                "ordinal": 5,
+                "field": {
+                    "Column": {
+                        "Expression": {
+                            "SourceRef": {
+                                "Entity": "active_items"
+                            }
+                        },
+                        "Property": "type"
+                    }
+                },
+                "type": "Categorical",
+                "howCreated": "User"
+            },
+            {
+                "name": "a530058b385d5ce6eafa",
+                "displayName": "Workspace Name",
+                "ordinal": 6,
+                "field": {
+                    "Column": {
+                        "Expression": {
+                            "SourceRef": {
+                                "Entity": "workspaces"
+                            }
+                        },
+                        "Property": "WorkspaceName"
+                    }
+                },
+                "type": "Categorical",
+                "howCreated": "User"
+            },
+            {
+                "name": "ec5543b042683289b7e7",
+                "ordinal": 7,
+                "field": {
+                    "Column": {
+                        "Expression": {
+                            "SourceRef": {
+                                "Entity": "workspaces"
+                            }
+                        },
+                        "Property": "WorkspaceId"
+                    }
+                },
+                "type": "Categorical",
+                "howCreated": "User"
+            }
+        ],
+        "filterSortOrder": "Custom"
+    },
+    "pageBinding": {
+        "name": "8e72cd0768704ba02c25",
+        "type": "Drillthrough",
+        "parameters": [
+            {
+                "name": "a30dc7881212773630d0",
+                "boundFilter": "90611798c800b2eb879d",
+                "fieldExpr": {
+                    "Column": {
+                        "Expression": {
+                            "SourceRef": {
+                                "Entity": "capacities"
+                            }
+                        },
+                        "Property": "displayName"
+                    }
+                }
+            }
+        ],
+        "acceptsFilterContext": "None"
+    },
+    "objects": {
+        "displayArea": [
+            {
+                "properties": {
+                    "verticalAlignment": {
+                        "expr": {
+                            "Literal": {
+                                "Value": "'Middle'"
+                            }
+                        }
+                    }
+                }
+            }
+        ],
+        "background": [
+            {
+                "properties": {
+                    "image": {
+                        "image": {
+                            "name": {
+                                "expr": {
+                                    "Literal": {
+                                        "Value": "'fuam_core_bg.png'"
+                                    }
+                                }
+                            },
+                            "url": {
+                                "expr": {
+                                    "ResourcePackageItem": {
+                                        "PackageName": "RegisteredResources",
+                                        "PackageType": 1,
+                                        "ItemName": "fuam_core_bg5333965023756615.png"
+                                    }
+                                }
+                            },
+                            "scaling": {
+                                "expr": {
+                                    "Literal": {
+                                        "Value": "'Fill'"
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "transparency": {
+                        "expr": {
+                            "Literal": {
+                                "Value": "0D"
+                            }
+                        }
+                    }
+                }
+            }
+        ]
+    },
+    "visibility": "HiddenInViewMode",
+    "type": "Drillthrough",
+    "visualInteractions": [
+        {
+            "source": "a3c904a942c638cd2ba1",
+            "target": "fcda429132d1be4dda7c",
+            "type": "NoFilter"
+        },
+        {
+            "source": "a3c904a942c638cd2ba1",
+            "target": "78a2a660a056042447c3",
+            "type": "NoFilter"
+        },
+        {
+            "source": "a3c904a942c638cd2ba1",
+            "target": "56ce475d9051bc60c9c9",
+            "type": "NoFilter"
+        },
+        {
+            "source": "a3c904a942c638cd2ba1",
+            "target": "eee4dbd04005d0a109cd",
+            "type": "NoFilter"
+        },
+        {
+            "source": "a3c904a942c638cd2ba1",
+            "target": "a92a2ddb424aaa269240",
+            "type": "NoFilter"
+        },
+        {
+            "source": "a3c904a942c638cd2ba1",
+            "target": "2f7ba89675a1b4c40707",
+            "type": "NoFilter"
+        },
+        {
+            "source": "a3c904a942c638cd2ba1",
+            "target": "1233fee4860997400412",
+            "type": "NoFilter"
+        }
+    ]
+}

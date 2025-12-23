@@ -1,0 +1,92 @@
+{
+    "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.5.0/schema.json",
+    "name": "ab7b061a48ae69b332de",
+    "position": {
+        "x": 13.934426229508198,
+        "y": 180.32786885245903,
+        "z": 16000,
+        "height": 90.16393442622952,
+        "width": 254.91803278688525,
+        "tabOrder": 15000
+    },
+    "visual": {
+        "visualType": "textbox",
+        "objects": {
+            "general": [
+                {
+                    "properties": {
+                        "paragraphs": [
+                            {
+                                "textRuns": [
+                                    {
+                                        "value": "Desription",
+                                        "textStyle": {
+                                            "fontWeight": "bold",
+                                            "fontSize": "12pt"
+                                        }
+                                    }
+                                ]
+                            },
+                            {
+                                "textRuns": [
+                                    {
+                                        "value": "This page provides a holistic overview of the selected item’s life cycle.",
+                                        "textStyle": {
+                                            "fontFamily": "Segoe UI"
+                                        }
+                                    }
+                                ]
+                            },
+                            {
+                                "textRuns": [
+                                    {
+                                        "value": "Link to ",
+                                        "textStyle": {
+                                            "fontWeight": "bold"
+                                        }
+                                    },
+                                    {
+                                        "value": "Fabric operations",
+                                        "textStyle": {
+                                            "fontWeight": "bold"
+                                        },
+                                        "url": "https://learn.microsoft.com/en-us/fabric/enterprise/fabric-operations"
+                                    }
+                                ]
+                            }
+                        ]
+                    }
+                }
+            ]
+        },
+        "visualContainerObjects": {
+            "border": [
+                {
+                    "properties": {
+                        "show": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "false"
+                                }
+                            }
+                        }
+                    }
+                }
+            ],
+            "background": [
+                {
+                    "properties": {
+                        "show": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "false"
+                                }
+                            }
+                        }
+                    }
+                }
+            ]
+        },
+        "drillFilterOtherVisuals": true
+    }
+}

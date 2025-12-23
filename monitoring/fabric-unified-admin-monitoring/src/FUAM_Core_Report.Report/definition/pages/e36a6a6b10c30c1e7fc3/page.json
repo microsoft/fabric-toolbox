@@ -1,0 +1,286 @@
+{
+    "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/page/2.0.0/schema.json",
+    "name": "e36a6a6b10c30c1e7fc3",
+    "displayName": "Access Report",
+    "displayOption": "FitToPage",
+    "height": 1080,
+    "width": 1920,
+    "filterConfig": {
+        "filters": [
+            {
+                "name": "682663b9fcfb246059cb",
+                "displayName": "Capacity Name",
+                "ordinal": 0,
+                "field": {
+                    "Column": {
+                        "Expression": {
+                            "SourceRef": {
+                                "Entity": "capacities"
+                            }
+                        },
+                        "Property": "displayName"
+                    }
+                },
+                "type": "Categorical",
+                "filter": {
+                    "Version": 2,
+                    "From": [
+                        {
+                            "Name": "c",
+                            "Entity": "capacities",
+                            "Type": 0
+                        }
+                    ],
+                    "Where": [
+                        {
+                            "Condition": {
+                                "Not": {
+                                    "Expression": {
+                                        "In": {
+                                            "Expressions": [
+                                                {
+                                                    "Column": {
+                                                        "Expression": {
+                                                            "SourceRef": {
+                                                                "Source": "c"
+                                                            }
+                                                        },
+                                                        "Property": "displayName"
+                                                    }
+                                                }
+                                            ],
+                                            "Values": [
+                                                [
+                                                    {
+                                                        "Literal": {
+                                                            "Value": "null"
+                                                        }
+                                                    }
+                                                ]
+                                            ]
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    ]
+                },
+                "howCreated": "User",
+                "objects": {
+                    "general": [
+                        {
+                            "properties": {
+                                "isInvertedSelectionMode": {
+                                    "expr": {
+                                        "Literal": {
+                                            "Value": "true"
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    ]
+                }
+            },
+            {
+                "name": "86c5e41e254cc9b3d664",
+                "ordinal": 1,
+                "field": {
+                    "Column": {
+                        "Expression": {
+                            "SourceRef": {
+                                "Entity": "capacities"
+                            }
+                        },
+                        "Property": "CapacityId"
+                    }
+                },
+                "type": "Categorical",
+                "howCreated": "User"
+            },
+            {
+                "name": "6ecc0b5ed808650bead7",
+                "displayName": "Workspace Name",
+                "ordinal": 2,
+                "field": {
+                    "Column": {
+                        "Expression": {
+                            "SourceRef": {
+                                "Entity": "workspaces"
+                            }
+                        },
+                        "Property": "WorkspaceName"
+                    }
+                },
+                "type": "Categorical",
+                "howCreated": "User"
+            },
+            {
+                "name": "578e11b3ffba896a6428",
+                "ordinal": 3,
+                "field": {
+                    "Column": {
+                        "Expression": {
+                            "SourceRef": {
+                                "Entity": "workspaces"
+                            }
+                        },
+                        "Property": "WorkspaceId"
+                    }
+                },
+                "type": "Categorical",
+                "howCreated": "User"
+            },
+            {
+                "name": "ac65facad643498e6c3b",
+                "ordinal": 4,
+                "field": {
+                    "Column": {
+                        "Expression": {
+                            "SourceRef": {
+                                "Entity": "workspaces_scanned_users"
+                            }
+                        },
+                        "Property": "PrincipalType"
+                    }
+                },
+                "type": "Categorical",
+                "howCreated": "User"
+            },
+            {
+                "name": "47f1ce8e74d11182dd81",
+                "ordinal": 5,
+                "field": {
+                    "Column": {
+                        "Expression": {
+                            "SourceRef": {
+                                "Entity": "workspaces_scanned_users"
+                            }
+                        },
+                        "Property": "GroupUserAccessRight"
+                    }
+                },
+                "type": "Categorical",
+                "howCreated": "User"
+            },
+            {
+                "name": "1897a618ff2d25e94f00",
+                "ordinal": 6,
+                "field": {
+                    "Column": {
+                        "Expression": {
+                            "SourceRef": {
+                                "Entity": "workspaces_scanned_users"
+                            }
+                        },
+                        "Property": "GraphId"
+                    }
+                },
+                "type": "Categorical",
+                "howCreated": "User"
+            },
+            {
+                "name": "b141479ab7c977f8ccd7",
+                "ordinal": 7,
+                "field": {
+                    "Column": {
+                        "Expression": {
+                            "SourceRef": {
+                                "Entity": "workspaces_scanned_users"
+                            }
+                        },
+                        "Property": "Identifier"
+                    }
+                },
+                "type": "Categorical",
+                "howCreated": "User"
+            },
+            {
+                "name": "d188c48db71aca156475",
+                "ordinal": 8,
+                "field": {
+                    "Column": {
+                        "Expression": {
+                            "SourceRef": {
+                                "Entity": "workspaces_scanned_users"
+                            }
+                        },
+                        "Property": "UserType"
+                    }
+                },
+                "type": "Categorical",
+                "howCreated": "User"
+            }
+        ],
+        "filterSortOrder": "Custom"
+    },
+    "objects": {
+        "displayArea": [
+            {
+                "properties": {
+                    "verticalAlignment": {
+                        "expr": {
+                            "Literal": {
+                                "Value": "'Middle'"
+                            }
+                        }
+                    }
+                }
+            }
+        ],
+        "background": [
+            {
+                "properties": {
+                    "image": {
+                        "image": {
+                            "name": {
+                                "expr": {
+                                    "Literal": {
+                                        "Value": "'fuam_core_bg.png'"
+                                    }
+                                }
+                            },
+                            "url": {
+                                "expr": {
+                                    "ResourcePackageItem": {
+                                        "PackageName": "RegisteredResources",
+                                        "PackageType": 1,
+                                        "ItemName": "fuam_core_bg37455449716801825.png"
+                                    }
+                                }
+                            },
+                            "scaling": {
+                                "expr": {
+                                    "Literal": {
+                                        "Value": "'Fill'"
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "transparency": {
+                        "expr": {
+                            "Literal": {
+                                "Value": "0D"
+                            }
+                        }
+                    }
+                }
+            }
+        ],
+        "outspacePane": [
+            {
+                "properties": {
+                    "width": {
+                        "expr": {
+                            "Literal": {
+                                "Value": "282L"
+                            }
+                        }
+                    }
+                }
+            }
+        ]
+    },
+    "visibility": "HiddenInViewMode"
+}

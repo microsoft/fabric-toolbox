@@ -102,5 +102,3 @@ table semantic_model_bpa_results
 			schemaName: dbo
 			expressionSource: DatabaseQuery
 
-	annotation PBI_ResultType = Table
-

@@ -1,0 +1,280 @@
+{
+    "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.5.0/schema.json",
+    "name": "596481930bcecc89c80e",
+    "position": {
+        "x": 1294.6987951807228,
+        "y": 12.082616179001722,
+        "z": 1000,
+        "height": 95.7314974182444,
+        "width": 472.1514629948365,
+        "tabOrder": 6000
+    },
+    "visual": {
+        "visualType": "slicer",
+        "query": {
+            "queryState": {
+                "Values": {
+                    "projections": [
+                        {
+                            "field": {
+                                "Column": {
+                                    "Expression": {
+                                        "SourceRef": {
+                                            "Entity": "capacity_metrics_by_timepoint"
+                                        }
+                                    },
+                                    "Property": "TimePoint"
+                                }
+                            },
+                            "queryRef": "capacity_metrics_by_timepoint.TimePoint",
+                            "nativeQueryRef": "TimePoint (Day)",
+                            "active": true,
+                            "displayName": "TimePoint (Day)"
+                        }
+                    ]
+                }
+            },
+            "sortDefinition": {
+                "sort": [
+                    {
+                        "field": {
+                            "Column": {
+                                "Expression": {
+                                    "SourceRef": {
+                                        "Entity": "capacity_metrics_by_timepoint"
+                                    }
+                                },
+                                "Property": "TimePoint"
+                            }
+                        },
+                        "direction": "Ascending"
+                    }
+                ],
+                "isDefaultSort": true
+            }
+        },
+        "objects": {
+            "data": [
+                {
+                    "properties": {
+                        "mode": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "'Between'"
+                                }
+                            }
+                        },
+                        "startDate": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "datetime'2025-09-22T00:00:00'"
+                                }
+                            }
+                        }
+                    }
+                }
+            ],
+            "items": [
+                {
+                    "properties": {
+                        "textSize": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "10D"
+                                }
+                            }
+                        }
+                    }
+                }
+            ],
+            "header": [
+                {
+                    "properties": {
+                        "textSize": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "9D"
+                                }
+                            }
+                        }
+                    }
+                }
+            ],
+            "general": [
+                {
+                    "properties": {
+                        "selfFilterEnabled": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "true"
+                                }
+                            }
+                        },
+                        "filter": {
+                            "filter": {
+                                "Version": 2,
+                                "From": [
+                                    {
+                                        "Name": "c",
+                                        "Entity": "capacity_metrics_by_timepoint",
+                                        "Type": 0
+                                    }
+                                ],
+                                "Where": [
+                                    {
+                                        "Condition": {
+                                            "Comparison": {
+                                                "ComparisonKind": 2,
+                                                "Left": {
+                                                    "Column": {
+                                                        "Expression": {
+                                                            "SourceRef": {
+                                                                "Source": "c"
+                                                            }
+                                                        },
+                                                        "Property": "TimePoint"
+                                                    }
+                                                },
+                                                "Right": {
+                                                    "Literal": {
+                                                        "Value": "datetime'2025-09-22T00:00:00'"
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
+                                ]
+                            }
+                        }
+                    }
+                }
+            ],
+            "date": [
+                {
+                    "properties": {
+                        "textSize": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "8D"
+                                }
+                            }
+                        }
+                    }
+                }
+            ],
+            "slider": [
+                {
+                    "properties": {
+                        "color": {
+                            "solid": {
+                                "color": {
+                                    "expr": {
+                                        "ThemeDataColor": {
+                                            "ColorId": 2,
+                                            "Percent": 0
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            ]
+        },
+        "visualContainerObjects": {
+            "title": [
+                {
+                    "properties": {
+                        "show": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "false"
+                                }
+                            }
+                        },
+                        "text": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "''"
+                                }
+                            }
+                        },
+                        "fontSize": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "12D"
+                                }
+                            }
+                        }
+                    }
+                }
+            ],
+            "border": [
+                {
+                    "properties": {
+                        "show": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "true"
+                                }
+                            }
+                        },
+                        "radius": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "8D"
+                                }
+                            }
+                        }
+                    }
+                }
+            ],
+            "dropShadow": [
+                {
+                    "properties": {
+                        "show": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "true"
+                                }
+                            }
+                        },
+                        "color": {
+                            "solid": {
+                                "color": {
+                                    "expr": {
+                                        "ThemeDataColor": {
+                                            "ColorId": 0,
+                                            "Percent": -0.1
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            ]
+        },
+        "drillFilterOtherVisuals": true
+    },
+    "filterConfig": {
+        "filters": [
+            {
+                "name": "8b4340e6bd31c380a34d",
+                "ordinal": 0,
+                "field": {
+                    "Column": {
+                        "Expression": {
+                            "SourceRef": {
+                                "Entity": "capacity_metrics_by_timepoint"
+                            }
+                        },
+                        "Property": "TimePoint"
+                    }
+                },
+                "type": "Categorical"
+            }
+        ],
+        "filterSortOrder": "Custom"
+    }
+}

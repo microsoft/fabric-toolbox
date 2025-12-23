@@ -1,0 +1,120 @@
+{
+    "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.5.0/schema.json",
+    "name": "a2f6b34ec53adbd98095",
+    "position": {
+        "x": 19.409020217729392,
+        "y": 89.5800933125972,
+        "z": 4000,
+        "height": 197.07620528771383,
+        "width": 546.4385692068429,
+        "tabOrder": 1000
+    },
+    "visual": {
+        "visualType": "pivotTable",
+        "query": {
+            "queryState": {
+                "Columns": {
+                    "projections": [
+                        {
+                            "field": {
+                                "Column": {
+                                    "Expression": {
+                                        "SourceRef": {
+                                            "Entity": "semantic_model_bpa_rule_catalog"
+                                        }
+                                    },
+                                    "Property": "ImpactArea"
+                                }
+                            },
+                            "queryRef": "semantic_model_bpa_rule_catalog.ImpactArea",
+                            "nativeQueryRef": "ImpactArea",
+                            "active": true
+                        }
+                    ]
+                },
+                "Rows": {
+                    "projections": [
+                        {
+                            "field": {
+                                "Column": {
+                                    "Expression": {
+                                        "SourceRef": {
+                                            "Entity": "semantic_model_bpa_rule_catalog"
+                                        }
+                                    },
+                                    "Property": "Category"
+                                }
+                            },
+                            "queryRef": "semantic_model_bpa_rule_catalog.Category",
+                            "nativeQueryRef": "Category",
+                            "active": true
+                        },
+                        {
+                            "field": {
+                                "Column": {
+                                    "Expression": {
+                                        "SourceRef": {
+                                            "Entity": "semantic_model_bpa_rule_catalog"
+                                        }
+                                    },
+                                    "Property": "Severity"
+                                }
+                            },
+                            "queryRef": "semantic_model_bpa_rule_catalog.Severity",
+                            "nativeQueryRef": "Severity",
+                            "active": false
+                        }
+                    ]
+                },
+                "Values": {
+                    "projections": [
+                        {
+                            "field": {
+                                "Aggregation": {
+                                    "Expression": {
+                                        "Column": {
+                                            "Expression": {
+                                                "SourceRef": {
+                                                    "Entity": "semantic_model_bpa_rule_catalog"
+                                                }
+                                            },
+                                            "Property": "RuleId"
+                                        }
+                                    },
+                                    "Function": 5
+                                }
+                            },
+                            "queryRef": "CountNonNull(semantic_model_bpa_rule_catalog.RuleId)",
+                            "nativeQueryRef": "Count of RuleId"
+                        }
+                    ]
+                }
+            }
+        },
+        "expansionStates": [
+            {
+                "roles": [
+                    "Rows"
+                ],
+                "levels": [
+                    {
+                        "queryRefs": [
+                            "semantic_model_bpa_rule_catalog.Category"
+                        ],
+                        "isCollapsed": true,
+                        "isPinned": true
+                    },
+                    {
+                        "queryRefs": [
+                            "semantic_model_bpa_rule_catalog.Severity"
+                        ],
+                        "isCollapsed": true,
+                        "isPinned": true
+                    }
+                ],
+                "root": {}
+            }
+        ],
+        "drillFilterOtherVisuals": true
+    }
+}

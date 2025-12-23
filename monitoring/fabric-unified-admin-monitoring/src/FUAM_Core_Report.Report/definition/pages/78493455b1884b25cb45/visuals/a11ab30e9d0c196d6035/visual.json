@@ -1,0 +1,87 @@
+{
+    "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.5.0/schema.json",
+    "name": "a11ab30e9d0c196d6035",
+    "position": {
+        "x": 24,
+        "y": 93,
+        "z": 4000,
+        "height": 88,
+        "width": 389,
+        "tabOrder": 3000
+    },
+    "visual": {
+        "visualType": "textbox",
+        "objects": {
+            "general": [
+                {
+                    "properties": {
+                        "paragraphs": [
+                            {
+                                "textRuns": [
+                                    {
+                                        "value": "Step 1) ",
+                                        "textStyle": {
+                                            "fontWeight": "bold",
+                                            "fontSize": "12pt",
+                                            "color": "#248a85"
+                                        }
+                                    },
+                                    {
+                                        "value": "Definition of \"unused workspaces\"",
+                                        "textStyle": {
+                                            "fontWeight": "bold",
+                                            "fontSize": "12pt"
+                                        }
+                                    }
+                                ]
+                            },
+                            {
+                                "textRuns": [
+                                    {
+                                        "value": "FUAM calculates the \"Unused Workspace Score\" for the last X days from different factors, like CU usage, Activity logs etc."
+                                    }
+                                ]
+                            },
+                            {
+                                "textRuns": [
+                                    {
+                                        "value": "Choose a day to trigger recalculation of the results:"
+                                    }
+                                ]
+                            }
+                        ]
+                    }
+                }
+            ]
+        },
+        "visualContainerObjects": {
+            "border": [
+                {
+                    "properties": {
+                        "show": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "false"
+                                }
+                            }
+                        }
+                    }
+                }
+            ],
+            "background": [
+                {
+                    "properties": {
+                        "show": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "false"
+                                }
+                            }
+                        }
+                    }
+                }
+            ]
+        },
+        "drillFilterOtherVisuals": true
+    }
+}

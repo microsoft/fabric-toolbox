@@ -152,6 +152,25 @@ table reports
 
 		annotation SummarizationSetBy = Automatic
 
+	column 'sensitivityLabel.labelId'
+		dataType: string
+		lineageTag: 486955f0-50df-4575-8b37-7112eb68dbda
+		sourceLineageTag: sensitivityLabel.labelId
+		summarizeBy: none
+		sourceColumn: sensitivityLabel.labelId
+
+		annotation SummarizationSetBy = Automatic
+
+	column format
+		dataType: string
+		sourceProviderType: varchar(8000)
+		lineageTag: b38e8efe-48c5-490c-a438-b0a911515cc6
+		sourceLineageTag: format
+		summarizeBy: none
+		sourceColumn: format
+
+		annotation SummarizationSetBy = Automatic
+
 	partition reports = entity
 		mode: directLake
 		source

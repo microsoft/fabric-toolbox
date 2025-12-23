@@ -753,7 +753,7 @@ table Metrics
 			    SUM(semantic_model_analyzer_runs[TotalSize]),
 			    [Selected Unit Value]
 			)
-		formatString: #,0.0
+		formatString: #,0.00
 		displayFolder: Semantic Models\Optimization Module\VertiPaq\Model level
 		lineageTag: b9b794a2-1213-4fda-86e6-2116b9ece7f3
 
@@ -1218,17 +1218,6 @@ table Metrics
 
 		annotation PBI_FormatHint = {"isGeneralNumber":true}
 
-	measure '# AI Skills' =
-			
-			CALCULATE(
-			    COUNT(active_items[id]),
-			    active_items[fuam_deleted] = FALSE(),
-			    active_items[type] = "AISkill"
-			)
-		formatString: #,0
-		displayFolder: Items\General
-		lineageTag: ac8ae4d6-5870-44b8-8a60-21596ea96143
-
 	measure 'Avg CU by Item by Day IOD' = ```
 			
 			VAR _calculatedResult = 
@@ -1243,9 +1232,11 @@ table Metrics
 			        [SumCuByItemByDay]
 			    )
 			```
-		formatString: #,0.00
+		formatString: #,0
 		displayFolder: Capacity IOD Metrics\General
 		lineageTag: 393eee7a-4d1f-4357-be79-2ecbfae8b43b
+
+		annotation PBI_FormatHint = {"isDecimal":true}
 
 	measure 'Max CU by Item by Day IOD' = ```
 			
@@ -1261,7 +1252,7 @@ table Metrics
 			        [SumCuByItemByDay]
 			    )
 			```
-		formatString: 0
+		formatString: #,0
 		displayFolder: Capacity IOD Metrics\General
 		lineageTag: b396842a-86d0-4f18-9ea6-1df76173a9cf
 
@@ -1420,7 +1411,7 @@ table Metrics
 		displayFolder: Semantic Models\Optimization Module\BPA
 		lineageTag: 71119d44-d242-4b1c-aa17-8606d39b8bc3
 
-	measure 'FUAM Release' = "2025.9.1"
+	measure 'FUAM Release' = "2026.1.1"
 		displayFolder: Meta
 		lineageTag: 186c2aac-d73b-4371-88ae-423e22b84179
 
@@ -1600,80 +1591,10 @@ table Metrics
 
 		annotation PBI_FormatHint = {"isDecimal":true}
 
-	/// Calculates the Average CU seconds by Item by Day. It ignores the 'semantic model' and 'storage mode' attributes in the filter context.
-	measure 'Avg Capacity CU 90d IOD' =
-			
-			CALCULATE(
-			    [Avg CU by Item by Day 90d IOD],
-			    REMOVEFILTERS(semantic_models[Name])
-			)
-		displayFolder: Semantic Models\Optimization Module\Capacity IOD Metrics
-		lineageTag: bbf6bc51-d5eb-4fa4-81ad-605823765fe2
-
-		annotation PBI_FormatHint = {"isGeneralNumber":true}
-
-	measure 'Avg Capacity CU 90d vs SM CU 7d IOD' = ```
-			
-			VAR _avg1d = [Avg CU by Item by Day 7d IOD]
-			RETURN
-			IF(
-			    ISBLANK(_avg1d), 
-			    BLANK(),
-			    [Avg CU by Item by Day 7d IOD] - [Avg Capacity CU 90d IOD]
-			)
-			```
-		displayFolder: Semantic Models\Optimization Module\Capacity IOD Metrics
-		lineageTag: c43f25f0-6473-4877-8021-99f7b0eb82a6
-
-		annotation PBI_FormatHint = {"isGeneralNumber":true}
-
-	measure 'Avg Capacity CU 90d vs SM CU 7d Bool IOD' = ```
-			
-			IF(
-			    [Avg Capacity CU 90d vs SM CU 7d IOD] > 0, 
-			    TRUE(),
-			    FALSE()
-			)
-			
-			```
-		formatString: """TRUE"";""TRUE"";""FALSE"""
-		displayFolder: Semantic Models\Optimization Module\Capacity IOD Metrics
-		lineageTag: 4577b837-d37a-4c4c-9992-35161f2264e1
-
-	measure 'Avg Capacity CU 90d vs SM CU 7d Color IOD' =
-			
-			VAR _avg1d = [Avg Capacity CU 90d vs SM CU 7d IOD]
-			RETURN
-			SWITCH (
-			        TRUE,
-			        _avg1d > 0, "#D195EA",
-			        _avg1d = 0, "",
-			        _avg1d < 0, "#8dbed6",
-			        BLANK()
-			        )
-		displayFolder: Semantic Models\Optimization Module\Capacity IOD Metrics
-		lineageTag: 5683a60f-64c4-4b98-928a-ec29dcf72211
-
-	measure 'Semantic Model Analyzer Runs' = COUNT(semantic_model_analyzer_runs[RunId])
+	measure 'Runs OM-SM' = COUNT(semantic_model_analyzer_runs[RunId])
 		formatString: 0
 		displayFolder: Semantic Models\Optimization Module\General
 		lineageTag: 26269557-b123-4ad8-8dfd-3dde354c253c
-
-	measure 'Avg Capacity CU 90d vs SM CU 7d % IOD' = ```
-			
-			VAR _avg1d = [Avg CU by Item by Day 7d IOD]
-			RETURN 
-			    IF(
-			        ISBLANK(_avg1d), BLANK(),    
-			        DIVIDE(
-			            [Avg CU by Item by Day 7d IOD] - [Avg Capacity CU 90d IOD], 
-			            [Avg Capacity CU 90d IOD]
-			        )
-			    )
-			```
-		formatString: 0.00%;-0.00%;0.00%
-		displayFolder: Semantic Models\Optimization Module\Capacity IOD Metrics
-		lineageTag: a9cf4f14-4030-4415-80b3-c2377d1b26e7
 
 	measure 'Avg CU by Item by Day 90d IOD' =
 			
@@ -1729,7 +1650,7 @@ table Metrics
 		displayFolder: Semantic Models\Optimization Module\BPA
 		lineageTag: c5ce404e-2ee0-46a0-8be9-e9938c65f2ab
 
-	measure 'Semantic Model Analyzer Last Run' =
+	measure 'Last Run OM-SM' =
 			
 			CALCULATE(
 			    MAX(semantic_model_analyzer_runs[RunId]),
@@ -1739,68 +1660,43 @@ table Metrics
 		displayFolder: Semantic Models\Optimization Module\General
 		lineageTag: 355a3faf-4756-4502-84ae-9160f26f05e2
 
-	measure 'Total Size Last Run (model)' =
+	measure 'BPA Violations (Background Impact) - Last Run OM-SM' =
 			
-			VAR _run = [Semantic Model Analyzer Last Run]
-			RETURN
-			    CALCULATE(
-			        [Total Size (model)],
-			        semantic_model_analyzer_runs[RunId] = _run
-			    )
-		displayFolder: Semantic Models\Optimization Module\VertiPaq\Model level
-		lineageTag: 4411d9c1-b2d3-462f-b7b3-d454aa2f2bdf
-
-		annotation PBI_FormatHint = {"isGeneralNumber":true}
-
-	measure 'Tables Last Run (model)' =
-			
-			VAR _run = [Semantic Model Analyzer Last Run]
-			RETURN
-			    CALCULATE(
-			        [Tables (model)],
-			        semantic_model_analyzer_runs[RunId] = _run
-			    )
-		formatString: 0
-		displayFolder: Semantic Models\Optimization Module\VertiPaq\Model level
-		lineageTag: 3420ea7d-cb54-468c-8afb-33d83bda39eb
-
-	measure 'BPA Violations (Background Impact) Last Run' =
-			
-			VAR _run = [Semantic Model Analyzer Last Run]
+			VAR _run = [Last Run OM-SM]
 			RETURN
 			    CALCULATE(
 			        [BPA Violations (Background Impact)],
 			        semantic_model_analyzer_runs[RunId] = _run
 			    )
 		formatString: #,0
-		displayFolder: Semantic Models\Optimization Module\BPA
+		displayFolder: Semantic Models\Optimization Module\Run Metrics - Last
 		lineageTag: d515c393-ddb1-4576-976c-db3843c4b99b
 
-	measure 'BPA Violations (Query Impact) Last Run' =
+	measure 'BPA Violations (Query Impact) - Last Run OM-SM' =
 			
-			VAR _run = [Semantic Model Analyzer Last Run]
+			VAR _run = [Last Run OM-SM]
 			RETURN
 			    CALCULATE(
 			        [BPA Violations (Query Impact)],
 			        semantic_model_analyzer_runs[RunId] = _run
 			    )
 		formatString: #,0
-		displayFolder: Semantic Models\Optimization Module\BPA
+		displayFolder: Semantic Models\Optimization Module\Run Metrics - Last
 		lineageTag: b69909a2-2b72-4774-8f9a-1ce931a6b136
 
-	measure 'BPA Violations (Usability Impact) Last Run' =
+	measure 'BPA Violations (Usability Impact) - Last Run OM-SM' =
 			
-			VAR _run = [Semantic Model Analyzer Last Run]
+			VAR _run = [Last Run OM-SM]
 			RETURN
 			    CALCULATE(
 			        [BPA Violations (Usability Impact)],
 			        semantic_model_analyzer_runs[RunId] = _run
 			    )
 		formatString: #,0
-		displayFolder: Semantic Models\Optimization Module\BPA
+		displayFolder: Semantic Models\Optimization Module\Run Metrics - Last
 		lineageTag: 19475181-365c-436b-98c2-f1e4b91fa795
 
-	measure 'Avg VR by Item by Day' = ```
+	measure '# VR by Item by Day' = ```
 			
 			// VR = View Report
 			VAR _calculatedResult = 
@@ -1810,17 +1706,17 @@ table Metrics
 			            "SumBySemanticModelByDay", CALCULATE( [# Activities], activities[Activity] = "ViewReport" )
 			        )
 			RETURN
-			    AVERAGEX(
+			    COUNTX(
 			        _calculatedResult,
 			        [SumBySemanticModelByDay]
 			    )
 			```
-		displayFolder: Activities\General
+		displayFolder: Activities\Item Specific
 		lineageTag: 7040e928-0742-4736-822d-effb8f41d4d6
 
 		annotation PBI_FormatHint = {"isGeneralNumber":true}
 
-	measure 'Avg SMR by Item by Day' = ```
+	measure '# SMR by Item by Day' = ```
 			
 			// SMR = Semantic Model Refresh
 			VAR _calculatedResult = 
@@ -1830,12 +1726,12 @@ table Metrics
 			            "SumBySemanticModelByDay", CALCULATE( [# Activities], activities[Activity] = "RefreshDataset" ) 
 			        )
 			RETURN
-			    AVERAGEX(
+			    COUNTX(
 			        _calculatedResult,
 			        [SumBySemanticModelByDay]
 			    )
 			```
-		displayFolder: Activities\General
+		displayFolder: Activities\Item Specific
 		lineageTag: 9c506500-ddbd-4fa0-90b4-947db5ec394c
 
 		annotation PBI_FormatHint = {"isGeneralNumber":true}
@@ -1852,29 +1748,20 @@ table Metrics
 
 		annotation PBI_FormatHint = {"isDecimal":true}
 
-	measure 'Avg SMR by Item by Day 90d' =
+	measure '# VR by Item by Day TI' =
 			
+			VAR _daysInScope = [unused_workspaces_days_in_scope_value]
+			RETURN
 			CALCULATE(
-			    [Avg SMR by Item by Day],
-			    'calendar'[Date2Key] >= TODAY()-90
+			    [# VR by Item by Day],
+			    'calendar'[Date2Key] >= TODAY()-_daysInScope
 			)
-		displayFolder: Activities\Time Intelligence
-		lineageTag: 28991b9b-ee7b-4647-9db6-f21f2d2a3183
-
-		annotation PBI_FormatHint = {"isGeneralNumber":true}
-
-	measure 'Avg VR by Item by Day 90d' =
-			
-			CALCULATE(
-			    [Avg VR by Item by Day],
-			    'calendar'[Date2Key] >= TODAY()-90
-			)
-		displayFolder: Activities\Time Intelligence
+		displayFolder: Unused Workspaces\Base Metrics
 		lineageTag: e48241e7-53e5-480f-9e90-c0995b314ccb
 
 		annotation PBI_FormatHint = {"isGeneralNumber":true}
 
-	measure 'Avg AiEA by Item by Day' = ```
+	measure '# AiEA by Item by Day' = ```
 			
 			// AiEA = Analyzed in External Application
 			VAR _calculatedResult = 
@@ -1884,17 +1771,17 @@ table Metrics
 			            "SumBySemanticModelByDay", CALCULATE( [# Activities], activities[Activity] = "AnalyzedByExternalApplication" )
 			        )
 			RETURN
-			    AVERAGEX(
+			    COUNTX(
 			        _calculatedResult,
 			        [SumBySemanticModelByDay]
 			    )
 			```
-		displayFolder: Activities\General
+		displayFolder: Activities\Item Specific
 		lineageTag: df094cdf-5341-4348-840e-a7731b626d87
 
 		annotation PBI_FormatHint = {"isGeneralNumber":true}
 
-	measure 'Avg AiEx by Item by Day' = ```
+	measure '# AiEx by Item by Day' = ```
 			
 			// AiEx = Analyzed in Excel
 			VAR _calculatedResult = 
@@ -1904,34 +1791,38 @@ table Metrics
 			            "SumBySemanticModelByDay", CALCULATE( [# Activities], activities[Activity] = "AnalyzeInExcel" )
 			        )
 			RETURN
-			    AVERAGEX(
+			    COUNTX(
 			        _calculatedResult,
 			        [SumBySemanticModelByDay]
 			    )
 			```
-		displayFolder: Activities\General
+		displayFolder: Activities\Item Specific
 		lineageTag: c645ce44-8ae1-49e0-96fa-cde08257c0bf
 
 		annotation PBI_FormatHint = {"isGeneralNumber":true}
 
-	measure 'Avg AiEx by Item by Day 90d' =
+	measure '# AiEx by Item by Day TI' =
 			
+			VAR _daysInScope = [unused_workspaces_days_in_scope_value]
+			RETURN
 			CALCULATE(
-			    [Avg AiEx by Item by Day],
-			    'calendar'[Date2Key] >= TODAY()-90
+			    [# AiEx by Item by Day],
+			    'calendar'[Date2Key] >= TODAY()-_daysInScope
 			)
-		displayFolder: Activities\Time Intelligence
+		displayFolder: Unused Workspaces\Base Metrics
 		lineageTag: 5a18b1ff-1f60-4eba-94b9-033417a25857
 
 		annotation PBI_FormatHint = {"isGeneralNumber":true}
 
-	measure 'Avg AiEA by Item by Day 90d' =
+	measure '# AiEA by Item by Day TI' =
 			
+			VAR _daysInScope = [unused_workspaces_days_in_scope_value]
+			RETURN
 			CALCULATE(
-			    [Avg AiEA by Item by Day],
-			    'calendar'[Date2Key] >= TODAY()-90
+			    [# AiEA by Item by Day],
+			    'calendar'[Date2Key] >= TODAY()-_daysInScope
 			)
-		displayFolder: Activities\Time Intelligence
+		displayFolder: Unused Workspaces\Base Metrics
 		lineageTag: da10f72e-09c4-47f6-b4e8-98574d599aeb
 
 		annotation PBI_FormatHint = {"isGeneralNumber":true}
@@ -1960,6 +1851,7 @@ table Metrics
 		lineageTag: 60dba4fb-3da2-40d6-bfbb-bea95addec12
 		dataCategory: WebUrl
 
+	/// Count of 30 seconds evaluation windows, where the capacity entered interactive delay (above 100%) 
 	measure 'Throttling Count' =
 			
 			CALCULATE(
@@ -2146,7 +2038,7 @@ table Metrics
 			    _workspace_id &
 			    "/reports/" &
 			    _reportId &
-			    "?experience=power-bi&filter=active_items%2Fid%20eq%20%27" &
+			    "/c0726ccc38a810722751?experience=power-bi&filter=active_items%2Fid%20eq%20%27" &
 			    MIN(active_items[id]) & 
 			    "%27",
 			    BLANK()
@@ -2216,6 +2108,588 @@ table Metrics
 			    )
 		displayFolder: Meta
 		lineageTag: 551c2d6c-79d7-4f74-b0cc-d5ebe6616b9b
+
+	measure '# Item Level Accesses' = COUNTROWS(item_users)
+		formatString: 0
+		displayFolder: Items\Access
+		lineageTag: 8585df00-9114-4897-8eb5-76a8d73b2ffb
+
+	measure '# User Data Function' =
+			
+			CALCULATE(
+			    COUNT(active_items[id]),
+			    active_items[fuam_deleted] = FALSE(),
+			    active_items[type] = "UserDataFunction"
+			)
+		formatString: 0
+		displayFolder: Items\General
+		lineageTag: 6516f321-d974-4056-aece-be6f886b9443
+
+	measure '# Environments' =
+			
+			CALCULATE(
+			    COUNT(active_items[id]),
+			    active_items[fuam_deleted] = FALSE(),
+			    active_items[type] = "Environments"
+			)
+		formatString: 0
+		displayFolder: Items\General
+		lineageTag: c815258a-63b3-45b3-99b7-a0073fe23c41
+
+	measure '# SQL Databases' =
+			
+			CALCULATE(
+			    COUNT(active_items[id]),
+			    active_items[fuam_deleted] = FALSE(),
+			    active_items[type] = "SQLDatabase"
+			)
+		formatString: 0
+		displayFolder: Items\General
+		lineageTag: efbcafd4-2f12-49a4-980e-dbde355cc3ef
+
+	measure '# Anomaly Detectors' =
+			
+			CALCULATE(
+			    COUNT(active_items[id]),
+			    active_items[fuam_deleted] = FALSE(),
+			    active_items[type] = "AnomalyDetector"
+			)
+		formatString: 0
+		displayFolder: Items\General
+		lineageTag: 3298548d-ccec-4552-ad54-b5ee90842f93
+
+	measure '# Data Agents' =
+			
+			CALCULATE(
+			    COUNT(active_items[id]),
+			    active_items[fuam_deleted] = FALSE(),
+			    active_items[type] = "DataAgent"
+			)
+		formatString: 0
+		displayFolder: Items\General
+		lineageTag: bf476643-294c-45ee-be9f-2435f652d586
+
+	/// Count of 30 seconds evaluation windows, where the capacity entered interactive rejection (above 100%) 
+	measure 'Throttling L2 Count' =
+			
+			CALCULATE(
+			    COUNTROWS(capacity_metrics_by_timepoint),
+			    capacity_metrics_by_timepoint[InteractiveRejectionPercentage] > 1
+			)
+		formatString: 0
+		displayFolder: Capacity TimePoint Metrics\Calculated
+		lineageTag: 087c0417-08f6-413a-9b05-433ca0a6cf82
+
+	/// Count of 30 seconds evaluation windows, where the capacity entered background rejection (above 100%) 
+	measure 'Throttling L3 Count' =
+			
+			CALCULATE(
+			    COUNTROWS(capacity_metrics_by_timepoint),
+			    capacity_metrics_by_timepoint[BackgroundRejectionPercentage] > 1
+			)
+		formatString: 0
+		displayFolder: Capacity TimePoint Metrics\Calculated
+		lineageTag: ad729336-fa24-4ed6-8eb7-5c4315fc08d5
+
+	/// Unique count of domains on tenant.
+	measure '# Domains' =
+			
+			CALCULATE(
+			    COUNT(domains_flatten[DomainId]),
+			    domains_flatten[IsSubDomain] = 0
+			)
+		formatString: #,0
+		displayFolder: Domains
+		lineageTag: e35f99fa-07a5-4c3a-96fe-d6993d958659
+
+	/// Unique count of sub-domains on tenant.
+	measure '# Sub-Domains' =
+			
+			CALCULATE(
+			    COUNT(domains_flatten[DomainId]),
+			    domains_flatten[IsSubDomain] = 1
+			)
+		formatString: #,0
+		displayFolder: Domains
+		lineageTag: 25bebfe5-c4b4-406c-880a-49f4c15afc82
+
+	measure 'Total CUs 14d IOD' =
+			
+			CALCULATE(
+			    [Total CUs IOD],
+			    'calendar'[IsInLast14Days] = 1
+			)
+		formatString: #,0
+		displayFolder: Capacity IOD Metrics\Time Intelligence
+		lineageTag: 21ae371a-6089-45a0-8801-c4130132c4fa
+
+		annotation PBI_FormatHint = {"isDecimal":true}
+
+	measure 'Total CUs 30d IOD' =
+			
+			CALCULATE(
+			    [Total CUs IOD],
+			    'calendar'[IsInLast30Days] = 1
+			)
+		formatString: #,0
+		displayFolder: Capacity IOD Metrics\Time Intelligence
+		lineageTag: f434232f-3d08-4a14-a2cf-b23adbc0813d
+
+		annotation PBI_FormatHint = {"isDecimal":true}
+
+	measure 'Total CUs 7d IOD' =
+			
+			CALCULATE(
+			    [Total CUs IOD],
+			    'calendar'[Date2Key] >= TODAY()-7
+			)
+		formatString: #,0
+		displayFolder: Capacity IOD Metrics\Time Intelligence
+		lineageTag: 15a946e3-7559-4df3-86d3-7088eba9fe7b
+
+		annotation PBI_FormatHint = {"isDecimal":true}
+
+	measure 'Total CUs 90d IOD' =
+			
+			CALCULATE(
+			    [Total CUs IOD],
+			    'calendar'[Date2Key] >= TODAY()-90
+			)
+		formatString: #,0
+		displayFolder: Capacity IOD Metrics\Time Intelligence
+		lineageTag: c43e9fc1-3a26-4281-ae43-04fef9d68a6b
+
+		annotation PBI_FormatHint = {"isDecimal":true}
+
+	measure 'Assigned Workspaces to Domains %' = ```
+			
+			VAR _workspaces = [# Workspaces]
+			VAR _notAssignedCount = CALCULATE([# Workspaces], ISBLANK(workspaces[DomainId]))
+			VAR _assignedCount = CALCULATE([# Workspaces], workspaces[DomainId] <> BLANK())
+			RETURN 
+			    DIVIDE(_assignedCount, [# Workspaces])
+			```
+		formatString: 0%;-0%;0%
+		displayFolder: Workspaces
+		lineageTag: 05e831b3-e67e-48c0-b3b8-81eef57a5486
+
+	measure 'Trends Views 14d vs. 30d' =
+			
+			DIVIDE(
+			    [# Activities last 14d]-[# Activities last 30d],
+			    [# Activities last 30d]
+			)
+		formatString: 0.00%;-0.00%;0.00%
+		displayFolder: Activities\Time Intelligence
+		lineageTag: 89315cbe-19b1-4df0-843c-0f450c146b65
+
+	measure '# Copy Jobs' =
+			
+			CALCULATE(
+			    COUNT(active_items[id]),
+			    active_items[fuam_deleted] = FALSE(),
+			    active_items[type] = "CopyJob"
+			)
+		formatString: #,0
+		displayFolder: Items\General
+		lineageTag: 3b3f7f4e-2892-4dff-9486-8ae58308b628
+
+	measure '# RTI Dashboards' =
+			
+			CALCULATE(
+			    COUNT(active_items[id]),
+			    active_items[fuam_deleted] = FALSE(),
+			    active_items[type] = "KQLDashboard"
+			)
+		formatString: #,0
+		displayFolder: Items\General
+		lineageTag: 4b4a75ad-8864-4541-bb0a-bdc82cd3319d
+
+	measure '# Maps' =
+			
+			CALCULATE(
+			    COUNT(active_items[id]),
+			    active_items[fuam_deleted] = FALSE(),
+			    active_items[type] = "Map"
+			)
+		formatString: #,0
+		displayFolder: Items\General
+		lineageTag: b2ac7c0f-af2f-4340-ba50-cbc6693f7baf
+
+	measure '# Variable Libraries' =
+			
+			CALCULATE(
+			    COUNT(active_items[id]),
+			    active_items[fuam_deleted] = FALSE(),
+			    active_items[type] = "VariableLibrary"
+			)
+		formatString: #,0
+		displayFolder: Items\General
+		lineageTag: 08d81725-7b88-4ee4-939f-14ef021afeae
+
+	measure '# Apache Airflow Jobs' =
+			
+			CALCULATE(
+			    COUNT(active_items[id]),
+			    active_items[fuam_deleted] = FALSE(),
+			    active_items[type] = "ApacheAirflowJob"
+			)
+		formatString: #,0
+		displayFolder: Items\General
+		lineageTag: 12895f4e-4013-42cb-b427-ef3a46ab18ff
+
+	measure '# Event Schema Sets' =
+			
+			CALCULATE(
+			    COUNT(active_items[id]),
+			    active_items[fuam_deleted] = FALSE(),
+			    active_items[type] = "EventSchemaSet"
+			)
+		formatString: 0
+		displayFolder: Items\General
+		lineageTag: 516d96a5-c6ea-4efc-be38-997c4380365e
+
+	measure '# Operations Agents' =
+			
+			CALCULATE(
+			    COUNT(active_items[id]),
+			    active_items[fuam_deleted] = FALSE(),
+			    active_items[type] = "OperationsAgent"
+			)
+		formatString: #,0
+		displayFolder: Items\General
+		lineageTag: 50888a79-7586-4fcc-a09d-db516699c423
+
+	measure '# Ontologies' =
+			
+			CALCULATE(
+			    COUNT(active_items[id]),
+			    active_items[fuam_deleted] = FALSE(),
+			    active_items[type] = "Ontology"
+			)
+		formatString: #,0
+		displayFolder: Items\General
+		lineageTag: d27cd422-e392-4657-b007-23ad202d490a
+
+	measure '# Sustainability Data Solutions' =
+			
+			CALCULATE(
+			    COUNT(active_items[id]),
+			    active_items[fuam_deleted] = FALSE(),
+			    active_items[type] = "SustainabilityDataSolution"
+			)
+		formatString: #,0
+		displayFolder: Items\General
+		lineageTag: 1772af30-418c-4894-ae22-23134320c880
+
+	measure '# Graph Models' =
+			
+			CALCULATE(
+			    COUNT(active_items[id]),
+			    active_items[fuam_deleted] = FALSE(),
+			    active_items[type] = "GraphModel"
+			)
+		formatString: #,0
+		displayFolder: Items\General
+		lineageTag: d9ec1d5e-f715-4b3d-a779-7f9643402b20
+
+	measure 'Unused Workspace Indicator CU TI' =
+			
+			VAR _metric = [Total CUs 90d IOD]
+			RETURN
+			    IF(_metric<1, 1, BLANK())
+		formatString: 0
+		displayFolder: Unused Workspaces\Indicators
+		lineageTag: c20707aa-aa0e-4232-af53-80695423abd4
+
+	measure 'Unused Workspace Indicator ViewReport TI' =
+			
+			VAR _metric = [# VR by Item by Day TI]
+			RETURN
+			    IF(_metric<1, 1, BLANK())
+		formatString: 0
+		displayFolder: Unused Workspaces\Indicators
+		lineageTag: 798471e3-5aeb-47ce-89f8-6bf3832d2ca4
+
+	measure 'Unused Workspace Indicator AnalyzedInExcel TI' =
+			
+			VAR _metric = [# AiEx by Item by Day TI]
+			RETURN
+			    IF(_metric<1, 1, BLANK())
+		formatString: 0
+		displayFolder: Unused Workspaces\Indicators
+		lineageTag: 35142f87-364a-41f3-881e-673bcf520eea
+
+	measure 'Unused Workspace Indicator AnalyzedInExternalAppl TI' =
+			
+			VAR _metric = [# AiEA by Item by Day TI]
+			RETURN
+			    IF(_metric<1, 1, BLANK())
+		formatString: 0
+		displayFolder: Unused Workspaces\Indicators
+		lineageTag: f7e57219-5ba2-4b76-a5c1-f28305dc9097
+
+	measure '# Activities by Item by Day' = ```
+			
+			VAR _calculatedResult = 
+			    SUMMARIZECOLUMNS(
+			            'calendar'[Date2Key],
+			            activities[ItemId],
+			            "CountByItemByDay", [# Activities]
+			        )
+			RETURN
+			    AVERAGEX(
+			        _calculatedResult,
+			        [CountByItemByDay]
+			    )
+			```
+		displayFolder: Activities\Item Specific
+		lineageTag: fe6eb356-959a-4e7c-a7c5-571849180e84
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure '# Activities by Item by Day TI' =
+			
+			VAR _daysInScope = [unused_workspaces_days_in_scope_value]
+			RETURN
+			CALCULATE(
+			    [# Activities by Item by Day],
+			    'calendar'[Date2Key] >= TODAY()-_daysInScope
+			)
+		displayFolder: Unused Workspaces\Base Metrics
+		lineageTag: 93a8b052-34cf-4ab8-ab65-1ba3c573d37a
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'Unused Workspace Indicator Activities (ItemId) TI' =
+			
+			VAR _metric = [# Activities by Item by Day TI]
+			RETURN
+			    IF(_metric<1, 1, BLANK())
+		formatString: 0
+		displayFolder: Unused Workspaces\Indicators
+		lineageTag: c60ef5ba-ce74-44e6-a877-fc3117a16cff
+
+	measure 'Unused Workspace Indicator Score TI' = ```
+			
+			VAR _sum = 
+			    [Unused Workspace Indicator Activities (ItemId) TI] + 
+			    [Unused Workspace Indicator AnalyzedInExcel TI] +
+			    [Unused Workspace Indicator AnalyzedInExternalAppl TI] + 
+			    [Unused Workspace Indicator CU TI] + 
+			    [Unused Workspace Indicator ViewReport TI]
+			VAR _total = IF(_sum=BLANK(),BLANK(),5)
+			RETURN
+			    DIVIDE(_sum,_total, BLANK())
+			```
+		formatString: 0%;-0%;0%
+		displayFolder: Unused Workspaces\_Final Score
+		lineageTag: 3e845a4e-f6b5-464f-a8e8-8a8f4b5228cb
+
+	measure 'Unused Workspace Action Mail To' = CONCATENATE("mailto:",CONCATENATE([First Workspace Admin (User)],CONCATENATE("?subject=Unused Workspace Alert | Workspace: ", CONCATENATE(MIN(workspaces[WorkspaceName]), CONCATENATE("?body=Dear User! %0D%0A %0D%0A We have identified one of your workspaces, which hasn't had activities, interactions in the last ",CONCATENATE([unused_workspaces_days_in_scope_value], CONCATENATE(" days. %0D%0A %0D%0A Link to Workspace: https://app.powerbi.com/groups/", CONCATENATE(MIN(workspaces[WorkspaceId]), CONCATENATE("","%0D%0A %0D%0A Please, let us know if we can delete the workspace in the next days. %0D%0A %0D%0A Thank you in advance! %0D%0A Best Regards, %0D%0A Your Fabric Platform Team")))))))))
+		displayFolder: Unused Workspaces\Action Helper
+		lineageTag: 2f34ccaf-0fa2-49a6-9657-63a8c6725770
+		dataCategory: WebUrl
+
+	measure 'First Workspace Admin (User)' =
+			
+			VAR _user = CALCULATE(
+			    MIN(workspaces_scanned_users[Identifier]),
+			    workspaces_scanned_users[PrincipalType] = "User",
+			    workspaces_scanned_users[GroupUserAccessRight] = "Admin"
+			)
+			RETURN
+			IF(ISBLANK(_user), "No Workspace Admin User found.", _user)
+		displayFolder: Unused Workspaces\Action Helper
+		lineageTag: 0b4c7c78-b0c0-4048-a1be-cb1e96046b34
+
+	measure 'Unused Workspace Action Teams To' =
+			
+			CONCATENATE("https://teams.microsoft.com/l/chat/0/0?users=", [First Workspace Admin (User)])
+		displayFolder: Unused Workspaces\Action Helper
+		lineageTag: 929b3ce2-79e9-465e-8b25-a56ac9d850fb
+		dataCategory: WebUrl
+
+	measure 'Total Size - Last Run OM-SM' =
+			
+			VAR _runId = [Last Run OM-SM]
+			VAR _value = CALCULATE(
+			        [Total Size (model)],
+			        semantic_model_analyzer_runs[RunId] = _runId
+			    )
+			RETURN
+			    _value
+		formatString: 0.00
+		displayFolder: Semantic Models\Optimization Module\Run Metrics - Last
+		lineageTag: 542d1cf2-98e4-446c-991a-68ed2a416b1d
+
+	measure '# Tables - Last Run OM-SM' =
+			
+			VAR _lastRundId = [Last Run OM-SM]
+			VAR _lastValue = CALCULATE(
+			        [Tables (model)],
+			        semantic_model_analyzer_runs[RunId] = _lastRundId
+			    )
+			RETURN
+			    _lastValue
+		formatString: 0
+		displayFolder: Semantic Models\Optimization Module\Run Metrics - Last
+		lineageTag: 02130a61-b155-4e87-8fb7-6f93e9656946
+
+	measure 'Previous Run OM-SM' = ```
+			
+			// The _run calculates the latest run for the filtered semantic model, however it removes the filter context for the RunId
+			VAR _run = CALCULATE(
+			    MAX(semantic_model_analyzer_runs[RunId])
+			    //REMOVEFILTERS(vertipaqanalyzer_model[RunId])
+			)
+			VAR _calculatedRun = _run-1
+			
+			// This condition checks if the semantic model has multiple runs. 
+			// For the comparison of runs, it is important to know that.
+			// Once the semantic model has only 1 run, the comparison won't work any results
+			VAR _validatedRun = IF(_calculatedRun <= 0,  BLANK(), _calculatedRun)
+			
+			RETURN _validatedRun
+			```
+		formatString: 0
+		displayFolder: Semantic Models\Optimization Module\General
+		lineageTag: e92a2d55-1ee1-4af0-b65c-7b45508b99d6
+
+	measure '# Tables - Previous Run OM-SM' =
+			
+			VAR _runId = [Previous Run OM-SM]
+			VAR _lastValue = CALCULATE(
+			        [Tables (model)],
+			        semantic_model_analyzer_runs[RunId] = _runId
+			    )
+			RETURN
+			    _lastValue
+		formatString: 0
+		displayFolder: Semantic Models\Optimization Module\Run Metrics - Previous
+		lineageTag: 43bcf308-b8d3-4412-a5f4-b0e86e55e287
+
+	measure 'BPA Violations (Background Impact) - Previous Run OM-SM' =
+			
+			VAR _run = [Previous Run OM-SM]
+			RETURN
+			    CALCULATE(
+			        [BPA Violations (Background Impact)],
+			        semantic_model_analyzer_runs[RunId] = _run
+			    )
+		formatString: 0
+		displayFolder: Semantic Models\Optimization Module\Run Metrics - Previous
+		lineageTag: 1474a8bc-2ff2-4b2c-a751-e7cafd18e5e9
+
+	measure 'BPA Violations (Query Impact) - Previous Run OM-SM' =
+			
+			VAR _run = [Previous Run OM-SM]
+			RETURN
+			    CALCULATE(
+			        [BPA Violations (Query Impact)],
+			        semantic_model_analyzer_runs[RunId] = _run
+			    )
+		formatString: 0
+		displayFolder: Semantic Models\Optimization Module\Run Metrics - Previous
+		lineageTag: b439967b-87ac-463b-996f-b9f0b88487bf
+
+	measure 'BPA Violations (Usability Impact) - Previous Run OM-SM' =
+			
+			VAR _run = [Previous Run OM-SM]
+			RETURN
+			    CALCULATE(
+			        [BPA Violations (Usability Impact)],
+			        semantic_model_analyzer_runs[RunId] = _run
+			    )
+		formatString: 0
+		displayFolder: Semantic Models\Optimization Module\Run Metrics - Previous
+		lineageTag: 1818a704-86a3-4735-b046-6cdd9591bf43
+
+	measure 'Total Size - Previous Run OM-SM' =
+			
+			VAR _rundId = [Previous Run OM-SM]
+			VAR _value = CALCULATE(
+			        [Total Size (model)],
+			        semantic_model_analyzer_runs[RunId] = _rundId
+			    )
+			RETURN
+			    _value
+		formatString: 0.00
+		displayFolder: Semantic Models\Optimization Module\Run Metrics - Previous
+		lineageTag: f0c39c4f-de11-4b6d-baa7-2246838df6f7
+
+	measure '# Tables - Comparison OM-SM' =
+			
+			IF(ISBLANK([Previous Run OM-SM]),
+			    BLANK(),
+			    [# Tables - Previous Run OM-SM] - [# Tables - Last Run OM-SM]
+			    )
+		formatString: 0
+		displayFolder: Semantic Models\Optimization Module\Run Metrics - Comparison
+		lineageTag: 78daad87-4ebd-4d60-be7f-041cc3f347a6
+
+	measure '# Total Size - Comparison OM-SM' =
+			
+			IF(ISBLANK([Previous Run OM-SM]),
+			    BLANK(),
+			    [Total Size - Previous Run OM-SM] - [Total Size - Last Run OM-SM]
+			    )
+		displayFolder: Semantic Models\Optimization Module\Run Metrics - Comparison
+		lineageTag: c5f46d29-701d-497d-b257-cd77bd29ce14
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'BPA Violations (Background Impact) - Comparison OM-SM' =
+			
+			IF(ISBLANK([Previous Run OM-SM]),
+			    BLANK(),
+			    [BPA Violations (Background Impact) - Previous Run OM-SM] - [BPA Violations (Background Impact) - Last Run OM-SM]
+			    )
+		formatString: 0
+		displayFolder: Semantic Models\Optimization Module\Run Metrics - Comparison
+		lineageTag: 0d54488c-ca59-4e70-be53-c1e77f7b7777
+
+	measure 'BPA Violations (Query Impact) - Comparison OM-SM' =
+			
+			IF(ISBLANK([Previous Run OM-SM]),
+			    BLANK(),
+			    [BPA Violations (Query Impact) - Previous Run OM-SM] - [BPA Violations (Query Impact) - Last Run OM-SM]
+			    )
+		formatString: 0
+		displayFolder: Semantic Models\Optimization Module\Run Metrics - Comparison
+		lineageTag: 73fca52e-a70c-4946-af57-ee0aa31fcf2d
+
+	measure 'BPA Violations (Usability Impact) - Comparison OM-SM' =
+			
+			IF(ISBLANK([Previous Run OM-SM]),
+			    BLANK(),
+			    [BPA Violations (Usability Impact) - Previous Run OM-SM] - [BPA Violations (Usability Impact) - Last Run OM-SM]
+			    )
+		formatString: 0
+		displayFolder: Semantic Models\Optimization Module\Run Metrics - Comparison
+		lineageTag: 6c226557-65e1-4d1f-b8c1-26586a84ebc0
+
+	measure '# Analyzed Semantic Models OM-SM' = DISTINCTCOUNT(semantic_model_analyzer_runs[SemanticModelId])
+		formatString: 0
+		displayFolder: Semantic Models\Optimization Module\General
+		lineageTag: 361dc05b-9779-4bce-bef5-27d61c16dcd7
+
+	measure 'Last Run Datetime OM-SM' = MAX(semantic_model_analyzer_runs[RunTimestamp])
+		formatString: General Date
+		displayFolder: Semantic Models\Optimization Module\General
+		lineageTag: 509010bb-487b-4a1d-9669-bc41e1a9356a
+
+		annotation PBI_FormatHint = {"isCustom":true}
+
+	measure 'Widely Shared Organisation Links' = DISTINCTCOUNT(widelyshared_organization_links[ItemId])
+		formatString: #,0
+		displayFolder: Widely Shared Objects
+		lineageTag: 7a696086-fcfe-4fe4-9c88-ee4964b00b27
+
+	measure 'Widely Shared Objects Published to Web' = DISTINCTCOUNT(widelyshared_publishtoweb[ItemId])
+		formatString: #,0
+		displayFolder: Widely Shared Objects
+		lineageTag: e4f420a6-f48d-4e76-8465-e1dd1f4a33ad
 
 	column Value
 		isHidden

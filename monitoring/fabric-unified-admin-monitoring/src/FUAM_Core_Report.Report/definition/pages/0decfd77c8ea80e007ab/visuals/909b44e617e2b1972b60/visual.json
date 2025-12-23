@@ -1,0 +1,126 @@
+{
+    "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.5.0/schema.json",
+    "name": "909b44e617e2b1972b60",
+    "position": {
+        "x": 19,
+        "y": 351,
+        "z": 4000,
+        "height": 405,
+        "width": 173,
+        "tabOrder": 4000
+    },
+    "visual": {
+        "visualType": "textbox",
+        "objects": {
+            "general": [
+                {
+                    "properties": {
+                        "paragraphs": [
+                            {
+                                "textRuns": [
+                                    {
+                                        "value": "Description: ",
+                                        "textStyle": {
+                                            "fontWeight": "bold"
+                                        }
+                                    }
+                                ]
+                            },
+                            {
+                                "textRuns": [
+                                    {
+                                        "value": "This page provides an overview of your current tenant state. "
+                                    }
+                                ]
+                            },
+                            {
+                                "textRuns": [
+                                    {
+                                        "value": ""
+                                    }
+                                ]
+                            },
+                            {
+                                "textRuns": [
+                                    {
+                                        "value": "The three bar charts with metrics '"
+                                    },
+                                    {
+                                        "value": "MCG",
+                                        "textStyle": {
+                                            "fontWeight": "bold"
+                                        }
+                                    },
+                                    {
+                                        "value": "', '"
+                                    },
+                                    {
+                                        "value": "MAUG",
+                                        "textStyle": {
+                                            "fontWeight": "bold"
+                                        }
+                                    },
+                                    {
+                                        "value": "' and '"
+                                    },
+                                    {
+                                        "value": "CUG",
+                                        "textStyle": {
+                                            "fontWeight": "bold"
+                                        }
+                                    },
+                                    {
+                                        "value": "' are platform adoption growth metrics, which help you to track the usage on your platform."
+                                    }
+                                ]
+                            },
+                            {
+                                "textRuns": [
+                                    {
+                                        "value": ""
+                                    }
+                                ]
+                            },
+                            {
+                                "textRuns": [
+                                    {
+                                        "value": "On the bottom, the cards visualize the deployed capacities, workspaces (attached to capacities) and different items on your tenant based on the last scan."
+                                    }
+                                ]
+                            }
+                        ]
+                    }
+                }
+            ]
+        },
+        "visualContainerObjects": {
+            "background": [
+                {
+                    "properties": {
+                        "show": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "false"
+                                }
+                            }
+                        }
+                    }
+                }
+            ],
+            "border": [
+                {
+                    "properties": {
+                        "show": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "false"
+                                }
+                            }
+                        }
+                    }
+                }
+            ]
+        },
+        "drillFilterOtherVisuals": true
+    }
+}

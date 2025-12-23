@@ -1,0 +1,74 @@
+table audit_granted_ws_access_for_analyzer
+	lineageTag: 1f3e79de-557f-4653-acdd-b9dda944e1a8
+	sourceLineageTag: [dbo].[audit_granted_ws_access_for_analyzer]
+
+	column workspace_id
+		dataType: string
+		sourceProviderType: varchar(8000)
+		lineageTag: 1edacbc7-fd6a-4e16-9f74-d8ba17b3bab5
+		sourceLineageTag: workspace_id
+		summarizeBy: none
+		sourceColumn: workspace_id
+
+		annotation SummarizationSetBy = Automatic
+
+	column reason
+		dataType: string
+		sourceProviderType: varchar(8000)
+		lineageTag: e10db0ae-7efa-4874-b1a4-236699af07c4
+		sourceLineageTag: reason
+		summarizeBy: none
+		sourceColumn: reason
+
+		annotation SummarizationSetBy = Automatic
+
+	column entity
+		dataType: string
+		sourceProviderType: varchar(8000)
+		lineageTag: a800b2e7-c9ca-4d5a-9ce7-879d2beacc85
+		sourceLineageTag: entity
+		summarizeBy: none
+		sourceColumn: entity
+
+		annotation SummarizationSetBy = Automatic
+
+	column principal_type
+		dataType: string
+		sourceProviderType: varchar(8000)
+		lineageTag: 02654744-aa3d-4a4e-8ff8-fd95535c703d
+		sourceLineageTag: principal_type
+		summarizeBy: none
+		sourceColumn: principal_type
+
+		annotation SummarizationSetBy = Automatic
+
+	column timestamp
+		dataType: dateTime
+		formatString: General Date
+		sourceProviderType: datetime2
+		lineageTag: f83e1572-bb74-40fd-be42-1c847cd83c90
+		sourceLineageTag: timestamp
+		summarizeBy: none
+		sourceColumn: timestamp
+
+		annotation SummarizationSetBy = Automatic
+
+	column access_right
+		dataType: string
+		sourceProviderType: varchar(8000)
+		lineageTag: e7e74f97-8161-4b9b-baae-0111d0dc30bd
+		sourceLineageTag: access_right
+		summarizeBy: none
+		sourceColumn: access_right
+
+		annotation SummarizationSetBy = Automatic
+
+	partition audit_granted_ws_access_for_analyzer = entity
+		mode: directLake
+		source
+			entityName: audit_granted_ws_access_for_analyzer
+			schemaName: dbo
+			expressionSource: DatabaseQuery
+
+	annotation PBI_ResultType = Table
+
