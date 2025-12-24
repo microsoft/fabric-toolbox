@@ -9,11 +9,11 @@ Fabric toolbox is a repository of tools, accelerators, scripts, and samples to h
 These assets should be treated as examples that you can use to create the solutions that are appropriate for your use case. If you have any issues, please use the [issues](https://github.com/microsoft/fabric-toolbox/issues) tab of this repository and we will work to address issues on a best effort basis. 
 
 ## Monitoring
-- $${\color{green}NEW!}$$ [Fabric Spark Monitoring (Monitor Spark with RTI)](./monitoring/fabric-spark-monitoring)
-- $${\color{green}NEW!}$$ [Fabric Platform Monitoring (Monitor Fabric with RTI and Capacity Events)](./monitoring/fabric-platform-monitoring)
-- [Fabric Cost Analysis (FCA)](./monitoring/fabric-cost-analysis)
-- [Fabric Unified Admin Monitoring (FUAM)](./monitoring/fabric-unified-admin-monitoring)
+- $${\color{yellow}UPDATED!}$$ [Fabric Cost Analysis (FCA)](./monitoring/fabric-cost-analysis)
+- $${\color{yellow}UPDATED!}$$ [Fabric Unified Admin Monitoring (FUAM)](./monitoring/fabric-unified-admin-monitoring)
+- [Fabric Platform Monitoring (Monitor Fabric with RTI and Capacity Events)](./monitoring/fabric-platform-monitoring)
 - [Workspace Monitoring Report Templates](./monitoring/workspace-monitoring-dashboards)
+- [Fabric Spark Monitoring (Monitor Spark with RTI)](./monitoring/fabric-spark-monitoring)
 
 ## Accelerators
 - [BCDR Accelerator](./accelerators/BCDR)
@@ -38,6 +38,7 @@ These assets should be treated as examples that you can use to create the soluti
 - [Notebook: Workspace Size](./samples/notebook-workspace-size)
 
 ## Scripts
+- $${\color{green}NEW!}$$ [Mirror CCI Tables for Fabric SQL DB](./scripts/sql-Mirror-CCI-tables)
 - [CI Views](./scripts/dw-ci-views)
 - [DW/SQL AE Properties](./scripts/dw-properties)
 - [DW Active Requests](./scripts/dw-active-requests)
@@ -46,6 +47,7 @@ These assets should be treated as examples that you can use to create the soluti
 - [DW SP Kill Queries](./scripts/dw-sp-kill-queries)
 
 ## Tools
+- $${\color{yellow}UPDATED!}$$ [Fabric Data Factory Migration Assistant](./tools/FabricDataFactoryMigrationAssistant)
 - [DAX Performance Tuner MCP Server](./tools/DAXPerformanceTunerMCPServer)
 - [Semantic Model MCP Server](./tools/SemanticModelMCPServer)
 - [Open Mirroring SDK](./tools/OpenMirroringPythonSDK)
