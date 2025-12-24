@@ -25,6 +25,7 @@ These assets should be treated as examples that you can use to create the soluti
 - [Real Time Intelligence Eventhouse](./accelerators/real-time-intelligence_eventhouse)
 - [Real Time Intelligence Eventstream](./accelerators/real-time-intelligence_eventstream)
 - [Policy Weaver - Mirror Data Access Policies from Databricks and Snowflake to Fabric](./accelerators/policy-weaver)
+- [Fabic Launcher - From repo to workspace, deploy Fabric solutions effortlessly](./accelerators/fabric-launcher)
 
 ## Samples
 - [Open Mirroring](./samples/open-mirroring)
