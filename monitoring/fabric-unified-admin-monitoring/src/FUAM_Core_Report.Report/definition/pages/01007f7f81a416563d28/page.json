@@ -1,0 +1,158 @@
+{
+    "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/page/2.0.0/schema.json",
+    "name": "01007f7f81a416563d28",
+    "displayName": "User Access Details",
+    "displayOption": "FitToPage",
+    "height": 1080,
+    "width": 1920,
+    "filterConfig": {
+        "filters": [
+            {
+                "name": "e83b62402b91fcc5853b",
+                "ordinal": 0,
+                "field": {
+                    "Column": {
+                        "Expression": {
+                            "SourceRef": {
+                                "Entity": "item_users"
+                            }
+                        },
+                        "Property": "Identifier"
+                    }
+                },
+                "type": "Categorical",
+                "filter": {
+                    "Version": 2,
+                    "From": [
+                        {
+                            "Name": "i",
+                            "Entity": "item_users",
+                            "Type": 0
+                        }
+                    ],
+                    "Where": [
+                        {
+                            "Condition": {
+                                "In": {
+                                    "Expressions": [
+                                        {
+                                            "Column": {
+                                                "Expression": {
+                                                    "SourceRef": {
+                                                        "Source": "i"
+                                                    }
+                                                },
+                                                "Property": "Identifier"
+                                            }
+                                        }
+                                    ],
+                                    "Values": [
+                                        [
+                                            {
+                                                "Literal": {
+                                                    "Value": "'ggintli@MngEnvMCAP059919.onmicrosoft.com'"
+                                                }
+                                            }
+                                        ]
+                                    ]
+                                }
+                            }
+                        }
+                    ]
+                },
+                "howCreated": "Drillthrough"
+            }
+        ],
+        "filterSortOrder": "Custom"
+    },
+    "pageBinding": {
+        "name": "1e45006fae0c9f4eea73",
+        "type": "Drillthrough",
+        "parameters": [
+            {
+                "name": "65865b638aa55dc75941",
+                "boundFilter": "e83b62402b91fcc5853b",
+                "fieldExpr": {
+                    "Column": {
+                        "Expression": {
+                            "SourceRef": {
+                                "Entity": "item_users"
+                            }
+                        },
+                        "Property": "Identifier"
+                    }
+                }
+            }
+        ]
+    },
+    "objects": {
+        "displayArea": [
+            {
+                "properties": {
+                    "verticalAlignment": {
+                        "expr": {
+                            "Literal": {
+                                "Value": "'Middle'"
+                            }
+                        }
+                    }
+                }
+            }
+        ],
+        "background": [
+            {
+                "properties": {
+                    "image": {
+                        "image": {
+                            "name": {
+                                "expr": {
+                                    "Literal": {
+                                        "Value": "'fuam_core_bg.png'"
+                                    }
+                                }
+                            },
+                            "url": {
+                                "expr": {
+                                    "ResourcePackageItem": {
+                                        "PackageName": "RegisteredResources",
+                                        "PackageType": 1,
+                                        "ItemName": "fuam_core_bg21213522325164114.png"
+                                    }
+                                }
+                            },
+                            "scaling": {
+                                "expr": {
+                                    "Literal": {
+                                        "Value": "'Fill'"
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "transparency": {
+                        "expr": {
+                            "Literal": {
+                                "Value": "0D"
+                            }
+                        }
+                    }
+                }
+            }
+        ],
+        "outspacePane": [
+            {
+                "properties": {
+                    "width": {
+                        "expr": {
+                            "Literal": {
+                                "Value": "282L"
+                            }
+                        }
+                    }
+                }
+            }
+        ]
+    },
+    "visibility": "HiddenInViewMode",
+    "type": "Drillthrough"
+}

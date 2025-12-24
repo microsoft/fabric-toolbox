@@ -1,0 +1,43 @@
+table semantic_model_datasources
+	lineageTag: 4d2f411b-e85a-43d1-9d54-0ccc4358fe7c
+	sourceLineageTag: [dbo].[semantic_model_datasources]
+
+	column WorkspaceId
+		dataType: string
+		sourceProviderType: varchar(8000)
+		lineageTag: 66e8b546-cbf8-4266-8422-ba491b485407
+		sourceLineageTag: WorkspaceId
+		summarizeBy: none
+		sourceColumn: WorkspaceId
+
+		annotation SummarizationSetBy = Automatic
+
+	column SemanticModelId
+		dataType: string
+		sourceProviderType: varchar(8000)
+		lineageTag: 09256ed2-065b-4183-acef-44934f732855
+		sourceLineageTag: SemanticModelId
+		summarizeBy: none
+		sourceColumn: SemanticModelId
+
+		annotation SummarizationSetBy = Automatic
+
+	column datasourceInstanceId
+		dataType: string
+		sourceProviderType: varchar(8000)
+		lineageTag: e9cd6514-85c7-4fd6-903e-3af1999ac94a
+		sourceLineageTag: datasourceInstanceId
+		summarizeBy: none
+		sourceColumn: datasourceInstanceId
+
+		annotation SummarizationSetBy = Automatic
+
+	partition semantic_model_datasources = entity
+		mode: directLake
+		source
+			entityName: semantic_model_datasources
+			schemaName: dbo
+			expressionSource: DatabaseQuery
+
+	annotation PBI_ResultType = Table
+

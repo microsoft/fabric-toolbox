@@ -6,6 +6,9 @@
 
 [Want to get a brief introduction on FUAM? - Watch the video](https://youtu.be/CmHMOsQcMGI)
 
+> [!IMPORTANT]  
+> FUAM will support the Capacity Utilization Events mode in the future. This features takes Fabric monitoring to the next level by providing near-real time CU consumption.
+
 > [!CAUTION]  
 > The FUAM solution accelerator is not an official Microsoft product! It is a solution accelerator, which can help you implement a monitoring solution within Fabric. As such there is no offical support available and there is a risk that things might break. E.g. the extraction of Capacity Metrics data. This is based on the Capacity Metrics App and elements of that App could change without notice and impact FUAM.
 
@@ -71,6 +74,7 @@ Are you ready to try FUAM out? We have prepared two step-by-step guides to help 
 
 ## Changelog
 
+- **FUAM [Release 2026.1.1 (latest)](/monitoring/fabric-unified-admin-monitoring/changelog/FUAM_Changelog.md)**
 - **FUAM [Release 2025.9.1](/monitoring/fabric-unified-admin-monitoring/changelog/FUAM_Changelog.md)**
 
 ## Support

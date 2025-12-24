@@ -1,0 +1,82 @@
+{
+    "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.5.0/schema.json",
+    "name": "a7177ae1845ba863a704",
+    "position": {
+        "x": 36.458333333333336,
+        "y": 888.5416666666667,
+        "z": 12000,
+        "height": 56.25,
+        "width": 1840.625,
+        "tabOrder": 12000
+    },
+    "visual": {
+        "visualType": "textbox",
+        "objects": {
+            "general": [
+                {
+                    "properties": {
+                        "paragraphs": [
+                            {
+                                "textRuns": [
+                                    {
+                                        "value": "Step 3) ",
+                                        "textStyle": {
+                                            "fontWeight": "bold",
+                                            "fontSize": "12pt",
+                                            "color": "#248a85"
+                                        }
+                                    },
+                                    {
+                                        "value": "Go to details",
+                                        "textStyle": {
+                                            "fontWeight": "bold",
+                                            "fontSize": "12pt"
+                                        }
+                                    }
+                                ],
+                                "horizontalTextAlignment": "center"
+                            },
+                            {
+                                "textRuns": [
+                                    {
+                                        "value": "Click on the action button to see access details."
+                                    }
+                                ],
+                                "horizontalTextAlignment": "center"
+                            }
+                        ]
+                    }
+                }
+            ]
+        },
+        "visualContainerObjects": {
+            "border": [
+                {
+                    "properties": {
+                        "show": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "false"
+                                }
+                            }
+                        }
+                    }
+                }
+            ],
+            "background": [
+                {
+                    "properties": {
+                        "show": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "false"
+                                }
+                            }
+                        }
+                    }
+                }
+            ]
+        },
+        "drillFilterOtherVisuals": true
+    }
+}

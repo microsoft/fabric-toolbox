@@ -2,6 +2,37 @@
 for Fabric Unified Admin Monitoring solution accelerator.
 
 --------------------------
+## 📦 2026.1.1
+
+Date: 2025-12-23
+
+
+### 📈 Enhancements
+
+- **New Data**:
+    - Domain Information
+    - Workspace Domain Mapping
+    - Datasource Semantic Model Mapping
+    - Widely Shared - Organization Links
+    - Widely Shared - PublishedToWeb
+
+- **Report Updates**:
+    - New navigation from Overview Page to different topics
+    - New Analytical Pathways: 
+        - Unused workspaces with single click communication to the workspace owners
+        - Access Management Report
+    - New report pages:
+        - Data Sources (for Semantic Models)
+        - Widely Share Objects
+    - Update to Item_Analyzer Report
+- **Others**: 
+    - Anonymization of Activities (Can be parameterized in the main pipeline)
+    - Automatic Deployment into folders
+
+Best Regards!
+Kevin & Gellért
+
+--------------------------
 
 ## 📦 2025.9.1
 

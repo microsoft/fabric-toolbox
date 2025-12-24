@@ -1,0 +1,89 @@
+{
+    "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.5.0/schema.json",
+    "name": "821cc18ad30d74b0cbea",
+    "position": {
+        "x": 26.204819277108435,
+        "y": 283.73493975903614,
+        "z": 3000,
+        "height": 47.89156626506024,
+        "width": 498.79518072289153,
+        "tabOrder": 1000
+    },
+    "visual": {
+        "visualType": "textbox",
+        "objects": {
+            "general": [
+                {
+                    "properties": {
+                        "paragraphs": [
+                            {
+                                "textRuns": [
+                                    {
+                                        "value": "Analyzed Semantic Models ",
+                                        "textStyle": {
+                                            "fontWeight": "bold",
+                                            "fontFamily": "Calibri",
+                                            "fontSize": "12pt"
+                                        }
+                                    },
+                                    {
+                                        "value": "by Capacity",
+                                        "textStyle": {
+                                            "fontWeight": "bold",
+                                            "fontFamily": "Calibri",
+                                            "fontSize": "12pt",
+                                            "color": "#694b75"
+                                        }
+                                    }
+                                ]
+                            },
+                            {
+                                "textRuns": [
+                                    {
+                                        "value": "Step 1) ",
+                                        "textStyle": {
+                                            "fontWeight": "bold",
+                                            "color": "#694b75"
+                                        }
+                                    },
+                                    {
+                                        "value": "Review Capacities, where in-depth analysis of semantic models happened."
+                                    }
+                                ]
+                            }
+                        ]
+                    }
+                }
+            ]
+        },
+        "visualContainerObjects": {
+            "background": [
+                {
+                    "properties": {
+                        "show": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "false"
+                                }
+                            }
+                        }
+                    }
+                }
+            ],
+            "border": [
+                {
+                    "properties": {
+                        "show": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "false"
+                                }
+                            }
+                        }
+                    }
+                }
+            ]
+        },
+        "drillFilterOtherVisuals": true
+    }
+}

@@ -1,0 +1,337 @@
+{
+    "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.5.0/schema.json",
+    "name": "6081521693c4bab07d7c",
+    "position": {
+        "x": 16.729776247848537,
+        "y": 205.40447504302927,
+        "z": 9000,
+        "height": 791.8760757314974,
+        "width": 404.302925989673,
+        "tabOrder": 6000
+    },
+    "visual": {
+        "visualType": "listSlicer",
+        "query": {
+            "queryState": {
+                "Values": {
+                    "projections": [
+                        {
+                            "field": {
+                                "Column": {
+                                    "Expression": {
+                                        "SourceRef": {
+                                            "Entity": "tenant_settings"
+                                        }
+                                    },
+                                    "Property": "tenantSettingGroup"
+                                }
+                            },
+                            "queryRef": "tenant_settings.tenantSettingGroup",
+                            "nativeQueryRef": "Tenant Setting Group",
+                            "active": true,
+                            "displayName": "Tenant Setting Group"
+                        },
+                        {
+                            "field": {
+                                "Column": {
+                                    "Expression": {
+                                        "SourceRef": {
+                                            "Entity": "tenant_settings"
+                                        }
+                                    },
+                                    "Property": "title"
+                                }
+                            },
+                            "queryRef": "tenant_settings.title",
+                            "nativeQueryRef": "Title",
+                            "active": false,
+                            "displayName": "Title"
+                        }
+                    ]
+                }
+            },
+            "sortDefinition": {
+                "isDefaultSort": true
+            }
+        },
+        "expansionStates": [
+            {
+                "roles": [
+                    "Values"
+                ],
+                "levels": [
+                    {
+                        "queryRefs": [
+                            "tenant_settings.tenantSettingGroup"
+                        ],
+                        "isCollapsed": true,
+                        "identityKeys": [
+                            {
+                                "Column": {
+                                    "Expression": {
+                                        "SourceRef": {
+                                            "Entity": "tenant_settings"
+                                        }
+                                    },
+                                    "Property": "tenantSettingGroup"
+                                }
+                            }
+                        ],
+                        "isPinned": true
+                    },
+                    {
+                        "queryRefs": [
+                            "tenant_settings.title"
+                        ],
+                        "isCollapsed": true,
+                        "isPinned": true
+                    }
+                ],
+                "root": {}
+            }
+        ],
+        "objects": {
+            "data": [
+                {
+                    "properties": {}
+                }
+            ],
+            "general": [
+                {
+                    "properties": {
+                        "selfFilterEnabled": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "true"
+                                }
+                            }
+                        }
+                    }
+                }
+            ],
+            "selection": [
+                {
+                    "properties": {
+                        "singleSelect": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "false"
+                                }
+                            }
+                        },
+                        "selectAllCheckboxEnabled": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "true"
+                                }
+                            }
+                        }
+                    }
+                }
+            ],
+            "value": [
+                {
+                    "properties": {
+                        "fontSize": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "8D"
+                                }
+                            }
+                        }
+                    },
+                    "selector": {
+                        "id": "default"
+                    }
+                }
+            ],
+            "shapeCustomRectangle": [
+                {
+                    "properties": {
+                        "tileShape": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "'rectangleRoundedByPixel'"
+                                }
+                            }
+                        },
+                        "rectangleRoundedCurveCustomStyle": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "false"
+                                }
+                            }
+                        },
+                        "rectangleRoundedCurve": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "5L"
+                                }
+                            }
+                        }
+                    },
+                    "selector": {
+                        "id": "default"
+                    }
+                }
+            ],
+            "expansionIcon": [
+                {
+                    "properties": {
+                        "spacing": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "4L"
+                                }
+                            }
+                        }
+                    },
+                    "selector": {
+                        "id": "default"
+                    }
+                }
+            ],
+            "fillCustom": [
+                {
+                    "properties": {
+                        "fillColor": {
+                            "solid": {
+                                "color": {
+                                    "expr": {
+                                        "ThemeDataColor": {
+                                            "ColorId": 2,
+                                            "Percent": 0.6
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "selector": {
+                        "id": "default"
+                    }
+                },
+                {
+                    "properties": {
+                        "show": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "false"
+                                }
+                            }
+                        }
+                    }
+                }
+            ],
+            "layout": [
+                {
+                    "properties": {
+                        "fixedButtonsCount": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "false"
+                                }
+                            }
+                        },
+                        "indentation": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "18L"
+                                }
+                            }
+                        },
+                        "maxTiles": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "40L"
+                                }
+                            }
+                        },
+                        "containerIndentation": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "true"
+                                }
+                            }
+                        }
+                    }
+                }
+            ]
+        },
+        "visualContainerObjects": {
+            "title": [
+                {
+                    "properties": {
+                        "show": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "true"
+                                }
+                            }
+                        },
+                        "text": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "'Tenant Setting Group -> Setting'"
+                                }
+                            }
+                        },
+                        "fontSize": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "10D"
+                                }
+                            }
+                        }
+                    }
+                }
+            ],
+            "border": [
+                {
+                    "properties": {
+                        "show": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "true"
+                                }
+                            }
+                        },
+                        "radius": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "5D"
+                                }
+                            }
+                        }
+                    }
+                }
+            ],
+            "dropShadow": [
+                {
+                    "properties": {
+                        "show": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "true"
+                                }
+                            }
+                        },
+                        "color": {
+                            "solid": {
+                                "color": {
+                                    "expr": {
+                                        "ThemeDataColor": {
+                                            "ColorId": 0,
+                                            "Percent": -0.1
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            ]
+        },
+        "drillFilterOtherVisuals": true
+    }
+}

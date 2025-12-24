@@ -183,6 +183,14 @@ The Pipeline has different parameters, which are controlling the data load flow:
 - Feel free to explore the report pages
    ![](/monitoring/fabric-unified-admin-monitoring/media/deployment/FUAM_basic_deployment_process_7_3.png)
 
+|Step|Description|
+|---|---|
+|A|On-demand report pages, each page is designed for a specific purpose.|
+|B||
+|C|Navigation action buttons **More** (navigates to given report page) and **Info** (navigates to github documentation).|
+|D||
+|E||
+|F||
 
 > **Error handling:** In case of errors like 'Visual can't be rendered', please check the 'Remark' section.
 

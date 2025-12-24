@@ -1,0 +1,519 @@
+{
+    "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.5.0/schema.json",
+    "name": "60d41e4135a902c00d39",
+    "position": {
+        "x": 192,
+        "y": 351,
+        "z": 0,
+        "height": 405,
+        "width": 1712,
+        "tabOrder": 7000
+    },
+    "visual": {
+        "visualType": "azureMap",
+        "query": {
+            "queryState": {
+                "Category": {
+                    "projections": [
+                        {
+                            "field": {
+                                "Column": {
+                                    "Expression": {
+                                        "SourceRef": {
+                                            "Entity": "capacity_regions"
+                                        }
+                                    },
+                                    "Property": "Location"
+                                }
+                            },
+                            "queryRef": "capacity_regions.Location",
+                            "nativeQueryRef": "Location",
+                            "active": true
+                        }
+                    ]
+                },
+                "Series": {
+                    "projections": [
+                        {
+                            "field": {
+                                "Column": {
+                                    "Expression": {
+                                        "SourceRef": {
+                                            "Entity": "capacities"
+                                        }
+                                    },
+                                    "Property": "state"
+                                }
+                            },
+                            "queryRef": "capacities.state",
+                            "nativeQueryRef": "Capacity State (based on last scan)",
+                            "displayName": "Capacity State (based on last scan)"
+                        }
+                    ],
+                    "showAll": true
+                },
+                "Size": {
+                    "projections": [
+                        {
+                            "field": {
+                                "Measure": {
+                                    "Expression": {
+                                        "SourceRef": {
+                                            "Entity": "Metrics"
+                                        }
+                                    },
+                                    "Property": "# Capacities"
+                                }
+                            },
+                            "queryRef": "Metrics.# Capacities",
+                            "nativeQueryRef": "# Capacities"
+                        }
+                    ]
+                },
+                "Tooltips": {
+                    "projections": [
+                        {
+                            "field": {
+                                "Aggregation": {
+                                    "Expression": {
+                                        "Column": {
+                                            "Expression": {
+                                                "SourceRef": {
+                                                    "Entity": "capacity_regions"
+                                                }
+                                            },
+                                            "Property": "FabricRegion"
+                                        }
+                                    },
+                                    "Function": 3
+                                }
+                            },
+                            "queryRef": "Min(capacity_regions.FabricRegion)",
+                            "nativeQueryRef": "Region",
+                            "displayName": "Region"
+                        },
+                        {
+                            "field": {
+                                "Measure": {
+                                    "Expression": {
+                                        "SourceRef": {
+                                            "Entity": "Metrics"
+                                        }
+                                    },
+                                    "Property": "# Workspaces"
+                                }
+                            },
+                            "queryRef": "Metrics.# Workspaces",
+                            "nativeQueryRef": "# Workspaces"
+                        },
+                        {
+                            "field": {
+                                "Measure": {
+                                    "Expression": {
+                                        "SourceRef": {
+                                            "Entity": "Metrics"
+                                        }
+                                    },
+                                    "Property": "# Users"
+                                }
+                            },
+                            "queryRef": "Metrics.# Users",
+                            "nativeQueryRef": "# Users"
+                        },
+                        {
+                            "field": {
+                                "Measure": {
+                                    "Expression": {
+                                        "SourceRef": {
+                                            "Entity": "Metrics"
+                                        }
+                                    },
+                                    "Property": "# Activities last 14d"
+                                }
+                            },
+                            "queryRef": "Metrics.# Activities last 14d",
+                            "nativeQueryRef": "# Activities last 14d"
+                        },
+                        {
+                            "field": {
+                                "Measure": {
+                                    "Expression": {
+                                        "SourceRef": {
+                                            "Entity": "Metrics"
+                                        }
+                                    },
+                                    "Property": "# Activities last 30d"
+                                }
+                            },
+                            "queryRef": "Metrics.# Activities last 30d",
+                            "nativeQueryRef": "# Activities last 30d"
+                        },
+                        {
+                            "field": {
+                                "Measure": {
+                                    "Expression": {
+                                        "SourceRef": {
+                                            "Entity": "Metrics"
+                                        }
+                                    },
+                                    "Property": "# Active Artifacts"
+                                }
+                            },
+                            "queryRef": "Metrics.# Active Artifacts",
+                            "nativeQueryRef": "# Active Items",
+                            "displayName": "# Active Items"
+                        },
+                        {
+                            "field": {
+                                "Measure": {
+                                    "Expression": {
+                                        "SourceRef": {
+                                            "Entity": "Metrics"
+                                        }
+                                    },
+                                    "Property": "Total CUs last 14d"
+                                }
+                            },
+                            "queryRef": "Metrics.Total CUs last 14d",
+                            "nativeQueryRef": "Total CUs last 14d"
+                        },
+                        {
+                            "field": {
+                                "Measure": {
+                                    "Expression": {
+                                        "SourceRef": {
+                                            "Entity": "Metrics"
+                                        }
+                                    },
+                                    "Property": "Total CUs last 30d"
+                                }
+                            },
+                            "queryRef": "Metrics.Total CUs last 30d",
+                            "nativeQueryRef": "Total CUs last 30d"
+                        },
+                        {
+                            "field": {
+                                "Measure": {
+                                    "Expression": {
+                                        "SourceRef": {
+                                            "Entity": "Metrics"
+                                        }
+                                    },
+                                    "Property": "Avg CU by Item by Day Difference 14d vs 30d IOD"
+                                }
+                            },
+                            "queryRef": "Metrics.Avg CU by Item by Day Difference 14d vs 30d IOD",
+                            "nativeQueryRef": "CU Item Utilization Trend %",
+                            "displayName": "CU Item Utilization Trend %"
+                        }
+                    ]
+                }
+            }
+        },
+        "objects": {
+            "dataPoint": [
+                {
+                    "properties": {
+                        "fill": {
+                            "solid": {
+                                "color": {
+                                    "expr": {
+                                        "Literal": {
+                                            "Value": "'#97F0BF'"
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                {
+                    "properties": {
+                        "fill": {
+                            "solid": {
+                                "color": {
+                                    "expr": {
+                                        "ThemeDataColor": {
+                                            "ColorId": 9,
+                                            "Percent": 0
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "selector": {
+                        "data": [
+                            {
+                                "scopeId": {
+                                    "Comparison": {
+                                        "ComparisonKind": 0,
+                                        "Left": {
+                                            "Column": {
+                                                "Expression": {
+                                                    "SourceRef": {
+                                                        "Entity": "capacities"
+                                                    }
+                                                },
+                                                "Property": "state"
+                                            }
+                                        },
+                                        "Right": {
+                                            "Literal": {
+                                                "Value": "'Suspended'"
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        ]
+                    }
+                },
+                {
+                    "properties": {
+                        "fill": {
+                            "solid": {
+                                "color": {
+                                    "expr": {
+                                        "ThemeDataColor": {
+                                            "ColorId": 8,
+                                            "Percent": 0.2
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "selector": {
+                        "data": [
+                            {
+                                "scopeId": {
+                                    "Comparison": {
+                                        "ComparisonKind": 0,
+                                        "Left": {
+                                            "Column": {
+                                                "Expression": {
+                                                    "SourceRef": {
+                                                        "Entity": "capacities"
+                                                    }
+                                                },
+                                                "Property": "state"
+                                            }
+                                        },
+                                        "Right": {
+                                            "Literal": {
+                                                "Value": "'Active'"
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        ]
+                    }
+                }
+            ],
+            "mapControls": [
+                {
+                    "properties": {
+                        "defaultStyle": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "'satellite'"
+                                }
+                            }
+                        },
+                        "showLabels": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "false"
+                                }
+                            }
+                        },
+                        "showStylePicker": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "false"
+                                }
+                            }
+                        },
+                        "showNavigationControls": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "true"
+                                }
+                            }
+                        },
+                        "showSelectionControl": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "false"
+                                }
+                            }
+                        }
+                    }
+                }
+            ],
+            "categoryLabels": [
+                {
+                    "properties": {
+                        "show": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "true"
+                                }
+                            }
+                        }
+                    }
+                }
+            ],
+            "legend": [
+                {
+                    "properties": {
+                        "show": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "false"
+                                }
+                            }
+                        }
+                    }
+                }
+            ],
+            "bubbleLayer": [
+                {
+                    "properties": {
+                        "show": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "true"
+                                }
+                            }
+                        },
+                        "bubbleRadius": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "10L"
+                                }
+                            }
+                        },
+                        "minBubbleRadius": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "10L"
+                                }
+                            }
+                        },
+                        "maxRadius": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "32L"
+                                }
+                            }
+                        },
+                        "markerRangeType": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "'magnitude'"
+                                }
+                            }
+                        },
+                        "bubbleStrokeWidth": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "1L"
+                                }
+                            }
+                        },
+                        "autoStrokeColor": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "true"
+                                }
+                            }
+                        },
+                        "layerPosition": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "''"
+                                }
+                            }
+                        }
+                    }
+                }
+            ]
+        },
+        "visualContainerObjects": {
+            "background": [
+                {
+                    "properties": {
+                        "color": {
+                            "solid": {
+                                "color": {
+                                    "expr": {
+                                        "ThemeDataColor": {
+                                            "ColorId": 0,
+                                            "Percent": 0
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            ],
+            "title": [
+                {
+                    "properties": {
+                        "fontColor": {
+                            "solid": {
+                                "color": {
+                                    "expr": {
+                                        "ThemeDataColor": {
+                                            "ColorId": 1,
+                                            "Percent": 0
+                                        }
+                                    }
+                                }
+                            }
+                        },
+                        "text": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "'Your Fabric/Power BI Capacity regions'"
+                                }
+                            }
+                        },
+                        "show": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "true"
+                                }
+                            }
+                        },
+                        "fontSize": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "10D"
+                                }
+                            }
+                        }
+                    }
+                }
+            ],
+            "visualTooltip": [
+                {
+                    "properties": {
+                        "type": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "'Default'"
+                                }
+                            }
+                        }
+                    }
+                }
+            ]
+        },
+        "drillFilterOtherVisuals": true
+    }
+}

@@ -1,0 +1,135 @@
+table widelyshared_publishtoweb
+	lineageTag: 13b8f013-94bb-4c03-a416-afe096f428dd
+	sourceLineageTag: [dbo].[widelyshared_publishtoweb]
+
+	column TransferDate
+		dataType: dateTime
+		formatString: General Date
+		sourceProviderType: date
+		lineageTag: bb2bfaf5-b9c7-4122-a92c-98983e99fc05
+		sourceLineageTag: TransferDate
+		summarizeBy: none
+		sourceColumn: TransferDate
+
+		annotation SummarizationSetBy = Automatic
+
+	column TransferDateTime
+		dataType: dateTime
+		formatString: General Date
+		sourceProviderType: datetime2
+		lineageTag: a09cf1ea-aa67-4770-93a0-b6bd51726a43
+		sourceLineageTag: TransferDateTime
+		summarizeBy: none
+		sourceColumn: TransferDateTime
+
+		annotation SummarizationSetBy = Automatic
+
+	column accessRight
+		dataType: string
+		sourceProviderType: varchar(8000)
+		lineageTag: 6de64651-3b01-426a-bead-d6f17dceddcd
+		sourceLineageTag: accessRight
+		summarizeBy: none
+		sourceColumn: accessRight
+
+		annotation SummarizationSetBy = Automatic
+
+	column artifactType
+		dataType: string
+		sourceProviderType: varchar(8000)
+		lineageTag: da1fc6f0-7017-4516-9a37-4de8721c8321
+		sourceLineageTag: artifactType
+		summarizeBy: none
+		sourceColumn: artifactType
+
+		annotation SummarizationSetBy = Automatic
+
+	column item_displayName
+		dataType: string
+		sourceProviderType: varchar(8000)
+		lineageTag: 5aa69ad2-414c-4348-bd15-f456b3ee9674
+		sourceLineageTag: item_displayName
+		summarizeBy: none
+		sourceColumn: item_displayName
+
+		annotation SummarizationSetBy = Automatic
+
+	column shareType
+		dataType: string
+		sourceProviderType: varchar(8000)
+		lineageTag: dce81c28-5303-4517-819e-dc14597a346b
+		sourceLineageTag: shareType
+		summarizeBy: none
+		sourceColumn: shareType
+
+		annotation SummarizationSetBy = Automatic
+
+	column sharer_displayName
+		dataType: string
+		sourceProviderType: varchar(8000)
+		lineageTag: cac32b00-b4fc-46b4-98d5-36e8ca360ec5
+		sourceLineageTag: sharer_displayName
+		summarizeBy: none
+		sourceColumn: sharer_displayName
+
+		annotation SummarizationSetBy = Automatic
+
+	column sharer_emailAddress
+		dataType: string
+		sourceProviderType: varchar(8000)
+		lineageTag: ff6c376e-dd6c-4be7-8d84-cdf81fb71599
+		sourceLineageTag: sharer_emailAddress
+		summarizeBy: none
+		sourceColumn: sharer_emailAddress
+
+		annotation SummarizationSetBy = Automatic
+
+	column sharer_graphId
+		dataType: string
+		sourceProviderType: varchar(8000)
+		lineageTag: 404d7e84-56db-4991-8554-2b5d7fcc07cf
+		sourceLineageTag: sharer_graphId
+		summarizeBy: none
+		sourceColumn: sharer_graphId
+
+		annotation SummarizationSetBy = Automatic
+
+	column sharer_identifier
+		dataType: string
+		sourceProviderType: varchar(8000)
+		lineageTag: 29bd3aec-bc00-4f4d-be53-436bb46f323d
+		sourceLineageTag: sharer_identifier
+		summarizeBy: none
+		sourceColumn: sharer_identifier
+
+		annotation SummarizationSetBy = Automatic
+
+	column sharer_principalType
+		dataType: string
+		sourceProviderType: varchar(8000)
+		lineageTag: 1ba848a8-f9ce-4144-87d5-c649ebb119a7
+		sourceLineageTag: sharer_principalType
+		summarizeBy: none
+		sourceColumn: sharer_principalType
+
+		annotation SummarizationSetBy = Automatic
+
+	column ItemId
+		dataType: string
+		sourceProviderType: varchar(8000)
+		lineageTag: 95c431bc-c09f-4bf9-b36e-edb3c50d9f26
+		sourceLineageTag: ItemId
+		summarizeBy: none
+		sourceColumn: ItemId
+
+		annotation SummarizationSetBy = Automatic
+
+	partition widelyshared_publishtoweb = entity
+		mode: directLake
+		source
+			entityName: widelyshared_publishtoweb
+			schemaName: dbo
+			expressionSource: DatabaseQuery
+
+	annotation PBI_ResultType = Table
+

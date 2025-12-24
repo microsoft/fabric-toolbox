@@ -1,0 +1,290 @@
+{
+    "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/page/2.0.0/schema.json",
+    "name": "42350f20dd0eea6d77c5",
+    "displayName": "Capacity Characteristic",
+    "displayOption": "FitToPage",
+    "height": 1200,
+    "width": 1920,
+    "filterConfig": {
+        "filters": [
+            {
+                "name": "d9df510b6181d8e8a2d2",
+                "displayName": "Workload",
+                "ordinal": 0,
+                "field": {
+                    "Column": {
+                        "Expression": {
+                            "SourceRef": {
+                                "Entity": "capacity_metrics_by_item_by_operation_by_day"
+                            }
+                        },
+                        "Property": "ItemKind"
+                    }
+                },
+                "type": "Categorical",
+                "howCreated": "User",
+                "objects": {
+                    "general": [
+                        {
+                            "properties": {
+                                "isInvertedSelectionMode": {
+                                    "expr": {
+                                        "Literal": {
+                                            "Value": "true"
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    ]
+                }
+            },
+            {
+                "name": "adb02b4544afad1e584e",
+                "displayName": "Capacity Name",
+                "ordinal": 1,
+                "field": {
+                    "Column": {
+                        "Expression": {
+                            "SourceRef": {
+                                "Entity": "capacities"
+                            }
+                        },
+                        "Property": "displayName"
+                    }
+                },
+                "type": "Categorical",
+                "filter": {
+                    "Version": 2,
+                    "From": [
+                        {
+                            "Name": "c",
+                            "Entity": "capacities",
+                            "Type": 0
+                        }
+                    ],
+                    "Where": [
+                        {
+                            "Condition": {
+                                "Not": {
+                                    "Expression": {
+                                        "In": {
+                                            "Expressions": [
+                                                {
+                                                    "Column": {
+                                                        "Expression": {
+                                                            "SourceRef": {
+                                                                "Source": "c"
+                                                            }
+                                                        },
+                                                        "Property": "displayName"
+                                                    }
+                                                }
+                                            ],
+                                            "Values": [
+                                                [
+                                                    {
+                                                        "Literal": {
+                                                            "Value": "null"
+                                                        }
+                                                    }
+                                                ]
+                                            ]
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    ]
+                },
+                "howCreated": "User",
+                "isLockedInViewMode": true,
+                "objects": {
+                    "general": [
+                        {
+                            "properties": {
+                                "isInvertedSelectionMode": {
+                                    "expr": {
+                                        "Literal": {
+                                            "Value": "true"
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    ]
+                }
+            }
+        ],
+        "filterSortOrder": "Custom"
+    },
+    "objects": {
+        "displayArea": [
+            {
+                "properties": {
+                    "verticalAlignment": {
+                        "expr": {
+                            "Literal": {
+                                "Value": "'Middle'"
+                            }
+                        }
+                    }
+                }
+            }
+        ],
+        "background": [
+            {
+                "properties": {
+                    "image": {
+                        "image": {
+                            "name": {
+                                "expr": {
+                                    "Literal": {
+                                        "Value": "'fuam_core_capa_charact_bg.png'"
+                                    }
+                                }
+                            },
+                            "url": {
+                                "expr": {
+                                    "ResourcePackageItem": {
+                                        "PackageName": "RegisteredResources",
+                                        "PackageType": 1,
+                                        "ItemName": "fuam_core_capa_charact_bg2054853850602415.png"
+                                    }
+                                }
+                            },
+                            "scaling": {
+                                "expr": {
+                                    "Literal": {
+                                        "Value": "'Fill'"
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "transparency": {
+                        "expr": {
+                            "Literal": {
+                                "Value": "0D"
+                            }
+                        }
+                    },
+                    "color": {
+                        "solid": {
+                            "color": {
+                                "expr": {
+                                    "ThemeDataColor": {
+                                        "ColorId": 0,
+                                        "Percent": -0.1
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        ]
+    },
+    "visualInteractions": [
+        {
+            "source": "f0ee8e10b07456b4ebd3",
+            "target": "b95d9204ccad4633ab96",
+            "type": "DataFilter"
+        },
+        {
+            "source": "f0ee8e10b07456b4ebd3",
+            "target": "68e9e0625e4c09961812",
+            "type": "DataFilter"
+        },
+        {
+            "source": "f0ee8e10b07456b4ebd3",
+            "target": "21d3af933e8111d4be70",
+            "type": "DataFilter"
+        },
+        {
+            "source": "f0ee8e10b07456b4ebd3",
+            "target": "f295e756c0c00be87757",
+            "type": "DataFilter"
+        },
+        {
+            "source": "b95d9204ccad4633ab96",
+            "target": "f295e756c0c00be87757",
+            "type": "HighlightFilter"
+        },
+        {
+            "source": "b95d9204ccad4633ab96",
+            "target": "89026ac0d352c0ba90c8",
+            "type": "DataFilter"
+        },
+        {
+            "source": "b95d9204ccad4633ab96",
+            "target": "b4a8d15013d0d1e6b7ba",
+            "type": "DataFilter"
+        },
+        {
+            "source": "f0ee8e10b07456b4ebd3",
+            "target": "b4a8d15013d0d1e6b7ba",
+            "type": "DataFilter"
+        },
+        {
+            "source": "f0ee8e10b07456b4ebd3",
+            "target": "89026ac0d352c0ba90c8",
+            "type": "DataFilter"
+        },
+        {
+            "source": "f0ee8e10b07456b4ebd3",
+            "target": "9cd6f4b0e2aca699151e",
+            "type": "DataFilter"
+        },
+        {
+            "source": "b95d9204ccad4633ab96",
+            "target": "9cd6f4b0e2aca699151e",
+            "type": "DataFilter"
+        },
+        {
+            "source": "b95d9204ccad4633ab96",
+            "target": "f0ee8e10b07456b4ebd3",
+            "type": "NoFilter"
+        },
+        {
+            "source": "270ce2dea9270934bc47",
+            "target": "b95d9204ccad4633ab96",
+            "type": "DataFilter"
+        },
+        {
+            "source": "270ce2dea9270934bc47",
+            "target": "21d3af933e8111d4be70",
+            "type": "DataFilter"
+        },
+        {
+            "source": "270ce2dea9270934bc47",
+            "target": "68e9e0625e4c09961812",
+            "type": "DataFilter"
+        },
+        {
+            "source": "270ce2dea9270934bc47",
+            "target": "f295e756c0c00be87757",
+            "type": "DataFilter"
+        },
+        {
+            "source": "270ce2dea9270934bc47",
+            "target": "89026ac0d352c0ba90c8",
+            "type": "DataFilter"
+        },
+        {
+            "source": "270ce2dea9270934bc47",
+            "target": "b4a8d15013d0d1e6b7ba",
+            "type": "DataFilter"
+        },
+        {
+            "source": "270ce2dea9270934bc47",
+            "target": "9cd6f4b0e2aca699151e",
+            "type": "DataFilter"
+        },
+        {
+            "source": "270ce2dea9270934bc47",
+            "target": "f0ee8e10b07456b4ebd3",
+            "type": "DataFilter"
+        }
+    ]
+}

@@ -92,9 +92,11 @@ table Metrics
 		lineageTag: f6ff3cb7-5c3d-4b77-b3f7-6ddcce358805
 
 	measure 'Total CUs IOD' = SUM(capacity_metrics_by_item_by_operation_by_day[TotalCUs])
-		formatString: #,0.00
+		formatString: #,0
 		displayFolder: Capacity IOD Metrics\General
 		lineageTag: 66a68833-e5fb-4090-8052-86cfd577197a
+
+		annotation PBI_FormatHint = {"isDecimal":true}
 
 	measure 'Total Duration (s) IOD' = SUM(capacity_metrics_by_item_by_operation_by_day[DurationInSec])
 		formatString: #,0
@@ -122,9 +124,11 @@ table Metrics
 			    [Avg CU by Item by Day IOD],
 			    'calendar'[IsInLast14Days] = 1
 			)
-		formatString: #,0.00
+		formatString: #,0
 		displayFolder: Capacity IOD Metrics\Time Intelligence
 		lineageTag: 33a4360b-bd62-4e36-8907-b79efd8e5340
+
+		annotation PBI_FormatHint = {"isDecimal":true}
 
 	measure 'Avg CU by Item by Day 30d IOD' =
 			
@@ -132,9 +136,11 @@ table Metrics
 			    [Avg CU by Item by Day IOD],
 			    'calendar'[IsInLast30Days] = 1
 			)
-		formatString: #,0.00
+		formatString: #,0
 		displayFolder: Capacity IOD Metrics\Time Intelligence
 		lineageTag: ee8159f9-b95b-4eca-991d-1364ee57381f
+
+		annotation PBI_FormatHint = {"isDecimal":true}
 
 	measure 'Avg CU by Item by Day 7d IOD' =
 			
@@ -142,9 +148,11 @@ table Metrics
 			    [Avg CU by Item by Day IOD],
 			    'calendar'[Date2Key] >= TODAY()-7
 			)
-		formatString: #,0.00
+		formatString: #,0
 		displayFolder: Capacity IOD Metrics\Time Intelligence
 		lineageTag: 9e582f5d-af24-4a3f-9eff-fbb042d9cd3d
+
+		annotation PBI_FormatHint = {"isDecimal":true}
 
 	measure 'Avg CU by Item by Day 90d IOD' =
 			
@@ -152,9 +160,11 @@ table Metrics
 			    [Avg CU by Item by Day IOD],
 			    'calendar'[Date2Key] >= TODAY()-90
 			)
-		formatString: #,0.00
+		formatString: #,0
 		displayFolder: Capacity IOD Metrics\Time Intelligence
 		lineageTag: e14125de-8cf0-4181-a0c2-510124039954
+
+		annotation PBI_FormatHint = {"isDecimal":true}
 
 	measure 'Max CU by Item by Day 14d IOD' =
 			
@@ -182,10 +192,9 @@ table Metrics
 			    [Max CU by Item by Day IOD],
 			    'calendar'[Date2Key] >= TODAY()-7
 			)
+		formatString: #,0.00
 		displayFolder: Capacity IOD Metrics\Time Intelligence
 		lineageTag: 3b216a08-0d14-4d79-b501-c16ddd8e7693
-
-		annotation PBI_FormatHint = {"isGeneralNumber":true}
 
 	measure 'Max CU by Item by Day 90d IOD' =
 			
@@ -193,7 +202,7 @@ table Metrics
 			    [Max CU by Item by Day IOD],
 			    'calendar'[Date2Key] >= TODAY()-90
 			)
-		formatString: 0
+		formatString: #,0
 		displayFolder: Capacity IOD Metrics\Time Intelligence
 		lineageTag: dd55f0d9-8b86-4f8f-89a8-18c82ac13f85
 
@@ -208,7 +217,7 @@ table Metrics
 		displayFolder: Helper
 		lineageTag: 331bbd11-d17a-45d3-bc34-4139135bc6e0
 
-	measure 'FUAM Release' = "2025.9.1"
+	measure 'FUAM Release' = "2026.1.1"
 		displayFolder: Meta
 		lineageTag: ca859e16-fcf7-4da8-8409-85eee8cad196
 
@@ -376,7 +385,7 @@ table Metrics
 
 	measure 'BPA Violations (Background Impact) Last Run' =
 			
-			VAR _run = [Semantic Model Analyzer Last Run]
+			VAR _run = [Last Run OM-SM]
 			RETURN
 			    CALCULATE(
 			        [BPA Violations (Background Impact)],
@@ -418,7 +427,7 @@ table Metrics
 
 	measure 'BPA Violations (Query Impact) Last Run' =
 			
-			VAR _run = [Semantic Model Analyzer Last Run]
+			VAR _run = [Last Run OM-SM]
 			RETURN
 			    CALCULATE(
 			        [BPA Violations (Query Impact)],
@@ -440,7 +449,7 @@ table Metrics
 
 	measure 'BPA Violations (Usability Impact) Last Run' =
 			
-			VAR _run = [Semantic Model Analyzer Last Run]
+			VAR _run = [Last Run OM-SM]
 			RETURN
 			    CALCULATE(
 			        [BPA Violations (Usability Impact)],
@@ -530,7 +539,7 @@ table Metrics
 
 		annotation PBI_FormatHint = {"isGeneralNumber":true}
 
-	measure 'Semantic Model Analyzer Last Run' =
+	measure 'Last Run OM-SM' =
 			
 			CALCULATE(
 			    MAX(semantic_model_analyzer_runs[RunId]),
@@ -540,7 +549,7 @@ table Metrics
 		displayFolder: Semantic Models\Optimization Module\General
 		lineageTag: 02a516b2-6dff-47a4-a316-7f6779d8ab25
 
-	measure 'Semantic Model Analyzer Runs' = COUNT(semantic_model_analyzer_runs[RunId])
+	measure 'Runs OM-SM' = COUNT(semantic_model_analyzer_runs[RunId])
 		formatString: 0
 		displayFolder: Semantic Models\Optimization Module\General
 		lineageTag: 34e47dc5-e5d8-41e8-92f3-227f97352ca7
@@ -594,7 +603,7 @@ table Metrics
 
 	measure 'Tables Last Run (model)' =
 			
-			VAR _run = [Semantic Model Analyzer Last Run]
+			VAR _run = [Last Run OM-SM]
 			RETURN
 			    CALCULATE(
 			        [Tables (model)],
@@ -616,7 +625,7 @@ table Metrics
 
 	measure 'Total Size Last Run (model)' =
 			
-			VAR _run = [Semantic Model Analyzer Last Run]
+			VAR _run = [Last Run OM-SM]
 			RETURN
 			    CALCULATE(
 			        [Total Size (model)],
@@ -648,10 +657,9 @@ table Metrics
 			    SUM(semantic_model_vertipaq_tables[DataSize]),
 			    [Selected Unit Value]
 			)
+		formatString: #,0.00
 		displayFolder: Semantic Models\Optimization Module\VertiPaq\Table level
 		lineageTag: 40edb924-4688-4a56-b616-bae4f1cacb55
-
-		annotation PBI_FormatHint = {"isGeneralNumber":true}
 
 	measure 'Dictionary Size (table)' =
 			
@@ -659,7 +667,7 @@ table Metrics
 			    SUM(semantic_model_vertipaq_tables[DictionarySize]),
 			    [Selected Unit Value]
 			)
-		formatString: #,0
+		formatString: #,0.00
 		displayFolder: Semantic Models\Optimization Module\VertiPaq\Table level
 		lineageTag: 25c85240-81f6-498d-a811-20fd04f5d5f8
 
@@ -669,7 +677,7 @@ table Metrics
 			    SUM(semantic_model_vertipaq_tables[HierarchySize]),
 			    [Selected Unit Value]
 			)
-		formatString: #,0
+		formatString: #,0.00
 		displayFolder: Semantic Models\Optimization Module\VertiPaq\Table level
 		lineageTag: b52f35cf-9007-4591-9d57-d4b1cf8e9c85
 
@@ -679,7 +687,7 @@ table Metrics
 			    SUM(semantic_model_vertipaq_tables[RelationshipSize]),
 			    [Selected Unit Value]
 			)
-		formatString: #,0
+		formatString: #,0.00
 		displayFolder: Semantic Models\Optimization Module\VertiPaq\Table level
 		lineageTag: f4f279a5-48b9-4583-891c-0871b6fa7893
 
@@ -694,12 +702,12 @@ table Metrics
 			    SUM(semantic_model_vertipaq_tables[TotalSize]),
 			    [Selected Unit Value]
 			)
-		formatString: #,0
+		formatString: #,0.00
 		displayFolder: Semantic Models\Optimization Module\VertiPaq\Table level
 		lineageTag: 5bcc39c4-32cb-4bc3-b15a-a9b294386597
 
 	measure 'User Hierarchy Size (table)' = SUM(semantic_model_vertipaq_tables[UserHierarchySize])
-		formatString: #,0
+		formatString: #,0.00
 		displayFolder: Semantic Models\Optimization Module\VertiPaq\Table level
 		lineageTag: 00c046ce-a4a3-4dd7-bf31-e55a7a11b59d
 
@@ -835,6 +843,13 @@ table Metrics
 			)
 		displayFolder: Helper
 		lineageTag: d646a50c-8508-41e2-a25c-44d8f5c83018
+
+	measure 'Last Run Datetime OM-SM' = MAX(semantic_model_analyzer_runs[RunTimestamp])
+		formatString: yyyy-mm-dd
+		displayFolder: Semantic Models\Optimization Module\General
+		lineageTag: a96e2701-9899-4368-bbbe-2ec1ba431ebf
+
+		annotation PBI_FormatHint = {"isCustom":true}
 
 	column Value
 		isHidden

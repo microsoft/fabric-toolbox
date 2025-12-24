@@ -1,0 +1,482 @@
+{
+    "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/page/2.0.0/schema.json",
+    "name": "b26549390428b8c63ab1",
+    "displayName": "Optimization Module",
+    "displayOption": "FitToPage",
+    "height": 1050,
+    "width": 1900,
+    "filterConfig": {
+        "filters": [
+            {
+                "name": "e68efd2a3259f9d072c8",
+                "ordinal": 0,
+                "field": {
+                    "Column": {
+                        "Expression": {
+                            "SourceRef": {
+                                "Entity": "size_units"
+                            }
+                        },
+                        "Property": "Unit"
+                    }
+                },
+                "type": "Categorical",
+                "filter": {
+                    "Version": 2,
+                    "From": [
+                        {
+                            "Name": "s",
+                            "Entity": "size_units",
+                            "Type": 0
+                        }
+                    ],
+                    "Where": [
+                        {
+                            "Condition": {
+                                "In": {
+                                    "Expressions": [
+                                        {
+                                            "Column": {
+                                                "Expression": {
+                                                    "SourceRef": {
+                                                        "Source": "s"
+                                                    }
+                                                },
+                                                "Property": "Unit"
+                                            }
+                                        }
+                                    ],
+                                    "Values": [
+                                        [
+                                            {
+                                                "Literal": {
+                                                    "Value": "'megabytes'"
+                                                }
+                                            }
+                                        ]
+                                    ]
+                                }
+                            }
+                        }
+                    ]
+                },
+                "howCreated": "User",
+                "objects": {
+                    "general": [
+                        {
+                            "properties": {
+                                "requireSingleSelect": {
+                                    "expr": {
+                                        "Literal": {
+                                            "Value": "true"
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    ]
+                }
+            },
+            {
+                "name": "c6cfb98376bdcac4db63",
+                "ordinal": 1,
+                "field": {
+                    "Column": {
+                        "Expression": {
+                            "SourceRef": {
+                                "Entity": "semantic_model_analyzer_runs"
+                            }
+                        },
+                        "Property": "RunTimestamp"
+                    }
+                },
+                "type": "Categorical",
+                "howCreated": "User"
+            },
+            {
+                "name": "4e5c05121603a7909a09",
+                "displayName": "Semantic Model",
+                "ordinal": 2,
+                "field": {
+                    "Column": {
+                        "Expression": {
+                            "SourceRef": {
+                                "Entity": "semantic_models"
+                            }
+                        },
+                        "Property": "Name"
+                    }
+                },
+                "type": "Categorical",
+                "howCreated": "User",
+                "objects": {
+                    "general": [
+                        {
+                            "properties": {}
+                        }
+                    ]
+                }
+            },
+            {
+                "name": "d125ed1eb07a1e005320",
+                "ordinal": 3,
+                "field": {
+                    "Column": {
+                        "Expression": {
+                            "SourceRef": {
+                                "Entity": "semantic_models"
+                            }
+                        },
+                        "Property": "SemanticModelId"
+                    }
+                },
+                "type": "Categorical",
+                "howCreated": "User"
+            },
+            {
+                "name": "ef7b2b69190b785e5511",
+                "displayName": "Workspace Name",
+                "ordinal": 4,
+                "field": {
+                    "Column": {
+                        "Expression": {
+                            "SourceRef": {
+                                "Entity": "workspaces"
+                            }
+                        },
+                        "Property": "WorkspaceName"
+                    }
+                },
+                "type": "Categorical",
+                "howCreated": "User"
+            },
+            {
+                "name": "898d8e4550160652c0ee",
+                "ordinal": 5,
+                "field": {
+                    "Column": {
+                        "Expression": {
+                            "SourceRef": {
+                                "Entity": "workspaces"
+                            }
+                        },
+                        "Property": "WorkspaceId"
+                    }
+                },
+                "type": "Categorical",
+                "howCreated": "User"
+            },
+            {
+                "name": "32c36020b63e0ae79008",
+                "displayName": "Capacity Name",
+                "ordinal": 6,
+                "field": {
+                    "Column": {
+                        "Expression": {
+                            "SourceRef": {
+                                "Entity": "capacities"
+                            }
+                        },
+                        "Property": "displayName"
+                    }
+                },
+                "type": "Categorical",
+                "howCreated": "User"
+            },
+            {
+                "name": "9e8525f6ad240ab39766",
+                "ordinal": 7,
+                "field": {
+                    "Column": {
+                        "Expression": {
+                            "SourceRef": {
+                                "Entity": "capacities"
+                            }
+                        },
+                        "Property": "CapacityId"
+                    }
+                },
+                "type": "Categorical",
+                "filter": {
+                    "Version": 2,
+                    "From": [
+                        {
+                            "Name": "c",
+                            "Entity": "capacities",
+                            "Type": 0
+                        }
+                    ],
+                    "Where": [
+                        {
+                            "Condition": {
+                                "Not": {
+                                    "Expression": {
+                                        "In": {
+                                            "Expressions": [
+                                                {
+                                                    "Column": {
+                                                        "Expression": {
+                                                            "SourceRef": {
+                                                                "Source": "c"
+                                                            }
+                                                        },
+                                                        "Property": "CapacityId"
+                                                    }
+                                                }
+                                            ],
+                                            "Values": [
+                                                [
+                                                    {
+                                                        "Literal": {
+                                                            "Value": "null"
+                                                        }
+                                                    }
+                                                ]
+                                            ]
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    ]
+                },
+                "howCreated": "User",
+                "objects": {
+                    "general": [
+                        {
+                            "properties": {
+                                "isInvertedSelectionMode": {
+                                    "expr": {
+                                        "Literal": {
+                                            "Value": "true"
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    ]
+                }
+            },
+            {
+                "name": "cd045f4ae8a2a5184036",
+                "ordinal": 8,
+                "field": {
+                    "Column": {
+                        "Expression": {
+                            "SourceRef": {
+                                "Entity": "semantic_model_content_types"
+                            }
+                        },
+                        "Property": "IsIncludedInOptimizationModule"
+                    }
+                },
+                "type": "Categorical",
+                "filter": {
+                    "Version": 2,
+                    "From": [
+                        {
+                            "Name": "s",
+                            "Entity": "semantic_model_content_types",
+                            "Type": 0
+                        }
+                    ],
+                    "Where": [
+                        {
+                            "Condition": {
+                                "In": {
+                                    "Expressions": [
+                                        {
+                                            "Column": {
+                                                "Expression": {
+                                                    "SourceRef": {
+                                                        "Source": "s"
+                                                    }
+                                                },
+                                                "Property": "IsIncludedInOptimizationModule"
+                                            }
+                                        }
+                                    ],
+                                    "Values": [
+                                        [
+                                            {
+                                                "Literal": {
+                                                    "Value": "true"
+                                                }
+                                            }
+                                        ]
+                                    ]
+                                }
+                            }
+                        }
+                    ]
+                },
+                "howCreated": "User",
+                "isLockedInViewMode": true
+            },
+            {
+                "name": "f765a7970248eb120bdd",
+                "displayName": "(Pre-filter) SemanticModelId",
+                "ordinal": 9,
+                "field": {
+                    "Column": {
+                        "Expression": {
+                            "SourceRef": {
+                                "Entity": "semantic_model_analyzer_runs"
+                            }
+                        },
+                        "Property": "SemanticModelId"
+                    }
+                },
+                "type": "Advanced",
+                "filter": {
+                    "Version": 2,
+                    "From": [
+                        {
+                            "Name": "s",
+                            "Entity": "semantic_model_analyzer_runs",
+                            "Type": 0
+                        }
+                    ],
+                    "Where": [
+                        {
+                            "Condition": {
+                                "Not": {
+                                    "Expression": {
+                                        "Comparison": {
+                                            "ComparisonKind": 0,
+                                            "Left": {
+                                                "Column": {
+                                                    "Expression": {
+                                                        "SourceRef": {
+                                                            "Source": "s"
+                                                        }
+                                                    },
+                                                    "Property": "SemanticModelId"
+                                                }
+                                            },
+                                            "Right": {
+                                                "Literal": {
+                                                    "Value": "null"
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    ]
+                },
+                "howCreated": "User",
+                "isLockedInViewMode": true
+            }
+        ],
+        "filterSortOrder": "Custom"
+    },
+    "pageBinding": {
+        "name": "1324bd8d36388b86d27b",
+        "type": "Drillthrough",
+        "parameters": [
+            {
+                "name": "7fbbd3009e5b0dcdf0cf",
+                "boundFilter": "e68efd2a3259f9d072c8",
+                "qnaSingleSelectRequired": true,
+                "fieldExpr": {
+                    "Column": {
+                        "Expression": {
+                            "SourceRef": {
+                                "Entity": "size_units"
+                            }
+                        },
+                        "Property": "Unit"
+                    }
+                }
+            }
+        ]
+    },
+    "objects": {
+        "displayArea": [
+            {
+                "properties": {
+                    "verticalAlignment": {
+                        "expr": {
+                            "Literal": {
+                                "Value": "'Middle'"
+                            }
+                        }
+                    }
+                }
+            }
+        ],
+        "background": [
+            {
+                "properties": {
+                    "image": {
+                        "image": {
+                            "name": {
+                                "expr": {
+                                    "Literal": {
+                                        "Value": "'fuam_core_om_bg.png'"
+                                    }
+                                }
+                            },
+                            "url": {
+                                "expr": {
+                                    "ResourcePackageItem": {
+                                        "PackageName": "RegisteredResources",
+                                        "PackageType": 1,
+                                        "ItemName": "fuam_core_om_bg9631300318863146.png"
+                                    }
+                                }
+                            },
+                            "scaling": {
+                                "expr": {
+                                    "Literal": {
+                                        "Value": "'Fit'"
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "transparency": {
+                        "expr": {
+                            "Literal": {
+                                "Value": "0D"
+                            }
+                        }
+                    }
+                }
+            }
+        ],
+        "outspacePane": [
+            {
+                "properties": {
+                    "width": {
+                        "expr": {
+                            "Literal": {
+                                "Value": "217L"
+                            }
+                        }
+                    }
+                }
+            }
+        ]
+    },
+    "type": "Drillthrough",
+    "visualInteractions": [
+        {
+            "source": "fa41b0749d670a9fa8db",
+            "target": "8af641b537f2e6f1961a",
+            "type": "NoFilter"
+        },
+        {
+            "source": "fa41b0749d670a9fa8db",
+            "target": "6af9a2559b945dd3574d",
+            "type": "NoFilter"
+        },
+        {
+            "source": "fa41b0749d670a9fa8db",
+            "target": "0ad1f965ac9aa1b12ce2",
+            "type": "NoFilter"
+        }
+    ]
+}

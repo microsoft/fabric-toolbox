@@ -1,142 +1,12 @@
 table semantic_model_analyzer_runs
-	lineageTag: ca2703af-910e-44d6-a303-22d8308950ce
+	lineageTag: 070ec87f-1dd2-467d-81a7-ec52fb56ff8f
 	sourceLineageTag: [dbo].[semantic_model_analyzer_runs]
-
-	column SemanticModelRunKey
-		dataType: string
-		sourceProviderType: varchar(8000)
-		lineageTag: f2c0fb95-0cfb-4317-8ffd-d5b58ba93aa6
-		sourceLineageTag: SemanticModelRunKey
-		summarizeBy: none
-		sourceColumn: SemanticModelRunKey
-
-		annotation SummarizationSetBy = Automatic
-
-	column WorkspaceId
-		dataType: string
-		sourceProviderType: varchar(8000)
-		lineageTag: 37b2d11b-4db6-4235-9361-5156d6ba1217
-		sourceLineageTag: WorkspaceId
-		summarizeBy: none
-		sourceColumn: WorkspaceId
-
-		annotation SummarizationSetBy = Automatic
-
-	column SemanticModelId
-		dataType: string
-		sourceProviderType: varchar(2048)
-		lineageTag: 03824a7b-b5d3-4f9b-a674-d28a3827f297
-		sourceLineageTag: SemanticModelId
-		summarizeBy: none
-		sourceColumn: SemanticModelId
-
-		annotation SummarizationSetBy = Automatic
-
-	column RunTimestamp
-		dataType: dateTime
-		formatString: General Date
-		sourceProviderType: datetime2
-		lineageTag: 4b2a5f81-e44b-4573-9ba2-2601acdf80c7
-		sourceLineageTag: RunTimestamp
-		summarizeBy: none
-		sourceColumn: RunTimestamp
-
-		annotation SummarizationSetBy = Automatic
-
-	column RunId
-		dataType: int64
-		formatString: 0
-		sourceProviderType: bigint
-		lineageTag: 74592bf7-87e0-45dc-90b1-3761e94ee247
-		sourceLineageTag: RunId
-		summarizeBy: count
-		sourceColumn: RunId
-
-		annotation SummarizationSetBy = Automatic
-
-	column RunName
-		dataType: string
-		sourceProviderType: varchar(8000)
-		lineageTag: f2aad7bf-f8f7-4288-a83a-1820ad9d17a1
-		sourceLineageTag: RunName
-		summarizeBy: none
-		sourceColumn: RunName
-		sortByColumn: RunId
-
-		changedProperty = SortByColumn
-
-		annotation SummarizationSetBy = Automatic
-
-	column AnalyzerMode
-		dataType: string
-		sourceProviderType: varchar(8000)
-		lineageTag: f3b5e0b6-9349-4597-adc9-97baceb04a06
-		sourceLineageTag: AnalyzerMode
-		summarizeBy: none
-		sourceColumn: AnalyzerMode
-
-		annotation SummarizationSetBy = Automatic
-
-	column CompatibilityLevel
-		dataType: int64
-		formatString: 0
-		sourceProviderType: bigint
-		lineageTag: 346d8def-6159-4815-b997-e284ccbac7bc
-		sourceLineageTag: CompatibilityLevel
-		summarizeBy: sum
-		sourceColumn: CompatibilityLevel
-
-		annotation SummarizationSetBy = Automatic
-
-	column TableCount
-		dataType: int64
-		formatString: 0
-		sourceProviderType: bigint
-		lineageTag: 56f16bed-e8e3-4261-96e9-cd451816f00e
-		sourceLineageTag: TableCount
-		summarizeBy: sum
-		sourceColumn: TableCount
-
-		annotation SummarizationSetBy = Automatic
-
-	column TotalSize
-		dataType: int64
-		formatString: 0
-		sourceProviderType: bigint
-		lineageTag: 80e33f05-a9f2-4416-a8cf-9cf4892d72f5
-		sourceLineageTag: TotalSize
-		summarizeBy: sum
-		sourceColumn: TotalSize
-
-		annotation SummarizationSetBy = Automatic
-
-	column DictionarySize
-		dataType: int64
-		formatString: 0
-		sourceProviderType: bigint
-		lineageTag: c6dc1634-435a-4fa0-9c6d-5e91325a7a03
-		sourceLineageTag: DictionarySize
-		summarizeBy: sum
-		sourceColumn: DictionarySize
-
-		annotation SummarizationSetBy = Automatic
-
-	column DataSize
-		dataType: int64
-		formatString: 0
-		sourceProviderType: bigint
-		lineageTag: 9600ca99-bc11-425c-949a-045bfd57c43d
-		sourceLineageTag: DataSize
-		summarizeBy: sum
-		sourceColumn: DataSize
-
-		annotation SummarizationSetBy = Automatic
 
 	column HierarchySize
 		dataType: int64
 		formatString: 0
 		sourceProviderType: bigint
-		lineageTag: de07ccd4-0382-4034-9fb4-3d66569c018e
+		lineageTag: ca10b0bf-0bac-45af-a489-101e03d50430
 		sourceLineageTag: HierarchySize
 		summarizeBy: sum
 		sourceColumn: HierarchySize
@@ -147,7 +17,7 @@ table semantic_model_analyzer_runs
 		dataType: int64
 		formatString: 0
 		sourceProviderType: bigint
-		lineageTag: 118c542d-fcef-40c1-a5b3-a4d31dfcd112
+		lineageTag: b84ac66b-9904-40ff-ab7d-9733cdd8c530
 		sourceLineageTag: RelationshipSize
 		summarizeBy: sum
 		sourceColumn: RelationshipSize
@@ -158,10 +28,140 @@ table semantic_model_analyzer_runs
 		dataType: int64
 		formatString: 0
 		sourceProviderType: bigint
-		lineageTag: c8d3907f-762e-42c1-b81d-55bf35224c55
+		lineageTag: 630cf734-8b73-430c-b069-e959166cf8ca
 		sourceLineageTag: UserHierarchySize
 		summarizeBy: sum
 		sourceColumn: UserHierarchySize
+
+		annotation SummarizationSetBy = Automatic
+
+	column AnalyzerMode
+		dataType: string
+		sourceProviderType: varchar(8000)
+		lineageTag: b6740063-9607-4e73-be21-8e828c3a963b
+		sourceLineageTag: AnalyzerMode
+		summarizeBy: none
+		sourceColumn: AnalyzerMode
+
+		annotation SummarizationSetBy = Automatic
+
+	column CompatibilityLevel
+		dataType: int64
+		formatString: 0
+		sourceProviderType: bigint
+		lineageTag: 1bb6def8-d89f-4a0e-b1b5-ae5ed3e55090
+		sourceLineageTag: CompatibilityLevel
+		summarizeBy: sum
+		sourceColumn: CompatibilityLevel
+
+		annotation SummarizationSetBy = Automatic
+
+	column TableCount
+		dataType: int64
+		formatString: 0
+		sourceProviderType: bigint
+		lineageTag: 9e08a57e-f4a7-40c3-9eef-5a3529e6cb0c
+		sourceLineageTag: TableCount
+		summarizeBy: sum
+		sourceColumn: TableCount
+
+		annotation SummarizationSetBy = Automatic
+
+	column TotalSize
+		dataType: int64
+		formatString: 0
+		sourceProviderType: bigint
+		lineageTag: 8e29fd87-7a4b-4ae1-81f1-75e6cd1c9aee
+		sourceLineageTag: TotalSize
+		summarizeBy: sum
+		sourceColumn: TotalSize
+
+		annotation SummarizationSetBy = Automatic
+
+	column DictionarySize
+		dataType: int64
+		formatString: 0
+		sourceProviderType: bigint
+		lineageTag: a7adaa89-b0b2-4774-a1e8-85f30a254b4b
+		sourceLineageTag: DictionarySize
+		summarizeBy: sum
+		sourceColumn: DictionarySize
+
+		annotation SummarizationSetBy = Automatic
+
+	column DataSize
+		dataType: int64
+		formatString: 0
+		sourceProviderType: bigint
+		lineageTag: eb1546f1-b0b3-49f0-87f1-c53cf9b7adc9
+		sourceLineageTag: DataSize
+		summarizeBy: sum
+		sourceColumn: DataSize
+
+		annotation SummarizationSetBy = Automatic
+
+	column SemanticModelRunKey
+		dataType: string
+		sourceProviderType: varchar(8000)
+		lineageTag: d69cd91a-010c-4cb3-97e7-c6862aa97819
+		sourceLineageTag: SemanticModelRunKey
+		summarizeBy: none
+		sourceColumn: SemanticModelRunKey
+
+		annotation SummarizationSetBy = Automatic
+
+	column WorkspaceId
+		dataType: string
+		sourceProviderType: varchar(8000)
+		lineageTag: 4988865c-8ec8-4bba-9687-d57670fef57f
+		sourceLineageTag: WorkspaceId
+		summarizeBy: none
+		sourceColumn: WorkspaceId
+
+		annotation SummarizationSetBy = Automatic
+
+	column SemanticModelId
+		dataType: string
+		sourceProviderType: varchar(8000)
+		lineageTag: da0ecd58-22b9-4baa-9043-107538c94ec4
+		sourceLineageTag: SemanticModelId
+		summarizeBy: none
+		sourceColumn: SemanticModelId
+
+		annotation SummarizationSetBy = Automatic
+
+	column RunTimestamp
+		dataType: dateTime
+		formatString: General Date
+		sourceProviderType: datetime2
+		lineageTag: d8c12a6e-a53d-435c-8281-08e55e52ecee
+		sourceLineageTag: RunTimestamp
+		summarizeBy: none
+		sourceColumn: RunTimestamp
+
+		annotation SummarizationSetBy = Automatic
+
+	column RunId
+		dataType: int64
+		formatString: 0
+		sourceProviderType: bigint
+		lineageTag: ce583145-ee54-445f-9731-0642c7a7984d
+		sourceLineageTag: RunId
+		summarizeBy: count
+		sourceColumn: RunId
+
+		annotation SummarizationSetBy = Automatic
+
+	column RunName
+		dataType: string
+		sourceProviderType: varchar(8000)
+		lineageTag: 8d966964-d6d1-49d5-8ede-db0267dda5e2
+		sourceLineageTag: RunName
+		summarizeBy: none
+		sourceColumn: RunName
+		sortByColumn: RunId
+
+		changedProperty = SortByColumn
 
 		annotation SummarizationSetBy = Automatic
 

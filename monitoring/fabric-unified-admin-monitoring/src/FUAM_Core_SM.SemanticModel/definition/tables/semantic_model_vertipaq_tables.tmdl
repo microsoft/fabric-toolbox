@@ -1,11 +1,11 @@
 table semantic_model_vertipaq_tables
-	lineageTag: ae3f1d56-88e2-44b5-9abc-cc6bead7ae16
+	lineageTag: 2d043d69-97ef-4e33-8560-31f2b6d3229c
 	sourceLineageTag: [dbo].[semantic_model_vertipaq_tables]
 
 	column Name
 		dataType: string
 		sourceProviderType: varchar(8000)
-		lineageTag: 395549df-4c1e-40da-9054-7dfa50086204
+		lineageTag: a08712c5-cff0-4110-8966-6274eeddb7c8
 		sourceLineageTag: Name
 		summarizeBy: none
 		sourceColumn: Name
@@ -15,7 +15,7 @@ table semantic_model_vertipaq_tables
 	column Description
 		dataType: string
 		sourceProviderType: varchar(8000)
-		lineageTag: 418cc4b8-e14a-4f74-8a0f-c993ddafb8e1
+		lineageTag: 2f026346-c1da-45d6-ae91-2607f1f6765b
 		sourceLineageTag: Description
 		summarizeBy: none
 		sourceColumn: Description
@@ -26,7 +26,7 @@ table semantic_model_vertipaq_tables
 		dataType: boolean
 		formatString: """TRUE"";""TRUE"";""FALSE"""
 		sourceProviderType: bit
-		lineageTag: ec6bdfbf-d345-4b05-8122-4b72252f9126
+		lineageTag: 77a2e9d1-5a95-45c0-969a-0d81c3183bdb
 		sourceLineageTag: Hidden
 		summarizeBy: none
 		sourceColumn: Hidden
@@ -36,7 +36,7 @@ table semantic_model_vertipaq_tables
 	column DataCategory
 		dataType: string
 		sourceProviderType: varchar(8000)
-		lineageTag: fd744d1e-60c7-4843-bc8f-85a272d01082
+		lineageTag: 0b96cd8d-bcd6-43db-90c4-7723ecf9880d
 		sourceLineageTag: DataCategory
 		summarizeBy: none
 		sourceColumn: DataCategory
@@ -46,13 +46,10 @@ table semantic_model_vertipaq_tables
 	column Type
 		dataType: string
 		sourceProviderType: varchar(8000)
-		lineageTag: be43bd70-5436-4ad9-a7cc-a708dbcd8bae
+		lineageTag: d21bf32d-2e8f-4f2a-b5e4-88339e863fba
 		sourceLineageTag: Type
 		summarizeBy: none
 		sourceColumn: Type
-		sortByColumn: RelationshipSize
-
-		changedProperty = SortByColumn
 
 		annotation SummarizationSetBy = Automatic
 
@@ -60,78 +57,31 @@ table semantic_model_vertipaq_tables
 		dataType: boolean
 		formatString: """TRUE"";""TRUE"";""FALSE"""
 		sourceProviderType: bit
-		lineageTag: 82e0994f-4617-4e75-9099-036794db7cf2
+		lineageTag: d243a409-7bf1-4636-94b2-43ee252630b6
 		sourceLineageTag: RefreshPolicy
 		summarizeBy: none
 		sourceColumn: RefreshPolicy
 
 		annotation SummarizationSetBy = Automatic
 
-	column RowCount
+	column RunId
 		dataType: int64
 		formatString: 0
 		sourceProviderType: bigint
-		lineageTag: 93b52f9d-71bd-4252-8ff0-72c54c996182
-		sourceLineageTag: RowCount
-		summarizeBy: sum
-		sourceColumn: RowCount
-
-		changedProperty = FormatString
+		lineageTag: e7d12cb2-e102-4a27-ac14-5ae868d90076
+		sourceLineageTag: RunId
+		summarizeBy: count
+		sourceColumn: RunId
 
 		annotation SummarizationSetBy = Automatic
 
-	column TotalSize
-		dataType: int64
-		formatString: 0
-		sourceProviderType: bigint
-		lineageTag: 292cea81-c1bf-4b3f-9857-288f34de004c
-		sourceLineageTag: TotalSize
-		summarizeBy: sum
-		sourceColumn: TotalSize
-
-		annotation SummarizationSetBy = Automatic
-
-	column DictionarySize
-		dataType: int64
-		formatString: 0
-		sourceProviderType: bigint
-		lineageTag: a2f3f123-cbf2-4189-a23f-31c27fae85a4
-		sourceLineageTag: DictionarySize
-		summarizeBy: sum
-		sourceColumn: DictionarySize
-
-		annotation SummarizationSetBy = Automatic
-
-	column DataSize
-		dataType: int64
-		formatString: 0
-		sourceProviderType: bigint
-		lineageTag: 722f23ce-ce03-4b2a-ab90-9395e47c14e3
-		sourceLineageTag: DataSize
-		summarizeBy: sum
-		sourceColumn: DataSize
-
-		annotation SummarizationSetBy = Automatic
-
-	column HierarchySize
-		dataType: int64
-		formatString: 0
-		sourceProviderType: bigint
-		lineageTag: 99a862d5-2ec1-4d37-8b47-6faddd4ae45e
-		sourceLineageTag: HierarchySize
-		summarizeBy: sum
-		sourceColumn: HierarchySize
-
-		annotation SummarizationSetBy = Automatic
-
-	column RelationshipSize
-		dataType: int64
-		formatString: 0
-		sourceProviderType: bigint
-		lineageTag: f79e9378-b0d1-4070-8e89-c3527d06fcb1
-		sourceLineageTag: RelationshipSize
-		summarizeBy: sum
-		sourceColumn: RelationshipSize
+	column SemanticModelRunKey
+		dataType: string
+		sourceProviderType: varchar(8000)
+		lineageTag: cde6788a-2fe7-457f-9e9d-650f09570807
+		sourceLineageTag: SemanticModelRunKey
+		summarizeBy: none
+		sourceColumn: SemanticModelRunKey
 
 		annotation SummarizationSetBy = Automatic
 
@@ -139,7 +89,7 @@ table semantic_model_vertipaq_tables
 		dataType: int64
 		formatString: 0
 		sourceProviderType: bigint
-		lineageTag: 68fd4189-ea56-4ccf-806c-8b2a4cffca16
+		lineageTag: 51d26542-9f3a-4eb8-a4c4-04749687d753
 		sourceLineageTag: UserHierarchySize
 		summarizeBy: sum
 		sourceColumn: UserHierarchySize
@@ -150,7 +100,7 @@ table semantic_model_vertipaq_tables
 		dataType: int64
 		formatString: 0
 		sourceProviderType: bigint
-		lineageTag: 4dd4c038-2907-4838-aae0-487cb0e7f890
+		lineageTag: a820193d-cff3-4a7f-93a2-7ec620d3f870
 		sourceLineageTag: Partitions
 		summarizeBy: sum
 		sourceColumn: Partitions
@@ -161,7 +111,7 @@ table semantic_model_vertipaq_tables
 		dataType: int64
 		formatString: 0
 		sourceProviderType: bigint
-		lineageTag: 1a714562-72d7-4fa7-a9e6-a945c0d12bcf
+		lineageTag: d49a2831-382c-46f0-885a-395a0549b831
 		sourceLineageTag: Columns
 		summarizeBy: sum
 		sourceColumn: Columns
@@ -171,7 +121,7 @@ table semantic_model_vertipaq_tables
 	column PercentageOfDB
 		dataType: double
 		sourceProviderType: float
-		lineageTag: 36a4c632-70df-4f6a-8b92-5188bd415b9c
+		lineageTag: 521a8dac-d950-447c-9ab5-233d34e8a622
 		sourceLineageTag: PercentageOfDB
 		summarizeBy: sum
 		sourceColumn: PercentageOfDB
@@ -183,7 +133,7 @@ table semantic_model_vertipaq_tables
 	column SemanticModelId
 		dataType: string
 		sourceProviderType: varchar(8000)
-		lineageTag: 7e826856-aeaf-451f-8784-7081f507861f
+		lineageTag: 9768543e-588e-485a-b5cf-fc0e12f922b9
 		sourceLineageTag: SemanticModelId
 		summarizeBy: none
 		sourceColumn: SemanticModelId
@@ -193,31 +143,76 @@ table semantic_model_vertipaq_tables
 	column WorkspaceId
 		dataType: string
 		sourceProviderType: varchar(8000)
-		lineageTag: 54e60f30-0a3b-41b5-8a0b-7bb3c05cb8a6
+		lineageTag: 573668b9-e90c-4ec0-85ed-76cebd199896
 		sourceLineageTag: WorkspaceId
 		summarizeBy: none
 		sourceColumn: WorkspaceId
 
 		annotation SummarizationSetBy = Automatic
 
-	column RunId
+	column RowCount
 		dataType: int64
 		formatString: 0
 		sourceProviderType: bigint
-		lineageTag: dd646306-236d-4a32-8962-5312a8f51b4d
-		sourceLineageTag: RunId
-		summarizeBy: count
-		sourceColumn: RunId
+		lineageTag: 0ab8fcfa-1e95-4cc1-8659-d39f945dcc94
+		sourceLineageTag: RowCount
+		summarizeBy: sum
+		sourceColumn: RowCount
 
 		annotation SummarizationSetBy = Automatic
 
-	column SemanticModelRunKey
-		dataType: string
-		sourceProviderType: varchar(2048)
-		lineageTag: 7a9362d2-b5ea-4949-a31e-72be814e7347
-		sourceLineageTag: SemanticModelRunKey
-		summarizeBy: none
-		sourceColumn: SemanticModelRunKey
+	column TotalSize
+		dataType: int64
+		formatString: 0
+		sourceProviderType: bigint
+		lineageTag: 5a586501-8075-4129-be73-95fe3c6c7c4c
+		sourceLineageTag: TotalSize
+		summarizeBy: sum
+		sourceColumn: TotalSize
+
+		annotation SummarizationSetBy = Automatic
+
+	column DictionarySize
+		dataType: int64
+		formatString: 0
+		sourceProviderType: bigint
+		lineageTag: 09d953b4-1c75-492c-b213-0cec289f4824
+		sourceLineageTag: DictionarySize
+		summarizeBy: sum
+		sourceColumn: DictionarySize
+
+		annotation SummarizationSetBy = Automatic
+
+	column DataSize
+		dataType: int64
+		formatString: 0
+		sourceProviderType: bigint
+		lineageTag: b3df9fce-1d4c-40ce-b939-cdb5d576b464
+		sourceLineageTag: DataSize
+		summarizeBy: sum
+		sourceColumn: DataSize
+
+		annotation SummarizationSetBy = Automatic
+
+	column HierarchySize
+		dataType: int64
+		formatString: 0
+		sourceProviderType: bigint
+		lineageTag: dabef5a9-67cb-45eb-aa80-b9f7a2852f52
+		sourceLineageTag: HierarchySize
+		summarizeBy: sum
+		sourceColumn: HierarchySize
+
+		annotation SummarizationSetBy = Automatic
+
+	column RelationshipSize
+		dataType: int64
+		formatString: 0
+		sourceProviderType: bigint
+		lineageTag: 033f8650-cd17-425c-bf9c-4d981756a38e
+		sourceLineageTag: RelationshipSize
+		summarizeBy: sum
+		sourceColumn: RelationshipSize
 
 		annotation SummarizationSetBy = Automatic
 
