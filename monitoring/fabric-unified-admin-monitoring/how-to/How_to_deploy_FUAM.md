@@ -136,15 +136,18 @@ The Pipeline has different parameters, which are controlling the data load flow:
 |----------------|-------------------------------|-----------------------------|
 |has_tenant_domains|If **true**, the tenant inventory is enriched with domain information. Use it only, if domains are in use at your tenant. **Default is false**        | true or false            |
 |extract_powerbi_artifacts_only|If **true**, the tenant inventory contains **only** semantic models, dataflows, datamarts, reports, dashboard and apps. If **false** the pipeline extracts Power BI **and** Fabric items. Currently, first-party workloads are supported only. **Default is false** | true or false |
-|metric_days_in_scope|Defines how many days should be extracted from the capacity metrics app. A maximum of 14 days can be extracted. For an initial load you can set it to the maximum and in subsequent runs reduce it to 2 days|range between **1** and **14**|
+|metric_days_in_scope|Defines how many days should be extracted from the capacity metrics app. A maximum of 14 days can be extracted. For an initial load you can set it to the maximum and in subsequent runs reduce it to 2 days|Integer range between **1** and **14**|
 |metric_workspace|This is the name _or_ id of the workspace where the capacity metrics app was deployed|string|
 |metric_dataset|This is the name _or_ id of the semantic model of the capacity metrics app |string|
-|activity_days_in_scope|It defines how many days in the past the activity must be retrieved from the API. Recommended to **use 28 for the initial load** and change the value to **2 for daily load**.| range between **2** and **28** |
+|activity_days_in_scope|It defines how many days in the past the activity must be retrieved from the API. Recommended to **use 28 for the initial load** and change the value to **2 for daily load**.| Integer range between **2** and **28** |
 |display_data|If **true**, the notebooks will display more information about each relevant step at runtime. This is useful for debugging. **Default is false**| true or false |
 |optional_keyvault_name|**Optional**: If you have configured a key vault, enter the name of the key vault. Otherwise, simply leave this field blank. In this case, the Load_Inventory module will use the Notebook owner's identity.| empty or string|
 |optional_keyvault_sp_ tenantId_secret_name|**Optional**: If you have configured a key vault and its secrets, enter the name of the tenantId secret name. Otherwise, simply leave this field blank. In this case, the Load_Inventory module will use the Notebook owner's identity.|empty or string|
 |optional_keyvault_sp_ clientId_secret_name|**Optional**: If you have configured a key vault and its secrets, enter the name of the clientId secret name. Otherwise, simply leave this field blank. In this case, the Load_Inventory module will use the Notebook owner's identity.|empty or string|
 |optional_keyvault_sp_ secret_secret_name|**Optional**: If you have configured a key vault and its secrets, enter the name of the service principal's secret secret name. Otherwise, simply leave this field blank. In this case, the Load_Inventory module will use the Notebook owner's identity.|empty or string|
+|activity_anonymize_tables|If **true**, the Load_Activities module enables anonymization of activities Lakehouse table for the recently loaded activity logs. <br><br> **_Important:_** The anonymization logic will has the "UserId" and "UserKey" columns. <br><br> **_Tip:_** Use it in combination of the parameter **activity_anonymize_after_days = 0** to anonymize the currently loaded activity log values. |true or false|
+|activity_anonymize_after_days|Default is **0**. If value is higher than 0 (zero) and the parameter **activity_anonymize_tables** is **true** the Load_Activities module will anonymize (hash with md5) the **activities** Lakehouse table columns ("UserId" and "UserKey") before the given day. <br><br> _**Example A:**_ Let's assume you stored 190 days of activity logs in FUAM_Lakehouse. You set the parameter activity_anonymize_after_days to **90**. In this case the last 90 days of activities data will **not** be anonymized, the rest days from d-91 and d-190 will be anonymized.   |Integer range between **0** and **365**|
+|activity_anonymize_files|If **true**, the Load_Activities module will delete all the raw historical activity JSON files in FUAM_Lakehouse/Files/history/actities folder. <br> <br> If **false**, the logic will keep the raw activity JSON files and populates it after every pipeline execution.|true or false|
 
 
 - Run the Pipeline once. This will initially load the data into FUAM_Lakehouse
@@ -186,11 +189,11 @@ The Pipeline has different parameters, which are controlling the data load flow:
 |Step|Description|
 |---|---|
 |A|On-demand report pages, each page is designed for a specific purpose.|
-|B||
+|B|Every report page has a its predefined filter columns for the current context.|
 |C|Navigation action buttons **More** (navigates to given report page) and **Info** (navigates to github documentation).|
-|D||
-|E||
-|F||
+|D|Analytical pathways in FUAM provide for Fabric Administrators specific guided self-service assessment experiences. Click on **Start** to begin the walkthrough.|
+|E|Meta data to your current FUAM deployment. One a new FUAM release is available, the button will be purple with the text "Update is available". Otherwise it is green with the text "FUAM is up-to-date."|
+|F|Explore other monitoring experiences like "FUAM's specific reports" or the "Fabric Cost Analysis" solution accelerator.|
 
 > **Error handling:** In case of errors like 'Visual can't be rendered', please check the 'Remark' section.
 
