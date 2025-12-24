@@ -9,14 +9,14 @@ Date: 2025-12-23
 
 ### 📈 Enhancements
 
-- **New Data**:
+- **New data**:
     - Domain Information
     - Workspace Domain Mapping
     - Datasource Semantic Model Mapping
     - Widely Shared - Organization Links
     - Widely Shared - PublishedToWeb
 
-- **Report Updates**:
+- **Report updates**:
     - New navigation from Overview Page to different topics
     - New Analytical Pathways: 
         - Unused workspaces with single click communication to the workspace owners
@@ -25,6 +25,11 @@ Date: 2025-12-23
         - Data Sources (for Semantic Models)
         - Widely Share Objects
     - Update to Item_Analyzer Report
+ 
+- **Report design**:
+  - With this update, we harmonized the design language across FCA, Workspace Monitoring Dashboards, and FUAM. We hope this helps you monitor your tenant, Fabric costs, workspaces, and items with a consistent look and feel.
+ 
+    
 - **Others**: 
     - Anonymization of Activities (Can be parameterized in the main pipeline)
     - Automatic Deployment into folders
