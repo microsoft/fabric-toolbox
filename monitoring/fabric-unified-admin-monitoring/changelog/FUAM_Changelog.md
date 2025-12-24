@@ -33,8 +33,32 @@ Date: 2025-12-23
 - **Others**: 
     - Anonymization of Activities (Can be parameterized in the main pipeline)
     - Automatic Deployment into folders
+ 
+**Screenshots from new release:**
+Enhanced Home screen of FUAM_Core_Report:
+![image](/monitoring/fabric-unified-admin-monitoring/media/changelog/changelog_2026.1.1_1.png)
+
+New Domains page:
+![image](/monitoring/fabric-unified-admin-monitoring/media/changelog/changelog_2026.1.1_4.png)
+
+New Analytical Pathway "Unused workspaces":
+![image](/monitoring/fabric-unified-admin-monitoring/media/changelog/changelog_2026.1.1_2.png)
+
+New Analytical Pathway "Access Management Report":
+![image](/monitoring/fabric-unified-admin-monitoring/media/changelog/changelog_2026.1.1_3.png)
+
+New Item level access details:
+![image](/monitoring/fabric-unified-admin-monitoring/media/changelog/changelog_2026.1.1_7.png)
+
+New mapped Datasource page (focused on semantic model connections):
+![image](/monitoring/fabric-unified-admin-monitoring/media/changelog/changelog_2026.1.1_5.png)
+
+New "Widely shared object" page:
+![image](/monitoring/fabric-unified-admin-monitoring/media/changelog/changelog_2026.1.1_6.png)
+
 
 Best Regards!
+
 Kevin & Gellért
 
 --------------------------
