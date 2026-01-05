@@ -23,7 +23,7 @@ This checklist helps you prepare your Power BI semantic model for use with Fabri
 ## AI Data Schema (Prep for AI > Simplify data schema)
 **For semantic models, Data Agent uses `Prep for AI` configuration of the semantic model. To learn more, refer to the [Prep for AI documentation](https://learn.microsoft.com/en-us/power-bi/create-reports/copilot-prepare-data-ai)**
 
-- [ ] Define the scope of your Data Agent (list of questions it should answer, user personas etc)
+- [ ] Define the scope of your Data Agent (list of questions it should/should not answer, user personas, what's out of scope, security requirements etc)
 - [ ] ⚠️Select only relevant tables, columns, and measures (very important)
 - [ ] Include all dependent objects for selected measures (OPTIONAL: use [get_measure_dependencies](https://semantic-link-labs.readthedocs.io/en/stable/sempy_labs.html#sempy_labs.get_measure_dependencies) from Semantic Link Labs if you have many dependencies)
 - [ ] Exclude helper measures and intermediate calculation objects that are not part of the Data Agent scope
