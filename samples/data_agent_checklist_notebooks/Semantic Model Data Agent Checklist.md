@@ -10,7 +10,7 @@ This checklist helps you prepare your Power BI semantic model for use with Fabri
 - [ ] Fix incorrect data types
 - [ ] Remove unnecessary columns and tables
 - [ ] Use [Performance Analyzer](https://learn.microsoft.com/en-us/power-bi/create-reports/performance-analyzer) to test query performance on measures included in the AI data schema
-- [ ] Use clear, business-friendly names for tables, columns, and measures (not TR_AMT, F_SLS, DIM_GEO_01)
+- [ ] Use clear, business-friendly names for tables, columns, and measures (not TR_AMT, CustName)
 - [ ] Add descriptions to tables, columns, and measures. The purpose of the description is to help AI understand the context, add description accordingly. Keep it concise.
 - [ ] Add synonyms in Power BI Desktop for commonly used alternative terms the users may use
 - [ ] Define [row label](https://learn.microsoft.com/en-us/power-bi/natural-language/q-and-a-tooling-intro#set-a-row-label) especially for dimension tables
@@ -41,7 +41,7 @@ This checklist helps you prepare your Power BI semantic model for use with Fabri
 - [ ] Test trigger questions for exact and semantic matching
 
 ## AI Instructions (Prep for AI > Add AI instructions)
-- [ ] Define business terminology specific to your organization (e.g. `TMS is total media spend and should be calculated using the measure total_media_spend`)
+- [ ] Define business terminology specific to your organization (e.g. `TMS is total media spend and should be calculated using the measure total_media_spend`, `YTD is year to date`)
 - [ ] Specify time period definitions (fiscal year, peak season, etc.)
 - [ ] Document metric preferences (which measure to use for common questions)
 - [ ] Clarify ambiguous date fields (Order Date vs Ship Date vs Due Date)
