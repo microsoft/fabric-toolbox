@@ -7,6 +7,7 @@ This checklist helps you prepare your Power BI semantic model for use with Fabri
 - [ ] ⚠️Use star schema with clear fact and dimension tables (avoid flat, denormalized, or pivoted data structures)
 - [ ] Run [Best Practice Analyzer](https://learn.microsoft.com/en-us/power-bi/transform-model/service-notebooks) in a Fabric notebook
 - [ ] Run [Semantic Model Memory Analyzer](https://learn.microsoft.com/en-us/power-bi/transform-model/service-notebooks#model-memory-analyzer) in a Fabric notebook
+- [ ] If using Direct Lake semantic model, perform Direct Lake specific optimizations such as V-Order. See [optimization guidance](https://learn.microsoft.com/en-us/fabric/fundamentals/direct-lake-understand-storage).
 - [ ] Fix incorrect data types
 - [ ] Remove unnecessary columns and tables
 - [ ] Use [Performance Analyzer](https://learn.microsoft.com/en-us/power-bi/create-reports/performance-analyzer) to test query performance on measures included in the AI data schema
