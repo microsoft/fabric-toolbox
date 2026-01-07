@@ -412,18 +412,30 @@ Describe 'Get-FabricWorkspace Integration' -Tag 'Integration' {
 
 **Running Tests**:
 ```powershell
-# Run all unit tests
-Invoke-Build test
+# Run all unit tests (via Sampler - clean process)
+.\build.ps1 -Tasks test
 
-# Run specific test file
+# Run tests directly with Pester (faster iteration)
 Invoke-Pester -Path tests/Unit/Get-FabricWorkspace.Tests.ps1
 
 # Run with coverage
-Invoke-Build test -Configuration @{CodeCoverageThreshold=85}
+.\build.ps1 -Tasks test
 
 # Run integration tests (requires credentials)
 Invoke-Pester -Path tests/Integration -Tag Integration
 ```
+
+**Test Results Location**:
+When running tests via `.\build.ps1 -Tasks test`, the Pester output files are saved to:
+- **Directory**: `tools\MicrosoftFabricMgmt\output\testResults\`
+- **Formats**: NUnit XML and other test result formats
+- **Usage**: Instead of parsing large console output, read these files directly for detailed test analysis
+
+This is particularly helpful when:
+- Analyzing test failures across large test suites
+- Generating test reports
+- Integrating with CI/CD systems
+- Debugging specific test results without re-running tests
 
 ### 7. Documentation Standards
 
