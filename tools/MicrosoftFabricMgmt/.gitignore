@@ -13,6 +13,9 @@
 # Build results
 [Oo]utput/
 
+# allow the module folder for now until it can be deployed to the PowerShell Gallery
+!output/module/MicrosoftFabricMgmt
+
 # MSTest test Results
 [Tt]est[Rr]esult*/
 [Bb]uild[Ll]og.*
