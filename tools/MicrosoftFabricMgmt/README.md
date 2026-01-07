@@ -11,13 +11,54 @@ The MicrosoftFabricMgmt is a collection of PowerShell scripts designed to intera
 - [License](#license)
 
 ## Installation
-To install the MicrosoftFabricMgmt, clone the repository and import the module in your PowerShell session:
-```sh
+As with all PowerShell modules, you can either clone the repository and import the module manually, or use the PowerShell Gallery to install it directly. We recommend using the PowerShell Gallery for easier updates and management.
+
+```powershell
+# Install from PowerShell Gallery
+Install-Module -Name MicrosoftFabricMgmt
+```
+
+NOTE - AT PRESENT THE MODULE IS NOT PUBLISHED TO THE POWERSHELL GALLERY. USE THE CLONE METHOD BELOW UNTIL IT IS PUBLISHED.
+
+
+IF you prefer to clone the repository, you can do so with the following commands:
+
+```powershell
+
+#Install dependency Modules if not already installed
+
+$RequiredModules = @(
+    {
+        Name = 'PSFramework'
+        MinimumVersion = '5.0.0'
+    },
+    {
+        Name = 'Az.Accounts'
+        MinimumVersion = '5.0.0'
+    }
+    {
+        Name = 'Az.Resources'
+        MinimumVersion = '6.15.1'
+    }
+    {
+        Name = 'MicrosoftPowerBIMgmt'
+        MinimumVersion =  '1.2.1111'
+    }
+)
+foreach ($module in $RequiredModules) {
+    if (-not (Get-Module -ListAvailable -Name $module.Name -MinimumVersion $module.MinimumVersion -ErrorAction SilentlyContinue)) {
+        Install-Module -Name $module.Name -MinimumVersion $module.MinimumVersion -Repository PSGallery -Force -AllowClobber
+    }
+}
+# Clone the repository
 git clone https://github.com/microsoft/fabric-toolbox.git
-Import-Module ./tools/MicrosoftFabricMgmt/MicrosoftFabricMGMT/MicrosoftFabricMgmt.psm1
+# Import the module
+Import-Module ./tools\MicrosoftFabricMgmt\output\module\MicrosoftFabricMgmt\0.5.4\MicrosoftFabricMgmt.psd1
 ```
 
 ## Prerequisites
+
+The MicrosoftFabricMgmt toolkit requires the Az.Accounts PowerShell modules to interact with Azure services. These will be automatically installed when you install the MicrosoftFabricMgmt module from the PowerShell Gallery.
 
 You can install the entire Azure PowerShell module or just the Az.Accounts module, which is required for this toolkit.
 
@@ -32,12 +73,6 @@ Install-Module -Name Az -Repository PSGallery -Force
 Install-Module -Name Az.Accounts -Force -AllowClobber
 ```
 
-> [!NOTE]
-> After install or update you can import the Az.Accounts module
-
-```powershell
-Import-Module Az.Accounts -Force
-```
 
 ## Configuration
 

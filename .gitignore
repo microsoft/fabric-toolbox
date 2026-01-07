@@ -412,3 +412,5 @@ FodyWeavers.xsd
 
 # Ignore duplicated dependabot tools/FabricDataFactoryMigrationAssistant/.github/dependabot.yml
 tools/FabricDataFactoryMigrationAssistant/.github/dependabot.yml
+tools/MicrosoftFabricMgmt/testResults.xml
+testResults.xml

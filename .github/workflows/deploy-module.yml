@@ -1,0 +1,101 @@
+on:
+  push:
+    branches:
+      - main
+    paths-ignore:
+      - CHANGELOG.md
+      - .vscode/**
+      - .github/**
+      - images/**
+      - tests/**
+      - '**.md'
+      - '**.yml'
+env:
+  buildFolderName: output
+  buildArtifactName: output
+
+permissions:
+  contents: write  # to create a release
+  id-token: write # to use the GitHub OIDC token for authentication
+  packages: write # to publish the module to the PowerShell Gallery
+  pull-requests: write # to create a pull request for the changelog
+  issues: write # to create an issue for the changelog
+  actions: write # to allow the workflow to run actions
+  checks: write # to allow the workflow to create checks
+  statuses: write # to allow the workflow to create statuses
+
+name: Deploy  Module
+# This workflow is triggered on push to the main branch and deploys the module to the PowerShell Gallery and creates a GitHub Release.
+jobs:
+  Build_Stage_Package_Module:
+    name: Package Module
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout Code
+      uses: actions/checkout@v3
+      with:
+        ref: ${{ github.head_ref }}   # checkout the correct branch name
+        fetch-depth: 0
+        token: ${{ secrets.REPO_TOKEN }}
+    - name: Install GitVersion
+      uses: gittools/actions/gitversion/setup@v0.9.15
+      with:
+        versionSpec: 5.x
+    - name: Evaluate Next Version
+      uses: gittools/actions/gitversion/execute@v0.9.15
+      with:
+        configFilePath: GitVersion.yml
+    - name: Build & Package Module
+      shell: pwsh
+      run: ./build.ps1 -ResolveDependency -tasks pack
+      env:
+        ModuleVersion: ${{ env.GITVERSION_MAJORMINORPATCH }}
+    - name: Publish Build Artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: ${{ env.buildArtifactName }}
+        path: ${{ env.buildFolderName }}/
+
+  Deploy_Stage_Deploy_Module:
+    name: Deploy Module
+    runs-on: ubuntu-latest
+    needs:
+      - Build_Stage_Package_Module
+    if: ${{ success() && (github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/')) }}
+    steps:
+    - name: Checkout Code
+      uses: actions/checkout@v3
+      with:
+        ref: ${{ github.head_ref }}   # checkout the correct branch name
+        fetch-depth: 0
+        token: ${{ secrets.REPO_TOKEN }}
+    - name: Download Build Artifact
+      uses: actions/download-artifact@v4
+      with:
+        name: ${{ env.buildArtifactName }}
+        path: ${{ env.buildFolderName }}
+    - name: Publish Release
+      shell: pwsh
+      run: ./build.ps1 -tasks publish
+      env:
+        GitHubToken: ${{ secrets.GitHubToken }}
+        GalleryApiToken: ${{ secrets.GalleryApiToken }}
+    - name: Merge main -> develop
+        # This step merges the main branch into the develop branch after a successful deployment. This ensures that the develop branch includes the tag for the latest release.
+      run: |
+        git config --local user.email "jpomfret7@gmail.com"
+        git config --local user.name "Automated Jess Did this"
+        git checkout main
+        git pull
+        git checkout develop
+        git pull
+        git merge --no-ff main -m "Auto-merge main back to dev"
+        git push
+    - name: Send Changelog PR
+      shell: pwsh
+      run: ./build.ps1 -tasks Create_ChangeLog_GitHub_PR
+      env:
+        GitHubToken: ${{ secrets.GitHubToken }}
+        GalleryApiToken: ${{ secrets.GalleryApiToken }}
+        ReleaseBranch: main
+        MainGitBranch: main
