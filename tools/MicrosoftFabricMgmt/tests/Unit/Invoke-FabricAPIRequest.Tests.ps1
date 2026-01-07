@@ -8,6 +8,8 @@ $expectedParams = @(
     "Body"
     "ContentType"
     "WaitForCompletion"
+    "MaxRetries"
+    "RetryBackoffMultiplier"
     "ProgressAction"
     "Verbose"
     "Debug"

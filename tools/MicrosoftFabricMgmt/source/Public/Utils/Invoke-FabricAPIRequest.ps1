@@ -23,14 +23,30 @@
 .PARAMETER WaitForCompletion
     If specified, waits for completion of long-running operations before returning.
 
+.PARAMETER MaxRetries
+    Maximum number of retry attempts for transient failures (429, 503, 504).
+    If not specified, uses the module's configured default (Api.RetryMaxAttempts).
+
+.PARAMETER RetryBackoffMultiplier
+    Multiplier for exponential backoff between retry attempts.
+    If not specified, uses the module's configured default (Api.RetryBackoffMultiplier).
+
 .EXAMPLE
     Invoke-FabricAPIRequest -Headers $headers -BaseURI "https://api.fabric.microsoft.com/resource" -Method Get
 
 .EXAMPLE
     Invoke-FabricAPIRequest -Headers $headers -BaseURI "https://api.fabric.microsoft.com/resource" -Method Post -Body $body -WaitForCompletion
 
+.EXAMPLE
+    Invoke-FabricAPIRequest -Headers $headers -BaseURI "https://api.fabric.microsoft.com/resource" -Method Get -MaxRetries 5 -RetryBackoffMultiplier 3
+
 .NOTES
-    Author: Tiago Balabuch
+    Enhanced with retry logic for transient failures (429 Too Many Requests, 503 Service Unavailable, 504 Gateway Timeout).
+    Respects Retry-After headers when provided by the API.
+
+    Author: Tiago Balabuch, Jess Pomfret, Rob Sewell
+    Version: 2.0.0
+    Last Updated: 2026-01-07
 #>
 function Invoke-FabricAPIRequest {
     param (
@@ -53,9 +69,23 @@ function Invoke-FabricAPIRequest {
         [string] $ContentType = "application/json; charset=utf-8",
 
         [Parameter(Mandatory = $false)]
-        [switch]$WaitForCompletion
+        [switch]$WaitForCompletion,
+
+        [Parameter(Mandatory = $false)]
+        [int]$MaxRetries,
+
+        [Parameter(Mandatory = $false)]
+        [int]$RetryBackoffMultiplier
     )
     try {
+        # Get retry configuration from PSFramework or use provided values
+        if (-not $MaxRetries) {
+            $MaxRetries = Get-PSFConfigValue -FullName 'MicrosoftFabricMgmt.Api.RetryMaxAttempts' -Fallback 3
+        }
+        if (-not $RetryBackoffMultiplier) {
+            $RetryBackoffMultiplier = Get-PSFConfigValue -FullName 'MicrosoftFabricMgmt.Api.RetryBackoffMultiplier' -Fallback 2
+        }
+
         # Initialize continuation token and results collection
         $continuationToken = $null
         $results = New-Object System.Collections.Generic.List[Object]
@@ -94,9 +124,40 @@ function Invoke-FabricAPIRequest {
                 $invokeParams.ContentType = $ContentType
             }
 
-            # Invoke the API request
-            $response = Invoke-RestMethod @invokeParams
-            Write-FabricLog -Message "API response code: $statusCode" -Level Debug
+            # Invoke the API request with retry logic for transient failures
+            $retryCount = 0
+            $shouldRetry = $true
+
+            while ($shouldRetry) {
+                $response = Invoke-RestMethod @invokeParams
+                Write-FabricLog -Message "API response code: $statusCode" -Level Debug
+
+                # Check if this is a transient failure that should be retried
+                $isTransientFailure = $statusCode -in @(429, 503, 504)
+
+                if ($isTransientFailure -and $retryCount -lt $MaxRetries) {
+                    $retryCount++
+
+                    # Check for Retry-After header
+                    $retryAfterSeconds = if ($responseHeader -and $responseHeader['Retry-After']) {
+                        [int]$responseHeader['Retry-After']
+                    } else {
+                        # Calculate exponential backoff with jitter
+                        $baseDelay = [Math]::Pow($RetryBackoffMultiplier, $retryCount)
+                        $jitter = Get-Random -Minimum 0 -Maximum 1000 -SetSeed ([int](Get-Date).Ticks)
+                        [int]($baseDelay + ($jitter / 1000))
+                    }
+
+                    Write-FabricLog -Message "Transient failure (status $statusCode). Retry $retryCount of $MaxRetries after $retryAfterSeconds seconds..." -Level Warning
+                    Start-Sleep -Seconds $retryAfterSeconds
+
+                    # Continue to next retry iteration
+                    continue
+                }
+
+                # Exit retry loop if request succeeded or max retries reached
+                $shouldRetry = $false
+            }
 
             # Handle response based on HTTP status code
             switch ($statusCode) {
