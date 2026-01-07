@@ -47,16 +47,16 @@ function Get-FabricReflexDefinition {
     )
     try {
         # Validate authentication token before proceeding.
-        Write-Message -Message "Validating authentication token..." -Level Debug
+        Write-FabricLog -Message "Validating authentication token..." -Level Debug
         Test-TokenExpired
-        Write-Message -Message "Authentication token is valid." -Level Debug
+        Write-FabricLog -Message "Authentication token is valid." -Level Debug
 
         # Construct the API endpoint URI with filtering logic
         $apiEndpointURI = "{0}/workspaces/{1}/reflexes/{2}/getDefinition" -f $FabricConfig.BaseUrl, $WorkspaceId, $ReflexId
         if ($ReflexFormat) {
             $apiEndpointURI = "{0}?format={1}" -f $apiEndpointURI, $ReflexFormat
         }
-        Write-Message -Message "API Endpoint: $apiEndpointURI" -Level Debug
+        Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
 
         # Make the API request
         $apiParams = @{
@@ -67,13 +67,13 @@ function Get-FabricReflexDefinition {
         $response = Invoke-FabricAPIRequest @apiParams
 
         # Return the API response
-        Write-Message -Message "Reflex '$ReflexId' definition retrieved successfully!" -Level Debug
+        Write-FabricLog -Message "Reflex '$ReflexId' definition retrieved successfully!" -Level Debug
         return $response
     }
     catch {
         # Capture and log error details
         $errorDetails = $_.Exception.Message
-        Write-Message -Message "Failed to retrieve Reflex. Error: $errorDetails" -Level Error
+        Write-FabricLog -Message "Failed to retrieve Reflex. Error: $errorDetails" -Level Error
     }
 
 }

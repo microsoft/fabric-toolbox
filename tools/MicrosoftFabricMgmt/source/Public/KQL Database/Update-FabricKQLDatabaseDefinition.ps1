@@ -67,9 +67,9 @@ function Update-FabricKQLDatabaseDefinition {
     )
     try {
         # Validate authentication token before proceeding.
-        Write-Message -Message "Validating authentication token..." -Level Debug
+        Write-FabricLog -Message "Validating authentication token..." -Level Debug
         Test-TokenExpired
-        Write-Message -Message "Authentication token is valid." -Level Debug
+        Write-FabricLog -Message "Authentication token is valid." -Level Debug
 
         # Construct the API endpoint URI with filtering logic
         $apiEndpointURI = "{0}/workspaces/{1}/kqlDatabases/{2}/updateDefinition" -f $FabricConfig.BaseUrl, $WorkspaceId, $KQLDatabaseId
@@ -77,7 +77,7 @@ function Update-FabricKQLDatabaseDefinition {
             # Append query parameter correctly
             $apiEndpointURI = "$apiEndpointURI?updateMetadata=true"
         }
-        Write-Message -Message "API Endpoint: $apiEndpointURI" -Level Debug
+        Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
 
         # Construct the request body
         $body = @{
@@ -98,7 +98,7 @@ function Update-FabricKQLDatabaseDefinition {
                 }
             }
             else {
-                Write-Message -Message "Invalid or empty content in KQLDatabase definition." -Level Error
+                Write-FabricLog -Message "Invalid or empty content in KQLDatabase definition." -Level Error
                 return $null
             }
         }
@@ -114,7 +114,7 @@ function Update-FabricKQLDatabaseDefinition {
                 }
             }
             else {
-                Write-Message -Message "Invalid or empty content in platform definition." -Level Error
+                Write-FabricLog -Message "Invalid or empty content in platform definition." -Level Error
                 return $null
             }
         }
@@ -132,14 +132,14 @@ function Update-FabricKQLDatabaseDefinition {
                 }
             }
             else {
-                Write-Message -Message "Invalid or empty content in schema definition." -Level Error
+                Write-FabricLog -Message "Invalid or empty content in schema definition." -Level Error
                 return $null
             }
         }
 
         # Convert the body to JSON
         $bodyJson = $body | ConvertTo-Json -Depth 10
-        Write-Message -Message "Request Body: $bodyJson" -Level Debug
+        Write-FabricLog -Message "Request Body: $bodyJson" -Level Debug
 
         # Make the API request
         $apiParams = @{
@@ -152,13 +152,13 @@ function Update-FabricKQLDatabaseDefinition {
             $response = Invoke-FabricAPIRequest @apiParams
 
             # Return the API response
-            Write-Message -Message "Successfully updated the definition for KQL Database with ID '$KQLDatabaseId' in workspace '$WorkspaceId'." -Level Info
+            Write-FabricLog -Message "Successfully updated the definition for KQL Database with ID '$KQLDatabaseId' in workspace '$WorkspaceId'." -Level Info
             return $response
         }
     }
     catch {
         # Capture and log error details
         $errorDetails = $_.Exception.Message
-        Write-Message -Message "Failed to update KQLDatabase. Error: $errorDetails" -Level Error
+        Write-FabricLog -Message "Failed to update KQLDatabase. Error: $errorDetails" -Level Error
     }
 }

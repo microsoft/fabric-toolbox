@@ -47,16 +47,16 @@ function Get-FabricEventhouseDefinition {
     )
     try {
         # Validate authentication token before proceeding.
-        Write-Message -Message "Validating authentication token..." -Level Debug
+        Write-FabricLog -Message "Validating authentication token..." -Level Debug
         Test-TokenExpired
-        Write-Message -Message "Authentication token is valid." -Level Debug
+        Write-FabricLog -Message "Authentication token is valid." -Level Debug
 
         # Construct the API endpoint URI with filtering logic
         $apiEndpointURI = "{0}/workspaces/{1}/eventhouses/{2}/getDefinition" -f $FabricConfig.BaseUrl, $WorkspaceId, $EventhouseId
         if ($EventhouseFormat) {
             $apiEndpointURI = "{0}?format={1}" -f $apiEndpointURI, $EventhouseFormat
         }
-        Write-Message -Message "API Endpoint: $apiEndpointURI" -Level Debug
+        Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
 
         # Make the API request
         $apiParams = @{
@@ -67,13 +67,13 @@ function Get-FabricEventhouseDefinition {
         $response = Invoke-FabricAPIRequest @apiParams
 
         # Return the API response
-        Write-Message -Message "Eventhouse '$EventhouseId' definition retrieved successfully!" -Level Debug
+        Write-FabricLog -Message "Eventhouse '$EventhouseId' definition retrieved successfully!" -Level Debug
         return $response
     }
     catch {
         # Capture and log error details
         $errorDetails = $_.Exception.Message
-        Write-Message -Message "Failed to retrieve Eventhouse. Error: $errorDetails" -Level Error
+        Write-FabricLog -Message "Failed to retrieve Eventhouse. Error: $errorDetails" -Level Error
     }
 
 }

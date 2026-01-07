@@ -21,13 +21,13 @@ function Get-FabricWorkspaceTenantSettingOverrides {
     param ( )
     try {
         # Validate authentication token before proceeding.
-        Write-Message -Message "Validating authentication token..." -Level Debug
+        Write-FabricLog -Message "Validating authentication token..." -Level Debug
         Test-TokenExpired
-        Write-Message -Message "Authentication token is valid." -Level Debug
+        Write-FabricLog -Message "Authentication token is valid." -Level Debug
 
         # Construct the API endpoint URI
         $apiEndpointURI = "{0}/admin/workspaces/delegatedTenantSettingOverrides" -f $FabricConfig.BaseUrl
-        Write-Message -Message "Constructed API Endpoint: $apiEndpointURI" -Level Debug
+        Write-FabricLog -Message "Constructed API Endpoint: $apiEndpointURI" -Level Debug
 
         # Make the API request
         # Make the API request
@@ -40,18 +40,18 @@ function Get-FabricWorkspaceTenantSettingOverrides {
 
         # Immediately handle empty response
         if (-not $dataItems) {
-            Write-Message -Message "No data returned from the API." -Level Warning
+            Write-FabricLog -Message "No data returned from the API." -Level Warning
             return $null
         }
         else {
             # Return all workspace tenant setting overrides
-            Write-Message -Message "Successfully retrieved workspaces tenant setting overrides." -Level Debug
+            Write-FabricLog -Message "Successfully retrieved workspaces tenant setting overrides." -Level Debug
             return $dataItems
         }
     }
     catch {
         # Capture and log error details
         $errorDetails = $_.Exception.Message
-        Write-Message -Message "Error retrieving workspaces tenant setting overrides: $errorDetails" -Level Error
+        Write-FabricLog -Message "Error retrieving workspaces tenant setting overrides: $errorDetails" -Level Error
     }
 }

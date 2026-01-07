@@ -35,13 +35,13 @@ function Remove-FabricWarehouseSnapshot {
     )
     try {
         # Validate authentication token before proceeding.
-        Write-Message -Message "Validating token..." -Level Debug
+        Write-FabricLog -Message "Validating token..." -Level Debug
         Test-TokenExpired
-        Write-Message -Message "Token validation completed." -Level Debug
+        Write-FabricLog -Message "Token validation completed." -Level Debug
 
         # Construct the API endpoint URI
         $apiEndpointURI = "{0}/workspaces/{1}/warehousesnapshots/{2}" -f $FabricConfig.BaseUrl, $WorkspaceId, $WarehouseSnapshotId
-        Write-Message -Message "API Endpoint: $apiEndpointURI" -Level Debug
+        Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
 
         # Make the API request
         $apiParams = @{
@@ -54,7 +54,7 @@ function Remove-FabricWarehouseSnapshot {
             $response = Invoke-FabricAPIRequest @apiParams
 
             # Return the API response
-            Write-Message -Message "Warehouse Snapshot '$WarehouseSnapshotId' deleted successfully from workspace '$WorkspaceId'." -Level Info
+            Write-FabricLog -Message "Warehouse Snapshot '$WarehouseSnapshotId' deleted successfully from workspace '$WorkspaceId'." -Level Info
             return $response
         }
 
@@ -62,6 +62,6 @@ function Remove-FabricWarehouseSnapshot {
     catch {
         # Capture and log error details
         $errorDetails = $_.Exception.Message
-        Write-Message -Message "Failed to delete Warehouse Snapshot '$WarehouseSnapshotId' from workspace '$WorkspaceId'. Error: $errorDetails" -Level Error
+        Write-FabricLog -Message "Failed to delete Warehouse Snapshot '$WarehouseSnapshotId' from workspace '$WorkspaceId'. Error: $errorDetails" -Level Error
     }
 }

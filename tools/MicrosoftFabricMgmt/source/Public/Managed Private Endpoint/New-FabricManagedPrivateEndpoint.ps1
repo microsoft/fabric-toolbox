@@ -61,24 +61,24 @@ function New-FabricManagedPrivateEndpoint {
         # Additional ManagedPrivateEndpointName validation
 
         if ($ManagedPrivateEndpointName.Length -gt 64) {
-            Write-Message -Message "Managed Private Endpoint name exceeds 64 characters." -Level Error
+            Write-FabricLog -Message "Managed Private Endpoint name exceeds 64 characters." -Level Error
             return $null
         }
         if ($requestMessage) {
             if ($requestMessage.Length -gt 140) {
-                Write-Message -Message "Request message exceeds 140 characters." -Level Error
+                Write-FabricLog -Message "Request message exceeds 140 characters." -Level Error
                 return $null
             }
         }
 
         # Validate authentication token before proceeding.
-        Write-Message -Message "Validating authentication token..." -Level Debug
+        Write-FabricLog -Message "Validating authentication token..." -Level Debug
         Test-TokenExpired
-        Write-Message -Message "Authentication token is valid." -Level Debug
+        Write-FabricLog -Message "Authentication token is valid." -Level Debug
 
         # Construct the API endpoint URI
         $apiEndpointURI = "{0}/workspaces/{1}/managedPrivateEndpoints" -f $FabricConfig.BaseUrl, $WorkspaceId
-        Write-Message -Message "API Endpoint: $apiEndpointURI" -Level Debug
+        Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
 
         # Construct the request body
         $body = @{
@@ -93,7 +93,7 @@ function New-FabricManagedPrivateEndpoint {
 
         # Convert the body to JSON format
         $bodyJson = $body | ConvertTo-Json -Depth 4
-        Write-Message -Message "Request Body: $bodyJson" -Level Debug
+        Write-FabricLog -Message "Request Body: $bodyJson" -Level Debug
 
         # Make the API request
         $apiParams = @{
@@ -106,13 +106,13 @@ function New-FabricManagedPrivateEndpoint {
             $response = Invoke-FabricAPIRequest @apiParams
 
             # Return the API response
-            Write-Message -Message "Managed Private Endpoint created successfully!" -Level Info
+            Write-FabricLog -Message "Managed Private Endpoint created successfully!" -Level Info
             return $response
         }
     }
     catch {
         # Capture and log error details
         $errorDetails = $_.Exception.Message
-        Write-Message -Message "Failed to create Managed Private Endpoint. Error: $errorDetails" -Level Error
+        Write-FabricLog -Message "Failed to create Managed Private Endpoint. Error: $errorDetails" -Level Error
     }
 }

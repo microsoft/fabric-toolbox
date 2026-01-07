@@ -34,9 +34,9 @@ function Get-FabricMirroredDatabaseTableStatus {
     )
     try {
         # Validate authentication token before proceeding.
-        Write-Message -Message "Validating authentication token..." -Level Debug
+        Write-FabricLog -Message "Validating authentication token..." -Level Debug
         Test-TokenExpired
-        Write-Message -Message "Authentication token is valid." -Level Debug
+        Write-FabricLog -Message "Authentication token is valid." -Level Debug
 
         # Construct the API endpoint URI
         $apiEndpointURI = "{0}/workspaces/{1}/mirroredDatabases/{2}/getTablesMirroringStatus" -f $FabricConfig.BaseUrl, $WorkspaceId, $MirroredDatabaseId
@@ -51,17 +51,17 @@ function Get-FabricMirroredDatabaseTableStatus {
 
         # Immediately handle empty response
         if (-not $dataItems) {
-            Write-Message -Message "No data returned from the API." -Level Warning
+            Write-FabricLog -Message "No data returned from the API." -Level Warning
             return $null
         }
         else {
-            Write-Message -Message "Item(s) found. Data retrieved successfully!" -Level Debug
+            Write-FabricLog -Message "Item(s) found. Data retrieved successfully!" -Level Debug
             return $dataItems
         }
     }
     catch {
         # Capture and log error details
         $errorDetails = $_.Exception.Message
-        Write-Message -Message "Failed to retrieve MirroredDatabase. Error: $errorDetails" -Level Error
+        Write-FabricLog -Message "Failed to retrieve MirroredDatabase. Error: $errorDetails" -Level Error
     }
 }

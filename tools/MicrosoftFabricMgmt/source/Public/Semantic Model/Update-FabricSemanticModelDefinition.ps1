@@ -43,9 +43,9 @@ function Update-FabricSemanticModelDefinition {
     )
     try {
         # Validate authentication token before proceeding.
-        Write-Message -Message "Validating authentication token..." -Level Debug
+        Write-FabricLog -Message "Validating authentication token..." -Level Debug
         Test-TokenExpired
-        Write-Message -Message "Authentication token is valid." -Level Debug
+        Write-FabricLog -Message "Authentication token is valid." -Level Debug
 
         # Construct the API endpoint URI with filtering logic
         $apiEndpointURI = "{0}/workspaces/{1}/SemanticModels/{2}/updateDefinition" -f $FabricConfig.BaseUrl, $WorkspaceId, $SemanticModelId
@@ -64,7 +64,7 @@ function Update-FabricSemanticModelDefinition {
         foreach ($part in $jsonObjectParts.parts) {
             if ($part.path -eq ".platform") {
                 $hasPlatformFile = $true
-                Write-Message -Message "Platform File: $hasPlatformFile" -Level Debug
+                Write-FabricLog -Message "Platform File: $hasPlatformFile" -Level Debug
             }
         }
 
@@ -72,11 +72,11 @@ function Update-FabricSemanticModelDefinition {
         if ($hasPlatformFile -eq $true) {
             $apiEndpointURI = "?updateMetadata=true" -f $apiEndpointURI
         }
-        Write-Message -Message "API Endpoint: $apiEndpointURI" -Level Debug
+        Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
 
         # Convert the body to JSON
         $bodyJson = $body | ConvertTo-Json -Depth 10
-        Write-Message -Message "Request Body: $bodyJson" -Level Debug
+        Write-FabricLog -Message "Request Body: $bodyJson" -Level Debug
 
         # Make the API request
         if ($PSCmdlet.ShouldProcess("Semantic Model definition '$SemanticModelId' in workspace '$WorkspaceId'", "Update")) {
@@ -89,13 +89,13 @@ function Update-FabricSemanticModelDefinition {
             $response = Invoke-FabricAPIRequest @apiParams
 
             # Return the API response
-            Write-Message -Message "Successfully updated the definition for Semantic Model with ID '$SemanticModelId' in workspace '$WorkspaceId'." -Level Info
+            Write-FabricLog -Message "Successfully updated the definition for Semantic Model with ID '$SemanticModelId' in workspace '$WorkspaceId'." -Level Info
             return $response
         }
     }
     catch {
         # Capture and log error details
         $errorDetails = $_.Exception.Message
-        Write-Message -Message "Failed to update SemanticModel. Error: $errorDetails" -Level Error
+        Write-FabricLog -Message "Failed to update SemanticModel. Error: $errorDetails" -Level Error
     }
 }

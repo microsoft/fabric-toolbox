@@ -49,13 +49,13 @@ function Update-FabricApacheAirflowJob {
     )
     try {
         # Ensure token validity
-        Write-Message -Message "Validating token..." -Level Debug
+        Write-FabricLog -Message "Validating token..." -Level Debug
         Test-TokenExpired
-        Write-Message -Message "Token validation completed." -Level Debug
+        Write-FabricLog -Message "Token validation completed." -Level Debug
 
         # Construct the API endpoint URI
         $apiEndpointURI = "{0}/workspaces/{1}/ApacheAirflowJobs/{2}" -f $FabricConfig.BaseUrl, $WorkspaceId, $ApacheAirflowJobId
-        Write-Message -Message "API Endpoint: $apiEndpointURI" -Level Debug
+        Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
 
         # Construct the request body
         $body = @{
@@ -68,7 +68,7 @@ function Update-FabricApacheAirflowJob {
 
         # Convert the body to JSON
         $bodyJson = $body | ConvertTo-Json
-        Write-Message -Message "Request Body: $bodyJson" -Level Debug
+        Write-FabricLog -Message "Request Body: $bodyJson" -Level Debug
 
         if ($PSCmdlet.ShouldProcess("Apache Airflow Job '$ApacheAirflowJobId' in workspace '$WorkspaceId'", "Update properties")) {
             # Make the API request
@@ -81,13 +81,13 @@ function Update-FabricApacheAirflowJob {
             $response = Invoke-FabricAPIRequest @apiParams
 
             # Return the API response
-            Write-Message -Message "Apache Airflow Job '$ApacheAirflowJobName' updated successfully!" -Level Info
+            Write-FabricLog -Message "Apache Airflow Job '$ApacheAirflowJobName' updated successfully!" -Level Info
             return $response
         }
     }
     catch {
         # Handle and log errors
         $errorDetails = $_.Exception.Message
-        Write-Message -Message "Failed to update Apache Airflow Job. Error: $errorDetails" -Level Error
+        Write-FabricLog -Message "Failed to update Apache Airflow Job. Error: $errorDetails" -Level Error
     }
 }

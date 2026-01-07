@@ -27,13 +27,13 @@ function Get-FabricLongRunningOperationResult {
         [string]$operationId
     )
     # Validate authentication token before proceeding.
-    Write-Message -Message "Validating authentication token..." -Level Debug
+    Write-FabricLog -Message "Validating authentication token..." -Level Debug
     Test-TokenExpired
-    Write-Message -Message "Authentication token is valid." -Level Debug
+    Write-FabricLog -Message "Authentication token is valid." -Level Debug
 
     # Construct the API endpoint URI
     $apiEndpointURI = "https://api.fabric.microsoft.com/v1/operations/{0}/result" -f $operationId
-    Write-Message -Message "API Endpoint: $apiEndpointURI" -Level Debug
+    Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
 
     try {
         # Make the API request
@@ -45,13 +45,13 @@ function Get-FabricLongRunningOperationResult {
         $response = Invoke-FabricAPIRequest @apiParams
 
         # Return the API response
-        Write-Message -Message "LRO result return: $($response)" -Level Debug
+        Write-FabricLog -Message "LRO result return: $($response)" -Level Debug
         return $response
     }
     catch {
         # Capture and log error details
         $errorDetails = $_.Exception.Message
-        Write-Message -Message "An error occurred while returning the operation result: $errorDetails" -Level Error
+        Write-FabricLog -Message "An error occurred while returning the operation result: $errorDetails" -Level Error
         throw
     }
 }

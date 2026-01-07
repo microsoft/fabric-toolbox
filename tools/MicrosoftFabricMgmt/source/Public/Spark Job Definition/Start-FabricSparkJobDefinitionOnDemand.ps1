@@ -49,13 +49,13 @@ function Start-FabricSparkJobDefinitionOnDemand {
     )
     try {
         # Validate authentication token before proceeding.
-        Write-Message -Message "Validating authentication token..." -Level Debug
+        Write-FabricLog -Message "Validating authentication token..." -Level Debug
         Test-TokenExpired
-        Write-Message -Message "Authentication token is valid." -Level Debug
+        Write-FabricLog -Message "Authentication token is valid." -Level Debug
 
         # Construct the API endpoint URI
         $apiEndpointURI = "{0}/workspaces/{1}/SparkJobDefinitions/{2}/jobs/instances?jobType={3}" -f $FabricConfig.BaseUrl, $WorkspaceId , $SparkJobDefinitionId, $JobType
-        Write-Message -Message "API Endpoint: $apiEndpointURI" -Level Debug
+        Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
 
         # Step 4: Make the API request
         if ($PSCmdlet.ShouldProcess("Spark Job Definition '$SparkJobDefinitionId' in workspace '$WorkspaceId'", "Start")) {
@@ -71,22 +71,22 @@ function Start-FabricSparkJobDefinitionOnDemand {
             $response = Invoke-FabricAPIRequest @apiParams
 
             if ($WaitForCompletion) {
-                Write-Message -Message "On-demand Spark Job Definition (ID: '$SparkJobDefinitionId') has completed." -Level Info
-                Write-Message -Message "Job details: $($response | ConvertTo-Json -Depth 5)" -Level Debug
+                Write-FabricLog -Message "On-demand Spark Job Definition (ID: '$SparkJobDefinitionId') has completed." -Level Info
+                Write-FabricLog -Message "Job details: $($response | ConvertTo-Json -Depth 5)" -Level Debug
             }
             else {
-                Write-Message -Message "Successfully started on-demand Spark Job Definition (ID: '$SparkJobDefinitionId') in workspace '$WorkspaceId'. and is running asynchronously." -Level Info
-                Write-Message -Message "You can monitor the job status using the job ID from the response." -Level Debug
+                Write-FabricLog -Message "Successfully started on-demand Spark Job Definition (ID: '$SparkJobDefinitionId') in workspace '$WorkspaceId'. and is running asynchronously." -Level Info
+                Write-FabricLog -Message "You can monitor the job status using the job ID from the response." -Level Debug
             }
 
             # Return the API response
-            #Write-Message -Message "Successfully started on-demand Spark Job Definition (ID: '$SparkJobDefinitionId') in workspace '$WorkspaceId'." -Level Info
+            #Write-FabricLog -Message "Successfully started on-demand Spark Job Definition (ID: '$SparkJobDefinitionId') in workspace '$WorkspaceId'." -Level Info
             return $response
         }
     }
     catch {
         # Capture and log error details
         $errorDetails = $_.Exception.Message
-        Write-Message -Message "Failed to start Spark Job Definition on demand. Error: $errorDetails" -Level Error
+        Write-FabricLog -Message "Failed to start Spark Job Definition on demand. Error: $errorDetails" -Level Error
     }
 }

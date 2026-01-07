@@ -47,7 +47,7 @@ function Convert-FromBase64 {
     catch {
         # Capture and log error details
         $errorDetails = $_.Exception.Message
-        Write-Message -Message "An error occurred while decoding from Base64: $errorDetails" -Level Error
+        Write-FabricLog -Message "An error occurred while decoding from Base64: $errorDetails" -Level Error
         throw "An error occurred while decoding from Base64: $_"
     }
 }

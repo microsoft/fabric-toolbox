@@ -70,9 +70,9 @@ function Update-FabricCapacityTenantSettingOverrides {
 
     try {
         # Validate authentication token before proceeding.
-        Write-Message -Message "Validating authentication token..." -Level Debug
+        Write-FabricLog -Message "Validating authentication token..." -Level Debug
         Test-TokenExpired
-        Write-Message -Message "Authentication token is valid." -Level Debug
+        Write-FabricLog -Message "Authentication token is valid." -Level Debug
 
         # Validate Security Groups if provided
         # This uses a .NET HashSet to accelerate lookup even more, especially useful in large collections.
@@ -97,7 +97,7 @@ function Update-FabricCapacityTenantSettingOverrides {
 
         # Construct API endpoint URL
         $apiEndpointURI = "{0}/admin/capacities/{1}/delegatedTenantSettingOverrides" -f $FabricConfig.BaseUrl, $CapacityId
-        Write-Message -Message "Constructed API Endpoint: $apiEndpointURI" -Level Debug
+        Write-FabricLog -Message "Constructed API Endpoint: $apiEndpointURI" -Level Debug
 
         # Construct request body
         $body = @{
@@ -119,7 +119,7 @@ function Update-FabricCapacityTenantSettingOverrides {
 
         # Convert body to JSON
         $bodyJson = $body | ConvertTo-Json -Depth 4
-        Write-Message -Message "Request Body: $bodyJson" -Level Debug
+        Write-FabricLog -Message "Request Body: $bodyJson" -Level Debug
 
         # Make the API request
         if ($PSCmdlet.ShouldProcess("capacity '$CapacityId' setting '$SettingTitle'", "Update delegated tenant setting overrides")) {
@@ -130,13 +130,13 @@ function Update-FabricCapacityTenantSettingOverrides {
                 -Body $bodyJson
 
             # Return the API response
-            Write-Message -Message "Successfully updated capacity tenant setting overrides for CapacityId: $CapacityId and SettingTitle: $SettingTitle." -Level Info
+            Write-FabricLog -Message "Successfully updated capacity tenant setting overrides for CapacityId: $CapacityId and SettingTitle: $SettingTitle." -Level Info
             return $response
         }
     }
     catch {
         # Capture and log error details
         $errorDetails = $_.Exception.Message
-        Write-Message -Message "Error updating tenant settings: $errorDetails" -Level Error
+        Write-FabricLog -Message "Error updating tenant settings: $errorDetails" -Level Error
     }
 }

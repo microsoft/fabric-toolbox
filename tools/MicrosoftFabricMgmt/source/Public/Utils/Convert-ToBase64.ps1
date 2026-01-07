@@ -45,25 +45,25 @@ function Convert-ToBase64 {
         # Warn if file size exceeds threshold (e.g., 50MB)
         $fileInfo = Get-Item -Path $filePath
         if ($fileInfo.Length -gt 50MB) {
-            Write-Message -Message "Warning: File size exceeds 50MB. This may cause memory issues." -Level Warning
+            Write-FabricLog -Message "Warning: File size exceeds 50MB. This may cause memory issues." -Level Warning
         }
 
         # Reading all the bytes from the file
-        Write-Message -Message "Reading all the bytes from the file specified: $filePath" -Level Debug
+        Write-FabricLog -Message "Reading all the bytes from the file specified: $filePath" -Level Debug
         $fileBytes = [System.IO.File]::ReadAllBytes($filePath)
 
         # Convert the byte array to Base64 string
-        Write-Message -Message "Convert the byte array to Base64 string" -Level Debug
+        Write-FabricLog -Message "Convert the byte array to Base64 string" -Level Debug
         $base64String = [Convert]::ToBase64String($fileBytes)
 
         # Return the encoded string
-        Write-Message -Message "Return the encoded string for the file: $filePath" -Level Debug
+        Write-FabricLog -Message "Return the encoded string for the file: $filePath" -Level Debug
         return $base64String
     }
     catch {
         # Capture and log error details
         $errorDetails = $_.Exception.Message
-        Write-Message -Message "An error occurred while encoding to Base64: $errorDetails" -Level Error
+        Write-FabricLog -Message "An error occurred while encoding to Base64: $errorDetails" -Level Error
         throw "An error occurred while encoding to Base64: $_"
     }
 }

@@ -75,7 +75,7 @@ function Invoke-FabricAPIRequest {
                 $apiEndpointURI = "$BaseURI$separator" + "continuationToken=$encodedToken"
             }
 
-            Write-Message -Message "Calling API: $apiEndpointURI" -Level Debug
+            Write-FabricLog -Message "Calling API: $apiEndpointURI" -Level Debug
 
             # Prepare parameters for Invoke-RestMethod
             $invokeParams = @{
@@ -96,12 +96,12 @@ function Invoke-FabricAPIRequest {
 
             # Invoke the API request
             $response = Invoke-RestMethod @invokeParams
-            Write-Message -Message "API response code: $statusCode" -Level Debug
+            Write-FabricLog -Message "API response code: $statusCode" -Level Debug
 
             # Handle response based on HTTP status code
             switch ($statusCode) {
                 200 {
-                    Write-Message -Message "API call succeeded." -Level Debug
+                    Write-FabricLog -Message "API call succeeded." -Level Debug
                     [string]$etag = $responseHeader["ETag"]
 
                     if ($response) {
@@ -131,17 +131,17 @@ function Invoke-FabricAPIRequest {
                         $continuationToken = $propertyNames -contains 'continuationToken' ? $response.continuationToken : $null
                     }
                     else {
-                        Write-Message -Message "No data in response" -Level Debug
+                        Write-FabricLog -Message "No data in response" -Level Debug
                         $continuationToken = $null
                     }
                 }
                 201 {
-                    Write-Message -Message "Resource created successfully." -Level Debug
+                    Write-FabricLog -Message "Resource created successfully." -Level Debug
                     return $response
                 }
                 202 {
                     # Handle long-running operations (LROs)
-                    Write-Message -Message "Request accepted. The operation is being processed." -Level Info
+                    Write-FabricLog -Message "Request accepted. The operation is being processed." -Level Info
                     [string]$operationId = $responseHeader["x-ms-operation-id"]
                     [string]$location = $responseHeader["Location"]
                     $retryAfter = $responseHeader["Retry-After"]
@@ -149,17 +149,17 @@ function Invoke-FabricAPIRequest {
 
                     # If the response contains an operation ID or Location header, handle as a long-running operation (LRO)
                     if ($operationId -or $location) {
-                        Write-Message -Message "Operation ID: '$operationId', Location: '$location'" -Level Debug
+                        Write-FabricLog -Message "Operation ID: '$operationId', Location: '$location'" -Level Debug
 
                         # If waiting for completion is requested, poll the operation status until completion
                         if ($WaitForCompletion.IsPresent) {
-                            Write-Message -Message "The operation is running synchronously. Proceeding with long-running operation." -Level Debug
+                            Write-FabricLog -Message "The operation is running synchronously. Proceeding with long-running operation." -Level Debug
                             $operationStatus = Get-FabricLongRunningOperation -operationId $operationId -location $location
-                            Write-Message -Message "Long Running Operation status: $operationStatus" -Level Debug
+                            Write-FabricLog -Message "Long Running Operation status: $operationStatus" -Level Debug
 
                             # If the operation succeeded and results are expected, fetch the result
                             if ($operationStatus.status -eq "Succeeded") {
-                                Write-Message -Message "Operation succeeded. Fetching result." -Level Debug
+                                Write-FabricLog -Message "Operation succeeded. Fetching result." -Level Debug
                                 $operationResult = Get-FabricLongRunningOperationResult -operationId $operationId
                                 # Add result data to the results collection, handling 'definition' property if present
                                 if ($operationResult.PSObject.Properties.Name -contains 'definition') {
@@ -184,7 +184,7 @@ function Invoke-FabricAPIRequest {
                         }
                         else {
                             # If not waiting for completion, return operation tracking information
-                            Write-Message -Message "The operation is running asynchronously." -Level Info
+                            Write-FabricLog -Message "The operation is running asynchronously." -Level Info
                             return [PSCustomObject]@{
                                 OperationId = $operationId
                                 Location    = $location
@@ -214,7 +214,7 @@ function Invoke-FabricAPIRequest {
         return , $results.ToArray()
     }
     catch {
-        Write-Message -Message "Invoke Fabric API error. Error: $($_.Exception.Message)" -Level Error
+        Write-FabricLog -Message "Invoke Fabric API error. Error: $($_.Exception.Message)" -Level Error
         throw
     }
 }

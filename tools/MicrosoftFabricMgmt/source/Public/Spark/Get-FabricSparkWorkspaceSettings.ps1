@@ -29,13 +29,13 @@ function Get-FabricSparkWorkspaceSettings {
     )
     try {
         # Validate authentication token before proceeding.
-        Write-Message -Message "Validating authentication token..." -Level Debug
+        Write-FabricLog -Message "Validating authentication token..." -Level Debug
         Test-TokenExpired
-        Write-Message -Message "Authentication token is valid." -Level Debug
+        Write-FabricLog -Message "Authentication token is valid." -Level Debug
 
         # Construct the API endpoint URI
         $apiEndpointURI = "{0}/workspaces/{1}/spark/settings" -f $FabricConfig.BaseUrl, $WorkspaceId
-        Write-Message -Message "API Endpoint: $apiEndpointURI" -Level Debug
+        Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
 
         # Make the API request
         # Make the API request
@@ -48,18 +48,18 @@ function Get-FabricSparkWorkspaceSettings {
 
         # Immediately handle empty response
         if (-not $dataItems) {
-            Write-Message -Message "No data returned from the API." -Level Warning
+            Write-FabricLog -Message "No data returned from the API." -Level Warning
             return $null
         }
         else {
             # Return all Spark Settings
-            Write-Message -Message " Returning all Workspace Spark Settings." -Level Debug
+            Write-FabricLog -Message " Returning all Workspace Spark Settings." -Level Debug
             return $dataItems
         }
     }
     catch {
         # Capture and log error details
         $errorDetails = $_.Exception.Message
-        Write-Message -Message "Failed to retrieve SparkSettings. Error: $errorDetails" -Level Error
+        Write-FabricLog -Message "Failed to retrieve SparkSettings. Error: $errorDetails" -Level Error
     }
 }

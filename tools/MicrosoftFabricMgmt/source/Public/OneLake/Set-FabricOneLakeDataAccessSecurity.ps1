@@ -90,9 +90,9 @@ function Set-FabricOneLakeDataAccessSecurity {
     )
     try {
         # Validate authentication token before proceeding.
-        Write-Message -Message "Validating authentication token..." -Level Debug
+        Write-FabricLog -Message "Validating authentication token..." -Level Debug
         Test-TokenExpired
-        Write-Message -Message "Authentication token is valid." -Level Debug
+        Write-FabricLog -Message "Authentication token is valid." -Level Debug
 
         # Construct the API endpoint URI
         $apiEndpointURI = "{0}/workspaces/{1}/items/{2}/dataAccessRoles" -f $FabricConfig.BaseUrl, $WorkspaceId, $ItemId
@@ -100,7 +100,7 @@ function Set-FabricOneLakeDataAccessSecurity {
             $apiEndpointURI += "?dryRun=true"
         }
 
-        Write-Message -Message "API Endpoint: $apiEndpointURI" -Level Debug
+        Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
 
         # Build decision rule
         $decisionRule = @{
@@ -152,7 +152,7 @@ function Set-FabricOneLakeDataAccessSecurity {
 
         # Convert the body to JSON format
         $bodyJson = $body | ConvertTo-Json -Depth 10
-        Write-Message -Message "Request Body: $bodyJson" -Level Debug
+        Write-FabricLog -Message "Request Body: $bodyJson" -Level Debug
 
         # Make the API request when confirmed
         $target = "Item '$ItemId' in workspace '$WorkspaceId'"
@@ -168,10 +168,10 @@ function Set-FabricOneLakeDataAccessSecurity {
 
             # Return the API response
             if ($DryRun.IsPresent) {
-                Write-Message -Message "Dry run completed. No changes were made." -Level Info
+                Write-FabricLog -Message "Dry run completed. No changes were made." -Level Info
             }
             else {
-                Write-Message -Message "OneLake Data Access Security set up successfully!" -Level Info
+                Write-FabricLog -Message "OneLake Data Access Security set up successfully!" -Level Info
             }
 
             return $response
@@ -180,6 +180,6 @@ function Set-FabricOneLakeDataAccessSecurity {
     catch {
         # Capture and log error details
         $errorDetails = $_.Exception.Message
-        Write-Message -Message "Failed to set up OneLake Data Access Security. Error: $errorDetails" -Level Error
+        Write-FabricLog -Message "Failed to set up OneLake Data Access Security. Error: $errorDetails" -Level Error
     }
 }

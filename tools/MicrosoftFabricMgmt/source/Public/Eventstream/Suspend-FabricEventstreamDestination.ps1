@@ -42,13 +42,13 @@ function Suspend-FabricEventstreamDestination {
     )
     try {
         # Validate authentication token before proceeding.
-        Write-Message -Message "Validating authentication token..." -Level Debug
+        Write-FabricLog -Message "Validating authentication token..." -Level Debug
         Test-TokenExpired
-        Write-Message -Message "Authentication token is valid." -Level Debug
+        Write-FabricLog -Message "Authentication token is valid." -Level Debug
 
         # Construct the API endpoint URI
         $apiEndpointURI = "{0}/workspaces/{1}/eventstreams/{2}/destinations/{3}/pause" -f $FabricConfig.BaseUrl, $WorkspaceId, $EventstreamId, $DestinationId
-        Write-Message -Message "API Endpoint: $apiEndpointURI" -Level Debug
+        Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
 
         if ($PSCmdlet.ShouldProcess($DestinationId, "Pause Eventstream destination in workspace '$WorkspaceId' (Eventstream '$EventstreamId')")) {
             # Make the API request
@@ -60,13 +60,13 @@ function Suspend-FabricEventstreamDestination {
             $response = Invoke-FabricAPIRequest @apiParams
 
             # Return the API response
-            Write-Message -Message "Eventstream '$EventstreamId' destination '$DestinationId' paused successfully!" -Level Info
+            Write-FabricLog -Message "Eventstream '$EventstreamId' destination '$DestinationId' paused successfully!" -Level Info
             return $response
         }
     }
     catch {
         # Capture and log error details
         $errorDetails = $_.Exception.Message
-        Write-Message -Message "Failed to pause Eventstream Destination '$DestinationId'. Error: $errorDetails" -Level Error
+        Write-FabricLog -Message "Failed to pause Eventstream Destination '$DestinationId'. Error: $errorDetails" -Level Error
     }
 }

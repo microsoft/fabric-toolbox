@@ -59,9 +59,9 @@ function Update-FabricKQLDashboardDefinition {
     )
     try {
         # Validate authentication token before proceeding.
-        Write-Message -Message "Validating authentication token..." -Level Debug
+        Write-FabricLog -Message "Validating authentication token..." -Level Debug
         Test-TokenExpired
-        Write-Message -Message "Authentication token is valid." -Level Debug
+        Write-FabricLog -Message "Authentication token is valid." -Level Debug
 
         # Construct the API endpoint URI with filtering logic
         $apiEndpointURI = "{0}/workspaces/{1}/KQLDashboards/{2}/updateDefinition" -f $FabricConfig.BaseUrl, $WorkspaceId, $KQLDashboardId
@@ -69,7 +69,7 @@ function Update-FabricKQLDashboardDefinition {
             # Append the query parameter correctly
             $apiEndpointURI = "$apiEndpointURI?updateMetadata=true"
         }
-        Write-Message -Message "API Endpoint: $apiEndpointURI" -Level Debug
+        Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
 
         # Construct the request body
         $body = @{
@@ -91,7 +91,7 @@ function Update-FabricKQLDashboardDefinition {
                 }
             }
             else {
-                Write-Message -Message "Invalid or empty content in KQLDashboard definition." -Level Error
+                Write-FabricLog -Message "Invalid or empty content in KQLDashboard definition." -Level Error
                 return $null
             }
         }
@@ -107,14 +107,14 @@ function Update-FabricKQLDashboardDefinition {
                 }
             }
             else {
-                Write-Message -Message "Invalid or empty content in platform definition." -Level Error
+                Write-FabricLog -Message "Invalid or empty content in platform definition." -Level Error
                 return $null
             }
         }
 
         # Convert the body to JSON
         $bodyJson = $body | ConvertTo-Json -Depth 10
-        Write-Message -Message "Request Body: $bodyJson" -Level Debug
+        Write-FabricLog -Message "Request Body: $bodyJson" -Level Debug
 
         # Make the API request
         $apiParams = @{
@@ -127,13 +127,13 @@ function Update-FabricKQLDashboardDefinition {
             $response = Invoke-FabricAPIRequest @apiParams
 
             # Return the API response
-            Write-Message -Message "Successfully updated the definition for KQL Dashboard with ID '$KQLDashboardId' in workspace '$WorkspaceId'." -Level Info
+            Write-FabricLog -Message "Successfully updated the definition for KQL Dashboard with ID '$KQLDashboardId' in workspace '$WorkspaceId'." -Level Info
             return $response
         }
     }
     catch {
         # Capture and log error details
         $errorDetails = $_.Exception.Message
-        Write-Message -Message "Failed to update KQLDashboard. Error: $errorDetails" -Level Error
+        Write-FabricLog -Message "Failed to update KQLDashboard. Error: $errorDetails" -Level Error
     }
 }

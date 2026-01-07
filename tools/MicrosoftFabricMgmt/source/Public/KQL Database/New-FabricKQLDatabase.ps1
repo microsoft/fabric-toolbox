@@ -1,4 +1,4 @@
-﻿<#
+<#
 .SYNOPSIS
 Creates a new KQL Database in a workspace.
 
@@ -124,13 +124,13 @@ function New-FabricKQLDatabase {
     )
     try {
         # Validate authentication token before proceeding.
-        Write-Message -Message "Validating authentication token..." -Level Debug
+        Write-FabricLog -Message "Validating authentication token..." -Level Debug
         Test-TokenExpired
-        Write-Message -Message "Authentication token is valid." -Level Debug
+        Write-FabricLog -Message "Authentication token is valid." -Level Debug
 
         # Construct the API endpoint URI
         $apiEndpointURI = "{0}/workspaces/{1}/kqlDatabases" -f $FabricConfig.BaseUrl, $WorkspaceId
-        Write-Message -Message "API Endpoint: $apiEndpointURI" -Level Debug
+        Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
 
         # Construct the request body
         $body = @{
@@ -159,7 +159,7 @@ function New-FabricKQLDatabase {
                 }
             }
             else {
-                Write-Message -Message "Invalid or empty content in KQLDatabase definition." -Level Error
+                Write-FabricLog -Message "Invalid or empty content in KQLDatabase definition." -Level Error
                 return $null
             }
 
@@ -176,7 +176,7 @@ function New-FabricKQLDatabase {
                     }
                 }
                 else {
-                    Write-Message -Message "Invalid or empty content in platform definition." -Level Error
+                    Write-FabricLog -Message "Invalid or empty content in platform definition." -Level Error
                     return $null
                 }
 
@@ -194,7 +194,7 @@ function New-FabricKQLDatabase {
                     }
                 }
                 else {
-                    Write-Message -Message "Invalid or empty content in schema definition." -Level Error
+                    Write-FabricLog -Message "Invalid or empty content in schema definition." -Level Error
                     return $null
                 }
             }
@@ -203,34 +203,34 @@ function New-FabricKQLDatabase {
         else {
             if ($KQLDatabaseType -eq "Shortcut") {
                 if (-not $parentEventhouseId) {
-                    Write-Message -Message "Error: 'parentEventhouseId' is required for Shortcut type." -Level Error
+                    Write-FabricLog -Message "Error: 'parentEventhouseId' is required for Shortcut type." -Level Error
                     return $null
                 }
                 if (-not ($KQLInvitationToken -or $KQLSourceClusterUri -or $KQLSourceDatabaseName)) {
-                    Write-Message -Message "Error: Provide either 'KQLInvitationToken', 'KQLSourceClusterUri', or 'KQLSourceDatabaseName'." -Level Error
+                    Write-FabricLog -Message "Error: Provide either 'KQLInvitationToken', 'KQLSourceClusterUri', or 'KQLSourceDatabaseName'." -Level Error
                     return $null
                 }
                 if ($KQLInvitationToken) {
-                    Write-Message -Message "Info: 'KQLInvitationToken' is provided." -Level Warning
+                    Write-FabricLog -Message "Info: 'KQLInvitationToken' is provided." -Level Warning
 
                     if ($KQLSourceClusterUri) {
-                        Write-Message -Message "Warning: 'KQLSourceClusterUri' is ignored when 'KQLInvitationToken' is provided." -Level Warning
+                        Write-FabricLog -Message "Warning: 'KQLSourceClusterUri' is ignored when 'KQLInvitationToken' is provided." -Level Warning
                         #$KQLSourceClusterUri = $null
                     }
                     if ($KQLSourceDatabaseName) {
-                        Write-Message -Message "Warning: 'KQLSourceDatabaseName' is ignored when 'KQLInvitationToken' is provided." -Level Warning
+                        Write-FabricLog -Message "Warning: 'KQLSourceDatabaseName' is ignored when 'KQLInvitationToken' is provided." -Level Warning
                         #$KQLSourceDatabaseName = $null
                     }
                 }
                 if ($KQLSourceClusterUri -and -not $KQLSourceDatabaseName) {
-                    Write-Message -Message "Error: 'KQLSourceDatabaseName' is required when 'KQLSourceClusterUri' is provided." -Level Error
+                    Write-FabricLog -Message "Error: 'KQLSourceDatabaseName' is required when 'KQLSourceClusterUri' is provided." -Level Error
                     return $null
                 }
             }
 
             # Validate ReadWrite type database
             if ($KQLDatabaseType -eq "ReadWrite" -and -not $parentEventhouseId) {
-                Write-Message -Message "Error: 'parentEventhouseId' is required for ReadWrite type." -Level Error
+                Write-FabricLog -Message "Error: 'parentEventhouseId' is required for ReadWrite type." -Level Error
                 return $null
             }
 
@@ -255,7 +255,7 @@ function New-FabricKQLDatabase {
 
         # Convert the body to JSON
         $bodyJson = $body | ConvertTo-Json -Depth 10
-        Write-Message -Message "Request Body: $bodyJson" -Level Debug
+        Write-FabricLog -Message "Request Body: $bodyJson" -Level Debug
 
         # Make the API request
         $apiParams = @{
@@ -268,13 +268,13 @@ function New-FabricKQLDatabase {
             $response = Invoke-FabricAPIRequest @apiParams
 
             # Return the API response
-            Write-Message -Message "KQLDatabase '$KQLDatabaseName' created successfully!" -Level Info
+            Write-FabricLog -Message "KQLDatabase '$KQLDatabaseName' created successfully!" -Level Info
             return $response
         }
     }
     catch {
         # Capture and log error details
         $errorDetails = $_.Exception.Message
-        Write-Message -Message "Failed to create KQLDatabase. Error: $errorDetails" -Level Error
+        Write-FabricLog -Message "Failed to create KQLDatabase. Error: $errorDetails" -Level Error
     }
 }

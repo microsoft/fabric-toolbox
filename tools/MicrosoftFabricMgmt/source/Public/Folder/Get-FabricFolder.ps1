@@ -55,38 +55,38 @@ function Get-FabricFolder {
     try {
         # Validate input parameters
         if ($RootFolderId -and $FolderName) {
-            Write-Message -Message "Specify only one parameter: either 'RootFolderId' or 'FolderName'." -Level Error
+            Write-FabricLog -Message "Specify only one parameter: either 'RootFolderId' or 'FolderName'." -Level Error
             return $null
         }
 
         # Additional FolderName validation
         if ($FolderName) {
             if ($FolderName.Length -gt 255) {
-                Write-Message -Message "Folder name exceeds 255 characters." -Level Error
+                Write-FabricLog -Message "Folder name exceeds 255 characters." -Level Error
                 return $null
             }
             if ($FolderName -match '^[\s]|\s$') {
-                Write-Message -Message "Folder name cannot have leading or trailing spaces." -Level Error
+                Write-FabricLog -Message "Folder name cannot have leading or trailing spaces." -Level Error
                 return $null
             }
             if ($FolderName -match '[~"#.&*:<>?\/{|}]') {
-                Write-Message -Message "Folder name contains invalid characters: ~ # . & * : < > ? / { | }\" -Level Error
+                Write-FabricLog -Message "Folder name contains invalid characters: ~ # . & * : < > ? / { | }\" -Level Error
                 return $null
             }
             if ($FolderName -match '^\$recycle\.bin$|^recycled$|^recycler$') {
-                Write-Message -Message "Folder name cannot be a system-reserved name." -Level Error
+                Write-FabricLog -Message "Folder name cannot be a system-reserved name." -Level Error
                 return $null
             }
             if ($FolderName -match '[\x00-\x1F]') {
-                Write-Message -Message "Folder name contains control characters." -Level Error
+                Write-FabricLog -Message "Folder name contains control characters." -Level Error
                 return $null
             }
         }
 
         # Validate authentication token before proceeding.
-        Write-Message -Message "Validating authentication token..." -Level Debug
+        Write-FabricLog -Message "Validating authentication token..." -Level Debug
         Test-TokenExpired
-        Write-Message -Message "Authentication token is valid." -Level Debug
+        Write-FabricLog -Message "Authentication token is valid." -Level Debug
 
         # Construct the API endpoint URI
         $queryParams = @()
@@ -95,7 +95,7 @@ function Get-FabricFolder {
         }
         $queryParams += "recursive=$($Recursive.IsPresent -and $Recursive ? 'True' : 'False')"
         $apiEndpointURI = "{0}/workspaces/{1}/folders?{2}" -f $FabricConfig.BaseUrl, $WorkspaceId, ($queryParams -join '&')
-        Write-Message -Message "API Endpoint: $apiEndpointURI" -Level Debug
+        Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
 
         # Make the API request
         $apiParams = @{
@@ -107,7 +107,7 @@ function Get-FabricFolder {
 
         # Immediately handle empty response
         if (-not $dataItems) {
-            Write-Message -Message "No data returned from the API." -Level Warning
+            Write-FabricLog -Message "No data returned from the API." -Level Warning
             return $null
         }
 
@@ -116,23 +116,23 @@ function Get-FabricFolder {
             $matchedItems = $dataItems.Where({ $_.DisplayName -eq $FolderName }, 'First')
         }
         else {
-            Write-Message -Message "No filter provided. Returning all items." -Level Debug
+            Write-FabricLog -Message "No filter provided. Returning all items." -Level Debug
             $matchedItems = $dataItems
         }
 
         # Handle results
         if ($matchedItems) {
-            Write-Message -Message "Item(s) found matching the specified criteria." -Level Debug
+            Write-FabricLog -Message "Item(s) found matching the specified criteria." -Level Debug
             return $matchedItems
         }
         else {
-            Write-Message -Message "No item found matching the provided criteria." -Level Warning
+            Write-FabricLog -Message "No item found matching the provided criteria." -Level Warning
             return $null
         }
     }
     catch {
         # Capture and log error details
         $errorDetails = $_.Exception.Message
-        Write-Message -Message "Failed to retrieve Warehouse. Error: $errorDetails" -Level Error
+        Write-FabricLog -Message "Failed to retrieve Warehouse. Error: $errorDetails" -Level Error
     }
 }

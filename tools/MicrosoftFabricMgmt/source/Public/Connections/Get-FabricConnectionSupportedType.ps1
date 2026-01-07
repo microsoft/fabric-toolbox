@@ -42,9 +42,9 @@ function Get-FabricConnectionSupportedType {
 
     try {
         # Validate authentication token before proceeding.
-        Write-Message -Message "Validating authentication token..." -Level Debug
+        Write-FabricLog -Message "Validating authentication token..." -Level Debug
         Test-TokenExpired
-        Write-Message -Message "Authentication token is valid." -Level Debug
+        Write-FabricLog -Message "Authentication token is valid." -Level Debug
 
         # Construct the API endpoint URI
         $apiEndpointURI = "{0}/connections/supportedConnectionTypes" -f $FabricConfig.BaseUrl
@@ -52,11 +52,11 @@ function Get-FabricConnectionSupportedType {
         # Build query parameters dynamically
         $queryParams = @()
         if ($GatewayId) {
-            Write-Message -Message "Filtering by GatewayId: $GatewayId" -Level Debug
+            Write-FabricLog -Message "Filtering by GatewayId: $GatewayId" -Level Debug
             $queryParams += "gatewayId=$GatewayId"
         }
         if ($ShowAllCreationMethods) {
-            Write-Message -Message "Including all creation methods." -Level Debug
+            Write-FabricLog -Message "Including all creation methods." -Level Debug
             $queryParams += "showAllCreationMethods=true"
         }
         if ($queryParams.Count -gt 0) {
@@ -73,17 +73,17 @@ function Get-FabricConnectionSupportedType {
 
         # Immediately handle empty response
         if (-not $dataItems) {
-            Write-Message -Message "No data returned from the API." -Level Warning
+            Write-FabricLog -Message "No data returned from the API." -Level Warning
             return $null
         }
         else {
-            Write-Message -Message "Item(s) found matching the specified criteria." -Level Debug
+            Write-FabricLog -Message "Item(s) found matching the specified criteria." -Level Debug
             return $dataItems
         }
     }
     catch {
         # Capture and log error details
         $errorDetails = $_.Exception.Message
-        Write-Message -Message "Failed to retrieve Connection. Error: $errorDetails" -Level Error
+        Write-FabricLog -Message "Failed to retrieve Connection. Error: $errorDetails" -Level Error
     }
 }

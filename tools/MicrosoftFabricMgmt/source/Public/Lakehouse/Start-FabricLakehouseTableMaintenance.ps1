@@ -87,9 +87,9 @@ function Start-FabricLakehouseTableMaintenance {
     )
     try {
         # Validate authentication token before proceeding.
-        Write-Message -Message "Validating authentication token..." -Level Debug
+        Write-FabricLog -Message "Validating authentication token..." -Level Debug
         Test-TokenExpired
-        Write-Message -Message "Authentication token is valid." -Level Debug
+        Write-FabricLog -Message "Authentication token is valid." -Level Debug
 
         # Validate input parameters
         $lakehouse = Get-FabricLakehouse -WorkspaceId $WorkspaceId -LakehouseId $LakehouseId
@@ -100,7 +100,7 @@ function Start-FabricLakehouseTableMaintenance {
 
         # Construct the API endpoint URI
         $apiEndpointURI = "{0}/workspaces/{1}/lakehouses/{2}/jobs/instances?jobType={3}" -f $FabricConfig.BaseUrl, $WorkspaceId , $LakehouseId, $JobType
-        Write-Message -Message "API Endpoint: $apiEndpointURI" -Level Debug
+        Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
 
         # Construct the request body
         $body = @{
@@ -118,11 +118,11 @@ function Start-FabricLakehouseTableMaintenance {
 
 
         if ($ColumnsZOrderBy) {
-            Write-Message -Message "Original ColumnsZOrderBy input: $ColumnsZOrderBy" -Level Debug
+            Write-FabricLog -Message "Original ColumnsZOrderBy input: $ColumnsZOrderBy" -Level Debug
 
             # If it's a single string like "id,nome", split it into array
             if ($ColumnsZOrderBy.Count -eq 1 -and $ColumnsZOrderBy[0] -is [string] -and $ColumnsZOrderBy[0] -match ",") {
-                Write-Message -Message "Detected comma-separated string in ColumnsZOrderBy. Splitting it..." -Level Debug
+                Write-FabricLog -Message "Detected comma-separated string in ColumnsZOrderBy. Splitting it..." -Level Debug
                 $ColumnsZOrderBy = $ColumnsZOrderBy[0] -split "\s*,\s*"
             }
 
@@ -131,10 +131,10 @@ function Start-FabricLakehouseTableMaintenance {
 
             if ($ColumnsZOrderBy.Count -gt 0) {
                 $body.executionData.optimizeSettings.zOrderBy = $ColumnsZOrderBy
-                Write-Message -Message "Final ColumnsZOrderBy: $($ColumnsZOrderBy -join ', ')" -Level Debug
+                Write-FabricLog -Message "Final ColumnsZOrderBy: $($ColumnsZOrderBy -join ', ')" -Level Debug
             }
             else {
-                Write-Message -Message "ColumnsZOrderBy was provided but resulted in an empty array after processing." -Level Warning
+                Write-FabricLog -Message "ColumnsZOrderBy was provided but resulted in an empty array after processing." -Level Warning
             }
         }
 
@@ -151,7 +151,7 @@ function Start-FabricLakehouseTableMaintenance {
 
         # Convert the body to JSON
         $bodyJson = $body | ConvertTo-Json -Depth 10
-        Write-Message -Message "Request Body: $bodyJson" -Level Debug
+        Write-FabricLog -Message "Request Body: $bodyJson" -Level Debug
 
         # Make the API request
         $apiParams = @{
@@ -168,12 +168,12 @@ function Start-FabricLakehouseTableMaintenance {
             $response = Invoke-FabricAPIRequest @apiParams
 
             if ($WaitForCompletion) {
-                Write-Message -Message "Table maintenance job for Lakehouse '$LakehouseId' has completed." -Level Info
-                Write-Message -Message "Job details: $($response | ConvertTo-Json -Depth 5)" -Level Debug
+                Write-FabricLog -Message "Table maintenance job for Lakehouse '$LakehouseId' has completed." -Level Info
+                Write-FabricLog -Message "Job details: $($response | ConvertTo-Json -Depth 5)" -Level Debug
             }
             else {
-                Write-Message -Message "Table maintenance job for Lakehouse '$LakehouseId' has been started and is running asynchronously." -Level Info
-                Write-Message -Message "You can monitor the job status using the job ID from the response." -Level Debug
+                Write-FabricLog -Message "Table maintenance job for Lakehouse '$LakehouseId' has been started and is running asynchronously." -Level Info
+                Write-FabricLog -Message "You can monitor the job status using the job ID from the response." -Level Debug
             }
             # Return the API response
             return $response
@@ -182,6 +182,6 @@ function Start-FabricLakehouseTableMaintenance {
     catch {
         # Capture and log error details
         $errorDetails = $_.Exception.Message
-        Write-Message -Message "Failed to start table maintenance job. Error: $errorDetails" -Level Error
+        Write-FabricLog -Message "Failed to start table maintenance job. Error: $errorDetails" -Level Error
     }
 }

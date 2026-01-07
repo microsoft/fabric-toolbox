@@ -95,13 +95,13 @@ function Update-FabricSparkSettings {
 
     try {
         # Step 1: Ensure token validity
-        Write-Message -Message "Validating token..." -Level Debug
+        Write-FabricLog -Message "Validating token..." -Level Debug
         Test-TokenExpired
-        Write-Message -Message "Token validation completed." -Level Debug
+        Write-FabricLog -Message "Token validation completed." -Level Debug
 
         # Step 2: Construct the API URL
         $apiEndpointUrl = "{0}/workspaces/{1}/spark/settings" -f $FabricConfig.BaseUrl, $WorkspaceId, $SparkSettingsId
-        Write-Message -Message "API Endpoint: $apiEndpointUrl" -Level Debug
+        Write-FabricLog -Message "API Endpoint: $apiEndpointUrl" -Level Debug
 
         # Step 3: Construct the request body
         # Construct the request body with optional properties
@@ -134,7 +134,7 @@ function Update-FabricSparkSettings {
                 }
             }
             } else {
-                Write-Message -Message "Both 'defaultPoolName' and 'defaultPoolType' must be provided together." -Level Error
+                Write-FabricLog -Message "Both 'defaultPoolName' and 'defaultPoolType' must be provided together." -Level Error
                 throw
             }
         }
@@ -152,7 +152,7 @@ function Update-FabricSparkSettings {
 
         # Convert the body to JSON
         $bodyJson = $body | ConvertTo-Json
-        Write-Message -Message "Request Body: $bodyJson" -Level Debug
+        Write-FabricLog -Message "Request Body: $bodyJson" -Level Debug
 
         # Step 4: Make the API request
         if ($PSCmdlet.ShouldProcess("Spark settings '$SparkSettingsName' in workspace '$WorkspaceId'", "Update")) {
@@ -170,21 +170,21 @@ function Update-FabricSparkSettings {
 
             # Step 5: Validate the response code
             if ($statusCode -ne 200) {
-                Write-Message -Message "Unexpected response code: $statusCode from the API." -Level Error
-                Write-Message -Message "Error: $($response.message)" -Level Error
-                Write-Message -Message "Error Details: $($response.moreDetails)" -Level Error
-                Write-Message "Error Code: $($response.errorCode)" -Level Error
+                Write-FabricLog -Message "Unexpected response code: $statusCode from the API." -Level Error
+                Write-FabricLog -Message "Error: $($response.message)" -Level Error
+                Write-FabricLog -Message "Error Details: $($response.moreDetails)" -Level Error
+                Write-FabricLog "Error Code: $($response.errorCode)" -Level Error
                 return $null
             }
 
             # Step 6: Handle results
-            Write-Message -Message "Spark Custom Pool '$SparkSettingsName' updated successfully!" -Level Info
+            Write-FabricLog -Message "Spark Custom Pool '$SparkSettingsName' updated successfully!" -Level Info
             return $response
         }
     }
     catch {
         # Step 7: Handle and log errors
         $errorDetails = $_.Exception.Message
-        Write-Message -Message "Failed to update SparkSettings. Error: $errorDetails" -Level Error
+        Write-FabricLog -Message "Failed to update SparkSettings. Error: $errorDetails" -Level Error
     }
 }

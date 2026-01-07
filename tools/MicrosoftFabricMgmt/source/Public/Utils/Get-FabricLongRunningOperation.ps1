@@ -59,9 +59,9 @@ function Get-FabricLongRunningOperation {
     }
 
     # Validate authentication token before proceeding.
-    Write-Message -Message "Validating authentication token..." -Level Debug
+    Write-FabricLog -Message "Validating authentication token..." -Level Debug
     Test-TokenExpired
-    Write-Message -Message "Authentication token is valid." -Level Debug
+    Write-FabricLog -Message "Authentication token is valid." -Level Debug
 
     # Construct the API endpoint URI
     $apiEndpointURI = if ($operationId) {
@@ -70,7 +70,7 @@ function Get-FabricLongRunningOperation {
     else {
         $location
     }
-    Write-Message -Message "API Endpoint: $apiEndpointURI" -Level Debug
+    Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
 
     $startTime = Get-Date
 
@@ -93,7 +93,7 @@ function Get-FabricLongRunningOperation {
             $operation = Invoke-FabricAPIRequest @apiParams
 
             # Log status for debugging
-            Write-Message -Message "Operation Status: $($operation.status)" -Level Debug
+            Write-FabricLog -Message "Operation Status: $($operation.status)" -Level Debug
 
         } while ($operation.status -notin @("Succeeded", "Completed", "Failed"))
 
@@ -103,7 +103,7 @@ function Get-FabricLongRunningOperation {
     catch {
         # Capture and log error details
         $errorDetails = $_.Exception.Message
-        Write-Message -Message "An error occurred while checking the long running operation: $errorDetails" -Level Error
+        Write-FabricLog -Message "An error occurred while checking the long running operation: $errorDetails" -Level Error
         throw
     }
 }

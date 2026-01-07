@@ -42,13 +42,13 @@ function Remove-FabricSharingLinks {
         }
 
         # Validate authentication token before proceeding.
-        Write-Message -Message "Validating authentication token..." -Level Debug
+        Write-FabricLog -Message "Validating authentication token..." -Level Debug
         Test-TokenExpired
-        Write-Message -Message "Authentication token is valid." -Level Debug
+        Write-FabricLog -Message "Authentication token is valid." -Level Debug
 
         # Construct the API endpoint URI
         $apiEndpointURI = "{0}/admin/items/removeAllSharingLinks" -f $FabricConfig.BaseUrl, $WorkspaceId
-        Write-Message -Message "API Endpoint: $apiEndpointURI" -Level Debug
+        Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
 
         # Construct the request body
         $body = @{
@@ -57,7 +57,7 @@ function Remove-FabricSharingLinks {
 
         # Convert the body to JSON
         $bodyJson = $body | ConvertTo-Json -Depth 2
-        Write-Message -Message "Request Body: $bodyJson" -Level Debug
+        Write-FabricLog -Message "Request Body: $bodyJson" -Level Debug
 
         # Make the API request
         if ($PSCmdlet.ShouldProcess("all items with sharing link type '$sharingLinkType'", "Remove all sharing links")) {
@@ -68,13 +68,13 @@ function Remove-FabricSharingLinks {
                 -Body $bodyJson
 
             # Return the API response
-            Write-Message -Message "All sharing links have been removed successfully from the specified items." -Level Info
+            Write-FabricLog -Message "All sharing links have been removed successfully from the specified items." -Level Info
             return $response
         }
     }
     catch {
         # Capture and log error details
         $errorDetails = $_.Exception.Message
-        Write-Message -Message "Failed to remove all sharing links. Error details: $errorDetails" -Level Error
+        Write-FabricLog -Message "Failed to remove all sharing links. Error details: $errorDetails" -Level Error
     }
 }

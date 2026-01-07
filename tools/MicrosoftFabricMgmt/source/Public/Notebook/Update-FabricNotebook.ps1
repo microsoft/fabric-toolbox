@@ -56,13 +56,13 @@ function Update-FabricNotebook {
     )
     try {
         # Validate authentication token before proceeding.
-        Write-Message -Message "Validating authentication token..." -Level Debug
+        Write-FabricLog -Message "Validating authentication token..." -Level Debug
         Test-TokenExpired
-        Write-Message -Message "Authentication token is valid." -Level Debug
+        Write-FabricLog -Message "Authentication token is valid." -Level Debug
 
         # Construct the API endpoint URI
         $apiEndpointURI = "{0}/workspaces/{1}/notebooks/{2}" -f $FabricConfig.BaseUrl, $WorkspaceId, $NotebookId
-        Write-Message -Message "API Endpoint: $apiEndpointURI" -Level Debug
+        Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
 
         # Construct the request body
         $body = @{
@@ -75,7 +75,7 @@ function Update-FabricNotebook {
 
         # Convert the body to JSON
         $bodyJson = $body | ConvertTo-Json
-        Write-Message -Message "Request Body: $bodyJson" -Level Debug
+        Write-FabricLog -Message "Request Body: $bodyJson" -Level Debug
 
        # Make the API request when confirmed
         $target = "Notebook '$NotebookId' in workspace '$WorkspaceId'"
@@ -90,13 +90,13 @@ function Update-FabricNotebook {
             $response = Invoke-FabricAPIRequest @apiParams
 
             # Return the API response
-            Write-Message -Message "Notebook '$NotebookName' updated successfully!" -Level Info
+            Write-FabricLog -Message "Notebook '$NotebookName' updated successfully!" -Level Info
             return $response
         }
     }
     catch {
         # Capture and log error details
         $errorDetails = $_.Exception.Message
-        Write-Message -Message "Failed to update notebook. Error: $errorDetails" -Level Error
+        Write-FabricLog -Message "Failed to update notebook. Error: $errorDetails" -Level Error
     }
 }

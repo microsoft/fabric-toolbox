@@ -33,9 +33,9 @@ function Get-FabricCapacityTenantSettingOverrides {
     )
     try {
         # Validate authentication token before proceeding.
-        Write-Message -Message "Validating authentication token..." -Level Debug
+        Write-FabricLog -Message "Validating authentication token..." -Level Debug
         Test-TokenExpired
-        Write-Message -Message "Authentication token is valid." -Level Debug
+        Write-FabricLog -Message "Authentication token is valid." -Level Debug
 
         # Construct the API endpoint URI with filtering logic
         if ($capacityId) {
@@ -46,7 +46,7 @@ function Get-FabricCapacityTenantSettingOverrides {
             $apiEndpointURI = "{0}/admin/capacities/delegatedTenantSettingOverrides" -f $FabricConfig.BaseUrl
             $message = "Successfully retrieved capacity tenant setting overrides."
         }
-        Write-Message -Message "API Endpoint: $apiEndpointURI" -Level Debug
+        Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
 
         # Make the API request
         # Make the API request
@@ -59,18 +59,18 @@ function Get-FabricCapacityTenantSettingOverrides {
 
         # Immediately handle empty response
         if (-not $dataItems) {
-            Write-Message -Message "No data returned from the API." -Level Warning
+            Write-FabricLog -Message "No data returned from the API." -Level Warning
             return $null
         }
         else {
             # Return all tenant setting overrides
-            Write-Message -Message $message -Level Debug
+            Write-FabricLog -Message $message -Level Debug
             return $dataItems
         }
     }
     catch {
         # Capture and log error details
         $errorDetails = $_.Exception.Message
-        Write-Message -Message "Error retrieving capacity tenant setting overrides: $errorDetails" -Level Error
+        Write-FabricLog -Message "Error retrieving capacity tenant setting overrides: $errorDetails" -Level Error
     }
 }

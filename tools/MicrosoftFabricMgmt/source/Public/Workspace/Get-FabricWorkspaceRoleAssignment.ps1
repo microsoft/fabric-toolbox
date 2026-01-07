@@ -42,13 +42,13 @@ function Get-FabricWorkspaceRoleAssignment {
 
     try {
         # Validate authentication token before proceeding.
-        Write-Message -Message "Validating authentication token..." -Level Debug
+        Write-FabricLog -Message "Validating authentication token..." -Level Debug
         Test-TokenExpired
-        Write-Message -Message "Authentication token is valid." -Level Debug
+        Write-FabricLog -Message "Authentication token is valid." -Level Debug
 
         # Construct the API endpoint URI
         $apiEndpointURI = "{0}/workspaces/{1}/roleAssignments" -f $FabricConfig.BaseUrl, $WorkspaceId
-        Write-Message -Message "API Endpoint: $apiEndpointURI" -Level Debug
+        Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
 
         # Make the API request
         $apiParams = @{
@@ -60,7 +60,7 @@ function Get-FabricWorkspaceRoleAssignment {
 
         # Immediately handle empty response
         if (-not $dataItems) {
-            Write-Message -Message "No data returned from the API." -Level Warning
+            Write-FabricLog -Message "No data returned from the API." -Level Warning
             return $null
         }
 
@@ -69,13 +69,13 @@ function Get-FabricWorkspaceRoleAssignment {
             $matchedItems = $dataItems.Where({ $_.Id -eq $WorkspaceRoleAssignmentId })
         }
         else {
-            Write-Message -Message "No filter provided. Returning all items." -Level Debug
+            Write-FabricLog -Message "No filter provided. Returning all items." -Level Debug
             $matchedItems = $dataItems
         }
 
         # Handle results
         if ($matchedItems) {
-            Write-Message -Message "Found $($matchedItems.Count) role assignments for WorkspaceId '$WorkspaceId'." -Level Debug
+            Write-FabricLog -Message "Found $($matchedItems.Count) role assignments for WorkspaceId '$WorkspaceId'." -Level Debug
 
             # Transform data into custom objects
             $customResults = foreach ($obj in $matchedItems) {
@@ -93,11 +93,11 @@ function Get-FabricWorkspaceRoleAssignment {
         }
         else {
             if ($WorkspaceRoleAssignmentId) {
-                Write-Message -Message "No role assignment found with ID '$WorkspaceRoleAssignmentId' for WorkspaceId '$WorkspaceId'." -Level Warning
+                Write-FabricLog -Message "No role assignment found with ID '$WorkspaceRoleAssignmentId' for WorkspaceId '$WorkspaceId'." -Level Warning
                 return $null
             }
             else {
-                Write-Message -Message "No role assignments found for WorkspaceId '$WorkspaceId'." -Level Warning
+                Write-FabricLog -Message "No role assignments found for WorkspaceId '$WorkspaceId'." -Level Warning
                 return $null
             }
         }
@@ -105,6 +105,6 @@ function Get-FabricWorkspaceRoleAssignment {
     catch {
         # Capture and log error details
         $errorDetails = $_.Exception.Message
-        Write-Message -Message "Failed to retrieve role assignments for WorkspaceId '$WorkspaceId'. Error: $errorDetails" -Level Error
+        Write-FabricLog -Message "Failed to retrieve role assignments for WorkspaceId '$WorkspaceId'. Error: $errorDetails" -Level Error
     }
 }

@@ -48,19 +48,19 @@ function Get-FabricManagedPrivateEndpoint {
     try {
         # Validate input parameters
         if ($ManagedPrivateEndpointId -and $ManagedPrivateEndpointName) {
-            Write-Message -Message "Specify only one parameter: either 'ManagedPrivateEndpointId' or 'ManagedPrivateEndpointName'." -Level Error
+            Write-FabricLog -Message "Specify only one parameter: either 'ManagedPrivateEndpointId' or 'ManagedPrivateEndpointName'." -Level Error
             return $null
         }
 
         if ($ManagedPrivateEndpointName.Length -gt 64) {
-            Write-Message -Message "Managed Private Endpoint name exceeds 64 characters." -Level Error
+            Write-FabricLog -Message "Managed Private Endpoint name exceeds 64 characters." -Level Error
             return $null
         }
 
         # Validate authentication token before proceeding.
-        Write-Message -Message "Validating authentication token..." -Level Debug
+        Write-FabricLog -Message "Validating authentication token..." -Level Debug
         Test-TokenExpired
-        Write-Message -Message "Authentication token is valid." -Level Debug
+        Write-FabricLog -Message "Authentication token is valid." -Level Debug
 
         # Construct the API endpoint URI
         $apiEndpointURI = "{0}/workspaces/{1}/managedPrivateEndpoints" -f $FabricConfig.BaseUrl, $WorkspaceId
@@ -75,7 +75,7 @@ function Get-FabricManagedPrivateEndpoint {
 
         # Immediately handle empty response
         if (-not $dataItems) {
-            Write-Message -Message "No data returned from the API." -Level Warning
+            Write-FabricLog -Message "No data returned from the API." -Level Warning
             return $null
         }
 
@@ -87,23 +87,23 @@ function Get-FabricManagedPrivateEndpoint {
             $matchedItems = $dataItems.Where({ $_.name -eq $ManagedPrivateEndpointName }, 'First')
         }
         else {
-            Write-Message -Message "No filter provided. Returning all items." -Level Debug
+            Write-FabricLog -Message "No filter provided. Returning all items." -Level Debug
             $matchedItems = $dataItems
         }
 
         # Handle results
         if ($matchedItems) {
-            Write-Message -Message "Item(s) found matching the specified criteria." -Level Debug
+            Write-FabricLog -Message "Item(s) found matching the specified criteria." -Level Debug
             return $matchedItems
         }
         else {
-            Write-Message -Message "No item found matching the provided criteria." -Level Warning
+            Write-FabricLog -Message "No item found matching the provided criteria." -Level Warning
             return $null
         }
     }
     catch {
         # Capture and log error details
         $errorDetails = $_.Exception.Message
-        Write-Message -Message "Failed to retrieve Managed Private Endpoints. Error: $errorDetails" -Level Error
+        Write-FabricLog -Message "Failed to retrieve Managed Private Endpoints. Error: $errorDetails" -Level Error
     }
 }

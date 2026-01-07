@@ -63,13 +63,13 @@ function Get-FabricOneLakeDataAccessSecurity {
     [string]$RoleName    )
     try {
         # Validate authentication token before proceeding.
-        Write-Message -Message "Validating authentication token..." -Level Debug
+        Write-FabricLog -Message "Validating authentication token..." -Level Debug
         Test-TokenExpired
-        Write-Message -Message "Authentication token is valid." -Level Debug
+        Write-FabricLog -Message "Authentication token is valid." -Level Debug
 
         # Construct the API endpoint URI
         $apiEndpointURI = "{0}/workspaces/{1}/items/{2}/dataAccessRoles" -f $FabricConfig.BaseUrl, $WorkspaceId, $ItemId
-        Write-Message -Message "API Endpoint: $apiEndpointURI" -Level Debug
+        Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
 
         # Make the API request
         $apiParams = @{
@@ -81,7 +81,7 @@ function Get-FabricOneLakeDataAccessSecurity {
 
         # Optionally filter by RoleName if provided
         if ($RoleName) {
-            Write-Message -Message "Filtering roles by name '$RoleName'." -Level Debug
+            Write-FabricLog -Message "Filtering roles by name '$RoleName'." -Level Debug
             try {
                 # Support both array and envelope shapes
                 if ($response -is [System.Collections.IEnumerable]) {
@@ -92,7 +92,7 @@ function Get-FabricOneLakeDataAccessSecurity {
                 }
             }
             catch {
-                Write-Message -Message "Unable to filter response by RoleName due to unexpected shape." -Level Debug
+                Write-FabricLog -Message "Unable to filter response by RoleName due to unexpected shape." -Level Debug
             }
         }
 
@@ -101,6 +101,6 @@ function Get-FabricOneLakeDataAccessSecurity {
     catch {
         # Capture and log error details
         $errorDetails = $_.Exception.Message
-        Write-Message -Message "Failed to get OneLake Data Access Security. Error: $errorDetails" -Level Error
+        Write-FabricLog -Message "Failed to get OneLake Data Access Security. Error: $errorDetails" -Level Error
     }
 }

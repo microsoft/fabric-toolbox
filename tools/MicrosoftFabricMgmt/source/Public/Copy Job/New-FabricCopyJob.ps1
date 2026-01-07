@@ -56,13 +56,13 @@ function New-FabricCopyJob {
     )
     try {
         # Validate authentication token before proceeding.
-        Write-Message -Message "Validating authentication token..." -Level Debug
+        Write-FabricLog -Message "Validating authentication token..." -Level Debug
         Test-TokenExpired
-        Write-Message -Message "Authentication token is valid." -Level Debug
+        Write-FabricLog -Message "Authentication token is valid." -Level Debug
 
         # Construct the API endpoint URL
         $apiEndpointURI = "{0}/workspaces/{1}/copyJobs" -f $FabricConfig.BaseUrl, $WorkspaceId
-        Write-Message -Message "API Endpoint: $apiEndpointURI" -Level Debug
+        Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
 
         # Construct the request body
         $body = @{
@@ -93,7 +93,7 @@ function New-FabricCopyJob {
                 }
             }
             else {
-                Write-Message -Message "Invalid or empty content in Copy Job definition." -Level Error
+                Write-FabricLog -Message "Invalid or empty content in Copy Job definition." -Level Error
                 return $null
             }
         }
@@ -117,13 +117,13 @@ function New-FabricCopyJob {
                 }
             }
             else {
-                Write-Message -Message "Invalid or empty content in platform definition." -Level Error
+                Write-FabricLog -Message "Invalid or empty content in platform definition." -Level Error
                 return $null
             }
         }
 
         $bodyJson = $body | ConvertTo-Json -Depth 10
-        Write-Message -Message "Request Body: $bodyJson" -Level Debug
+        Write-FabricLog -Message "Request Body: $bodyJson" -Level Debug
 
         if ($PSCmdlet.ShouldProcess("workspace '$WorkspaceId'", "Create Copy Job '$CopyJobName'")) {
             # Make the API request
@@ -136,7 +136,7 @@ function New-FabricCopyJob {
             $response = Invoke-FabricAPIRequest @apiParams
 
             # Return the API response
-            Write-Message -Message "Copy Job created successfully!" -Level Info
+            Write-FabricLog -Message "Copy Job created successfully!" -Level Info
             return $response
         }
 
@@ -144,6 +144,6 @@ function New-FabricCopyJob {
     catch {
         # Capture and log error details
         $errorDetails = $_.Exception.Message
-        Write-Message -Message "Failed to create Copy Job. Error: $errorDetails" -Level Error
+        Write-FabricLog -Message "Failed to create Copy Job. Error: $errorDetails" -Level Error
     }
 }

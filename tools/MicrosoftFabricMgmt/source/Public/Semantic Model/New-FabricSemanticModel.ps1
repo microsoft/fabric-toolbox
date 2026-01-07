@@ -51,9 +51,9 @@ function New-FabricSemanticModel {
     )
     try {
         # Validate authentication token before proceeding.
-        Write-Message -Message "Validating authentication token..." -Level Debug
+        Write-FabricLog -Message "Validating authentication token..." -Level Debug
         Test-TokenExpired
-        Write-Message -Message "Authentication token is valid." -Level Debug
+        Write-FabricLog -Message "Authentication token is valid." -Level Debug
 
         # Construct the API endpoint URI
         $apiEndpointURI = "{0}/workspaces/{1}/semanticModels" -f $FabricConfig.BaseUrl, $WorkspaceId
@@ -77,7 +77,7 @@ function New-FabricSemanticModel {
 
         # Convert the body to JSON
         $bodyJson = $body | ConvertTo-Json -Depth 10
-        Write-Message -Message "Request Body: $bodyJson" -Level Debug
+        Write-FabricLog -Message "Request Body: $bodyJson" -Level Debug
 
         # Make the API request
         if ($PSCmdlet.ShouldProcess("Semantic Model '$SemanticModelName' in workspace '$WorkspaceId'", "Create")) {
@@ -90,7 +90,7 @@ function New-FabricSemanticModel {
             $response = Invoke-FabricAPIRequest @apiParams
 
             # Return the API response
-            Write-Message -Message "SemanticModel '$SemanticModelName' created successfully!" -Level Info
+            Write-FabricLog -Message "SemanticModel '$SemanticModelName' created successfully!" -Level Info
             return $response
         }
 
@@ -98,6 +98,6 @@ function New-FabricSemanticModel {
     catch {
         # Capture and log error details
         $errorDetails = $_.Exception.Message
-        Write-Message -Message "Failed to create SemanticModel. Error: $errorDetails" -Level Error
+        Write-FabricLog -Message "Failed to create SemanticModel. Error: $errorDetails" -Level Error
     }
 }

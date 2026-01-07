@@ -57,18 +57,18 @@ function Get-FabricKQLDashboard {
     try {
         # Validate input parameters
         if ($KQLDashboardId -and $KQLDashboardName) {
-            Write-Message -Message "Specify only one parameter: either 'KQLDashboardId' or 'KQLDashboardName'." -Level Error
+            Write-FabricLog -Message "Specify only one parameter: either 'KQLDashboardId' or 'KQLDashboardName'." -Level Error
             return $null
         }
 
         # Validate authentication token before proceeding.
-        Write-Message -Message "Validating authentication token..." -Level Debug
+        Write-FabricLog -Message "Validating authentication token..." -Level Debug
         Test-TokenExpired
-        Write-Message -Message "Authentication token is valid." -Level Debug
+        Write-FabricLog -Message "Authentication token is valid." -Level Debug
 
         # Construct the API endpoint URI
         $apiEndpointURI = "{0}/workspaces/{1}/kqlDashboards" -f $FabricConfig.BaseUrl, $WorkspaceId
-        Write-Message -Message "API Endpoint: $apiEndpointURI" -Level Debug
+        Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
 
         # Make the API request
         $apiParams = @{
@@ -80,7 +80,7 @@ function Get-FabricKQLDashboard {
 
         # Immediately handle empty response
         if (-not $dataItems) {
-            Write-Message -Message "No data returned from the API." -Level Warning
+            Write-FabricLog -Message "No data returned from the API." -Level Warning
             return $null
         }
 
@@ -92,24 +92,24 @@ function Get-FabricKQLDashboard {
             $matchedItems = $dataItems.Where({ $_.DisplayName -eq $KQLDashboardName }, 'First')
         }
         else {
-            Write-Message -Message "No filter provided. Returning all items." -Level Debug
+            Write-FabricLog -Message "No filter provided. Returning all items." -Level Debug
             $matchedItems = $dataItems
         }
 
         # Handle results
         if ($matchedItems) {
-            Write-Message -Message "Item(s) found matching the specified criteria." -Level Debug
+            Write-FabricLog -Message "Item(s) found matching the specified criteria." -Level Debug
             return $matchedItems
         }
         else {
-            Write-Message -Message "No item found matching the provided criteria." -Level Warning
+            Write-FabricLog -Message "No item found matching the provided criteria." -Level Warning
             return $null
         }
     }
     catch {
         # Capture and log error details
         $errorDetails = $_.Exception.Message
-        Write-Message -Message "Failed to retrieve KQLDashboard. Error: $errorDetails" -Level Error
+        Write-FabricLog -Message "Failed to retrieve KQLDashboard. Error: $errorDetails" -Level Error
     }
 
 }

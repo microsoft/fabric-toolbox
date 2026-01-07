@@ -45,9 +45,9 @@ function Get-FabricCopyJobDefinition {
     )
     try {
         # Validate authentication token before proceeding.
-        Write-Message -Message "Validating authentication token..." -Level Debug
+        Write-FabricLog -Message "Validating authentication token..." -Level Debug
         Test-TokenExpired
-        Write-Message -Message "Authentication token is valid." -Level Debug
+        Write-FabricLog -Message "Authentication token is valid." -Level Debug
 
         # Construct the API endpoint URL
         $apiEndpointURI = "{0}/workspaces/{1}/copyJobs/{2}/getDefinition" -f $FabricConfig.BaseUrl, $WorkspaceId, $CopyJobId
@@ -56,7 +56,7 @@ function Get-FabricCopyJobDefinition {
         if ($CopyJobFormat) {
             $apiEndpointURI = "{0}?format={1}" -f $apiEndpointURI, $CopyJobFormat
         }
-        Write-Message -Message "API Endpoint: $apiEndpointURI" -Level Debug
+        Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
 
         # Make the API request
         $apiParams = @{
@@ -72,6 +72,6 @@ function Get-FabricCopyJobDefinition {
     catch {
         # Capture and log error details
         $errorDetails = $_.Exception.Message
-        Write-Message -Message "Failed to retrieve Copy Job definition. Error: $errorDetails" -Level Error
+        Write-FabricLog -Message "Failed to retrieve Copy Job definition. Error: $errorDetails" -Level Error
     }
 }

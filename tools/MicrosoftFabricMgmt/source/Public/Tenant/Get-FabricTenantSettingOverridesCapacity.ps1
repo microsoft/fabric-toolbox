@@ -24,9 +24,9 @@ function Get-FabricTenantSettingOverridesCapacity {
     param ()
     try {
         # Step 1: Ensure token validity
-        Write-Message -Message "Validating token..." -Level Debug
+        Write-FabricLog -Message "Validating token..." -Level Debug
         Test-TokenExpired
-        Write-Message -Message "Token validation completed." -Level Debug
+        Write-FabricLog -Message "Token validation completed." -Level Debug
 
         # Step 3: Initialize variables
         $continuationToken = $null
@@ -37,7 +37,7 @@ function Get-FabricTenantSettingOverridesCapacity {
         }
 
         # Step 4: Loop to retrieve all capacities with continuation token
-        Write-Message -Message "Loop started to get continuation token" -Level Debug
+        Write-FabricLog -Message "Loop started to get continuation token" -Level Debug
         $baseApiEndpointUrl = "{0}/admin/capacities/delegatedTenantSettingOverrides" -f $FabricConfig.BaseUrl
 
         do {
@@ -49,7 +49,7 @@ function Get-FabricTenantSettingOverridesCapacity {
                 $encodedToken = [System.Web.HttpUtility]::UrlEncode($continuationToken)
                 $apiEndpointUrl = "{0}?continuationToken={1}" -f $apiEndpointUrl, $encodedToken
             }
-            Write-Message -Message "API Endpoint: $apiEndpointUrl" -Level Debug
+            Write-FabricLog -Message "API Endpoint: $apiEndpointUrl" -Level Debug
 
             # Step 6: Make the API request
             $restParams = @{
@@ -65,48 +65,48 @@ function Get-FabricTenantSettingOverridesCapacity {
 
             # Step 7: Validate the response code
             if ($statusCode -ne 200) {
-                Write-Message -Message "Unexpected response code: $statusCode from the API." -Level Error
-                Write-Message -Message "Error: $($response.message)" -Level Error
-                Write-Message -Message "Error Details: $($response.moreDetails)" -Level Error
-                Write-Message "Error Code: $($response.errorCode)" -Level Error
+                Write-FabricLog -Message "Unexpected response code: $statusCode from the API." -Level Error
+                Write-FabricLog -Message "Error: $($response.message)" -Level Error
+                Write-FabricLog -Message "Error Details: $($response.moreDetails)" -Level Error
+                Write-FabricLog "Error Code: $($response.errorCode)" -Level Error
                 return $null
             }
 
             # Step 8: Add data to the list
             if ($null -ne $response) {
-                Write-Message -Message "Adding data to the list" -Level Debug
+                Write-FabricLog -Message "Adding data to the list" -Level Debug
                 $capacitiesOverrides += $response.value
 
                 # Update the continuation token if present
                 if ($response.PSObject.Properties.Match("continuationToken")) {
-                    Write-Message -Message "Updating the continuation token" -Level Debug
+                    Write-FabricLog -Message "Updating the continuation token" -Level Debug
                     $continuationToken = $response.continuationToken
-                    Write-Message -Message "Continuation token: $continuationToken" -Level Debug
+                    Write-FabricLog -Message "Continuation token: $continuationToken" -Level Debug
                 }
                 else {
-                    Write-Message -Message "Updating the continuation token to null" -Level Debug
+                    Write-FabricLog -Message "Updating the continuation token to null" -Level Debug
                     $continuationToken = $null
                 }
             }
             else {
-                Write-Message -Message "No data received from the API." -Level Warning
+                Write-FabricLog -Message "No data received from the API." -Level Warning
                 break
             }
         } while ($null -ne $continuationToken)
-        Write-Message -Message "Loop finished and all data added to the list" -Level Debug
+        Write-FabricLog -Message "Loop finished and all data added to the list" -Level Debug
         # Step 7: Handle results
         if ($capacitiesOverrides) {
-            Write-Message -Message "Capacities overrides found." -Level Debug
+            Write-FabricLog -Message "Capacities overrides found." -Level Debug
             return $capacitiesOverrides
         }
         else {
-            Write-Message -Message "No capacity capacities tenant settings overrides overrides found matching the provided criteria." -Level Warning
+            Write-FabricLog -Message "No capacity capacities tenant settings overrides overrides found matching the provided criteria." -Level Warning
             return $null
         }
     }
     catch {
         # Step 8: Capture and log error details
         $errorDetails = $_.Exception.Message
-        Write-Message -Message "Failed to retrieve capacities tenant settings overrides. Error: $errorDetails" -Level Error
+        Write-FabricLog -Message "Failed to retrieve capacities tenant settings overrides. Error: $errorDetails" -Level Error
     }
 }

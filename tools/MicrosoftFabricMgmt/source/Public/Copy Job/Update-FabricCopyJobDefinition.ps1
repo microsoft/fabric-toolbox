@@ -58,9 +58,9 @@ function Update-FabricCopyJobDefinition {
     )
     try {
         # Step 1: Ensure token validity
-        Write-Message -Message "Validating token..." -Level Debug
+        Write-FabricLog -Message "Validating token..." -Level Debug
         Test-TokenExpired
-        Write-Message -Message "Token validation completed." -Level Debug
+        Write-FabricLog -Message "Token validation completed." -Level Debug
 
         # Step 2: Construct the API URL
         $apiEndpointURI = "{0}/workspaces/{1}/copyJobs/{2}/updateDefinition" -f $FabricConfig.BaseUrl, $WorkspaceId, $CopyJobId
@@ -68,7 +68,7 @@ function Update-FabricCopyJobDefinition {
         if ($CopyJobPathPlatformDefinition) {
             $apiEndpointURI = "$apiEndpointURI?updateMetadata=true"
         }
-        Write-Message -Message "API Endpoint: $apiEndpointURI" -Level Debug
+        Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
 
         # Step 3: Construct the request body
         $body = @{
@@ -89,7 +89,7 @@ function Update-FabricCopyJobDefinition {
                 }
             }
             else {
-                Write-Message -Message "Invalid or empty content in Copy Job definition." -Level Error
+                Write-FabricLog -Message "Invalid or empty content in Copy Job definition." -Level Error
                 return $null
             }
         }
@@ -105,13 +105,13 @@ function Update-FabricCopyJobDefinition {
                 }
             }
             else {
-                Write-Message -Message "Invalid or empty content in platform definition." -Level Error
+                Write-FabricLog -Message "Invalid or empty content in platform definition." -Level Error
                 return $null
             }
         }
 
         $bodyJson = $body | ConvertTo-Json -Depth 10
-        Write-Message -Message "Request Body: $bodyJson" -Level Debug
+        Write-FabricLog -Message "Request Body: $bodyJson" -Level Debug
 
         if ($PSCmdlet.ShouldProcess("Copy Job '$CopyJobId' in workspace '$WorkspaceId'", "Update definition/metadata")) {
             # Step 4: Make the API request
@@ -123,13 +123,13 @@ function Update-FabricCopyJobDefinition {
             }
             $response = Invoke-FabricAPIRequest @apiParams
 
-            Write-Message -Message "Successfully updated the definition for Copy Job with ID '$CopyJobId' in workspace '$WorkspaceId'." -Level Info
+            Write-FabricLog -Message "Successfully updated the definition for Copy Job with ID '$CopyJobId' in workspace '$WorkspaceId'." -Level Info
             return $response
         }
     }
     catch {
         # Step 6: Handle and log errors
         $errorDetails = $_.Exception.Message
-        Write-Message -Message "Failed to update Copy Job. Error: $errorDetails" -Level Error
+        Write-FabricLog -Message "Failed to update Copy Job. Error: $errorDetails" -Level Error
     }
 }

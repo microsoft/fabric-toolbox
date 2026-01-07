@@ -51,9 +51,9 @@ function Start-FabricLakehouseRefreshMaterializedLakeView {
     )
     try {
         # Validate authentication token before proceeding.
-        Write-Message -Message "Validating authentication token..." -Level Debug
+        Write-FabricLog -Message "Validating authentication token..." -Level Debug
         Test-TokenExpired
-        Write-Message -Message "Authentication token is valid." -Level Debug
+        Write-FabricLog -Message "Authentication token is valid." -Level Debug
 
         # Validate input parameters
         #$lakehouse = Get-FabricLakehouse -WorkspaceId $WorkspaceId -LakehouseId $LakehouseId
@@ -64,7 +64,7 @@ function Start-FabricLakehouseRefreshMaterializedLakeView {
 
         # Construct the API endpoint URI
         $apiEndpointURI = "{0}/workspaces/{1}/lakehouses/{2}/jobs/instances?jobType={3}" -f $FabricConfig.BaseUrl, $WorkspaceId , $LakehouseId, $JobType
-        Write-Message -Message "API Endpoint: $apiEndpointURI" -Level Debug
+        Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
 
           # Make the API request
         $apiParams = @{
@@ -80,12 +80,12 @@ function Start-FabricLakehouseRefreshMaterializedLakeView {
             $response = Invoke-FabricAPIRequest @apiParams
 
             if ($WaitForCompletion) {
-                Write-Message -Message "Refresh MLV job for Lakehouse '$LakehouseId' has completed." -Level Info
-                Write-Message -Message "Job details: $($response | ConvertTo-Json -Depth 5)" -Level Debug
+                Write-FabricLog -Message "Refresh MLV job for Lakehouse '$LakehouseId' has completed." -Level Info
+                Write-FabricLog -Message "Job details: $($response | ConvertTo-Json -Depth 5)" -Level Debug
             }
             else {
-                Write-Message -Message "Refresh MLV job for Lakehouse '$LakehouseId' has been started and is running asynchronously." -Level Info
-                Write-Message -Message "You can monitor the job status using the job ID from the response." -Level Debug
+                Write-FabricLog -Message "Refresh MLV job for Lakehouse '$LakehouseId' has been started and is running asynchronously." -Level Info
+                Write-FabricLog -Message "You can monitor the job status using the job ID from the response." -Level Debug
             }
             # Return the API response
             return $response
@@ -94,6 +94,6 @@ function Start-FabricLakehouseRefreshMaterializedLakeView {
     catch {
         # Capture and log error details
         $errorDetails = $_.Exception.Message
-        Write-Message -Message "Failed to start refresh MLV job. Error: $errorDetails" -Level Error
+        Write-FabricLog -Message "Failed to start refresh MLV job. Error: $errorDetails" -Level Error
     }
 }

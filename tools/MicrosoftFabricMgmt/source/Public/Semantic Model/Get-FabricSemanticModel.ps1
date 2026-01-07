@@ -49,18 +49,18 @@ function Get-FabricSemanticModel {
     try {
         # Validate input parameters
         if ($SemanticModelId -and $SemanticModelName) {
-            Write-Message -Message "Specify only one parameter: either 'SemanticModelId' or 'SemanticModelName'." -Level Error
+            Write-FabricLog -Message "Specify only one parameter: either 'SemanticModelId' or 'SemanticModelName'." -Level Error
             return $null
         }
 
         # Validate authentication token before proceeding.
-        Write-Message -Message "Validating token..." -Level Debug
+        Write-FabricLog -Message "Validating token..." -Level Debug
         Test-TokenExpired
-        Write-Message -Message "Token validation completed." -Level Debug
+        Write-FabricLog -Message "Token validation completed." -Level Debug
 
         # Construct the API endpoint URI
         $apiEndpointURI = "{0}/workspaces/{1}/semanticModels" -f $FabricConfig.BaseUrl, $WorkspaceId
-        Write-Message -Message "API Endpoint: $apiEndpointURI" -Level Debug
+        Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
 
         # Make the API request
         # Make the API request
@@ -73,7 +73,7 @@ function Get-FabricSemanticModel {
 
         # Immediately handle empty response
         if (-not $dataItems) {
-            Write-Message -Message "No data returned from the API." -Level Warning
+            Write-FabricLog -Message "No data returned from the API." -Level Warning
             return $null
         }
 
@@ -85,24 +85,24 @@ function Get-FabricSemanticModel {
             $matchedItems = $dataItems.Where({ $_.DisplayName -eq $SemanticModelName }, 'First')
         }
         else {
-            Write-Message -Message "No filter provided. Returning all items." -Level Debug
+            Write-FabricLog -Message "No filter provided. Returning all items." -Level Debug
             $matchedItems = $dataItems
         }
 
         # Handle results
         if ($matchedItems) {
-            Write-Message -Message "Item(s) found matching the specified criteria." -Level Debug
+            Write-FabricLog -Message "Item(s) found matching the specified criteria." -Level Debug
             return $matchedItems
         }
         else {
-            Write-Message -Message "No item found matching the provided criteria." -Level Warning
+            Write-FabricLog -Message "No item found matching the provided criteria." -Level Warning
             return $null
         }
     }
     catch {
         # Capture and log error details
         $errorDetails = $_.Exception.Message
-        Write-Message -Message "Failed to retrieve SemanticModel. Error: $errorDetails" -Level Error
+        Write-FabricLog -Message "Failed to retrieve SemanticModel. Error: $errorDetails" -Level Error
     }
 
 }

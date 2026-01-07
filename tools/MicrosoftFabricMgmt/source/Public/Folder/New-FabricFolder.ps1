@@ -49,35 +49,35 @@ function New-FabricFolder {
         # Additional FolderName validation
         if ($FolderName) {
             if ($FolderName.Length -gt 255) {
-                Write-Message -Message "Folder name exceeds 255 characters." -Level Error
+                Write-FabricLog -Message "Folder name exceeds 255 characters." -Level Error
                 return $null
             }
             if ($FolderName -match '^[\s]|\s$') {
-                Write-Message -Message "Folder name cannot have leading or trailing spaces." -Level Error
+                Write-FabricLog -Message "Folder name cannot have leading or trailing spaces." -Level Error
                 return $null
             }
             if ($FolderName -match '[~"#.&*:<>?\/{|}]') {
-                Write-Message -Message "Folder name contains invalid characters: ~ # . & * : < > ? / { | }\" -Level Error
+                Write-FabricLog -Message "Folder name contains invalid characters: ~ # . & * : < > ? / { | }\" -Level Error
                 return $null
             }
             if ($FolderName -match '^\$recycle\.bin$|^recycled$|^recycler$') {
-                Write-Message -Message "Folder name cannot be a system-reserved name." -Level Error
+                Write-FabricLog -Message "Folder name cannot be a system-reserved name." -Level Error
                 return $null
             }
             if ($FolderName -match '[\x00-\x1F]') {
-                Write-Message -Message "Folder name contains control characters." -Level Error
+                Write-FabricLog -Message "Folder name contains control characters." -Level Error
                 return $null
             }
         }
 
         # Validate authentication token before proceeding.
-        Write-Message -Message "Validating authentication token..." -Level Debug
+        Write-FabricLog -Message "Validating authentication token..." -Level Debug
         Test-TokenExpired
-        Write-Message -Message "Authentication token is valid." -Level Debug
+        Write-FabricLog -Message "Authentication token is valid." -Level Debug
 
         # Construct the API endpoint URI
         $apiEndpointURI = "{0}/workspaces/{1}/folders" -f $FabricConfig.BaseUrl, $WorkspaceId
-        Write-Message -Message "API Endpoint: $apiEndpointURI" -Level Debug
+        Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
 
         # Construct the request body
         $body = @{
@@ -90,7 +90,7 @@ function New-FabricFolder {
 
         # Convert the body to JSON format
         $bodyJson = $body | ConvertTo-Json -Depth 4
-        Write-Message -Message "Request Body: $bodyJson" -Level Debug
+        Write-FabricLog -Message "Request Body: $bodyJson" -Level Debug
 
         # Make the API request (guarded by ShouldProcess)
         if ($PSCmdlet.ShouldProcess($FolderName, "Create folder in workspace '$WorkspaceId'")) {
@@ -103,7 +103,7 @@ function New-FabricFolder {
             $response = Invoke-FabricAPIRequest @apiParams
 
             # Return the API response
-            Write-Message -Message "Folder created successfully!" -Level Info
+            Write-FabricLog -Message "Folder created successfully!" -Level Info
             return $response
         }
 
@@ -111,6 +111,6 @@ function New-FabricFolder {
     catch {
         # Capture and log error details
         $errorDetails = $_.Exception.Message
-        Write-Message -Message "Failed to create Folder. Error: $errorDetails" -Level Error
+        Write-FabricLog -Message "Failed to create Folder. Error: $errorDetails" -Level Error
     }
 }

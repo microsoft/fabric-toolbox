@@ -48,16 +48,16 @@ function Get-FabricSemanticModelDefinition {
     )
     try {
         # Validate authentication token before proceeding.
-        Write-Message -Message "Validating authentication token..." -Level Debug
+        Write-FabricLog -Message "Validating authentication token..." -Level Debug
         Test-TokenExpired
-        Write-Message -Message "Authentication token is valid." -Level Debug
+        Write-FabricLog -Message "Authentication token is valid." -Level Debug
 
         # Construct the API endpoint URI with filtering logic
         $apiEndpointURI = "{0}/workspaces/{1}/semanticModels/{2}/getDefinition" -f $FabricConfig.BaseUrl, $WorkspaceId, $SemanticModelId
         if ($SemanticModelFormat) {
             $apiEndpointURI = "{0}?format={1}" -f $apiEndpointURI, $SemanticModelFormat
         }
-        Write-Message -Message "API Endpoint: $apiEndpointURI" -Level Debug
+        Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
 
         # Make the API request
         $apiParams = @{
@@ -68,13 +68,13 @@ function Get-FabricSemanticModelDefinition {
         $response = Invoke-FabricAPIRequest @apiParams
 
         # Return the API response
-        Write-Message -Message "SemanticModel '$SemanticModelId' definition retrieved successfully!" -Level Debug
+        Write-FabricLog -Message "SemanticModel '$SemanticModelId' definition retrieved successfully!" -Level Debug
         return $response
     }
     catch {
         # Capture and log error details
         $errorDetails = $_.Exception.Message
-        Write-Message -Message "Failed to retrieve SemanticModel. Error: $errorDetails" -Level Error
+        Write-FabricLog -Message "Failed to retrieve SemanticModel. Error: $errorDetails" -Level Error
     }
 
 }

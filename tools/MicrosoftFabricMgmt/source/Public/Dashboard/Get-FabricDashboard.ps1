@@ -30,9 +30,9 @@ function Get-FabricDashboard {
 
     try {
         # Ensure token validity
-        Write-Message -Message "Validating token..." -Level Debug
+        Write-FabricLog -Message "Validating token..." -Level Debug
         Test-TokenExpired
-        Write-Message -Message "Token validation completed." -Level Debug
+        Write-FabricLog -Message "Token validation completed." -Level Debug
 
         # Construct the API endpoint URL
         $apiEndpointURI = "{0}/workspaces/{1}/dashboards" -f $FabricConfig.BaseUrl, $WorkspaceId
@@ -51,6 +51,6 @@ function Get-FabricDashboard {
     catch {
         # Capture and log error details
         $errorDetails = $_.Exception.Message
-        Write-Message -Message "Failed to retrieve Dashboard. Error: $errorDetails" -Level Error
+        Write-FabricLog -Message "Failed to retrieve Dashboard. Error: $errorDetails" -Level Error
     }
 }

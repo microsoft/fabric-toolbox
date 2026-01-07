@@ -40,16 +40,16 @@ function Get-FabricUserListAccessEntities {
     )
     try {
         # Validate authentication token before proceeding.
-        Write-Message -Message "Validating authentication token..." -Level Debug
+        Write-FabricLog -Message "Validating authentication token..." -Level Debug
         Test-TokenExpired
-        Write-Message -Message "Authentication token is valid." -Level Debug
+        Write-FabricLog -Message "Authentication token is valid." -Level Debug
 
         # Construct the API endpoint URI with filtering logic
         $apiEndpointURI = "{0}admin/users/{1}/access" -f $FabricConfig.BaseUrl, $UserId
         if ($Type) {
             $apiEndpointURI += "?type=$Type"
         }
-        Write-Message -Message "API Endpoint: $apiEndpointURI" -Level Debug
+        Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
 
         # Make the API request
         # Make the API request
@@ -62,18 +62,18 @@ function Get-FabricUserListAccessEntities {
 
         # Immediately handle empty response
         if (-not $dataItems) {
-            Write-Message -Message "No data returned from the API." -Level Warning
+            Write-FabricLog -Message "No data returned from the API." -Level Warning
             return $null
         }
         else {
             # Return all workspace tenant setting overrides
-            Write-Message -Message "Successfully retrieved access entities for user ID '$UserId'. Entity count: $($dataItems.Count)" -Level Debug
+            Write-FabricLog -Message "Successfully retrieved access entities for user ID '$UserId'. Entity count: $($dataItems.Count)" -Level Debug
             return $dataItems
         }
     }
     catch {
         # Capture and log error details
         $errorDetails = $_.Exception.Message
-        Write-Message -Message "Failed to retrieve Warehouse. Error: $errorDetails" -Level Error
+        Write-FabricLog -Message "Failed to retrieve Warehouse. Error: $errorDetails" -Level Error
     }
 }

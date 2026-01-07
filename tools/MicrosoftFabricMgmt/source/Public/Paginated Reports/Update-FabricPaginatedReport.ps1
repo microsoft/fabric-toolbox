@@ -51,13 +51,13 @@ function Update-FabricPaginatedReport {
     )
     try {
         # Validate authentication token before proceeding.
-        Write-Message -Message "Validating authentication token..." -Level Debug
+        Write-FabricLog -Message "Validating authentication token..." -Level Debug
         Test-TokenExpired
-        Write-Message -Message "Authentication token is valid." -Level Debug
+        Write-FabricLog -Message "Authentication token is valid." -Level Debug
 
     # Construct the API endpoint URI
     $apiEndpointUrl = "{0}/workspaces/{1}/paginatedReports/{2}" -f $FabricConfig.BaseUrl, $WorkspaceId, $PaginatedReportId
-    Write-Message -Message "API Endpoint: $apiEndpointUrl" -Level Debug
+    Write-FabricLog -Message "API Endpoint: $apiEndpointUrl" -Level Debug
 
         # Construct the request body
         $body = @{
@@ -70,7 +70,7 @@ function Update-FabricPaginatedReport {
 
         # Convert the body to JSON
         $bodyJson = $body | ConvertTo-Json
-        Write-Message -Message "Request Body: $bodyJson" -Level Debug
+        Write-FabricLog -Message "Request Body: $bodyJson" -Level Debug
 
        # Make the API request when confirmed
         $target = "Paginated Report '$PaginatedReportId' in workspace '$WorkspaceId'"
@@ -85,13 +85,13 @@ function Update-FabricPaginatedReport {
             $response = Invoke-FabricAPIRequest @apiParams
 
             # Return the API response
-            Write-Message -Message "Paginated Report '$PaginatedReportName' updated successfully!" -Level Info
+            Write-FabricLog -Message "Paginated Report '$PaginatedReportName' updated successfully!" -Level Info
             return $response
         }
     }
     catch {
         # Capture and log error details
         $errorDetails = $_.Exception.Message
-        Write-Message -Message "Failed to update Paginated Report. Error: $errorDetails" -Level Error
+        Write-FabricLog -Message "Failed to update Paginated Report. Error: $errorDetails" -Level Error
     }
 }

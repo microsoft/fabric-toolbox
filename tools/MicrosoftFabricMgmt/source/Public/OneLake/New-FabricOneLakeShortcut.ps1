@@ -156,22 +156,22 @@ function New-FabricOneLakeShortcut {
         if ($requiredParamsByTarget.ContainsKey($Target)) {
             foreach ($param in $requiredParamsByTarget[$Target]) {
                 if (-not (Get-Variable -Name $param -ValueOnly)) {
-                    Write-Message -Message "Parameter '$param' cannot be null or empty when Target is $Target." -Level Error
+                    Write-FabricLog -Message "Parameter '$param' cannot be null or empty when Target is $Target." -Level Error
                     return $null
                 }
             }
         }
         # Validate authentication token before proceeding.
-        Write-Message -Message "Validating authentication token..." -Level Debug
+        Write-FabricLog -Message "Validating authentication token..." -Level Debug
         Test-TokenExpired
-        Write-Message -Message "Authentication token is valid." -Level Debug
+        Write-FabricLog -Message "Authentication token is valid." -Level Debug
 
         # Construct the API endpoint URI
         $apiEndpointURI = "{0}/workspaces/{1}/items/{2}/shortcuts" -f $FabricConfig.BaseUrl, $WorkspaceId, $ItemId
         if ($ShortcutConflictPolicy) {
             $apiEndpointURI = "$apiEndpointURI?shortcutConflictPolicy=$ShortcutConflictPolicy"
         }
-        Write-Message -Message "API Endpoint: $apiEndpointURI" -Level Debug
+        Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
 
         # Construct the request body in the required nested format
         $targetBody = @{}
@@ -203,7 +203,7 @@ function New-FabricOneLakeShortcut {
 
         # Convert the body to JSON format
         $bodyJson = $body | ConvertTo-Json -Depth 4
-        Write-Message -Message "Request Body: $bodyJson" -Level Debug
+        Write-FabricLog -Message "Request Body: $bodyJson" -Level Debug
 
         # Make the API request when confirmed
         $target = "Item '$ItemId' in workspace '$WorkspaceId'"
@@ -218,13 +218,13 @@ function New-FabricOneLakeShortcut {
             $response = Invoke-FabricAPIRequest @apiParams
 
             # Return the API response
-            Write-Message -Message "OneLake Shortcut created successfully!" -Level Info
+            Write-FabricLog -Message "OneLake Shortcut created successfully!" -Level Info
             return $response
         }
     }
     catch {
         # Capture and log error details
         $errorDetails = $_.Exception.Message
-        Write-Message -Message "Failed to create OneLake Shortcut. Error: $errorDetails" -Level Error
+        Write-FabricLog -Message "Failed to create OneLake Shortcut. Error: $errorDetails" -Level Error
     }
 }

@@ -22,13 +22,13 @@ function Get-FabricDomainTenantSettingOverrides {
     param ( )
     try {
         # Validate authentication token before proceeding.
-        Write-Message -Message "Validating authentication token..." -Level Debug
+        Write-FabricLog -Message "Validating authentication token..." -Level Debug
         Test-TokenExpired
-        Write-Message -Message "Authentication token is valid." -Level Debug
+        Write-FabricLog -Message "Authentication token is valid." -Level Debug
 
         # Construct the API endpoint URI
         $apiEndpointURI = "{0}/admin/domains/delegatedTenantSettingOverrides" -f $FabricConfig.BaseUrl
-        Write-Message -Message "API Endpoint: $apiEndpointURI" -Level Debug
+        Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
 
         # Make the API request
         # Make the API request
@@ -41,17 +41,17 @@ function Get-FabricDomainTenantSettingOverrides {
 
         # Immediately handle empty response
         if (-not $dataItems) {
-            Write-Message -Message "No data returned from the API." -Level Warning
+            Write-FabricLog -Message "No data returned from the API." -Level Warning
             return $null
         }
         else {
-            Write-Message -Message "Successfully retrieved domain tenant setting overrides." -Level Debug
+            Write-FabricLog -Message "Successfully retrieved domain tenant setting overrides." -Level Debug
             return $dataItems
         }
     }
     catch {
         # Capture and log error details
         $errorDetails = $_.Exception.Message
-        Write-Message -Message "Error retrieving domain tenant setting overrides: $errorDetails" -Level Error
+        Write-FabricLog -Message "Error retrieving domain tenant setting overrides: $errorDetails" -Level Error
     }
 }

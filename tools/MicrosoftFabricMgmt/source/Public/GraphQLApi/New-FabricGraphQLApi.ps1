@@ -64,13 +64,13 @@ function New-FabricGraphQLApi {
     )
     try {
         # Validate authentication token before proceeding.
-        Write-Message -Message "Validating authentication token..." -Level Debug
+        Write-FabricLog -Message "Validating authentication token..." -Level Debug
         Test-TokenExpired
-        Write-Message -Message "Authentication token is valid." -Level Debug
+        Write-FabricLog -Message "Authentication token is valid." -Level Debug
 
         # Construct the API endpoint URI
         $apiEndpointURI = "{0}/workspaces/{1}/GraphQLApis" -f $FabricConfig.BaseUrl, $WorkspaceId
-        Write-Message -Message "API Endpoint: $apiEndpointURI" -Level Debug
+        Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
 
         # Construct the request body
         $body = @{
@@ -104,7 +104,7 @@ function New-FabricGraphQLApi {
                 }
             }
             else {
-                Write-Message -Message "Invalid or empty content in GraphQLApi definition." -Level Error
+                Write-FabricLog -Message "Invalid or empty content in GraphQLApi definition." -Level Error
                 return $null
             }
         }
@@ -129,14 +129,14 @@ function New-FabricGraphQLApi {
                 }
             }
             else {
-                Write-Message -Message "Invalid or empty content in platform definition." -Level Error
+                Write-FabricLog -Message "Invalid or empty content in platform definition." -Level Error
                 return $null
             }
         }
 
         # Convert the body to JSON
         $bodyJson = $body | ConvertTo-Json -Depth 10
-        Write-Message -Message "Request Body: $bodyJson" -Level Debug
+        Write-FabricLog -Message "Request Body: $bodyJson" -Level Debug
 
         $apiParams = @{
             BaseURI = $apiEndpointURI
@@ -148,13 +148,13 @@ function New-FabricGraphQLApi {
             $response = Invoke-FabricAPIRequest @apiParams
 
             # Return the API response
-            Write-Message -Message "GraphQLApi '$GraphQLApiName' created successfully!" -Level Info
+            Write-FabricLog -Message "GraphQLApi '$GraphQLApiName' created successfully!" -Level Info
             return $response
         }
     }
     catch {
         # Capture and log error details
         $errorDetails = $_.Exception.Message
-        Write-Message -Message "Failed to create GraphQLApi. Error: $errorDetails" -Level Error
+        Write-FabricLog -Message "Failed to create GraphQLApi. Error: $errorDetails" -Level Error
     }
 }

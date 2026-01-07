@@ -79,9 +79,9 @@ function Update-FabricTenantSetting {
     )
     try {
         # Validate authentication token
-        Write-Message -Message "Validating authentication token..." -Level Debug
+        Write-FabricLog -Message "Validating authentication token..." -Level Debug
         Test-TokenExpired
-        Write-Message -Message "Authentication token is valid." -Level Debug
+        Write-FabricLog -Message "Authentication token is valid." -Level Debug
 
         # Validate Security Groups if provided
         if ($EnabledSecurityGroups) {
@@ -111,7 +111,7 @@ function Update-FabricTenantSetting {
 
         # Construct API endpoint URL
         $apiEndpointURI = "{0}/admin/tenantsettings/{1}/update" -f $FabricConfig.BaseUrl, $TenantSettingName
-        Write-Message -Message "Constructed API Endpoint: $apiEndpointURI" -Level Debug
+        Write-FabricLog -Message "Constructed API Endpoint: $apiEndpointURI" -Level Debug
 
         # Construct request body
         $body = @{
@@ -144,7 +144,7 @@ function Update-FabricTenantSetting {
 
         # Convert body to JSON
         $bodyJson = $body | ConvertTo-Json -Depth 5
-        Write-Message -Message "Request Body: $bodyJson" -Level Debug
+        Write-FabricLog -Message "Request Body: $bodyJson" -Level Debug
 
         # Invoke Fabric API request
         if ($PSCmdlet.ShouldProcess("tenant setting '$TenantSettingName'", "Update tenant setting")) {
@@ -155,13 +155,13 @@ function Update-FabricTenantSetting {
                 -Body $bodyJson
 
             # Return the API response
-            Write-Message -Message "Successfully updated tenant setting." -Level Info
+            Write-FabricLog -Message "Successfully updated tenant setting." -Level Info
             return $response
         }
     }
     catch {
         # Capture and log error details
         $errorDetails = $_.Exception.Message
-        Write-Message -Message "Error updating tenant settings: $errorDetails" -Level Error
+        Write-FabricLog -Message "Error updating tenant settings: $errorDetails" -Level Error
     }
 }

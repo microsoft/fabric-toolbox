@@ -31,13 +31,13 @@ function Get-FabricDomainWorkspace {
 
     try {
         # Validate authentication token before proceeding.
-        Write-Message -Message "Validating authentication token..." -Level Debug
+        Write-FabricLog -Message "Validating authentication token..." -Level Debug
         Test-TokenExpired
-        Write-Message -Message "Authentication token is valid." -Level Debug
+        Write-FabricLog -Message "Authentication token is valid." -Level Debug
 
         # Construct the API endpoint URI
         $apiEndpointURI = "{0}/admin/domains/{1}/workspaces" -f $FabricConfig.BaseUrl, $DomainId
-        Write-Message -Message "API Endpoint: $apiEndpointURI" -Level Debug
+        Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
 
         # Make the API request
         $apiParams = @{
@@ -49,7 +49,7 @@ function Get-FabricDomainWorkspace {
 
         # Handle empty response
         if (-not $dataItems) {
-            Write-Message -Message "No data returned from the API." -Level Warning
+            Write-FabricLog -Message "No data returned from the API." -Level Warning
             return $null
         }
         # Handle results
@@ -57,13 +57,13 @@ function Get-FabricDomainWorkspace {
             return $dataItems
         }
         else {
-            Write-Message -Message "No workspace found for the '$DomainId'." -Level Warning
+            Write-FabricLog -Message "No workspace found for the '$DomainId'." -Level Warning
             return $null
         }
     }
     catch {
         # Capture and log error details
         $errorDetails = Get-ErrorResponse($_.Exception)
-        Write-Message -Message "Failed to retrieve domain workspaces. Error: $errorDetails" -Level Error
+        Write-FabricLog -Message "Failed to retrieve domain workspaces. Error: $errorDetails" -Level Error
     }
 }

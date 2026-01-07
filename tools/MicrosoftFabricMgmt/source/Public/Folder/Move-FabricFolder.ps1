@@ -48,13 +48,13 @@ function Move-FabricFolder {
     try {
 
         # Validate authentication token before proceeding.
-        Write-Message -Message "Validating authentication token..." -Level Debug
+        Write-FabricLog -Message "Validating authentication token..." -Level Debug
         Test-TokenExpired
-        Write-Message -Message "Authentication token is valid." -Level Debug
+        Write-FabricLog -Message "Authentication token is valid." -Level Debug
 
         # Construct the API endpoint URI
         $apiEndpointURI = "{0}/workspaces/{1}/folders/{2}/move" -f $FabricConfig.BaseUrl, $WorkspaceId, $FolderId
-        Write-Message -Message "API Endpoint: $apiEndpointURI" -Level Debug
+        Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
 
         # Construct the request body only if TargetFolderId is provided
         if ($TargetFolderId) {
@@ -68,7 +68,7 @@ function Move-FabricFolder {
 
         # Convert the body to JSON format
         $bodyJson = $body | ConvertTo-Json -Depth 4
-        Write-Message -Message "Request Body: $bodyJson" -Level Debug
+        Write-FabricLog -Message "Request Body: $bodyJson" -Level Debug
 
         if ($PSCmdlet.ShouldProcess($FolderId, "Move folder in workspace '$WorkspaceId'")) {
             # Make the API request
@@ -81,7 +81,7 @@ function Move-FabricFolder {
             $response = Invoke-FabricAPIRequest @apiParams
 
             # Return the API response
-            Write-Message -Message "Folder moved successfully!" -Level Info
+            Write-FabricLog -Message "Folder moved successfully!" -Level Info
             return $response
         }
 
@@ -89,6 +89,6 @@ function Move-FabricFolder {
     catch {
         # Capture and log error details
         $errorDetails = $_.Exception.Message
-        Write-Message -Message "Failed to move Folder. Error: $errorDetails" -Level Error
+        Write-FabricLog -Message "Failed to move Folder. Error: $errorDetails" -Level Error
     }
 }

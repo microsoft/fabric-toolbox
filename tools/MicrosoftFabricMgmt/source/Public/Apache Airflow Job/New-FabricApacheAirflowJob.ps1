@@ -59,13 +59,13 @@ function New-FabricApacheAirflowJob {
     )
     try {
         # Validate authentication token before proceeding.
-        Write-Message -Message "Validating authentication token..." -Level Debug
+        Write-FabricLog -Message "Validating authentication token..." -Level Debug
         Test-TokenExpired
-        Write-Message -Message "Authentication token is valid." -Level Debug
+        Write-FabricLog -Message "Authentication token is valid." -Level Debug
 
         # Construct the API endpoint URL
         $apiEndpointURI = "{0}/workspaces/{1}/ApacheAirflowJobs" -f $FabricConfig.BaseUrl, $WorkspaceId
-        Write-Message -Message "API Endpoint: $apiEndpointURI" -Level Debug
+        Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
 
         # Construct the request body
         $body = @{
@@ -96,7 +96,7 @@ function New-FabricApacheAirflowJob {
                 }
             }
             else {
-                Write-Message -Message "Invalid or empty content in Apache Airflow Job definition." -Level Error
+                Write-FabricLog -Message "Invalid or empty content in Apache Airflow Job definition." -Level Error
                 return $null
             }
         }
@@ -120,13 +120,13 @@ function New-FabricApacheAirflowJob {
                 }
             }
             else {
-                Write-Message -Message "Invalid or empty content in platform definition." -Level Error
+                Write-FabricLog -Message "Invalid or empty content in platform definition." -Level Error
                 return $null
             }
         }
 
         $bodyJson = $body | ConvertTo-Json -Depth 10
-        Write-Message -Message "Request Body: $bodyJson" -Level Debug
+        Write-FabricLog -Message "Request Body: $bodyJson" -Level Debug
 
         if ($PSCmdlet.ShouldProcess("workspace '$WorkspaceId'", "Create Apache Airflow Job '$ApacheAirflowJobName'")) {
             # Make the API request
@@ -139,7 +139,7 @@ function New-FabricApacheAirflowJob {
             $response = Invoke-FabricAPIRequest @apiParams
 
             # Return the API response
-            Write-Message -Message "Apache Airflow Job created successfully!" -Level Info
+            Write-FabricLog -Message "Apache Airflow Job created successfully!" -Level Info
             return $response
         }
 
@@ -147,6 +147,6 @@ function New-FabricApacheAirflowJob {
     catch {
         # Capture and log error details
         $errorDetails = $_.Exception.Message
-        Write-Message -Message "Failed to create Apache Airflow Job. Error: $errorDetails" -Level Error
+        Write-FabricLog -Message "Failed to create Apache Airflow Job. Error: $errorDetails" -Level Error
     }
 }
