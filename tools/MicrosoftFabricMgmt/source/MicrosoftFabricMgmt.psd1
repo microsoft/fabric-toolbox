@@ -12,10 +12,10 @@
 RootModule = 'MicrosoftFabricMgmt.psm1'
 
 # Version number of this module.
-ModuleVersion = '0.5.4'
+ModuleVersion = '1.0.0'
 
 # Supported PSEditions
-# CompatiblePSEditions = @()
+CompatiblePSEditions = @('Desktop', 'Core')
 
 # ID used to uniquely identify this module
 GUID = 'd0110b5c-cfcc-4bcc-8049-468880cf66c8'
@@ -30,10 +30,10 @@ CompanyName = 'MicrosoftFabricMgmt'
 Copyright = '2025 MicrosoftFabricMgmt by Fabric Toolbox'
 
 # Description of the functionality provided by this module
-Description = 'MicrosoftFabricMgmt'
+Description = 'PowerShell module for managing Microsoft Fabric resources via the Fabric API. Supports workspaces, lakehouses, warehouses, notebooks, and more.'
 
 # Minimum version of the PowerShell engine required by this module
-# PowerShellVersion = ''
+PowerShellVersion = '5.1'
 
 # Name of the PowerShell host required by this module
 # PowerShellHostName = ''
@@ -51,7 +51,7 @@ Description = 'MicrosoftFabricMgmt'
 # ProcessorArchitecture = ''
 
 # Modules that must be imported into the global environment prior to importing this module
-# RequiredModules = @()
+RequiredModules = @('PSFramework')
 
 # Assemblies that must be loaded prior to importing this module
 # RequiredAssemblies = @()
