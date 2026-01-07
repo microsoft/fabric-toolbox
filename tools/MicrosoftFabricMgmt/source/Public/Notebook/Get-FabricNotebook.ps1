@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
 Gets a Notebook or lists all Notebooks in a workspace.
 

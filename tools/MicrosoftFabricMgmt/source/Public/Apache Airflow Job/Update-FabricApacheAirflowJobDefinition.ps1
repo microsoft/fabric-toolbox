@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
 Updates the definition or metadata of an Apache Airflow Job in a Microsoft Fabric workspace.
 

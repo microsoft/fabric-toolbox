@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
 Retrieves one or more Spark Livy sessions for a specified workspace in Microsoft Fabric.
 

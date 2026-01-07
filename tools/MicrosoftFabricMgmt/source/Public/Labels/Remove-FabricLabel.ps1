@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
 Removes labels in bulk from items in Microsoft Fabric.
 

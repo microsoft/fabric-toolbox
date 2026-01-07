@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
 Deletes a Fabric domain by its ID.
 

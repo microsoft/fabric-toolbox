@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
 Triggers a refresh of materialized lake views for a specified Lakehouse in Microsoft Fabric.
 

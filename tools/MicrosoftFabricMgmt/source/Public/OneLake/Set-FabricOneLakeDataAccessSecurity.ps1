@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Sets data access security for OneLake items in a Microsoft Fabric workspace.
 

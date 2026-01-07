@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
 Retrieves Spark Job Definition Livy sessions for a specified workspace and job definition in Microsoft Fabric.
 

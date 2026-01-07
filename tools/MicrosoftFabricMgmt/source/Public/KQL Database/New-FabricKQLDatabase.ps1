@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
 Creates a new KQL Database in a workspace.
 

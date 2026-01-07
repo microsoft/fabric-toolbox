@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
 Gets Warehouse Snapshots or a specific Warehouse Snapshot in a workspace.
 

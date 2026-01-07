@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
 Resumes a paused Eventstream in a Microsoft Fabric workspace.
 

@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
 Retrieves tenant settings from the Fabric environment.
 

@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Updates an existing GraphQL API in a specified Microsoft Fabric workspace.
 

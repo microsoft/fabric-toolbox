@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Updates an existing SparkJobDefinition in a specified Microsoft Fabric workspace.
 

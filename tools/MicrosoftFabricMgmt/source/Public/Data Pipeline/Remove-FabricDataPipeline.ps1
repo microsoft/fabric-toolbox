@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Removes a DataPipeline from a specified Microsoft Fabric workspace.
 

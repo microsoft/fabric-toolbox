@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Retrieves warehouse details from a specified Microsoft Fabric workspace.
 

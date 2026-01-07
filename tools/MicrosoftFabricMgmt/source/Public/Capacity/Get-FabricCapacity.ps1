@@ -1,4 +1,4 @@
-
+﻿
 <#
 .SYNOPSIS
     Retrieves capacity details from a specified Microsoft Fabric workspace.

@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
 Retrieves Livy session(s) for a specified notebook in Microsoft Fabric.
 

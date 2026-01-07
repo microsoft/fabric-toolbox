@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
 Deletes an environment from a specified workspace in Microsoft Fabric.
 

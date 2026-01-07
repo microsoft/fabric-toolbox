@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Retrieves Apache Airflow Job details from a specified Microsoft Fabric workspace.
 

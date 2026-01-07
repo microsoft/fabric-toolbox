@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
 Uploads a library to the staging environment in a Microsoft Fabric workspace.
 

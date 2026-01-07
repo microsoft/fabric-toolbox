@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Removes a mounted Data Factory from a specified Microsoft Fabric workspace.
 

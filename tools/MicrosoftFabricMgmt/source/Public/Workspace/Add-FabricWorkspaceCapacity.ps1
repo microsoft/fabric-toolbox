@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
 Assigns a Fabric workspace to a specified capacity.
 

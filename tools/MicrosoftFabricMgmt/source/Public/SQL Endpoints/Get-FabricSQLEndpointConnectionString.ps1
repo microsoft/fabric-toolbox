@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
 Retrieves the connection string for a specific SQL Endpoint in a Fabric workspace.
 

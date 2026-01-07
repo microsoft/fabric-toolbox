@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Creates a new GraphQL API resource in a specified Microsoft Fabric workspace.
 

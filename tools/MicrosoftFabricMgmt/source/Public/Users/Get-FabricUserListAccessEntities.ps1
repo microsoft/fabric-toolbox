@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Retrieves access entities for a specified user in Microsoft Fabric.
 

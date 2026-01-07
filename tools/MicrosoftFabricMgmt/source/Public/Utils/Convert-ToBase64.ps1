@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Encodes the content of a file into a Base64-encoded string.
 

@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Retrieves Eventhouse details from a specified Microsoft Fabric workspace.
 

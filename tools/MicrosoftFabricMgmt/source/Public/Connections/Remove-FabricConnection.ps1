@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Deletes a connection from Microsoft Fabric.
 

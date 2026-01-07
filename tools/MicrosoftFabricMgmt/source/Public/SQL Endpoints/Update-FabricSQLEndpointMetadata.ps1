@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
 Refreshes metadata for a SQL Endpoint.
 

@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Updates an existing tag in Microsoft Fabric.
 

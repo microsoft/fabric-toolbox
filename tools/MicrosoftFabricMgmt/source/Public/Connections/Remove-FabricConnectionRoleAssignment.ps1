@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
 Deletes a role assignment from a specified Fabric Connection.
 

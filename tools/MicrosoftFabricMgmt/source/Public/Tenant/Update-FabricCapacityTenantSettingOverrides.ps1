@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
 Updates tenant setting overrides for a specified capacity ID.
 

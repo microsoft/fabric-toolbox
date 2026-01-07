@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Deletes a warehouse snapshot from a specified Microsoft Fabric workspace.
 

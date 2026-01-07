@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Retrieves the definition of an SparkJobDef        # Make the API request
         $apiParams = @{

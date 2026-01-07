@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Retrieves the definition of an SemanticModel from a specified Microsoft Fabric workspace.
 

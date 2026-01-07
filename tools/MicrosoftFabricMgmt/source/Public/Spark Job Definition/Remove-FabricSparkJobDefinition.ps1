@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Removes an SparkJobDefinition from a specified Microsoft Fabric workspace.
 

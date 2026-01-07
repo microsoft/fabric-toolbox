@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Sends an HTTP request to a Microsoft Fabric API, supporting pagination and long-running operations.
 

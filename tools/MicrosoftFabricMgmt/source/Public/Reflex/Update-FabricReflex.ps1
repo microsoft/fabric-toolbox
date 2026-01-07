@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Updates an existing Reflex in a specified Microsoft Fabric workspace.
 

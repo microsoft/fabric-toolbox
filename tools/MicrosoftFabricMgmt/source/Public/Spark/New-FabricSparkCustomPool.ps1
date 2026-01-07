@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Creates a new Spark custom pool in a specified Microsoft Fabric workspace.
 

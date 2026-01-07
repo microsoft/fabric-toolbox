@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Revokes an external data share from a specified Microsoft Fabric workspace item.
 

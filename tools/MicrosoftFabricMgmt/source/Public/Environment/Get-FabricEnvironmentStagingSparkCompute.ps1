@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
 Retrieves staging Spark compute details for a specific environment in a Microsoft Fabric workspace.
 

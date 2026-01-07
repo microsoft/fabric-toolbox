@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Removes an ML Experiment from a specified Microsoft Fabric workspace.
 

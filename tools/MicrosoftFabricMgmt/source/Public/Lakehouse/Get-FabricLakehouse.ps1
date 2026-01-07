@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
 Gets a Lakehouse or lists all Lakehouses in a workspace.
 

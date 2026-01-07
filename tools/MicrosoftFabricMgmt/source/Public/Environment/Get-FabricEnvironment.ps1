@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
 Retrieves an environment or a list of environments from a specified workspace in Microsoft Fabric.
 

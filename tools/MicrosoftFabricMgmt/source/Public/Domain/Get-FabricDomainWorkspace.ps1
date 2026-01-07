@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
 Retrieves the workspaces associated with a specific domain in Microsoft Fabric.
 

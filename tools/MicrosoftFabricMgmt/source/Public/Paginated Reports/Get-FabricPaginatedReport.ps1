@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Retrieves paginated report details from a specified Microsoft Fabric workspace.
 

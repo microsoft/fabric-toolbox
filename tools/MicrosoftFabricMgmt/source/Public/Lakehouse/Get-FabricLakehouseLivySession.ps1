@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
 Retrieves one or more Livy sessions for a specified Lakehouse in Microsoft Fabric.
 

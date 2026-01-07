@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
 Cancels the publish operation for a specified environment in Microsoft Fabric.
 

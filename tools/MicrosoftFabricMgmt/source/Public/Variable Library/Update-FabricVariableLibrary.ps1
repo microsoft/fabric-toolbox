@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Updates an existing Variable Library in a specified Microsoft Fabric workspace.
 

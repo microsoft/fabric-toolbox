@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
 Retrieves the result of a completed long-running operation from the Microsoft Fabric API.
 

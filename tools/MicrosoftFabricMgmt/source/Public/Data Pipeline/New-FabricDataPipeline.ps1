@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Creates a new DataPipeline in a specified Microsoft Fabric workspace.
 

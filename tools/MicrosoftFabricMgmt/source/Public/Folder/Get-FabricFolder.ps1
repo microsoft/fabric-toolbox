@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Retrieves folder details from a specified Microsoft Fabric workspace.
 

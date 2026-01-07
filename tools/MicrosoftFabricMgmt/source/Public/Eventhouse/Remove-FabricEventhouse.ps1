@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Removes an Eventhouse from a specified Microsoft Fabric workspace.
 

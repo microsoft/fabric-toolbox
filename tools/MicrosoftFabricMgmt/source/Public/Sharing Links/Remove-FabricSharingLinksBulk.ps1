@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
 Removes sharing links in bulk from items in Mic        # Make the API request
         $apiParams = @{

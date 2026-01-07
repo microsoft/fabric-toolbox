@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Creates a new Managed Private Endpoint in a Microsoft Fabric workspace.
 

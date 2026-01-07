@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
 Deletes an KQLQueryset from a specified workspace in Microsoft Fabric.
 

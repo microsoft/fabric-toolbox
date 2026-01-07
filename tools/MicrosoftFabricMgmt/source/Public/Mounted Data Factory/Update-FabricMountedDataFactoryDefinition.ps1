@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Updates the definition of a Mounted Data Factory in a Microsoft Fabric workspace.
 

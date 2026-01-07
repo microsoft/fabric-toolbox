@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Creates a new ML Model in a specified Microsoft Fabric workspace.
 

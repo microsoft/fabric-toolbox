@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Retrieves shortcut details from a specified Microsoft Fabric OneLake item.
 

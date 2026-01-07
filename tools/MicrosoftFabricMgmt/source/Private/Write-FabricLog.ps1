@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
 Module-specific logging wrapper around PSFramework's Write-PSFMessage.
 

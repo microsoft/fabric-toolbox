@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Deletes a variable library from a Microsoft Fabric workspace.
 

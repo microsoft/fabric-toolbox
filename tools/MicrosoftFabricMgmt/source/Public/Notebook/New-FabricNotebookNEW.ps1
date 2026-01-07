@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
 Creates a new notebook in a specified Microsoft Fabric workspace.
 

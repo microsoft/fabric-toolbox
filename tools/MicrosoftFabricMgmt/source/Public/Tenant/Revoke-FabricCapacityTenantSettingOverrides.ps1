@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
 Removes a tenant setting override from a specific capacity in the Fabric tenant.
 

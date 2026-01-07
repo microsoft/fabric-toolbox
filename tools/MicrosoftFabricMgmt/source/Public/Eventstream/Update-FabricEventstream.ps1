@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
 Updates the properties of a Fabric Eventstream.
 

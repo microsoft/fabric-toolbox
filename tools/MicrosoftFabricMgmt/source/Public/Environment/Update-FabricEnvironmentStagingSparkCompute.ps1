@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
 Updates the Spark compute configuration in the staging environment for a given workspace.
 

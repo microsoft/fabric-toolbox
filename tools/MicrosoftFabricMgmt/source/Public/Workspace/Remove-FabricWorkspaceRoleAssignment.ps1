@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
 Removes a role assignment from a Fabric workspace.
 

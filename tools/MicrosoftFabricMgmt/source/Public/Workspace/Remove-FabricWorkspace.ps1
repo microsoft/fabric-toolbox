@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
 Deletes an existing Fabric workspace by its workspace ID.
 

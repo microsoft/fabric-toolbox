@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Creates a new OneLake Shortcut in a Microsoft Fabric workspace.
 

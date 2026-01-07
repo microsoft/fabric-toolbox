@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
 Creates a new KQLDashboard in a specified Microsoft Fabric workspace.
 

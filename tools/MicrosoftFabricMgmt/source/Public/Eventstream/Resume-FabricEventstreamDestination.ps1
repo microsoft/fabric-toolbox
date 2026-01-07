@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
 Resumes a destination of an Eventstream in a Microsoft Fabric workspace.
 

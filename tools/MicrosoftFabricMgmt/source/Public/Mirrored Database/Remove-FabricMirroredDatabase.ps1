@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
 Deletes an MirroredDatabase from a specified workspace in Microsoft Fabric.
 

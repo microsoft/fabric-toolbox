@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Retrieves all files from a specified directory recursively, encodes their contents to Base64, and returns a structured object containing relative paths and encoded payloads.
 

@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
 Updates the definition of a notebook in a Microsoft Fabric workspace.
 

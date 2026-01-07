@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Removes an Reflex from a specified Microsoft Fabric workspace.
 

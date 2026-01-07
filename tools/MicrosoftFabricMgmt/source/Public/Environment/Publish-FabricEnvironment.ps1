@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
 Publishes a staging environment in a specified Microsoft Fabric workspace.
 

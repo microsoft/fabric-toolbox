@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
 Retrieve the topology for an Eventstream in a Microsoft Fabric workspace.
 

@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Retrieves Spark settings from a specified Microsoft Fabric workspace.
 

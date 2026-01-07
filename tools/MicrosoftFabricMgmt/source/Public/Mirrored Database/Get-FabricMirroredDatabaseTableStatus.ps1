@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
 Gets per-table mirroring status details for a mirrored database.
 

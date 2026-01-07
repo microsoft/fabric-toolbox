@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Creates a new Eventhouse in a specified Microsoft Fabric workspace.
 

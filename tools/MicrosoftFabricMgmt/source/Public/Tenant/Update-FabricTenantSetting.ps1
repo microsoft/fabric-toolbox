@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
 Updates a Fabric tenant setting.
 

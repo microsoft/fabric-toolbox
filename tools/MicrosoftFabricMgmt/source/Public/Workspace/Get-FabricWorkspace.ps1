@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
 Retrieves details of a Microsoft Fabric workspace by its ID or name.
 

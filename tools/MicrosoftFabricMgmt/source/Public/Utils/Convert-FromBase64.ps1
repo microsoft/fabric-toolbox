@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
 Decodes a Base64-encoded string into its original text representation.
 

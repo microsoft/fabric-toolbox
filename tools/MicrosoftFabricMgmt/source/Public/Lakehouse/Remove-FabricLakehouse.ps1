@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
 Deletes an Lakehouse from a specified workspace in Microsoft Fabric.
 

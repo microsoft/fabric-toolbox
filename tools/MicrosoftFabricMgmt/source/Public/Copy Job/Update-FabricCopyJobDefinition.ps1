@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
 Updates the definition of a Copy Job in a Microsoft Fabric workspace.
 

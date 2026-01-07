@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Updates an existing warehouse snapshot in a Microsoft Fabric workspace.
 

@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Removes a managed private endpoint from a specified Microsoft Fabric workspace.
 

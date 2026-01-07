@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Updates the definition of an existing SemanticModel in a specified Microsoft Fabric workspace.
 

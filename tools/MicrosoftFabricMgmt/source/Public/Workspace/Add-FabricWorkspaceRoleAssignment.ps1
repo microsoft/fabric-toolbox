@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
 Assigns a role to a principal for a specified Fabric workspace.
 

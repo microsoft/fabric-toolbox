@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Removes an SemanticModel from a specified Microsoft Fabric workspace.
 

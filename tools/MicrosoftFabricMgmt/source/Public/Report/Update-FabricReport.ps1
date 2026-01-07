@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Updates an existing Report in a specified Microsoft Fabric workspace.
 

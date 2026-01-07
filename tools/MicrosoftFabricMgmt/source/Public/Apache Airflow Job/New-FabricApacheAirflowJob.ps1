@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Creates a new Apache Airflow Job in a specified Microsoft Fabric workspace.
 

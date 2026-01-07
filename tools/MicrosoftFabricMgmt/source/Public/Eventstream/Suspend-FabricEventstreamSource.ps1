@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
 Suspends (pauses) a source of an Eventstream in a Microsoft Fabric workspace.
 .DESCRIPTION

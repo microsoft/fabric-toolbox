@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
 Assigns workspaces to a Fabric domain based on specified capacities.
 

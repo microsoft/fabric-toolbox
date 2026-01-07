@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Resets the OneLake shortcut cache for a specified Microsoft Fabric workspace.
 

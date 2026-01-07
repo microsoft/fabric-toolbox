@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
 Checks if the Fabric authentication token is expired or nearing expiration.
 

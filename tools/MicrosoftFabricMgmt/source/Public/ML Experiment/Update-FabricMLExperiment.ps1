@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Updates an existing ML Experiment in a specified Microsoft Fabric workspace.
 

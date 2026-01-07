@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
 Deprovisions the Managed Identity for a specified Fabric workspace.
 

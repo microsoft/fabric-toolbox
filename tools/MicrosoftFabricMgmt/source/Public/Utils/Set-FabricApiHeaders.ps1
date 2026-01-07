@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
 Sets the Fabric API headers with a valid token for the specified Azure tenant.
 

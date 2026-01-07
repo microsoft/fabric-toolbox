@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Removes an Report from a specified Microsoft Fabric workspace.
 

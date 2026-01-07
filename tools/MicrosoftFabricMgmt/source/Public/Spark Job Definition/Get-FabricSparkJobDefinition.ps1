@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Retrieves Spark Job Definition details from a specified Microsoft Fabric workspace.
 

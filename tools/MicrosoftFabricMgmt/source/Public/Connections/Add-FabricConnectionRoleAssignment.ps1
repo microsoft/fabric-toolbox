@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
 Assigns a specified role to a principal for a Fabric Connection.
 

@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
 Gets table metadata for a Lakehouse.
 

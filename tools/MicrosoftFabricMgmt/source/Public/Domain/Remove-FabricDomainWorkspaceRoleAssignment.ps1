@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
 Bulk unUnassign roles to principals for workspaces in a Fabric domain.
 

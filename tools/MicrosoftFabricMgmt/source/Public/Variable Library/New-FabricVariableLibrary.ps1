@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Creates a new Variable Library in a specified Microsoft Fabric workspace.
 

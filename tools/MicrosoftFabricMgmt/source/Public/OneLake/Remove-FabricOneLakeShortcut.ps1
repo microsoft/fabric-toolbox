@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Removes a OneLake Shortcut from a specified item in a Microsoft Fabric workspace.
 

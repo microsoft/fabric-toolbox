@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Removes an Apache Airflow Job from a specified Microsoft Fabric workspace.
 

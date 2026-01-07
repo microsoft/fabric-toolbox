@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
 Pauses (suspends) a destination of an Eventstream in a Microsoft Fabric workspace.
 

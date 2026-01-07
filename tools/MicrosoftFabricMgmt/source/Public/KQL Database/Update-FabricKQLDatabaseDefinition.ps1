@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
 Updates the definition of a KQLDatabase in a Microsoft Fabric workspace.
 

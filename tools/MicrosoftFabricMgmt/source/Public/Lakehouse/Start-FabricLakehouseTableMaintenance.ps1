@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
 Starts a table maintenance job for a specified Lakehouse table in Microsoft Fabric.
 

@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
 Assigns a label in bulk to multiple items in Microsoft Fabric.
 

@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Removes an ML Model from a specified Microsoft Fabric workspace.
 

@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
 Retrieves domain information from Microsoft Fabric, optionally filtering by domain ID, domain name, or only non-empty domains.
 

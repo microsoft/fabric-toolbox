@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
 Retrieves a specific KQL Database or all KQL Databases from a workspace.
 

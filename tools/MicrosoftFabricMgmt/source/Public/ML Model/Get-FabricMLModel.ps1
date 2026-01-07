@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Retrieves ML Model details from a specified Microsoft Fabric workspace.
 

@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Moves a folder to a new location within a Microsoft Fabric workspace.
 

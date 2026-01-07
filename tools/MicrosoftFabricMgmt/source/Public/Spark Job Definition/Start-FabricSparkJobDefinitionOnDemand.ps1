@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Starts a Fabric Spark Job Definition on demand.
 

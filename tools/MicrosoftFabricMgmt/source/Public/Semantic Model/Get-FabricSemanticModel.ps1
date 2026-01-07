@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Retrieves SemanticModel details from a specified Microsoft Fabric workspace.
 

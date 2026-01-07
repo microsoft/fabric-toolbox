@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Removes a GraphQL API from a specified Microsoft Fabric workspace.
 

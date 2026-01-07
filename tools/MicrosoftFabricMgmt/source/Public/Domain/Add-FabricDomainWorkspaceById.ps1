@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
 Assigns workspaces to a specified domain in Microsoft Fabric by their IDs.
 

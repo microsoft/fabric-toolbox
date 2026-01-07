@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
 Retrieves the connection string for a specific Warehouse in a Fabric workspace.
 

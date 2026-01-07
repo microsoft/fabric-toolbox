@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
 Gets the current mirroring status for a specific Mirrored Database.
 

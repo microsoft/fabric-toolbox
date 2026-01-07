@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
 Updates the definition of a KQLDashboard in a Microsoft Fabric workspace.
 

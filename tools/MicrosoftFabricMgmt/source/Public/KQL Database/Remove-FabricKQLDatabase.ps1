@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
 Deletes an KQLDatabase from a specified workspace in Microsoft Fabric.
 

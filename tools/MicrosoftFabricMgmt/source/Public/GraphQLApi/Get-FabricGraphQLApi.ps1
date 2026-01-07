@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Retrieves GraphQL API details from a specified Microsoft Fabric workspace.
 

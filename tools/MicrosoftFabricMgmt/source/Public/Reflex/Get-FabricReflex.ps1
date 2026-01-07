@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Retrieves Reflex details from a specified Microsoft Fabric workspace.
 

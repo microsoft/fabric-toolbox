@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Retrieves connection details from a Microsoft Fabric workspace.
 

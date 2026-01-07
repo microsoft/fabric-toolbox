@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
 Retrieves SQL Endpoints from a specified workspace in Fabric.
 

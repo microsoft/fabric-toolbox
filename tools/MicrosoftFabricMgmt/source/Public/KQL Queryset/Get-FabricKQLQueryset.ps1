@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
 Retrieves a specific KQL Queryset or all KQL Querysets from a workspace.
 

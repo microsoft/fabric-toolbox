@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
 Bulk assigns roles to principals for workspaces in a Fabric domain.
 

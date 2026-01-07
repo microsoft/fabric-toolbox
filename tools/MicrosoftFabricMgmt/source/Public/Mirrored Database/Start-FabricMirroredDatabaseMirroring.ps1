@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
 Starts mirroring for a specified MirroredDatabase in a workspace.
 

@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Deletes a Copy Job from a specified Microsoft Fabric workspace.
 

@@ -1,4 +1,4 @@
-
+﻿
 <#
 .SYNOPSIS
 Retrieves the definition of a KQLDashboard from a specific workspace in Microsoft Fabric.

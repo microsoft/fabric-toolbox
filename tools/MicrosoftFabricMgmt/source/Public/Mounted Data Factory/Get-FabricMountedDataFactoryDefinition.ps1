@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Retrieves the definition of a mounted Data Factory from a Microsoft Fabric workspace.
 

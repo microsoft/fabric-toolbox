@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Creates one or more tags in a Microsoft Fabric workspace.
 

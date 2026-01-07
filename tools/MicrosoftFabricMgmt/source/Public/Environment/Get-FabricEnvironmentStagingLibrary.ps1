@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
 Retrieves the staging library details for a specific environment in a Microsoft Fabric workspace.
 

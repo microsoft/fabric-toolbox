@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
 Loads one or more data files (or all files in a folder) into a Lakehouse table within a Microsoft Fabric workspace.
 

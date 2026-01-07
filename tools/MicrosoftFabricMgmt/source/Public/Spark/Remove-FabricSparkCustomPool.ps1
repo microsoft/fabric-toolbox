@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Removes a Spark custom pool from a specified Microsoft Fabric workspace.
 

@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Creates a new SemanticModel in a specified Microsoft Fabric workspace.
 

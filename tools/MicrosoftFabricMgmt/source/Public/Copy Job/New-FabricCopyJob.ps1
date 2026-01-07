@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Creates a new copy job in a specified Microsoft Fabric workspace.
 

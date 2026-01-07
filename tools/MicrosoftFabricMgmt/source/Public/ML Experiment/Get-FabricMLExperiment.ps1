@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Retrieves ML Experiment details from a specified Microsoft Fabric workspace.
 

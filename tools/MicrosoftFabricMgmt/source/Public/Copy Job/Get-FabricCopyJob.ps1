@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Retrieves details of one or more CopyJobs from a specified Microsoft Fabric workspace.
 

@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
 Polls and returns the final status of a Fabric long-running operation.
 

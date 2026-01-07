@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
 Deletes an Eventstream from a specified workspace in Microsoft Fabric.
 

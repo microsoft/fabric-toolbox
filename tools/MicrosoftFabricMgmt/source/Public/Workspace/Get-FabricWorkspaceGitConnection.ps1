@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
 Retrieves Git connection details for Microsoft Fabric workspaces.
 

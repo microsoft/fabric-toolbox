@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
 Retrieves a specific KQL Dashboard or all KQL Dashboards from a workspace.
 

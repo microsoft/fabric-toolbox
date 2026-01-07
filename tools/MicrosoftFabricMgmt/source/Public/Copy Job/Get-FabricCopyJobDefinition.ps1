@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
 Retrieves the definition of a Copy Job from a specific workspace in Microsoft Fabric.
 Author: Updated by Jess Pomfret and Rob Sewell November 2026

@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Removes a warehouse from a specified Microsoft Fabric workspace.
 

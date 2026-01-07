@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
 Updates Spark settings at the workspace scope.
 

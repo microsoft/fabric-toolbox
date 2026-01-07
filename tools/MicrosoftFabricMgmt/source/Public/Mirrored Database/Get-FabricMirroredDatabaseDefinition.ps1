@@ -1,4 +1,4 @@
-
+﻿
 <#
 .SYNOPSIS
 Retrieves the definition of a MirroredDatabase from a specific workspace in Microsoft Fabric.

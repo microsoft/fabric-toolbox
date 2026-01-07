@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Creates a new folder in a specified Microsoft Fabric workspace.
 

@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
 Provisions an identity for a Fabric workspace.
 

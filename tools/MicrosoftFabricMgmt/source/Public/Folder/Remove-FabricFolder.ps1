@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Deletes a folder from a specified Microsoft Fabric workspace.
 

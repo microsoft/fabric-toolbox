@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
 Automatically refreshes the Fabric API authentication token.
 

@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
 Updates a Fabric domain by its ID.
 

@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
 Unassigns a Fabric workspace from its capacity.
 

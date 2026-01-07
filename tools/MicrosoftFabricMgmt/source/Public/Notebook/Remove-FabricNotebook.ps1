@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
 Deletes an Notebook from a specified workspace in Microsoft Fabric.
 

@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Retrieves the definition of an Report from a specified Microsoft Fabric workspace.
 

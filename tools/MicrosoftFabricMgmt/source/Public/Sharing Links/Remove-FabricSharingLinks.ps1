@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
 Removes all sharing links in bulk from s        # Make the API request
         $apiParams = @{

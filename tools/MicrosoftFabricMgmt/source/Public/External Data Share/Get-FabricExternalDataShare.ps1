@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Retrieves External Data Shares details from a specified Microsoft Fabric.
 

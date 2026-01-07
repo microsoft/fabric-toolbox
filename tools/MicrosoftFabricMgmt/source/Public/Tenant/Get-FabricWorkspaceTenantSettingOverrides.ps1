@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
 Retrieves tenant setting overrides for all workspaces in the Fabric tenant.
 

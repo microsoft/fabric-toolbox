@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Updates an existing Eventhouse in a specified Microsoft Fabric workspace.
 

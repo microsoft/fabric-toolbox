@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
 Creates a new environment in a specified workspace.
 

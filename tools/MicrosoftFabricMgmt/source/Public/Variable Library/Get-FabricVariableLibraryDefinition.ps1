@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Retrieves the definition of a variable library from a Microsoft Fabric workspace.
 

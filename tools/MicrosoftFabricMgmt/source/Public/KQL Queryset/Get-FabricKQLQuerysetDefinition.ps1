@@ -1,4 +1,4 @@
-
+﻿
 <#
 .SYNOPSIS
 Retrieves the definition of a KQLQueryset from a specific workspace in Microsoft Fabric.

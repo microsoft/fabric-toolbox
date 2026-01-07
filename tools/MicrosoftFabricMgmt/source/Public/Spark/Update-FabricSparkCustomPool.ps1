@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Updates an existing Spark custom pool in a specified Microsoft Fabric workspace.
 

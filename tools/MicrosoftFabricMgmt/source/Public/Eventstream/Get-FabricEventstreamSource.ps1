@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
 Retrieve a specific Eventstream source from a Microsoft Fabric workspace.
 

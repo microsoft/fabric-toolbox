@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Retrieves data pipelines from a specified Microsoft Fabric workspace.
 

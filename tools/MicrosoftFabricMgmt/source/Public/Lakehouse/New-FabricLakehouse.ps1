@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
 Creates a new Lakehouse in a specified Microsoft Fabric workspace.
 

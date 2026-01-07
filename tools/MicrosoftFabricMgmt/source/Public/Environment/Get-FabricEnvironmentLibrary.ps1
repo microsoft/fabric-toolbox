@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
 Retrieves the list of libraries associated with a specific environment in a Microsoft Fabric workspace.
 

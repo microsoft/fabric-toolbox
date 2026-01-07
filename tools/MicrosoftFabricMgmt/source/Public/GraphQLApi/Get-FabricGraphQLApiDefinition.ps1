@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Retrieves the definition of a GraphQL API from a specified Microsoft Fabric workspace.
 

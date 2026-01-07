@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
 Retrieves tenant setting overrides for a specific domain or all capacities in the Fabric tenant.
 
