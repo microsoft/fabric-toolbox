@@ -17,13 +17,43 @@ As with all PowerShell modules, you can either clone the repository and import t
 # Install from PowerShell Gallery
 Install-Module -Name MicrosoftFabricMgmt
 ```
+
+NOTE - AT PRESENT THE MODULE IS NOT PUBLISHED TO THE POWERSHELL GALLERY. USE THE CLONE METHOD BELOW UNTIL IT IS PUBLISHED.
+
+
 IF you prefer to clone the repository, you can do so with the following commands:
 
 ```powershell
+
+#Install dependency Modules if not already installed
+
+$RequiredModules = @(
+    {
+        Name = 'PSFramework'
+        MinimumVersion = '5.0.0'
+    },
+    {
+        Name = 'Az.Accounts'
+        MinimumVersion = '5.0.0'
+    }
+    {
+        Name = 'Az.Resources'
+        MinimumVersion = '6.15.1'
+    }
+    {
+        Name = 'MicrosoftPowerBIMgmt'
+        MinimumVersion =  '1.2.1111'
+    }
+)
+foreach ($module in $RequiredModules) {
+    if (-not (Get-Module -ListAvailable -Name $module.Name -MinimumVersion $module.MinimumVersion -ErrorAction SilentlyContinue)) {
+        Install-Module -Name $module.Name -MinimumVersion $module.MinimumVersion -Repository PSGallery -Force -AllowClobber
+    }
+}
 # Clone the repository
 git clone https://github.com/microsoft/fabric-toolbox.git
 # Import the module
-Import-Module ./tools/MicrosoftFabricMgmt/MicrosoftFabricMGMT/MicrosoftFabricMgmt.psm1
+Import-Module ./tools\MicrosoftFabricMgmt\output\module\MicrosoftFabricMgmt\0.5.4\MicrosoftFabricMgmt.psd1
 ```
 
 ## Prerequisites
