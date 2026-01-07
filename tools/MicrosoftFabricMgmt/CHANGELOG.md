@@ -170,11 +170,5 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 **Contributors:**  
 Rob Sewell, Jess Pomfret, Ioana Bouariu, Frank Geisler, Kamil Nowinski, and others.
 
-**Note:**  
+**Note:**
 For a full list of changes and details, please see the commit history.
-
-### Added
-
-### Security
-
-- In case of vulnerabilities.
