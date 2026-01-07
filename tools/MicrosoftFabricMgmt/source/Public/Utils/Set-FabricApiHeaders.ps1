@@ -79,6 +79,7 @@ function Set-FabricApiHeaders {
         [System.Security.SecureString]$AppSecret,
 
         [Parameter(Mandatory = $true, ParameterSetName = 'ManagedIdentity')]
+        [System.Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSReviewUnusedParameter', '', Justification='Parameter is used for parameter set binding')]
         [switch]$UseManagedIdentity,
 
         [Parameter(Mandatory = $false, ParameterSetName = 'ManagedIdentity')]
