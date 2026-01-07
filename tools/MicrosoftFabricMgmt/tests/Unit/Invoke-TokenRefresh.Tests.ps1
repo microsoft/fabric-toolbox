@@ -2,11 +2,6 @@
 param(
     $ModuleName = "MicrosoftFabricMgmt",
 $expectedParams = @(
-    "TenantId"
-    "AppId"
-    "AppSecret"
-    "UseManagedIdentity"
-    "ClientId"
     "ProgressAction"
     "Verbose"
     "Debug"
@@ -19,21 +14,22 @@ $expectedParams = @(
     "PipelineVariable"
     "ErrorVariable"
     "WarningVariable"
-    "Confirm"
-    "WhatIf"
 )
 )
 
-Describe "Set-FabricApiHeaders" -Tag "UnitTests" {
+Describe "Invoke-TokenRefresh" -Tag "UnitTests" {
 
     BeforeDiscovery {
-        $command = Get-Command -Name Set-FabricApiHeaders
+        . $PSScriptRoot\..\..\source\Private\Invoke-TokenRefresh.ps1
+        $command = Get-Command -Name Invoke-TokenRefresh
         $expected = $expectedParams
     }
 
     Context "Parameter validation" {
         BeforeAll {
-            $command = Get-Command -Name Set-FabricApiHeaders
+        . $PSScriptRoot\..\..\source\Private\Invoke-TokenRefresh.ps1
+
+            $command = Get-Command -Name Invoke-TokenRefresh
             $expected = $expectedParams
         }
 
