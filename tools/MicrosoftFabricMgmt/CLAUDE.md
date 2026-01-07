@@ -13,6 +13,12 @@ This document provides comprehensive instructions for AI-assisted development of
 - **Pester**: Unit and integration testing
 - **PlatyPS**: Help documentation generation
 
+**PowerShell Compatibility**:
+- **CRITICAL**: Module MUST support both PowerShell 5.1 and PowerShell 7+
+- Code must handle version-specific differences explicitly
+- Test on both versions before deployment
+- Use `$PSVersionTable.PSVersion` to detect version and branch logic when needed
+
 ## Directory Structure
 
 ```
@@ -605,6 +611,44 @@ $workspaceId  # Not: $wsId, $id, $w
 Get-FabricWorkspace  # Not: Get-FabricWorkspaces (even when returning multiple)
 ```
 
+#### PowerShell Version Compatibility
+
+**CRITICAL**: Code must work on both PowerShell 5.1 and PowerShell 7+
+
+**Version-Specific Considerations**:
+
+```powershell
+# Ternary operator (PowerShell 7+ only) - DO NOT USE
+$value = $condition ? $trueValue : $falseValue  # BREAKS in PS 5.1
+
+# Use traditional if/else instead
+$value = if ($condition) { $trueValue } else { $falseValue }  # Works in both
+
+# Null coalescing (PowerShell 7+ only) - DO NOT USE
+$value = $variable ?? $defaultValue  # BREAKS in PS 5.1
+
+# Use traditional pattern instead
+$value = if ($null -eq $variable) { $defaultValue } else { $variable }  # Works in both
+
+# Pipeline chain operators (PowerShell 7+ only) - DO NOT USE
+Get-Item file.txt && Get-Content file.txt  # BREAKS in PS 5.1
+
+# Use traditional error handling
+if (Get-Item file.txt -ErrorAction SilentlyContinue) {
+    Get-Content file.txt
+}
+
+# .ForEach() and .Where() methods - Available in PS 4+, safe to use
+$results.Where({ $_.Id -eq $targetId }, 'First')  # Works in both
+$items.ForEach({ $_.Name })  # Works in both
+```
+
+**Testing Requirements**:
+- Test all code on both PowerShell 5.1 and PowerShell 7.4+
+- Use `$PSVersionTable.PSVersion` to detect version for branching logic
+- Document any version-specific behavior
+- CI/CD should test both versions
+
 #### Formatting Standards
 
 - **Indentation**: 4 spaces (no tabs)
@@ -1006,19 +1050,30 @@ When working on this module:
    # First time or after dependency changes
    .\build.ps1 -ResolveDependency -noop
 
-   # Build and test in clean process
-   .\build.ps1 -Tasks clean,build,test
+   # Build and test in clean process (PowerShell 7+)
+   pwsh -NoProfile -Command ".\build.ps1 -Tasks clean,build,test"
+
+   # Build and test in PowerShell 5.1 (if available)
+   powershell.exe -NoProfile -Command ".\build.ps1 -Tasks clean,build,test"
    ```
 
-2. **Follow existing patterns** - consistency is key
+2. **Test on both PowerShell versions** - Code must work on PS 5.1 and 7+
 
-3. **Document everything** - future you will thank present you
+3. **Avoid PowerShell 7+ only syntax**:
+   - NO ternary operators (`?:`)
+   - NO null coalescing (`??`)
+   - NO pipeline chain operators (`&&`, `||`)
+   - Use `New-Object` instead of `::new()`
 
-4. **Write tests first** when possible (TDD approach)
+4. **Follow existing patterns** - consistency is key
 
-5. **Update CHANGELOG.md** for user-facing changes
+5. **Document everything** - future you will thank present you
 
-6. **Version appropriately**:
+6. **Write tests first** when possible (TDD approach)
+
+7. **Update CHANGELOG.md** for user-facing changes
+
+8. **Version appropriately**:
    - Patch (0.0.x): Bug fixes, no API changes
    - Minor (0.x.0): New features, backwards compatible
    - Major (x.0.0): Breaking changes
