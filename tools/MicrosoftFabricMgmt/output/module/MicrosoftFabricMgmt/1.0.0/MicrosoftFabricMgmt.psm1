@@ -333,9 +333,14 @@ function Invoke-FabricAuthCheck {
     }
 
     Write-FabricLog -Message "Authentication token is valid" -Level Debug
-    return $true
+
+    # Only return $true when not using ThrowOnFailure (caller needs the boolean result)
+    # When using ThrowOnFailure, don't output anything - caller only cares about exceptions
+    if (-not $ThrowOnFailure) {
+        return $true
+    }
 }
-#EndRegion '.\Private\Invoke-FabricAuthCheck.ps1' 67
+#EndRegion '.\Private\Invoke-FabricAuthCheck.ps1' 72
 #Region '.\Private\Invoke-TokenRefresh.ps1' -1
 
 <#
