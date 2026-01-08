@@ -101,7 +101,7 @@ function Invoke-FabricAPIRequest {
             $apiEndpointURI = $BaseURI
             if ($null -ne $continuationToken) {
                 $encodedToken = [System.Web.HttpUtility]::UrlEncode($continuationToken)
-                $separator = $BaseURI -like "*`?*" ? "&" : "?"
+                $separator = if ($BaseURI -like "*`?*") { "&" } else { "?" }
                 $apiEndpointURI = "$BaseURI$separator" + "continuationToken=$encodedToken"
             }
 
@@ -189,7 +189,7 @@ function Invoke-FabricAPIRequest {
                             $results.Add($item)
                         }
                         # Update continuation token for pagination
-                        $continuationToken = $propertyNames -contains 'continuationToken' ? $response.continuationToken : $null
+                        $continuationToken = if ($propertyNames -contains 'continuationToken') { $response.continuationToken } else { $null }
                     }
                     else {
                         Write-FabricLog -Message "No data in response" -Level Debug

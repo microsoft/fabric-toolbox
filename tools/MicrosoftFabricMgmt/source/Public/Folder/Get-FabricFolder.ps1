@@ -93,7 +93,8 @@ function Get-FabricFolder {
         if ($RootFolderId) {
             $queryParams += "rootFolderId=$RootFolderId"
         }
-        $queryParams += "recursive=$($Recursive.IsPresent -and $Recursive ? 'True' : 'False')"
+        $recursiveValue = if ($Recursive.IsPresent -and $Recursive) { 'True' } else { 'False' }
+        $queryParams += "recursive=$recursiveValue"
         $apiEndpointURI = "{0}/workspaces/{1}/folders?{2}" -f $FabricConfig.BaseUrl, $WorkspaceId, ($queryParams -join '&')
         Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
 
