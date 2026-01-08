@@ -38,12 +38,10 @@ function Add-FabricWorkspaceCapacity {
 
     try {
         # Validate authentication token before proceeding.
-        Write-FabricLog -Message "Validating authentication token..." -Level Debug
-        Test-TokenExpired
-        Write-FabricLog -Message "Authentication token is valid." -Level Debug
+        Invoke-FabricAuthCheck -ThrowOnFailure
 
         # Construct the API endpoint URI
-        $apiEndpointURI = "{0}/workspaces/{1}/assignToCapacity" -f $FabricConfig.BaseUrl, $WorkspaceId
+        $apiEndpointURI = Build-FabricAPIUri -Resource 'workspaces' -ItemId $WorkspaceId -Subresource 'assignToCapacity'
         Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
 
         # Construct the request body
@@ -52,7 +50,7 @@ function Add-FabricWorkspaceCapacity {
         }
 
         # Convert the body to JSON
-        $bodyJson = $body | ConvertTo-Json -Depth 4
+        $bodyJson = Convert-FabricRequestBody -InputObject $body
         Write-FabricLog -Message "Request Body: $bodyJson" -Level Debug
 
         # Make the API request
@@ -66,7 +64,7 @@ function Add-FabricWorkspaceCapacity {
 
         # Return the API response
         Write-FabricLog -Message "Successfully assigned workspace with ID '$WorkspaceId' to capacity with ID '$CapacityId'." -Level Info
-        return $response
+        $response
     }
     catch {
         # Capture and log error details

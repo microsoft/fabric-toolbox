@@ -41,14 +41,11 @@ function Get-FabricWorkspaceRoleAssignment {
     )
 
     try {
-        # Validate authentication token before proceeding.
-        Write-FabricLog -Message "Validating authentication token..." -Level Debug
-        Test-TokenExpired
-        Write-FabricLog -Message "Authentication token is valid." -Level Debug
+        # Validate authentication
+        Invoke-FabricAuthCheck -ThrowOnFailure
 
         # Construct the API endpoint URI
-        $apiEndpointURI = "{0}/workspaces/{1}/roleAssignments" -f $FabricConfig.BaseUrl, $WorkspaceId
-        Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
+        $apiEndpointURI = Build-FabricAPIUri -Resource 'workspaces' -ItemId $WorkspaceId -Subresource 'roleAssignments'
 
         # Make the API request
         $apiParams = @{
@@ -58,26 +55,11 @@ function Get-FabricWorkspaceRoleAssignment {
         }
         $dataItems = Invoke-FabricAPIRequest @apiParams
 
-        # Immediately handle empty response
-        if (-not $dataItems) {
-            Write-FabricLog -Message "No data returned from the API." -Level Warning
-            return $null
-        }
+        # Apply filtering
+        $matchedItems = Select-FabricResource -InputObject $dataItems -Id $WorkspaceRoleAssignmentId -ResourceType 'WorkspaceRoleAssignment'
 
-        # Apply filtering logic efficiently
-        if ($WorkspaceRoleAssignmentId) {
-            $matchedItems = $dataItems.Where({ $_.Id -eq $WorkspaceRoleAssignmentId })
-        }
-        else {
-            Write-FabricLog -Message "No filter provided. Returning all items." -Level Debug
-            $matchedItems = $dataItems
-        }
-
-        # Handle results
+        # Transform data into custom objects
         if ($matchedItems) {
-            Write-FabricLog -Message "Found $($matchedItems.Count) role assignments for WorkspaceId '$WorkspaceId'." -Level Debug
-
-            # Transform data into custom objects
             $customResults = foreach ($obj in $matchedItems) {
                 [PSCustomObject]@{
                     ID                = $obj.id
@@ -89,17 +71,7 @@ function Get-FabricWorkspaceRoleAssignment {
                     Role              = $obj.role
                 }
             }
-            return $customResults
-        }
-        else {
-            if ($WorkspaceRoleAssignmentId) {
-                Write-FabricLog -Message "No role assignment found with ID '$WorkspaceRoleAssignmentId' for WorkspaceId '$WorkspaceId'." -Level Warning
-                return $null
-            }
-            else {
-                Write-FabricLog -Message "No role assignments found for WorkspaceId '$WorkspaceId'." -Level Warning
-                return $null
-            }
+            $customResults
         }
     }
     catch {

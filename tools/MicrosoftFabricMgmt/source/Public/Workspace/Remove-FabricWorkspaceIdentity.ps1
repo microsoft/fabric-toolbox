@@ -30,12 +30,10 @@ function Remove-FabricWorkspaceIdentity {
 
     try {
         # Validate authentication token before proceeding.
-        Write-FabricLog -Message "Validating authentication token..." -Level Debug
-        Test-TokenExpired
-        Write-FabricLog -Message "Authentication token is valid." -Level Debug
+        Invoke-FabricAuthCheck -ThrowOnFailure
 
         # Construct the API endpoint URI
-        $apiEndpointURI = "{0}/workspaces/{1}/deprovisionIdentity" -f $FabricConfig.BaseUrl, $WorkspaceId
+        $apiEndpointURI = Build-FabricAPIUri -Resource 'workspaces' -ItemId $WorkspaceId -Subresource 'deprovisionIdentity'
         Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
 
         # Make the API request
@@ -43,7 +41,6 @@ function Remove-FabricWorkspaceIdentity {
             BaseURI = $apiEndpointURI
             Headers = $FabricConfig.FabricHeaders
             Method = 'Post'
-            Body = $bodyJson
         }
 
         if ($PSCmdlet.ShouldProcess("Workspace identity for '$WorkspaceId'", 'Deprovision')) {

@@ -28,14 +28,11 @@ function Remove-FabricWorkspace {
     )
 
     try {
-        # Validate authentication token before proceeding.
-        Write-FabricLog -Message "Validating authentication token..." -Level Debug
-        Test-TokenExpired
-        Write-FabricLog -Message "Authentication token is valid." -Level Debug
+        # Validate authentication
+        Invoke-FabricAuthCheck -ThrowOnFailure
 
         # Construct the API endpoint URI
-        $apiEndpointURI = "{0}/workspaces/{1}" -f $FabricConfig.BaseUrl, $WorkspaceId
-        Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
+        $apiEndpointURI = Build-FabricAPIUri -Resource 'workspaces' -ItemId $WorkspaceId
 
         # Make the API request
         $apiParams = @{
@@ -46,17 +43,13 @@ function Remove-FabricWorkspace {
 
         if ($PSCmdlet.ShouldProcess("Workspace '$WorkspaceId'", 'Delete')) {
             $response = Invoke-FabricAPIRequest @apiParams
-
-            # Return the API response
             Write-FabricLog -Message "Workspace '$WorkspaceId' deleted successfully!" -Level Info
-            return $response
+            $response
         }
-
     }
     catch {
         # Capture and log error details
         $errorDetails = $_.Exception.Message
-        Write-FabricLog -Message "Failed to retrieve capacity. Error: $errorDetails" -Level Error
-        return $null
+        Write-FabricLog -Message "Failed to delete workspace. Error: $errorDetails" -Level Error
     }
 }

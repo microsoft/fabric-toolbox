@@ -34,14 +34,11 @@ function Get-FabricWorkspaceGitConnection {
         [string]$WorkspaceId
     )
     try {
-        # Validate authentication token before proceeding.
-        Write-FabricLog -Message "Validating authentication token..." -Level Debug
-        Test-TokenExpired
-        Write-FabricLog -Message "Authentication token is valid." -Level Debug
+        # Validate authentication
+        Invoke-FabricAuthCheck -ThrowOnFailure
 
         # Construct the API endpoint URI
-        $apiEndpointURI = "{0}/admin/workspaces/discoverGitConnections" -f $FabricConfig.BaseUrl
-        Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
+        $apiEndpointURI = Build-FabricAPIUri -Resource 'admin/workspaces/discoverGitConnections'
 
         # Make the API request
         $apiParams = @{
@@ -51,29 +48,18 @@ function Get-FabricWorkspaceGitConnection {
         }
         $dataItems = Invoke-FabricAPIRequest @apiParams
 
-        # Immediately handle empty response
-        if (-not $dataItems) {
-            Write-FabricLog -Message "No data returned from the API." -Level Warning
-            return $null
-        }
-
-        # Apply filtering logic efficiently
+        # Apply filtering - using custom property 'workspaceId' instead of 'Id'
         if ($WorkspaceId) {
             $matchedItems = $dataItems.Where({ $_.workspaceId -eq $WorkspaceId }, 'First')
+            if ($matchedItems) {
+                $matchedItems
+            }
+            else {
+                Write-FabricLog -Message "No Git connection found for WorkspaceId '$WorkspaceId'." -Level Warning
+            }
         }
         else {
-            Write-FabricLog -Message "No filter provided. Returning all items." -Level Debug
-            $matchedItems = $dataItems
-        }
-
-        # Handle results
-        if ($matchedItems) {
-            Write-FabricLog -Message "Item(s) found matching the specified criteria." -Level Debug
-            return $matchedItems
-        }
-        else {
-            Write-FabricLog -Message "No item found matching the provided criteria." -Level Warning
-            return $null
+            $dataItems
         }
     }
     catch {

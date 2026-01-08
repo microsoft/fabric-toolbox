@@ -46,17 +46,14 @@ function Get-FabricWorkspace {
         # Validate input parameters
         if ($WorkspaceId -and $WorkspaceName) {
             Write-FabricLog -Message "Specify only one parameter: either 'WorkspaceId' or 'WorkspaceName'." -Level Error
-            return $null
+            return
         }
 
-        # Validate authentication token before proceeding.
-        Write-FabricLog -Message "Validating authentication token..." -Level Debug
-        Test-TokenExpired
-        Write-FabricLog -Message "Authentication token is valid." -Level Debug
+        # Validate authentication
+        Invoke-FabricAuthCheck -ThrowOnFailure
 
         # Construct the API endpoint URI
-        $apiEndpointURI = "{0}/workspaces" -f $FabricConfig.BaseUrl
-        Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
+        $apiEndpointURI = Build-FabricAPIUri -Resource 'workspaces'
 
         # Make the API request
         $apiParams = @{
@@ -66,33 +63,8 @@ function Get-FabricWorkspace {
         }
         $dataItems = Invoke-FabricAPIRequest @apiParams
 
-        # Immediately handle empty response
-        if (-not $dataItems) {
-            Write-FabricLog -Message "No data returned from the API." -Level Warning
-            return $null
-        }
-
-        # Apply filtering logic efficiently
-        if ($WorkspaceId) {
-            $matchedItems = $dataItems.Where({ $_.Id -eq $WorkspaceId }, 'First')
-        }
-        elseif ($WorkspaceName) {
-            $matchedItems = $dataItems.Where({ $_.DisplayName -eq $WorkspaceName }, 'First')
-        }
-        else {
-            Write-FabricLog -Message "No filter provided. Returning all items." -Level Debug
-            $matchedItems = $dataItems
-        }
-
-        # Handle results
-        if ($matchedItems) {
-            Write-FabricLog -Message "Item(s) found matching the specified criteria." -Level Debug
-            return $matchedItems
-        }
-        else {
-            Write-FabricLog -Message "No item found matching the provided criteria." -Level Warning
-            return $null
-        }
+        # Apply filtering and output results
+        Select-FabricResource -InputObject $dataItems -Id $WorkspaceId -DisplayName $WorkspaceName -ResourceType 'Workspace'
     }
     catch {
         # Capture and log error details

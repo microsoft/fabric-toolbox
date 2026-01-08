@@ -53,12 +53,10 @@ function Add-FabricWorkspaceRoleAssignment {
 
     try {
         # Validate authentication token before proceeding.
-        Write-FabricLog -Message "Validating authentication token..." -Level Debug
-        Test-TokenExpired
-        Write-FabricLog -Message "Authentication token is valid." -Level Debug
+        Invoke-FabricAuthCheck -ThrowOnFailure
 
         # Construct the API endpoint URI
-        $apiEndpointURI = "{0}/workspaces/{1}/roleAssignments" -f $FabricConfig.BaseUrl, $WorkspaceId
+        $apiEndpointURI = Build-FabricAPIUri -Resource 'workspaces' -ItemId $WorkspaceId -Subresource 'roleAssignments'
         Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
 
         # Construct the request body
@@ -71,7 +69,7 @@ function Add-FabricWorkspaceRoleAssignment {
         }
 
         # Convert the body to JSON
-        $bodyJson = $body | ConvertTo-Json -Depth 4
+        $bodyJson = Convert-FabricRequestBody -InputObject $body
         Write-FabricLog -Message "Request Body: $bodyJson" -Level Debug
 
         # Make the API request
@@ -85,7 +83,7 @@ function Add-FabricWorkspaceRoleAssignment {
 
         # Return the API response
         Write-FabricLog -Message "Role '$WorkspaceRole' assigned to principal '$PrincipalId' successfully in workspace '$WorkspaceId'." -Level Info
-        return $response
+        $response
     }
     catch {
         # Capture and log error details
