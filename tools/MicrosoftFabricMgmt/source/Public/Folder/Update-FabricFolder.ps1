@@ -67,14 +67,11 @@ function Update-FabricFolder {
                 return $null
             }
         }
-        # Validate authentication token before proceeding.
-        Write-FabricLog -Message "Validating authentication token..." -Level Debug
-        Test-TokenExpired
-        Write-FabricLog -Message "Authentication token is valid." -Level Debug
+        # Validate authentication
+        Invoke-FabricAuthCheck -ThrowOnFailure
 
         # Construct the API endpoint URI
-        $apiEndpointURI = "{0}/workspaces/{1}/folders/{2}" -f $FabricConfig.BaseUrl, $WorkspaceId, $FolderId
-        Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
+        $apiEndpointURI = New-FabricAPIUri -Resource 'workspaces' -WorkspaceId $WorkspaceId -Subresource "folders/$FolderId"
 
         # Construct the request body
         $body = @{
@@ -82,13 +79,12 @@ function Update-FabricFolder {
         }
 
         # Convert the body to JSON
-        $bodyJson = $body | ConvertTo-Json
-        Write-FabricLog -Message "Request Body: $bodyJson" -Level Debug
+        $bodyJson = Convert-FabricRequestBody -InputObject $body
 
         if ($PSCmdlet.ShouldProcess($FolderId, "Update folder '$FolderName' in workspace '$WorkspaceId'")) {
             # Make the API request
             $apiParams = @{
-                Headers = $FabricConfig.FabricHeaders
+                Headers = $script:FabricAuthContext.FabricHeaders
                 BaseURI = $apiEndpointURI
                 Method  = 'Patch'
                 Body    = $bodyJson
@@ -96,7 +92,7 @@ function Update-FabricFolder {
             $response = Invoke-FabricAPIRequest @apiParams
             # Return the API response
             Write-FabricLog -Message "Folder '$FolderName' updated successfully!" -Level Info
-            return $response
+            $response
         }
     }
     catch {

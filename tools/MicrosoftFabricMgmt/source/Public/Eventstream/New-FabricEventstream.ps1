@@ -58,14 +58,11 @@ function New-FabricEventstream {
         [string]$EventstreamPathPlatformDefinition
     )
     try {
-        # Validate authentication token before proceeding.
-        Write-FabricLog -Message "Validating authentication token..." -Level Debug
-        Test-TokenExpired
-        Write-FabricLog -Message "Authentication token is valid." -Level Debug
+        # Validate authentication
+        Invoke-FabricAuthCheck -ThrowOnFailure
 
         # Construct the API endpoint URI
-        $apiEndpointURI = "{0}/workspaces/{1}/eventstreams" -f $FabricConfig.BaseUrl, $WorkspaceId
-        Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
+        $apiEndpointURI = New-FabricAPIUri -Resource 'workspaces' -WorkspaceId $WorkspaceId -Subresource 'eventstreams'
 
         # Construct the request body
         $body = @{
@@ -97,7 +94,7 @@ function New-FabricEventstream {
             }
             else {
                 Write-FabricLog -Message "Invalid or empty content in Eventstream definition." -Level Error
-                return $null
+                return
             }
         }
 
@@ -122,19 +119,18 @@ function New-FabricEventstream {
             }
             else {
                 Write-FabricLog -Message "Invalid or empty content in platform definition." -Level Error
-                return $null
+                return
             }
         }
 
         # Convert the body to JSON
-        $bodyJson = $body | ConvertTo-Json -Depth 10
-        Write-FabricLog -Message "Request Body: $bodyJson" -Level Debug
+        $bodyJson = Convert-FabricRequestBody -InputObject $body
 
         # Make the API request (guarded by ShouldProcess)
         if ($PSCmdlet.ShouldProcess($EventstreamName, "Create Eventstream in workspace '$WorkspaceId'")) {
             $apiParams = @{
                 BaseURI = $apiEndpointURI
-                Headers = $FabricConfig.FabricHeaders
+                Headers = $script:FabricAuthContext.FabricHeaders
                 Method  = 'Post'
                 Body    = $bodyJson
             }
@@ -142,7 +138,7 @@ function New-FabricEventstream {
 
             # Return the API response
             Write-FabricLog -Message "Eventstream '$EventstreamName' created successfully!" -Level Info
-            return $response
+            $response
         }
     }
     catch {

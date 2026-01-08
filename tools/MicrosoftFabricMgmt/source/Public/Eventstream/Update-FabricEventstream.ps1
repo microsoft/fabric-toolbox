@@ -56,16 +56,13 @@ function Update-FabricEventstream {
     )
 
     try {
-        # Validate authentication token before proceeding.
-        Write-FabricLog -Message "Validating authentication token..." -Level Debug
-        Test-TokenExpired
-        Write-FabricLog -Message "Authentication token is valid." -Level Debug
+        # Validate authentication
+        Invoke-FabricAuthCheck -ThrowOnFailure
 
         # Construct the API endpoint URI
-        $apiEndpointURI = "{0}/workspaces/{1}/eventstreams/{2}" -f $FabricConfig.BaseUrl, $WorkspaceId, $EventstreamId
-        Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
+        $apiEndpointURI = New-FabricAPIUri -Resource 'workspaces' -WorkspaceId $WorkspaceId -Subresource 'eventstreams' -ItemId $EventstreamId
 
-        # Step 3: Construct the request body
+        # Construct the request body
         $body = @{
             displayName = $EventstreamName
         }
@@ -75,14 +72,13 @@ function Update-FabricEventstream {
         }
 
         # Convert the body to JSON
-        $bodyJson = $body | ConvertTo-Json
-        Write-FabricLog -Message "Request Body: $bodyJson" -Level Debug
+        $bodyJson = Convert-FabricRequestBody -InputObject $body
 
         if ($PSCmdlet.ShouldProcess($EventstreamId, "Update Eventstream '$EventstreamName' in workspace '$WorkspaceId'")) {
             # Make the API request
             $apiParams = @{
-                Headers = $FabricConfig.FabricHeaders
                 BaseURI = $apiEndpointURI
+                Headers = $script:FabricAuthContext.FabricHeaders
                 Method  = 'Patch'
                 Body    = $bodyJson
             }
@@ -90,7 +86,7 @@ function Update-FabricEventstream {
 
             # Return the API response
             Write-FabricLog -Message "Eventstream '$EventstreamName' updated successfully!" -Level Info
-            return $response
+            $response
         }
     }
     catch {

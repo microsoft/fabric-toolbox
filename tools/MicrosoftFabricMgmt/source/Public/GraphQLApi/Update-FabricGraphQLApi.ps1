@@ -48,14 +48,11 @@ function Update-FabricGraphQLApi {
         [string]$GraphQLApiDescription
     )
     try {
-        # Validate authentication token before proceeding.
-        Write-FabricLog -Message "Validating authentication token..." -Level Debug
-        Test-TokenExpired
-        Write-FabricLog -Message "Authentication token is valid." -Level Debug
+        # Validate authentication
+        Invoke-FabricAuthCheck -ThrowOnFailure
 
         # Construct the API endpoint URI
-        $apiEndpointURI = "{0}/workspaces/{1}/GraphQLApis/{2}" -f $FabricConfig.BaseUrl, $WorkspaceId, $GraphQLApiId
-        Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
+        $apiEndpointURI = New-FabricAPIUri -Resource 'workspaces' -WorkspaceId $WorkspaceId -Subresource 'GraphQLApis' -ItemId $GraphQLApiId
 
         # Construct the request body
         $body = @{
@@ -67,22 +64,21 @@ function Update-FabricGraphQLApi {
         }
 
         # Convert the body to JSON
-        $bodyJson = $body | ConvertTo-Json
-        Write-FabricLog -Message "Request Body: $bodyJson" -Level Debug
+        $bodyJson = Convert-FabricRequestBody -InputObject $body
 
-        # Make the API request
-        $apiParams = @{
-            Headers = $FabricConfig.FabricHeaders
-            BaseURI = $apiEndpointURI
-            Method  = 'Patch'
-            Body    = $bodyJson
-        }
         if ($PSCmdlet.ShouldProcess("GraphQL API '$GraphQLApiId' in workspace '$WorkspaceId'", "Update")) {
+            # Make the API request
+            $apiParams = @{
+                BaseURI = $apiEndpointURI
+                Headers = $script:FabricAuthContext.FabricHeaders
+                Method  = 'Patch'
+                Body    = $bodyJson
+            }
             $response = Invoke-FabricAPIRequest @apiParams
 
             # Return the API response
             Write-FabricLog -Message "GraphQL API '$GraphQLApiName' updated successfully!" -Level Info
-            return $response
+            $response
         }
     }
     catch {

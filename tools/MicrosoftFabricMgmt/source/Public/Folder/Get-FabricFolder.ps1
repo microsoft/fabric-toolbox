@@ -83,53 +83,28 @@ function Get-FabricFolder {
             }
         }
 
-        # Validate authentication token before proceeding.
-        Write-FabricLog -Message "Validating authentication token..." -Level Debug
-        Test-TokenExpired
-        Write-FabricLog -Message "Authentication token is valid." -Level Debug
+        # Validate authentication
+        Invoke-FabricAuthCheck -ThrowOnFailure
 
         # Construct the API endpoint URI
-        $queryParams = @()
+        $queryParams = @{}
         if ($RootFolderId) {
-            $queryParams += "rootFolderId=$RootFolderId"
+            $queryParams.rootFolderId = $RootFolderId
         }
         $recursiveValue = if ($Recursive.IsPresent -and $Recursive) { 'True' } else { 'False' }
-        $queryParams += "recursive=$recursiveValue"
-        $apiEndpointURI = "{0}/workspaces/{1}/folders?{2}" -f $FabricConfig.BaseUrl, $WorkspaceId, ($queryParams -join '&')
-        Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
+        $queryParams.recursive = $recursiveValue
+        $apiEndpointURI = New-FabricAPIUri -Resource 'workspaces' -WorkspaceId $WorkspaceId -Subresource 'folders' -QueryParameters $queryParams
 
         # Make the API request
         $apiParams = @{
             BaseURI = $apiEndpointURI
-            Headers = $FabricConfig.FabricHeaders
+            Headers = $script:FabricAuthContext.FabricHeaders
             Method  = 'Get'
         }
         $dataItems = Invoke-FabricAPIRequest @apiParams
 
-        # Immediately handle empty response
-        if (-not $dataItems) {
-            Write-FabricLog -Message "No data returned from the API." -Level Warning
-            return $null
-        }
-
-        # Apply filtering logic efficiently
-        if ($FolderName) {
-            $matchedItems = $dataItems.Where({ $_.DisplayName -eq $FolderName }, 'First')
-        }
-        else {
-            Write-FabricLog -Message "No filter provided. Returning all items." -Level Debug
-            $matchedItems = $dataItems
-        }
-
-        # Handle results
-        if ($matchedItems) {
-            Write-FabricLog -Message "Item(s) found matching the specified criteria." -Level Debug
-            return $matchedItems
-        }
-        else {
-            Write-FabricLog -Message "No item found matching the provided criteria." -Level Warning
-            return $null
-        }
+        # Apply filtering logic
+        Select-FabricResource -InputObject $dataItems -DisplayName $FolderName -ResourceType 'Folder'
     }
     catch {
         # Capture and log error details

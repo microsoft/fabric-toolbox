@@ -53,13 +53,11 @@ function Update-FabricDomain {
     )
 
     try {
-        # Validate authentication token before proceeding.
-        Write-FabricLog -Message "Validating authentication token..." -Level Debug
-        Test-TokenExpired
-        Write-FabricLog -Message "Authentication token is valid." -Level Debug
+        # Validate authentication token before proceeding
+        Invoke-FabricAuthCheck -ThrowOnFailure
 
         # Construct the API endpoint URI
-        $apiEndpointURI = "{0}/admin/domains/{1}" -f $FabricConfig.BaseUrl, $DomainId
+        $apiEndpointURI = New-FabricAPIUri -Segments @('admin', 'domains', $DomainId)
         Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
 
         # Construct the request body
@@ -75,23 +73,21 @@ function Update-FabricDomain {
             $body.contributorsScope = $DomainContributorsScope
         }
 
-        # Convert the body to JSON
-        $bodyJson = $body | ConvertTo-Json -Depth 10
+        $bodyJson = Convert-FabricRequestBody -InputObject $body
         Write-FabricLog -Message "Request Body: $bodyJson" -Level Debug
 
         # Make the API request (guarded by ShouldProcess)
         if ($PSCmdlet.ShouldProcess($DomainId, "Update Fabric domain '$DomainName'")) {
             $apiParams = @{
-                Headers = $FabricConfig.FabricHeaders
+                Headers = $script:FabricAuthContext.FabricHeaders
                 BaseURI = $apiEndpointURI
                 Method  = 'Patch'
                 Body    = $bodyJson
             }
             $response = Invoke-FabricAPIRequest @apiParams
 
-            # Return the API response
             Write-FabricLog -Message "Domain '$DomainName' updated successfully!" -Level Info
-            return $response
+            $response
         }
     }
     catch {

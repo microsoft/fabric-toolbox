@@ -55,14 +55,11 @@ function Update-FabricEnvironment {
         [string]$EnvironmentDescription
     )
     try {
-        # Validate authentication token before proceeding.
-        Write-FabricLog -Message "Validating authentication token..." -Level Debug
-        Test-TokenExpired
-        Write-FabricLog -Message "Authentication token is valid." -Level Debug
+        # Validate authentication
+        Invoke-FabricAuthCheck -ThrowOnFailure
 
         # Construct the API endpoint URI
-        $apiEndpointURI = "{0}/workspaces/{1}/environments/{2}" -f $FabricConfig.BaseUrl, $WorkspaceId, $EnvironmentId
-        Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
+        $apiEndpointURI = New-FabricAPIUri -Resource 'workspaces' -WorkspaceId $WorkspaceId -Subresource "environments/$EnvironmentId"
 
         # Construct the request body
         $body = @{
@@ -74,13 +71,12 @@ function Update-FabricEnvironment {
         }
 
         # Convert the body to JSON
-        $bodyJson = $body | ConvertTo-Json
-        Write-FabricLog -Message "Request Body: $bodyJson" -Level Debug
+        $bodyJson = Convert-FabricRequestBody -InputObject $body
 
         # Make the API request (guarded by ShouldProcess)
         if ($PSCmdlet.ShouldProcess($EnvironmentId, "Update Fabric environment '$EnvironmentName' in workspace '$WorkspaceId'")) {
             $apiParams = @{
-                Headers = $FabricConfig.FabricHeaders
+                Headers = $script:FabricAuthContext.FabricHeaders
                 BaseURI = $apiEndpointURI
                 Method  = 'Patch'
                 Body    = $bodyJson
@@ -89,7 +85,7 @@ function Update-FabricEnvironment {
 
             # Return the API response
             Write-FabricLog -Message "Environment '$EnvironmentName' updated successfully!" -Level Info
-            return $response
+            $response
         }
     }
     catch {

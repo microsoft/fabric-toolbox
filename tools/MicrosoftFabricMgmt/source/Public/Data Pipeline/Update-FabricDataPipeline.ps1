@@ -50,13 +50,11 @@ function Update-FabricDataPipeline {
     )
 
     try {
-        # Validate authentication token before proceeding.
-        Write-FabricLog -Message "Validating authentication token..." -Level Debug
-        Test-TokenExpired
-        Write-FabricLog -Message "Authentication token is valid." -Level Debug
+        # Validate authentication token before proceeding
+        Invoke-FabricAuthCheck -ThrowOnFailure
 
         # Construct the API endpoint URI
-        $apiEndpointURI = "{0}/workspaces/{1}/dataPipelines/{2}" -f $FabricConfig.BaseUrl, $WorkspaceId, $DataPipelineId
+        $apiEndpointURI = New-FabricAPIUri -Segments @('workspaces', $WorkspaceId, 'dataPipelines', $DataPipelineId)
         Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
 
         # Construct the request body
@@ -68,23 +66,21 @@ function Update-FabricDataPipeline {
             $body.description = $DataPipelineDescription
         }
 
-        # Convert the body to JSON
-        $bodyJson = $body | ConvertTo-Json
+        $bodyJson = Convert-FabricRequestBody -InputObject $body
         Write-FabricLog -Message "Request Body: $bodyJson" -Level Debug
 
         if ($PSCmdlet.ShouldProcess("DataPipeline '$DataPipelineId' in workspace '$WorkspaceId'", "Update properties")) {
             # Make the API request
             $apiParams = @{
-                Headers = $FabricConfig.FabricHeaders
+                Headers = $script:FabricAuthContext.FabricHeaders
                 BaseURI = $apiEndpointURI
                 Method = 'Patch'
                 Body = $bodyJson
             }
             $response = Invoke-FabricAPIRequest @apiParams
 
-            # Return the API response
             Write-FabricLog -Message "Data Pipeline '$DataPipelineName' updated successfully!" -Level Info
-            return $response
+            $response
         }
     }
     catch {

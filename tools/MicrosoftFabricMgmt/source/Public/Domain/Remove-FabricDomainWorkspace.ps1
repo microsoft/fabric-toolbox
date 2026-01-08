@@ -45,10 +45,8 @@ function Remove-FabricDomainWorkspace {
     )
 
     try {
-        # Validate authentication token before proceeding.
-        Write-FabricLog -Message "Validating authentication token..." -Level Debug
-        Test-TokenExpired
-        Write-FabricLog -Message "Authentication token is valid." -Level Debug
+        # Validate authentication token before proceeding
+        Invoke-FabricAuthCheck -ThrowOnFailure
 
         # Construct the API endpoint URI based on the presence of WorkspaceIds
         # Construct the request body
@@ -57,14 +55,13 @@ function Remove-FabricDomainWorkspace {
             $body = @{
                 workspacesIds = $WorkspaceIds
             }
-
-            $bodyJson = $body | ConvertTo-Json -Depth 2
+            $bodyJson = Convert-FabricRequestBody -InputObject $body
         }
         else {
             $endpointSuffix = "unassignAllWorkspaces"
             $bodyJson = $null
         }
-        $apiEndpointURI = "{0}/admin/domains/{1}/{2}" -f $FabricConfig.BaseUrl, $DomainId, $endpointSuffix
+        $apiEndpointURI = New-FabricAPIUri -Segments @('admin', 'domains', $DomainId, $endpointSuffix)
         Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
         Write-FabricLog -Message "Request Body: $bodyJson" -Level Debug
 
@@ -72,15 +69,14 @@ function Remove-FabricDomainWorkspace {
         if ($PSCmdlet.ShouldProcess($DomainId, 'Unassign workspaces from domain')) {
             $apiParams = @{
                 BaseURI = $apiEndpointURI
-                Headers = $FabricConfig.FabricHeaders
+                Headers = $script:FabricAuthContext.FabricHeaders
                 Method  = 'Post'
                 Body    = $bodyJson
             }
             $response = Invoke-FabricAPIRequest @apiParams
 
-            # Return the API response
             Write-FabricLog -Message "Successfully unassigned workspaces to the domain with ID '$DomainId'." -Level Info
-            return $response
+            $response
         }
     }
     catch {

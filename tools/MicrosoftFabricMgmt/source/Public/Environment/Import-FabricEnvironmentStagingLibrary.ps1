@@ -35,14 +35,11 @@ function Import-FabricEnvironmentStagingLibrary {
         [string]$EnvironmentId
     )
     try {
-        # Validate authentication token before proceeding.
-        Write-FabricLog -Message "Validating authentication token..." -Level Debug
-        Test-TokenExpired
-        Write-FabricLog -Message "Authentication token is valid." -Level Debug
+        # Validate authentication
+        Invoke-FabricAuthCheck -ThrowOnFailure
 
         # Construct the API endpoint URI
-        $apiEndpointURI = "{0}/workspaces/{1}/environments/{2}/staging/libraries" -f $FabricConfig.BaseUrl, $WorkspaceId, $EnvironmentId
-        Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
+        $apiEndpointURI = New-FabricAPIUri -Resource 'workspaces' -WorkspaceId $WorkspaceId -Subresource "environments/$EnvironmentId/staging/libraries"
 
         # Construct the request body (not yet implemented in Fabric docs)
 
@@ -50,14 +47,14 @@ function Import-FabricEnvironmentStagingLibrary {
         if ($PSCmdlet.ShouldProcess($EnvironmentId, "Upload staging library placeholder in workspace '$WorkspaceId'")) {
             $apiParams = @{
                 BaseURI = $apiEndpointURI
-                Headers = $FabricConfig.FabricHeaders
+                Headers = $script:FabricAuthContext.FabricHeaders
                 Method  = 'Post'
             }
             $response = Invoke-FabricAPIRequest @apiParams
 
             # Return the API response
             Write-FabricLog -Message "Environment staging library uploaded successfully!" -Level Info
-            return $response
+            $response
         }
     }
     catch {

@@ -44,29 +44,30 @@ function Get-FabricGraphQLApiDefinition {
         [string]$GraphQLApiFormat
     )
     try {
-        # Validate authentication token before proceeding.
-        Write-FabricLog -Message "Validating authentication token..." -Level Debug
-        Test-TokenExpired
-        Write-FabricLog -Message "Authentication token is valid." -Level Debug
+        # Validate authentication
+        Invoke-FabricAuthCheck -ThrowOnFailure
 
-        # Construct the API endpoint URI with filtering logic
-        $apiEndpointURI = "{0}/workspaces/{1}/GraphQLApis/{2}/getDefinition" -f $FabricConfig.BaseUrl, $WorkspaceId, $GraphQLApiId
-        if ($GraphQLApiFormat) {
-            $apiEndpointURI = "{0}?format={1}" -f $apiEndpointURI, $GraphQLApiFormat
+        # Construct the API endpoint URI with optional format parameter
+        $queryParams = if ($GraphQLApiFormat) {
+            @{ format = $GraphQLApiFormat }
+        } else {
+            $null
         }
-        Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
+
+        $apiEndpointURI = New-FabricAPIUri -Resource 'workspaces' -WorkspaceId $WorkspaceId -Subresource 'GraphQLApis' -ItemId $GraphQLApiId -QueryParameters $queryParams
+        $apiEndpointURI = $apiEndpointURI -replace '/GraphQLApis/([^/]+)$', '/GraphQLApis/$1/getDefinition'
 
         # Make the API request
         $apiParams = @{
             BaseURI = $apiEndpointURI
-            Headers = $FabricConfig.FabricHeaders
+            Headers = $script:FabricAuthContext.FabricHeaders
             Method  = 'Post'
         }
         $response = Invoke-FabricAPIRequest @apiParams
 
         # Return the API response
         Write-FabricLog -Message "GraphQLApi '$GraphQLApiId' definition retrieved successfully!" -Level Debug
-        return $response
+        $response
     }
     catch {
         # Capture and log error details

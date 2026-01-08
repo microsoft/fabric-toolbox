@@ -37,13 +37,11 @@ function Add-FabricDomainWorkspaceByCapacity {
     )
 
     try {
-        # Validate authentication token before proceeding.
-        Write-FabricLog -Message "Validating authentication token..." -Level Debug
-        Test-TokenExpired
-        Write-FabricLog -Message "Authentication token is valid." -Level Debug
+        # Validate authentication token before proceeding
+        Invoke-FabricAuthCheck -ThrowOnFailure
 
         # Construct the API endpoint URI
-        $apiEndpointURI = "{0}/admin/domains/{1}/assignWorkspacesByCapacities" -f $FabricConfig.BaseUrl, $DomainId
+        $apiEndpointURI = New-FabricAPIUri -Segments @('admin', 'domains', $DomainId, 'assignWorkspacesByCapacities')
         Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
 
         # Construct the request body
@@ -51,23 +49,21 @@ function Add-FabricDomainWorkspaceByCapacity {
             capacitiesIds = $CapacitiesIds
         }
 
-        # Convert the body to JSON
-        $bodyJson = $body | ConvertTo-Json -Depth 2
+        $bodyJson = Convert-FabricRequestBody -InputObject $body
         Write-FabricLog -Message "Request Body: $bodyJson" -Level Debug
 
         # Make the API request (guarded by ShouldProcess)
         if ($PSCmdlet.ShouldProcess($DomainId, 'Assign workspaces to domain by capacities')) {
             $apiParams = @{
                 BaseURI = $apiEndpointURI
-                Headers = $FabricConfig.FabricHeaders
+                Headers = $script:FabricAuthContext.FabricHeaders
                 Method  = 'Post'
                 Body    = $bodyJson
             }
             $response = Invoke-FabricAPIRequest @apiParams
 
-            # Return the API response
             Write-FabricLog -Message "Assigning domain workspaces by capacity completed successfully!" -Level Info
-            return $response
+            $response
         }
     }
     catch {

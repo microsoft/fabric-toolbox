@@ -30,36 +30,20 @@ function Get-FabricDomainWorkspace {
     )
 
     try {
-        # Validate authentication token before proceeding.
-        Write-FabricLog -Message "Validating authentication token..." -Level Debug
-        Test-TokenExpired
-        Write-FabricLog -Message "Authentication token is valid." -Level Debug
+        # Validate authentication token before proceeding
+        Invoke-FabricAuthCheck -ThrowOnFailure
 
         # Construct the API endpoint URI
-        $apiEndpointURI = "{0}/admin/domains/{1}/workspaces" -f $FabricConfig.BaseUrl, $DomainId
+        $apiEndpointURI = New-FabricAPIUri -Segments @('admin', 'domains', $DomainId, 'workspaces')
         Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
 
         # Make the API request
         $apiParams = @{
             BaseURI = $apiEndpointURI
-            Headers = $FabricConfig.FabricHeaders
+            Headers = $script:FabricAuthContext.FabricHeaders
             Method = 'Get'
         }
-        $dataItems = Invoke-FabricAPIRequest @apiParams
-
-        # Handle empty response
-        if (-not $dataItems) {
-            Write-FabricLog -Message "No data returned from the API." -Level Warning
-            return $null
-        }
-        # Handle results
-        if ($dataItems) {
-            return $dataItems
-        }
-        else {
-            Write-FabricLog -Message "No workspace found for the '$DomainId'." -Level Warning
-            return $null
-        }
+        Invoke-FabricAPIRequest @apiParams
     }
     catch {
         # Capture and log error details

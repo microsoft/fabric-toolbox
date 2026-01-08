@@ -964,53 +964,25 @@ function Get-FabricApacheAirflowJob {
         # Validate input parameters
         if ($ApacheAirflowJobId -and $ApacheAirflowJobName) {
             Write-FabricLog -Message "Specify only one parameter: either 'ApacheAirflowJobId' or 'ApacheAirflowJobName'." -Level Error
-            return $null
+            return
         }
 
-        # Validate authentication token before proceeding.
-        Write-FabricLog -Message "Validating authentication token..." -Level Debug
-        Test-TokenExpired
-        Write-FabricLog -Message "Authentication token is valid." -Level Debug
+        # Validate authentication
+        Invoke-FabricAuthCheck -ThrowOnFailure
 
         # Construct the API endpoint URI
-        $apiEndpointURI = "{0}/workspaces/{1}/ApacheAirflowJobs" -f $FabricConfig.BaseUrl, $WorkspaceId
-        Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
+        $apiEndpointURI = New-FabricAPIUri -Resource 'workspaces' -WorkspaceId $WorkspaceId -Subresource 'ApacheAirflowJobs'
 
         # Make the API request
         $apiParams = @{
             BaseURI = $apiEndpointURI
-            Headers = $FabricConfig.FabricHeaders
+            Headers = $script:FabricAuthContext.FabricHeaders
             Method = 'Get'
         }
         $dataItems = Invoke-FabricAPIRequest @apiParams
 
-        # Immediately handle empty response
-        if (-not $dataItems) {
-            Write-FabricLog -Message "No data returned from the API." -Level Warning
-            return $null
-        }
-
-        # Apply filtering logic efficiently
-        if ($ApacheAirflowJobId) {
-            $matchedItems = $dataItems.Where({ $_.Id -eq $ApacheAirflowJobId }, 'First')
-        }
-        elseif ($ApacheAirflowJobName) {
-            $matchedItems = $dataItems.Where({ $_.DisplayName -eq $ApacheAirflowJobName }, 'First')
-        }
-        else {
-            Write-FabricLog -Message "No filter provided. Returning all items." -Level Debug
-            $matchedItems = $dataItems
-        }
-
-        # Handle results
-        if ($matchedItems) {
-            Write-FabricLog -Message "Item(s) found matching the specified criteria." -Level Debug
-            return $matchedItems
-        }
-        else {
-            Write-FabricLog -Message "No item found matching the provided criteria." -Level Warning
-            return $null
-        }
+        # Apply filtering and output results
+        Select-FabricResource -InputObject $dataItems -Id $ApacheAirflowJobId -DisplayName $ApacheAirflowJobName -ResourceType 'Apache Airflow Job'
     }
     catch {
         # Capture and log error details
@@ -1018,7 +990,7 @@ function Get-FabricApacheAirflowJob {
         Write-FabricLog -Message "Failed to retrieve Apache Airflow Job. Error: $errorDetails" -Level Error
     }
 }
-#EndRegion '.\Public\Apache Airflow Job\Get-FabricApacheAirflowJob.ps1' 108
+#EndRegion '.\Public\Apache Airflow Job\Get-FabricApacheAirflowJob.ps1' 80
 #Region '.\Public\Apache Airflow Job\Get-FabricApacheAirflowJobDefinition.ps1' -1
 
 <#
@@ -1067,30 +1039,31 @@ function Get-FabricApacheAirflowJobDefinition {
         [string]$ApacheAirflowJobFormat
     )
     try {
-        # Validate authentication token before proceeding.
-        Write-FabricLog -Message "Validating authentication token..." -Level Debug
-        Test-TokenExpired
-        Write-FabricLog -Message "Authentication token is valid." -Level Debug
+        # Validate authentication
+        Invoke-FabricAuthCheck -ThrowOnFailure
 
         # Construct the API endpoint URL
-        $apiEndpointURI = "{0}/workspaces/{1}/ApacheAirflowJobs/{2}/getDefinition" -f $FabricConfig.BaseUrl, $WorkspaceId, $ApacheAirflowJobId
-
-        # Append the format query parameter if specified by the user.
-        if ($ApacheAirflowJobFormat) {
-            $apiEndpointURI = "{0}?format={1}" -f $apiEndpointURI, $ApacheAirflowJobFormat
+        $queryParams = if ($ApacheAirflowJobFormat) {
+            @{ format = $ApacheAirflowJobFormat }
+        } else {
+            $null
         }
-        Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
+
+        $apiEndpointURI = New-FabricAPIUri -Resource 'workspaces' -WorkspaceId $WorkspaceId -Subresource 'ApacheAirflowJobs' -ItemId $ApacheAirflowJobId
+        $apiEndpointURI = "$apiEndpointURI/getDefinition"
+
+        if ($queryParams) {
+            $queryString = ($queryParams.GetEnumerator() | ForEach-Object { "$($_.Key)=$($_.Value)" }) -join '&'
+            $apiEndpointURI = "$apiEndpointURI`?$queryString"
+        }
 
         # Make the API request
         $apiParams = @{
             BaseURI = $apiEndpointURI
-            Headers = $FabricConfig.FabricHeaders
+            Headers = $script:FabricAuthContext.FabricHeaders
             Method = 'Post'
         }
-        $response = Invoke-FabricAPIRequest @apiParams
-
-        # Return the API response
-        return $response
+        Invoke-FabricAPIRequest @apiParams
     }
     catch {
         # Capture and log error details
@@ -1098,7 +1071,7 @@ function Get-FabricApacheAirflowJobDefinition {
         Write-FabricLog -Message "Failed to retrieve Apache Airflow Job definition. Error: $errorDetails" -Level Error
     }
 }
-#EndRegion '.\Public\Apache Airflow Job\Get-FabricApacheAirflowJobDefinition.ps1' 78
+#EndRegion '.\Public\Apache Airflow Job\Get-FabricApacheAirflowJobDefinition.ps1' 79
 #Region '.\Public\Apache Airflow Job\New-FabricApacheAirflowJob.ps1' -1
 
 <#
@@ -1161,14 +1134,11 @@ function New-FabricApacheAirflowJob {
         [string]$ApacheAirflowJobPathPlatformDefinition
     )
     try {
-        # Validate authentication token before proceeding.
-        Write-FabricLog -Message "Validating authentication token..." -Level Debug
-        Test-TokenExpired
-        Write-FabricLog -Message "Authentication token is valid." -Level Debug
+        # Validate authentication
+        Invoke-FabricAuthCheck -ThrowOnFailure
 
         # Construct the API endpoint URL
-        $apiEndpointURI = "{0}/workspaces/{1}/ApacheAirflowJobs" -f $FabricConfig.BaseUrl, $WorkspaceId
-        Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
+        $apiEndpointURI = New-FabricAPIUri -Resource 'workspaces' -WorkspaceId $WorkspaceId -Subresource 'ApacheAirflowJobs'
 
         # Construct the request body
         $body = @{
@@ -1228,22 +1198,19 @@ function New-FabricApacheAirflowJob {
             }
         }
 
-        $bodyJson = $body | ConvertTo-Json -Depth 10
-        Write-FabricLog -Message "Request Body: $bodyJson" -Level Debug
+        $bodyJson = Convert-FabricRequestBody -InputObject $body
 
         if ($PSCmdlet.ShouldProcess("workspace '$WorkspaceId'", "Create Apache Airflow Job '$ApacheAirflowJobName'")) {
             # Make the API request
             $apiParams = @{
                 BaseURI = $apiEndpointURI
-                Headers = $FabricConfig.FabricHeaders
+                Headers = $script:FabricAuthContext.FabricHeaders
                 Method = 'Post'
                 Body = $bodyJson
             }
             $response = Invoke-FabricAPIRequest @apiParams
-
-            # Return the API response
             Write-FabricLog -Message "Apache Airflow Job created successfully!" -Level Info
-            return $response
+            $response
         }
 
     }
@@ -1253,7 +1220,7 @@ function New-FabricApacheAirflowJob {
         Write-FabricLog -Message "Failed to create Apache Airflow Job. Error: $errorDetails" -Level Error
     }
 }
-#EndRegion '.\Public\Apache Airflow Job\New-FabricApacheAirflowJob.ps1' 153
+#EndRegion '.\Public\Apache Airflow Job\New-FabricApacheAirflowJob.ps1' 147
 #Region '.\Public\Apache Airflow Job\Remove-FabricApacheAirflowJob.ps1' -1
 
 <#
@@ -1291,27 +1258,22 @@ function Remove-FabricApacheAirflowJob {
         [string]$ApacheAirflowJobId
     )
     try {
-        # Validate authentication token before proceeding.
-        Write-FabricLog -Message "Validating authentication token..." -Level Debug
-        Test-TokenExpired
-        Write-FabricLog -Message "Authentication token is valid." -Level Debug
+        # Validate authentication
+        Invoke-FabricAuthCheck -ThrowOnFailure
 
         # Construct the API endpoint URI
-        $apiEndpointURI = "{0}/workspaces/{1}/ApacheAirflowJobs/{2}" -f $FabricConfig.BaseUrl, $WorkspaceId, $ApacheAirflowJobId
-        Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
+        $apiEndpointURI = New-FabricAPIUri -Resource 'workspaces' -WorkspaceId $WorkspaceId -Subresource 'ApacheAirflowJobs' -ItemId $ApacheAirflowJobId
 
         if ($PSCmdlet.ShouldProcess("Apache Airflow Job '$ApacheAirflowJobId' in workspace '$WorkspaceId'", "Delete")) {
             # Make the API request
             $apiParams = @{
-                Headers = $FabricConfig.FabricHeaders
+                Headers = $script:FabricAuthContext.FabricHeaders
                 BaseURI = $apiEndpointURI
                 Method = 'Delete'
             }
             $response = Invoke-FabricAPIRequest @apiParams
-
-            # Return the API response
             Write-FabricLog -Message "Apache Airflow Job '$ApacheAirflowJobId' deleted successfully from workspace '$WorkspaceId'." -Level Info
-            return $response
+            $response
         }
 
     }
@@ -1321,7 +1283,7 @@ function Remove-FabricApacheAirflowJob {
         Write-FabricLog -Message "Failed to delete Apache Airflow Job '$ApacheAirflowJobId' from workspace '$WorkspaceId'. Error: $errorDetails" -Level Error
     }
 }
-#EndRegion '.\Public\Apache Airflow Job\Remove-FabricApacheAirflowJob.ps1' 66
+#EndRegion '.\Public\Apache Airflow Job\Remove-FabricApacheAirflowJob.ps1' 61
 #Region '.\Public\Apache Airflow Job\Update-FabricApacheAirflowJob.ps1' -1
 
 <#
@@ -1374,14 +1336,11 @@ function Update-FabricApacheAirflowJob {
         [string]$ApacheAirflowJobDescription
     )
     try {
-        # Ensure token validity
-        Write-FabricLog -Message "Validating token..." -Level Debug
-        Test-TokenExpired
-        Write-FabricLog -Message "Token validation completed." -Level Debug
+        # Validate authentication
+        Invoke-FabricAuthCheck -ThrowOnFailure
 
         # Construct the API endpoint URI
-        $apiEndpointURI = "{0}/workspaces/{1}/ApacheAirflowJobs/{2}" -f $FabricConfig.BaseUrl, $WorkspaceId, $ApacheAirflowJobId
-        Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
+        $apiEndpointURI = New-FabricAPIUri -Resource 'workspaces' -WorkspaceId $WorkspaceId -Subresource 'ApacheAirflowJobs' -ItemId $ApacheAirflowJobId
 
         # Construct the request body
         $body = @{
@@ -1393,22 +1352,19 @@ function Update-FabricApacheAirflowJob {
         }
 
         # Convert the body to JSON
-        $bodyJson = $body | ConvertTo-Json
-        Write-FabricLog -Message "Request Body: $bodyJson" -Level Debug
+        $bodyJson = Convert-FabricRequestBody -InputObject $body
 
         if ($PSCmdlet.ShouldProcess("Apache Airflow Job '$ApacheAirflowJobId' in workspace '$WorkspaceId'", "Update properties")) {
             # Make the API request
             $apiParams = @{
-                Headers = $FabricConfig.FabricHeaders
+                Headers = $script:FabricAuthContext.FabricHeaders
                 BaseURI = $apiEndpointURI
                 Method = 'Patch'
                 Body = $bodyJson
             }
             $response = Invoke-FabricAPIRequest @apiParams
-
-            # Return the API response
             Write-FabricLog -Message "Apache Airflow Job '$ApacheAirflowJobName' updated successfully!" -Level Info
-            return $response
+            $response
         }
     }
     catch {
@@ -1417,7 +1373,7 @@ function Update-FabricApacheAirflowJob {
         Write-FabricLog -Message "Failed to update Apache Airflow Job. Error: $errorDetails" -Level Error
     }
 }
-#EndRegion '.\Public\Apache Airflow Job\Update-FabricApacheAirflowJob.ps1' 94
+#EndRegion '.\Public\Apache Airflow Job\Update-FabricApacheAirflowJob.ps1' 88
 #Region '.\Public\Apache Airflow Job\Update-FabricApacheAirflowJobDefinition.ps1' -1
 
 <#
@@ -1479,18 +1435,23 @@ function Update-FabricApacheAirflowJobDefinition {
         [string]$ApacheAirflowJobPathPlatformDefinition
     )
     try {
-        # Step 1: Ensure token validity
-        Write-FabricLog -Message "Validating token..." -Level Debug
-        Test-TokenExpired
-        Write-FabricLog -Message "Token validation completed." -Level Debug
+        # Validate authentication
+        Invoke-FabricAuthCheck -ThrowOnFailure
 
-        # Step 2: Construct the API URL
-        $apiEndpointURI = "{0}/workspaces/{1}/ApacheAirflowJobs/{2}/updateDefinition" -f $FabricConfig.BaseUrl, $WorkspaceId, $ApacheAirflowJobId
-
-        if ($ApacheAirflowJobPathPlatformDefinition) {
-            $apiEndpointURI = "$apiEndpointURI?updateMetadata=true"
+        # Construct the API URL
+        $queryParams = if ($ApacheAirflowJobPathPlatformDefinition) {
+            @{ updateMetadata = 'true' }
+        } else {
+            $null
         }
-        Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
+
+        $apiEndpointURI = New-FabricAPIUri -Resource 'workspaces' -WorkspaceId $WorkspaceId -Subresource 'ApacheAirflowJobs' -ItemId $ApacheAirflowJobId
+        $apiEndpointURI = "$apiEndpointURI/updateDefinition"
+
+        if ($queryParams) {
+            $queryString = ($queryParams.GetEnumerator() | ForEach-Object { "$($_.Key)=$($_.Value)" }) -join '&'
+            $apiEndpointURI = "$apiEndpointURI`?$queryString"
+        }
 
         # Step 3: Construct the request body
         $body = @{
@@ -1532,21 +1493,19 @@ function Update-FabricApacheAirflowJobDefinition {
             }
         }
 
-        $bodyJson = $body | ConvertTo-Json -Depth 10
-        Write-FabricLog -Message "Request Body: $bodyJson" -Level Debug
+        $bodyJson = Convert-FabricRequestBody -InputObject $body
 
         if ($PSCmdlet.ShouldProcess("Apache Airflow Job '$ApacheAirflowJobId' in workspace '$WorkspaceId'", "Update definition/metadata")) {
-            # Step 4: Make the API request
+            # Make the API request
             $apiParams = @{
                 BaseURI = $apiEndpointURI
-                Headers = $FabricConfig.FabricHeaders
+                Headers = $script:FabricAuthContext.FabricHeaders
                 Method = 'Post'
                 Body = $bodyJson
             }
             $response = Invoke-FabricAPIRequest @apiParams
-
             Write-FabricLog -Message "Successfully updated the definition for Apache Airflow Job with ID '$ApacheAirflowJobId' in workspace '$WorkspaceId'." -Level Info
-            return $response
+            $response
         }
     }
     catch {
@@ -1555,7 +1514,7 @@ function Update-FabricApacheAirflowJobDefinition {
         Write-FabricLog -Message "Failed to update Apache Airflow Job. Error: $errorDetails" -Level Error
     }
 }
-#EndRegion '.\Public\Apache Airflow Job\Update-FabricApacheAirflowJobDefinition.ps1' 136
+#EndRegion '.\Public\Apache Airflow Job\Update-FabricApacheAirflowJobDefinition.ps1' 139
 #Region '.\Public\Capacity\Get-FabricCapacity.ps1' -1
 
 
@@ -1602,52 +1561,25 @@ function Get-FabricCapacity {
         # Validate input parameters
         if ($CapacityId -and $CapacityName) {
             Write-FabricLog -Message "Specify only one parameter: either 'CapacityId' or 'CapacityName'." -Level Error
-            return $null
+            return
         }
 
-        # Validate authentication token before proceeding.
-        Write-FabricLog -Message "Validating authentication token..." -Level Debug
-        Test-TokenExpired
-        Write-FabricLog -Message "Authentication token is valid." -Level Debug
+        # Validate authentication
+        Invoke-FabricAuthCheck -ThrowOnFailure
 
         # Construct the API endpoint URI
-        $apiEndpointURI = "{0}/capacities" -f $FabricConfig.BaseUrl
-        Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
+        $apiEndpointURI = New-FabricAPIUri -Resource 'capacities'
+
         # Make the API request
         $apiParams = @{
             BaseURI = $apiEndpointURI
-            Headers = $FabricConfig.FabricHeaders
+            Headers = $script:FabricAuthContext.FabricHeaders
             Method = 'Get'
         }
         $dataItems = Invoke-FabricAPIRequest @apiParams
 
-        # Immediately handle empty response
-        if (-not $dataItems) {
-            Write-FabricLog -Message "No data returned from the API." -Level Warning
-            return $null
-        }
-
-        # Apply filtering logic efficiently
-        if ($CapacityId) {
-            $matchedItems = $dataItems.Where({ $_.Id -eq $CapacityId }, 'First')
-        }
-        elseif ($CapacityName) {
-            $matchedItems = $dataItems.Where({ $_.DisplayName -eq $CapacityName }, 'First')
-        }
-        else {
-            Write-FabricLog -Message "No filter provided. Returning all items." -Level Debug
-            $matchedItems = $dataItems
-        }
-
-        # Handle results
-        if ($matchedItems) {
-            Write-FabricLog -Message "Item(s) found matching the specified criteria." -Level Debug
-            return $matchedItems
-        }
-        else {
-            Write-FabricLog -Message "No item found matching the provided criteria." -Level Warning
-            return $null
-        }
+        # Apply filtering and output results
+        Select-FabricResource -InputObject $dataItems -Id $CapacityId -DisplayName $CapacityName -ResourceType 'Capacity'
     }
     catch {
         # Capture and log error details
@@ -1655,7 +1587,7 @@ function Get-FabricCapacity {
         Write-FabricLog -Message "Failed to retrieve capacity. Error: $errorDetails" -Level Error
     }
 }
-#EndRegion '.\Public\Capacity\Get-FabricCapacity.ps1' 98
+#EndRegion '.\Public\Capacity\Get-FabricCapacity.ps1' 71
 #Region '.\Public\Connections\Add-FabricConnectionRoleAssignment.ps1' -1
 
 <#
@@ -1711,14 +1643,11 @@ function Add-FabricConnectionRoleAssignment {
     )
 
     try {
-        # Validate authentication token before proceeding.
-        Write-FabricLog -Message "Validating authentication token..." -Level Debug
-        Test-TokenExpired
-        Write-FabricLog -Message "Authentication token is valid." -Level Debug
+        # Validate authentication
+        Invoke-FabricAuthCheck -ThrowOnFailure
 
         # Construct the API endpoint URI
-        $apiEndpointURI = "{0}/connections/{1}/roleAssignments" -f $FabricConfig.BaseUrl, $ConnectionId
-        Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
+        $apiEndpointURI = New-FabricAPIUri -Resource 'connections' -ItemId $ConnectionId -Subresource 'roleAssignments'
 
         # Construct the request body
         $body = @{
@@ -1730,21 +1659,18 @@ function Add-FabricConnectionRoleAssignment {
         }
 
         # Convert the body to JSON
-        $bodyJson = $body | ConvertTo-Json -Depth 4
-        Write-FabricLog -Message "Request Body: $bodyJson" -Level Debug
+        $bodyJson = Convert-FabricRequestBody -InputObject $body
 
         # Make the API request
         $apiParams = @{
             BaseURI = $apiEndpointURI
-            Headers = $FabricConfig.FabricHeaders
+            Headers = $script:FabricAuthContext.FabricHeaders
             Method = 'Post'
             Body = $bodyJson
         }
         $response = Invoke-FabricAPIRequest @apiParams
-
-        # Return the API response
         Write-FabricLog -Message "Role '$ConnectionRole' assigned to principal '$PrincipalId' successfully in connection '$ConnectionId'." -Level Info
-        return $response
+        $response
     }
     catch {
         # Capture and log error details
@@ -1752,7 +1678,7 @@ function Add-FabricConnectionRoleAssignment {
         Write-FabricLog -Message "Failed to assign role. Error: $errorDetails" -Level Error
     }
 }
-#EndRegion '.\Public\Connections\Add-FabricConnectionRoleAssignment.ps1' 95
+#EndRegion '.\Public\Connections\Add-FabricConnectionRoleAssignment.ps1' 89
 #Region '.\Public\Connections\Get-FabricConnection.ps1' -1
 
 <#
@@ -1797,49 +1723,22 @@ function Get-FabricConnection {
     )
 
     try {
-        # Validate authentication token before proceeding.
-        Write-FabricLog -Message "Validating authentication token..." -Level Debug
-        Test-TokenExpired
-        Write-FabricLog -Message "Authentication token is valid." -Level Debug
+        # Validate authentication
+        Invoke-FabricAuthCheck -ThrowOnFailure
 
         # Construct the API endpoint URI
-        $apiEndpointURI = "{0}/connections" -f $FabricConfig.BaseUrl
+        $apiEndpointURI = New-FabricAPIUri -Resource 'connections'
 
         # Make the API request
         $apiParams = @{
             BaseURI = $apiEndpointURI
-            Headers = $FabricConfig.FabricHeaders
+            Headers = $script:FabricAuthContext.FabricHeaders
             Method  = 'Get'
         }
         $dataItems = Invoke-FabricAPIRequest @apiParams
 
-        # Immediately handle empty response
-        if (-not $dataItems) {
-            Write-FabricLog -Message "No data returned from the API." -Level Warning
-            return $null
-        }
-
-        # Apply filtering logic efficiently
-        if ($ConnectionId) {
-            $matchedItems = $dataItems.Where({ $_.Id -eq $ConnectionId }, 'First')
-        }
-        elseif ($ConnectionName) {
-            $matchedItems = $dataItems.Where({ $_.DisplayName -eq $ConnectionName }, 'First')
-        }
-        else {
-            Write-FabricLog -Message "No filter provided. Returning all items." -Level Debug
-            $matchedItems = $dataItems
-        }
-
-        # Handle results
-        if ($matchedItems) {
-            Write-FabricLog -Message "Item(s) found matching the specified criteria." -Level Debug
-            return $matchedItems
-        }
-        else {
-            Write-FabricLog -Message "No item found matching the provided criteria." -Level Warning
-            return $null
-        }
+        # Apply filtering and output results
+        Select-FabricResource -InputObject $dataItems -Id $ConnectionId -DisplayName $ConnectionName -ResourceType 'Connection'
     }
     catch {
         # Capture and log error details
@@ -1847,7 +1746,7 @@ function Get-FabricConnection {
         Write-FabricLog -Message "Failed to retrieve Connection. Error: $errorDetails" -Level Error
     }
 }
-#EndRegion '.\Public\Connections\Get-FabricConnection.ps1' 93
+#EndRegion '.\Public\Connections\Get-FabricConnection.ps1' 66
 #Region '.\Public\Connections\Get-FabricConnectionSupportedType.ps1' -1
 
 <#
@@ -1893,45 +1792,28 @@ function Get-FabricConnectionSupportedType {
     )
 
     try {
-        # Validate authentication token before proceeding.
-        Write-FabricLog -Message "Validating authentication token..." -Level Debug
-        Test-TokenExpired
-        Write-FabricLog -Message "Authentication token is valid." -Level Debug
-
-        # Construct the API endpoint URI
-        $apiEndpointURI = "{0}/connections/supportedConnectionTypes" -f $FabricConfig.BaseUrl
+        # Validate authentication
+        Invoke-FabricAuthCheck -ThrowOnFailure
 
         # Build query parameters dynamically
-        $queryParams = @()
+        $queryHash = @{}
         if ($GatewayId) {
-            Write-FabricLog -Message "Filtering by GatewayId: $GatewayId" -Level Debug
-            $queryParams += "gatewayId=$GatewayId"
+            $queryHash['gatewayId'] = $GatewayId
         }
         if ($ShowAllCreationMethods) {
-            Write-FabricLog -Message "Including all creation methods." -Level Debug
-            $queryParams += "showAllCreationMethods=true"
+            $queryHash['showAllCreationMethods'] = 'true'
         }
-        if ($queryParams.Count -gt 0) {
-            $apiEndpointURI = "{0}/connections/supportedConnectionTypes?{1}" -f $FabricConfig.BaseUrl, ($queryParams -join '&')
-        }
+
+        # Construct the API endpoint URI
+        $apiEndpointURI = New-FabricAPIUri -Resource 'connections' -Subresource 'supportedConnectionTypes' -QueryParameters $queryHash
 
         # Make the API request
         $apiParams = @{
             BaseURI = $apiEndpointURI
-            Headers = $FabricConfig.FabricHeaders
+            Headers = $script:FabricAuthContext.FabricHeaders
             Method  = 'Get'
         }
-        $dataItems = Invoke-FabricAPIRequest @apiParams
-
-        # Immediately handle empty response
-        if (-not $dataItems) {
-            Write-FabricLog -Message "No data returned from the API." -Level Warning
-            return $null
-        }
-        else {
-            Write-FabricLog -Message "Item(s) found matching the specified criteria." -Level Debug
-            return $dataItems
-        }
+        Invoke-FabricAPIRequest @apiParams
     }
     catch {
         # Capture and log error details
@@ -1939,7 +1821,7 @@ function Get-FabricConnectionSupportedType {
         Write-FabricLog -Message "Failed to retrieve Connection. Error: $errorDetails" -Level Error
     }
 }
-#EndRegion '.\Public\Connections\Get-FabricConnectionSupportedType.ps1' 90
+#EndRegion '.\Public\Connections\Get-FabricConnectionSupportedType.ps1' 73
 #Region '.\Public\Connections\Remove-FabricConnection.ps1' -1
 
 <#
@@ -1970,27 +1852,22 @@ function Remove-FabricConnection {
         [string]$ConnectionId
     )
     try {
-        # Validate authentication token before proceeding.
-        Write-FabricLog -Message "Validating token..." -Level Debug
-        Test-TokenExpired
-        Write-FabricLog -Message "Token validation completed." -Level Debug
+        # Validate authentication
+        Invoke-FabricAuthCheck -ThrowOnFailure
 
         # Construct the API endpoint URI
-        $apiEndpointURI = "{0}/connections/{1}" -f $FabricConfig.BaseUrl, $ConnectionId
-        Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
+        $apiEndpointURI = New-FabricAPIUri -Resource 'connections' -ItemId $ConnectionId
 
         if ($PSCmdlet.ShouldProcess("Connection '$ConnectionId'", "Delete")) {
             # Make the API request
             $apiParams = @{
-                Headers = $FabricConfig.FabricHeaders
+                Headers = $script:FabricAuthContext.FabricHeaders
                 BaseURI = $apiEndpointURI
                 Method = 'Delete'
             }
             $response = Invoke-FabricAPIRequest @apiParams
-
-            # Return the API response
             Write-FabricLog -Message "Connection '$ConnectionId' deleted successfully." -Level Info
-            return $response
+            $response
         }
 
     }
@@ -2000,7 +1877,7 @@ function Remove-FabricConnection {
         Write-FabricLog -Message "Failed to delete Connection '$ConnectionId'. Error: $errorDetails" -Level Error
     }
 }
-#EndRegion '.\Public\Connections\Remove-FabricConnection.ps1' 59
+#EndRegion '.\Public\Connections\Remove-FabricConnection.ps1' 54
 #Region '.\Public\Connections\Remove-FabricConnectionRoleAssignment.ps1' -1
 
 <#
@@ -2041,27 +1918,23 @@ function Remove-FabricConnectionRoleAssignment {
     )
 
     try {
-        # Validate authentication token before proceeding.
-        Write-FabricLog -Message "Validating authentication token..." -Level Debug
-        Test-TokenExpired
-        Write-FabricLog -Message "Authentication token is valid." -Level Debug
+        # Validate authentication
+        Invoke-FabricAuthCheck -ThrowOnFailure
 
         # Construct the API endpoint URI
-        $apiEndpointURI = "{0}/connections/{1}/roleAssignments/{2}" -f $FabricConfig.BaseUrl, $ConnectionId, $ConnectionRoleAssignmentId
-        Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
+        $apiEndpointURI = New-FabricAPIUri -Resource 'connections' -ItemId $ConnectionId -Subresource 'roleAssignments'
+        $apiEndpointURI = "$apiEndpointURI/$ConnectionRoleAssignmentId"
 
         if ($PSCmdlet.ShouldProcess("Role assignment '$ConnectionRoleAssignmentId' on Connection '$ConnectionId'", "Delete")) {
             # Make the API request
             $apiParams = @{
-                Headers = $FabricConfig.FabricHeaders
+                Headers = $script:FabricAuthContext.FabricHeaders
                 BaseURI = $apiEndpointURI
                 Method = 'Delete'
             }
             $response = Invoke-FabricAPIRequest @apiParams
-
-            # Return the API response
             Write-FabricLog -Message "Role assignment '$ConnectionRoleAssignmentId' successfully removed from Connection '$ConnectionId'." -Level Info
-            return $response
+            $response
         }
     }
     catch {
@@ -2070,7 +1943,7 @@ function Remove-FabricConnectionRoleAssignment {
         Write-FabricLog -Message "Failed to remove role assignments for ConnectionId '$ConnectionId'. Error: $errorDetails" -Level Error
     }
 }
-#EndRegion '.\Public\Connections\Remove-FabricConnectionRoleAssignment.ps1' 68
+#EndRegion '.\Public\Connections\Remove-FabricConnectionRoleAssignment.ps1' 64
 #Region '.\Public\Connections\Update-FabricConnectionRoleAssignment.ps1' -1
 
 <#
@@ -2115,14 +1988,12 @@ function Update-FabricConnectionRoleAssignment {
         [string]$ConnectionRole
     )
     try {
-        # Validate authentication token before proceeding.
-        Write-FabricLog -Message "Validating authentication token..." -Level Debug
-        Test-TokenExpired
-        Write-FabricLog -Message "Authentication token is valid." -Level Debug
+        # Validate authentication
+        Invoke-FabricAuthCheck -ThrowOnFailure
 
         # Construct the API endpoint URI
-        $apiEndpointURI = "{0}/connections/{1}/roleAssignments/{2}" -f $FabricConfig.BaseUrl, $ConnectionId, $ConnectionRoleAssignmentId
-        Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
+        $apiEndpointURI = New-FabricAPIUri -Resource 'connections' -ItemId $ConnectionId -Subresource 'roleAssignments'
+        $apiEndpointURI = "$apiEndpointURI/$ConnectionRoleAssignmentId"
 
         # Construct the request body
         $body = @{
@@ -2130,22 +2001,19 @@ function Update-FabricConnectionRoleAssignment {
         }
 
         # Convert the body to JSON
-        $bodyJson = $body | ConvertTo-Json -Depth 4 -Compress
-        Write-FabricLog -Message "Request Body: $bodyJson" -Level Debug
+        $bodyJson = Convert-FabricRequestBody -InputObject $body
 
         if ($PSCmdlet.ShouldProcess("Role assignment '$ConnectionRoleAssignmentId' on Connection '$ConnectionId'", "Update role to '$ConnectionRole'")) {
             # Make the API request
             $apiParams = @{
-                Headers = $FabricConfig.FabricHeaders
+                Headers = $script:FabricAuthContext.FabricHeaders
                 BaseURI = $apiEndpointURI
                 Method = 'Patch'
                 Body = $bodyJson
             }
             $response = Invoke-FabricAPIRequest @apiParams
-
-            # Return the API response
             Write-FabricLog -Message "Role assignment $ConnectionRoleAssignmentId updated successfully in Connection '$ConnectionId'." -Level Info
-            return $response
+            $response
         }
     }
     catch {
@@ -2154,7 +2022,7 @@ function Update-FabricConnectionRoleAssignment {
         Write-FabricLog -Message "Failed to update role assignment. Error: $errorDetails" -Level Error
     }
 }
-#EndRegion '.\Public\Connections\Update-FabricConnectionRoleAssignment.ps1' 82
+#EndRegion '.\Public\Connections\Update-FabricConnectionRoleAssignment.ps1' 77
 #Region '.\Public\Copy Job\Get-FabricCopyJob.ps1' -1
 
 <#
@@ -2210,56 +2078,23 @@ function Get-FabricCopyJob {
         [string]$CopyJobName
     )
     try {
-        # Validate input parameters
-        if ($CopyJobId -and $CopyJobName) {
-            Write-FabricLog -Message "Specify only one parameter: either 'CopyJobId' or 'CopyJobName'." -Level Error
-            return $null
-        }
-
-        # Validate authentication token before proceeding.
-        Write-FabricLog -Message "Validating authentication token..." -Level Debug
-        Test-TokenExpired
-        Write-FabricLog -Message "Authentication token is valid." -Level Debug
+        # Validate authentication token before proceeding
+        Invoke-FabricAuthCheck -ThrowOnFailure
 
         # Construct the API endpoint URI
-        $apiEndpointURI = "{0}/workspaces/{1}/copyJobs" -f $FabricConfig.BaseUrl, $WorkspaceId
+        $apiEndpointURI = New-FabricAPIUri -Segments @('workspaces', $WorkspaceId, 'copyJobs')
         Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
 
         # Make the API request
         $apiParams = @{
             BaseURI = $apiEndpointURI
-            Headers = $FabricConfig.FabricHeaders
+            Headers = $script:FabricAuthContext.FabricHeaders
             Method = 'Get'
         }
         $dataItems = Invoke-FabricAPIRequest @apiParams
 
-        # Immediately handle empty response
-        if (-not $dataItems) {
-            Write-FabricLog -Message "No data returned from the API." -Level Warning
-            return $null
-        }
-
-        # Apply filtering logic efficiently
-        if ($CopyJobId) {
-            $matchedItems = $dataItems.Where({ $_.Id -eq $CopyJobId }, 'First')
-        }
-        elseif ($CopyJobName) {
-            $matchedItems = $dataItems.Where({ $_.DisplayName -eq $CopyJobName }, 'First')
-        }
-        else {
-            Write-FabricLog -Message "No filter provided. Returning all items." -Level Debug
-            $matchedItems = $dataItems
-        }
-
-        # Handle results
-        if ($matchedItems) {
-            Write-FabricLog -Message "Item(s) found matching the specified criteria." -Level Debug
-            return $matchedItems
-        }
-        else {
-            Write-FabricLog -Message "No item found matching the provided criteria." -Level Warning
-            return $null
-        }
+        # Apply filtering
+        Select-FabricResource -InputObject $dataItems -Id $CopyJobId -Name $CopyJobName -ResourceType 'Copy Job'
     }
     catch {
         # Capture and log error details
@@ -2267,7 +2102,7 @@ function Get-FabricCopyJob {
         Write-FabricLog -Message "Failed to retrieve CopyJob. Error: $errorDetails" -Level Error
     }
 }
-#EndRegion '.\Public\Copy Job\Get-FabricCopyJob.ps1' 111
+#EndRegion '.\Public\Copy Job\Get-FabricCopyJob.ps1' 78
 #Region '.\Public\Copy Job\Get-FabricCopyJobDefinition.ps1' -1
 
 <#
@@ -2316,30 +2151,25 @@ function Get-FabricCopyJobDefinition {
         [string]$CopyJobFormat
     )
     try {
-        # Validate authentication token before proceeding.
-        Write-FabricLog -Message "Validating authentication token..." -Level Debug
-        Test-TokenExpired
-        Write-FabricLog -Message "Authentication token is valid." -Level Debug
+        # Validate authentication token before proceeding
+        Invoke-FabricAuthCheck -ThrowOnFailure
 
         # Construct the API endpoint URL
-        $apiEndpointURI = "{0}/workspaces/{1}/copyJobs/{2}/getDefinition" -f $FabricConfig.BaseUrl, $WorkspaceId, $CopyJobId
-
-        # Append the format query parameter if specified by the user.
+        $segments = @('workspaces', $WorkspaceId, 'copyJobs', $CopyJobId, 'getDefinition')
+        $queryParams = @{}
         if ($CopyJobFormat) {
-            $apiEndpointURI = "{0}?format={1}" -f $apiEndpointURI, $CopyJobFormat
+            $queryParams['format'] = $CopyJobFormat
         }
+        $apiEndpointURI = New-FabricAPIUri -Segments $segments -QueryParameters $queryParams
         Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
 
         # Make the API request
         $apiParams = @{
             BaseURI = $apiEndpointURI
-            Headers = $FabricConfig.FabricHeaders
+            Headers = $script:FabricAuthContext.FabricHeaders
             Method = 'Post'
         }
-        $response = Invoke-FabricAPIRequest @apiParams
-
-        # Return the API response
-        return $response
+        Invoke-FabricAPIRequest @apiParams
     }
     catch {
         # Capture and log error details
@@ -2347,7 +2177,7 @@ function Get-FabricCopyJobDefinition {
         Write-FabricLog -Message "Failed to retrieve Copy Job definition. Error: $errorDetails" -Level Error
     }
 }
-#EndRegion '.\Public\Copy Job\Get-FabricCopyJobDefinition.ps1' 78
+#EndRegion '.\Public\Copy Job\Get-FabricCopyJobDefinition.ps1' 73
 #Region '.\Public\Copy Job\New-FabricCopyJob.ps1' -1
 
 <#
@@ -2407,13 +2237,11 @@ function New-FabricCopyJob {
         [string]$CopyJobPathPlatformDefinition
     )
     try {
-        # Validate authentication token before proceeding.
-        Write-FabricLog -Message "Validating authentication token..." -Level Debug
-        Test-TokenExpired
-        Write-FabricLog -Message "Authentication token is valid." -Level Debug
+        # Validate authentication token before proceeding
+        Invoke-FabricAuthCheck -ThrowOnFailure
 
         # Construct the API endpoint URL
-        $apiEndpointURI = "{0}/workspaces/{1}/copyJobs" -f $FabricConfig.BaseUrl, $WorkspaceId
+        $apiEndpointURI = New-FabricAPIUri -Segments @('workspaces', $WorkspaceId, 'copyJobs')
         Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
 
         # Construct the request body
@@ -2446,7 +2274,7 @@ function New-FabricCopyJob {
             }
             else {
                 Write-FabricLog -Message "Invalid or empty content in Copy Job definition." -Level Error
-                return $null
+                return
             }
         }
         # Add platform definition file content if provided
@@ -2470,26 +2298,25 @@ function New-FabricCopyJob {
             }
             else {
                 Write-FabricLog -Message "Invalid or empty content in platform definition." -Level Error
-                return $null
+                return
             }
         }
 
-        $bodyJson = $body | ConvertTo-Json -Depth 10
+        $bodyJson = Convert-FabricRequestBody -InputObject $body
         Write-FabricLog -Message "Request Body: $bodyJson" -Level Debug
 
         if ($PSCmdlet.ShouldProcess("workspace '$WorkspaceId'", "Create Copy Job '$CopyJobName'")) {
             # Make the API request
             $apiParams = @{
                 BaseURI = $apiEndpointURI
-                Headers = $FabricConfig.FabricHeaders
+                Headers = $script:FabricAuthContext.FabricHeaders
                 Method = 'Post'
                 Body = $bodyJson
             }
             $response = Invoke-FabricAPIRequest @apiParams
 
-            # Return the API response
             Write-FabricLog -Message "Copy Job created successfully!" -Level Info
-            return $response
+            $response
         }
 
     }
@@ -2499,7 +2326,7 @@ function New-FabricCopyJob {
         Write-FabricLog -Message "Failed to create Copy Job. Error: $errorDetails" -Level Error
     }
 }
-#EndRegion '.\Public\Copy Job\New-FabricCopyJob.ps1' 150
+#EndRegion '.\Public\Copy Job\New-FabricCopyJob.ps1' 147
 #Region '.\Public\Copy Job\Remove-FabricCopyJob.ps1' -1
 
 <#
@@ -2538,26 +2365,24 @@ function Remove-FabricCopyJob {
         [string]$CopyJobId
     )
     try {
-        # Validate authentication token before proceeding.
-        Write-FabricLog -Message "Validating authentication token..." -Level Debug
-        Test-TokenExpired
-        Write-FabricLog -Message "Authentication token is valid." -Level Debug
+        # Validate authentication token before proceeding
+        Invoke-FabricAuthCheck -ThrowOnFailure
 
         # Construct the API endpoint URI
-        $apiEndpointURI = "{0}/workspaces/{1}/copyJobs/{2}" -f $FabricConfig.BaseUrl, $WorkspaceId, $CopyJobId
+        $apiEndpointURI = New-FabricAPIUri -Segments @('workspaces', $WorkspaceId, 'copyJobs', $CopyJobId)
         Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
 
         if ($PSCmdlet.ShouldProcess("Copy Job '$CopyJobId' in workspace '$WorkspaceId'", "Delete")) {
             # Make the API request
             $apiParams = @{
-                Headers = $FabricConfig.FabricHeaders
+                Headers = $script:FabricAuthContext.FabricHeaders
                 BaseURI = $apiEndpointURI
                 Method = 'Delete'
             }
             $response = Invoke-FabricAPIRequest @apiParams
 
             Write-FabricLog -Message "Copy Job '$CopyJobId' deleted successfully from workspace '$WorkspaceId'." -Level Info
-            return $response
+            $response
         }
 
     }
@@ -2567,7 +2392,7 @@ function Remove-FabricCopyJob {
         Write-FabricLog -Message "Failed to delete Copy Job '$CopyJobId' from workspace '$WorkspaceId'. Error: $errorDetails" -Level Error
     }
 }
-#EndRegion '.\Public\Copy Job\Remove-FabricCopyJob.ps1' 66
+#EndRegion '.\Public\Copy Job\Remove-FabricCopyJob.ps1' 64
 #Region '.\Public\Copy Job\Update-FabricCopyJob.ps1' -1
 
 <#
@@ -2621,13 +2446,11 @@ function Update-FabricCopyJob {
         [string]$CopyJobDescription
     )
     try {
-        # Ensure token validity
-        Write-FabricLog -Message "Validating token..." -Level Debug
-        Test-TokenExpired
-        Write-FabricLog -Message "Token validation completed." -Level Debug
+        # Validate authentication token before proceeding
+        Invoke-FabricAuthCheck -ThrowOnFailure
 
         # Construct the API endpoint URI
-        $apiEndpointURI = "{0}/workspaces/{1}/copyJobs/{2}" -f $FabricConfig.BaseUrl, $WorkspaceId, $CopyJobId
+        $apiEndpointURI = New-FabricAPIUri -Segments @('workspaces', $WorkspaceId, 'copyJobs', $CopyJobId)
         Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
 
         # Construct the request body
@@ -2639,14 +2462,13 @@ function Update-FabricCopyJob {
             $body.description = $CopyJobDescription
         }
 
-        # Convert the body to JSON
-        $bodyJson = $body | ConvertTo-Json
+        $bodyJson = Convert-FabricRequestBody -InputObject $body
         Write-FabricLog -Message "Request Body: $bodyJson" -Level Debug
 
         if ($PSCmdlet.ShouldProcess("Copy Job '$CopyJobId' in workspace '$WorkspaceId'", "Update properties")) {
             # Make the API request
             $apiParams = @{
-                Headers = $FabricConfig.FabricHeaders
+                Headers = $script:FabricAuthContext.FabricHeaders
                 BaseURI = $apiEndpointURI
                 Method = 'Patch'
                 Body = $bodyJson
@@ -2654,7 +2476,7 @@ function Update-FabricCopyJob {
             $response = Invoke-FabricAPIRequest @apiParams
 
             Write-FabricLog -Message "Copy Job '$CopyJobName' updated successfully!" -Level Info
-            return $response
+            $response
         }
     }
     catch {
@@ -2663,7 +2485,7 @@ function Update-FabricCopyJob {
         Write-FabricLog -Message "Failed to update Copy Job. Error: $errorDetails" -Level Error
     }
 }
-#EndRegion '.\Public\Copy Job\Update-FabricCopyJob.ps1' 94
+#EndRegion '.\Public\Copy Job\Update-FabricCopyJob.ps1' 91
 #Region '.\Public\Copy Job\Update-FabricCopyJobDefinition.ps1' -1
 
 <#
@@ -2725,20 +2547,19 @@ function Update-FabricCopyJobDefinition {
         [string]$CopyJobPathPlatformDefinition
     )
     try {
-        # Step 1: Ensure token validity
-        Write-FabricLog -Message "Validating token..." -Level Debug
-        Test-TokenExpired
-        Write-FabricLog -Message "Token validation completed." -Level Debug
+        # Validate authentication token before proceeding
+        Invoke-FabricAuthCheck -ThrowOnFailure
 
-        # Step 2: Construct the API URL
-        $apiEndpointURI = "{0}/workspaces/{1}/copyJobs/{2}/updateDefinition" -f $FabricConfig.BaseUrl, $WorkspaceId, $CopyJobId
-
+        # Construct the API URL
+        $segments = @('workspaces', $WorkspaceId, 'copyJobs', $CopyJobId, 'updateDefinition')
+        $queryParams = @{}
         if ($CopyJobPathPlatformDefinition) {
-            $apiEndpointURI = "$apiEndpointURI?updateMetadata=true"
+            $queryParams['updateMetadata'] = 'true'
         }
+        $apiEndpointURI = New-FabricAPIUri -Segments $segments -QueryParameters $queryParams
         Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
 
-        # Step 3: Construct the request body
+        # Construct the request body
         $body = @{
             definition = @{
                 parts = @()
@@ -2758,7 +2579,7 @@ function Update-FabricCopyJobDefinition {
             }
             else {
                 Write-FabricLog -Message "Invalid or empty content in Copy Job definition." -Level Error
-                return $null
+                return
             }
         }
 
@@ -2774,25 +2595,25 @@ function Update-FabricCopyJobDefinition {
             }
             else {
                 Write-FabricLog -Message "Invalid or empty content in platform definition." -Level Error
-                return $null
+                return
             }
         }
 
-        $bodyJson = $body | ConvertTo-Json -Depth 10
+        $bodyJson = Convert-FabricRequestBody -InputObject $body
         Write-FabricLog -Message "Request Body: $bodyJson" -Level Debug
 
         if ($PSCmdlet.ShouldProcess("Copy Job '$CopyJobId' in workspace '$WorkspaceId'", "Update definition/metadata")) {
-            # Step 4: Make the API request
+            # Make the API request
             $apiParams = @{
                 BaseURI = $apiEndpointURI
-                Headers = $FabricConfig.FabricHeaders
+                Headers = $script:FabricAuthContext.FabricHeaders
                 Method = 'Post'
                 Body = $bodyJson
             }
             $response = Invoke-FabricAPIRequest @apiParams
 
             Write-FabricLog -Message "Successfully updated the definition for Copy Job with ID '$CopyJobId' in workspace '$WorkspaceId'." -Level Info
-            return $response
+            $response
         }
     }
     catch {
@@ -2801,7 +2622,7 @@ function Update-FabricCopyJobDefinition {
         Write-FabricLog -Message "Failed to update Copy Job. Error: $errorDetails" -Level Error
     }
 }
-#EndRegion '.\Public\Copy Job\Update-FabricCopyJobDefinition.ps1' 136
+#EndRegion '.\Public\Copy Job\Update-FabricCopyJobDefinition.ps1' 135
 #Region '.\Public\Dashboard\Get-FabricDashboard.ps1' -1
 
 <#
@@ -2835,23 +2656,19 @@ function Get-FabricDashboard {
     )
 
     try {
-        # Ensure token validity
-        Write-FabricLog -Message "Validating token..." -Level Debug
-        Test-TokenExpired
-        Write-FabricLog -Message "Token validation completed." -Level Debug
+        # Validate authentication token before proceeding
+        Invoke-FabricAuthCheck -ThrowOnFailure
 
         # Construct the API endpoint URL
-        $apiEndpointURI = "{0}/workspaces/{1}/dashboards" -f $FabricConfig.BaseUrl, $WorkspaceId
+        $apiEndpointURI = New-FabricAPIUri -Segments @('workspaces', $WorkspaceId, 'dashboards')
 
-        # Invoke the Fabric API to retrieve capacity details
+        # Invoke the Fabric API to retrieve dashboards
         $apiParams = @{
             BaseURI = $apiEndpointURI
-            Headers = $FabricConfig.FabricHeaders
+            Headers = $script:FabricAuthContext.FabricHeaders
             Method = 'Get'
         }
-        $Dashboards = Invoke-FabricAPIRequest @apiParams
-
-        return $Dashboards
+        Invoke-FabricAPIRequest @apiParams
 
     }
     catch {
@@ -2860,7 +2677,7 @@ function Get-FabricDashboard {
         Write-FabricLog -Message "Failed to retrieve Dashboard. Error: $errorDetails" -Level Error
     }
 }
-#EndRegion '.\Public\Dashboard\Get-FabricDashboard.ps1' 57
+#EndRegion '.\Public\Dashboard\Get-FabricDashboard.ps1' 53
 #Region '.\Public\Data Pipeline\Get-FabricDataPipeline.ps1' -1
 
 <#
@@ -2911,55 +2728,22 @@ function Get-FabricDataPipeline {
         [string]$DataPipelineName
     )
     try {
-        # Validate input parameters
-        if ($DataPipelineId -and $DataPipelineName) {
-            Write-FabricLog -Message "Specify only one parameter: either 'DataPipelineId' or 'DataPipelineName'." -Level Error
-            return $null
-        }
-
-        # Validate authentication token before proceeding.
-        Write-FabricLog -Message "Validating authentication token..." -Level Debug
-        Test-TokenExpired
-        Write-FabricLog -Message "Authentication token is valid." -Level Debug
+        # Validate authentication token before proceeding
+        Invoke-FabricAuthCheck -ThrowOnFailure
 
         # Construct the API endpoint URI
-        $apiEndpointURI = "{0}/workspaces/{1}/dataPipelines" -f $FabricConfig.BaseUrl, $WorkspaceId
+        $apiEndpointURI = New-FabricAPIUri -Segments @('workspaces', $WorkspaceId, 'dataPipelines')
 
         # Make the API request
         $apiParams = @{
             BaseURI = $apiEndpointURI
-            Headers = $FabricConfig.FabricHeaders
+            Headers = $script:FabricAuthContext.FabricHeaders
             Method = 'Get'
         }
         $dataItems = Invoke-FabricAPIRequest @apiParams
 
-        # Immediately handle empty response
-        if (-not $dataItems) {
-            Write-FabricLog -Message "No data returned from the API." -Level Warning
-            return $null
-        }
-
-        # Apply filtering logic efficiently
-        if ($DataPipelineId) {
-            $matchedItems = $dataItems.Where({ $_.Id -eq $DataPipelineId }, 'First')
-        }
-        elseif ($DataPipelineName) {
-            $matchedItems = $dataItems.Where({ $_.DisplayName -eq $DataPipelineName }, 'First')
-        }
-        else {
-            Write-FabricLog -Message "No filter provided. Returning all items." -Level Debug
-            $matchedItems = $dataItems
-        }
-
-        # Handle results
-        if ($matchedItems) {
-            Write-FabricLog -Message "Item(s) found matching the specified criteria." -Level Debug
-            return $matchedItems
-        }
-        else {
-            Write-FabricLog -Message "No item found matching the provided criteria." -Level Warning
-            return $null
-        }
+        # Apply filtering
+        Select-FabricResource -InputObject $dataItems -Id $DataPipelineId -Name $DataPipelineName -ResourceType 'Data Pipeline'
     }
     catch {
         # Capture and log error details
@@ -2967,7 +2751,7 @@ function Get-FabricDataPipeline {
         Write-FabricLog -Message "Failed to retrieve DataPipeline. Error: $errorDetails" -Level Error
     }
 }
-#EndRegion '.\Public\Data Pipeline\Get-FabricDataPipeline.ps1' 105
+#EndRegion '.\Public\Data Pipeline\Get-FabricDataPipeline.ps1' 72
 #Region '.\Public\Data Pipeline\New-FabricDataPipeline.ps1' -1
 
 <#
@@ -3017,13 +2801,11 @@ function New-FabricDataPipeline {
     )
 
     try {
-        # Validate authentication token before proceeding.
-        Write-FabricLog -Message "Validating authentication token..." -Level Debug
-        Test-TokenExpired
-        Write-FabricLog -Message "Authentication token is valid." -Level Debug
+        # Validate authentication token before proceeding
+        Invoke-FabricAuthCheck -ThrowOnFailure
 
         # Construct the API endpoint URI
-        $apiEndpointURI = "{0}/workspaces/{1}/dataPipelines" -f $FabricConfig.BaseUrl, $WorkspaceId
+        $apiEndpointURI = New-FabricAPIUri -Segments @('workspaces', $WorkspaceId, 'dataPipelines')
         Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
 
         # Construct the request body
@@ -3035,23 +2817,21 @@ function New-FabricDataPipeline {
             $body.description = $DataPipelineDescription
         }
 
-        # Convert the body to JSON
-        $bodyJson = $body | ConvertTo-Json -Depth 10
+        $bodyJson = Convert-FabricRequestBody -InputObject $body
         Write-FabricLog -Message "Request Body: $bodyJson" -Level Debug
 
         if ($PSCmdlet.ShouldProcess("workspace '$WorkspaceId'", "Create Data Pipeline '$DataPipelineName'")) {
             # Make the API request
             $apiParams = @{
                 BaseURI = $apiEndpointURI
-                Headers = $FabricConfig.FabricHeaders
+                Headers = $script:FabricAuthContext.FabricHeaders
                 Method = 'Post'
                 Body = $bodyJson
             }
             $response = Invoke-FabricAPIRequest @apiParams
 
-            # Return the API response
             Write-FabricLog -Message "Data Pipeline created successfully!" -Level Info
-            return $response
+            $response
         }
     }
     catch {
@@ -3060,7 +2840,7 @@ function New-FabricDataPipeline {
         Write-FabricLog -Message "Failed to create DataPipeline. Error: $errorDetails" -Level Error
     }
 }
-#EndRegion '.\Public\Data Pipeline\New-FabricDataPipeline.ps1' 91
+#EndRegion '.\Public\Data Pipeline\New-FabricDataPipeline.ps1' 87
 #Region '.\Public\Data Pipeline\Remove-FabricDataPipeline.ps1' -1
 
 <#
@@ -3100,27 +2880,24 @@ function Remove-FabricDataPipeline {
         [string]$DataPipelineId
     )
     try {
-        # Validate authentication token before proceeding.
-        Write-FabricLog -Message "Validating authentication token..." -Level Debug
-        Test-TokenExpired
-        Write-FabricLog -Message "Authentication token is valid." -Level Debug
+        # Validate authentication token before proceeding
+        Invoke-FabricAuthCheck -ThrowOnFailure
 
         # Construct the API endpoint URI
-        $apiEndpointURI = "{0}/workspaces/{1}/dataPipelines/{2}" -f $FabricConfig.BaseUrl, $WorkspaceId, $DataPipelineId
+        $apiEndpointURI = New-FabricAPIUri -Segments @('workspaces', $WorkspaceId, 'dataPipelines', $DataPipelineId)
         Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
 
         if ($PSCmdlet.ShouldProcess("DataPipeline '$DataPipelineId' in workspace '$WorkspaceId'", "Delete")) {
             # Make the API request
             $apiParams = @{
-                Headers = $FabricConfig.FabricHeaders
+                Headers = $script:FabricAuthContext.FabricHeaders
                 BaseURI = $apiEndpointURI
                 Method = 'Delete'
             }
             $response = Invoke-FabricAPIRequest @apiParams
 
-            # Return the API response
             Write-FabricLog -Message "DataPipeline '$DataPipelineId' deleted successfully from workspace '$WorkspaceId'." -Level Info
-            return $response
+            $response
         }
     }
     catch {
@@ -3129,7 +2906,7 @@ function Remove-FabricDataPipeline {
         Write-FabricLog -Message "Failed to delete DataPipeline '$DataPipelineId' from workspace '$WorkspaceId'. Error: $errorDetails" -Level Error
     }
 }
-#EndRegion '.\Public\Data Pipeline\Remove-FabricDataPipeline.ps1' 67
+#EndRegion '.\Public\Data Pipeline\Remove-FabricDataPipeline.ps1' 64
 #Region '.\Public\Data Pipeline\Update-FabricDataPipeline.ps1' -1
 
 <#
@@ -3184,13 +2961,11 @@ function Update-FabricDataPipeline {
     )
 
     try {
-        # Validate authentication token before proceeding.
-        Write-FabricLog -Message "Validating authentication token..." -Level Debug
-        Test-TokenExpired
-        Write-FabricLog -Message "Authentication token is valid." -Level Debug
+        # Validate authentication token before proceeding
+        Invoke-FabricAuthCheck -ThrowOnFailure
 
         # Construct the API endpoint URI
-        $apiEndpointURI = "{0}/workspaces/{1}/dataPipelines/{2}" -f $FabricConfig.BaseUrl, $WorkspaceId, $DataPipelineId
+        $apiEndpointURI = New-FabricAPIUri -Segments @('workspaces', $WorkspaceId, 'dataPipelines', $DataPipelineId)
         Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
 
         # Construct the request body
@@ -3202,23 +2977,21 @@ function Update-FabricDataPipeline {
             $body.description = $DataPipelineDescription
         }
 
-        # Convert the body to JSON
-        $bodyJson = $body | ConvertTo-Json
+        $bodyJson = Convert-FabricRequestBody -InputObject $body
         Write-FabricLog -Message "Request Body: $bodyJson" -Level Debug
 
         if ($PSCmdlet.ShouldProcess("DataPipeline '$DataPipelineId' in workspace '$WorkspaceId'", "Update properties")) {
             # Make the API request
             $apiParams = @{
-                Headers = $FabricConfig.FabricHeaders
+                Headers = $script:FabricAuthContext.FabricHeaders
                 BaseURI = $apiEndpointURI
                 Method = 'Patch'
                 Body = $bodyJson
             }
             $response = Invoke-FabricAPIRequest @apiParams
 
-            # Return the API response
             Write-FabricLog -Message "Data Pipeline '$DataPipelineName' updated successfully!" -Level Info
-            return $response
+            $response
         }
     }
     catch {
@@ -3227,7 +3000,7 @@ function Update-FabricDataPipeline {
         Write-FabricLog -Message "Failed to update DataPipeline. Error: $errorDetails" -Level Error
     }
 }
-#EndRegion '.\Public\Data Pipeline\Update-FabricDataPipeline.ps1' 96
+#EndRegion '.\Public\Data Pipeline\Update-FabricDataPipeline.ps1' 92
 #Region '.\Public\Datamart\Get-FabricDatamart.ps1' -1
 
 <#
@@ -3274,55 +3047,22 @@ function Get-FabricDatamart {
     )
 
     try {
-        # Validate input parameters
-        if ($DatamartId -and $DatamartName) {
-            Write-FabricLog -Message "Specify only one parameter: either 'DatamartId' or 'DatamartName'." -Level Error
-            return $null
-        }
-
-        # Validate authentication token before proceeding.
-        Write-FabricLog -Message "Validating authentication token..." -Level Debug
-        Test-TokenExpired
-        Write-FabricLog -Message "Authentication token is valid." -Level Debug
+        # Validate authentication token before proceeding
+        Invoke-FabricAuthCheck -ThrowOnFailure
 
         # Construct the API endpoint URI
-        $apiEndpointURI = "{0}/workspaces/{1}/datamarts" -f $FabricConfig.BaseUrl, $WorkspaceId
+        $apiEndpointURI = New-FabricAPIUri -Segments @('workspaces', $WorkspaceId, 'datamarts')
 
         # Make the API request
         $apiParams = @{
             BaseURI = $apiEndpointURI
-            Headers = $FabricConfig.FabricHeaders
+            Headers = $script:FabricAuthContext.FabricHeaders
             Method = 'Get'
         }
         $dataItems = Invoke-FabricAPIRequest @apiParams
 
-        # Immediately handle empty response
-        if (-not $dataItems) {
-            Write-FabricLog -Message "No data returned from the API." -Level Warning
-            return $null
-        }
-
-        # Apply filtering logic efficiently
-        if ($DatamartId) {
-            $matchedItems = $dataItems.Where({ $_.Id -eq $DatamartId }, 'First')
-        }
-        elseif ($DatamartName) {
-            $matchedItems = $dataItems.Where({ $_.DisplayName -eq $DatamartName }, 'First')
-        }
-        else {
-            Write-FabricLog -Message "No filter provided. Returning all items." -Level Debug
-            $matchedItems = $dataItems
-        }
-
-        # Handle results
-        if ($matchedItems) {
-            Write-FabricLog -Message "Item(s) found matching the specified criteria." -Level Debug
-            return $matchedItems
-        }
-        else {
-            Write-FabricLog -Message "No item found matching the provided criteria." -Level Warning
-            return $null
-        }
+        # Apply filtering
+        Select-FabricResource -InputObject $dataItems -Id $DatamartId -Name $DatamartName -ResourceType 'Datamart'
     }
     catch {
         # Capture and log error details
@@ -3330,7 +3070,7 @@ function Get-FabricDatamart {
         Write-FabricLog -Message "Failed to retrieve Datamart. Error: $errorDetails" -Level Error
     }
 }
-#EndRegion '.\Public\Datamart\Get-FabricDatamart.ps1' 101
+#EndRegion '.\Public\Datamart\Get-FabricDatamart.ps1' 68
 #Region '.\Public\Domain\Add-FabricDomainWorkspaceByCapacity.ps1' -1
 
 <#
@@ -3372,13 +3112,11 @@ function Add-FabricDomainWorkspaceByCapacity {
     )
 
     try {
-        # Validate authentication token before proceeding.
-        Write-FabricLog -Message "Validating authentication token..." -Level Debug
-        Test-TokenExpired
-        Write-FabricLog -Message "Authentication token is valid." -Level Debug
+        # Validate authentication token before proceeding
+        Invoke-FabricAuthCheck -ThrowOnFailure
 
         # Construct the API endpoint URI
-        $apiEndpointURI = "{0}/admin/domains/{1}/assignWorkspacesByCapacities" -f $FabricConfig.BaseUrl, $DomainId
+        $apiEndpointURI = New-FabricAPIUri -Segments @('admin', 'domains', $DomainId, 'assignWorkspacesByCapacities')
         Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
 
         # Construct the request body
@@ -3386,23 +3124,21 @@ function Add-FabricDomainWorkspaceByCapacity {
             capacitiesIds = $CapacitiesIds
         }
 
-        # Convert the body to JSON
-        $bodyJson = $body | ConvertTo-Json -Depth 2
+        $bodyJson = Convert-FabricRequestBody -InputObject $body
         Write-FabricLog -Message "Request Body: $bodyJson" -Level Debug
 
         # Make the API request (guarded by ShouldProcess)
         if ($PSCmdlet.ShouldProcess($DomainId, 'Assign workspaces to domain by capacities')) {
             $apiParams = @{
                 BaseURI = $apiEndpointURI
-                Headers = $FabricConfig.FabricHeaders
+                Headers = $script:FabricAuthContext.FabricHeaders
                 Method  = 'Post'
                 Body    = $bodyJson
             }
             $response = Invoke-FabricAPIRequest @apiParams
 
-            # Return the API response
             Write-FabricLog -Message "Assigning domain workspaces by capacity completed successfully!" -Level Info
-            return $response
+            $response
         }
     }
     catch {
@@ -3411,7 +3147,7 @@ function Add-FabricDomainWorkspaceByCapacity {
         Write-FabricLog -Message "Error occurred while assigning workspaces by capacity for domain '$DomainId'. Details: $errorDetails" -Level Error
     }
 }
-#EndRegion '.\Public\Domain\Add-FabricDomainWorkspaceByCapacity.ps1' 79
+#EndRegion '.\Public\Domain\Add-FabricDomainWorkspaceByCapacity.ps1' 75
 #Region '.\Public\Domain\Add-FabricDomainWorkspaceById.ps1' -1
 
 <#
@@ -3453,13 +3189,11 @@ function Add-FabricDomainWorkspaceById {
     )
 
     try {
-        # Validate authentication token before proceeding.
-        Write-FabricLog -Message "Validating authentication token..." -Level Debug
-        Test-TokenExpired
-        Write-FabricLog -Message "Authentication token is valid." -Level Debug
+        # Validate authentication token before proceeding
+        Invoke-FabricAuthCheck -ThrowOnFailure
 
         # Construct the API endpoint URI
-        $apiEndpointURI = "{0}/admin/domains/{1}/assignWorkspaces" -f $FabricConfig.BaseUrl, $DomainId
+        $apiEndpointURI = New-FabricAPIUri -Segments @('admin', 'domains', $DomainId, 'assignWorkspaces')
         Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
 
         # Construct the request body
@@ -3467,23 +3201,21 @@ function Add-FabricDomainWorkspaceById {
             workspacesIds = $WorkspaceIds
         }
 
-        # Convert the body to JSON
-        $bodyJson = $body | ConvertTo-Json -Depth 2
+        $bodyJson = Convert-FabricRequestBody -InputObject $body
         Write-FabricLog -Message "Request Body: $bodyJson" -Level Debug
 
         #  Make the API request (guarded by ShouldProcess)
         if ($PSCmdlet.ShouldProcess($DomainId, 'Assign workspaces to domain by IDs')) {
             $apiParams = @{
                 BaseURI = $apiEndpointURI
-                Headers = $FabricConfig.FabricHeaders
+                Headers = $script:FabricAuthContext.FabricHeaders
                 Method  = 'Post'
                 Body    = $bodyJson
             }
             $response = Invoke-FabricAPIRequest @apiParams
 
-            # Return the API response
             Write-FabricLog -Message "Successfully assigned workspaces to the domain with ID '$DomainId'." -Level Info
-            return $response
+            $response
         }
     }
     catch {
@@ -3492,7 +3224,7 @@ function Add-FabricDomainWorkspaceById {
         Write-FabricLog -Message "Failed to assign workspaces to the domain with ID '$DomainId'. Error: $errorDetails" -Level Error
     }
 }
-#EndRegion '.\Public\Domain\Add-FabricDomainWorkspaceById.ps1' 79
+#EndRegion '.\Public\Domain\Add-FabricDomainWorkspaceById.ps1' 75
 #Region '.\Public\Domain\Add-FabricDomainWorkspaceByPrincipal.ps1' -1
 
 <#
@@ -3545,13 +3277,11 @@ function Add-FabricDomainWorkspaceByPrincipal {
             }
         }
 
-        # Validate authentication token before proceeding.
-        Write-FabricLog -Message "Validating authentication token..." -Level Debug
-        Test-TokenExpired
-        Write-FabricLog -Message "Authentication token is valid." -Level Debug
+        # Validate authentication token before proceeding
+        Invoke-FabricAuthCheck -ThrowOnFailure
 
         # Construct the API endpoint URI
-        $apiEndpointURI = "{0}/admin/domains/{1}/assignWorkspacesByPrincipals" -f $FabricConfig.BaseUrl, $DomainId
+        $apiEndpointURI = New-FabricAPIUri -Segments @('admin', 'domains', $DomainId, 'assignWorkspacesByPrincipals')
         Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
 
         # Construct the request body
@@ -3559,21 +3289,19 @@ function Add-FabricDomainWorkspaceByPrincipal {
             principals = $PrincipalIds
         }
 
-        # Convert the PrincipalIds to JSON
-        $bodyJson = $body | ConvertTo-Json -Depth 2
+        $bodyJson = Convert-FabricRequestBody -InputObject $body
         Write-FabricLog -Message "Request Body: $bodyJson" -Level Debug
 
         # Make the API request (guarded by ShouldProcess)
         if ($PSCmdlet.ShouldProcess($DomainId, 'Assign workspaces to domain by principals')) {
             $apiParams = @{
                 BaseURI = $apiEndpointURI
-                Headers = $FabricConfig.FabricHeaders
+                Headers = $script:FabricAuthContext.FabricHeaders
                 Method  = 'Post'
                 Body    = $bodyJson
             }
             $null = Invoke-FabricAPIRequest @apiParams
 
-            # Return the API response
             Write-FabricLog -Message "Assigning domain workspaces by principal completed successfully!" -Level Info
         }
     }
@@ -3583,7 +3311,7 @@ function Add-FabricDomainWorkspaceByPrincipal {
         Write-FabricLog -Message "Failed to assign domain workspaces by principals. Error: $errorDetails" -Level Error
     }
 }
-#EndRegion '.\Public\Domain\Add-FabricDomainWorkspaceByPrincipal.ps1' 89
+#EndRegion '.\Public\Domain\Add-FabricDomainWorkspaceByPrincipal.ps1' 85
 #Region '.\Public\Domain\Add-FabricDomainWorkspaceByRoleAssignment.ps1' -1
 
 <#
@@ -3644,13 +3372,11 @@ function Add-FabricDomainWorkspaceByRoleAssignment {
             }
         }
 
-        # Validate authentication token before proceeding.
-        Write-FabricLog -Message "Validating authentication token..." -Level Debug
-        Test-TokenExpired
-        Write-FabricLog -Message "Authentication token is valid." -Level Debug
+        # Validate authentication token before proceeding
+        Invoke-FabricAuthCheck -ThrowOnFailure
 
         # Construct the API endpoint URI
-        $apiEndpointURI = "{0}/admin/domains/{1}/roleAssignments/bulkAssign" -f $FabricConfig.BaseUrl, $DomainId
+        $apiEndpointURI = New-FabricAPIUri -Segments @('admin', 'domains', $DomainId, 'roleAssignments', 'bulkAssign')
         Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
 
         # Construct the request body
@@ -3659,23 +3385,21 @@ function Add-FabricDomainWorkspaceByRoleAssignment {
             principals = $PrincipalIds
         }
 
-        # Convert the body to JSON
-        $bodyJson = $body | ConvertTo-Json -Depth 2
+        $bodyJson = Convert-FabricRequestBody -InputObject $body
         Write-FabricLog -Message "Request Body: $bodyJson" -Level Debug
 
         # Make the API request (guarded by ShouldProcess)
         if ($PSCmdlet.ShouldProcess($DomainId, "Assign role '$DomainRole' to principals")) {
             $apiParams = @{
                 BaseURI = $apiEndpointURI
-                Headers = $FabricConfig.FabricHeaders
+                Headers = $script:FabricAuthContext.FabricHeaders
                 Method  = 'Post'
                 Body    = $bodyJson
             }
             $response = Invoke-FabricAPIRequest @apiParams
 
-            # Return the API response
             Write-FabricLog -Message "Bulk role assignment for domain '$DomainId' completed successfully!" -Level Info
-            return $response
+            $response
         }
     }
     catch {
@@ -3684,7 +3408,7 @@ function Add-FabricDomainWorkspaceByRoleAssignment {
         Write-FabricLog -Message "Failed to bulk assign roles in domain '$DomainId'. Error: $errorDetails" -Level Error
     }
 }
-#EndRegion '.\Public\Domain\Add-FabricDomainWorkspaceByRoleAssignment.ps1' 99
+#EndRegion '.\Public\Domain\Add-FabricDomainWorkspaceByRoleAssignment.ps1' 95
 #Region '.\Public\Domain\Get-FabricDomain.ps1' -1
 
 <#
@@ -3736,59 +3460,27 @@ function Get-FabricDomain {
         [bool]$NonEmptyDomainsOnly = $false
     )
     try {
-        # Validate input parameters
-        if ($DomainId -and $DomainName) {
-            Write-FabricLog -Message "Specify only one parameter: either 'DomainId' or 'DomainName'." -Level Error
-            return $null
-        }
-
-        # Validate authentication token before proceeding.
-        Write-FabricLog -Message "Validating authentication token..." -Level Debug
-        Test-TokenExpired
-        Write-FabricLog -Message "Authentication token is valid." -Level Debug
+        # Validate authentication token before proceeding
+        Invoke-FabricAuthCheck -ThrowOnFailure
 
         # Construct the API endpoint URI with filtering logic
-        $apiEndpointURI = "{0}/admin/domains" -f $FabricConfig.BaseUrl
+        $queryParams = @{}
         if ($NonEmptyDomainsOnly) {
-            $apiEndpointURI = "{0}?nonEmptyOnly=true" -f $apiEndpointURI
+            $queryParams['nonEmptyOnly'] = 'true'
         }
+        $apiEndpointURI = New-FabricAPIUri -Segments @('admin', 'domains') -QueryParameters $queryParams
         Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
 
         # Make the API request
         $apiParams = @{
             BaseURI = $apiEndpointURI
-            Headers = $FabricConfig.FabricHeaders
+            Headers = $script:FabricAuthContext.FabricHeaders
             Method = 'Get'
         }
         $dataItems = Invoke-FabricAPIRequest @apiParams
 
-        # Immediately handle empty response
-        if (-not $dataItems) {
-            Write-FabricLog -Message "No data returned from the API." -Level Warning
-            return $null
-        }
-
-        # Apply filtering logic efficiently
-        if ($DomainId) {
-            $matchedItems = $dataItems.Where({ $_.Id -eq $DomainId }, 'First')
-        }
-        elseif ($DomainName) {
-            $matchedItems = $dataItems.Where({ $_.DisplayName -eq $DomainName }, 'First')
-        }
-        else {
-            Write-FabricLog -Message "No filter provided. Returning all items." -Level Debug
-            $matchedItems = $dataItems
-        }
-
-        # Handle results
-        if ($matchedItems) {
-            Write-FabricLog -Message "Item(s) found matching the specified criteria." -Level Debug
-            return $matchedItems
-        }
-        else {
-            Write-FabricLog -Message "No item found matching the provided criteria." -Level Warning
-            return $null
-        }
+        # Apply filtering
+        Select-FabricResource -InputObject $dataItems -Id $DomainId -Name $DomainName -ResourceType 'Domain'
     }
     catch {
         # Capture and log error details
@@ -3796,7 +3488,7 @@ function Get-FabricDomain {
         Write-FabricLog -Message "Failed to retrieve environment. Error: $errorDetails" -Level Error
     }
 }
-#EndRegion '.\Public\Domain\Get-FabricDomain.ps1' 110
+#EndRegion '.\Public\Domain\Get-FabricDomain.ps1' 78
 #Region '.\Public\Domain\Get-FabricDomainWorkspace.ps1' -1
 
 <#
@@ -3831,36 +3523,20 @@ function Get-FabricDomainWorkspace {
     )
 
     try {
-        # Validate authentication token before proceeding.
-        Write-FabricLog -Message "Validating authentication token..." -Level Debug
-        Test-TokenExpired
-        Write-FabricLog -Message "Authentication token is valid." -Level Debug
+        # Validate authentication token before proceeding
+        Invoke-FabricAuthCheck -ThrowOnFailure
 
         # Construct the API endpoint URI
-        $apiEndpointURI = "{0}/admin/domains/{1}/workspaces" -f $FabricConfig.BaseUrl, $DomainId
+        $apiEndpointURI = New-FabricAPIUri -Segments @('admin', 'domains', $DomainId, 'workspaces')
         Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
 
         # Make the API request
         $apiParams = @{
             BaseURI = $apiEndpointURI
-            Headers = $FabricConfig.FabricHeaders
+            Headers = $script:FabricAuthContext.FabricHeaders
             Method = 'Get'
         }
-        $dataItems = Invoke-FabricAPIRequest @apiParams
-
-        # Handle empty response
-        if (-not $dataItems) {
-            Write-FabricLog -Message "No data returned from the API." -Level Warning
-            return $null
-        }
-        # Handle results
-        if ($dataItems) {
-            return $dataItems
-        }
-        else {
-            Write-FabricLog -Message "No workspace found for the '$DomainId'." -Level Warning
-            return $null
-        }
+        Invoke-FabricAPIRequest @apiParams
     }
     catch {
         # Capture and log error details
@@ -3868,7 +3544,7 @@ function Get-FabricDomainWorkspace {
         Write-FabricLog -Message "Failed to retrieve domain workspaces. Error: $errorDetails" -Level Error
     }
 }
-#EndRegion '.\Public\Domain\Get-FabricDomainWorkspace.ps1' 70
+#EndRegion '.\Public\Domain\Get-FabricDomainWorkspace.ps1' 54
 #Region '.\Public\Domain\New-FabricDomain.ps1' -1
 
 <#
@@ -3918,13 +3594,11 @@ function New-FabricDomain {
     )
 
     try {
-        # Validate authentication token before proceeding.
-        Write-FabricLog -Message "Validating authentication token..." -Level Debug
-        Test-TokenExpired
-        Write-FabricLog -Message "Authentication token is valid." -Level Debug
+        # Validate authentication token before proceeding
+        Invoke-FabricAuthCheck -ThrowOnFailure
 
         # Construct the API endpoint URI
-        $apiEndpointURI = "{0}/admin/domains" -f $FabricConfig.BaseUrl
+        $apiEndpointURI = New-FabricAPIUri -Segments @('admin', 'domains')
         Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
 
         # Construct the request body
@@ -3940,23 +3614,21 @@ function New-FabricDomain {
             $body.parentDomainId = $ParentDomainId
         }
 
-        # Convert the body to JSON
-        $bodyJson = $body | ConvertTo-Json -Depth 2
+        $bodyJson = Convert-FabricRequestBody -InputObject $body
         Write-FabricLog -Message "Request Body: $bodyJson" -Level Debug
 
         # Make the API request (guarded by ShouldProcess)
         if ($PSCmdlet.ShouldProcess($DomainName, 'Create Fabric domain')) {
             $apiParams = @{
                 BaseURI = $apiEndpointURI
-                Headers = $FabricConfig.FabricHeaders
+                Headers = $script:FabricAuthContext.FabricHeaders
                 Method  = 'Post'
                 Body    = $bodyJson
             }
             $response = Invoke-FabricAPIRequest @apiParams
 
-            # Return the API response
             Write-FabricLog -Message "Domain created successfully!" -Level Info
-            return $response
+            $response
         }
     }
     catch {
@@ -3965,7 +3637,7 @@ function New-FabricDomain {
         Write-FabricLog -Message "Failed to create domain. Error: $errorDetails" -Level Error
     }
 }
-#EndRegion '.\Public\Domain\New-FabricDomain.ps1' 95
+#EndRegion '.\Public\Domain\New-FabricDomain.ps1' 91
 #Region '.\Public\Domain\Remove-FabricDomain.ps1' -1
 
 <#
@@ -4000,27 +3672,24 @@ function Remove-FabricDomain {
     )
 
     try {
-        # Validate authentication token before proceeding.
-        Write-FabricLog -Message "Validating authentication token..." -Level Debug
-        Test-TokenExpired
-        Write-FabricLog -Message "Authentication token is valid." -Level Debug
+        # Validate authentication token before proceeding
+        Invoke-FabricAuthCheck -ThrowOnFailure
 
         # Construct the API endpoint URI
-        $apiEndpointURI = "{0}/admin/domains/{1}" -f $FabricConfig.BaseUrl, $DomainId
+        $apiEndpointURI = New-FabricAPIUri -Segments @('admin', 'domains', $DomainId)
         Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
 
         # Make the API request (guarded by ShouldProcess)
         if ($PSCmdlet.ShouldProcess($DomainId, 'Delete Fabric domain')) {
             $apiParams = @{
-                Headers = $FabricConfig.FabricHeaders
+                Headers = $script:FabricAuthContext.FabricHeaders
                 BaseURI = $apiEndpointURI
                 Method  = 'Delete'
             }
             $response = Invoke-FabricAPIRequest @apiParams
 
-            # Return the API response
             Write-FabricLog -Message "Domain '$DomainId' deleted successfully!" -Level Info
-            return $response
+            $response
         }
     }
     catch {
@@ -4029,7 +3698,7 @@ function Remove-FabricDomain {
         Write-FabricLog -Message "Failed to delete domain '$DomainId'. Error: $errorDetails" -Level Error
     }
 }
-#EndRegion '.\Public\Domain\Remove-FabricDomain.ps1' 62
+#EndRegion '.\Public\Domain\Remove-FabricDomain.ps1' 59
 #Region '.\Public\Domain\Remove-FabricDomainWorkspace.ps1' -1
 
 
@@ -4079,10 +3748,8 @@ function Remove-FabricDomainWorkspace {
     )
 
     try {
-        # Validate authentication token before proceeding.
-        Write-FabricLog -Message "Validating authentication token..." -Level Debug
-        Test-TokenExpired
-        Write-FabricLog -Message "Authentication token is valid." -Level Debug
+        # Validate authentication token before proceeding
+        Invoke-FabricAuthCheck -ThrowOnFailure
 
         # Construct the API endpoint URI based on the presence of WorkspaceIds
         # Construct the request body
@@ -4091,14 +3758,13 @@ function Remove-FabricDomainWorkspace {
             $body = @{
                 workspacesIds = $WorkspaceIds
             }
-
-            $bodyJson = $body | ConvertTo-Json -Depth 2
+            $bodyJson = Convert-FabricRequestBody -InputObject $body
         }
         else {
             $endpointSuffix = "unassignAllWorkspaces"
             $bodyJson = $null
         }
-        $apiEndpointURI = "{0}/admin/domains/{1}/{2}" -f $FabricConfig.BaseUrl, $DomainId, $endpointSuffix
+        $apiEndpointURI = New-FabricAPIUri -Segments @('admin', 'domains', $DomainId, $endpointSuffix)
         Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
         Write-FabricLog -Message "Request Body: $bodyJson" -Level Debug
 
@@ -4106,15 +3772,14 @@ function Remove-FabricDomainWorkspace {
         if ($PSCmdlet.ShouldProcess($DomainId, 'Unassign workspaces from domain')) {
             $apiParams = @{
                 BaseURI = $apiEndpointURI
-                Headers = $FabricConfig.FabricHeaders
+                Headers = $script:FabricAuthContext.FabricHeaders
                 Method  = 'Post'
                 Body    = $bodyJson
             }
             $response = Invoke-FabricAPIRequest @apiParams
 
-            # Return the API response
             Write-FabricLog -Message "Successfully unassigned workspaces to the domain with ID '$DomainId'." -Level Info
-            return $response
+            $response
         }
     }
     catch {
@@ -4123,7 +3788,7 @@ function Remove-FabricDomainWorkspace {
         Write-FabricLog -Message "Failed to unassign workspaces to the domain with ID '$DomainId'. Error: $errorDetails" -Level Error
     }
 }
-#EndRegion '.\Public\Domain\Remove-FabricDomainWorkspace.ps1' 92
+#EndRegion '.\Public\Domain\Remove-FabricDomainWorkspace.ps1' 88
 #Region '.\Public\Domain\Remove-FabricDomainWorkspaceRoleAssignment.ps1' -1
 
 <#
@@ -4186,13 +3851,11 @@ function Remove-FabricDomainWorkspaceRoleAssignment {
             }
         }
 
-        # Validate authentication token before proceeding.
-        Write-FabricLog -Message "Validating authentication token..." -Level Debug
-        Test-TokenExpired
-        Write-FabricLog -Message "Authentication token is valid." -Level Debug
+        # Validate authentication token before proceeding
+        Invoke-FabricAuthCheck -ThrowOnFailure
 
         # Construct the API endpoint URI
-        $apiEndpointURI = "{0}/admin/domains/{1}/roleAssignments/bulkUnassign" -f $FabricConfig.BaseUrl, $DomainId
+        $apiEndpointURI = New-FabricAPIUri -Segments @('admin', 'domains', $DomainId, 'roleAssignments', 'bulkUnassign')
         Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
 
         # Construct the request body
@@ -4200,22 +3863,21 @@ function Remove-FabricDomainWorkspaceRoleAssignment {
             type       = $DomainRole
             principals = $PrincipalIds
         }
-        $bodyJson = $body | ConvertTo-Json -Depth 2
+        $bodyJson = Convert-FabricRequestBody -InputObject $body
         Write-FabricLog -Message "Request Body: $bodyJson" -Level Debug
 
         # Make the API request (guarded by ShouldProcess)
         if ($PSCmdlet.ShouldProcess($DomainId, "Unassign role '$DomainRole' from principals")) {
             $apiParams = @{
                 BaseURI = $apiEndpointURI
-                Headers = $FabricConfig.FabricHeaders
+                Headers = $script:FabricAuthContext.FabricHeaders
                 Method  = 'Post'
                 Body    = $bodyJson
             }
             $response = Invoke-FabricAPIRequest @apiParams
 
-            # Return the API response
             Write-FabricLog -Message "Bulk role unassignment for domain '$DomainId' completed successfully!" -Level Info
-            return $response
+            $response
         }
     }
     catch {
@@ -4224,7 +3886,7 @@ function Remove-FabricDomainWorkspaceRoleAssignment {
         Write-FabricLog -Message "Failed to bulk assign roles in domain '$DomainId'. Error: $errorDetails" -Level Error
     }
 }
-#EndRegion '.\Public\Domain\Remove-FabricDomainWorkspaceRoleAssignment.ps1' 99
+#EndRegion '.\Public\Domain\Remove-FabricDomainWorkspaceRoleAssignment.ps1' 96
 #Region '.\Public\Domain\Update-FabricDomain.ps1' -1
 
 <#
@@ -4282,13 +3944,11 @@ function Update-FabricDomain {
     )
 
     try {
-        # Validate authentication token before proceeding.
-        Write-FabricLog -Message "Validating authentication token..." -Level Debug
-        Test-TokenExpired
-        Write-FabricLog -Message "Authentication token is valid." -Level Debug
+        # Validate authentication token before proceeding
+        Invoke-FabricAuthCheck -ThrowOnFailure
 
         # Construct the API endpoint URI
-        $apiEndpointURI = "{0}/admin/domains/{1}" -f $FabricConfig.BaseUrl, $DomainId
+        $apiEndpointURI = New-FabricAPIUri -Segments @('admin', 'domains', $DomainId)
         Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
 
         # Construct the request body
@@ -4304,23 +3964,21 @@ function Update-FabricDomain {
             $body.contributorsScope = $DomainContributorsScope
         }
 
-        # Convert the body to JSON
-        $bodyJson = $body | ConvertTo-Json -Depth 10
+        $bodyJson = Convert-FabricRequestBody -InputObject $body
         Write-FabricLog -Message "Request Body: $bodyJson" -Level Debug
 
         # Make the API request (guarded by ShouldProcess)
         if ($PSCmdlet.ShouldProcess($DomainId, "Update Fabric domain '$DomainName'")) {
             $apiParams = @{
-                Headers = $FabricConfig.FabricHeaders
+                Headers = $script:FabricAuthContext.FabricHeaders
                 BaseURI = $apiEndpointURI
                 Method  = 'Patch'
                 Body    = $bodyJson
             }
             $response = Invoke-FabricAPIRequest @apiParams
 
-            # Return the API response
             Write-FabricLog -Message "Domain '$DomainName' updated successfully!" -Level Info
-            return $response
+            $response
         }
     }
     catch {
@@ -4329,7 +3987,7 @@ function Update-FabricDomain {
         Write-FabricLog -Message "Failed to update domain '$DomainId'. Error: $errorDetails" -Level Error
     }
 }
-#EndRegion '.\Public\Domain\Update-FabricDomain.ps1' 103
+#EndRegion '.\Public\Domain\Update-FabricDomain.ps1' 99
 #Region '.\Public\Environment\Get-FabricEnvironment.ps1' -1
 
 <#
@@ -4387,53 +4045,25 @@ function Get-FabricEnvironment {
         # Validate input parameters
         if ($EnvironmentId -and $EnvironmentName) {
             Write-FabricLog -Message "Specify only one parameter: either 'EnvironmentId' or 'EnvironmentName'." -Level Error
-            return $null
+            return
         }
 
-        # Validate authentication token before proceeding.
-        Write-FabricLog -Message "Validating authentication token..." -Level Debug
-        Test-TokenExpired
-        Write-FabricLog -Message "Authentication token is valid." -Level Debug
+        # Validate authentication
+        Invoke-FabricAuthCheck -ThrowOnFailure
 
         # Construct the API endpoint URI
-        $apiEndpointURI = "{0}/workspaces/{1}/environments" -f $FabricConfig.BaseUrl, $WorkspaceId
-        Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
+        $apiEndpointURI = New-FabricAPIUri -Resource 'workspaces' -WorkspaceId $WorkspaceId -Subresource 'environments'
 
         # Make the API request
         $apiParams = @{
             BaseURI = $apiEndpointURI
-            Headers = $FabricConfig.FabricHeaders
+            Headers = $script:FabricAuthContext.FabricHeaders
             Method = 'Get'
         }
         $dataItems = Invoke-FabricAPIRequest @apiParams
 
-        # Immediately handle empty response
-        if (-not $dataItems) {
-            Write-FabricLog -Message "No data returned from the API." -Level Warning
-            return $null
-        }
-
-        # Apply filtering logic efficiently
-        if ($EnvironmentId) {
-            $matchedItems = $dataItems.Where({ $_.Id -eq $EnvironmentId }, 'First')
-        }
-        elseif ($EnvironmentName) {
-            $matchedItems = $dataItems.Where({ $_.DisplayName -eq $EnvironmentName }, 'First')
-        }
-        else {
-            Write-FabricLog -Message "No filter provided. Returning all items." -Level Debug
-            $matchedItems = $dataItems
-        }
-
-        # Handle results
-        if ($matchedItems) {
-            Write-FabricLog -Message "Item(s) found matching the specified criteria." -Level Debug
-            return $matchedItems
-        }
-        else {
-            Write-FabricLog -Message "No item found matching the provided criteria." -Level Warning
-            return $null
-        }
+        # Apply filtering logic
+        Select-FabricResource -InputObject $dataItems -Id $EnvironmentId -DisplayName $EnvironmentName -ResourceType 'Environment'
     }
     catch {
         # Capture and log error details
@@ -4442,7 +4072,7 @@ function Get-FabricEnvironment {
     }
 
 }
-#EndRegion '.\Public\Environment\Get-FabricEnvironment.ps1' 111
+#EndRegion '.\Public\Environment\Get-FabricEnvironment.ps1' 83
 #Region '.\Public\Environment\Get-FabricEnvironmentLibrary.ps1' -1
 
 <#
@@ -4483,25 +4113,19 @@ function Get-FabricEnvironmentLibrary {
         [string]$EnvironmentId
     )
     try {
-        # Validate authentication token before proceeding.
-        Write-FabricLog -Message "Validating authentication token..." -Level Debug
-        Test-TokenExpired
-        Write-FabricLog -Message "Authentication token is valid." -Level Debug
+        # Validate authentication
+        Invoke-FabricAuthCheck -ThrowOnFailure
 
         # Construct the API endpoint URI
-        $apiEndpointURI = "{0}/workspaces/{1}/environments/{2}/libraries" -f $FabricConfig.BaseUrl, $WorkspaceId, $EnvironmentId
-        Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
+        $apiEndpointURI = New-FabricAPIUri -Resource 'workspaces' -WorkspaceId $WorkspaceId -Subresource "environments/$EnvironmentId/libraries"
 
         # Make the API request
         $apiParams = @{
             BaseURI = $apiEndpointURI
-            Headers = $FabricConfig.FabricHeaders
+            Headers = $script:FabricAuthContext.FabricHeaders
             Method = 'Get'
         }
-        $dataItems = Invoke-FabricAPIRequest @apiParams
-
-        # Handle results
-        return $dataItems
+        Invoke-FabricAPIRequest @apiParams
     }
     catch {
         # Capture and log error details
@@ -4510,7 +4134,7 @@ function Get-FabricEnvironmentLibrary {
     }
 
 }
-#EndRegion '.\Public\Environment\Get-FabricEnvironmentLibrary.ps1' 66
+#EndRegion '.\Public\Environment\Get-FabricEnvironmentLibrary.ps1' 60
 #Region '.\Public\Environment\Get-FabricEnvironmentSparkCompute.ps1' -1
 
 <#
@@ -4552,25 +4176,19 @@ function Get-FabricEnvironmentSparkCompute {
     )
 
     try {
-        # Validate authentication token before proceeding.
-        Write-FabricLog -Message "Validating authentication token..." -Level Debug
-        Test-TokenExpired
-        Write-FabricLog -Message "Authentication token is valid." -Level Debug
+        # Validate authentication
+        Invoke-FabricAuthCheck -ThrowOnFailure
 
         # Construct the API endpoint URI
-        $apiEndpointURI = "{0}/workspaces/{1}/environments/{2}/sparkcompute" -f $FabricConfig.BaseUrl, $WorkspaceId, $EnvironmentId
-        Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
+        $apiEndpointURI = New-FabricAPIUri -Resource 'workspaces' -WorkspaceId $WorkspaceId -Subresource "environments/$EnvironmentId/sparkcompute"
 
         # Make the API request
         $apiParams = @{
             BaseURI = $apiEndpointURI
-            Headers = $FabricConfig.FabricHeaders
+            Headers = $script:FabricAuthContext.FabricHeaders
             Method = 'Get'
         }
-        $dataItems = Invoke-FabricAPIRequest @apiParams
-
-        # Handle results
-        return $dataItems
+        Invoke-FabricAPIRequest @apiParams
     }
     catch {
         # Capture and log error details
@@ -4579,7 +4197,7 @@ function Get-FabricEnvironmentSparkCompute {
     }
 
 }
-#EndRegion '.\Public\Environment\Get-FabricEnvironmentSparkCompute.ps1' 67
+#EndRegion '.\Public\Environment\Get-FabricEnvironmentSparkCompute.ps1' 61
 #Region '.\Public\Environment\Get-FabricEnvironmentStagingLibrary.ps1' -1
 
 <#
@@ -4619,34 +4237,28 @@ function Get-FabricEnvironmentStagingLibrary {
         [string]$EnvironmentId
     )
     try {
-        # Validate authentication token before proceeding.
-        Write-FabricLog -Message "Validating authentication token..." -Level Debug
-        Test-TokenExpired
-        Write-FabricLog -Message "Authentication token is valid." -Level Debug
+        # Validate authentication
+        Invoke-FabricAuthCheck -ThrowOnFailure
 
         # Construct the API endpoint URI
-        $apiEndpointURI = "{0}/workspaces/{1}/environments/{2}/staging/libraries" -f $FabricConfig.BaseUrl, $WorkspaceId, $EnvironmentId
-        Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
+        $apiEndpointURI = New-FabricAPIUri -Resource 'workspaces' -WorkspaceId $WorkspaceId -Subresource "environments/$EnvironmentId/staging/libraries"
 
         # Make the API request
         $apiParams = @{
             BaseURI = $apiEndpointURI
-            Headers = $FabricConfig.FabricHeaders
+            Headers = $script:FabricAuthContext.FabricHeaders
             Method = 'Get'
         }
-        $dataItems = Invoke-FabricAPIRequest @apiParams
-
-        # Handle results
-        return $dataItems
+        Invoke-FabricAPIRequest @apiParams
     }
     catch {
         # Capture and log error details
         $errorDetails = $_.Exception.Message
-        Write-FabricLog -Message "Failed to retrieve environment spark compute. Error: $errorDetails" -Level Error
+        Write-FabricLog -Message "Failed to retrieve environment staging library. Error: $errorDetails" -Level Error
     }
 
 }
-#EndRegion '.\Public\Environment\Get-FabricEnvironmentStagingLibrary.ps1' 65
+#EndRegion '.\Public\Environment\Get-FabricEnvironmentStagingLibrary.ps1' 59
 #Region '.\Public\Environment\Get-FabricEnvironmentStagingSparkCompute.ps1' -1
 
 <#
@@ -4686,34 +4298,28 @@ function Get-FabricEnvironmentStagingSparkCompute {
         [string]$EnvironmentId
     )
     try {
-        # Validate authentication token before proceeding.
-        Write-FabricLog -Message "Validating authentication token..." -Level Debug
-        Test-TokenExpired
-        Write-FabricLog -Message "Authentication token is valid." -Level Debug
+        # Validate authentication
+        Invoke-FabricAuthCheck -ThrowOnFailure
 
         # Construct the API endpoint URI
-        $apiEndpointURI = "{0}/workspaces/{1}/environments/{2}/staging/sparkcompute" -f $FabricConfig.BaseUrl, $WorkspaceId, $EnvironmentId
-        Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
+        $apiEndpointURI = New-FabricAPIUri -Resource 'workspaces' -WorkspaceId $WorkspaceId -Subresource "environments/$EnvironmentId/staging/sparkcompute"
 
         # Make the API request
         $apiParams = @{
             BaseURI = $apiEndpointURI
-            Headers = $FabricConfig.FabricHeaders
+            Headers = $script:FabricAuthContext.FabricHeaders
             Method = 'Get'
         }
-        $dataItems = Invoke-FabricAPIRequest @apiParams
-
-        # Handle results
-        return $dataItems
+        Invoke-FabricAPIRequest @apiParams
     }
     catch {
         # Capture and log error details
         $errorDetails = $_.Exception.Message
-        Write-FabricLog -Message "Failed to retrieve environment spark compute. Error: $errorDetails" -Level Error
+        Write-FabricLog -Message "Failed to retrieve environment staging Spark compute. Error: $errorDetails" -Level Error
     }
 
 }
-#EndRegion '.\Public\Environment\Get-FabricEnvironmentStagingSparkCompute.ps1' 65
+#EndRegion '.\Public\Environment\Get-FabricEnvironmentStagingSparkCompute.ps1' 59
 #Region '.\Public\Environment\Import-FabricEnvironmentStagingLibrary.ps1' -1
 
 <#
@@ -4753,14 +4359,11 @@ function Import-FabricEnvironmentStagingLibrary {
         [string]$EnvironmentId
     )
     try {
-        # Validate authentication token before proceeding.
-        Write-FabricLog -Message "Validating authentication token..." -Level Debug
-        Test-TokenExpired
-        Write-FabricLog -Message "Authentication token is valid." -Level Debug
+        # Validate authentication
+        Invoke-FabricAuthCheck -ThrowOnFailure
 
         # Construct the API endpoint URI
-        $apiEndpointURI = "{0}/workspaces/{1}/environments/{2}/staging/libraries" -f $FabricConfig.BaseUrl, $WorkspaceId, $EnvironmentId
-        Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
+        $apiEndpointURI = New-FabricAPIUri -Resource 'workspaces' -WorkspaceId $WorkspaceId -Subresource "environments/$EnvironmentId/staging/libraries"
 
         # Construct the request body (not yet implemented in Fabric docs)
 
@@ -4768,14 +4371,14 @@ function Import-FabricEnvironmentStagingLibrary {
         if ($PSCmdlet.ShouldProcess($EnvironmentId, "Upload staging library placeholder in workspace '$WorkspaceId'")) {
             $apiParams = @{
                 BaseURI = $apiEndpointURI
-                Headers = $FabricConfig.FabricHeaders
+                Headers = $script:FabricAuthContext.FabricHeaders
                 Method  = 'Post'
             }
             $response = Invoke-FabricAPIRequest @apiParams
 
             # Return the API response
             Write-FabricLog -Message "Environment staging library uploaded successfully!" -Level Info
-            return $response
+            $response
         }
     }
     catch {
@@ -4784,7 +4387,7 @@ function Import-FabricEnvironmentStagingLibrary {
         Write-FabricLog -Message "Failed to upload environment staging library. Error: $errorDetails" -Level Error
     }
 }
-#EndRegion '.\Public\Environment\Import-FabricEnvironmentStagingLibrary.ps1' 69
+#EndRegion '.\Public\Environment\Import-FabricEnvironmentStagingLibrary.ps1' 66
 #Region '.\Public\Environment\New-FabricEnvironment.ps1' -1
 
 <#
@@ -4833,14 +4436,11 @@ function New-FabricEnvironment {
         [string]$EnvironmentDescription
     )
     try {
-        # Validate authentication token before proceeding.
-        Write-FabricLog -Message "Validating authentication token..." -Level Debug
-        Test-TokenExpired
-        Write-FabricLog -Message "Authentication token is valid." -Level Debug
+        # Validate authentication
+        Invoke-FabricAuthCheck -ThrowOnFailure
 
         # Construct the API endpoint URI
-        $apiEndpointURI = "{0}/workspaces/{1}/environments" -f $FabricConfig.BaseUrl, $WorkspaceId
-        Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
+        $apiEndpointURI = New-FabricAPIUri -Resource 'workspaces' -WorkspaceId $WorkspaceId -Subresource 'environments'
 
         # Construct the request body
         $body = @{
@@ -4852,14 +4452,13 @@ function New-FabricEnvironment {
         }
 
         # Convert the body to JSON
-        $bodyJson = $body | ConvertTo-Json -Depth 2
-        Write-FabricLog -Message "Request Body: $bodyJson" -Level Debug
+        $bodyJson = Convert-FabricRequestBody -InputObject $body
 
         # Make the API request (guarded by ShouldProcess)
         if ($PSCmdlet.ShouldProcess($EnvironmentName, "Create Fabric environment in workspace '$WorkspaceId'")) {
             $apiParams = @{
                 BaseURI = $apiEndpointURI
-                Headers = $FabricConfig.FabricHeaders
+                Headers = $script:FabricAuthContext.FabricHeaders
                 Method  = 'Post'
                 Body    = $bodyJson
             }
@@ -4867,7 +4466,7 @@ function New-FabricEnvironment {
 
             # Return the API response
             Write-FabricLog -Message "Environment '$EnvironmentName' created successfully!" -Level Info
-            return $response
+            $response
         }
     }
     catch {
@@ -4876,7 +4475,7 @@ function New-FabricEnvironment {
         Write-FabricLog -Message "Failed to create environment. Error: $errorDetails" -Level Error
     }
 }
-#EndRegion '.\Public\Environment\New-FabricEnvironment.ps1' 90
+#EndRegion '.\Public\Environment\New-FabricEnvironment.ps1' 86
 #Region '.\Public\Environment\Publish-FabricEnvironment.ps1' -1
 
 <#
@@ -4917,36 +4516,33 @@ function Publish-FabricEnvironment {
         [string]$EnvironmentId
     )
     try {
-        # Validate authentication token before proceeding.
-        Write-FabricLog -Message "Validating authentication token..." -Level Debug
-        Test-TokenExpired
-        Write-FabricLog -Message "Authentication token is valid." -Level Debug
+        # Validate authentication
+        Invoke-FabricAuthCheck -ThrowOnFailure
 
         # Construct the API endpoint URI
-        $apiEndpointURI = "{0}/workspaces/{1}/environments/{2}/staging/publish" -f $FabricConfig.BaseUrl, $WorkspaceId, $EnvironmentId
-        Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
+        $apiEndpointURI = New-FabricAPIUri -Resource 'workspaces' -WorkspaceId $WorkspaceId -Subresource "environments/$EnvironmentId/staging/publish"
 
         #  Make the API request (guarded by ShouldProcess)
         if ($PSCmdlet.ShouldProcess($EnvironmentId, "Publish staging environment in workspace '$WorkspaceId'")) {
             $apiParams = @{
                 BaseURI = $apiEndpointURI
-                Headers = $FabricConfig.FabricHeaders
+                Headers = $script:FabricAuthContext.FabricHeaders
                 Method  = 'Post'
             }
             $response = Invoke-FabricAPIRequest @apiParams
 
             # Return the API response
             Write-FabricLog -Message "Publish operation request has been submitted successfully for the environment '$EnvironmentId'!" -Level Info
-            return $response
+            $response
         }
     }
     catch {
         # Capture and log error details
         $errorDetails = $_.Exception.Message
-        Write-FabricLog -Message "Failed to create environment. Error: $errorDetails" -Level Error
+        Write-FabricLog -Message "Failed to publish environment. Error: $errorDetails" -Level Error
     }
 }
-#EndRegion '.\Public\Environment\Publish-FabricEnvironment.ps1' 68
+#EndRegion '.\Public\Environment\Publish-FabricEnvironment.ps1' 65
 #Region '.\Public\Environment\Remove-FabricEnvironment.ps1' -1
 
 <#
@@ -4986,19 +4582,16 @@ function Remove-FabricEnvironment {
         [string]$EnvironmentId
     )
     try {
-        # Validate authentication token before proceeding.
-        Write-FabricLog -Message "Validating authentication token..." -Level Debug
-        Test-TokenExpired
-        Write-FabricLog -Message "Authentication token is valid." -Level Debug
+        # Validate authentication
+        Invoke-FabricAuthCheck -ThrowOnFailure
 
         # Construct the API endpoint URI
-        $apiEndpointURI = "{0}/workspaces/{1}/environments/{2}" -f $FabricConfig.BaseUrl, $WorkspaceId, $EnvironmentId
-        Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
+        $apiEndpointURI = New-FabricAPIUri -Resource 'workspaces' -WorkspaceId $WorkspaceId -Subresource "environments/$EnvironmentId"
 
         # Make the API request (guarded by ShouldProcess)
         if ($PSCmdlet.ShouldProcess($EnvironmentId, "Delete Fabric environment in workspace '$WorkspaceId'")) {
             $apiParams = @{
-                Headers = $FabricConfig.FabricHeaders
+                Headers = $script:FabricAuthContext.FabricHeaders
                 BaseURI = $apiEndpointURI
                 Method  = 'Delete'
             }
@@ -5006,7 +4599,7 @@ function Remove-FabricEnvironment {
 
             # Return the API response
             Write-FabricLog -Message "Environment '$EnvironmentId' deleted successfully from workspace '$WorkspaceId'." -Level Info
-            return $response
+            $response
         }
     }
     catch {
@@ -5015,7 +4608,7 @@ function Remove-FabricEnvironment {
         Write-FabricLog -Message "Failed to delete environment '$EnvironmentId' from workspace '$WorkspaceId'. Error: $errorDetails" -Level Error
     }
 }
-#EndRegion '.\Public\Environment\Remove-FabricEnvironment.ps1' 67
+#EndRegion '.\Public\Environment\Remove-FabricEnvironment.ps1' 64
 #Region '.\Public\Environment\Remove-FabricEnvironmentStagingLibrary.ps1' -1
 
 
@@ -5064,19 +4657,19 @@ function Remove-FabricEnvironmentStagingLibrary {
         [string]$LibraryName
     )
     try {
-        # Validate authentication token before proceeding.
-        Write-FabricLog -Message "Validating authentication token..." -Level Debug
-        Test-TokenExpired
-        Write-FabricLog -Message "Authentication token is valid." -Level Debug
+        # Validate authentication
+        Invoke-FabricAuthCheck -ThrowOnFailure
 
         # Construct the API endpoint URI
-        $apiEndpointURI = "{0}/workspaces/{1}/environments/{2}/staging/libraries?libraryToDelete={3}" -f $FabricConfig.BaseUrl, $WorkspaceId, $EnvironmentId, $LibraryName
-        Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
+        $queryParams = @{
+            libraryToDelete = $LibraryName
+        }
+        $apiEndpointURI = New-FabricAPIUri -Resource 'workspaces' -WorkspaceId $WorkspaceId -Subresource "environments/$EnvironmentId/staging/libraries" -QueryParameters $queryParams
 
         # Make the API request (guarded by ShouldProcess)
         if ($PSCmdlet.ShouldProcess($LibraryName, "Delete environment staging library in workspace '$WorkspaceId' for environment '$EnvironmentId'")) {
             $apiParams = @{
-                Headers = $FabricConfig.FabricHeaders
+                Headers = $script:FabricAuthContext.FabricHeaders
                 BaseURI = $apiEndpointURI
                 Method  = 'Delete'
             }
@@ -5084,13 +4677,13 @@ function Remove-FabricEnvironmentStagingLibrary {
 
             # Return the API response
             Write-FabricLog -Message "Staging library $LibraryName for the Environment '$EnvironmentId' deleted successfully from workspace '$WorkspaceId'." -Level Info
-            return $response
+            $response
         }
     }
     catch {
         # Capture and log error details
         $errorDetails = $_.Exception.Message
-        Write-FabricLog -Message "Failed to delete environment '$EnvironmentId' from workspace '$WorkspaceId'. Error: $errorDetails" -Level Error
+        Write-FabricLog -Message "Failed to delete environment staging library '$LibraryName' from workspace '$WorkspaceId'. Error: $errorDetails" -Level Error
     }
 }
 #EndRegion '.\Public\Environment\Remove-FabricEnvironmentStagingLibrary.ps1' 76
@@ -5134,27 +4727,24 @@ function Stop-FabricEnvironmentPublish {
         [string]$EnvironmentId
     )
     try {
-        # Validate authentication token before proceeding.
-        Write-FabricLog -Message "Validating authentication token..." -Level Debug
-        Test-TokenExpired
-        Write-FabricLog -Message "Authentication token is valid." -Level Debug
+        # Validate authentication
+        Invoke-FabricAuthCheck -ThrowOnFailure
 
         # Construct the API endpoint URI
-        $apiEndpointURI = "{0}/workspaces/{1}/environments/{2}/staging/cancelPublish" -f $FabricConfig.BaseUrl, $WorkspaceId, $EnvironmentId
-        Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
+        $apiEndpointURI = New-FabricAPIUri -Resource 'workspaces' -WorkspaceId $WorkspaceId -Subresource "environments/$EnvironmentId/staging/cancelPublish"
 
         #  Make the API request (guarded by ShouldProcess)
         if ($PSCmdlet.ShouldProcess($EnvironmentId, "Cancel publish for staging environment in workspace '$WorkspaceId'")) {
             $apiParams = @{
                 BaseURI = $apiEndpointURI
-                Headers = $FabricConfig.FabricHeaders
+                Headers = $script:FabricAuthContext.FabricHeaders
                 Method  = 'Post'
             }
             $response = Invoke-FabricAPIRequest @apiParams
 
             # Return the API response
             Write-FabricLog -Message "Publication for environment '$EnvironmentId' has been successfully canceled." -Level Info
-            return $response
+            $response
         }
     }
     catch {
@@ -5163,7 +4753,7 @@ function Stop-FabricEnvironmentPublish {
         Write-FabricLog -Message "Failed to cancel publication for environment '$EnvironmentId' from workspace '$WorkspaceId'. Error: $errorDetails" -Level Error
     }
 }
-#EndRegion '.\Public\Environment\Stop-FabricEnvironmentPublish.ps1' 68
+#EndRegion '.\Public\Environment\Stop-FabricEnvironmentPublish.ps1' 65
 #Region '.\Public\Environment\Update-FabricEnvironment.ps1' -1
 
 <#
@@ -5223,14 +4813,11 @@ function Update-FabricEnvironment {
         [string]$EnvironmentDescription
     )
     try {
-        # Validate authentication token before proceeding.
-        Write-FabricLog -Message "Validating authentication token..." -Level Debug
-        Test-TokenExpired
-        Write-FabricLog -Message "Authentication token is valid." -Level Debug
+        # Validate authentication
+        Invoke-FabricAuthCheck -ThrowOnFailure
 
         # Construct the API endpoint URI
-        $apiEndpointURI = "{0}/workspaces/{1}/environments/{2}" -f $FabricConfig.BaseUrl, $WorkspaceId, $EnvironmentId
-        Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
+        $apiEndpointURI = New-FabricAPIUri -Resource 'workspaces' -WorkspaceId $WorkspaceId -Subresource "environments/$EnvironmentId"
 
         # Construct the request body
         $body = @{
@@ -5242,13 +4829,12 @@ function Update-FabricEnvironment {
         }
 
         # Convert the body to JSON
-        $bodyJson = $body | ConvertTo-Json
-        Write-FabricLog -Message "Request Body: $bodyJson" -Level Debug
+        $bodyJson = Convert-FabricRequestBody -InputObject $body
 
         # Make the API request (guarded by ShouldProcess)
         if ($PSCmdlet.ShouldProcess($EnvironmentId, "Update Fabric environment '$EnvironmentName' in workspace '$WorkspaceId'")) {
             $apiParams = @{
-                Headers = $FabricConfig.FabricHeaders
+                Headers = $script:FabricAuthContext.FabricHeaders
                 BaseURI = $apiEndpointURI
                 Method  = 'Patch'
                 Body    = $bodyJson
@@ -5257,7 +4843,7 @@ function Update-FabricEnvironment {
 
             # Return the API response
             Write-FabricLog -Message "Environment '$EnvironmentName' updated successfully!" -Level Info
-            return $response
+            $response
         }
     }
     catch {
@@ -5266,7 +4852,7 @@ function Update-FabricEnvironment {
         Write-FabricLog -Message "Failed to update Environment. Error: $errorDetails" -Level Error
     }
 }
-#EndRegion '.\Public\Environment\Update-FabricEnvironment.ps1' 101
+#EndRegion '.\Public\Environment\Update-FabricEnvironment.ps1' 97
 #Region '.\Public\Environment\Update-FabricEnvironmentStagingSparkCompute.ps1' -1
 
 <#
@@ -5383,14 +4969,11 @@ function Update-FabricEnvironmentStagingSparkCompute {
         [System.Object]$SparkProperties
     )
     try {
-        # Validate authentication token before proceeding.
-        Write-FabricLog -Message "Validating authentication token..." -Level Debug
-        Test-TokenExpired
-        Write-FabricLog -Message "Authentication token is valid." -Level Debug
+        # Validate authentication
+        Invoke-FabricAuthCheck -ThrowOnFailure
 
         # Construct the API endpoint URI
-        $apiEndpointURI = "{0}/workspaces/{1}/environments/{2}/staging/sparkcompute" -f $FabricConfig.BaseUrl, $WorkspaceId, $EnvironmentId
-        Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
+        $apiEndpointURI = New-FabricAPIUri -Resource 'workspaces' -WorkspaceId $WorkspaceId -Subresource "environments/$EnvironmentId/staging/sparkcompute"
 
         # Construct the request body
         $body = @{
@@ -5412,13 +4995,12 @@ function Update-FabricEnvironmentStagingSparkCompute {
         }
 
         # Convert the body to JSON
-        $bodyJson = $body | ConvertTo-Json -Depth 4
-        Write-FabricLog -Message "Request Body: $bodyJson" -Level Debug
+        $bodyJson = Convert-FabricRequestBody -InputObject $body -Depth 4
 
         # Make the API request (guarded by ShouldProcess)
         if ($PSCmdlet.ShouldProcess($EnvironmentId, "Update staging Spark compute in workspace '$WorkspaceId'")) {
             $apiParams = @{
-                Headers = $FabricConfig.FabricHeaders
+                Headers = $script:FabricAuthContext.FabricHeaders
                 BaseURI = $apiEndpointURI
                 Method  = 'Patch'
                 Body    = $bodyJson
@@ -5427,7 +5009,7 @@ function Update-FabricEnvironmentStagingSparkCompute {
 
             # Return the API response
             Write-FabricLog -Message "Environment staging Spark compute updated successfully!" -Level Info
-            return $response
+            $response
         }
     }
     catch {
@@ -5436,7 +5018,7 @@ function Update-FabricEnvironmentStagingSparkCompute {
         Write-FabricLog -Message "Failed to update environment staging Spark compute. Error: $errorDetails" -Level Error
     }
 }
-#EndRegion '.\Public\Environment\Update-FabricEnvironmentStagingSparkCompute.ps1' 168
+#EndRegion '.\Public\Environment\Update-FabricEnvironmentStagingSparkCompute.ps1' 164
 #Region '.\Public\Eventhouse\Get-FabricEventhouse.ps1' -1
 
 <#
@@ -5491,53 +5073,25 @@ function Get-FabricEventhouse {
         # Validate input parameters
         if ($EventhouseId -and $EventhouseName) {
             Write-FabricLog -Message "Specify only one parameter: either 'EventhouseId' or 'EventhouseName'." -Level Error
-            return $null
+            return
         }
 
-        # Validate authentication token before proceeding.
-        Write-FabricLog -Message "Validating authentication token..." -Level Debug
-        Test-TokenExpired
-        Write-FabricLog -Message "Authentication token is valid." -Level Debug
+        # Validate authentication
+        Invoke-FabricAuthCheck -ThrowOnFailure
 
         # Construct the API endpoint URI
-        $apiEndpointURI = "{0}/workspaces/{1}/eventhouses" -f $FabricConfig.BaseUrl, $WorkspaceId
-        Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
+        $apiEndpointURI = New-FabricAPIUri -Resource 'workspaces' -WorkspaceId $WorkspaceId -Subresource 'eventhouses'
 
         # Make the API request
         $apiParams = @{
             BaseURI = $apiEndpointURI
-            Headers = $FabricConfig.FabricHeaders
+            Headers = $script:FabricAuthContext.FabricHeaders
             Method = 'Get'
         }
         $dataItems = Invoke-FabricAPIRequest @apiParams
 
-        # Immediately handle empty response
-        if (-not $dataItems) {
-            Write-FabricLog -Message "No data returned from the API." -Level Warning
-            return $null
-        }
-
-        # Apply filtering logic efficiently
-        if ($EventhouseId) {
-            $matchedItems = $dataItems.Where({ $_.Id -eq $EventhouseId }, 'First')
-        }
-        elseif ($EventhouseName) {
-            $matchedItems = $dataItems.Where({ $_.DisplayName -eq $EventhouseName }, 'First')
-        }
-        else {
-            Write-FabricLog -Message "No filter provided. Returning all items." -Level Debug
-            $matchedItems = $dataItems
-        }
-
-        # Handle results
-        if ($matchedItems) {
-            Write-FabricLog -Message "Item(s) found matching the specified criteria." -Level Debug
-            return $matchedItems
-        }
-        else {
-            Write-FabricLog -Message "No item found matching the provided criteria." -Level Warning
-            return $null
-        }
+        # Apply filtering logic
+        Select-FabricResource -InputObject $dataItems -Id $EventhouseId -DisplayName $EventhouseName -ResourceType 'Eventhouse'
     }
     catch {
         # Capture and log error details
@@ -5546,7 +5100,7 @@ function Get-FabricEventhouse {
     }
 
 }
-#EndRegion '.\Public\Eventhouse\Get-FabricEventhouse.ps1' 108
+#EndRegion '.\Public\Eventhouse\Get-FabricEventhouse.ps1' 80
 #Region '.\Public\Eventhouse\Get-FabricEventhouseDefinition.ps1' -1
 
 <#
@@ -5597,38 +5151,33 @@ function Get-FabricEventhouseDefinition {
         [string]$EventhouseFormat
     )
     try {
-        # Validate authentication token before proceeding.
-        Write-FabricLog -Message "Validating authentication token..." -Level Debug
-        Test-TokenExpired
-        Write-FabricLog -Message "Authentication token is valid." -Level Debug
+        # Validate authentication
+        Invoke-FabricAuthCheck -ThrowOnFailure
 
         # Construct the API endpoint URI with filtering logic
-        $apiEndpointURI = "{0}/workspaces/{1}/eventhouses/{2}/getDefinition" -f $FabricConfig.BaseUrl, $WorkspaceId, $EventhouseId
-        if ($EventhouseFormat) {
-            $apiEndpointURI = "{0}?format={1}" -f $apiEndpointURI, $EventhouseFormat
-        }
-        Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
+        $queryParams = if ($EventhouseFormat) { @{ format = $EventhouseFormat } } else { $null }
+        $apiEndpointURI = New-FabricAPIUri -Resource 'workspaces' -WorkspaceId $WorkspaceId -Subresource "eventhouses/$EventhouseId/getDefinition" -QueryParameters $queryParams
 
         # Make the API request
         $apiParams = @{
             BaseURI = $apiEndpointURI
-            Headers = $FabricConfig.FabricHeaders
+            Headers = $script:FabricAuthContext.FabricHeaders
             Method = 'Post'
         }
         $response = Invoke-FabricAPIRequest @apiParams
 
         # Return the API response
         Write-FabricLog -Message "Eventhouse '$EventhouseId' definition retrieved successfully!" -Level Debug
-        return $response
+        $response
     }
     catch {
         # Capture and log error details
         $errorDetails = $_.Exception.Message
-        Write-FabricLog -Message "Failed to retrieve Eventhouse. Error: $errorDetails" -Level Error
+        Write-FabricLog -Message "Failed to retrieve Eventhouse definition. Error: $errorDetails" -Level Error
     }
 
 }
-#EndRegion '.\Public\Eventhouse\Get-FabricEventhouseDefinition.ps1' 80
+#EndRegion '.\Public\Eventhouse\Get-FabricEventhouseDefinition.ps1' 75
 #Region '.\Public\Eventhouse\New-FabricEventhouse.ps1' -1
 
 <#
@@ -5690,14 +5239,11 @@ function New-FabricEventhouse {
         [string]$EventhousePathPlatformDefinition
     )
     try {
-        # Validate authentication token before proceeding.
-        Write-FabricLog -Message "Validating authentication token..." -Level Debug
-        Test-TokenExpired
-        Write-FabricLog -Message "Authentication token is valid." -Level Debug
+        # Validate authentication
+        Invoke-FabricAuthCheck -ThrowOnFailure
 
         # Construct the API endpoint URI
-        $apiEndpointURI = "{0}/workspaces/{1}/eventhouses" -f $FabricConfig.BaseUrl, $WorkspaceId
-        Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
+        $apiEndpointURI = New-FabricAPIUri -Resource 'workspaces' -WorkspaceId $WorkspaceId -Subresource 'eventhouses'
 
         # Construct the request body
         $body = @{
@@ -5727,7 +5273,7 @@ function New-FabricEventhouse {
             }
             else {
                 Write-FabricLog -Message "Invalid or empty content in Eventhouse definition." -Level Error
-                return $null
+                return
             }
         }
 
@@ -5751,18 +5297,17 @@ function New-FabricEventhouse {
             }
             else {
                 Write-FabricLog -Message "Invalid or empty content in platform definition." -Level Error
-                return $null
+                return
             }
         }
 
         # Convert the body to JSON
-        $bodyJson = $body | ConvertTo-Json -Depth 10
-        Write-FabricLog -Message "Request Body: $bodyJson" -Level Debug
+        $bodyJson = Convert-FabricRequestBody -InputObject $body -Depth 10
 
         if ($PSCmdlet.ShouldProcess($EventhouseName, "Create Eventhouse in workspace '$WorkspaceId'")) {
             $apiParams = @{
                 BaseURI = $apiEndpointURI
-                Headers = $FabricConfig.FabricHeaders
+                Headers = $script:FabricAuthContext.FabricHeaders
                 Method  = 'Post'
                 Body    = $bodyJson
             }
@@ -5770,7 +5315,7 @@ function New-FabricEventhouse {
 
             # Return the API response
             Write-FabricLog -Message "Eventhouse '$EventhouseName' created successfully!" -Level Info
-            return $response
+            $response
         }
     }
     catch {
@@ -5779,7 +5324,7 @@ function New-FabricEventhouse {
         Write-FabricLog -Message "Failed to create Eventhouse. Error: $errorDetails" -Level Error
     }
 }
-#EndRegion '.\Public\Eventhouse\New-FabricEventhouse.ps1' 149
+#EndRegion '.\Public\Eventhouse\New-FabricEventhouse.ps1' 145
 #Region '.\Public\Eventhouse\Remove-FabricEventhouse.ps1' -1
 
 <#
@@ -5819,19 +5364,16 @@ function Remove-FabricEventhouse {
         [string]$EventhouseId
     )
     try {
-        # Validate authentication token before proceeding.
-        Write-FabricLog -Message "Validating authentication token..." -Level Debug
-        Test-TokenExpired
-        Write-FabricLog -Message "Authentication token is valid." -Level Debug
+        # Validate authentication
+        Invoke-FabricAuthCheck -ThrowOnFailure
 
         # Construct the API endpoint URI
-        $apiEndpointURI = "{0}/workspaces/{1}/eventhouses/{2}" -f $FabricConfig.BaseUrl, $WorkspaceId, $EventhouseId
-        Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
+        $apiEndpointURI = New-FabricAPIUri -Resource 'workspaces' -WorkspaceId $WorkspaceId -Subresource "eventhouses/$EventhouseId"
 
         if ($PSCmdlet.ShouldProcess($EventhouseId, "Delete Eventhouse in workspace '$WorkspaceId'")) {
             # Make the API request
             $apiParams = @{
-                Headers = $FabricConfig.FabricHeaders
+                Headers = $script:FabricAuthContext.FabricHeaders
                 BaseURI = $apiEndpointURI
                 Method  = 'Delete'
             }
@@ -5839,7 +5381,7 @@ function Remove-FabricEventhouse {
 
             # Return the API response
             Write-FabricLog -Message "Eventhouse '$EventhouseId' deleted successfully from workspace '$WorkspaceId'." -Level Info
-            return $response
+            $response
         }
 
     }
@@ -5849,7 +5391,7 @@ function Remove-FabricEventhouse {
         Write-FabricLog -Message "Failed to delete Eventhouse '$EventhouseId'. Error: $errorDetails" -Level Error
     }
 }
-#EndRegion '.\Public\Eventhouse\Remove-FabricEventhouse.ps1' 68
+#EndRegion '.\Public\Eventhouse\Remove-FabricEventhouse.ps1' 65
 #Region '.\Public\Eventhouse\Update-FabricEventhouse.ps1' -1
 
 <#
@@ -5904,14 +5446,11 @@ function Update-FabricEventhouse {
         [string]$EventhouseDescription
     )
     try {
-        # Validate authentication token before proceeding.
-        Write-FabricLog -Message "Validating authentication token..." -Level Debug
-        Test-TokenExpired
-        Write-FabricLog -Message "Authentication token is valid." -Level Debug
+        # Validate authentication
+        Invoke-FabricAuthCheck -ThrowOnFailure
 
         # Construct the API endpoint URI
-        $apiEndpointURI = "{0}/workspaces/{1}/eventhouses/{2}" -f $FabricConfig.BaseUrl, $WorkspaceId, $EventhouseId
-        Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
+        $apiEndpointURI = New-FabricAPIUri -Resource 'workspaces' -WorkspaceId $WorkspaceId -Subresource "eventhouses/$EventhouseId"
 
         # Construct the request body
         $body = @{
@@ -5923,13 +5462,12 @@ function Update-FabricEventhouse {
         }
 
         # Convert the body to JSON
-        $bodyJson = $body | ConvertTo-Json
-        Write-FabricLog -Message "Request Body: $bodyJson" -Level Debug
+        $bodyJson = Convert-FabricRequestBody -InputObject $body
 
         if ($PSCmdlet.ShouldProcess($EventhouseId, "Update Eventhouse '$EventhouseName' in workspace '$WorkspaceId'")) {
             # Make the API request
             $apiParams = @{
-                Headers = $FabricConfig.FabricHeaders
+                Headers = $script:FabricAuthContext.FabricHeaders
                 BaseURI = $apiEndpointURI
                 Method  = 'Patch'
                 Body    = $bodyJson
@@ -5938,7 +5476,7 @@ function Update-FabricEventhouse {
 
             # Return the API response
             Write-FabricLog -Message "Eventhouse '$EventhouseName' updated successfully!" -Level Info
-            return $response
+            $response
         }
     }
     catch {
@@ -5947,7 +5485,7 @@ function Update-FabricEventhouse {
         Write-FabricLog -Message "Failed to update Eventhouse. Error: $errorDetails" -Level Error
     }
 }
-#EndRegion '.\Public\Eventhouse\Update-FabricEventhouse.ps1' 96
+#EndRegion '.\Public\Eventhouse\Update-FabricEventhouse.ps1' 92
 #Region '.\Public\Eventhouse\Update-FabricEventhouseDefinition.ps1' -1
 
 <#
@@ -6001,17 +5539,12 @@ function Update-FabricEventhouseDefinition {
         [string]$EventhousePathPlatformDefinition
     )
     try {
-        # Validate authentication token before proceeding.
-        Write-FabricLog -Message "Validating authentication token..." -Level Debug
-        Test-TokenExpired
-        Write-FabricLog -Message "Authentication token is valid." -Level Debug
+        # Validate authentication
+        Invoke-FabricAuthCheck -ThrowOnFailure
 
         # Construct the API endpoint URI with filtering logic
-        $apiEndpointURI = "{0}/workspaces/{1}/eventhouses/{2}/updateDefinition" -f $FabricConfig.BaseUrl, $WorkspaceId, $EventhouseId
-        if ($EventhousePathPlatformDefinition) {
-            $apiEndpointURI = "$apiEndpointURI?updateMetadata=true"
-        }
-        Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
+        $queryParams = if ($EventhousePathPlatformDefinition) { @{ updateMetadata = 'true' } } else { $null }
+        $apiEndpointURI = New-FabricAPIUri -Resource 'workspaces' -WorkspaceId $WorkspaceId -Subresource "eventhouses/$EventhouseId/updateDefinition" -QueryParameters $queryParams
 
         # Step 3: Construct the request body
         $body = @{
@@ -6033,7 +5566,7 @@ function Update-FabricEventhouseDefinition {
             }
             else {
                 Write-FabricLog -Message "Invalid or empty content in Eventhouse definition." -Level Error
-                return $null
+                return
             }
         }
 
@@ -6049,19 +5582,18 @@ function Update-FabricEventhouseDefinition {
             }
             else {
                 Write-FabricLog -Message "Invalid or empty content in platform definition." -Level Error
-                return $null
+                return
             }
         }
 
         # Convert the body to JSON
-        $bodyJson = $body | ConvertTo-Json -Depth 10
-        Write-FabricLog -Message "Request Body: $bodyJson" -Level Debug
+        $bodyJson = Convert-FabricRequestBody -InputObject $body -Depth 10
 
         if ($PSCmdlet.ShouldProcess($EventhouseId, "Update Eventhouse definition in workspace '$WorkspaceId'")) {
             # Make the API request
             $apiParams = @{
                 BaseURI = $apiEndpointURI
-                Headers = $FabricConfig.FabricHeaders
+                Headers = $script:FabricAuthContext.FabricHeaders
                 Method  = 'Post'
                 Body    = $bodyJson
             }
@@ -6069,16 +5601,16 @@ function Update-FabricEventhouseDefinition {
 
             # Return the API response
             Write-FabricLog -Message "Successfully updated the definition for Eventhouse with ID '$EventhouseId' in workspace '$WorkspaceId'." -Level Info
-            return $response
+            $response
         }
     }
     catch {
         # Capture and log error details
         $errorDetails = $_.Exception.Message
-        Write-FabricLog -Message "Failed to update Eventhouse. Error: $errorDetails" -Level Error
+        Write-FabricLog -Message "Failed to update Eventhouse definition. Error: $errorDetails" -Level Error
     }
 }
-#EndRegion '.\Public\Eventhouse\Update-FabricEventhouseDefinition.ps1' 129
+#EndRegion '.\Public\Eventhouse\Update-FabricEventhouseDefinition.ps1' 123
 #Region '.\Public\Eventstream\Get-FabricEventstream.ps1' -1
 
 <#
@@ -6143,54 +5675,25 @@ function Get-FabricEventstream {
         # Validate input parameters
         if ($EventstreamId -and $EventstreamName) {
             Write-FabricLog -Message "Specify only one parameter: either 'EventstreamId' or 'EventstreamName'." -Level Error
-            return $null
+            return
         }
 
-        # Validate authentication token before proceeding.
-        Write-FabricLog -Message "Validating authentication token..." -Level Debug
-        Test-TokenExpired
-        Write-FabricLog -Message "Authentication token is valid." -Level Debug
+        # Validate authentication
+        Invoke-FabricAuthCheck -ThrowOnFailure
 
         # Construct the API endpoint URI
-        $apiEndpointURI = "{0}/workspaces/{1}/eventstreams" -f $FabricConfig.BaseUrl, $WorkspaceId
-        Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
+        $apiEndpointURI = New-FabricAPIUri -Resource 'workspaces' -WorkspaceId $WorkspaceId -Subresource 'eventstreams'
 
-        # Make the API request
         # Make the API request
         $apiParams = @{
             BaseURI = $apiEndpointURI
-            Headers = $FabricConfig.FabricHeaders
-            Method = 'Get'
+            Headers = $script:FabricAuthContext.FabricHeaders
+            Method  = 'Get'
         }
         $dataItems = Invoke-FabricAPIRequest @apiParams
 
-        # Immediately handle empty response
-        if (-not $dataItems) {
-            Write-FabricLog -Message "No data returned from the API." -Level Warning
-            return $null
-        }
-
-        # Apply filtering logic efficiently
-        if ($EventstreamId) {
-            $matchedItems = $dataItems.Where({ $_.Id -eq $EventstreamId }, 'First')
-        }
-        elseif ($EventstreamName) {
-            $matchedItems = $dataItems.Where({ $_.DisplayName -eq $EventstreamName }, 'First')
-        }
-        else {
-            Write-FabricLog -Message "No filter provided. Returning all items." -Level Debug
-            $matchedItems = $dataItems
-        }
-
-        # Handle results
-        if ($matchedItems) {
-            Write-FabricLog -Message "Item(s) found matching the specified criteria." -Level Debug
-            return $matchedItems
-        }
-        else {
-            Write-FabricLog -Message "No item found matching the provided criteria." -Level Warning
-            return $null
-        }
+        # Apply filtering and return results
+        Select-FabricResource -InputObject $dataItems -Id $EventstreamId -DisplayName $EventstreamName -ResourceType 'Eventstream'
     }
     catch {
         # Capture and log error details
@@ -6199,7 +5702,7 @@ function Get-FabricEventstream {
     }
 
 }
-#EndRegion '.\Public\Eventstream\Get-FabricEventstream.ps1' 119
+#EndRegion '.\Public\Eventstream\Get-FabricEventstream.ps1' 90
 #Region '.\Public\Eventstream\Get-FabricEventstreamDefinition.ps1' -1
 
 
@@ -6254,29 +5757,30 @@ function Get-FabricEventstreamDefinition {
         [string]$EventstreamFormat
     )
     try {
-        # Validate authentication token before proceeding.
-        Write-FabricLog -Message "Validating authentication token..." -Level Debug
-        Test-TokenExpired
-        Write-FabricLog -Message "Authentication token is valid." -Level Debug
+        # Validate authentication
+        Invoke-FabricAuthCheck -ThrowOnFailure
 
-        # Construct the API endpoint URI with filtering logic
-        $apiEndpointURI = "{0}/workspaces/{1}/Eventstreams/{2}/getDefinition" -f $FabricConfig.BaseUrl, $WorkspaceId, $EventstreamId
-        if ($EventstreamFormat) {
-            $apiEndpointURI = "{0}?format={1}" -f $apiEndpointURI, $EventstreamFormat
+        # Construct the API endpoint URI with optional format parameter
+        $queryParams = if ($EventstreamFormat) {
+            @{ format = $EventstreamFormat }
+        } else {
+            $null
         }
-        Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
+
+        $apiEndpointURI = New-FabricAPIUri -Resource 'workspaces' -WorkspaceId $WorkspaceId -Subresource 'eventstreams' -ItemId $EventstreamId -QueryParameters $queryParams
+        $apiEndpointURI = $apiEndpointURI -replace '/eventstreams/([^/]+)$', '/eventstreams/$1/getDefinition'
 
         # Make the API request
         $apiParams = @{
             BaseURI = $apiEndpointURI
-            Headers = $FabricConfig.FabricHeaders
-            Method = 'Post'
+            Headers = $script:FabricAuthContext.FabricHeaders
+            Method  = 'Post'
         }
         $response = Invoke-FabricAPIRequest @apiParams
 
         # Return the API response
         Write-FabricLog -Message "Eventstream '$EventstreamId' definition retrieved successfully!" -Level Info
-        return $response
+        $response
     }
     catch {
         # Capture and log error details
@@ -6285,7 +5789,7 @@ function Get-FabricEventstreamDefinition {
     }
 
 }
-#EndRegion '.\Public\Eventstream\Get-FabricEventstreamDefinition.ps1' 84
+#EndRegion '.\Public\Eventstream\Get-FabricEventstreamDefinition.ps1' 85
 #Region '.\Public\Eventstream\Get-FabricEventstreamDestination.ps1' -1
 
 <#
@@ -6332,32 +5836,20 @@ function Get-FabricEventstreamDestination {
         [string]$DestinationId
     )
     try {
-        # Validate authentication token before proceeding.
-        Write-FabricLog -Message "Validating authentication token..." -Level Debug
-        Test-TokenExpired
-        Write-FabricLog -Message "Authentication token is valid." -Level Debug
+        # Validate authentication
+        Invoke-FabricAuthCheck -ThrowOnFailure
 
         # Construct the API endpoint URI
-        $apiEndpointURI = "{0}/workspaces/{1}/eventstreams/{2}/destinations/{3}" -f $FabricConfig.BaseUrl, $WorkspaceId, $EventstreamId, $DestinationId
-        Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
+        $apiEndpointURI = New-FabricAPIUri -Resource 'workspaces' -WorkspaceId $WorkspaceId -Subresource 'eventstreams' -ItemId $EventstreamId
+        $apiEndpointURI = "$apiEndpointURI/destinations/$DestinationId"
 
         # Make the API request
         $apiParams = @{
             BaseURI = $apiEndpointURI
-            Headers = $FabricConfig.FabricHeaders
+            Headers = $script:FabricAuthContext.FabricHeaders
             Method  = 'Get'
         }
-        $dataItems = Invoke-FabricAPIRequest @apiParams
-
-        # Immediately handle empty response
-        if (-not $dataItems) {
-            Write-FabricLog -Message "No data returned from the API." -Level Warning
-            return $null
-        }
-        else {
-            Write-FabricLog -Message "No filter provided. Returning all items." -Level Debug
-            return $dataItems
-        }
+        Invoke-FabricAPIRequest @apiParams
     }
     catch {
         # Capture and log error details
@@ -6365,7 +5857,7 @@ function Get-FabricEventstreamDestination {
         Write-FabricLog -Message "Failed to retrieve Eventstream Destination. Error: $errorDetails" -Level Error
     }
 }
-#EndRegion '.\Public\Eventstream\Get-FabricEventstreamDestination.ps1' 78
+#EndRegion '.\Public\Eventstream\Get-FabricEventstreamDestination.ps1' 66
 #Region '.\Public\Eventstream\Get-FabricEventstreamDestinationConnection.ps1' -1
 
 <#
@@ -6415,32 +5907,20 @@ function Get-FabricEventstreamDestinationConnection {
         [string]$DestinationId
     )
     try {
-        # Validate authentication token before proceeding.
-        Write-FabricLog -Message "Validating authentication token..." -Level Debug
-        Test-TokenExpired
-        Write-FabricLog -Message "Authentication token is valid." -Level Debug
+        # Validate authentication
+        Invoke-FabricAuthCheck -ThrowOnFailure
 
         # Construct the API endpoint URI
-        $apiEndpointURI = "{0}/workspaces/{1}/eventstreams/{2}/destinations/{3}/connection" -f $FabricConfig.BaseUrl, $WorkspaceId, $EventstreamId, $DestinationId
-        Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
+        $apiEndpointURI = New-FabricAPIUri -Resource 'workspaces' -WorkspaceId $WorkspaceId -Subresource 'eventstreams' -ItemId $EventstreamId
+        $apiEndpointURI = "$apiEndpointURI/destinations/$DestinationId/connection"
 
         # Make the API request
         $apiParams = @{
             BaseURI = $apiEndpointURI
-            Headers = $FabricConfig.FabricHeaders
+            Headers = $script:FabricAuthContext.FabricHeaders
             Method  = 'Get'
         }
-        $dataItems = Invoke-FabricAPIRequest @apiParams
-
-        # Immediately handle empty response
-        if (-not $dataItems) {
-            Write-FabricLog -Message "No data returned from the API." -Level Warning
-            return $null
-        }
-        else {
-            Write-FabricLog -Message "No filter provided. Returning all items." -Level Debug
-            return $dataItems
-        }
+        Invoke-FabricAPIRequest @apiParams
     }
     catch {
         # Capture and log error details
@@ -6448,7 +5928,7 @@ function Get-FabricEventstreamDestinationConnection {
         Write-FabricLog -Message "Failed to retrieve Eventstream Destination Connection. Error: $errorDetails" -Level Error
     }
 }
-#EndRegion '.\Public\Eventstream\Get-FabricEventstreamDestinationConnection.ps1' 81
+#EndRegion '.\Public\Eventstream\Get-FabricEventstreamDestinationConnection.ps1' 69
 #Region '.\Public\Eventstream\Get-FabricEventstreamSource.ps1' -1
 
 <#
@@ -6493,32 +5973,20 @@ function Get-FabricEventstreamSource {
         [string]$SourceId
     )
     try {
-        # Validate authentication token before proceeding.
-        Write-FabricLog -Message "Validating authentication token..." -Level Debug
-        Test-TokenExpired
-        Write-FabricLog -Message "Authentication token is valid." -Level Debug
+        # Validate authentication
+        Invoke-FabricAuthCheck -ThrowOnFailure
 
         # Construct the API endpoint URI
-        $apiEndpointURI = "{0}/workspaces/{1}/eventstreams/{2}/sources/{3}" -f $FabricConfig.BaseUrl, $WorkspaceId, $EventstreamId, $SourceId
-        Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
+        $apiEndpointURI = New-FabricAPIUri -Resource 'workspaces' -WorkspaceId $WorkspaceId -Subresource 'eventstreams' -ItemId $EventstreamId
+        $apiEndpointURI = "$apiEndpointURI/sources/$SourceId"
 
         # Make the API request
         $apiParams = @{
             BaseURI = $apiEndpointURI
-            Headers = $FabricConfig.FabricHeaders
+            Headers = $script:FabricAuthContext.FabricHeaders
             Method  = 'Get'
         }
-        $dataItems = Invoke-FabricAPIRequest @apiParams
-
-        # Immediately handle empty response
-        if (-not $dataItems) {
-            Write-FabricLog -Message "No data returned from the API." -Level Warning
-            return $null
-        }
-        else {
-            Write-FabricLog -Message "No filter provided. Returning all items." -Level Debug
-            return $dataItems
-        }
+        Invoke-FabricAPIRequest @apiParams
     }
     catch {
         # Capture and log error details
@@ -6526,7 +5994,7 @@ function Get-FabricEventstreamSource {
         Write-FabricLog -Message "Failed to retrieve Eventstream Source. Error: $errorDetails" -Level Error
     }
 }
-#EndRegion '.\Public\Eventstream\Get-FabricEventstreamSource.ps1' 76
+#EndRegion '.\Public\Eventstream\Get-FabricEventstreamSource.ps1' 64
 #Region '.\Public\Eventstream\Get-FabricEventstreamSourceConnection.ps1' -1
 
 <#
@@ -6576,32 +6044,20 @@ function Get-FabricEventstreamSourceConnection {
         [string]$SourceId
     )
     try {
-        # Validate authentication token before proceeding.
-        Write-FabricLog -Message "Validating authentication token..." -Level Debug
-        Test-TokenExpired
-        Write-FabricLog -Message "Authentication token is valid." -Level Debug
+        # Validate authentication
+        Invoke-FabricAuthCheck -ThrowOnFailure
 
         # Construct the API endpoint URI
-        $apiEndpointURI = "{0}/workspaces/{1}/eventstreams/{2}/sources/{3}/connection" -f $FabricConfig.BaseUrl, $WorkspaceId, $EventstreamId, $SourceId
-        Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
+        $apiEndpointURI = New-FabricAPIUri -Resource 'workspaces' -WorkspaceId $WorkspaceId -Subresource 'eventstreams' -ItemId $EventstreamId
+        $apiEndpointURI = "$apiEndpointURI/sources/$SourceId/connection"
 
         # Make the API request
         $apiParams = @{
             BaseURI = $apiEndpointURI
-            Headers = $FabricConfig.FabricHeaders
+            Headers = $script:FabricAuthContext.FabricHeaders
             Method  = 'Get'
         }
-        $dataItems = Invoke-FabricAPIRequest @apiParams
-
-        # Immediately handle empty response
-        if (-not $dataItems) {
-            Write-FabricLog -Message "No data returned from the API." -Level Warning
-            return $null
-        }
-        else {
-            Write-FabricLog -Message "No filter provided. Returning all items." -Level Debug
-            return $dataItems
-        }
+        Invoke-FabricAPIRequest @apiParams
     }
     catch {
         # Capture and log error details
@@ -6609,7 +6065,7 @@ function Get-FabricEventstreamSourceConnection {
         Write-FabricLog -Message "Failed to retrieve Eventstream Source Connection. Error: $errorDetails" -Level Error
     }
 }
-#EndRegion '.\Public\Eventstream\Get-FabricEventstreamSourceConnection.ps1' 81
+#EndRegion '.\Public\Eventstream\Get-FabricEventstreamSourceConnection.ps1' 69
 #Region '.\Public\Eventstream\Get-FabricEventstreamTopology.ps1' -1
 
 <#
@@ -6647,32 +6103,20 @@ function Get-FabricEventstreamTopology {
         [string]$EventstreamId
     )
     try {
-        # Validate authentication token before proceeding.
-        Write-FabricLog -Message "Validating authentication token..." -Level Debug
-        Test-TokenExpired
-        Write-FabricLog -Message "Authentication token is valid." -Level Debug
+        # Validate authentication
+        Invoke-FabricAuthCheck -ThrowOnFailure
 
         # Construct the API endpoint URI
-        $apiEndpointURI = "{0}/workspaces/{1}/eventstreams/{2}/topology" -f $FabricConfig.BaseUrl, $WorkspaceId, $EventstreamId
-        Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
+        $apiEndpointURI = New-FabricAPIUri -Resource 'workspaces' -WorkspaceId $WorkspaceId -Subresource 'eventstreams' -ItemId $EventstreamId
+        $apiEndpointURI = "$apiEndpointURI/topology"
 
         # Make the API request
         $apiParams = @{
             BaseURI = $apiEndpointURI
-            Headers = $FabricConfig.FabricHeaders
+            Headers = $script:FabricAuthContext.FabricHeaders
             Method  = 'Get'
         }
-        $dataItems = Invoke-FabricAPIRequest @apiParams
-
-        # Immediately handle empty response
-        if (-not $dataItems) {
-            Write-FabricLog -Message "No data returned from the API." -Level Warning
-            return $null
-        }
-        else {
-            Write-FabricLog -Message "No filter provided. Returning all items." -Level Debug
-            return $dataItems
-        }
+        Invoke-FabricAPIRequest @apiParams
     }
     catch {
         # Capture and log error details
@@ -6680,7 +6124,7 @@ function Get-FabricEventstreamTopology {
         Write-FabricLog -Message "Failed to retrieve Eventstream Topology. Error: $errorDetails" -Level Error
     }
 }
-#EndRegion '.\Public\Eventstream\Get-FabricEventstreamTopology.ps1' 69
+#EndRegion '.\Public\Eventstream\Get-FabricEventstreamTopology.ps1' 57
 #Region '.\Public\Eventstream\New-FabricEventstream.ps1' -1
 
 <#
@@ -6743,14 +6187,11 @@ function New-FabricEventstream {
         [string]$EventstreamPathPlatformDefinition
     )
     try {
-        # Validate authentication token before proceeding.
-        Write-FabricLog -Message "Validating authentication token..." -Level Debug
-        Test-TokenExpired
-        Write-FabricLog -Message "Authentication token is valid." -Level Debug
+        # Validate authentication
+        Invoke-FabricAuthCheck -ThrowOnFailure
 
         # Construct the API endpoint URI
-        $apiEndpointURI = "{0}/workspaces/{1}/eventstreams" -f $FabricConfig.BaseUrl, $WorkspaceId
-        Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
+        $apiEndpointURI = New-FabricAPIUri -Resource 'workspaces' -WorkspaceId $WorkspaceId -Subresource 'eventstreams'
 
         # Construct the request body
         $body = @{
@@ -6782,7 +6223,7 @@ function New-FabricEventstream {
             }
             else {
                 Write-FabricLog -Message "Invalid or empty content in Eventstream definition." -Level Error
-                return $null
+                return
             }
         }
 
@@ -6807,19 +6248,18 @@ function New-FabricEventstream {
             }
             else {
                 Write-FabricLog -Message "Invalid or empty content in platform definition." -Level Error
-                return $null
+                return
             }
         }
 
         # Convert the body to JSON
-        $bodyJson = $body | ConvertTo-Json -Depth 10
-        Write-FabricLog -Message "Request Body: $bodyJson" -Level Debug
+        $bodyJson = Convert-FabricRequestBody -InputObject $body
 
         # Make the API request (guarded by ShouldProcess)
         if ($PSCmdlet.ShouldProcess($EventstreamName, "Create Eventstream in workspace '$WorkspaceId'")) {
             $apiParams = @{
                 BaseURI = $apiEndpointURI
-                Headers = $FabricConfig.FabricHeaders
+                Headers = $script:FabricAuthContext.FabricHeaders
                 Method  = 'Post'
                 Body    = $bodyJson
             }
@@ -6827,7 +6267,7 @@ function New-FabricEventstream {
 
             # Return the API response
             Write-FabricLog -Message "Eventstream '$EventstreamName' created successfully!" -Level Info
-            return $response
+            $response
         }
     }
     catch {
@@ -6836,7 +6276,7 @@ function New-FabricEventstream {
         Write-FabricLog -Message "Failed to create Eventstream. Error: $errorDetails" -Level Error
     }
 }
-#EndRegion '.\Public\Eventstream\New-FabricEventstream.ps1' 154
+#EndRegion '.\Public\Eventstream\New-FabricEventstream.ps1' 150
 #Region '.\Public\Eventstream\Remove-FabricEventstream.ps1' -1
 
 <#
@@ -6878,27 +6318,24 @@ function Remove-FabricEventstream {
     )
 
     try {
-        # Validate authentication token before proceeding.
-        Write-FabricLog -Message "Validating authentication token..." -Level Debug
-        Test-TokenExpired
-        Write-FabricLog -Message "Authentication token is valid." -Level Debug
+        # Validate authentication
+        Invoke-FabricAuthCheck -ThrowOnFailure
 
         # Construct the API endpoint URI
-        $apiEndpointURI = "{0}/workspaces/{1}/eventstreams/{2}" -f $FabricConfig.BaseUrl, $WorkspaceId, $EventstreamId
-        Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
+        $apiEndpointURI = New-FabricAPIUri -Resource 'workspaces' -WorkspaceId $WorkspaceId -Subresource 'eventstreams' -ItemId $EventstreamId
 
         if ($PSCmdlet.ShouldProcess($EventstreamId, "Delete Eventstream in workspace '$WorkspaceId'")) {
             # Make the API request
             $apiParams = @{
-                Headers = $FabricConfig.FabricHeaders
                 BaseURI = $apiEndpointURI
+                Headers = $script:FabricAuthContext.FabricHeaders
                 Method  = 'Delete'
             }
             $response = Invoke-FabricAPIRequest @apiParams
 
             # Return the API response
             Write-FabricLog -Message "Eventstream '$EventstreamId' deleted successfully from workspace '$WorkspaceId'." -Level Info
-            return $response
+            $response
         }
     }
     catch {
@@ -6907,7 +6344,7 @@ function Remove-FabricEventstream {
         Write-FabricLog -Message "Failed to delete Eventstream '$EventstreamId' from workspace '$WorkspaceId'. Error: $errorDetails" -Level Error
     }
 }
-#EndRegion '.\Public\Eventstream\Remove-FabricEventstream.ps1' 69
+#EndRegion '.\Public\Eventstream\Remove-FabricEventstream.ps1' 66
 #Region '.\Public\Eventstream\Resume-FabricEventstream.ps1' -1
 
 <#
@@ -6946,27 +6383,25 @@ function Resume-FabricEventstream {
         [string]$EventstreamId
     )
     try {
-        # Validate authentication token before proceeding.
-        Write-FabricLog -Message "Validating authentication token..." -Level Debug
-        Test-TokenExpired
-        Write-FabricLog -Message "Authentication token is valid." -Level Debug
+        # Validate authentication
+        Invoke-FabricAuthCheck -ThrowOnFailure
 
         # Construct the API endpoint URI
-        $apiEndpointURI = "{0}/workspaces/{1}/eventstreams/{2}/resume" -f $FabricConfig.BaseUrl, $WorkspaceId, $EventstreamId
-        Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
+        $apiEndpointURI = New-FabricAPIUri -Resource 'workspaces' -WorkspaceId $WorkspaceId -Subresource 'eventstreams' -ItemId $EventstreamId
+        $apiEndpointURI = "$apiEndpointURI/resume"
 
         if ($PSCmdlet.ShouldProcess($EventstreamId, "Resume Eventstream in workspace '$WorkspaceId'")) {
             # Make the API request
             $apiParams = @{
                 BaseURI = $apiEndpointURI
-                Headers = $FabricConfig.FabricHeaders
+                Headers = $script:FabricAuthContext.FabricHeaders
                 Method  = 'Post'
             }
             $response = Invoke-FabricAPIRequest @apiParams
 
             # Return the API response
             Write-FabricLog -Message "Eventstream '$EventstreamId' resumed successfully!" -Level Info
-            return $response
+            $response
         }
     }
     catch {
@@ -6975,7 +6410,7 @@ function Resume-FabricEventstream {
         Write-FabricLog -Message "Failed to resume Eventstream. Error: $errorDetails" -Level Error
     }
 }
-#EndRegion '.\Public\Eventstream\Resume-FabricEventstream.ps1' 66
+#EndRegion '.\Public\Eventstream\Resume-FabricEventstream.ps1' 64
 #Region '.\Public\Eventstream\Resume-FabricEventstreamDestination.ps1' -1
 
 <#
@@ -7021,27 +6456,25 @@ function Resume-FabricEventstreamDestination {
         [string]$DestinationId
     )
     try {
-        # Validate authentication token before proceeding.
-        Write-FabricLog -Message "Validating authentication token..." -Level Debug
-        Test-TokenExpired
-        Write-FabricLog -Message "Authentication token is valid." -Level Debug
+        # Validate authentication
+        Invoke-FabricAuthCheck -ThrowOnFailure
 
         # Construct the API endpoint URI
-        $apiEndpointURI = "{0}/workspaces/{1}/eventstreams/{2}/destinations/{3}/resume" -f $FabricConfig.BaseUrl, $WorkspaceId, $EventstreamId, $DestinationId
-        Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
+        $apiEndpointURI = New-FabricAPIUri -Resource 'workspaces' -WorkspaceId $WorkspaceId -Subresource 'eventstreams' -ItemId $EventstreamId
+        $apiEndpointURI = "$apiEndpointURI/destinations/$DestinationId/resume"
 
         if ($PSCmdlet.ShouldProcess($DestinationId, "Resume Eventstream destination in workspace '$WorkspaceId' (Eventstream '$EventstreamId')")) {
             # Make the API request
             $apiParams = @{
                 BaseURI = $apiEndpointURI
-                Headers = $FabricConfig.FabricHeaders
+                Headers = $script:FabricAuthContext.FabricHeaders
                 Method  = 'Post'
             }
             $response = Invoke-FabricAPIRequest @apiParams
 
             # Return the API response
             Write-FabricLog -Message "Eventstream '$EventstreamId' destination '$DestinationId' resumed successfully!" -Level Info
-            return $response
+            $response
         }
     }
     catch {
@@ -7050,7 +6483,7 @@ function Resume-FabricEventstreamDestination {
         Write-FabricLog -Message "Failed to resume Eventstream Destination '$DestinationId'. Error: $errorDetails" -Level Error
     }
 }
-#EndRegion '.\Public\Eventstream\Resume-FabricEventstreamDestination.ps1' 73
+#EndRegion '.\Public\Eventstream\Resume-FabricEventstreamDestination.ps1' 71
 #Region '.\Public\Eventstream\Resume-FabricEventstreamSource.ps1' -1
 
 <#
@@ -7097,27 +6530,25 @@ function Resume-FabricEventstreamSource {
         [string]$SourceId
     )
     try {
-        # Validate authentication token before proceeding.
-        Write-FabricLog -Message "Validating authentication token..." -Level Debug
-        Test-TokenExpired
-        Write-FabricLog -Message "Authentication token is valid." -Level Debug
+        # Validate authentication
+        Invoke-FabricAuthCheck -ThrowOnFailure
 
         # Construct the API endpoint URI
-        $apiEndpointURI = "{0}/workspaces/{1}/eventstreams/{2}/sources/{3}/resume" -f $FabricConfig.BaseUrl, $WorkspaceId, $EventstreamId, $SourceId
-        Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
+        $apiEndpointURI = New-FabricAPIUri -Resource 'workspaces' -WorkspaceId $WorkspaceId -Subresource 'eventstreams' -ItemId $EventstreamId
+        $apiEndpointURI = "$apiEndpointURI/sources/$SourceId/resume"
 
         if ($PSCmdlet.ShouldProcess($SourceId, "Resume Eventstream source in workspace '$WorkspaceId' (Eventstream '$EventstreamId')")) {
             # Make the API request
             $apiParams = @{
                 BaseURI = $apiEndpointURI
-                Headers = $FabricConfig.FabricHeaders
+                Headers = $script:FabricAuthContext.FabricHeaders
                 Method  = 'Post'
             }
             $response = Invoke-FabricAPIRequest @apiParams
 
             # Return the API response
             Write-FabricLog -Message "Eventstream '$EventstreamId' Source '$SourceId' resumed successfully!" -Level Info
-            return $response
+            $response
         }
     }
     catch {
@@ -7126,7 +6557,7 @@ function Resume-FabricEventstreamSource {
         Write-FabricLog -Message "Failed to resume Eventstream Source '$SourceId'. Error: $errorDetails" -Level Error
     }
 }
-#EndRegion '.\Public\Eventstream\Resume-FabricEventstreamSource.ps1' 74
+#EndRegion '.\Public\Eventstream\Resume-FabricEventstreamSource.ps1' 72
 #Region '.\Public\Eventstream\Suspend-FabricEventstream.ps1' -1
 
 <#
@@ -7163,27 +6594,25 @@ function Suspend-FabricEventstream {
         [string]$EventstreamId
     )
     try {
-        # Validate authentication token before proceeding.
-        Write-FabricLog -Message "Validating authentication token..." -Level Debug
-        Test-TokenExpired
-        Write-FabricLog -Message "Authentication token is valid." -Level Debug
+        # Validate authentication
+        Invoke-FabricAuthCheck -ThrowOnFailure
 
         # Construct the API endpoint URI
-        $apiEndpointURI = "{0}/workspaces/{1}/eventstreams/{2}/pause" -f $FabricConfig.BaseUrl, $WorkspaceId, $EventstreamId
-        Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
+        $apiEndpointURI = New-FabricAPIUri -Resource 'workspaces' -WorkspaceId $WorkspaceId -Subresource 'eventstreams' -ItemId $EventstreamId
+        $apiEndpointURI = "$apiEndpointURI/pause"
 
         if ($PSCmdlet.ShouldProcess($EventstreamId, "Pause Eventstream in workspace '$WorkspaceId'")) {
             # Make the API request
             $apiParams = @{
                 BaseURI = $apiEndpointURI
-                Headers = $FabricConfig.FabricHeaders
+                Headers = $script:FabricAuthContext.FabricHeaders
                 Method  = 'Post'
             }
             $response = Invoke-FabricAPIRequest @apiParams
 
             # Return the API response
             Write-FabricLog -Message "Eventstream '$EventstreamId' paused successfully!" -Level Info
-            return $response
+            $response
         }
     }
     catch {
@@ -7192,7 +6621,7 @@ function Suspend-FabricEventstream {
         Write-FabricLog -Message "Failed to pause Eventstream. Error: $errorDetails" -Level Error
     }
 }
-#EndRegion '.\Public\Eventstream\Suspend-FabricEventstream.ps1' 64
+#EndRegion '.\Public\Eventstream\Suspend-FabricEventstream.ps1' 62
 #Region '.\Public\Eventstream\Suspend-FabricEventstreamDestination.ps1' -1
 
 <#
@@ -7238,27 +6667,25 @@ function Suspend-FabricEventstreamDestination {
         [string]$DestinationId
     )
     try {
-        # Validate authentication token before proceeding.
-        Write-FabricLog -Message "Validating authentication token..." -Level Debug
-        Test-TokenExpired
-        Write-FabricLog -Message "Authentication token is valid." -Level Debug
+        # Validate authentication
+        Invoke-FabricAuthCheck -ThrowOnFailure
 
         # Construct the API endpoint URI
-        $apiEndpointURI = "{0}/workspaces/{1}/eventstreams/{2}/destinations/{3}/pause" -f $FabricConfig.BaseUrl, $WorkspaceId, $EventstreamId, $DestinationId
-        Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
+        $apiEndpointURI = New-FabricAPIUri -Resource 'workspaces' -WorkspaceId $WorkspaceId -Subresource 'eventstreams' -ItemId $EventstreamId
+        $apiEndpointURI = "$apiEndpointURI/destinations/$DestinationId/pause"
 
         if ($PSCmdlet.ShouldProcess($DestinationId, "Pause Eventstream destination in workspace '$WorkspaceId' (Eventstream '$EventstreamId')")) {
             # Make the API request
             $apiParams = @{
                 BaseURI = $apiEndpointURI
-                Headers = $FabricConfig.FabricHeaders
+                Headers = $script:FabricAuthContext.FabricHeaders
                 Method  = 'Post'
             }
             $response = Invoke-FabricAPIRequest @apiParams
 
             # Return the API response
             Write-FabricLog -Message "Eventstream '$EventstreamId' destination '$DestinationId' paused successfully!" -Level Info
-            return $response
+            $response
         }
     }
     catch {
@@ -7267,7 +6694,7 @@ function Suspend-FabricEventstreamDestination {
         Write-FabricLog -Message "Failed to pause Eventstream Destination '$DestinationId'. Error: $errorDetails" -Level Error
     }
 }
-#EndRegion '.\Public\Eventstream\Suspend-FabricEventstreamDestination.ps1' 73
+#EndRegion '.\Public\Eventstream\Suspend-FabricEventstreamDestination.ps1' 71
 #Region '.\Public\Eventstream\Suspend-FabricEventstreamSource.ps1' -1
 
 <#
@@ -7309,27 +6736,25 @@ function Suspend-FabricEventstreamSource {
         [string]$SourceId
     )
     try {
-        # Validate authentication token before proceeding.
-        Write-FabricLog -Message "Validating authentication token..." -Level Debug
-        Test-TokenExpired
-        Write-FabricLog -Message "Authentication token is valid." -Level Debug
+        # Validate authentication
+        Invoke-FabricAuthCheck -ThrowOnFailure
 
         # Construct the API endpoint URI
-        $apiEndpointURI = "{0}/workspaces/{1}/eventstreams/{2}/sources/{3}/pause" -f $FabricConfig.BaseUrl, $WorkspaceId, $EventstreamId, $SourceId
-        Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
+        $apiEndpointURI = New-FabricAPIUri -Resource 'workspaces' -WorkspaceId $WorkspaceId -Subresource 'eventstreams' -ItemId $EventstreamId
+        $apiEndpointURI = "$apiEndpointURI/sources/$SourceId/pause"
 
         if ($PSCmdlet.ShouldProcess($SourceId, "Pause Eventstream source in workspace '$WorkspaceId' (Eventstream '$EventstreamId')")) {
             # Make the API request
             $apiParams = @{
                 BaseURI = $apiEndpointURI
-                Headers = $FabricConfig.FabricHeaders
+                Headers = $script:FabricAuthContext.FabricHeaders
                 Method  = 'Post'
             }
             $response = Invoke-FabricAPIRequest @apiParams
 
             # Return the API response
             Write-FabricLog -Message "Eventstream '$EventstreamId' Source '$SourceId' paused successfully!" -Level Info
-            return $response
+            $response
         }
     }
     catch {
@@ -7338,7 +6763,7 @@ function Suspend-FabricEventstreamSource {
         Write-FabricLog -Message "Failed to pause Eventstream Source '$SourceId'. Error: $errorDetails" -Level Error
     }
 }
-#EndRegion '.\Public\Eventstream\Suspend-FabricEventstreamSource.ps1' 69
+#EndRegion '.\Public\Eventstream\Suspend-FabricEventstreamSource.ps1' 67
 #Region '.\Public\Eventstream\Update-FabricEventstream.ps1' -1
 
 <#
@@ -7399,16 +6824,13 @@ function Update-FabricEventstream {
     )
 
     try {
-        # Validate authentication token before proceeding.
-        Write-FabricLog -Message "Validating authentication token..." -Level Debug
-        Test-TokenExpired
-        Write-FabricLog -Message "Authentication token is valid." -Level Debug
+        # Validate authentication
+        Invoke-FabricAuthCheck -ThrowOnFailure
 
         # Construct the API endpoint URI
-        $apiEndpointURI = "{0}/workspaces/{1}/eventstreams/{2}" -f $FabricConfig.BaseUrl, $WorkspaceId, $EventstreamId
-        Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
+        $apiEndpointURI = New-FabricAPIUri -Resource 'workspaces' -WorkspaceId $WorkspaceId -Subresource 'eventstreams' -ItemId $EventstreamId
 
-        # Step 3: Construct the request body
+        # Construct the request body
         $body = @{
             displayName = $EventstreamName
         }
@@ -7418,14 +6840,13 @@ function Update-FabricEventstream {
         }
 
         # Convert the body to JSON
-        $bodyJson = $body | ConvertTo-Json
-        Write-FabricLog -Message "Request Body: $bodyJson" -Level Debug
+        $bodyJson = Convert-FabricRequestBody -InputObject $body
 
         if ($PSCmdlet.ShouldProcess($EventstreamId, "Update Eventstream '$EventstreamName' in workspace '$WorkspaceId'")) {
             # Make the API request
             $apiParams = @{
-                Headers = $FabricConfig.FabricHeaders
                 BaseURI = $apiEndpointURI
+                Headers = $script:FabricAuthContext.FabricHeaders
                 Method  = 'Patch'
                 Body    = $bodyJson
             }
@@ -7433,7 +6854,7 @@ function Update-FabricEventstream {
 
             # Return the API response
             Write-FabricLog -Message "Eventstream '$EventstreamName' updated successfully!" -Level Info
-            return $response
+            $response
         }
     }
     catch {
@@ -7442,7 +6863,7 @@ function Update-FabricEventstream {
         Write-FabricLog -Message "Failed to update Eventstream. Error: $errorDetails" -Level Error
     }
 }
-#EndRegion '.\Public\Eventstream\Update-FabricEventstream.ps1' 102
+#EndRegion '.\Public\Eventstream\Update-FabricEventstream.ps1' 98
 #Region '.\Public\Eventstream\Update-FabricEventstreamDefinition.ps1' -1
 
 <#
@@ -7509,19 +6930,20 @@ function Update-FabricEventstreamDefinition {
     )
 
     try {
-        # Validate authentication token before proceeding.
-        Write-FabricLog -Message "Validating authentication token..." -Level Debug
-        Test-TokenExpired
-        Write-FabricLog -Message "Authentication token is valid." -Level Debug
+        # Validate authentication
+        Invoke-FabricAuthCheck -ThrowOnFailure
 
-        # Construct the API endpoint URI with filtering logic
-        $apiEndpointURI = "{0}/workspaces/{1}/eventstreams/{2}/updateDefinition" -f $FabricConfig.BaseUrl, $WorkspaceId, $EventstreamId
-        if ($EventstreamPathPlatformDefinition) {
-            $apiEndpointURI = "$apiEndpointURI?updateMetadata=true"
+        # Construct the API endpoint URI with optional updateMetadata query parameter
+        $queryParams = if ($EventstreamPathPlatformDefinition) {
+            @{ updateMetadata = 'true' }
+        } else {
+            $null
         }
-        Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
 
-        # Step 3: Construct the request body
+        $apiEndpointURI = New-FabricAPIUri -Resource 'workspaces' -WorkspaceId $WorkspaceId -Subresource 'eventstreams' -ItemId $EventstreamId -QueryParameters $queryParams
+        $apiEndpointURI = $apiEndpointURI -replace '/eventstreams/([^/?]+)', '/eventstreams/$1/updateDefinition'
+
+        # Construct the request body
         $body = @{
             definition = @{
                 parts = @()
@@ -7541,7 +6963,7 @@ function Update-FabricEventstreamDefinition {
             }
             else {
                 Write-FabricLog -Message "Invalid or empty content in Eventstream definition." -Level Error
-                return $null
+                return
             }
         }
 
@@ -7557,27 +6979,26 @@ function Update-FabricEventstreamDefinition {
             }
             else {
                 Write-FabricLog -Message "Invalid or empty content in platform definition." -Level Error
-                return $null
+                return
             }
         }
 
         # Convert the body to JSON
-        $bodyJson = $body | ConvertTo-Json -Depth 10
-        Write-FabricLog -Message "Request Body: $bodyJson" -Level Debug
+        $bodyJson = Convert-FabricRequestBody -InputObject $body
 
         if ($PSCmdlet.ShouldProcess($EventstreamId, "Update Eventstream definition in workspace '$WorkspaceId'")) {
             # Make the API request
             $apiParams = @{
                 BaseURI = $apiEndpointURI
-                Headers = $FabricConfig.FabricHeaders
-                Method = 'Post'
-                Body = $bodyJson
+                Headers = $script:FabricAuthContext.FabricHeaders
+                Method  = 'Post'
+                Body    = $bodyJson
             }
             $response = Invoke-FabricAPIRequest @apiParams
 
             # Return the API response
             Write-FabricLog -Message "Successfully updated the definition for Eventstream with ID '$EventstreamId' in workspace '$WorkspaceId'." -Level Info
-            return $response
+            $response
         }
     }
     catch {
@@ -7621,46 +7042,22 @@ function Get-FabricExternalDataShare {
         [string]$ExternalDataShareId
     )
     try {
-        # Validate authentication token before proceeding.
-        Write-FabricLog -Message "Validating authentication token..." -Level Debug
-        Test-TokenExpired
-        Write-FabricLog -Message "Authentication token is valid." -Level Debug
+        # Validate authentication
+        Invoke-FabricAuthCheck -ThrowOnFailure
 
         # Construct the API endpoint URI
-        $apiEndpointURI = "{0}/admin/items/externalDataShares" -f $FabricConfig.BaseUrl
-        Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
+        $apiEndpointURI = New-FabricAPIUri -Resource 'admin/items/externalDataShares'
 
         # Make the API request
         $apiParams = @{
             BaseURI = $apiEndpointURI
-            Headers = $FabricConfig.FabricHeaders
+            Headers = $script:FabricAuthContext.FabricHeaders
             Method = 'Get'
         }
         $dataItems = Invoke-FabricAPIRequest @apiParams
 
-        if (-not $dataItems) {
-            Write-FabricLog -Message "No data returned from the API." -Level Warning
-            return $null
-        }
-
         # Apply filtering logic
-        if ($ExternalDataShareId) {
-            $matchedItems = $dataItems.Where({ $_.Id -eq $ExternalDataShareId }, 'First')
-        }
-        else {
-            Write-FabricLog -Message "No filter provided. Returning all items." -Level Debug
-            $matchedItems = $dataItems
-        }
-
-        # Handle results
-        if ($matchedItems) {
-            Write-FabricLog -Message "Item(s) found matching the specified criteria." -Level Debug
-            return $matchedItems
-        }
-        else {
-            Write-FabricLog -Message "No item found matching the provided criteria." -Level Warning
-            return $null
-        }
+        Select-FabricResource -InputObject $dataItems -Id $ExternalDataShareId -ResourceType 'ExternalDataShare'
     }
     catch {
         # Capture and log error details
@@ -7668,7 +7065,7 @@ function Get-FabricExternalDataShare {
         Write-FabricLog -Message "Failed to retrieve External Data Shares. Error: $errorDetails" -Level Error
     }
 }
-#EndRegion '.\Public\External Data Share\Get-FabricExternalDataShare.ps1' 80
+#EndRegion '.\Public\External Data Share\Get-FabricExternalDataShare.ps1' 56
 #Region '.\Public\External Data Share\Revoke-FabricExternalDataShare.ps1' -1
 
 <#
@@ -7714,36 +7111,33 @@ function Revoke-FabricExternalDataShare {
         [string]$ExternalDataShareId
     )
     try {
-        # Validate authentication token before proceeding.
-        Write-FabricLog -Message "Validating authentication token..." -Level Debug
-        Test-TokenExpired
-        Write-FabricLog -Message "Authentication token is valid." -Level Debug
+        # Validate authentication
+        Invoke-FabricAuthCheck -ThrowOnFailure
 
         # Construct the API endpoint URI
-        Write-FabricLog -Message "Constructing API endpoint URI..." -Level Debug
-        $apiEndpointURI = "{0}/admin/workspaces/{1}/items/{2}/externalDataShares/{3}/revoke" -f $FabricConfig.BaseUrl, $WorkspaceId, $ItemId, $ExternalDataShareId
+        $apiEndpointURI = New-FabricAPIUri -Resource 'admin/workspaces' -WorkspaceId $WorkspaceId -Subresource "items/$ItemId/externalDataShares/$ExternalDataShareId/revoke"
 
         if ($PSCmdlet.ShouldProcess($ExternalDataShareId, "Revoke external data share for item '$ItemId' in workspace '$WorkspaceId'")) {
             $apiParams = @{
                 BaseURI = $apiEndpointURI
-                Headers = $FabricConfig.FabricHeaders
+                Headers = $script:FabricAuthContext.FabricHeaders
                 Method  = 'Post'
             }
             $dataItems = Invoke-FabricAPIRequest @apiParams
 
             # Return the API response
             Write-FabricLog -Message "External data share with ID '$ExternalDataShareId' successfully revoked in workspace '$WorkspaceId', item '$ItemId'." -Level Info
-            return $dataItems
+            $dataItems
         }
     }
     catch {
         # Capture and log error details
         $errorDetails = $_.Exception.Message
-        Write-FabricLog -Message "Failed to retrieve External Data Shares. Error: $errorDetails" -Level Error
+        Write-FabricLog -Message "Failed to revoke External Data Share. Error: $errorDetails" -Level Error
     }
 
 }
-#EndRegion '.\Public\External Data Share\Revoke-FabricExternalDataShare.ps1' 73
+#EndRegion '.\Public\External Data Share\Revoke-FabricExternalDataShare.ps1' 70
 #Region '.\Public\Folder\Get-FabricFolder.ps1' -1
 
 <#
@@ -7831,53 +7225,28 @@ function Get-FabricFolder {
             }
         }
 
-        # Validate authentication token before proceeding.
-        Write-FabricLog -Message "Validating authentication token..." -Level Debug
-        Test-TokenExpired
-        Write-FabricLog -Message "Authentication token is valid." -Level Debug
+        # Validate authentication
+        Invoke-FabricAuthCheck -ThrowOnFailure
 
         # Construct the API endpoint URI
-        $queryParams = @()
+        $queryParams = @{}
         if ($RootFolderId) {
-            $queryParams += "rootFolderId=$RootFolderId"
+            $queryParams.rootFolderId = $RootFolderId
         }
         $recursiveValue = if ($Recursive.IsPresent -and $Recursive) { 'True' } else { 'False' }
-        $queryParams += "recursive=$recursiveValue"
-        $apiEndpointURI = "{0}/workspaces/{1}/folders?{2}" -f $FabricConfig.BaseUrl, $WorkspaceId, ($queryParams -join '&')
-        Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
+        $queryParams.recursive = $recursiveValue
+        $apiEndpointURI = New-FabricAPIUri -Resource 'workspaces' -WorkspaceId $WorkspaceId -Subresource 'folders' -QueryParameters $queryParams
 
         # Make the API request
         $apiParams = @{
             BaseURI = $apiEndpointURI
-            Headers = $FabricConfig.FabricHeaders
+            Headers = $script:FabricAuthContext.FabricHeaders
             Method  = 'Get'
         }
         $dataItems = Invoke-FabricAPIRequest @apiParams
 
-        # Immediately handle empty response
-        if (-not $dataItems) {
-            Write-FabricLog -Message "No data returned from the API." -Level Warning
-            return $null
-        }
-
-        # Apply filtering logic efficiently
-        if ($FolderName) {
-            $matchedItems = $dataItems.Where({ $_.DisplayName -eq $FolderName }, 'First')
-        }
-        else {
-            Write-FabricLog -Message "No filter provided. Returning all items." -Level Debug
-            $matchedItems = $dataItems
-        }
-
-        # Handle results
-        if ($matchedItems) {
-            Write-FabricLog -Message "Item(s) found matching the specified criteria." -Level Debug
-            return $matchedItems
-        }
-        else {
-            Write-FabricLog -Message "No item found matching the provided criteria." -Level Warning
-            return $null
-        }
+        # Apply filtering logic
+        Select-FabricResource -InputObject $dataItems -DisplayName $FolderName -ResourceType 'Folder'
     }
     catch {
         # Capture and log error details
@@ -7885,7 +7254,7 @@ function Get-FabricFolder {
         Write-FabricLog -Message "Failed to retrieve Warehouse. Error: $errorDetails" -Level Error
     }
 }
-#EndRegion '.\Public\Folder\Get-FabricFolder.ps1' 140
+#EndRegion '.\Public\Folder\Get-FabricFolder.ps1' 115
 #Region '.\Public\Folder\Move-FabricFolder.ps1' -1
 
 <#
@@ -7937,14 +7306,11 @@ function Move-FabricFolder {
     )
     try {
 
-        # Validate authentication token before proceeding.
-        Write-FabricLog -Message "Validating authentication token..." -Level Debug
-        Test-TokenExpired
-        Write-FabricLog -Message "Authentication token is valid." -Level Debug
+        # Validate authentication
+        Invoke-FabricAuthCheck -ThrowOnFailure
 
         # Construct the API endpoint URI
-        $apiEndpointURI = "{0}/workspaces/{1}/folders/{2}/move" -f $FabricConfig.BaseUrl, $WorkspaceId, $FolderId
-        Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
+        $apiEndpointURI = New-FabricAPIUri -Resource 'workspaces' -WorkspaceId $WorkspaceId -Subresource "folders/$FolderId/move"
 
         # Construct the request body only if TargetFolderId is provided
         if ($TargetFolderId) {
@@ -7957,14 +7323,13 @@ function Move-FabricFolder {
         }
 
         # Convert the body to JSON format
-        $bodyJson = $body | ConvertTo-Json -Depth 4
-        Write-FabricLog -Message "Request Body: $bodyJson" -Level Debug
+        $bodyJson = Convert-FabricRequestBody -InputObject $body
 
         if ($PSCmdlet.ShouldProcess($FolderId, "Move folder in workspace '$WorkspaceId'")) {
             # Make the API request
             $apiParams = @{
                 BaseURI = $apiEndpointURI
-                Headers = $FabricConfig.FabricHeaders
+                Headers = $script:FabricAuthContext.FabricHeaders
                 Method  = 'Post'
                 Body    = $bodyJson
             }
@@ -7972,7 +7337,7 @@ function Move-FabricFolder {
 
             # Return the API response
             Write-FabricLog -Message "Folder moved successfully!" -Level Info
-            return $response
+            $response
         }
 
     }
@@ -7982,7 +7347,7 @@ function Move-FabricFolder {
         Write-FabricLog -Message "Failed to move Folder. Error: $errorDetails" -Level Error
     }
 }
-#EndRegion '.\Public\Folder\Move-FabricFolder.ps1' 95
+#EndRegion '.\Public\Folder\Move-FabricFolder.ps1' 91
 #Region '.\Public\Folder\New-FabricFolder.ps1' -1
 
 <#
@@ -8057,14 +7422,11 @@ function New-FabricFolder {
             }
         }
 
-        # Validate authentication token before proceeding.
-        Write-FabricLog -Message "Validating authentication token..." -Level Debug
-        Test-TokenExpired
-        Write-FabricLog -Message "Authentication token is valid." -Level Debug
+        # Validate authentication
+        Invoke-FabricAuthCheck -ThrowOnFailure
 
         # Construct the API endpoint URI
-        $apiEndpointURI = "{0}/workspaces/{1}/folders" -f $FabricConfig.BaseUrl, $WorkspaceId
-        Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
+        $apiEndpointURI = New-FabricAPIUri -Resource 'workspaces' -WorkspaceId $WorkspaceId -Subresource 'folders'
 
         # Construct the request body
         $body = @{
@@ -8076,14 +7438,13 @@ function New-FabricFolder {
         }
 
         # Convert the body to JSON format
-        $bodyJson = $body | ConvertTo-Json -Depth 4
-        Write-FabricLog -Message "Request Body: $bodyJson" -Level Debug
+        $bodyJson = Convert-FabricRequestBody -InputObject $body
 
         # Make the API request (guarded by ShouldProcess)
         if ($PSCmdlet.ShouldProcess($FolderName, "Create folder in workspace '$WorkspaceId'")) {
             $apiParams = @{
                 BaseURI = $apiEndpointURI
-                Headers = $FabricConfig.FabricHeaders
+                Headers = $script:FabricAuthContext.FabricHeaders
                 Method  = 'Post'
                 Body    = $bodyJson
             }
@@ -8091,7 +7452,7 @@ function New-FabricFolder {
 
             # Return the API response
             Write-FabricLog -Message "Folder created successfully!" -Level Info
-            return $response
+            $response
         }
 
     }
@@ -8101,7 +7462,7 @@ function New-FabricFolder {
         Write-FabricLog -Message "Failed to create Folder. Error: $errorDetails" -Level Error
     }
 }
-#EndRegion '.\Public\Folder\New-FabricFolder.ps1' 117
+#EndRegion '.\Public\Folder\New-FabricFolder.ps1' 113
 #Region '.\Public\Folder\Remove-FabricFolder.ps1' -1
 
 <#
@@ -8140,19 +7501,16 @@ function Remove-FabricFolder {
         [string]$FolderId
     )
     try {
-        # Validate authentication token before proceeding.
-        Write-FabricLog -Message "Validating token..." -Level Debug
-        Test-TokenExpired
-        Write-FabricLog -Message "Token validation completed." -Level Debug
+        # Validate authentication
+        Invoke-FabricAuthCheck -ThrowOnFailure
 
         # Construct the API endpoint URI
-        $apiEndpointURI = "{0}/workspaces/{1}/folders/{2}" -f $FabricConfig.BaseUrl, $WorkspaceId, $FolderId
-        Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
+        $apiEndpointURI = New-FabricAPIUri -Resource 'workspaces' -WorkspaceId $WorkspaceId -Subresource "folders/$FolderId"
 
         if ($PSCmdlet.ShouldProcess($FolderId, "Delete folder in workspace '$WorkspaceId'")) {
             # Make the API request
             $apiParams = @{
-                Headers = $FabricConfig.FabricHeaders
+                Headers = $script:FabricAuthContext.FabricHeaders
                 BaseURI = $apiEndpointURI
                 Method  = 'Delete'
             }
@@ -8160,7 +7518,7 @@ function Remove-FabricFolder {
 
             # Return the API response
             Write-FabricLog -Message "Folder '$FolderId' deleted successfully from workspace '$WorkspaceId'." -Level Info
-            return $response
+            $response
         }
 
     }
@@ -8170,7 +7528,7 @@ function Remove-FabricFolder {
         Write-FabricLog -Message "Failed to delete Folder '$FolderId' from workspace '$WorkspaceId'. Error: $errorDetails" -Level Error
     }
 }
-#EndRegion '.\Public\Folder\Remove-FabricFolder.ps1' 67
+#EndRegion '.\Public\Folder\Remove-FabricFolder.ps1' 64
 #Region '.\Public\Folder\Update-FabricFolder.ps1' -1
 
 <#
@@ -8242,14 +7600,11 @@ function Update-FabricFolder {
                 return $null
             }
         }
-        # Validate authentication token before proceeding.
-        Write-FabricLog -Message "Validating authentication token..." -Level Debug
-        Test-TokenExpired
-        Write-FabricLog -Message "Authentication token is valid." -Level Debug
+        # Validate authentication
+        Invoke-FabricAuthCheck -ThrowOnFailure
 
         # Construct the API endpoint URI
-        $apiEndpointURI = "{0}/workspaces/{1}/folders/{2}" -f $FabricConfig.BaseUrl, $WorkspaceId, $FolderId
-        Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
+        $apiEndpointURI = New-FabricAPIUri -Resource 'workspaces' -WorkspaceId $WorkspaceId -Subresource "folders/$FolderId"
 
         # Construct the request body
         $body = @{
@@ -8257,13 +7612,12 @@ function Update-FabricFolder {
         }
 
         # Convert the body to JSON
-        $bodyJson = $body | ConvertTo-Json
-        Write-FabricLog -Message "Request Body: $bodyJson" -Level Debug
+        $bodyJson = Convert-FabricRequestBody -InputObject $body
 
         if ($PSCmdlet.ShouldProcess($FolderId, "Update folder '$FolderName' in workspace '$WorkspaceId'")) {
             # Make the API request
             $apiParams = @{
-                Headers = $FabricConfig.FabricHeaders
+                Headers = $script:FabricAuthContext.FabricHeaders
                 BaseURI = $apiEndpointURI
                 Method  = 'Patch'
                 Body    = $bodyJson
@@ -8271,7 +7625,7 @@ function Update-FabricFolder {
             $response = Invoke-FabricAPIRequest @apiParams
             # Return the API response
             Write-FabricLog -Message "Folder '$FolderName' updated successfully!" -Level Info
-            return $response
+            $response
         }
     }
     catch {
@@ -8280,7 +7634,7 @@ function Update-FabricFolder {
         Write-FabricLog -Message "Failed to update Folder. Error: $errorDetails" -Level Error
     }
 }
-#EndRegion '.\Public\Folder\Update-FabricFolder.ps1' 108
+#EndRegion '.\Public\Folder\Update-FabricFolder.ps1' 104
 #Region '.\Public\GraphQLApi\Get-FabricGraphQLApi.ps1' -1
 
 <#
@@ -8334,53 +7688,25 @@ function Get-FabricGraphQLApi {
         # Validate input parameters
         if ($GraphQLApiId -and $GraphQLApiName) {
             Write-FabricLog -Message "Specify only one parameter: either 'GraphQLApiId' or 'GraphQLApiName'." -Level Error
-            return $null
+            return
         }
 
-        # Validate authentication token before proceeding.
-        Write-FabricLog -Message "Validating authentication token..." -Level Debug
-        Test-TokenExpired
-        Write-FabricLog -Message "Authentication token is valid." -Level Debug
+        # Validate authentication
+        Invoke-FabricAuthCheck -ThrowOnFailure
 
         # Construct the API endpoint URI
-        $apiEndpointURI = "{0}/workspaces/{1}/GraphQLApis" -f $FabricConfig.BaseUrl, $WorkspaceId
-        Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
+        $apiEndpointURI = New-FabricAPIUri -Resource 'workspaces' -WorkspaceId $WorkspaceId -Subresource 'GraphQLApis'
 
         # Make the API request
         $apiParams = @{
             BaseURI = $apiEndpointURI
-            Headers = $FabricConfig.FabricHeaders
+            Headers = $script:FabricAuthContext.FabricHeaders
             Method  = 'Get'
         }
         $dataItems = Invoke-FabricAPIRequest @apiParams
 
-        # Immediately handle empty response
-        if (-not $dataItems) {
-            Write-FabricLog -Message "No data returned from the API." -Level Warning
-            return $null
-        }
-
-        # Apply filtering logic efficiently
-        if ($GraphQLApiId) {
-            $matchedItems = $dataItems.Where({ $_.Id -eq $GraphQLApiId }, 'First')
-        }
-        elseif ($GraphQLApiName) {
-            $matchedItems = $dataItems.Where({ $_.DisplayName -eq $GraphQLApiName }, 'First')
-        }
-        else {
-            Write-FabricLog -Message "No filter provided. Returning all items." -Level Debug
-            $matchedItems = $dataItems
-        }
-
-        # Handle results
-        if ($matchedItems) {
-            Write-FabricLog -Message "Item(s) found matching the specified criteria." -Level Debug
-            return $matchedItems
-        }
-        else {
-            Write-FabricLog -Message "No item found matching the provided criteria." -Level Warning
-            return $null
-        }
+        # Apply filtering and return results
+        Select-FabricResource -InputObject $dataItems -Id $GraphQLApiId -DisplayName $GraphQLApiName -ResourceType 'GraphQL API'
     }
     catch {
         # Capture and log error details
@@ -8388,7 +7714,7 @@ function Get-FabricGraphQLApi {
         Write-FabricLog -Message "Failed to retrieve GraphQL API. Error: $errorDetails" -Level Error
     }
 }
-#EndRegion '.\Public\GraphQLApi\Get-FabricGraphQLApi.ps1' 106
+#EndRegion '.\Public\GraphQLApi\Get-FabricGraphQLApi.ps1' 78
 #Region '.\Public\GraphQLApi\Get-FabricGraphQLApiDefinition.ps1' -1
 
 <#
@@ -8437,29 +7763,30 @@ function Get-FabricGraphQLApiDefinition {
         [string]$GraphQLApiFormat
     )
     try {
-        # Validate authentication token before proceeding.
-        Write-FabricLog -Message "Validating authentication token..." -Level Debug
-        Test-TokenExpired
-        Write-FabricLog -Message "Authentication token is valid." -Level Debug
+        # Validate authentication
+        Invoke-FabricAuthCheck -ThrowOnFailure
 
-        # Construct the API endpoint URI with filtering logic
-        $apiEndpointURI = "{0}/workspaces/{1}/GraphQLApis/{2}/getDefinition" -f $FabricConfig.BaseUrl, $WorkspaceId, $GraphQLApiId
-        if ($GraphQLApiFormat) {
-            $apiEndpointURI = "{0}?format={1}" -f $apiEndpointURI, $GraphQLApiFormat
+        # Construct the API endpoint URI with optional format parameter
+        $queryParams = if ($GraphQLApiFormat) {
+            @{ format = $GraphQLApiFormat }
+        } else {
+            $null
         }
-        Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
+
+        $apiEndpointURI = New-FabricAPIUri -Resource 'workspaces' -WorkspaceId $WorkspaceId -Subresource 'GraphQLApis' -ItemId $GraphQLApiId -QueryParameters $queryParams
+        $apiEndpointURI = $apiEndpointURI -replace '/GraphQLApis/([^/]+)$', '/GraphQLApis/$1/getDefinition'
 
         # Make the API request
         $apiParams = @{
             BaseURI = $apiEndpointURI
-            Headers = $FabricConfig.FabricHeaders
+            Headers = $script:FabricAuthContext.FabricHeaders
             Method  = 'Post'
         }
         $response = Invoke-FabricAPIRequest @apiParams
 
         # Return the API response
         Write-FabricLog -Message "GraphQLApi '$GraphQLApiId' definition retrieved successfully!" -Level Debug
-        return $response
+        $response
     }
     catch {
         # Capture and log error details
@@ -8467,7 +7794,7 @@ function Get-FabricGraphQLApiDefinition {
         Write-FabricLog -Message "Failed to retrieve GraphQLApi. Error: $errorDetails" -Level Error
     }
  }
-#EndRegion '.\Public\GraphQLApi\Get-FabricGraphQLApiDefinition.ps1' 77
+#EndRegion '.\Public\GraphQLApi\Get-FabricGraphQLApiDefinition.ps1' 78
 #Region '.\Public\GraphQLApi\New-FabricGraphQLApi.ps1' -1
 
 <#
@@ -8535,14 +7862,11 @@ function New-FabricGraphQLApi {
         [string]$FolderId
     )
     try {
-        # Validate authentication token before proceeding.
-        Write-FabricLog -Message "Validating authentication token..." -Level Debug
-        Test-TokenExpired
-        Write-FabricLog -Message "Authentication token is valid." -Level Debug
+        # Validate authentication
+        Invoke-FabricAuthCheck -ThrowOnFailure
 
         # Construct the API endpoint URI
-        $apiEndpointURI = "{0}/workspaces/{1}/GraphQLApis" -f $FabricConfig.BaseUrl, $WorkspaceId
-        Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
+        $apiEndpointURI = New-FabricAPIUri -Resource 'workspaces' -WorkspaceId $WorkspaceId -Subresource 'GraphQLApis'
 
         # Construct the request body
         $body = @{
@@ -8556,6 +7880,7 @@ function New-FabricGraphQLApi {
         if ($GraphQLApiDescription) {
             $body.description = $GraphQLApiDescription
         }
+
         if ($GraphQLApiPathDefinition) {
             $GraphQLApiEncodedContent = Convert-ToBase64 -filePath $GraphQLApiPathDefinition
 
@@ -8577,7 +7902,7 @@ function New-FabricGraphQLApi {
             }
             else {
                 Write-FabricLog -Message "Invalid or empty content in GraphQLApi definition." -Level Error
-                return $null
+                return
             }
         }
 
@@ -8602,26 +7927,25 @@ function New-FabricGraphQLApi {
             }
             else {
                 Write-FabricLog -Message "Invalid or empty content in platform definition." -Level Error
-                return $null
+                return
             }
         }
 
         # Convert the body to JSON
-        $bodyJson = $body | ConvertTo-Json -Depth 10
-        Write-FabricLog -Message "Request Body: $bodyJson" -Level Debug
+        $bodyJson = Convert-FabricRequestBody -InputObject $body
 
-        $apiParams = @{
-            BaseURI = $apiEndpointURI
-            Headers = $FabricConfig.FabricHeaders
-            Method  = 'Post'
-            Body    = $bodyJson
-        }
         if ($PSCmdlet.ShouldProcess("GraphQL API '$GraphQLApiName' in workspace '$WorkspaceId'", "Create")) {
+            $apiParams = @{
+                BaseURI = $apiEndpointURI
+                Headers = $script:FabricAuthContext.FabricHeaders
+                Method  = 'Post'
+                Body    = $bodyJson
+            }
             $response = Invoke-FabricAPIRequest @apiParams
 
             # Return the API response
             Write-FabricLog -Message "GraphQLApi '$GraphQLApiName' created successfully!" -Level Info
-            return $response
+            $response
         }
     }
     catch {
@@ -8630,7 +7954,7 @@ function New-FabricGraphQLApi {
         Write-FabricLog -Message "Failed to create GraphQLApi. Error: $errorDetails" -Level Error
     }
 }
-#EndRegion '.\Public\GraphQLApi\New-FabricGraphQLApi.ps1' 161
+#EndRegion '.\Public\GraphQLApi\New-FabricGraphQLApi.ps1' 158
 #Region '.\Public\GraphQLApi\Remove-FabricGraphQLApi.ps1' -1
 
 <#
@@ -8669,29 +7993,25 @@ function Remove-FabricGraphQLApi {
         [string]$GraphQLApiId
     )
     try {
-        # Validate authentication token before proceeding.
-        Write-FabricLog -Message "Validating authentication token..." -Level Debug
-        Test-TokenExpired
-        Write-FabricLog -Message "Authentication token is valid." -Level Debug
+        # Validate authentication
+        Invoke-FabricAuthCheck -ThrowOnFailure
 
         # Construct the API endpoint URI
-        $apiEndpointURI = "{0}/workspaces/{1}/GraphQLApis/{2}" -f $FabricConfig.BaseUrl, $WorkspaceId, $GraphQLApiId
-        Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
+        $apiEndpointURI = New-FabricAPIUri -Resource 'workspaces' -WorkspaceId $WorkspaceId -Subresource 'GraphQLApis' -ItemId $GraphQLApiId
 
-        # Make the API request
-        $apiParams = @{
-            Headers = $FabricConfig.FabricHeaders
-            BaseURI = $apiEndpointURI
-            Method  = 'Delete'
-        }
         if ($PSCmdlet.ShouldProcess($GraphQLApiId, "Delete GraphQL API in workspace '$WorkspaceId'")) {
+            # Make the API request
+            $apiParams = @{
+                BaseURI = $apiEndpointURI
+                Headers = $script:FabricAuthContext.FabricHeaders
+                Method  = 'Delete'
+            }
             $response = Invoke-FabricAPIRequest @apiParams
 
             # Return the API response
             Write-FabricLog -Message "GraphQLApi '$GraphQLApiId' deleted successfully from workspace '$WorkspaceId'." -Level Info
-            return $response
+            $response
         }
-
     }
     catch {
         # Capture and log error details
@@ -8699,7 +8019,7 @@ function Remove-FabricGraphQLApi {
         Write-FabricLog -Message "Failed to delete GraphQLApi '$GraphQLApiId'. Error: $errorDetails" -Level Error
     }
 }
-#EndRegion '.\Public\GraphQLApi\Remove-FabricGraphQLApi.ps1' 67
+#EndRegion '.\Public\GraphQLApi\Remove-FabricGraphQLApi.ps1' 63
 #Region '.\Public\GraphQLApi\Update-FabricGraphQLApi.ps1' -1
 
 <#
@@ -8752,14 +8072,11 @@ function Update-FabricGraphQLApi {
         [string]$GraphQLApiDescription
     )
     try {
-        # Validate authentication token before proceeding.
-        Write-FabricLog -Message "Validating authentication token..." -Level Debug
-        Test-TokenExpired
-        Write-FabricLog -Message "Authentication token is valid." -Level Debug
+        # Validate authentication
+        Invoke-FabricAuthCheck -ThrowOnFailure
 
         # Construct the API endpoint URI
-        $apiEndpointURI = "{0}/workspaces/{1}/GraphQLApis/{2}" -f $FabricConfig.BaseUrl, $WorkspaceId, $GraphQLApiId
-        Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
+        $apiEndpointURI = New-FabricAPIUri -Resource 'workspaces' -WorkspaceId $WorkspaceId -Subresource 'GraphQLApis' -ItemId $GraphQLApiId
 
         # Construct the request body
         $body = @{
@@ -8771,22 +8088,21 @@ function Update-FabricGraphQLApi {
         }
 
         # Convert the body to JSON
-        $bodyJson = $body | ConvertTo-Json
-        Write-FabricLog -Message "Request Body: $bodyJson" -Level Debug
+        $bodyJson = Convert-FabricRequestBody -InputObject $body
 
-        # Make the API request
-        $apiParams = @{
-            Headers = $FabricConfig.FabricHeaders
-            BaseURI = $apiEndpointURI
-            Method  = 'Patch'
-            Body    = $bodyJson
-        }
         if ($PSCmdlet.ShouldProcess("GraphQL API '$GraphQLApiId' in workspace '$WorkspaceId'", "Update")) {
+            # Make the API request
+            $apiParams = @{
+                BaseURI = $apiEndpointURI
+                Headers = $script:FabricAuthContext.FabricHeaders
+                Method  = 'Patch'
+                Body    = $bodyJson
+            }
             $response = Invoke-FabricAPIRequest @apiParams
 
             # Return the API response
             Write-FabricLog -Message "GraphQL API '$GraphQLApiName' updated successfully!" -Level Info
-            return $response
+            $response
         }
     }
     catch {
@@ -8795,7 +8111,7 @@ function Update-FabricGraphQLApi {
         Write-FabricLog -Message "Failed to update GraphQL API. Error: $errorDetails" -Level Error
     }
 }
-#EndRegion '.\Public\GraphQLApi\Update-FabricGraphQLApi.ps1' 94
+#EndRegion '.\Public\GraphQLApi\Update-FabricGraphQLApi.ps1' 90
 #Region '.\Public\GraphQLApi\Update-FabricGraphQLApiDefinition.ps1' -1
 
 <#
@@ -8846,20 +8162,20 @@ function Update-FabricGraphQLApiDefinition {
         [string]$GraphQLApiPathPlatformDefinition
     )
     try {
-        # Validate authentication token before proceeding.
-        Write-FabricLog -Message "Validating authentication token..." -Level Debug
-        Test-TokenExpired
-        Write-FabricLog -Message "Authentication token is valid." -Level Debug
+        # Validate authentication
+        Invoke-FabricAuthCheck -ThrowOnFailure
 
-        # Construct the API endpoint URI with filtering logic
-        $apiEndpointURI = "{0}/workspaces/{1}/GraphQLApis/{2}/updateDefinition" -f $FabricConfig.BaseUrl, $WorkspaceId, $GraphQLApiId
-        if ($GraphQLApiPathPlatformDefinition) {
-            # Append query parameter correctly instead of replacing the endpoint
-            $apiEndpointURI = "$apiEndpointURI?updateMetadata=true"
+        # Construct the API endpoint URI with optional updateMetadata query parameter
+        $queryParams = if ($GraphQLApiPathPlatformDefinition) {
+            @{ updateMetadata = 'true' }
+        } else {
+            $null
         }
-        Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
 
-        # Step 3: Construct the request body
+        $apiEndpointURI = New-FabricAPIUri -Resource 'workspaces' -WorkspaceId $WorkspaceId -Subresource 'GraphQLApis' -ItemId $GraphQLApiId -QueryParameters $queryParams
+        $apiEndpointURI = $apiEndpointURI -replace '/GraphQLApis/([^/?]+)', '/GraphQLApis/$1/updateDefinition'
+
+        # Construct the request body
         $body = @{
             definition = @{
                 format = "GraphQLApiV1"
@@ -8880,7 +8196,7 @@ function Update-FabricGraphQLApiDefinition {
             }
             else {
                 Write-FabricLog -Message "Invalid or empty content in GraphQLApi definition." -Level Error
-                return $null
+                return
             }
         }
 
@@ -8896,27 +8212,26 @@ function Update-FabricGraphQLApiDefinition {
             }
             else {
                 Write-FabricLog -Message "Invalid or empty content in platform definition." -Level Error
-                return $null
+                return
             }
         }
 
         # Convert the body to JSON
-        $bodyJson = $body | ConvertTo-Json -Depth 10
-        Write-FabricLog -Message "Request Body: $bodyJson" -Level Debug
+        $bodyJson = Convert-FabricRequestBody -InputObject $body
 
-        # Make the API request
-        $apiParams = @{
-            BaseURI = $apiEndpointURI
-            Headers = $FabricConfig.FabricHeaders
-            Method  = 'Post'
-            Body    = $bodyJson
-        }
         if ($PSCmdlet.ShouldProcess($GraphQLApiId, "Update GraphQL API definition in workspace '$WorkspaceId'")) {
+            # Make the API request
+            $apiParams = @{
+                BaseURI = $apiEndpointURI
+                Headers = $script:FabricAuthContext.FabricHeaders
+                Method  = 'Post'
+                Body    = $bodyJson
+            }
             $response = Invoke-FabricAPIRequest @apiParams
 
             # Return the API response
             Write-FabricLog -Message "Successfully updated the definition for GraphQLApi with ID '$GraphQLApiId' in workspace '$WorkspaceId'." -Level Info
-            return $response
+            $response
         }
     }
     catch {
@@ -8925,7 +8240,7 @@ function Update-FabricGraphQLApiDefinition {
         Write-FabricLog -Message "Failed to update GraphQLApi. Error: $errorDetails" -Level Error
     }
 }
-#EndRegion '.\Public\GraphQLApi\Update-FabricGraphQLApiDefinition.ps1' 128
+#EndRegion '.\Public\GraphQLApi\Update-FabricGraphQLApiDefinition.ps1' 127
 #Region '.\Public\KQL Dashboard\Get-FabricKQLDashboard.ps1' -1
 
 <#
@@ -25100,7 +24415,7 @@ The display name of the workspace to create. Allowed characters are letters, num
 a name that clearly reflects the workspace purpose (e.g. Finance Analytics) for easier administration.
 
 .PARAMETER WorkspaceDescription
-Optional textual description explaining the workspaceï¿½s intended usage, stakeholders, or data domain. Providing a
+Optional textual description explaining the workspace�s intended usage, stakeholders, or data domain. Providing a
 meaningful description helps other administrators and users understand scope without opening items.
 
 .PARAMETER CapacityId
@@ -25617,4 +24932,3 @@ function Update-FabricWorkspaceRoleAssignment {
     }
 }
 #EndRegion '.\Public\Workspace\Update-FabricWorkspaceRoleAssignment.ps1' 88
-

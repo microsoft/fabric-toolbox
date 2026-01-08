@@ -45,13 +45,11 @@ function New-FabricDomain {
     )
 
     try {
-        # Validate authentication token before proceeding.
-        Write-FabricLog -Message "Validating authentication token..." -Level Debug
-        Test-TokenExpired
-        Write-FabricLog -Message "Authentication token is valid." -Level Debug
+        # Validate authentication token before proceeding
+        Invoke-FabricAuthCheck -ThrowOnFailure
 
         # Construct the API endpoint URI
-        $apiEndpointURI = "{0}/admin/domains" -f $FabricConfig.BaseUrl
+        $apiEndpointURI = New-FabricAPIUri -Segments @('admin', 'domains')
         Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
 
         # Construct the request body
@@ -67,23 +65,21 @@ function New-FabricDomain {
             $body.parentDomainId = $ParentDomainId
         }
 
-        # Convert the body to JSON
-        $bodyJson = $body | ConvertTo-Json -Depth 2
+        $bodyJson = Convert-FabricRequestBody -InputObject $body
         Write-FabricLog -Message "Request Body: $bodyJson" -Level Debug
 
         # Make the API request (guarded by ShouldProcess)
         if ($PSCmdlet.ShouldProcess($DomainName, 'Create Fabric domain')) {
             $apiParams = @{
                 BaseURI = $apiEndpointURI
-                Headers = $FabricConfig.FabricHeaders
+                Headers = $script:FabricAuthContext.FabricHeaders
                 Method  = 'Post'
                 Body    = $bodyJson
             }
             $response = Invoke-FabricAPIRequest @apiParams
 
-            # Return the API response
             Write-FabricLog -Message "Domain created successfully!" -Level Info
-            return $response
+            $response
         }
     }
     catch {

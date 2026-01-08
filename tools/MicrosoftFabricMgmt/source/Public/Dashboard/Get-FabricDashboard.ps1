@@ -29,23 +29,19 @@ function Get-FabricDashboard {
     )
 
     try {
-        # Ensure token validity
-        Write-FabricLog -Message "Validating token..." -Level Debug
-        Test-TokenExpired
-        Write-FabricLog -Message "Token validation completed." -Level Debug
+        # Validate authentication token before proceeding
+        Invoke-FabricAuthCheck -ThrowOnFailure
 
         # Construct the API endpoint URL
-        $apiEndpointURI = "{0}/workspaces/{1}/dashboards" -f $FabricConfig.BaseUrl, $WorkspaceId
+        $apiEndpointURI = New-FabricAPIUri -Segments @('workspaces', $WorkspaceId, 'dashboards')
 
-        # Invoke the Fabric API to retrieve capacity details
+        # Invoke the Fabric API to retrieve dashboards
         $apiParams = @{
             BaseURI = $apiEndpointURI
-            Headers = $FabricConfig.FabricHeaders
+            Headers = $script:FabricAuthContext.FabricHeaders
             Method = 'Get'
         }
-        $Dashboards = Invoke-FabricAPIRequest @apiParams
-
-        return $Dashboards
+        Invoke-FabricAPIRequest @apiParams
 
     }
     catch {

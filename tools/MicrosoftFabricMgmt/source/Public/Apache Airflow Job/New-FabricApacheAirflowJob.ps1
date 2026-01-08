@@ -58,14 +58,11 @@ function New-FabricApacheAirflowJob {
         [string]$ApacheAirflowJobPathPlatformDefinition
     )
     try {
-        # Validate authentication token before proceeding.
-        Write-FabricLog -Message "Validating authentication token..." -Level Debug
-        Test-TokenExpired
-        Write-FabricLog -Message "Authentication token is valid." -Level Debug
+        # Validate authentication
+        Invoke-FabricAuthCheck -ThrowOnFailure
 
         # Construct the API endpoint URL
-        $apiEndpointURI = "{0}/workspaces/{1}/ApacheAirflowJobs" -f $FabricConfig.BaseUrl, $WorkspaceId
-        Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
+        $apiEndpointURI = New-FabricAPIUri -Resource 'workspaces' -WorkspaceId $WorkspaceId -Subresource 'ApacheAirflowJobs'
 
         # Construct the request body
         $body = @{
@@ -125,22 +122,19 @@ function New-FabricApacheAirflowJob {
             }
         }
 
-        $bodyJson = $body | ConvertTo-Json -Depth 10
-        Write-FabricLog -Message "Request Body: $bodyJson" -Level Debug
+        $bodyJson = Convert-FabricRequestBody -InputObject $body
 
         if ($PSCmdlet.ShouldProcess("workspace '$WorkspaceId'", "Create Apache Airflow Job '$ApacheAirflowJobName'")) {
             # Make the API request
             $apiParams = @{
                 BaseURI = $apiEndpointURI
-                Headers = $FabricConfig.FabricHeaders
+                Headers = $script:FabricAuthContext.FabricHeaders
                 Method = 'Post'
                 Body = $bodyJson
             }
             $response = Invoke-FabricAPIRequest @apiParams
-
-            # Return the API response
             Write-FabricLog -Message "Apache Airflow Job created successfully!" -Level Info
-            return $response
+            $response
         }
 
     }

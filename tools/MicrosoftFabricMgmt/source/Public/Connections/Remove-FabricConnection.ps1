@@ -26,27 +26,22 @@ function Remove-FabricConnection {
         [string]$ConnectionId
     )
     try {
-        # Validate authentication token before proceeding.
-        Write-FabricLog -Message "Validating token..." -Level Debug
-        Test-TokenExpired
-        Write-FabricLog -Message "Token validation completed." -Level Debug
+        # Validate authentication
+        Invoke-FabricAuthCheck -ThrowOnFailure
 
         # Construct the API endpoint URI
-        $apiEndpointURI = "{0}/connections/{1}" -f $FabricConfig.BaseUrl, $ConnectionId
-        Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
+        $apiEndpointURI = New-FabricAPIUri -Resource 'connections' -ItemId $ConnectionId
 
         if ($PSCmdlet.ShouldProcess("Connection '$ConnectionId'", "Delete")) {
             # Make the API request
             $apiParams = @{
-                Headers = $FabricConfig.FabricHeaders
+                Headers = $script:FabricAuthContext.FabricHeaders
                 BaseURI = $apiEndpointURI
                 Method = 'Delete'
             }
             $response = Invoke-FabricAPIRequest @apiParams
-
-            # Return the API response
             Write-FabricLog -Message "Connection '$ConnectionId' deleted successfully." -Level Info
-            return $response
+            $response
         }
 
     }

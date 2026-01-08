@@ -49,13 +49,11 @@ function Update-FabricCopyJob {
         [string]$CopyJobDescription
     )
     try {
-        # Ensure token validity
-        Write-FabricLog -Message "Validating token..." -Level Debug
-        Test-TokenExpired
-        Write-FabricLog -Message "Token validation completed." -Level Debug
+        # Validate authentication token before proceeding
+        Invoke-FabricAuthCheck -ThrowOnFailure
 
         # Construct the API endpoint URI
-        $apiEndpointURI = "{0}/workspaces/{1}/copyJobs/{2}" -f $FabricConfig.BaseUrl, $WorkspaceId, $CopyJobId
+        $apiEndpointURI = New-FabricAPIUri -Segments @('workspaces', $WorkspaceId, 'copyJobs', $CopyJobId)
         Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
 
         # Construct the request body
@@ -67,14 +65,13 @@ function Update-FabricCopyJob {
             $body.description = $CopyJobDescription
         }
 
-        # Convert the body to JSON
-        $bodyJson = $body | ConvertTo-Json
+        $bodyJson = Convert-FabricRequestBody -InputObject $body
         Write-FabricLog -Message "Request Body: $bodyJson" -Level Debug
 
         if ($PSCmdlet.ShouldProcess("Copy Job '$CopyJobId' in workspace '$WorkspaceId'", "Update properties")) {
             # Make the API request
             $apiParams = @{
-                Headers = $FabricConfig.FabricHeaders
+                Headers = $script:FabricAuthContext.FabricHeaders
                 BaseURI = $apiEndpointURI
                 Method = 'Patch'
                 Body = $bodyJson
@@ -82,7 +79,7 @@ function Update-FabricCopyJob {
             $response = Invoke-FabricAPIRequest @apiParams
 
             Write-FabricLog -Message "Copy Job '$CopyJobName' updated successfully!" -Level Info
-            return $response
+            $response
         }
     }
     catch {

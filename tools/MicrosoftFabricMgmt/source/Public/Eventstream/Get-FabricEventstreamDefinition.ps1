@@ -50,29 +50,30 @@ function Get-FabricEventstreamDefinition {
         [string]$EventstreamFormat
     )
     try {
-        # Validate authentication token before proceeding.
-        Write-FabricLog -Message "Validating authentication token..." -Level Debug
-        Test-TokenExpired
-        Write-FabricLog -Message "Authentication token is valid." -Level Debug
+        # Validate authentication
+        Invoke-FabricAuthCheck -ThrowOnFailure
 
-        # Construct the API endpoint URI with filtering logic
-        $apiEndpointURI = "{0}/workspaces/{1}/Eventstreams/{2}/getDefinition" -f $FabricConfig.BaseUrl, $WorkspaceId, $EventstreamId
-        if ($EventstreamFormat) {
-            $apiEndpointURI = "{0}?format={1}" -f $apiEndpointURI, $EventstreamFormat
+        # Construct the API endpoint URI with optional format parameter
+        $queryParams = if ($EventstreamFormat) {
+            @{ format = $EventstreamFormat }
+        } else {
+            $null
         }
-        Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
+
+        $apiEndpointURI = New-FabricAPIUri -Resource 'workspaces' -WorkspaceId $WorkspaceId -Subresource 'eventstreams' -ItemId $EventstreamId -QueryParameters $queryParams
+        $apiEndpointURI = $apiEndpointURI -replace '/eventstreams/([^/]+)$', '/eventstreams/$1/getDefinition'
 
         # Make the API request
         $apiParams = @{
             BaseURI = $apiEndpointURI
-            Headers = $FabricConfig.FabricHeaders
-            Method = 'Post'
+            Headers = $script:FabricAuthContext.FabricHeaders
+            Method  = 'Post'
         }
         $response = Invoke-FabricAPIRequest @apiParams
 
         # Return the API response
         Write-FabricLog -Message "Eventstream '$EventstreamId' definition retrieved successfully!" -Level Info
-        return $response
+        $response
     }
     catch {
         # Capture and log error details

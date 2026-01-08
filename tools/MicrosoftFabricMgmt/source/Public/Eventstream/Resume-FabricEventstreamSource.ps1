@@ -42,27 +42,25 @@ function Resume-FabricEventstreamSource {
         [string]$SourceId
     )
     try {
-        # Validate authentication token before proceeding.
-        Write-FabricLog -Message "Validating authentication token..." -Level Debug
-        Test-TokenExpired
-        Write-FabricLog -Message "Authentication token is valid." -Level Debug
+        # Validate authentication
+        Invoke-FabricAuthCheck -ThrowOnFailure
 
         # Construct the API endpoint URI
-        $apiEndpointURI = "{0}/workspaces/{1}/eventstreams/{2}/sources/{3}/resume" -f $FabricConfig.BaseUrl, $WorkspaceId, $EventstreamId, $SourceId
-        Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
+        $apiEndpointURI = New-FabricAPIUri -Resource 'workspaces' -WorkspaceId $WorkspaceId -Subresource 'eventstreams' -ItemId $EventstreamId
+        $apiEndpointURI = "$apiEndpointURI/sources/$SourceId/resume"
 
         if ($PSCmdlet.ShouldProcess($SourceId, "Resume Eventstream source in workspace '$WorkspaceId' (Eventstream '$EventstreamId')")) {
             # Make the API request
             $apiParams = @{
                 BaseURI = $apiEndpointURI
-                Headers = $FabricConfig.FabricHeaders
+                Headers = $script:FabricAuthContext.FabricHeaders
                 Method  = 'Post'
             }
             $response = Invoke-FabricAPIRequest @apiParams
 
             # Return the API response
             Write-FabricLog -Message "Eventstream '$EventstreamId' Source '$SourceId' resumed successfully!" -Level Info
-            return $response
+            $response
         }
     }
     catch {

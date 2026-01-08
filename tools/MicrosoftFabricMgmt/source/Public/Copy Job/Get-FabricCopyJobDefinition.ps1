@@ -44,30 +44,25 @@ function Get-FabricCopyJobDefinition {
         [string]$CopyJobFormat
     )
     try {
-        # Validate authentication token before proceeding.
-        Write-FabricLog -Message "Validating authentication token..." -Level Debug
-        Test-TokenExpired
-        Write-FabricLog -Message "Authentication token is valid." -Level Debug
+        # Validate authentication token before proceeding
+        Invoke-FabricAuthCheck -ThrowOnFailure
 
         # Construct the API endpoint URL
-        $apiEndpointURI = "{0}/workspaces/{1}/copyJobs/{2}/getDefinition" -f $FabricConfig.BaseUrl, $WorkspaceId, $CopyJobId
-
-        # Append the format query parameter if specified by the user.
+        $segments = @('workspaces', $WorkspaceId, 'copyJobs', $CopyJobId, 'getDefinition')
+        $queryParams = @{}
         if ($CopyJobFormat) {
-            $apiEndpointURI = "{0}?format={1}" -f $apiEndpointURI, $CopyJobFormat
+            $queryParams['format'] = $CopyJobFormat
         }
+        $apiEndpointURI = New-FabricAPIUri -Segments $segments -QueryParameters $queryParams
         Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
 
         # Make the API request
         $apiParams = @{
             BaseURI = $apiEndpointURI
-            Headers = $FabricConfig.FabricHeaders
+            Headers = $script:FabricAuthContext.FabricHeaders
             Method = 'Post'
         }
-        $response = Invoke-FabricAPIRequest @apiParams
-
-        # Return the API response
-        return $response
+        Invoke-FabricAPIRequest @apiParams
     }
     catch {
         # Capture and log error details

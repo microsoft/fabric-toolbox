@@ -62,19 +62,20 @@ function Update-FabricEventstreamDefinition {
     )
 
     try {
-        # Validate authentication token before proceeding.
-        Write-FabricLog -Message "Validating authentication token..." -Level Debug
-        Test-TokenExpired
-        Write-FabricLog -Message "Authentication token is valid." -Level Debug
+        # Validate authentication
+        Invoke-FabricAuthCheck -ThrowOnFailure
 
-        # Construct the API endpoint URI with filtering logic
-        $apiEndpointURI = "{0}/workspaces/{1}/eventstreams/{2}/updateDefinition" -f $FabricConfig.BaseUrl, $WorkspaceId, $EventstreamId
-        if ($EventstreamPathPlatformDefinition) {
-            $apiEndpointURI = "$apiEndpointURI?updateMetadata=true"
+        # Construct the API endpoint URI with optional updateMetadata query parameter
+        $queryParams = if ($EventstreamPathPlatformDefinition) {
+            @{ updateMetadata = 'true' }
+        } else {
+            $null
         }
-        Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
 
-        # Step 3: Construct the request body
+        $apiEndpointURI = New-FabricAPIUri -Resource 'workspaces' -WorkspaceId $WorkspaceId -Subresource 'eventstreams' -ItemId $EventstreamId -QueryParameters $queryParams
+        $apiEndpointURI = $apiEndpointURI -replace '/eventstreams/([^/?]+)', '/eventstreams/$1/updateDefinition'
+
+        # Construct the request body
         $body = @{
             definition = @{
                 parts = @()
@@ -94,7 +95,7 @@ function Update-FabricEventstreamDefinition {
             }
             else {
                 Write-FabricLog -Message "Invalid or empty content in Eventstream definition." -Level Error
-                return $null
+                return
             }
         }
 
@@ -110,27 +111,26 @@ function Update-FabricEventstreamDefinition {
             }
             else {
                 Write-FabricLog -Message "Invalid or empty content in platform definition." -Level Error
-                return $null
+                return
             }
         }
 
         # Convert the body to JSON
-        $bodyJson = $body | ConvertTo-Json -Depth 10
-        Write-FabricLog -Message "Request Body: $bodyJson" -Level Debug
+        $bodyJson = Convert-FabricRequestBody -InputObject $body
 
         if ($PSCmdlet.ShouldProcess($EventstreamId, "Update Eventstream definition in workspace '$WorkspaceId'")) {
             # Make the API request
             $apiParams = @{
                 BaseURI = $apiEndpointURI
-                Headers = $FabricConfig.FabricHeaders
-                Method = 'Post'
-                Body = $bodyJson
+                Headers = $script:FabricAuthContext.FabricHeaders
+                Method  = 'Post'
+                Body    = $bodyJson
             }
             $response = Invoke-FabricAPIRequest @apiParams
 
             # Return the API response
             Write-FabricLog -Message "Successfully updated the definition for Eventstream with ID '$EventstreamId' in workspace '$WorkspaceId'." -Level Info
-            return $response
+            $response
         }
     }
     catch {

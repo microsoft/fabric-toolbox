@@ -70,14 +70,11 @@ function New-FabricFolder {
             }
         }
 
-        # Validate authentication token before proceeding.
-        Write-FabricLog -Message "Validating authentication token..." -Level Debug
-        Test-TokenExpired
-        Write-FabricLog -Message "Authentication token is valid." -Level Debug
+        # Validate authentication
+        Invoke-FabricAuthCheck -ThrowOnFailure
 
         # Construct the API endpoint URI
-        $apiEndpointURI = "{0}/workspaces/{1}/folders" -f $FabricConfig.BaseUrl, $WorkspaceId
-        Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
+        $apiEndpointURI = New-FabricAPIUri -Resource 'workspaces' -WorkspaceId $WorkspaceId -Subresource 'folders'
 
         # Construct the request body
         $body = @{
@@ -89,14 +86,13 @@ function New-FabricFolder {
         }
 
         # Convert the body to JSON format
-        $bodyJson = $body | ConvertTo-Json -Depth 4
-        Write-FabricLog -Message "Request Body: $bodyJson" -Level Debug
+        $bodyJson = Convert-FabricRequestBody -InputObject $body
 
         # Make the API request (guarded by ShouldProcess)
         if ($PSCmdlet.ShouldProcess($FolderName, "Create folder in workspace '$WorkspaceId'")) {
             $apiParams = @{
                 BaseURI = $apiEndpointURI
-                Headers = $FabricConfig.FabricHeaders
+                Headers = $script:FabricAuthContext.FabricHeaders
                 Method  = 'Post'
                 Body    = $bodyJson
             }
@@ -104,7 +100,7 @@ function New-FabricFolder {
 
             # Return the API response
             Write-FabricLog -Message "Folder created successfully!" -Level Info
-            return $response
+            $response
         }
 
     }

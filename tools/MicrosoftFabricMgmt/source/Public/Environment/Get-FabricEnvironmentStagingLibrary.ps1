@@ -35,30 +35,24 @@ function Get-FabricEnvironmentStagingLibrary {
         [string]$EnvironmentId
     )
     try {
-        # Validate authentication token before proceeding.
-        Write-FabricLog -Message "Validating authentication token..." -Level Debug
-        Test-TokenExpired
-        Write-FabricLog -Message "Authentication token is valid." -Level Debug
+        # Validate authentication
+        Invoke-FabricAuthCheck -ThrowOnFailure
 
         # Construct the API endpoint URI
-        $apiEndpointURI = "{0}/workspaces/{1}/environments/{2}/staging/libraries" -f $FabricConfig.BaseUrl, $WorkspaceId, $EnvironmentId
-        Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
+        $apiEndpointURI = New-FabricAPIUri -Resource 'workspaces' -WorkspaceId $WorkspaceId -Subresource "environments/$EnvironmentId/staging/libraries"
 
         # Make the API request
         $apiParams = @{
             BaseURI = $apiEndpointURI
-            Headers = $FabricConfig.FabricHeaders
+            Headers = $script:FabricAuthContext.FabricHeaders
             Method = 'Get'
         }
-        $dataItems = Invoke-FabricAPIRequest @apiParams
-
-        # Handle results
-        return $dataItems
+        Invoke-FabricAPIRequest @apiParams
     }
     catch {
         # Capture and log error details
         $errorDetails = $_.Exception.Message
-        Write-FabricLog -Message "Failed to retrieve environment spark compute. Error: $errorDetails" -Level Error
+        Write-FabricLog -Message "Failed to retrieve environment staging library. Error: $errorDetails" -Level Error
     }
 
 }

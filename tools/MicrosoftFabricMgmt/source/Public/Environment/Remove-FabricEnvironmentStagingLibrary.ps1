@@ -44,19 +44,19 @@ function Remove-FabricEnvironmentStagingLibrary {
         [string]$LibraryName
     )
     try {
-        # Validate authentication token before proceeding.
-        Write-FabricLog -Message "Validating authentication token..." -Level Debug
-        Test-TokenExpired
-        Write-FabricLog -Message "Authentication token is valid." -Level Debug
+        # Validate authentication
+        Invoke-FabricAuthCheck -ThrowOnFailure
 
         # Construct the API endpoint URI
-        $apiEndpointURI = "{0}/workspaces/{1}/environments/{2}/staging/libraries?libraryToDelete={3}" -f $FabricConfig.BaseUrl, $WorkspaceId, $EnvironmentId, $LibraryName
-        Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
+        $queryParams = @{
+            libraryToDelete = $LibraryName
+        }
+        $apiEndpointURI = New-FabricAPIUri -Resource 'workspaces' -WorkspaceId $WorkspaceId -Subresource "environments/$EnvironmentId/staging/libraries" -QueryParameters $queryParams
 
         # Make the API request (guarded by ShouldProcess)
         if ($PSCmdlet.ShouldProcess($LibraryName, "Delete environment staging library in workspace '$WorkspaceId' for environment '$EnvironmentId'")) {
             $apiParams = @{
-                Headers = $FabricConfig.FabricHeaders
+                Headers = $script:FabricAuthContext.FabricHeaders
                 BaseURI = $apiEndpointURI
                 Method  = 'Delete'
             }
@@ -64,12 +64,12 @@ function Remove-FabricEnvironmentStagingLibrary {
 
             # Return the API response
             Write-FabricLog -Message "Staging library $LibraryName for the Environment '$EnvironmentId' deleted successfully from workspace '$WorkspaceId'." -Level Info
-            return $response
+            $response
         }
     }
     catch {
         # Capture and log error details
         $errorDetails = $_.Exception.Message
-        Write-FabricLog -Message "Failed to delete environment '$EnvironmentId' from workspace '$WorkspaceId'. Error: $errorDetails" -Level Error
+        Write-FabricLog -Message "Failed to delete environment staging library '$LibraryName' from workspace '$WorkspaceId'. Error: $errorDetails" -Level Error
     }
 }

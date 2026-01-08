@@ -44,30 +44,31 @@ function Get-FabricApacheAirflowJobDefinition {
         [string]$ApacheAirflowJobFormat
     )
     try {
-        # Validate authentication token before proceeding.
-        Write-FabricLog -Message "Validating authentication token..." -Level Debug
-        Test-TokenExpired
-        Write-FabricLog -Message "Authentication token is valid." -Level Debug
+        # Validate authentication
+        Invoke-FabricAuthCheck -ThrowOnFailure
 
         # Construct the API endpoint URL
-        $apiEndpointURI = "{0}/workspaces/{1}/ApacheAirflowJobs/{2}/getDefinition" -f $FabricConfig.BaseUrl, $WorkspaceId, $ApacheAirflowJobId
-
-        # Append the format query parameter if specified by the user.
-        if ($ApacheAirflowJobFormat) {
-            $apiEndpointURI = "{0}?format={1}" -f $apiEndpointURI, $ApacheAirflowJobFormat
+        $queryParams = if ($ApacheAirflowJobFormat) {
+            @{ format = $ApacheAirflowJobFormat }
+        } else {
+            $null
         }
-        Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
+
+        $apiEndpointURI = New-FabricAPIUri -Resource 'workspaces' -WorkspaceId $WorkspaceId -Subresource 'ApacheAirflowJobs' -ItemId $ApacheAirflowJobId
+        $apiEndpointURI = "$apiEndpointURI/getDefinition"
+
+        if ($queryParams) {
+            $queryString = ($queryParams.GetEnumerator() | ForEach-Object { "$($_.Key)=$($_.Value)" }) -join '&'
+            $apiEndpointURI = "$apiEndpointURI`?$queryString"
+        }
 
         # Make the API request
         $apiParams = @{
             BaseURI = $apiEndpointURI
-            Headers = $FabricConfig.FabricHeaders
+            Headers = $script:FabricAuthContext.FabricHeaders
             Method = 'Post'
         }
-        $response = Invoke-FabricAPIRequest @apiParams
-
-        # Return the API response
-        return $response
+        Invoke-FabricAPIRequest @apiParams
     }
     catch {
         # Capture and log error details

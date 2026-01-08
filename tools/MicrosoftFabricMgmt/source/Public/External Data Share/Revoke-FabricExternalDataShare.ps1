@@ -41,32 +41,29 @@ function Revoke-FabricExternalDataShare {
         [string]$ExternalDataShareId
     )
     try {
-        # Validate authentication token before proceeding.
-        Write-FabricLog -Message "Validating authentication token..." -Level Debug
-        Test-TokenExpired
-        Write-FabricLog -Message "Authentication token is valid." -Level Debug
+        # Validate authentication
+        Invoke-FabricAuthCheck -ThrowOnFailure
 
         # Construct the API endpoint URI
-        Write-FabricLog -Message "Constructing API endpoint URI..." -Level Debug
-        $apiEndpointURI = "{0}/admin/workspaces/{1}/items/{2}/externalDataShares/{3}/revoke" -f $FabricConfig.BaseUrl, $WorkspaceId, $ItemId, $ExternalDataShareId
+        $apiEndpointURI = New-FabricAPIUri -Resource 'admin/workspaces' -WorkspaceId $WorkspaceId -Subresource "items/$ItemId/externalDataShares/$ExternalDataShareId/revoke"
 
         if ($PSCmdlet.ShouldProcess($ExternalDataShareId, "Revoke external data share for item '$ItemId' in workspace '$WorkspaceId'")) {
             $apiParams = @{
                 BaseURI = $apiEndpointURI
-                Headers = $FabricConfig.FabricHeaders
+                Headers = $script:FabricAuthContext.FabricHeaders
                 Method  = 'Post'
             }
             $dataItems = Invoke-FabricAPIRequest @apiParams
 
             # Return the API response
             Write-FabricLog -Message "External data share with ID '$ExternalDataShareId' successfully revoked in workspace '$WorkspaceId', item '$ItemId'." -Level Info
-            return $dataItems
+            $dataItems
         }
     }
     catch {
         # Capture and log error details
         $errorDetails = $_.Exception.Message
-        Write-FabricLog -Message "Failed to retrieve External Data Shares. Error: $errorDetails" -Level Error
+        Write-FabricLog -Message "Failed to revoke External Data Share. Error: $errorDetails" -Level Error
     }
 
 }

@@ -57,14 +57,11 @@ function New-FabricEventhouse {
         [string]$EventhousePathPlatformDefinition
     )
     try {
-        # Validate authentication token before proceeding.
-        Write-FabricLog -Message "Validating authentication token..." -Level Debug
-        Test-TokenExpired
-        Write-FabricLog -Message "Authentication token is valid." -Level Debug
+        # Validate authentication
+        Invoke-FabricAuthCheck -ThrowOnFailure
 
         # Construct the API endpoint URI
-        $apiEndpointURI = "{0}/workspaces/{1}/eventhouses" -f $FabricConfig.BaseUrl, $WorkspaceId
-        Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
+        $apiEndpointURI = New-FabricAPIUri -Resource 'workspaces' -WorkspaceId $WorkspaceId -Subresource 'eventhouses'
 
         # Construct the request body
         $body = @{
@@ -94,7 +91,7 @@ function New-FabricEventhouse {
             }
             else {
                 Write-FabricLog -Message "Invalid or empty content in Eventhouse definition." -Level Error
-                return $null
+                return
             }
         }
 
@@ -118,18 +115,17 @@ function New-FabricEventhouse {
             }
             else {
                 Write-FabricLog -Message "Invalid or empty content in platform definition." -Level Error
-                return $null
+                return
             }
         }
 
         # Convert the body to JSON
-        $bodyJson = $body | ConvertTo-Json -Depth 10
-        Write-FabricLog -Message "Request Body: $bodyJson" -Level Debug
+        $bodyJson = Convert-FabricRequestBody -InputObject $body -Depth 10
 
         if ($PSCmdlet.ShouldProcess($EventhouseName, "Create Eventhouse in workspace '$WorkspaceId'")) {
             $apiParams = @{
                 BaseURI = $apiEndpointURI
-                Headers = $FabricConfig.FabricHeaders
+                Headers = $script:FabricAuthContext.FabricHeaders
                 Method  = 'Post'
                 Body    = $bodyJson
             }
@@ -137,7 +133,7 @@ function New-FabricEventhouse {
 
             # Return the API response
             Write-FabricLog -Message "Eventhouse '$EventhouseName' created successfully!" -Level Info
-            return $response
+            $response
         }
     }
     catch {

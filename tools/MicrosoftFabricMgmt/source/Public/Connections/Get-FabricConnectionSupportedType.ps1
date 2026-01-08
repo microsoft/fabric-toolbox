@@ -41,45 +41,28 @@ function Get-FabricConnectionSupportedType {
     )
 
     try {
-        # Validate authentication token before proceeding.
-        Write-FabricLog -Message "Validating authentication token..." -Level Debug
-        Test-TokenExpired
-        Write-FabricLog -Message "Authentication token is valid." -Level Debug
-
-        # Construct the API endpoint URI
-        $apiEndpointURI = "{0}/connections/supportedConnectionTypes" -f $FabricConfig.BaseUrl
+        # Validate authentication
+        Invoke-FabricAuthCheck -ThrowOnFailure
 
         # Build query parameters dynamically
-        $queryParams = @()
+        $queryHash = @{}
         if ($GatewayId) {
-            Write-FabricLog -Message "Filtering by GatewayId: $GatewayId" -Level Debug
-            $queryParams += "gatewayId=$GatewayId"
+            $queryHash['gatewayId'] = $GatewayId
         }
         if ($ShowAllCreationMethods) {
-            Write-FabricLog -Message "Including all creation methods." -Level Debug
-            $queryParams += "showAllCreationMethods=true"
+            $queryHash['showAllCreationMethods'] = 'true'
         }
-        if ($queryParams.Count -gt 0) {
-            $apiEndpointURI = "{0}/connections/supportedConnectionTypes?{1}" -f $FabricConfig.BaseUrl, ($queryParams -join '&')
-        }
+
+        # Construct the API endpoint URI
+        $apiEndpointURI = New-FabricAPIUri -Resource 'connections' -Subresource 'supportedConnectionTypes' -QueryParameters $queryHash
 
         # Make the API request
         $apiParams = @{
             BaseURI = $apiEndpointURI
-            Headers = $FabricConfig.FabricHeaders
+            Headers = $script:FabricAuthContext.FabricHeaders
             Method  = 'Get'
         }
-        $dataItems = Invoke-FabricAPIRequest @apiParams
-
-        # Immediately handle empty response
-        if (-not $dataItems) {
-            Write-FabricLog -Message "No data returned from the API." -Level Warning
-            return $null
-        }
-        else {
-            Write-FabricLog -Message "Item(s) found matching the specified criteria." -Level Debug
-            return $dataItems
-        }
+        Invoke-FabricAPIRequest @apiParams
     }
     catch {
         # Capture and log error details

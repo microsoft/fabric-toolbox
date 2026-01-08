@@ -112,14 +112,11 @@ function Update-FabricEnvironmentStagingSparkCompute {
         [System.Object]$SparkProperties
     )
     try {
-        # Validate authentication token before proceeding.
-        Write-FabricLog -Message "Validating authentication token..." -Level Debug
-        Test-TokenExpired
-        Write-FabricLog -Message "Authentication token is valid." -Level Debug
+        # Validate authentication
+        Invoke-FabricAuthCheck -ThrowOnFailure
 
         # Construct the API endpoint URI
-        $apiEndpointURI = "{0}/workspaces/{1}/environments/{2}/staging/sparkcompute" -f $FabricConfig.BaseUrl, $WorkspaceId, $EnvironmentId
-        Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
+        $apiEndpointURI = New-FabricAPIUri -Resource 'workspaces' -WorkspaceId $WorkspaceId -Subresource "environments/$EnvironmentId/staging/sparkcompute"
 
         # Construct the request body
         $body = @{
@@ -141,13 +138,12 @@ function Update-FabricEnvironmentStagingSparkCompute {
         }
 
         # Convert the body to JSON
-        $bodyJson = $body | ConvertTo-Json -Depth 4
-        Write-FabricLog -Message "Request Body: $bodyJson" -Level Debug
+        $bodyJson = Convert-FabricRequestBody -InputObject $body -Depth 4
 
         # Make the API request (guarded by ShouldProcess)
         if ($PSCmdlet.ShouldProcess($EnvironmentId, "Update staging Spark compute in workspace '$WorkspaceId'")) {
             $apiParams = @{
-                Headers = $FabricConfig.FabricHeaders
+                Headers = $script:FabricAuthContext.FabricHeaders
                 BaseURI = $apiEndpointURI
                 Method  = 'Patch'
                 Body    = $bodyJson
@@ -156,7 +152,7 @@ function Update-FabricEnvironmentStagingSparkCompute {
 
             # Return the API response
             Write-FabricLog -Message "Environment staging Spark compute updated successfully!" -Level Info
-            return $response
+            $response
         }
     }
     catch {

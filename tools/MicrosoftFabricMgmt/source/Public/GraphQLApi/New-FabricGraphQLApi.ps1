@@ -63,14 +63,11 @@ function New-FabricGraphQLApi {
         [string]$FolderId
     )
     try {
-        # Validate authentication token before proceeding.
-        Write-FabricLog -Message "Validating authentication token..." -Level Debug
-        Test-TokenExpired
-        Write-FabricLog -Message "Authentication token is valid." -Level Debug
+        # Validate authentication
+        Invoke-FabricAuthCheck -ThrowOnFailure
 
         # Construct the API endpoint URI
-        $apiEndpointURI = "{0}/workspaces/{1}/GraphQLApis" -f $FabricConfig.BaseUrl, $WorkspaceId
-        Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
+        $apiEndpointURI = New-FabricAPIUri -Resource 'workspaces' -WorkspaceId $WorkspaceId -Subresource 'GraphQLApis'
 
         # Construct the request body
         $body = @{
@@ -84,6 +81,7 @@ function New-FabricGraphQLApi {
         if ($GraphQLApiDescription) {
             $body.description = $GraphQLApiDescription
         }
+
         if ($GraphQLApiPathDefinition) {
             $GraphQLApiEncodedContent = Convert-ToBase64 -filePath $GraphQLApiPathDefinition
 
@@ -105,7 +103,7 @@ function New-FabricGraphQLApi {
             }
             else {
                 Write-FabricLog -Message "Invalid or empty content in GraphQLApi definition." -Level Error
-                return $null
+                return
             }
         }
 
@@ -130,26 +128,25 @@ function New-FabricGraphQLApi {
             }
             else {
                 Write-FabricLog -Message "Invalid or empty content in platform definition." -Level Error
-                return $null
+                return
             }
         }
 
         # Convert the body to JSON
-        $bodyJson = $body | ConvertTo-Json -Depth 10
-        Write-FabricLog -Message "Request Body: $bodyJson" -Level Debug
+        $bodyJson = Convert-FabricRequestBody -InputObject $body
 
-        $apiParams = @{
-            BaseURI = $apiEndpointURI
-            Headers = $FabricConfig.FabricHeaders
-            Method  = 'Post'
-            Body    = $bodyJson
-        }
         if ($PSCmdlet.ShouldProcess("GraphQL API '$GraphQLApiName' in workspace '$WorkspaceId'", "Create")) {
+            $apiParams = @{
+                BaseURI = $apiEndpointURI
+                Headers = $script:FabricAuthContext.FabricHeaders
+                Method  = 'Post'
+                Body    = $bodyJson
+            }
             $response = Invoke-FabricAPIRequest @apiParams
 
             # Return the API response
             Write-FabricLog -Message "GraphQLApi '$GraphQLApiName' created successfully!" -Level Info
-            return $response
+            $response
         }
     }
     catch {

@@ -55,13 +55,11 @@ function New-FabricCopyJob {
         [string]$CopyJobPathPlatformDefinition
     )
     try {
-        # Validate authentication token before proceeding.
-        Write-FabricLog -Message "Validating authentication token..." -Level Debug
-        Test-TokenExpired
-        Write-FabricLog -Message "Authentication token is valid." -Level Debug
+        # Validate authentication token before proceeding
+        Invoke-FabricAuthCheck -ThrowOnFailure
 
         # Construct the API endpoint URL
-        $apiEndpointURI = "{0}/workspaces/{1}/copyJobs" -f $FabricConfig.BaseUrl, $WorkspaceId
+        $apiEndpointURI = New-FabricAPIUri -Segments @('workspaces', $WorkspaceId, 'copyJobs')
         Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
 
         # Construct the request body
@@ -94,7 +92,7 @@ function New-FabricCopyJob {
             }
             else {
                 Write-FabricLog -Message "Invalid or empty content in Copy Job definition." -Level Error
-                return $null
+                return
             }
         }
         # Add platform definition file content if provided
@@ -118,26 +116,25 @@ function New-FabricCopyJob {
             }
             else {
                 Write-FabricLog -Message "Invalid or empty content in platform definition." -Level Error
-                return $null
+                return
             }
         }
 
-        $bodyJson = $body | ConvertTo-Json -Depth 10
+        $bodyJson = Convert-FabricRequestBody -InputObject $body
         Write-FabricLog -Message "Request Body: $bodyJson" -Level Debug
 
         if ($PSCmdlet.ShouldProcess("workspace '$WorkspaceId'", "Create Copy Job '$CopyJobName'")) {
             # Make the API request
             $apiParams = @{
                 BaseURI = $apiEndpointURI
-                Headers = $FabricConfig.FabricHeaders
+                Headers = $script:FabricAuthContext.FabricHeaders
                 Method = 'Post'
                 Body = $bodyJson
             }
             $response = Invoke-FabricAPIRequest @apiParams
 
-            # Return the API response
             Write-FabricLog -Message "Copy Job created successfully!" -Level Info
-            return $response
+            $response
         }
 
     }

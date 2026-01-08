@@ -47,59 +47,27 @@ function Get-FabricDomain {
         [bool]$NonEmptyDomainsOnly = $false
     )
     try {
-        # Validate input parameters
-        if ($DomainId -and $DomainName) {
-            Write-FabricLog -Message "Specify only one parameter: either 'DomainId' or 'DomainName'." -Level Error
-            return $null
-        }
-
-        # Validate authentication token before proceeding.
-        Write-FabricLog -Message "Validating authentication token..." -Level Debug
-        Test-TokenExpired
-        Write-FabricLog -Message "Authentication token is valid." -Level Debug
+        # Validate authentication token before proceeding
+        Invoke-FabricAuthCheck -ThrowOnFailure
 
         # Construct the API endpoint URI with filtering logic
-        $apiEndpointURI = "{0}/admin/domains" -f $FabricConfig.BaseUrl
+        $queryParams = @{}
         if ($NonEmptyDomainsOnly) {
-            $apiEndpointURI = "{0}?nonEmptyOnly=true" -f $apiEndpointURI
+            $queryParams['nonEmptyOnly'] = 'true'
         }
+        $apiEndpointURI = New-FabricAPIUri -Segments @('admin', 'domains') -QueryParameters $queryParams
         Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
 
         # Make the API request
         $apiParams = @{
             BaseURI = $apiEndpointURI
-            Headers = $FabricConfig.FabricHeaders
+            Headers = $script:FabricAuthContext.FabricHeaders
             Method = 'Get'
         }
         $dataItems = Invoke-FabricAPIRequest @apiParams
 
-        # Immediately handle empty response
-        if (-not $dataItems) {
-            Write-FabricLog -Message "No data returned from the API." -Level Warning
-            return $null
-        }
-
-        # Apply filtering logic efficiently
-        if ($DomainId) {
-            $matchedItems = $dataItems.Where({ $_.Id -eq $DomainId }, 'First')
-        }
-        elseif ($DomainName) {
-            $matchedItems = $dataItems.Where({ $_.DisplayName -eq $DomainName }, 'First')
-        }
-        else {
-            Write-FabricLog -Message "No filter provided. Returning all items." -Level Debug
-            $matchedItems = $dataItems
-        }
-
-        # Handle results
-        if ($matchedItems) {
-            Write-FabricLog -Message "Item(s) found matching the specified criteria." -Level Debug
-            return $matchedItems
-        }
-        else {
-            Write-FabricLog -Message "No item found matching the provided criteria." -Level Warning
-            return $null
-        }
+        # Apply filtering
+        Select-FabricResource -InputObject $dataItems -Id $DomainId -Name $DomainName -ResourceType 'Domain'
     }
     catch {
         # Capture and log error details
