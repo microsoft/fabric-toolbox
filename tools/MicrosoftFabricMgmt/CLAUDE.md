@@ -305,6 +305,35 @@ function Update-FabricResource {
 }
 ```
 
+**CRITICAL - PowerShell Output Behavior**:
+- **DO NOT use `return` statements** unless explicitly needed for early exit or error conditions
+- PowerShell functions automatically output any unassigned values to the pipeline
+- Using `return` can suppress other outputs and cause unexpected behavior
+- Let PowerShell's natural output behavior handle function results
+
+```powershell
+# GOOD - Natural output
+function Get-FabricWorkspace {
+    $result = Invoke-FabricAPIRequest @params
+    Select-FabricResource -InputObject $result -Id $WorkspaceId -ResourceType 'Workspace'
+}
+
+# BAD - Unnecessary return statements
+function Get-FabricWorkspace {
+    $result = Invoke-FabricAPIRequest @params
+    return Select-FabricResource -InputObject $result -Id $WorkspaceId -ResourceType 'Workspace'
+}
+
+# GOOD - return only for early exit
+function Get-FabricWorkspace {
+    if ($WorkspaceId -and $WorkspaceName) {
+        Write-FabricLog -Message "Specify only one parameter" -Level Error
+        return  # Early exit on error
+    }
+    # ... continue normal flow
+}
+```
+
 **Parameter Naming Conventions**:
 - Use full names, not abbreviations (e.g., `WorkspaceId` not `WsId`)
 - Follow PowerShell conventions: `Get-*`, `Set-*`, `New-*`, `Remove-*`, `Update-*`
