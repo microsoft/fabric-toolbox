@@ -1,4 +1,4 @@
-﻿<#
+<#
 .SYNOPSIS
 Provisions an identity for a Fabric workspace.
 
@@ -33,7 +33,7 @@ function Add-FabricWorkspaceIdentity {
         Invoke-FabricAuthCheck -ThrowOnFailure
 
         # Construct the API endpoint URI
-        $apiEndpointURI = Build-FabricAPIUri -Resource 'workspaces' -ItemId $WorkspaceId -Subresource 'provisionIdentity'
+        $apiEndpointURI = New-FabricAPIUri -Resource 'workspaces' -ItemId $WorkspaceId -Subresource 'provisionIdentity'
         Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
 
         # Make the API request

@@ -1,4 +1,4 @@
-﻿<#
+<#
 .SYNOPSIS
 Updates the role assignment for a specific principal in a Fabric workspace.
 
@@ -51,7 +51,7 @@ function Update-FabricWorkspaceRoleAssignment {
         Invoke-FabricAuthCheck -ThrowOnFailure
 
         # Construct the API endpoint URI
-        $apiEndpointURI = Build-FabricAPIUri -Resource 'workspaces' -ItemId $WorkspaceId -Subresource 'roleAssignments' -SubresourceId $WorkspaceRoleAssignmentId
+        $apiEndpointURI = New-FabricAPIUri -Resource 'workspaces' -ItemId $WorkspaceId -Subresource 'roleAssignments' -SubresourceId $WorkspaceRoleAssignmentId
         Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
 
         # Construct the request body

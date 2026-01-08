@@ -1,4 +1,4 @@
-﻿<#
+<#
 .SYNOPSIS
 Creates a new Fabric workspace.
 
@@ -12,7 +12,7 @@ The display name of the workspace to create. Allowed characters are letters, num
 a name that clearly reflects the workspace purpose (e.g. Finance Analytics) for easier administration.
 
 .PARAMETER WorkspaceDescription
-Optional textual description explaining the workspace’s intended usage, stakeholders, or data domain. Providing a
+Optional textual description explaining the workspace�s intended usage, stakeholders, or data domain. Providing a
 meaningful description helps other administrators and users understand scope without opening items.
 
 .PARAMETER CapacityId
@@ -59,7 +59,7 @@ function New-FabricWorkspace {
         Invoke-FabricAuthCheck -ThrowOnFailure
 
         # Construct the API endpoint URI
-        $apiEndpointURI = Build-FabricAPIUri -Resource 'workspaces'
+        $apiEndpointURI = New-FabricAPIUri -Resource 'workspaces'
 
         # Construct the request body
         $body = @{

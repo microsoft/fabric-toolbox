@@ -1,4 +1,4 @@
-﻿<#
+<#
 .SYNOPSIS
 Deprovisions the Managed Identity for a specified Fabric workspace.
 
@@ -33,7 +33,7 @@ function Remove-FabricWorkspaceIdentity {
         Invoke-FabricAuthCheck -ThrowOnFailure
 
         # Construct the API endpoint URI
-        $apiEndpointURI = Build-FabricAPIUri -Resource 'workspaces' -ItemId $WorkspaceId -Subresource 'deprovisionIdentity'
+        $apiEndpointURI = New-FabricAPIUri -Resource 'workspaces' -ItemId $WorkspaceId -Subresource 'deprovisionIdentity'
         Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
 
         # Make the API request

@@ -1,4 +1,4 @@
-﻿<#
+<#
 .SYNOPSIS
 Deletes an existing Fabric workspace by its workspace ID.
 
@@ -32,7 +32,7 @@ function Remove-FabricWorkspace {
         Invoke-FabricAuthCheck -ThrowOnFailure
 
         # Construct the API endpoint URI
-        $apiEndpointURI = Build-FabricAPIUri -Resource 'workspaces' -ItemId $WorkspaceId
+        $apiEndpointURI = New-FabricAPIUri -Resource 'workspaces' -ItemId $WorkspaceId
 
         # Make the API request
         $apiParams = @{

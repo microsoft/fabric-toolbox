@@ -1,4 +1,4 @@
-﻿<#
+<#
 .SYNOPSIS
 Removes a role assignment from a Fabric workspace.
 
@@ -41,7 +41,7 @@ function Remove-FabricWorkspaceRoleAssignment {
         Invoke-FabricAuthCheck -ThrowOnFailure
 
         # Construct the API endpoint URI
-        $apiEndpointURI = Build-FabricAPIUri -Resource 'workspaces' -ItemId $WorkspaceId -Subresource 'roleAssignments' -SubresourceId $WorkspaceRoleAssignmentId
+        $apiEndpointURI = New-FabricAPIUri -Resource 'workspaces' -ItemId $WorkspaceId -Subresource 'roleAssignments' -SubresourceId $WorkspaceRoleAssignmentId
         Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
 
         # Make the API request

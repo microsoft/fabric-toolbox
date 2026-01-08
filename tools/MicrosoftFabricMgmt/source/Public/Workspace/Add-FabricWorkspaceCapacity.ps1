@@ -1,4 +1,4 @@
-﻿<#
+<#
 .SYNOPSIS
 Assigns a Fabric workspace to a specified capacity.
 
@@ -41,7 +41,7 @@ function Add-FabricWorkspaceCapacity {
         Invoke-FabricAuthCheck -ThrowOnFailure
 
         # Construct the API endpoint URI
-        $apiEndpointURI = Build-FabricAPIUri -Resource 'workspaces' -ItemId $WorkspaceId -Subresource 'assignToCapacity'
+        $apiEndpointURI = New-FabricAPIUri -Resource 'workspaces' -ItemId $WorkspaceId -Subresource 'assignToCapacity'
         Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
 
         # Construct the request body

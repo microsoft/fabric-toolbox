@@ -26,18 +26,18 @@
     Returns the fully constructed API endpoint URI.
 
 .EXAMPLE
-    Build-FabricAPIUri -Resource 'workspaces' -WorkspaceId $wsId -Subresource 'lakehouses'
+    New-FabricAPIUri -Resource 'workspaces' -WorkspaceId $wsId -Subresource 'lakehouses'
 
     Returns: https://api.fabric.microsoft.com/v1/workspaces/{wsId}/lakehouses
 
 .EXAMPLE
-    Build-FabricAPIUri -Resource 'workspaces' -WorkspaceId $wsId -Subresource 'items' -ItemId $itemId
+    New-FabricAPIUri -Resource 'workspaces' -WorkspaceId $wsId -Subresource 'items' -ItemId $itemId
 
     Returns: https://api.fabric.microsoft.com/v1/workspaces/{wsId}/items/{itemId}
 
 .EXAMPLE
     $query = @{ updateMetadata = 'true'; force = 'false' }
-    Build-FabricAPIUri -Resource 'workspaces' -WorkspaceId $wsId -QueryParameters $query
+    New-FabricAPIUri -Resource 'workspaces' -WorkspaceId $wsId -QueryParameters $query
 
     Returns: https://api.fabric.microsoft.com/v1/workspaces/{wsId}?updateMetadata=true&force=false
 
@@ -48,7 +48,7 @@
     Version: 1.0.0
     Last Updated: 2026-01-07
 #>
-function Build-FabricAPIUri {
+function New-FabricAPIUri {
     [CmdletBinding()]
     [OutputType([string])]
     param(

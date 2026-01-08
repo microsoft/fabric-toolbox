@@ -1,4 +1,4 @@
-﻿<#
+<#
 .SYNOPSIS
 Retrieves details of a Microsoft Fabric workspace by its ID or name.
 
@@ -53,7 +53,7 @@ function Get-FabricWorkspace {
         Invoke-FabricAuthCheck -ThrowOnFailure
 
         # Construct the API endpoint URI
-        $apiEndpointURI = Build-FabricAPIUri -Resource 'workspaces'
+        $apiEndpointURI = New-FabricAPIUri -Resource 'workspaces'
 
         # Make the API request
         $apiParams = @{

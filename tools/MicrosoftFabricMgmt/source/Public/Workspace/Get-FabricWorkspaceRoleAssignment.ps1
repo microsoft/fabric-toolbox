@@ -1,4 +1,4 @@
-﻿<#
+<#
 .SYNOPSIS
 Retrieves role assignments for a specified Fabric workspace.
 
@@ -45,7 +45,7 @@ function Get-FabricWorkspaceRoleAssignment {
         Invoke-FabricAuthCheck -ThrowOnFailure
 
         # Construct the API endpoint URI
-        $apiEndpointURI = Build-FabricAPIUri -Resource 'workspaces' -ItemId $WorkspaceId -Subresource 'roleAssignments'
+        $apiEndpointURI = New-FabricAPIUri -Resource 'workspaces' -ItemId $WorkspaceId -Subresource 'roleAssignments'
 
         # Make the API request
         $apiParams = @{

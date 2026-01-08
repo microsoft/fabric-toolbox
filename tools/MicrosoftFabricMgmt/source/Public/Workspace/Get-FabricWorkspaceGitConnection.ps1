@@ -1,4 +1,4 @@
-﻿<#
+<#
 .SYNOPSIS
 Retrieves Git connection details for Microsoft Fabric workspaces.
 
@@ -38,7 +38,7 @@ function Get-FabricWorkspaceGitConnection {
         Invoke-FabricAuthCheck -ThrowOnFailure
 
         # Construct the API endpoint URI
-        $apiEndpointURI = Build-FabricAPIUri -Resource 'admin/workspaces/discoverGitConnections'
+        $apiEndpointURI = New-FabricAPIUri -Resource 'admin/workspaces/discoverGitConnections'
 
         # Make the API request
         $apiParams = @{

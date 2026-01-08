@@ -22,20 +22,20 @@ param(
     )
 )
 
-Describe "Build-FabricAPIUri" -Tag "UnitTests" {
+Describe "New-FabricAPIUri" -Tag "UnitTests" {
 
     BeforeDiscovery {
-        . $PSScriptRoot\..\..\source\Private\Build-FabricAPIUri.ps1
+        . $PSScriptRoot\..\..\source\Private\New-FabricAPIUri.ps1
         . $PSScriptRoot\..\..\source\Private\Write-FabricLog.ps1
-        $command = Get-Command -Name Build-FabricAPIUri
+        $command = Get-Command -Name New-FabricAPIUri
         $expected = $expectedParams
     }
 
     Context "Parameter validation" {
         BeforeAll {
-            . $PSScriptRoot\..\..\source\Private\Build-FabricAPIUri.ps1
+            . $PSScriptRoot\..\..\source\Private\New-FabricAPIUri.ps1
             . $PSScriptRoot\..\..\source\Private\Write-FabricLog.ps1
-            $command = Get-Command -Name Build-FabricAPIUri
+            $command = Get-Command -Name New-FabricAPIUri
             $expected = $expectedParams
         }
 
