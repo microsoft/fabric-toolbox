@@ -11,10 +11,26 @@
 *.sln.docstates
 
 # Build results
-[Oo]utput/
+
 
 # allow the module folder for now until it can be deployed to the PowerShell Gallery
-!output/module/MicrosoftFabricMgmt
+# Ignore the output directory
+[Oo]utput/
+[Oo]utput/RequiredModules/
+
+# Allow Git to descend into output/
+![Oo]utput/
+
+# Allow Git to descend into output/module/
+![Oo]utput/module/
+
+# Allow Git to descend into output/module/MicrosoftFabricMgmt/
+![Oo]utput/module/MicrosoftFabricMgmt/
+
+# allow everything inside MicrosoftFabricMgmt
+![Oo]utput/module/MicrosoftFabricMgmt/**
+
+
 
 # MSTest test Results
 [Tt]est[Rr]esult*/
