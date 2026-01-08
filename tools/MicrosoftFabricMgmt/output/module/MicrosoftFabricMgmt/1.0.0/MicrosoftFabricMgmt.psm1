@@ -104,120 +104,6 @@ MicrosoftFabricMgmt v1.0.0 - BREAKING CHANGES:
 - See BREAKING-CHANGES.md for migration guide
 "@
 #EndRegion '.\prefix.ps1' 104
-#Region '.\Private\Build-FabricAPIUri.ps1' -1
-
-<#
-.SYNOPSIS
-    Constructs a properly formatted Fabric API endpoint URI.
-
-.DESCRIPTION
-    This helper function standardizes URI construction across all 244 public functions.
-    It handles workspace IDs, item IDs, subresources, and query parameters consistently.
-
-.PARAMETER Resource
-    The base resource type (e.g., 'workspaces', 'capacities', 'items').
-
-.PARAMETER WorkspaceId
-    Optional workspace GUID. If provided, will be included in the URI path.
-
-.PARAMETER ItemId
-    Optional item GUID. If provided, will be included in the URI path after workspace.
-
-.PARAMETER Subresource
-    Optional subresource path (e.g., 'users', 'roleAssignments', 'definition').
-
-.PARAMETER QueryParameters
-    Optional hashtable of query parameters to append to the URI.
-
-.OUTPUTS
-    System.String
-    Returns the fully constructed API endpoint URI.
-
-.EXAMPLE
-    Build-FabricAPIUri -Resource 'workspaces' -WorkspaceId $wsId -Subresource 'lakehouses'
-
-    Returns: https://api.fabric.microsoft.com/v1/workspaces/{wsId}/lakehouses
-
-.EXAMPLE
-    Build-FabricAPIUri -Resource 'workspaces' -WorkspaceId $wsId -Subresource 'items' -ItemId $itemId
-
-    Returns: https://api.fabric.microsoft.com/v1/workspaces/{wsId}/items/{itemId}
-
-.EXAMPLE
-    $query = @{ updateMetadata = 'true'; force = 'false' }
-    Build-FabricAPIUri -Resource 'workspaces' -WorkspaceId $wsId -QueryParameters $query
-
-    Returns: https://api.fabric.microsoft.com/v1/workspaces/{wsId}?updateMetadata=true&force=false
-
-.NOTES
-    Uses PSFramework configuration for the base URL.
-
-    Author: Tiago Balabuch, Jess Pomfret, Rob Sewell
-    Version: 1.0.0
-    Last Updated: 2026-01-07
-#>
-function Build-FabricAPIUri {
-    [CmdletBinding()]
-    [OutputType([string])]
-    param(
-        [Parameter(Mandatory = $true)]
-        [ValidateNotNullOrEmpty()]
-        [string]$Resource,
-
-        [Parameter()]
-        [string]$WorkspaceId,
-
-        [Parameter()]
-        [string]$ItemId,
-
-        [Parameter()]
-        [string]$Subresource,
-
-        [Parameter()]
-        [hashtable]$QueryParameters
-    )
-
-    # Get base URL from module-scoped auth context
-    $baseUrl = $script:FabricAuthContext.BaseUrl
-
-    # Start building the URI
-    $uriParts = [System.Collections.Generic.List[string]]::new()
-    $uriParts.Add($baseUrl)
-    $uriParts.Add($Resource)
-
-    # Add workspace ID if provided
-    if ($WorkspaceId) {
-        $uriParts.Add($WorkspaceId)
-    }
-
-    # Add subresource if provided
-    if ($Subresource) {
-        $uriParts.Add($Subresource)
-    }
-
-    # Add item ID if provided (typically comes after subresource)
-    if ($ItemId) {
-        $uriParts.Add($ItemId)
-    }
-
-    # Join parts with forward slashes
-    $uri = $uriParts -join '/'
-
-    # Add query parameters if provided
-    if ($QueryParameters -and $QueryParameters.Count -gt 0) {
-        $queryString = ($QueryParameters.GetEnumerator() | ForEach-Object {
-            $key = [System.Uri]::EscapeDataString($_.Key)
-            $value = [System.Uri]::EscapeDataString($_.Value.ToString())
-            "$key=$value"
-        }) -join '&'
-
-        $uri = "$uri`?$queryString"
-    }
-
-    Write-FabricLog -Message "Constructed API URI: $uri" -Level Debug
-    return $uri
-}
-#EndRegion '.\Private\Build-FabricAPIUri.ps1' 112
 #Region '.\Private\Convert-FabricRequestBody.ps1' -1
 
 <#
@@ -557,6 +443,120 @@ function Invoke-TokenRefresh {
     }
 }
 #EndRegion '.\Private\Invoke-TokenRefresh.ps1' 105
+#Region '.\Private\New-FabricAPIUri.ps1' -1
+
+<#
+.SYNOPSIS
+    Constructs a properly formatted Fabric API endpoint URI.
+
+.DESCRIPTION
+    This helper function standardizes URI construction across all 244 public functions.
+    It handles workspace IDs, item IDs, subresources, and query parameters consistently.
+
+.PARAMETER Resource
+    The base resource type (e.g., 'workspaces', 'capacities', 'items').
+
+.PARAMETER WorkspaceId
+    Optional workspace GUID. If provided, will be included in the URI path.
+
+.PARAMETER ItemId
+    Optional item GUID. If provided, will be included in the URI path after workspace.
+
+.PARAMETER Subresource
+    Optional subresource path (e.g., 'users', 'roleAssignments', 'definition').
+
+.PARAMETER QueryParameters
+    Optional hashtable of query parameters to append to the URI.
+
+.OUTPUTS
+    System.String
+    Returns the fully constructed API endpoint URI.
+
+.EXAMPLE
+    New-FabricAPIUri -Resource 'workspaces' -WorkspaceId $wsId -Subresource 'lakehouses'
+
+    Returns: https://api.fabric.microsoft.com/v1/workspaces/{wsId}/lakehouses
+
+.EXAMPLE
+    New-FabricAPIUri -Resource 'workspaces' -WorkspaceId $wsId -Subresource 'items' -ItemId $itemId
+
+    Returns: https://api.fabric.microsoft.com/v1/workspaces/{wsId}/items/{itemId}
+
+.EXAMPLE
+    $query = @{ updateMetadata = 'true'; force = 'false' }
+    New-FabricAPIUri -Resource 'workspaces' -WorkspaceId $wsId -QueryParameters $query
+
+    Returns: https://api.fabric.microsoft.com/v1/workspaces/{wsId}?updateMetadata=true&force=false
+
+.NOTES
+    Uses PSFramework configuration for the base URL.
+
+    Author: Tiago Balabuch, Jess Pomfret, Rob Sewell
+    Version: 1.0.0
+    Last Updated: 2026-01-07
+#>
+function New-FabricAPIUri {
+    [CmdletBinding()]
+    [OutputType([string])]
+    param(
+        [Parameter(Mandatory = $true)]
+        [ValidateNotNullOrEmpty()]
+        [string]$Resource,
+
+        [Parameter()]
+        [string]$WorkspaceId,
+
+        [Parameter()]
+        [string]$ItemId,
+
+        [Parameter()]
+        [string]$Subresource,
+
+        [Parameter()]
+        [hashtable]$QueryParameters
+    )
+
+    # Get base URL from module-scoped auth context
+    $baseUrl = $script:FabricAuthContext.BaseUrl
+
+    # Start building the URI
+    $uriParts = [System.Collections.Generic.List[string]]::new()
+    $uriParts.Add($baseUrl)
+    $uriParts.Add($Resource)
+
+    # Add workspace ID if provided
+    if ($WorkspaceId) {
+        $uriParts.Add($WorkspaceId)
+    }
+
+    # Add subresource if provided
+    if ($Subresource) {
+        $uriParts.Add($Subresource)
+    }
+
+    # Add item ID if provided (typically comes after subresource)
+    if ($ItemId) {
+        $uriParts.Add($ItemId)
+    }
+
+    # Join parts with forward slashes
+    $uri = $uriParts -join '/'
+
+    # Add query parameters if provided
+    if ($QueryParameters -and $QueryParameters.Count -gt 0) {
+        $queryString = ($QueryParameters.GetEnumerator() | ForEach-Object {
+            $key = [System.Uri]::EscapeDataString($_.Key)
+            $value = [System.Uri]::EscapeDataString($_.Value.ToString())
+            "$key=$value"
+        }) -join '&'
+
+        $uri = "$uri`?$queryString"
+    }
+
+    Write-FabricLog -Message "Constructed API URI: $uri" -Level Debug
+    return $uri
+}
+#EndRegion '.\Private\New-FabricAPIUri.ps1' 112
 #Region '.\Private\Select-FabricResource.ps1' -1
 
 <#
@@ -24656,7 +24656,7 @@ function Add-FabricWorkspaceCapacity {
         Invoke-FabricAuthCheck -ThrowOnFailure
 
         # Construct the API endpoint URI
-        $apiEndpointURI = Build-FabricAPIUri -Resource 'workspaces' -ItemId $WorkspaceId -Subresource 'assignToCapacity'
+        $apiEndpointURI = New-FabricAPIUri -Resource 'workspaces' -ItemId $WorkspaceId -Subresource 'assignToCapacity'
         Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
 
         # Construct the request body
@@ -24671,7 +24671,7 @@ function Add-FabricWorkspaceCapacity {
         # Make the API request
         $apiParams = @{
             BaseURI = $apiEndpointURI
-            Headers = $FabricConfig.FabricHeaders
+            Headers = $script:FabricAuthContext.FabricHeaders
             Method = 'Post'
             Body = $bodyJson
         }
@@ -24725,13 +24725,13 @@ function Add-FabricWorkspaceIdentity {
         Invoke-FabricAuthCheck -ThrowOnFailure
 
         # Construct the API endpoint URI
-        $apiEndpointURI = Build-FabricAPIUri -Resource 'workspaces' -ItemId $WorkspaceId -Subresource 'provisionIdentity'
+        $apiEndpointURI = New-FabricAPIUri -Resource 'workspaces' -ItemId $WorkspaceId -Subresource 'provisionIdentity'
         Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
 
         # Make the API request
         $apiParams = @{
             BaseURI = $apiEndpointURI
-            Headers = $FabricConfig.FabricHeaders
+            Headers = $script:FabricAuthContext.FabricHeaders
             Method = 'Post'
         }
         $response = Invoke-FabricAPIRequest @apiParams
@@ -24808,7 +24808,7 @@ function Add-FabricWorkspaceRoleAssignment {
         Invoke-FabricAuthCheck -ThrowOnFailure
 
         # Construct the API endpoint URI
-        $apiEndpointURI = Build-FabricAPIUri -Resource 'workspaces' -ItemId $WorkspaceId -Subresource 'roleAssignments'
+        $apiEndpointURI = New-FabricAPIUri -Resource 'workspaces' -ItemId $WorkspaceId -Subresource 'roleAssignments'
         Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
 
         # Construct the request body
@@ -24827,7 +24827,7 @@ function Add-FabricWorkspaceRoleAssignment {
         # Make the API request
         $apiParams = @{
             BaseURI = $apiEndpointURI
-            Headers = $FabricConfig.FabricHeaders
+            Headers = $script:FabricAuthContext.FabricHeaders
             Method = 'Post'
             Body = $bodyJson
         }
@@ -24901,12 +24901,12 @@ function Get-FabricWorkspace {
         Invoke-FabricAuthCheck -ThrowOnFailure
 
         # Construct the API endpoint URI
-        $apiEndpointURI = Build-FabricAPIUri -Resource 'workspaces'
+        $apiEndpointURI = New-FabricAPIUri -Resource 'workspaces'
 
         # Make the API request
         $apiParams = @{
             BaseURI = $apiEndpointURI
-            Headers = $FabricConfig.FabricHeaders
+            Headers = $script:FabricAuthContext.FabricHeaders
             Method = 'Get'
         }
         $dataItems = Invoke-FabricAPIRequest @apiParams
@@ -24963,12 +24963,12 @@ function Get-FabricWorkspaceGitConnection {
         Invoke-FabricAuthCheck -ThrowOnFailure
 
         # Construct the API endpoint URI
-        $apiEndpointURI = Build-FabricAPIUri -Resource 'admin/workspaces/discoverGitConnections'
+        $apiEndpointURI = New-FabricAPIUri -Resource 'admin/workspaces/discoverGitConnections'
 
         # Make the API request
         $apiParams = @{
             BaseURI = $apiEndpointURI
-            Headers = $FabricConfig.FabricHeaders
+            Headers = $script:FabricAuthContext.FabricHeaders
             Method = 'Get'
         }
         $dataItems = Invoke-FabricAPIRequest @apiParams
@@ -25043,12 +25043,12 @@ function Get-FabricWorkspaceRoleAssignment {
         Invoke-FabricAuthCheck -ThrowOnFailure
 
         # Construct the API endpoint URI
-        $apiEndpointURI = Build-FabricAPIUri -Resource 'workspaces' -ItemId $WorkspaceId -Subresource 'roleAssignments'
+        $apiEndpointURI = New-FabricAPIUri -Resource 'workspaces' -ItemId $WorkspaceId -Subresource 'roleAssignments'
 
         # Make the API request
         $apiParams = @{
             BaseURI = $apiEndpointURI
-            Headers = $FabricConfig.FabricHeaders
+            Headers = $script:FabricAuthContext.FabricHeaders
             Method = 'Get'
         }
         $dataItems = Invoke-FabricAPIRequest @apiParams
@@ -25095,7 +25095,7 @@ The display name of the workspace to create. Allowed characters are letters, num
 a name that clearly reflects the workspace purpose (e.g. Finance Analytics) for easier administration.
 
 .PARAMETER WorkspaceDescription
-Optional textual description explaining the workspace’s intended usage, stakeholders, or data domain. Providing a
+Optional textual description explaining the workspaceï¿½s intended usage, stakeholders, or data domain. Providing a
 meaningful description helps other administrators and users understand scope without opening items.
 
 .PARAMETER CapacityId
@@ -25142,7 +25142,7 @@ function New-FabricWorkspace {
         Invoke-FabricAuthCheck -ThrowOnFailure
 
         # Construct the API endpoint URI
-        $apiEndpointURI = Build-FabricAPIUri -Resource 'workspaces'
+        $apiEndpointURI = New-FabricAPIUri -Resource 'workspaces'
 
         # Construct the request body
         $body = @{
@@ -25163,7 +25163,7 @@ function New-FabricWorkspace {
         # Make the API request
         $apiParams = @{
             BaseURI = $apiEndpointURI
-            Headers = $FabricConfig.FabricHeaders
+            Headers = $script:FabricAuthContext.FabricHeaders
             Method = 'Post'
             Body = $bodyJson
         }
@@ -25218,11 +25218,11 @@ function Remove-FabricWorkspace {
         Invoke-FabricAuthCheck -ThrowOnFailure
 
         # Construct the API endpoint URI
-        $apiEndpointURI = Build-FabricAPIUri -Resource 'workspaces' -ItemId $WorkspaceId
+        $apiEndpointURI = New-FabricAPIUri -Resource 'workspaces' -ItemId $WorkspaceId
 
         # Make the API request
         $apiParams = @{
-            Headers = $FabricConfig.FabricHeaders
+            Headers = $script:FabricAuthContext.FabricHeaders
             BaseURI = $apiEndpointURI
             Method = 'Delete'
         }
@@ -25276,14 +25276,14 @@ function Remove-FabricWorkspaceCapacity {
         Invoke-FabricAuthCheck -ThrowOnFailure
 
         # Construct the API endpoint URI
-        $apiEndpointURI = Build-FabricAPIUri -Resource 'workspaces' -ItemId $WorkspaceId -Subresource 'unassignFromCapacity'
+        $apiEndpointURI = New-FabricAPIUri -Resource 'workspaces' -ItemId $WorkspaceId -Subresource 'unassignFromCapacity'
         Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
 
         if ($PSCmdlet.ShouldProcess("$WorkspaceId" , "Remove from Capacity")) {
             # Make the API request
         $response = Invoke-FabricAPIRequest `
             -BaseURI $apiEndpointURI `
-            -Headers $FabricConfig.FabricHeaders `
+            -Headers $script:FabricAuthContext.FabricHeaders `
             -Method Post
         }
 
@@ -25336,13 +25336,13 @@ function Remove-FabricWorkspaceIdentity {
         Invoke-FabricAuthCheck -ThrowOnFailure
 
         # Construct the API endpoint URI
-        $apiEndpointURI = Build-FabricAPIUri -Resource 'workspaces' -ItemId $WorkspaceId -Subresource 'deprovisionIdentity'
+        $apiEndpointURI = New-FabricAPIUri -Resource 'workspaces' -ItemId $WorkspaceId -Subresource 'deprovisionIdentity'
         Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
 
         # Make the API request
         $apiParams = @{
             BaseURI = $apiEndpointURI
-            Headers = $FabricConfig.FabricHeaders
+            Headers = $script:FabricAuthContext.FabricHeaders
             Method = 'Post'
         }
 
@@ -25405,12 +25405,12 @@ function Remove-FabricWorkspaceRoleAssignment {
         Invoke-FabricAuthCheck -ThrowOnFailure
 
         # Construct the API endpoint URI
-        $apiEndpointURI = Build-FabricAPIUri -Resource 'workspaces' -ItemId $WorkspaceId -Subresource 'roleAssignments' -SubresourceId $WorkspaceRoleAssignmentId
+        $apiEndpointURI = New-FabricAPIUri -Resource 'workspaces' -ItemId $WorkspaceId -Subresource 'roleAssignments' -SubresourceId $WorkspaceRoleAssignmentId
         Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
 
         # Make the API request
         $apiParams = @{
-            Headers = $FabricConfig.FabricHeaders
+            Headers = $script:FabricAuthContext.FabricHeaders
             BaseURI = $apiEndpointURI
             Method = 'Delete'
         }
@@ -25487,7 +25487,7 @@ function Update-FabricWorkspace {
         Invoke-FabricAuthCheck -ThrowOnFailure
 
         # Construct the API endpoint URI
-        $apiEndpointURI = Build-FabricAPIUri -Resource 'workspaces' -ItemId $WorkspaceId
+        $apiEndpointURI = New-FabricAPIUri -Resource 'workspaces' -ItemId $WorkspaceId
 
         # Construct the request body
         $body = @{
@@ -25503,7 +25503,7 @@ function Update-FabricWorkspace {
 
         # Make the API request
         $apiParams = @{
-            Headers = $FabricConfig.FabricHeaders
+            Headers = $script:FabricAuthContext.FabricHeaders
             BaseURI = $apiEndpointURI
             Method = 'Patch'
             Body = $bodyJson
@@ -25577,7 +25577,7 @@ function Update-FabricWorkspaceRoleAssignment {
         Invoke-FabricAuthCheck -ThrowOnFailure
 
         # Construct the API endpoint URI
-        $apiEndpointURI = Build-FabricAPIUri -Resource 'workspaces' -ItemId $WorkspaceId -Subresource 'roleAssignments' -SubresourceId $WorkspaceRoleAssignmentId
+        $apiEndpointURI = New-FabricAPIUri -Resource 'workspaces' -ItemId $WorkspaceId -Subresource 'roleAssignments' -SubresourceId $WorkspaceRoleAssignmentId
         Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
 
         # Construct the request body
@@ -25591,7 +25591,7 @@ function Update-FabricWorkspaceRoleAssignment {
 
         # Make the API request
         $apiParams = @{
-            Headers = $FabricConfig.FabricHeaders
+            Headers = $script:FabricAuthContext.FabricHeaders
             BaseURI = $apiEndpointURI
             Method = 'Patch'
             Body = $bodyJson

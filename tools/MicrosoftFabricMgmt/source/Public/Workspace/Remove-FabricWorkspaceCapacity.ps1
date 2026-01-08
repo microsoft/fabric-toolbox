@@ -39,7 +39,7 @@ function Remove-FabricWorkspaceCapacity {
             # Make the API request
         $response = Invoke-FabricAPIRequest `
             -BaseURI $apiEndpointURI `
-            -Headers $FabricConfig.FabricHeaders `
+            -Headers $script:FabricAuthContext.FabricHeaders `
             -Method Post
         }
 
