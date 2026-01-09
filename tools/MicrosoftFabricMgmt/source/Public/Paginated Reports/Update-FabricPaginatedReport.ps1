@@ -50,13 +50,11 @@ function Update-FabricPaginatedReport {
         [string]$PaginatedReportDescription
     )
     try {
-        # Validate authentication token before proceeding.
-        Write-FabricLog -Message "Validating authentication token..." -Level Debug
-        Test-TokenExpired
-        Write-FabricLog -Message "Authentication token is valid." -Level Debug
+        Invoke-FabricAuthCheck -ThrowOnFailure
+
 
     # Construct the API endpoint URI
-    $apiEndpointUrl = "{0}/workspaces/{1}/paginatedReports/{2}" -f $FabricConfig.BaseUrl, $WorkspaceId, $PaginatedReportId
+    $apiEndpointUrl = "{0}/workspaces/{1}/paginatedReports/{2}" -f $script:FabricAuthContext.BaseUrl, $WorkspaceId, $PaginatedReportId
     Write-FabricLog -Message "API Endpoint: $apiEndpointUrl" -Level Debug
 
         # Construct the request body
@@ -77,7 +75,7 @@ function Update-FabricPaginatedReport {
         $action = "Update Paginated Report display name/description"
         if ($PSCmdlet.ShouldProcess($target, $action)) {
             $apiParams = @{
-                Headers = $FabricConfig.FabricHeaders
+                Headers = $script:FabricAuthContext.FabricHeaders
                 BaseURI = $apiEndpointUrl
                 Method = 'Patch'
                 Body = $bodyJson

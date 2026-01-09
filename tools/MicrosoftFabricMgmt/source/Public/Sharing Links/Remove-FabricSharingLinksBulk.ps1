@@ -3,7 +3,7 @@
 Removes sharing links in bulk from items in Mic        # Make the API request
         $apiParams = @{
             BaseURI = $apiEndpointURI
-            Headers = $FabricConfig.FabricHeaders
+            Headers = $script:FabricAuthContext.FabricHeaders
             Method = 'Delete'
             Body = $bodyJson
         }
@@ -47,13 +47,11 @@ function Remove-FabricSharingLinksBulk {
             }
         }
 
-        # Validate authentication token before proceeding.
-        Write-FabricLog -Message "Validating authentication token..." -Level Debug
-        Test-TokenExpired
-        Write-FabricLog -Message "Authentication token is valid." -Level Debug
+        Invoke-FabricAuthCheck -ThrowOnFailure
+
 
         # Construct the API endpoint URI
-        $apiEndpointURI = "{0}/admin/items/bulkRemoveSharingLinks" -f $FabricConfig.BaseUrl, $WorkspaceId
+        $apiEndpointURI = "{0}/admin/items/bulkRemoveSharingLinks" -f $script:FabricAuthContext.BaseUrl, $WorkspaceId
         Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
 
         # Construct the request body
@@ -70,7 +68,7 @@ function Remove-FabricSharingLinksBulk {
         if ($PSCmdlet.ShouldProcess("$($Items.Count) item(s) with sharing link type '$sharingLinkType'", "Remove sharing links in bulk")) {
             $response = Invoke-FabricAPIRequest `
                 -BaseURI $apiEndpointURI `
-                -Headers $FabricConfig.FabricHeaders `
+                -Headers $script:FabricAuthContext.FabricHeaders `
                 -Method Post `
                 -Body $bodyJson
 

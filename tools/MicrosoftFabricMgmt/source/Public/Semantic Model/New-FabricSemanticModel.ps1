@@ -50,13 +50,11 @@ function New-FabricSemanticModel {
         [string]$SemanticModelPathDefinition
     )
     try {
-        # Validate authentication token before proceeding.
-        Write-FabricLog -Message "Validating authentication token..." -Level Debug
-        Test-TokenExpired
-        Write-FabricLog -Message "Authentication token is valid." -Level Debug
+        Invoke-FabricAuthCheck -ThrowOnFailure
+
 
         # Construct the API endpoint URI
-        $apiEndpointURI = "{0}/workspaces/{1}/semanticModels" -f $FabricConfig.BaseUrl, $WorkspaceId
+        $apiEndpointURI = "{0}/workspaces/{1}/semanticModels" -f $script:FabricAuthContext.BaseUrl, $WorkspaceId
 
         # Construct the request body
         $body = @{
@@ -83,7 +81,7 @@ function New-FabricSemanticModel {
         if ($PSCmdlet.ShouldProcess("Semantic Model '$SemanticModelName' in workspace '$WorkspaceId'", "Create")) {
             $apiParams = @{
                 BaseURI = $apiEndpointURI
-                Headers = $FabricConfig.FabricHeaders
+                Headers = $script:FabricAuthContext.FabricHeaders
                 Method = 'Post'
                 Body = $bodyJson
             }

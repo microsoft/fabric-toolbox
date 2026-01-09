@@ -32,22 +32,20 @@ function Get-FabricLakehouseTable {
         [string]$LakehouseId
     )
     try {
-        # Validate authentication token before proceeding.
-        Write-FabricLog -Message "Validating authentication token..." -Level Debug
-        Test-TokenExpired
-        Write-FabricLog -Message "Authentication token is valid." -Level Debug
+        Invoke-FabricAuthCheck -ThrowOnFailure
+
 
         # Initialize variables
         $maxResults = 1
 
         # Construct the API endpoint URI
-        $apiEndpointURI = "{0}/workspaces/{1}/lakehouses/{2}/tables?maxResults={3}" -f $FabricConfig.BaseUrl, $WorkspaceId, $LakehouseId, $maxResults
+        $apiEndpointURI = "{0}/workspaces/{1}/lakehouses/{2}/tables?maxResults={3}" -f $script:FabricAuthContext.BaseUrl, $WorkspaceId, $LakehouseId, $maxResults
         Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
 
         # Make the API request
         $apiParams = @{
             BaseURI = $apiEndpointURI
-            Headers = $FabricConfig.FabricHeaders
+            Headers = $script:FabricAuthContext.FabricHeaders
             Method = 'Get'
         }
         $dataItems = Invoke-FabricAPIRequest @apiParams

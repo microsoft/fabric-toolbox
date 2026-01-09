@@ -48,20 +48,18 @@ function Start-FabricSparkJobDefinitionOnDemand {
         [switch]$WaitForCompletion
     )
     try {
-        # Validate authentication token before proceeding.
-        Write-FabricLog -Message "Validating authentication token..." -Level Debug
-        Test-TokenExpired
-        Write-FabricLog -Message "Authentication token is valid." -Level Debug
+        Invoke-FabricAuthCheck -ThrowOnFailure
+
 
         # Construct the API endpoint URI
-        $apiEndpointURI = "{0}/workspaces/{1}/SparkJobDefinitions/{2}/jobs/instances?jobType={3}" -f $FabricConfig.BaseUrl, $WorkspaceId , $SparkJobDefinitionId, $JobType
+        $apiEndpointURI = "{0}/workspaces/{1}/SparkJobDefinitions/{2}/jobs/instances?jobType={3}" -f $script:FabricAuthContext.BaseUrl, $WorkspaceId , $SparkJobDefinitionId, $JobType
         Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
 
         # Step 4: Make the API request
         if ($PSCmdlet.ShouldProcess("Spark Job Definition '$SparkJobDefinitionId' in workspace '$WorkspaceId'", "Start")) {
             $apiParams = @{
                 BaseURI = $apiEndpointURI
-                Headers = $FabricConfig.FabricHeaders
+                Headers = $script:FabricAuthContext.FabricHeaders
                 Method  = 'Post'
                 Body    = $bodyJson
             }

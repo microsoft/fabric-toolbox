@@ -47,20 +47,18 @@ function Update-FabricSQLEndpointMetadata {
         [switch]$WaitForCompletion
     )
     try {
-        # Validate authentication token before proceeding.
-        Write-FabricLog -Message "Validating authentication token..." -Level Debug
-        Test-TokenExpired
-        Write-FabricLog -Message "Authentication token is valid." -Level Debug
+        Invoke-FabricAuthCheck -ThrowOnFailure
+
 
         # Construct the API endpoint URI
-        $apiEndpointURI = "{0}/workspaces/{1}/sqlEndpoints/{2}/refreshMetadata" -f $FabricConfig.BaseUrl, $WorkspaceId, $SQLEndpointId
+        $apiEndpointURI = "{0}/workspaces/{1}/sqlEndpoints/{2}/refreshMetadata" -f $script:FabricAuthContext.BaseUrl, $WorkspaceId, $SQLEndpointId
         Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
 
         # Make the API request
         if ($PSCmdlet.ShouldProcess("SQL Endpoint '$SQLEndpointId' in workspace '$WorkspaceId'", "Update metadata")) {
             $apiParams = @{
                 BaseURI = $apiEndpointURI
-                Headers = $FabricConfig.FabricHeaders
+                Headers = $script:FabricAuthContext.FabricHeaders
                 Method  = 'Post'
             }
             if ($WaitForCompletion.IsPresent) {

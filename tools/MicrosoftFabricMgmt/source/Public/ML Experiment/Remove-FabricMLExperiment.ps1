@@ -35,13 +35,11 @@ function Remove-FabricMLExperiment {
         [string]$MLExperimentId
     )
     try {
-        # Validate authentication token before proceeding.
-        Write-FabricLog -Message "Validating authentication token..." -Level Debug
-        Test-TokenExpired
-        Write-FabricLog -Message "Authentication token is valid." -Level Debug
+        Invoke-FabricAuthCheck -ThrowOnFailure
+
 
         # Construct the API endpoint URI
-        $apiEndpointURI = "{0}/workspaces/{1}/mlExperiments/{2}" -f $FabricConfig.BaseUrl, $WorkspaceId, $MLExperimentId
+        $apiEndpointURI = "{0}/workspaces/{1}/mlExperiments/{2}" -f $script:FabricAuthContext.BaseUrl, $WorkspaceId, $MLExperimentId
         Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
 
         # Make the API request when confirmed
@@ -49,7 +47,7 @@ function Remove-FabricMLExperiment {
         $action = "Delete ML Experiment"
         if ($PSCmdlet.ShouldProcess($target, $action)) {
             $apiParams = @{
-                Headers = $FabricConfig.FabricHeaders
+                Headers = $script:FabricAuthContext.FabricHeaders
                 BaseURI = $apiEndpointURI
                 Method = 'Delete'
             }

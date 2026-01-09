@@ -51,13 +51,11 @@ function Get-FabricNotebookDefinition {
         [string]$NotebookFormat = 'ipynb'
     )
     try {
-        # Validate authentication token before proceeding.
-        Write-FabricLog -Message "Validating authentication token..." -Level Debug
-        Test-TokenExpired
-        Write-FabricLog -Message "Authentication token is valid." -Level Debug
+        Invoke-FabricAuthCheck -ThrowOnFailure
+
 
         # Construct the API endpoint URI with filtering logic
-        $apiEndpointURI = "{0}/workspaces/{1}/notebooks/{2}/getDefinition" -f $FabricConfig.BaseUrl, $WorkspaceId, $NotebookId
+        $apiEndpointURI = "{0}/workspaces/{1}/notebooks/{2}/getDefinition" -f $script:FabricAuthContext.BaseUrl, $WorkspaceId, $NotebookId
         if ($NotebookFormat) {
             $apiEndpointURI = "{0}?format={1}" -f $apiEndpointURI, $NotebookFormat
         }
@@ -66,7 +64,7 @@ function Get-FabricNotebookDefinition {
         # Make the API request
         $apiParams = @{
             BaseURI = $apiEndpointURI
-            Headers = $FabricConfig.FabricHeaders
+            Headers = $script:FabricAuthContext.FabricHeaders
             Method = 'Post'
         }
         $response = Invoke-FabricAPIRequest @apiParams

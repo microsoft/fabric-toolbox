@@ -69,10 +69,8 @@ function Update-FabricCapacityTenantSettingOverrides {
     )
 
     try {
-        # Validate authentication token before proceeding.
-        Write-FabricLog -Message "Validating authentication token..." -Level Debug
-        Test-TokenExpired
-        Write-FabricLog -Message "Authentication token is valid." -Level Debug
+        Invoke-FabricAuthCheck -ThrowOnFailure
+
 
         # Validate Security Groups if provided
         # This uses a .NET HashSet to accelerate lookup even more, especially useful in large collections.
@@ -96,7 +94,7 @@ function Update-FabricCapacityTenantSettingOverrides {
         }
 
         # Construct API endpoint URL
-        $apiEndpointURI = "{0}/admin/capacities/{1}/delegatedTenantSettingOverrides" -f $FabricConfig.BaseUrl, $CapacityId
+        $apiEndpointURI = "{0}/admin/capacities/{1}/delegatedTenantSettingOverrides" -f $script:FabricAuthContext.BaseUrl, $CapacityId
         Write-FabricLog -Message "Constructed API Endpoint: $apiEndpointURI" -Level Debug
 
         # Construct request body
@@ -125,7 +123,7 @@ function Update-FabricCapacityTenantSettingOverrides {
         if ($PSCmdlet.ShouldProcess("capacity '$CapacityId' setting '$SettingTitle'", "Update delegated tenant setting overrides")) {
             $response = Invoke-FabricAPIRequest `
                 -BaseURI $apiEndpointURI `
-                -Headers $FabricConfig.FabricHeaders `
+                -Headers $script:FabricAuthContext.FabricHeaders `
                 -Method Post `
                 -Body $bodyJson
 

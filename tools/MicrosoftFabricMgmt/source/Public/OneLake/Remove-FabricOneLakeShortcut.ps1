@@ -47,13 +47,11 @@ function Remove-FabricOneLakeShortcut {
         [string]$ShortcutName
     )
     try {
-        # Validate authentication token before proceeding.
-        Write-FabricLog -Message "Validating token..." -Level Debug
-        Test-TokenExpired
-        Write-FabricLog -Message "Token validation completed." -Level Debug
+        Invoke-FabricAuthCheck -ThrowOnFailure
+
 
         # Construct the API endpoint URI
-        $apiEndpointURI = "{0}/workspaces/{1}/items/{2}/shortcuts/{3}/{4}" -f $FabricConfig.BaseUrl, $WorkspaceId, $ItemId, $ShortcutPath, $ShortcutName
+        $apiEndpointURI = "{0}/workspaces/{1}/items/{2}/shortcuts/{3}/{4}" -f $script:FabricAuthContext.BaseUrl, $WorkspaceId, $ItemId, $ShortcutPath, $ShortcutName
         Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
 
         # Make the API request when confirmed
@@ -61,7 +59,7 @@ function Remove-FabricOneLakeShortcut {
         $action = "Delete OneLake Shortcut"
         if ($PSCmdlet.ShouldProcess($target, $action)) {
             $apiParams = @{
-                Headers = $FabricConfig.FabricHeaders
+                Headers = $script:FabricAuthContext.FabricHeaders
                 BaseURI = $apiEndpointURI
                 Method  = 'Delete'
             }

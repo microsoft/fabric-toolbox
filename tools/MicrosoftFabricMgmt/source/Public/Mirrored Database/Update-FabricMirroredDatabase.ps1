@@ -55,13 +55,11 @@ function Update-FabricMirroredDatabase {
         [string]$MirroredDatabaseDescription
     )
     try {
-        # Validate authentication token before proceeding.
-        Write-FabricLog -Message "Validating authentication token..." -Level Debug
-        Test-TokenExpired
-        Write-FabricLog -Message "Authentication token is valid." -Level Debug
+        Invoke-FabricAuthCheck -ThrowOnFailure
+
 
         # Construct the API endpoint URI
-        $apiEndpointURI = "{0}/workspaces/{1}/mirroredDatabases/{2}" -f $FabricConfig.BaseUrl, $WorkspaceId, $MirroredDatabaseId
+        $apiEndpointURI = "{0}/workspaces/{1}/mirroredDatabases/{2}" -f $script:FabricAuthContext.BaseUrl, $WorkspaceId, $MirroredDatabaseId
         Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
 
         # Construct the request body
@@ -79,7 +77,7 @@ function Update-FabricMirroredDatabase {
 
         # Make the API request
         $apiParams = @{
-            Headers = $FabricConfig.FabricHeaders
+            Headers = $script:FabricAuthContext.FabricHeaders
             BaseURI = $apiEndpointURI
             Method = 'Patch'
             Body = $bodyJson

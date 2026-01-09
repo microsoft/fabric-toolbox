@@ -36,13 +36,11 @@ function New-FabricTag {
                 throw "Each Tag must contain 'displayName' property. Found: $tag"
             }
         }
-        # Validate authentication token before proceeding.
-        Write-FabricLog -Message "Validating authentication token..." -Level Debug
-        Test-TokenExpired
-        Write-FabricLog -Message "Authentication token is valid." -Level Debug
+        Invoke-FabricAuthCheck -ThrowOnFailure
+
 
         # Construct the API endpoint URI
-        $apiEndpointURI = "{0}/admin/tags/bulkCreateTags" -f $FabricConfig.BaseUrl, $WorkspaceId
+        $apiEndpointURI = "{0}/admin/tags/bulkCreateTags" -f $script:FabricAuthContext.BaseUrl, $WorkspaceId
         Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
 
         # Construct the request body
@@ -54,7 +52,7 @@ function New-FabricTag {
         if ($PSCmdlet.ShouldProcess("Fabric tags", "Create tags in bulk")) {
             $apiParams = @{
                 BaseURI = $apiEndpointURI
-                Headers = $FabricConfig.FabricHeaders
+                Headers = $script:FabricAuthContext.FabricHeaders
                 Method = 'Post'
                 Body = $bodyJson
             }

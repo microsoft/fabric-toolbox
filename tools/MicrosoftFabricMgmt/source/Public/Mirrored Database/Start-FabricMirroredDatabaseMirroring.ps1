@@ -32,19 +32,17 @@ function Start-FabricMirroredDatabaseMirroring {
     )
 
     try {
-        # Validate authentication token before proceeding.
-        Write-FabricLog -Message "Validating authentication token..." -Level Debug
-        Test-TokenExpired
-        Write-FabricLog -Message "Authentication token is valid." -Level Debug
+        Invoke-FabricAuthCheck -ThrowOnFailure
+
 
         # Construct the API endpoint URI
-        $apiEndpointURI = "{0}/workspaces/{1}/mirroredDatabases/{2}/startMirroring" -f $FabricConfig.BaseUrl, $WorkspaceId, $MirroredDatabaseId
+        $apiEndpointURI = "{0}/workspaces/{1}/mirroredDatabases/{2}/startMirroring" -f $script:FabricAuthContext.BaseUrl, $WorkspaceId, $MirroredDatabaseId
         Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
 
         # Make the API request
         $apiParams = @{
             BaseURI = $apiEndpointURI
-            Headers = $FabricConfig.FabricHeaders
+            Headers = $script:FabricAuthContext.FabricHeaders
             Method = 'Post'
         }
         if ($PSCmdlet.ShouldProcess($MirroredDatabaseId, "Start mirroring for mirrored database in workspace '$WorkspaceId'")) {

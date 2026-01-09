@@ -94,13 +94,11 @@ function New-FabricSparkCustomPool {
         [int]$DynamicExecutorAllocationMaxExecutors
     )
     try {
-        # Validate authentication token before proceeding.
-        Write-FabricLog -Message "Validating authentication token..." -Level Debug
-        Test-TokenExpired
-        Write-FabricLog -Message "Authentication token is valid." -Level Debug
+        Invoke-FabricAuthCheck -ThrowOnFailure
+
 
         # Construct the API endpoint URI
-        $apiEndpointURI = "{0}/workspaces/{1}/spark/pools" -f $FabricConfig.BaseUrl, $WorkspaceId
+        $apiEndpointURI = "{0}/workspaces/{1}/spark/pools" -f $script:FabricAuthContext.BaseUrl, $WorkspaceId
         Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
 
         # Step 3: Construct the request body
@@ -128,7 +126,7 @@ function New-FabricSparkCustomPool {
         if ($PSCmdlet.ShouldProcess("Spark Custom Pool '$SparkCustomPoolName' in workspace '$WorkspaceId'", "Create")) {
             $apiParams = @{
                 BaseURI = $apiEndpointURI
-                Headers = $FabricConfig.FabricHeaders
+                Headers = $script:FabricAuthContext.FabricHeaders
                 Method = 'Post'
                 Body = $bodyJson
             }

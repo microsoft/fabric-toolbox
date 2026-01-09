@@ -62,13 +62,11 @@ function Update-FabricMirroredDatabaseDefinition {
     )
 
     try {
-        # Validate authentication token before proceeding.
-        Write-FabricLog -Message "Validating authentication token..." -Level Debug
-        Test-TokenExpired
-        Write-FabricLog -Message "Authentication token is valid." -Level Debug
+        Invoke-FabricAuthCheck -ThrowOnFailure
+
 
         # Construct the API endpoint URI with filtering logic
-        $apiEndpointURI = "{0}/workspaces/{1}/mirroredDatabases/{2}/updateDefinition" -f $FabricConfig.BaseUrl, $WorkspaceId, $MirroredDatabaseId
+        $apiEndpointURI = "{0}/workspaces/{1}/mirroredDatabases/{2}/updateDefinition" -f $script:FabricAuthContext.BaseUrl, $WorkspaceId, $MirroredDatabaseId
         if ($MirroredDatabasePathPlatformDefinition) {
             # Append query parameter correctly
             $apiEndpointURI = "$apiEndpointURI?updateMetadata=true"
@@ -122,7 +120,7 @@ function Update-FabricMirroredDatabaseDefinition {
         # Make the API request
         $apiParams = @{
             BaseURI = $apiEndpointURI
-            Headers = $FabricConfig.FabricHeaders
+            Headers = $script:FabricAuthContext.FabricHeaders
             Method = 'Post'
             Body = $bodyJson
         }

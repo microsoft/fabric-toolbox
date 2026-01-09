@@ -51,13 +51,11 @@ function New-FabricReport {
         [string]$ReportPathDefinition
     )
     try {
-        # Validate authentication token before proceeding.
-        Write-FabricLog -Message "Validating authentication token..." -Level Debug
-        Test-TokenExpired
-        Write-FabricLog -Message "Authentication token is valid." -Level Debug
+        Invoke-FabricAuthCheck -ThrowOnFailure
+
 
         # Construct the API endpoint URI
-        $apiEndpointURI = "{0}/workspaces/{1}/reports" -f $FabricConfig.BaseUrl, $WorkspaceId
+        $apiEndpointURI = "{0}/workspaces/{1}/reports" -f $script:FabricAuthContext.BaseUrl, $WorkspaceId
         Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
 
         # Construct the request body
@@ -89,7 +87,7 @@ function New-FabricReport {
         if ($PSCmdlet.ShouldProcess("Report '$ReportName' in workspace '$WorkspaceId'", "Create")) {
             $apiParams = @{
                 BaseURI = $apiEndpointURI
-                Headers = $FabricConfig.FabricHeaders
+                Headers = $script:FabricAuthContext.FabricHeaders
                 Method = 'Post'
                 Body = $bodyJson
             }

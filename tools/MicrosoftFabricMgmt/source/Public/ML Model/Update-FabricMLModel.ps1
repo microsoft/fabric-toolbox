@@ -42,13 +42,11 @@ function Update-FabricMLModel {
         [string]$MLModelDescription
     )
     try {
-        # Validate authentication token before proceeding.
-        Write-FabricLog -Message "Validating authentication token..." -Level Debug
-        Test-TokenExpired
-        Write-FabricLog -Message "Authentication token is valid." -Level Debug
+        Invoke-FabricAuthCheck -ThrowOnFailure
+
 
         # Construct the API endpoint URI
-        $apiEndpointURI = "{0}/workspaces/{1}/mlModels/{2}" -f $FabricConfig.BaseUrl, $WorkspaceId, $MLModelId
+        $apiEndpointURI = "{0}/workspaces/{1}/mlModels/{2}" -f $script:FabricAuthContext.BaseUrl, $WorkspaceId, $MLModelId
         Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
 
         # Construct the request body
@@ -65,7 +63,7 @@ function Update-FabricMLModel {
         $action = "Update ML Model description"
         if ($PSCmdlet.ShouldProcess($target, $action)) {
             $apiParams = @{
-                Headers = $FabricConfig.FabricHeaders
+                Headers = $script:FabricAuthContext.FabricHeaders
                 BaseURI = $apiEndpointURI
                 Method = 'Patch'
                 Body = $bodyJson

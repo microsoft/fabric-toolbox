@@ -34,19 +34,17 @@ function Remove-FabricSparkJobDefinition {
         [string]$SparkJobDefinitionId
     )
     try {
-        # Validate authentication token before proceeding.
-        Write-FabricLog -Message "Validating authentication token..." -Level Debug
-        Test-TokenExpired
-        Write-FabricLog -Message "Authentication token is valid." -Level Debug
+        Invoke-FabricAuthCheck -ThrowOnFailure
+
 
         # Construct the API endpoint URI
-        $apiEndpointURI = "{0}/workspaces/{1}/sparkJobDefinitions/{2}" -f $FabricConfig.BaseUrl, $WorkspaceId, $SparkJobDefinitionId
+        $apiEndpointURI = "{0}/workspaces/{1}/sparkJobDefinitions/{2}" -f $script:FabricAuthContext.BaseUrl, $WorkspaceId, $SparkJobDefinitionId
         Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
 
         ## Make the API request
         if ($PSCmdlet.ShouldProcess("Spark Job Definition '$SparkJobDefinitionId' in workspace '$WorkspaceId'", "Remove")) {
             $apiParams = @{
-                Headers = $FabricConfig.FabricHeaders
+                Headers = $script:FabricAuthContext.FabricHeaders
                 BaseURI = $apiEndpointURI
                 Method = 'Delete'
             }

@@ -48,13 +48,11 @@ function Update-FabricSparkJobDefinitionDefinition {
         [string]$SparkJobDefinitionPathPlatformDefinition
     )
     try {
-        # Validate authentication token before proceeding.
-        Write-FabricLog -Message "Validating authentication token..." -Level Debug
-        Test-TokenExpired
-        Write-FabricLog -Message "Authentication token is valid." -Level Debug
+        Invoke-FabricAuthCheck -ThrowOnFailure
+
 
         # Construct the API endpoint URI with filtering logic
-        $apiEndpointURI = "{0}/workspaces/{1}/SparkJobDefinitions/{2}/updateDefinition" -f $FabricConfig.BaseUrl, $WorkspaceId, $SparkJobDefinitionId
+        $apiEndpointURI = "{0}/workspaces/{1}/SparkJobDefinitions/{2}/updateDefinition" -f $script:FabricAuthContext.BaseUrl, $WorkspaceId, $SparkJobDefinitionId
         if ($SparkJobDefinitionPathPlatformDefinition) {
             $apiEndpointURI = "?updateMetadata=true" -f $apiEndpointURI
         }
@@ -108,7 +106,7 @@ function Update-FabricSparkJobDefinitionDefinition {
         if ($PSCmdlet.ShouldProcess("Spark Job Definition definition '$SparkJobDefinitionId' in workspace '$WorkspaceId'", "Update")) {
             $apiParams = @{
                 BaseURI = $apiEndpointURI
-                Headers = $FabricConfig.FabricHeaders
+                Headers = $script:FabricAuthContext.FabricHeaders
                 Method = 'Post'
                 Body = $bodyJson
             }

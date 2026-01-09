@@ -34,18 +34,16 @@ function Remove-FabricWarehouseSnapshot {
         [string]$WarehouseSnapshotId
     )
     try {
-        # Validate authentication token before proceeding.
-        Write-FabricLog -Message "Validating token..." -Level Debug
-        Test-TokenExpired
-        Write-FabricLog -Message "Token validation completed." -Level Debug
+        Invoke-FabricAuthCheck -ThrowOnFailure
+
 
         # Construct the API endpoint URI
-        $apiEndpointURI = "{0}/workspaces/{1}/warehousesnapshots/{2}" -f $FabricConfig.BaseUrl, $WorkspaceId, $WarehouseSnapshotId
+        $apiEndpointURI = "{0}/workspaces/{1}/warehousesnapshots/{2}" -f $script:FabricAuthContext.BaseUrl, $WorkspaceId, $WarehouseSnapshotId
         Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
 
         # Make the API request
         $apiParams = @{
-            Headers = $FabricConfig.FabricHeaders
+            Headers = $script:FabricAuthContext.FabricHeaders
             BaseURI = $apiEndpointURI
             Method  = 'Delete'
         }

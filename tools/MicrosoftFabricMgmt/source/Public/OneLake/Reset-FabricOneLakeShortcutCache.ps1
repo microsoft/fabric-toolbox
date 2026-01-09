@@ -27,13 +27,11 @@ function Reset-FabricOneLakeShortcutCache {
         [string]$WorkspaceId
     )
     try {
-        # Validate authentication token before proceeding.
-        Write-FabricLog -Message "Validating authentication token..." -Level Debug
-        Test-TokenExpired
-        Write-FabricLog -Message "Authentication token is valid." -Level Debug
+        Invoke-FabricAuthCheck -ThrowOnFailure
+
 
         # Construct the API endpoint URI
-        $apiEndpointURI = "{0}/workspaces/{1}/onelake/resetShortcutCache" -f $FabricConfig.BaseUrl, $WorkspaceId
+        $apiEndpointURI = "{0}/workspaces/{1}/onelake/resetShortcutCache" -f $script:FabricAuthContext.BaseUrl, $WorkspaceId
         Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
         # Make the API request when confirmed
         $target = "Workspace '$WorkspaceId'"
@@ -41,7 +39,7 @@ function Reset-FabricOneLakeShortcutCache {
         if ($PSCmdlet.ShouldProcess($target, $action)) {
             $apiParams = @{
                 BaseURI = $apiEndpointURI
-                Headers = $FabricConfig.FabricHeaders
+                Headers = $script:FabricAuthContext.FabricHeaders
                 Method  = 'Post'
             }
             $response = Invoke-FabricAPIRequest @apiParams

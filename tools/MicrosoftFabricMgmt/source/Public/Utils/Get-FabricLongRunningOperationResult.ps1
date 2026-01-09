@@ -15,7 +15,7 @@ Get-FabricLongRunningOperationResult -operationId "12345-abcd-67890-efgh"
 This command fetches the result of the operation with the specified operationId.
 
 .NOTES
-- Ensure the Fabric API headers (e.g., authorization tokens) are defined in $FabricConfig.FabricHeaders.
+- Ensure the Fabric API headers (e.g., authorization tokens) are defined in $script:FabricAuthContext.FabricHeaders.
 - This function does not handle polling. Ensure the operation is in a terminal state before calling this function.
     Author: Updated by Jess Pomfret and Rob Sewell November 2026
 
@@ -26,10 +26,8 @@ function Get-FabricLongRunningOperationResult {
         [Parameter(Mandatory = $true)]
         [string]$operationId
     )
-    # Validate authentication token before proceeding.
-    Write-FabricLog -Message "Validating authentication token..." -Level Debug
-    Test-TokenExpired
-    Write-FabricLog -Message "Authentication token is valid." -Level Debug
+    Invoke-FabricAuthCheck -ThrowOnFailure
+
 
     # Construct the API endpoint URI
     $apiEndpointURI = "https://api.fabric.microsoft.com/v1/operations/{0}/result" -f $operationId
@@ -39,7 +37,7 @@ function Get-FabricLongRunningOperationResult {
         # Make the API request
         $apiParams = @{
             BaseURI = $apiEndpointURI
-            Headers = $FabricConfig.FabricHeaders
+            Headers = $script:FabricAuthContext.FabricHeaders
             Method = 'Get'
         }
         $response = Invoke-FabricAPIRequest @apiParams

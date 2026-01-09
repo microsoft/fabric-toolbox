@@ -52,13 +52,11 @@ function Get-FabricOneLakeShortcut {
         [string]$ParentPath
     )
     try {
-        # Validate authentication token before proceeding.
-        Write-FabricLog -Message "Validating authentication token..." -Level Debug
-        Test-TokenExpired
-        Write-FabricLog -Message "Authentication token is valid." -Level Debug
+        Invoke-FabricAuthCheck -ThrowOnFailure
+
 
         # Construct the API endpoint URI
-        $apiEndpointURI = "{0}/workspaces/{1}/items/{2}/shortcuts" -f $FabricConfig.BaseUrl, $WorkspaceId, $ItemId
+        $apiEndpointURI = "{0}/workspaces/{1}/items/{2}/shortcuts" -f $script:FabricAuthContext.BaseUrl, $WorkspaceId, $ItemId
         if ($ParentPath) {
             $apiEndpointURI += "?parentPath={0}" -f $ParentPath
         }
@@ -67,7 +65,7 @@ function Get-FabricOneLakeShortcut {
         # Make the API request
         $apiParams = @{
             BaseURI = $apiEndpointURI
-            Headers = $FabricConfig.FabricHeaders
+            Headers = $script:FabricAuthContext.FabricHeaders
             Method  = 'Get'
         }
         $dataItems = Invoke-FabricAPIRequest @apiParams

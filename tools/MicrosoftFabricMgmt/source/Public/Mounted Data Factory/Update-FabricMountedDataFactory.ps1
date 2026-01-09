@@ -48,13 +48,11 @@ function Update-FabricMountedDataFactory {
         [string]$MountedDataFactoryDescription
     )
     try {
-        # Validate authentication token before proceeding.
-        Write-FabricLog -Message "Validating authentication token..." -Level Debug
-        Test-TokenExpired
-        Write-FabricLog -Message "Authentication token is valid." -Level Debug
+        Invoke-FabricAuthCheck -ThrowOnFailure
+
 
         # Construct the API endpoint URI
-        $apiEndpointURI = "{0}/workspaces/{1}/mountedDataFactories/{2}" -f $FabricConfig.BaseUrl, $WorkspaceId, $MountedDataFactoryId
+        $apiEndpointURI = "{0}/workspaces/{1}/mountedDataFactories/{2}" -f $script:FabricAuthContext.BaseUrl, $WorkspaceId, $MountedDataFactoryId
         Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
 
         # Construct the request body
@@ -75,7 +73,7 @@ function Update-FabricMountedDataFactory {
         $action = "Update Mounted Data Factory display name/description"
         if ($PSCmdlet.ShouldProcess($target, $action)) {
             $apiParams = @{
-                Headers = $FabricConfig.FabricHeaders
+                Headers = $script:FabricAuthContext.FabricHeaders
                 BaseURI = $apiEndpointURI
                 Method  = 'Patch'
                 Body    = $bodyJson

@@ -46,13 +46,11 @@ function Get-FabricReportDefinition {
         [string]$ReportFormat
     )
     try {
-        # Validate authentication token before proceeding.
-        Write-FabricLog -Message "Validating authentication token..." -Level Debug
-        Test-TokenExpired
-        Write-FabricLog -Message "Authentication token is valid." -Level Debug
+        Invoke-FabricAuthCheck -ThrowOnFailure
+
 
         # Construct the API endpoint URI with filtering logic
-        $apiEndpointURI = "{0}/workspaces/{1}/reports/{2}/getDefinition" -f $FabricConfig.BaseUrl, $WorkspaceId, $ReportId
+        $apiEndpointURI = "{0}/workspaces/{1}/reports/{2}/getDefinition" -f $script:FabricAuthContext.BaseUrl, $WorkspaceId, $ReportId
         if ($ReportFormat) {
             $apiEndpointURI = "{0}?format={1}" -f $apiEndpointURI, $ReportFormat
         }
@@ -62,7 +60,7 @@ function Get-FabricReportDefinition {
         # Make the API request
         $apiParams = @{
             BaseURI = $apiEndpointURI
-            Headers = $FabricConfig.FabricHeaders
+            Headers = $script:FabricAuthContext.FabricHeaders
             Method = 'Post'
         }
         $response = Invoke-FabricAPIRequest @apiParams

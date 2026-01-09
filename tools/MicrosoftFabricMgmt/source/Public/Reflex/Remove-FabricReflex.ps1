@@ -35,19 +35,17 @@ function Remove-FabricReflex {
         [string]$ReflexId
     )
     try {
-        # Validate authentication token before proceeding.
-        Write-FabricLog -Message "Validating authentication token..." -Level Debug
-        Test-TokenExpired
-        Write-FabricLog -Message "Authentication token is valid." -Level Debug
+        Invoke-FabricAuthCheck -ThrowOnFailure
+
 
         # Construct the API endpoint URI
-        $apiEndpointURI = "{0}/workspaces/{1}/reflexes/{2}" -f $FabricConfig.BaseUrl, $WorkspaceId, $ReflexId
+        $apiEndpointURI = "{0}/workspaces/{1}/reflexes/{2}" -f $script:FabricAuthContext.BaseUrl, $WorkspaceId, $ReflexId
         Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
 
         # Make the API request
         if ($PSCmdlet.ShouldProcess("Reflex '$ReflexId' in workspace '$WorkspaceId'", "Remove")) {
             $apiParams = @{
-                Headers = $FabricConfig.FabricHeaders
+                Headers = $script:FabricAuthContext.FabricHeaders
                 BaseURI = $apiEndpointURI
                 Method = 'Delete'
             }

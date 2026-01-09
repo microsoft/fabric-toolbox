@@ -53,20 +53,18 @@ function Get-FabricSemanticModel {
             return $null
         }
 
-        # Validate authentication token before proceeding.
-        Write-FabricLog -Message "Validating token..." -Level Debug
-        Test-TokenExpired
-        Write-FabricLog -Message "Token validation completed." -Level Debug
+        Invoke-FabricAuthCheck -ThrowOnFailure
+
 
         # Construct the API endpoint URI
-        $apiEndpointURI = "{0}/workspaces/{1}/semanticModels" -f $FabricConfig.BaseUrl, $WorkspaceId
+        $apiEndpointURI = "{0}/workspaces/{1}/semanticModels" -f $script:FabricAuthContext.BaseUrl, $WorkspaceId
         Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
 
         # Make the API request
         # Make the API request
         $apiParams = @{
             BaseURI = $apiEndpointURI
-            Headers = $FabricConfig.FabricHeaders
+            Headers = $script:FabricAuthContext.FabricHeaders
             Method = 'Get'
         }
         $dataItems = Invoke-FabricAPIRequest @apiParams

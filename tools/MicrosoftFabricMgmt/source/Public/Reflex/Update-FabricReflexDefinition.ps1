@@ -49,13 +49,11 @@ function Update-FabricReflexDefinition {
         [string]$ReflexPathPlatformDefinition
     )
     try {
-        # Validate authentication token before proceeding.
-        Write-FabricLog -Message "Validating authentication token..." -Level Debug
-        Test-TokenExpired
-        Write-FabricLog -Message "Authentication token is valid." -Level Debug
+        Invoke-FabricAuthCheck -ThrowOnFailure
+
 
         # Construct the API endpoint URI with filtering logic
-        $apiEndpointURI = "{0}/workspaces/{1}/reflexes/{2}/updateDefinition" -f $FabricConfig.BaseUrl, $WorkspaceId, $ReflexId
+        $apiEndpointURI = "{0}/workspaces/{1}/reflexes/{2}/updateDefinition" -f $script:FabricAuthContext.BaseUrl, $WorkspaceId, $ReflexId
         if ($ReflexPathPlatformDefinition) {
             $apiEndpointURI = "?updateMetadata=true" -f $apiEndpointURI
         }
@@ -109,7 +107,7 @@ function Update-FabricReflexDefinition {
         if ($PSCmdlet.ShouldProcess("Reflex definition for Reflex ID '$ReflexId' in workspace '$WorkspaceId'", "Update")) {
             $apiParams = @{
                 BaseURI = $apiEndpointURI
-                Headers = $FabricConfig.FabricHeaders
+                Headers = $script:FabricAuthContext.FabricHeaders
                 Method = 'Post'
                 Body = $bodyJson
             }

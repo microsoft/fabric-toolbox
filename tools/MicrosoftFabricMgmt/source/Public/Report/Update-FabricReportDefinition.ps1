@@ -42,13 +42,11 @@ function Update-FabricReportDefinition {
         [string]$ReportPathDefinition
     )
     try {
-        # Validate authentication token before proceeding.
-        Write-FabricLog -Message "Validating authentication token..." -Level Debug
-        Test-TokenExpired
-        Write-FabricLog -Message "Authentication token is valid." -Level Debug
+        Invoke-FabricAuthCheck -ThrowOnFailure
+
 
         # Construct the API endpoint URI with filtering logic
-        $apiEndpointURI = "{0}/workspaces/{1}/Reports/{2}/updateDefinition" -f $FabricConfig.BaseUrl, $WorkspaceId, $ReportId
+        $apiEndpointURI = "{0}/workspaces/{1}/Reports/{2}/updateDefinition" -f $script:FabricAuthContext.BaseUrl, $WorkspaceId, $ReportId
 
         # Construct the request body
         $body = @{
@@ -89,7 +87,7 @@ function Update-FabricReportDefinition {
         if ($PSCmdlet.ShouldProcess("Report definition for Report ID '$ReportId' in workspace '$WorkspaceId'", "Update")) {
             $apiParams = @{
                 BaseURI = $apiEndpointURI
-                Headers = $FabricConfig.FabricHeaders
+                Headers = $script:FabricAuthContext.FabricHeaders
                 Method = 'Post'
                 Body = $bodyJson
             }

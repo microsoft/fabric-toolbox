@@ -35,13 +35,11 @@ function Update-FabricTag {
         [string]$TagName
     )
     try {
-        # Validate authentication token before proceeding.
-        Write-FabricLog -Message "Validating authentication token..." -Level Debug
-        Test-TokenExpired
-        Write-FabricLog -Message "Authentication token is valid." -Level Debug
+        Invoke-FabricAuthCheck -ThrowOnFailure
+
                 PATCH https://api.fabric.microsoft.com/v1/admin/tags/{tagId}
         # Construct the API endpoint URI
-        $apiEndpointURI = "{0}/admin/tags/{1}" -f $FabricConfig.BaseUrl, $TagId
+        $apiEndpointURI = "{0}/admin/tags/{1}" -f $script:FabricAuthContext.BaseUrl, $TagId
         Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
 
         # Construct the request body
@@ -56,7 +54,7 @@ function Update-FabricTag {
         # Make the API request
         if ($PSCmdlet.ShouldProcess("tag '$TagId' with name '$TagName'", "Update")) {
             $apiParams = @{
-                Headers = $FabricConfig.FabricHeaders
+                Headers = $script:FabricAuthContext.FabricHeaders
                 BaseURI = $apiEndpointURI
                 Method = 'Patch'
                 Body = $bodyJson

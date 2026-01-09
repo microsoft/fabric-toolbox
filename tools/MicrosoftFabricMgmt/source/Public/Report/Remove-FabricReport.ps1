@@ -35,19 +35,17 @@ function Remove-FabricReport {
         [string]$ReportId
     )
     try {
-        # Validate authentication token before proceeding.
-        Write-FabricLog -Message "Validating authentication token..." -Level Debug
-        Test-TokenExpired
-        Write-FabricLog -Message "Authentication token is valid." -Level Debug
+        Invoke-FabricAuthCheck -ThrowOnFailure
+
 
         # Construct the API endpoint URI
-        $apiEndpointURI = "{0}/workspaces/{1}/reports/{2}" -f $FabricConfig.BaseUrl, $WorkspaceId, $ReportId
+        $apiEndpointURI = "{0}/workspaces/{1}/reports/{2}" -f $script:FabricAuthContext.BaseUrl, $WorkspaceId, $ReportId
         Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
 
         ## Make the API request
         if ($PSCmdlet.ShouldProcess("Report '$ReportId' in workspace '$WorkspaceId'", "Remove")) {
             $apiParams = @{
-                Headers = $FabricConfig.FabricHeaders
+                Headers = $script:FabricAuthContext.FabricHeaders
                 BaseURI = $apiEndpointURI
                 Method = 'Delete'
             }

@@ -38,7 +38,7 @@ function Get-FabricTenantSettingOverridesCapacity {
 
         # Step 4: Loop to retrieve all capacities with continuation token
         Write-FabricLog -Message "Loop started to get continuation token" -Level Debug
-        $baseApiEndpointUrl = "{0}/admin/capacities/delegatedTenantSettingOverrides" -f $FabricConfig.BaseUrl
+        $baseApiEndpointUrl = "{0}/admin/capacities/delegatedTenantSettingOverrides" -f $script:FabricAuthContext.BaseUrl
 
         do {
             # Step 5: Construct the API URL
@@ -53,7 +53,7 @@ function Get-FabricTenantSettingOverridesCapacity {
 
             # Step 6: Make the API request
             $restParams = @{
-                Headers = $FabricConfig.FabricHeaders
+                Headers = $script:FabricAuthContext.FabricHeaders
                 Uri = $apiEndpointUrl
                 Method = 'Get'
                 ErrorAction = 'Stop'

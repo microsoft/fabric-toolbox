@@ -100,7 +100,7 @@ function Update-FabricSparkSettings {
         Write-FabricLog -Message "Token validation completed." -Level Debug
 
         # Step 2: Construct the API URL
-        $apiEndpointUrl = "{0}/workspaces/{1}/spark/settings" -f $FabricConfig.BaseUrl, $WorkspaceId, $SparkSettingsId
+        $apiEndpointUrl = "{0}/workspaces/{1}/spark/settings" -f $script:FabricAuthContext.BaseUrl, $WorkspaceId, $SparkSettingsId
         Write-FabricLog -Message "API Endpoint: $apiEndpointUrl" -Level Debug
 
         # Step 3: Construct the request body
@@ -157,7 +157,7 @@ function Update-FabricSparkSettings {
         # Step 4: Make the API request
         if ($PSCmdlet.ShouldProcess("Spark settings '$SparkSettingsName' in workspace '$WorkspaceId'", "Update")) {
             $restParams = @{
-                Headers = $FabricConfig.FabricHeaders
+                Headers = $script:FabricAuthContext.FabricHeaders
                 Uri = $apiEndpointUrl
                 Method = 'Patch'
                 Body = $bodyJson

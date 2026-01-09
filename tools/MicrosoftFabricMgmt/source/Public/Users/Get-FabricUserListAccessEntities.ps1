@@ -39,13 +39,11 @@ function Get-FabricUserListAccessEntities {
         [string]$Type
     )
     try {
-        # Validate authentication token before proceeding.
-        Write-FabricLog -Message "Validating authentication token..." -Level Debug
-        Test-TokenExpired
-        Write-FabricLog -Message "Authentication token is valid." -Level Debug
+        Invoke-FabricAuthCheck -ThrowOnFailure
+
 
         # Construct the API endpoint URI with filtering logic
-        $apiEndpointURI = "{0}admin/users/{1}/access" -f $FabricConfig.BaseUrl, $UserId
+        $apiEndpointURI = "{0}admin/users/{1}/access" -f $script:FabricAuthContext.BaseUrl, $UserId
         if ($Type) {
             $apiEndpointURI += "?type=$Type"
         }
@@ -55,7 +53,7 @@ function Get-FabricUserListAccessEntities {
         # Make the API request
         $apiParams = @{
             BaseURI = $apiEndpointURI
-            Headers = $FabricConfig.FabricHeaders
+            Headers = $script:FabricAuthContext.FabricHeaders
             Method = 'Get'
         }
         $dataItems = Invoke-FabricAPIRequest @apiParams

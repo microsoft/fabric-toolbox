@@ -50,10 +50,8 @@ function Start-FabricLakehouseRefreshMaterializedLakeView {
         [switch]$WaitForCompletion
     )
     try {
-        # Validate authentication token before proceeding.
-        Write-FabricLog -Message "Validating authentication token..." -Level Debug
-        Test-TokenExpired
-        Write-FabricLog -Message "Authentication token is valid." -Level Debug
+        Invoke-FabricAuthCheck -ThrowOnFailure
+
 
         # Validate input parameters
         #$lakehouse = Get-FabricLakehouse -WorkspaceId $WorkspaceId -LakehouseId $LakehouseId
@@ -63,13 +61,13 @@ function Start-FabricLakehouseRefreshMaterializedLakeView {
         #}
 
         # Construct the API endpoint URI
-        $apiEndpointURI = "{0}/workspaces/{1}/lakehouses/{2}/jobs/instances?jobType={3}" -f $FabricConfig.BaseUrl, $WorkspaceId , $LakehouseId, $JobType
+        $apiEndpointURI = "{0}/workspaces/{1}/lakehouses/{2}/jobs/instances?jobType={3}" -f $script:FabricAuthContext.BaseUrl, $WorkspaceId , $LakehouseId, $JobType
         Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
 
           # Make the API request
         $apiParams = @{
             BaseURI = $apiEndpointURI
-            Headers = $FabricConfig.FabricHeaders
+            Headers = $script:FabricAuthContext.FabricHeaders
             Method  = 'Post'
         }
 

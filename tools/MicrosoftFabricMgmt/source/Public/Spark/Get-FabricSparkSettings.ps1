@@ -45,7 +45,7 @@ function Get-FabricSparkSettings {
 
         # Step 4: Loop to retrieve all capacities with continuation token
         Write-FabricLog -Message "Loop started to get continuation token" -Level Debug
-        $baseApiEndpointUrl = "{0}/workspaces/{1}/spark/settings" -f $FabricConfig.BaseUrl, $WorkspaceId
+        $baseApiEndpointUrl = "{0}/workspaces/{1}/spark/settings" -f $script:FabricAuthContext.BaseUrl, $WorkspaceId
 
         do {
             # Step 5: Construct the API URL
@@ -60,7 +60,7 @@ function Get-FabricSparkSettings {
 
             # Step 6: Make the API request
             $restParams = @{
-                Headers = $FabricConfig.FabricHeaders
+                Headers = $script:FabricAuthContext.FabricHeaders
                 Uri = $apiEndpointUrl
                 Method = 'Get'
                 ErrorAction = 'Stop'

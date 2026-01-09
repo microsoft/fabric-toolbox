@@ -32,18 +32,16 @@ function Get-FabricCapacityTenantSettingOverrides {
         [string]$capacityId
     )
     try {
-        # Validate authentication token before proceeding.
-        Write-FabricLog -Message "Validating authentication token..." -Level Debug
-        Test-TokenExpired
-        Write-FabricLog -Message "Authentication token is valid." -Level Debug
+        Invoke-FabricAuthCheck -ThrowOnFailure
+
 
         # Construct the API endpoint URI with filtering logic
         if ($capacityId) {
-            $apiEndpointURI = "{0}/admin/capacities/{1}/delegatedTenantSettingOverrides" -f $FabricConfig.BaseUrl, $capacityId
+            $apiEndpointURI = "{0}/admin/capacities/{1}/delegatedTenantSettingOverrides" -f $script:FabricAuthContext.BaseUrl, $capacityId
             $message = "Successfully retrieved tenant setting overrides for capacity ID: $capacityId."
         }
         else {
-            $apiEndpointURI = "{0}/admin/capacities/delegatedTenantSettingOverrides" -f $FabricConfig.BaseUrl
+            $apiEndpointURI = "{0}/admin/capacities/delegatedTenantSettingOverrides" -f $script:FabricAuthContext.BaseUrl
             $message = "Successfully retrieved capacity tenant setting overrides."
         }
         Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
@@ -52,7 +50,7 @@ function Get-FabricCapacityTenantSettingOverrides {
         # Make the API request
         $apiParams = @{
             BaseURI = $apiEndpointURI
-            Headers = $FabricConfig.FabricHeaders
+            Headers = $script:FabricAuthContext.FabricHeaders
             Method = 'Get'
         }
         $dataItems = Invoke-FabricAPIRequest @apiParams

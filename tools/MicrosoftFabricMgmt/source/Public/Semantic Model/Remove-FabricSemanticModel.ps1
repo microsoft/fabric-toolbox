@@ -35,19 +35,17 @@ function Remove-FabricSemanticModel {
         [string]$SemanticModelId
     )
     try {
-        # Validate authentication token before proceeding.
-        Write-FabricLog -Message "Validating authentication token..." -Level Debug
-        Test-TokenExpired
-        Write-FabricLog -Message "Authentication token is valid." -Level Debug
+        Invoke-FabricAuthCheck -ThrowOnFailure
+
 
         # Construct the API endpoint URI
-        $apiEndpointURI = "{0}/workspaces/{1}/semanticModels/{2}" -f $FabricConfig.BaseUrl, $WorkspaceId, $SemanticModelId
+        $apiEndpointURI = "{0}/workspaces/{1}/semanticModels/{2}" -f $script:FabricAuthContext.BaseUrl, $WorkspaceId, $SemanticModelId
         Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
 
         ## Make the API request
         if ($PSCmdlet.ShouldProcess("Semantic Model '$SemanticModelId' in workspace '$WorkspaceId'", "Remove")) {
             $apiParams = @{
-                Headers = $FabricConfig.FabricHeaders
+                Headers = $script:FabricAuthContext.FabricHeaders
                 BaseURI = $apiEndpointURI
                 Method = 'Delete'
             }

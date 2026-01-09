@@ -47,13 +47,11 @@ function Get-FabricSemanticModelDefinition {
         [string]$SemanticModelFormat = "TMDL"
     )
     try {
-        # Validate authentication token before proceeding.
-        Write-FabricLog -Message "Validating authentication token..." -Level Debug
-        Test-TokenExpired
-        Write-FabricLog -Message "Authentication token is valid." -Level Debug
+        Invoke-FabricAuthCheck -ThrowOnFailure
+
 
         # Construct the API endpoint URI with filtering logic
-        $apiEndpointURI = "{0}/workspaces/{1}/semanticModels/{2}/getDefinition" -f $FabricConfig.BaseUrl, $WorkspaceId, $SemanticModelId
+        $apiEndpointURI = "{0}/workspaces/{1}/semanticModels/{2}/getDefinition" -f $script:FabricAuthContext.BaseUrl, $WorkspaceId, $SemanticModelId
         if ($SemanticModelFormat) {
             $apiEndpointURI = "{0}?format={1}" -f $apiEndpointURI, $SemanticModelFormat
         }
@@ -62,7 +60,7 @@ function Get-FabricSemanticModelDefinition {
         # Make the API request
         $apiParams = @{
             BaseURI = $apiEndpointURI
-            Headers = $FabricConfig.FabricHeaders
+            Headers = $script:FabricAuthContext.FabricHeaders
             Method = 'Post'
         }
         $response = Invoke-FabricAPIRequest @apiParams

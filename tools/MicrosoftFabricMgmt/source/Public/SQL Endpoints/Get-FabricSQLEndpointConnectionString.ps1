@@ -52,13 +52,11 @@ function Get-FabricSQLEndpointConnectionString {
         [string]$PrivateLinkType
     )
     try {
-        # Validate authentication token before proceeding.
-        Write-FabricLog -Message "Validating authentication token..." -Level Debug
-        Test-TokenExpired
-        Write-FabricLog -Message "Authentication token is valid." -Level Debug
+        Invoke-FabricAuthCheck -ThrowOnFailure
+
 
         # Construct the API endpoint URI
-        $apiEndpointURI = "{0}/workspaces/{1}/sqlEndpoints/{2}/connectionString" -f $FabricConfig.BaseUrl, $WorkspaceId, $SQLEndpointId
+        $apiEndpointURI = "{0}/workspaces/{1}/sqlEndpoints/{2}/connectionString" -f $script:FabricAuthContext.BaseUrl, $WorkspaceId, $SQLEndpointId
         # Append query parameters if GuestTenantId or PrivateLinkType are provided
         $queryParams = @()
         if ($GuestTenantId) {
@@ -76,7 +74,7 @@ function Get-FabricSQLEndpointConnectionString {
         # Make the API request
         $apiParams = @{
             BaseURI = $apiEndpointURI
-            Headers = $FabricConfig.FabricHeaders
+            Headers = $script:FabricAuthContext.FabricHeaders
             Method  = 'Get'
         }
         $dataItems = Invoke-FabricAPIRequest @apiParams

@@ -61,7 +61,7 @@ function New-FabricNotebookNEW {
         Write-FabricLog -Message "Token validation completed." -Level Debug
 
         # Step 2: Construct the API URL
-        $apiEndpointUrl = "{0}/workspaces/{1}/notebooks" -f $FabricConfig.BaseUrl, $WorkspaceId
+        $apiEndpointUrl = "{0}/workspaces/{1}/notebooks" -f $script:FabricAuthContext.BaseUrl, $WorkspaceId
         Write-FabricLog -Message "API Endpoint: $apiEndpointUrl" -Level Debug
 
         # Step 3: Construct the request body
@@ -100,7 +100,7 @@ function New-FabricNotebookNEW {
         $action = "Create Notebook '$NotebookName'"
         if ($PSCmdlet.ShouldProcess($target, $action)) {
             $response = Invoke-RestMethod `
-                -Headers $FabricConfig.FabricHeaders `
+                -Headers $script:FabricAuthContext.FabricHeaders `
                 -Uri $apiEndpointUrl `
                 -Method Post `
                 -Body $bodyJson `

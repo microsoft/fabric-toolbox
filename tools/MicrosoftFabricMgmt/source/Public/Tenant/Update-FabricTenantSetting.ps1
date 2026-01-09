@@ -78,10 +78,8 @@ function Update-FabricTenantSetting {
         [System.Object]$Properties
     )
     try {
-        # Validate authentication token
-        Write-FabricLog -Message "Validating authentication token..." -Level Debug
-        Test-TokenExpired
-        Write-FabricLog -Message "Authentication token is valid." -Level Debug
+        Invoke-FabricAuthCheck -ThrowOnFailure
+
 
         # Validate Security Groups if provided
         if ($EnabledSecurityGroups) {
@@ -110,7 +108,7 @@ function Update-FabricTenantSetting {
         }
 
         # Construct API endpoint URL
-        $apiEndpointURI = "{0}/admin/tenantsettings/{1}/update" -f $FabricConfig.BaseUrl, $TenantSettingName
+        $apiEndpointURI = "{0}/admin/tenantsettings/{1}/update" -f $script:FabricAuthContext.BaseUrl, $TenantSettingName
         Write-FabricLog -Message "Constructed API Endpoint: $apiEndpointURI" -Level Debug
 
         # Construct request body
@@ -150,7 +148,7 @@ function Update-FabricTenantSetting {
         if ($PSCmdlet.ShouldProcess("tenant setting '$TenantSettingName'", "Update tenant setting")) {
             $response = Invoke-FabricAPIRequest `
                 -BaseURI $apiEndpointURI `
-                -Headers $FabricConfig.FabricHeaders `
+                -Headers $script:FabricAuthContext.FabricHeaders `
                 -Method Post `
                 -Body $bodyJson
 

@@ -27,19 +27,17 @@ function Remove-FabricTag {
         [string]$TagId
     )
     try {
-        # Validate authentication token before proceeding.
-        Write-FabricLog -Message "Validating token..." -Level Debug
-        Test-TokenExpired
-        Write-FabricLog -Message "Token validation completed." -Level Debug
+        Invoke-FabricAuthCheck -ThrowOnFailure
+
 
         # Construct the API endpoint URI
-        $apiEndpointURI = "{0}/v1/admin/tags/{1}" -f $FabricConfig.BaseUrl, $TagId
+        $apiEndpointURI = "{0}/v1/admin/tags/{1}" -f $script:FabricAuthContext.BaseUrl, $TagId
         Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
 
         # Make the API request
         if ($PSCmdlet.ShouldProcess("tag '$TagId'", "Remove")) {
             $apiParams = @{
-                Headers = $FabricConfig.FabricHeaders
+                Headers = $script:FabricAuthContext.FabricHeaders
                 BaseURI = $apiEndpointURI
                 Method = 'Delete'
             }
