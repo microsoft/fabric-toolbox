@@ -1,4 +1,4 @@
-﻿<#
+<#
 .SYNOPSIS
 Updates the role assignment for a specific principal in a Fabric workspace.
 
@@ -75,7 +75,7 @@ function Update-FabricWorkspaceRoleAssignment {
             $response = Invoke-FabricAPIRequest @apiParams
 
             # Return the API response
-            Write-FabricLog -Message "Role assignment $WorkspaceRoleAssignmentId updated successfully in workspace '$WorkspaceId'." -Level Info
+            Write-FabricLog -Message "Role assignment $WorkspaceRoleAssignmentId updated successfully in workspace '$WorkspaceId'." -Level Host
             $response
         }
     }

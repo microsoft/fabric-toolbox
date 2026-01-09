@@ -1,4 +1,4 @@
-﻿<#
+<#
 .SYNOPSIS
     Creates a new Variable Library in a specified Microsoft Fabric workspace.
 
@@ -104,7 +104,7 @@ function New-FabricVariableLibrary {
             $response = Invoke-FabricAPIRequest @apiParams
 
             # Return the API response
-            Write-FabricLog -Message "Variable Library '$VariableLibraryName' created successfully!" -Level Info
+            Write-FabricLog -Message "Variable Library '$VariableLibraryName' created successfully!" -Level Host
             return $response
         }
     }

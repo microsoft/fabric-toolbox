@@ -1,4 +1,4 @@
-﻿<#
+<#
 .SYNOPSIS
     Removes an SparkJobDefinition from a specified Microsoft Fabric workspace.
 
@@ -51,7 +51,7 @@ function Remove-FabricSparkJobDefinition {
             $response = Invoke-FabricAPIRequest @apiParams
 
             # Return the API response
-            Write-FabricLog -Message "Spark Job Definition '$SparkJobDefinitionId' deleted successfully from workspace '$WorkspaceId'." -Level Info
+            Write-FabricLog -Message "Spark Job Definition '$SparkJobDefinitionId' deleted successfully from workspace '$WorkspaceId'." -Level Host
             return $response
         }
     }

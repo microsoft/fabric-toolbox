@@ -1,4 +1,4 @@
-﻿<#
+<#
 .SYNOPSIS
     Creates a new Eventhouse in a specified Microsoft Fabric workspace.
 
@@ -132,7 +132,7 @@ function New-FabricEventhouse {
             $response = Invoke-FabricAPIRequest @apiParams
 
             # Return the API response
-            Write-FabricLog -Message "Eventhouse '$EventhouseName' created successfully!" -Level Info
+            Write-FabricLog -Message "Eventhouse '$EventhouseName' created successfully!" -Level Host
             $response
         }
     }

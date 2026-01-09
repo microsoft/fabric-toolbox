@@ -1,4 +1,4 @@
-﻿<#
+<#
 .SYNOPSIS
 Creates a new Lakehouse in a specified Microsoft Fabric workspace.
 
@@ -88,7 +88,7 @@ function New-FabricLakehouse {
             $response = Invoke-FabricAPIRequest @apiParams
 
             # Return the API response
-            Write-FabricLog -Message "Lakehouse '$LakehouseName' created successfully!" -Level Info
+            Write-FabricLog -Message "Lakehouse '$LakehouseName' created successfully!" -Level Host
             return $response
         }
     }

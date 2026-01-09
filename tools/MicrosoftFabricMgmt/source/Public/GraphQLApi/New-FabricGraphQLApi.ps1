@@ -1,4 +1,4 @@
-﻿<#
+<#
 .SYNOPSIS
     Creates a new GraphQL API resource in a specified Microsoft Fabric workspace.
 
@@ -145,7 +145,7 @@ function New-FabricGraphQLApi {
             $response = Invoke-FabricAPIRequest @apiParams
 
             # Return the API response
-            Write-FabricLog -Message "GraphQLApi '$GraphQLApiName' created successfully!" -Level Info
+            Write-FabricLog -Message "GraphQLApi '$GraphQLApiName' created successfully!" -Level Host
             $response
         }
     }

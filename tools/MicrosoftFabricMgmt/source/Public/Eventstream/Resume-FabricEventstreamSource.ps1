@@ -1,4 +1,4 @@
-﻿<#
+<#
 .SYNOPSIS
 Resumes a source of an Eventstream in a Microsoft Fabric workspace.
 
@@ -59,7 +59,7 @@ function Resume-FabricEventstreamSource {
             $response = Invoke-FabricAPIRequest @apiParams
 
             # Return the API response
-            Write-FabricLog -Message "Eventstream '$EventstreamId' Source '$SourceId' resumed successfully!" -Level Info
+            Write-FabricLog -Message "Eventstream '$EventstreamId' Source '$SourceId' resumed successfully!" -Level Host
             $response
         }
     }

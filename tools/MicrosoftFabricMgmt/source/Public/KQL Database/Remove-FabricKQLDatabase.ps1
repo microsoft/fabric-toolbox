@@ -1,4 +1,4 @@
-﻿<#
+<#
 .SYNOPSIS
 Deletes an KQLDatabase from a specified workspace in Microsoft Fabric.
 
@@ -55,7 +55,7 @@ function Remove-FabricKQLDatabase {
             $response = Invoke-FabricAPIRequest @apiParams
 
             # Return the API response
-            Write-FabricLog -Message "KQLDatabase '$KQLDatabaseId' deleted successfully from workspace '$WorkspaceId'." -Level Info
+            Write-FabricLog -Message "KQLDatabase '$KQLDatabaseId' deleted successfully from workspace '$WorkspaceId'." -Level Host
             return $response
         }
     }

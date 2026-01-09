@@ -1,4 +1,4 @@
-﻿<#
+<#
 .SYNOPSIS
     Removes a tag from Microsoft Fabric.
 
@@ -44,7 +44,7 @@ function Remove-FabricTag {
             $response = Invoke-FabricAPIRequest @apiParams
 
             # Return the API response
-            Write-FabricLog -Message "Tag '$TagId' deleted successfully." -Level Info
+            Write-FabricLog -Message "Tag '$TagId' deleted successfully." -Level Host
             return $response
         }
 

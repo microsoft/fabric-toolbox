@@ -1,4 +1,4 @@
-﻿<#
+<#
 .SYNOPSIS
     Updates an existing tag in Microsoft Fabric.
 
@@ -62,7 +62,7 @@ function Update-FabricTag {
             $response = Invoke-FabricAPIRequest @apiParams
 
             # Return the API response
-            Write-FabricLog -Message "Tag '$TagName' updated successfully!" -Level Info
+            Write-FabricLog -Message "Tag '$TagName' updated successfully!" -Level Host
             return $response
         }
     }

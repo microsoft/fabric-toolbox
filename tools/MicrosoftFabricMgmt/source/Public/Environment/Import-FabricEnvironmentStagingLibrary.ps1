@@ -1,4 +1,4 @@
-﻿<#
+<#
 .SYNOPSIS
 Uploads a library to the staging environment in a Microsoft Fabric workspace.
 
@@ -53,7 +53,7 @@ function Import-FabricEnvironmentStagingLibrary {
             $response = Invoke-FabricAPIRequest @apiParams
 
             # Return the API response
-            Write-FabricLog -Message "Environment staging library uploaded successfully!" -Level Info
+            Write-FabricLog -Message "Environment staging library uploaded successfully!" -Level Host
             $response
         }
     }

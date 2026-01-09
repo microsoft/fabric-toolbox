@@ -1,4 +1,4 @@
-﻿<#
+<#
 .SYNOPSIS
 Loads one or more data files (or all files in a folder) into a Lakehouse table within a Microsoft Fabric workspace.
 
@@ -142,7 +142,7 @@ function Write-FabricLakehouseTableData {
             $response = Invoke-FabricAPIRequest @apiParams
 
             # Return the API response
-            Write-FabricLog -Message "Table '$TableName' loaded successfully into Lakehouse '$LakehouseId' in Workspace '$WorkspaceId'." -Level Info
+            Write-FabricLog -Message "Table '$TableName' loaded successfully into Lakehouse '$LakehouseId' in Workspace '$WorkspaceId'." -Level Host
             return $response
         }
     }

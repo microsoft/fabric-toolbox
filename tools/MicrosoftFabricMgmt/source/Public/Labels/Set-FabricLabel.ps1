@@ -1,4 +1,4 @@
-﻿<#
+<#
 .SYNOPSIS
 Assigns a label in bulk to multiple items in Microsoft Fabric.
 
@@ -90,7 +90,7 @@ function Set-FabricLabel {
             $response = Invoke-FabricAPIRequest @apiParams
 
             # Return the API response
-            Write-FabricLog -Message "Bulk label assignment completed successfully for $($Items.Count) item(s) with LabelId '$LabelId'." -Level Info
+            Write-FabricLog -Message "Bulk label assignment completed successfully for $($Items.Count) item(s) with LabelId '$LabelId'." -Level Host
             return $response
         }
     }

@@ -1,4 +1,4 @@
-﻿<#
+<#
 .SYNOPSIS
     Creates a new folder in a specified Microsoft Fabric workspace.
 
@@ -99,7 +99,7 @@ function New-FabricFolder {
             $response = Invoke-FabricAPIRequest @apiParams
 
             # Return the API response
-            Write-FabricLog -Message "Folder created successfully!" -Level Info
+            Write-FabricLog -Message "Folder created successfully!" -Level Host
             $response
         }
 

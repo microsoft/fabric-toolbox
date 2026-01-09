@@ -1,4 +1,4 @@
-﻿<#
+<#
 .SYNOPSIS
     Updates an existing Apache Airflow Job in a Microsoft Fabric workspace.
 
@@ -75,7 +75,7 @@ function Update-FabricApacheAirflowJob {
                 Body = $bodyJson
             }
             $response = Invoke-FabricAPIRequest @apiParams
-            Write-FabricLog -Message "Apache Airflow Job '$ApacheAirflowJobName' updated successfully!" -Level Info
+            Write-FabricLog -Message "Apache Airflow Job '$ApacheAirflowJobName' updated successfully!" -Level Host
             $response
         }
     }

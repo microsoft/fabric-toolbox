@@ -1,4 +1,4 @@
-﻿<#
+<#
 .SYNOPSIS
 Updates a Fabric domain by its ID.
 
@@ -86,7 +86,7 @@ function Update-FabricDomain {
             }
             $response = Invoke-FabricAPIRequest @apiParams
 
-            Write-FabricLog -Message "Domain '$DomainName' updated successfully!" -Level Info
+            Write-FabricLog -Message "Domain '$DomainName' updated successfully!" -Level Host
             $response
         }
     }

@@ -1,4 +1,4 @@
-﻿<#
+<#
 .SYNOPSIS
 Provisions an identity for a Fabric workspace.
 
@@ -45,7 +45,7 @@ function Add-FabricWorkspaceIdentity {
         $response = Invoke-FabricAPIRequest @apiParams
 
         # Return the API response.
-        Write-FabricLog -Message "Workspace identity was successfully provisioned for workspace '$WorkspaceId'." -Level Info
+        Write-FabricLog -Message "Workspace identity was successfully provisioned for workspace '$WorkspaceId'." -Level Host
         $response
 
     }

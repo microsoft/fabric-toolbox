@@ -1,4 +1,4 @@
-﻿<#
+<#
 .SYNOPSIS
 Removes labels in bulk from items in Microsoft Fabric.
 
@@ -59,7 +59,7 @@ function Remove-FabricLabel {
             $response = Invoke-FabricAPIRequest @apiParams
 
             # Return the API response
-            Write-FabricLog -Message "Bulk label removal completed successfully." -Level Info
+            Write-FabricLog -Message "Bulk label removal completed successfully." -Level Host
             return $response
         }
     }

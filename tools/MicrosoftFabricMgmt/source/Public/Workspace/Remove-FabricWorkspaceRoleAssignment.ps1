@@ -1,4 +1,4 @@
-﻿<#
+<#
 .SYNOPSIS
 Removes a role assignment from a Fabric workspace.
 
@@ -55,7 +55,7 @@ function Remove-FabricWorkspaceRoleAssignment {
             $response = Invoke-FabricAPIRequest @apiParams
 
             # Return the API response
-            Write-FabricLog -Message "Role assignment '$WorkspaceRoleAssignmentId' successfully removed from workspace '$WorkspaceId'." -Level Info
+            Write-FabricLog -Message "Role assignment '$WorkspaceRoleAssignmentId' successfully removed from workspace '$WorkspaceId'." -Level Host
             $response
         }
     }

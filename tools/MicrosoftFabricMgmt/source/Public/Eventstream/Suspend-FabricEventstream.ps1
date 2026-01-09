@@ -1,4 +1,4 @@
-﻿<#
+<#
 .SYNOPSIS
 Suspends (pauses) an existing Eventstream in a Microsoft Fabric workspace.
 
@@ -49,7 +49,7 @@ function Suspend-FabricEventstream {
             $response = Invoke-FabricAPIRequest @apiParams
 
             # Return the API response
-            Write-FabricLog -Message "Eventstream '$EventstreamId' paused successfully!" -Level Info
+            Write-FabricLog -Message "Eventstream '$EventstreamId' paused successfully!" -Level Host
             $response
         }
     }

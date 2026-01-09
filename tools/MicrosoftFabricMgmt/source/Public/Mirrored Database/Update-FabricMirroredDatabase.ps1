@@ -1,4 +1,4 @@
-﻿<#
+<#
 .SYNOPSIS
 Updates the properties of a Fabric MirroredDatabase.
 
@@ -86,7 +86,7 @@ function Update-FabricMirroredDatabase {
             $response = Invoke-FabricAPIRequest @apiParams
 
             # Return the API response
-            Write-FabricLog -Message "Mirrored Database '$MirroredDatabaseName' updated successfully!" -Level Info
+            Write-FabricLog -Message "Mirrored Database '$MirroredDatabaseName' updated successfully!" -Level Host
             return $response
         }
     }

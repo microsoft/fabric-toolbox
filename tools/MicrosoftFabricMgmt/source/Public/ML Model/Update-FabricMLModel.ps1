@@ -1,4 +1,4 @@
-﻿<#
+<#
 .SYNOPSIS
     Updates an existing ML Model in a specified Microsoft Fabric workspace.
 
@@ -71,7 +71,7 @@ function Update-FabricMLModel {
             $response = Invoke-FabricAPIRequest @apiParams
 
             # Return the API response
-            Write-FabricLog -Message "ML Model '$MLModelId' updated successfully!" -Level Info
+            Write-FabricLog -Message "ML Model '$MLModelId' updated successfully!" -Level Host
             return $response
         }
     }

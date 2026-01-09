@@ -1,4 +1,4 @@
-﻿<#
+<#
 .SYNOPSIS
     Updates an existing Spark custom pool in a specified Microsoft Fabric workspace.
 
@@ -140,7 +140,7 @@ function Update-FabricSparkCustomPool {
             $response = Invoke-FabricAPIRequest @apiParams
 
             # Return the API response
-            Write-FabricLog -Message "Spark Custom Pool '$SparkCustomPoolName' updated successfully!" -Level Info
+            Write-FabricLog -Message "Spark Custom Pool '$SparkCustomPoolName' updated successfully!" -Level Host
             return $response
         }
     }

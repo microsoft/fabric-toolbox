@@ -1,4 +1,4 @@
-﻿<#
+<#
 .SYNOPSIS
 Creates a new KQLQueryset in a specified Microsoft Fabric workspace.
 
@@ -140,7 +140,7 @@ function New-FabricKQLQueryset {
             $response = Invoke-FabricAPIRequest @apiParams
 
             # Return the API response
-            Write-FabricLog -Message "KQLQueryset '$KQLQuerysetName' created successfully!" -Level Info
+            Write-FabricLog -Message "KQLQueryset '$KQLQuerysetName' created successfully!" -Level Host
             return $response
         }
 

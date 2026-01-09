@@ -1,4 +1,4 @@
-﻿<#
+<#
 .SYNOPSIS
 Updates the properties of a Fabric KQLDatabase.
 
@@ -89,7 +89,7 @@ function Update-FabricKQLDatabase {
             $response = Invoke-FabricAPIRequest @apiParams
 
             # Return the API response
-            Write-FabricLog -Message "KQLDatabase '$KQLDatabaseName' updated successfully!" -Level Info
+            Write-FabricLog -Message "KQLDatabase '$KQLDatabaseName' updated successfully!" -Level Host
             return $response
         }
     }

@@ -1,4 +1,4 @@
-﻿<#
+<#
 .SYNOPSIS
     Updates an existing paginated report in a specified Microsoft Fabric workspace.
 
@@ -83,7 +83,7 @@ function Update-FabricPaginatedReport {
             $response = Invoke-FabricAPIRequest @apiParams
 
             # Return the API response
-            Write-FabricLog -Message "Paginated Report '$PaginatedReportName' updated successfully!" -Level Info
+            Write-FabricLog -Message "Paginated Report '$PaginatedReportName' updated successfully!" -Level Host
             return $response
         }
     }

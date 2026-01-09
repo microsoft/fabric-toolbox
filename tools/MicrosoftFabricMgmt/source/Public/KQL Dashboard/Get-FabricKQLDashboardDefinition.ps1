@@ -1,4 +1,4 @@
-﻿
+
 <#
 .SYNOPSIS
 Retrieves the definition of a KQLDashboard from a specific workspace in Microsoft Fabric.
@@ -69,7 +69,7 @@ function Get-FabricKQLDashboardDefinition {
         $response = Invoke-FabricAPIRequest @apiParams
 
         # Return the API response
-        Write-FabricLog -Message "KQLDashboard '$KQLDashboardId' definition retrieved successfully!" -Level Info
+        Write-FabricLog -Message "KQLDashboard '$KQLDashboardId' definition retrieved successfully!" -Level Host
         return $response
     }
     catch {

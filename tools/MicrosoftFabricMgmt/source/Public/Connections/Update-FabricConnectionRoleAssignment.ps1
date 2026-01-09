@@ -1,4 +1,4 @@
-﻿<#
+<#
 .SYNOPSIS
 Updates the role assignment for a principal in a Fabric Connection.
 
@@ -64,7 +64,7 @@ function Update-FabricConnectionRoleAssignment {
                 Body = $bodyJson
             }
             $response = Invoke-FabricAPIRequest @apiParams
-            Write-FabricLog -Message "Role assignment $ConnectionRoleAssignmentId updated successfully in Connection '$ConnectionId'." -Level Info
+            Write-FabricLog -Message "Role assignment $ConnectionRoleAssignmentId updated successfully in Connection '$ConnectionId'." -Level Host
             $response
         }
     }

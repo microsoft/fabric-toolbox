@@ -1,4 +1,4 @@
-﻿<#
+<#
 .SYNOPSIS
 Refreshes metadata for a SQL Endpoint.
 
@@ -67,11 +67,11 @@ function Update-FabricSQLEndpointMetadata {
             $response = Invoke-FabricAPIRequest @apiParams
 
             if ($WaitForCompletion) {
-                Write-FabricLog -Message "Refresh SQL Endpoint metadata for SQL Endpoint '$($SQLEndpointId)' has completed." -Level Info
+                Write-FabricLog -Message "Refresh SQL Endpoint metadata for SQL Endpoint '$($SQLEndpointId)' has completed." -Level Host
                 Write-FabricLog -Message "Job details: $($response | ConvertTo-Json -Depth 5)" -Level Debug
             }
             else {
-                Write-FabricLog -Message "Refresh SQL Endpoint metadata for SQL Endpoint '$($SQLEndpointId)' has been started and is running asynchronously." -Level Info
+                Write-FabricLog -Message "Refresh SQL Endpoint metadata for SQL Endpoint '$($SQLEndpointId)' has been started and is running asynchronously." -Level Host
                 Write-FabricLog -Message "You can monitor the job status using the job ID from the response." -Level Debug
             }
             # Return the API response

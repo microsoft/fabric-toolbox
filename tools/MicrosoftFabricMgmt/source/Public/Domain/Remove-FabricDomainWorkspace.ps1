@@ -1,4 +1,4 @@
-﻿
+
 <#
 .SYNOPSIS
 Unassign workspaces from a specified Fabric domain.
@@ -75,7 +75,7 @@ function Remove-FabricDomainWorkspace {
             }
             $response = Invoke-FabricAPIRequest @apiParams
 
-            Write-FabricLog -Message "Successfully unassigned workspaces to the domain with ID '$DomainId'." -Level Info
+            Write-FabricLog -Message "Successfully unassigned workspaces to the domain with ID '$DomainId'." -Level Host
             $response
         }
     }

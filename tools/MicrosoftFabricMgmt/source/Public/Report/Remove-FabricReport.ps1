@@ -1,4 +1,4 @@
-﻿<#
+<#
 .SYNOPSIS
     Removes an Report from a specified Microsoft Fabric workspace.
 
@@ -52,7 +52,7 @@ function Remove-FabricReport {
             $response = Invoke-FabricAPIRequest @apiParams
 
             # Return the API response
-            Write-FabricLog -Message "Report '$ReportId' deleted successfully from workspace '$WorkspaceId'." -Level Info
+            Write-FabricLog -Message "Report '$ReportId' deleted successfully from workspace '$WorkspaceId'." -Level Host
             return $response
         }
     }

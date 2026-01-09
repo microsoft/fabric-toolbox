@@ -1,4 +1,4 @@
-﻿<#
+<#
 .SYNOPSIS
     Creates a new OneLake Shortcut in a Microsoft Fabric workspace.
 
@@ -216,7 +216,7 @@ function New-FabricOneLakeShortcut {
             $response = Invoke-FabricAPIRequest @apiParams
 
             # Return the API response
-            Write-FabricLog -Message "OneLake Shortcut created successfully!" -Level Info
+            Write-FabricLog -Message "OneLake Shortcut created successfully!" -Level Host
             return $response
         }
     }

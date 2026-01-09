@@ -1,4 +1,4 @@
-﻿<#
+<#
 .SYNOPSIS
 Updates the properties of a Fabric Environment.
 
@@ -84,7 +84,7 @@ function Update-FabricEnvironment {
             $response = Invoke-FabricAPIRequest @apiParams
 
             # Return the API response
-            Write-FabricLog -Message "Environment '$EnvironmentName' updated successfully!" -Level Info
+            Write-FabricLog -Message "Environment '$EnvironmentName' updated successfully!" -Level Host
             $response
         }
     }

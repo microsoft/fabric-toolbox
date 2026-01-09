@@ -1,4 +1,4 @@
-﻿<#
+<#
 .SYNOPSIS
     Creates a new copy job in a specified Microsoft Fabric workspace.
 
@@ -133,7 +133,7 @@ function New-FabricCopyJob {
             }
             $response = Invoke-FabricAPIRequest @apiParams
 
-            Write-FabricLog -Message "Copy Job created successfully!" -Level Info
+            Write-FabricLog -Message "Copy Job created successfully!" -Level Host
             $response
         }
 

@@ -1,4 +1,4 @@
-﻿<#
+<#
 .SYNOPSIS
     Deletes a warehouse snapshot from a specified Microsoft Fabric workspace.
 
@@ -52,7 +52,7 @@ function Remove-FabricWarehouseSnapshot {
             $response = Invoke-FabricAPIRequest @apiParams
 
             # Return the API response
-            Write-FabricLog -Message "Warehouse Snapshot '$WarehouseSnapshotId' deleted successfully from workspace '$WorkspaceId'." -Level Info
+            Write-FabricLog -Message "Warehouse Snapshot '$WarehouseSnapshotId' deleted successfully from workspace '$WorkspaceId'." -Level Host
             return $response
         }
 

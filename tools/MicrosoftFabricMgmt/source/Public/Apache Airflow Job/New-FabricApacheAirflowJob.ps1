@@ -1,4 +1,4 @@
-﻿<#
+<#
 .SYNOPSIS
     Creates a new Apache Airflow Job in a specified Microsoft Fabric workspace.
 
@@ -133,7 +133,7 @@ function New-FabricApacheAirflowJob {
                 Body = $bodyJson
             }
             $response = Invoke-FabricAPIRequest @apiParams
-            Write-FabricLog -Message "Apache Airflow Job created successfully!" -Level Info
+            Write-FabricLog -Message "Apache Airflow Job created successfully!" -Level Host
             $response
         }
 

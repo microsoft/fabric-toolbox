@@ -1,4 +1,4 @@
-﻿<#
+<#
 .SYNOPSIS
     Removes a Spark custom pool from a specified Microsoft Fabric workspace.
 
@@ -52,7 +52,7 @@ function Remove-FabricSparkCustomPool {
             $response = Invoke-FabricAPIRequest @apiParams
 
             # Return the API response
-            Write-FabricLog -Message "Spark Custom Pool '$SparkCustomPoolId' deleted successfully from workspace '$WorkspaceId'." -Level Info
+            Write-FabricLog -Message "Spark Custom Pool '$SparkCustomPoolId' deleted successfully from workspace '$WorkspaceId'." -Level Host
             return $response
         }
     }

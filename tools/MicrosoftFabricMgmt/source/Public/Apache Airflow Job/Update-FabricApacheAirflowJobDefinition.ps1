@@ -1,4 +1,4 @@
-﻿<#
+<#
 .SYNOPSIS
 Updates the definition or metadata of an Apache Airflow Job in a Microsoft Fabric workspace.
 
@@ -126,7 +126,7 @@ function Update-FabricApacheAirflowJobDefinition {
                 Body = $bodyJson
             }
             $response = Invoke-FabricAPIRequest @apiParams
-            Write-FabricLog -Message "Successfully updated the definition for Apache Airflow Job with ID '$ApacheAirflowJobId' in workspace '$WorkspaceId'." -Level Info
+            Write-FabricLog -Message "Successfully updated the definition for Apache Airflow Job with ID '$ApacheAirflowJobId' in workspace '$WorkspaceId'." -Level Host
             $response
         }
     }

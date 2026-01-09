@@ -1,4 +1,4 @@
-﻿<#
+<#
 .SYNOPSIS
     Updates an existing Copy Job in a specified Microsoft Fabric workspace.
 
@@ -78,7 +78,7 @@ function Update-FabricCopyJob {
             }
             $response = Invoke-FabricAPIRequest @apiParams
 
-            Write-FabricLog -Message "Copy Job '$CopyJobName' updated successfully!" -Level Info
+            Write-FabricLog -Message "Copy Job '$CopyJobName' updated successfully!" -Level Host
             $response
         }
     }

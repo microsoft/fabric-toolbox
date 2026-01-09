@@ -1,4 +1,4 @@
-﻿<#
+<#
 .SYNOPSIS
     Creates a new Report in a specified Microsoft Fabric workspace.
 
@@ -94,7 +94,7 @@ function New-FabricReport {
             $response = Invoke-FabricAPIRequest @apiParams
 
             # Return the API response
-            Write-FabricLog -Message "Report '$ReportName' created successfully!" -Level Info
+            Write-FabricLog -Message "Report '$ReportName' created successfully!" -Level Host
             return $response
         }
     }

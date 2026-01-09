@@ -1,4 +1,4 @@
-﻿<#
+<#
 .SYNOPSIS
     Creates a new Spark custom pool in a specified Microsoft Fabric workspace.
 
@@ -133,7 +133,7 @@ function New-FabricSparkCustomPool {
             $response = Invoke-FabricAPIRequest @apiParams
 
             # Return the API response
-            Write-FabricLog -Message "SparkCustomPool '$SparkCustomPoolName' created successfully!" -Level Info
+            Write-FabricLog -Message "SparkCustomPool '$SparkCustomPoolName' created successfully!" -Level Host
             return $response
         }
     }

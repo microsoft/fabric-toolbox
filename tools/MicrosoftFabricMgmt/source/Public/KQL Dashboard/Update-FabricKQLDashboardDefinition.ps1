@@ -1,4 +1,4 @@
-﻿<#
+<#
 .SYNOPSIS
 Updates the definition of a KQLDashboard in a Microsoft Fabric workspace.
 
@@ -127,7 +127,7 @@ function Update-FabricKQLDashboardDefinition {
             $response = Invoke-FabricAPIRequest @apiParams
 
             # Return the API response
-            Write-FabricLog -Message "Successfully updated the definition for KQL Dashboard with ID '$KQLDashboardId' in workspace '$WorkspaceId'." -Level Info
+            Write-FabricLog -Message "Successfully updated the definition for KQL Dashboard with ID '$KQLDashboardId' in workspace '$WorkspaceId'." -Level Host
             return $response
         }
     }

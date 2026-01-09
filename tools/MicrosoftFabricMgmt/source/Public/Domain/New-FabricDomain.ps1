@@ -1,4 +1,4 @@
-﻿<#
+<#
 .SYNOPSIS
 Creates a new Fabric domain.
 
@@ -78,7 +78,7 @@ function New-FabricDomain {
             }
             $response = Invoke-FabricAPIRequest @apiParams
 
-            Write-FabricLog -Message "Domain created successfully!" -Level Info
+            Write-FabricLog -Message "Domain created successfully!" -Level Host
             $response
         }
     }

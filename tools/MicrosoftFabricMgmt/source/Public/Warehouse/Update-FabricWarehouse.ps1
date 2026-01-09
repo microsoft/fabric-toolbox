@@ -1,4 +1,4 @@
-﻿<#
+<#
 .SYNOPSIS
     Updates an existing warehouse in a specified Microsoft Fabric workspace.
 
@@ -81,7 +81,7 @@ function Update-FabricWarehouse {
         if ($PSCmdlet.ShouldProcess("Warehouse '$WarehouseId' to '$WarehouseName' in workspace '$WorkspaceId'", 'Update')) {
             $response = Invoke-FabricAPIRequest @apiParams
             # Return the API response
-            Write-FabricLog -Message "Warehouse '$WarehouseName' updated successfully!" -Level Info
+            Write-FabricLog -Message "Warehouse '$WarehouseName' updated successfully!" -Level Host
             return $response
         }
     }

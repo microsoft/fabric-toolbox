@@ -1,4 +1,4 @@
-﻿<#
+<#
 .SYNOPSIS
 Creates a new MirroredDatabase in a specified Microsoft Fabric workspace.
 
@@ -138,7 +138,7 @@ function New-FabricMirroredDatabase {
             $response = Invoke-FabricAPIRequest @apiParams
 
             # Return the API response
-            Write-FabricLog -Message "Mirrored Database '$MirroredDatabaseName' created successfully!" -Level Info
+            Write-FabricLog -Message "Mirrored Database '$MirroredDatabaseName' created successfully!" -Level Host
             return $response
         }
 

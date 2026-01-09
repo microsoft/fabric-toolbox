@@ -1,4 +1,4 @@
-﻿<#
+<#
 .SYNOPSIS
 Deletes an KQLDashboard from a specified workspace in Microsoft Fabric.
 
@@ -54,7 +54,7 @@ function Remove-FabricKQLDashboard {
             $response = Invoke-FabricAPIRequest @apiParams
 
             # Return the API response
-            Write-FabricLog -Message "KQLDashboard '$KQLDashboardId' deleted successfully from workspace '$WorkspaceId'." -Level Info
+            Write-FabricLog -Message "KQLDashboard '$KQLDashboardId' deleted successfully from workspace '$WorkspaceId'." -Level Host
             return $response
         }
     }

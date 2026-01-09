@@ -1,4 +1,4 @@
-﻿<#
+<#
 .SYNOPSIS
 Deletes a role assignment from a specified Fabric Connection.
 
@@ -51,7 +51,7 @@ function Remove-FabricConnectionRoleAssignment {
                 Method = 'Delete'
             }
             $response = Invoke-FabricAPIRequest @apiParams
-            Write-FabricLog -Message "Role assignment '$ConnectionRoleAssignmentId' successfully removed from Connection '$ConnectionId'." -Level Info
+            Write-FabricLog -Message "Role assignment '$ConnectionRoleAssignmentId' successfully removed from Connection '$ConnectionId'." -Level Host
             $response
         }
     }

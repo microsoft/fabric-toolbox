@@ -1,4 +1,4 @@
-﻿<#
+<#
 .SYNOPSIS
 Updates the definition of a MirroredDatabase in a Microsoft Fabric workspace.
 
@@ -129,7 +129,7 @@ function Update-FabricMirroredDatabaseDefinition {
 
             # Return the API response
 
-            Write-FabricLog -Message "Successfully updated the definition for Mirrored Database with ID '$MirroredDatabaseId' in workspace '$WorkspaceId'." -Level Info
+            Write-FabricLog -Message "Successfully updated the definition for Mirrored Database with ID '$MirroredDatabaseId' in workspace '$WorkspaceId'." -Level Host
             return $response
         }
     }

@@ -1,4 +1,4 @@
-﻿<#
+<#
 .SYNOPSIS
     Updates the definition of a Mounted Data Factory in a Microsoft Fabric workspace.
 
@@ -114,7 +114,7 @@ function Update-FabricMountedDataFactoryDefinition {
             $response = Invoke-FabricAPIRequest @apiParams
 
             # Return the API response
-            Write-FabricLog -Message "Successfully updated the definition for Mounted Data Factory with ID '$MountedDataFactoryId' in workspace '$WorkspaceId'." -Level Info
+            Write-FabricLog -Message "Successfully updated the definition for Mounted Data Factory with ID '$MountedDataFactoryId' in workspace '$WorkspaceId'." -Level Host
             return $response
         }
     }

@@ -1,4 +1,4 @@
-﻿<#
+<#
 .SYNOPSIS
 Creates a new notebook in a specified Microsoft Fabric workspace.
 
@@ -114,11 +114,11 @@ function New-FabricNotebookNEW {
         # Step 5: Handle and log the response
         switch ($statusCode) {
             201 {
-                Write-FabricLog -Message "Notebook '$NotebookName' created successfully!" -Level Info
+                Write-FabricLog -Message "Notebook '$NotebookName' created successfully!" -Level Host
                 return $response
             }
             202 {
-                Write-FabricLog -Message "Notebook '$NotebookName' creation accepted. Provisioning in progress!" -Level Info
+                Write-FabricLog -Message "Notebook '$NotebookName' creation accepted. Provisioning in progress!" -Level Host
 
                 [string]$operationId = $responseHeader["x-ms-operation-id"]
                 [string]$location = $responseHeader["Location"]

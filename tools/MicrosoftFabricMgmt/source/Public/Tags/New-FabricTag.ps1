@@ -1,4 +1,4 @@
-﻿<#
+<#
 .SYNOPSIS
     Creates one or more tags in a Microsoft Fabric workspace.
 
@@ -59,7 +59,7 @@ function New-FabricTag {
             $response = Invoke-FabricAPIRequest @apiParams
 
             # Return the API response
-            Write-FabricLog -Message "Tags created successfully!" -Level Info
+            Write-FabricLog -Message "Tags created successfully!" -Level Host
             return $response
         }
     }

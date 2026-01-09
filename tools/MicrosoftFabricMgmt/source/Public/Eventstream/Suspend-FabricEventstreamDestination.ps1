@@ -1,4 +1,4 @@
-﻿<#
+<#
 .SYNOPSIS
 Pauses (suspends) a destination of an Eventstream in a Microsoft Fabric workspace.
 
@@ -58,7 +58,7 @@ function Suspend-FabricEventstreamDestination {
             $response = Invoke-FabricAPIRequest @apiParams
 
             # Return the API response
-            Write-FabricLog -Message "Eventstream '$EventstreamId' destination '$DestinationId' paused successfully!" -Level Info
+            Write-FabricLog -Message "Eventstream '$EventstreamId' destination '$DestinationId' paused successfully!" -Level Host
             $response
         }
     }

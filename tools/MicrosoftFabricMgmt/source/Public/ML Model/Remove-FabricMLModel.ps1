@@ -1,4 +1,4 @@
-﻿<#
+<#
 .SYNOPSIS
     Removes an ML Model from a specified Microsoft Fabric workspace.
 
@@ -54,7 +54,7 @@ function Remove-FabricMLModel {
             $response = Invoke-FabricAPIRequest @apiParams
 
             # Return the API response
-            Write-FabricLog -Message "ML Model '$MLModelId' deleted successfully from workspace '$WorkspaceId'." -Level Info
+            Write-FabricLog -Message "ML Model '$MLModelId' deleted successfully from workspace '$WorkspaceId'." -Level Host
             return $response
         }
     }

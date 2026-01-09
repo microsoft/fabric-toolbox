@@ -1,4 +1,4 @@
-﻿<#
+<#
 .SYNOPSIS
 Updates the definition of a KQLQueryset in a Microsoft Fabric workspace.
 
@@ -128,7 +128,7 @@ function Update-FabricKQLQuerysetDefinition {
             $response = Invoke-FabricAPIRequest @apiParams
 
             # Return the API response
-            Write-FabricLog -Message "Successfully updated the definition for KQL Queryset with ID '$KQLQuerysetId' in workspace '$WorkspaceId'." -Level Info
+            Write-FabricLog -Message "Successfully updated the definition for KQL Queryset with ID '$KQLQuerysetId' in workspace '$WorkspaceId'." -Level Host
             return $response
         }
     }

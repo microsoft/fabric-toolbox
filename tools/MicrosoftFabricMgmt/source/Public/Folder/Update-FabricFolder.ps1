@@ -1,4 +1,4 @@
-﻿<#
+<#
 .SYNOPSIS
     Updates the name and optionally the description of a folder in a Microsoft Fabric workspace.
 
@@ -91,7 +91,7 @@ function Update-FabricFolder {
             }
             $response = Invoke-FabricAPIRequest @apiParams
             # Return the API response
-            Write-FabricLog -Message "Folder '$FolderName' updated successfully!" -Level Info
+            Write-FabricLog -Message "Folder '$FolderName' updated successfully!" -Level Host
             $response
         }
     }

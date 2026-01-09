@@ -1,4 +1,4 @@
-﻿<#
+<#
 .SYNOPSIS
     Removes a DataPipeline from a specified Microsoft Fabric workspace.
 
@@ -51,7 +51,7 @@ function Remove-FabricDataPipeline {
             }
             $response = Invoke-FabricAPIRequest @apiParams
 
-            Write-FabricLog -Message "DataPipeline '$DataPipelineId' deleted successfully from workspace '$WorkspaceId'." -Level Info
+            Write-FabricLog -Message "DataPipeline '$DataPipelineId' deleted successfully from workspace '$WorkspaceId'." -Level Host
             $response
         }
     }

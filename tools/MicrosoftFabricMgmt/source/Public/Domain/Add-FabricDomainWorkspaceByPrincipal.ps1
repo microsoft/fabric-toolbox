@@ -1,4 +1,4 @@
-﻿<#
+<#
 .SYNOPSIS
 Assigns workspaces to a domain based on principal IDs in Microsoft Fabric.
 
@@ -73,7 +73,7 @@ function Add-FabricDomainWorkspaceByPrincipal {
             }
             $null = Invoke-FabricAPIRequest @apiParams
 
-            Write-FabricLog -Message "Assigning domain workspaces by principal completed successfully!" -Level Info
+            Write-FabricLog -Message "Assigning domain workspaces by principal completed successfully!" -Level Host
         }
     }
     catch {

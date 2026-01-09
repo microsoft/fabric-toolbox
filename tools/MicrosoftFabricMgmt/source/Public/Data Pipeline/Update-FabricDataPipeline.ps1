@@ -1,4 +1,4 @@
-﻿<#
+<#
 .SYNOPSIS
     Updates an existing DataPipeline in a specified Microsoft Fabric workspace.
 
@@ -79,7 +79,7 @@ function Update-FabricDataPipeline {
             }
             $response = Invoke-FabricAPIRequest @apiParams
 
-            Write-FabricLog -Message "Data Pipeline '$DataPipelineName' updated successfully!" -Level Info
+            Write-FabricLog -Message "Data Pipeline '$DataPipelineName' updated successfully!" -Level Host
             $response
         }
     }

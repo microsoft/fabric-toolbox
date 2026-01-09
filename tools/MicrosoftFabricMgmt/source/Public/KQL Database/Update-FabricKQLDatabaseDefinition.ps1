@@ -1,4 +1,4 @@
-﻿<#
+<#
 .SYNOPSIS
 Updates the definition of a KQLDatabase in a Microsoft Fabric workspace.
 
@@ -152,7 +152,7 @@ function Update-FabricKQLDatabaseDefinition {
             $response = Invoke-FabricAPIRequest @apiParams
 
             # Return the API response
-            Write-FabricLog -Message "Successfully updated the definition for KQL Database with ID '$KQLDatabaseId' in workspace '$WorkspaceId'." -Level Info
+            Write-FabricLog -Message "Successfully updated the definition for KQL Database with ID '$KQLDatabaseId' in workspace '$WorkspaceId'." -Level Host
             return $response
         }
     }

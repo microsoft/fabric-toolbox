@@ -1,4 +1,4 @@
-﻿<#
+<#
 .SYNOPSIS
 Creates a new KQLDashboard in a specified Microsoft Fabric workspace.
 
@@ -140,7 +140,7 @@ function New-FabricKQLDashboard {
             $response = Invoke-FabricAPIRequest @apiParams
 
             # Return the API response
-            Write-FabricLog -Message "KQLDashboard '$KQLDashboardName' created successfully!" -Level Info
+            Write-FabricLog -Message "KQLDashboard '$KQLDashboardName' created successfully!" -Level Host
             return $response
         }
     }

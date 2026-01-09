@@ -1,4 +1,4 @@
-﻿<#
+<#
 .SYNOPSIS
     Updates the definition of an existing Reflex in a specified Microsoft Fabric workspace.
 
@@ -114,7 +114,7 @@ function Update-FabricReflexDefinition {
             $response = Invoke-FabricAPIRequest @apiParams
 
             # Return the API response
-            Write-FabricLog -Message "Successfully updated the definition for Reflex with ID '$ReflexId' in workspace '$WorkspaceId'." -Level Info
+            Write-FabricLog -Message "Successfully updated the definition for Reflex with ID '$ReflexId' in workspace '$WorkspaceId'." -Level Host
             return $response
         }
     }

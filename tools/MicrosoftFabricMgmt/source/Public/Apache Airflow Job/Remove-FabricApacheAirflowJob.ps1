@@ -1,4 +1,4 @@
-﻿<#
+<#
 .SYNOPSIS
     Removes an Apache Airflow Job from a specified Microsoft Fabric workspace.
 
@@ -47,7 +47,7 @@ function Remove-FabricApacheAirflowJob {
                 Method = 'Delete'
             }
             $response = Invoke-FabricAPIRequest @apiParams
-            Write-FabricLog -Message "Apache Airflow Job '$ApacheAirflowJobId' deleted successfully from workspace '$WorkspaceId'." -Level Info
+            Write-FabricLog -Message "Apache Airflow Job '$ApacheAirflowJobId' deleted successfully from workspace '$WorkspaceId'." -Level Host
             $response
         }
 

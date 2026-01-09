@@ -1,4 +1,4 @@
-﻿<#
+<#
 .SYNOPSIS
     Updates the definition of an existing Eventhouse in a specified Microsoft Fabric workspace.
 
@@ -110,7 +110,7 @@ function Update-FabricEventhouseDefinition {
             $response = Invoke-FabricAPIRequest @apiParams
 
             # Return the API response
-            Write-FabricLog -Message "Successfully updated the definition for Eventhouse with ID '$EventhouseId' in workspace '$WorkspaceId'." -Level Info
+            Write-FabricLog -Message "Successfully updated the definition for Eventhouse with ID '$EventhouseId' in workspace '$WorkspaceId'." -Level Host
             $response
         }
     }

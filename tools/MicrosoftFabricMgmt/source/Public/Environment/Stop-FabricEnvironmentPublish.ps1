@@ -1,4 +1,4 @@
-﻿<#
+<#
 .SYNOPSIS
 Cancels the publish operation for a specified environment in Microsoft Fabric.
 
@@ -52,7 +52,7 @@ function Stop-FabricEnvironmentPublish {
             $response = Invoke-FabricAPIRequest @apiParams
 
             # Return the API response
-            Write-FabricLog -Message "Publication for environment '$EnvironmentId' has been successfully canceled." -Level Info
+            Write-FabricLog -Message "Publication for environment '$EnvironmentId' has been successfully canceled." -Level Host
             $response
         }
     }

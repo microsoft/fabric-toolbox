@@ -1,4 +1,4 @@
-﻿<#
+<#
 .SYNOPSIS
 Updates the definition of a Eventstream in a Microsoft Fabric workspace.
 
@@ -129,7 +129,7 @@ function Update-FabricEventstreamDefinition {
             $response = Invoke-FabricAPIRequest @apiParams
 
             # Return the API response
-            Write-FabricLog -Message "Successfully updated the definition for Eventstream with ID '$EventstreamId' in workspace '$WorkspaceId'." -Level Info
+            Write-FabricLog -Message "Successfully updated the definition for Eventstream with ID '$EventstreamId' in workspace '$WorkspaceId'." -Level Host
             $response
         }
     }

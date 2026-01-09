@@ -1,4 +1,4 @@
-﻿<#
+<#
 .SYNOPSIS
 Updates the properties of a Fabric Lakehouse.
 
@@ -86,7 +86,7 @@ function Update-FabricLakehouse {
             $response = Invoke-FabricAPIRequest @apiParams
 
             # Return the API response
-            Write-FabricLog -Message "Lakehouse '$LakehouseName' updated successfully!" -Level Info
+            Write-FabricLog -Message "Lakehouse '$LakehouseName' updated successfully!" -Level Host
             return $response
         }
     }

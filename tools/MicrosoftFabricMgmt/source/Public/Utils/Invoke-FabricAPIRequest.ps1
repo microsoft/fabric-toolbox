@@ -1,4 +1,4 @@
-﻿<#
+<#
 .SYNOPSIS
     Sends an HTTP request to a Microsoft Fabric API, supporting pagination and long-running operations.
 
@@ -202,7 +202,7 @@ function Invoke-FabricAPIRequest {
                 }
                 202 {
                     # Handle long-running operations (LROs)
-                    Write-FabricLog -Message "Request accepted. The operation is being processed." -Level Info
+                    Write-FabricLog -Message "Request accepted. The operation is being processed." -Level Host
                     [string]$operationId = $responseHeader["x-ms-operation-id"]
                     [string]$location = $responseHeader["Location"]
                     $retryAfter = $responseHeader["Retry-After"]
@@ -245,7 +245,7 @@ function Invoke-FabricAPIRequest {
                         }
                         else {
                             # If not waiting for completion, return operation tracking information
-                            Write-FabricLog -Message "The operation is running asynchronously." -Level Info
+                            Write-FabricLog -Message "The operation is running asynchronously." -Level Host
                             return [PSCustomObject]@{
                                 OperationId = $operationId
                                 Location    = $location

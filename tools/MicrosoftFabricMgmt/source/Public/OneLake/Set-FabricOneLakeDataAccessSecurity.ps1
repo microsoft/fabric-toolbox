@@ -1,4 +1,4 @@
-﻿<#
+<#
 .SYNOPSIS
     Sets data access security for OneLake items in a Microsoft Fabric workspace.
 
@@ -166,10 +166,10 @@ function Set-FabricOneLakeDataAccessSecurity {
 
             # Return the API response
             if ($DryRun.IsPresent) {
-                Write-FabricLog -Message "Dry run completed. No changes were made." -Level Info
+                Write-FabricLog -Message "Dry run completed. No changes were made." -Level Host
             }
             else {
-                Write-FabricLog -Message "OneLake Data Access Security set up successfully!" -Level Info
+                Write-FabricLog -Message "OneLake Data Access Security set up successfully!" -Level Host
             }
 
             return $response

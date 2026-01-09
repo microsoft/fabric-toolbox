@@ -1,4 +1,4 @@
-﻿<#
+<#
 .SYNOPSIS
     Deletes a connection from Microsoft Fabric.
 
@@ -40,7 +40,7 @@ function Remove-FabricConnection {
                 Method = 'Delete'
             }
             $response = Invoke-FabricAPIRequest @apiParams
-            Write-FabricLog -Message "Connection '$ConnectionId' deleted successfully." -Level Info
+            Write-FabricLog -Message "Connection '$ConnectionId' deleted successfully." -Level Host
             $response
         }
 

@@ -87,7 +87,7 @@ function New-FabricWorkspace {
 
         if ($PSCmdlet.ShouldProcess("Workspace '$WorkspaceName'", 'Create')) {
             $response = Invoke-FabricAPIRequest @apiParams
-            Write-FabricLog -Message "Workspace '$WorkspaceName' created successfully!" -Level Info
+            Write-FabricLog -Message "Workspace '$WorkspaceName' created successfully!" -Level Host
             $response
         }
     }

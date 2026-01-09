@@ -1,4 +1,4 @@
-﻿<#
+<#
 .SYNOPSIS
 Updates the definition of a notebook in a Microsoft Fabric workspace.
 
@@ -134,7 +134,7 @@ function Update-FabricNotebookDefinition {
             $response = Invoke-FabricAPIRequest @apiParams
 
             # Return the API response
-            Write-FabricLog -Message "Successfully updated the definition for Notebook with ID '$NotebookId' in workspace '$WorkspaceId'." -Level Info
+            Write-FabricLog -Message "Successfully updated the definition for Notebook with ID '$NotebookId' in workspace '$WorkspaceId'." -Level Host
             return $response
         }
     }

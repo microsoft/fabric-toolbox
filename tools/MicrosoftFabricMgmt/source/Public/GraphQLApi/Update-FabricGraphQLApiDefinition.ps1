@@ -1,4 +1,4 @@
-﻿<#
+<#
 .SYNOPSIS
     Updates the definition of a GraphQLApi in a Microsoft Fabric workspace.
 
@@ -114,7 +114,7 @@ function Update-FabricGraphQLApiDefinition {
             $response = Invoke-FabricAPIRequest @apiParams
 
             # Return the API response
-            Write-FabricLog -Message "Successfully updated the definition for GraphQLApi with ID '$GraphQLApiId' in workspace '$WorkspaceId'." -Level Info
+            Write-FabricLog -Message "Successfully updated the definition for GraphQLApi with ID '$GraphQLApiId' in workspace '$WorkspaceId'." -Level Host
             $response
         }
     }

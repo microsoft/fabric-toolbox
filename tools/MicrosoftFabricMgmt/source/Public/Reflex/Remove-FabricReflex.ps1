@@ -1,4 +1,4 @@
-﻿<#
+<#
 .SYNOPSIS
     Removes an Reflex from a specified Microsoft Fabric workspace.
 
@@ -52,7 +52,7 @@ function Remove-FabricReflex {
             $response = Invoke-FabricAPIRequest @apiParams
 
             # Return the API response
-            Write-FabricLog -Message "Reflex '$ReflexId' deleted successfully from workspace '$WorkspaceId'." -Level Info
+            Write-FabricLog -Message "Reflex '$ReflexId' deleted successfully from workspace '$WorkspaceId'." -Level Host
             return $response
         }
     }

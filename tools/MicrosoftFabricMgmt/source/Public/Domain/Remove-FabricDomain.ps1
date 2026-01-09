@@ -1,4 +1,4 @@
-﻿<#
+<#
 .SYNOPSIS
 Deletes a Fabric domain by its ID.
 
@@ -46,7 +46,7 @@ function Remove-FabricDomain {
             }
             $response = Invoke-FabricAPIRequest @apiParams
 
-            Write-FabricLog -Message "Domain '$DomainId' deleted successfully!" -Level Info
+            Write-FabricLog -Message "Domain '$DomainId' deleted successfully!" -Level Host
             $response
         }
     }

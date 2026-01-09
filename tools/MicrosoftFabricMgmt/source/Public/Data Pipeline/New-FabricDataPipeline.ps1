@@ -1,4 +1,4 @@
-﻿<#
+<#
 .SYNOPSIS
     Creates a new DataPipeline in a specified Microsoft Fabric workspace.
 
@@ -74,7 +74,7 @@ function New-FabricDataPipeline {
             }
             $response = Invoke-FabricAPIRequest @apiParams
 
-            Write-FabricLog -Message "Data Pipeline created successfully!" -Level Info
+            Write-FabricLog -Message "Data Pipeline created successfully!" -Level Host
             $response
         }
     }

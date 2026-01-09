@@ -1,4 +1,4 @@
-﻿<#
+<#
 .SYNOPSIS
 Updates tenant setting overrides for a specified capacity ID.
 
@@ -128,7 +128,7 @@ function Update-FabricCapacityTenantSettingOverrides {
                 -Body $bodyJson
 
             # Return the API response
-            Write-FabricLog -Message "Successfully updated capacity tenant setting overrides for CapacityId: $CapacityId and SettingTitle: $SettingTitle." -Level Info
+            Write-FabricLog -Message "Successfully updated capacity tenant setting overrides for CapacityId: $CapacityId and SettingTitle: $SettingTitle." -Level Host
             return $response
         }
     }

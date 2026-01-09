@@ -1,4 +1,4 @@
-﻿<#
+<#
 .SYNOPSIS
 Bulk unUnassign roles to principals for workspaces in a Fabric domain.
 
@@ -83,7 +83,7 @@ function Remove-FabricDomainWorkspaceRoleAssignment {
             }
             $response = Invoke-FabricAPIRequest @apiParams
 
-            Write-FabricLog -Message "Bulk role unassignment for domain '$DomainId' completed successfully!" -Level Info
+            Write-FabricLog -Message "Bulk role unassignment for domain '$DomainId' completed successfully!" -Level Host
             $response
         }
     }

@@ -1,4 +1,4 @@
-﻿<#
+<#
 .SYNOPSIS
     Creates a new ML Experiment in a specified Microsoft Fabric workspace.
 
@@ -76,7 +76,7 @@ function New-FabricMLExperiment {
             $response = Invoke-FabricAPIRequest @apiParams
 
             # Return the API response
-            Write-FabricLog -Message "ML Experiment '$MLExperimentName' created successfully!" -Level Info
+            Write-FabricLog -Message "ML Experiment '$MLExperimentName' created successfully!" -Level Host
             return $response
         }
     }

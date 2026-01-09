@@ -1,4 +1,4 @@
-﻿<#
+<#
 .SYNOPSIS
     Resets the OneLake shortcut cache for a specified Microsoft Fabric workspace.
 
@@ -45,7 +45,7 @@ function Reset-FabricOneLakeShortcutCache {
             $response = Invoke-FabricAPIRequest @apiParams
 
             # Return the API response
-            Write-FabricLog -Message "Successfully reset the OneLake shortcut cache for workspace '$WorkspaceId'." -Level Info
+            Write-FabricLog -Message "Successfully reset the OneLake shortcut cache for workspace '$WorkspaceId'." -Level Host
             return $response
         }
     }

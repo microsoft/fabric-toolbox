@@ -1,4 +1,4 @@
-﻿<#
+<#
 .SYNOPSIS
 Assigns a specified role to a principal for a Fabric Connection.
 
@@ -77,7 +77,7 @@ function Add-FabricConnectionRoleAssignment {
             Body = $bodyJson
         }
         $response = Invoke-FabricAPIRequest @apiParams
-        Write-FabricLog -Message "Role '$ConnectionRole' assigned to principal '$PrincipalId' successfully in connection '$ConnectionId'." -Level Info
+        Write-FabricLog -Message "Role '$ConnectionRole' assigned to principal '$PrincipalId' successfully in connection '$ConnectionId'." -Level Host
         $response
     }
     catch {

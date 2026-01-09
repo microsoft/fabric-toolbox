@@ -1,4 +1,4 @@
-﻿<#
+<#
 .SYNOPSIS
 Updates the Spark compute configuration in the staging environment for a given workspace.
 
@@ -151,7 +151,7 @@ function Update-FabricEnvironmentStagingSparkCompute {
             $response = Invoke-FabricAPIRequest @apiParams
 
             # Return the API response
-            Write-FabricLog -Message "Environment staging Spark compute updated successfully!" -Level Info
+            Write-FabricLog -Message "Environment staging Spark compute updated successfully!" -Level Host
             $response
         }
     }

@@ -1,4 +1,4 @@
-﻿<#
+<#
 .SYNOPSIS
 Assigns workspaces to a Fabric domain based on specified capacities.
 
@@ -62,7 +62,7 @@ function Add-FabricDomainWorkspaceByCapacity {
             }
             $response = Invoke-FabricAPIRequest @apiParams
 
-            Write-FabricLog -Message "Assigning domain workspaces by capacity completed successfully!" -Level Info
+            Write-FabricLog -Message "Assigning domain workspaces by capacity completed successfully!" -Level Host
             $response
         }
     }

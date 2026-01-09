@@ -1,4 +1,4 @@
-﻿<#
+<#
 .SYNOPSIS
     Updates an existing GraphQL API in a specified Microsoft Fabric workspace.
 
@@ -77,7 +77,7 @@ function Update-FabricGraphQLApi {
             $response = Invoke-FabricAPIRequest @apiParams
 
             # Return the API response
-            Write-FabricLog -Message "GraphQL API '$GraphQLApiName' updated successfully!" -Level Info
+            Write-FabricLog -Message "GraphQL API '$GraphQLApiName' updated successfully!" -Level Host
             $response
         }
     }

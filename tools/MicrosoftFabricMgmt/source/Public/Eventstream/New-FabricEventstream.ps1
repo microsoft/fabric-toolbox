@@ -1,4 +1,4 @@
-﻿<#
+<#
 .SYNOPSIS
 Creates a new Eventstream in a specified Microsoft Fabric workspace.
 
@@ -137,7 +137,7 @@ function New-FabricEventstream {
             $response = Invoke-FabricAPIRequest @apiParams
 
             # Return the API response
-            Write-FabricLog -Message "Eventstream '$EventstreamName' created successfully!" -Level Info
+            Write-FabricLog -Message "Eventstream '$EventstreamName' created successfully!" -Level Host
             $response
         }
     }

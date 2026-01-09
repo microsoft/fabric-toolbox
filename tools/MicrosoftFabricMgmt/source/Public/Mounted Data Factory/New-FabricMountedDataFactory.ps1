@@ -1,4 +1,4 @@
-﻿<#
+<#
 .SYNOPSIS
     Creates a new Mounted Data Factory resource in a specified Microsoft Fabric workspace.
 
@@ -148,7 +148,7 @@ function New-FabricMountedDataFactory {
             $response = Invoke-FabricAPIRequest @apiParams
 
             # Return the API response
-            Write-FabricLog -Message "Mounted Data Factory '$MountedDataFactoryName' created successfully!" -Level Info
+            Write-FabricLog -Message "Mounted Data Factory '$MountedDataFactoryName' created successfully!" -Level Host
             return $response
         }
     }

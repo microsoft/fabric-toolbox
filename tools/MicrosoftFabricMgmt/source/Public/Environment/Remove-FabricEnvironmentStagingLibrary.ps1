@@ -1,4 +1,4 @@
-﻿
+
 <#
 .SYNOPSIS
 Deletes a specified library from the staging environment in a Microsoft Fabric workspace.
@@ -63,7 +63,7 @@ function Remove-FabricEnvironmentStagingLibrary {
             $response = Invoke-FabricAPIRequest @apiParams
 
             # Return the API response
-            Write-FabricLog -Message "Staging library $LibraryName for the Environment '$EnvironmentId' deleted successfully from workspace '$WorkspaceId'." -Level Info
+            Write-FabricLog -Message "Staging library $LibraryName for the Environment '$EnvironmentId' deleted successfully from workspace '$WorkspaceId'." -Level Host
             $response
         }
     }

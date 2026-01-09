@@ -1,4 +1,4 @@
-﻿<#
+<#
 .SYNOPSIS
 Triggers a refresh of materialized lake views for a specified Lakehouse in Microsoft Fabric.
 
@@ -78,11 +78,11 @@ function Start-FabricLakehouseRefreshMaterializedLakeView {
             $response = Invoke-FabricAPIRequest @apiParams
 
             if ($WaitForCompletion) {
-                Write-FabricLog -Message "Refresh MLV job for Lakehouse '$LakehouseId' has completed." -Level Info
+                Write-FabricLog -Message "Refresh MLV job for Lakehouse '$LakehouseId' has completed." -Level Host
                 Write-FabricLog -Message "Job details: $($response | ConvertTo-Json -Depth 5)" -Level Debug
             }
             else {
-                Write-FabricLog -Message "Refresh MLV job for Lakehouse '$LakehouseId' has been started and is running asynchronously." -Level Info
+                Write-FabricLog -Message "Refresh MLV job for Lakehouse '$LakehouseId' has been started and is running asynchronously." -Level Host
                 Write-FabricLog -Message "You can monitor the job status using the job ID from the response." -Level Debug
             }
             # Return the API response

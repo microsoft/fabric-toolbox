@@ -1,4 +1,4 @@
-﻿<#
+<#
 .SYNOPSIS
 Starts mirroring for a specified MirroredDatabase in a workspace.
 
@@ -49,7 +49,7 @@ function Start-FabricMirroredDatabaseMirroring {
             $response = Invoke-FabricAPIRequest @apiParams
 
             # Return the API response
-            Write-FabricLog -Message "Database mirroring started successfully for Mirrored DatabaseId: $MirroredDatabaseId" -Level Info
+            Write-FabricLog -Message "Database mirroring started successfully for Mirrored DatabaseId: $MirroredDatabaseId" -Level Host
             return $response
         }
     }

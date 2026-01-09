@@ -1,4 +1,4 @@
-﻿<#
+<#
 .SYNOPSIS
     Updates an existing Reflex in a specified Microsoft Fabric workspace.
 
@@ -81,7 +81,7 @@ function Update-FabricReflex {
             $response = Invoke-FabricAPIRequest @apiParams
 
             # Return the API response
-            Write-FabricLog -Message "Reflex '$ReflexName' updated successfully!" -Level Info
+            Write-FabricLog -Message "Reflex '$ReflexName' updated successfully!" -Level Host
             return $response
         }
     }

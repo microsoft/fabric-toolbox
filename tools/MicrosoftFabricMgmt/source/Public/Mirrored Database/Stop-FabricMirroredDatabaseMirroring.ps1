@@ -1,4 +1,4 @@
-﻿
+
 <#
 .SYNOPSIS
 Stops mirroring for a specified MirroredDatabase in a workspace.
@@ -47,7 +47,7 @@ function Stop-FabricMirroredDatabaseMirroring {
             $response = Invoke-FabricAPIRequest @apiParams
 
             # Return the API response
-            Write-FabricLog -Message "Database mirroring stopped successfully for MirroredDatabaseId: $MirroredDatabaseId" -Level Info
+            Write-FabricLog -Message "Database mirroring stopped successfully for MirroredDatabaseId: $MirroredDatabaseId" -Level Host
             return $response
         }
     }

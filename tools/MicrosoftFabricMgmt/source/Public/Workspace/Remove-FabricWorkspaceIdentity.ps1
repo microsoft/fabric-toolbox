@@ -1,4 +1,4 @@
-﻿<#
+<#
 .SYNOPSIS
 Deprovisions the Managed Identity for a specified Fabric workspace.
 
@@ -47,7 +47,7 @@ function Remove-FabricWorkspaceIdentity {
             Invoke-FabricAPIRequest @apiParams
 
             # Return the API response
-            Write-FabricLog -Message "Workspace identity was successfully deprovisioned for workspace '$WorkspaceId'." -Level Info
+            Write-FabricLog -Message "Workspace identity was successfully deprovisioned for workspace '$WorkspaceId'." -Level Host
         }
     }
     catch {

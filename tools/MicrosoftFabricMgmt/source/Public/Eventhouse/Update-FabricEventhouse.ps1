@@ -1,4 +1,4 @@
-﻿<#
+<#
 .SYNOPSIS
     Updates an existing Eventhouse in a specified Microsoft Fabric workspace.
 
@@ -79,7 +79,7 @@ function Update-FabricEventhouse {
             $response = Invoke-FabricAPIRequest @apiParams
 
             # Return the API response
-            Write-FabricLog -Message "Eventhouse '$EventhouseName' updated successfully!" -Level Info
+            Write-FabricLog -Message "Eventhouse '$EventhouseName' updated successfully!" -Level Host
             $response
         }
     }

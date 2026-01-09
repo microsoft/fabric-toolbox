@@ -1,4 +1,4 @@
-﻿<#
+<#
 .SYNOPSIS
     Updates the definition of an existing SemanticModel in a specified Microsoft Fabric workspace.
 
@@ -87,7 +87,7 @@ function Update-FabricSemanticModelDefinition {
             $response = Invoke-FabricAPIRequest @apiParams
 
             # Return the API response
-            Write-FabricLog -Message "Successfully updated the definition for Semantic Model with ID '$SemanticModelId' in workspace '$WorkspaceId'." -Level Info
+            Write-FabricLog -Message "Successfully updated the definition for Semantic Model with ID '$SemanticModelId' in workspace '$WorkspaceId'." -Level Host
             return $response
         }
     }

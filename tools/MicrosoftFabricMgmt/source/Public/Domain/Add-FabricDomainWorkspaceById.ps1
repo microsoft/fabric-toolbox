@@ -1,4 +1,4 @@
-﻿<#
+<#
 .SYNOPSIS
 Assigns workspaces to a specified domain in Microsoft Fabric by their IDs.
 
@@ -62,7 +62,7 @@ function Add-FabricDomainWorkspaceById {
             }
             $response = Invoke-FabricAPIRequest @apiParams
 
-            Write-FabricLog -Message "Successfully assigned workspaces to the domain with ID '$DomainId'." -Level Info
+            Write-FabricLog -Message "Successfully assigned workspaces to the domain with ID '$DomainId'." -Level Host
             $response
         }
     }

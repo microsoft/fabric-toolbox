@@ -1,4 +1,4 @@
-﻿<#
+<#
 .SYNOPSIS
 Updates the properties of a Fabric Notebook.
 
@@ -88,7 +88,7 @@ function Update-FabricNotebook {
             $response = Invoke-FabricAPIRequest @apiParams
 
             # Return the API response
-            Write-FabricLog -Message "Notebook '$NotebookName' updated successfully!" -Level Info
+            Write-FabricLog -Message "Notebook '$NotebookName' updated successfully!" -Level Host
             return $response
         }
     }

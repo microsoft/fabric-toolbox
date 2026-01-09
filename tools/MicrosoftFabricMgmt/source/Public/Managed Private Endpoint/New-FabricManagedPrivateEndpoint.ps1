@@ -1,4 +1,4 @@
-﻿<#
+<#
 .SYNOPSIS
     Creates a new Managed Private Endpoint in a Microsoft Fabric workspace.
 
@@ -104,7 +104,7 @@ function New-FabricManagedPrivateEndpoint {
             $response = Invoke-FabricAPIRequest @apiParams
 
             # Return the API response
-            Write-FabricLog -Message "Managed Private Endpoint created successfully!" -Level Info
+            Write-FabricLog -Message "Managed Private Endpoint created successfully!" -Level Host
             return $response
         }
     }

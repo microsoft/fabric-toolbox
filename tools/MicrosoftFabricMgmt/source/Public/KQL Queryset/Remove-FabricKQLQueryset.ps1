@@ -1,4 +1,4 @@
-﻿<#
+<#
 .SYNOPSIS
 Deletes an KQLQueryset from a specified workspace in Microsoft Fabric.
 
@@ -54,7 +54,7 @@ function Remove-FabricKQLQueryset {
             $response = Invoke-FabricAPIRequest @apiParams
 
             # Return the API response
-            Write-FabricLog -Message "KQLQueryset '$KQLQuerysetId' deleted successfully from workspace '$WorkspaceId'." -Level Info
+            Write-FabricLog -Message "KQLQueryset '$KQLQuerysetId' deleted successfully from workspace '$WorkspaceId'." -Level Host
             return $response
         }
     }

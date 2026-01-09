@@ -1,4 +1,4 @@
-﻿
+
 <#
 .SYNOPSIS
 Retrieves the definition of a Eventstream from a specific workspace in Microsoft Fabric.
@@ -72,7 +72,7 @@ function Get-FabricEventstreamDefinition {
         $response = Invoke-FabricAPIRequest @apiParams
 
         # Return the API response
-        Write-FabricLog -Message "Eventstream '$EventstreamId' definition retrieved successfully!" -Level Info
+        Write-FabricLog -Message "Eventstream '$EventstreamId' definition retrieved successfully!" -Level Host
         $response
     }
     catch {

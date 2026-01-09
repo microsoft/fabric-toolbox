@@ -1,4 +1,4 @@
-﻿<#
+<#
 .SYNOPSIS
     Updates an existing warehouse snapshot in a Microsoft Fabric workspace.
 
@@ -93,7 +93,7 @@ function Update-FabricWarehouseSnapshot {
         if ($PSCmdlet.ShouldProcess("Warehouse Snapshot '$WarehouseSnapshotId' to '$WarehouseSnapshotName' in workspace '$WorkspaceId'", 'Update')) {
             $response = Invoke-FabricAPIRequest @apiParams
             # Return the API response
-            Write-FabricLog -Message "Warehouse Snapshot '$WarehouseSnapshotName' updated successfully!" -Level Info
+            Write-FabricLog -Message "Warehouse Snapshot '$WarehouseSnapshotName' updated successfully!" -Level Host
             return $response
         }
     }

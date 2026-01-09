@@ -1,4 +1,4 @@
-﻿<#
+<#
 .SYNOPSIS
 Bulk assigns roles to principals for workspaces in a Fabric domain.
 
@@ -82,7 +82,7 @@ function Add-FabricDomainWorkspaceByRoleAssignment {
             }
             $response = Invoke-FabricAPIRequest @apiParams
 
-            Write-FabricLog -Message "Bulk role assignment for domain '$DomainId' completed successfully!" -Level Info
+            Write-FabricLog -Message "Bulk role assignment for domain '$DomainId' completed successfully!" -Level Host
             $response
         }
     }

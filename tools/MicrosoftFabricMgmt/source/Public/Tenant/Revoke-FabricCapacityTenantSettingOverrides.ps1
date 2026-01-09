@@ -1,4 +1,4 @@
-﻿<#
+<#
 .SYNOPSIS
 Removes a tenant setting override from a specific capacity in the Fabric tenant.
 
@@ -51,7 +51,7 @@ function Revoke-FabricCapacityTenantSettingOverrides {
             $response = Invoke-FabricAPIRequest @apiParams
 
             # Return the API response
-            Write-FabricLog -Message "Successfully removed the tenant setting override '$tenantSettingName' from the capacity with ID '$capacityId'." -Level Info
+            Write-FabricLog -Message "Successfully removed the tenant setting override '$tenantSettingName' from the capacity with ID '$capacityId'." -Level Host
             return $response
         }
     }

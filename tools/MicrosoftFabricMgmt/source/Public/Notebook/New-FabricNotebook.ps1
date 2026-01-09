@@ -1,4 +1,4 @@
-﻿<#
+<#
 .SYNOPSIS
 Creates a new notebook in a specified Microsoft Fabric workspace.
 
@@ -149,7 +149,7 @@ function New-FabricNotebook {
             $response = Invoke-FabricAPIRequest @apiParams
 
             # Return the API response
-            Write-FabricLog -Message "Notebook '$NotebookName' created successfully!" -Level Info
+            Write-FabricLog -Message "Notebook '$NotebookName' created successfully!" -Level Host
             return $response
         }
     }

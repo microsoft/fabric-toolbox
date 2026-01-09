@@ -1,4 +1,4 @@
-﻿<#
+<#
 .SYNOPSIS
     Updates the definition of an existing SparkJobDefinition in a specified Microsoft Fabric workspace.
 
@@ -113,7 +113,7 @@ function Update-FabricSparkJobDefinitionDefinition {
             $response = Invoke-FabricAPIRequest @apiParams
 
             # Return the API response
-            Write-FabricLog -Message "Successfully updated the definition for Spark Job Definition with ID '$SparkJobDefinitionId' in workspace '$WorkspaceId'." -Level Info
+            Write-FabricLog -Message "Successfully updated the definition for Spark Job Definition with ID '$SparkJobDefinitionId' in workspace '$WorkspaceId'." -Level Host
             return $response
         }
     }

@@ -1,4 +1,4 @@
-﻿<#
+<#
 .SYNOPSIS
     Revokes an external data share from a specified Microsoft Fabric workspace item.
 
@@ -56,7 +56,7 @@ function Revoke-FabricExternalDataShare {
             $dataItems = Invoke-FabricAPIRequest @apiParams
 
             # Return the API response
-            Write-FabricLog -Message "External data share with ID '$ExternalDataShareId' successfully revoked in workspace '$WorkspaceId', item '$ItemId'." -Level Info
+            Write-FabricLog -Message "External data share with ID '$ExternalDataShareId' successfully revoked in workspace '$WorkspaceId', item '$ItemId'." -Level Host
             $dataItems
         }
     }

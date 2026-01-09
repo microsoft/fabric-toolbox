@@ -1,4 +1,4 @@
-﻿<#
+<#
 .SYNOPSIS
     Moves a folder to a new location within a Microsoft Fabric workspace.
 
@@ -77,7 +77,7 @@ function Move-FabricFolder {
             $response = Invoke-FabricAPIRequest @apiParams
 
             # Return the API response
-            Write-FabricLog -Message "Folder moved successfully!" -Level Info
+            Write-FabricLog -Message "Folder moved successfully!" -Level Host
             $response
         }
 

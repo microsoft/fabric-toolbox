@@ -1,4 +1,4 @@
-﻿<#
+<#
 .SYNOPSIS
 Updates the properties of a Fabric workspace.
 
@@ -77,7 +77,7 @@ function Update-FabricWorkspace {
 
         if ($PSCmdlet.ShouldProcess("Workspace '$WorkspaceId' to '$WorkspaceName'", 'Update')) {
             $response = Invoke-FabricAPIRequest @apiParams
-            Write-FabricLog -Message "Workspace '$WorkspaceName' updated successfully!" -Level Info
+            Write-FabricLog -Message "Workspace '$WorkspaceName' updated successfully!" -Level Host
             $response
         }
     }

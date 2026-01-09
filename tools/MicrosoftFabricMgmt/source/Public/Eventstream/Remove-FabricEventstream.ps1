@@ -1,4 +1,4 @@
-﻿<#
+<#
 .SYNOPSIS
 Deletes an Eventstream from a specified workspace in Microsoft Fabric.
 
@@ -53,7 +53,7 @@ function Remove-FabricEventstream {
             $response = Invoke-FabricAPIRequest @apiParams
 
             # Return the API response
-            Write-FabricLog -Message "Eventstream '$EventstreamId' deleted successfully from workspace '$WorkspaceId'." -Level Info
+            Write-FabricLog -Message "Eventstream '$EventstreamId' deleted successfully from workspace '$WorkspaceId'." -Level Host
             $response
         }
     }

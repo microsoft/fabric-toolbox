@@ -1,4 +1,4 @@
-﻿<#
+<#
 .SYNOPSIS
 Deletes an environment from a specified workspace in Microsoft Fabric.
 
@@ -51,7 +51,7 @@ function Remove-FabricEnvironment {
             $response = Invoke-FabricAPIRequest @apiParams
 
             # Return the API response
-            Write-FabricLog -Message "Environment '$EnvironmentId' deleted successfully from workspace '$WorkspaceId'." -Level Info
+            Write-FabricLog -Message "Environment '$EnvironmentId' deleted successfully from workspace '$WorkspaceId'." -Level Host
             $response
         }
     }

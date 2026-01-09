@@ -1,4 +1,4 @@
-﻿<#
+<#
 .SYNOPSIS
 Updates the properties of a Fabric Eventstream.
 
@@ -85,7 +85,7 @@ function Update-FabricEventstream {
             $response = Invoke-FabricAPIRequest @apiParams
 
             # Return the API response
-            Write-FabricLog -Message "Eventstream '$EventstreamName' updated successfully!" -Level Info
+            Write-FabricLog -Message "Eventstream '$EventstreamName' updated successfully!" -Level Host
             $response
         }
     }

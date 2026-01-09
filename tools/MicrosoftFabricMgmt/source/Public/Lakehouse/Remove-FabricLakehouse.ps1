@@ -1,4 +1,4 @@
-﻿<#
+<#
 .SYNOPSIS
 Deletes an Lakehouse from a specified workspace in Microsoft Fabric.
 
@@ -52,7 +52,7 @@ function Remove-FabricLakehouse {
             $response = Invoke-FabricAPIRequest @apiParams
 
             # Return the API response
-            Write-FabricLog -Message "Lakehouse '$LakehouseId' deleted successfully from workspace '$WorkspaceId'." -Level Info
+            Write-FabricLog -Message "Lakehouse '$LakehouseId' deleted successfully from workspace '$WorkspaceId'." -Level Host
             return $response
         }
 

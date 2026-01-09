@@ -1,4 +1,4 @@
-﻿<#
+<#
 .SYNOPSIS
     Updates an existing Report in a specified Microsoft Fabric workspace.
 
@@ -81,7 +81,7 @@ function Update-FabricReport {
             $response = Invoke-FabricAPIRequest @apiParams
 
             # Return the API response
-            Write-FabricLog -Message "Report '$ReportName' updated successfully!" -Level Info
+            Write-FabricLog -Message "Report '$ReportName' updated successfully!" -Level Host
             return $response
         }
     }

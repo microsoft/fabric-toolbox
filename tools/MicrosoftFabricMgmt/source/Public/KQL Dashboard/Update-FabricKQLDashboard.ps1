@@ -1,4 +1,4 @@
-﻿<#
+<#
 .SYNOPSIS
 Updates the properties of a Fabric KQLDashboard.
 
@@ -88,7 +88,7 @@ function Update-FabricKQLDashboard {
             $response = Invoke-FabricAPIRequest @apiParams
 
             # Return the API response
-            Write-FabricLog -Message "KQLDashboard '$KQLDashboardName' updated successfully!" -Level Info
+            Write-FabricLog -Message "KQLDashboard '$KQLDashboardName' updated successfully!" -Level Host
             return $response
         }
     }

@@ -1,4 +1,4 @@
-﻿<#
+<#
 .SYNOPSIS
     Creates a new ML Model in a specified Microsoft Fabric workspace.
 
@@ -76,7 +76,7 @@ function New-FabricMLModel {
             $response = Invoke-FabricAPIRequest @apiParams
 
             # Return the API response
-            Write-FabricLog -Message "ML Model '$MLModelName' created successfully!" -Level Info
+            Write-FabricLog -Message "ML Model '$MLModelName' created successfully!" -Level Host
             return $response
         }
     }

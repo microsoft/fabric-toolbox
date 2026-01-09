@@ -1,4 +1,4 @@
-﻿<#
+<#
 .SYNOPSIS
     Creates a new warehouse snapshot in a specified Microsoft Fabric workspace.
 
@@ -112,7 +112,7 @@ function New-FabricWarehouseSnapshot {
             $response = Invoke-FabricAPIRequest @apiParams
 
             # Return the API response
-            Write-FabricLog -Message "Data Warehouse Snapshot created successfully!" -Level Info
+            Write-FabricLog -Message "Data Warehouse Snapshot created successfully!" -Level Host
             return $response
         }
     }

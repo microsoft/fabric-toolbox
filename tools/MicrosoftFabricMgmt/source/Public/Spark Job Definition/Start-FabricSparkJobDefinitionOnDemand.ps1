@@ -1,4 +1,4 @@
-﻿<#
+<#
 .SYNOPSIS
     Starts a Fabric Spark Job Definition on demand.
 
@@ -69,16 +69,16 @@ function Start-FabricSparkJobDefinitionOnDemand {
             $response = Invoke-FabricAPIRequest @apiParams
 
             if ($WaitForCompletion) {
-                Write-FabricLog -Message "On-demand Spark Job Definition (ID: '$SparkJobDefinitionId') has completed." -Level Info
+                Write-FabricLog -Message "On-demand Spark Job Definition (ID: '$SparkJobDefinitionId') has completed." -Level Host
                 Write-FabricLog -Message "Job details: $($response | ConvertTo-Json -Depth 5)" -Level Debug
             }
             else {
-                Write-FabricLog -Message "Successfully started on-demand Spark Job Definition (ID: '$SparkJobDefinitionId') in workspace '$WorkspaceId'. and is running asynchronously." -Level Info
+                Write-FabricLog -Message "Successfully started on-demand Spark Job Definition (ID: '$SparkJobDefinitionId') in workspace '$WorkspaceId'. and is running asynchronously." -Level Host
                 Write-FabricLog -Message "You can monitor the job status using the job ID from the response." -Level Debug
             }
 
             # Return the API response
-            #Write-FabricLog -Message "Successfully started on-demand Spark Job Definition (ID: '$SparkJobDefinitionId') in workspace '$WorkspaceId'." -Level Info
+            #Write-FabricLog -Message "Successfully started on-demand Spark Job Definition (ID: '$SparkJobDefinitionId') in workspace '$WorkspaceId'." -Level Host
             return $response
         }
     }

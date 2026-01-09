@@ -1,4 +1,4 @@
-﻿<#
+<#
 .SYNOPSIS
     Removes a warehouse from a specified Microsoft Fabric workspace.
 
@@ -52,7 +52,7 @@ function Remove-FabricWarehouse {
             $response = Invoke-FabricAPIRequest @apiParams
 
             # Return the API response
-            Write-FabricLog -Message "Warehouse '$WarehouseId' deleted successfully from workspace '$WorkspaceId'." -Level Info
+            Write-FabricLog -Message "Warehouse '$WarehouseId' deleted successfully from workspace '$WorkspaceId'." -Level Host
             return $response
         }
 

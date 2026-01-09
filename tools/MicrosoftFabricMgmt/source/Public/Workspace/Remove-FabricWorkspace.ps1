@@ -1,4 +1,4 @@
-﻿<#
+<#
 .SYNOPSIS
 Deletes an existing Fabric workspace by its workspace ID.
 
@@ -43,7 +43,7 @@ function Remove-FabricWorkspace {
 
         if ($PSCmdlet.ShouldProcess("Workspace '$WorkspaceId'", 'Delete')) {
             $response = Invoke-FabricAPIRequest @apiParams
-            Write-FabricLog -Message "Workspace '$WorkspaceId' deleted successfully!" -Level Info
+            Write-FabricLog -Message "Workspace '$WorkspaceId' deleted successfully!" -Level Host
             $response
         }
     }

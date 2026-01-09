@@ -1,4 +1,4 @@
-﻿<#
+<#
 .SYNOPSIS
 Removes sharing links in bulk from items in Mic        # Make the API request
         $apiParams = @{
@@ -73,7 +73,7 @@ function Remove-FabricSharingLinksBulk {
                 -Body $bodyJson
 
             # Return the API response
-            Write-FabricLog -Message "Bulk sharing link removal completed successfully for $($Items.Count) item(s)." -Level Info
+            Write-FabricLog -Message "Bulk sharing link removal completed successfully for $($Items.Count) item(s)." -Level Host
             return $response
         }
     }

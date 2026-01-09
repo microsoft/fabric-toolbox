@@ -1,4 +1,4 @@
-﻿<#
+<#
 .SYNOPSIS
     Updates an existing Variable Library in a specified Microsoft Fabric workspace.
 
@@ -92,7 +92,7 @@ function Update-FabricVariableLibrary {
             $response = Invoke-FabricAPIRequest @apiParams
 
             # Return the API response
-            Write-FabricLog -Message "Variable Library '$VariableLibraryName' updated successfully!" -Level Info
+            Write-FabricLog -Message "Variable Library '$VariableLibraryName' updated successfully!" -Level Host
             return $response
         }
     }

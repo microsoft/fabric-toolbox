@@ -1,4 +1,4 @@
-﻿<#
+<#
 .SYNOPSIS
 Creates a new KQL Database in a workspace.
 
@@ -268,7 +268,7 @@ function New-FabricKQLDatabase {
             $response = Invoke-FabricAPIRequest @apiParams
 
             # Return the API response
-            Write-FabricLog -Message "KQLDatabase '$KQLDatabaseName' created successfully!" -Level Info
+            Write-FabricLog -Message "KQLDatabase '$KQLDatabaseName' created successfully!" -Level Host
             return $response
         }
     }

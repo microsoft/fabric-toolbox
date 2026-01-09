@@ -1,4 +1,4 @@
-﻿<#
+<#
 .SYNOPSIS
 Updates Spark settings for a workspace (workspace-scope variant).
 
@@ -161,7 +161,7 @@ function Update-FabricSparkWorkspaceSettings {
             $response = Invoke-FabricAPIRequest @apiParams
 
             # Return the API response
-            Write-FabricLog -Message "Spark Workspace Pool '$SparkSettingsName' updated successfully!" -Level Info
+            Write-FabricLog -Message "Spark Workspace Pool '$SparkSettingsName' updated successfully!" -Level Host
             return $response
         }
     }

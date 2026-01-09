@@ -1,4 +1,4 @@
-﻿<#
+<#
 .SYNOPSIS
     Creates a new Reflex in a specified Microsoft Fabric workspace.
 
@@ -135,7 +135,7 @@ function New-FabricReflex {
             $response = Invoke-FabricAPIRequest @apiParams
 
             # Return the API response
-            Write-FabricLog -Message "Reflex '$ReflexName' created successfully!" -Level Info
+            Write-FabricLog -Message "Reflex '$ReflexName' created successfully!" -Level Host
             return $response
         }
     }

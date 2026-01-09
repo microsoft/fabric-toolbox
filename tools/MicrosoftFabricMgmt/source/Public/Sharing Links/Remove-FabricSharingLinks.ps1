@@ -1,4 +1,4 @@
-﻿<#
+<#
 .SYNOPSIS
 Removes all sharing links in bulk from s        # Make the API request
         $apiParams = @{
@@ -66,7 +66,7 @@ function Remove-FabricSharingLinks {
                 -Body $bodyJson
 
             # Return the API response
-            Write-FabricLog -Message "All sharing links have been removed successfully from the specified items." -Level Info
+            Write-FabricLog -Message "All sharing links have been removed successfully from the specified items." -Level Host
             return $response
         }
     }

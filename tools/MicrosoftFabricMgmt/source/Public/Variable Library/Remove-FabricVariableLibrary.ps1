@@ -1,4 +1,4 @@
-﻿<#
+<#
 .SYNOPSIS
     Deletes a variable library from a Microsoft Fabric workspace.
 
@@ -51,7 +51,7 @@ function Remove-FabricVariableLibrary {
             $response = Invoke-FabricAPIRequest @apiParams
 
             # Return the API response
-            Write-FabricLog -Message "Variable Library '$VariableLibraryId' deleted successfully from workspace '$WorkspaceId'." -Level Info
+            Write-FabricLog -Message "Variable Library '$VariableLibraryId' deleted successfully from workspace '$WorkspaceId'." -Level Host
             return $response
         }
 

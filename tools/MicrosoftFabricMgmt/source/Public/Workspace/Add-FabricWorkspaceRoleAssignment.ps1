@@ -1,4 +1,4 @@
-﻿<#
+<#
 .SYNOPSIS
 Assigns a role to a principal for a specified Fabric workspace.
 
@@ -82,7 +82,7 @@ function Add-FabricWorkspaceRoleAssignment {
         $response = Invoke-FabricAPIRequest @apiParams
 
         # Return the API response
-        Write-FabricLog -Message "Role '$WorkspaceRole' assigned to principal '$PrincipalId' successfully in workspace '$WorkspaceId'." -Level Info
+        Write-FabricLog -Message "Role '$WorkspaceRole' assigned to principal '$PrincipalId' successfully in workspace '$WorkspaceId'." -Level Host
         $response
     }
     catch {

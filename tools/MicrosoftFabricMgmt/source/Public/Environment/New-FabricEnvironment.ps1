@@ -1,4 +1,4 @@
-﻿<#
+<#
 .SYNOPSIS
 Creates a new environment in a specified workspace.
 
@@ -73,7 +73,7 @@ function New-FabricEnvironment {
             $response = Invoke-FabricAPIRequest @apiParams
 
             # Return the API response
-            Write-FabricLog -Message "Environment '$EnvironmentName' created successfully!" -Level Info
+            Write-FabricLog -Message "Environment '$EnvironmentName' created successfully!" -Level Host
             $response
         }
     }

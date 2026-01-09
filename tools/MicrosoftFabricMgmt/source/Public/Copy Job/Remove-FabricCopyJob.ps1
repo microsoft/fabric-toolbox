@@ -1,4 +1,4 @@
-﻿<#
+<#
 .SYNOPSIS
     Deletes a Copy Job from a specified Microsoft Fabric workspace.
 
@@ -50,7 +50,7 @@ function Remove-FabricCopyJob {
             }
             $response = Invoke-FabricAPIRequest @apiParams
 
-            Write-FabricLog -Message "Copy Job '$CopyJobId' deleted successfully from workspace '$WorkspaceId'." -Level Info
+            Write-FabricLog -Message "Copy Job '$CopyJobId' deleted successfully from workspace '$WorkspaceId'." -Level Host
             $response
         }
 

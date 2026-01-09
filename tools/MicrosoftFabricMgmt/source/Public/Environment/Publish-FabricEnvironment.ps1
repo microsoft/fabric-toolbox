@@ -1,4 +1,4 @@
-﻿<#
+<#
 .SYNOPSIS
 Publishes a staging environment in a specified Microsoft Fabric workspace.
 
@@ -52,7 +52,7 @@ function Publish-FabricEnvironment {
             $response = Invoke-FabricAPIRequest @apiParams
 
             # Return the API response
-            Write-FabricLog -Message "Publish operation request has been submitted successfully for the environment '$EnvironmentId'!" -Level Info
+            Write-FabricLog -Message "Publish operation request has been submitted successfully for the environment '$EnvironmentId'!" -Level Host
             $response
         }
     }

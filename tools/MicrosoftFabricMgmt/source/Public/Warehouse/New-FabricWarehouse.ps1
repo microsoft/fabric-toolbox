@@ -1,4 +1,4 @@
-﻿<#
+<#
 .SYNOPSIS
     Creates a new warehouse in a specified Microsoft Fabric workspace.
 
@@ -88,7 +88,7 @@ function New-FabricWarehouse {
             $response = Invoke-FabricAPIRequest @apiParams
 
             # Return the API response
-            Write-FabricLog -Message "Data Warehouse created successfully!" -Level Info
+            Write-FabricLog -Message "Data Warehouse created successfully!" -Level Host
             return $response
         }
     }

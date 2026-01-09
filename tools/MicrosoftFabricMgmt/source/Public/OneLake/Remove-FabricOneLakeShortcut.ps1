@@ -1,4 +1,4 @@
-﻿<#
+<#
 .SYNOPSIS
     Removes a OneLake Shortcut from a specified item in a Microsoft Fabric workspace.
 
@@ -66,7 +66,7 @@ function Remove-FabricOneLakeShortcut {
             $response = Invoke-FabricAPIRequest @apiParams
 
             # Return the API response
-            Write-FabricLog -Message "OneLake Shortcut '$ShortcutName' was successfully deleted from item '$ItemId' in workspace '$WorkspaceId'." -Level Info
+            Write-FabricLog -Message "OneLake Shortcut '$ShortcutName' was successfully deleted from item '$ItemId' in workspace '$WorkspaceId'." -Level Host
             return $response
         }
 

@@ -1,4 +1,4 @@
-﻿<#
+<#
 .SYNOPSIS
     Deletes a folder from a specified Microsoft Fabric workspace.
 
@@ -50,7 +50,7 @@ function Remove-FabricFolder {
             $response = Invoke-FabricAPIRequest @apiParams
 
             # Return the API response
-            Write-FabricLog -Message "Folder '$FolderId' deleted successfully from workspace '$WorkspaceId'." -Level Info
+            Write-FabricLog -Message "Folder '$FolderId' deleted successfully from workspace '$WorkspaceId'." -Level Host
             $response
         }
 

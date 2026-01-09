@@ -1,4 +1,4 @@
-﻿<#
+<#
 .SYNOPSIS
     Removes an ML Experiment from a specified Microsoft Fabric workspace.
 
@@ -54,7 +54,7 @@ function Remove-FabricMLExperiment {
             $response = Invoke-FabricAPIRequest @apiParams
 
             # Return the API response
-            Write-FabricLog -Message "ML Experiment '$MLExperimentId' deleted successfully from workspace '$WorkspaceId'." -Level Info
+            Write-FabricLog -Message "ML Experiment '$MLExperimentId' deleted successfully from workspace '$WorkspaceId'." -Level Host
             return $response
         }
     }

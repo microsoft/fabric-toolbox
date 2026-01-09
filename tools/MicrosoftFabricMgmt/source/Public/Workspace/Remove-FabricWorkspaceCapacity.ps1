@@ -1,4 +1,4 @@
-﻿<#
+<#
 .SYNOPSIS
 Unassigns a Fabric workspace from its capacity.
 
@@ -45,7 +45,7 @@ function Remove-FabricWorkspaceCapacity {
 
 
         # Return the API response
-        Write-FabricLog -Message "Workspace capacity has been successfully unassigned from workspace '$WorkspaceId'." -Level Info
+        Write-FabricLog -Message "Workspace capacity has been successfully unassigned from workspace '$WorkspaceId'." -Level Host
         $response
     }
     catch {

@@ -1,4 +1,4 @@
-﻿<#
+<#
 .SYNOPSIS
 Updates a Fabric tenant setting.
 
@@ -153,7 +153,7 @@ function Update-FabricTenantSetting {
                 -Body $bodyJson
 
             # Return the API response
-            Write-FabricLog -Message "Successfully updated tenant setting." -Level Info
+            Write-FabricLog -Message "Successfully updated tenant setting." -Level Host
             return $response
         }
     }

@@ -1,4 +1,4 @@
-﻿<#
+<#
 .SYNOPSIS
 Assigns a Fabric workspace to a specified capacity.
 
@@ -63,7 +63,7 @@ function Add-FabricWorkspaceCapacity {
         $response = Invoke-FabricAPIRequest @apiParams
 
         # Return the API response
-        Write-FabricLog -Message "Successfully assigned workspace with ID '$WorkspaceId' to capacity with ID '$CapacityId'." -Level Info
+        Write-FabricLog -Message "Successfully assigned workspace with ID '$WorkspaceId' to capacity with ID '$CapacityId'." -Level Host
         $response
     }
     catch {

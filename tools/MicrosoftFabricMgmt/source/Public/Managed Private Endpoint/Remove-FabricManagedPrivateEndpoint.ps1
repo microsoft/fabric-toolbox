@@ -1,4 +1,4 @@
-﻿<#
+<#
 .SYNOPSIS
     Removes a managed private endpoint from a specified Microsoft Fabric workspace.
 
@@ -50,7 +50,7 @@ function Remove-FabricManagedPrivateEndpoint {
             $response = Invoke-FabricAPIRequest @apiParams
 
             # Return the API response
-            Write-FabricLog -Message "Managed Private Endpoint '$ManagedPrivateEndpointId' deleted successfully from workspace '$WorkspaceId'." -Level Info
+            Write-FabricLog -Message "Managed Private Endpoint '$ManagedPrivateEndpointId' deleted successfully from workspace '$WorkspaceId'." -Level Host
             return $response
         }
 

@@ -1,4 +1,4 @@
-﻿<#
+<#
 .SYNOPSIS
 Updates the properties of a Fabric KQLQueryset.
 
@@ -88,7 +88,7 @@ function Update-FabricKQLQueryset {
             $response = Invoke-FabricAPIRequest @apiParams
 
             # Return the API response
-            Write-FabricLog -Message "KQLQueryset '$KQLQuerysetName' updated successfully!" -Level Info
+            Write-FabricLog -Message "KQLQueryset '$KQLQuerysetName' updated successfully!" -Level Host
             return $response
         }
     }

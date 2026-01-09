@@ -1,4 +1,4 @@
-﻿<#
+<#
 .SYNOPSIS
     Updates the name and optionally the description of a Mounted Data Factory in a Microsoft Fabric workspace.
 
@@ -81,7 +81,7 @@ function Update-FabricMountedDataFactory {
             $response = Invoke-FabricAPIRequest @apiParams
 
             # Return the API response
-            Write-FabricLog -Message "Mounted Data Factory '$MountedDataFactoryName' updated successfully!" -Level Info
+            Write-FabricLog -Message "Mounted Data Factory '$MountedDataFactoryName' updated successfully!" -Level Host
             return $response
         }
     }

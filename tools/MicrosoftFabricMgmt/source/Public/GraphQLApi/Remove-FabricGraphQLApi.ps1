@@ -1,4 +1,4 @@
-﻿<#
+<#
 .SYNOPSIS
     Removes a GraphQL API from a specified Microsoft Fabric workspace.
 
@@ -50,7 +50,7 @@ function Remove-FabricGraphQLApi {
             $response = Invoke-FabricAPIRequest @apiParams
 
             # Return the API response
-            Write-FabricLog -Message "GraphQLApi '$GraphQLApiId' deleted successfully from workspace '$WorkspaceId'." -Level Info
+            Write-FabricLog -Message "GraphQLApi '$GraphQLApiId' deleted successfully from workspace '$WorkspaceId'." -Level Host
             $response
         }
     }

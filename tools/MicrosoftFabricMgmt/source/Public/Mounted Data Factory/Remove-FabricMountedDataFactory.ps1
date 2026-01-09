@@ -1,4 +1,4 @@
-﻿<#
+<#
 .SYNOPSIS
     Removes a mounted Data Factory from a specified Microsoft Fabric workspace.
 
@@ -53,7 +53,7 @@ function Remove-FabricMountedDataFactory {
             $response = Invoke-FabricAPIRequest @apiParams
 
             # Return the API response
-            Write-FabricLog -Message "Mounted Data Factory '$MountedDataFactoryId' deleted successfully from workspace '$WorkspaceId'." -Level Info
+            Write-FabricLog -Message "Mounted Data Factory '$MountedDataFactoryId' deleted successfully from workspace '$WorkspaceId'." -Level Host
             return $response
         }
 

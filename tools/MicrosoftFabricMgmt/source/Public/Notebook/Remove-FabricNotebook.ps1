@@ -1,4 +1,4 @@
-﻿<#
+<#
 .SYNOPSIS
 Deletes an Notebook from a specified workspace in Microsoft Fabric.
 
@@ -55,7 +55,7 @@ function Remove-FabricNotebook {
             $response = Invoke-FabricAPIRequest @apiParams
 
             # Return the API response
-            Write-FabricLog -Message "Notebook '$NotebookId' deleted successfully from workspace '$WorkspaceId'." -Level Info
+            Write-FabricLog -Message "Notebook '$NotebookId' deleted successfully from workspace '$WorkspaceId'." -Level Host
             return $response
         }
     }

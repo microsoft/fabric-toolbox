@@ -1,4 +1,4 @@
-﻿<#
+<#
 .SYNOPSIS
 Updates Spark settings at the workspace scope.
 
@@ -178,7 +178,7 @@ function Update-FabricSparkSettings {
             }
 
             # Step 6: Handle results
-            Write-FabricLog -Message "Spark Custom Pool '$SparkSettingsName' updated successfully!" -Level Info
+            Write-FabricLog -Message "Spark Custom Pool '$SparkSettingsName' updated successfully!" -Level Host
             return $response
         }
     }

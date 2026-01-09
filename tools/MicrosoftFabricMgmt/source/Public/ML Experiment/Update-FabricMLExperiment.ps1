@@ -1,4 +1,4 @@
-﻿<#
+<#
 .SYNOPSIS
     Updates an existing ML Experiment in a specified Microsoft Fabric workspace.
 
@@ -84,7 +84,7 @@ function Update-FabricMLExperiment {
             $response = Invoke-FabricAPIRequest @apiParams
 
             # Return the API response
-            Write-FabricLog -Message "ML Experiment '$MLExperimentName' updated successfully!" -Level Info
+            Write-FabricLog -Message "ML Experiment '$MLExperimentName' updated successfully!" -Level Host
             return $response
         }
     }
