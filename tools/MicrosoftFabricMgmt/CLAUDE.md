@@ -76,7 +76,24 @@ tools/MicrosoftFabricMgmt/
 
 ### 2. Error Handling Excellence
 
-Every public function MUST have comprehensive error handling:
+Every public function MUST have comprehensive error handling.
+
+**User-Friendly Error Messages**: The module automatically extracts meaningful error information from Microsoft Fabric API responses:
+
+```powershell
+# When an API error occurs (like 409 Conflict), users see:
+# "API request failed with status code 409 (Conflict). ErrorCode: WorkspaceNameAlreadyExists | Workspace name already exists | RequestId: 29fc4e3d-d625-4222-8328-5a6a395e4db1"
+
+# Instead of a raw JSON dump:
+# "API request failed with status code 409. Error: Conflict Response: { "requestId": "...", "errorCode": "...", ... }"
+```
+
+The `Invoke-FabricAPIRequest` helper automatically parses API error responses and extracts:
+- `errorCode` - The specific error code from Microsoft Fabric
+- `message` - Human-readable error message
+- `requestId` - Request tracking ID for Microsoft support
+
+**Error Handling Pattern**:
 
 ```powershell
 function Get-FabricResource {
@@ -160,6 +177,24 @@ Write-PSFMessage -Level Error -Message "Something went wrong" -ErrorRecord $_
 - `SomewhatVerbose` - Light verbose information
 - `Debug` - Debug information for troubleshooting
 - `InternalComment` - Internal code flow notes
+
+**Write-FabricLog Helper Function**:
+
+The module provides `Write-FabricLog` as a simplified wrapper around `Write-PSFMessage`. This function uses a restricted set of log levels via `ValidateSet` attribute:
+
+**Valid Levels**: `Host`, `Debug`, `Verbose`, `Warning`, `Error`, `Critical`
+
+**IMPORTANT**: Do NOT use `Info` as a level - it is not valid and will cause parameter validation errors. Use `Host` for informational/success messages instead.
+
+```powershell
+# CORRECT - Use Host for informational messages
+Write-FabricLog -Message "Workspace created successfully!" -Level Host
+Write-FabricLog -Message "Processing item..." -Level Verbose
+Write-FabricLog -Message "API request details" -Level Debug
+
+# INCORRECT - Info is not a valid level
+Write-FabricLog -Message "Workspace created successfully!" -Level Info  # ❌ Will fail validation
+```
 
 #### Configuration Management
 

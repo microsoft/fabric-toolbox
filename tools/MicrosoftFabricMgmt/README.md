@@ -89,9 +89,11 @@ foreach ($module in $RequiredModules) {
 # Clone the repository
 git clone https://github.com/microsoft/fabric-toolbox.git
 cd fabric-toolbox
+```
 
-You can also download the ZIP file from GitHub and extract it. You can even use [this function Rob created](https://gist.github.com/SQLDBAWithABeard/fc2c5bf1e0c2ba6a89e88d234e1a79c0 ) to only extract the tools MicrosoftFabricMgmt:
+You can also download the ZIP file from GitHub and extract it. You can even use [this function Rob created](https://gist.github.com/SQLDBAWithABeard/fc2c5bf1e0c2ba6a89e88d234e1a79c0 ) to only extract the tools\MicrosoftFabricMgmt folder.
 
+```powershell
 
 # Import the module
 Import-Module .\output\module\MicrosoftFabricMgmt\*\MicrosoftFabricMgmt.psd1
@@ -110,8 +112,9 @@ Best for: Interactive sessions, development, testing
 Set-FabricApiHeaders -TenantId "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
 
 # This will prompt for interactive authentication via your browser
-# Your credentials are cached for the session
+# Your credentials are cached for the sessions
 ```
+![Fabric Headers](docs/images/Set-FabricApiHeaders.png)
 
 #### Option 2: Service Principal (Automated)
 
@@ -164,16 +167,28 @@ Get-FabricWorkspace
 
 # Get a specific workspace by name
 Get-FabricWorkspace -WorkspaceName "My Analytics Workspace"
+```
+
+![Fabric Workspace](docs/images/Get-FabricWorkspace.png)
+
+```powershell
 
 # Create a new workspace
 $newWorkspace = New-FabricWorkspace -WorkspaceName "Dev Environment" -WorkspaceDescription "Development workspace for analytics"
+
+# Assign the workspace to a capacity
+Assign-FabricWorkspaceCapacity -WorkspaceId $newWorkspace.id -CapacityId "your-capacity-id"
 
 # List all lakehouses in a workspace
 Get-FabricLakehouse -WorkspaceId $newWorkspace.id
 
 # Create a lakehouse
-New-FabricLakehouse -WorkspaceId $newWorkspace.id -LakehouseName "Sales Data" -LakehouseDescription "Sales analytics lakehouse"
+New-FabricLakehouse -WorkspaceId $newWorkspace.id -LakehouseName "SalesData" -LakehouseDescription "Sales analytics lakehouse"
+```
 
+![Fabric Lakehouse](docs/images/FirstSteps.png)
+
+````powershell
 # List notebooks in a workspace
 Get-FabricNotebook -WorkspaceId $newWorkspace.id
 

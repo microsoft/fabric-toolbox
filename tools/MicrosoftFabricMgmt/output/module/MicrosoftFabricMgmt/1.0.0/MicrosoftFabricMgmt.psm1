@@ -22121,7 +22121,48 @@ function Invoke-FabricAPIRequest {
 
             # Throw error for unsuccessful responses
             if ($statusCode -notin 200, 201, 202) {
-                throw "API request failed with status code $statusCode. Error: $errorMsg Response: $($response | ConvertTo-Json -Depth 10)"
+                # Try to extract meaningful error details from the response
+                $errorDetails = $errorMsg
+
+                if ($response) {
+                    # Check for Microsoft Fabric API standard error format
+                    if ($response.PSObject.Properties.Name -contains 'errorCode' -or
+                        $response.PSObject.Properties.Name -contains 'message') {
+
+                        $errorParts = @()
+
+                        if ($response.errorCode) {
+                            $errorParts += "ErrorCode: $($response.errorCode)"
+                        }
+
+                        if ($response.message) {
+                            $errorParts += $response.message
+                        }
+
+                        if ($response.requestId) {
+                            $errorParts += "RequestId: $($response.requestId)"
+                        }
+
+                        $errorDetails = $errorParts -join ' | '
+                    }
+                    elseif ($response.PSObject.Properties.Name -contains 'error') {
+                        # Some APIs nest error details in an 'error' property
+                        $errorObj = $response.error
+                        $errorParts = @()
+
+                        if ($errorObj.code) {
+                            $errorParts += "ErrorCode: $($errorObj.code)"
+                        }
+
+                        if ($errorObj.message) {
+                            $errorParts += $errorObj.message
+                        }
+
+                        $errorDetails = $errorParts -join ' | '
+                    }
+                }
+
+                throw "API request failed with status code $statusCode ($errorMsg). $errorDetails"
             }
 
         } while ($null -ne $continuationToken)
@@ -22133,7 +22174,7 @@ function Invoke-FabricAPIRequest {
         throw
     }
 }
-#EndRegion '.\Public\Utils\Invoke-FabricAPIRequest.ps1' 282
+#EndRegion '.\Public\Utils\Invoke-FabricAPIRequest.ps1' 323
 #Region '.\Public\Utils\Set-FabricApiHeaders.ps1' -1
 
 <#
