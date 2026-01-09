@@ -1,0 +1,96 @@
+<#
+.SYNOPSIS
+    Updates an existing ML Experiment in a specified Microsoft Fabric workspace.
+
+.DESCRIPTION
+    This function sends a PATCH request to the Microsoft Fabric API to update an existing ML Experiment
+    in the specified workspace. It supports optional parameters for ML Experiment description.
+
+.PARAMETER WorkspaceId
+    The unique identifier of the workspace where the ML Experiment exists. This parameter is optional.
+
+.PARAMETER MLExperimentId
+    The unique identifier of the ML Experiment to be updated. This parameter is mandatory.
+
+.PARAMETER MLExperimentName
+    The new name of the ML Experiment. This parameter is mandatory.
+
+.PARAMETER MLExperimentDescription
+    An optional new description for the ML Experiment.
+
+.EXAMPLE
+     Update-FabricMLExperiment -WorkspaceId "workspace-12345" -MLExperimentId "experiment-67890" -MLExperimentName "Updated ML Experiment" -MLExperimentDescription "Updated description"
+    This example updates the ML Experiment with ID "experiment-67890" in the workspace with ID "workspace-12345" with a new name and description.
+
+.NOTES
+    - Requires `$FabricConfig` global configuration, including `BaseUrl` and `FabricHeaders`.
+    - Calls `Test-TokenExpired` to ensure token validity before making the API request.
+
+    Author: Tiago Balabuch
+
+#>
+function Update-FabricMLExperiment {
+    [CmdletBinding(SupportsShouldProcess = $true, ConfirmImpact = 'Medium')]
+    param (
+        [Parameter(Mandatory = $true)]
+        [ValidateNotNullOrEmpty()]
+        [string]$WorkspaceId,
+
+        [Parameter(Mandatory = $true)]
+        [ValidateNotNullOrEmpty()]
+        [string]$MLExperimentId,
+
+        [Parameter(Mandatory = $true)]
+        [ValidateNotNullOrEmpty()]
+        [ValidatePattern('^[a-zA-Z0-9_]*$')]
+        [string]$MLExperimentName,
+
+        [Parameter(Mandatory = $false)]
+        [ValidateNotNullOrEmpty()]
+        [string]$MLExperimentDescription
+    )
+
+    try {
+        Invoke-FabricAuthCheck -ThrowOnFailure
+
+
+        # Construct the API endpoint URI
+        $apiEndpointURI = "{0}/workspaces/{1}/mlExperiments/{2}" -f $script:FabricAuthContext.BaseUrl, $WorkspaceId, $MLExperimentId
+        Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
+
+        # Construct the request body
+        $body = @{
+            displayName = $MLExperimentName
+        }
+
+        if ($MLExperimentDescription) {
+            $body.description = $MLExperimentDescription
+        }
+
+        # Convert the body to JSON
+        $bodyJson = $body | ConvertTo-Json
+        Write-FabricLog -Message "Request Body: $bodyJson" -Level Debug
+
+        # Make the API request when confirmed
+        $target = "ML Experiment '$MLExperimentId' in workspace '$WorkspaceId'"
+        $action = "Update ML Experiment to name '$MLExperimentName'"
+        if ($PSCmdlet.ShouldProcess($target, $action)) {
+            $apiParams = @{
+                Headers = $script:FabricAuthContext.FabricHeaders
+                BaseURI = $apiEndpointURI
+                Method = 'Patch'
+                Body = $bodyJson
+            }
+            $response = Invoke-FabricAPIRequest @apiParams
+
+            # Return the API response
+            Write-FabricLog -Message "ML Experiment '$MLExperimentName' updated successfully!" -Level Host
+            return $response
+        }
+    }
+    catch {
+        # Capture and log error details
+        $errorDetails = $_.Exception.Message
+        Write-FabricLog -Message "Failed to update ML Experiment. Error: $errorDetails" -Level Error
+    }
+}

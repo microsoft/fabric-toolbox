@@ -1,0 +1,173 @@
+on:
+  pull_request:
+    branches:
+    - develop
+    paths-ignore:
+    - CHANGELOG.md
+name: Build and Test Module for Pull Request
+env:
+  buildFolderName: output
+  buildArtifactName: output
+  testResultFolderName: testResults
+jobs:
+  Build_Stage_Package_Module:
+    name: Package Module
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout Code
+      uses: actions/checkout@v3
+      with:
+        ref: ${{github.event.pull_request.head.ref}}
+        repository: ${{github.event.pull_request.head.repo.full_name}}   # checkout the correct branch name
+        fetch-depth: 0
+    - name: Install GitVersion
+      uses: gittools/actions/gitversion/setup@v0.9.15
+      with:
+        versionSpec: 5.x
+    - name: Evaluate Next Version
+      uses: gittools/actions/gitversion/execute@v0.9.15
+      with:
+        configFilePath: GitVersion.yml
+    - name: Build & Package Module
+      shell: pwsh
+      run: ./build.ps1 -ResolveDependency -tasks pack
+      env:
+        ModuleVersion: ${{ env.gitVersion.NuGetVersionV2 }}
+    - name: Publish Build Artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: ${{ env.buildArtifactName }}
+        path: ${{ env.buildFolderName }}/
+  Test_Stage_test_linux:
+    name: Linux
+    runs-on: ubuntu-latest
+    needs:
+    - Build_Stage_Package_Module
+    steps:
+    - name: Checkout Code
+      uses: actions/checkout@v3
+      with:
+        ref: ${{github.event.pull_request.head.ref}}
+        repository: ${{github.event.pull_request.head.repo.full_name}}   # checkout the correct branch name
+        fetch-depth: 0
+    - name: Download Build Artifact
+      uses: actions/download-artifact@v4
+      with:
+        name: ${{ env.buildArtifactName }}
+        path: ${{ env.buildFolderName }}
+    - name: Run Tests
+      shell: pwsh
+      run: ./build.ps1 -tasks noop ; ./build.ps1 -tasks test
+    - name: Publish Test Artifact
+      uses: actions/upload-artifact@v4
+      with:
+        path: ${{ env.buildFolderName }}/${{ env.testResultFolderName }}/
+        name: CodeCoverageLinux
+      if: success() || failure()
+  Test_Stage_test_windows_core:
+    name: Windows (PowerShell)
+    runs-on: windows-latest
+    needs:
+    - Build_Stage_Package_Module
+    steps:
+    - name: Checkout Code
+      uses: actions/checkout@v3
+      with:
+        ref: ${{github.event.pull_request.head.ref}}
+        repository: ${{github.event.pull_request.head.repo.full_name}}   # checkout the correct branch name
+        fetch-depth: 0
+    - name: Download Build Artifact
+      uses: actions/download-artifact@v4
+      with:
+        name: ${{ env.buildArtifactName }}
+        path: ${{ env.buildFolderName }}
+    - name: Run Tests
+      shell: pwsh
+      run: ./build.ps1 -tasks noop; ./build.ps1 -tasks test
+
+    - name: Publish Test Artifact
+      uses: actions/upload-artifact@v4
+      with:
+        path: ${{ env.buildFolderName }}/${{ env.testResultFolderName }}/
+        name: CodeCoverageWinPS7
+      if: success() || failure()
+  Test_Stage_test_windows_ps:
+    name: Windows (Windows PowerShell)
+    runs-on: windows-latest
+    needs:
+    - Build_Stage_Package_Module
+    steps:
+    - name: Checkout Code
+      uses: actions/checkout@v3
+      with:
+        ref: ${{github.event.pull_request.head.ref}}
+        repository: ${{github.event.pull_request.head.repo.full_name}}   # checkout the correct branch name
+        fetch-depth: 0
+    - name: Download Build Artifact
+      uses: actions/download-artifact@v4
+      with:
+        name: ${{ env.buildArtifactName }}
+        path: ${{ env.buildFolderName }}
+    - name: Run Tests
+      shell: pwsh
+      run: ./build.ps1 -ResolveDependency -tasks test
+    - name: Publish Test Artifact
+      uses: actions/upload-artifact@v4
+      with:
+        path: ${{ env.buildFolderName }}/${{ env.testResultFolderName }}/
+        name: CodeCoverageWinPS51
+      if: success() || failure()
+  Test_Stage_Code_Coverage:
+    name: Publish Code Coverage
+    if: success() || failure()
+    runs-on: ubuntu-latest
+    needs:
+    - Build_Stage_Package_Module
+    - Test_Stage_test_linux
+    - Test_Stage_test_windows_core
+    - Test_Stage_test_windows_ps
+    steps:
+    - name: Checkout Code
+      uses: actions/checkout@v3
+      with:
+        ref: ${{github.event.pull_request.head.ref}}   # checkout the correct branch name
+        repository: ${{github.event.pull_request.head.repo.full_name}}   # checkout the correct branch name
+        fetch-depth: 0
+
+    - name: Download Test Artifact Linux
+      uses: actions/download-artifact@v4
+      with:
+        name: CodeCoverageLinux
+        path: ${{ env.buildFolderName }}/${{ env.testResultFolderName }}/CodeCoverageLinux/
+    - name: Download Test Artifact Windows (PS 5.1)
+      uses: actions/download-artifact@v4
+      with:
+        name: CodeCoverageWinPS51
+        path: ${{ env.buildFolderName }}/${{ env.testResultFolderName }}/CodeCoverageWinPS51/
+    - name: Download Test Artifact Windows (PS7)
+      uses: actions/download-artifact@v4
+      with:
+        name: CodeCoverageWinPS7
+        path: ${{ env.buildFolderName }}/${{ env.testResultFolderName }}/CodeCoverageWinPS7/
+
+    - name: Publish Linux Test Results
+      id: linux-test-results
+      uses: EnricoMi/publish-unit-test-result-action@v2
+      if: always()
+      with:
+        nunit_files: ${{ env.buildFolderName }}/${{ env.testResultFolderName }}/CodeCoverageLinux/NUnit*.xml
+        check_name: Linux Test Results
+    - name: Publish WinPS51 Test Results
+      id: winps51-test-results
+      uses: EnricoMi/publish-unit-test-result-action@v2
+      if: always()
+      with:
+        nunit_files: ${{ env.buildFolderName }}/${{ env.testResultFolderName }}/CodeCoverageWinPS51/NUnit*.xml
+        check_name: WinPS51 Test Results
+    - name: Publish WinPS71 Test Results
+      id: winps71-test-results
+      uses: EnricoMi/publish-unit-test-result-action@v2
+      if: always()
+      with:
+        nunit_files: ${{ env.buildFolderName }}/${{ env.testResultFolderName }}/CodeCoverageWinPS7/NUnit*.xml
+        check_name: WinPS71 Test Results

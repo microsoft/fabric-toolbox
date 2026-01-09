@@ -1,0 +1,125 @@
+{
+    "version": "2.0.0",
+    "_runner": "terminal",
+    "windows": {
+        "options": {
+            "shell": {
+                "executable": "C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe",
+                "args": [
+                    "-NoProfile",
+                    "-ExecutionPolicy",
+                    "Bypass",
+                    "-Command"
+                ]
+            }
+        }
+    },
+    "linux": {
+        "options": {
+            "shell": {
+                "executable": "/usr/bin/pwsh",
+                "args": [
+                    "-NoProfile",
+                    "-Command"
+                ]
+            }
+        }
+    },
+    "osx": {
+        "options": {
+            "shell": {
+                "executable": "/usr/local/bin/pwsh",
+                "args": [
+                    "-NoProfile",
+                    "-Command"
+                ]
+            }
+        }
+    },
+    "tasks": [
+        {
+            "label": "build",
+            "type": "shell",
+            "command": "&${cwd}/build.ps1",
+            "args": [],
+            "presentation": {
+                "echo": true,
+                "reveal": "always",
+                "focus": true,
+                "panel": "new",
+                "clear": false
+            },
+            "runOptions": {
+                "runOn": "default"
+            },
+            "problemMatcher": [
+                {
+                    "owner": "powershell",
+                    "fileLocation": [
+                        "absolute"
+                    ],
+                    "severity": "error",
+                    "pattern": [
+                        {
+                            "regexp": "^\\s*(\\[-\\]\\s*.*?)(\\d+)ms\\s*$",
+                            "message": 1
+                        },
+                        {
+                            "regexp": "(.*)",
+                            "code": 1
+                        },
+                        {
+                            "regexp": ""
+                        },
+                        {
+                            "regexp": "^.*,\\s*(.*):\\s*line\\s*(\\d+).*",
+                            "file": 1,
+                            "line": 2
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "label": "test",
+            "type": "shell",
+            "command": "&${cwd}/build.ps1",
+            "args": ["-AutoRestore","-Tasks","test"],
+            "presentation": {
+                "echo": true,
+                "reveal": "always",
+                "focus": true,
+                "panel": "dedicated",
+                "showReuseMessage": true,
+                "clear": false
+            },
+            "problemMatcher": [
+                {
+                    "owner": "powershell",
+                    "fileLocation": [
+                        "absolute"
+                    ],
+                    "severity": "error",
+                    "pattern": [
+                        {
+                            "regexp": "^\\s*(\\[-\\]\\s*.*?)(\\d+)ms\\s*$",
+                            "message": 1
+                        },
+                        {
+                            "regexp": "(.*)",
+                            "code": 1
+                        },
+                        {
+                            "regexp": ""
+                        },
+                        {
+                            "regexp": "^.*,\\s*(.*):\\s*line\\s*(\\d+).*",
+                            "file": 1,
+                            "line": 2
+                        }
+                    ]
+                }
+            ]
+        }
+    ]
+}

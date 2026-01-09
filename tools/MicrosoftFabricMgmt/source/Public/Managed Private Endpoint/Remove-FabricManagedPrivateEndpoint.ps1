@@ -1,0 +1,63 @@
+<#
+.SYNOPSIS
+    Removes a managed private endpoint from a specified Microsoft Fabric workspace.
+
+.DESCRIPTION
+    Deletes a managed private endpoint identified by ManagedPrivateEndpointId from the workspace specified by WorkspaceId using the Microsoft Fabric API.
+
+.PARAMETER WorkspaceId
+    The ID of the workspace containing the managed private endpoint.
+
+.PARAMETER ManagedPrivateEndpointId
+    The ID of the managed private endpoint to remove.
+
+.EXAMPLE
+    Remove-FabricManagedPrivateEndpoint -WorkspaceId "workspace-12345" -ManagedPrivateEndpointId "mpe-67890"
+    Removes the managed private endpoint with ID "mpe-67890" from the workspace "workspace-12345".
+
+.NOTES
+    - Requires `$FabricConfig` global configuration with `BaseUrl` and `FabricHeaders`.
+    - Calls `Test-TokenExpired` to ensure the authentication token is valid before making the API request.
+
+    Author: Tiago Balabuch
+#>
+function Remove-FabricManagedPrivateEndpoint {
+    [CmdletBinding(SupportsShouldProcess = $true, ConfirmImpact = 'High')]
+    param (
+        [Parameter(Mandatory = $true)]
+        [ValidateNotNullOrEmpty()]
+        [string]$WorkspaceId,
+
+        [Parameter(Mandatory = $true)]
+        [ValidateNotNullOrEmpty()]
+        [string]$ManagedPrivateEndpointId
+    )
+    try {
+        Invoke-FabricAuthCheck -ThrowOnFailure
+
+
+        # Construct the API endpoint URI
+        $apiEndpointURI = "{0}/workspaces/{1}/managedPrivateEndpoints/{2}" -f $script:FabricAuthContext.BaseUrl, $WorkspaceId, $ManagedPrivateEndpointId
+        Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
+
+        # Make the API request
+        $apiParams = @{
+            Headers = $script:FabricAuthContext.FabricHeaders
+            BaseURI = $apiEndpointURI
+            Method  = 'Delete'
+        }
+        if ($PSCmdlet.ShouldProcess($ManagedPrivateEndpointId, "Delete Managed Private Endpoint in workspace '$WorkspaceId'")) {
+            $response = Invoke-FabricAPIRequest @apiParams
+
+            # Return the API response
+            Write-FabricLog -Message "Managed Private Endpoint '$ManagedPrivateEndpointId' deleted successfully from workspace '$WorkspaceId'." -Level Host
+            return $response
+        }
+
+    }
+    catch {
+        # Capture and log error details
+        $errorDetails = $_.Exception.Message
+        Write-FabricLog -Message "Failed to delete Managed Private Endpoint '$ManagedPrivateEndpointId' from workspace '$WorkspaceId'. Error: $errorDetails" -Level Error
+    }
+}
