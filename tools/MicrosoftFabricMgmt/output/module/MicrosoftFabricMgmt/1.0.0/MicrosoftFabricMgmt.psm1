@@ -1209,7 +1209,7 @@ function New-FabricApacheAirflowJob {
                 Body = $bodyJson
             }
             $response = Invoke-FabricAPIRequest @apiParams
-            Write-FabricLog -Message "Apache Airflow Job created successfully!" -Level Info
+            Write-FabricLog -Message "Apache Airflow Job created successfully!" -Level Host
             $response
         }
 
@@ -1272,7 +1272,7 @@ function Remove-FabricApacheAirflowJob {
                 Method = 'Delete'
             }
             $response = Invoke-FabricAPIRequest @apiParams
-            Write-FabricLog -Message "Apache Airflow Job '$ApacheAirflowJobId' deleted successfully from workspace '$WorkspaceId'." -Level Info
+            Write-FabricLog -Message "Apache Airflow Job '$ApacheAirflowJobId' deleted successfully from workspace '$WorkspaceId'." -Level Host
             $response
         }
 
@@ -1363,7 +1363,7 @@ function Update-FabricApacheAirflowJob {
                 Body = $bodyJson
             }
             $response = Invoke-FabricAPIRequest @apiParams
-            Write-FabricLog -Message "Apache Airflow Job '$ApacheAirflowJobName' updated successfully!" -Level Info
+            Write-FabricLog -Message "Apache Airflow Job '$ApacheAirflowJobName' updated successfully!" -Level Host
             $response
         }
     }
@@ -1504,7 +1504,7 @@ function Update-FabricApacheAirflowJobDefinition {
                 Body = $bodyJson
             }
             $response = Invoke-FabricAPIRequest @apiParams
-            Write-FabricLog -Message "Successfully updated the definition for Apache Airflow Job with ID '$ApacheAirflowJobId' in workspace '$WorkspaceId'." -Level Info
+            Write-FabricLog -Message "Successfully updated the definition for Apache Airflow Job with ID '$ApacheAirflowJobId' in workspace '$WorkspaceId'." -Level Host
             $response
         }
     }
@@ -1669,7 +1669,7 @@ function Add-FabricConnectionRoleAssignment {
             Body = $bodyJson
         }
         $response = Invoke-FabricAPIRequest @apiParams
-        Write-FabricLog -Message "Role '$ConnectionRole' assigned to principal '$PrincipalId' successfully in connection '$ConnectionId'." -Level Info
+        Write-FabricLog -Message "Role '$ConnectionRole' assigned to principal '$PrincipalId' successfully in connection '$ConnectionId'." -Level Host
         $response
     }
     catch {
@@ -1866,7 +1866,7 @@ function Remove-FabricConnection {
                 Method = 'Delete'
             }
             $response = Invoke-FabricAPIRequest @apiParams
-            Write-FabricLog -Message "Connection '$ConnectionId' deleted successfully." -Level Info
+            Write-FabricLog -Message "Connection '$ConnectionId' deleted successfully." -Level Host
             $response
         }
 
@@ -1933,7 +1933,7 @@ function Remove-FabricConnectionRoleAssignment {
                 Method = 'Delete'
             }
             $response = Invoke-FabricAPIRequest @apiParams
-            Write-FabricLog -Message "Role assignment '$ConnectionRoleAssignmentId' successfully removed from Connection '$ConnectionId'." -Level Info
+            Write-FabricLog -Message "Role assignment '$ConnectionRoleAssignmentId' successfully removed from Connection '$ConnectionId'." -Level Host
             $response
         }
     }
@@ -2012,7 +2012,7 @@ function Update-FabricConnectionRoleAssignment {
                 Body = $bodyJson
             }
             $response = Invoke-FabricAPIRequest @apiParams
-            Write-FabricLog -Message "Role assignment $ConnectionRoleAssignmentId updated successfully in Connection '$ConnectionId'." -Level Info
+            Write-FabricLog -Message "Role assignment $ConnectionRoleAssignmentId updated successfully in Connection '$ConnectionId'." -Level Host
             $response
         }
     }
@@ -2315,7 +2315,7 @@ function New-FabricCopyJob {
             }
             $response = Invoke-FabricAPIRequest @apiParams
 
-            Write-FabricLog -Message "Copy Job created successfully!" -Level Info
+            Write-FabricLog -Message "Copy Job created successfully!" -Level Host
             $response
         }
 
@@ -2381,7 +2381,7 @@ function Remove-FabricCopyJob {
             }
             $response = Invoke-FabricAPIRequest @apiParams
 
-            Write-FabricLog -Message "Copy Job '$CopyJobId' deleted successfully from workspace '$WorkspaceId'." -Level Info
+            Write-FabricLog -Message "Copy Job '$CopyJobId' deleted successfully from workspace '$WorkspaceId'." -Level Host
             $response
         }
 
@@ -2475,7 +2475,7 @@ function Update-FabricCopyJob {
             }
             $response = Invoke-FabricAPIRequest @apiParams
 
-            Write-FabricLog -Message "Copy Job '$CopyJobName' updated successfully!" -Level Info
+            Write-FabricLog -Message "Copy Job '$CopyJobName' updated successfully!" -Level Host
             $response
         }
     }
@@ -2612,7 +2612,7 @@ function Update-FabricCopyJobDefinition {
             }
             $response = Invoke-FabricAPIRequest @apiParams
 
-            Write-FabricLog -Message "Successfully updated the definition for Copy Job with ID '$CopyJobId' in workspace '$WorkspaceId'." -Level Info
+            Write-FabricLog -Message "Successfully updated the definition for Copy Job with ID '$CopyJobId' in workspace '$WorkspaceId'." -Level Host
             $response
         }
     }
@@ -2830,7 +2830,7 @@ function New-FabricDataPipeline {
             }
             $response = Invoke-FabricAPIRequest @apiParams
 
-            Write-FabricLog -Message "Data Pipeline created successfully!" -Level Info
+            Write-FabricLog -Message "Data Pipeline created successfully!" -Level Host
             $response
         }
     }
@@ -2896,7 +2896,7 @@ function Remove-FabricDataPipeline {
             }
             $response = Invoke-FabricAPIRequest @apiParams
 
-            Write-FabricLog -Message "DataPipeline '$DataPipelineId' deleted successfully from workspace '$WorkspaceId'." -Level Info
+            Write-FabricLog -Message "DataPipeline '$DataPipelineId' deleted successfully from workspace '$WorkspaceId'." -Level Host
             $response
         }
     }
@@ -2990,7 +2990,7 @@ function Update-FabricDataPipeline {
             }
             $response = Invoke-FabricAPIRequest @apiParams
 
-            Write-FabricLog -Message "Data Pipeline '$DataPipelineName' updated successfully!" -Level Info
+            Write-FabricLog -Message "Data Pipeline '$DataPipelineName' updated successfully!" -Level Host
             $response
         }
     }
@@ -3137,7 +3137,7 @@ function Add-FabricDomainWorkspaceByCapacity {
             }
             $response = Invoke-FabricAPIRequest @apiParams
 
-            Write-FabricLog -Message "Assigning domain workspaces by capacity completed successfully!" -Level Info
+            Write-FabricLog -Message "Assigning domain workspaces by capacity completed successfully!" -Level Host
             $response
         }
     }
@@ -3214,7 +3214,7 @@ function Add-FabricDomainWorkspaceById {
             }
             $response = Invoke-FabricAPIRequest @apiParams
 
-            Write-FabricLog -Message "Successfully assigned workspaces to the domain with ID '$DomainId'." -Level Info
+            Write-FabricLog -Message "Successfully assigned workspaces to the domain with ID '$DomainId'." -Level Host
             $response
         }
     }
@@ -3302,7 +3302,7 @@ function Add-FabricDomainWorkspaceByPrincipal {
             }
             $null = Invoke-FabricAPIRequest @apiParams
 
-            Write-FabricLog -Message "Assigning domain workspaces by principal completed successfully!" -Level Info
+            Write-FabricLog -Message "Assigning domain workspaces by principal completed successfully!" -Level Host
         }
     }
     catch {
@@ -3398,7 +3398,7 @@ function Add-FabricDomainWorkspaceByRoleAssignment {
             }
             $response = Invoke-FabricAPIRequest @apiParams
 
-            Write-FabricLog -Message "Bulk role assignment for domain '$DomainId' completed successfully!" -Level Info
+            Write-FabricLog -Message "Bulk role assignment for domain '$DomainId' completed successfully!" -Level Host
             $response
         }
     }
@@ -3627,7 +3627,7 @@ function New-FabricDomain {
             }
             $response = Invoke-FabricAPIRequest @apiParams
 
-            Write-FabricLog -Message "Domain created successfully!" -Level Info
+            Write-FabricLog -Message "Domain created successfully!" -Level Host
             $response
         }
     }
@@ -3688,7 +3688,7 @@ function Remove-FabricDomain {
             }
             $response = Invoke-FabricAPIRequest @apiParams
 
-            Write-FabricLog -Message "Domain '$DomainId' deleted successfully!" -Level Info
+            Write-FabricLog -Message "Domain '$DomainId' deleted successfully!" -Level Host
             $response
         }
     }
@@ -3778,7 +3778,7 @@ function Remove-FabricDomainWorkspace {
             }
             $response = Invoke-FabricAPIRequest @apiParams
 
-            Write-FabricLog -Message "Successfully unassigned workspaces to the domain with ID '$DomainId'." -Level Info
+            Write-FabricLog -Message "Successfully unassigned workspaces to the domain with ID '$DomainId'." -Level Host
             $response
         }
     }
@@ -3876,7 +3876,7 @@ function Remove-FabricDomainWorkspaceRoleAssignment {
             }
             $response = Invoke-FabricAPIRequest @apiParams
 
-            Write-FabricLog -Message "Bulk role unassignment for domain '$DomainId' completed successfully!" -Level Info
+            Write-FabricLog -Message "Bulk role unassignment for domain '$DomainId' completed successfully!" -Level Host
             $response
         }
     }
@@ -3977,7 +3977,7 @@ function Update-FabricDomain {
             }
             $response = Invoke-FabricAPIRequest @apiParams
 
-            Write-FabricLog -Message "Domain '$DomainName' updated successfully!" -Level Info
+            Write-FabricLog -Message "Domain '$DomainName' updated successfully!" -Level Host
             $response
         }
     }
@@ -4377,7 +4377,7 @@ function Import-FabricEnvironmentStagingLibrary {
             $response = Invoke-FabricAPIRequest @apiParams
 
             # Return the API response
-            Write-FabricLog -Message "Environment staging library uploaded successfully!" -Level Info
+            Write-FabricLog -Message "Environment staging library uploaded successfully!" -Level Host
             $response
         }
     }
@@ -4465,7 +4465,7 @@ function New-FabricEnvironment {
             $response = Invoke-FabricAPIRequest @apiParams
 
             # Return the API response
-            Write-FabricLog -Message "Environment '$EnvironmentName' created successfully!" -Level Info
+            Write-FabricLog -Message "Environment '$EnvironmentName' created successfully!" -Level Host
             $response
         }
     }
@@ -4532,7 +4532,7 @@ function Publish-FabricEnvironment {
             $response = Invoke-FabricAPIRequest @apiParams
 
             # Return the API response
-            Write-FabricLog -Message "Publish operation request has been submitted successfully for the environment '$EnvironmentId'!" -Level Info
+            Write-FabricLog -Message "Publish operation request has been submitted successfully for the environment '$EnvironmentId'!" -Level Host
             $response
         }
     }
@@ -4598,7 +4598,7 @@ function Remove-FabricEnvironment {
             $response = Invoke-FabricAPIRequest @apiParams
 
             # Return the API response
-            Write-FabricLog -Message "Environment '$EnvironmentId' deleted successfully from workspace '$WorkspaceId'." -Level Info
+            Write-FabricLog -Message "Environment '$EnvironmentId' deleted successfully from workspace '$WorkspaceId'." -Level Host
             $response
         }
     }
@@ -4676,7 +4676,7 @@ function Remove-FabricEnvironmentStagingLibrary {
             $response = Invoke-FabricAPIRequest @apiParams
 
             # Return the API response
-            Write-FabricLog -Message "Staging library $LibraryName for the Environment '$EnvironmentId' deleted successfully from workspace '$WorkspaceId'." -Level Info
+            Write-FabricLog -Message "Staging library $LibraryName for the Environment '$EnvironmentId' deleted successfully from workspace '$WorkspaceId'." -Level Host
             $response
         }
     }
@@ -4743,7 +4743,7 @@ function Stop-FabricEnvironmentPublish {
             $response = Invoke-FabricAPIRequest @apiParams
 
             # Return the API response
-            Write-FabricLog -Message "Publication for environment '$EnvironmentId' has been successfully canceled." -Level Info
+            Write-FabricLog -Message "Publication for environment '$EnvironmentId' has been successfully canceled." -Level Host
             $response
         }
     }
@@ -4842,7 +4842,7 @@ function Update-FabricEnvironment {
             $response = Invoke-FabricAPIRequest @apiParams
 
             # Return the API response
-            Write-FabricLog -Message "Environment '$EnvironmentName' updated successfully!" -Level Info
+            Write-FabricLog -Message "Environment '$EnvironmentName' updated successfully!" -Level Host
             $response
         }
     }
@@ -5008,7 +5008,7 @@ function Update-FabricEnvironmentStagingSparkCompute {
             $response = Invoke-FabricAPIRequest @apiParams
 
             # Return the API response
-            Write-FabricLog -Message "Environment staging Spark compute updated successfully!" -Level Info
+            Write-FabricLog -Message "Environment staging Spark compute updated successfully!" -Level Host
             $response
         }
     }
@@ -5314,7 +5314,7 @@ function New-FabricEventhouse {
             $response = Invoke-FabricAPIRequest @apiParams
 
             # Return the API response
-            Write-FabricLog -Message "Eventhouse '$EventhouseName' created successfully!" -Level Info
+            Write-FabricLog -Message "Eventhouse '$EventhouseName' created successfully!" -Level Host
             $response
         }
     }
@@ -5380,7 +5380,7 @@ function Remove-FabricEventhouse {
             $response = Invoke-FabricAPIRequest @apiParams
 
             # Return the API response
-            Write-FabricLog -Message "Eventhouse '$EventhouseId' deleted successfully from workspace '$WorkspaceId'." -Level Info
+            Write-FabricLog -Message "Eventhouse '$EventhouseId' deleted successfully from workspace '$WorkspaceId'." -Level Host
             $response
         }
 
@@ -5475,7 +5475,7 @@ function Update-FabricEventhouse {
             $response = Invoke-FabricAPIRequest @apiParams
 
             # Return the API response
-            Write-FabricLog -Message "Eventhouse '$EventhouseName' updated successfully!" -Level Info
+            Write-FabricLog -Message "Eventhouse '$EventhouseName' updated successfully!" -Level Host
             $response
         }
     }
@@ -5600,7 +5600,7 @@ function Update-FabricEventhouseDefinition {
             $response = Invoke-FabricAPIRequest @apiParams
 
             # Return the API response
-            Write-FabricLog -Message "Successfully updated the definition for Eventhouse with ID '$EventhouseId' in workspace '$WorkspaceId'." -Level Info
+            Write-FabricLog -Message "Successfully updated the definition for Eventhouse with ID '$EventhouseId' in workspace '$WorkspaceId'." -Level Host
             $response
         }
     }
@@ -5779,7 +5779,7 @@ function Get-FabricEventstreamDefinition {
         $response = Invoke-FabricAPIRequest @apiParams
 
         # Return the API response
-        Write-FabricLog -Message "Eventstream '$EventstreamId' definition retrieved successfully!" -Level Info
+        Write-FabricLog -Message "Eventstream '$EventstreamId' definition retrieved successfully!" -Level Host
         $response
     }
     catch {
@@ -6266,7 +6266,7 @@ function New-FabricEventstream {
             $response = Invoke-FabricAPIRequest @apiParams
 
             # Return the API response
-            Write-FabricLog -Message "Eventstream '$EventstreamName' created successfully!" -Level Info
+            Write-FabricLog -Message "Eventstream '$EventstreamName' created successfully!" -Level Host
             $response
         }
     }
@@ -6334,7 +6334,7 @@ function Remove-FabricEventstream {
             $response = Invoke-FabricAPIRequest @apiParams
 
             # Return the API response
-            Write-FabricLog -Message "Eventstream '$EventstreamId' deleted successfully from workspace '$WorkspaceId'." -Level Info
+            Write-FabricLog -Message "Eventstream '$EventstreamId' deleted successfully from workspace '$WorkspaceId'." -Level Host
             $response
         }
     }
@@ -6400,7 +6400,7 @@ function Resume-FabricEventstream {
             $response = Invoke-FabricAPIRequest @apiParams
 
             # Return the API response
-            Write-FabricLog -Message "Eventstream '$EventstreamId' resumed successfully!" -Level Info
+            Write-FabricLog -Message "Eventstream '$EventstreamId' resumed successfully!" -Level Host
             $response
         }
     }
@@ -6473,7 +6473,7 @@ function Resume-FabricEventstreamDestination {
             $response = Invoke-FabricAPIRequest @apiParams
 
             # Return the API response
-            Write-FabricLog -Message "Eventstream '$EventstreamId' destination '$DestinationId' resumed successfully!" -Level Info
+            Write-FabricLog -Message "Eventstream '$EventstreamId' destination '$DestinationId' resumed successfully!" -Level Host
             $response
         }
     }
@@ -6547,7 +6547,7 @@ function Resume-FabricEventstreamSource {
             $response = Invoke-FabricAPIRequest @apiParams
 
             # Return the API response
-            Write-FabricLog -Message "Eventstream '$EventstreamId' Source '$SourceId' resumed successfully!" -Level Info
+            Write-FabricLog -Message "Eventstream '$EventstreamId' Source '$SourceId' resumed successfully!" -Level Host
             $response
         }
     }
@@ -6611,7 +6611,7 @@ function Suspend-FabricEventstream {
             $response = Invoke-FabricAPIRequest @apiParams
 
             # Return the API response
-            Write-FabricLog -Message "Eventstream '$EventstreamId' paused successfully!" -Level Info
+            Write-FabricLog -Message "Eventstream '$EventstreamId' paused successfully!" -Level Host
             $response
         }
     }
@@ -6684,7 +6684,7 @@ function Suspend-FabricEventstreamDestination {
             $response = Invoke-FabricAPIRequest @apiParams
 
             # Return the API response
-            Write-FabricLog -Message "Eventstream '$EventstreamId' destination '$DestinationId' paused successfully!" -Level Info
+            Write-FabricLog -Message "Eventstream '$EventstreamId' destination '$DestinationId' paused successfully!" -Level Host
             $response
         }
     }
@@ -6753,7 +6753,7 @@ function Suspend-FabricEventstreamSource {
             $response = Invoke-FabricAPIRequest @apiParams
 
             # Return the API response
-            Write-FabricLog -Message "Eventstream '$EventstreamId' Source '$SourceId' paused successfully!" -Level Info
+            Write-FabricLog -Message "Eventstream '$EventstreamId' Source '$SourceId' paused successfully!" -Level Host
             $response
         }
     }
@@ -6853,7 +6853,7 @@ function Update-FabricEventstream {
             $response = Invoke-FabricAPIRequest @apiParams
 
             # Return the API response
-            Write-FabricLog -Message "Eventstream '$EventstreamName' updated successfully!" -Level Info
+            Write-FabricLog -Message "Eventstream '$EventstreamName' updated successfully!" -Level Host
             $response
         }
     }
@@ -6997,7 +6997,7 @@ function Update-FabricEventstreamDefinition {
             $response = Invoke-FabricAPIRequest @apiParams
 
             # Return the API response
-            Write-FabricLog -Message "Successfully updated the definition for Eventstream with ID '$EventstreamId' in workspace '$WorkspaceId'." -Level Info
+            Write-FabricLog -Message "Successfully updated the definition for Eventstream with ID '$EventstreamId' in workspace '$WorkspaceId'." -Level Host
             $response
         }
     }
@@ -7126,7 +7126,7 @@ function Revoke-FabricExternalDataShare {
             $dataItems = Invoke-FabricAPIRequest @apiParams
 
             # Return the API response
-            Write-FabricLog -Message "External data share with ID '$ExternalDataShareId' successfully revoked in workspace '$WorkspaceId', item '$ItemId'." -Level Info
+            Write-FabricLog -Message "External data share with ID '$ExternalDataShareId' successfully revoked in workspace '$WorkspaceId', item '$ItemId'." -Level Host
             $dataItems
         }
     }
@@ -7336,7 +7336,7 @@ function Move-FabricFolder {
             $response = Invoke-FabricAPIRequest @apiParams
 
             # Return the API response
-            Write-FabricLog -Message "Folder moved successfully!" -Level Info
+            Write-FabricLog -Message "Folder moved successfully!" -Level Host
             $response
         }
 
@@ -7451,7 +7451,7 @@ function New-FabricFolder {
             $response = Invoke-FabricAPIRequest @apiParams
 
             # Return the API response
-            Write-FabricLog -Message "Folder created successfully!" -Level Info
+            Write-FabricLog -Message "Folder created successfully!" -Level Host
             $response
         }
 
@@ -7517,7 +7517,7 @@ function Remove-FabricFolder {
             $response = Invoke-FabricAPIRequest @apiParams
 
             # Return the API response
-            Write-FabricLog -Message "Folder '$FolderId' deleted successfully from workspace '$WorkspaceId'." -Level Info
+            Write-FabricLog -Message "Folder '$FolderId' deleted successfully from workspace '$WorkspaceId'." -Level Host
             $response
         }
 
@@ -7624,7 +7624,7 @@ function Update-FabricFolder {
             }
             $response = Invoke-FabricAPIRequest @apiParams
             # Return the API response
-            Write-FabricLog -Message "Folder '$FolderName' updated successfully!" -Level Info
+            Write-FabricLog -Message "Folder '$FolderName' updated successfully!" -Level Host
             $response
         }
     }
@@ -7944,7 +7944,7 @@ function New-FabricGraphQLApi {
             $response = Invoke-FabricAPIRequest @apiParams
 
             # Return the API response
-            Write-FabricLog -Message "GraphQLApi '$GraphQLApiName' created successfully!" -Level Info
+            Write-FabricLog -Message "GraphQLApi '$GraphQLApiName' created successfully!" -Level Host
             $response
         }
     }
@@ -8009,7 +8009,7 @@ function Remove-FabricGraphQLApi {
             $response = Invoke-FabricAPIRequest @apiParams
 
             # Return the API response
-            Write-FabricLog -Message "GraphQLApi '$GraphQLApiId' deleted successfully from workspace '$WorkspaceId'." -Level Info
+            Write-FabricLog -Message "GraphQLApi '$GraphQLApiId' deleted successfully from workspace '$WorkspaceId'." -Level Host
             $response
         }
     }
@@ -8101,7 +8101,7 @@ function Update-FabricGraphQLApi {
             $response = Invoke-FabricAPIRequest @apiParams
 
             # Return the API response
-            Write-FabricLog -Message "GraphQL API '$GraphQLApiName' updated successfully!" -Level Info
+            Write-FabricLog -Message "GraphQL API '$GraphQLApiName' updated successfully!" -Level Host
             $response
         }
     }
@@ -8230,7 +8230,7 @@ function Update-FabricGraphQLApiDefinition {
             $response = Invoke-FabricAPIRequest @apiParams
 
             # Return the API response
-            Write-FabricLog -Message "Successfully updated the definition for GraphQLApi with ID '$GraphQLApiId' in workspace '$WorkspaceId'." -Level Info
+            Write-FabricLog -Message "Successfully updated the definition for GraphQLApi with ID '$GraphQLApiId' in workspace '$WorkspaceId'." -Level Host
             $response
         }
     }
@@ -8432,7 +8432,7 @@ function Get-FabricKQLDashboardDefinition {
         $response = Invoke-FabricAPIRequest @apiParams
 
         # Return the API response
-        Write-FabricLog -Message "KQLDashboard '$KQLDashboardId' definition retrieved successfully!" -Level Info
+        Write-FabricLog -Message "KQLDashboard '$KQLDashboardId' definition retrieved successfully!" -Level Host
         return $response
     }
     catch {
@@ -8587,7 +8587,7 @@ function New-FabricKQLDashboard {
             $response = Invoke-FabricAPIRequest @apiParams
 
             # Return the API response
-            Write-FabricLog -Message "KQLDashboard '$KQLDashboardName' created successfully!" -Level Info
+            Write-FabricLog -Message "KQLDashboard '$KQLDashboardName' created successfully!" -Level Host
             return $response
         }
     }
@@ -8656,7 +8656,7 @@ function Remove-FabricKQLDashboard {
             $response = Invoke-FabricAPIRequest @apiParams
 
             # Return the API response
-            Write-FabricLog -Message "KQLDashboard '$KQLDashboardId' deleted successfully from workspace '$WorkspaceId'." -Level Info
+            Write-FabricLog -Message "KQLDashboard '$KQLDashboardId' deleted successfully from workspace '$WorkspaceId'." -Level Host
             return $response
         }
     }
@@ -8759,7 +8759,7 @@ function Update-FabricKQLDashboard {
             $response = Invoke-FabricAPIRequest @apiParams
 
             # Return the API response
-            Write-FabricLog -Message "KQLDashboard '$KQLDashboardName' updated successfully!" -Level Info
+            Write-FabricLog -Message "KQLDashboard '$KQLDashboardName' updated successfully!" -Level Host
             return $response
         }
     }
@@ -8901,7 +8901,7 @@ function Update-FabricKQLDashboardDefinition {
             $response = Invoke-FabricAPIRequest @apiParams
 
             # Return the API response
-            Write-FabricLog -Message "Successfully updated the definition for KQL Dashboard with ID '$KQLDashboardId' in workspace '$WorkspaceId'." -Level Info
+            Write-FabricLog -Message "Successfully updated the definition for KQL Dashboard with ID '$KQLDashboardId' in workspace '$WorkspaceId'." -Level Host
             return $response
         }
     }
@@ -9387,7 +9387,7 @@ function New-FabricKQLDatabase {
             $response = Invoke-FabricAPIRequest @apiParams
 
             # Return the API response
-            Write-FabricLog -Message "KQLDatabase '$KQLDatabaseName' created successfully!" -Level Info
+            Write-FabricLog -Message "KQLDatabase '$KQLDatabaseName' created successfully!" -Level Host
             return $response
         }
     }
@@ -9457,7 +9457,7 @@ function Remove-FabricKQLDatabase {
             $response = Invoke-FabricAPIRequest @apiParams
 
             # Return the API response
-            Write-FabricLog -Message "KQLDatabase '$KQLDatabaseId' deleted successfully from workspace '$WorkspaceId'." -Level Info
+            Write-FabricLog -Message "KQLDatabase '$KQLDatabaseId' deleted successfully from workspace '$WorkspaceId'." -Level Host
             return $response
         }
     }
@@ -9561,7 +9561,7 @@ function Update-FabricKQLDatabase {
             $response = Invoke-FabricAPIRequest @apiParams
 
             # Return the API response
-            Write-FabricLog -Message "KQLDatabase '$KQLDatabaseName' updated successfully!" -Level Info
+            Write-FabricLog -Message "KQLDatabase '$KQLDatabaseName' updated successfully!" -Level Host
             return $response
         }
     }
@@ -9728,7 +9728,7 @@ function Update-FabricKQLDatabaseDefinition {
             $response = Invoke-FabricAPIRequest @apiParams
 
             # Return the API response
-            Write-FabricLog -Message "Successfully updated the definition for KQL Database with ID '$KQLDatabaseId' in workspace '$WorkspaceId'." -Level Info
+            Write-FabricLog -Message "Successfully updated the definition for KQL Database with ID '$KQLDatabaseId' in workspace '$WorkspaceId'." -Level Host
             return $response
         }
     }
@@ -10083,7 +10083,7 @@ function New-FabricKQLQueryset {
             $response = Invoke-FabricAPIRequest @apiParams
 
             # Return the API response
-            Write-FabricLog -Message "KQLQueryset '$KQLQuerysetName' created successfully!" -Level Info
+            Write-FabricLog -Message "KQLQueryset '$KQLQuerysetName' created successfully!" -Level Host
             return $response
         }
 
@@ -10153,7 +10153,7 @@ function Remove-FabricKQLQueryset {
             $response = Invoke-FabricAPIRequest @apiParams
 
             # Return the API response
-            Write-FabricLog -Message "KQLQueryset '$KQLQuerysetId' deleted successfully from workspace '$WorkspaceId'." -Level Info
+            Write-FabricLog -Message "KQLQueryset '$KQLQuerysetId' deleted successfully from workspace '$WorkspaceId'." -Level Host
             return $response
         }
     }
@@ -10256,7 +10256,7 @@ function Update-FabricKQLQueryset {
             $response = Invoke-FabricAPIRequest @apiParams
 
             # Return the API response
-            Write-FabricLog -Message "KQLQueryset '$KQLQuerysetName' updated successfully!" -Level Info
+            Write-FabricLog -Message "KQLQueryset '$KQLQuerysetName' updated successfully!" -Level Host
             return $response
         }
     }
@@ -10399,7 +10399,7 @@ function Update-FabricKQLQuerysetDefinition {
             $response = Invoke-FabricAPIRequest @apiParams
 
             # Return the API response
-            Write-FabricLog -Message "Successfully updated the definition for KQL Queryset with ID '$KQLQuerysetId' in workspace '$WorkspaceId'." -Level Info
+            Write-FabricLog -Message "Successfully updated the definition for KQL Queryset with ID '$KQLQuerysetId' in workspace '$WorkspaceId'." -Level Host
             return $response
         }
     }
@@ -10473,7 +10473,7 @@ function Remove-FabricLabel {
             $response = Invoke-FabricAPIRequest @apiParams
 
             # Return the API response
-            Write-FabricLog -Message "Bulk label removal completed successfully." -Level Info
+            Write-FabricLog -Message "Bulk label removal completed successfully." -Level Host
             return $response
         }
     }
@@ -10578,7 +10578,7 @@ function Set-FabricLabel {
             $response = Invoke-FabricAPIRequest @apiParams
 
             # Return the API response
-            Write-FabricLog -Message "Bulk label assignment completed successfully for $($Items.Count) item(s) with LabelId '$LabelId'." -Level Info
+            Write-FabricLog -Message "Bulk label assignment completed successfully for $($Items.Count) item(s) with LabelId '$LabelId'." -Level Host
             return $response
         }
     }
@@ -10967,7 +10967,7 @@ function New-FabricLakehouse {
             $response = Invoke-FabricAPIRequest @apiParams
 
             # Return the API response
-            Write-FabricLog -Message "Lakehouse '$LakehouseName' created successfully!" -Level Info
+            Write-FabricLog -Message "Lakehouse '$LakehouseName' created successfully!" -Level Host
             return $response
         }
     }
@@ -11034,7 +11034,7 @@ function Remove-FabricLakehouse {
             $response = Invoke-FabricAPIRequest @apiParams
 
             # Return the API response
-            Write-FabricLog -Message "Lakehouse '$LakehouseId' deleted successfully from workspace '$WorkspaceId'." -Level Info
+            Write-FabricLog -Message "Lakehouse '$LakehouseId' deleted successfully from workspace '$WorkspaceId'." -Level Host
             return $response
         }
 
@@ -11129,11 +11129,11 @@ function Start-FabricLakehouseRefreshMaterializedLakeView {
             $response = Invoke-FabricAPIRequest @apiParams
 
             if ($WaitForCompletion) {
-                Write-FabricLog -Message "Refresh MLV job for Lakehouse '$LakehouseId' has completed." -Level Info
+                Write-FabricLog -Message "Refresh MLV job for Lakehouse '$LakehouseId' has completed." -Level Host
                 Write-FabricLog -Message "Job details: $($response | ConvertTo-Json -Depth 5)" -Level Debug
             }
             else {
-                Write-FabricLog -Message "Refresh MLV job for Lakehouse '$LakehouseId' has been started and is running asynchronously." -Level Info
+                Write-FabricLog -Message "Refresh MLV job for Lakehouse '$LakehouseId' has been started and is running asynchronously." -Level Host
                 Write-FabricLog -Message "You can monitor the job status using the job ID from the response." -Level Debug
             }
             # Return the API response
@@ -11317,11 +11317,11 @@ function Start-FabricLakehouseTableMaintenance {
             $response = Invoke-FabricAPIRequest @apiParams
 
             if ($WaitForCompletion) {
-                Write-FabricLog -Message "Table maintenance job for Lakehouse '$LakehouseId' has completed." -Level Info
+                Write-FabricLog -Message "Table maintenance job for Lakehouse '$LakehouseId' has completed." -Level Host
                 Write-FabricLog -Message "Job details: $($response | ConvertTo-Json -Depth 5)" -Level Debug
             }
             else {
-                Write-FabricLog -Message "Table maintenance job for Lakehouse '$LakehouseId' has been started and is running asynchronously." -Level Info
+                Write-FabricLog -Message "Table maintenance job for Lakehouse '$LakehouseId' has been started and is running asynchronously." -Level Host
                 Write-FabricLog -Message "You can monitor the job status using the job ID from the response." -Level Debug
             }
             # Return the API response
@@ -11425,7 +11425,7 @@ function Update-FabricLakehouse {
             $response = Invoke-FabricAPIRequest @apiParams
 
             # Return the API response
-            Write-FabricLog -Message "Lakehouse '$LakehouseName' updated successfully!" -Level Info
+            Write-FabricLog -Message "Lakehouse '$LakehouseName' updated successfully!" -Level Host
             return $response
         }
     }
@@ -11582,7 +11582,7 @@ function Write-FabricLakehouseTableData {
             $response = Invoke-FabricAPIRequest @apiParams
 
             # Return the API response
-            Write-FabricLog -Message "Table '$TableName' loaded successfully into Lakehouse '$LakehouseId' in Workspace '$WorkspaceId'." -Level Info
+            Write-FabricLog -Message "Table '$TableName' loaded successfully into Lakehouse '$LakehouseId' in Workspace '$WorkspaceId'." -Level Host
             return $response
         }
     }
@@ -11811,7 +11811,7 @@ function New-FabricManagedPrivateEndpoint {
             $response = Invoke-FabricAPIRequest @apiParams
 
             # Return the API response
-            Write-FabricLog -Message "Managed Private Endpoint created successfully!" -Level Info
+            Write-FabricLog -Message "Managed Private Endpoint created successfully!" -Level Host
             return $response
         }
     }
@@ -11876,7 +11876,7 @@ function Remove-FabricManagedPrivateEndpoint {
             $response = Invoke-FabricAPIRequest @apiParams
 
             # Return the API response
-            Write-FabricLog -Message "Managed Private Endpoint '$ManagedPrivateEndpointId' deleted successfully from workspace '$WorkspaceId'." -Level Info
+            Write-FabricLog -Message "Managed Private Endpoint '$ManagedPrivateEndpointId' deleted successfully from workspace '$WorkspaceId'." -Level Host
             return $response
         }
 
@@ -12352,7 +12352,7 @@ function New-FabricMirroredDatabase {
             $response = Invoke-FabricAPIRequest @apiParams
 
             # Return the API response
-            Write-FabricLog -Message "Mirrored Database '$MirroredDatabaseName' created successfully!" -Level Info
+            Write-FabricLog -Message "Mirrored Database '$MirroredDatabaseName' created successfully!" -Level Host
             return $response
         }
 
@@ -12419,7 +12419,7 @@ function Remove-FabricMirroredDatabase {
             $response = Invoke-FabricAPIRequest @apiParams
 
             # Return the API response
-            Write-FabricLog -Message "Mirrored Database '$MirroredDatabaseId' deleted successfully from workspace '$WorkspaceId'." -Level Info
+            Write-FabricLog -Message "Mirrored Database '$MirroredDatabaseId' deleted successfully from workspace '$WorkspaceId'." -Level Host
             return $response
         }
     }
@@ -12483,7 +12483,7 @@ function Start-FabricMirroredDatabaseMirroring {
             $response = Invoke-FabricAPIRequest @apiParams
 
             # Return the API response
-            Write-FabricLog -Message "Database mirroring started successfully for Mirrored DatabaseId: $MirroredDatabaseId" -Level Info
+            Write-FabricLog -Message "Database mirroring started successfully for Mirrored DatabaseId: $MirroredDatabaseId" -Level Host
             return $response
         }
     }
@@ -12546,7 +12546,7 @@ function Stop-FabricMirroredDatabaseMirroring {
             $response = Invoke-FabricAPIRequest @apiParams
 
             # Return the API response
-            Write-FabricLog -Message "Database mirroring stopped successfully for MirroredDatabaseId: $MirroredDatabaseId" -Level Info
+            Write-FabricLog -Message "Database mirroring stopped successfully for MirroredDatabaseId: $MirroredDatabaseId" -Level Host
             return $response
         }
     }
@@ -12648,7 +12648,7 @@ function Update-FabricMirroredDatabase {
             $response = Invoke-FabricAPIRequest @apiParams
 
             # Return the API response
-            Write-FabricLog -Message "Mirrored Database '$MirroredDatabaseName' updated successfully!" -Level Info
+            Write-FabricLog -Message "Mirrored Database '$MirroredDatabaseName' updated successfully!" -Level Host
             return $response
         }
     }
@@ -12792,7 +12792,7 @@ function Update-FabricMirroredDatabaseDefinition {
 
             # Return the API response
 
-            Write-FabricLog -Message "Successfully updated the definition for Mirrored Database with ID '$MirroredDatabaseId' in workspace '$WorkspaceId'." -Level Info
+            Write-FabricLog -Message "Successfully updated the definition for Mirrored Database with ID '$MirroredDatabaseId' in workspace '$WorkspaceId'." -Level Host
             return $response
         }
     }
@@ -13109,7 +13109,7 @@ function New-FabricMLExperiment {
             $response = Invoke-FabricAPIRequest @apiParams
 
             # Return the API response
-            Write-FabricLog -Message "ML Experiment '$MLExperimentName' created successfully!" -Level Info
+            Write-FabricLog -Message "ML Experiment '$MLExperimentName' created successfully!" -Level Host
             return $response
         }
     }
@@ -13178,7 +13178,7 @@ function Remove-FabricMLExperiment {
             $response = Invoke-FabricAPIRequest @apiParams
 
             # Return the API response
-            Write-FabricLog -Message "ML Experiment '$MLExperimentId' deleted successfully from workspace '$WorkspaceId'." -Level Info
+            Write-FabricLog -Message "ML Experiment '$MLExperimentId' deleted successfully from workspace '$WorkspaceId'." -Level Host
             return $response
         }
     }
@@ -13277,7 +13277,7 @@ function Update-FabricMLExperiment {
             $response = Invoke-FabricAPIRequest @apiParams
 
             # Return the API response
-            Write-FabricLog -Message "ML Experiment '$MLExperimentName' updated successfully!" -Level Info
+            Write-FabricLog -Message "ML Experiment '$MLExperimentName' updated successfully!" -Level Host
             return $response
         }
     }
@@ -13478,7 +13478,7 @@ function New-FabricMLModel {
             $response = Invoke-FabricAPIRequest @apiParams
 
             # Return the API response
-            Write-FabricLog -Message "ML Model '$MLModelName' created successfully!" -Level Info
+            Write-FabricLog -Message "ML Model '$MLModelName' created successfully!" -Level Host
             return $response
         }
     }
@@ -13547,7 +13547,7 @@ function Remove-FabricMLModel {
             $response = Invoke-FabricAPIRequest @apiParams
 
             # Return the API response
-            Write-FabricLog -Message "ML Model '$MLModelId' deleted successfully from workspace '$WorkspaceId'." -Level Info
+            Write-FabricLog -Message "ML Model '$MLModelId' deleted successfully from workspace '$WorkspaceId'." -Level Host
             return $response
         }
     }
@@ -13633,7 +13633,7 @@ function Update-FabricMLModel {
             $response = Invoke-FabricAPIRequest @apiParams
 
             # Return the API response
-            Write-FabricLog -Message "ML Model '$MLModelId' updated successfully!" -Level Info
+            Write-FabricLog -Message "ML Model '$MLModelId' updated successfully!" -Level Host
             return $response
         }
     }
@@ -13979,7 +13979,7 @@ function New-FabricMountedDataFactory {
             $response = Invoke-FabricAPIRequest @apiParams
 
             # Return the API response
-            Write-FabricLog -Message "Mounted Data Factory '$MountedDataFactoryName' created successfully!" -Level Info
+            Write-FabricLog -Message "Mounted Data Factory '$MountedDataFactoryName' created successfully!" -Level Host
             return $response
         }
     }
@@ -14047,7 +14047,7 @@ function Remove-FabricMountedDataFactory {
             $response = Invoke-FabricAPIRequest @apiParams
 
             # Return the API response
-            Write-FabricLog -Message "Mounted Data Factory '$MountedDataFactoryId' deleted successfully from workspace '$WorkspaceId'." -Level Info
+            Write-FabricLog -Message "Mounted Data Factory '$MountedDataFactoryId' deleted successfully from workspace '$WorkspaceId'." -Level Host
             return $response
         }
 
@@ -14144,7 +14144,7 @@ function Update-FabricMountedDataFactory {
             $response = Invoke-FabricAPIRequest @apiParams
 
             # Return the API response
-            Write-FabricLog -Message "Mounted Data Factory '$MountedDataFactoryName' updated successfully!" -Level Info
+            Write-FabricLog -Message "Mounted Data Factory '$MountedDataFactoryName' updated successfully!" -Level Host
             return $response
         }
     }
@@ -14273,7 +14273,7 @@ function Update-FabricMountedDataFactoryDefinition {
             $response = Invoke-FabricAPIRequest @apiParams
 
             # Return the API response
-            Write-FabricLog -Message "Successfully updated the definition for Mounted Data Factory with ID '$MountedDataFactoryId' in workspace '$WorkspaceId'." -Level Info
+            Write-FabricLog -Message "Successfully updated the definition for Mounted Data Factory with ID '$MountedDataFactoryId' in workspace '$WorkspaceId'." -Level Host
             return $response
         }
     }
@@ -14735,7 +14735,7 @@ function New-FabricNotebook {
             $response = Invoke-FabricAPIRequest @apiParams
 
             # Return the API response
-            Write-FabricLog -Message "Notebook '$NotebookName' created successfully!" -Level Info
+            Write-FabricLog -Message "Notebook '$NotebookName' created successfully!" -Level Host
             return $response
         }
     }
@@ -14864,11 +14864,11 @@ function New-FabricNotebookNEW {
         # Step 5: Handle and log the response
         switch ($statusCode) {
             201 {
-                Write-FabricLog -Message "Notebook '$NotebookName' created successfully!" -Level Info
+                Write-FabricLog -Message "Notebook '$NotebookName' created successfully!" -Level Host
                 return $response
             }
             202 {
-                Write-FabricLog -Message "Notebook '$NotebookName' creation accepted. Provisioning in progress!" -Level Info
+                Write-FabricLog -Message "Notebook '$NotebookName' creation accepted. Provisioning in progress!" -Level Host
 
                 [string]$operationId = $responseHeader["x-ms-operation-id"]
                 [string]$location = $responseHeader["Location"]
@@ -14970,7 +14970,7 @@ function Remove-FabricNotebook {
             $response = Invoke-FabricAPIRequest @apiParams
 
             # Return the API response
-            Write-FabricLog -Message "Notebook '$NotebookId' deleted successfully from workspace '$WorkspaceId'." -Level Info
+            Write-FabricLog -Message "Notebook '$NotebookId' deleted successfully from workspace '$WorkspaceId'." -Level Host
             return $response
         }
     }
@@ -15073,7 +15073,7 @@ function Update-FabricNotebook {
             $response = Invoke-FabricAPIRequest @apiParams
 
             # Return the API response
-            Write-FabricLog -Message "Notebook '$NotebookName' updated successfully!" -Level Info
+            Write-FabricLog -Message "Notebook '$NotebookName' updated successfully!" -Level Host
             return $response
         }
     }
@@ -15222,7 +15222,7 @@ function Update-FabricNotebookDefinition {
             $response = Invoke-FabricAPIRequest @apiParams
 
             # Return the API response
-            Write-FabricLog -Message "Successfully updated the definition for Notebook with ID '$NotebookId' in workspace '$WorkspaceId'." -Level Info
+            Write-FabricLog -Message "Successfully updated the definition for Notebook with ID '$NotebookId' in workspace '$WorkspaceId'." -Level Host
             return $response
         }
     }
@@ -15666,7 +15666,7 @@ function New-FabricOneLakeShortcut {
             $response = Invoke-FabricAPIRequest @apiParams
 
             # Return the API response
-            Write-FabricLog -Message "OneLake Shortcut created successfully!" -Level Info
+            Write-FabricLog -Message "OneLake Shortcut created successfully!" -Level Host
             return $response
         }
     }
@@ -15747,7 +15747,7 @@ function Remove-FabricOneLakeShortcut {
             $response = Invoke-FabricAPIRequest @apiParams
 
             # Return the API response
-            Write-FabricLog -Message "OneLake Shortcut '$ShortcutName' was successfully deleted from item '$ItemId' in workspace '$WorkspaceId'." -Level Info
+            Write-FabricLog -Message "OneLake Shortcut '$ShortcutName' was successfully deleted from item '$ItemId' in workspace '$WorkspaceId'." -Level Host
             return $response
         }
 
@@ -15808,7 +15808,7 @@ function Reset-FabricOneLakeShortcutCache {
             $response = Invoke-FabricAPIRequest @apiParams
 
             # Return the API response
-            Write-FabricLog -Message "Successfully reset the OneLake shortcut cache for workspace '$WorkspaceId'." -Level Info
+            Write-FabricLog -Message "Successfully reset the OneLake shortcut cache for workspace '$WorkspaceId'." -Level Host
             return $response
         }
     }
@@ -15989,10 +15989,10 @@ function Set-FabricOneLakeDataAccessSecurity {
 
             # Return the API response
             if ($DryRun.IsPresent) {
-                Write-FabricLog -Message "Dry run completed. No changes were made." -Level Info
+                Write-FabricLog -Message "Dry run completed. No changes were made." -Level Host
             }
             else {
-                Write-FabricLog -Message "OneLake Data Access Security set up successfully!" -Level Info
+                Write-FabricLog -Message "OneLake Data Access Security set up successfully!" -Level Host
             }
 
             return $response
@@ -16199,7 +16199,7 @@ function Update-FabricPaginatedReport {
             $response = Invoke-FabricAPIRequest @apiParams
 
             # Return the API response
-            Write-FabricLog -Message "Paginated Report '$PaginatedReportName' updated successfully!" -Level Info
+            Write-FabricLog -Message "Paginated Report '$PaginatedReportName' updated successfully!" -Level Host
             return $response
         }
     }
@@ -16537,7 +16537,7 @@ function New-FabricReflex {
             $response = Invoke-FabricAPIRequest @apiParams
 
             # Return the API response
-            Write-FabricLog -Message "Reflex '$ReflexName' created successfully!" -Level Info
+            Write-FabricLog -Message "Reflex '$ReflexName' created successfully!" -Level Host
             return $response
         }
     }
@@ -16604,7 +16604,7 @@ function Remove-FabricReflex {
             $response = Invoke-FabricAPIRequest @apiParams
 
             # Return the API response
-            Write-FabricLog -Message "Reflex '$ReflexId' deleted successfully from workspace '$WorkspaceId'." -Level Info
+            Write-FabricLog -Message "Reflex '$ReflexId' deleted successfully from workspace '$WorkspaceId'." -Level Host
             return $response
         }
     }
@@ -16700,7 +16700,7 @@ function Update-FabricReflex {
             $response = Invoke-FabricAPIRequest @apiParams
 
             # Return the API response
-            Write-FabricLog -Message "Reflex '$ReflexName' updated successfully!" -Level Info
+            Write-FabricLog -Message "Reflex '$ReflexName' updated successfully!" -Level Host
             return $response
         }
     }
@@ -16829,7 +16829,7 @@ function Update-FabricReflexDefinition {
             $response = Invoke-FabricAPIRequest @apiParams
 
             # Return the API response
-            Write-FabricLog -Message "Successfully updated the definition for Reflex with ID '$ReflexId' in workspace '$WorkspaceId'." -Level Info
+            Write-FabricLog -Message "Successfully updated the definition for Reflex with ID '$ReflexId' in workspace '$WorkspaceId'." -Level Host
             return $response
         }
     }
@@ -17126,7 +17126,7 @@ function New-FabricReport {
             $response = Invoke-FabricAPIRequest @apiParams
 
             # Return the API response
-            Write-FabricLog -Message "Report '$ReportName' created successfully!" -Level Info
+            Write-FabricLog -Message "Report '$ReportName' created successfully!" -Level Host
             return $response
         }
     }
@@ -17193,7 +17193,7 @@ function Remove-FabricReport {
             $response = Invoke-FabricAPIRequest @apiParams
 
             # Return the API response
-            Write-FabricLog -Message "Report '$ReportId' deleted successfully from workspace '$WorkspaceId'." -Level Info
+            Write-FabricLog -Message "Report '$ReportId' deleted successfully from workspace '$WorkspaceId'." -Level Host
             return $response
         }
     }
@@ -17289,7 +17289,7 @@ function Update-FabricReport {
             $response = Invoke-FabricAPIRequest @apiParams
 
             # Return the API response
-            Write-FabricLog -Message "Report '$ReportName' updated successfully!" -Level Info
+            Write-FabricLog -Message "Report '$ReportName' updated successfully!" -Level Host
             return $response
         }
     }
@@ -17398,7 +17398,7 @@ function Update-FabricReportDefinition {
             $response = Invoke-FabricAPIRequest @apiParams
 
             # Return the API response
-            Write-FabricLog -Message "Successfully updated the definition for Report with ID '$ReportId' in workspace '$WorkspaceId'." -Level Info
+            Write-FabricLog -Message "Successfully updated the definition for Report with ID '$ReportId' in workspace '$WorkspaceId'." -Level Host
             return $response
         }
     }
@@ -17691,7 +17691,7 @@ function New-FabricSemanticModel {
             $response = Invoke-FabricAPIRequest @apiParams
 
             # Return the API response
-            Write-FabricLog -Message "SemanticModel '$SemanticModelName' created successfully!" -Level Info
+            Write-FabricLog -Message "SemanticModel '$SemanticModelName' created successfully!" -Level Host
             return $response
         }
 
@@ -17759,7 +17759,7 @@ function Remove-FabricSemanticModel {
             $response = Invoke-FabricAPIRequest @apiParams
 
             # Return the API response
-            Write-FabricLog -Message "SemanticModel '$SemanticModelId' deleted successfully from workspace '$WorkspaceId'." -Level Info
+            Write-FabricLog -Message "SemanticModel '$SemanticModelId' deleted successfully from workspace '$WorkspaceId'." -Level Host
             return $response
         }
     }
@@ -17855,7 +17855,7 @@ function Update-FabricSemanticModel {
             $response = Invoke-FabricAPIRequest @apiParams
 
             # Return the API response
-            Write-FabricLog -Message "SemanticModel '$SemanticModelName' updated successfully!" -Level Info
+            Write-FabricLog -Message "SemanticModel '$SemanticModelName' updated successfully!" -Level Host
             return $response
         }
     }
@@ -17957,7 +17957,7 @@ function Update-FabricSemanticModelDefinition {
             $response = Invoke-FabricAPIRequest @apiParams
 
             # Return the API response
-            Write-FabricLog -Message "Successfully updated the definition for Semantic Model with ID '$SemanticModelId' in workspace '$WorkspaceId'." -Level Info
+            Write-FabricLog -Message "Successfully updated the definition for Semantic Model with ID '$SemanticModelId' in workspace '$WorkspaceId'." -Level Host
             return $response
         }
     }
@@ -18038,7 +18038,7 @@ function Remove-FabricSharingLinks {
                 -Body $bodyJson
 
             # Return the API response
-            Write-FabricLog -Message "All sharing links have been removed successfully from the specified items." -Level Info
+            Write-FabricLog -Message "All sharing links have been removed successfully from the specified items." -Level Host
             return $response
         }
     }
@@ -18126,7 +18126,7 @@ function Remove-FabricSharingLinksBulk {
                 -Body $bodyJson
 
             # Return the API response
-            Write-FabricLog -Message "Bulk sharing link removal completed successfully for $($Items.Count) item(s)." -Level Info
+            Write-FabricLog -Message "Bulk sharing link removal completed successfully for $($Items.Count) item(s)." -Level Host
             return $response
         }
     }
@@ -18565,7 +18565,7 @@ function New-FabricSparkJobDefinition {
             $response = Invoke-FabricAPIRequest @apiParams
 
             # Return the API response
-            Write-FabricLog -Message "Spark Job Definition '$SparkJobDefinitionName' created successfully!" -Level Info
+            Write-FabricLog -Message "Spark Job Definition '$SparkJobDefinitionName' created successfully!" -Level Host
             return $response
         }
     }
@@ -18631,7 +18631,7 @@ function Remove-FabricSparkJobDefinition {
             $response = Invoke-FabricAPIRequest @apiParams
 
             # Return the API response
-            Write-FabricLog -Message "Spark Job Definition '$SparkJobDefinitionId' deleted successfully from workspace '$WorkspaceId'." -Level Info
+            Write-FabricLog -Message "Spark Job Definition '$SparkJobDefinitionId' deleted successfully from workspace '$WorkspaceId'." -Level Host
             return $response
         }
     }
@@ -18715,16 +18715,16 @@ function Start-FabricSparkJobDefinitionOnDemand {
             $response = Invoke-FabricAPIRequest @apiParams
 
             if ($WaitForCompletion) {
-                Write-FabricLog -Message "On-demand Spark Job Definition (ID: '$SparkJobDefinitionId') has completed." -Level Info
+                Write-FabricLog -Message "On-demand Spark Job Definition (ID: '$SparkJobDefinitionId') has completed." -Level Host
                 Write-FabricLog -Message "Job details: $($response | ConvertTo-Json -Depth 5)" -Level Debug
             }
             else {
-                Write-FabricLog -Message "Successfully started on-demand Spark Job Definition (ID: '$SparkJobDefinitionId') in workspace '$WorkspaceId'. and is running asynchronously." -Level Info
+                Write-FabricLog -Message "Successfully started on-demand Spark Job Definition (ID: '$SparkJobDefinitionId') in workspace '$WorkspaceId'. and is running asynchronously." -Level Host
                 Write-FabricLog -Message "You can monitor the job status using the job ID from the response." -Level Debug
             }
 
             # Return the API response
-            #Write-FabricLog -Message "Successfully started on-demand Spark Job Definition (ID: '$SparkJobDefinitionId') in workspace '$WorkspaceId'." -Level Info
+            #Write-FabricLog -Message "Successfully started on-demand Spark Job Definition (ID: '$SparkJobDefinitionId') in workspace '$WorkspaceId'." -Level Host
             return $response
         }
     }
@@ -18819,7 +18819,7 @@ function Update-FabricSparkJobDefinition {
             $response = Invoke-FabricAPIRequest @apiParams
 
             # Return the API response
-            Write-FabricLog -Message "Spark Job Definition '$SparkJobDefinitionName' updated successfully!" -Level Info
+            Write-FabricLog -Message "Spark Job Definition '$SparkJobDefinitionName' updated successfully!" -Level Host
             return $response
         }
     }
@@ -18947,7 +18947,7 @@ function Update-FabricSparkJobDefinitionDefinition {
             $response = Invoke-FabricAPIRequest @apiParams
 
             # Return the API response
-            Write-FabricLog -Message "Successfully updated the definition for Spark Job Definition with ID '$SparkJobDefinitionId' in workspace '$WorkspaceId'." -Level Info
+            Write-FabricLog -Message "Successfully updated the definition for Spark Job Definition with ID '$SparkJobDefinitionId' in workspace '$WorkspaceId'." -Level Host
             return $response
         }
     }
@@ -19490,7 +19490,7 @@ function New-FabricSparkCustomPool {
             $response = Invoke-FabricAPIRequest @apiParams
 
             # Return the API response
-            Write-FabricLog -Message "SparkCustomPool '$SparkCustomPoolName' created successfully!" -Level Info
+            Write-FabricLog -Message "SparkCustomPool '$SparkCustomPoolName' created successfully!" -Level Host
             return $response
         }
     }
@@ -19557,7 +19557,7 @@ function Remove-FabricSparkCustomPool {
             $response = Invoke-FabricAPIRequest @apiParams
 
             # Return the API response
-            Write-FabricLog -Message "Spark Custom Pool '$SparkCustomPoolId' deleted successfully from workspace '$WorkspaceId'." -Level Info
+            Write-FabricLog -Message "Spark Custom Pool '$SparkCustomPoolId' deleted successfully from workspace '$WorkspaceId'." -Level Host
             return $response
         }
     }
@@ -19712,7 +19712,7 @@ function Update-FabricSparkCustomPool {
             $response = Invoke-FabricAPIRequest @apiParams
 
             # Return the API response
-            Write-FabricLog -Message "Spark Custom Pool '$SparkCustomPoolName' updated successfully!" -Level Info
+            Write-FabricLog -Message "Spark Custom Pool '$SparkCustomPoolName' updated successfully!" -Level Host
             return $response
         }
     }
@@ -19905,7 +19905,7 @@ function Update-FabricSparkSettings {
             }
 
             # Step 6: Handle results
-            Write-FabricLog -Message "Spark Custom Pool '$SparkSettingsName' updated successfully!" -Level Info
+            Write-FabricLog -Message "Spark Custom Pool '$SparkSettingsName' updated successfully!" -Level Host
             return $response
         }
     }
@@ -20081,7 +20081,7 @@ function Update-FabricSparkWorkspaceSettings {
             $response = Invoke-FabricAPIRequest @apiParams
 
             # Return the API response
-            Write-FabricLog -Message "Spark Workspace Pool '$SparkSettingsName' updated successfully!" -Level Info
+            Write-FabricLog -Message "Spark Workspace Pool '$SparkSettingsName' updated successfully!" -Level Host
             return $response
         }
     }
@@ -20371,11 +20371,11 @@ function Update-FabricSQLEndpointMetadata {
             $response = Invoke-FabricAPIRequest @apiParams
 
             if ($WaitForCompletion) {
-                Write-FabricLog -Message "Refresh SQL Endpoint metadata for SQL Endpoint '$($SQLEndpointId)' has completed." -Level Info
+                Write-FabricLog -Message "Refresh SQL Endpoint metadata for SQL Endpoint '$($SQLEndpointId)' has completed." -Level Host
                 Write-FabricLog -Message "Job details: $($response | ConvertTo-Json -Depth 5)" -Level Debug
             }
             else {
-                Write-FabricLog -Message "Refresh SQL Endpoint metadata for SQL Endpoint '$($SQLEndpointId)' has been started and is running asynchronously." -Level Info
+                Write-FabricLog -Message "Refresh SQL Endpoint metadata for SQL Endpoint '$($SQLEndpointId)' has been started and is running asynchronously." -Level Host
                 Write-FabricLog -Message "You can monitor the job status using the job ID from the response." -Level Debug
             }
             # Return the API response
@@ -20554,7 +20554,7 @@ function New-FabricTag {
             $response = Invoke-FabricAPIRequest @apiParams
 
             # Return the API response
-            Write-FabricLog -Message "Tags created successfully!" -Level Info
+            Write-FabricLog -Message "Tags created successfully!" -Level Host
             return $response
         }
     }
@@ -20613,7 +20613,7 @@ function Remove-FabricTag {
             $response = Invoke-FabricAPIRequest @apiParams
 
             # Return the API response
-            Write-FabricLog -Message "Tag '$TagId' deleted successfully." -Level Info
+            Write-FabricLog -Message "Tag '$TagId' deleted successfully." -Level Host
             return $response
         }
 
@@ -20691,7 +20691,7 @@ function Update-FabricTag {
             $response = Invoke-FabricAPIRequest @apiParams
 
             # Return the API response
-            Write-FabricLog -Message "Tag '$TagName' updated successfully!" -Level Info
+            Write-FabricLog -Message "Tag '$TagName' updated successfully!" -Level Host
             return $response
         }
     }
@@ -21152,7 +21152,7 @@ function Revoke-FabricCapacityTenantSettingOverrides {
             $response = Invoke-FabricAPIRequest @apiParams
 
             # Return the API response
-            Write-FabricLog -Message "Successfully removed the tenant setting override '$tenantSettingName' from the capacity with ID '$capacityId'." -Level Info
+            Write-FabricLog -Message "Successfully removed the tenant setting override '$tenantSettingName' from the capacity with ID '$capacityId'." -Level Host
             return $response
         }
     }
@@ -21295,7 +21295,7 @@ function Update-FabricCapacityTenantSettingOverrides {
                 -Body $bodyJson
 
             # Return the API response
-            Write-FabricLog -Message "Successfully updated capacity tenant setting overrides for CapacityId: $CapacityId and SettingTitle: $SettingTitle." -Level Info
+            Write-FabricLog -Message "Successfully updated capacity tenant setting overrides for CapacityId: $CapacityId and SettingTitle: $SettingTitle." -Level Host
             return $response
         }
     }
@@ -21463,7 +21463,7 @@ function Update-FabricTenantSetting {
                 -Body $bodyJson
 
             # Return the API response
-            Write-FabricLog -Message "Successfully updated tenant setting." -Level Info
+            Write-FabricLog -Message "Successfully updated tenant setting." -Level Host
             return $response
         }
     }
@@ -22056,7 +22056,7 @@ function Invoke-FabricAPIRequest {
                 }
                 202 {
                     # Handle long-running operations (LROs)
-                    Write-FabricLog -Message "Request accepted. The operation is being processed." -Level Info
+                    Write-FabricLog -Message "Request accepted. The operation is being processed." -Level Host
                     [string]$operationId = $responseHeader["x-ms-operation-id"]
                     [string]$location = $responseHeader["Location"]
                     $retryAfter = $responseHeader["Retry-After"]
@@ -22099,7 +22099,7 @@ function Invoke-FabricAPIRequest {
                         }
                         else {
                             # If not waiting for completion, return operation tracking information
-                            Write-FabricLog -Message "The operation is running asynchronously." -Level Info
+                            Write-FabricLog -Message "The operation is running asynchronously." -Level Host
                             return [PSCustomObject]@{
                                 OperationId = $operationId
                                 Location    = $location
@@ -22616,7 +22616,7 @@ function New-FabricVariableLibrary {
             $response = Invoke-FabricAPIRequest @apiParams
 
             # Return the API response
-            Write-FabricLog -Message "Variable Library '$VariableLibraryName' created successfully!" -Level Info
+            Write-FabricLog -Message "Variable Library '$VariableLibraryName' created successfully!" -Level Host
             return $response
         }
     }
@@ -22682,7 +22682,7 @@ function Remove-FabricVariableLibrary {
             $response = Invoke-FabricAPIRequest @apiParams
 
             # Return the API response
-            Write-FabricLog -Message "Variable Library '$VariableLibraryId' deleted successfully from workspace '$WorkspaceId'." -Level Info
+            Write-FabricLog -Message "Variable Library '$VariableLibraryId' deleted successfully from workspace '$WorkspaceId'." -Level Host
             return $response
         }
 
@@ -22790,7 +22790,7 @@ function Update-FabricVariableLibrary {
             $response = Invoke-FabricAPIRequest @apiParams
 
             # Return the API response
-            Write-FabricLog -Message "Variable Library '$VariableLibraryName' updated successfully!" -Level Info
+            Write-FabricLog -Message "Variable Library '$VariableLibraryName' updated successfully!" -Level Host
             return $response
         }
     }
@@ -23213,7 +23213,7 @@ function New-FabricWarehouse {
             $response = Invoke-FabricAPIRequest @apiParams
 
             # Return the API response
-            Write-FabricLog -Message "Data Warehouse created successfully!" -Level Info
+            Write-FabricLog -Message "Data Warehouse created successfully!" -Level Host
             return $response
         }
     }
@@ -23340,7 +23340,7 @@ function New-FabricWarehouseSnapshot {
             $response = Invoke-FabricAPIRequest @apiParams
 
             # Return the API response
-            Write-FabricLog -Message "Data Warehouse Snapshot created successfully!" -Level Info
+            Write-FabricLog -Message "Data Warehouse Snapshot created successfully!" -Level Host
             return $response
         }
     }
@@ -23407,7 +23407,7 @@ function Remove-FabricWarehouse {
             $response = Invoke-FabricAPIRequest @apiParams
 
             # Return the API response
-            Write-FabricLog -Message "Warehouse '$WarehouseId' deleted successfully from workspace '$WorkspaceId'." -Level Info
+            Write-FabricLog -Message "Warehouse '$WarehouseId' deleted successfully from workspace '$WorkspaceId'." -Level Host
             return $response
         }
 
@@ -23475,7 +23475,7 @@ function Remove-FabricWarehouseSnapshot {
             $response = Invoke-FabricAPIRequest @apiParams
 
             # Return the API response
-            Write-FabricLog -Message "Warehouse Snapshot '$WarehouseSnapshotId' deleted successfully from workspace '$WorkspaceId'." -Level Info
+            Write-FabricLog -Message "Warehouse Snapshot '$WarehouseSnapshotId' deleted successfully from workspace '$WorkspaceId'." -Level Host
             return $response
         }
 
@@ -23572,7 +23572,7 @@ function Update-FabricWarehouse {
         if ($PSCmdlet.ShouldProcess("Warehouse '$WarehouseId' to '$WarehouseName' in workspace '$WorkspaceId'", 'Update')) {
             $response = Invoke-FabricAPIRequest @apiParams
             # Return the API response
-            Write-FabricLog -Message "Warehouse '$WarehouseName' updated successfully!" -Level Info
+            Write-FabricLog -Message "Warehouse '$WarehouseName' updated successfully!" -Level Host
             return $response
         }
     }
@@ -23680,7 +23680,7 @@ function Update-FabricWarehouseSnapshot {
         if ($PSCmdlet.ShouldProcess("Warehouse Snapshot '$WarehouseSnapshotId' to '$WarehouseSnapshotName' in workspace '$WorkspaceId'", 'Update')) {
             $response = Invoke-FabricAPIRequest @apiParams
             # Return the API response
-            Write-FabricLog -Message "Warehouse Snapshot '$WarehouseSnapshotName' updated successfully!" -Level Info
+            Write-FabricLog -Message "Warehouse Snapshot '$WarehouseSnapshotName' updated successfully!" -Level Host
             return $response
         }
     }
@@ -23758,7 +23758,7 @@ function Add-FabricWorkspaceCapacity {
         $response = Invoke-FabricAPIRequest @apiParams
 
         # Return the API response
-        Write-FabricLog -Message "Successfully assigned workspace with ID '$WorkspaceId' to capacity with ID '$CapacityId'." -Level Info
+        Write-FabricLog -Message "Successfully assigned workspace with ID '$WorkspaceId' to capacity with ID '$CapacityId'." -Level Host
         $response
     }
     catch {
@@ -23817,7 +23817,7 @@ function Add-FabricWorkspaceIdentity {
         $response = Invoke-FabricAPIRequest @apiParams
 
         # Return the API response.
-        Write-FabricLog -Message "Workspace identity was successfully provisioned for workspace '$WorkspaceId'." -Level Info
+        Write-FabricLog -Message "Workspace identity was successfully provisioned for workspace '$WorkspaceId'." -Level Host
         $response
 
     }
@@ -23914,7 +23914,7 @@ function Add-FabricWorkspaceRoleAssignment {
         $response = Invoke-FabricAPIRequest @apiParams
 
         # Return the API response
-        Write-FabricLog -Message "Role '$WorkspaceRole' assigned to principal '$PrincipalId' successfully in workspace '$WorkspaceId'." -Level Info
+        Write-FabricLog -Message "Role '$WorkspaceRole' assigned to principal '$PrincipalId' successfully in workspace '$WorkspaceId'." -Level Host
         $response
     }
     catch {
@@ -24176,7 +24176,7 @@ The display name of the workspace to create. Allowed characters are letters, num
 a name that clearly reflects the workspace purpose (e.g. Finance Analytics) for easier administration.
 
 .PARAMETER WorkspaceDescription
-Optional textual description explaining the workspaceï¿½s intended usage, stakeholders, or data domain. Providing a
+Optional textual description explaining the workspace�s intended usage, stakeholders, or data domain. Providing a
 meaningful description helps other administrators and users understand scope without opening items.
 
 .PARAMETER CapacityId
@@ -24251,7 +24251,7 @@ function New-FabricWorkspace {
 
         if ($PSCmdlet.ShouldProcess("Workspace '$WorkspaceName'", 'Create')) {
             $response = Invoke-FabricAPIRequest @apiParams
-            Write-FabricLog -Message "Workspace '$WorkspaceName' created successfully!" -Level Info
+            Write-FabricLog -Message "Workspace '$WorkspaceName' created successfully!" -Level Host
             $response
         }
     }
@@ -24310,7 +24310,7 @@ function Remove-FabricWorkspace {
 
         if ($PSCmdlet.ShouldProcess("Workspace '$WorkspaceId'", 'Delete')) {
             $response = Invoke-FabricAPIRequest @apiParams
-            Write-FabricLog -Message "Workspace '$WorkspaceId' deleted successfully!" -Level Info
+            Write-FabricLog -Message "Workspace '$WorkspaceId' deleted successfully!" -Level Host
             $response
         }
     }
@@ -24370,7 +24370,7 @@ function Remove-FabricWorkspaceCapacity {
 
 
         # Return the API response
-        Write-FabricLog -Message "Workspace capacity has been successfully unassigned from workspace '$WorkspaceId'." -Level Info
+        Write-FabricLog -Message "Workspace capacity has been successfully unassigned from workspace '$WorkspaceId'." -Level Host
         $response
     }
     catch {
@@ -24431,7 +24431,7 @@ function Remove-FabricWorkspaceIdentity {
             Invoke-FabricAPIRequest @apiParams
 
             # Return the API response
-            Write-FabricLog -Message "Workspace identity was successfully deprovisioned for workspace '$WorkspaceId'." -Level Info
+            Write-FabricLog -Message "Workspace identity was successfully deprovisioned for workspace '$WorkspaceId'." -Level Host
         }
     }
     catch {
@@ -24500,7 +24500,7 @@ function Remove-FabricWorkspaceRoleAssignment {
             $response = Invoke-FabricAPIRequest @apiParams
 
             # Return the API response
-            Write-FabricLog -Message "Role assignment '$WorkspaceRoleAssignmentId' successfully removed from workspace '$WorkspaceId'." -Level Info
+            Write-FabricLog -Message "Role assignment '$WorkspaceRoleAssignmentId' successfully removed from workspace '$WorkspaceId'." -Level Host
             $response
         }
     }
@@ -24592,7 +24592,7 @@ function Update-FabricWorkspace {
 
         if ($PSCmdlet.ShouldProcess("Workspace '$WorkspaceId' to '$WorkspaceName'", 'Update')) {
             $response = Invoke-FabricAPIRequest @apiParams
-            Write-FabricLog -Message "Workspace '$WorkspaceName' updated successfully!" -Level Info
+            Write-FabricLog -Message "Workspace '$WorkspaceName' updated successfully!" -Level Host
             $response
         }
     }
@@ -24682,7 +24682,7 @@ function Update-FabricWorkspaceRoleAssignment {
             $response = Invoke-FabricAPIRequest @apiParams
 
             # Return the API response
-            Write-FabricLog -Message "Role assignment $WorkspaceRoleAssignmentId updated successfully in workspace '$WorkspaceId'." -Level Info
+            Write-FabricLog -Message "Role assignment $WorkspaceRoleAssignmentId updated successfully in workspace '$WorkspaceId'." -Level Host
             $response
         }
     }
@@ -24693,4 +24693,3 @@ function Update-FabricWorkspaceRoleAssignment {
     }
 }
 #EndRegion '.\Public\Workspace\Update-FabricWorkspaceRoleAssignment.ps1' 88
-
