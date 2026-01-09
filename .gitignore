@@ -414,3 +414,8 @@ FodyWeavers.xsd
 tools/FabricDataFactoryMigrationAssistant/.github/dependabot.yml
 tools/MicrosoftFabricMgmt/testResults.xml
 testResults.xml
+
+# Microsoft Fabric REST API Specs Cache
+# Downloaded from https://github.com/microsoft/fabric-rest-api-specs
+# Run Update-FabricAPISpecsCache.ps1 to refresh
+tools/.api-specs-cache/

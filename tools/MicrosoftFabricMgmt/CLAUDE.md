@@ -19,6 +19,21 @@ This document provides comprehensive instructions for AI-assisted development of
 - Test on both versions before deployment
 - Use `$PSVersionTable.PSVersion` to detect version and branch logic when needed
 
+**API Endpoint Validation**:
+- **CRITICAL**: All API endpoints MUST be validated against the official [Microsoft Fabric REST API Specs](https://github.com/microsoft/fabric-rest-api-specs/)
+- Primary reference: [platform/swagger.json](https://github.com/microsoft/fabric-rest-api-specs/blob/main/platform/swagger.json)
+- Before implementing or modifying any API call:
+  1. Verify the exact endpoint path in the swagger.json file
+  2. Confirm the HTTP method (GET, POST, PATCH, DELETE, PUT)
+  3. Validate required and optional parameters
+  4. Check request/response schema structures
+- Common endpoint patterns:
+  - Workspace resources: `/workspaces/{workspaceId}/resourceType`
+  - Workspace role assignments: `/workspaces/{workspaceId}/roleAssignments`
+  - Items: `/workspaces/{workspaceId}/items/{itemId}`
+  - Item subresources: `/workspaces/{workspaceId}/items/{itemId}/subresource`
+- Write unit tests that validate constructed URIs match official spec patterns
+
 ## Directory Structure
 
 ```
