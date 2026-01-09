@@ -27,10 +27,11 @@ Before you update your FUAM workspace, please review the following illustration,
 
 #### 1b) Before you update
 
-1. (Recommended) **Back up your workspace** items (e.g., using Git) before the update.
-2. (Recommended) **Check the release notes** of FUAM to see enhanced, fixed, or new items and features.
-3. (Recommended) **Take a screenshot** of your current pipeline parameters in `Load_FUAM_Data_E2E` before the update.
-4. (Highly recommended) **Use the same user to update FUAM** as you **used during initial deployment**. It is important to do so because this user is the owner of all the FUAM-related items and the cloud connections.
+1. (Recommended) [**Review** the release notes from FUAM](/monitoring/fabric-unified-admin-monitoring/changelog/FUAM_Changelog.md)
+2. (Recommended) **Back up your workspace** items (e.g., using Git) before the update.
+3. (Recommended) **Check the release notes** of FUAM to see enhanced, fixed, or new items and features.
+4. (Recommended) **Take a screenshot** of your current pipeline parameters in `Load_FUAM_Data_E2E` before the update.
+5. (Highly recommended) **Use the same user to update FUAM** as you **used during initial deployment**. It is important to do so because this user is the owner of all the FUAM-related items and the cloud connections.
  
 ## 2. Download and run Notebook
 

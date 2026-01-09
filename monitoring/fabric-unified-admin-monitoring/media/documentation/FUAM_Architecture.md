@@ -91,6 +91,8 @@ The following illustration shows you the current structure and purpose of the pr
 
 ![image](/monitoring/fabric-unified-admin-monitoring/media/general/fuam_report_structure.png)
 
+### FUAM_Core_Report
+
 **Some screenshots of the FUAM_Core_Report:**
 
 ![image](/monitoring/fabric-unified-admin-monitoring/media/general/fuam_core_1.png)
@@ -103,12 +105,43 @@ The following illustration shows you the current structure and purpose of the pr
 
 ![image](/monitoring/fabric-unified-admin-monitoring/media/general/fuam_core_5.png)
 
+![image](/monitoring/fabric-unified-admin-monitoring/media/general/fuam_core_6.png)
+
+![image](/monitoring/fabric-unified-admin-monitoring/media/general/fuam_core_7.png)
+
+![image](/monitoring/fabric-unified-admin-monitoring/media/general/fuam_core_8.png)
+
+![image](/monitoring/fabric-unified-admin-monitoring/media/general/fuam_core_9.png)
+
+![image](/monitoring/fabric-unified-admin-monitoring/media/general/fuam_core_10.png)
+
+![image](/monitoring/fabric-unified-admin-monitoring/media/general/fuam_core_11.png)
+
+and more..
+
 **Filters**
 
 By following best practices, the report pages try to avoid slicers on the report pages.  
 Each report page has its own filter pane column definition to help users focus on the most important information.
 
-![](https://github.com/GT-Analytics/fuam-basic/blob/dev-2025.3.1/media/wiki_deployment/FUAM_basic_deployment_process_6_1.png)
+
+
+### FUAM_Item_Analyzer_Report
+
+##### Some screenshots of the FUAM_Item_Analyzer_Report
+
+**Item Analyzer** report page:
+![image](/monitoring/fabric-unified-admin-monitoring/media/general/fuam_item_4.png)
+![image](/monitoring/fabric-unified-admin-monitoring/media/general/fuam_item_5.png)
+
+**Semantic Model Analyzer** report page:
+Semantic model specific insights enriched with associated to Power BI reports' activity logs.
+![image](/monitoring/fabric-unified-admin-monitoring/media/general/fuam_item_1.png)
+![image](/monitoring/fabric-unified-admin-monitoring/media/general/fuam_item_2.png)
+![image](/monitoring/fabric-unified-admin-monitoring/media/general/fuam_item_3.png)
+
+
+
 
 ## Extensibility
 
