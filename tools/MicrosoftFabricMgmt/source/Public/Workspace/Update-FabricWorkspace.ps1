@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
 Updates the properties of a Fabric workspace.
 
@@ -53,7 +53,7 @@ function Update-FabricWorkspace {
         Invoke-FabricAuthCheck -ThrowOnFailure
 
         # Construct the API endpoint URI
-        $apiEndpointURI = New-FabricAPIUri -Resource 'workspaces' -ItemId $WorkspaceId
+        $apiEndpointURI = New-FabricAPIUri -Resource 'workspaces' -WorkspaceId $WorkspaceId
 
         # Construct the request body
         $body = @{

@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
 Assigns a role to a principal for a specified Fabric workspace.
 
@@ -56,7 +56,7 @@ function Add-FabricWorkspaceRoleAssignment {
         Invoke-FabricAuthCheck -ThrowOnFailure
 
         # Construct the API endpoint URI
-        $apiEndpointURI = New-FabricAPIUri -Resource 'workspaces' -ItemId $WorkspaceId -Subresource 'roleAssignments'
+        $apiEndpointURI = New-FabricAPIUri -Resource 'workspaces' -WorkspaceId $WorkspaceId -Subresource 'roleAssignments'
         Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
 
         # Construct the request body

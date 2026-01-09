@@ -45,7 +45,8 @@ function Get-FabricWorkspaceRoleAssignment {
         Invoke-FabricAuthCheck -ThrowOnFailure
 
         # Construct the API endpoint URI
-        $apiEndpointURI = New-FabricAPIUri -Resource 'workspaces' -ItemId $WorkspaceId -Subresource 'roleAssignments'
+        # Correct pattern: /workspaces/{workspaceId}/roleAssignments
+        $apiEndpointURI = New-FabricAPIUri -Resource 'workspaces' -WorkspaceId $WorkspaceId -Subresource 'roleAssignments'
 
         # Make the API request
         $apiParams = @{

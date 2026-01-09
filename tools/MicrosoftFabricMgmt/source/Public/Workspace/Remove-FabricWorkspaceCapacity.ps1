@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
 Unassigns a Fabric workspace from its capacity.
 
@@ -32,7 +32,7 @@ function Remove-FabricWorkspaceCapacity {
         Invoke-FabricAuthCheck -ThrowOnFailure
 
         # Construct the API endpoint URI
-        $apiEndpointURI = New-FabricAPIUri -Resource 'workspaces' -ItemId $WorkspaceId -Subresource 'unassignFromCapacity'
+        $apiEndpointURI = New-FabricAPIUri -Resource 'workspaces' -WorkspaceId $WorkspaceId -Subresource 'unassignFromCapacity'
         Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
 
         if ($PSCmdlet.ShouldProcess("$WorkspaceId" , "Remove from Capacity")) {

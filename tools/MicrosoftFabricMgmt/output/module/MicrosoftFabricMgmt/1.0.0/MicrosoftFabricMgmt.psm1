@@ -23736,7 +23736,7 @@ function Add-FabricWorkspaceCapacity {
         Invoke-FabricAuthCheck -ThrowOnFailure
 
         # Construct the API endpoint URI
-        $apiEndpointURI = New-FabricAPIUri -Resource 'workspaces' -ItemId $WorkspaceId -Subresource 'assignToCapacity'
+        $apiEndpointURI = New-FabricAPIUri -Resource 'workspaces' -WorkspaceId $WorkspaceId -Subresource 'assignToCapacity'
         Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
 
         # Construct the request body
@@ -23805,7 +23805,7 @@ function Add-FabricWorkspaceIdentity {
         Invoke-FabricAuthCheck -ThrowOnFailure
 
         # Construct the API endpoint URI
-        $apiEndpointURI = New-FabricAPIUri -Resource 'workspaces' -ItemId $WorkspaceId -Subresource 'provisionIdentity'
+        $apiEndpointURI = New-FabricAPIUri -Resource 'workspaces' -WorkspaceId $WorkspaceId -Subresource 'provisionIdentity'
         Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
 
         # Make the API request
@@ -23888,7 +23888,7 @@ function Add-FabricWorkspaceRoleAssignment {
         Invoke-FabricAuthCheck -ThrowOnFailure
 
         # Construct the API endpoint URI
-        $apiEndpointURI = New-FabricAPIUri -Resource 'workspaces' -ItemId $WorkspaceId -Subresource 'roleAssignments'
+        $apiEndpointURI = New-FabricAPIUri -Resource 'workspaces' -WorkspaceId $WorkspaceId -Subresource 'roleAssignments'
         Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
 
         # Construct the request body
@@ -24123,7 +24123,8 @@ function Get-FabricWorkspaceRoleAssignment {
         Invoke-FabricAuthCheck -ThrowOnFailure
 
         # Construct the API endpoint URI
-        $apiEndpointURI = New-FabricAPIUri -Resource 'workspaces' -ItemId $WorkspaceId -Subresource 'roleAssignments'
+        # Correct pattern: /workspaces/{workspaceId}/roleAssignments
+        $apiEndpointURI = New-FabricAPIUri -Resource 'workspaces' -WorkspaceId $WorkspaceId -Subresource 'roleAssignments'
 
         # Make the API request
         $apiParams = @{
@@ -24158,7 +24159,7 @@ function Get-FabricWorkspaceRoleAssignment {
         Write-FabricLog -Message "Failed to retrieve role assignments for WorkspaceId '$WorkspaceId'. Error: $errorDetails" -Level Error
     }
 }
-#EndRegion '.\Public\Workspace\Get-FabricWorkspaceRoleAssignment.ps1' 83
+#EndRegion '.\Public\Workspace\Get-FabricWorkspaceRoleAssignment.ps1' 84
 #Region '.\Public\Workspace\New-FabricWorkspace.ps1' -1
 
 <#
@@ -24298,7 +24299,7 @@ function Remove-FabricWorkspace {
         Invoke-FabricAuthCheck -ThrowOnFailure
 
         # Construct the API endpoint URI
-        $apiEndpointURI = New-FabricAPIUri -Resource 'workspaces' -ItemId $WorkspaceId
+        $apiEndpointURI = New-FabricAPIUri -Resource 'workspaces' -WorkspaceId $WorkspaceId
 
         # Make the API request
         $apiParams = @{
@@ -24356,7 +24357,7 @@ function Remove-FabricWorkspaceCapacity {
         Invoke-FabricAuthCheck -ThrowOnFailure
 
         # Construct the API endpoint URI
-        $apiEndpointURI = New-FabricAPIUri -Resource 'workspaces' -ItemId $WorkspaceId -Subresource 'unassignFromCapacity'
+        $apiEndpointURI = New-FabricAPIUri -Resource 'workspaces' -WorkspaceId $WorkspaceId -Subresource 'unassignFromCapacity'
         Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
 
         if ($PSCmdlet.ShouldProcess("$WorkspaceId" , "Remove from Capacity")) {
@@ -24416,7 +24417,7 @@ function Remove-FabricWorkspaceIdentity {
         Invoke-FabricAuthCheck -ThrowOnFailure
 
         # Construct the API endpoint URI
-        $apiEndpointURI = New-FabricAPIUri -Resource 'workspaces' -ItemId $WorkspaceId -Subresource 'deprovisionIdentity'
+        $apiEndpointURI = New-FabricAPIUri -Resource 'workspaces' -WorkspaceId $WorkspaceId -Subresource 'deprovisionIdentity'
         Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
 
         # Make the API request
@@ -24485,7 +24486,7 @@ function Remove-FabricWorkspaceRoleAssignment {
         Invoke-FabricAuthCheck -ThrowOnFailure
 
         # Construct the API endpoint URI
-        $apiEndpointURI = New-FabricAPIUri -Resource 'workspaces' -ItemId $WorkspaceId -Subresource 'roleAssignments' -SubresourceId $WorkspaceRoleAssignmentId
+        $apiEndpointURI = New-FabricAPIUri -Resource 'workspaces' -WorkspaceId $WorkspaceId -Subresource 'roleAssignments' -ItemId $WorkspaceRoleAssignmentId
         Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
 
         # Make the API request
@@ -24567,7 +24568,7 @@ function Update-FabricWorkspace {
         Invoke-FabricAuthCheck -ThrowOnFailure
 
         # Construct the API endpoint URI
-        $apiEndpointURI = New-FabricAPIUri -Resource 'workspaces' -ItemId $WorkspaceId
+        $apiEndpointURI = New-FabricAPIUri -Resource 'workspaces' -WorkspaceId $WorkspaceId
 
         # Construct the request body
         $body = @{
@@ -24657,7 +24658,7 @@ function Update-FabricWorkspaceRoleAssignment {
         Invoke-FabricAuthCheck -ThrowOnFailure
 
         # Construct the API endpoint URI
-        $apiEndpointURI = New-FabricAPIUri -Resource 'workspaces' -ItemId $WorkspaceId -Subresource 'roleAssignments' -SubresourceId $WorkspaceRoleAssignmentId
+        $apiEndpointURI = New-FabricAPIUri -Resource 'workspaces' -WorkspaceId $WorkspaceId -Subresource 'roleAssignments' -ItemId $WorkspaceRoleAssignmentId
         Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
 
         # Construct the request body
