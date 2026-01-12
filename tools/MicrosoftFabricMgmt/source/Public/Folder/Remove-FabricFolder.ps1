@@ -1,0 +1,63 @@
+<#
+.SYNOPSIS
+    Deletes a folder from a specified Microsoft Fabric workspace.
+
+.DESCRIPTION
+    Sends a DELETE request to the Microsoft Fabric API to remove a folder identified by FolderId from the workspace identified by WorkspaceId.
+
+.PARAMETER WorkspaceId
+    The ID of the workspace containing the folder to delete.
+
+.PARAMETER FolderId
+    The ID of the folder to delete.
+
+.EXAMPLE
+    Remove-FabricFolder -WorkspaceId "workspace-12345" -FolderId "folder-67890"
+    Removes the folder with ID "folder-67890" from the workspace "workspace-12345".
+    This example removes the Folder with ID "Folder-67890" from the workspace with ID "workspace-12345".
+
+.NOTES
+    - Requires `$FabricConfig` global configuration, including `BaseUrl` and `FabricHeaders`.
+    - Calls `Test-TokenExpired` to ensure token validity before making the API request.
+
+    Author: Tiago Balabuch
+#>
+function Remove-FabricFolder {
+    [CmdletBinding(SupportsShouldProcess = $true, ConfirmImpact = 'High')]
+    param (
+        [Parameter(Mandatory = $true)]
+        [ValidateNotNullOrEmpty()]
+        [string]$WorkspaceId,
+
+        [Parameter(Mandatory = $true)]
+        [ValidateNotNullOrEmpty()]
+        [string]$FolderId
+    )
+    try {
+        # Validate authentication
+        Invoke-FabricAuthCheck -ThrowOnFailure
+
+        # Construct the API endpoint URI
+        $apiEndpointURI = New-FabricAPIUri -Resource 'workspaces' -WorkspaceId $WorkspaceId -Subresource "folders/$FolderId"
+
+        if ($PSCmdlet.ShouldProcess($FolderId, "Delete folder in workspace '$WorkspaceId'")) {
+            # Make the API request
+            $apiParams = @{
+                Headers = $script:FabricAuthContext.FabricHeaders
+                BaseURI = $apiEndpointURI
+                Method  = 'Delete'
+            }
+            $response = Invoke-FabricAPIRequest @apiParams
+
+            # Return the API response
+            Write-FabricLog -Message "Folder '$FolderId' deleted successfully from workspace '$WorkspaceId'." -Level Host
+            $response
+        }
+
+    }
+    catch {
+        # Capture and log error details
+        $errorDetails = $_.Exception.Message
+        Write-FabricLog -Message "Failed to delete Folder '$FolderId' from workspace '$WorkspaceId'. Error: $errorDetails" -Level Error
+    }
+}

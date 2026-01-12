@@ -1,0 +1,147 @@
+<#
+.SYNOPSIS
+    Creates a new Reflex in a specified Microsoft Fabric workspace.
+
+.DESCRIPTION
+    This function sends a POST request to the Microsoft Fabric API to create a new Reflex
+    in the specified workspace. It supports optional parameters for Reflex description and path definitions.
+
+.PARAMETER WorkspaceId
+    The unique identifier of the workspace where the Reflex will be created. This parameter is mandatory.
+
+.PARAMETER ReflexName
+    The name of the Reflex to be created. This parameter is mandatory.
+
+.PARAMETER ReflexDescription
+    An optional description for the Reflex.
+
+.PARAMETER ReflexPathDefinition
+    An optional path to the Reflex definition file to upload.
+
+.PARAMETER ReflexPathPlatformDefinition
+    An optional path to the platform-specific definition file to upload.
+
+.EXAMPLE
+    New-FabricReflex -WorkspaceId "workspace-12345" -ReflexName "New Reflex" -ReflexDescription "Description of the new Reflex"
+    This example creates a new Reflex named "New Reflex" in the workspace with ID "workspace-12345" with the provided description.
+
+.NOTES
+    - Requires `$FabricConfig` global configuration, including `BaseUrl` and `FabricHeaders`.
+    - Calls `Test-TokenExpired` to ensure token validity before making the API request.
+
+    Author: Tiago Balabuch
+
+#>
+function New-FabricReflex {
+    [CmdletBinding(SupportsShouldProcess=$true, ConfirmImpact='Medium')]
+    param (
+        [Parameter(Mandatory = $true)]
+        [ValidateNotNullOrEmpty()]
+        [string]$WorkspaceId,
+
+        [Parameter(Mandatory = $true)]
+        [ValidateNotNullOrEmpty()]
+        [ValidatePattern('^[a-zA-Z0-9_ ]*$')]
+        [string]$ReflexName,
+
+        [Parameter(Mandatory = $false)]
+        [ValidateNotNullOrEmpty()]
+        [string]$ReflexDescription,
+
+        [Parameter(Mandatory = $false)]
+        [ValidateNotNullOrEmpty()]
+        [string]$ReflexPathDefinition,
+
+        [Parameter(Mandatory = $false)]
+        [ValidateNotNullOrEmpty()]
+        [string]$ReflexPathPlatformDefinition
+    )
+    try {
+        Invoke-FabricAuthCheck -ThrowOnFailure
+
+
+        # Construct the API endpoint URI
+        $apiEndpointURI = "{0}/workspaces/{1}/reflexes" -f $script:FabricAuthContext.BaseUrl, $WorkspaceId
+        Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
+
+        # Construct the request body
+        $body = @{
+            displayName = $ReflexName
+        }
+
+        if ($ReflexDescription) {
+            $body.description = $ReflexDescription
+        }
+        if ($ReflexPathDefinition) {
+            $ReflexEncodedContent = Convert-ToBase64 -filePath $ReflexPathDefinition
+
+            if (-not [string]::IsNullOrEmpty($ReflexEncodedContent)) {
+                # Initialize definition if it doesn't exist
+                if (-not $body.definition) {
+                    $body.definition = @{
+                        parts = @()
+                    }
+                }
+
+                # Add new part to the parts array
+                $body.definition.parts += @{
+                    path        = "ReflexEntities.json"
+                    payload     = $ReflexEncodedContent
+                    payloadType = "InlineBase64"
+                }
+            }
+            else {
+                Write-FabricLog -Message "Invalid or empty content in Reflex definition." -Level Error
+                return $null
+            }
+        }
+
+        if ($ReflexPathPlatformDefinition) {
+            $ReflexEncodedPlatformContent = Convert-ToBase64 -filePath $ReflexPathPlatformDefinition
+
+            if (-not [string]::IsNullOrEmpty($ReflexEncodedPlatformContent)) {
+                # Initialize definition if it doesn't exist
+                if (-not $body.definition) {
+                    $body.definition = @{
+                        parts = @()
+                    }
+                }
+
+                # Add new part to the parts array
+                $body.definition.parts += @{
+                    path        = ".platform"
+                    payload     = $ReflexEncodedPlatformContent
+                    payloadType = "InlineBase64"
+                }
+            }
+            else {
+                Write-FabricLog -Message "Invalid or empty content in platform definition." -Level Error
+                return $null
+            }
+        }
+
+        # Convert the body to JSON
+        $bodyJson = $body | ConvertTo-Json -Depth 10
+        Write-FabricLog -Message "Request Body: $bodyJson" -Level Debug
+
+        # Make the API request
+        if ($PSCmdlet.ShouldProcess("Reflex '$ReflexName' in workspace '$WorkspaceId'", "Create")) {
+            $apiParams = @{
+                BaseURI = $apiEndpointURI
+                Headers = $script:FabricAuthContext.FabricHeaders
+                Method = 'Post'
+                Body = $bodyJson
+            }
+            $response = Invoke-FabricAPIRequest @apiParams
+
+            # Return the API response
+            Write-FabricLog -Message "Reflex '$ReflexName' created successfully!" -Level Host
+            return $response
+        }
+    }
+    catch {
+        # Capture and log error details
+        $errorDetails = $_.Exception.Message
+        Write-FabricLog -Message "Failed to create Reflex. Error: $errorDetails" -Level Error
+    }
+}
