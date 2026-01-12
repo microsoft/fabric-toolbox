@@ -1,0 +1,566 @@
+{
+    "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.5.0/schema.json",
+    "name": "fb8d0a308076d0ca16d2",
+    "position": {
+        "x": 221.66668701171875,
+        "y": 107.33332824707031,
+        "z": 0,
+        "height": 190,
+        "width": 534,
+        "tabOrder": 7000
+    },
+    "visual": {
+        "visualType": "lineStackedColumnComboChart",
+        "query": {
+            "queryState": {
+                "Category": {
+                    "projections": [
+                        {
+                            "field": {
+                                "Column": {
+                                    "Expression": {
+                                        "SourceRef": {
+                                            "Entity": "capacity_metrics_by_timepoint"
+                                        }
+                                    },
+                                    "Property": "TimePoint"
+                                }
+                            },
+                            "queryRef": "capacity_metrics_by_timepoint.TimePoint",
+                            "nativeQueryRef": "TimePoint",
+                            "active": true
+                        }
+                    ]
+                },
+                "Tooltips": {
+                    "projections": [
+                        {
+                            "field": {
+                                "Measure": {
+                                    "Expression": {
+                                        "SourceRef": {
+                                            "Entity": "Metrics"
+                                        }
+                                    },
+                                    "Property": "Total CU Usage %"
+                                }
+                            },
+                            "queryRef": "Capacity_MetricsByTimePoint.Total CU Usage %",
+                            "nativeQueryRef": "Total CU Usage %1"
+                        },
+                        {
+                            "field": {
+                                "Measure": {
+                                    "Expression": {
+                                        "SourceRef": {
+                                            "Entity": "Metrics"
+                                        }
+                                    },
+                                    "Property": "Total CU(s)"
+                                }
+                            },
+                            "queryRef": "Capacity_MetricsByTimePoint.Total CU(s)",
+                            "nativeQueryRef": "Total CU(s)1"
+                        },
+                        {
+                            "field": {
+                                "Measure": {
+                                    "Expression": {
+                                        "SourceRef": {
+                                            "Entity": "Metrics"
+                                        }
+                                    },
+                                    "Property": "Autoscale %"
+                                }
+                            },
+                            "queryRef": "Capacity_MetricsByTimePoint.Autoscale %",
+                            "nativeQueryRef": "Autoscale %1"
+                        },
+                        {
+                            "field": {
+                                "Measure": {
+                                    "Expression": {
+                                        "SourceRef": {
+                                            "Entity": "Metrics"
+                                        }
+                                    },
+                                    "Property": "Interactive %"
+                                }
+                            },
+                            "queryRef": "Capacity_MetricsByTimePoint.Interactive %",
+                            "nativeQueryRef": "Interactive %1"
+                        },
+                        {
+                            "field": {
+                                "Measure": {
+                                    "Expression": {
+                                        "SourceRef": {
+                                            "Entity": "Metrics"
+                                        }
+                                    },
+                                    "Property": "Background %"
+                                }
+                            },
+                            "queryRef": "Capacity_MetricsByTimePoint.Background %",
+                            "nativeQueryRef": "Background %1"
+                        },
+                        {
+                            "field": {
+                                "Measure": {
+                                    "Expression": {
+                                        "SourceRef": {
+                                            "Entity": "Metrics"
+                                        }
+                                    },
+                                    "Property": "Interactive non-billable %"
+                                }
+                            },
+                            "queryRef": "Capacity_MetricsByTimePoint.Interactive non-billable %",
+                            "nativeQueryRef": "Interactive non-billable %1"
+                        },
+                        {
+                            "field": {
+                                "Measure": {
+                                    "Expression": {
+                                        "SourceRef": {
+                                            "Entity": "Metrics"
+                                        }
+                                    },
+                                    "Property": "Background non-billable %"
+                                }
+                            },
+                            "queryRef": "Capacity_MetricsByTimePoint.Background non-billable %",
+                            "nativeQueryRef": "Background non-billable %"
+                        },
+                        {
+                            "field": {
+                                "Measure": {
+                                    "Expression": {
+                                        "SourceRef": {
+                                            "Entity": "Metrics"
+                                        }
+                                    },
+                                    "Property": "SKU in CU(s)"
+                                }
+                            },
+                            "queryRef": "Capacity_MetricsByTimePoint.SKU in CU(s)",
+                            "nativeQueryRef": "100% in CU(s)1",
+                            "displayName": "100% in CU(s)"
+                        }
+                    ]
+                },
+                "Y": {
+                    "projections": [
+                        {
+                            "field": {
+                                "Measure": {
+                                    "Expression": {
+                                        "SourceRef": {
+                                            "Entity": "Metrics"
+                                        }
+                                    },
+                                    "Property": "Background %"
+                                }
+                            },
+                            "queryRef": "Capacity_MetricsByTimePoint.Background %",
+                            "nativeQueryRef": "Background %1"
+                        },
+                        {
+                            "field": {
+                                "Measure": {
+                                    "Expression": {
+                                        "SourceRef": {
+                                            "Entity": "Metrics"
+                                        }
+                                    },
+                                    "Property": "Background non-billable %"
+                                }
+                            },
+                            "queryRef": "Capacity_MetricsByTimePoint.Background non-billable %",
+                            "nativeQueryRef": "Background non-billable %"
+                        },
+                        {
+                            "field": {
+                                "Measure": {
+                                    "Expression": {
+                                        "SourceRef": {
+                                            "Entity": "Metrics"
+                                        }
+                                    },
+                                    "Property": "Interactive %"
+                                }
+                            },
+                            "queryRef": "Capacity_MetricsByTimePoint.Interactive %",
+                            "nativeQueryRef": "Interactive %1"
+                        },
+                        {
+                            "field": {
+                                "Measure": {
+                                    "Expression": {
+                                        "SourceRef": {
+                                            "Entity": "Metrics"
+                                        }
+                                    },
+                                    "Property": "Interactive non-billable %"
+                                }
+                            },
+                            "queryRef": "Capacity_MetricsByTimePoint.Interactive non-billable %",
+                            "nativeQueryRef": "Interactive non-billable %1"
+                        }
+                    ]
+                }
+            },
+            "sortDefinition": {
+                "sort": [
+                    {
+                        "field": {
+                            "Column": {
+                                "Expression": {
+                                    "SourceRef": {
+                                        "Entity": "capacity_metrics_by_timepoint"
+                                    }
+                                },
+                                "Property": "TimePoint"
+                            }
+                        },
+                        "direction": "Ascending"
+                    }
+                ],
+                "isDefaultSort": true
+            }
+        },
+        "objects": {
+            "zoom": [
+                {
+                    "properties": {
+                        "show": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "true"
+                                }
+                            }
+                        },
+                        "showOnValueAxis": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "false"
+                                }
+                            }
+                        },
+                        "showOnCategoryAxis": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "false"
+                                }
+                            }
+                        }
+                    }
+                }
+            ],
+            "valueAxis": [
+                {
+                    "properties": {
+                        "showAxisTitle": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "true"
+                                }
+                            }
+                        },
+                        "titleText": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "'CU %'"
+                                }
+                            }
+                        },
+                        "secShowAxisTitle": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "false"
+                                }
+                            }
+                        }
+                    }
+                }
+            ],
+            "legend": [
+                {
+                    "properties": {
+                        "show": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "true"
+                                }
+                            }
+                        },
+                        "fontSize": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "8D"
+                                }
+                            }
+                        }
+                    }
+                }
+            ],
+            "categoryAxis": [
+                {
+                    "properties": {
+                        "show": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "true"
+                                }
+                            }
+                        },
+                        "showAxisTitle": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "false"
+                                }
+                            }
+                        },
+                        "axisType": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "'Scalar'"
+                                }
+                            }
+                        }
+                    }
+                }
+            ],
+            "dataPoint": [
+                {
+                    "properties": {
+                        "fill": {
+                            "solid": {
+                                "color": {
+                                    "expr": {
+                                        "Literal": {
+                                            "Value": "'#0B6FBF'"
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "selector": {
+                        "metadata": "Capacity_MetricsByTimePoint.Background %"
+                    }
+                },
+                {
+                    "properties": {
+                        "fill": {
+                            "solid": {
+                                "color": {
+                                    "expr": {
+                                        "Literal": {
+                                            "Value": "'#D13438'"
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "selector": {
+                        "metadata": "Capacity_MetricsByTimePoint.Interactive %"
+                    }
+                },
+                {
+                    "properties": {
+                        "fill": {
+                            "solid": {
+                                "color": {
+                                    "expr": {
+                                        "Literal": {
+                                            "Value": "'#99C9EE'"
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "selector": {
+                        "metadata": "Capacity_MetricsByTimePoint.Background non-billable %"
+                    }
+                },
+                {
+                    "properties": {
+                        "fill": {
+                            "solid": {
+                                "color": {
+                                    "expr": {
+                                        "Literal": {
+                                            "Value": "'#6BB700'"
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "selector": {
+                        "metadata": "Capacity_MetricsByTimePoint.Interactive non-billable %"
+                    }
+                },
+                {
+                    "properties": {
+                        "fill": {
+                            "solid": {
+                                "color": {
+                                    "expr": {
+                                        "Literal": {
+                                            "Value": "'#FFAA44'"
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "selector": {
+                        "metadata": "Capacity_MetricsByTimePoint.Autoscale %"
+                    }
+                }
+            ],
+            "lineStyles": [
+                {
+                    "properties": {
+                        "strokeWidth": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "1L"
+                                }
+                            }
+                        },
+                        "lineStyle": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "'dotted'"
+                                }
+                            }
+                        }
+                    },
+                    "selector": {
+                        "metadata": "Capacity_MetricsByTimePoint.Autoscale %"
+                    }
+                }
+            ],
+            "y1AxisReferenceLine": [
+                {
+                    "properties": {
+                        "show": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "true"
+                                }
+                            }
+                        },
+                        "displayName": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "'Y-Axis Constant Line 1'"
+                                }
+                            }
+                        },
+                        "value": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "1D"
+                                }
+                            }
+                        },
+                        "lineColor": {
+                            "solid": {
+                                "color": {
+                                    "expr": {
+                                        "ThemeDataColor": {
+                                            "ColorId": 1,
+                                            "Percent": 0.4
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "selector": {
+                        "id": "1"
+                    }
+                }
+            ]
+        },
+        "visualContainerObjects": {
+            "dropShadow": [
+                {
+                    "properties": {
+                        "show": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "true"
+                                }
+                            }
+                        },
+                        "color": {
+                            "solid": {
+                                "color": {
+                                    "expr": {
+                                        "ThemeDataColor": {
+                                            "ColorId": 0,
+                                            "Percent": -0.2
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            ],
+            "title": [
+                {
+                    "properties": {
+                        "text": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "'Utilization | CU % over time'"
+                                }
+                            }
+                        }
+                    }
+                }
+            ],
+            "border": [
+                {
+                    "properties": {
+                        "show": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "true"
+                                }
+                            }
+                        },
+                        "color": {
+                            "solid": {
+                                "color": {
+                                    "expr": {
+                                        "ThemeDataColor": {
+                                            "ColorId": 0,
+                                            "Percent": 0
+                                        }
+                                    }
+                                }
+                            }
+                        },
+                        "radius": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "6D"
+                                }
+                            }
+                        }
+                    }
+                }
+            ]
+        },
+        "drillFilterOtherVisuals": true
+    }
+}

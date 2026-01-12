@@ -1,0 +1,436 @@
+{
+    "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.5.0/schema.json",
+    "name": "8d2cc170cde5117908e1",
+    "position": {
+        "x": 247.2289156626506,
+        "y": 70.6368330464716,
+        "z": 9000,
+        "height": 92.94320137693632,
+        "width": 1672.9776247848536,
+        "tabOrder": 6000
+    },
+    "visual": {
+        "visualType": "cardVisual",
+        "query": {
+            "queryState": {
+                "Data": {
+                    "projections": [
+                        {
+                            "field": {
+                                "Measure": {
+                                    "Expression": {
+                                        "SourceRef": {
+                                            "Entity": "Metrics"
+                                        }
+                                    },
+                                    "Property": "# Activities"
+                                }
+                            },
+                            "queryRef": "Metrics.# Activities",
+                            "nativeQueryRef": "# Activities"
+                        },
+                        {
+                            "field": {
+                                "Measure": {
+                                    "Expression": {
+                                        "SourceRef": {
+                                            "Entity": "Metrics"
+                                        }
+                                    },
+                                    "Property": "# Users"
+                                }
+                            },
+                            "queryRef": "Metrics.# Users",
+                            "nativeQueryRef": "# Users"
+                        },
+                        {
+                            "field": {
+                                "Measure": {
+                                    "Expression": {
+                                        "SourceRef": {
+                                            "Entity": "Metrics"
+                                        }
+                                    },
+                                    "Property": "# Viewed Reports (Activities)"
+                                }
+                            },
+                            "queryRef": "Metrics.# Viewed Reports (Activities)",
+                            "nativeQueryRef": "# Viewed Reports",
+                            "displayName": "# Viewed Reports"
+                        },
+                        {
+                            "field": {
+                                "Measure": {
+                                    "Expression": {
+                                        "SourceRef": {
+                                            "Entity": "Metrics"
+                                        }
+                                    },
+                                    "Property": "# Activities last 14d"
+                                }
+                            },
+                            "queryRef": "Metrics.# Activities last 14d",
+                            "nativeQueryRef": "# Activities last 14d"
+                        },
+                        {
+                            "field": {
+                                "Measure": {
+                                    "Expression": {
+                                        "SourceRef": {
+                                            "Entity": "Metrics"
+                                        }
+                                    },
+                                    "Property": "# Activities last 30d"
+                                }
+                            },
+                            "queryRef": "Metrics.# Activities last 30d",
+                            "nativeQueryRef": "# Activities last 30d"
+                        },
+                        {
+                            "field": {
+                                "Measure": {
+                                    "Expression": {
+                                        "SourceRef": {
+                                            "Entity": "Metrics"
+                                        }
+                                    },
+                                    "Property": "# Activities CM"
+                                }
+                            },
+                            "queryRef": "Metrics.# Activities CM",
+                            "nativeQueryRef": "# Activities CM"
+                        },
+                        {
+                            "field": {
+                                "Measure": {
+                                    "Expression": {
+                                        "SourceRef": {
+                                            "Entity": "Metrics"
+                                        }
+                                    },
+                                    "Property": "# Activities CY"
+                                }
+                            },
+                            "queryRef": "Metrics.# Activities CY",
+                            "nativeQueryRef": "# Activities CY"
+                        },
+                        {
+                            "field": {
+                                "Measure": {
+                                    "Expression": {
+                                        "SourceRef": {
+                                            "Entity": "Metrics"
+                                        }
+                                    },
+                                    "Property": "# Activities PM"
+                                }
+                            },
+                            "queryRef": "Metrics.# Activities PM",
+                            "nativeQueryRef": "# Activities PM"
+                        },
+                        {
+                            "field": {
+                                "Measure": {
+                                    "Expression": {
+                                        "SourceRef": {
+                                            "Entity": "Metrics"
+                                        }
+                                    },
+                                    "Property": "# Activities PY"
+                                }
+                            },
+                            "queryRef": "Metrics.# Activities PY",
+                            "nativeQueryRef": "# Activities PY"
+                        }
+                    ]
+                }
+            },
+            "sortDefinition": {
+                "sort": [
+                    {
+                        "field": {
+                            "Measure": {
+                                "Expression": {
+                                    "SourceRef": {
+                                        "Entity": "Metrics"
+                                    }
+                                },
+                                "Property": "# Activities"
+                            }
+                        },
+                        "direction": "Descending"
+                    }
+                ],
+                "isDefaultSort": true
+            }
+        },
+        "objects": {
+            "layout": [
+                {
+                    "properties": {
+                        "orientation": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "0D"
+                                }
+                            }
+                        },
+                        "columnCount": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "9L"
+                                }
+                            }
+                        },
+                        "rowCount": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "1L"
+                                }
+                            }
+                        },
+                        "alignment": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "'middle'"
+                                }
+                            }
+                        },
+                        "cellPadding": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "2L"
+                                }
+                            }
+                        }
+                    }
+                }
+            ],
+            "outline": [
+                {
+                    "properties": {
+                        "show": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "false"
+                                }
+                            }
+                        }
+                    },
+                    "selector": {
+                        "id": "default"
+                    }
+                }
+            ],
+            "shapeCustomRectangle": [
+                {
+                    "properties": {
+                        "tileShape": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "'rectangleRoundedByPixel'"
+                                }
+                            }
+                        },
+                        "rectangleRoundedCurve": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "5L"
+                                }
+                            }
+                        }
+                    },
+                    "selector": {
+                        "id": "default"
+                    }
+                }
+            ],
+            "fillCustom": [
+                {
+                    "properties": {
+                        "fillColor": {
+                            "solid": {
+                                "color": {
+                                    "expr": {
+                                        "ThemeDataColor": {
+                                            "ColorId": 0,
+                                            "Percent": 0
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "selector": {
+                        "id": "default"
+                    }
+                }
+            ],
+            "shadowCustom": [
+                {
+                    "properties": {
+                        "show": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "true"
+                                }
+                            }
+                        },
+                        "color": {
+                            "solid": {
+                                "color": {
+                                    "expr": {
+                                        "ThemeDataColor": {
+                                            "ColorId": 0,
+                                            "Percent": -0.2
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "selector": {
+                        "id": "default"
+                    }
+                }
+            ],
+            "glowCustom": [
+                {
+                    "properties": {
+                        "show": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "false"
+                                }
+                            }
+                        }
+                    },
+                    "selector": {
+                        "id": "default"
+                    }
+                }
+            ],
+            "label": [
+                {
+                    "properties": {
+                        "fontSize": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "10D"
+                                }
+                            }
+                        },
+                        "fontFamily": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "'''Segoe UI Semibold'', wf_segoe-ui_semibold, helvetica, arial, sans-serif'"
+                                }
+                            }
+                        },
+                        "fontColor": {
+                            "solid": {
+                                "color": {
+                                    "expr": {
+                                        "ThemeDataColor": {
+                                            "ColorId": 1,
+                                            "Percent": 0
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "selector": {
+                        "id": "default"
+                    }
+                }
+            ],
+            "padding": [
+                {
+                    "properties": {
+                        "paddingSelection": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "'Custom'"
+                                }
+                            }
+                        },
+                        "leftMargin": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "30L"
+                                }
+                            }
+                        }
+                    },
+                    "selector": {
+                        "id": "default"
+                    }
+                }
+            ],
+            "value": [
+                {
+                    "properties": {
+                        "fontSize": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "16D"
+                                }
+                            }
+                        },
+                        "fontFamily": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "'''Segoe UI Semibold'', wf_segoe-ui_semibold, helvetica, arial, sans-serif'"
+                                }
+                            }
+                        },
+                        "fontColor": {
+                            "solid": {
+                                "color": {
+                                    "expr": {
+                                        "Literal": {
+                                            "Value": "'#2E6D55'"
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "selector": {
+                        "id": "default"
+                    }
+                }
+            ]
+        },
+        "visualContainerObjects": {
+            "background": [
+                {
+                    "properties": {
+                        "show": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "false"
+                                }
+                            }
+                        }
+                    }
+                }
+            ],
+            "border": [
+                {
+                    "properties": {
+                        "show": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "false"
+                                }
+                            }
+                        }
+                    }
+                }
+            ]
+        },
+        "drillFilterOtherVisuals": true
+    }
+}

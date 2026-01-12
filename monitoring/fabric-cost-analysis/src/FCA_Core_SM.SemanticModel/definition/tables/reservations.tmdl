@@ -1,0 +1,166 @@
+table reservations
+	lineageTag: 048955a8-8999-437f-aae7-c9fde20286fe
+	sourceLineageTag: [dbo].[reservations]
+
+	measure 'RI Amount' = SUM(reservations[Amount])
+		lineageTag: 529c3627-05f8-4a8f-80f6-d2a7099e527d
+
+		formatStringDefinition =
+				SWITCH( MAX(reservations[Currency]),
+				"USD", "\$#,0.00;(\$#,0.00);\$#,0.00",
+				"EUR", "\€#,0.00;(\€#,0.00);\€#,0.00",
+				"#,0.00;(#,0.00);#,0.00")
+
+		changedProperty = Name
+
+		changedProperty = FormatString
+
+		changedProperty = FormatStringDefinition
+
+	column Amount
+		dataType: double
+		isHidden
+		sourceProviderType: float
+		lineageTag: 8cf536ed-6d12-4c39-b6a3-407175f81a73
+		sourceLineageTag: Amount
+		summarizeBy: sum
+		sourceColumn: Amount
+
+		changedProperty = SummarizeBy
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = User
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column BillingFrequency
+		dataType: string
+		sourceProviderType: varchar(8000)
+		lineageTag: 501b3f8e-a0ad-46a4-a438-b42b8c1ca7ff
+		sourceLineageTag: BillingFrequency
+		summarizeBy: none
+		sourceColumn: BillingFrequency
+
+		annotation SummarizationSetBy = Automatic
+
+	column Currency
+		dataType: string
+		sourceProviderType: varchar(8000)
+		lineageTag: 0f306780-b1eb-4507-b3d7-5213b48c0307
+		sourceLineageTag: Currency
+		summarizeBy: none
+		sourceColumn: Currency
+
+		annotation SummarizationSetBy = Automatic
+
+	column Description
+		dataType: string
+		sourceProviderType: varchar(8000)
+		lineageTag: eded64e6-3be1-4fe5-b700-dd5a0853fdeb
+		sourceLineageTag: Description
+		summarizeBy: none
+		sourceColumn: Description
+
+		annotation SummarizationSetBy = Automatic
+
+	column EventDate
+		dataType: dateTime
+		formatString: General Date
+		sourceProviderType: datetime2
+		lineageTag: f35f098a-c0f4-4dfc-a470-9221462d8af5
+		sourceLineageTag: EventDate
+		summarizeBy: none
+		sourceColumn: EventDate
+
+		annotation SummarizationSetBy = Automatic
+
+	column PurchasingSubscriptionGuid
+		dataType: string
+		sourceProviderType: varchar(8000)
+		lineageTag: 438fc43b-20f0-41f8-85cf-86070c6ac0b4
+		sourceLineageTag: PurchasingSubscriptionGuid
+		summarizeBy: none
+		sourceColumn: PurchasingSubscriptionGuid
+
+		annotation SummarizationSetBy = Automatic
+
+	column PurchasingSubscriptionName
+		dataType: string
+		sourceProviderType: varchar(8000)
+		lineageTag: 71702f9c-99c0-4d5e-93b0-43d244063fbc
+		sourceLineageTag: PurchasingSubscriptionName
+		summarizeBy: none
+		sourceColumn: PurchasingSubscriptionName
+
+		annotation SummarizationSetBy = Automatic
+
+	column Quantity
+		dataType: int64
+		sourceProviderType: float
+		lineageTag: 297ed799-e7bc-4437-bd24-8ecbe0522a7f
+		sourceLineageTag: Quantity
+		summarizeBy: sum
+		sourceColumn: Quantity
+
+		changedProperty = SummarizeBy
+
+		changedProperty = DataType
+
+		annotation SummarizationSetBy = User
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column Region
+		dataType: string
+		sourceProviderType: varchar(8000)
+		lineageTag: b99dec35-de09-4e62-a685-95820ced79c0
+		sourceLineageTag: Region
+		summarizeBy: none
+		sourceColumn: Region
+
+		annotation SummarizationSetBy = Automatic
+
+	column ReservationOrderId
+		dataType: string
+		sourceProviderType: varchar(8000)
+		lineageTag: f621ef76-1686-467f-a1ed-754dbc581eea
+		sourceLineageTag: ReservationOrderId
+		summarizeBy: none
+		sourceColumn: ReservationOrderId
+
+		annotation SummarizationSetBy = Automatic
+
+	column ReservationOrderName
+		dataType: string
+		sourceProviderType: varchar(8000)
+		lineageTag: d3eeb2e4-667d-4583-95fd-054553a8ea65
+		sourceLineageTag: ReservationOrderName
+		summarizeBy: none
+		sourceColumn: ReservationOrderName
+
+		annotation SummarizationSetBy = Automatic
+
+	column ReservationOrderKey
+		dataType: int64
+		isHidden
+		formatString: 0
+		sourceProviderType: int
+		lineageTag: c2705897-135f-450a-b186-3913cb4c6ff8
+		sourceLineageTag: ReservationOrderKey
+		summarizeBy: none
+		sourceColumn: ReservationOrderKey
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	partition reservations = entity
+		mode: directLake
+		source
+			entityName: reservations
+			schemaName: dbo
+			expressionSource: DatabaseQuery
+
+	annotation PBI_ResultType = Table
+

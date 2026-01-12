@@ -1,0 +1,26 @@
+{
+  "name": "Accessible Orchid",
+  "dataColors": [
+    "#364B59",
+    "#C480A7",
+    "#663466",
+    "#6E98B5",
+    "#67002E",
+    "#5D8099",
+    "#3F213F",
+    "#EC64A9"
+  ],
+  "foreground": "#192229",
+  "background": "#FFFFFF",
+  "foregroundNeutralSecondary": "#716E76",
+  "backgroundLight": "#EBE8FA",
+  "foregroundNeutralTertiary": "#96939E",
+  "backgroundNeutral": "#DAD8E8",
+  "tableAccent": "#BD3978",
+  "maximum": "#3F213F",
+  "center": "#663466",
+  "minimum": "#6E98B5",
+  "bad": "#BD3978",
+  "neutral": "#C480A7",
+  "good": "#9C6584"
+}

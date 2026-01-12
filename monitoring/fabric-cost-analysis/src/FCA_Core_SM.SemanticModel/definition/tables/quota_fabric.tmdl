@@ -1,0 +1,122 @@
+table quota_fabric
+	lineageTag: 0d4f3e74-27c6-487b-9770-95b2dbd0096c
+	sourceLineageTag: [dbo].[quota_fabric]
+
+	measure 'Quota Consumed' = DIVIDE(SUM(quota_fabric[Usage]),SUM(quota_fabric[Limit]))
+		formatString: 0.00%;-0.00%;0.00%
+		lineageTag: a34ff0cf-3aa9-4c75-9eb5-cf7bea6b6a86
+
+		changedProperty = Name
+
+		changedProperty = FormatString
+
+	measure 'Quota Limit' = SUM(quota_fabric[Limit])
+		formatString: 0
+		lineageTag: 18c14fdc-c823-4d3c-bf4f-ad0c24f1d693
+
+		changedProperty = Name
+
+	measure 'Quota Ratio' =
+			
+			var color = switch(true(),
+			    [Quota Consumed] < .5, "#EB895F",
+			    "#9071CE")
+			
+			var start_String = "data:image/svg+xml;utf81,"
+			var svg_full =  "<svg width='500' height='200' viewBox='0 10 750 100' fill='none' xmlns='http://www.w3.org/2000/svg'>
+			<rect x='30' y='32' width='"& 660 * [Quota Consumed] &"' height='80' rx='5' fill='"& color &"'/>
+			<rect x='5' y='10' width='710' height='130' rx='10' stroke='#777171' stroke-width='10'/>
+			</svg>"
+			
+			return start_String & svg_full
+		lineageTag: a7fb0274-8744-4dd7-a36e-4455784a9f5f
+		dataCategory: ImageUrl
+
+		changedProperty = Name
+
+		changedProperty = DataCategory
+
+	measure 'Quota Used' = SUM(quota_fabric[Usage])
+		formatString: 0
+		lineageTag: 6e3955d5-9e0f-45e0-b2ca-e848551c8cae
+
+		changedProperty = Name
+
+	column RegionId
+		dataType: string
+		isHidden
+		sourceProviderType: varchar(8000)
+		lineageTag: 9b0c81fe-fabd-44a0-9b79-b768fd5ecdfb
+		sourceLineageTag: RegionId
+		summarizeBy: none
+		sourceColumn: RegionId
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	column Usage
+		dataType: int64
+		isHidden
+		formatString: 0
+		sourceProviderType: int
+		lineageTag: 0d65eec2-0207-4864-8bc4-2d88db7e78a5
+		sourceLineageTag: Usage
+		summarizeBy: sum
+		sourceColumn: Usage
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	column Limit
+		dataType: int64
+		isHidden
+		formatString: 0
+		sourceProviderType: int
+		lineageTag: 298d1d8c-ea42-4669-ae78-b9f1db51245b
+		sourceLineageTag: Limit
+		summarizeBy: sum
+		sourceColumn: Limit
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	column DateKey
+		dataType: int64
+		isHidden
+		formatString: 0
+		sourceProviderType: int
+		lineageTag: f4fc0fc7-1131-46f3-bdd0-9f0f8c52fc38
+		sourceLineageTag: DateKey
+		summarizeBy: none
+		sourceColumn: DateKey
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	column SubscriptionKey
+		dataType: int64
+		isHidden
+		formatString: 0
+		sourceProviderType: int
+		lineageTag: 15c90f5e-971e-466e-9f6e-af2d6b565e6a
+		sourceLineageTag: SubscriptionKey
+		summarizeBy: none
+		sourceColumn: SubscriptionKey
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	partition quota_fabric = entity
+		mode: directLake
+		source
+			entityName: quota_fabric
+			schemaName: dbo
+			expressionSource: DatabaseQuery
+
+	annotation PBI_ResultType = Table
+

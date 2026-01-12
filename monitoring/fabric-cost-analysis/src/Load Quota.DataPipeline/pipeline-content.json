@@ -1,0 +1,394 @@
+{
+  "properties": {
+    "activities": [
+            {
+                "name": "Get Subscriptions",
+                "type": "Lookup",
+                "dependsOn": [],
+                "policy": {
+                    "timeout": "0.12:00:00",
+                    "retry": 0,
+                    "retryIntervalInSeconds": 30,
+                    "secureOutput": false,
+                    "secureInput": false
+                },
+                "typeProperties": {
+                    "source": {
+                        "type": "LakehouseTableSource"
+                    },
+                    "firstRowOnly": false,
+                    "datasetSettings": {
+                        "annotations": [],
+                        "linkedService": {
+                            "name": "FCA",
+                            "properties": {
+                                "annotations": [],
+                                "type": "Lakehouse",
+                                "typeProperties": {
+                                    "workspaceId": "57bceddc-a995-44a7-bfb5-1d5f11ad1e98",
+                                    "artifactId": "897aa7f9-9a59-4b8a-ad72-551118dc1109",
+                                    "rootFolder": "Tables"
+                                }
+                            }
+                        },
+                        "type": "LakehouseTable",
+                        "schema": [],
+                        "typeProperties": {
+                            "table": "subscriptions"
+                        }
+                    }
+                }
+            },
+            {
+                "name": "For Subscription",
+                "type": "ForEach",
+                "dependsOn": [
+                    {
+                        "activity": "Get Subscriptions",
+                        "dependencyConditions": [
+                            "Succeeded"
+                        ]
+                    }
+                ],
+                "typeProperties": {
+                    "items": {
+                        "value": "@activity('Get Subscriptions').output.value",
+                        "type": "Expression"
+                    },
+                    "isSequential": true,
+                    "activities": [
+                        {
+                            "name": "Set SubscriptionId",
+                            "type": "SetVariable",
+                            "dependsOn": [],
+                            "policy": {
+                                "secureOutput": false,
+                                "secureInput": false
+                            },
+                            "typeProperties": {
+                                "variableName": "SubscriptionId",
+                                "value": {
+                                    "value": "@item().SubId",
+                                    "type": "Expression"
+                                }
+                            }
+                        },
+                        {
+                            "name": "Get Quota Regions1",
+                            "type": "Copy",
+                            "dependsOn": [
+                                {
+                                    "activity": "Set SubscriptionKey",
+                                    "dependencyConditions": [
+                                        "Succeeded"
+                                    ]
+                                }
+                            ],
+                            "policy": {
+                                "timeout": "0.12:00:00",
+                                "retry": 0,
+                                "retryIntervalInSeconds": 30,
+                                "secureOutput": false,
+                                "secureInput": false
+                            },
+                            "typeProperties": {
+                                "source": {
+                                    "type": "RestSource",
+                                    "httpRequestTimeout": "00:02:00",
+                                    "requestInterval": "00.00:00:00.010",
+                                    "requestMethod": "POST",
+                                    "requestBody": {
+                                        "value": "@replace(variables('body_region1'), 'f931e557-a3a4-4063-9f34-064e7a936e90', variables('SubscriptionId'))",
+                                        "type": "Expression"
+                                    },
+                                    "additionalHeaders": {
+                                        "content-type": "application/json"
+                                    },
+                                    "datasetSettings": {
+                                        "annotations": [],
+                                        "type": "RestResource",
+                                        "typeProperties": {
+                                            "relativeUrl": "batch?api-version=2020-06-01"
+                                        },
+                                        "schema": [],
+                                        "externalReferences": {
+                                            "connection": "50bcac62-6770-456d-9897-2ae7c08874b9"
+                                        }
+                                    }
+                                },
+                                "sink": {
+                                    "type": "JsonSink",
+                                    "storeSettings": {
+                                        "type": "LakehouseWriteSettings"
+                                    },
+                                    "formatSettings": {
+                                        "type": "JsonWriteSettings"
+                                    },
+                                    "datasetSettings": {
+                                        "annotations": [],
+                                        "linkedService": {
+                                            "name": "FCA",
+                                            "properties": {
+                                                "annotations": [],
+                                                "type": "Lakehouse",
+                                                "typeProperties": {
+                                                    "workspaceId": "57bceddc-a995-44a7-bfb5-1d5f11ad1e98",
+                                                    "artifactId": "897aa7f9-9a59-4b8a-ad72-551118dc1109",
+                                                    "rootFolder": "Files"
+                                                }
+                                            }
+                                        },
+                                        "type": "Json",
+                                        "typeProperties": {
+                                            "location": {
+                                                "type": "LakehouseLocation",
+                                                "fileName": {
+                                                    "value": "@concat(variables('SubscriptionId'),'_',variables('SubscriptionKey'),'_regions1.json')",
+                                                    "type": "Expression"
+                                                },
+                                                "folderPath": "Data/Quotas"
+                                            }
+                                        },
+                                        "schema": {}
+                                    }
+                                },
+                                "enableStaging": false
+                            }
+                        },
+                        {
+                            "name": "Get Quota Regions2",
+                            "type": "Copy",
+                            "dependsOn": [
+                                {
+                                    "activity": "Get Quota Regions1",
+                                    "dependencyConditions": [
+                                        "Succeeded"
+                                    ]
+                                }
+                            ],
+                            "policy": {
+                                "timeout": "0.12:00:00",
+                                "retry": 0,
+                                "retryIntervalInSeconds": 30,
+                                "secureOutput": false,
+                                "secureInput": false
+                            },
+                            "typeProperties": {
+                                "source": {
+                                    "type": "RestSource",
+                                    "httpRequestTimeout": "00:02:00",
+                                    "requestInterval": "00.00:00:00.010",
+                                    "requestMethod": "POST",
+                                    "requestBody": {
+                                        "value": "@replace(variables('body_region2'), 'f931e557-a3a4-4063-9f34-064e7a936e90', variables('SubscriptionId'))",
+                                        "type": "Expression"
+                                    },
+                                    "additionalHeaders": {
+                                        "content-type": "application/json"
+                                    },
+                                    "datasetSettings": {
+                                        "annotations": [],
+                                        "type": "RestResource",
+                                        "typeProperties": {
+                                            "relativeUrl": "batch?api-version=2020-06-01"
+                                        },
+                                        "schema": [],
+                                        "externalReferences": {
+                                            "connection": "50bcac62-6770-456d-9897-2ae7c08874b9"
+                                        }
+                                    }
+                                },
+                                "sink": {
+                                    "type": "JsonSink",
+                                    "storeSettings": {
+                                        "type": "LakehouseWriteSettings"
+                                    },
+                                    "formatSettings": {
+                                        "type": "JsonWriteSettings"
+                                    },
+                                    "datasetSettings": {
+                                        "annotations": [],
+                                        "linkedService": {
+                                            "name": "FCA",
+                                            "properties": {
+                                                "annotations": [],
+                                                "type": "Lakehouse",
+                                                "typeProperties": {
+                                                    "workspaceId": "57bceddc-a995-44a7-bfb5-1d5f11ad1e98",
+                                                    "artifactId": "897aa7f9-9a59-4b8a-ad72-551118dc1109",
+                                                    "rootFolder": "Files"
+                                                }
+                                            }
+                                        },
+                                        "type": "Json",
+                                        "typeProperties": {
+                                            "location": {
+                                                "type": "LakehouseLocation",
+                                                "fileName": {
+                                                    "value": "@concat(variables('SubscriptionId'),'_',variables('SubscriptionKey'),'_regions2.json')",
+                                                    "type": "Expression"
+                                                },
+                                                "folderPath": "Data/Quotas"
+                                            }
+                                        },
+                                        "schema": {}
+                                    }
+                                },
+                                "enableStaging": false
+                            }
+                        },
+                        {
+                            "name": "Get Quota Regions3",
+                            "type": "Copy",
+                            "dependsOn": [
+                                {
+                                    "activity": "Get Quota Regions2",
+                                    "dependencyConditions": [
+                                        "Succeeded"
+                                    ]
+                                }
+                            ],
+                            "policy": {
+                                "timeout": "0.12:00:00",
+                                "retry": 0,
+                                "retryIntervalInSeconds": 30,
+                                "secureOutput": false,
+                                "secureInput": false
+                            },
+                            "typeProperties": {
+                                "source": {
+                                    "type": "RestSource",
+                                    "httpRequestTimeout": "00:02:00",
+                                    "requestInterval": "00.00:00:00.010",
+                                    "requestMethod": "POST",
+                                    "requestBody": {
+                                        "value": "@replace(variables('body_region3'), 'f931e557-a3a4-4063-9f34-064e7a936e90', variables('SubscriptionId'))",
+                                        "type": "Expression"
+                                    },
+                                    "additionalHeaders": {
+                                        "content-type": "application/json"
+                                    },
+                                    "datasetSettings": {
+                                        "annotations": [],
+                                        "type": "RestResource",
+                                        "typeProperties": {
+                                            "relativeUrl": "batch?api-version=2020-06-01"
+                                        },
+                                        "schema": [],
+                                        "externalReferences": {
+                                            "connection": "50bcac62-6770-456d-9897-2ae7c08874b9"
+                                        }
+                                    }
+                                },
+                                "sink": {
+                                    "type": "JsonSink",
+                                    "storeSettings": {
+                                        "type": "LakehouseWriteSettings"
+                                    },
+                                    "formatSettings": {
+                                        "type": "JsonWriteSettings"
+                                    },
+                                    "datasetSettings": {
+                                        "annotations": [],
+                                        "linkedService": {
+                                            "name": "FCA",
+                                            "properties": {
+                                                "annotations": [],
+                                                "type": "Lakehouse",
+                                                "typeProperties": {
+                                                    "workspaceId": "57bceddc-a995-44a7-bfb5-1d5f11ad1e98",
+                                                    "artifactId": "897aa7f9-9a59-4b8a-ad72-551118dc1109",
+                                                    "rootFolder": "Files"
+                                                }
+                                            }
+                                        },
+                                        "type": "Json",
+                                        "typeProperties": {
+                                            "location": {
+                                                "type": "LakehouseLocation",
+                                                "fileName": {
+                                                    "value": "@concat(variables('SubscriptionId'),'_',variables('SubscriptionKey'),'_regions3.json')",
+                                                    "type": "Expression"
+                                                },
+                                                "folderPath": "Data/Quotas"
+                                            }
+                                        },
+                                        "schema": {}
+                                    }
+                                },
+                                "enableStaging": false
+                            }
+                        },
+                        {
+                            "name": "Set SubscriptionKey",
+                            "type": "SetVariable",
+                            "dependsOn": [
+                                {
+                                    "activity": "Set SubscriptionId",
+                                    "dependencyConditions": [
+                                        "Succeeded"
+                                    ]
+                                }
+                            ],
+                            "policy": {
+                                "secureOutput": false,
+                                "secureInput": false
+                            },
+                            "typeProperties": {
+                                "variableName": "SubscriptionKey",
+                                "value": {
+                                    "value": "@string(item().SubscriptionKey)",
+                                    "type": "Expression"
+                                }
+                            }
+                        }
+                    ]
+                }
+            },
+            {
+                "name": "Load Quota to lakehouse",
+                "type": "TridentNotebook",
+                "dependsOn": [
+                    {
+                        "activity": "For Subscription",
+                        "dependencyConditions": [
+                            "Succeeded"
+                        ]
+                    }
+                ],
+                "policy": {
+                    "timeout": "0.12:00:00",
+                    "retry": 0,
+                    "retryIntervalInSeconds": 30,
+                    "secureOutput": false,
+                    "secureInput": false
+                },
+                "typeProperties": {
+                    "notebookId": "c128d9a2-9832-4742-aabb-67f4bd999b47",
+                    "workspaceId": "57bceddc-a995-44a7-bfb5-1d5f11ad1e98",
+                    "sessionTag": "fca"
+                }
+            }
+        ],
+        "variables": {
+            "SubscriptionId": {
+                "type": "String"
+            },
+            "body_region1": {
+                "type": "String",
+                "defaultValue": "{\"requests\":[{\"httpMethod\":\"GET\",\"name\":\"westcentralus\",\"requestHeaderDetails\":{\"commandName\":\"Microsoft_Azure_Capacity.\"},\"url\":\"/subscriptions/f931e557-a3a4-4063-9f34-064e7a936e90/providers/Microsoft.Fabric/locations/westcentralus/usages?api-version=2023-11-01\"},{\"httpMethod\":\"GET\",\"name\":\"australiaeast\",\"requestHeaderDetails\":{\"commandName\":\"Microsoft_Azure_Capacity.\"},\"url\":\"/subscriptions/f931e557-a3a4-4063-9f34-064e7a936e90/providers/Microsoft.Fabric/locations/australiaeast/usages?api-version=2023-11-01\"},{\"httpMethod\":\"GET\",\"name\":\"australiasoutheast\",\"requestHeaderDetails\":{\"commandName\":\"Microsoft_Azure_Capacity.\"},\"url\":\"/subscriptions/f931e557-a3a4-4063-9f34-064e7a936e90/providers/Microsoft.Fabric/locations/australiasoutheast/usages?api-version=2023-11-01\"},{\"httpMethod\":\"GET\",\"name\":\"brazilsouth\",\"requestHeaderDetails\":{\"commandName\":\"Microsoft_Azure_Capacity.\"},\"url\":\"/subscriptions/f931e557-a3a4-4063-9f34-064e7a936e90/providers/Microsoft.Fabric/locations/brazilsouth/usages?api-version=2023-11-01\"},{\"httpMethod\":\"GET\",\"name\":\"canadacentral\",\"requestHeaderDetails\":{\"commandName\":\"Microsoft_Azure_Capacity.\"},\"url\":\"/subscriptions/f931e557-a3a4-4063-9f34-064e7a936e90/providers/Microsoft.Fabric/locations/canadacentral/usages?api-version=2023-11-01\"},{\"httpMethod\":\"GET\",\"name\":\"canadaeast\",\"requestHeaderDetails\":{\"commandName\":\"Microsoft_Azure_Capacity.\"},\"url\":\"/subscriptions/f931e557-a3a4-4063-9f34-064e7a936e90/providers/Microsoft.Fabric/locations/canadaeast/usages?api-version=2023-11-01\"},{\"httpMethod\":\"GET\",\"name\":\"centralindia\",\"requestHeaderDetails\":{\"commandName\":\"Microsoft_Azure_Capacity.\"},\"url\":\"/subscriptions/f931e557-a3a4-4063-9f34-064e7a936e90/providers/Microsoft.Fabric/locations/centralindia/usages?api-version=2023-11-01\"},{\"httpMethod\":\"GET\",\"name\":\"centralus\",\"requestHeaderDetails\":{\"commandName\":\"Microsoft_Azure_Capacity.\"},\"url\":\"/subscriptions/f931e557-a3a4-4063-9f34-064e7a936e90/providers/Microsoft.Fabric/locations/centralus/usages?api-version=2023-11-01\"},{\"httpMethod\":\"GET\",\"name\":\"eastasia\",\"requestHeaderDetails\":{\"commandName\":\"Microsoft_Azure_Capacity.\"},\"url\":\"/subscriptions/f931e557-a3a4-4063-9f34-064e7a936e90/providers/Microsoft.Fabric/locations/eastasia/usages?api-version=2023-11-01\"},{\"httpMethod\":\"GET\",\"name\":\"eastus\",\"requestHeaderDetails\":{\"commandName\":\"Microsoft_Azure_Capacity.\"},\"url\":\"/subscriptions/f931e557-a3a4-4063-9f34-064e7a936e90/providers/Microsoft.Fabric/locations/eastus/usages?api-version=2023-11-01\"},{\"httpMethod\":\"GET\",\"name\":\"eastus2\",\"requestHeaderDetails\":{\"commandName\":\"Microsoft_Azure_Capacity.\"},\"url\":\"/subscriptions/f931e557-a3a4-4063-9f34-064e7a936e90/providers/Microsoft.Fabric/locations/eastus2/usages?api-version=2023-11-01\"},{\"httpMethod\":\"GET\",\"name\":\"francecentral\",\"requestHeaderDetails\":{\"commandName\":\"Microsoft_Azure_Capacity.\"},\"url\":\"/subscriptions/f931e557-a3a4-4063-9f34-064e7a936e90/providers/Microsoft.Fabric/locations/francecentral/usages?api-version=2023-11-01\"},{\"httpMethod\":\"GET\",\"name\":\"germanynorth\",\"requestHeaderDetails\":{\"commandName\":\"Microsoft_Azure_Capacity.\"},\"url\":\"/subscriptions/f931e557-a3a4-4063-9f34-064e7a936e90/providers/Microsoft.Fabric/locations/germanynorth/usages?api-version=2023-11-01\"},{\"httpMethod\":\"GET\",\"name\":\"germanywestcentral\",\"requestHeaderDetails\":{\"commandName\":\"Microsoft_Azure_Capacity.\"},\"url\":\"/subscriptions/f931e557-a3a4-4063-9f34-064e7a936e90/providers/Microsoft.Fabric/locations/germanywestcentral/usages?api-version=2023-11-01\"},{\"httpMethod\":\"GET\",\"name\":\"westindia\",\"requestHeaderDetails\":{\"commandName\":\"Microsoft_Azure_Capacity.\"},\"url\":\"/subscriptions/f931e557-a3a4-4063-9f34-064e7a936e90/providers/Microsoft.Fabric/locations/westindia/usages?api-version=2023-11-01\"},{\"httpMethod\":\"GET\",\"name\":\"italynorth\",\"requestHeaderDetails\":{\"commandName\":\"Microsoft_Azure_Capacity.\"},\"url\":\"/subscriptions/f931e557-a3a4-4063-9f34-064e7a936e90/providers/Microsoft.Fabric/locations/italynorth/usages?api-version=2023-11-01\"},{\"httpMethod\":\"GET\",\"name\":\"mexicocentral\",\"requestHeaderDetails\":{\"commandName\":\"Microsoft_Azure_Capacity.\"},\"url\":\"/subscriptions/f931e557-a3a4-4063-9f34-064e7a936e90/providers/Microsoft.Fabric/locations/mexicocentral/usages?api-version=2023-11-01\"}]}"
+            },
+            "body_region2": {
+                "type": "String",
+                "defaultValue": "{\"requests\":[{\"httpMethod\":\"GET\",\"name\":\"japaneast\",\"requestHeaderDetails\":{\"commandName\":\"Microsoft_Azure_Capacity.\"},\"url\":\"/subscriptions/f931e557-a3a4-4063-9f34-064e7a936e90/providers/Microsoft.Fabric/locations/japaneast/usages?api-version=2023-11-01\"},{\"httpMethod\":\"GET\",\"name\":\"japanwest\",\"requestHeaderDetails\":{\"commandName\":\"Microsoft_Azure_Capacity.\"},\"url\":\"/subscriptions/f931e557-a3a4-4063-9f34-064e7a936e90/providers/Microsoft.Fabric/locations/japanwest/usages?api-version=2023-11-01\"},{\"httpMethod\":\"GET\",\"name\":\"koreacentral\",\"requestHeaderDetails\":{\"commandName\":\"Microsoft_Azure_Capacity.\"},\"url\":\"/subscriptions/f931e557-a3a4-4063-9f34-064e7a936e90/providers/Microsoft.Fabric/locations/koreacentral/usages?api-version=2023-11-01\"},{\"httpMethod\":\"GET\",\"name\":\"koreasouth\",\"requestHeaderDetails\":{\"commandName\":\"Microsoft_Azure_Capacity.\"},\"url\":\"/subscriptions/f931e557-a3a4-4063-9f34-064e7a936e90/providers/Microsoft.Fabric/locations/koreasouth/usages?api-version=2023-11-01\"},{\"httpMethod\":\"GET\",\"name\":\"northcentralus\",\"requestHeaderDetails\":{\"commandName\":\"Microsoft_Azure_Capacity.\"},\"url\":\"/subscriptions/f931e557-a3a4-4063-9f34-064e7a936e90/providers/Microsoft.Fabric/locations/northcentralus/usages?api-version=2023-11-01\"},{\"httpMethod\":\"GET\",\"name\":\"northeurope\",\"requestHeaderDetails\":{\"commandName\":\"Microsoft_Azure_Capacity.\"},\"url\":\"/subscriptions/f931e557-a3a4-4063-9f34-064e7a936e90/providers/Microsoft.Fabric/locations/northeurope/usages?api-version=2023-11-01\"},{\"httpMethod\":\"GET\",\"name\":\"norwayeast\",\"requestHeaderDetails\":{\"commandName\":\"Microsoft_Azure_Capacity.\"},\"url\":\"/subscriptions/f931e557-a3a4-4063-9f34-064e7a936e90/providers/Microsoft.Fabric/locations/norwayeast/usages?api-version=2023-11-01\"},{\"httpMethod\":\"GET\",\"name\":\"norwaywest\",\"requestHeaderDetails\":{\"commandName\":\"Microsoft_Azure_Capacity.\"},\"url\":\"/subscriptions/f931e557-a3a4-4063-9f34-064e7a936e90/providers/Microsoft.Fabric/locations/norwaywest/usages?api-version=2023-11-01\"},{\"httpMethod\":\"GET\",\"name\":\"qatarcentral\",\"requestHeaderDetails\":{\"commandName\":\"Microsoft_Azure_Capacity.\"},\"url\":\"/subscriptions/f931e557-a3a4-4063-9f34-064e7a936e90/providers/Microsoft.Fabric/locations/qatarcentral/usages?api-version=2023-11-01\"},{\"httpMethod\":\"GET\",\"name\":\"spaincentral\",\"requestHeaderDetails\":{\"commandName\":\"Microsoft_Azure_Capacity.\"},\"url\":\"/subscriptions/f931e557-a3a4-4063-9f34-064e7a936e90/providers/Microsoft.Fabric/locations/spaincentral/usages?api-version=2023-11-01\"},{\"httpMethod\":\"GET\",\"name\":\"newzealandnorth\",\"requestHeaderDetails\":{\"commandName\":\"Microsoft_Azure_Capacity.\"},\"url\":\"/subscriptions/f931e557-a3a4-4063-9f34-064e7a936e90/providers/Microsoft.Fabric/locations/newzealandnorth/usages?api-version=2023-11-01\"},{\"httpMethod\":\"GET\",\"name\":\"indonesiacentral\",\"requestHeaderDetails\":{\"commandName\":\"Microsoft_Azure_Capacity.\"},\"url\":\"/subscriptions/f931e557-a3a4-4063-9f34-064e7a936e90/providers/Microsoft.Fabric/locations/indonesiacentral/usages?api-version=2023-11-01\"},{\"httpMethod\":\"GET\",\"name\":\"malaysiawest\",\"requestHeaderDetails\":{\"commandName\":\"Microsoft_Azure_Capacity.\"},\"url\":\"/subscriptions/f931e557-a3a4-4063-9f34-064e7a936e90/providers/Microsoft.Fabric/locations/malaysiawest/usages?api-version=2023-11-01\"},{\"httpMethod\":\"GET\",\"name\":\"chilecentral\",\"requestHeaderDetails\":{\"commandName\":\"Microsoft_Azure_Capacity.\"},\"url\":\"/subscriptions/f931e557-a3a4-4063-9f34-064e7a936e90/providers/Microsoft.Fabric/locations/chilecentral/usages?api-version=2023-11-01\"},{\"httpMethod\":\"GET\",\"name\":\"austriaeast\",\"requestHeaderDetails\":{\"commandName\":\"Microsoft_Azure_Capacity.\"},\"url\":\"/subscriptions/f931e557-a3a4-4063-9f34-064e7a936e90/providers/Microsoft.Fabric/locations/austriaeast/usages?api-version=2023-11-01\"},{\"httpMethod\":\"GET\",\"name\":\"israelcentral\",\"requestHeaderDetails\":{\"commandName\":\"Microsoft_Azure_Capacity.\"},\"url\":\"/subscriptions/f931e557-a3a4-4063-9f34-064e7a936e90/providers/Microsoft.Fabric/locations/israelcentral/usages?api-version=2023-11-01\"},{\"httpMethod\":\"GET\",\"name\":\"polandcentral\",\"requestHeaderDetails\":{\"commandName\":\"Microsoft_Azure_Capacity.\"},\"url\":\"/subscriptions/f931e557-a3a4-4063-9f34-064e7a936e90/providers/Microsoft.Fabric/locations/polandcentral/usages?api-version=2023-11-01\"}]}"
+            },
+            "body_region3": {
+                "type": "String",
+                "defaultValue": "{\"requests\":[{\"httpMethod\":\"GET\",\"name\":\"southafricanorth\",\"requestHeaderDetails\":{\"commandName\":\"Microsoft_Azure_Capacity.\"},\"url\":\"/subscriptions/f931e557-a3a4-4063-9f34-064e7a936e90/providers/Microsoft.Fabric/locations/southafricanorth/usages?api-version=2023-11-01\"},{\"httpMethod\":\"GET\",\"name\":\"southafricawest\",\"requestHeaderDetails\":{\"commandName\":\"Microsoft_Azure_Capacity.\"},\"url\":\"/subscriptions/f931e557-a3a4-4063-9f34-064e7a936e90/providers/Microsoft.Fabric/locations/southafricawest/usages?api-version=2023-11-01\"},{\"httpMethod\":\"GET\",\"name\":\"southcentralus\",\"requestHeaderDetails\":{\"commandName\":\"Microsoft_Azure_Capacity.\"},\"url\":\"/subscriptions/f931e557-a3a4-4063-9f34-064e7a936e90/providers/Microsoft.Fabric/locations/southcentralus/usages?api-version=2023-11-01\"},{\"httpMethod\":\"GET\",\"name\":\"southeastasia\",\"requestHeaderDetails\":{\"commandName\":\"Microsoft_Azure_Capacity.\"},\"url\":\"/subscriptions/f931e557-a3a4-4063-9f34-064e7a936e90/providers/Microsoft.Fabric/locations/southeastasia/usages?api-version=2023-11-01\"},{\"httpMethod\":\"GET\",\"name\":\"southindia\",\"requestHeaderDetails\":{\"commandName\":\"Microsoft_Azure_Capacity.\"},\"url\":\"/subscriptions/f931e557-a3a4-4063-9f34-064e7a936e90/providers/Microsoft.Fabric/locations/southindia/usages?api-version=2023-11-01\"},{\"httpMethod\":\"GET\",\"name\":\"swedencentral\",\"requestHeaderDetails\":{\"commandName\":\"Microsoft_Azure_Capacity.\"},\"url\":\"/subscriptions/f931e557-a3a4-4063-9f34-064e7a936e90/providers/Microsoft.Fabric/locations/swedencentral/usages?api-version=2023-11-01\"},{\"httpMethod\":\"GET\",\"name\":\"switzerlandnorth\",\"requestHeaderDetails\":{\"commandName\":\"Microsoft_Azure_Capacity.\"},\"url\":\"/subscriptions/f931e557-a3a4-4063-9f34-064e7a936e90/providers/Microsoft.Fabric/locations/switzerlandnorth/usages?api-version=2023-11-01\"},{\"httpMethod\":\"GET\",\"name\":\"switzerlandwest\",\"requestHeaderDetails\":{\"commandName\":\"Microsoft_Azure_Capacity.\"},\"url\":\"/subscriptions/f931e557-a3a4-4063-9f34-064e7a936e90/providers/Microsoft.Fabric/locations/switzerlandwest/usages?api-version=2023-11-01\"},{\"httpMethod\":\"GET\",\"name\":\"uaecentral\",\"requestHeaderDetails\":{\"commandName\":\"Microsoft_Azure_Capacity.\"},\"url\":\"/subscriptions/f931e557-a3a4-4063-9f34-064e7a936e90/providers/Microsoft.Fabric/locations/uaecentral/usages?api-version=2023-11-01\"},{\"httpMethod\":\"GET\",\"name\":\"uaenorth\",\"requestHeaderDetails\":{\"commandName\":\"Microsoft_Azure_Capacity.\"},\"url\":\"/subscriptions/f931e557-a3a4-4063-9f34-064e7a936e90/providers/Microsoft.Fabric/locations/uaenorth/usages?api-version=2023-11-01\"},{\"httpMethod\":\"GET\",\"name\":\"uksouth\",\"requestHeaderDetails\":{\"commandName\":\"Microsoft_Azure_Capacity.\"},\"url\":\"/subscriptions/f931e557-a3a4-4063-9f34-064e7a936e90/providers/Microsoft.Fabric/locations/uksouth/usages?api-version=2023-11-01\"},{\"httpMethod\":\"GET\",\"name\":\"ukwest\",\"requestHeaderDetails\":{\"commandName\":\"Microsoft_Azure_Capacity.\"},\"url\":\"/subscriptions/f931e557-a3a4-4063-9f34-064e7a936e90/providers/Microsoft.Fabric/locations/ukwest/usages?api-version=2023-11-01\"},{\"httpMethod\":\"GET\",\"name\":\"westeurope\",\"requestHeaderDetails\":{\"commandName\":\"Microsoft_Azure_Capacity.\"},\"url\":\"/subscriptions/f931e557-a3a4-4063-9f34-064e7a936e90/providers/Microsoft.Fabric/locations/westeurope/usages?api-version=2023-11-01\"},{\"httpMethod\":\"GET\",\"name\":\"westus\",\"requestHeaderDetails\":{\"commandName\":\"Microsoft_Azure_Capacity.\"},\"url\":\"/subscriptions/f931e557-a3a4-4063-9f34-064e7a936e90/providers/Microsoft.Fabric/locations/westus/usages?api-version=2023-11-01\"},{\"httpMethod\":\"GET\",\"name\":\"westus2\",\"requestHeaderDetails\":{\"commandName\":\"Microsoft_Azure_Capacity.\"},\"url\":\"/subscriptions/f931e557-a3a4-4063-9f34-064e7a936e90/providers/Microsoft.Fabric/locations/westus2/usages?api-version=2023-11-01\"},{\"httpMethod\":\"GET\",\"name\":\"westus3\",\"requestHeaderDetails\":{\"commandName\":\"Microsoft_Azure_Capacity.\"},\"url\":\"/subscriptions/f931e557-a3a4-4063-9f34-064e7a936e90/providers/Microsoft.Fabric/locations/westus3/usages?api-version=2023-11-01\"}]}"
+            },
+            "SubscriptionKey": {
+                "type": "String"
+            }
+        }
+  }
+}

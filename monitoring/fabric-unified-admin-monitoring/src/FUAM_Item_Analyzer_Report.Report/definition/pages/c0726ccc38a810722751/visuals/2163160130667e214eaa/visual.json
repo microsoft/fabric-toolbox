@@ -1,0 +1,444 @@
+{
+    "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.5.0/schema.json",
+    "name": "2163160130667e214eaa",
+    "position": {
+        "x": 12,
+        "y": 756.6575520833334,
+        "z": 10000,
+        "height": 518.6666666666666,
+        "width": 782.6666666666666,
+        "tabOrder": 6000
+    },
+    "visual": {
+        "visualType": "RadarChart1446119667547",
+        "query": {
+            "queryState": {
+                "Y": {
+                    "projections": [
+                        {
+                            "field": {
+                                "Measure": {
+                                    "Expression": {
+                                        "SourceRef": {
+                                            "Entity": "Metrics"
+                                        }
+                                    },
+                                    "Property": "Avg CU by Item by Day 7d IOD"
+                                }
+                            },
+                            "queryRef": "Metrics.Avg CU by Item by Day 7d IOD",
+                            "nativeQueryRef": "Avg CU 7d",
+                            "displayName": "Avg CU 7d"
+                        },
+                        {
+                            "field": {
+                                "Measure": {
+                                    "Expression": {
+                                        "SourceRef": {
+                                            "Entity": "Metrics"
+                                        }
+                                    },
+                                    "Property": "Avg CU by Item by Day 14d IOD"
+                                }
+                            },
+                            "queryRef": "Metrics.Avg CU by Item by Day 14d IOD",
+                            "nativeQueryRef": "Avg CU 14d",
+                            "displayName": "Avg CU 14d",
+                            "format": "#,0.00"
+                        },
+                        {
+                            "field": {
+                                "Measure": {
+                                    "Expression": {
+                                        "SourceRef": {
+                                            "Entity": "Metrics"
+                                        }
+                                    },
+                                    "Property": "Avg CU by Item by Day 30d IOD"
+                                }
+                            },
+                            "queryRef": "Metrics.Avg CU by Item by Day 30d IOD",
+                            "nativeQueryRef": "Avg CU 30d",
+                            "displayName": "Avg CU 30d"
+                        },
+                        {
+                            "field": {
+                                "Measure": {
+                                    "Expression": {
+                                        "SourceRef": {
+                                            "Entity": "Metrics"
+                                        }
+                                    },
+                                    "Property": "Avg CU by Item by Day 90d IOD"
+                                }
+                            },
+                            "queryRef": "Metrics.Avg CU by Item by Day 90d IOD",
+                            "nativeQueryRef": "Avg CU 90d",
+                            "displayName": "Avg CU 90d"
+                        }
+                    ]
+                },
+                "Category": {
+                    "projections": [
+                        {
+                            "field": {
+                                "Column": {
+                                    "Expression": {
+                                        "SourceRef": {
+                                            "Entity": "capacity_metrics_by_item_by_operation_by_day"
+                                        }
+                                    },
+                                    "Property": "OperationName"
+                                }
+                            },
+                            "queryRef": "capacity_metrics_by_item_by_operation_by_day.OperationName",
+                            "nativeQueryRef": "OperationName"
+                        }
+                    ]
+                }
+            },
+            "sortDefinition": {
+                "sort": [
+                    {
+                        "field": {
+                            "Measure": {
+                                "Expression": {
+                                    "SourceRef": {
+                                        "Entity": "Metrics"
+                                    }
+                                },
+                                "Property": "Avg CU by Item by Day 7d IOD"
+                            }
+                        },
+                        "direction": "Descending"
+                    }
+                ],
+                "isDefaultSort": true
+            }
+        },
+        "objects": {
+            "line": [
+                {
+                    "properties": {
+                        "show": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "false"
+                                }
+                            }
+                        },
+                        "lineWidth": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "5D"
+                                }
+                            }
+                        }
+                    }
+                }
+            ],
+            "labels": [
+                {
+                    "properties": {
+                        "fontSize": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "8D"
+                                }
+                            }
+                        },
+                        "fontFamily": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "'''Segoe UI'', wf_segoe-ui_normal, helvetica, arial, sans-serif'"
+                                }
+                            }
+                        }
+                    }
+                }
+            ],
+            "legend": [
+                {
+                    "properties": {
+                        "fontFamily": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "'''Segoe UI'', wf_segoe-ui_normal, helvetica, arial, sans-serif'"
+                                }
+                            }
+                        },
+                        "fontSize": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "9D"
+                                }
+                            }
+                        }
+                    }
+                }
+            ],
+            "dataPoint": [
+                {
+                    "properties": {
+                        "fill": {
+                            "solid": {
+                                "color": {
+                                    "expr": {
+                                        "Literal": {
+                                            "Value": "'#F2859E'"
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "selector": {
+                        "metadata": "Metrics.Avg CU by Item by Day 14d IOD"
+                    }
+                },
+                {
+                    "properties": {
+                        "fill": {
+                            "solid": {
+                                "color": {
+                                    "expr": {
+                                        "ThemeDataColor": {
+                                            "ColorId": 2,
+                                            "Percent": 0.4
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "selector": {
+                        "metadata": "Metrics.Avg CU by Item by Day 30d IOD"
+                    }
+                },
+                {
+                    "properties": {
+                        "fill": {
+                            "solid": {
+                                "color": {
+                                    "expr": {
+                                        "ThemeDataColor": {
+                                            "ColorId": 4,
+                                            "Percent": 0
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "selector": {
+                        "metadata": "Metrics.Avg CU by Item by Day 90d IOD"
+                    }
+                },
+                {
+                    "properties": {
+                        "fill": {
+                            "solid": {
+                                "color": {
+                                    "expr": {
+                                        "ThemeDataColor": {
+                                            "ColorId": 5,
+                                            "Percent": 0
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "selector": {
+                        "metadata": "Metrics.Avg CU by Item by Day 7d IOD"
+                    }
+                }
+            ]
+        },
+        "visualContainerObjects": {
+            "background": [
+                {
+                    "properties": {
+                        "show": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "true"
+                                }
+                            }
+                        },
+                        "color": {
+                            "solid": {
+                                "color": {
+                                    "expr": {
+                                        "ThemeDataColor": {
+                                            "ColorId": 0,
+                                            "Percent": 0
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            ],
+            "border": [
+                {
+                    "properties": {
+                        "color": {
+                            "solid": {
+                                "color": {
+                                    "expr": {
+                                        "ThemeDataColor": {
+                                            "ColorId": 0,
+                                            "Percent": 0
+                                        }
+                                    }
+                                }
+                            }
+                        },
+                        "show": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "true"
+                                }
+                            }
+                        }
+                    }
+                }
+            ],
+            "dropShadow": [
+                {
+                    "properties": {
+                        "show": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "true"
+                                }
+                            }
+                        },
+                        "color": {
+                            "solid": {
+                                "color": {
+                                    "expr": {
+                                        "ThemeDataColor": {
+                                            "ColorId": 0,
+                                            "Percent": -0.2
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            ],
+            "visualHeader": [
+                {
+                    "properties": {
+                        "showSmartNarrativeButton": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "false"
+                                }
+                            }
+                        },
+                        "showTooltipButton": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "false"
+                                }
+                            }
+                        }
+                    }
+                }
+            ],
+            "title": [
+                {
+                    "properties": {
+                        "text": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "'Avg CU 14d, 30d, 90d | Workload Characteristic'"
+                                }
+                            }
+                        }
+                    }
+                }
+            ]
+        },
+        "drillFilterOtherVisuals": true
+    },
+    "filterConfig": {
+        "filters": [
+            {
+                "name": "3604d98ab04838c94878",
+                "field": {
+                    "Measure": {
+                        "Expression": {
+                            "SourceRef": {
+                                "Entity": "Metrics"
+                            }
+                        },
+                        "Property": "Avg CU by Item by Day 7d IOD"
+                    }
+                },
+                "type": "Advanced"
+            },
+            {
+                "name": "abb0039d86c559733e59",
+                "field": {
+                    "Measure": {
+                        "Expression": {
+                            "SourceRef": {
+                                "Entity": "Metrics"
+                            }
+                        },
+                        "Property": "Avg CU by Item by Day 14d IOD"
+                    }
+                },
+                "type": "Advanced"
+            },
+            {
+                "name": "65f1e5dddd61014462c9",
+                "field": {
+                    "Measure": {
+                        "Expression": {
+                            "SourceRef": {
+                                "Entity": "Metrics"
+                            }
+                        },
+                        "Property": "Avg CU by Item by Day 30d IOD"
+                    }
+                },
+                "type": "Advanced"
+            },
+            {
+                "name": "c4d0eafea3635e8fd1b3",
+                "field": {
+                    "Measure": {
+                        "Expression": {
+                            "SourceRef": {
+                                "Entity": "Metrics"
+                            }
+                        },
+                        "Property": "Avg CU by Item by Day 90d IOD"
+                    }
+                },
+                "type": "Advanced"
+            },
+            {
+                "name": "9ecaf3579f48a5d47845",
+                "field": {
+                    "Column": {
+                        "Expression": {
+                            "SourceRef": {
+                                "Entity": "capacity_metrics_by_item_by_operation_by_day"
+                            }
+                        },
+                        "Property": "OperationName"
+                    }
+                },
+                "type": "Categorical"
+            }
+        ]
+    }
+}

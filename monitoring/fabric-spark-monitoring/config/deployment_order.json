@@ -1,0 +1,74 @@
+[
+    {
+        "name": "Workspace.src",
+        "id": "63b564e3-bc45-46b0-aa00-31e28a727076",
+        "type": "Core"
+    },
+    {
+        "name": "Spark Monitoring.Eventhouse",
+        "id": "61e0280c-4975-8bf6-4e6d-cc748ab5be27",
+        "folder": "Storage",
+        "kustoQueryUri": "kusto_query_uri",
+        "kustoIngestUri": "kusto_ingest_uri"
+    },
+    {
+        "name": "Spark Monitoring.KQLDatabase",
+        "id": "3e46dcfb-d099-b0ef-4861-4603e64229bd",
+        "folder": "Storage",
+        "parent": "Spark Monitoring.Eventhouse"
+    },
+    {
+        "name": "SparkMonitoring.Eventstream",
+        "id": "3d2fdfb1-601b-8f71-4e11-34ed0a2c79aa",
+        "folder": "Stream",
+        "customEndpointName":[
+            "IngestionEndpoint"
+        ],
+        "destinations": [
+            {
+                "name": "Eventhouse",
+                "itemName": "Spark Monitoring.KQLDatabase",
+                "type": "Eventhouse"
+            }
+        ]
+    },
+    {
+        "name": "Spark Monitoring Recommedations.Notebook",
+        "folder": "Recommender",
+        "id": "9b7cc66d-40b7-8a6f-4a38-2bcdda7eb24a"
+    },
+    {
+        "name": "SparkLensPipeline.DataPipeline",
+        "id": "599af237-f1cc-863d-481e-22001aacb285",
+        "folder": "Recommender",
+        "parameters": [
+            {
+                "name": "KustoURIfqdn",
+                "type": "kusto_query_uri",
+                "source": "Spark Monitoring.Eventhouse"
+            },
+            {
+                "name": "KQLDatabase",
+                "type": "kusto_database",
+                "source": "Spark Monitoring.KQLDatabase"
+            }
+        ],
+        "activities": [
+            {
+                "name": "SparkLens",
+                "type": "TridentNotebook",
+                "itemName": "Spark Monitoring Recommedations.Notebook"
+            }
+        ]
+    },
+	{
+        "name": "Spark Monitoring.KQLDashboard",
+        "id": "94b0dac6-cc63-8c9d-4a4b-40404f12bf39",
+		"datasources": [
+            {
+                "name": "Spark Monitoring",
+                "itemName": "Spark Monitoring.KQLDatabase"
+            }
+        ]
+    }
+]

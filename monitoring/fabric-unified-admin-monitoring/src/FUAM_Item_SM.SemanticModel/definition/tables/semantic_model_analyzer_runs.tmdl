@@ -172,5 +172,3 @@ table semantic_model_analyzer_runs
 			schemaName: dbo
 			expressionSource: DatabaseQuery
 
-	annotation PBI_ResultType = Table
-

@@ -1,0 +1,148 @@
+{
+    "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.5.0/schema.json",
+    "name": "926d52a32808596ecf7a",
+    "position": {
+        "x": 528.2169533519591,
+        "y": 87.26907638370984,
+        "z": 11000,
+        "height": 70,
+        "width": 130,
+        "tabOrder": 8000
+    },
+    "visual": {
+        "visualType": "card",
+        "query": {
+            "queryState": {
+                "Values": {
+                    "projections": [
+                        {
+                            "field": {
+                                "Measure": {
+                                    "Expression": {
+                                        "SourceRef": {
+                                            "Entity": "Metrics"
+                                        }
+                                    },
+                                    "Property": "Failure Ops KD"
+                                }
+                            },
+                            "queryRef": "Metrics.Failure Ops KD",
+                            "nativeQueryRef": "Failure Ops",
+                            "displayName": "Failure Ops"
+                        }
+                    ]
+                }
+            },
+            "sortDefinition": {
+                "sort": [
+                    {
+                        "field": {
+                            "Measure": {
+                                "Expression": {
+                                    "SourceRef": {
+                                        "Entity": "Metrics"
+                                    }
+                                },
+                                "Property": "Failure Ops KD"
+                            }
+                        },
+                        "direction": "Descending"
+                    }
+                ],
+                "isDefaultSort": true
+            }
+        },
+        "objects": {
+            "general": [
+                {
+                    "properties": {}
+                }
+            ],
+            "labels": [
+                {
+                    "properties": {
+                        "fontSize": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "18D"
+                                }
+                            }
+                        },
+                        "color": {
+                            "solid": {
+                                "color": {
+                                    "expr": {
+                                        "Literal": {
+                                            "Value": "'#FA4545'"
+                                        }
+                                    }
+                                }
+                            }
+                        },
+                        "labelDisplayUnits": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "1D"
+                                }
+                            }
+                        }
+                    }
+                }
+            ],
+            "categoryLabels": [
+                {
+                    "properties": {
+                        "fontSize": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "9D"
+                                }
+                            }
+                        }
+                    }
+                }
+            ]
+        },
+        "visualContainerObjects": {
+            "dropShadow": [
+                {
+                    "properties": {
+                        "show": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "true"
+                                }
+                            }
+                        },
+                        "color": {
+                            "solid": {
+                                "color": {
+                                    "expr": {
+                                        "ThemeDataColor": {
+                                            "ColorId": 0,
+                                            "Percent": -0.2
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            ],
+            "border": [
+                {
+                    "properties": {
+                        "radius": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "5D"
+                                }
+                            }
+                        }
+                    }
+                }
+            ]
+        },
+        "drillFilterOtherVisuals": true
+    }
+}

@@ -1,0 +1,146 @@
+{
+    "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.5.0/schema.json",
+    "name": "4e61c7b8498c66b64b05",
+    "position": {
+        "x": 221.66668701171875,
+        "y": 7.3333282470703125,
+        "z": 9000,
+        "height": 92,
+        "width": 534,
+        "tabOrder": 6000
+    },
+    "visual": {
+        "visualType": "lineChart",
+        "query": {
+            "queryState": {
+                "Category": {
+                    "projections": [
+                        {
+                            "field": {
+                                "Column": {
+                                    "Expression": {
+                                        "SourceRef": {
+                                            "Entity": "capacity_metrics_by_timepoint"
+                                        }
+                                    },
+                                    "Property": "TimePoint"
+                                }
+                            },
+                            "queryRef": "capacity_metrics_by_timepoint.TimePoint",
+                            "nativeQueryRef": "Count of TimePoint",
+                            "active": true
+                        }
+                    ]
+                },
+                "Y": {
+                    "projections": [
+                        {
+                            "field": {
+                                "Measure": {
+                                    "Expression": {
+                                        "SourceRef": {
+                                            "Entity": "Metrics"
+                                        }
+                                    },
+                                    "Property": "TimePoint SKU CU"
+                                }
+                            },
+                            "queryRef": "Metrics.TimePoint SKU CU",
+                            "nativeQueryRef": "TimePoint F-SKU",
+                            "displayName": "TimePoint F-SKU"
+                        }
+                    ]
+                }
+            },
+            "sortDefinition": {
+                "sort": [
+                    {
+                        "field": {
+                            "Column": {
+                                "Expression": {
+                                    "SourceRef": {
+                                        "Entity": "capacity_metrics_by_timepoint"
+                                    }
+                                },
+                                "Property": "TimePoint"
+                            }
+                        },
+                        "direction": "Ascending"
+                    }
+                ],
+                "isDefaultSort": true
+            }
+        },
+        "objects": {
+            "labels": [
+                {
+                    "properties": {
+                        "show": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "true"
+                                }
+                            }
+                        }
+                    }
+                }
+            ],
+            "valueAxis": [
+                {
+                    "properties": {
+                        "show": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "true"
+                                }
+                            }
+                        },
+                        "showAxisTitle": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "false"
+                                }
+                            }
+                        },
+                        "gridlineShow": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "false"
+                                }
+                            }
+                        }
+                    }
+                }
+            ]
+        },
+        "visualContainerObjects": {
+            "title": [
+                {
+                    "properties": {
+                        "text": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "'TimePoint F-SKU'"
+                                }
+                            }
+                        }
+                    }
+                }
+            ],
+            "border": [
+                {
+                    "properties": {
+                        "radius": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "6D"
+                                }
+                            }
+                        }
+                    }
+                }
+            ]
+        },
+        "drillFilterOtherVisuals": true
+    }
+}

@@ -1,0 +1,109 @@
+{
+    "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.5.0/schema.json",
+    "name": "6b7f47c537b398ce2bd6",
+    "position": {
+        "x": 1521.8740556553603,
+        "y": 8.77160838994444,
+        "z": 5000,
+        "height": 55.55351980298145,
+        "width": 45.3199766813796,
+        "tabOrder": 2000
+    },
+    "visual": {
+        "visualType": "actionButton",
+        "objects": {
+            "icon": [
+                {
+                    "properties": {
+                        "shapeType": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "'back'"
+                                }
+                            }
+                        },
+                        "lineColor": {
+                            "solid": {
+                                "color": {
+                                    "expr": {
+                                        "ThemeDataColor": {
+                                            "ColorId": 2,
+                                            "Percent": 0
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "selector": {
+                        "id": "default"
+                    }
+                }
+            ]
+        },
+        "visualContainerObjects": {
+            "visualLink": [
+                {
+                    "properties": {
+                        "show": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "true"
+                                }
+                            }
+                        },
+                        "type": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "'PageNavigation'"
+                                }
+                            }
+                        },
+                        "navigationSection": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "'0b29bd16187850bca883'"
+                                }
+                            }
+                        }
+                    }
+                }
+            ],
+            "border": [
+                {
+                    "properties": {
+                        "show": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "true"
+                                }
+                            }
+                        },
+                        "radius": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "12D"
+                                }
+                            }
+                        }
+                    }
+                }
+            ],
+            "background": [
+                {
+                    "properties": {
+                        "show": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "true"
+                                }
+                            }
+                        }
+                    }
+                }
+            ]
+        },
+        "drillFilterOtherVisuals": true
+    },
+    "howCreated": "InsertVisualButton"
+}

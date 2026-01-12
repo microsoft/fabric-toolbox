@@ -1,0 +1,159 @@
+{
+    "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.5.0/schema.json",
+    "name": "bccaba6c9738d0be1252",
+    "position": {
+        "x": 231,
+        "y": 82,
+        "z": 4000,
+        "height": 67,
+        "width": 227,
+        "tabOrder": 2000
+    },
+    "visual": {
+        "visualType": "card",
+        "query": {
+            "queryState": {
+                "Values": {
+                    "projections": [
+                        {
+                            "field": {
+                                "Aggregation": {
+                                    "Expression": {
+                                        "Column": {
+                                            "Expression": {
+                                                "SourceRef": {
+                                                    "Entity": "active_items"
+                                                }
+                                            },
+                                            "Property": "type"
+                                        }
+                                    },
+                                    "Function": 3
+                                }
+                            },
+                            "queryRef": "Min(active_items.type)",
+                            "nativeQueryRef": "Inventory Item Kind",
+                            "displayName": "Inventory Item Kind"
+                        }
+                    ]
+                }
+            },
+            "sortDefinition": {
+                "sort": [
+                    {
+                        "field": {
+                            "Aggregation": {
+                                "Expression": {
+                                    "Column": {
+                                        "Expression": {
+                                            "SourceRef": {
+                                                "Entity": "calendar_timepoints"
+                                            }
+                                        },
+                                        "Property": "Date"
+                                    }
+                                },
+                                "Function": 3
+                            }
+                        },
+                        "direction": "Ascending"
+                    }
+                ],
+                "isDefaultSort": true
+            }
+        },
+        "objects": {
+            "general": [
+                {
+                    "properties": {}
+                }
+            ],
+            "labels": [
+                {
+                    "properties": {
+                        "fontSize": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "11D"
+                                }
+                            }
+                        },
+                        "color": {
+                            "solid": {
+                                "color": {
+                                    "expr": {
+                                        "ThemeDataColor": {
+                                            "ColorId": 1,
+                                            "Percent": 0
+                                        }
+                                    }
+                                }
+                            }
+                        },
+                        "labelDisplayUnits": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "1D"
+                                }
+                            }
+                        }
+                    }
+                }
+            ],
+            "categoryLabels": [
+                {
+                    "properties": {
+                        "fontSize": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "9D"
+                                }
+                            }
+                        }
+                    }
+                }
+            ]
+        },
+        "visualContainerObjects": {
+            "dropShadow": [
+                {
+                    "properties": {
+                        "show": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "true"
+                                }
+                            }
+                        },
+                        "color": {
+                            "solid": {
+                                "color": {
+                                    "expr": {
+                                        "ThemeDataColor": {
+                                            "ColorId": 0,
+                                            "Percent": -0.2
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            ],
+            "border": [
+                {
+                    "properties": {
+                        "radius": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "5D"
+                                }
+                            }
+                        }
+                    }
+                }
+            ]
+        },
+        "drillFilterOtherVisuals": true
+    }
+}

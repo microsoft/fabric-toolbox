@@ -1,0 +1,215 @@
+{
+    "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.5.0/schema.json",
+    "name": "7943ca7cf95bd2d5a980",
+    "position": {
+        "x": 211.66666666666669,
+        "y": 632.5,
+        "z": 64003,
+        "height": 51.66666666666667,
+        "width": 67.5,
+        "tabOrder": 64003
+    },
+    "visual": {
+        "visualType": "card",
+        "query": {
+            "queryState": {
+                "Values": {
+                    "projections": [
+                        {
+                            "field": {
+                                "Measure": {
+                                    "Expression": {
+                                        "SourceRef": {
+                                            "Entity": "Metrics"
+                                        }
+                                    },
+                                    "Property": "# Datasource Instances"
+                                }
+                            },
+                            "queryRef": "Metrics.# Datasource Instances",
+                            "nativeQueryRef": "# Datasource Instances"
+                        }
+                    ]
+                }
+            },
+            "sortDefinition": {
+                "sort": [
+                    {
+                        "field": {
+                            "Measure": {
+                                "Expression": {
+                                    "SourceRef": {
+                                        "Entity": "Metrics"
+                                    }
+                                },
+                                "Property": "# Datasource Instances"
+                            }
+                        },
+                        "direction": "Descending"
+                    }
+                ],
+                "isDefaultSort": true
+            }
+        },
+        "objects": {
+            "general": [
+                {
+                    "properties": {}
+                }
+            ],
+            "labels": [
+                {
+                    "properties": {
+                        "fontSize": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "15D"
+                                }
+                            }
+                        },
+                        "labelDisplayUnits": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "1D"
+                                }
+                            }
+                        }
+                    }
+                }
+            ],
+            "categoryLabels": [
+                {
+                    "properties": {
+                        "fontSize": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "9D"
+                                }
+                            }
+                        },
+                        "show": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "false"
+                                }
+                            }
+                        }
+                    }
+                }
+            ]
+        },
+        "visualContainerObjects": {
+            "dropShadow": [
+                {
+                    "properties": {
+                        "show": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "false"
+                                }
+                            }
+                        },
+                        "color": {
+                            "solid": {
+                                "color": {
+                                    "expr": {
+                                        "ThemeDataColor": {
+                                            "ColorId": 0,
+                                            "Percent": -0.2
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            ],
+            "border": [
+                {
+                    "properties": {
+                        "radius": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "5D"
+                                }
+                            }
+                        },
+                        "show": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "false"
+                                }
+                            }
+                        }
+                    }
+                }
+            ],
+            "background": [
+                {
+                    "properties": {
+                        "show": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "false"
+                                }
+                            }
+                        }
+                    }
+                }
+            ],
+            "title": [
+                {
+                    "properties": {
+                        "show": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "true"
+                                }
+                            }
+                        },
+                        "fontSize": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "8D"
+                                }
+                            }
+                        },
+                        "alignment": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "'center'"
+                                }
+                            }
+                        },
+                        "text": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "'Connections'"
+                                }
+                            }
+                        }
+                    }
+                }
+            ]
+        },
+        "drillFilterOtherVisuals": true
+    },
+    "filterConfig": {
+        "filters": [
+            {
+                "name": "ff32d445df807eea2d63",
+                "field": {
+                    "Measure": {
+                        "Expression": {
+                            "SourceRef": {
+                                "Entity": "Metrics"
+                            }
+                        },
+                        "Property": "# Datasource Instances"
+                    }
+                },
+                "type": "Advanced"
+            }
+        ]
+    }
+}

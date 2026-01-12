@@ -1,0 +1,130 @@
+{
+    "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.5.0/schema.json",
+    "name": "db389b887ac2753d0c53",
+    "position": {
+        "x": 18.990515332676427,
+        "y": 83.22250219689852,
+        "z": 5000,
+        "height": 72.46376811594203,
+        "width": 163.768115942029,
+        "tabOrder": 2000
+    },
+    "visual": {
+        "visualType": "card",
+        "query": {
+            "queryState": {
+                "Values": {
+                    "projections": [
+                        {
+                            "field": {
+                                "Measure": {
+                                    "Expression": {
+                                        "SourceRef": {
+                                            "Entity": "Metrics"
+                                        }
+                                    },
+                                    "Property": "Used CU(s) %"
+                                }
+                            },
+                            "queryRef": "Metrics.Used CU(s) %",
+                            "nativeQueryRef": "Used CU(s) % overall",
+                            "displayName": "Used CU(s) % overall"
+                        }
+                    ]
+                }
+            },
+            "sortDefinition": {
+                "sort": [
+                    {
+                        "field": {
+                            "Measure": {
+                                "Expression": {
+                                    "SourceRef": {
+                                        "Entity": "Metrics"
+                                    }
+                                },
+                                "Property": "Used CU(s) %"
+                            }
+                        },
+                        "direction": "Descending"
+                    }
+                ],
+                "isDefaultSort": true
+            }
+        },
+        "objects": {
+            "general": [
+                {
+                    "properties": {}
+                }
+            ],
+            "labels": [
+                {
+                    "properties": {
+                        "fontSize": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "18D"
+                                }
+                            }
+                        }
+                    }
+                }
+            ],
+            "categoryLabels": [
+                {
+                    "properties": {
+                        "fontSize": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "9D"
+                                }
+                            }
+                        }
+                    }
+                }
+            ]
+        },
+        "visualContainerObjects": {
+            "dropShadow": [
+                {
+                    "properties": {
+                        "show": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "true"
+                                }
+                            }
+                        },
+                        "color": {
+                            "solid": {
+                                "color": {
+                                    "expr": {
+                                        "ThemeDataColor": {
+                                            "ColorId": 0,
+                                            "Percent": -0.2
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            ],
+            "border": [
+                {
+                    "properties": {
+                        "radius": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "5D"
+                                }
+                            }
+                        }
+                    }
+                }
+            ]
+        },
+        "drillFilterOtherVisuals": true
+    }
+}

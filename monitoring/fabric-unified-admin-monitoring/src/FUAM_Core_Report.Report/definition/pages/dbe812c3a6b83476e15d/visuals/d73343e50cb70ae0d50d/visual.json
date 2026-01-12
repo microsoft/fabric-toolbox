@@ -1,0 +1,78 @@
+{
+    "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.5.0/schema.json",
+    "name": "d73343e50cb70ae0d50d",
+    "position": {
+        "x": 393.1818181818182,
+        "y": 90.9090909090909,
+        "z": 9000,
+        "height": 73.86363636363636,
+        "width": 532.9545454545455,
+        "tabOrder": 6000
+    },
+    "visual": {
+        "visualType": "textbox",
+        "objects": {
+            "general": [
+                {
+                    "properties": {
+                        "paragraphs": [
+                            {
+                                "textRuns": [
+                                    {
+                                        "value": "Description:",
+                                        "textStyle": {
+                                            "fontWeight": "bold"
+                                        }
+                                    }
+                                ]
+                            },
+                            {
+                                "textRuns": [
+                                    {
+                                        "value": "The Item catalog aims to provide transparency about active items on your platform."
+                                    }
+                                ]
+                            },
+                            {
+                                "textRuns": [
+                                    {
+                                        "value": "You can easily find items based on ids, names and other properties"
+                                    }
+                                ]
+                            }
+                        ]
+                    }
+                }
+            ]
+        },
+        "visualContainerObjects": {
+            "background": [
+                {
+                    "properties": {
+                        "show": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "false"
+                                }
+                            }
+                        }
+                    }
+                }
+            ],
+            "border": [
+                {
+                    "properties": {
+                        "show": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "false"
+                                }
+                            }
+                        }
+                    }
+                }
+            ]
+        },
+        "drillFilterOtherVisuals": true
+    }
+}

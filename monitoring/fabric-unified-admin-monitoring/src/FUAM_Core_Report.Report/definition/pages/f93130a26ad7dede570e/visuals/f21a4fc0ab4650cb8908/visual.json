@@ -1,0 +1,197 @@
+{
+    "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.5.0/schema.json",
+    "name": "f21a4fc0ab4650cb8908",
+    "position": {
+        "x": 175.32373167983494,
+        "y": 221.1342546800883,
+        "z": 59000,
+        "height": 59.04255319148937,
+        "width": 105.31914893617022,
+        "tabOrder": 58000
+    },
+    "visual": {
+        "visualType": "card",
+        "query": {
+            "queryState": {
+                "Values": {
+                    "projections": [
+                        {
+                            "field": {
+                                "Measure": {
+                                    "Expression": {
+                                        "SourceRef": {
+                                            "Entity": "Metrics"
+                                        }
+                                    },
+                                    "Property": "# Item Level Accesses"
+                                }
+                            },
+                            "queryRef": "Metrics.# Item Level Accesses",
+                            "nativeQueryRef": "# Item Level Accesses"
+                        }
+                    ]
+                }
+            },
+            "sortDefinition": {
+                "sort": [
+                    {
+                        "field": {
+                            "Measure": {
+                                "Expression": {
+                                    "SourceRef": {
+                                        "Entity": "Metrics"
+                                    }
+                                },
+                                "Property": "# Item Level Accesses"
+                            }
+                        },
+                        "direction": "Descending"
+                    }
+                ],
+                "isDefaultSort": true
+            }
+        },
+        "objects": {
+            "general": [
+                {
+                    "properties": {}
+                }
+            ],
+            "labels": [
+                {
+                    "properties": {
+                        "fontSize": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "18D"
+                                }
+                            }
+                        },
+                        "labelDisplayUnits": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "1D"
+                                }
+                            }
+                        }
+                    }
+                }
+            ],
+            "categoryLabels": [
+                {
+                    "properties": {
+                        "fontSize": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "9D"
+                                }
+                            }
+                        },
+                        "show": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "false"
+                                }
+                            }
+                        }
+                    }
+                }
+            ]
+        },
+        "visualContainerObjects": {
+            "dropShadow": [
+                {
+                    "properties": {
+                        "show": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "false"
+                                }
+                            }
+                        },
+                        "color": {
+                            "solid": {
+                                "color": {
+                                    "expr": {
+                                        "ThemeDataColor": {
+                                            "ColorId": 0,
+                                            "Percent": -0.2
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            ],
+            "border": [
+                {
+                    "properties": {
+                        "radius": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "5D"
+                                }
+                            }
+                        },
+                        "show": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "false"
+                                }
+                            }
+                        }
+                    }
+                }
+            ],
+            "background": [
+                {
+                    "properties": {
+                        "show": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "false"
+                                }
+                            }
+                        }
+                    }
+                }
+            ],
+            "title": [
+                {
+                    "properties": {
+                        "show": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "true"
+                                }
+                            }
+                        },
+                        "fontSize": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "8D"
+                                }
+                            }
+                        },
+                        "alignment": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "'center'"
+                                }
+                            }
+                        },
+                        "text": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "'Item Level Accesses'"
+                                }
+                            }
+                        }
+                    }
+                }
+            ]
+        },
+        "drillFilterOtherVisuals": true
+    }
+}

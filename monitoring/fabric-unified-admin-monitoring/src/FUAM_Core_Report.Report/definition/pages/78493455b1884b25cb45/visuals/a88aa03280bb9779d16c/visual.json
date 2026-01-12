@@ -1,0 +1,166 @@
+{
+    "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.5.0/schema.json",
+    "name": "a88aa03280bb9779d16c",
+    "position": {
+        "x": 1953.6144578313254,
+        "y": 18.803786574870912,
+        "z": 2000,
+        "height": 42.55593803786575,
+        "width": 131.6265060240964,
+        "tabOrder": 2000
+    },
+    "visual": {
+        "visualType": "card",
+        "query": {
+            "queryState": {
+                "Values": {
+                    "projections": [
+                        {
+                            "field": {
+                                "Measure": {
+                                    "Expression": {
+                                        "SourceRef": {
+                                            "Entity": "Metrics"
+                                        }
+                                    },
+                                    "Property": "FUAM Release"
+                                }
+                            },
+                            "queryRef": "Metrics.FUAM Release",
+                            "nativeQueryRef": "FUAM Release"
+                        }
+                    ]
+                }
+            }
+        },
+        "objects": {
+            "labels": [
+                {
+                    "properties": {
+                        "fontSize": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "12D"
+                                }
+                            }
+                        },
+                        "color": {
+                            "solid": {
+                                "color": {
+                                    "expr": {
+                                        "ThemeDataColor": {
+                                            "ColorId": 1,
+                                            "Percent": 0
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            ],
+            "categoryLabels": [
+                {
+                    "properties": {
+                        "fontSize": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "8D"
+                                }
+                            }
+                        },
+                        "show": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "false"
+                                }
+                            }
+                        }
+                    }
+                }
+            ]
+        },
+        "visualContainerObjects": {
+            "background": [
+                {
+                    "properties": {
+                        "show": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "false"
+                                }
+                            }
+                        }
+                    }
+                }
+            ],
+            "border": [
+                {
+                    "properties": {
+                        "show": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "false"
+                                }
+                            }
+                        }
+                    }
+                }
+            ],
+            "title": [
+                {
+                    "properties": {
+                        "show": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "true"
+                                }
+                            }
+                        },
+                        "text": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "'FUAM Release'"
+                                }
+                            }
+                        },
+                        "fontSize": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "10D"
+                                }
+                            }
+                        },
+                        "fontFamily": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "'''Segoe UI Semibold'', wf_segoe-ui_semibold, helvetica, arial, sans-serif'"
+                                }
+                            }
+                        },
+                        "alignment": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "'center'"
+                                }
+                            }
+                        },
+                        "fontColor": {
+                            "solid": {
+                                "color": {
+                                    "expr": {
+                                        "ThemeDataColor": {
+                                            "ColorId": 1,
+                                            "Percent": 0
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            ]
+        },
+        "drillFilterOtherVisuals": true
+    }
+}

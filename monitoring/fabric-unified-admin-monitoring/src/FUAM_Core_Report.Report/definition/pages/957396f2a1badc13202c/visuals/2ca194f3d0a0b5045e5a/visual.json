@@ -1,0 +1,1086 @@
+{
+    "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.5.0/schema.json",
+    "name": "2ca194f3d0a0b5045e5a",
+    "position": {
+        "x": 20.08615384615385,
+        "y": 172.5046153846154,
+        "z": 11000,
+        "height": 886.1538461538462,
+        "width": 1548.9969230769232,
+        "tabOrder": 13000
+    },
+    "visual": {
+        "visualType": "tableEx",
+        "query": {
+            "queryState": {
+                "Values": {
+                    "projections": [
+                        {
+                            "field": {
+                                "Column": {
+                                    "Expression": {
+                                        "SourceRef": {
+                                            "Entity": "calendar"
+                                        }
+                                    },
+                                    "Property": "Date2Key"
+                                }
+                            },
+                            "queryRef": "calendar.Date2Key",
+                            "nativeQueryRef": "Date",
+                            "displayName": "Date"
+                        },
+                        {
+                            "field": {
+                                "Column": {
+                                    "Expression": {
+                                        "SourceRef": {
+                                            "Entity": "workspaces"
+                                        }
+                                    },
+                                    "Property": "WorkspaceName"
+                                }
+                            },
+                            "queryRef": "workspaces.WorkspaceName",
+                            "nativeQueryRef": "Workspace Name",
+                            "displayName": "Workspace Name"
+                        },
+                        {
+                            "field": {
+                                "Column": {
+                                    "Expression": {
+                                        "SourceRef": {
+                                            "Entity": "capacity_metrics_by_item_by_operation_by_day"
+                                        }
+                                    },
+                                    "Property": "ItemKind"
+                                }
+                            },
+                            "queryRef": "capacity_metrics_by_item_by_operation_by_day.ItemKind",
+                            "nativeQueryRef": "Item Kind",
+                            "displayName": "Item Kind"
+                        },
+                        {
+                            "field": {
+                                "Column": {
+                                    "Expression": {
+                                        "SourceRef": {
+                                            "Entity": "active_items"
+                                        }
+                                    },
+                                    "Property": "name"
+                                }
+                            },
+                            "queryRef": "active_items.name",
+                            "nativeQueryRef": "Item Name",
+                            "displayName": "Item Name"
+                        },
+                        {
+                            "field": {
+                                "Measure": {
+                                    "Expression": {
+                                        "SourceRef": {
+                                            "Entity": "Metrics"
+                                        }
+                                    },
+                                    "Property": "Total CUs IOD"
+                                }
+                            },
+                            "queryRef": "Metrics.Total CUs IOD",
+                            "nativeQueryRef": "Total CUs",
+                            "displayName": "Total CUs"
+                        },
+                        {
+                            "field": {
+                                "Measure": {
+                                    "Expression": {
+                                        "SourceRef": {
+                                            "Entity": "Metrics"
+                                        }
+                                    },
+                                    "Property": "Daily CU vs Avg CU IOD OA"
+                                }
+                            },
+                            "queryRef": "Metrics.Daily CU vs Avg CU IOD OA",
+                            "nativeQueryRef": "Daily CU vs 14d Avg CU",
+                            "displayName": "Daily CU vs 14d Avg CU"
+                        },
+                        {
+                            "field": {
+                                "Measure": {
+                                    "Expression": {
+                                        "SourceRef": {
+                                            "Entity": "Metrics"
+                                        }
+                                    },
+                                    "Property": "CU Outlier Factor IOD OA"
+                                }
+                            },
+                            "queryRef": "Metrics.CU Outlier Factor IOD OA",
+                            "nativeQueryRef": "Outlier Factor",
+                            "displayName": "Outlier Factor"
+                        }
+                    ]
+                }
+            },
+            "sortDefinition": {
+                "sort": [
+                    {
+                        "field": {
+                            "Column": {
+                                "Expression": {
+                                    "SourceRef": {
+                                        "Entity": "capacity_metrics_by_item_by_operation_by_day"
+                                    }
+                                },
+                                "Property": "ItemKind"
+                            }
+                        },
+                        "direction": "Ascending"
+                    }
+                ]
+            }
+        },
+        "objects": {
+            "columnHeaders": [
+                {
+                    "properties": {
+                        "fontFamily": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "'''Segoe UI Semibold'', wf_segoe-ui_semibold, helvetica, arial, sans-serif'"
+                                }
+                            }
+                        },
+                        "backColor": {
+                            "solid": {
+                                "color": {
+                                    "expr": {
+                                        "ThemeDataColor": {
+                                            "ColorId": 0,
+                                            "Percent": 0
+                                        }
+                                    }
+                                }
+                            }
+                        },
+                        "fontColor": {
+                            "solid": {
+                                "color": {
+                                    "expr": {
+                                        "ThemeDataColor": {
+                                            "ColorId": 2,
+                                            "Percent": 0
+                                        }
+                                    }
+                                }
+                            }
+                        },
+                        "fontSize": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "12D"
+                                }
+                            }
+                        }
+                    }
+                }
+            ],
+            "grid": [
+                {
+                    "properties": {
+                        "gridVertical": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "true"
+                                }
+                            }
+                        },
+                        "rowPadding": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "11D"
+                                }
+                            }
+                        },
+                        "outlineColor": {
+                            "solid": {
+                                "color": {
+                                    "expr": {
+                                        "ThemeDataColor": {
+                                            "ColorId": 0,
+                                            "Percent": -0.1
+                                        }
+                                    }
+                                }
+                            }
+                        },
+                        "gridHorizontal": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "true"
+                                }
+                            }
+                        },
+                        "gridHorizontalWeight": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "1D"
+                                }
+                            }
+                        },
+                        "gridHorizontalColor": {
+                            "solid": {
+                                "color": {
+                                    "expr": {
+                                        "Literal": {
+                                            "Value": "'#F7F7F7'"
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            ],
+            "values": [
+                {
+                    "properties": {
+                        "backColorSecondary": {
+                            "solid": {
+                                "color": {
+                                    "expr": {
+                                        "Literal": {
+                                            "Value": "'#F7F7F7'"
+                                        }
+                                    }
+                                }
+                            }
+                        },
+                        "fontSize": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "12D"
+                                }
+                            }
+                        },
+                        "backColorPrimary": {
+                            "solid": {
+                                "color": {
+                                    "expr": {
+                                        "ThemeDataColor": {
+                                            "ColorId": 0,
+                                            "Percent": 0
+                                        }
+                                    }
+                                }
+                            }
+                        },
+                        "fontFamily": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "'''Segoe UI Semibold'', wf_segoe-ui_semibold, helvetica, arial, sans-serif'"
+                                }
+                            }
+                        }
+                    }
+                },
+                {
+                    "properties": {
+                        "backColor": {
+                            "solid": {
+                                "color": {
+                                    "expr": {
+                                        "FillRule": {
+                                            "Input": {
+                                                "Measure": {
+                                                    "Expression": {
+                                                        "SourceRef": {
+                                                            "Entity": "Metrics"
+                                                        }
+                                                    },
+                                                    "Property": "CU Outlier Factor IOD OA"
+                                                }
+                                            },
+                                            "FillRule": {
+                                                "linearGradient2": {
+                                                    "min": {
+                                                        "color": {
+                                                            "Literal": {
+                                                                "Value": "'#FFFFFF'"
+                                                            }
+                                                        },
+                                                        "value": {
+                                                            "Literal": {
+                                                                "Value": "0D"
+                                                            }
+                                                        }
+                                                    },
+                                                    "max": {
+                                                        "color": {
+                                                            "Literal": {
+                                                                "Value": "'#FE7272'"
+                                                            }
+                                                        },
+                                                        "value": {
+                                                            "Literal": {
+                                                                "Value": "3D"
+                                                            }
+                                                        }
+                                                    },
+                                                    "nullColoringStrategy": {
+                                                        "strategy": {
+                                                            "Literal": {
+                                                                "Value": "'asZero'"
+                                                            }
+                                                        }
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "selector": {
+                        "data": [
+                            {
+                                "dataViewWildcard": {
+                                    "matchingOption": 1
+                                }
+                            }
+                        ],
+                        "metadata": "Metrics.Daily CU vs Avg CU IOD OA"
+                    }
+                },
+                {
+                    "properties": {
+                        "icon": {
+                            "kind": "Icon",
+                            "layout": {
+                                "expr": {
+                                    "Literal": {
+                                        "Value": "'IconOnly'"
+                                    }
+                                }
+                            },
+                            "verticalAlignment": {
+                                "expr": {
+                                    "Literal": {
+                                        "Value": "'Middle'"
+                                    }
+                                }
+                            },
+                            "value": {
+                                "expr": {
+                                    "Conditional": {
+                                        "Cases": [
+                                            {
+                                                "Condition": {
+                                                    "And": {
+                                                        "Left": {
+                                                            "Comparison": {
+                                                                "ComparisonKind": 1,
+                                                                "Left": {
+                                                                    "Measure": {
+                                                                        "Expression": {
+                                                                            "SourceRef": {
+                                                                                "Entity": "Metrics"
+                                                                            }
+                                                                        },
+                                                                        "Property": "CU Outlier Factor IOD OA"
+                                                                    }
+                                                                },
+                                                                "Right": {
+                                                                    "Literal": {
+                                                                        "Value": "3D"
+                                                                    }
+                                                                }
+                                                            }
+                                                        },
+                                                        "Right": {
+                                                            "Comparison": {
+                                                                "ComparisonKind": 3,
+                                                                "Left": {
+                                                                    "Measure": {
+                                                                        "Expression": {
+                                                                            "SourceRef": {
+                                                                                "Entity": "Metrics"
+                                                                            }
+                                                                        },
+                                                                        "Property": "CU Outlier Factor IOD OA"
+                                                                    }
+                                                                },
+                                                                "Right": {
+                                                                    "Literal": {
+                                                                        "Value": "500000D"
+                                                                    }
+                                                                }
+                                                            }
+                                                        }
+                                                    }
+                                                },
+                                                "Value": {
+                                                    "Literal": {
+                                                        "Value": "'QuadrantFullColored'"
+                                                    }
+                                                }
+                                            },
+                                            {
+                                                "Condition": {
+                                                    "And": {
+                                                        "Left": {
+                                                            "Comparison": {
+                                                                "ComparisonKind": 1,
+                                                                "Left": {
+                                                                    "Measure": {
+                                                                        "Expression": {
+                                                                            "SourceRef": {
+                                                                                "Entity": "Metrics"
+                                                                            }
+                                                                        },
+                                                                        "Property": "CU Outlier Factor IOD OA"
+                                                                    }
+                                                                },
+                                                                "Right": {
+                                                                    "Literal": {
+                                                                        "Value": "2D"
+                                                                    }
+                                                                }
+                                                            }
+                                                        },
+                                                        "Right": {
+                                                            "Comparison": {
+                                                                "ComparisonKind": 4,
+                                                                "Left": {
+                                                                    "Measure": {
+                                                                        "Expression": {
+                                                                            "SourceRef": {
+                                                                                "Entity": "Metrics"
+                                                                            }
+                                                                        },
+                                                                        "Property": "CU Outlier Factor IOD OA"
+                                                                    }
+                                                                },
+                                                                "Right": {
+                                                                    "Literal": {
+                                                                        "Value": "3D"
+                                                                    }
+                                                                }
+                                                            }
+                                                        }
+                                                    }
+                                                },
+                                                "Value": {
+                                                    "Literal": {
+                                                        "Value": "'Quadrant75Colored'"
+                                                    }
+                                                }
+                                            },
+                                            {
+                                                "Condition": {
+                                                    "And": {
+                                                        "Left": {
+                                                            "Comparison": {
+                                                                "ComparisonKind": 1,
+                                                                "Left": {
+                                                                    "Measure": {
+                                                                        "Expression": {
+                                                                            "SourceRef": {
+                                                                                "Entity": "Metrics"
+                                                                            }
+                                                                        },
+                                                                        "Property": "CU Outlier Factor IOD OA"
+                                                                    }
+                                                                },
+                                                                "Right": {
+                                                                    "Literal": {
+                                                                        "Value": "1D"
+                                                                    }
+                                                                }
+                                                            }
+                                                        },
+                                                        "Right": {
+                                                            "Comparison": {
+                                                                "ComparisonKind": 4,
+                                                                "Left": {
+                                                                    "Measure": {
+                                                                        "Expression": {
+                                                                            "SourceRef": {
+                                                                                "Entity": "Metrics"
+                                                                            }
+                                                                        },
+                                                                        "Property": "CU Outlier Factor IOD OA"
+                                                                    }
+                                                                },
+                                                                "Right": {
+                                                                    "Literal": {
+                                                                        "Value": "2D"
+                                                                    }
+                                                                }
+                                                            }
+                                                        }
+                                                    }
+                                                },
+                                                "Value": {
+                                                    "Literal": {
+                                                        "Value": "'Quadrant50Colored'"
+                                                    }
+                                                }
+                                            },
+                                            {
+                                                "Condition": {
+                                                    "And": {
+                                                        "Left": {
+                                                            "Comparison": {
+                                                                "ComparisonKind": 1,
+                                                                "Left": {
+                                                                    "Measure": {
+                                                                        "Expression": {
+                                                                            "SourceRef": {
+                                                                                "Entity": "Metrics"
+                                                                            }
+                                                                        },
+                                                                        "Property": "CU Outlier Factor IOD OA"
+                                                                    }
+                                                                },
+                                                                "Right": {
+                                                                    "Literal": {
+                                                                        "Value": "0D"
+                                                                    }
+                                                                }
+                                                            }
+                                                        },
+                                                        "Right": {
+                                                            "Comparison": {
+                                                                "ComparisonKind": 4,
+                                                                "Left": {
+                                                                    "Measure": {
+                                                                        "Expression": {
+                                                                            "SourceRef": {
+                                                                                "Entity": "Metrics"
+                                                                            }
+                                                                        },
+                                                                        "Property": "CU Outlier Factor IOD OA"
+                                                                    }
+                                                                },
+                                                                "Right": {
+                                                                    "Literal": {
+                                                                        "Value": "1D"
+                                                                    }
+                                                                }
+                                                            }
+                                                        }
+                                                    }
+                                                },
+                                                "Value": {
+                                                    "Literal": {
+                                                        "Value": "'Quadrant25Colored'"
+                                                    }
+                                                }
+                                            },
+                                            {
+                                                "Condition": {
+                                                    "And": {
+                                                        "Left": {
+                                                            "Comparison": {
+                                                                "ComparisonKind": 2,
+                                                                "Left": {
+                                                                    "Measure": {
+                                                                        "Expression": {
+                                                                            "SourceRef": {
+                                                                                "Entity": "Metrics"
+                                                                            }
+                                                                        },
+                                                                        "Property": "CU Outlier Factor IOD OA"
+                                                                    }
+                                                                },
+                                                                "Right": {
+                                                                    "Literal": {
+                                                                        "Value": "-50000D"
+                                                                    }
+                                                                }
+                                                            }
+                                                        },
+                                                        "Right": {
+                                                            "Comparison": {
+                                                                "ComparisonKind": 4,
+                                                                "Left": {
+                                                                    "Measure": {
+                                                                        "Expression": {
+                                                                            "SourceRef": {
+                                                                                "Entity": "Metrics"
+                                                                            }
+                                                                        },
+                                                                        "Property": "CU Outlier Factor IOD OA"
+                                                                    }
+                                                                },
+                                                                "Right": {
+                                                                    "Literal": {
+                                                                        "Value": "0D"
+                                                                    }
+                                                                }
+                                                            }
+                                                        }
+                                                    }
+                                                },
+                                                "Value": {
+                                                    "Literal": {
+                                                        "Value": "'QuadrantEmpty'"
+                                                    }
+                                                }
+                                            }
+                                        ]
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "selector": {
+                        "data": [
+                            {
+                                "dataViewWildcard": {
+                                    "matchingOption": 1
+                                }
+                            }
+                        ],
+                        "metadata": "Metrics.CU Outlier Factor IOD OA"
+                    }
+                }
+            ],
+            "columnWidth": [
+                {
+                    "properties": {
+                        "value": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "411.5078308308216D"
+                                }
+                            }
+                        }
+                    },
+                    "selector": {
+                        "metadata": "active_items.name"
+                    }
+                },
+                {
+                    "properties": {
+                        "value": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "313.7098758048868D"
+                                }
+                            }
+                        }
+                    },
+                    "selector": {
+                        "metadata": "workspaces.WorkspaceName"
+                    }
+                },
+                {
+                    "properties": {
+                        "value": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "116.25153465099417D"
+                                }
+                            }
+                        }
+                    },
+                    "selector": {
+                        "metadata": "Metrics.CU Outlier Factor IOD OA"
+                    }
+                },
+                {
+                    "properties": {
+                        "value": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "186.51534979155477D"
+                                }
+                            }
+                        }
+                    },
+                    "selector": {
+                        "metadata": "Metrics.Daily CU vs Avg CU IOD OA"
+                    }
+                },
+                {
+                    "properties": {
+                        "value": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "182.13071780793263D"
+                                }
+                            }
+                        }
+                    },
+                    "selector": {
+                        "metadata": "Metrics.Total CUs IOD"
+                    }
+                },
+                {
+                    "properties": {
+                        "value": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "156.96920311262804D"
+                                }
+                            }
+                        }
+                    },
+                    "selector": {
+                        "metadata": "capacity_metrics_by_item_by_operation_by_day.ItemKind"
+                    }
+                }
+            ],
+            "columnFormatting": [
+                {
+                    "properties": {
+                        "alignment": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "'Center'"
+                                }
+                            }
+                        }
+                    },
+                    "selector": {
+                        "metadata": "calendar.Date2Key"
+                    }
+                },
+                {
+                    "properties": {
+                        "alignment": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "'Center'"
+                                }
+                            }
+                        }
+                    },
+                    "selector": {
+                        "metadata": "Metrics.CU Outlier Factor IOD OA"
+                    }
+                },
+                {
+                    "properties": {
+                        "dataBars": {
+                            "positiveColor": {
+                                "solid": {
+                                    "color": {
+                                        "expr": {
+                                            "Literal": {
+                                                "Value": "'#a7d0ce'"
+                                            }
+                                        }
+                                    }
+                                }
+                            },
+                            "negativeColor": {
+                                "solid": {
+                                    "color": {
+                                        "expr": {
+                                            "Literal": {
+                                                "Value": "'minColor'"
+                                            }
+                                        }
+                                    }
+                                }
+                            },
+                            "axisColor": {
+                                "solid": {
+                                    "color": {
+                                        "expr": {
+                                            "Literal": {
+                                                "Value": "'foreground'"
+                                            }
+                                        }
+                                    }
+                                }
+                            },
+                            "reverseDirection": {
+                                "expr": {
+                                    "Literal": {
+                                        "Value": "false"
+                                    }
+                                }
+                            },
+                            "hideText": {
+                                "expr": {
+                                    "Literal": {
+                                        "Value": "false"
+                                    }
+                                }
+                            },
+                            "totalMatchingOption": {
+                                "expr": {
+                                    "Literal": {
+                                        "Value": "1L"
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "selector": {
+                        "metadata": "Metrics.Total CUs IOD"
+                    }
+                }
+            ],
+            "total": [
+                {
+                    "properties": {
+                        "totals": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "false"
+                                }
+                            }
+                        }
+                    }
+                }
+            ]
+        },
+        "visualContainerObjects": {
+            "title": [
+                {
+                    "properties": {
+                        "show": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "true"
+                                }
+                            }
+                        },
+                        "text": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "'Item Outlier Analysis'"
+                                }
+                            }
+                        },
+                        "fontSize": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "12D"
+                                }
+                            }
+                        }
+                    }
+                }
+            ],
+            "border": [
+                {
+                    "properties": {
+                        "show": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "true"
+                                }
+                            }
+                        },
+                        "radius": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "5D"
+                                }
+                            }
+                        }
+                    }
+                }
+            ],
+            "dropShadow": [
+                {
+                    "properties": {
+                        "show": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "true"
+                                }
+                            }
+                        },
+                        "color": {
+                            "solid": {
+                                "color": {
+                                    "expr": {
+                                        "ThemeDataColor": {
+                                            "ColorId": 0,
+                                            "Percent": -0.1
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            ],
+            "visualTooltip": [
+                {
+                    "properties": {
+                        "show": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "true"
+                                }
+                            }
+                        },
+                        "section": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "'8d39b414abb490008ab4'"
+                                }
+                            }
+                        }
+                    }
+                }
+            ]
+        },
+        "drillFilterOtherVisuals": true
+    },
+    "filterConfig": {
+        "filters": [
+            {
+                "name": "6e96574dd53e5bddb616",
+                "ordinal": 0,
+                "field": {
+                    "Column": {
+                        "Expression": {
+                            "SourceRef": {
+                                "Entity": "calendar"
+                            }
+                        },
+                        "Property": "Date2Key"
+                    }
+                },
+                "type": "Categorical"
+            },
+            {
+                "name": "b01f837852be9689780d",
+                "ordinal": 1,
+                "field": {
+                    "Column": {
+                        "Expression": {
+                            "SourceRef": {
+                                "Entity": "workspaces"
+                            }
+                        },
+                        "Property": "WorkspaceName"
+                    }
+                },
+                "type": "Categorical"
+            },
+            {
+                "name": "4243eacb3868ce414e75",
+                "ordinal": 2,
+                "field": {
+                    "Column": {
+                        "Expression": {
+                            "SourceRef": {
+                                "Entity": "active_items"
+                            }
+                        },
+                        "Property": "name"
+                    }
+                },
+                "type": "Categorical"
+            },
+            {
+                "name": "17d1b2f11d8ad4770ad8",
+                "ordinal": 3,
+                "field": {
+                    "Measure": {
+                        "Expression": {
+                            "SourceRef": {
+                                "Entity": "Metrics"
+                            }
+                        },
+                        "Property": "Total CUs IOD"
+                    }
+                },
+                "type": "Advanced"
+            },
+            {
+                "name": "b98816662499ee43e34b",
+                "ordinal": 4,
+                "field": {
+                    "Measure": {
+                        "Expression": {
+                            "SourceRef": {
+                                "Entity": "Metrics"
+                            }
+                        },
+                        "Property": "Daily CU vs Avg CU IOD OA"
+                    }
+                },
+                "type": "Advanced"
+            },
+            {
+                "name": "77cde1c98e922a555524",
+                "ordinal": 5,
+                "field": {
+                    "Measure": {
+                        "Expression": {
+                            "SourceRef": {
+                                "Entity": "Metrics"
+                            }
+                        },
+                        "Property": "CU Outlier Factor IOD OA"
+                    }
+                },
+                "type": "Advanced"
+            },
+            {
+                "name": "8eeeb9eb48d200167729",
+                "ordinal": 6,
+                "field": {
+                    "Measure": {
+                        "Expression": {
+                            "SourceRef": {
+                                "Entity": "Metrics"
+                            }
+                        },
+                        "Property": "Selected Date Helper IOD OA"
+                    }
+                },
+                "type": "Advanced",
+                "filter": {
+                    "Version": 2,
+                    "From": [
+                        {
+                            "Name": "m",
+                            "Entity": "Metrics",
+                            "Type": 0
+                        }
+                    ],
+                    "Where": [
+                        {
+                            "Condition": {
+                                "Comparison": {
+                                    "ComparisonKind": 0,
+                                    "Left": {
+                                        "Measure": {
+                                            "Expression": {
+                                                "SourceRef": {
+                                                    "Source": "m"
+                                                }
+                                            },
+                                            "Property": "Selected Date Helper IOD OA"
+                                        }
+                                    },
+                                    "Right": {
+                                        "Literal": {
+                                            "Value": "1L"
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    ]
+                },
+                "howCreated": "User"
+            }
+        ],
+        "filterSortOrder": "Custom"
+    }
+}

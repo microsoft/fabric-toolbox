@@ -1,0 +1,258 @@
+table reservation_usage
+	lineageTag: 48ed37bf-0c7e-4676-ae12-403d83be59e0
+	sourceLineageTag: [dbo].[reservation_usage]
+
+	measure 'RI usage countrows' = COUNTROWS(reservation_usage)
+		formatString: 0
+		lineageTag: bfc1eacb-c763-4a07-9988-eaccde82408e
+
+		changedProperty = Name
+
+	measure 'Reservation used ratio %' = ```
+			
+			var _table = 
+			SUMMARIZE(reservation_usage, 
+			          reservation_usage[UsageDate], 
+			          reservations[ReservationOrderKey], 
+			          "used", SUM(reservation_usage[UsedHours]), 
+			          "reserved", MAX(reservation_usage[ReservedHours]))
+			
+			RETURN
+			
+			AVERAGEX(_table,
+			DIVIDE([used], [reserved])
+			)
+			```
+		formatString: 0.00%;-0.00%;0.00%
+		lineageTag: 98ee3276-1438-433c-b46d-b058148b6cfd
+
+		changedProperty = Name
+
+		changedProperty = FormatString
+
+	measure 'Reservation unused ratio %' = 1 - reservation_usage[Reservation used ratio %]
+		formatString: 0.00%;-0.00%;0.00%
+		lineageTag: 3a4e40ae-a0ad-497c-810d-0e47c999fa57
+
+		changedProperty = Name
+
+		changedProperty = FormatString
+
+	column ResourceName
+		dataType: string
+		sourceProviderType: varchar(8000)
+		lineageTag: 59f12f0f-09c3-4759-8f57-975550670a7f
+		sourceLineageTag: ResourceName
+		summarizeBy: none
+		sourceColumn: ResourceName
+
+		annotation SummarizationSetBy = Automatic
+
+	column SubAccountId
+		dataType: string
+		isHidden
+		sourceProviderType: varchar(8000)
+		lineageTag: 8d5331c6-d4fa-4cbe-b55b-d4483cc6cfe7
+		sourceLineageTag: SubAccountId
+		summarizeBy: none
+		sourceColumn: SubAccountId
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	column ReservationOrderId
+		dataType: string
+		sourceProviderType: varchar(8000)
+		lineageTag: 324087e4-b8f7-46ab-9959-91e4f8b889cf
+		sourceLineageTag: ReservationOrderId
+		summarizeBy: none
+		sourceColumn: ReservationOrderId
+
+		annotation SummarizationSetBy = Automatic
+
+	column InstanceFlexibilityGroup
+		dataType: string
+		sourceProviderType: varchar(8000)
+		lineageTag: c3346272-1117-460e-a0fe-1851a9160ab3
+		sourceLineageTag: InstanceFlexibilityGroup
+		summarizeBy: none
+		sourceColumn: InstanceFlexibilityGroup
+
+		annotation SummarizationSetBy = Automatic
+
+	column InstanceFlexibilityRatio
+		dataType: double
+		sourceProviderType: float
+		lineageTag: 7d29509c-2268-4121-aeeb-6b84a7b0c1fc
+		sourceLineageTag: InstanceFlexibilityRatio
+		summarizeBy: sum
+		sourceColumn: InstanceFlexibilityRatio
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column Kind
+		dataType: string
+		sourceProviderType: varchar(8000)
+		lineageTag: 464e3d48-9bce-4bde-a291-eaa61f2f7a9e
+		sourceLineageTag: Kind
+		summarizeBy: none
+		sourceColumn: Kind
+
+		annotation SummarizationSetBy = Automatic
+
+	column PeriodLoaded
+		dataType: dateTime
+		formatString: General Date
+		sourceProviderType: date
+		lineageTag: bb173a1f-7bf3-443b-ae69-e2b8416f9022
+		sourceLineageTag: PeriodLoaded
+		summarizeBy: none
+		sourceColumn: PeriodLoaded
+
+		annotation SummarizationSetBy = Automatic
+
+	column ResourceGroupName
+		dataType: string
+		sourceProviderType: varchar(8000)
+		lineageTag: 5f5c5524-b229-42f8-baa3-9ff5dc0b8e13
+		sourceLineageTag: ResourceGroupName
+		summarizeBy: none
+		sourceColumn: ResourceGroupName
+
+		annotation SummarizationSetBy = Automatic
+
+	column ReservationOrderKey
+		dataType: int64
+		isHidden
+		formatString: 0
+		sourceProviderType: int
+		lineageTag: 0ba66608-ac7b-41d0-b51f-53155743b9ef
+		sourceLineageTag: ReservationOrderKey
+		summarizeBy: none
+		sourceColumn: ReservationOrderKey
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	column SubscriptionKey
+		dataType: int64
+		isHidden
+		formatString: 0
+		sourceProviderType: int
+		lineageTag: a8400a37-bcc1-4c5a-81f5-7fd4cfadd11d
+		sourceLineageTag: SubscriptionKey
+		summarizeBy: none
+		sourceColumn: SubscriptionKey
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	column ResourceKey
+		dataType: int64
+		isHidden
+		formatString: 0
+		sourceProviderType: int
+		lineageTag: f4ac61c9-b686-4ff9-8bbb-39fd7825da32
+		sourceLineageTag: ResourceKey
+		summarizeBy: none
+		sourceColumn: ResourceKey
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	column ReservationId
+		dataType: string
+		sourceProviderType: varchar(8000)
+		lineageTag: 8486fa4f-6d6b-4a9f-a3ef-f60220833b98
+		sourceLineageTag: ReservationId
+		summarizeBy: none
+		sourceColumn: ReservationId
+
+		annotation SummarizationSetBy = Automatic
+
+	column ReservedHours
+		dataType: double
+		sourceProviderType: float
+		lineageTag: 59a61769-bfbf-4e41-8d5c-d381b15c52b7
+		sourceLineageTag: ReservedHours
+		summarizeBy: sum
+		sourceColumn: ReservedHours
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column SkuName
+		dataType: string
+		sourceProviderType: varchar(8000)
+		lineageTag: 57a04a0f-61e4-4fad-b9c8-3fae94def550
+		sourceLineageTag: SkuName
+		summarizeBy: none
+		sourceColumn: SkuName
+
+		annotation SummarizationSetBy = Automatic
+
+	column TotalReservedQuantity
+		dataType: double
+		sourceProviderType: float
+		lineageTag: fc16f05d-7667-45fa-9961-0a5932b0d5a0
+		sourceLineageTag: TotalReservedQuantity
+		summarizeBy: sum
+		sourceColumn: TotalReservedQuantity
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column UsageDate
+		dataType: dateTime
+		formatString: General Date
+		sourceProviderType: datetime2
+		lineageTag: 688d66ef-91b6-45cb-ab2a-0cd715f0c011
+		sourceLineageTag: UsageDate
+		summarizeBy: none
+		sourceColumn: UsageDate
+
+		annotation SummarizationSetBy = Automatic
+
+	column UsedHours
+		dataType: double
+		sourceProviderType: float
+		lineageTag: 6a14ab30-5114-4295-b43d-fdc361fa8c02
+		sourceLineageTag: UsedHours
+		summarizeBy: sum
+		sourceColumn: UsedHours
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column UsageDate_key
+		dataType: int64
+		isHidden
+		formatString: 0
+		sourceProviderType: int
+		lineageTag: 6e63bfad-4655-494c-ae61-520e69ce2c91
+		sourceLineageTag: UsageDate_key
+		summarizeBy: none
+		sourceColumn: UsageDate_key
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	partition reservation_usage = entity
+		mode: directLake
+		source
+			entityName: reservation_usage
+			schemaName: dbo
+			expressionSource: DatabaseQuery
+
+	annotation PBI_ResultType = Table
+

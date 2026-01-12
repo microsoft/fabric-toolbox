@@ -1,0 +1,51 @@
+relationship c012636f-ab04-5d40-959b-302f7f8c24a1
+	fromColumn: fca.MeterKey
+	toColumn: meters.MeterKey
+
+relationship c5137560-7461-4f58-3599-9a62c860ced0
+	fromColumn: fca.ChargePeriodStart_DateKey
+	toColumn: calendar.DateKey
+
+relationship 0b3559d6-f6b2-b283-43ee-da6fb16256ed
+	fromColumn: resources.RegionId
+	toColumn: capacity_regions.RegionId
+
+relationship acb5b209-af79-b0c5-a64c-cece8fcee79a
+	relyOnReferentialIntegrity
+	fromColumn: fca.ResourceKey
+	toColumn: resources.ResourceKey
+
+relationship 615f9cfb-f224-4047-a9c8-8d3b2d2fe61f
+	relyOnReferentialIntegrity
+	fromColumn: fca.SubscriptionKey
+	toColumn: subscriptions.SubscriptionKey
+
+relationship 137636c1-df56-827f-d0ba-1da71b11bd02
+	fromColumn: quota_fabric.DateKey
+	toColumn: calendar.DateKey
+
+relationship 16d56a41-73e7-91fb-b1f0-a357e1327b14
+	fromColumn: quota_fabric.SubscriptionKey
+	toColumn: subscriptions.SubscriptionKey
+
+relationship a65b5438-15cf-fa50-3470-0de5f9cff6dc
+	fromColumn: quota_fabric.RegionId
+	toColumn: capacity_regions.RegionId
+
+relationship e035b3ee-5e59-3b86-30e7-9a084ba9d958
+	fromColumn: reservation_usage.UsageDate_key
+	toColumn: calendar.DateKey
+
+relationship 9186df32-1e00-2378-f78d-4a3898996ca9
+	fromColumn: reservation_usage.ResourceKey
+	toColumn: resources.ResourceKey
+
+relationship 22abce86-f705-62b3-c4cc-38c38a6a8a62
+	fromColumn: reservation_usage.SubscriptionKey
+	toColumn: subscriptions.SubscriptionKey
+
+relationship 99f411ba-d0bf-3786-953c-1dd9e891c20e
+	crossFilteringBehavior: bothDirections
+	fromColumn: reservation_usage.ReservationOrderKey
+	toColumn: reservations.ReservationOrderKey
+

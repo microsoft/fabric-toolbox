@@ -1,0 +1,940 @@
+{
+    "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.5.0/schema.json",
+    "name": "d6e50911f06287d299db",
+    "position": {
+        "x": 9.294320137693632,
+        "y": 166.368330464716,
+        "z": 4000,
+        "height": 905.2667814113597,
+        "width": 1979.6901893287436,
+        "tabOrder": 1000
+    },
+    "visual": {
+        "visualType": "tableEx",
+        "query": {
+            "queryState": {
+                "Values": {
+                    "projections": [
+                        {
+                            "field": {
+                                "Column": {
+                                    "Expression": {
+                                        "SourceRef": {
+                                            "Entity": "capacities"
+                                        }
+                                    },
+                                    "Property": "displayName"
+                                }
+                            },
+                            "queryRef": "capacities.displayName",
+                            "nativeQueryRef": "Capacity",
+                            "displayName": "Capacity"
+                        },
+                        {
+                            "field": {
+                                "Column": {
+                                    "Expression": {
+                                        "SourceRef": {
+                                            "Entity": "workspaces"
+                                        }
+                                    },
+                                    "Property": "WorkspaceId"
+                                }
+                            },
+                            "queryRef": "workspaces.WorkspaceId",
+                            "nativeQueryRef": "Workspace Id",
+                            "displayName": "Workspace Id"
+                        },
+                        {
+                            "field": {
+                                "Column": {
+                                    "Expression": {
+                                        "SourceRef": {
+                                            "Entity": "workspaces"
+                                        }
+                                    },
+                                    "Property": "WorkspaceName"
+                                }
+                            },
+                            "queryRef": "workspaces.WorkspaceName",
+                            "nativeQueryRef": "Workspace",
+                            "displayName": "Workspace"
+                        },
+                        {
+                            "field": {
+                                "Column": {
+                                    "Expression": {
+                                        "SourceRef": {
+                                            "Entity": "workspaces"
+                                        }
+                                    },
+                                    "Property": "DefaultDatasetStorageFormat"
+                                }
+                            },
+                            "queryRef": "workspaces.DefaultDatasetStorageFormat",
+                            "nativeQueryRef": "Storage Format",
+                            "displayName": "Storage Format"
+                        },
+                        {
+                            "field": {
+                                "Column": {
+                                    "Expression": {
+                                        "SourceRef": {
+                                            "Entity": "active_items"
+                                        }
+                                    },
+                                    "Property": "type"
+                                }
+                            },
+                            "queryRef": "active_items.type",
+                            "nativeQueryRef": "Item Kind",
+                            "displayName": "Item Kind"
+                        },
+                        {
+                            "field": {
+                                "Column": {
+                                    "Expression": {
+                                        "SourceRef": {
+                                            "Entity": "active_items"
+                                        }
+                                    },
+                                    "Property": "id"
+                                }
+                            },
+                            "queryRef": "active_items.id",
+                            "nativeQueryRef": "Item Id",
+                            "displayName": "Item Id"
+                        },
+                        {
+                            "field": {
+                                "Column": {
+                                    "Expression": {
+                                        "SourceRef": {
+                                            "Entity": "active_items"
+                                        }
+                                    },
+                                    "Property": "name"
+                                }
+                            },
+                            "queryRef": "active_items.name",
+                            "nativeQueryRef": "Item Name",
+                            "displayName": "Item Name"
+                        },
+                        {
+                            "field": {
+                                "Column": {
+                                    "Expression": {
+                                        "SourceRef": {
+                                            "Entity": "active_items"
+                                        }
+                                    },
+                                    "Property": "state"
+                                }
+                            },
+                            "queryRef": "active_items.state",
+                            "nativeQueryRef": "Item State",
+                            "displayName": "Item State"
+                        },
+                        {
+                            "field": {
+                                "Column": {
+                                    "Expression": {
+                                        "SourceRef": {
+                                            "Entity": "active_items"
+                                        }
+                                    },
+                                    "Property": "fuam_deleted"
+                                }
+                            },
+                            "queryRef": "active_items.fuam_deleted",
+                            "nativeQueryRef": "FUAM Deleted State",
+                            "displayName": "FUAM Deleted State"
+                        },
+                        {
+                            "field": {
+                                "Measure": {
+                                    "Expression": {
+                                        "SourceRef": {
+                                            "Entity": "Metrics"
+                                        }
+                                    },
+                                    "Property": "Avg CU by Item by Day 14d IOD"
+                                }
+                            },
+                            "queryRef": "Metrics.Avg CU by Item by Day 14d IOD",
+                            "nativeQueryRef": "Avg CU (s) 14d",
+                            "displayName": "Avg CU (s) 14d"
+                        },
+                        {
+                            "field": {
+                                "Measure": {
+                                    "Expression": {
+                                        "SourceRef": {
+                                            "Entity": "Metrics"
+                                        }
+                                    },
+                                    "Property": "Avg CU by Item by Day 30d IOD"
+                                }
+                            },
+                            "queryRef": "Metrics.Avg CU by Item by Day 30d IOD",
+                            "nativeQueryRef": "Avg CU (s) 30d",
+                            "displayName": "Avg CU (s) 30d"
+                        },
+                        {
+                            "field": {
+                                "Measure": {
+                                    "Expression": {
+                                        "SourceRef": {
+                                            "Entity": "Metrics"
+                                        }
+                                    },
+                                    "Property": "Avg CU by Item by Day Difference 14d vs 30d IOD"
+                                }
+                            },
+                            "queryRef": "Metrics.Avg CU by Item by Day Difference 14d vs 30d IOD",
+                            "nativeQueryRef": "CU (s) Utilization Trend % (14d vs. 30d)",
+                            "displayName": "CU (s) Utilization Trend % (14d vs. 30d)"
+                        },
+                        {
+                            "field": {
+                                "Column": {
+                                    "Expression": {
+                                        "SourceRef": {
+                                            "Entity": "active_items"
+                                        }
+                                    },
+                                    "Property": "creatorUserPrincipalName"
+                                }
+                            },
+                            "queryRef": "active_items.creatorUserPrincipalName",
+                            "nativeQueryRef": "Item Owner (if applicable)",
+                            "displayName": "Item Owner (if applicable)"
+                        },
+                        {
+                            "field": {
+                                "Measure": {
+                                    "Expression": {
+                                        "SourceRef": {
+                                            "Entity": "Metrics"
+                                        }
+                                    },
+                                    "Property": "Item Analyzer Report URL"
+                                }
+                            },
+                            "queryRef": "Metrics.Item Analyzer Report URL",
+                            "nativeQueryRef": "Item Analyzer Link",
+                            "displayName": "Item Analyzer Link"
+                        }
+                    ],
+                    "showAll": true
+                }
+            },
+            "sortDefinition": {
+                "sort": [
+                    {
+                        "field": {
+                            "Measure": {
+                                "Expression": {
+                                    "SourceRef": {
+                                        "Entity": "Metrics"
+                                    }
+                                },
+                                "Property": "Avg CU by Item by Day Difference 14d vs 30d IOD"
+                            }
+                        },
+                        "direction": "Descending"
+                    }
+                ]
+            }
+        },
+        "objects": {
+            "grid": [
+                {
+                    "properties": {
+                        "rowPadding": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "6D"
+                                }
+                            }
+                        },
+                        "gridVertical": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "true"
+                                }
+                            }
+                        },
+                        "gridHorizontal": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "true"
+                                }
+                            }
+                        }
+                    }
+                }
+            ],
+            "columnHeaders": [
+                {
+                    "properties": {
+                        "fontFamily": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "'''Segoe UI Semibold'', wf_segoe-ui_semibold, helvetica, arial, sans-serif'"
+                                }
+                            }
+                        },
+                        "fontSize": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "9D"
+                                }
+                            }
+                        },
+                        "alignment": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "'Center'"
+                                }
+                            }
+                        },
+                        "backColor": {
+                            "solid": {
+                                "color": {
+                                    "expr": {
+                                        "Literal": {
+                                            "Value": "'#50A19D'"
+                                        }
+                                    }
+                                }
+                            }
+                        },
+                        "fontColor": {
+                            "solid": {
+                                "color": {
+                                    "expr": {
+                                        "ThemeDataColor": {
+                                            "ColorId": 0,
+                                            "Percent": 0
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            ],
+            "general": [
+                {
+                    "properties": {}
+                }
+            ],
+            "columnWidth": [
+                {
+                    "properties": {
+                        "value": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "224.3085593041745D"
+                                }
+                            }
+                        }
+                    },
+                    "selector": {
+                        "metadata": "active_items.name"
+                    }
+                },
+                {
+                    "properties": {
+                        "value": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "67.69198742094665D"
+                                }
+                            }
+                        }
+                    },
+                    "selector": {
+                        "metadata": "active_items.state"
+                    }
+                },
+                {
+                    "properties": {
+                        "value": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "97.57373931334938D"
+                                }
+                            }
+                        }
+                    },
+                    "selector": {
+                        "metadata": "workspaces.DefaultDatasetStorageFormat"
+                    }
+                },
+                {
+                    "properties": {
+                        "value": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "160.64091654390484D"
+                                }
+                            }
+                        }
+                    },
+                    "selector": {
+                        "metadata": "workspaces.WorkspaceName"
+                    }
+                },
+                {
+                    "properties": {
+                        "value": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "125.67871683465363D"
+                                }
+                            }
+                        }
+                    },
+                    "selector": {
+                        "metadata": "Metrics.Avg CU by Item by Day Difference 14d vs 30d IOD"
+                    }
+                },
+                {
+                    "properties": {
+                        "value": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "69.02236572659316D"
+                                }
+                            }
+                        }
+                    },
+                    "selector": {
+                        "metadata": "active_items.fuam_deleted"
+                    }
+                },
+                {
+                    "properties": {
+                        "value": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "77.54422644266387D"
+                                }
+                            }
+                        }
+                    },
+                    "selector": {
+                        "metadata": "Metrics.Item Analyzer Report URL"
+                    }
+                }
+            ],
+            "values": [
+                {
+                    "properties": {
+                        "fontSize": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "9D"
+                                }
+                            }
+                        },
+                        "backColorSecondary": {
+                            "solid": {
+                                "color": {
+                                    "expr": {
+                                        "ThemeDataColor": {
+                                            "ColorId": 0,
+                                            "Percent": 0
+                                        }
+                                    }
+                                }
+                            }
+                        },
+                        "urlIcon": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "true"
+                                }
+                            }
+                        }
+                    }
+                }
+            ],
+            "columnFormatting": [
+                {
+                    "properties": {
+                        "dataBars": {
+                            "positiveColor": {
+                                "solid": {
+                                    "color": {
+                                        "expr": {
+                                            "Literal": {
+                                                "Value": "'#a7d0ce'"
+                                            }
+                                        }
+                                    }
+                                }
+                            },
+                            "negativeColor": {
+                                "solid": {
+                                    "color": {
+                                        "expr": {
+                                            "Literal": {
+                                                "Value": "'#F197DC'"
+                                            }
+                                        }
+                                    }
+                                }
+                            },
+                            "axisColor": {
+                                "solid": {
+                                    "color": {
+                                        "expr": {
+                                            "Literal": {
+                                                "Value": "'foreground'"
+                                            }
+                                        }
+                                    }
+                                }
+                            },
+                            "reverseDirection": {
+                                "expr": {
+                                    "Literal": {
+                                        "Value": "false"
+                                    }
+                                }
+                            },
+                            "hideText": {
+                                "expr": {
+                                    "Literal": {
+                                        "Value": "false"
+                                    }
+                                }
+                            },
+                            "totalMatchingOption": {
+                                "expr": {
+                                    "Literal": {
+                                        "Value": "1L"
+                                    }
+                                }
+                            }
+                        },
+                        "styleValues": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "false"
+                                }
+                            }
+                        },
+                        "styleHeader": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "true"
+                                }
+                            }
+                        },
+                        "backColor": {
+                            "solid": {
+                                "color": {
+                                    "expr": {
+                                        "ThemeDataColor": {
+                                            "ColorId": 2,
+                                            "Percent": -0.5
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "selector": {
+                        "metadata": "Metrics.Avg CU by Item by Day Difference 14d vs 30d IOD"
+                    }
+                },
+                {
+                    "properties": {
+                        "styleValues": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "false"
+                                }
+                            }
+                        },
+                        "styleHeader": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "true"
+                                }
+                            }
+                        },
+                        "backColor": {
+                            "solid": {
+                                "color": {
+                                    "expr": {
+                                        "ThemeDataColor": {
+                                            "ColorId": 2,
+                                            "Percent": -0.25
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "selector": {
+                        "metadata": "Metrics.Avg CU by Item by Day 14d IOD"
+                    }
+                },
+                {
+                    "properties": {
+                        "styleValues": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "false"
+                                }
+                            }
+                        },
+                        "styleHeader": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "true"
+                                }
+                            }
+                        },
+                        "backColor": {
+                            "solid": {
+                                "color": {
+                                    "expr": {
+                                        "ThemeDataColor": {
+                                            "ColorId": 2,
+                                            "Percent": -0.25
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "selector": {
+                        "metadata": "Metrics.Avg CU by Item by Day 30d IOD"
+                    }
+                }
+            ]
+        },
+        "visualContainerObjects": {
+            "title": [
+                {
+                    "properties": {
+                        "show": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "false"
+                                }
+                            }
+                        },
+                        "text": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "'Item catalog'"
+                                }
+                            }
+                        },
+                        "fontSize": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "12D"
+                                }
+                            }
+                        }
+                    }
+                }
+            ],
+            "border": [
+                {
+                    "properties": {
+                        "show": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "false"
+                                }
+                            }
+                        },
+                        "color": {
+                            "solid": {
+                                "color": {
+                                    "expr": {
+                                        "ThemeDataColor": {
+                                            "ColorId": 0,
+                                            "Percent": 0
+                                        }
+                                    }
+                                }
+                            }
+                        },
+                        "radius": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "10D"
+                                }
+                            }
+                        }
+                    }
+                }
+            ],
+            "dropShadow": [
+                {
+                    "properties": {
+                        "show": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "false"
+                                }
+                            }
+                        },
+                        "color": {
+                            "solid": {
+                                "color": {
+                                    "expr": {
+                                        "ThemeDataColor": {
+                                            "ColorId": 0,
+                                            "Percent": -0.1
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            ],
+            "background": [
+                {
+                    "properties": {
+                        "show": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "false"
+                                }
+                            }
+                        }
+                    }
+                }
+            ]
+        },
+        "drillFilterOtherVisuals": true
+    },
+    "filterConfig": {
+        "filters": [
+            {
+                "name": "9e3a44c160438376b205",
+                "ordinal": 0,
+                "field": {
+                    "Column": {
+                        "Expression": {
+                            "SourceRef": {
+                                "Entity": "capacities"
+                            }
+                        },
+                        "Property": "displayName"
+                    }
+                },
+                "type": "Categorical",
+                "objects": {
+                    "general": [
+                        {
+                            "properties": {
+                                "requireSingleSelect": {
+                                    "expr": {
+                                        "Literal": {
+                                            "Value": "true"
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    ]
+                }
+            },
+            {
+                "name": "e28956417ba338cc3db9",
+                "ordinal": 1,
+                "field": {
+                    "Column": {
+                        "Expression": {
+                            "SourceRef": {
+                                "Entity": "workspaces"
+                            }
+                        },
+                        "Property": "WorkspaceName"
+                    }
+                },
+                "type": "Categorical"
+            },
+            {
+                "name": "b6bb751e1a59ab58ecb0",
+                "ordinal": 2,
+                "field": {
+                    "Column": {
+                        "Expression": {
+                            "SourceRef": {
+                                "Entity": "active_items"
+                            }
+                        },
+                        "Property": "name"
+                    }
+                },
+                "type": "Categorical"
+            },
+            {
+                "name": "e44e73036024000c6311",
+                "ordinal": 3,
+                "field": {
+                    "Column": {
+                        "Expression": {
+                            "SourceRef": {
+                                "Entity": "active_items"
+                            }
+                        },
+                        "Property": "state"
+                    }
+                },
+                "type": "Categorical"
+            },
+            {
+                "name": "fc59f8fa003c7e05e881",
+                "ordinal": 4,
+                "field": {
+                    "Column": {
+                        "Expression": {
+                            "SourceRef": {
+                                "Entity": "active_items"
+                            }
+                        },
+                        "Property": "type"
+                    }
+                },
+                "type": "Categorical"
+            },
+            {
+                "name": "63a7ccc0e0b9ad929180",
+                "ordinal": 5,
+                "field": {
+                    "Column": {
+                        "Expression": {
+                            "SourceRef": {
+                                "Entity": "active_items"
+                            }
+                        },
+                        "Property": "id"
+                    }
+                },
+                "type": "Categorical"
+            },
+            {
+                "name": "300cc6daebdec8518161",
+                "ordinal": 6,
+                "field": {
+                    "Column": {
+                        "Expression": {
+                            "SourceRef": {
+                                "Entity": "workspaces"
+                            }
+                        },
+                        "Property": "Type"
+                    }
+                },
+                "type": "Categorical",
+                "howCreated": "User"
+            },
+            {
+                "name": "4f9cf0e74c8b1325a199",
+                "ordinal": 7,
+                "field": {
+                    "Column": {
+                        "Expression": {
+                            "SourceRef": {
+                                "Entity": "workspaces"
+                            }
+                        },
+                        "Property": "DefaultDatasetStorageFormat"
+                    }
+                },
+                "type": "Categorical"
+            },
+            {
+                "name": "1dad2fb076ed7ae232bb",
+                "ordinal": 8,
+                "field": {
+                    "Column": {
+                        "Expression": {
+                            "SourceRef": {
+                                "Entity": "workspaces"
+                            }
+                        },
+                        "Property": "WorkspaceId"
+                    }
+                },
+                "type": "Categorical"
+            },
+            {
+                "name": "06a0b4229e10e1346108",
+                "ordinal": 9,
+                "field": {
+                    "Measure": {
+                        "Expression": {
+                            "SourceRef": {
+                                "Entity": "Metrics"
+                            }
+                        },
+                        "Property": "Avg CU by Item by Day 14d IOD"
+                    }
+                },
+                "type": "Advanced"
+            },
+            {
+                "name": "649409b14a80421b831b",
+                "ordinal": 10,
+                "field": {
+                    "Measure": {
+                        "Expression": {
+                            "SourceRef": {
+                                "Entity": "Metrics"
+                            }
+                        },
+                        "Property": "Avg CU by Item by Day 30d IOD"
+                    }
+                },
+                "type": "Advanced"
+            },
+            {
+                "name": "6ba5c634385e024c3d57",
+                "ordinal": 11,
+                "field": {
+                    "Measure": {
+                        "Expression": {
+                            "SourceRef": {
+                                "Entity": "Metrics"
+                            }
+                        },
+                        "Property": "Avg CU by Item by Day Difference 14d vs 30d IOD"
+                    }
+                },
+                "type": "Advanced"
+            },
+            {
+                "name": "e160df025ab75accd650",
+                "ordinal": 12,
+                "field": {
+                    "Column": {
+                        "Expression": {
+                            "SourceRef": {
+                                "Entity": "active_items"
+                            }
+                        },
+                        "Property": "fuam_deleted"
+                    }
+                },
+                "type": "Categorical"
+            }
+        ],
+        "filterSortOrder": "Custom"
+    }
+}

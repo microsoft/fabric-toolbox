@@ -1,0 +1,98 @@
+table capacity_regions
+	lineageTag: 97ba5560-8233-4d21-975e-ad0c17f94132
+	sourceLineageTag: [dbo].[capacity_regions]
+
+	column Continent
+		dataType: string
+		sourceProviderType: varchar(8000)
+		lineageTag: 59f100ae-1992-4703-aa54-0206eb301c93
+		sourceLineageTag: Continent
+		summarizeBy: none
+		sourceColumn: Continent
+
+		annotation SummarizationSetBy = Automatic
+
+	column RegionName
+		dataType: string
+		sourceProviderType: varchar(8000)
+		lineageTag: 785f6ff8-0fae-47f8-87a9-f6be285d0682
+		sourceLineageTag: FabricRegion
+		summarizeBy: none
+		sourceColumn: FabricRegion
+
+		changedProperty = Name
+
+		annotation SummarizationSetBy = Automatic
+
+	column Latitude
+		dataType: double
+		sourceProviderType: float
+		lineageTag: 130d651e-80be-48a8-867b-d5e2235ba359
+		sourceLineageTag: Latitude
+		dataCategory: Latitude
+		summarizeBy: none
+		sourceColumn: Latitude
+
+		changedProperty = DataCategory
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column Longitude
+		dataType: double
+		sourceProviderType: float
+		lineageTag: f5602f59-b674-4f3a-82ac-46b717d3a224
+		sourceLineageTag: Longitude
+		dataCategory: Longitude
+		summarizeBy: none
+		sourceColumn: Longitude
+
+		changedProperty = DataCategory
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column Location
+		dataType: string
+		sourceProviderType: varchar(8000)
+		lineageTag: d7b90d7c-473a-4abc-a456-1ac0c8ba504f
+		sourceLineageTag: Location
+		summarizeBy: none
+		sourceColumn: Location
+
+		annotation SummarizationSetBy = Automatic
+
+	column RegionId
+		dataType: string
+		isHidden
+		sourceProviderType: varchar(8000)
+		lineageTag: f29f7098-2bf0-42c0-a2be-564076db4558
+		sourceLineageTag: RegionId
+		summarizeBy: none
+		sourceColumn: RegionId
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	column Geography
+		dataType: string
+		sourceProviderType: varchar(8000)
+		lineageTag: 49c4e231-6807-4a53-b5d2-64c4f2efa6ca
+		sourceLineageTag: Geography
+		summarizeBy: none
+		sourceColumn: Geography
+
+		annotation SummarizationSetBy = Automatic
+
+	partition capacity_regions = entity
+		mode: directLake
+		source
+			entityName: capacity_regions
+			schemaName: dbo
+			expressionSource: DatabaseQuery
+
+	annotation PBI_ResultType = Table
+

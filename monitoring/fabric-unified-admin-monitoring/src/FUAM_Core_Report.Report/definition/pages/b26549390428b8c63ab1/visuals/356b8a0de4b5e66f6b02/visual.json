@@ -1,0 +1,75 @@
+{
+    "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.5.0/schema.json",
+    "name": "356b8a0de4b5e66f6b02",
+    "position": {
+        "x": 588.2530120481928,
+        "y": 956.0240963855422,
+        "z": 16000,
+        "height": 33.433734939759034,
+        "width": 419.27710843373495,
+        "tabOrder": 16002
+    },
+    "visual": {
+        "visualType": "textbox",
+        "objects": {
+            "general": [
+                {
+                    "properties": {
+                        "paragraphs": [
+                            {
+                                "textRuns": [
+                                    {
+                                        "value": "Step 4)",
+                                        "textStyle": {
+                                            "fontWeight": "bold",
+                                            "color": "#694b75"
+                                        }
+                                    },
+                                    {
+                                        "value": " ",
+                                        "textStyle": {
+                                            "fontWeight": "bold",
+                                            "color": "#248a85"
+                                        }
+                                    },
+                                    {
+                                        "value": "Click on button to see detailed metrics to semantic models:"
+                                    }
+                                ]
+                            }
+                        ]
+                    }
+                }
+            ]
+        },
+        "visualContainerObjects": {
+            "background": [
+                {
+                    "properties": {
+                        "show": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "false"
+                                }
+                            }
+                        }
+                    }
+                }
+            ],
+            "border": [
+                {
+                    "properties": {
+                        "show": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "false"
+                                }
+                            }
+                        }
+                    }
+                }
+            ]
+        },
+        "drillFilterOtherVisuals": true
+    }
+}

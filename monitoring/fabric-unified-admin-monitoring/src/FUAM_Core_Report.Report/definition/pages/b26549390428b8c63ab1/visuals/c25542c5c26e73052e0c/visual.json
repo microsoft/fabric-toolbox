@@ -1,0 +1,150 @@
+{
+    "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.5.0/schema.json",
+    "name": "c25542c5c26e73052e0c",
+    "position": {
+        "x": 28.21077177495152,
+        "y": 87.60187024853367,
+        "z": 4000,
+        "height": 173.71896303522777,
+        "width": 543.4285510332767,
+        "tabOrder": 4000
+    },
+    "visual": {
+        "visualType": "textbox",
+        "objects": {
+            "general": [
+                {
+                    "properties": {
+                        "paragraphs": [
+                            {
+                                "textRuns": [
+                                    {
+                                        "value": "Introduction",
+                                        "textStyle": {
+                                            "fontWeight": "bold",
+                                            "fontFamily": "Calibri",
+                                            "fontSize": "12pt"
+                                        }
+                                    }
+                                ]
+                            },
+                            {
+                                "textRuns": [
+                                    {
+                                        "value": ""
+                                    }
+                                ]
+                            },
+                            {
+                                "textRuns": [
+                                    {
+                                        "value": "FUAM provides a specific module, which helps Fabric admins, Capacity owners to get in-depth details about semantic models with CU utilization peak from the previous day.",
+                                        "textStyle": {
+                                            "color": "black"
+                                        }
+                                    }
+                                ]
+                            },
+                            {
+                                "textRuns": [
+                                    {
+                                        "value": "The count of scoped semantic models for optimization module can be changed in the Load_FUAM_E2E Pipeline."
+                                    }
+                                ]
+                            },
+                            {
+                                "textRuns": [
+                                    {
+                                        "value": ""
+                                    }
+                                ]
+                            },
+                            {
+                                "textRuns": [
+                                    {
+                                        "value": "Supported semantic model kinds:",
+                                        "textStyle": {
+                                            "fontWeight": "bold",
+                                            "color": "black"
+                                        }
+                                    }
+                                ]
+                            },
+                            {
+                                "textRuns": [
+                                    {
+                                        "value": "Import",
+                                        "textStyle": {
+                                            "fontWeight": "bold",
+                                            "color": "#694b75"
+                                        }
+                                    },
+                                    {
+                                        "value": " ",
+                                        "textStyle": {
+                                            "color": "#694b75"
+                                        }
+                                    },
+                                    {
+                                        "value": "mode | ",
+                                        "textStyle": {
+                                            "color": "black"
+                                        }
+                                    },
+                                    {
+                                        "value": "Composite",
+                                        "textStyle": {
+                                            "fontWeight": "bold",
+                                            "color": "#694b75"
+                                        }
+                                    },
+                                    {
+                                        "value": " ",
+                                        "textStyle": {
+                                            "color": "#225b61"
+                                        }
+                                    },
+                                    {
+                                        "value": "mode",
+                                        "textStyle": {
+                                            "color": "black"
+                                        }
+                                    }
+                                ]
+                            }
+                        ]
+                    }
+                }
+            ]
+        },
+        "visualContainerObjects": {
+            "background": [
+                {
+                    "properties": {
+                        "show": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "false"
+                                }
+                            }
+                        }
+                    }
+                }
+            ],
+            "border": [
+                {
+                    "properties": {
+                        "show": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "false"
+                                }
+                            }
+                        }
+                    }
+                }
+            ]
+        },
+        "drillFilterOtherVisuals": true
+    }
+}

@@ -1,0 +1,1772 @@
+{
+    "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.5.0/schema.json",
+    "name": "fa41b0749d670a9fa8db",
+    "position": {
+        "x": 588.2530120481928,
+        "y": 342.4698795180723,
+        "z": 18000,
+        "height": 607.2289156626506,
+        "width": 1291.2650602409637,
+        "tabOrder": 5000
+    },
+    "visual": {
+        "visualType": "tableEx",
+        "query": {
+            "queryState": {
+                "Values": {
+                    "projections": [
+                        {
+                            "field": {
+                                "Column": {
+                                    "Expression": {
+                                        "SourceRef": {
+                                            "Entity": "capacities"
+                                        }
+                                    },
+                                    "Property": "displayName"
+                                }
+                            },
+                            "queryRef": "capacities.displayName",
+                            "nativeQueryRef": "Capacity",
+                            "displayName": "Capacity"
+                        },
+                        {
+                            "field": {
+                                "Column": {
+                                    "Expression": {
+                                        "SourceRef": {
+                                            "Entity": "workspaces"
+                                        }
+                                    },
+                                    "Property": "WorkspaceName"
+                                }
+                            },
+                            "queryRef": "workspaces.WorkspaceName",
+                            "nativeQueryRef": "Workspace",
+                            "displayName": "Workspace"
+                        },
+                        {
+                            "field": {
+                                "Column": {
+                                    "Expression": {
+                                        "SourceRef": {
+                                            "Entity": "semantic_models"
+                                        }
+                                    },
+                                    "Property": "Name"
+                                }
+                            },
+                            "queryRef": "semantic_models.Name",
+                            "nativeQueryRef": "Semantic Model",
+                            "displayName": "Semantic Model"
+                        },
+                        {
+                            "field": {
+                                "Aggregation": {
+                                    "Expression": {
+                                        "Column": {
+                                            "Expression": {
+                                                "SourceRef": {
+                                                    "Entity": "semantic_model_analyzer_runs"
+                                                }
+                                            },
+                                            "Property": "RunName"
+                                        }
+                                    },
+                                    "Function": 4
+                                }
+                            },
+                            "queryRef": "Max(semantic_model_analyzer_runs.RunName)",
+                            "nativeQueryRef": "Last Run",
+                            "displayName": "Last Run"
+                        },
+                        {
+                            "field": {
+                                "Measure": {
+                                    "Expression": {
+                                        "SourceRef": {
+                                            "Entity": "Metrics"
+                                        }
+                                    },
+                                    "Property": "# Tables - Last Run OM-SM"
+                                }
+                            },
+                            "queryRef": "Metrics.# Tables - Last Run OM-SM",
+                            "nativeQueryRef": "# Tables (last run)",
+                            "displayName": "# Tables (last run)"
+                        },
+                        {
+                            "field": {
+                                "Measure": {
+                                    "Expression": {
+                                        "SourceRef": {
+                                            "Entity": "Metrics"
+                                        }
+                                    },
+                                    "Property": "Total Size - Last Run OM-SM"
+                                }
+                            },
+                            "queryRef": "Metrics.Total Size - Last Run OM-SM",
+                            "nativeQueryRef": "Total Size (last run)",
+                            "displayName": "Total Size (last run)"
+                        },
+                        {
+                            "field": {
+                                "Measure": {
+                                    "Expression": {
+                                        "SourceRef": {
+                                            "Entity": "Metrics"
+                                        }
+                                    },
+                                    "Property": "BPA Violations (Background Impact) - Last Run OM-SM"
+                                }
+                            },
+                            "queryRef": "Metrics.BPA Violations (Background Impact) - Last Run OM-SM",
+                            "nativeQueryRef": "BPA | Background Impact",
+                            "displayName": "BPA | Background Impact"
+                        },
+                        {
+                            "field": {
+                                "Measure": {
+                                    "Expression": {
+                                        "SourceRef": {
+                                            "Entity": "Metrics"
+                                        }
+                                    },
+                                    "Property": "BPA Violations (Query Impact) - Last Run OM-SM"
+                                }
+                            },
+                            "queryRef": "Metrics.BPA Violations (Query Impact) - Last Run OM-SM",
+                            "nativeQueryRef": "BPA | Query Impact",
+                            "displayName": "BPA | Query Impact"
+                        },
+                        {
+                            "field": {
+                                "Measure": {
+                                    "Expression": {
+                                        "SourceRef": {
+                                            "Entity": "Metrics"
+                                        }
+                                    },
+                                    "Property": "BPA Violations (Usability Impact) - Last Run OM-SM"
+                                }
+                            },
+                            "queryRef": "Metrics.BPA Violations (Usability Impact) - Last Run OM-SM",
+                            "nativeQueryRef": "BPA | Usability Impact",
+                            "displayName": "BPA | Usability Impact"
+                        }
+                    ]
+                }
+            },
+            "sortDefinition": {
+                "sort": [
+                    {
+                        "field": {
+                            "Column": {
+                                "Expression": {
+                                    "SourceRef": {
+                                        "Entity": "capacities"
+                                    }
+                                },
+                                "Property": "displayName"
+                            }
+                        },
+                        "direction": "Ascending"
+                    }
+                ]
+            }
+        },
+        "objects": {
+            "grid": [
+                {
+                    "properties": {
+                        "rowPadding": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "6D"
+                                }
+                            }
+                        },
+                        "gridVertical": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "true"
+                                }
+                            }
+                        },
+                        "gridHorizontal": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "true"
+                                }
+                            }
+                        },
+                        "outlineColor": {
+                            "solid": {
+                                "color": {
+                                    "expr": {
+                                        "ThemeDataColor": {
+                                            "ColorId": 1,
+                                            "Percent": 0.4
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            ],
+            "columnHeaders": [
+                {
+                    "properties": {
+                        "fontFamily": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "'''Segoe UI Semibold'', wf_segoe-ui_semibold, helvetica, arial, sans-serif'"
+                                }
+                            }
+                        },
+                        "fontColor": {
+                            "solid": {
+                                "color": {
+                                    "expr": {
+                                        "ThemeDataColor": {
+                                            "ColorId": 0,
+                                            "Percent": 0
+                                        }
+                                    }
+                                }
+                            }
+                        },
+                        "backColor": {
+                            "solid": {
+                                "color": {
+                                    "expr": {
+                                        "ThemeDataColor": {
+                                            "ColorId": 5,
+                                            "Percent": -0.5
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            ],
+            "general": [
+                {
+                    "properties": {}
+                }
+            ],
+            "values": [
+                {
+                    "properties": {
+                        "backColorSecondary": {
+                            "solid": {
+                                "color": {
+                                    "expr": {
+                                        "Literal": {
+                                            "Value": "'#FAFAFA'"
+                                        }
+                                    }
+                                }
+                            }
+                        },
+                        "urlIcon": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "true"
+                                }
+                            }
+                        },
+                        "backColorPrimary": {
+                            "solid": {
+                                "color": {
+                                    "expr": {
+                                        "Literal": {
+                                            "Value": "'#FDFDFD'"
+                                        }
+                                    }
+                                }
+                            }
+                        },
+                        "fontFamily": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "'''Segoe UI Semibold'', wf_segoe-ui_semibold, helvetica, arial, sans-serif'"
+                                }
+                            }
+                        },
+                        "fontSize": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "10D"
+                                }
+                            }
+                        }
+                    }
+                },
+                {
+                    "properties": {},
+                    "selector": {
+                        "data": [
+                            {
+                                "dataViewWildcard": {
+                                    "matchingOption": 1
+                                }
+                            }
+                        ],
+                        "metadata": "capacities.displayName"
+                    }
+                },
+                {
+                    "properties": {
+                        "icon": {
+                            "kind": "Icon",
+                            "layout": {
+                                "expr": {
+                                    "Literal": {
+                                        "Value": "'After'"
+                                    }
+                                }
+                            },
+                            "verticalAlignment": {
+                                "expr": {
+                                    "Literal": {
+                                        "Value": "'Top'"
+                                    }
+                                }
+                            },
+                            "value": {
+                                "expr": {
+                                    "Conditional": {
+                                        "Cases": [
+                                            {
+                                                "Condition": {
+                                                    "And": {
+                                                        "Left": {
+                                                            "Comparison": {
+                                                                "ComparisonKind": 1,
+                                                                "Left": {
+                                                                    "Measure": {
+                                                                        "Expression": {
+                                                                            "SourceRef": {
+                                                                                "Entity": "Metrics"
+                                                                            }
+                                                                        },
+                                                                        "Property": "# Tables - Comparison OM-SM"
+                                                                    }
+                                                                },
+                                                                "Right": {
+                                                                    "Literal": {
+                                                                        "Value": "0D"
+                                                                    }
+                                                                }
+                                                            }
+                                                        },
+                                                        "Right": {
+                                                            "Comparison": {
+                                                                "ComparisonKind": 3,
+                                                                "Left": {
+                                                                    "Measure": {
+                                                                        "Expression": {
+                                                                            "SourceRef": {
+                                                                                "Entity": "Metrics"
+                                                                            }
+                                                                        },
+                                                                        "Property": "# Tables - Comparison OM-SM"
+                                                                    }
+                                                                },
+                                                                "Right": {
+                                                                    "Literal": {
+                                                                        "Value": "1000D"
+                                                                    }
+                                                                }
+                                                            }
+                                                        }
+                                                    }
+                                                },
+                                                "Value": {
+                                                    "Literal": {
+                                                        "Value": "'ColoredArrowUpRed'"
+                                                    }
+                                                }
+                                            },
+                                            {
+                                                "Condition": {
+                                                    "Comparison": {
+                                                        "ComparisonKind": 0,
+                                                        "Left": {
+                                                            "Measure": {
+                                                                "Expression": {
+                                                                    "SourceRef": {
+                                                                        "Entity": "Metrics"
+                                                                    }
+                                                                },
+                                                                "Property": "# Tables - Comparison OM-SM"
+                                                            }
+                                                        },
+                                                        "Right": {
+                                                            "Literal": {
+                                                                "Value": "0D"
+                                                            }
+                                                        }
+                                                    }
+                                                },
+                                                "Value": {
+                                                    "Literal": {
+                                                        "Value": "'TriangleMedium'"
+                                                    }
+                                                }
+                                            },
+                                            {
+                                                "Condition": {
+                                                    "And": {
+                                                        "Left": {
+                                                            "Comparison": {
+                                                                "ComparisonKind": 2,
+                                                                "Left": {
+                                                                    "Measure": {
+                                                                        "Expression": {
+                                                                            "SourceRef": {
+                                                                                "Entity": "Metrics"
+                                                                            }
+                                                                        },
+                                                                        "Property": "# Tables - Comparison OM-SM"
+                                                                    }
+                                                                },
+                                                                "Right": {
+                                                                    "Literal": {
+                                                                        "Value": "-1000D"
+                                                                    }
+                                                                }
+                                                            }
+                                                        },
+                                                        "Right": {
+                                                            "Comparison": {
+                                                                "ComparisonKind": 3,
+                                                                "Left": {
+                                                                    "Measure": {
+                                                                        "Expression": {
+                                                                            "SourceRef": {
+                                                                                "Entity": "Metrics"
+                                                                            }
+                                                                        },
+                                                                        "Property": "# Tables - Comparison OM-SM"
+                                                                    }
+                                                                },
+                                                                "Right": {
+                                                                    "Literal": {
+                                                                        "Value": "0D"
+                                                                    }
+                                                                }
+                                                            }
+                                                        }
+                                                    }
+                                                },
+                                                "Value": {
+                                                    "Literal": {
+                                                        "Value": "'ColoredArrowDownGreen'"
+                                                    }
+                                                }
+                                            }
+                                        ]
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "selector": {
+                        "data": [
+                            {
+                                "dataViewWildcard": {
+                                    "matchingOption": 1
+                                }
+                            }
+                        ],
+                        "metadata": "Metrics.# Tables - Last Run OM-SM"
+                    }
+                },
+                {
+                    "properties": {
+                        "icon": {
+                            "kind": "Icon",
+                            "layout": {
+                                "expr": {
+                                    "Literal": {
+                                        "Value": "'After'"
+                                    }
+                                }
+                            },
+                            "verticalAlignment": {
+                                "expr": {
+                                    "Literal": {
+                                        "Value": "'Top'"
+                                    }
+                                }
+                            },
+                            "value": {
+                                "expr": {
+                                    "Conditional": {
+                                        "Cases": [
+                                            {
+                                                "Condition": {
+                                                    "And": {
+                                                        "Left": {
+                                                            "Comparison": {
+                                                                "ComparisonKind": 1,
+                                                                "Left": {
+                                                                    "Measure": {
+                                                                        "Expression": {
+                                                                            "SourceRef": {
+                                                                                "Entity": "Metrics"
+                                                                            }
+                                                                        },
+                                                                        "Property": "# Total Size - Comparison OM-SM"
+                                                                    }
+                                                                },
+                                                                "Right": {
+                                                                    "Literal": {
+                                                                        "Value": "0D"
+                                                                    }
+                                                                }
+                                                            }
+                                                        },
+                                                        "Right": {
+                                                            "Comparison": {
+                                                                "ComparisonKind": 4,
+                                                                "Left": {
+                                                                    "Measure": {
+                                                                        "Expression": {
+                                                                            "SourceRef": {
+                                                                                "Entity": "Metrics"
+                                                                            }
+                                                                        },
+                                                                        "Property": "# Total Size - Comparison OM-SM"
+                                                                    }
+                                                                },
+                                                                "Right": {
+                                                                    "Literal": {
+                                                                        "Value": "1000D"
+                                                                    }
+                                                                }
+                                                            }
+                                                        }
+                                                    }
+                                                },
+                                                "Value": {
+                                                    "Literal": {
+                                                        "Value": "'ColoredArrowUpRed'"
+                                                    }
+                                                }
+                                            },
+                                            {
+                                                "Condition": {
+                                                    "Comparison": {
+                                                        "ComparisonKind": 0,
+                                                        "Left": {
+                                                            "Measure": {
+                                                                "Expression": {
+                                                                    "SourceRef": {
+                                                                        "Entity": "Metrics"
+                                                                    }
+                                                                },
+                                                                "Property": "# Total Size - Comparison OM-SM"
+                                                            }
+                                                        },
+                                                        "Right": {
+                                                            "Literal": {
+                                                                "Value": "0D"
+                                                            }
+                                                        }
+                                                    }
+                                                },
+                                                "Value": {
+                                                    "Literal": {
+                                                        "Value": "'TriangleMedium'"
+                                                    }
+                                                }
+                                            },
+                                            {
+                                                "Condition": {
+                                                    "And": {
+                                                        "Left": {
+                                                            "Comparison": {
+                                                                "ComparisonKind": 2,
+                                                                "Left": {
+                                                                    "Measure": {
+                                                                        "Expression": {
+                                                                            "SourceRef": {
+                                                                                "Entity": "Metrics"
+                                                                            }
+                                                                        },
+                                                                        "Property": "# Total Size - Comparison OM-SM"
+                                                                    }
+                                                                },
+                                                                "Right": {
+                                                                    "Literal": {
+                                                                        "Value": "-1000D"
+                                                                    }
+                                                                }
+                                                            }
+                                                        },
+                                                        "Right": {
+                                                            "Comparison": {
+                                                                "ComparisonKind": 3,
+                                                                "Left": {
+                                                                    "Measure": {
+                                                                        "Expression": {
+                                                                            "SourceRef": {
+                                                                                "Entity": "Metrics"
+                                                                            }
+                                                                        },
+                                                                        "Property": "# Total Size - Comparison OM-SM"
+                                                                    }
+                                                                },
+                                                                "Right": {
+                                                                    "Literal": {
+                                                                        "Value": "0D"
+                                                                    }
+                                                                }
+                                                            }
+                                                        }
+                                                    }
+                                                },
+                                                "Value": {
+                                                    "Literal": {
+                                                        "Value": "'ColoredArrowDownGreen'"
+                                                    }
+                                                }
+                                            }
+                                        ]
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "selector": {
+                        "data": [
+                            {
+                                "dataViewWildcard": {
+                                    "matchingOption": 1
+                                }
+                            }
+                        ],
+                        "metadata": "Metrics.Total Size - Last Run OM-SM"
+                    }
+                },
+                {
+                    "properties": {
+                        "icon": {
+                            "kind": "Icon",
+                            "layout": {
+                                "expr": {
+                                    "Literal": {
+                                        "Value": "'After'"
+                                    }
+                                }
+                            },
+                            "verticalAlignment": {
+                                "expr": {
+                                    "Literal": {
+                                        "Value": "'Top'"
+                                    }
+                                }
+                            },
+                            "value": {
+                                "expr": {
+                                    "Conditional": {
+                                        "Cases": [
+                                            {
+                                                "Condition": {
+                                                    "And": {
+                                                        "Left": {
+                                                            "Comparison": {
+                                                                "ComparisonKind": 1,
+                                                                "Left": {
+                                                                    "Measure": {
+                                                                        "Expression": {
+                                                                            "SourceRef": {
+                                                                                "Entity": "Metrics"
+                                                                            }
+                                                                        },
+                                                                        "Property": "BPA Violations (Background Impact) - Comparison OM-SM"
+                                                                    }
+                                                                },
+                                                                "Right": {
+                                                                    "Literal": {
+                                                                        "Value": "0D"
+                                                                    }
+                                                                }
+                                                            }
+                                                        },
+                                                        "Right": {
+                                                            "Comparison": {
+                                                                "ComparisonKind": 4,
+                                                                "Left": {
+                                                                    "Measure": {
+                                                                        "Expression": {
+                                                                            "SourceRef": {
+                                                                                "Entity": "Metrics"
+                                                                            }
+                                                                        },
+                                                                        "Property": "BPA Violations (Background Impact) - Comparison OM-SM"
+                                                                    }
+                                                                },
+                                                                "Right": {
+                                                                    "Literal": {
+                                                                        "Value": "1000D"
+                                                                    }
+                                                                }
+                                                            }
+                                                        }
+                                                    }
+                                                },
+                                                "Value": {
+                                                    "Literal": {
+                                                        "Value": "'ColoredArrowUpRed'"
+                                                    }
+                                                }
+                                            },
+                                            {
+                                                "Condition": {
+                                                    "Comparison": {
+                                                        "ComparisonKind": 0,
+                                                        "Left": {
+                                                            "Measure": {
+                                                                "Expression": {
+                                                                    "SourceRef": {
+                                                                        "Entity": "Metrics"
+                                                                    }
+                                                                },
+                                                                "Property": "BPA Violations (Background Impact) - Comparison OM-SM"
+                                                            }
+                                                        },
+                                                        "Right": {
+                                                            "Literal": {
+                                                                "Value": "0D"
+                                                            }
+                                                        }
+                                                    }
+                                                },
+                                                "Value": {
+                                                    "Literal": {
+                                                        "Value": "'TriangleMedium'"
+                                                    }
+                                                }
+                                            },
+                                            {
+                                                "Condition": {
+                                                    "And": {
+                                                        "Left": {
+                                                            "Comparison": {
+                                                                "ComparisonKind": 2,
+                                                                "Left": {
+                                                                    "Measure": {
+                                                                        "Expression": {
+                                                                            "SourceRef": {
+                                                                                "Entity": "Metrics"
+                                                                            }
+                                                                        },
+                                                                        "Property": "BPA Violations (Background Impact) - Comparison OM-SM"
+                                                                    }
+                                                                },
+                                                                "Right": {
+                                                                    "Literal": {
+                                                                        "Value": "-1000D"
+                                                                    }
+                                                                }
+                                                            }
+                                                        },
+                                                        "Right": {
+                                                            "Comparison": {
+                                                                "ComparisonKind": 3,
+                                                                "Left": {
+                                                                    "Measure": {
+                                                                        "Expression": {
+                                                                            "SourceRef": {
+                                                                                "Entity": "Metrics"
+                                                                            }
+                                                                        },
+                                                                        "Property": "BPA Violations (Background Impact) - Comparison OM-SM"
+                                                                    }
+                                                                },
+                                                                "Right": {
+                                                                    "Literal": {
+                                                                        "Value": "0D"
+                                                                    }
+                                                                }
+                                                            }
+                                                        }
+                                                    }
+                                                },
+                                                "Value": {
+                                                    "Literal": {
+                                                        "Value": "'ColoredArrowDownGreen'"
+                                                    }
+                                                }
+                                            }
+                                        ]
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "selector": {
+                        "data": [
+                            {
+                                "dataViewWildcard": {
+                                    "matchingOption": 1
+                                }
+                            }
+                        ],
+                        "metadata": "Metrics.BPA Violations (Background Impact) - Last Run OM-SM"
+                    }
+                },
+                {
+                    "properties": {
+                        "icon": {
+                            "kind": "Icon",
+                            "layout": {
+                                "expr": {
+                                    "Literal": {
+                                        "Value": "'After'"
+                                    }
+                                }
+                            },
+                            "verticalAlignment": {
+                                "expr": {
+                                    "Literal": {
+                                        "Value": "'Top'"
+                                    }
+                                }
+                            },
+                            "value": {
+                                "expr": {
+                                    "Conditional": {
+                                        "Cases": [
+                                            {
+                                                "Condition": {
+                                                    "And": {
+                                                        "Left": {
+                                                            "Comparison": {
+                                                                "ComparisonKind": 1,
+                                                                "Left": {
+                                                                    "Measure": {
+                                                                        "Expression": {
+                                                                            "SourceRef": {
+                                                                                "Entity": "Metrics"
+                                                                            }
+                                                                        },
+                                                                        "Property": "BPA Violations (Query Impact) - Comparison OM-SM"
+                                                                    }
+                                                                },
+                                                                "Right": {
+                                                                    "Literal": {
+                                                                        "Value": "0D"
+                                                                    }
+                                                                }
+                                                            }
+                                                        },
+                                                        "Right": {
+                                                            "Comparison": {
+                                                                "ComparisonKind": 4,
+                                                                "Left": {
+                                                                    "Measure": {
+                                                                        "Expression": {
+                                                                            "SourceRef": {
+                                                                                "Entity": "Metrics"
+                                                                            }
+                                                                        },
+                                                                        "Property": "BPA Violations (Query Impact) - Comparison OM-SM"
+                                                                    }
+                                                                },
+                                                                "Right": {
+                                                                    "Literal": {
+                                                                        "Value": "1000D"
+                                                                    }
+                                                                }
+                                                            }
+                                                        }
+                                                    }
+                                                },
+                                                "Value": {
+                                                    "Literal": {
+                                                        "Value": "'ColoredArrowUpRed'"
+                                                    }
+                                                }
+                                            },
+                                            {
+                                                "Condition": {
+                                                    "Comparison": {
+                                                        "ComparisonKind": 0,
+                                                        "Left": {
+                                                            "Measure": {
+                                                                "Expression": {
+                                                                    "SourceRef": {
+                                                                        "Entity": "Metrics"
+                                                                    }
+                                                                },
+                                                                "Property": "BPA Violations (Query Impact) - Comparison OM-SM"
+                                                            }
+                                                        },
+                                                        "Right": {
+                                                            "Literal": {
+                                                                "Value": "0D"
+                                                            }
+                                                        }
+                                                    }
+                                                },
+                                                "Value": {
+                                                    "Literal": {
+                                                        "Value": "'TriangleMedium'"
+                                                    }
+                                                }
+                                            },
+                                            {
+                                                "Condition": {
+                                                    "And": {
+                                                        "Left": {
+                                                            "Comparison": {
+                                                                "ComparisonKind": 2,
+                                                                "Left": {
+                                                                    "Measure": {
+                                                                        "Expression": {
+                                                                            "SourceRef": {
+                                                                                "Entity": "Metrics"
+                                                                            }
+                                                                        },
+                                                                        "Property": "BPA Violations (Query Impact) - Comparison OM-SM"
+                                                                    }
+                                                                },
+                                                                "Right": {
+                                                                    "Literal": {
+                                                                        "Value": "-1000D"
+                                                                    }
+                                                                }
+                                                            }
+                                                        },
+                                                        "Right": {
+                                                            "Comparison": {
+                                                                "ComparisonKind": 3,
+                                                                "Left": {
+                                                                    "Measure": {
+                                                                        "Expression": {
+                                                                            "SourceRef": {
+                                                                                "Entity": "Metrics"
+                                                                            }
+                                                                        },
+                                                                        "Property": "BPA Violations (Query Impact) - Comparison OM-SM"
+                                                                    }
+                                                                },
+                                                                "Right": {
+                                                                    "Literal": {
+                                                                        "Value": "0D"
+                                                                    }
+                                                                }
+                                                            }
+                                                        }
+                                                    }
+                                                },
+                                                "Value": {
+                                                    "Literal": {
+                                                        "Value": "'ColoredArrowDownGreen'"
+                                                    }
+                                                }
+                                            }
+                                        ]
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "selector": {
+                        "data": [
+                            {
+                                "dataViewWildcard": {
+                                    "matchingOption": 1
+                                }
+                            }
+                        ],
+                        "metadata": "Metrics.BPA Violations (Query Impact) - Last Run OM-SM"
+                    }
+                },
+                {
+                    "properties": {
+                        "icon": {
+                            "kind": "Icon",
+                            "layout": {
+                                "expr": {
+                                    "Literal": {
+                                        "Value": "'After'"
+                                    }
+                                }
+                            },
+                            "verticalAlignment": {
+                                "expr": {
+                                    "Literal": {
+                                        "Value": "'Top'"
+                                    }
+                                }
+                            },
+                            "value": {
+                                "expr": {
+                                    "Conditional": {
+                                        "Cases": [
+                                            {
+                                                "Condition": {
+                                                    "And": {
+                                                        "Left": {
+                                                            "Comparison": {
+                                                                "ComparisonKind": 1,
+                                                                "Left": {
+                                                                    "Measure": {
+                                                                        "Expression": {
+                                                                            "SourceRef": {
+                                                                                "Entity": "Metrics"
+                                                                            }
+                                                                        },
+                                                                        "Property": "BPA Violations (Usability Impact) - Comparison OM-SM"
+                                                                    }
+                                                                },
+                                                                "Right": {
+                                                                    "Literal": {
+                                                                        "Value": "0D"
+                                                                    }
+                                                                }
+                                                            }
+                                                        },
+                                                        "Right": {
+                                                            "Comparison": {
+                                                                "ComparisonKind": 4,
+                                                                "Left": {
+                                                                    "Measure": {
+                                                                        "Expression": {
+                                                                            "SourceRef": {
+                                                                                "Entity": "Metrics"
+                                                                            }
+                                                                        },
+                                                                        "Property": "BPA Violations (Usability Impact) - Comparison OM-SM"
+                                                                    }
+                                                                },
+                                                                "Right": {
+                                                                    "Literal": {
+                                                                        "Value": "1000D"
+                                                                    }
+                                                                }
+                                                            }
+                                                        }
+                                                    }
+                                                },
+                                                "Value": {
+                                                    "Literal": {
+                                                        "Value": "'ColoredArrowUpRed'"
+                                                    }
+                                                }
+                                            },
+                                            {
+                                                "Condition": {
+                                                    "Comparison": {
+                                                        "ComparisonKind": 0,
+                                                        "Left": {
+                                                            "Measure": {
+                                                                "Expression": {
+                                                                    "SourceRef": {
+                                                                        "Entity": "Metrics"
+                                                                    }
+                                                                },
+                                                                "Property": "BPA Violations (Usability Impact) - Comparison OM-SM"
+                                                            }
+                                                        },
+                                                        "Right": {
+                                                            "Literal": {
+                                                                "Value": "0D"
+                                                            }
+                                                        }
+                                                    }
+                                                },
+                                                "Value": {
+                                                    "Literal": {
+                                                        "Value": "'TriangleMedium'"
+                                                    }
+                                                }
+                                            },
+                                            {
+                                                "Condition": {
+                                                    "And": {
+                                                        "Left": {
+                                                            "Comparison": {
+                                                                "ComparisonKind": 2,
+                                                                "Left": {
+                                                                    "Measure": {
+                                                                        "Expression": {
+                                                                            "SourceRef": {
+                                                                                "Entity": "Metrics"
+                                                                            }
+                                                                        },
+                                                                        "Property": "BPA Violations (Usability Impact) - Comparison OM-SM"
+                                                                    }
+                                                                },
+                                                                "Right": {
+                                                                    "Literal": {
+                                                                        "Value": "-1000D"
+                                                                    }
+                                                                }
+                                                            }
+                                                        },
+                                                        "Right": {
+                                                            "Comparison": {
+                                                                "ComparisonKind": 3,
+                                                                "Left": {
+                                                                    "Measure": {
+                                                                        "Expression": {
+                                                                            "SourceRef": {
+                                                                                "Entity": "Metrics"
+                                                                            }
+                                                                        },
+                                                                        "Property": "BPA Violations (Usability Impact) - Comparison OM-SM"
+                                                                    }
+                                                                },
+                                                                "Right": {
+                                                                    "Literal": {
+                                                                        "Value": "0D"
+                                                                    }
+                                                                }
+                                                            }
+                                                        }
+                                                    }
+                                                },
+                                                "Value": {
+                                                    "Literal": {
+                                                        "Value": "'ColoredArrowDownGreen'"
+                                                    }
+                                                }
+                                            }
+                                        ]
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "selector": {
+                        "data": [
+                            {
+                                "dataViewWildcard": {
+                                    "matchingOption": 1
+                                }
+                            }
+                        ],
+                        "metadata": "Metrics.BPA Violations (Usability Impact) - Last Run OM-SM"
+                    }
+                }
+            ],
+            "columnFormatting": [
+                {
+                    "properties": {
+                        "alignment": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "'Right'"
+                                }
+                            }
+                        }
+                    },
+                    "selector": {
+                        "metadata": "Min(semantic_model_analyzer_runs.RunName)"
+                    }
+                },
+                {
+                    "properties": {
+                        "styleValues": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "false"
+                                }
+                            }
+                        },
+                        "styleHeader": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "true"
+                                }
+                            }
+                        },
+                        "backColor": {
+                            "solid": {
+                                "color": {
+                                    "expr": {
+                                        "ThemeDataColor": {
+                                            "ColorId": 4,
+                                            "Percent": -0.5
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "selector": {
+                        "metadata": "Metrics.BPA Violations (Background Impact) - Last Run OM-SM"
+                    }
+                },
+                {
+                    "properties": {
+                        "backColor": {
+                            "solid": {
+                                "color": {
+                                    "expr": {
+                                        "Literal": {
+                                            "Value": "'#D84141'"
+                                        }
+                                    }
+                                }
+                            }
+                        },
+                        "styleValues": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "false"
+                                }
+                            }
+                        },
+                        "styleHeader": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "true"
+                                }
+                            }
+                        }
+                    },
+                    "selector": {
+                        "metadata": "Metrics.BPA Violations (Query Impact) - Last Run OM-SM"
+                    }
+                },
+                {
+                    "properties": {
+                        "styleValues": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "false"
+                                }
+                            }
+                        },
+                        "styleHeader": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "true"
+                                }
+                            }
+                        },
+                        "backColor": {
+                            "solid": {
+                                "color": {
+                                    "expr": {
+                                        "ThemeDataColor": {
+                                            "ColorId": 9,
+                                            "Percent": -0.25
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "selector": {
+                        "metadata": "Metrics.BPA Violations (Usability Impact) - Last Run OM-SM"
+                    }
+                }
+            ],
+            "columnWidth": [
+                {
+                    "properties": {
+                        "value": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "282.8768388137207D"
+                                }
+                            }
+                        }
+                    },
+                    "selector": {
+                        "metadata": "semantic_models.Name"
+                    }
+                },
+                {
+                    "properties": {
+                        "value": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "233.18413415070944D"
+                                }
+                            }
+                        }
+                    },
+                    "selector": {
+                        "metadata": "workspaces.WorkspaceName"
+                    }
+                },
+                {
+                    "properties": {
+                        "value": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "130.6626460114222D"
+                                }
+                            }
+                        }
+                    },
+                    "selector": {
+                        "metadata": "Metrics.BPA Violations (Background Impact) - Last Run OM-SM"
+                    }
+                },
+                {
+                    "properties": {
+                        "value": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "89.24100057204373D"
+                                }
+                            }
+                        }
+                    },
+                    "selector": {
+                        "metadata": "Metrics.BPA Violations (Query Impact) - Last Run OM-SM"
+                    }
+                },
+                {
+                    "properties": {
+                        "value": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "104.1445391504231D"
+                                }
+                            }
+                        }
+                    },
+                    "selector": {
+                        "metadata": "Metrics.BPA Violations (Usability Impact) - Last Run OM-SM"
+                    }
+                },
+                {
+                    "properties": {
+                        "value": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "93.51067424989084D"
+                                }
+                            }
+                        }
+                    },
+                    "selector": {
+                        "metadata": "Metrics.Total Size - Last Run OM-SM"
+                    }
+                },
+                {
+                    "properties": {
+                        "value": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "81.95181455500023D"
+                                }
+                            }
+                        }
+                    },
+                    "selector": {
+                        "metadata": "Metrics.# Tables - Last Run OM-SM"
+                    }
+                },
+                {
+                    "properties": {
+                        "value": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "119.08436334624753D"
+                                }
+                            }
+                        }
+                    },
+                    "selector": {
+                        "metadata": "capacities.displayName"
+                    }
+                }
+            ],
+            "total": [
+                {
+                    "properties": {
+                        "totals": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "false"
+                                }
+                            }
+                        }
+                    }
+                }
+            ]
+        },
+        "visualContainerObjects": {
+            "title": [
+                {
+                    "properties": {
+                        "show": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "false"
+                                }
+                            }
+                        },
+                        "text": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "'Semantic Models'"
+                                }
+                            }
+                        },
+                        "fontSize": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "12D"
+                                }
+                            }
+                        }
+                    }
+                }
+            ],
+            "border": [
+                {
+                    "properties": {
+                        "show": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "false"
+                                }
+                            }
+                        },
+                        "color": {
+                            "solid": {
+                                "color": {
+                                    "expr": {
+                                        "ThemeDataColor": {
+                                            "ColorId": 0,
+                                            "Percent": 0
+                                        }
+                                    }
+                                }
+                            }
+                        },
+                        "radius": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "10D"
+                                }
+                            }
+                        }
+                    }
+                }
+            ],
+            "dropShadow": [
+                {
+                    "properties": {
+                        "show": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "false"
+                                }
+                            }
+                        },
+                        "color": {
+                            "solid": {
+                                "color": {
+                                    "expr": {
+                                        "ThemeDataColor": {
+                                            "ColorId": 0,
+                                            "Percent": -0.1
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            ],
+            "visualTooltip": [
+                {
+                    "properties": {
+                        "show": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "false"
+                                }
+                            }
+                        },
+                        "section": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "'c08f3fbf99c01b08869f'"
+                                }
+                            }
+                        }
+                    }
+                }
+            ],
+            "subTitle": [
+                {
+                    "properties": {
+                        "show": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "false"
+                                }
+                            }
+                        },
+                        "text": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "''"
+                                }
+                            }
+                        }
+                    }
+                }
+            ],
+            "background": [
+                {
+                    "properties": {
+                        "show": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "true"
+                                }
+                            }
+                        }
+                    }
+                }
+            ],
+            "visualHeader": [
+                {
+                    "properties": {
+                        "showDrillUpButton": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "false"
+                                }
+                            }
+                        },
+                        "showDrillRoleSelector": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "false"
+                                }
+                            }
+                        },
+                        "showDrillToggleButton": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "false"
+                                }
+                            }
+                        },
+                        "showDrillDownLevelButton": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "false"
+                                }
+                            }
+                        },
+                        "showDrillDownExpandButton": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "false"
+                                }
+                            }
+                        }
+                    }
+                }
+            ]
+        },
+        "drillFilterOtherVisuals": true
+    },
+    "filterConfig": {
+        "filters": [
+            {
+                "name": "9ff556e378d69b542e7b",
+                "ordinal": 1,
+                "field": {
+                    "Column": {
+                        "Expression": {
+                            "SourceRef": {
+                                "Entity": "capacities"
+                            }
+                        },
+                        "Property": "displayName"
+                    }
+                },
+                "type": "Categorical"
+            },
+            {
+                "name": "7a311fd3e157851f8403",
+                "ordinal": 3,
+                "field": {
+                    "Measure": {
+                        "Expression": {
+                            "SourceRef": {
+                                "Entity": "Metrics"
+                            }
+                        },
+                        "Property": "Total Size (model)"
+                    }
+                },
+                "type": "Advanced",
+                "howCreated": "User"
+            },
+            {
+                "name": "0f13de84a247561ffa98",
+                "ordinal": 11,
+                "field": {
+                    "Measure": {
+                        "Expression": {
+                            "SourceRef": {
+                                "Entity": "Metrics"
+                            }
+                        },
+                        "Property": "Trend Avg CU by Item by Day Difference 14d vs 30d IOD"
+                    }
+                },
+                "type": "Advanced",
+                "howCreated": "User"
+            },
+            {
+                "name": "1fbfe71d9ed537792aa1",
+                "ordinal": 12,
+                "field": {
+                    "Column": {
+                        "Expression": {
+                            "SourceRef": {
+                                "Entity": "semantic_models"
+                            }
+                        },
+                        "Property": "ContentProviderType"
+                    }
+                },
+                "type": "Categorical",
+                "howCreated": "User"
+            },
+            {
+                "name": "a55a4555630969dfe801",
+                "field": {
+                    "Column": {
+                        "Expression": {
+                            "SourceRef": {
+                                "Entity": "workspaces"
+                            }
+                        },
+                        "Property": "WorkspaceName"
+                    }
+                },
+                "type": "Categorical"
+            },
+            {
+                "name": "e48306a8a7b57df27e86",
+                "field": {
+                    "Column": {
+                        "Expression": {
+                            "SourceRef": {
+                                "Entity": "semantic_models"
+                            }
+                        },
+                        "Property": "Name"
+                    }
+                },
+                "type": "Categorical"
+            },
+            {
+                "name": "e953e8b9b1311ab076cd",
+                "field": {
+                    "Aggregation": {
+                        "Expression": {
+                            "Column": {
+                                "Expression": {
+                                    "SourceRef": {
+                                        "Entity": "semantic_model_analyzer_runs"
+                                    }
+                                },
+                                "Property": "RunName"
+                            }
+                        },
+                        "Function": 4
+                    }
+                },
+                "type": "Advanced"
+            },
+            {
+                "name": "ee98bee262a78d67f724",
+                "field": {
+                    "Measure": {
+                        "Expression": {
+                            "SourceRef": {
+                                "Entity": "Metrics"
+                            }
+                        },
+                        "Property": "# Tables - Last Run OM-SM"
+                    }
+                },
+                "type": "Advanced"
+            },
+            {
+                "name": "0435ca649aceceecb650",
+                "field": {
+                    "Measure": {
+                        "Expression": {
+                            "SourceRef": {
+                                "Entity": "Metrics"
+                            }
+                        },
+                        "Property": "Total Size - Last Run OM-SM"
+                    }
+                },
+                "type": "Advanced"
+            },
+            {
+                "name": "831c2afc4b4ecfd108b9",
+                "field": {
+                    "Measure": {
+                        "Expression": {
+                            "SourceRef": {
+                                "Entity": "Metrics"
+                            }
+                        },
+                        "Property": "BPA Violations (Background Impact) - Last Run OM-SM"
+                    }
+                },
+                "type": "Advanced"
+            },
+            {
+                "name": "1ece04930fd5b8a19758",
+                "field": {
+                    "Measure": {
+                        "Expression": {
+                            "SourceRef": {
+                                "Entity": "Metrics"
+                            }
+                        },
+                        "Property": "BPA Violations (Query Impact) - Last Run OM-SM"
+                    }
+                },
+                "type": "Advanced"
+            },
+            {
+                "name": "81c30943aa1671db52b0",
+                "field": {
+                    "Measure": {
+                        "Expression": {
+                            "SourceRef": {
+                                "Entity": "Metrics"
+                            }
+                        },
+                        "Property": "BPA Violations (Usability Impact) - Last Run OM-SM"
+                    }
+                },
+                "type": "Advanced"
+            }
+        ],
+        "filterSortOrder": "Custom"
+    }
+}

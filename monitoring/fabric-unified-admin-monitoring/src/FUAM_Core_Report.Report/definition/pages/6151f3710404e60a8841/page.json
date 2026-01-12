@@ -1,0 +1,149 @@
+{
+    "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/page/2.0.0/schema.json",
+    "name": "6151f3710404e60a8841",
+    "displayName": "Capacity Utilization",
+    "displayOption": "FitToPage",
+    "height": 1080,
+    "width": 1920,
+    "filterConfig": {
+        "filters": [
+            {
+                "name": "36f7581e60a015bc2592",
+                "displayName": "Capacity Name",
+                "ordinal": 0,
+                "field": {
+                    "Column": {
+                        "Expression": {
+                            "SourceRef": {
+                                "Entity": "capacities"
+                            }
+                        },
+                        "Property": "displayName"
+                    }
+                },
+                "type": "Categorical",
+                "howCreated": "User"
+            },
+            {
+                "name": "e61b3a250d8d662ec9a9",
+                "ordinal": 1,
+                "field": {
+                    "Column": {
+                        "Expression": {
+                            "SourceRef": {
+                                "Entity": "capacities"
+                            }
+                        },
+                        "Property": "CapacityId"
+                    }
+                },
+                "type": "Categorical",
+                "howCreated": "User"
+            },
+            {
+                "name": "694a1ebd16d0a961cbb5",
+                "displayName": "Capacity Region",
+                "ordinal": 2,
+                "field": {
+                    "Column": {
+                        "Expression": {
+                            "SourceRef": {
+                                "Entity": "capacities"
+                            }
+                        },
+                        "Property": "region"
+                    }
+                },
+                "type": "Categorical",
+                "howCreated": "User"
+            },
+            {
+                "name": "38977d86d5183d63c9e6",
+                "ordinal": 3,
+                "field": {
+                    "Column": {
+                        "Expression": {
+                            "SourceRef": {
+                                "Entity": "capacity_metrics_by_timepoint"
+                            }
+                        },
+                        "Property": "TimePoint"
+                    }
+                },
+                "type": "RelativeDate",
+                "howCreated": "User",
+                "objects": {
+                    "general": [
+                        {
+                            "properties": {
+                                "isInvertedSelectionMode": {
+                                    "expr": {
+                                        "Literal": {
+                                            "Value": "true"
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    ]
+                }
+            }
+        ],
+        "filterSortOrder": "Custom"
+    },
+    "objects": {
+        "displayArea": [
+            {
+                "properties": {
+                    "verticalAlignment": {
+                        "expr": {
+                            "Literal": {
+                                "Value": "'Middle'"
+                            }
+                        }
+                    }
+                }
+            }
+        ],
+        "background": [
+            {
+                "properties": {
+                    "image": {
+                        "image": {
+                            "name": {
+                                "expr": {
+                                    "Literal": {
+                                        "Value": "'fuam_core_capa_util_bg.png'"
+                                    }
+                                }
+                            },
+                            "url": {
+                                "expr": {
+                                    "ResourcePackageItem": {
+                                        "PackageName": "RegisteredResources",
+                                        "PackageType": 1,
+                                        "ItemName": "fuam_core_capa_util_bg8918458890285964.png"
+                                    }
+                                }
+                            },
+                            "scaling": {
+                                "expr": {
+                                    "Literal": {
+                                        "Value": "'Fill'"
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "transparency": {
+                        "expr": {
+                            "Literal": {
+                                "Value": "0D"
+                            }
+                        }
+                    }
+                }
+            }
+        ]
+    }
+}

@@ -1,0 +1,31 @@
+model Model
+	culture: en-US
+	collation: Latin1_General_100_BIN2_UTF8
+	defaultPowerBIDataSourceVersion: powerBI_V3
+	sourceQueryCulture: en-US
+
+annotation __PBI_TimeIntelligenceEnabled = 0
+
+annotation PBI_QueryOrder = ["DatabaseQuery"]
+
+annotation PBI_ProTooling = ["RemoteModeling","WebModelingEdit","DevMode","Copilot","CopilotMeasureDescriptions"]
+
+annotation TabularEditor_SerializeOptions = {"IgnoreInferredObjects":true,"IgnoreInferredProperties":true,"IgnoreTimestamps":true,"SplitMultilineStrings":true,"PrefixFilenames":false,"LocalTranslations":false,"LocalPerspectives":false,"LocalRelationships":false,"Levels":["Data Sources","Perspectives","Relationships","Roles","Shared Expressions","Tables","Tables/Calculation Items","Tables/Columns","Tables/Hierarchies","Tables/Measures","Tables/Partitions","Translations"],"AlsoSaveAsBim":true}
+
+annotation __TEdtr = 1
+
+annotation __PBI_ServiceStoredInTmdl = reserved
+
+ref table calendar
+ref table meters
+ref table fca
+ref table audit_latest_available_fca_version
+ref table capacity_regions
+ref table subscriptions
+ref table resources
+ref table quota_fabric
+ref table reservations
+ref table reservation_usage
+
+ref cultureInfo en-US
+

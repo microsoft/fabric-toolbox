@@ -1,0 +1,230 @@
+{
+    "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.5.0/schema.json",
+    "name": "270ce2dea9270934bc47",
+    "position": {
+        "x": 1640.9852216748768,
+        "y": 870.1477832512315,
+        "z": 15000,
+        "height": 240,
+        "width": 256.55172413793105,
+        "tabOrder": 14000
+    },
+    "visual": {
+        "visualType": "tableEx",
+        "query": {
+            "queryState": {
+                "Values": {
+                    "projections": [
+                        {
+                            "field": {
+                                "Column": {
+                                    "Expression": {
+                                        "SourceRef": {
+                                            "Entity": "capacities"
+                                        }
+                                    },
+                                    "Property": "displayName"
+                                }
+                            },
+                            "queryRef": "capacities.displayName",
+                            "nativeQueryRef": "Select Capacity",
+                            "displayName": "Select Capacity"
+                        }
+                    ]
+                }
+            },
+            "sortDefinition": {
+                "sort": [
+                    {
+                        "field": {
+                            "Column": {
+                                "Expression": {
+                                    "SourceRef": {
+                                        "Entity": "capacities"
+                                    }
+                                },
+                                "Property": "displayName"
+                            }
+                        },
+                        "direction": "Ascending"
+                    }
+                ]
+            }
+        },
+        "objects": {
+            "general": [
+                {
+                    "properties": {}
+                }
+            ],
+            "columnWidth": [
+                {
+                    "properties": {
+                        "value": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "226.9468839483077D"
+                                }
+                            }
+                        }
+                    },
+                    "selector": {
+                        "metadata": "capacities.displayName"
+                    }
+                }
+            ],
+            "columnHeaders": [
+                {
+                    "properties": {
+                        "fontColor": {
+                            "solid": {
+                                "color": {
+                                    "expr": {
+                                        "ThemeDataColor": {
+                                            "ColorId": 0,
+                                            "Percent": 0
+                                        }
+                                    }
+                                }
+                            }
+                        },
+                        "backColor": {
+                            "solid": {
+                                "color": {
+                                    "expr": {
+                                        "ThemeDataColor": {
+                                            "ColorId": 2,
+                                            "Percent": 0
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            ],
+            "values": [
+                {
+                    "properties": {
+                        "fontFamily": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "'''Segoe UI Semibold'', wf_segoe-ui_semibold, helvetica, arial, sans-serif'"
+                                }
+                            }
+                        }
+                    }
+                }
+            ],
+            "grid": [
+                {
+                    "properties": {
+                        "rowPadding": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "4D"
+                                }
+                            }
+                        }
+                    }
+                }
+            ]
+        },
+        "visualContainerObjects": {
+            "title": [
+                {
+                    "properties": {
+                        "show": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "false"
+                                }
+                            }
+                        },
+                        "text": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "''"
+                                }
+                            }
+                        },
+                        "fontSize": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "12D"
+                                }
+                            }
+                        }
+                    }
+                }
+            ],
+            "border": [
+                {
+                    "properties": {
+                        "show": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "true"
+                                }
+                            }
+                        },
+                        "radius": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "5D"
+                                }
+                            }
+                        }
+                    }
+                }
+            ],
+            "dropShadow": [
+                {
+                    "properties": {
+                        "show": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "true"
+                                }
+                            }
+                        },
+                        "color": {
+                            "solid": {
+                                "color": {
+                                    "expr": {
+                                        "ThemeDataColor": {
+                                            "ColorId": 0,
+                                            "Percent": -0.1
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            ]
+        },
+        "drillFilterOtherVisuals": true
+    },
+    "filterConfig": {
+        "filters": [
+            {
+                "name": "5dcb70929031851bc41b",
+                "ordinal": 0,
+                "field": {
+                    "Column": {
+                        "Expression": {
+                            "SourceRef": {
+                                "Entity": "tenant_settings"
+                            }
+                        },
+                        "Property": "TransferDateTime"
+                    }
+                },
+                "type": "Categorical",
+                "howCreated": "User"
+            }
+        ],
+        "filterSortOrder": "Custom"
+    }
+}

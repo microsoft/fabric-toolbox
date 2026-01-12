@@ -1,0 +1,236 @@
+{
+  "properties": {
+    "activities": [
+            {
+                "name": "Focus Data",
+                "type": "TridentNotebook",
+                "dependsOn": [
+                    {
+                        "activity": "Load Meters",
+                        "dependencyConditions": [
+                            "Succeeded"
+                        ]
+                    }
+                ],
+                "policy": {
+                    "timeout": "0.1:00:00",
+                    "retry": 1,
+                    "retryIntervalInSeconds": 30,
+                    "secureOutput": false,
+                    "secureInput": false
+                },
+                "typeProperties": {
+                    "notebookId": "0c96d0e9-ea78-4c25-848a-8c581c9c7b24",
+                    "workspaceId": "57bceddc-a995-44a7-bfb5-1d5f11ad1e98",
+                    "parameters": {
+                        "fromMonth": {
+                            "value": {
+                                "value": "@pipeline().parameters.FromMonth",
+                                "type": "Expression"
+                            },
+                            "type": "int"
+                        },
+                        "toMonth": {
+                            "value": {
+                                "value": "@pipeline().parameters.ToMonth",
+                                "type": "Expression"
+                            },
+                            "type": "int"
+                        }
+                    },
+                    "sessionTag": "fca"
+                }
+            },
+            {
+                "name": "Calendar Data",
+                "type": "TridentNotebook",
+                "dependsOn": [
+                    {
+                        "activity": "Focus_Fabric Data",
+                        "dependencyConditions": [
+                            "Succeeded"
+                        ]
+                    }
+                ],
+                "policy": {
+                    "timeout": "0.1:00:00",
+                    "retry": 1,
+                    "retryIntervalInSeconds": 30,
+                    "secureOutput": false,
+                    "secureInput": false
+                },
+                "typeProperties": {
+                    "notebookId": "aa881633-c031-433b-8420-d569fd1965b8",
+                    "workspaceId": "57bceddc-a995-44a7-bfb5-1d5f11ad1e98",
+                    "sessionTag": "fca"
+                }
+            },
+            {
+                "name": "FCA Version",
+                "type": "TridentNotebook",
+                "dependsOn": [],
+                "policy": {
+                    "timeout": "0.1:00:00",
+                    "retry": 1,
+                    "retryIntervalInSeconds": 30,
+                    "secureOutput": false,
+                    "secureInput": false
+                },
+                "typeProperties": {
+                    "notebookId": "3d735ef3-2014-424f-99e2-832fca1291ce",
+                    "workspaceId": "57bceddc-a995-44a7-bfb5-1d5f11ad1e98",
+                    "sessionTag": "fca"
+                }
+            },
+            {
+                "name": "Load Meters",
+                "type": "TridentNotebook",
+                "dependsOn": [],
+                "policy": {
+                    "timeout": "0.1:00:00",
+                    "retry": 1,
+                    "retryIntervalInSeconds": 30,
+                    "secureOutput": false,
+                    "secureInput": false
+                },
+                "typeProperties": {
+                    "notebookId": "681520b2-2265-4927-979a-b0ef804f8f8e",
+                    "workspaceId": "57bceddc-a995-44a7-bfb5-1d5f11ad1e98",
+                    "sessionTag": "fca"
+                }
+            },
+            {
+                "name": "Focus_Fabric Data",
+                "type": "TridentNotebook",
+                "dependsOn": [
+                    {
+                        "activity": "Load Dimensions",
+                        "dependencyConditions": [
+                            "Succeeded"
+                        ]
+                    }
+                ],
+                "policy": {
+                    "timeout": "0.1:00:00",
+                    "retry": 1,
+                    "retryIntervalInSeconds": 30,
+                    "secureOutput": false,
+                    "secureInput": false
+                },
+                "typeProperties": {
+                    "notebookId": "7a5dec37-ce1a-445c-8315-60d06305aefc",
+                    "workspaceId": "57bceddc-a995-44a7-bfb5-1d5f11ad1e98",
+                    "parameters": {
+                        "fromMonth": {
+                            "value": {
+                                "value": "@pipeline().parameters.FromMonth",
+                                "type": "Expression"
+                            },
+                            "type": "int"
+                        },
+                        "toMonth": {
+                            "value": {
+                                "value": "@pipeline().parameters.ToMonth",
+                                "type": "Expression"
+                            },
+                            "type": "int"
+                        }
+                    },
+                    "sessionTag": "fca"
+                }
+            },
+            {
+                "name": "Load Dimensions",
+                "type": "TridentNotebook",
+                "dependsOn": [
+                    {
+                        "activity": "Focus Data",
+                        "dependencyConditions": [
+                            "Succeeded"
+                        ]
+                    }
+                ],
+                "policy": {
+                    "timeout": "0.1:00:00",
+                    "retry": 1,
+                    "retryIntervalInSeconds": 30,
+                    "secureOutput": false,
+                    "secureInput": false
+                },
+                "typeProperties": {
+                    "notebookId": "0e29a4cd-d9b6-4cab-8049-1d2123f4b3d7",
+                    "workspaceId": "57bceddc-a995-44a7-bfb5-1d5f11ad1e98",
+                    "sessionTag": "fca"
+                }
+            },
+            {
+                "name": "Load Quotas",
+                "type": "ExecutePipeline",
+                "state": "Inactive",
+                "onInactiveMarkAs": "Succeeded",
+                "dependsOn": [
+                    {
+                        "activity": "Load Dimensions",
+                        "dependencyConditions": [
+                            "Succeeded"
+                        ]
+                    }
+                ],
+                "policy": {
+                    "secureInput": false
+                },
+                "typeProperties": {
+                    "pipeline": {
+                        "referenceName": "bc560572-054f-49e6-8601-2505da5bea6a",
+                        "type": "PipelineReference"
+                    },
+                    "waitOnCompletion": true
+                }
+            },
+            {
+                "name": "Load Reservations",
+                "type": "ExecutePipeline",
+                "state": "Inactive",
+                "onInactiveMarkAs": "Succeeded",
+                "dependsOn": [
+                    {
+                        "activity": "Load Dimensions",
+                        "dependencyConditions": [
+                            "Succeeded"
+                        ]
+                    }
+                ],
+                "policy": {
+                    "secureInput": false
+                },
+                "typeProperties": {
+                    "pipeline": {
+                        "referenceName": "973f5bba-e075-4055-8949-eb9b36801737",
+                        "type": "PipelineReference"
+                    },
+                    "waitOnCompletion": true,
+                    "parameters": {
+                        "FromMonth": {
+                            "value": "@pipeline().parameters.FromMonth",
+                            "type": "Expression"
+                        },
+                        "ToMonth": {
+                            "value": "@pipeline().parameters.ToMonth",
+                            "type": "Expression"
+                        }
+                    }
+                }
+            }
+        ],
+        "parameters": {
+            "FromMonth": {
+                "type": "int",
+                "defaultValue": -6
+            },
+            "ToMonth": {
+                "type": "int",
+                "defaultValue": 0
+            }
+        }
+  }
+}

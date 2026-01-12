@@ -1,0 +1,746 @@
+{
+    "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.5.0/schema.json",
+    "name": "7f2fd2531c979cb66ad1",
+    "position": {
+        "x": 698.9328743545611,
+        "y": 254.6643717728055,
+        "z": 7000,
+        "height": 802.0998278829604,
+        "width": 1206.4027538726334,
+        "tabOrder": 4000
+    },
+    "visual": {
+        "visualType": "pivotTable",
+        "query": {
+            "queryState": {
+                "Columns": {
+                    "projections": [
+                        {
+                            "field": {
+                                "Column": {
+                                    "Expression": {
+                                        "SourceRef": {
+                                            "Entity": "tenant_settings"
+                                        }
+                                    },
+                                    "Property": "TransferDateTime"
+                                }
+                            },
+                            "queryRef": "tenant_settings.TransferDateTime",
+                            "nativeQueryRef": "Snapshot Date",
+                            "active": true,
+                            "displayName": "Snapshot Date"
+                        }
+                    ]
+                },
+                "Rows": {
+                    "projections": [
+                        {
+                            "field": {
+                                "Column": {
+                                    "Expression": {
+                                        "SourceRef": {
+                                            "Entity": "tenant_settings"
+                                        }
+                                    },
+                                    "Property": "tenantSettingGroup"
+                                }
+                            },
+                            "queryRef": "tenant_settings.tenantSettingGroup",
+                            "nativeQueryRef": "Tenant Setting Group",
+                            "active": true,
+                            "displayName": "Tenant Setting Group"
+                        },
+                        {
+                            "field": {
+                                "Column": {
+                                    "Expression": {
+                                        "SourceRef": {
+                                            "Entity": "tenant_settings"
+                                        }
+                                    },
+                                    "Property": "title"
+                                }
+                            },
+                            "queryRef": "tenant_settings.title",
+                            "nativeQueryRef": "Title",
+                            "active": true,
+                            "displayName": "Title"
+                        }
+                    ]
+                },
+                "Values": {
+                    "projections": [
+                        {
+                            "field": {
+                                "Measure": {
+                                    "Expression": {
+                                        "SourceRef": {
+                                            "Entity": "Metrics"
+                                        }
+                                    },
+                                    "Property": "Tenant Setting Value"
+                                }
+                            },
+                            "queryRef": "Metrics.Tenant Setting Value",
+                            "nativeQueryRef": "Tenant Setting Value"
+                        }
+                    ]
+                }
+            }
+        },
+        "expansionStates": [
+            {
+                "roles": [
+                    "Rows"
+                ],
+                "levels": [
+                    {
+                        "queryRefs": [
+                            "tenant_settings.tenantSettingGroup"
+                        ],
+                        "identityKeys": [
+                            {
+                                "Column": {
+                                    "Expression": {
+                                        "SourceRef": {
+                                            "Entity": "tenant_settings"
+                                        }
+                                    },
+                                    "Property": "tenantSettingGroup"
+                                }
+                            }
+                        ],
+                        "isPinned": true
+                    },
+                    {
+                        "queryRefs": [
+                            "tenant_settings.title"
+                        ],
+                        "isCollapsed": true,
+                        "isPinned": true
+                    }
+                ],
+                "root": {}
+            }
+        ],
+        "objects": {
+            "grid": [
+                {
+                    "properties": {
+                        "rowPadding": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "3D"
+                                }
+                            }
+                        },
+                        "gridHorizontal": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "true"
+                                }
+                            }
+                        },
+                        "gridVertical": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "true"
+                                }
+                            }
+                        },
+                        "outlineColor": {
+                            "solid": {
+                                "color": {
+                                    "expr": {
+                                        "ThemeDataColor": {
+                                            "ColorId": 0,
+                                            "Percent": -0.2
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            ],
+            "columnHeaders": [
+                {
+                    "properties": {
+                        "fontFamily": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "'''Segoe UI Semibold'', wf_segoe-ui_semibold, helvetica, arial, sans-serif'"
+                                }
+                            }
+                        },
+                        "fontSize": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "9D"
+                                }
+                            }
+                        }
+                    }
+                }
+            ],
+            "rowHeaders": [
+                {
+                    "properties": {
+                        "fontFamily": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "'''Segoe UI Semibold'', wf_segoe-ui_semibold, helvetica, arial, sans-serif'"
+                                }
+                            }
+                        },
+                        "fontSize": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "9D"
+                                }
+                            }
+                        }
+                    }
+                }
+            ],
+            "subTotals": [
+                {
+                    "properties": {
+                        "bold": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "false"
+                                }
+                            }
+                        },
+                        "fontFamily": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "'''Segoe UI Semibold'', wf_segoe-ui_semibold, helvetica, arial, sans-serif'"
+                                }
+                            }
+                        },
+                        "fontColor": {
+                            "solid": {
+                                "color": {
+                                    "expr": {
+                                        "ThemeDataColor": {
+                                            "ColorId": 1,
+                                            "Percent": 0
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "selector": {
+                        "id": "Column"
+                    }
+                },
+                {
+                    "properties": {
+                        "bold": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "false"
+                                }
+                            }
+                        },
+                        "fontFamily": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "'''Segoe UI Bold'', wf_segoe-ui_bold, helvetica, arial, sans-serif'"
+                                }
+                            }
+                        },
+                        "fontColor": {
+                            "solid": {
+                                "color": {
+                                    "expr": {
+                                        "ThemeDataColor": {
+                                            "ColorId": 1,
+                                            "Percent": 0
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "selector": {
+                        "id": "Row"
+                    }
+                },
+                {
+                    "properties": {
+                        "columnSubtotals": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "false"
+                                }
+                            }
+                        },
+                        "rowSubtotals": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "false"
+                                }
+                            }
+                        }
+                    }
+                }
+            ],
+            "rowTotal": [
+                {
+                    "properties": {
+                        "bold": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "false"
+                                }
+                            }
+                        }
+                    }
+                }
+            ],
+            "columnTotal": [
+                {
+                    "properties": {
+                        "bold": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "false"
+                                }
+                            }
+                        }
+                    }
+                }
+            ],
+            "blankRows": [
+                {
+                    "properties": {
+                        "showBlankRows": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "false"
+                                }
+                            }
+                        }
+                    }
+                }
+            ],
+            "columnWidth": [
+                {
+                    "properties": {
+                        "value": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "72.60345582295794D"
+                                }
+                            }
+                        }
+                    },
+                    "selector": {
+                        "data": [
+                            {
+                                "scopeId": {
+                                    "Comparison": {
+                                        "ComparisonKind": 0,
+                                        "Left": {
+                                            "Column": {
+                                                "Expression": {
+                                                    "SourceRef": {
+                                                        "Entity": "tenant_settings"
+                                                    }
+                                                },
+                                                "Property": "TransferDateTime"
+                                            }
+                                        },
+                                        "Right": {
+                                            "Literal": {
+                                                "Value": "datetime'2024-07-16T21:09:33.653'"
+                                            }
+                                        }
+                                    }
+                                }
+                            },
+                            {
+                                "scopeId": {
+                                    "Comparison": {
+                                        "ComparisonKind": 0,
+                                        "Left": {
+                                            "Column": {
+                                                "Expression": {
+                                                    "SourceRef": {
+                                                        "Entity": "tenant_settings"
+                                                    }
+                                                },
+                                                "Property": "enabled"
+                                            }
+                                        },
+                                        "Right": {
+                                            "Literal": {
+                                                "Value": "false"
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        ]
+                    }
+                },
+                {
+                    "properties": {
+                        "value": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "341.44868566137006D"
+                                }
+                            }
+                        }
+                    },
+                    "selector": {
+                        "metadata": "tenant_settings.tenantSettingGroup"
+                    }
+                }
+            ],
+            "values": [
+                {
+                    "properties": {
+                        "backColorSecondary": {
+                            "solid": {
+                                "color": {
+                                    "expr": {
+                                        "Literal": {
+                                            "Value": "'#F6F6F6'"
+                                        }
+                                    }
+                                }
+                            }
+                        },
+                        "backColorPrimary": {
+                            "solid": {
+                                "color": {
+                                    "expr": {
+                                        "ThemeDataColor": {
+                                            "ColorId": 0,
+                                            "Percent": -0.1
+                                        }
+                                    }
+                                }
+                            }
+                        },
+                        "fontSize": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "9D"
+                                }
+                            }
+                        }
+                    }
+                },
+                {
+                    "properties": {
+                        "icon": {
+                            "kind": "Icon",
+                            "layout": {
+                                "expr": {
+                                    "Literal": {
+                                        "Value": "'IconOnly'"
+                                    }
+                                }
+                            },
+                            "verticalAlignment": {
+                                "expr": {
+                                    "Literal": {
+                                        "Value": "'Top'"
+                                    }
+                                }
+                            },
+                            "value": {
+                                "expr": {
+                                    "Conditional": {
+                                        "Cases": [
+                                            {
+                                                "Condition": {
+                                                    "Comparison": {
+                                                        "ComparisonKind": 0,
+                                                        "Left": {
+                                                            "Measure": {
+                                                                "Expression": {
+                                                                    "SourceRef": {
+                                                                        "Entity": "Metrics"
+                                                                    }
+                                                                },
+                                                                "Property": "Tenant Setting Value"
+                                                            }
+                                                        },
+                                                        "Right": {
+                                                            "Literal": {
+                                                                "Value": "1D"
+                                                            }
+                                                        }
+                                                    }
+                                                },
+                                                "Value": {
+                                                    "Literal": {
+                                                        "Value": "'CircleHigh'"
+                                                    }
+                                                }
+                                            },
+                                            {
+                                                "Condition": {
+                                                    "Comparison": {
+                                                        "ComparisonKind": 0,
+                                                        "Left": {
+                                                            "Measure": {
+                                                                "Expression": {
+                                                                    "SourceRef": {
+                                                                        "Entity": "Metrics"
+                                                                    }
+                                                                },
+                                                                "Property": "Tenant Setting Value"
+                                                            }
+                                                        },
+                                                        "Right": {
+                                                            "Literal": {
+                                                                "Value": "0D"
+                                                            }
+                                                        }
+                                                    }
+                                                },
+                                                "Value": {
+                                                    "Literal": {
+                                                        "Value": "'SignLow'"
+                                                    }
+                                                }
+                                            }
+                                        ]
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "selector": {
+                        "data": [
+                            {
+                                "dataViewWildcard": {
+                                    "matchingOption": 1
+                                }
+                            }
+                        ],
+                        "metadata": "Metrics.Tenant Setting Value"
+                    }
+                }
+            ],
+            "general": [
+                {
+                    "properties": {
+                        "layout": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "'Compact'"
+                                }
+                            }
+                        }
+                    }
+                }
+            ],
+            "columnFormatting": [
+                {
+                    "properties": {
+                        "alignment": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "'Center'"
+                                }
+                            }
+                        }
+                    },
+                    "selector": {
+                        "metadata": "Metrics.Tenant Setting Value"
+                    }
+                }
+            ]
+        },
+        "visualContainerObjects": {
+            "title": [
+                {
+                    "properties": {
+                        "show": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "true"
+                                }
+                            }
+                        },
+                        "text": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "'Tenant Settings | Snapshots'"
+                                }
+                            }
+                        },
+                        "fontSize": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "12D"
+                                }
+                            }
+                        }
+                    }
+                }
+            ],
+            "border": [
+                {
+                    "properties": {
+                        "show": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "false"
+                                }
+                            }
+                        },
+                        "color": {
+                            "solid": {
+                                "color": {
+                                    "expr": {
+                                        "ThemeDataColor": {
+                                            "ColorId": 0,
+                                            "Percent": 0
+                                        }
+                                    }
+                                }
+                            }
+                        },
+                        "radius": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "5D"
+                                }
+                            }
+                        }
+                    }
+                }
+            ],
+            "dropShadow": [
+                {
+                    "properties": {
+                        "show": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "false"
+                                }
+                            }
+                        },
+                        "color": {
+                            "solid": {
+                                "color": {
+                                    "expr": {
+                                        "ThemeDataColor": {
+                                            "ColorId": 0,
+                                            "Percent": -0.1
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            ],
+            "visualTooltip": [
+                {
+                    "properties": {
+                        "show": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "true"
+                                }
+                            }
+                        }
+                    }
+                }
+            ],
+            "background": [
+                {
+                    "properties": {
+                        "show": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "false"
+                                }
+                            }
+                        }
+                    }
+                }
+            ]
+        },
+        "drillFilterOtherVisuals": true
+    },
+    "filterConfig": {
+        "filters": [
+            {
+                "name": "6bcc78546d00b5a57d95",
+                "ordinal": 0,
+                "field": {
+                    "Column": {
+                        "Expression": {
+                            "SourceRef": {
+                                "Entity": "tenant_settings"
+                            }
+                        },
+                        "Property": "tenantSettingGroup"
+                    }
+                },
+                "type": "Categorical"
+            },
+            {
+                "name": "429bc6fd075b18e021a3",
+                "ordinal": 1,
+                "field": {
+                    "Column": {
+                        "Expression": {
+                            "SourceRef": {
+                                "Entity": "tenant_settings"
+                            }
+                        },
+                        "Property": "TransferDateTime"
+                    }
+                },
+                "type": "Categorical"
+            },
+            {
+                "name": "902633f9bc999a2b1304",
+                "ordinal": 2,
+                "field": {
+                    "Column": {
+                        "Expression": {
+                            "SourceRef": {
+                                "Entity": "tenant_settings"
+                            }
+                        },
+                        "Property": "title"
+                    }
+                },
+                "type": "Categorical"
+            },
+            {
+                "name": "5606f43870b2b3ae89a2",
+                "ordinal": 3,
+                "field": {
+                    "Measure": {
+                        "Expression": {
+                            "SourceRef": {
+                                "Entity": "Metrics"
+                            }
+                        },
+                        "Property": "Enabled"
+                    }
+                },
+                "type": "Advanced",
+                "howCreated": "User"
+            }
+        ],
+        "filterSortOrder": "Custom"
+    }
+}

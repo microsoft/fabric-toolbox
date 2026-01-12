@@ -1,0 +1,2183 @@
+{
+    "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.5.0/schema.json",
+    "name": "559cafbf71cb8c0daba9",
+    "position": {
+        "x": 19.857789269553972,
+        "y": 359.9224305106658,
+        "z": 6000,
+        "height": 668.9592760180996,
+        "width": 1880.284421460892,
+        "tabOrder": 3000
+    },
+    "visual": {
+        "visualType": "pivotTable",
+        "query": {
+            "queryState": {
+                "Rows": {
+                    "projections": [
+                        {
+                            "field": {
+                                "Column": {
+                                    "Expression": {
+                                        "SourceRef": {
+                                            "Entity": "activities"
+                                        }
+                                    },
+                                    "Property": "CapacityName"
+                                }
+                            },
+                            "queryRef": "activities.CapacityName",
+                            "nativeQueryRef": "Capacity",
+                            "active": true,
+                            "displayName": "Capacity"
+                        },
+                        {
+                            "field": {
+                                "Column": {
+                                    "Expression": {
+                                        "SourceRef": {
+                                            "Entity": "activities"
+                                        }
+                                    },
+                                    "Property": "WorkSpaceName"
+                                }
+                            },
+                            "queryRef": "activities.WorkSpaceName",
+                            "nativeQueryRef": "Workspace",
+                            "active": false,
+                            "displayName": "Workspace"
+                        },
+                        {
+                            "field": {
+                                "Column": {
+                                    "Expression": {
+                                        "SourceRef": {
+                                            "Entity": "activities"
+                                        }
+                                    },
+                                    "Property": "ReportName"
+                                }
+                            },
+                            "queryRef": "activities.ReportName",
+                            "nativeQueryRef": "Report",
+                            "active": false,
+                            "displayName": "Report"
+                        }
+                    ]
+                },
+                "Values": {
+                    "projections": [
+                        {
+                            "field": {
+                                "Measure": {
+                                    "Expression": {
+                                        "SourceRef": {
+                                            "Entity": "Metrics"
+                                        }
+                                    },
+                                    "Property": "# Users"
+                                }
+                            },
+                            "queryRef": "Metrics.# Users",
+                            "nativeQueryRef": "# Total Users",
+                            "displayName": "# Total Users"
+                        },
+                        {
+                            "field": {
+                                "Measure": {
+                                    "Expression": {
+                                        "SourceRef": {
+                                            "Entity": "Metrics"
+                                        }
+                                    },
+                                    "Property": "# Users CM"
+                                }
+                            },
+                            "queryRef": "Metrics.# Users CM",
+                            "nativeQueryRef": "# Users (Current Month)",
+                            "displayName": "# Users (Current Month)"
+                        },
+                        {
+                            "field": {
+                                "Measure": {
+                                    "Expression": {
+                                        "SourceRef": {
+                                            "Entity": "Metrics"
+                                        }
+                                    },
+                                    "Property": "# Users PM"
+                                }
+                            },
+                            "queryRef": "Metrics.# Users PM",
+                            "nativeQueryRef": "# Users (Past Month)",
+                            "displayName": "# Users (Past Month)"
+                        },
+                        {
+                            "field": {
+                                "Measure": {
+                                    "Expression": {
+                                        "SourceRef": {
+                                            "Entity": "Metrics"
+                                        }
+                                    },
+                                    "Property": "# Users PY"
+                                }
+                            },
+                            "queryRef": "Metrics.# Users PY",
+                            "nativeQueryRef": "# Users (Past Year)",
+                            "displayName": "# Users (Past Year)"
+                        },
+                        {
+                            "field": {
+                                "Measure": {
+                                    "Expression": {
+                                        "SourceRef": {
+                                            "Entity": "Metrics"
+                                        }
+                                    },
+                                    "Property": "# Users last 14d"
+                                }
+                            },
+                            "queryRef": "Metrics.# Users last 14d",
+                            "nativeQueryRef": "# Users last 14d"
+                        },
+                        {
+                            "field": {
+                                "Measure": {
+                                    "Expression": {
+                                        "SourceRef": {
+                                            "Entity": "Metrics"
+                                        }
+                                    },
+                                    "Property": "# Users last 30d"
+                                }
+                            },
+                            "queryRef": "Metrics.# Users last 30d",
+                            "nativeQueryRef": "# Users last 30d"
+                        },
+                        {
+                            "field": {
+                                "Measure": {
+                                    "Expression": {
+                                        "SourceRef": {
+                                            "Entity": "Metrics"
+                                        }
+                                    },
+                                    "Property": "# Viewed Reports (Activities)"
+                                }
+                            },
+                            "queryRef": "Metrics.# Viewed Reports (Activities)",
+                            "nativeQueryRef": "# Total Viewed Reports",
+                            "displayName": "# Total Viewed Reports"
+                        },
+                        {
+                            "field": {
+                                "Measure": {
+                                    "Expression": {
+                                        "SourceRef": {
+                                            "Entity": "Metrics"
+                                        }
+                                    },
+                                    "Property": "# Viewed Reports 14d"
+                                }
+                            },
+                            "queryRef": "Metrics.# Viewed Reports 14d",
+                            "nativeQueryRef": "# Viewed Reports 14d"
+                        },
+                        {
+                            "field": {
+                                "Measure": {
+                                    "Expression": {
+                                        "SourceRef": {
+                                            "Entity": "Metrics"
+                                        }
+                                    },
+                                    "Property": "# Viewed Reports 30d"
+                                }
+                            },
+                            "queryRef": "Metrics.# Viewed Reports 30d",
+                            "nativeQueryRef": "# Viewed Reports 30d"
+                        },
+                        {
+                            "field": {
+                                "Measure": {
+                                    "Expression": {
+                                        "SourceRef": {
+                                            "Entity": "Metrics"
+                                        }
+                                    },
+                                    "Property": "# Activities"
+                                }
+                            },
+                            "queryRef": "Metrics.# Activities",
+                            "nativeQueryRef": "# Total Report Views",
+                            "displayName": "# Total Report Views"
+                        },
+                        {
+                            "field": {
+                                "Measure": {
+                                    "Expression": {
+                                        "SourceRef": {
+                                            "Entity": "Metrics"
+                                        }
+                                    },
+                                    "Property": "# Activities CM"
+                                }
+                            },
+                            "queryRef": "Metrics.# Activities CM",
+                            "nativeQueryRef": "# Report View (Current Month)",
+                            "displayName": "# Report View (Current Month)"
+                        },
+                        {
+                            "field": {
+                                "Measure": {
+                                    "Expression": {
+                                        "SourceRef": {
+                                            "Entity": "Metrics"
+                                        }
+                                    },
+                                    "Property": "# Activities PM"
+                                }
+                            },
+                            "queryRef": "Metrics.# Activities PM",
+                            "nativeQueryRef": "# Report Views (Past Month)",
+                            "displayName": "# Report Views (Past Month)"
+                        },
+                        {
+                            "field": {
+                                "Measure": {
+                                    "Expression": {
+                                        "SourceRef": {
+                                            "Entity": "Metrics"
+                                        }
+                                    },
+                                    "Property": "# Activities PY"
+                                }
+                            },
+                            "queryRef": "Metrics.# Activities PY",
+                            "nativeQueryRef": "# Report View (Past Year)",
+                            "displayName": "# Report View (Past Year)"
+                        }
+                    ]
+                }
+            },
+            "sortDefinition": {
+                "sort": [
+                    {
+                        "field": {
+                            "Measure": {
+                                "Expression": {
+                                    "SourceRef": {
+                                        "Entity": "Metrics"
+                                    }
+                                },
+                                "Property": "# Viewed Reports (Activities)"
+                            }
+                        },
+                        "direction": "Descending"
+                    }
+                ]
+            }
+        },
+        "expansionStates": [
+            {
+                "roles": [
+                    "Rows"
+                ],
+                "levels": [
+                    {
+                        "queryRefs": [
+                            "activities.CapacityName"
+                        ],
+                        "isCollapsed": true,
+                        "identityKeys": [
+                            {
+                                "Column": {
+                                    "Expression": {
+                                        "SourceRef": {
+                                            "Entity": "activities"
+                                        }
+                                    },
+                                    "Property": "CapacityName"
+                                }
+                            }
+                        ],
+                        "isPinned": true
+                    },
+                    {
+                        "queryRefs": [
+                            "activities.WorkSpaceName"
+                        ],
+                        "isCollapsed": true,
+                        "identityKeys": [
+                            {
+                                "Column": {
+                                    "Expression": {
+                                        "SourceRef": {
+                                            "Entity": "activities"
+                                        }
+                                    },
+                                    "Property": "WorkSpaceName"
+                                }
+                            }
+                        ],
+                        "isPinned": true
+                    },
+                    {
+                        "queryRefs": [
+                            "activities.ReportName"
+                        ],
+                        "isCollapsed": true,
+                        "identityKeys": [
+                            {
+                                "Column": {
+                                    "Expression": {
+                                        "SourceRef": {
+                                            "Entity": "activities"
+                                        }
+                                    },
+                                    "Property": "ReportName"
+                                }
+                            }
+                        ],
+                        "isPinned": true
+                    }
+                ],
+                "root": {}
+            }
+        ],
+        "objects": {
+            "grid": [
+                {
+                    "properties": {
+                        "rowPadding": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "6D"
+                                }
+                            }
+                        },
+                        "gridVertical": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "true"
+                                }
+                            }
+                        },
+                        "gridHorizontal": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "true"
+                                }
+                            }
+                        }
+                    }
+                }
+            ],
+            "columnHeaders": [
+                {
+                    "properties": {
+                        "fontFamily": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "'''Segoe UI Semibold'', wf_segoe-ui_semibold, helvetica, arial, sans-serif'"
+                                }
+                            }
+                        },
+                        "fontSize": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "9D"
+                                }
+                            }
+                        },
+                        "alignment": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "'Center'"
+                                }
+                            }
+                        },
+                        "backColor": {
+                            "solid": {
+                                "color": {
+                                    "expr": {
+                                        "Literal": {
+                                            "Value": "'#4DA492'"
+                                        }
+                                    }
+                                }
+                            }
+                        },
+                        "fontColor": {
+                            "solid": {
+                                "color": {
+                                    "expr": {
+                                        "ThemeDataColor": {
+                                            "ColorId": 0,
+                                            "Percent": 0
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            ],
+            "general": [
+                {
+                    "properties": {
+                        "layout": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "'Tabular'"
+                                }
+                            }
+                        }
+                    }
+                }
+            ],
+            "values": [
+                {
+                    "properties": {
+                        "fontSize": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "9D"
+                                }
+                            }
+                        },
+                        "backColorSecondary": {
+                            "solid": {
+                                "color": {
+                                    "expr": {
+                                        "ThemeDataColor": {
+                                            "ColorId": 0,
+                                            "Percent": 0
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            ],
+            "columnWidth": [
+                {
+                    "properties": {
+                        "value": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "173.67051155662728D"
+                                }
+                            }
+                        }
+                    },
+                    "selector": {
+                        "metadata": "activities.CapacityName"
+                    }
+                },
+                {
+                    "properties": {
+                        "value": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "344.4325927202212D"
+                                }
+                            }
+                        }
+                    },
+                    "selector": {
+                        "metadata": "activities.ReportName"
+                    }
+                },
+                {
+                    "properties": {
+                        "value": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "334.19900907858096D"
+                                }
+                            }
+                        }
+                    },
+                    "selector": {
+                        "metadata": "activities.WorkSpaceName"
+                    }
+                },
+                {
+                    "properties": {
+                        "value": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "101.03356199419187D"
+                                }
+                            }
+                        }
+                    },
+                    "selector": {
+                        "metadata": "Metrics.# Activities"
+                    }
+                },
+                {
+                    "properties": {
+                        "value": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "90.09000916543613D"
+                                }
+                            }
+                        }
+                    },
+                    "selector": {
+                        "metadata": "Metrics.# Users"
+                    }
+                },
+                {
+                    "properties": {
+                        "value": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "102.55017550975813D"
+                                }
+                            }
+                        }
+                    },
+                    "selector": {
+                        "metadata": "Metrics.# Users CM"
+                    }
+                },
+                {
+                    "properties": {
+                        "value": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "85.35501318228093D"
+                                }
+                            }
+                        }
+                    },
+                    "selector": {
+                        "metadata": "Metrics.# Users PM"
+                    }
+                },
+                {
+                    "properties": {
+                        "value": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "76.24829306097355D"
+                                }
+                            }
+                        }
+                    },
+                    "selector": {
+                        "metadata": "Metrics.# Users PY"
+                    }
+                },
+                {
+                    "properties": {
+                        "value": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "106.84829793523232D"
+                                }
+                            }
+                        }
+                    },
+                    "selector": {
+                        "metadata": "Metrics.# Activities CM"
+                    }
+                },
+                {
+                    "properties": {
+                        "value": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "109.73793103448276D"
+                                }
+                            }
+                        }
+                    },
+                    "selector": {
+                        "metadata": "Metrics.# Activities PM"
+                    }
+                },
+                {
+                    "properties": {
+                        "value": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "101.65518928559337D"
+                                }
+                            }
+                        }
+                    },
+                    "selector": {
+                        "metadata": "Metrics.# Activities PY"
+                    }
+                },
+                {
+                    "properties": {
+                        "value": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "94.31952324750083D"
+                                }
+                            }
+                        }
+                    },
+                    "selector": {
+                        "metadata": "Metrics.# Viewed Reports (Activities)"
+                    }
+                },
+                {
+                    "properties": {
+                        "value": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "80.57262598045995D"
+                                }
+                            }
+                        }
+                    },
+                    "selector": {
+                        "metadata": "Metrics.# Viewed Reports 14d"
+                    }
+                },
+                {
+                    "properties": {
+                        "value": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "84.92279394815559D"
+                                }
+                            }
+                        }
+                    },
+                    "selector": {
+                        "metadata": "Metrics.# Viewed Reports 30d"
+                    }
+                },
+                {
+                    "properties": {
+                        "value": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "75.04879126815553D"
+                                }
+                            }
+                        }
+                    },
+                    "selector": {
+                        "metadata": "Metrics.# Users last 14d"
+                    }
+                },
+                {
+                    "properties": {
+                        "value": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "76.04878899073859D"
+                                }
+                            }
+                        }
+                    },
+                    "selector": {
+                        "metadata": "Metrics.# Users last 30d"
+                    }
+                }
+            ],
+            "columnFormatting": [
+                {
+                    "properties": {
+                        "dataBars": {
+                            "positiveColor": {
+                                "solid": {
+                                    "color": {
+                                        "expr": {
+                                            "Literal": {
+                                                "Value": "'#7cb9b6'"
+                                            }
+                                        }
+                                    }
+                                }
+                            },
+                            "negativeColor": {
+                                "solid": {
+                                    "color": {
+                                        "expr": {
+                                            "Literal": {
+                                                "Value": "'minColor'"
+                                            }
+                                        }
+                                    }
+                                }
+                            },
+                            "axisColor": {
+                                "solid": {
+                                    "color": {
+                                        "expr": {
+                                            "Literal": {
+                                                "Value": "'foreground'"
+                                            }
+                                        }
+                                    }
+                                }
+                            },
+                            "reverseDirection": {
+                                "expr": {
+                                    "Literal": {
+                                        "Value": "false"
+                                    }
+                                }
+                            },
+                            "hideText": {
+                                "expr": {
+                                    "Literal": {
+                                        "Value": "false"
+                                    }
+                                }
+                            },
+                            "totalMatchingOption": {
+                                "expr": {
+                                    "Literal": {
+                                        "Value": "1L"
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "selector": {
+                        "metadata": "Metrics.# Activities"
+                    }
+                },
+                {
+                    "properties": {
+                        "styleSubtotals": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "false"
+                                }
+                            }
+                        },
+                        "styleValues": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "false"
+                                }
+                            }
+                        },
+                        "styleHeader": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "true"
+                                }
+                            }
+                        },
+                        "backColor": {
+                            "solid": {
+                                "color": {
+                                    "expr": {
+                                        "Literal": {
+                                            "Value": "'#5EA7B2'"
+                                        }
+                                    }
+                                }
+                            }
+                        },
+                        "dataBars": {
+                            "positiveColor": {
+                                "solid": {
+                                    "color": {
+                                        "expr": {
+                                            "Literal": {
+                                                "Value": "'#5EA7B2'"
+                                            }
+                                        }
+                                    }
+                                }
+                            },
+                            "negativeColor": {
+                                "solid": {
+                                    "color": {
+                                        "expr": {
+                                            "Literal": {
+                                                "Value": "'minColor'"
+                                            }
+                                        }
+                                    }
+                                }
+                            },
+                            "axisColor": {
+                                "solid": {
+                                    "color": {
+                                        "expr": {
+                                            "Literal": {
+                                                "Value": "'foreground'"
+                                            }
+                                        }
+                                    }
+                                }
+                            },
+                            "reverseDirection": {
+                                "expr": {
+                                    "Literal": {
+                                        "Value": "false"
+                                    }
+                                }
+                            },
+                            "hideText": {
+                                "expr": {
+                                    "Literal": {
+                                        "Value": "false"
+                                    }
+                                }
+                            },
+                            "totalMatchingOption": {
+                                "expr": {
+                                    "Literal": {
+                                        "Value": "1L"
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "selector": {
+                        "metadata": "Metrics.# Users"
+                    }
+                },
+                {
+                    "properties": {
+                        "backColor": {
+                            "solid": {
+                                "color": {
+                                    "expr": {
+                                        "Literal": {
+                                            "Value": "'#5EA7B2'"
+                                        }
+                                    }
+                                }
+                            }
+                        },
+                        "styleSubtotals": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "false"
+                                }
+                            }
+                        },
+                        "styleValues": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "false"
+                                }
+                            }
+                        },
+                        "styleHeader": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "true"
+                                }
+                            }
+                        },
+                        "dataBars": {
+                            "positiveColor": {
+                                "solid": {
+                                    "color": {
+                                        "expr": {
+                                            "Literal": {
+                                                "Value": "'#7DBEC8'"
+                                            }
+                                        }
+                                    }
+                                }
+                            },
+                            "negativeColor": {
+                                "solid": {
+                                    "color": {
+                                        "expr": {
+                                            "Literal": {
+                                                "Value": "'minColor'"
+                                            }
+                                        }
+                                    }
+                                }
+                            },
+                            "axisColor": {
+                                "solid": {
+                                    "color": {
+                                        "expr": {
+                                            "Literal": {
+                                                "Value": "'foreground'"
+                                            }
+                                        }
+                                    }
+                                }
+                            },
+                            "reverseDirection": {
+                                "expr": {
+                                    "Literal": {
+                                        "Value": "false"
+                                    }
+                                }
+                            },
+                            "hideText": {
+                                "expr": {
+                                    "Literal": {
+                                        "Value": "false"
+                                    }
+                                }
+                            },
+                            "totalMatchingOption": {
+                                "expr": {
+                                    "Literal": {
+                                        "Value": "1L"
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "selector": {
+                        "metadata": "Metrics.# Users CM"
+                    }
+                },
+                {
+                    "properties": {
+                        "styleSubtotals": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "false"
+                                }
+                            }
+                        },
+                        "styleValues": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "false"
+                                }
+                            }
+                        },
+                        "styleHeader": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "true"
+                                }
+                            }
+                        },
+                        "backColor": {
+                            "solid": {
+                                "color": {
+                                    "expr": {
+                                        "Literal": {
+                                            "Value": "'#5EA7B2'"
+                                        }
+                                    }
+                                }
+                            }
+                        },
+                        "dataBars": {
+                            "positiveColor": {
+                                "solid": {
+                                    "color": {
+                                        "expr": {
+                                            "Literal": {
+                                                "Value": "'#7DBEC8'"
+                                            }
+                                        }
+                                    }
+                                }
+                            },
+                            "negativeColor": {
+                                "solid": {
+                                    "color": {
+                                        "expr": {
+                                            "Literal": {
+                                                "Value": "'minColor'"
+                                            }
+                                        }
+                                    }
+                                }
+                            },
+                            "axisColor": {
+                                "solid": {
+                                    "color": {
+                                        "expr": {
+                                            "Literal": {
+                                                "Value": "'foreground'"
+                                            }
+                                        }
+                                    }
+                                }
+                            },
+                            "reverseDirection": {
+                                "expr": {
+                                    "Literal": {
+                                        "Value": "false"
+                                    }
+                                }
+                            },
+                            "hideText": {
+                                "expr": {
+                                    "Literal": {
+                                        "Value": "false"
+                                    }
+                                }
+                            },
+                            "totalMatchingOption": {
+                                "expr": {
+                                    "Literal": {
+                                        "Value": "1L"
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "selector": {
+                        "metadata": "Metrics.# Users PM"
+                    }
+                },
+                {
+                    "properties": {
+                        "styleSubtotals": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "false"
+                                }
+                            }
+                        },
+                        "styleValues": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "false"
+                                }
+                            }
+                        },
+                        "styleHeader": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "true"
+                                }
+                            }
+                        },
+                        "backColor": {
+                            "solid": {
+                                "color": {
+                                    "expr": {
+                                        "Literal": {
+                                            "Value": "'#5EA7B2'"
+                                        }
+                                    }
+                                }
+                            }
+                        },
+                        "dataBars": {
+                            "positiveColor": {
+                                "solid": {
+                                    "color": {
+                                        "expr": {
+                                            "Literal": {
+                                                "Value": "'#7DBEC8'"
+                                            }
+                                        }
+                                    }
+                                }
+                            },
+                            "negativeColor": {
+                                "solid": {
+                                    "color": {
+                                        "expr": {
+                                            "Literal": {
+                                                "Value": "'minColor'"
+                                            }
+                                        }
+                                    }
+                                }
+                            },
+                            "axisColor": {
+                                "solid": {
+                                    "color": {
+                                        "expr": {
+                                            "Literal": {
+                                                "Value": "'foreground'"
+                                            }
+                                        }
+                                    }
+                                }
+                            },
+                            "reverseDirection": {
+                                "expr": {
+                                    "Literal": {
+                                        "Value": "false"
+                                    }
+                                }
+                            },
+                            "hideText": {
+                                "expr": {
+                                    "Literal": {
+                                        "Value": "false"
+                                    }
+                                }
+                            },
+                            "totalMatchingOption": {
+                                "expr": {
+                                    "Literal": {
+                                        "Value": "1L"
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "selector": {
+                        "metadata": "Metrics.# Users PY"
+                    }
+                },
+                {
+                    "properties": {
+                        "backColor": {
+                            "solid": {
+                                "color": {
+                                    "expr": {
+                                        "Literal": {
+                                            "Value": "'#FFB568'"
+                                        }
+                                    }
+                                }
+                            }
+                        },
+                        "styleValues": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "false"
+                                }
+                            }
+                        },
+                        "styleHeader": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "true"
+                                }
+                            }
+                        },
+                        "styleSubtotals": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "false"
+                                }
+                            }
+                        },
+                        "dataBars": {
+                            "positiveColor": {
+                                "solid": {
+                                    "color": {
+                                        "expr": {
+                                            "Literal": {
+                                                "Value": "'#ffc88e'"
+                                            }
+                                        }
+                                    }
+                                }
+                            },
+                            "negativeColor": {
+                                "solid": {
+                                    "color": {
+                                        "expr": {
+                                            "Literal": {
+                                                "Value": "'minColor'"
+                                            }
+                                        }
+                                    }
+                                }
+                            },
+                            "axisColor": {
+                                "solid": {
+                                    "color": {
+                                        "expr": {
+                                            "Literal": {
+                                                "Value": "'foreground'"
+                                            }
+                                        }
+                                    }
+                                }
+                            },
+                            "reverseDirection": {
+                                "expr": {
+                                    "Literal": {
+                                        "Value": "false"
+                                    }
+                                }
+                            },
+                            "hideText": {
+                                "expr": {
+                                    "Literal": {
+                                        "Value": "false"
+                                    }
+                                }
+                            },
+                            "totalMatchingOption": {
+                                "expr": {
+                                    "Literal": {
+                                        "Value": "1L"
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "selector": {
+                        "metadata": "Metrics.# Viewed Reports (Activities)"
+                    }
+                },
+                {
+                    "properties": {
+                        "styleSubtotals": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "false"
+                                }
+                            }
+                        },
+                        "styleValues": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "false"
+                                }
+                            }
+                        },
+                        "styleHeader": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "true"
+                                }
+                            }
+                        },
+                        "backColor": {
+                            "solid": {
+                                "color": {
+                                    "expr": {
+                                        "Literal": {
+                                            "Value": "'#ffb568'"
+                                        }
+                                    }
+                                }
+                            }
+                        },
+                        "dataBars": {
+                            "positiveColor": {
+                                "solid": {
+                                    "color": {
+                                        "expr": {
+                                            "Literal": {
+                                                "Value": "'#ffdab3'"
+                                            }
+                                        }
+                                    }
+                                }
+                            },
+                            "negativeColor": {
+                                "solid": {
+                                    "color": {
+                                        "expr": {
+                                            "Literal": {
+                                                "Value": "'minColor'"
+                                            }
+                                        }
+                                    }
+                                }
+                            },
+                            "axisColor": {
+                                "solid": {
+                                    "color": {
+                                        "expr": {
+                                            "Literal": {
+                                                "Value": "'foreground'"
+                                            }
+                                        }
+                                    }
+                                }
+                            },
+                            "reverseDirection": {
+                                "expr": {
+                                    "Literal": {
+                                        "Value": "false"
+                                    }
+                                }
+                            },
+                            "hideText": {
+                                "expr": {
+                                    "Literal": {
+                                        "Value": "false"
+                                    }
+                                }
+                            },
+                            "totalMatchingOption": {
+                                "expr": {
+                                    "Literal": {
+                                        "Value": "1L"
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "selector": {
+                        "metadata": "Metrics.# Viewed Reports 14d"
+                    }
+                },
+                {
+                    "properties": {
+                        "styleValues": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "false"
+                                }
+                            }
+                        },
+                        "styleSubtotals": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "false"
+                                }
+                            }
+                        },
+                        "backColor": {
+                            "solid": {
+                                "color": {
+                                    "expr": {
+                                        "Literal": {
+                                            "Value": "'#ffb568'"
+                                        }
+                                    }
+                                }
+                            }
+                        },
+                        "styleHeader": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "true"
+                                }
+                            }
+                        },
+                        "dataBars": {
+                            "positiveColor": {
+                                "solid": {
+                                    "color": {
+                                        "expr": {
+                                            "Literal": {
+                                                "Value": "'#ffdab3'"
+                                            }
+                                        }
+                                    }
+                                }
+                            },
+                            "negativeColor": {
+                                "solid": {
+                                    "color": {
+                                        "expr": {
+                                            "Literal": {
+                                                "Value": "'minColor'"
+                                            }
+                                        }
+                                    }
+                                }
+                            },
+                            "axisColor": {
+                                "solid": {
+                                    "color": {
+                                        "expr": {
+                                            "Literal": {
+                                                "Value": "'foreground'"
+                                            }
+                                        }
+                                    }
+                                }
+                            },
+                            "reverseDirection": {
+                                "expr": {
+                                    "Literal": {
+                                        "Value": "false"
+                                    }
+                                }
+                            },
+                            "hideText": {
+                                "expr": {
+                                    "Literal": {
+                                        "Value": "false"
+                                    }
+                                }
+                            },
+                            "totalMatchingOption": {
+                                "expr": {
+                                    "Literal": {
+                                        "Value": "1L"
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "selector": {
+                        "metadata": "Metrics.# Viewed Reports 30d"
+                    }
+                },
+                {
+                    "properties": {
+                        "backColor": {
+                            "solid": {
+                                "color": {
+                                    "expr": {
+                                        "Literal": {
+                                            "Value": "'#5EA7B2'"
+                                        }
+                                    }
+                                }
+                            }
+                        },
+                        "styleValues": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "false"
+                                }
+                            }
+                        },
+                        "styleSubtotals": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "false"
+                                }
+                            }
+                        },
+                        "styleHeader": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "true"
+                                }
+                            }
+                        },
+                        "dataBars": {
+                            "positiveColor": {
+                                "solid": {
+                                    "color": {
+                                        "expr": {
+                                            "Literal": {
+                                                "Value": "'#7DBEC8'"
+                                            }
+                                        }
+                                    }
+                                }
+                            },
+                            "negativeColor": {
+                                "solid": {
+                                    "color": {
+                                        "expr": {
+                                            "Literal": {
+                                                "Value": "'minColor'"
+                                            }
+                                        }
+                                    }
+                                }
+                            },
+                            "axisColor": {
+                                "solid": {
+                                    "color": {
+                                        "expr": {
+                                            "Literal": {
+                                                "Value": "'foreground'"
+                                            }
+                                        }
+                                    }
+                                }
+                            },
+                            "reverseDirection": {
+                                "expr": {
+                                    "Literal": {
+                                        "Value": "false"
+                                    }
+                                }
+                            },
+                            "hideText": {
+                                "expr": {
+                                    "Literal": {
+                                        "Value": "false"
+                                    }
+                                }
+                            },
+                            "totalMatchingOption": {
+                                "expr": {
+                                    "Literal": {
+                                        "Value": "1L"
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "selector": {
+                        "metadata": "Metrics.# Users last 14d"
+                    }
+                },
+                {
+                    "properties": {
+                        "backColor": {
+                            "solid": {
+                                "color": {
+                                    "expr": {
+                                        "Literal": {
+                                            "Value": "'#5EA7B2'"
+                                        }
+                                    }
+                                }
+                            }
+                        },
+                        "styleValues": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "false"
+                                }
+                            }
+                        },
+                        "styleSubtotals": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "false"
+                                }
+                            }
+                        },
+                        "dataBars": {
+                            "positiveColor": {
+                                "solid": {
+                                    "color": {
+                                        "expr": {
+                                            "Literal": {
+                                                "Value": "'#7DBEC8'"
+                                            }
+                                        }
+                                    }
+                                }
+                            },
+                            "negativeColor": {
+                                "solid": {
+                                    "color": {
+                                        "expr": {
+                                            "Literal": {
+                                                "Value": "'minColor'"
+                                            }
+                                        }
+                                    }
+                                }
+                            },
+                            "axisColor": {
+                                "solid": {
+                                    "color": {
+                                        "expr": {
+                                            "Literal": {
+                                                "Value": "'foreground'"
+                                            }
+                                        }
+                                    }
+                                }
+                            },
+                            "reverseDirection": {
+                                "expr": {
+                                    "Literal": {
+                                        "Value": "false"
+                                    }
+                                }
+                            },
+                            "hideText": {
+                                "expr": {
+                                    "Literal": {
+                                        "Value": "false"
+                                    }
+                                }
+                            },
+                            "totalMatchingOption": {
+                                "expr": {
+                                    "Literal": {
+                                        "Value": "1L"
+                                    }
+                                }
+                            }
+                        },
+                        "styleHeader": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "true"
+                                }
+                            }
+                        }
+                    },
+                    "selector": {
+                        "metadata": "Metrics.# Users last 30d"
+                    }
+                },
+                {
+                    "properties": {
+                        "dataBars": {
+                            "positiveColor": {
+                                "solid": {
+                                    "color": {
+                                        "expr": {
+                                            "Literal": {
+                                                "Value": "'#a7d0ce'"
+                                            }
+                                        }
+                                    }
+                                }
+                            },
+                            "negativeColor": {
+                                "solid": {
+                                    "color": {
+                                        "expr": {
+                                            "Literal": {
+                                                "Value": "'minColor'"
+                                            }
+                                        }
+                                    }
+                                }
+                            },
+                            "axisColor": {
+                                "solid": {
+                                    "color": {
+                                        "expr": {
+                                            "Literal": {
+                                                "Value": "'foreground'"
+                                            }
+                                        }
+                                    }
+                                }
+                            },
+                            "reverseDirection": {
+                                "expr": {
+                                    "Literal": {
+                                        "Value": "false"
+                                    }
+                                }
+                            },
+                            "hideText": {
+                                "expr": {
+                                    "Literal": {
+                                        "Value": "false"
+                                    }
+                                }
+                            },
+                            "totalMatchingOption": {
+                                "expr": {
+                                    "Literal": {
+                                        "Value": "1L"
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "selector": {
+                        "metadata": "Metrics.# Activities CM"
+                    }
+                },
+                {
+                    "properties": {
+                        "dataBars": {
+                            "positiveColor": {
+                                "solid": {
+                                    "color": {
+                                        "expr": {
+                                            "Literal": {
+                                                "Value": "'#a7d0ce'"
+                                            }
+                                        }
+                                    }
+                                }
+                            },
+                            "negativeColor": {
+                                "solid": {
+                                    "color": {
+                                        "expr": {
+                                            "Literal": {
+                                                "Value": "'minColor'"
+                                            }
+                                        }
+                                    }
+                                }
+                            },
+                            "axisColor": {
+                                "solid": {
+                                    "color": {
+                                        "expr": {
+                                            "Literal": {
+                                                "Value": "'foreground'"
+                                            }
+                                        }
+                                    }
+                                }
+                            },
+                            "reverseDirection": {
+                                "expr": {
+                                    "Literal": {
+                                        "Value": "false"
+                                    }
+                                }
+                            },
+                            "hideText": {
+                                "expr": {
+                                    "Literal": {
+                                        "Value": "false"
+                                    }
+                                }
+                            },
+                            "totalMatchingOption": {
+                                "expr": {
+                                    "Literal": {
+                                        "Value": "1L"
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "selector": {
+                        "metadata": "Metrics.# Activities PM"
+                    }
+                },
+                {
+                    "properties": {
+                        "dataBars": {
+                            "positiveColor": {
+                                "solid": {
+                                    "color": {
+                                        "expr": {
+                                            "Literal": {
+                                                "Value": "'#a7d0ce'"
+                                            }
+                                        }
+                                    }
+                                }
+                            },
+                            "negativeColor": {
+                                "solid": {
+                                    "color": {
+                                        "expr": {
+                                            "Literal": {
+                                                "Value": "'minColor'"
+                                            }
+                                        }
+                                    }
+                                }
+                            },
+                            "axisColor": {
+                                "solid": {
+                                    "color": {
+                                        "expr": {
+                                            "Literal": {
+                                                "Value": "'foreground'"
+                                            }
+                                        }
+                                    }
+                                }
+                            },
+                            "reverseDirection": {
+                                "expr": {
+                                    "Literal": {
+                                        "Value": "false"
+                                    }
+                                }
+                            },
+                            "hideText": {
+                                "expr": {
+                                    "Literal": {
+                                        "Value": "false"
+                                    }
+                                }
+                            },
+                            "totalMatchingOption": {
+                                "expr": {
+                                    "Literal": {
+                                        "Value": "1L"
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "selector": {
+                        "metadata": "Metrics.# Activities PY"
+                    }
+                }
+            ],
+            "subTotals": [
+                {
+                    "properties": {
+                        "perRowLevel": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "false"
+                                }
+                            }
+                        }
+                    }
+                },
+                {
+                    "properties": {
+                        "levelSubtotalEnabled": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "false"
+                                }
+                            }
+                        }
+                    },
+                    "selector": {
+                        "metadata": "activities.CapacityName"
+                    }
+                }
+            ],
+            "rowHeaders": [
+                {
+                    "properties": {
+                        "repeatRowHeaders": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "false"
+                                }
+                            }
+                        }
+                    }
+                }
+            ]
+        },
+        "visualContainerObjects": {
+            "title": [
+                {
+                    "properties": {
+                        "show": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "true"
+                                }
+                            }
+                        },
+                        "text": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "'Report Usage'"
+                                }
+                            }
+                        },
+                        "fontSize": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "12D"
+                                }
+                            }
+                        }
+                    }
+                }
+            ],
+            "border": [
+                {
+                    "properties": {
+                        "show": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "true"
+                                }
+                            }
+                        },
+                        "color": {
+                            "solid": {
+                                "color": {
+                                    "expr": {
+                                        "ThemeDataColor": {
+                                            "ColorId": 0,
+                                            "Percent": 0
+                                        }
+                                    }
+                                }
+                            }
+                        },
+                        "radius": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "5D"
+                                }
+                            }
+                        }
+                    }
+                }
+            ],
+            "dropShadow": [
+                {
+                    "properties": {
+                        "show": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "true"
+                                }
+                            }
+                        },
+                        "color": {
+                            "solid": {
+                                "color": {
+                                    "expr": {
+                                        "ThemeDataColor": {
+                                            "ColorId": 0,
+                                            "Percent": -0.1
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            ],
+            "background": [
+                {
+                    "properties": {
+                        "show": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "true"
+                                }
+                            }
+                        }
+                    }
+                }
+            ],
+            "subTitle": [
+                {
+                    "properties": {
+                        "show": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "true"
+                                }
+                            }
+                        },
+                        "text": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "'Info: It shows Capacities, Workspaces, Items historical names based on the Activity Date | It also shows activities from deleted items'"
+                                }
+                            }
+                        },
+                        "titleWrap": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "true"
+                                }
+                            }
+                        }
+                    }
+                }
+            ],
+            "divider": [
+                {
+                    "properties": {
+                        "show": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "false"
+                                }
+                            }
+                        }
+                    }
+                }
+            ]
+        },
+        "drillFilterOtherVisuals": true
+    },
+    "filterConfig": {
+        "filters": [
+            {
+                "name": "Filtercf934ff47a863e85571a",
+                "ordinal": 0,
+                "field": {
+                    "Measure": {
+                        "Expression": {
+                            "SourceRef": {
+                                "Entity": "Metrics"
+                            }
+                        },
+                        "Property": "# Refreshable Items"
+                    }
+                },
+                "type": "Advanced",
+                "howCreated": "User"
+            },
+            {
+                "name": "e53a93ad91acca000d06",
+                "ordinal": 1,
+                "field": {
+                    "Column": {
+                        "Expression": {
+                            "SourceRef": {
+                                "Entity": "activities"
+                            }
+                        },
+                        "Property": "CapacityName"
+                    }
+                },
+                "type": "Categorical"
+            },
+            {
+                "name": "9e8be05ca15aa96c41bb",
+                "ordinal": 2,
+                "field": {
+                    "Column": {
+                        "Expression": {
+                            "SourceRef": {
+                                "Entity": "activities"
+                            }
+                        },
+                        "Property": "ReportName"
+                    }
+                },
+                "type": "Categorical"
+            },
+            {
+                "name": "78790d5f6dd996b0ca64",
+                "ordinal": 3,
+                "field": {
+                    "Measure": {
+                        "Expression": {
+                            "SourceRef": {
+                                "Entity": "Metrics"
+                            }
+                        },
+                        "Property": "# Activities"
+                    }
+                },
+                "type": "Advanced"
+            },
+            {
+                "name": "105b21d4e0c9e36000e2",
+                "ordinal": 4,
+                "field": {
+                    "Measure": {
+                        "Expression": {
+                            "SourceRef": {
+                                "Entity": "Metrics"
+                            }
+                        },
+                        "Property": "# Users"
+                    }
+                },
+                "type": "Advanced"
+            },
+            {
+                "name": "c1db15e1dc08cc0c01ab",
+                "ordinal": 5,
+                "field": {
+                    "Column": {
+                        "Expression": {
+                            "SourceRef": {
+                                "Entity": "activities"
+                            }
+                        },
+                        "Property": "WorkSpaceName"
+                    }
+                },
+                "type": "Categorical"
+            },
+            {
+                "name": "884e44fab3d25a22b405",
+                "ordinal": 6,
+                "field": {
+                    "Measure": {
+                        "Expression": {
+                            "SourceRef": {
+                                "Entity": "Metrics"
+                            }
+                        },
+                        "Property": "# Users CM"
+                    }
+                },
+                "type": "Advanced"
+            },
+            {
+                "name": "02e6643737debb1b96d2",
+                "ordinal": 7,
+                "field": {
+                    "Measure": {
+                        "Expression": {
+                            "SourceRef": {
+                                "Entity": "Metrics"
+                            }
+                        },
+                        "Property": "# Users PM"
+                    }
+                },
+                "type": "Advanced"
+            },
+            {
+                "name": "798d94b6696229cbb023",
+                "ordinal": 8,
+                "field": {
+                    "Measure": {
+                        "Expression": {
+                            "SourceRef": {
+                                "Entity": "Metrics"
+                            }
+                        },
+                        "Property": "# Users PY"
+                    }
+                },
+                "type": "Advanced"
+            },
+            {
+                "name": "f9c8b7bc8891c6bb025b",
+                "ordinal": 9,
+                "field": {
+                    "Measure": {
+                        "Expression": {
+                            "SourceRef": {
+                                "Entity": "Metrics"
+                            }
+                        },
+                        "Property": "# Activities CM"
+                    }
+                },
+                "type": "Advanced"
+            },
+            {
+                "name": "ac6d91c4b2d79bb6d980",
+                "ordinal": 10,
+                "field": {
+                    "Measure": {
+                        "Expression": {
+                            "SourceRef": {
+                                "Entity": "Metrics"
+                            }
+                        },
+                        "Property": "# Activities PM"
+                    }
+                },
+                "type": "Advanced"
+            },
+            {
+                "name": "52f2ed16b02954901ac4",
+                "ordinal": 11,
+                "field": {
+                    "Measure": {
+                        "Expression": {
+                            "SourceRef": {
+                                "Entity": "Metrics"
+                            }
+                        },
+                        "Property": "# Activities PY"
+                    }
+                },
+                "type": "Advanced"
+            },
+            {
+                "name": "922eebc0e96ebea0988b",
+                "ordinal": 12,
+                "field": {
+                    "Measure": {
+                        "Expression": {
+                            "SourceRef": {
+                                "Entity": "Metrics"
+                            }
+                        },
+                        "Property": "# Viewed Reports (Activities)"
+                    }
+                },
+                "type": "Advanced"
+            }
+        ],
+        "filterSortOrder": "Custom"
+    }
+}

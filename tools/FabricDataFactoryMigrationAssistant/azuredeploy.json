@@ -1,0 +1,99 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "name": {
+      "type": "string",
+      "defaultValue": "pipeline-fabric-upgrader",
+      "metadata": {
+        "description": "Name of the Static Web App"
+      }
+    },
+    "location": {
+      "type": "string",
+      "defaultValue": "[resourceGroup().location]",
+      "allowedValues": [
+        "westus2",
+        "centralus",
+        "eastus2",
+        "westeurope",
+        "eastasia"
+      ],
+      "metadata": {
+        "description": "Location for the Static Web App"
+      }
+    },
+    "sku": {
+      "type": "string",
+      "defaultValue": "Free",
+      "allowedValues": [
+        "Free",
+        "Standard"
+      ],
+      "metadata": {
+        "description": "SKU for the Static Web App"
+      }
+    },
+    "repositoryUrl": {
+      "type": "string",
+      "defaultValue": "https://github.com/Mirabile-S/PipelineToFabricUpgrader",
+      "metadata": {
+        "description": "GitHub repository URL"
+      }
+    },
+    "branch": {
+      "type": "string",
+      "defaultValue": "main",
+      "metadata": {
+        "description": "Branch to deploy from"
+      }
+    },
+    "repositoryToken": {
+      "type": "securestring",
+      "metadata": {
+        "description": "GitHub Personal Access Token with repo permissions"
+      }
+    }
+  },
+  "variables": {
+    "staticWebAppName": "[parameters('name')]"
+  },
+  "resources": [
+    {
+      "type": "Microsoft.Web/staticSites",
+      "apiVersion": "2022-09-01",
+      "name": "[variables('staticWebAppName')]",
+      "location": "[parameters('location')]",
+      "sku": {
+        "name": "[parameters('sku')]",
+        "tier": "[parameters('sku')]"
+      },
+      "properties": {
+        "repositoryUrl": "[parameters('repositoryUrl')]",
+        "branch": "[parameters('branch')]",
+        "repositoryToken": "[parameters('repositoryToken')]",
+        "buildProperties": {
+          "appLocation": "/",
+          "apiLocation": "",
+          "outputLocation": "dist",
+          "appBuildCommand": "npm run build",
+          "apiBuildCommand": ""
+        },
+        "stagingEnvironmentPolicy": "Enabled",
+        "allowConfigFileUpdates": true,
+        "provider": "GitHub",
+        "enterpriseGradeCdnStatus": "Disabled"
+      }
+    }
+  ],
+  "outputs": {
+    "staticWebAppUrl": {
+      "type": "string",
+      "value": "[concat('https://', reference(resourceId('Microsoft.Web/staticSites', variables('staticWebAppName'))).defaultHostname)]"
+    },
+    "staticWebAppId": {
+      "type": "string",
+      "value": "[resourceId('Microsoft.Web/staticSites', variables('staticWebAppName'))]"
+    }
+  }
+}

@@ -1,0 +1,1173 @@
+{
+    "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.5.0/schema.json",
+    "name": "3da0df8015e0871bfdc8",
+    "position": {
+        "x": 1200,
+        "y": 1503.448275862069,
+        "z": 21000,
+        "height": 679.3103448275863,
+        "width": 693.1034482758621,
+        "tabOrder": 22000
+    },
+    "visual": {
+        "visualType": "pivotTable",
+        "query": {
+            "queryState": {
+                "Columns": {
+                    "projections": [
+                        {
+                            "field": {
+                                "Column": {
+                                    "Expression": {
+                                        "SourceRef": {
+                                            "Entity": "semantic_model_analyzer_runs"
+                                        }
+                                    },
+                                    "Property": "RunName"
+                                }
+                            },
+                            "queryRef": "semantic_model_analyzer_runs.RunName",
+                            "nativeQueryRef": "RunName",
+                            "active": true
+                        }
+                    ]
+                },
+                "Rows": {
+                    "projections": [
+                        {
+                            "field": {
+                                "Column": {
+                                    "Expression": {
+                                        "SourceRef": {
+                                            "Entity": "semantic_model_vertipaq_tables"
+                                        }
+                                    },
+                                    "Property": "Name"
+                                }
+                            },
+                            "queryRef": "semantic_model_vertipaq_tables.Name",
+                            "nativeQueryRef": "Table Name",
+                            "active": true,
+                            "displayName": "Table Name"
+                        }
+                    ]
+                },
+                "Values": {
+                    "projections": [
+                        {
+                            "field": {
+                                "Measure": {
+                                    "Expression": {
+                                        "SourceRef": {
+                                            "Entity": "Metrics"
+                                        }
+                                    },
+                                    "Property": "Partitions (table)"
+                                }
+                            },
+                            "queryRef": "Metrics.Partitions (table)",
+                            "nativeQueryRef": "Partitions",
+                            "displayName": "Partitions"
+                        },
+                        {
+                            "field": {
+                                "Measure": {
+                                    "Expression": {
+                                        "SourceRef": {
+                                            "Entity": "Metrics"
+                                        }
+                                    },
+                                    "Property": "Rows (table)"
+                                }
+                            },
+                            "queryRef": "Metrics.Rows (table)",
+                            "nativeQueryRef": "Rows",
+                            "displayName": "Rows"
+                        },
+                        {
+                            "field": {
+                                "Measure": {
+                                    "Expression": {
+                                        "SourceRef": {
+                                            "Entity": "Metrics"
+                                        }
+                                    },
+                                    "Property": "Columns (table)"
+                                }
+                            },
+                            "queryRef": "Metrics.Columns (table)",
+                            "nativeQueryRef": "Columns",
+                            "displayName": "Columns"
+                        },
+                        {
+                            "field": {
+                                "Measure": {
+                                    "Expression": {
+                                        "SourceRef": {
+                                            "Entity": "Metrics"
+                                        }
+                                    },
+                                    "Property": "Total Size (table)"
+                                }
+                            },
+                            "queryRef": "Metrics.Total Size (table)",
+                            "nativeQueryRef": "Total Size",
+                            "displayName": "Total Size"
+                        },
+                        {
+                            "field": {
+                                "Measure": {
+                                    "Expression": {
+                                        "SourceRef": {
+                                            "Entity": "Metrics"
+                                        }
+                                    },
+                                    "Property": "Data Size (table)"
+                                }
+                            },
+                            "queryRef": "Metrics.Data Size (table)",
+                            "nativeQueryRef": "Data Size",
+                            "displayName": "Data Size"
+                        },
+                        {
+                            "field": {
+                                "Measure": {
+                                    "Expression": {
+                                        "SourceRef": {
+                                            "Entity": "Metrics"
+                                        }
+                                    },
+                                    "Property": "Dictionary Size (table)"
+                                }
+                            },
+                            "queryRef": "Metrics.Dictionary Size (table)",
+                            "nativeQueryRef": "Dictionary Size",
+                            "displayName": "Dictionary Size"
+                        },
+                        {
+                            "field": {
+                                "Measure": {
+                                    "Expression": {
+                                        "SourceRef": {
+                                            "Entity": "Metrics"
+                                        }
+                                    },
+                                    "Property": "Hierarcy Size (table)"
+                                }
+                            },
+                            "queryRef": "Metrics.Hierarcy Size (table)",
+                            "nativeQueryRef": "Hierarcy Size",
+                            "displayName": "Hierarcy Size"
+                        },
+                        {
+                            "field": {
+                                "Measure": {
+                                    "Expression": {
+                                        "SourceRef": {
+                                            "Entity": "Metrics"
+                                        }
+                                    },
+                                    "Property": "User Hierarchy Size (table)"
+                                }
+                            },
+                            "queryRef": "Metrics.User Hierarchy Size (table)",
+                            "nativeQueryRef": "User Hierarchy Size",
+                            "displayName": "User Hierarchy Size"
+                        },
+                        {
+                            "field": {
+                                "Measure": {
+                                    "Expression": {
+                                        "SourceRef": {
+                                            "Entity": "Metrics"
+                                        }
+                                    },
+                                    "Property": "Relationship Size (table)"
+                                }
+                            },
+                            "queryRef": "Metrics.Relationship Size (table)",
+                            "nativeQueryRef": "Relationship Size",
+                            "displayName": "Relationship Size"
+                        },
+                        {
+                            "field": {
+                                "Aggregation": {
+                                    "Expression": {
+                                        "Column": {
+                                            "Expression": {
+                                                "SourceRef": {
+                                                    "Entity": "semantic_model_vertipaq_tables"
+                                                }
+                                            },
+                                            "Property": "PercentageOfDB"
+                                        }
+                                    },
+                                    "Function": 0
+                                }
+                            },
+                            "queryRef": "Sum(semantic_model_vertipaq_tables.PercentageOfDB)",
+                            "nativeQueryRef": "% of Model",
+                            "displayName": "% of Model"
+                        }
+                    ]
+                }
+            },
+            "sortDefinition": {
+                "sort": [
+                    {
+                        "field": {
+                            "Measure": {
+                                "Expression": {
+                                    "SourceRef": {
+                                        "Entity": "Metrics"
+                                    }
+                                },
+                                "Property": "Rows (table)"
+                            }
+                        },
+                        "direction": "Descending"
+                    }
+                ]
+            }
+        },
+        "expansionStates": [
+            {
+                "roles": [
+                    "Rows"
+                ],
+                "levels": [
+                    {
+                        "queryRefs": [
+                            "semantic_model_vertipaq_tables.Name"
+                        ],
+                        "isCollapsed": true,
+                        "isPinned": true
+                    }
+                ],
+                "root": {}
+            }
+        ],
+        "objects": {
+            "columnHeaders": [
+                {
+                    "properties": {
+                        "fontFamily": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "'''Segoe UI Semibold'', wf_segoe-ui_semibold, helvetica, arial, sans-serif'"
+                                }
+                            }
+                        },
+                        "backColor": {
+                            "solid": {
+                                "color": {
+                                    "expr": {
+                                        "ThemeDataColor": {
+                                            "ColorId": 5,
+                                            "Percent": -0.5
+                                        }
+                                    }
+                                }
+                            }
+                        },
+                        "fontColor": {
+                            "solid": {
+                                "color": {
+                                    "expr": {
+                                        "ThemeDataColor": {
+                                            "ColorId": 0,
+                                            "Percent": 0
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            ],
+            "grid": [
+                {
+                    "properties": {
+                        "gridVertical": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "true"
+                                }
+                            }
+                        },
+                        "rowPadding": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "7D"
+                                }
+                            }
+                        },
+                        "gridHorizontal": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "true"
+                                }
+                            }
+                        },
+                        "outlineColor": {
+                            "solid": {
+                                "color": {
+                                    "expr": {
+                                        "ThemeDataColor": {
+                                            "ColorId": 0,
+                                            "Percent": -0.5
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            ],
+            "values": [
+                {
+                    "properties": {
+                        "backColorSecondary": {
+                            "solid": {
+                                "color": {
+                                    "expr": {
+                                        "Literal": {
+                                            "Value": "'#F5F6F5'"
+                                        }
+                                    }
+                                }
+                            }
+                        },
+                        "urlIcon": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "true"
+                                }
+                            }
+                        },
+                        "fontFamily": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "'''Segoe UI Semibold'', wf_segoe-ui_semibold, helvetica, arial, sans-serif'"
+                                }
+                            }
+                        },
+                        "valuesOnRow": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "true"
+                                }
+                            }
+                        }
+                    }
+                }
+            ],
+            "general": [
+                {
+                    "properties": {
+                        "layout": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "'Tabular'"
+                                }
+                            }
+                        }
+                    }
+                }
+            ],
+            "total": [
+                {
+                    "properties": {}
+                }
+            ],
+            "subTotals": [
+                {
+                    "properties": {
+                        "rowSubtotals": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "false"
+                                }
+                            }
+                        },
+                        "columnSubtotals": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "false"
+                                }
+                            }
+                        }
+                    }
+                }
+            ],
+            "rowTotal": [
+                {
+                    "properties": {
+                        "applyToHeaders": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "false"
+                                }
+                            }
+                        }
+                    }
+                }
+            ],
+            "columnFormatting": [
+                {
+                    "properties": {
+                        "dataBars": {
+                            "positiveColor": {
+                                "solid": {
+                                    "color": {
+                                        "expr": {
+                                            "Literal": {
+                                                "Value": "'#ffc88e'"
+                                            }
+                                        }
+                                    }
+                                }
+                            },
+                            "negativeColor": {
+                                "solid": {
+                                    "color": {
+                                        "expr": {
+                                            "Literal": {
+                                                "Value": "'minColor'"
+                                            }
+                                        }
+                                    }
+                                }
+                            },
+                            "axisColor": {
+                                "solid": {
+                                    "color": {
+                                        "expr": {
+                                            "Literal": {
+                                                "Value": "'foreground'"
+                                            }
+                                        }
+                                    }
+                                }
+                            },
+                            "reverseDirection": {
+                                "expr": {
+                                    "Literal": {
+                                        "Value": "false"
+                                    }
+                                }
+                            },
+                            "hideText": {
+                                "expr": {
+                                    "Literal": {
+                                        "Value": "false"
+                                    }
+                                }
+                            },
+                            "totalMatchingOption": {
+                                "expr": {
+                                    "Literal": {
+                                        "Value": "1L"
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "selector": {
+                        "metadata": "Metrics.Rows (table)"
+                    }
+                },
+                {
+                    "properties": {
+                        "dataBars": {
+                            "positiveColor": {
+                                "solid": {
+                                    "color": {
+                                        "expr": {
+                                            "Literal": {
+                                                "Value": "'#e3bff2'"
+                                            }
+                                        }
+                                    }
+                                }
+                            },
+                            "negativeColor": {
+                                "solid": {
+                                    "color": {
+                                        "expr": {
+                                            "Literal": {
+                                                "Value": "'minColor'"
+                                            }
+                                        }
+                                    }
+                                }
+                            },
+                            "axisColor": {
+                                "solid": {
+                                    "color": {
+                                        "expr": {
+                                            "Literal": {
+                                                "Value": "'foreground'"
+                                            }
+                                        }
+                                    }
+                                }
+                            },
+                            "reverseDirection": {
+                                "expr": {
+                                    "Literal": {
+                                        "Value": "false"
+                                    }
+                                }
+                            },
+                            "hideText": {
+                                "expr": {
+                                    "Literal": {
+                                        "Value": "false"
+                                    }
+                                }
+                            },
+                            "totalMatchingOption": {
+                                "expr": {
+                                    "Literal": {
+                                        "Value": "1L"
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "selector": {
+                        "metadata": "Metrics.Total Size (table)"
+                    }
+                },
+                {
+                    "properties": {
+                        "dataBars": {
+                            "positiveColor": {
+                                "solid": {
+                                    "color": {
+                                        "expr": {
+                                            "Literal": {
+                                                "Value": "'#b1cbf7'"
+                                            }
+                                        }
+                                    }
+                                }
+                            },
+                            "negativeColor": {
+                                "solid": {
+                                    "color": {
+                                        "expr": {
+                                            "Literal": {
+                                                "Value": "'minColor'"
+                                            }
+                                        }
+                                    }
+                                }
+                            },
+                            "axisColor": {
+                                "solid": {
+                                    "color": {
+                                        "expr": {
+                                            "Literal": {
+                                                "Value": "'foreground'"
+                                            }
+                                        }
+                                    }
+                                }
+                            },
+                            "reverseDirection": {
+                                "expr": {
+                                    "Literal": {
+                                        "Value": "false"
+                                    }
+                                }
+                            },
+                            "hideText": {
+                                "expr": {
+                                    "Literal": {
+                                        "Value": "false"
+                                    }
+                                }
+                            },
+                            "totalMatchingOption": {
+                                "expr": {
+                                    "Literal": {
+                                        "Value": "1L"
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "selector": {
+                        "metadata": "Sum(semantic_model_vertipaq_tables.PercentageOfDB)"
+                    }
+                }
+            ]
+        },
+        "visualContainerObjects": {
+            "title": [
+                {
+                    "properties": {
+                        "show": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "true"
+                                }
+                            }
+                        },
+                        "text": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "'Table level Memory Analyzer Results over Runs'"
+                                }
+                            }
+                        },
+                        "fontSize": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "12D"
+                                }
+                            }
+                        }
+                    }
+                }
+            ],
+            "border": [
+                {
+                    "properties": {
+                        "show": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "true"
+                                }
+                            }
+                        },
+                        "radius": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "5D"
+                                }
+                            }
+                        }
+                    }
+                }
+            ],
+            "dropShadow": [
+                {
+                    "properties": {
+                        "show": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "true"
+                                }
+                            }
+                        },
+                        "color": {
+                            "solid": {
+                                "color": {
+                                    "expr": {
+                                        "ThemeDataColor": {
+                                            "ColorId": 0,
+                                            "Percent": -0.1
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            ],
+            "subTitle": [
+                {
+                    "properties": {
+                        "show": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "true"
+                                }
+                            }
+                        }
+                    }
+                }
+            ]
+        },
+        "drillFilterOtherVisuals": true
+    },
+    "filterConfig": {
+        "filters": [
+            {
+                "name": "bb14eaf9b6d839bbcb17",
+                "ordinal": 0,
+                "field": {
+                    "Column": {
+                        "Expression": {
+                            "SourceRef": {
+                                "Entity": "semantic_models"
+                            }
+                        },
+                        "Property": "Name"
+                    }
+                },
+                "type": "Categorical",
+                "howCreated": "User"
+            },
+            {
+                "name": "6b0e6fe998399de74fcf",
+                "ordinal": 1,
+                "field": {
+                    "Column": {
+                        "Expression": {
+                            "SourceRef": {
+                                "Entity": "semantic_model_analyzer_runs"
+                            }
+                        },
+                        "Property": "RunName"
+                    }
+                },
+                "type": "Categorical"
+            },
+            {
+                "name": "95aa2502251d22fd1d12",
+                "ordinal": 2,
+                "field": {
+                    "Column": {
+                        "Expression": {
+                            "SourceRef": {
+                                "Entity": "semantic_models"
+                            }
+                        },
+                        "Property": "ContentProviderType"
+                    }
+                },
+                "type": "Categorical",
+                "howCreated": "User"
+            },
+            {
+                "name": "d1d83ef72ba622259623",
+                "ordinal": 3,
+                "field": {
+                    "Column": {
+                        "Expression": {
+                            "SourceRef": {
+                                "Entity": "semantic_models"
+                            }
+                        },
+                        "Property": "StorageMode"
+                    }
+                },
+                "type": "Categorical",
+                "howCreated": "User"
+            },
+            {
+                "name": "3eb13a032d34b290df41",
+                "ordinal": 4,
+                "field": {
+                    "Measure": {
+                        "Expression": {
+                            "SourceRef": {
+                                "Entity": "Metrics"
+                            }
+                        },
+                        "Property": "BPA Violations"
+                    }
+                },
+                "type": "Advanced",
+                "howCreated": "User"
+            },
+            {
+                "name": "0baf9b6d30fa97af2171",
+                "ordinal": 5,
+                "field": {
+                    "Column": {
+                        "Expression": {
+                            "SourceRef": {
+                                "Entity": "semantic_model_analyzer_runs"
+                            }
+                        },
+                        "Property": "AnalyzerMode"
+                    }
+                },
+                "type": "Categorical",
+                "howCreated": "User",
+                "objects": {
+                    "general": [
+                        {
+                            "properties": {}
+                        }
+                    ]
+                }
+            },
+            {
+                "name": "454406a2c348c2578b97",
+                "ordinal": 6,
+                "field": {
+                    "Measure": {
+                        "Expression": {
+                            "SourceRef": {
+                                "Entity": "Metrics"
+                            }
+                        },
+                        "Property": "Total Size (model)"
+                    }
+                },
+                "type": "Advanced",
+                "howCreated": "User"
+            },
+            {
+                "name": "fbfd9429dacc0d637172",
+                "ordinal": 7,
+                "field": {
+                    "Column": {
+                        "Expression": {
+                            "SourceRef": {
+                                "Entity": "semantic_models"
+                            }
+                        },
+                        "Property": "CreatedDate"
+                    }
+                },
+                "type": "Categorical",
+                "howCreated": "User"
+            },
+            {
+                "name": "f833baaf38532633f4dd",
+                "ordinal": 8,
+                "field": {
+                    "Measure": {
+                        "Expression": {
+                            "SourceRef": {
+                                "Entity": "Metrics"
+                            }
+                        },
+                        "Property": "Data Size (model)"
+                    }
+                },
+                "type": "Advanced",
+                "howCreated": "User"
+            },
+            {
+                "name": "19424da21a48b05fdeda",
+                "ordinal": 9,
+                "field": {
+                    "Measure": {
+                        "Expression": {
+                            "SourceRef": {
+                                "Entity": "Metrics"
+                            }
+                        },
+                        "Property": "Dictionary Size (model)"
+                    }
+                },
+                "type": "Advanced",
+                "howCreated": "User"
+            },
+            {
+                "name": "0aafd71abd03b1a46d59",
+                "ordinal": 10,
+                "field": {
+                    "Measure": {
+                        "Expression": {
+                            "SourceRef": {
+                                "Entity": "Metrics"
+                            }
+                        },
+                        "Property": "Hierarchy Size (model)"
+                    }
+                },
+                "type": "Advanced",
+                "howCreated": "User"
+            },
+            {
+                "name": "7c50c7bc66d9a6aee853",
+                "ordinal": 11,
+                "field": {
+                    "Measure": {
+                        "Expression": {
+                            "SourceRef": {
+                                "Entity": "Metrics"
+                            }
+                        },
+                        "Property": "Relationship Size (model)"
+                    }
+                },
+                "type": "Advanced",
+                "howCreated": "User"
+            },
+            {
+                "name": "8f456b0c4a02491744da",
+                "ordinal": 12,
+                "field": {
+                    "Measure": {
+                        "Expression": {
+                            "SourceRef": {
+                                "Entity": "Metrics"
+                            }
+                        },
+                        "Property": "User Hierarchy Size (model)"
+                    }
+                },
+                "type": "Advanced",
+                "howCreated": "User"
+            },
+            {
+                "name": "9f4e7cb874997cdad1f0",
+                "ordinal": 13,
+                "field": {
+                    "Measure": {
+                        "Expression": {
+                            "SourceRef": {
+                                "Entity": "Metrics"
+                            }
+                        },
+                        "Property": "Tables (model)"
+                    }
+                },
+                "type": "Advanced",
+                "howCreated": "User"
+            },
+            {
+                "name": "977bfad5e1cf52c62e1a",
+                "ordinal": 14,
+                "field": {
+                    "Measure": {
+                        "Expression": {
+                            "SourceRef": {
+                                "Entity": "Metrics"
+                            }
+                        },
+                        "Property": "Total CUs IOD"
+                    }
+                },
+                "type": "Advanced",
+                "howCreated": "User"
+            },
+            {
+                "name": "10286782c4f5e6c3f15c",
+                "ordinal": 15,
+                "field": {
+                    "Measure": {
+                        "Expression": {
+                            "SourceRef": {
+                                "Entity": "Metrics"
+                            }
+                        },
+                        "Property": "Avg CU by Item by Day IOD"
+                    }
+                },
+                "type": "Advanced",
+                "howCreated": "User"
+            },
+            {
+                "name": "22cc4a6fb4528b8fb7e5",
+                "ordinal": 16,
+                "field": {
+                    "Measure": {
+                        "Expression": {
+                            "SourceRef": {
+                                "Entity": "Metrics"
+                            }
+                        },
+                        "Property": "Tables (model)"
+                    }
+                },
+                "type": "Advanced",
+                "filter": {
+                    "Version": 2,
+                    "From": [
+                        {
+                            "Name": "m",
+                            "Entity": "Metrics",
+                            "Type": 0
+                        }
+                    ],
+                    "Where": [
+                        {
+                            "Condition": {
+                                "Comparison": {
+                                    "ComparisonKind": 1,
+                                    "Left": {
+                                        "Measure": {
+                                            "Expression": {
+                                                "SourceRef": {
+                                                    "Source": "m"
+                                                }
+                                            },
+                                            "Property": "Tables (model)"
+                                        }
+                                    },
+                                    "Right": {
+                                        "Literal": {
+                                            "Value": "0L"
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    ]
+                },
+                "howCreated": "User"
+            },
+            {
+                "name": "3a60cf995828408ff23e",
+                "field": {
+                    "Column": {
+                        "Expression": {
+                            "SourceRef": {
+                                "Entity": "semantic_model_vertipaq_tables"
+                            }
+                        },
+                        "Property": "Name"
+                    }
+                },
+                "type": "Categorical"
+            },
+            {
+                "name": "2fa1bc9d284382e86800",
+                "field": {
+                    "Measure": {
+                        "Expression": {
+                            "SourceRef": {
+                                "Entity": "Metrics"
+                            }
+                        },
+                        "Property": "Partitions (table)"
+                    }
+                },
+                "type": "Advanced"
+            },
+            {
+                "name": "57bb1944a9b4b3539cbd",
+                "field": {
+                    "Measure": {
+                        "Expression": {
+                            "SourceRef": {
+                                "Entity": "Metrics"
+                            }
+                        },
+                        "Property": "Rows (table)"
+                    }
+                },
+                "type": "Advanced"
+            },
+            {
+                "name": "60c7df24ff28d1096e4b",
+                "field": {
+                    "Measure": {
+                        "Expression": {
+                            "SourceRef": {
+                                "Entity": "Metrics"
+                            }
+                        },
+                        "Property": "Columns (table)"
+                    }
+                },
+                "type": "Advanced"
+            },
+            {
+                "name": "dba58b468f1a8e0e1ed6",
+                "field": {
+                    "Measure": {
+                        "Expression": {
+                            "SourceRef": {
+                                "Entity": "Metrics"
+                            }
+                        },
+                        "Property": "Total Size (table)"
+                    }
+                },
+                "type": "Advanced"
+            },
+            {
+                "name": "5542426e47c508faffe3",
+                "field": {
+                    "Aggregation": {
+                        "Expression": {
+                            "Column": {
+                                "Expression": {
+                                    "SourceRef": {
+                                        "Entity": "semantic_model_vertipaq_tables"
+                                    }
+                                },
+                                "Property": "PercentageOfDB"
+                            }
+                        },
+                        "Function": 0
+                    }
+                },
+                "type": "Advanced"
+            },
+            {
+                "name": "8da3a4639d55ba30dce7",
+                "field": {
+                    "Measure": {
+                        "Expression": {
+                            "SourceRef": {
+                                "Entity": "Metrics"
+                            }
+                        },
+                        "Property": "Dictionary Size (table)"
+                    }
+                },
+                "type": "Advanced"
+            },
+            {
+                "name": "ac14af10f632f2513e68",
+                "field": {
+                    "Measure": {
+                        "Expression": {
+                            "SourceRef": {
+                                "Entity": "Metrics"
+                            }
+                        },
+                        "Property": "Hierarcy Size (table)"
+                    }
+                },
+                "type": "Advanced"
+            },
+            {
+                "name": "edd110eab64d5bd5065d",
+                "field": {
+                    "Measure": {
+                        "Expression": {
+                            "SourceRef": {
+                                "Entity": "Metrics"
+                            }
+                        },
+                        "Property": "Data Size (table)"
+                    }
+                },
+                "type": "Advanced"
+            },
+            {
+                "name": "1f4af056d51a7b706c6f",
+                "field": {
+                    "Measure": {
+                        "Expression": {
+                            "SourceRef": {
+                                "Entity": "Metrics"
+                            }
+                        },
+                        "Property": "User Hierarchy Size (table)"
+                    }
+                },
+                "type": "Advanced"
+            },
+            {
+                "name": "63197adfbfc75239fcf0",
+                "field": {
+                    "Measure": {
+                        "Expression": {
+                            "SourceRef": {
+                                "Entity": "Metrics"
+                            }
+                        },
+                        "Property": "Relationship Size (table)"
+                    }
+                },
+                "type": "Advanced"
+            }
+        ],
+        "filterSortOrder": "Custom"
+    }
+}

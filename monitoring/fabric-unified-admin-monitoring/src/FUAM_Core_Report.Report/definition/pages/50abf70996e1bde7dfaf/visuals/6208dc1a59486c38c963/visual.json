@@ -1,0 +1,67 @@
+{
+    "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.5.0/schema.json",
+    "name": "6208dc1a59486c38c963",
+    "position": {
+        "x": 33.90728476821192,
+        "y": 95.36423841059603,
+        "z": 1000,
+        "height": 50.860927152317885,
+        "width": 664.3708609271523,
+        "tabOrder": 3000
+    },
+    "visual": {
+        "visualType": "textbox",
+        "objects": {
+            "general": [
+                {
+                    "properties": {
+                        "paragraphs": [
+                            {
+                                "textRuns": [
+                                    {
+                                        "value": "Description: ",
+                                        "textStyle": {
+                                            "fontWeight": "bold"
+                                        }
+                                    },
+                                    {
+                                        "value": "This report page shows all the FUAM internal logs."
+                                    }
+                                ]
+                            }
+                        ]
+                    }
+                }
+            ]
+        },
+        "visualContainerObjects": {
+            "background": [
+                {
+                    "properties": {
+                        "show": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "false"
+                                }
+                            }
+                        }
+                    }
+                }
+            ],
+            "border": [
+                {
+                    "properties": {
+                        "show": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "false"
+                                }
+                            }
+                        }
+                    }
+                }
+            ]
+        },
+        "drillFilterOtherVisuals": true
+    }
+}

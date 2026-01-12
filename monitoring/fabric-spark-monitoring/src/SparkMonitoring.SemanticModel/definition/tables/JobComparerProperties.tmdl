@@ -1,0 +1,82 @@
+table JobComparerProperties
+	lineageTag: 3e7d36bd-05a2-4969-ae15-cfaa07d001c1
+
+	column timestamp
+		dataType: dateTime
+		formatString: General Date
+		sourceProviderType: datetimeoffset
+		lineageTag: e6ea6b60-c65c-4b0c-8f6f-57ae381c38d9
+		summarizeBy: none
+		sourceColumn: timestamp
+
+		annotation SummarizationSetBy = Automatic
+
+	column applicationId
+		dataType: string
+		sourceProviderType: nvarchar(max)
+		lineageTag: e603fa46-648a-49d2-acb3-ae6505327cf8
+		summarizeBy: none
+		sourceColumn: applicationId
+
+		annotation SummarizationSetBy = Automatic
+
+	column properties
+		dataType: string
+		lineageTag: fc677fec-a25c-41f9-bab3-44be9c4eb9e2
+		summarizeBy: none
+		sourceColumn: properties
+
+		annotation SummarizationSetBy = Automatic
+
+	column key
+		dataType: string
+		sourceProviderType: nvarchar(max)
+		lineageTag: c80cdfb7-a39d-4d3d-b766-3becf6ad231a
+		summarizeBy: none
+		sourceColumn: key
+
+		annotation SummarizationSetBy = Automatic
+
+	column value
+		dataType: string
+		sourceProviderType: nvarchar(max)
+		lineageTag: f76ab6df-045c-4d21-bf53-000990e77e65
+		summarizeBy: none
+		sourceColumn: value
+
+		annotation SummarizationSetBy = Automatic
+
+	partition JobComparerProperties = m
+		mode: directQuery
+		queryGroup: Comparer
+		source = ```
+				let
+				    Source = AzureDataExplorer.Contents(RTIfqdn, "eventHouseTelemetry", "
+				 
+				    RawLogs
+				| where applicationId  in ('"&ApplicationFirst&"','"&ApplicationSecond&"')
+				| where  properties contains 'SparkListenerJobStart'
+				| where properties contains ""Job ID""
+				| partition by applicationId
+				    (
+				        sort by timestamp desc
+				        | serialize
+				        | extend row_num = row_number()
+				        | where row_num == 1
+				    )
+				| extend props = parse_json(properties)
+				| project timestamp,applicationId,properties=props.[""Properties""]
+				| mv-expand  properties
+				| extend key = tostring(bag_keys(properties)[0])
+				| extend value = tostring(properties[key])
+				| where key contains ""spark.trident.highconcurrency.enabled"" or key contains ""spark.native.enabled"" or key contains ""spark.synapse.vhd.id"" or key == ""spark.fabric.resourceProfile""
+				")
+				
+				in
+				    Source
+				```
+
+	annotation PBI_NavigationStepName = Navigation
+
+	annotation PBI_ResultType = Table
+

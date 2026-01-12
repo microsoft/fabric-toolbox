@@ -1,0 +1,622 @@
+{
+    "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.5.0/schema.json",
+    "name": "dbf632479ab416413551",
+    "position": {
+        "x": 15.700656672035683,
+        "y": 797.8788254243589,
+        "z": 1000,
+        "height": 256.919836451493,
+        "width": 1886.9334654937431,
+        "tabOrder": 10000
+    },
+    "visual": {
+        "visualType": "tableEx",
+        "query": {
+            "queryState": {
+                "Values": {
+                    "projections": [
+                        {
+                            "field": {
+                                "Column": {
+                                    "Expression": {
+                                        "SourceRef": {
+                                            "Entity": "delegated_tenant_settings_overrides"
+                                        }
+                                    },
+                                    "Property": "tenantSettingGroup"
+                                }
+                            },
+                            "queryRef": "delegated_tenant_settings_overrides.tenantSettingGroup",
+                            "nativeQueryRef": "Tenant Setting Group",
+                            "displayName": "Tenant Setting Group"
+                        },
+                        {
+                            "field": {
+                                "Column": {
+                                    "Expression": {
+                                        "SourceRef": {
+                                            "Entity": "delegated_tenant_settings_overrides"
+                                        }
+                                    },
+                                    "Property": "settingName"
+                                }
+                            },
+                            "queryRef": "delegated_tenant_settings_overrides.settingName",
+                            "nativeQueryRef": "Setting Name",
+                            "displayName": "Setting Name"
+                        },
+                        {
+                            "field": {
+                                "Column": {
+                                    "Expression": {
+                                        "SourceRef": {
+                                            "Entity": "delegated_tenant_settings_overrides"
+                                        }
+                                    },
+                                    "Property": "title"
+                                }
+                            },
+                            "queryRef": "delegated_tenant_settings_overrides.title",
+                            "nativeQueryRef": "Title",
+                            "displayName": "Title"
+                        },
+                        {
+                            "field": {
+                                "Column": {
+                                    "Expression": {
+                                        "SourceRef": {
+                                            "Entity": "delegated_tenant_settings_overrides"
+                                        }
+                                    },
+                                    "Property": "enabled"
+                                }
+                            },
+                            "queryRef": "delegated_tenant_settings_overrides.enabled",
+                            "nativeQueryRef": "Setting Enabled",
+                            "displayName": "Setting Enabled"
+                        },
+                        {
+                            "field": {
+                                "Column": {
+                                    "Expression": {
+                                        "SourceRef": {
+                                            "Entity": "delegated_tenant_settings_overrides"
+                                        }
+                                    },
+                                    "Property": "canSpecifySecurityGroups"
+                                }
+                            },
+                            "queryRef": "delegated_tenant_settings_overrides.canSpecifySecurityGroups",
+                            "nativeQueryRef": "Can Specify Security Groups",
+                            "displayName": "Can Specify Security Groups"
+                        },
+                        {
+                            "field": {
+                                "Column": {
+                                    "Expression": {
+                                        "SourceRef": {
+                                            "Entity": "delegated_tenant_settings_overrides"
+                                        }
+                                    },
+                                    "Property": "delegatedFrom"
+                                }
+                            },
+                            "queryRef": "delegated_tenant_settings_overrides.delegatedFrom",
+                            "nativeQueryRef": "Delegated From",
+                            "displayName": "Delegated From"
+                        },
+                        {
+                            "field": {
+                                "Column": {
+                                    "Expression": {
+                                        "SourceRef": {
+                                            "Entity": "capacities"
+                                        }
+                                    },
+                                    "Property": "displayName"
+                                }
+                            },
+                            "queryRef": "capacities.displayName",
+                            "nativeQueryRef": "Capacity",
+                            "displayName": "Capacity"
+                        },
+                        {
+                            "field": {
+                                "Column": {
+                                    "Expression": {
+                                        "SourceRef": {
+                                            "Entity": "capacities"
+                                        }
+                                    },
+                                    "Property": "region"
+                                }
+                            },
+                            "queryRef": "capacities.region",
+                            "nativeQueryRef": "Capacity Region",
+                            "displayName": "Capacity Region"
+                        },
+                        {
+                            "field": {
+                                "Column": {
+                                    "Expression": {
+                                        "SourceRef": {
+                                            "Entity": "capacities"
+                                        }
+                                    },
+                                    "Property": "sku"
+                                }
+                            },
+                            "queryRef": "capacities.sku",
+                            "nativeQueryRef": "Capacity SKU (based on last scan)",
+                            "displayName": "Capacity SKU (based on last scan)"
+                        },
+                        {
+                            "field": {
+                                "Column": {
+                                    "Expression": {
+                                        "SourceRef": {
+                                            "Entity": "delegated_tenant_settings_overrides"
+                                        }
+                                    },
+                                    "Property": "TransferDateTime"
+                                }
+                            },
+                            "queryRef": "delegated_tenant_settings_overrides.TransferDateTime",
+                            "nativeQueryRef": "Snapshot Date",
+                            "displayName": "Snapshot Date"
+                        }
+                    ]
+                }
+            }
+        },
+        "objects": {
+            "grid": [
+                {
+                    "properties": {
+                        "rowPadding": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "3D"
+                                }
+                            }
+                        },
+                        "gridHorizontal": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "true"
+                                }
+                            }
+                        },
+                        "gridVertical": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "true"
+                                }
+                            }
+                        },
+                        "outlineColor": {
+                            "solid": {
+                                "color": {
+                                    "expr": {
+                                        "ThemeDataColor": {
+                                            "ColorId": 0,
+                                            "Percent": -0.2
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            ],
+            "columnHeaders": [
+                {
+                    "properties": {
+                        "fontFamily": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "'''Segoe UI Semibold'', wf_segoe-ui_semibold, helvetica, arial, sans-serif'"
+                                }
+                            }
+                        },
+                        "fontSize": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "9D"
+                                }
+                            }
+                        },
+                        "alignment": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "'Left'"
+                                }
+                            }
+                        },
+                        "fontColor": {
+                            "solid": {
+                                "color": {
+                                    "expr": {
+                                        "ThemeDataColor": {
+                                            "ColorId": 0,
+                                            "Percent": 0
+                                        }
+                                    }
+                                }
+                            }
+                        },
+                        "backColor": {
+                            "solid": {
+                                "color": {
+                                    "expr": {
+                                        "ThemeDataColor": {
+                                            "ColorId": 2,
+                                            "Percent": 0
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            ],
+            "columnWidth": [
+                {
+                    "properties": {
+                        "value": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "72.60345582295794D"
+                                }
+                            }
+                        }
+                    },
+                    "selector": {
+                        "data": [
+                            {
+                                "scopeId": {
+                                    "Comparison": {
+                                        "ComparisonKind": 0,
+                                        "Left": {
+                                            "Column": {
+                                                "Expression": {
+                                                    "SourceRef": {
+                                                        "Entity": "tenant_settings"
+                                                    }
+                                                },
+                                                "Property": "TransferDateTime"
+                                            }
+                                        },
+                                        "Right": {
+                                            "Literal": {
+                                                "Value": "datetime'2024-07-16T21:09:33.653'"
+                                            }
+                                        }
+                                    }
+                                }
+                            },
+                            {
+                                "scopeId": {
+                                    "Comparison": {
+                                        "ComparisonKind": 0,
+                                        "Left": {
+                                            "Column": {
+                                                "Expression": {
+                                                    "SourceRef": {
+                                                        "Entity": "tenant_settings"
+                                                    }
+                                                },
+                                                "Property": "enabled"
+                                            }
+                                        },
+                                        "Right": {
+                                            "Literal": {
+                                                "Value": "false"
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        ]
+                    }
+                },
+                {
+                    "properties": {
+                        "value": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "246.05941310184812D"
+                                }
+                            }
+                        }
+                    },
+                    "selector": {
+                        "metadata": "delegated_tenant_settings_overrides.settingName"
+                    }
+                },
+                {
+                    "properties": {
+                        "value": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "482.73691654879775D"
+                                }
+                            }
+                        }
+                    },
+                    "selector": {
+                        "metadata": "delegated_tenant_settings_overrides.title"
+                    }
+                }
+            ],
+            "values": [
+                {
+                    "properties": {
+                        "backColorSecondary": {
+                            "solid": {
+                                "color": {
+                                    "expr": {
+                                        "Literal": {
+                                            "Value": "'#F6F6F6'"
+                                        }
+                                    }
+                                }
+                            }
+                        },
+                        "backColorPrimary": {
+                            "solid": {
+                                "color": {
+                                    "expr": {
+                                        "ThemeDataColor": {
+                                            "ColorId": 0,
+                                            "Percent": -0.1
+                                        }
+                                    }
+                                }
+                            }
+                        },
+                        "fontSize": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "9D"
+                                }
+                            }
+                        }
+                    }
+                }
+            ],
+            "general": [
+                {
+                    "properties": {}
+                }
+            ]
+        },
+        "visualContainerObjects": {
+            "title": [
+                {
+                    "properties": {
+                        "show": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "true"
+                                }
+                            }
+                        },
+                        "text": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "'Delegated Tenant Setting Overrides | Details'"
+                                }
+                            }
+                        },
+                        "fontSize": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "12D"
+                                }
+                            }
+                        }
+                    }
+                }
+            ],
+            "border": [
+                {
+                    "properties": {
+                        "show": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "true"
+                                }
+                            }
+                        },
+                        "color": {
+                            "solid": {
+                                "color": {
+                                    "expr": {
+                                        "ThemeDataColor": {
+                                            "ColorId": 0,
+                                            "Percent": 0
+                                        }
+                                    }
+                                }
+                            }
+                        },
+                        "radius": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "5D"
+                                }
+                            }
+                        }
+                    }
+                }
+            ],
+            "dropShadow": [
+                {
+                    "properties": {
+                        "show": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "true"
+                                }
+                            }
+                        },
+                        "color": {
+                            "solid": {
+                                "color": {
+                                    "expr": {
+                                        "ThemeDataColor": {
+                                            "ColorId": 0,
+                                            "Percent": -0.1
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            ]
+        },
+        "drillFilterOtherVisuals": true
+    },
+    "filterConfig": {
+        "filters": [
+            {
+                "name": "0cdfff87708820d10887",
+                "ordinal": 0,
+                "field": {
+                    "Column": {
+                        "Expression": {
+                            "SourceRef": {
+                                "Entity": "delegated_tenant_settings_overrides"
+                            }
+                        },
+                        "Property": "settingName"
+                    }
+                },
+                "type": "Categorical"
+            },
+            {
+                "name": "5feb6c235d4c87651bac",
+                "ordinal": 1,
+                "field": {
+                    "Column": {
+                        "Expression": {
+                            "SourceRef": {
+                                "Entity": "delegated_tenant_settings_overrides"
+                            }
+                        },
+                        "Property": "title"
+                    }
+                },
+                "type": "Categorical"
+            },
+            {
+                "name": "575944613de55a85c074",
+                "ordinal": 2,
+                "field": {
+                    "Column": {
+                        "Expression": {
+                            "SourceRef": {
+                                "Entity": "delegated_tenant_settings_overrides"
+                            }
+                        },
+                        "Property": "TransferDateTime"
+                    }
+                },
+                "type": "Categorical"
+            },
+            {
+                "name": "7792941b00d739932920",
+                "ordinal": 3,
+                "field": {
+                    "Column": {
+                        "Expression": {
+                            "SourceRef": {
+                                "Entity": "delegated_tenant_settings_overrides"
+                            }
+                        },
+                        "Property": "delegatedFrom"
+                    }
+                },
+                "type": "Categorical"
+            },
+            {
+                "name": "b310eb7d3d3921036292",
+                "ordinal": 4,
+                "field": {
+                    "Column": {
+                        "Expression": {
+                            "SourceRef": {
+                                "Entity": "delegated_tenant_settings_overrides"
+                            }
+                        },
+                        "Property": "tenantSettingGroup"
+                    }
+                },
+                "type": "Categorical"
+            },
+            {
+                "name": "2e5e280e93348bb422d7",
+                "ordinal": 5,
+                "field": {
+                    "Column": {
+                        "Expression": {
+                            "SourceRef": {
+                                "Entity": "capacities"
+                            }
+                        },
+                        "Property": "displayName"
+                    }
+                },
+                "type": "Categorical"
+            },
+            {
+                "name": "575fbc44a0280b8bb4e9",
+                "ordinal": 6,
+                "field": {
+                    "Column": {
+                        "Expression": {
+                            "SourceRef": {
+                                "Entity": "delegated_tenant_settings_overrides"
+                            }
+                        },
+                        "Property": "enabled"
+                    }
+                },
+                "type": "Categorical"
+            },
+            {
+                "name": "d93892d029050db7022b",
+                "ordinal": 7,
+                "field": {
+                    "Column": {
+                        "Expression": {
+                            "SourceRef": {
+                                "Entity": "delegated_tenant_settings_overrides"
+                            }
+                        },
+                        "Property": "canSpecifySecurityGroups"
+                    }
+                },
+                "type": "Categorical"
+            },
+            {
+                "name": "ae3d199a2440ac55270c",
+                "ordinal": 8,
+                "field": {
+                    "Column": {
+                        "Expression": {
+                            "SourceRef": {
+                                "Entity": "capacities"
+                            }
+                        },
+                        "Property": "region"
+                    }
+                },
+                "type": "Categorical"
+            }
+        ],
+        "filterSortOrder": "Custom"
+    }
+}

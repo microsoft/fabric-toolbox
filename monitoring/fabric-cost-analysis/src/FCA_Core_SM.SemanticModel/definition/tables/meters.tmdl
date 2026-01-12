@@ -1,0 +1,127 @@
+/// Meter table
+table meters
+	lineageTag: 3909217c-6b73-4264-8783-a8f4cfcf884b
+	sourceLineageTag: [dbo].[meters]
+
+	/// Meter Name
+	column Name
+		dataType: string
+		sourceProviderType: varchar(8000)
+		lineageTag: ff614a9f-401b-4b3b-8415-abf596babee8
+		sourceLineageTag: Name
+		summarizeBy: none
+		sourceColumn: Name
+
+		changedProperty = Description
+
+		annotation SummarizationSetBy = Automatic
+
+	/// Meter Description
+	column Description
+		dataType: string
+		sourceProviderType: varchar(8000)
+		lineageTag: 83c45fb4-92b7-4f8f-9c94-c1e3e218dc2b
+		sourceLineageTag: Description
+		summarizeBy: none
+		sourceColumn: Description
+
+		changedProperty = Description
+
+		annotation SummarizationSetBy = Automatic
+
+	/// Meter State
+	column State
+		dataType: string
+		sourceProviderType: varchar(8000)
+		lineageTag: bad5f108-3b0c-4eee-b0c5-7fdd13638a4a
+		sourceLineageTag: State
+		summarizeBy: none
+		sourceColumn: State
+
+		changedProperty = Description
+
+		annotation SummarizationSetBy = Automatic
+
+	/// Meter = "Compute Pool Capacity Usage CU" Representing the available capacity
+	column Main
+		dataType: boolean
+		formatString: """TRUE"";""TRUE"";""FALSE"""
+		sourceProviderType: varchar(8000)
+		lineageTag: 823d0e2c-90bf-4861-a3ae-c0154dc2c474
+		sourceLineageTag: Main
+		summarizeBy: none
+		sourceColumn: Main
+
+		changedProperty = DataType
+
+		changedProperty = Description
+
+		annotation SummarizationSetBy = Automatic
+
+	/// Meter included or not in the SKU
+	column Included
+		dataType: boolean
+		formatString: """TRUE"";""TRUE"";""FALSE"""
+		sourceProviderType: varchar(8000)
+		lineageTag: 6bd44a6b-bb2a-4fb0-923d-00b4ae8a2969
+		sourceLineageTag: Included
+		summarizeBy: none
+		sourceColumn: Included
+
+		changedProperty = DataType
+
+		changedProperty = Description
+
+		annotation SummarizationSetBy = Automatic
+
+	/// Meter Category
+	column Category
+		dataType: string
+		sourceProviderType: varchar(8000)
+		lineageTag: 335a9d30-2919-496b-a6c3-e79359799145
+		sourceLineageTag: Category
+		summarizeBy: none
+		sourceColumn: Category
+
+		changedProperty = Description
+
+		annotation SummarizationSetBy = Automatic
+
+	column Name_Lower
+		dataType: string
+		isHidden
+		sourceProviderType: varchar(8000)
+		lineageTag: 9cf4ada9-a68a-4428-9e8c-eb60d30e0a05
+		sourceLineageTag: Name_Lower
+		summarizeBy: none
+		sourceColumn: Name_Lower
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	column MeterKey
+		dataType: int64
+		isHidden
+		formatString: 0
+		sourceProviderType: int
+		lineageTag: cc07d11a-edbb-4326-b1bc-0d88a7cf07b3
+		sourceLineageTag: MeterKey
+		summarizeBy: none
+		sourceColumn: MeterKey
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	partition meters = entity
+		mode: directLake
+		source
+			entityName: meters
+			schemaName: dbo
+			expressionSource: DatabaseQuery
+
+	changedProperty = Description
+
+	annotation PBI_ResultType = Table
+

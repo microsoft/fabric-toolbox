@@ -1,0 +1,89 @@
+{
+    "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.5.0/schema.json",
+    "name": "c24ee9e1f608eafaad9b",
+    "position": {
+        "x": 16.729776247848537,
+        "y": 79.93115318416523,
+        "z": 9000,
+        "height": 75.28399311531841,
+        "width": 1058.6230636833045,
+        "tabOrder": 6000
+    },
+    "visual": {
+        "visualType": "textbox",
+        "objects": {
+            "general": [
+                {
+                    "properties": {
+                        "paragraphs": [
+                            {
+                                "textRuns": [
+                                    {
+                                        "value": "Important:",
+                                        "textStyle": {
+                                            "fontWeight": "bold",
+                                            "fontSize": "14.6667px"
+                                        }
+                                    }
+                                ]
+                            },
+                            {
+                                "textRuns": [
+                                    {
+                                        "value": "The capacity refreshable API returns the semantic model refreshes in consideration time windows (start date & end date). ",
+                                        "textStyle": {
+                                            "fontFamily": "inherit",
+                                            "fontSize": "inherit"
+                                        }
+                                    }
+                                ]
+                            },
+                            {
+                                "textRuns": [
+                                    {
+                                        "value": "This table shows the extracted refresh history from the Capacity Refreshable API endpoint, "
+                                    },
+                                    {
+                                        "value": "which contains the only a few refresh history items of a given semantic model.",
+                                        "textStyle": {
+                                            "fontWeight": "bold"
+                                        }
+                                    }
+                                ]
+                            }
+                        ]
+                    }
+                }
+            ]
+        },
+        "visualContainerObjects": {
+            "background": [
+                {
+                    "properties": {
+                        "show": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "false"
+                                }
+                            }
+                        }
+                    }
+                }
+            ],
+            "border": [
+                {
+                    "properties": {
+                        "show": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "false"
+                                }
+                            }
+                        }
+                    }
+                }
+            ]
+        },
+        "drillFilterOtherVisuals": true
+    }
+}

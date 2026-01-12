@@ -1,0 +1,258 @@
+{
+    "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.5.0/schema.json",
+    "name": "797bab71cba23b549a9a",
+    "position": {
+        "x": 1660.3130870381965,
+        "y": 180.33813400125234,
+        "z": 8000,
+        "height": 276.5184721352536,
+        "width": 239.2485911083281,
+        "tabOrder": 4000
+    },
+    "visual": {
+        "visualType": "barChart",
+        "query": {
+            "queryState": {
+                "Category": {
+                    "projections": [
+                        {
+                            "field": {
+                                "Column": {
+                                    "Expression": {
+                                        "SourceRef": {
+                                            "Entity": "workspaces"
+                                        }
+                                    },
+                                    "Property": "HasWorkspaceLevelSettings"
+                                }
+                            },
+                            "queryRef": "workspaces.HasWorkspaceLevelSettings",
+                            "nativeQueryRef": "Has Workspace Level Settings",
+                            "active": true,
+                            "displayName": "Has Workspace Level Settings"
+                        }
+                    ]
+                },
+                "Y": {
+                    "projections": [
+                        {
+                            "field": {
+                                "Measure": {
+                                    "Expression": {
+                                        "SourceRef": {
+                                            "Entity": "Metrics"
+                                        }
+                                    },
+                                    "Property": "# Workspaces"
+                                }
+                            },
+                            "queryRef": "Metrics.# Workspaces",
+                            "nativeQueryRef": "# Workspaces"
+                        }
+                    ]
+                }
+            },
+            "sortDefinition": {
+                "sort": [
+                    {
+                        "field": {
+                            "Measure": {
+                                "Expression": {
+                                    "SourceRef": {
+                                        "Entity": "Metrics"
+                                    }
+                                },
+                                "Property": "# Workspaces"
+                            }
+                        },
+                        "direction": "Descending"
+                    }
+                ],
+                "isDefaultSort": true
+            }
+        },
+        "objects": {
+            "categoryAxis": [
+                {
+                    "properties": {
+                        "maxMarginFactor": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "50L"
+                                }
+                            }
+                        }
+                    }
+                }
+            ],
+            "dataPoint": [
+                {
+                    "properties": {
+                        "fill": {
+                            "solid": {
+                                "color": {
+                                    "expr": {
+                                        "ThemeDataColor": {
+                                            "ColorId": 9,
+                                            "Percent": 0.6
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            ],
+            "labels": [
+                {
+                    "properties": {
+                        "show": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "true"
+                                }
+                            }
+                        },
+                        "labelDisplayUnits": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "1D"
+                                }
+                            }
+                        },
+                        "labelPosition": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "'OutsideEnd'"
+                                }
+                            }
+                        }
+                    }
+                }
+            ]
+        },
+        "visualContainerObjects": {
+            "title": [
+                {
+                    "properties": {
+                        "show": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "true"
+                                }
+                            }
+                        },
+                        "text": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "'Workspaces by Workspace level settings (True/False)'"
+                                }
+                            }
+                        },
+                        "fontSize": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "12D"
+                                }
+                            }
+                        }
+                    }
+                }
+            ],
+            "border": [
+                {
+                    "properties": {
+                        "show": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "true"
+                                }
+                            }
+                        },
+                        "radius": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "5D"
+                                }
+                            }
+                        }
+                    }
+                }
+            ],
+            "dropShadow": [
+                {
+                    "properties": {
+                        "show": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "true"
+                                }
+                            }
+                        },
+                        "color": {
+                            "solid": {
+                                "color": {
+                                    "expr": {
+                                        "ThemeDataColor": {
+                                            "ColorId": 0,
+                                            "Percent": -0.1
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            ],
+            "visualTooltip": [
+                {
+                    "properties": {
+                        "type": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "'Default'"
+                                }
+                            }
+                        }
+                    }
+                }
+            ]
+        },
+        "drillFilterOtherVisuals": true
+    },
+    "filterConfig": {
+        "filters": [
+            {
+                "name": "cf633313c6b40bc49922",
+                "ordinal": 0,
+                "field": {
+                    "Measure": {
+                        "Expression": {
+                            "SourceRef": {
+                                "Entity": "Metrics"
+                            }
+                        },
+                        "Property": "# Workspaces"
+                    }
+                },
+                "type": "Advanced"
+            },
+            {
+                "name": "d874f6f9156de8d3317c",
+                "ordinal": 1,
+                "field": {
+                    "Column": {
+                        "Expression": {
+                            "SourceRef": {
+                                "Entity": "workspaces"
+                            }
+                        },
+                        "Property": "HasWorkspaceLevelSettings"
+                    }
+                },
+                "type": "Categorical"
+            }
+        ],
+        "filterSortOrder": "Custom"
+    }
+}

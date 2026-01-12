@@ -1,112 +1,98 @@
 table delegated_tenant_settings_overrides
-	lineageTag: 27d37d8b-4d56-42c7-ac81-b4d17e5c464c
+	lineageTag: 6d5f0868-76e4-420a-a4e2-de49d20fae5a
 	sourceLineageTag: [dbo].[delegated_tenant_settings_overrides]
-
-	column TransferDate
-		dataType: dateTime
-		formatString: yyyy-mm-dd
-		sourceProviderType: date
-		lineageTag: f24eb580-7760-458a-87c2-25738c36c695
-		sourceLineageTag: TransferDate
-		summarizeBy: none
-		sourceColumn: TransferDate
-
-		changedProperty = FormatString
-
-		annotation SummarizationSetBy = Automatic
-
-		annotation PBI_FormatHint = {"isCustom":true}
-
-	column TransferDateTime
-		dataType: dateTime
-		formatString: General Date
-		sourceProviderType: datetime2
-		lineageTag: db51eee6-3762-4c80-91ba-96c052a5a98b
-		sourceLineageTag: TransferDateTime
-		summarizeBy: none
-		sourceColumn: TransferDateTime
-
-		annotation SummarizationSetBy = Automatic
-
-	column OverrideId
-		dataType: string
-		sourceProviderType: varchar(8000)
-		lineageTag: 3447aa87-cf5e-4b94-be22-a2f298e1f401
-		sourceLineageTag: OverrideId
-		summarizeBy: none
-		sourceColumn: OverrideId
-
-		annotation SummarizationSetBy = Automatic
-
-	column title
-		dataType: string
-		sourceProviderType: varchar(8000)
-		lineageTag: 5af35f5a-cb66-4ddb-92d8-d659a5b40d6b
-		sourceLineageTag: title
-		summarizeBy: none
-		sourceColumn: title
-
-		annotation SummarizationSetBy = Automatic
-
-	column delegatedFrom
-		dataType: string
-		sourceProviderType: varchar(8000)
-		lineageTag: e9eb97b4-20cc-471f-b12c-42d56bc01f6f
-		sourceLineageTag: delegatedFrom
-		summarizeBy: none
-		sourceColumn: delegatedFrom
-
-		annotation SummarizationSetBy = Automatic
 
 	column settingName
 		dataType: string
-		sourceProviderType: varchar(8000)
-		lineageTag: 019ccb1a-6b65-4800-9f65-15726773060f
+		lineageTag: 8739c1b8-6cf4-47a6-ac9a-d56eb23c6369
 		sourceLineageTag: settingName
 		summarizeBy: none
 		sourceColumn: settingName
 
 		annotation SummarizationSetBy = Automatic
 
-	column tenantSettingGroup
+	column title
 		dataType: string
-		sourceProviderType: varchar(8000)
-		lineageTag: ced3e948-0639-41d6-b4da-9981d71011a7
-		sourceLineageTag: tenantSettingGroup
+		lineageTag: ef54940e-5496-4e55-85d0-82d9e244b481
+		sourceLineageTag: title
 		summarizeBy: none
-		sourceColumn: tenantSettingGroup
+		sourceColumn: title
 
 		annotation SummarizationSetBy = Automatic
 
-	column enabled
-		dataType: boolean
-		formatString: """TRUE"";""TRUE"";""FALSE"""
-		sourceProviderType: bit
-		lineageTag: a2977fa9-7490-41fe-9dba-657602e14e49
-		sourceLineageTag: enabled
+	column TransferDateTime
+		dataType: dateTime
+		formatString: General Date
+		lineageTag: a5cbb654-3429-4f70-a458-56caa50ee550
+		sourceLineageTag: TransferDateTime
 		summarizeBy: none
-		sourceColumn: enabled
-
-		annotation SummarizationSetBy = Automatic
-
-	column CapacityId
-		dataType: string
-		sourceProviderType: varchar(8000)
-		lineageTag: ae87f4f8-b07b-4715-8139-d9c8357a3a9c
-		sourceLineageTag: CapacityId
-		summarizeBy: none
-		sourceColumn: CapacityId
+		sourceColumn: TransferDateTime
 
 		annotation SummarizationSetBy = Automatic
 
 	column canSpecifySecurityGroups
 		dataType: boolean
 		formatString: """TRUE"";""TRUE"";""FALSE"""
-		sourceProviderType: bit
-		lineageTag: 86907942-865a-4bbd-a653-af26f5c84b63
+		lineageTag: 7500720d-ad26-4a9d-9dd5-4e91b9045f09
 		sourceLineageTag: canSpecifySecurityGroups
 		summarizeBy: none
 		sourceColumn: canSpecifySecurityGroups
+
+		annotation SummarizationSetBy = Automatic
+
+	column OverrideId
+		dataType: string
+		lineageTag: fcf16bd9-3bbe-4301-adbd-634291b54a3a
+		sourceLineageTag: OverrideId
+		summarizeBy: none
+		sourceColumn: OverrideId
+
+		annotation SummarizationSetBy = Automatic
+
+	column TransferDate
+		dataType: dateTime
+		formatString: General Date
+		lineageTag: 0cecfb23-53ba-49db-88dc-97f434a74f7b
+		sourceLineageTag: TransferDate
+		summarizeBy: none
+		sourceColumn: TransferDate
+
+		annotation SummarizationSetBy = Automatic
+
+	column CapacityId
+		dataType: string
+		lineageTag: 47d6ceae-f9e5-45dc-93c1-c9c3e9d1a3ce
+		sourceLineageTag: CapacityId
+		summarizeBy: none
+		sourceColumn: CapacityId
+
+		annotation SummarizationSetBy = Automatic
+
+	column tenantSettingGroup
+		dataType: string
+		lineageTag: bc45785c-c706-4ab1-a248-cb8641072ac2
+		sourceLineageTag: tenantSettingGroup
+		summarizeBy: none
+		sourceColumn: tenantSettingGroup
+
+		annotation SummarizationSetBy = Automatic
+
+	column delegatedFrom
+		dataType: string
+		lineageTag: a4b099fc-fc96-43b2-be38-e5c93de602da
+		sourceLineageTag: delegatedFrom
+		summarizeBy: none
+		sourceColumn: delegatedFrom
+
+		annotation SummarizationSetBy = Automatic
+
+	column enabled
+		dataType: boolean
+		formatString: """TRUE"";""TRUE"";""FALSE"""
+		lineageTag: 14b52aa4-ee07-44dc-9090-af272a308d7c
+		sourceLineageTag: enabled
+		summarizeBy: none
+		sourceColumn: enabled
 
 		annotation SummarizationSetBy = Automatic
 

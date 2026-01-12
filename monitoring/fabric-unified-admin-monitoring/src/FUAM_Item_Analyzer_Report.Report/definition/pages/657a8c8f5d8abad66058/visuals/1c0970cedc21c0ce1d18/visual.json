@@ -1,0 +1,71 @@
+{
+    "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.5.0/schema.json",
+    "name": "1c0970cedc21c0ce1d18",
+    "position": {
+        "x": 702.4590163934429,
+        "y": 444.2622950819679,
+        "z": 3003,
+        "height": 140.98360655737704,
+        "width": 264.75409836065575,
+        "tabOrder": 3003
+    },
+    "visual": {
+        "visualType": "textbox",
+        "objects": {
+            "general": [
+                {
+                    "properties": {
+                        "paragraphs": [
+                            {
+                                "textRuns": [
+                                    {
+                                        "value": "Select this page to explore collected telemetry, inventory logs, and the life cycle of a given semantic model and its connected report item(s).",
+                                        "textStyle": {
+                                            "fontFamily": "Segoe UI"
+                                        }
+                                    }
+                                ]
+                            },
+                            {
+                                "textRuns": [
+                                    {
+                                        "value": ""
+                                    }
+                                ]
+                            }
+                        ]
+                    }
+                }
+            ]
+        },
+        "visualContainerObjects": {
+            "border": [
+                {
+                    "properties": {
+                        "show": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "false"
+                                }
+                            }
+                        }
+                    }
+                }
+            ],
+            "background": [
+                {
+                    "properties": {
+                        "show": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "false"
+                                }
+                            }
+                        }
+                    }
+                }
+            ]
+        },
+        "drillFilterOtherVisuals": true
+    }
+}

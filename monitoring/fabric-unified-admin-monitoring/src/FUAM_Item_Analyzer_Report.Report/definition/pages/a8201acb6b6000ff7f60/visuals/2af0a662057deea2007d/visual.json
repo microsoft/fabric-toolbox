@@ -1,0 +1,234 @@
+{
+    "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.5.0/schema.json",
+    "name": "2af0a662057deea2007d",
+    "position": {
+        "x": 809.3219585193643,
+        "y": 160.26814972504587,
+        "z": 10000,
+        "height": 81.11111111111111,
+        "width": 417.77777777777777,
+        "tabOrder": 10000
+    },
+    "visual": {
+        "visualType": "tableEx",
+        "query": {
+            "queryState": {
+                "Values": {
+                    "projections": [
+                        {
+                            "field": {
+                                "Aggregation": {
+                                    "Expression": {
+                                        "Column": {
+                                            "Expression": {
+                                                "SourceRef": {
+                                                    "Entity": "active_items"
+                                                }
+                                            },
+                                            "Property": "id"
+                                        }
+                                    },
+                                    "Function": 3
+                                }
+                            },
+                            "queryRef": "active_items.id",
+                            "nativeQueryRef": "Item Id",
+                            "displayName": "Item Id"
+                        }
+                    ]
+                }
+            },
+            "sortDefinition": {
+                "sort": [
+                    {
+                        "field": {
+                            "Aggregation": {
+                                "Expression": {
+                                    "Column": {
+                                        "Expression": {
+                                            "SourceRef": {
+                                                "Entity": "active_items"
+                                            }
+                                        },
+                                        "Property": "id"
+                                    }
+                                },
+                                "Function": 3
+                            }
+                        },
+                        "direction": "Descending"
+                    }
+                ]
+            }
+        },
+        "objects": {
+            "general": [
+                {
+                    "properties": {}
+                }
+            ],
+            "total": [
+                {
+                    "properties": {
+                        "totals": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "false"
+                                }
+                            }
+                        }
+                    }
+                }
+            ],
+            "columnHeaders": [
+                {
+                    "properties": {
+                        "fontSize": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "10D"
+                                }
+                            }
+                        },
+                        "alignment": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "'Center'"
+                                }
+                            }
+                        },
+                        "fontFamily": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "'''Segoe UI'', wf_segoe-ui_normal, helvetica, arial, sans-serif'"
+                                }
+                            }
+                        },
+                        "fontColor": {
+                            "solid": {
+                                "color": {
+                                    "expr": {
+                                        "Literal": {
+                                            "Value": "'#6D4BAE'"
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            ],
+            "grid": [
+                {
+                    "properties": {
+                        "outlineColor": {
+                            "solid": {
+                                "color": {
+                                    "expr": {
+                                        "ThemeDataColor": {
+                                            "ColorId": 0,
+                                            "Percent": -0.1
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            ],
+            "values": [
+                {
+                    "properties": {
+                        "fontSize": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "13D"
+                                }
+                            }
+                        },
+                        "fontFamily": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "'''Segoe UI Semibold'', wf_segoe-ui_semibold, helvetica, arial, sans-serif'"
+                                }
+                            }
+                        }
+                    }
+                }
+            ],
+            "columnWidth": [
+                {
+                    "properties": {
+                        "value": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "396.5745633376278D"
+                                }
+                            }
+                        }
+                    },
+                    "selector": {
+                        "metadata": "active_items.id"
+                    }
+                }
+            ],
+            "columnFormatting": [
+                {
+                    "properties": {
+                        "alignment": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "'Center'"
+                                }
+                            }
+                        }
+                    },
+                    "selector": {
+                        "metadata": "active_items.id"
+                    }
+                }
+            ]
+        },
+        "visualContainerObjects": {
+            "dropShadow": [
+                {
+                    "properties": {
+                        "show": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "true"
+                                }
+                            }
+                        },
+                        "color": {
+                            "solid": {
+                                "color": {
+                                    "expr": {
+                                        "ThemeDataColor": {
+                                            "ColorId": 0,
+                                            "Percent": -0.2
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            ],
+            "border": [
+                {
+                    "properties": {
+                        "radius": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "10D"
+                                }
+                            }
+                        }
+                    }
+                }
+            ]
+        },
+        "drillFilterOtherVisuals": true
+    }
+}

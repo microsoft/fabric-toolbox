@@ -1,0 +1,451 @@
+{
+    "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.5.0/schema.json",
+    "name": "af90296c60c3f063d8ce",
+    "position": {
+        "x": 798.656832711792,
+        "y": 513.574458957642,
+        "z": 10000,
+        "height": 543.6781609195402,
+        "width": 1100,
+        "tabOrder": 6000
+    },
+    "visual": {
+        "visualType": "lineStackedColumnComboChart",
+        "query": {
+            "queryState": {
+                "Category": {
+                    "projections": [
+                        {
+                            "field": {
+                                "Column": {
+                                    "Expression": {
+                                        "SourceRef": {
+                                            "Entity": "calendar"
+                                        }
+                                    },
+                                    "Property": "Year"
+                                }
+                            },
+                            "queryRef": "calendar.Year",
+                            "nativeQueryRef": "Year",
+                            "active": true
+                        },
+                        {
+                            "field": {
+                                "Column": {
+                                    "Expression": {
+                                        "SourceRef": {
+                                            "Entity": "calendar"
+                                        }
+                                    },
+                                    "Property": "WeekOfYear"
+                                }
+                            },
+                            "queryRef": "calendar.WeekOfYear",
+                            "nativeQueryRef": "Week of Year",
+                            "active": true,
+                            "displayName": "Week of Year"
+                        }
+                    ]
+                },
+                "Series": {
+                    "projections": [
+                        {
+                            "field": {
+                                "Column": {
+                                    "Expression": {
+                                        "SourceRef": {
+                                            "Entity": "capacity_metrics_by_item_kind_by_day"
+                                        }
+                                    },
+                                    "Property": "ItemKind"
+                                }
+                            },
+                            "queryRef": "capacity_metrics_by_item_kind_by_day.ItemKind",
+                            "nativeQueryRef": "Item Kind",
+                            "displayName": "Item Kind"
+                        }
+                    ]
+                },
+                "Y": {
+                    "projections": [
+                        {
+                            "field": {
+                                "Measure": {
+                                    "Expression": {
+                                        "SourceRef": {
+                                            "Entity": "Metrics"
+                                        }
+                                    },
+                                    "Property": "Total CUs KD"
+                                }
+                            },
+                            "queryRef": "Metrics.Total CUs KD",
+                            "nativeQueryRef": "Total CUs",
+                            "displayName": "Total CUs"
+                        }
+                    ]
+                },
+                "Y2": {
+                    "projections": [
+                        {
+                            "field": {
+                                "Measure": {
+                                    "Expression": {
+                                        "SourceRef": {
+                                            "Entity": "Metrics"
+                                        }
+                                    },
+                                    "Property": "Operations KD"
+                                }
+                            },
+                            "queryRef": "Metrics.Operations KD",
+                            "nativeQueryRef": "Operations",
+                            "displayName": "Operations"
+                        }
+                    ]
+                }
+            },
+            "sortDefinition": {
+                "sort": [
+                    {
+                        "field": {
+                            "Column": {
+                                "Expression": {
+                                    "SourceRef": {
+                                        "Entity": "active_items"
+                                    }
+                                },
+                                "Property": "type"
+                            }
+                        },
+                        "direction": "Descending"
+                    }
+                ]
+            }
+        },
+        "objects": {
+            "categoryAxis": [
+                {
+                    "properties": {
+                        "axisType": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "'Categorical'"
+                                }
+                            }
+                        },
+                        "maxMarginFactor": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "50L"
+                                }
+                            }
+                        }
+                    }
+                }
+            ],
+            "labels": [
+                {
+                    "properties": {
+                        "show": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "true"
+                                }
+                            }
+                        }
+                    }
+                }
+            ],
+            "legend": [
+                {
+                    "properties": {
+                        "position": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "'Right'"
+                                }
+                            }
+                        }
+                    }
+                }
+            ],
+            "totals": [
+                {
+                    "properties": {
+                        "show": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "true"
+                                }
+                            }
+                        }
+                    }
+                }
+            ],
+            "zoom": [
+                {
+                    "properties": {
+                        "show": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "false"
+                                }
+                            }
+                        }
+                    }
+                }
+            ],
+            "valueAxis": [
+                {
+                    "properties": {
+                        "gridlineAutoScale": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "false"
+                                }
+                            }
+                        }
+                    }
+                }
+            ],
+            "lineStyles": [
+                {
+                    "properties": {
+                        "showMarker": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "true"
+                                }
+                            }
+                        },
+                        "markerColor": {
+                            "solid": {
+                                "color": {
+                                    "expr": {
+                                        "Literal": {
+                                            "Value": "'#d195ea'"
+                                        }
+                                    }
+                                }
+                            }
+                        },
+                        "strokeWidth": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "4D"
+                                }
+                            }
+                        },
+                        "markerSize": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "5D"
+                                }
+                            }
+                        }
+                    }
+                }
+            ],
+            "dataPoint": [
+                {
+                    "properties": {
+                        "fill": {
+                            "solid": {
+                                "color": {
+                                    "expr": {
+                                        "ThemeDataColor": {
+                                            "ColorId": 7,
+                                            "Percent": -0.25
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "selector": {
+                        "data": [
+                            {
+                                "scopeId": {
+                                    "Comparison": {
+                                        "ComparisonKind": 0,
+                                        "Left": {
+                                            "Column": {
+                                                "Expression": {
+                                                    "SourceRef": {
+                                                        "Entity": "capacity_metrics_by_item_kind_by_day"
+                                                    }
+                                                },
+                                                "Property": "ItemKind"
+                                            }
+                                        },
+                                        "Right": {
+                                            "Literal": {
+                                                "Value": "'SynapseNotebook'"
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        ]
+                    }
+                },
+                {
+                    "properties": {
+                        "fill": {
+                            "solid": {
+                                "color": {
+                                    "expr": {
+                                        "ThemeDataColor": {
+                                            "ColorId": 9,
+                                            "Percent": 0
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "selector": {
+                        "data": [
+                            {
+                                "scopeId": {
+                                    "Comparison": {
+                                        "ComparisonKind": 0,
+                                        "Left": {
+                                            "Column": {
+                                                "Expression": {
+                                                    "SourceRef": {
+                                                        "Entity": "capacity_metrics_by_item_kind_by_day"
+                                                    }
+                                                },
+                                                "Property": "ItemKind"
+                                            }
+                                        },
+                                        "Right": {
+                                            "Literal": {
+                                                "Value": "'Dataset'"
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        ]
+                    }
+                },
+                {
+                    "properties": {
+                        "fill": {
+                            "solid": {
+                                "color": {
+                                    "expr": {
+                                        "Literal": {
+                                            "Value": "'#AE62CD'"
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "selector": {
+                        "metadata": "Metrics.Operations KD"
+                    }
+                }
+            ]
+        },
+        "visualContainerObjects": {
+            "title": [
+                {
+                    "properties": {
+                        "show": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "true"
+                                }
+                            }
+                        },
+                        "text": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "'Total CUs by Date by Item Kind'"
+                                }
+                            }
+                        }
+                    }
+                }
+            ],
+            "border": [
+                {
+                    "properties": {
+                        "show": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "true"
+                                }
+                            }
+                        }
+                    }
+                }
+            ],
+            "dropShadow": [
+                {
+                    "properties": {
+                        "show": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "true"
+                                }
+                            }
+                        },
+                        "color": {
+                            "solid": {
+                                "color": {
+                                    "expr": {
+                                        "ThemeDataColor": {
+                                            "ColorId": 0,
+                                            "Percent": -0.1
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            ],
+            "padding": [
+                {
+                    "properties": {
+                        "top": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "5D"
+                                }
+                            }
+                        }
+                    }
+                }
+            ],
+            "subTitle": [
+                {
+                    "properties": {
+                        "show": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "true"
+                                }
+                            }
+                        },
+                        "text": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "'X-Axis Hierarchy: Year -> Week of Year'"
+                                }
+                            }
+                        }
+                    }
+                }
+            ]
+        },
+        "drillFilterOtherVisuals": true
+    }
+}

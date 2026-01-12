@@ -1,0 +1,122 @@
+{
+    "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.5.0/schema.json",
+    "name": "c230af0b96a6dc3e7572",
+    "position": {
+        "x": 38.54166666666667,
+        "y": 83.33333333333334,
+        "z": 10000,
+        "height": 98.95833333333334,
+        "width": 1840.625,
+        "tabOrder": 10000
+    },
+    "visual": {
+        "visualType": "textbox",
+        "objects": {
+            "general": [
+                {
+                    "properties": {
+                        "paragraphs": [
+                            {
+                                "textRuns": [
+                                    {
+                                        "value": "Step 1) ",
+                                        "textStyle": {
+                                            "fontWeight": "bold",
+                                            "fontSize": "12pt",
+                                            "color": "#248a85"
+                                        }
+                                    },
+                                    {
+                                        "value": "Decide access point of view",
+                                        "textStyle": {
+                                            "fontWeight": "bold",
+                                            "fontSize": "12pt"
+                                        }
+                                    }
+                                ],
+                                "horizontalTextAlignment": "center"
+                            },
+                            {
+                                "textRuns": [
+                                    {
+                                        "value": ""
+                                    }
+                                ]
+                            },
+                            {
+                                "textRuns": [
+                                    {
+                                        "value": "On the"
+                                    },
+                                    {
+                                        "value": " left hand side",
+                                        "textStyle": {
+                                            "fontWeight": "bold"
+                                        }
+                                    },
+                                    {
+                                        "value": ", you can search for identities, which have "
+                                    },
+                                    {
+                                        "value": "granted access to workspaces.",
+                                        "textStyle": {
+                                            "fontWeight": "bold"
+                                        }
+                                    },
+                                    {
+                                        "value": "\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\tOn the "
+                                    },
+                                    {
+                                        "value": "right hand side,",
+                                        "textStyle": {
+                                            "fontWeight": "bold"
+                                        }
+                                    },
+                                    {
+                                        "value": " you can search for identities, which have "
+                                    },
+                                    {
+                                        "value": "granted access to items.",
+                                        "textStyle": {
+                                            "fontWeight": "bold"
+                                        }
+                                    }
+                                ],
+                                "horizontalTextAlignment": "center"
+                            }
+                        ]
+                    }
+                }
+            ]
+        },
+        "visualContainerObjects": {
+            "border": [
+                {
+                    "properties": {
+                        "show": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "false"
+                                }
+                            }
+                        }
+                    }
+                }
+            ],
+            "background": [
+                {
+                    "properties": {
+                        "show": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "false"
+                                }
+                            }
+                        }
+                    }
+                }
+            ]
+        },
+        "drillFilterOtherVisuals": true
+    }
+}

@@ -1,0 +1,715 @@
+{
+    "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.5.0/schema.json",
+    "name": "287f3445c5d0903d1394",
+    "position": {
+        "x": 461.53846153846155,
+        "y": 646.0584109130765,
+        "z": 5000,
+        "height": 236.8916155419223,
+        "width": 806.2167689161554,
+        "tabOrder": 2000
+    },
+    "visual": {
+        "visualType": "lineClusteredColumnComboChart",
+        "query": {
+            "queryState": {
+                "Category": {
+                    "projections": [
+                        {
+                            "field": {
+                                "Column": {
+                                    "Expression": {
+                                        "SourceRef": {
+                                            "Entity": "calendar"
+                                        }
+                                    },
+                                    "Property": "YearMonth"
+                                }
+                            },
+                            "queryRef": "calendar.YearMonth",
+                            "nativeQueryRef": "YearMonth",
+                            "active": true
+                        }
+                    ]
+                },
+                "Y": {
+                    "projections": [
+                        {
+                            "field": {
+                                "Measure": {
+                                    "Expression": {
+                                        "SourceRef": {
+                                            "Entity": "Metrics"
+                                        }
+                                    },
+                                    "Property": "# Activities"
+                                }
+                            },
+                            "queryRef": "Metrics.# Activities",
+                            "nativeQueryRef": "# Refresh Activities",
+                            "displayName": "# Refresh Activities"
+                        }
+                    ]
+                },
+                "Y2": {
+                    "projections": [
+                        {
+                            "field": {
+                                "Measure": {
+                                    "Expression": {
+                                        "SourceRef": {
+                                            "Entity": "Metrics"
+                                        }
+                                    },
+                                    "Property": "Activities Growth MoM"
+                                }
+                            },
+                            "queryRef": "Metrics.Activities Growth MoM",
+                            "nativeQueryRef": "Refresh Activities Growth MoM",
+                            "displayName": "Refresh Activities Growth MoM"
+                        }
+                    ]
+                }
+            },
+            "sortDefinition": {
+                "sort": [
+                    {
+                        "field": {
+                            "Column": {
+                                "Expression": {
+                                    "SourceRef": {
+                                        "Entity": "calendar"
+                                    }
+                                },
+                                "Property": "YearMonth"
+                            }
+                        },
+                        "direction": "Ascending"
+                    }
+                ]
+            }
+        },
+        "objects": {
+            "categoryAxis": [
+                {
+                    "properties": {
+                        "axisType": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "'Scalar'"
+                                }
+                            }
+                        },
+                        "gridlineColor": {
+                            "solid": {
+                                "color": {
+                                    "expr": {
+                                        "ThemeDataColor": {
+                                            "ColorId": 0,
+                                            "Percent": -0.5
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            ],
+            "labels": [
+                {
+                    "properties": {
+                        "show": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "true"
+                                }
+                            }
+                        }
+                    }
+                },
+                {
+                    "properties": {
+                        "showSeries": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "false"
+                                }
+                            }
+                        }
+                    },
+                    "selector": {
+                        "metadata": "Metrics.# Activities"
+                    }
+                }
+            ],
+            "legend": [
+                {
+                    "properties": {
+                        "position": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "'Right'"
+                                }
+                            }
+                        }
+                    }
+                }
+            ],
+            "valueAxis": [
+                {
+                    "properties": {
+                        "gridlineColor": {
+                            "solid": {
+                                "color": {
+                                    "expr": {
+                                        "ThemeDataColor": {
+                                            "ColorId": 0,
+                                            "Percent": -0.5
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            ],
+            "dataPoint": [
+                {
+                    "properties": {
+                        "fill": {
+                            "solid": {
+                                "color": {
+                                    "expr": {
+                                        "Literal": {
+                                            "Value": "'#61BBB5'"
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "selector": {
+                        "data": [
+                            {
+                                "scopeId": {
+                                    "Comparison": {
+                                        "ComparisonKind": 0,
+                                        "Left": {
+                                            "Column": {
+                                                "Expression": {
+                                                    "SourceRef": {
+                                                        "Entity": "activities"
+                                                    }
+                                                },
+                                                "Property": "Activity"
+                                            }
+                                        },
+                                        "Right": {
+                                            "Literal": {
+                                                "Value": "'RequestCopilot'"
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        ]
+                    }
+                },
+                {
+                    "properties": {
+                        "fill": {
+                            "solid": {
+                                "color": {
+                                    "expr": {
+                                        "Literal": {
+                                            "Value": "'#FF9BC5'"
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "selector": {
+                        "data": [
+                            {
+                                "scopeId": {
+                                    "Comparison": {
+                                        "ComparisonKind": 0,
+                                        "Left": {
+                                            "Column": {
+                                                "Expression": {
+                                                    "SourceRef": {
+                                                        "Entity": "activities"
+                                                    }
+                                                },
+                                                "Property": "Activity"
+                                            }
+                                        },
+                                        "Right": {
+                                            "Literal": {
+                                                "Value": "'RequestOpenAI'"
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        ]
+                    }
+                },
+                {
+                    "properties": {
+                        "fill": {
+                            "solid": {
+                                "color": {
+                                    "expr": {
+                                        "Literal": {
+                                            "Value": "'#B87EE7'"
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "selector": {
+                        "metadata": "Metrics.Activities Growth MoM"
+                    }
+                },
+                {
+                    "properties": {
+                        "fill": {
+                            "solid": {
+                                "color": {
+                                    "expr": {
+                                        "ThemeDataColor": {
+                                            "ColorId": 4,
+                                            "Percent": -0.25
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            ],
+            "lineStyles": [
+                {
+                    "properties": {
+                        "showMarker": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "true"
+                                }
+                            }
+                        },
+                        "markerShape": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "'square'"
+                                }
+                            }
+                        },
+                        "markerSize": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "6D"
+                                }
+                            }
+                        },
+                        "areaShow": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "false"
+                                }
+                            }
+                        }
+                    }
+                }
+            ]
+        },
+        "visualContainerObjects": {
+            "title": [
+                {
+                    "properties": {
+                        "show": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "true"
+                                }
+                            }
+                        },
+                        "text": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "'Activity | Refresh related Activities on dedicated Capacities'"
+                                }
+                            }
+                        },
+                        "fontSize": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "12D"
+                                }
+                            }
+                        }
+                    }
+                }
+            ],
+            "border": [
+                {
+                    "properties": {
+                        "show": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "true"
+                                }
+                            }
+                        },
+                        "radius": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "5D"
+                                }
+                            }
+                        }
+                    }
+                }
+            ],
+            "dropShadow": [
+                {
+                    "properties": {
+                        "show": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "true"
+                                }
+                            }
+                        },
+                        "color": {
+                            "solid": {
+                                "color": {
+                                    "expr": {
+                                        "ThemeDataColor": {
+                                            "ColorId": 0,
+                                            "Percent": -0.1
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            ],
+            "subTitle": [
+                {
+                    "properties": {
+                        "show": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "true"
+                                }
+                            }
+                        },
+                        "text": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "'X-Axis hierarchy: Year-Month | Filtered for Activites: ''RefreshDataset'' & ''RequestDataFlowRefresh'''"
+                                }
+                            }
+                        },
+                        "fontSize": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "9D"
+                                }
+                            }
+                        }
+                    }
+                }
+            ],
+            "visualTooltip": [
+                {
+                    "properties": {
+                        "type": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "'Default'"
+                                }
+                            }
+                        }
+                    }
+                }
+            ]
+        },
+        "drillFilterOtherVisuals": true
+    },
+    "filterConfig": {
+        "filters": [
+            {
+                "name": "Filter93a5f4fe7eed5565de64",
+                "ordinal": 0,
+                "field": {
+                    "Column": {
+                        "Expression": {
+                            "SourceRef": {
+                                "Entity": "activities"
+                            }
+                        },
+                        "Property": "Activity"
+                    }
+                },
+                "type": "Advanced",
+                "filter": {
+                    "Version": 2,
+                    "From": [
+                        {
+                            "Name": "a",
+                            "Entity": "activities",
+                            "Type": 0
+                        }
+                    ],
+                    "Where": [
+                        {
+                            "Condition": {
+                                "Or": {
+                                    "Left": {
+                                        "Comparison": {
+                                            "ComparisonKind": 0,
+                                            "Left": {
+                                                "Column": {
+                                                    "Expression": {
+                                                        "SourceRef": {
+                                                            "Source": "a"
+                                                        }
+                                                    },
+                                                    "Property": "Activity"
+                                                }
+                                            },
+                                            "Right": {
+                                                "Literal": {
+                                                    "Value": "'RefreshDataset'"
+                                                }
+                                            }
+                                        }
+                                    },
+                                    "Right": {
+                                        "Comparison": {
+                                            "ComparisonKind": 0,
+                                            "Left": {
+                                                "Column": {
+                                                    "Expression": {
+                                                        "SourceRef": {
+                                                            "Source": "a"
+                                                        }
+                                                    },
+                                                    "Property": "Activity"
+                                                }
+                                            },
+                                            "Right": {
+                                                "Literal": {
+                                                    "Value": "'RequestDataflowRefresh'"
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    ]
+                },
+                "howCreated": "User"
+            },
+            {
+                "name": "bfbb4e2e0e66b20af250",
+                "ordinal": 1,
+                "field": {
+                    "Column": {
+                        "Expression": {
+                            "SourceRef": {
+                                "Entity": "activities"
+                            }
+                        },
+                        "Property": "CapacityId"
+                    }
+                },
+                "type": "Categorical",
+                "filter": {
+                    "Version": 2,
+                    "From": [
+                        {
+                            "Name": "a",
+                            "Entity": "activities",
+                            "Type": 0
+                        }
+                    ],
+                    "Where": [
+                        {
+                            "Condition": {
+                                "Not": {
+                                    "Expression": {
+                                        "In": {
+                                            "Expressions": [
+                                                {
+                                                    "Column": {
+                                                        "Expression": {
+                                                            "SourceRef": {
+                                                                "Source": "a"
+                                                            }
+                                                        },
+                                                        "Property": "CapacityId"
+                                                    }
+                                                }
+                                            ],
+                                            "Values": [
+                                                [
+                                                    {
+                                                        "Literal": {
+                                                            "Value": "null"
+                                                        }
+                                                    }
+                                                ]
+                                            ]
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    ]
+                },
+                "howCreated": "User",
+                "objects": {
+                    "general": [
+                        {
+                            "properties": {
+                                "isInvertedSelectionMode": {
+                                    "expr": {
+                                        "Literal": {
+                                            "Value": "true"
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    ]
+                }
+            },
+            {
+                "name": "b33104d5399e40922901",
+                "ordinal": 2,
+                "field": {
+                    "Column": {
+                        "Expression": {
+                            "SourceRef": {
+                                "Entity": "calendar"
+                            }
+                        },
+                        "Property": "YearMonth"
+                    }
+                },
+                "type": "Categorical"
+            },
+            {
+                "name": "4dd87427c9e2f4d72928",
+                "ordinal": 3,
+                "field": {
+                    "Measure": {
+                        "Expression": {
+                            "SourceRef": {
+                                "Entity": "Metrics"
+                            }
+                        },
+                        "Property": "# Activities"
+                    }
+                },
+                "type": "Advanced"
+            },
+            {
+                "name": "e3beb6c9e33e197feb40",
+                "ordinal": 4,
+                "field": {
+                    "Measure": {
+                        "Expression": {
+                            "SourceRef": {
+                                "Entity": "Metrics"
+                            }
+                        },
+                        "Property": "Activities Growth MoM"
+                    }
+                },
+                "type": "Advanced"
+            },
+            {
+                "name": "ff9c5e8e7635a49752a4",
+                "ordinal": 5,
+                "field": {
+                    "Column": {
+                        "Expression": {
+                            "SourceRef": {
+                                "Entity": "calendar"
+                            }
+                        },
+                        "Property": "Date2Key"
+                    }
+                },
+                "type": "RelativeDate",
+                "filter": {
+                    "Version": 2,
+                    "From": [
+                        {
+                            "Name": "c",
+                            "Entity": "calendar",
+                            "Type": 0
+                        }
+                    ],
+                    "Where": [
+                        {
+                            "Condition": {
+                                "Between": {
+                                    "Expression": {
+                                        "Column": {
+                                            "Expression": {
+                                                "SourceRef": {
+                                                    "Source": "c"
+                                                }
+                                            },
+                                            "Property": "Date2Key"
+                                        }
+                                    },
+                                    "LowerBound": {
+                                        "DateSpan": {
+                                            "Expression": {
+                                                "DateAdd": {
+                                                    "Expression": {
+                                                        "DateAdd": {
+                                                            "Expression": {
+                                                                "Now": {}
+                                                            },
+                                                            "Amount": 1,
+                                                            "TimeUnit": 0
+                                                        }
+                                                    },
+                                                    "Amount": -2,
+                                                    "TimeUnit": 3
+                                                }
+                                            },
+                                            "TimeUnit": 0
+                                        }
+                                    },
+                                    "UpperBound": {
+                                        "DateSpan": {
+                                            "Expression": {
+                                                "Now": {}
+                                            },
+                                            "TimeUnit": 0
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    ]
+                },
+                "howCreated": "User"
+            }
+        ],
+        "filterSortOrder": "Custom"
+    }
+}

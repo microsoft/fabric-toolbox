@@ -1,0 +1,275 @@
+{
+    "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.5.0/schema.json",
+    "name": "4024471e6e6c8dcd59a5",
+    "position": {
+        "x": 1690.441176470588,
+        "y": 16.91176470588235,
+        "z": 12000,
+        "height": 41.17647058823529,
+        "width": 155.1470588235294,
+        "tabOrder": 9000
+    },
+    "visual": {
+        "visualType": "actionButton",
+        "objects": {
+            "icon": [
+                {
+                    "properties": {
+                        "shapeType": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "'blank'"
+                                }
+                            }
+                        }
+                    },
+                    "selector": {
+                        "id": "default"
+                    }
+                },
+                {
+                    "properties": {
+                        "show": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "false"
+                                }
+                            }
+                        }
+                    }
+                }
+            ],
+            "fill": [
+                {
+                    "properties": {
+                        "show": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "true"
+                                }
+                            }
+                        }
+                    }
+                },
+                {
+                    "properties": {
+                        "fillColor": {
+                            "solid": {
+                                "color": {
+                                    "expr": {
+                                        "Conditional": {
+                                            "Cases": [
+                                                {
+                                                    "Condition": {
+                                                        "Comparison": {
+                                                            "ComparisonKind": 0,
+                                                            "Left": {
+                                                                "Measure": {
+                                                                    "Expression": {
+                                                                        "SourceRef": {
+                                                                            "Entity": "Metrics"
+                                                                        }
+                                                                    },
+                                                                    "Property": "FUAM Update Available"
+                                                                }
+                                                            },
+                                                            "Right": {
+                                                                "Literal": {
+                                                                    "Value": "0D"
+                                                                }
+                                                            }
+                                                        }
+                                                    },
+                                                    "Value": {
+                                                        "Literal": {
+                                                            "Value": "'#50a19d'"
+                                                        }
+                                                    }
+                                                },
+                                                {
+                                                    "Condition": {
+                                                        "Comparison": {
+                                                            "ComparisonKind": 0,
+                                                            "Left": {
+                                                                "Measure": {
+                                                                    "Expression": {
+                                                                        "SourceRef": {
+                                                                            "Entity": "Metrics"
+                                                                        }
+                                                                    },
+                                                                    "Property": "FUAM Update Available"
+                                                                }
+                                                            },
+                                                            "Right": {
+                                                                "Literal": {
+                                                                    "Value": "1D"
+                                                                }
+                                                            }
+                                                        }
+                                                    },
+                                                    "Value": {
+                                                        "Literal": {
+                                                            "Value": "'#9d70b0'"
+                                                        }
+                                                    }
+                                                }
+                                            ]
+                                        }
+                                    }
+                                }
+                            }
+                        },
+                        "transparency": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "0D"
+                                }
+                            }
+                        }
+                    },
+                    "selector": {
+                        "id": "default"
+                    }
+                }
+            ],
+            "outline": [
+                {
+                    "properties": {
+                        "show": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "false"
+                                }
+                            }
+                        }
+                    }
+                }
+            ],
+            "shape": [
+                {
+                    "properties": {
+                        "tileShape": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "'rectangleRounded'"
+                                }
+                            }
+                        },
+                        "rectangleRoundedCurve": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "50L"
+                                }
+                            }
+                        }
+                    },
+                    "selector": {
+                        "id": "default"
+                    }
+                }
+            ],
+            "text": [
+                {
+                    "properties": {
+                        "show": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "true"
+                                }
+                            }
+                        }
+                    }
+                },
+                {
+                    "properties": {
+                        "text": {
+                            "expr": {
+                                "Measure": {
+                                    "Expression": {
+                                        "SourceRef": {
+                                            "Entity": "Metrics"
+                                        }
+                                    },
+                                    "Property": "FUAM Release Message"
+                                }
+                            }
+                        },
+                        "fontColor": {
+                            "solid": {
+                                "color": {
+                                    "expr": {
+                                        "ThemeDataColor": {
+                                            "ColorId": 0,
+                                            "Percent": 0
+                                        }
+                                    }
+                                }
+                            }
+                        },
+                        "fontFamily": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "'''Segoe UI Semibold'', wf_segoe-ui_semibold, helvetica, arial, sans-serif'"
+                                }
+                            }
+                        }
+                    },
+                    "selector": {
+                        "id": "default"
+                    }
+                }
+            ]
+        },
+        "visualContainerObjects": {
+            "visualLink": [
+                {
+                    "properties": {
+                        "show": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "true"
+                                }
+                            }
+                        },
+                        "type": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "'WebUrl'"
+                                }
+                            }
+                        },
+                        "webUrl": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "'https://github.com/microsoft/fabric-toolbox/blob/main/monitoring/fabric-unified-admin-monitoring/how-to/How_to_update_FUAM.md'"
+                                }
+                            }
+                        },
+                        "tooltip": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "'Link: How to update FUAM'"
+                                }
+                            }
+                        }
+                    }
+                }
+            ],
+            "border": [
+                {
+                    "properties": {
+                        "show": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "false"
+                                }
+                            }
+                        }
+                    }
+                }
+            ]
+        },
+        "drillFilterOtherVisuals": true
+    },
+    "howCreated": "InsertVisualButton"
+}

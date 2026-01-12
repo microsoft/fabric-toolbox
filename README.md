@@ -9,11 +9,14 @@ Fabric toolbox is a repository of tools, accelerators, scripts, and samples to h
 These assets should be treated as examples that you can use to create the solutions that are appropriate for your use case. If you have any issues, please use the [issues](https://github.com/microsoft/fabric-toolbox/issues) tab of this repository and we will work to address issues on a best effort basis. 
 
 ## Monitoring
-- [Fabric Unified Admin Monitoring (FUAM)](./monitoring/fabric-unified-admin-monitoring)
+- $${\color{yellow}UPDATED!}$$ [Fabric Cost Analysis (FCA)](./monitoring/fabric-cost-analysis)
+- $${\color{yellow}UPDATED!}$$ [Fabric Unified Admin Monitoring (FUAM)](./monitoring/fabric-unified-admin-monitoring)
+- [Fabric Platform Monitoring (Monitor Fabric with RTI and Capacity Events)](./monitoring/fabric-platform-monitoring)
 - [Workspace Monitoring Report Templates](./monitoring/workspace-monitoring-dashboards)
+- [Fabric Spark Monitoring (Monitor Spark with RTI)](./monitoring/fabric-spark-monitoring)
 
 ## Accelerators
-- $${\color{green}NEW!}$$ [BCDR Accelerator](./accelerators/BCDR)
+- [BCDR Accelerator](./accelerators/BCDR)
 - [CICD: Git-Based Deployments](./accelerators/CICD/Git-based-deployments)
 - [CICD: Deploy using Fabric deployment pipelines](./accelerators/CICD/Deploy-using-Fabric-deployment-pipelines)
 - [CICD: Branch out to new workspace](./accelerators/CICD/Branch-out-to-new-workspace)
@@ -21,6 +24,7 @@ These assets should be treated as examples that you can use to create the soluti
 - [Power BI datamart to Fabric Data Warehouse Modernization](./accelerators/power-bi-to-fabric-data-warehouse-modernization)
 - [Real Time Intelligence Eventhouse](./accelerators/real-time-intelligence_eventhouse)
 - [Real Time Intelligence Eventstream](./accelerators/real-time-intelligence_eventstream)
+- [Policy Weaver - Mirror Data Access Policies from Databricks and Snowflake to Fabric](./accelerators/policy-weaver)
 
 ## Samples
 - [Open Mirroring](./samples/open-mirroring)
@@ -34,15 +38,19 @@ These assets should be treated as examples that you can use to create the soluti
 - [Notebook: Workspace Size](./samples/notebook-workspace-size)
 
 ## Scripts
-- $${\color{green}NEW!}$$ [CI Views](./scripts/dw-ci-views)
-- $${\color{green}NEW!}$$ [DW/SQL AE Properties](./scripts/dw-properties)
+- $${\color{green}NEW!}$$ [Mirror CCI Tables for Fabric SQL DB](./scripts/sql-Mirror-CCI-tables)
+- [CI Views](./scripts/dw-ci-views)
+- [DW/SQL AE Properties](./scripts/dw-properties)
 - [DW Active Requests](./scripts/dw-active-requests)
 - [DW Copy DMV to Table](./scripts/dw-copy-dmv-to-table)
 - [DW Queries Running at Timepoint](./scripts/dw-queries-running-at-timepoint)
 - [DW SP Kill Queries](./scripts/dw-sp-kill-queries)
 
 ## Tools
-- $${\color{green}NEW!}$$ [Open Mirroring SDK](./tools/OpenMirroringPythonSDK)
+- $${\color{yellow}UPDATED!}$$ [Fabric Data Factory Migration Assistant](./tools/FabricDataFactoryMigrationAssistant)
+- [DAX Performance Tuner MCP Server](./tools/DAXPerformanceTunerMCPServer)
+- [Semantic Model MCP Server](./tools/SemanticModelMCPServer)
+- [Open Mirroring SDK](./tools/OpenMirroringPythonSDK)
 - [MicrosoftFabricMgmt PowerShell Module](./tools/MicrosoftFabricMgmt)
 - [Gen2 Dedicated Pool to Fabric DW Table Copy](./tools/Gen2toFabricDW)
 - [Semantic Model Audit](./tools/SemanticModelAudit)

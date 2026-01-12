@@ -1,0 +1,65 @@
+table subscriptions
+	lineageTag: b38edd54-7876-40de-87b7-495b58b6b80a
+	sourceLineageTag: [dbo].[subscriptions]
+
+	column SubAccountId
+		dataType: string
+		isHidden
+		lineageTag: 7279a2b4-c666-455b-93c2-51d70812372b
+		sourceLineageTag: SubAccountId
+		summarizeBy: none
+		sourceColumn: SubAccountId
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	column SubAccountName
+		dataType: string
+		lineageTag: af0542e4-087d-43a8-b45c-68bce12ad785
+		sourceLineageTag: SubAccountName
+		summarizeBy: none
+		sourceColumn: SubAccountName
+
+		annotation SummarizationSetBy = Automatic
+
+	column SubAccountType
+		dataType: string
+		lineageTag: d082a5ed-9f24-4e9b-a368-2bbc6d1ae95b
+		sourceLineageTag: SubAccountType
+		summarizeBy: none
+		sourceColumn: SubAccountType
+
+		annotation SummarizationSetBy = Automatic
+
+	column SubId
+		dataType: string
+		lineageTag: e4b05646-d2fd-43f7-9868-640266f1bc4c
+		sourceLineageTag: SubId
+		summarizeBy: none
+		sourceColumn: SubId
+
+		annotation SummarizationSetBy = Automatic
+
+	column SubscriptionKey
+		dataType: int64
+		isHidden
+		formatString: 0
+		lineageTag: 3384773f-fae7-4772-9281-672c9c520ef5
+		sourceLineageTag: SubscriptionKey
+		summarizeBy: none
+		sourceColumn: SubscriptionKey
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	partition subscriptions = entity
+		mode: directLake
+		source
+			entityName: subscriptions
+			schemaName: dbo
+			expressionSource: DatabaseQuery
+
+	annotation PBI_ResultType = Table
+

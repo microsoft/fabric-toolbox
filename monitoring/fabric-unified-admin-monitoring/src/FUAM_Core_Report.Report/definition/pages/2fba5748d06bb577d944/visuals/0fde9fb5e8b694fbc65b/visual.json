@@ -1,0 +1,628 @@
+{
+    "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.5.0/schema.json",
+    "name": "0fde9fb5e8b694fbc65b",
+    "position": {
+        "x": 23.36713995943205,
+        "y": 176.55172413793105,
+        "z": 1000,
+        "height": 880.1622718052739,
+        "width": 1875.8620689655174,
+        "tabOrder": 5000
+    },
+    "visual": {
+        "visualType": "pivotTable",
+        "query": {
+            "queryState": {
+                "Columns": {
+                    "projections": [
+                        {
+                            "field": {
+                                "Column": {
+                                    "Expression": {
+                                        "SourceRef": {
+                                            "Entity": "item_users"
+                                        }
+                                    },
+                                    "Property": "AccessRight"
+                                }
+                            },
+                            "queryRef": "item_users.AccessRight",
+                            "nativeQueryRef": "AccessRight",
+                            "active": true
+                        }
+                    ]
+                },
+                "Rows": {
+                    "projections": [
+                        {
+                            "field": {
+                                "Column": {
+                                    "Expression": {
+                                        "SourceRef": {
+                                            "Entity": "item_users"
+                                        }
+                                    },
+                                    "Property": "PrincipalType"
+                                }
+                            },
+                            "queryRef": "item_users.PrincipalType",
+                            "nativeQueryRef": "PrincipalType",
+                            "active": true
+                        },
+                        {
+                            "field": {
+                                "Column": {
+                                    "Expression": {
+                                        "SourceRef": {
+                                            "Entity": "item_users"
+                                        }
+                                    },
+                                    "Property": "Identifier"
+                                }
+                            },
+                            "queryRef": "item_users.Identifier",
+                            "nativeQueryRef": "Identifier",
+                            "active": true
+                        },
+                        {
+                            "field": {
+                                "Column": {
+                                    "Expression": {
+                                        "SourceRef": {
+                                            "Entity": "workspaces"
+                                        }
+                                    },
+                                    "Property": "WorkspaceName"
+                                }
+                            },
+                            "queryRef": "workspaces.WorkspaceName",
+                            "nativeQueryRef": "WorkspaceName",
+                            "active": true
+                        }
+                    ]
+                },
+                "Values": {
+                    "projections": [
+                        {
+                            "field": {
+                                "Measure": {
+                                    "Expression": {
+                                        "SourceRef": {
+                                            "Entity": "Metrics"
+                                        }
+                                    },
+                                    "Property": "# Item Level Accesses"
+                                }
+                            },
+                            "queryRef": "Metrics.# Item Level Accesses",
+                            "nativeQueryRef": "# Item Level Accesses"
+                        }
+                    ]
+                }
+            }
+        },
+        "expansionStates": [
+            {
+                "roles": [
+                    "Rows"
+                ],
+                "levels": [
+                    {
+                        "queryRefs": [
+                            "item_users.PrincipalType"
+                        ],
+                        "isCollapsed": true,
+                        "identityKeys": [
+                            {
+                                "Column": {
+                                    "Expression": {
+                                        "SourceRef": {
+                                            "Entity": "item_users"
+                                        }
+                                    },
+                                    "Property": "PrincipalType"
+                                }
+                            }
+                        ],
+                        "isPinned": true
+                    },
+                    {
+                        "queryRefs": [
+                            "item_users.Identifier"
+                        ],
+                        "isCollapsed": true,
+                        "identityKeys": [
+                            {
+                                "Column": {
+                                    "Expression": {
+                                        "SourceRef": {
+                                            "Entity": "item_users"
+                                        }
+                                    },
+                                    "Property": "Identifier"
+                                }
+                            }
+                        ],
+                        "isPinned": true
+                    },
+                    {
+                        "queryRefs": [
+                            "workspaces.WorkspaceName"
+                        ],
+                        "isCollapsed": true,
+                        "identityKeys": [
+                            {
+                                "Column": {
+                                    "Expression": {
+                                        "SourceRef": {
+                                            "Entity": "workspaces"
+                                        }
+                                    },
+                                    "Property": "WorkspaceName"
+                                }
+                            }
+                        ],
+                        "isPinned": true
+                    }
+                ],
+                "root": {
+                    "children": [
+                        {
+                            "identityValues": [
+                                {
+                                    "Literal": {
+                                        "Value": "'User'"
+                                    }
+                                }
+                            ],
+                            "isToggled": true,
+                            "children": [
+                                {
+                                    "identityValues": [
+                                        {
+                                            "Literal": {
+                                                "Value": "'martink@MngEnvMCAP059919.onmicrosoft.com'"
+                                            }
+                                        }
+                                    ],
+                                    "isToggled": true
+                                }
+                            ]
+                        }
+                    ]
+                }
+            }
+        ],
+        "objects": {
+            "columnHeaders": [
+                {
+                    "properties": {
+                        "fontFamily": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "'''Segoe UI Semibold'', wf_segoe-ui_semibold, helvetica, arial, sans-serif'"
+                                }
+                            }
+                        },
+                        "backColor": {
+                            "solid": {
+                                "color": {
+                                    "expr": {
+                                        "ThemeDataColor": {
+                                            "ColorId": 2,
+                                            "Percent": 0
+                                        }
+                                    }
+                                }
+                            }
+                        },
+                        "fontColor": {
+                            "solid": {
+                                "color": {
+                                    "expr": {
+                                        "ThemeDataColor": {
+                                            "ColorId": 0,
+                                            "Percent": 0
+                                        }
+                                    }
+                                }
+                            }
+                        },
+                        "fontSize": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "10D"
+                                }
+                            }
+                        }
+                    }
+                }
+            ],
+            "grid": [
+                {
+                    "properties": {
+                        "gridVertical": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "true"
+                                }
+                            }
+                        },
+                        "rowPadding": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "8D"
+                                }
+                            }
+                        },
+                        "outlineColor": {
+                            "solid": {
+                                "color": {
+                                    "expr": {
+                                        "ThemeDataColor": {
+                                            "ColorId": 0,
+                                            "Percent": -0.2
+                                        }
+                                    }
+                                }
+                            }
+                        },
+                        "textSize": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "12D"
+                                }
+                            }
+                        },
+                        "gridHorizontal": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "true"
+                                }
+                            }
+                        }
+                    }
+                }
+            ],
+            "values": [
+                {
+                    "properties": {
+                        "backColorSecondary": {
+                            "solid": {
+                                "color": {
+                                    "expr": {
+                                        "Literal": {
+                                            "Value": "'#F5F6F5'"
+                                        }
+                                    }
+                                }
+                            }
+                        },
+                        "fontSize": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "10D"
+                                }
+                            }
+                        }
+                    }
+                },
+                {
+                    "properties": {
+                        "backColor": {
+                            "solid": {
+                                "color": {
+                                    "expr": {
+                                        "FillRule": {
+                                            "Input": {
+                                                "Measure": {
+                                                    "Expression": {
+                                                        "SourceRef": {
+                                                            "Entity": "Metrics"
+                                                        }
+                                                    },
+                                                    "Property": "# Item Level Accesses"
+                                                }
+                                            },
+                                            "FillRule": {
+                                                "linearGradient3": {
+                                                    "min": {
+                                                        "color": {
+                                                            "Literal": {
+                                                                "Value": "'#FFFFFF'"
+                                                            }
+                                                        }
+                                                    },
+                                                    "mid": {
+                                                        "color": {
+                                                            "Literal": {
+                                                                "Value": "'#ffdab3'"
+                                                            }
+                                                        }
+                                                    },
+                                                    "max": {
+                                                        "color": {
+                                                            "Literal": {
+                                                                "Value": "'maxColor'"
+                                                            }
+                                                        }
+                                                    },
+                                                    "nullColoringStrategy": {
+                                                        "strategy": {
+                                                            "Literal": {
+                                                                "Value": "'asZero'"
+                                                            }
+                                                        }
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "selector": {
+                        "data": [
+                            {
+                                "dataViewWildcard": {
+                                    "matchingOption": 1
+                                }
+                            }
+                        ],
+                        "metadata": "Metrics.# Item Level Accesses"
+                    }
+                }
+            ],
+            "general": [
+                {
+                    "properties": {
+                        "layout": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "'Tabular'"
+                                }
+                            }
+                        }
+                    }
+                }
+            ],
+            "rowHeaders": [
+                {
+                    "properties": {
+                        "fontSize": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "10D"
+                                }
+                            }
+                        }
+                    }
+                }
+            ],
+            "columnTotal": [
+                {
+                    "properties": {
+                        "fontSize": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "10D"
+                                }
+                            }
+                        },
+                        "applyToHeaders": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "false"
+                                }
+                            }
+                        }
+                    }
+                }
+            ],
+            "subTotals": [
+                {
+                    "properties": {
+                        "rowSubtotals": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "true"
+                                }
+                            }
+                        },
+                        "columnSubtotals": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "true"
+                                }
+                            }
+                        },
+                        "rowSubtotalsLabel": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "'# Accesses'"
+                                }
+                            }
+                        },
+                        "perRowLevel": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "true"
+                                }
+                            }
+                        }
+                    }
+                },
+                {
+                    "properties": {
+                        "levelSubtotalEnabled": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "false"
+                                }
+                            }
+                        }
+                    },
+                    "selector": {
+                        "metadata": "item_users.Identifier"
+                    }
+                }
+            ]
+        },
+        "visualContainerObjects": {
+            "title": [
+                {
+                    "properties": {
+                        "show": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "true"
+                                }
+                            }
+                        },
+                        "text": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "'# Item Level Accesses by Principal Type by Identified by Access Right'"
+                                }
+                            }
+                        },
+                        "fontSize": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "12D"
+                                }
+                            }
+                        }
+                    }
+                }
+            ],
+            "border": [
+                {
+                    "properties": {
+                        "show": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "true"
+                                }
+                            }
+                        },
+                        "radius": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "12D"
+                                }
+                            }
+                        }
+                    }
+                }
+            ],
+            "dropShadow": [
+                {
+                    "properties": {
+                        "show": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "true"
+                                }
+                            }
+                        },
+                        "color": {
+                            "solid": {
+                                "color": {
+                                    "expr": {
+                                        "ThemeDataColor": {
+                                            "ColorId": 0,
+                                            "Percent": -0.2
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            ]
+        },
+        "drillFilterOtherVisuals": true
+    },
+    "filterConfig": {
+        "filters": [
+            {
+                "name": "3abe1b581d43c0ce0abd",
+                "ordinal": 0,
+                "field": {
+                    "Column": {
+                        "Expression": {
+                            "SourceRef": {
+                                "Entity": "workspaces"
+                            }
+                        },
+                        "Property": "WorkspaceName"
+                    }
+                },
+                "type": "Categorical"
+            },
+            {
+                "name": "3f382af131d0439cb77b",
+                "ordinal": 1,
+                "field": {
+                    "Column": {
+                        "Expression": {
+                            "SourceRef": {
+                                "Entity": "item_users"
+                            }
+                        },
+                        "Property": "PrincipalType"
+                    }
+                },
+                "type": "Categorical"
+            },
+            {
+                "name": "50920304dac3fe7412ea",
+                "ordinal": 2,
+                "field": {
+                    "Column": {
+                        "Expression": {
+                            "SourceRef": {
+                                "Entity": "item_users"
+                            }
+                        },
+                        "Property": "Identifier"
+                    }
+                },
+                "type": "Categorical"
+            },
+            {
+                "name": "c43f8d42552b303a929c",
+                "ordinal": 3,
+                "field": {
+                    "Column": {
+                        "Expression": {
+                            "SourceRef": {
+                                "Entity": "item_users"
+                            }
+                        },
+                        "Property": "AccessRight"
+                    }
+                },
+                "type": "Categorical"
+            },
+            {
+                "name": "7537d82ccc399d67019b",
+                "ordinal": 4,
+                "field": {
+                    "Measure": {
+                        "Expression": {
+                            "SourceRef": {
+                                "Entity": "Metrics"
+                            }
+                        },
+                        "Property": "# Item Level Accesses"
+                    }
+                },
+                "type": "Advanced"
+            }
+        ],
+        "filterSortOrder": "Custom"
+    }
+}

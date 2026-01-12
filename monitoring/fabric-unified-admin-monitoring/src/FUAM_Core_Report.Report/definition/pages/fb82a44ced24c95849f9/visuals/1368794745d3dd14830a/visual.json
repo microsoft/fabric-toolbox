@@ -1,0 +1,303 @@
+{
+    "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.5.0/schema.json",
+    "name": "1368794745d3dd14830a",
+    "position": {
+        "x": 1033.1787188701112,
+        "y": 7.598211919750764,
+        "z": 4000,
+        "height": 60,
+        "width": 153.125,
+        "tabOrder": 1000
+    },
+    "visual": {
+        "visualType": "actionButton",
+        "objects": {
+            "icon": [
+                {
+                    "properties": {
+                        "shapeType": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "'custom'"
+                                }
+                            }
+                        },
+                        "horizontalAlignment": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "'right'"
+                                }
+                            }
+                        },
+                        "iconSize": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "20D"
+                                }
+                            }
+                        }
+                    },
+                    "selector": {
+                        "id": "default"
+                    }
+                },
+                {
+                    "properties": {
+                        "show": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "false"
+                                }
+                            }
+                        }
+                    }
+                }
+            ],
+            "text": [
+                {
+                    "properties": {
+                        "show": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "true"
+                                }
+                            }
+                        }
+                    }
+                },
+                {
+                    "properties": {
+                        "text": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "'Operation View'"
+                                }
+                            }
+                        },
+                        "fontFamily": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "'''Segoe UI Semibold'', wf_segoe-ui_semibold, helvetica, arial, sans-serif'"
+                                }
+                            }
+                        },
+                        "fontColor": {
+                            "solid": {
+                                "color": {
+                                    "expr": {
+                                        "ThemeDataColor": {
+                                            "ColorId": 0,
+                                            "Percent": 0
+                                        }
+                                    }
+                                }
+                            }
+                        },
+                        "fontSize": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "10D"
+                                }
+                            }
+                        },
+                        "horizontalAlignment": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "'center'"
+                                }
+                            }
+                        },
+                        "leftMargin": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "10L"
+                                }
+                            }
+                        }
+                    },
+                    "selector": {
+                        "id": "default"
+                    }
+                }
+            ],
+            "shape": [
+                {
+                    "properties": {
+                        "tileShape": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "'rectangleRounded'"
+                                }
+                            }
+                        },
+                        "rectangleRoundedCurve": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "10L"
+                                }
+                            }
+                        }
+                    },
+                    "selector": {
+                        "id": "default"
+                    }
+                }
+            ],
+            "outline": [
+                {
+                    "properties": {
+                        "show": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "false"
+                                }
+                            }
+                        }
+                    }
+                }
+            ],
+            "shadow": [
+                {
+                    "properties": {
+                        "show": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "true"
+                                }
+                            }
+                        }
+                    }
+                },
+                {
+                    "properties": {
+                        "color": {
+                            "solid": {
+                                "color": {
+                                    "expr": {
+                                        "ThemeDataColor": {
+                                            "ColorId": 0,
+                                            "Percent": 0
+                                        }
+                                    }
+                                }
+                            }
+                        },
+                        "shadowBlur": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "3D"
+                                }
+                            }
+                        }
+                    },
+                    "selector": {
+                        "id": "default"
+                    }
+                }
+            ],
+            "fill": [
+                {
+                    "properties": {
+                        "show": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "true"
+                                }
+                            }
+                        }
+                    }
+                },
+                {
+                    "properties": {
+                        "fillColor": {
+                            "solid": {
+                                "color": {
+                                    "expr": {
+                                        "ThemeDataColor": {
+                                            "ColorId": 2,
+                                            "Percent": 0
+                                        }
+                                    }
+                                }
+                            }
+                        },
+                        "transparency": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "0D"
+                                }
+                            }
+                        }
+                    },
+                    "selector": {
+                        "id": "default"
+                    }
+                }
+            ]
+        },
+        "visualContainerObjects": {
+            "title": [
+                {
+                    "properties": {
+                        "show": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "false"
+                                }
+                            }
+                        }
+                    }
+                }
+            ],
+            "visualLink": [
+                {
+                    "properties": {
+                        "show": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "true"
+                                }
+                            }
+                        },
+                        "type": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "'PageNavigation'"
+                                }
+                            }
+                        },
+                        "bookmark": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "'c37036b0d12abae98316'"
+                                }
+                            }
+                        },
+                        "navigationSection": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "'fb82a44ced24c95849f9'"
+                                }
+                            }
+                        }
+                    }
+                }
+            ],
+            "border": [
+                {
+                    "properties": {
+                        "show": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "false"
+                                }
+                            }
+                        }
+                    }
+                }
+            ]
+        },
+        "drillFilterOtherVisuals": true
+    },
+    "howCreated": "InsertVisualButton"
+}

@@ -1,0 +1,571 @@
+{
+    "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.5.0/schema.json",
+    "name": "da3d6ca01652c76ecd69",
+    "position": {
+        "x": 1344.5652173913043,
+        "y": 1115.2173913043478,
+        "z": 17000,
+        "height": 288.04347826086956,
+        "width": 547.8260869565217,
+        "tabOrder": 19000
+    },
+    "visual": {
+        "visualType": "pivotTable",
+        "query": {
+            "queryState": {
+                "Rows": {
+                    "projections": [
+                        {
+                            "field": {
+                                "Column": {
+                                    "Expression": {
+                                        "SourceRef": {
+                                            "Entity": "aggregated_activities_last_30days"
+                                        }
+                                    },
+                                    "Property": "Activity"
+                                }
+                            },
+                            "queryRef": "aggregated_activities_last_30days.Activity",
+                            "nativeQueryRef": "Activity",
+                            "active": true
+                        },
+                        {
+                            "field": {
+                                "Column": {
+                                    "Expression": {
+                                        "SourceRef": {
+                                            "Entity": "aggregated_activities_last_30days"
+                                        }
+                                    },
+                                    "Property": "CreationDate"
+                                }
+                            },
+                            "queryRef": "aggregated_activities_last_30days.CreationDate",
+                            "nativeQueryRef": "CreationDate",
+                            "active": true
+                        },
+                        {
+                            "field": {
+                                "Column": {
+                                    "Expression": {
+                                        "SourceRef": {
+                                            "Entity": "aggregated_activities_last_30days"
+                                        }
+                                    },
+                                    "Property": "CreationHour"
+                                }
+                            },
+                            "queryRef": "aggregated_activities_last_30days.CreationHour",
+                            "nativeQueryRef": "CreationHour",
+                            "active": false
+                        },
+                        {
+                            "field": {
+                                "Column": {
+                                    "Expression": {
+                                        "SourceRef": {
+                                            "Entity": "activities"
+                                        }
+                                    },
+                                    "Property": "UserId"
+                                }
+                            },
+                            "queryRef": "activities.UserId",
+                            "nativeQueryRef": "UserId",
+                            "active": false
+                        }
+                    ]
+                },
+                "Values": {
+                    "projections": [
+                        {
+                            "field": {
+                                "Measure": {
+                                    "Expression": {
+                                        "SourceRef": {
+                                            "Entity": "Metrics"
+                                        }
+                                    },
+                                    "Property": "# Item Activities"
+                                }
+                            },
+                            "queryRef": "Metrics.# Item Activities",
+                            "nativeQueryRef": "# SM Activities",
+                            "displayName": "# SM Activities"
+                        },
+                        {
+                            "field": {
+                                "Measure": {
+                                    "Expression": {
+                                        "SourceRef": {
+                                            "Entity": "Metrics"
+                                        }
+                                    },
+                                    "Property": "# Users"
+                                }
+                            },
+                            "queryRef": "Metrics.# Users",
+                            "nativeQueryRef": "# SM Users",
+                            "displayName": "# SM Users"
+                        }
+                    ]
+                }
+            },
+            "sortDefinition": {
+                "sort": [
+                    {
+                        "field": {
+                            "Measure": {
+                                "Expression": {
+                                    "SourceRef": {
+                                        "Entity": "Metrics"
+                                    }
+                                },
+                                "Property": "# Item Activities"
+                            }
+                        },
+                        "direction": "Descending"
+                    }
+                ]
+            }
+        },
+        "expansionStates": [
+            {
+                "roles": [
+                    "Rows"
+                ],
+                "levels": [
+                    {
+                        "queryRefs": [
+                            "aggregated_activities_last_30days.Activity"
+                        ],
+                        "isCollapsed": true,
+                        "identityKeys": [
+                            {
+                                "Column": {
+                                    "Expression": {
+                                        "SourceRef": {
+                                            "Entity": "aggregated_activities_last_30days"
+                                        }
+                                    },
+                                    "Property": "Activity"
+                                }
+                            }
+                        ],
+                        "isPinned": true
+                    },
+                    {
+                        "queryRefs": [
+                            "aggregated_activities_last_30days.CreationDate"
+                        ],
+                        "isCollapsed": true,
+                        "isPinned": true
+                    },
+                    {
+                        "queryRefs": [
+                            "aggregated_activities_last_30days.CreationHour"
+                        ],
+                        "isCollapsed": true
+                    },
+                    {
+                        "queryRefs": [
+                            "activities.UserId"
+                        ],
+                        "isCollapsed": true
+                    }
+                ],
+                "root": {
+                    "children": [
+                        {
+                            "identityValues": [
+                                {
+                                    "Literal": {
+                                        "Value": "'ConnectFromExternalApplication'"
+                                    }
+                                }
+                            ],
+                            "isToggled": true
+                        }
+                    ]
+                }
+            }
+        ],
+        "objects": {
+            "general": [
+                {
+                    "properties": {
+                        "layout": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "'Compact'"
+                                }
+                            }
+                        }
+                    }
+                }
+            ],
+            "columnFormatting": [
+                {
+                    "properties": {
+                        "dataBars": {
+                            "positiveColor": {
+                                "solid": {
+                                    "color": {
+                                        "expr": {
+                                            "Literal": {
+                                                "Value": "'#ffc88e'"
+                                            }
+                                        }
+                                    }
+                                }
+                            },
+                            "negativeColor": {
+                                "solid": {
+                                    "color": {
+                                        "expr": {
+                                            "Literal": {
+                                                "Value": "'minColor'"
+                                            }
+                                        }
+                                    }
+                                }
+                            },
+                            "axisColor": {
+                                "solid": {
+                                    "color": {
+                                        "expr": {
+                                            "Literal": {
+                                                "Value": "'foreground'"
+                                            }
+                                        }
+                                    }
+                                }
+                            },
+                            "reverseDirection": {
+                                "expr": {
+                                    "Literal": {
+                                        "Value": "false"
+                                    }
+                                }
+                            },
+                            "hideText": {
+                                "expr": {
+                                    "Literal": {
+                                        "Value": "false"
+                                    }
+                                }
+                            },
+                            "totalMatchingOption": {
+                                "expr": {
+                                    "Literal": {
+                                        "Value": "1L"
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "selector": {
+                        "metadata": "Metrics.# Item Activities"
+                    }
+                },
+                {
+                    "properties": {
+                        "dataBars": {
+                            "positiveColor": {
+                                "solid": {
+                                    "color": {
+                                        "expr": {
+                                            "Literal": {
+                                                "Value": "'#8be0ff'"
+                                            }
+                                        }
+                                    }
+                                }
+                            },
+                            "negativeColor": {
+                                "solid": {
+                                    "color": {
+                                        "expr": {
+                                            "Literal": {
+                                                "Value": "'minColor'"
+                                            }
+                                        }
+                                    }
+                                }
+                            },
+                            "axisColor": {
+                                "solid": {
+                                    "color": {
+                                        "expr": {
+                                            "Literal": {
+                                                "Value": "'foreground'"
+                                            }
+                                        }
+                                    }
+                                }
+                            },
+                            "reverseDirection": {
+                                "expr": {
+                                    "Literal": {
+                                        "Value": "false"
+                                    }
+                                }
+                            },
+                            "hideText": {
+                                "expr": {
+                                    "Literal": {
+                                        "Value": "false"
+                                    }
+                                }
+                            },
+                            "totalMatchingOption": {
+                                "expr": {
+                                    "Literal": {
+                                        "Value": "1L"
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "selector": {
+                        "metadata": "Metrics.# Users"
+                    }
+                }
+            ],
+            "grid": [
+                {
+                    "properties": {
+                        "outlineColor": {
+                            "solid": {
+                                "color": {
+                                    "expr": {
+                                        "ThemeDataColor": {
+                                            "ColorId": 5,
+                                            "Percent": -0.25
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            ],
+            "columnWidth": [
+                {
+                    "properties": {
+                        "value": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "286.523630519424D"
+                                }
+                            }
+                        }
+                    },
+                    "selector": {
+                        "metadata": "aggregated_activities_last_30days.Activity"
+                    }
+                }
+            ]
+        },
+        "visualContainerObjects": {
+            "title": [
+                {
+                    "properties": {
+                        "show": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "true"
+                                }
+                            }
+                        },
+                        "text": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "'Item Activities & Unique Users | last 30 days'"
+                                }
+                            }
+                        },
+                        "fontSize": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "12D"
+                                }
+                            }
+                        }
+                    }
+                }
+            ],
+            "border": [
+                {
+                    "properties": {
+                        "show": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "true"
+                                }
+                            }
+                        },
+                        "color": {
+                            "solid": {
+                                "color": {
+                                    "expr": {
+                                        "ThemeDataColor": {
+                                            "ColorId": 0,
+                                            "Percent": 0
+                                        }
+                                    }
+                                }
+                            }
+                        },
+                        "radius": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "10D"
+                                }
+                            }
+                        }
+                    }
+                }
+            ],
+            "dropShadow": [
+                {
+                    "properties": {
+                        "show": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "true"
+                                }
+                            }
+                        },
+                        "color": {
+                            "solid": {
+                                "color": {
+                                    "expr": {
+                                        "ThemeDataColor": {
+                                            "ColorId": 0,
+                                            "Percent": -0.1
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            ]
+        },
+        "drillFilterOtherVisuals": true
+    },
+    "filterConfig": {
+        "filters": [
+            {
+                "name": "48e59b4835c188a958b1",
+                "ordinal": 0,
+                "field": {
+                    "Column": {
+                        "Expression": {
+                            "SourceRef": {
+                                "Entity": "activities"
+                            }
+                        },
+                        "Property": "Activity"
+                    }
+                },
+                "type": "Categorical",
+                "howCreated": "User"
+            },
+            {
+                "name": "e1f960c68e57012d1c30",
+                "ordinal": 1,
+                "field": {
+                    "Measure": {
+                        "Expression": {
+                            "SourceRef": {
+                                "Entity": "Metrics"
+                            }
+                        },
+                        "Property": "# Item Activities"
+                    }
+                },
+                "type": "Advanced"
+            },
+            {
+                "name": "3024e9953ccadde7492c",
+                "ordinal": 2,
+                "field": {
+                    "Measure": {
+                        "Expression": {
+                            "SourceRef": {
+                                "Entity": "Metrics"
+                            }
+                        },
+                        "Property": "# Users"
+                    }
+                },
+                "type": "Advanced"
+            },
+            {
+                "name": "ef5cef920eee388029a6",
+                "ordinal": 3,
+                "field": {
+                    "Column": {
+                        "Expression": {
+                            "SourceRef": {
+                                "Entity": "activities"
+                            }
+                        },
+                        "Property": "CreationHour"
+                    }
+                },
+                "type": "Advanced",
+                "howCreated": "User"
+            },
+            {
+                "name": "f5ef281ed81d1e11c757",
+                "ordinal": 4,
+                "field": {
+                    "Column": {
+                        "Expression": {
+                            "SourceRef": {
+                                "Entity": "aggregated_activities_last_30days"
+                            }
+                        },
+                        "Property": "Activity"
+                    }
+                },
+                "type": "Categorical"
+            },
+            {
+                "name": "494ea649be8fea53b663",
+                "ordinal": 5,
+                "field": {
+                    "Column": {
+                        "Expression": {
+                            "SourceRef": {
+                                "Entity": "aggregated_activities_last_30days"
+                            }
+                        },
+                        "Property": "CreationDate"
+                    }
+                },
+                "type": "Categorical"
+            },
+            {
+                "name": "f1710008e69ba2f27fde",
+                "ordinal": 6,
+                "field": {
+                    "Column": {
+                        "Expression": {
+                            "SourceRef": {
+                                "Entity": "aggregated_activities_last_30days"
+                            }
+                        },
+                        "Property": "CreationHour"
+                    }
+                },
+                "type": "Advanced"
+            }
+        ],
+        "filterSortOrder": "Custom"
+    }
+}

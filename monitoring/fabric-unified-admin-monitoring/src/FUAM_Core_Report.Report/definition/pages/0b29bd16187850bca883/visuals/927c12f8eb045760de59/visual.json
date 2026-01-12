@@ -1,0 +1,216 @@
+{
+    "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.5.0/schema.json",
+    "name": "927c12f8eb045760de59",
+    "position": {
+        "x": 218.41652323580033,
+        "y": 134.83820998278827,
+        "z": 3000,
+        "height": 63.85542168674699,
+        "width": 202.40963855421688,
+        "tabOrder": 0
+    },
+    "visual": {
+        "visualType": "slicer",
+        "query": {
+            "queryState": {
+                "Values": {
+                    "projections": [
+                        {
+                            "field": {
+                                "Column": {
+                                    "Expression": {
+                                        "SourceRef": {
+                                            "Entity": "tenant_settings"
+                                        }
+                                    },
+                                    "Property": "canSpecifySecurityGroups"
+                                }
+                            },
+                            "queryRef": "tenant_settings.canSpecifySecurityGroups",
+                            "nativeQueryRef": "Can Specify Security Groups",
+                            "active": true,
+                            "displayName": "Can Specify Security Groups"
+                        }
+                    ]
+                }
+            },
+            "sortDefinition": {
+                "isDefaultSort": true
+            }
+        },
+        "expansionStates": [
+            {
+                "roles": [
+                    "Values"
+                ],
+                "levels": [
+                    {
+                        "queryRefs": [
+                            "tenant_settings.canSpecifySecurityGroups"
+                        ],
+                        "isCollapsed": true,
+                        "isPinned": true
+                    }
+                ],
+                "root": {}
+            }
+        ],
+        "objects": {
+            "data": [
+                {
+                    "properties": {
+                        "mode": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "'Dropdown'"
+                                }
+                            }
+                        }
+                    }
+                }
+            ],
+            "items": [
+                {
+                    "properties": {
+                        "textSize": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "8D"
+                                }
+                            }
+                        }
+                    }
+                }
+            ],
+            "header": [
+                {
+                    "properties": {
+                        "textSize": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "9D"
+                                }
+                            }
+                        }
+                    }
+                }
+            ],
+            "general": [
+                {
+                    "properties": {
+                        "selfFilterEnabled": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "true"
+                                }
+                            }
+                        },
+                        "orientation": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "1D"
+                                }
+                            }
+                        }
+                    }
+                }
+            ]
+        },
+        "visualContainerObjects": {
+            "title": [
+                {
+                    "properties": {
+                        "show": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "false"
+                                }
+                            }
+                        },
+                        "text": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "''"
+                                }
+                            }
+                        },
+                        "fontSize": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "12D"
+                                }
+                            }
+                        }
+                    }
+                }
+            ],
+            "border": [
+                {
+                    "properties": {
+                        "show": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "true"
+                                }
+                            }
+                        },
+                        "radius": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "5D"
+                                }
+                            }
+                        }
+                    }
+                }
+            ],
+            "dropShadow": [
+                {
+                    "properties": {
+                        "show": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "true"
+                                }
+                            }
+                        },
+                        "color": {
+                            "solid": {
+                                "color": {
+                                    "expr": {
+                                        "ThemeDataColor": {
+                                            "ColorId": 0,
+                                            "Percent": -0.1
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            ]
+        },
+        "drillFilterOtherVisuals": true
+    },
+    "filterConfig": {
+        "filters": [
+            {
+                "name": "Filterde718276e6343123888c",
+                "ordinal": 0,
+                "field": {
+                    "Column": {
+                        "Expression": {
+                            "SourceRef": {
+                                "Entity": "capacities"
+                            }
+                        },
+                        "Property": "displayName"
+                    }
+                },
+                "type": "Categorical",
+                "howCreated": "User"
+            }
+        ],
+        "filterSortOrder": "Custom"
+    }
+}

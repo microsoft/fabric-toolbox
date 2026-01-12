@@ -201,5 +201,3 @@ table capacity_metrics_by_item_by_operation_by_day
 			schemaName: dbo
 			expressionSource: DatabaseQuery
 
-	annotation PBI_ResultType = Table
-

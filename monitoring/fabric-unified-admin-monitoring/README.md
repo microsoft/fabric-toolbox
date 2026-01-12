@@ -6,6 +6,9 @@
 
 [Want to get a brief introduction on FUAM? - Watch the video](https://youtu.be/CmHMOsQcMGI)
 
+> [!IMPORTANT]  
+> FUAM will support the Capacity Utilization Events mode in the future. This features takes Fabric monitoring to the next level by providing near-real time CU consumption.
+
 > [!CAUTION]  
 > The FUAM solution accelerator is not an official Microsoft product! It is a solution accelerator, which can help you implement a monitoring solution within Fabric. As such there is no offical support available and there is a risk that things might break. E.g. the extraction of Capacity Metrics data. This is based on the Capacity Metrics App and elements of that App could change without notice and impact FUAM.
 
@@ -71,6 +74,7 @@ Are you ready to try FUAM out? We have prepared two step-by-step guides to help 
 
 ## Changelog
 
+- **FUAM [Release 2026.1.1 (latest)](/monitoring/fabric-unified-admin-monitoring/changelog/FUAM_Changelog.md)**
 - **FUAM [Release 2025.9.1](/monitoring/fabric-unified-admin-monitoring/changelog/FUAM_Changelog.md)**
 
 ## Support
@@ -85,13 +89,34 @@ The FUAM solution accelerator template **is not an official Microsoft service**.
 **Important:** Please do not open a support ticket in case of an issue regarding the templates. In case of any questions or issues regarding the templates, please create an issue in this repository.
 
 
-
 ----------------
 
 ## Other helpful resources
+
+##### Built-in Fabric monitoring features
+- [Microsoft Fabric Capacity Metrics app ](https://learn.microsoft.com/en-us/fabric/enterprise/metrics-app)
+- [What is the admin monitoring workspace? (preview)](https://learn.microsoft.com/en-us/fabric/admin/monitoring-workspace)
+- [Microsoft Fabric Chargeback app (preview)](https://learn.microsoft.com/en-us/fabric/enterprise/chargeback-app)
+
+##### FUAM related videos
+- [Video - FUAM in Guy in a Cube](https://www.youtube.com/watch?v=G_-N2VMO8C0&themeRefresh=1)
 - [Video - Brief introduction to FUAM](https://youtu.be/CmHMOsQcMGI)
+
+##### Other FUAM articles
+- [Overview - FUAM](/monitoring/fabric-unified-admin-monitoring/README.md)
 - [Documentation - FUAM's Authorization & Authentication](/monitoring/fabric-unified-admin-monitoring/media/documentation/FUAM_Authorization.md)
 - [Documentation - FUAM Architecture](/monitoring/fabric-unified-admin-monitoring/media/documentation/FUAM_Architecture.md)
 - [Documentation - FUAM Lakehouse table lineage](/monitoring/fabric-unified-admin-monitoring/media/documentation/FUAM_Documentation_Lakehouse_table_lineage.pdf)
+- [Documentation - FUAM Engine level analyzer reports](/monitoring/fabric-unified-admin-monitoring/media/documentation/FUAM_Engine_Level_Analyzer_Reports.md)
+
+##### Some other Fabric Toolbox assets
+- [Overview - Fabric Cost Analysis](/monitoring/fabric-cost-analysis/README.md)
+- [Overview - Fabric Workspace Monitoring report templates](/monitoring/workspace-monitoring-dashboards/README.md)
+- [Overview - Semantic Model MCP Server](https://github.com/microsoft/fabric-toolbox/tree/main/tools/SemanticModelMCPServer)
+- [Overview - Semantic Model Audit tool](/tools/SemanticModelAudit/README.md)
+
+##### Semantic Link & Semantic Link Lab
+- [What is semantic link?](https://learn.microsoft.com/en-us/fabric/data-science/semantic-link-overview)
+- [Overview - Semantic Link Labs](https://github.com/microsoft/semantic-link-labs/blob/main/README.md)
 
 ----------------

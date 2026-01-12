@@ -1,0 +1,26 @@
+{
+  "name": "Accessible City park",
+  "dataColors": [
+    "#59A33A",
+    "#2D386D",
+    "#AD8F21",
+    "#7B1C25",
+    "#5C97D2",
+    "#661F89",
+    "#E56E1D",
+    "#14482C"
+  ],
+  "foreground": "#111111",
+  "background": "#FFFFFF",
+  "foregroundNeutralSecondary": "#5D5C60",
+  "backgroundLight": "#F0EEF8",
+  "foregroundNeutralTertiary": "#8E8C93",
+  "backgroundNeutral": "#EFEDFB",
+  "tableAccent": "#2D8509",
+  "maximum": "#14482C",
+  "center": "#7758C9",
+  "minimum": "#AC1D2A",
+  "bad": "#E56E1D",
+  "neutral": "#2464B1",
+  "good": "#27A481"
+}

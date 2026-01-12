@@ -1,0 +1,76 @@
+{
+    "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/page/2.0.0/schema.json",
+    "name": "f93130a26ad7dede570e",
+    "displayName": "Home",
+    "displayOption": "FitToPage",
+    "height": 1080,
+    "width": 1920,
+    "objects": {
+        "displayArea": [
+            {
+                "properties": {
+                    "verticalAlignment": {
+                        "expr": {
+                            "Literal": {
+                                "Value": "'Middle'"
+                            }
+                        }
+                    }
+                }
+            }
+        ],
+        "background": [
+            {
+                "properties": {
+                    "image": {
+                        "image": {
+                            "name": {
+                                "expr": {
+                                    "Literal": {
+                                        "Value": "'fuam_core_home_bg.png'"
+                                    }
+                                }
+                            },
+                            "url": {
+                                "expr": {
+                                    "ResourcePackageItem": {
+                                        "PackageName": "RegisteredResources",
+                                        "PackageType": 1,
+                                        "ItemName": "fuam_core_home_bg5982635581759405.png"
+                                    }
+                                }
+                            },
+                            "scaling": {
+                                "expr": {
+                                    "Literal": {
+                                        "Value": "'Fill'"
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "transparency": {
+                        "expr": {
+                            "Literal": {
+                                "Value": "0D"
+                            }
+                        }
+                    }
+                }
+            }
+        ],
+        "outspacePane": [
+            {
+                "properties": {
+                    "width": {
+                        "expr": {
+                            "Literal": {
+                                "Value": "232L"
+                            }
+                        }
+                    }
+                }
+            }
+        ]
+    }
+}

@@ -104,5 +104,3 @@ table semantic_model_bpa_rule_catalog
 			schemaName: dbo
 			expressionSource: DatabaseQuery
 
-	annotation PBI_ResultType = Table
-

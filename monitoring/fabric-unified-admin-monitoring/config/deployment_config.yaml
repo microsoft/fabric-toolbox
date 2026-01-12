@@ -6,3 +6,89 @@ connections:
 fuam_lakehouse_semantic_models:
   - FUAM_Core_SM.SemanticModel
   - FUAM_Item_SM.SemanticModel
+
+folders:
+  - name: "Deployment"
+    items:
+    - FUAM_Config_Lakehouse.Lakehouse
+    - Init_FUAM_Lakehouse_Tables.Notebook
+  - name: "Others"
+    items:
+    - FUAM_Staging_Lakehouse.Lakehouse
+    - Generate_Calendar_Table.Notebook
+    - Check_FUAM_Version.Notebook
+  - name: "Active Items"
+    items:
+    - 01_Transfer_Active_Items_Unit.Notebook
+    - Load_Items_E2E.DataPipeline
+  - name: "Activities"
+    items:
+    - 02_Transfer_Activities_Unit.Notebook
+    - 03_Aggregate_Activities_Unit.Notebook
+    - Load_Activities_E2E.DataPipeline
+  - name: "Capacities"
+    items:
+    - 01_Transfer_Capacities_Unit.Notebook
+    - Load_Capacities_E2E.DataPipeline
+  - name: "Capacity Refreshables"
+    items:
+    - 01_Transfer_Capacity_Refreshables_Unit.Notebook
+    - Load_Capacity_Refreshables_E2E.DataPipeline
+  - name: "Workspaces"
+    items:
+    - 02_Transfer_Workspaces_Unit.Notebook
+    - Load_PBI_Workspaces_E2E.DataPipeline
+  - name: "Inventory"
+    items:
+    - 01_Transfer_Incremental_Inventory_Unit.Notebook
+    - Load_Inventory_E2E.DataPipeline
+  - name: "Tenant Settings"
+    items:
+    - 01_Transfer_Delegated_Tenant_Settings_Overrides_Unit.Notebook
+    - 01_Transfer_Tenant_Admin_Settings_Unit.Notebook
+    - Load_Tenant_Settings_E2E.DataPipeline
+    - Load_Delegated_Tenant_Settings_Overrides_E2E.DataPipeline
+  - name: "Git Connections"
+    items:
+    - 01_Transfer_Git_Connections_Unit.Notebook
+    - Load_Git_Connections_E2E.DataPipeline
+  - name: "Maintenance"
+    items:  
+    - FUAM_Backup_Lakehouse.Lakehouse
+    - 01_FUAM_Lakehouse_Backup.Notebook
+    - 02_FUAM_Lakehouse_Optimization.Notebook
+    - Maintenance_for_FUAM.DataPipeline
+    - 01_Create_Snapshot_Tables_Unit.Notebook
+  - name: "Capacity Metrics"
+    items:  
+    - 01_Transfer_CapacityMetricData_Timepoints_Unit.Notebook
+    - 02_Transfer_CapacityMetricData_ItemKind_Unit.Notebook
+    - 03_Transfer_CapacityMetricData_ItemOperation_Unit.Notebook
+    - Load_Capacity_Metrics_E2E.DataPipeline
+  - name: "Reporting"
+    items:
+    - FUAM_Core_SM.SemanticModel
+    - FUAM_Core_Report.Report
+    - FUAM_Item_SM.SemanticModel
+    - FUAM_Item_Analyzer_Report.Report
+    - FUAM_Semantic_Model_Meta_Data_Analyzer_SM.SemanticModel
+    - FUAM_Semantic_Model_Meta_Data_Analyzer_Report.Report
+    - FUAM_SQL_Endpoint_Analyzer_SM.SemanticModel
+    - FUAM_SQL_Endpoint_Analyzer_Report.Report
+    - FUAM_Gateway_Monitoring_From_Files_SM.SemanticModel
+    - FUAM_Gateway_Monitoring_From_Files_Report.Report
+  - name: "Domains"
+    items:
+    - 01_Transfer_Domains_Unit.Notebook
+    - Load_Domains_E2E.DataPipeline
+  - name: "WidelyShared"
+    items:
+    - 01_Transfer_WidelyShared_OrganizationLinks_Unit.Notebook
+    - 01_Transfer_WidelyShared_PublishedToWeb_Unit.Notebook
+    - Load_WidelyShared_OrganizationLinks_E2E.DataPipeline
+    - Load_WidelyShared_PublishedToWeb_E2E.DataPipeline
+  - name: "Optimization Module"
+    items:
+    - 00_Run_Optimization_Module_for_SM_Unit.Notebook
+    
+    

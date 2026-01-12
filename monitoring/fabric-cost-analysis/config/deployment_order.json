@@ -1,0 +1,86 @@
+[
+  {
+    "name": "FCA.Workspace",
+    "id": "57bceddc-a995-44a7-bfb5-1d5f11ad1e98"
+  },
+  {
+    "name": "fca azure management",
+    "id": "50bcac62-6770-456d-9897-2ae7c08874b9"
+  },
+  {
+    "name": "FCA.Lakehouse",
+    "id": "897aa7f9-9a59-4b8a-ad72-551118dc1109"
+  },
+  {
+    "name": "01_Load_Focus.Notebook",
+    "id": "0c96d0e9-ea78-4c25-848a-8c581c9c7b24"
+  },
+  {
+    "name": "01_Load_Calendar.Notebook",
+    "id": "aa881633-c031-433b-8420-d569fd1965b8"
+  },
+  {
+    "name": "01_Load_FCAVersion.Notebook",
+    "id": "3d735ef3-2014-424f-99e2-832fca1291ce"
+  },
+  {
+    "name": "01_Load_Dimensions.Notebook",
+    "id": "0e29a4cd-d9b6-4cab-8049-1d2123f4b3d7"
+  },
+  {
+    "name": "01_Load_Focus_Fabric.Notebook",
+    "id": "7a5dec37-ce1a-445c-8315-60d06305aefc"
+  },
+  {
+    "name": "03_Optimization.Notebook",
+    "id": "337fd9f8-1500-4823-8e1f-04d0e87b1adc"
+  },
+  {
+    "name": "01_Load_Meters.Notebook",
+    "id": "681520b2-2265-4927-979a-b0ef804f8f8e"
+  },
+  {
+    "name": "02_Load_DimReservation.Notebook",
+    "id": "2616bdc2-8284-4783-9feb-0d63e5264446"
+  },
+    {
+    "name": "02_Load_Reservation.Notebook",
+    "id": "fde3c9c2-d7ee-477a-9ab5-86b379730537"
+  },
+  {
+    "name": "02_Load_Reservation_Fabric.Notebook",
+    "id": "9ed1a200-d07d-445b-8849-4fb77bfb9b24"
+  },
+  {
+    "name": "02_Create_DataAgent.Notebook",
+    "id": "a866b760-30d6-4cf5-b303-67b654b8e189"
+  },
+  {
+    "name": "Init_FCA_Lakehouse_Tables.Notebook",
+    "id": "b1d81878-700d-46dc-8b61-265fd1c70fc2"
+  },
+  {
+    "name": "02_Load_Quota_Fabric.Notebook",
+    "id": "c128d9a2-9832-4742-aabb-67f4bd999b47" 
+  },
+  {
+    "name": "FCA_Core_SM.SemanticModel",
+    "id": "26c9f0b0-fc20-4eaf-8309-b38bba897b6e"
+  },
+  {
+    "name": "FCA_Core_Report.Report",
+    "id": "bdb9aa02-a5b6-49b5-b0e9-e1b0aec578c5"
+  },
+  {
+    "name": "Load Quota.DataPipeline",
+    "id": "bc560572-054f-49e6-8601-2505da5bea6a"
+  },
+  {
+    "name": "Load Reservations.DataPipeline",
+    "id": "973f5bba-e075-4055-8949-eb9b36801737"
+  },
+  {
+    "name": "Load FCA E2E.DataPipeline",
+    "id": "82115e96-db2b-4201-8d14-dc8041ee6ba7"
+  }
+]

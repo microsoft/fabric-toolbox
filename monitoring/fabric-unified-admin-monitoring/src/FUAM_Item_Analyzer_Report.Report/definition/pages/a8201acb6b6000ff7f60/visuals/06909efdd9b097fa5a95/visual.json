@@ -1,0 +1,73 @@
+{
+    "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.5.0/schema.json",
+    "name": "06909efdd9b097fa5a95",
+    "position": {
+        "x": 927.536231884058,
+        "y": 0,
+        "z": 0,
+        "height": 88.40579710144928,
+        "width": 81.15942028985508,
+        "tabOrder": 29007
+    },
+    "visual": {
+        "visualType": "image",
+        "objects": {
+            "image": [
+                {
+                    "properties": {
+                        "sourceFile": {
+                            "image": {
+                                "name": {
+                                    "expr": {
+                                        "Literal": {
+                                            "Value": "'sm_lg.png'"
+                                        }
+                                    }
+                                },
+                                "url": {
+                                    "expr": {
+                                        "ResourcePackageItem": {
+                                            "PackageName": "RegisteredResources",
+                                            "PackageType": 1,
+                                            "ItemName": "sm_lg8210822107455301.png"
+                                        }
+                                    }
+                                },
+                                "scaling": {
+                                    "expr": {
+                                        "Literal": {
+                                            "Value": "'Normal'"
+                                        }
+                                    }
+                                }
+                            }
+                        },
+                        "fit": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "'Fill'"
+                                }
+                            }
+                        }
+                    }
+                }
+            ]
+        },
+        "visualContainerObjects": {
+            "border": [
+                {
+                    "properties": {
+                        "show": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "false"
+                                }
+                            }
+                        }
+                    }
+                }
+            ]
+        },
+        "drillFilterOtherVisuals": true
+    }
+}

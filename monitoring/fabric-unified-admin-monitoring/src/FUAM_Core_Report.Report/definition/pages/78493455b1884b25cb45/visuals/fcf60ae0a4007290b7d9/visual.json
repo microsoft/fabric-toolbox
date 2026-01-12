@@ -1,0 +1,101 @@
+{
+    "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.5.0/schema.json",
+    "name": "fcf60ae0a4007290b7d9",
+    "position": {
+        "x": 542,
+        "y": 96,
+        "z": 5000,
+        "height": 117,
+        "width": 911,
+        "tabOrder": 4000
+    },
+    "visual": {
+        "visualType": "textbox",
+        "objects": {
+            "general": [
+                {
+                    "properties": {
+                        "paragraphs": [
+                            {
+                                "textRuns": [
+                                    {
+                                        "value": "Step 2) ",
+                                        "textStyle": {
+                                            "fontWeight": "bold",
+                                            "fontSize": "12pt",
+                                            "color": "#248a85"
+                                        }
+                                    },
+                                    {
+                                        "value": "Review unused workspaces scores based on FUAM's analytical logic",
+                                        "textStyle": {
+                                            "fontWeight": "bold",
+                                            "fontSize": "12pt"
+                                        }
+                                    }
+                                ]
+                            },
+                            {
+                                "textRuns": [
+                                    {
+                                        "value": "The listed workspaces are candidates to remove from tenants based on the \"Unused Workspace Score\". "
+                                    }
+                                ]
+                            },
+                            {
+                                "textRuns": [
+                                    {
+                                        "value": "This score is a 0-100% scale. ",
+                                        "textStyle": {
+                                            "fontWeight": "bold",
+                                            "color": "#248a85"
+                                        }
+                                    }
+                                ]
+                            },
+                            {
+                                "textRuns": [
+                                    {
+                                        "value": "Higher number indicates that the workspace isn't used longer than the selected days in scope.",
+                                        "textStyle": {
+                                            "fontWeight": "bold"
+                                        }
+                                    }
+                                ]
+                            }
+                        ]
+                    }
+                }
+            ]
+        },
+        "visualContainerObjects": {
+            "border": [
+                {
+                    "properties": {
+                        "show": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "false"
+                                }
+                            }
+                        }
+                    }
+                }
+            ],
+            "background": [
+                {
+                    "properties": {
+                        "show": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "false"
+                                }
+                            }
+                        }
+                    }
+                }
+            ]
+        },
+        "drillFilterOtherVisuals": true
+    }
+}

@@ -1,0 +1,387 @@
+{
+    "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.5.0/schema.json",
+    "name": "f3823edd13556c1b87a8",
+    "position": {
+        "x": 22.121787820740007,
+        "y": 627.69996567237,
+        "z": 8000,
+        "height": 426.38127090301003,
+        "width": 475.1839464882943,
+        "tabOrder": 5000
+    },
+    "visual": {
+        "visualType": "barChart",
+        "query": {
+            "queryState": {
+                "Category": {
+                    "projections": [
+                        {
+                            "field": {
+                                "Column": {
+                                    "Expression": {
+                                        "SourceRef": {
+                                            "Entity": "active_items"
+                                        }
+                                    },
+                                    "Property": "type"
+                                }
+                            },
+                            "queryRef": "active_items.type",
+                            "nativeQueryRef": "Item Kind",
+                            "active": true,
+                            "displayName": "Item Kind"
+                        }
+                    ]
+                },
+                "Y": {
+                    "projections": [
+                        {
+                            "field": {
+                                "Measure": {
+                                    "Expression": {
+                                        "SourceRef": {
+                                            "Entity": "Metrics"
+                                        }
+                                    },
+                                    "Property": "# Active Artifacts"
+                                }
+                            },
+                            "queryRef": "Metrics.# Active Artifacts",
+                            "nativeQueryRef": "# Active Artifacts"
+                        }
+                    ]
+                }
+            },
+            "sortDefinition": {
+                "sort": [
+                    {
+                        "field": {
+                            "Measure": {
+                                "Expression": {
+                                    "SourceRef": {
+                                        "Entity": "Metrics"
+                                    }
+                                },
+                                "Property": "# Active Artifacts"
+                            }
+                        },
+                        "direction": "Descending"
+                    }
+                ],
+                "isDefaultSort": true
+            }
+        },
+        "objects": {
+            "categoryAxis": [
+                {
+                    "properties": {
+                        "axisType": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "'Categorical'"
+                                }
+                            }
+                        },
+                        "maxMarginFactor": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "50L"
+                                }
+                            }
+                        }
+                    }
+                }
+            ],
+            "labels": [
+                {
+                    "properties": {
+                        "show": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "true"
+                                }
+                            }
+                        }
+                    }
+                }
+            ],
+            "legend": [
+                {
+                    "properties": {
+                        "position": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "'Top'"
+                                }
+                            }
+                        },
+                        "showGradientLegend": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "false"
+                                }
+                            }
+                        },
+                        "show": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "false"
+                                }
+                            }
+                        }
+                    }
+                }
+            ],
+            "ribbonBands": [
+                {
+                    "properties": {
+                        "show": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "false"
+                                }
+                            }
+                        }
+                    }
+                }
+            ],
+            "totals": [
+                {
+                    "properties": {
+                        "show": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "true"
+                                }
+                            }
+                        }
+                    }
+                }
+            ],
+            "zoom": [
+                {
+                    "properties": {
+                        "show": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "false"
+                                }
+                            }
+                        }
+                    }
+                }
+            ],
+            "valueAxis": [
+                {
+                    "properties": {
+                        "gridlineAutoScale": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "false"
+                                }
+                            }
+                        }
+                    }
+                }
+            ],
+            "dataPoint": [
+                {
+                    "properties": {
+                        "fill": {
+                            "solid": {
+                                "color": {
+                                    "expr": {
+                                        "FillRule": {
+                                            "Input": {
+                                                "Measure": {
+                                                    "Expression": {
+                                                        "SourceRef": {
+                                                            "Entity": "Metrics"
+                                                        }
+                                                    },
+                                                    "Property": "# Active Artifacts"
+                                                }
+                                            },
+                                            "FillRule": {
+                                                "linearGradient2": {
+                                                    "min": {
+                                                        "color": {
+                                                            "Literal": {
+                                                                "Value": "'#bddbc7'"
+                                                            }
+                                                        }
+                                                    },
+                                                    "max": {
+                                                        "color": {
+                                                            "Literal": {
+                                                                "Value": "'#59A472'"
+                                                            }
+                                                        }
+                                                    },
+                                                    "nullColoringStrategy": {
+                                                        "strategy": {
+                                                            "Literal": {
+                                                                "Value": "'asZero'"
+                                                            }
+                                                        }
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "selector": {
+                        "data": [
+                            {
+                                "dataViewWildcard": {
+                                    "matchingOption": 1
+                                }
+                            }
+                        ]
+                    }
+                }
+            ]
+        },
+        "visualContainerObjects": {
+            "title": [
+                {
+                    "properties": {
+                        "show": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "true"
+                                }
+                            }
+                        },
+                        "text": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "'# Items by Types'"
+                                }
+                            }
+                        }
+                    }
+                }
+            ],
+            "border": [
+                {
+                    "properties": {
+                        "show": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "true"
+                                }
+                            }
+                        }
+                    }
+                }
+            ],
+            "dropShadow": [
+                {
+                    "properties": {
+                        "show": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "true"
+                                }
+                            }
+                        },
+                        "color": {
+                            "solid": {
+                                "color": {
+                                    "expr": {
+                                        "ThemeDataColor": {
+                                            "ColorId": 0,
+                                            "Percent": -0.1
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            ],
+            "padding": [
+                {
+                    "properties": {
+                        "top": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "5D"
+                                }
+                            }
+                        }
+                    }
+                }
+            ],
+            "visualTooltip": [
+                {
+                    "properties": {
+                        "type": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "'Default'"
+                                }
+                            }
+                        }
+                    }
+                }
+            ]
+        },
+        "drillFilterOtherVisuals": true
+    },
+    "filterConfig": {
+        "filters": [
+            {
+                "name": "Filterb66d63e91123ad2c5833",
+                "ordinal": 0,
+                "field": {
+                    "Column": {
+                        "Expression": {
+                            "SourceRef": {
+                                "Entity": "workspaces"
+                            }
+                        },
+                        "Property": "WorkspaceName"
+                    }
+                },
+                "type": "Categorical",
+                "howCreated": "User"
+            },
+            {
+                "name": "Filter71d1bc12aa206a84deeb",
+                "ordinal": 1,
+                "field": {
+                    "Measure": {
+                        "Expression": {
+                            "SourceRef": {
+                                "Entity": "Metrics"
+                            }
+                        },
+                        "Property": "# Active Artifacts"
+                    }
+                },
+                "type": "Advanced"
+            },
+            {
+                "name": "Filter2ffc814c130cde6a9c02",
+                "ordinal": 2,
+                "field": {
+                    "Column": {
+                        "Expression": {
+                            "SourceRef": {
+                                "Entity": "active_items"
+                            }
+                        },
+                        "Property": "type"
+                    }
+                },
+                "type": "Categorical"
+            }
+        ],
+        "filterSortOrder": "Custom"
+    }
+}
