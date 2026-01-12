@@ -25,7 +25,7 @@
     Description          = 'PowerShell module for managing Microsoft Fabric resources via the Fabric API. Supports workspaces, lakehouses, warehouses, notebooks, and more.'
 
     # Minimum version of the PowerShell engine required by this module
-    PowerShellVersion    = '5.1'
+    PowerShellVersion    = '7.0'
 
     # Name of the PowerShell host required by this module
     # PowerShellHostName = ''
