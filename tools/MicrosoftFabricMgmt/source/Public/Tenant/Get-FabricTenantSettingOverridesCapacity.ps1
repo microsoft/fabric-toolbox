@@ -57,9 +57,14 @@ function Get-FabricTenantSettingOverridesCapacity {
                 Uri = $apiEndpointUrl
                 Method = 'Get'
                 ErrorAction = 'Stop'
-                SkipHttpErrorCheck = $true
                 ResponseHeadersVariable = 'responseHeader'
-                StatusCodeVariable = 'statusCode'
+            }
+            if ($PSVersionTable.PSVersion.Major -ge 7)
+            {
+                $restParams.Add("SkipHttpErrorCheck", $true)
+                $restParams.Add("StatusCodeVariable", 'statusCode')
+                $restParams.Add("ResponseHeadersVariable", 'responseHeader')
+
             }
             $response = Invoke-RestMethod @restParams
 

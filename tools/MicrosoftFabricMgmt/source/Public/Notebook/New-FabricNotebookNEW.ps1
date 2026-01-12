@@ -33,7 +33,8 @@ Author: Tiago Balabuch
 
 #>
 
-function New-FabricNotebookNEW {
+function New-FabricNotebookNEW
+{
     [CmdletBinding(SupportsShouldProcess = $true, ConfirmImpact = 'Medium')]
     param (
         [Parameter(Mandatory = $true)]
@@ -54,7 +55,8 @@ function New-FabricNotebookNEW {
         [string]$NotebookPathDefinition
     )
 
-    try {
+    try
+    {
         # Step 1: Ensure token validity
         Write-FabricLog -Message "Validating token..." -Level Debug
         Test-TokenExpired
@@ -69,12 +71,15 @@ function New-FabricNotebookNEW {
             displayName = $NotebookName
         }
 
-        if ($NotebookDescription) {
+        if ($NotebookDescription)
+        {
             $body.description = $NotebookDescription
         }
 
-        if ($NotebookPathDefinition) {
-            if (-not $body.definition) {
+        if ($NotebookPathDefinition)
+        {
+            if (-not $body.definition)
+            {
                 $body.definition = @{
                     format = "ipynb"
                     parts  = @()
@@ -85,8 +90,10 @@ function New-FabricNotebookNEW {
             $body.definition.parts = $jsonObjectParts.parts
         }
         # Check if any path is .platform
-        foreach ($part in $jsonObjectParts.parts) {
-            if ($part.path -eq ".platform") {
+        foreach ($part in $jsonObjectParts.parts)
+        {
+            if ($part.path -eq ".platform")
+            {
                 $hasPlatformFile = $true
                 Write-FabricLog -Message "Platform File: $hasPlatformFile" -Level Debug
             }
@@ -98,26 +105,37 @@ function New-FabricNotebookNEW {
         # Step 4: Make the API request when confirmed
         $target = "Workspace '$WorkspaceId'"
         $action = "Create Notebook '$NotebookName'"
-        if ($PSCmdlet.ShouldProcess($target, $action)) {
-            $response = Invoke-RestMethod `
-                -Headers $script:FabricAuthContext.FabricHeaders `
-                -Uri $apiEndpointUrl `
-                -Method Post `
-                -Body $bodyJson `
-                -ContentType "application/json" `
-                -ErrorAction Stop `
-                -SkipHttpErrorCheck `
-                -ResponseHeadersVariable "responseHeader" `
-                -StatusCodeVariable "statusCode"
+        # Prepare parameters for Invoke-RestMethod
+        $invokeParams = @{
+            Headers                 = $script:FabricAuthContext.FabricHeaders
+            Uri                     = $apiEndpointURI
+            Body                    = $bodyJson
+            Method                  = 'Post'
+            ErrorAction             = 'Stop'
+            ResponseHeadersVariable = 'responseHeader'
+
+            ContentType             = "application/json" `
+        }
+        if ($PSVersionTable.PSVersion.Major -ge 7)
+        {
+            $invokeParams.Add("SkipHttpErrorCheck", $true)
+            $invokeParams.Add("StatusCodeVariable", 'statusCode')
+        }
+        if ($PSCmdlet.ShouldProcess($target, $action))
+        {
+            $response = Invoke-RestMethod
         }
 
         # Step 5: Handle and log the response
-        switch ($statusCode) {
-            201 {
+        switch ($statusCode)
+        {
+            201
+            {
                 Write-FabricLog -Message "Notebook '$NotebookName' created successfully!" -Level Host
                 return $response
             }
-            202 {
+            202
+            {
                 Write-FabricLog -Message "Notebook '$NotebookName' creation accepted. Provisioning in progress!" -Level Host
 
                 [string]$operationId = $responseHeader["x-ms-operation-id"]
@@ -132,7 +150,8 @@ function New-FabricNotebookNEW {
                 $operationStatus = Get-FabricLongRunningOperation -operationId $operationId
                 Write-FabricLog -Message "Long Running Operation status: $operationStatus" -Level Debug
                 # Handle operation result
-                if ($operationStatus.status -eq "Succeeded") {
+                if ($operationStatus.status -eq "Succeeded")
+                {
                     Write-FabricLog -Message "Operation Succeeded" -Level Debug
                     Write-FabricLog -Message "Getting Long Running Operation result" -Level Debug
 
@@ -141,20 +160,23 @@ function New-FabricNotebookNEW {
 
                     return $operationResult
                 }
-                else {
+                else
+                {
                     Write-FabricLog -Message "Operation failed. Status: $($operationStatus)" -Level Debug
                     Write-FabricLog -Message "Operation failed. Status: $($operationStatus)" -Level Error
                     return $operationStatus
                 }
             }
-            default {
+            default
+            {
                 Write-FabricLog -Message "Unexpected response code: $statusCode" -Level Error
                 Write-FabricLog -Message "Error details: $($response.message)" -Level Error
                 throw "API request failed with status code $statusCode."
             }
         }
     }
-    catch {
+    catch
+    {
         # Step 6: Handle and log errors
         $errorDetails = $_.Exception.Message
         Write-FabricLog -Message "Failed to create notebook. Error: $errorDetails" -Level Error
