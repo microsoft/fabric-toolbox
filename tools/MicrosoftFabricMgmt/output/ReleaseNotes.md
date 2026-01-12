@@ -1,9 +1,4 @@
-# Changelog for MicrosoftFabricMgmt
-
-The format is based on and uses the types of changes according to [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
-and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
-
-## [Unreleased]
+## [1.0.2] - 2026-01-12
 
 ### Added
 ### Changed
@@ -118,3 +113,4 @@ Rob Sewell, Jess Pomfret, Ioana Bouariu, Frank Geisler, and others.
 
 **Note:**
 For a full list of changes and details, please see the commit history.
+
