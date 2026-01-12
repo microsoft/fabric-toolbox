@@ -1,0 +1,55 @@
+﻿<#
+.SYNOPSIS
+Retrieves the result of a completed long-running operation from the Microsoft Fabric API.
+
+.DESCRIPTION
+The Get-FabricLongRunningOperationResult function queries the Microsoft Fabric API to fetch the result
+of a specific long-running operation. This is typically used after confirming the operation has completed successfully.
+
+.PARAMETER operationId
+The unique identifier of the completed long-running operation whose result you want to retrieve.
+
+.EXAMPLE
+Get-FabricLongRunningOperationResult -operationId "12345-abcd-67890-efgh"
+
+This command fetches the result of the operation with the specified operationId.
+
+.NOTES
+- Ensure the Fabric API headers (e.g., authorization tokens) are defined in $script:FabricAuthContext.FabricHeaders.
+- This function does not handle polling. Ensure the operation is in a terminal state before calling this function.
+    Author: Updated by Jess Pomfret and Rob Sewell November 2026
+
+
+#>
+function Get-FabricLongRunningOperationResult {
+    param (
+        [Parameter(Mandatory = $true)]
+        [string]$operationId
+    )
+    Invoke-FabricAuthCheck -ThrowOnFailure
+
+
+    # Construct the API endpoint URI
+    $apiEndpointURI = "https://api.fabric.microsoft.com/v1/operations/{0}/result" -f $operationId
+    Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
+
+    try {
+        # Make the API request
+        $apiParams = @{
+            BaseURI = $apiEndpointURI
+            Headers = $script:FabricAuthContext.FabricHeaders
+            Method = 'Get'
+        }
+        $response = Invoke-FabricAPIRequest @apiParams
+
+        # Return the API response
+        Write-FabricLog -Message "LRO result return: $($response)" -Level Debug
+        return $response
+    }
+    catch {
+        # Capture and log error details
+        $errorDetails = $_.Exception.Message
+        Write-FabricLog -Message "An error occurred while returning the operation result: $errorDetails" -Level Error
+        throw
+    }
+}
