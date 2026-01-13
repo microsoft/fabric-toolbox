@@ -576,7 +576,194 @@ SEE ALSO
 - `about_MicrosoftFabricMgmt_Configuration`
 - `about_MicrosoftFabricMgmt_QuickStart`
 
-### 8. Sampler Build System
+### 8. Output Formatting Standards
+
+#### Overview
+
+PowerShell formatting files (`.ps1xml`) define how objects are displayed to users without modifying the actual objects in the pipeline. The module MUST provide custom formatting to ensure consistent, user-friendly output across all 244 functions.
+
+**Key Principle**: Formatting affects **display only**, not pipeline data. All object properties remain available even if not displayed by default.
+
+**Reference Documentation**:
+- [Formatting File Overview](https://learn.microsoft.com/en-us/powershell/scripting/developer/format/formatting-file-overview?view=powershell-7.5)
+- [Format Schema XML Reference](https://learn.microsoft.com/en-us/powershell/scripting/developer/format/format-schema-xml-reference?view=powershell-7.5)
+
+#### MicrosoftFabricMgmt Output Format Standard
+
+**CRITICAL**: All module functions MUST return objects with consistent, user-friendly display formatting.
+
+**Standard Display Order** (applies to all item/resource objects):
+1. **Capacity Name** (resolved from CapacityId if available)
+2. **Workspace Name** (resolved from WorkspaceId)
+3. **Item Name** (DisplayName property)
+4. **Item Type** (Type property)
+5. **...remaining properties** (in logical order)
+
+**Rationale**: Users think hierarchically (Capacity → Workspace → Item), so display should match mental model.
+
+---
+
+### 8. Output Formatting with .ps1xml Files
+
+#### Overview
+
+PowerShell format files (`.ps1xml`) define **how objects are displayed** to users without modifying the actual object data in the pipeline. All object properties remain available even if not displayed by default.
+
+**Key Principle**: Formatting files control **display only** - they don't affect the object in the pipeline.
+
+#### File Location & Loading
+
+**Format File Location**: `source/MicrosoftFabricMgmt.Format.ps1xml`
+
+**Loading Format File**:
+```powershell
+# In module manifest (MicrosoftFabricMgmt.psd1)
+@{
+    FormatsToProcess = @('MicrosoftFabricMgmt.Format.ps1xml')
+}
+```
+
+**IMPORTANT**: Format files are loaded at module import and cached by PowerShell. To test changes:
+```powershell
+# Remove module from session
+Remove-Module MicrosoftFabricMgmt -Force
+
+# Rebuild module
+.\build.ps1 -Tasks build
+
+# Import fresh module
+Import-Module .\output\module\MicrosoftFabricMgmt\1.0.0\MicrosoftFabricMgmt.psd1 -Force
+```
+
+---
+
+### 9. Output Formatting Standards
+
+#### Overview
+
+PowerShell formatting files (`.ps1xml`) control how objects appear when displayed to the user **without modifying the actual objects** in the pipeline. All object properties remain available for further pipeline operations even if not displayed.
+
+**Critical Principle**: Formatting affects **display only**, not the data itself. Users can always access all properties via `Select-Object`, `Format-List`, etc.
+
+#### Module Formatting File Location
+
+**File**: `source/MicrosoftFabricMgmt.Format.ps1xml`
+
+This file is automatically loaded when the module imports. It defines default display formats for all Fabric resource types.
+
+#### Output Display Priority (User-Centric Design)
+
+All Fabric resources should follow this display priority to maximize usefulness:
+
+**Primary Context (Always Visible)**:
+1. **Capacity Name** - Where the resource lives (highest context)
+2. **Workspace Name** - Logical container for resources
+3. **Item Name** - The resource's display name
+4. **Item Type** - What kind of resource (Lakehouse, Notebook, etc.)
+
+**Secondary Information** (shown in List view or when selected):
+- All other properties (IDs, descriptions, metadata, etc.)
+
+### Why This Order Matters
+
+**User Mental Model**: "Which capacity → which workspace → which item → what type"
+- Users think in terms of names, not GUIDs
+- Capacity/Workspace provide context for where the item lives
+- Item Name + Type identify the specific resource
+
+**Current Problem**: Default output shows:
+```powershell
+id                   : 12345-guid
+displayName          : MyLakehouse
+type                 : Lakehouse
+workspaceId          : workspace-guid
+```
+
+**Desired Output**:
+```
+Capacity      Workspace         Item              Type
+--------      ---------         ----              ----
+Premium-001   Analytics WS      Sales Data        Lakehouse
+Premium-001   Analytics WS      Customer Reports  Notebook
+```
+
+---
+
+## Output Formatting Implementation Plan
+
+### Phase 5A: Output Formatting (NEW SCOPE)
+
+#### Goal: User-Friendly Default Display
+
+**Problem**: Current output shows raw API responses with GUIDs instead of human-readable names.
+
+**Solution**: Implement PowerShell format files (`.ps1xml`) to control default display output.
+
+### Standard Output Format (All Resources)
+
+**Display Priority**:
+1. **Capacity Name** (resolved from capacityId)
+2. **Workspace Name** (resolved from workspaceId)
+3. **Item Name** (displayName property)
+4. **Item Type** (type property)
+5. **Rest of properties** (in default order)
+
+### Implementation Plan
+
+#### Step 1: Create Helper Functions for Name Resolution
+
+**New Helper Functions Needed**:
+
+1. **`Get-FabricCapacityName`** - Resolve Capacity ID to Name
+   ```powershell
+   function Get-FabricCapacityName {
+       param([string]$CapacityId)
+       # Cache results for performance
+       # Return capacity display name
+   }
+   ```
+
+2. **Get-FabricWorkspaceName** - Resolve workspace ID to name
+   ```powershell
+   function Get-FabricWorkspaceName {
+       param([string]$WorkspaceId)
+       # Cache lookups to avoid repeated API calls
+   }
+   ```
+
+3. **Add-FabricResourceNames** - Helper to enrich objects
+   ```powershell
+   function Add-FabricResourceNames {
+       param([Parameter(ValueFromPipeline)]$InputObject)
+       process {
+           # Add CapacityName, WorkspaceName to object
+       }
+   }
+   ```
+
+### Implementation Plan
+
+1. **Create Format.ps1xml File**
+   - Location: `source/MicrosoftFabricMgmt.Format.ps1xml`
+   - Define default table views for all major resource types
+   - Priority columns: Capacity Name, Workspace Name, Item Name, Item Type
+
+2. **Create Helper Functions**
+   - `Get-FabricCapacityName` - Resolve capacity ID to name
+   - `Get-FabricWorkspaceName` - Resolve workspace ID to name
+   - Add caching to avoid repeated API calls
+
+3. **Update Module Manifest**
+   - Add `FormatsToProcess` entry in `.psd1` file
+
+4. **Add Type Data**
+   - Create `.ps1xml` types file to add computed properties
+   - `PSTypeName` decorators for custom formatting
+
+Would you like me to:
+1. Start implementing the formatting file structure?
+2. Create helper functions for resolving Capacity/Workspace names from IDs?
+3. Both?
 
 #### Build Configuration
 
