@@ -104,6 +104,100 @@ MicrosoftFabricMgmt v1.0.0 - BREAKING CHANGES:
 - See BREAKING-CHANGES.md for migration guide
 "@
 #EndRegion '.\prefix.ps1' 104
+#Region '.\Private\Add-FabricTypeName.ps1' -1
+
+function Add-FabricTypeName {
+    <#
+    .SYNOPSIS
+        Adds PSTypeName to Fabric objects for custom formatting.
+
+    .DESCRIPTION
+        This helper function adds appropriate PSTypeNames to objects returned from the Fabric API.
+        The type names are used by PowerShell's formatting system (via MicrosoftFabricMgmt.Format.ps1xml)
+        to display objects with custom table views that include resolved capacity and workspace names.
+
+    .PARAMETER InputObject
+        The object(s) to decorate with type names. Can be a single object or an array.
+        Accepts pipeline input.
+
+    .PARAMETER TypeName
+        The PSTypeName to add to the object(s). Common values:
+        - MicrosoftFabric.Lakehouse
+        - MicrosoftFabric.Notebook
+        - MicrosoftFabric.Warehouse
+        - MicrosoftFabric.Workspace
+        - MicrosoftFabric.Capacity
+        - MicrosoftFabric.DataPipeline
+        - MicrosoftFabric.Environment
+        - MicrosoftFabric.Eventhouse
+        - MicrosoftFabric.KQLDatabase
+        - MicrosoftFabric.MLExperiment
+        - MicrosoftFabric.MLModel
+        - MicrosoftFabric.Report
+        - MicrosoftFabric.SemanticModel
+        - MicrosoftFabric.SparkJobDefinition
+
+    .EXAMPLE
+        $lakehouse | Add-FabricTypeName -TypeName 'MicrosoftFabric.Lakehouse'
+
+        Adds the Lakehouse type name to a single object.
+
+    .EXAMPLE
+        $items = Get-FabricLakehouse -WorkspaceId $wsId
+        $items | Add-FabricTypeName -TypeName 'MicrosoftFabric.Lakehouse'
+
+        Adds type names to multiple objects via pipeline.
+
+    .EXAMPLE
+        # Typical usage in a Get-* function
+        $dataItems = Invoke-FabricAPIRequest @apiParams
+        $dataItems | Add-FabricTypeName -TypeName 'MicrosoftFabric.Lakehouse'
+        return $dataItems
+
+    .NOTES
+        This function modifies the PSObject.TypeNames collection directly.
+        The type name is inserted at position 0 (highest priority).
+        The custom format views defined in MicrosoftFabricMgmt.Format.ps1xml will
+        automatically apply when objects with these type names are displayed.
+    #>
+    [CmdletBinding()]
+    param(
+        [Parameter(Mandatory, ValueFromPipeline)]
+        [AllowNull()]
+        $InputObject,
+
+        [Parameter(Mandatory)]
+        [ValidateNotNullOrEmpty()]
+        [string]$TypeName
+    )
+
+    process {
+        # Handle null input gracefully
+        if ($null -eq $InputObject) {
+            return
+        }
+
+        # Handle arrays - process each item
+        if ($InputObject -is [array]) {
+            foreach ($item in $InputObject) {
+                if ($null -ne $item -and $item.PSObject) {
+                    # Only add if not already present
+                    if ($item.PSObject.TypeNames[0] -ne $TypeName) {
+                        $item.PSObject.TypeNames.Insert(0, $TypeName)
+                    }
+                }
+            }
+        }
+        # Handle single objects
+        elseif ($InputObject.PSObject) {
+            # Only add if not already present
+            if ($InputObject.PSObject.TypeNames[0] -ne $TypeName) {
+                $InputObject.PSObject.TypeNames.Insert(0, $TypeName)
+            }
+        }
+    }
+}
+#EndRegion '.\Private\Add-FabricTypeName.ps1' 92
 #Region '.\Private\Convert-FabricRequestBody.ps1' -1
 
 <#
@@ -586,6 +680,10 @@ function New-FabricAPIUri {
     The type of resource being filtered (e.g., 'Lakehouse', 'Workspace').
     Used for consistent warning messages.
 
+.PARAMETER TypeName
+    Optional PSTypeName to add to returned objects for custom formatting.
+    Example: 'MicrosoftFabric.Workspace', 'MicrosoftFabric.Lakehouse'
+
 .OUTPUTS
     System.Object[]
     Returns filtered resources or all resources if no filter is specified.
@@ -627,7 +725,10 @@ function Select-FabricResource {
         [string]$DisplayName,
 
         [Parameter(Mandatory = $true)]
-        [string]$ResourceType
+        [string]$ResourceType,
+
+        [Parameter()]
+        [string]$TypeName
     )
 
     # If no input, return empty
@@ -639,6 +740,12 @@ function Select-FabricResource {
     # No filters - return all
     if (-not $Id -and -not $DisplayName) {
         Write-FabricLog -Message "Returning all $($InputObject.Count) $ResourceType resource(s)" -Level Debug
+
+        # Add type decoration if specified
+        if ($TypeName) {
+            $InputObject | Add-FabricTypeName -TypeName $TypeName
+        }
+
         return $InputObject
     }
 
@@ -652,6 +759,11 @@ function Select-FabricResource {
             Write-FabricLog -Message "$ResourceType with ID '$Id' not found" -Level Warning
         } else {
             Write-FabricLog -Message "Found $ResourceType with ID: $Id" -Level Debug
+
+            # Add type decoration if specified
+            if ($TypeName) {
+                $filtered | Add-FabricTypeName -TypeName $TypeName
+            }
         }
 
         return $filtered
@@ -667,15 +779,23 @@ function Select-FabricResource {
             Write-FabricLog -Message "$ResourceType with DisplayName '$DisplayName' not found" -Level Warning
         } else {
             Write-FabricLog -Message "Found $($filtered.Count) $ResourceType resource(s) with DisplayName: $DisplayName" -Level Debug
+
+            # Add type decoration if specified
+            if ($TypeName) {
+                $filtered | Add-FabricTypeName -TypeName $TypeName
+            }
         }
 
         return $filtered
     }
 
     # Fallback (should not reach here)
+    if ($TypeName) {
+        $InputObject | Add-FabricTypeName -TypeName $TypeName
+    }
     return $InputObject
 }
-#EndRegion '.\Private\Select-FabricResource.ps1' 112
+#EndRegion '.\Private\Select-FabricResource.ps1' 138
 #Region '.\Private\Test-TokenExpired.ps1' -1
 
 <#
@@ -1578,8 +1698,8 @@ function Get-FabricCapacity {
         }
         $dataItems = Invoke-FabricAPIRequest @apiParams
 
-        # Apply filtering and output results
-        Select-FabricResource -InputObject $dataItems -Id $CapacityId -DisplayName $CapacityName -ResourceType 'Capacity'
+        # Apply filtering and output results with type decoration
+        Select-FabricResource -InputObject $dataItems -Id $CapacityId -DisplayName $CapacityName -ResourceType 'Capacity' -TypeName 'MicrosoftFabric.Capacity'
     }
     catch {
         # Capture and log error details
@@ -10691,6 +10811,10 @@ function Get-FabricLakehouse {
         # Handle results
         if ($matchedItems) {
             Write-FabricLog -Message "Item(s) found matching the specified criteria." -Level Debug
+
+            # Add type decoration for custom formatting
+            $matchedItems | Add-FabricTypeName -TypeName 'MicrosoftFabric.Lakehouse'
+
             return $matchedItems
         }
         else {
@@ -10705,7 +10829,7 @@ function Get-FabricLakehouse {
     }
 
 }
-#EndRegion '.\Public\Lakehouse\Get-FabricLakehouse.ps1' 115
+#EndRegion '.\Public\Lakehouse\Get-FabricLakehouse.ps1' 119
 #Region '.\Public\Lakehouse\Get-FabricLakehouseLivySession.ps1' -1
 
 <#
@@ -14387,6 +14511,10 @@ function Get-FabricNotebook {
         # Handle results
         if ($matchedItems) {
             Write-FabricLog -Message "Item(s) found matching the specified criteria." -Level Debug
+
+            # Add type decoration for custom formatting
+            $matchedItems | Add-FabricTypeName -TypeName 'MicrosoftFabric.Notebook'
+
             return $matchedItems
         }
         else {
@@ -14400,7 +14528,7 @@ function Get-FabricNotebook {
         Write-FabricLog -Message "Failed to retrieve Notebook. Error: $errorDetails" -Level Error
     }
 }
-#EndRegion '.\Public\Notebook\Get-FabricNotebook.ps1' 115
+#EndRegion '.\Public\Notebook\Get-FabricNotebook.ps1' 119
 #Region '.\Public\Notebook\Get-FabricNotebookDefinition.ps1' -1
 
 
@@ -21605,6 +21733,84 @@ function Get-FabricUserListAccessEntities {
     }
 }
 #EndRegion '.\Public\Users\Get-FabricUserListAccessEntities.ps1' 78
+#Region '.\Public\Utils\Clear-FabricNameCache.ps1' -1
+
+function Clear-FabricNameCache {
+    <#
+    .SYNOPSIS
+        Clears the cached capacity and workspace name resolutions.
+
+    .DESCRIPTION
+        Removes all cached capacity and workspace name lookups from PSFramework's
+        configuration cache. Use this if capacity or workspace names have changed
+        and you need to force fresh API lookups.
+
+        This function clears:
+        - All cached capacity names (from Resolve-FabricCapacityName)
+        - All cached workspace names (from Resolve-FabricWorkspaceName)
+
+    .PARAMETER Force
+        If specified, clears the cache without confirmation.
+
+    .EXAMPLE
+        Clear-FabricNameCache
+
+        Clears all cached capacity and workspace names.
+
+    .EXAMPLE
+        Clear-FabricNameCache -Force
+
+        Clears the cache without prompting for confirmation.
+
+    .NOTES
+        This function is useful when:
+        - Capacity or workspace names have been renamed
+        - You suspect cached data is stale
+        - You want to reduce memory usage from large caches
+    #>
+    [CmdletBinding(SupportsShouldProcess, ConfirmImpact = 'Low')]
+    param(
+        [Parameter()]
+        [switch]$Force
+    )
+
+    begin {
+        Write-PSFMessage -Level Verbose -Message "Preparing to clear Fabric name cache"
+    }
+
+    process {
+        if ($Force -or $PSCmdlet.ShouldProcess("Fabric Name Cache", "Clear all cached capacity and workspace names")) {
+            try {
+                # Get all PSFramework configuration items for our cache
+                $cacheConfigs = Get-PSFConfig -FullName "MicrosoftFabricMgmt.Cache.*"
+
+                if ($cacheConfigs) {
+                    $count = ($cacheConfigs | Measure-Object).Count
+
+                    # Remove each cached configuration by setting to $null and unregistering
+                    foreach ($config in $cacheConfigs) {
+                        # First set the value to $null to clear runtime cache
+                        Set-PSFConfig -FullName $config.FullName -Value $null
+
+                        # Then unregister to remove from persisted storage
+                        Unregister-PSFConfig -FullName $config.FullName -Scope FileUserShared -ErrorAction SilentlyContinue
+                        Unregister-PSFConfig -FullName $config.FullName -Scope FileSystem -ErrorAction SilentlyContinue
+                    }
+
+                    Write-PSFMessage -Level Host -Message "Successfully cleared $count cached name resolution(s)"
+                }
+                else {
+                    Write-PSFMessage -Level Host -Message "No cached names found to clear"
+                }
+            }
+            catch {
+                Write-PSFMessage -Level Error -Message "Failed to clear name cache: $($_.Exception.Message)" -ErrorRecord $_
+                throw
+            }
+        }
+    }
+}
+#EndRegion '.\Public\Utils\Clear-FabricNameCache.ps1' 76
 #Region '.\Public\Utils\Convert-FromBase64.ps1' -1
 
 <#
@@ -22230,6 +22436,269 @@ function Invoke-FabricAPIRequest {
     }
 }
 #EndRegion '.\Public\Utils\Invoke-FabricAPIRequest.ps1' 327
+#Region '.\Public\Utils\Resolve-FabricCapacityIdFromWorkspace.ps1' -1
+
+function Resolve-FabricCapacityIdFromWorkspace {
+    <#
+    .SYNOPSIS
+        Resolves a Capacity ID from a Workspace ID.
+
+    .DESCRIPTION
+        Looks up the workspace to get its capacity ID.
+        This is needed for items (like Lakehouses) that only have workspaceId but not capacityId.
+        Results are cached using PSFramework's configuration system for performance.
+
+    .PARAMETER WorkspaceId
+        The workspace ID (GUID) to resolve.
+
+    .PARAMETER DisableCache
+        If specified, bypasses the cache and always makes a fresh API call.
+
+    .EXAMPLE
+        Resolve-FabricCapacityIdFromWorkspace -WorkspaceId "67890-ijkl-mnop"
+
+        Returns the capacity ID for the workspace, using cache if available.
+
+    .NOTES
+        This function uses PSFramework's configuration system for caching.
+        Cache key format: "WorkspaceCapacityId_{WorkspaceId}"
+    #>
+    [CmdletBinding()]
+    param(
+        [Parameter(Mandatory, ValueFromPipeline, ValueFromPipelineByPropertyName)]
+        [ValidateNotNullOrEmpty()]
+        [Alias('Id')]
+        [string]$WorkspaceId,
+
+        [Parameter()]
+        [switch]$DisableCache
+    )
+
+    process {
+        # Generate cache key
+        $cacheKey = "WorkspaceCapacityId_$WorkspaceId"
+
+        # Check cache first (unless disabled)
+        if (-not $DisableCache) {
+            $cached = Get-PSFConfigValue -FullName "MicrosoftFabricMgmt.Cache.$cacheKey" -Fallback $null
+
+            if ($cached) {
+                Write-PSFMessage -Level Debug -Message "Cache hit for workspace capacity ID '$WorkspaceId': $cached"
+                return $cached
+            }
+        }
+
+        # Cache miss or disabled - make API call
+        Write-PSFMessage -Level Debug -Message "Cache miss for workspace capacity ID '$WorkspaceId' - resolving via API"
+
+        try {
+            # Call Get-FabricWorkspace to resolve
+            $workspace = Get-FabricWorkspace -WorkspaceId $WorkspaceId -ErrorAction Stop
+
+            if ($workspace -and $workspace.capacityId) {
+                $capacityId = $workspace.capacityId
+
+                # Cache the result (unless caching is disabled)
+                if (-not $DisableCache) {
+                    Set-PSFConfig -FullName "MicrosoftFabricMgmt.Cache.$cacheKey" -Value $capacityId
+                    Write-PSFMessage -Level Debug -Message "Cached capacity ID '$capacityId' for workspace ID '$WorkspaceId'"
+                }
+
+                return $capacityId
+            }
+
+            # Workspace found but no capacityId
+            Write-PSFMessage -Level Debug -Message "Workspace '$WorkspaceId' has no capacity assigned"
+            return $null
+        }
+        catch {
+            # Error occurred, log and return null
+            Write-PSFMessage -Level Warning -Message "Failed to resolve capacity ID from workspace ID '$WorkspaceId': $($_.Exception.Message)" -ErrorRecord $_
+            return $null
+        }
+    }
+}
+#EndRegion '.\Public\Utils\Resolve-FabricCapacityIdFromWorkspace.ps1' 81
+#Region '.\Public\Utils\Resolve-FabricCapacityName.ps1' -1
+
+function Resolve-FabricCapacityName {
+    <#
+    .SYNOPSIS
+        Resolves a Fabric Capacity ID to its display name.
+
+    .DESCRIPTION
+        Looks up the capacity display name from a capacity ID (GUID).
+        Results are cached using PSFramework's result cache for performance.
+
+        The cache persists for the session lifetime and is shared across all
+        functions. Use Clear-PSFResultCache to clear the cache if needed.
+
+    .PARAMETER CapacityId
+        The capacity ID (GUID) to resolve.
+
+    .PARAMETER DisableCache
+        If specified, bypasses the cache and always makes a fresh API call.
+
+    .EXAMPLE
+        Resolve-FabricCapacityName -CapacityId "12345-abcd-efgh"
+
+        Returns the display name for the specified capacity, using cache if available.
+
+    .EXAMPLE
+        Resolve-FabricCapacityName -CapacityId "12345-abcd-efgh" -DisableCache
+
+        Forces a fresh API call, bypassing the cache.
+
+    .NOTES
+        This function uses PSFramework's result cache system for optimal performance.
+        Cache key format: "CapacityName_{CapacityId}"
+    #>
+    [CmdletBinding()]
+    param(
+        [Parameter(Mandatory, ValueFromPipeline, ValueFromPipelineByPropertyName)]
+        [ValidateNotNullOrEmpty()]
+        [Alias('Id')]
+        [string]$CapacityId,
+
+        [Parameter()]
+        [switch]$DisableCache
+    )
+
+    process {
+        # Generate cache key
+        $cacheKey = "CapacityName_$CapacityId"
+
+        # Check cache first (unless disabled)
+        if (-not $DisableCache) {
+            $cached = Get-PSFConfigValue -FullName "MicrosoftFabricMgmt.Cache.$cacheKey" -Fallback $null
+
+            if ($cached) {
+                Write-PSFMessage -Level Debug -Message "Cache hit for capacity ID '$CapacityId': $cached"
+                return $cached
+            }
+        }
+
+        # Cache miss or disabled - make API call
+        Write-PSFMessage -Level Debug -Message "Cache miss for capacity ID '$CapacityId' - resolving via API"
+
+        try {
+            # Call Get-FabricCapacity to resolve
+            $capacity = Get-FabricCapacity -CapacityId $CapacityId -ErrorAction Stop
+
+            if ($capacity -and $capacity.displayName) {
+                $name = $capacity.displayName
+
+                # Cache the result (unless caching is disabled)
+                if (-not $DisableCache) {
+                    Set-PSFConfig -FullName "MicrosoftFabricMgmt.Cache.$cacheKey" -Value $name
+                    Write-PSFMessage -Level Debug -Message "Cached capacity name '$name' for ID '$CapacityId'"
+                }
+
+                return $name
+            }
+
+            # Capacity not found, return ID as fallback
+            Write-PSFMessage -Level Warning -Message "Capacity with ID '$CapacityId' not found. Returning ID as fallback."
+            return $CapacityId
+        }
+        catch {
+            # Error occurred, log and return ID as fallback
+            Write-PSFMessage -Level Warning -Message "Failed to resolve capacity ID '$CapacityId': $($_.Exception.Message)" -ErrorRecord $_
+            return $CapacityId
+        }
+    }
+}
+#EndRegion '.\Public\Utils\Resolve-FabricCapacityName.ps1' 88
+#Region '.\Public\Utils\Resolve-FabricWorkspaceName.ps1' -1
+
+function Resolve-FabricWorkspaceName {
+    <#
+    .SYNOPSIS
+        Resolves a Fabric Workspace ID to its display name.
+
+    .DESCRIPTION
+        Looks up the workspace display name from a workspace ID (GUID).
+        Results are cached using PSFramework's configuration system for performance.
+
+        The cache persists for the session lifetime and is shared across all
+        functions. Use Clear-FabricNameCache to clear the cache if needed.
+
+    .PARAMETER WorkspaceId
+        The workspace ID (GUID) to resolve.
+
+    .PARAMETER DisableCache
+        If specified, bypasses the cache and always makes a fresh API call.
+
+    .EXAMPLE
+        Resolve-FabricWorkspaceName -WorkspaceId "67890-ijkl-mnop"
+
+        Returns the display name for the specified workspace, using cache if available.
+
+    .EXAMPLE
+        Resolve-FabricWorkspaceName -WorkspaceId "67890-ijkl-mnop" -DisableCache
+
+        Forces a fresh API call, bypassing the cache.
+
+    .NOTES
+        This function uses PSFramework's configuration system for caching.
+        Cache key format: "WorkspaceName_{WorkspaceId}"
+    #>
+    [CmdletBinding()]
+    param(
+        [Parameter(Mandatory, ValueFromPipeline, ValueFromPipelineByPropertyName)]
+        [ValidateNotNullOrEmpty()]
+        [Alias('Id')]
+        [string]$WorkspaceId,
+
+        [Parameter()]
+        [switch]$DisableCache
+    )
+
+    process {
+        # Generate cache key
+        $cacheKey = "WorkspaceName_$WorkspaceId"
+
+        # Check cache first (unless disabled)
+        if (-not $DisableCache) {
+            $cached = Get-PSFConfigValue -FullName "MicrosoftFabricMgmt.Cache.$cacheKey" -Fallback $null
+
+            if ($cached) {
+                Write-PSFMessage -Level Debug -Message "Cache hit for workspace ID '$WorkspaceId': $cached"
+                return $cached
+            }
+        }
+
+        # Cache miss or disabled - make API call
+        Write-PSFMessage -Level Debug -Message "Cache miss for workspace ID '$WorkspaceId' - resolving via API"
+
+        try {
+            # Call Get-FabricWorkspace to resolve
+            $workspace = Get-FabricWorkspace -WorkspaceId $WorkspaceId -ErrorAction Stop
+
+            if ($workspace -and $workspace.displayName) {
+                $name = $workspace.displayName
+
+                # Cache the result (unless caching is disabled)
+                if (-not $DisableCache) {
+                    Set-PSFConfig -FullName "MicrosoftFabricMgmt.Cache.$cacheKey" -Value $name
+                    Write-PSFMessage -Level Debug -Message "Cached workspace name '$name' for ID '$WorkspaceId'"
+                }
+
+                return $name
+            }
+
+            # Workspace not found, return ID as fallback
+            Write-PSFMessage -Level Warning -Message "Workspace with ID '$WorkspaceId' not found. Returning ID as fallback."
+            return $WorkspaceId
+        }
+        catch {
+            # Error occurred, log and return ID as fallback
+            Write-PSFMessage -Level Warning -Message "Failed to resolve workspace ID '$WorkspaceId': $($_.Exception.Message)" -ErrorRecord $_
+            return $WorkspaceId
+        }
+    }
+}
+#EndRegion '.\Public\Utils\Resolve-FabricWorkspaceName.ps1' 88
 #Region '.\Public\Utils\Set-FabricApiHeaders.ps1' -1
 
 <#
@@ -22989,6 +23458,10 @@ function Get-FabricWarehouse {
         # Handle results
         if ($matchedItems) {
             Write-FabricLog -Message "Item(s) found matching the specified criteria." -Level Debug
+
+            # Add type decoration for custom formatting
+            $matchedItems | Add-FabricTypeName -TypeName 'MicrosoftFabric.Warehouse'
+
             return $matchedItems
         }
         else {
@@ -23002,7 +23475,7 @@ function Get-FabricWarehouse {
         Write-FabricLog -Message "Failed to retrieve Warehouse. Error: $errorDetails" -Level Error
     }
 }
-#EndRegion '.\Public\Warehouse\Get-FabricWarehouse.ps1' 104
+#EndRegion '.\Public\Warehouse\Get-FabricWarehouse.ps1' 108
 #Region '.\Public\Warehouse\Get-FabricWarehouseConnectionString.ps1' -1
 
 <#
@@ -24087,8 +24560,8 @@ function Get-FabricWorkspace {
         }
         $dataItems = Invoke-FabricAPIRequest @apiParams
 
-        # Apply filtering and output results
-        Select-FabricResource -InputObject $dataItems -Id $WorkspaceId -DisplayName $WorkspaceName -ResourceType 'Workspace'
+        # Apply filtering and output results with type decoration
+        Select-FabricResource -InputObject $dataItems -Id $WorkspaceId -DisplayName $WorkspaceName -ResourceType 'Workspace' -TypeName 'MicrosoftFabric.Workspace'
     }
     catch {
         # Capture and log error details

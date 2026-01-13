@@ -263,7 +263,123 @@ Set-FabricApiHeaders -UseManagedIdentity
 - Support token refresh without re-authentication
 - Clear sensitive data from memory after use
 
-### 5. Function Structure Standards
+### 5. Output Formatting - MANDATORY FOR ALL GET-* FUNCTIONS
+
+**⚠️ CRITICAL REQUIREMENT**: Every Get-* function that returns Fabric resources MUST implement output formatting for user-friendly display.
+
+#### Why Output Formatting Matters
+
+Without formatting, users see raw API responses with GUIDs:
+```powershell
+# Bad: Raw output - confusing and not user-friendly
+id                                   displayName      type      workspaceId                          capacityId
+--                                   -----------      ----      -----------                          ----------
+a1b2c3d4-e5f6-1234-5678-9abcdef01234 My Lakehouse     Lakehouse f9e8d7c6-b5a4-9876-5432-1fedcba98765 c4d5e6f7-...
+```
+
+With formatting, users see human-readable names:
+```powershell
+# Good: Formatted output - clear and actionable
+Capacity Name        Workspace Name       Item Name        Type      ID
+-------------        --------------       ---------        ----      --
+Premium Capacity P1  Analytics Workspace  My Lakehouse     Lakehouse a1b2c3d4-...
+```
+
+#### Mandatory Implementation Steps
+
+**Step 1: Add Type Decoration to Your Function**
+
+Choose the appropriate method based on your function's structure:
+
+**Method A: Using Select-FabricResource (Preferred)**
+```powershell
+# Add -TypeName parameter to Select-FabricResource call
+Select-FabricResource -InputObject $dataItems `
+    -Id $ResourceId `
+    -DisplayName $ResourceName `
+    -ResourceType 'ResourceType' `
+    -TypeName 'MicrosoftFabric.ResourceType'  # <-- ADD THIS
+```
+
+**Method B: Direct Decoration**
+```powershell
+# Before returning results, add type decoration
+if ($matchedItems) {
+    Write-FabricLog -Message "Item(s) found" -Level Debug
+
+    # Add type decoration for custom formatting
+    $matchedItems | Add-FabricTypeName -TypeName 'MicrosoftFabric.ResourceType'
+
+    return $matchedItems
+}
+```
+
+**Step 2: Verify Format View Exists**
+
+Check if a format view exists for your resource type in `source/MicrosoftFabricMgmt.Format.ps1xml`:
+
+```powershell
+# Search for your resource type
+Select-String -Path "source/MicrosoftFabricMgmt.Format.ps1xml" -Pattern "MicrosoftFabric.YourResourceType"
+```
+
+If NOT found, add a new view definition (see section 8 for format file syntax).
+
+**Step 3: Test Formatting**
+
+After building the module, verify formatting works:
+```powershell
+# Import rebuilt module
+Remove-Module MicrosoftFabricMgmt -Force
+.\build.ps1 -Tasks build
+Import-Module .\output\module\MicrosoftFabricMgmt\1.0.2\MicrosoftFabricMgmt.psd1 -Force
+
+# Test your function
+$result = Get-FabricYourResource -WorkspaceId "test-id"
+$result | Format-Table -AutoSize
+
+# Should display: Capacity Name | Workspace Name | Item Name | Type | ID
+```
+
+#### Available Helper Functions
+
+- **Add-FabricTypeName** (Private): Adds PSTypeName to objects for format file matching
+- **Resolve-FabricCapacityName** (Private): Converts capacity GUID → capacity name (cached)
+- **Resolve-FabricWorkspaceName** (Private): Converts workspace GUID → workspace name (cached)
+- **Clear-FabricNameCache** (Public): Clears cached name resolutions
+
+#### Type Naming Convention
+
+**MUST follow**: `MicrosoftFabric.{ResourceType}`
+
+Examples:
+- `MicrosoftFabric.Lakehouse`
+- `MicrosoftFabric.Notebook`
+- `MicrosoftFabric.Warehouse`
+- `MicrosoftFabric.Workspace`
+- `MicrosoftFabric.Capacity`
+- `MicrosoftFabric.DataPipeline`
+- `MicrosoftFabric.Environment`
+- `MicrosoftFabric.KQLDatabase`
+- `MicrosoftFabric.MLModel`
+- `MicrosoftFabric.SparkJobDefinition`
+
+#### Checklist Before Committing
+
+- [ ] Function adds type decoration using `Add-FabricTypeName` or `Select-FabricResource -TypeName`
+- [ ] Format view exists in `MicrosoftFabricMgmt.Format.ps1xml`
+- [ ] Tested formatting displays correct columns (Capacity Name, Workspace Name, Item Name, Type, ID)
+- [ ] Module builds successfully (`.\build.ps1 -Tasks build`)
+- [ ] No errors or warnings in build output
+
+**Related Documentation**:
+- See section 8: "Output Formatting with .ps1xml Files" for format file syntax
+- See section 10: "Adding a New Function" for complete workflow
+- See [docs/OUTPUT-FORMATTING.md](docs/OUTPUT-FORMATTING.md) for detailed guide
+
+---
+
+### 6. Function Structure Standards
 
 Every public function MUST include:
 
@@ -977,20 +1093,110 @@ Invoke-ScriptAnalyzer -Path ./source -Recurse -ReportSummary
 
 2. **Implement with full help and error handling** (see section 5)
 
-3. **Add to manifest** (if not using automatic export):
+3. **⚠️ MANDATORY: Add Output Formatting** (see section 10):
+
+   **For Get-* Functions Returning Fabric Resources**:
+
+   Every Get-* function MUST add type decoration to returned objects for proper formatting:
+
+   ```powershell
+   # Method 1: Direct decoration (for functions NOT using Select-FabricResource)
+   if ($matchedItems) {
+       # Add type decoration for custom formatting
+       $matchedItems | Add-FabricTypeName -TypeName 'MicrosoftFabric.ResourceType'
+       return $matchedItems
+   }
+
+   # Method 2: Via Select-FabricResource (preferred pattern)
+   Select-FabricResource -InputObject $dataItems `
+       -Id $ResourceId `
+       -DisplayName $ResourceName `
+       -ResourceType 'ResourceType' `
+       -TypeName 'MicrosoftFabric.ResourceType'
+   ```
+
+   **Type Name Convention**: `MicrosoftFabric.{ResourceType}`
+   - Example: `MicrosoftFabric.Lakehouse`
+   - Example: `MicrosoftFabric.Notebook`
+   - Example: `MicrosoftFabric.Warehouse`
+   - Example: `MicrosoftFabric.Workspace`
+   - Example: `MicrosoftFabric.Capacity`
+
+   **Add Format View to Format File** (if new resource type):
+
+   Edit `source/MicrosoftFabricMgmt.Format.ps1xml` and add a view definition:
+
+   ```xml
+   <View>
+     <Name>ResourceTypeView</Name>
+     <ViewSelectedBy>
+       <TypeName>MicrosoftFabric.ResourceType</TypeName>
+     </ViewSelectedBy>
+     <TableControl>
+       <TableHeaders>
+         <TableColumnHeader><Label>Capacity Name</Label><Width>25</Width></TableColumnHeader>
+         <TableColumnHeader><Label>Workspace Name</Label><Width>25</Width></TableColumnHeader>
+         <TableColumnHeader><Label>Item Name</Label><Width>30</Width></TableColumnHeader>
+         <TableColumnHeader><Label>Type</Label><Width>15</Width></TableColumnHeader>
+         <TableColumnHeader><Label>ID</Label></TableColumnHeader>
+       </TableHeaders>
+       <TableRowEntries>
+         <TableRowEntry>
+           <TableColumnItems>
+             <!-- Capacity Name - Resolve from capacityId -->
+             <TableColumnItem>
+               <ScriptBlock>
+                 if ($_.capacityId) {
+                   try { Resolve-FabricCapacityName -CapacityId $_.capacityId }
+                   catch { $_.capacityId }
+                 } else { 'N/A' }
+               </ScriptBlock>
+             </TableColumnItem>
+             <!-- Workspace Name - Resolve from workspaceId -->
+             <TableColumnItem>
+               <ScriptBlock>
+                 if ($_.workspaceId) {
+                   try { Resolve-FabricWorkspaceName -WorkspaceId $_.workspaceId }
+                   catch { $_.workspaceId }
+                 } else { 'N/A' }
+               </ScriptBlock>
+             </TableColumnItem>
+             <!-- Item Name -->
+             <TableColumnItem><PropertyName>displayName</PropertyName></TableColumnItem>
+             <!-- Type -->
+             <TableColumnItem><PropertyName>type</PropertyName></TableColumnItem>
+             <!-- ID -->
+             <TableColumnItem><PropertyName>id</PropertyName></TableColumnItem>
+           </TableColumnItems>
+         </TableRowEntry>
+       </TableRowEntries>
+     </TableControl>
+   </View>
+   ```
+
+   **Verify Formatting Works**:
+   ```powershell
+   # Test that objects display with custom format
+   $result = Get-FabricNewResource -WorkspaceId "test"
+   $result | Format-Table -AutoSize
+
+   # Should show: Capacity Name | Workspace Name | Item Name | Type | ID
+   ```
+
+4. **Add to manifest** (if not using automatic export):
    Edit `source/MicrosoftFabricMgmt.psd1` if needed
 
-4. **Create unit test**:
+5. **Create unit test**:
    ```powershell
    New-Item -Path "tests/Unit/Get-FabricLakehouseTable.Tests.ps1"
    ```
 
-5. **Build and test** (in clean process):
+6. **Build and test** (in clean process):
    ```powershell
    .\build.ps1 -Tasks build,test
    ```
 
-6. **Generate documentation**:
+7. **Generate documentation**:
    ```powershell
    New-MarkdownHelp -Command Get-FabricLakehouseTable -OutputFolder ./docs
    ```
@@ -1004,15 +1210,53 @@ Invoke-ScriptAnalyzer -Path ./source -Recurse -ReportSummary
 
 2. **Make changes following existing patterns**
 
-3. **Update tests**:
+3. **⚠️ MANDATORY: Check and Add Output Formatting**:
+
+   If the function is a Get-* function that returns Fabric resources and does NOT already have type decoration:
+
+   ```powershell
+   # Check if type decoration exists
+   Select-String -Path "source/Public/Workspace/Get-FabricWorkspace.ps1" -Pattern "Add-FabricTypeName|TypeName"
+
+   # If NOT found, add type decoration before return statement:
+   # - Use Add-FabricTypeName for direct decoration
+   # - OR add -TypeName parameter to Select-FabricResource call
+   ```
+
+   **Example Update**:
+   ```powershell
+   # BEFORE (no formatting)
+   if ($matchedItems) {
+       Write-FabricLog -Message "Item(s) found" -Level Debug
+       return $matchedItems
+   }
+
+   # AFTER (with formatting)
+   if ($matchedItems) {
+       Write-FabricLog -Message "Item(s) found" -Level Debug
+       $matchedItems | Add-FabricTypeName -TypeName 'MicrosoftFabric.ResourceType'
+       return $matchedItems
+   }
+   ```
+
+   **Or via Select-FabricResource**:
+   ```powershell
+   # BEFORE
+   Select-FabricResource -InputObject $dataItems -Id $Id -ResourceType 'Resource'
+
+   # AFTER
+   Select-FabricResource -InputObject $dataItems -Id $Id -ResourceType 'Resource' -TypeName 'MicrosoftFabric.Resource'
+   ```
+
+4. **Update tests**:
    - Modify existing tests if behavior changed
    - Add new tests for new functionality
 
-4. **Update documentation**:
+5. **Update documentation**:
    - Update comment-based help
    - Regenerate markdown: `Update-MarkdownHelp -Path ./docs`
 
-5. **Run tests** (in clean process):
+6. **Run tests** (in clean process):
    ```powershell
    .\build.ps1 -Tasks build,test
    # OR run tests directly for faster iteration

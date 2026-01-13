@@ -1,0 +1,379 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Configuration>
+  <ViewDefinitions>
+
+    <!--
+      =============================================================================
+      Fabric Item View - Default view for most Fabric items
+      =============================================================================
+      Used for: Lakehouse, Notebook, Warehouse, DataPipeline, Environment, etc.
+      Display Priority: Capacity Name, Workspace Name, Item Name, Item Type, ID
+    -->
+    <View>
+      <Name>FabricItemView</Name>
+      <ViewSelectedBy>
+        <TypeName>MicrosoftFabric.Item</TypeName>
+        <TypeName>MicrosoftFabric.Lakehouse</TypeName>
+        <TypeName>MicrosoftFabric.Notebook</TypeName>
+        <TypeName>MicrosoftFabric.Warehouse</TypeName>
+        <TypeName>MicrosoftFabric.DataPipeline</TypeName>
+        <TypeName>MicrosoftFabric.Environment</TypeName>
+        <TypeName>MicrosoftFabric.Eventhouse</TypeName>
+        <TypeName>MicrosoftFabric.KQLDatabase</TypeName>
+        <TypeName>MicrosoftFabric.KQLQueryset</TypeName>
+        <TypeName>MicrosoftFabric.MLExperiment</TypeName>
+        <TypeName>MicrosoftFabric.MLModel</TypeName>
+        <TypeName>MicrosoftFabric.Report</TypeName>
+        <TypeName>MicrosoftFabric.SemanticModel</TypeName>
+        <TypeName>MicrosoftFabric.SparkJobDefinition</TypeName>
+      </ViewSelectedBy>
+      <TableControl>
+        <TableHeaders>
+          <TableColumnHeader>
+            <Label>Capacity Name</Label>
+            <Width>25</Width>
+          </TableColumnHeader>
+          <TableColumnHeader>
+            <Label>Workspace Name</Label>
+            <Width>25</Width>
+          </TableColumnHeader>
+          <TableColumnHeader>
+            <Label>Item Name</Label>
+            <Width>30</Width>
+          </TableColumnHeader>
+          <TableColumnHeader>
+            <Label>Type</Label>
+            <Width>15</Width>
+          </TableColumnHeader>
+          <TableColumnHeader>
+            <Label>ID</Label>
+          </TableColumnHeader>
+        </TableHeaders>
+        <TableRowEntries>
+          <TableRowEntry>
+            <TableColumnItems>
+              <!-- Capacity Name - Resolve from capacityId if present, else cascade through workspaceId -->
+              <TableColumnItem>
+                <ScriptBlock>
+                  if ($_.capacityId) {
+                    try {
+                      Resolve-FabricCapacityName -CapacityId $_.capacityId
+                    }
+                    catch {
+                      $_.capacityId
+                    }
+                  }
+                  elseif ($_.workspaceId) {
+                    # Cascade: workspaceId -> capacityId -> capacity name
+                    try {
+                      $capacityId = Resolve-FabricCapacityIdFromWorkspace -WorkspaceId $_.workspaceId
+                      if ($capacityId) {
+                        Resolve-FabricCapacityName -CapacityId $capacityId
+                      }
+                      else {
+                        'N/A'
+                      }
+                    }
+                    catch {
+                      'N/A'
+                    }
+                  }
+                  else {
+                    'N/A'
+                  }
+                </ScriptBlock>
+              </TableColumnItem>
+              <!-- Workspace Name - Resolve from workspaceId if present -->
+              <TableColumnItem>
+                <ScriptBlock>
+                  if ($_.workspaceId) {
+                    try {
+                      Resolve-FabricWorkspaceName -WorkspaceId $_.workspaceId
+                    }
+                    catch {
+                      $_.workspaceId
+                    }
+                  }
+                  else {
+                    'N/A'
+                  }
+                </ScriptBlock>
+              </TableColumnItem>
+              <!-- Item Name (displayName or name) -->
+              <TableColumnItem>
+                <PropertyName>displayName</PropertyName>
+              </TableColumnItem>
+              <!-- Item Type -->
+              <TableColumnItem>
+                <PropertyName>type</PropertyName>
+              </TableColumnItem>
+              <!-- ID -->
+              <TableColumnItem>
+                <PropertyName>id</PropertyName>
+              </TableColumnItem>
+            </TableColumnItems>
+          </TableRowEntry>
+        </TableRowEntries>
+      </TableControl>
+    </View>
+
+    <!--
+      =============================================================================
+      Workspace View - For workspace objects
+      =============================================================================
+      Display Priority: Capacity Name, Workspace Name, Type, ID
+    -->
+    <View>
+      <Name>WorkspaceView</Name>
+      <ViewSelectedBy>
+        <TypeName>MicrosoftFabric.Workspace</TypeName>
+      </ViewSelectedBy>
+      <TableControl>
+        <TableHeaders>
+          <TableColumnHeader>
+            <Label>Capacity Name</Label>
+            <Width>25</Width>
+          </TableColumnHeader>
+          <TableColumnHeader>
+            <Label>Workspace Name</Label>
+            <Width>35</Width>
+          </TableColumnHeader>
+          <TableColumnHeader>
+            <Label>Type</Label>
+            <Width>15</Width>
+          </TableColumnHeader>
+          <TableColumnHeader>
+            <Label>ID</Label>
+          </TableColumnHeader>
+        </TableHeaders>
+        <TableRowEntries>
+          <TableRowEntry>
+            <TableColumnItems>
+              <!-- Capacity Name - Resolve from capacityId -->
+              <TableColumnItem>
+                <ScriptBlock>
+                  if ($_.capacityId) {
+                    try {
+                      Resolve-FabricCapacityName -CapacityId $_.capacityId
+                    }
+                    catch {
+                      $_.capacityId
+                    }
+                  }
+                  else {
+                    'N/A'
+                  }
+                </ScriptBlock>
+              </TableColumnItem>
+              <!-- Workspace Name (displayName) -->
+              <TableColumnItem>
+                <PropertyName>displayName</PropertyName>
+              </TableColumnItem>
+              <!-- Type -->
+              <TableColumnItem>
+                <PropertyName>type</PropertyName>
+              </TableColumnItem>
+              <!-- ID -->
+              <TableColumnItem>
+                <PropertyName>id</PropertyName>
+              </TableColumnItem>
+            </TableColumnItems>
+          </TableRowEntry>
+        </TableRowEntries>
+      </TableControl>
+    </View>
+
+    <!--
+      =============================================================================
+      Capacity View - For capacity objects
+      =============================================================================
+      Display Priority: Capacity Name, Region, State, SKU, ID
+    -->
+    <View>
+      <Name>CapacityView</Name>
+      <ViewSelectedBy>
+        <TypeName>MicrosoftFabric.Capacity</TypeName>
+      </ViewSelectedBy>
+      <TableControl>
+        <TableHeaders>
+          <TableColumnHeader>
+            <Label>Capacity Name</Label>
+            <Width>25</Width>
+          </TableColumnHeader>
+          <TableColumnHeader>
+            <Label>Region</Label>
+            <Width>20</Width>
+          </TableColumnHeader>
+          <TableColumnHeader>
+            <Label>State</Label>
+            <Width>12</Width>
+          </TableColumnHeader>
+          <TableColumnHeader>
+            <Label>SKU</Label>
+            <Width>10</Width>
+          </TableColumnHeader>
+          <TableColumnHeader>
+            <Label>ID</Label>
+          </TableColumnHeader>
+        </TableHeaders>
+        <TableRowEntries>
+          <TableRowEntry>
+            <TableColumnItems>
+              <!-- Capacity Name -->
+              <TableColumnItem>
+                <PropertyName>displayName</PropertyName>
+              </TableColumnItem>
+              <!-- Region -->
+              <TableColumnItem>
+                <PropertyName>region</PropertyName>
+              </TableColumnItem>
+              <!-- State -->
+              <TableColumnItem>
+                <PropertyName>state</PropertyName>
+              </TableColumnItem>
+              <!-- SKU -->
+              <TableColumnItem>
+                <PropertyName>sku</PropertyName>
+              </TableColumnItem>
+              <!-- ID -->
+              <TableColumnItem>
+                <PropertyName>id</PropertyName>
+              </TableColumnItem>
+            </TableColumnItems>
+          </TableRowEntry>
+        </TableRowEntries>
+      </TableControl>
+    </View>
+
+    <!--
+      =============================================================================
+      Domain View - For domain objects
+      =============================================================================
+      Display Priority: Domain Name, Description, Parent Domain ID, ID
+    -->
+    <View>
+      <Name>DomainView</Name>
+      <ViewSelectedBy>
+        <TypeName>MicrosoftFabric.Domain</TypeName>
+      </ViewSelectedBy>
+      <TableControl>
+        <TableHeaders>
+          <TableColumnHeader>
+            <Label>Domain Name</Label>
+            <Width>30</Width>
+          </TableColumnHeader>
+          <TableColumnHeader>
+            <Label>Description</Label>
+            <Width>40</Width>
+          </TableColumnHeader>
+          <TableColumnHeader>
+            <Label>Parent Domain ID</Label>
+            <Width>20</Width>
+          </TableColumnHeader>
+          <TableColumnHeader>
+            <Label>ID</Label>
+          </TableColumnHeader>
+        </TableHeaders>
+        <TableRowEntries>
+          <TableRowEntry>
+            <TableColumnItems>
+              <!-- Domain Name -->
+              <TableColumnItem>
+                <PropertyName>displayName</PropertyName>
+              </TableColumnItem>
+              <!-- Description -->
+              <TableColumnItem>
+                <PropertyName>description</PropertyName>
+              </TableColumnItem>
+              <!-- Parent Domain ID -->
+              <TableColumnItem>
+                <PropertyName>parentDomainId</PropertyName>
+              </TableColumnItem>
+              <!-- ID -->
+              <TableColumnItem>
+                <PropertyName>id</PropertyName>
+              </TableColumnItem>
+            </TableColumnItems>
+          </TableRowEntry>
+        </TableRowEntries>
+      </TableControl>
+    </View>
+
+    <!--
+      =============================================================================
+      Job View - For job-related objects (Spark jobs, Copy jobs, etc.)
+      =============================================================================
+      Display Priority: Job Name, Workspace Name, Status, Type, ID
+    -->
+    <View>
+      <Name>JobView</Name>
+      <ViewSelectedBy>
+        <TypeName>MicrosoftFabric.SparkJob</TypeName>
+        <TypeName>MicrosoftFabric.CopyJob</TypeName>
+        <TypeName>MicrosoftFabric.ApacheAirflowJob</TypeName>
+      </ViewSelectedBy>
+      <TableControl>
+        <TableHeaders>
+          <TableColumnHeader>
+            <Label>Job Name</Label>
+            <Width>30</Width>
+          </TableColumnHeader>
+          <TableColumnHeader>
+            <Label>Workspace Name</Label>
+            <Width>25</Width>
+          </TableColumnHeader>
+          <TableColumnHeader>
+            <Label>Status</Label>
+            <Width>15</Width>
+          </TableColumnHeader>
+          <TableColumnHeader>
+            <Label>Type</Label>
+            <Width>15</Width>
+          </TableColumnHeader>
+          <TableColumnHeader>
+            <Label>ID</Label>
+          </TableColumnHeader>
+        </TableHeaders>
+        <TableRowEntries>
+          <TableRowEntry>
+            <TableColumnItems>
+              <!-- Job Name -->
+              <TableColumnItem>
+                <PropertyName>displayName</PropertyName>
+              </TableColumnItem>
+              <!-- Workspace Name - Resolve from workspaceId -->
+              <TableColumnItem>
+                <ScriptBlock>
+                  if ($_.workspaceId) {
+                    try {
+                      Resolve-FabricWorkspaceName -WorkspaceId $_.workspaceId
+                    }
+                    catch {
+                      $_.workspaceId
+                    }
+                  }
+                  else {
+                    'N/A'
+                  }
+                </ScriptBlock>
+              </TableColumnItem>
+              <!-- Status -->
+              <TableColumnItem>
+                <PropertyName>status</PropertyName>
+              </TableColumnItem>
+              <!-- Type -->
+              <TableColumnItem>
+                <PropertyName>type</PropertyName>
+              </TableColumnItem>
+              <!-- ID -->
+              <TableColumnItem>
+                <PropertyName>id</PropertyName>
+              </TableColumnItem>
+            </TableColumnItems>
+          </TableRowEntry>
+        </TableRowEntries>
+      </TableControl>
+    </View>
+
+  </ViewDefinitions>
+</Configuration>

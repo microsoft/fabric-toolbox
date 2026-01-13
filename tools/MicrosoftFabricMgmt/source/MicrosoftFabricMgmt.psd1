@@ -62,7 +62,7 @@
     # TypesToProcess = @()
 
     # Format files (.ps1xml) to be loaded when importing this module
-    # FormatsToProcess = @()
+    FormatsToProcess     = @('MicrosoftFabricMgmt.Format.ps1xml')
 
     # Modules to import as nested modules of the module specified in RootModule/ModuleToProcess
     # NestedModules = @()
@@ -197,7 +197,9 @@
     'Convert-FromBase64', 'Convert-ToBase64',
     'Get-FabricLongRunningOperation',
     'Get-FabricLongRunningOperationResult', 'Invoke-FabricAPIRequest',
-    'Set-FabricApiHeaders', 'Get-FabricVariableLibrary',
+    'Set-FabricApiHeaders', 'Clear-FabricNameCache',
+    'Resolve-FabricCapacityName', 'Resolve-FabricWorkspaceName',
+    'Resolve-FabricCapacityIdFromWorkspace', 'Get-FabricVariableLibrary',
     'Get-FabricVariableLibraryDefinition', 'New-FabricVariableLibrary',
     'Remove-FabricVariableLibrary', 'Update-FabricVariableLibrary',
     'Get-FabricWarehouse', 'Get-FabricWarehouseConnectionString',

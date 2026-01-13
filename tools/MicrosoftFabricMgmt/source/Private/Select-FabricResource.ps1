@@ -20,6 +20,10 @@
     The type of resource being filtered (e.g., 'Lakehouse', 'Workspace').
     Used for consistent warning messages.
 
+.PARAMETER TypeName
+    Optional PSTypeName to add to returned objects for custom formatting.
+    Example: 'MicrosoftFabric.Workspace', 'MicrosoftFabric.Lakehouse'
+
 .OUTPUTS
     System.Object[]
     Returns filtered resources or all resources if no filter is specified.
@@ -61,7 +65,10 @@ function Select-FabricResource {
         [string]$DisplayName,
 
         [Parameter(Mandatory = $true)]
-        [string]$ResourceType
+        [string]$ResourceType,
+
+        [Parameter()]
+        [string]$TypeName
     )
 
     # If no input, return empty
@@ -73,6 +80,12 @@ function Select-FabricResource {
     # No filters - return all
     if (-not $Id -and -not $DisplayName) {
         Write-FabricLog -Message "Returning all $($InputObject.Count) $ResourceType resource(s)" -Level Debug
+
+        # Add type decoration if specified
+        if ($TypeName) {
+            $InputObject | Add-FabricTypeName -TypeName $TypeName
+        }
+
         return $InputObject
     }
 
@@ -86,6 +99,11 @@ function Select-FabricResource {
             Write-FabricLog -Message "$ResourceType with ID '$Id' not found" -Level Warning
         } else {
             Write-FabricLog -Message "Found $ResourceType with ID: $Id" -Level Debug
+
+            # Add type decoration if specified
+            if ($TypeName) {
+                $filtered | Add-FabricTypeName -TypeName $TypeName
+            }
         }
 
         return $filtered
@@ -101,11 +119,19 @@ function Select-FabricResource {
             Write-FabricLog -Message "$ResourceType with DisplayName '$DisplayName' not found" -Level Warning
         } else {
             Write-FabricLog -Message "Found $($filtered.Count) $ResourceType resource(s) with DisplayName: $DisplayName" -Level Debug
+
+            # Add type decoration if specified
+            if ($TypeName) {
+                $filtered | Add-FabricTypeName -TypeName $TypeName
+            }
         }
 
         return $filtered
     }
 
     # Fallback (should not reach here)
+    if ($TypeName) {
+        $InputObject | Add-FabricTypeName -TypeName $TypeName
+    }
     return $InputObject
 }
