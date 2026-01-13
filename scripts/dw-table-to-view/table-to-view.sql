@@ -39,7 +39,7 @@ begin
 			CONVERT(VARCHAR, sc.name) AS SchName,
 			CONVERT(VARCHAR, tbl.name) AS tblName,
 			c.column_id AS colid,
-			CONVERT(VARCHAR, c.name) AS colname,
+			CAST( c.name as VARCHAR(255)) AS colname,
 			CONVERT(VARCHAR, t.name) AS coltype,
 			CONVERT(VARCHAR, c.collation_name) AS collation_name
 		FROM ' + QUOTENAME(@InputDatabase) + N'.sys.columns c
