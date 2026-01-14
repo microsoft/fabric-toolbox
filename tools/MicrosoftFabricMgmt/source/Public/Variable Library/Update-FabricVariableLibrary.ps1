@@ -43,7 +43,7 @@ function Update-FabricVariableLibrary {
 
         [Parameter(Mandatory = $true)]
         [ValidateNotNullOrEmpty()]
-        [ValidatePattern('^[a-zA-Z0-9_ ]*$')]
+        [ValidatePattern('^[a-zA-Z0-9_]*$')]
         [string]$VariableLibraryName,
 
         [Parameter(Mandatory = $false)]
