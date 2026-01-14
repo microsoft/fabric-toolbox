@@ -1,157 +1,180 @@
-# Changelog
+# Changelog for MicrosoftFabricMgmt
 
-All notable changes to the MicrosoftFabricMgmt project will be documented in this file.
+The format is based on and uses the types of changes according to [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
+and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
-### Added
-### Fixed
-### Changed
 
+## [1.0.3] - 2026-01-14
 
-## [0.5.4] – 2025-08-28
 ### Added
 
-- New Spark Job Definition functions
-  - Get-FabricSparkJobDefinitionLivySession
-- New Spark functions
-  - Get-FabricSparkLivySession
-- New Warehouse functions
-  - Get-FabricWarehouseConnectionString
-  - Get-FabricWarehouseSnapshot
-  - New-FabricWarehouseSnapshot
-  - Remove-FabricWarehouseSnapshot
-  - Update-FabricWarehouseSnapshot
-- New GraphQLApi functions
+- **Intelligent Output Formatting System**: Automatic formatting of Get-* cmdlet output with resolved GUIDs to human-readable names
+  - Format views for Items, Workspaces, Capacities, Domains, Role Assignments, and Jobs
+  - Displays: Capacity Name, Workspace Name, Item Name, Type, and ID in consistent format
+  - Automatic name resolution with intelligent caching for optimal performance
+
+- **Public Helper Functions** (3 new functions exported):
+  - `Resolve-FabricCapacityName`: Converts capacity GUIDs to display names with caching
+  - `Resolve-FabricWorkspaceName`: Converts workspace GUIDs to display names with caching
+  - `Resolve-FabricCapacityIdFromWorkspace`: Cascading resolution for items without direct capacityId
+  - All functions use PSFramework configuration for caching (persists across sessions)
+  - Comprehensive documentation added for all three functions
+
+- **Cascading Resolution**: Items that only return workspaceId (Lakehouse, Notebook, etc.) now display Capacity Name by cascading through workspace to get capacityId
+
+- **Format Views** (6 views in MicrosoftFabricMgmt.Format.ps1xml):
+  - `FabricItemView`: For 32 item types (Lakehouse, Notebook, Warehouse, Environment, Report, etc.)
+  - `WorkspaceView`: For workspace objects
+  - `CapacityView`: For capacity objects
+  - `DomainView`: For domain objects
+  - `RoleAssignmentView`: For workspace role assignments (NEW)
+  - `JobView`: For job-related objects
+
+- **Formatted Output** applied to 11 Get-* functions:
+  - Get-FabricLakehouse
+  - Get-FabricNotebook
+  - Get-FabricWarehouse
+  - Get-FabricWorkspace
+  - Get-FabricCapacity
+  - Get-FabricWorkspaceRoleAssignment (includes workspaceId for name resolution)
+  - Get-FabricEnvironment
+  - Get-FabricEventhouse
+  - Get-FabricApacheAirflowJob
   - Get-FabricGraphQLApi
-  - Get-FabricGraphQLApiDefinition
-  - New-FabricGraphQLApi
-  - Remove-FabricGraphQLApi
-  - Update-FabricGraphQLApi
-  - Update-FabricGraphQLApiDefinition
-- New Mounted Data Factory functions
-  - Get-FabricMountedDataFactory
-  - Get-FabricMountedDataFactoryDefinition
-  - New-FabricMountedDataFactory
-  - Remove-FabricMountedDataFactory
-  - Update-FabricMountedDataFactory
-  - Update-FabricMountedDataFactoryDefinition
-- New SQL Endpoint functions
-  - Update-FabricSQLEndpointMetadata
-  - Get-FabricSQLEndpointConnectionString
-- New Variable Library functions
-  - Get-FabricVariableLibrary
-  - Get-FabricVariableLibraryDefinition
-  - New-FabricVariableLibrary
-  - Remove-FabricVariableLibrary
-  - Update-FabricVariableLibrary
-  - Update-FabricVariableLibraryDefinition
-### Fixed
-  - Get-FabricSQLEndpoint - Fixed error message
-### Changed
+  - Get-FabricEventstream
 
-- 
-
-## [0.5.3] – 2025-08-19
-### Added
-- New Connections functions
-  - Add-FabricConnectionRoleAssignment
-  - Get-FabricConnection
-  - Get-FabricConnectionSupportedType
-  - Remove-FabricConnection
-  - Remove-FabricConnectionRoleAssignment
-  - Update-FabricConnectionRoleAssignment
-- New Eventstream functions
-  - Get-FabricEventstreamDestination
-  - Get-FabricEventstreamDestinationConnection
-  - Get-FabricEventstreamSource
-  - Get-FabricEventstreamSourceConnection
-  - Get-FabricEventstreamTopology
-  - Resume-FabricEventstream
-  - Resume-FabricEventstreamDestination
-  - Resume-FabricEventstreamSource
-  - Suspend-FabricEventstream
-  - Suspend-FabricEventstreamDestination
-  - Suspend-FabricEventstreamSource
-- New Lakehouse functions
-  - Start-FabricLakehouseRefreshMaterializedLakeView
-  - Get-FabricLakehouseLivySession
-- New Notebook functions
-  - Get-FabricNotebookLivySession
-
-### Fixed
+- **Documentation**:
+  - [Resolve-FabricCapacityName.md](docs/Resolve-FabricCapacityName.md) - Complete cmdlet documentation
+  - [Resolve-FabricWorkspaceName.md](docs/Resolve-FabricWorkspaceName.md) - Complete cmdlet documentation
+  - [Resolve-FabricCapacityIdFromWorkspace.md](docs/Resolve-FabricCapacityIdFromWorkspace.md) - Cascading resolution documentation
+  - [OUTPUT-FORMATTING.md](docs/OUTPUT-FORMATTING.md) - Updated with cascading resolution details
+  - [PHASE6_FORMATTING_COMPLETION.md](PHASE6_FORMATTING_COMPLETION.md) - Roadmap for remaining 23 functions
 
 ### Changed
-Changed comment-based help in the Start-FabricLakehouseTableMaintenance function
 
-## [0.5.2] – 2025-08-04
+- **Select-FabricResource**: Enhanced with optional `-TypeName` parameter for automatic type decoration
+- **Module Manifest**: Exported 3 new public helper functions (Resolve-FabricCapacityName, Resolve-FabricWorkspaceName, Resolve-FabricCapacityIdFromWorkspace)
+- **Module Manifest**: Added `FormatsToProcess = @('MicrosoftFabricMgmt.Format.ps1xml')` to load format file
+- **Get-FabricWorkspaceRoleAssignment**: Now returns custom objects with workspaceId for name resolution and type decoration
+
+### Performance Improvements
+
+- **Intelligent Caching**: Name resolutions cached using PSFramework configuration system
+  - First lookup: 100-500ms (API call)
+  - Cached lookup: <1ms (200-500x faster!)
+  - Cache persists across PowerShell sessions
+  - Dramatically improves performance for repeated queries
+- **Cascading Resolution Caching**: Both levels cached (workspace→capacityId AND capacityId→name)
+
+### Fixed
+### Deprecated
+### Removed
+### Security
+
+## [1.0.2] - 2026-01-07
 
 ### Added
-- New Folder functions
-  - Get-FabricFolder
-  - Move-FabricFolder
-  - New-FabricFolder
-  - Remove-FabricFolder
-  - Update-FabricFolder
-- New Managed Private Endpoints functions
-  - Get-FabricManagedPrivateEndpoint
-  - New-FabricManagedPrivateEndpoint
-  - Remove-FabricManagedPrivateEndpoint
-- New OneLake Shortcut functions
-  - Get-FabricOneLakeShortcut
-  - New-FabricOneLakeShortcut
-  - Remove-FabricOneLakeShortcut
-  - Reset-FabricOneLakeShortcutCache
-
 ### Changed
-
-Invoke-FabricAPIRequest function now can return ETAG from the request header if exists
-
+Minimum PowerShell version 7.0 in module manifest.
 ### Fixed
-  - Remove the -ForegroundColor parameter for Write-Error and Write-Warning in the Write-Message function
-  - Get-FabricWarehouse: Incorrect variable name used for input validation
-  - New-FabricWarehouse: Remove the line breaks between parameters to enhance readability
-  - New-FabricFolder: Make the folder name parameter mandatory
-  
-## [0.5.0] – 2025-07-19
+### Deprecated
+### Removed
+Powershell 5.1 support.
+### Security
+
+## [1.0.0] - 2026-01-07
+
+### BREAKING CHANGES
+
+⚠️ **Version 1.0.0 contains significant breaking changes. See [BREAKING-CHANGES.md](BREAKING-CHANGES.md) for detailed migration guide.**
+
+- **BREAKING**: Removed global `$FabricConfig` variable - Module now uses internal state management via PSFramework with `$script:FabricAuthContext`
+- **BREAKING**: Removed custom `Write-Message` function - All logging now uses PSFramework's `Write-PSFMessage`
+- **BREAKING**: `Test-TokenExpired` now returns boolean (`$true`/`$false`) instead of throwing exceptions for better error handling
+- **BREAKING**: PowerShell 5.1 minimum version required (supports both PowerShell 5.1 and 7+)
 
 ### Added
 
-- Introduced Invoke-FabricAPIRequest for making API requests with support for pagination and error handling.
-- Added new functions:
-  - Apache Air Flow
-  - Copy Job
-  - External Data Shares Providers
-  - Labels
-  - Sharing links
-  - Tags
-  - Tenant settings
-  - Workspace
-  - Users
+- **Managed Identity Authentication**: Full support for Azure Managed Identity (both system-assigned and user-assigned)
+  - `Set-FabricApiHeaders -UseManagedIdentity` for system-assigned identity
+  - `Set-FabricApiHeaders -UseManagedIdentity -ClientId "..."` for user-assigned identity
+- **Automatic Token Refresh**: New `Test-TokenExpired -AutoRefresh` capability for Managed Identity authentication
+- **PSFramework Integration**: Complete migration to PSFramework for configuration and logging
+  - Configuration: `Get-PSFConfig -Module MicrosoftFabricMgmt` to view all settings
+  - Logging: Enterprise-grade logging with multiple providers (file, event log, etc.)
+- **New Helper Function**: `Invoke-TokenRefresh` for automatic token renewal (Managed Identity only)
+- **Configuration Options**: New PSFramework-based configuration settings:
+  - `Api.BaseUrl`: Base URL for Fabric API endpoints
+  - `Api.ResourceUrl`: Azure resource URL for token acquisition
+  - `Api.TimeoutSeconds`: Default timeout for API requests (30 seconds)
+  - `Api.RetryMaxAttempts`: Maximum retry attempts (3)
+  - `Api.RetryBackoffMultiplier`: Exponential backoff multiplier (2)
+  - `Auth.TokenRefreshThresholdSeconds`: Token refresh threshold (300 seconds / 5 minutes)
+  - `Json.DefaultDepth`: Default depth for JSON conversion (10)
+- **Module Cleanup Handler**: Automatic cleanup of sensitive authentication data when module is unloaded
+- **Enhanced Documentation**: Complete comment-based help updates for all authentication functions
 
 ### Changed
 
-- Renamed a few functions
-  - Get-FabricSparkSettings to Get-FabricSparkWorkspaceSettings
-  - Update-FabricSparkSettings to Update-FabricSparkWorkspaceSettings
-  - Get-FabricTenantSettingOverridesCapacity to Get-FabricCapacityTenantSettingOverrides
+- **Module Manifest**: Updated to version 1.0.0 with explicit PowerShell 5.1 compatibility
+  - Added `RequiredModules = @('PSFramework')` dependency
+  - Added `CompatiblePSEditions = @('Desktop', 'Core')` for explicit PS 5.1 and 7+ support
+  - Updated `PowerShellVersion = '5.1'` minimum requirement
+- **Module Initialization** (`prefix.ps1`): Complete rewrite with PSFramework configuration system
+  - Initializes all module configuration on import
+  - Creates module-scoped `$script:FabricAuthContext` instead of global `$FabricConfig`
+  - Registers module cleanup handler for security
+  - Displays breaking change notice on module load
+- **Authentication** (`Set-FabricApiHeaders`): Complete rewrite with modern PowerShell patterns
+  - Three parameter sets: `UserPrincipal`, `ServicePrincipal`, `ManagedIdentity`
+  - All code is PowerShell 5.1 compatible (uses `New-Object` instead of `::new()`)
+  - Uses PSFramework logging (`Write-PSFMessage`) throughout
+  - Updates module-scoped `$script:FabricAuthContext` instead of global variable
+  - Enhanced error messages with context-specific guidance
+  - Stores authentication method and metadata for token refresh capability
+- **Token Validation** (`Test-TokenExpired`): Enhanced with auto-refresh and better error handling
+  - Returns `$true` (expired) or `$false` (valid) instead of throwing exceptions
+  - New `-AutoRefresh` parameter for automatic token renewal
+  - Proactive refresh when token < 5 minutes from expiration
+  - Uses PSFramework logging and configuration
+  - Checks module-scoped `$script:FabricAuthContext` instead of `$FabricConfig`
+- **All Logging**: Migrated from custom `Write-Message` to PSFramework's `Write-PSFMessage`
+  - Better performance and flexibility
+  - Supports multiple logging providers
+  - Configurable log levels and filtering
+  - Structured logging support
 
-- Standardized parameter naming and API patterns
-- Enhanced error handling across all cmdlets
-- Refactor API request parameters in multiple scripts for consistency and readability. Now it uses a splatting format.
+### Removed
 
-### Fixed
+- **Global `$FabricConfig` Variable**: Removed entirely - use module functions instead
+- **Custom `Write-Message` Function**: Removed - use `Write-PSFMessage` from PSFramework
+- **Exception-Based Token Validation**: `Test-TokenExpired` no longer throws - returns boolean
 
-- Authentication fallback when environment variables for Fabric credentials are missing.
-- Fix message types
-- Fix bugs
+### Security
+
+- **Improved Token Security**: Module-scoped authentication context prevents accidental global variable exposure
+- **Automatic Memory Cleanup**: Secure cleanup of authentication data when module is unloaded
+- **SecureString Handling**: Proper SecureString to plain text conversion with guaranteed memory cleanup
+
+### Migration Guide
+
+**If upgrading from 0.x to 1.0.0:**
+
+1. Remove all `$FabricConfig` references from your scripts
+2. Authentication still works the same way via `Set-FabricApiHeaders`
+3. Use `Get-PSFConfigValue` if you need configuration values
+4. Update any `Test-TokenExpired` calls to handle boolean return values
+5. Consider migrating Azure-hosted workloads to Managed Identity authentication
+
+**See [BREAKING-CHANGES.md](BREAKING-CHANGES.md) for complete migration guide with examples.**
+
+### Previous Version Changes
 
 ---
 
-## [0.1.0] – 2025-06-09
+**Contributors:**  
+Rob Sewell, Jess Pomfret, Ioana Bouariu, Frank Geisler, and others.
 
-### Added
-
-- Initial PowerShell module structure and framework
-- Basic authentication and API connection handling
-- Core utility functions for API interactions
-- Module manifest and basic configuration
+**Note:**
+For a full list of changes and details, please see the commit history.

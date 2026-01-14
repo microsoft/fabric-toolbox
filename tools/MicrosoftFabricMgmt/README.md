@@ -69,7 +69,7 @@ As with all PowerShell modules, you can either clone the repository and import t
 ```powershell
 # Install from PowerShell Gallery
 Install-Module -Name MicrosoftFabricMgmt
-
+```
 You can find the module on the PowerShell Gallery here: [MicrosoftFabricMgmt on PSGallery](https://www.powershellgallery.com/packages/MicrosoftFabricMgmt)
 
 You can update the module at any time using:
@@ -199,7 +199,7 @@ New-FabricLakehouse -WorkspaceId $newWorkspace.id -LakehouseName "SalesData" -La
 
 ![Fabric Lakehouse](docs/images/FirstSteps.png)
 
-````powershell
+```powershell
 # List notebooks in a workspace
 Get-FabricNotebook -WorkspaceId $newWorkspace.id
 
