@@ -1,4 +1,4 @@
-﻿<#
+<#
 .SYNOPSIS
 Retrieves an environment or a list of environments from a specified workspace in Microsoft Fabric.
 
@@ -71,7 +71,7 @@ function Get-FabricEnvironment {
         $dataItems = Invoke-FabricAPIRequest @apiParams
 
         # Apply filtering logic
-        Select-FabricResource -InputObject $dataItems -Id $EnvironmentId -DisplayName $EnvironmentName -ResourceType 'Environment'
+        Select-FabricResource -InputObject $dataItems -Id $EnvironmentId -DisplayName $EnvironmentName -ResourceType 'Environment' -TypeName 'MicrosoftFabric.Environment'
     }
     catch {
         # Capture and log error details

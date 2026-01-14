@@ -13,19 +13,37 @@
       <Name>FabricItemView</Name>
       <ViewSelectedBy>
         <TypeName>MicrosoftFabric.Item</TypeName>
-        <TypeName>MicrosoftFabric.Lakehouse</TypeName>
-        <TypeName>MicrosoftFabric.Notebook</TypeName>
-        <TypeName>MicrosoftFabric.Warehouse</TypeName>
+        <TypeName>MicrosoftFabric.ApacheAirflowJob</TypeName>
+        <TypeName>MicrosoftFabric.CopyJob</TypeName>
+        <TypeName>MicrosoftFabric.Dashboard</TypeName>
         <TypeName>MicrosoftFabric.DataPipeline</TypeName>
+        <TypeName>MicrosoftFabric.Datamart</TypeName>
         <TypeName>MicrosoftFabric.Environment</TypeName>
         <TypeName>MicrosoftFabric.Eventhouse</TypeName>
+        <TypeName>MicrosoftFabric.Eventstream</TypeName>
+        <TypeName>MicrosoftFabric.ExternalDataShare</TypeName>
+        <TypeName>MicrosoftFabric.Folder</TypeName>
+        <TypeName>MicrosoftFabric.GraphQLApi</TypeName>
+        <TypeName>MicrosoftFabric.KQLDashboard</TypeName>
         <TypeName>MicrosoftFabric.KQLDatabase</TypeName>
         <TypeName>MicrosoftFabric.KQLQueryset</TypeName>
+        <TypeName>MicrosoftFabric.Lakehouse</TypeName>
+        <TypeName>MicrosoftFabric.ManagedPrivateEndpoint</TypeName>
+        <TypeName>MicrosoftFabric.MirroredDatabase</TypeName>
+        <TypeName>MicrosoftFabric.MirroredWarehouse</TypeName>
         <TypeName>MicrosoftFabric.MLExperiment</TypeName>
         <TypeName>MicrosoftFabric.MLModel</TypeName>
+        <TypeName>MicrosoftFabric.MountedDataFactory</TypeName>
+        <TypeName>MicrosoftFabric.Notebook</TypeName>
+        <TypeName>MicrosoftFabric.OneLakeShortcut</TypeName>
+        <TypeName>MicrosoftFabric.PaginatedReport</TypeName>
+        <TypeName>MicrosoftFabric.Reflex</TypeName>
         <TypeName>MicrosoftFabric.Report</TypeName>
         <TypeName>MicrosoftFabric.SemanticModel</TypeName>
         <TypeName>MicrosoftFabric.SparkJobDefinition</TypeName>
+        <TypeName>MicrosoftFabric.SQLEndpoint</TypeName>
+        <TypeName>MicrosoftFabric.VariableLibrary</TypeName>
+        <TypeName>MicrosoftFabric.Warehouse</TypeName>
       </ViewSelectedBy>
       <TableControl>
         <TableHeaders>
@@ -292,6 +310,91 @@
               <!-- ID -->
               <TableColumnItem>
                 <PropertyName>id</PropertyName>
+              </TableColumnItem>
+            </TableColumnItems>
+          </TableRowEntry>
+        </TableRowEntries>
+      </TableControl>
+    </View>
+
+    <!--
+      =============================================================================
+      Role Assignment View - For workspace role assignments
+      =============================================================================
+      Display Priority: Workspace Name, Principal Name, Type, Role, ID
+      Note: WorkspaceId must be added to objects for workspace name resolution
+    -->
+    <View>
+      <Name>RoleAssignmentView</Name>
+      <ViewSelectedBy>
+        <TypeName>MicrosoftFabric.WorkspaceRoleAssignment</TypeName>
+      </ViewSelectedBy>
+      <TableControl>
+        <TableHeaders>
+          <TableColumnHeader>
+            <Label>Workspace Name</Label>
+            <Width>25</Width>
+          </TableColumnHeader>
+          <TableColumnHeader>
+            <Label>Principal</Label>
+            <Width>30</Width>
+          </TableColumnHeader>
+          <TableColumnHeader>
+            <Label>Type</Label>
+            <Width>15</Width>
+          </TableColumnHeader>
+          <TableColumnHeader>
+            <Label>Role</Label>
+            <Width>15</Width>
+          </TableColumnHeader>
+          <TableColumnHeader>
+            <Label>ID</Label>
+          </TableColumnHeader>
+        </TableHeaders>
+        <TableRowEntries>
+          <TableRowEntry>
+            <TableColumnItems>
+              <!-- Workspace Name - Resolve from workspaceId if present -->
+              <TableColumnItem>
+                <ScriptBlock>
+                  if ($_.workspaceId) {
+                    try {
+                      Resolve-FabricWorkspaceName -WorkspaceId $_.workspaceId
+                    }
+                    catch {
+                      $_.workspaceId
+                    }
+                  }
+                  else {
+                    'N/A'
+                  }
+                </ScriptBlock>
+              </TableColumnItem>
+              <!-- Principal Name (DisplayName or UserPrincipalName) -->
+              <TableColumnItem>
+                <ScriptBlock>
+                  if ($_.DisplayName) {
+                    $_.DisplayName
+                  }
+                  elseif ($_.UserPrincipalName) {
+                    $_.UserPrincipalName
+                  }
+                  else {
+                    $_.PrincipalId
+                  }
+                </ScriptBlock>
+              </TableColumnItem>
+              <!-- Type -->
+              <TableColumnItem>
+                <PropertyName>Type</PropertyName>
+              </TableColumnItem>
+              <!-- Role -->
+              <TableColumnItem>
+                <PropertyName>Role</PropertyName>
+              </TableColumnItem>
+              <!-- ID -->
+              <TableColumnItem>
+                <PropertyName>ID</PropertyName>
               </TableColumnItem>
             </TableColumnItems>
           </TableRowEntry>

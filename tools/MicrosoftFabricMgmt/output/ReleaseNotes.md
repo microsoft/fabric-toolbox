@@ -1,7 +1,65 @@
-## [1.0.2] - 2026-01-12
+## [1.0.2] - 2026-01-13
 
 ### Added
+
+- **Intelligent Output Formatting System**: Automatic formatting of Get-* cmdlet output with resolved GUIDs to human-readable names
+  - Format views for Items, Workspaces, Capacities, Domains, Role Assignments, and Jobs
+  - Displays: Capacity Name, Workspace Name, Item Name, Type, and ID in consistent format
+  - Automatic name resolution with intelligent caching for optimal performance
+
+- **Public Helper Functions** (3 new functions exported):
+  - `Resolve-FabricCapacityName`: Converts capacity GUIDs to display names with caching
+  - `Resolve-FabricWorkspaceName`: Converts workspace GUIDs to display names with caching
+  - `Resolve-FabricCapacityIdFromWorkspace`: Cascading resolution for items without direct capacityId
+  - All functions use PSFramework configuration for caching (persists across sessions)
+  - Comprehensive documentation added for all three functions
+
+- **Cascading Resolution**: Items that only return workspaceId (Lakehouse, Notebook, etc.) now display Capacity Name by cascading through workspace to get capacityId
+
+- **Format Views** (6 views in MicrosoftFabricMgmt.Format.ps1xml):
+  - `FabricItemView`: For 32 item types (Lakehouse, Notebook, Warehouse, Environment, Report, etc.)
+  - `WorkspaceView`: For workspace objects
+  - `CapacityView`: For capacity objects
+  - `DomainView`: For domain objects
+  - `RoleAssignmentView`: For workspace role assignments (NEW)
+  - `JobView`: For job-related objects
+
+- **Formatted Output** applied to 11 Get-* functions:
+  - Get-FabricLakehouse
+  - Get-FabricNotebook
+  - Get-FabricWarehouse
+  - Get-FabricWorkspace
+  - Get-FabricCapacity
+  - Get-FabricWorkspaceRoleAssignment (includes workspaceId for name resolution)
+  - Get-FabricEnvironment
+  - Get-FabricEventhouse
+  - Get-FabricApacheAirflowJob
+  - Get-FabricGraphQLApi
+  - Get-FabricEventstream
+
+- **Documentation**:
+  - [Resolve-FabricCapacityName.md](docs/Resolve-FabricCapacityName.md) - Complete cmdlet documentation
+  - [Resolve-FabricWorkspaceName.md](docs/Resolve-FabricWorkspaceName.md) - Complete cmdlet documentation
+  - [Resolve-FabricCapacityIdFromWorkspace.md](docs/Resolve-FabricCapacityIdFromWorkspace.md) - Cascading resolution documentation
+  - [OUTPUT-FORMATTING.md](docs/OUTPUT-FORMATTING.md) - Updated with cascading resolution details
+  - [PHASE6_FORMATTING_COMPLETION.md](PHASE6_FORMATTING_COMPLETION.md) - Roadmap for remaining 23 functions
+
 ### Changed
+
+- **Select-FabricResource**: Enhanced with optional `-TypeName` parameter for automatic type decoration
+- **Module Manifest**: Exported 3 new public helper functions (Resolve-FabricCapacityName, Resolve-FabricWorkspaceName, Resolve-FabricCapacityIdFromWorkspace)
+- **Module Manifest**: Added `FormatsToProcess = @('MicrosoftFabricMgmt.Format.ps1xml')` to load format file
+- **Get-FabricWorkspaceRoleAssignment**: Now returns custom objects with workspaceId for name resolution and type decoration
+
+### Performance Improvements
+
+- **Intelligent Caching**: Name resolutions cached using PSFramework configuration system
+  - First lookup: 100-500ms (API call)
+  - Cached lookup: <1ms (200-500x faster!)
+  - Cache persists across PowerShell sessions
+  - Dramatically improves performance for repeated queries
+- **Cascading Resolution Caching**: Both levels cached (workspace→capacityId AND capacityId→name)
+
 ### Fixed
 ### Deprecated
 ### Removed

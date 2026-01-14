@@ -1,4 +1,4 @@
-﻿<#
+<#
 .SYNOPSIS
     Retrieves Apache Airflow Job details from a specified Microsoft Fabric workspace.
 
@@ -69,7 +69,7 @@ function Get-FabricApacheAirflowJob {
         $dataItems = Invoke-FabricAPIRequest @apiParams
 
         # Apply filtering and output results
-        Select-FabricResource -InputObject $dataItems -Id $ApacheAirflowJobId -DisplayName $ApacheAirflowJobName -ResourceType 'Apache Airflow Job'
+        Select-FabricResource -InputObject $dataItems -Id $ApacheAirflowJobId -DisplayName $ApacheAirflowJobName -ResourceType 'Apache Airflow Job' -TypeName 'MicrosoftFabric.ApacheAirflowJob'
     }
     catch {
         # Capture and log error details

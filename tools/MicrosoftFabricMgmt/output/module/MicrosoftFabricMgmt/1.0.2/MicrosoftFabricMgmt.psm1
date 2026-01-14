@@ -1102,7 +1102,7 @@ function Get-FabricApacheAirflowJob {
         $dataItems = Invoke-FabricAPIRequest @apiParams
 
         # Apply filtering and output results
-        Select-FabricResource -InputObject $dataItems -Id $ApacheAirflowJobId -DisplayName $ApacheAirflowJobName -ResourceType 'Apache Airflow Job'
+        Select-FabricResource -InputObject $dataItems -Id $ApacheAirflowJobId -DisplayName $ApacheAirflowJobName -ResourceType 'Apache Airflow Job' -TypeName 'MicrosoftFabric.ApacheAirflowJob'
     }
     catch {
         # Capture and log error details
@@ -4183,7 +4183,7 @@ function Get-FabricEnvironment {
         $dataItems = Invoke-FabricAPIRequest @apiParams
 
         # Apply filtering logic
-        Select-FabricResource -InputObject $dataItems -Id $EnvironmentId -DisplayName $EnvironmentName -ResourceType 'Environment'
+        Select-FabricResource -InputObject $dataItems -Id $EnvironmentId -DisplayName $EnvironmentName -ResourceType 'Environment' -TypeName 'MicrosoftFabric.Environment'
     }
     catch {
         # Capture and log error details
@@ -5211,7 +5211,7 @@ function Get-FabricEventhouse {
         $dataItems = Invoke-FabricAPIRequest @apiParams
 
         # Apply filtering logic
-        Select-FabricResource -InputObject $dataItems -Id $EventhouseId -DisplayName $EventhouseName -ResourceType 'Eventhouse'
+        Select-FabricResource -InputObject $dataItems -Id $EventhouseId -DisplayName $EventhouseName -ResourceType 'Eventhouse' -TypeName 'MicrosoftFabric.Eventhouse'
     }
     catch {
         # Capture and log error details
@@ -5813,7 +5813,7 @@ function Get-FabricEventstream {
         $dataItems = Invoke-FabricAPIRequest @apiParams
 
         # Apply filtering and return results
-        Select-FabricResource -InputObject $dataItems -Id $EventstreamId -DisplayName $EventstreamName -ResourceType 'Eventstream'
+        Select-FabricResource -InputObject $dataItems -Id $EventstreamId -DisplayName $EventstreamName -ResourceType 'Eventstream' -TypeName 'MicrosoftFabric.Eventstream'
     }
     catch {
         # Capture and log error details
@@ -7826,7 +7826,7 @@ function Get-FabricGraphQLApi {
         $dataItems = Invoke-FabricAPIRequest @apiParams
 
         # Apply filtering and return results
-        Select-FabricResource -InputObject $dataItems -Id $GraphQLApiId -DisplayName $GraphQLApiName -ResourceType 'GraphQL API'
+        Select-FabricResource -InputObject $dataItems -Id $GraphQLApiId -DisplayName $GraphQLApiName -ResourceType 'GraphQL API' -TypeName 'MicrosoftFabric.GraphQLApi'
     }
     catch {
         # Capture and log error details
@@ -24706,10 +24706,11 @@ function Get-FabricWorkspaceRoleAssignment {
         # Apply filtering
         $matchedItems = Select-FabricResource -InputObject $dataItems -Id $WorkspaceRoleAssignmentId -ResourceType 'WorkspaceRoleAssignment'
 
-        # Transform data into custom objects
+        # Transform data into custom objects with type decoration
         if ($matchedItems) {
             $customResults = foreach ($obj in $matchedItems) {
                 [PSCustomObject]@{
+                    workspaceId       = $WorkspaceId  # Add workspaceId for formatting
                     ID                = $obj.id
                     PrincipalId       = $obj.principal.id
                     DisplayName       = $obj.principal.displayName
@@ -24719,7 +24720,11 @@ function Get-FabricWorkspaceRoleAssignment {
                     Role              = $obj.role
                 }
             }
-            $customResults
+
+            # Add type decoration for custom formatting
+            $customResults | Add-FabricTypeName -TypeName 'MicrosoftFabric.WorkspaceRoleAssignment'
+
+            return $customResults
         }
     }
     catch {
@@ -24728,7 +24733,7 @@ function Get-FabricWorkspaceRoleAssignment {
         Write-FabricLog -Message "Failed to retrieve role assignments for WorkspaceId '$WorkspaceId'. Error: $errorDetails" -Level Error
     }
 }
-#EndRegion '.\Public\Workspace\Get-FabricWorkspaceRoleAssignment.ps1' 84
+#EndRegion '.\Public\Workspace\Get-FabricWorkspaceRoleAssignment.ps1' 89
 #Region '.\Public\Workspace\New-FabricWorkspace.ps1' -1
 
 <#

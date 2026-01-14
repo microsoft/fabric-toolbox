@@ -5,6 +5,8 @@
 
 **MicrosoftFabricMgmt** is an enterprise-grade PowerShell module providing comprehensive automation and management capabilities for **Microsoft Fabric** environments. Built with PowerShell best practices and modern development standards, this module delivers a robust, production-ready interface to the entire Microsoft Fabric REST API ecosystem.
 
+**NOTE:** This module is currently only compatible with PowerShell version 7 and later. PowerShell 5.1 support could be added if there is sufficient demand.
+
 ### 🚀 Key Features
 
 - **244+ Cmdlets** - Complete coverage of Microsoft Fabric REST API
@@ -68,9 +70,17 @@ As with all PowerShell modules, you can either clone the repository and import t
 # Install from PowerShell Gallery
 Install-Module -Name MicrosoftFabricMgmt
 
-> **Note**: The module will be published to PowerShell Gallery soon. Until then, use the manual installation method below.
+You can find the module on the PowerShell Gallery here: [MicrosoftFabricMgmt on PSGallery](https://www.powershellgallery.com/packages/MicrosoftFabricMgmt)
 
-#### Manual Installation (Current Method)
+You can update the module at any time using:
+
+```powershell
+# Update the module
+Update-Module -Name MicrosoftFabricMgmt
+```
+
+
+#### Manual Installation
 
 ```powershell
 # Install required dependencies
