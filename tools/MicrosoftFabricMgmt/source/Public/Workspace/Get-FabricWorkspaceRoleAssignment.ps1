@@ -59,10 +59,11 @@ function Get-FabricWorkspaceRoleAssignment {
         # Apply filtering
         $matchedItems = Select-FabricResource -InputObject $dataItems -Id $WorkspaceRoleAssignmentId -ResourceType 'WorkspaceRoleAssignment'
 
-        # Transform data into custom objects
+        # Transform data into custom objects with type decoration
         if ($matchedItems) {
             $customResults = foreach ($obj in $matchedItems) {
                 [PSCustomObject]@{
+                    workspaceId       = $WorkspaceId  # Add workspaceId for formatting
                     ID                = $obj.id
                     PrincipalId       = $obj.principal.id
                     DisplayName       = $obj.principal.displayName
@@ -72,7 +73,11 @@ function Get-FabricWorkspaceRoleAssignment {
                     Role              = $obj.role
                 }
             }
-            $customResults
+
+            # Add type decoration for custom formatting
+            $customResults | Add-FabricTypeName -TypeName 'MicrosoftFabric.WorkspaceRoleAssignment'
+
+            return $customResults
         }
     }
     catch {

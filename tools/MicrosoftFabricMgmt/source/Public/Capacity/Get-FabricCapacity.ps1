@@ -59,8 +59,8 @@ function Get-FabricCapacity {
         }
         $dataItems = Invoke-FabricAPIRequest @apiParams
 
-        # Apply filtering and output results
-        Select-FabricResource -InputObject $dataItems -Id $CapacityId -DisplayName $CapacityName -ResourceType 'Capacity'
+        # Apply filtering and output results with type decoration
+        Select-FabricResource -InputObject $dataItems -Id $CapacityId -DisplayName $CapacityName -ResourceType 'Capacity' -TypeName 'MicrosoftFabric.Capacity'
     }
     catch {
         # Capture and log error details

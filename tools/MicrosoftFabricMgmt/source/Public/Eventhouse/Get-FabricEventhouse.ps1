@@ -1,4 +1,4 @@
-﻿<#
+<#
 .SYNOPSIS
     Retrieves Eventhouse details from a specified Microsoft Fabric workspace.
 
@@ -68,7 +68,7 @@ function Get-FabricEventhouse {
         $dataItems = Invoke-FabricAPIRequest @apiParams
 
         # Apply filtering logic
-        Select-FabricResource -InputObject $dataItems -Id $EventhouseId -DisplayName $EventhouseName -ResourceType 'Eventhouse'
+        Select-FabricResource -InputObject $dataItems -Id $EventhouseId -DisplayName $EventhouseName -ResourceType 'Eventhouse' -TypeName 'MicrosoftFabric.Eventhouse'
     }
     catch {
         # Capture and log error details

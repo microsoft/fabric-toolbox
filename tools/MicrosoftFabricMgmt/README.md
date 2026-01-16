@@ -5,12 +5,15 @@
 
 **MicrosoftFabricMgmt** is an enterprise-grade PowerShell module providing comprehensive automation and management capabilities for **Microsoft Fabric** environments. Built with PowerShell best practices and modern development standards, this module delivers a robust, production-ready interface to the entire Microsoft Fabric REST API ecosystem.
 
+**NOTE:** This module is currently only compatible with PowerShell version 7 and later. PowerShell 5.1 support could be added if there is sufficient demand.
+
 ### 🚀 Key Features
 
 - **244+ Cmdlets** - Complete coverage of Microsoft Fabric REST API
 - **42 Resource Types** - Manage Lakehouses, Warehouses, Notebooks, Pipelines, ML Models, Eventstreams, and more
 - **Multiple Auth Methods** - User Principal, Service Principal, and Managed Identity support
 - **Enterprise Ready** - Built-in retry logic, comprehensive error handling, and PSFramework logging
+- **Intelligent Output Formatting** - Automatic GUID-to-name resolution with smart caching for readable results
 - **API Validated** - All endpoints verified against [official Microsoft Fabric REST API specifications](https://github.com/microsoft/fabric-rest-api-specs)
 - **Cross-Platform** - PowerShell 5.1+ and PowerShell 7+ compatible
 - **Fully Documented** - Complete help documentation and examples for every cmdlet
@@ -66,10 +69,18 @@ As with all PowerShell modules, you can either clone the repository and import t
 ```powershell
 # Install from PowerShell Gallery
 Install-Module -Name MicrosoftFabricMgmt
+```
+You can find the module on the PowerShell Gallery here: [MicrosoftFabricMgmt on PSGallery](https://www.powershellgallery.com/packages/MicrosoftFabricMgmt)
 
-> **Note**: The module will be published to PowerShell Gallery soon. Until then, use the manual installation method below.
+You can update the module at any time using:
 
-#### Manual Installation (Current Method)
+```powershell
+# Update the module
+Update-Module -Name MicrosoftFabricMgmt
+```
+
+
+#### Manual Installation
 
 ```powershell
 # Install required dependencies
@@ -188,7 +199,7 @@ New-FabricLakehouse -WorkspaceId $newWorkspace.id -LakehouseName "SalesData" -La
 
 ![Fabric Lakehouse](docs/images/FirstSteps.png)
 
-````powershell
+```powershell
 # List notebooks in a workspace
 Get-FabricNotebook -WorkspaceId $newWorkspace.id
 
@@ -268,6 +279,60 @@ $auditReport = foreach ($workspace in $workspaces) {
 # Export to CSV
 $auditReport | Export-Csv -Path "FabricWorkspaceAudit_$(Get-Date -Format 'yyyyMMdd').csv" -NoTypeInformation
 ```
+
+---
+
+## 📊 Intelligent Output Formatting
+
+The module includes smart output formatting that automatically makes results more readable and actionable by:
+
+### Automatic Name Resolution
+Instead of displaying raw GUIDs, the module automatically resolves IDs to human-readable names:
+- **Capacity IDs** → Capacity display names
+- **Workspace IDs** → Workspace display names
+
+**Example - Without Formatting:**
+```powershell
+id                                   displayName          type      workspaceId                          capacityId
+--                                   -----------          ----      -----------                          ----------
+a1b2c3d4-e5f6-1234-5678-9abcdef01234 Sales Lakehouse      Lakehouse f9e8d7c6-b5a4-9876-5432-1fedcba98765 c4d5e6f7...
+```
+
+**Example - With Smart Formatting:**
+```powershell
+Capacity Name        Workspace Name       Item Name           Type      ID
+-------------        --------------       ---------           ----      --
+Premium Capacity P1  Sales Analytics      Sales Lakehouse     Lakehouse a1b2c3d4-e5f6...
+Premium Capacity P1  Sales Analytics      ETL Notebook        Notebook  b2c3d4e5-f6a7...
+Premium Capacity P2  Marketing Workspace  Campaign Data       Warehouse c3d4e5f6-a7b8...
+```
+
+### Performance with Smart Caching
+Name resolutions are cached for optimal performance:
+- **First lookup:** ~200ms (API call)
+- **Cached lookup:** <1ms (~200x faster!)
+- Cache persists across sessions
+- Automatic cache management
+
+### Clear Cache When Needed
+After renaming capacities or workspaces, clear the cache to fetch updated names:
+
+```powershell
+# Clear all cached name resolutions
+Clear-FabricNameCache -Force
+
+# Output: Successfully cleared 42 cached name resolution(s)
+```
+
+### Consistent Display Format
+All objects display with consistent column priority:
+1. Capacity Name
+2. Workspace Name
+3. Item Name
+4. Item Type
+5. Additional properties...
+
+**Learn More:** See the complete [Output Formatting Guide](docs/OUTPUT-FORMATTING.md) for details on format views, caching behavior, and troubleshooting.
 
 ---
 
@@ -510,6 +575,8 @@ The module uses [Sampler](https://github.com/gaelcolas/Sampler), a modern PowerS
 
 ### Documentation
 - **Module Documentation**: See `docs/` folder for detailed cmdlet documentation
+- **Output Formatting Guide**: [docs/OUTPUT-FORMATTING.md](docs/OUTPUT-FORMATTING.md) - Complete guide to output formatting and caching
+- **Clear Cache Function**: [docs/Clear-FabricNameCache.md](docs/Clear-FabricNameCache.md) - Cache management documentation
 - **Microsoft Fabric Docs**: [Microsoft Fabric Documentation](https://learn.microsoft.com/fabric/)
 - **REST API Reference**: [Fabric REST API](https://learn.microsoft.com/rest/api/fabric/)
 - **API Specifications**: [Official Swagger Specs](https://github.com/microsoft/fabric-rest-api-specs)
