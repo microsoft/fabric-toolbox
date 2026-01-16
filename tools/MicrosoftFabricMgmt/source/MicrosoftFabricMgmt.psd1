@@ -4,7 +4,7 @@
     RootModule           = 'MicrosoftFabricMgmt.psm1'
 
     # Version number of this module.
-    ModuleVersion        = '1.0.3'
+    ModuleVersion        = '1.0.4'
 
     # Supported PSEditions
     CompatiblePSEditions = @('Desktop', 'Core')
@@ -45,7 +45,7 @@
     # Modules that must be imported into the global environment prior to importing this module
     # Modules that must be imported into the global environment prior to importing this module
     RequiredModules      = @(
-        @{ ModuleName = 'PSFramework'; ModuleVersion = '1.12.0' },
+        @{ ModuleName = 'PSFramework'; ModuleVersion = '1.12.345' },
         @{ ModuleName = 'Az.Accounts'; ModuleVersion = '5.0.0' },
         @{ ModuleName = 'Az.Resources'; ModuleVersion = '6.15.1' },
         @{ ModuleName = 'MicrosoftPowerBIMgmt'; ModuleVersion = '1.2.1111' }

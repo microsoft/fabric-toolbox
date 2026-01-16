@@ -104,7 +104,7 @@ function Get-FabricFolder {
         $dataItems = Invoke-FabricAPIRequest @apiParams
 
         # Apply filtering logic
-        Select-FabricResource -InputObject $dataItems -DisplayName $FolderName -ResourceType 'Folder'
+        Select-FabricResource -InputObject $dataItems -DisplayName $FolderName -ResourceType 'Folder' -TypeName 'MicrosoftFabric.Folder'
     }
     catch {
         # Capture and log error details

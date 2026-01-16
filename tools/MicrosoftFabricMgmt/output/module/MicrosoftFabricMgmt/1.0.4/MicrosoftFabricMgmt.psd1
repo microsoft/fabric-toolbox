@@ -4,7 +4,7 @@
     RootModule           = 'MicrosoftFabricMgmt.psm1'
 
     # Version number of this module.
-    ModuleVersion        = '1.0.3'
+    ModuleVersion        = '1.0.4'
 
     # Supported PSEditions
     CompatiblePSEditions = @('Desktop', 'Core')
@@ -45,7 +45,7 @@
     # Modules that must be imported into the global environment prior to importing this module
     # Modules that must be imported into the global environment prior to importing this module
     RequiredModules      = @(
-        @{ ModuleName = 'PSFramework'; ModuleVersion = '1.12.0' },
+        @{ ModuleName = 'PSFramework'; ModuleVersion = '1.12.345' },
         @{ ModuleName = 'Az.Accounts'; ModuleVersion = '5.0.0' },
         @{ ModuleName = 'Az.Resources'; ModuleVersion = '6.15.1' },
         @{ ModuleName = 'MicrosoftPowerBIMgmt'; ModuleVersion = '1.2.1111' }
@@ -118,7 +118,7 @@
             # IconUri = ''
 
             # ReleaseNotes of this module
-            ReleaseNotes = '## [1.0.3] - 2026-01-14
+            ReleaseNotes = '## [1.0.4] - 2026-01-16
 
 ### Added
 
@@ -181,6 +181,10 @@
 - **Cascading Resolution Caching**: Both levels cached (workspace→capacityId AND capacityId→name)
 
 ### Fixed
+- Fixed overly restrictive `ValidatePattern` on name parameters across 18 cmdlets to match Microsoft Fabric documentation
+  - **Fabric items** (Lakehouse, Warehouse, KQL Database, Tags, Variable Library, Spark Job Definition, SQL Endpoints): Changed pattern from `''^[a-zA-Z0-9_ ]*$''` to `''^[a-zA-Z0-9_]*$''` (removed space support as per Fabric naming restrictions)
+  - **Workspaces**: Removed restrictive pattern validation entirely to support broader character set allowed by Fabric workspaces
+
 ### Deprecated
 ### Removed
 ### Security

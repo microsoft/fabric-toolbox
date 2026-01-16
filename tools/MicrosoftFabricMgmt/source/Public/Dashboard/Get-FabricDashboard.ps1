@@ -41,8 +41,13 @@ function Get-FabricDashboard {
             Headers = $script:FabricAuthContext.FabricHeaders
             Method = 'Get'
         }
-        Invoke-FabricAPIRequest @apiParams
+        $dataItems = Invoke-FabricAPIRequest @apiParams
 
+        # Add type decoration for custom formatting
+        if ($dataItems) {
+            $dataItems | Add-FabricTypeName -TypeName 'MicrosoftFabric.Dashboard'
+            return $dataItems
+        }
     }
     catch {
         # Capture and log error details
