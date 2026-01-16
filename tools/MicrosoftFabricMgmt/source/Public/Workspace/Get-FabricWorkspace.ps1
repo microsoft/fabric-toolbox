@@ -38,7 +38,6 @@ function Get-FabricWorkspace {
 
         [Parameter(Mandatory = $false)]
         [ValidateNotNullOrEmpty()]
-        [ValidatePattern('^[a-zA-Z0-9_ ]*$')]
         [string]$WorkspaceName
     )
 
@@ -63,8 +62,8 @@ function Get-FabricWorkspace {
         }
         $dataItems = Invoke-FabricAPIRequest @apiParams
 
-        # Apply filtering and output results
-        Select-FabricResource -InputObject $dataItems -Id $WorkspaceId -DisplayName $WorkspaceName -ResourceType 'Workspace'
+        # Apply filtering and output results with type decoration
+        Select-FabricResource -InputObject $dataItems -Id $WorkspaceId -DisplayName $WorkspaceName -ResourceType 'Workspace' -TypeName 'MicrosoftFabric.Workspace'
     }
     catch {
         # Capture and log error details

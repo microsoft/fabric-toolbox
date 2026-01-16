@@ -1,4 +1,4 @@
-﻿<#
+<#
 .SYNOPSIS
 Retrieves a specific Eventstream or all Eventstreams from a workspace in Microsoft Fabric.
 
@@ -78,7 +78,7 @@ function Get-FabricEventstream {
         $dataItems = Invoke-FabricAPIRequest @apiParams
 
         # Apply filtering and return results
-        Select-FabricResource -InputObject $dataItems -Id $EventstreamId -DisplayName $EventstreamName -ResourceType 'Eventstream'
+        Select-FabricResource -InputObject $dataItems -Id $EventstreamId -DisplayName $EventstreamName -ResourceType 'Eventstream' -TypeName 'MicrosoftFabric.Eventstream'
     }
     catch {
         # Capture and log error details

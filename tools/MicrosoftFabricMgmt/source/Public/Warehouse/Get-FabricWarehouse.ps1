@@ -42,7 +42,7 @@ function Get-FabricWarehouse {
 
         [Parameter(Mandatory = $false)]
         [ValidateNotNullOrEmpty()]
-        [ValidatePattern('^[a-zA-Z0-9_ ]*$')]
+        [ValidatePattern('^[a-zA-Z0-9_]*$')]
         [string]$WarehouseName
     )
 
@@ -88,6 +88,10 @@ function Get-FabricWarehouse {
         # Handle results
         if ($matchedItems) {
             Write-FabricLog -Message "Item(s) found matching the specified criteria." -Level Debug
+
+            # Add type decoration for custom formatting
+            $matchedItems | Add-FabricTypeName -TypeName 'MicrosoftFabric.Warehouse'
+
             return $matchedItems
         }
         else {

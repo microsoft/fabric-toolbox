@@ -113,9 +113,13 @@ function Invoke-FabricAPIRequest {
                 Uri                     = $apiEndpointURI
                 Method                  = $Method
                 ErrorAction             = 'Stop'
-                SkipHttpErrorCheck      = $true
-                ResponseHeadersVariable = 'responseHeader'
-                StatusCodeVariable      = 'statusCode'
+            }
+
+            if ($PSVersionTable.PSVersion.Major -ge 7)
+            {
+                $invokeParams.Add("SkipHttpErrorCheck", $true)
+                $invokeParams.Add("StatusCodeVariable", 'statusCode')
+                $invokeParams.Add("ResponseHeadersVariable", 'responseHeader')
             }
 
             # Include body and content type for applicable HTTP methods
