@@ -44,8 +44,9 @@ Author: Tiago Balabuch
 function Get-FabricMirroredDatabase {
     [CmdletBinding()]
     param (
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
         [ValidateNotNullOrEmpty()]
+        [Alias('id')]
         [string]$WorkspaceId,
 
         [Parameter(Mandatory = $false)]
@@ -57,62 +58,61 @@ function Get-FabricMirroredDatabase {
         [ValidatePattern('^[a-zA-Z0-9_ ]*$')]
         [string]$MirroredDatabaseName
     )
-    try {
-        # Validate input parameters
-        if ($MirroredDatabaseId -and $MirroredDatabaseName) {
-            Write-FabricLog -Message "Specify only one parameter: either 'MirroredDatabaseId' or 'MirroredDatabaseName'." -Level Error
-            return $null
-        }
 
-        Invoke-FabricAuthCheck -ThrowOnFailure
+    process {
+        try {
+            # Validate input parameters
+            if ($MirroredDatabaseId -and $MirroredDatabaseName) {
+                Write-FabricLog -Message "Specify only one parameter: either 'MirroredDatabaseId' or 'MirroredDatabaseName'." -Level Error
+                return
+            }
+
+            Invoke-FabricAuthCheck -ThrowOnFailure
 
 
-        # Construct the API endpoint URI
-        $apiEndpointURI = "{0}/workspaces/{1}/mirroredDatabases" -f $script:FabricAuthContext.BaseUrl, $WorkspaceId
-        Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
+            # Construct the API endpoint URI
+            $apiEndpointURI = "{0}/workspaces/{1}/mirroredDatabases" -f $script:FabricAuthContext.BaseUrl, $WorkspaceId
+            Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
 
-        # Make the API request
-        $apiParams = @{
-            BaseURI = $apiEndpointURI
-            Headers = $script:FabricAuthContext.FabricHeaders
-            Method = 'Get'
-        }
-        $dataItems = Invoke-FabricAPIRequest @apiParams
+            # Make the API request
+            $apiParams = @{
+                BaseURI = $apiEndpointURI
+                Headers = $script:FabricAuthContext.FabricHeaders
+                Method = 'Get'
+            }
+            $dataItems = Invoke-FabricAPIRequest @apiParams
 
-        # Immediately handle empty response
-        if (-not $dataItems) {
-            Write-FabricLog -Message "No data returned from the API." -Level Warning
-            return $null
-        }
+            # Immediately handle empty response
+            if (-not $dataItems) {
+                Write-FabricLog -Message "No mirrored databases found in workspace: $WorkspaceId" -Level Debug
+                return
+            }
 
-        # Apply filtering logic efficiently
-        if ($MirroredDatabaseId) {
-            $matchedItems = $dataItems.Where({ $_.Id -eq $MirroredDatabaseId }, 'First')
-        }
-        elseif ($MirroredDatabaseName) {
-            $matchedItems = $dataItems.Where({ $_.DisplayName -eq $MirroredDatabaseName }, 'First')
-        }
-        else {
-            Write-FabricLog -Message "No filter provided. Returning all items." -Level Debug
-            $matchedItems = $dataItems
-        }
+            # Apply filtering logic efficiently
+            if ($MirroredDatabaseId) {
+                $matchedItems = $dataItems.Where({ $_.Id -eq $MirroredDatabaseId }, 'First')
+            }
+            elseif ($MirroredDatabaseName) {
+                $matchedItems = $dataItems.Where({ $_.DisplayName -eq $MirroredDatabaseName }, 'First')
+            }
+            else {
+                Write-FabricLog -Message "No filter provided. Returning all items." -Level Debug
+                $matchedItems = $dataItems
+            }
 
-        # Handle results
-        if ($matchedItems) {
-            Write-FabricLog -Message "Item(s) found matching the specified criteria." -Level Debug
-            # Add type decoration for custom formatting
-            $matchedItems | Add-FabricTypeName -TypeName 'MicrosoftFabric.MirroredDatabase'
-            return $matchedItems
+            # Handle results
+            if ($matchedItems) {
+                Write-FabricLog -Message "Item(s) found matching the specified criteria." -Level Debug
+                $matchedItems
+            }
+            else {
+                Write-FabricLog -Message "No item found matching the provided criteria." -Level Debug
+            }
         }
-        else {
-            Write-FabricLog -Message "No item found matching the provided criteria." -Level Warning
-            return $null
+        catch {
+            # Capture and log error details
+            $errorDetails = $_.Exception.Message
+            Write-FabricLog -Message "Failed to retrieve MirroredDatabase for workspace '$WorkspaceId'. Error: $errorDetails" -Level Error
         }
     }
-    catch {
-        # Capture and log error details
-        $errorDetails = $_.Exception.Message
-        Write-FabricLog -Message "Failed to retrieve Mirrored Database. Error: $errorDetails" -Level Error
-    }
-
 }

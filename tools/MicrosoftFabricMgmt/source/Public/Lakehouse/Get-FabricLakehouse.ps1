@@ -42,8 +42,9 @@ Author: Tiago Balabuch
 function Get-FabricLakehouse {
     [CmdletBinding()]
     param (
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
         [ValidateNotNullOrEmpty()]
+        [Alias('id')]
         [string]$WorkspaceId,
 
         [Parameter(Mandatory = $false)]
@@ -55,64 +56,63 @@ function Get-FabricLakehouse {
         [ValidatePattern('^[a-zA-Z0-9_]*$')]
         [string]$LakehouseName
     )
-    try {
-        # Validate input parameters
-        if ($LakehouseId -and $LakehouseName) {
-            Write-FabricLog -Message "Specify only one parameter: either 'LakehouseId' or 'LakehouseName'." -Level Error
-            return $null
+
+    process {
+        try {
+            # Validate input parameters
+            if ($LakehouseId -and $LakehouseName) {
+                Write-FabricLog -Message "Specify only one parameter: either 'LakehouseId' or 'LakehouseName'." -Level Error
+                return
+            }
+
+            Invoke-FabricAuthCheck -ThrowOnFailure
+
+
+            # Construct the API endpoint URI
+            $apiEndpointURI = "{0}/workspaces/{1}/lakehouses" -f $script:FabricAuthContext.BaseUrl, $WorkspaceId
+            Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
+
+            # Make the API request
+            $apiParams = @{
+                BaseURI = $apiEndpointURI
+                Headers = $script:FabricAuthContext.FabricHeaders
+                Method = 'Get'
+            }
+            $dataItems = Invoke-FabricAPIRequest @apiParams
+
+            # Immediately handle empty response
+            if (-not $dataItems) {
+                Write-FabricLog -Message "No lakehouses found in workspace: $WorkspaceId" -Level Debug
+                return
+            }
+
+            # Apply filtering logic efficiently
+            if ($LakehouseId) {
+                $matchedItems = $dataItems.Where({ $_.Id -eq $LakehouseId }, 'First')
+            }
+            elseif ($LakehouseName) {
+                $matchedItems = $dataItems.Where({ $_.DisplayName -eq $LakehouseName }, 'First')
+            }
+            else {
+                Write-FabricLog -Message "No filter provided. Returning all items." -Level Debug
+                $matchedItems = $dataItems
+            }
+
+            # Handle results
+            if ($matchedItems) {
+                Write-FabricLog -Message "Item(s) found matching the specified criteria." -Level Debug
+
+                # Output to pipeline
+                $matchedItems
+            }
+            else {
+                Write-FabricLog -Message "No item found matching the provided criteria." -Level Debug
+            }
         }
-
-        Invoke-FabricAuthCheck -ThrowOnFailure
-
-
-        # Construct the API endpoint URI
-        $apiEndpointURI = "{0}/workspaces/{1}/lakehouses" -f $script:FabricAuthContext.BaseUrl, $WorkspaceId
-        Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
-
-        # Make the API request
-        $apiParams = @{
-            BaseURI = $apiEndpointURI
-            Headers = $script:FabricAuthContext.FabricHeaders
-            Method = 'Get'
-        }
-        $dataItems = Invoke-FabricAPIRequest @apiParams
-
-        # Immediately handle empty response
-        if (-not $dataItems) {
-            Write-FabricLog -Message "No data returned from the API." -Level Warning
-            return $null
-        }
-
-        # Apply filtering logic efficiently
-        if ($LakehouseId) {
-            $matchedItems = $dataItems.Where({ $_.Id -eq $LakehouseId }, 'First')
-        }
-        elseif ($LakehouseName) {
-            $matchedItems = $dataItems.Where({ $_.DisplayName -eq $LakehouseName }, 'First')
-        }
-        else {
-            Write-FabricLog -Message "No filter provided. Returning all items." -Level Debug
-            $matchedItems = $dataItems
-        }
-
-        # Handle results
-        if ($matchedItems) {
-            Write-FabricLog -Message "Item(s) found matching the specified criteria." -Level Debug
-
-            # Add type decoration for custom formatting
-            $matchedItems | Add-FabricTypeName -TypeName 'MicrosoftFabric.Lakehouse'
-
-            return $matchedItems
-        }
-        else {
-            Write-FabricLog -Message "No item found matching the provided criteria." -Level Warning
-            return $null
+        catch {
+            # Capture and log error details
+            $errorDetails = $_.Exception.Message
+            Write-FabricLog -Message "Failed to retrieve Lakehouse for workspace '$WorkspaceId'. Error: $errorDetails" -Level Error
         }
     }
-    catch {
-        # Capture and log error details
-        $errorDetails = $_.Exception.Message
-        Write-FabricLog -Message "Failed to retrieve Lakehouse. Error: $errorDetails" -Level Error
-    }
-
 }
