@@ -2214,7 +2214,7 @@ function Get-FabricCopyJob {
         $dataItems = Invoke-FabricAPIRequest @apiParams
 
         # Apply filtering
-        Select-FabricResource -InputObject $dataItems -Id $CopyJobId -Name $CopyJobName -ResourceType 'Copy Job'
+        Select-FabricResource -InputObject $dataItems -Id $CopyJobId -Name $CopyJobName -ResourceType 'Copy Job' -TypeName 'MicrosoftFabric.CopyJob'
     }
     catch {
         # Capture and log error details
@@ -2788,8 +2788,13 @@ function Get-FabricDashboard {
             Headers = $script:FabricAuthContext.FabricHeaders
             Method = 'Get'
         }
-        Invoke-FabricAPIRequest @apiParams
+        $dataItems = Invoke-FabricAPIRequest @apiParams
 
+        # Add type decoration for custom formatting
+        if ($dataItems) {
+            $dataItems | Add-FabricTypeName -TypeName 'MicrosoftFabric.Dashboard'
+            return $dataItems
+        }
     }
     catch {
         # Capture and log error details
@@ -2797,7 +2802,7 @@ function Get-FabricDashboard {
         Write-FabricLog -Message "Failed to retrieve Dashboard. Error: $errorDetails" -Level Error
     }
 }
-#EndRegion '.\Public\Dashboard\Get-FabricDashboard.ps1' 53
+#EndRegion '.\Public\Dashboard\Get-FabricDashboard.ps1' 58
 #Region '.\Public\Data Pipeline\Get-FabricDataPipeline.ps1' -1
 
 <#
@@ -2862,8 +2867,8 @@ function Get-FabricDataPipeline {
         }
         $dataItems = Invoke-FabricAPIRequest @apiParams
 
-        # Apply filtering
-        Select-FabricResource -InputObject $dataItems -Id $DataPipelineId -Name $DataPipelineName -ResourceType 'Data Pipeline'
+        # Apply filtering with type decoration
+        Select-FabricResource -InputObject $dataItems -Id $DataPipelineId -DisplayName $DataPipelineName -ResourceType 'Data Pipeline' -TypeName 'MicrosoftFabric.DataPipeline'
     }
     catch {
         # Capture and log error details
@@ -3182,7 +3187,7 @@ function Get-FabricDatamart {
         $dataItems = Invoke-FabricAPIRequest @apiParams
 
         # Apply filtering
-        Select-FabricResource -InputObject $dataItems -Id $DatamartId -Name $DatamartName -ResourceType 'Datamart'
+        Select-FabricResource -InputObject $dataItems -Id $DatamartId -Name $DatamartName -ResourceType 'Datamart' -TypeName 'MicrosoftFabric.Datamart'
     }
     catch {
         # Capture and log error details
@@ -7177,7 +7182,7 @@ function Get-FabricExternalDataShare {
         $dataItems = Invoke-FabricAPIRequest @apiParams
 
         # Apply filtering logic
-        Select-FabricResource -InputObject $dataItems -Id $ExternalDataShareId -ResourceType 'ExternalDataShare'
+        Select-FabricResource -InputObject $dataItems -Id $ExternalDataShareId -ResourceType 'ExternalDataShare' -TypeName 'MicrosoftFabric.ExternalDataShare'
     }
     catch {
         # Capture and log error details
@@ -7366,7 +7371,7 @@ function Get-FabricFolder {
         $dataItems = Invoke-FabricAPIRequest @apiParams
 
         # Apply filtering logic
-        Select-FabricResource -InputObject $dataItems -DisplayName $FolderName -ResourceType 'Folder'
+        Select-FabricResource -InputObject $dataItems -DisplayName $FolderName -ResourceType 'Folder' -TypeName 'MicrosoftFabric.Folder'
     }
     catch {
         # Capture and log error details
@@ -8464,6 +8469,8 @@ function Get-FabricKQLDashboard {
         # Handle results
         if ($matchedItems) {
             Write-FabricLog -Message "Item(s) found matching the specified criteria." -Level Debug
+            # Add type decoration for custom formatting
+            $matchedItems | Add-FabricTypeName -TypeName 'MicrosoftFabric.KQLDashboard'
             return $matchedItems
         }
         else {
@@ -8478,7 +8485,7 @@ function Get-FabricKQLDashboard {
     }
 
 }
-#EndRegion '.\Public\KQL Dashboard\Get-FabricKQLDashboard.ps1' 116
+#EndRegion '.\Public\KQL Dashboard\Get-FabricKQLDashboard.ps1' 118
 #Region '.\Public\KQL Dashboard\Get-FabricKQLDashboardDefinition.ps1' -1
 
 
@@ -9134,6 +9141,8 @@ function Get-FabricKQLDatabase {
         # Handle results
         if ($matchedItems) {
             Write-FabricLog -Message "Item(s) found matching the specified criteria." -Level Debug
+            # Add type decoration for custom formatting
+            $matchedItems | Add-FabricTypeName -TypeName 'MicrosoftFabric.KQLDatabase'
             return $matchedItems
         }
         else {
@@ -9148,7 +9157,7 @@ function Get-FabricKQLDatabase {
     }
 
 }
-#EndRegion '.\Public\KQL Database\Get-FabricKQLDatabase.ps1' 115
+#EndRegion '.\Public\KQL Database\Get-FabricKQLDatabase.ps1' 117
 #Region '.\Public\KQL Database\Get-FabricKQLDatabaseDefinition.ps1' -1
 
 
@@ -9321,7 +9330,7 @@ function New-FabricKQLDatabase {
 
         [Parameter(Mandatory = $true)]
         [ValidateNotNullOrEmpty()]
-        [ValidatePattern('^[a-zA-Z0-9_ ]*$')]
+        [ValidatePattern('^[a-zA-Z0-9_]*$')]
         [string]$KQLDatabaseName,
 
         [Parameter(Mandatory = $false)]
@@ -9639,7 +9648,7 @@ function Update-FabricKQLDatabase {
 
         [Parameter(Mandatory = $true)]
         [ValidateNotNullOrEmpty()]
-        [ValidatePattern('^[a-zA-Z0-9_ ]*$')]
+        [ValidatePattern('^[a-zA-Z0-9_]*$')]
         [string]$KQLDatabaseName,
 
         [Parameter(Mandatory = $false)]
@@ -9961,6 +9970,8 @@ function Get-FabricKQLQueryset {
         # Handle results
         if ($matchedItems) {
             Write-FabricLog -Message "Item(s) found matching the specified criteria." -Level Debug
+            # Add type decoration for custom formatting
+            $matchedItems | Add-FabricTypeName -TypeName 'MicrosoftFabric.KQLQueryset'
             return $matchedItems
         }
         else {
@@ -9975,7 +9986,7 @@ function Get-FabricKQLQueryset {
     }
 
 }
-#EndRegion '.\Public\KQL Queryset\Get-FabricKQLQueryset.ps1' 115
+#EndRegion '.\Public\KQL Queryset\Get-FabricKQLQueryset.ps1' 117
 #Region '.\Public\KQL Queryset\Get-FabricKQLQuerysetDefinition.ps1' -1
 
 
@@ -10765,7 +10776,7 @@ function Get-FabricLakehouse {
 
         [Parameter(Mandatory = $false)]
         [ValidateNotNullOrEmpty()]
-        [ValidatePattern('^[a-zA-Z0-9_ ]*$')]
+        [ValidatePattern('^[a-zA-Z0-9_]*$')]
         [string]$LakehouseName
     )
     try {
@@ -11813,6 +11824,8 @@ function Get-FabricManagedPrivateEndpoint {
         # Handle results
         if ($matchedItems) {
             Write-FabricLog -Message "Item(s) found matching the specified criteria." -Level Debug
+            # Add type decoration for custom formatting
+            $matchedItems | Add-FabricTypeName -TypeName 'MicrosoftFabric.ManagedPrivateEndpoint'
             return $matchedItems
         }
         else {
@@ -11826,7 +11839,7 @@ function Get-FabricManagedPrivateEndpoint {
         Write-FabricLog -Message "Failed to retrieve Managed Private Endpoints. Error: $errorDetails" -Level Error
     }
 }
-#EndRegion '.\Public\Managed Private Endpoint\Get-FabricManagedPrivateEndpoint.ps1' 108
+#EndRegion '.\Public\Managed Private Endpoint\Get-FabricManagedPrivateEndpoint.ps1' 110
 #Region '.\Public\Managed Private Endpoint\New-FabricManagedPrivateEndpoint.ps1' -1
 
 <#
@@ -12116,6 +12129,8 @@ function Get-FabricMirroredDatabase {
         # Handle results
         if ($matchedItems) {
             Write-FabricLog -Message "Item(s) found matching the specified criteria." -Level Debug
+            # Add type decoration for custom formatting
+            $matchedItems | Add-FabricTypeName -TypeName 'MicrosoftFabric.MirroredDatabase'
             return $matchedItems
         }
         else {
@@ -12130,7 +12145,7 @@ function Get-FabricMirroredDatabase {
     }
 
 }
-#EndRegion '.\Public\Mirrored Database\Get-FabricMirroredDatabase.ps1' 117
+#EndRegion '.\Public\Mirrored Database\Get-FabricMirroredDatabase.ps1' 119
 #Region '.\Public\Mirrored Database\Get-FabricMirroredDatabaseDefinition.ps1' -1
 
 
@@ -13031,6 +13046,8 @@ function Get-FabricMirroredWarehouse {
         # Handle results
         if ($matchedItems) {
             Write-FabricLog -Message "Item(s) found matching the specified criteria." -Level Debug
+            # Add type decoration for custom formatting
+            $matchedItems | Add-FabricTypeName -TypeName 'MicrosoftFabric.MirroredWarehouse'
             return $matchedItems
         }
         else {
@@ -13045,7 +13062,7 @@ function Get-FabricMirroredWarehouse {
     }
 
 }
-#EndRegion '.\Public\Mirrored Warehouse\Get-FabricMirroredWarehouse.ps1' 117
+#EndRegion '.\Public\Mirrored Warehouse\Get-FabricMirroredWarehouse.ps1' 119
 #Region '.\Public\ML Experiment\Get-FabricMLExperiment.ps1' -1
 
 <#
@@ -13139,6 +13156,8 @@ function Get-FabricMLExperiment {
         # Handle results
         if ($matchedItems) {
             Write-FabricLog -Message "Item(s) found matching the specified criteria." -Level Debug
+            # Add type decoration for custom formatting
+            $matchedItems | Add-FabricTypeName -TypeName 'MicrosoftFabric.MLExperiment'
             return $matchedItems
         }
         else {
@@ -13152,7 +13171,7 @@ function Get-FabricMLExperiment {
         Write-FabricLog -Message "Failed to retrieve ML Experiment. Error: $errorDetails" -Level Error
     }
 }
-#EndRegion '.\Public\ML Experiment\Get-FabricMLExperiment.ps1' 105
+#EndRegion '.\Public\ML Experiment\Get-FabricMLExperiment.ps1' 107
 #Region '.\Public\ML Experiment\New-FabricMLExperiment.ps1' -1
 
 <#
@@ -13507,6 +13526,8 @@ function Get-FabricMLModel {
         # Handle results
         if ($matchedItems) {
             Write-FabricLog -Message "Item(s) found matching the specified criteria." -Level Debug
+            # Add type decoration for custom formatting
+            $matchedItems | Add-FabricTypeName -TypeName 'MicrosoftFabric.MLModel'
             return $matchedItems
         }
         else {
@@ -13521,7 +13542,7 @@ function Get-FabricMLModel {
     }
 
 }
-#EndRegion '.\Public\ML Model\Get-FabricMLModel.ps1' 108
+#EndRegion '.\Public\ML Model\Get-FabricMLModel.ps1' 110
 #Region '.\Public\ML Model\New-FabricMLModel.ps1' -1
 
 <#
@@ -13860,6 +13881,8 @@ function Get-FabricMountedDataFactory {
         # Handle results
         if ($matchedItems) {
             Write-FabricLog -Message "Item(s) found matching the specified criteria." -Level Debug
+            # Add type decoration for custom formatting
+            $matchedItems | Add-FabricTypeName -TypeName 'MicrosoftFabric.MountedDataFactory'
             return $matchedItems
         }
         else {
@@ -13873,7 +13896,7 @@ function Get-FabricMountedDataFactory {
         Write-FabricLog -Message "Failed to retrieve Mounted Data Factory. Error: $errorDetails" -Level Error
     }
 }
-#EndRegion '.\Public\Mounted Data Factory\Get-FabricMountedDataFactory.ps1' 104
+#EndRegion '.\Public\Mounted Data Factory\Get-FabricMountedDataFactory.ps1' 106
 #Region '.\Public\Mounted Data Factory\Get-FabricMountedDataFactoryDefinition.ps1' -1
 
 <#
@@ -15582,6 +15605,8 @@ function Get-FabricOneLakeShortcut {
         # Handle results
         if ($matchedItems) {
             Write-FabricLog -Message "Item(s) found matching the specified criteria." -Level Debug
+            # Add type decoration for custom formatting
+            $matchedItems | Add-FabricTypeName -TypeName 'MicrosoftFabric.OneLakeShortcut'
             return $matchedItems
         }
         else {
@@ -15595,7 +15620,7 @@ function Get-FabricOneLakeShortcut {
         Write-FabricLog -Message "Failed to retrieve OneLake Shortcut(s). Error details: $errorDetails" -Level Error
     }
 }
-#EndRegion '.\Public\OneLake\Get-FabricOneLakeShortcut.ps1' 104
+#EndRegion '.\Public\OneLake\Get-FabricOneLakeShortcut.ps1' 106
 #Region '.\Public\OneLake\New-FabricOneLakeShortcut.ps1' -1
 
 <#
@@ -16248,6 +16273,8 @@ function Get-FabricPaginatedReport {
         # Handle results
         if ($matchedItems) {
             Write-FabricLog -Message "Item(s) found matching the specified criteria." -Level Debug
+            # Add type decoration for custom formatting
+            $matchedItems | Add-FabricTypeName -TypeName 'MicrosoftFabric.PaginatedReport'
             return $matchedItems
         }
         else {
@@ -16261,7 +16288,7 @@ function Get-FabricPaginatedReport {
         Write-FabricLog -Message "Failed to retrieve Paginated Report. Error: $errorDetails" -Level Error
     }
 }
-#EndRegion '.\Public\Paginated Reports\Get-FabricPaginatedReport.ps1' 105
+#EndRegion '.\Public\Paginated Reports\Get-FabricPaginatedReport.ps1' 107
 #Region '.\Public\Paginated Reports\Update-FabricPaginatedReport.ps1' -1
 
 <#
@@ -16453,6 +16480,8 @@ function Get-FabricReflex {
         # Handle results
         if ($matchedItems) {
             Write-FabricLog -Message "Item(s) found matching the specified criteria." -Level Debug
+            # Add type decoration for custom formatting
+            $matchedItems | Add-FabricTypeName -TypeName 'MicrosoftFabric.Reflex'
             return $matchedItems
         }
         else {
@@ -16467,7 +16496,7 @@ function Get-FabricReflex {
     }
 
 }
-#EndRegion '.\Public\Reflex\Get-FabricReflex.ps1' 106
+#EndRegion '.\Public\Reflex\Get-FabricReflex.ps1' 108
 #Region '.\Public\Reflex\Get-FabricReflexDefinition.ps1' -1
 
 <#
@@ -17084,6 +17113,8 @@ function Get-FabricReport {
         # Handle results
         if ($matchedItems) {
             Write-FabricLog -Message "Item(s) found matching the specified criteria." -Level Debug
+            # Add type decoration for custom formatting
+            $matchedItems | Add-FabricTypeName -TypeName 'MicrosoftFabric.Report'
             return $matchedItems
         }
         else {
@@ -17097,7 +17128,7 @@ function Get-FabricReport {
         Write-FabricLog -Message "Failed to retrieve Report. Error: $errorDetails" -Level Error
     }
 }
-#EndRegion '.\Public\Report\Get-FabricReport.ps1' 106
+#EndRegion '.\Public\Report\Get-FabricReport.ps1' 108
 #Region '.\Public\Report\Get-FabricReportDefinition.ps1' -1
 
 <#
@@ -17653,6 +17684,8 @@ function Get-FabricSemanticModel {
         # Handle results
         if ($matchedItems) {
             Write-FabricLog -Message "Item(s) found matching the specified criteria." -Level Debug
+            # Add type decoration for custom formatting
+            $matchedItems | Add-FabricTypeName -TypeName 'MicrosoftFabric.SemanticModel'
             return $matchedItems
         }
         else {
@@ -17667,7 +17700,7 @@ function Get-FabricSemanticModel {
     }
 
 }
-#EndRegion '.\Public\Semantic Model\Get-FabricSemanticModel.ps1' 107
+#EndRegion '.\Public\Semantic Model\Get-FabricSemanticModel.ps1' 109
 #Region '.\Public\Semantic Model\Get-FabricSemanticModelDefinition.ps1' -1
 
 <#
@@ -18334,7 +18367,7 @@ function Get-FabricSparkJobDefinition {
 
         [Parameter(Mandatory = $false)]
         [ValidateNotNullOrEmpty()]
-        [ValidatePattern('^[a-zA-Z0-9_ ]*$')]
+        [ValidatePattern('^[a-zA-Z0-9_]*$')]
         [string]$SparkJobDefinitionName
     )
     try {
@@ -18381,6 +18414,8 @@ function Get-FabricSparkJobDefinition {
         # Handle results
         if ($matchedItems) {
             Write-FabricLog -Message "Item(s) found matching the specified criteria." -Level Debug
+            # Add type decoration for custom formatting
+            $matchedItems | Add-FabricTypeName -TypeName 'MicrosoftFabric.SparkJobDefinition'
             return $matchedItems
         }
         else {
@@ -18394,7 +18429,7 @@ function Get-FabricSparkJobDefinition {
         Write-FabricLog -Message "Failed to retrieve SparkJobDefinition. Error: $errorDetails" -Level Error
     }
 }
-#EndRegion '.\Public\Spark Job Definition\Get-FabricSparkJobDefinition.ps1' 106
+#EndRegion '.\Public\Spark Job Definition\Get-FabricSparkJobDefinition.ps1' 108
 #Region '.\Public\Spark Job Definition\Get-FabricSparkJobDefinitionDefinition.ps1' -1
 
 <#
@@ -20314,7 +20349,7 @@ function Get-FabricSQLEndpoint {
 
         [Parameter(Mandatory = $false)]
         [ValidateNotNullOrEmpty()]
-        [ValidatePattern('^[a-zA-Z0-9_ ]*$')]
+        [ValidatePattern('^[a-zA-Z0-9_]*$')]
         [string]$SQLEndpointName
     )
     try {
@@ -20360,6 +20395,8 @@ function Get-FabricSQLEndpoint {
         # Handle results
         if ($matchedItems) {
             Write-FabricLog -Message "Item(s) found matching the specified criteria." -Level Debug
+            # Add type decoration for custom formatting
+            $matchedItems | Add-FabricTypeName -TypeName 'MicrosoftFabric.SQLEndpoint'
             return $matchedItems
         }
         else {
@@ -20373,7 +20410,7 @@ function Get-FabricSQLEndpoint {
         Write-FabricLog -Message "Failed to retrieve SQL Endpoint. Error: $errorDetails" -Level Error
     }
 }
-#EndRegion '.\Public\SQL Endpoints\Get-FabricSQLEndpoint.ps1' 106
+#EndRegion '.\Public\SQL Endpoints\Get-FabricSQLEndpoint.ps1' 108
 #Region '.\Public\SQL Endpoints\Get-FabricSQLEndpointConnectionString.ps1' -1
 
 <#
@@ -20603,7 +20640,7 @@ function Get-FabricTag {
 
         [Parameter(Mandatory = $false)]
         [ValidateNotNullOrEmpty()]
-        [ValidatePattern('^[a-zA-Z0-9_ ]*$')]
+        [ValidatePattern('^[a-zA-Z0-9_]*$')]
         [string]$TagName
     )
 
@@ -20834,7 +20871,7 @@ function Update-FabricTag {
 
         [Parameter(Mandatory = $false)]
         [ValidateNotNullOrEmpty()]
-        [ValidatePattern('^[a-zA-Z0-9_ ]*$')]
+        [ValidatePattern('^[a-zA-Z0-9_]*$')]
         [string]$TagName
     )
     try {
@@ -22936,7 +22973,7 @@ function Get-FabricVariableLibrary {
 
         [Parameter(Mandatory = $false)]
         [ValidateNotNullOrEmpty()]
-        [ValidatePattern('^[a-zA-Z0-9_ ]*$')]
+        [ValidatePattern('^[a-zA-Z0-9_]*$')]
         [string]$VariableLibraryName
     )
     try {
@@ -22982,6 +23019,8 @@ function Get-FabricVariableLibrary {
         # Handle results
         if ($matchedItems) {
             Write-FabricLog -Message "Item(s) found matching the specified criteria." -Level Debug
+            # Add type decoration for custom formatting
+            $matchedItems | Add-FabricTypeName -TypeName 'MicrosoftFabric.VariableLibrary'
             return $matchedItems
         }
         else {
@@ -22995,7 +23034,7 @@ function Get-FabricVariableLibrary {
         Write-FabricLog -Message "Failed to retrieve Variable Library. Error: $errorDetails" -Level Error
     }
 }
-#EndRegion '.\Public\Variable Library\Get-FabricVariableLibrary.ps1' 105
+#EndRegion '.\Public\Variable Library\Get-FabricVariableLibrary.ps1' 107
 #Region '.\Public\Variable Library\Get-FabricVariableLibraryDefinition.ps1' -1
 
 <#
@@ -23117,7 +23156,7 @@ function New-FabricVariableLibrary {
 
         [Parameter(Mandatory = $true)]
         [ValidateNotNullOrEmpty()]
-        [ValidatePattern('^[a-zA-Z0-9_ ]*$')]
+        [ValidatePattern('^[a-zA-Z0-9_]*$')]
         [string]$VariableLibraryName,
 
         [Parameter(Mandatory = $false)]
@@ -23306,7 +23345,7 @@ function Update-FabricVariableLibrary {
 
         [Parameter(Mandatory = $true)]
         [ValidateNotNullOrEmpty()]
-        [ValidatePattern('^[a-zA-Z0-9_ ]*$')]
+        [ValidatePattern('^[a-zA-Z0-9_]*$')]
         [string]$VariableLibraryName,
 
         [Parameter(Mandatory = $false)]
@@ -23412,7 +23451,7 @@ function Get-FabricWarehouse {
 
         [Parameter(Mandatory = $false)]
         [ValidateNotNullOrEmpty()]
-        [ValidatePattern('^[a-zA-Z0-9_ ]*$')]
+        [ValidatePattern('^[a-zA-Z0-9_]*$')]
         [string]$WarehouseName
     )
 
@@ -23630,7 +23669,7 @@ function Get-FabricWarehouseSnapshot {
 
         [Parameter(Mandatory = $false)]
         [ValidateNotNullOrEmpty()]
-        [ValidatePattern('^[a-zA-Z0-9_ ]*$')]
+        [ValidatePattern('^[a-zA-Z0-9_]*$')]
         [string]$WarehouseSnapshotName
     )
 
@@ -23731,7 +23770,7 @@ function New-FabricWarehouse {
 
         [Parameter(Mandatory = $true)]
         [ValidateNotNullOrEmpty()]
-        [ValidatePattern('^[a-zA-Z0-9_ ]*$')]
+        [ValidatePattern('^[a-zA-Z0-9_]*$')]
         [string]$WarehouseName,
 
         [Parameter(Mandatory = $false)]
@@ -23840,7 +23879,7 @@ function New-FabricWarehouseSnapshot {
 
         [Parameter(Mandatory = $true)]
         [ValidateNotNullOrEmpty()]
-        [ValidatePattern('^[a-zA-Z0-9_ ]*$')]
+        [ValidatePattern('^[a-zA-Z0-9_]*$')]
         [string]$WarehouseSnapshotName,
 
         [Parameter(Mandatory = $false)]
@@ -24102,7 +24141,7 @@ function Update-FabricWarehouse {
 
         [Parameter(Mandatory = $true)]
         [ValidateNotNullOrEmpty()]
-        [ValidatePattern('^[a-zA-Z0-9_ ]*$')]
+        [ValidatePattern('^[a-zA-Z0-9_]*$')]
         [string]$WarehouseName,
 
         [Parameter(Mandatory = $false)]
@@ -24198,7 +24237,7 @@ function Update-FabricWarehouseSnapshot {
 
         [Parameter(Mandatory = $true)]
         [ValidateNotNullOrEmpty()]
-        [ValidatePattern('^[a-zA-Z0-9_ ]*$')]
+        [ValidatePattern('^[a-zA-Z0-9_]*$')]
         [string]$WarehouseSnapshotName,
 
         [Parameter(Mandatory = $false)]
@@ -24535,7 +24574,6 @@ function Get-FabricWorkspace {
 
         [Parameter(Mandatory = $false)]
         [ValidateNotNullOrEmpty()]
-        [ValidatePattern('^[a-zA-Z0-9_ ]*$')]
         [string]$WorkspaceName
     )
 
@@ -24569,7 +24607,7 @@ function Get-FabricWorkspace {
         Write-FabricLog -Message "Failed to retrieve workspace. Error: $errorDetails" -Level Error
     }
 }
-#EndRegion '.\Public\Workspace\Get-FabricWorkspace.ps1' 75
+#EndRegion '.\Public\Workspace\Get-FabricWorkspace.ps1' 74
 #Region '.\Public\Workspace\Get-FabricWorkspaceGitConnection.ps1' -1
 
 <#
@@ -24780,7 +24818,6 @@ function New-FabricWorkspace {
     param (
         [Parameter(Mandatory = $true)]
         [ValidateNotNullOrEmpty()]
-        [ValidatePattern('^[a-zA-Z0-9_ ]*$')]
         [string]$WorkspaceName,
 
         [Parameter(Mandatory = $false)]
@@ -24836,7 +24873,7 @@ function New-FabricWorkspace {
 
     }
 }
-#EndRegion '.\Public\Workspace\New-FabricWorkspace.ps1' 101
+#EndRegion '.\Public\Workspace\New-FabricWorkspace.ps1' 100
 #Region '.\Public\Workspace\Remove-FabricWorkspace.ps1' -1
 
 <#
@@ -25129,7 +25166,7 @@ function Update-FabricWorkspace {
 
         [Parameter(Mandatory = $true)]
         [ValidateNotNullOrEmpty()]
-        [ValidatePattern('^[a-zA-Z0-9_ ]*$')]
+
         [string]$WorkspaceName,
 
         [Parameter(Mandatory = $false)]
