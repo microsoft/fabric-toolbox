@@ -67,7 +67,7 @@ function Get-FabricCopyJob {
         $dataItems = Invoke-FabricAPIRequest @apiParams
 
         # Apply filtering
-        Select-FabricResource -InputObject $dataItems -Id $CopyJobId -Name $CopyJobName -ResourceType 'Copy Job'
+        Select-FabricResource -InputObject $dataItems -Id $CopyJobId -Name $CopyJobName -ResourceType 'Copy Job' -TypeName 'MicrosoftFabric.CopyJob'
     }
     catch {
         # Capture and log error details

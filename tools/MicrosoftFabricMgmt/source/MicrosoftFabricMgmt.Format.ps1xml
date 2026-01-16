@@ -321,7 +321,7 @@
       =============================================================================
       Role Assignment View - For workspace role assignments
       =============================================================================
-      Display Priority: Workspace Name, Principal Name, Type, Role, ID
+      Display Priority: Capacity Name, Workspace Name, Principal Name, Type, Role, ID
       Note: WorkspaceId must be added to objects for workspace name resolution
     -->
     <View>
@@ -332,20 +332,24 @@
       <TableControl>
         <TableHeaders>
           <TableColumnHeader>
+            <Label>Capacity Name</Label>
+            <Width>20</Width>
+          </TableColumnHeader>
+          <TableColumnHeader>
             <Label>Workspace Name</Label>
-            <Width>25</Width>
+            <Width>22</Width>
           </TableColumnHeader>
           <TableColumnHeader>
             <Label>Principal</Label>
-            <Width>30</Width>
+            <Width>28</Width>
           </TableColumnHeader>
           <TableColumnHeader>
             <Label>Type</Label>
-            <Width>15</Width>
+            <Width>12</Width>
           </TableColumnHeader>
           <TableColumnHeader>
             <Label>Role</Label>
-            <Width>15</Width>
+            <Width>12</Width>
           </TableColumnHeader>
           <TableColumnHeader>
             <Label>ID</Label>
@@ -354,6 +358,28 @@
         <TableRowEntries>
           <TableRowEntry>
             <TableColumnItems>
+              <!-- Capacity Name - Cascade through workspaceId -->
+              <TableColumnItem>
+                <ScriptBlock>
+                  if ($_.workspaceId) {
+                    try {
+                      $capacityId = Resolve-FabricCapacityIdFromWorkspace -WorkspaceId $_.workspaceId
+                      if ($capacityId) {
+                        Resolve-FabricCapacityName -CapacityId $capacityId
+                      }
+                      else {
+                        'N/A'
+                      }
+                    }
+                    catch {
+                      'N/A'
+                    }
+                  }
+                  else {
+                    'N/A'
+                  }
+                </ScriptBlock>
+              </TableColumnItem>
               <!-- Workspace Name - Resolve from workspaceId if present -->
               <TableColumnItem>
                 <ScriptBlock>

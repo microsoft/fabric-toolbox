@@ -57,7 +57,7 @@ function Get-FabricDatamart {
         $dataItems = Invoke-FabricAPIRequest @apiParams
 
         # Apply filtering
-        Select-FabricResource -InputObject $dataItems -Id $DatamartId -Name $DatamartName -ResourceType 'Datamart'
+        Select-FabricResource -InputObject $dataItems -Id $DatamartId -Name $DatamartName -ResourceType 'Datamart' -TypeName 'MicrosoftFabric.Datamart'
     }
     catch {
         # Capture and log error details

@@ -60,8 +60,8 @@ function Get-FabricDataPipeline {
         }
         $dataItems = Invoke-FabricAPIRequest @apiParams
 
-        # Apply filtering
-        Select-FabricResource -InputObject $dataItems -Id $DataPipelineId -Name $DataPipelineName -ResourceType 'Data Pipeline'
+        # Apply filtering with type decoration
+        Select-FabricResource -InputObject $dataItems -Id $DataPipelineId -DisplayName $DataPipelineName -ResourceType 'Data Pipeline' -TypeName 'MicrosoftFabric.DataPipeline'
     }
     catch {
         # Capture and log error details
