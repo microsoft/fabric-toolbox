@@ -33,31 +33,30 @@ export class InvokePipelineService {
 
   /**
    * Parses all pipeline components to extract ExecutePipeline activity references
+   * NOW SUPPORTS NESTED ACTIVITIES in ForEach, IfCondition, Switch, Until containers
    */
   parseExecutePipelineActivities(components: ADFComponent[]): void {
     this.pipelineComponents = components.filter(comp => comp.type === 'pipeline');
     this.pipelineReferences = [];
 
-    console.log(`Parsing ${this.pipelineComponents.length} pipeline components for ExecutePipeline activities`);
+    console.log(`Parsing ${this.pipelineComponents.length} pipeline components for ExecutePipeline activities (including nested)`);
 
     for (const pipeline of this.pipelineComponents) {
-      if (!pipeline.definition?.properties?.activities) continue;
-
-      for (const activity of pipeline.definition.properties.activities) {
-        if (activity.type === 'ExecutePipeline') {
-          const reference = this.extractPipelineReference(pipeline.name, activity);
-          if (reference) {
-            this.pipelineReferences.push(reference);
-            console.log(`Found ExecutePipeline activity: ${reference.parentPipelineName} -> ${reference.targetPipelineName}`);
-          }
-        }
+      if (!pipeline.definition?.properties?.activities) {
+        console.log(`Skipping pipeline '${pipeline.name}' - no activities found`);
+        continue;
       }
+
+      console.log(`Scanning pipeline '${pipeline.name}' with ${pipeline.definition.properties.activities.length} top-level activities`);
+      
+      // Recursively parse all activities including nested ones
+      this.parseActivitiesRecursively(pipeline.name, pipeline.definition.properties.activities);
     }
 
     // Update isReferencedByOthers flag
     this.updateReferencedFlags();
 
-    console.log(`Found ${this.pipelineReferences.length} ExecutePipeline activities`);
+    console.log(`Found ${this.pipelineReferences.length} ExecutePipeline activities (including nested)`);
   }
 
   /**
@@ -78,6 +77,87 @@ export class InvokePipelineService {
       parameters: activity.typeProperties.parameters || {},
       isReferencedByOthers: false // Will be updated later
     };
+  }
+
+  /**
+   * Recursively parses activities to find ExecutePipeline activities at all nesting levels
+   * Handles ForEach, IfCondition, Switch, Until container activities
+   * @param pipelineName The parent pipeline name
+   * @param activities Array of activities to scan
+   * @param nestingPath Current nesting path for logging (optional)
+   */
+  private parseActivitiesRecursively(pipelineName: string, activities: any[], nestingPath: string = ''): void {
+    if (!Array.isArray(activities)) {
+      console.warn(`parseActivitiesRecursively called with non-array activities for pipeline '${pipelineName}'`);
+      return;
+    }
+
+    for (const activity of activities) {
+      if (!activity || typeof activity !== 'object') {
+        continue;
+      }
+
+      const activityPath = nestingPath ? `${nestingPath} → ${activity.name}` : activity.name;
+
+      // Check if current activity is ExecutePipeline
+      if (activity.type === 'ExecutePipeline') {
+        const reference = this.extractPipelineReference(pipelineName, activity);
+        if (reference) {
+          this.pipelineReferences.push(reference);
+          console.log(`Found ExecutePipeline activity at path: ${activityPath} (${reference.parentPipelineName} → ${reference.targetPipelineName})`);
+        }
+      }
+
+      // Recursively process nested activities in container types
+      if (activity.typeProperties) {
+        // ForEach container
+        if (activity.type === 'ForEach' && Array.isArray(activity.typeProperties.activities)) {
+          const nestedCount = activity.typeProperties.activities.length;
+          console.log(`Scanning ${nestedCount} nested activities in ForEach '${activity.name}' at path: ${activityPath}`);
+          this.parseActivitiesRecursively(pipelineName, activity.typeProperties.activities, activityPath);
+        }
+
+        // IfCondition container
+        if (activity.type === 'IfCondition') {
+          if (Array.isArray(activity.typeProperties.ifTrueActivities) && activity.typeProperties.ifTrueActivities.length > 0) {
+            const nestedCount = activity.typeProperties.ifTrueActivities.length;
+            console.log(`Scanning ${nestedCount} nested activities in IfCondition '${activity.name}' (ifTrue branch) at path: ${activityPath}`);
+            this.parseActivitiesRecursively(pipelineName, activity.typeProperties.ifTrueActivities, `${activityPath} [ifTrue]`);
+          }
+          if (Array.isArray(activity.typeProperties.ifFalseActivities) && activity.typeProperties.ifFalseActivities.length > 0) {
+            const nestedCount = activity.typeProperties.ifFalseActivities.length;
+            console.log(`Scanning ${nestedCount} nested activities in IfCondition '${activity.name}' (ifFalse branch) at path: ${activityPath}`);
+            this.parseActivitiesRecursively(pipelineName, activity.typeProperties.ifFalseActivities, `${activityPath} [ifFalse]`);
+          }
+        }
+
+        // Until container
+        if (activity.type === 'Until' && Array.isArray(activity.typeProperties.activities)) {
+          const nestedCount = activity.typeProperties.activities.length;
+          console.log(`Scanning ${nestedCount} nested activities in Until '${activity.name}' at path: ${activityPath}`);
+          this.parseActivitiesRecursively(pipelineName, activity.typeProperties.activities, activityPath);
+        }
+
+        // Switch container
+        if (activity.type === 'Switch') {
+          if (Array.isArray(activity.typeProperties.cases)) {
+            for (let i = 0; i < activity.typeProperties.cases.length; i++) {
+              const switchCase = activity.typeProperties.cases[i];
+              if (switchCase && Array.isArray(switchCase.activities) && switchCase.activities.length > 0) {
+                const nestedCount = switchCase.activities.length;
+                console.log(`Scanning ${nestedCount} nested activities in Switch '${activity.name}' (case ${i}) at path: ${activityPath}`);
+                this.parseActivitiesRecursively(pipelineName, switchCase.activities, `${activityPath} [case ${i}]`);
+              }
+            }
+          }
+          if (Array.isArray(activity.typeProperties.defaultActivities) && activity.typeProperties.defaultActivities.length > 0) {
+            const nestedCount = activity.typeProperties.defaultActivities.length;
+            console.log(`Scanning ${nestedCount} nested activities in Switch '${activity.name}' (default case) at path: ${activityPath}`);
+            this.parseActivitiesRecursively(pipelineName, activity.typeProperties.defaultActivities, `${activityPath} [default]`);
+          }
+        }
+      }
+    }
   }
 
   /**

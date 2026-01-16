@@ -25,10 +25,11 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: '20'
-          cache: 'npm'
 
       - name: Install dependencies
-        run: npm ci
+        run: |
+          rm -rf node_modules package-lock.json
+          npm install
 
       - name: Build Application
         run: npm run build
@@ -44,6 +45,9 @@ jobs:
           api_location: ""
           output_location: "dist"
           skip_app_build: true
+          skip_api_build: true
+        env:
+          NODE_VERSION: "20"
 
       - name: Deployment Summary
         run: |

@@ -2,7 +2,19 @@ import { adfParserService } from './adfParserService';
 
 /**
  * Enhanced service for transforming ADF Copy activities to Fabric format
- * Properly handles dataset parameters, connection mappings, and Fabric structure
+ * 
+ * Key Features:
+ * - Converts ADF inputs/outputs to Fabric datasetSettings
+ * - Handles dataset parameter substitution
+ * - Maps connection references to Fabric connection IDs
+ * - Automatically fixes wildcard path fileSystem issues
+ * 
+ * Wildcard Fix (Jan 2026):
+ * When wildcardFolderPath or wildcardFileName are used in storeSettings,
+ * ensures the fileSystem property is present in datasetSettings.typeProperties.location.
+ * This is required in Fabric but was missing in ADF-to-Fabric transformations.
+ * 
+ * @see docs/WILDCARD_FIX_GUIDE.md for troubleshooting
  */
 export class CopyActivityTransformer {
   /**
@@ -142,6 +154,38 @@ export class CopyActivityTransformer {
   }
 
   /**
+   * Detects if wildcard paths are being used in storeSettings
+   * 
+   * In ADF/Synapse, wildcard paths allow reading multiple files matching a pattern:
+   * - wildcardFolderPath: Match folders by pattern (e.g., "input/*", "@variables('path')")
+   * - wildcardFileName: Match files by pattern (e.g., "*.json", "data_*.parquet")
+   * 
+   * When wildcards are used, Fabric requires the fileSystem to be explicitly set
+   * in datasetSettings.typeProperties.location, even though ADF doesn't require it
+   * in the activity definition (it comes from the dataset).
+   * 
+   * @param storeSettings The storeSettings object from source or sink
+   * @returns true if wildcardFolderPath or wildcardFileName is present
+   * 
+   * @example
+   * // Returns true
+   * hasWildcardPaths({
+   *   type: 'AzureBlobFSReadSettings',
+   *   wildcardFileName: '*.json'
+   * })
+   */
+  private hasWildcardPaths(storeSettings: any): boolean {
+    if (!storeSettings || typeof storeSettings !== 'object') {
+      return false;
+    }
+    
+    return Boolean(
+      storeSettings.wildcardFolderPath || 
+      storeSettings.wildcardFileName
+    );
+  }
+
+  /**
    * Transforms the source configuration for a Copy activity
    * @param source The ADF source configuration
    * @param datasetMappings The dataset mappings
@@ -199,6 +243,68 @@ export class CopyActivityTransformer {
       pipelineName,
       activityName
     );
+
+    // WILDCARD FIX: When wildcards are used, ensure fileSystem is in datasetSettings
+    if (this.hasWildcardPaths(source.storeSettings)) {
+      console.log(`🔍 Wildcard paths detected in source storeSettings for activity '${activityName || 'unknown'}'`);
+      
+      // Check if datasetSettings has a location object (file-based datasets)
+      if (datasetSettings?.typeProperties?.location) {
+        // If fileSystem is not already set, try to get it from the dataset's original typeProperties
+        if (!datasetSettings.typeProperties.location.fileSystem && !datasetSettings.typeProperties.location.container) {
+          const originalLocation = sourceDataset.definition?.properties?.typeProperties?.location || {};
+          
+          // Get fileSystem or container from original dataset location
+          const fileSystemValue = originalLocation.fileSystem || originalLocation.container;
+          
+          if (fileSystemValue) {
+            // If it's an Expression object, extract the value and apply parameter substitution
+            let resolvedFileSystem: any;
+            
+            if (typeof fileSystemValue === 'object' && fileSystemValue !== null && fileSystemValue.value) {
+              // Handle Expression objects
+              const expressionValue = fileSystemValue.value;
+              if (typeof expressionValue === 'string') {
+                resolvedFileSystem = this.replaceParameterReferences(expressionValue, sourceParameters);
+              } else {
+                // Nested Expression object edge case
+                console.warn(`⚠️ Source fileSystem has nested Expression object structure, using as-is`);
+                resolvedFileSystem = expressionValue;
+              }
+            } else if (typeof fileSystemValue === 'string') {
+              // Handle plain string values
+              resolvedFileSystem = this.replaceParameterReferences(fileSystemValue, sourceParameters);
+            } else {
+              // Handle non-standard types (number, boolean, etc.)
+              console.warn(`⚠️ Source fileSystem has unexpected type: ${typeof fileSystemValue}, converting to string`);
+              resolvedFileSystem = String(fileSystemValue);
+            }
+            
+            // Final validation before setting
+            if (resolvedFileSystem && resolvedFileSystem !== 'undefined' && resolvedFileSystem !== 'null') {
+              // Trim whitespace from resolved value
+              const trimmedValue = typeof resolvedFileSystem === 'string' ? resolvedFileSystem.trim() : resolvedFileSystem;
+              
+              if (trimmedValue && trimmedValue !== '') {
+                datasetSettings.typeProperties.location.fileSystem = trimmedValue;
+                console.log(`✅ Wildcard fix applied: Added fileSystem to source datasetSettings.typeProperties.location: "${trimmedValue}"`);
+              } else {
+                console.warn(`⚠️ Wildcard detected but resolved fileSystem value is empty for source in activity '${activityName || 'unknown'}'`);
+              }
+            } else {
+              console.warn(`⚠️ Wildcard detected but could not resolve fileSystem value for source in activity '${activityName || 'unknown'}'`);
+            }
+          } else {
+            console.warn(`⚠️ Wildcard detected but no fileSystem/container found in dataset definition for source in activity '${activityName || 'unknown'}'`);
+          }
+        } else {
+          const existingValue = datasetSettings.typeProperties.location.fileSystem || datasetSettings.typeProperties.location.container;
+          console.log(`✓ fileSystem already present in source datasetSettings.typeProperties.location: "${existingValue}"`);
+        }
+      } else {
+        console.warn(`⚠️ Wildcard detected in source but datasetSettings does not have a location object (dataset type: ${datasetSettings?.type || 'unknown'}) for activity '${activityName || 'unknown'}'`);
+      }
+    }
 
     return {
       ...source,
@@ -265,6 +371,68 @@ export class CopyActivityTransformer {
       pipelineName,
       activityName
     );
+
+    // WILDCARD FIX: When wildcards are used, ensure fileSystem is in datasetSettings
+    if (this.hasWildcardPaths(sink.storeSettings)) {
+      console.log(`🔍 Wildcard paths detected in sink storeSettings for activity '${activityName || 'unknown'}'`);
+      
+      // Check if datasetSettings has a location object (file-based datasets)
+      if (datasetSettings?.typeProperties?.location) {
+        // If fileSystem is not already set, try to get it from the dataset's original typeProperties
+        if (!datasetSettings.typeProperties.location.fileSystem && !datasetSettings.typeProperties.location.container) {
+          const originalLocation = sinkDataset.definition?.properties?.typeProperties?.location || {};
+          
+          // Get fileSystem or container from original dataset location
+          const fileSystemValue = originalLocation.fileSystem || originalLocation.container;
+          
+          if (fileSystemValue) {
+            // If it's an Expression object, extract the value and apply parameter substitution
+            let resolvedFileSystem: any;
+            
+            if (typeof fileSystemValue === 'object' && fileSystemValue !== null && fileSystemValue.value) {
+              // Handle Expression objects
+              const expressionValue = fileSystemValue.value;
+              if (typeof expressionValue === 'string') {
+                resolvedFileSystem = this.replaceParameterReferences(expressionValue, sinkParameters);
+              } else {
+                // Nested Expression object edge case
+                console.warn(`⚠️ Sink fileSystem has nested Expression object structure, using as-is`);
+                resolvedFileSystem = expressionValue;
+              }
+            } else if (typeof fileSystemValue === 'string') {
+              // Handle plain string values
+              resolvedFileSystem = this.replaceParameterReferences(fileSystemValue, sinkParameters);
+            } else {
+              // Handle non-standard types (number, boolean, etc.)
+              console.warn(`⚠️ Sink fileSystem has unexpected type: ${typeof fileSystemValue}, converting to string`);
+              resolvedFileSystem = String(fileSystemValue);
+            }
+            
+            // Final validation before setting
+            if (resolvedFileSystem && resolvedFileSystem !== 'undefined' && resolvedFileSystem !== 'null') {
+              // Trim whitespace from resolved value
+              const trimmedValue = typeof resolvedFileSystem === 'string' ? resolvedFileSystem.trim() : resolvedFileSystem;
+              
+              if (trimmedValue && trimmedValue !== '') {
+                datasetSettings.typeProperties.location.fileSystem = trimmedValue;
+                console.log(`✅ Wildcard fix applied: Added fileSystem to sink datasetSettings.typeProperties.location: "${trimmedValue}"`);
+              } else {
+                console.warn(`⚠️ Wildcard detected but resolved fileSystem value is empty for sink in activity '${activityName || 'unknown'}'`);
+              }
+            } else {
+              console.warn(`⚠️ Wildcard detected but could not resolve fileSystem value for sink in activity '${activityName || 'unknown'}'`);
+            }
+          } else {
+            console.warn(`⚠️ Wildcard detected but no fileSystem/container found in dataset definition for sink in activity '${activityName || 'unknown'}'`);
+          }
+        } else {
+          const existingValue = datasetSettings.typeProperties.location.fileSystem || datasetSettings.typeProperties.location.container;
+          console.log(`✓ fileSystem already present in sink datasetSettings.typeProperties.location: "${existingValue}"`);
+        }
+      } else {
+        console.warn(`⚠️ Wildcard detected in sink but datasetSettings does not have a location object (dataset type: ${datasetSettings?.type || 'unknown'}) for activity '${activityName || 'unknown'}'`);
+      }
+    }
 
     return {
       ...sink,
@@ -776,6 +944,11 @@ export class CopyActivityTransformer {
     if (typeProperties.quoteChar !== undefined) {
       result.quoteChar = typeProperties.quoteChar;
     }
+
+    // Add compression object only if it exists
+    if (typeProperties.compression !== undefined) {
+      result.compression = typeProperties.compression;
+    }
     
     return result;
   }
@@ -817,6 +990,11 @@ export class CopyActivityTransformer {
     // Add compression codec only if it exists
     if (typeProperties.compressionCodec !== undefined) {
       result.compressionCodec = typeProperties.compressionCodec;
+    }
+
+    // Add compression object only if it exists
+    if (typeProperties.compression !== undefined) {
+      result.compression = typeProperties.compression;
     }
     
     return result;
@@ -860,6 +1038,11 @@ export class CopyActivityTransformer {
     if (typeProperties.encodingName !== undefined) {
       result.encodingName = typeProperties.encodingName;
     }
+
+    // Add compression object only if it exists
+    if (typeProperties.compression !== undefined) {
+      result.compression = typeProperties.compression;
+    }
     
     return result;
   }
@@ -896,6 +1079,11 @@ export class CopyActivityTransformer {
     // Only add location if it has properties
     if (Object.keys(locationResult).length > 0) {
       result.location = locationResult;
+    }
+
+    // Add compression object only if it exists
+    if (typeProperties.compression !== undefined) {
+      result.compression = typeProperties.compression;
     }
     
     return result;
