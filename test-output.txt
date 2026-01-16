@@ -1,0 +1,239 @@
+
+> pipeline-to-fabric-upgrader@0.0.0 test
+> vitest copyActivityTransformer.wildcard --reporter=verbose --run
+
+
+[1m[46m RUN [49m[22m [36mv3.2.4 [39m[90mC:/Users/seanmirabile/OneDrive - Microsoft/Documents/git_repos/PipelineToFabricUpgrader[39m
+
+11:43:13 PM [vite] (client) warning: This case clause will never be evaluated because it duplicates an earlier case clause
+676|          return this.buildJsonDatasetProperties(typePropertiesWithParams, role);
+677|        
+678|        case 'Parquet':
+   |             ^
+679|          return this.buildParquetDatasetProperties(typePropertiesWithParams, role);
+680|        
+
+  Plugin: vite:esbuild
+  File: C:/Users/seanmirabile/OneDrive - Microsoft/Documents/git_repos/PipelineToFabricUpgrader/src/services/copyActivityTransformer.ts
+11:43:13 PM [vite] (client) warning: This case clause will never be evaluated because it duplicates an earlier case clause
+679|          return this.buildParquetDatasetProperties(typePropertiesWithParams, role);
+680|        
+681|        case 'Json':
+   |             ^
+682|          return this.buildJsonDatasetProperties(typePropertiesWithParams, role);
+683|        
+
+  Plugin: vite:esbuild
+  File: C:/Users/seanmirabile/OneDrive - Microsoft/Documents/git_repos/PipelineToFabricUpgrader/src/services/copyActivityTransformer.ts
+[90mstdout[2m | src/services/__tests__/copyActivityTransformer.wildcard.test.ts[2m > [22m[2mCopyActivityTransformer - Wildcard Path FileSystem Fix[2m > [22m[2mWildcard Path Detection[2m > [22m[2mshould detect wildcardFolderPath in source storeSettings
+[22m[39mTransforming Copy activity: Copy data1
+Dataset mappings for Copy data1: {
+  hasSourceDataset: [33mfalse[39m,
+  hasSinkDataset: [33mfalse[39m,
+  sourceDatasetName: [90mundefined[39m,
+  sinkDatasetName: [90mundefined[39m
+}
+
+stderr | src/services/__tests__/copyActivityTransformer.wildcard.test.ts > CopyActivityTransformer - Wildcard Path FileSystem Fix > Wildcard Path Detection > should detect wildcardFolderPath in source storeSettings
+CRITICAL: No source dataset found for Copy activity - this will create an invalid pipeline
+
+[90mstdout[2m | src/services/__tests__/copyActivityTransformer.wildcard.test.ts[2m > [22m[2mCopyActivityTransformer - Wildcard Path FileSystem Fix[2m > [22m[2mWildcard Path Detection[2m > [22m[2mshould detect wildcardFileName in source storeSettings
+[22m[39mTransforming Copy activity: Copy data2
+Dataset mappings for Copy data2: {
+  hasSourceDataset: [33mfalse[39m,
+  hasSinkDataset: [33mfalse[39m,
+  sourceDatasetName: [90mundefined[39m,
+  sinkDatasetName: [90mundefined[39m
+}
+
+stderr | src/services/__tests__/copyActivityTransformer.wildcard.test.ts > CopyActivityTransformer - Wildcard Path FileSystem Fix > Wildcard Path Detection > should detect wildcardFileName in source storeSettings
+CRITICAL: No source dataset found for Copy activity - this will create an invalid pipeline
+
+[90mstdout[2m | src/services/__tests__/copyActivityTransformer.wildcard.test.ts[2m > [22m[2mCopyActivityTransformer - Wildcard Path FileSystem Fix[2m > [22m[2mWildcard Path Detection[2m > [22m[2mshould handle hardcoded fileSystem in dataset
+[22m[39mTransforming Copy activity: Copy data3
+Dataset mappings for Copy data3: {
+  hasSourceDataset: [33mfalse[39m,
+  hasSinkDataset: [33mfalse[39m,
+  sourceDatasetName: [90mundefined[39m,
+  sinkDatasetName: [90mundefined[39m
+}
+
+stderr | src/services/__tests__/copyActivityTransformer.wildcard.test.ts > CopyActivityTransformer - Wildcard Path FileSystem Fix > Wildcard Path Detection > should handle hardcoded fileSystem in dataset
+CRITICAL: No source dataset found for Copy activity - this will create an invalid pipeline
+
+[90mstdout[2m | src/services/__tests__/copyActivityTransformer.wildcard.test.ts[2m > [22m[2mCopyActivityTransformer - Wildcard Path FileSystem Fix[2m > [22m[2mWildcard Path Detection[2m > [22m[2mshould not add fileSystem when no wildcards are present
+[22m[39mTransforming Copy activity: Copy data4
+Dataset mappings for Copy data4: {
+  hasSourceDataset: [33mfalse[39m,
+  hasSinkDataset: [33mfalse[39m,
+  sourceDatasetName: [90mundefined[39m,
+  sinkDatasetName: [90mundefined[39m
+}
+
+stderr | src/services/__tests__/copyActivityTransformer.wildcard.test.ts > CopyActivityTransformer - Wildcard Path FileSystem Fix > Wildcard Path Detection > should not add fileSystem when no wildcards are present
+CRITICAL: No source dataset found for Copy activity - this will create an invalid pipeline
+
+[90mstdout[2m | src/services/__tests__/copyActivityTransformer.wildcard.test.ts[2m > [22m[2mCopyActivityTransformer - Wildcard Path FileSystem Fix[2m > [22m[2mWildcard Path Detection[2m > [22m[2mshould handle global parameter expressions in fileSystem
+[22m[39mTransforming Copy activity: Copy data5
+Dataset mappings for Copy data5: {
+  hasSourceDataset: [33mfalse[39m,
+  hasSinkDataset: [33mfalse[39m,
+  sourceDatasetName: [90mundefined[39m,
+  sinkDatasetName: [90mundefined[39m
+}
+
+stderr | src/services/__tests__/copyActivityTransformer.wildcard.test.ts > CopyActivityTransformer - Wildcard Path FileSystem Fix > Wildcard Path Detection > should handle global parameter expressions in fileSystem
+CRITICAL: No source dataset found for Copy activity - this will create an invalid pipeline
+
+[90mstdout[2m | src/services/__tests__/copyActivityTransformer.wildcard.test.ts[2m > [22m[2mCopyActivityTransformer - Wildcard Path FileSystem Fix[2m > [22m[2mWildcard Path Detection[2m > [22m[2mshould handle wildcards in sink storeSettings
+[22m[39mTransforming Copy activity: Copy data6
+Dataset mappings for Copy data6: {
+  hasSourceDataset: [33mfalse[39m,
+  hasSinkDataset: [33mfalse[39m,
+  sourceDatasetName: [90mundefined[39m,
+  sinkDatasetName: [90mundefined[39m
+}
+
+stderr | src/services/__tests__/copyActivityTransformer.wildcard.test.ts > CopyActivityTransformer - Wildcard Path FileSystem Fix > Wildcard Path Detection > should handle wildcards in sink storeSettings
+CRITICAL: No source dataset found for Copy activity - this will create an invalid pipeline
+
+[90mstdout[2m | src/services/__tests__/copyActivityTransformer.wildcard.test.ts[2m > [22m[2mCopyActivityTransformer - Wildcard Path FileSystem Fix[2m > [22m[2mWildcard Path Detection[2m > [22m[2mshould handle container property instead of fileSystem
+[22m[39mTransforming Copy activity: Copy data7
+Dataset mappings for Copy data7: {
+  hasSourceDataset: [33mfalse[39m,
+  hasSinkDataset: [33mfalse[39m,
+  sourceDatasetName: [90mundefined[39m,
+  sinkDatasetName: [90mundefined[39m
+}
+
+stderr | src/services/__tests__/copyActivityTransformer.wildcard.test.ts > CopyActivityTransformer - Wildcard Path FileSystem Fix > Wildcard Path Detection > should handle container property instead of fileSystem
+CRITICAL: No source dataset found for Copy activity - this will create an invalid pipeline
+
+ [31m├ù[39m src/services/__tests__/copyActivityTransformer.wildcard.test.ts[2m > [22mCopyActivityTransformer - Wildcard Path FileSystem Fix[2m > [22mWildcard Path Detection[2m > [22mshould detect wildcardFolderPath in source storeSettings[32m 11[2mms[22m[39m
+[31m   ΓåÆ Source dataset is required for Copy activity but was not found. Check that the dataset reference is valid and the dataset was parsed correctly.[39m
+ [31m├ù[39m src/services/__tests__/copyActivityTransformer.wildcard.test.ts[2m > [22mCopyActivityTransformer - Wildcard Path FileSystem Fix[2m > [22mWildcard Path Detection[2m > [22mshould detect wildcardFileName in source storeSettings[32m 1[2mms[22m[39m
+[31m   ΓåÆ Source dataset is required for Copy activity but was not found. Check that the dataset reference is valid and the dataset was parsed correctly.[39m
+ [31m├ù[39m src/services/__tests__/copyActivityTransformer.wildcard.test.ts[2m > [22mCopyActivityTransformer - Wildcard Path FileSystem Fix[2m > [22mWildcard Path Detection[2m > [22mshould handle hardcoded fileSystem in dataset[32m 2[2mms[22m[39m
+[31m   ΓåÆ Source dataset is required for Copy activity but was not found. Check that the dataset reference is valid and the dataset was parsed correctly.[39m
+ [31m├ù[39m src/services/__tests__/copyActivityTransformer.wildcard.test.ts[2m > [22mCopyActivityTransformer - Wildcard Path FileSystem Fix[2m > [22mWildcard Path Detection[2m > [22mshould not add fileSystem when no wildcards are present[32m 1[2mms[22m[39m
+[31m   ΓåÆ Source dataset is required for Copy activity but was not found. Check that the dataset reference is valid and the dataset was parsed correctly.[39m
+ [31m├ù[39m src/services/__tests__/copyActivityTransformer.wildcard.test.ts[2m > [22mCopyActivityTransformer - Wildcard Path FileSystem Fix[2m > [22mWildcard Path Detection[2m > [22mshould handle global parameter expressions in fileSystem[32m 1[2mms[22m[39m
+[31m   ΓåÆ Source dataset is required for Copy activity but was not found. Check that the dataset reference is valid and the dataset was parsed correctly.[39m
+ [31m├ù[39m src/services/__tests__/copyActivityTransformer.wildcard.test.ts[2m > [22mCopyActivityTransformer - Wildcard Path FileSystem Fix[2m > [22mWildcard Path Detection[2m > [22mshould handle wildcards in sink storeSettings[32m 1[2mms[22m[39m
+[31m   ΓåÆ Source dataset is required for Copy activity but was not found. Check that the dataset reference is valid and the dataset was parsed correctly.[39m
+ [31m├ù[39m src/services/__tests__/copyActivityTransformer.wildcard.test.ts[2m > [22mCopyActivityTransformer - Wildcard Path FileSystem Fix[2m > [22mWildcard Path Detection[2m > [22mshould handle container property instead of fileSystem[32m 1[2mms[22m[39m
+[31m   ΓåÆ Source dataset is required for Copy activity but was not found. Check that the dataset reference is valid and the dataset was parsed correctly.[39m
+
+ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ» Failed Tests 7 ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»
+
+ FAIL  src/services/__tests__/copyActivityTransformer.wildcard.test.ts > CopyActivityTransformer - Wildcard Path FileSystem Fix > Wildcard Path Detection > should detect wildcardFolderPath in source storeSettings
+Error: Source dataset is required for Copy activity but was not found. Check that the dataset reference is valid and the dataset was parsed correctly.
+ Γ¥» CopyActivityTransformer.transformCopySource src/services/copyActivityTransformer.ts:180:13
+    178|     if (!sourceDataset) {
+    179|       console.error('CRITICAL: No source dataset found for Copy activiΓÇª
+    180|       throw new Error('Source dataset is required for Copy activity buΓÇª
+       |             ^
+    181|     }
+    182| 
+ Γ¥» CopyActivityTransformer.transformCopyTypeProperties src/services/copyActivityTransformer.ts:104:20
+ Γ¥» CopyActivityTransformer.transformCopyActivity src/services/copyActivityTransformer.ts:40:28
+ Γ¥» src/services/__tests__/copyActivityTransformer.wildcard.test.ts:97:34
+
+ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»[1/7]ΓÄ»
+
+ FAIL  src/services/__tests__/copyActivityTransformer.wildcard.test.ts > CopyActivityTransformer - Wildcard Path FileSystem Fix > Wildcard Path Detection > should detect wildcardFileName in source storeSettings
+Error: Source dataset is required for Copy activity but was not found. Check that the dataset reference is valid and the dataset was parsed correctly.
+ Γ¥» CopyActivityTransformer.transformCopySource src/services/copyActivityTransformer.ts:180:13
+    178|     if (!sourceDataset) {
+    179|       console.error('CRITICAL: No source dataset found for Copy activiΓÇª
+    180|       throw new Error('Source dataset is required for Copy activity buΓÇª
+       |             ^
+    181|     }
+    182| 
+ Γ¥» CopyActivityTransformer.transformCopyTypeProperties src/services/copyActivityTransformer.ts:104:20
+ Γ¥» CopyActivityTransformer.transformCopyActivity src/services/copyActivityTransformer.ts:40:28
+ Γ¥» src/services/__tests__/copyActivityTransformer.wildcard.test.ts:178:34
+
+ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»[2/7]ΓÄ»
+
+ FAIL  src/services/__tests__/copyActivityTransformer.wildcard.test.ts > CopyActivityTransformer - Wildcard Path FileSystem Fix > Wildcard Path Detection > should handle hardcoded fileSystem in dataset
+Error: Source dataset is required for Copy activity but was not found. Check that the dataset reference is valid and the dataset was parsed correctly.
+ Γ¥» CopyActivityTransformer.transformCopySource src/services/copyActivityTransformer.ts:180:13
+    178|     if (!sourceDataset) {
+    179|       console.error('CRITICAL: No source dataset found for Copy activiΓÇª
+    180|       throw new Error('Source dataset is required for Copy activity buΓÇª
+       |             ^
+    181|     }
+    182| 
+ Γ¥» CopyActivityTransformer.transformCopyTypeProperties src/services/copyActivityTransformer.ts:104:20
+ Γ¥» CopyActivityTransformer.transformCopyActivity src/services/copyActivityTransformer.ts:40:28
+ Γ¥» src/services/__tests__/copyActivityTransformer.wildcard.test.ts:247:34
+
+ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»[3/7]ΓÄ»
+
+ FAIL  src/services/__tests__/copyActivityTransformer.wildcard.test.ts > CopyActivityTransformer - Wildcard Path FileSystem Fix > Wildcard Path Detection > should not add fileSystem when no wildcards are present
+Error: Source dataset is required for Copy activity but was not found. Check that the dataset reference is valid and the dataset was parsed correctly.
+ Γ¥» CopyActivityTransformer.transformCopySource src/services/copyActivityTransformer.ts:180:13
+    178|     if (!sourceDataset) {
+    179|       console.error('CRITICAL: No source dataset found for Copy activiΓÇª
+    180|       throw new Error('Source dataset is required for Copy activity buΓÇª
+       |             ^
+    181|     }
+    182| 
+ Γ¥» CopyActivityTransformer.transformCopyTypeProperties src/services/copyActivityTransformer.ts:104:20
+ Γ¥» CopyActivityTransformer.transformCopyActivity src/services/copyActivityTransformer.ts:40:28
+ Γ¥» src/services/__tests__/copyActivityTransformer.wildcard.test.ts:332:34
+
+ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»[4/7]ΓÄ»
+
+ FAIL  src/services/__tests__/copyActivityTransformer.wildcard.test.ts > CopyActivityTransformer - Wildcard Path FileSystem Fix > Wildcard Path Detection > should handle global parameter expressions in fileSystem
+Error: Source dataset is required for Copy activity but was not found. Check that the dataset reference is valid and the dataset was parsed correctly.
+ Γ¥» CopyActivityTransformer.transformCopySource src/services/copyActivityTransformer.ts:180:13
+    178|     if (!sourceDataset) {
+    179|       console.error('CRITICAL: No source dataset found for Copy activiΓÇª
+    180|       throw new Error('Source dataset is required for Copy activity buΓÇª
+       |             ^
+    181|     }
+    182| 
+ Γ¥» CopyActivityTransformer.transformCopyTypeProperties src/services/copyActivityTransformer.ts:104:20
+ Γ¥» CopyActivityTransformer.transformCopyActivity src/services/copyActivityTransformer.ts:40:28
+ Γ¥» src/services/__tests__/copyActivityTransformer.wildcard.test.ts:410:34
+
+ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»[5/7]ΓÄ»
+
+ FAIL  src/services/__tests__/copyActivityTransformer.wildcard.test.ts > CopyActivityTransformer - Wildcard Path FileSystem Fix > Wildcard Path Detection > should handle wildcards in sink storeSettings
+Error: Source dataset is required for Copy activity but was not found. Check that the dataset reference is valid and the dataset was parsed correctly.
+ Γ¥» CopyActivityTransformer.transformCopySource src/services/copyActivityTransformer.ts:180:13
+    178|     if (!sourceDataset) {
+    179|       console.error('CRITICAL: No source dataset found for Copy activiΓÇª
+    180|       throw new Error('Source dataset is required for Copy activity buΓÇª
+       |             ^
+    181|     }
+    182| 
+ Γ¥» CopyActivityTransformer.transformCopyTypeProperties src/services/copyActivityTransformer.ts:104:20
+ Γ¥» CopyActivityTransformer.transformCopyActivity src/services/copyActivityTransformer.ts:40:28
+ Γ¥» src/services/__tests__/copyActivityTransformer.wildcard.test.ts:488:34
+
+ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»[6/7]ΓÄ»
+
+ FAIL  src/services/__tests__/copyActivityTransformer.wildcard.test.ts > CopyActivityTransformer - Wildcard Path FileSystem Fix > Wildcard Path Detection > should handle container property instead of fileSystem
+Error: Source dataset is required for Copy activity but was not found. Check that the dataset reference is valid and the dataset was parsed correctly.
+ Γ¥» CopyActivityTransformer.transformCopySource src/services/copyActivityTransformer.ts:180:13
+    178|     if (!sourceDataset) {
+    179|       console.error('CRITICAL: No source dataset found for Copy activiΓÇª
+    180|       throw new Error('Source dataset is required for Copy activity buΓÇª
+       |             ^
+    181|     }
+    182| 
+ Γ¥» CopyActivityTransformer.transformCopyTypeProperties src/services/copyActivityTransformer.ts:104:20
+ Γ¥» CopyActivityTransformer.transformCopyActivity src/services/copyActivityTransformer.ts:40:28
+ Γ¥» src/services/__tests__/copyActivityTransformer.wildcard.test.ts:565:34
+
+ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»[7/7]ΓÄ»
+
+
+[2m Test Files [22m [1m[31m1 failed[39m[22m[90m (1)[39m
+[2m      Tests [22m [1m[31m7 failed[39m[22m[90m (7)[39m
+[2m   Start at [22m 23:43:11
+[2m   Duration [22m 3.21s[2m (transform 316ms, setup 402ms, collect 541ms, tests 21ms, environment 1.59s, prepare 201ms)[22m
+
