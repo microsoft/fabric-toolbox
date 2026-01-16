@@ -419,3 +419,6 @@ testResults.xml
 # Downloaded from https://github.com/microsoft/fabric-rest-api-specs
 # Run Update-FabricAPISpecsCache.ps1 to refresh
 tools/.api-specs-cache/
+tools/MicrosoftFabricMgmt/scripts/Fix-WriteFabricLogLevel.ps1
+tools/MicrosoftFabricMgmt/scripts/Fix-WorkspaceAPIUris.ps1
+tools/MicrosoftFabricMgmt/scripts/Refactor-PublicFunctions.ps1

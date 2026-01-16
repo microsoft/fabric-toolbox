@@ -52,7 +52,7 @@ function Get-FabricLakehouse {
 
         [Parameter(Mandatory = $false)]
         [ValidateNotNullOrEmpty()]
-        [ValidatePattern('^[a-zA-Z0-9_ ]*$')]
+        [ValidatePattern('^[a-zA-Z0-9_]*$')]
         [string]$LakehouseName
     )
     try {
@@ -98,6 +98,10 @@ function Get-FabricLakehouse {
         # Handle results
         if ($matchedItems) {
             Write-FabricLog -Message "Item(s) found matching the specified criteria." -Level Debug
+
+            # Add type decoration for custom formatting
+            $matchedItems | Add-FabricTypeName -TypeName 'MicrosoftFabric.Lakehouse'
+
             return $matchedItems
         }
         else {

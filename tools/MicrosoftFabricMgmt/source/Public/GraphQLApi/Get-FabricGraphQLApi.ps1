@@ -1,4 +1,4 @@
-﻿<#
+<#
 .SYNOPSIS
     Retrieves GraphQL API details from a specified Microsoft Fabric workspace.
 
@@ -67,7 +67,7 @@ function Get-FabricGraphQLApi {
         $dataItems = Invoke-FabricAPIRequest @apiParams
 
         # Apply filtering and return results
-        Select-FabricResource -InputObject $dataItems -Id $GraphQLApiId -DisplayName $GraphQLApiName -ResourceType 'GraphQL API'
+        Select-FabricResource -InputObject $dataItems -Id $GraphQLApiId -DisplayName $GraphQLApiName -ResourceType 'GraphQL API' -TypeName 'MicrosoftFabric.GraphQLApi'
     }
     catch {
         # Capture and log error details
