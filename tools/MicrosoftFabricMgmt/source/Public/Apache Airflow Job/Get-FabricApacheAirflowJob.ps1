@@ -84,9 +84,4 @@ function Get-FabricApacheAirflowJob {
         # Apply filtering and output results
         Select-FabricResource -InputObject $dataItems -Id $ApacheAirflowJobId -DisplayName $ApacheAirflowJobName -ResourceType 'Apache Airflow Job' -TypeName 'MicrosoftFabric.ApacheAirflowJob'
     }
-    catch {
-        # Capture and log error details
-        $errorDetails = $_.Exception.Message
-        Write-FabricLog -Message "Failed to retrieve Apache Airflow Job. Error: $errorDetails" -Level Error
-    }
 }

@@ -82,9 +82,4 @@ function Get-FabricCopyJob {
         # Apply filtering
         Select-FabricResource -InputObject $dataItems -Id $CopyJobId -Name $CopyJobName -ResourceType 'Copy Job' -TypeName 'MicrosoftFabric.CopyJob'
     }
-    catch {
-        # Capture and log error details
-        $errorDetails = $_.Exception.Message
-        Write-FabricLog -Message "Failed to retrieve CopyJob. Error: $errorDetails" -Level Error
-    }
 }
