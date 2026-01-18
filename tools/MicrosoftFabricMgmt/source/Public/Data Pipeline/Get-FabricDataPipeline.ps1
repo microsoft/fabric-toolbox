@@ -53,7 +53,7 @@ function Get-FabricDataPipeline {
             Invoke-FabricAuthCheck -ThrowOnFailure
 
             # Construct the API endpoint URI
-            $apiEndpointURI = New-FabricAPIUri -Segments @('workspaces', $WorkspaceId, 'dataPipelines')
+            $apiEndpointURI = New-FabricAPIUri -Resource 'workspaces' -WorkspaceId $WorkspaceId -Subresource 'dataPipelines'
 
             # Make the API request
             $apiParams = @{

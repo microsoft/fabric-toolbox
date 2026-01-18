@@ -74,7 +74,7 @@ function Get-FabricEnvironment {
             $dataItems = Invoke-FabricAPIRequest @apiParams
 
             # Apply filtering logic
-            Select-FabricResource -InputObject $dataItems -Id $EnvironmentId -DisplayName $EnvironmentName -ResourceType 'Environment' -TypeName 'MicrosoftFabric.Environment'
+            Select-FabricResource -InputObject $dataItems -Id $EnvironmentId -Name $EnvironmentName -ResourceType 'Environment'
         }
         catch {
             # Capture and log error details

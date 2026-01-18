@@ -68,7 +68,7 @@ function Get-FabricKQLDashboard {
             Invoke-FabricAuthCheck -ThrowOnFailure
 
             # Construct the API endpoint URI
-            $apiEndpointURI = "{0}/workspaces/{1}/kqlDashboards" -f $script:FabricAuthContext.BaseUrl, $WorkspaceId
+            $apiEndpointURI = New-FabricAPIUri -Resource 'workspaces' -WorkspaceId $WorkspaceId -Subresource 'kqlDashboards'
             Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
 
             # Make the API request
