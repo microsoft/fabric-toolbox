@@ -424,3 +424,4 @@ tools/MicrosoftFabricMgmt/scripts/Fix-WorkspaceAPIUris.ps1
 tools/MicrosoftFabricMgmt/scripts/Refactor-PublicFunctions.ps1
 .vscode/tasks.json
 .vscode/tasks.json
+tools/MicrosoftFabricMgmt/scripts/branch to dev tests.ps1
