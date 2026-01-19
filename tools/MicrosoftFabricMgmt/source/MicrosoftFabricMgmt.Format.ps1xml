@@ -203,6 +203,81 @@
 
     <!--
       =============================================================================
+      Admin Workspace View - For workspace objects from admin API
+      =============================================================================
+      Display Priority: Capacity Name, Workspace Name, State, Type, ID
+      Note: Admin API returns 'name' instead of 'displayName'
+    -->
+    <View>
+      <Name>AdminWorkspaceView</Name>
+      <ViewSelectedBy>
+        <TypeName>MicrosoftFabric.AdminWorkspace</TypeName>
+      </ViewSelectedBy>
+      <TableControl>
+        <TableHeaders>
+          <TableColumnHeader>
+            <Label>Capacity Name</Label>
+            <Width>25</Width>
+          </TableColumnHeader>
+          <TableColumnHeader>
+            <Label>Workspace Name</Label>
+            <Width>30</Width>
+          </TableColumnHeader>
+          <TableColumnHeader>
+            <Label>State</Label>
+            <Width>10</Width>
+          </TableColumnHeader>
+          <TableColumnHeader>
+            <Label>Type</Label>
+            <Width>15</Width>
+          </TableColumnHeader>
+          <TableColumnHeader>
+            <Label>ID</Label>
+          </TableColumnHeader>
+        </TableHeaders>
+        <TableRowEntries>
+          <TableRowEntry>
+            <TableColumnItems>
+              <!-- Capacity Name - Resolve from capacityId -->
+              <TableColumnItem>
+                <ScriptBlock>
+                  if ($_.capacityId) {
+                    try {
+                      Resolve-FabricCapacityName -CapacityId $_.capacityId
+                    }
+                    catch {
+                      $_.capacityId
+                    }
+                  }
+                  else {
+                    'N/A'
+                  }
+                </ScriptBlock>
+              </TableColumnItem>
+              <!-- Workspace Name (name - not displayName in admin API) -->
+              <TableColumnItem>
+                <PropertyName>name</PropertyName>
+              </TableColumnItem>
+              <!-- State -->
+              <TableColumnItem>
+                <PropertyName>state</PropertyName>
+              </TableColumnItem>
+              <!-- Type -->
+              <TableColumnItem>
+                <PropertyName>type</PropertyName>
+              </TableColumnItem>
+              <!-- ID -->
+              <TableColumnItem>
+                <PropertyName>id</PropertyName>
+              </TableColumnItem>
+            </TableColumnItems>
+          </TableRowEntry>
+        </TableRowEntries>
+      </TableControl>
+    </View>
+
+    <!--
+      =============================================================================
       Capacity View - For capacity objects
       =============================================================================
       Display Priority: Capacity Name, Region, State, SKU, ID
@@ -853,6 +928,65 @@
               <ListItem>
                 <Label>ID</Label>
                 <PropertyName>ID</PropertyName>
+              </ListItem>
+            </ListItems>
+          </ListEntry>
+        </ListEntries>
+      </ListControl>
+    </View>
+
+    <!--
+      Admin Workspace List View - For Format-List on admin workspace objects
+      Note: Admin API returns 'name' instead of 'displayName'
+    -->
+    <View>
+      <Name>AdminWorkspaceListView</Name>
+      <ViewSelectedBy>
+        <TypeName>MicrosoftFabric.AdminWorkspace</TypeName>
+      </ViewSelectedBy>
+      <ListControl>
+        <ListEntries>
+          <ListEntry>
+            <ListItems>
+              <ListItem>
+                <Label>Capacity Name</Label>
+                <ScriptBlock>
+                  if ($_.capacityId) {
+                    try {
+                      Resolve-FabricCapacityName -CapacityId $_.capacityId
+                    }
+                    catch {
+                      $_.capacityId
+                    }
+                  }
+                  else {
+                    'N/A'
+                  }
+                </ScriptBlock>
+              </ListItem>
+              <ListItem>
+                <Label>Capacity ID</Label>
+                <PropertyName>capacityId</PropertyName>
+              </ListItem>
+              <ListItem>
+                <Label>Workspace Name</Label>
+                <PropertyName>name</PropertyName>
+              </ListItem>
+              <ListItem>
+                <Label>Workspace ID</Label>
+                <PropertyName>id</PropertyName>
+              </ListItem>
+              <ListItem>
+                <Label>State</Label>
+                <PropertyName>state</PropertyName>
+              </ListItem>
+              <ListItem>
+                <Label>Type</Label>
+                <PropertyName>type</PropertyName>
+              </ListItem>
+              <ListItem>
+                <Label>Domain ID</Label>
+                <PropertyName>domainId</PropertyName>
               </ListItem>
             </ListItems>
           </ListEntry>
