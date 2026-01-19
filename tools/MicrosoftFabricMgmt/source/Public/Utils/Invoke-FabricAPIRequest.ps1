@@ -177,6 +177,7 @@ function Invoke-FabricAPIRequest {
                             { $propertyNames -contains 'value' } { $items = $response.value; break }
                             { $propertyNames -contains 'accessEntities' } { $items = $response.accessEntities; break }
                             { $propertyNames -contains 'domains' } { $items = $response.domains; break }
+                            { $propertyNames -contains 'workspaces' } { $items = $response.workspaces; break }
                             { $propertyNames -contains 'publishDetails' } { $items = $response.publishDetails; break }
                             { $propertyNames -contains 'definition' } { $items = $response.definition.parts; break }
                             { $propertyNames -contains 'data' } { $items = $response.data; break }

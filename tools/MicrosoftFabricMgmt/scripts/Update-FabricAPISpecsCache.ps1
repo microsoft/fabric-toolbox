@@ -37,7 +37,8 @@ param(
 $ErrorActionPreference = 'Stop'
 
 # Create cache directory if it doesn't exist
-if (-not (Test-Path $CachePath)) {
+if (-not (Test-Path $CachePath))
+{
     New-Item -Path $CachePath -ItemType Directory -Force | Out-Null
     Write-Host "Created cache directory: $CachePath" -ForegroundColor Green
 }
@@ -102,49 +103,70 @@ $failedSpecs = @()
 Write-Host "`nDownloading Microsoft Fabric REST API Swagger Specifications..." -ForegroundColor Cyan
 Write-Host "Cache Path: $CachePath`n" -ForegroundColor Gray
 
-foreach ($spec in $swaggerSpecs) {
-    $url = "$baseUrl/$spec/swagger.json"
-    $outputFile = Join-Path $CachePath "$spec.swagger.json"
+foreach ($spec in $swaggerSpecs)
+{
+    # Define the files to download for each spec
+    $filesToDownload = @(
+        @{
+            Url        = "$baseUrl/$spec/swagger.json"
+            OutputFile = Join-Path $CachePath "$spec.swagger.json"
+            FileType   = 'swagger'
+        },
+        @{
+            Url        = "$baseUrl/$spec/definitions.json"
+            OutputFile = Join-Path $CachePath "$spec.definitions.json"
+            FileType   = 'definitions'
+        }
+    )
 
-    # Skip if file exists and Force not specified
-    if ((Test-Path $outputFile) -and -not $Force) {
-        Write-Host "[SKIP] $spec (already cached)" -ForegroundColor Gray
-        $skippedCount++
-        continue
-    }
+    foreach ($fileInfo in $filesToDownload)
+    {
+        $url = $fileInfo.Url
+        $outputFile = $fileInfo.OutputFile
+        $fileType = $fileInfo.FileType
 
-    try {
-        Write-Host "[DOWNLOADING] $spec..." -ForegroundColor Yellow -NoNewline
+        # Skip if file exists and Force not specified
+        if ((Test-Path $outputFile) -and -not $Force)
+        {
+            Write-Host "[SKIP] $spec.$fileType (already cached)" -ForegroundColor Gray
+            $skippedCount++
+            continue
+        }
 
-        # Download the swagger file
-        $response = Invoke-WebRequest -Uri $url -UseBasicParsing -ErrorAction Stop
+        try
+        {
+            Write-Host "[DOWNLOADING] $spec.$fileType..." -ForegroundColor Yellow -NoNewline
 
-        # Save to cache
-        $response.Content | Out-File -FilePath $outputFile -Encoding UTF8 -Force
+            # Download the file
+            $response = Invoke-WebRequest -Uri $url -UseBasicParsing -ErrorAction Stop
 
-        # Validate it's valid JSON
-        $json = Get-Content $outputFile -Raw | ConvertFrom-Json -ErrorAction Stop
+            # Save to cache
+            $response.Content | Out-File -FilePath $outputFile -Encoding UTF8 -Force
 
-        Write-Host " SUCCESS" -ForegroundColor Green
-        $downloadedCount++
-    }
-    catch {
-        Write-Host " FAILED" -ForegroundColor Red
-        Write-Host "  Error: $($_.Exception.Message)" -ForegroundColor Red
-        $failedCount++
-        $failedSpecs += $spec
+            # Validate it's valid JSON
+            $json = Get-Content $outputFile -Raw | ConvertFrom-Json -ErrorAction Stop
+
+            Write-Host " SUCCESS" -ForegroundColor Green
+            $downloadedCount++
+        }
+        catch
+        {
+            Write-Host " FAILED" -ForegroundColor Red
+            Write-Host "  Error: $($_.Exception.Message)" -ForegroundColor Red
+            $failedCount++
+            $failedSpecs += "$spec.$fileType"
+        }
     }
 }
-
 # Create metadata file with download timestamp
 $metadata = @{
     LastUpdated = (Get-Date).ToString('o')
-    TotalSpecs = $swaggerSpecs.Count
-    Downloaded = $downloadedCount
-    Skipped = $skippedCount
-    Failed = $failedCount
+    TotalSpecs  = $swaggerSpecs.Count
+    Downloaded  = $downloadedCount
+    Skipped     = $skippedCount
+    Failed      = $failedCount
     FailedSpecs = $failedSpecs
-    SpecList = $swaggerSpecs
+    SpecList    = $swaggerSpecs
 } | ConvertTo-Json -Depth 10
 
 $metadataFile = Join-Path $CachePath 'cache-metadata.json'
@@ -157,11 +179,19 @@ Write-Host "========================================" -ForegroundColor Cyan
 Write-Host "Total Specs:  $($swaggerSpecs.Count)" -ForegroundColor White
 Write-Host "Downloaded:   $downloadedCount" -ForegroundColor Green
 Write-Host "Skipped:      $skippedCount" -ForegroundColor Gray
-Write-Host "Failed:       $failedCount" -ForegroundColor $(if ($failedCount -gt 0) { 'Red' } else { 'Green' })
+Write-Host "Failed:       $failedCount" -ForegroundColor $(if ($failedCount -gt 0)
+    {
+        'Red'
+    }
+    else
+    {
+        'Green'
+    })
 Write-Host "Cache Path:   $CachePath" -ForegroundColor White
 Write-Host "Last Updated: $(Get-Date -Format 'yyyy-MM-dd HH:mm:ss')" -ForegroundColor White
 
-if ($failedSpecs.Count -gt 0) {
+if ($failedSpecs.Count -gt 0)
+{
     Write-Host "`nFailed Specs:" -ForegroundColor Red
     $failedSpecs | ForEach-Object { Write-Host "  - $_" -ForegroundColor Red }
 }
