@@ -1,0 +1,259 @@
+Metadata-Version: 2.4
+Name: fabric-assessment-tool
+Version: 0.0.1
+Summary: Command-line tool for Migration Assessment for Fabric DE/DW
+Author: Microsoft Corporation
+License-Expression: MIT
+Classifier: Programming Language :: Python :: 3
+Classifier: Programming Language :: Python :: 3.10
+Classifier: Programming Language :: Python :: 3.11
+Classifier: Programming Language :: Python :: 3.12
+Classifier: Operating System :: OS Independent
+Requires-Python: <3.13,>=3.10
+Description-Content-Type: text/markdown
+License-File: LICENSE
+Requires-Dist: questionary
+Requires-Dist: prompt_toolkit>=3.0.41
+Requires-Dist: jmespath
+Requires-Dist: click>=8.0.0
+Requires-Dist: requests>=2.25.0
+Requires-Dist: azure-identity
+Requires-Dist: azure-mgmt-resource
+Requires-Dist: databricks-sdk==0.67.0
+Requires-Dist: mssql-python==1.1.0
+Provides-Extra: test
+Requires-Dist: pytest>=8.2.1; extra == "test"
+Dynamic: license-file
+
+<p align="center">
+	<h1 align="center">
+		<img src="./res/logo.png" alt="Logo" width="200">
+	</h1>
+	<p align="center">Migration Assessment Tool for Fabric DE/DW<br>Fabric Assessment Tool is a command-line tool for connecting, extracting, and exporting data from various cloud data platforms to help with migration planning and assessment</p>
+</p>
+
+<p align="center">
+	<br>
+	<img src="./res/preview.gif" alt="Preview of the tool" width="600">
+	<br>
+</p>
+
+
+## Develpment setup
+
+This repository contains a devcontainer file that will setup the environment ready for development and testing.
+
+If you are using Visual Studio Code, you will need Docker Desktop.
+After checking out the repository, just open the command palette (F1) and select the option ```Dev Containers: Reopen in Container```.
+
+## Installation
+
+Install Fabric Assessment Tool in development mode:
+
+```bash
+pip install -e .
+```
+
+## Package instruction
+
+To generate the package files:
+
+```bash
+poetry build
+```
+After that sdist and wheel packages will be available in the ```dist``` folder.
+
+Once generated, you can install the wheel package using pip:
+
+```bash
+pip install dist/fabric_assessment_tool-0.0.1-py3-none-any.whl
+```
+
+
+
+## CLI Commands
+
+Fabric Assessment Tool provides three main commands:
+
+### `fat assess` - Assess data sources for migration readiness
+
+```bash
+fat assess --source <databricks|synapse> \
+          --mode <full> \
+          --ws <workspace1_name,workspace2_name> \
+          -o/--output <output_path>
+```
+
+**Required Parameters:**
+- `--source`: Source platform (databricks, synapse, or others in the future)
+- `--mode`: Assessment mode (currently supports: full)
+- `-o/--output`: Output path for assessment results
+
+**Optional Parameters:**
+- `--ws`: Comma-separated list of workspace names to assess 
+  - *For Databricks, use the **workspace name** (not the workspace ID)*
+  - *If not provided, it will prompt the list of reachable workspaces to select*
+- `--tenant-id`: Azure tenant ID (if not provided, will use default credentials)
+- `--subscription-id`: Azure subscription ID (if not provided, will use default credentials)
+- `--resource-group`: Azure resource group name
+
+**Examples:**
+```bash
+# Assess Synapse workspaces (interactive selection)
+fat assess --source synapse --mode full -o assessment.json
+
+# Assess targeted Synapse workspaces 
+fat assess --source synapse --mode full --ws workspace1,workspace2 -o assessment_folder/
+
+# Assess Databricks workspace
+fat assess --source databricks --mode full --ws my-workspace --output results/
+```
+
+## Configuration
+
+### Azure Synapse
+
+For Azure Synapse assessments, you can provide authentication details via:
+
+1. Command line parameters:
+   ```bash
+   fat assess --source synapse --tenant-id <tenant-id> --subscription-id <subscription-id> --resource-group <resource-group> ...
+   ```
+
+2. Environment variables:
+   ```bash
+   export AZURE_TENANT_ID="your-tenant-id"
+   export AZURE_SUBSCRIPTION_ID="your-subscription-id"
+   export AZURE_RESOURCE_GROUP="your-resource-group"
+   ```
+
+### Databricks
+
+For Databricks operations, set the following environment variables:
+
+```bash
+export DATABRICKS_WORKSPACE_URL="https://your-workspace.cloud.databricks.com"
+export DATABRICKS_ACCESS_TOKEN="your-access-token"
+```
+
+## Sample Output
+
+Assessment results are saved in JSON format with the following structure:
+
+```json
+{
+  "metadata": {
+    "source": "synapse",
+    "mode": "full",
+    "workspaces": ["workspace1", "workspace2"],
+    "timestamp": "2025-10-03T14:15:07.047659",
+    "version": "0.0.1"
+  },
+  "results": [
+    {
+      "workspace": "workspace1",
+      "status": "success",
+      "summary": {
+        "workspace_info": {...},
+        "counts": {
+          "dedicated_sql_pools": 1,
+          "serverless_sql_pools": 1,
+          "spark_pools": 1,
+          ...
+        },
+        "assessment_status": {
+          "status": "completed|incompleted|failed",
+          "description": ...
+        }
+      }
+    }
+  ],
+  "summary": {
+    "total_workspaces": 2,
+    "assessed_workspaces": 2,
+    "incomplete_workspaces": 0,
+    "failed_workspaces": 0
+  }
+}
+```
+
+The details of each extracted resource is stored in a specific file, the list of all generated files can be found in the export summary:
+
+```json
+{
+  "results": [
+    {
+      "format": "json",
+      "workspace_directory": "/tmp/assessment/workspace1",
+      "files_created": [
+        "/tmp/assessment/workspace1/summary.json",
+        "/tmp/assessment/workspace1/workspace.json",
+        "/tmp/assessment/workspace1/resources/sql_pools/dedicated_pool_dw100c.json",
+        "/tmp/assessment/workspace1/resources/sql_pools/serverless_pool_Built-in.json",
+        "/tmp/assessment/workspace1/resources/spark_pools/smallpool.json",
+        "/tmp/assessment/workspace1/resources/pipelines/L0_IndividualCustomer.json",
+        ...
+        "/tmp/assessment/workspace1/admin/integration_runtimes/AutoResolveIntegrationRuntime.json",
+        "/tmp/assessment/workspace1/admin/integration_runtimes/SHIR-example.json",
+        "/tmp/assessment/workspace1/admin/linked_services/workspace1-WorkspaceDefaultSqlServer.json",
+        "/tmp/assessment/workspace1/admin/linked_services/workspace1-WorkspaceDefaultStorage.json",
+        "/tmp/assessment/workspace1/admin/linked_services/us-employment-hours-earnings-state.json",
+        "/tmp/assessment/workspace1/admin/libraries/my_library-0.1.10-py3-none-any.whl.json",
+        ...
+        "/tmp/assessment/workspace1/data/serverless_databases/example.json",
+        "/tmp/assessment/workspace1/data/serverless_databases/LakeDatabase.json",
+        "/tmp/assessment/workspace1/data/dedicated_databases/dw100c.json"
+      ],
+      "total_files": 53,
+      "workspace_name": "workspace1",
+      "export_timestamp": "2025-12-11T08:54:25.825936",
+      "export_format": "json"
+    }
+  ]
+}
+
+```
+
+## Querying Assessment Results
+
+The Fabric Assessment Tool exports data in a structured hierarchical format that can be easily queried using tools like DuckDB. For comprehensive examples of how to query the exported data, see the [Query Results Guide](docs/query_results.md).
+
+### Quick Start with DuckDB
+
+Install DuckDB:
+```bash
+pip install duckdb
+```
+
+Query examples:
+```sql
+-- Query all notebooks across workspaces
+CREATE TABLE notebooks AS
+SELECT * FROM read_json_auto('/path/to/assessment/*/resources/notebooks/*.json');
+
+-- Query Synapse dedicated tables with statistics
+CREATE TABLE dedicated_tables AS
+SELECT * FROM read_json_auto('/path/to/assessment/*/data/dedicated_databases/databases/*/schemas/*/tables/*.json');
+
+-- Query Databricks Unity Catalog tables
+CREATE TABLE unity_tables AS  
+SELECT * FROM read_json_auto('/path/to/assessment/*/data/unity_catalog/catalogs/*/schemas/*/tables/*.json');
+```
+
+### New Hierarchical Structure
+
+The tool now exports data in a hierarchical structure for better organization:
+
+- **Resources**: Notebooks, jobs/pipelines, clusters/pools
+- **Admin**: Integration runtimes, linked services, datasets (Synapse only)
+- **Data**: Hierarchical structure with databases → schemas → tables/views
+  - Synapse: `serverless_databases/` and `dedicated_databases/`
+  - Databricks: `unity_catalog/` and `legacy_databases/`
+
+This structure makes it easier to:
+- Navigate large datasets
+- Query specific components independently
+- Understand data lineage and relationships
+- Perform granular analysis of your data platform
+
+## Development and Contributing
