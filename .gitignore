@@ -422,3 +422,4 @@ tools/.api-specs-cache/
 tools/MicrosoftFabricMgmt/scripts/Fix-WriteFabricLogLevel.ps1
 tools/MicrosoftFabricMgmt/scripts/Fix-WorkspaceAPIUris.ps1
 tools/MicrosoftFabricMgmt/scripts/Refactor-PublicFunctions.ps1
+.vscode/tasks.json
