@@ -47,6 +47,7 @@ These assets should be treated as examples that you can use to create the soluti
 - [DW SP Kill Queries](./scripts/dw-sp-kill-queries)
 
 ## Tools
+- $${\color{green}NEW!}$$ [Fabric Assessment Tool](./accelerators/fabric-assessment-tool)
 - $${\color{yellow}UPDATED!}$$ [Fabric Data Factory Migration Assistant](./tools/FabricDataFactoryMigrationAssistant)
 - [DAX Performance Tuner MCP Server](./tools/DAXPerformanceTunerMCPServer)
 - [Semantic Model MCP Server](./tools/SemanticModelMCPServer)
