@@ -118,7 +118,7 @@
             # IconUri = ''
 
             # ReleaseNotes of this module
-            ReleaseNotes = '## [1.0.4] - 2026-01-19
+            ReleaseNotes = '## [1.0.4] - 2026-01-20
 
 ### Added
 

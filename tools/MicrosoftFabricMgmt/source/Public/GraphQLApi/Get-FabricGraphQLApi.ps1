@@ -15,6 +15,9 @@
 .PARAMETER GraphQLApiName
     The display name of the GraphQL API to retrieve. Optional.
 
+.PARAMETER Raw
+    If specified, returns the raw API response without type decoration.
+
 .EXAMPLE
     Get-FabricGraphQLApi -WorkspaceId "workspace-12345" -GraphQLApiId "graphqlapi-67890"
     Retrieves the GraphQL API with ID "graphqlapi-67890" from the specified workspace.
@@ -44,7 +47,10 @@ function Get-FabricGraphQLApi {
         [Parameter(Mandatory = $false)]
         [ValidateNotNullOrEmpty()]
         [ValidatePattern('^[a-zA-Z0-9_ ]*$')]
-        [string]$GraphQLApiName
+        [string]$GraphQLApiName,
+
+        [Parameter()]
+        [switch]$Raw
     )
 
     process {
@@ -70,7 +76,7 @@ function Get-FabricGraphQLApi {
             $dataItems = Invoke-FabricAPIRequest @apiParams
 
             # Apply filtering and return results
-            Select-FabricResource -InputObject $dataItems -Id $GraphQLApiId -DisplayName $GraphQLApiName -ResourceType 'GraphQL API' -TypeName 'MicrosoftFabric.GraphQLApi'
+            Select-FabricResource -InputObject $dataItems -Id $GraphQLApiId -DisplayName $GraphQLApiName -ResourceType 'GraphQL API' -TypeName 'MicrosoftFabric.GraphQLApi' -Raw:$Raw
         }
         catch {
             # Capture and log error details

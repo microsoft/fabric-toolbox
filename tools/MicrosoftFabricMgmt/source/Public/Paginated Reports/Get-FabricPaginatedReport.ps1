@@ -15,6 +15,9 @@
 .PARAMETER PaginatedReportName
     The name of the paginated report to retrieve. This parameter is optional.
 
+.PARAMETER Raw
+    If specified, returns the raw API response without any transformation or filtering.
+
 .EXAMPLE
     Get-FabricPaginatedReports -WorkspaceId "workspace-12345" -PaginatedReportId "report-67890"
     This example retrieves the paginated report details for the report with ID "report-67890" in the workspace with ID "workspace-12345".
@@ -22,6 +25,10 @@
 .EXAMPLE
     Get-FabricPaginatedReports -WorkspaceId "workspace-12345" -PaginatedReportName "My Paginated Report"
     This example retrieves the paginated report details for the report named "My Paginated Report" in the workspace with ID "workspace-12345".
+
+.EXAMPLE
+    Get-FabricPaginatedReport -WorkspaceId "workspace-12345" -Raw
+    This example retrieves all paginated reports in the workspace with raw API response format.
 
 .NOTES
     - Requires `$FabricConfig` global configuration, including `BaseUrl` and `FabricHeaders`.
@@ -45,7 +52,10 @@ function Get-FabricPaginatedReport {
         [Parameter(Mandatory = $false)]
         [ValidateNotNullOrEmpty()]
         [ValidatePattern('^[a-zA-Z0-9_ ]*$')]
-        [string]$PaginatedReportName
+        [string]$PaginatedReportName,
+
+        [Parameter(Mandatory = $false)]
+        [switch]$Raw
     )
 
     process {
@@ -71,32 +81,8 @@ function Get-FabricPaginatedReport {
             }
             $dataItems = Invoke-FabricAPIRequest @apiParams
 
-            # Immediately handle empty response
-            if (-not $dataItems) {
-                Write-FabricLog -Message "No paginated reports found in workspace: $WorkspaceId" -Level Debug
-                return
-            }
-
-            # Apply filtering logic efficiently
-            if ($PaginatedReportId) {
-                $matchedItems = $dataItems.Where({ $_.Id -eq $PaginatedReportId }, 'First')
-            }
-            elseif ($PaginatedReportName) {
-                $matchedItems = $dataItems.Where({ $_.DisplayName -eq $PaginatedReportName }, 'First')
-            }
-            else {
-                Write-FabricLog -Message "No filter provided. Returning all items." -Level Debug
-                $matchedItems = $dataItems
-            }
-
-            # Handle results
-            if ($matchedItems) {
-                Write-FabricLog -Message "Item(s) found matching the specified criteria." -Level Debug
-                $matchedItems
-            }
-            else {
-                Write-FabricLog -Message "No item found matching the provided criteria." -Level Debug
-            }
+            # Apply filtering and formatting
+            Select-FabricResource -InputObject $dataItems -Id $PaginatedReportId -DisplayName $PaginatedReportName -ResourceType 'PaginatedReport' -TypeName 'MicrosoftFabric.PaginatedReport' -Raw:$Raw
         }
         catch {
             # Capture and log error details

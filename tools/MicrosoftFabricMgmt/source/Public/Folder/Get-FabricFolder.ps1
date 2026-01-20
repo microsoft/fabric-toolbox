@@ -18,6 +18,9 @@
 .PARAMETER Recursive
     If specified, retrieves folders recursively. Optional.
 
+.PARAMETER Raw
+    Returns the raw API response without any filtering or transformation. Use this switch when you need the complete, unprocessed response from the API.
+
 .EXAMPLE
     Get-FabricFolder -WorkspaceId "workspace-12345" -FolderName "MyFolder"
     Retrieves details for the folder named "MyFolder" in the specified workspace.
@@ -25,6 +28,10 @@
 .EXAMPLE
     Get-FabricFolder -WorkspaceId "workspace-12345" -RootFolderId "folder-67890" -Recursive
     Retrieves details for the folder with the given ID and its subfolders.
+
+.EXAMPLE
+    Get-FabricFolder -WorkspaceId "workspace-12345" -Raw
+    Returns the raw API response for all folders in the workspace without any formatting or type decoration.
 
 .NOTES
     - Requires `$FabricConfig` global configuration with `BaseUrl` and `FabricHeaders`.
@@ -50,7 +57,10 @@ function Get-FabricFolder {
         [string]$RootFolderId,
 
         [Parameter(Mandatory = $false)]
-        [switch]$Recursive
+        [switch]$Recursive,
+
+        [Parameter(Mandatory = $false)]
+        [switch]$Raw
     )
 
     process {
@@ -106,7 +116,7 @@ function Get-FabricFolder {
             $dataItems = Invoke-FabricAPIRequest @apiParams
 
             # Apply filtering logic
-            Select-FabricResource -InputObject $dataItems -DisplayName $FolderName -ResourceType 'Folder'
+            Select-FabricResource -InputObject $dataItems -DisplayName $FolderName -ResourceType 'Folder' -TypeName 'MicrosoftFabric.Folder' -Raw:$Raw
         }
         catch {
             # Capture and log error details

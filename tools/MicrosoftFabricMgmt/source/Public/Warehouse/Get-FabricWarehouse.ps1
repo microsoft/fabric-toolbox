@@ -1,4 +1,4 @@
-﻿<#
+<#
 .SYNOPSIS
     Retrieves warehouse details from a specified Microsoft Fabric workspace.
 
@@ -15,6 +15,9 @@
 .PARAMETER WarehouseName
     The name of the warehouse to retrieve. This parameter is optional.
 
+.PARAMETER Raw
+    When specified, returns the raw API response without any filtering or formatting.
+
 .EXAMPLE
      Get-FabricWarehouse -WorkspaceId "workspace-12345" -WarehouseId "warehouse-67890"
     This example retrieves the warehouse details for the warehouse with ID "warehouse-67890" in the workspace with ID "workspace-12345".
@@ -22,6 +25,10 @@
 .EXAMPLE
      Get-FabricWarehouse -WorkspaceId "workspace-12345" -WarehouseName "My Warehouse"
     This example retrieves the warehouse details for the warehouse named "My Warehouse" in the workspace with ID "workspace-12345".
+
+.EXAMPLE
+     Get-FabricWarehouse -WorkspaceId "workspace-12345" -Raw
+    This example returns the raw API response for all warehouses in the workspace without any processing.
 
 .NOTES
     - Requires `$FabricConfig` global configuration, including `BaseUrl` and `FabricHeaders`.
@@ -44,7 +51,10 @@ function Get-FabricWarehouse {
         [Parameter(Mandatory = $false)]
         [ValidateNotNullOrEmpty()]
         [ValidatePattern('^[a-zA-Z0-9_]*$')]
-        [string]$WarehouseName
+        [string]$WarehouseName,
+
+        [Parameter()]
+        [switch]$Raw
     )
 
     process {
@@ -57,7 +67,6 @@ function Get-FabricWarehouse {
 
             Invoke-FabricAuthCheck -ThrowOnFailure
 
-
             # Construct the API endpoint URI
             $apiEndpointURI = "{0}/workspaces/{1}/warehouses" -f $script:FabricAuthContext.BaseUrl, $WorkspaceId
 
@@ -69,33 +78,8 @@ function Get-FabricWarehouse {
             }
             $dataItems = Invoke-FabricAPIRequest @apiParams
 
-            # Immediately handle empty response
-            if (-not $dataItems) {
-                Write-FabricLog -Message "No warehouses found in workspace: $WorkspaceId" -Level Debug
-                return
-            }
-
-            # Apply filtering logic efficiently
-            if ($WarehouseId) {
-                $matchedItems = $dataItems.Where({ $_.Id -eq $WarehouseId }, 'First')
-            }
-            elseif ($WarehouseName) {
-                $matchedItems = $dataItems.Where({ $_.DisplayName -eq $WarehouseName }, 'First')
-            }
-            else {
-                Write-FabricLog -Message "No filter provided. Returning all items." -Level Debug
-                $matchedItems = $dataItems
-            }
-
-            # Handle results
-            if ($matchedItems) {
-                Write-FabricLog -Message "Item(s) found matching the specified criteria." -Level Debug
-
-                $matchedItems
-            }
-            else {
-                Write-FabricLog -Message "No item found matching the provided criteria." -Level Debug
-            }
+            # Apply filtering and formatting
+            Select-FabricResource -InputObject $dataItems -Id $WarehouseId -DisplayName $WarehouseName -ResourceType 'Warehouse' -TypeName 'MicrosoftFabric.Warehouse' -Raw:$Raw
         }
         catch {
             # Capture and log error details

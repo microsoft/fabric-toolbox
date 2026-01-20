@@ -14,6 +14,9 @@ The `Get-FabricDomain` function allows retrieval of domains in Microsoft Fabric,
 .PARAMETER NonEmptyDomainsOnly
 (Optional) If set to `$true`, only domains containing workspaces will be returned.
 
+.PARAMETER Raw
+Returns the raw API response without any filtering or transformation. Use this switch when you need the complete, unprocessed response from the API.
+
 .EXAMPLE
 Get-FabricDomain -DomainId "12345"
 
@@ -23,6 +26,11 @@ Fetches the domain with ID "12345".
 Get-FabricDomain -DomainName "Finance"
 
 Fetches the domain with the display name "Finance".
+
+.EXAMPLE
+Get-FabricDomain -Raw
+
+Returns the raw API response for all domains without any formatting or type decoration.
 
 .NOTES
 - Requires `$FabricConfig` global configuration, including `BaseUrl` and `FabricHeaders`.
@@ -44,7 +52,10 @@ function Get-FabricDomain {
 
         [Parameter(Mandatory = $false)]
         [ValidateNotNullOrEmpty()]
-        [bool]$NonEmptyDomainsOnly = $false
+        [bool]$NonEmptyDomainsOnly = $false,
+
+        [Parameter(Mandatory = $false)]
+        [switch]$Raw
     )
     try {
         # Validate authentication token before proceeding
@@ -67,7 +78,7 @@ function Get-FabricDomain {
         $dataItems = Invoke-FabricAPIRequest @apiParams
 
         # Apply filtering
-        Select-FabricResource -InputObject $dataItems -Id $DomainId -Name $DomainName -ResourceType 'Domain'
+        Select-FabricResource -InputObject $dataItems -Id $DomainId -DisplayName $DomainName -ResourceType 'Domain' -TypeName 'MicrosoftFabric.Domain' -Raw:$Raw
     }
     catch {
         # Capture and log error details

@@ -15,6 +15,9 @@
 .PARAMETER ManagedPrivateEndpointName
     The name of the Managed Private Endpoint to retrieve. Optional.
 
+.PARAMETER Raw
+    If specified, returns the raw API response without any transformation or filtering.
+
 .EXAMPLE
     Get-FabricManagedPrivateEndpoint -WorkspaceId "workspace-12345" -ManagedPrivateEndpointId "endpoint-67890"
     Retrieves details for the Managed Private Endpoint with ID "endpoint-67890" in workspace "workspace-12345".
@@ -22,6 +25,10 @@
 .EXAMPLE
     Get-FabricManagedPrivateEndpoint -WorkspaceId "workspace-12345" -ManagedPrivateEndpointName "MyEndpoint"
     Retrieves details for the Managed Private Endpoint named "MyEndpoint" in workspace "workspace-12345".
+
+.EXAMPLE
+    Get-FabricManagedPrivateEndpoint -WorkspaceId "workspace-12345" -Raw
+    Retrieves all Managed Private Endpoints in the workspace with raw API response format.
 
 .NOTES
     - Requires `$FabricConfig` global configuration with `BaseUrl` and `FabricHeaders`.
@@ -43,7 +50,10 @@ function Get-FabricManagedPrivateEndpoint {
 
         [Parameter(Mandatory = $false)]
         [ValidateNotNullOrEmpty()]
-        [string]$ManagedPrivateEndpointName
+        [string]$ManagedPrivateEndpointName,
+
+        [Parameter(Mandatory = $false)]
+        [switch]$Raw
     )
 
     process {
@@ -73,32 +83,8 @@ function Get-FabricManagedPrivateEndpoint {
             }
             $dataItems = Invoke-FabricAPIRequest @apiParams
 
-            # Immediately handle empty response
-            if (-not $dataItems) {
-                Write-FabricLog -Message "No managed private endpoints found in workspace: $WorkspaceId" -Level Debug
-                return
-            }
-
-            # Apply filtering logic efficiently
-            if ($ManagedPrivateEndpointId) {
-                $matchedItems = $dataItems.Where({ $_.id -eq $ManagedPrivateEndpointId }, 'First')
-            }
-            elseif ($ManagedPrivateEndpointName) {
-                $matchedItems = $dataItems.Where({ $_.name -eq $ManagedPrivateEndpointName }, 'First')
-            }
-            else {
-                Write-FabricLog -Message "No filter provided. Returning all items." -Level Debug
-                $matchedItems = $dataItems
-            }
-
-            # Handle results
-            if ($matchedItems) {
-                Write-FabricLog -Message "Item(s) found matching the specified criteria." -Level Debug
-                $matchedItems
-            }
-            else {
-                Write-FabricLog -Message "No item found matching the provided criteria." -Level Debug
-            }
+            # Apply filtering and formatting
+            Select-FabricResource -InputObject $dataItems -Id $ManagedPrivateEndpointId -DisplayName $ManagedPrivateEndpointName -ResourceType 'ManagedPrivateEndpoint' -TypeName 'MicrosoftFabric.ManagedPrivateEndpoint' -Raw:$Raw
         }
         catch {
             # Capture and log error details
