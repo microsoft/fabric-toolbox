@@ -32,62 +32,74 @@
 function Update-FabricReport {
     [CmdletBinding(SupportsShouldProcess=$true, ConfirmImpact='Medium')]
     param (
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
         [ValidateNotNullOrEmpty()]
         [string]$WorkspaceId,
 
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
         [ValidateNotNullOrEmpty()]
+        [Alias('id')]
         [string]$ReportId,
 
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $false, ValueFromPipelineByPropertyName = $true)]
         [ValidateNotNullOrEmpty()]
         [ValidatePattern('^[a-zA-Z0-9_ ]*$')]
+        [Alias('DisplayName')]
         [string]$ReportName,
 
-        [Parameter(Mandatory = $false)]
+        [Parameter(Mandatory = $false, ValueFromPipelineByPropertyName = $true)]
         [ValidateNotNullOrEmpty()]
+        [Alias('Description')]
         [string]$ReportDescription
     )
-    try {
-        Invoke-FabricAuthCheck -ThrowOnFailure
-
-
-        # Construct the API endpoint URI
-        $apiEndpointURI = "{0}/workspaces/{1}/reports/{2}" -f $script:FabricAuthContext.BaseUrl, $WorkspaceId, $ReportId
-        Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
-
-        # Construct the request body
-        $body = @{
-            displayName = $ReportName
-        }
-
-        if ($ReportDescription) {
-            $body.description = $ReportDescription
-        }
-
-        # Convert the body to JSON
-        $bodyJson = $body | ConvertTo-Json
-        Write-FabricLog -Message "Request Body: $bodyJson" -Level Debug
-
-        # Make the API request
-        if ($PSCmdlet.ShouldProcess("Report '$ReportName' (ID: $ReportId) in workspace '$WorkspaceId'", "Update")) {
-            $apiParams = @{
-                Headers = $script:FabricAuthContext.FabricHeaders
-                BaseURI = $apiEndpointURI
-                Method = 'Patch'
-                Body = $bodyJson
+    process {
+        try {
+            # Validate that at least one update parameter is provided
+            if (-not $ReportName -and -not $ReportDescription) {
+                Write-FabricLog -Message "At least one of ReportName or ReportDescription must be specified" -Level Error
+                return
             }
-            $response = Invoke-FabricAPIRequest @apiParams
 
-            # Return the API response
-            Write-FabricLog -Message "Report '$ReportName' updated successfully!" -Level Host
-            return $response
+            Invoke-FabricAuthCheck -ThrowOnFailure
+
+            # Construct the API endpoint URI
+            $apiEndpointURI = New-FabricAPIUri -Resource 'workspaces' -WorkspaceId $WorkspaceId -Subresource 'reports' -ItemId $ReportId
+            Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
+
+            # Construct the request body
+            $body = @{}
+
+            if ($ReportName) {
+                $body.displayName = $ReportName
+            }
+
+            if ($ReportDescription) {
+                $body.description = $ReportDescription
+            }
+
+            # Convert the body to JSON
+            $bodyJson = $body | ConvertTo-Json
+            Write-FabricLog -Message "Request Body: $bodyJson" -Level Debug
+
+            # Make the API request
+            if ($PSCmdlet.ShouldProcess("Report '$ReportName' (ID: $ReportId) in workspace '$WorkspaceId'", "Update")) {
+                $apiParams = @{
+                    Headers = $script:FabricAuthContext.FabricHeaders
+                    BaseURI = $apiEndpointURI
+                    Method = 'Patch'
+                    Body = $bodyJson
+                }
+                $response = Invoke-FabricAPIRequest @apiParams
+
+                # Return the API response
+                Write-FabricLog -Message "Report '$ReportName' updated successfully!" -Level Host
+                return $response
+            }
         }
-    }
-    catch {
-        # Capture and log error details
-        $errorDetails = $_.Exception.Message
-        Write-FabricLog -Message "Failed to update Report. Error: $errorDetails" -Level Error
+        catch {
+            # Capture and log error details
+            $errorDetails = $_.Exception.Message
+            Write-FabricLog -Message "Failed to update Report. Error: $errorDetails" -Level Error
+        }
     }
 }

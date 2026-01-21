@@ -25,15 +25,17 @@
 function Remove-FabricSparkJobDefinition {
     [CmdletBinding(SupportsShouldProcess=$true, ConfirmImpact='High')]
     param (
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
         [ValidateNotNullOrEmpty()]
         [string]$WorkspaceId,
 
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
         [ValidateNotNullOrEmpty()]
+        [Alias('id')]
         [string]$SparkJobDefinitionId
     )
-    try {
+    process {
+        try {
         Invoke-FabricAuthCheck -ThrowOnFailure
 
 
@@ -59,5 +61,6 @@ function Remove-FabricSparkJobDefinition {
         # Capture and log error details
         $errorDetails = $_.Exception.Message
         Write-FabricLog -Message "Failed to delete SparkJobDefinition '$SparkJobDefinitionId'. Error: $errorDetails" -Level Error
+        }
     }
 }

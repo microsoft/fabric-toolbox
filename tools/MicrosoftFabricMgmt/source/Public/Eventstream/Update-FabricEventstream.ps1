@@ -37,25 +37,35 @@ Author: Tiago Balabuch
 function Update-FabricEventstream {
     [CmdletBinding(SupportsShouldProcess = $true, ConfirmImpact = 'Medium')]
     param (
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
         [ValidateNotNullOrEmpty()]
         [string]$WorkspaceId,
 
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
         [ValidateNotNullOrEmpty()]
+        [Alias('id')]
         [string]$EventstreamId,
 
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $false, ValueFromPipelineByPropertyName = $true)]
         [ValidateNotNullOrEmpty()]
         [ValidatePattern('^[a-zA-Z0-9_ ]*$')]
+        [Alias('DisplayName')]
         [string]$EventstreamName,
 
-        [Parameter(Mandatory = $false)]
+        [Parameter(Mandatory = $false, ValueFromPipelineByPropertyName = $true)]
         [ValidateNotNullOrEmpty()]
+        [Alias('Description')]
         [string]$EventstreamDescription
     )
 
-    try {
+    process {
+        try {
+        # Validate that at least one update parameter is provided
+        if (-not $EventstreamName -and -not $EventstreamDescription) {
+            Write-FabricLog -Message "At least one of EventstreamName or EventstreamDescription must be specified" -Level Error
+            return
+        }
+
         # Validate authentication
         Invoke-FabricAuthCheck -ThrowOnFailure
 
@@ -63,8 +73,10 @@ function Update-FabricEventstream {
         $apiEndpointURI = New-FabricAPIUri -Resource 'workspaces' -WorkspaceId $WorkspaceId -Subresource 'eventstreams' -ItemId $EventstreamId
 
         # Construct the request body
-        $body = @{
-            displayName = $EventstreamName
+        $body = @{}
+
+        if ($EventstreamName) {
+            $body.displayName = $EventstreamName
         }
 
         if ($EventstreamDescription) {
@@ -89,9 +101,10 @@ function Update-FabricEventstream {
             $response
         }
     }
-    catch {
-        # Capture and log error details
-        $errorDetails = $_.Exception.Message
-        Write-FabricLog -Message "Failed to update Eventstream. Error: $errorDetails" -Level Error
+        catch {
+            # Capture and log error details
+            $errorDetails = $_.Exception.Message
+            Write-FabricLog -Message "Failed to update Eventstream. Error: $errorDetails" -Level Error
+        }
     }
 }

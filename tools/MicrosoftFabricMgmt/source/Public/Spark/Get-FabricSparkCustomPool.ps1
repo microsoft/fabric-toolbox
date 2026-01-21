@@ -94,10 +94,12 @@ function Get-FabricSparkCustomPool {
                 $matchedItems = $dataItems
             }
 
-            # Handle results
+            # Handle results and add workspaceId for pipeline support
             if ($matchedItems) {
                 Write-FabricLog -Message "Item(s) found matching the specified criteria." -Level Debug
-                $matchedItems
+                foreach ($item in $matchedItems) {
+                    $item | Add-Member -NotePropertyName 'workspaceId' -NotePropertyValue $WorkspaceId -Force -PassThru
+                }
             }
             else {
                 Write-FabricLog -Message "No item found matching the provided criteria." -Level Debug

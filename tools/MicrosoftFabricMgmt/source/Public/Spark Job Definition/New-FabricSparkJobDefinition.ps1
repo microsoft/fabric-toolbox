@@ -34,8 +34,9 @@
 function New-FabricSparkJobDefinition {
     [CmdletBinding(SupportsShouldProcess=$true, ConfirmImpact='Medium')]
     param (
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
         [ValidateNotNullOrEmpty()]
+        [Alias('id')]
         [string]$WorkspaceId,
 
         [Parameter(Mandatory = $true)]
@@ -55,6 +56,7 @@ function New-FabricSparkJobDefinition {
         [ValidateNotNullOrEmpty()]
         [string]$SparkJobDefinitionPathPlatformDefinition
     )
+    process {
     try {
         Invoke-FabricAuthCheck -ThrowOnFailure
 
@@ -144,5 +146,6 @@ function New-FabricSparkJobDefinition {
         # Capture and log error details
         $errorDetails = $_.Exception.Message
         Write-FabricLog -Message "Failed to create Spark Job Definition. Error: $errorDetails" -Level Error
+    }
     }
 }

@@ -32,62 +32,74 @@
 function Update-FabricSemanticModel {
     [CmdletBinding(SupportsShouldProcess=$true, ConfirmImpact='Medium')]
     param (
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
         [ValidateNotNullOrEmpty()]
         [string]$WorkspaceId,
 
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
         [ValidateNotNullOrEmpty()]
+        [Alias('id')]
         [string]$SemanticModelId,
 
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $false, ValueFromPipelineByPropertyName = $true)]
         [ValidateNotNullOrEmpty()]
         [ValidatePattern('^[a-zA-Z0-9_ ]*$')]
+        [Alias('DisplayName')]
         [string]$SemanticModelName,
 
-        [Parameter(Mandatory = $false)]
+        [Parameter(Mandatory = $false, ValueFromPipelineByPropertyName = $true)]
         [ValidateNotNullOrEmpty()]
+        [Alias('Description')]
         [string]$SemanticModelDescription
     )
-    try {
-        Invoke-FabricAuthCheck -ThrowOnFailure
-
-
-        # Construct the API endpoint URI
-        $apiEndpointURI = "{0}/workspaces/{1}/semanticModels/{2}" -f $script:FabricAuthContext.BaseUrl, $WorkspaceId, $SemanticModelId
-        Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
-
-        # Construct the request body
-        $body = @{
-            displayName = $SemanticModelName
-        }
-
-        if ($SemanticModelDescription) {
-            $body.description = $SemanticModelDescription
-        }
-
-        # Convert the body to JSON
-        $bodyJson = $body | ConvertTo-Json
-        Write-FabricLog -Message "Request Body: $bodyJson" -Level Debug
-
-        # Make the API request
-        if ($PSCmdlet.ShouldProcess("Semantic Model '$SemanticModelName' in workspace '$WorkspaceId'", "Update")) {
-            $apiParams = @{
-                Headers = $script:FabricAuthContext.FabricHeaders
-                BaseURI = $apiEndpointURI
-                Method = 'Patch'
-                Body = $bodyJson
+    process {
+        try {
+            # Validate that at least one update parameter is provided
+            if (-not $SemanticModelName -and -not $SemanticModelDescription) {
+                Write-FabricLog -Message "At least one of SemanticModelName or SemanticModelDescription must be specified" -Level Error
+                return
             }
-            $response = Invoke-FabricAPIRequest @apiParams
 
-            # Return the API response
-            Write-FabricLog -Message "SemanticModel '$SemanticModelName' updated successfully!" -Level Host
-            return $response
+            Invoke-FabricAuthCheck -ThrowOnFailure
+
+            # Construct the API endpoint URI
+            $apiEndpointURI = New-FabricAPIUri -Resource 'workspaces' -WorkspaceId $WorkspaceId -Subresource 'semanticModels' -ItemId $SemanticModelId
+            Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
+
+            # Construct the request body
+            $body = @{}
+
+            if ($SemanticModelName) {
+                $body.displayName = $SemanticModelName
+            }
+
+            if ($SemanticModelDescription) {
+                $body.description = $SemanticModelDescription
+            }
+
+            # Convert the body to JSON
+            $bodyJson = $body | ConvertTo-Json
+            Write-FabricLog -Message "Request Body: $bodyJson" -Level Debug
+
+            # Make the API request
+            if ($PSCmdlet.ShouldProcess("Semantic Model '$SemanticModelName' in workspace '$WorkspaceId'", "Update")) {
+                $apiParams = @{
+                    Headers = $script:FabricAuthContext.FabricHeaders
+                    BaseURI = $apiEndpointURI
+                    Method = 'Patch'
+                    Body = $bodyJson
+                }
+                $response = Invoke-FabricAPIRequest @apiParams
+
+                # Return the API response
+                Write-FabricLog -Message "SemanticModel '$SemanticModelName' updated successfully!" -Level Host
+                return $response
+            }
         }
-    }
-    catch {
-        # Capture and log error details
-        $errorDetails = $_.Exception.Message
-        Write-FabricLog -Message "Failed to update SemanticModel. Error: $errorDetails" -Level Error
+        catch {
+            # Capture and log error details
+            $errorDetails = $_.Exception.Message
+            Write-FabricLog -Message "Failed to update SemanticModel. Error: $errorDetails" -Level Error
+        }
     }
 }

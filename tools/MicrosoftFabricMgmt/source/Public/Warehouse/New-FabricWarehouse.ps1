@@ -31,8 +31,9 @@
 function New-FabricWarehouse {
     [CmdletBinding(SupportsShouldProcess=$true, ConfirmImpact='Medium')]
     param (
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
         [ValidateNotNullOrEmpty()]
+        [Alias('id')]
         [string]$WorkspaceId,
 
         [Parameter(Mandatory = $true)]
@@ -49,6 +50,7 @@ function New-FabricWarehouse {
         [ValidateSet('Latin1_General_100_BIN2_UTF8', 'Latin1_General_100_CI_AS_KS_WS_SC_UTF8')]
         [string]$WarehouseCollation = 'Latin1_General_100_BIN2_UTF8'
     )
+    process {
     try {
         Invoke-FabricAuthCheck -ThrowOnFailure
 
@@ -96,5 +98,6 @@ function New-FabricWarehouse {
         # Capture and log error details
         $errorDetails = $_.Exception.Message
         Write-FabricLog -Message "Failed to create Warehouse. Error: $errorDetails" -Level Error
+    }
     }
 }

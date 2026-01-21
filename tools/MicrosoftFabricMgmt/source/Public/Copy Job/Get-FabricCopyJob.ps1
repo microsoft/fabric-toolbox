@@ -58,7 +58,7 @@ function Get-FabricCopyJob {
             Invoke-FabricAuthCheck -ThrowOnFailure
 
             # Construct the API endpoint URI
-            $apiEndpointURI = New-FabricAPIUri -Segments @('workspaces', $WorkspaceId, 'copyJobs')
+            $apiEndpointURI = New-FabricAPIUri -Resource 'workspaces' -WorkspaceId $WorkspaceId -Subresource 'copyJobs'
             Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
 
             # Make the API request
@@ -70,16 +70,12 @@ function Get-FabricCopyJob {
             $dataItems = Invoke-FabricAPIRequest @apiParams
 
             # Apply filtering
-            Select-FabricResource -InputObject $dataItems -Id $CopyJobId -Name $CopyJobName -ResourceType 'Copy Job'
+            Select-FabricResource -InputObject $dataItems -Id $CopyJobId -Name $CopyJobName -ResourceType 'Copy Job' -TypeName 'MicrosoftFabric.CopyJob'
         }
         catch {
             # Capture and log error details
             $errorDetails = $_.Exception.Message
             Write-FabricLog -Message "Failed to retrieve CopyJob for workspace '$WorkspaceId'. Error: $errorDetails" -Level Error
         }
-        $dataItems = Invoke-FabricAPIRequest @apiParams
-
-        # Apply filtering
-        Select-FabricResource -InputObject $dataItems -Id $CopyJobId -Name $CopyJobName -ResourceType 'Copy Job' -TypeName 'MicrosoftFabric.CopyJob'
     }
 }

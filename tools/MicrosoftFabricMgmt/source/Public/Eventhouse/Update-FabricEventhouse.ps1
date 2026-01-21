@@ -32,33 +32,45 @@
 function Update-FabricEventhouse {
     [CmdletBinding(SupportsShouldProcess = $true, ConfirmImpact = 'Medium')]
     param (
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
         [ValidateNotNullOrEmpty()]
         [string]$WorkspaceId,
 
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
         [ValidateNotNullOrEmpty()]
+        [Alias('id')]
         [string]$EventhouseId,
 
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $false, ValueFromPipelineByPropertyName = $true)]
         [ValidateNotNullOrEmpty()]
         [ValidatePattern('^[a-zA-Z0-9_ ]*$')]
+        [Alias('DisplayName')]
         [string]$EventhouseName,
 
-        [Parameter(Mandatory = $false)]
+        [Parameter(Mandatory = $false, ValueFromPipelineByPropertyName = $true)]
         [ValidateNotNullOrEmpty()]
+        [Alias('Description')]
         [string]$EventhouseDescription
     )
-    try {
+    process {
+        try {
+        # Validate that at least one update parameter is provided
+        if (-not $EventhouseName -and -not $EventhouseDescription) {
+            Write-FabricLog -Message "At least one of EventhouseName or EventhouseDescription must be specified" -Level Error
+            return
+        }
+
         # Validate authentication
         Invoke-FabricAuthCheck -ThrowOnFailure
 
         # Construct the API endpoint URI
-        $apiEndpointURI = New-FabricAPIUri -Resource 'workspaces' -WorkspaceId $WorkspaceId -Subresource "eventhouses/$EventhouseId"
+        $apiEndpointURI = New-FabricAPIUri -Resource 'workspaces' -WorkspaceId $WorkspaceId -Subresource 'eventhouses' -ItemId $EventhouseId
 
         # Construct the request body
-        $body = @{
-            displayName = $EventhouseName
+        $body = @{}
+
+        if ($EventhouseName) {
+            $body.displayName = $EventhouseName
         }
 
         if ($EventhouseDescription) {
@@ -83,9 +95,10 @@ function Update-FabricEventhouse {
             $response
         }
     }
-    catch {
-        # Capture and log error details
-        $errorDetails = $_.Exception.Message
-        Write-FabricLog -Message "Failed to update Eventhouse. Error: $errorDetails" -Level Error
+        catch {
+            # Capture and log error details
+            $errorDetails = $_.Exception.Message
+            Write-FabricLog -Message "Failed to update Eventhouse. Error: $errorDetails" -Level Error
+        }
     }
 }
