@@ -2834,6 +2834,551 @@ function Update-FabricCopyJobDefinition {
     }
 }
 #EndRegion '.\Public\Copy Job\Update-FabricCopyJobDefinition.ps1' 135
+#Region '.\Public\Cosmos DB Database\Get-FabricCosmosDBDatabase.ps1' -1
+
+<#
+.SYNOPSIS
+    Gets a Cosmos DB Database or lists all Cosmos DB Databases in a workspace.
+
+.DESCRIPTION
+    The Get-FabricCosmosDBDatabase cmdlet retrieves Cosmos DB Database items from a specified Microsoft Fabric workspace.
+    You can list all Cosmos DB Databases or filter by a specific CosmosDBDatabaseId or display name.
+
+.PARAMETER WorkspaceId
+    The GUID of the workspace containing the Cosmos DB Database resources.
+
+.PARAMETER CosmosDBDatabaseId
+    Optional. Returns only the Cosmos DB Database matching this resource Id.
+
+.PARAMETER CosmosDBDatabaseName
+    Optional. Returns only the Cosmos DB Database whose display name exactly matches this value.
+
+.PARAMETER Raw
+    Optional. When specified, returns the raw API response with resolved CapacityName and WorkspaceName
+    properties added directly to the output objects.
+
+.EXAMPLE
+    Get-FabricCosmosDBDatabase -WorkspaceId "12345678-1234-1234-1234-123456789012"
+
+    Lists all Cosmos DB Databases in the specified workspace.
+
+.EXAMPLE
+    Get-FabricCosmosDBDatabase -WorkspaceId "12345678-1234-1234-1234-123456789012" -CosmosDBDatabaseId "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee"
+
+    Returns the Cosmos DB Database with the specified Id.
+
+.NOTES
+    - Requires `$FabricAuthContext` global configuration.
+    - Calls `Invoke-FabricAuthCheck` to ensure token validity before making the API request.
+
+    Author: Tiago Balabuch, Jess Pomfret, Rob Sewell
+
+#>
+function Get-FabricCosmosDBDatabase {
+    [CmdletBinding()]
+    param (
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
+        [ValidateNotNullOrEmpty()]
+        [Alias('id')]
+        [string]$WorkspaceId,
+
+        [Parameter(Mandatory = $false)]
+        [ValidateNotNullOrEmpty()]
+        [string]$CosmosDBDatabaseId,
+
+        [Parameter(Mandatory = $false)]
+        [ValidateNotNullOrEmpty()]
+        [ValidatePattern('^[a-zA-Z0-9_ ]*$')]
+        [string]$CosmosDBDatabaseName,
+
+        [Parameter()]
+        [switch]$Raw
+    )
+
+    process {
+        try {
+            # Validate input parameters
+            if ($CosmosDBDatabaseId -and $CosmosDBDatabaseName) {
+                Write-FabricLog -Message "Specify only one parameter: either 'CosmosDBDatabaseId' or 'CosmosDBDatabaseName'." -Level Error
+                return
+            }
+
+            Invoke-FabricAuthCheck -ThrowOnFailure
+
+            # Construct the API endpoint URI
+            $apiEndpointURI = New-FabricAPIUri -Resource 'workspaces' -WorkspaceId $WorkspaceId -Subresource 'cosmosDbDatabases'
+            Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
+
+            # Make the API request
+            $apiParams = @{
+                BaseURI = $apiEndpointURI
+                Headers = $script:FabricAuthContext.FabricHeaders
+                Method  = 'Get'
+            }
+            $dataItems = Invoke-FabricAPIRequest @apiParams
+
+            # Apply filtering and formatting
+            Select-FabricResource -InputObject $dataItems -Id $CosmosDBDatabaseId -DisplayName $CosmosDBDatabaseName -ResourceType 'CosmosDBDatabase' -TypeName 'MicrosoftFabric.CosmosDBDatabase' -Raw:$Raw
+        }
+        catch {
+            $errorDetails = $_.Exception.Message
+            Write-FabricLog -Message "Failed to retrieve Cosmos DB Database for workspace '$WorkspaceId'. Error: $errorDetails" -Level Error
+        }
+    }
+}
+#EndRegion '.\Public\Cosmos DB Database\Get-FabricCosmosDBDatabase.ps1' 91
+#Region '.\Public\Cosmos DB Database\Get-FabricCosmosDBDatabaseDefinition.ps1' -1
+
+<#
+.SYNOPSIS
+    Gets the definition of a Cosmos DB Database from a Fabric workspace.
+
+.DESCRIPTION
+    The Get-FabricCosmosDBDatabaseDefinition cmdlet retrieves the public definition of a Cosmos DB Database
+    from a specified workspace. This API supports long running operations (LRO).
+
+.PARAMETER WorkspaceId
+    The GUID of the workspace containing the Cosmos DB Database.
+
+.PARAMETER CosmosDBDatabaseId
+    The GUID of the Cosmos DB Database whose definition to retrieve.
+
+.EXAMPLE
+    Get-FabricCosmosDBDatabaseDefinition -WorkspaceId "12345678-1234-1234-1234-123456789012" -CosmosDBDatabaseId "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee"
+
+    Retrieves the definition of the specified Cosmos DB Database.
+
+.NOTES
+    - Requires `$FabricAuthContext` global configuration.
+    - This API supports long running operations (LRO).
+
+    Author: Tiago Balabuch, Jess Pomfret, Rob Sewell
+
+#>
+function Get-FabricCosmosDBDatabaseDefinition {
+    [CmdletBinding()]
+    param (
+        [Parameter(Mandatory = $true)]
+        [ValidateNotNullOrEmpty()]
+        [string]$WorkspaceId,
+
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
+        [ValidateNotNullOrEmpty()]
+        [Alias('id')]
+        [string]$CosmosDBDatabaseId
+    )
+
+    process {
+        try {
+            Invoke-FabricAuthCheck -ThrowOnFailure
+
+            # Construct the API endpoint URI
+            $apiEndpointURI = New-FabricAPIUri -Resource 'workspaces' -WorkspaceId $WorkspaceId -Subresource 'cosmosDbDatabases' -ItemId "$CosmosDBDatabaseId/getDefinition"
+            Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
+
+            # Make the API request (POST to getDefinition)
+            $apiParams = @{
+                BaseURI = $apiEndpointURI
+                Headers = $script:FabricAuthContext.FabricHeaders
+                Method  = 'Post'
+            }
+            $response = Invoke-FabricAPIRequest @apiParams
+
+            if ($response) {
+                Write-FabricLog -Message "Cosmos DB Database definition retrieved successfully." -Level Debug
+                return $response
+            }
+        }
+        catch {
+            $errorDetails = $_.Exception.Message
+            Write-FabricLog -Message "Failed to retrieve Cosmos DB Database definition for '$CosmosDBDatabaseId'. Error: $errorDetails" -Level Error
+        }
+    }
+}
+#EndRegion '.\Public\Cosmos DB Database\Get-FabricCosmosDBDatabaseDefinition.ps1' 67
+#Region '.\Public\Cosmos DB Database\New-FabricCosmosDBDatabase.ps1' -1
+
+<#
+.SYNOPSIS
+    Creates a new Cosmos DB Database in a Fabric workspace.
+
+.DESCRIPTION
+    The New-FabricCosmosDBDatabase cmdlet creates a new Cosmos DB Database within a specified Fabric workspace.
+
+.PARAMETER WorkspaceId
+    The GUID of the workspace where the Cosmos DB Database will be created.
+
+.PARAMETER CosmosDBDatabaseName
+    The display name for the new Cosmos DB Database.
+
+.PARAMETER Description
+    Optional. A description for the Cosmos DB Database.
+
+.PARAMETER Definition
+    Optional. A hashtable containing the Cosmos DB Database definition with parts array.
+
+.EXAMPLE
+    New-FabricCosmosDBDatabase -WorkspaceId "12345678-1234-1234-1234-123456789012" -CosmosDBDatabaseName "MyCosmosDB"
+
+    Creates a new Cosmos DB Database with the specified name.
+
+.NOTES
+    - Requires `$FabricAuthContext` global configuration.
+    - This API supports long running operations (LRO).
+
+    Author: Tiago Balabuch, Jess Pomfret, Rob Sewell
+
+#>
+function New-FabricCosmosDBDatabase {
+    [CmdletBinding(SupportsShouldProcess)]
+    param (
+        [Parameter(Mandatory = $true)]
+        [ValidateNotNullOrEmpty()]
+        [string]$WorkspaceId,
+
+        [Parameter(Mandatory = $true)]
+        [ValidateNotNullOrEmpty()]
+        [ValidatePattern('^[a-zA-Z0-9_ ]*$')]
+        [string]$CosmosDBDatabaseName,
+
+        [Parameter(Mandatory = $false)]
+        [ValidateNotNullOrEmpty()]
+        [string]$Description,
+
+        [Parameter(Mandatory = $false)]
+        [ValidateNotNullOrEmpty()]
+        [hashtable]$Definition
+    )
+
+    process {
+        try {
+            Invoke-FabricAuthCheck -ThrowOnFailure
+
+            # Construct the API endpoint URI
+            $apiEndpointURI = New-FabricAPIUri -Resource 'workspaces' -WorkspaceId $WorkspaceId -Subresource 'cosmosDbDatabases'
+            Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
+
+            # Build request body
+            $body = @{
+                displayName = $CosmosDBDatabaseName
+            }
+
+            if ($Description) {
+                $body.description = $Description
+            }
+
+            if ($Definition) {
+                $body.definition = $Definition
+            }
+
+            $bodyJson = $body | ConvertTo-Json -Depth 10
+
+            if ($PSCmdlet.ShouldProcess("Cosmos DB Database '$CosmosDBDatabaseName'", "Create")) {
+                # Make the API request
+                $apiParams = @{
+                    BaseURI = $apiEndpointURI
+                    Headers = $script:FabricAuthContext.FabricHeaders
+                    Method  = 'Post'
+                    Body    = $bodyJson
+                }
+                $response = Invoke-FabricAPIRequest @apiParams
+
+                if ($response) {
+                    Write-FabricLog -Message "Cosmos DB Database '$CosmosDBDatabaseName' created successfully." -Level Debug
+                    return $response
+                }
+            }
+        }
+        catch {
+            $errorDetails = $_.Exception.Message
+            Write-FabricLog -Message "Failed to create Cosmos DB Database '$CosmosDBDatabaseName'. Error: $errorDetails" -Level Error
+        }
+    }
+}
+#EndRegion '.\Public\Cosmos DB Database\New-FabricCosmosDBDatabase.ps1' 98
+#Region '.\Public\Cosmos DB Database\Remove-FabricCosmosDBDatabase.ps1' -1
+
+<#
+.SYNOPSIS
+    Removes a Cosmos DB Database from a Fabric workspace.
+
+.DESCRIPTION
+    The Remove-FabricCosmosDBDatabase cmdlet deletes a Cosmos DB Database from a specified workspace.
+
+.PARAMETER WorkspaceId
+    The GUID of the workspace containing the Cosmos DB Database.
+
+.PARAMETER CosmosDBDatabaseId
+    The GUID of the Cosmos DB Database to delete.
+
+.EXAMPLE
+    Remove-FabricCosmosDBDatabase -WorkspaceId "12345678-1234-1234-1234-123456789012" -CosmosDBDatabaseId "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee"
+
+    Deletes the specified Cosmos DB Database from the workspace.
+
+.NOTES
+    - Requires `$FabricAuthContext` global configuration.
+
+    Author: Tiago Balabuch, Jess Pomfret, Rob Sewell
+
+#>
+function Remove-FabricCosmosDBDatabase {
+    [CmdletBinding(SupportsShouldProcess, ConfirmImpact = 'High')]
+    param (
+        [Parameter(Mandatory = $true)]
+        [ValidateNotNullOrEmpty()]
+        [string]$WorkspaceId,
+
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
+        [ValidateNotNullOrEmpty()]
+        [Alias('id')]
+        [string]$CosmosDBDatabaseId
+    )
+
+    process {
+        try {
+            Invoke-FabricAuthCheck -ThrowOnFailure
+
+            # Construct the API endpoint URI
+            $apiEndpointURI = New-FabricAPIUri -Resource 'workspaces' -WorkspaceId $WorkspaceId -Subresource 'cosmosDbDatabases' -ItemId $CosmosDBDatabaseId
+            Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
+
+            if ($PSCmdlet.ShouldProcess("Cosmos DB Database '$CosmosDBDatabaseId'", "Delete")) {
+                # Make the API request
+                $apiParams = @{
+                    BaseURI = $apiEndpointURI
+                    Headers = $script:FabricAuthContext.FabricHeaders
+                    Method  = 'Delete'
+                }
+                Invoke-FabricAPIRequest @apiParams
+
+                Write-FabricLog -Message "Cosmos DB Database '$CosmosDBDatabaseId' deleted successfully." -Level Debug
+            }
+        }
+        catch {
+            $errorDetails = $_.Exception.Message
+            Write-FabricLog -Message "Failed to delete Cosmos DB Database '$CosmosDBDatabaseId'. Error: $errorDetails" -Level Error
+        }
+    }
+}
+#EndRegion '.\Public\Cosmos DB Database\Remove-FabricCosmosDBDatabase.ps1' 64
+#Region '.\Public\Cosmos DB Database\Update-FabricCosmosDBDatabase.ps1' -1
+
+<#
+.SYNOPSIS
+    Updates an existing Cosmos DB Database in a Fabric workspace.
+
+.DESCRIPTION
+    The Update-FabricCosmosDBDatabase cmdlet updates the properties of a Cosmos DB Database in a specified workspace.
+
+.PARAMETER WorkspaceId
+    The GUID of the workspace containing the Cosmos DB Database.
+
+.PARAMETER CosmosDBDatabaseId
+    The GUID of the Cosmos DB Database to update.
+
+.PARAMETER CosmosDBDatabaseName
+    Optional. The new display name for the Cosmos DB Database.
+
+.PARAMETER Description
+    Optional. The new description for the Cosmos DB Database.
+
+.EXAMPLE
+    Update-FabricCosmosDBDatabase -WorkspaceId "12345678-1234-1234-1234-123456789012" -CosmosDBDatabaseId "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee" -CosmosDBDatabaseName "NewName"
+
+    Updates the display name of the specified Cosmos DB Database.
+
+.NOTES
+    - Requires `$FabricAuthContext` global configuration.
+
+    Author: Tiago Balabuch, Jess Pomfret, Rob Sewell
+
+#>
+function Update-FabricCosmosDBDatabase {
+    [CmdletBinding(SupportsShouldProcess)]
+    param (
+        [Parameter(Mandatory = $true)]
+        [ValidateNotNullOrEmpty()]
+        [string]$WorkspaceId,
+
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
+        [ValidateNotNullOrEmpty()]
+        [Alias('id')]
+        [string]$CosmosDBDatabaseId,
+
+        [Parameter(Mandatory = $false)]
+        [ValidateNotNullOrEmpty()]
+        [ValidatePattern('^[a-zA-Z0-9_ ]*$')]
+        [string]$CosmosDBDatabaseName,
+
+        [Parameter(Mandatory = $false)]
+        [ValidateNotNullOrEmpty()]
+        [string]$Description
+    )
+
+    process {
+        try {
+            if (-not $CosmosDBDatabaseName -and -not $Description) {
+                Write-FabricLog -Message "At least one of 'CosmosDBDatabaseName' or 'Description' must be specified." -Level Error
+                return
+            }
+
+            Invoke-FabricAuthCheck -ThrowOnFailure
+
+            # Construct the API endpoint URI
+            $apiEndpointURI = New-FabricAPIUri -Resource 'workspaces' -WorkspaceId $WorkspaceId -Subresource 'cosmosDbDatabases' -ItemId $CosmosDBDatabaseId
+            Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
+
+            # Build request body
+            $body = @{}
+
+            if ($CosmosDBDatabaseName) {
+                $body.displayName = $CosmosDBDatabaseName
+            }
+
+            if ($Description) {
+                $body.description = $Description
+            }
+
+            $bodyJson = $body | ConvertTo-Json -Depth 10
+
+            if ($PSCmdlet.ShouldProcess("Cosmos DB Database '$CosmosDBDatabaseId'", "Update")) {
+                # Make the API request
+                $apiParams = @{
+                    BaseURI = $apiEndpointURI
+                    Headers = $script:FabricAuthContext.FabricHeaders
+                    Method  = 'Patch'
+                    Body    = $bodyJson
+                }
+                $response = Invoke-FabricAPIRequest @apiParams
+
+                if ($response) {
+                    Write-FabricLog -Message "Cosmos DB Database '$CosmosDBDatabaseId' updated successfully." -Level Debug
+                    return $response
+                }
+            }
+        }
+        catch {
+            $errorDetails = $_.Exception.Message
+            Write-FabricLog -Message "Failed to update Cosmos DB Database '$CosmosDBDatabaseId'. Error: $errorDetails" -Level Error
+        }
+    }
+}
+#EndRegion '.\Public\Cosmos DB Database\Update-FabricCosmosDBDatabase.ps1' 101
+#Region '.\Public\Cosmos DB Database\Update-FabricCosmosDBDatabaseDefinition.ps1' -1
+
+<#
+.SYNOPSIS
+    Updates the definition of a Cosmos DB Database in a Fabric workspace.
+
+.DESCRIPTION
+    The Update-FabricCosmosDBDatabaseDefinition cmdlet overrides the definition for the specified Cosmos DB Database.
+    This API supports long running operations (LRO).
+
+.PARAMETER WorkspaceId
+    The GUID of the workspace containing the Cosmos DB Database.
+
+.PARAMETER CosmosDBDatabaseId
+    The GUID of the Cosmos DB Database whose definition to update.
+
+.PARAMETER Definition
+    The definition object containing the parts array to update.
+
+.PARAMETER UpdateMetadata
+    Optional. When set to true and the .platform file is provided as part of the definition,
+    the item's metadata is updated using the metadata in the .platform file.
+
+.EXAMPLE
+    $definition = @{
+        parts = @(
+            @{
+                path = "config.json"
+                payload = [Convert]::ToBase64String([System.Text.Encoding]::UTF8.GetBytes('{"config": "content"}'))
+                payloadType = "InlineBase64"
+            }
+        )
+    }
+    Update-FabricCosmosDBDatabaseDefinition -WorkspaceId "12345678-1234-1234-1234-123456789012" -CosmosDBDatabaseId "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee" -Definition $definition
+
+    Updates the definition of the specified Cosmos DB Database.
+
+.NOTES
+    - Requires `$FabricAuthContext` global configuration.
+    - This API supports long running operations (LRO).
+
+    Author: Tiago Balabuch, Jess Pomfret, Rob Sewell
+
+#>
+function Update-FabricCosmosDBDatabaseDefinition {
+    [CmdletBinding(SupportsShouldProcess)]
+    param (
+        [Parameter(Mandatory = $true)]
+        [ValidateNotNullOrEmpty()]
+        [string]$WorkspaceId,
+
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
+        [ValidateNotNullOrEmpty()]
+        [Alias('id')]
+        [string]$CosmosDBDatabaseId,
+
+        [Parameter(Mandatory = $true)]
+        [ValidateNotNullOrEmpty()]
+        [hashtable]$Definition,
+
+        [Parameter(Mandatory = $false)]
+        [switch]$UpdateMetadata
+    )
+
+    process {
+        try {
+            Invoke-FabricAuthCheck -ThrowOnFailure
+
+            # Build query parameters
+            $queryParams = @{}
+            if ($UpdateMetadata) {
+                $queryParams['updateMetadata'] = 'true'
+            }
+
+            # Construct the API endpoint URI
+            $uriParams = @{
+                Resource    = 'workspaces'
+                WorkspaceId = $WorkspaceId
+                Subresource = 'cosmosDbDatabases'
+                ItemId      = "$CosmosDBDatabaseId/updateDefinition"
+            }
+            if ($queryParams.Count -gt 0) {
+                $uriParams['QueryParameters'] = $queryParams
+            }
+            $apiEndpointURI = New-FabricAPIUri @uriParams
+            Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
+
+            # Build request body
+            $body = @{
+                definition = $Definition
+            }
+            $bodyJson = $body | ConvertTo-Json -Depth 10
+
+            if ($PSCmdlet.ShouldProcess("Cosmos DB Database definition '$CosmosDBDatabaseId'", "Update")) {
+                # Make the API request
+                $apiParams = @{
+                    BaseURI = $apiEndpointURI
+                    Headers = $script:FabricAuthContext.FabricHeaders
+                    Method  = 'Post'
+                    Body    = $bodyJson
+                }
+                $response = Invoke-FabricAPIRequest @apiParams
+
+                Write-FabricLog -Message "Cosmos DB Database definition updated successfully." -Level Debug
+                return $response
+            }
+        }
+        catch {
+            $errorDetails = $_.Exception.Message
+            Write-FabricLog -Message "Failed to update Cosmos DB Database definition for '$CosmosDBDatabaseId'. Error: $errorDetails" -Level Error
+        }
+    }
+}
+#EndRegion '.\Public\Cosmos DB Database\Update-FabricCosmosDBDatabaseDefinition.ps1' 112
 #Region '.\Public\Dashboard\Get-FabricDashboard.ps1' -1
 
 <#
@@ -3241,6 +3786,727 @@ function Update-FabricDataPipeline {
     }
 }
 #EndRegion '.\Public\Data Pipeline\Update-FabricDataPipeline.ps1' 92
+#Region '.\Public\Dataflow\Get-FabricDataflow.ps1' -1
+
+<#
+.SYNOPSIS
+    Gets a Dataflow or lists all Dataflows in a workspace.
+
+.DESCRIPTION
+    The Get-FabricDataflow cmdlet retrieves Dataflow items from a specified Microsoft Fabric workspace.
+    You can list all Dataflows or filter by a specific DataflowId or display name.
+
+.PARAMETER WorkspaceId
+    The GUID of the workspace containing the Dataflow resources.
+
+.PARAMETER DataflowId
+    Optional. Returns only the Dataflow matching this resource Id.
+
+.PARAMETER DataflowName
+    Optional. Returns only the Dataflow whose display name exactly matches this value.
+
+.PARAMETER Raw
+    Optional. When specified, returns the raw API response with resolved CapacityName and WorkspaceName
+    properties added directly to the output objects.
+
+.EXAMPLE
+    Get-FabricDataflow -WorkspaceId "12345678-1234-1234-1234-123456789012"
+
+    Lists all Dataflows in the specified workspace.
+
+.EXAMPLE
+    Get-FabricDataflow -WorkspaceId "12345678-1234-1234-1234-123456789012" -DataflowId "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee"
+
+    Returns the Dataflow with the specified Id.
+
+.EXAMPLE
+    Get-FabricDataflow -WorkspaceId "12345678-1234-1234-1234-123456789012" -DataflowName "SalesDataflow"
+
+    Returns the Dataflow with the specified name.
+
+.EXAMPLE
+    Get-FabricDataflow -WorkspaceId "12345678-1234-1234-1234-123456789012" -Raw | Export-Csv -Path "dataflows.csv"
+
+    Exports all Dataflows with resolved names to a CSV file.
+
+.NOTES
+    - Requires `$FabricAuthContext` global configuration.
+    - Calls `Invoke-FabricAuthCheck` to ensure token validity before making the API request.
+
+    Author: Tiago Balabuch, Jess Pomfret, Rob Sewell
+
+#>
+function Get-FabricDataflow {
+    [CmdletBinding()]
+    param (
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
+        [ValidateNotNullOrEmpty()]
+        [Alias('id')]
+        [string]$WorkspaceId,
+
+        [Parameter(Mandatory = $false)]
+        [ValidateNotNullOrEmpty()]
+        [string]$DataflowId,
+
+        [Parameter(Mandatory = $false)]
+        [ValidateNotNullOrEmpty()]
+        [ValidatePattern('^[a-zA-Z0-9_ ]*$')]
+        [string]$DataflowName,
+
+        [Parameter()]
+        [switch]$Raw
+    )
+
+    process {
+        try {
+            # Validate input parameters
+            if ($DataflowId -and $DataflowName) {
+                Write-FabricLog -Message "Specify only one parameter: either 'DataflowId' or 'DataflowName'." -Level Error
+                return
+            }
+
+            Invoke-FabricAuthCheck -ThrowOnFailure
+
+            # Construct the API endpoint URI
+            $apiEndpointURI = New-FabricAPIUri -Resource 'workspaces' -WorkspaceId $WorkspaceId -Subresource 'dataflows'
+            Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
+
+            # Make the API request
+            $apiParams = @{
+                BaseURI = $apiEndpointURI
+                Headers = $script:FabricAuthContext.FabricHeaders
+                Method  = 'Get'
+            }
+            $dataItems = Invoke-FabricAPIRequest @apiParams
+
+            # Apply filtering and formatting
+            Select-FabricResource -InputObject $dataItems -Id $DataflowId -DisplayName $DataflowName -ResourceType 'Dataflow' -TypeName 'MicrosoftFabric.Dataflow' -Raw:$Raw
+        }
+        catch {
+            $errorDetails = $_.Exception.Message
+            Write-FabricLog -Message "Failed to retrieve Dataflow for workspace '$WorkspaceId'. Error: $errorDetails" -Level Error
+        }
+    }
+}
+#EndRegion '.\Public\Dataflow\Get-FabricDataflow.ps1' 101
+#Region '.\Public\Dataflow\Get-FabricDataflowDefinition.ps1' -1
+
+<#
+.SYNOPSIS
+    Gets the definition of a Dataflow from a Microsoft Fabric workspace.
+
+.DESCRIPTION
+    This function retrieves the definition of a Dataflow. This is a long-running operation (LRO)
+    that returns the Dataflow's definition including its parts.
+
+.PARAMETER WorkspaceId
+    The unique identifier of the workspace containing the Dataflow.
+
+.PARAMETER DataflowId
+    The unique identifier of the Dataflow.
+
+.EXAMPLE
+    Get-FabricDataflowDefinition -WorkspaceId "12345678-1234-1234-1234-123456789012" -DataflowId "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee"
+
+    Gets the definition of the specified Dataflow.
+
+.NOTES
+    - This operation is a long-running operation (LRO).
+    - Requires `$FabricAuthContext` global configuration.
+    - Calls `Invoke-FabricAuthCheck` to ensure token validity.
+
+    Author: Tiago Balabuch, Jess Pomfret, Rob Sewell
+
+#>
+function Get-FabricDataflowDefinition {
+    [CmdletBinding()]
+    param (
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
+        [ValidateNotNullOrEmpty()]
+        [string]$WorkspaceId,
+
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
+        [ValidateNotNullOrEmpty()]
+        [Alias('id')]
+        [string]$DataflowId
+    )
+
+    process {
+        try {
+            Invoke-FabricAuthCheck -ThrowOnFailure
+
+            # Construct the API endpoint URI (POST to getDefinition)
+            $apiEndpointURI = New-FabricAPIUri -Resource 'workspaces' -WorkspaceId $WorkspaceId -Subresource 'dataflows' -ItemId "$DataflowId/getDefinition"
+            Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
+
+            # Make the API request
+            $apiParams = @{
+                BaseURI = $apiEndpointURI
+                Headers = $script:FabricAuthContext.FabricHeaders
+                Method  = 'Post'
+            }
+            $response = Invoke-FabricAPIRequest @apiParams
+
+            if (-not $response) {
+                Write-FabricLog -Message "No definition returned from the API." -Level Warning
+                return $null
+            }
+
+            Write-FabricLog -Message "Dataflow definition retrieved successfully." -Level Debug
+            return $response
+        }
+        catch {
+            $errorDetails = $_.Exception.Message
+            Write-FabricLog -Message "Failed to retrieve Dataflow definition. Error: $errorDetails" -Level Error
+        }
+    }
+}
+#EndRegion '.\Public\Dataflow\Get-FabricDataflowDefinition.ps1' 71
+#Region '.\Public\Dataflow\Get-FabricDataflowParameter.ps1' -1
+
+<#
+.SYNOPSIS
+    Gets the parameters of a Dataflow from a Microsoft Fabric workspace.
+
+.DESCRIPTION
+    This function retrieves the discoverable parameters from a Dataflow's definition.
+
+.PARAMETER WorkspaceId
+    The unique identifier of the workspace containing the Dataflow.
+
+.PARAMETER DataflowId
+    The unique identifier of the Dataflow.
+
+.EXAMPLE
+    Get-FabricDataflowParameter -WorkspaceId "12345678-1234-1234-1234-123456789012" -DataflowId "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee"
+
+    Gets the parameters of the specified Dataflow.
+
+.NOTES
+    - Requires `$FabricAuthContext` global configuration.
+    - Calls `Invoke-FabricAuthCheck` to ensure token validity.
+
+    Author: Tiago Balabuch, Jess Pomfret, Rob Sewell
+
+#>
+function Get-FabricDataflowParameter {
+    [CmdletBinding()]
+    param (
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
+        [ValidateNotNullOrEmpty()]
+        [string]$WorkspaceId,
+
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
+        [ValidateNotNullOrEmpty()]
+        [Alias('id')]
+        [string]$DataflowId
+    )
+
+    process {
+        try {
+            Invoke-FabricAuthCheck -ThrowOnFailure
+
+            # Construct the API endpoint URI
+            $apiEndpointURI = New-FabricAPIUri -Resource 'workspaces' -WorkspaceId $WorkspaceId -Subresource 'dataflows' -ItemId "$DataflowId/parameters"
+            Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
+
+            # Make the API request
+            $apiParams = @{
+                BaseURI = $apiEndpointURI
+                Headers = $script:FabricAuthContext.FabricHeaders
+                Method  = 'Get'
+            }
+            $response = Invoke-FabricAPIRequest @apiParams
+
+            if (-not $response) {
+                Write-FabricLog -Message "No parameters found for Dataflow." -Level Warning
+                return $null
+            }
+
+            Write-FabricLog -Message "Dataflow parameters retrieved successfully." -Level Debug
+            return $response
+        }
+        catch {
+            $errorDetails = $_.Exception.Message
+            Write-FabricLog -Message "Failed to retrieve Dataflow parameters. Error: $errorDetails" -Level Error
+        }
+    }
+}
+#EndRegion '.\Public\Dataflow\Get-FabricDataflowParameter.ps1' 69
+#Region '.\Public\Dataflow\New-FabricDataflow.ps1' -1
+
+<#
+.SYNOPSIS
+    Creates a new Dataflow in a specified Microsoft Fabric workspace.
+
+.DESCRIPTION
+    This function sends a POST request to the Microsoft Fabric API to create a new Dataflow
+    in the specified workspace. This is a long-running operation (LRO).
+
+.PARAMETER WorkspaceId
+    The unique identifier of the workspace where the Dataflow will be created.
+
+.PARAMETER DataflowName
+    The name of the Dataflow to be created.
+
+.PARAMETER DataflowDescription
+    An optional description for the Dataflow.
+
+.PARAMETER Definition
+    Optional. The definition of the Dataflow as a hashtable containing the parts.
+    Each part should have format, partPath, and payload properties.
+
+.EXAMPLE
+    New-FabricDataflow -WorkspaceId "12345678-1234-1234-1234-123456789012" -DataflowName "SalesDataflow"
+
+    Creates a new Dataflow named "SalesDataflow" in the specified workspace.
+
+.EXAMPLE
+    New-FabricDataflow -WorkspaceId "12345678-1234-1234-1234-123456789012" -DataflowName "SalesDataflow" -DataflowDescription "Sales data transformation"
+
+    Creates a new Dataflow with a description.
+
+.NOTES
+    - This operation is a long-running operation (LRO).
+    - Requires `$FabricAuthContext` global configuration.
+    - Calls `Invoke-FabricAuthCheck` to ensure token validity.
+
+    Author: Tiago Balabuch, Jess Pomfret, Rob Sewell
+
+#>
+function New-FabricDataflow {
+    [CmdletBinding(SupportsShouldProcess = $true, ConfirmImpact = 'Medium')]
+    param (
+        [Parameter(Mandatory = $true)]
+        [ValidateNotNullOrEmpty()]
+        [string]$WorkspaceId,
+
+        [Parameter(Mandatory = $true)]
+        [ValidateNotNullOrEmpty()]
+        [ValidatePattern('^[a-zA-Z0-9_ ]*$')]
+        [string]$DataflowName,
+
+        [Parameter(Mandatory = $false)]
+        [ValidateNotNullOrEmpty()]
+        [string]$DataflowDescription,
+
+        [Parameter(Mandatory = $false)]
+        [hashtable]$Definition
+    )
+
+    try {
+        Invoke-FabricAuthCheck -ThrowOnFailure
+
+        # Construct the API endpoint URI
+        $apiEndpointURI = New-FabricAPIUri -Resource 'workspaces' -WorkspaceId $WorkspaceId -Subresource 'dataflows'
+        Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
+
+        # Construct the request body
+        $body = @{
+            displayName = $DataflowName
+        }
+
+        if ($DataflowDescription) {
+            $body.description = $DataflowDescription
+        }
+
+        if ($Definition) {
+            $body.definition = $Definition
+        }
+
+        $bodyJson = $body | ConvertTo-Json -Depth 10
+        Write-FabricLog -Message "Request Body: $bodyJson" -Level Debug
+
+        # Make the API request
+        $apiParams = @{
+            BaseURI = $apiEndpointURI
+            Headers = $script:FabricAuthContext.FabricHeaders
+            Method  = 'Post'
+            Body    = $bodyJson
+        }
+
+        if ($PSCmdlet.ShouldProcess($DataflowName, "Create Dataflow in workspace '$WorkspaceId'")) {
+            $response = Invoke-FabricAPIRequest @apiParams
+            Write-FabricLog -Message "Dataflow '$DataflowName' created successfully!" -Level Host
+            return $response
+        }
+    }
+    catch {
+        $errorDetails = $_.Exception.Message
+        Write-FabricLog -Message "Failed to create Dataflow. Error: $errorDetails" -Level Error
+    }
+}
+#EndRegion '.\Public\Dataflow\New-FabricDataflow.ps1' 102
+#Region '.\Public\Dataflow\Remove-FabricDataflow.ps1' -1
+
+<#
+.SYNOPSIS
+    Removes a Dataflow from a Microsoft Fabric workspace.
+
+.DESCRIPTION
+    This function sends a DELETE request to the Microsoft Fabric API to remove a Dataflow
+    from the specified workspace.
+
+.PARAMETER WorkspaceId
+    The unique identifier of the workspace containing the Dataflow.
+
+.PARAMETER DataflowId
+    The unique identifier of the Dataflow to delete.
+
+.EXAMPLE
+    Remove-FabricDataflow -WorkspaceId "12345678-1234-1234-1234-123456789012" -DataflowId "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee"
+
+    Removes the specified Dataflow from the workspace.
+
+.EXAMPLE
+    Get-FabricDataflow -WorkspaceId "12345678-1234-1234-1234-123456789012" -DataflowName "OldDataflow" | Remove-FabricDataflow
+
+    Removes a Dataflow by piping it from Get-FabricDataflow.
+
+.NOTES
+    - Requires `$FabricAuthContext` global configuration.
+    - Calls `Invoke-FabricAuthCheck` to ensure token validity.
+
+    Author: Tiago Balabuch, Jess Pomfret, Rob Sewell
+
+#>
+function Remove-FabricDataflow {
+    [CmdletBinding(SupportsShouldProcess = $true, ConfirmImpact = 'High')]
+    param (
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
+        [ValidateNotNullOrEmpty()]
+        [string]$WorkspaceId,
+
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
+        [ValidateNotNullOrEmpty()]
+        [Alias('id')]
+        [string]$DataflowId
+    )
+
+    process {
+        try {
+            Invoke-FabricAuthCheck -ThrowOnFailure
+
+            # Construct the API endpoint URI
+            $apiEndpointURI = New-FabricAPIUri -Resource 'workspaces' -WorkspaceId $WorkspaceId -Subresource 'dataflows' -ItemId $DataflowId
+            Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
+
+            # Make the API request
+            $apiParams = @{
+                BaseURI = $apiEndpointURI
+                Headers = $script:FabricAuthContext.FabricHeaders
+                Method  = 'Delete'
+            }
+
+            if ($PSCmdlet.ShouldProcess($DataflowId, "Remove Dataflow from workspace '$WorkspaceId'")) {
+                $null = Invoke-FabricAPIRequest @apiParams
+                Write-FabricLog -Message "Dataflow '$DataflowId' removed successfully!" -Level Host
+            }
+        }
+        catch {
+            $errorDetails = $_.Exception.Message
+            Write-FabricLog -Message "Failed to remove Dataflow. Error: $errorDetails" -Level Error
+        }
+    }
+}
+#EndRegion '.\Public\Dataflow\Remove-FabricDataflow.ps1' 71
+#Region '.\Public\Dataflow\Start-FabricDataflowJob.ps1' -1
+
+<#
+.SYNOPSIS
+    Starts an on-demand job for a Dataflow in a Microsoft Fabric workspace.
+
+.DESCRIPTION
+    This function triggers an on-demand execution or apply changes job for a Dataflow.
+
+.PARAMETER WorkspaceId
+    The unique identifier of the workspace containing the Dataflow.
+
+.PARAMETER DataflowId
+    The unique identifier of the Dataflow.
+
+.PARAMETER JobType
+    The type of job to run. Valid values are 'Execute' or 'ApplyChanges'.
+
+.PARAMETER ExecutionData
+    Optional. Additional execution data for the job as a hashtable.
+    Only applicable for 'Execute' job type.
+
+.EXAMPLE
+    Start-FabricDataflowJob -WorkspaceId "12345678-1234-1234-1234-123456789012" -DataflowId "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee" -JobType Execute
+
+    Starts an Execute job for the specified Dataflow.
+
+.EXAMPLE
+    Start-FabricDataflowJob -WorkspaceId "12345678-1234-1234-1234-123456789012" -DataflowId "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee" -JobType ApplyChanges
+
+    Starts an ApplyChanges job for the specified Dataflow.
+
+.NOTES
+    - Requires `$FabricAuthContext` global configuration.
+    - Calls `Invoke-FabricAuthCheck` to ensure token validity.
+
+    Author: Tiago Balabuch, Jess Pomfret, Rob Sewell
+
+#>
+function Start-FabricDataflowJob {
+    [CmdletBinding(SupportsShouldProcess = $true, ConfirmImpact = 'Medium')]
+    param (
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
+        [ValidateNotNullOrEmpty()]
+        [string]$WorkspaceId,
+
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
+        [ValidateNotNullOrEmpty()]
+        [Alias('id')]
+        [string]$DataflowId,
+
+        [Parameter(Mandatory = $true)]
+        [ValidateSet('Execute', 'ApplyChanges')]
+        [string]$JobType,
+
+        [Parameter(Mandatory = $false)]
+        [hashtable]$ExecutionData
+    )
+
+    process {
+        try {
+            Invoke-FabricAuthCheck -ThrowOnFailure
+
+            # Construct the API endpoint URI
+            $apiEndpointURI = New-FabricAPIUri -Resource 'workspaces' -WorkspaceId $WorkspaceId -Subresource 'dataflows' -ItemId "$DataflowId/jobs/$JobType/instances"
+            Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
+
+            # Build request parameters
+            $apiParams = @{
+                BaseURI = $apiEndpointURI
+                Headers = $script:FabricAuthContext.FabricHeaders
+                Method  = 'Post'
+            }
+
+            # Add body for Execute job type if execution data provided
+            if ($JobType -eq 'Execute' -and $ExecutionData) {
+                $body = @{
+                    executionData = $ExecutionData
+                }
+                $apiParams.Body = $body | ConvertTo-Json -Depth 10
+                Write-FabricLog -Message "Request Body: $($apiParams.Body)" -Level Debug
+            }
+
+            if ($PSCmdlet.ShouldProcess($DataflowId, "Start $JobType job for Dataflow in workspace '$WorkspaceId'")) {
+                $response = Invoke-FabricAPIRequest @apiParams
+                Write-FabricLog -Message "Dataflow $JobType job started successfully!" -Level Host
+                return $response
+            }
+        }
+        catch {
+            $errorDetails = $_.Exception.Message
+            Write-FabricLog -Message "Failed to start Dataflow job. Error: $errorDetails" -Level Error
+        }
+    }
+}
+#EndRegion '.\Public\Dataflow\Start-FabricDataflowJob.ps1' 94
+#Region '.\Public\Dataflow\Update-FabricDataflow.ps1' -1
+
+<#
+.SYNOPSIS
+    Updates an existing Dataflow in a Microsoft Fabric workspace.
+
+.DESCRIPTION
+    This function sends a PATCH request to the Microsoft Fabric API to update a Dataflow's
+    display name and/or description.
+
+.PARAMETER WorkspaceId
+    The unique identifier of the workspace containing the Dataflow.
+
+.PARAMETER DataflowId
+    The unique identifier of the Dataflow to update.
+
+.PARAMETER DataflowName
+    Optional. The new display name for the Dataflow.
+
+.PARAMETER DataflowDescription
+    Optional. The new description for the Dataflow.
+
+.EXAMPLE
+    Update-FabricDataflow -WorkspaceId "12345678-1234-1234-1234-123456789012" -DataflowId "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee" -DataflowName "UpdatedName"
+
+    Updates the Dataflow's display name.
+
+.EXAMPLE
+    Update-FabricDataflow -WorkspaceId "12345678-1234-1234-1234-123456789012" -DataflowId "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee" -DataflowDescription "New description"
+
+    Updates the Dataflow's description.
+
+.NOTES
+    - Requires `$FabricAuthContext` global configuration.
+    - Calls `Invoke-FabricAuthCheck` to ensure token validity.
+
+    Author: Tiago Balabuch, Jess Pomfret, Rob Sewell
+
+#>
+function Update-FabricDataflow {
+    [CmdletBinding(SupportsShouldProcess = $true, ConfirmImpact = 'Medium')]
+    param (
+        [Parameter(Mandatory = $true)]
+        [ValidateNotNullOrEmpty()]
+        [string]$WorkspaceId,
+
+        [Parameter(Mandatory = $true)]
+        [ValidateNotNullOrEmpty()]
+        [Alias('id')]
+        [string]$DataflowId,
+
+        [Parameter(Mandatory = $false)]
+        [ValidateNotNullOrEmpty()]
+        [ValidatePattern('^[a-zA-Z0-9_ ]*$')]
+        [string]$DataflowName,
+
+        [Parameter(Mandatory = $false)]
+        [ValidateNotNullOrEmpty()]
+        [string]$DataflowDescription
+    )
+
+    try {
+        # Validate at least one update parameter is provided
+        if (-not $DataflowName -and -not $DataflowDescription) {
+            Write-FabricLog -Message "At least one of 'DataflowName' or 'DataflowDescription' must be provided." -Level Error
+            return
+        }
+
+        Invoke-FabricAuthCheck -ThrowOnFailure
+
+        # Construct the API endpoint URI
+        $apiEndpointURI = New-FabricAPIUri -Resource 'workspaces' -WorkspaceId $WorkspaceId -Subresource 'dataflows' -ItemId $DataflowId
+        Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
+
+        # Construct the request body
+        $body = @{}
+
+        if ($DataflowName) {
+            $body.displayName = $DataflowName
+        }
+
+        if ($DataflowDescription) {
+            $body.description = $DataflowDescription
+        }
+
+        $bodyJson = $body | ConvertTo-Json -Depth 10
+        Write-FabricLog -Message "Request Body: $bodyJson" -Level Debug
+
+        # Make the API request
+        $apiParams = @{
+            BaseURI = $apiEndpointURI
+            Headers = $script:FabricAuthContext.FabricHeaders
+            Method  = 'Patch'
+            Body    = $bodyJson
+        }
+
+        if ($PSCmdlet.ShouldProcess($DataflowId, "Update Dataflow in workspace '$WorkspaceId'")) {
+            $response = Invoke-FabricAPIRequest @apiParams
+            Write-FabricLog -Message "Dataflow '$DataflowId' updated successfully!" -Level Host
+            return $response
+        }
+    }
+    catch {
+        $errorDetails = $_.Exception.Message
+        Write-FabricLog -Message "Failed to update Dataflow. Error: $errorDetails" -Level Error
+    }
+}
+#EndRegion '.\Public\Dataflow\Update-FabricDataflow.ps1' 106
+#Region '.\Public\Dataflow\Update-FabricDataflowDefinition.ps1' -1
+
+<#
+.SYNOPSIS
+    Updates the definition of a Dataflow in a Microsoft Fabric workspace.
+
+.DESCRIPTION
+    This function sends a POST request to update the definition of a Dataflow.
+    This is a long-running operation (LRO).
+
+.PARAMETER WorkspaceId
+    The unique identifier of the workspace containing the Dataflow.
+
+.PARAMETER DataflowId
+    The unique identifier of the Dataflow.
+
+.PARAMETER Definition
+    The new definition for the Dataflow as a hashtable containing the parts.
+
+.EXAMPLE
+    $definition = @{
+        parts = @(
+            @{
+                path = "dataflow.json"
+                payload = "base64encodedcontent"
+                payloadType = "InlineBase64"
+            }
+        )
+    }
+    Update-FabricDataflowDefinition -WorkspaceId "12345678-1234-1234-1234-123456789012" -DataflowId "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee" -Definition $definition
+
+    Updates the Dataflow's definition.
+
+.NOTES
+    - This operation is a long-running operation (LRO).
+    - Requires `$FabricAuthContext` global configuration.
+    - Calls `Invoke-FabricAuthCheck` to ensure token validity.
+
+    Author: Tiago Balabuch, Jess Pomfret, Rob Sewell
+
+#>
+function Update-FabricDataflowDefinition {
+    [CmdletBinding(SupportsShouldProcess = $true, ConfirmImpact = 'Medium')]
+    param (
+        [Parameter(Mandatory = $true)]
+        [ValidateNotNullOrEmpty()]
+        [string]$WorkspaceId,
+
+        [Parameter(Mandatory = $true)]
+        [ValidateNotNullOrEmpty()]
+        [Alias('id')]
+        [string]$DataflowId,
+
+        [Parameter(Mandatory = $true)]
+        [ValidateNotNullOrEmpty()]
+        [hashtable]$Definition
+    )
+
+    try {
+        Invoke-FabricAuthCheck -ThrowOnFailure
+
+        # Construct the API endpoint URI
+        $apiEndpointURI = New-FabricAPIUri -Resource 'workspaces' -WorkspaceId $WorkspaceId -Subresource 'dataflows' -ItemId "$DataflowId/updateDefinition"
+        Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
+
+        # Construct the request body
+        $body = @{
+            definition = $Definition
+        }
+
+        $bodyJson = $body | ConvertTo-Json -Depth 10
+        Write-FabricLog -Message "Request Body: $bodyJson" -Level Debug
+
+        # Make the API request
+        $apiParams = @{
+            BaseURI = $apiEndpointURI
+            Headers = $script:FabricAuthContext.FabricHeaders
+            Method  = 'Post'
+            Body    = $bodyJson
+        }
+
+        if ($PSCmdlet.ShouldProcess($DataflowId, "Update Dataflow definition in workspace '$WorkspaceId'")) {
+            $response = Invoke-FabricAPIRequest @apiParams
+            Write-FabricLog -Message "Dataflow definition updated successfully!" -Level Host
+            return $response
+        }
+    }
+    catch {
+        $errorDetails = $_.Exception.Message
+        Write-FabricLog -Message "Failed to update Dataflow definition. Error: $errorDetails" -Level Error
+    }
+}
+#EndRegion '.\Public\Dataflow\Update-FabricDataflowDefinition.ps1' 91
 #Region '.\Public\Datamart\Get-FabricDatamart.ps1' -1
 
 <#
@@ -7960,6 +9226,846 @@ function Update-FabricFolder {
     }
 }
 #EndRegion '.\Public\Folder\Update-FabricFolder.ps1' 104
+#Region '.\Public\Graph Model\Get-FabricGraphModel.ps1' -1
+
+<#
+.SYNOPSIS
+    Gets a Graph Model or lists all Graph Models in a workspace.
+
+.DESCRIPTION
+    The Get-FabricGraphModel cmdlet retrieves Graph Model items from a specified Microsoft Fabric workspace.
+    You can list all Graph Models or filter by a specific GraphModelId or display name.
+
+.PARAMETER WorkspaceId
+    The GUID of the workspace containing the Graph Model resources.
+
+.PARAMETER GraphModelId
+    Optional. Returns only the Graph Model matching this resource Id.
+
+.PARAMETER GraphModelName
+    Optional. Returns only the Graph Model whose display name exactly matches this value.
+
+.PARAMETER Raw
+    Optional. When specified, returns the raw API response with resolved CapacityName and WorkspaceName
+    properties added directly to the output objects.
+
+.EXAMPLE
+    Get-FabricGraphModel -WorkspaceId "12345678-1234-1234-1234-123456789012"
+
+    Lists all Graph Models in the specified workspace.
+
+.EXAMPLE
+    Get-FabricGraphModel -WorkspaceId "12345678-1234-1234-1234-123456789012" -GraphModelId "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee"
+
+    Returns the Graph Model with the specified Id.
+
+.EXAMPLE
+    Get-FabricGraphModel -WorkspaceId "12345678-1234-1234-1234-123456789012" -GraphModelName "MyGraphModel"
+
+    Returns the Graph Model with the specified name.
+
+.EXAMPLE
+    Get-FabricGraphModel -WorkspaceId "12345678-1234-1234-1234-123456789012" -Raw | Export-Csv -Path "graphmodels.csv"
+
+    Exports all Graph Models with resolved names to a CSV file.
+
+.NOTES
+    - Requires `$FabricAuthContext` global configuration.
+    - Calls `Invoke-FabricAuthCheck` to ensure token validity before making the API request.
+
+    Author: Tiago Balabuch, Jess Pomfret, Rob Sewell
+
+#>
+function Get-FabricGraphModel {
+    [CmdletBinding()]
+    param (
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
+        [ValidateNotNullOrEmpty()]
+        [Alias('id')]
+        [string]$WorkspaceId,
+
+        [Parameter(Mandatory = $false)]
+        [ValidateNotNullOrEmpty()]
+        [string]$GraphModelId,
+
+        [Parameter(Mandatory = $false)]
+        [ValidateNotNullOrEmpty()]
+        [ValidatePattern('^[a-zA-Z0-9_ ]*$')]
+        [string]$GraphModelName,
+
+        [Parameter()]
+        [switch]$Raw
+    )
+
+    process {
+        try {
+            # Validate input parameters
+            if ($GraphModelId -and $GraphModelName) {
+                Write-FabricLog -Message "Specify only one parameter: either 'GraphModelId' or 'GraphModelName'." -Level Error
+                return
+            }
+
+            Invoke-FabricAuthCheck -ThrowOnFailure
+
+            # Construct the API endpoint URI
+            $apiEndpointURI = New-FabricAPIUri -Resource 'workspaces' -WorkspaceId $WorkspaceId -Subresource 'GraphModels'
+            Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
+
+            # Make the API request
+            $apiParams = @{
+                BaseURI = $apiEndpointURI
+                Headers = $script:FabricAuthContext.FabricHeaders
+                Method  = 'Get'
+            }
+            $dataItems = Invoke-FabricAPIRequest @apiParams
+
+            # Apply filtering and formatting
+            Select-FabricResource -InputObject $dataItems -Id $GraphModelId -DisplayName $GraphModelName -ResourceType 'GraphModel' -TypeName 'MicrosoftFabric.GraphModel' -Raw:$Raw
+        }
+        catch {
+            $errorDetails = $_.Exception.Message
+            Write-FabricLog -Message "Failed to retrieve Graph Model for workspace '$WorkspaceId'. Error: $errorDetails" -Level Error
+        }
+    }
+}
+#EndRegion '.\Public\Graph Model\Get-FabricGraphModel.ps1' 101
+#Region '.\Public\Graph Model\Get-FabricGraphModelDefinition.ps1' -1
+
+<#
+.SYNOPSIS
+    Gets the definition of a Graph Model from a Fabric workspace.
+
+.DESCRIPTION
+    The Get-FabricGraphModelDefinition cmdlet retrieves the public definition of a Graph Model
+    from a specified workspace. This API supports long running operations (LRO).
+
+.PARAMETER WorkspaceId
+    The GUID of the workspace containing the Graph Model.
+
+.PARAMETER GraphModelId
+    The GUID of the Graph Model whose definition to retrieve.
+
+.PARAMETER Format
+    Optional. The format of the Graph Model public definition.
+
+.EXAMPLE
+    Get-FabricGraphModelDefinition -WorkspaceId "12345678-1234-1234-1234-123456789012" -GraphModelId "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee"
+
+    Retrieves the definition of the specified Graph Model.
+
+.NOTES
+    - Requires `$FabricAuthContext` global configuration.
+    - This API supports long running operations (LRO).
+    - The sensitivity label is not a part of the definition.
+
+    Author: Tiago Balabuch, Jess Pomfret, Rob Sewell
+
+#>
+function Get-FabricGraphModelDefinition {
+    [CmdletBinding()]
+    param (
+        [Parameter(Mandatory = $true)]
+        [ValidateNotNullOrEmpty()]
+        [string]$WorkspaceId,
+
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
+        [ValidateNotNullOrEmpty()]
+        [Alias('id')]
+        [string]$GraphModelId,
+
+        [Parameter(Mandatory = $false)]
+        [ValidateNotNullOrEmpty()]
+        [string]$Format
+    )
+
+    process {
+        try {
+            Invoke-FabricAuthCheck -ThrowOnFailure
+
+            # Build query parameters if format specified
+            $queryParams = @{}
+            if ($Format) {
+                $queryParams['format'] = $Format
+            }
+
+            # Construct the API endpoint URI
+            $uriParams = @{
+                Resource    = 'workspaces'
+                WorkspaceId = $WorkspaceId
+                Subresource = 'GraphModels'
+                ItemId      = "$GraphModelId/getDefinition"
+            }
+            if ($queryParams.Count -gt 0) {
+                $uriParams['QueryParameters'] = $queryParams
+            }
+            $apiEndpointURI = New-FabricAPIUri @uriParams
+            Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
+
+            # Make the API request (POST to getDefinition)
+            $apiParams = @{
+                BaseURI = $apiEndpointURI
+                Headers = $script:FabricAuthContext.FabricHeaders
+                Method  = 'Post'
+            }
+            $response = Invoke-FabricAPIRequest @apiParams
+
+            if ($response) {
+                Write-FabricLog -Message "Graph Model definition retrieved successfully." -Level Debug
+                return $response
+            }
+        }
+        catch {
+            $errorDetails = $_.Exception.Message
+            Write-FabricLog -Message "Failed to retrieve Graph Model definition for '$GraphModelId'. Error: $errorDetails" -Level Error
+        }
+    }
+}
+#EndRegion '.\Public\Graph Model\Get-FabricGraphModelDefinition.ps1' 90
+#Region '.\Public\Graph Model\Get-FabricGraphModelQueryableType.ps1' -1
+
+<#
+.SYNOPSIS
+    Gets the queryable graph type for a Graph Model.
+
+.DESCRIPTION
+    The Get-FabricGraphModelQueryableType cmdlet retrieves the current queryable graph type
+    for the specified Graph Model. This is a beta API that requires the beta parameter.
+
+.PARAMETER WorkspaceId
+    The GUID of the workspace containing the Graph Model.
+
+.PARAMETER GraphModelId
+    The GUID of the Graph Model to get the queryable type for.
+
+.EXAMPLE
+    Get-FabricGraphModelQueryableType -WorkspaceId "12345678-1234-1234-1234-123456789012" -GraphModelId "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee"
+
+    Gets the queryable graph type for the specified Graph Model.
+
+.NOTES
+    - Requires `$FabricAuthContext` global configuration.
+    - This is a beta API.
+
+    Author: Tiago Balabuch, Jess Pomfret, Rob Sewell
+
+#>
+function Get-FabricGraphModelQueryableType {
+    [CmdletBinding()]
+    param (
+        [Parameter(Mandatory = $true)]
+        [ValidateNotNullOrEmpty()]
+        [string]$WorkspaceId,
+
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
+        [ValidateNotNullOrEmpty()]
+        [Alias('id')]
+        [string]$GraphModelId
+    )
+
+    process {
+        try {
+            Invoke-FabricAuthCheck -ThrowOnFailure
+
+            # Construct the API endpoint URI with beta query parameter
+            $uriParams = @{
+                Resource        = 'workspaces'
+                WorkspaceId     = $WorkspaceId
+                Subresource     = 'GraphModels'
+                ItemId          = "$GraphModelId/getQueryableGraphType"
+                QueryParameters = @{ beta = 'true' }
+            }
+            $apiEndpointURI = New-FabricAPIUri @uriParams
+            Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
+
+            # Make the API request
+            $apiParams = @{
+                BaseURI = $apiEndpointURI
+                Headers = $script:FabricAuthContext.FabricHeaders
+                Method  = 'Get'
+            }
+            $response = Invoke-FabricAPIRequest @apiParams
+
+            if ($response) {
+                Write-FabricLog -Message "Queryable graph type retrieved successfully." -Level Debug
+                return $response
+            }
+        }
+        catch {
+            $errorDetails = $_.Exception.Message
+            Write-FabricLog -Message "Failed to get queryable graph type for Graph Model '$GraphModelId'. Error: $errorDetails" -Level Error
+        }
+    }
+}
+#EndRegion '.\Public\Graph Model\Get-FabricGraphModelQueryableType.ps1' 74
+#Region '.\Public\Graph Model\Invoke-FabricGraphModelQuery.ps1' -1
+
+<#
+.SYNOPSIS
+    Executes a query on a Graph Model in a Fabric workspace.
+
+.DESCRIPTION
+    The Invoke-FabricGraphModelQuery cmdlet executes a GQL query on the specified Graph Model.
+    This is a beta API that requires the beta parameter to be set to true.
+
+.PARAMETER WorkspaceId
+    The GUID of the workspace containing the Graph Model.
+
+.PARAMETER GraphModelId
+    The GUID of the Graph Model to query.
+
+.PARAMETER Query
+    The GQL query string to execute.
+
+.EXAMPLE
+    Invoke-FabricGraphModelQuery -WorkspaceId "12345678-1234-1234-1234-123456789012" -GraphModelId "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee" -Query "MATCH (n) RETURN n LIMIT 10"
+
+    Executes a GQL query on the specified Graph Model.
+
+.NOTES
+    - Requires `$FabricAuthContext` global configuration.
+    - This is a beta API.
+    - Results are returned in JSON format. Refer to the MSFT GQL API documentation for result format.
+
+    Author: Tiago Balabuch, Jess Pomfret, Rob Sewell
+
+#>
+function Invoke-FabricGraphModelQuery {
+    [CmdletBinding()]
+    param (
+        [Parameter(Mandatory = $true)]
+        [ValidateNotNullOrEmpty()]
+        [string]$WorkspaceId,
+
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
+        [ValidateNotNullOrEmpty()]
+        [Alias('id')]
+        [string]$GraphModelId,
+
+        [Parameter(Mandatory = $true)]
+        [ValidateNotNullOrEmpty()]
+        [string]$Query
+    )
+
+    process {
+        try {
+            Invoke-FabricAuthCheck -ThrowOnFailure
+
+            # Construct the API endpoint URI with beta query parameter
+            $uriParams = @{
+                Resource        = 'workspaces'
+                WorkspaceId     = $WorkspaceId
+                Subresource     = 'GraphModels'
+                ItemId          = "$GraphModelId/executeQuery"
+                QueryParameters = @{ beta = 'true' }
+            }
+            $apiEndpointURI = New-FabricAPIUri @uriParams
+            Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
+
+            # Build request body
+            $body = @{
+                query = $Query
+            }
+            $bodyJson = $body | ConvertTo-Json -Depth 10
+
+            # Make the API request
+            $apiParams = @{
+                BaseURI = $apiEndpointURI
+                Headers = $script:FabricAuthContext.FabricHeaders
+                Method  = 'Post'
+                Body    = $bodyJson
+            }
+            $response = Invoke-FabricAPIRequest @apiParams
+
+            if ($response) {
+                Write-FabricLog -Message "Graph Model query executed successfully." -Level Debug
+                return $response
+            }
+        }
+        catch {
+            $errorDetails = $_.Exception.Message
+            Write-FabricLog -Message "Failed to execute query on Graph Model '$GraphModelId'. Error: $errorDetails" -Level Error
+        }
+    }
+}
+#EndRegion '.\Public\Graph Model\Invoke-FabricGraphModelQuery.ps1' 89
+#Region '.\Public\Graph Model\New-FabricGraphModel.ps1' -1
+
+<#
+.SYNOPSIS
+    Creates a new Graph Model in a Fabric workspace.
+
+.DESCRIPTION
+    The New-FabricGraphModel cmdlet creates a new Graph Model within a specified Fabric workspace.
+    The Graph Model can be created with just a name and optional description, or with a full definition.
+
+.PARAMETER WorkspaceId
+    The GUID of the workspace where the Graph Model will be created.
+
+.PARAMETER GraphModelName
+    The display name for the new Graph Model.
+
+.PARAMETER Description
+    Optional. A description for the Graph Model.
+
+.PARAMETER Definition
+    Optional. A hashtable containing the Graph Model definition with parts array.
+
+.EXAMPLE
+    New-FabricGraphModel -WorkspaceId "12345678-1234-1234-1234-123456789012" -GraphModelName "MyGraphModel"
+
+    Creates a new Graph Model with the specified name.
+
+.EXAMPLE
+    New-FabricGraphModel -WorkspaceId "12345678-1234-1234-1234-123456789012" -GraphModelName "MyGraphModel" -Description "My graph model for analytics"
+
+    Creates a new Graph Model with a name and description.
+
+.NOTES
+    - Requires `$FabricAuthContext` global configuration.
+    - This API supports long running operations (LRO).
+
+    Author: Tiago Balabuch, Jess Pomfret, Rob Sewell
+
+#>
+function New-FabricGraphModel {
+    [CmdletBinding(SupportsShouldProcess)]
+    param (
+        [Parameter(Mandatory = $true)]
+        [ValidateNotNullOrEmpty()]
+        [string]$WorkspaceId,
+
+        [Parameter(Mandatory = $true)]
+        [ValidateNotNullOrEmpty()]
+        [ValidatePattern('^[a-zA-Z0-9_ ]*$')]
+        [string]$GraphModelName,
+
+        [Parameter(Mandatory = $false)]
+        [ValidateNotNullOrEmpty()]
+        [string]$Description,
+
+        [Parameter(Mandatory = $false)]
+        [ValidateNotNullOrEmpty()]
+        [hashtable]$Definition
+    )
+
+    process {
+        try {
+            Invoke-FabricAuthCheck -ThrowOnFailure
+
+            # Construct the API endpoint URI
+            $apiEndpointURI = New-FabricAPIUri -Resource 'workspaces' -WorkspaceId $WorkspaceId -Subresource 'GraphModels'
+            Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
+
+            # Build request body
+            $body = @{
+                displayName = $GraphModelName
+            }
+
+            if ($Description) {
+                $body.description = $Description
+            }
+
+            if ($Definition) {
+                $body.definition = $Definition
+            }
+
+            $bodyJson = $body | ConvertTo-Json -Depth 10
+
+            if ($PSCmdlet.ShouldProcess("Graph Model '$GraphModelName'", "Create")) {
+                # Make the API request
+                $apiParams = @{
+                    BaseURI = $apiEndpointURI
+                    Headers = $script:FabricAuthContext.FabricHeaders
+                    Method  = 'Post'
+                    Body    = $bodyJson
+                }
+                $response = Invoke-FabricAPIRequest @apiParams
+
+                if ($response) {
+                    Write-FabricLog -Message "Graph Model '$GraphModelName' created successfully." -Level Debug
+                    return $response
+                }
+            }
+        }
+        catch {
+            $errorDetails = $_.Exception.Message
+            Write-FabricLog -Message "Failed to create Graph Model '$GraphModelName'. Error: $errorDetails" -Level Error
+        }
+    }
+}
+#EndRegion '.\Public\Graph Model\New-FabricGraphModel.ps1' 104
+#Region '.\Public\Graph Model\Remove-FabricGraphModel.ps1' -1
+
+<#
+.SYNOPSIS
+    Removes a Graph Model from a Fabric workspace.
+
+.DESCRIPTION
+    The Remove-FabricGraphModel cmdlet deletes a Graph Model from a specified workspace.
+    This is a destructive operation and cannot be undone.
+
+.PARAMETER WorkspaceId
+    The GUID of the workspace containing the Graph Model.
+
+.PARAMETER GraphModelId
+    The GUID of the Graph Model to delete.
+
+.EXAMPLE
+    Remove-FabricGraphModel -WorkspaceId "12345678-1234-1234-1234-123456789012" -GraphModelId "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee"
+
+    Deletes the specified Graph Model from the workspace.
+
+.EXAMPLE
+    Get-FabricGraphModel -WorkspaceId "12345678-1234-1234-1234-123456789012" -GraphModelName "OldGraphModel" | Remove-FabricGraphModel -WorkspaceId "12345678-1234-1234-1234-123456789012"
+
+    Deletes a Graph Model by piping from Get-FabricGraphModel.
+
+.NOTES
+    - Requires `$FabricAuthContext` global configuration.
+    - Calls `Invoke-FabricAuthCheck` to ensure token validity before making the API request.
+
+    Author: Tiago Balabuch, Jess Pomfret, Rob Sewell
+
+#>
+function Remove-FabricGraphModel {
+    [CmdletBinding(SupportsShouldProcess, ConfirmImpact = 'High')]
+    param (
+        [Parameter(Mandatory = $true)]
+        [ValidateNotNullOrEmpty()]
+        [string]$WorkspaceId,
+
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
+        [ValidateNotNullOrEmpty()]
+        [Alias('id')]
+        [string]$GraphModelId
+    )
+
+    process {
+        try {
+            Invoke-FabricAuthCheck -ThrowOnFailure
+
+            # Construct the API endpoint URI
+            $apiEndpointURI = New-FabricAPIUri -Resource 'workspaces' -WorkspaceId $WorkspaceId -Subresource 'GraphModels' -ItemId $GraphModelId
+            Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
+
+            if ($PSCmdlet.ShouldProcess("Graph Model '$GraphModelId'", "Delete")) {
+                # Make the API request
+                $apiParams = @{
+                    BaseURI = $apiEndpointURI
+                    Headers = $script:FabricAuthContext.FabricHeaders
+                    Method  = 'Delete'
+                }
+                Invoke-FabricAPIRequest @apiParams
+
+                Write-FabricLog -Message "Graph Model '$GraphModelId' deleted successfully." -Level Debug
+            }
+        }
+        catch {
+            $errorDetails = $_.Exception.Message
+            Write-FabricLog -Message "Failed to delete Graph Model '$GraphModelId'. Error: $errorDetails" -Level Error
+        }
+    }
+}
+#EndRegion '.\Public\Graph Model\Remove-FabricGraphModel.ps1' 71
+#Region '.\Public\Graph Model\Start-FabricGraphModelRefresh.ps1' -1
+
+<#
+.SYNOPSIS
+    Runs an on-demand RefreshGraph job for a Graph Model.
+
+.DESCRIPTION
+    The Start-FabricGraphModelRefresh cmdlet triggers an on-demand RefreshGraph job for the specified
+    Graph Model in a Fabric workspace.
+
+.PARAMETER WorkspaceId
+    The GUID of the workspace containing the Graph Model.
+
+.PARAMETER GraphModelId
+    The GUID of the Graph Model to refresh.
+
+.EXAMPLE
+    Start-FabricGraphModelRefresh -WorkspaceId "12345678-1234-1234-1234-123456789012" -GraphModelId "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee"
+
+    Starts a refresh job for the specified Graph Model.
+
+.EXAMPLE
+    Get-FabricGraphModel -WorkspaceId "12345678-1234-1234-1234-123456789012" -GraphModelName "MyGraphModel" | Start-FabricGraphModelRefresh -WorkspaceId "12345678-1234-1234-1234-123456789012"
+
+    Starts a refresh job by piping from Get-FabricGraphModel.
+
+.NOTES
+    - Requires `$FabricAuthContext` global configuration.
+    - This is an asynchronous operation that returns immediately.
+
+    Author: Tiago Balabuch, Jess Pomfret, Rob Sewell
+
+#>
+function Start-FabricGraphModelRefresh {
+    [CmdletBinding(SupportsShouldProcess)]
+    param (
+        [Parameter(Mandatory = $true)]
+        [ValidateNotNullOrEmpty()]
+        [string]$WorkspaceId,
+
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
+        [ValidateNotNullOrEmpty()]
+        [Alias('id')]
+        [string]$GraphModelId
+    )
+
+    process {
+        try {
+            Invoke-FabricAuthCheck -ThrowOnFailure
+
+            # Construct the API endpoint URI
+            $apiEndpointURI = New-FabricAPIUri -Resource 'workspaces' -WorkspaceId $WorkspaceId -Subresource 'GraphModels' -ItemId "$GraphModelId/jobs/RefreshGraph/instances"
+            Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
+
+            if ($PSCmdlet.ShouldProcess("Graph Model '$GraphModelId'", "Start RefreshGraph job")) {
+                # Make the API request
+                $apiParams = @{
+                    BaseURI = $apiEndpointURI
+                    Headers = $script:FabricAuthContext.FabricHeaders
+                    Method  = 'Post'
+                }
+                $response = Invoke-FabricAPIRequest @apiParams
+
+                Write-FabricLog -Message "RefreshGraph job started for Graph Model '$GraphModelId'." -Level Debug
+                return $response
+            }
+        }
+        catch {
+            $errorDetails = $_.Exception.Message
+            Write-FabricLog -Message "Failed to start RefreshGraph job for Graph Model '$GraphModelId'. Error: $errorDetails" -Level Error
+        }
+    }
+}
+#EndRegion '.\Public\Graph Model\Start-FabricGraphModelRefresh.ps1' 72
+#Region '.\Public\Graph Model\Update-FabricGraphModel.ps1' -1
+
+<#
+.SYNOPSIS
+    Updates an existing Graph Model in a Fabric workspace.
+
+.DESCRIPTION
+    The Update-FabricGraphModel cmdlet updates the properties of a Graph Model in a specified workspace.
+    You can update the display name and/or description.
+
+.PARAMETER WorkspaceId
+    The GUID of the workspace containing the Graph Model.
+
+.PARAMETER GraphModelId
+    The GUID of the Graph Model to update.
+
+.PARAMETER GraphModelName
+    Optional. The new display name for the Graph Model.
+
+.PARAMETER Description
+    Optional. The new description for the Graph Model.
+
+.EXAMPLE
+    Update-FabricGraphModel -WorkspaceId "12345678-1234-1234-1234-123456789012" -GraphModelId "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee" -GraphModelName "NewName"
+
+    Updates the display name of the specified Graph Model.
+
+.EXAMPLE
+    Update-FabricGraphModel -WorkspaceId "12345678-1234-1234-1234-123456789012" -GraphModelId "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee" -Description "Updated description"
+
+    Updates the description of the specified Graph Model.
+
+.NOTES
+    - Requires `$FabricAuthContext` global configuration.
+    - Calls `Invoke-FabricAuthCheck` to ensure token validity before making the API request.
+
+    Author: Tiago Balabuch, Jess Pomfret, Rob Sewell
+
+#>
+function Update-FabricGraphModel {
+    [CmdletBinding(SupportsShouldProcess)]
+    param (
+        [Parameter(Mandatory = $true)]
+        [ValidateNotNullOrEmpty()]
+        [string]$WorkspaceId,
+
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
+        [ValidateNotNullOrEmpty()]
+        [Alias('id')]
+        [string]$GraphModelId,
+
+        [Parameter(Mandatory = $false)]
+        [ValidateNotNullOrEmpty()]
+        [ValidatePattern('^[a-zA-Z0-9_ ]*$')]
+        [string]$GraphModelName,
+
+        [Parameter(Mandatory = $false)]
+        [ValidateNotNullOrEmpty()]
+        [string]$Description
+    )
+
+    process {
+        try {
+            if (-not $GraphModelName -and -not $Description) {
+                Write-FabricLog -Message "At least one of 'GraphModelName' or 'Description' must be specified." -Level Error
+                return
+            }
+
+            Invoke-FabricAuthCheck -ThrowOnFailure
+
+            # Construct the API endpoint URI
+            $apiEndpointURI = New-FabricAPIUri -Resource 'workspaces' -WorkspaceId $WorkspaceId -Subresource 'GraphModels' -ItemId $GraphModelId
+            Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
+
+            # Build request body
+            $body = @{}
+
+            if ($GraphModelName) {
+                $body.displayName = $GraphModelName
+            }
+
+            if ($Description) {
+                $body.description = $Description
+            }
+
+            $bodyJson = $body | ConvertTo-Json -Depth 10
+
+            if ($PSCmdlet.ShouldProcess("Graph Model '$GraphModelId'", "Update")) {
+                # Make the API request
+                $apiParams = @{
+                    BaseURI = $apiEndpointURI
+                    Headers = $script:FabricAuthContext.FabricHeaders
+                    Method  = 'Patch'
+                    Body    = $bodyJson
+                }
+                $response = Invoke-FabricAPIRequest @apiParams
+
+                if ($response) {
+                    Write-FabricLog -Message "Graph Model '$GraphModelId' updated successfully." -Level Debug
+                    return $response
+                }
+            }
+        }
+        catch {
+            $errorDetails = $_.Exception.Message
+            Write-FabricLog -Message "Failed to update Graph Model '$GraphModelId'. Error: $errorDetails" -Level Error
+        }
+    }
+}
+#EndRegion '.\Public\Graph Model\Update-FabricGraphModel.ps1' 108
+#Region '.\Public\Graph Model\Update-FabricGraphModelDefinition.ps1' -1
+
+<#
+.SYNOPSIS
+    Updates the definition of a Graph Model in a Fabric workspace.
+
+.DESCRIPTION
+    The Update-FabricGraphModelDefinition cmdlet overrides the definition for the specified Graph Model.
+    This API supports long running operations (LRO).
+
+.PARAMETER WorkspaceId
+    The GUID of the workspace containing the Graph Model.
+
+.PARAMETER GraphModelId
+    The GUID of the Graph Model whose definition to update.
+
+.PARAMETER Definition
+    The definition object containing the parts array to update.
+
+.PARAMETER UpdateMetadata
+    Optional. When set to true and the .platform file is provided as part of the definition,
+    the item's metadata is updated using the metadata in the .platform file.
+
+.EXAMPLE
+    $definition = @{
+        parts = @(
+            @{
+                path = "model.json"
+                payload = [Convert]::ToBase64String([System.Text.Encoding]::UTF8.GetBytes('{"model": "content"}'))
+                payloadType = "InlineBase64"
+            }
+        )
+    }
+    Update-FabricGraphModelDefinition -WorkspaceId "12345678-1234-1234-1234-123456789012" -GraphModelId "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee" -Definition $definition
+
+    Updates the definition of the specified Graph Model.
+
+.NOTES
+    - Requires `$FabricAuthContext` global configuration.
+    - This API supports long running operations (LRO).
+    - Updating the definition does not affect its sensitivity label.
+
+    Author: Tiago Balabuch, Jess Pomfret, Rob Sewell
+
+#>
+function Update-FabricGraphModelDefinition {
+    [CmdletBinding(SupportsShouldProcess)]
+    param (
+        [Parameter(Mandatory = $true)]
+        [ValidateNotNullOrEmpty()]
+        [string]$WorkspaceId,
+
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
+        [ValidateNotNullOrEmpty()]
+        [Alias('id')]
+        [string]$GraphModelId,
+
+        [Parameter(Mandatory = $true)]
+        [ValidateNotNullOrEmpty()]
+        [hashtable]$Definition,
+
+        [Parameter(Mandatory = $false)]
+        [switch]$UpdateMetadata
+    )
+
+    process {
+        try {
+            Invoke-FabricAuthCheck -ThrowOnFailure
+
+            # Build query parameters
+            $queryParams = @{}
+            if ($UpdateMetadata) {
+                $queryParams['updateMetadata'] = 'true'
+            }
+
+            # Construct the API endpoint URI
+            $uriParams = @{
+                Resource    = 'workspaces'
+                WorkspaceId = $WorkspaceId
+                Subresource = 'GraphModels'
+                ItemId      = "$GraphModelId/updateDefinition"
+            }
+            if ($queryParams.Count -gt 0) {
+                $uriParams['QueryParameters'] = $queryParams
+            }
+            $apiEndpointURI = New-FabricAPIUri @uriParams
+            Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
+
+            # Build request body
+            $body = @{
+                definition = $Definition
+            }
+            $bodyJson = $body | ConvertTo-Json -Depth 10
+
+            if ($PSCmdlet.ShouldProcess("Graph Model definition '$GraphModelId'", "Update")) {
+                # Make the API request
+                $apiParams = @{
+                    BaseURI = $apiEndpointURI
+                    Headers = $script:FabricAuthContext.FabricHeaders
+                    Method  = 'Post'
+                    Body    = $bodyJson
+                }
+                $response = Invoke-FabricAPIRequest @apiParams
+
+                Write-FabricLog -Message "Graph Model definition updated successfully." -Level Debug
+                return $response
+            }
+        }
+        catch {
+            $errorDetails = $_.Exception.Message
+            Write-FabricLog -Message "Failed to update Graph Model definition for '$GraphModelId'. Error: $errorDetails" -Level Error
+        }
+    }
+}
+#EndRegion '.\Public\Graph Model\Update-FabricGraphModelDefinition.ps1' 113
 #Region '.\Public\GraphQLApi\Get-FabricGraphQLApi.ps1' -1
 
 <#
@@ -18332,6 +20438,565 @@ function Remove-FabricSharingLinksBulk {
     }
 }
 #EndRegion '.\Public\Sharing Links\Remove-FabricSharingLinksBulk.ps1' 86
+#Region '.\Public\Snowflake Database\Get-FabricSnowflakeDatabase.ps1' -1
+
+<#
+.SYNOPSIS
+    Gets a Snowflake Database or lists all Snowflake Databases in a workspace.
+
+.DESCRIPTION
+    The Get-FabricSnowflakeDatabase cmdlet retrieves Snowflake Database items from a specified Microsoft Fabric workspace.
+    You can list all Snowflake Databases or filter by a specific SnowflakeDatabaseId or display name.
+
+.PARAMETER WorkspaceId
+    The GUID of the workspace containing the Snowflake Database resources.
+
+.PARAMETER SnowflakeDatabaseId
+    Optional. Returns only the Snowflake Database matching this resource Id.
+
+.PARAMETER SnowflakeDatabaseName
+    Optional. Returns only the Snowflake Database whose display name exactly matches this value.
+
+.PARAMETER Raw
+    Optional. When specified, returns the raw API response with resolved CapacityName and WorkspaceName
+    properties added directly to the output objects.
+
+.EXAMPLE
+    Get-FabricSnowflakeDatabase -WorkspaceId "12345678-1234-1234-1234-123456789012"
+
+    Lists all Snowflake Databases in the specified workspace.
+
+.EXAMPLE
+    Get-FabricSnowflakeDatabase -WorkspaceId "12345678-1234-1234-1234-123456789012" -SnowflakeDatabaseId "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee"
+
+    Returns the Snowflake Database with the specified Id.
+
+.EXAMPLE
+    Get-FabricSnowflakeDatabase -WorkspaceId "12345678-1234-1234-1234-123456789012" -SnowflakeDatabaseName "MySnowflakeDB"
+
+    Returns the Snowflake Database with the specified name.
+
+.NOTES
+    - Requires `$FabricAuthContext` global configuration.
+    - Calls `Invoke-FabricAuthCheck` to ensure token validity before making the API request.
+
+    Author: Tiago Balabuch, Jess Pomfret, Rob Sewell
+
+#>
+function Get-FabricSnowflakeDatabase {
+    [CmdletBinding()]
+    param (
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
+        [ValidateNotNullOrEmpty()]
+        [Alias('id')]
+        [string]$WorkspaceId,
+
+        [Parameter(Mandatory = $false)]
+        [ValidateNotNullOrEmpty()]
+        [string]$SnowflakeDatabaseId,
+
+        [Parameter(Mandatory = $false)]
+        [ValidateNotNullOrEmpty()]
+        [ValidatePattern('^[a-zA-Z0-9_ ]*$')]
+        [string]$SnowflakeDatabaseName,
+
+        [Parameter()]
+        [switch]$Raw
+    )
+
+    process {
+        try {
+            # Validate input parameters
+            if ($SnowflakeDatabaseId -and $SnowflakeDatabaseName) {
+                Write-FabricLog -Message "Specify only one parameter: either 'SnowflakeDatabaseId' or 'SnowflakeDatabaseName'." -Level Error
+                return
+            }
+
+            Invoke-FabricAuthCheck -ThrowOnFailure
+
+            # Construct the API endpoint URI
+            $apiEndpointURI = New-FabricAPIUri -Resource 'workspaces' -WorkspaceId $WorkspaceId -Subresource 'snowflakeDatabases'
+            Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
+
+            # Make the API request
+            $apiParams = @{
+                BaseURI = $apiEndpointURI
+                Headers = $script:FabricAuthContext.FabricHeaders
+                Method  = 'Get'
+            }
+            $dataItems = Invoke-FabricAPIRequest @apiParams
+
+            # Apply filtering and formatting
+            Select-FabricResource -InputObject $dataItems -Id $SnowflakeDatabaseId -DisplayName $SnowflakeDatabaseName -ResourceType 'SnowflakeDatabase' -TypeName 'MicrosoftFabric.SnowflakeDatabase' -Raw:$Raw
+        }
+        catch {
+            $errorDetails = $_.Exception.Message
+            Write-FabricLog -Message "Failed to retrieve Snowflake Database for workspace '$WorkspaceId'. Error: $errorDetails" -Level Error
+        }
+    }
+}
+#EndRegion '.\Public\Snowflake Database\Get-FabricSnowflakeDatabase.ps1' 96
+#Region '.\Public\Snowflake Database\Get-FabricSnowflakeDatabaseDefinition.ps1' -1
+
+<#
+.SYNOPSIS
+    Gets the definition of a Snowflake Database from a Fabric workspace.
+
+.DESCRIPTION
+    The Get-FabricSnowflakeDatabaseDefinition cmdlet retrieves the public definition of a Snowflake Database
+    from a specified workspace. This API supports long running operations (LRO).
+
+.PARAMETER WorkspaceId
+    The GUID of the workspace containing the Snowflake Database.
+
+.PARAMETER SnowflakeDatabaseId
+    The GUID of the Snowflake Database whose definition to retrieve.
+
+.EXAMPLE
+    Get-FabricSnowflakeDatabaseDefinition -WorkspaceId "12345678-1234-1234-1234-123456789012" -SnowflakeDatabaseId "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee"
+
+    Retrieves the definition of the specified Snowflake Database.
+
+.NOTES
+    - Requires `$FabricAuthContext` global configuration.
+    - This API supports long running operations (LRO).
+
+    Author: Tiago Balabuch, Jess Pomfret, Rob Sewell
+
+#>
+function Get-FabricSnowflakeDatabaseDefinition {
+    [CmdletBinding()]
+    param (
+        [Parameter(Mandatory = $true)]
+        [ValidateNotNullOrEmpty()]
+        [string]$WorkspaceId,
+
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
+        [ValidateNotNullOrEmpty()]
+        [Alias('id')]
+        [string]$SnowflakeDatabaseId
+    )
+
+    process {
+        try {
+            Invoke-FabricAuthCheck -ThrowOnFailure
+
+            # Construct the API endpoint URI
+            $apiEndpointURI = New-FabricAPIUri -Resource 'workspaces' -WorkspaceId $WorkspaceId -Subresource 'snowflakeDatabases' -ItemId "$SnowflakeDatabaseId/getDefinition"
+            Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
+
+            # Make the API request (POST to getDefinition)
+            $apiParams = @{
+                BaseURI = $apiEndpointURI
+                Headers = $script:FabricAuthContext.FabricHeaders
+                Method  = 'Post'
+            }
+            $response = Invoke-FabricAPIRequest @apiParams
+
+            if ($response) {
+                Write-FabricLog -Message "Snowflake Database definition retrieved successfully." -Level Debug
+                return $response
+            }
+        }
+        catch {
+            $errorDetails = $_.Exception.Message
+            Write-FabricLog -Message "Failed to retrieve Snowflake Database definition for '$SnowflakeDatabaseId'. Error: $errorDetails" -Level Error
+        }
+    }
+}
+#EndRegion '.\Public\Snowflake Database\Get-FabricSnowflakeDatabaseDefinition.ps1' 67
+#Region '.\Public\Snowflake Database\New-FabricSnowflakeDatabase.ps1' -1
+
+<#
+.SYNOPSIS
+    Creates a new Snowflake Database in a Fabric workspace.
+
+.DESCRIPTION
+    The New-FabricSnowflakeDatabase cmdlet creates a new Snowflake Database within a specified Fabric workspace.
+    The Snowflake Database can be created with just a name and optional description, or with a full definition.
+
+.PARAMETER WorkspaceId
+    The GUID of the workspace where the Snowflake Database will be created.
+
+.PARAMETER SnowflakeDatabaseName
+    The display name for the new Snowflake Database.
+
+.PARAMETER Description
+    Optional. A description for the Snowflake Database.
+
+.PARAMETER CreationPayload
+    Optional. A hashtable containing the creation payload for the Snowflake Database.
+
+.PARAMETER Definition
+    Optional. A hashtable containing the Snowflake Database definition with parts array.
+
+.EXAMPLE
+    New-FabricSnowflakeDatabase -WorkspaceId "12345678-1234-1234-1234-123456789012" -SnowflakeDatabaseName "MySnowflakeDB"
+
+    Creates a new Snowflake Database with the specified name.
+
+.EXAMPLE
+    New-FabricSnowflakeDatabase -WorkspaceId "12345678-1234-1234-1234-123456789012" -SnowflakeDatabaseName "MySnowflakeDB" -Description "My Snowflake database"
+
+    Creates a new Snowflake Database with a name and description.
+
+.NOTES
+    - Requires `$FabricAuthContext` global configuration.
+    - This API supports long running operations (LRO).
+
+    Author: Tiago Balabuch, Jess Pomfret, Rob Sewell
+
+#>
+function New-FabricSnowflakeDatabase {
+    [CmdletBinding(SupportsShouldProcess)]
+    param (
+        [Parameter(Mandatory = $true)]
+        [ValidateNotNullOrEmpty()]
+        [string]$WorkspaceId,
+
+        [Parameter(Mandatory = $true)]
+        [ValidateNotNullOrEmpty()]
+        [ValidatePattern('^[a-zA-Z0-9_ ]*$')]
+        [string]$SnowflakeDatabaseName,
+
+        [Parameter(Mandatory = $false)]
+        [ValidateNotNullOrEmpty()]
+        [string]$Description,
+
+        [Parameter(Mandatory = $false)]
+        [ValidateNotNullOrEmpty()]
+        [hashtable]$CreationPayload,
+
+        [Parameter(Mandatory = $false)]
+        [ValidateNotNullOrEmpty()]
+        [hashtable]$Definition
+    )
+
+    process {
+        try {
+            Invoke-FabricAuthCheck -ThrowOnFailure
+
+            # Construct the API endpoint URI
+            $apiEndpointURI = New-FabricAPIUri -Resource 'workspaces' -WorkspaceId $WorkspaceId -Subresource 'snowflakeDatabases'
+            Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
+
+            # Build request body
+            $body = @{
+                displayName = $SnowflakeDatabaseName
+            }
+
+            if ($Description) {
+                $body.description = $Description
+            }
+
+            if ($CreationPayload) {
+                $body.creationPayload = $CreationPayload
+            }
+
+            if ($Definition) {
+                $body.definition = $Definition
+            }
+
+            $bodyJson = $body | ConvertTo-Json -Depth 10
+
+            if ($PSCmdlet.ShouldProcess("Snowflake Database '$SnowflakeDatabaseName'", "Create")) {
+                # Make the API request
+                $apiParams = @{
+                    BaseURI = $apiEndpointURI
+                    Headers = $script:FabricAuthContext.FabricHeaders
+                    Method  = 'Post'
+                    Body    = $bodyJson
+                }
+                $response = Invoke-FabricAPIRequest @apiParams
+
+                if ($response) {
+                    Write-FabricLog -Message "Snowflake Database '$SnowflakeDatabaseName' created successfully." -Level Debug
+                    return $response
+                }
+            }
+        }
+        catch {
+            $errorDetails = $_.Exception.Message
+            Write-FabricLog -Message "Failed to create Snowflake Database '$SnowflakeDatabaseName'. Error: $errorDetails" -Level Error
+        }
+    }
+}
+#EndRegion '.\Public\Snowflake Database\New-FabricSnowflakeDatabase.ps1' 115
+#Region '.\Public\Snowflake Database\Remove-FabricSnowflakeDatabase.ps1' -1
+
+<#
+.SYNOPSIS
+    Removes a Snowflake Database from a Fabric workspace.
+
+.DESCRIPTION
+    The Remove-FabricSnowflakeDatabase cmdlet deletes a Snowflake Database from a specified workspace.
+    This is a destructive operation and cannot be undone.
+
+.PARAMETER WorkspaceId
+    The GUID of the workspace containing the Snowflake Database.
+
+.PARAMETER SnowflakeDatabaseId
+    The GUID of the Snowflake Database to delete.
+
+.EXAMPLE
+    Remove-FabricSnowflakeDatabase -WorkspaceId "12345678-1234-1234-1234-123456789012" -SnowflakeDatabaseId "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee"
+
+    Deletes the specified Snowflake Database from the workspace.
+
+.EXAMPLE
+    Get-FabricSnowflakeDatabase -WorkspaceId "12345678-1234-1234-1234-123456789012" -SnowflakeDatabaseName "OldDB" | Remove-FabricSnowflakeDatabase -WorkspaceId "12345678-1234-1234-1234-123456789012"
+
+    Deletes a Snowflake Database by piping from Get-FabricSnowflakeDatabase.
+
+.NOTES
+    - Requires `$FabricAuthContext` global configuration.
+    - Calls `Invoke-FabricAuthCheck` to ensure token validity before making the API request.
+
+    Author: Tiago Balabuch, Jess Pomfret, Rob Sewell
+
+#>
+function Remove-FabricSnowflakeDatabase {
+    [CmdletBinding(SupportsShouldProcess, ConfirmImpact = 'High')]
+    param (
+        [Parameter(Mandatory = $true)]
+        [ValidateNotNullOrEmpty()]
+        [string]$WorkspaceId,
+
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
+        [ValidateNotNullOrEmpty()]
+        [Alias('id')]
+        [string]$SnowflakeDatabaseId
+    )
+
+    process {
+        try {
+            Invoke-FabricAuthCheck -ThrowOnFailure
+
+            # Construct the API endpoint URI
+            $apiEndpointURI = New-FabricAPIUri -Resource 'workspaces' -WorkspaceId $WorkspaceId -Subresource 'snowflakeDatabases' -ItemId $SnowflakeDatabaseId
+            Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
+
+            if ($PSCmdlet.ShouldProcess("Snowflake Database '$SnowflakeDatabaseId'", "Delete")) {
+                # Make the API request
+                $apiParams = @{
+                    BaseURI = $apiEndpointURI
+                    Headers = $script:FabricAuthContext.FabricHeaders
+                    Method  = 'Delete'
+                }
+                Invoke-FabricAPIRequest @apiParams
+
+                Write-FabricLog -Message "Snowflake Database '$SnowflakeDatabaseId' deleted successfully." -Level Debug
+            }
+        }
+        catch {
+            $errorDetails = $_.Exception.Message
+            Write-FabricLog -Message "Failed to delete Snowflake Database '$SnowflakeDatabaseId'. Error: $errorDetails" -Level Error
+        }
+    }
+}
+#EndRegion '.\Public\Snowflake Database\Remove-FabricSnowflakeDatabase.ps1' 71
+#Region '.\Public\Snowflake Database\Update-FabricSnowflakeDatabase.ps1' -1
+
+<#
+.SYNOPSIS
+    Updates an existing Snowflake Database in a Fabric workspace.
+
+.DESCRIPTION
+    The Update-FabricSnowflakeDatabase cmdlet updates the properties of a Snowflake Database in a specified workspace.
+    You can update the display name and/or description.
+
+.PARAMETER WorkspaceId
+    The GUID of the workspace containing the Snowflake Database.
+
+.PARAMETER SnowflakeDatabaseId
+    The GUID of the Snowflake Database to update.
+
+.PARAMETER SnowflakeDatabaseName
+    Optional. The new display name for the Snowflake Database.
+
+.PARAMETER Description
+    Optional. The new description for the Snowflake Database.
+
+.EXAMPLE
+    Update-FabricSnowflakeDatabase -WorkspaceId "12345678-1234-1234-1234-123456789012" -SnowflakeDatabaseId "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee" -SnowflakeDatabaseName "NewName"
+
+    Updates the display name of the specified Snowflake Database.
+
+.EXAMPLE
+    Update-FabricSnowflakeDatabase -WorkspaceId "12345678-1234-1234-1234-123456789012" -SnowflakeDatabaseId "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee" -Description "Updated description"
+
+    Updates the description of the specified Snowflake Database.
+
+.NOTES
+    - Requires `$FabricAuthContext` global configuration.
+    - Calls `Invoke-FabricAuthCheck` to ensure token validity before making the API request.
+
+    Author: Tiago Balabuch, Jess Pomfret, Rob Sewell
+
+#>
+function Update-FabricSnowflakeDatabase {
+    [CmdletBinding(SupportsShouldProcess)]
+    param (
+        [Parameter(Mandatory = $true)]
+        [ValidateNotNullOrEmpty()]
+        [string]$WorkspaceId,
+
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
+        [ValidateNotNullOrEmpty()]
+        [Alias('id')]
+        [string]$SnowflakeDatabaseId,
+
+        [Parameter(Mandatory = $false)]
+        [ValidateNotNullOrEmpty()]
+        [ValidatePattern('^[a-zA-Z0-9_ ]*$')]
+        [string]$SnowflakeDatabaseName,
+
+        [Parameter(Mandatory = $false)]
+        [ValidateNotNullOrEmpty()]
+        [string]$Description
+    )
+
+    process {
+        try {
+            if (-not $SnowflakeDatabaseName -and -not $Description) {
+                Write-FabricLog -Message "At least one of 'SnowflakeDatabaseName' or 'Description' must be specified." -Level Error
+                return
+            }
+
+            Invoke-FabricAuthCheck -ThrowOnFailure
+
+            # Construct the API endpoint URI
+            $apiEndpointURI = New-FabricAPIUri -Resource 'workspaces' -WorkspaceId $WorkspaceId -Subresource 'snowflakeDatabases' -ItemId $SnowflakeDatabaseId
+            Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
+
+            # Build request body
+            $body = @{}
+
+            if ($SnowflakeDatabaseName) {
+                $body.displayName = $SnowflakeDatabaseName
+            }
+
+            if ($Description) {
+                $body.description = $Description
+            }
+
+            $bodyJson = $body | ConvertTo-Json -Depth 10
+
+            if ($PSCmdlet.ShouldProcess("Snowflake Database '$SnowflakeDatabaseId'", "Update")) {
+                # Make the API request
+                $apiParams = @{
+                    BaseURI = $apiEndpointURI
+                    Headers = $script:FabricAuthContext.FabricHeaders
+                    Method  = 'Patch'
+                    Body    = $bodyJson
+                }
+                $response = Invoke-FabricAPIRequest @apiParams
+
+                if ($response) {
+                    Write-FabricLog -Message "Snowflake Database '$SnowflakeDatabaseId' updated successfully." -Level Debug
+                    return $response
+                }
+            }
+        }
+        catch {
+            $errorDetails = $_.Exception.Message
+            Write-FabricLog -Message "Failed to update Snowflake Database '$SnowflakeDatabaseId'. Error: $errorDetails" -Level Error
+        }
+    }
+}
+#EndRegion '.\Public\Snowflake Database\Update-FabricSnowflakeDatabase.ps1' 108
+#Region '.\Public\Snowflake Database\Update-FabricSnowflakeDatabaseDefinition.ps1' -1
+
+<#
+.SYNOPSIS
+    Updates the definition of a Snowflake Database in a Fabric workspace.
+
+.DESCRIPTION
+    The Update-FabricSnowflakeDatabaseDefinition cmdlet overrides the definition for the specified Snowflake Database.
+    This API supports long running operations (LRO).
+
+.PARAMETER WorkspaceId
+    The GUID of the workspace containing the Snowflake Database.
+
+.PARAMETER SnowflakeDatabaseId
+    The GUID of the Snowflake Database whose definition to update.
+
+.PARAMETER Definition
+    The definition object containing the parts array to update.
+
+.EXAMPLE
+    $definition = @{
+        parts = @(
+            @{
+                path = "config.json"
+                payload = [Convert]::ToBase64String([System.Text.Encoding]::UTF8.GetBytes('{"config": "content"}'))
+                payloadType = "InlineBase64"
+            }
+        )
+    }
+    Update-FabricSnowflakeDatabaseDefinition -WorkspaceId "12345678-1234-1234-1234-123456789012" -SnowflakeDatabaseId "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee" -Definition $definition
+
+    Updates the definition of the specified Snowflake Database.
+
+.NOTES
+    - Requires `$FabricAuthContext` global configuration.
+    - This API supports long running operations (LRO).
+
+    Author: Tiago Balabuch, Jess Pomfret, Rob Sewell
+
+#>
+function Update-FabricSnowflakeDatabaseDefinition {
+    [CmdletBinding(SupportsShouldProcess)]
+    param (
+        [Parameter(Mandatory = $true)]
+        [ValidateNotNullOrEmpty()]
+        [string]$WorkspaceId,
+
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
+        [ValidateNotNullOrEmpty()]
+        [Alias('id')]
+        [string]$SnowflakeDatabaseId,
+
+        [Parameter(Mandatory = $true)]
+        [ValidateNotNullOrEmpty()]
+        [hashtable]$Definition
+    )
+
+    process {
+        try {
+            Invoke-FabricAuthCheck -ThrowOnFailure
+
+            # Construct the API endpoint URI
+            $apiEndpointURI = New-FabricAPIUri -Resource 'workspaces' -WorkspaceId $WorkspaceId -Subresource 'snowflakeDatabases' -ItemId "$SnowflakeDatabaseId/updateDefinition"
+            Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
+
+            # Build request body
+            $body = @{
+                definition = $Definition
+            }
+            $bodyJson = $body | ConvertTo-Json -Depth 10
+
+            if ($PSCmdlet.ShouldProcess("Snowflake Database definition '$SnowflakeDatabaseId'", "Update")) {
+                # Make the API request
+                $apiParams = @{
+                    BaseURI = $apiEndpointURI
+                    Headers = $script:FabricAuthContext.FabricHeaders
+                    Method  = 'Post'
+                    Body    = $bodyJson
+                }
+                $response = Invoke-FabricAPIRequest @apiParams
+
+                Write-FabricLog -Message "Snowflake Database definition updated successfully." -Level Debug
+                return $response
+            }
+        }
+        catch {
+            $errorDetails = $_.Exception.Message
+            Write-FabricLog -Message "Failed to update Snowflake Database definition for '$SnowflakeDatabaseId'. Error: $errorDetails" -Level Error
+        }
+    }
+}
+#EndRegion '.\Public\Snowflake Database\Update-FabricSnowflakeDatabaseDefinition.ps1' 90
 #Region '.\Public\Spark Job Definition\Get-FabricSparkJobDefinition.ps1' -1
 
 <#
@@ -20292,6 +22957,810 @@ function Update-FabricSparkWorkspaceSettings {
     }
 }
 #EndRegion '.\Public\Spark\Update-FabricSparkWorkspaceSettings.ps1' 174
+#Region '.\Public\SQL Database\Get-FabricSQLDatabase.ps1' -1
+
+<#
+.SYNOPSIS
+    Gets a SQL Database or lists all SQL Databases in a workspace.
+
+.DESCRIPTION
+    The Get-FabricSQLDatabase cmdlet retrieves SQL Database items from a specified Microsoft Fabric workspace.
+    You can list all SQL Databases or filter by a specific SQLDatabaseId or display name.
+
+.PARAMETER WorkspaceId
+    The GUID of the workspace containing the SQL Database resources.
+
+.PARAMETER SQLDatabaseId
+    Optional. Returns only the SQL Database matching this resource Id.
+
+.PARAMETER SQLDatabaseName
+    Optional. Returns only the SQL Database whose display name exactly matches this value.
+
+.PARAMETER Raw
+    Optional. When specified, returns the raw API response with resolved CapacityName and WorkspaceName
+    properties added directly to the output objects.
+
+.EXAMPLE
+    Get-FabricSQLDatabase -WorkspaceId "12345678-1234-1234-1234-123456789012"
+
+    Lists all SQL Databases in the specified workspace.
+
+.EXAMPLE
+    Get-FabricSQLDatabase -WorkspaceId "12345678-1234-1234-1234-123456789012" -SQLDatabaseId "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee"
+
+    Returns the SQL Database with the specified Id.
+
+.EXAMPLE
+    Get-FabricSQLDatabase -WorkspaceId "12345678-1234-1234-1234-123456789012" -SQLDatabaseName "SalesDB"
+
+    Returns the SQL Database with the specified name.
+
+.EXAMPLE
+    Get-FabricSQLDatabase -WorkspaceId "12345678-1234-1234-1234-123456789012" -Raw | Export-Csv -Path "sqldatabases.csv"
+
+    Exports all SQL Databases with resolved names to a CSV file.
+
+.NOTES
+    - Requires `$FabricAuthContext` global configuration.
+    - Calls `Invoke-FabricAuthCheck` to ensure token validity before making the API request.
+
+    Author: Tiago Balabuch, Jess Pomfret, Rob Sewell
+
+#>
+function Get-FabricSQLDatabase {
+    [CmdletBinding()]
+    param (
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
+        [ValidateNotNullOrEmpty()]
+        [Alias('id')]
+        [string]$WorkspaceId,
+
+        [Parameter(Mandatory = $false)]
+        [ValidateNotNullOrEmpty()]
+        [string]$SQLDatabaseId,
+
+        [Parameter(Mandatory = $false)]
+        [ValidateNotNullOrEmpty()]
+        [ValidatePattern('^[a-zA-Z0-9_ ]*$')]
+        [string]$SQLDatabaseName,
+
+        [Parameter()]
+        [switch]$Raw
+    )
+
+    process {
+        try {
+            # Validate input parameters
+            if ($SQLDatabaseId -and $SQLDatabaseName) {
+                Write-FabricLog -Message "Specify only one parameter: either 'SQLDatabaseId' or 'SQLDatabaseName'." -Level Error
+                return
+            }
+
+            Invoke-FabricAuthCheck -ThrowOnFailure
+
+            # Construct the API endpoint URI
+            $apiEndpointURI = New-FabricAPIUri -Resource 'workspaces' -WorkspaceId $WorkspaceId -Subresource 'sqlDatabases'
+            Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
+
+            # Make the API request
+            $apiParams = @{
+                BaseURI = $apiEndpointURI
+                Headers = $script:FabricAuthContext.FabricHeaders
+                Method  = 'Get'
+            }
+            $dataItems = Invoke-FabricAPIRequest @apiParams
+
+            # Apply filtering and formatting
+            Select-FabricResource -InputObject $dataItems -Id $SQLDatabaseId -DisplayName $SQLDatabaseName -ResourceType 'SQLDatabase' -TypeName 'MicrosoftFabric.SQLDatabase' -Raw:$Raw
+        }
+        catch {
+            $errorDetails = $_.Exception.Message
+            Write-FabricLog -Message "Failed to retrieve SQL Database for workspace '$WorkspaceId'. Error: $errorDetails" -Level Error
+        }
+    }
+}
+#EndRegion '.\Public\SQL Database\Get-FabricSQLDatabase.ps1' 101
+#Region '.\Public\SQL Database\Get-FabricSQLDatabaseConnectionString.ps1' -1
+
+<#
+.SYNOPSIS
+    Retrieves the connection string for a specific SQL Database in a Fabric workspace.
+
+.DESCRIPTION
+    The Get-FabricSQLDatabaseConnectionString function retrieves the connection string for a given SQL Database
+    within a specified Fabric workspace. It supports optional parameters for guest tenant access and private link type.
+    The function validates authentication, constructs the appropriate API endpoint, and returns the connection string.
+
+.PARAMETER WorkspaceId
+    The ID of the workspace containing the SQL Database. This parameter is mandatory.
+
+.PARAMETER SQLDatabaseId
+    The ID of the SQL Database for which to retrieve the connection string. This parameter is mandatory.
+
+.PARAMETER GuestTenantId
+    (Optional) The tenant ID for guest access, if applicable.
+
+.PARAMETER PrivateLinkType
+    (Optional) The type of private link to use for the connection string. Valid values are 'None' or 'Workspace'.
+
+.EXAMPLE
+    Get-FabricSQLDatabaseConnectionString -WorkspaceId "workspace123" -SQLDatabaseId "database456"
+    Retrieves the connection string for the SQL Database with ID "database456" in workspace "workspace123".
+
+.EXAMPLE
+    Get-FabricSQLDatabaseConnectionString -WorkspaceId "workspace123" -SQLDatabaseId "database456" -GuestTenantId "guestTenant789" -PrivateLinkType "Workspace"
+    Retrieves the connection string with guest tenant access and workspace private link type.
+
+.EXAMPLE
+    Get-FabricSQLDatabase -WorkspaceId "workspace123" | Get-FabricSQLDatabaseConnectionString
+    Retrieves connection strings for all SQL Databases in the workspace using pipeline input.
+
+.NOTES
+    - Requires `$FabricAuthContext` global configuration, including `BaseUrl` and `FabricHeaders`.
+    - Calls `Invoke-FabricAuthCheck` to ensure token validity before making the API request.
+
+    Author: Tiago Balabuch, Jess Pomfret, Rob Sewell
+
+#>
+function Get-FabricSQLDatabaseConnectionString {
+    [CmdletBinding()]
+    param (
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
+        [ValidateNotNullOrEmpty()]
+        [string]$WorkspaceId,
+
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
+        [ValidateNotNullOrEmpty()]
+        [Alias('id')]
+        [string]$SQLDatabaseId,
+
+        [Parameter(Mandatory = $false)]
+        [ValidateNotNullOrEmpty()]
+        [string]$GuestTenantId,
+
+        [Parameter(Mandatory = $false)]
+        [ValidateNotNullOrEmpty()]
+        [ValidateSet('None', 'Workspace')]
+        [string]$PrivateLinkType
+    )
+
+    process {
+        try {
+            # Validate authentication
+            Invoke-FabricAuthCheck -ThrowOnFailure
+
+            # Build query parameters hashtable
+            $queryParams = @{}
+            if ($GuestTenantId) {
+                $queryParams['guestTenantId'] = $GuestTenantId
+            }
+            if ($PrivateLinkType) {
+                $queryParams['privateLinkType'] = $PrivateLinkType
+            }
+
+            # Construct the API endpoint URI using New-FabricAPIUri
+            $uriParams = @{
+                Resource    = 'workspaces'
+                WorkspaceId = $WorkspaceId
+                Subresource = 'sqlDatabases'
+                ItemId      = "$SQLDatabaseId/connectionString"
+            }
+            if ($queryParams.Count -gt 0) {
+                $uriParams['QueryParameters'] = $queryParams
+            }
+            $apiEndpointURI = New-FabricAPIUri @uriParams
+
+            # Make the API request
+            $apiParams = @{
+                BaseURI = $apiEndpointURI
+                Headers = $script:FabricAuthContext.FabricHeaders
+                Method  = 'Get'
+            }
+            $response = Invoke-FabricAPIRequest @apiParams
+
+            # Handle response
+            if (-not $response) {
+                Write-FabricLog -Message "No connection string returned from the API." -Level Warning
+                return $null
+            }
+
+            Write-FabricLog -Message "Connection string retrieved successfully." -Level Debug
+            return $response
+        }
+        catch {
+            # Capture and log error details
+            $errorDetails = $_.Exception.Message
+            Write-FabricLog -Message "Failed to retrieve SQL Database connection string. Error: $errorDetails" -Level Error
+        }
+    }
+}
+#EndRegion '.\Public\SQL Database\Get-FabricSQLDatabaseConnectionString.ps1' 113
+#Region '.\Public\SQL Database\Get-FabricSQLDatabaseDefinition.ps1' -1
+
+<#
+.SYNOPSIS
+    Gets the definition of a SQL Database from a Microsoft Fabric workspace.
+
+.DESCRIPTION
+    This function retrieves the definition of a SQL Database. This is a long-running operation (LRO)
+    that returns the SQL Database's definition including its parts.
+
+.PARAMETER WorkspaceId
+    The unique identifier of the workspace containing the SQL Database.
+
+.PARAMETER SQLDatabaseId
+    The unique identifier of the SQL Database.
+
+.EXAMPLE
+    Get-FabricSQLDatabaseDefinition -WorkspaceId "12345678-1234-1234-1234-123456789012" -SQLDatabaseId "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee"
+
+    Gets the definition of the specified SQL Database.
+
+.NOTES
+    - This operation is a long-running operation (LRO).
+    - Requires `$FabricAuthContext` global configuration.
+    - Calls `Invoke-FabricAuthCheck` to ensure token validity.
+
+    Author: Tiago Balabuch, Jess Pomfret, Rob Sewell
+
+#>
+function Get-FabricSQLDatabaseDefinition {
+    [CmdletBinding()]
+    param (
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
+        [ValidateNotNullOrEmpty()]
+        [string]$WorkspaceId,
+
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
+        [ValidateNotNullOrEmpty()]
+        [Alias('id')]
+        [string]$SQLDatabaseId
+    )
+
+    process {
+        try {
+            Invoke-FabricAuthCheck -ThrowOnFailure
+
+            # Construct the API endpoint URI (POST to getDefinition)
+            $apiEndpointURI = New-FabricAPIUri -Resource 'workspaces' -WorkspaceId $WorkspaceId -Subresource 'sqlDatabases' -ItemId "$SQLDatabaseId/getDefinition"
+            Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
+
+            # Make the API request
+            $apiParams = @{
+                BaseURI = $apiEndpointURI
+                Headers = $script:FabricAuthContext.FabricHeaders
+                Method  = 'Post'
+            }
+            $response = Invoke-FabricAPIRequest @apiParams
+
+            if (-not $response) {
+                Write-FabricLog -Message "No definition returned from the API." -Level Warning
+                return $null
+            }
+
+            Write-FabricLog -Message "SQL Database definition retrieved successfully." -Level Debug
+            return $response
+        }
+        catch {
+            $errorDetails = $_.Exception.Message
+            Write-FabricLog -Message "Failed to retrieve SQL Database definition. Error: $errorDetails" -Level Error
+        }
+    }
+}
+#EndRegion '.\Public\SQL Database\Get-FabricSQLDatabaseDefinition.ps1' 71
+#Region '.\Public\SQL Database\New-FabricSQLDatabase.ps1' -1
+
+<#
+.SYNOPSIS
+    Creates a new SQL Database in a specified Microsoft Fabric workspace.
+
+.DESCRIPTION
+    This function sends a POST request to the Microsoft Fabric API to create a new SQL Database
+    in the specified workspace. This is a long-running operation (LRO).
+
+.PARAMETER WorkspaceId
+    The unique identifier of the workspace where the SQL Database will be created.
+
+.PARAMETER SQLDatabaseName
+    The name of the SQL Database to be created.
+
+.PARAMETER SQLDatabaseDescription
+    An optional description for the SQL Database.
+
+.PARAMETER Definition
+    Optional. The definition of the SQL Database as a hashtable containing the parts.
+
+.EXAMPLE
+    New-FabricSQLDatabase -WorkspaceId "12345678-1234-1234-1234-123456789012" -SQLDatabaseName "SalesDB"
+
+    Creates a new SQL Database named "SalesDB" in the specified workspace.
+
+.EXAMPLE
+    New-FabricSQLDatabase -WorkspaceId "12345678-1234-1234-1234-123456789012" -SQLDatabaseName "SalesDB" -SQLDatabaseDescription "Sales data storage"
+
+    Creates a new SQL Database with a description.
+
+.NOTES
+    - This operation is a long-running operation (LRO).
+    - Requires `$FabricAuthContext` global configuration.
+    - Calls `Invoke-FabricAuthCheck` to ensure token validity.
+
+    Author: Tiago Balabuch, Jess Pomfret, Rob Sewell
+
+#>
+function New-FabricSQLDatabase {
+    [CmdletBinding(SupportsShouldProcess = $true, ConfirmImpact = 'Medium')]
+    param (
+        [Parameter(Mandatory = $true)]
+        [ValidateNotNullOrEmpty()]
+        [string]$WorkspaceId,
+
+        [Parameter(Mandatory = $true)]
+        [ValidateNotNullOrEmpty()]
+        [ValidatePattern('^[a-zA-Z0-9_ ]*$')]
+        [string]$SQLDatabaseName,
+
+        [Parameter(Mandatory = $false)]
+        [ValidateNotNullOrEmpty()]
+        [string]$SQLDatabaseDescription,
+
+        [Parameter(Mandatory = $false)]
+        [hashtable]$Definition
+    )
+
+    try {
+        Invoke-FabricAuthCheck -ThrowOnFailure
+
+        # Construct the API endpoint URI
+        $apiEndpointURI = New-FabricAPIUri -Resource 'workspaces' -WorkspaceId $WorkspaceId -Subresource 'sqlDatabases'
+        Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
+
+        # Construct the request body
+        $body = @{
+            displayName = $SQLDatabaseName
+        }
+
+        if ($SQLDatabaseDescription) {
+            $body.description = $SQLDatabaseDescription
+        }
+
+        if ($Definition) {
+            $body.definition = $Definition
+        }
+
+        $bodyJson = $body | ConvertTo-Json -Depth 10
+        Write-FabricLog -Message "Request Body: $bodyJson" -Level Debug
+
+        # Make the API request
+        $apiParams = @{
+            BaseURI = $apiEndpointURI
+            Headers = $script:FabricAuthContext.FabricHeaders
+            Method  = 'Post'
+            Body    = $bodyJson
+        }
+
+        if ($PSCmdlet.ShouldProcess($SQLDatabaseName, "Create SQL Database in workspace '$WorkspaceId'")) {
+            $response = Invoke-FabricAPIRequest @apiParams
+            Write-FabricLog -Message "SQL Database '$SQLDatabaseName' created successfully!" -Level Host
+            return $response
+        }
+    }
+    catch {
+        $errorDetails = $_.Exception.Message
+        Write-FabricLog -Message "Failed to create SQL Database. Error: $errorDetails" -Level Error
+    }
+}
+#EndRegion '.\Public\SQL Database\New-FabricSQLDatabase.ps1' 101
+#Region '.\Public\SQL Database\Remove-FabricSQLDatabase.ps1' -1
+
+<#
+.SYNOPSIS
+    Removes a SQL Database from a Microsoft Fabric workspace.
+
+.DESCRIPTION
+    This function sends a DELETE request to the Microsoft Fabric API to remove a SQL Database
+    from the specified workspace.
+
+.PARAMETER WorkspaceId
+    The unique identifier of the workspace containing the SQL Database.
+
+.PARAMETER SQLDatabaseId
+    The unique identifier of the SQL Database to delete.
+
+.EXAMPLE
+    Remove-FabricSQLDatabase -WorkspaceId "12345678-1234-1234-1234-123456789012" -SQLDatabaseId "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee"
+
+    Removes the specified SQL Database from the workspace.
+
+.EXAMPLE
+    Get-FabricSQLDatabase -WorkspaceId "12345678-1234-1234-1234-123456789012" -SQLDatabaseName "OldDB" | Remove-FabricSQLDatabase
+
+    Removes a SQL Database by piping it from Get-FabricSQLDatabase.
+
+.NOTES
+    - Requires `$FabricAuthContext` global configuration.
+    - Calls `Invoke-FabricAuthCheck` to ensure token validity.
+
+    Author: Tiago Balabuch, Jess Pomfret, Rob Sewell
+
+#>
+function Remove-FabricSQLDatabase {
+    [CmdletBinding(SupportsShouldProcess = $true, ConfirmImpact = 'High')]
+    param (
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
+        [ValidateNotNullOrEmpty()]
+        [string]$WorkspaceId,
+
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
+        [ValidateNotNullOrEmpty()]
+        [Alias('id')]
+        [string]$SQLDatabaseId
+    )
+
+    process {
+        try {
+            Invoke-FabricAuthCheck -ThrowOnFailure
+
+            # Construct the API endpoint URI
+            $apiEndpointURI = New-FabricAPIUri -Resource 'workspaces' -WorkspaceId $WorkspaceId -Subresource 'sqlDatabases' -ItemId $SQLDatabaseId
+            Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
+
+            # Make the API request
+            $apiParams = @{
+                BaseURI = $apiEndpointURI
+                Headers = $script:FabricAuthContext.FabricHeaders
+                Method  = 'Delete'
+            }
+
+            if ($PSCmdlet.ShouldProcess($SQLDatabaseId, "Remove SQL Database from workspace '$WorkspaceId'")) {
+                $null = Invoke-FabricAPIRequest @apiParams
+                Write-FabricLog -Message "SQL Database '$SQLDatabaseId' removed successfully!" -Level Host
+            }
+        }
+        catch {
+            $errorDetails = $_.Exception.Message
+            Write-FabricLog -Message "Failed to remove SQL Database. Error: $errorDetails" -Level Error
+        }
+    }
+}
+#EndRegion '.\Public\SQL Database\Remove-FabricSQLDatabase.ps1' 71
+#Region '.\Public\SQL Database\Start-FabricSQLDatabaseMirroring.ps1' -1
+
+<#
+.SYNOPSIS
+    Starts mirroring for a SQL Database in a Microsoft Fabric workspace.
+
+.DESCRIPTION
+    This function sends a POST request to start mirroring for a SQL Database.
+
+.PARAMETER WorkspaceId
+    The unique identifier of the workspace containing the SQL Database.
+
+.PARAMETER SQLDatabaseId
+    The unique identifier of the SQL Database.
+
+.EXAMPLE
+    Start-FabricSQLDatabaseMirroring -WorkspaceId "12345678-1234-1234-1234-123456789012" -SQLDatabaseId "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee"
+
+    Starts mirroring for the specified SQL Database.
+
+.NOTES
+    - Requires `$FabricAuthContext` global configuration.
+    - Calls `Invoke-FabricAuthCheck` to ensure token validity.
+
+    Author: Tiago Balabuch, Jess Pomfret, Rob Sewell
+
+#>
+function Start-FabricSQLDatabaseMirroring {
+    [CmdletBinding(SupportsShouldProcess = $true, ConfirmImpact = 'Medium')]
+    param (
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
+        [ValidateNotNullOrEmpty()]
+        [string]$WorkspaceId,
+
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
+        [ValidateNotNullOrEmpty()]
+        [Alias('id')]
+        [string]$SQLDatabaseId
+    )
+
+    process {
+        try {
+            Invoke-FabricAuthCheck -ThrowOnFailure
+
+            # Construct the API endpoint URI
+            $apiEndpointURI = New-FabricAPIUri -Resource 'workspaces' -WorkspaceId $WorkspaceId -Subresource 'sqlDatabases' -ItemId "$SQLDatabaseId/startMirroring"
+            Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
+
+            # Make the API request
+            $apiParams = @{
+                BaseURI = $apiEndpointURI
+                Headers = $script:FabricAuthContext.FabricHeaders
+                Method  = 'Post'
+            }
+
+            if ($PSCmdlet.ShouldProcess($SQLDatabaseId, "Start mirroring for SQL Database in workspace '$WorkspaceId'")) {
+                $response = Invoke-FabricAPIRequest @apiParams
+                Write-FabricLog -Message "SQL Database mirroring started successfully!" -Level Host
+                return $response
+            }
+        }
+        catch {
+            $errorDetails = $_.Exception.Message
+            Write-FabricLog -Message "Failed to start SQL Database mirroring. Error: $errorDetails" -Level Error
+        }
+    }
+}
+#EndRegion '.\Public\SQL Database\Start-FabricSQLDatabaseMirroring.ps1' 66
+#Region '.\Public\SQL Database\Stop-FabricSQLDatabaseMirroring.ps1' -1
+
+<#
+.SYNOPSIS
+    Stops mirroring for a SQL Database in a Microsoft Fabric workspace.
+
+.DESCRIPTION
+    This function sends a POST request to stop mirroring for a SQL Database.
+
+.PARAMETER WorkspaceId
+    The unique identifier of the workspace containing the SQL Database.
+
+.PARAMETER SQLDatabaseId
+    The unique identifier of the SQL Database.
+
+.EXAMPLE
+    Stop-FabricSQLDatabaseMirroring -WorkspaceId "12345678-1234-1234-1234-123456789012" -SQLDatabaseId "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee"
+
+    Stops mirroring for the specified SQL Database.
+
+.NOTES
+    - Requires `$FabricAuthContext` global configuration.
+    - Calls `Invoke-FabricAuthCheck` to ensure token validity.
+
+    Author: Tiago Balabuch, Jess Pomfret, Rob Sewell
+
+#>
+function Stop-FabricSQLDatabaseMirroring {
+    [CmdletBinding(SupportsShouldProcess = $true, ConfirmImpact = 'Medium')]
+    param (
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
+        [ValidateNotNullOrEmpty()]
+        [string]$WorkspaceId,
+
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
+        [ValidateNotNullOrEmpty()]
+        [Alias('id')]
+        [string]$SQLDatabaseId
+    )
+
+    process {
+        try {
+            Invoke-FabricAuthCheck -ThrowOnFailure
+
+            # Construct the API endpoint URI
+            $apiEndpointURI = New-FabricAPIUri -Resource 'workspaces' -WorkspaceId $WorkspaceId -Subresource 'sqlDatabases' -ItemId "$SQLDatabaseId/stopMirroring"
+            Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
+
+            # Make the API request
+            $apiParams = @{
+                BaseURI = $apiEndpointURI
+                Headers = $script:FabricAuthContext.FabricHeaders
+                Method  = 'Post'
+            }
+
+            if ($PSCmdlet.ShouldProcess($SQLDatabaseId, "Stop mirroring for SQL Database in workspace '$WorkspaceId'")) {
+                $response = Invoke-FabricAPIRequest @apiParams
+                Write-FabricLog -Message "SQL Database mirroring stopped successfully!" -Level Host
+                return $response
+            }
+        }
+        catch {
+            $errorDetails = $_.Exception.Message
+            Write-FabricLog -Message "Failed to stop SQL Database mirroring. Error: $errorDetails" -Level Error
+        }
+    }
+}
+#EndRegion '.\Public\SQL Database\Stop-FabricSQLDatabaseMirroring.ps1' 66
+#Region '.\Public\SQL Database\Update-FabricSQLDatabase.ps1' -1
+
+<#
+.SYNOPSIS
+    Updates an existing SQL Database in a Microsoft Fabric workspace.
+
+.DESCRIPTION
+    This function sends a PATCH request to the Microsoft Fabric API to update a SQL Database's
+    display name and/or description.
+
+.PARAMETER WorkspaceId
+    The unique identifier of the workspace containing the SQL Database.
+
+.PARAMETER SQLDatabaseId
+    The unique identifier of the SQL Database to update.
+
+.PARAMETER SQLDatabaseName
+    Optional. The new display name for the SQL Database.
+
+.PARAMETER SQLDatabaseDescription
+    Optional. The new description for the SQL Database.
+
+.EXAMPLE
+    Update-FabricSQLDatabase -WorkspaceId "12345678-1234-1234-1234-123456789012" -SQLDatabaseId "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee" -SQLDatabaseName "UpdatedName"
+
+    Updates the SQL Database's display name.
+
+.EXAMPLE
+    Update-FabricSQLDatabase -WorkspaceId "12345678-1234-1234-1234-123456789012" -SQLDatabaseId "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee" -SQLDatabaseDescription "New description"
+
+    Updates the SQL Database's description.
+
+.NOTES
+    - Requires `$FabricAuthContext` global configuration.
+    - Calls `Invoke-FabricAuthCheck` to ensure token validity.
+
+    Author: Tiago Balabuch, Jess Pomfret, Rob Sewell
+
+#>
+function Update-FabricSQLDatabase {
+    [CmdletBinding(SupportsShouldProcess = $true, ConfirmImpact = 'Medium')]
+    param (
+        [Parameter(Mandatory = $true)]
+        [ValidateNotNullOrEmpty()]
+        [string]$WorkspaceId,
+
+        [Parameter(Mandatory = $true)]
+        [ValidateNotNullOrEmpty()]
+        [Alias('id')]
+        [string]$SQLDatabaseId,
+
+        [Parameter(Mandatory = $false)]
+        [ValidateNotNullOrEmpty()]
+        [ValidatePattern('^[a-zA-Z0-9_ ]*$')]
+        [string]$SQLDatabaseName,
+
+        [Parameter(Mandatory = $false)]
+        [ValidateNotNullOrEmpty()]
+        [string]$SQLDatabaseDescription
+    )
+
+    try {
+        # Validate at least one update parameter is provided
+        if (-not $SQLDatabaseName -and -not $SQLDatabaseDescription) {
+            Write-FabricLog -Message "At least one of 'SQLDatabaseName' or 'SQLDatabaseDescription' must be provided." -Level Error
+            return
+        }
+
+        Invoke-FabricAuthCheck -ThrowOnFailure
+
+        # Construct the API endpoint URI
+        $apiEndpointURI = New-FabricAPIUri -Resource 'workspaces' -WorkspaceId $WorkspaceId -Subresource 'sqlDatabases' -ItemId $SQLDatabaseId
+        Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
+
+        # Construct the request body
+        $body = @{}
+
+        if ($SQLDatabaseName) {
+            $body.displayName = $SQLDatabaseName
+        }
+
+        if ($SQLDatabaseDescription) {
+            $body.description = $SQLDatabaseDescription
+        }
+
+        $bodyJson = $body | ConvertTo-Json -Depth 10
+        Write-FabricLog -Message "Request Body: $bodyJson" -Level Debug
+
+        # Make the API request
+        $apiParams = @{
+            BaseURI = $apiEndpointURI
+            Headers = $script:FabricAuthContext.FabricHeaders
+            Method  = 'Patch'
+            Body    = $bodyJson
+        }
+
+        if ($PSCmdlet.ShouldProcess($SQLDatabaseId, "Update SQL Database in workspace '$WorkspaceId'")) {
+            $response = Invoke-FabricAPIRequest @apiParams
+            Write-FabricLog -Message "SQL Database '$SQLDatabaseId' updated successfully!" -Level Host
+            return $response
+        }
+    }
+    catch {
+        $errorDetails = $_.Exception.Message
+        Write-FabricLog -Message "Failed to update SQL Database. Error: $errorDetails" -Level Error
+    }
+}
+#EndRegion '.\Public\SQL Database\Update-FabricSQLDatabase.ps1' 106
+#Region '.\Public\SQL Database\Update-FabricSQLDatabaseDefinition.ps1' -1
+
+<#
+.SYNOPSIS
+    Updates the definition of a SQL Database in a Microsoft Fabric workspace.
+
+.DESCRIPTION
+    This function sends a POST request to update the definition of a SQL Database.
+    This is a long-running operation (LRO).
+
+.PARAMETER WorkspaceId
+    The unique identifier of the workspace containing the SQL Database.
+
+.PARAMETER SQLDatabaseId
+    The unique identifier of the SQL Database.
+
+.PARAMETER Definition
+    The new definition for the SQL Database as a hashtable containing the parts.
+
+.EXAMPLE
+    $definition = @{
+        parts = @(
+            @{
+                path = "sqldatabase.json"
+                payload = "base64encodedcontent"
+                payloadType = "InlineBase64"
+            }
+        )
+    }
+    Update-FabricSQLDatabaseDefinition -WorkspaceId "12345678-1234-1234-1234-123456789012" -SQLDatabaseId "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee" -Definition $definition
+
+    Updates the SQL Database's definition.
+
+.NOTES
+    - This operation is a long-running operation (LRO).
+    - Requires `$FabricAuthContext` global configuration.
+    - Calls `Invoke-FabricAuthCheck` to ensure token validity.
+
+    Author: Tiago Balabuch, Jess Pomfret, Rob Sewell
+
+#>
+function Update-FabricSQLDatabaseDefinition {
+    [CmdletBinding(SupportsShouldProcess = $true, ConfirmImpact = 'Medium')]
+    param (
+        [Parameter(Mandatory = $true)]
+        [ValidateNotNullOrEmpty()]
+        [string]$WorkspaceId,
+
+        [Parameter(Mandatory = $true)]
+        [ValidateNotNullOrEmpty()]
+        [Alias('id')]
+        [string]$SQLDatabaseId,
+
+        [Parameter(Mandatory = $true)]
+        [ValidateNotNullOrEmpty()]
+        [hashtable]$Definition
+    )
+
+    try {
+        Invoke-FabricAuthCheck -ThrowOnFailure
+
+        # Construct the API endpoint URI
+        $apiEndpointURI = New-FabricAPIUri -Resource 'workspaces' -WorkspaceId $WorkspaceId -Subresource 'sqlDatabases' -ItemId "$SQLDatabaseId/updateDefinition"
+        Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
+
+        # Construct the request body
+        $body = @{
+            definition = $Definition
+        }
+
+        $bodyJson = $body | ConvertTo-Json -Depth 10
+        Write-FabricLog -Message "Request Body: $bodyJson" -Level Debug
+
+        # Make the API request
+        $apiParams = @{
+            BaseURI = $apiEndpointURI
+            Headers = $script:FabricAuthContext.FabricHeaders
+            Method  = 'Post'
+            Body    = $bodyJson
+        }
+
+        if ($PSCmdlet.ShouldProcess($SQLDatabaseId, "Update SQL Database definition in workspace '$WorkspaceId'")) {
+            $response = Invoke-FabricAPIRequest @apiParams
+            Write-FabricLog -Message "SQL Database definition updated successfully!" -Level Host
+            return $response
+        }
+    }
+    catch {
+        $errorDetails = $_.Exception.Message
+        Write-FabricLog -Message "Failed to update SQL Database definition. Error: $errorDetails" -Level Error
+    }
+}
+#EndRegion '.\Public\SQL Database\Update-FabricSQLDatabaseDefinition.ps1' 91
 #Region '.\Public\SQL Endpoints\Get-FabricSQLEndpoint.ps1' -1
 
 <#

@@ -15,6 +15,7 @@
         <TypeName>MicrosoftFabric.Item</TypeName>
         <TypeName>MicrosoftFabric.ApacheAirflowJob</TypeName>
         <TypeName>MicrosoftFabric.CopyJob</TypeName>
+        <TypeName>MicrosoftFabric.CosmosDBDatabase</TypeName>
         <TypeName>MicrosoftFabric.Dashboard</TypeName>
         <TypeName>MicrosoftFabric.DataPipeline</TypeName>
         <TypeName>MicrosoftFabric.Datamart</TypeName>
@@ -24,6 +25,7 @@
         <TypeName>MicrosoftFabric.ExternalDataShare</TypeName>
         <TypeName>MicrosoftFabric.Folder</TypeName>
         <TypeName>MicrosoftFabric.GraphQLApi</TypeName>
+        <TypeName>MicrosoftFabric.GraphModel</TypeName>
         <TypeName>MicrosoftFabric.KQLDashboard</TypeName>
         <TypeName>MicrosoftFabric.KQLDatabase</TypeName>
         <TypeName>MicrosoftFabric.KQLQueryset</TypeName>
@@ -40,8 +42,11 @@
         <TypeName>MicrosoftFabric.Reflex</TypeName>
         <TypeName>MicrosoftFabric.Report</TypeName>
         <TypeName>MicrosoftFabric.SemanticModel</TypeName>
+        <TypeName>MicrosoftFabric.SnowflakeDatabase</TypeName>
         <TypeName>MicrosoftFabric.SparkJobDefinition</TypeName>
         <TypeName>MicrosoftFabric.SQLEndpoint</TypeName>
+        <TypeName>MicrosoftFabric.SQLDatabase</TypeName>
+        <TypeName>MicrosoftFabric.Dataflow</TypeName>
         <TypeName>MicrosoftFabric.VariableLibrary</TypeName>
         <TypeName>MicrosoftFabric.Warehouse</TypeName>
       </ViewSelectedBy>
@@ -594,6 +599,7 @@
         <TypeName>MicrosoftFabric.Item</TypeName>
         <TypeName>MicrosoftFabric.ApacheAirflowJob</TypeName>
         <TypeName>MicrosoftFabric.CopyJob</TypeName>
+        <TypeName>MicrosoftFabric.CosmosDBDatabase</TypeName>
         <TypeName>MicrosoftFabric.Dashboard</TypeName>
         <TypeName>MicrosoftFabric.DataPipeline</TypeName>
         <TypeName>MicrosoftFabric.Datamart</TypeName>
@@ -603,6 +609,7 @@
         <TypeName>MicrosoftFabric.ExternalDataShare</TypeName>
         <TypeName>MicrosoftFabric.Folder</TypeName>
         <TypeName>MicrosoftFabric.GraphQLApi</TypeName>
+        <TypeName>MicrosoftFabric.GraphModel</TypeName>
         <TypeName>MicrosoftFabric.KQLDashboard</TypeName>
         <TypeName>MicrosoftFabric.KQLDatabase</TypeName>
         <TypeName>MicrosoftFabric.KQLQueryset</TypeName>
@@ -619,8 +626,11 @@
         <TypeName>MicrosoftFabric.Reflex</TypeName>
         <TypeName>MicrosoftFabric.Report</TypeName>
         <TypeName>MicrosoftFabric.SemanticModel</TypeName>
+        <TypeName>MicrosoftFabric.SnowflakeDatabase</TypeName>
         <TypeName>MicrosoftFabric.SparkJobDefinition</TypeName>
         <TypeName>MicrosoftFabric.SQLEndpoint</TypeName>
+        <TypeName>MicrosoftFabric.SQLDatabase</TypeName>
+        <TypeName>MicrosoftFabric.Dataflow</TypeName>
         <TypeName>MicrosoftFabric.VariableLibrary</TypeName>
         <TypeName>MicrosoftFabric.Warehouse</TypeName>
       </ViewSelectedBy>
