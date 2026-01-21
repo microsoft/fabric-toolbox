@@ -20,7 +20,7 @@ import { CompletePage } from './components/pages/CompletePage';
 function AppContent() {
   const { state, dispatch } = useAppContext();
 
-  // Load stored auth state on app start test
+  // Load stored auth state on app start test2
   useEffect(() => {
     try {
       const storedAuth = authService.loadAuthState();
