@@ -25,20 +25,21 @@
 function Remove-FabricVariableLibrary {
     [CmdletBinding(SupportsShouldProcess=$true, ConfirmImpact='High')]
     param (
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
         [ValidateNotNullOrEmpty()]
         [string]$WorkspaceId,
 
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
         [ValidateNotNullOrEmpty()]
+        [Alias('id')]
         [string]$VariableLibraryId
     )
+    process {
     try {
         Invoke-FabricAuthCheck -ThrowOnFailure
 
-
         # Construct the API endpoint URI
-        $apiEndpointURI = "{0}/workspaces/{1}/VariableLibraries/{2}" -f $script:FabricAuthContext.BaseUrl, $WorkspaceId, $VariableLibraryId
+        $apiEndpointURI = New-FabricAPIUri -Resource 'workspaces' -WorkspaceId $WorkspaceId -Subresource 'VariableLibraries' -ItemId $VariableLibraryId
         Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
 
         # Make the API request
@@ -60,5 +61,6 @@ function Remove-FabricVariableLibrary {
         # Capture and log error details
         $errorDetails = $_.Exception.Message
         Write-FabricLog -Message "Failed to delete Variable Library '$VariableLibraryId'. Error: $errorDetails" -Level Error
+    }
     }
 }

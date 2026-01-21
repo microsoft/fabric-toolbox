@@ -31,35 +31,47 @@
 function Update-FabricDataPipeline {
     [CmdletBinding(SupportsShouldProcess = $true, ConfirmImpact = 'Medium')]
     param (
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
         [ValidateNotNullOrEmpty()]
         [string]$WorkspaceId,
 
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
         [ValidateNotNullOrEmpty()]
+        [Alias('id')]
         [string]$DataPipelineId,
 
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $false, ValueFromPipelineByPropertyName = $true)]
         [ValidateNotNullOrEmpty()]
         [ValidatePattern('^[a-zA-Z0-9_ ]*$')]
+        [Alias('DisplayName')]
         [string]$DataPipelineName,
 
-        [Parameter(Mandatory = $false)]
+        [Parameter(Mandatory = $false, ValueFromPipelineByPropertyName = $true)]
         [ValidateNotNullOrEmpty()]
+        [Alias('Description')]
         [string]$DataPipelineDescription
     )
 
-    try {
+    process {
+        try {
+        # Validate that at least one update parameter is provided
+        if (-not $DataPipelineName -and -not $DataPipelineDescription) {
+            Write-FabricLog -Message "At least one of DataPipelineName or DataPipelineDescription must be specified" -Level Error
+            return
+        }
+
         # Validate authentication token before proceeding
         Invoke-FabricAuthCheck -ThrowOnFailure
 
         # Construct the API endpoint URI
-        $apiEndpointURI = New-FabricAPIUri -Segments @('workspaces', $WorkspaceId, 'dataPipelines', $DataPipelineId)
+        $apiEndpointURI = New-FabricAPIUri -Resource 'workspaces' -WorkspaceId $WorkspaceId -Subresource 'dataPipelines' -ItemId $DataPipelineId
         Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
 
         # Construct the request body
-        $body = @{
-            displayName = $DataPipelineName
+        $body = @{}
+
+        if ($DataPipelineName) {
+            $body.displayName = $DataPipelineName
         }
 
         if ($DataPipelineDescription) {
@@ -84,8 +96,9 @@ function Update-FabricDataPipeline {
         }
     }
     catch {
-        # Capture and log error details
-        $errorDetails = $_.Exception.Message
-        Write-FabricLog -Message "Failed to update DataPipeline. Error: $errorDetails" -Level Error
+            # Capture and log error details
+            $errorDetails = $_.Exception.Message
+            Write-FabricLog -Message "Failed to update DataPipeline. Error: $errorDetails" -Level Error
+        }
     }
 }

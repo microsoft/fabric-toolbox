@@ -32,11 +32,12 @@
 function Update-FabricWarehouseSnapshot {
     [CmdletBinding(SupportsShouldProcess=$true, ConfirmImpact='Medium')]
     param (
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
         [ValidateNotNullOrEmpty()]
+        [Alias('id')]
         [string]$WorkspaceId,
 
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
         [ValidateNotNullOrEmpty()]
         [string]$WarehouseSnapshotId,
 
@@ -54,6 +55,7 @@ function Update-FabricWarehouseSnapshot {
         [ValidatePattern('^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z$')]
         [string]$SnapshotDateTime
     )
+    process {
     try {
         Invoke-FabricAuthCheck -ThrowOnFailure
 
@@ -101,5 +103,4 @@ function Update-FabricWarehouseSnapshot {
         # Capture and log error details
         $errorDetails = $_.Exception.Message
         Write-FabricLog -Message "Failed to update Warehouse Snapshot '$WarehouseSnapshotName'. Error: $errorDetails" -Level Error
-    }
-}
+    }    }}

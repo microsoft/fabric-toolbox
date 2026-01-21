@@ -29,11 +29,12 @@
 function Update-FabricSemanticModelDefinition {
     [CmdletBinding(SupportsShouldProcess=$true, ConfirmImpact='Medium')]
     param (
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
         [ValidateNotNullOrEmpty()]
+        [Alias('id')]
         [string]$WorkspaceId,
 
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
         [ValidateNotNullOrEmpty()]
         [string]$SemanticModelId,
 
@@ -41,59 +42,61 @@ function Update-FabricSemanticModelDefinition {
         [ValidateNotNullOrEmpty()]
         [string]$SemanticModelPathDefinition
     )
-    try {
-        Invoke-FabricAuthCheck -ThrowOnFailure
+    process {
+        try {
+            Invoke-FabricAuthCheck -ThrowOnFailure
 
 
-        # Construct the API endpoint URI with filtering logic
-        $apiEndpointURI = "{0}/workspaces/{1}/SemanticModels/{2}/updateDefinition" -f $script:FabricAuthContext.BaseUrl, $WorkspaceId, $SemanticModelId
+            # Construct the API endpoint URI with filtering logic
+            $apiEndpointURI = "{0}/workspaces/{1}/SemanticModels/{2}/updateDefinition" -f $script:FabricAuthContext.BaseUrl, $WorkspaceId, $SemanticModelId
 
-        # Construct the request body
-        $body = @{
-            definition = @{
-                parts = @()
+            # Construct the request body
+            $body = @{
+                definition = @{
+                    parts = @()
+                }
+            }
+
+            $jsonObjectParts = Get-FileDefinitionPart -sourceDirectory $SemanticModelPathDefinition
+            # Add new part to the parts array
+            $body.definition.parts = $jsonObjectParts.parts
+            # Check if any path is .platform
+            foreach ($part in $jsonObjectParts.parts) {
+                if ($part.path -eq ".platform") {
+                    $hasPlatformFile = $true
+                    Write-FabricLog -Message "Platform File: $hasPlatformFile" -Level Debug
+                }
+            }
+
+            # If the platform file exists, append the query parameter to the URL
+            if ($hasPlatformFile -eq $true) {
+                $apiEndpointURI = "?updateMetadata=true" -f $apiEndpointURI
+            }
+            Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
+
+            # Convert the body to JSON
+            $bodyJson = $body | ConvertTo-Json -Depth 10
+            Write-FabricLog -Message "Request Body: $bodyJson" -Level Debug
+
+            # Make the API request
+            if ($PSCmdlet.ShouldProcess("Semantic Model definition '$SemanticModelId' in workspace '$WorkspaceId'", "Update")) {
+                $apiParams = @{
+                    BaseURI = $apiEndpointURI
+                    Headers = $script:FabricAuthContext.FabricHeaders
+                    Method = 'Post'
+                    Body = $bodyJson
+                }
+                $response = Invoke-FabricAPIRequest @apiParams
+
+                # Return the API response
+                Write-FabricLog -Message "Successfully updated the definition for Semantic Model with ID '$SemanticModelId' in workspace '$WorkspaceId'." -Level Host
+                return $response
             }
         }
-
-        $jsonObjectParts = Get-FileDefinitionPart -sourceDirectory $SemanticModelPathDefinition
-        # Add new part to the parts array
-        $body.definition.parts = $jsonObjectParts.parts
-        # Check if any path is .platform
-        foreach ($part in $jsonObjectParts.parts) {
-            if ($part.path -eq ".platform") {
-                $hasPlatformFile = $true
-                Write-FabricLog -Message "Platform File: $hasPlatformFile" -Level Debug
-            }
+        catch {
+            # Capture and log error details
+            $errorDetails = $_.Exception.Message
+            Write-FabricLog -Message "Failed to update SemanticModel. Error: $errorDetails" -Level Error
         }
-
-        # If the platform file exists, append the query parameter to the URL
-        if ($hasPlatformFile -eq $true) {
-            $apiEndpointURI = "?updateMetadata=true" -f $apiEndpointURI
-        }
-        Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
-
-        # Convert the body to JSON
-        $bodyJson = $body | ConvertTo-Json -Depth 10
-        Write-FabricLog -Message "Request Body: $bodyJson" -Level Debug
-
-        # Make the API request
-        if ($PSCmdlet.ShouldProcess("Semantic Model definition '$SemanticModelId' in workspace '$WorkspaceId'", "Update")) {
-            $apiParams = @{
-                BaseURI = $apiEndpointURI
-                Headers = $script:FabricAuthContext.FabricHeaders
-                Method = 'Post'
-                Body = $bodyJson
-            }
-            $response = Invoke-FabricAPIRequest @apiParams
-
-            # Return the API response
-            Write-FabricLog -Message "Successfully updated the definition for Semantic Model with ID '$SemanticModelId' in workspace '$WorkspaceId'." -Level Host
-            return $response
-        }
-    }
-    catch {
-        # Capture and log error details
-        $errorDetails = $_.Exception.Message
-        Write-FabricLog -Message "Failed to update SemanticModel. Error: $errorDetails" -Level Error
     }
 }

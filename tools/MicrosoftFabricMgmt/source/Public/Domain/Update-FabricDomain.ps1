@@ -33,17 +33,20 @@ Author: Tiago Balabuch
 function Update-FabricDomain {
     [CmdletBinding(SupportsShouldProcess = $true, ConfirmImpact = 'Medium')]
     param (
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
         [ValidateNotNullOrEmpty()]
+        [Alias('id')]
         [string]$DomainId,
 
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $false, ValueFromPipelineByPropertyName = $true)]
         [ValidateNotNullOrEmpty()]
         [ValidatePattern('^[a-zA-Z0-9_ ]*$')]
+        [Alias('DisplayName')]
         [string]$DomainName,
 
-        [Parameter(Mandatory = $false)]
+        [Parameter(Mandatory = $false, ValueFromPipelineByPropertyName = $true)]
         [ValidateNotNullOrEmpty()]
+        [Alias('Description')]
         [string]$DomainDescription,
 
         [Parameter(Mandatory = $false)]
@@ -53,6 +56,12 @@ function Update-FabricDomain {
     )
 
     try {
+        # Validate that at least one update parameter is provided
+        if (-not $DomainName -and -not $DomainDescription -and -not $DomainContributorsScope) {
+            Write-FabricLog -Message "At least one of DomainName, DomainDescription, or DomainContributorsScope must be specified" -Level Error
+            return
+        }
+
         # Validate authentication token before proceeding
         Invoke-FabricAuthCheck -ThrowOnFailure
 
@@ -61,8 +70,10 @@ function Update-FabricDomain {
         Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
 
         # Construct the request body
-        $body = @{
-            displayName = $DomainName
+        $body = @{}
+
+        if ($DomainName) {
+            $body.displayName = $DomainName
         }
 
         if ($DomainDescription) {

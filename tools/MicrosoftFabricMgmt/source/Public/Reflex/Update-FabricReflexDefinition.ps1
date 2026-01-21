@@ -32,12 +32,13 @@
 function Update-FabricReflexDefinition {
     [CmdletBinding(SupportsShouldProcess=$true, ConfirmImpact='Medium')]
     param (
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
         [ValidateNotNullOrEmpty()]
         [string]$WorkspaceId,
 
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
         [ValidateNotNullOrEmpty()]
+        [Alias('id')]
         [string]$ReflexId,
 
         [Parameter(Mandatory = $true)]
@@ -48,8 +49,9 @@ function Update-FabricReflexDefinition {
         [ValidateNotNullOrEmpty()]
         [string]$ReflexPathPlatformDefinition
     )
-    try {
-        Invoke-FabricAuthCheck -ThrowOnFailure
+    process {
+        try {
+            Invoke-FabricAuthCheck -ThrowOnFailure
 
 
         # Construct the API endpoint URI with filtering logic
@@ -122,5 +124,6 @@ function Update-FabricReflexDefinition {
         # Capture and log error details
         $errorDetails = $_.Exception.Message
         Write-FabricLog -Message "Failed to update Reflex. Error: $errorDetails" -Level Error
+        }
     }
 }

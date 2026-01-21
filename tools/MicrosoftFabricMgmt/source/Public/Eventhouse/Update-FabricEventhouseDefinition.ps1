@@ -32,12 +32,13 @@
 function Update-FabricEventhouseDefinition {
     [CmdletBinding(SupportsShouldProcess = $true, ConfirmImpact = 'Medium')]
     param (
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
         [ValidateNotNullOrEmpty()]
         [string]$WorkspaceId,
 
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
         [ValidateNotNullOrEmpty()]
+        [Alias('id')]
         [string]$EventhouseId,
 
         [Parameter(Mandatory = $true)]
@@ -48,7 +49,8 @@ function Update-FabricEventhouseDefinition {
         [ValidateNotNullOrEmpty()]
         [string]$EventhousePathPlatformDefinition
     )
-    try {
+    process {
+        try {
         # Validate authentication
         Invoke-FabricAuthCheck -ThrowOnFailure
 
@@ -114,9 +116,10 @@ function Update-FabricEventhouseDefinition {
             $response
         }
     }
-    catch {
-        # Capture and log error details
-        $errorDetails = $_.Exception.Message
-        Write-FabricLog -Message "Failed to update Eventhouse definition. Error: $errorDetails" -Level Error
+        catch {
+            # Capture and log error details
+            $errorDetails = $_.Exception.Message
+            Write-FabricLog -Message "Failed to update Eventhouse definition. Error: $errorDetails" -Level Error
+        }
     }
 }

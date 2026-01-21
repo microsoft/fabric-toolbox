@@ -59,7 +59,7 @@ function New-FabricCopyJob {
         Invoke-FabricAuthCheck -ThrowOnFailure
 
         # Construct the API endpoint URL
-        $apiEndpointURI = New-FabricAPIUri -Segments @('workspaces', $WorkspaceId, 'copyJobs')
+        $apiEndpointURI = New-FabricAPIUri -Resource 'workspaces' -WorkspaceId $WorkspaceId -Subresource 'copyJobs'
         Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
 
         # Construct the request body
