@@ -368,11 +368,25 @@ kustoQuery = """
 RawLogs
 """
 
+#applicationIDs = """
+#sparklens_metadata
+#| project applicationId
+#| distinct applicationId
+#"""
 applicationIDs = """
-sparklens_metadata
-| project applicationId
-| distinct applicationId
+union 
+(
+    sparklens_errors
+    | project applicationID
+    | distinct applicationID 
+),
+(
+    sparklens_metadata
+    | project applicationId
+    | distinct applicationID=applicationId 
+) 
 """
+
 # The query URI for reading the data e.g. https://<>.kusto.data.microsoft.com.
 #kustoUri = "https://trd-ektwgkvj37tkhsvrky.z4.kusto.fabric.microsoft.com"
 # The database with data to be read.
@@ -405,14 +419,20 @@ applicationIDs.cache()
 
 filtered_df = kustoDf.filter(get_json_object(col("records"), "$.category") == "EventLog")
 
-sample_json_df = filtered_df.select("records").limit(1000)  # you can adjust the sample size
-json_rdd = sample_json_df.rdd.map(lambda r: r[0])
-inferred_schema = spark.read.json(json_rdd).schema
-print("📘 Inferred schema:")
-print(inferred_schema.simpleString())
-parsed_df = kustoDf.withColumn("records_parsed", F.from_json(F.col("records"), inferred_schema))
-flattened_df = parsed_df.select("*", "records_parsed.*").drop("records_parsed")
-filtered_df=flattened_df
+# Filter out application IDs that have already been processed (if any)
+if not applicationIDs.rdd.isEmpty():
+    existing_ids = [row["applicationId"] for row in applicationIDs.select("applicationId").distinct().collect()]
+    if existing_ids:
+        filtered_df = filtered_df.filter(~get_json_object(col("records"), "$.applicationId").isin(existing_ids))
+
+#sample_json_df = filtered_df.select("records").limit(1000)  # you can adjust the sample size
+#json_rdd = sample_json_df.rdd.map(lambda r: r[0])
+#inferred_schema = spark.read.json(json_rdd).schema
+#print("📘 Inferred schema:")
+#print(inferred_schema.simpleString())
+#parsed_df = kustoDf.withColumn("records_parsed", F.from_json(F.col("records"), inferred_schema))
+#flattened_df = parsed_df.select("*", "records_parsed.*").drop("records_parsed")
+#filtered_df=flattened_df
 
 metadata_df = []
 summary_dfs = []
@@ -421,36 +441,25 @@ predictions_df =[]
 recommendations_df = []
 
 
-# Filter out application IDs that have already been processed (if any)
-if not applicationIDs.rdd.isEmpty():
-    existing_ids = [row["applicationId"] for row in applicationIDs.select("applicationId").distinct().collect()]
-    if existing_ids:
-        filtered_df = filtered_df.filter(~col("applicationId").isin(existing_ids))
-
 # Final check if anything to process
 if filtered_df.rdd.isEmpty():
     print("No new records to process in this run")
 else:
     # Optionally show a few rows to verify
-    filtered_df.count()
-
+    #filtered_df.count()
     # === 2.1 Infer Schema from Properties ===
-    json_rdd = (
-        filtered_df
-        .filter(col("properties").isNotNull())
-        .selectExpr("CAST(properties AS STRING) as json_str")
-        .rdd
-        .map(lambda row: row["json_str"])
-    )
-
-    sample_df = spark.read.json(json_rdd)
-
+    #json_rdd = (
+    #    filtered_df
+    #    .filter(col("properties").isNotNull())
+    #    .selectExpr("CAST(properties AS STRING) as json_str")
+    #    .rdd
+    #    .map(lambda row: row["json_str"])
+    #)
+    #sample_df = spark.read.json(json_rdd)
     # sample_df.show()
-
-    sample_schema = sample_df.schema
+    #sample_schema = sample_df.schema
 
     event_log_df = filtered_df
-
     # === 3. Extract Metadata ===
     def extract_app_metadata(df):
         native_enabled_df = df.selectExpr("properties.`Spark Properties`.`spark.native.enabled` AS spark_native_enabled") \
@@ -466,41 +475,64 @@ else:
             "fabricWorkspaceId", "isHighConcurrencyEnabled"
         ).distinct().withColumn("spark.native.enabled", lit(native_enabled))
 
-    metadata_df = extract_app_metadata(filtered_df)
-    # metadata_df.show(truncate=False)
+    #metadata_df = extract_app_metadata(filtered_df) !!!!!
 
+    # metadata_df.show(truncate=False)
     # === 4. Process Each Application ID ===
-    app_ids = metadata_df.select("applicationId").distinct().rdd.flatMap(lambda x: x).collect()
+    app_ids = event_log_df.select(get_json_object(col("records"), "$.applicationId")).distinct().rdd.flatMap(lambda x: x).collect()
 
     print(f"Found {len(app_ids)} applications.")
 
     i=0
-
     for app_id in app_ids:
-        accessToken = mssparkutils.credentials.getToken(kustoUri)
-        i += 1
-        print(f"Processing application ID: {app_id}, application number: {i}")
-
-        filtered_event_log_df = event_log_df.filter(col("applicationId") == app_id)
-        filtered_metadata_df = metadata_df.filter(col("applicationId") == app_id)
-
-        start_events = filtered_event_log_df \
-            .filter(col("properties.Event") == "SparkListenerApplicationStart") \
-            .select("properties.Timestamp") \
-            .limit(1) \
-            .collect()
-
-        if not start_events:
-            logging.warning(f"Missing SparkListenerApplicationStart event for {app_id}")
-            schema = StructType([
-                StructField("applicationID", StringType(), True),
-                StructField("error", StringType(), True),
-            ])
-            error_row = {"applicationID": app_id, "error": "Missing SparkListenerApplicationStart event"}
-            summary_dfs.append(spark.createDataFrame([error_row], schema=schema))
-            continue
-
         try:
+            accessToken = mssparkutils.credentials.getToken(kustoUri)
+            i += 1
+            print(f"Processing application ID: {app_id}, application number: {i}")
+
+            filtered_event_log_df = event_log_df.filter(get_json_object(col("records"), "$.applicationId") == app_id)
+
+            ##PUT THIS INTO A DEF
+            sample_json_df = filtered_event_log_df.select("records")#.limit(5000)  # you can adjust the sample size
+            json_rdd = sample_json_df.rdd.map(lambda r: r[0])
+            inferred_schema = spark.read.json(json_rdd).schema
+            print("📘 Inferred schema:")
+            print(inferred_schema.simpleString())
+            parsed_df = filtered_event_log_df.withColumn("records_parsed", F.from_json(F.col("records"), inferred_schema))
+            flattened_df = parsed_df.select("*", "records_parsed.*").drop("records_parsed")
+            filtered_event_log_df=flattened_df
+            ##PUT THIS INTO A DEF
+
+            filtered_metadata_df = extract_app_metadata(filtered_event_log_df)
+
+            #filtered_metadata_df = metadata_df.filter(col("applicationId") == app_id)
+
+            start_events = filtered_event_log_df \
+                .filter(col("properties.Event") == "SparkListenerApplicationStart") \
+                .select("properties.Timestamp") \
+                .limit(1) \
+                .collect()
+
+            if not start_events:
+                logging.warning(f"Missing SparkListenerApplicationStart event for {app_id}")
+                schema = StructType([ \
+                    StructField("applicationID", StringType(), True),
+                    StructField("error", StringType(), True),
+                ])
+                error_row = {"applicationID": app_id, "error": "Missing SparkListenerApplicationStart event"}
+                error_df=spark.createDataFrame([error_row], schema=schema)
+                #summary_dfs.append(spark.createDataFrame([error_row], schema=schema))
+                error_df.write \
+                    .format("com.microsoft.kusto.spark.synapse.datasource") \
+                    .option("accessToken", accessToken) \
+                    .option("kustoCluster", kustoUri)\
+                    .option("kustoDatabase", database)\
+                    .option("kustoTable", "sparklens_errors") \
+                    .option("tableCreateOptions", "CreateIfNotExist") \
+                    .mode("Append") \
+                    .save()
+                continue
+            
             print("Starting summary")
             app_summary_df_list = compute_stage_task_summary(filtered_event_log_df, filtered_metadata_df, app_id)
             print("writing results to EventHouse")
