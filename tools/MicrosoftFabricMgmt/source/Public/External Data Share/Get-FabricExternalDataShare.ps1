@@ -45,7 +45,7 @@ function Get-FabricExternalDataShare {
         $dataItems = Invoke-FabricAPIRequest @apiParams
 
         # Apply filtering logic
-        Select-FabricResource -InputObject $dataItems -Id $ExternalDataShareId -ResourceType 'ExternalDataShare'
+        Select-FabricResource -InputObject $dataItems -Id $ExternalDataShareId -ResourceType 'ExternalDataShare' -TypeName 'MicrosoftFabric.ExternalDataShare'
     }
     catch {
         # Capture and log error details

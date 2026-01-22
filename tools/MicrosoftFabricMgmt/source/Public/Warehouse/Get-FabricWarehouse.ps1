@@ -32,8 +32,9 @@
 function Get-FabricWarehouse {
     [CmdletBinding()]
     param (
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
         [ValidateNotNullOrEmpty()]
+        [Alias('id')]
         [string]$WorkspaceId,
 
         [Parameter(Mandatory = $false)]
@@ -42,66 +43,64 @@ function Get-FabricWarehouse {
 
         [Parameter(Mandatory = $false)]
         [ValidateNotNullOrEmpty()]
-        [ValidatePattern('^[a-zA-Z0-9_ ]*$')]
+        [ValidatePattern('^[a-zA-Z0-9_]*$')]
         [string]$WarehouseName
     )
 
-    try {
-        # Validate input parameters
-        if ($WarehouseId -and $WarehouseName) {
-            Write-FabricLog -Message "Specify only one parameter: either 'WarehouseId' or 'WarehouseName'." -Level Error
-            return $null
+    process {
+        try {
+            # Validate input parameters
+            if ($WarehouseId -and $WarehouseName) {
+                Write-FabricLog -Message "Specify only one parameter: either 'WarehouseId' or 'WarehouseName'." -Level Error
+                return
+            }
+
+            Invoke-FabricAuthCheck -ThrowOnFailure
+
+
+            # Construct the API endpoint URI
+            $apiEndpointURI = "{0}/workspaces/{1}/warehouses" -f $script:FabricAuthContext.BaseUrl, $WorkspaceId
+
+            # Make the API request
+            $apiParams = @{
+                BaseURI = $apiEndpointURI
+                Headers = $script:FabricAuthContext.FabricHeaders
+                Method  = 'Get'
+            }
+            $dataItems = Invoke-FabricAPIRequest @apiParams
+
+            # Immediately handle empty response
+            if (-not $dataItems) {
+                Write-FabricLog -Message "No warehouses found in workspace: $WorkspaceId" -Level Debug
+                return
+            }
+
+            # Apply filtering logic efficiently
+            if ($WarehouseId) {
+                $matchedItems = $dataItems.Where({ $_.Id -eq $WarehouseId }, 'First')
+            }
+            elseif ($WarehouseName) {
+                $matchedItems = $dataItems.Where({ $_.DisplayName -eq $WarehouseName }, 'First')
+            }
+            else {
+                Write-FabricLog -Message "No filter provided. Returning all items." -Level Debug
+                $matchedItems = $dataItems
+            }
+
+            # Handle results
+            if ($matchedItems) {
+                Write-FabricLog -Message "Item(s) found matching the specified criteria." -Level Debug
+
+                $matchedItems
+            }
+            else {
+                Write-FabricLog -Message "No item found matching the provided criteria." -Level Debug
+            }
         }
-
-        Invoke-FabricAuthCheck -ThrowOnFailure
-
-
-        # Construct the API endpoint URI
-        $apiEndpointURI = "{0}/workspaces/{1}/warehouses" -f $script:FabricAuthContext.BaseUrl, $WorkspaceId
-
-        # Make the API request
-        $apiParams = @{
-            BaseURI = $apiEndpointURI
-            Headers = $script:FabricAuthContext.FabricHeaders
-            Method  = 'Get'
+        catch {
+            # Capture and log error details
+            $errorDetails = $_.Exception.Message
+            Write-FabricLog -Message "Failed to retrieve Warehouse for workspace '$WorkspaceId'. Error: $errorDetails" -Level Error
         }
-        $dataItems = Invoke-FabricAPIRequest @apiParams
-
-        # Immediately handle empty response
-        if (-not $dataItems) {
-            Write-FabricLog -Message "No data returned from the API." -Level Warning
-            return $null
-        }
-
-        # Apply filtering logic efficiently
-        if ($WarehouseId) {
-            $matchedItems = $dataItems.Where({ $_.Id -eq $WarehouseId }, 'First')
-        }
-        elseif ($WarehouseName) {
-            $matchedItems = $dataItems.Where({ $_.DisplayName -eq $WarehouseName }, 'First')
-        }
-        else {
-            Write-FabricLog -Message "No filter provided. Returning all items." -Level Debug
-            $matchedItems = $dataItems
-        }
-
-        # Handle results
-        if ($matchedItems) {
-            Write-FabricLog -Message "Item(s) found matching the specified criteria." -Level Debug
-
-            # Add type decoration for custom formatting
-            $matchedItems | Add-FabricTypeName -TypeName 'MicrosoftFabric.Warehouse'
-
-            return $matchedItems
-        }
-        else {
-            Write-FabricLog -Message "No item found matching the provided criteria." -Level Warning
-            return $null
-        }
-    }
-    catch {
-        # Capture and log error details
-        $errorDetails = $_.Exception.Message
-        Write-FabricLog -Message "Failed to retrieve Warehouse. Error: $errorDetails" -Level Error
     }
 }

@@ -31,12 +31,13 @@
 function Start-FabricSparkJobDefinitionOnDemand {
     [CmdletBinding(SupportsShouldProcess=$true, ConfirmImpact='Medium')]
     param (
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
         [ValidateNotNullOrEmpty()]
         [string]$WorkspaceId,
 
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
         [ValidateNotNullOrEmpty()]
+        [Alias('id')]
         [string]$SparkJobDefinitionId,
 
         [Parameter(Mandatory = $false)]
@@ -47,8 +48,9 @@ function Start-FabricSparkJobDefinitionOnDemand {
         [Parameter(Mandatory = $false)]
         [switch]$WaitForCompletion
     )
-    try {
-        Invoke-FabricAuthCheck -ThrowOnFailure
+    process {
+        try {
+            Invoke-FabricAuthCheck -ThrowOnFailure
 
 
         # Construct the API endpoint URI
@@ -86,5 +88,6 @@ function Start-FabricSparkJobDefinitionOnDemand {
         # Capture and log error details
         $errorDetails = $_.Exception.Message
         Write-FabricLog -Message "Failed to start Spark Job Definition on demand. Error: $errorDetails" -Level Error
+        }
     }
 }

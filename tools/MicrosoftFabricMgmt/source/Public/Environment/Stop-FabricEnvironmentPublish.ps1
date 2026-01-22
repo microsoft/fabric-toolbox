@@ -27,14 +27,16 @@ Author: Tiago Balabuch
 function Stop-FabricEnvironmentPublish {
     [CmdletBinding(SupportsShouldProcess = $true, ConfirmImpact = 'Medium')]
     param (
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
         [ValidateNotNullOrEmpty()]
+        [Alias('id')]
         [string]$WorkspaceId,
 
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
         [ValidateNotNullOrEmpty()]
         [string]$EnvironmentId
     )
+    process {
     try {
         # Validate authentication
         Invoke-FabricAuthCheck -ThrowOnFailure
@@ -60,5 +62,6 @@ function Stop-FabricEnvironmentPublish {
         # Capture and log error details
         $errorDetails = $_.Exception.Message
         Write-FabricLog -Message "Failed to cancel publication for environment '$EnvironmentId' from workspace '$WorkspaceId'. Error: $errorDetails" -Level Error
+    }
     }
 }

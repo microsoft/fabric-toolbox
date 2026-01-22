@@ -58,11 +58,12 @@ Author: Tiago Balabuch
 function Update-FabricEnvironmentStagingSparkCompute {
     [CmdletBinding(SupportsShouldProcess = $true, ConfirmImpact = 'Medium')]
     param (
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
         [ValidateNotNullOrEmpty()]
+        [Alias('id')]
         [string]$WorkspaceId,
 
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
         [ValidateNotNullOrEmpty()]
         [string]$EnvironmentId,
 
@@ -111,6 +112,7 @@ function Update-FabricEnvironmentStagingSparkCompute {
         [Parameter(Mandatory = $true)]
         [System.Object]$SparkProperties
     )
+    process {
     try {
         # Validate authentication
         Invoke-FabricAuthCheck -ThrowOnFailure
@@ -159,5 +161,6 @@ function Update-FabricEnvironmentStagingSparkCompute {
         # Capture and log error details
         $errorDetails = $_.Exception.Message
         Write-FabricLog -Message "Failed to update environment staging Spark compute. Error: $errorDetails" -Level Error
+    }
     }
 }

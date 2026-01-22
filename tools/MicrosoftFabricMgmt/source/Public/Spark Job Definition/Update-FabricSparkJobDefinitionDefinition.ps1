@@ -31,12 +31,13 @@
 function Update-FabricSparkJobDefinitionDefinition {
     [CmdletBinding(SupportsShouldProcess=$true, ConfirmImpact='Medium')]
     param (
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
         [ValidateNotNullOrEmpty()]
         [string]$WorkspaceId,
 
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
         [ValidateNotNullOrEmpty()]
+        [Alias('id')]
         [string]$SparkJobDefinitionId,
 
         [Parameter(Mandatory = $true)]
@@ -47,8 +48,9 @@ function Update-FabricSparkJobDefinitionDefinition {
         [ValidateNotNullOrEmpty()]
         [string]$SparkJobDefinitionPathPlatformDefinition
     )
-    try {
-        Invoke-FabricAuthCheck -ThrowOnFailure
+    process {
+        try {
+            Invoke-FabricAuthCheck -ThrowOnFailure
 
 
         # Construct the API endpoint URI with filtering logic
@@ -121,5 +123,6 @@ function Update-FabricSparkJobDefinitionDefinition {
         # Step 6: Handle and log errors
         $errorDetails = $_.Exception.Message
         Write-FabricLog -Message "Failed to update Spark Job Definition. Error: $errorDetails" -Level Error
+        }
     }
 }

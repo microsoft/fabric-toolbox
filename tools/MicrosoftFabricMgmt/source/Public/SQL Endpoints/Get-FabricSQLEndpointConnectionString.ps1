@@ -34,8 +34,9 @@ Get-FabricSQLEndpointConnectionString -WorkspaceId "workspace123" -SQLEndpointId
 function Get-FabricSQLEndpointConnectionString {
     [CmdletBinding()]
     param (
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
         [ValidateNotNullOrEmpty()]
+        [Alias('id')]
         [string]$WorkspaceId,
 
         [Parameter(Mandatory = $true)]

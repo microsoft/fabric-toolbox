@@ -32,8 +32,9 @@
 function Get-FabricGraphQLApi {
     [CmdletBinding()]
     param (
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
         [ValidateNotNullOrEmpty()]
+        [Alias('id')]
         [string]$WorkspaceId,
 
         [Parameter(Mandatory = $false)]
@@ -45,33 +46,36 @@ function Get-FabricGraphQLApi {
         [ValidatePattern('^[a-zA-Z0-9_ ]*$')]
         [string]$GraphQLApiName
     )
-    try {
-        # Validate input parameters
-        if ($GraphQLApiId -and $GraphQLApiName) {
-            Write-FabricLog -Message "Specify only one parameter: either 'GraphQLApiId' or 'GraphQLApiName'." -Level Error
-            return
+
+    process {
+        try {
+            # Validate input parameters
+            if ($GraphQLApiId -and $GraphQLApiName) {
+                Write-FabricLog -Message "Specify only one parameter: either 'GraphQLApiId' or 'GraphQLApiName'." -Level Error
+                return
+            }
+
+            # Validate authentication
+            Invoke-FabricAuthCheck -ThrowOnFailure
+
+            # Construct the API endpoint URI
+            $apiEndpointURI = New-FabricAPIUri -Resource 'workspaces' -WorkspaceId $WorkspaceId -Subresource 'GraphQLApis'
+
+            # Make the API request
+            $apiParams = @{
+                BaseURI = $apiEndpointURI
+                Headers = $script:FabricAuthContext.FabricHeaders
+                Method  = 'Get'
+            }
+            $dataItems = Invoke-FabricAPIRequest @apiParams
+
+            # Apply filtering and return results
+            Select-FabricResource -InputObject $dataItems -Id $GraphQLApiId -DisplayName $GraphQLApiName -ResourceType 'GraphQL API' -TypeName 'MicrosoftFabric.GraphQLApi'
         }
-
-        # Validate authentication
-        Invoke-FabricAuthCheck -ThrowOnFailure
-
-        # Construct the API endpoint URI
-        $apiEndpointURI = New-FabricAPIUri -Resource 'workspaces' -WorkspaceId $WorkspaceId -Subresource 'GraphQLApis'
-
-        # Make the API request
-        $apiParams = @{
-            BaseURI = $apiEndpointURI
-            Headers = $script:FabricAuthContext.FabricHeaders
-            Method  = 'Get'
+        catch {
+            # Capture and log error details
+            $errorDetails = $_.Exception.Message
+            Write-FabricLog -Message "Failed to retrieve GraphQL API for workspace '$WorkspaceId'. Error: $errorDetails" -Level Error
         }
-        $dataItems = Invoke-FabricAPIRequest @apiParams
-
-        # Apply filtering and return results
-        Select-FabricResource -InputObject $dataItems -Id $GraphQLApiId -DisplayName $GraphQLApiName -ResourceType 'GraphQL API' -TypeName 'MicrosoftFabric.GraphQLApi'
-    }
-    catch {
-        # Capture and log error details
-        $errorDetails = $_.Exception.Message
-        Write-FabricLog -Message "Failed to retrieve GraphQL API. Error: $errorDetails" -Level Error
     }
 }

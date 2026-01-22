@@ -43,12 +43,13 @@ Author: Tiago Balabuch
 function Update-FabricNotebookDefinition {
     [CmdletBinding(SupportsShouldProcess = $true, ConfirmImpact = 'Medium')]
     param (
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
         [ValidateNotNullOrEmpty()]
         [string]$WorkspaceId,
 
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
         [ValidateNotNullOrEmpty()]
+        [Alias('id')]
         [string]$NotebookId,
 
         [Parameter(Mandatory = $true)]
@@ -64,13 +65,12 @@ function Update-FabricNotebookDefinition {
         [ValidateSet('ipynb', 'fabricGitSource')]
         [string]$NotebookFormat = 'ipynb'
     )
-
+    process {
     try {
         Invoke-FabricAuthCheck -ThrowOnFailure
 
-
         # Construct the API endpoint URI with filtering logic
-        $apiEndpointURI = "{0}/workspaces/{1}/notebooks/{2}/updateDefinition" -f $script:FabricAuthContext.BaseUrl, $WorkspaceId, $NotebookId
+        $apiEndpointURI = New-FabricAPIUri -Resource 'workspaces' -WorkspaceId $WorkspaceId -Subresource 'notebooks' -ItemId $NotebookId -AdditionalPath 'updateDefinition'
         if ($NotebookPathPlatformDefinition) {
             $apiEndpointURI = "$apiEndpointURI?updateMetadata=true"
         }
@@ -142,5 +142,6 @@ function Update-FabricNotebookDefinition {
         # Capture and log error details
         $errorDetails = $_.Exception.Message
         Write-FabricLog -Message "Failed to update notebook. Error: $errorDetails" -Level Error
+    }
     }
 }
