@@ -32,64 +32,76 @@
 function Update-FabricPaginatedReport {
     [CmdletBinding(SupportsShouldProcess = $true, ConfirmImpact = 'Medium')]
     param (
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
         [ValidateNotNullOrEmpty()]
         [string]$WorkspaceId,
 
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
         [ValidateNotNullOrEmpty()]
+        [Alias('id')]
         [string]$PaginatedReportId,
 
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $false, ValueFromPipelineByPropertyName = $true)]
         [ValidateNotNullOrEmpty()]
         [ValidatePattern('^[a-zA-Z0-9_ ]*$')]
+        [Alias('DisplayName')]
         [string]$PaginatedReportName,
 
-        [Parameter(Mandatory = $false)]
+        [Parameter(Mandatory = $false, ValueFromPipelineByPropertyName = $true)]
         [ValidateNotNullOrEmpty()]
+        [Alias('Description')]
         [string]$PaginatedReportDescription
     )
-    try {
-        Invoke-FabricAuthCheck -ThrowOnFailure
-
-
-    # Construct the API endpoint URI
-    $apiEndpointUrl = "{0}/workspaces/{1}/paginatedReports/{2}" -f $script:FabricAuthContext.BaseUrl, $WorkspaceId, $PaginatedReportId
-    Write-FabricLog -Message "API Endpoint: $apiEndpointUrl" -Level Debug
-
-        # Construct the request body
-        $body = @{
-            displayName = $PaginatedReportName
-        }
-
-        if ($PaginatedReportDescription) {
-            $body.description = $PaginatedReportDescription
-        }
-
-        # Convert the body to JSON
-        $bodyJson = $body | ConvertTo-Json
-        Write-FabricLog -Message "Request Body: $bodyJson" -Level Debug
-
-       # Make the API request when confirmed
-        $target = "Paginated Report '$PaginatedReportId' in workspace '$WorkspaceId'"
-        $action = "Update Paginated Report display name/description"
-        if ($PSCmdlet.ShouldProcess($target, $action)) {
-            $apiParams = @{
-                Headers = $script:FabricAuthContext.FabricHeaders
-                BaseURI = $apiEndpointUrl
-                Method = 'Patch'
-                Body = $bodyJson
+    process {
+        try {
+            # Validate that at least one update parameter is provided
+            if (-not $PaginatedReportName -and -not $PaginatedReportDescription) {
+                Write-FabricLog -Message "At least one of PaginatedReportName or PaginatedReportDescription must be specified" -Level Error
+                return
             }
-            $response = Invoke-FabricAPIRequest @apiParams
 
-            # Return the API response
-            Write-FabricLog -Message "Paginated Report '$PaginatedReportName' updated successfully!" -Level Host
-            return $response
+            Invoke-FabricAuthCheck -ThrowOnFailure
+
+        # Construct the API endpoint URI
+        $apiEndpointUrl = New-FabricAPIUri -Resource 'workspaces' -WorkspaceId $WorkspaceId -Subresource 'paginatedReports' -ItemId $PaginatedReportId
+        Write-FabricLog -Message "API Endpoint: $apiEndpointUrl" -Level Debug
+
+            # Construct the request body
+            $body = @{}
+
+            if ($PaginatedReportName) {
+                $body.displayName = $PaginatedReportName
+            }
+
+            if ($PaginatedReportDescription) {
+                $body.description = $PaginatedReportDescription
+            }
+
+            # Convert the body to JSON
+            $bodyJson = $body | ConvertTo-Json
+            Write-FabricLog -Message "Request Body: $bodyJson" -Level Debug
+
+           # Make the API request when confirmed
+            $target = "Paginated Report '$PaginatedReportId' in workspace '$WorkspaceId'"
+            $action = "Update Paginated Report display name/description"
+            if ($PSCmdlet.ShouldProcess($target, $action)) {
+                $apiParams = @{
+                    Headers = $script:FabricAuthContext.FabricHeaders
+                    BaseURI = $apiEndpointUrl
+                    Method = 'Patch'
+                    Body = $bodyJson
+                }
+                $response = Invoke-FabricAPIRequest @apiParams
+
+                # Return the API response
+                Write-FabricLog -Message "Paginated Report '$PaginatedReportName' updated successfully!" -Level Host
+                return $response
+            }
         }
-    }
-    catch {
-        # Capture and log error details
-        $errorDetails = $_.Exception.Message
-        Write-FabricLog -Message "Failed to update Paginated Report. Error: $errorDetails" -Level Error
+        catch {
+            # Capture and log error details
+            $errorDetails = $_.Exception.Message
+            Write-FabricLog -Message "Failed to update Paginated Report. Error: $errorDetails" -Level Error
+        }
     }
 }

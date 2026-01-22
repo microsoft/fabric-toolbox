@@ -45,12 +45,13 @@ Author: Tiago Balabuch
 function Update-FabricKQLDatabaseDefinition {
     [CmdletBinding(SupportsShouldProcess = $true, ConfirmImpact = 'Medium')]
     param (
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
         [ValidateNotNullOrEmpty()]
         [string]$WorkspaceId,
 
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
         [ValidateNotNullOrEmpty()]
+        [Alias('id')]
         [string]$KQLDatabaseId,
 
         [Parameter(Mandatory = $true)]
@@ -65,7 +66,8 @@ function Update-FabricKQLDatabaseDefinition {
         [ValidateNotNullOrEmpty()]
         [string]$KQLDatabasePathSchemaDefinition
     )
-    try {
+    process {
+        try {
         # Validate authentication token before proceeding.
         Write-FabricLog -Message "Validating authentication token..." -Level Debug
         Test-TokenExpired
@@ -156,9 +158,10 @@ function Update-FabricKQLDatabaseDefinition {
             return $response
         }
     }
-    catch {
-        # Capture and log error details
-        $errorDetails = $_.Exception.Message
-        Write-FabricLog -Message "Failed to update KQLDatabase. Error: $errorDetails" -Level Error
+        catch {
+            # Capture and log error details
+            $errorDetails = $_.Exception.Message
+            Write-FabricLog -Message "Failed to update KQLDatabase. Error: $errorDetails" -Level Error
+        }
     }
 }

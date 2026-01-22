@@ -37,37 +37,46 @@ Author: Tiago Balabuch
 function Update-FabricKQLDatabase {
     [CmdletBinding(SupportsShouldProcess = $true, ConfirmImpact = 'Medium')]
     param (
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
         [ValidateNotNullOrEmpty()]
         [string]$WorkspaceId,
 
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
         [ValidateNotNullOrEmpty()]
+        [Alias('id')]
         [string]$KQLDatabaseId,
 
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $false, ValueFromPipelineByPropertyName = $true)]
         [ValidateNotNullOrEmpty()]
         [ValidatePattern('^[a-zA-Z0-9_]*$')]
+        [Alias('DisplayName')]
         [string]$KQLDatabaseName,
 
-        [Parameter(Mandatory = $false)]
+        [Parameter(Mandatory = $false, ValueFromPipelineByPropertyName = $true)]
         [ValidateNotNullOrEmpty()]
+        [Alias('Description')]
         [string]$KQLDatabaseDescription
     )
 
-    try {
-        # Validate authentication token before proceeding.
-        Write-FabricLog -Message "Validating authentication token..." -Level Debug
-        Test-TokenExpired
-        Write-FabricLog -Message "Authentication token is valid." -Level Debug
+    process {
+        try {
+        # Validate that at least one update parameter is provided
+        if (-not $KQLDatabaseName -and -not $KQLDatabaseDescription) {
+            Write-FabricLog -Message "At least one of KQLDatabaseName or KQLDatabaseDescription must be specified" -Level Error
+            return
+        }
+
+        Invoke-FabricAuthCheck -ThrowOnFailure
 
         # Construct the API endpoint URI
-        $apiEndpointURI = "{0}/workspaces/{1}/kqlDatabases/{2}" -f $FabricConfig.BaseUrl, $WorkspaceId, $KQLDatabaseId
+        $apiEndpointURI = New-FabricAPIUri -Resource 'workspaces' -WorkspaceId $WorkspaceId -Subresource 'kqlDatabases' -ItemId $KQLDatabaseId
         Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
 
-        # Construct the request body
-        $body = @{
-            displayName = $KQLDatabaseName
+        # Construct the request body conditionally
+        $body = @{}
+
+        if ($KQLDatabaseName) {
+            $body.displayName = $KQLDatabaseName
         }
 
         if ($KQLDatabaseDescription) {
@@ -80,7 +89,7 @@ function Update-FabricKQLDatabase {
 
         # Make the API request
         $apiParams = @{
-            Headers = $FabricConfig.FabricHeaders
+            Headers = $script:FabricAuthContext.FabricHeaders
             BaseURI = $apiEndpointURI
             Method = 'Patch'
             Body = $bodyJson
@@ -93,9 +102,10 @@ function Update-FabricKQLDatabase {
             return $response
         }
     }
-    catch {
-        # Capture and log error details
-        $errorDetails = $_.Exception.Message
-        Write-FabricLog -Message "Failed to update KQLDatabase. Error: $errorDetails" -Level Error
+        catch {
+            # Capture and log error details
+            $errorDetails = $_.Exception.Message
+            Write-FabricLog -Message "Failed to update KQLDatabase. Error: $errorDetails" -Level Error
+        }
     }
 }

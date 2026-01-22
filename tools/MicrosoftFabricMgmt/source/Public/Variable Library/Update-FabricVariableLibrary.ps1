@@ -30,75 +30,97 @@
 
     Author: Tiago Balabuch
 #>
-function Update-FabricVariableLibrary {
-    [CmdletBinding(SupportsShouldProcess=$true, ConfirmImpact='Medium')]
+function Update-FabricVariableLibrary
+{
+    [CmdletBinding(SupportsShouldProcess = $true, ConfirmImpact = 'Medium')]
     param (
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
         [ValidateNotNullOrEmpty()]
         [string]$WorkspaceId,
 
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
         [ValidateNotNullOrEmpty()]
+        [Alias('id')]
         [string]$VariableLibraryId,
 
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $false, ValueFromPipelineByPropertyName = $true)]
         [ValidateNotNullOrEmpty()]
         [ValidatePattern('^[a-zA-Z0-9_]*$')]
+        [Alias('DisplayName')]
         [string]$VariableLibraryName,
 
-        [Parameter(Mandatory = $false)]
+        [Parameter(Mandatory = $false, ValueFromPipelineByPropertyName = $true)]
         [ValidateNotNullOrEmpty()]
+        [Alias('Description')]
         [string]$VariableLibraryDescription,
 
         [Parameter(Mandatory = $false)]
         [ValidateNotNullOrEmpty()]
         [string]$ActiveValueSetName
     )
-    try {
-        Invoke-FabricAuthCheck -ThrowOnFailure
-
-
-        # Construct the API endpoint URI
-        $apiEndpointURI = "{0}/workspaces/{1}/VariableLibraries/{2}" -f $script:FabricAuthContext.BaseUrl, $WorkspaceId, $VariableLibraryId
-        Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
-
-        # Construct the request body
-        $body = @{
-            displayName = $VariableLibraryName
-        }
-
-        if ($VariableLibraryDescription) {
-            $body.description = $VariableLibraryDescription
-        }
-        if ($ActiveValueSetName) {
-            if (-not $body.ContainsKey('properties') -or $null -eq $body.properties) {
-                $body.properties = @{}
+    process
+    {
+        try
+        {
+            # Validate that at least one update parameter is provided
+            if (-not $VariableLibraryName -and -not $VariableLibraryDescription -and -not $ActiveValueSetName)
+            {
+                Write-FabricLog -Message "At least one of VariableLibraryName, VariableLibraryDescription, or ActiveValueSetName must be specified" -Level Error
+                return
             }
-            $body.properties.activeValueSetName = $ActiveValueSetName
-        }
 
-        # Convert the body to JSON
-        $bodyJson = $body | ConvertTo-Json
-        Write-FabricLog -Message "Request Body: $bodyJson" -Level Debug
+            Invoke-FabricAuthCheck -ThrowOnFailure
 
-        # Make the API request
-        if ($PSCmdlet.ShouldProcess("Variable Library '$VariableLibraryName' in workspace '$WorkspaceId'", "Update")) {
-            $apiParams = @{
-                Headers = $script:FabricAuthContext.FabricHeaders
-                BaseURI = $apiEndpointURI
-                Method  = 'Patch'
-                Body    = $bodyJson
+            # Construct the API endpoint URI
+            $apiEndpointURI = New-FabricAPIUri -Resource 'workspaces' -WorkspaceId $WorkspaceId -Subresource 'VariableLibraries' -ItemId $VariableLibraryId
+            Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
+
+            # Construct the request body conditionally
+            $body = @{}
+
+            if ($VariableLibraryName)
+            {
+                $body.displayName = $VariableLibraryName
             }
-            $response = Invoke-FabricAPIRequest @apiParams
 
-            # Return the API response
-            Write-FabricLog -Message "Variable Library '$VariableLibraryName' updated successfully!" -Level Host
-            return $response
+            if ($VariableLibraryDescription)
+            {
+                $body.description = $VariableLibraryDescription
+            }
+            if ($ActiveValueSetName)
+            {
+                if (-not $body.ContainsKey('properties') -or $null -eq $body.properties)
+                {
+                    $body.properties = @{}
+                }
+                $body.properties.activeValueSetName = $ActiveValueSetName
+            }
+
+            # Convert the body to JSON
+            $bodyJson = $body | ConvertTo-Json
+            Write-FabricLog -Message "Request Body: $bodyJson" -Level Debug
+
+            # Make the API request
+            if ($PSCmdlet.ShouldProcess("Variable Library '$VariableLibraryName' in workspace '$WorkspaceId'", "Update"))
+            {
+                $apiParams = @{
+                    Headers = $script:FabricAuthContext.FabricHeaders
+                    BaseURI = $apiEndpointURI
+                    Method  = 'Patch'
+                    Body    = $bodyJson
+                }
+                $response = Invoke-FabricAPIRequest @apiParams
+
+                # Return the API response
+                Write-FabricLog -Message "Variable Library '$VariableLibraryName' updated successfully!" -Level Host
+                return $response
+            }
         }
-    }
-    catch {
-        # Capture and log error details
-        $errorDetails = $_.Exception.Message
-        Write-FabricLog -Message "Failed to update Variable Library. Error: $errorDetails" -Level Error
+        catch
+        {
+            # Capture and log error details
+            $errorDetails = $_.Exception.Message
+            Write-FabricLog -Message "Failed to update Variable Library. Error: $errorDetails" -Level Error
+        }
     }
 }

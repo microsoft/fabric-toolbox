@@ -33,12 +33,13 @@ Author: Tiago Balabuch
 function Update-FabricWorkspaceRoleAssignment {
     [CmdletBinding(SupportsShouldProcess=$true, ConfirmImpact = 'Medium')]
     param (
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
         [ValidateNotNullOrEmpty()]
         [string]$WorkspaceId,
 
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
         [ValidateNotNullOrEmpty()]
+        [Alias('id')]
         [string]$WorkspaceRoleAssignmentId,
 
         [Parameter(Mandatory = $true)]

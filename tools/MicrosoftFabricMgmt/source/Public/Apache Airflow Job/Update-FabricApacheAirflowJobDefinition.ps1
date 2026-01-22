@@ -40,11 +40,12 @@ Author: Tiago Balabuch
 function Update-FabricApacheAirflowJobDefinition {
     [CmdletBinding(SupportsShouldProcess = $true, ConfirmImpact = 'Medium')]
     param (
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
         [ValidateNotNullOrEmpty()]
+        [Alias('id')]
         [string]$WorkspaceId,
 
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
         [ValidateNotNullOrEmpty()]
         [string]$ApacheAirflowJobId,
 
@@ -56,7 +57,9 @@ function Update-FabricApacheAirflowJobDefinition {
         [ValidateNotNullOrEmpty()]
         [string]$ApacheAirflowJobPathPlatformDefinition
     )
-    try {
+
+    process {
+        try {
         # Validate authentication
         Invoke-FabricAuthCheck -ThrowOnFailure
 
@@ -135,4 +138,5 @@ function Update-FabricApacheAirflowJobDefinition {
         $errorDetails = $_.Exception.Message
         Write-FabricLog -Message "Failed to update Apache Airflow Job. Error: $errorDetails" -Level Error
     }
+}
 }

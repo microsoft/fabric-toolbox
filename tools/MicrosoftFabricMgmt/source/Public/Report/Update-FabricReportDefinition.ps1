@@ -29,78 +29,81 @@
 function Update-FabricReportDefinition {
     [CmdletBinding(SupportsShouldProcess=$true, ConfirmImpact='Medium')]
     param (
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
         [ValidateNotNullOrEmpty()]
         [string]$WorkspaceId,
 
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
         [ValidateNotNullOrEmpty()]
+        [Alias('id')]
         [string]$ReportId,
 
         [Parameter(Mandatory = $true)]
         [ValidateNotNullOrEmpty()]
         [string]$ReportPathDefinition
     )
-    try {
-        Invoke-FabricAuthCheck -ThrowOnFailure
+    process {
+        try {
+            Invoke-FabricAuthCheck -ThrowOnFailure
 
 
-        # Construct the API endpoint URI with filtering logic
-        $apiEndpointURI = "{0}/workspaces/{1}/Reports/{2}/updateDefinition" -f $script:FabricAuthContext.BaseUrl, $WorkspaceId, $ReportId
+            # Construct the API endpoint URI with filtering logic
+            $apiEndpointURI = "{0}/workspaces/{1}/Reports/{2}/updateDefinition" -f $script:FabricAuthContext.BaseUrl, $WorkspaceId, $ReportId
 
-        # Construct the request body
-        $body = @{
-            definition = @{
-                parts = @()
-            }
-        }
-
-        if ($ReportPathDefinition) {
-            if (-not $body.definition) {
-                $body.definition = @{
+            # Construct the request body
+            $body = @{
+                definition = @{
                     parts = @()
                 }
             }
-            $jsonObjectParts = Get-FileDefinitionPart -sourceDirectory $ReportPathDefinition
-            # Add new part to the parts array
-            $body.definition.parts = $jsonObjectParts.parts
-        }
-        # Check if any path is .platform
-        foreach ($part in $jsonObjectParts.parts) {
-            if ($part.path -eq ".platform") {
-                $hasPlatformFile = $true
-                Write-FabricLog -Message "Platform File: $hasPlatformFile" -Level Debug
+
+            if ($ReportPathDefinition) {
+                if (-not $body.definition) {
+                    $body.definition = @{
+                        parts = @()
+                    }
+                }
+                $jsonObjectParts = Get-FileDefinitionPart -sourceDirectory $ReportPathDefinition
+                # Add new part to the parts array
+                $body.definition.parts = $jsonObjectParts.parts
+            }
+            # Check if any path is .platform
+            foreach ($part in $jsonObjectParts.parts) {
+                if ($part.path -eq ".platform") {
+                    $hasPlatformFile = $true
+                    Write-FabricLog -Message "Platform File: $hasPlatformFile" -Level Debug
+                }
+            }
+
+            # If the platform file exists, append the query parameter to the URL
+            if ($hasPlatformFile -eq $true) {
+                $apiEndpointURI += "?updateMetadata=true" -f $apiEndpointURI
+            }
+            Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
+
+            # Convert the body to JSON
+            $bodyJson = $body | ConvertTo-Json -Depth 10
+            Write-FabricLog -Message "Request Body: $bodyJson" -Level Debug
+
+            # Make the API request
+            if ($PSCmdlet.ShouldProcess("Report definition for Report ID '$ReportId' in workspace '$WorkspaceId'", "Update")) {
+                $apiParams = @{
+                    BaseURI = $apiEndpointURI
+                    Headers = $script:FabricAuthContext.FabricHeaders
+                    Method = 'Post'
+                    Body = $bodyJson
+                }
+                $response = Invoke-FabricAPIRequest @apiParams
+
+                # Return the API response
+                Write-FabricLog -Message "Successfully updated the definition for Report with ID '$ReportId' in workspace '$WorkspaceId'." -Level Host
+                return $response
             }
         }
-
-        # If the platform file exists, append the query parameter to the URL
-        if ($hasPlatformFile -eq $true) {
-            $apiEndpointURI += "?updateMetadata=true" -f $apiEndpointURI
+        catch {
+            # Capture and log error details
+            $errorDetails = $_.Exception.Message
+            Write-FabricLog -Message "Failed to update Report. Error: $errorDetails" -Level Error
         }
-        Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
-
-        # Convert the body to JSON
-        $bodyJson = $body | ConvertTo-Json -Depth 10
-        Write-FabricLog -Message "Request Body: $bodyJson" -Level Debug
-
-        # Make the API request
-        if ($PSCmdlet.ShouldProcess("Report definition for Report ID '$ReportId' in workspace '$WorkspaceId'", "Update")) {
-            $apiParams = @{
-                BaseURI = $apiEndpointURI
-                Headers = $script:FabricAuthContext.FabricHeaders
-                Method = 'Post'
-                Body = $bodyJson
-            }
-            $response = Invoke-FabricAPIRequest @apiParams
-
-            # Return the API response
-            Write-FabricLog -Message "Successfully updated the definition for Report with ID '$ReportId' in workspace '$WorkspaceId'." -Level Host
-            return $response
-        }
-    }
-    catch {
-        # Capture and log error details
-        $errorDetails = $_.Exception.Message
-        Write-FabricLog -Message "Failed to update Report. Error: $errorDetails" -Level Error
     }
 }

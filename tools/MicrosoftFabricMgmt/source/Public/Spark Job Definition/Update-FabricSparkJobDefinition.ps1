@@ -31,34 +31,45 @@
 function Update-FabricSparkJobDefinition {
     [CmdletBinding(SupportsShouldProcess=$true, ConfirmImpact='Medium')]
     param (
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
         [ValidateNotNullOrEmpty()]
         [string]$WorkspaceId,
 
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
         [ValidateNotNullOrEmpty()]
+        [Alias('id')]
         [string]$SparkJobDefinitionId,
 
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $false, ValueFromPipelineByPropertyName = $true)]
         [ValidateNotNullOrEmpty()]
         [ValidatePattern('^[a-zA-Z0-9_ ]*$')]
+        [Alias('DisplayName')]
         [string]$SparkJobDefinitionName,
 
-        [Parameter(Mandatory = $false)]
+        [Parameter(Mandatory = $false, ValueFromPipelineByPropertyName = $true)]
         [ValidateNotNullOrEmpty()]
+        [Alias('Description')]
         [string]$SparkJobDefinitionDescription
     )
-    try {
-        Invoke-FabricAuthCheck -ThrowOnFailure
+    process {
+        try {
+            # Validate that at least one update parameter is provided
+            if (-not $SparkJobDefinitionName -and -not $SparkJobDefinitionDescription) {
+                Write-FabricLog -Message "At least one of SparkJobDefinitionName or SparkJobDefinitionDescription must be specified" -Level Error
+                return
+            }
 
+            Invoke-FabricAuthCheck -ThrowOnFailure
 
         # Construct the API endpoint URI
-        $apiEndpointURI = "{0}/workspaces/{1}/sparkJobDefinitions/{2}" -f $script:FabricAuthContext.BaseUrl, $WorkspaceId, $SparkJobDefinitionId
+        $apiEndpointURI = New-FabricAPIUri -Resource 'workspaces' -WorkspaceId $WorkspaceId -Subresource 'sparkJobDefinitions' -ItemId $SparkJobDefinitionId
         Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
 
         # Construct the request body
-        $body = @{
-            displayName = $SparkJobDefinitionName
+        $body = @{}
+
+        if ($SparkJobDefinitionName) {
+            $body.displayName = $SparkJobDefinitionName
         }
 
         if ($SparkJobDefinitionDescription) {
@@ -88,5 +99,6 @@ function Update-FabricSparkJobDefinition {
         # Capture and log error details
         $errorDetails = $_.Exception.Message
         Write-FabricLog -Message "Failed to update SparkJobDefinition. Error: $errorDetails" -Level Error
+        }
     }
 }

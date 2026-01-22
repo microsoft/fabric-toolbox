@@ -41,12 +41,13 @@ Author: Tiago Balabuch
 function Update-FabricKQLDashboardDefinition {
     [CmdletBinding(SupportsShouldProcess = $true, ConfirmImpact = 'Medium')]
     param (
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
         [ValidateNotNullOrEmpty()]
         [string]$WorkspaceId,
 
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
         [ValidateNotNullOrEmpty()]
+        [Alias('id')]
         [string]$KQLDashboardId,
 
         [Parameter(Mandatory = $true)]
@@ -57,7 +58,8 @@ function Update-FabricKQLDashboardDefinition {
         [ValidateNotNullOrEmpty()]
         [string]$KQLDashboardPathPlatformDefinition
     )
-    try {
+    process {
+        try {
         # Validate authentication token before proceeding.
         Write-FabricLog -Message "Validating authentication token..." -Level Debug
         Test-TokenExpired
@@ -131,9 +133,10 @@ function Update-FabricKQLDashboardDefinition {
             return $response
         }
     }
-    catch {
-        # Capture and log error details
-        $errorDetails = $_.Exception.Message
-        Write-FabricLog -Message "Failed to update KQLDashboard. Error: $errorDetails" -Level Error
+        catch {
+            # Capture and log error details
+            $errorDetails = $_.Exception.Message
+            Write-FabricLog -Message "Failed to update KQLDashboard. Error: $errorDetails" -Level Error
+        }
     }
 }

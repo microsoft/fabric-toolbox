@@ -69,7 +69,7 @@ function Get-FabricReport {
             Invoke-FabricAuthCheck -ThrowOnFailure
 
             # Construct the API endpoint URI
-            $apiEndpointURI = "{0}/workspaces/{1}/reports" -f $script:FabricAuthContext.BaseUrl, $WorkspaceId
+            $apiEndpointURI = New-FabricAPIUri -Resource 'workspaces' -WorkspaceId $WorkspaceId -Subresource 'reports'
             Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
 
             # Make the API request
