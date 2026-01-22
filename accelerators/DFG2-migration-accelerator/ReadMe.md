@@ -6,6 +6,7 @@ To use it:
 	- create a Lakehouse to store migration files
 	- deploy notebooks and a semantic model/report to the workspace
 	- Note: this notebook will access this Fabric Toolbox folder to read in the json file with the item definitions. If you are not able to access the internet from your notebook, please download the json file and update the path accordingly.
+	- If the Inventory Report is not visible in the Workspace, just do a refresh of the browser.
 - If desired, run the "Dataflow Inventory" notebook to get information on the Dataflows in your tenant
 	- View the Inventory Report to decide which Dataflows to migrate
 - Use the "Create DFG2s from DFG1s" notebook to automatically create Gen 2 Dataflows from your Gen 1 Dataflows
