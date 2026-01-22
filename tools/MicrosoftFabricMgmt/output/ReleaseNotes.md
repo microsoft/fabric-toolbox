@@ -1,4 +1,4 @@
-## [1.0.3] - 2026-01-14
+## [1.0.4] - 2026-01-16
 
 ### Added
 
@@ -61,6 +61,10 @@
 - **Cascading Resolution Caching**: Both levels cached (workspace→capacityId AND capacityId→name)
 
 ### Fixed
+- Fixed overly restrictive `ValidatePattern` on name parameters across 18 cmdlets to match Microsoft Fabric documentation
+  - **Fabric items** (Lakehouse, Warehouse, KQL Database, Tags, Variable Library, Spark Job Definition, SQL Endpoints): Changed pattern from `'^[a-zA-Z0-9_ ]*$'` to `'^[a-zA-Z0-9_]*$'` (removed space support as per Fabric naming restrictions)
+  - **Workspaces**: Removed restrictive pattern validation entirely to support broader character set allowed by Fabric workspaces
+
 ### Deprecated
 ### Removed
 ### Security

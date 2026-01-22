@@ -37,34 +37,45 @@ Author: Tiago Balabuch
 function Update-FabricLakehouse {
     [CmdletBinding(SupportsShouldProcess = $true, ConfirmImpact = 'Medium')]
     param (
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
         [ValidateNotNullOrEmpty()]
         [string]$WorkspaceId,
 
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
         [ValidateNotNullOrEmpty()]
+        [Alias('id')]
         [string]$LakehouseId,
 
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $false, ValueFromPipelineByPropertyName = $true)]
         [ValidateNotNullOrEmpty()]
         [ValidatePattern('^[a-zA-Z0-9_]*$')]
+        [Alias('DisplayName')]
         [string]$LakehouseName,
 
-        [Parameter(Mandatory = $false)]
+        [Parameter(Mandatory = $false, ValueFromPipelineByPropertyName = $true)]
         [ValidateNotNullOrEmpty()]
+        [Alias('Description')]
         [string]$LakehouseDescription
     )
+    process {
     try {
-       Invoke-FabricAuthCheck -ThrowOnFailure
+        # Validate that at least one update parameter is provided
+        if (-not $LakehouseName -and -not $LakehouseDescription) {
+            Write-FabricLog -Message "At least one of LakehouseName or LakehouseDescription must be specified" -Level Error
+            return
+        }
 
+        Invoke-FabricAuthCheck -ThrowOnFailure
 
         # Construct the API endpoint URI
-        $apiEndpointURI = "{0}/workspaces/{1}/lakehouses/{2}" -f $script:FabricAuthContext.BaseUrl, $WorkspaceId, $LakehouseId
+        $apiEndpointURI = New-FabricAPIUri -Resource 'workspaces' -WorkspaceId $WorkspaceId -Subresource 'lakehouses' -ItemId $LakehouseId
         Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
 
         # Construct the request body
-        $body = @{
-            displayName = $LakehouseName
+        $body = @{}
+
+        if ($LakehouseName) {
+            $body.displayName = $LakehouseName
         }
 
         if ($LakehouseDescription) {
@@ -94,5 +105,6 @@ function Update-FabricLakehouse {
         # Capture and log error details
         $errorDetails = $_.Exception.Message
         Write-FabricLog -Message "Failed to update Lakehouse. Error: $errorDetails" -Level Error
+    }
     }
 }

@@ -344,9 +344,12 @@ $result | Format-Table -AutoSize
 #### Available Helper Functions
 
 - **Add-FabricTypeName** (Private): Adds PSTypeName to objects for format file matching
-- **Resolve-FabricCapacityName** (Private): Converts capacity GUID → capacity name (cached)
-- **Resolve-FabricWorkspaceName** (Private): Converts workspace GUID → workspace name (cached)
-- **Clear-FabricNameCache** (Public): Clears cached name resolutions
+- **Resolve-FabricCapacityName** (Public): Converts capacity GUID → capacity name (cached)
+- **Resolve-FabricWorkspaceName** (Public): Converts workspace GUID → workspace name (cached)
+- **Resolve-FabricCapacityIdFromWorkspace** (Public): Cascading resolution - workspaceId → capacityId (cached)
+- **Clear-FabricNameCache** (Public): Clears all cached name resolutions
+
+**Note**: Resolve-* functions are public so format file ScriptBlocks can access them.
 
 #### Type Naming Convention
 
@@ -372,10 +375,64 @@ Examples:
 - [ ] Module builds successfully (`.\build.ps1 -Tasks build`)
 - [ ] No errors or warnings in build output
 
+#### Current Formatting Status (Phase 5 Complete)
+
+**Formatted Functions (11 of 34)** - 32% Coverage:
+1. Get-FabricLakehouse ✅
+2. Get-FabricNotebook ✅
+3. Get-FabricWarehouse ✅
+4. Get-FabricWorkspace ✅
+5. Get-FabricCapacity ✅
+6. Get-FabricWorkspaceRoleAssignment ✅
+7. Get-FabricEnvironment ✅
+8. Get-FabricEventhouse ✅
+9. Get-FabricApacheAirflowJob ✅
+10. Get-FabricGraphQLApi ✅
+11. Get-FabricEventstream ✅
+
+**Remaining Functions (23)** - See [PHASE6_FORMATTING_COMPLETION.md](PHASE6_FORMATTING_COMPLETION.md) for tracking
+
+**Priority 1 Functions to Format Next (8 most commonly used)**:
+- Get-FabricReport
+- Get-FabricSemanticModel
+- Get-FabricDataPipeline
+- Get-FabricDashboard
+- Get-FabricSparkJobDefinition
+- Get-FabricKQLDatabase
+- Get-FabricKQLQueryset
+- Get-FabricKQLDashboard
+
+**Format Views Available**:
+- `FabricItemView` - 32 item types configured
+- `WorkspaceView` - Workspace objects
+- `CapacityView` - Capacity objects
+- `DomainView` - Domain objects
+- `RoleAssignmentView` - Role assignments
+- `JobView` - Job objects
+
+#### Cascading Resolution (for items without capacityId)
+
+Many Fabric items (Lakehouse, Notebook, Warehouse, etc.) only return `workspaceId` in their API response. The format system uses cascading resolution:
+
+```
+Item (has workspaceId only)
+  ↓
+Resolve-FabricCapacityIdFromWorkspace(workspaceId)
+  ↓
+Get workspace → extract capacityId
+  ↓
+Resolve-FabricCapacityName(capacityId)
+  ↓
+Display: "Premium Capacity P1"
+```
+
+Both levels are cached for optimal performance (200-500x faster on cache hit).
+
 **Related Documentation**:
 - See section 8: "Output Formatting with .ps1xml Files" for format file syntax
 - See section 10: "Adding a New Function" for complete workflow
 - See [docs/OUTPUT-FORMATTING.md](docs/OUTPUT-FORMATTING.md) for detailed guide
+- See [PHASE6_FORMATTING_COMPLETION.md](PHASE6_FORMATTING_COMPLETION.md) for remaining work tracking
 
 ---
 

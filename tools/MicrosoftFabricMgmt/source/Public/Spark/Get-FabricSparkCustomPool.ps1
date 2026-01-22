@@ -38,8 +38,9 @@
 function Get-FabricSparkCustomPool {
     [CmdletBinding()]
     param (
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
         [ValidateNotNullOrEmpty()]
+        [Alias('id')]
         [string]$WorkspaceId,
 
         [Parameter(Mandatory = $false)]
@@ -51,61 +52,64 @@ function Get-FabricSparkCustomPool {
         [ValidatePattern('^[a-zA-Z0-9_ ]*$')]
         [string]$SparkCustomPoolName
     )
-    try {
-        # Validate input parameters
-        if ($SparkCustomPoolId -and $SparkCustomPoolName) {
-            Write-FabricLog -Message "Specify only one parameter: either 'SparkCustomPoolId' or 'SparkCustomPoolName'." -Level Error
-            return $null
-        }
 
-        Invoke-FabricAuthCheck -ThrowOnFailure
+    process {
+        try {
+            # Validate input parameters
+            if ($SparkCustomPoolId -and $SparkCustomPoolName) {
+                Write-FabricLog -Message "Specify only one parameter: either 'SparkCustomPoolId' or 'SparkCustomPoolName'." -Level Error
+                return
+            }
+
+            Invoke-FabricAuthCheck -ThrowOnFailure
 
 
-        # Construct the API endpoint URI
-        $apiEndpointURI = "{0}/workspaces/{1}/spark/pools" -f $script:FabricAuthContext.BaseUrl, $WorkspaceId
-        Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
+            # Construct the API endpoint URI
+            $apiEndpointURI = "{0}/workspaces/{1}/spark/pools" -f $script:FabricAuthContext.BaseUrl, $WorkspaceId
+            Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
 
-        # Make the API request
-        # Make the API request
-        $apiParams = @{
-            BaseURI = $apiEndpointURI
-            Headers = $script:FabricAuthContext.FabricHeaders
-            Method = 'Get'
-        }
-        $dataItems = Invoke-FabricAPIRequest @apiParams
+            # Make the API request
+            $apiParams = @{
+                BaseURI = $apiEndpointURI
+                Headers = $script:FabricAuthContext.FabricHeaders
+                Method = 'Get'
+            }
+            $dataItems = Invoke-FabricAPIRequest @apiParams
 
-        # Immediately handle empty response
-        if (-not $dataItems) {
-            Write-FabricLog -Message "No data returned from the API." -Level Warning
-            return $null
-        }
+            # Immediately handle empty response
+            if (-not $dataItems) {
+                Write-FabricLog -Message "No Spark custom pools found in workspace: $WorkspaceId" -Level Debug
+                return
+            }
 
-        # Apply filtering logic efficiently
-        if ($SparkCustomPoolId) {
-            $matchedItems = $dataItems.Where({ $_.id -eq $SparkCustomPoolId }, 'First')
-        }
-        elseif ($SparkCustomPoolName) {
-            $matchedItems = $dataItems.Where({ $_.name -eq $SparkCustomPoolName }, 'First')
-        }
-        else {
-            Write-FabricLog -Message "No filter provided. Returning all items." -Level Debug
-            $matchedItems = $dataItems
-        }
+            # Apply filtering logic efficiently
+            if ($SparkCustomPoolId) {
+                $matchedItems = $dataItems.Where({ $_.id -eq $SparkCustomPoolId }, 'First')
+            }
+            elseif ($SparkCustomPoolName) {
+                $matchedItems = $dataItems.Where({ $_.name -eq $SparkCustomPoolName }, 'First')
+            }
+            else {
+                Write-FabricLog -Message "No filter provided. Returning all items." -Level Debug
+                $matchedItems = $dataItems
+            }
 
-        # Handle results
-        if ($matchedItems) {
-            Write-FabricLog -Message "Item(s) found matching the specified criteria." -Level Debug
-            return $matchedItems
+            # Handle results and add workspaceId for pipeline support
+            if ($matchedItems) {
+                Write-FabricLog -Message "Item(s) found matching the specified criteria." -Level Debug
+                foreach ($item in $matchedItems) {
+                    $item | Add-Member -NotePropertyName 'workspaceId' -NotePropertyValue $WorkspaceId -Force -PassThru
+                }
+            }
+            else {
+                Write-FabricLog -Message "No item found matching the provided criteria." -Level Debug
+            }
         }
-        else {
-            Write-FabricLog -Message "No item found matching the provided criteria." -Level Warning
-            return $null
+        catch {
+            # Capture and log error details
+            $errorDetails = $_.Exception.Message
+            Write-FabricLog -Message "Failed to retrieve SparkCustomPool for workspace '$WorkspaceId'. Error: $errorDetails" -Level Error
         }
-    }
-    catch {
-        # Capture and log error details
-        $errorDetails = $_.Exception.Message
-        Write-FabricLog -Message "Failed to retrieve SparkCustomPool. Error: $errorDetails" -Level Error
     }
 
 }

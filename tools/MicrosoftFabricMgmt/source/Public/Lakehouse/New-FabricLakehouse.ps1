@@ -33,8 +33,9 @@ Author: Tiago Balabuch
 function New-FabricLakehouse {
     [CmdletBinding(SupportsShouldProcess = $true, ConfirmImpact = 'Medium')]
     param (
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
         [ValidateNotNullOrEmpty()]
+        [Alias('id')]
         [string]$WorkspaceId,
 
         [Parameter(Mandatory = $true)]
@@ -50,6 +51,7 @@ function New-FabricLakehouse {
         [ValidateNotNullOrEmpty()]
         [bool]$LakehouseEnableSchemas = $false
     )
+    process {
     try {
         Invoke-FabricAuthCheck -ThrowOnFailure
 
@@ -96,5 +98,6 @@ function New-FabricLakehouse {
         # Capture and log error details
         $errorDetails = $_.Exception.Message
         Write-FabricLog -Message "Failed to create Lakehouse. Error: $errorDetails" -Level Error
+    }
     }
 }

@@ -23,8 +23,9 @@ Author: Updated by Jess Pomfret and Rob Sewell November 2026
 function Get-FabricLakehouseTable {
     [CmdletBinding()]
     param (
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
         [ValidateNotNullOrEmpty()]
+        [Alias('id')]
         [string]$WorkspaceId,
 
         [Parameter(Mandatory = $false)]

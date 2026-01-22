@@ -55,7 +55,15 @@ function Get-FabricDomain {
         if ($NonEmptyDomainsOnly) {
             $queryParams['nonEmptyOnly'] = 'true'
         }
-        $apiEndpointURI = New-FabricAPIUri -Segments @('admin', 'domains') -QueryParameters $queryParams
+        
+        # Build URI manually for admin/domains endpoint
+        $baseUri = "$($script:FabricAuthContext.BaseUrl)/admin/domains"
+        if ($queryParams.Count -gt 0) {
+            $queryString = ($queryParams.GetEnumerator() | ForEach-Object { "$($_.Key)=$($_.Value)" }) -join '&'
+            $apiEndpointURI = "$baseUri?$queryString"
+        } else {
+            $apiEndpointURI = $baseUri
+        }
         Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
 
         # Make the API request

@@ -1,6 +1,5 @@
 # MicrosoftFabricMgmt PowerShell Module
 
-
 ## Overview
 
 **MicrosoftFabricMgmt** is an enterprise-grade PowerShell module providing comprehensive automation and management capabilities for **Microsoft Fabric** environments. Built with PowerShell best practices and modern development standards, this module delivers a robust, production-ready interface to the entire Microsoft Fabric REST API ecosystem.

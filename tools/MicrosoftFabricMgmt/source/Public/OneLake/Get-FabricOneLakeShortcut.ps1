@@ -35,8 +35,9 @@
 function Get-FabricOneLakeShortcut {
     [CmdletBinding()]
     param (
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
         [ValidateNotNullOrEmpty()]
+        [Alias('id')]
         [string]$WorkspaceId,
 
         [Parameter(Mandatory = $true)]
@@ -88,6 +89,8 @@ function Get-FabricOneLakeShortcut {
         # Handle results
         if ($matchedItems) {
             Write-FabricLog -Message "Item(s) found matching the specified criteria." -Level Debug
+            # Add type decoration for custom formatting
+            $matchedItems | Add-FabricTypeName -TypeName 'MicrosoftFabric.OneLakeShortcut'
             return $matchedItems
         }
         else {

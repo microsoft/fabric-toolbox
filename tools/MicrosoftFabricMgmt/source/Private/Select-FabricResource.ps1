@@ -62,6 +62,7 @@ function Select-FabricResource {
         [string]$Id,
 
         [Parameter()]
+        [Alias('Name')]
         [string]$DisplayName,
 
         [Parameter(Mandatory = $true)]
