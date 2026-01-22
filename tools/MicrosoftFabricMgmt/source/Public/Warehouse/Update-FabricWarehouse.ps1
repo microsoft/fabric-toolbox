@@ -32,34 +32,45 @@
 function Update-FabricWarehouse {
     [CmdletBinding(SupportsShouldProcess=$true, ConfirmImpact='Medium')]
     param (
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
         [ValidateNotNullOrEmpty()]
         [string]$WorkspaceId,
 
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
         [ValidateNotNullOrEmpty()]
+        [Alias('id')]
         [string]$WarehouseId,
 
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $false, ValueFromPipelineByPropertyName = $true)]
         [ValidateNotNullOrEmpty()]
-        [ValidatePattern('^[a-zA-Z0-9_ ]*$')]
+        [ValidatePattern('^[a-zA-Z0-9_]*$')]
+        [Alias('displayName')]
         [string]$WarehouseName,
 
-        [Parameter(Mandatory = $false)]
+        [Parameter(Mandatory = $false, ValueFromPipelineByPropertyName = $true)]
         [ValidateNotNullOrEmpty()]
+        [Alias('description')]
         [string]$WarehouseDescription
     )
+    process {
     try {
         Invoke-FabricAuthCheck -ThrowOnFailure
 
+        # Validate that at least one update parameter is provided
+        if (-not $WarehouseName -and -not $WarehouseDescription) {
+            Write-FabricLog -Message "At least one parameter (WarehouseName or WarehouseDescription) must be provided." -Level Error
+            return
+        }
 
         # Construct the API endpoint URI
         $apiEndpointURI = "{0}/workspaces/{1}/warehouses/{2}" -f $script:FabricAuthContext.BaseUrl, $WorkspaceId, $WarehouseId
         Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
 
-        # Construct the request body
-        $body = @{
-            displayName = $WarehouseName
+        # Construct the request body with only the properties that are provided
+        $body = @{}
+
+        if ($WarehouseName) {
+            $body.displayName = $WarehouseName
         }
 
         if ($WarehouseDescription) {
@@ -78,10 +89,11 @@ function Update-FabricWarehouse {
             Body = $bodyJson
         }
 
-        if ($PSCmdlet.ShouldProcess("Warehouse '$WarehouseId' to '$WarehouseName' in workspace '$WorkspaceId'", 'Update')) {
+        $targetDescription = if ($WarehouseName) { "Warehouse '$WarehouseId' to '$WarehouseName'" } else { "Warehouse '$WarehouseId'" }
+        if ($PSCmdlet.ShouldProcess("$targetDescription in workspace '$WorkspaceId'", 'Update')) {
             $response = Invoke-FabricAPIRequest @apiParams
             # Return the API response
-            Write-FabricLog -Message "Warehouse '$WarehouseName' updated successfully!" -Level Host
+            Write-FabricLog -Message "Warehouse updated successfully!" -Level Host
             return $response
         }
     }
@@ -89,5 +101,6 @@ function Update-FabricWarehouse {
         # Capture and log error details
         $errorDetails = $_.Exception.Message
         Write-FabricLog -Message "Failed to update Warehouse. Error: $errorDetails" -Level Error
+    }
     }
 }

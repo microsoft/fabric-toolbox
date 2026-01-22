@@ -25,8 +25,9 @@ function Get-FabricSparkSettings
     [CmdletBinding()]
     [OutputType([object[]])]
     param (
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
         [ValidateNotNullOrEmpty()]
+        [Alias('id')]
         [string]$WorkspaceId
     )
 

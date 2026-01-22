@@ -33,8 +33,9 @@
 function Get-FabricEventhouse {
     [CmdletBinding()]
     param (
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
         [ValidateNotNullOrEmpty()]
+        [Alias('id')]
         [string]$WorkspaceId,
 
         [Parameter(Mandatory = $false)]
@@ -46,34 +47,36 @@ function Get-FabricEventhouse {
         [ValidatePattern('^[a-zA-Z0-9_ ]*$')]
         [string]$EventhouseName
     )
-    try {
-        # Validate input parameters
-        if ($EventhouseId -and $EventhouseName) {
-            Write-FabricLog -Message "Specify only one parameter: either 'EventhouseId' or 'EventhouseName'." -Level Error
-            return
+
+    process {
+        try {
+            # Validate input parameters
+            if ($EventhouseId -and $EventhouseName) {
+                Write-FabricLog -Message "Specify only one parameter: either 'EventhouseId' or 'EventhouseName'." -Level Error
+                return
+            }
+
+            # Validate authentication
+            Invoke-FabricAuthCheck -ThrowOnFailure
+
+            # Construct the API endpoint URI
+            $apiEndpointURI = New-FabricAPIUri -Resource 'workspaces' -WorkspaceId $WorkspaceId -Subresource 'eventhouses'
+
+            # Make the API request
+            $apiParams = @{
+                BaseURI = $apiEndpointURI
+                Headers = $script:FabricAuthContext.FabricHeaders
+                Method = 'Get'
+            }
+            $dataItems = Invoke-FabricAPIRequest @apiParams
+
+            # Apply filtering logic
+            Select-FabricResource -InputObject $dataItems -Id $EventhouseId -DisplayName $EventhouseName -ResourceType 'Eventhouse' -TypeName 'MicrosoftFabric.Eventhouse'
         }
-
-        # Validate authentication
-        Invoke-FabricAuthCheck -ThrowOnFailure
-
-        # Construct the API endpoint URI
-        $apiEndpointURI = New-FabricAPIUri -Resource 'workspaces' -WorkspaceId $WorkspaceId -Subresource 'eventhouses'
-
-        # Make the API request
-        $apiParams = @{
-            BaseURI = $apiEndpointURI
-            Headers = $script:FabricAuthContext.FabricHeaders
-            Method = 'Get'
+        catch {
+            # Capture and log error details
+            $errorDetails = $_.Exception.Message
+            Write-FabricLog -Message "Failed to retrieve Eventhouse for workspace '$WorkspaceId'. Error: $errorDetails" -Level Error
         }
-        $dataItems = Invoke-FabricAPIRequest @apiParams
-
-        # Apply filtering logic
-        Select-FabricResource -InputObject $dataItems -Id $EventhouseId -DisplayName $EventhouseName -ResourceType 'Eventhouse' -TypeName 'MicrosoftFabric.Eventhouse'
     }
-    catch {
-        # Capture and log error details
-        $errorDetails = $_.Exception.Message
-        Write-FabricLog -Message "Failed to retrieve Eventhouse. Error: $errorDetails" -Level Error
-    }
-
 }

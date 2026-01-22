@@ -33,8 +33,9 @@
 function Get-FabricPaginatedReport {
     [CmdletBinding()]
     param (
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
         [ValidateNotNullOrEmpty()]
+        [Alias('id')]
         [string]$WorkspaceId,
 
         [Parameter(Mandatory = $false)]
@@ -46,59 +47,61 @@ function Get-FabricPaginatedReport {
         [ValidatePattern('^[a-zA-Z0-9_ ]*$')]
         [string]$PaginatedReportName
     )
-    try {
-        # Validate input parameters
-        if ($PaginatedReportId -and $PaginatedReportName) {
-            Write-FabricLog -Message "Specify only one parameter: either 'PaginatedReportId' or 'PaginatedReportName'." -Level Error
-            return $null
-        }
 
-        Invoke-FabricAuthCheck -ThrowOnFailure
+    process {
+        try {
+            # Validate input parameters
+            if ($PaginatedReportId -and $PaginatedReportName) {
+                Write-FabricLog -Message "Specify only one parameter: either 'PaginatedReportId' or 'PaginatedReportName'." -Level Error
+                return
+            }
+
+            Invoke-FabricAuthCheck -ThrowOnFailure
 
 
-        # Construct the API endpoint URI
-        $apiEndpointURI = "{0}/workspaces/{1}/paginatedReports" -f $script:FabricAuthContext.BaseUrl, $WorkspaceId
-          Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
+            # Construct the API endpoint URI
+            $apiEndpointURI = "{0}/workspaces/{1}/paginatedReports" -f $script:FabricAuthContext.BaseUrl, $WorkspaceId
+              Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
 
-         # Make the API request
-        $apiParams = @{
-            BaseURI = $apiEndpointURI
-            Headers = $script:FabricAuthContext.FabricHeaders
-            Method = 'Get'
-        }
-        $dataItems = Invoke-FabricAPIRequest @apiParams
+             # Make the API request
+            $apiParams = @{
+                BaseURI = $apiEndpointURI
+                Headers = $script:FabricAuthContext.FabricHeaders
+                Method = 'Get'
+            }
+            $dataItems = Invoke-FabricAPIRequest @apiParams
 
-        # Immediately handle empty response
-        if (-not $dataItems) {
-            Write-FabricLog -Message "No data returned from the API." -Level Warning
-            return $null
-        }
+            # Immediately handle empty response
+            if (-not $dataItems) {
+                Write-FabricLog -Message "No paginated reports found in workspace: $WorkspaceId" -Level Debug
+                return
+            }
 
-        # Apply filtering logic efficiently
-        if ($PaginatedReportId) {
-            $matchedItems = $dataItems.Where({ $_.Id -eq $PaginatedReportId }, 'First')
-        }
-        elseif ($PaginatedReportName) {
-            $matchedItems = $dataItems.Where({ $_.DisplayName -eq $PaginatedReportName }, 'First')
-        }
-        else {
-            Write-FabricLog -Message "No filter provided. Returning all items." -Level Debug
-            $matchedItems = $dataItems
-        }
+            # Apply filtering logic efficiently
+            if ($PaginatedReportId) {
+                $matchedItems = $dataItems.Where({ $_.Id -eq $PaginatedReportId }, 'First')
+            }
+            elseif ($PaginatedReportName) {
+                $matchedItems = $dataItems.Where({ $_.DisplayName -eq $PaginatedReportName }, 'First')
+            }
+            else {
+                Write-FabricLog -Message "No filter provided. Returning all items." -Level Debug
+                $matchedItems = $dataItems
+            }
 
-        # Handle results
-        if ($matchedItems) {
-            Write-FabricLog -Message "Item(s) found matching the specified criteria." -Level Debug
-            return $matchedItems
+            # Handle results
+            if ($matchedItems) {
+                Write-FabricLog -Message "Item(s) found matching the specified criteria." -Level Debug
+                $matchedItems
+            }
+            else {
+                Write-FabricLog -Message "No item found matching the provided criteria." -Level Debug
+            }
         }
-        else {
-            Write-FabricLog -Message "No item found matching the provided criteria." -Level Warning
-            return $null
+        catch {
+            # Capture and log error details
+            $errorDetails = $_.Exception.Message
+            Write-FabricLog -Message "Failed to retrieve Paginated Report for workspace '$WorkspaceId'. Error: $errorDetails" -Level Error
         }
-    }
-    catch {
-        # Capture and log error details
-        $errorDetails = $_.Exception.Message
-        Write-FabricLog -Message "Failed to retrieve Paginated Report. Error: $errorDetails" -Level Error
     }
 }

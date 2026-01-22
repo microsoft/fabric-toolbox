@@ -37,34 +37,45 @@ Author: Tiago Balabuch
 function Update-FabricNotebook {
     [CmdletBinding(SupportsShouldProcess = $true, ConfirmImpact = 'Medium')]
     param (
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
         [ValidateNotNullOrEmpty()]
         [string]$WorkspaceId,
 
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
         [ValidateNotNullOrEmpty()]
+        [Alias('id')]
         [string]$NotebookId,
 
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $false, ValueFromPipelineByPropertyName = $true)]
         [ValidateNotNullOrEmpty()]
         [ValidatePattern('^[a-zA-Z0-9_ ]*$')]
+        [Alias('DisplayName')]
         [string]$NotebookName,
 
-        [Parameter(Mandatory = $false)]
+        [Parameter(Mandatory = $false, ValueFromPipelineByPropertyName = $true)]
         [ValidateNotNullOrEmpty()]
+        [Alias('Description')]
         [string]$NotebookDescription
     )
+    process {
     try {
+        # Validate that at least one update parameter is provided
+        if (-not $NotebookName -and -not $NotebookDescription) {
+            Write-FabricLog -Message "At least one of NotebookName or NotebookDescription must be specified" -Level Error
+            return
+        }
+
         Invoke-FabricAuthCheck -ThrowOnFailure
 
-
         # Construct the API endpoint URI
-        $apiEndpointURI = "{0}/workspaces/{1}/notebooks/{2}" -f $script:FabricAuthContext.BaseUrl, $WorkspaceId, $NotebookId
+        $apiEndpointURI = New-FabricAPIUri -Resource 'workspaces' -WorkspaceId $WorkspaceId -Subresource 'notebooks' -ItemId $NotebookId
         Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
 
         # Construct the request body
-        $body = @{
-            displayName = $NotebookName
+        $body = @{}
+
+        if ($NotebookName) {
+            $body.displayName = $NotebookName
         }
 
         if ($NotebookDescription) {
@@ -96,5 +107,6 @@ function Update-FabricNotebook {
         # Capture and log error details
         $errorDetails = $_.Exception.Message
         Write-FabricLog -Message "Failed to update notebook. Error: $errorDetails" -Level Error
+    }
     }
 }

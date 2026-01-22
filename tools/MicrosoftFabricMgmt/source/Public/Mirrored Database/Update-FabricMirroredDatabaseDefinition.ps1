@@ -44,12 +44,13 @@ Author: Tiago Balabuch
 function Update-FabricMirroredDatabaseDefinition {
     [CmdletBinding(SupportsShouldProcess = $true, ConfirmImpact = 'Medium')]
     param (
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
         [ValidateNotNullOrEmpty()]
         [string]$WorkspaceId,
 
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
         [ValidateNotNullOrEmpty()]
+        [Alias('id')]
         [string]$MirroredDatabaseId,
 
         [Parameter(Mandatory = $true)]
@@ -61,8 +62,9 @@ function Update-FabricMirroredDatabaseDefinition {
         [string]$MirroredDatabasePathPlatformDefinition
     )
 
-    try {
-        Invoke-FabricAuthCheck -ThrowOnFailure
+    process {
+        try {
+            Invoke-FabricAuthCheck -ThrowOnFailure
 
 
         # Construct the API endpoint URI with filtering logic
@@ -137,5 +139,6 @@ function Update-FabricMirroredDatabaseDefinition {
         # Capture and log error details
         $errorDetails = $_.Exception.Message
         Write-FabricLog -Message "Failed to update MirroredDatabase. Error: $errorDetails" -Level Error
+        }
     }
 }

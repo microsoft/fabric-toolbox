@@ -31,18 +31,20 @@ Author: Tiago Balabuch
 function Remove-FabricEnvironmentStagingLibrary {
     [CmdletBinding(SupportsShouldProcess = $true, ConfirmImpact = 'High')]
     param (
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
         [ValidateNotNullOrEmpty()]
         [string]$WorkspaceId,
 
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
         [ValidateNotNullOrEmpty()]
+        [Alias('id')]
         [string]$EnvironmentId,
 
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
         [ValidateNotNullOrEmpty()]
         [string]$LibraryName
     )
+    process {
     try {
         # Validate authentication
         Invoke-FabricAuthCheck -ThrowOnFailure
@@ -71,5 +73,6 @@ function Remove-FabricEnvironmentStagingLibrary {
         # Capture and log error details
         $errorDetails = $_.Exception.Message
         Write-FabricLog -Message "Failed to delete environment staging library '$LibraryName' from workspace '$WorkspaceId'. Error: $errorDetails" -Level Error
+    }
     }
 }

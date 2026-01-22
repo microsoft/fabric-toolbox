@@ -37,34 +37,45 @@ Author: Tiago Balabuch
 function Update-FabricMirroredDatabase {
     [CmdletBinding(SupportsShouldProcess = $true, ConfirmImpact = 'Medium')]
     param (
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
         [ValidateNotNullOrEmpty()]
         [string]$WorkspaceId,
 
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
         [ValidateNotNullOrEmpty()]
+        [Alias('id')]
         [string]$MirroredDatabaseId,
 
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $false, ValueFromPipelineByPropertyName = $true)]
         [ValidateNotNullOrEmpty()]
         [ValidatePattern('^[a-zA-Z0-9_ ]*$')]
+        [Alias('DisplayName')]
         [string]$MirroredDatabaseName,
 
-        [Parameter(Mandatory = $false)]
+        [Parameter(Mandatory = $false, ValueFromPipelineByPropertyName = $true)]
         [ValidateNotNullOrEmpty()]
+        [Alias('Description')]
         [string]$MirroredDatabaseDescription
     )
-    try {
-        Invoke-FabricAuthCheck -ThrowOnFailure
+    process {
+        try {
+            # Validate that at least one update parameter is provided
+            if (-not $MirroredDatabaseName -and -not $MirroredDatabaseDescription) {
+                Write-FabricLog -Message "At least one of MirroredDatabaseName or MirroredDatabaseDescription must be specified" -Level Error
+                return
+            }
 
+            Invoke-FabricAuthCheck -ThrowOnFailure
 
         # Construct the API endpoint URI
-        $apiEndpointURI = "{0}/workspaces/{1}/mirroredDatabases/{2}" -f $script:FabricAuthContext.BaseUrl, $WorkspaceId, $MirroredDatabaseId
+        $apiEndpointURI = New-FabricAPIUri -Resource 'workspaces' -WorkspaceId $WorkspaceId -Subresource 'mirroredDatabases' -ItemId $MirroredDatabaseId
         Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
 
         # Construct the request body
-        $body = @{
-            displayName = $MirroredDatabaseName
+        $body = @{}
+
+        if ($MirroredDatabaseName) {
+            $body.displayName = $MirroredDatabaseName
         }
 
         if ($MirroredDatabaseDescription) {
@@ -94,5 +105,6 @@ function Update-FabricMirroredDatabase {
         # Capture and log error details
         $errorDetails = $_.Exception.Message
         Write-FabricLog -Message "Failed to update MirroredDatabase. Error: $errorDetails" -Level Error
+        }
     }
 }

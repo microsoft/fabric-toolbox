@@ -30,33 +30,46 @@
 function Update-FabricApacheAirflowJob {
     [CmdletBinding(SupportsShouldProcess = $true, ConfirmImpact = 'Medium')]
     param (
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
         [ValidateNotNullOrEmpty()]
         [string]$WorkspaceId,
 
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
         [ValidateNotNullOrEmpty()]
+        [Alias('id')]
         [string]$ApacheAirflowJobId,
 
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $false, ValueFromPipelineByPropertyName = $true)]
         [ValidateNotNullOrEmpty()]
         [ValidatePattern('^[a-zA-Z0-9_ ]*$')]
+        [Alias('displayName')]
         [string]$ApacheAirflowJobName,
 
-        [Parameter(Mandatory = $false)]
+        [Parameter(Mandatory = $false, ValueFromPipelineByPropertyName = $true)]
         [ValidateNotNullOrEmpty()]
+        [Alias('description')]
         [string]$ApacheAirflowJobDescription
     )
-    try {
+
+    process {
+        try {
         # Validate authentication
         Invoke-FabricAuthCheck -ThrowOnFailure
+
+        # Validate that at least one update parameter is provided
+        if (-not $ApacheAirflowJobName -and -not $ApacheAirflowJobDescription) {
+            Write-FabricLog -Message "At least one parameter (ApacheAirflowJobName or ApacheAirflowJobDescription) must be provided." -Level Error
+            return
+        }
 
         # Construct the API endpoint URI
         $apiEndpointURI = New-FabricAPIUri -Resource 'workspaces' -WorkspaceId $WorkspaceId -Subresource 'ApacheAirflowJobs' -ItemId $ApacheAirflowJobId
 
-        # Construct the request body
-        $body = @{
-            displayName = $ApacheAirflowJobName
+        # Construct the request body with only the properties that are provided
+        $body = @{}
+
+        if ($ApacheAirflowJobName) {
+            $body.displayName = $ApacheAirflowJobName
         }
 
         if ($ApacheAirflowJobDescription) {
@@ -80,8 +93,9 @@ function Update-FabricApacheAirflowJob {
         }
     }
     catch {
-        # Handle and log errors
-        $errorDetails = $_.Exception.Message
-        Write-FabricLog -Message "Failed to update Apache Airflow Job. Error: $errorDetails" -Level Error
+            # Handle and log errors
+            $errorDetails = $_.Exception.Message
+            Write-FabricLog -Message "Failed to update Apache Airflow Job. Error: $errorDetails" -Level Error
+        }
     }
 }
