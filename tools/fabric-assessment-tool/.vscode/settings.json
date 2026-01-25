@@ -1,0 +1,35 @@
+{
+    "python.testing.pytestArgs": [
+        "./tests"
+    ],
+    "python.testing.unittestEnabled": false,
+    "python.testing.pytestEnabled": true,
+    "python.testing.autoTestDiscoverOnSaveEnabled": true,
+    "files.associations": {
+        "*.coveragerc": "ini"
+    },
+    "editor.formatOnSave": true,
+    "editor.defaultFormatter": "ms-python.black-formatter",
+    "editor.codeActionsOnSave": {
+        "source.organizeImports": "explicit"
+    },
+    "isort.args": [
+        "--profile",
+        "black",
+        "--multi-line",
+        "3",
+        "--lines-between-types",
+        "0",
+        "--remove-redundant-aliases"
+    ],
+    "[python]": {
+        "editor.defaultFormatter": "ms-python.black-formatter"
+    },
+    "python.analysis.extraPaths": [
+        "./python_wheel_poetry/src",
+        "./src"
+    ],
+    "[json]": {
+        "editor.defaultFormatter": "vscode.json-language-features"
+    }
+}
