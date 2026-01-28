@@ -422,3 +422,9 @@ tools/.api-specs-cache/
 tools/MicrosoftFabricMgmt/scripts/Fix-WriteFabricLogLevel.ps1
 tools/MicrosoftFabricMgmt/scripts/Fix-WorkspaceAPIUris.ps1
 tools/MicrosoftFabricMgmt/scripts/Refactor-PublicFunctions.ps1
+.vscode/tasks.json
+.vscode/tasks.json
+tools/MicrosoftFabricMgmt/scripts/branch to dev tests.ps1
+tools/MicrosoftFabricMgmt/scripts/validation-report.json
+.claude/settings.local.json
+tools/MicrosoftFabricMgmt/scripts/Validate-FabricModuleCoverage.ps1

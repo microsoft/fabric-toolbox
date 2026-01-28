@@ -1,4 +1,4 @@
-﻿<#
+<#
 .SYNOPSIS
 Retrieves a specific KQL Queryset or all KQL Querysets from a workspace.
 
@@ -14,6 +14,9 @@ Optional. The GUID of a single KQL Queryset to retrieve directly. Use this for d
 .PARAMETER KQLQuerysetName
 Optional. The display name of a KQL Queryset to retrieve. Provide this when the Id is unknown and you want to match by name.
 
+.PARAMETER Raw
+When specified, returns the raw API response without any filtering or formatting.
+
 .EXAMPLE
 Get-FabricKQLQueryset -WorkspaceId $wId -KQLQuerysetId '1a2b3c4d-5555-6666-7777-88889999aaaa'
 
@@ -28,6 +31,11 @@ Returns the single queryset named 'User Activity' if it exists.
 Get-FabricKQLQueryset -WorkspaceId $wId
 
 Returns all querysets in the specified workspace.
+
+.EXAMPLE
+Get-FabricKQLQueryset -WorkspaceId $wId -Raw
+
+Returns the raw API response for all querysets in the workspace without any processing.
 
 .NOTES
 - Requires `$FabricConfig` (BaseUrl, FabricHeaders).
@@ -52,7 +60,10 @@ function Get-FabricKQLQueryset {
         [Parameter(Mandatory = $false)]
         [ValidateNotNullOrEmpty()]
         [ValidatePattern('^[a-zA-Z0-9_ ]*$')]
-        [string]$KQLQuerysetName
+        [string]$KQLQuerysetName,
+
+        [Parameter()]
+        [switch]$Raw
     )
 
     process {
@@ -74,36 +85,12 @@ function Get-FabricKQLQueryset {
             $apiParams = @{
                 BaseURI = $apiEndpointURI
                 Headers = $script:FabricAuthContext.FabricHeaders
-                Method = 'Get'
+                Method  = 'Get'
             }
             $dataItems = Invoke-FabricAPIRequest @apiParams
 
-            # Immediately handle empty response
-            if (-not $dataItems) {
-                Write-FabricLog -Message "No KQL querysets found in workspace: $WorkspaceId" -Level Debug
-                return
-            }
-
-            # Apply filtering logic efficiently
-            if ($KQLQuerysetId) {
-                $matchedItems = $dataItems.Where({ $_.Id -eq $KQLQuerysetId }, 'First')
-            }
-            elseif ($KQLQuerysetName) {
-                $matchedItems = $dataItems.Where({ $_.DisplayName -eq $KQLQuerysetName }, 'First')
-            }
-            else {
-                Write-FabricLog -Message "No filter provided. Returning all items." -Level Debug
-                $matchedItems = $dataItems
-            }
-
-            # Handle results
-            if ($matchedItems) {
-                Write-FabricLog -Message "Item(s) found matching the specified criteria." -Level Debug
-                $matchedItems
-            }
-            else {
-                Write-FabricLog -Message "No item found matching the provided criteria." -Level Debug
-            }
+            # Apply filtering and formatting
+            Select-FabricResource -InputObject $dataItems -Id $KQLQuerysetId -DisplayName $KQLQuerysetName -ResourceType 'KQLQueryset' -TypeName 'MicrosoftFabric.KQLQueryset' -Raw:$Raw
         }
         catch {
             # Capture and log error details

@@ -1,4 +1,4 @@
-﻿<#
+<#
 .SYNOPSIS
     Retrieves Report details from a specified Microsoft Fabric workspace.
 
@@ -15,6 +15,9 @@
 .PARAMETER ReportName
     The name of the Report to retrieve. This parameter is optional.
 
+.PARAMETER Raw
+    When specified, returns the raw API response without any filtering or formatting.
+
 .EXAMPLE
     Get-FabricReport -WorkspaceId "workspace-12345" -ReportId "Report-67890"
     This example retrieves the Report details for the Report with ID "Report-67890" in the workspace with ID "workspace-12345".
@@ -22,6 +25,10 @@
 .EXAMPLE
     Get-FabricReport -WorkspaceId "workspace-12345" -ReportName "My Report"
     This example retrieves the Report details for the Report named "My Report" in the workspace with ID "workspace-12345".
+
+.EXAMPLE
+    Get-FabricReport -WorkspaceId "workspace-12345" -Raw
+    This example returns the raw API response for all reports in the workspace without any processing.
 
 .NOTES
     - Requires `$FabricConfig` global configuration, including `BaseUrl` and `FabricHeaders`.
@@ -45,7 +52,10 @@ function Get-FabricReport {
         [Parameter(Mandatory = $false)]
         [ValidateNotNullOrEmpty()]
         [ValidatePattern('^[a-zA-Z0-9_ ]*$')]
-        [string]$ReportName
+        [string]$ReportName,
+
+        [Parameter()]
+        [switch]$Raw
     )
 
     process {
@@ -66,36 +76,12 @@ function Get-FabricReport {
             $apiParams = @{
                 BaseURI = $apiEndpointURI
                 Headers = $script:FabricAuthContext.FabricHeaders
-                Method = 'Get'
+                Method  = 'Get'
             }
             $dataItems = Invoke-FabricAPIRequest @apiParams
 
-            # Immediately handle empty response
-            if (-not $dataItems) {
-                Write-FabricLog -Message "No reports found in workspace: $WorkspaceId" -Level Debug
-                return
-            }
-
-            # Apply filtering logic efficiently
-            if ($ReportId) {
-                $matchedItems = $dataItems.Where({ $_.Id -eq $ReportId }, 'First')
-            }
-            elseif ($ReportName) {
-                $matchedItems = $dataItems.Where({ $_.DisplayName -eq $ReportName }, 'First')
-            }
-            else {
-                Write-FabricLog -Message "No filter provided. Returning all items." -Level Debug
-                $matchedItems = $dataItems
-            }
-
-            # Handle results
-            if ($matchedItems) {
-                Write-FabricLog -Message "Item(s) found matching the specified criteria." -Level Debug
-                $matchedItems
-            }
-            else {
-                Write-FabricLog -Message "No item found matching the provided criteria." -Level Debug
-            }
+            # Apply filtering and formatting
+            Select-FabricResource -InputObject $dataItems -Id $ReportId -DisplayName $ReportName -ResourceType 'Report' -TypeName 'MicrosoftFabric.Report' -Raw:$Raw
         }
         catch {
             # Capture and log error details

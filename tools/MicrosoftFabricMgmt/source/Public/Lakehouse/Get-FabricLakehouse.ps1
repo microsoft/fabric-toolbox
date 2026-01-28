@@ -1,4 +1,4 @@
-﻿<#
+<#
 .SYNOPSIS
 Gets a Lakehouse or lists all Lakehouses in a workspace.
 
@@ -17,6 +17,10 @@ listing and want a direct lookup without client filtering.
 Optional. Returns only the Lakehouse whose display name exactly matches this value. Provide this when the Id is not
 known. Do not combine with LakehouseId.
 
+.PARAMETER Raw
+Optional. When specified, returns the raw API response with resolved CapacityName and WorkspaceName properties
+added directly to the output objects. Useful for piping to Export-Csv, ConvertTo-Json, or other commands.
+
 .EXAMPLE
 Get-FabricLakehouse -WorkspaceId "12345" -LakehouseId "aaaaaaaa-bbbb-cccc-dddd-ffffffffffff"
 
@@ -31,6 +35,11 @@ Retrieves the Lakehouse named Development from workspace 12345.
 Get-FabricLakehouse -WorkspaceId "12345"
 
 Lists all Lakehouses available in the workspace.
+
+.EXAMPLE
+Get-FabricLakehouse -WorkspaceId "12345" -Raw | Export-Csv -Path "lakehouses.csv"
+
+Exports all Lakehouses with resolved names to a CSV file.
 
 .NOTES
 - Requires `$FabricConfig` global configuration, including BaseUrl and FabricHeaders.
@@ -54,7 +63,10 @@ function Get-FabricLakehouse {
         [Parameter(Mandatory = $false)]
         [ValidateNotNullOrEmpty()]
         [ValidatePattern('^[a-zA-Z0-9_]*$')]
-        [string]$LakehouseName
+        [string]$LakehouseName,
+
+        [Parameter()]
+        [switch]$Raw
     )
 
     process {
@@ -67,7 +79,6 @@ function Get-FabricLakehouse {
 
             Invoke-FabricAuthCheck -ThrowOnFailure
 
-
             # Construct the API endpoint URI
             $apiEndpointURI = "{0}/workspaces/{1}/lakehouses" -f $script:FabricAuthContext.BaseUrl, $WorkspaceId
             Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
@@ -76,38 +87,12 @@ function Get-FabricLakehouse {
             $apiParams = @{
                 BaseURI = $apiEndpointURI
                 Headers = $script:FabricAuthContext.FabricHeaders
-                Method = 'Get'
+                Method  = 'Get'
             }
             $dataItems = Invoke-FabricAPIRequest @apiParams
 
-            # Immediately handle empty response
-            if (-not $dataItems) {
-                Write-FabricLog -Message "No lakehouses found in workspace: $WorkspaceId" -Level Debug
-                return
-            }
-
-            # Apply filtering logic efficiently
-            if ($LakehouseId) {
-                $matchedItems = $dataItems.Where({ $_.Id -eq $LakehouseId }, 'First')
-            }
-            elseif ($LakehouseName) {
-                $matchedItems = $dataItems.Where({ $_.DisplayName -eq $LakehouseName }, 'First')
-            }
-            else {
-                Write-FabricLog -Message "No filter provided. Returning all items." -Level Debug
-                $matchedItems = $dataItems
-            }
-
-            # Handle results
-            if ($matchedItems) {
-                Write-FabricLog -Message "Item(s) found matching the specified criteria." -Level Debug
-
-                # Output to pipeline
-                $matchedItems
-            }
-            else {
-                Write-FabricLog -Message "No item found matching the provided criteria." -Level Debug
-            }
+            # Apply filtering and formatting
+            Select-FabricResource -InputObject $dataItems -Id $LakehouseId -DisplayName $LakehouseName -ResourceType 'Lakehouse' -TypeName 'MicrosoftFabric.Lakehouse' -Raw:$Raw
         }
         catch {
             # Capture and log error details

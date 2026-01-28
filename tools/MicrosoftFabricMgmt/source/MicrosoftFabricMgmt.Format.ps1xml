@@ -15,6 +15,7 @@
         <TypeName>MicrosoftFabric.Item</TypeName>
         <TypeName>MicrosoftFabric.ApacheAirflowJob</TypeName>
         <TypeName>MicrosoftFabric.CopyJob</TypeName>
+        <TypeName>MicrosoftFabric.CosmosDBDatabase</TypeName>
         <TypeName>MicrosoftFabric.Dashboard</TypeName>
         <TypeName>MicrosoftFabric.DataPipeline</TypeName>
         <TypeName>MicrosoftFabric.Datamart</TypeName>
@@ -24,6 +25,7 @@
         <TypeName>MicrosoftFabric.ExternalDataShare</TypeName>
         <TypeName>MicrosoftFabric.Folder</TypeName>
         <TypeName>MicrosoftFabric.GraphQLApi</TypeName>
+        <TypeName>MicrosoftFabric.GraphModel</TypeName>
         <TypeName>MicrosoftFabric.KQLDashboard</TypeName>
         <TypeName>MicrosoftFabric.KQLDatabase</TypeName>
         <TypeName>MicrosoftFabric.KQLQueryset</TypeName>
@@ -40,8 +42,11 @@
         <TypeName>MicrosoftFabric.Reflex</TypeName>
         <TypeName>MicrosoftFabric.Report</TypeName>
         <TypeName>MicrosoftFabric.SemanticModel</TypeName>
+        <TypeName>MicrosoftFabric.SnowflakeDatabase</TypeName>
         <TypeName>MicrosoftFabric.SparkJobDefinition</TypeName>
         <TypeName>MicrosoftFabric.SQLEndpoint</TypeName>
+        <TypeName>MicrosoftFabric.SQLDatabase</TypeName>
+        <TypeName>MicrosoftFabric.Dataflow</TypeName>
         <TypeName>MicrosoftFabric.VariableLibrary</TypeName>
         <TypeName>MicrosoftFabric.Warehouse</TypeName>
       </ViewSelectedBy>
@@ -186,6 +191,81 @@
               <!-- Workspace Name (displayName) -->
               <TableColumnItem>
                 <PropertyName>displayName</PropertyName>
+              </TableColumnItem>
+              <!-- Type -->
+              <TableColumnItem>
+                <PropertyName>type</PropertyName>
+              </TableColumnItem>
+              <!-- ID -->
+              <TableColumnItem>
+                <PropertyName>id</PropertyName>
+              </TableColumnItem>
+            </TableColumnItems>
+          </TableRowEntry>
+        </TableRowEntries>
+      </TableControl>
+    </View>
+
+    <!--
+      =============================================================================
+      Admin Workspace View - For workspace objects from admin API
+      =============================================================================
+      Display Priority: Capacity Name, Workspace Name, State, Type, ID
+      Note: Admin API returns 'name' instead of 'displayName'
+    -->
+    <View>
+      <Name>AdminWorkspaceView</Name>
+      <ViewSelectedBy>
+        <TypeName>MicrosoftFabric.AdminWorkspace</TypeName>
+      </ViewSelectedBy>
+      <TableControl>
+        <TableHeaders>
+          <TableColumnHeader>
+            <Label>Capacity Name</Label>
+            <Width>25</Width>
+          </TableColumnHeader>
+          <TableColumnHeader>
+            <Label>Workspace Name</Label>
+            <Width>30</Width>
+          </TableColumnHeader>
+          <TableColumnHeader>
+            <Label>State</Label>
+            <Width>10</Width>
+          </TableColumnHeader>
+          <TableColumnHeader>
+            <Label>Type</Label>
+            <Width>15</Width>
+          </TableColumnHeader>
+          <TableColumnHeader>
+            <Label>ID</Label>
+          </TableColumnHeader>
+        </TableHeaders>
+        <TableRowEntries>
+          <TableRowEntry>
+            <TableColumnItems>
+              <!-- Capacity Name - Resolve from capacityId -->
+              <TableColumnItem>
+                <ScriptBlock>
+                  if ($_.capacityId) {
+                    try {
+                      Resolve-FabricCapacityName -CapacityId $_.capacityId
+                    }
+                    catch {
+                      $_.capacityId
+                    }
+                  }
+                  else {
+                    'N/A'
+                  }
+                </ScriptBlock>
+              </TableColumnItem>
+              <!-- Workspace Name (name - not displayName in admin API) -->
+              <TableColumnItem>
+                <PropertyName>name</PropertyName>
+              </TableColumnItem>
+              <!-- State -->
+              <TableColumnItem>
+                <PropertyName>state</PropertyName>
               </TableColumnItem>
               <!-- Type -->
               <TableColumnItem>
@@ -502,6 +582,426 @@
           </TableRowEntry>
         </TableRowEntries>
       </TableControl>
+    </View>
+
+    <!--
+      =============================================================================
+      LIST VIEWS - For Format-List output
+      =============================================================================
+    -->
+
+    <!--
+      Fabric Item List View - For Format-List on most Fabric items
+    -->
+    <View>
+      <Name>FabricItemListView</Name>
+      <ViewSelectedBy>
+        <TypeName>MicrosoftFabric.Item</TypeName>
+        <TypeName>MicrosoftFabric.ApacheAirflowJob</TypeName>
+        <TypeName>MicrosoftFabric.CopyJob</TypeName>
+        <TypeName>MicrosoftFabric.CosmosDBDatabase</TypeName>
+        <TypeName>MicrosoftFabric.Dashboard</TypeName>
+        <TypeName>MicrosoftFabric.DataPipeline</TypeName>
+        <TypeName>MicrosoftFabric.Datamart</TypeName>
+        <TypeName>MicrosoftFabric.Environment</TypeName>
+        <TypeName>MicrosoftFabric.Eventhouse</TypeName>
+        <TypeName>MicrosoftFabric.Eventstream</TypeName>
+        <TypeName>MicrosoftFabric.ExternalDataShare</TypeName>
+        <TypeName>MicrosoftFabric.Folder</TypeName>
+        <TypeName>MicrosoftFabric.GraphQLApi</TypeName>
+        <TypeName>MicrosoftFabric.GraphModel</TypeName>
+        <TypeName>MicrosoftFabric.KQLDashboard</TypeName>
+        <TypeName>MicrosoftFabric.KQLDatabase</TypeName>
+        <TypeName>MicrosoftFabric.KQLQueryset</TypeName>
+        <TypeName>MicrosoftFabric.Lakehouse</TypeName>
+        <TypeName>MicrosoftFabric.ManagedPrivateEndpoint</TypeName>
+        <TypeName>MicrosoftFabric.MirroredDatabase</TypeName>
+        <TypeName>MicrosoftFabric.MirroredWarehouse</TypeName>
+        <TypeName>MicrosoftFabric.MLExperiment</TypeName>
+        <TypeName>MicrosoftFabric.MLModel</TypeName>
+        <TypeName>MicrosoftFabric.MountedDataFactory</TypeName>
+        <TypeName>MicrosoftFabric.Notebook</TypeName>
+        <TypeName>MicrosoftFabric.OneLakeShortcut</TypeName>
+        <TypeName>MicrosoftFabric.PaginatedReport</TypeName>
+        <TypeName>MicrosoftFabric.Reflex</TypeName>
+        <TypeName>MicrosoftFabric.Report</TypeName>
+        <TypeName>MicrosoftFabric.SemanticModel</TypeName>
+        <TypeName>MicrosoftFabric.SnowflakeDatabase</TypeName>
+        <TypeName>MicrosoftFabric.SparkJobDefinition</TypeName>
+        <TypeName>MicrosoftFabric.SQLEndpoint</TypeName>
+        <TypeName>MicrosoftFabric.SQLDatabase</TypeName>
+        <TypeName>MicrosoftFabric.Dataflow</TypeName>
+        <TypeName>MicrosoftFabric.VariableLibrary</TypeName>
+        <TypeName>MicrosoftFabric.Warehouse</TypeName>
+      </ViewSelectedBy>
+      <ListControl>
+        <ListEntries>
+          <ListEntry>
+            <ListItems>
+              <ListItem>
+                <Label>Capacity Name</Label>
+                <ScriptBlock>
+                  if ($_.capacityId) {
+                    try {
+                      Resolve-FabricCapacityName -CapacityId $_.capacityId
+                    }
+                    catch {
+                      $_.capacityId
+                    }
+                  }
+                  elseif ($_.workspaceId) {
+                    try {
+                      $capacityId = Resolve-FabricCapacityIdFromWorkspace -WorkspaceId $_.workspaceId
+                      if ($capacityId) {
+                        Resolve-FabricCapacityName -CapacityId $capacityId
+                      }
+                      else {
+                        'N/A'
+                      }
+                    }
+                    catch {
+                      'N/A'
+                    }
+                  }
+                  else {
+                    'N/A'
+                  }
+                </ScriptBlock>
+              </ListItem>
+              <ListItem>
+                <Label>Capacity ID</Label>
+                <ScriptBlock>
+                  if ($_.capacityId) {
+                    $_.capacityId
+                  }
+                  elseif ($_.workspaceId) {
+                    try {
+                      Resolve-FabricCapacityIdFromWorkspace -WorkspaceId $_.workspaceId
+                    }
+                    catch {
+                      'N/A'
+                    }
+                  }
+                  else {
+                    'N/A'
+                  }
+                </ScriptBlock>
+              </ListItem>
+              <ListItem>
+                <Label>Workspace Name</Label>
+                <ScriptBlock>
+                  if ($_.workspaceId) {
+                    try {
+                      Resolve-FabricWorkspaceName -WorkspaceId $_.workspaceId
+                    }
+                    catch {
+                      $_.workspaceId
+                    }
+                  }
+                  else {
+                    'N/A'
+                  }
+                </ScriptBlock>
+              </ListItem>
+              <ListItem>
+                <Label>Workspace ID</Label>
+                <PropertyName>workspaceId</PropertyName>
+              </ListItem>
+              <ListItem>
+                <Label>Item Name</Label>
+                <PropertyName>displayName</PropertyName>
+              </ListItem>
+              <ListItem>
+                <Label>Type</Label>
+                <PropertyName>type</PropertyName>
+              </ListItem>
+              <ListItem>
+                <Label>ID</Label>
+                <PropertyName>id</PropertyName>
+              </ListItem>
+              <ListItem>
+                <Label>Description</Label>
+                <PropertyName>description</PropertyName>
+              </ListItem>
+            </ListItems>
+          </ListEntry>
+        </ListEntries>
+      </ListControl>
+    </View>
+
+    <!--
+      Workspace List View - For Format-List on workspace objects
+    -->
+    <View>
+      <Name>WorkspaceListView</Name>
+      <ViewSelectedBy>
+        <TypeName>MicrosoftFabric.Workspace</TypeName>
+      </ViewSelectedBy>
+      <ListControl>
+        <ListEntries>
+          <ListEntry>
+            <ListItems>
+              <ListItem>
+                <Label>Capacity Name</Label>
+                <ScriptBlock>
+                  if ($_.capacityId) {
+                    try {
+                      Resolve-FabricCapacityName -CapacityId $_.capacityId
+                    }
+                    catch {
+                      $_.capacityId
+                    }
+                  }
+                  else {
+                    'N/A'
+                  }
+                </ScriptBlock>
+              </ListItem>
+              <ListItem>
+                <Label>Capacity ID</Label>
+                <PropertyName>capacityId</PropertyName>
+              </ListItem>
+              <ListItem>
+                <Label>Workspace Name</Label>
+                <PropertyName>displayName</PropertyName>
+              </ListItem>
+              <ListItem>
+                <Label>Workspace ID</Label>
+                <PropertyName>id</PropertyName>
+              </ListItem>
+              <ListItem>
+                <Label>Type</Label>
+                <PropertyName>type</PropertyName>
+              </ListItem>
+              <ListItem>
+                <Label>Description</Label>
+                <PropertyName>description</PropertyName>
+              </ListItem>
+            </ListItems>
+          </ListEntry>
+        </ListEntries>
+      </ListControl>
+    </View>
+
+    <!--
+      Capacity List View - For Format-List on capacity objects
+    -->
+    <View>
+      <Name>CapacityListView</Name>
+      <ViewSelectedBy>
+        <TypeName>MicrosoftFabric.Capacity</TypeName>
+      </ViewSelectedBy>
+      <ListControl>
+        <ListEntries>
+          <ListEntry>
+            <ListItems>
+              <ListItem>
+                <Label>Capacity Name</Label>
+                <PropertyName>displayName</PropertyName>
+              </ListItem>
+              <ListItem>
+                <Label>Capacity ID</Label>
+                <PropertyName>id</PropertyName>
+              </ListItem>
+              <ListItem>
+                <Label>Region</Label>
+                <PropertyName>region</PropertyName>
+              </ListItem>
+              <ListItem>
+                <Label>State</Label>
+                <PropertyName>state</PropertyName>
+              </ListItem>
+              <ListItem>
+                <Label>SKU</Label>
+                <PropertyName>sku</PropertyName>
+              </ListItem>
+            </ListItems>
+          </ListEntry>
+        </ListEntries>
+      </ListControl>
+    </View>
+
+    <!--
+      Domain List View - For Format-List on domain objects
+    -->
+    <View>
+      <Name>DomainListView</Name>
+      <ViewSelectedBy>
+        <TypeName>MicrosoftFabric.Domain</TypeName>
+      </ViewSelectedBy>
+      <ListControl>
+        <ListEntries>
+          <ListEntry>
+            <ListItems>
+              <ListItem>
+                <Label>Domain Name</Label>
+                <PropertyName>displayName</PropertyName>
+              </ListItem>
+              <ListItem>
+                <Label>Domain ID</Label>
+                <PropertyName>id</PropertyName>
+              </ListItem>
+              <ListItem>
+                <Label>Description</Label>
+                <PropertyName>description</PropertyName>
+              </ListItem>
+              <ListItem>
+                <Label>Parent Domain ID</Label>
+                <PropertyName>parentDomainId</PropertyName>
+              </ListItem>
+            </ListItems>
+          </ListEntry>
+        </ListEntries>
+      </ListControl>
+    </View>
+
+    <!--
+      Role Assignment List View - For Format-List on workspace role assignments
+    -->
+    <View>
+      <Name>RoleAssignmentListView</Name>
+      <ViewSelectedBy>
+        <TypeName>MicrosoftFabric.WorkspaceRoleAssignment</TypeName>
+      </ViewSelectedBy>
+      <ListControl>
+        <ListEntries>
+          <ListEntry>
+            <ListItems>
+              <ListItem>
+                <Label>Capacity Name</Label>
+                <ScriptBlock>
+                  if ($_.workspaceId) {
+                    try {
+                      $capacityId = Resolve-FabricCapacityIdFromWorkspace -WorkspaceId $_.workspaceId
+                      if ($capacityId) {
+                        Resolve-FabricCapacityName -CapacityId $capacityId
+                      }
+                      else {
+                        'N/A'
+                      }
+                    }
+                    catch {
+                      'N/A'
+                    }
+                  }
+                  else {
+                    'N/A'
+                  }
+                </ScriptBlock>
+              </ListItem>
+              <ListItem>
+                <Label>Workspace Name</Label>
+                <ScriptBlock>
+                  if ($_.workspaceId) {
+                    try {
+                      Resolve-FabricWorkspaceName -WorkspaceId $_.workspaceId
+                    }
+                    catch {
+                      $_.workspaceId
+                    }
+                  }
+                  else {
+                    'N/A'
+                  }
+                </ScriptBlock>
+              </ListItem>
+              <ListItem>
+                <Label>Workspace ID</Label>
+                <PropertyName>workspaceId</PropertyName>
+              </ListItem>
+              <ListItem>
+                <Label>Principal</Label>
+                <ScriptBlock>
+                  if ($_.DisplayName) {
+                    $_.DisplayName
+                  }
+                  elseif ($_.UserPrincipalName) {
+                    $_.UserPrincipalName
+                  }
+                  else {
+                    $_.PrincipalId
+                  }
+                </ScriptBlock>
+              </ListItem>
+              <ListItem>
+                <Label>Principal ID</Label>
+                <PropertyName>PrincipalId</PropertyName>
+              </ListItem>
+              <ListItem>
+                <Label>Type</Label>
+                <PropertyName>Type</PropertyName>
+              </ListItem>
+              <ListItem>
+                <Label>Role</Label>
+                <PropertyName>Role</PropertyName>
+              </ListItem>
+              <ListItem>
+                <Label>ID</Label>
+                <PropertyName>ID</PropertyName>
+              </ListItem>
+            </ListItems>
+          </ListEntry>
+        </ListEntries>
+      </ListControl>
+    </View>
+
+    <!--
+      Admin Workspace List View - For Format-List on admin workspace objects
+      Note: Admin API returns 'name' instead of 'displayName'
+    -->
+    <View>
+      <Name>AdminWorkspaceListView</Name>
+      <ViewSelectedBy>
+        <TypeName>MicrosoftFabric.AdminWorkspace</TypeName>
+      </ViewSelectedBy>
+      <ListControl>
+        <ListEntries>
+          <ListEntry>
+            <ListItems>
+              <ListItem>
+                <Label>Capacity Name</Label>
+                <ScriptBlock>
+                  if ($_.capacityId) {
+                    try {
+                      Resolve-FabricCapacityName -CapacityId $_.capacityId
+                    }
+                    catch {
+                      $_.capacityId
+                    }
+                  }
+                  else {
+                    'N/A'
+                  }
+                </ScriptBlock>
+              </ListItem>
+              <ListItem>
+                <Label>Capacity ID</Label>
+                <PropertyName>capacityId</PropertyName>
+              </ListItem>
+              <ListItem>
+                <Label>Workspace Name</Label>
+                <PropertyName>name</PropertyName>
+              </ListItem>
+              <ListItem>
+                <Label>Workspace ID</Label>
+                <PropertyName>id</PropertyName>
+              </ListItem>
+              <ListItem>
+                <Label>State</Label>
+                <PropertyName>state</PropertyName>
+              </ListItem>
+              <ListItem>
+                <Label>Type</Label>
+                <PropertyName>type</PropertyName>
+              </ListItem>
+              <ListItem>
+                <Label>Domain ID</Label>
+                <PropertyName>domainId</PropertyName>
+              </ListItem>
+            </ListItems>
+          </ListEntry>
+        </ListEntries>
+      </ListControl>
     </View>
 
   </ViewDefinitions>

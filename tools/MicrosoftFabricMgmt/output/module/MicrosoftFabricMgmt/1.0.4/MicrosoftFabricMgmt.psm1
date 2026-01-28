@@ -667,6 +667,10 @@ function New-FabricAPIUri {
     It handles mutual exclusivity of ID vs DisplayName filtering and provides consistent
     warning messages when resources are not found.
 
+    By default, returned objects are decorated with PSTypeNames for custom formatting
+    (showing Capacity Name, Workspace Name, etc. in table view). Use the -Raw switch
+    to instead add resolved name properties directly to the objects for export scenarios.
+
 .PARAMETER InputObject
     The collection of resources to filter (typically from an API response).
 
@@ -683,6 +687,13 @@ function New-FabricAPIUri {
 .PARAMETER TypeName
     Optional PSTypeName to add to returned objects for custom formatting.
     Example: 'MicrosoftFabric.Workspace', 'MicrosoftFabric.Lakehouse'
+    Ignored when -Raw is specified.
+
+.PARAMETER Raw
+    When specified, adds resolved name properties (CapacityName, WorkspaceName) directly
+    to the output objects instead of using PSTypeName formatting. This is useful when
+    piping to Export-Csv, ConvertTo-Json, or other commands that need the resolved
+    names as actual properties rather than display-only formatting.
 
 .OUTPUTS
     System.Object[]
@@ -703,12 +714,18 @@ function New-FabricAPIUri {
 
     Returns all lakehouses (no filtering).
 
+.EXAMPLE
+    Select-FabricResource -InputObject $items -ResourceType 'Lakehouse' -TypeName 'MicrosoftFabric.Lakehouse' -Raw
+
+    Returns all lakehouses with CapacityName and WorkspaceName properties added directly
+    to each object, suitable for export to CSV or JSON.
+
 .NOTES
     This function saves approximately 20 lines per Get-* function × ~50 functions = ~1,000 lines.
 
     Author: Tiago Balabuch, Jess Pomfret, Rob Sewell
-    Version: 1.0.0
-    Last Updated: 2026-01-07
+    Version: 1.1.0
+    Last Updated: 2026-01-19
 #>
 function Select-FabricResource {
     [CmdletBinding()]
@@ -722,13 +739,17 @@ function Select-FabricResource {
         [string]$Id,
 
         [Parameter()]
+        [Alias('Name')]
         [string]$DisplayName,
 
         [Parameter(Mandatory = $true)]
         [string]$ResourceType,
 
         [Parameter()]
-        [string]$TypeName
+        [string]$TypeName,
+
+        [Parameter()]
+        [switch]$Raw
     )
 
     # If no input, return empty
@@ -737,65 +758,93 @@ function Select-FabricResource {
         return @()
     }
 
+    # Determine which items to return based on filters
+    $resultItems = $null
+
     # No filters - return all
     if (-not $Id -and -not $DisplayName) {
         Write-FabricLog -Message "Returning all $($InputObject.Count) $ResourceType resource(s)" -Level Debug
-
-        # Add type decoration if specified
-        if ($TypeName) {
-            $InputObject | Add-FabricTypeName -TypeName $TypeName
-        }
-
-        return $InputObject
+        $resultItems = $InputObject
     }
-
     # Filter by ID
-    if ($Id) {
+    elseif ($Id) {
         Write-FabricLog -Message "Filtering $ResourceType by ID: $Id" -Level Debug
+        $resultItems = $InputObject | Where-Object { $_.id -eq $Id }
 
-        $filtered = $InputObject | Where-Object { $_.id -eq $Id }
-
-        if (-not $filtered) {
+        if (-not $resultItems) {
             Write-FabricLog -Message "$ResourceType with ID '$Id' not found" -Level Warning
-        } else {
-            Write-FabricLog -Message "Found $ResourceType with ID: $Id" -Level Debug
-
-            # Add type decoration if specified
-            if ($TypeName) {
-                $filtered | Add-FabricTypeName -TypeName $TypeName
-            }
+            return $resultItems
         }
-
-        return $filtered
+        Write-FabricLog -Message "Found $ResourceType with ID: $Id" -Level Debug
     }
-
     # Filter by DisplayName
-    if ($DisplayName) {
+    elseif ($DisplayName) {
         Write-FabricLog -Message "Filtering $ResourceType by DisplayName: $DisplayName" -Level Debug
+        $resultItems = $InputObject | Where-Object { $_.displayName -eq $DisplayName }
 
-        $filtered = $InputObject | Where-Object { $_.displayName -eq $DisplayName }
-
-        if (-not $filtered) {
+        if (-not $resultItems) {
             Write-FabricLog -Message "$ResourceType with DisplayName '$DisplayName' not found" -Level Warning
-        } else {
-            Write-FabricLog -Message "Found $($filtered.Count) $ResourceType resource(s) with DisplayName: $DisplayName" -Level Debug
+            return $resultItems
+        }
+        Write-FabricLog -Message "Found $(@($resultItems).Count) $ResourceType resource(s) with DisplayName: $DisplayName" -Level Debug
+    }
 
-            # Add type decoration if specified
-            if ($TypeName) {
-                $filtered | Add-FabricTypeName -TypeName $TypeName
+    # Apply Raw or TypeName decoration
+    if ($resultItems) {
+        if ($Raw) {
+            # Add resolved name properties directly to objects
+            foreach ($item in $resultItems) {
+                # Resolve CapacityName
+                $capacityName = $null
+                if ($item.capacityId) {
+                    try {
+                        $capacityName = Resolve-FabricCapacityName -CapacityId $item.capacityId
+                    }
+                    catch {
+                        $capacityName = $item.capacityId
+                    }
+                }
+                elseif ($item.workspaceId) {
+                    try {
+                        $capacityId = Resolve-FabricCapacityIdFromWorkspace -WorkspaceId $item.workspaceId
+                        if ($capacityId) {
+                            $capacityName = Resolve-FabricCapacityName -CapacityId $capacityId
+                        }
+                    }
+                    catch {
+                        $capacityName = $null
+                    }
+                }
+
+                # Resolve WorkspaceName
+                $workspaceName = $null
+                if ($item.workspaceId) {
+                    try {
+                        $workspaceName = Resolve-FabricWorkspaceName -WorkspaceId $item.workspaceId
+                    }
+                    catch {
+                        $workspaceName = $item.workspaceId
+                    }
+                }
+
+                # Add properties to the object
+                if ($null -ne $capacityName) {
+                    $item | Add-Member -NotePropertyName 'CapacityName' -NotePropertyValue $capacityName -Force
+                }
+                if ($null -ne $workspaceName) {
+                    $item | Add-Member -NotePropertyName 'WorkspaceName' -NotePropertyValue $workspaceName -Force
+                }
             }
         }
-
-        return $filtered
+        elseif ($TypeName) {
+            # Add type decoration for formatting
+            $resultItems | Add-FabricTypeName -TypeName $TypeName
+        }
     }
 
-    # Fallback (should not reach here)
-    if ($TypeName) {
-        $InputObject | Add-FabricTypeName -TypeName $TypeName
-    }
-    return $InputObject
+    return $resultItems
 }
-#EndRegion '.\Private\Select-FabricResource.ps1' 138
+#EndRegion '.\Private\Select-FabricResource.ps1' 187
 #Region '.\Private\Test-TokenExpired.ps1' -1
 
 <#
@@ -1029,6 +1078,841 @@ function Write-FabricLog {
     Write-PSFMessage @psfParams
 }
 #EndRegion '.\Private\Write-FabricLog.ps1' 105
+#Region '.\Public\Admin\Get-FabricAdminGitConnection.ps1' -1
+
+<#
+.SYNOPSIS
+    Gets Git connections from the admin API for tenant-wide visibility.
+
+.DESCRIPTION
+    The Get-FabricAdminGitConnection cmdlet retrieves Git connections using the admin API endpoint.
+    This provides tenant-wide visibility into all workspace Git connections.
+    Requires Fabric Administrator permissions.
+
+.PARAMETER Raw
+    Optional. When specified, returns the raw API response.
+
+.EXAMPLE
+    Get-FabricAdminGitConnection
+
+    Lists all Git connections in the tenant.
+
+.NOTES
+    - Requires Fabric Administrator permissions or service principal with Tenant.Read.All scope.
+    - Rate limited to 25 requests per minute.
+    - This is a preview API.
+
+    Author: Tiago Balabuch, Jess Pomfret, Rob Sewell
+
+#>
+function Get-FabricAdminGitConnection {
+    [CmdletBinding()]
+    param (
+        [Parameter()]
+        [switch]$Raw
+    )
+
+    process {
+        try {
+            Invoke-FabricAuthCheck -ThrowOnFailure
+
+            # Construct the API endpoint URI
+            $apiEndpointURI = "{0}/admin/workspaces/discoverGitConnections" -f $script:FabricAuthContext.BaseUrl
+            Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
+
+            # Make the API request
+            $apiParams = @{
+                BaseURI = $apiEndpointURI
+                Headers = $script:FabricAuthContext.FabricHeaders
+                Method  = 'Get'
+            }
+            $response = Invoke-FabricAPIRequest @apiParams
+
+            if (-not $response) {
+                Write-FabricLog -Message "No Git connections returned from admin API." -Level Warning
+                return $null
+            }
+
+            # Handle response - admin API returns connections in 'value' property
+            $connections = if ($response.value) { $response.value } else { $response }
+
+            if ($Raw) {
+                return $connections
+            }
+
+            # Add type name for formatting
+            foreach ($conn in $connections) {
+                $conn | Add-Member -NotePropertyName 'PSTypeName' -NotePropertyValue 'MicrosoftFabric.AdminGitConnection' -Force
+            }
+
+            Write-FabricLog -Message "Retrieved $($connections.Count) Git connection(s) from admin API." -Level Debug
+            return $connections
+        }
+        catch {
+            $errorDetails = $_.Exception.Message
+            Write-FabricLog -Message "Failed to retrieve Git connections from admin API. Error: $errorDetails" -Level Error
+        }
+    }
+}
+#EndRegion '.\Public\Admin\Get-FabricAdminGitConnection.ps1' 75
+#Region '.\Public\Admin\Get-FabricAdminItem.ps1' -1
+
+<#
+.SYNOPSIS
+    Gets items from the admin API for tenant-wide visibility.
+
+.DESCRIPTION
+    The Get-FabricAdminItem cmdlet retrieves Fabric and PowerBI items using the admin API endpoint.
+    This provides tenant-wide visibility into all items (including those the user doesn't have access to).
+    Requires Fabric Administrator permissions.
+
+.PARAMETER WorkspaceId
+    Optional. Filter items by workspace ID.
+
+.PARAMETER ItemId
+    Optional. Returns only the item matching this ID. Requires WorkspaceId.
+
+.PARAMETER CapacityId
+    Optional. Filter items by capacity ID.
+
+.PARAMETER ItemType
+    Optional. Filter items by type.
+
+.PARAMETER State
+    Optional. Filter by item state. Valid values: active.
+
+.PARAMETER Raw
+    Optional. When specified, returns the raw API response.
+
+.EXAMPLE
+    Get-FabricAdminItem
+
+    Lists all items in the tenant.
+
+.EXAMPLE
+    Get-FabricAdminItem -WorkspaceId "12345678-1234-1234-1234-123456789012"
+
+    Lists all items in the specified workspace.
+
+.EXAMPLE
+    Get-FabricAdminItem -WorkspaceId "12345678-1234-1234-1234-123456789012" -ItemId "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee"
+
+    Returns the specific item.
+
+.EXAMPLE
+    Get-FabricAdminItem -ItemType "Lakehouse" -State "active"
+
+    Lists all active Lakehouse items in the tenant.
+
+.EXAMPLE
+    Get-FabricAdminItem -CapacityId "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee"
+
+    Lists all items on the specified capacity.
+
+.NOTES
+    - Requires Fabric Administrator permissions or service principal with Tenant.Read.All scope.
+    - Rate limited to 200 requests per hour.
+    - This is a preview API.
+
+    Author: Tiago Balabuch, Jess Pomfret, Rob Sewell
+
+#>
+function Get-FabricAdminItem {
+    [CmdletBinding()]
+    param (
+        [Parameter(Mandatory = $false)]
+        [ValidateNotNullOrEmpty()]
+        [string]$WorkspaceId,
+
+        [Parameter(Mandatory = $false)]
+        [ValidateNotNullOrEmpty()]
+        [string]$ItemId,
+
+        [Parameter(Mandatory = $false)]
+        [ValidateNotNullOrEmpty()]
+        [string]$CapacityId,
+
+        [Parameter(Mandatory = $false)]
+        [ValidateNotNullOrEmpty()]
+        [string]$ItemType,
+
+        [Parameter(Mandatory = $false)]
+        [ValidateSet('active')]
+        [string]$State,
+
+        [Parameter()]
+        [switch]$Raw
+    )
+
+    process {
+        try {
+            # Validate parameters
+            if ($ItemId -and -not $WorkspaceId) {
+                Write-FabricLog -Message "WorkspaceId is required when specifying ItemId." -Level Error
+                return
+            }
+
+            Invoke-FabricAuthCheck -ThrowOnFailure
+
+            # If ItemId and WorkspaceId provided, get specific item
+            if ($ItemId -and $WorkspaceId) {
+                $apiEndpointURI = "{0}/admin/workspaces/{1}/items/{2}" -f $script:FabricAuthContext.BaseUrl, $WorkspaceId, $ItemId
+                Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
+
+                $apiParams = @{
+                    BaseURI = $apiEndpointURI
+                    Headers = $script:FabricAuthContext.FabricHeaders
+                    Method  = 'Get'
+                }
+                $response = Invoke-FabricAPIRequest @apiParams
+
+                if ($response) {
+                    if ($Raw) {
+                        return $response
+                    }
+                    $response | Add-Member -NotePropertyName 'PSTypeName' -NotePropertyValue 'MicrosoftFabric.AdminItem' -Force
+                    return $response
+                }
+                return $null
+            }
+
+            # Build query parameters for list operation
+            $queryParams = @{}
+            if ($WorkspaceId) {
+                $queryParams['workspaceId'] = $WorkspaceId
+            }
+            if ($CapacityId) {
+                $queryParams['capacityId'] = $CapacityId
+            }
+            if ($ItemType) {
+                $queryParams['type'] = $ItemType
+            }
+            if ($State) {
+                $queryParams['state'] = $State
+            }
+
+            # Construct the API endpoint URI
+            if ($queryParams.Count -gt 0) {
+                $queryString = ($queryParams.GetEnumerator() | ForEach-Object { "$($_.Key)=$($_.Value)" }) -join '&'
+                $apiEndpointURI = "{0}/{1}?{2}" -f $script:FabricAuthContext.BaseUrl, 'admin/items', $queryString
+            }
+            else {
+                $apiEndpointURI = "{0}/{1}" -f $script:FabricAuthContext.BaseUrl, 'admin/items'
+            }
+            Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
+
+            # Make the API request
+            $apiParams = @{
+                BaseURI = $apiEndpointURI
+                Headers = $script:FabricAuthContext.FabricHeaders
+                Method  = 'Get'
+            }
+            $response = Invoke-FabricAPIRequest @apiParams
+
+            if (-not $response) {
+                Write-FabricLog -Message "No items returned from admin API." -Level Warning
+                return $null
+            }
+
+            # Handle response - admin API returns items in 'itemEntities' property
+            $items = if ($response.itemEntities) { $response.itemEntities } else { $response }
+
+            if ($Raw) {
+                return $items
+            }
+
+            # Add type name for formatting
+            foreach ($item in $items) {
+                $item | Add-Member -NotePropertyName 'PSTypeName' -NotePropertyValue 'MicrosoftFabric.AdminItem' -Force
+            }
+
+            Write-FabricLog -Message "Retrieved $($items.Count) item(s) from admin API." -Level Debug
+            return $items
+        }
+        catch {
+            $errorDetails = $_.Exception.Message
+            Write-FabricLog -Message "Failed to retrieve items from admin API. Error: $errorDetails" -Level Error
+        }
+    }
+}
+#EndRegion '.\Public\Admin\Get-FabricAdminItem.ps1' 179
+#Region '.\Public\Admin\Get-FabricAdminItemUser.ps1' -1
+
+<#
+.SYNOPSIS
+    Gets users with access to a specific item using the admin API.
+
+.DESCRIPTION
+    The Get-FabricAdminItemUser cmdlet retrieves users (including groups and service principals)
+    that have access to the specified item using the admin API endpoint.
+    Requires Fabric Administrator permissions.
+
+.PARAMETER WorkspaceId
+    The GUID of the workspace containing the item.
+
+.PARAMETER ItemId
+    The GUID of the item to get users for.
+
+.PARAMETER ItemType
+    Optional. The type of the item. Required for Report, Dashboard, SemanticModel, App, and Dataflow.
+
+.PARAMETER Raw
+    Optional. When specified, returns the raw API response.
+
+.EXAMPLE
+    Get-FabricAdminItemUser -WorkspaceId "12345678-1234-1234-1234-123456789012" -ItemId "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee"
+
+    Lists all users with access to the specified item.
+
+.EXAMPLE
+    Get-FabricAdminItemUser -WorkspaceId "12345678-1234-1234-1234-123456789012" -ItemId "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee" -ItemType "Report"
+
+    Lists all users with access to the specified Report item.
+
+.NOTES
+    - Requires Fabric Administrator permissions or service principal with Tenant.Read.All scope.
+    - Rate limited to 200 requests per hour.
+    - This is a preview API.
+
+    Author: Tiago Balabuch, Jess Pomfret, Rob Sewell
+
+#>
+function Get-FabricAdminItemUser {
+    [CmdletBinding()]
+    param (
+        [Parameter(Mandatory = $true)]
+        [ValidateNotNullOrEmpty()]
+        [string]$WorkspaceId,
+
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
+        [ValidateNotNullOrEmpty()]
+        [Alias('id')]
+        [string]$ItemId,
+
+        [Parameter(Mandatory = $false)]
+        [ValidateNotNullOrEmpty()]
+        [string]$ItemType,
+
+        [Parameter()]
+        [switch]$Raw
+    )
+
+    process {
+        try {
+            Invoke-FabricAuthCheck -ThrowOnFailure
+
+            # Construct the API endpoint URI
+            $apiEndpointURI = "{0}/admin/workspaces/{1}/items/{2}/users" -f $script:FabricAuthContext.BaseUrl, $WorkspaceId, $ItemId
+
+            # Add type query parameter if specified
+            if ($ItemType) {
+                $apiEndpointURI = "{0}?type={1}" -f $apiEndpointURI, $ItemType
+            }
+
+            Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
+
+            # Make the API request
+            $apiParams = @{
+                BaseURI = $apiEndpointURI
+                Headers = $script:FabricAuthContext.FabricHeaders
+                Method  = 'Get'
+            }
+            $response = Invoke-FabricAPIRequest @apiParams
+
+            if (-not $response) {
+                Write-FabricLog -Message "No users returned from admin API for item '$ItemId'." -Level Warning
+                return $null
+            }
+
+            # Handle response - admin API returns users in 'accessDetails' property
+            $users = if ($response.accessDetails) { $response.accessDetails } else { $response }
+
+            if ($Raw) {
+                return $users
+            }
+
+            # Add context and type name for formatting
+            foreach ($user in $users) {
+                $user | Add-Member -NotePropertyName 'workspaceId' -NotePropertyValue $WorkspaceId -Force
+                $user | Add-Member -NotePropertyName 'itemId' -NotePropertyValue $ItemId -Force
+                $user | Add-Member -NotePropertyName 'PSTypeName' -NotePropertyValue 'MicrosoftFabric.AdminItemUser' -Force
+            }
+
+            Write-FabricLog -Message "Retrieved $($users.Count) user(s) for item '$ItemId'." -Level Debug
+            return $users
+        }
+        catch {
+            $errorDetails = $_.Exception.Message
+            Write-FabricLog -Message "Failed to retrieve item users from admin API. Error: $errorDetails" -Level Error
+        }
+    }
+}
+#EndRegion '.\Public\Admin\Get-FabricAdminItemUser.ps1' 110
+#Region '.\Public\Admin\Get-FabricAdminUserAccess.ps1' -1
+
+<#
+.SYNOPSIS
+    Gets items that a specific user can access using the admin API.
+
+.DESCRIPTION
+    The Get-FabricAdminUserAccess cmdlet retrieves a list of permission details for Fabric and PowerBI items
+    that the specified user can access. Requires Fabric Administrator permissions.
+
+.PARAMETER UserId
+    The user's graph ID or User Principal Name (UPN).
+
+.PARAMETER ItemType
+    Optional. Filter by item type.
+
+.PARAMETER Raw
+    Optional. When specified, returns the raw API response.
+
+.EXAMPLE
+    Get-FabricAdminUserAccess -UserId "user@contoso.com"
+
+    Lists all items the specified user can access.
+
+.EXAMPLE
+    Get-FabricAdminUserAccess -UserId "12345678-1234-1234-1234-123456789012" -ItemType "Lakehouse"
+
+    Lists all Lakehouse items the specified user can access.
+
+.NOTES
+    - Requires Fabric Administrator permissions or service principal with Tenant.Read.All scope.
+    - Rate limited to 200 requests per hour.
+    - This is a preview API.
+
+    Author: Tiago Balabuch, Jess Pomfret, Rob Sewell
+
+#>
+function Get-FabricAdminUserAccess {
+    [CmdletBinding()]
+    param (
+        [Parameter(Mandatory = $true)]
+        [ValidateNotNullOrEmpty()]
+        [string]$UserId,
+
+        [Parameter(Mandatory = $false)]
+        [ValidateNotNullOrEmpty()]
+        [string]$ItemType,
+
+        [Parameter()]
+        [switch]$Raw
+    )
+
+    process {
+        try {
+            Invoke-FabricAuthCheck -ThrowOnFailure
+
+            # Construct the API endpoint URI
+            $apiEndpointURI = "{0}/admin/users/{1}/access" -f $script:FabricAuthContext.BaseUrl, $UserId
+
+            # Add type query parameter if specified
+            if ($ItemType) {
+                $apiEndpointURI = "{0}?type={1}" -f $apiEndpointURI, $ItemType
+            }
+
+            Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
+
+            # Make the API request
+            $apiParams = @{
+                BaseURI = $apiEndpointURI
+                Headers = $script:FabricAuthContext.FabricHeaders
+                Method  = 'Get'
+            }
+            $response = Invoke-FabricAPIRequest @apiParams
+
+            if (-not $response) {
+                Write-FabricLog -Message "No access entities returned from admin API for user '$UserId'." -Level Warning
+                return $null
+            }
+
+            # Handle response - admin API returns entities in 'accessEntities' property
+            $entities = if ($response.accessEntities) { $response.accessEntities } else { $response }
+
+            if ($Raw) {
+                return $entities
+            }
+
+            # Add context and type name for formatting
+            foreach ($entity in $entities) {
+                $entity | Add-Member -NotePropertyName 'userId' -NotePropertyValue $UserId -Force
+                $entity | Add-Member -NotePropertyName 'PSTypeName' -NotePropertyValue 'MicrosoftFabric.AdminUserAccess' -Force
+            }
+
+            Write-FabricLog -Message "Retrieved $($entities.Count) access entit(ies) for user '$UserId'." -Level Debug
+            return $entities
+        }
+        catch {
+            $errorDetails = $_.Exception.Message
+            Write-FabricLog -Message "Failed to retrieve user access from admin API. Error: $errorDetails" -Level Error
+        }
+    }
+}
+#EndRegion '.\Public\Admin\Get-FabricAdminUserAccess.ps1' 100
+#Region '.\Public\Admin\Get-FabricAdminWorkspace.ps1' -1
+
+<#
+.SYNOPSIS
+    Gets workspaces from the admin API for tenant-wide visibility.
+
+.DESCRIPTION
+    The Get-FabricAdminWorkspace cmdlet retrieves workspaces using the admin API endpoint.
+    This provides tenant-wide visibility into all workspaces (including those the user doesn't have access to).
+    Requires Fabric Administrator permissions.
+
+.PARAMETER WorkspaceId
+    Optional. Returns only the workspace matching this ID.
+
+.PARAMETER WorkspaceName
+    Optional. Filter workspaces by name.
+
+.PARAMETER WorkspaceType
+    Optional. Filter by workspace type. Valid values: personal, workspace, adminworkspace.
+
+.PARAMETER CapacityId
+    Optional. Filter workspaces by capacity ID.
+
+.PARAMETER State
+    Optional. Filter by workspace state. Valid values: active, deleted.
+
+.PARAMETER Raw
+    Optional. When specified, returns the raw API response.
+
+.EXAMPLE
+    Get-FabricAdminWorkspace
+
+    Lists all workspaces in the tenant.
+
+.EXAMPLE
+    Get-FabricAdminWorkspace -WorkspaceId "12345678-1234-1234-1234-123456789012"
+
+    Returns the workspace with the specified ID.
+
+.EXAMPLE
+    Get-FabricAdminWorkspace -WorkspaceType "workspace" -State "active"
+
+    Lists all active workspaces (excluding personal workspaces).
+
+.EXAMPLE
+    Get-FabricAdminWorkspace -CapacityId "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee"
+
+    Lists all workspaces on the specified capacity.
+
+.NOTES
+    - Requires Fabric Administrator permissions or service principal with Tenant.Read.All scope.
+    - Rate limited to 200 requests per hour.
+    - This is a preview API.
+
+    Author: Tiago Balabuch, Jess Pomfret, Rob Sewell
+
+#>
+function Get-FabricAdminWorkspace {
+    [CmdletBinding()]
+    param (
+        [Parameter(Mandatory = $false)]
+        [ValidateNotNullOrEmpty()]
+        [string]$WorkspaceId,
+
+        [Parameter(Mandatory = $false)]
+        [ValidateNotNullOrEmpty()]
+        [string]$WorkspaceName,
+
+        [Parameter(Mandatory = $false)]
+        [ValidateSet('personal', 'workspace', 'adminworkspace')]
+        [string]$WorkspaceType,
+
+        [Parameter(Mandatory = $false, ValueFromPipelineByPropertyName = $true)]
+        [ValidateNotNullOrEmpty()]
+        [string]$CapacityId,
+
+        [Parameter(Mandatory = $false)]
+        [ValidateSet('active', 'deleted')]
+        [string]$State,
+
+        [Parameter()]
+        [switch]$Raw
+    )
+
+    process {
+        try {
+            Invoke-FabricAuthCheck -ThrowOnFailure
+
+            # If WorkspaceId provided, get specific workspace
+            if ($WorkspaceId) {
+                $apiEndpointURI = "{0}/admin/workspaces/{1}" -f $script:FabricAuthContext.BaseUrl, $WorkspaceId
+                Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
+
+                $apiParams = @{
+                    BaseURI = $apiEndpointURI
+                    Headers = $script:FabricAuthContext.FabricHeaders
+                    Method  = 'Get'
+                }
+                $response = Invoke-FabricAPIRequest @apiParams
+
+                if ($response) {
+                    if ($Raw) {
+                        return $response
+                    }
+                    $response | Add-Member -NotePropertyName 'PSTypeName' -NotePropertyValue 'MicrosoftFabric.AdminWorkspace' -Force
+                    return $response
+                }
+                return $null
+            }
+
+            # Build query parameters for list operation
+            $queryParams = @{}
+            if ($WorkspaceName) {
+                $queryParams['name'] = $WorkspaceName
+            }
+            if ($WorkspaceType) {
+                $queryParams['type'] = $WorkspaceType
+            }
+            if ($CapacityId) {
+                $queryParams['capacityId'] = $CapacityId
+            }
+            if ($State) {
+                $queryParams['state'] = $State
+            }
+
+            # Construct the API endpoint URI
+            $uriParams = @{
+                BaseUrl  = $script:FabricAuthContext.BaseUrl
+                Endpoint = 'admin/workspaces'
+            }
+            if ($queryParams.Count -gt 0) {
+                $queryString = ($queryParams.GetEnumerator() | ForEach-Object { "$($_.Key)=$($_.Value)" }) -join '&'
+                $apiEndpointURI = "{0}/{1}?{2}" -f $script:FabricAuthContext.BaseUrl, 'admin/workspaces', $queryString
+            }
+            else {
+                $apiEndpointURI = "{0}/{1}" -f $script:FabricAuthContext.BaseUrl, 'admin/workspaces'
+            }
+            Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
+
+            # Make the API request
+            $apiParams = @{
+                BaseURI = $apiEndpointURI
+                Headers = $script:FabricAuthContext.FabricHeaders
+                Method  = 'Get'
+            }
+            $response = Invoke-FabricAPIRequest @apiParams
+
+            if (-not $response) {
+                Write-FabricLog -Message "No workspaces returned from admin API." -Level Warning
+                return $null
+            }
+
+            # Handle response - admin API returns workspaces in 'workspaces' property
+            $workspaces = if ($response.workspaces) { $response.workspaces } else { $response }
+
+            if ($Raw) {
+                return $workspaces
+            }
+
+            # Add type name for formatting
+            foreach ($ws in $workspaces) {
+                $ws | Add-Member -NotePropertyName 'PSTypeName' -NotePropertyValue 'MicrosoftFabric.AdminWorkspace' -Force
+            }
+
+            Write-FabricLog -Message "Retrieved $($workspaces.Count) workspace(s) from admin API." -Level Debug
+            return $workspaces
+        }
+        catch {
+            $errorDetails = $_.Exception.Message
+            Write-FabricLog -Message "Failed to retrieve workspaces from admin API. Error: $errorDetails" -Level Error
+        }
+    }
+}
+#EndRegion '.\Public\Admin\Get-FabricAdminWorkspace.ps1' 172
+#Region '.\Public\Admin\Get-FabricAdminWorkspaceUser.ps1' -1
+
+<#
+.SYNOPSIS
+    Gets users with access to a workspace using the admin API.
+
+.DESCRIPTION
+    The Get-FabricAdminWorkspaceUser cmdlet retrieves users (including groups and service principals)
+    that have access to the specified workspace using the admin API endpoint.
+    Requires Fabric Administrator permissions.
+
+.PARAMETER WorkspaceId
+    The GUID of the workspace to get users for. This parameter is mandatory.
+
+.PARAMETER Raw
+    Optional. When specified, returns the raw API response.
+
+.EXAMPLE
+    Get-FabricAdminWorkspaceUser -WorkspaceId "12345678-1234-1234-1234-123456789012"
+
+    Lists all users with access to the specified workspace.
+
+.EXAMPLE
+    Get-FabricAdminWorkspace | ForEach-Object { Get-FabricAdminWorkspaceUser -WorkspaceId $_.id }
+
+    Lists users for all workspaces in the tenant.
+
+.NOTES
+    - Requires Fabric Administrator permissions or service principal with Tenant.Read.All scope.
+    - Rate limited to 200 requests per hour.
+    - This is a preview API.
+
+    Author: Tiago Balabuch, Jess Pomfret, Rob Sewell
+
+#>
+function Get-FabricAdminWorkspaceUser {
+    [CmdletBinding()]
+    param (
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
+        [ValidateNotNullOrEmpty()]
+        [Alias('id')]
+        [string]$WorkspaceId,
+
+        [Parameter()]
+        [switch]$Raw
+    )
+
+    process {
+        try {
+            Invoke-FabricAuthCheck -ThrowOnFailure
+
+            # Construct the API endpoint URI
+            $apiEndpointURI = "{0}/admin/workspaces/{1}/users" -f $script:FabricAuthContext.BaseUrl, $WorkspaceId
+            Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
+
+            # Make the API request
+            $apiParams = @{
+                BaseURI = $apiEndpointURI
+                Headers = $script:FabricAuthContext.FabricHeaders
+                Method  = 'Get'
+            }
+            $response = Invoke-FabricAPIRequest @apiParams
+
+            if (-not $response) {
+                Write-FabricLog -Message "No users returned from admin API for workspace '$WorkspaceId'." -Level Warning
+                return $null
+            }
+
+            # Handle response - admin API returns users in 'accessDetails' property
+            $users = if ($response.accessDetails) { $response.accessDetails } else { $response }
+
+            if ($Raw) {
+                return $users
+            }
+
+            # Add workspace context and type name for formatting
+            foreach ($user in $users) {
+                $user | Add-Member -NotePropertyName 'workspaceId' -NotePropertyValue $WorkspaceId -Force
+                $user | Add-Member -NotePropertyName 'PSTypeName' -NotePropertyValue 'MicrosoftFabric.AdminWorkspaceUser' -Force
+            }
+
+            Write-FabricLog -Message "Retrieved $($users.Count) user(s) for workspace '$WorkspaceId'." -Level Debug
+            return $users
+        }
+        catch {
+            $errorDetails = $_.Exception.Message
+            Write-FabricLog -Message "Failed to retrieve workspace users from admin API. Error: $errorDetails" -Level Error
+        }
+    }
+}
+#EndRegion '.\Public\Admin\Get-FabricAdminWorkspaceUser.ps1' 89
+#Region '.\Public\Admin\Restore-FabricAdminWorkspace.ps1' -1
+
+<#
+.SYNOPSIS
+    Restores a deleted workspace using the admin API.
+
+.DESCRIPTION
+    The Restore-FabricAdminWorkspace cmdlet restores a previously deleted workspace using the admin API.
+    Requires Fabric Administrator permissions.
+
+.PARAMETER WorkspaceId
+    The GUID of the deleted workspace to restore.
+
+.PARAMETER RestoredWorkspaceName
+    Optional. The new name for the restored workspace. If not provided, the original name is used.
+
+.PARAMETER EmailOwnerOnRestore
+    Optional. When set to true, sends an email to the workspace owner when the restoration is complete.
+
+.EXAMPLE
+    Restore-FabricAdminWorkspace -WorkspaceId "12345678-1234-1234-1234-123456789012"
+
+    Restores the deleted workspace with its original name.
+
+.EXAMPLE
+    Restore-FabricAdminWorkspace -WorkspaceId "12345678-1234-1234-1234-123456789012" -RestoredWorkspaceName "Restored Workspace"
+
+    Restores the deleted workspace with a new name.
+
+.EXAMPLE
+    Get-FabricAdminWorkspace -State "deleted" | Restore-FabricAdminWorkspace
+
+    Restores all deleted workspaces.
+
+.NOTES
+    - Requires Fabric Administrator permissions or service principal with Tenant.ReadWrite.All scope.
+    - Rate limited to 10 requests per minute.
+    - This is a preview API.
+
+    Author: Tiago Balabuch, Jess Pomfret, Rob Sewell
+
+#>
+function Restore-FabricAdminWorkspace {
+    [CmdletBinding(SupportsShouldProcess)]
+    param (
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
+        [ValidateNotNullOrEmpty()]
+        [Alias('id')]
+        [string]$WorkspaceId,
+
+        [Parameter(Mandatory = $false)]
+        [ValidateNotNullOrEmpty()]
+        [string]$RestoredWorkspaceName,
+
+        [Parameter(Mandatory = $false)]
+        [switch]$EmailOwnerOnRestore
+    )
+
+    process {
+        try {
+            Invoke-FabricAuthCheck -ThrowOnFailure
+
+            # Construct the API endpoint URI
+            $apiEndpointURI = "{0}/admin/workspaces/{1}/restore" -f $script:FabricAuthContext.BaseUrl, $WorkspaceId
+            Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
+
+            # Build request body
+            $body = @{}
+            if ($RestoredWorkspaceName) {
+                $body.restoredWorkspaceName = $RestoredWorkspaceName
+            }
+            if ($EmailOwnerOnRestore) {
+                $body.emailOwnerOnRestore = $true
+            }
+
+            $bodyJson = if ($body.Count -gt 0) { $body | ConvertTo-Json -Depth 10 } else { '{}' }
+
+            if ($PSCmdlet.ShouldProcess("Workspace '$WorkspaceId'", "Restore")) {
+                # Make the API request
+                $apiParams = @{
+                    BaseURI = $apiEndpointURI
+                    Headers = $script:FabricAuthContext.FabricHeaders
+                    Method  = 'Post'
+                    Body    = $bodyJson
+                }
+                $response = Invoke-FabricAPIRequest @apiParams
+
+                Write-FabricLog -Message "Workspace '$WorkspaceId' restored successfully." -Level Debug
+                return $response
+            }
+        }
+        catch {
+            $errorDetails = $_.Exception.Message
+            Write-FabricLog -Message "Failed to restore workspace '$WorkspaceId'. Error: $errorDetails" -Level Error
+        }
+    }
+}
+#EndRegion '.\Public\Admin\Restore-FabricAdminWorkspace.ps1' 96
 #Region '.\Public\Apache Airflow Job\Get-FabricApacheAirflowJob.ps1' -1
 
 <#
@@ -1049,6 +1933,9 @@ function Write-FabricLog {
 .PARAMETER ApacheAirflowJobName
     (Optional) The display name of the Apache Airflow Job to retrieve.
 
+.PARAMETER Raw
+    If specified, returns the raw API response without type decoration.
+
 .EXAMPLE
     Get-FabricApacheAirflowJob -WorkspaceId "workspace-12345" -ApacheAirflowJobId "job-67890"
     Retrieves the Apache Airflow Job with ID "job-67890" from the specified workspace.
@@ -1067,8 +1954,9 @@ function Write-FabricLog {
 function Get-FabricApacheAirflowJob {
     [CmdletBinding()]
     param (
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
         [ValidateNotNullOrEmpty()]
+        [Alias('id')]
         [string]$WorkspaceId,
 
         [Parameter(Mandatory = $false)]
@@ -1078,39 +1966,45 @@ function Get-FabricApacheAirflowJob {
         [Parameter(Mandatory = $false)]
         [ValidateNotNullOrEmpty()]
         [ValidatePattern('^[a-zA-Z0-9_ ]*$')]
-        [string]$ApacheAirflowJobName
+        [string]$ApacheAirflowJobName,
+
+        [Parameter()]
+        [switch]$Raw
     )
-    try {
-        # Validate input parameters
-        if ($ApacheAirflowJobId -and $ApacheAirflowJobName) {
-            Write-FabricLog -Message "Specify only one parameter: either 'ApacheAirflowJobId' or 'ApacheAirflowJobName'." -Level Error
-            return
+
+    process {
+        try {
+            # Validate input parameters
+            if ($ApacheAirflowJobId -and $ApacheAirflowJobName) {
+                Write-FabricLog -Message "Specify only one parameter: either 'ApacheAirflowJobId' or 'ApacheAirflowJobName'." -Level Error
+                return
+            }
+
+            # Validate authentication
+            Invoke-FabricAuthCheck -ThrowOnFailure
+
+            # Construct the API endpoint URI
+            $apiEndpointURI = New-FabricAPIUri -Resource 'workspaces' -WorkspaceId $WorkspaceId -Subresource 'ApacheAirflowJobs'
+
+            # Make the API request
+            $apiParams = @{
+                BaseURI = $apiEndpointURI
+                Headers = $script:FabricAuthContext.FabricHeaders
+                Method = 'Get'
+            }
+            $dataItems = Invoke-FabricAPIRequest @apiParams
+
+            # Apply filtering and output results
+            Select-FabricResource -InputObject $dataItems -Id $ApacheAirflowJobId -DisplayName $ApacheAirflowJobName -ResourceType 'Apache Airflow Job' -TypeName 'MicrosoftFabric.ApacheAirflowJob' -Raw:$Raw
         }
-
-        # Validate authentication
-        Invoke-FabricAuthCheck -ThrowOnFailure
-
-        # Construct the API endpoint URI
-        $apiEndpointURI = New-FabricAPIUri -Resource 'workspaces' -WorkspaceId $WorkspaceId -Subresource 'ApacheAirflowJobs'
-
-        # Make the API request
-        $apiParams = @{
-            BaseURI = $apiEndpointURI
-            Headers = $script:FabricAuthContext.FabricHeaders
-            Method = 'Get'
+        catch {
+            # Capture and log error details
+            $errorDetails = $_.Exception.Message
+            Write-FabricLog -Message "Failed to retrieve Apache Airflow Job for workspace '$WorkspaceId'. Error: $errorDetails" -Level Error
         }
-        $dataItems = Invoke-FabricAPIRequest @apiParams
-
-        # Apply filtering and output results
-        Select-FabricResource -InputObject $dataItems -Id $ApacheAirflowJobId -DisplayName $ApacheAirflowJobName -ResourceType 'Apache Airflow Job' -TypeName 'MicrosoftFabric.ApacheAirflowJob'
-    }
-    catch {
-        # Capture and log error details
-        $errorDetails = $_.Exception.Message
-        Write-FabricLog -Message "Failed to retrieve Apache Airflow Job. Error: $errorDetails" -Level Error
     }
 }
-#EndRegion '.\Public\Apache Airflow Job\Get-FabricApacheAirflowJob.ps1' 80
+#EndRegion '.\Public\Apache Airflow Job\Get-FabricApacheAirflowJob.ps1' 90
 #Region '.\Public\Apache Airflow Job\Get-FabricApacheAirflowJobDefinition.ps1' -1
 
 <#
@@ -1146,8 +2040,9 @@ Author: Updated by Jess Pomfret and Rob Sewell November 2026
 function Get-FabricApacheAirflowJobDefinition {
     [CmdletBinding()]
     param (
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
         [ValidateNotNullOrEmpty()]
+        [Alias('id')]
         [string]$WorkspaceId,
 
         [Parameter(Mandatory = $true)]
@@ -1191,7 +2086,7 @@ function Get-FabricApacheAirflowJobDefinition {
         Write-FabricLog -Message "Failed to retrieve Apache Airflow Job definition. Error: $errorDetails" -Level Error
     }
 }
-#EndRegion '.\Public\Apache Airflow Job\Get-FabricApacheAirflowJobDefinition.ps1' 79
+#EndRegion '.\Public\Apache Airflow Job\Get-FabricApacheAirflowJobDefinition.ps1' 80
 #Region '.\Public\Apache Airflow Job\New-FabricApacheAirflowJob.ps1' -1
 
 <#
@@ -1369,15 +2264,18 @@ function New-FabricApacheAirflowJob {
 function Remove-FabricApacheAirflowJob {
     [CmdletBinding(SupportsShouldProcess = $true, ConfirmImpact = 'Medium')]
     param (
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
         [ValidateNotNullOrEmpty()]
         [string]$WorkspaceId,
 
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
         [ValidateNotNullOrEmpty()]
+        [Alias('id')]
         [string]$ApacheAirflowJobId
     )
-    try {
+
+    process {
+        try {
         # Validate authentication
         Invoke-FabricAuthCheck -ThrowOnFailure
 
@@ -1398,12 +2296,13 @@ function Remove-FabricApacheAirflowJob {
 
     }
     catch {
-        # Log and handle errors
-        $errorDetails = $_.Exception.Message
-        Write-FabricLog -Message "Failed to delete Apache Airflow Job '$ApacheAirflowJobId' from workspace '$WorkspaceId'. Error: $errorDetails" -Level Error
+            # Log and handle errors
+            $errorDetails = $_.Exception.Message
+            Write-FabricLog -Message "Failed to delete Apache Airflow Job '$ApacheAirflowJobId' from workspace '$WorkspaceId'. Error: $errorDetails" -Level Error
+        }
     }
 }
-#EndRegion '.\Public\Apache Airflow Job\Remove-FabricApacheAirflowJob.ps1' 61
+#EndRegion '.\Public\Apache Airflow Job\Remove-FabricApacheAirflowJob.ps1' 65
 #Region '.\Public\Apache Airflow Job\Update-FabricApacheAirflowJob.ps1' -1
 
 <#
@@ -1438,33 +2337,46 @@ function Remove-FabricApacheAirflowJob {
 function Update-FabricApacheAirflowJob {
     [CmdletBinding(SupportsShouldProcess = $true, ConfirmImpact = 'Medium')]
     param (
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
         [ValidateNotNullOrEmpty()]
         [string]$WorkspaceId,
 
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
         [ValidateNotNullOrEmpty()]
+        [Alias('id')]
         [string]$ApacheAirflowJobId,
 
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $false, ValueFromPipelineByPropertyName = $true)]
         [ValidateNotNullOrEmpty()]
         [ValidatePattern('^[a-zA-Z0-9_ ]*$')]
+        [Alias('displayName')]
         [string]$ApacheAirflowJobName,
 
-        [Parameter(Mandatory = $false)]
+        [Parameter(Mandatory = $false, ValueFromPipelineByPropertyName = $true)]
         [ValidateNotNullOrEmpty()]
+        [Alias('description')]
         [string]$ApacheAirflowJobDescription
     )
-    try {
+
+    process {
+        try {
         # Validate authentication
         Invoke-FabricAuthCheck -ThrowOnFailure
+
+        # Validate that at least one update parameter is provided
+        if (-not $ApacheAirflowJobName -and -not $ApacheAirflowJobDescription) {
+            Write-FabricLog -Message "At least one parameter (ApacheAirflowJobName or ApacheAirflowJobDescription) must be provided." -Level Error
+            return
+        }
 
         # Construct the API endpoint URI
         $apiEndpointURI = New-FabricAPIUri -Resource 'workspaces' -WorkspaceId $WorkspaceId -Subresource 'ApacheAirflowJobs' -ItemId $ApacheAirflowJobId
 
-        # Construct the request body
-        $body = @{
-            displayName = $ApacheAirflowJobName
+        # Construct the request body with only the properties that are provided
+        $body = @{}
+
+        if ($ApacheAirflowJobName) {
+            $body.displayName = $ApacheAirflowJobName
         }
 
         if ($ApacheAirflowJobDescription) {
@@ -1488,12 +2400,13 @@ function Update-FabricApacheAirflowJob {
         }
     }
     catch {
-        # Handle and log errors
-        $errorDetails = $_.Exception.Message
-        Write-FabricLog -Message "Failed to update Apache Airflow Job. Error: $errorDetails" -Level Error
+            # Handle and log errors
+            $errorDetails = $_.Exception.Message
+            Write-FabricLog -Message "Failed to update Apache Airflow Job. Error: $errorDetails" -Level Error
+        }
     }
 }
-#EndRegion '.\Public\Apache Airflow Job\Update-FabricApacheAirflowJob.ps1' 88
+#EndRegion '.\Public\Apache Airflow Job\Update-FabricApacheAirflowJob.ps1' 102
 #Region '.\Public\Apache Airflow Job\Update-FabricApacheAirflowJobDefinition.ps1' -1
 
 <#
@@ -1538,11 +2451,12 @@ Author: Tiago Balabuch
 function Update-FabricApacheAirflowJobDefinition {
     [CmdletBinding(SupportsShouldProcess = $true, ConfirmImpact = 'Medium')]
     param (
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
         [ValidateNotNullOrEmpty()]
+        [Alias('id')]
         [string]$WorkspaceId,
 
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
         [ValidateNotNullOrEmpty()]
         [string]$ApacheAirflowJobId,
 
@@ -1554,7 +2468,9 @@ function Update-FabricApacheAirflowJobDefinition {
         [ValidateNotNullOrEmpty()]
         [string]$ApacheAirflowJobPathPlatformDefinition
     )
-    try {
+
+    process {
+        try {
         # Validate authentication
         Invoke-FabricAuthCheck -ThrowOnFailure
 
@@ -1634,7 +2550,8 @@ function Update-FabricApacheAirflowJobDefinition {
         Write-FabricLog -Message "Failed to update Apache Airflow Job. Error: $errorDetails" -Level Error
     }
 }
-#EndRegion '.\Public\Apache Airflow Job\Update-FabricApacheAirflowJobDefinition.ps1' 139
+}
+#EndRegion '.\Public\Apache Airflow Job\Update-FabricApacheAirflowJobDefinition.ps1' 143
 #Region '.\Public\Capacity\Get-FabricCapacity.ps1' -1
 
 
@@ -1651,6 +2568,9 @@ function Update-FabricApacheAirflowJobDefinition {
 
 .PARAMETER CapacityName
     The name of the capacity to retrieve. This parameter is optional.
+
+.PARAMETER Raw
+    If specified, returns the raw API response without type decoration.
 
 .EXAMPLE
      Get-FabricCapacity -CapacityId "capacity-12345"
@@ -1675,7 +2595,10 @@ function Get-FabricCapacity {
 
         [Parameter(Mandatory = $false)]
         [ValidateNotNullOrEmpty()]
-        [string]$CapacityName
+        [string]$CapacityName,
+
+        [Parameter()]
+        [switch]$Raw
     )
     try {
         # Validate input parameters
@@ -1699,7 +2622,7 @@ function Get-FabricCapacity {
         $dataItems = Invoke-FabricAPIRequest @apiParams
 
         # Apply filtering and output results with type decoration
-        Select-FabricResource -InputObject $dataItems -Id $CapacityId -DisplayName $CapacityName -ResourceType 'Capacity' -TypeName 'MicrosoftFabric.Capacity'
+        Select-FabricResource -InputObject $dataItems -Id $CapacityId -DisplayName $CapacityName -ResourceType 'Capacity' -TypeName 'MicrosoftFabric.Capacity' -Raw:$Raw
     }
     catch {
         # Capture and log error details
@@ -1707,7 +2630,7 @@ function Get-FabricCapacity {
         Write-FabricLog -Message "Failed to retrieve capacity. Error: $errorDetails" -Level Error
     }
 }
-#EndRegion '.\Public\Capacity\Get-FabricCapacity.ps1' 71
+#EndRegion '.\Public\Capacity\Get-FabricCapacity.ps1' 77
 #Region '.\Public\Connections\Add-FabricConnectionRoleAssignment.ps1' -1
 
 <#
@@ -1815,6 +2738,9 @@ function Add-FabricConnectionRoleAssignment {
 .PARAMETER ConnectionName
     Optional. The display name of the connection.
 
+.PARAMETER Raw
+    Returns the raw API response without any filtering or transformation. Use this switch when you need the complete, unprocessed response from the API.
+
 .EXAMPLE
     Get-FabricConnection -ConnectionId "Connection-67890"
     Returns details for the connection with ID "Connection-67890".
@@ -1822,6 +2748,10 @@ function Add-FabricConnectionRoleAssignment {
 .EXAMPLE
     Get-FabricConnection -ConnectionName "My Connection"
     Returns details for the connection named "My Connection".
+
+.EXAMPLE
+    Get-FabricConnection -Raw
+    Returns the raw API response for all connections without any formatting or type decoration.
 
 .NOTES
     - Requires `$FabricConfig` with `BaseUrl` and `FabricHeaders`.
@@ -1839,7 +2769,10 @@ function Get-FabricConnection {
         [Parameter(Mandatory = $false, ParameterSetName = 'Name')]
         [ValidateNotNullOrEmpty()]
         [ValidatePattern('^[a-zA-Z0-9_ ]*$')]
-        [string]$ConnectionName
+        [string]$ConnectionName,
+
+        [Parameter(Mandatory = $false)]
+        [switch]$Raw
     )
 
     try {
@@ -1858,7 +2791,7 @@ function Get-FabricConnection {
         $dataItems = Invoke-FabricAPIRequest @apiParams
 
         # Apply filtering and output results
-        Select-FabricResource -InputObject $dataItems -Id $ConnectionId -DisplayName $ConnectionName -ResourceType 'Connection'
+        Select-FabricResource -InputObject $dataItems -Id $ConnectionId -DisplayName $ConnectionName -ResourceType 'Connection' -TypeName 'MicrosoftFabric.Connection' -Raw:$Raw
     }
     catch {
         # Capture and log error details
@@ -1866,7 +2799,7 @@ function Get-FabricConnection {
         Write-FabricLog -Message "Failed to retrieve Connection. Error: $errorDetails" -Level Error
     }
 }
-#EndRegion '.\Public\Connections\Get-FabricConnection.ps1' 66
+#EndRegion '.\Public\Connections\Get-FabricConnection.ps1' 76
 #Region '.\Public\Connections\Get-FabricConnectionSupportedType.ps1' -1
 
 <#
@@ -2163,6 +3096,9 @@ function Update-FabricConnectionRoleAssignment {
 .PARAMETER CopyJobName
     The display name of the CopyJob to retrieve. Optional; specify either CopyJobId or CopyJobName, not both.
 
+.PARAMETER Raw
+    Returns the raw API response without any filtering or transformation. Use this switch when you need the complete, unprocessed response from the API.
+
 .EXAMPLE
     Get-FabricCopyJob -WorkspaceId "workspace-12345" -CopyJobId "CopyJob-67890"
     Retrieves the CopyJob with ID "CopyJob-67890" from workspace "workspace-12345".
@@ -2175,6 +3111,10 @@ function Update-FabricConnectionRoleAssignment {
     Get-FabricCopyJob -WorkspaceId "workspace-12345"
     Retrieves all CopyJobs from workspace "workspace-12345".
 
+.EXAMPLE
+    Get-FabricCopyJob -WorkspaceId "workspace-12345" -Raw
+    Returns the raw API response for all CopyJobs in the workspace without any formatting or type decoration.
+
 .NOTES
     Requires the `$FabricConfig` global variable with `BaseUrl` and `FabricHeaders` properties.
     Calls `Test-TokenExpired` to ensure the authentication token is valid before making the API request.
@@ -2184,8 +3124,9 @@ function Update-FabricConnectionRoleAssignment {
 function Get-FabricCopyJob {
     [CmdletBinding()]
     param (
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
         [ValidateNotNullOrEmpty()]
+        [Alias('id')]
         [string]$WorkspaceId,
 
         [Parameter(Mandatory = $false)]
@@ -2195,34 +3136,40 @@ function Get-FabricCopyJob {
         [Parameter(Mandatory = $false)]
         [ValidateNotNullOrEmpty()]
         [ValidatePattern('^[a-zA-Z0-9_ ]*$')]
-        [string]$CopyJobName
+        [string]$CopyJobName,
+
+        [Parameter(Mandatory = $false)]
+        [switch]$Raw
     )
-    try {
-        # Validate authentication token before proceeding
-        Invoke-FabricAuthCheck -ThrowOnFailure
 
-        # Construct the API endpoint URI
-        $apiEndpointURI = New-FabricAPIUri -Segments @('workspaces', $WorkspaceId, 'copyJobs')
-        Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
+    process {
+        try {
+            # Validate authentication token before proceeding
+            Invoke-FabricAuthCheck -ThrowOnFailure
 
-        # Make the API request
-        $apiParams = @{
-            BaseURI = $apiEndpointURI
-            Headers = $script:FabricAuthContext.FabricHeaders
-            Method = 'Get'
+            # Construct the API endpoint URI
+            $apiEndpointURI = New-FabricAPIUri -Resource 'workspaces' -WorkspaceId $WorkspaceId -Subresource 'copyJobs'
+            Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
+
+            # Make the API request
+            $apiParams = @{
+                BaseURI = $apiEndpointURI
+                Headers = $script:FabricAuthContext.FabricHeaders
+                Method = 'Get'
+            }
+            $dataItems = Invoke-FabricAPIRequest @apiParams
+
+            # Apply filtering
+            Select-FabricResource -InputObject $dataItems -Id $CopyJobId -DisplayName $CopyJobName -ResourceType 'Copy Job' -TypeName 'MicrosoftFabric.CopyJob' -Raw:$Raw
         }
-        $dataItems = Invoke-FabricAPIRequest @apiParams
-
-        # Apply filtering
-        Select-FabricResource -InputObject $dataItems -Id $CopyJobId -Name $CopyJobName -ResourceType 'Copy Job' -TypeName 'MicrosoftFabric.CopyJob'
-    }
-    catch {
-        # Capture and log error details
-        $errorDetails = $_.Exception.Message
-        Write-FabricLog -Message "Failed to retrieve CopyJob. Error: $errorDetails" -Level Error
+        catch {
+            # Capture and log error details
+            $errorDetails = $_.Exception.Message
+            Write-FabricLog -Message "Failed to retrieve CopyJob for workspace '$WorkspaceId'. Error: $errorDetails" -Level Error
+        }
     }
 }
-#EndRegion '.\Public\Copy Job\Get-FabricCopyJob.ps1' 78
+#EndRegion '.\Public\Copy Job\Get-FabricCopyJob.ps1' 92
 #Region '.\Public\Copy Job\Get-FabricCopyJobDefinition.ps1' -1
 
 <#
@@ -2258,8 +3205,9 @@ Retrieves the definition of the Copy Job with ID `67890` from the workspace with
 function Get-FabricCopyJobDefinition {
     [CmdletBinding()]
     param (
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
         [ValidateNotNullOrEmpty()]
+        [Alias('id')]
         [string]$WorkspaceId,
 
         [Parameter(Mandatory = $true)]
@@ -2297,7 +3245,7 @@ function Get-FabricCopyJobDefinition {
         Write-FabricLog -Message "Failed to retrieve Copy Job definition. Error: $errorDetails" -Level Error
     }
 }
-#EndRegion '.\Public\Copy Job\Get-FabricCopyJobDefinition.ps1' 73
+#EndRegion '.\Public\Copy Job\Get-FabricCopyJobDefinition.ps1' 74
 #Region '.\Public\Copy Job\New-FabricCopyJob.ps1' -1
 
 <#
@@ -2361,7 +3309,7 @@ function New-FabricCopyJob {
         Invoke-FabricAuthCheck -ThrowOnFailure
 
         # Construct the API endpoint URL
-        $apiEndpointURI = New-FabricAPIUri -Segments @('workspaces', $WorkspaceId, 'copyJobs')
+        $apiEndpointURI = New-FabricAPIUri -Resource 'workspaces' -WorkspaceId $WorkspaceId -Subresource 'copyJobs'
         Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
 
         # Construct the request body
@@ -2476,20 +3424,23 @@ function New-FabricCopyJob {
 function Remove-FabricCopyJob {
     [CmdletBinding(SupportsShouldProcess = $true, ConfirmImpact = 'Medium')]
     param (
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
         [ValidateNotNullOrEmpty()]
         [string]$WorkspaceId,
 
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
         [ValidateNotNullOrEmpty()]
+        [Alias('id')]
         [string]$CopyJobId
     )
-    try {
+
+    process {
+        try {
         # Validate authentication token before proceeding
         Invoke-FabricAuthCheck -ThrowOnFailure
 
         # Construct the API endpoint URI
-        $apiEndpointURI = New-FabricAPIUri -Segments @('workspaces', $WorkspaceId, 'copyJobs', $CopyJobId)
+        $apiEndpointURI = New-FabricAPIUri -Resource 'workspaces' -WorkspaceId $WorkspaceId -Subresource 'copyJobs' -ItemId $CopyJobId
         Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
 
         if ($PSCmdlet.ShouldProcess("Copy Job '$CopyJobId' in workspace '$WorkspaceId'", "Delete")) {
@@ -2507,12 +3458,13 @@ function Remove-FabricCopyJob {
 
     }
     catch {
-        # Log and handle errors
-        $errorDetails = $_.Exception.Message
-        Write-FabricLog -Message "Failed to delete Copy Job '$CopyJobId' from workspace '$WorkspaceId'. Error: $errorDetails" -Level Error
+            # Log and handle errors
+            $errorDetails = $_.Exception.Message
+            Write-FabricLog -Message "Failed to delete Copy Job '$CopyJobId' from workspace '$WorkspaceId'. Error: $errorDetails" -Level Error
+        }
     }
 }
-#EndRegion '.\Public\Copy Job\Remove-FabricCopyJob.ps1' 64
+#EndRegion '.\Public\Copy Job\Remove-FabricCopyJob.ps1' 68
 #Region '.\Public\Copy Job\Update-FabricCopyJob.ps1' -1
 
 <#
@@ -2548,34 +3500,47 @@ function Remove-FabricCopyJob {
 function Update-FabricCopyJob {
     [CmdletBinding(SupportsShouldProcess = $true, ConfirmImpact = 'Medium')]
     param (
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
         [ValidateNotNullOrEmpty()]
         [string]$WorkspaceId,
 
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
         [ValidateNotNullOrEmpty()]
+        [Alias('id')]
         [string]$CopyJobId,
 
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $false, ValueFromPipelineByPropertyName = $true)]
         [ValidateNotNullOrEmpty()]
         [ValidatePattern('^[a-zA-Z0-9_ ]*$')]
+        [Alias('DisplayName')]
         [string]$CopyJobName,
 
-        [Parameter(Mandatory = $false)]
+        [Parameter(Mandatory = $false, ValueFromPipelineByPropertyName = $true)]
         [ValidateNotNullOrEmpty()]
+        [Alias('Description')]
         [string]$CopyJobDescription
     )
-    try {
+
+    process {
+        try {
+        # Validate that at least one update parameter is provided
+        if (-not $CopyJobName -and -not $CopyJobDescription) {
+            Write-FabricLog -Message "At least one of CopyJobName or CopyJobDescription must be specified" -Level Error
+            return
+        }
+
         # Validate authentication token before proceeding
         Invoke-FabricAuthCheck -ThrowOnFailure
 
         # Construct the API endpoint URI
-        $apiEndpointURI = New-FabricAPIUri -Segments @('workspaces', $WorkspaceId, 'copyJobs', $CopyJobId)
+        $apiEndpointURI = New-FabricAPIUri -Resource 'workspaces' -WorkspaceId $WorkspaceId -Subresource 'copyJobs' -ItemId $CopyJobId
         Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
 
         # Construct the request body
-        $body = @{
-            displayName = $CopyJobName
+        $body = @{}
+
+        if ($CopyJobName) {
+            $body.displayName = $CopyJobName
         }
 
         if ($CopyJobDescription) {
@@ -2600,12 +3565,13 @@ function Update-FabricCopyJob {
         }
     }
     catch {
-        # Handle and log errors
-        $errorDetails = $_.Exception.Message
-        Write-FabricLog -Message "Failed to update Copy Job. Error: $errorDetails" -Level Error
+            # Handle and log errors
+            $errorDetails = $_.Exception.Message
+            Write-FabricLog -Message "Failed to update Copy Job. Error: $errorDetails" -Level Error
+        }
     }
 }
-#EndRegion '.\Public\Copy Job\Update-FabricCopyJob.ps1' 91
+#EndRegion '.\Public\Copy Job\Update-FabricCopyJob.ps1' 105
 #Region '.\Public\Copy Job\Update-FabricCopyJobDefinition.ps1' -1
 
 <#
@@ -2647,14 +3613,16 @@ Updates both the content and platform-specific definition of the Copy Job with I
 Author: Tiago Balabuch
 #>
 
-function Update-FabricCopyJobDefinition {
+function Update-FabricCopyJobDefinition
+{
     [CmdletBinding(SupportsShouldProcess = $true, ConfirmImpact = 'Medium')]
     param (
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
         [ValidateNotNullOrEmpty()]
+        [Alias('id')]
         [string]$WorkspaceId,
 
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
         [ValidateNotNullOrEmpty()]
         [string]$CopyJobId,
 
@@ -2666,83 +3634,644 @@ function Update-FabricCopyJobDefinition {
         [ValidateNotNullOrEmpty()]
         [string]$CopyJobPathPlatformDefinition
     )
-    try {
-        # Validate authentication token before proceeding
-        Invoke-FabricAuthCheck -ThrowOnFailure
 
-        # Construct the API URL
-        $segments = @('workspaces', $WorkspaceId, 'copyJobs', $CopyJobId, 'updateDefinition')
-        $queryParams = @{}
-        if ($CopyJobPathPlatformDefinition) {
-            $queryParams['updateMetadata'] = 'true'
-        }
-        $apiEndpointURI = New-FabricAPIUri -Segments $segments -QueryParameters $queryParams
-        Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
+    process
+    {
+        try
+        {
+            # Validate authentication token before proceeding
+            Invoke-FabricAuthCheck -ThrowOnFailure
 
-        # Construct the request body
-        $body = @{
-            definition = @{
-                parts = @()
+            # Construct the API URL
+            $segments = @('workspaces', $WorkspaceId, 'copyJobs', $CopyJobId, 'updateDefinition')
+            $queryParams = @{}
+            if ($CopyJobPathPlatformDefinition)
+            {
+                $queryParams['updateMetadata'] = 'true'
             }
-        }
+            $apiEndpointURI = New-FabricAPIUri -Segments $segments -QueryParameters $queryParams
+            Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
 
-        if ($CopyJobPathDefinition) {
-            $CopyJobEncodedContent = Convert-ToBase64 -filePath $CopyJobPathDefinition
-
-            if (-not [string]::IsNullOrEmpty($CopyJobEncodedContent)) {
-                # Add new part to the parts array
-                $body.definition.parts += @{
-                    path        = "copyjob-content.json"
-                    payload     = $CopyJobEncodedContent
-                    payloadType = "InlineBase64"
+            # Construct the request body
+            $body = @{
+                definition = @{
+                    parts = @()
                 }
             }
-            else {
-                Write-FabricLog -Message "Invalid or empty content in Copy Job definition." -Level Error
-                return
-            }
-        }
 
-        if ($CopyJobPathPlatformDefinition) {
-            $CopyJobEncodedPlatformContent = Convert-ToBase64 -filePath $CopyJobPathPlatformDefinition
-            if (-not [string]::IsNullOrEmpty($CopyJobEncodedPlatformContent)) {
-                # Add new part to the parts array
-                $body.definition.parts += @{
-                    path        = ".platform"
-                    payload     = $CopyJobEncodedPlatformContent
-                    payloadType = "InlineBase64"
+            if ($CopyJobPathDefinition)
+            {
+                $CopyJobEncodedContent = Convert-ToBase64 -filePath $CopyJobPathDefinition
+
+                if (-not [string]::IsNullOrEmpty($CopyJobEncodedContent))
+                {
+                    # Add new part to the parts array
+                    $body.definition.parts += @{
+                        path        = "copyjob-content.json"
+                        payload     = $CopyJobEncodedContent
+                        payloadType = "InlineBase64"
+                    }
+                }
+                else
+                {
+                    Write-FabricLog -Message "Invalid or empty content in Copy Job definition." -Level Error
+                    return
                 }
             }
-            else {
-                Write-FabricLog -Message "Invalid or empty content in platform definition." -Level Error
+
+            if ($CopyJobPathPlatformDefinition)
+            {
+                $CopyJobEncodedPlatformContent = Convert-ToBase64 -filePath $CopyJobPathPlatformDefinition
+                if (-not [string]::IsNullOrEmpty($CopyJobEncodedPlatformContent))
+                {
+                    # Add new part to the parts array
+                    $body.definition.parts += @{
+                        path        = ".platform"
+                        payload     = $CopyJobEncodedPlatformContent
+                        payloadType = "InlineBase64"
+                    }
+                }
+                else
+                {
+                    Write-FabricLog -Message "Invalid or empty content in platform definition." -Level Error
+                    return
+                }
+            }
+
+            $bodyJson = Convert-FabricRequestBody -InputObject $body
+            Write-FabricLog -Message "Request Body: $bodyJson" -Level Debug
+
+            if ($PSCmdlet.ShouldProcess("Copy Job '$CopyJobId' in workspace '$WorkspaceId'", "Update definition/metadata"))
+            {
+                # Make the API request
+                $apiParams = @{
+                    BaseURI = $apiEndpointURI
+                    Headers = $script:FabricAuthContext.FabricHeaders
+                    Method  = 'Post'
+                    Body    = $bodyJson
+                }
+                $response = Invoke-FabricAPIRequest @apiParams
+
+                Write-FabricLog -Message "Successfully updated the definition for Copy Job with ID '$CopyJobId' in workspace '$WorkspaceId'." -Level Host
+                $response
+            }
+
+        }
+        catch
+        {
+            # Step 6: Handle and log errors
+            $errorDetails = $_.Exception.Message
+            Write-FabricLog -Message "Failed to update Copy Job. Error: $errorDetails" -Level Error
+        }
+    }
+
+}
+#EndRegion '.\Public\Copy Job\Update-FabricCopyJobDefinition.ps1' 153
+#Region '.\Public\Cosmos DB Database\Get-FabricCosmosDBDatabase.ps1' -1
+
+<#
+.SYNOPSIS
+    Gets a Cosmos DB Database or lists all Cosmos DB Databases in a workspace.
+
+.DESCRIPTION
+    The Get-FabricCosmosDBDatabase cmdlet retrieves Cosmos DB Database items from a specified Microsoft Fabric workspace.
+    You can list all Cosmos DB Databases or filter by a specific CosmosDBDatabaseId or display name.
+
+.PARAMETER WorkspaceId
+    The GUID of the workspace containing the Cosmos DB Database resources.
+
+.PARAMETER CosmosDBDatabaseId
+    Optional. Returns only the Cosmos DB Database matching this resource Id.
+
+.PARAMETER CosmosDBDatabaseName
+    Optional. Returns only the Cosmos DB Database whose display name exactly matches this value.
+
+.PARAMETER Raw
+    Optional. When specified, returns the raw API response with resolved CapacityName and WorkspaceName
+    properties added directly to the output objects.
+
+.EXAMPLE
+    Get-FabricCosmosDBDatabase -WorkspaceId "12345678-1234-1234-1234-123456789012"
+
+    Lists all Cosmos DB Databases in the specified workspace.
+
+.EXAMPLE
+    Get-FabricCosmosDBDatabase -WorkspaceId "12345678-1234-1234-1234-123456789012" -CosmosDBDatabaseId "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee"
+
+    Returns the Cosmos DB Database with the specified Id.
+
+.NOTES
+    - Requires `$FabricAuthContext` global configuration.
+    - Calls `Invoke-FabricAuthCheck` to ensure token validity before making the API request.
+
+    Author: Tiago Balabuch, Jess Pomfret, Rob Sewell
+
+#>
+function Get-FabricCosmosDBDatabase {
+    [CmdletBinding()]
+    param (
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
+        [ValidateNotNullOrEmpty()]
+        [Alias('id')]
+        [string]$WorkspaceId,
+
+        [Parameter(Mandatory = $false)]
+        [ValidateNotNullOrEmpty()]
+        [string]$CosmosDBDatabaseId,
+
+        [Parameter(Mandatory = $false)]
+        [ValidateNotNullOrEmpty()]
+        [ValidatePattern('^[a-zA-Z0-9_ ]*$')]
+        [string]$CosmosDBDatabaseName,
+
+        [Parameter()]
+        [switch]$Raw
+    )
+
+    process {
+        try {
+            # Validate input parameters
+            if ($CosmosDBDatabaseId -and $CosmosDBDatabaseName) {
+                Write-FabricLog -Message "Specify only one parameter: either 'CosmosDBDatabaseId' or 'CosmosDBDatabaseName'." -Level Error
                 return
             }
-        }
 
-        $bodyJson = Convert-FabricRequestBody -InputObject $body
-        Write-FabricLog -Message "Request Body: $bodyJson" -Level Debug
+            Invoke-FabricAuthCheck -ThrowOnFailure
 
-        if ($PSCmdlet.ShouldProcess("Copy Job '$CopyJobId' in workspace '$WorkspaceId'", "Update definition/metadata")) {
+            # Construct the API endpoint URI
+            $apiEndpointURI = New-FabricAPIUri -Resource 'workspaces' -WorkspaceId $WorkspaceId -Subresource 'cosmosDbDatabases'
+            Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
+
             # Make the API request
             $apiParams = @{
                 BaseURI = $apiEndpointURI
                 Headers = $script:FabricAuthContext.FabricHeaders
-                Method = 'Post'
-                Body = $bodyJson
+                Method  = 'Get'
+            }
+            $dataItems = Invoke-FabricAPIRequest @apiParams
+
+            # Apply filtering and formatting
+            Select-FabricResource -InputObject $dataItems -Id $CosmosDBDatabaseId -DisplayName $CosmosDBDatabaseName -ResourceType 'CosmosDBDatabase' -TypeName 'MicrosoftFabric.CosmosDBDatabase' -Raw:$Raw
+        }
+        catch {
+            $errorDetails = $_.Exception.Message
+            Write-FabricLog -Message "Failed to retrieve Cosmos DB Database for workspace '$WorkspaceId'. Error: $errorDetails" -Level Error
+        }
+    }
+}
+#EndRegion '.\Public\Cosmos DB Database\Get-FabricCosmosDBDatabase.ps1' 91
+#Region '.\Public\Cosmos DB Database\Get-FabricCosmosDBDatabaseDefinition.ps1' -1
+
+<#
+.SYNOPSIS
+    Gets the definition of a Cosmos DB Database from a Fabric workspace.
+
+.DESCRIPTION
+    The Get-FabricCosmosDBDatabaseDefinition cmdlet retrieves the public definition of a Cosmos DB Database
+    from a specified workspace. This API supports long running operations (LRO).
+
+.PARAMETER WorkspaceId
+    The GUID of the workspace containing the Cosmos DB Database.
+
+.PARAMETER CosmosDBDatabaseId
+    The GUID of the Cosmos DB Database whose definition to retrieve.
+
+.EXAMPLE
+    Get-FabricCosmosDBDatabaseDefinition -WorkspaceId "12345678-1234-1234-1234-123456789012" -CosmosDBDatabaseId "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee"
+
+    Retrieves the definition of the specified Cosmos DB Database.
+
+.NOTES
+    - Requires `$FabricAuthContext` global configuration.
+    - This API supports long running operations (LRO).
+
+    Author: Tiago Balabuch, Jess Pomfret, Rob Sewell
+
+#>
+function Get-FabricCosmosDBDatabaseDefinition {
+    [CmdletBinding()]
+    param (
+        [Parameter(Mandatory = $true)]
+        [ValidateNotNullOrEmpty()]
+        [string]$WorkspaceId,
+
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
+        [ValidateNotNullOrEmpty()]
+        [Alias('id')]
+        [string]$CosmosDBDatabaseId
+    )
+
+    process {
+        try {
+            Invoke-FabricAuthCheck -ThrowOnFailure
+
+            # Construct the API endpoint URI
+            $apiEndpointURI = New-FabricAPIUri -Resource 'workspaces' -WorkspaceId $WorkspaceId -Subresource 'cosmosDbDatabases' -ItemId "$CosmosDBDatabaseId/getDefinition"
+            Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
+
+            # Make the API request (POST to getDefinition)
+            $apiParams = @{
+                BaseURI = $apiEndpointURI
+                Headers = $script:FabricAuthContext.FabricHeaders
+                Method  = 'Post'
             }
             $response = Invoke-FabricAPIRequest @apiParams
 
-            Write-FabricLog -Message "Successfully updated the definition for Copy Job with ID '$CopyJobId' in workspace '$WorkspaceId'." -Level Host
-            $response
+            if ($response) {
+                Write-FabricLog -Message "Cosmos DB Database definition retrieved successfully." -Level Debug
+                return $response
+            }
+        }
+        catch {
+            $errorDetails = $_.Exception.Message
+            Write-FabricLog -Message "Failed to retrieve Cosmos DB Database definition for '$CosmosDBDatabaseId'. Error: $errorDetails" -Level Error
         }
     }
-    catch {
-        # Step 6: Handle and log errors
-        $errorDetails = $_.Exception.Message
-        Write-FabricLog -Message "Failed to update Copy Job. Error: $errorDetails" -Level Error
+}
+#EndRegion '.\Public\Cosmos DB Database\Get-FabricCosmosDBDatabaseDefinition.ps1' 67
+#Region '.\Public\Cosmos DB Database\New-FabricCosmosDBDatabase.ps1' -1
+
+<#
+.SYNOPSIS
+    Creates a new Cosmos DB Database in a Fabric workspace.
+
+.DESCRIPTION
+    The New-FabricCosmosDBDatabase cmdlet creates a new Cosmos DB Database within a specified Fabric workspace.
+
+.PARAMETER WorkspaceId
+    The GUID of the workspace where the Cosmos DB Database will be created.
+
+.PARAMETER CosmosDBDatabaseName
+    The display name for the new Cosmos DB Database.
+
+.PARAMETER Description
+    Optional. A description for the Cosmos DB Database.
+
+.PARAMETER Definition
+    Optional. A hashtable containing the Cosmos DB Database definition with parts array.
+
+.EXAMPLE
+    New-FabricCosmosDBDatabase -WorkspaceId "12345678-1234-1234-1234-123456789012" -CosmosDBDatabaseName "MyCosmosDB"
+
+    Creates a new Cosmos DB Database with the specified name.
+
+.NOTES
+    - Requires `$FabricAuthContext` global configuration.
+    - This API supports long running operations (LRO).
+
+    Author: Tiago Balabuch, Jess Pomfret, Rob Sewell
+
+#>
+function New-FabricCosmosDBDatabase {
+    [CmdletBinding(SupportsShouldProcess)]
+    param (
+        [Parameter(Mandatory = $true)]
+        [ValidateNotNullOrEmpty()]
+        [string]$WorkspaceId,
+
+        [Parameter(Mandatory = $true)]
+        [ValidateNotNullOrEmpty()]
+        [ValidatePattern('^[a-zA-Z0-9_ ]*$')]
+        [string]$CosmosDBDatabaseName,
+
+        [Parameter(Mandatory = $false)]
+        [ValidateNotNullOrEmpty()]
+        [string]$Description,
+
+        [Parameter(Mandatory = $false)]
+        [ValidateNotNullOrEmpty()]
+        [hashtable]$Definition
+    )
+
+    process {
+        try {
+            Invoke-FabricAuthCheck -ThrowOnFailure
+
+            # Construct the API endpoint URI
+            $apiEndpointURI = New-FabricAPIUri -Resource 'workspaces' -WorkspaceId $WorkspaceId -Subresource 'cosmosDbDatabases'
+            Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
+
+            # Build request body
+            $body = @{
+                displayName = $CosmosDBDatabaseName
+            }
+
+            if ($Description) {
+                $body.description = $Description
+            }
+
+            if ($Definition) {
+                $body.definition = $Definition
+            }
+
+            $bodyJson = $body | ConvertTo-Json -Depth 10
+
+            if ($PSCmdlet.ShouldProcess("Cosmos DB Database '$CosmosDBDatabaseName'", "Create")) {
+                # Make the API request
+                $apiParams = @{
+                    BaseURI = $apiEndpointURI
+                    Headers = $script:FabricAuthContext.FabricHeaders
+                    Method  = 'Post'
+                    Body    = $bodyJson
+                }
+                $response = Invoke-FabricAPIRequest @apiParams
+
+                if ($response) {
+                    Write-FabricLog -Message "Cosmos DB Database '$CosmosDBDatabaseName' created successfully." -Level Debug
+                    return $response
+                }
+            }
+        }
+        catch {
+            $errorDetails = $_.Exception.Message
+            Write-FabricLog -Message "Failed to create Cosmos DB Database '$CosmosDBDatabaseName'. Error: $errorDetails" -Level Error
+        }
     }
 }
-#EndRegion '.\Public\Copy Job\Update-FabricCopyJobDefinition.ps1' 135
+#EndRegion '.\Public\Cosmos DB Database\New-FabricCosmosDBDatabase.ps1' 98
+#Region '.\Public\Cosmos DB Database\Remove-FabricCosmosDBDatabase.ps1' -1
+
+<#
+.SYNOPSIS
+    Removes a Cosmos DB Database from a Fabric workspace.
+
+.DESCRIPTION
+    The Remove-FabricCosmosDBDatabase cmdlet deletes a Cosmos DB Database from a specified workspace.
+
+.PARAMETER WorkspaceId
+    The GUID of the workspace containing the Cosmos DB Database.
+
+.PARAMETER CosmosDBDatabaseId
+    The GUID of the Cosmos DB Database to delete.
+
+.EXAMPLE
+    Remove-FabricCosmosDBDatabase -WorkspaceId "12345678-1234-1234-1234-123456789012" -CosmosDBDatabaseId "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee"
+
+    Deletes the specified Cosmos DB Database from the workspace.
+
+.NOTES
+    - Requires `$FabricAuthContext` global configuration.
+
+    Author: Tiago Balabuch, Jess Pomfret, Rob Sewell
+
+#>
+function Remove-FabricCosmosDBDatabase {
+    [CmdletBinding(SupportsShouldProcess, ConfirmImpact = 'High')]
+    param (
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
+        [ValidateNotNullOrEmpty()]
+        [string]$WorkspaceId,
+
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
+        [ValidateNotNullOrEmpty()]
+        [Alias('id')]
+        [string]$CosmosDBDatabaseId
+    )
+
+    process {
+        try {
+            Invoke-FabricAuthCheck -ThrowOnFailure
+
+            # Construct the API endpoint URI
+            $apiEndpointURI = New-FabricAPIUri -Resource 'workspaces' -WorkspaceId $WorkspaceId -Subresource 'cosmosDbDatabases' -ItemId $CosmosDBDatabaseId
+            Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
+
+            if ($PSCmdlet.ShouldProcess("Cosmos DB Database '$CosmosDBDatabaseId'", "Delete")) {
+                # Make the API request
+                $apiParams = @{
+                    BaseURI = $apiEndpointURI
+                    Headers = $script:FabricAuthContext.FabricHeaders
+                    Method  = 'Delete'
+                }
+                Invoke-FabricAPIRequest @apiParams
+
+                Write-FabricLog -Message "Cosmos DB Database '$CosmosDBDatabaseId' deleted successfully." -Level Debug
+            }
+        }
+        catch {
+            $errorDetails = $_.Exception.Message
+            Write-FabricLog -Message "Failed to delete Cosmos DB Database '$CosmosDBDatabaseId'. Error: $errorDetails" -Level Error
+        }
+    }
+}
+#EndRegion '.\Public\Cosmos DB Database\Remove-FabricCosmosDBDatabase.ps1' 64
+#Region '.\Public\Cosmos DB Database\Update-FabricCosmosDBDatabase.ps1' -1
+
+<#
+.SYNOPSIS
+    Updates an existing Cosmos DB Database in a Fabric workspace.
+
+.DESCRIPTION
+    The Update-FabricCosmosDBDatabase cmdlet updates the properties of a Cosmos DB Database in a specified workspace.
+
+.PARAMETER WorkspaceId
+    The GUID of the workspace containing the Cosmos DB Database.
+
+.PARAMETER CosmosDBDatabaseId
+    The GUID of the Cosmos DB Database to update.
+
+.PARAMETER CosmosDBDatabaseName
+    Optional. The new display name for the Cosmos DB Database.
+
+.PARAMETER Description
+    Optional. The new description for the Cosmos DB Database.
+
+.EXAMPLE
+    Update-FabricCosmosDBDatabase -WorkspaceId "12345678-1234-1234-1234-123456789012" -CosmosDBDatabaseId "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee" -CosmosDBDatabaseName "NewName"
+
+    Updates the display name of the specified Cosmos DB Database.
+
+.NOTES
+    - Requires `$FabricAuthContext` global configuration.
+
+    Author: Tiago Balabuch, Jess Pomfret, Rob Sewell
+
+#>
+function Update-FabricCosmosDBDatabase {
+    [CmdletBinding(SupportsShouldProcess)]
+    param (
+        [Parameter(Mandatory = $true)]
+        [ValidateNotNullOrEmpty()]
+        [string]$WorkspaceId,
+
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
+        [ValidateNotNullOrEmpty()]
+        [Alias('id')]
+        [string]$CosmosDBDatabaseId,
+
+        [Parameter(Mandatory = $false)]
+        [ValidateNotNullOrEmpty()]
+        [ValidatePattern('^[a-zA-Z0-9_ ]*$')]
+        [string]$CosmosDBDatabaseName,
+
+        [Parameter(Mandatory = $false)]
+        [ValidateNotNullOrEmpty()]
+        [string]$Description
+    )
+
+    process {
+        try {
+            if (-not $CosmosDBDatabaseName -and -not $Description) {
+                Write-FabricLog -Message "At least one of 'CosmosDBDatabaseName' or 'Description' must be specified." -Level Error
+                return
+            }
+
+            Invoke-FabricAuthCheck -ThrowOnFailure
+
+            # Construct the API endpoint URI
+            $apiEndpointURI = New-FabricAPIUri -Resource 'workspaces' -WorkspaceId $WorkspaceId -Subresource 'cosmosDbDatabases' -ItemId $CosmosDBDatabaseId
+            Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
+
+            # Build request body
+            $body = @{}
+
+            if ($CosmosDBDatabaseName) {
+                $body.displayName = $CosmosDBDatabaseName
+            }
+
+            if ($Description) {
+                $body.description = $Description
+            }
+
+            $bodyJson = $body | ConvertTo-Json -Depth 10
+
+            if ($PSCmdlet.ShouldProcess("Cosmos DB Database '$CosmosDBDatabaseId'", "Update")) {
+                # Make the API request
+                $apiParams = @{
+                    BaseURI = $apiEndpointURI
+                    Headers = $script:FabricAuthContext.FabricHeaders
+                    Method  = 'Patch'
+                    Body    = $bodyJson
+                }
+                $response = Invoke-FabricAPIRequest @apiParams
+
+                if ($response) {
+                    Write-FabricLog -Message "Cosmos DB Database '$CosmosDBDatabaseId' updated successfully." -Level Debug
+                    return $response
+                }
+            }
+        }
+        catch {
+            $errorDetails = $_.Exception.Message
+            Write-FabricLog -Message "Failed to update Cosmos DB Database '$CosmosDBDatabaseId'. Error: $errorDetails" -Level Error
+        }
+    }
+}
+#EndRegion '.\Public\Cosmos DB Database\Update-FabricCosmosDBDatabase.ps1' 101
+#Region '.\Public\Cosmos DB Database\Update-FabricCosmosDBDatabaseDefinition.ps1' -1
+
+<#
+.SYNOPSIS
+    Updates the definition of a Cosmos DB Database in a Fabric workspace.
+
+.DESCRIPTION
+    The Update-FabricCosmosDBDatabaseDefinition cmdlet overrides the definition for the specified Cosmos DB Database.
+    This API supports long running operations (LRO).
+
+.PARAMETER WorkspaceId
+    The GUID of the workspace containing the Cosmos DB Database.
+
+.PARAMETER CosmosDBDatabaseId
+    The GUID of the Cosmos DB Database whose definition to update.
+
+.PARAMETER Definition
+    The definition object containing the parts array to update.
+
+.PARAMETER UpdateMetadata
+    Optional. When set to true and the .platform file is provided as part of the definition,
+    the item's metadata is updated using the metadata in the .platform file.
+
+.EXAMPLE
+    $definition = @{
+        parts = @(
+            @{
+                path = "config.json"
+                payload = [Convert]::ToBase64String([System.Text.Encoding]::UTF8.GetBytes('{"config": "content"}'))
+                payloadType = "InlineBase64"
+            }
+        )
+    }
+    Update-FabricCosmosDBDatabaseDefinition -WorkspaceId "12345678-1234-1234-1234-123456789012" -CosmosDBDatabaseId "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee" -Definition $definition
+
+    Updates the definition of the specified Cosmos DB Database.
+
+.NOTES
+    - Requires `$FabricAuthContext` global configuration.
+    - This API supports long running operations (LRO).
+
+    Author: Tiago Balabuch, Jess Pomfret, Rob Sewell
+
+#>
+function Update-FabricCosmosDBDatabaseDefinition {
+    [CmdletBinding(SupportsShouldProcess)]
+    param (
+        [Parameter(Mandatory = $true)]
+        [ValidateNotNullOrEmpty()]
+        [string]$WorkspaceId,
+
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
+        [ValidateNotNullOrEmpty()]
+        [Alias('id')]
+        [string]$CosmosDBDatabaseId,
+
+        [Parameter(Mandatory = $true)]
+        [ValidateNotNullOrEmpty()]
+        [hashtable]$Definition,
+
+        [Parameter(Mandatory = $false)]
+        [switch]$UpdateMetadata
+    )
+
+    process {
+        try {
+            Invoke-FabricAuthCheck -ThrowOnFailure
+
+            # Build query parameters
+            $queryParams = @{}
+            if ($UpdateMetadata) {
+                $queryParams['updateMetadata'] = 'true'
+            }
+
+            # Construct the API endpoint URI
+            $uriParams = @{
+                Resource    = 'workspaces'
+                WorkspaceId = $WorkspaceId
+                Subresource = 'cosmosDbDatabases'
+                ItemId      = "$CosmosDBDatabaseId/updateDefinition"
+            }
+            if ($queryParams.Count -gt 0) {
+                $uriParams['QueryParameters'] = $queryParams
+            }
+            $apiEndpointURI = New-FabricAPIUri @uriParams
+            Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
+
+            # Build request body
+            $body = @{
+                definition = $Definition
+            }
+            $bodyJson = $body | ConvertTo-Json -Depth 10
+
+            if ($PSCmdlet.ShouldProcess("Cosmos DB Database definition '$CosmosDBDatabaseId'", "Update")) {
+                # Make the API request
+                $apiParams = @{
+                    BaseURI = $apiEndpointURI
+                    Headers = $script:FabricAuthContext.FabricHeaders
+                    Method  = 'Post'
+                    Body    = $bodyJson
+                }
+                $response = Invoke-FabricAPIRequest @apiParams
+
+                Write-FabricLog -Message "Cosmos DB Database definition updated successfully." -Level Debug
+                return $response
+            }
+        }
+        catch {
+            $errorDetails = $_.Exception.Message
+            Write-FabricLog -Message "Failed to update Cosmos DB Database definition for '$CosmosDBDatabaseId'. Error: $errorDetails" -Level Error
+        }
+    }
+}
+#EndRegion '.\Public\Cosmos DB Database\Update-FabricCosmosDBDatabaseDefinition.ps1' 112
 #Region '.\Public\Dashboard\Get-FabricDashboard.ps1' -1
 
 <#
@@ -2756,9 +4285,16 @@ function Update-FabricCopyJobDefinition {
 .PARAMETER WorkspaceId
     The ID of the workspace from which to retrieve dashboards. This parameter is mandatory.
 
+.PARAMETER Raw
+    Returns the raw API response without any filtering or transformation. Use this switch when you need the complete, unprocessed response from the API.
+
 .EXAMPLE
      Get-FabricDashboard -WorkspaceId "12345"
     This example retrieves all dashboards from the workspace with ID "12345".
+
+.EXAMPLE
+    Get-FabricDashboard -WorkspaceId "12345" -Raw
+    Returns the raw API response for all dashboards in the workspace without any formatting or type decoration.
 
 .NOTES
     - Requires `$FabricConfig` global configuration, including `BaseUrl` and `FabricHeaders`.
@@ -2770,39 +4306,42 @@ function Update-FabricCopyJobDefinition {
 function Get-FabricDashboard {
     [CmdletBinding()]
     param (
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
         [ValidateNotNullOrEmpty()]
-        [string]$WorkspaceId
+        [Alias('id')]
+        [string]$WorkspaceId,
+
+        [Parameter(Mandatory = $false)]
+        [switch]$Raw
     )
 
-    try {
-        # Validate authentication token before proceeding
-        Invoke-FabricAuthCheck -ThrowOnFailure
+    process {
+        try {
+            # Validate authentication token before proceeding
+            Invoke-FabricAuthCheck -ThrowOnFailure
 
-        # Construct the API endpoint URL
-        $apiEndpointURI = New-FabricAPIUri -Segments @('workspaces', $WorkspaceId, 'dashboards')
+            # Construct the API endpoint URL
+            $apiEndpointURI = New-FabricAPIUri -Segments @('workspaces', $WorkspaceId, 'dashboards')
 
-        # Invoke the Fabric API to retrieve dashboards
-        $apiParams = @{
-            BaseURI = $apiEndpointURI
-            Headers = $script:FabricAuthContext.FabricHeaders
-            Method = 'Get'
+            # Invoke the Fabric API to retrieve dashboards
+            $apiParams = @{
+                BaseURI = $apiEndpointURI
+                Headers = $script:FabricAuthContext.FabricHeaders
+                Method = 'Get'
+            }
+            $dataItems = Invoke-FabricAPIRequest @apiParams
+
+            # Apply filtering
+            Select-FabricResource -InputObject $dataItems -ResourceType 'Dashboard' -TypeName 'MicrosoftFabric.Dashboard' -Raw:$Raw
         }
-        $dataItems = Invoke-FabricAPIRequest @apiParams
-
-        # Add type decoration for custom formatting
-        if ($dataItems) {
-            $dataItems | Add-FabricTypeName -TypeName 'MicrosoftFabric.Dashboard'
-            return $dataItems
+        catch {
+            # Capture and log error details
+            $errorDetails = $_.Exception.Message
+            Write-FabricLog -Message "Failed to retrieve Dashboard for workspace '$WorkspaceId'. Error: $errorDetails" -Level Error
         }
-    }
-    catch {
-        # Capture and log error details
-        $errorDetails = $_.Exception.Message
-        Write-FabricLog -Message "Failed to retrieve Dashboard. Error: $errorDetails" -Level Error
     }
 }
-#EndRegion '.\Public\Dashboard\Get-FabricDashboard.ps1' 58
+#EndRegion '.\Public\Dashboard\Get-FabricDashboard.ps1' 68
 #Region '.\Public\Data Pipeline\Get-FabricDataPipeline.ps1' -1
 
 <#
@@ -2822,6 +4361,9 @@ function Get-FabricDashboard {
 .PARAMETER DataPipelineName
     The display name of the Data Pipeline to retrieve. This parameter is optional and filters the results by name.
 
+.PARAMETER Raw
+    Returns the raw API response without any filtering or transformation. Use this switch when you need the complete, unprocessed response from the API.
+
 .EXAMPLE
      Get-FabricData Pipeline -WorkspaceId "workspace-12345" -Data PipelineId "Data Pipeline-67890"
     This example retrieves the Data Pipeline details for the Data Pipeline with ID "Data Pipeline-67890" in the workspace with ID "workspace-12345".
@@ -2829,6 +4371,10 @@ function Get-FabricDashboard {
 .EXAMPLE
      Get-FabricData Pipeline -WorkspaceId "workspace-12345" -Data PipelineName "My Data Pipeline"
     This example retrieves the Data Pipeline details for the Data Pipeline named "My Data Pipeline" in the workspace with ID "workspace-12345".
+
+.EXAMPLE
+    Get-FabricDataPipeline -WorkspaceId "workspace-12345" -Raw
+    Returns the raw API response for all data pipelines in the workspace without any formatting or type decoration.
 
 .NOTES
     - Requires `$FabricConfig` global configuration, including `BaseUrl` and `FabricHeaders`.
@@ -2839,8 +4385,9 @@ function Get-FabricDashboard {
 function Get-FabricDataPipeline {
     [CmdletBinding()]
     param (
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
         [ValidateNotNullOrEmpty()]
+        [Alias('id')]
         [string]$WorkspaceId,
 
         [Parameter(Mandatory = $false)]
@@ -2850,33 +4397,39 @@ function Get-FabricDataPipeline {
         [Parameter(Mandatory = $false)]
         [ValidateNotNullOrEmpty()]
         [ValidatePattern('^[a-zA-Z0-9_ ]*$')]
-        [string]$DataPipelineName
+        [string]$DataPipelineName,
+
+        [Parameter(Mandatory = $false)]
+        [switch]$Raw
     )
-    try {
-        # Validate authentication token before proceeding
-        Invoke-FabricAuthCheck -ThrowOnFailure
 
-        # Construct the API endpoint URI
-        $apiEndpointURI = New-FabricAPIUri -Segments @('workspaces', $WorkspaceId, 'dataPipelines')
+    process {
+        try {
+            # Validate authentication token before proceeding
+            Invoke-FabricAuthCheck -ThrowOnFailure
 
-        # Make the API request
-        $apiParams = @{
-            BaseURI = $apiEndpointURI
-            Headers = $script:FabricAuthContext.FabricHeaders
-            Method = 'Get'
+            # Construct the API endpoint URI
+            $apiEndpointURI = New-FabricAPIUri -Resource 'workspaces' -WorkspaceId $WorkspaceId -Subresource 'dataPipelines'
+
+            # Make the API request
+            $apiParams = @{
+                BaseURI = $apiEndpointURI
+                Headers = $script:FabricAuthContext.FabricHeaders
+                Method = 'Get'
+            }
+            $dataItems = Invoke-FabricAPIRequest @apiParams
+
+            # Apply filtering
+            Select-FabricResource -InputObject $dataItems -Id $DataPipelineId -DisplayName $DataPipelineName -ResourceType 'Data Pipeline' -TypeName 'MicrosoftFabric.DataPipeline' -Raw:$Raw
         }
-        $dataItems = Invoke-FabricAPIRequest @apiParams
-
-        # Apply filtering with type decoration
-        Select-FabricResource -InputObject $dataItems -Id $DataPipelineId -DisplayName $DataPipelineName -ResourceType 'Data Pipeline' -TypeName 'MicrosoftFabric.DataPipeline'
-    }
-    catch {
-        # Capture and log error details
-        $errorDetails = $_.Exception.Message
-        Write-FabricLog -Message "Failed to retrieve DataPipeline. Error: $errorDetails" -Level Error
+        catch {
+            # Capture and log error details
+            $errorDetails = $_.Exception.Message
+            Write-FabricLog -Message "Failed to retrieve DataPipeline for workspace '$WorkspaceId'. Error: $errorDetails" -Level Error
+        }
     }
 }
-#EndRegion '.\Public\Data Pipeline\Get-FabricDataPipeline.ps1' 72
+#EndRegion '.\Public\Data Pipeline\Get-FabricDataPipeline.ps1' 86
 #Region '.\Public\Data Pipeline\New-FabricDataPipeline.ps1' -1
 
 <#
@@ -2911,8 +4464,9 @@ function Get-FabricDataPipeline {
 function New-FabricDataPipeline {
     [CmdletBinding(SupportsShouldProcess = $true, ConfirmImpact = 'Medium')]
     param (
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
         [ValidateNotNullOrEmpty()]
+        [Alias('id')]
         [string]$WorkspaceId,
 
         [Parameter(Mandatory = $true)]
@@ -2925,12 +4479,13 @@ function New-FabricDataPipeline {
         [string]$DataPipelineDescription
     )
 
+    process {
     try {
         # Validate authentication token before proceeding
         Invoke-FabricAuthCheck -ThrowOnFailure
 
         # Construct the API endpoint URI
-        $apiEndpointURI = New-FabricAPIUri -Segments @('workspaces', $WorkspaceId, 'dataPipelines')
+        $apiEndpointURI = New-FabricAPIUri -Resource 'workspaces' -WorkspaceId $WorkspaceId -Subresource 'dataPipelines'
         Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
 
         # Construct the request body
@@ -2964,8 +4519,9 @@ function New-FabricDataPipeline {
         $errorDetails = $_.Exception.Message
         Write-FabricLog -Message "Failed to create DataPipeline. Error: $errorDetails" -Level Error
     }
+    }
 }
-#EndRegion '.\Public\Data Pipeline\New-FabricDataPipeline.ps1' 87
+#EndRegion '.\Public\Data Pipeline\New-FabricDataPipeline.ps1' 90
 #Region '.\Public\Data Pipeline\Remove-FabricDataPipeline.ps1' -1
 
 <#
@@ -2996,20 +4552,23 @@ function New-FabricDataPipeline {
 function Remove-FabricDataPipeline {
     [CmdletBinding(SupportsShouldProcess = $true, ConfirmImpact = 'Medium')]
     param (
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
         [ValidateNotNullOrEmpty()]
         [string]$WorkspaceId,
 
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
         [ValidateNotNullOrEmpty()]
+        [Alias('id')]
         [string]$DataPipelineId
     )
-    try {
+
+    process {
+        try {
         # Validate authentication token before proceeding
         Invoke-FabricAuthCheck -ThrowOnFailure
 
         # Construct the API endpoint URI
-        $apiEndpointURI = New-FabricAPIUri -Segments @('workspaces', $WorkspaceId, 'dataPipelines', $DataPipelineId)
+        $apiEndpointURI = New-FabricAPIUri -Resource 'workspaces' -WorkspaceId $WorkspaceId -Subresource 'dataPipelines' -ItemId $DataPipelineId
         Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
 
         if ($PSCmdlet.ShouldProcess("DataPipeline '$DataPipelineId' in workspace '$WorkspaceId'", "Delete")) {
@@ -3026,12 +4585,13 @@ function Remove-FabricDataPipeline {
         }
     }
     catch {
-        # Capture and log error details
-        $errorDetails = $_.Exception.Message
-        Write-FabricLog -Message "Failed to delete DataPipeline '$DataPipelineId' from workspace '$WorkspaceId'. Error: $errorDetails" -Level Error
+            # Capture and log error details
+            $errorDetails = $_.Exception.Message
+            Write-FabricLog -Message "Failed to delete DataPipeline '$DataPipelineId' from workspace '$WorkspaceId'. Error: $errorDetails" -Level Error
+        }
     }
 }
-#EndRegion '.\Public\Data Pipeline\Remove-FabricDataPipeline.ps1' 64
+#EndRegion '.\Public\Data Pipeline\Remove-FabricDataPipeline.ps1' 68
 #Region '.\Public\Data Pipeline\Update-FabricDataPipeline.ps1' -1
 
 <#
@@ -3067,35 +4627,47 @@ function Remove-FabricDataPipeline {
 function Update-FabricDataPipeline {
     [CmdletBinding(SupportsShouldProcess = $true, ConfirmImpact = 'Medium')]
     param (
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
         [ValidateNotNullOrEmpty()]
         [string]$WorkspaceId,
 
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
         [ValidateNotNullOrEmpty()]
+        [Alias('id')]
         [string]$DataPipelineId,
 
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $false, ValueFromPipelineByPropertyName = $true)]
         [ValidateNotNullOrEmpty()]
         [ValidatePattern('^[a-zA-Z0-9_ ]*$')]
+        [Alias('DisplayName')]
         [string]$DataPipelineName,
 
-        [Parameter(Mandatory = $false)]
+        [Parameter(Mandatory = $false, ValueFromPipelineByPropertyName = $true)]
         [ValidateNotNullOrEmpty()]
+        [Alias('Description')]
         [string]$DataPipelineDescription
     )
 
-    try {
+    process {
+        try {
+        # Validate that at least one update parameter is provided
+        if (-not $DataPipelineName -and -not $DataPipelineDescription) {
+            Write-FabricLog -Message "At least one of DataPipelineName or DataPipelineDescription must be specified" -Level Error
+            return
+        }
+
         # Validate authentication token before proceeding
         Invoke-FabricAuthCheck -ThrowOnFailure
 
         # Construct the API endpoint URI
-        $apiEndpointURI = New-FabricAPIUri -Segments @('workspaces', $WorkspaceId, 'dataPipelines', $DataPipelineId)
+        $apiEndpointURI = New-FabricAPIUri -Resource 'workspaces' -WorkspaceId $WorkspaceId -Subresource 'dataPipelines' -ItemId $DataPipelineId
         Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
 
         # Construct the request body
-        $body = @{
-            displayName = $DataPipelineName
+        $body = @{}
+
+        if ($DataPipelineName) {
+            $body.displayName = $DataPipelineName
         }
 
         if ($DataPipelineDescription) {
@@ -3120,12 +4692,734 @@ function Update-FabricDataPipeline {
         }
     }
     catch {
-        # Capture and log error details
-        $errorDetails = $_.Exception.Message
-        Write-FabricLog -Message "Failed to update DataPipeline. Error: $errorDetails" -Level Error
+            # Capture and log error details
+            $errorDetails = $_.Exception.Message
+            Write-FabricLog -Message "Failed to update DataPipeline. Error: $errorDetails" -Level Error
+        }
     }
 }
-#EndRegion '.\Public\Data Pipeline\Update-FabricDataPipeline.ps1' 92
+#EndRegion '.\Public\Data Pipeline\Update-FabricDataPipeline.ps1' 105
+#Region '.\Public\Dataflow\Get-FabricDataflow.ps1' -1
+
+<#
+.SYNOPSIS
+    Gets a Dataflow or lists all Dataflows in a workspace.
+
+.DESCRIPTION
+    The Get-FabricDataflow cmdlet retrieves Dataflow items from a specified Microsoft Fabric workspace.
+    You can list all Dataflows or filter by a specific DataflowId or display name.
+
+.PARAMETER WorkspaceId
+    The GUID of the workspace containing the Dataflow resources.
+
+.PARAMETER DataflowId
+    Optional. Returns only the Dataflow matching this resource Id.
+
+.PARAMETER DataflowName
+    Optional. Returns only the Dataflow whose display name exactly matches this value.
+
+.PARAMETER Raw
+    Optional. When specified, returns the raw API response with resolved CapacityName and WorkspaceName
+    properties added directly to the output objects.
+
+.EXAMPLE
+    Get-FabricDataflow -WorkspaceId "12345678-1234-1234-1234-123456789012"
+
+    Lists all Dataflows in the specified workspace.
+
+.EXAMPLE
+    Get-FabricDataflow -WorkspaceId "12345678-1234-1234-1234-123456789012" -DataflowId "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee"
+
+    Returns the Dataflow with the specified Id.
+
+.EXAMPLE
+    Get-FabricDataflow -WorkspaceId "12345678-1234-1234-1234-123456789012" -DataflowName "SalesDataflow"
+
+    Returns the Dataflow with the specified name.
+
+.EXAMPLE
+    Get-FabricDataflow -WorkspaceId "12345678-1234-1234-1234-123456789012" -Raw | Export-Csv -Path "dataflows.csv"
+
+    Exports all Dataflows with resolved names to a CSV file.
+
+.NOTES
+    - Requires `$FabricAuthContext` global configuration.
+    - Calls `Invoke-FabricAuthCheck` to ensure token validity before making the API request.
+
+    Author: Tiago Balabuch, Jess Pomfret, Rob Sewell
+
+#>
+function Get-FabricDataflow {
+    [CmdletBinding()]
+    param (
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
+        [ValidateNotNullOrEmpty()]
+        [Alias('id')]
+        [string]$WorkspaceId,
+
+        [Parameter(Mandatory = $false)]
+        [ValidateNotNullOrEmpty()]
+        [string]$DataflowId,
+
+        [Parameter(Mandatory = $false)]
+        [ValidateNotNullOrEmpty()]
+        [ValidatePattern('^[a-zA-Z0-9_ ]*$')]
+        [string]$DataflowName,
+
+        [Parameter()]
+        [switch]$Raw
+    )
+
+    process {
+        try {
+            # Validate input parameters
+            if ($DataflowId -and $DataflowName) {
+                Write-FabricLog -Message "Specify only one parameter: either 'DataflowId' or 'DataflowName'." -Level Error
+                return
+            }
+
+            Invoke-FabricAuthCheck -ThrowOnFailure
+
+            # Construct the API endpoint URI
+            $apiEndpointURI = New-FabricAPIUri -Resource 'workspaces' -WorkspaceId $WorkspaceId -Subresource 'dataflows'
+            Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
+
+            # Make the API request
+            $apiParams = @{
+                BaseURI = $apiEndpointURI
+                Headers = $script:FabricAuthContext.FabricHeaders
+                Method  = 'Get'
+            }
+            $dataItems = Invoke-FabricAPIRequest @apiParams
+
+            # Apply filtering and formatting
+            Select-FabricResource -InputObject $dataItems -Id $DataflowId -DisplayName $DataflowName -ResourceType 'Dataflow' -TypeName 'MicrosoftFabric.Dataflow' -Raw:$Raw
+        }
+        catch {
+            $errorDetails = $_.Exception.Message
+            Write-FabricLog -Message "Failed to retrieve Dataflow for workspace '$WorkspaceId'. Error: $errorDetails" -Level Error
+        }
+    }
+}
+#EndRegion '.\Public\Dataflow\Get-FabricDataflow.ps1' 101
+#Region '.\Public\Dataflow\Get-FabricDataflowDefinition.ps1' -1
+
+<#
+.SYNOPSIS
+    Gets the definition of a Dataflow from a Microsoft Fabric workspace.
+
+.DESCRIPTION
+    This function retrieves the definition of a Dataflow. This is a long-running operation (LRO)
+    that returns the Dataflow's definition including its parts.
+
+.PARAMETER WorkspaceId
+    The unique identifier of the workspace containing the Dataflow.
+
+.PARAMETER DataflowId
+    The unique identifier of the Dataflow.
+
+.EXAMPLE
+    Get-FabricDataflowDefinition -WorkspaceId "12345678-1234-1234-1234-123456789012" -DataflowId "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee"
+
+    Gets the definition of the specified Dataflow.
+
+.NOTES
+    - This operation is a long-running operation (LRO).
+    - Requires `$FabricAuthContext` global configuration.
+    - Calls `Invoke-FabricAuthCheck` to ensure token validity.
+
+    Author: Tiago Balabuch, Jess Pomfret, Rob Sewell
+
+#>
+function Get-FabricDataflowDefinition {
+    [CmdletBinding()]
+    param (
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
+        [ValidateNotNullOrEmpty()]
+        [string]$WorkspaceId,
+
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
+        [ValidateNotNullOrEmpty()]
+        [Alias('id')]
+        [string]$DataflowId
+    )
+
+    process {
+        try {
+            Invoke-FabricAuthCheck -ThrowOnFailure
+
+            # Construct the API endpoint URI (POST to getDefinition)
+            $apiEndpointURI = New-FabricAPIUri -Resource 'workspaces' -WorkspaceId $WorkspaceId -Subresource 'dataflows' -ItemId "$DataflowId/getDefinition"
+            Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
+
+            # Make the API request
+            $apiParams = @{
+                BaseURI = $apiEndpointURI
+                Headers = $script:FabricAuthContext.FabricHeaders
+                Method  = 'Post'
+            }
+            $response = Invoke-FabricAPIRequest @apiParams
+
+            if (-not $response) {
+                Write-FabricLog -Message "No definition returned from the API." -Level Warning
+                return $null
+            }
+
+            Write-FabricLog -Message "Dataflow definition retrieved successfully." -Level Debug
+            return $response
+        }
+        catch {
+            $errorDetails = $_.Exception.Message
+            Write-FabricLog -Message "Failed to retrieve Dataflow definition. Error: $errorDetails" -Level Error
+        }
+    }
+}
+#EndRegion '.\Public\Dataflow\Get-FabricDataflowDefinition.ps1' 71
+#Region '.\Public\Dataflow\Get-FabricDataflowParameter.ps1' -1
+
+<#
+.SYNOPSIS
+    Gets the parameters of a Dataflow from a Microsoft Fabric workspace.
+
+.DESCRIPTION
+    This function retrieves the discoverable parameters from a Dataflow's definition.
+
+.PARAMETER WorkspaceId
+    The unique identifier of the workspace containing the Dataflow.
+
+.PARAMETER DataflowId
+    The unique identifier of the Dataflow.
+
+.EXAMPLE
+    Get-FabricDataflowParameter -WorkspaceId "12345678-1234-1234-1234-123456789012" -DataflowId "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee"
+
+    Gets the parameters of the specified Dataflow.
+
+.NOTES
+    - Requires `$FabricAuthContext` global configuration.
+    - Calls `Invoke-FabricAuthCheck` to ensure token validity.
+
+    Author: Tiago Balabuch, Jess Pomfret, Rob Sewell
+
+#>
+function Get-FabricDataflowParameter {
+    [CmdletBinding()]
+    param (
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
+        [ValidateNotNullOrEmpty()]
+        [string]$WorkspaceId,
+
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
+        [ValidateNotNullOrEmpty()]
+        [Alias('id')]
+        [string]$DataflowId
+    )
+
+    process {
+        try {
+            Invoke-FabricAuthCheck -ThrowOnFailure
+
+            # Construct the API endpoint URI
+            $apiEndpointURI = New-FabricAPIUri -Resource 'workspaces' -WorkspaceId $WorkspaceId -Subresource 'dataflows' -ItemId "$DataflowId/parameters"
+            Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
+
+            # Make the API request
+            $apiParams = @{
+                BaseURI = $apiEndpointURI
+                Headers = $script:FabricAuthContext.FabricHeaders
+                Method  = 'Get'
+            }
+            $response = Invoke-FabricAPIRequest @apiParams
+
+            if (-not $response) {
+                Write-FabricLog -Message "No parameters found for Dataflow." -Level Warning
+                return $null
+            }
+
+            Write-FabricLog -Message "Dataflow parameters retrieved successfully." -Level Debug
+            return $response
+        }
+        catch {
+            $errorDetails = $_.Exception.Message
+            Write-FabricLog -Message "Failed to retrieve Dataflow parameters. Error: $errorDetails" -Level Error
+        }
+    }
+}
+#EndRegion '.\Public\Dataflow\Get-FabricDataflowParameter.ps1' 69
+#Region '.\Public\Dataflow\New-FabricDataflow.ps1' -1
+
+<#
+.SYNOPSIS
+    Creates a new Dataflow in a specified Microsoft Fabric workspace.
+
+.DESCRIPTION
+    This function sends a POST request to the Microsoft Fabric API to create a new Dataflow
+    in the specified workspace. This is a long-running operation (LRO).
+
+.PARAMETER WorkspaceId
+    The unique identifier of the workspace where the Dataflow will be created.
+
+.PARAMETER DataflowName
+    The name of the Dataflow to be created.
+
+.PARAMETER DataflowDescription
+    An optional description for the Dataflow.
+
+.PARAMETER Definition
+    Optional. The definition of the Dataflow as a hashtable containing the parts.
+    Each part should have format, partPath, and payload properties.
+
+.EXAMPLE
+    New-FabricDataflow -WorkspaceId "12345678-1234-1234-1234-123456789012" -DataflowName "SalesDataflow"
+
+    Creates a new Dataflow named "SalesDataflow" in the specified workspace.
+
+.EXAMPLE
+    New-FabricDataflow -WorkspaceId "12345678-1234-1234-1234-123456789012" -DataflowName "SalesDataflow" -DataflowDescription "Sales data transformation"
+
+    Creates a new Dataflow with a description.
+
+.NOTES
+    - This operation is a long-running operation (LRO).
+    - Requires `$FabricAuthContext` global configuration.
+    - Calls `Invoke-FabricAuthCheck` to ensure token validity.
+
+    Author: Tiago Balabuch, Jess Pomfret, Rob Sewell
+
+#>
+function New-FabricDataflow {
+    [CmdletBinding(SupportsShouldProcess = $true, ConfirmImpact = 'Medium')]
+    param (
+        [Parameter(Mandatory = $true)]
+        [ValidateNotNullOrEmpty()]
+        [string]$WorkspaceId,
+
+        [Parameter(Mandatory = $true)]
+        [ValidateNotNullOrEmpty()]
+        [ValidatePattern('^[a-zA-Z0-9_ ]*$')]
+        [string]$DataflowName,
+
+        [Parameter(Mandatory = $false)]
+        [ValidateNotNullOrEmpty()]
+        [string]$DataflowDescription,
+
+        [Parameter(Mandatory = $false)]
+        [hashtable]$Definition
+    )
+
+    try {
+        Invoke-FabricAuthCheck -ThrowOnFailure
+
+        # Construct the API endpoint URI
+        $apiEndpointURI = New-FabricAPIUri -Resource 'workspaces' -WorkspaceId $WorkspaceId -Subresource 'dataflows'
+        Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
+
+        # Construct the request body
+        $body = @{
+            displayName = $DataflowName
+        }
+
+        if ($DataflowDescription) {
+            $body.description = $DataflowDescription
+        }
+
+        if ($Definition) {
+            $body.definition = $Definition
+        }
+
+        $bodyJson = $body | ConvertTo-Json -Depth 10
+        Write-FabricLog -Message "Request Body: $bodyJson" -Level Debug
+
+        # Make the API request
+        $apiParams = @{
+            BaseURI = $apiEndpointURI
+            Headers = $script:FabricAuthContext.FabricHeaders
+            Method  = 'Post'
+            Body    = $bodyJson
+        }
+
+        if ($PSCmdlet.ShouldProcess($DataflowName, "Create Dataflow in workspace '$WorkspaceId'")) {
+            $response = Invoke-FabricAPIRequest @apiParams
+            Write-FabricLog -Message "Dataflow '$DataflowName' created successfully!" -Level Host
+            return $response
+        }
+    }
+    catch {
+        $errorDetails = $_.Exception.Message
+        Write-FabricLog -Message "Failed to create Dataflow. Error: $errorDetails" -Level Error
+    }
+}
+#EndRegion '.\Public\Dataflow\New-FabricDataflow.ps1' 102
+#Region '.\Public\Dataflow\Remove-FabricDataflow.ps1' -1
+
+<#
+.SYNOPSIS
+    Removes a Dataflow from a Microsoft Fabric workspace.
+
+.DESCRIPTION
+    This function sends a DELETE request to the Microsoft Fabric API to remove a Dataflow
+    from the specified workspace.
+
+.PARAMETER WorkspaceId
+    The unique identifier of the workspace containing the Dataflow.
+
+.PARAMETER DataflowId
+    The unique identifier of the Dataflow to delete.
+
+.EXAMPLE
+    Remove-FabricDataflow -WorkspaceId "12345678-1234-1234-1234-123456789012" -DataflowId "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee"
+
+    Removes the specified Dataflow from the workspace.
+
+.EXAMPLE
+    Get-FabricDataflow -WorkspaceId "12345678-1234-1234-1234-123456789012" -DataflowName "OldDataflow" | Remove-FabricDataflow
+
+    Removes a Dataflow by piping it from Get-FabricDataflow.
+
+.NOTES
+    - Requires `$FabricAuthContext` global configuration.
+    - Calls `Invoke-FabricAuthCheck` to ensure token validity.
+
+    Author: Tiago Balabuch, Jess Pomfret, Rob Sewell
+
+#>
+function Remove-FabricDataflow {
+    [CmdletBinding(SupportsShouldProcess = $true, ConfirmImpact = 'High')]
+    param (
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
+        [ValidateNotNullOrEmpty()]
+        [string]$WorkspaceId,
+
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
+        [ValidateNotNullOrEmpty()]
+        [Alias('id')]
+        [string]$DataflowId
+    )
+
+    process {
+        try {
+            Invoke-FabricAuthCheck -ThrowOnFailure
+
+            # Construct the API endpoint URI
+            $apiEndpointURI = New-FabricAPIUri -Resource 'workspaces' -WorkspaceId $WorkspaceId -Subresource 'dataflows' -ItemId $DataflowId
+            Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
+
+            # Make the API request
+            $apiParams = @{
+                BaseURI = $apiEndpointURI
+                Headers = $script:FabricAuthContext.FabricHeaders
+                Method  = 'Delete'
+            }
+
+            if ($PSCmdlet.ShouldProcess($DataflowId, "Remove Dataflow from workspace '$WorkspaceId'")) {
+                $null = Invoke-FabricAPIRequest @apiParams
+                Write-FabricLog -Message "Dataflow '$DataflowId' removed successfully!" -Level Host
+            }
+        }
+        catch {
+            $errorDetails = $_.Exception.Message
+            Write-FabricLog -Message "Failed to remove Dataflow. Error: $errorDetails" -Level Error
+        }
+    }
+}
+#EndRegion '.\Public\Dataflow\Remove-FabricDataflow.ps1' 71
+#Region '.\Public\Dataflow\Start-FabricDataflowJob.ps1' -1
+
+<#
+.SYNOPSIS
+    Starts an on-demand job for a Dataflow in a Microsoft Fabric workspace.
+
+.DESCRIPTION
+    This function triggers an on-demand execution or apply changes job for a Dataflow.
+
+.PARAMETER WorkspaceId
+    The unique identifier of the workspace containing the Dataflow.
+
+.PARAMETER DataflowId
+    The unique identifier of the Dataflow.
+
+.PARAMETER JobType
+    The type of job to run. Valid values are 'Execute' or 'ApplyChanges'.
+
+.PARAMETER ExecutionData
+    Optional. Additional execution data for the job as a hashtable.
+    Only applicable for 'Execute' job type.
+
+.EXAMPLE
+    Start-FabricDataflowJob -WorkspaceId "12345678-1234-1234-1234-123456789012" -DataflowId "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee" -JobType Execute
+
+    Starts an Execute job for the specified Dataflow.
+
+.EXAMPLE
+    Start-FabricDataflowJob -WorkspaceId "12345678-1234-1234-1234-123456789012" -DataflowId "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee" -JobType ApplyChanges
+
+    Starts an ApplyChanges job for the specified Dataflow.
+
+.NOTES
+    - Requires `$FabricAuthContext` global configuration.
+    - Calls `Invoke-FabricAuthCheck` to ensure token validity.
+
+    Author: Tiago Balabuch, Jess Pomfret, Rob Sewell
+
+#>
+function Start-FabricDataflowJob {
+    [CmdletBinding(SupportsShouldProcess = $true, ConfirmImpact = 'Medium')]
+    param (
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
+        [ValidateNotNullOrEmpty()]
+        [string]$WorkspaceId,
+
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
+        [ValidateNotNullOrEmpty()]
+        [Alias('id')]
+        [string]$DataflowId,
+
+        [Parameter(Mandatory = $true)]
+        [ValidateSet('Execute', 'ApplyChanges')]
+        [string]$JobType,
+
+        [Parameter(Mandatory = $false)]
+        [hashtable]$ExecutionData
+    )
+
+    process {
+        try {
+            Invoke-FabricAuthCheck -ThrowOnFailure
+
+            # Construct the API endpoint URI
+            $apiEndpointURI = New-FabricAPIUri -Resource 'workspaces' -WorkspaceId $WorkspaceId -Subresource 'dataflows' -ItemId "$DataflowId/jobs/$JobType/instances"
+            Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
+
+            # Build request parameters
+            $apiParams = @{
+                BaseURI = $apiEndpointURI
+                Headers = $script:FabricAuthContext.FabricHeaders
+                Method  = 'Post'
+            }
+
+            # Add body for Execute job type if execution data provided
+            if ($JobType -eq 'Execute' -and $ExecutionData) {
+                $body = @{
+                    executionData = $ExecutionData
+                }
+                $apiParams.Body = $body | ConvertTo-Json -Depth 10
+                Write-FabricLog -Message "Request Body: $($apiParams.Body)" -Level Debug
+            }
+
+            if ($PSCmdlet.ShouldProcess($DataflowId, "Start $JobType job for Dataflow in workspace '$WorkspaceId'")) {
+                $response = Invoke-FabricAPIRequest @apiParams
+                Write-FabricLog -Message "Dataflow $JobType job started successfully!" -Level Host
+                return $response
+            }
+        }
+        catch {
+            $errorDetails = $_.Exception.Message
+            Write-FabricLog -Message "Failed to start Dataflow job. Error: $errorDetails" -Level Error
+        }
+    }
+}
+#EndRegion '.\Public\Dataflow\Start-FabricDataflowJob.ps1' 94
+#Region '.\Public\Dataflow\Update-FabricDataflow.ps1' -1
+
+<#
+.SYNOPSIS
+    Updates an existing Dataflow in a Microsoft Fabric workspace.
+
+.DESCRIPTION
+    This function sends a PATCH request to the Microsoft Fabric API to update a Dataflow's
+    display name and/or description.
+
+.PARAMETER WorkspaceId
+    The unique identifier of the workspace containing the Dataflow.
+
+.PARAMETER DataflowId
+    The unique identifier of the Dataflow to update.
+
+.PARAMETER DataflowName
+    Optional. The new display name for the Dataflow.
+
+.PARAMETER DataflowDescription
+    Optional. The new description for the Dataflow.
+
+.EXAMPLE
+    Update-FabricDataflow -WorkspaceId "12345678-1234-1234-1234-123456789012" -DataflowId "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee" -DataflowName "UpdatedName"
+
+    Updates the Dataflow's display name.
+
+.EXAMPLE
+    Update-FabricDataflow -WorkspaceId "12345678-1234-1234-1234-123456789012" -DataflowId "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee" -DataflowDescription "New description"
+
+    Updates the Dataflow's description.
+
+.NOTES
+    - Requires `$FabricAuthContext` global configuration.
+    - Calls `Invoke-FabricAuthCheck` to ensure token validity.
+
+    Author: Tiago Balabuch, Jess Pomfret, Rob Sewell
+
+#>
+function Update-FabricDataflow {
+    [CmdletBinding(SupportsShouldProcess = $true, ConfirmImpact = 'Medium')]
+    param (
+        [Parameter(Mandatory = $true)]
+        [ValidateNotNullOrEmpty()]
+        [string]$WorkspaceId,
+
+        [Parameter(Mandatory = $true)]
+        [ValidateNotNullOrEmpty()]
+        [Alias('id')]
+        [string]$DataflowId,
+
+        [Parameter(Mandatory = $false)]
+        [ValidateNotNullOrEmpty()]
+        [ValidatePattern('^[a-zA-Z0-9_ ]*$')]
+        [string]$DataflowName,
+
+        [Parameter(Mandatory = $false)]
+        [ValidateNotNullOrEmpty()]
+        [string]$DataflowDescription
+    )
+
+    try {
+        # Validate at least one update parameter is provided
+        if (-not $DataflowName -and -not $DataflowDescription) {
+            Write-FabricLog -Message "At least one of 'DataflowName' or 'DataflowDescription' must be provided." -Level Error
+            return
+        }
+
+        Invoke-FabricAuthCheck -ThrowOnFailure
+
+        # Construct the API endpoint URI
+        $apiEndpointURI = New-FabricAPIUri -Resource 'workspaces' -WorkspaceId $WorkspaceId -Subresource 'dataflows' -ItemId $DataflowId
+        Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
+
+        # Construct the request body
+        $body = @{}
+
+        if ($DataflowName) {
+            $body.displayName = $DataflowName
+        }
+
+        if ($DataflowDescription) {
+            $body.description = $DataflowDescription
+        }
+
+        $bodyJson = $body | ConvertTo-Json -Depth 10
+        Write-FabricLog -Message "Request Body: $bodyJson" -Level Debug
+
+        # Make the API request
+        $apiParams = @{
+            BaseURI = $apiEndpointURI
+            Headers = $script:FabricAuthContext.FabricHeaders
+            Method  = 'Patch'
+            Body    = $bodyJson
+        }
+
+        if ($PSCmdlet.ShouldProcess($DataflowId, "Update Dataflow in workspace '$WorkspaceId'")) {
+            $response = Invoke-FabricAPIRequest @apiParams
+            Write-FabricLog -Message "Dataflow '$DataflowId' updated successfully!" -Level Host
+            return $response
+        }
+    }
+    catch {
+        $errorDetails = $_.Exception.Message
+        Write-FabricLog -Message "Failed to update Dataflow. Error: $errorDetails" -Level Error
+    }
+}
+#EndRegion '.\Public\Dataflow\Update-FabricDataflow.ps1' 106
+#Region '.\Public\Dataflow\Update-FabricDataflowDefinition.ps1' -1
+
+<#
+.SYNOPSIS
+    Updates the definition of a Dataflow in a Microsoft Fabric workspace.
+
+.DESCRIPTION
+    This function sends a POST request to update the definition of a Dataflow.
+    This is a long-running operation (LRO).
+
+.PARAMETER WorkspaceId
+    The unique identifier of the workspace containing the Dataflow.
+
+.PARAMETER DataflowId
+    The unique identifier of the Dataflow.
+
+.PARAMETER Definition
+    The new definition for the Dataflow as a hashtable containing the parts.
+
+.EXAMPLE
+    $definition = @{
+        parts = @(
+            @{
+                path = "dataflow.json"
+                payload = "base64encodedcontent"
+                payloadType = "InlineBase64"
+            }
+        )
+    }
+    Update-FabricDataflowDefinition -WorkspaceId "12345678-1234-1234-1234-123456789012" -DataflowId "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee" -Definition $definition
+
+    Updates the Dataflow's definition.
+
+.NOTES
+    - This operation is a long-running operation (LRO).
+    - Requires `$FabricAuthContext` global configuration.
+    - Calls `Invoke-FabricAuthCheck` to ensure token validity.
+
+    Author: Tiago Balabuch, Jess Pomfret, Rob Sewell
+
+#>
+function Update-FabricDataflowDefinition {
+    [CmdletBinding(SupportsShouldProcess = $true, ConfirmImpact = 'Medium')]
+    param (
+        [Parameter(Mandatory = $true)]
+        [ValidateNotNullOrEmpty()]
+        [string]$WorkspaceId,
+
+        [Parameter(Mandatory = $true)]
+        [ValidateNotNullOrEmpty()]
+        [Alias('id')]
+        [string]$DataflowId,
+
+        [Parameter(Mandatory = $true)]
+        [ValidateNotNullOrEmpty()]
+        [hashtable]$Definition
+    )
+
+    try {
+        Invoke-FabricAuthCheck -ThrowOnFailure
+
+        # Construct the API endpoint URI
+        $apiEndpointURI = New-FabricAPIUri -Resource 'workspaces' -WorkspaceId $WorkspaceId -Subresource 'dataflows' -ItemId "$DataflowId/updateDefinition"
+        Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
+
+        # Construct the request body
+        $body = @{
+            definition = $Definition
+        }
+
+        $bodyJson = $body | ConvertTo-Json -Depth 10
+        Write-FabricLog -Message "Request Body: $bodyJson" -Level Debug
+
+        # Make the API request
+        $apiParams = @{
+            BaseURI = $apiEndpointURI
+            Headers = $script:FabricAuthContext.FabricHeaders
+            Method  = 'Post'
+            Body    = $bodyJson
+        }
+
+        if ($PSCmdlet.ShouldProcess($DataflowId, "Update Dataflow definition in workspace '$WorkspaceId'")) {
+            $response = Invoke-FabricAPIRequest @apiParams
+            Write-FabricLog -Message "Dataflow definition updated successfully!" -Level Host
+            return $response
+        }
+    }
+    catch {
+        $errorDetails = $_.Exception.Message
+        Write-FabricLog -Message "Failed to update Dataflow definition. Error: $errorDetails" -Level Error
+    }
+}
+#EndRegion '.\Public\Dataflow\Update-FabricDataflowDefinition.ps1' 91
 #Region '.\Public\Datamart\Get-FabricDatamart.ps1' -1
 
 <#
@@ -3145,9 +5439,16 @@ function Update-FabricDataPipeline {
 .PARAMETER DatamartName
     Optional. The display name of the datamart to retrieve. Use this to fetch a single datamart by name when the Id is not known.
 
+.PARAMETER Raw
+    Returns the raw API response without any filtering or transformation. Use this switch when you need the complete, unprocessed response from the API.
+
 .EXAMPLE
      Get-FabricDatamart -WorkspaceId "12345"
     This example retrieves all datamarts from the workspace with ID "12345".
+
+.EXAMPLE
+    Get-FabricDatamart -WorkspaceId "12345" -Raw
+    Returns the raw API response for all datamarts in the workspace without any formatting or type decoration.
 
 .NOTES
     - Requires `$FabricConfig` global configuration, including `BaseUrl` and `FabricHeaders`.
@@ -3158,8 +5459,9 @@ function Update-FabricDataPipeline {
 function Get-FabricDatamart {
     [CmdletBinding()]
     param (
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
         [ValidateNotNullOrEmpty()]
+        [Alias('id')]
         [string]$WorkspaceId,
 
         [Parameter(Mandatory = $false)]
@@ -3168,34 +5470,39 @@ function Get-FabricDatamart {
 
         [Parameter(Mandatory = $false)]
         [ValidateNotNullOrEmpty()]
-        [string]$DatamartName
+        [string]$DatamartName,
+
+        [Parameter(Mandatory = $false)]
+        [switch]$Raw
     )
 
-    try {
-        # Validate authentication token before proceeding
-        Invoke-FabricAuthCheck -ThrowOnFailure
+    process {
+        try {
+            # Validate authentication token before proceeding
+            Invoke-FabricAuthCheck -ThrowOnFailure
 
-        # Construct the API endpoint URI
-        $apiEndpointURI = New-FabricAPIUri -Segments @('workspaces', $WorkspaceId, 'datamarts')
+            # Construct the API endpoint URI
+            $apiEndpointURI = New-FabricAPIUri -Segments @('workspaces', $WorkspaceId, 'datamarts')
 
-        # Make the API request
-        $apiParams = @{
-            BaseURI = $apiEndpointURI
-            Headers = $script:FabricAuthContext.FabricHeaders
-            Method = 'Get'
+            # Make the API request
+            $apiParams = @{
+                BaseURI = $apiEndpointURI
+                Headers = $script:FabricAuthContext.FabricHeaders
+                Method = 'Get'
+            }
+            $dataItems = Invoke-FabricAPIRequest @apiParams
+
+            # Apply filtering
+            Select-FabricResource -InputObject $dataItems -Id $DatamartId -DisplayName $DatamartName -ResourceType 'Datamart' -TypeName 'MicrosoftFabric.Datamart' -Raw:$Raw
         }
-        $dataItems = Invoke-FabricAPIRequest @apiParams
-
-        # Apply filtering
-        Select-FabricResource -InputObject $dataItems -Id $DatamartId -Name $DatamartName -ResourceType 'Datamart' -TypeName 'MicrosoftFabric.Datamart'
-    }
-    catch {
-        # Capture and log error details
-        $errorDetails = $_.Exception.Message
-        Write-FabricLog -Message "Failed to retrieve Datamart. Error: $errorDetails" -Level Error
+        catch {
+            # Capture and log error details
+            $errorDetails = $_.Exception.Message
+            Write-FabricLog -Message "Failed to retrieve Datamart for workspace '$WorkspaceId'. Error: $errorDetails" -Level Error
+        }
     }
 }
-#EndRegion '.\Public\Datamart\Get-FabricDatamart.ps1' 68
+#EndRegion '.\Public\Datamart\Get-FabricDatamart.ps1' 81
 #Region '.\Public\Domain\Add-FabricDomainWorkspaceByCapacity.ps1' -1
 
 <#
@@ -3552,6 +5859,9 @@ The `Get-FabricDomain` function allows retrieval of domains in Microsoft Fabric,
 .PARAMETER NonEmptyDomainsOnly
 (Optional) If set to `$true`, only domains containing workspaces will be returned.
 
+.PARAMETER Raw
+Returns the raw API response without any filtering or transformation. Use this switch when you need the complete, unprocessed response from the API.
+
 .EXAMPLE
 Get-FabricDomain -DomainId "12345"
 
@@ -3561,6 +5871,11 @@ Fetches the domain with ID "12345".
 Get-FabricDomain -DomainName "Finance"
 
 Fetches the domain with the display name "Finance".
+
+.EXAMPLE
+Get-FabricDomain -Raw
+
+Returns the raw API response for all domains without any formatting or type decoration.
 
 .NOTES
 - Requires `$FabricConfig` global configuration, including `BaseUrl` and `FabricHeaders`.
@@ -3582,7 +5897,10 @@ function Get-FabricDomain {
 
         [Parameter(Mandatory = $false)]
         [ValidateNotNullOrEmpty()]
-        [bool]$NonEmptyDomainsOnly = $false
+        [bool]$NonEmptyDomainsOnly = $false,
+
+        [Parameter(Mandatory = $false)]
+        [switch]$Raw
     )
     try {
         # Validate authentication token before proceeding
@@ -3593,7 +5911,15 @@ function Get-FabricDomain {
         if ($NonEmptyDomainsOnly) {
             $queryParams['nonEmptyOnly'] = 'true'
         }
-        $apiEndpointURI = New-FabricAPIUri -Segments @('admin', 'domains') -QueryParameters $queryParams
+        
+        # Build URI manually for admin/domains endpoint
+        $baseUri = "$($script:FabricAuthContext.BaseUrl)/admin/domains"
+        if ($queryParams.Count -gt 0) {
+            $queryString = ($queryParams.GetEnumerator() | ForEach-Object { "$($_.Key)=$($_.Value)" }) -join '&'
+            $apiEndpointURI = "$baseUri?$queryString"
+        } else {
+            $apiEndpointURI = $baseUri
+        }
         Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
 
         # Make the API request
@@ -3605,7 +5931,7 @@ function Get-FabricDomain {
         $dataItems = Invoke-FabricAPIRequest @apiParams
 
         # Apply filtering
-        Select-FabricResource -InputObject $dataItems -Id $DomainId -Name $DomainName -ResourceType 'Domain'
+        Select-FabricResource -InputObject $dataItems -Id $DomainId -DisplayName $DomainName -ResourceType 'Domain' -TypeName 'MicrosoftFabric.Domain' -Raw:$Raw
     }
     catch {
         # Capture and log error details
@@ -3613,7 +5939,7 @@ function Get-FabricDomain {
         Write-FabricLog -Message "Failed to retrieve environment. Error: $errorDetails" -Level Error
     }
 }
-#EndRegion '.\Public\Domain\Get-FabricDomain.ps1' 78
+#EndRegion '.\Public\Domain\Get-FabricDomain.ps1' 97
 #Region '.\Public\Domain\Get-FabricDomainWorkspace.ps1' -1
 
 <#
@@ -4049,17 +6375,20 @@ Author: Tiago Balabuch
 function Update-FabricDomain {
     [CmdletBinding(SupportsShouldProcess = $true, ConfirmImpact = 'Medium')]
     param (
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
         [ValidateNotNullOrEmpty()]
+        [Alias('id')]
         [string]$DomainId,
 
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $false, ValueFromPipelineByPropertyName = $true)]
         [ValidateNotNullOrEmpty()]
         [ValidatePattern('^[a-zA-Z0-9_ ]*$')]
+        [Alias('DisplayName')]
         [string]$DomainName,
 
-        [Parameter(Mandatory = $false)]
+        [Parameter(Mandatory = $false, ValueFromPipelineByPropertyName = $true)]
         [ValidateNotNullOrEmpty()]
+        [Alias('Description')]
         [string]$DomainDescription,
 
         [Parameter(Mandatory = $false)]
@@ -4069,6 +6398,12 @@ function Update-FabricDomain {
     )
 
     try {
+        # Validate that at least one update parameter is provided
+        if (-not $DomainName -and -not $DomainDescription -and -not $DomainContributorsScope) {
+            Write-FabricLog -Message "At least one of DomainName, DomainDescription, or DomainContributorsScope must be specified" -Level Error
+            return
+        }
+
         # Validate authentication token before proceeding
         Invoke-FabricAuthCheck -ThrowOnFailure
 
@@ -4077,8 +6412,10 @@ function Update-FabricDomain {
         Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
 
         # Construct the request body
-        $body = @{
-            displayName = $DomainName
+        $body = @{}
+
+        if ($DomainName) {
+            $body.displayName = $DomainName
         }
 
         if ($DomainDescription) {
@@ -4112,7 +6449,7 @@ function Update-FabricDomain {
         Write-FabricLog -Message "Failed to update domain '$DomainId'. Error: $errorDetails" -Level Error
     }
 }
-#EndRegion '.\Public\Domain\Update-FabricDomain.ps1' 99
+#EndRegion '.\Public\Domain\Update-FabricDomain.ps1' 110
 #Region '.\Public\Environment\Get-FabricEnvironment.ps1' -1
 
 <#
@@ -4131,6 +6468,9 @@ The `Get-FabricEnvironment` function sends a GET request to the Fabric API to re
 .PARAMETER EnvironmentName
 (Optional) The name of the specific environment to retrieve.
 
+.PARAMETER Raw
+Returns the raw API response without any filtering or transformation. Use this switch when you need the complete, unprocessed response from the API.
+
 .EXAMPLE
 Get-FabricEnvironment -WorkspaceId "12345" -EnvironmentName "Development"
 
@@ -4140,6 +6480,11 @@ Retrieves the "Development" environment from workspace "12345".
 Get-FabricEnvironment -WorkspaceId "12345"
 
 Retrieves all environments in workspace "12345".
+
+.EXAMPLE
+Get-FabricEnvironment -WorkspaceId "12345" -Raw
+
+Returns the raw API response for all environments in the workspace without any formatting or type decoration.
 
 .NOTES
 - Requires `$FabricConfig` global configuration, including `BaseUrl` and `FabricHeaders`.
@@ -4153,8 +6498,9 @@ Author: Tiago Balabuch
 function Get-FabricEnvironment {
     [CmdletBinding()]
     param (
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
         [ValidateNotNullOrEmpty()]
+        [Alias('id')]
         [string]$WorkspaceId,
 
         [Parameter(Mandatory = $false)]
@@ -4164,40 +6510,45 @@ function Get-FabricEnvironment {
         [Parameter(Mandatory = $false)]
         [ValidateNotNullOrEmpty()]
         [ValidatePattern('^[a-zA-Z0-9_ ]*$')]
-        [string]$EnvironmentName
+        [string]$EnvironmentName,
+
+        [Parameter(Mandatory = $false)]
+        [switch]$Raw
     )
-    try {
-        # Validate input parameters
-        if ($EnvironmentId -and $EnvironmentName) {
-            Write-FabricLog -Message "Specify only one parameter: either 'EnvironmentId' or 'EnvironmentName'." -Level Error
-            return
+
+    process {
+        try {
+            # Validate input parameters
+            if ($EnvironmentId -and $EnvironmentName) {
+                Write-FabricLog -Message "Specify only one parameter: either 'EnvironmentId' or 'EnvironmentName'." -Level Error
+                return
+            }
+
+            # Validate authentication
+            Invoke-FabricAuthCheck -ThrowOnFailure
+
+            # Construct the API endpoint URI
+            $apiEndpointURI = New-FabricAPIUri -Resource 'workspaces' -WorkspaceId $WorkspaceId -Subresource 'environments'
+
+            # Make the API request
+            $apiParams = @{
+                BaseURI = $apiEndpointURI
+                Headers = $script:FabricAuthContext.FabricHeaders
+                Method = 'Get'
+            }
+            $dataItems = Invoke-FabricAPIRequest @apiParams
+
+            # Apply filtering logic
+            Select-FabricResource -InputObject $dataItems -Id $EnvironmentId -DisplayName $EnvironmentName -ResourceType 'Environment' -TypeName 'MicrosoftFabric.Environment' -Raw:$Raw
         }
-
-        # Validate authentication
-        Invoke-FabricAuthCheck -ThrowOnFailure
-
-        # Construct the API endpoint URI
-        $apiEndpointURI = New-FabricAPIUri -Resource 'workspaces' -WorkspaceId $WorkspaceId -Subresource 'environments'
-
-        # Make the API request
-        $apiParams = @{
-            BaseURI = $apiEndpointURI
-            Headers = $script:FabricAuthContext.FabricHeaders
-            Method = 'Get'
+        catch {
+            # Capture and log error details
+            $errorDetails = $_.Exception.Message
+            Write-FabricLog -Message "Failed to retrieve environment for workspace '$WorkspaceId'. Error: $errorDetails" -Level Error
         }
-        $dataItems = Invoke-FabricAPIRequest @apiParams
-
-        # Apply filtering logic
-        Select-FabricResource -InputObject $dataItems -Id $EnvironmentId -DisplayName $EnvironmentName -ResourceType 'Environment' -TypeName 'MicrosoftFabric.Environment'
     }
-    catch {
-        # Capture and log error details
-        $errorDetails = $_.Exception.Message
-        Write-FabricLog -Message "Failed to retrieve environment. Error: $errorDetails" -Level Error
-    }
-
 }
-#EndRegion '.\Public\Environment\Get-FabricEnvironment.ps1' 83
+#EndRegion '.\Public\Environment\Get-FabricEnvironment.ps1' 97
 #Region '.\Public\Environment\Get-FabricEnvironmentLibrary.ps1' -1
 
 <#
@@ -4229,8 +6580,9 @@ Author: Tiago Balabuch
 function Get-FabricEnvironmentLibrary {
     [CmdletBinding()]
     param (
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
         [ValidateNotNullOrEmpty()]
+        [Alias('id')]
         [string]$WorkspaceId,
 
         [Parameter(Mandatory = $true)]
@@ -4259,7 +6611,7 @@ function Get-FabricEnvironmentLibrary {
     }
 
 }
-#EndRegion '.\Public\Environment\Get-FabricEnvironmentLibrary.ps1' 60
+#EndRegion '.\Public\Environment\Get-FabricEnvironmentLibrary.ps1' 61
 #Region '.\Public\Environment\Get-FabricEnvironmentSparkCompute.ps1' -1
 
 <#
@@ -4291,8 +6643,9 @@ Author: Tiago Balabuch
 function Get-FabricEnvironmentSparkCompute {
     [CmdletBinding()]
     param (
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
         [ValidateNotNullOrEmpty()]
+        [Alias('id')]
         [string]$WorkspaceId,
 
         [Parameter(Mandatory = $true)]
@@ -4322,7 +6675,7 @@ function Get-FabricEnvironmentSparkCompute {
     }
 
 }
-#EndRegion '.\Public\Environment\Get-FabricEnvironmentSparkCompute.ps1' 61
+#EndRegion '.\Public\Environment\Get-FabricEnvironmentSparkCompute.ps1' 62
 #Region '.\Public\Environment\Get-FabricEnvironmentStagingLibrary.ps1' -1
 
 <#
@@ -4353,8 +6706,9 @@ Author: Tiago Balabuch
 function Get-FabricEnvironmentStagingLibrary {
     [CmdletBinding()]
     param (
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
         [ValidateNotNullOrEmpty()]
+        [Alias('id')]
         [string]$WorkspaceId,
 
         [Parameter(Mandatory = $true)]
@@ -4383,7 +6737,7 @@ function Get-FabricEnvironmentStagingLibrary {
     }
 
 }
-#EndRegion '.\Public\Environment\Get-FabricEnvironmentStagingLibrary.ps1' 59
+#EndRegion '.\Public\Environment\Get-FabricEnvironmentStagingLibrary.ps1' 60
 #Region '.\Public\Environment\Get-FabricEnvironmentStagingSparkCompute.ps1' -1
 
 <#
@@ -4414,8 +6768,9 @@ Author: Tiago Balabuch
 function Get-FabricEnvironmentStagingSparkCompute {
     [CmdletBinding()]
     param (
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
         [ValidateNotNullOrEmpty()]
+        [Alias('id')]
         [string]$WorkspaceId,
 
         [Parameter(Mandatory = $true)]
@@ -4444,7 +6799,7 @@ function Get-FabricEnvironmentStagingSparkCompute {
     }
 
 }
-#EndRegion '.\Public\Environment\Get-FabricEnvironmentStagingSparkCompute.ps1' 59
+#EndRegion '.\Public\Environment\Get-FabricEnvironmentStagingSparkCompute.ps1' 60
 #Region '.\Public\Environment\Import-FabricEnvironmentStagingLibrary.ps1' -1
 
 <#
@@ -4475,14 +6830,16 @@ Author: Tiago Balabuch
 function Import-FabricEnvironmentStagingLibrary {
     [CmdletBinding(SupportsShouldProcess = $true, ConfirmImpact = 'Medium')]
     param (
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
         [ValidateNotNullOrEmpty()]
+        [Alias('id')]
         [string]$WorkspaceId,
 
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
         [ValidateNotNullOrEmpty()]
         [string]$EnvironmentId
     )
+    process {
     try {
         # Validate authentication
         Invoke-FabricAuthCheck -ThrowOnFailure
@@ -4511,8 +6868,9 @@ function Import-FabricEnvironmentStagingLibrary {
         $errorDetails = $_.Exception.Message
         Write-FabricLog -Message "Failed to upload environment staging library. Error: $errorDetails" -Level Error
     }
+    }
 }
-#EndRegion '.\Public\Environment\Import-FabricEnvironmentStagingLibrary.ps1' 66
+#EndRegion '.\Public\Environment\Import-FabricEnvironmentStagingLibrary.ps1' 69
 #Region '.\Public\Environment\New-FabricEnvironment.ps1' -1
 
 <#
@@ -4547,8 +6905,9 @@ Author: Tiago Balabuch
 function New-FabricEnvironment {
     [CmdletBinding(SupportsShouldProcess = $true, ConfirmImpact = 'Medium')]
     param (
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
         [ValidateNotNullOrEmpty()]
+        [Alias('id')]
         [string]$WorkspaceId,
 
         [Parameter(Mandatory = $true)]
@@ -4560,6 +6919,7 @@ function New-FabricEnvironment {
         [ValidateNotNullOrEmpty()]
         [string]$EnvironmentDescription
     )
+    process {
     try {
         # Validate authentication
         Invoke-FabricAuthCheck -ThrowOnFailure
@@ -4599,8 +6959,9 @@ function New-FabricEnvironment {
         $errorDetails = $_.Exception.Message
         Write-FabricLog -Message "Failed to create environment. Error: $errorDetails" -Level Error
     }
+    }
 }
-#EndRegion '.\Public\Environment\New-FabricEnvironment.ps1' 86
+#EndRegion '.\Public\Environment\New-FabricEnvironment.ps1' 89
 #Region '.\Public\Environment\Publish-FabricEnvironment.ps1' -1
 
 <#
@@ -4632,14 +6993,16 @@ Author: Tiago Balabuch
 function Publish-FabricEnvironment {
     [CmdletBinding(SupportsShouldProcess = $true, ConfirmImpact = 'Medium')]
     param (
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
         [ValidateNotNullOrEmpty()]
+        [Alias('id')]
         [string]$WorkspaceId,
 
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
         [ValidateNotNullOrEmpty()]
         [string]$EnvironmentId
     )
+    process {
     try {
         # Validate authentication
         Invoke-FabricAuthCheck -ThrowOnFailure
@@ -4666,8 +7029,9 @@ function Publish-FabricEnvironment {
         $errorDetails = $_.Exception.Message
         Write-FabricLog -Message "Failed to publish environment. Error: $errorDetails" -Level Error
     }
+    }
 }
-#EndRegion '.\Public\Environment\Publish-FabricEnvironment.ps1' 65
+#EndRegion '.\Public\Environment\Publish-FabricEnvironment.ps1' 68
 #Region '.\Public\Environment\Remove-FabricEnvironment.ps1' -1
 
 <#
@@ -4698,14 +7062,16 @@ Author: Tiago Balabuch
 function Remove-FabricEnvironment {
     [CmdletBinding(SupportsShouldProcess = $true, ConfirmImpact = 'High')]
     param (
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
         [ValidateNotNullOrEmpty()]
         [string]$WorkspaceId,
 
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
         [ValidateNotNullOrEmpty()]
+        [Alias('id')]
         [string]$EnvironmentId
     )
+    process {
     try {
         # Validate authentication
         Invoke-FabricAuthCheck -ThrowOnFailure
@@ -4732,8 +7098,9 @@ function Remove-FabricEnvironment {
         $errorDetails = $_.Exception.Message
         Write-FabricLog -Message "Failed to delete environment '$EnvironmentId' from workspace '$WorkspaceId'. Error: $errorDetails" -Level Error
     }
+    }
 }
-#EndRegion '.\Public\Environment\Remove-FabricEnvironment.ps1' 64
+#EndRegion '.\Public\Environment\Remove-FabricEnvironment.ps1' 67
 #Region '.\Public\Environment\Remove-FabricEnvironmentStagingLibrary.ps1' -1
 
 
@@ -4769,18 +7136,20 @@ Author: Tiago Balabuch
 function Remove-FabricEnvironmentStagingLibrary {
     [CmdletBinding(SupportsShouldProcess = $true, ConfirmImpact = 'High')]
     param (
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
         [ValidateNotNullOrEmpty()]
         [string]$WorkspaceId,
 
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
         [ValidateNotNullOrEmpty()]
+        [Alias('id')]
         [string]$EnvironmentId,
 
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
         [ValidateNotNullOrEmpty()]
         [string]$LibraryName
     )
+    process {
     try {
         # Validate authentication
         Invoke-FabricAuthCheck -ThrowOnFailure
@@ -4810,8 +7179,9 @@ function Remove-FabricEnvironmentStagingLibrary {
         $errorDetails = $_.Exception.Message
         Write-FabricLog -Message "Failed to delete environment staging library '$LibraryName' from workspace '$WorkspaceId'. Error: $errorDetails" -Level Error
     }
+    }
 }
-#EndRegion '.\Public\Environment\Remove-FabricEnvironmentStagingLibrary.ps1' 76
+#EndRegion '.\Public\Environment\Remove-FabricEnvironmentStagingLibrary.ps1' 79
 #Region '.\Public\Environment\Stop-FabricEnvironmentPublish.ps1' -1
 
 <#
@@ -4843,14 +7213,16 @@ Author: Tiago Balabuch
 function Stop-FabricEnvironmentPublish {
     [CmdletBinding(SupportsShouldProcess = $true, ConfirmImpact = 'Medium')]
     param (
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
         [ValidateNotNullOrEmpty()]
+        [Alias('id')]
         [string]$WorkspaceId,
 
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
         [ValidateNotNullOrEmpty()]
         [string]$EnvironmentId
     )
+    process {
     try {
         # Validate authentication
         Invoke-FabricAuthCheck -ThrowOnFailure
@@ -4877,8 +7249,9 @@ function Stop-FabricEnvironmentPublish {
         $errorDetails = $_.Exception.Message
         Write-FabricLog -Message "Failed to cancel publication for environment '$EnvironmentId' from workspace '$WorkspaceId'. Error: $errorDetails" -Level Error
     }
+    }
 }
-#EndRegion '.\Public\Environment\Stop-FabricEnvironmentPublish.ps1' 65
+#EndRegion '.\Public\Environment\Stop-FabricEnvironmentPublish.ps1' 68
 #Region '.\Public\Environment\Update-FabricEnvironment.ps1' -1
 
 <#
@@ -4920,33 +7293,45 @@ Author: Tiago Balabuch
 function Update-FabricEnvironment {
     [CmdletBinding(SupportsShouldProcess = $true, ConfirmImpact = 'Medium')]
     param (
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
         [ValidateNotNullOrEmpty()]
         [string]$WorkspaceId,
 
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
         [ValidateNotNullOrEmpty()]
+        [Alias('id')]
         [string]$EnvironmentId,
 
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $false, ValueFromPipelineByPropertyName = $true)]
         [ValidateNotNullOrEmpty()]
         [ValidatePattern('^[a-zA-Z0-9_ ]*$')]
+        [Alias('DisplayName')]
         [string]$EnvironmentName,
 
-        [Parameter(Mandatory = $false)]
+        [Parameter(Mandatory = $false, ValueFromPipelineByPropertyName = $true)]
         [ValidateNotNullOrEmpty()]
+        [Alias('Description')]
         [string]$EnvironmentDescription
     )
+    process {
     try {
+        # Validate that at least one update parameter is provided
+        if (-not $EnvironmentName -and -not $EnvironmentDescription) {
+            Write-FabricLog -Message "At least one of EnvironmentName or EnvironmentDescription must be specified" -Level Error
+            return
+        }
+
         # Validate authentication
         Invoke-FabricAuthCheck -ThrowOnFailure
 
         # Construct the API endpoint URI
-        $apiEndpointURI = New-FabricAPIUri -Resource 'workspaces' -WorkspaceId $WorkspaceId -Subresource "environments/$EnvironmentId"
+        $apiEndpointURI = New-FabricAPIUri -Resource 'workspaces' -WorkspaceId $WorkspaceId -Subresource 'environments' -ItemId $EnvironmentId
 
         # Construct the request body
-        $body = @{
-            displayName = $EnvironmentName
+        $body = @{}
+
+        if ($EnvironmentName) {
+            $body.displayName = $EnvironmentName
         }
 
         if ($EnvironmentDescription) {
@@ -4976,8 +7361,9 @@ function Update-FabricEnvironment {
         $errorDetails = $_.Exception.Message
         Write-FabricLog -Message "Failed to update Environment. Error: $errorDetails" -Level Error
     }
+    }
 }
-#EndRegion '.\Public\Environment\Update-FabricEnvironment.ps1' 97
+#EndRegion '.\Public\Environment\Update-FabricEnvironment.ps1' 110
 #Region '.\Public\Environment\Update-FabricEnvironmentStagingSparkCompute.ps1' -1
 
 <#
@@ -5040,11 +7426,12 @@ Author: Tiago Balabuch
 function Update-FabricEnvironmentStagingSparkCompute {
     [CmdletBinding(SupportsShouldProcess = $true, ConfirmImpact = 'Medium')]
     param (
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
         [ValidateNotNullOrEmpty()]
+        [Alias('id')]
         [string]$WorkspaceId,
 
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
         [ValidateNotNullOrEmpty()]
         [string]$EnvironmentId,
 
@@ -5093,6 +7480,7 @@ function Update-FabricEnvironmentStagingSparkCompute {
         [Parameter(Mandatory = $true)]
         [System.Object]$SparkProperties
     )
+    process {
     try {
         # Validate authentication
         Invoke-FabricAuthCheck -ThrowOnFailure
@@ -5142,8 +7530,9 @@ function Update-FabricEnvironmentStagingSparkCompute {
         $errorDetails = $_.Exception.Message
         Write-FabricLog -Message "Failed to update environment staging Spark compute. Error: $errorDetails" -Level Error
     }
+    }
 }
-#EndRegion '.\Public\Environment\Update-FabricEnvironmentStagingSparkCompute.ps1' 164
+#EndRegion '.\Public\Environment\Update-FabricEnvironmentStagingSparkCompute.ps1' 167
 #Region '.\Public\Eventhouse\Get-FabricEventhouse.ps1' -1
 
 <#
@@ -5163,6 +7552,9 @@ function Update-FabricEnvironmentStagingSparkCompute {
 .PARAMETER EventhouseName
     The name of the Eventhouse to retrieve. This parameter is optional.
 
+.PARAMETER Raw
+    If specified, returns the raw API response without type decoration.
+
 .EXAMPLE
      Get-FabricEventhouse -WorkspaceId "workspace-12345" -EventhouseId "eventhouse-67890"
     This example retrieves the Eventhouse details for the Eventhouse with ID "eventhouse-67890" in the workspace with ID "workspace-12345".
@@ -5181,8 +7573,9 @@ function Update-FabricEnvironmentStagingSparkCompute {
 function Get-FabricEventhouse {
     [CmdletBinding()]
     param (
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
         [ValidateNotNullOrEmpty()]
+        [Alias('id')]
         [string]$WorkspaceId,
 
         [Parameter(Mandatory = $false)]
@@ -5192,40 +7585,45 @@ function Get-FabricEventhouse {
         [Parameter(Mandatory = $false)]
         [ValidateNotNullOrEmpty()]
         [ValidatePattern('^[a-zA-Z0-9_ ]*$')]
-        [string]$EventhouseName
+        [string]$EventhouseName,
+
+        [Parameter()]
+        [switch]$Raw
     )
-    try {
-        # Validate input parameters
-        if ($EventhouseId -and $EventhouseName) {
-            Write-FabricLog -Message "Specify only one parameter: either 'EventhouseId' or 'EventhouseName'." -Level Error
-            return
+
+    process {
+        try {
+            # Validate input parameters
+            if ($EventhouseId -and $EventhouseName) {
+                Write-FabricLog -Message "Specify only one parameter: either 'EventhouseId' or 'EventhouseName'." -Level Error
+                return
+            }
+
+            # Validate authentication
+            Invoke-FabricAuthCheck -ThrowOnFailure
+
+            # Construct the API endpoint URI
+            $apiEndpointURI = New-FabricAPIUri -Resource 'workspaces' -WorkspaceId $WorkspaceId -Subresource 'eventhouses'
+
+            # Make the API request
+            $apiParams = @{
+                BaseURI = $apiEndpointURI
+                Headers = $script:FabricAuthContext.FabricHeaders
+                Method = 'Get'
+            }
+            $dataItems = Invoke-FabricAPIRequest @apiParams
+
+            # Apply filtering logic
+            Select-FabricResource -InputObject $dataItems -Id $EventhouseId -DisplayName $EventhouseName -ResourceType 'Eventhouse' -TypeName 'MicrosoftFabric.Eventhouse' -Raw:$Raw
         }
-
-        # Validate authentication
-        Invoke-FabricAuthCheck -ThrowOnFailure
-
-        # Construct the API endpoint URI
-        $apiEndpointURI = New-FabricAPIUri -Resource 'workspaces' -WorkspaceId $WorkspaceId -Subresource 'eventhouses'
-
-        # Make the API request
-        $apiParams = @{
-            BaseURI = $apiEndpointURI
-            Headers = $script:FabricAuthContext.FabricHeaders
-            Method = 'Get'
+        catch {
+            # Capture and log error details
+            $errorDetails = $_.Exception.Message
+            Write-FabricLog -Message "Failed to retrieve Eventhouse for workspace '$WorkspaceId'. Error: $errorDetails" -Level Error
         }
-        $dataItems = Invoke-FabricAPIRequest @apiParams
-
-        # Apply filtering logic
-        Select-FabricResource -InputObject $dataItems -Id $EventhouseId -DisplayName $EventhouseName -ResourceType 'Eventhouse' -TypeName 'MicrosoftFabric.Eventhouse'
     }
-    catch {
-        # Capture and log error details
-        $errorDetails = $_.Exception.Message
-        Write-FabricLog -Message "Failed to retrieve Eventhouse. Error: $errorDetails" -Level Error
-    }
-
 }
-#EndRegion '.\Public\Eventhouse\Get-FabricEventhouse.ps1' 80
+#EndRegion '.\Public\Eventhouse\Get-FabricEventhouse.ps1' 89
 #Region '.\Public\Eventhouse\Get-FabricEventhouseDefinition.ps1' -1
 
 <#
@@ -5263,8 +7661,9 @@ function Get-FabricEventhouse {
 function Get-FabricEventhouseDefinition {
     [CmdletBinding()]
     param (
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
         [ValidateNotNullOrEmpty()]
+        [Alias('id')]
         [string]$WorkspaceId,
 
         [Parameter(Mandatory = $false)]
@@ -5302,7 +7701,7 @@ function Get-FabricEventhouseDefinition {
     }
 
 }
-#EndRegion '.\Public\Eventhouse\Get-FabricEventhouseDefinition.ps1' 75
+#EndRegion '.\Public\Eventhouse\Get-FabricEventhouseDefinition.ps1' 76
 #Region '.\Public\Eventhouse\New-FabricEventhouse.ps1' -1
 
 <#
@@ -5342,8 +7741,9 @@ function Get-FabricEventhouseDefinition {
 function New-FabricEventhouse {
     [CmdletBinding(SupportsShouldProcess = $true, ConfirmImpact = 'Medium')]
     param (
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
         [ValidateNotNullOrEmpty()]
+        [Alias('id')]
         [string]$WorkspaceId,
 
         [Parameter(Mandatory = $true)]
@@ -5363,6 +7763,7 @@ function New-FabricEventhouse {
         [ValidateNotNullOrEmpty()]
         [string]$EventhousePathPlatformDefinition
     )
+    process {
     try {
         # Validate authentication
         Invoke-FabricAuthCheck -ThrowOnFailure
@@ -5448,8 +7849,9 @@ function New-FabricEventhouse {
         $errorDetails = $_.Exception.Message
         Write-FabricLog -Message "Failed to create Eventhouse. Error: $errorDetails" -Level Error
     }
+    }
 }
-#EndRegion '.\Public\Eventhouse\New-FabricEventhouse.ps1' 145
+#EndRegion '.\Public\Eventhouse\New-FabricEventhouse.ps1' 148
 #Region '.\Public\Eventhouse\Remove-FabricEventhouse.ps1' -1
 
 <#
@@ -5480,15 +7882,17 @@ function New-FabricEventhouse {
 function Remove-FabricEventhouse {
     [CmdletBinding(SupportsShouldProcess = $true, ConfirmImpact = 'High')]
     param (
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
         [ValidateNotNullOrEmpty()]
         [string]$WorkspaceId,
 
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
         [ValidateNotNullOrEmpty()]
+        [Alias('id')]
         [string]$EventhouseId
     )
-    try {
+    process {
+        try {
         # Validate authentication
         Invoke-FabricAuthCheck -ThrowOnFailure
 
@@ -5510,13 +7914,14 @@ function Remove-FabricEventhouse {
         }
 
     }
-    catch {
-        # Capture and log error details
-        $errorDetails = $_.Exception.Message
-        Write-FabricLog -Message "Failed to delete Eventhouse '$EventhouseId'. Error: $errorDetails" -Level Error
+        catch {
+            # Capture and log error details
+            $errorDetails = $_.Exception.Message
+            Write-FabricLog -Message "Failed to delete Eventhouse '$EventhouseId'. Error: $errorDetails" -Level Error
+        }
     }
 }
-#EndRegion '.\Public\Eventhouse\Remove-FabricEventhouse.ps1' 65
+#EndRegion '.\Public\Eventhouse\Remove-FabricEventhouse.ps1' 68
 #Region '.\Public\Eventhouse\Update-FabricEventhouse.ps1' -1
 
 <#
@@ -5553,33 +7958,45 @@ function Remove-FabricEventhouse {
 function Update-FabricEventhouse {
     [CmdletBinding(SupportsShouldProcess = $true, ConfirmImpact = 'Medium')]
     param (
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
         [ValidateNotNullOrEmpty()]
         [string]$WorkspaceId,
 
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
         [ValidateNotNullOrEmpty()]
+        [Alias('id')]
         [string]$EventhouseId,
 
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $false, ValueFromPipelineByPropertyName = $true)]
         [ValidateNotNullOrEmpty()]
         [ValidatePattern('^[a-zA-Z0-9_ ]*$')]
+        [Alias('DisplayName')]
         [string]$EventhouseName,
 
-        [Parameter(Mandatory = $false)]
+        [Parameter(Mandatory = $false, ValueFromPipelineByPropertyName = $true)]
         [ValidateNotNullOrEmpty()]
+        [Alias('Description')]
         [string]$EventhouseDescription
     )
-    try {
+    process {
+        try {
+        # Validate that at least one update parameter is provided
+        if (-not $EventhouseName -and -not $EventhouseDescription) {
+            Write-FabricLog -Message "At least one of EventhouseName or EventhouseDescription must be specified" -Level Error
+            return
+        }
+
         # Validate authentication
         Invoke-FabricAuthCheck -ThrowOnFailure
 
         # Construct the API endpoint URI
-        $apiEndpointURI = New-FabricAPIUri -Resource 'workspaces' -WorkspaceId $WorkspaceId -Subresource "eventhouses/$EventhouseId"
+        $apiEndpointURI = New-FabricAPIUri -Resource 'workspaces' -WorkspaceId $WorkspaceId -Subresource 'eventhouses' -ItemId $EventhouseId
 
         # Construct the request body
-        $body = @{
-            displayName = $EventhouseName
+        $body = @{}
+
+        if ($EventhouseName) {
+            $body.displayName = $EventhouseName
         }
 
         if ($EventhouseDescription) {
@@ -5604,13 +8021,14 @@ function Update-FabricEventhouse {
             $response
         }
     }
-    catch {
-        # Capture and log error details
-        $errorDetails = $_.Exception.Message
-        Write-FabricLog -Message "Failed to update Eventhouse. Error: $errorDetails" -Level Error
+        catch {
+            # Capture and log error details
+            $errorDetails = $_.Exception.Message
+            Write-FabricLog -Message "Failed to update Eventhouse. Error: $errorDetails" -Level Error
+        }
     }
 }
-#EndRegion '.\Public\Eventhouse\Update-FabricEventhouse.ps1' 92
+#EndRegion '.\Public\Eventhouse\Update-FabricEventhouse.ps1' 105
 #Region '.\Public\Eventhouse\Update-FabricEventhouseDefinition.ps1' -1
 
 <#
@@ -5647,12 +8065,13 @@ function Update-FabricEventhouse {
 function Update-FabricEventhouseDefinition {
     [CmdletBinding(SupportsShouldProcess = $true, ConfirmImpact = 'Medium')]
     param (
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
         [ValidateNotNullOrEmpty()]
         [string]$WorkspaceId,
 
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
         [ValidateNotNullOrEmpty()]
+        [Alias('id')]
         [string]$EventhouseId,
 
         [Parameter(Mandatory = $true)]
@@ -5663,7 +8082,8 @@ function Update-FabricEventhouseDefinition {
         [ValidateNotNullOrEmpty()]
         [string]$EventhousePathPlatformDefinition
     )
-    try {
+    process {
+        try {
         # Validate authentication
         Invoke-FabricAuthCheck -ThrowOnFailure
 
@@ -5729,13 +8149,14 @@ function Update-FabricEventhouseDefinition {
             $response
         }
     }
-    catch {
-        # Capture and log error details
-        $errorDetails = $_.Exception.Message
-        Write-FabricLog -Message "Failed to update Eventhouse definition. Error: $errorDetails" -Level Error
+        catch {
+            # Capture and log error details
+            $errorDetails = $_.Exception.Message
+            Write-FabricLog -Message "Failed to update Eventhouse definition. Error: $errorDetails" -Level Error
+        }
     }
 }
-#EndRegion '.\Public\Eventhouse\Update-FabricEventhouseDefinition.ps1' 123
+#EndRegion '.\Public\Eventhouse\Update-FabricEventhouseDefinition.ps1' 126
 #Region '.\Public\Eventstream\Get-FabricEventstream.ps1' -1
 
 <#
@@ -5754,6 +8175,9 @@ Optional. The GUID of a single Eventstream to return. Use this when you already 
 
 .PARAMETER EventstreamName
 Optional. The display name of the Eventstream to retrieve. Use this when you prefer to match by its friendly name instead of the GUID.
+
+.PARAMETER Raw
+If specified, returns the raw API response without type decoration.
 
 .EXAMPLE
 Get-FabricEventstream -WorkspaceId "12345" -EventstreamName "Development"
@@ -5782,8 +8206,9 @@ Author: Tiago Balabuch
 function Get-FabricEventstream {
     [CmdletBinding()]
     param (
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
         [ValidateNotNullOrEmpty()]
+        [Alias('id')]
         [string]$WorkspaceId,
 
         [Parameter(Mandatory = $false)]
@@ -5793,41 +8218,45 @@ function Get-FabricEventstream {
         [Parameter(Mandatory = $false)]
         [ValidateNotNullOrEmpty()]
         [ValidatePattern('^[a-zA-Z0-9_ ]*$')]
-        [string]$EventstreamName
+        [string]$EventstreamName,
+
+        [Parameter()]
+        [switch]$Raw
     )
 
-    try {
-        # Validate input parameters
-        if ($EventstreamId -and $EventstreamName) {
-            Write-FabricLog -Message "Specify only one parameter: either 'EventstreamId' or 'EventstreamName'." -Level Error
-            return
+    process {
+        try {
+            # Validate input parameters
+            if ($EventstreamId -and $EventstreamName) {
+                Write-FabricLog -Message "Specify only one parameter: either 'EventstreamId' or 'EventstreamName'." -Level Error
+                return
+            }
+
+            # Validate authentication
+            Invoke-FabricAuthCheck -ThrowOnFailure
+
+            # Construct the API endpoint URI
+            $apiEndpointURI = New-FabricAPIUri -Resource 'workspaces' -WorkspaceId $WorkspaceId -Subresource 'eventstreams'
+
+            # Make the API request
+            $apiParams = @{
+                BaseURI = $apiEndpointURI
+                Headers = $script:FabricAuthContext.FabricHeaders
+                Method  = 'Get'
+            }
+            $dataItems = Invoke-FabricAPIRequest @apiParams
+
+            # Apply filtering and return results
+            Select-FabricResource -InputObject $dataItems -Id $EventstreamId -DisplayName $EventstreamName -ResourceType 'Eventstream' -TypeName 'MicrosoftFabric.Eventstream' -Raw:$Raw
         }
-
-        # Validate authentication
-        Invoke-FabricAuthCheck -ThrowOnFailure
-
-        # Construct the API endpoint URI
-        $apiEndpointURI = New-FabricAPIUri -Resource 'workspaces' -WorkspaceId $WorkspaceId -Subresource 'eventstreams'
-
-        # Make the API request
-        $apiParams = @{
-            BaseURI = $apiEndpointURI
-            Headers = $script:FabricAuthContext.FabricHeaders
-            Method  = 'Get'
+        catch {
+            # Capture and log error details
+            $errorDetails = $_.Exception.Message
+            Write-FabricLog -Message "Failed to retrieve Eventstream for workspace '$WorkspaceId'. Error: $errorDetails" -Level Error
         }
-        $dataItems = Invoke-FabricAPIRequest @apiParams
-
-        # Apply filtering and return results
-        Select-FabricResource -InputObject $dataItems -Id $EventstreamId -DisplayName $EventstreamName -ResourceType 'Eventstream' -TypeName 'MicrosoftFabric.Eventstream'
     }
-    catch {
-        # Capture and log error details
-        $errorDetails = $_.Exception.Message
-        Write-FabricLog -Message "Failed to retrieve Eventstream. Error: $errorDetails" -Level Error
-    }
-
 }
-#EndRegion '.\Public\Eventstream\Get-FabricEventstream.ps1' 90
+#EndRegion '.\Public\Eventstream\Get-FabricEventstream.ps1' 98
 #Region '.\Public\Eventstream\Get-FabricEventstreamDefinition.ps1' -1
 
 
@@ -5869,8 +8298,9 @@ Author: Updated by Jess Pomfret and Rob Sewell November 2026
 function Get-FabricEventstreamDefinition {
     [CmdletBinding()]
     param (
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
         [ValidateNotNullOrEmpty()]
+        [Alias('id')]
         [string]$WorkspaceId,
 
         [Parameter(Mandatory = $false)]
@@ -5914,7 +8344,7 @@ function Get-FabricEventstreamDefinition {
     }
 
 }
-#EndRegion '.\Public\Eventstream\Get-FabricEventstreamDefinition.ps1' 85
+#EndRegion '.\Public\Eventstream\Get-FabricEventstreamDefinition.ps1' 86
 #Region '.\Public\Eventstream\Get-FabricEventstreamDestination.ps1' -1
 
 <#
@@ -5948,8 +8378,9 @@ Author: Tiago Balabuch
 function Get-FabricEventstreamDestination {
     [CmdletBinding()]
     param (
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
         [ValidateNotNullOrEmpty()]
+        [Alias('id')]
         [string]$WorkspaceId,
 
         [Parameter(Mandatory = $true)]
@@ -5982,7 +8413,7 @@ function Get-FabricEventstreamDestination {
         Write-FabricLog -Message "Failed to retrieve Eventstream Destination. Error: $errorDetails" -Level Error
     }
 }
-#EndRegion '.\Public\Eventstream\Get-FabricEventstreamDestination.ps1' 66
+#EndRegion '.\Public\Eventstream\Get-FabricEventstreamDestination.ps1' 67
 #Region '.\Public\Eventstream\Get-FabricEventstreamDestinationConnection.ps1' -1
 
 <#
@@ -6019,8 +8450,9 @@ Author: Tiago Balabuch
 function Get-FabricEventstreamDestinationConnection {
     [CmdletBinding()]
     param (
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
         [ValidateNotNullOrEmpty()]
+        [Alias('id')]
         [string]$WorkspaceId,
 
         [Parameter(Mandatory = $true)]
@@ -6053,7 +8485,7 @@ function Get-FabricEventstreamDestinationConnection {
         Write-FabricLog -Message "Failed to retrieve Eventstream Destination Connection. Error: $errorDetails" -Level Error
     }
 }
-#EndRegion '.\Public\Eventstream\Get-FabricEventstreamDestinationConnection.ps1' 69
+#EndRegion '.\Public\Eventstream\Get-FabricEventstreamDestinationConnection.ps1' 70
 #Region '.\Public\Eventstream\Get-FabricEventstreamSource.ps1' -1
 
 <#
@@ -6085,8 +8517,9 @@ Author: Tiago Balabuch
 function Get-FabricEventstreamSource {
     [CmdletBinding()]
     param (
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
         [ValidateNotNullOrEmpty()]
+        [Alias('id')]
         [string]$WorkspaceId,
 
         [Parameter(Mandatory = $true)]
@@ -6119,7 +8552,7 @@ function Get-FabricEventstreamSource {
         Write-FabricLog -Message "Failed to retrieve Eventstream Source. Error: $errorDetails" -Level Error
     }
 }
-#EndRegion '.\Public\Eventstream\Get-FabricEventstreamSource.ps1' 64
+#EndRegion '.\Public\Eventstream\Get-FabricEventstreamSource.ps1' 65
 #Region '.\Public\Eventstream\Get-FabricEventstreamSourceConnection.ps1' -1
 
 <#
@@ -6156,8 +8589,9 @@ Retrieves connection details for source 'abcd' of Eventstream '67890' in workspa
 function Get-FabricEventstreamSourceConnection {
     [CmdletBinding()]
     param (
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
         [ValidateNotNullOrEmpty()]
+        [Alias('id')]
         [string]$WorkspaceId,
 
         [Parameter(Mandatory = $true)]
@@ -6190,7 +8624,7 @@ function Get-FabricEventstreamSourceConnection {
         Write-FabricLog -Message "Failed to retrieve Eventstream Source Connection. Error: $errorDetails" -Level Error
     }
 }
-#EndRegion '.\Public\Eventstream\Get-FabricEventstreamSourceConnection.ps1' 69
+#EndRegion '.\Public\Eventstream\Get-FabricEventstreamSourceConnection.ps1' 70
 #Region '.\Public\Eventstream\Get-FabricEventstreamTopology.ps1' -1
 
 <#
@@ -6219,8 +8653,9 @@ Author: Tiago Balabuch
 function Get-FabricEventstreamTopology {
     [CmdletBinding()]
     param (
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
         [ValidateNotNullOrEmpty()]
+        [Alias('id')]
         [string]$WorkspaceId,
 
         [Parameter(Mandatory = $true)]
@@ -6249,7 +8684,7 @@ function Get-FabricEventstreamTopology {
         Write-FabricLog -Message "Failed to retrieve Eventstream Topology. Error: $errorDetails" -Level Error
     }
 }
-#EndRegion '.\Public\Eventstream\Get-FabricEventstreamTopology.ps1' 57
+#EndRegion '.\Public\Eventstream\Get-FabricEventstreamTopology.ps1' 58
 #Region '.\Public\Eventstream\New-FabricEventstream.ps1' -1
 
 <#
@@ -6433,16 +8868,18 @@ Author: Tiago Balabuch
 function Remove-FabricEventstream {
     [CmdletBinding(SupportsShouldProcess = $true, ConfirmImpact = 'High')]
     param (
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
         [ValidateNotNullOrEmpty()]
         [string]$WorkspaceId,
 
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
         [ValidateNotNullOrEmpty()]
+        [Alias('id')]
         [string]$EventstreamId
     )
 
-    try {
+    process {
+        try {
         # Validate authentication
         Invoke-FabricAuthCheck -ThrowOnFailure
 
@@ -6463,13 +8900,14 @@ function Remove-FabricEventstream {
             $response
         }
     }
-    catch {
-        # Capture and log error details
-        $errorDetails = $_.Exception.Message
-        Write-FabricLog -Message "Failed to delete Eventstream '$EventstreamId' from workspace '$WorkspaceId'. Error: $errorDetails" -Level Error
+        catch {
+            # Capture and log error details
+            $errorDetails = $_.Exception.Message
+            Write-FabricLog -Message "Failed to delete Eventstream '$EventstreamId' from workspace '$WorkspaceId'. Error: $errorDetails" -Level Error
+        }
     }
 }
-#EndRegion '.\Public\Eventstream\Remove-FabricEventstream.ps1' 66
+#EndRegion '.\Public\Eventstream\Remove-FabricEventstream.ps1' 69
 #Region '.\Public\Eventstream\Resume-FabricEventstream.ps1' -1
 
 <#
@@ -6930,25 +9368,35 @@ Author: Tiago Balabuch
 function Update-FabricEventstream {
     [CmdletBinding(SupportsShouldProcess = $true, ConfirmImpact = 'Medium')]
     param (
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
         [ValidateNotNullOrEmpty()]
         [string]$WorkspaceId,
 
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
         [ValidateNotNullOrEmpty()]
+        [Alias('id')]
         [string]$EventstreamId,
 
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $false, ValueFromPipelineByPropertyName = $true)]
         [ValidateNotNullOrEmpty()]
         [ValidatePattern('^[a-zA-Z0-9_ ]*$')]
+        [Alias('DisplayName')]
         [string]$EventstreamName,
 
-        [Parameter(Mandatory = $false)]
+        [Parameter(Mandatory = $false, ValueFromPipelineByPropertyName = $true)]
         [ValidateNotNullOrEmpty()]
+        [Alias('Description')]
         [string]$EventstreamDescription
     )
 
-    try {
+    process {
+        try {
+        # Validate that at least one update parameter is provided
+        if (-not $EventstreamName -and -not $EventstreamDescription) {
+            Write-FabricLog -Message "At least one of EventstreamName or EventstreamDescription must be specified" -Level Error
+            return
+        }
+
         # Validate authentication
         Invoke-FabricAuthCheck -ThrowOnFailure
 
@@ -6956,8 +9404,10 @@ function Update-FabricEventstream {
         $apiEndpointURI = New-FabricAPIUri -Resource 'workspaces' -WorkspaceId $WorkspaceId -Subresource 'eventstreams' -ItemId $EventstreamId
 
         # Construct the request body
-        $body = @{
-            displayName = $EventstreamName
+        $body = @{}
+
+        if ($EventstreamName) {
+            $body.displayName = $EventstreamName
         }
 
         if ($EventstreamDescription) {
@@ -6982,13 +9432,14 @@ function Update-FabricEventstream {
             $response
         }
     }
-    catch {
-        # Capture and log error details
-        $errorDetails = $_.Exception.Message
-        Write-FabricLog -Message "Failed to update Eventstream. Error: $errorDetails" -Level Error
+        catch {
+            # Capture and log error details
+            $errorDetails = $_.Exception.Message
+            Write-FabricLog -Message "Failed to update Eventstream. Error: $errorDetails" -Level Error
+        }
     }
 }
-#EndRegion '.\Public\Eventstream\Update-FabricEventstream.ps1' 98
+#EndRegion '.\Public\Eventstream\Update-FabricEventstream.ps1' 111
 #Region '.\Public\Eventstream\Update-FabricEventstreamDefinition.ps1' -1
 
 <#
@@ -7037,11 +9488,12 @@ Author: Tiago Balabuch
 function Update-FabricEventstreamDefinition {
     [CmdletBinding(SupportsShouldProcess = $true, ConfirmImpact = 'Medium')]
     param (
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
         [ValidateNotNullOrEmpty()]
+        [Alias('id')]
         [string]$WorkspaceId,
 
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
         [ValidateNotNullOrEmpty()]
         [string]$EventstreamId,
 
@@ -7054,7 +9506,8 @@ function Update-FabricEventstreamDefinition {
         [string]$EventstreamPathPlatformDefinition
     )
 
-    try {
+    process {
+        try {
         # Validate authentication
         Invoke-FabricAuthCheck -ThrowOnFailure
 
@@ -7126,13 +9579,14 @@ function Update-FabricEventstreamDefinition {
             $response
         }
     }
-    catch {
-        # Capture and log error details
-        $errorDetails = $_.Exception.Message
-        Write-FabricLog -Message "Failed to update Eventstream. Error: $errorDetails" -Level Error
+        catch {
+            # Capture and log error details
+            $errorDetails = $_.Exception.Message
+            Write-FabricLog -Message "Failed to update Eventstream. Error: $errorDetails" -Level Error
+        }
     }
 }
-#EndRegion '.\Public\Eventstream\Update-FabricEventstreamDefinition.ps1' 142
+#EndRegion '.\Public\Eventstream\Update-FabricEventstreamDefinition.ps1' 145
 #Region '.\Public\External Data Share\Get-FabricExternalDataShare.ps1' -1
 
 <#
@@ -7145,6 +9599,9 @@ function Update-FabricEventstreamDefinition {
 
 .PARAMETER ExternalDataShareId
     (Optional) The ID of the External Data Share to retrieve. If not provided, all External Data Shares will be returned.
+
+.PARAMETER Raw
+    If specified, returns the raw API response without type decoration.
 
 .EXAMPLE
     Get-FabricExternalDataShares -ExternalDataShareId "12345"
@@ -7164,7 +9621,10 @@ function Get-FabricExternalDataShare {
     param (
         [Parameter(Mandatory = $False)]
         [ValidateNotNullOrEmpty()]
-        [string]$ExternalDataShareId
+        [string]$ExternalDataShareId,
+
+        [Parameter()]
+        [switch]$Raw
     )
     try {
         # Validate authentication
@@ -7182,7 +9642,7 @@ function Get-FabricExternalDataShare {
         $dataItems = Invoke-FabricAPIRequest @apiParams
 
         # Apply filtering logic
-        Select-FabricResource -InputObject $dataItems -Id $ExternalDataShareId -ResourceType 'ExternalDataShare' -TypeName 'MicrosoftFabric.ExternalDataShare'
+        Select-FabricResource -InputObject $dataItems -Id $ExternalDataShareId -ResourceType 'ExternalDataShare' -TypeName 'MicrosoftFabric.ExternalDataShare' -Raw:$Raw
     }
     catch {
         # Capture and log error details
@@ -7190,7 +9650,7 @@ function Get-FabricExternalDataShare {
         Write-FabricLog -Message "Failed to retrieve External Data Shares. Error: $errorDetails" -Level Error
     }
 }
-#EndRegion '.\Public\External Data Share\Get-FabricExternalDataShare.ps1' 56
+#EndRegion '.\Public\External Data Share\Get-FabricExternalDataShare.ps1' 62
 #Region '.\Public\External Data Share\Revoke-FabricExternalDataShare.ps1' -1
 
 <#
@@ -7285,6 +9745,9 @@ function Revoke-FabricExternalDataShare {
 .PARAMETER Recursive
     If specified, retrieves folders recursively. Optional.
 
+.PARAMETER Raw
+    Returns the raw API response without any filtering or transformation. Use this switch when you need the complete, unprocessed response from the API.
+
 .EXAMPLE
     Get-FabricFolder -WorkspaceId "workspace-12345" -FolderName "MyFolder"
     Retrieves details for the folder named "MyFolder" in the specified workspace.
@@ -7292,6 +9755,10 @@ function Revoke-FabricExternalDataShare {
 .EXAMPLE
     Get-FabricFolder -WorkspaceId "workspace-12345" -RootFolderId "folder-67890" -Recursive
     Retrieves details for the folder with the given ID and its subfolders.
+
+.EXAMPLE
+    Get-FabricFolder -WorkspaceId "workspace-12345" -Raw
+    Returns the raw API response for all folders in the workspace without any formatting or type decoration.
 
 .NOTES
     - Requires `$FabricConfig` global configuration with `BaseUrl` and `FabricHeaders`.
@@ -7302,8 +9769,9 @@ function Revoke-FabricExternalDataShare {
 function Get-FabricFolder {
     [CmdletBinding()]
     param (
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
         [ValidateNotNullOrEmpty()]
+        [Alias('id')]
         [string]$WorkspaceId,
 
         [Parameter(Mandatory = $false)]
@@ -7316,70 +9784,75 @@ function Get-FabricFolder {
         [string]$RootFolderId,
 
         [Parameter(Mandatory = $false)]
-        [switch]$Recursive
+        [switch]$Recursive,
+
+        [Parameter(Mandatory = $false)]
+        [switch]$Raw
     )
 
-    try {
-        # Validate input parameters
-        if ($RootFolderId -and $FolderName) {
-            Write-FabricLog -Message "Specify only one parameter: either 'RootFolderId' or 'FolderName'." -Level Error
-            return $null
+    process {
+        try {
+            # Validate input parameters
+            if ($RootFolderId -and $FolderName) {
+                Write-FabricLog -Message "Specify only one parameter: either 'RootFolderId' or 'FolderName'." -Level Error
+                return
+            }
+
+            # Additional FolderName validation
+            if ($FolderName) {
+                if ($FolderName.Length -gt 255) {
+                    Write-FabricLog -Message "Folder name exceeds 255 characters." -Level Error
+                    return
+                }
+                if ($FolderName -match '^[\s]|\s$') {
+                    Write-FabricLog -Message "Folder name cannot have leading or trailing spaces." -Level Error
+                    return
+                }
+                if ($FolderName -match '[~"#.&*:<>?\/{|}]') {
+                    Write-FabricLog -Message "Folder name contains invalid characters: ~ # . & * : < > ? / { | }\" -Level Error
+                    return
+                }
+                if ($FolderName -match '^\$recycle\.bin$|^recycled$|^recycler$') {
+                    Write-FabricLog -Message "Folder name cannot be a system-reserved name." -Level Error
+                    return
+                }
+                if ($FolderName -match '[\x00-\x1F]') {
+                    Write-FabricLog -Message "Folder name contains control characters." -Level Error
+                    return
+                }
+            }
+
+            # Validate authentication
+            Invoke-FabricAuthCheck -ThrowOnFailure
+
+            # Construct the API endpoint URI
+            $queryParams = @{}
+            if ($RootFolderId) {
+                $queryParams.rootFolderId = $RootFolderId
+            }
+            $recursiveValue = if ($Recursive.IsPresent -and $Recursive) { 'True' } else { 'False' }
+            $queryParams.recursive = $recursiveValue
+            $apiEndpointURI = New-FabricAPIUri -Resource 'workspaces' -WorkspaceId $WorkspaceId -Subresource 'folders' -QueryParameters $queryParams
+
+            # Make the API request
+            $apiParams = @{
+                BaseURI = $apiEndpointURI
+                Headers = $script:FabricAuthContext.FabricHeaders
+                Method  = 'Get'
+            }
+            $dataItems = Invoke-FabricAPIRequest @apiParams
+
+            # Apply filtering logic
+            Select-FabricResource -InputObject $dataItems -DisplayName $FolderName -ResourceType 'Folder' -TypeName 'MicrosoftFabric.Folder' -Raw:$Raw
         }
-
-        # Additional FolderName validation
-        if ($FolderName) {
-            if ($FolderName.Length -gt 255) {
-                Write-FabricLog -Message "Folder name exceeds 255 characters." -Level Error
-                return $null
-            }
-            if ($FolderName -match '^[\s]|\s$') {
-                Write-FabricLog -Message "Folder name cannot have leading or trailing spaces." -Level Error
-                return $null
-            }
-            if ($FolderName -match '[~"#.&*:<>?\/{|}]') {
-                Write-FabricLog -Message "Folder name contains invalid characters: ~ # . & * : < > ? / { | }\" -Level Error
-                return $null
-            }
-            if ($FolderName -match '^\$recycle\.bin$|^recycled$|^recycler$') {
-                Write-FabricLog -Message "Folder name cannot be a system-reserved name." -Level Error
-                return $null
-            }
-            if ($FolderName -match '[\x00-\x1F]') {
-                Write-FabricLog -Message "Folder name contains control characters." -Level Error
-                return $null
-            }
+        catch {
+            # Capture and log error details
+            $errorDetails = $_.Exception.Message
+            Write-FabricLog -Message "Failed to retrieve Folder for workspace '$WorkspaceId'. Error: $errorDetails" -Level Error
         }
-
-        # Validate authentication
-        Invoke-FabricAuthCheck -ThrowOnFailure
-
-        # Construct the API endpoint URI
-        $queryParams = @{}
-        if ($RootFolderId) {
-            $queryParams.rootFolderId = $RootFolderId
-        }
-        $recursiveValue = if ($Recursive.IsPresent -and $Recursive) { 'True' } else { 'False' }
-        $queryParams.recursive = $recursiveValue
-        $apiEndpointURI = New-FabricAPIUri -Resource 'workspaces' -WorkspaceId $WorkspaceId -Subresource 'folders' -QueryParameters $queryParams
-
-        # Make the API request
-        $apiParams = @{
-            BaseURI = $apiEndpointURI
-            Headers = $script:FabricAuthContext.FabricHeaders
-            Method  = 'Get'
-        }
-        $dataItems = Invoke-FabricAPIRequest @apiParams
-
-        # Apply filtering logic
-        Select-FabricResource -InputObject $dataItems -DisplayName $FolderName -ResourceType 'Folder' -TypeName 'MicrosoftFabric.Folder'
-    }
-    catch {
-        # Capture and log error details
-        $errorDetails = $_.Exception.Message
-        Write-FabricLog -Message "Failed to retrieve Warehouse. Error: $errorDetails" -Level Error
     }
 }
-#EndRegion '.\Public\Folder\Get-FabricFolder.ps1' 115
+#EndRegion '.\Public\Folder\Get-FabricFolder.ps1' 128
 #Region '.\Public\Folder\Move-FabricFolder.ps1' -1
 
 <#
@@ -7760,6 +10233,846 @@ function Update-FabricFolder {
     }
 }
 #EndRegion '.\Public\Folder\Update-FabricFolder.ps1' 104
+#Region '.\Public\Graph Model\Get-FabricGraphModel.ps1' -1
+
+<#
+.SYNOPSIS
+    Gets a Graph Model or lists all Graph Models in a workspace.
+
+.DESCRIPTION
+    The Get-FabricGraphModel cmdlet retrieves Graph Model items from a specified Microsoft Fabric workspace.
+    You can list all Graph Models or filter by a specific GraphModelId or display name.
+
+.PARAMETER WorkspaceId
+    The GUID of the workspace containing the Graph Model resources.
+
+.PARAMETER GraphModelId
+    Optional. Returns only the Graph Model matching this resource Id.
+
+.PARAMETER GraphModelName
+    Optional. Returns only the Graph Model whose display name exactly matches this value.
+
+.PARAMETER Raw
+    Optional. When specified, returns the raw API response with resolved CapacityName and WorkspaceName
+    properties added directly to the output objects.
+
+.EXAMPLE
+    Get-FabricGraphModel -WorkspaceId "12345678-1234-1234-1234-123456789012"
+
+    Lists all Graph Models in the specified workspace.
+
+.EXAMPLE
+    Get-FabricGraphModel -WorkspaceId "12345678-1234-1234-1234-123456789012" -GraphModelId "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee"
+
+    Returns the Graph Model with the specified Id.
+
+.EXAMPLE
+    Get-FabricGraphModel -WorkspaceId "12345678-1234-1234-1234-123456789012" -GraphModelName "MyGraphModel"
+
+    Returns the Graph Model with the specified name.
+
+.EXAMPLE
+    Get-FabricGraphModel -WorkspaceId "12345678-1234-1234-1234-123456789012" -Raw | Export-Csv -Path "graphmodels.csv"
+
+    Exports all Graph Models with resolved names to a CSV file.
+
+.NOTES
+    - Requires `$FabricAuthContext` global configuration.
+    - Calls `Invoke-FabricAuthCheck` to ensure token validity before making the API request.
+
+    Author: Tiago Balabuch, Jess Pomfret, Rob Sewell
+
+#>
+function Get-FabricGraphModel {
+    [CmdletBinding()]
+    param (
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
+        [ValidateNotNullOrEmpty()]
+        [Alias('id')]
+        [string]$WorkspaceId,
+
+        [Parameter(Mandatory = $false)]
+        [ValidateNotNullOrEmpty()]
+        [string]$GraphModelId,
+
+        [Parameter(Mandatory = $false)]
+        [ValidateNotNullOrEmpty()]
+        [ValidatePattern('^[a-zA-Z0-9_ ]*$')]
+        [string]$GraphModelName,
+
+        [Parameter()]
+        [switch]$Raw
+    )
+
+    process {
+        try {
+            # Validate input parameters
+            if ($GraphModelId -and $GraphModelName) {
+                Write-FabricLog -Message "Specify only one parameter: either 'GraphModelId' or 'GraphModelName'." -Level Error
+                return
+            }
+
+            Invoke-FabricAuthCheck -ThrowOnFailure
+
+            # Construct the API endpoint URI
+            $apiEndpointURI = New-FabricAPIUri -Resource 'workspaces' -WorkspaceId $WorkspaceId -Subresource 'GraphModels'
+            Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
+
+            # Make the API request
+            $apiParams = @{
+                BaseURI = $apiEndpointURI
+                Headers = $script:FabricAuthContext.FabricHeaders
+                Method  = 'Get'
+            }
+            $dataItems = Invoke-FabricAPIRequest @apiParams
+
+            # Apply filtering and formatting
+            Select-FabricResource -InputObject $dataItems -Id $GraphModelId -DisplayName $GraphModelName -ResourceType 'GraphModel' -TypeName 'MicrosoftFabric.GraphModel' -Raw:$Raw
+        }
+        catch {
+            $errorDetails = $_.Exception.Message
+            Write-FabricLog -Message "Failed to retrieve Graph Model for workspace '$WorkspaceId'. Error: $errorDetails" -Level Error
+        }
+    }
+}
+#EndRegion '.\Public\Graph Model\Get-FabricGraphModel.ps1' 101
+#Region '.\Public\Graph Model\Get-FabricGraphModelDefinition.ps1' -1
+
+<#
+.SYNOPSIS
+    Gets the definition of a Graph Model from a Fabric workspace.
+
+.DESCRIPTION
+    The Get-FabricGraphModelDefinition cmdlet retrieves the public definition of a Graph Model
+    from a specified workspace. This API supports long running operations (LRO).
+
+.PARAMETER WorkspaceId
+    The GUID of the workspace containing the Graph Model.
+
+.PARAMETER GraphModelId
+    The GUID of the Graph Model whose definition to retrieve.
+
+.PARAMETER Format
+    Optional. The format of the Graph Model public definition.
+
+.EXAMPLE
+    Get-FabricGraphModelDefinition -WorkspaceId "12345678-1234-1234-1234-123456789012" -GraphModelId "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee"
+
+    Retrieves the definition of the specified Graph Model.
+
+.NOTES
+    - Requires `$FabricAuthContext` global configuration.
+    - This API supports long running operations (LRO).
+    - The sensitivity label is not a part of the definition.
+
+    Author: Tiago Balabuch, Jess Pomfret, Rob Sewell
+
+#>
+function Get-FabricGraphModelDefinition {
+    [CmdletBinding()]
+    param (
+        [Parameter(Mandatory = $true)]
+        [ValidateNotNullOrEmpty()]
+        [string]$WorkspaceId,
+
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
+        [ValidateNotNullOrEmpty()]
+        [Alias('id')]
+        [string]$GraphModelId,
+
+        [Parameter(Mandatory = $false)]
+        [ValidateNotNullOrEmpty()]
+        [string]$Format
+    )
+
+    process {
+        try {
+            Invoke-FabricAuthCheck -ThrowOnFailure
+
+            # Build query parameters if format specified
+            $queryParams = @{}
+            if ($Format) {
+                $queryParams['format'] = $Format
+            }
+
+            # Construct the API endpoint URI
+            $uriParams = @{
+                Resource    = 'workspaces'
+                WorkspaceId = $WorkspaceId
+                Subresource = 'GraphModels'
+                ItemId      = "$GraphModelId/getDefinition"
+            }
+            if ($queryParams.Count -gt 0) {
+                $uriParams['QueryParameters'] = $queryParams
+            }
+            $apiEndpointURI = New-FabricAPIUri @uriParams
+            Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
+
+            # Make the API request (POST to getDefinition)
+            $apiParams = @{
+                BaseURI = $apiEndpointURI
+                Headers = $script:FabricAuthContext.FabricHeaders
+                Method  = 'Post'
+            }
+            $response = Invoke-FabricAPIRequest @apiParams
+
+            if ($response) {
+                Write-FabricLog -Message "Graph Model definition retrieved successfully." -Level Debug
+                return $response
+            }
+        }
+        catch {
+            $errorDetails = $_.Exception.Message
+            Write-FabricLog -Message "Failed to retrieve Graph Model definition for '$GraphModelId'. Error: $errorDetails" -Level Error
+        }
+    }
+}
+#EndRegion '.\Public\Graph Model\Get-FabricGraphModelDefinition.ps1' 90
+#Region '.\Public\Graph Model\Get-FabricGraphModelQueryableType.ps1' -1
+
+<#
+.SYNOPSIS
+    Gets the queryable graph type for a Graph Model.
+
+.DESCRIPTION
+    The Get-FabricGraphModelQueryableType cmdlet retrieves the current queryable graph type
+    for the specified Graph Model. This is a beta API that requires the beta parameter.
+
+.PARAMETER WorkspaceId
+    The GUID of the workspace containing the Graph Model.
+
+.PARAMETER GraphModelId
+    The GUID of the Graph Model to get the queryable type for.
+
+.EXAMPLE
+    Get-FabricGraphModelQueryableType -WorkspaceId "12345678-1234-1234-1234-123456789012" -GraphModelId "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee"
+
+    Gets the queryable graph type for the specified Graph Model.
+
+.NOTES
+    - Requires `$FabricAuthContext` global configuration.
+    - This is a beta API.
+
+    Author: Tiago Balabuch, Jess Pomfret, Rob Sewell
+
+#>
+function Get-FabricGraphModelQueryableType {
+    [CmdletBinding()]
+    param (
+        [Parameter(Mandatory = $true)]
+        [ValidateNotNullOrEmpty()]
+        [string]$WorkspaceId,
+
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
+        [ValidateNotNullOrEmpty()]
+        [Alias('id')]
+        [string]$GraphModelId
+    )
+
+    process {
+        try {
+            Invoke-FabricAuthCheck -ThrowOnFailure
+
+            # Construct the API endpoint URI with beta query parameter
+            $uriParams = @{
+                Resource        = 'workspaces'
+                WorkspaceId     = $WorkspaceId
+                Subresource     = 'GraphModels'
+                ItemId          = "$GraphModelId/getQueryableGraphType"
+                QueryParameters = @{ beta = 'true' }
+            }
+            $apiEndpointURI = New-FabricAPIUri @uriParams
+            Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
+
+            # Make the API request
+            $apiParams = @{
+                BaseURI = $apiEndpointURI
+                Headers = $script:FabricAuthContext.FabricHeaders
+                Method  = 'Get'
+            }
+            $response = Invoke-FabricAPIRequest @apiParams
+
+            if ($response) {
+                Write-FabricLog -Message "Queryable graph type retrieved successfully." -Level Debug
+                return $response
+            }
+        }
+        catch {
+            $errorDetails = $_.Exception.Message
+            Write-FabricLog -Message "Failed to get queryable graph type for Graph Model '$GraphModelId'. Error: $errorDetails" -Level Error
+        }
+    }
+}
+#EndRegion '.\Public\Graph Model\Get-FabricGraphModelQueryableType.ps1' 74
+#Region '.\Public\Graph Model\Invoke-FabricGraphModelQuery.ps1' -1
+
+<#
+.SYNOPSIS
+    Executes a query on a Graph Model in a Fabric workspace.
+
+.DESCRIPTION
+    The Invoke-FabricGraphModelQuery cmdlet executes a GQL query on the specified Graph Model.
+    This is a beta API that requires the beta parameter to be set to true.
+
+.PARAMETER WorkspaceId
+    The GUID of the workspace containing the Graph Model.
+
+.PARAMETER GraphModelId
+    The GUID of the Graph Model to query.
+
+.PARAMETER Query
+    The GQL query string to execute.
+
+.EXAMPLE
+    Invoke-FabricGraphModelQuery -WorkspaceId "12345678-1234-1234-1234-123456789012" -GraphModelId "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee" -Query "MATCH (n) RETURN n LIMIT 10"
+
+    Executes a GQL query on the specified Graph Model.
+
+.NOTES
+    - Requires `$FabricAuthContext` global configuration.
+    - This is a beta API.
+    - Results are returned in JSON format. Refer to the MSFT GQL API documentation for result format.
+
+    Author: Tiago Balabuch, Jess Pomfret, Rob Sewell
+
+#>
+function Invoke-FabricGraphModelQuery {
+    [CmdletBinding()]
+    param (
+        [Parameter(Mandatory = $true)]
+        [ValidateNotNullOrEmpty()]
+        [string]$WorkspaceId,
+
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
+        [ValidateNotNullOrEmpty()]
+        [Alias('id')]
+        [string]$GraphModelId,
+
+        [Parameter(Mandatory = $true)]
+        [ValidateNotNullOrEmpty()]
+        [string]$Query
+    )
+
+    process {
+        try {
+            Invoke-FabricAuthCheck -ThrowOnFailure
+
+            # Construct the API endpoint URI with beta query parameter
+            $uriParams = @{
+                Resource        = 'workspaces'
+                WorkspaceId     = $WorkspaceId
+                Subresource     = 'GraphModels'
+                ItemId          = "$GraphModelId/executeQuery"
+                QueryParameters = @{ beta = 'true' }
+            }
+            $apiEndpointURI = New-FabricAPIUri @uriParams
+            Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
+
+            # Build request body
+            $body = @{
+                query = $Query
+            }
+            $bodyJson = $body | ConvertTo-Json -Depth 10
+
+            # Make the API request
+            $apiParams = @{
+                BaseURI = $apiEndpointURI
+                Headers = $script:FabricAuthContext.FabricHeaders
+                Method  = 'Post'
+                Body    = $bodyJson
+            }
+            $response = Invoke-FabricAPIRequest @apiParams
+
+            if ($response) {
+                Write-FabricLog -Message "Graph Model query executed successfully." -Level Debug
+                return $response
+            }
+        }
+        catch {
+            $errorDetails = $_.Exception.Message
+            Write-FabricLog -Message "Failed to execute query on Graph Model '$GraphModelId'. Error: $errorDetails" -Level Error
+        }
+    }
+}
+#EndRegion '.\Public\Graph Model\Invoke-FabricGraphModelQuery.ps1' 89
+#Region '.\Public\Graph Model\New-FabricGraphModel.ps1' -1
+
+<#
+.SYNOPSIS
+    Creates a new Graph Model in a Fabric workspace.
+
+.DESCRIPTION
+    The New-FabricGraphModel cmdlet creates a new Graph Model within a specified Fabric workspace.
+    The Graph Model can be created with just a name and optional description, or with a full definition.
+
+.PARAMETER WorkspaceId
+    The GUID of the workspace where the Graph Model will be created.
+
+.PARAMETER GraphModelName
+    The display name for the new Graph Model.
+
+.PARAMETER Description
+    Optional. A description for the Graph Model.
+
+.PARAMETER Definition
+    Optional. A hashtable containing the Graph Model definition with parts array.
+
+.EXAMPLE
+    New-FabricGraphModel -WorkspaceId "12345678-1234-1234-1234-123456789012" -GraphModelName "MyGraphModel"
+
+    Creates a new Graph Model with the specified name.
+
+.EXAMPLE
+    New-FabricGraphModel -WorkspaceId "12345678-1234-1234-1234-123456789012" -GraphModelName "MyGraphModel" -Description "My graph model for analytics"
+
+    Creates a new Graph Model with a name and description.
+
+.NOTES
+    - Requires `$FabricAuthContext` global configuration.
+    - This API supports long running operations (LRO).
+
+    Author: Tiago Balabuch, Jess Pomfret, Rob Sewell
+
+#>
+function New-FabricGraphModel {
+    [CmdletBinding(SupportsShouldProcess)]
+    param (
+        [Parameter(Mandatory = $true)]
+        [ValidateNotNullOrEmpty()]
+        [string]$WorkspaceId,
+
+        [Parameter(Mandatory = $true)]
+        [ValidateNotNullOrEmpty()]
+        [ValidatePattern('^[a-zA-Z0-9_ ]*$')]
+        [string]$GraphModelName,
+
+        [Parameter(Mandatory = $false)]
+        [ValidateNotNullOrEmpty()]
+        [string]$Description,
+
+        [Parameter(Mandatory = $false)]
+        [ValidateNotNullOrEmpty()]
+        [hashtable]$Definition
+    )
+
+    process {
+        try {
+            Invoke-FabricAuthCheck -ThrowOnFailure
+
+            # Construct the API endpoint URI
+            $apiEndpointURI = New-FabricAPIUri -Resource 'workspaces' -WorkspaceId $WorkspaceId -Subresource 'GraphModels'
+            Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
+
+            # Build request body
+            $body = @{
+                displayName = $GraphModelName
+            }
+
+            if ($Description) {
+                $body.description = $Description
+            }
+
+            if ($Definition) {
+                $body.definition = $Definition
+            }
+
+            $bodyJson = $body | ConvertTo-Json -Depth 10
+
+            if ($PSCmdlet.ShouldProcess("Graph Model '$GraphModelName'", "Create")) {
+                # Make the API request
+                $apiParams = @{
+                    BaseURI = $apiEndpointURI
+                    Headers = $script:FabricAuthContext.FabricHeaders
+                    Method  = 'Post'
+                    Body    = $bodyJson
+                }
+                $response = Invoke-FabricAPIRequest @apiParams
+
+                if ($response) {
+                    Write-FabricLog -Message "Graph Model '$GraphModelName' created successfully." -Level Debug
+                    return $response
+                }
+            }
+        }
+        catch {
+            $errorDetails = $_.Exception.Message
+            Write-FabricLog -Message "Failed to create Graph Model '$GraphModelName'. Error: $errorDetails" -Level Error
+        }
+    }
+}
+#EndRegion '.\Public\Graph Model\New-FabricGraphModel.ps1' 104
+#Region '.\Public\Graph Model\Remove-FabricGraphModel.ps1' -1
+
+<#
+.SYNOPSIS
+    Removes a Graph Model from a Fabric workspace.
+
+.DESCRIPTION
+    The Remove-FabricGraphModel cmdlet deletes a Graph Model from a specified workspace.
+    This is a destructive operation and cannot be undone.
+
+.PARAMETER WorkspaceId
+    The GUID of the workspace containing the Graph Model.
+
+.PARAMETER GraphModelId
+    The GUID of the Graph Model to delete.
+
+.EXAMPLE
+    Remove-FabricGraphModel -WorkspaceId "12345678-1234-1234-1234-123456789012" -GraphModelId "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee"
+
+    Deletes the specified Graph Model from the workspace.
+
+.EXAMPLE
+    Get-FabricGraphModel -WorkspaceId "12345678-1234-1234-1234-123456789012" -GraphModelName "OldGraphModel" | Remove-FabricGraphModel
+
+    Deletes a Graph Model by piping from Get-FabricGraphModel.
+
+.NOTES
+    - Requires `$FabricAuthContext` global configuration.
+    - Calls `Invoke-FabricAuthCheck` to ensure token validity before making the API request.
+
+    Author: Tiago Balabuch, Jess Pomfret, Rob Sewell
+
+#>
+function Remove-FabricGraphModel {
+    [CmdletBinding(SupportsShouldProcess, ConfirmImpact = 'High')]
+    param (
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
+        [ValidateNotNullOrEmpty()]
+        [string]$WorkspaceId,
+
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
+        [ValidateNotNullOrEmpty()]
+        [Alias('id')]
+        [string]$GraphModelId
+    )
+
+    process {
+        try {
+            Invoke-FabricAuthCheck -ThrowOnFailure
+
+            # Construct the API endpoint URI
+            $apiEndpointURI = New-FabricAPIUri -Resource 'workspaces' -WorkspaceId $WorkspaceId -Subresource 'GraphModels' -ItemId $GraphModelId
+            Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
+
+            if ($PSCmdlet.ShouldProcess("Graph Model '$GraphModelId'", "Delete")) {
+                # Make the API request
+                $apiParams = @{
+                    BaseURI = $apiEndpointURI
+                    Headers = $script:FabricAuthContext.FabricHeaders
+                    Method  = 'Delete'
+                }
+                Invoke-FabricAPIRequest @apiParams
+
+                Write-FabricLog -Message "Graph Model '$GraphModelId' deleted successfully." -Level Debug
+            }
+        }
+        catch {
+            $errorDetails = $_.Exception.Message
+            Write-FabricLog -Message "Failed to delete Graph Model '$GraphModelId'. Error: $errorDetails" -Level Error
+        }
+    }
+}
+#EndRegion '.\Public\Graph Model\Remove-FabricGraphModel.ps1' 71
+#Region '.\Public\Graph Model\Start-FabricGraphModelRefresh.ps1' -1
+
+<#
+.SYNOPSIS
+    Runs an on-demand RefreshGraph job for a Graph Model.
+
+.DESCRIPTION
+    The Start-FabricGraphModelRefresh cmdlet triggers an on-demand RefreshGraph job for the specified
+    Graph Model in a Fabric workspace.
+
+.PARAMETER WorkspaceId
+    The GUID of the workspace containing the Graph Model.
+
+.PARAMETER GraphModelId
+    The GUID of the Graph Model to refresh.
+
+.EXAMPLE
+    Start-FabricGraphModelRefresh -WorkspaceId "12345678-1234-1234-1234-123456789012" -GraphModelId "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee"
+
+    Starts a refresh job for the specified Graph Model.
+
+.EXAMPLE
+    Get-FabricGraphModel -WorkspaceId "12345678-1234-1234-1234-123456789012" -GraphModelName "MyGraphModel" | Start-FabricGraphModelRefresh -WorkspaceId "12345678-1234-1234-1234-123456789012"
+
+    Starts a refresh job by piping from Get-FabricGraphModel.
+
+.NOTES
+    - Requires `$FabricAuthContext` global configuration.
+    - This is an asynchronous operation that returns immediately.
+
+    Author: Tiago Balabuch, Jess Pomfret, Rob Sewell
+
+#>
+function Start-FabricGraphModelRefresh {
+    [CmdletBinding(SupportsShouldProcess)]
+    param (
+        [Parameter(Mandatory = $true)]
+        [ValidateNotNullOrEmpty()]
+        [string]$WorkspaceId,
+
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
+        [ValidateNotNullOrEmpty()]
+        [Alias('id')]
+        [string]$GraphModelId
+    )
+
+    process {
+        try {
+            Invoke-FabricAuthCheck -ThrowOnFailure
+
+            # Construct the API endpoint URI
+            $apiEndpointURI = New-FabricAPIUri -Resource 'workspaces' -WorkspaceId $WorkspaceId -Subresource 'GraphModels' -ItemId "$GraphModelId/jobs/RefreshGraph/instances"
+            Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
+
+            if ($PSCmdlet.ShouldProcess("Graph Model '$GraphModelId'", "Start RefreshGraph job")) {
+                # Make the API request
+                $apiParams = @{
+                    BaseURI = $apiEndpointURI
+                    Headers = $script:FabricAuthContext.FabricHeaders
+                    Method  = 'Post'
+                }
+                $response = Invoke-FabricAPIRequest @apiParams
+
+                Write-FabricLog -Message "RefreshGraph job started for Graph Model '$GraphModelId'." -Level Debug
+                return $response
+            }
+        }
+        catch {
+            $errorDetails = $_.Exception.Message
+            Write-FabricLog -Message "Failed to start RefreshGraph job for Graph Model '$GraphModelId'. Error: $errorDetails" -Level Error
+        }
+    }
+}
+#EndRegion '.\Public\Graph Model\Start-FabricGraphModelRefresh.ps1' 72
+#Region '.\Public\Graph Model\Update-FabricGraphModel.ps1' -1
+
+<#
+.SYNOPSIS
+    Updates an existing Graph Model in a Fabric workspace.
+
+.DESCRIPTION
+    The Update-FabricGraphModel cmdlet updates the properties of a Graph Model in a specified workspace.
+    You can update the display name and/or description.
+
+.PARAMETER WorkspaceId
+    The GUID of the workspace containing the Graph Model.
+
+.PARAMETER GraphModelId
+    The GUID of the Graph Model to update.
+
+.PARAMETER GraphModelName
+    Optional. The new display name for the Graph Model.
+
+.PARAMETER Description
+    Optional. The new description for the Graph Model.
+
+.EXAMPLE
+    Update-FabricGraphModel -WorkspaceId "12345678-1234-1234-1234-123456789012" -GraphModelId "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee" -GraphModelName "NewName"
+
+    Updates the display name of the specified Graph Model.
+
+.EXAMPLE
+    Update-FabricGraphModel -WorkspaceId "12345678-1234-1234-1234-123456789012" -GraphModelId "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee" -Description "Updated description"
+
+    Updates the description of the specified Graph Model.
+
+.NOTES
+    - Requires `$FabricAuthContext` global configuration.
+    - Calls `Invoke-FabricAuthCheck` to ensure token validity before making the API request.
+
+    Author: Tiago Balabuch, Jess Pomfret, Rob Sewell
+
+#>
+function Update-FabricGraphModel {
+    [CmdletBinding(SupportsShouldProcess)]
+    param (
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
+        [ValidateNotNullOrEmpty()]
+        [string]$WorkspaceId,
+
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
+        [ValidateNotNullOrEmpty()]
+        [Alias('id')]
+        [string]$GraphModelId,
+
+        [Parameter(Mandatory = $false)]
+        [ValidateNotNullOrEmpty()]
+        [ValidatePattern('^[a-zA-Z0-9_ ]*$')]
+        [string]$GraphModelName,
+
+        [Parameter(Mandatory = $false)]
+        [ValidateNotNullOrEmpty()]
+        [string]$Description
+    )
+
+    process {
+        try {
+            if (-not $GraphModelName -and -not $Description) {
+                Write-FabricLog -Message "At least one of 'GraphModelName' or 'Description' must be specified." -Level Error
+                return
+            }
+
+            Invoke-FabricAuthCheck -ThrowOnFailure
+
+            # Construct the API endpoint URI
+            $apiEndpointURI = New-FabricAPIUri -Resource 'workspaces' -WorkspaceId $WorkspaceId -Subresource 'GraphModels' -ItemId $GraphModelId
+            Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
+
+            # Build request body
+            $body = @{}
+
+            if ($GraphModelName) {
+                $body.displayName = $GraphModelName
+            }
+
+            if ($Description) {
+                $body.description = $Description
+            }
+
+            $bodyJson = $body | ConvertTo-Json -Depth 10
+
+            if ($PSCmdlet.ShouldProcess("Graph Model '$GraphModelId'", "Update")) {
+                # Make the API request
+                $apiParams = @{
+                    BaseURI = $apiEndpointURI
+                    Headers = $script:FabricAuthContext.FabricHeaders
+                    Method  = 'Patch'
+                    Body    = $bodyJson
+                }
+                $response = Invoke-FabricAPIRequest @apiParams
+
+                if ($response) {
+                    Write-FabricLog -Message "Graph Model '$GraphModelId' updated successfully." -Level Debug
+                    return $response
+                }
+            }
+        }
+        catch {
+            $errorDetails = $_.Exception.Message
+            Write-FabricLog -Message "Failed to update Graph Model '$GraphModelId'. Error: $errorDetails" -Level Error
+        }
+    }
+}
+#EndRegion '.\Public\Graph Model\Update-FabricGraphModel.ps1' 108
+#Region '.\Public\Graph Model\Update-FabricGraphModelDefinition.ps1' -1
+
+<#
+.SYNOPSIS
+    Updates the definition of a Graph Model in a Fabric workspace.
+
+.DESCRIPTION
+    The Update-FabricGraphModelDefinition cmdlet overrides the definition for the specified Graph Model.
+    This API supports long running operations (LRO).
+
+.PARAMETER WorkspaceId
+    The GUID of the workspace containing the Graph Model.
+
+.PARAMETER GraphModelId
+    The GUID of the Graph Model whose definition to update.
+
+.PARAMETER Definition
+    The definition object containing the parts array to update.
+
+.PARAMETER UpdateMetadata
+    Optional. When set to true and the .platform file is provided as part of the definition,
+    the item's metadata is updated using the metadata in the .platform file.
+
+.EXAMPLE
+    $definition = @{
+        parts = @(
+            @{
+                path = "model.json"
+                payload = [Convert]::ToBase64String([System.Text.Encoding]::UTF8.GetBytes('{"model": "content"}'))
+                payloadType = "InlineBase64"
+            }
+        )
+    }
+    Update-FabricGraphModelDefinition -WorkspaceId "12345678-1234-1234-1234-123456789012" -GraphModelId "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee" -Definition $definition
+
+    Updates the definition of the specified Graph Model.
+
+.NOTES
+    - Requires `$FabricAuthContext` global configuration.
+    - This API supports long running operations (LRO).
+    - Updating the definition does not affect its sensitivity label.
+
+    Author: Tiago Balabuch, Jess Pomfret, Rob Sewell
+
+#>
+function Update-FabricGraphModelDefinition {
+    [CmdletBinding(SupportsShouldProcess)]
+    param (
+        [Parameter(Mandatory = $true)]
+        [ValidateNotNullOrEmpty()]
+        [string]$WorkspaceId,
+
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
+        [ValidateNotNullOrEmpty()]
+        [Alias('id')]
+        [string]$GraphModelId,
+
+        [Parameter(Mandatory = $true)]
+        [ValidateNotNullOrEmpty()]
+        [hashtable]$Definition,
+
+        [Parameter(Mandatory = $false)]
+        [switch]$UpdateMetadata
+    )
+
+    process {
+        try {
+            Invoke-FabricAuthCheck -ThrowOnFailure
+
+            # Build query parameters
+            $queryParams = @{}
+            if ($UpdateMetadata) {
+                $queryParams['updateMetadata'] = 'true'
+            }
+
+            # Construct the API endpoint URI
+            $uriParams = @{
+                Resource    = 'workspaces'
+                WorkspaceId = $WorkspaceId
+                Subresource = 'GraphModels'
+                ItemId      = "$GraphModelId/updateDefinition"
+            }
+            if ($queryParams.Count -gt 0) {
+                $uriParams['QueryParameters'] = $queryParams
+            }
+            $apiEndpointURI = New-FabricAPIUri @uriParams
+            Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
+
+            # Build request body
+            $body = @{
+                definition = $Definition
+            }
+            $bodyJson = $body | ConvertTo-Json -Depth 10
+
+            if ($PSCmdlet.ShouldProcess("Graph Model definition '$GraphModelId'", "Update")) {
+                # Make the API request
+                $apiParams = @{
+                    BaseURI = $apiEndpointURI
+                    Headers = $script:FabricAuthContext.FabricHeaders
+                    Method  = 'Post'
+                    Body    = $bodyJson
+                }
+                $response = Invoke-FabricAPIRequest @apiParams
+
+                Write-FabricLog -Message "Graph Model definition updated successfully." -Level Debug
+                return $response
+            }
+        }
+        catch {
+            $errorDetails = $_.Exception.Message
+            Write-FabricLog -Message "Failed to update Graph Model definition for '$GraphModelId'. Error: $errorDetails" -Level Error
+        }
+    }
+}
+#EndRegion '.\Public\Graph Model\Update-FabricGraphModelDefinition.ps1' 113
 #Region '.\Public\GraphQLApi\Get-FabricGraphQLApi.ps1' -1
 
 <#
@@ -7779,6 +11092,9 @@ function Update-FabricFolder {
 .PARAMETER GraphQLApiName
     The display name of the GraphQL API to retrieve. Optional.
 
+.PARAMETER Raw
+    If specified, returns the raw API response without type decoration.
+
 .EXAMPLE
     Get-FabricGraphQLApi -WorkspaceId "workspace-12345" -GraphQLApiId "graphqlapi-67890"
     Retrieves the GraphQL API with ID "graphqlapi-67890" from the specified workspace.
@@ -7796,8 +11112,9 @@ function Update-FabricFolder {
 function Get-FabricGraphQLApi {
     [CmdletBinding()]
     param (
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
         [ValidateNotNullOrEmpty()]
+        [Alias('id')]
         [string]$WorkspaceId,
 
         [Parameter(Mandatory = $false)]
@@ -7807,39 +11124,45 @@ function Get-FabricGraphQLApi {
         [Parameter(Mandatory = $false)]
         [ValidateNotNullOrEmpty()]
         [ValidatePattern('^[a-zA-Z0-9_ ]*$')]
-        [string]$GraphQLApiName
+        [string]$GraphQLApiName,
+
+        [Parameter()]
+        [switch]$Raw
     )
-    try {
-        # Validate input parameters
-        if ($GraphQLApiId -and $GraphQLApiName) {
-            Write-FabricLog -Message "Specify only one parameter: either 'GraphQLApiId' or 'GraphQLApiName'." -Level Error
-            return
+
+    process {
+        try {
+            # Validate input parameters
+            if ($GraphQLApiId -and $GraphQLApiName) {
+                Write-FabricLog -Message "Specify only one parameter: either 'GraphQLApiId' or 'GraphQLApiName'." -Level Error
+                return
+            }
+
+            # Validate authentication
+            Invoke-FabricAuthCheck -ThrowOnFailure
+
+            # Construct the API endpoint URI
+            $apiEndpointURI = New-FabricAPIUri -Resource 'workspaces' -WorkspaceId $WorkspaceId -Subresource 'GraphQLApis'
+
+            # Make the API request
+            $apiParams = @{
+                BaseURI = $apiEndpointURI
+                Headers = $script:FabricAuthContext.FabricHeaders
+                Method  = 'Get'
+            }
+            $dataItems = Invoke-FabricAPIRequest @apiParams
+
+            # Apply filtering and return results
+            Select-FabricResource -InputObject $dataItems -Id $GraphQLApiId -DisplayName $GraphQLApiName -ResourceType 'GraphQL API' -TypeName 'MicrosoftFabric.GraphQLApi' -Raw:$Raw
         }
-
-        # Validate authentication
-        Invoke-FabricAuthCheck -ThrowOnFailure
-
-        # Construct the API endpoint URI
-        $apiEndpointURI = New-FabricAPIUri -Resource 'workspaces' -WorkspaceId $WorkspaceId -Subresource 'GraphQLApis'
-
-        # Make the API request
-        $apiParams = @{
-            BaseURI = $apiEndpointURI
-            Headers = $script:FabricAuthContext.FabricHeaders
-            Method  = 'Get'
+        catch {
+            # Capture and log error details
+            $errorDetails = $_.Exception.Message
+            Write-FabricLog -Message "Failed to retrieve GraphQL API for workspace '$WorkspaceId'. Error: $errorDetails" -Level Error
         }
-        $dataItems = Invoke-FabricAPIRequest @apiParams
-
-        # Apply filtering and return results
-        Select-FabricResource -InputObject $dataItems -Id $GraphQLApiId -DisplayName $GraphQLApiName -ResourceType 'GraphQL API' -TypeName 'MicrosoftFabric.GraphQLApi'
-    }
-    catch {
-        # Capture and log error details
-        $errorDetails = $_.Exception.Message
-        Write-FabricLog -Message "Failed to retrieve GraphQL API. Error: $errorDetails" -Level Error
     }
 }
-#EndRegion '.\Public\GraphQLApi\Get-FabricGraphQLApi.ps1' 78
+#EndRegion '.\Public\GraphQLApi\Get-FabricGraphQLApi.ps1' 88
 #Region '.\Public\GraphQLApi\Get-FabricGraphQLApiDefinition.ps1' -1
 
 <#
@@ -7875,8 +11198,9 @@ function Get-FabricGraphQLApi {
 function Get-FabricGraphQLApiDefinition {
     [CmdletBinding()]
     param (
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
         [ValidateNotNullOrEmpty()]
+        [Alias('id')]
         [string]$WorkspaceId,
 
         [Parameter(Mandatory = $false)]
@@ -7919,7 +11243,7 @@ function Get-FabricGraphQLApiDefinition {
         Write-FabricLog -Message "Failed to retrieve GraphQLApi. Error: $errorDetails" -Level Error
     }
  }
-#EndRegion '.\Public\GraphQLApi\Get-FabricGraphQLApiDefinition.ps1' 78
+#EndRegion '.\Public\GraphQLApi\Get-FabricGraphQLApiDefinition.ps1' 79
 #Region '.\Public\GraphQLApi\New-FabricGraphQLApi.ps1' -1
 
 <#
@@ -8109,17 +11433,19 @@ function New-FabricGraphQLApi {
 function Remove-FabricGraphQLApi {
     [CmdletBinding(SupportsShouldProcess = $true, ConfirmImpact = 'High')]
     param (
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
         [ValidateNotNullOrEmpty()]
         [string]$WorkspaceId,
 
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
         [ValidateNotNullOrEmpty()]
+        [Alias('id')]
         [string]$GraphQLApiId
     )
-    try {
-        # Validate authentication
-        Invoke-FabricAuthCheck -ThrowOnFailure
+    process {
+        try {
+            # Validate authentication
+            Invoke-FabricAuthCheck -ThrowOnFailure
 
         # Construct the API endpoint URI
         $apiEndpointURI = New-FabricAPIUri -Resource 'workspaces' -WorkspaceId $WorkspaceId -Subresource 'GraphQLApis' -ItemId $GraphQLApiId
@@ -8142,9 +11468,10 @@ function Remove-FabricGraphQLApi {
         # Capture and log error details
         $errorDetails = $_.Exception.Message
         Write-FabricLog -Message "Failed to delete GraphQLApi '$GraphQLApiId'. Error: $errorDetails" -Level Error
+        }
     }
 }
-#EndRegion '.\Public\GraphQLApi\Remove-FabricGraphQLApi.ps1' 63
+#EndRegion '.\Public\GraphQLApi\Remove-FabricGraphQLApi.ps1' 66
 #Region '.\Public\GraphQLApi\Update-FabricGraphQLApi.ps1' -1
 
 <#
@@ -8179,33 +11506,45 @@ function Remove-FabricGraphQLApi {
 function Update-FabricGraphQLApi {
     [CmdletBinding(SupportsShouldProcess = $true, ConfirmImpact = 'Medium')]
     param (
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
         [ValidateNotNullOrEmpty()]
         [string]$WorkspaceId,
 
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
         [ValidateNotNullOrEmpty()]
+        [Alias('id')]
         [string]$GraphQLApiId,
 
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $false, ValueFromPipelineByPropertyName = $true)]
         [ValidateNotNullOrEmpty()]
         [ValidatePattern('^[a-zA-Z0-9_ ]*$')]
+        [Alias('DisplayName')]
         [string]$GraphQLApiName,
 
-        [Parameter(Mandatory = $false)]
+        [Parameter(Mandatory = $false, ValueFromPipelineByPropertyName = $true)]
         [ValidateNotNullOrEmpty()]
+        [Alias('Description')]
         [string]$GraphQLApiDescription
     )
-    try {
-        # Validate authentication
-        Invoke-FabricAuthCheck -ThrowOnFailure
+    process {
+        try {
+            # Validate that at least one update parameter is provided
+            if (-not $GraphQLApiName -and -not $GraphQLApiDescription) {
+                Write-FabricLog -Message "At least one of GraphQLApiName or GraphQLApiDescription must be specified" -Level Error
+                return
+            }
+
+            # Validate authentication
+            Invoke-FabricAuthCheck -ThrowOnFailure
 
         # Construct the API endpoint URI
         $apiEndpointURI = New-FabricAPIUri -Resource 'workspaces' -WorkspaceId $WorkspaceId -Subresource 'GraphQLApis' -ItemId $GraphQLApiId
 
         # Construct the request body
-        $body = @{
-            displayName = $GraphQLApiName
+        $body = @{}
+
+        if ($GraphQLApiName) {
+            $body.displayName = $GraphQLApiName
         }
 
         if ($GraphQLApiDescription) {
@@ -8234,9 +11573,10 @@ function Update-FabricGraphQLApi {
         # Capture and log error details
         $errorDetails = $_.Exception.Message
         Write-FabricLog -Message "Failed to update GraphQL API. Error: $errorDetails" -Level Error
+        }
     }
 }
-#EndRegion '.\Public\GraphQLApi\Update-FabricGraphQLApi.ps1' 90
+#EndRegion '.\Public\GraphQLApi\Update-FabricGraphQLApi.ps1' 103
 #Region '.\Public\GraphQLApi\Update-FabricGraphQLApiDefinition.ps1' -1
 
 <#
@@ -8270,12 +11610,13 @@ function Update-FabricGraphQLApi {
 function Update-FabricGraphQLApiDefinition {
     [CmdletBinding(SupportsShouldProcess = $true, ConfirmImpact = 'Medium')]
     param (
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
         [ValidateNotNullOrEmpty()]
         [string]$WorkspaceId,
 
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
         [ValidateNotNullOrEmpty()]
+        [Alias('id')]
         [string]$GraphQLApiId,
 
         [Parameter(Mandatory = $true)]
@@ -8286,9 +11627,10 @@ function Update-FabricGraphQLApiDefinition {
         [ValidateNotNullOrEmpty()]
         [string]$GraphQLApiPathPlatformDefinition
     )
-    try {
-        # Validate authentication
-        Invoke-FabricAuthCheck -ThrowOnFailure
+    process {
+        try {
+            # Validate authentication
+            Invoke-FabricAuthCheck -ThrowOnFailure
 
         # Construct the API endpoint URI with optional updateMetadata query parameter
         $queryParams = if ($GraphQLApiPathPlatformDefinition) {
@@ -8365,7 +11707,8 @@ function Update-FabricGraphQLApiDefinition {
         Write-FabricLog -Message "Failed to update GraphQLApi. Error: $errorDetails" -Level Error
     }
 }
-#EndRegion '.\Public\GraphQLApi\Update-FabricGraphQLApiDefinition.ps1' 127
+}
+#EndRegion '.\Public\GraphQLApi\Update-FabricGraphQLApiDefinition.ps1' 130
 #Region '.\Public\KQL Dashboard\Get-FabricKQLDashboard.ps1' -1
 
 <#
@@ -8384,6 +11727,9 @@ Optional. The GUID of a single KQL Dashboard to retrieve directly. Use this when
 .PARAMETER KQLDashboardName
 Optional. The display name of a KQL Dashboard to retrieve. Provide this when the Id is unknown and you want to match by name.
 
+.PARAMETER Raw
+When specified, returns the raw API response without any filtering or formatting.
+
 .EXAMPLE
 Get-FabricKQLDashboard -WorkspaceId $wId -KQLDashboardId '1a2b3c4d-5555-6666-7777-88889999aaaa'
 
@@ -8399,6 +11745,11 @@ Get-FabricKQLDashboard -WorkspaceId $wId
 
 Returns all dashboards in the specified workspace.
 
+.EXAMPLE
+Get-FabricKQLDashboard -WorkspaceId $wId -Raw
+
+Returns the raw API response for all dashboards in the workspace without any processing.
+
 .NOTES
 - Requires `$FabricConfig` (BaseUrl, FabricHeaders).
 - Validates token freshness via `Test-TokenExpired` before request.
@@ -8411,8 +11762,9 @@ Author: Tiago Balabuch; Help extended by Copilot.
 function Get-FabricKQLDashboard {
     [CmdletBinding()]
     param (
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
         [ValidateNotNullOrEmpty()]
+        [Alias('id')]
         [string]$WorkspaceId,
 
         [Parameter(Mandatory = $false)]
@@ -8422,70 +11774,46 @@ function Get-FabricKQLDashboard {
         [Parameter(Mandatory = $false)]
         [ValidateNotNullOrEmpty()]
         [ValidatePattern('^[a-zA-Z0-9_ ]*$')]
-        [string]$KQLDashboardName
+        [string]$KQLDashboardName,
+
+        [Parameter()]
+        [switch]$Raw
     )
-    try {
-        # Validate input parameters
-        if ($KQLDashboardId -and $KQLDashboardName) {
-            Write-FabricLog -Message "Specify only one parameter: either 'KQLDashboardId' or 'KQLDashboardName'." -Level Error
-            return $null
-        }
 
-        # Validate authentication token before proceeding.
-        Write-FabricLog -Message "Validating authentication token..." -Level Debug
-        Test-TokenExpired
-        Write-FabricLog -Message "Authentication token is valid." -Level Debug
+    process {
+        try {
+            # Validate input parameters
+            if ($KQLDashboardId -and $KQLDashboardName) {
+                Write-FabricLog -Message "Specify only one parameter: either 'KQLDashboardId' or 'KQLDashboardName'." -Level Error
+                return
+            }
 
-        # Construct the API endpoint URI
-        $apiEndpointURI = "{0}/workspaces/{1}/kqlDashboards" -f $FabricConfig.BaseUrl, $WorkspaceId
-        Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
+            # Validate authentication token before proceeding
+            Invoke-FabricAuthCheck -ThrowOnFailure
 
-        # Make the API request
-        $apiParams = @{
-            BaseURI = $apiEndpointURI
-            Headers = $FabricConfig.FabricHeaders
-            Method = 'Get'
-        }
-        $dataItems = Invoke-FabricAPIRequest @apiParams
+            # Construct the API endpoint URI
+            $apiEndpointURI = New-FabricAPIUri -Resource 'workspaces' -WorkspaceId $WorkspaceId -Subresource 'kqlDashboards'
+            Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
 
-        # Immediately handle empty response
-        if (-not $dataItems) {
-            Write-FabricLog -Message "No data returned from the API." -Level Warning
-            return $null
-        }
+            # Make the API request
+            $apiParams = @{
+                BaseURI = $apiEndpointURI
+                Headers = $script:FabricAuthContext.FabricHeaders
+                Method  = 'Get'
+            }
+            $dataItems = Invoke-FabricAPIRequest @apiParams
 
-        # Apply filtering logic efficiently
-        if ($KQLDashboardId) {
-            $matchedItems = $dataItems.Where({ $_.Id -eq $KQLDashboardId }, 'First')
+            # Apply filtering and formatting
+            Select-FabricResource -InputObject $dataItems -Id $KQLDashboardId -DisplayName $KQLDashboardName -ResourceType 'KQLDashboard' -TypeName 'MicrosoftFabric.KQLDashboard' -Raw:$Raw
         }
-        elseif ($KQLDashboardName) {
-            $matchedItems = $dataItems.Where({ $_.DisplayName -eq $KQLDashboardName }, 'First')
-        }
-        else {
-            Write-FabricLog -Message "No filter provided. Returning all items." -Level Debug
-            $matchedItems = $dataItems
-        }
-
-        # Handle results
-        if ($matchedItems) {
-            Write-FabricLog -Message "Item(s) found matching the specified criteria." -Level Debug
-            # Add type decoration for custom formatting
-            $matchedItems | Add-FabricTypeName -TypeName 'MicrosoftFabric.KQLDashboard'
-            return $matchedItems
-        }
-        else {
-            Write-FabricLog -Message "No item found matching the provided criteria." -Level Warning
-            return $null
+        catch {
+            # Capture and log error details
+            $errorDetails = $_.Exception.Message
+            Write-FabricLog -Message "Failed to retrieve KQLDashboard for workspace '$WorkspaceId'. Error: $errorDetails" -Level Error
         }
     }
-    catch {
-        # Capture and log error details
-        $errorDetails = $_.Exception.Message
-        Write-FabricLog -Message "Failed to retrieve KQLDashboard. Error: $errorDetails" -Level Error
-    }
-
 }
-#EndRegion '.\Public\KQL Dashboard\Get-FabricKQLDashboard.ps1' 118
+#EndRegion '.\Public\KQL Dashboard\Get-FabricKQLDashboard.ps1' 103
 #Region '.\Public\KQL Dashboard\Get-FabricKQLDashboardDefinition.ps1' -1
 
 
@@ -8525,8 +11853,9 @@ Author: Updated by Jess Pomfret and Rob Sewell November 2026
 function Get-FabricKQLDashboardDefinition {
     [CmdletBinding()]
     param (
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
         [ValidateNotNullOrEmpty()]
+        [Alias('id')]
         [string]$WorkspaceId,
 
         [Parameter(Mandatory = $false)]
@@ -8569,7 +11898,7 @@ function Get-FabricKQLDashboardDefinition {
     }
 
 }
-#EndRegion '.\Public\KQL Dashboard\Get-FabricKQLDashboardDefinition.ps1' 82
+#EndRegion '.\Public\KQL Dashboard\Get-FabricKQLDashboardDefinition.ps1' 83
 #Region '.\Public\KQL Dashboard\New-FabricKQLDashboard.ps1' -1
 
 <#
@@ -8609,8 +11938,9 @@ Author: Tiago Balabuch
 function New-FabricKQLDashboard {
     [CmdletBinding(SupportsShouldProcess = $true, ConfirmImpact = 'Medium')]
     param (
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
         [ValidateNotNullOrEmpty()]
+        [Alias('id')]
         [string]$WorkspaceId,
 
         [Parameter(Mandatory = $true)]
@@ -8630,14 +11960,13 @@ function New-FabricKQLDashboard {
         [ValidateNotNullOrEmpty()]
         [string]$KQLDashboardPathPlatformDefinition
     )
+    process {
     try {
         # Validate authentication token before proceeding.
-        Write-FabricLog -Message "Validating authentication token..." -Level Debug
-        Test-TokenExpired
-        Write-FabricLog -Message "Authentication token is valid." -Level Debug
+        Invoke-FabricAuthCheck -ThrowOnFailure
 
         # Construct the API endpoint URI
-        $apiEndpointURI = "{0}/workspaces/{1}/kqlDashboards" -f $FabricConfig.BaseUrl, $WorkspaceId
+        $apiEndpointURI = New-FabricAPIUri -Resource 'workspaces' -WorkspaceId $WorkspaceId -Subresource 'kqlDashboards'
         Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
 
         # Construct the request body
@@ -8706,7 +12035,7 @@ function New-FabricKQLDashboard {
         # Make the API request
         $apiParams = @{
             BaseURI = $apiEndpointURI
-            Headers = $FabricConfig.FabricHeaders
+            Headers = $script:FabricAuthContext.FabricHeaders
             Method = 'Post'
             Body = $bodyJson
         }
@@ -8723,8 +12052,9 @@ function New-FabricKQLDashboard {
         $errorDetails = $_.Exception.Message
         Write-FabricLog -Message "Failed to create KQLDashboard. Error: $errorDetails" -Level Error
     }
+    }
 }
-#EndRegion '.\Public\KQL Dashboard\New-FabricKQLDashboard.ps1' 153
+#EndRegion '.\Public\KQL Dashboard\New-FabricKQLDashboard.ps1' 154
 #Region '.\Public\KQL Dashboard\Remove-FabricKQLDashboard.ps1' -1
 
 <#
@@ -8755,27 +12085,26 @@ Author: Tiago Balabuch
 function Remove-FabricKQLDashboard {
     [CmdletBinding(SupportsShouldProcess = $true, ConfirmImpact = 'High')]
     param (
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
         [ValidateNotNullOrEmpty()]
         [string]$WorkspaceId,
 
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
         [ValidateNotNullOrEmpty()]
+        [Alias('id')]
         [string]$KQLDashboardId
     )
-    try {
-        # Validate authentication token before proceeding.
-        Write-FabricLog -Message "Validating authentication token..." -Level Debug
-        Test-TokenExpired
-        Write-FabricLog -Message "Authentication token is valid." -Level Debug
+    process {
+        try {
+        Invoke-FabricAuthCheck -ThrowOnFailure
 
         # Construct the API endpoint URI
-        $apiEndpointURI = "{0}/workspaces/{1}/kqlDashboards/{2}" -f $FabricConfig.BaseUrl, $WorkspaceId, $KQLDashboardId
+        $apiEndpointURI = New-FabricAPIUri -Resource 'workspaces' -WorkspaceId $WorkspaceId -Subresource 'kqlDashboards' -ItemId $KQLDashboardId
         Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
 
         # Make the API request
         $apiParams = @{
-            Headers = $FabricConfig.FabricHeaders
+            Headers = $script:FabricAuthContext.FabricHeaders
             BaseURI = $apiEndpointURI
             Method = 'Delete'
         }
@@ -8787,10 +12116,11 @@ function Remove-FabricKQLDashboard {
             return $response
         }
     }
-    catch {
-        # Capture and log error details
-        $errorDetails = $_.Exception.Message
-        Write-FabricLog -Message "Failed to delete KQLDashboard '$KQLDashboardId' from workspace '$WorkspaceId'. Error: $errorDetails" -Level Error
+        catch {
+            # Capture and log error details
+            $errorDetails = $_.Exception.Message
+            Write-FabricLog -Message "Failed to delete KQLDashboard '$KQLDashboardId' from workspace '$WorkspaceId'. Error: $errorDetails" -Level Error
+        }
     }
 }
 #EndRegion '.\Public\KQL Dashboard\Remove-FabricKQLDashboard.ps1' 67
@@ -8835,36 +12165,46 @@ Author: Tiago Balabuch
 function Update-FabricKQLDashboard {
     [CmdletBinding(SupportsShouldProcess = $true, ConfirmImpact = 'Medium')]
     param (
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
         [ValidateNotNullOrEmpty()]
         [string]$WorkspaceId,
 
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
         [ValidateNotNullOrEmpty()]
+        [Alias('id')]
         [string]$KQLDashboardId,
 
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $false, ValueFromPipelineByPropertyName = $true)]
         [ValidateNotNullOrEmpty()]
         [ValidatePattern('^[a-zA-Z0-9_ ]*$')]
+        [Alias('DisplayName')]
         [string]$KQLDashboardName,
 
-        [Parameter(Mandatory = $false)]
+        [Parameter(Mandatory = $false, ValueFromPipelineByPropertyName = $true)]
         [ValidateNotNullOrEmpty()]
+        [Alias('Description')]
         [string]$KQLDashboardDescription
     )
-    try {
+    process {
+        try {
+        # Validate that at least one update parameter is provided
+        if (-not $KQLDashboardName -and -not $KQLDashboardDescription) {
+            Write-FabricLog -Message "At least one of KQLDashboardName or KQLDashboardDescription must be specified" -Level Error
+            return
+        }
+
         # Validate authentication token before proceeding.
-        Write-FabricLog -Message "Validating authentication token..." -Level Debug
-        Test-TokenExpired
-        Write-FabricLog -Message "Authentication token is valid." -Level Debug
+        Invoke-FabricAuthCheck -ThrowOnFailure
 
         # Construct the API endpoint URI
-        $apiEndpointURI = "{0}/workspaces/{1}/kqlDashboards/{2}" -f $FabricConfig.BaseUrl, $WorkspaceId, $KQLDashboardId
+        $apiEndpointURI = New-FabricAPIUri -Resource 'workspaces' -WorkspaceId $WorkspaceId -Subresource 'kqlDashboards' -ItemId $KQLDashboardId
         Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
 
         # Construct the request body
-        $body = @{
-            displayName = $KQLDashboardName
+        $body = @{}
+
+        if ($KQLDashboardName) {
+            $body.displayName = $KQLDashboardName
         }
 
         if ($KQLDashboardDescription) {
@@ -8877,7 +12217,7 @@ function Update-FabricKQLDashboard {
 
         # Make the API request
         $apiParams = @{
-            Headers = $FabricConfig.FabricHeaders
+            Headers = $script:FabricAuthContext.FabricHeaders
             BaseURI = $apiEndpointURI
             Method = 'Patch'
             Body = $bodyJson
@@ -8890,13 +12230,14 @@ function Update-FabricKQLDashboard {
             return $response
         }
     }
-    catch {
-        # Capture and log error details
-        $errorDetails = $_.Exception.Message
-        Write-FabricLog -Message "Failed to update KQLDashboard. Error: $errorDetails" -Level Error
+        catch {
+            # Capture and log error details
+            $errorDetails = $_.Exception.Message
+            Write-FabricLog -Message "Failed to update KQLDashboard. Error: $errorDetails" -Level Error
+        }
     }
 }
-#EndRegion '.\Public\KQL Dashboard\Update-FabricKQLDashboard.ps1' 101
+#EndRegion '.\Public\KQL Dashboard\Update-FabricKQLDashboard.ps1' 112
 #Region '.\Public\KQL Dashboard\Update-FabricKQLDashboardDefinition.ps1' -1
 
 <#
@@ -8942,12 +12283,13 @@ Author: Tiago Balabuch
 function Update-FabricKQLDashboardDefinition {
     [CmdletBinding(SupportsShouldProcess = $true, ConfirmImpact = 'Medium')]
     param (
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
         [ValidateNotNullOrEmpty()]
         [string]$WorkspaceId,
 
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
         [ValidateNotNullOrEmpty()]
+        [Alias('id')]
         [string]$KQLDashboardId,
 
         [Parameter(Mandatory = $true)]
@@ -8958,7 +12300,8 @@ function Update-FabricKQLDashboardDefinition {
         [ValidateNotNullOrEmpty()]
         [string]$KQLDashboardPathPlatformDefinition
     )
-    try {
+    process {
+        try {
         # Validate authentication token before proceeding.
         Write-FabricLog -Message "Validating authentication token..." -Level Debug
         Test-TokenExpired
@@ -9032,13 +12375,14 @@ function Update-FabricKQLDashboardDefinition {
             return $response
         }
     }
-    catch {
-        # Capture and log error details
-        $errorDetails = $_.Exception.Message
-        Write-FabricLog -Message "Failed to update KQLDashboard. Error: $errorDetails" -Level Error
+        catch {
+            # Capture and log error details
+            $errorDetails = $_.Exception.Message
+            Write-FabricLog -Message "Failed to update KQLDashboard. Error: $errorDetails" -Level Error
+        }
     }
 }
-#EndRegion '.\Public\KQL Dashboard\Update-FabricKQLDashboardDefinition.ps1' 140
+#EndRegion '.\Public\KQL Dashboard\Update-FabricKQLDashboardDefinition.ps1' 143
 #Region '.\Public\KQL Database\Get-FabricKQLDatabase.ps1' -1
 
 <#
@@ -9057,6 +12401,9 @@ Optional. The GUID of a single KQL Database to retrieve directly. Use this when 
 .PARAMETER KQLDatabaseName
 Optional. The display name of a KQL Database to retrieve. Provide this when the Id is unknown and you want to match by name.
 
+.PARAMETER Raw
+When specified, returns the raw API response without any filtering or formatting.
+
 .EXAMPLE
 Get-FabricKQLDatabase -WorkspaceId $wId -KQLDatabaseId '1a2b3c4d-5555-6666-7777-88889999aaaa'
 
@@ -9072,6 +12419,11 @@ Get-FabricKQLDatabase -WorkspaceId $wId
 
 Returns all databases in the specified workspace.
 
+.EXAMPLE
+Get-FabricKQLDatabase -WorkspaceId $wId -Raw
+
+Returns the raw API response for all databases in the workspace without any processing.
+
 .NOTES
 - Requires `$FabricConfig` (BaseUrl, FabricHeaders).
 - Validates token freshness via `Test-TokenExpired` before request.
@@ -9083,8 +12435,9 @@ Author: Tiago Balabuch; Help extended by Copilot.
 function Get-FabricKQLDatabase {
     [CmdletBinding()]
     param (
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
         [ValidateNotNullOrEmpty()]
+        [Alias('id')]
         [string]$WorkspaceId,
 
         [Parameter(Mandatory = $false)]
@@ -9094,70 +12447,46 @@ function Get-FabricKQLDatabase {
         [Parameter(Mandatory = $false)]
         [ValidateNotNullOrEmpty()]
         [ValidatePattern('^[a-zA-Z0-9_ ]*$')]
-        [string]$KQLDatabaseName
+        [string]$KQLDatabaseName,
+
+        [Parameter()]
+        [switch]$Raw
     )
-    try {
-        # Validate input parameters
-        if ($KQLDatabaseId -and $KQLDatabaseName) {
-            Write-FabricLog -Message "Specify only one parameter: either 'KQLDatabaseId' or 'KQLDatabaseName'." -Level Error
-            return $null
-        }
 
-        # Validate authentication token before proceeding.
-        Write-FabricLog -Message "Validating authentication token..." -Level Debug
-        Test-TokenExpired
-        Write-FabricLog -Message "Authentication token is valid." -Level Debug
+    process {
+        try {
+            # Validate input parameters
+            if ($KQLDatabaseId -and $KQLDatabaseName) {
+                Write-FabricLog -Message "Specify only one parameter: either 'KQLDatabaseId' or 'KQLDatabaseName'." -Level Error
+                return
+            }
 
-        # Construct the API endpoint URI
-        $apiEndpointURI = "{0}/workspaces/{1}/kqlDatabases" -f $FabricConfig.BaseUrl, $WorkspaceId
-        Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
+            # Validate authentication token before proceeding
+            Invoke-FabricAuthCheck -ThrowOnFailure
 
-        # Make the API request
-        $apiParams = @{
-            BaseURI = $apiEndpointURI
-            Headers = $FabricConfig.FabricHeaders
-            Method = 'Get'
-        }
-        $dataItems = Invoke-FabricAPIRequest @apiParams
+            # Construct the API endpoint URI
+            $apiEndpointURI = "{0}/workspaces/{1}/kqlDatabases" -f $script:FabricAuthContext.BaseUrl, $WorkspaceId
+            Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
 
-        # Immediately handle empty response
-        if (-not $dataItems) {
-            Write-FabricLog -Message "No data returned from the API." -Level Warning
-            return $null
-        }
+            # Make the API request
+            $apiParams = @{
+                BaseURI = $apiEndpointURI
+                Headers = $script:FabricAuthContext.FabricHeaders
+                Method  = 'Get'
+            }
+            $dataItems = Invoke-FabricAPIRequest @apiParams
 
-        # Apply filtering logic efficiently
-        if ($KQLDatabaseId) {
-            $matchedItems = $dataItems.Where({ $_.Id -eq $KQLDatabaseId }, 'First')
+            # Apply filtering and formatting
+            Select-FabricResource -InputObject $dataItems -Id $KQLDatabaseId -DisplayName $KQLDatabaseName -ResourceType 'KQLDatabase' -TypeName 'MicrosoftFabric.KQLDatabase' -Raw:$Raw
         }
-        elseif ($KQLDatabaseName) {
-            $matchedItems = $dataItems.Where({ $_.DisplayName -eq $KQLDatabaseName }, 'First')
-        }
-        else {
-            Write-FabricLog -Message "No filter provided. Returning all items." -Level Debug
-            $matchedItems = $dataItems
-        }
-
-        # Handle results
-        if ($matchedItems) {
-            Write-FabricLog -Message "Item(s) found matching the specified criteria." -Level Debug
-            # Add type decoration for custom formatting
-            $matchedItems | Add-FabricTypeName -TypeName 'MicrosoftFabric.KQLDatabase'
-            return $matchedItems
-        }
-        else {
-            Write-FabricLog -Message "No item found matching the provided criteria." -Level Warning
-            return $null
+        catch {
+            # Capture and log error details
+            $errorDetails = $_.Exception.Message
+            Write-FabricLog -Message "Failed to retrieve KQLDatabase for workspace '$WorkspaceId'. Error: $errorDetails" -Level Error
         }
     }
-    catch {
-        # Capture and log error details
-        $errorDetails = $_.Exception.Message
-        Write-FabricLog -Message "Failed to retrieve KQLDatabase. Error: $errorDetails" -Level Error
-    }
-
 }
-#EndRegion '.\Public\KQL Database\Get-FabricKQLDatabase.ps1' 117
+#EndRegion '.\Public\KQL Database\Get-FabricKQLDatabase.ps1' 102
 #Region '.\Public\KQL Database\Get-FabricKQLDatabaseDefinition.ps1' -1
 
 
@@ -9200,8 +12529,9 @@ Author: Updated by Jess Pomfret and Rob Sewell November 2026
 function Get-FabricKQLDatabaseDefinition {
     [CmdletBinding()]
     param (
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
         [ValidateNotNullOrEmpty()]
+        [Alias('id')]
         [string]$WorkspaceId,
 
         [Parameter(Mandatory = $false)]
@@ -9243,7 +12573,7 @@ function Get-FabricKQLDatabaseDefinition {
         Write-FabricLog -Message "Failed to retrieve KQLDatabase. Error: $errorDetails" -Level Error
     }
 }
-#EndRegion '.\Public\KQL Database\Get-FabricKQLDatabaseDefinition.ps1' 84
+#EndRegion '.\Public\KQL Database\Get-FabricKQLDatabaseDefinition.ps1' 85
 #Region '.\Public\KQL Database\New-FabricKQLDatabase.ps1' -1
 
 <#
@@ -9324,8 +12654,9 @@ Author: Tiago Balabuch
 function New-FabricKQLDatabase {
     [CmdletBinding(SupportsShouldProcess = $true, ConfirmImpact = 'Medium')]
     param (
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
         [ValidateNotNullOrEmpty()]
+        [Alias('id')]
         [string]$WorkspaceId,
 
         [Parameter(Mandatory = $true)]
@@ -9370,11 +12701,10 @@ function New-FabricKQLDatabase {
         [ValidateNotNullOrEmpty()]
         [string]$KQLDatabasePathSchemaDefinition
     )
+    process {
     try {
         # Validate authentication token before proceeding.
-        Write-FabricLog -Message "Validating authentication token..." -Level Debug
-        Test-TokenExpired
-        Write-FabricLog -Message "Authentication token is valid." -Level Debug
+        Invoke-FabricAuthCheck -ThrowOnFailure
 
         # Construct the API endpoint URI
         $apiEndpointURI = "{0}/workspaces/{1}/kqlDatabases" -f $FabricConfig.BaseUrl, $WorkspaceId
@@ -9508,7 +12838,7 @@ function New-FabricKQLDatabase {
         # Make the API request
         $apiParams = @{
             BaseURI = $apiEndpointURI
-            Headers = $FabricConfig.FabricHeaders
+            Headers = $script:FabricAuthContext.FabricHeaders
             Method = 'Post'
             Body = $bodyJson
         }
@@ -9525,8 +12855,9 @@ function New-FabricKQLDatabase {
         $errorDetails = $_.Exception.Message
         Write-FabricLog -Message "Failed to create KQLDatabase. Error: $errorDetails" -Level Error
     }
+    }
 }
-#EndRegion '.\Public\KQL Database\New-FabricKQLDatabase.ps1' 281
+#EndRegion '.\Public\KQL Database\New-FabricKQLDatabase.ps1' 282
 #Region '.\Public\KQL Database\Remove-FabricKQLDatabase.ps1' -1
 
 <#
@@ -9557,28 +12888,27 @@ Author: Tiago Balabuch
 function Remove-FabricKQLDatabase {
     [CmdletBinding(SupportsShouldProcess = $true, ConfirmImpact = 'High')]
     param (
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
         [ValidateNotNullOrEmpty()]
         [string]$WorkspaceId,
 
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
         [ValidateNotNullOrEmpty()]
+        [Alias('id')]
         [string]$KQLDatabaseId
     )
 
-    try {
-        # Validate authentication token before proceeding.
-        Write-FabricLog -Message "Validating authentication token..." -Level Debug
-        Test-TokenExpired
-        Write-FabricLog -Message "Authentication token is valid." -Level Debug
+    process {
+        try{
+        Invoke-FabricAuthCheck -ThrowOnFailure
 
         # Construct the API endpoint URI
-        $apiEndpointURI = "{0}/workspaces/{1}/kqlDatabases/{2}" -f $FabricConfig.BaseUrl, $WorkspaceId, $KQLDatabaseId
+        $apiEndpointURI = New-FabricAPIUri -Resource 'workspaces' -WorkspaceId $WorkspaceId -Subresource 'kqlDatabases' -ItemId $KQLDatabaseId
         Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
 
         # Make the API request
         $apiParams = @{
-            Headers = $FabricConfig.FabricHeaders
+            Headers = $script:FabricAuthContext.FabricHeaders
             BaseURI = $apiEndpointURI
             Method = 'Delete'
         }
@@ -9590,10 +12920,11 @@ function Remove-FabricKQLDatabase {
             return $response
         }
     }
-    catch {
-        # Capture and log error details
-        $errorDetails = $_.Exception.Message
-        Write-FabricLog -Message "Failed to delete KQLDatabase '$KQLDatabaseId' from workspace '$WorkspaceId'. Error: $errorDetails" -Level Error
+        catch {
+            # Capture and log error details
+            $errorDetails = $_.Exception.Message
+            Write-FabricLog -Message "Failed to delete KQLDatabase '$KQLDatabaseId' from workspace '$WorkspaceId'. Error: $errorDetails" -Level Error
+        }
     }
 }
 #EndRegion '.\Public\KQL Database\Remove-FabricKQLDatabase.ps1' 68
@@ -9638,37 +12969,46 @@ Author: Tiago Balabuch
 function Update-FabricKQLDatabase {
     [CmdletBinding(SupportsShouldProcess = $true, ConfirmImpact = 'Medium')]
     param (
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
         [ValidateNotNullOrEmpty()]
         [string]$WorkspaceId,
 
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
         [ValidateNotNullOrEmpty()]
+        [Alias('id')]
         [string]$KQLDatabaseId,
 
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $false, ValueFromPipelineByPropertyName = $true)]
         [ValidateNotNullOrEmpty()]
         [ValidatePattern('^[a-zA-Z0-9_]*$')]
+        [Alias('DisplayName')]
         [string]$KQLDatabaseName,
 
-        [Parameter(Mandatory = $false)]
+        [Parameter(Mandatory = $false, ValueFromPipelineByPropertyName = $true)]
         [ValidateNotNullOrEmpty()]
+        [Alias('Description')]
         [string]$KQLDatabaseDescription
     )
 
-    try {
-        # Validate authentication token before proceeding.
-        Write-FabricLog -Message "Validating authentication token..." -Level Debug
-        Test-TokenExpired
-        Write-FabricLog -Message "Authentication token is valid." -Level Debug
+    process {
+        try {
+        # Validate that at least one update parameter is provided
+        if (-not $KQLDatabaseName -and -not $KQLDatabaseDescription) {
+            Write-FabricLog -Message "At least one of KQLDatabaseName or KQLDatabaseDescription must be specified" -Level Error
+            return
+        }
+
+        Invoke-FabricAuthCheck -ThrowOnFailure
 
         # Construct the API endpoint URI
-        $apiEndpointURI = "{0}/workspaces/{1}/kqlDatabases/{2}" -f $FabricConfig.BaseUrl, $WorkspaceId, $KQLDatabaseId
+        $apiEndpointURI = New-FabricAPIUri -Resource 'workspaces' -WorkspaceId $WorkspaceId -Subresource 'kqlDatabases' -ItemId $KQLDatabaseId
         Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
 
-        # Construct the request body
-        $body = @{
-            displayName = $KQLDatabaseName
+        # Construct the request body conditionally
+        $body = @{}
+
+        if ($KQLDatabaseName) {
+            $body.displayName = $KQLDatabaseName
         }
 
         if ($KQLDatabaseDescription) {
@@ -9681,7 +13021,7 @@ function Update-FabricKQLDatabase {
 
         # Make the API request
         $apiParams = @{
-            Headers = $FabricConfig.FabricHeaders
+            Headers = $script:FabricAuthContext.FabricHeaders
             BaseURI = $apiEndpointURI
             Method = 'Patch'
             Body = $bodyJson
@@ -9694,13 +13034,14 @@ function Update-FabricKQLDatabase {
             return $response
         }
     }
-    catch {
-        # Capture and log error details
-        $errorDetails = $_.Exception.Message
-        Write-FabricLog -Message "Failed to update KQLDatabase. Error: $errorDetails" -Level Error
+        catch {
+            # Capture and log error details
+            $errorDetails = $_.Exception.Message
+            Write-FabricLog -Message "Failed to update KQLDatabase. Error: $errorDetails" -Level Error
+        }
     }
 }
-#EndRegion '.\Public\KQL Database\Update-FabricKQLDatabase.ps1' 102
+#EndRegion '.\Public\KQL Database\Update-FabricKQLDatabase.ps1' 112
 #Region '.\Public\KQL Database\Update-FabricKQLDatabaseDefinition.ps1' -1
 
 <#
@@ -9750,12 +13091,13 @@ Author: Tiago Balabuch
 function Update-FabricKQLDatabaseDefinition {
     [CmdletBinding(SupportsShouldProcess = $true, ConfirmImpact = 'Medium')]
     param (
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
         [ValidateNotNullOrEmpty()]
         [string]$WorkspaceId,
 
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
         [ValidateNotNullOrEmpty()]
+        [Alias('id')]
         [string]$KQLDatabaseId,
 
         [Parameter(Mandatory = $true)]
@@ -9770,7 +13112,8 @@ function Update-FabricKQLDatabaseDefinition {
         [ValidateNotNullOrEmpty()]
         [string]$KQLDatabasePathSchemaDefinition
     )
-    try {
+    process {
+        try {
         # Validate authentication token before proceeding.
         Write-FabricLog -Message "Validating authentication token..." -Level Debug
         Test-TokenExpired
@@ -9861,13 +13204,14 @@ function Update-FabricKQLDatabaseDefinition {
             return $response
         }
     }
-    catch {
-        # Capture and log error details
-        $errorDetails = $_.Exception.Message
-        Write-FabricLog -Message "Failed to update KQLDatabase. Error: $errorDetails" -Level Error
+        catch {
+            # Capture and log error details
+            $errorDetails = $_.Exception.Message
+            Write-FabricLog -Message "Failed to update KQLDatabase. Error: $errorDetails" -Level Error
+        }
     }
 }
-#EndRegion '.\Public\KQL Database\Update-FabricKQLDatabaseDefinition.ps1' 165
+#EndRegion '.\Public\KQL Database\Update-FabricKQLDatabaseDefinition.ps1' 168
 #Region '.\Public\KQL Queryset\Get-FabricKQLQueryset.ps1' -1
 
 <#
@@ -9886,6 +13230,9 @@ Optional. The GUID of a single KQL Queryset to retrieve directly. Use this for d
 .PARAMETER KQLQuerysetName
 Optional. The display name of a KQL Queryset to retrieve. Provide this when the Id is unknown and you want to match by name.
 
+.PARAMETER Raw
+When specified, returns the raw API response without any filtering or formatting.
+
 .EXAMPLE
 Get-FabricKQLQueryset -WorkspaceId $wId -KQLQuerysetId '1a2b3c4d-5555-6666-7777-88889999aaaa'
 
@@ -9901,6 +13248,11 @@ Get-FabricKQLQueryset -WorkspaceId $wId
 
 Returns all querysets in the specified workspace.
 
+.EXAMPLE
+Get-FabricKQLQueryset -WorkspaceId $wId -Raw
+
+Returns the raw API response for all querysets in the workspace without any processing.
+
 .NOTES
 - Requires `$FabricConfig` (BaseUrl, FabricHeaders).
 - Validates token freshness via `Test-TokenExpired` before request.
@@ -9912,8 +13264,9 @@ Author: Tiago Balabuch; Help extended by Copilot.
 function Get-FabricKQLQueryset {
     [CmdletBinding()]
     param (
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
         [ValidateNotNullOrEmpty()]
+        [Alias('id')]
         [string]$WorkspaceId,
 
         [Parameter(Mandatory = $false)]
@@ -9923,70 +13276,47 @@ function Get-FabricKQLQueryset {
         [Parameter(Mandatory = $false)]
         [ValidateNotNullOrEmpty()]
         [ValidatePattern('^[a-zA-Z0-9_ ]*$')]
-        [string]$KQLQuerysetName
+        [string]$KQLQuerysetName,
+
+        [Parameter()]
+        [switch]$Raw
     )
-    try {
-        # Validate input parameters
-        if ($KQLQuerysetId -and $KQLQuerysetName) {
-            Write-FabricLog -Message "Specify only one parameter: either 'KQLQuerysetId' or 'KQLQuerysetName'." -Level Error
-            return $null
-        }
 
-        # Validate authentication token before proceeding.
-        Write-FabricLog -Message "Validating authentication token..." -Level Debug
-        Test-TokenExpired
-        Write-FabricLog -Message "Authentication token is valid." -Level Debug
+    process {
+        try {
+            # Validate input parameters
+            if ($KQLQuerysetId -and $KQLQuerysetName) {
+                Write-FabricLog -Message "Specify only one parameter: either 'KQLQuerysetId' or 'KQLQuerysetName'." -Level Error
+                return
+            }
 
-        # Construct the API endpoint URI
-        $apiEndpointURI = "{0}/workspaces/{1}/kqlQuerysets" -f $FabricConfig.BaseUrl, $WorkspaceId
-        Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
+            # Validate authentication token before proceeding
+            Invoke-FabricAuthCheck -ThrowOnFailure
 
-        # Make the API request
-        $apiParams = @{
-            BaseURI = $apiEndpointURI
-            Headers = $FabricConfig.FabricHeaders
-            Method = 'Get'
-        }
-        $dataItems = Invoke-FabricAPIRequest @apiParams
+            # Construct the API endpoint URI
+            $apiEndpointURI = "{0}/workspaces/{1}/kqlQuerysets" -f $script:FabricAuthContext.BaseUrl, $WorkspaceId
+            Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
 
-        # Immediately handle empty response
-        if (-not $dataItems) {
-            Write-FabricLog -Message "No data returned from the API." -Level Warning
-            return $null
-        }
+            # Make the API request
+            $apiParams = @{
+                BaseURI = $apiEndpointURI
+                Headers = $script:FabricAuthContext.FabricHeaders
+                Method  = 'Get'
+            }
+            $dataItems = Invoke-FabricAPIRequest @apiParams
 
-        # Apply filtering logic efficiently
-        if ($KQLQuerysetId) {
-            $matchedItems = $dataItems.Where({ $_.Id -eq $KQLQuerysetId }, 'First')
+            # Apply filtering and formatting
+            Select-FabricResource -InputObject $dataItems -Id $KQLQuerysetId -DisplayName $KQLQuerysetName -ResourceType 'KQLQueryset' -TypeName 'MicrosoftFabric.KQLQueryset' -Raw:$Raw
         }
-        elseif ($KQLQuerysetName) {
-            $matchedItems = $dataItems.Where({ $_.DisplayName -eq $KQLQuerysetName }, 'First')
+        catch {
+            # Capture and log error details
+            $errorDetails = $_.Exception.Message
+            Write-FabricLog -Message "Failed to retrieve KQLQueryset for workspace '$WorkspaceId'. Error: $errorDetails" -Level Error
         }
-        else {
-            Write-FabricLog -Message "No filter provided. Returning all items." -Level Debug
-            $matchedItems = $dataItems
-        }
-
-        # Handle results
-        if ($matchedItems) {
-            Write-FabricLog -Message "Item(s) found matching the specified criteria." -Level Debug
-            # Add type decoration for custom formatting
-            $matchedItems | Add-FabricTypeName -TypeName 'MicrosoftFabric.KQLQueryset'
-            return $matchedItems
-        }
-        else {
-            Write-FabricLog -Message "No item found matching the provided criteria." -Level Warning
-            return $null
-        }
-    }
-    catch {
-        # Capture and log error details
-        $errorDetails = $_.Exception.Message
-        Write-FabricLog -Message "Failed to retrieve KQLQueryset. Error: $errorDetails" -Level Error
     }
 
 }
-#EndRegion '.\Public\KQL Queryset\Get-FabricKQLQueryset.ps1' 117
+#EndRegion '.\Public\KQL Queryset\Get-FabricKQLQueryset.ps1' 103
 #Region '.\Public\KQL Queryset\Get-FabricKQLQuerysetDefinition.ps1' -1
 
 
@@ -10026,8 +13356,9 @@ Author: Updated by Jess Pomfret and Rob Sewell November 2026
 function Get-FabricKQLQuerysetDefinition {
     [CmdletBinding()]
     param (
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
         [ValidateNotNullOrEmpty()]
+        [Alias('id')]
         [string]$WorkspaceId,
 
         [Parameter(Mandatory = $false)]
@@ -10069,7 +13400,7 @@ function Get-FabricKQLQuerysetDefinition {
     }
 
 }
-#EndRegion '.\Public\KQL Queryset\Get-FabricKQLQuerysetDefinition.ps1' 81
+#EndRegion '.\Public\KQL Queryset\Get-FabricKQLQuerysetDefinition.ps1' 82
 #Region '.\Public\KQL Queryset\New-FabricKQLQueryset.ps1' -1
 
 <#
@@ -10256,27 +13587,26 @@ Author: Tiago Balabuch
 function Remove-FabricKQLQueryset {
     [CmdletBinding(SupportsShouldProcess = $true, ConfirmImpact = 'High')]
     param (
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
         [ValidateNotNullOrEmpty()]
         [string]$WorkspaceId,
 
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
         [ValidateNotNullOrEmpty()]
+        [Alias('id')]
         [string]$KQLQuerysetId
     )
-    try {
-        # Validate authentication token before proceeding.
-        Write-FabricLog -Message "Validating authentication token..." -Level Debug
-        Test-TokenExpired
-        Write-FabricLog -Message "Authentication token is valid." -Level Debug
+    process {
+        try {
+        Invoke-FabricAuthCheck -ThrowOnFailure
 
         # Construct the API endpoint URI
-        $apiEndpointURI = "{0}/workspaces/{1}/kqlQuerysets/{2}" -f $FabricConfig.BaseUrl, $WorkspaceId, $KQLQuerysetId
+        $apiEndpointURI = New-FabricAPIUri -Resource 'workspaces' -WorkspaceId $WorkspaceId -Subresource 'kqlQuerysets' -ItemId $KQLQuerysetId
         Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
 
         # Make the API request
         $apiParams = @{
-            Headers = $FabricConfig.FabricHeaders
+            Headers = $script:FabricAuthContext.FabricHeaders
             BaseURI = $apiEndpointURI
             Method = 'Delete'
         }
@@ -10288,10 +13618,11 @@ function Remove-FabricKQLQueryset {
             return $response
         }
     }
-    catch {
-        # Capture and log error details
-        $errorDetails = $_.Exception.Message
-        Write-FabricLog -Message "Failed to delete KQLQueryset '$KQLQuerysetId' from workspace '$WorkspaceId'. Error: $errorDetails" -Level Error
+        catch {
+            # Capture and log error details
+            $errorDetails = $_.Exception.Message
+            Write-FabricLog -Message "Failed to delete KQLQueryset '$KQLQuerysetId' from workspace '$WorkspaceId'. Error: $errorDetails" -Level Error
+        }
     }
 }
 #EndRegion '.\Public\KQL Queryset\Remove-FabricKQLQueryset.ps1' 67
@@ -10336,36 +13667,46 @@ Author: Tiago Balabuch
 function Update-FabricKQLQueryset {
     [CmdletBinding(SupportsShouldProcess = $true, ConfirmImpact = 'Medium')]
     param (
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
         [ValidateNotNullOrEmpty()]
         [string]$WorkspaceId,
 
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
         [ValidateNotNullOrEmpty()]
+        [Alias('id')]
         [string]$KQLQuerysetId,
 
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $false, ValueFromPipelineByPropertyName = $true)]
         [ValidateNotNullOrEmpty()]
         [ValidatePattern('^[a-zA-Z0-9_ ]*$')]
+        [Alias('DisplayName')]
         [string]$KQLQuerysetName,
 
-        [Parameter(Mandatory = $false)]
+        [Parameter(Mandatory = $false, ValueFromPipelineByPropertyName = $true)]
         [ValidateNotNullOrEmpty()]
+        [Alias('Description')]
         [string]$KQLQuerysetDescription
     )
-    try {
+    process {
+        try {
+        # Validate that at least one update parameter is provided
+        if (-not $KQLQuerysetName -and -not $KQLQuerysetDescription) {
+            Write-FabricLog -Message "At least one of KQLQuerysetName or KQLQuerysetDescription must be specified" -Level Error
+            return
+        }
+
         # Validate authentication token before proceeding.
-        Write-FabricLog -Message "Validating authentication token..." -Level Debug
-        Test-TokenExpired
-        Write-FabricLog -Message "Authentication token is valid." -Level Debug
+        Invoke-FabricAuthCheck -ThrowOnFailure
 
         # Construct the API endpoint URI
-        $apiEndpointURI = "{0}/workspaces/{1}/kqlQuerysets/{2}" -f $FabricConfig.BaseUrl, $WorkspaceId, $KQLQuerysetId
+        $apiEndpointURI = New-FabricAPIUri -Resource 'workspaces' -WorkspaceId $WorkspaceId -Subresource 'kqlQuerysets' -ItemId $KQLQuerysetId
         Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
 
         # Construct the request body
-        $body = @{
-            displayName = $KQLQuerysetName
+        $body = @{}
+
+        if ($KQLQuerysetName) {
+            $body.displayName = $KQLQuerysetName
         }
 
         if ($KQLQuerysetDescription) {
@@ -10378,7 +13719,7 @@ function Update-FabricKQLQueryset {
 
         # Make the API request
         $apiParams = @{
-            Headers = $FabricConfig.FabricHeaders
+            Headers = $script:FabricAuthContext.FabricHeaders
             BaseURI = $apiEndpointURI
             Method = 'Patch'
             Body = $bodyJson
@@ -10391,13 +13732,14 @@ function Update-FabricKQLQueryset {
             return $response
         }
     }
-    catch {
-        # Capture and log error details
-        $errorDetails = $_.Exception.Message
-        Write-FabricLog -Message "Failed to update KQLQueryset. Error: $errorDetails" -Level Error
+        catch {
+            # Capture and log error details
+            $errorDetails = $_.Exception.Message
+            Write-FabricLog -Message "Failed to update KQLQueryset. Error: $errorDetails" -Level Error
+        }
     }
 }
-#EndRegion '.\Public\KQL Queryset\Update-FabricKQLQueryset.ps1' 101
+#EndRegion '.\Public\KQL Queryset\Update-FabricKQLQueryset.ps1' 112
 #Region '.\Public\KQL Queryset\Update-FabricKQLQuerysetDefinition.ps1' -1
 
 <#
@@ -10443,12 +13785,13 @@ Author: Tiago Balabuch
 function Update-FabricKQLQuerysetDefinition {
     [CmdletBinding(SupportsShouldProcess = $true, ConfirmImpact = 'Medium')]
     param (
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
         [ValidateNotNullOrEmpty()]
         [string]$WorkspaceId,
 
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
         [ValidateNotNullOrEmpty()]
+        [Alias('id')]
         [string]$KQLQuerysetId,
 
         [Parameter(Mandatory = $true)]
@@ -10460,7 +13803,8 @@ function Update-FabricKQLQuerysetDefinition {
         [string]$KQLQuerysetPathPlatformDefinition
     )
 
-    try {
+    process {
+        try {
         # Validate authentication token before proceeding.
         Write-FabricLog -Message "Validating authentication token..." -Level Debug
         Test-TokenExpired
@@ -10534,13 +13878,14 @@ function Update-FabricKQLQuerysetDefinition {
             return $response
         }
     }
-    catch {
-        # Capture and log error details
-        $errorDetails = $_.Exception.Message
-        Write-FabricLog -Message "Failed to update KQLQueryset. Error: $errorDetails" -Level Error
+        catch {
+            # Capture and log error details
+            $errorDetails = $_.Exception.Message
+            Write-FabricLog -Message "Failed to update KQLQueryset. Error: $errorDetails" -Level Error
+        }
     }
 }
-#EndRegion '.\Public\KQL Queryset\Update-FabricKQLQuerysetDefinition.ps1' 141
+#EndRegion '.\Public\KQL Queryset\Update-FabricKQLQuerysetDefinition.ps1' 144
 #Region '.\Public\Labels\Remove-FabricLabel.ps1' -1
 
 <#
@@ -10741,6 +14086,10 @@ listing and want a direct lookup without client filtering.
 Optional. Returns only the Lakehouse whose display name exactly matches this value. Provide this when the Id is not
 known. Do not combine with LakehouseId.
 
+.PARAMETER Raw
+Optional. When specified, returns the raw API response with resolved CapacityName and WorkspaceName properties
+added directly to the output objects. Useful for piping to Export-Csv, ConvertTo-Json, or other commands.
+
 .EXAMPLE
 Get-FabricLakehouse -WorkspaceId "12345" -LakehouseId "aaaaaaaa-bbbb-cccc-dddd-ffffffffffff"
 
@@ -10756,6 +14105,11 @@ Get-FabricLakehouse -WorkspaceId "12345"
 
 Lists all Lakehouses available in the workspace.
 
+.EXAMPLE
+Get-FabricLakehouse -WorkspaceId "12345" -Raw | Export-Csv -Path "lakehouses.csv"
+
+Exports all Lakehouses with resolved names to a CSV file.
+
 .NOTES
 - Requires `$FabricConfig` global configuration, including BaseUrl and FabricHeaders.
 - Calls Test-TokenExpired to ensure token validity before making the API request.
@@ -10766,8 +14120,9 @@ Author: Tiago Balabuch
 function Get-FabricLakehouse {
     [CmdletBinding()]
     param (
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
         [ValidateNotNullOrEmpty()]
+        [Alias('id')]
         [string]$WorkspaceId,
 
         [Parameter(Mandatory = $false)]
@@ -10777,70 +14132,45 @@ function Get-FabricLakehouse {
         [Parameter(Mandatory = $false)]
         [ValidateNotNullOrEmpty()]
         [ValidatePattern('^[a-zA-Z0-9_]*$')]
-        [string]$LakehouseName
+        [string]$LakehouseName,
+
+        [Parameter()]
+        [switch]$Raw
     )
-    try {
-        # Validate input parameters
-        if ($LakehouseId -and $LakehouseName) {
-            Write-FabricLog -Message "Specify only one parameter: either 'LakehouseId' or 'LakehouseName'." -Level Error
-            return $null
+
+    process {
+        try {
+            # Validate input parameters
+            if ($LakehouseId -and $LakehouseName) {
+                Write-FabricLog -Message "Specify only one parameter: either 'LakehouseId' or 'LakehouseName'." -Level Error
+                return
+            }
+
+            Invoke-FabricAuthCheck -ThrowOnFailure
+
+            # Construct the API endpoint URI
+            $apiEndpointURI = "{0}/workspaces/{1}/lakehouses" -f $script:FabricAuthContext.BaseUrl, $WorkspaceId
+            Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
+
+            # Make the API request
+            $apiParams = @{
+                BaseURI = $apiEndpointURI
+                Headers = $script:FabricAuthContext.FabricHeaders
+                Method  = 'Get'
+            }
+            $dataItems = Invoke-FabricAPIRequest @apiParams
+
+            # Apply filtering and formatting
+            Select-FabricResource -InputObject $dataItems -Id $LakehouseId -DisplayName $LakehouseName -ResourceType 'Lakehouse' -TypeName 'MicrosoftFabric.Lakehouse' -Raw:$Raw
         }
-
-        Invoke-FabricAuthCheck -ThrowOnFailure
-
-
-        # Construct the API endpoint URI
-        $apiEndpointURI = "{0}/workspaces/{1}/lakehouses" -f $script:FabricAuthContext.BaseUrl, $WorkspaceId
-        Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
-
-        # Make the API request
-        $apiParams = @{
-            BaseURI = $apiEndpointURI
-            Headers = $script:FabricAuthContext.FabricHeaders
-            Method = 'Get'
-        }
-        $dataItems = Invoke-FabricAPIRequest @apiParams
-
-        # Immediately handle empty response
-        if (-not $dataItems) {
-            Write-FabricLog -Message "No data returned from the API." -Level Warning
-            return $null
-        }
-
-        # Apply filtering logic efficiently
-        if ($LakehouseId) {
-            $matchedItems = $dataItems.Where({ $_.Id -eq $LakehouseId }, 'First')
-        }
-        elseif ($LakehouseName) {
-            $matchedItems = $dataItems.Where({ $_.DisplayName -eq $LakehouseName }, 'First')
-        }
-        else {
-            Write-FabricLog -Message "No filter provided. Returning all items." -Level Debug
-            $matchedItems = $dataItems
-        }
-
-        # Handle results
-        if ($matchedItems) {
-            Write-FabricLog -Message "Item(s) found matching the specified criteria." -Level Debug
-
-            # Add type decoration for custom formatting
-            $matchedItems | Add-FabricTypeName -TypeName 'MicrosoftFabric.Lakehouse'
-
-            return $matchedItems
-        }
-        else {
-            Write-FabricLog -Message "No item found matching the provided criteria." -Level Warning
-            return $null
+        catch {
+            # Capture and log error details
+            $errorDetails = $_.Exception.Message
+            Write-FabricLog -Message "Failed to retrieve Lakehouse for workspace '$WorkspaceId'. Error: $errorDetails" -Level Error
         }
     }
-    catch {
-        # Capture and log error details
-        $errorDetails = $_.Exception.Message
-        Write-FabricLog -Message "Failed to retrieve Lakehouse. Error: $errorDetails" -Level Error
-    }
-
 }
-#EndRegion '.\Public\Lakehouse\Get-FabricLakehouse.ps1' 119
+#EndRegion '.\Public\Lakehouse\Get-FabricLakehouse.ps1' 104
 #Region '.\Public\Lakehouse\Get-FabricLakehouseLivySession.ps1' -1
 
 <#
@@ -10878,8 +14208,9 @@ Author: Tiago Balabuch
 function Get-FabricLakehouseLivySession {
     [CmdletBinding()]
     param (
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
         [ValidateNotNullOrEmpty()]
+        [Alias('id')]
         [string]$WorkspaceId,
 
         [Parameter(Mandatory = $true)]
@@ -10937,7 +14268,7 @@ function Get-FabricLakehouseLivySession {
         Write-FabricLog -Message "Failed to retrieve Lakehouse Livy Session. Error: $errorDetails" -Level Error
     }
 }
-#EndRegion '.\Public\Lakehouse\Get-FabricLakehouseLivySession.ps1' 95
+#EndRegion '.\Public\Lakehouse\Get-FabricLakehouseLivySession.ps1' 96
 #Region '.\Public\Lakehouse\Get-FabricLakehouseTable.ps1' -1
 
 <#
@@ -10965,8 +14296,9 @@ Author: Updated by Jess Pomfret and Rob Sewell November 2026
 function Get-FabricLakehouseTable {
     [CmdletBinding()]
     param (
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
         [ValidateNotNullOrEmpty()]
+        [Alias('id')]
         [string]$WorkspaceId,
 
         [Parameter(Mandatory = $false)]
@@ -11009,7 +14341,7 @@ function Get-FabricLakehouseTable {
     }
 
 }
-#EndRegion '.\Public\Lakehouse\Get-FabricLakehouseTable.ps1' 70
+#EndRegion '.\Public\Lakehouse\Get-FabricLakehouseTable.ps1' 71
 #Region '.\Public\Lakehouse\New-FabricLakehouse.ps1' -1
 
 <#
@@ -11047,8 +14379,9 @@ Author: Tiago Balabuch
 function New-FabricLakehouse {
     [CmdletBinding(SupportsShouldProcess = $true, ConfirmImpact = 'Medium')]
     param (
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
         [ValidateNotNullOrEmpty()]
+        [Alias('id')]
         [string]$WorkspaceId,
 
         [Parameter(Mandatory = $true)]
@@ -11064,6 +14397,7 @@ function New-FabricLakehouse {
         [ValidateNotNullOrEmpty()]
         [bool]$LakehouseEnableSchemas = $false
     )
+    process {
     try {
         Invoke-FabricAuthCheck -ThrowOnFailure
 
@@ -11111,8 +14445,9 @@ function New-FabricLakehouse {
         $errorDetails = $_.Exception.Message
         Write-FabricLog -Message "Failed to create Lakehouse. Error: $errorDetails" -Level Error
     }
+    }
 }
-#EndRegion '.\Public\Lakehouse\New-FabricLakehouse.ps1' 101
+#EndRegion '.\Public\Lakehouse\New-FabricLakehouse.ps1' 104
 #Region '.\Public\Lakehouse\Remove-FabricLakehouse.ps1' -1
 
 <#
@@ -11143,14 +14478,16 @@ Author: Tiago Balabuch
 function Remove-FabricLakehouse {
     [CmdletBinding(SupportsShouldProcess = $true, ConfirmImpact = 'High')]
     param (
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
         [ValidateNotNullOrEmpty()]
         [string]$WorkspaceId,
 
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
         [ValidateNotNullOrEmpty()]
+        [Alias('id')]
         [string]$LakehouseId
     )
+    process {
     try {
         Invoke-FabricAuthCheck -ThrowOnFailure
 
@@ -11180,8 +14517,9 @@ function Remove-FabricLakehouse {
         $errorDetails = $_.Exception.Message
         Write-FabricLog -Message "Failed to delete Lakehouse '$LakehouseId' from workspace '$WorkspaceId'. Error: $errorDetails" -Level Error
     }
+    }
 }
-#EndRegion '.\Public\Lakehouse\Remove-FabricLakehouse.ps1' 67
+#EndRegion '.\Public\Lakehouse\Remove-FabricLakehouse.ps1' 70
 #Region '.\Public\Lakehouse\Start-FabricLakehouseRefreshMaterializedLakeView.ps1' -1
 
 <#
@@ -11219,12 +14557,13 @@ Author: Tiago Balabuch
 function Start-FabricLakehouseRefreshMaterializedLakeView {
     [CmdletBinding(SupportsShouldProcess = $true, ConfirmImpact = 'Medium')]
     param (
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
         [ValidateNotNullOrEmpty()]
         [string]$WorkspaceId,
 
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
         [ValidateNotNullOrEmpty()]
+        [Alias('id')]
         [string]$LakehouseId,
 
         [Parameter(Mandatory = $false)]
@@ -11281,7 +14620,7 @@ function Start-FabricLakehouseRefreshMaterializedLakeView {
         Write-FabricLog -Message "Failed to start refresh MLV job. Error: $errorDetails" -Level Error
     }
 }
-#EndRegion '.\Public\Lakehouse\Start-FabricLakehouseRefreshMaterializedLakeView.ps1' 98
+#EndRegion '.\Public\Lakehouse\Start-FabricLakehouseRefreshMaterializedLakeView.ps1' 99
 #Region '.\Public\Lakehouse\Start-FabricLakehouseTableMaintenance.ps1' -1
 
 <#
@@ -11334,12 +14673,13 @@ Author: Tiago Balabuch
 function Start-FabricLakehouseTableMaintenance {
     [CmdletBinding(SupportsShouldProcess = $true, ConfirmImpact = 'Medium')]
     param (
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
         [ValidateNotNullOrEmpty()]
         [string]$WorkspaceId,
 
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
         [ValidateNotNullOrEmpty()]
+        [Alias('id')]
         [string]$LakehouseId,
 
         [Parameter(Mandatory = $false)]
@@ -11469,7 +14809,7 @@ function Start-FabricLakehouseTableMaintenance {
         Write-FabricLog -Message "Failed to start table maintenance job. Error: $errorDetails" -Level Error
     }
 }
-#EndRegion '.\Public\Lakehouse\Start-FabricLakehouseTableMaintenance.ps1' 186
+#EndRegion '.\Public\Lakehouse\Start-FabricLakehouseTableMaintenance.ps1' 187
 #Region '.\Public\Lakehouse\Update-FabricLakehouse.ps1' -1
 
 <#
@@ -11511,34 +14851,45 @@ Author: Tiago Balabuch
 function Update-FabricLakehouse {
     [CmdletBinding(SupportsShouldProcess = $true, ConfirmImpact = 'Medium')]
     param (
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
         [ValidateNotNullOrEmpty()]
         [string]$WorkspaceId,
 
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
         [ValidateNotNullOrEmpty()]
+        [Alias('id')]
         [string]$LakehouseId,
 
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $false, ValueFromPipelineByPropertyName = $true)]
         [ValidateNotNullOrEmpty()]
         [ValidatePattern('^[a-zA-Z0-9_]*$')]
+        [Alias('DisplayName')]
         [string]$LakehouseName,
 
-        [Parameter(Mandatory = $false)]
+        [Parameter(Mandatory = $false, ValueFromPipelineByPropertyName = $true)]
         [ValidateNotNullOrEmpty()]
+        [Alias('Description')]
         [string]$LakehouseDescription
     )
+    process {
     try {
-       Invoke-FabricAuthCheck -ThrowOnFailure
+        # Validate that at least one update parameter is provided
+        if (-not $LakehouseName -and -not $LakehouseDescription) {
+            Write-FabricLog -Message "At least one of LakehouseName or LakehouseDescription must be specified" -Level Error
+            return
+        }
 
+        Invoke-FabricAuthCheck -ThrowOnFailure
 
         # Construct the API endpoint URI
-        $apiEndpointURI = "{0}/workspaces/{1}/lakehouses/{2}" -f $script:FabricAuthContext.BaseUrl, $WorkspaceId, $LakehouseId
+        $apiEndpointURI = New-FabricAPIUri -Resource 'workspaces' -WorkspaceId $WorkspaceId -Subresource 'lakehouses' -ItemId $LakehouseId
         Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
 
         # Construct the request body
-        $body = @{
-            displayName = $LakehouseName
+        $body = @{}
+
+        if ($LakehouseName) {
+            $body.displayName = $LakehouseName
         }
 
         if ($LakehouseDescription) {
@@ -11569,8 +14920,9 @@ function Update-FabricLakehouse {
         $errorDetails = $_.Exception.Message
         Write-FabricLog -Message "Failed to update Lakehouse. Error: $errorDetails" -Level Error
     }
+    }
 }
-#EndRegion '.\Public\Lakehouse\Update-FabricLakehouse.ps1' 99
+#EndRegion '.\Public\Lakehouse\Update-FabricLakehouse.ps1' 111
 #Region '.\Public\Lakehouse\Write-FabricLakehouseTableData.ps1' -1
 
 <#
@@ -11747,6 +15099,9 @@ function Write-FabricLakehouseTableData {
 .PARAMETER ManagedPrivateEndpointName
     The name of the Managed Private Endpoint to retrieve. Optional.
 
+.PARAMETER Raw
+    If specified, returns the raw API response without any transformation or filtering.
+
 .EXAMPLE
     Get-FabricManagedPrivateEndpoint -WorkspaceId "workspace-12345" -ManagedPrivateEndpointId "endpoint-67890"
     Retrieves details for the Managed Private Endpoint with ID "endpoint-67890" in workspace "workspace-12345".
@@ -11754,6 +15109,10 @@ function Write-FabricLakehouseTableData {
 .EXAMPLE
     Get-FabricManagedPrivateEndpoint -WorkspaceId "workspace-12345" -ManagedPrivateEndpointName "MyEndpoint"
     Retrieves details for the Managed Private Endpoint named "MyEndpoint" in workspace "workspace-12345".
+
+.EXAMPLE
+    Get-FabricManagedPrivateEndpoint -WorkspaceId "workspace-12345" -Raw
+    Retrieves all Managed Private Endpoints in the workspace with raw API response format.
 
 .NOTES
     - Requires `$FabricConfig` global configuration with `BaseUrl` and `FabricHeaders`.
@@ -11764,8 +15123,9 @@ function Write-FabricLakehouseTableData {
 function Get-FabricManagedPrivateEndpoint {
     [CmdletBinding()]
     param (
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
         [ValidateNotNullOrEmpty()]
+        [Alias('id')]
         [string]$WorkspaceId,
 
         [Parameter(Mandatory = $false)]
@@ -11774,72 +15134,50 @@ function Get-FabricManagedPrivateEndpoint {
 
         [Parameter(Mandatory = $false)]
         [ValidateNotNullOrEmpty()]
-        [string]$ManagedPrivateEndpointName
+        [string]$ManagedPrivateEndpointName,
+
+        [Parameter(Mandatory = $false)]
+        [switch]$Raw
     )
 
-    try {
-        # Validate input parameters
-        if ($ManagedPrivateEndpointId -and $ManagedPrivateEndpointName) {
-            Write-FabricLog -Message "Specify only one parameter: either 'ManagedPrivateEndpointId' or 'ManagedPrivateEndpointName'." -Level Error
-            return $null
-        }
+    process {
+        try {
+            # Validate input parameters
+            if ($ManagedPrivateEndpointId -and $ManagedPrivateEndpointName) {
+                Write-FabricLog -Message "Specify only one parameter: either 'ManagedPrivateEndpointId' or 'ManagedPrivateEndpointName'." -Level Error
+                return
+            }
 
-        if ($ManagedPrivateEndpointName.Length -gt 64) {
-            Write-FabricLog -Message "Managed Private Endpoint name exceeds 64 characters." -Level Error
-            return $null
-        }
+            if ($ManagedPrivateEndpointName.Length -gt 64) {
+                Write-FabricLog -Message "Managed Private Endpoint name exceeds 64 characters." -Level Error
+                return
+            }
 
-        Invoke-FabricAuthCheck -ThrowOnFailure
+            Invoke-FabricAuthCheck -ThrowOnFailure
 
 
-        # Construct the API endpoint URI
-        $apiEndpointURI = "{0}/workspaces/{1}/managedPrivateEndpoints" -f $script:FabricAuthContext.BaseUrl, $WorkspaceId
+            # Construct the API endpoint URI
+            $apiEndpointURI = "{0}/workspaces/{1}/managedPrivateEndpoints" -f $script:FabricAuthContext.BaseUrl, $WorkspaceId
 
-        # Make the API request
-        $apiParams = @{
-            BaseURI = $apiEndpointURI
-            Headers = $script:FabricAuthContext.FabricHeaders
-            Method  = 'Get'
-        }
-        $dataItems = Invoke-FabricAPIRequest @apiParams
+            # Make the API request
+            $apiParams = @{
+                BaseURI = $apiEndpointURI
+                Headers = $script:FabricAuthContext.FabricHeaders
+                Method  = 'Get'
+            }
+            $dataItems = Invoke-FabricAPIRequest @apiParams
 
-        # Immediately handle empty response
-        if (-not $dataItems) {
-            Write-FabricLog -Message "No data returned from the API." -Level Warning
-            return $null
+            # Apply filtering and formatting
+            Select-FabricResource -InputObject $dataItems -Id $ManagedPrivateEndpointId -DisplayName $ManagedPrivateEndpointName -ResourceType 'ManagedPrivateEndpoint' -TypeName 'MicrosoftFabric.ManagedPrivateEndpoint' -Raw:$Raw
         }
-
-        # Apply filtering logic efficiently
-        if ($ManagedPrivateEndpointId) {
-            $matchedItems = $dataItems.Where({ $_.id -eq $ManagedPrivateEndpointId }, 'First')
+        catch {
+            # Capture and log error details
+            $errorDetails = $_.Exception.Message
+            Write-FabricLog -Message "Failed to retrieve Managed Private Endpoints for workspace '$WorkspaceId'. Error: $errorDetails" -Level Error
         }
-        elseif ($ManagedPrivateEndpointName) {
-            $matchedItems = $dataItems.Where({ $_.name -eq $ManagedPrivateEndpointName }, 'First')
-        }
-        else {
-            Write-FabricLog -Message "No filter provided. Returning all items." -Level Debug
-            $matchedItems = $dataItems
-        }
-
-        # Handle results
-        if ($matchedItems) {
-            Write-FabricLog -Message "Item(s) found matching the specified criteria." -Level Debug
-            # Add type decoration for custom formatting
-            $matchedItems | Add-FabricTypeName -TypeName 'MicrosoftFabric.ManagedPrivateEndpoint'
-            return $matchedItems
-        }
-        else {
-            Write-FabricLog -Message "No item found matching the provided criteria." -Level Warning
-            return $null
-        }
-    }
-    catch {
-        # Capture and log error details
-        $errorDetails = $_.Exception.Message
-        Write-FabricLog -Message "Failed to retrieve Managed Private Endpoints. Error: $errorDetails" -Level Error
     }
 }
-#EndRegion '.\Public\Managed Private Endpoint\Get-FabricManagedPrivateEndpoint.ps1' 110
+#EndRegion '.\Public\Managed Private Endpoint\Get-FabricManagedPrivateEndpoint.ps1' 96
 #Region '.\Public\Managed Private Endpoint\New-FabricManagedPrivateEndpoint.ps1' -1
 
 <#
@@ -12046,7 +15384,10 @@ know the item’s Id and want to avoid an additional client-side name filter acr
 
 .PARAMETER MirroredDatabaseName
 When supplied, returns only the mirrored database whose display name exactly matches this value. This is useful when
-you don’t have the Id available. Do not use with MirroredDatabaseId; only one filter may be specified.
+you don't have the Id available. Do not use with MirroredDatabaseId; only one filter may be specified.
+
+.PARAMETER Raw
+If specified, returns the raw API response without any transformation or filtering.
 
 .EXAMPLE
 Get-FabricMirroredDatabase -WorkspaceId "12345" -MirroredDatabaseId "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee"
@@ -12063,6 +15404,11 @@ Get-FabricMirroredDatabase -WorkspaceId "12345"
 
 Lists all mirrored databases available in workspace "12345".
 
+.EXAMPLE
+Get-FabricMirroredDatabase -WorkspaceId "12345" -Raw
+
+Retrieves all mirrored databases in the workspace with raw API response format.
+
 .NOTES
 - Requires `$FabricConfig` global configuration, including BaseUrl and FabricHeaders.
 - Calls Test-TokenExpired to ensure token validity before making the API request.
@@ -12073,8 +15419,9 @@ Author: Tiago Balabuch
 function Get-FabricMirroredDatabase {
     [CmdletBinding()]
     param (
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
         [ValidateNotNullOrEmpty()]
+        [Alias('id')]
         [string]$WorkspaceId,
 
         [Parameter(Mandatory = $false)]
@@ -12084,68 +15431,46 @@ function Get-FabricMirroredDatabase {
         [Parameter(Mandatory = $false)]
         [ValidateNotNullOrEmpty()]
         [ValidatePattern('^[a-zA-Z0-9_ ]*$')]
-        [string]$MirroredDatabaseName
+        [string]$MirroredDatabaseName,
+
+        [Parameter(Mandatory = $false)]
+        [switch]$Raw
     )
-    try {
-        # Validate input parameters
-        if ($MirroredDatabaseId -and $MirroredDatabaseName) {
-            Write-FabricLog -Message "Specify only one parameter: either 'MirroredDatabaseId' or 'MirroredDatabaseName'." -Level Error
-            return $null
-        }
 
-        Invoke-FabricAuthCheck -ThrowOnFailure
+    process {
+        try {
+            # Validate input parameters
+            if ($MirroredDatabaseId -and $MirroredDatabaseName) {
+                Write-FabricLog -Message "Specify only one parameter: either 'MirroredDatabaseId' or 'MirroredDatabaseName'." -Level Error
+                return
+            }
+
+            Invoke-FabricAuthCheck -ThrowOnFailure
 
 
-        # Construct the API endpoint URI
-        $apiEndpointURI = "{0}/workspaces/{1}/mirroredDatabases" -f $script:FabricAuthContext.BaseUrl, $WorkspaceId
-        Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
+            # Construct the API endpoint URI
+            $apiEndpointURI = "{0}/workspaces/{1}/mirroredDatabases" -f $script:FabricAuthContext.BaseUrl, $WorkspaceId
+            Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
 
-        # Make the API request
-        $apiParams = @{
-            BaseURI = $apiEndpointURI
-            Headers = $script:FabricAuthContext.FabricHeaders
-            Method = 'Get'
-        }
-        $dataItems = Invoke-FabricAPIRequest @apiParams
+            # Make the API request
+            $apiParams = @{
+                BaseURI = $apiEndpointURI
+                Headers = $script:FabricAuthContext.FabricHeaders
+                Method = 'Get'
+            }
+            $dataItems = Invoke-FabricAPIRequest @apiParams
 
-        # Immediately handle empty response
-        if (-not $dataItems) {
-            Write-FabricLog -Message "No data returned from the API." -Level Warning
-            return $null
+            # Apply filtering and formatting
+            Select-FabricResource -InputObject $dataItems -Id $MirroredDatabaseId -DisplayName $MirroredDatabaseName -ResourceType 'MirroredDatabase' -TypeName 'MicrosoftFabric.MirroredDatabase' -Raw:$Raw
         }
-
-        # Apply filtering logic efficiently
-        if ($MirroredDatabaseId) {
-            $matchedItems = $dataItems.Where({ $_.Id -eq $MirroredDatabaseId }, 'First')
-        }
-        elseif ($MirroredDatabaseName) {
-            $matchedItems = $dataItems.Where({ $_.DisplayName -eq $MirroredDatabaseName }, 'First')
-        }
-        else {
-            Write-FabricLog -Message "No filter provided. Returning all items." -Level Debug
-            $matchedItems = $dataItems
-        }
-
-        # Handle results
-        if ($matchedItems) {
-            Write-FabricLog -Message "Item(s) found matching the specified criteria." -Level Debug
-            # Add type decoration for custom formatting
-            $matchedItems | Add-FabricTypeName -TypeName 'MicrosoftFabric.MirroredDatabase'
-            return $matchedItems
-        }
-        else {
-            Write-FabricLog -Message "No item found matching the provided criteria." -Level Warning
-            return $null
+        catch {
+            # Capture and log error details
+            $errorDetails = $_.Exception.Message
+            Write-FabricLog -Message "Failed to retrieve MirroredDatabase for workspace '$WorkspaceId'. Error: $errorDetails" -Level Error
         }
     }
-    catch {
-        # Capture and log error details
-        $errorDetails = $_.Exception.Message
-        Write-FabricLog -Message "Failed to retrieve Mirrored Database. Error: $errorDetails" -Level Error
-    }
-
 }
-#EndRegion '.\Public\Mirrored Database\Get-FabricMirroredDatabase.ps1' 119
+#EndRegion '.\Public\Mirrored Database\Get-FabricMirroredDatabase.ps1' 106
 #Region '.\Public\Mirrored Database\Get-FabricMirroredDatabaseDefinition.ps1' -1
 
 
@@ -12182,8 +15507,9 @@ Author: Updated by Jess Pomfret and Rob Sewell November 2026
 function Get-FabricMirroredDatabaseDefinition {
     [CmdletBinding()]
     param (
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
         [ValidateNotNullOrEmpty()]
+        [Alias('id')]
         [string]$WorkspaceId,
 
         [Parameter(Mandatory = $false)]
@@ -12217,7 +15543,7 @@ function Get-FabricMirroredDatabaseDefinition {
     }
 
 }
-#EndRegion '.\Public\Mirrored Database\Get-FabricMirroredDatabaseDefinition.ps1' 70
+#EndRegion '.\Public\Mirrored Database\Get-FabricMirroredDatabaseDefinition.ps1' 71
 #Region '.\Public\Mirrored Database\Get-FabricMirroredDatabaseStatus.ps1' -1
 
 <#
@@ -12245,8 +15571,9 @@ Author: Updated by Jess Pomfret and Rob Sewell November 2026
 function Get-FabricMirroredDatabaseStatus {
     [CmdletBinding()]
     param (
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
         [ValidateNotNullOrEmpty()]
+        [Alias('id')]
         [string]$WorkspaceId,
 
         [Parameter(Mandatory = $false)]
@@ -12280,7 +15607,7 @@ function Get-FabricMirroredDatabaseStatus {
     }
 
 }
-#EndRegion '.\Public\Mirrored Database\Get-FabricMirroredDatabaseStatus.ps1' 61
+#EndRegion '.\Public\Mirrored Database\Get-FabricMirroredDatabaseStatus.ps1' 62
 #Region '.\Public\Mirrored Database\Get-FabricMirroredDatabaseTableStatus.ps1' -1
 
 <#
@@ -12309,8 +15636,9 @@ Author: Updated by Jess Pomfret and Rob Sewell November 2026
 function Get-FabricMirroredDatabaseTableStatus {
     [CmdletBinding()]
     param (
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
         [ValidateNotNullOrEmpty()]
+        [Alias('id')]
         [string]$WorkspaceId,
 
         [Parameter(Mandatory = $false)]
@@ -12348,7 +15676,7 @@ function Get-FabricMirroredDatabaseTableStatus {
         Write-FabricLog -Message "Failed to retrieve MirroredDatabase. Error: $errorDetails" -Level Error
     }
 }
-#EndRegion '.\Public\Mirrored Database\Get-FabricMirroredDatabaseTableStatus.ps1' 66
+#EndRegion '.\Public\Mirrored Database\Get-FabricMirroredDatabaseTableStatus.ps1' 67
 #Region '.\Public\Mirrored Database\New-FabricMirroredDatabase.ps1' -1
 
 <#
@@ -12532,15 +15860,17 @@ Author: Tiago Balabuch
 function Remove-FabricMirroredDatabase {
     [CmdletBinding(SupportsShouldProcess = $true, ConfirmImpact = 'High')]
     param (
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
         [ValidateNotNullOrEmpty()]
         [string]$WorkspaceId,
 
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
         [ValidateNotNullOrEmpty()]
+        [Alias('id')]
         [string]$MirroredDatabaseId
     )
-    try {
+    process {
+        try {
         Invoke-FabricAuthCheck -ThrowOnFailure
 
 
@@ -12566,9 +15896,10 @@ function Remove-FabricMirroredDatabase {
         # Capture and log error details
         $errorDetails = $_.Exception.Message
         Write-FabricLog -Message "Failed to delete MirroredDatabase '$MirroredDatabaseId' from workspace '$WorkspaceId'. Error: $errorDetails" -Level Error
+        }
     }
 }
-#EndRegion '.\Public\Mirrored Database\Remove-FabricMirroredDatabase.ps1' 64
+#EndRegion '.\Public\Mirrored Database\Remove-FabricMirroredDatabase.ps1' 67
 #Region '.\Public\Mirrored Database\Start-FabricMirroredDatabaseMirroring.ps1' -1
 
 <#
@@ -12595,16 +15926,18 @@ Starts mirroring for the Mirrored Database with the ID "MirroredDatabase123" in 
 function Start-FabricMirroredDatabaseMirroring {
     [CmdletBinding(SupportsShouldProcess = $true, ConfirmImpact = 'Medium')]
     param (
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
         [ValidateNotNullOrEmpty()]
+        [Alias('id')]
         [string]$WorkspaceId,
 
-        [Parameter(Mandatory = $false)]
+        [Parameter(Mandatory = $false, ValueFromPipelineByPropertyName = $true)]
         [ValidateNotNullOrEmpty()]
         [string]$MirroredDatabaseId
     )
 
-    try {
+    process {
+        try {
         Invoke-FabricAuthCheck -ThrowOnFailure
 
 
@@ -12630,10 +15963,11 @@ function Start-FabricMirroredDatabaseMirroring {
         # Capture and log error details
         $errorDetails = $_.Exception.Message
         Write-FabricLog -Message "Failed to start MirroredDatabase. Error: $errorDetails" -Level Error
+        }
     }
 
 }
-#EndRegion '.\Public\Mirrored Database\Start-FabricMirroredDatabaseMirroring.ps1' 63
+#EndRegion '.\Public\Mirrored Database\Start-FabricMirroredDatabaseMirroring.ps1' 66
 #Region '.\Public\Mirrored Database\Stop-FabricMirroredDatabaseMirroring.ps1' -1
 
 
@@ -12659,15 +15993,17 @@ Stops mirroring for the Mirrored Database with the ID "MirroredDatabase123" in t
 function Stop-FabricMirroredDatabaseMirroring {
     [CmdletBinding(SupportsShouldProcess = $true, ConfirmImpact = 'Medium')]
     param (
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
         [ValidateNotNullOrEmpty()]
+        [Alias('id')]
         [string]$WorkspaceId,
 
-        [Parameter(Mandatory = $false)]
+        [Parameter(Mandatory = $false, ValueFromPipelineByPropertyName = $true)]
         [ValidateNotNullOrEmpty()]
         [string]$MirroredDatabaseId
     )
-    try {
+    process {
+        try {
         Invoke-FabricAuthCheck -ThrowOnFailure
 
 
@@ -12693,10 +16029,11 @@ function Stop-FabricMirroredDatabaseMirroring {
         # Capture and log error details
         $errorDetails = $_.Exception.Message
         Write-FabricLog -Message "Failed to stop MirroredDatabase. Error: $errorDetails" -Level Error
+        }
     }
 
 }
-#EndRegion '.\Public\Mirrored Database\Stop-FabricMirroredDatabaseMirroring.ps1' 61
+#EndRegion '.\Public\Mirrored Database\Stop-FabricMirroredDatabaseMirroring.ps1' 64
 #Region '.\Public\Mirrored Database\Update-FabricMirroredDatabase.ps1' -1
 
 <#
@@ -12738,34 +16075,45 @@ Author: Tiago Balabuch
 function Update-FabricMirroredDatabase {
     [CmdletBinding(SupportsShouldProcess = $true, ConfirmImpact = 'Medium')]
     param (
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
         [ValidateNotNullOrEmpty()]
         [string]$WorkspaceId,
 
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
         [ValidateNotNullOrEmpty()]
+        [Alias('id')]
         [string]$MirroredDatabaseId,
 
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $false, ValueFromPipelineByPropertyName = $true)]
         [ValidateNotNullOrEmpty()]
         [ValidatePattern('^[a-zA-Z0-9_ ]*$')]
+        [Alias('DisplayName')]
         [string]$MirroredDatabaseName,
 
-        [Parameter(Mandatory = $false)]
+        [Parameter(Mandatory = $false, ValueFromPipelineByPropertyName = $true)]
         [ValidateNotNullOrEmpty()]
+        [Alias('Description')]
         [string]$MirroredDatabaseDescription
     )
-    try {
-        Invoke-FabricAuthCheck -ThrowOnFailure
+    process {
+        try {
+            # Validate that at least one update parameter is provided
+            if (-not $MirroredDatabaseName -and -not $MirroredDatabaseDescription) {
+                Write-FabricLog -Message "At least one of MirroredDatabaseName or MirroredDatabaseDescription must be specified" -Level Error
+                return
+            }
 
+            Invoke-FabricAuthCheck -ThrowOnFailure
 
         # Construct the API endpoint URI
-        $apiEndpointURI = "{0}/workspaces/{1}/mirroredDatabases/{2}" -f $script:FabricAuthContext.BaseUrl, $WorkspaceId, $MirroredDatabaseId
+        $apiEndpointURI = New-FabricAPIUri -Resource 'workspaces' -WorkspaceId $WorkspaceId -Subresource 'mirroredDatabases' -ItemId $MirroredDatabaseId
         Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
 
         # Construct the request body
-        $body = @{
-            displayName = $MirroredDatabaseName
+        $body = @{}
+
+        if ($MirroredDatabaseName) {
+            $body.displayName = $MirroredDatabaseName
         }
 
         if ($MirroredDatabaseDescription) {
@@ -12795,9 +16143,10 @@ function Update-FabricMirroredDatabase {
         # Capture and log error details
         $errorDetails = $_.Exception.Message
         Write-FabricLog -Message "Failed to update MirroredDatabase. Error: $errorDetails" -Level Error
+        }
     }
 }
-#EndRegion '.\Public\Mirrored Database\Update-FabricMirroredDatabase.ps1' 99
+#EndRegion '.\Public\Mirrored Database\Update-FabricMirroredDatabase.ps1' 111
 #Region '.\Public\Mirrored Database\Update-FabricMirroredDatabaseDefinition.ps1' -1
 
 <#
@@ -12846,12 +16195,13 @@ Author: Tiago Balabuch
 function Update-FabricMirroredDatabaseDefinition {
     [CmdletBinding(SupportsShouldProcess = $true, ConfirmImpact = 'Medium')]
     param (
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
         [ValidateNotNullOrEmpty()]
         [string]$WorkspaceId,
 
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
         [ValidateNotNullOrEmpty()]
+        [Alias('id')]
         [string]$MirroredDatabaseId,
 
         [Parameter(Mandatory = $true)]
@@ -12863,8 +16213,9 @@ function Update-FabricMirroredDatabaseDefinition {
         [string]$MirroredDatabasePathPlatformDefinition
     )
 
-    try {
-        Invoke-FabricAuthCheck -ThrowOnFailure
+    process {
+        try {
+            Invoke-FabricAuthCheck -ThrowOnFailure
 
 
         # Construct the API endpoint URI with filtering logic
@@ -12939,9 +16290,10 @@ function Update-FabricMirroredDatabaseDefinition {
         # Capture and log error details
         $errorDetails = $_.Exception.Message
         Write-FabricLog -Message "Failed to update MirroredDatabase. Error: $errorDetails" -Level Error
+        }
     }
 }
-#EndRegion '.\Public\Mirrored Database\Update-FabricMirroredDatabaseDefinition.ps1' 142
+#EndRegion '.\Public\Mirrored Database\Update-FabricMirroredDatabaseDefinition.ps1' 145
 #Region '.\Public\Mirrored Warehouse\Get-FabricMirroredWarehouse.ps1' -1
 
 <#
@@ -12965,6 +16317,9 @@ already captured it from a prior listing operation for more precise retrieval.
 Optional. When supplied, returns only the mirrored warehouse whose display name exactly matches this string. Use this
 when the Id is not known. Do not combine with MirroredWarehouseId.
 
+.PARAMETER Raw
+If specified, returns the raw API response without any transformation or filtering.
+
 .EXAMPLE
 Get-FabricMirroredWarehouse -WorkspaceId "12345" -MirroredWarehouseId "aaaaaaaa-bbbb-cccc-dddd-ffffffffffff"
 
@@ -12980,6 +16335,11 @@ Get-FabricMirroredWarehouse -WorkspaceId "12345"
 
 Lists all mirrored warehouses present in the specified workspace.
 
+.EXAMPLE
+Get-FabricMirroredWarehouse -WorkspaceId "12345" -Raw
+
+Retrieves all mirrored warehouses in the workspace with raw API response format.
+
 .NOTES
 - Requires `$FabricConfig` global configuration, including BaseUrl and FabricHeaders.
 - Calls Test-TokenExpired to ensure token validity before making the API request.
@@ -12990,8 +16350,9 @@ Author: Tiago Balabuch
 function Get-FabricMirroredWarehouse {
     [CmdletBinding()]
     param (
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
         [ValidateNotNullOrEmpty()]
+        [Alias('id')]
         [string]$WorkspaceId,
 
         [Parameter(Mandatory = $false)]
@@ -13001,68 +16362,46 @@ function Get-FabricMirroredWarehouse {
         [Parameter(Mandatory = $false)]
         [ValidateNotNullOrEmpty()]
         [ValidatePattern('^[a-zA-Z0-9_ ]*$')]
-        [string]$MirroredWarehouseName
+        [string]$MirroredWarehouseName,
+
+        [Parameter(Mandatory = $false)]
+        [switch]$Raw
     )
-    try {
-        # Validate input parameters
-        if ($MirroredWarehouseId -and $MirroredWarehouseName) {
-            Write-FabricLog -Message "Specify only one parameter: either 'MirroredWarehouseId' or 'MirroredWarehouseName'." -Level Error
-            return $null
-        }
 
-        Invoke-FabricAuthCheck -ThrowOnFailure
+    process {
+        try {
+            # Validate input parameters
+            if ($MirroredWarehouseId -and $MirroredWarehouseName) {
+                Write-FabricLog -Message "Specify only one parameter: either 'MirroredWarehouseId' or 'MirroredWarehouseName'." -Level Error
+                return
+            }
+
+            Invoke-FabricAuthCheck -ThrowOnFailure
 
 
-        # Construct the API endpoint URI
-        $apiEndpointURI = "{0}/workspaces/{1}/MirroredWarehouses" -f $script:FabricAuthContext.BaseUrl, $WorkspaceId
-        Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
+            # Construct the API endpoint URI
+            $apiEndpointURI = "{0}/workspaces/{1}/MirroredWarehouses" -f $script:FabricAuthContext.BaseUrl, $WorkspaceId
+            Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
 
-        # Make the API request
-        $apiParams = @{
-            BaseURI = $apiEndpointURI
-            Headers = $script:FabricAuthContext.FabricHeaders
-            Method = 'Get'
-        }
-        $dataItems = Invoke-FabricAPIRequest @apiParams
+            # Make the API request
+            $apiParams = @{
+                BaseURI = $apiEndpointURI
+                Headers = $script:FabricAuthContext.FabricHeaders
+                Method = 'Get'
+            }
+            $dataItems = Invoke-FabricAPIRequest @apiParams
 
-        # Immediately handle empty response
-        if (-not $dataItems) {
-            Write-FabricLog -Message "No data returned from the API." -Level Warning
-            return $null
+            # Apply filtering and formatting
+            Select-FabricResource -InputObject $dataItems -Id $MirroredWarehouseId -DisplayName $MirroredWarehouseName -ResourceType 'MirroredWarehouse' -TypeName 'MicrosoftFabric.MirroredWarehouse' -Raw:$Raw
         }
-
-        # Apply filtering logic efficiently
-        if ($MirroredWarehouseId) {
-            $matchedItems = $dataItems.Where({ $_.Id -eq $MirroredWarehouseId }, 'First')
-        }
-        elseif ($MirroredWarehouseName) {
-            $matchedItems = $dataItems.Where({ $_.DisplayName -eq $MirroredWarehouseName }, 'First')
-        }
-        else {
-            Write-FabricLog -Message "No filter provided. Returning all items." -Level Debug
-            $matchedItems = $dataItems
-        }
-
-        # Handle results
-        if ($matchedItems) {
-            Write-FabricLog -Message "Item(s) found matching the specified criteria." -Level Debug
-            # Add type decoration for custom formatting
-            $matchedItems | Add-FabricTypeName -TypeName 'MicrosoftFabric.MirroredWarehouse'
-            return $matchedItems
-        }
-        else {
-            Write-FabricLog -Message "No item found matching the provided criteria." -Level Warning
-            return $null
+        catch {
+            # Capture and log error details
+            $errorDetails = $_.Exception.Message
+            Write-FabricLog -Message "Failed to retrieve MirroredWarehouse for workspace '$WorkspaceId'. Error: $errorDetails" -Level Error
         }
     }
-    catch {
-        # Step 10: Capture and log error details
-        $errorDetails = $_.Exception.Message
-        Write-FabricLog -Message "Failed to retrieve MirroredWarehouse. Error: $errorDetails" -Level Error
-    }
-
 }
-#EndRegion '.\Public\Mirrored Warehouse\Get-FabricMirroredWarehouse.ps1' 119
+#EndRegion '.\Public\Mirrored Warehouse\Get-FabricMirroredWarehouse.ps1' 106
 #Region '.\Public\ML Experiment\Get-FabricMLExperiment.ps1' -1
 
 <#
@@ -13082,6 +16421,9 @@ function Get-FabricMirroredWarehouse {
 .PARAMETER MLExperimentName
     The name of the ML Experiment to retrieve. This parameter is optional.
 
+.PARAMETER Raw
+    When specified, returns the raw API response without any filtering or formatting.
+
 .EXAMPLE
     Get-FabricMLExperiment -WorkspaceId "workspace-12345" -MLExperimentId "experiment-67890"
     This example retrieves the ML Experiment details for the experiment with ID "experiment-67890" in the workspace with ID "workspace-12345".
@@ -13089,6 +16431,10 @@ function Get-FabricMirroredWarehouse {
 .EXAMPLE
     Get-FabricMLExperiment -WorkspaceId "workspace-12345" -MLExperimentName "My ML Experiment"
     This example retrieves the ML Experiment details for the experiment named "My ML Experiment" in the workspace with ID "workspace-12345".
+
+.EXAMPLE
+    Get-FabricMLExperiment -WorkspaceId "workspace-12345" -Raw
+    This example returns the raw API response for all ML experiments in the workspace without any processing.
 
 .NOTES
     - Requires `$FabricConfig` global configuration, including `BaseUrl` and `FabricHeaders`.
@@ -13100,8 +16446,9 @@ function Get-FabricMirroredWarehouse {
 function Get-FabricMLExperiment {
     [CmdletBinding()]
     param (
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
         [ValidateNotNullOrEmpty()]
+        [Alias('id')]
         [string]$WorkspaceId,
 
         [Parameter(Mandatory = $false)]
@@ -13111,67 +16458,45 @@ function Get-FabricMLExperiment {
         [Parameter(Mandatory = $false)]
         [ValidateNotNullOrEmpty()]
         [ValidatePattern('^[a-zA-Z0-9_ ]*$')]
-        [string]$MLExperimentName
+        [string]$MLExperimentName,
+
+        [Parameter()]
+        [switch]$Raw
     )
-    try {
-        # Validate input parameters
-        if ($MLExperimentId -and $MLExperimentName) {
-            Write-FabricLog -Message "Specify only one parameter: either 'MLExperimentId' or 'MLExperimentName'." -Level Error
-            return $null
-        }
 
-        Invoke-FabricAuthCheck -ThrowOnFailure
+    process {
+        try {
+            # Validate input parameters
+            if ($MLExperimentId -and $MLExperimentName) {
+                Write-FabricLog -Message "Specify only one parameter: either 'MLExperimentId' or 'MLExperimentName'." -Level Error
+                return
+            }
 
+            Invoke-FabricAuthCheck -ThrowOnFailure
 
-        # Construct the API endpoint URI
-        $apiEndpointURI = "{0}/workspaces/{1}/mlExperiments" -f $script:FabricAuthContext.BaseUrl, $WorkspaceId
-        Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
+            # Construct the API endpoint URI
+            $apiEndpointURI = "{0}/workspaces/{1}/mlExperiments" -f $script:FabricAuthContext.BaseUrl, $WorkspaceId
+            Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
 
-        # Make the API request
-        $apiParams = @{
-            BaseURI = $apiEndpointURI
-            Headers = $script:FabricAuthContext.FabricHeaders
-            Method = 'Get'
-        }
-        $dataItems = Invoke-FabricAPIRequest @apiParams
+            # Make the API request
+            $apiParams = @{
+                BaseURI = $apiEndpointURI
+                Headers = $script:FabricAuthContext.FabricHeaders
+                Method  = 'Get'
+            }
+            $dataItems = Invoke-FabricAPIRequest @apiParams
 
-        # Immediately handle empty response
-        if (-not $dataItems) {
-            Write-FabricLog -Message "No data returned from the API." -Level Warning
-            return $null
+            # Apply filtering and formatting
+            Select-FabricResource -InputObject $dataItems -Id $MLExperimentId -DisplayName $MLExperimentName -ResourceType 'MLExperiment' -TypeName 'MicrosoftFabric.MLExperiment' -Raw:$Raw
         }
-
-        # Apply filtering logic efficiently
-        if ($MLExperimentId) {
-            $matchedItems = $dataItems.Where({ $_.Id -eq $MLExperimentId }, 'First')
+        catch {
+            # Capture and log error details
+            $errorDetails = $_.Exception.Message
+            Write-FabricLog -Message "Failed to retrieve ML Experiment for workspace '$WorkspaceId'. Error: $errorDetails" -Level Error
         }
-        elseif ($MLExperimentName) {
-            $matchedItems = $dataItems.Where({ $_.DisplayName -eq $MLExperimentName }, 'First')
-        }
-        else {
-            Write-FabricLog -Message "No filter provided. Returning all items." -Level Debug
-            $matchedItems = $dataItems
-        }
-
-        # Handle results
-        if ($matchedItems) {
-            Write-FabricLog -Message "Item(s) found matching the specified criteria." -Level Debug
-            # Add type decoration for custom formatting
-            $matchedItems | Add-FabricTypeName -TypeName 'MicrosoftFabric.MLExperiment'
-            return $matchedItems
-        }
-        else {
-            Write-FabricLog -Message "No item found matching the provided criteria." -Level Warning
-            return $null
-        }
-    }
-    catch {
-        # Capture and log error details
-        $errorDetails = $_.Exception.Message
-        Write-FabricLog -Message "Failed to retrieve ML Experiment. Error: $errorDetails" -Level Error
     }
 }
-#EndRegion '.\Public\ML Experiment\Get-FabricMLExperiment.ps1' 107
+#EndRegion '.\Public\ML Experiment\Get-FabricMLExperiment.ps1' 93
 #Region '.\Public\ML Experiment\New-FabricMLExperiment.ps1' -1
 
 <#
@@ -13205,8 +16530,9 @@ function Get-FabricMLExperiment {
 function New-FabricMLExperiment {
     [CmdletBinding(SupportsShouldProcess = $true, ConfirmImpact = 'Medium')]
     param (
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
         [ValidateNotNullOrEmpty()]
+        [Alias('id')]
         [string]$WorkspaceId,
 
         [Parameter(Mandatory = $true)]
@@ -13218,6 +16544,7 @@ function New-FabricMLExperiment {
         [ValidateNotNullOrEmpty()]
         [string]$MLExperimentDescription
     )
+    process {
     try {
         Invoke-FabricAuthCheck -ThrowOnFailure
 
@@ -13261,8 +16588,9 @@ function New-FabricMLExperiment {
         $errorDetails = $_.Exception.Message
         Write-FabricLog -Message "Failed to create ML Experiment. Error: $errorDetails" -Level Error
     }
+    }
 }
-#EndRegion '.\Public\ML Experiment\New-FabricMLExperiment.ps1' 89
+#EndRegion '.\Public\ML Experiment\New-FabricMLExperiment.ps1' 92
 #Region '.\Public\ML Experiment\Remove-FabricMLExperiment.ps1' -1
 
 <#
@@ -13293,14 +16621,16 @@ function New-FabricMLExperiment {
 function Remove-FabricMLExperiment {
     [CmdletBinding(SupportsShouldProcess = $true, ConfirmImpact = 'High')]
     param (
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
         [ValidateNotNullOrEmpty()]
         [string]$WorkspaceId,
 
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
         [ValidateNotNullOrEmpty()]
+        [Alias('id')]
         [string]$MLExperimentId
     )
+    process {
     try {
         Invoke-FabricAuthCheck -ThrowOnFailure
 
@@ -13330,8 +16660,9 @@ function Remove-FabricMLExperiment {
         $errorDetails = $_.Exception.Message
         Write-FabricLog -Message "Failed to delete ML Experiment '$MLExperimentId' from workspace '$WorkspaceId'. Error: $errorDetails" -Level Error
     }
+    }
 }
-#EndRegion '.\Public\ML Experiment\Remove-FabricMLExperiment.ps1' 67
+#EndRegion '.\Public\ML Experiment\Remove-FabricMLExperiment.ps1' 70
 #Region '.\Public\ML Experiment\Update-FabricMLExperiment.ps1' -1
 
 <#
@@ -13368,35 +16699,46 @@ function Remove-FabricMLExperiment {
 function Update-FabricMLExperiment {
     [CmdletBinding(SupportsShouldProcess = $true, ConfirmImpact = 'Medium')]
     param (
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
         [ValidateNotNullOrEmpty()]
         [string]$WorkspaceId,
 
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
         [ValidateNotNullOrEmpty()]
+        [Alias('id')]
         [string]$MLExperimentId,
 
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $false, ValueFromPipelineByPropertyName = $true)]
         [ValidateNotNullOrEmpty()]
         [ValidatePattern('^[a-zA-Z0-9_]*$')]
+        [Alias('DisplayName')]
         [string]$MLExperimentName,
 
-        [Parameter(Mandatory = $false)]
+        [Parameter(Mandatory = $false, ValueFromPipelineByPropertyName = $true)]
         [ValidateNotNullOrEmpty()]
+        [Alias('Description')]
         [string]$MLExperimentDescription
     )
 
+    process {
     try {
+        # Validate that at least one update parameter is provided
+        if (-not $MLExperimentName -and -not $MLExperimentDescription) {
+            Write-FabricLog -Message "At least one of MLExperimentName or MLExperimentDescription must be specified" -Level Error
+            return
+        }
+
         Invoke-FabricAuthCheck -ThrowOnFailure
 
-
         # Construct the API endpoint URI
-        $apiEndpointURI = "{0}/workspaces/{1}/mlExperiments/{2}" -f $script:FabricAuthContext.BaseUrl, $WorkspaceId, $MLExperimentId
+        $apiEndpointURI = New-FabricAPIUri -Resource 'workspaces' -WorkspaceId $WorkspaceId -Subresource 'mlExperiments' -ItemId $MLExperimentId
         Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
 
-        # Construct the request body
-        $body = @{
-            displayName = $MLExperimentName
+        # Construct the request body conditionally
+        $body = @{}
+
+        if ($MLExperimentName) {
+            $body.displayName = $MLExperimentName
         }
 
         if ($MLExperimentDescription) {
@@ -13429,8 +16771,9 @@ function Update-FabricMLExperiment {
         $errorDetails = $_.Exception.Message
         Write-FabricLog -Message "Failed to update ML Experiment. Error: $errorDetails" -Level Error
     }
+    }
 }
-#EndRegion '.\Public\ML Experiment\Update-FabricMLExperiment.ps1' 97
+#EndRegion '.\Public\ML Experiment\Update-FabricMLExperiment.ps1' 109
 #Region '.\Public\ML Model\Get-FabricMLModel.ps1' -1
 
 <#
@@ -13450,6 +16793,9 @@ function Update-FabricMLExperiment {
 .PARAMETER MLModelName
     The name of the ML Model to retrieve. This parameter is optional.
 
+.PARAMETER Raw
+    If specified, returns the raw API response without any transformation or filtering.
+
 .EXAMPLE
     Get-FabricMLModel -WorkspaceId "workspace-12345" -MLModelId "model-67890"
     This example retrieves the ML Model details for the model with ID "model-67890" in the workspace with ID "workspace-12345".
@@ -13457,6 +16803,10 @@ function Update-FabricMLExperiment {
 .EXAMPLE
     Get-FabricMLModel -WorkspaceId "workspace-12345" -MLModelName "My ML Model"
     This example retrieves the ML Model details for the model named "My ML Model" in the workspace with ID "workspace-12345".
+
+.EXAMPLE
+    Get-FabricMLModel -WorkspaceId "workspace-12345" -Raw
+    This example retrieves all ML Models in the workspace with raw API response format.
 
 .NOTES
     - Requires `$FabricConfig` global configuration, including `BaseUrl` and `FabricHeaders`.
@@ -13468,8 +16818,9 @@ function Update-FabricMLExperiment {
 function Get-FabricMLModel {
     [CmdletBinding()]
     param (
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
         [ValidateNotNullOrEmpty()]
+        [Alias('id')]
         [string]$WorkspaceId,
 
         [Parameter(Mandatory = $false)]
@@ -13479,70 +16830,47 @@ function Get-FabricMLModel {
         [Parameter(Mandatory = $false)]
         [ValidateNotNullOrEmpty()]
         [ValidatePattern('^[a-zA-Z0-9_ ]*$')]
-        [string]$MLModelName
+        [string]$MLModelName,
+
+        [Parameter(Mandatory = $false)]
+        [switch]$Raw
     )
 
-    try {
-        # Validate input parameters
-        if ($MLModelId -and $MLModelName) {
-            Write-FabricLog -Message "Specify only one parameter: either 'MLModelId' or 'MLModelName'." -Level Error
-            return $null
-        }
+    process {
+        try {
+            # Validate input parameters
+            if ($MLModelId -and $MLModelName) {
+                Write-FabricLog -Message "Specify only one parameter: either 'MLModelId' or 'MLModelName'." -Level Error
+                return
+            }
 
-        Invoke-FabricAuthCheck -ThrowOnFailure
+            Invoke-FabricAuthCheck -ThrowOnFailure
 
 
-        # Construct the API endpoint URI
-        $apiEndpointURI = "{0}/workspaces/{1}/mlModels" -f $script:FabricAuthContext.BaseUrl, $WorkspaceId
-        Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
+            # Construct the API endpoint URI
+            $apiEndpointURI = "{0}/workspaces/{1}/mlModels" -f $script:FabricAuthContext.BaseUrl, $WorkspaceId
+            Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
 
-        # Make the API request
-        # Make the API request
-        $apiParams = @{
-            BaseURI = $apiEndpointURI
-            Headers = $script:FabricAuthContext.FabricHeaders
-            Method = 'Get'
-        }
-        $dataItems = Invoke-FabricAPIRequest @apiParams
+            # Make the API request
+            $apiParams = @{
+                BaseURI = $apiEndpointURI
+                Headers = $script:FabricAuthContext.FabricHeaders
+                Method = 'Get'
+            }
+            $dataItems = Invoke-FabricAPIRequest @apiParams
 
-        # Immediately handle empty response
-        if (-not $dataItems) {
-            Write-FabricLog -Message "No data returned from the API." -Level Warning
-            return $null
+            # Apply filtering and formatting
+            Select-FabricResource -InputObject $dataItems -Id $MLModelId -DisplayName $MLModelName -ResourceType 'MLModel' -TypeName 'MicrosoftFabric.MLModel' -Raw:$Raw
         }
-
-        # Apply filtering logic efficiently
-        if ($MLModelId) {
-            $matchedItems = $dataItems.Where({ $_.Id -eq $MLModelId }, 'First')
+        catch {
+            # Capture and log error details
+            $errorDetails = $_.Exception.Message
+            Write-FabricLog -Message "Failed to retrieve ML Model for workspace '$WorkspaceId'. Error: $errorDetails" -Level Error
         }
-        elseif ($MLModelName) {
-            $matchedItems = $dataItems.Where({ $_.DisplayName -eq $MLModelName }, 'First')
-        }
-        else {
-            Write-FabricLog -Message "No filter provided. Returning all items." -Level Debug
-            $matchedItems = $dataItems
-        }
-
-        # Handle results
-        if ($matchedItems) {
-            Write-FabricLog -Message "Item(s) found matching the specified criteria." -Level Debug
-            # Add type decoration for custom formatting
-            $matchedItems | Add-FabricTypeName -TypeName 'MicrosoftFabric.MLModel'
-            return $matchedItems
-        }
-        else {
-            Write-FabricLog -Message "No item found matching the provided criteria." -Level Warning
-            return $null
-        }
-    }
-    catch {
-        # Capture and log error details
-        $errorDetails = $_.Exception.Message
-        Write-FabricLog -Message "Failed to retrieve ML Model. Error: $errorDetails" -Level Error
     }
 
 }
-#EndRegion '.\Public\ML Model\Get-FabricMLModel.ps1' 110
+#EndRegion '.\Public\ML Model\Get-FabricMLModel.ps1' 95
 #Region '.\Public\ML Model\New-FabricMLModel.ps1' -1
 
 <#
@@ -13664,14 +16992,16 @@ function New-FabricMLModel {
 function Remove-FabricMLModel {
     [CmdletBinding(SupportsShouldProcess = $true, ConfirmImpact = 'High')]
     param (
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
         [ValidateNotNullOrEmpty()]
         [string]$WorkspaceId,
 
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
         [ValidateNotNullOrEmpty()]
+        [Alias('id')]
         [string]$MLModelId
     )
+    process {
     try {
         Invoke-FabricAuthCheck -ThrowOnFailure
 
@@ -13701,8 +17031,9 @@ function Remove-FabricMLModel {
         $errorDetails = $_.Exception.Message
         Write-FabricLog -Message "Failed to delete ML Model '$MLModelId' from workspace '$WorkspaceId'. Error: $errorDetails" -Level Error
     }
+    }
 }
-#EndRegion '.\Public\ML Model\Remove-FabricMLModel.ps1' 67
+#EndRegion '.\Public\ML Model\Remove-FabricMLModel.ps1' 70
 #Region '.\Public\ML Model\Update-FabricMLModel.ps1' -1
 
 <#
@@ -13736,18 +17067,20 @@ function Remove-FabricMLModel {
 function Update-FabricMLModel {
     [CmdletBinding(SupportsShouldProcess = $true, ConfirmImpact = 'Medium')]
     param (
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
         [ValidateNotNullOrEmpty()]
         [string]$WorkspaceId,
 
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
         [ValidateNotNullOrEmpty()]
+        [Alias('id')]
         [string]$MLModelId,
 
         [Parameter(Mandatory = $false)]
         [ValidateNotNullOrEmpty()]
         [string]$MLModelDescription
     )
+    process {
     try {
         Invoke-FabricAuthCheck -ThrowOnFailure
 
@@ -13787,8 +17120,9 @@ function Update-FabricMLModel {
         $errorDetails = $_.Exception.Message
         Write-FabricLog -Message "Failed to update ML Model. Error: $errorDetails" -Level Error
     }
+    }
 }
-#EndRegion '.\Public\ML Model\Update-FabricMLModel.ps1' 84
+#EndRegion '.\Public\ML Model\Update-FabricMLModel.ps1' 87
 #Region '.\Public\Mounted Data Factory\Get-FabricMountedDataFactory.ps1' -1
 
 <#
@@ -13808,6 +17142,9 @@ function Update-FabricMLModel {
 .PARAMETER MountedDataFactoryName
     The display name of the mounted Data Factory to retrieve. Optional.
 
+.PARAMETER Raw
+    If specified, returns the raw API response without any transformation or filtering.
+
 .EXAMPLE
     Get-FabricMountedDataFactory -WorkspaceId "workspace-12345" -MountedDataFactoryId "MountedDataFactory-67890"
     Retrieves the mounted Data Factory with ID "MountedDataFactory-67890" from the specified workspace.
@@ -13815,6 +17152,10 @@ function Update-FabricMLModel {
 .EXAMPLE
     Get-FabricMountedDataFactory -WorkspaceId "workspace-12345" -MountedDataFactoryName "My Data Factory"
     Retrieves the mounted Data Factory named "My Data Factory" from the specified workspace.
+
+.EXAMPLE
+    Get-FabricMountedDataFactory -WorkspaceId "workspace-12345" -Raw
+    Retrieves all mounted Data Factories in the workspace with raw API response format.
 
 .NOTES
     - Requires `$FabricConfig` global configuration with `BaseUrl` and `FabricHeaders`.
@@ -13825,8 +17166,9 @@ function Update-FabricMLModel {
 function Get-FabricMountedDataFactory {
     [CmdletBinding()]
     param (
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
         [ValidateNotNullOrEmpty()]
+        [Alias('id')]
         [string]$WorkspaceId,
 
         [Parameter(Mandatory = $false)]
@@ -13836,67 +17178,46 @@ function Get-FabricMountedDataFactory {
         [Parameter(Mandatory = $false)]
         [ValidateNotNullOrEmpty()]
         [ValidatePattern('^[a-zA-Z0-9_ ]*$')]
-        [string]$MountedDataFactoryName
+        [string]$MountedDataFactoryName,
+
+        [Parameter(Mandatory = $false)]
+        [switch]$Raw
     )
-    try {
-        # Validate input parameters
-        if ($MountedDataFactoryId -and $MountedDataFactoryName) {
-            Write-FabricLog -Message "Specify only one parameter: either 'MountedDataFactoryId' or 'MountedDataFactoryName'." -Level Error
-            return $null
-        }
 
-        Invoke-FabricAuthCheck -ThrowOnFailure
+    process {
+        try {
+            # Validate input parameters
+            if ($MountedDataFactoryId -and $MountedDataFactoryName) {
+                Write-FabricLog -Message "Specify only one parameter: either 'MountedDataFactoryId' or 'MountedDataFactoryName'." -Level Error
+                return
+            }
+
+            Invoke-FabricAuthCheck -ThrowOnFailure
 
 
-        # Construct the API endpoint URI
-        $apiEndpointURI = "{0}/workspaces/{1}/mountedDataFactories" -f $script:FabricAuthContext.BaseUrl, $WorkspaceId
-        Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
+            # Construct the API endpoint URI
+            $apiEndpointURI = "{0}/workspaces/{1}/mountedDataFactories" -f $script:FabricAuthContext.BaseUrl, $WorkspaceId
+            Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
 
-        # Make the API request
-        $apiParams = @{
-            BaseURI = $apiEndpointURI
-            Headers = $script:FabricAuthContext.FabricHeaders
-            Method  = 'Get'
-        }
-        $dataItems = Invoke-FabricAPIRequest @apiParams
+            # Make the API request
+            $apiParams = @{
+                BaseURI = $apiEndpointURI
+                Headers = $script:FabricAuthContext.FabricHeaders
+                Method  = 'Get'
+            }
+            $dataItems = Invoke-FabricAPIRequest @apiParams
 
-        # Immediately handle empty response
-        if (-not $dataItems) {
-            Write-FabricLog -Message "No data returned from the API." -Level Warning
-            return $null
+            # Apply filtering and formatting
+            Select-FabricResource -InputObject $dataItems -Id $MountedDataFactoryId -DisplayName $MountedDataFactoryName -ResourceType 'MountedDataFactory' -TypeName 'MicrosoftFabric.MountedDataFactory' -Raw:$Raw
         }
-
-        # Apply filtering logic efficiently
-        if ($MountedDataFactoryId) {
-            $matchedItems = $dataItems.Where({ $_.Id -eq $MountedDataFactoryId }, 'First')
+        catch {
+            # Capture and log error details
+            $errorDetails = $_.Exception.Message
+            Write-FabricLog -Message "Failed to retrieve Mounted Data Factory for workspace '$WorkspaceId'. Error: $errorDetails" -Level Error
         }
-        elseif ($MountedDataFactoryName) {
-            $matchedItems = $dataItems.Where({ $_.DisplayName -eq $MountedDataFactoryName }, 'First')
-        }
-        else {
-            Write-FabricLog -Message "No filter provided. Returning all items." -Level Debug
-            $matchedItems = $dataItems
-        }
-
-        # Handle results
-        if ($matchedItems) {
-            Write-FabricLog -Message "Item(s) found matching the specified criteria." -Level Debug
-            # Add type decoration for custom formatting
-            $matchedItems | Add-FabricTypeName -TypeName 'MicrosoftFabric.MountedDataFactory'
-            return $matchedItems
-        }
-        else {
-            Write-FabricLog -Message "No item found matching the provided criteria." -Level Warning
-            return $null
-        }
-    }
-    catch {
-        # Capture and log error details
-        $errorDetails = $_.Exception.Message
-        Write-FabricLog -Message "Failed to retrieve Mounted Data Factory. Error: $errorDetails" -Level Error
     }
 }
-#EndRegion '.\Public\Mounted Data Factory\Get-FabricMountedDataFactory.ps1' 106
+#EndRegion '.\Public\Mounted Data Factory\Get-FabricMountedDataFactory.ps1' 93
 #Region '.\Public\Mounted Data Factory\Get-FabricMountedDataFactoryDefinition.ps1' -1
 
 <#
@@ -13932,8 +17253,9 @@ function Get-FabricMountedDataFactory {
 function Get-FabricMountedDataFactoryDefinition {
     [CmdletBinding()]
     param (
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
         [ValidateNotNullOrEmpty()]
+        [Alias('id')]
         [string]$WorkspaceId,
 
         [Parameter(Mandatory = $false)]
@@ -13973,7 +17295,7 @@ function Get-FabricMountedDataFactoryDefinition {
         Write-FabricLog -Message "Failed to retrieve Mounted Data Factory. Error: $errorDetails" -Level Error
     }
  }
-#EndRegion '.\Public\Mounted Data Factory\Get-FabricMountedDataFactoryDefinition.ps1' 75
+#EndRegion '.\Public\Mounted Data Factory\Get-FabricMountedDataFactoryDefinition.ps1' 76
 #Region '.\Public\Mounted Data Factory\New-FabricMountedDataFactory.ps1' -1
 
 <#
@@ -14240,34 +17562,44 @@ function Remove-FabricMountedDataFactory {
 function Update-FabricMountedDataFactory {
     [CmdletBinding(SupportsShouldProcess = $true, ConfirmImpact = 'Medium')]
     param (
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
         [ValidateNotNullOrEmpty()]
         [string]$WorkspaceId,
 
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
         [ValidateNotNullOrEmpty()]
+        [Alias('id')]
         [string]$MountedDataFactoryId,
 
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $false, ValueFromPipelineByPropertyName = $true)]
         [ValidateNotNullOrEmpty()]
         [ValidatePattern('^[a-zA-Z0-9_ ]*$')]
+        [Alias('DisplayName')]
         [string]$MountedDataFactoryName,
 
-        [Parameter(Mandatory = $false)]
+        [Parameter(Mandatory = $false, ValueFromPipelineByPropertyName = $true)]
         [ValidateNotNullOrEmpty()]
+        [Alias('Description')]
         [string]$MountedDataFactoryDescription
     )
     try {
+        # Validate that at least one update parameter is provided
+        if (-not $MountedDataFactoryName -and -not $MountedDataFactoryDescription) {
+            Write-FabricLog -Message "At least one of MountedDataFactoryName or MountedDataFactoryDescription must be specified" -Level Error
+            return
+        }
+
         Invoke-FabricAuthCheck -ThrowOnFailure
 
-
         # Construct the API endpoint URI
-        $apiEndpointURI = "{0}/workspaces/{1}/mountedDataFactories/{2}" -f $script:FabricAuthContext.BaseUrl, $WorkspaceId, $MountedDataFactoryId
+        $apiEndpointURI = New-FabricAPIUri -Resource 'workspaces' -WorkspaceId $WorkspaceId -Subresource 'mountedDataFactories' -ItemId $MountedDataFactoryId
         Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
 
         # Construct the request body
-        $body = @{
-            displayName = $MountedDataFactoryName
+        $body = @{}
+
+        if ($MountedDataFactoryName) {
+            $body.displayName = $MountedDataFactoryName
         }
 
         if ($MountedDataFactoryDescription) {
@@ -14301,7 +17633,7 @@ function Update-FabricMountedDataFactory {
         Write-FabricLog -Message "Failed to update Mounted Data Factory. Error: $errorDetails" -Level Error
     }
 }
-#EndRegion '.\Public\Mounted Data Factory\Update-FabricMountedDataFactory.ps1' 94
+#EndRegion '.\Public\Mounted Data Factory\Update-FabricMountedDataFactory.ps1' 104
 #Region '.\Public\Mounted Data Factory\Update-FabricMountedDataFactoryDefinition.ps1' -1
 
 <#
@@ -14452,6 +17784,9 @@ resource Id from a prior call.
 Optional. When supplied, returns only the notebook whose display name exactly matches this string. Do not combine with
 NotebookId.
 
+.PARAMETER Raw
+When specified, returns the raw API response without any filtering or formatting.
+
 .EXAMPLE
 Get-FabricNotebook -WorkspaceId "12345" -NotebookId "aaaaaaaa-bbbb-cccc-dddd-ffffffffffff"
 
@@ -14467,6 +17802,11 @@ Get-FabricNotebook -WorkspaceId "12345"
 
 Lists all notebooks in the workspace.
 
+.EXAMPLE
+Get-FabricNotebook -WorkspaceId "12345" -Raw
+
+Returns the raw API response for all notebooks in the workspace without any processing.
+
 .NOTES
 - Requires `$FabricConfig` global configuration, including BaseUrl and FabricHeaders.
 - Calls Test-TokenExpired to ensure token validity before making the API request.
@@ -14477,8 +17817,9 @@ Author: Tiago Balabuch
 function Get-FabricNotebook {
     [CmdletBinding()]
     param (
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
         [ValidateNotNullOrEmpty()]
+        [Alias('id')]
         [string]$WorkspaceId,
 
         [Parameter(Mandatory = $false)]
@@ -14488,70 +17829,45 @@ function Get-FabricNotebook {
         [Parameter(Mandatory = $false)]
         [ValidateNotNullOrEmpty()]
         [ValidatePattern('^[a-zA-Z0-9_ ]*$')]
-        [string]$NotebookName
+        [string]$NotebookName,
+
+        [Parameter()]
+        [switch]$Raw
     )
-    try {
-        # Validate input parameters
-        if ($NotebookId -and $NotebookName) {
-            Write-FabricLog -Message "Specify only one parameter: either 'NotebookId' or 'NotebookName'." -Level Error
-            return $null
+
+    process {
+        try {
+            # Validate input parameters
+            if ($NotebookId -and $NotebookName) {
+                Write-FabricLog -Message "Specify only one parameter: either 'NotebookId' or 'NotebookName'." -Level Error
+                return
+            }
+
+            Invoke-FabricAuthCheck -ThrowOnFailure
+
+            # Construct the API endpoint URI
+            $apiEndpointURI = "{0}/workspaces/{1}/notebooks" -f $script:FabricAuthContext.BaseUrl, $WorkspaceId
+            Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
+
+            # Make the API request
+            $apiParams = @{
+                BaseURI = $apiEndpointURI
+                Headers = $script:FabricAuthContext.FabricHeaders
+                Method  = 'Get'
+            }
+            $dataItems = Invoke-FabricAPIRequest @apiParams
+
+            # Apply filtering and formatting
+            Select-FabricResource -InputObject $dataItems -Id $NotebookId -DisplayName $NotebookName -ResourceType 'Notebook' -TypeName 'MicrosoftFabric.Notebook' -Raw:$Raw
         }
-
-        Invoke-FabricAuthCheck -ThrowOnFailure
-
-
-        # Construct the API endpoint URI
-        $apiEndpointURI = "{0}/workspaces/{1}/notebooks" -f $script:FabricAuthContext.BaseUrl, $WorkspaceId
-        Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
-
-        # Make the API request
-        # Make the API request
-        $apiParams = @{
-            BaseURI = $apiEndpointURI
-            Headers = $script:FabricAuthContext.FabricHeaders
-            Method = 'Get'
+        catch {
+            # Capture and log error details
+            $errorDetails = $_.Exception.Message
+            Write-FabricLog -Message "Failed to retrieve Notebook for workspace '$WorkspaceId'. Error: $errorDetails" -Level Error
         }
-        $dataItems = Invoke-FabricAPIRequest @apiParams
-
-        # Immediately handle empty response
-        if (-not $dataItems) {
-            Write-FabricLog -Message "No data returned from the API." -Level Warning
-            return $null
-        }
-
-        # Apply filtering logic efficiently
-        if ($NotebookId) {
-            $matchedItems = $dataItems.Where({ $_.Id -eq $NotebookId }, 'First')
-        }
-        elseif ($NotebookName) {
-            $matchedItems = $dataItems.Where({ $_.DisplayName -eq $NotebookName }, 'First')
-        }
-        else {
-            Write-FabricLog -Message "No filter provided. Returning all items." -Level Debug
-            $matchedItems = $dataItems
-        }
-
-        # Handle results
-        if ($matchedItems) {
-            Write-FabricLog -Message "Item(s) found matching the specified criteria." -Level Debug
-
-            # Add type decoration for custom formatting
-            $matchedItems | Add-FabricTypeName -TypeName 'MicrosoftFabric.Notebook'
-
-            return $matchedItems
-        }
-        else {
-            Write-FabricLog -Message "No item found matching the provided criteria." -Level Warning
-            return $null
-        }
-    }
-    catch {
-        # Capture and log error details
-        $errorDetails = $_.Exception.Message
-        Write-FabricLog -Message "Failed to retrieve Notebook. Error: $errorDetails" -Level Error
     }
 }
-#EndRegion '.\Public\Notebook\Get-FabricNotebook.ps1' 119
+#EndRegion '.\Public\Notebook\Get-FabricNotebook.ps1' 103
 #Region '.\Public\Notebook\Get-FabricNotebookDefinition.ps1' -1
 
 
@@ -14593,8 +17909,9 @@ Author: Updated by Jess Pomfret and Rob Sewell November 2026
 function Get-FabricNotebookDefinition {
     [CmdletBinding()]
     param (
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
         [ValidateNotNullOrEmpty()]
+        [Alias('id')]
         [string]$WorkspaceId,
 
         [Parameter(Mandatory = $false)]
@@ -14635,7 +17952,7 @@ function Get-FabricNotebookDefinition {
         Write-FabricLog -Message "Failed to retrieve Notebook. Error: $errorDetails" -Level Error
     }
 }
-#EndRegion '.\Public\Notebook\Get-FabricNotebookDefinition.ps1' 82
+#EndRegion '.\Public\Notebook\Get-FabricNotebookDefinition.ps1' 83
 #Region '.\Public\Notebook\Get-FabricNotebookLivySession.ps1' -1
 
 <#
@@ -14673,8 +17990,9 @@ Author: Tiago Balabuch
 function Get-FabricNotebookLivySession {
     [CmdletBinding()]
     param (
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
         [ValidateNotNullOrEmpty()]
+        [Alias('id')]
         [string]$WorkspaceId,
 
         [Parameter(Mandatory = $true)]
@@ -14732,7 +18050,7 @@ function Get-FabricNotebookLivySession {
         Write-FabricLog -Message "Failed to retrieve Notebook Livy Session. Error: $errorDetails" -Level Error
     }
 }
-#EndRegion '.\Public\Notebook\Get-FabricNotebookLivySession.ps1' 95
+#EndRegion '.\Public\Notebook\Get-FabricNotebookLivySession.ps1' 96
 #Region '.\Public\Notebook\New-FabricNotebook.ps1' -1
 
 <#
@@ -14775,8 +18093,9 @@ Author: Tiago Balabuch
 function New-FabricNotebook {
     [CmdletBinding(SupportsShouldProcess = $true, ConfirmImpact = 'Medium')]
     param (
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
         [ValidateNotNullOrEmpty()]
+        [Alias('id')]
         [string]$WorkspaceId,
 
         [Parameter(Mandatory = $true)]
@@ -14802,6 +18121,7 @@ function New-FabricNotebook {
         [string]$NotebookFormat = 'ipynb'
     )
 
+    process {
     try {
         Invoke-FabricAuthCheck -ThrowOnFailure
 
@@ -14895,8 +18215,9 @@ function New-FabricNotebook {
         $errorDetails = $_.Exception.Message
         Write-FabricLog -Message "Failed to create notebook. Error: $errorDetails" -Level Error
     }
+    }
 }
-#EndRegion '.\Public\Notebook\New-FabricNotebook.ps1' 162
+#EndRegion '.\Public\Notebook\New-FabricNotebook.ps1' 165
 #Region '.\Public\Notebook\New-FabricNotebookNEW.ps1' -1
 
 <#
@@ -15114,15 +18435,16 @@ Author: Tiago Balabuch
 function Remove-FabricNotebook {
     [CmdletBinding(SupportsShouldProcess = $true, ConfirmImpact = 'High')]
     param (
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
         [ValidateNotNullOrEmpty()]
         [string]$WorkspaceId,
 
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
         [ValidateNotNullOrEmpty()]
+        [Alias('id')]
         [string]$NotebookId
     )
-
+    process {
     try {
         Invoke-FabricAuthCheck -ThrowOnFailure
 
@@ -15152,8 +18474,9 @@ function Remove-FabricNotebook {
         $errorDetails = $_.Exception.Message
         Write-FabricLog -Message "Failed to delete notebook '$NotebookId' from workspace '$WorkspaceId'. Error: $errorDetails" -Level Error
     }
+    }
 }
-#EndRegion '.\Public\Notebook\Remove-FabricNotebook.ps1' 68
+#EndRegion '.\Public\Notebook\Remove-FabricNotebook.ps1' 70
 #Region '.\Public\Notebook\Update-FabricNotebook.ps1' -1
 
 <#
@@ -15195,34 +18518,45 @@ Author: Tiago Balabuch
 function Update-FabricNotebook {
     [CmdletBinding(SupportsShouldProcess = $true, ConfirmImpact = 'Medium')]
     param (
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
         [ValidateNotNullOrEmpty()]
         [string]$WorkspaceId,
 
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
         [ValidateNotNullOrEmpty()]
+        [Alias('id')]
         [string]$NotebookId,
 
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $false, ValueFromPipelineByPropertyName = $true)]
         [ValidateNotNullOrEmpty()]
         [ValidatePattern('^[a-zA-Z0-9_ ]*$')]
+        [Alias('DisplayName')]
         [string]$NotebookName,
 
-        [Parameter(Mandatory = $false)]
+        [Parameter(Mandatory = $false, ValueFromPipelineByPropertyName = $true)]
         [ValidateNotNullOrEmpty()]
+        [Alias('Description')]
         [string]$NotebookDescription
     )
+    process {
     try {
+        # Validate that at least one update parameter is provided
+        if (-not $NotebookName -and -not $NotebookDescription) {
+            Write-FabricLog -Message "At least one of NotebookName or NotebookDescription must be specified" -Level Error
+            return
+        }
+
         Invoke-FabricAuthCheck -ThrowOnFailure
 
-
         # Construct the API endpoint URI
-        $apiEndpointURI = "{0}/workspaces/{1}/notebooks/{2}" -f $script:FabricAuthContext.BaseUrl, $WorkspaceId, $NotebookId
+        $apiEndpointURI = New-FabricAPIUri -Resource 'workspaces' -WorkspaceId $WorkspaceId -Subresource 'notebooks' -ItemId $NotebookId
         Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
 
         # Construct the request body
-        $body = @{
-            displayName = $NotebookName
+        $body = @{}
+
+        if ($NotebookName) {
+            $body.displayName = $NotebookName
         }
 
         if ($NotebookDescription) {
@@ -15255,8 +18589,9 @@ function Update-FabricNotebook {
         $errorDetails = $_.Exception.Message
         Write-FabricLog -Message "Failed to update notebook. Error: $errorDetails" -Level Error
     }
+    }
 }
-#EndRegion '.\Public\Notebook\Update-FabricNotebook.ps1' 101
+#EndRegion '.\Public\Notebook\Update-FabricNotebook.ps1' 113
 #Region '.\Public\Notebook\Update-FabricNotebookDefinition.ps1' -1
 
 <#
@@ -15304,12 +18639,13 @@ Author: Tiago Balabuch
 function Update-FabricNotebookDefinition {
     [CmdletBinding(SupportsShouldProcess = $true, ConfirmImpact = 'Medium')]
     param (
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
         [ValidateNotNullOrEmpty()]
         [string]$WorkspaceId,
 
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
         [ValidateNotNullOrEmpty()]
+        [Alias('id')]
         [string]$NotebookId,
 
         [Parameter(Mandatory = $true)]
@@ -15325,13 +18661,12 @@ function Update-FabricNotebookDefinition {
         [ValidateSet('ipynb', 'fabricGitSource')]
         [string]$NotebookFormat = 'ipynb'
     )
-
+    process {
     try {
         Invoke-FabricAuthCheck -ThrowOnFailure
 
-
         # Construct the API endpoint URI with filtering logic
-        $apiEndpointURI = "{0}/workspaces/{1}/notebooks/{2}/updateDefinition" -f $script:FabricAuthContext.BaseUrl, $WorkspaceId, $NotebookId
+        $apiEndpointURI = New-FabricAPIUri -Resource 'workspaces' -WorkspaceId $WorkspaceId -Subresource 'notebooks' -ItemId $NotebookId -AdditionalPath 'updateDefinition'
         if ($NotebookPathPlatformDefinition) {
             $apiEndpointURI = "$apiEndpointURI?updateMetadata=true"
         }
@@ -15404,8 +18739,9 @@ function Update-FabricNotebookDefinition {
         $errorDetails = $_.Exception.Message
         Write-FabricLog -Message "Failed to update notebook. Error: $errorDetails" -Level Error
     }
+    }
 }
-#EndRegion '.\Public\Notebook\Update-FabricNotebookDefinition.ps1' 147
+#EndRegion '.\Public\Notebook\Update-FabricNotebookDefinition.ps1' 148
 #Region '.\Public\OneLake\Get-FabricOneLakeDataAccessSecurity.ps1' -1
 
 <#
@@ -15461,8 +18797,9 @@ function Update-FabricNotebookDefinition {
 function Get-FabricOneLakeDataAccessSecurity {
     [CmdletBinding()]
     param (
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
         [ValidateNotNullOrEmpty()]
+        [Alias('id')]
         [string]$WorkspaceId,
 
         [Parameter(Mandatory = $true)]
@@ -15512,7 +18849,7 @@ function Get-FabricOneLakeDataAccessSecurity {
         Write-FabricLog -Message "Failed to get OneLake Data Access Security. Error: $errorDetails" -Level Error
     }
 }
-#EndRegion '.\Public\OneLake\Get-FabricOneLakeDataAccessSecurity.ps1' 105
+#EndRegion '.\Public\OneLake\Get-FabricOneLakeDataAccessSecurity.ps1' 106
 #Region '.\Public\OneLake\Get-FabricOneLakeShortcut.ps1' -1
 
 <#
@@ -15552,8 +18889,9 @@ function Get-FabricOneLakeDataAccessSecurity {
 function Get-FabricOneLakeShortcut {
     [CmdletBinding()]
     param (
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
         [ValidateNotNullOrEmpty()]
+        [Alias('id')]
         [string]$WorkspaceId,
 
         [Parameter(Mandatory = $true)]
@@ -15620,7 +18958,7 @@ function Get-FabricOneLakeShortcut {
         Write-FabricLog -Message "Failed to retrieve OneLake Shortcut(s). Error details: $errorDetails" -Level Error
     }
 }
-#EndRegion '.\Public\OneLake\Get-FabricOneLakeShortcut.ps1' 106
+#EndRegion '.\Public\OneLake\Get-FabricOneLakeShortcut.ps1' 107
 #Region '.\Public\OneLake\New-FabricOneLakeShortcut.ps1' -1
 
 <#
@@ -16199,6 +19537,9 @@ function Set-FabricOneLakeDataAccessSecurity {
 .PARAMETER PaginatedReportName
     The name of the paginated report to retrieve. This parameter is optional.
 
+.PARAMETER Raw
+    If specified, returns the raw API response without any transformation or filtering.
+
 .EXAMPLE
     Get-FabricPaginatedReports -WorkspaceId "workspace-12345" -PaginatedReportId "report-67890"
     This example retrieves the paginated report details for the report with ID "report-67890" in the workspace with ID "workspace-12345".
@@ -16206,6 +19547,10 @@ function Set-FabricOneLakeDataAccessSecurity {
 .EXAMPLE
     Get-FabricPaginatedReports -WorkspaceId "workspace-12345" -PaginatedReportName "My Paginated Report"
     This example retrieves the paginated report details for the report named "My Paginated Report" in the workspace with ID "workspace-12345".
+
+.EXAMPLE
+    Get-FabricPaginatedReport -WorkspaceId "workspace-12345" -Raw
+    This example retrieves all paginated reports in the workspace with raw API response format.
 
 .NOTES
     - Requires `$FabricConfig` global configuration, including `BaseUrl` and `FabricHeaders`.
@@ -16217,8 +19562,9 @@ function Set-FabricOneLakeDataAccessSecurity {
 function Get-FabricPaginatedReport {
     [CmdletBinding()]
     param (
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
         [ValidateNotNullOrEmpty()]
+        [Alias('id')]
         [string]$WorkspaceId,
 
         [Parameter(Mandatory = $false)]
@@ -16228,67 +19574,46 @@ function Get-FabricPaginatedReport {
         [Parameter(Mandatory = $false)]
         [ValidateNotNullOrEmpty()]
         [ValidatePattern('^[a-zA-Z0-9_ ]*$')]
-        [string]$PaginatedReportName
+        [string]$PaginatedReportName,
+
+        [Parameter(Mandatory = $false)]
+        [switch]$Raw
     )
-    try {
-        # Validate input parameters
-        if ($PaginatedReportId -and $PaginatedReportName) {
-            Write-FabricLog -Message "Specify only one parameter: either 'PaginatedReportId' or 'PaginatedReportName'." -Level Error
-            return $null
-        }
 
-        Invoke-FabricAuthCheck -ThrowOnFailure
+    process {
+        try {
+            # Validate input parameters
+            if ($PaginatedReportId -and $PaginatedReportName) {
+                Write-FabricLog -Message "Specify only one parameter: either 'PaginatedReportId' or 'PaginatedReportName'." -Level Error
+                return
+            }
+
+            Invoke-FabricAuthCheck -ThrowOnFailure
 
 
-        # Construct the API endpoint URI
-        $apiEndpointURI = "{0}/workspaces/{1}/paginatedReports" -f $script:FabricAuthContext.BaseUrl, $WorkspaceId
-          Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
+            # Construct the API endpoint URI
+            $apiEndpointURI = "{0}/workspaces/{1}/paginatedReports" -f $script:FabricAuthContext.BaseUrl, $WorkspaceId
+              Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
 
-         # Make the API request
-        $apiParams = @{
-            BaseURI = $apiEndpointURI
-            Headers = $script:FabricAuthContext.FabricHeaders
-            Method = 'Get'
-        }
-        $dataItems = Invoke-FabricAPIRequest @apiParams
+             # Make the API request
+            $apiParams = @{
+                BaseURI = $apiEndpointURI
+                Headers = $script:FabricAuthContext.FabricHeaders
+                Method = 'Get'
+            }
+            $dataItems = Invoke-FabricAPIRequest @apiParams
 
-        # Immediately handle empty response
-        if (-not $dataItems) {
-            Write-FabricLog -Message "No data returned from the API." -Level Warning
-            return $null
+            # Apply filtering and formatting
+            Select-FabricResource -InputObject $dataItems -Id $PaginatedReportId -DisplayName $PaginatedReportName -ResourceType 'PaginatedReport' -TypeName 'MicrosoftFabric.PaginatedReport' -Raw:$Raw
         }
-
-        # Apply filtering logic efficiently
-        if ($PaginatedReportId) {
-            $matchedItems = $dataItems.Where({ $_.Id -eq $PaginatedReportId }, 'First')
+        catch {
+            # Capture and log error details
+            $errorDetails = $_.Exception.Message
+            Write-FabricLog -Message "Failed to retrieve Paginated Report for workspace '$WorkspaceId'. Error: $errorDetails" -Level Error
         }
-        elseif ($PaginatedReportName) {
-            $matchedItems = $dataItems.Where({ $_.DisplayName -eq $PaginatedReportName }, 'First')
-        }
-        else {
-            Write-FabricLog -Message "No filter provided. Returning all items." -Level Debug
-            $matchedItems = $dataItems
-        }
-
-        # Handle results
-        if ($matchedItems) {
-            Write-FabricLog -Message "Item(s) found matching the specified criteria." -Level Debug
-            # Add type decoration for custom formatting
-            $matchedItems | Add-FabricTypeName -TypeName 'MicrosoftFabric.PaginatedReport'
-            return $matchedItems
-        }
-        else {
-            Write-FabricLog -Message "No item found matching the provided criteria." -Level Warning
-            return $null
-        }
-    }
-    catch {
-        # Capture and log error details
-        $errorDetails = $_.Exception.Message
-        Write-FabricLog -Message "Failed to retrieve Paginated Report. Error: $errorDetails" -Level Error
     }
 }
-#EndRegion '.\Public\Paginated Reports\Get-FabricPaginatedReport.ps1' 107
+#EndRegion '.\Public\Paginated Reports\Get-FabricPaginatedReport.ps1' 94
 #Region '.\Public\Paginated Reports\Update-FabricPaginatedReport.ps1' -1
 
 <#
@@ -16325,68 +19650,80 @@ function Get-FabricPaginatedReport {
 function Update-FabricPaginatedReport {
     [CmdletBinding(SupportsShouldProcess = $true, ConfirmImpact = 'Medium')]
     param (
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
         [ValidateNotNullOrEmpty()]
         [string]$WorkspaceId,
 
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
         [ValidateNotNullOrEmpty()]
+        [Alias('id')]
         [string]$PaginatedReportId,
 
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $false, ValueFromPipelineByPropertyName = $true)]
         [ValidateNotNullOrEmpty()]
         [ValidatePattern('^[a-zA-Z0-9_ ]*$')]
+        [Alias('DisplayName')]
         [string]$PaginatedReportName,
 
-        [Parameter(Mandatory = $false)]
+        [Parameter(Mandatory = $false, ValueFromPipelineByPropertyName = $true)]
         [ValidateNotNullOrEmpty()]
+        [Alias('Description')]
         [string]$PaginatedReportDescription
     )
-    try {
-        Invoke-FabricAuthCheck -ThrowOnFailure
-
-
-    # Construct the API endpoint URI
-    $apiEndpointUrl = "{0}/workspaces/{1}/paginatedReports/{2}" -f $script:FabricAuthContext.BaseUrl, $WorkspaceId, $PaginatedReportId
-    Write-FabricLog -Message "API Endpoint: $apiEndpointUrl" -Level Debug
-
-        # Construct the request body
-        $body = @{
-            displayName = $PaginatedReportName
-        }
-
-        if ($PaginatedReportDescription) {
-            $body.description = $PaginatedReportDescription
-        }
-
-        # Convert the body to JSON
-        $bodyJson = $body | ConvertTo-Json
-        Write-FabricLog -Message "Request Body: $bodyJson" -Level Debug
-
-       # Make the API request when confirmed
-        $target = "Paginated Report '$PaginatedReportId' in workspace '$WorkspaceId'"
-        $action = "Update Paginated Report display name/description"
-        if ($PSCmdlet.ShouldProcess($target, $action)) {
-            $apiParams = @{
-                Headers = $script:FabricAuthContext.FabricHeaders
-                BaseURI = $apiEndpointUrl
-                Method = 'Patch'
-                Body = $bodyJson
+    process {
+        try {
+            # Validate that at least one update parameter is provided
+            if (-not $PaginatedReportName -and -not $PaginatedReportDescription) {
+                Write-FabricLog -Message "At least one of PaginatedReportName or PaginatedReportDescription must be specified" -Level Error
+                return
             }
-            $response = Invoke-FabricAPIRequest @apiParams
 
-            # Return the API response
-            Write-FabricLog -Message "Paginated Report '$PaginatedReportName' updated successfully!" -Level Host
-            return $response
+            Invoke-FabricAuthCheck -ThrowOnFailure
+
+        # Construct the API endpoint URI
+        $apiEndpointUrl = New-FabricAPIUri -Resource 'workspaces' -WorkspaceId $WorkspaceId -Subresource 'paginatedReports' -ItemId $PaginatedReportId
+        Write-FabricLog -Message "API Endpoint: $apiEndpointUrl" -Level Debug
+
+            # Construct the request body
+            $body = @{}
+
+            if ($PaginatedReportName) {
+                $body.displayName = $PaginatedReportName
+            }
+
+            if ($PaginatedReportDescription) {
+                $body.description = $PaginatedReportDescription
+            }
+
+            # Convert the body to JSON
+            $bodyJson = $body | ConvertTo-Json
+            Write-FabricLog -Message "Request Body: $bodyJson" -Level Debug
+
+           # Make the API request when confirmed
+            $target = "Paginated Report '$PaginatedReportId' in workspace '$WorkspaceId'"
+            $action = "Update Paginated Report display name/description"
+            if ($PSCmdlet.ShouldProcess($target, $action)) {
+                $apiParams = @{
+                    Headers = $script:FabricAuthContext.FabricHeaders
+                    BaseURI = $apiEndpointUrl
+                    Method = 'Patch'
+                    Body = $bodyJson
+                }
+                $response = Invoke-FabricAPIRequest @apiParams
+
+                # Return the API response
+                Write-FabricLog -Message "Paginated Report '$PaginatedReportName' updated successfully!" -Level Host
+                return $response
+            }
         }
-    }
-    catch {
-        # Capture and log error details
-        $errorDetails = $_.Exception.Message
-        Write-FabricLog -Message "Failed to update Paginated Report. Error: $errorDetails" -Level Error
+        catch {
+            # Capture and log error details
+            $errorDetails = $_.Exception.Message
+            Write-FabricLog -Message "Failed to update Paginated Report. Error: $errorDetails" -Level Error
+        }
     }
 }
-#EndRegion '.\Public\Paginated Reports\Update-FabricPaginatedReport.ps1' 96
+#EndRegion '.\Public\Paginated Reports\Update-FabricPaginatedReport.ps1' 108
 #Region '.\Public\Reflex\Get-FabricReflex.ps1' -1
 
 <#
@@ -16406,6 +19743,9 @@ function Update-FabricPaginatedReport {
 .PARAMETER ReflexName
     The name of the Reflex to retrieve. This parameter is optional.
 
+.PARAMETER Raw
+    If specified, returns the raw API response without any transformation or filtering.
+
 .EXAMPLE
     Get-FabricReflex -WorkspaceId "workspace-12345" -ReflexId "Reflex-67890"
     This example retrieves the Reflex details for the Reflex with ID "Reflex-67890" in the workspace with ID "workspace-12345".
@@ -16413,6 +19753,10 @@ function Update-FabricPaginatedReport {
 .EXAMPLE
     Get-FabricReflex -WorkspaceId "workspace-12345" -ReflexName "My Reflex"
     This example retrieves the Reflex details for the Reflex named "My Reflex" in the workspace with ID "workspace-12345".
+
+.EXAMPLE
+    Get-FabricReflex -WorkspaceId "workspace-12345" -Raw
+    This example retrieves all Reflexes in the workspace with raw API response format.
 
 .NOTES
     - Requires `$FabricConfig` global configuration, including `BaseUrl` and `FabricHeaders`.
@@ -16424,8 +19768,9 @@ function Update-FabricPaginatedReport {
 function Get-FabricReflex {
     [CmdletBinding()]
     param (
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
         [ValidateNotNullOrEmpty()]
+        [Alias('id')]
         [string]$WorkspaceId,
 
         [Parameter(Mandatory = $false)]
@@ -16435,68 +19780,46 @@ function Get-FabricReflex {
         [Parameter(Mandatory = $false)]
         [ValidateNotNullOrEmpty()]
         [ValidatePattern('^[a-zA-Z0-9_ ]*$')]
-        [string]$ReflexName
+        [string]$ReflexName,
+
+        [Parameter(Mandatory = $false)]
+        [switch]$Raw
     )
-    try {
-        # Validate input parameters
-        if ($ReflexId -and $ReflexName) {
-            Write-FabricLog -Message "Specify only one parameter: either 'ReflexId' or 'ReflexName'." -Level Error
-            return $null
-        }
 
-        Invoke-FabricAuthCheck -ThrowOnFailure
+    process {
+        try {
+            # Validate input parameters
+            if ($ReflexId -and $ReflexName) {
+                Write-FabricLog -Message "Specify only one parameter: either 'ReflexId' or 'ReflexName'." -Level Error
+                return
+            }
+
+            Invoke-FabricAuthCheck -ThrowOnFailure
 
 
-        # Construct the API endpoint URI
-        $apiEndpointURI = "{0}/workspaces/{1}/reflexes" -f $script:FabricAuthContext.BaseUrl, $WorkspaceId
-        Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
+            # Construct the API endpoint URI
+            $apiEndpointURI = "{0}/workspaces/{1}/reflexes" -f $script:FabricAuthContext.BaseUrl, $WorkspaceId
+            Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
 
-        # Make the API request
-        $apiParams = @{
-            BaseURI = $apiEndpointURI
-            Headers = $script:FabricAuthContext.FabricHeaders
-            Method = 'Get'
-        }
-        $dataItems = Invoke-FabricAPIRequest @apiParams
+            # Make the API request
+            $apiParams = @{
+                BaseURI = $apiEndpointURI
+                Headers = $script:FabricAuthContext.FabricHeaders
+                Method = 'Get'
+            }
+            $dataItems = Invoke-FabricAPIRequest @apiParams
 
-        # Immediately handle empty response
-        if (-not $dataItems) {
-            Write-FabricLog -Message "No data returned from the API." -Level Warning
-            return $null
+            # Apply filtering and formatting
+            Select-FabricResource -InputObject $dataItems -Id $ReflexId -DisplayName $ReflexName -ResourceType 'Reflex' -TypeName 'MicrosoftFabric.Reflex' -Raw:$Raw
         }
-
-        # Apply filtering logic efficiently
-        if ($ReflexId) {
-            $matchedItems = $dataItems.Where({ $_.Id -eq $ReflexId }, 'First')
-        }
-        elseif ($ReflexName) {
-            $matchedItems = $dataItems.Where({ $_.DisplayName -eq $ReflexName }, 'First')
-        }
-        else {
-            Write-FabricLog -Message "No filter provided. Returning all items." -Level Debug
-            $matchedItems = $dataItems
-        }
-
-        # Handle results
-        if ($matchedItems) {
-            Write-FabricLog -Message "Item(s) found matching the specified criteria." -Level Debug
-            # Add type decoration for custom formatting
-            $matchedItems | Add-FabricTypeName -TypeName 'MicrosoftFabric.Reflex'
-            return $matchedItems
-        }
-        else {
-            Write-FabricLog -Message "No item found matching the provided criteria." -Level Warning
-            return $null
+        catch {
+            # Capture and log error details
+            $errorDetails = $_.Exception.Message
+            Write-FabricLog -Message "Failed to retrieve Reflex for workspace '$WorkspaceId'. Error: $errorDetails" -Level Error
         }
     }
-    catch {
-        # Capture and log error details
-        $errorDetails = $_.Exception.Message
-        Write-FabricLog -Message "Failed to retrieve Reflex. Error: $errorDetails" -Level Error
-    }
-
 }
-#EndRegion '.\Public\Reflex\Get-FabricReflex.ps1' 108
+#EndRegion '.\Public\Reflex\Get-FabricReflex.ps1' 94
 #Region '.\Public\Reflex\Get-FabricReflexDefinition.ps1' -1
 
 <#
@@ -16534,8 +19857,9 @@ function Get-FabricReflex {
 function Get-FabricReflexDefinition {
     [CmdletBinding()]
     param (
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
         [ValidateNotNullOrEmpty()]
+        [Alias('id')]
         [string]$WorkspaceId,
 
         [Parameter(Mandatory = $false)]
@@ -16576,7 +19900,7 @@ function Get-FabricReflexDefinition {
     }
 
 }
-#EndRegion '.\Public\Reflex\Get-FabricReflexDefinition.ps1' 78
+#EndRegion '.\Public\Reflex\Get-FabricReflexDefinition.ps1' 79
 #Region '.\Public\Reflex\New-FabricReflex.ps1' -1
 
 <#
@@ -16757,15 +20081,17 @@ function New-FabricReflex {
 function Remove-FabricReflex {
     [CmdletBinding(SupportsShouldProcess=$true, ConfirmImpact='High')]
     param (
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
         [ValidateNotNullOrEmpty()]
         [string]$WorkspaceId,
 
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
         [ValidateNotNullOrEmpty()]
+        [Alias('id')]
         [string]$ReflexId
     )
-    try {
+    process {
+        try {
         Invoke-FabricAuthCheck -ThrowOnFailure
 
 
@@ -16791,9 +20117,10 @@ function Remove-FabricReflex {
         # Capture and log error details
         $errorDetails = $_.Exception.Message
         Write-FabricLog -Message "Failed to delete Reflex '$ReflexId'. Error: $errorDetails" -Level Error
+        }
     }
 }
-#EndRegion '.\Public\Reflex\Remove-FabricReflex.ps1' 65
+#EndRegion '.\Public\Reflex\Remove-FabricReflex.ps1' 68
 #Region '.\Public\Reflex\Update-FabricReflex.ps1' -1
 
 <#
@@ -16830,34 +20157,45 @@ function Remove-FabricReflex {
 function Update-FabricReflex {
     [CmdletBinding(SupportsShouldProcess=$true, ConfirmImpact='Medium')]
     param (
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
         [ValidateNotNullOrEmpty()]
         [string]$WorkspaceId,
 
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
         [ValidateNotNullOrEmpty()]
+        [Alias('id')]
         [string]$ReflexId,
 
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $false, ValueFromPipelineByPropertyName = $true)]
         [ValidateNotNullOrEmpty()]
         [ValidatePattern('^[a-zA-Z0-9_ ]*$')]
+        [Alias('DisplayName')]
         [string]$ReflexName,
 
-        [Parameter(Mandatory = $false)]
+        [Parameter(Mandatory = $false, ValueFromPipelineByPropertyName = $true)]
         [ValidateNotNullOrEmpty()]
+        [Alias('Description')]
         [string]$ReflexDescription
     )
-    try {
-        Invoke-FabricAuthCheck -ThrowOnFailure
+    process {
+        try {
+            # Validate that at least one update parameter is provided
+            if (-not $ReflexName -and -not $ReflexDescription) {
+                Write-FabricLog -Message "At least one of ReflexName or ReflexDescription must be specified" -Level Error
+                return
+            }
 
+            Invoke-FabricAuthCheck -ThrowOnFailure
 
         # Construct the API endpoint URI
-        $apiEndpointURI = "{0}/workspaces/{1}/reflexes/{2}" -f $script:FabricAuthContext.BaseUrl, $WorkspaceId, $ReflexId
+        $apiEndpointURI = New-FabricAPIUri -Resource 'workspaces' -WorkspaceId $WorkspaceId -Subresource 'reflexes' -ItemId $ReflexId
         Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
 
         # Construct the request body
-        $body = @{
-            displayName = $ReflexName
+        $body = @{}
+
+        if ($ReflexName) {
+            $body.displayName = $ReflexName
         }
 
         if ($ReflexDescription) {
@@ -16887,9 +20225,10 @@ function Update-FabricReflex {
         # Capture and log error details
         $errorDetails = $_.Exception.Message
         Write-FabricLog -Message "Failed to update Reflex. Error: $errorDetails" -Level Error
+        }
     }
 }
-#EndRegion '.\Public\Reflex\Update-FabricReflex.ps1' 94
+#EndRegion '.\Public\Reflex\Update-FabricReflex.ps1' 106
 #Region '.\Public\Reflex\Update-FabricReflexDefinition.ps1' -1
 
 <#
@@ -16926,12 +20265,13 @@ function Update-FabricReflex {
 function Update-FabricReflexDefinition {
     [CmdletBinding(SupportsShouldProcess=$true, ConfirmImpact='Medium')]
     param (
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
         [ValidateNotNullOrEmpty()]
         [string]$WorkspaceId,
 
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
         [ValidateNotNullOrEmpty()]
+        [Alias('id')]
         [string]$ReflexId,
 
         [Parameter(Mandatory = $true)]
@@ -16942,8 +20282,9 @@ function Update-FabricReflexDefinition {
         [ValidateNotNullOrEmpty()]
         [string]$ReflexPathPlatformDefinition
     )
-    try {
-        Invoke-FabricAuthCheck -ThrowOnFailure
+    process {
+        try {
+            Invoke-FabricAuthCheck -ThrowOnFailure
 
 
         # Construct the API endpoint URI with filtering logic
@@ -17016,9 +20357,10 @@ function Update-FabricReflexDefinition {
         # Capture and log error details
         $errorDetails = $_.Exception.Message
         Write-FabricLog -Message "Failed to update Reflex. Error: $errorDetails" -Level Error
+        }
     }
 }
-#EndRegion '.\Public\Reflex\Update-FabricReflexDefinition.ps1' 127
+#EndRegion '.\Public\Reflex\Update-FabricReflexDefinition.ps1' 130
 #Region '.\Public\Report\Get-FabricReport.ps1' -1
 
 <#
@@ -17038,6 +20380,9 @@ function Update-FabricReflexDefinition {
 .PARAMETER ReportName
     The name of the Report to retrieve. This parameter is optional.
 
+.PARAMETER Raw
+    When specified, returns the raw API response without any filtering or formatting.
+
 .EXAMPLE
     Get-FabricReport -WorkspaceId "workspace-12345" -ReportId "Report-67890"
     This example retrieves the Report details for the Report with ID "Report-67890" in the workspace with ID "workspace-12345".
@@ -17045,6 +20390,10 @@ function Update-FabricReflexDefinition {
 .EXAMPLE
     Get-FabricReport -WorkspaceId "workspace-12345" -ReportName "My Report"
     This example retrieves the Report details for the Report named "My Report" in the workspace with ID "workspace-12345".
+
+.EXAMPLE
+    Get-FabricReport -WorkspaceId "workspace-12345" -Raw
+    This example returns the raw API response for all reports in the workspace without any processing.
 
 .NOTES
     - Requires `$FabricConfig` global configuration, including `BaseUrl` and `FabricHeaders`.
@@ -17056,8 +20405,9 @@ function Update-FabricReflexDefinition {
 function Get-FabricReport {
     [CmdletBinding()]
     param (
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
         [ValidateNotNullOrEmpty()]
+        [Alias('id')]
         [string]$WorkspaceId,
 
         [Parameter(Mandatory = $false)]
@@ -17067,68 +20417,45 @@ function Get-FabricReport {
         [Parameter(Mandatory = $false)]
         [ValidateNotNullOrEmpty()]
         [ValidatePattern('^[a-zA-Z0-9_ ]*$')]
-        [string]$ReportName
+        [string]$ReportName,
+
+        [Parameter()]
+        [switch]$Raw
     )
-    try {
-        # Validate input parameters
-        if ($ReportId -and $ReportName) {
-            Write-FabricLog -Message "Specify only one parameter: either 'ReportId' or 'ReportName'." -Level Error
-            return $null
-        }
 
-        Invoke-FabricAuthCheck -ThrowOnFailure
+    process {
+        try {
+            # Validate input parameters
+            if ($ReportId -and $ReportName) {
+                Write-FabricLog -Message "Specify only one parameter: either 'ReportId' or 'ReportName'." -Level Error
+                return
+            }
 
+            Invoke-FabricAuthCheck -ThrowOnFailure
 
-        # Construct the API endpoint URI
-        $apiEndpointURI = "{0}/workspaces/{1}/reports" -f $script:FabricAuthContext.BaseUrl, $WorkspaceId
-        Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
+            # Construct the API endpoint URI
+            $apiEndpointURI = New-FabricAPIUri -Resource 'workspaces' -WorkspaceId $WorkspaceId -Subresource 'reports'
+            Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
 
-        # Make the API request
-        # Make the API request
-        $apiParams = @{
-            BaseURI = $apiEndpointURI
-            Headers = $script:FabricAuthContext.FabricHeaders
-            Method = 'Get'
-        }
-        $dataItems = Invoke-FabricAPIRequest @apiParams
+            # Make the API request
+            $apiParams = @{
+                BaseURI = $apiEndpointURI
+                Headers = $script:FabricAuthContext.FabricHeaders
+                Method  = 'Get'
+            }
+            $dataItems = Invoke-FabricAPIRequest @apiParams
 
-        # Immediately handle empty response
-        if (-not $dataItems) {
-            Write-FabricLog -Message "No data returned from the API." -Level Warning
-            return $null
+            # Apply filtering and formatting
+            Select-FabricResource -InputObject $dataItems -Id $ReportId -DisplayName $ReportName -ResourceType 'Report' -TypeName 'MicrosoftFabric.Report' -Raw:$Raw
         }
-
-        # Apply filtering logic efficiently
-        if ($ReportId) {
-            $matchedItems = $dataItems.Where({ $_.Id -eq $ReportId }, 'First')
+        catch {
+            # Capture and log error details
+            $errorDetails = $_.Exception.Message
+            Write-FabricLog -Message "Failed to retrieve Report for workspace '$WorkspaceId'. Error: $errorDetails" -Level Error
         }
-        elseif ($ReportName) {
-            $matchedItems = $dataItems.Where({ $_.DisplayName -eq $ReportName }, 'First')
-        }
-        else {
-            Write-FabricLog -Message "No filter provided. Returning all items." -Level Debug
-            $matchedItems = $dataItems
-        }
-
-        # Handle results
-        if ($matchedItems) {
-            Write-FabricLog -Message "Item(s) found matching the specified criteria." -Level Debug
-            # Add type decoration for custom formatting
-            $matchedItems | Add-FabricTypeName -TypeName 'MicrosoftFabric.Report'
-            return $matchedItems
-        }
-        else {
-            Write-FabricLog -Message "No item found matching the provided criteria." -Level Warning
-            return $null
-        }
-    }
-    catch {
-        # Capture and log error details
-        $errorDetails = $_.Exception.Message
-        Write-FabricLog -Message "Failed to retrieve Report. Error: $errorDetails" -Level Error
     }
 }
-#EndRegion '.\Public\Report\Get-FabricReport.ps1' 108
+#EndRegion '.\Public\Report\Get-FabricReport.ps1' 93
 #Region '.\Public\Report\Get-FabricReportDefinition.ps1' -1
 
 <#
@@ -17166,8 +20493,9 @@ function Get-FabricReport {
 function Get-FabricReportDefinition {
     [CmdletBinding()]
     param (
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
         [ValidateNotNullOrEmpty()]
+        [Alias('id')]
         [string]$WorkspaceId,
 
         [Parameter(Mandatory = $false)]
@@ -17208,7 +20536,7 @@ function Get-FabricReportDefinition {
         Write-FabricLog -Message "Failed to retrieve Report. Error: $errorDetails" -Level Error
     }
 }
-#EndRegion '.\Public\Report\Get-FabricReportDefinition.ps1' 78
+#EndRegion '.\Public\Report\Get-FabricReportDefinition.ps1' 79
 #Region '.\Public\Report\New-FabricReport.ps1' -1
 
 <#
@@ -17348,43 +20676,46 @@ function New-FabricReport {
 function Remove-FabricReport {
     [CmdletBinding(SupportsShouldProcess=$true, ConfirmImpact='High')]
     param (
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
         [ValidateNotNullOrEmpty()]
         [string]$WorkspaceId,
 
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
         [ValidateNotNullOrEmpty()]
+        [Alias('id')]
         [string]$ReportId
     )
-    try {
-        Invoke-FabricAuthCheck -ThrowOnFailure
+    process {
+        try {
+            Invoke-FabricAuthCheck -ThrowOnFailure
 
 
-        # Construct the API endpoint URI
-        $apiEndpointURI = "{0}/workspaces/{1}/reports/{2}" -f $script:FabricAuthContext.BaseUrl, $WorkspaceId, $ReportId
-        Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
+            # Construct the API endpoint URI
+            $apiEndpointURI = "{0}/workspaces/{1}/reports/{2}" -f $script:FabricAuthContext.BaseUrl, $WorkspaceId, $ReportId
+            Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
 
-        ## Make the API request
-        if ($PSCmdlet.ShouldProcess("Report '$ReportId' in workspace '$WorkspaceId'", "Remove")) {
-            $apiParams = @{
-                Headers = $script:FabricAuthContext.FabricHeaders
-                BaseURI = $apiEndpointURI
-                Method = 'Delete'
+            ## Make the API request
+            if ($PSCmdlet.ShouldProcess("Report '$ReportId' in workspace '$WorkspaceId'", "Remove")) {
+                $apiParams = @{
+                    Headers = $script:FabricAuthContext.FabricHeaders
+                    BaseURI = $apiEndpointURI
+                    Method = 'Delete'
+                }
+                $response = Invoke-FabricAPIRequest @apiParams
+
+                # Return the API response
+                Write-FabricLog -Message "Report '$ReportId' deleted successfully from workspace '$WorkspaceId'." -Level Host
+                return $response
             }
-            $response = Invoke-FabricAPIRequest @apiParams
-
-            # Return the API response
-            Write-FabricLog -Message "Report '$ReportId' deleted successfully from workspace '$WorkspaceId'." -Level Host
-            return $response
+        }
+        catch {
+            # Capture and log error details
+            $errorDetails = $_.Exception.Message
+            Write-FabricLog -Message "Failed to delete Report '$ReportId'. Error: $errorDetails" -Level Error
         }
     }
-    catch {
-        # Capture and log error details
-        $errorDetails = $_.Exception.Message
-        Write-FabricLog -Message "Failed to delete Report '$ReportId'. Error: $errorDetails" -Level Error
-    }
 }
-#EndRegion '.\Public\Report\Remove-FabricReport.ps1' 65
+#EndRegion '.\Public\Report\Remove-FabricReport.ps1' 68
 #Region '.\Public\Report\Update-FabricReport.ps1' -1
 
 <#
@@ -17421,66 +20752,78 @@ function Remove-FabricReport {
 function Update-FabricReport {
     [CmdletBinding(SupportsShouldProcess=$true, ConfirmImpact='Medium')]
     param (
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
         [ValidateNotNullOrEmpty()]
         [string]$WorkspaceId,
 
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
         [ValidateNotNullOrEmpty()]
+        [Alias('id')]
         [string]$ReportId,
 
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $false, ValueFromPipelineByPropertyName = $true)]
         [ValidateNotNullOrEmpty()]
         [ValidatePattern('^[a-zA-Z0-9_ ]*$')]
+        [Alias('DisplayName')]
         [string]$ReportName,
 
-        [Parameter(Mandatory = $false)]
+        [Parameter(Mandatory = $false, ValueFromPipelineByPropertyName = $true)]
         [ValidateNotNullOrEmpty()]
+        [Alias('Description')]
         [string]$ReportDescription
     )
-    try {
-        Invoke-FabricAuthCheck -ThrowOnFailure
-
-
-        # Construct the API endpoint URI
-        $apiEndpointURI = "{0}/workspaces/{1}/reports/{2}" -f $script:FabricAuthContext.BaseUrl, $WorkspaceId, $ReportId
-        Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
-
-        # Construct the request body
-        $body = @{
-            displayName = $ReportName
-        }
-
-        if ($ReportDescription) {
-            $body.description = $ReportDescription
-        }
-
-        # Convert the body to JSON
-        $bodyJson = $body | ConvertTo-Json
-        Write-FabricLog -Message "Request Body: $bodyJson" -Level Debug
-
-        # Make the API request
-        if ($PSCmdlet.ShouldProcess("Report '$ReportName' (ID: $ReportId) in workspace '$WorkspaceId'", "Update")) {
-            $apiParams = @{
-                Headers = $script:FabricAuthContext.FabricHeaders
-                BaseURI = $apiEndpointURI
-                Method = 'Patch'
-                Body = $bodyJson
+    process {
+        try {
+            # Validate that at least one update parameter is provided
+            if (-not $ReportName -and -not $ReportDescription) {
+                Write-FabricLog -Message "At least one of ReportName or ReportDescription must be specified" -Level Error
+                return
             }
-            $response = Invoke-FabricAPIRequest @apiParams
 
-            # Return the API response
-            Write-FabricLog -Message "Report '$ReportName' updated successfully!" -Level Host
-            return $response
+            Invoke-FabricAuthCheck -ThrowOnFailure
+
+            # Construct the API endpoint URI
+            $apiEndpointURI = New-FabricAPIUri -Resource 'workspaces' -WorkspaceId $WorkspaceId -Subresource 'reports' -ItemId $ReportId
+            Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
+
+            # Construct the request body
+            $body = @{}
+
+            if ($ReportName) {
+                $body.displayName = $ReportName
+            }
+
+            if ($ReportDescription) {
+                $body.description = $ReportDescription
+            }
+
+            # Convert the body to JSON
+            $bodyJson = $body | ConvertTo-Json
+            Write-FabricLog -Message "Request Body: $bodyJson" -Level Debug
+
+            # Make the API request
+            if ($PSCmdlet.ShouldProcess("Report '$ReportName' (ID: $ReportId) in workspace '$WorkspaceId'", "Update")) {
+                $apiParams = @{
+                    Headers = $script:FabricAuthContext.FabricHeaders
+                    BaseURI = $apiEndpointURI
+                    Method = 'Patch'
+                    Body = $bodyJson
+                }
+                $response = Invoke-FabricAPIRequest @apiParams
+
+                # Return the API response
+                Write-FabricLog -Message "Report '$ReportName' updated successfully!" -Level Host
+                return $response
+            }
         }
-    }
-    catch {
-        # Capture and log error details
-        $errorDetails = $_.Exception.Message
-        Write-FabricLog -Message "Failed to update Report. Error: $errorDetails" -Level Error
+        catch {
+            # Capture and log error details
+            $errorDetails = $_.Exception.Message
+            Write-FabricLog -Message "Failed to update Report. Error: $errorDetails" -Level Error
+        }
     }
 }
-#EndRegion '.\Public\Report\Update-FabricReport.ps1' 94
+#EndRegion '.\Public\Report\Update-FabricReport.ps1' 106
 #Region '.\Public\Report\Update-FabricReportDefinition.ps1' -1
 
 <#
@@ -17514,82 +20857,85 @@ function Update-FabricReport {
 function Update-FabricReportDefinition {
     [CmdletBinding(SupportsShouldProcess=$true, ConfirmImpact='Medium')]
     param (
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
         [ValidateNotNullOrEmpty()]
         [string]$WorkspaceId,
 
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
         [ValidateNotNullOrEmpty()]
+        [Alias('id')]
         [string]$ReportId,
 
         [Parameter(Mandatory = $true)]
         [ValidateNotNullOrEmpty()]
         [string]$ReportPathDefinition
     )
-    try {
-        Invoke-FabricAuthCheck -ThrowOnFailure
+    process {
+        try {
+            Invoke-FabricAuthCheck -ThrowOnFailure
 
 
-        # Construct the API endpoint URI with filtering logic
-        $apiEndpointURI = "{0}/workspaces/{1}/Reports/{2}/updateDefinition" -f $script:FabricAuthContext.BaseUrl, $WorkspaceId, $ReportId
+            # Construct the API endpoint URI with filtering logic
+            $apiEndpointURI = "{0}/workspaces/{1}/Reports/{2}/updateDefinition" -f $script:FabricAuthContext.BaseUrl, $WorkspaceId, $ReportId
 
-        # Construct the request body
-        $body = @{
-            definition = @{
-                parts = @()
-            }
-        }
-
-        if ($ReportPathDefinition) {
-            if (-not $body.definition) {
-                $body.definition = @{
+            # Construct the request body
+            $body = @{
+                definition = @{
                     parts = @()
                 }
             }
-            $jsonObjectParts = Get-FileDefinitionPart -sourceDirectory $ReportPathDefinition
-            # Add new part to the parts array
-            $body.definition.parts = $jsonObjectParts.parts
-        }
-        # Check if any path is .platform
-        foreach ($part in $jsonObjectParts.parts) {
-            if ($part.path -eq ".platform") {
-                $hasPlatformFile = $true
-                Write-FabricLog -Message "Platform File: $hasPlatformFile" -Level Debug
+
+            if ($ReportPathDefinition) {
+                if (-not $body.definition) {
+                    $body.definition = @{
+                        parts = @()
+                    }
+                }
+                $jsonObjectParts = Get-FileDefinitionPart -sourceDirectory $ReportPathDefinition
+                # Add new part to the parts array
+                $body.definition.parts = $jsonObjectParts.parts
+            }
+            # Check if any path is .platform
+            foreach ($part in $jsonObjectParts.parts) {
+                if ($part.path -eq ".platform") {
+                    $hasPlatformFile = $true
+                    Write-FabricLog -Message "Platform File: $hasPlatformFile" -Level Debug
+                }
+            }
+
+            # If the platform file exists, append the query parameter to the URL
+            if ($hasPlatformFile -eq $true) {
+                $apiEndpointURI += "?updateMetadata=true" -f $apiEndpointURI
+            }
+            Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
+
+            # Convert the body to JSON
+            $bodyJson = $body | ConvertTo-Json -Depth 10
+            Write-FabricLog -Message "Request Body: $bodyJson" -Level Debug
+
+            # Make the API request
+            if ($PSCmdlet.ShouldProcess("Report definition for Report ID '$ReportId' in workspace '$WorkspaceId'", "Update")) {
+                $apiParams = @{
+                    BaseURI = $apiEndpointURI
+                    Headers = $script:FabricAuthContext.FabricHeaders
+                    Method = 'Post'
+                    Body = $bodyJson
+                }
+                $response = Invoke-FabricAPIRequest @apiParams
+
+                # Return the API response
+                Write-FabricLog -Message "Successfully updated the definition for Report with ID '$ReportId' in workspace '$WorkspaceId'." -Level Host
+                return $response
             }
         }
-
-        # If the platform file exists, append the query parameter to the URL
-        if ($hasPlatformFile -eq $true) {
-            $apiEndpointURI += "?updateMetadata=true" -f $apiEndpointURI
+        catch {
+            # Capture and log error details
+            $errorDetails = $_.Exception.Message
+            Write-FabricLog -Message "Failed to update Report. Error: $errorDetails" -Level Error
         }
-        Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
-
-        # Convert the body to JSON
-        $bodyJson = $body | ConvertTo-Json -Depth 10
-        Write-FabricLog -Message "Request Body: $bodyJson" -Level Debug
-
-        # Make the API request
-        if ($PSCmdlet.ShouldProcess("Report definition for Report ID '$ReportId' in workspace '$WorkspaceId'", "Update")) {
-            $apiParams = @{
-                BaseURI = $apiEndpointURI
-                Headers = $script:FabricAuthContext.FabricHeaders
-                Method = 'Post'
-                Body = $bodyJson
-            }
-            $response = Invoke-FabricAPIRequest @apiParams
-
-            # Return the API response
-            Write-FabricLog -Message "Successfully updated the definition for Report with ID '$ReportId' in workspace '$WorkspaceId'." -Level Host
-            return $response
-        }
-    }
-    catch {
-        # Capture and log error details
-        $errorDetails = $_.Exception.Message
-        Write-FabricLog -Message "Failed to update Report. Error: $errorDetails" -Level Error
     }
 }
-#EndRegion '.\Public\Report\Update-FabricReportDefinition.ps1' 107
+#EndRegion '.\Public\Report\Update-FabricReportDefinition.ps1' 110
 #Region '.\Public\Semantic Model\Get-FabricSemanticModel.ps1' -1
 
 <#
@@ -17609,6 +20955,9 @@ function Update-FabricReportDefinition {
 .PARAMETER SemanticModelName
     The name of the SemanticModel to retrieve. This parameter is optional.
 
+.PARAMETER Raw
+    When specified, returns the raw API response without any filtering or formatting.
+
 .EXAMPLE
     Get-FabricSemanticModel -WorkspaceId "workspace-12345" -SemanticModelId "SemanticModel-67890"
     This example retrieves the SemanticModel details for the SemanticModel with ID "SemanticModel-67890" in the workspace with ID "workspace-12345".
@@ -17616,6 +20965,10 @@ function Update-FabricReportDefinition {
 .EXAMPLE
     Get-FabricSemanticModel -WorkspaceId "workspace-12345" -SemanticModelName "My SemanticModel"
     This example retrieves the SemanticModel details for the SemanticModel named "My SemanticModel" in the workspace with ID "workspace-12345".
+
+.EXAMPLE
+    Get-FabricSemanticModel -WorkspaceId "workspace-12345" -Raw
+    This example returns the raw API response for all semantic models in the workspace without any processing.
 
 .NOTES
     - Requires `$FabricConfig` global configuration, including `BaseUrl` and `FabricHeaders`.
@@ -17627,8 +20980,9 @@ function Update-FabricReportDefinition {
 function Get-FabricSemanticModel {
     [CmdletBinding()]
     param (
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
         [ValidateNotNullOrEmpty()]
+        [Alias('id')]
         [string]$WorkspaceId,
 
         [Parameter(Mandatory = $false)]
@@ -17638,69 +20992,45 @@ function Get-FabricSemanticModel {
         [Parameter(Mandatory = $false)]
         [ValidateNotNullOrEmpty()]
         [ValidatePattern('^[a-zA-Z0-9_ ]*$')]
-        [string]$SemanticModelName
+        [string]$SemanticModelName,
+
+        [Parameter()]
+        [switch]$Raw
     )
-    try {
-        # Validate input parameters
-        if ($SemanticModelId -and $SemanticModelName) {
-            Write-FabricLog -Message "Specify only one parameter: either 'SemanticModelId' or 'SemanticModelName'." -Level Error
-            return $null
-        }
 
-        Invoke-FabricAuthCheck -ThrowOnFailure
+    process {
+        try {
+            # Validate input parameters
+            if ($SemanticModelId -and $SemanticModelName) {
+                Write-FabricLog -Message "Specify only one parameter: either 'SemanticModelId' or 'SemanticModelName'." -Level Error
+                return
+            }
 
+            Invoke-FabricAuthCheck -ThrowOnFailure
 
-        # Construct the API endpoint URI
-        $apiEndpointURI = "{0}/workspaces/{1}/semanticModels" -f $script:FabricAuthContext.BaseUrl, $WorkspaceId
-        Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
+            # Construct the API endpoint URI
+            $apiEndpointURI = "{0}/workspaces/{1}/semanticModels" -f $script:FabricAuthContext.BaseUrl, $WorkspaceId
+            Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
 
-        # Make the API request
-        # Make the API request
-        $apiParams = @{
-            BaseURI = $apiEndpointURI
-            Headers = $script:FabricAuthContext.FabricHeaders
-            Method = 'Get'
-        }
-        $dataItems = Invoke-FabricAPIRequest @apiParams
+            # Make the API request
+            $apiParams = @{
+                BaseURI = $apiEndpointURI
+                Headers = $script:FabricAuthContext.FabricHeaders
+                Method  = 'Get'
+            }
+            $dataItems = Invoke-FabricAPIRequest @apiParams
 
-        # Immediately handle empty response
-        if (-not $dataItems) {
-            Write-FabricLog -Message "No data returned from the API." -Level Warning
-            return $null
+            # Apply filtering and formatting
+            Select-FabricResource -InputObject $dataItems -Id $SemanticModelId -DisplayName $SemanticModelName -ResourceType 'SemanticModel' -TypeName 'MicrosoftFabric.SemanticModel' -Raw:$Raw
         }
-
-        # Apply filtering logic efficiently
-        if ($SemanticModelId) {
-            $matchedItems = $dataItems.Where({ $_.Id -eq $SemanticModelId }, 'First')
-        }
-        elseif ($SemanticModelName) {
-            $matchedItems = $dataItems.Where({ $_.DisplayName -eq $SemanticModelName }, 'First')
-        }
-        else {
-            Write-FabricLog -Message "No filter provided. Returning all items." -Level Debug
-            $matchedItems = $dataItems
-        }
-
-        # Handle results
-        if ($matchedItems) {
-            Write-FabricLog -Message "Item(s) found matching the specified criteria." -Level Debug
-            # Add type decoration for custom formatting
-            $matchedItems | Add-FabricTypeName -TypeName 'MicrosoftFabric.SemanticModel'
-            return $matchedItems
-        }
-        else {
-            Write-FabricLog -Message "No item found matching the provided criteria." -Level Warning
-            return $null
+        catch {
+            # Capture and log error details
+            $errorDetails = $_.Exception.Message
+            Write-FabricLog -Message "Failed to retrieve SemanticModel for workspace '$WorkspaceId'. Error: $errorDetails" -Level Error
         }
     }
-    catch {
-        # Capture and log error details
-        $errorDetails = $_.Exception.Message
-        Write-FabricLog -Message "Failed to retrieve SemanticModel. Error: $errorDetails" -Level Error
-    }
-
 }
-#EndRegion '.\Public\Semantic Model\Get-FabricSemanticModel.ps1' 109
+#EndRegion '.\Public\Semantic Model\Get-FabricSemanticModel.ps1' 93
 #Region '.\Public\Semantic Model\Get-FabricSemanticModelDefinition.ps1' -1
 
 <#
@@ -17738,8 +21068,9 @@ function Get-FabricSemanticModel {
 function Get-FabricSemanticModelDefinition {
     [CmdletBinding()]
     param (
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
         [ValidateNotNullOrEmpty()]
+        [Alias('id')]
         [string]$WorkspaceId,
 
         [Parameter(Mandatory = $false)]
@@ -17781,7 +21112,7 @@ function Get-FabricSemanticModelDefinition {
     }
 
 }
-#EndRegion '.\Public\Semantic Model\Get-FabricSemanticModelDefinition.ps1' 79
+#EndRegion '.\Public\Semantic Model\Get-FabricSemanticModelDefinition.ps1' 80
 #Region '.\Public\Semantic Model\New-FabricSemanticModel.ps1' -1
 
 <#
@@ -17916,43 +21247,46 @@ function New-FabricSemanticModel {
 function Remove-FabricSemanticModel {
     [CmdletBinding(SupportsShouldProcess=$true, ConfirmImpact='High')]
     param (
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
         [ValidateNotNullOrEmpty()]
         [string]$WorkspaceId,
 
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
         [ValidateNotNullOrEmpty()]
+        [Alias('id')]
         [string]$SemanticModelId
     )
-    try {
-        Invoke-FabricAuthCheck -ThrowOnFailure
+    process {
+        try {
+            Invoke-FabricAuthCheck -ThrowOnFailure
 
 
-        # Construct the API endpoint URI
-        $apiEndpointURI = "{0}/workspaces/{1}/semanticModels/{2}" -f $script:FabricAuthContext.BaseUrl, $WorkspaceId, $SemanticModelId
-        Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
+            # Construct the API endpoint URI
+            $apiEndpointURI = "{0}/workspaces/{1}/semanticModels/{2}" -f $script:FabricAuthContext.BaseUrl, $WorkspaceId, $SemanticModelId
+            Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
 
-        ## Make the API request
-        if ($PSCmdlet.ShouldProcess("Semantic Model '$SemanticModelId' in workspace '$WorkspaceId'", "Remove")) {
-            $apiParams = @{
-                Headers = $script:FabricAuthContext.FabricHeaders
-                BaseURI = $apiEndpointURI
-                Method = 'Delete'
+            ## Make the API request
+            if ($PSCmdlet.ShouldProcess("Semantic Model '$SemanticModelId' in workspace '$WorkspaceId'", "Remove")) {
+                $apiParams = @{
+                    Headers = $script:FabricAuthContext.FabricHeaders
+                    BaseURI = $apiEndpointURI
+                    Method = 'Delete'
+                }
+                $response = Invoke-FabricAPIRequest @apiParams
+
+                # Return the API response
+                Write-FabricLog -Message "SemanticModel '$SemanticModelId' deleted successfully from workspace '$WorkspaceId'." -Level Host
+                return $response
             }
-            $response = Invoke-FabricAPIRequest @apiParams
-
-            # Return the API response
-            Write-FabricLog -Message "SemanticModel '$SemanticModelId' deleted successfully from workspace '$WorkspaceId'." -Level Host
-            return $response
+        }
+        catch {
+            # Capture and log error details
+            $errorDetails = $_.Exception.Message
+            Write-FabricLog -Message "Failed to delete SemanticModel '$SemanticModelId'. Error: $errorDetails" -Level Error
         }
     }
-    catch {
-        # Capture and log error details
-        $errorDetails = $_.Exception.Message
-        Write-FabricLog -Message "Failed to delete SemanticModel '$SemanticModelId'. Error: $errorDetails" -Level Error
-    }
 }
-#EndRegion '.\Public\Semantic Model\Remove-FabricSemanticModel.ps1' 65
+#EndRegion '.\Public\Semantic Model\Remove-FabricSemanticModel.ps1' 68
 #Region '.\Public\Semantic Model\Update-FabricSemanticModel.ps1' -1
 
 <#
@@ -17989,66 +21323,78 @@ function Remove-FabricSemanticModel {
 function Update-FabricSemanticModel {
     [CmdletBinding(SupportsShouldProcess=$true, ConfirmImpact='Medium')]
     param (
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
         [ValidateNotNullOrEmpty()]
         [string]$WorkspaceId,
 
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
         [ValidateNotNullOrEmpty()]
+        [Alias('id')]
         [string]$SemanticModelId,
 
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $false, ValueFromPipelineByPropertyName = $true)]
         [ValidateNotNullOrEmpty()]
         [ValidatePattern('^[a-zA-Z0-9_ ]*$')]
+        [Alias('DisplayName')]
         [string]$SemanticModelName,
 
-        [Parameter(Mandatory = $false)]
+        [Parameter(Mandatory = $false, ValueFromPipelineByPropertyName = $true)]
         [ValidateNotNullOrEmpty()]
+        [Alias('Description')]
         [string]$SemanticModelDescription
     )
-    try {
-        Invoke-FabricAuthCheck -ThrowOnFailure
-
-
-        # Construct the API endpoint URI
-        $apiEndpointURI = "{0}/workspaces/{1}/semanticModels/{2}" -f $script:FabricAuthContext.BaseUrl, $WorkspaceId, $SemanticModelId
-        Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
-
-        # Construct the request body
-        $body = @{
-            displayName = $SemanticModelName
-        }
-
-        if ($SemanticModelDescription) {
-            $body.description = $SemanticModelDescription
-        }
-
-        # Convert the body to JSON
-        $bodyJson = $body | ConvertTo-Json
-        Write-FabricLog -Message "Request Body: $bodyJson" -Level Debug
-
-        # Make the API request
-        if ($PSCmdlet.ShouldProcess("Semantic Model '$SemanticModelName' in workspace '$WorkspaceId'", "Update")) {
-            $apiParams = @{
-                Headers = $script:FabricAuthContext.FabricHeaders
-                BaseURI = $apiEndpointURI
-                Method = 'Patch'
-                Body = $bodyJson
+    process {
+        try {
+            # Validate that at least one update parameter is provided
+            if (-not $SemanticModelName -and -not $SemanticModelDescription) {
+                Write-FabricLog -Message "At least one of SemanticModelName or SemanticModelDescription must be specified" -Level Error
+                return
             }
-            $response = Invoke-FabricAPIRequest @apiParams
 
-            # Return the API response
-            Write-FabricLog -Message "SemanticModel '$SemanticModelName' updated successfully!" -Level Host
-            return $response
+            Invoke-FabricAuthCheck -ThrowOnFailure
+
+            # Construct the API endpoint URI
+            $apiEndpointURI = New-FabricAPIUri -Resource 'workspaces' -WorkspaceId $WorkspaceId -Subresource 'semanticModels' -ItemId $SemanticModelId
+            Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
+
+            # Construct the request body
+            $body = @{}
+
+            if ($SemanticModelName) {
+                $body.displayName = $SemanticModelName
+            }
+
+            if ($SemanticModelDescription) {
+                $body.description = $SemanticModelDescription
+            }
+
+            # Convert the body to JSON
+            $bodyJson = $body | ConvertTo-Json
+            Write-FabricLog -Message "Request Body: $bodyJson" -Level Debug
+
+            # Make the API request
+            if ($PSCmdlet.ShouldProcess("Semantic Model '$SemanticModelName' in workspace '$WorkspaceId'", "Update")) {
+                $apiParams = @{
+                    Headers = $script:FabricAuthContext.FabricHeaders
+                    BaseURI = $apiEndpointURI
+                    Method = 'Patch'
+                    Body = $bodyJson
+                }
+                $response = Invoke-FabricAPIRequest @apiParams
+
+                # Return the API response
+                Write-FabricLog -Message "SemanticModel '$SemanticModelName' updated successfully!" -Level Host
+                return $response
+            }
         }
-    }
-    catch {
-        # Capture and log error details
-        $errorDetails = $_.Exception.Message
-        Write-FabricLog -Message "Failed to update SemanticModel. Error: $errorDetails" -Level Error
+        catch {
+            # Capture and log error details
+            $errorDetails = $_.Exception.Message
+            Write-FabricLog -Message "Failed to update SemanticModel. Error: $errorDetails" -Level Error
+        }
     }
 }
-#EndRegion '.\Public\Semantic Model\Update-FabricSemanticModel.ps1' 94
+#EndRegion '.\Public\Semantic Model\Update-FabricSemanticModel.ps1' 106
 #Region '.\Public\Semantic Model\Update-FabricSemanticModelDefinition.ps1' -1
 
 <#
@@ -18082,11 +21428,12 @@ function Update-FabricSemanticModel {
 function Update-FabricSemanticModelDefinition {
     [CmdletBinding(SupportsShouldProcess=$true, ConfirmImpact='Medium')]
     param (
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
         [ValidateNotNullOrEmpty()]
+        [Alias('id')]
         [string]$WorkspaceId,
 
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
         [ValidateNotNullOrEmpty()]
         [string]$SemanticModelId,
 
@@ -18094,63 +21441,65 @@ function Update-FabricSemanticModelDefinition {
         [ValidateNotNullOrEmpty()]
         [string]$SemanticModelPathDefinition
     )
-    try {
-        Invoke-FabricAuthCheck -ThrowOnFailure
+    process {
+        try {
+            Invoke-FabricAuthCheck -ThrowOnFailure
 
 
-        # Construct the API endpoint URI with filtering logic
-        $apiEndpointURI = "{0}/workspaces/{1}/SemanticModels/{2}/updateDefinition" -f $script:FabricAuthContext.BaseUrl, $WorkspaceId, $SemanticModelId
+            # Construct the API endpoint URI with filtering logic
+            $apiEndpointURI = "{0}/workspaces/{1}/SemanticModels/{2}/updateDefinition" -f $script:FabricAuthContext.BaseUrl, $WorkspaceId, $SemanticModelId
 
-        # Construct the request body
-        $body = @{
-            definition = @{
-                parts = @()
+            # Construct the request body
+            $body = @{
+                definition = @{
+                    parts = @()
+                }
+            }
+
+            $jsonObjectParts = Get-FileDefinitionPart -sourceDirectory $SemanticModelPathDefinition
+            # Add new part to the parts array
+            $body.definition.parts = $jsonObjectParts.parts
+            # Check if any path is .platform
+            foreach ($part in $jsonObjectParts.parts) {
+                if ($part.path -eq ".platform") {
+                    $hasPlatformFile = $true
+                    Write-FabricLog -Message "Platform File: $hasPlatformFile" -Level Debug
+                }
+            }
+
+            # If the platform file exists, append the query parameter to the URL
+            if ($hasPlatformFile -eq $true) {
+                $apiEndpointURI = "?updateMetadata=true" -f $apiEndpointURI
+            }
+            Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
+
+            # Convert the body to JSON
+            $bodyJson = $body | ConvertTo-Json -Depth 10
+            Write-FabricLog -Message "Request Body: $bodyJson" -Level Debug
+
+            # Make the API request
+            if ($PSCmdlet.ShouldProcess("Semantic Model definition '$SemanticModelId' in workspace '$WorkspaceId'", "Update")) {
+                $apiParams = @{
+                    BaseURI = $apiEndpointURI
+                    Headers = $script:FabricAuthContext.FabricHeaders
+                    Method = 'Post'
+                    Body = $bodyJson
+                }
+                $response = Invoke-FabricAPIRequest @apiParams
+
+                # Return the API response
+                Write-FabricLog -Message "Successfully updated the definition for Semantic Model with ID '$SemanticModelId' in workspace '$WorkspaceId'." -Level Host
+                return $response
             }
         }
-
-        $jsonObjectParts = Get-FileDefinitionPart -sourceDirectory $SemanticModelPathDefinition
-        # Add new part to the parts array
-        $body.definition.parts = $jsonObjectParts.parts
-        # Check if any path is .platform
-        foreach ($part in $jsonObjectParts.parts) {
-            if ($part.path -eq ".platform") {
-                $hasPlatformFile = $true
-                Write-FabricLog -Message "Platform File: $hasPlatformFile" -Level Debug
-            }
+        catch {
+            # Capture and log error details
+            $errorDetails = $_.Exception.Message
+            Write-FabricLog -Message "Failed to update SemanticModel. Error: $errorDetails" -Level Error
         }
-
-        # If the platform file exists, append the query parameter to the URL
-        if ($hasPlatformFile -eq $true) {
-            $apiEndpointURI = "?updateMetadata=true" -f $apiEndpointURI
-        }
-        Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
-
-        # Convert the body to JSON
-        $bodyJson = $body | ConvertTo-Json -Depth 10
-        Write-FabricLog -Message "Request Body: $bodyJson" -Level Debug
-
-        # Make the API request
-        if ($PSCmdlet.ShouldProcess("Semantic Model definition '$SemanticModelId' in workspace '$WorkspaceId'", "Update")) {
-            $apiParams = @{
-                BaseURI = $apiEndpointURI
-                Headers = $script:FabricAuthContext.FabricHeaders
-                Method = 'Post'
-                Body = $bodyJson
-            }
-            $response = Invoke-FabricAPIRequest @apiParams
-
-            # Return the API response
-            Write-FabricLog -Message "Successfully updated the definition for Semantic Model with ID '$SemanticModelId' in workspace '$WorkspaceId'." -Level Host
-            return $response
-        }
-    }
-    catch {
-        # Capture and log error details
-        $errorDetails = $_.Exception.Message
-        Write-FabricLog -Message "Failed to update SemanticModel. Error: $errorDetails" -Level Error
     }
 }
-#EndRegion '.\Public\Semantic Model\Update-FabricSemanticModelDefinition.ps1' 100
+#EndRegion '.\Public\Semantic Model\Update-FabricSemanticModelDefinition.ps1' 103
 #Region '.\Public\Sharing Links\Remove-FabricSharingLinks.ps1' -1
 
 <#
@@ -18320,6 +21669,565 @@ function Remove-FabricSharingLinksBulk {
     }
 }
 #EndRegion '.\Public\Sharing Links\Remove-FabricSharingLinksBulk.ps1' 86
+#Region '.\Public\Snowflake Database\Get-FabricSnowflakeDatabase.ps1' -1
+
+<#
+.SYNOPSIS
+    Gets a Snowflake Database or lists all Snowflake Databases in a workspace.
+
+.DESCRIPTION
+    The Get-FabricSnowflakeDatabase cmdlet retrieves Snowflake Database items from a specified Microsoft Fabric workspace.
+    You can list all Snowflake Databases or filter by a specific SnowflakeDatabaseId or display name.
+
+.PARAMETER WorkspaceId
+    The GUID of the workspace containing the Snowflake Database resources.
+
+.PARAMETER SnowflakeDatabaseId
+    Optional. Returns only the Snowflake Database matching this resource Id.
+
+.PARAMETER SnowflakeDatabaseName
+    Optional. Returns only the Snowflake Database whose display name exactly matches this value.
+
+.PARAMETER Raw
+    Optional. When specified, returns the raw API response with resolved CapacityName and WorkspaceName
+    properties added directly to the output objects.
+
+.EXAMPLE
+    Get-FabricSnowflakeDatabase -WorkspaceId "12345678-1234-1234-1234-123456789012"
+
+    Lists all Snowflake Databases in the specified workspace.
+
+.EXAMPLE
+    Get-FabricSnowflakeDatabase -WorkspaceId "12345678-1234-1234-1234-123456789012" -SnowflakeDatabaseId "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee"
+
+    Returns the Snowflake Database with the specified Id.
+
+.EXAMPLE
+    Get-FabricSnowflakeDatabase -WorkspaceId "12345678-1234-1234-1234-123456789012" -SnowflakeDatabaseName "MySnowflakeDB"
+
+    Returns the Snowflake Database with the specified name.
+
+.NOTES
+    - Requires `$FabricAuthContext` global configuration.
+    - Calls `Invoke-FabricAuthCheck` to ensure token validity before making the API request.
+
+    Author: Tiago Balabuch, Jess Pomfret, Rob Sewell
+
+#>
+function Get-FabricSnowflakeDatabase {
+    [CmdletBinding()]
+    param (
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
+        [ValidateNotNullOrEmpty()]
+        [Alias('id')]
+        [string]$WorkspaceId,
+
+        [Parameter(Mandatory = $false)]
+        [ValidateNotNullOrEmpty()]
+        [string]$SnowflakeDatabaseId,
+
+        [Parameter(Mandatory = $false)]
+        [ValidateNotNullOrEmpty()]
+        [ValidatePattern('^[a-zA-Z0-9_ ]*$')]
+        [string]$SnowflakeDatabaseName,
+
+        [Parameter()]
+        [switch]$Raw
+    )
+
+    process {
+        try {
+            # Validate input parameters
+            if ($SnowflakeDatabaseId -and $SnowflakeDatabaseName) {
+                Write-FabricLog -Message "Specify only one parameter: either 'SnowflakeDatabaseId' or 'SnowflakeDatabaseName'." -Level Error
+                return
+            }
+
+            Invoke-FabricAuthCheck -ThrowOnFailure
+
+            # Construct the API endpoint URI
+            $apiEndpointURI = New-FabricAPIUri -Resource 'workspaces' -WorkspaceId $WorkspaceId -Subresource 'snowflakeDatabases'
+            Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
+
+            # Make the API request
+            $apiParams = @{
+                BaseURI = $apiEndpointURI
+                Headers = $script:FabricAuthContext.FabricHeaders
+                Method  = 'Get'
+            }
+            $dataItems = Invoke-FabricAPIRequest @apiParams
+
+            # Apply filtering and formatting
+            Select-FabricResource -InputObject $dataItems -Id $SnowflakeDatabaseId -DisplayName $SnowflakeDatabaseName -ResourceType 'SnowflakeDatabase' -TypeName 'MicrosoftFabric.SnowflakeDatabase' -Raw:$Raw
+        }
+        catch {
+            $errorDetails = $_.Exception.Message
+            Write-FabricLog -Message "Failed to retrieve Snowflake Database for workspace '$WorkspaceId'. Error: $errorDetails" -Level Error
+        }
+    }
+}
+#EndRegion '.\Public\Snowflake Database\Get-FabricSnowflakeDatabase.ps1' 96
+#Region '.\Public\Snowflake Database\Get-FabricSnowflakeDatabaseDefinition.ps1' -1
+
+<#
+.SYNOPSIS
+    Gets the definition of a Snowflake Database from a Fabric workspace.
+
+.DESCRIPTION
+    The Get-FabricSnowflakeDatabaseDefinition cmdlet retrieves the public definition of a Snowflake Database
+    from a specified workspace. This API supports long running operations (LRO).
+
+.PARAMETER WorkspaceId
+    The GUID of the workspace containing the Snowflake Database.
+
+.PARAMETER SnowflakeDatabaseId
+    The GUID of the Snowflake Database whose definition to retrieve.
+
+.EXAMPLE
+    Get-FabricSnowflakeDatabaseDefinition -WorkspaceId "12345678-1234-1234-1234-123456789012" -SnowflakeDatabaseId "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee"
+
+    Retrieves the definition of the specified Snowflake Database.
+
+.NOTES
+    - Requires `$FabricAuthContext` global configuration.
+    - This API supports long running operations (LRO).
+
+    Author: Tiago Balabuch, Jess Pomfret, Rob Sewell
+
+#>
+function Get-FabricSnowflakeDatabaseDefinition {
+    [CmdletBinding()]
+    param (
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
+        [ValidateNotNullOrEmpty()]
+        [string]$WorkspaceId,
+
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
+        [ValidateNotNullOrEmpty()]
+        [Alias('id')]
+        [string]$SnowflakeDatabaseId
+    )
+
+    process {
+        try {
+            Invoke-FabricAuthCheck -ThrowOnFailure
+
+            # Construct the API endpoint URI
+            $apiEndpointURI = New-FabricAPIUri -Resource 'workspaces' -WorkspaceId $WorkspaceId -Subresource 'snowflakeDatabases' -ItemId "$SnowflakeDatabaseId/getDefinition"
+            Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
+
+            # Make the API request (POST to getDefinition)
+            $apiParams = @{
+                BaseURI = $apiEndpointURI
+                Headers = $script:FabricAuthContext.FabricHeaders
+                Method  = 'Post'
+            }
+            $response = Invoke-FabricAPIRequest @apiParams
+
+            if ($response) {
+                Write-FabricLog -Message "Snowflake Database definition retrieved successfully." -Level Debug
+                return $response
+            }
+        }
+        catch {
+            $errorDetails = $_.Exception.Message
+            Write-FabricLog -Message "Failed to retrieve Snowflake Database definition for '$SnowflakeDatabaseId'. Error: $errorDetails" -Level Error
+        }
+    }
+}
+#EndRegion '.\Public\Snowflake Database\Get-FabricSnowflakeDatabaseDefinition.ps1' 67
+#Region '.\Public\Snowflake Database\New-FabricSnowflakeDatabase.ps1' -1
+
+<#
+.SYNOPSIS
+    Creates a new Snowflake Database in a Fabric workspace.
+
+.DESCRIPTION
+    The New-FabricSnowflakeDatabase cmdlet creates a new Snowflake Database within a specified Fabric workspace.
+    The Snowflake Database can be created with just a name and optional description, or with a full definition.
+
+.PARAMETER WorkspaceId
+    The GUID of the workspace where the Snowflake Database will be created.
+
+.PARAMETER SnowflakeDatabaseName
+    The display name for the new Snowflake Database.
+
+.PARAMETER Description
+    Optional. A description for the Snowflake Database.
+
+.PARAMETER CreationPayload
+    Optional. A hashtable containing the creation payload for the Snowflake Database.
+
+.PARAMETER Definition
+    Optional. A hashtable containing the Snowflake Database definition with parts array.
+
+.EXAMPLE
+    New-FabricSnowflakeDatabase -WorkspaceId "12345678-1234-1234-1234-123456789012" -SnowflakeDatabaseName "MySnowflakeDB"
+
+    Creates a new Snowflake Database with the specified name.
+
+.EXAMPLE
+    New-FabricSnowflakeDatabase -WorkspaceId "12345678-1234-1234-1234-123456789012" -SnowflakeDatabaseName "MySnowflakeDB" -Description "My Snowflake database"
+
+    Creates a new Snowflake Database with a name and description.
+
+.NOTES
+    - Requires `$FabricAuthContext` global configuration.
+    - This API supports long running operations (LRO).
+
+    Author: Tiago Balabuch, Jess Pomfret, Rob Sewell
+
+#>
+function New-FabricSnowflakeDatabase {
+    [CmdletBinding(SupportsShouldProcess)]
+    param (
+        [Parameter(Mandatory = $true)]
+        [ValidateNotNullOrEmpty()]
+        [string]$WorkspaceId,
+
+        [Parameter(Mandatory = $true)]
+        [ValidateNotNullOrEmpty()]
+        [ValidatePattern('^[a-zA-Z0-9_ ]*$')]
+        [string]$SnowflakeDatabaseName,
+
+        [Parameter(Mandatory = $false)]
+        [ValidateNotNullOrEmpty()]
+        [string]$Description,
+
+        [Parameter(Mandatory = $false)]
+        [ValidateNotNullOrEmpty()]
+        [hashtable]$CreationPayload,
+
+        [Parameter(Mandatory = $false)]
+        [ValidateNotNullOrEmpty()]
+        [hashtable]$Definition
+    )
+
+    process {
+        try {
+            Invoke-FabricAuthCheck -ThrowOnFailure
+
+            # Construct the API endpoint URI
+            $apiEndpointURI = New-FabricAPIUri -Resource 'workspaces' -WorkspaceId $WorkspaceId -Subresource 'snowflakeDatabases'
+            Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
+
+            # Build request body
+            $body = @{
+                displayName = $SnowflakeDatabaseName
+            }
+
+            if ($Description) {
+                $body.description = $Description
+            }
+
+            if ($CreationPayload) {
+                $body.creationPayload = $CreationPayload
+            }
+
+            if ($Definition) {
+                $body.definition = $Definition
+            }
+
+            $bodyJson = $body | ConvertTo-Json -Depth 10
+
+            if ($PSCmdlet.ShouldProcess("Snowflake Database '$SnowflakeDatabaseName'", "Create")) {
+                # Make the API request
+                $apiParams = @{
+                    BaseURI = $apiEndpointURI
+                    Headers = $script:FabricAuthContext.FabricHeaders
+                    Method  = 'Post'
+                    Body    = $bodyJson
+                }
+                $response = Invoke-FabricAPIRequest @apiParams
+
+                if ($response) {
+                    Write-FabricLog -Message "Snowflake Database '$SnowflakeDatabaseName' created successfully." -Level Debug
+                    return $response
+                }
+            }
+        }
+        catch {
+            $errorDetails = $_.Exception.Message
+            Write-FabricLog -Message "Failed to create Snowflake Database '$SnowflakeDatabaseName'. Error: $errorDetails" -Level Error
+        }
+    }
+}
+#EndRegion '.\Public\Snowflake Database\New-FabricSnowflakeDatabase.ps1' 115
+#Region '.\Public\Snowflake Database\Remove-FabricSnowflakeDatabase.ps1' -1
+
+<#
+.SYNOPSIS
+    Removes a Snowflake Database from a Fabric workspace.
+
+.DESCRIPTION
+    The Remove-FabricSnowflakeDatabase cmdlet deletes a Snowflake Database from a specified workspace.
+    This is a destructive operation and cannot be undone.
+
+.PARAMETER WorkspaceId
+    The GUID of the workspace containing the Snowflake Database.
+
+.PARAMETER SnowflakeDatabaseId
+    The GUID of the Snowflake Database to delete.
+
+.EXAMPLE
+    Remove-FabricSnowflakeDatabase -WorkspaceId "12345678-1234-1234-1234-123456789012" -SnowflakeDatabaseId "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee"
+
+    Deletes the specified Snowflake Database from the workspace.
+
+.EXAMPLE
+    Get-FabricSnowflakeDatabase -WorkspaceId "12345678-1234-1234-1234-123456789012" -SnowflakeDatabaseName "OldDB" | Remove-FabricSnowflakeDatabase
+
+    Deletes a Snowflake Database by piping from Get-FabricSnowflakeDatabase.
+
+.NOTES
+    - Requires `$FabricAuthContext` global configuration.
+    - Calls `Invoke-FabricAuthCheck` to ensure token validity before making the API request.
+
+    Author: Tiago Balabuch, Jess Pomfret, Rob Sewell
+
+#>
+function Remove-FabricSnowflakeDatabase {
+    [CmdletBinding(SupportsShouldProcess, ConfirmImpact = 'High')]
+    param (
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
+        [ValidateNotNullOrEmpty()]
+        [string]$WorkspaceId,
+
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
+        [ValidateNotNullOrEmpty()]
+        [Alias('id')]
+        [string]$SnowflakeDatabaseId
+    )
+
+    process {
+        try {
+            Invoke-FabricAuthCheck -ThrowOnFailure
+
+            # Construct the API endpoint URI
+            $apiEndpointURI = New-FabricAPIUri -Resource 'workspaces' -WorkspaceId $WorkspaceId -Subresource 'snowflakeDatabases' -ItemId $SnowflakeDatabaseId
+            Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
+
+            if ($PSCmdlet.ShouldProcess("Snowflake Database '$SnowflakeDatabaseId'", "Delete")) {
+                # Make the API request
+                $apiParams = @{
+                    BaseURI = $apiEndpointURI
+                    Headers = $script:FabricAuthContext.FabricHeaders
+                    Method  = 'Delete'
+                }
+                Invoke-FabricAPIRequest @apiParams
+
+                Write-FabricLog -Message "Snowflake Database '$SnowflakeDatabaseId' deleted successfully." -Level Debug
+            }
+        }
+        catch {
+            $errorDetails = $_.Exception.Message
+            Write-FabricLog -Message "Failed to delete Snowflake Database '$SnowflakeDatabaseId'. Error: $errorDetails" -Level Error
+        }
+    }
+}
+#EndRegion '.\Public\Snowflake Database\Remove-FabricSnowflakeDatabase.ps1' 71
+#Region '.\Public\Snowflake Database\Update-FabricSnowflakeDatabase.ps1' -1
+
+<#
+.SYNOPSIS
+    Updates an existing Snowflake Database in a Fabric workspace.
+
+.DESCRIPTION
+    The Update-FabricSnowflakeDatabase cmdlet updates the properties of a Snowflake Database in a specified workspace.
+    You can update the display name and/or description.
+
+.PARAMETER WorkspaceId
+    The GUID of the workspace containing the Snowflake Database.
+
+.PARAMETER SnowflakeDatabaseId
+    The GUID of the Snowflake Database to update.
+
+.PARAMETER SnowflakeDatabaseName
+    Optional. The new display name for the Snowflake Database.
+
+.PARAMETER Description
+    Optional. The new description for the Snowflake Database.
+
+.EXAMPLE
+    Update-FabricSnowflakeDatabase -WorkspaceId "12345678-1234-1234-1234-123456789012" -SnowflakeDatabaseId "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee" -SnowflakeDatabaseName "NewName"
+
+    Updates the display name of the specified Snowflake Database.
+
+.EXAMPLE
+    Update-FabricSnowflakeDatabase -WorkspaceId "12345678-1234-1234-1234-123456789012" -SnowflakeDatabaseId "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee" -Description "Updated description"
+
+    Updates the description of the specified Snowflake Database.
+
+.NOTES
+    - Requires `$FabricAuthContext` global configuration.
+    - Calls `Invoke-FabricAuthCheck` to ensure token validity before making the API request.
+
+    Author: Tiago Balabuch, Jess Pomfret, Rob Sewell
+
+#>
+function Update-FabricSnowflakeDatabase {
+    [CmdletBinding(SupportsShouldProcess)]
+    param (
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
+        [ValidateNotNullOrEmpty()]
+        [string]$WorkspaceId,
+
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
+        [ValidateNotNullOrEmpty()]
+        [Alias('id')]
+        [string]$SnowflakeDatabaseId,
+
+        [Parameter(Mandatory = $false)]
+        [ValidateNotNullOrEmpty()]
+        [ValidatePattern('^[a-zA-Z0-9_ ]*$')]
+        [string]$SnowflakeDatabaseName,
+
+        [Parameter(Mandatory = $false)]
+        [ValidateNotNullOrEmpty()]
+        [string]$Description
+    )
+
+    process {
+        try {
+            if (-not $SnowflakeDatabaseName -and -not $Description) {
+                Write-FabricLog -Message "At least one of 'SnowflakeDatabaseName' or 'Description' must be specified." -Level Error
+                return
+            }
+
+            Invoke-FabricAuthCheck -ThrowOnFailure
+
+            # Construct the API endpoint URI
+            $apiEndpointURI = New-FabricAPIUri -Resource 'workspaces' -WorkspaceId $WorkspaceId -Subresource 'snowflakeDatabases' -ItemId $SnowflakeDatabaseId
+            Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
+
+            # Build request body
+            $body = @{}
+
+            if ($SnowflakeDatabaseName) {
+                $body.displayName = $SnowflakeDatabaseName
+            }
+
+            if ($Description) {
+                $body.description = $Description
+            }
+
+            $bodyJson = $body | ConvertTo-Json -Depth 10
+
+            if ($PSCmdlet.ShouldProcess("Snowflake Database '$SnowflakeDatabaseId'", "Update")) {
+                # Make the API request
+                $apiParams = @{
+                    BaseURI = $apiEndpointURI
+                    Headers = $script:FabricAuthContext.FabricHeaders
+                    Method  = 'Patch'
+                    Body    = $bodyJson
+                }
+                $response = Invoke-FabricAPIRequest @apiParams
+
+                if ($response) {
+                    Write-FabricLog -Message "Snowflake Database '$SnowflakeDatabaseId' updated successfully." -Level Debug
+                    return $response
+                }
+            }
+        }
+        catch {
+            $errorDetails = $_.Exception.Message
+            Write-FabricLog -Message "Failed to update Snowflake Database '$SnowflakeDatabaseId'. Error: $errorDetails" -Level Error
+        }
+    }
+}
+#EndRegion '.\Public\Snowflake Database\Update-FabricSnowflakeDatabase.ps1' 108
+#Region '.\Public\Snowflake Database\Update-FabricSnowflakeDatabaseDefinition.ps1' -1
+
+<#
+.SYNOPSIS
+    Updates the definition of a Snowflake Database in a Fabric workspace.
+
+.DESCRIPTION
+    The Update-FabricSnowflakeDatabaseDefinition cmdlet overrides the definition for the specified Snowflake Database.
+    This API supports long running operations (LRO).
+
+.PARAMETER WorkspaceId
+    The GUID of the workspace containing the Snowflake Database.
+
+.PARAMETER SnowflakeDatabaseId
+    The GUID of the Snowflake Database whose definition to update.
+
+.PARAMETER Definition
+    The definition object containing the parts array to update.
+
+.EXAMPLE
+    $definition = @{
+        parts = @(
+            @{
+                path = "config.json"
+                payload = [Convert]::ToBase64String([System.Text.Encoding]::UTF8.GetBytes('{"config": "content"}'))
+                payloadType = "InlineBase64"
+            }
+        )
+    }
+    Update-FabricSnowflakeDatabaseDefinition -WorkspaceId "12345678-1234-1234-1234-123456789012" -SnowflakeDatabaseId "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee" -Definition $definition
+
+    Updates the definition of the specified Snowflake Database.
+
+.NOTES
+    - Requires `$FabricAuthContext` global configuration.
+    - This API supports long running operations (LRO).
+
+    Author: Tiago Balabuch, Jess Pomfret, Rob Sewell
+
+#>
+function Update-FabricSnowflakeDatabaseDefinition {
+    [CmdletBinding(SupportsShouldProcess)]
+    param (
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
+        [ValidateNotNullOrEmpty()]
+        [string]$WorkspaceId,
+
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
+        [ValidateNotNullOrEmpty()]
+        [Alias('id')]
+        [string]$SnowflakeDatabaseId,
+
+        [Parameter(Mandatory = $true)]
+        [ValidateNotNullOrEmpty()]
+        [hashtable]$Definition
+    )
+
+    process {
+        try {
+            Invoke-FabricAuthCheck -ThrowOnFailure
+
+            # Construct the API endpoint URI
+            $apiEndpointURI = New-FabricAPIUri -Resource 'workspaces' -WorkspaceId $WorkspaceId -Subresource 'snowflakeDatabases' -ItemId "$SnowflakeDatabaseId/updateDefinition"
+            Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
+
+            # Build request body
+            $body = @{
+                definition = $Definition
+            }
+            $bodyJson = $body | ConvertTo-Json -Depth 10
+
+            if ($PSCmdlet.ShouldProcess("Snowflake Database definition '$SnowflakeDatabaseId'", "Update")) {
+                # Make the API request
+                $apiParams = @{
+                    BaseURI = $apiEndpointURI
+                    Headers = $script:FabricAuthContext.FabricHeaders
+                    Method  = 'Post'
+                    Body    = $bodyJson
+                }
+                $response = Invoke-FabricAPIRequest @apiParams
+
+                Write-FabricLog -Message "Snowflake Database definition updated successfully." -Level Debug
+                return $response
+            }
+        }
+        catch {
+            $errorDetails = $_.Exception.Message
+            Write-FabricLog -Message "Failed to update Snowflake Database definition for '$SnowflakeDatabaseId'. Error: $errorDetails" -Level Error
+        }
+    }
+}
+#EndRegion '.\Public\Snowflake Database\Update-FabricSnowflakeDatabaseDefinition.ps1' 90
 #Region '.\Public\Spark Job Definition\Get-FabricSparkJobDefinition.ps1' -1
 
 <#
@@ -18339,6 +22247,9 @@ function Remove-FabricSharingLinksBulk {
 .PARAMETER SparkJobDefinitionName
     The name of the SparkJobDefinition to retrieve. This parameter is optional.
 
+.PARAMETER Raw
+    If specified, returns the raw API response without any transformation or filtering.
+
 .EXAMPLE
     Get-FabricSparkJobDefinition -WorkspaceId "workspace-12345" -SparkJobDefinitionId "SparkJobDefinition-67890"
     This example retrieves the SparkJobDefinition details for the SparkJobDefinition with ID "SparkJobDefinition-67890" in the workspace with ID "workspace-12345".
@@ -18346,6 +22257,10 @@ function Remove-FabricSharingLinksBulk {
 .EXAMPLE
     Get-FabricSparkJobDefinition -WorkspaceId "workspace-12345" -SparkJobDefinitionName "My SparkJobDefinition"
     This example retrieves the SparkJobDefinition details for the SparkJobDefinition named "My SparkJobDefinition" in the workspace with ID "workspace-12345".
+
+.EXAMPLE
+    Get-FabricSparkJobDefinition -WorkspaceId "workspace-12345" -Raw
+    This example retrieves all Spark Job Definitions in the workspace with raw API response format.
 
 .NOTES
     - Requires `$FabricConfig` global configuration, including `BaseUrl` and `FabricHeaders`.
@@ -18357,8 +22272,9 @@ function Remove-FabricSharingLinksBulk {
 function Get-FabricSparkJobDefinition {
     [CmdletBinding()]
     param (
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
         [ValidateNotNullOrEmpty()]
+        [Alias('id')]
         [string]$WorkspaceId,
 
         [Parameter(Mandatory = $false)]
@@ -18368,68 +22284,46 @@ function Get-FabricSparkJobDefinition {
         [Parameter(Mandatory = $false)]
         [ValidateNotNullOrEmpty()]
         [ValidatePattern('^[a-zA-Z0-9_]*$')]
-        [string]$SparkJobDefinitionName
+        [string]$SparkJobDefinitionName,
+
+        [Parameter(Mandatory = $false)]
+        [switch]$Raw
     )
-    try {
-        # Validate input parameters
-        if ($SparkJobDefinitionId -and $SparkJobDefinitionName) {
-            Write-FabricLog -Message "Specify only one parameter: either 'SparkJobDefinitionId' or 'SparkJobDefinitionName'." -Level Error
-            return $null
-        }
 
-        Invoke-FabricAuthCheck -ThrowOnFailure
+    process {
+        try {
+            # Validate input parameters
+            if ($SparkJobDefinitionId -and $SparkJobDefinitionName) {
+                Write-FabricLog -Message "Specify only one parameter: either 'SparkJobDefinitionId' or 'SparkJobDefinitionName'." -Level Error
+                return
+            }
+
+            Invoke-FabricAuthCheck -ThrowOnFailure
 
 
-        # Construct the API endpoint URI
-        $apiEndpointURI = "{0}/workspaces/{1}/sparkJobDefinitions" -f $script:FabricAuthContext.BaseUrl, $WorkspaceId
-        Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
+            # Construct the API endpoint URI
+            $apiEndpointURI = "{0}/workspaces/{1}/sparkJobDefinitions" -f $script:FabricAuthContext.BaseUrl, $WorkspaceId
+            Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
 
-        # Make the API request
-        # Make the API request
-        $apiParams = @{
-            BaseURI = $apiEndpointURI
-            Headers = $script:FabricAuthContext.FabricHeaders
-            Method = 'Get'
-        }
-        $dataItems = Invoke-FabricAPIRequest @apiParams
+            # Make the API request
+            $apiParams = @{
+                BaseURI = $apiEndpointURI
+                Headers = $script:FabricAuthContext.FabricHeaders
+                Method = 'Get'
+            }
+            $dataItems = Invoke-FabricAPIRequest @apiParams
 
-        # Immediately handle empty response
-        if (-not $dataItems) {
-            Write-FabricLog -Message "No data returned from the API." -Level Warning
-            return $null
+            # Apply filtering and formatting
+            Select-FabricResource -InputObject $dataItems -Id $SparkJobDefinitionId -DisplayName $SparkJobDefinitionName -ResourceType 'SparkJobDefinition' -TypeName 'MicrosoftFabric.SparkJobDefinition' -Raw:$Raw
         }
-
-        # Apply filtering logic efficiently
-        if ($SparkJobDefinitionId) {
-            $matchedItems = $dataItems.Where({ $_.Id -eq $SparkJobDefinitionId }, 'First')
+        catch {
+            # Capture and log error details
+            $errorDetails = $_.Exception.Message
+            Write-FabricLog -Message "Failed to retrieve SparkJobDefinition for workspace '$WorkspaceId'. Error: $errorDetails" -Level Error
         }
-        elseif ($SparkJobDefinitionName) {
-            $matchedItems = $dataItems.Where({ $_.DisplayName -eq $SparkJobDefinitionName }, 'First')
-        }
-        else {
-            Write-FabricLog -Message "No filter provided. Returning all items." -Level Debug
-            $matchedItems = $dataItems
-        }
-
-        # Handle results
-        if ($matchedItems) {
-            Write-FabricLog -Message "Item(s) found matching the specified criteria." -Level Debug
-            # Add type decoration for custom formatting
-            $matchedItems | Add-FabricTypeName -TypeName 'MicrosoftFabric.SparkJobDefinition'
-            return $matchedItems
-        }
-        else {
-            Write-FabricLog -Message "No item found matching the provided criteria." -Level Warning
-            return $null
-        }
-    }
-    catch {
-        # Capture and log error details
-        $errorDetails = $_.Exception.Message
-        Write-FabricLog -Message "Failed to retrieve SparkJobDefinition. Error: $errorDetails" -Level Error
     }
 }
-#EndRegion '.\Public\Spark Job Definition\Get-FabricSparkJobDefinition.ps1' 108
+#EndRegion '.\Public\Spark Job Definition\Get-FabricSparkJobDefinition.ps1' 94
 #Region '.\Public\Spark Job Definition\Get-FabricSparkJobDefinitionDefinition.ps1' -1
 
 <#
@@ -18472,8 +22366,9 @@ function Get-FabricSparkJobDefinition {
 function Get-FabricSparkJobDefinitionDefinition {
     [CmdletBinding()]
     param (
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
         [ValidateNotNullOrEmpty()]
+        [Alias('id')]
         [string]$WorkspaceId,
 
         [Parameter(Mandatory = $false)]
@@ -18512,7 +22407,7 @@ function Get-FabricSparkJobDefinitionDefinition {
         Write-FabricLog -Message "Failed to retrieve Spark Job Definition. Error: $errorDetails" -Level Error
     }
 }
-#EndRegion '.\Public\Spark Job Definition\Get-FabricSparkJobDefinitionDefinition.ps1' 81
+#EndRegion '.\Public\Spark Job Definition\Get-FabricSparkJobDefinitionDefinition.ps1' 82
 #Region '.\Public\Spark Job Definition\Get-FabricSparkJobDefinitionLivySession.ps1' -1
 
 <#
@@ -18550,8 +22445,9 @@ Author: Tiago Balabuch
 function Get-FabricSparkJobDefinitionLivySession {
     [CmdletBinding()]
     param (
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
         [ValidateNotNullOrEmpty()]
+        [Alias('id')]
         [string]$WorkspaceId,
 
         [Parameter(Mandatory = $true)]
@@ -18609,7 +22505,7 @@ function Get-FabricSparkJobDefinitionLivySession {
         Write-FabricLog -Message "Failed to retrieve Spark Job Definition Livy Session. Error: $errorDetails" -Level Error
     }
 }
-#EndRegion '.\Public\Spark Job Definition\Get-FabricSparkJobDefinitionLivySession.ps1' 95
+#EndRegion '.\Public\Spark Job Definition\Get-FabricSparkJobDefinitionLivySession.ps1' 96
 #Region '.\Public\Spark Job Definition\New-FabricSparkJobDefinition.ps1' -1
 
 <#
@@ -18648,8 +22544,9 @@ function Get-FabricSparkJobDefinitionLivySession {
 function New-FabricSparkJobDefinition {
     [CmdletBinding(SupportsShouldProcess=$true, ConfirmImpact='Medium')]
     param (
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
         [ValidateNotNullOrEmpty()]
+        [Alias('id')]
         [string]$WorkspaceId,
 
         [Parameter(Mandatory = $true)]
@@ -18669,6 +22566,7 @@ function New-FabricSparkJobDefinition {
         [ValidateNotNullOrEmpty()]
         [string]$SparkJobDefinitionPathPlatformDefinition
     )
+    process {
     try {
         Invoke-FabricAuthCheck -ThrowOnFailure
 
@@ -18759,8 +22657,9 @@ function New-FabricSparkJobDefinition {
         $errorDetails = $_.Exception.Message
         Write-FabricLog -Message "Failed to create Spark Job Definition. Error: $errorDetails" -Level Error
     }
+    }
 }
-#EndRegion '.\Public\Spark Job Definition\New-FabricSparkJobDefinition.ps1' 149
+#EndRegion '.\Public\Spark Job Definition\New-FabricSparkJobDefinition.ps1' 152
 #Region '.\Public\Spark Job Definition\Remove-FabricSparkJobDefinition.ps1' -1
 
 <#
@@ -18790,15 +22689,17 @@ function New-FabricSparkJobDefinition {
 function Remove-FabricSparkJobDefinition {
     [CmdletBinding(SupportsShouldProcess=$true, ConfirmImpact='High')]
     param (
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
         [ValidateNotNullOrEmpty()]
         [string]$WorkspaceId,
 
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
         [ValidateNotNullOrEmpty()]
+        [Alias('id')]
         [string]$SparkJobDefinitionId
     )
-    try {
+    process {
+        try {
         Invoke-FabricAuthCheck -ThrowOnFailure
 
 
@@ -18824,9 +22725,10 @@ function Remove-FabricSparkJobDefinition {
         # Capture and log error details
         $errorDetails = $_.Exception.Message
         Write-FabricLog -Message "Failed to delete SparkJobDefinition '$SparkJobDefinitionId'. Error: $errorDetails" -Level Error
+        }
     }
 }
-#EndRegion '.\Public\Spark Job Definition\Remove-FabricSparkJobDefinition.ps1' 64
+#EndRegion '.\Public\Spark Job Definition\Remove-FabricSparkJobDefinition.ps1' 67
 #Region '.\Public\Spark Job Definition\Start-FabricSparkJobDefinitionOnDemand.ps1' -1
 
 <#
@@ -18862,12 +22764,13 @@ function Remove-FabricSparkJobDefinition {
 function Start-FabricSparkJobDefinitionOnDemand {
     [CmdletBinding(SupportsShouldProcess=$true, ConfirmImpact='Medium')]
     param (
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
         [ValidateNotNullOrEmpty()]
         [string]$WorkspaceId,
 
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
         [ValidateNotNullOrEmpty()]
+        [Alias('id')]
         [string]$SparkJobDefinitionId,
 
         [Parameter(Mandatory = $false)]
@@ -18878,8 +22781,9 @@ function Start-FabricSparkJobDefinitionOnDemand {
         [Parameter(Mandatory = $false)]
         [switch]$WaitForCompletion
     )
-    try {
-        Invoke-FabricAuthCheck -ThrowOnFailure
+    process {
+        try {
+            Invoke-FabricAuthCheck -ThrowOnFailure
 
 
         # Construct the API endpoint URI
@@ -18917,9 +22821,10 @@ function Start-FabricSparkJobDefinitionOnDemand {
         # Capture and log error details
         $errorDetails = $_.Exception.Message
         Write-FabricLog -Message "Failed to start Spark Job Definition on demand. Error: $errorDetails" -Level Error
+        }
     }
 }
-#EndRegion '.\Public\Spark Job Definition\Start-FabricSparkJobDefinitionOnDemand.ps1' 91
+#EndRegion '.\Public\Spark Job Definition\Start-FabricSparkJobDefinitionOnDemand.ps1' 94
 #Region '.\Public\Spark Job Definition\Update-FabricSparkJobDefinition.ps1' -1
 
 <#
@@ -18955,34 +22860,45 @@ function Start-FabricSparkJobDefinitionOnDemand {
 function Update-FabricSparkJobDefinition {
     [CmdletBinding(SupportsShouldProcess=$true, ConfirmImpact='Medium')]
     param (
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
         [ValidateNotNullOrEmpty()]
         [string]$WorkspaceId,
 
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
         [ValidateNotNullOrEmpty()]
+        [Alias('id')]
         [string]$SparkJobDefinitionId,
 
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $false, ValueFromPipelineByPropertyName = $true)]
         [ValidateNotNullOrEmpty()]
         [ValidatePattern('^[a-zA-Z0-9_ ]*$')]
+        [Alias('DisplayName')]
         [string]$SparkJobDefinitionName,
 
-        [Parameter(Mandatory = $false)]
+        [Parameter(Mandatory = $false, ValueFromPipelineByPropertyName = $true)]
         [ValidateNotNullOrEmpty()]
+        [Alias('Description')]
         [string]$SparkJobDefinitionDescription
     )
-    try {
-        Invoke-FabricAuthCheck -ThrowOnFailure
+    process {
+        try {
+            # Validate that at least one update parameter is provided
+            if (-not $SparkJobDefinitionName -and -not $SparkJobDefinitionDescription) {
+                Write-FabricLog -Message "At least one of SparkJobDefinitionName or SparkJobDefinitionDescription must be specified" -Level Error
+                return
+            }
 
+            Invoke-FabricAuthCheck -ThrowOnFailure
 
         # Construct the API endpoint URI
-        $apiEndpointURI = "{0}/workspaces/{1}/sparkJobDefinitions/{2}" -f $script:FabricAuthContext.BaseUrl, $WorkspaceId, $SparkJobDefinitionId
+        $apiEndpointURI = New-FabricAPIUri -Resource 'workspaces' -WorkspaceId $WorkspaceId -Subresource 'sparkJobDefinitions' -ItemId $SparkJobDefinitionId
         Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
 
         # Construct the request body
-        $body = @{
-            displayName = $SparkJobDefinitionName
+        $body = @{}
+
+        if ($SparkJobDefinitionName) {
+            $body.displayName = $SparkJobDefinitionName
         }
 
         if ($SparkJobDefinitionDescription) {
@@ -19012,9 +22928,10 @@ function Update-FabricSparkJobDefinition {
         # Capture and log error details
         $errorDetails = $_.Exception.Message
         Write-FabricLog -Message "Failed to update SparkJobDefinition. Error: $errorDetails" -Level Error
+        }
     }
 }
-#EndRegion '.\Public\Spark Job Definition\Update-FabricSparkJobDefinition.ps1' 93
+#EndRegion '.\Public\Spark Job Definition\Update-FabricSparkJobDefinition.ps1' 105
 #Region '.\Public\Spark Job Definition\Update-FabricSparkJobDefinitionDefinition.ps1' -1
 
 <#
@@ -19050,12 +22967,13 @@ function Update-FabricSparkJobDefinition {
 function Update-FabricSparkJobDefinitionDefinition {
     [CmdletBinding(SupportsShouldProcess=$true, ConfirmImpact='Medium')]
     param (
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
         [ValidateNotNullOrEmpty()]
         [string]$WorkspaceId,
 
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
         [ValidateNotNullOrEmpty()]
+        [Alias('id')]
         [string]$SparkJobDefinitionId,
 
         [Parameter(Mandatory = $true)]
@@ -19066,8 +22984,9 @@ function Update-FabricSparkJobDefinitionDefinition {
         [ValidateNotNullOrEmpty()]
         [string]$SparkJobDefinitionPathPlatformDefinition
     )
-    try {
-        Invoke-FabricAuthCheck -ThrowOnFailure
+    process {
+        try {
+            Invoke-FabricAuthCheck -ThrowOnFailure
 
 
         # Construct the API endpoint URI with filtering logic
@@ -19140,9 +23059,10 @@ function Update-FabricSparkJobDefinitionDefinition {
         # Step 6: Handle and log errors
         $errorDetails = $_.Exception.Message
         Write-FabricLog -Message "Failed to update Spark Job Definition. Error: $errorDetails" -Level Error
+        }
     }
 }
-#EndRegion '.\Public\Spark Job Definition\Update-FabricSparkJobDefinitionDefinition.ps1' 126
+#EndRegion '.\Public\Spark Job Definition\Update-FabricSparkJobDefinitionDefinition.ps1' 129
 #Region '.\Public\Spark\Get-FabricSparkCustomPool.ps1' -1
 
 <#
@@ -19163,6 +23083,9 @@ function Update-FabricSparkJobDefinitionDefinition {
 .PARAMETER SparkCustomPoolName
     The name of the specific Spark custom pool to retrieve. This parameter is optional.
 
+.PARAMETER Raw
+    If specified, returns the raw API response without any transformation or filtering.
+
 .EXAMPLE
     Get-FabricSparkCustomPool -WorkspaceId "12345"
     This example retrieves all Spark custom pools from the workspace with ID "12345".
@@ -19175,6 +23098,10 @@ function Update-FabricSparkJobDefinitionDefinition {
     Get-FabricSparkCustomPool -WorkspaceId "12345" -SparkCustomPoolName "MyPool"
     This example retrieves the Spark custom pool with name "MyPool" from the workspace with ID "12345".
 
+.EXAMPLE
+    Get-FabricSparkCustomPool -WorkspaceId "12345" -Raw
+    This example retrieves all Spark custom pools in the workspace with raw API response format.
+
 .NOTES
     - Requires `$FabricConfig` global configuration, including `BaseUrl` and `FabricHeaders`.
     - Calls `Test-TokenExpired` to ensure token validity before making the API request.
@@ -19185,8 +23112,9 @@ function Update-FabricSparkJobDefinitionDefinition {
 function Get-FabricSparkCustomPool {
     [CmdletBinding()]
     param (
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
         [ValidateNotNullOrEmpty()]
+        [Alias('id')]
         [string]$WorkspaceId,
 
         [Parameter(Mandatory = $false)]
@@ -19196,67 +23124,47 @@ function Get-FabricSparkCustomPool {
         [Parameter(Mandatory = $false)]
         [ValidateNotNullOrEmpty()]
         [ValidatePattern('^[a-zA-Z0-9_ ]*$')]
-        [string]$SparkCustomPoolName
+        [string]$SparkCustomPoolName,
+
+        [Parameter(Mandatory = $false)]
+        [switch]$Raw
     )
-    try {
-        # Validate input parameters
-        if ($SparkCustomPoolId -and $SparkCustomPoolName) {
-            Write-FabricLog -Message "Specify only one parameter: either 'SparkCustomPoolId' or 'SparkCustomPoolName'." -Level Error
-            return $null
-        }
 
-        Invoke-FabricAuthCheck -ThrowOnFailure
+    process {
+        try {
+            # Validate input parameters
+            if ($SparkCustomPoolId -and $SparkCustomPoolName) {
+                Write-FabricLog -Message "Specify only one parameter: either 'SparkCustomPoolId' or 'SparkCustomPoolName'." -Level Error
+                return
+            }
+
+            Invoke-FabricAuthCheck -ThrowOnFailure
 
 
-        # Construct the API endpoint URI
-        $apiEndpointURI = "{0}/workspaces/{1}/spark/pools" -f $script:FabricAuthContext.BaseUrl, $WorkspaceId
-        Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
+            # Construct the API endpoint URI
+            $apiEndpointURI = "{0}/workspaces/{1}/spark/pools" -f $script:FabricAuthContext.BaseUrl, $WorkspaceId
+            Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
 
-        # Make the API request
-        # Make the API request
-        $apiParams = @{
-            BaseURI = $apiEndpointURI
-            Headers = $script:FabricAuthContext.FabricHeaders
-            Method = 'Get'
-        }
-        $dataItems = Invoke-FabricAPIRequest @apiParams
+            # Make the API request
+            $apiParams = @{
+                BaseURI = $apiEndpointURI
+                Headers = $script:FabricAuthContext.FabricHeaders
+                Method = 'Get'
+            }
+            $dataItems = Invoke-FabricAPIRequest @apiParams
 
-        # Immediately handle empty response
-        if (-not $dataItems) {
-            Write-FabricLog -Message "No data returned from the API." -Level Warning
-            return $null
+            # Apply filtering and formatting
+            Select-FabricResource -InputObject $dataItems -Id $SparkCustomPoolId -DisplayName $SparkCustomPoolName -ResourceType 'SparkCustomPool' -TypeName 'MicrosoftFabric.SparkCustomPool' -Raw:$Raw
         }
-
-        # Apply filtering logic efficiently
-        if ($SparkCustomPoolId) {
-            $matchedItems = $dataItems.Where({ $_.id -eq $SparkCustomPoolId }, 'First')
+        catch {
+            # Capture and log error details
+            $errorDetails = $_.Exception.Message
+            Write-FabricLog -Message "Failed to retrieve SparkCustomPool for workspace '$WorkspaceId'. Error: $errorDetails" -Level Error
         }
-        elseif ($SparkCustomPoolName) {
-            $matchedItems = $dataItems.Where({ $_.name -eq $SparkCustomPoolName }, 'First')
-        }
-        else {
-            Write-FabricLog -Message "No filter provided. Returning all items." -Level Debug
-            $matchedItems = $dataItems
-        }
-
-        # Handle results
-        if ($matchedItems) {
-            Write-FabricLog -Message "Item(s) found matching the specified criteria." -Level Debug
-            return $matchedItems
-        }
-        else {
-            Write-FabricLog -Message "No item found matching the provided criteria." -Level Warning
-            return $null
-        }
-    }
-    catch {
-        # Capture and log error details
-        $errorDetails = $_.Exception.Message
-        Write-FabricLog -Message "Failed to retrieve SparkCustomPool. Error: $errorDetails" -Level Error
     }
 
 }
-#EndRegion '.\Public\Spark\Get-FabricSparkCustomPool.ps1' 112
+#EndRegion '.\Public\Spark\Get-FabricSparkCustomPool.ps1' 100
 #Region '.\Public\Spark\Get-FabricSparkLivySession.ps1' -1
 
 <#
@@ -19291,8 +23199,9 @@ Author: Tiago Balabuch
 function Get-FabricSparkLivySession {
     [CmdletBinding()]
     param (
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
         [ValidateNotNullOrEmpty()]
+        [Alias('id')]
         [string]$WorkspaceId,
 
         [Parameter(Mandatory = $false)]
@@ -19346,7 +23255,7 @@ function Get-FabricSparkLivySession {
         Write-FabricLog -Message "Failed to retrieve Spark Livy Session. Error: $errorDetails" -Level Error
     }
 }
-#EndRegion '.\Public\Spark\Get-FabricSparkLivySession.ps1' 88
+#EndRegion '.\Public\Spark\Get-FabricSparkLivySession.ps1' 89
 #Region '.\Public\Spark\Get-FabricSparkSettings.ps1' -1
 
 <#
@@ -19376,8 +23285,9 @@ function Get-FabricSparkSettings
     [CmdletBinding()]
     [OutputType([object[]])]
     param (
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
         [ValidateNotNullOrEmpty()]
+        [Alias('id')]
         [string]$WorkspaceId
     )
 
@@ -19490,7 +23400,7 @@ function Get-FabricSparkSettings
     }
 
 }
-#EndRegion '.\Public\Spark\Get-FabricSparkSettings.ps1' 142
+#EndRegion '.\Public\Spark\Get-FabricSparkSettings.ps1' 143
 #Region '.\Public\Spark\Get-FabricSparkWorkspaceSettings.ps1' -1
 
 <#
@@ -19518,8 +23428,9 @@ function Get-FabricSparkSettings
 function Get-FabricSparkWorkspaceSettings {
     [CmdletBinding()]
     param (
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
         [ValidateNotNullOrEmpty()]
+        [Alias('id')]
         [string]$WorkspaceId
     )
     try {
@@ -19556,7 +23467,7 @@ function Get-FabricSparkWorkspaceSettings {
         Write-FabricLog -Message "Failed to retrieve SparkSettings. Error: $errorDetails" -Level Error
     }
 }
-#EndRegion '.\Public\Spark\Get-FabricSparkWorkspaceSettings.ps1' 64
+#EndRegion '.\Public\Spark\Get-FabricSparkWorkspaceSettings.ps1' 65
 #Region '.\Public\Spark\New-FabricSparkCustomPool.ps1' -1
 
 <#
@@ -19735,15 +23646,17 @@ function New-FabricSparkCustomPool {
 function Remove-FabricSparkCustomPool {
     [CmdletBinding(SupportsShouldProcess=$true, ConfirmImpact='High')]
     param (
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
         [ValidateNotNullOrEmpty()]
         [string]$WorkspaceId,
 
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
         [ValidateNotNullOrEmpty()]
+        [Alias('id')]
         [string]$SparkCustomPoolId
     )
-    try {
+    process {
+        try {
         Invoke-FabricAuthCheck -ThrowOnFailure
 
 
@@ -19769,9 +23682,10 @@ function Remove-FabricSparkCustomPool {
         # Capture and log error details
         $errorDetails = $_.Exception.Message
         Write-FabricLog -Message "Failed to delete SparkCustomPool '$SparkCustomPoolId' from workspace '$WorkspaceId'. Error: $errorDetails" -Level Error
+        }
     }
 }
-#EndRegion '.\Public\Spark\Remove-FabricSparkCustomPool.ps1' 65
+#EndRegion '.\Public\Spark\Remove-FabricSparkCustomPool.ps1' 68
 #Region '.\Public\Spark\Update-FabricSparkCustomPool.ps1' -1
 
 <#
@@ -19829,75 +23743,109 @@ function Remove-FabricSparkCustomPool {
 function Update-FabricSparkCustomPool {
     [CmdletBinding(SupportsShouldProcess=$true, ConfirmImpact='Medium')]
     param (
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
         [ValidateNotNullOrEmpty()]
         [string]$WorkspaceId,
 
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
         [ValidateNotNullOrEmpty()]
+        [Alias('id')]
         [string]$SparkCustomPoolId,
 
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $false, ValueFromPipelineByPropertyName = $true)]
         [ValidateNotNullOrEmpty()]
         [ValidatePattern('^[a-zA-Z0-9_ ]*$')]
+        [Alias('DisplayName')]
         [string]$InstancePoolName,
 
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $false)]
         [ValidateNotNullOrEmpty()]
         [ValidateSet('MemoryOptimized')]
         [string]$NodeFamily,
 
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $false)]
         [ValidateNotNullOrEmpty()]
         [ValidateSet('Large', 'Medium', 'Small', 'XLarge', 'XXLarge')]
         [string]$NodeSize,
 
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $false)]
         [ValidateNotNullOrEmpty()]
         [bool]$AutoScaleEnabled,
 
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $false)]
         [ValidateNotNullOrEmpty()]
         [int]$AutoScaleMinNodeCount,
 
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $false)]
         [ValidateNotNullOrEmpty()]
         [int]$AutoScaleMaxNodeCount,
 
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $false)]
         [ValidateNotNullOrEmpty()]
         [bool]$DynamicExecutorAllocationEnabled,
 
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $false)]
         [ValidateNotNullOrEmpty()]
         [int]$DynamicExecutorAllocationMinExecutors,
 
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $false)]
         [ValidateNotNullOrEmpty()]
         [int]$DynamicExecutorAllocationMaxExecutors
     )
-    try {
-        Invoke-FabricAuthCheck -ThrowOnFailure
+    process {
+        try {
+            # Validate that at least one update parameter is provided
+            if (-not $InstancePoolName -and -not $NodeFamily -and -not $NodeSize -and
+                $null -eq $AutoScaleEnabled -and $null -eq $AutoScaleMinNodeCount -and $null -eq $AutoScaleMaxNodeCount -and
+                $null -eq $DynamicExecutorAllocationEnabled -and $null -eq $DynamicExecutorAllocationMinExecutors -and $null -eq $DynamicExecutorAllocationMaxExecutors) {
+                Write-FabricLog -Message "At least one update parameter must be specified" -Level Error
+                return
+            }
 
+            Invoke-FabricAuthCheck -ThrowOnFailure
 
-        # Construct the API endpoint URI
+        # Construct the API endpoint URI (Spark pools use a non-standard path)
         $apiEndpointURI = "{0}/workspaces/{1}/spark/pools/{2}" -f $script:FabricAuthContext.BaseUrl, $WorkspaceId, $SparkCustomPoolId
         Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
 
-        # Construct the request body
-        $body = @{
-            name                      = $InstancePoolName
-            nodeFamily                = $NodeFamily
-            nodeSize                  = $NodeSize
-            autoScale                 = @{
-                enabled      = $AutoScaleEnabled
-                minNodeCount = $AutoScaleMinNodeCount
-                maxNodeCount = $AutoScaleMaxNodeCount
+        # Construct the request body conditionally
+        $body = @{}
+
+        if ($InstancePoolName) {
+            $body.name = $InstancePoolName
+        }
+
+        if ($NodeFamily) {
+            $body.nodeFamily = $NodeFamily
+        }
+
+        if ($NodeSize) {
+            $body.nodeSize = $NodeSize
+        }
+
+        if ($PSBoundParameters.ContainsKey('AutoScaleEnabled') -or $AutoScaleMinNodeCount -or $AutoScaleMaxNodeCount) {
+            $body.autoScale = @{}
+            if ($PSBoundParameters.ContainsKey('AutoScaleEnabled')) {
+                $body.autoScale.enabled = $AutoScaleEnabled
             }
-            dynamicExecutorAllocation = @{
-                enabled      = $DynamicExecutorAllocationEnabled
-                minExecutors = $DynamicExecutorAllocationMinExecutors
-                maxExecutors = $DynamicExecutorAllocationMaxExecutors
+            if ($AutoScaleMinNodeCount) {
+                $body.autoScale.minNodeCount = $AutoScaleMinNodeCount
+            }
+            if ($AutoScaleMaxNodeCount) {
+                $body.autoScale.maxNodeCount = $AutoScaleMaxNodeCount
+            }
+        }
+
+        if ($PSBoundParameters.ContainsKey('DynamicExecutorAllocationEnabled') -or $DynamicExecutorAllocationMinExecutors -or $DynamicExecutorAllocationMaxExecutors) {
+            $body.dynamicExecutorAllocation = @{}
+            if ($PSBoundParameters.ContainsKey('DynamicExecutorAllocationEnabled')) {
+                $body.dynamicExecutorAllocation.enabled = $DynamicExecutorAllocationEnabled
+            }
+            if ($DynamicExecutorAllocationMinExecutors) {
+                $body.dynamicExecutorAllocation.minExecutors = $DynamicExecutorAllocationMinExecutors
+            }
+            if ($DynamicExecutorAllocationMaxExecutors) {
+                $body.dynamicExecutorAllocation.maxExecutors = $DynamicExecutorAllocationMaxExecutors
             }
         }
 
@@ -19924,9 +23872,10 @@ function Update-FabricSparkCustomPool {
         # Capture and log error details
         $errorDetails = $_.Exception.Message
         Write-FabricLog -Message "Failed to update SparkCustomPool. Error: $errorDetails" -Level Error
+        }
     }
 }
-#EndRegion '.\Public\Spark\Update-FabricSparkCustomPool.ps1' 153
+#EndRegion '.\Public\Spark\Update-FabricSparkCustomPool.ps1' 188
 #Region '.\Public\Spark\Update-FabricSparkSettings.ps1' -1
 
 <#
@@ -19981,8 +23930,9 @@ Author: Tiago Balabuch; Help updated by Copilot.
 function Update-FabricSparkSettings {
     [CmdletBinding(SupportsShouldProcess=$true, ConfirmImpact='Medium')]
     param (
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
         [ValidateNotNullOrEmpty()]
+        [Alias('id')]
         [string]$WorkspaceId,
 
 
@@ -20024,10 +23974,11 @@ function Update-FabricSparkSettings {
         [string]$EnvironmentRuntimeVersion
     )
 
-    try {
-        # Step 1: Ensure token validity
-        Write-FabricLog -Message "Validating token..." -Level Debug
-        Test-TokenExpired
+    process {
+        try {
+            # Step 1: Ensure token validity
+            Write-FabricLog -Message "Validating token..." -Level Debug
+            Test-TokenExpired
         Write-FabricLog -Message "Token validation completed." -Level Debug
 
         # Step 2: Construct the API URL
@@ -20122,9 +24073,10 @@ function Update-FabricSparkSettings {
         # Step 7: Handle and log errors
         $errorDetails = $_.Exception.Message
         Write-FabricLog -Message "Failed to update SparkSettings. Error: $errorDetails" -Level Error
+        }
     }
 }
-#EndRegion '.\Public\Spark\Update-FabricSparkSettings.ps1' 196
+#EndRegion '.\Public\Spark\Update-FabricSparkSettings.ps1' 199
 #Region '.\Public\Spark\Update-FabricSparkWorkspaceSettings.ps1' -1
 
 <#
@@ -20179,8 +24131,9 @@ Author: Tiago Balabuch; Help updated by Copilot.
 function Update-FabricSparkWorkspaceSettings {
     [CmdletBinding(SupportsShouldProcess=$true, ConfirmImpact='Medium')]
     param (
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
         [ValidateNotNullOrEmpty()]
+        [Alias('id')]
         [string]$WorkspaceId,
 
         [Parameter(Mandatory = $false)]
@@ -20300,7 +24253,811 @@ function Update-FabricSparkWorkspaceSettings {
         Write-FabricLog -Message "Failed to update SparkSettings. Error: $errorDetails" -Level Error
     }
 }
-#EndRegion '.\Public\Spark\Update-FabricSparkWorkspaceSettings.ps1' 174
+#EndRegion '.\Public\Spark\Update-FabricSparkWorkspaceSettings.ps1' 175
+#Region '.\Public\SQL Database\Get-FabricSQLDatabase.ps1' -1
+
+<#
+.SYNOPSIS
+    Gets a SQL Database or lists all SQL Databases in a workspace.
+
+.DESCRIPTION
+    The Get-FabricSQLDatabase cmdlet retrieves SQL Database items from a specified Microsoft Fabric workspace.
+    You can list all SQL Databases or filter by a specific SQLDatabaseId or display name.
+
+.PARAMETER WorkspaceId
+    The GUID of the workspace containing the SQL Database resources.
+
+.PARAMETER SQLDatabaseId
+    Optional. Returns only the SQL Database matching this resource Id.
+
+.PARAMETER SQLDatabaseName
+    Optional. Returns only the SQL Database whose display name exactly matches this value.
+
+.PARAMETER Raw
+    Optional. When specified, returns the raw API response with resolved CapacityName and WorkspaceName
+    properties added directly to the output objects.
+
+.EXAMPLE
+    Get-FabricSQLDatabase -WorkspaceId "12345678-1234-1234-1234-123456789012"
+
+    Lists all SQL Databases in the specified workspace.
+
+.EXAMPLE
+    Get-FabricSQLDatabase -WorkspaceId "12345678-1234-1234-1234-123456789012" -SQLDatabaseId "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee"
+
+    Returns the SQL Database with the specified Id.
+
+.EXAMPLE
+    Get-FabricSQLDatabase -WorkspaceId "12345678-1234-1234-1234-123456789012" -SQLDatabaseName "SalesDB"
+
+    Returns the SQL Database with the specified name.
+
+.EXAMPLE
+    Get-FabricSQLDatabase -WorkspaceId "12345678-1234-1234-1234-123456789012" -Raw | Export-Csv -Path "sqldatabases.csv"
+
+    Exports all SQL Databases with resolved names to a CSV file.
+
+.NOTES
+    - Requires `$FabricAuthContext` global configuration.
+    - Calls `Invoke-FabricAuthCheck` to ensure token validity before making the API request.
+
+    Author: Tiago Balabuch, Jess Pomfret, Rob Sewell
+
+#>
+function Get-FabricSQLDatabase {
+    [CmdletBinding()]
+    param (
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
+        [ValidateNotNullOrEmpty()]
+        [Alias('id')]
+        [string]$WorkspaceId,
+
+        [Parameter(Mandatory = $false)]
+        [ValidateNotNullOrEmpty()]
+        [string]$SQLDatabaseId,
+
+        [Parameter(Mandatory = $false)]
+        [ValidateNotNullOrEmpty()]
+        [ValidatePattern('^[a-zA-Z0-9_ ]*$')]
+        [string]$SQLDatabaseName,
+
+        [Parameter()]
+        [switch]$Raw
+    )
+
+    process {
+        try {
+            # Validate input parameters
+            if ($SQLDatabaseId -and $SQLDatabaseName) {
+                Write-FabricLog -Message "Specify only one parameter: either 'SQLDatabaseId' or 'SQLDatabaseName'." -Level Error
+                return
+            }
+
+            Invoke-FabricAuthCheck -ThrowOnFailure
+
+            # Construct the API endpoint URI
+            $apiEndpointURI = New-FabricAPIUri -Resource 'workspaces' -WorkspaceId $WorkspaceId -Subresource 'sqlDatabases'
+            Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
+
+            # Make the API request
+            $apiParams = @{
+                BaseURI = $apiEndpointURI
+                Headers = $script:FabricAuthContext.FabricHeaders
+                Method  = 'Get'
+            }
+            $dataItems = Invoke-FabricAPIRequest @apiParams
+
+            # Apply filtering and formatting
+            Select-FabricResource -InputObject $dataItems -Id $SQLDatabaseId -DisplayName $SQLDatabaseName -ResourceType 'SQLDatabase' -TypeName 'MicrosoftFabric.SQLDatabase' -Raw:$Raw
+        }
+        catch {
+            $errorDetails = $_.Exception.Message
+            Write-FabricLog -Message "Failed to retrieve SQL Database for workspace '$WorkspaceId'. Error: $errorDetails" -Level Error
+        }
+    }
+}
+#EndRegion '.\Public\SQL Database\Get-FabricSQLDatabase.ps1' 101
+#Region '.\Public\SQL Database\Get-FabricSQLDatabaseConnectionString.ps1' -1
+
+<#
+.SYNOPSIS
+    Retrieves the connection string for a specific SQL Database in a Fabric workspace.
+
+.DESCRIPTION
+    The Get-FabricSQLDatabaseConnectionString function retrieves the connection string for a given SQL Database
+    within a specified Fabric workspace. It supports optional parameters for guest tenant access and private link type.
+    The function validates authentication, constructs the appropriate API endpoint, and returns the connection string.
+
+.PARAMETER WorkspaceId
+    The ID of the workspace containing the SQL Database. This parameter is mandatory.
+
+.PARAMETER SQLDatabaseId
+    The ID of the SQL Database for which to retrieve the connection string. This parameter is mandatory.
+
+.PARAMETER GuestTenantId
+    (Optional) The tenant ID for guest access, if applicable.
+
+.PARAMETER PrivateLinkType
+    (Optional) The type of private link to use for the connection string. Valid values are 'None' or 'Workspace'.
+
+.EXAMPLE
+    Get-FabricSQLDatabaseConnectionString -WorkspaceId "workspace123" -SQLDatabaseId "database456"
+    Retrieves the connection string for the SQL Database with ID "database456" in workspace "workspace123".
+
+.EXAMPLE
+    Get-FabricSQLDatabaseConnectionString -WorkspaceId "workspace123" -SQLDatabaseId "database456" -GuestTenantId "guestTenant789" -PrivateLinkType "Workspace"
+    Retrieves the connection string with guest tenant access and workspace private link type.
+
+.EXAMPLE
+    Get-FabricSQLDatabase -WorkspaceId "workspace123" | Get-FabricSQLDatabaseConnectionString
+    Retrieves connection strings for all SQL Databases in the workspace using pipeline input.
+
+.NOTES
+    - Requires `$FabricAuthContext` global configuration, including `BaseUrl` and `FabricHeaders`.
+    - Calls `Invoke-FabricAuthCheck` to ensure token validity before making the API request.
+
+    Author: Tiago Balabuch, Jess Pomfret, Rob Sewell
+
+#>
+function Get-FabricSQLDatabaseConnectionString {
+    [CmdletBinding()]
+    param (
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
+        [ValidateNotNullOrEmpty()]
+        [string]$WorkspaceId,
+
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
+        [ValidateNotNullOrEmpty()]
+        [Alias('id')]
+        [string]$SQLDatabaseId,
+
+        [Parameter(Mandatory = $false)]
+        [ValidateNotNullOrEmpty()]
+        [string]$GuestTenantId,
+
+        [Parameter(Mandatory = $false)]
+        [ValidateNotNullOrEmpty()]
+        [ValidateSet('None', 'Workspace')]
+        [string]$PrivateLinkType
+    )
+
+    process {
+        try {
+            # Validate authentication
+            Invoke-FabricAuthCheck -ThrowOnFailure
+
+            # Build query parameters hashtable
+            $queryParams = @{}
+            if ($GuestTenantId) {
+                $queryParams['guestTenantId'] = $GuestTenantId
+            }
+            if ($PrivateLinkType) {
+                $queryParams['privateLinkType'] = $PrivateLinkType
+            }
+
+            # Construct the API endpoint URI using New-FabricAPIUri
+            $uriParams = @{
+                Resource    = 'workspaces'
+                WorkspaceId = $WorkspaceId
+                Subresource = 'sqlDatabases'
+                ItemId      = "$SQLDatabaseId/connectionString"
+            }
+            if ($queryParams.Count -gt 0) {
+                $uriParams['QueryParameters'] = $queryParams
+            }
+            $apiEndpointURI = New-FabricAPIUri @uriParams
+
+            # Make the API request
+            $apiParams = @{
+                BaseURI = $apiEndpointURI
+                Headers = $script:FabricAuthContext.FabricHeaders
+                Method  = 'Get'
+            }
+            $response = Invoke-FabricAPIRequest @apiParams
+
+            # Handle response
+            if (-not $response) {
+                Write-FabricLog -Message "No connection string returned from the API." -Level Warning
+                return $null
+            }
+
+            Write-FabricLog -Message "Connection string retrieved successfully." -Level Debug
+            return $response
+        }
+        catch {
+            # Capture and log error details
+            $errorDetails = $_.Exception.Message
+            Write-FabricLog -Message "Failed to retrieve SQL Database connection string. Error: $errorDetails" -Level Error
+        }
+    }
+}
+#EndRegion '.\Public\SQL Database\Get-FabricSQLDatabaseConnectionString.ps1' 113
+#Region '.\Public\SQL Database\Get-FabricSQLDatabaseDefinition.ps1' -1
+
+<#
+.SYNOPSIS
+    Gets the definition of a SQL Database from a Microsoft Fabric workspace.
+
+.DESCRIPTION
+    This function retrieves the definition of a SQL Database. This is a long-running operation (LRO)
+    that returns the SQL Database's definition including its parts.
+
+.PARAMETER WorkspaceId
+    The unique identifier of the workspace containing the SQL Database.
+
+.PARAMETER SQLDatabaseId
+    The unique identifier of the SQL Database.
+
+.EXAMPLE
+    Get-FabricSQLDatabaseDefinition -WorkspaceId "12345678-1234-1234-1234-123456789012" -SQLDatabaseId "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee"
+
+    Gets the definition of the specified SQL Database.
+
+.NOTES
+    - This operation is a long-running operation (LRO).
+    - Requires `$FabricAuthContext` global configuration.
+    - Calls `Invoke-FabricAuthCheck` to ensure token validity.
+
+    Author: Tiago Balabuch, Jess Pomfret, Rob Sewell
+
+#>
+function Get-FabricSQLDatabaseDefinition {
+    [CmdletBinding()]
+    param (
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
+        [ValidateNotNullOrEmpty()]
+        [string]$WorkspaceId,
+
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
+        [ValidateNotNullOrEmpty()]
+        [Alias('id')]
+        [string]$SQLDatabaseId
+    )
+
+    process {
+        try {
+            Invoke-FabricAuthCheck -ThrowOnFailure
+
+            # Construct the API endpoint URI (POST to getDefinition)
+            $apiEndpointURI = New-FabricAPIUri -Resource 'workspaces' -WorkspaceId $WorkspaceId -Subresource 'sqlDatabases' -ItemId "$SQLDatabaseId/getDefinition"
+            Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
+
+            # Make the API request
+            $apiParams = @{
+                BaseURI = $apiEndpointURI
+                Headers = $script:FabricAuthContext.FabricHeaders
+                Method  = 'Post'
+            }
+            $response = Invoke-FabricAPIRequest @apiParams
+
+            if (-not $response) {
+                Write-FabricLog -Message "No definition returned from the API." -Level Warning
+                return $null
+            }
+
+            Write-FabricLog -Message "SQL Database definition retrieved successfully." -Level Debug
+            return $response
+        }
+        catch {
+            $errorDetails = $_.Exception.Message
+            Write-FabricLog -Message "Failed to retrieve SQL Database definition. Error: $errorDetails" -Level Error
+        }
+    }
+}
+#EndRegion '.\Public\SQL Database\Get-FabricSQLDatabaseDefinition.ps1' 71
+#Region '.\Public\SQL Database\New-FabricSQLDatabase.ps1' -1
+
+<#
+.SYNOPSIS
+    Creates a new SQL Database in a specified Microsoft Fabric workspace.
+
+.DESCRIPTION
+    This function sends a POST request to the Microsoft Fabric API to create a new SQL Database
+    in the specified workspace. This is a long-running operation (LRO).
+
+.PARAMETER WorkspaceId
+    The unique identifier of the workspace where the SQL Database will be created.
+
+.PARAMETER SQLDatabaseName
+    The name of the SQL Database to be created.
+
+.PARAMETER SQLDatabaseDescription
+    An optional description for the SQL Database.
+
+.PARAMETER Definition
+    Optional. The definition of the SQL Database as a hashtable containing the parts.
+
+.EXAMPLE
+    New-FabricSQLDatabase -WorkspaceId "12345678-1234-1234-1234-123456789012" -SQLDatabaseName "SalesDB"
+
+    Creates a new SQL Database named "SalesDB" in the specified workspace.
+
+.EXAMPLE
+    New-FabricSQLDatabase -WorkspaceId "12345678-1234-1234-1234-123456789012" -SQLDatabaseName "SalesDB" -SQLDatabaseDescription "Sales data storage"
+
+    Creates a new SQL Database with a description.
+
+.NOTES
+    - This operation is a long-running operation (LRO).
+    - Requires `$FabricAuthContext` global configuration.
+    - Calls `Invoke-FabricAuthCheck` to ensure token validity.
+
+    Author: Tiago Balabuch, Jess Pomfret, Rob Sewell
+
+#>
+function New-FabricSQLDatabase {
+    [CmdletBinding(SupportsShouldProcess = $true, ConfirmImpact = 'Medium')]
+    param (
+        [Parameter(Mandatory = $true)]
+        [ValidateNotNullOrEmpty()]
+        [string]$WorkspaceId,
+
+        [Parameter(Mandatory = $true)]
+        [ValidateNotNullOrEmpty()]
+        [ValidatePattern('^[a-zA-Z0-9_ ]*$')]
+        [string]$SQLDatabaseName,
+
+        [Parameter(Mandatory = $false)]
+        [ValidateNotNullOrEmpty()]
+        [string]$SQLDatabaseDescription,
+
+        [Parameter(Mandatory = $false)]
+        [hashtable]$Definition
+    )
+
+    try {
+        Invoke-FabricAuthCheck -ThrowOnFailure
+
+        # Construct the API endpoint URI
+        $apiEndpointURI = New-FabricAPIUri -Resource 'workspaces' -WorkspaceId $WorkspaceId -Subresource 'sqlDatabases'
+        Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
+
+        # Construct the request body
+        $body = @{
+            displayName = $SQLDatabaseName
+        }
+
+        if ($SQLDatabaseDescription) {
+            $body.description = $SQLDatabaseDescription
+        }
+
+        if ($Definition) {
+            $body.definition = $Definition
+        }
+
+        $bodyJson = $body | ConvertTo-Json -Depth 10
+        Write-FabricLog -Message "Request Body: $bodyJson" -Level Debug
+
+        # Make the API request
+        $apiParams = @{
+            BaseURI = $apiEndpointURI
+            Headers = $script:FabricAuthContext.FabricHeaders
+            Method  = 'Post'
+            Body    = $bodyJson
+        }
+
+        if ($PSCmdlet.ShouldProcess($SQLDatabaseName, "Create SQL Database in workspace '$WorkspaceId'")) {
+            $response = Invoke-FabricAPIRequest @apiParams
+            Write-FabricLog -Message "SQL Database '$SQLDatabaseName' created successfully!" -Level Host
+            return $response
+        }
+    }
+    catch {
+        $errorDetails = $_.Exception.Message
+        Write-FabricLog -Message "Failed to create SQL Database. Error: $errorDetails" -Level Error
+    }
+}
+#EndRegion '.\Public\SQL Database\New-FabricSQLDatabase.ps1' 101
+#Region '.\Public\SQL Database\Remove-FabricSQLDatabase.ps1' -1
+
+<#
+.SYNOPSIS
+    Removes a SQL Database from a Microsoft Fabric workspace.
+
+.DESCRIPTION
+    This function sends a DELETE request to the Microsoft Fabric API to remove a SQL Database
+    from the specified workspace.
+
+.PARAMETER WorkspaceId
+    The unique identifier of the workspace containing the SQL Database.
+
+.PARAMETER SQLDatabaseId
+    The unique identifier of the SQL Database to delete.
+
+.EXAMPLE
+    Remove-FabricSQLDatabase -WorkspaceId "12345678-1234-1234-1234-123456789012" -SQLDatabaseId "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee"
+
+    Removes the specified SQL Database from the workspace.
+
+.EXAMPLE
+    Get-FabricSQLDatabase -WorkspaceId "12345678-1234-1234-1234-123456789012" -SQLDatabaseName "OldDB" | Remove-FabricSQLDatabase
+
+    Removes a SQL Database by piping it from Get-FabricSQLDatabase.
+
+.NOTES
+    - Requires `$FabricAuthContext` global configuration.
+    - Calls `Invoke-FabricAuthCheck` to ensure token validity.
+
+    Author: Tiago Balabuch, Jess Pomfret, Rob Sewell
+
+#>
+function Remove-FabricSQLDatabase {
+    [CmdletBinding(SupportsShouldProcess = $true, ConfirmImpact = 'High')]
+    param (
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
+        [ValidateNotNullOrEmpty()]
+        [string]$WorkspaceId,
+
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
+        [ValidateNotNullOrEmpty()]
+        [Alias('id')]
+        [string]$SQLDatabaseId
+    )
+
+    process {
+        try {
+            Invoke-FabricAuthCheck -ThrowOnFailure
+
+            # Construct the API endpoint URI
+            $apiEndpointURI = New-FabricAPIUri -Resource 'workspaces' -WorkspaceId $WorkspaceId -Subresource 'sqlDatabases' -ItemId $SQLDatabaseId
+            Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
+
+            # Make the API request
+            $apiParams = @{
+                BaseURI = $apiEndpointURI
+                Headers = $script:FabricAuthContext.FabricHeaders
+                Method  = 'Delete'
+            }
+
+            if ($PSCmdlet.ShouldProcess($SQLDatabaseId, "Remove SQL Database from workspace '$WorkspaceId'")) {
+                $null = Invoke-FabricAPIRequest @apiParams
+                Write-FabricLog -Message "SQL Database '$SQLDatabaseId' removed successfully!" -Level Host
+            }
+        }
+        catch {
+            $errorDetails = $_.Exception.Message
+            Write-FabricLog -Message "Failed to remove SQL Database. Error: $errorDetails" -Level Error
+        }
+    }
+}
+#EndRegion '.\Public\SQL Database\Remove-FabricSQLDatabase.ps1' 71
+#Region '.\Public\SQL Database\Start-FabricSQLDatabaseMirroring.ps1' -1
+
+<#
+.SYNOPSIS
+    Starts mirroring for a SQL Database in a Microsoft Fabric workspace.
+
+.DESCRIPTION
+    This function sends a POST request to start mirroring for a SQL Database.
+
+.PARAMETER WorkspaceId
+    The unique identifier of the workspace containing the SQL Database.
+
+.PARAMETER SQLDatabaseId
+    The unique identifier of the SQL Database.
+
+.EXAMPLE
+    Start-FabricSQLDatabaseMirroring -WorkspaceId "12345678-1234-1234-1234-123456789012" -SQLDatabaseId "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee"
+
+    Starts mirroring for the specified SQL Database.
+
+.NOTES
+    - Requires `$FabricAuthContext` global configuration.
+    - Calls `Invoke-FabricAuthCheck` to ensure token validity.
+
+    Author: Tiago Balabuch, Jess Pomfret, Rob Sewell
+
+#>
+function Start-FabricSQLDatabaseMirroring {
+    [CmdletBinding(SupportsShouldProcess = $true, ConfirmImpact = 'Medium')]
+    param (
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
+        [ValidateNotNullOrEmpty()]
+        [string]$WorkspaceId,
+
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
+        [ValidateNotNullOrEmpty()]
+        [Alias('id')]
+        [string]$SQLDatabaseId
+    )
+
+    process {
+        try {
+            Invoke-FabricAuthCheck -ThrowOnFailure
+
+            # Construct the API endpoint URI
+            $apiEndpointURI = New-FabricAPIUri -Resource 'workspaces' -WorkspaceId $WorkspaceId -Subresource 'sqlDatabases' -ItemId "$SQLDatabaseId/startMirroring"
+            Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
+
+            # Make the API request
+            $apiParams = @{
+                BaseURI = $apiEndpointURI
+                Headers = $script:FabricAuthContext.FabricHeaders
+                Method  = 'Post'
+            }
+
+            if ($PSCmdlet.ShouldProcess($SQLDatabaseId, "Start mirroring for SQL Database in workspace '$WorkspaceId'")) {
+                $response = Invoke-FabricAPIRequest @apiParams
+                Write-FabricLog -Message "SQL Database mirroring started successfully!" -Level Host
+                return $response
+            }
+        }
+        catch {
+            $errorDetails = $_.Exception.Message
+            Write-FabricLog -Message "Failed to start SQL Database mirroring. Error: $errorDetails" -Level Error
+        }
+    }
+}
+#EndRegion '.\Public\SQL Database\Start-FabricSQLDatabaseMirroring.ps1' 66
+#Region '.\Public\SQL Database\Stop-FabricSQLDatabaseMirroring.ps1' -1
+
+<#
+.SYNOPSIS
+    Stops mirroring for a SQL Database in a Microsoft Fabric workspace.
+
+.DESCRIPTION
+    This function sends a POST request to stop mirroring for a SQL Database.
+
+.PARAMETER WorkspaceId
+    The unique identifier of the workspace containing the SQL Database.
+
+.PARAMETER SQLDatabaseId
+    The unique identifier of the SQL Database.
+
+.EXAMPLE
+    Stop-FabricSQLDatabaseMirroring -WorkspaceId "12345678-1234-1234-1234-123456789012" -SQLDatabaseId "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee"
+
+    Stops mirroring for the specified SQL Database.
+
+.NOTES
+    - Requires `$FabricAuthContext` global configuration.
+    - Calls `Invoke-FabricAuthCheck` to ensure token validity.
+
+    Author: Tiago Balabuch, Jess Pomfret, Rob Sewell
+
+#>
+function Stop-FabricSQLDatabaseMirroring {
+    [CmdletBinding(SupportsShouldProcess = $true, ConfirmImpact = 'Medium')]
+    param (
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
+        [ValidateNotNullOrEmpty()]
+        [string]$WorkspaceId,
+
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
+        [ValidateNotNullOrEmpty()]
+        [Alias('id')]
+        [string]$SQLDatabaseId
+    )
+
+    process {
+        try {
+            Invoke-FabricAuthCheck -ThrowOnFailure
+
+            # Construct the API endpoint URI
+            $apiEndpointURI = New-FabricAPIUri -Resource 'workspaces' -WorkspaceId $WorkspaceId -Subresource 'sqlDatabases' -ItemId "$SQLDatabaseId/stopMirroring"
+            Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
+
+            # Make the API request
+            $apiParams = @{
+                BaseURI = $apiEndpointURI
+                Headers = $script:FabricAuthContext.FabricHeaders
+                Method  = 'Post'
+            }
+
+            if ($PSCmdlet.ShouldProcess($SQLDatabaseId, "Stop mirroring for SQL Database in workspace '$WorkspaceId'")) {
+                $response = Invoke-FabricAPIRequest @apiParams
+                Write-FabricLog -Message "SQL Database mirroring stopped successfully!" -Level Host
+                return $response
+            }
+        }
+        catch {
+            $errorDetails = $_.Exception.Message
+            Write-FabricLog -Message "Failed to stop SQL Database mirroring. Error: $errorDetails" -Level Error
+        }
+    }
+}
+#EndRegion '.\Public\SQL Database\Stop-FabricSQLDatabaseMirroring.ps1' 66
+#Region '.\Public\SQL Database\Update-FabricSQLDatabase.ps1' -1
+
+<#
+.SYNOPSIS
+    Updates an existing SQL Database in a Microsoft Fabric workspace.
+
+.DESCRIPTION
+    This function sends a PATCH request to the Microsoft Fabric API to update a SQL Database's
+    display name and/or description.
+
+.PARAMETER WorkspaceId
+    The unique identifier of the workspace containing the SQL Database.
+
+.PARAMETER SQLDatabaseId
+    The unique identifier of the SQL Database to update.
+
+.PARAMETER SQLDatabaseName
+    Optional. The new display name for the SQL Database.
+
+.PARAMETER SQLDatabaseDescription
+    Optional. The new description for the SQL Database.
+
+.EXAMPLE
+    Update-FabricSQLDatabase -WorkspaceId "12345678-1234-1234-1234-123456789012" -SQLDatabaseId "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee" -SQLDatabaseName "UpdatedName"
+
+    Updates the SQL Database's display name.
+
+.EXAMPLE
+    Update-FabricSQLDatabase -WorkspaceId "12345678-1234-1234-1234-123456789012" -SQLDatabaseId "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee" -SQLDatabaseDescription "New description"
+
+    Updates the SQL Database's description.
+
+.NOTES
+    - Requires `$FabricAuthContext` global configuration.
+    - Calls `Invoke-FabricAuthCheck` to ensure token validity.
+
+    Author: Tiago Balabuch, Jess Pomfret, Rob Sewell
+
+#>
+function Update-FabricSQLDatabase {
+    [CmdletBinding(SupportsShouldProcess = $true, ConfirmImpact = 'Medium')]
+    param (
+        [Parameter(Mandatory = $true)]
+        [ValidateNotNullOrEmpty()]
+        [string]$WorkspaceId,
+
+        [Parameter(Mandatory = $true)]
+        [ValidateNotNullOrEmpty()]
+        [Alias('id')]
+        [string]$SQLDatabaseId,
+
+        [Parameter(Mandatory = $false)]
+        [ValidateNotNullOrEmpty()]
+        [ValidatePattern('^[a-zA-Z0-9_ ]*$')]
+        [string]$SQLDatabaseName,
+
+        [Parameter(Mandatory = $false)]
+        [ValidateNotNullOrEmpty()]
+        [string]$SQLDatabaseDescription
+    )
+
+    try {
+        # Validate at least one update parameter is provided
+        if (-not $SQLDatabaseName -and -not $SQLDatabaseDescription) {
+            Write-FabricLog -Message "At least one of 'SQLDatabaseName' or 'SQLDatabaseDescription' must be provided." -Level Error
+            return
+        }
+
+        Invoke-FabricAuthCheck -ThrowOnFailure
+
+        # Construct the API endpoint URI
+        $apiEndpointURI = New-FabricAPIUri -Resource 'workspaces' -WorkspaceId $WorkspaceId -Subresource 'sqlDatabases' -ItemId $SQLDatabaseId
+        Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
+
+        # Construct the request body
+        $body = @{}
+
+        if ($SQLDatabaseName) {
+            $body.displayName = $SQLDatabaseName
+        }
+
+        if ($SQLDatabaseDescription) {
+            $body.description = $SQLDatabaseDescription
+        }
+
+        $bodyJson = $body | ConvertTo-Json -Depth 10
+        Write-FabricLog -Message "Request Body: $bodyJson" -Level Debug
+
+        # Make the API request
+        $apiParams = @{
+            BaseURI = $apiEndpointURI
+            Headers = $script:FabricAuthContext.FabricHeaders
+            Method  = 'Patch'
+            Body    = $bodyJson
+        }
+
+        if ($PSCmdlet.ShouldProcess($SQLDatabaseId, "Update SQL Database in workspace '$WorkspaceId'")) {
+            $response = Invoke-FabricAPIRequest @apiParams
+            Write-FabricLog -Message "SQL Database '$SQLDatabaseId' updated successfully!" -Level Host
+            return $response
+        }
+    }
+    catch {
+        $errorDetails = $_.Exception.Message
+        Write-FabricLog -Message "Failed to update SQL Database. Error: $errorDetails" -Level Error
+    }
+}
+#EndRegion '.\Public\SQL Database\Update-FabricSQLDatabase.ps1' 106
+#Region '.\Public\SQL Database\Update-FabricSQLDatabaseDefinition.ps1' -1
+
+<#
+.SYNOPSIS
+    Updates the definition of a SQL Database in a Microsoft Fabric workspace.
+
+.DESCRIPTION
+    This function sends a POST request to update the definition of a SQL Database.
+    This is a long-running operation (LRO).
+
+.PARAMETER WorkspaceId
+    The unique identifier of the workspace containing the SQL Database.
+
+.PARAMETER SQLDatabaseId
+    The unique identifier of the SQL Database.
+
+.PARAMETER Definition
+    The new definition for the SQL Database as a hashtable containing the parts.
+
+.EXAMPLE
+    $definition = @{
+        parts = @(
+            @{
+                path = "sqldatabase.json"
+                payload = "base64encodedcontent"
+                payloadType = "InlineBase64"
+            }
+        )
+    }
+    Update-FabricSQLDatabaseDefinition -WorkspaceId "12345678-1234-1234-1234-123456789012" -SQLDatabaseId "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee" -Definition $definition
+
+    Updates the SQL Database's definition.
+
+.NOTES
+    - This operation is a long-running operation (LRO).
+    - Requires `$FabricAuthContext` global configuration.
+    - Calls `Invoke-FabricAuthCheck` to ensure token validity.
+
+    Author: Tiago Balabuch, Jess Pomfret, Rob Sewell
+
+#>
+function Update-FabricSQLDatabaseDefinition {
+    [CmdletBinding(SupportsShouldProcess = $true, ConfirmImpact = 'Medium')]
+    param (
+        [Parameter(Mandatory = $true)]
+        [ValidateNotNullOrEmpty()]
+        [string]$WorkspaceId,
+
+        [Parameter(Mandatory = $true)]
+        [ValidateNotNullOrEmpty()]
+        [Alias('id')]
+        [string]$SQLDatabaseId,
+
+        [Parameter(Mandatory = $true)]
+        [ValidateNotNullOrEmpty()]
+        [hashtable]$Definition
+    )
+
+    try {
+        Invoke-FabricAuthCheck -ThrowOnFailure
+
+        # Construct the API endpoint URI
+        $apiEndpointURI = New-FabricAPIUri -Resource 'workspaces' -WorkspaceId $WorkspaceId -Subresource 'sqlDatabases' -ItemId "$SQLDatabaseId/updateDefinition"
+        Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
+
+        # Construct the request body
+        $body = @{
+            definition = $Definition
+        }
+
+        $bodyJson = $body | ConvertTo-Json -Depth 10
+        Write-FabricLog -Message "Request Body: $bodyJson" -Level Debug
+
+        # Make the API request
+        $apiParams = @{
+            BaseURI = $apiEndpointURI
+            Headers = $script:FabricAuthContext.FabricHeaders
+            Method  = 'Post'
+            Body    = $bodyJson
+        }
+
+        if ($PSCmdlet.ShouldProcess($SQLDatabaseId, "Update SQL Database definition in workspace '$WorkspaceId'")) {
+            $response = Invoke-FabricAPIRequest @apiParams
+            Write-FabricLog -Message "SQL Database definition updated successfully!" -Level Host
+            return $response
+        }
+    }
+    catch {
+        $errorDetails = $_.Exception.Message
+        Write-FabricLog -Message "Failed to update SQL Database definition. Error: $errorDetails" -Level Error
+    }
+}
+#EndRegion '.\Public\SQL Database\Update-FabricSQLDatabaseDefinition.ps1' 91
 #Region '.\Public\SQL Endpoints\Get-FabricSQLEndpoint.ps1' -1
 
 <#
@@ -20322,11 +25079,19 @@ The ID of the SQL Endpoint to retrieve. This parameter is optional but cannot be
 .PARAMETER SQLEndpointName
 The name of the SQL Endpoint to retrieve. This parameter is optional but cannot be used together with SQLEndpointId.
 
+.PARAMETER Raw
+If specified, returns the raw API response without any transformation or filtering.
+
 .EXAMPLE
 Get-FabricSQLEndpoint -WorkspaceId "workspace123" -SQLEndpointId "endpoint456"
 
 .EXAMPLE
 Get-FabricSQLEndpoint -WorkspaceId "workspace123" -SQLEndpointName "MySQLEndpoint"
+
+.EXAMPLE
+Get-FabricSQLEndpoint -WorkspaceId "workspace123" -Raw
+
+Retrieves all SQL Endpoints in the workspace with raw API response format.
 
 .NOTES
     - Requires `$FabricConfig` global configuration, including `BaseUrl` and `FabricHeaders`.
@@ -20339,8 +25104,9 @@ Get-FabricSQLEndpoint -WorkspaceId "workspace123" -SQLEndpointName "MySQLEndpoin
 function Get-FabricSQLEndpoint {
     [CmdletBinding()]
     param (
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
         [ValidateNotNullOrEmpty()]
+        [Alias('id')]
         [string]$WorkspaceId,
 
         [Parameter(Mandatory = $false)]
@@ -20350,111 +25116,98 @@ function Get-FabricSQLEndpoint {
         [Parameter(Mandatory = $false)]
         [ValidateNotNullOrEmpty()]
         [ValidatePattern('^[a-zA-Z0-9_]*$')]
-        [string]$SQLEndpointName
+        [string]$SQLEndpointName,
+
+        [Parameter(Mandatory = $false)]
+        [switch]$Raw
     )
-    try {
-        # Validate input parameters
-        if ($SQLEndpointId -and $SQLEndpointName) {
-            Write-FabricLog -Message "Specify only one parameter: either 'SQLEndpointId' or 'SQLEndpointName'." -Level Error
-            return $null
-        }
 
-        Invoke-FabricAuthCheck -ThrowOnFailure
+    process {
+        try {
+            # Validate input parameters
+            if ($SQLEndpointId -and $SQLEndpointName) {
+                Write-FabricLog -Message "Specify only one parameter: either 'SQLEndpointId' or 'SQLEndpointName'." -Level Error
+                return
+            }
+
+            Invoke-FabricAuthCheck -ThrowOnFailure
 
 
-        # Construct the API endpoint URI
-        $apiEndpointURI = "{0}/workspaces/{1}/SQLEndpoints" -f $script:FabricAuthContext.BaseUrl, $WorkspaceId
-        Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
+            # Construct the API endpoint URI
+            $apiEndpointURI = "{0}/workspaces/{1}/SQLEndpoints" -f $script:FabricAuthContext.BaseUrl, $WorkspaceId
+            Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
 
-        # Make the API request
-        $apiParams = @{
-            BaseURI = $apiEndpointURI
-            Headers = $script:FabricAuthContext.FabricHeaders
-            Method  = 'Get'
-        }
-        $dataItems = Invoke-FabricAPIRequest @apiParams
+            # Make the API request
+            $apiParams = @{
+                BaseURI = $apiEndpointURI
+                Headers = $script:FabricAuthContext.FabricHeaders
+                Method  = 'Get'
+            }
+            $dataItems = Invoke-FabricAPIRequest @apiParams
 
-        # Immediately handle empty response
-        if (-not $dataItems) {
-            Write-FabricLog -Message "No data returned from the API." -Level Warning
-            return $null
+            # Apply filtering and formatting
+            Select-FabricResource -InputObject $dataItems -Id $SQLEndpointId -DisplayName $SQLEndpointName -ResourceType 'SQLEndpoint' -TypeName 'MicrosoftFabric.SQLEndpoint' -Raw:$Raw
         }
-
-        # Apply filtering logic efficiently
-        if ($SQLEndpointId) {
-            $matchedItems = $dataItems.Where({ $_.Id -eq $SQLEndpointId }, 'First')
+        catch {
+            # Capture and log error details
+            $errorDetails = $_.Exception.Message
+            Write-FabricLog -Message "Failed to retrieve SQL Endpoint for workspace '$WorkspaceId'. Error: $errorDetails" -Level Error
         }
-        elseif ($SQLEndpointName) {
-            $matchedItems = $dataItems.Where({ $_.DisplayName -eq $SQLEndpointName }, 'First')
-        }
-        else {
-            Write-FabricLog -Message "No filter provided. Returning all items." -Level Debug
-            $matchedItems = $dataItems
-        }
-
-        # Handle results
-        if ($matchedItems) {
-            Write-FabricLog -Message "Item(s) found matching the specified criteria." -Level Debug
-            # Add type decoration for custom formatting
-            $matchedItems | Add-FabricTypeName -TypeName 'MicrosoftFabric.SQLEndpoint'
-            return $matchedItems
-        }
-        else {
-            Write-FabricLog -Message "No item found matching the provided criteria." -Level Warning
-            return $null
-        }
-    }
-    catch {
-        # Capture and log error details
-        $errorDetails = $_.Exception.Message
-        Write-FabricLog -Message "Failed to retrieve SQL Endpoint. Error: $errorDetails" -Level Error
     }
 }
-#EndRegion '.\Public\SQL Endpoints\Get-FabricSQLEndpoint.ps1' 108
+#EndRegion '.\Public\SQL Endpoints\Get-FabricSQLEndpoint.ps1' 96
 #Region '.\Public\SQL Endpoints\Get-FabricSQLEndpointConnectionString.ps1' -1
 
 <#
 .SYNOPSIS
-Retrieves the connection string for a specific SQL Endpoint in a Fabric workspace.
+    Retrieves the connection string for a specific SQL Endpoint in a Fabric workspace.
 
 .DESCRIPTION
-The Get-FabricSQLEndpointConnectionString function retrieves the connection string for a given SQL Endpoint within a specified Fabric workspace.
-It supports optional parameters for guest tenant access and private link type. The function validates authentication, constructs the appropriate API endpoint,
-and returns the connection string or handles errors as needed.
+    The Get-FabricSQLEndpointConnectionString function retrieves the connection string for a given SQL Endpoint
+    within a specified Fabric workspace. It supports optional parameters for guest tenant access and private link type.
+    The function validates authentication, constructs the appropriate API endpoint, and returns the connection string.
 
 .PARAMETER WorkspaceId
-The ID of the workspace containing the SQL Endpoint. This parameter is mandatory.
+    The ID of the workspace containing the SQL Endpoint. This parameter is mandatory.
 
 .PARAMETER SQLEndpointId
-The ID of the SQL Endpoint for which to retrieve the connection string. This parameter is mandatory.
+    The ID of the SQL Endpoint for which to retrieve the connection string. This parameter is mandatory.
 
 .PARAMETER GuestTenantId
-(Optional) The tenant ID for guest access, if applicable.
+    (Optional) The tenant ID for guest access, if applicable.
 
 .PARAMETER PrivateLinkType
-(Optional) The type of private link to use for the connection string. Valid values are 'None' or 'Workspace'.
+    (Optional) The type of private link to use for the connection string. Valid values are 'None' or 'Workspace'.
 
 .EXAMPLE
-Get-FabricSQLEndpointConnectionString -WorkspaceId "workspace123" -SQLEndpointId "endpoint456"
+    Get-FabricSQLEndpointConnectionString -WorkspaceId "workspace123" -SQLEndpointId "endpoint456"
+    Retrieves the connection string for the SQL Endpoint with ID "endpoint456" in workspace "workspace123".
 
 .EXAMPLE
-Get-FabricSQLEndpointConnectionString -WorkspaceId "workspace123" -SQLEndpointId "endpoint456" -GuestTenantId "guestTenant789" -PrivateLinkType "Workspace"
+    Get-FabricSQLEndpointConnectionString -WorkspaceId "workspace123" -SQLEndpointId "endpoint456" -GuestTenantId "guestTenant789" -PrivateLinkType "Workspace"
+    Retrieves the connection string with guest tenant access and workspace private link type.
+
+.EXAMPLE
+    Get-FabricSQLEndpoint -WorkspaceId "workspace123" | Get-FabricSQLEndpointConnectionString
+    Retrieves connection strings for all SQL Endpoints in the workspace using pipeline input.
 
 .NOTES
-    - Requires `$FabricConfig` global configuration, including `BaseUrl` and `FabricHeaders`.
-    - Calls `Test-TokenExpired` to ensure token validity before making the API request.
-    Author: Updated by Jess Pomfret and Rob Sewell November 2026
+    - Requires `$FabricAuthContext` global configuration, including `BaseUrl` and `FabricHeaders`.
+    - Calls `Invoke-FabricAuthCheck` to ensure token validity before making the API request.
+
+    Author: Tiago Balabuch, Jess Pomfret, Rob Sewell
 
 #>
 function Get-FabricSQLEndpointConnectionString {
     [CmdletBinding()]
     param (
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
         [ValidateNotNullOrEmpty()]
         [string]$WorkspaceId,
 
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
         [ValidateNotNullOrEmpty()]
+        [Alias('id')]
         [string]$SQLEndpointId,
 
         [Parameter(Mandatory = $false)]
@@ -20466,25 +25219,31 @@ function Get-FabricSQLEndpointConnectionString {
         [ValidateSet('None', 'Workspace')]
         [string]$PrivateLinkType
     )
+
     try {
+        # Validate authentication
         Invoke-FabricAuthCheck -ThrowOnFailure
 
-
-        # Construct the API endpoint URI
-        $apiEndpointURI = "{0}/workspaces/{1}/sqlEndpoints/{2}/connectionString" -f $script:FabricAuthContext.BaseUrl, $WorkspaceId, $SQLEndpointId
-        # Append query parameters if GuestTenantId or PrivateLinkType are provided
-        $queryParams = @()
+        # Build query parameters hashtable
+        $queryParams = @{}
         if ($GuestTenantId) {
-            $queryParams += "guestTenantId=$GuestTenantId"
+            $queryParams['guestTenantId'] = $GuestTenantId
         }
         if ($PrivateLinkType) {
-            $queryParams += "privateLinkType=$PrivateLinkType"
-        }
-        if ($queryParams.Count -gt 0) {
-            $apiEndpointURI += "?" + ($queryParams -join "&")
+            $queryParams['privateLinkType'] = $PrivateLinkType
         }
 
-        Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
+        # Construct the API endpoint URI using New-FabricAPIUri
+        $uriParams = @{
+            Resource    = 'workspaces'
+            WorkspaceId = $WorkspaceId
+            Subresource = 'sqlEndpoints'
+            ItemId      = "$SQLEndpointId/connectionString"
+        }
+        if ($queryParams.Count -gt 0) {
+            $uriParams['QueryParameters'] = $queryParams
+        }
+        $apiEndpointURI = New-FabricAPIUri @uriParams
 
         # Make the API request
         $apiParams = @{
@@ -20492,17 +25251,16 @@ function Get-FabricSQLEndpointConnectionString {
             Headers = $script:FabricAuthContext.FabricHeaders
             Method  = 'Get'
         }
-        $dataItems = Invoke-FabricAPIRequest @apiParams
+        $response = Invoke-FabricAPIRequest @apiParams
 
-        # Immediately handle empty response
-        if (-not $dataItems) {
-            Write-FabricLog -Message "No data returned from the API." -Level Warning
+        # Handle response
+        if (-not $response) {
+            Write-FabricLog -Message "No connection string returned from the API." -Level Warning
             return $null
         }
-        else {
-            Write-FabricLog -Message "Item(s) found matching the specified criteria." -Level Debug
-            return $dataItems
-        }
+
+        Write-FabricLog -Message "Connection string retrieved successfully." -Level Debug
+        return $response
     }
     catch {
         # Capture and log error details
@@ -20510,7 +25268,7 @@ function Get-FabricSQLEndpointConnectionString {
         Write-FabricLog -Message "Failed to retrieve SQL Endpoint connection string. Error: $errorDetails" -Level Error
     }
 }
-#EndRegion '.\Public\SQL Endpoints\Get-FabricSQLEndpointConnectionString.ps1' 98
+#EndRegion '.\Public\SQL Endpoints\Get-FabricSQLEndpointConnectionString.ps1' 111
 #Region '.\Public\SQL Endpoints\Update-FabricSQLEndpointMetadata.ps1' -1
 
 <#
@@ -20551,12 +25309,13 @@ Starts a refresh and waits until it completes before returning.
 function Update-FabricSQLEndpointMetadata {
     [CmdletBinding(SupportsShouldProcess=$true, ConfirmImpact='Medium')]
     param (
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
         [ValidateNotNullOrEmpty()]
         [string]$WorkspaceId,
 
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
         [ValidateNotNullOrEmpty()]
+        [Alias('id')]
         [string]$SQLEndpointId,
         [Parameter(Mandatory = $true)]
         [switch]$WaitForCompletion
@@ -20599,7 +25358,7 @@ function Update-FabricSQLEndpointMetadata {
         Write-FabricLog -Message "Failed to update SQL Endpoint metadata. Error: $errorDetails" -Level Error
     }
 }
-#EndRegion '.\Public\SQL Endpoints\Update-FabricSQLEndpointMetadata.ps1' 87
+#EndRegion '.\Public\SQL Endpoints\Update-FabricSQLEndpointMetadata.ps1' 88
 #Region '.\Public\Tags\Get-FabricTag.ps1' -1
 
 <#
@@ -22325,6 +27084,7 @@ function Invoke-FabricAPIRequest {
                             { $propertyNames -contains 'value' } { $items = $response.value; break }
                             { $propertyNames -contains 'accessEntities' } { $items = $response.accessEntities; break }
                             { $propertyNames -contains 'domains' } { $items = $response.domains; break }
+                            { $propertyNames -contains 'workspaces' } { $items = $response.workspaces; break }
                             { $propertyNames -contains 'publishDetails' } { $items = $response.publishDetails; break }
                             { $propertyNames -contains 'definition' } { $items = $response.definition.parts; break }
                             { $propertyNames -contains 'data' } { $items = $response.data; break }
@@ -22472,7 +27232,7 @@ function Invoke-FabricAPIRequest {
         throw
     }
 }
-#EndRegion '.\Public\Utils\Invoke-FabricAPIRequest.ps1' 327
+#EndRegion '.\Public\Utils\Invoke-FabricAPIRequest.ps1' 328
 #Region '.\Public\Utils\Resolve-FabricCapacityIdFromWorkspace.ps1' -1
 
 function Resolve-FabricCapacityIdFromWorkspace {
@@ -22945,6 +27705,9 @@ function Set-FabricApiHeaders {
 .PARAMETER VariableLibraryName
     The display name of the variable library to retrieve. Optional.
 
+.PARAMETER Raw
+    If specified, returns the raw API response without any transformation or filtering.
+
 .EXAMPLE
     Get-FabricVariableLibrary -WorkspaceId "workspace-12345" -VariableLibraryId "library-67890"
     Returns the variable library with ID "library-67890" from the specified workspace.
@@ -22952,6 +27715,10 @@ function Set-FabricApiHeaders {
 .EXAMPLE
     Get-FabricVariableLibrary -WorkspaceId "workspace-12345" -VariableLibraryName "My Variable Library"
     Returns the variable library named "My Variable Library" from the specified workspace.
+
+.EXAMPLE
+    Get-FabricVariableLibrary -WorkspaceId "workspace-12345" -Raw
+    Returns all variable libraries in the workspace with raw API response format.
 
 .NOTES
     - Requires a `$FabricConfig` global variable with `BaseUrl` and `FabricHeaders`.
@@ -22963,8 +27730,9 @@ function Set-FabricApiHeaders {
 function Get-FabricVariableLibrary {
     [CmdletBinding()]
     param (
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
         [ValidateNotNullOrEmpty()]
+        [Alias('id')]
         [string]$WorkspaceId,
 
         [Parameter(Mandatory = $false)]
@@ -22974,67 +27742,46 @@ function Get-FabricVariableLibrary {
         [Parameter(Mandatory = $false)]
         [ValidateNotNullOrEmpty()]
         [ValidatePattern('^[a-zA-Z0-9_]*$')]
-        [string]$VariableLibraryName
+        [string]$VariableLibraryName,
+
+        [Parameter(Mandatory = $false)]
+        [switch]$Raw
     )
-    try {
-        # Validate input parameters
-        if ($VariableLibraryId -and $VariableLibraryName) {
-            Write-FabricLog -Message "Specify only one parameter: either 'VariableLibraryId' or 'VariableLibraryName'." -Level Error
-            return $null
-        }
 
-        Invoke-FabricAuthCheck -ThrowOnFailure
+    process {
+        try {
+            # Validate input parameters
+            if ($VariableLibraryId -and $VariableLibraryName) {
+                Write-FabricLog -Message "Specify only one parameter: either 'VariableLibraryId' or 'VariableLibraryName'." -Level Error
+                return
+            }
+
+            Invoke-FabricAuthCheck -ThrowOnFailure
 
 
-        # Construct the API endpoint URI
-        $apiEndpointURI = "{0}/workspaces/{1}/VariableLibraries" -f $script:FabricAuthContext.BaseUrl, $WorkspaceId
-        Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
+            # Construct the API endpoint URI
+            $apiEndpointURI = "{0}/workspaces/{1}/VariableLibraries" -f $script:FabricAuthContext.BaseUrl, $WorkspaceId
+            Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
 
-        # Make the API request
-        $apiParams = @{
-            BaseURI = $apiEndpointURI
-            Headers = $script:FabricAuthContext.FabricHeaders
-            Method  = 'Get'
-        }
-        $dataItems = Invoke-FabricAPIRequest @apiParams
+            # Make the API request
+            $apiParams = @{
+                BaseURI = $apiEndpointURI
+                Headers = $script:FabricAuthContext.FabricHeaders
+                Method  = 'Get'
+            }
+            $dataItems = Invoke-FabricAPIRequest @apiParams
 
-        # Immediately handle empty response
-        if (-not $dataItems) {
-            Write-FabricLog -Message "No data returned from the API." -Level Warning
-            return $null
+            # Apply filtering and formatting
+            Select-FabricResource -InputObject $dataItems -Id $VariableLibraryId -DisplayName $VariableLibraryName -ResourceType 'VariableLibrary' -TypeName 'MicrosoftFabric.VariableLibrary' -Raw:$Raw
         }
-
-        # Apply filtering logic efficiently
-        if ($VariableLibraryId) {
-            $matchedItems = $dataItems.Where({ $_.Id -eq $VariableLibraryId }, 'First')
+        catch {
+            # Capture and log error details
+            $errorDetails = $_.Exception.Message
+            Write-FabricLog -Message "Failed to retrieve Variable Library for workspace '$WorkspaceId'. Error: $errorDetails" -Level Error
         }
-        elseif ($VariableLibraryName) {
-            $matchedItems = $dataItems.Where({ $_.DisplayName -eq $VariableLibraryName }, 'First')
-        }
-        else {
-            Write-FabricLog -Message "No filter provided. Returning all items." -Level Debug
-            $matchedItems = $dataItems
-        }
-
-        # Handle results
-        if ($matchedItems) {
-            Write-FabricLog -Message "Item(s) found matching the specified criteria." -Level Debug
-            # Add type decoration for custom formatting
-            $matchedItems | Add-FabricTypeName -TypeName 'MicrosoftFabric.VariableLibrary'
-            return $matchedItems
-        }
-        else {
-            Write-FabricLog -Message "No item found matching the provided criteria." -Level Warning
-            return $null
-        }
-    }
-    catch {
-        # Capture and log error details
-        $errorDetails = $_.Exception.Message
-        Write-FabricLog -Message "Failed to retrieve Variable Library. Error: $errorDetails" -Level Error
     }
 }
-#EndRegion '.\Public\Variable Library\Get-FabricVariableLibrary.ps1' 107
+#EndRegion '.\Public\Variable Library\Get-FabricVariableLibrary.ps1' 94
 #Region '.\Public\Variable Library\Get-FabricVariableLibraryDefinition.ps1' -1
 
 <#
@@ -23070,8 +27817,9 @@ function Get-FabricVariableLibrary {
 function Get-FabricVariableLibraryDefinition {
     [CmdletBinding()]
     param (
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
         [ValidateNotNullOrEmpty()]
+        [Alias('id')]
         [string]$WorkspaceId,
 
         [Parameter(Mandatory = $false)]
@@ -23111,7 +27859,7 @@ function Get-FabricVariableLibraryDefinition {
         Write-FabricLog -Message "Failed to retrieve Variable Library. Error: $errorDetails" -Level Error
     }
 }
-#EndRegion '.\Public\Variable Library\Get-FabricVariableLibraryDefinition.ps1' 75
+#EndRegion '.\Public\Variable Library\Get-FabricVariableLibraryDefinition.ps1' 76
 #Region '.\Public\Variable Library\New-FabricVariableLibrary.ps1' -1
 
 <#
@@ -23260,20 +28008,21 @@ function New-FabricVariableLibrary {
 function Remove-FabricVariableLibrary {
     [CmdletBinding(SupportsShouldProcess=$true, ConfirmImpact='High')]
     param (
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
         [ValidateNotNullOrEmpty()]
         [string]$WorkspaceId,
 
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
         [ValidateNotNullOrEmpty()]
+        [Alias('id')]
         [string]$VariableLibraryId
     )
+    process {
     try {
         Invoke-FabricAuthCheck -ThrowOnFailure
 
-
         # Construct the API endpoint URI
-        $apiEndpointURI = "{0}/workspaces/{1}/VariableLibraries/{2}" -f $script:FabricAuthContext.BaseUrl, $WorkspaceId, $VariableLibraryId
+        $apiEndpointURI = New-FabricAPIUri -Resource 'workspaces' -WorkspaceId $WorkspaceId -Subresource 'VariableLibraries' -ItemId $VariableLibraryId
         Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
 
         # Make the API request
@@ -23296,8 +28045,9 @@ function Remove-FabricVariableLibrary {
         $errorDetails = $_.Exception.Message
         Write-FabricLog -Message "Failed to delete Variable Library '$VariableLibraryId'. Error: $errorDetails" -Level Error
     }
+    }
 }
-#EndRegion '.\Public\Variable Library\Remove-FabricVariableLibrary.ps1' 65
+#EndRegion '.\Public\Variable Library\Remove-FabricVariableLibrary.ps1' 67
 #Region '.\Public\Variable Library\Update-FabricVariableLibrary.ps1' -1
 
 <#
@@ -23332,79 +28082,101 @@ function Remove-FabricVariableLibrary {
 
     Author: Tiago Balabuch
 #>
-function Update-FabricVariableLibrary {
-    [CmdletBinding(SupportsShouldProcess=$true, ConfirmImpact='Medium')]
+function Update-FabricVariableLibrary
+{
+    [CmdletBinding(SupportsShouldProcess = $true, ConfirmImpact = 'Medium')]
     param (
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
         [ValidateNotNullOrEmpty()]
         [string]$WorkspaceId,
 
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
         [ValidateNotNullOrEmpty()]
+        [Alias('id')]
         [string]$VariableLibraryId,
 
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $false, ValueFromPipelineByPropertyName = $true)]
         [ValidateNotNullOrEmpty()]
         [ValidatePattern('^[a-zA-Z0-9_]*$')]
+        [Alias('DisplayName')]
         [string]$VariableLibraryName,
 
-        [Parameter(Mandatory = $false)]
+        [Parameter(Mandatory = $false, ValueFromPipelineByPropertyName = $true)]
         [ValidateNotNullOrEmpty()]
+        [Alias('Description')]
         [string]$VariableLibraryDescription,
 
         [Parameter(Mandatory = $false)]
         [ValidateNotNullOrEmpty()]
         [string]$ActiveValueSetName
     )
-    try {
-        Invoke-FabricAuthCheck -ThrowOnFailure
-
-
-        # Construct the API endpoint URI
-        $apiEndpointURI = "{0}/workspaces/{1}/VariableLibraries/{2}" -f $script:FabricAuthContext.BaseUrl, $WorkspaceId, $VariableLibraryId
-        Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
-
-        # Construct the request body
-        $body = @{
-            displayName = $VariableLibraryName
-        }
-
-        if ($VariableLibraryDescription) {
-            $body.description = $VariableLibraryDescription
-        }
-        if ($ActiveValueSetName) {
-            if (-not $body.ContainsKey('properties') -or $null -eq $body.properties) {
-                $body.properties = @{}
+    process
+    {
+        try
+        {
+            # Validate that at least one update parameter is provided
+            if (-not $VariableLibraryName -and -not $VariableLibraryDescription -and -not $ActiveValueSetName)
+            {
+                Write-FabricLog -Message "At least one of VariableLibraryName, VariableLibraryDescription, or ActiveValueSetName must be specified" -Level Error
+                return
             }
-            $body.properties.activeValueSetName = $ActiveValueSetName
-        }
 
-        # Convert the body to JSON
-        $bodyJson = $body | ConvertTo-Json
-        Write-FabricLog -Message "Request Body: $bodyJson" -Level Debug
+            Invoke-FabricAuthCheck -ThrowOnFailure
 
-        # Make the API request
-        if ($PSCmdlet.ShouldProcess("Variable Library '$VariableLibraryName' in workspace '$WorkspaceId'", "Update")) {
-            $apiParams = @{
-                Headers = $script:FabricAuthContext.FabricHeaders
-                BaseURI = $apiEndpointURI
-                Method  = 'Patch'
-                Body    = $bodyJson
+            # Construct the API endpoint URI
+            $apiEndpointURI = New-FabricAPIUri -Resource 'workspaces' -WorkspaceId $WorkspaceId -Subresource 'VariableLibraries' -ItemId $VariableLibraryId
+            Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
+
+            # Construct the request body conditionally
+            $body = @{}
+
+            if ($VariableLibraryName)
+            {
+                $body.displayName = $VariableLibraryName
             }
-            $response = Invoke-FabricAPIRequest @apiParams
 
-            # Return the API response
-            Write-FabricLog -Message "Variable Library '$VariableLibraryName' updated successfully!" -Level Host
-            return $response
+            if ($VariableLibraryDescription)
+            {
+                $body.description = $VariableLibraryDescription
+            }
+            if ($ActiveValueSetName)
+            {
+                if (-not $body.ContainsKey('properties') -or $null -eq $body.properties)
+                {
+                    $body.properties = @{}
+                }
+                $body.properties.activeValueSetName = $ActiveValueSetName
+            }
+
+            # Convert the body to JSON
+            $bodyJson = $body | ConvertTo-Json
+            Write-FabricLog -Message "Request Body: $bodyJson" -Level Debug
+
+            # Make the API request
+            if ($PSCmdlet.ShouldProcess("Variable Library '$VariableLibraryName' in workspace '$WorkspaceId'", "Update"))
+            {
+                $apiParams = @{
+                    Headers = $script:FabricAuthContext.FabricHeaders
+                    BaseURI = $apiEndpointURI
+                    Method  = 'Patch'
+                    Body    = $bodyJson
+                }
+                $response = Invoke-FabricAPIRequest @apiParams
+
+                # Return the API response
+                Write-FabricLog -Message "Variable Library '$VariableLibraryName' updated successfully!" -Level Host
+                return $response
+            }
         }
-    }
-    catch {
-        # Capture and log error details
-        $errorDetails = $_.Exception.Message
-        Write-FabricLog -Message "Failed to update Variable Library. Error: $errorDetails" -Level Error
+        catch
+        {
+            # Capture and log error details
+            $errorDetails = $_.Exception.Message
+            Write-FabricLog -Message "Failed to update Variable Library. Error: $errorDetails" -Level Error
+        }
     }
 }
-#EndRegion '.\Public\Variable Library\Update-FabricVariableLibrary.ps1' 105
+#EndRegion '.\Public\Variable Library\Update-FabricVariableLibrary.ps1' 127
 #Region '.\Public\Warehouse\Get-FabricWarehouse.ps1' -1
 
 <#
@@ -23424,6 +28196,9 @@ function Update-FabricVariableLibrary {
 .PARAMETER WarehouseName
     The name of the warehouse to retrieve. This parameter is optional.
 
+.PARAMETER Raw
+    When specified, returns the raw API response without any filtering or formatting.
+
 .EXAMPLE
      Get-FabricWarehouse -WorkspaceId "workspace-12345" -WarehouseId "warehouse-67890"
     This example retrieves the warehouse details for the warehouse with ID "warehouse-67890" in the workspace with ID "workspace-12345".
@@ -23431,6 +28206,10 @@ function Update-FabricVariableLibrary {
 .EXAMPLE
      Get-FabricWarehouse -WorkspaceId "workspace-12345" -WarehouseName "My Warehouse"
     This example retrieves the warehouse details for the warehouse named "My Warehouse" in the workspace with ID "workspace-12345".
+
+.EXAMPLE
+     Get-FabricWarehouse -WorkspaceId "workspace-12345" -Raw
+    This example returns the raw API response for all warehouses in the workspace without any processing.
 
 .NOTES
     - Requires `$FabricConfig` global configuration, including `BaseUrl` and `FabricHeaders`.
@@ -23441,8 +28220,9 @@ function Update-FabricVariableLibrary {
 function Get-FabricWarehouse {
     [CmdletBinding()]
     param (
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
         [ValidateNotNullOrEmpty()]
+        [Alias('id')]
         [string]$WorkspaceId,
 
         [Parameter(Mandatory = $false)]
@@ -23452,69 +28232,44 @@ function Get-FabricWarehouse {
         [Parameter(Mandatory = $false)]
         [ValidateNotNullOrEmpty()]
         [ValidatePattern('^[a-zA-Z0-9_]*$')]
-        [string]$WarehouseName
+        [string]$WarehouseName,
+
+        [Parameter()]
+        [switch]$Raw
     )
 
-    try {
-        # Validate input parameters
-        if ($WarehouseId -and $WarehouseName) {
-            Write-FabricLog -Message "Specify only one parameter: either 'WarehouseId' or 'WarehouseName'." -Level Error
-            return $null
+    process {
+        try {
+            # Validate input parameters
+            if ($WarehouseId -and $WarehouseName) {
+                Write-FabricLog -Message "Specify only one parameter: either 'WarehouseId' or 'WarehouseName'." -Level Error
+                return
+            }
+
+            Invoke-FabricAuthCheck -ThrowOnFailure
+
+            # Construct the API endpoint URI
+            $apiEndpointURI = "{0}/workspaces/{1}/warehouses" -f $script:FabricAuthContext.BaseUrl, $WorkspaceId
+
+            # Make the API request
+            $apiParams = @{
+                BaseURI = $apiEndpointURI
+                Headers = $script:FabricAuthContext.FabricHeaders
+                Method  = 'Get'
+            }
+            $dataItems = Invoke-FabricAPIRequest @apiParams
+
+            # Apply filtering and formatting
+            Select-FabricResource -InputObject $dataItems -Id $WarehouseId -DisplayName $WarehouseName -ResourceType 'Warehouse' -TypeName 'MicrosoftFabric.Warehouse' -Raw:$Raw
         }
-
-        Invoke-FabricAuthCheck -ThrowOnFailure
-
-
-        # Construct the API endpoint URI
-        $apiEndpointURI = "{0}/workspaces/{1}/warehouses" -f $script:FabricAuthContext.BaseUrl, $WorkspaceId
-
-        # Make the API request
-        $apiParams = @{
-            BaseURI = $apiEndpointURI
-            Headers = $script:FabricAuthContext.FabricHeaders
-            Method  = 'Get'
+        catch {
+            # Capture and log error details
+            $errorDetails = $_.Exception.Message
+            Write-FabricLog -Message "Failed to retrieve Warehouse for workspace '$WorkspaceId'. Error: $errorDetails" -Level Error
         }
-        $dataItems = Invoke-FabricAPIRequest @apiParams
-
-        # Immediately handle empty response
-        if (-not $dataItems) {
-            Write-FabricLog -Message "No data returned from the API." -Level Warning
-            return $null
-        }
-
-        # Apply filtering logic efficiently
-        if ($WarehouseId) {
-            $matchedItems = $dataItems.Where({ $_.Id -eq $WarehouseId }, 'First')
-        }
-        elseif ($WarehouseName) {
-            $matchedItems = $dataItems.Where({ $_.DisplayName -eq $WarehouseName }, 'First')
-        }
-        else {
-            Write-FabricLog -Message "No filter provided. Returning all items." -Level Debug
-            $matchedItems = $dataItems
-        }
-
-        # Handle results
-        if ($matchedItems) {
-            Write-FabricLog -Message "Item(s) found matching the specified criteria." -Level Debug
-
-            # Add type decoration for custom formatting
-            $matchedItems | Add-FabricTypeName -TypeName 'MicrosoftFabric.Warehouse'
-
-            return $matchedItems
-        }
-        else {
-            Write-FabricLog -Message "No item found matching the provided criteria." -Level Warning
-            return $null
-        }
-    }
-    catch {
-        # Capture and log error details
-        $errorDetails = $_.Exception.Message
-        Write-FabricLog -Message "Failed to retrieve Warehouse. Error: $errorDetails" -Level Error
     }
 }
-#EndRegion '.\Public\Warehouse\Get-FabricWarehouse.ps1' 108
+#EndRegion '.\Public\Warehouse\Get-FabricWarehouse.ps1' 91
 #Region '.\Public\Warehouse\Get-FabricWarehouseConnectionString.ps1' -1
 
 <#
@@ -23552,8 +28307,9 @@ Author: Updated by Jess Pomfret and Rob Sewell November 2026
 function Get-FabricWarehouseConnectionString {
     [CmdletBinding()]
     param (
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
         [ValidateNotNullOrEmpty()]
+        [Alias('id')]
         [string]$WorkspaceId,
 
         [Parameter(Mandatory = $true)]
@@ -23613,7 +28369,7 @@ function Get-FabricWarehouseConnectionString {
         Write-FabricLog -Message "Failed to retrieve Warehouse connection string. Error: $errorDetails" -Level Error
     }
 }
-#EndRegion '.\Public\Warehouse\Get-FabricWarehouseConnectionString.ps1' 97
+#EndRegion '.\Public\Warehouse\Get-FabricWarehouseConnectionString.ps1' 98
 #Region '.\Public\Warehouse\Get-FabricWarehouseSnapshot.ps1' -1
 
 <#
@@ -23659,8 +28415,9 @@ Lists all warehouse snapshots in the workspace.
 function Get-FabricWarehouseSnapshot {
     [CmdletBinding()]
     param (
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
         [ValidateNotNullOrEmpty()]
+        [Alias('id')]
         [string]$WorkspaceId,
 
         [Parameter(Mandatory = $false)]
@@ -23728,7 +28485,7 @@ function Get-FabricWarehouseSnapshot {
         Write-FabricLog -Message "Failed to retrieve Warehouse Snapshot. Error: $errorDetails" -Level Error
     }
 }
-#EndRegion '.\Public\Warehouse\Get-FabricWarehouseSnapshot.ps1' 113
+#EndRegion '.\Public\Warehouse\Get-FabricWarehouseSnapshot.ps1' 114
 #Region '.\Public\Warehouse\New-FabricWarehouse.ps1' -1
 
 <#
@@ -23764,8 +28521,9 @@ function Get-FabricWarehouseSnapshot {
 function New-FabricWarehouse {
     [CmdletBinding(SupportsShouldProcess=$true, ConfirmImpact='Medium')]
     param (
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
         [ValidateNotNullOrEmpty()]
+        [Alias('id')]
         [string]$WorkspaceId,
 
         [Parameter(Mandatory = $true)]
@@ -23782,6 +28540,7 @@ function New-FabricWarehouse {
         [ValidateSet('Latin1_General_100_BIN2_UTF8', 'Latin1_General_100_CI_AS_KS_WS_SC_UTF8')]
         [string]$WarehouseCollation = 'Latin1_General_100_BIN2_UTF8'
     )
+    process {
     try {
         Invoke-FabricAuthCheck -ThrowOnFailure
 
@@ -23830,8 +28589,9 @@ function New-FabricWarehouse {
         $errorDetails = $_.Exception.Message
         Write-FabricLog -Message "Failed to create Warehouse. Error: $errorDetails" -Level Error
     }
+    }
 }
-#EndRegion '.\Public\Warehouse\New-FabricWarehouse.ps1' 101
+#EndRegion '.\Public\Warehouse\New-FabricWarehouse.ps1' 104
 #Region '.\Public\Warehouse\New-FabricWarehouseSnapshot.ps1' -1
 
 <#
@@ -23988,14 +28748,16 @@ function New-FabricWarehouseSnapshot {
 function Remove-FabricWarehouse {
     [CmdletBinding(SupportsShouldProcess=$true, ConfirmImpact='High')]
     param (
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
         [ValidateNotNullOrEmpty()]
         [string]$WorkspaceId,
 
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
         [ValidateNotNullOrEmpty()]
+        [Alias('id')]
         [string]$WarehouseId
     )
+    process {
     try {
         Invoke-FabricAuthCheck -ThrowOnFailure
 
@@ -24024,9 +28786,8 @@ function Remove-FabricWarehouse {
         # Capture and log error details
         $errorDetails = $_.Exception.Message
         Write-FabricLog -Message "Failed to delete Warehouse '$WarehouseId' from workspace '$WorkspaceId'. Error: $errorDetails" -Level Error
-    }
-}
-#EndRegion '.\Public\Warehouse\Remove-FabricWarehouse.ps1' 66
+    }    }}
+#EndRegion '.\Public\Warehouse\Remove-FabricWarehouse.ps1' 67
 #Region '.\Public\Warehouse\Remove-FabricWarehouseSnapshot.ps1' -1
 
 <#
@@ -24056,14 +28817,16 @@ function Remove-FabricWarehouse {
 function Remove-FabricWarehouseSnapshot {
     [CmdletBinding(SupportsShouldProcess=$true, ConfirmImpact='High')]
     param (
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
         [ValidateNotNullOrEmpty()]
+        [Alias('id')]
         [string]$WorkspaceId,
 
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
         [ValidateNotNullOrEmpty()]
         [string]$WarehouseSnapshotId
     )
+    process {
     try {
         Invoke-FabricAuthCheck -ThrowOnFailure
 
@@ -24093,8 +28856,9 @@ function Remove-FabricWarehouseSnapshot {
         $errorDetails = $_.Exception.Message
         Write-FabricLog -Message "Failed to delete Warehouse Snapshot '$WarehouseSnapshotId' from workspace '$WorkspaceId'. Error: $errorDetails" -Level Error
     }
+    }
 }
-#EndRegion '.\Public\Warehouse\Remove-FabricWarehouseSnapshot.ps1' 66
+#EndRegion '.\Public\Warehouse\Remove-FabricWarehouseSnapshot.ps1' 69
 #Region '.\Public\Warehouse\Update-FabricWarehouse.ps1' -1
 
 <#
@@ -24131,34 +28895,45 @@ function Remove-FabricWarehouseSnapshot {
 function Update-FabricWarehouse {
     [CmdletBinding(SupportsShouldProcess=$true, ConfirmImpact='Medium')]
     param (
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
         [ValidateNotNullOrEmpty()]
         [string]$WorkspaceId,
 
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
         [ValidateNotNullOrEmpty()]
+        [Alias('id')]
         [string]$WarehouseId,
 
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $false, ValueFromPipelineByPropertyName = $true)]
         [ValidateNotNullOrEmpty()]
         [ValidatePattern('^[a-zA-Z0-9_]*$')]
+        [Alias('displayName')]
         [string]$WarehouseName,
 
-        [Parameter(Mandatory = $false)]
+        [Parameter(Mandatory = $false, ValueFromPipelineByPropertyName = $true)]
         [ValidateNotNullOrEmpty()]
+        [Alias('description')]
         [string]$WarehouseDescription
     )
+    process {
     try {
         Invoke-FabricAuthCheck -ThrowOnFailure
 
+        # Validate that at least one update parameter is provided
+        if (-not $WarehouseName -and -not $WarehouseDescription) {
+            Write-FabricLog -Message "At least one parameter (WarehouseName or WarehouseDescription) must be provided." -Level Error
+            return
+        }
 
         # Construct the API endpoint URI
         $apiEndpointURI = "{0}/workspaces/{1}/warehouses/{2}" -f $script:FabricAuthContext.BaseUrl, $WorkspaceId, $WarehouseId
         Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
 
-        # Construct the request body
-        $body = @{
-            displayName = $WarehouseName
+        # Construct the request body with only the properties that are provided
+        $body = @{}
+
+        if ($WarehouseName) {
+            $body.displayName = $WarehouseName
         }
 
         if ($WarehouseDescription) {
@@ -24177,10 +28952,11 @@ function Update-FabricWarehouse {
             Body = $bodyJson
         }
 
-        if ($PSCmdlet.ShouldProcess("Warehouse '$WarehouseId' to '$WarehouseName' in workspace '$WorkspaceId'", 'Update')) {
+        $targetDescription = if ($WarehouseName) { "Warehouse '$WarehouseId' to '$WarehouseName'" } else { "Warehouse '$WarehouseId'" }
+        if ($PSCmdlet.ShouldProcess("$targetDescription in workspace '$WorkspaceId'", 'Update')) {
             $response = Invoke-FabricAPIRequest @apiParams
             # Return the API response
-            Write-FabricLog -Message "Warehouse '$WarehouseName' updated successfully!" -Level Host
+            Write-FabricLog -Message "Warehouse updated successfully!" -Level Host
             return $response
         }
     }
@@ -24189,8 +28965,9 @@ function Update-FabricWarehouse {
         $errorDetails = $_.Exception.Message
         Write-FabricLog -Message "Failed to update Warehouse. Error: $errorDetails" -Level Error
     }
+    }
 }
-#EndRegion '.\Public\Warehouse\Update-FabricWarehouse.ps1' 94
+#EndRegion '.\Public\Warehouse\Update-FabricWarehouse.ps1' 107
 #Region '.\Public\Warehouse\Update-FabricWarehouseSnapshot.ps1' -1
 
 <#
@@ -24227,11 +29004,12 @@ function Update-FabricWarehouse {
 function Update-FabricWarehouseSnapshot {
     [CmdletBinding(SupportsShouldProcess=$true, ConfirmImpact='Medium')]
     param (
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
         [ValidateNotNullOrEmpty()]
+        [Alias('id')]
         [string]$WorkspaceId,
 
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
         [ValidateNotNullOrEmpty()]
         [string]$WarehouseSnapshotId,
 
@@ -24249,6 +29027,7 @@ function Update-FabricWarehouseSnapshot {
         [ValidatePattern('^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z$')]
         [string]$SnapshotDateTime
     )
+    process {
     try {
         Invoke-FabricAuthCheck -ThrowOnFailure
 
@@ -24296,9 +29075,8 @@ function Update-FabricWarehouseSnapshot {
         # Capture and log error details
         $errorDetails = $_.Exception.Message
         Write-FabricLog -Message "Failed to update Warehouse Snapshot '$WarehouseSnapshotName'. Error: $errorDetails" -Level Error
-    }
-}
-#EndRegion '.\Public\Warehouse\Update-FabricWarehouseSnapshot.ps1' 106
+    }    }}
+#EndRegion '.\Public\Warehouse\Update-FabricWarehouseSnapshot.ps1' 107
 #Region '.\Public\Workspace\Add-FabricWorkspaceCapacity.ps1' -1
 
 <#
@@ -24547,6 +29325,10 @@ The unique identifier of the workspace to retrieve.
 .PARAMETER WorkspaceName
 The display name of the workspace to retrieve.
 
+.PARAMETER Raw
+When specified, returns the raw API response with resolved CapacityName property
+added directly to the output objects. Useful for piping to Export-Csv, ConvertTo-Json, or other commands.
+
 .EXAMPLE
 Get-FabricWorkspace -WorkspaceId "workspace123"
 
@@ -24556,6 +29338,11 @@ Fetches details of the workspace with ID "workspace123".
 Get-FabricWorkspace -WorkspaceName "MyWorkspace"
 
 Fetches details of the workspace with the name "MyWorkspace".
+
+.EXAMPLE
+Get-FabricWorkspace -Raw | Export-Csv -Path "workspaces.csv"
+
+Exports all workspaces with resolved CapacityName to a CSV file.
 
 .NOTES
 - Requires `$FabricConfig` global configuration, including `BaseUrl` and `FabricHeaders`.
@@ -24574,7 +29361,10 @@ function Get-FabricWorkspace {
 
         [Parameter(Mandatory = $false)]
         [ValidateNotNullOrEmpty()]
-        [string]$WorkspaceName
+        [string]$WorkspaceName,
+
+        [Parameter()]
+        [switch]$Raw
     )
 
     try {
@@ -24599,7 +29389,7 @@ function Get-FabricWorkspace {
         $dataItems = Invoke-FabricAPIRequest @apiParams
 
         # Apply filtering and output results with type decoration
-        Select-FabricResource -InputObject $dataItems -Id $WorkspaceId -DisplayName $WorkspaceName -ResourceType 'Workspace' -TypeName 'MicrosoftFabric.Workspace'
+        Select-FabricResource -InputObject $dataItems -Id $WorkspaceId -DisplayName $WorkspaceName -ResourceType 'Workspace' -TypeName 'MicrosoftFabric.Workspace' -Raw:$Raw
     }
     catch {
         # Capture and log error details
@@ -24607,7 +29397,152 @@ function Get-FabricWorkspace {
         Write-FabricLog -Message "Failed to retrieve workspace. Error: $errorDetails" -Level Error
     }
 }
-#EndRegion '.\Public\Workspace\Get-FabricWorkspace.ps1' 74
+#EndRegion '.\Public\Workspace\Get-FabricWorkspace.ps1' 86
+#Region '.\Public\Workspace\Get-FabricWorkspaceAsAdmin.ps1' -1
+
+<#
+.SYNOPSIS
+Retrieves Microsoft Fabric workspaces using admin API permissions.
+
+.DESCRIPTION
+The `Get-FabricWorkspaceAsAdmin` function fetches workspace details from the Fabric Admin API.
+This endpoint requires admin permissions and provides additional filtering options not available
+in the standard workspace API, including filtering by state (Active/Deleted), type, and capacity.
+
+.PARAMETER WorkspaceName
+Optional. Filter workspaces by display name.
+
+.PARAMETER WorkspaceType
+Optional. Filter workspaces by type. Valid values: Personal, Workspace, AdminWorkspace.
+
+.PARAMETER WorkspaceState
+Optional. Filter workspaces by state. Valid values: Active, Deleted.
+
+.PARAMETER CapacityId
+Optional. Filter workspaces by the capacity they are assigned to.
+
+.EXAMPLE
+Get-FabricWorkspaceAsAdmin
+
+Retrieves all workspaces visible to the admin.
+
+.EXAMPLE
+Get-FabricWorkspaceAsAdmin -WorkspaceName "Finance"
+
+Retrieves workspaces with the name "Finance".
+
+.EXAMPLE
+Get-FabricWorkspaceAsAdmin -WorkspaceState Deleted
+
+Retrieves all deleted workspaces.
+
+.EXAMPLE
+Get-FabricWorkspaceAsAdmin -WorkspaceType Personal
+
+Retrieves all personal workspaces.
+
+.EXAMPLE
+Get-FabricWorkspaceAsAdmin -CapacityId "00000000-0000-0000-0000-000000000000"
+
+Retrieves all workspaces assigned to the specified capacity.
+
+.NOTES
+- Requires Fabric Admin permissions.
+- Requires `$FabricAuthContext` module configuration.
+- Supports pagination automatically via continuation tokens.
+- Returns up to 10,000 records per API call.
+
+Author: Tiago Balabuch
+#>
+
+function Get-FabricWorkspaceAsAdmin {
+    [CmdletBinding()]
+    param (
+        [Parameter(Mandatory = $false)]
+        [ValidateNotNullOrEmpty()]
+        [string]$WorkspaceName,
+
+        [Parameter(Mandatory = $false)]
+        [ValidateSet('Personal', 'Workspace', 'AdminWorkspace')]
+        [string]$WorkspaceType,
+
+        [Parameter(Mandatory = $false)]
+        [ValidateSet('Active', 'Deleted')]
+        [string]$WorkspaceState,
+
+        [Parameter(Mandatory = $false)]
+        [ValidateNotNullOrEmpty()]
+        [string]$CapacityId
+    )
+
+    try {
+        # Validate authentication
+        Invoke-FabricAuthCheck -ThrowOnFailure
+
+        # Build query parameters
+        $queryParams = @{}
+
+        if ($WorkspaceName) {
+            $queryParams['name'] = $WorkspaceName
+        }
+
+        if ($WorkspaceType) {
+            # API expects lowercase
+            $queryParams['type'] = $WorkspaceType.ToLower()
+        }
+
+        if ($WorkspaceState) {
+            # API expects lowercase
+            $queryParams['state'] = $WorkspaceState.ToLower()
+        }
+
+        if ($CapacityId) {
+            $queryParams['capacityId'] = $CapacityId
+        }
+
+        # Construct the API endpoint URI for admin workspaces
+        $apiEndpointURI = "{0}/admin/workspaces" -f $script:FabricAuthContext.BaseUrl
+
+        # Add query parameters if any
+        if ($queryParams.Count -gt 0) {
+            $queryString = ($queryParams.GetEnumerator() | ForEach-Object {
+                $key = [System.Uri]::EscapeDataString($_.Key)
+                $value = [System.Uri]::EscapeDataString($_.Value.ToString())
+                "$key=$value"
+            }) -join '&'
+            $apiEndpointURI = "$apiEndpointURI`?$queryString"
+        }
+
+        Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
+
+        # Make the API request
+        $apiParams = @{
+            BaseURI = $apiEndpointURI
+            Headers = $script:FabricAuthContext.FabricHeaders
+            Method  = 'Get'
+        }
+        $dataItems = Invoke-FabricAPIRequest @apiParams
+
+        # Handle empty response
+        if (-not $dataItems) {
+            Write-FabricLog -Message "No workspaces returned from the admin API." -Level Warning
+            return $null
+        }
+
+        # Add type decoration for custom formatting
+        # Note: Admin API returns 'name' instead of 'displayName', so use AdminWorkspace type
+        $dataItems | Add-FabricTypeName -TypeName 'MicrosoftFabric.AdminWorkspace'
+
+        Write-FabricLog -Message "Retrieved $($dataItems.Count) workspace(s) from admin API." -Level Debug
+        return $dataItems
+    }
+    catch {
+        # Capture and log error details
+        $errorDetails = $_.Exception.Message
+        Write-FabricLog -Message "Failed to retrieve workspaces from admin API. Error: $errorDetails" -Level Error
+    }
+}
+#EndRegion '.\Public\Workspace\Get-FabricWorkspaceAsAdmin.ps1' 143
 #Region '.\Public\Workspace\Get-FabricWorkspaceGitConnection.ps1' -1
 
 <#
@@ -24696,6 +29631,9 @@ The unique identifier of the workspace to fetch role assignments for.
 .PARAMETER WorkspaceRoleAssignmentId
 (Optional) The unique identifier of a specific role assignment to retrieve.
 
+.PARAMETER Raw
+If specified, returns the raw API response without type decoration.
+
 .EXAMPLE
 Get-FabricWorkspaceRoleAssignments -WorkspaceId "workspace123"
 
@@ -24716,13 +29654,17 @@ Author: Tiago Balabuch
 function Get-FabricWorkspaceRoleAssignment {
     [CmdletBinding()]
     param (
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
         [ValidateNotNullOrEmpty()]
+        [Alias('id')]
         [string]$WorkspaceId,
 
         [Parameter(Mandatory = $false)]
         [ValidateNotNullOrEmpty()]
-        [string]$WorkspaceRoleAssignmentId
+        [string]$WorkspaceRoleAssignmentId,
+
+        [Parameter()]
+        [switch]$Raw
     )
 
     try {
@@ -24759,8 +29701,46 @@ function Get-FabricWorkspaceRoleAssignment {
                 }
             }
 
-            # Add type decoration for custom formatting
-            $customResults | Add-FabricTypeName -TypeName 'MicrosoftFabric.WorkspaceRoleAssignment'
+            if ($Raw) {
+                # Add resolved names directly to objects
+                foreach ($item in $customResults) {
+                    # Resolve WorkspaceName
+                    $workspaceName = $null
+                    if ($item.workspaceId) {
+                        try {
+                            $workspaceName = Resolve-FabricWorkspaceName -WorkspaceId $item.workspaceId
+                        }
+                        catch {
+                            $workspaceName = $item.workspaceId
+                        }
+                    }
+
+                    # Resolve CapacityName via workspace
+                    $capacityName = $null
+                    if ($item.workspaceId) {
+                        try {
+                            $capacityId = Resolve-FabricCapacityIdFromWorkspace -WorkspaceId $item.workspaceId
+                            if ($capacityId) {
+                                $capacityName = Resolve-FabricCapacityName -CapacityId $capacityId
+                            }
+                        }
+                        catch {
+                            $capacityName = $null
+                        }
+                    }
+
+                    if ($null -ne $workspaceName) {
+                        $item | Add-Member -NotePropertyName 'WorkspaceName' -NotePropertyValue $workspaceName -Force
+                    }
+                    if ($null -ne $capacityName) {
+                        $item | Add-Member -NotePropertyName 'CapacityName' -NotePropertyValue $capacityName -Force
+                    }
+                }
+            }
+            else {
+                # Add type decoration for custom formatting
+                $customResults | Add-FabricTypeName -TypeName 'MicrosoftFabric.WorkspaceRoleAssignment'
+            }
 
             return $customResults
         }
@@ -24771,7 +29751,7 @@ function Get-FabricWorkspaceRoleAssignment {
         Write-FabricLog -Message "Failed to retrieve role assignments for WorkspaceId '$WorkspaceId'. Error: $errorDetails" -Level Error
     }
 }
-#EndRegion '.\Public\Workspace\Get-FabricWorkspaceRoleAssignment.ps1' 89
+#EndRegion '.\Public\Workspace\Get-FabricWorkspaceRoleAssignment.ps1' 134
 #Region '.\Public\Workspace\New-FabricWorkspace.ps1' -1
 
 <#
@@ -25160,21 +30140,29 @@ Author: Tiago Balabuch
 function Update-FabricWorkspace {
     [CmdletBinding(SupportsShouldProcess=$true, ConfirmImpact = 'Medium')]
     param (
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
         [ValidateNotNullOrEmpty()]
+        [Alias('id')]
         [string]$WorkspaceId,
 
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $false, ValueFromPipelineByPropertyName = $true)]
         [ValidateNotNullOrEmpty()]
-
+        [Alias('DisplayName')]
         [string]$WorkspaceName,
 
-        [Parameter(Mandatory = $false)]
+        [Parameter(Mandatory = $false, ValueFromPipelineByPropertyName = $true)]
         [ValidateNotNullOrEmpty()]
+        [Alias('Description')]
         [string]$WorkspaceDescription
     )
 
     try {
+        # Validate that at least one update parameter is provided
+        if (-not $WorkspaceName -and -not $WorkspaceDescription) {
+            Write-FabricLog -Message "At least one of WorkspaceName or WorkspaceDescription must be specified" -Level Error
+            return
+        }
+
         # Validate authentication
         Invoke-FabricAuthCheck -ThrowOnFailure
 
@@ -25182,8 +30170,10 @@ function Update-FabricWorkspace {
         $apiEndpointURI = New-FabricAPIUri -Resource 'workspaces' -WorkspaceId $WorkspaceId
 
         # Construct the request body
-        $body = @{
-            displayName = $WorkspaceName
+        $body = @{}
+
+        if ($WorkspaceName) {
+            $body.displayName = $WorkspaceName
         }
 
         if ($WorkspaceDescription) {
@@ -25213,7 +30203,7 @@ function Update-FabricWorkspace {
         Write-FabricLog -Message "Failed to update workspace. Error: $errorDetails" -Level Error
     }
 }
-#EndRegion '.\Public\Workspace\Update-FabricWorkspace.ps1' 90
+#EndRegion '.\Public\Workspace\Update-FabricWorkspace.ps1' 100
 #Region '.\Public\Workspace\Update-FabricWorkspaceRoleAssignment.ps1' -1
 
 <#
@@ -25251,12 +30241,13 @@ Author: Tiago Balabuch
 function Update-FabricWorkspaceRoleAssignment {
     [CmdletBinding(SupportsShouldProcess=$true, ConfirmImpact = 'Medium')]
     param (
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
         [ValidateNotNullOrEmpty()]
         [string]$WorkspaceId,
 
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
         [ValidateNotNullOrEmpty()]
+        [Alias('id')]
         [string]$WorkspaceRoleAssignmentId,
 
         [Parameter(Mandatory = $true)]
@@ -25303,4 +30294,4 @@ function Update-FabricWorkspaceRoleAssignment {
         Write-FabricLog -Message "Failed to update role assignment. Error: $errorDetails" -Level Error
     }
 }
-#EndRegion '.\Public\Workspace\Update-FabricWorkspaceRoleAssignment.ps1' 88
+#EndRegion '.\Public\Workspace\Update-FabricWorkspaceRoleAssignment.ps1' 89

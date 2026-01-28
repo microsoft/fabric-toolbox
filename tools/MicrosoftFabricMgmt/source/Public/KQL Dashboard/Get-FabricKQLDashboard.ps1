@@ -1,4 +1,4 @@
-﻿<#
+<#
 .SYNOPSIS
 Retrieves a specific KQL Dashboard or all KQL Dashboards from a workspace.
 
@@ -14,6 +14,9 @@ Optional. The GUID of a single KQL Dashboard to retrieve directly. Use this when
 .PARAMETER KQLDashboardName
 Optional. The display name of a KQL Dashboard to retrieve. Provide this when the Id is unknown and you want to match by name.
 
+.PARAMETER Raw
+When specified, returns the raw API response without any filtering or formatting.
+
 .EXAMPLE
 Get-FabricKQLDashboard -WorkspaceId $wId -KQLDashboardId '1a2b3c4d-5555-6666-7777-88889999aaaa'
 
@@ -28,6 +31,11 @@ Returns the single dashboard named 'Operations Overview' if it exists.
 Get-FabricKQLDashboard -WorkspaceId $wId
 
 Returns all dashboards in the specified workspace.
+
+.EXAMPLE
+Get-FabricKQLDashboard -WorkspaceId $wId -Raw
+
+Returns the raw API response for all dashboards in the workspace without any processing.
 
 .NOTES
 - Requires `$FabricConfig` (BaseUrl, FabricHeaders).
@@ -53,7 +61,10 @@ function Get-FabricKQLDashboard {
         [Parameter(Mandatory = $false)]
         [ValidateNotNullOrEmpty()]
         [ValidatePattern('^[a-zA-Z0-9_ ]*$')]
-        [string]$KQLDashboardName
+        [string]$KQLDashboardName,
+
+        [Parameter()]
+        [switch]$Raw
     )
 
     process {
@@ -75,36 +86,12 @@ function Get-FabricKQLDashboard {
             $apiParams = @{
                 BaseURI = $apiEndpointURI
                 Headers = $script:FabricAuthContext.FabricHeaders
-                Method = 'Get'
+                Method  = 'Get'
             }
             $dataItems = Invoke-FabricAPIRequest @apiParams
 
-            # Immediately handle empty response
-            if (-not $dataItems) {
-                Write-FabricLog -Message "No KQL dashboards found in workspace: $WorkspaceId" -Level Debug
-                return
-            }
-
-            # Apply filtering logic efficiently
-            if ($KQLDashboardId) {
-                $matchedItems = $dataItems.Where({ $_.Id -eq $KQLDashboardId }, 'First')
-            }
-            elseif ($KQLDashboardName) {
-                $matchedItems = $dataItems.Where({ $_.DisplayName -eq $KQLDashboardName }, 'First')
-            }
-            else {
-                Write-FabricLog -Message "No filter provided. Returning all items." -Level Debug
-                $matchedItems = $dataItems
-            }
-
-            # Handle results
-            if ($matchedItems) {
-                Write-FabricLog -Message "Item(s) found matching the specified criteria." -Level Debug
-                $matchedItems
-            }
-            else {
-                Write-FabricLog -Message "No item found matching the provided criteria." -Level Debug
-            }
+            # Apply filtering and formatting
+            Select-FabricResource -InputObject $dataItems -Id $KQLDashboardId -DisplayName $KQLDashboardName -ResourceType 'KQLDashboard' -TypeName 'MicrosoftFabric.KQLDashboard' -Raw:$Raw
         }
         catch {
             # Capture and log error details
