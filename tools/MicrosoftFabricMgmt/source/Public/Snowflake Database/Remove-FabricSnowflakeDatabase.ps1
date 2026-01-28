@@ -18,7 +18,7 @@
     Deletes the specified Snowflake Database from the workspace.
 
 .EXAMPLE
-    Get-FabricSnowflakeDatabase -WorkspaceId "12345678-1234-1234-1234-123456789012" -SnowflakeDatabaseName "OldDB" | Remove-FabricSnowflakeDatabase -WorkspaceId "12345678-1234-1234-1234-123456789012"
+    Get-FabricSnowflakeDatabase -WorkspaceId "12345678-1234-1234-1234-123456789012" -SnowflakeDatabaseName "OldDB" | Remove-FabricSnowflakeDatabase
 
     Deletes a Snowflake Database by piping from Get-FabricSnowflakeDatabase.
 
@@ -32,7 +32,7 @@
 function Remove-FabricSnowflakeDatabase {
     [CmdletBinding(SupportsShouldProcess, ConfirmImpact = 'High')]
     param (
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
         [ValidateNotNullOrEmpty()]
         [string]$WorkspaceId,
 

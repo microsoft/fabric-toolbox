@@ -18,7 +18,7 @@
     Deletes the specified Graph Model from the workspace.
 
 .EXAMPLE
-    Get-FabricGraphModel -WorkspaceId "12345678-1234-1234-1234-123456789012" -GraphModelName "OldGraphModel" | Remove-FabricGraphModel -WorkspaceId "12345678-1234-1234-1234-123456789012"
+    Get-FabricGraphModel -WorkspaceId "12345678-1234-1234-1234-123456789012" -GraphModelName "OldGraphModel" | Remove-FabricGraphModel
 
     Deletes a Graph Model by piping from Get-FabricGraphModel.
 
@@ -32,7 +32,7 @@
 function Remove-FabricGraphModel {
     [CmdletBinding(SupportsShouldProcess, ConfirmImpact = 'High')]
     param (
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
         [ValidateNotNullOrEmpty()]
         [string]$WorkspaceId,
 

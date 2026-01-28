@@ -18,7 +18,7 @@
     Starts a refresh job for the specified Graph Model.
 
 .EXAMPLE
-    Get-FabricGraphModel -WorkspaceId "12345678-1234-1234-1234-123456789012" -GraphModelName "MyGraphModel" | Start-FabricGraphModelRefresh -WorkspaceId "12345678-1234-1234-1234-123456789012"
+    Get-FabricGraphModel -WorkspaceId "12345678-1234-1234-1234-123456789012" -GraphModelName "MyGraphModel" | Start-FabricGraphModelRefresh
 
     Starts a refresh job by piping from Get-FabricGraphModel.
 
@@ -32,7 +32,7 @@
 function Start-FabricGraphModelRefresh {
     [CmdletBinding(SupportsShouldProcess)]
     param (
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
         [ValidateNotNullOrEmpty()]
         [string]$WorkspaceId,
 
