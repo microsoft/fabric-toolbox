@@ -1,8 +1,8 @@
-# Fabric Workspace Monitoring Report Templates
+# Fabric Workspace Monitoring Report Templates (Preview)
 
 ![Fabric Workspace Monitoring component overview with report templates](./media/general/fwm_overview_cover.png)
 
-Current template version: **2025.8.2**
+Current template version: **2025.2.1-Preview**
 
 ## Introduction
 
