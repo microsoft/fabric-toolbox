@@ -28,6 +28,7 @@ Workspace Monitoring with the Power BI report template can help answer common qu
 |Eventhouse|"Are there ingestion pipelines that are failing or running slower than expected?"|Monitor ingestion success rates, durations, and retry patterns|[Ingestion Analysis](#analytical-pathway--eh--ingestion-performance)|
 |Mirrored database|"Why is the mirrored database table execution impacting performance?"|Analyze execution logs, query volumes, and CPU usage|[Table Execution Analysis](#analytical-pathway--mirrored-database-table-execution)|
 |API for GraphQL|"What is the success ratio of my production GraphQL API request over time?"|Track API call frequency, response times, and error rates|[GraphQL Performance Analysis](#analytical-pathway--graphql-performance)|
+|Copy Jobs|"What is the success ratio of my Copy Jobs over time?"|Track Copy Job executions, data volume, read and written tables, files with throughput|[Copy Job Run Analysis](#analytical-pathway--copy-job-run-analysis)|
 
 -----
 
@@ -43,11 +44,10 @@ Workspace Monitoring with the Power BI report template can help answer common qu
 |Eventhouse|[Ingestion Performance](#analytical-pathway--eh--ingestion-performance)|
 |API for GraphQL|[GraphQL Performance](#analytical-pathway--graphql-performance)|
 |Mirrored database|[Table Execution Analysis](#analytical-pathway--mirrored-database-table-execution)|
-|Copy Jobs|[Copy Job Details Loogs](#)|
+|Copy Jobs|[Copy Job Run Analysis](#analytical-pathway--copy-job-run-analysis)|
 
 
 ### Analytical Pathway | Diagnostic Overview
-
 
 ![Screenshot](/monitoring/workspace-monitoring-dashboards/media/documentation/pbi/fwm_pbi_ap_100.png)
 
@@ -422,6 +422,25 @@ You finished the analytical pathway "Query Performance" for Eventhouse KQL datab
 
 **Very well done!**
 You finished the analytical pathway "Query Performance" for Eventhouse KQL
+
+----------------
+
+### Copy Jobs
+
+### Analytical Pathway | Copy Job Run Analysis
+**for Copy Job items**
+
+![Screenshot](/monitoring/workspace-monitoring-dashboards/media/documentation/pbi/fwm_pbi_ap_cj_0.png)
+
+|Step|Description|
+|---|---|
+|1.|**Define** the considered time window (**Date**) on the filter pane <br> Available interval: 1 to 30 days <br> **Define** the "Time Unit" filter, which helps you convert all time-related measures. <br> Available units: _millisecond_, _second_, _minute_, _hour_ <br> **Define** the "Size Unit" filter, which helps you convert all data size/volume-related measures. <br> Available units: _byte_, _kilobyte_, _megabyte_, _gigabyte_|
+|2.|**Review** the "Copy Job Metrics" card. Once there are any collected logs for semantic models, this card will be available.|
+|3.|**Click** on the **Run Analysis** button within the "Copy Jobs Metrics" tile to begin the analytical pathway.|
+
+
+![Screenshot](/monitoring/workspace-monitoring-dashboards/media/documentation/pbi/fwm_pbi_ap_cj_1.png)
+
 
 ----------------
 
