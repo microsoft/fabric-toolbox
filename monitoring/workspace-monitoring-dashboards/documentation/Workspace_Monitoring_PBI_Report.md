@@ -43,6 +43,7 @@ Workspace Monitoring with the Power BI report template can help answer common qu
 |Eventhouse|[Ingestion Performance](#analytical-pathway--eh--ingestion-performance)|
 |API for GraphQL|[GraphQL Performance](#analytical-pathway--graphql-performance)|
 |Mirrored database|[Table Execution Analysis](#analytical-pathway--mirrored-database-table-execution)|
+|Copy Jobs|[Copy Job Details Loogs](#)|
 
 
 ### Analytical Pathway | Diagnostic Overview

@@ -40,7 +40,7 @@ There are two monitoring template options available:
 | [How to deploy **PBI Report**](./how-to/How_to_deploy_Workspace_Monitoring_PBI_Report.md) | [How to deploy **RTI Dashboard**](./how-to/How_to_deploy_Workspace_Monitoring_RTI_Dashboard.md) |
 | [Documentation for **PBI Report**](./documentation/Workspace_Monitoring_PBI_Report.md) | [Documentation for **RTI Dashboard**](./documentation/Workspace_Monitoring_RTI_Dashboard.md)  |
 |[Metric Glossary](/monitoring/workspace-monitoring-dashboards/documentation/Workspace_Monitoring_Templates_Metrics.md)|[Metric Glossary](/monitoring/workspace-monitoring-dashboards/documentation/Workspace_Monitoring_Templates_Metrics.md)|
-|**Included trace logs:** Semantic Models, Eventhouse Databases, Mirrored Databases, API for GraphQL | **Included trace logs:** Semantic Models, Eventhouse Databases | 
+|**Included trace logs:** Semantic Models, Eventhouse Databases, Mirrored Databases, API for GraphQL, Copy Jobs, Job Activities (limited list of items) | **Included trace logs:** Semantic Models, Eventhouse Databases | 
 |**Connectivity mode:** Composite mode (helper tables are imported; other trace logs use DirectQuery) | **Connectivity mode:** Each visual queries the Monitoring Eventhouse data individually; base queries keep the core logic. |
 | **Main benefits:** Analyzing performance trends over time, deep-dive investigations into historical operations, queries, etc. | **Main benefits:** Tracking current/running operations, enabling proactive alerting based on predefined scenarios. |
 
