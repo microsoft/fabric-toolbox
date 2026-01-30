@@ -8,7 +8,7 @@
 
 ### 🚀 Key Features
 
-- **294+ Cmdlets** - Complete coverage of Microsoft Fabric REST API
+- **295+ Cmdlets** - Complete coverage of Microsoft Fabric REST API
 - **48 Resource Types** - Manage Lakehouses, Warehouses, Notebooks, Pipelines, ML Models, Eventstreams, Graph Models, and more
 - **Multiple Auth Methods** - User Principal, Service Principal, and Managed Identity support
 - **Enterprise Ready** - Built-in retry logic, comprehensive error handling, and PSFramework logging
@@ -493,9 +493,9 @@ The module provides comprehensive coverage of Microsoft Fabric resources:
 | **Mirrored Warehouse** | 1 | Warehouse mirroring |
 | **Snowflake Database** | 6 | Snowflake integration |
 | **Cosmos DB Database** | 6 | Cosmos DB integration |
-| **Admin** | 7 | Tenant-wide administration |
+| **Admin** | 8 | Tenant-wide administration |
 
-**Total: 294+ Cmdlets** across 48 resource types
+**Total: 295+ Cmdlets** across 48 resource types
 
 </details>
 
@@ -627,7 +627,7 @@ This project is licensed under the **MIT License**. See the [LICENSE](../../LICE
 ### Upcoming Release
 
 **Unreleased** - New Resource Types and Admin API
-- ✅ 294+ cmdlets (50 new functions added)
+- ✅ 295+ cmdlets (51 new functions added)
 - ✅ 6 new resource types: Graph Model, Snowflake Database, Cosmos DB Database, Dataflow, SQL Database, Admin
 - ✅ Admin API for tenant-wide visibility into workspaces, items, and user access
 - ✅ Full pipeline support with `ValueFromPipelineByPropertyName`

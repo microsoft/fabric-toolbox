@@ -1133,20 +1133,8 @@ function Get-FabricAdminGitConnection {
                 return $null
             }
 
-            # Handle response - admin API returns connections in 'value' property
-            $connections = if ($response.value) { $response.value } else { $response }
-
-            if ($Raw) {
-                return $connections
-            }
-
-            # Add type name for formatting
-            foreach ($conn in $connections) {
-                $conn | Add-Member -NotePropertyName 'PSTypeName' -NotePropertyValue 'MicrosoftFabric.AdminGitConnection' -Force
-            }
-
-            Write-FabricLog -Message "Retrieved $($connections.Count) Git connection(s) from admin API." -Level Debug
-            return $connections
+            # Use Select-FabricResource for type decoration
+            return Select-FabricResource -InputObject $response -ResourceType 'AdminGitConnection' -TypeName 'MicrosoftFabric.AdminGitConnection' -Raw:$Raw
         }
         catch {
             $errorDetails = $_.Exception.Message
@@ -1154,7 +1142,7 @@ function Get-FabricAdminGitConnection {
         }
     }
 }
-#EndRegion '.\Public\Admin\Get-FabricAdminGitConnection.ps1' 75
+#EndRegion '.\Public\Admin\Get-FabricAdminGitConnection.ps1' 63
 #Region '.\Public\Admin\Get-FabricAdminItem.ps1' -1
 
 <#
@@ -1270,7 +1258,7 @@ function Get-FabricAdminItem {
                     if ($Raw) {
                         return $response
                     }
-                    $response | Add-Member -NotePropertyName 'PSTypeName' -NotePropertyValue 'MicrosoftFabric.AdminItem' -Force
+                    $response.PSObject.TypeNames.Insert(0, 'MicrosoftFabric.AdminItem')
                     return $response
                 }
                 return $null
@@ -1314,20 +1302,8 @@ function Get-FabricAdminItem {
                 return $null
             }
 
-            # Handle response - admin API returns items in 'itemEntities' property
-            $items = if ($response.itemEntities) { $response.itemEntities } else { $response }
-
-            if ($Raw) {
-                return $items
-            }
-
-            # Add type name for formatting
-            foreach ($item in $items) {
-                $item | Add-Member -NotePropertyName 'PSTypeName' -NotePropertyValue 'MicrosoftFabric.AdminItem' -Force
-            }
-
-            Write-FabricLog -Message "Retrieved $($items.Count) item(s) from admin API." -Level Debug
-            return $items
+            # Use Select-FabricResource for type decoration
+            return Select-FabricResource -InputObject $response -ResourceType 'AdminItem' -TypeName 'MicrosoftFabric.AdminItem' -Raw:$Raw
         }
         catch {
             $errorDetails = $_.Exception.Message
@@ -1335,7 +1311,7 @@ function Get-FabricAdminItem {
         }
     }
 }
-#EndRegion '.\Public\Admin\Get-FabricAdminItem.ps1' 179
+#EndRegion '.\Public\Admin\Get-FabricAdminItem.ps1' 167
 #Region '.\Public\Admin\Get-FabricAdminItemUser.ps1' -1
 
 <#
@@ -1424,22 +1400,19 @@ function Get-FabricAdminItemUser {
                 return $null
             }
 
-            # Handle response - admin API returns users in 'accessDetails' property
-            $users = if ($response.accessDetails) { $response.accessDetails } else { $response }
-
             if ($Raw) {
-                return $users
+                return $response
             }
 
             # Add context and type name for formatting
-            foreach ($user in $users) {
+            foreach ($user in $response) {
                 $user | Add-Member -NotePropertyName 'workspaceId' -NotePropertyValue $WorkspaceId -Force
                 $user | Add-Member -NotePropertyName 'itemId' -NotePropertyValue $ItemId -Force
-                $user | Add-Member -NotePropertyName 'PSTypeName' -NotePropertyValue 'MicrosoftFabric.AdminItemUser' -Force
             }
+            $response | Add-FabricTypeName -TypeName 'MicrosoftFabric.AdminItemUser'
 
-            Write-FabricLog -Message "Retrieved $($users.Count) user(s) for item '$ItemId'." -Level Debug
-            return $users
+            Write-FabricLog -Message "Retrieved $($response.Count) user(s) for item '$ItemId'." -Level Debug
+            return $response
         }
         catch {
             $errorDetails = $_.Exception.Message
@@ -1447,7 +1420,7 @@ function Get-FabricAdminItemUser {
         }
     }
 }
-#EndRegion '.\Public\Admin\Get-FabricAdminItemUser.ps1' 110
+#EndRegion '.\Public\Admin\Get-FabricAdminItemUser.ps1' 107
 #Region '.\Public\Admin\Get-FabricAdminUserAccess.ps1' -1
 
 <#
@@ -1527,21 +1500,18 @@ function Get-FabricAdminUserAccess {
                 return $null
             }
 
-            # Handle response - admin API returns entities in 'accessEntities' property
-            $entities = if ($response.accessEntities) { $response.accessEntities } else { $response }
-
             if ($Raw) {
-                return $entities
+                return $response
             }
 
             # Add context and type name for formatting
-            foreach ($entity in $entities) {
+            foreach ($entity in $response) {
                 $entity | Add-Member -NotePropertyName 'userId' -NotePropertyValue $UserId -Force
-                $entity | Add-Member -NotePropertyName 'PSTypeName' -NotePropertyValue 'MicrosoftFabric.AdminUserAccess' -Force
             }
+            $response | Add-FabricTypeName -TypeName 'MicrosoftFabric.AdminUserAccess'
 
-            Write-FabricLog -Message "Retrieved $($entities.Count) access entit(ies) for user '$UserId'." -Level Debug
-            return $entities
+            Write-FabricLog -Message "Retrieved $($response.Count) access entit(ies) for user '$UserId'." -Level Debug
+            return $response
         }
         catch {
             $errorDetails = $_.Exception.Message
@@ -1549,7 +1519,7 @@ function Get-FabricAdminUserAccess {
         }
     }
 }
-#EndRegion '.\Public\Admin\Get-FabricAdminUserAccess.ps1' 100
+#EndRegion '.\Public\Admin\Get-FabricAdminUserAccess.ps1' 97
 #Region '.\Public\Admin\Get-FabricAdminWorkspace.ps1' -1
 
 <#
@@ -1624,6 +1594,7 @@ function Get-FabricAdminWorkspace {
 
         [Parameter(Mandatory = $false, ValueFromPipelineByPropertyName = $true)]
         [ValidateNotNullOrEmpty()]
+        [Alias('id')]
         [string]$CapacityId,
 
         [Parameter(Mandatory = $false)]
@@ -1654,7 +1625,7 @@ function Get-FabricAdminWorkspace {
                     if ($Raw) {
                         return $response
                     }
-                    $response | Add-Member -NotePropertyName 'PSTypeName' -NotePropertyValue 'MicrosoftFabric.AdminWorkspace' -Force
+                    $response.PSObject.TypeNames.Insert(0, 'MicrosoftFabric.AdminWorkspace')
                     return $response
                 }
                 return $null
@@ -1702,20 +1673,8 @@ function Get-FabricAdminWorkspace {
                 return $null
             }
 
-            # Handle response - admin API returns workspaces in 'workspaces' property
-            $workspaces = if ($response.workspaces) { $response.workspaces } else { $response }
-
-            if ($Raw) {
-                return $workspaces
-            }
-
-            # Add type name for formatting
-            foreach ($ws in $workspaces) {
-                $ws | Add-Member -NotePropertyName 'PSTypeName' -NotePropertyValue 'MicrosoftFabric.AdminWorkspace' -Force
-            }
-
-            Write-FabricLog -Message "Retrieved $($workspaces.Count) workspace(s) from admin API." -Level Debug
-            return $workspaces
+            # Use Select-FabricResource for filtering and type decoration
+            return Select-FabricResource -InputObject $response -DisplayName $WorkspaceName -ResourceType 'AdminWorkspace' -TypeName 'MicrosoftFabric.AdminWorkspace' -Raw:$Raw
         }
         catch {
             $errorDetails = $_.Exception.Message
@@ -1723,7 +1682,7 @@ function Get-FabricAdminWorkspace {
         }
     }
 }
-#EndRegion '.\Public\Admin\Get-FabricAdminWorkspace.ps1' 172
+#EndRegion '.\Public\Admin\Get-FabricAdminWorkspace.ps1' 161
 #Region '.\Public\Admin\Get-FabricAdminWorkspaceUser.ps1' -1
 
 <#
@@ -1792,21 +1751,18 @@ function Get-FabricAdminWorkspaceUser {
                 return $null
             }
 
-            # Handle response - admin API returns users in 'accessDetails' property
-            $users = if ($response.accessDetails) { $response.accessDetails } else { $response }
-
             if ($Raw) {
-                return $users
+                return $response
             }
 
             # Add workspace context and type name for formatting
-            foreach ($user in $users) {
+            foreach ($user in $response) {
                 $user | Add-Member -NotePropertyName 'workspaceId' -NotePropertyValue $WorkspaceId -Force
-                $user | Add-Member -NotePropertyName 'PSTypeName' -NotePropertyValue 'MicrosoftFabric.AdminWorkspaceUser' -Force
             }
+            $response | Add-FabricTypeName -TypeName 'MicrosoftFabric.AdminWorkspaceUser'
 
-            Write-FabricLog -Message "Retrieved $($users.Count) user(s) for workspace '$WorkspaceId'." -Level Debug
-            return $users
+            Write-FabricLog -Message "Retrieved $($response.Count) user(s) for workspace '$WorkspaceId'." -Level Debug
+            return $response
         }
         catch {
             $errorDetails = $_.Exception.Message
@@ -1814,7 +1770,7 @@ function Get-FabricAdminWorkspaceUser {
         }
     }
 }
-#EndRegion '.\Public\Admin\Get-FabricAdminWorkspaceUser.ps1' 89
+#EndRegion '.\Public\Admin\Get-FabricAdminWorkspaceUser.ps1' 86
 #Region '.\Public\Admin\Restore-FabricAdminWorkspace.ps1' -1
 
 <#
@@ -3851,7 +3807,7 @@ function Get-FabricCosmosDBDatabase {
 function Get-FabricCosmosDBDatabaseDefinition {
     [CmdletBinding()]
     param (
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
         [ValidateNotNullOrEmpty()]
         [string]$WorkspaceId,
 
@@ -4090,7 +4046,7 @@ function Remove-FabricCosmosDBDatabase {
 function Update-FabricCosmosDBDatabase {
     [CmdletBinding(SupportsShouldProcess)]
     param (
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
         [ValidateNotNullOrEmpty()]
         [string]$WorkspaceId,
 
@@ -4205,7 +4161,7 @@ function Update-FabricCosmosDBDatabase {
 function Update-FabricCosmosDBDatabaseDefinition {
     [CmdletBinding(SupportsShouldProcess)]
     param (
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
         [ValidateNotNullOrEmpty()]
         [string]$WorkspaceId,
 
@@ -10371,7 +10327,7 @@ function Get-FabricGraphModel {
 function Get-FabricGraphModelDefinition {
     [CmdletBinding()]
     param (
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
         [ValidateNotNullOrEmpty()]
         [string]$WorkspaceId,
 
@@ -10459,7 +10415,7 @@ function Get-FabricGraphModelDefinition {
 function Get-FabricGraphModelQueryableType {
     [CmdletBinding()]
     param (
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
         [ValidateNotNullOrEmpty()]
         [string]$WorkspaceId,
 
@@ -10539,7 +10495,7 @@ function Get-FabricGraphModelQueryableType {
 function Invoke-FabricGraphModelQuery {
     [CmdletBinding()]
     param (
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
         [ValidateNotNullOrEmpty()]
         [string]$WorkspaceId,
 
@@ -10796,7 +10752,7 @@ function Remove-FabricGraphModel {
     Starts a refresh job for the specified Graph Model.
 
 .EXAMPLE
-    Get-FabricGraphModel -WorkspaceId "12345678-1234-1234-1234-123456789012" -GraphModelName "MyGraphModel" | Start-FabricGraphModelRefresh -WorkspaceId "12345678-1234-1234-1234-123456789012"
+    Get-FabricGraphModel -WorkspaceId "12345678-1234-1234-1234-123456789012" -GraphModelName "MyGraphModel" | Start-FabricGraphModelRefresh
 
     Starts a refresh job by piping from Get-FabricGraphModel.
 
@@ -10810,7 +10766,7 @@ function Remove-FabricGraphModel {
 function Start-FabricGraphModelRefresh {
     [CmdletBinding(SupportsShouldProcess)]
     param (
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
         [ValidateNotNullOrEmpty()]
         [string]$WorkspaceId,
 
@@ -11006,7 +10962,7 @@ function Update-FabricGraphModel {
 function Update-FabricGraphModelDefinition {
     [CmdletBinding(SupportsShouldProcess)]
     param (
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
         [ValidateNotNullOrEmpty()]
         [string]$WorkspaceId,
 

@@ -283,6 +283,72 @@
 
     <!--
       =============================================================================
+      Admin Report View - For report objects from admin API
+      =============================================================================
+      Display Priority: Workspace Name, Report Name, Dataset ID, ID
+    -->
+    <View>
+      <Name>AdminReportView</Name>
+      <ViewSelectedBy>
+        <TypeName>MicrosoftFabric.AdminReport</TypeName>
+      </ViewSelectedBy>
+      <TableControl>
+        <TableHeaders>
+          <TableColumnHeader>
+            <Label>Workspace Name</Label>
+            <Width>30</Width>
+          </TableColumnHeader>
+          <TableColumnHeader>
+            <Label>Report Name</Label>
+            <Width>35</Width>
+          </TableColumnHeader>
+          <TableColumnHeader>
+            <Label>Dataset ID</Label>
+            <Width>36</Width>
+          </TableColumnHeader>
+          <TableColumnHeader>
+            <Label>ID</Label>
+          </TableColumnHeader>
+        </TableHeaders>
+        <TableRowEntries>
+          <TableRowEntry>
+            <TableColumnItems>
+              <!-- Workspace Name - Resolve from workspaceId -->
+              <TableColumnItem>
+                <ScriptBlock>
+                  if ($_.workspaceId) {
+                    try {
+                      Resolve-FabricWorkspaceName -WorkspaceId $_.workspaceId
+                    }
+                    catch {
+                      $_.workspaceId
+                    }
+                  }
+                  else {
+                    'N/A'
+                  }
+                </ScriptBlock>
+              </TableColumnItem>
+              <!-- Report Name -->
+              <TableColumnItem>
+                <PropertyName>name</PropertyName>
+              </TableColumnItem>
+              <!-- Dataset ID -->
+              <TableColumnItem>
+                <PropertyName>datasetId</PropertyName>
+              </TableColumnItem>
+              <!-- ID -->
+              <TableColumnItem>
+                <PropertyName>id</PropertyName>
+              </TableColumnItem>
+            </TableColumnItems>
+          </TableRowEntry>
+        </TableRowEntries>
+      </TableControl>
+    </View>
+
+    <!--
+      =============================================================================
       Capacity View - For capacity objects
       =============================================================================
       Display Priority: Capacity Name, Region, State, SKU, ID
