@@ -27,9 +27,10 @@
     - `Get-FabricCosmosDBDatabaseDefinition`: Retrieve connection definitions
     - `Update-FabricCosmosDBDatabaseDefinition`: Update connection definitions
 
-- **Admin API Functions** (7 new functions): Tenant-wide administration capabilities
+- **Admin API Functions** (8 new functions): Tenant-wide administration capabilities
   - `Get-FabricAdminWorkspace`: List all workspaces in tenant with filtering by name, type, capacity, and state
   - `Get-FabricAdminItem`: List all items in tenant with filtering by workspace, capacity, type, and state
+  - `Get-FabricAdminReport`: List all reports in tenant with filtering by workspace
   - `Get-FabricAdminWorkspaceUser`: Get users with access to any workspace
   - `Get-FabricAdminGitConnection`: List all Git connections in tenant
   - `Get-FabricAdminItemUser`: Get users with access to any item
@@ -42,6 +43,7 @@
   - `MicrosoftFabric.CosmosDBDatabase`
   - `MicrosoftFabric.AdminWorkspace`
   - `MicrosoftFabric.AdminItem`
+  - `MicrosoftFabric.AdminReport`
   - `MicrosoftFabric.AdminWorkspaceUser`
   - `MicrosoftFabric.AdminGitConnection`
   - `MicrosoftFabric.AdminItemUser`
