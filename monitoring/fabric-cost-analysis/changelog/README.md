@@ -6,9 +6,13 @@
 - Warehouse Auto Scale cost analysis
 - Forecast
 - What if analysis
-- Corellate cost with CU
+- Corellate cost with CU based on Fabric Capacity Operations Events
 
 ## Release
+
+## 📦 2025.01.30
+
+- Fixes
 
 ## 📦 2025.12.05
 
