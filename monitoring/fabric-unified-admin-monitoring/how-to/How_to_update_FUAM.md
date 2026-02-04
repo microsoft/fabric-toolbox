@@ -84,3 +84,4 @@ You are now using the latest and greatest version of FUAM!
 - [Documentation - FUAM Authorization & Authentication](/monitoring/fabric-unified-admin-monitoring/media/documentation/FUAM_Authorization.md)
 - [Documentation - FUAM Architecture](/monitoring/fabric-unified-admin-monitoring/media/documentation/FUAM_Architecture.md)
 - [Documentation - FUAM Lakehouse Table Lineage](/monitoring/fabric-unified-admin-monitoring/media/documentation/FUAM_Documentation_Lakehouse_table_lineage.pdf)
+- [Documentation - FUAM Technical Deep Dive](/monitoring/fabric-unified-admin-monitoring/media/documentation/FUAM_Technical_Deep_Dive.md)

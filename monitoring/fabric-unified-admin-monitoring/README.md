@@ -110,6 +110,7 @@ The FUAM solution accelerator template **is not an official Microsoft service**.
 - [Documentation - FUAM Architecture](/monitoring/fabric-unified-admin-monitoring/media/documentation/FUAM_Architecture.md)
 - [Documentation - FUAM Lakehouse table lineage](/monitoring/fabric-unified-admin-monitoring/media/documentation/FUAM_Documentation_Lakehouse_table_lineage.pdf)
 - [Documentation - FUAM Engine level analyzer reports](/monitoring/fabric-unified-admin-monitoring/media/documentation/FUAM_Engine_Level_Analyzer_Reports.md)
+- [Documentation - FUAM Technical Deep Dive](/monitoring/fabric-unified-admin-monitoring/media/documentation/FUAM_Technical_Deep_Dive.md)
 
 ##### Some other Fabric Toolbox assets
 - [Overview - Fabric Cost Analysis](/monitoring/fabric-cost-analysis/README.md)
