@@ -2,7 +2,7 @@
 
 **Version:** 2026.2.1  
 **Last Updated:** February 4, 2026  
-**Authors:** Kevin Thomas and Gellert Gintli
+**Authors:** Kevin Thomas and Gellért Gintli
 
 ---
 

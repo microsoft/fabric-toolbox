@@ -25,6 +25,10 @@ Link: [Click here to update FUAM](/monitoring/fabric-unified-admin-monitoring/ho
     - Fixed an issue, which disabled to store the raw audit log jsons in `FUAM_Lakehouse/Files/history/` subfolder
 
 
+Best Regards!
+
+Kevin & Gellért
+
 
 --------------------------
 ## 📦 2026.1.1
