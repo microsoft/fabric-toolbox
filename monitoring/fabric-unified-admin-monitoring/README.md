@@ -74,8 +74,10 @@ Are you ready to try FUAM out? We have prepared two step-by-step guides to help 
 
 ## Changelog
 
-- **FUAM [Release 2026.1.1 (latest)](/monitoring/fabric-unified-admin-monitoring/changelog/FUAM_Changelog.md)**
+- **FUAM [Release 2026.2.1 (latest)](/monitoring/fabric-unified-admin-monitoring/changelog/FUAM_Changelog.md)**
+- **FUAM [Release 2026.1.1](/monitoring/fabric-unified-admin-monitoring/changelog/FUAM_Changelog.md)**
 - **FUAM [Release 2025.9.1](/monitoring/fabric-unified-admin-monitoring/changelog/FUAM_Changelog.md)**
+
 
 ## Support
 The FUAM solution accelerator template **is not an official Microsoft service**.
@@ -111,6 +113,7 @@ The FUAM solution accelerator template **is not an official Microsoft service**.
 
 ##### Some other Fabric Toolbox assets
 - [Overview - Fabric Cost Analysis](/monitoring/fabric-cost-analysis/README.md)
+- [Overview - Fabric Spark Monitoring](/monitoring/fabric-spark-monitoring/README.md)
 - [Overview - Fabric Workspace Monitoring report templates](/monitoring/workspace-monitoring-dashboards/README.md)
 - [Overview - Semantic Model MCP Server](https://github.com/microsoft/fabric-toolbox/tree/main/tools/SemanticModelMCPServer)
 - [Overview - Semantic Model Audit tool](/tools/SemanticModelAudit/README.md)
