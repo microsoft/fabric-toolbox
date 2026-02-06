@@ -3,7 +3,7 @@
     "version": "4.0",
     "datasetReference": {
         "byConnection": {
-            "connectionString": "Data Source=powerbi://api.powerbi.com/v1.0/myorg/FUAM_Version_2025_9_2;initial catalog=FUAM_Gateway_Monitoring_From_Files_SM;integrated security=ClaimsToken;semanticmodelid=f96b94aa-466d-35f9-851f-cde9111b0f17"
+            "connectionString": "Data Source=powerbi://api.powerbi.com/v1.0/myorg/FUAM_Version_2026_2_1;initial catalog=FUAM_Gateway_Monitoring_From_Files_SM;integrated security=ClaimsToken;semanticmodelid=f96b94aa-466d-35f9-851f-cde9111b0f17"
         }
     }
 }
