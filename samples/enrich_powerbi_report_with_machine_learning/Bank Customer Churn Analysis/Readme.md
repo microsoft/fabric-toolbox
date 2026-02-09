@@ -11,7 +11,7 @@ This challenge is especially common in financial services.
 
 Consider a bank that uses Power BI to track customer activity, balances, and service usage. Historical analysis shows that around 20% of customers churn, with churn tied to factors such as customer tenure, product usage, service interactions, and balance changes. 
 
-![Bank Churn Dashboard](Media\Bank-Customer-Churn-Analysis-Overview.png)
+![Bank Churn Dashboard](Media/Bank-Customer-Churn-Analysis-Overview.png)
 
 At this point, descriptive reporting is no longer enough. The real questions become:  
 
@@ -24,7 +24,7 @@ Microsoft Fabric makes it possible to answer those questions with a fully integr
 
 ## Architecture 
 
-![Architecture](Media\Architecture.png)
+![Architecture](Media/Architecture.png)
 
 Let us first look at the architecture briefly: 
 
