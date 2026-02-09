@@ -1,0 +1,105 @@
+{
+  "config": "{\"version\":\"5.69\",\"themeCollection\":{\"baseTheme\":{\"name\":\"CY25SU12\",\"type\":2,\"version\":{\"visual\":\"2.5.0\",\"report\":\"3.1.0\",\"page\":\"2.3.0\"}}},\"activeSectionIndex\":0,\"defaultDrillFilterOtherVisuals\":true,\"linguisticSchemaSyncVersion\":0,\"settings\":{\"useNewFilterPaneExperience\":true,\"allowChangeFilterTypes\":true,\"useStylableVisualContainerHeader\":true,\"queryLimitOption\":6,\"useEnhancedTooltips\":true,\"exportDataMode\":1,\"useDefaultAggregateDisplayName\":true},\"objects\":{\"section\":[{\"properties\":{\"verticalAlignment\":{\"expr\":{\"Literal\":{\"Value\":\"'Top'\"}}}}}]}}",
+  "layoutOptimization": 0,
+  "resourcePackages": [
+    {
+      "resourcePackage": {
+        "disabled": false,
+        "items": [
+          {
+            "name": "CY25SU12",
+            "path": "BaseThemes/CY25SU12.json",
+            "type": 202
+          }
+        ],
+        "name": "SharedResources",
+        "type": 2
+      }
+    }
+  ],
+  "sections": [
+    {
+      "config": "{}",
+      "displayName": "Bank Customer Churn Analysis",
+      "displayOption": 1,
+      "filters": "[]",
+      "height": 720.00,
+      "name": "adbebb8128b654425e08",
+      "visualContainers": [
+        {
+          "config": "{\"name\":\"328f32111cf51ee6c0d7\",\"layouts\":[{\"id\":0,\"position\":{\"x\":603.040037408869,\"y\":84.73902354349845,\"z\":3000,\"width\":275.6920286517929,\"height\":139.29702500301113,\"tabOrder\":3000}}],\"singleVisual\":{\"visualType\":\"cardVisual\",\"projections\":{\"Data\":[{\"queryRef\":\"churn.ActiveRate\"}]},\"prototypeQuery\":{\"Version\":2,\"From\":[{\"Name\":\"c\",\"Entity\":\"churn\",\"Type\":0}],\"Select\":[{\"Measure\":{\"Expression\":{\"SourceRef\":{\"Source\":\"c\"}},\"Property\":\"ActiveRate\"},\"Name\":\"churn.ActiveRate\",\"NativeReferenceName\":\"ActiveRate\"}],\"OrderBy\":[{\"Direction\":2,\"Expression\":{\"Measure\":{\"Expression\":{\"SourceRef\":{\"Source\":\"c\"}},\"Property\":\"ActiveRate\"}}}]},\"columnProperties\":{\"churn.ChurnRate\":{\"formatString\":null},\"churn.ActiveRate\":{\"formatString\":\"0.00 %;-0.00 %;0.00 %\"}},\"drillFilterOtherVisuals\":true,\"hasDefaultSort\":true,\"objects\":{\"label\":[{\"properties\":{\"show\":{\"expr\":{\"Literal\":{\"Value\":\"false\"}}}},\"selector\":{\"id\":\"default\"}}]},\"vcObjects\":{\"title\":[{\"properties\":{\"show\":{\"expr\":{\"Literal\":{\"Value\":\"true\"}}},\"text\":{\"expr\":{\"Literal\":{\"Value\":\"'Active Rate'\"}}},\"fontSize\":{\"expr\":{\"Literal\":{\"Value\":\"24D\"}}}}}],\"background\":[{\"properties\":{\"color\":{\"solid\":{\"color\":{\"expr\":{\"ThemeDataColor\":{\"ColorId\":2,\"Percent\":0.6}}}}}}}]}}}",
+          "filters": "[]",
+          "height": 139.30,
+          "width": 275.69,
+          "x": 603.04,
+          "y": 84.74,
+          "z": 3000.00
+        },
+        {
+          "config": "{\"name\":\"3cd27f4e84827b3e3eeb\",\"layouts\":[{\"id\":0,\"position\":{\"x\":901.3678326236512,\"y\":84.73902354349845,\"z\":4000,\"width\":275.6920286517929,\"height\":139.29702500301113,\"tabOrder\":4000}}],\"singleVisual\":{\"visualType\":\"cardVisual\",\"projections\":{\"Data\":[{\"queryRef\":\"churn.AverageBalance\"}]},\"prototypeQuery\":{\"Version\":2,\"From\":[{\"Name\":\"c\",\"Entity\":\"churn\",\"Type\":0}],\"Select\":[{\"Measure\":{\"Expression\":{\"SourceRef\":{\"Source\":\"c\"}},\"Property\":\"AverageBalance\"},\"Name\":\"churn.AverageBalance\",\"NativeReferenceName\":\"AverageBalance\"}],\"OrderBy\":[{\"Direction\":2,\"Expression\":{\"Measure\":{\"Expression\":{\"SourceRef\":{\"Source\":\"c\"}},\"Property\":\"AverageBalance\"}}}]},\"columnProperties\":{\"churn.ChurnRate\":{\"formatString\":null},\"churn.ActiveRate\":{\"formatString\":null},\"churn.AverageBalance\":{\"formatString\":\"0.00\"}},\"drillFilterOtherVisuals\":true,\"hasDefaultSort\":true,\"objects\":{\"label\":[{\"properties\":{\"show\":{\"expr\":{\"Literal\":{\"Value\":\"false\"}}}},\"selector\":{\"id\":\"default\"}}]},\"vcObjects\":{\"title\":[{\"properties\":{\"show\":{\"expr\":{\"Literal\":{\"Value\":\"true\"}}},\"text\":{\"expr\":{\"Literal\":{\"Value\":\"'Average Balance'\"}}},\"fontSize\":{\"expr\":{\"Literal\":{\"Value\":\"24D\"}}}}}],\"background\":[{\"properties\":{\"color\":{\"solid\":{\"color\":{\"expr\":{\"ThemeDataColor\":{\"ColorId\":2,\"Percent\":0.6}}}}}}}]}}}",
+          "filters": "[]",
+          "height": 139.30,
+          "width": 275.69,
+          "x": 901.37,
+          "y": 84.74,
+          "z": 4000.00
+        },
+        {
+          "config": "{\"name\":\"3db405d79f47c8c02f9f\",\"layouts\":[{\"id\":0,\"position\":{\"x\":307.6142635483163,\"y\":84.73902354349845,\"z\":2000,\"width\":275.6920286517929,\"height\":139.29702500301113,\"tabOrder\":2000}}],\"singleVisual\":{\"visualType\":\"cardVisual\",\"projections\":{\"Data\":[{\"queryRef\":\"churn.ChurnRate\"}]},\"prototypeQuery\":{\"Version\":2,\"From\":[{\"Name\":\"c\",\"Entity\":\"churn\",\"Type\":0}],\"Select\":[{\"Measure\":{\"Expression\":{\"SourceRef\":{\"Source\":\"c\"}},\"Property\":\"ChurnRate\"},\"Name\":\"churn.ChurnRate\",\"NativeReferenceName\":\"ChurnRate\"}],\"OrderBy\":[{\"Direction\":2,\"Expression\":{\"Measure\":{\"Expression\":{\"SourceRef\":{\"Source\":\"c\"}},\"Property\":\"ChurnRate\"}}}]},\"columnProperties\":{\"churn.ChurnRate\":{\"formatString\":\"0.00 %;-0.00 %;0.00 %\"}},\"drillFilterOtherVisuals\":true,\"hasDefaultSort\":true,\"objects\":{\"label\":[{\"properties\":{\"show\":{\"expr\":{\"Literal\":{\"Value\":\"false\"}}}},\"selector\":{\"id\":\"default\"}}]},\"vcObjects\":{\"title\":[{\"properties\":{\"show\":{\"expr\":{\"Literal\":{\"Value\":\"true\"}}},\"text\":{\"expr\":{\"Literal\":{\"Value\":\"'Churn Rate'\"}}},\"fontSize\":{\"expr\":{\"Literal\":{\"Value\":\"24D\"}}}}}],\"background\":[{\"properties\":{\"color\":{\"solid\":{\"color\":{\"expr\":{\"ThemeDataColor\":{\"ColorId\":2,\"Percent\":0.6}}}}}}}]}}}",
+          "filters": "[]",
+          "height": 139.30,
+          "width": 275.69,
+          "x": 307.61,
+          "y": 84.74,
+          "z": 2000.00
+        },
+        {
+          "config": "{\"name\":\"828f816548b33c2cc9b2\",\"layouts\":[{\"id\":0,\"position\":{\"x\":16.251319583684634,\"y\":84.73902354349845,\"z\":1000,\"width\":275.6920286517929,\"height\":139.29702500301113,\"tabOrder\":1000}}],\"singleVisual\":{\"visualType\":\"cardVisual\",\"projections\":{\"Data\":[{\"queryRef\":\"churn.TotalCustomer\"}]},\"prototypeQuery\":{\"Version\":2,\"From\":[{\"Name\":\"c\",\"Entity\":\"churn\",\"Type\":0}],\"Select\":[{\"Measure\":{\"Expression\":{\"SourceRef\":{\"Source\":\"c\"}},\"Property\":\"TotalCustomer\"},\"Name\":\"churn.TotalCustomer\",\"NativeReferenceName\":\"TotalCustomer\"}],\"OrderBy\":[{\"Direction\":2,\"Expression\":{\"Measure\":{\"Expression\":{\"SourceRef\":{\"Source\":\"c\"}},\"Property\":\"TotalCustomer\"}}}]},\"drillFilterOtherVisuals\":true,\"hasDefaultSort\":true,\"objects\":{\"label\":[{\"properties\":{\"show\":{\"expr\":{\"Literal\":{\"Value\":\"false\"}}}},\"selector\":{\"id\":\"default\"}}]},\"vcObjects\":{\"title\":[{\"properties\":{\"show\":{\"expr\":{\"Literal\":{\"Value\":\"true\"}}},\"text\":{\"expr\":{\"Literal\":{\"Value\":\"'Total Customer'\"}}},\"fontSize\":{\"expr\":{\"Literal\":{\"Value\":\"24D\"}}}}}],\"background\":[{\"properties\":{\"color\":{\"solid\":{\"color\":{\"expr\":{\"ThemeDataColor\":{\"ColorId\":2,\"Percent\":0.6}}}}}}}]}}}",
+          "filters": "[]",
+          "height": 139.30,
+          "width": 275.69,
+          "x": 16.25,
+          "y": 84.74,
+          "z": 1000.00
+        },
+        {
+          "config": "{\"name\":\"8a3163ffad8d185bbc45\",\"layouts\":[{\"id\":0,\"position\":{\"x\":16.251319583684634,\"y\":294.264965318861,\"z\":4001,\"width\":385.96884011251,\"height\":304.71224219408685,\"tabOrder\":4001}}],\"singleVisual\":{\"visualType\":\"clusteredColumnChart\",\"projections\":{\"Category\":[{\"queryRef\":\"churn.Geography\",\"active\":true}],\"Series\":[{\"queryRef\":\"churn.Exited\"}],\"Y\":[{\"queryRef\":\"churn.TotalCustomer\"}]},\"prototypeQuery\":{\"Version\":2,\"From\":[{\"Name\":\"c\",\"Entity\":\"churn\",\"Type\":0}],\"Select\":[{\"Column\":{\"Expression\":{\"SourceRef\":{\"Source\":\"c\"}},\"Property\":\"Geography\"},\"Name\":\"churn.Geography\",\"NativeReferenceName\":\"Count of Geography\"},{\"Column\":{\"Expression\":{\"SourceRef\":{\"Source\":\"c\"}},\"Property\":\"Exited\"},\"Name\":\"churn.Exited\",\"NativeReferenceName\":\"Exited\"},{\"Measure\":{\"Expression\":{\"SourceRef\":{\"Source\":\"c\"}},\"Property\":\"TotalCustomer\"},\"Name\":\"churn.TotalCustomer\",\"NativeReferenceName\":\"TotalCustomer\"}],\"OrderBy\":[{\"Direction\":2,\"Expression\":{\"Measure\":{\"Expression\":{\"SourceRef\":{\"Source\":\"c\"}},\"Property\":\"TotalCustomer\"}}}]},\"drillFilterOtherVisuals\":true,\"hasDefaultSort\":true,\"vcObjects\":{\"title\":[{\"properties\":{\"text\":{\"expr\":{\"Literal\":{\"Value\":\"'Churn Distribution by Geography'\"}}}}}]}}}",
+          "filters": "[]",
+          "height": 304.71,
+          "width": 385.97,
+          "x": 16.25,
+          "y": 294.26,
+          "z": 4001.00
+        },
+        {
+          "config": "{\"name\":\"8a51139509e46ab14a07\",\"layouts\":[{\"id\":0,\"position\":{\"x\":811.9855749133858,\"y\":294.264965318861,\"z\":4003,\"width\":385.96884011251,\"height\":304.71224219408685,\"tabOrder\":4003}}],\"singleVisual\":{\"visualType\":\"clusteredColumnChart\",\"projections\":{\"Series\":[{\"queryRef\":\"churn.Exited\"}],\"Y\":[{\"queryRef\":\"churn.TotalCustomer\"}],\"Category\":[{\"queryRef\":\"churn.Tenure\",\"active\":true}]},\"prototypeQuery\":{\"Version\":2,\"From\":[{\"Name\":\"c\",\"Entity\":\"churn\",\"Type\":0}],\"Select\":[{\"Column\":{\"Expression\":{\"SourceRef\":{\"Source\":\"c\"}},\"Property\":\"Exited\"},\"Name\":\"churn.Exited\",\"NativeReferenceName\":\"Exited\"},{\"Measure\":{\"Expression\":{\"SourceRef\":{\"Source\":\"c\"}},\"Property\":\"TotalCustomer\"},\"Name\":\"churn.TotalCustomer\",\"NativeReferenceName\":\"TotalCustomer\"},{\"Column\":{\"Expression\":{\"SourceRef\":{\"Source\":\"c\"}},\"Property\":\"Tenure\"},\"Name\":\"churn.Tenure\",\"NativeReferenceName\":\"Tenure\"}],\"OrderBy\":[{\"Direction\":2,\"Expression\":{\"Measure\":{\"Expression\":{\"SourceRef\":{\"Source\":\"c\"}},\"Property\":\"TotalCustomer\"}}}]},\"drillFilterOtherVisuals\":true,\"hasDefaultSort\":true,\"vcObjects\":{\"title\":[{\"properties\":{\"text\":{\"expr\":{\"Literal\":{\"Value\":\"'Churn Distribution by Tenure'\"}}}}}]}}}",
+          "filters": "[]",
+          "height": 304.71,
+          "width": 385.97,
+          "x": 811.99,
+          "y": 294.26,
+          "z": 4003.00
+        },
+        {
+          "config": "{\"name\":\"a2dcb34b8b47a57d340e\",\"layouts\":[{\"id\":0,\"position\":{\"x\":9.866872604379955,\"y\":0,\"z\":0,\"width\":564.1529512621951,\"height\":66.16608687643028,\"tabOrder\":0}}],\"singleVisual\":{\"visualType\":\"textbox\",\"drillFilterOtherVisuals\":true,\"objects\":{\"general\":[{\"properties\":{\"paragraphs\":[{\"textRuns\":[{\"value\":\"Bank Customer Churn Analysis\",\"textStyle\":{\"fontFamily\":\"Segoe UI Semibold\",\"fontSize\":\"28pt\"}}]}]}}]}}}",
+          "filters": "[]",
+          "height": 66.17,
+          "width": 564.15,
+          "x": 9.87,
+          "y": 0.00,
+          "z": 0.00
+        },
+        {
+          "config": "{\"name\":\"a7612e6b348f767f75ea\",\"layouts\":[{\"id\":0,\"position\":{\"x\":416.14986219649575,\"y\":294.264965318861,\"z\":4002,\"width\":385.96884011251,\"height\":304.71224219408685,\"tabOrder\":4002}}],\"singleVisual\":{\"visualType\":\"clusteredColumnChart\",\"projections\":{\"Series\":[{\"queryRef\":\"churn.Exited\"}],\"Y\":[{\"queryRef\":\"churn.TotalCustomer\"}],\"Category\":[{\"queryRef\":\"churn.Gender\",\"active\":true}]},\"prototypeQuery\":{\"Version\":2,\"From\":[{\"Name\":\"c\",\"Entity\":\"churn\",\"Type\":0}],\"Select\":[{\"Column\":{\"Expression\":{\"SourceRef\":{\"Source\":\"c\"}},\"Property\":\"Exited\"},\"Name\":\"churn.Exited\",\"NativeReferenceName\":\"Exited\"},{\"Measure\":{\"Expression\":{\"SourceRef\":{\"Source\":\"c\"}},\"Property\":\"TotalCustomer\"},\"Name\":\"churn.TotalCustomer\",\"NativeReferenceName\":\"TotalCustomer\"},{\"Column\":{\"Expression\":{\"SourceRef\":{\"Source\":\"c\"}},\"Property\":\"Gender\"},\"Name\":\"churn.Gender\",\"NativeReferenceName\":\"Gender\"}],\"OrderBy\":[{\"Direction\":2,\"Expression\":{\"Measure\":{\"Expression\":{\"SourceRef\":{\"Source\":\"c\"}},\"Property\":\"TotalCustomer\"}}}]},\"drillFilterOtherVisuals\":true,\"hasDefaultSort\":true,\"vcObjects\":{\"title\":[{\"properties\":{\"text\":{\"expr\":{\"Literal\":{\"Value\":\"'Churn Distribution by Gender'\"}}}}}]}}}",
+          "filters": "[]",
+          "height": 304.71,
+          "width": 385.97,
+          "x": 416.15,
+          "y": 294.26,
+          "z": 4002.00
+        }
+      ],
+      "width": 1280.00
+    }
+  ]
+}
