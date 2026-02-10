@@ -65,6 +65,7 @@ Once Data Lake Gen 2 storage account created here are the high levels steps to c
 ![FCA](./media/Setup-Export6.png)
 
 - Create a new File Shortcut on the FCA Lakehouse ([Create an Azure Data Lake Storage Gen2 shortcut](https://learn.microsoft.com/en-us/fabric/onelake/create-adls-shortcut))
+  - ‼️The user must have the Storage Blob Data Contributor role assigned
   - Select the ellipsis (**...**) next to **Files**
   - Select **New shortcut**
   - Select Azure Data Lake Storage Gen 2 and provide the following settings:
