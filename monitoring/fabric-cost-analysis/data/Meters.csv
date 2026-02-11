@@ -6,15 +6,15 @@ Apache Airflow job Capacity Usage CU,Represents Apache Airflow on your capacity,
 API for GraphQL Query,Represents GraphQL Query API for your capacity,GA,FALSE,TRUE,GraphQL
 API for GraphQL Query Capacity Usage CU,Represents GraphQL Query API for your capacity,GA,FALSE,TRUE,GraphQL
 Autoscale for Spark,Represents autoscale for Spark on your capacity,GA,FALSE,FALSE,Spark
-autoscale for Spark Capacity Usage CU,Represents autoscale for Spark on your capacity,Preview,FALSE,FALSE,Spark
+autoscale for Spark Capacity Usage CU,Represents autoscale for Spark on your capacity,GA,FALSE,FALSE,Spark
 OneLake Cache Data Stored,OneLake Cache Data Stored,GA,FALSE,FALSE,OneLake
-Compute Pool Capacity Usage CU,Represents the available capacity,GA,TRUE,TRUE,Fabric CU
+Compute Pool Capacity Usage CU,Represents the available capacity,GA,TRUE,TRUE,Not used CU
 Copilot and AI,Represents Copilot and AI on your capacity,GA,FALSE,TRUE,Copilot
 Copilot and AI Capacity Usage CU,Represents Copilot and AI on your capacity,GA,FALSE,TRUE,Copilot
 Cosmos DB backup storage Data Stored,Cosmos DB backup storage Data Stored,Preview,FALSE,TRUE,Cosmos DB
 Cosmos DB data restore Data Stored,Cosmos DB data restore Data Stored,Preview,FALSE,TRUE,Cosmos DB
 Cosmos DB storage Data Stored,Cosmos DB storage Data Stored,Preview,FALSE,TRUE,Cosmos DB
-Csms DB in MS Fabric Capacity Usage CU,Csms DB in MS Fabric Capacity Usage CU,Preview,FALSE,TRUE,Cosmos DB
+Cosmos DB in MS Fabric Capacity Usage CU,Cosmos DB in MS Fabric Capacity Usage CU,Preview,FALSE,TRUE,Cosmos DB
 Data Movement - Incremental copy Capacity Usage CU,Data Movement - Incremental copy Capacity Usage CU,GA,FALSE,TRUE,Data Movement
 Data Movement Capacity Usage CU,Represents the Pipelines Data Movement usage on your capacity,GA,FALSE,TRUE,Data Movement
 Data Orchestration Capacity Usage CU,Represents the Pipelines Data Orchestration usage on your capacity,GA,FALSE,TRUE,Data Orchestration
@@ -87,3 +87,4 @@ OneLake BCDR Read Operations via Proxy Capacity Usage CU,OneLake BCDR Read Opera
 Operations Agents Compute Capacity Usage CU,Operations Agents Compute,GA,FALSE,TRUE,Operations Agents
 Copilot and AI Capacity Usage CU,Represents Copilot and AI on your capacity,GA,FALSE,TRUE,Copilot
 Operations Agents Autonomous Reasoning Capacity Usage CU,Operations Agents Autonomous Reasoning Capacity Usage CU,GA,FALSE,TRUE,Operations Agents
+Real-Time Intelligence - Event Listener and Alert Capacity Usage CU,Represents Event Listener and Alerts for Real-Time Intelligence on your capacity,GA,FALSE,TRUE,RTI

@@ -1,6 +1,6 @@
 # Reservation
 
-🎬 Reservation setup demo available on YouTube: [Fabric Cost Analysis - Reservation deployment](https://youtu.be/iFTnpsOmiok)
+🎬 Reservation setup demo available on YouTube: [Fabric Cost Analysis - Reservation deployment](https://youtu.be/_lzNqnhj5Cc)
 
 🏗️ The reservation analysis is still in Preview and may receive major updates.
 
