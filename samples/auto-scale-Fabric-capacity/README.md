@@ -28,7 +28,8 @@ For more information about event schema, refer to [Explore Capacity overview eve
 ### 1. Create Eventstream  
 Set up an event stream named appropriately for your scenario.
 Guide: https://learn.microsoft.com/fabric/real-time-hub/create-eventstream
-![alt text](image-1.png)
+
+![alt text](images/image-1.png)
 ### 2. Add Capacity Overview Event Source
 Configure the event stream to include capacity overview data.
 For detailed steps, refer to: https://learn.microsoft.com/fabric/real-time-hub/add-capacity-overview-event-source
@@ -36,25 +37,26 @@ For detailed steps, refer to: https://learn.microsoft.com/fabric/real-time-hub/a
 #### Steps:
 
 1. Select **Capacity Overview Events** → **Connect**  
-![alt text](image-2.png)
+![alt text](images/image-2.png)
 2. To capture capacity utilization, select the event type `Microsoft.Fabric.Capacity.Summary` and choose the specific capacity you want to monitor.
 
-    ![alt text](image-3.png)
+    ![alt text](images/image-3.png)
 
 3. Rename the source to **Fabric-capacity-events**
-![alt text](image-4.png)
+
+    ![alt text](images/image-4.png)
 
 4. Add the SQL transformation code to the event stream and name it Calculate_capacity_utilization. For detailed guidance, refer to: https://learn.microsoft.com/fabric/real-time-hub/sql-operator
-![alt text](image-5.png)
+![alt text](images/image-5.png)
 
 ### 3. Add Capacity Overview Event Source
 Add an Activator as a destination in the event stream and name it Capacity-Activator. Create a new Activator if one does not already exist. For detailed steps, refer to: https://learn.microsoft.com/fabric/real-time-hub/add-activator-destination
-    ![alt text](image-6.png)
+    ![alt text](images/image-6.png)
 ### 4. Edit SQL transformation code
 
 The stream now flows as shown below. Since the event type Microsoft.Fabric.Capacity.Summary does not include a utilization metric, we need to generate a new metric and output the result to the Activator
 
-![alt text](image-7.png)
+![alt text](images/image-7.png)
 
 Click the edit icon for the SQL code and enter the following SQL script
 
@@ -91,7 +93,7 @@ SELECT
 INTO [Capacity-Activator]
 FROM u;
 ```
-![alt text](image-8.png)
+![alt text](images/image-8.png)
 
 This script performs the following actions:
 - Reads capacity telemetry from [CapacityScaleupdemo-stream].
@@ -103,34 +105,38 @@ utilization = capacityUnitMs / (baseCapacityUnits * windowDurationMs)
 
 ### 5. Publish the Eventstream
 After saving the query, the stream flow will appear as shown below. At this point, we are ready to publish the Eventstream
-![alt text](image-9.png) 
+
+![alt text](images/image-9.png)
+
 Once the Eventstream is published, both the source and destination will display the status as “Active.”
-![alt text](image-10.png)
+
+![alt text](images/image-10.png)
 ### 6. Configure the Activator
 Next, navigate to the Activator details page and click Open item to configure the activation settings. Typically, we avoid scaling up capacity immediately when utilization exceeds the threshold. Instead, best practice is to allow a time window—such as 10 minutes—to confirm whether utilization remains above the threshold. To achieve this, define a summarization rule on the utilization property
 
-![alt text](image-11.png)
+![alt text](images/image-11.png)
 
 - Create a new object - Click New Object and provide the following details:
     - **Object Name**: Fabric Capacity
     - **Unique Identifier**: capacityName
     - **Properties**: utilization
 
-    ![alt text](image-12.png)
+    ![alt text](images/image-12.png)
 
 - Create a new rule based on the property utilization
 
-    ![alt text](image-13.png)
+    ![alt text](images/image-13.png)
 
 - In the rule’s Definition panel, click Add Summarization → Average
 
-    ![alt text](image-14.png)
+    ![alt text](images/image-14.png)
 
 - Configure the rule for the utilization property:
     - **Summarization**: Average over a 10-minute window
     - **Condition**: Trigger when utilization remains greater than 0.8 for 10 minutes
     - **Action**: Execute the notebook scale_up_by_api to scale Fabric capacity to the next SKU
-![alt text](image-15.png)
+  
+    ![alt text](images/image-15.png)
 - Click Save and Start to activate the rule. Once enabled, the rule will continuously monitor Fabric capacity utilization and, when the alert condition is met, automatically scale the capacity to the next SKU by running the designated notebook
 ### 7. Use Fabric REST API to Scale Up the SKU
 Below is a sample approach for using the Fabric REST API to scale a Fabric capacity to the next SKU.
