@@ -1425,18 +1425,21 @@ function Get-FabricAdminItemUser {
 
 <#
 .SYNOPSIS
-    Gets reports from the admin API for tenant-wide visibility.
+    Gets reports from the Power BI admin API for tenant-wide visibility.
 
 .DESCRIPTION
-    The Get-FabricAdminReport cmdlet retrieves Power BI reports using the admin API endpoint.
-    This provides tenant-wide visibility into all reports (including those the user doesn't have access to).
-    Requires Fabric Administrator permissions.
+    The Get-FabricAdminReport cmdlet retrieves Power BI reports using the Power BI admin API endpoint
+    (https://api.powerbi.com/v1.0/myorg/admin/reports). This provides tenant-wide visibility into all
+    reports (including those the user doesn't have access to). Requires Fabric Administrator permissions.
 
-.PARAMETER WorkspaceId
-    Optional. Filter reports by workspace ID.
+.PARAMETER Filter
+    Optional. OData filter expression to filter the results (e.g., "contains(name,'sales')").
 
-.PARAMETER ReportId
-    Optional. Returns only the report matching this ID. Requires WorkspaceId.
+.PARAMETER Top
+    Optional. Maximum number of reports to return.
+
+.PARAMETER Skip
+    Optional. Number of reports to skip (for pagination).
 
 .PARAMETER Raw
     Optional. When specified, returns the raw API response.
@@ -1447,24 +1450,19 @@ function Get-FabricAdminItemUser {
     Lists all reports in the tenant.
 
 .EXAMPLE
-    Get-FabricAdminReport -WorkspaceId "12345678-1234-1234-1234-123456789012"
+    Get-FabricAdminReport -Top 100
 
-    Lists all reports in the specified workspace.
-
-.EXAMPLE
-    Get-FabricAdminReport -WorkspaceId "12345678-1234-1234-1234-123456789012" -ReportId "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee"
-
-    Returns the specific report.
+    Lists the first 100 reports in the tenant.
 
 .EXAMPLE
-    Get-FabricAdminWorkspace | Get-FabricAdminReport
+    Get-FabricAdminReport -Filter "contains(name,'Sales')"
 
-    Lists all reports from all workspaces via pipeline.
+    Lists reports with 'Sales' in the name.
 
 .NOTES
+    - Uses the Power BI Admin API: https://api.powerbi.com/v1.0/myorg/admin/reports
     - Requires Fabric Administrator permissions or service principal with Tenant.Read.All scope.
     - Rate limited to 200 requests per hour.
-    - This is a preview API.
 
     Author: Tiago Balabuch, Jess Pomfret, Rob Sewell
 
@@ -1472,14 +1470,17 @@ function Get-FabricAdminItemUser {
 function Get-FabricAdminReport {
     [CmdletBinding()]
     param (
-        [Parameter(Mandatory = $false, ValueFromPipelineByPropertyName = $true)]
+        [Parameter(Mandatory = $false)]
         [ValidateNotNullOrEmpty()]
-        [Alias('id')]
-        [string]$WorkspaceId,
+        [string]$Filter,
 
-        [Parameter(Mandatory = $false, ValueFromPipelineByPropertyName = $true)]
-        [ValidateNotNullOrEmpty()]
-        [string]$ReportId,
+        [Parameter(Mandatory = $false)]
+        [ValidateRange(1, 5000)]
+        [int]$Top,
+
+        [Parameter(Mandatory = $false)]
+        [ValidateRange(0, [int]::MaxValue)]
+        [int]$Skip,
 
         [Parameter()]
         [switch]$Raw
@@ -1487,43 +1488,27 @@ function Get-FabricAdminReport {
 
     process {
         try {
-            # Validate parameters
-            if ($ReportId -and -not $WorkspaceId) {
-                Write-FabricLog -Message "WorkspaceId is required when specifying ReportId." -Level Error
-                return
-            }
-
             Invoke-FabricAuthCheck -ThrowOnFailure
 
-            # If ReportId and WorkspaceId provided, get specific report
-            if ($ReportId -and $WorkspaceId) {
-                $apiEndpointURI = "{0}/admin/workspaces/{1}/reports/{2}" -f $script:FabricAuthContext.BaseUrl, $WorkspaceId, $ReportId
-                Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
+            # Power BI Admin API base URL
+            $powerBIAdminBaseUrl = "https://api.powerbi.com/v1.0/myorg"
 
-                $apiParams = @{
-                    BaseURI = $apiEndpointURI
-                    Headers = $script:FabricAuthContext.FabricHeaders
-                    Method  = 'Get'
-                }
-                $response = Invoke-FabricAPIRequest @apiParams
-
-                if ($response) {
-                    if ($Raw) {
-                        return $response
-                    }
-                    $response.PSObject.TypeNames.Insert(0, 'MicrosoftFabric.AdminReport')
-                    return $response
-                }
-                return $null
+            # Build query parameters
+            $queryParams = @()
+            if ($Filter) {
+                $queryParams += "`$filter=$([System.Uri]::EscapeDataString($Filter))"
+            }
+            if ($Top) {
+                $queryParams += "`$top=$Top"
+            }
+            if ($Skip) {
+                $queryParams += "`$skip=$Skip"
             }
 
-            # If WorkspaceId provided, get reports for that workspace
-            if ($WorkspaceId) {
-                $apiEndpointURI = "{0}/admin/workspaces/{1}/reports" -f $script:FabricAuthContext.BaseUrl, $WorkspaceId
-            }
-            else {
-                # Get all reports in tenant
-                $apiEndpointURI = "{0}/admin/reports" -f $script:FabricAuthContext.BaseUrl
+            # Construct the API endpoint URI
+            $apiEndpointURI = "$powerBIAdminBaseUrl/admin/reports"
+            if ($queryParams.Count -gt 0) {
+                $apiEndpointURI = "$apiEndpointURI`?$($queryParams -join '&')"
             }
 
             Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
@@ -1550,7 +1535,7 @@ function Get-FabricAdminReport {
         }
     }
 }
-#EndRegion '.\Public\Admin\Get-FabricAdminReport.ps1' 128
+#EndRegion '.\Public\Admin\Get-FabricAdminReport.ps1' 113
 #Region '.\Public\Admin\Get-FabricAdminUserAccess.ps1' -1
 
 <#
