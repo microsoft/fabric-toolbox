@@ -61,8 +61,9 @@
 function Get-FabricAdminItem {
     [CmdletBinding()]
     param (
-        [Parameter(Mandatory = $false)]
+        [Parameter(Mandatory = $false, ValueFromPipelineByPropertyName = $true)]
         [ValidateNotNullOrEmpty()]
+        [Alias('id')]
         [string]$WorkspaceId,
 
         [Parameter(Mandatory = $false)]
@@ -151,8 +152,8 @@ function Get-FabricAdminItem {
             $response = Invoke-FabricAPIRequest @apiParams
 
             if (-not $response) {
-                Write-FabricLog -Message "No items returned from admin API." -Level Warning
-                return $null
+                Write-FabricLog -Message "No items returned from admin API." -Level Debug
+                return
             }
 
             # Use Select-FabricResource for type decoration

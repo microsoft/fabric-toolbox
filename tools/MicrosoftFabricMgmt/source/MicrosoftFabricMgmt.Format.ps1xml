@@ -13,6 +13,7 @@
       <Name>FabricItemView</Name>
       <ViewSelectedBy>
         <TypeName>MicrosoftFabric.Item</TypeName>
+        <TypeName>MicrosoftFabric.AdminItem</TypeName>
         <TypeName>MicrosoftFabric.ApacheAirflowJob</TypeName>
         <TypeName>MicrosoftFabric.CopyJob</TypeName>
         <TypeName>MicrosoftFabric.CosmosDBDatabase</TypeName>
@@ -124,7 +125,17 @@
               </TableColumnItem>
               <!-- Item Name (displayName or name) -->
               <TableColumnItem>
-                <PropertyName>displayName</PropertyName>
+                <ScriptBlock>
+                  if ($_.displayName) {
+                    $_.displayName
+                  }
+                  elseif ($_.name) {
+                    $_.name
+                  }
+                  else {
+                    'N/A'
+                  }
+                </ScriptBlock>
               </TableColumnItem>
               <!-- Item Type -->
               <TableColumnItem>

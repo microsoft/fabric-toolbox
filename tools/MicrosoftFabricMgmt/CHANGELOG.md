@@ -118,6 +118,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Cascading Resolution Caching**: Both levels cached (workspace→capacityId AND capacityId→name)
 
 ### Fixed
+- **Get-FabricAdminItem**: Fixed pipeline support - WorkspaceId parameter now accepts input from pipeline via `ValueFromPipelineByPropertyName` with `Alias('id')`
+- **Get-FabricAdminItem**: Removed warning when no items are returned - now silently returns nothing as per module standards
+- **Get-FabricAdminItem**: Added output formatting - now displays Capacity Name, Workspace Name, Item Name, Type, and ID in table view
+- **Format File**: Added `MicrosoftFabric.AdminItem` to FabricItemView for automatic formatting of admin API items
+- **Format File**: Updated Item Name column to handle both `displayName` (standard items) and `name` (admin API items) properties
+- **Invoke-FabricAPIRequest**: Added support for `itemEntities` property in response handling (used by Admin API endpoints)
+- **Invoke-FabricAPIRequest**: Fixed array conversion error when `Retry-After` header is returned as an array - now handles both single values and arrays correctly
+- **Get-FabricAdminItem**: Fixed handling of empty `itemEntities` responses - now correctly returns empty array instead of failing
 - Fixed overly restrictive `ValidatePattern` on name parameters across 18 cmdlets to match Microsoft Fabric documentation
   - **Fabric items** (Lakehouse, Warehouse, KQL Database, Tags, Variable Library, Spark Job Definition, SQL Endpoints): Changed pattern from `'^[a-zA-Z0-9_ ]*$'` to `'^[a-zA-Z0-9_]*$'` (removed space support as per Fabric naming restrictions)
   - **Workspaces**: Removed restrictive pattern validation entirely to support broader character set allowed by Fabric workspaces
