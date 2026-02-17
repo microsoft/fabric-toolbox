@@ -14,6 +14,9 @@ The `Get-FabricEnvironment` function sends a GET request to the Fabric API to re
 .PARAMETER EnvironmentName
 (Optional) The name of the specific environment to retrieve.
 
+.PARAMETER Raw
+Returns the raw API response without any filtering or transformation. Use this switch when you need the complete, unprocessed response from the API.
+
 .EXAMPLE
 Get-FabricEnvironment -WorkspaceId "12345" -EnvironmentName "Development"
 
@@ -23,6 +26,11 @@ Retrieves the "Development" environment from workspace "12345".
 Get-FabricEnvironment -WorkspaceId "12345"
 
 Retrieves all environments in workspace "12345".
+
+.EXAMPLE
+Get-FabricEnvironment -WorkspaceId "12345" -Raw
+
+Returns the raw API response for all environments in the workspace without any formatting or type decoration.
 
 .NOTES
 - Requires `$FabricConfig` global configuration, including `BaseUrl` and `FabricHeaders`.
@@ -48,7 +56,10 @@ function Get-FabricEnvironment {
         [Parameter(Mandatory = $false)]
         [ValidateNotNullOrEmpty()]
         [ValidatePattern('^[a-zA-Z0-9_ ]*$')]
-        [string]$EnvironmentName
+        [string]$EnvironmentName,
+
+        [Parameter(Mandatory = $false)]
+        [switch]$Raw
     )
 
     process {
@@ -74,7 +85,7 @@ function Get-FabricEnvironment {
             $dataItems = Invoke-FabricAPIRequest @apiParams
 
             # Apply filtering logic
-            Select-FabricResource -InputObject $dataItems -Id $EnvironmentId -Name $EnvironmentName -ResourceType 'Environment'
+            Select-FabricResource -InputObject $dataItems -Id $EnvironmentId -DisplayName $EnvironmentName -ResourceType 'Environment' -TypeName 'MicrosoftFabric.Environment' -Raw:$Raw
         }
         catch {
             # Capture and log error details

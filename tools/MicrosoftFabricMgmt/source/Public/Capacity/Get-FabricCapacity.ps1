@@ -13,6 +13,9 @@
 .PARAMETER CapacityName
     The name of the capacity to retrieve. This parameter is optional.
 
+.PARAMETER Raw
+    If specified, returns the raw API response without type decoration.
+
 .EXAMPLE
      Get-FabricCapacity -CapacityId "capacity-12345"
     This example retrieves the capacity details for the capacity with ID "capacity-12345".
@@ -36,7 +39,10 @@ function Get-FabricCapacity {
 
         [Parameter(Mandatory = $false)]
         [ValidateNotNullOrEmpty()]
-        [string]$CapacityName
+        [string]$CapacityName,
+
+        [Parameter()]
+        [switch]$Raw
     )
     try {
         # Validate input parameters
@@ -60,7 +66,7 @@ function Get-FabricCapacity {
         $dataItems = Invoke-FabricAPIRequest @apiParams
 
         # Apply filtering and output results with type decoration
-        Select-FabricResource -InputObject $dataItems -Id $CapacityId -DisplayName $CapacityName -ResourceType 'Capacity' -TypeName 'MicrosoftFabric.Capacity'
+        Select-FabricResource -InputObject $dataItems -Id $CapacityId -DisplayName $CapacityName -ResourceType 'Capacity' -TypeName 'MicrosoftFabric.Capacity' -Raw:$Raw
     }
     catch {
         # Capture and log error details

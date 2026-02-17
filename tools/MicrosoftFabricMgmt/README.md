@@ -8,8 +8,8 @@
 
 ### 🚀 Key Features
 
-- **244+ Cmdlets** - Complete coverage of Microsoft Fabric REST API
-- **42 Resource Types** - Manage Lakehouses, Warehouses, Notebooks, Pipelines, ML Models, Eventstreams, and more
+- **295+ Cmdlets** - Complete coverage of Microsoft Fabric REST API
+- **48 Resource Types** - Manage Lakehouses, Warehouses, Notebooks, Pipelines, ML Models, Eventstreams, Graph Models, and more
 - **Multiple Auth Methods** - User Principal, Service Principal, and Managed Identity support
 - **Enterprise Ready** - Built-in retry logic, comprehensive error handling, and PSFramework logging
 - **Intelligent Output Formatting** - Automatic GUID-to-name resolution with smart caching for readable results
@@ -54,6 +54,14 @@
 - Domain administration and workspace assignments
 - Connection and gateway management
 - Deployment pipeline automation
+- **Admin API**: Tenant-wide workspace and item visibility
+- Audit user access across the entire tenant
+- Restore deleted workspaces
+
+**Data Integration**
+- Snowflake Database connections for cross-platform analytics
+- Cosmos DB Database integration for NoSQL workloads
+- Graph Models for relationship-based data analysis
 
 ---
 
@@ -384,18 +392,21 @@ This module implements industry-standard PowerShell development practices:
 
 ### Centralized Helper Functions
 
-The module uses four core helper functions that provide:
+The module uses core helper functions that provide:
 
 1. **Invoke-FabricAuthCheck** - Consistent authentication validation across all cmdlets
-2. **New-FabricAPIUri** - Standardized API endpoint construction with proper encoding
-3. **Convert-FabricRequestBody** - Uniform JSON serialization
-4. **Select-FabricResource** - Consistent resource filtering for Get-* cmdlets
+2. **New-FabricAPIUri** - Standardized API endpoint construction with query parameters
+3. **Select-FabricResource** - Consistent resource filtering and type decoration for Get-* cmdlets
+4. **Add-FabricTypeName** - PSTypeName decoration for custom formatting
+5. **Invoke-FabricAPIRequest** - Centralized API calls with pagination, retry logic, and LRO support
 
 **Benefits:**
-- Bug fixes in one place automatically benefit all 244 cmdlets
+- Bug fixes in one place automatically benefit all 294 cmdlets
 - Consistent behavior across entire module
 - Easier testing and maintenance
 - Enhanced retry logic with exponential backoff
+- Automatic pagination handling via continuation tokens
+- Built-in Long Running Operation (LRO) support
 
 ### Built-in Resilience
 
@@ -431,7 +442,7 @@ Get-Command -Module MicrosoftFabricMgmt -Name *Notebook*
 The module provides comprehensive coverage of Microsoft Fabric resources:
 
 <details>
-<summary><b>📦 42 Resource Types (Click to expand)</b></summary>
+<summary><b>📦 48 Resource Types (Click to expand)</b></summary>
 
 | Resource Type | Cmdlets | Description |
 |---------------|---------|-------------|
@@ -440,6 +451,8 @@ The module provides comprehensive coverage of Microsoft Fabric resources:
 | **Warehouse** | 9 | Warehouse operations and snapshots |
 | **Notebook** | 8 | Notebook deployment and management |
 | **Data Pipeline** | 4 | Pipeline orchestration |
+| **Dataflow** | 6 | Dataflow operations and parameters |
+| **SQL Database** | 6 | SQL Database management |
 | **Eventstream** | 17 | Real-time data streaming |
 | **Eventhouse** | 6 | Real-time analytics platform |
 | **Environment** | 13 | Spark environment management |
@@ -460,6 +473,7 @@ The module provides comprehensive coverage of Microsoft Fabric resources:
 | **Copy Job** | 6 | Data copy operations |
 | **Reflex** | 6 | Reflex item management |
 | **GraphQL API** | 6 | GraphQL API operations |
+| **Graph Model** | 8 | Graph-based data modeling and queries |
 | **Paginated Reports** | 2 | Paginated report management |
 | **Mounted Data Factory** | 6 | Data Factory integration |
 | **External Data Share** | 2 | Data sharing operations |
@@ -477,8 +491,11 @@ The module provides comprehensive coverage of Microsoft Fabric resources:
 | **Utils** | 6 | Utility functions |
 | **Managed Private Endpoint** | 3 | Private endpoint management |
 | **Mirrored Warehouse** | 1 | Warehouse mirroring |
+| **Snowflake Database** | 6 | Snowflake integration |
+| **Cosmos DB Database** | 6 | Cosmos DB integration |
+| **Admin** | 8 | Tenant-wide administration |
 
-**Total: 244+ Cmdlets** across 42 resource types
+**Total: 295+ Cmdlets** across 48 resource types
 
 </details>
 
@@ -607,7 +624,16 @@ This project is licensed under the **MIT License**. See the [LICENSE](../../LICE
 
 ## Changelog
 
-### Latest Release
+### Upcoming Release
+
+**Unreleased** - New Resource Types and Admin API
+- ✅ 295+ cmdlets (51 new functions added)
+- ✅ 6 new resource types: Graph Model, Snowflake Database, Cosmos DB Database, Dataflow, SQL Database, Admin
+- ✅ Admin API for tenant-wide visibility into workspaces, items, and user access
+- ✅ Full pipeline support with `ValueFromPipelineByPropertyName`
+- ✅ Intelligent output formatting with PSTypeName decoration
+
+### Previous Release
 
 **Version 1.0.0** - Major Modernization Release
 - ✅ 244+ cmdlets covering all major Fabric resource types

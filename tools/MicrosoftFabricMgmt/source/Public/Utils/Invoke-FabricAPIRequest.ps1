@@ -144,7 +144,13 @@ function Invoke-FabricAPIRequest {
 
                     # Check for Retry-After header
                     $retryAfterSeconds = if ($responseHeader -and $responseHeader['Retry-After']) {
-                        [int]$responseHeader['Retry-After']
+                        $retryAfterValue = $responseHeader['Retry-After']
+                        # Handle case where Retry-After might be an array
+                        if ($retryAfterValue -is [array]) {
+                            [int]$retryAfterValue[0]
+                        } else {
+                            [int]$retryAfterValue
+                        }
                     } else {
                         # Calculate exponential backoff with jitter
                         $baseDelay = [Math]::Pow($RetryBackoffMultiplier, $retryCount)
@@ -175,8 +181,10 @@ function Invoke-FabricAPIRequest {
                         $items = @()
                         switch ($true) {
                             { $propertyNames -contains 'value' } { $items = $response.value; break }
+                            { $propertyNames -contains 'itemEntities' } { $items = $response.itemEntities; break }
                             { $propertyNames -contains 'accessEntities' } { $items = $response.accessEntities; break }
                             { $propertyNames -contains 'domains' } { $items = $response.domains; break }
+                            { $propertyNames -contains 'workspaces' } { $items = $response.workspaces; break }
                             { $propertyNames -contains 'publishDetails' } { $items = $response.publishDetails; break }
                             { $propertyNames -contains 'definition' } { $items = $response.definition.parts; break }
                             { $propertyNames -contains 'data' } { $items = $response.data; break }

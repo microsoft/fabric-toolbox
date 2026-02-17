@@ -15,6 +15,9 @@ Optional. The GUID of a single Eventstream to return. Use this when you already 
 .PARAMETER EventstreamName
 Optional. The display name of the Eventstream to retrieve. Use this when you prefer to match by its friendly name instead of the GUID.
 
+.PARAMETER Raw
+If specified, returns the raw API response without type decoration.
+
 .EXAMPLE
 Get-FabricEventstream -WorkspaceId "12345" -EventstreamName "Development"
 
@@ -54,7 +57,10 @@ function Get-FabricEventstream {
         [Parameter(Mandatory = $false)]
         [ValidateNotNullOrEmpty()]
         [ValidatePattern('^[a-zA-Z0-9_ ]*$')]
-        [string]$EventstreamName
+        [string]$EventstreamName,
+
+        [Parameter()]
+        [switch]$Raw
     )
 
     process {
@@ -80,7 +86,7 @@ function Get-FabricEventstream {
             $dataItems = Invoke-FabricAPIRequest @apiParams
 
             # Apply filtering and return results
-            Select-FabricResource -InputObject $dataItems -Id $EventstreamId -DisplayName $EventstreamName -ResourceType 'Eventstream' -TypeName 'MicrosoftFabric.Eventstream'
+            Select-FabricResource -InputObject $dataItems -Id $EventstreamId -DisplayName $EventstreamName -ResourceType 'Eventstream' -TypeName 'MicrosoftFabric.Eventstream' -Raw:$Raw
         }
         catch {
             # Capture and log error details
