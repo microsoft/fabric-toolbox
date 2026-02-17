@@ -2,6 +2,35 @@
 for Fabric Unified Admin Monitoring solution accelerator.
 
 --------------------------
+## 📦 2026.2.1
+
+Date: 2026-02-04
+
+Link: [Click here to update FUAM](/monitoring/fabric-unified-admin-monitoring/how-to/How_to_update_FUAM.md)
+
+
+### 📈 Enhancements
+
+- **New Capacity Metrics support:**
+    - FUAM now supports the v53 of the capacity metrics
+
+
+### ✅ Fixes
+
+- **Data consistency (CapacityId Upper case issue)**
+     - Fixed an issue, which caused inconsistency in FUAM_Lakehouse tables, where CapacityId is included
+     - Download and run the newest Deploy_FUAM Notebook, which will fix the data issues.
+
+- **Historic audit log files:**
+    - Fixed an issue, which disabled to store the raw audit log jsons in `FUAM_Lakehouse/Files/history/` subfolder
+
+
+Best Regards!
+
+Kevin & Gellért
+
+
+--------------------------
 ## 📦 2026.1.1
 
 Date: 2025-12-23
