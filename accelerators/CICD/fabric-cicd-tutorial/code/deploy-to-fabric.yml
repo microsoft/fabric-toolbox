@@ -1,0 +1,52 @@
+trigger:
+  branches:
+    include: [test,prod]
+  paths:
+    include:
+    - fabric/**
+
+parameters:
+- name: items_in_scope
+  displayName: Enter Fabric items to be deployed
+  type: string
+  default: '["Notebook","DataPipeline","Lakehouse","SemanticModel","Report","VariableLibrary"]'
+
+variables:
+  - name: target_env
+    value: ${{ replace(variables['Build.SourceBranch'], 'refs/heads/', '') }}
+  # This variable group is linked to Azure Key Vault and secrets contain tenant id, service principal client id, secret
+  - group: fabric_cicd_group_sensitive
+  # This variable group contains the workspace names based on naming convention "[branch]WorkspaceName". It also contains the gitFolder to be referenced in the python script.
+  - group: fabric_cicd_group_non_sensitive
+stages:
+  - stage: DeployToFabric
+    displayName: "Deploy to Fabric Workspace"
+    jobs:
+      - deployment: Deployment
+        displayName: "Deploy Resources"
+        environment: $(target_env)
+        pool:
+          name: Azure Pipelines
+        strategy:
+          runOnce:
+            deploy:
+             steps:
+              # Use Python Version 3.12
+              - checkout: self
+              - task: UsePythonVersion@0
+                inputs:
+                  versionSpec: '3.12'
+                  addToPath: true
+                displayName: "Set up Python Environment"
+              # Install Dependencies
+              - script: |
+                  python -m pip install --upgrade pip
+                  pip install fabric-cicd 
+                displayName: "Install Fabric CICD Library"
+              - task: PythonScript@0
+                inputs:
+                  scriptSource: 'filePath'
+                  scriptPath: '.deploy/deploy-to-fabric.py'
+                  arguments: '--aztenantid $(aztenantid) --azclientid $(azclientid) --azspsecret $(azspnsecret) --items_in_scope ${{ parameters.items_in_scope }} --target_env $(target_env)'
+                  #failOnStderr: true 
+                displayName: 'Run deployment using fabric-cicd'
