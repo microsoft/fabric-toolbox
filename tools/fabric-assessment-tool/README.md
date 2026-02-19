@@ -1,8 +1,14 @@
 <p align="center">
 	<h1 align="center">
-		<img src="./res/logo.png" alt="Logo" width="200">
+		<img src="./media/logo.png" alt="Logo" width="200">
 	</h1>
 	<p align="center">Migration Assessment Tool for Fabric DE/DW<br>Fabric Assessment Tool is a command-line tool for connecting, extracting, and exporting data from various cloud data platforms to help with migration planning and assessment</p>
+</p>
+
+<p align="center">
+  <br>
+  <img src="./media/preview.gif" alt="Preview of the tool" width="600">
+  <br>
 </p>
 
 ## Why?
@@ -11,6 +17,12 @@ In order to estimate how migrating your assets in Microsoft Fabric would look li
 Even if you do not currently know the answers of all the questions, you should be able to go back and reuse previously gather information to answer your questions.
 
 This tool allows to scan one or multiple workspaces in order to get all the information contained in them into a single well structured folder hierarchy, so you can leverage analytics tools to gather the insights you need.
+
+## Requirements
+
+- **Python** 3.10, 3.11, or 3.12
+- **pip** (Python package installer)
+- **Azure CLI** ([installation guide](https://learn.microsoft.com/en-us/cli/azure/install-azure-cli))
 
 ## Installation
 
