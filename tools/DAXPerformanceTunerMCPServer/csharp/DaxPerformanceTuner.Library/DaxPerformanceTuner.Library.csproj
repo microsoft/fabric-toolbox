@@ -1,0 +1,37 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net8.0-windows</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <SatelliteResourceLanguages>en</SatelliteResourceLanguages>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="ModelContextProtocol" Version="0.3.0-preview.3" />
+    <PackageReference Include="Microsoft.Extensions.Hosting" Version="9.0.0" />
+    <PackageReference Include="Microsoft.Identity.Client" Version="4.68.0" />
+    <PackageReference Include="HtmlAgilityPack" Version="1.11.72" />
+    <PackageReference Include="System.Management" Version="9.0.0" />
+  </ItemGroup>
+
+  <!-- Local Analysis Services DLLs (same as existing dax_executor) -->
+  <ItemGroup>
+    <Reference Include="Microsoft.AnalysisServices.AdomdClient">
+      <HintPath>..\..\dotnet\Microsoft.AnalysisServices.AdomdClient.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.AnalysisServices.Core">
+      <HintPath>..\..\dotnet\Microsoft.AnalysisServices.Core.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.AnalysisServices">
+      <HintPath>..\..\dotnet\Microsoft.AnalysisServices.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.AnalysisServices.Tabular">
+      <HintPath>..\..\dotnet\Microsoft.AnalysisServices.Tabular.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.AnalysisServices.Tabular.Json">
+      <HintPath>..\..\dotnet\Microsoft.AnalysisServices.Tabular.Json.dll</HintPath>
+    </Reference>
+  </ItemGroup>
+
+</Project>
