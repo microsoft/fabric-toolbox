@@ -1,0 +1,2 @@
+[console_scripts]
+fat = fabric_assessment_tool.main:main

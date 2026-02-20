@@ -1,0 +1,18 @@
+setuptools>=65.5.1
+pip>=9.0.1
+tox>=4.20.0
+urllib3<2.3.0,>=2.0.0
+build
+prompt_toolkit
+requests
+questionary
+azure-identity
+azure-mgmt-resource==23.3.0
+databricks-sdk==0.67.0
+poetry
+mssql-python
+
+# Tests
+pytest
+pytest-cov
+vcrpy

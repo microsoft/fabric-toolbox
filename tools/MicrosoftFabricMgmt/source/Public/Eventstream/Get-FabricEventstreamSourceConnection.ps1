@@ -32,8 +32,9 @@ Retrieves connection details for source 'abcd' of Eventstream '67890' in workspa
 function Get-FabricEventstreamSourceConnection {
     [CmdletBinding()]
     param (
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
         [ValidateNotNullOrEmpty()]
+        [Alias('id')]
         [string]$WorkspaceId,
 
         [Parameter(Mandatory = $true)]

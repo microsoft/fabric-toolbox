@@ -37,33 +37,45 @@ Author: Tiago Balabuch
 function Update-FabricEnvironment {
     [CmdletBinding(SupportsShouldProcess = $true, ConfirmImpact = 'Medium')]
     param (
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
         [ValidateNotNullOrEmpty()]
         [string]$WorkspaceId,
 
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
         [ValidateNotNullOrEmpty()]
+        [Alias('id')]
         [string]$EnvironmentId,
 
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $false, ValueFromPipelineByPropertyName = $true)]
         [ValidateNotNullOrEmpty()]
         [ValidatePattern('^[a-zA-Z0-9_ ]*$')]
+        [Alias('DisplayName')]
         [string]$EnvironmentName,
 
-        [Parameter(Mandatory = $false)]
+        [Parameter(Mandatory = $false, ValueFromPipelineByPropertyName = $true)]
         [ValidateNotNullOrEmpty()]
+        [Alias('Description')]
         [string]$EnvironmentDescription
     )
+    process {
     try {
+        # Validate that at least one update parameter is provided
+        if (-not $EnvironmentName -and -not $EnvironmentDescription) {
+            Write-FabricLog -Message "At least one of EnvironmentName or EnvironmentDescription must be specified" -Level Error
+            return
+        }
+
         # Validate authentication
         Invoke-FabricAuthCheck -ThrowOnFailure
 
         # Construct the API endpoint URI
-        $apiEndpointURI = New-FabricAPIUri -Resource 'workspaces' -WorkspaceId $WorkspaceId -Subresource "environments/$EnvironmentId"
+        $apiEndpointURI = New-FabricAPIUri -Resource 'workspaces' -WorkspaceId $WorkspaceId -Subresource 'environments' -ItemId $EnvironmentId
 
         # Construct the request body
-        $body = @{
-            displayName = $EnvironmentName
+        $body = @{}
+
+        if ($EnvironmentName) {
+            $body.displayName = $EnvironmentName
         }
 
         if ($EnvironmentDescription) {
@@ -92,5 +104,6 @@ function Update-FabricEnvironment {
         # Capture and log error details
         $errorDetails = $_.Exception.Message
         Write-FabricLog -Message "Failed to update Environment. Error: $errorDetails" -Level Error
+    }
     }
 }

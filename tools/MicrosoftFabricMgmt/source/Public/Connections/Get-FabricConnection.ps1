@@ -12,6 +12,9 @@
 .PARAMETER ConnectionName
     Optional. The display name of the connection.
 
+.PARAMETER Raw
+    Returns the raw API response without any filtering or transformation. Use this switch when you need the complete, unprocessed response from the API.
+
 .EXAMPLE
     Get-FabricConnection -ConnectionId "Connection-67890"
     Returns details for the connection with ID "Connection-67890".
@@ -19,6 +22,10 @@
 .EXAMPLE
     Get-FabricConnection -ConnectionName "My Connection"
     Returns details for the connection named "My Connection".
+
+.EXAMPLE
+    Get-FabricConnection -Raw
+    Returns the raw API response for all connections without any formatting or type decoration.
 
 .NOTES
     - Requires `$FabricConfig` with `BaseUrl` and `FabricHeaders`.
@@ -36,7 +43,10 @@ function Get-FabricConnection {
         [Parameter(Mandatory = $false, ParameterSetName = 'Name')]
         [ValidateNotNullOrEmpty()]
         [ValidatePattern('^[a-zA-Z0-9_ ]*$')]
-        [string]$ConnectionName
+        [string]$ConnectionName,
+
+        [Parameter(Mandatory = $false)]
+        [switch]$Raw
     )
 
     try {
@@ -55,7 +65,7 @@ function Get-FabricConnection {
         $dataItems = Invoke-FabricAPIRequest @apiParams
 
         # Apply filtering and output results
-        Select-FabricResource -InputObject $dataItems -Id $ConnectionId -DisplayName $ConnectionName -ResourceType 'Connection'
+        Select-FabricResource -InputObject $dataItems -Id $ConnectionId -DisplayName $ConnectionName -ResourceType 'Connection' -TypeName 'MicrosoftFabric.Connection' -Raw:$Raw
     }
     catch {
         # Capture and log error details

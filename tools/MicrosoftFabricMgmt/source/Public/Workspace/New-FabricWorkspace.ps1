@@ -42,7 +42,6 @@ function New-FabricWorkspace {
     param (
         [Parameter(Mandatory = $true)]
         [ValidateNotNullOrEmpty()]
-        [ValidatePattern('^[a-zA-Z0-9_ ]*$')]
         [string]$WorkspaceName,
 
         [Parameter(Mandatory = $false)]

@@ -34,21 +34,29 @@ Author: Tiago Balabuch
 function Update-FabricWorkspace {
     [CmdletBinding(SupportsShouldProcess=$true, ConfirmImpact = 'Medium')]
     param (
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
         [ValidateNotNullOrEmpty()]
+        [Alias('id')]
         [string]$WorkspaceId,
 
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $false, ValueFromPipelineByPropertyName = $true)]
         [ValidateNotNullOrEmpty()]
-        [ValidatePattern('^[a-zA-Z0-9_ ]*$')]
+        [Alias('DisplayName')]
         [string]$WorkspaceName,
 
-        [Parameter(Mandatory = $false)]
+        [Parameter(Mandatory = $false, ValueFromPipelineByPropertyName = $true)]
         [ValidateNotNullOrEmpty()]
+        [Alias('Description')]
         [string]$WorkspaceDescription
     )
 
     try {
+        # Validate that at least one update parameter is provided
+        if (-not $WorkspaceName -and -not $WorkspaceDescription) {
+            Write-FabricLog -Message "At least one of WorkspaceName or WorkspaceDescription must be specified" -Level Error
+            return
+        }
+
         # Validate authentication
         Invoke-FabricAuthCheck -ThrowOnFailure
 
@@ -56,8 +64,10 @@ function Update-FabricWorkspace {
         $apiEndpointURI = New-FabricAPIUri -Resource 'workspaces' -WorkspaceId $WorkspaceId
 
         # Construct the request body
-        $body = @{
-            displayName = $WorkspaceName
+        $body = @{}
+
+        if ($WorkspaceName) {
+            $body.displayName = $WorkspaceName
         }
 
         if ($WorkspaceDescription) {

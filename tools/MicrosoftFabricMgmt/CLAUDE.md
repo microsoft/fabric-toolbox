@@ -344,9 +344,12 @@ $result | Format-Table -AutoSize
 #### Available Helper Functions
 
 - **Add-FabricTypeName** (Private): Adds PSTypeName to objects for format file matching
-- **Resolve-FabricCapacityName** (Private): Converts capacity GUID → capacity name (cached)
-- **Resolve-FabricWorkspaceName** (Private): Converts workspace GUID → workspace name (cached)
-- **Clear-FabricNameCache** (Public): Clears cached name resolutions
+- **Resolve-FabricCapacityName** (Public): Converts capacity GUID → capacity name (cached)
+- **Resolve-FabricWorkspaceName** (Public): Converts workspace GUID → workspace name (cached)
+- **Resolve-FabricCapacityIdFromWorkspace** (Public): Cascading resolution - workspaceId → capacityId (cached)
+- **Clear-FabricNameCache** (Public): Clears all cached name resolutions
+
+**Note**: Resolve-* functions are public so format file ScriptBlocks can access them.
 
 #### Type Naming Convention
 
@@ -372,10 +375,64 @@ Examples:
 - [ ] Module builds successfully (`.\build.ps1 -Tasks build`)
 - [ ] No errors or warnings in build output
 
+#### Current Formatting Status (Phase 5 Complete)
+
+**Formatted Functions (11 of 34)** - 32% Coverage:
+1. Get-FabricLakehouse ✅
+2. Get-FabricNotebook ✅
+3. Get-FabricWarehouse ✅
+4. Get-FabricWorkspace ✅
+5. Get-FabricCapacity ✅
+6. Get-FabricWorkspaceRoleAssignment ✅
+7. Get-FabricEnvironment ✅
+8. Get-FabricEventhouse ✅
+9. Get-FabricApacheAirflowJob ✅
+10. Get-FabricGraphQLApi ✅
+11. Get-FabricEventstream ✅
+
+**Remaining Functions (23)** - See [PHASE6_FORMATTING_COMPLETION.md](PHASE6_FORMATTING_COMPLETION.md) for tracking
+
+**Priority 1 Functions to Format Next (8 most commonly used)**:
+- Get-FabricReport
+- Get-FabricSemanticModel
+- Get-FabricDataPipeline
+- Get-FabricDashboard
+- Get-FabricSparkJobDefinition
+- Get-FabricKQLDatabase
+- Get-FabricKQLQueryset
+- Get-FabricKQLDashboard
+
+**Format Views Available**:
+- `FabricItemView` - 32 item types configured
+- `WorkspaceView` - Workspace objects
+- `CapacityView` - Capacity objects
+- `DomainView` - Domain objects
+- `RoleAssignmentView` - Role assignments
+- `JobView` - Job objects
+
+#### Cascading Resolution (for items without capacityId)
+
+Many Fabric items (Lakehouse, Notebook, Warehouse, etc.) only return `workspaceId` in their API response. The format system uses cascading resolution:
+
+```
+Item (has workspaceId only)
+  ↓
+Resolve-FabricCapacityIdFromWorkspace(workspaceId)
+  ↓
+Get workspace → extract capacityId
+  ↓
+Resolve-FabricCapacityName(capacityId)
+  ↓
+Display: "Premium Capacity P1"
+```
+
+Both levels are cached for optimal performance (200-500x faster on cache hit).
+
 **Related Documentation**:
 - See section 8: "Output Formatting with .ps1xml Files" for format file syntax
 - See section 10: "Adding a New Function" for complete workflow
 - See [docs/OUTPUT-FORMATTING.md](docs/OUTPUT-FORMATTING.md) for detailed guide
+- See [PHASE6_FORMATTING_COMPLETION.md](PHASE6_FORMATTING_COMPLETION.md) for remaining work tracking
 
 ---
 
@@ -1656,26 +1713,163 @@ Invoke-ScriptAnalyzer -Path ./source -Recurse
 Import-Module ./output/module/MicrosoftFabricMgmt -Force
 ```
 
+## API Validation and Coverage
+
+### Validation Script
+
+Run the comprehensive validation script to check module coverage against the official Fabric API:
+
+```powershell
+# Run full validation
+.\scripts\Validate-FabricModuleCoverage.ps1 -ValidationType All
+
+# Run specific validations
+.\scripts\Validate-FabricModuleCoverage.ps1 -ValidationType Coverage      # API endpoint coverage
+.\scripts\Validate-FabricModuleCoverage.ps1 -ValidationType RawParameter  # -Raw parameter check
+.\scripts\Validate-FabricModuleCoverage.ps1 -ValidationType Parameters    # Parameter completeness
+```
+
+### Current Validation Status (2026-01-20)
+
+| Metric | Status | Target |
+|--------|--------|--------|
+| **API Coverage** | 41.4% (227/548 operations) | 80%+ |
+| **-Raw Parameter** | 40.9% (36/88 Get-* functions) | 100% |
+| **Parameter Completeness** | 47.6% (108/227 matched) | 90%+ |
+
+### Three Validation Areas
+
+#### 1. API Endpoint Coverage
+
+**Goal**: Every Fabric API operation should have a matching PowerShell function.
+
+**Current Status**: 227 of 548 API operations covered (41.4%)
+
+**Missing Resource Types (No Coverage)**:
+| Resource Type | Operations | Priority |
+|--------------|------------|----------|
+| dataflow | 13 | High |
+| mirroredAzureDatabricksCatalog | 11 | Medium |
+| graphModel | 10 | Medium |
+| sqlDatabase | 9 | High |
+| spark | 9 | Medium |
+| anomalyDetector | 7 | Low (preview) |
+| ontology | 7 | Low (preview) |
+| graphQuerySet | 7 | Low |
+| eventSchemaSet | 7 | Low |
+| digitalTwinBuilderFlow | 7 | Low (preview) |
+| operationsAgent | 7 | Low (preview) |
+| cosmosDbDatabase | 7 | Medium |
+
+**Resource Types with Partial Coverage**:
+- platform: 26/118 operations (22%)
+- admin: 16/52 operations (31%)
+- environment: 21/28 operations (75%)
+
+#### 2. -Raw Parameter Coverage
+
+**Goal**: Every Get-* function should support `-Raw` parameter to return all properties with resolved names.
+
+**Current Status**: 36 of 88 Get-* functions have `-Raw` (40.9%)
+
+**Functions Missing -Raw Parameter** (52 functions):
+- Definition functions: `Get-Fabric*Definition` (12 functions)
+- Spark/Livy functions: `Get-FabricSparkSettings`, `Get-FabricLakehouseLivySession`, etc.
+- Tenant functions: `Get-FabricTenantSetting`, `Get-Fabric*TenantSettingOverrides`
+- Utility functions: `Get-FabricLongRunningOperation`, `Get-FabricLongRunningOperationResult`
+- OneLake functions: `Get-FabricOneLakeShortcut`, `Get-FabricOneLakeDataAccessSecurity`
+
+**Implementation Pattern**:
+```powershell
+# Add -Raw parameter to function
+[Parameter()]
+[switch]$Raw
+
+# Pass to Select-FabricResource
+Select-FabricResource -InputObject $dataItems -ResourceType 'Resource' -TypeName 'MicrosoftFabric.Resource' -Raw:$Raw
+```
+
+#### 3. Parameter Completeness
+
+**Goal**: Every PowerShell function should expose all API parameters.
+
+**Current Status**: 108 of 227 matched functions are complete (47.6%)
+
+**Common Missing Parameters**:
+- `continuationToken` - Pagination support (most List operations)
+- `maxResults` - Result limiting
+- `beta` - Preview API access
+- `gatewayId` - Gateway filtering for connections
+- `restorePointId` - Warehouse restore points
+- Query parameters for filtering/sorting
+
+### Improvement Priorities
+
+#### Phase 1: -Raw Parameter (Quick Win)
+Add `-Raw` to all 52 missing Get-* functions. This is mostly mechanical work.
+
+**Command to find functions missing -Raw**:
+```powershell
+.\scripts\Validate-FabricModuleCoverage.ps1 -ValidationType RawParameter
+```
+
+#### Phase 2: Parameter Completeness
+Add missing optional parameters, especially:
+1. `continuationToken` for paginated operations
+2. `maxResults` for result limiting
+3. Query parameters for filtering
+
+#### Phase 3: Missing Resource Types
+Implement functions for missing resource types by priority:
+1. **High**: dataflow, sqlDatabase
+2. **Medium**: spark (partial), cosmosDbDatabase, graphModel
+3. **Low**: Preview APIs (ontology, digitalTwinBuilder, etc.)
+
+#### Phase 4: Platform/Admin Coverage
+Many platform and admin operations are missing. Prioritize by usage.
+
+### Validation Scripts Location
+
+- **Main Validation**: `scripts/Validate-FabricModuleCoverage.ps1`
+- **API Endpoint Testing**: `scripts/Test-FabricAPIEndpoint.ps1`
+- **API Info Query**: `scripts/Get-FabricAPIEndpointInfo.ps1`
+- **API Cache Update**: `scripts/Update-FabricAPISpecsCache.ps1`
+
+### API Specs Cache
+
+The module uses a cached copy of the [Microsoft Fabric REST API Specs](https://github.com/microsoft/fabric-rest-api-specs).
+
+**Cache Location**: `tools/.api-specs-cache/`
+- `fabric-api-lookup.json` - Full API details with descriptions
+- `fabric-api-validation.json` - Simplified validation data
+
+**Update Cache**:
+```powershell
+.\scripts\Update-FabricAPISpecsCache.ps1
+```
+
+---
+
 ## Module Roadmap
 
 ### Current Priorities
-1. **Migrate Write-Message to PSFramework** - Replace all instances with Write-PSFMessage
-2. **Increase test coverage** - Target 85% coverage (currently 0%)
-3. **Implement managed identity auth** - Add support for Azure managed identities
-4. **Add tab completion** - Implement PSFramework tab completion for common parameters
+1. **Complete -Raw Parameter** - Add `-Raw` to all 52 remaining Get-* functions
+2. **Add Missing Parameters** - Especially `continuationToken`, `maxResults`, query params
+3. **Increase API Coverage** - Target 80% coverage (currently 41%)
+4. **Increase test coverage** - Target 85% coverage (currently low)
 5. **Improve error messages** - Make all errors actionable with clear next steps
 
 ### Future Enhancements
 - Implement automatic token refresh
 - Add retry logic with exponential backoff for API calls
-- Create PowerShell format files for better object display
 - Add progress bars for long-running operations
 - Implement result caching with PSFramework caching
 - Add whatif/confirm support to all destructive operations
+- Add missing resource types (dataflow, sqlDatabase, etc.)
 
 ---
 
-**Last Updated**: 2026-01-07
-**Module Version**: 0.5.4
+**Last Updated**: 2026-01-20
+**Module Version**: 1.0.4
 **Original Author**: Tiago Balabuch
 **Current Maintainer**: Rob Sewell

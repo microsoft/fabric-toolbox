@@ -11,6 +11,10 @@ The unique identifier of the workspace to retrieve.
 .PARAMETER WorkspaceName
 The display name of the workspace to retrieve.
 
+.PARAMETER Raw
+When specified, returns the raw API response with resolved CapacityName property
+added directly to the output objects. Useful for piping to Export-Csv, ConvertTo-Json, or other commands.
+
 .EXAMPLE
 Get-FabricWorkspace -WorkspaceId "workspace123"
 
@@ -20,6 +24,11 @@ Fetches details of the workspace with ID "workspace123".
 Get-FabricWorkspace -WorkspaceName "MyWorkspace"
 
 Fetches details of the workspace with the name "MyWorkspace".
+
+.EXAMPLE
+Get-FabricWorkspace -Raw | Export-Csv -Path "workspaces.csv"
+
+Exports all workspaces with resolved CapacityName to a CSV file.
 
 .NOTES
 - Requires `$FabricConfig` global configuration, including `BaseUrl` and `FabricHeaders`.
@@ -38,8 +47,10 @@ function Get-FabricWorkspace {
 
         [Parameter(Mandatory = $false)]
         [ValidateNotNullOrEmpty()]
-        [ValidatePattern('^[a-zA-Z0-9_ ]*$')]
-        [string]$WorkspaceName
+        [string]$WorkspaceName,
+
+        [Parameter()]
+        [switch]$Raw
     )
 
     try {
@@ -64,7 +75,7 @@ function Get-FabricWorkspace {
         $dataItems = Invoke-FabricAPIRequest @apiParams
 
         # Apply filtering and output results with type decoration
-        Select-FabricResource -InputObject $dataItems -Id $WorkspaceId -DisplayName $WorkspaceName -ResourceType 'Workspace' -TypeName 'MicrosoftFabric.Workspace'
+        Select-FabricResource -InputObject $dataItems -Id $WorkspaceId -DisplayName $WorkspaceName -ResourceType 'Workspace' -TypeName 'MicrosoftFabric.Workspace' -Raw:$Raw
     }
     catch {
         # Capture and log error details

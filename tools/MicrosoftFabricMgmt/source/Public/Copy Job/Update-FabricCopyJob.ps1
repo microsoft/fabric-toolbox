@@ -31,34 +31,47 @@
 function Update-FabricCopyJob {
     [CmdletBinding(SupportsShouldProcess = $true, ConfirmImpact = 'Medium')]
     param (
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
         [ValidateNotNullOrEmpty()]
         [string]$WorkspaceId,
 
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
         [ValidateNotNullOrEmpty()]
+        [Alias('id')]
         [string]$CopyJobId,
 
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $false, ValueFromPipelineByPropertyName = $true)]
         [ValidateNotNullOrEmpty()]
         [ValidatePattern('^[a-zA-Z0-9_ ]*$')]
+        [Alias('DisplayName')]
         [string]$CopyJobName,
 
-        [Parameter(Mandatory = $false)]
+        [Parameter(Mandatory = $false, ValueFromPipelineByPropertyName = $true)]
         [ValidateNotNullOrEmpty()]
+        [Alias('Description')]
         [string]$CopyJobDescription
     )
-    try {
+
+    process {
+        try {
+        # Validate that at least one update parameter is provided
+        if (-not $CopyJobName -and -not $CopyJobDescription) {
+            Write-FabricLog -Message "At least one of CopyJobName or CopyJobDescription must be specified" -Level Error
+            return
+        }
+
         # Validate authentication token before proceeding
         Invoke-FabricAuthCheck -ThrowOnFailure
 
         # Construct the API endpoint URI
-        $apiEndpointURI = New-FabricAPIUri -Segments @('workspaces', $WorkspaceId, 'copyJobs', $CopyJobId)
+        $apiEndpointURI = New-FabricAPIUri -Resource 'workspaces' -WorkspaceId $WorkspaceId -Subresource 'copyJobs' -ItemId $CopyJobId
         Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
 
         # Construct the request body
-        $body = @{
-            displayName = $CopyJobName
+        $body = @{}
+
+        if ($CopyJobName) {
+            $body.displayName = $CopyJobName
         }
 
         if ($CopyJobDescription) {
@@ -83,8 +96,9 @@ function Update-FabricCopyJob {
         }
     }
     catch {
-        # Handle and log errors
-        $errorDetails = $_.Exception.Message
-        Write-FabricLog -Message "Failed to update Copy Job. Error: $errorDetails" -Level Error
+            # Handle and log errors
+            $errorDetails = $_.Exception.Message
+            Write-FabricLog -Message "Failed to update Copy Job. Error: $errorDetails" -Level Error
+        }
     }
 }

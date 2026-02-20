@@ -41,12 +41,13 @@ Author: Tiago Balabuch
 function Update-FabricKQLQuerysetDefinition {
     [CmdletBinding(SupportsShouldProcess = $true, ConfirmImpact = 'Medium')]
     param (
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
         [ValidateNotNullOrEmpty()]
         [string]$WorkspaceId,
 
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
         [ValidateNotNullOrEmpty()]
+        [Alias('id')]
         [string]$KQLQuerysetId,
 
         [Parameter(Mandatory = $true)]
@@ -58,7 +59,8 @@ function Update-FabricKQLQuerysetDefinition {
         [string]$KQLQuerysetPathPlatformDefinition
     )
 
-    try {
+    process {
+        try {
         # Validate authentication token before proceeding.
         Write-FabricLog -Message "Validating authentication token..." -Level Debug
         Test-TokenExpired
@@ -132,9 +134,10 @@ function Update-FabricKQLQuerysetDefinition {
             return $response
         }
     }
-    catch {
-        # Capture and log error details
-        $errorDetails = $_.Exception.Message
-        Write-FabricLog -Message "Failed to update KQLQueryset. Error: $errorDetails" -Level Error
+        catch {
+            # Capture and log error details
+            $errorDetails = $_.Exception.Message
+            Write-FabricLog -Message "Failed to update KQLQueryset. Error: $errorDetails" -Level Error
+        }
     }
 }

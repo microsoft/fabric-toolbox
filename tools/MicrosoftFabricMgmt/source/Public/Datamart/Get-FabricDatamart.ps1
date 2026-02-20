@@ -15,9 +15,16 @@
 .PARAMETER DatamartName
     Optional. The display name of the datamart to retrieve. Use this to fetch a single datamart by name when the Id is not known.
 
+.PARAMETER Raw
+    Returns the raw API response without any filtering or transformation. Use this switch when you need the complete, unprocessed response from the API.
+
 .EXAMPLE
      Get-FabricDatamart -WorkspaceId "12345"
     This example retrieves all datamarts from the workspace with ID "12345".
+
+.EXAMPLE
+    Get-FabricDatamart -WorkspaceId "12345" -Raw
+    Returns the raw API response for all datamarts in the workspace without any formatting or type decoration.
 
 .NOTES
     - Requires `$FabricConfig` global configuration, including `BaseUrl` and `FabricHeaders`.
@@ -28,8 +35,9 @@
 function Get-FabricDatamart {
     [CmdletBinding()]
     param (
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
         [ValidateNotNullOrEmpty()]
+        [Alias('id')]
         [string]$WorkspaceId,
 
         [Parameter(Mandatory = $false)]
@@ -38,30 +46,35 @@ function Get-FabricDatamart {
 
         [Parameter(Mandatory = $false)]
         [ValidateNotNullOrEmpty()]
-        [string]$DatamartName
+        [string]$DatamartName,
+
+        [Parameter(Mandatory = $false)]
+        [switch]$Raw
     )
 
-    try {
-        # Validate authentication token before proceeding
-        Invoke-FabricAuthCheck -ThrowOnFailure
+    process {
+        try {
+            # Validate authentication token before proceeding
+            Invoke-FabricAuthCheck -ThrowOnFailure
 
-        # Construct the API endpoint URI
-        $apiEndpointURI = New-FabricAPIUri -Segments @('workspaces', $WorkspaceId, 'datamarts')
+            # Construct the API endpoint URI
+            $apiEndpointURI = New-FabricAPIUri -Segments @('workspaces', $WorkspaceId, 'datamarts')
 
-        # Make the API request
-        $apiParams = @{
-            BaseURI = $apiEndpointURI
-            Headers = $script:FabricAuthContext.FabricHeaders
-            Method = 'Get'
+            # Make the API request
+            $apiParams = @{
+                BaseURI = $apiEndpointURI
+                Headers = $script:FabricAuthContext.FabricHeaders
+                Method = 'Get'
+            }
+            $dataItems = Invoke-FabricAPIRequest @apiParams
+
+            # Apply filtering
+            Select-FabricResource -InputObject $dataItems -Id $DatamartId -DisplayName $DatamartName -ResourceType 'Datamart' -TypeName 'MicrosoftFabric.Datamart' -Raw:$Raw
         }
-        $dataItems = Invoke-FabricAPIRequest @apiParams
-
-        # Apply filtering
-        Select-FabricResource -InputObject $dataItems -Id $DatamartId -Name $DatamartName -ResourceType 'Datamart'
-    }
-    catch {
-        # Capture and log error details
-        $errorDetails = $_.Exception.Message
-        Write-FabricLog -Message "Failed to retrieve Datamart. Error: $errorDetails" -Level Error
+        catch {
+            # Capture and log error details
+            $errorDetails = $_.Exception.Message
+            Write-FabricLog -Message "Failed to retrieve Datamart for workspace '$WorkspaceId'. Error: $errorDetails" -Level Error
+        }
     }
 }
