@@ -15,6 +15,9 @@
 .PARAMETER VariableLibraryName
     The display name of the variable library to retrieve. Optional.
 
+.PARAMETER Raw
+    If specified, returns the raw API response without any transformation or filtering.
+
 .EXAMPLE
     Get-FabricVariableLibrary -WorkspaceId "workspace-12345" -VariableLibraryId "library-67890"
     Returns the variable library with ID "library-67890" from the specified workspace.
@@ -22,6 +25,10 @@
 .EXAMPLE
     Get-FabricVariableLibrary -WorkspaceId "workspace-12345" -VariableLibraryName "My Variable Library"
     Returns the variable library named "My Variable Library" from the specified workspace.
+
+.EXAMPLE
+    Get-FabricVariableLibrary -WorkspaceId "workspace-12345" -Raw
+    Returns all variable libraries in the workspace with raw API response format.
 
 .NOTES
     - Requires a `$FabricConfig` global variable with `BaseUrl` and `FabricHeaders`.
@@ -33,8 +40,9 @@
 function Get-FabricVariableLibrary {
     [CmdletBinding()]
     param (
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
         [ValidateNotNullOrEmpty()]
+        [Alias('id')]
         [string]$WorkspaceId,
 
         [Parameter(Mandatory = $false)]
@@ -43,62 +51,43 @@ function Get-FabricVariableLibrary {
 
         [Parameter(Mandatory = $false)]
         [ValidateNotNullOrEmpty()]
-        [ValidatePattern('^[a-zA-Z0-9_ ]*$')]
-        [string]$VariableLibraryName
+        [ValidatePattern('^[a-zA-Z0-9_]*$')]
+        [string]$VariableLibraryName,
+
+        [Parameter(Mandatory = $false)]
+        [switch]$Raw
     )
-    try {
-        # Validate input parameters
-        if ($VariableLibraryId -and $VariableLibraryName) {
-            Write-FabricLog -Message "Specify only one parameter: either 'VariableLibraryId' or 'VariableLibraryName'." -Level Error
-            return $null
-        }
 
-        Invoke-FabricAuthCheck -ThrowOnFailure
+    process {
+        try {
+            # Validate input parameters
+            if ($VariableLibraryId -and $VariableLibraryName) {
+                Write-FabricLog -Message "Specify only one parameter: either 'VariableLibraryId' or 'VariableLibraryName'." -Level Error
+                return
+            }
+
+            Invoke-FabricAuthCheck -ThrowOnFailure
 
 
-        # Construct the API endpoint URI
-        $apiEndpointURI = "{0}/workspaces/{1}/VariableLibraries" -f $script:FabricAuthContext.BaseUrl, $WorkspaceId
-        Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
+            # Construct the API endpoint URI
+            $apiEndpointURI = "{0}/workspaces/{1}/VariableLibraries" -f $script:FabricAuthContext.BaseUrl, $WorkspaceId
+            Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
 
-        # Make the API request
-        $apiParams = @{
-            BaseURI = $apiEndpointURI
-            Headers = $script:FabricAuthContext.FabricHeaders
-            Method  = 'Get'
-        }
-        $dataItems = Invoke-FabricAPIRequest @apiParams
+            # Make the API request
+            $apiParams = @{
+                BaseURI = $apiEndpointURI
+                Headers = $script:FabricAuthContext.FabricHeaders
+                Method  = 'Get'
+            }
+            $dataItems = Invoke-FabricAPIRequest @apiParams
 
-        # Immediately handle empty response
-        if (-not $dataItems) {
-            Write-FabricLog -Message "No data returned from the API." -Level Warning
-            return $null
+            # Apply filtering and formatting
+            Select-FabricResource -InputObject $dataItems -Id $VariableLibraryId -DisplayName $VariableLibraryName -ResourceType 'VariableLibrary' -TypeName 'MicrosoftFabric.VariableLibrary' -Raw:$Raw
         }
-
-        # Apply filtering logic efficiently
-        if ($VariableLibraryId) {
-            $matchedItems = $dataItems.Where({ $_.Id -eq $VariableLibraryId }, 'First')
+        catch {
+            # Capture and log error details
+            $errorDetails = $_.Exception.Message
+            Write-FabricLog -Message "Failed to retrieve Variable Library for workspace '$WorkspaceId'. Error: $errorDetails" -Level Error
         }
-        elseif ($VariableLibraryName) {
-            $matchedItems = $dataItems.Where({ $_.DisplayName -eq $VariableLibraryName }, 'First')
-        }
-        else {
-            Write-FabricLog -Message "No filter provided. Returning all items." -Level Debug
-            $matchedItems = $dataItems
-        }
-
-        # Handle results
-        if ($matchedItems) {
-            Write-FabricLog -Message "Item(s) found matching the specified criteria." -Level Debug
-            return $matchedItems
-        }
-        else {
-            Write-FabricLog -Message "No item found matching the provided criteria." -Level Warning
-            return $null
-        }
-    }
-    catch {
-        # Capture and log error details
-        $errorDetails = $_.Exception.Message
-        Write-FabricLog -Message "Failed to retrieve Variable Library. Error: $errorDetails" -Level Error
     }
 }

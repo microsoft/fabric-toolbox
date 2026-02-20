@@ -35,7 +35,7 @@ The deployment of FUAM can be done with very little effort, since we tried to au
     - _Users can create Fabric items_ for FUAM workspace admin(s) - [learn.microsoft.com](https://learn.microsoft.com/en-us/fabric/admin/fabric-switch)
     - _Allow XMLA endpoints and Analyze in Excel with on-premises semantic models_ – [learn.microsoft.com](https://learn.microsoft.com/en-us/fabric/admin/service-admin-portal-integration#allow-xmla-endpoints-and-analyze-in-excel-with-on-premises-datasets)
 - Fabric Capacity Metrics app (workspace) **with attached P or F-capacity** with **enabled XMLA endpoint** (at least 'Read')
-     - Compatible Versions of the Capacity Metrics App: v44 or earlier
+     - Compatible versions of the Capacity Metrics App: v53, v47, v44 or earlier
     - Before updating, please check [this site] to verify which versions of the Capacity Metrics app are compatible with FUAM.
 
 - **Optional:** Ability to access an Azure Key Vault on your tenant
@@ -266,5 +266,6 @@ src.zip
 - [Documentation - FUAM's Authorization & Authentication](/monitoring/fabric-unified-admin-monitoring/media/documentation/FUAM_Authorization.md)
 - [Documentation - FUAM Architecture](/monitoring/fabric-unified-admin-monitoring/media/documentation/FUAM_Architecture.md)
 - [Documentation - FUAM Lakehouse table lineage](/monitoring/fabric-unified-admin-monitoring/media/documentation/FUAM_Documentation_Lakehouse_table_lineage.pdf)
+- [Documentation - FUAM Technical Deep Dive](/monitoring/fabric-unified-admin-monitoring/media/documentation/FUAM_Technical_Deep_Dive.md)
 
 ----------------

@@ -14,6 +14,9 @@ The `Get-FabricEnvironment` function sends a GET request to the Fabric API to re
 .PARAMETER EnvironmentName
 (Optional) The name of the specific environment to retrieve.
 
+.PARAMETER Raw
+Returns the raw API response without any filtering or transformation. Use this switch when you need the complete, unprocessed response from the API.
+
 .EXAMPLE
 Get-FabricEnvironment -WorkspaceId "12345" -EnvironmentName "Development"
 
@@ -23,6 +26,11 @@ Retrieves the "Development" environment from workspace "12345".
 Get-FabricEnvironment -WorkspaceId "12345"
 
 Retrieves all environments in workspace "12345".
+
+.EXAMPLE
+Get-FabricEnvironment -WorkspaceId "12345" -Raw
+
+Returns the raw API response for all environments in the workspace without any formatting or type decoration.
 
 .NOTES
 - Requires `$FabricConfig` global configuration, including `BaseUrl` and `FabricHeaders`.
@@ -36,8 +44,9 @@ Author: Tiago Balabuch
 function Get-FabricEnvironment {
     [CmdletBinding()]
     param (
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
         [ValidateNotNullOrEmpty()]
+        [Alias('id')]
         [string]$WorkspaceId,
 
         [Parameter(Mandatory = $false)]
@@ -47,36 +56,41 @@ function Get-FabricEnvironment {
         [Parameter(Mandatory = $false)]
         [ValidateNotNullOrEmpty()]
         [ValidatePattern('^[a-zA-Z0-9_ ]*$')]
-        [string]$EnvironmentName
+        [string]$EnvironmentName,
+
+        [Parameter(Mandatory = $false)]
+        [switch]$Raw
     )
-    try {
-        # Validate input parameters
-        if ($EnvironmentId -and $EnvironmentName) {
-            Write-FabricLog -Message "Specify only one parameter: either 'EnvironmentId' or 'EnvironmentName'." -Level Error
-            return
+
+    process {
+        try {
+            # Validate input parameters
+            if ($EnvironmentId -and $EnvironmentName) {
+                Write-FabricLog -Message "Specify only one parameter: either 'EnvironmentId' or 'EnvironmentName'." -Level Error
+                return
+            }
+
+            # Validate authentication
+            Invoke-FabricAuthCheck -ThrowOnFailure
+
+            # Construct the API endpoint URI
+            $apiEndpointURI = New-FabricAPIUri -Resource 'workspaces' -WorkspaceId $WorkspaceId -Subresource 'environments'
+
+            # Make the API request
+            $apiParams = @{
+                BaseURI = $apiEndpointURI
+                Headers = $script:FabricAuthContext.FabricHeaders
+                Method = 'Get'
+            }
+            $dataItems = Invoke-FabricAPIRequest @apiParams
+
+            # Apply filtering logic
+            Select-FabricResource -InputObject $dataItems -Id $EnvironmentId -DisplayName $EnvironmentName -ResourceType 'Environment' -TypeName 'MicrosoftFabric.Environment' -Raw:$Raw
         }
-
-        # Validate authentication
-        Invoke-FabricAuthCheck -ThrowOnFailure
-
-        # Construct the API endpoint URI
-        $apiEndpointURI = New-FabricAPIUri -Resource 'workspaces' -WorkspaceId $WorkspaceId -Subresource 'environments'
-
-        # Make the API request
-        $apiParams = @{
-            BaseURI = $apiEndpointURI
-            Headers = $script:FabricAuthContext.FabricHeaders
-            Method = 'Get'
+        catch {
+            # Capture and log error details
+            $errorDetails = $_.Exception.Message
+            Write-FabricLog -Message "Failed to retrieve environment for workspace '$WorkspaceId'. Error: $errorDetails" -Level Error
         }
-        $dataItems = Invoke-FabricAPIRequest @apiParams
-
-        # Apply filtering logic
-        Select-FabricResource -InputObject $dataItems -Id $EnvironmentId -DisplayName $EnvironmentName -ResourceType 'Environment' -TypeName 'MicrosoftFabric.Environment'
     }
-    catch {
-        # Capture and log error details
-        $errorDetails = $_.Exception.Message
-        Write-FabricLog -Message "Failed to retrieve environment. Error: $errorDetails" -Level Error
-    }
-
 }

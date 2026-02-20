@@ -16,6 +16,9 @@
 .PARAMETER SparkCustomPoolName
     The name of the specific Spark custom pool to retrieve. This parameter is optional.
 
+.PARAMETER Raw
+    If specified, returns the raw API response without any transformation or filtering.
+
 .EXAMPLE
     Get-FabricSparkCustomPool -WorkspaceId "12345"
     This example retrieves all Spark custom pools from the workspace with ID "12345".
@@ -28,6 +31,10 @@
     Get-FabricSparkCustomPool -WorkspaceId "12345" -SparkCustomPoolName "MyPool"
     This example retrieves the Spark custom pool with name "MyPool" from the workspace with ID "12345".
 
+.EXAMPLE
+    Get-FabricSparkCustomPool -WorkspaceId "12345" -Raw
+    This example retrieves all Spark custom pools in the workspace with raw API response format.
+
 .NOTES
     - Requires `$FabricConfig` global configuration, including `BaseUrl` and `FabricHeaders`.
     - Calls `Test-TokenExpired` to ensure token validity before making the API request.
@@ -38,8 +45,9 @@
 function Get-FabricSparkCustomPool {
     [CmdletBinding()]
     param (
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
         [ValidateNotNullOrEmpty()]
+        [Alias('id')]
         [string]$WorkspaceId,
 
         [Parameter(Mandatory = $false)]
@@ -49,63 +57,43 @@ function Get-FabricSparkCustomPool {
         [Parameter(Mandatory = $false)]
         [ValidateNotNullOrEmpty()]
         [ValidatePattern('^[a-zA-Z0-9_ ]*$')]
-        [string]$SparkCustomPoolName
+        [string]$SparkCustomPoolName,
+
+        [Parameter(Mandatory = $false)]
+        [switch]$Raw
     )
-    try {
-        # Validate input parameters
-        if ($SparkCustomPoolId -and $SparkCustomPoolName) {
-            Write-FabricLog -Message "Specify only one parameter: either 'SparkCustomPoolId' or 'SparkCustomPoolName'." -Level Error
-            return $null
-        }
 
-        Invoke-FabricAuthCheck -ThrowOnFailure
+    process {
+        try {
+            # Validate input parameters
+            if ($SparkCustomPoolId -and $SparkCustomPoolName) {
+                Write-FabricLog -Message "Specify only one parameter: either 'SparkCustomPoolId' or 'SparkCustomPoolName'." -Level Error
+                return
+            }
+
+            Invoke-FabricAuthCheck -ThrowOnFailure
 
 
-        # Construct the API endpoint URI
-        $apiEndpointURI = "{0}/workspaces/{1}/spark/pools" -f $script:FabricAuthContext.BaseUrl, $WorkspaceId
-        Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
+            # Construct the API endpoint URI
+            $apiEndpointURI = "{0}/workspaces/{1}/spark/pools" -f $script:FabricAuthContext.BaseUrl, $WorkspaceId
+            Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
 
-        # Make the API request
-        # Make the API request
-        $apiParams = @{
-            BaseURI = $apiEndpointURI
-            Headers = $script:FabricAuthContext.FabricHeaders
-            Method = 'Get'
-        }
-        $dataItems = Invoke-FabricAPIRequest @apiParams
+            # Make the API request
+            $apiParams = @{
+                BaseURI = $apiEndpointURI
+                Headers = $script:FabricAuthContext.FabricHeaders
+                Method = 'Get'
+            }
+            $dataItems = Invoke-FabricAPIRequest @apiParams
 
-        # Immediately handle empty response
-        if (-not $dataItems) {
-            Write-FabricLog -Message "No data returned from the API." -Level Warning
-            return $null
+            # Apply filtering and formatting
+            Select-FabricResource -InputObject $dataItems -Id $SparkCustomPoolId -DisplayName $SparkCustomPoolName -ResourceType 'SparkCustomPool' -TypeName 'MicrosoftFabric.SparkCustomPool' -Raw:$Raw
         }
-
-        # Apply filtering logic efficiently
-        if ($SparkCustomPoolId) {
-            $matchedItems = $dataItems.Where({ $_.id -eq $SparkCustomPoolId }, 'First')
+        catch {
+            # Capture and log error details
+            $errorDetails = $_.Exception.Message
+            Write-FabricLog -Message "Failed to retrieve SparkCustomPool for workspace '$WorkspaceId'. Error: $errorDetails" -Level Error
         }
-        elseif ($SparkCustomPoolName) {
-            $matchedItems = $dataItems.Where({ $_.name -eq $SparkCustomPoolName }, 'First')
-        }
-        else {
-            Write-FabricLog -Message "No filter provided. Returning all items." -Level Debug
-            $matchedItems = $dataItems
-        }
-
-        # Handle results
-        if ($matchedItems) {
-            Write-FabricLog -Message "Item(s) found matching the specified criteria." -Level Debug
-            return $matchedItems
-        }
-        else {
-            Write-FabricLog -Message "No item found matching the provided criteria." -Level Warning
-            return $null
-        }
-    }
-    catch {
-        # Capture and log error details
-        $errorDetails = $_.Exception.Message
-        Write-FabricLog -Message "Failed to retrieve SparkCustomPool. Error: $errorDetails" -Level Error
     }
 
 }

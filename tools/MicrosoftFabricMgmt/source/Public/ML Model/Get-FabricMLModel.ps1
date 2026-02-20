@@ -15,6 +15,9 @@
 .PARAMETER MLModelName
     The name of the ML Model to retrieve. This parameter is optional.
 
+.PARAMETER Raw
+    If specified, returns the raw API response without any transformation or filtering.
+
 .EXAMPLE
     Get-FabricMLModel -WorkspaceId "workspace-12345" -MLModelId "model-67890"
     This example retrieves the ML Model details for the model with ID "model-67890" in the workspace with ID "workspace-12345".
@@ -22,6 +25,10 @@
 .EXAMPLE
     Get-FabricMLModel -WorkspaceId "workspace-12345" -MLModelName "My ML Model"
     This example retrieves the ML Model details for the model named "My ML Model" in the workspace with ID "workspace-12345".
+
+.EXAMPLE
+    Get-FabricMLModel -WorkspaceId "workspace-12345" -Raw
+    This example retrieves all ML Models in the workspace with raw API response format.
 
 .NOTES
     - Requires `$FabricConfig` global configuration, including `BaseUrl` and `FabricHeaders`.
@@ -33,8 +40,9 @@
 function Get-FabricMLModel {
     [CmdletBinding()]
     param (
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
         [ValidateNotNullOrEmpty()]
+        [Alias('id')]
         [string]$WorkspaceId,
 
         [Parameter(Mandatory = $false)]
@@ -44,64 +52,43 @@ function Get-FabricMLModel {
         [Parameter(Mandatory = $false)]
         [ValidateNotNullOrEmpty()]
         [ValidatePattern('^[a-zA-Z0-9_ ]*$')]
-        [string]$MLModelName
+        [string]$MLModelName,
+
+        [Parameter(Mandatory = $false)]
+        [switch]$Raw
     )
 
-    try {
-        # Validate input parameters
-        if ($MLModelId -and $MLModelName) {
-            Write-FabricLog -Message "Specify only one parameter: either 'MLModelId' or 'MLModelName'." -Level Error
-            return $null
-        }
+    process {
+        try {
+            # Validate input parameters
+            if ($MLModelId -and $MLModelName) {
+                Write-FabricLog -Message "Specify only one parameter: either 'MLModelId' or 'MLModelName'." -Level Error
+                return
+            }
 
-        Invoke-FabricAuthCheck -ThrowOnFailure
+            Invoke-FabricAuthCheck -ThrowOnFailure
 
 
-        # Construct the API endpoint URI
-        $apiEndpointURI = "{0}/workspaces/{1}/mlModels" -f $script:FabricAuthContext.BaseUrl, $WorkspaceId
-        Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
+            # Construct the API endpoint URI
+            $apiEndpointURI = "{0}/workspaces/{1}/mlModels" -f $script:FabricAuthContext.BaseUrl, $WorkspaceId
+            Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
 
-        # Make the API request
-        # Make the API request
-        $apiParams = @{
-            BaseURI = $apiEndpointURI
-            Headers = $script:FabricAuthContext.FabricHeaders
-            Method = 'Get'
-        }
-        $dataItems = Invoke-FabricAPIRequest @apiParams
+            # Make the API request
+            $apiParams = @{
+                BaseURI = $apiEndpointURI
+                Headers = $script:FabricAuthContext.FabricHeaders
+                Method = 'Get'
+            }
+            $dataItems = Invoke-FabricAPIRequest @apiParams
 
-        # Immediately handle empty response
-        if (-not $dataItems) {
-            Write-FabricLog -Message "No data returned from the API." -Level Warning
-            return $null
+            # Apply filtering and formatting
+            Select-FabricResource -InputObject $dataItems -Id $MLModelId -DisplayName $MLModelName -ResourceType 'MLModel' -TypeName 'MicrosoftFabric.MLModel' -Raw:$Raw
         }
-
-        # Apply filtering logic efficiently
-        if ($MLModelId) {
-            $matchedItems = $dataItems.Where({ $_.Id -eq $MLModelId }, 'First')
+        catch {
+            # Capture and log error details
+            $errorDetails = $_.Exception.Message
+            Write-FabricLog -Message "Failed to retrieve ML Model for workspace '$WorkspaceId'. Error: $errorDetails" -Level Error
         }
-        elseif ($MLModelName) {
-            $matchedItems = $dataItems.Where({ $_.DisplayName -eq $MLModelName }, 'First')
-        }
-        else {
-            Write-FabricLog -Message "No filter provided. Returning all items." -Level Debug
-            $matchedItems = $dataItems
-        }
-
-        # Handle results
-        if ($matchedItems) {
-            Write-FabricLog -Message "Item(s) found matching the specified criteria." -Level Debug
-            return $matchedItems
-        }
-        else {
-            Write-FabricLog -Message "No item found matching the provided criteria." -Level Warning
-            return $null
-        }
-    }
-    catch {
-        # Capture and log error details
-        $errorDetails = $_.Exception.Message
-        Write-FabricLog -Message "Failed to retrieve ML Model. Error: $errorDetails" -Level Error
     }
 
 }

@@ -17,7 +17,10 @@ know the item’s Id and want to avoid an additional client-side name filter acr
 
 .PARAMETER MirroredDatabaseName
 When supplied, returns only the mirrored database whose display name exactly matches this value. This is useful when
-you don’t have the Id available. Do not use with MirroredDatabaseId; only one filter may be specified.
+you don't have the Id available. Do not use with MirroredDatabaseId; only one filter may be specified.
+
+.PARAMETER Raw
+If specified, returns the raw API response without any transformation or filtering.
 
 .EXAMPLE
 Get-FabricMirroredDatabase -WorkspaceId "12345" -MirroredDatabaseId "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee"
@@ -34,6 +37,11 @@ Get-FabricMirroredDatabase -WorkspaceId "12345"
 
 Lists all mirrored databases available in workspace "12345".
 
+.EXAMPLE
+Get-FabricMirroredDatabase -WorkspaceId "12345" -Raw
+
+Retrieves all mirrored databases in the workspace with raw API response format.
+
 .NOTES
 - Requires `$FabricConfig` global configuration, including BaseUrl and FabricHeaders.
 - Calls Test-TokenExpired to ensure token validity before making the API request.
@@ -44,8 +52,9 @@ Author: Tiago Balabuch
 function Get-FabricMirroredDatabase {
     [CmdletBinding()]
     param (
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
         [ValidateNotNullOrEmpty()]
+        [Alias('id')]
         [string]$WorkspaceId,
 
         [Parameter(Mandatory = $false)]
@@ -55,62 +64,42 @@ function Get-FabricMirroredDatabase {
         [Parameter(Mandatory = $false)]
         [ValidateNotNullOrEmpty()]
         [ValidatePattern('^[a-zA-Z0-9_ ]*$')]
-        [string]$MirroredDatabaseName
+        [string]$MirroredDatabaseName,
+
+        [Parameter(Mandatory = $false)]
+        [switch]$Raw
     )
-    try {
-        # Validate input parameters
-        if ($MirroredDatabaseId -and $MirroredDatabaseName) {
-            Write-FabricLog -Message "Specify only one parameter: either 'MirroredDatabaseId' or 'MirroredDatabaseName'." -Level Error
-            return $null
-        }
 
-        Invoke-FabricAuthCheck -ThrowOnFailure
+    process {
+        try {
+            # Validate input parameters
+            if ($MirroredDatabaseId -and $MirroredDatabaseName) {
+                Write-FabricLog -Message "Specify only one parameter: either 'MirroredDatabaseId' or 'MirroredDatabaseName'." -Level Error
+                return
+            }
+
+            Invoke-FabricAuthCheck -ThrowOnFailure
 
 
-        # Construct the API endpoint URI
-        $apiEndpointURI = "{0}/workspaces/{1}/mirroredDatabases" -f $script:FabricAuthContext.BaseUrl, $WorkspaceId
-        Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
+            # Construct the API endpoint URI
+            $apiEndpointURI = "{0}/workspaces/{1}/mirroredDatabases" -f $script:FabricAuthContext.BaseUrl, $WorkspaceId
+            Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
 
-        # Make the API request
-        $apiParams = @{
-            BaseURI = $apiEndpointURI
-            Headers = $script:FabricAuthContext.FabricHeaders
-            Method = 'Get'
-        }
-        $dataItems = Invoke-FabricAPIRequest @apiParams
+            # Make the API request
+            $apiParams = @{
+                BaseURI = $apiEndpointURI
+                Headers = $script:FabricAuthContext.FabricHeaders
+                Method = 'Get'
+            }
+            $dataItems = Invoke-FabricAPIRequest @apiParams
 
-        # Immediately handle empty response
-        if (-not $dataItems) {
-            Write-FabricLog -Message "No data returned from the API." -Level Warning
-            return $null
+            # Apply filtering and formatting
+            Select-FabricResource -InputObject $dataItems -Id $MirroredDatabaseId -DisplayName $MirroredDatabaseName -ResourceType 'MirroredDatabase' -TypeName 'MicrosoftFabric.MirroredDatabase' -Raw:$Raw
         }
-
-        # Apply filtering logic efficiently
-        if ($MirroredDatabaseId) {
-            $matchedItems = $dataItems.Where({ $_.Id -eq $MirroredDatabaseId }, 'First')
-        }
-        elseif ($MirroredDatabaseName) {
-            $matchedItems = $dataItems.Where({ $_.DisplayName -eq $MirroredDatabaseName }, 'First')
-        }
-        else {
-            Write-FabricLog -Message "No filter provided. Returning all items." -Level Debug
-            $matchedItems = $dataItems
-        }
-
-        # Handle results
-        if ($matchedItems) {
-            Write-FabricLog -Message "Item(s) found matching the specified criteria." -Level Debug
-            return $matchedItems
-        }
-        else {
-            Write-FabricLog -Message "No item found matching the provided criteria." -Level Warning
-            return $null
+        catch {
+            # Capture and log error details
+            $errorDetails = $_.Exception.Message
+            Write-FabricLog -Message "Failed to retrieve MirroredDatabase for workspace '$WorkspaceId'. Error: $errorDetails" -Level Error
         }
     }
-    catch {
-        # Capture and log error details
-        $errorDetails = $_.Exception.Message
-        Write-FabricLog -Message "Failed to retrieve Mirrored Database. Error: $errorDetails" -Level Error
-    }
-
 }

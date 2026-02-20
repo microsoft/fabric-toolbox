@@ -50,8 +50,9 @@ Author: Tiago Balabuch; Help updated by Copilot.
 function Update-FabricSparkSettings {
     [CmdletBinding(SupportsShouldProcess=$true, ConfirmImpact='Medium')]
     param (
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
         [ValidateNotNullOrEmpty()]
+        [Alias('id')]
         [string]$WorkspaceId,
 
 
@@ -93,10 +94,11 @@ function Update-FabricSparkSettings {
         [string]$EnvironmentRuntimeVersion
     )
 
-    try {
-        # Step 1: Ensure token validity
-        Write-FabricLog -Message "Validating token..." -Level Debug
-        Test-TokenExpired
+    process {
+        try {
+            # Step 1: Ensure token validity
+            Write-FabricLog -Message "Validating token..." -Level Debug
+            Test-TokenExpired
         Write-FabricLog -Message "Token validation completed." -Level Debug
 
         # Step 2: Construct the API URL
@@ -191,5 +193,6 @@ function Update-FabricSparkSettings {
         # Step 7: Handle and log errors
         $errorDetails = $_.Exception.Message
         Write-FabricLog -Message "Failed to update SparkSettings. Error: $errorDetails" -Level Error
+        }
     }
 }

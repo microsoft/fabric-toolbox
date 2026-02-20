@@ -9,6 +9,9 @@
 .PARAMETER ExternalDataShareId
     (Optional) The ID of the External Data Share to retrieve. If not provided, all External Data Shares will be returned.
 
+.PARAMETER Raw
+    If specified, returns the raw API response without type decoration.
+
 .EXAMPLE
     Get-FabricExternalDataShares -ExternalDataShareId "12345"
     This example retrieves the External Data Share with ID "12345".
@@ -27,7 +30,10 @@ function Get-FabricExternalDataShare {
     param (
         [Parameter(Mandatory = $False)]
         [ValidateNotNullOrEmpty()]
-        [string]$ExternalDataShareId
+        [string]$ExternalDataShareId,
+
+        [Parameter()]
+        [switch]$Raw
     )
     try {
         # Validate authentication
@@ -45,7 +51,7 @@ function Get-FabricExternalDataShare {
         $dataItems = Invoke-FabricAPIRequest @apiParams
 
         # Apply filtering logic
-        Select-FabricResource -InputObject $dataItems -Id $ExternalDataShareId -ResourceType 'ExternalDataShare'
+        Select-FabricResource -InputObject $dataItems -Id $ExternalDataShareId -ResourceType 'ExternalDataShare' -TypeName 'MicrosoftFabric.ExternalDataShare' -Raw:$Raw
     }
     catch {
         # Capture and log error details

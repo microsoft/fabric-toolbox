@@ -24,15 +24,18 @@
 function Remove-FabricApacheAirflowJob {
     [CmdletBinding(SupportsShouldProcess = $true, ConfirmImpact = 'Medium')]
     param (
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
         [ValidateNotNullOrEmpty()]
         [string]$WorkspaceId,
 
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
         [ValidateNotNullOrEmpty()]
+        [Alias('id')]
         [string]$ApacheAirflowJobId
     )
-    try {
+
+    process {
+        try {
         # Validate authentication
         Invoke-FabricAuthCheck -ThrowOnFailure
 
@@ -53,8 +56,9 @@ function Remove-FabricApacheAirflowJob {
 
     }
     catch {
-        # Log and handle errors
-        $errorDetails = $_.Exception.Message
-        Write-FabricLog -Message "Failed to delete Apache Airflow Job '$ApacheAirflowJobId' from workspace '$WorkspaceId'. Error: $errorDetails" -Level Error
+            # Log and handle errors
+            $errorDetails = $_.Exception.Message
+            Write-FabricLog -Message "Failed to delete Apache Airflow Job '$ApacheAirflowJobId' from workspace '$WorkspaceId'. Error: $errorDetails" -Level Error
+        }
     }
 }

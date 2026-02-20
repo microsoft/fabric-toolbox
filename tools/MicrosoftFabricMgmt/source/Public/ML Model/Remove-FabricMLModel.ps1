@@ -26,14 +26,16 @@
 function Remove-FabricMLModel {
     [CmdletBinding(SupportsShouldProcess = $true, ConfirmImpact = 'High')]
     param (
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
         [ValidateNotNullOrEmpty()]
         [string]$WorkspaceId,
 
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
         [ValidateNotNullOrEmpty()]
+        [Alias('id')]
         [string]$MLModelId
     )
+    process {
     try {
         Invoke-FabricAuthCheck -ThrowOnFailure
 
@@ -62,5 +64,6 @@ function Remove-FabricMLModel {
         # Capture and log error details
         $errorDetails = $_.Exception.Message
         Write-FabricLog -Message "Failed to delete ML Model '$MLModelId' from workspace '$WorkspaceId'. Error: $errorDetails" -Level Error
+    }
     }
 }

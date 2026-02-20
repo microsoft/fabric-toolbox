@@ -1,4 +1,4 @@
-﻿<#
+<#
 .SYNOPSIS
 Retrieves a specific KQL Queryset or all KQL Querysets from a workspace.
 
@@ -13,6 +13,9 @@ Optional. The GUID of a single KQL Queryset to retrieve directly. Use this for d
 
 .PARAMETER KQLQuerysetName
 Optional. The display name of a KQL Queryset to retrieve. Provide this when the Id is unknown and you want to match by name.
+
+.PARAMETER Raw
+When specified, returns the raw API response without any filtering or formatting.
 
 .EXAMPLE
 Get-FabricKQLQueryset -WorkspaceId $wId -KQLQuerysetId '1a2b3c4d-5555-6666-7777-88889999aaaa'
@@ -29,6 +32,11 @@ Get-FabricKQLQueryset -WorkspaceId $wId
 
 Returns all querysets in the specified workspace.
 
+.EXAMPLE
+Get-FabricKQLQueryset -WorkspaceId $wId -Raw
+
+Returns the raw API response for all querysets in the workspace without any processing.
+
 .NOTES
 - Requires `$FabricConfig` (BaseUrl, FabricHeaders).
 - Validates token freshness via `Test-TokenExpired` before request.
@@ -40,8 +48,9 @@ Author: Tiago Balabuch; Help extended by Copilot.
 function Get-FabricKQLQueryset {
     [CmdletBinding()]
     param (
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
         [ValidateNotNullOrEmpty()]
+        [Alias('id')]
         [string]$WorkspaceId,
 
         [Parameter(Mandatory = $false)]
@@ -51,64 +60,43 @@ function Get-FabricKQLQueryset {
         [Parameter(Mandatory = $false)]
         [ValidateNotNullOrEmpty()]
         [ValidatePattern('^[a-zA-Z0-9_ ]*$')]
-        [string]$KQLQuerysetName
+        [string]$KQLQuerysetName,
+
+        [Parameter()]
+        [switch]$Raw
     )
-    try {
-        # Validate input parameters
-        if ($KQLQuerysetId -and $KQLQuerysetName) {
-            Write-FabricLog -Message "Specify only one parameter: either 'KQLQuerysetId' or 'KQLQuerysetName'." -Level Error
-            return $null
-        }
 
-        # Validate authentication token before proceeding.
-        Write-FabricLog -Message "Validating authentication token..." -Level Debug
-        Test-TokenExpired
-        Write-FabricLog -Message "Authentication token is valid." -Level Debug
+    process {
+        try {
+            # Validate input parameters
+            if ($KQLQuerysetId -and $KQLQuerysetName) {
+                Write-FabricLog -Message "Specify only one parameter: either 'KQLQuerysetId' or 'KQLQuerysetName'." -Level Error
+                return
+            }
 
-        # Construct the API endpoint URI
-        $apiEndpointURI = "{0}/workspaces/{1}/kqlQuerysets" -f $FabricConfig.BaseUrl, $WorkspaceId
-        Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
+            # Validate authentication token before proceeding
+            Invoke-FabricAuthCheck -ThrowOnFailure
 
-        # Make the API request
-        $apiParams = @{
-            BaseURI = $apiEndpointURI
-            Headers = $FabricConfig.FabricHeaders
-            Method = 'Get'
-        }
-        $dataItems = Invoke-FabricAPIRequest @apiParams
+            # Construct the API endpoint URI
+            $apiEndpointURI = "{0}/workspaces/{1}/kqlQuerysets" -f $script:FabricAuthContext.BaseUrl, $WorkspaceId
+            Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
 
-        # Immediately handle empty response
-        if (-not $dataItems) {
-            Write-FabricLog -Message "No data returned from the API." -Level Warning
-            return $null
-        }
+            # Make the API request
+            $apiParams = @{
+                BaseURI = $apiEndpointURI
+                Headers = $script:FabricAuthContext.FabricHeaders
+                Method  = 'Get'
+            }
+            $dataItems = Invoke-FabricAPIRequest @apiParams
 
-        # Apply filtering logic efficiently
-        if ($KQLQuerysetId) {
-            $matchedItems = $dataItems.Where({ $_.Id -eq $KQLQuerysetId }, 'First')
+            # Apply filtering and formatting
+            Select-FabricResource -InputObject $dataItems -Id $KQLQuerysetId -DisplayName $KQLQuerysetName -ResourceType 'KQLQueryset' -TypeName 'MicrosoftFabric.KQLQueryset' -Raw:$Raw
         }
-        elseif ($KQLQuerysetName) {
-            $matchedItems = $dataItems.Where({ $_.DisplayName -eq $KQLQuerysetName }, 'First')
+        catch {
+            # Capture and log error details
+            $errorDetails = $_.Exception.Message
+            Write-FabricLog -Message "Failed to retrieve KQLQueryset for workspace '$WorkspaceId'. Error: $errorDetails" -Level Error
         }
-        else {
-            Write-FabricLog -Message "No filter provided. Returning all items." -Level Debug
-            $matchedItems = $dataItems
-        }
-
-        # Handle results
-        if ($matchedItems) {
-            Write-FabricLog -Message "Item(s) found matching the specified criteria." -Level Debug
-            return $matchedItems
-        }
-        else {
-            Write-FabricLog -Message "No item found matching the provided criteria." -Level Warning
-            return $null
-        }
-    }
-    catch {
-        # Capture and log error details
-        $errorDetails = $_.Exception.Message
-        Write-FabricLog -Message "Failed to retrieve KQLQueryset. Error: $errorDetails" -Level Error
     }
 
 }

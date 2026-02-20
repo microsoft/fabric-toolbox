@@ -18,6 +18,9 @@
 .PARAMETER Recursive
     If specified, retrieves folders recursively. Optional.
 
+.PARAMETER Raw
+    Returns the raw API response without any filtering or transformation. Use this switch when you need the complete, unprocessed response from the API.
+
 .EXAMPLE
     Get-FabricFolder -WorkspaceId "workspace-12345" -FolderName "MyFolder"
     Retrieves details for the folder named "MyFolder" in the specified workspace.
@@ -25,6 +28,10 @@
 .EXAMPLE
     Get-FabricFolder -WorkspaceId "workspace-12345" -RootFolderId "folder-67890" -Recursive
     Retrieves details for the folder with the given ID and its subfolders.
+
+.EXAMPLE
+    Get-FabricFolder -WorkspaceId "workspace-12345" -Raw
+    Returns the raw API response for all folders in the workspace without any formatting or type decoration.
 
 .NOTES
     - Requires `$FabricConfig` global configuration with `BaseUrl` and `FabricHeaders`.
@@ -35,8 +42,9 @@
 function Get-FabricFolder {
     [CmdletBinding()]
     param (
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
         [ValidateNotNullOrEmpty()]
+        [Alias('id')]
         [string]$WorkspaceId,
 
         [Parameter(Mandatory = $false)]
@@ -49,66 +57,71 @@ function Get-FabricFolder {
         [string]$RootFolderId,
 
         [Parameter(Mandatory = $false)]
-        [switch]$Recursive
+        [switch]$Recursive,
+
+        [Parameter(Mandatory = $false)]
+        [switch]$Raw
     )
 
-    try {
-        # Validate input parameters
-        if ($RootFolderId -and $FolderName) {
-            Write-FabricLog -Message "Specify only one parameter: either 'RootFolderId' or 'FolderName'." -Level Error
-            return $null
+    process {
+        try {
+            # Validate input parameters
+            if ($RootFolderId -and $FolderName) {
+                Write-FabricLog -Message "Specify only one parameter: either 'RootFolderId' or 'FolderName'." -Level Error
+                return
+            }
+
+            # Additional FolderName validation
+            if ($FolderName) {
+                if ($FolderName.Length -gt 255) {
+                    Write-FabricLog -Message "Folder name exceeds 255 characters." -Level Error
+                    return
+                }
+                if ($FolderName -match '^[\s]|\s$') {
+                    Write-FabricLog -Message "Folder name cannot have leading or trailing spaces." -Level Error
+                    return
+                }
+                if ($FolderName -match '[~"#.&*:<>?\/{|}]') {
+                    Write-FabricLog -Message "Folder name contains invalid characters: ~ # . & * : < > ? / { | }\" -Level Error
+                    return
+                }
+                if ($FolderName -match '^\$recycle\.bin$|^recycled$|^recycler$') {
+                    Write-FabricLog -Message "Folder name cannot be a system-reserved name." -Level Error
+                    return
+                }
+                if ($FolderName -match '[\x00-\x1F]') {
+                    Write-FabricLog -Message "Folder name contains control characters." -Level Error
+                    return
+                }
+            }
+
+            # Validate authentication
+            Invoke-FabricAuthCheck -ThrowOnFailure
+
+            # Construct the API endpoint URI
+            $queryParams = @{}
+            if ($RootFolderId) {
+                $queryParams.rootFolderId = $RootFolderId
+            }
+            $recursiveValue = if ($Recursive.IsPresent -and $Recursive) { 'True' } else { 'False' }
+            $queryParams.recursive = $recursiveValue
+            $apiEndpointURI = New-FabricAPIUri -Resource 'workspaces' -WorkspaceId $WorkspaceId -Subresource 'folders' -QueryParameters $queryParams
+
+            # Make the API request
+            $apiParams = @{
+                BaseURI = $apiEndpointURI
+                Headers = $script:FabricAuthContext.FabricHeaders
+                Method  = 'Get'
+            }
+            $dataItems = Invoke-FabricAPIRequest @apiParams
+
+            # Apply filtering logic
+            Select-FabricResource -InputObject $dataItems -DisplayName $FolderName -ResourceType 'Folder' -TypeName 'MicrosoftFabric.Folder' -Raw:$Raw
         }
-
-        # Additional FolderName validation
-        if ($FolderName) {
-            if ($FolderName.Length -gt 255) {
-                Write-FabricLog -Message "Folder name exceeds 255 characters." -Level Error
-                return $null
-            }
-            if ($FolderName -match '^[\s]|\s$') {
-                Write-FabricLog -Message "Folder name cannot have leading or trailing spaces." -Level Error
-                return $null
-            }
-            if ($FolderName -match '[~"#.&*:<>?\/{|}]') {
-                Write-FabricLog -Message "Folder name contains invalid characters: ~ # . & * : < > ? / { | }\" -Level Error
-                return $null
-            }
-            if ($FolderName -match '^\$recycle\.bin$|^recycled$|^recycler$') {
-                Write-FabricLog -Message "Folder name cannot be a system-reserved name." -Level Error
-                return $null
-            }
-            if ($FolderName -match '[\x00-\x1F]') {
-                Write-FabricLog -Message "Folder name contains control characters." -Level Error
-                return $null
-            }
+        catch {
+            # Capture and log error details
+            $errorDetails = $_.Exception.Message
+            Write-FabricLog -Message "Failed to retrieve Folder for workspace '$WorkspaceId'. Error: $errorDetails" -Level Error
         }
-
-        # Validate authentication
-        Invoke-FabricAuthCheck -ThrowOnFailure
-
-        # Construct the API endpoint URI
-        $queryParams = @{}
-        if ($RootFolderId) {
-            $queryParams.rootFolderId = $RootFolderId
-        }
-        $recursiveValue = if ($Recursive.IsPresent -and $Recursive) { 'True' } else { 'False' }
-        $queryParams.recursive = $recursiveValue
-        $apiEndpointURI = New-FabricAPIUri -Resource 'workspaces' -WorkspaceId $WorkspaceId -Subresource 'folders' -QueryParameters $queryParams
-
-        # Make the API request
-        $apiParams = @{
-            BaseURI = $apiEndpointURI
-            Headers = $script:FabricAuthContext.FabricHeaders
-            Method  = 'Get'
-        }
-        $dataItems = Invoke-FabricAPIRequest @apiParams
-
-        # Apply filtering logic
-        Select-FabricResource -InputObject $dataItems -DisplayName $FolderName -ResourceType 'Folder'
-    }
-    catch {
-        # Capture and log error details
-        $errorDetails = $_.Exception.Message
-        Write-FabricLog -Message "Failed to retrieve Warehouse. Error: $errorDetails" -Level Error
     }
 }

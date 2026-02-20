@@ -1,4 +1,4 @@
-﻿<#
+<#
 .SYNOPSIS
     Retrieves Report details from a specified Microsoft Fabric workspace.
 
@@ -15,6 +15,9 @@
 .PARAMETER ReportName
     The name of the Report to retrieve. This parameter is optional.
 
+.PARAMETER Raw
+    When specified, returns the raw API response without any filtering or formatting.
+
 .EXAMPLE
     Get-FabricReport -WorkspaceId "workspace-12345" -ReportId "Report-67890"
     This example retrieves the Report details for the Report with ID "Report-67890" in the workspace with ID "workspace-12345".
@@ -22,6 +25,10 @@
 .EXAMPLE
     Get-FabricReport -WorkspaceId "workspace-12345" -ReportName "My Report"
     This example retrieves the Report details for the Report named "My Report" in the workspace with ID "workspace-12345".
+
+.EXAMPLE
+    Get-FabricReport -WorkspaceId "workspace-12345" -Raw
+    This example returns the raw API response for all reports in the workspace without any processing.
 
 .NOTES
     - Requires `$FabricConfig` global configuration, including `BaseUrl` and `FabricHeaders`.
@@ -33,8 +40,9 @@
 function Get-FabricReport {
     [CmdletBinding()]
     param (
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
         [ValidateNotNullOrEmpty()]
+        [Alias('id')]
         [string]$WorkspaceId,
 
         [Parameter(Mandatory = $false)]
@@ -44,62 +52,41 @@ function Get-FabricReport {
         [Parameter(Mandatory = $false)]
         [ValidateNotNullOrEmpty()]
         [ValidatePattern('^[a-zA-Z0-9_ ]*$')]
-        [string]$ReportName
+        [string]$ReportName,
+
+        [Parameter()]
+        [switch]$Raw
     )
-    try {
-        # Validate input parameters
-        if ($ReportId -and $ReportName) {
-            Write-FabricLog -Message "Specify only one parameter: either 'ReportId' or 'ReportName'." -Level Error
-            return $null
-        }
 
-        Invoke-FabricAuthCheck -ThrowOnFailure
+    process {
+        try {
+            # Validate input parameters
+            if ($ReportId -and $ReportName) {
+                Write-FabricLog -Message "Specify only one parameter: either 'ReportId' or 'ReportName'." -Level Error
+                return
+            }
 
+            Invoke-FabricAuthCheck -ThrowOnFailure
 
-        # Construct the API endpoint URI
-        $apiEndpointURI = "{0}/workspaces/{1}/reports" -f $script:FabricAuthContext.BaseUrl, $WorkspaceId
-        Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
+            # Construct the API endpoint URI
+            $apiEndpointURI = New-FabricAPIUri -Resource 'workspaces' -WorkspaceId $WorkspaceId -Subresource 'reports'
+            Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
 
-        # Make the API request
-        # Make the API request
-        $apiParams = @{
-            BaseURI = $apiEndpointURI
-            Headers = $script:FabricAuthContext.FabricHeaders
-            Method = 'Get'
-        }
-        $dataItems = Invoke-FabricAPIRequest @apiParams
+            # Make the API request
+            $apiParams = @{
+                BaseURI = $apiEndpointURI
+                Headers = $script:FabricAuthContext.FabricHeaders
+                Method  = 'Get'
+            }
+            $dataItems = Invoke-FabricAPIRequest @apiParams
 
-        # Immediately handle empty response
-        if (-not $dataItems) {
-            Write-FabricLog -Message "No data returned from the API." -Level Warning
-            return $null
+            # Apply filtering and formatting
+            Select-FabricResource -InputObject $dataItems -Id $ReportId -DisplayName $ReportName -ResourceType 'Report' -TypeName 'MicrosoftFabric.Report' -Raw:$Raw
         }
-
-        # Apply filtering logic efficiently
-        if ($ReportId) {
-            $matchedItems = $dataItems.Where({ $_.Id -eq $ReportId }, 'First')
+        catch {
+            # Capture and log error details
+            $errorDetails = $_.Exception.Message
+            Write-FabricLog -Message "Failed to retrieve Report for workspace '$WorkspaceId'. Error: $errorDetails" -Level Error
         }
-        elseif ($ReportName) {
-            $matchedItems = $dataItems.Where({ $_.DisplayName -eq $ReportName }, 'First')
-        }
-        else {
-            Write-FabricLog -Message "No filter provided. Returning all items." -Level Debug
-            $matchedItems = $dataItems
-        }
-
-        # Handle results
-        if ($matchedItems) {
-            Write-FabricLog -Message "Item(s) found matching the specified criteria." -Level Debug
-            return $matchedItems
-        }
-        else {
-            Write-FabricLog -Message "No item found matching the provided criteria." -Level Warning
-            return $null
-        }
-    }
-    catch {
-        # Capture and log error details
-        $errorDetails = $_.Exception.Message
-        Write-FabricLog -Message "Failed to retrieve Report. Error: $errorDetails" -Level Error
     }
 }

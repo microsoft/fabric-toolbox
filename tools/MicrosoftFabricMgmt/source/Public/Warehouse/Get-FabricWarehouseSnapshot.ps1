@@ -41,8 +41,9 @@ Lists all warehouse snapshots in the workspace.
 function Get-FabricWarehouseSnapshot {
     [CmdletBinding()]
     param (
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
         [ValidateNotNullOrEmpty()]
+        [Alias('id')]
         [string]$WorkspaceId,
 
         [Parameter(Mandatory = $false)]
@@ -51,7 +52,7 @@ function Get-FabricWarehouseSnapshot {
 
         [Parameter(Mandatory = $false)]
         [ValidateNotNullOrEmpty()]
-        [ValidatePattern('^[a-zA-Z0-9_ ]*$')]
+        [ValidatePattern('^[a-zA-Z0-9_]*$')]
         [string]$WarehouseSnapshotName
     )
 

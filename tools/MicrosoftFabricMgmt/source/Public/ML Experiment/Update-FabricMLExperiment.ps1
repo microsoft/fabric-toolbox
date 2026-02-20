@@ -32,35 +32,46 @@
 function Update-FabricMLExperiment {
     [CmdletBinding(SupportsShouldProcess = $true, ConfirmImpact = 'Medium')]
     param (
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
         [ValidateNotNullOrEmpty()]
         [string]$WorkspaceId,
 
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
         [ValidateNotNullOrEmpty()]
+        [Alias('id')]
         [string]$MLExperimentId,
 
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $false, ValueFromPipelineByPropertyName = $true)]
         [ValidateNotNullOrEmpty()]
         [ValidatePattern('^[a-zA-Z0-9_]*$')]
+        [Alias('DisplayName')]
         [string]$MLExperimentName,
 
-        [Parameter(Mandatory = $false)]
+        [Parameter(Mandatory = $false, ValueFromPipelineByPropertyName = $true)]
         [ValidateNotNullOrEmpty()]
+        [Alias('Description')]
         [string]$MLExperimentDescription
     )
 
+    process {
     try {
+        # Validate that at least one update parameter is provided
+        if (-not $MLExperimentName -and -not $MLExperimentDescription) {
+            Write-FabricLog -Message "At least one of MLExperimentName or MLExperimentDescription must be specified" -Level Error
+            return
+        }
+
         Invoke-FabricAuthCheck -ThrowOnFailure
 
-
         # Construct the API endpoint URI
-        $apiEndpointURI = "{0}/workspaces/{1}/mlExperiments/{2}" -f $script:FabricAuthContext.BaseUrl, $WorkspaceId, $MLExperimentId
+        $apiEndpointURI = New-FabricAPIUri -Resource 'workspaces' -WorkspaceId $WorkspaceId -Subresource 'mlExperiments' -ItemId $MLExperimentId
         Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
 
-        # Construct the request body
-        $body = @{
-            displayName = $MLExperimentName
+        # Construct the request body conditionally
+        $body = @{}
+
+        if ($MLExperimentName) {
+            $body.displayName = $MLExperimentName
         }
 
         if ($MLExperimentDescription) {
@@ -92,5 +103,6 @@ function Update-FabricMLExperiment {
         # Capture and log error details
         $errorDetails = $_.Exception.Message
         Write-FabricLog -Message "Failed to update ML Experiment. Error: $errorDetails" -Level Error
+    }
     }
 }

@@ -22,16 +22,18 @@ Starts mirroring for the Mirrored Database with the ID "MirroredDatabase123" in 
 function Start-FabricMirroredDatabaseMirroring {
     [CmdletBinding(SupportsShouldProcess = $true, ConfirmImpact = 'Medium')]
     param (
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
         [ValidateNotNullOrEmpty()]
+        [Alias('id')]
         [string]$WorkspaceId,
 
-        [Parameter(Mandatory = $false)]
+        [Parameter(Mandatory = $false, ValueFromPipelineByPropertyName = $true)]
         [ValidateNotNullOrEmpty()]
         [string]$MirroredDatabaseId
     )
 
-    try {
+    process {
+        try {
         Invoke-FabricAuthCheck -ThrowOnFailure
 
 
@@ -57,6 +59,7 @@ function Start-FabricMirroredDatabaseMirroring {
         # Capture and log error details
         $errorDetails = $_.Exception.Message
         Write-FabricLog -Message "Failed to start MirroredDatabase. Error: $errorDetails" -Level Error
+        }
     }
 
 }

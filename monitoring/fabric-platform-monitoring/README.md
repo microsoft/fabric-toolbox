@@ -114,7 +114,7 @@ To implement this solution, we have some step to follow. This steps will cover t
 
 ## Fabric initial setup 
 
-Create a workspace and import the [Platform Monitoring Setup Notebook](/monitoring/fabric-platform-monitoring/setup/Platform%20Monitoring%20Setup.ipynb). Follow the instructions for the first run.
+Create a workspace and import the [Platform Monitoring Setup Notebook](/monitoring/fabric-platform-monitoring/setup/Fabric%20Platform%20Monitoring%20Setup.ipynb). Follow the instructions for the first run.
 
 > [!CAUTION]
 > No change are made to any additional item in the workspace or eventhouse. But if you customize the default ones (Notebook, Policies, Tables, Functions, etc), the change could be reverted back or the update could fail.

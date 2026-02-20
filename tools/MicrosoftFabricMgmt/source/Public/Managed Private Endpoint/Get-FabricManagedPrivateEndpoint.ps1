@@ -15,6 +15,9 @@
 .PARAMETER ManagedPrivateEndpointName
     The name of the Managed Private Endpoint to retrieve. Optional.
 
+.PARAMETER Raw
+    If specified, returns the raw API response without any transformation or filtering.
+
 .EXAMPLE
     Get-FabricManagedPrivateEndpoint -WorkspaceId "workspace-12345" -ManagedPrivateEndpointId "endpoint-67890"
     Retrieves details for the Managed Private Endpoint with ID "endpoint-67890" in workspace "workspace-12345".
@@ -22,6 +25,10 @@
 .EXAMPLE
     Get-FabricManagedPrivateEndpoint -WorkspaceId "workspace-12345" -ManagedPrivateEndpointName "MyEndpoint"
     Retrieves details for the Managed Private Endpoint named "MyEndpoint" in workspace "workspace-12345".
+
+.EXAMPLE
+    Get-FabricManagedPrivateEndpoint -WorkspaceId "workspace-12345" -Raw
+    Retrieves all Managed Private Endpoints in the workspace with raw API response format.
 
 .NOTES
     - Requires `$FabricConfig` global configuration with `BaseUrl` and `FabricHeaders`.
@@ -32,8 +39,9 @@
 function Get-FabricManagedPrivateEndpoint {
     [CmdletBinding()]
     param (
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
         [ValidateNotNullOrEmpty()]
+        [Alias('id')]
         [string]$WorkspaceId,
 
         [Parameter(Mandatory = $false)]
@@ -42,66 +50,46 @@ function Get-FabricManagedPrivateEndpoint {
 
         [Parameter(Mandatory = $false)]
         [ValidateNotNullOrEmpty()]
-        [string]$ManagedPrivateEndpointName
+        [string]$ManagedPrivateEndpointName,
+
+        [Parameter(Mandatory = $false)]
+        [switch]$Raw
     )
 
-    try {
-        # Validate input parameters
-        if ($ManagedPrivateEndpointId -and $ManagedPrivateEndpointName) {
-            Write-FabricLog -Message "Specify only one parameter: either 'ManagedPrivateEndpointId' or 'ManagedPrivateEndpointName'." -Level Error
-            return $null
-        }
+    process {
+        try {
+            # Validate input parameters
+            if ($ManagedPrivateEndpointId -and $ManagedPrivateEndpointName) {
+                Write-FabricLog -Message "Specify only one parameter: either 'ManagedPrivateEndpointId' or 'ManagedPrivateEndpointName'." -Level Error
+                return
+            }
 
-        if ($ManagedPrivateEndpointName.Length -gt 64) {
-            Write-FabricLog -Message "Managed Private Endpoint name exceeds 64 characters." -Level Error
-            return $null
-        }
+            if ($ManagedPrivateEndpointName.Length -gt 64) {
+                Write-FabricLog -Message "Managed Private Endpoint name exceeds 64 characters." -Level Error
+                return
+            }
 
-        Invoke-FabricAuthCheck -ThrowOnFailure
+            Invoke-FabricAuthCheck -ThrowOnFailure
 
 
-        # Construct the API endpoint URI
-        $apiEndpointURI = "{0}/workspaces/{1}/managedPrivateEndpoints" -f $script:FabricAuthContext.BaseUrl, $WorkspaceId
+            # Construct the API endpoint URI
+            $apiEndpointURI = "{0}/workspaces/{1}/managedPrivateEndpoints" -f $script:FabricAuthContext.BaseUrl, $WorkspaceId
 
-        # Make the API request
-        $apiParams = @{
-            BaseURI = $apiEndpointURI
-            Headers = $script:FabricAuthContext.FabricHeaders
-            Method  = 'Get'
-        }
-        $dataItems = Invoke-FabricAPIRequest @apiParams
+            # Make the API request
+            $apiParams = @{
+                BaseURI = $apiEndpointURI
+                Headers = $script:FabricAuthContext.FabricHeaders
+                Method  = 'Get'
+            }
+            $dataItems = Invoke-FabricAPIRequest @apiParams
 
-        # Immediately handle empty response
-        if (-not $dataItems) {
-            Write-FabricLog -Message "No data returned from the API." -Level Warning
-            return $null
+            # Apply filtering and formatting
+            Select-FabricResource -InputObject $dataItems -Id $ManagedPrivateEndpointId -DisplayName $ManagedPrivateEndpointName -ResourceType 'ManagedPrivateEndpoint' -TypeName 'MicrosoftFabric.ManagedPrivateEndpoint' -Raw:$Raw
         }
-
-        # Apply filtering logic efficiently
-        if ($ManagedPrivateEndpointId) {
-            $matchedItems = $dataItems.Where({ $_.id -eq $ManagedPrivateEndpointId }, 'First')
+        catch {
+            # Capture and log error details
+            $errorDetails = $_.Exception.Message
+            Write-FabricLog -Message "Failed to retrieve Managed Private Endpoints for workspace '$WorkspaceId'. Error: $errorDetails" -Level Error
         }
-        elseif ($ManagedPrivateEndpointName) {
-            $matchedItems = $dataItems.Where({ $_.name -eq $ManagedPrivateEndpointName }, 'First')
-        }
-        else {
-            Write-FabricLog -Message "No filter provided. Returning all items." -Level Debug
-            $matchedItems = $dataItems
-        }
-
-        # Handle results
-        if ($matchedItems) {
-            Write-FabricLog -Message "Item(s) found matching the specified criteria." -Level Debug
-            return $matchedItems
-        }
-        else {
-            Write-FabricLog -Message "No item found matching the provided criteria." -Level Warning
-            return $null
-        }
-    }
-    catch {
-        # Capture and log error details
-        $errorDetails = $_.Exception.Message
-        Write-FabricLog -Message "Failed to retrieve Managed Private Endpoints. Error: $errorDetails" -Level Error
     }
 }

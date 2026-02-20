@@ -26,20 +26,23 @@
 function Remove-FabricDataPipeline {
     [CmdletBinding(SupportsShouldProcess = $true, ConfirmImpact = 'Medium')]
     param (
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
         [ValidateNotNullOrEmpty()]
         [string]$WorkspaceId,
 
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
         [ValidateNotNullOrEmpty()]
+        [Alias('id')]
         [string]$DataPipelineId
     )
-    try {
+
+    process {
+        try {
         # Validate authentication token before proceeding
         Invoke-FabricAuthCheck -ThrowOnFailure
 
         # Construct the API endpoint URI
-        $apiEndpointURI = New-FabricAPIUri -Segments @('workspaces', $WorkspaceId, 'dataPipelines', $DataPipelineId)
+        $apiEndpointURI = New-FabricAPIUri -Resource 'workspaces' -WorkspaceId $WorkspaceId -Subresource 'dataPipelines' -ItemId $DataPipelineId
         Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
 
         if ($PSCmdlet.ShouldProcess("DataPipeline '$DataPipelineId' in workspace '$WorkspaceId'", "Delete")) {
@@ -56,8 +59,9 @@ function Remove-FabricDataPipeline {
         }
     }
     catch {
-        # Capture and log error details
-        $errorDetails = $_.Exception.Message
-        Write-FabricLog -Message "Failed to delete DataPipeline '$DataPipelineId' from workspace '$WorkspaceId'. Error: $errorDetails" -Level Error
+            # Capture and log error details
+            $errorDetails = $_.Exception.Message
+            Write-FabricLog -Message "Failed to delete DataPipeline '$DataPipelineId' from workspace '$WorkspaceId'. Error: $errorDetails" -Level Error
+        }
     }
 }

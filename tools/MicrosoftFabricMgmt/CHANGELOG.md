@@ -7,6 +7,53 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **New Resource Types** (27 new functions):
+  - **Graph Model** (8 functions): Complete Graph Model management
+    - `Get-FabricGraphModel`: List and retrieve Graph Models with filtering by ID or name
+    - `New-FabricGraphModel`: Create new Graph Models with optional definition
+    - `Update-FabricGraphModel`: Update Graph Model display name and description
+    - `Remove-FabricGraphModel`: Delete Graph Models with confirmation support
+    - `Get-FabricGraphModelDefinition`: Retrieve Graph Model definitions (supports LRO)
+    - `Update-FabricGraphModelDefinition`: Update Graph Model definitions (supports LRO)
+    - `Invoke-FabricGraphModelQuery`: Execute queries against Graph Models
+    - `Get-FabricGraphModelQueryableType`: List queryable types for Graph Models
+  - **Snowflake Database** (6 functions): Snowflake integration in Fabric
+    - `Get-FabricSnowflakeDatabase`: List and retrieve Snowflake Databases
+    - `New-FabricSnowflakeDatabase`: Create new Snowflake Database connections
+    - `Update-FabricSnowflakeDatabase`: Update Snowflake Database properties
+    - `Remove-FabricSnowflakeDatabase`: Delete Snowflake Database connections
+    - `Get-FabricSnowflakeDatabaseDefinition`: Retrieve connection definitions
+    - `Update-FabricSnowflakeDatabaseDefinition`: Update connection definitions
+  - **Cosmos DB Database** (6 functions): Cosmos DB integration in Fabric
+    - `Get-FabricCosmosDBDatabase`: List and retrieve Cosmos DB Databases
+    - `New-FabricCosmosDBDatabase`: Create new Cosmos DB Database connections
+    - `Update-FabricCosmosDBDatabase`: Update Cosmos DB Database properties
+    - `Remove-FabricCosmosDBDatabase`: Delete Cosmos DB Database connections
+    - `Get-FabricCosmosDBDatabaseDefinition`: Retrieve connection definitions
+    - `Update-FabricCosmosDBDatabaseDefinition`: Update connection definitions
+
+- **Admin API Functions** (8 new functions): Tenant-wide administration capabilities
+  - `Get-FabricAdminWorkspace`: List all workspaces in tenant with filtering by name, type, capacity, and state
+  - `Get-FabricAdminItem`: List all items in tenant with filtering by workspace, capacity, type, and state
+  - `Get-FabricAdminReport`: List all reports in tenant with filtering by workspace
+  - `Get-FabricAdminWorkspaceUser`: Get users with access to any workspace
+  - `Get-FabricAdminGitConnection`: List all Git connections in tenant
+  - `Get-FabricAdminItemUser`: Get users with access to any item
+  - `Get-FabricAdminUserAccess`: List items a specific user can access
+  - `Restore-FabricAdminWorkspace`: Restore deleted workspaces
+
+- **Format File Updates**: Added PSTypeName support for new resource types
+  - `MicrosoftFabric.GraphModel`
+  - `MicrosoftFabric.SnowflakeDatabase`
+  - `MicrosoftFabric.CosmosDBDatabase`
+  - `MicrosoftFabric.AdminWorkspace`
+  - `MicrosoftFabric.AdminItem`
+  - `MicrosoftFabric.AdminReport`
+  - `MicrosoftFabric.AdminWorkspaceUser`
+  - `MicrosoftFabric.AdminGitConnection`
+  - `MicrosoftFabric.AdminItemUser`
+  - `MicrosoftFabric.AdminUserAccess`
+
 - **Intelligent Output Formatting System**: Automatic formatting of Get-* cmdlet output with resolved GUIDs to human-readable names
   - Format views for Items, Workspaces, Capacities, Domains, Role Assignments, and Jobs
   - Displays: Capacity Name, Workspace Name, Item Name, Type, and ID in consistent format
@@ -51,6 +98,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- **Pipeline Support**: All new functions support PowerShell pipeline with `ValueFromPipelineByPropertyName`
+  - WorkspaceId parameters accept pipeline input with `Alias('id')` for seamless piping
+  - Item ID parameters support piping from Get-* functions
+  - Example: `Get-FabricWorkspace | Get-FabricGraphModel` works naturally
+- **Admin Functions**: Use `Select-FabricResource` helper for consistent filtering and type decoration
 - **Select-FabricResource**: Enhanced with optional `-TypeName` parameter for automatic type decoration
 - **Module Manifest**: Exported 3 new public helper functions (Resolve-FabricCapacityName, Resolve-FabricWorkspaceName, Resolve-FabricCapacityIdFromWorkspace)
 - **Module Manifest**: Added `FormatsToProcess = @('MicrosoftFabricMgmt.Format.ps1xml')` to load format file
@@ -66,6 +118,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Cascading Resolution Caching**: Both levels cached (workspace→capacityId AND capacityId→name)
 
 ### Fixed
+- **Get-FabricAdminItem**: Fixed pipeline support - WorkspaceId parameter now accepts input from pipeline via `ValueFromPipelineByPropertyName` with `Alias('id')`
+- **Get-FabricAdminItem**: Removed warning when no items are returned - now silently returns nothing as per module standards
+- **Get-FabricAdminItem**: Added output formatting - now displays Capacity Name, Workspace Name, Item Name, Type, and ID in table view
+- **Format File**: Added `MicrosoftFabric.AdminItem` to FabricItemView for automatic formatting of admin API items
+- **Format File**: Updated Item Name column to handle both `displayName` (standard items) and `name` (admin API items) properties
+- **Invoke-FabricAPIRequest**: Added support for `itemEntities` property in response handling (used by Admin API endpoints)
+- **Invoke-FabricAPIRequest**: Fixed array conversion error when `Retry-After` header is returned as an array - now handles both single values and arrays correctly
+- **Get-FabricAdminItem**: Fixed handling of empty `itemEntities` responses - now correctly returns empty array instead of failing
+- Fixed overly restrictive `ValidatePattern` on name parameters across 18 cmdlets to match Microsoft Fabric documentation
+  - **Fabric items** (Lakehouse, Warehouse, KQL Database, Tags, Variable Library, Spark Job Definition, SQL Endpoints): Changed pattern from `'^[a-zA-Z0-9_ ]*$'` to `'^[a-zA-Z0-9_]*$'` (removed space support as per Fabric naming restrictions)
+  - **Workspaces**: Removed restrictive pattern validation entirely to support broader character set allowed by Fabric workspaces
+
+
 ### Deprecated
 ### Removed
 ### Security

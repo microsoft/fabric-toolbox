@@ -15,6 +15,9 @@
 .PARAMETER DataPipelineName
     The display name of the Data Pipeline to retrieve. This parameter is optional and filters the results by name.
 
+.PARAMETER Raw
+    Returns the raw API response without any filtering or transformation. Use this switch when you need the complete, unprocessed response from the API.
+
 .EXAMPLE
      Get-FabricData Pipeline -WorkspaceId "workspace-12345" -Data PipelineId "Data Pipeline-67890"
     This example retrieves the Data Pipeline details for the Data Pipeline with ID "Data Pipeline-67890" in the workspace with ID "workspace-12345".
@@ -22,6 +25,10 @@
 .EXAMPLE
      Get-FabricData Pipeline -WorkspaceId "workspace-12345" -Data PipelineName "My Data Pipeline"
     This example retrieves the Data Pipeline details for the Data Pipeline named "My Data Pipeline" in the workspace with ID "workspace-12345".
+
+.EXAMPLE
+    Get-FabricDataPipeline -WorkspaceId "workspace-12345" -Raw
+    Returns the raw API response for all data pipelines in the workspace without any formatting or type decoration.
 
 .NOTES
     - Requires `$FabricConfig` global configuration, including `BaseUrl` and `FabricHeaders`.
@@ -32,8 +39,9 @@
 function Get-FabricDataPipeline {
     [CmdletBinding()]
     param (
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
         [ValidateNotNullOrEmpty()]
+        [Alias('id')]
         [string]$WorkspaceId,
 
         [Parameter(Mandatory = $false)]
@@ -43,29 +51,35 @@ function Get-FabricDataPipeline {
         [Parameter(Mandatory = $false)]
         [ValidateNotNullOrEmpty()]
         [ValidatePattern('^[a-zA-Z0-9_ ]*$')]
-        [string]$DataPipelineName
+        [string]$DataPipelineName,
+
+        [Parameter(Mandatory = $false)]
+        [switch]$Raw
     )
-    try {
-        # Validate authentication token before proceeding
-        Invoke-FabricAuthCheck -ThrowOnFailure
 
-        # Construct the API endpoint URI
-        $apiEndpointURI = New-FabricAPIUri -Segments @('workspaces', $WorkspaceId, 'dataPipelines')
+    process {
+        try {
+            # Validate authentication token before proceeding
+            Invoke-FabricAuthCheck -ThrowOnFailure
 
-        # Make the API request
-        $apiParams = @{
-            BaseURI = $apiEndpointURI
-            Headers = $script:FabricAuthContext.FabricHeaders
-            Method = 'Get'
+            # Construct the API endpoint URI
+            $apiEndpointURI = New-FabricAPIUri -Resource 'workspaces' -WorkspaceId $WorkspaceId -Subresource 'dataPipelines'
+
+            # Make the API request
+            $apiParams = @{
+                BaseURI = $apiEndpointURI
+                Headers = $script:FabricAuthContext.FabricHeaders
+                Method = 'Get'
+            }
+            $dataItems = Invoke-FabricAPIRequest @apiParams
+
+            # Apply filtering
+            Select-FabricResource -InputObject $dataItems -Id $DataPipelineId -DisplayName $DataPipelineName -ResourceType 'Data Pipeline' -TypeName 'MicrosoftFabric.DataPipeline' -Raw:$Raw
         }
-        $dataItems = Invoke-FabricAPIRequest @apiParams
-
-        # Apply filtering
-        Select-FabricResource -InputObject $dataItems -Id $DataPipelineId -Name $DataPipelineName -ResourceType 'Data Pipeline'
-    }
-    catch {
-        # Capture and log error details
-        $errorDetails = $_.Exception.Message
-        Write-FabricLog -Message "Failed to retrieve DataPipeline. Error: $errorDetails" -Level Error
+        catch {
+            # Capture and log error details
+            $errorDetails = $_.Exception.Message
+            Write-FabricLog -Message "Failed to retrieve DataPipeline for workspace '$WorkspaceId'. Error: $errorDetails" -Level Error
+        }
     }
 }

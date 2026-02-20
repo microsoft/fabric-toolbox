@@ -44,11 +44,12 @@ Author: Tiago Balabuch
 function Update-FabricEventstreamDefinition {
     [CmdletBinding(SupportsShouldProcess = $true, ConfirmImpact = 'Medium')]
     param (
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
         [ValidateNotNullOrEmpty()]
+        [Alias('id')]
         [string]$WorkspaceId,
 
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
         [ValidateNotNullOrEmpty()]
         [string]$EventstreamId,
 
@@ -61,7 +62,8 @@ function Update-FabricEventstreamDefinition {
         [string]$EventstreamPathPlatformDefinition
     )
 
-    try {
+    process {
+        try {
         # Validate authentication
         Invoke-FabricAuthCheck -ThrowOnFailure
 
@@ -133,9 +135,10 @@ function Update-FabricEventstreamDefinition {
             $response
         }
     }
-    catch {
-        # Capture and log error details
-        $errorDetails = $_.Exception.Message
-        Write-FabricLog -Message "Failed to update Eventstream. Error: $errorDetails" -Level Error
+        catch {
+            # Capture and log error details
+            $errorDetails = $_.Exception.Message
+            Write-FabricLog -Message "Failed to update Eventstream. Error: $errorDetails" -Level Error
+        }
     }
 }

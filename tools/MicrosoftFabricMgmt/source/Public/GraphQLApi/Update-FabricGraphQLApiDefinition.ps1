@@ -29,12 +29,13 @@
 function Update-FabricGraphQLApiDefinition {
     [CmdletBinding(SupportsShouldProcess = $true, ConfirmImpact = 'Medium')]
     param (
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
         [ValidateNotNullOrEmpty()]
         [string]$WorkspaceId,
 
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
         [ValidateNotNullOrEmpty()]
+        [Alias('id')]
         [string]$GraphQLApiId,
 
         [Parameter(Mandatory = $true)]
@@ -45,9 +46,10 @@ function Update-FabricGraphQLApiDefinition {
         [ValidateNotNullOrEmpty()]
         [string]$GraphQLApiPathPlatformDefinition
     )
-    try {
-        # Validate authentication
-        Invoke-FabricAuthCheck -ThrowOnFailure
+    process {
+        try {
+            # Validate authentication
+            Invoke-FabricAuthCheck -ThrowOnFailure
 
         # Construct the API endpoint URI with optional updateMetadata query parameter
         $queryParams = if ($GraphQLApiPathPlatformDefinition) {
@@ -123,4 +125,5 @@ function Update-FabricGraphQLApiDefinition {
         $errorDetails = $_.Exception.Message
         Write-FabricLog -Message "Failed to update GraphQLApi. Error: $errorDetails" -Level Error
     }
+}
 }

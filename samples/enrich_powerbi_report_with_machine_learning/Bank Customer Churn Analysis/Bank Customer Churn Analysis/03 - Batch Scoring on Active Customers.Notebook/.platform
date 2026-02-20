@@ -1,0 +1,11 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/gitIntegration/platformProperties/2.0.0/schema.json",
+  "metadata": {
+    "type": "Notebook",
+    "displayName": "03 - Batch Scoring on Active Customers"
+  },
+  "config": {
+    "version": "2.0",
+    "logicalId": "95d13217-2a13-bc7b-423e-40544068321b"
+  }
+}

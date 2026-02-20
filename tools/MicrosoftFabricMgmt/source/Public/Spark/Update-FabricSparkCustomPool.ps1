@@ -53,75 +53,109 @@
 function Update-FabricSparkCustomPool {
     [CmdletBinding(SupportsShouldProcess=$true, ConfirmImpact='Medium')]
     param (
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
         [ValidateNotNullOrEmpty()]
         [string]$WorkspaceId,
 
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
         [ValidateNotNullOrEmpty()]
+        [Alias('id')]
         [string]$SparkCustomPoolId,
 
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $false, ValueFromPipelineByPropertyName = $true)]
         [ValidateNotNullOrEmpty()]
         [ValidatePattern('^[a-zA-Z0-9_ ]*$')]
+        [Alias('DisplayName')]
         [string]$InstancePoolName,
 
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $false)]
         [ValidateNotNullOrEmpty()]
         [ValidateSet('MemoryOptimized')]
         [string]$NodeFamily,
 
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $false)]
         [ValidateNotNullOrEmpty()]
         [ValidateSet('Large', 'Medium', 'Small', 'XLarge', 'XXLarge')]
         [string]$NodeSize,
 
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $false)]
         [ValidateNotNullOrEmpty()]
         [bool]$AutoScaleEnabled,
 
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $false)]
         [ValidateNotNullOrEmpty()]
         [int]$AutoScaleMinNodeCount,
 
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $false)]
         [ValidateNotNullOrEmpty()]
         [int]$AutoScaleMaxNodeCount,
 
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $false)]
         [ValidateNotNullOrEmpty()]
         [bool]$DynamicExecutorAllocationEnabled,
 
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $false)]
         [ValidateNotNullOrEmpty()]
         [int]$DynamicExecutorAllocationMinExecutors,
 
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $false)]
         [ValidateNotNullOrEmpty()]
         [int]$DynamicExecutorAllocationMaxExecutors
     )
-    try {
-        Invoke-FabricAuthCheck -ThrowOnFailure
+    process {
+        try {
+            # Validate that at least one update parameter is provided
+            if (-not $InstancePoolName -and -not $NodeFamily -and -not $NodeSize -and
+                $null -eq $AutoScaleEnabled -and $null -eq $AutoScaleMinNodeCount -and $null -eq $AutoScaleMaxNodeCount -and
+                $null -eq $DynamicExecutorAllocationEnabled -and $null -eq $DynamicExecutorAllocationMinExecutors -and $null -eq $DynamicExecutorAllocationMaxExecutors) {
+                Write-FabricLog -Message "At least one update parameter must be specified" -Level Error
+                return
+            }
 
+            Invoke-FabricAuthCheck -ThrowOnFailure
 
-        # Construct the API endpoint URI
+        # Construct the API endpoint URI (Spark pools use a non-standard path)
         $apiEndpointURI = "{0}/workspaces/{1}/spark/pools/{2}" -f $script:FabricAuthContext.BaseUrl, $WorkspaceId, $SparkCustomPoolId
         Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
 
-        # Construct the request body
-        $body = @{
-            name                      = $InstancePoolName
-            nodeFamily                = $NodeFamily
-            nodeSize                  = $NodeSize
-            autoScale                 = @{
-                enabled      = $AutoScaleEnabled
-                minNodeCount = $AutoScaleMinNodeCount
-                maxNodeCount = $AutoScaleMaxNodeCount
+        # Construct the request body conditionally
+        $body = @{}
+
+        if ($InstancePoolName) {
+            $body.name = $InstancePoolName
+        }
+
+        if ($NodeFamily) {
+            $body.nodeFamily = $NodeFamily
+        }
+
+        if ($NodeSize) {
+            $body.nodeSize = $NodeSize
+        }
+
+        if ($PSBoundParameters.ContainsKey('AutoScaleEnabled') -or $AutoScaleMinNodeCount -or $AutoScaleMaxNodeCount) {
+            $body.autoScale = @{}
+            if ($PSBoundParameters.ContainsKey('AutoScaleEnabled')) {
+                $body.autoScale.enabled = $AutoScaleEnabled
             }
-            dynamicExecutorAllocation = @{
-                enabled      = $DynamicExecutorAllocationEnabled
-                minExecutors = $DynamicExecutorAllocationMinExecutors
-                maxExecutors = $DynamicExecutorAllocationMaxExecutors
+            if ($AutoScaleMinNodeCount) {
+                $body.autoScale.minNodeCount = $AutoScaleMinNodeCount
+            }
+            if ($AutoScaleMaxNodeCount) {
+                $body.autoScale.maxNodeCount = $AutoScaleMaxNodeCount
+            }
+        }
+
+        if ($PSBoundParameters.ContainsKey('DynamicExecutorAllocationEnabled') -or $DynamicExecutorAllocationMinExecutors -or $DynamicExecutorAllocationMaxExecutors) {
+            $body.dynamicExecutorAllocation = @{}
+            if ($PSBoundParameters.ContainsKey('DynamicExecutorAllocationEnabled')) {
+                $body.dynamicExecutorAllocation.enabled = $DynamicExecutorAllocationEnabled
+            }
+            if ($DynamicExecutorAllocationMinExecutors) {
+                $body.dynamicExecutorAllocation.minExecutors = $DynamicExecutorAllocationMinExecutors
+            }
+            if ($DynamicExecutorAllocationMaxExecutors) {
+                $body.dynamicExecutorAllocation.maxExecutors = $DynamicExecutorAllocationMaxExecutors
             }
         }
 
@@ -148,5 +182,6 @@ function Update-FabricSparkCustomPool {
         # Capture and log error details
         $errorDetails = $_.Exception.Message
         Write-FabricLog -Message "Failed to update SparkCustomPool. Error: $errorDetails" -Level Error
+        }
     }
 }

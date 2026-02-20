@@ -26,15 +26,17 @@
 function Remove-FabricReflex {
     [CmdletBinding(SupportsShouldProcess=$true, ConfirmImpact='High')]
     param (
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
         [ValidateNotNullOrEmpty()]
         [string]$WorkspaceId,
 
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
         [ValidateNotNullOrEmpty()]
+        [Alias('id')]
         [string]$ReflexId
     )
-    try {
+    process {
+        try {
         Invoke-FabricAuthCheck -ThrowOnFailure
 
 
@@ -60,5 +62,6 @@ function Remove-FabricReflex {
         # Capture and log error details
         $errorDetails = $_.Exception.Message
         Write-FabricLog -Message "Failed to delete Reflex '$ReflexId'. Error: $errorDetails" -Level Error
+        }
     }
 }
