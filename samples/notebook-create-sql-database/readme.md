@@ -1,5 +1,6 @@
 # Create SQL Database with a collation
 
+[![Create Fabric SQL Database Video](https://img.youtube.com/vi/fgGZLCyz7Xg/0.jpg)](https://youtu.be/fgGZLCyz7Xg)
 
 
 This [notebook](CreateSQLDB.ipynb) demonstrates how to create a new SQL Database in Microsoft Fabric with a specific collation setting using the Fabric REST API. It performs the following steps:
@@ -25,3 +26,5 @@ This approach allows you to provision SQL Databases with any collation requireme
 
 
 - [API reference](https://learn.microsoft.com/en-us/rest/api/fabric/sqldatabase/items/create-sql-database?tabs=HTTP#newsqldatabasecreationpayload)
+
+
