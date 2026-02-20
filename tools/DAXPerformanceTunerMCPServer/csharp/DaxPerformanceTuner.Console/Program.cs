@@ -137,7 +137,8 @@ builder.Logging.SetMinimumLevel(LogLevel.Information);
 // the Python server (e.g. dataset_name, dax_query, workspace_name).
 var snakeCaseOptions = new JsonSerializerOptions
 {
-    PropertyNamingPolicy = JsonNamingPolicy.SnakeCaseLower
+    PropertyNamingPolicy = JsonNamingPolicy.SnakeCaseLower,
+    TypeInfoResolver = new System.Text.Json.Serialization.Metadata.DefaultJsonTypeInfoResolver()
 };
 
 var mcpBuilder = builder.Services
@@ -178,13 +179,13 @@ static void PrintWelcomeInfo(string version)
 {
     Console.WriteLine($"DAX Performance Tuner MCP Server v{version}");
     Console.WriteLine();
-    Console.WriteLine("MCP Configuration (add to your .mcp.json or VS Code settings):");
+    Console.WriteLine("MCP Configuration (add to your .vscode/mcp.json):");
     Console.WriteLine();
 
     var exePath = Environment.ProcessPath ?? "dax-performance-tuner.exe";
     var configJson = $$"""
     {
-        "mcpServers": {
+        "servers": {
             "dax-performance-tuner": {
                 "command": "{{exePath.Replace("\\", "\\\\")}}",
                 "args": ["--start"]
