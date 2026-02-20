@@ -1,0 +1,16 @@
+find_replace:
+- find_value: "bfddf0b6-5b74-461a-a963-e89ddc32f852" # Find and Replace dev WorkspaceID
+  replace_value:      
+      test: "$workspace.$id" # TEST workspace ID
+      prod: "$workspace.$id" # PROD workspace ID
+
+- find_value: "7f428d15-4575-4ae6-a06b-b32aa25636e1" # Find and Replace dev Woskspace DemoLakehouse GUID
+  replace_value:
+      test: "$items.Lakehouse.DemoLakehouse.id" # TEST DemoLakehouse Lakehouse GUID
+      prod: "$items.Lakehouse.DemoLakehouse.id" # PROD DemoLakehouse Lakehouse GUID
+
+- find_value: "91280ad0-b76e-4c98-a656-95d8f09a5e28" # dev Woskspace DemoLakehouse Lakehouse SQL endpoint GUID
+  replace_value:
+      test: "$items.Lakehouse.DemoLakehouse.$sqlendpointid" # TEST Woskspace DemoLakehouse Lakehouse SQL endpoint GUID
+      prod: "$items.Lakehouse.DemoLakehouse.$sqlendpointid" # PROD Woskspace DemoLakehouse Lakehouse SQL endpoint GUID
+      
