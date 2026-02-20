@@ -26,6 +26,7 @@ class AssessmentService:
         output_path: str,
         output_format: str = "json",
         subscription_id: Optional[str] = None,
+        auth_method: Optional[str] = None,
     ) -> Dict[str, Any]:
         """
         Perform assessment on specified workspaces.
@@ -37,6 +38,7 @@ class AssessmentService:
             output_path: Base path for output folder structure
             output_format: Export format (json, csv, parquet)
             subscription_id: Azure subscription ID (optional, will use Azure CLI default if not provided)
+            auth_method: Authentication method ("azure-cli", "fabric", or None for auto-detect)
 
         Returns:
             Assessment results dictionary
@@ -47,6 +49,8 @@ class AssessmentService:
         client_kwargs = {}
         if subscription_id:
             client_kwargs["subscription_id"] = subscription_id
+        if auth_method:
+            client_kwargs["auth_method"] = auth_method
         client = self._get_client(source=source, **client_kwargs)
 
         # Perform assessment

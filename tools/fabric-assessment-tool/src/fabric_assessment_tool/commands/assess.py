@@ -65,6 +65,13 @@ Examples:
             help="Azure subscription ID (if not provided, will use default credentials)",
         )
 
+        parser.add_argument(
+            "--auth-method",
+            choices=["azure-cli", "fabric"],
+            default=None,
+            help="Authentication method (default: auto-detect). Use 'fabric' when running inside a Fabric Notebook",
+        )
+
     def handle(self, args: argparse.Namespace) -> None:
         """Handle the assess command execution."""
         print(f"Starting assessment of {args.source} workspaces...")
@@ -82,6 +89,7 @@ Examples:
                 output_path=args.output,
                 output_format=getattr(args, "format", "json"),
                 subscription_id=getattr(args, "subscription_id", None),
+                auth_method=getattr(args, "auth_method", None),
             )
 
             utils_ui.print(f"Assessment completed successfully!")

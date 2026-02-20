@@ -389,7 +389,6 @@ class SynapseAssessment:
     assessment_metadata: SynapseAssessmentMetadata
 
     # Connection information
-    tenant_id: Optional[str] = None
     subscription_id: Optional[str] = None
     resource_group: Optional[str] = None
 

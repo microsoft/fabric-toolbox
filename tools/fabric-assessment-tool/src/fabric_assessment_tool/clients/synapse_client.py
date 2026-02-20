@@ -2,8 +2,6 @@ import builtins
 from argparse import Namespace
 from typing import Optional
 
-from azure.identity import AzureCliCredential
-
 from fabric_assessment_tool.errors.api import FATError
 
 from ..assessment.common import AssessmentStatus
@@ -53,6 +51,7 @@ from ..assessment.synapse import (
 from ..utils import ui as utils_ui
 from .api_client import ApiClient
 from .odbc_client import OdbcClient
+from .token_provider import TokenProvider, create_token_provider
 
 
 class SynapseClient:
@@ -61,6 +60,8 @@ class SynapseClient:
     def __init__(
         self,
         subscription_id: Optional[str] = None,
+        token_provider: Optional[TokenProvider] = None,
+        auth_method: Optional[str] = None,
         **kwargs,
     ):
         """
@@ -68,7 +69,10 @@ class SynapseClient:
 
         Args:
             subscription_id: Azure subscription ID (optional, will use Azure CLI default if not provided)
+            token_provider: Optional TokenProvider instance for authentication
+            auth_method: Authentication method ("azure-cli", "fabric", or None for auto-detect)
         """
+        self.token_provider = token_provider or create_token_provider(auth_method)
         self.custom_subscription_id = subscription_id
         self.authenticate()
         self.workspaces = self.get_workspaces()
@@ -77,37 +81,23 @@ class SynapseClient:
         self.paused_databases = []
 
     def authenticate(self) -> None:
-        """Authenticate with Azure using Azure CLI."""
+        """Authenticate with Azure using the configured token provider."""
         try:
-            self.credential = AzureCliCredential()
-            self.azure_token = self.credential.get_token(
+            azure_token = self.token_provider.get_token(
                 "https://management.azure.com/.default"
             )
             self.synapse_clients: dict[str, ApiClient] = {
-                "azure": ApiClient(token=self.azure_token.token)
+                "azure": ApiClient(token=azure_token)
             }
 
-            import json
-            import subprocess
-
-            cmd = "az account show"
-            output = subprocess.run(
-                cmd,
-                shell=True,
-                check=False,
-                stderr=subprocess.PIPE,
-                stdout=subprocess.PIPE,
-            )
-            result = json.loads(output.stdout)
-            if result:
-                self.account_info = result
-                self.tenant_id = self.account_info["tenantId"]
-                # Use custom subscription_id if provided, otherwise use Azure CLI default
-                self.subscription_id = (
-                    self.custom_subscription_id or self.account_info["id"]
+            # Use custom subscription_id if provided, otherwise use provider default
+            default_sub = self.token_provider.get_subscription_id()
+            self.subscription_id = self.custom_subscription_id or default_sub
+            if not self.subscription_id:
+                raise Exception(
+                    "No subscription ID available. "
+                    "Please provide --subscription-id when using Fabric notebook authentication."
                 )
-            else:
-                raise Exception("Failed to get account info from Azure CLI")
 
         except Exception as e:
             raise Exception(f"Failed to authenticate with Azure: {e}")
@@ -333,7 +323,6 @@ class SynapseClient:
                 managed_private_endpoints=managed_private_endpoints,
                 libraries=libraries,
                 assessment_metadata=assessment_metadata,
-                tenant_id=self.tenant_id,
                 subscription_id=self.subscription_id,
                 resource_group=workspace_info.resource_group,
             )
@@ -374,7 +363,7 @@ class SynapseClient:
                 base_url=base_url,
                 scope=scope,
                 api_version=api_version,
-                token=self.credential.get_token(scope).token if scope else None,
+                token=self.token_provider.get_token(scope) if scope else None,
             )
         return self.synapse_clients
 
