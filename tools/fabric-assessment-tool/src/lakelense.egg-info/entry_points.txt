@@ -1,2 +1,0 @@
-[console_scripts]
-lls = lakelense.main:main
