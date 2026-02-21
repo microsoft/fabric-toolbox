@@ -3,8 +3,8 @@
 .SYNOPSIS
     Creates a distribution zip file for DAXPerformanceTunerMCPServer
 .DESCRIPTION
-    Packages all necessary files for distribution, excluding build artifacts,
-    virtual environments, and user-generated content.
+    Packages all necessary files for distribution, excluding build artifacts.
+    Users will build the MCP server from C# source using setup.bat/setup.ps1.
 .PARAMETER OutputPath
     The path where the zip file will be created. Defaults to parent directory.
 .PARAMETER Version
@@ -43,7 +43,6 @@ try {
         @{ Path = "README.md"; Type = "File" }
         @{ Path = "LICENSE"; Type = "File" }
         @{ Path = "ATTRIBUTION.md"; Type = "File" }
-        @{ Path = "requirements.txt"; Type = "File" }
         @{ Path = "setup.bat"; Type = "File" }
         @{ Path = "setup.ps1"; Type = "File" }
         @{ Path = "dotnet"; Type = "Directory" }
@@ -52,17 +51,15 @@ try {
     
     # Directories and patterns to exclude during copy
     $ExcludeDirs = @(
-        "__pycache__",
         "obj",
-        "bin",  # Exclude all bin folders - users will build from source
-        ".pytest_cache",
-        "*.egg-info"
+        "bin",
+        ".vs"
     )
     
     # File patterns to exclude (aligned with .gitignore)
     $ExcludeFilePatterns = @(
-        "*.xml",     # Documentation files
-        "*.pdb",     # Debug symbols
+        "*.xml",
+        "*.pdb",
         "*.cache",
         "*.user",
         "*.suo"
@@ -75,11 +72,11 @@ try {
         
         if (Test-Path $SourcePath) {
             if ($item.Type -eq "File") {
-                Write-Host "  ✓ Copying $($item.Path)" -ForegroundColor Green
+                Write-Host "  + Copying $($item.Path)" -ForegroundColor Green
                 Copy-Item -Path $SourcePath -Destination $DestPath -Force
             }
             elseif ($item.Type -eq "Directory") {
-                Write-Host "  ✓ Copying $($item.Path)\" -ForegroundColor Green
+                Write-Host "  + Copying $($item.Path)\" -ForegroundColor Green
                 
                 # Create destination directory
                 New-Item -ItemType Directory -Path $DestPath -Force | Out-Null
@@ -97,7 +94,7 @@ try {
                         }
                     }
                     
-                    # Exclude files matching patterns (XML, PDB, etc.)
+                    # Exclude files matching patterns
                     if (-not $_.PSIsContainer) {
                         foreach ($FilePattern in $ExcludeFilePatterns) {
                             if ($_.Name -like $FilePattern) {
@@ -125,15 +122,19 @@ try {
             }
         }
         else {
-            Write-Host "  ⚠ Warning: $($item.Path) not found" -ForegroundColor Yellow
+            Write-Host "  ! Warning: $($item.Path) not found" -ForegroundColor Yellow
         }
     }
     
     # Verify critical files exist
     $CriticalFiles = @(
-        "src\dax_executor\Program.cs",  # C# source code (not compiled exe)
-        "src\dax_executor\DaxExecutor.csproj",
+        "src\DaxPerformanceTuner.Console\Program.cs",
+        "src\DaxPerformanceTuner.Console\DaxPerformanceTuner.Console.csproj",
+        "src\DaxPerformanceTuner.Library\DaxPerformanceTuner.Library.csproj",
+        "src\DaxPerformanceTuner.sln",
+        "src\LICENSE-MSRL.txt",
         "dotnet\Microsoft.AnalysisServices.AdomdClient.dll",
+        "setup.bat",
         "setup.ps1"
     )
     
@@ -146,10 +147,8 @@ try {
     }
     
     if ($MissingCritical.Count -gt 0) {
-        Write-Host "`n❌ ERROR: Missing critical files:" -ForegroundColor Red
+        Write-Host "`nERROR: Missing critical files:" -ForegroundColor Red
         $MissingCritical | ForEach-Object { Write-Host "   - $_" -ForegroundColor Red }
-        Write-Host "`nPlease ensure the project is built before creating distribution." -ForegroundColor Yellow
-        Write-Host "Run: dotnet build src\dax_executor\DaxExecutor.csproj -c Release" -ForegroundColor Yellow
         exit 1
     }
     
@@ -174,7 +173,7 @@ try {
     # Get file size
     $ZipSize = (Get-Item $ZipPath).Length / 1MB
     
-    Write-Host "`n✅ Distribution created successfully!" -ForegroundColor Green
+    Write-Host "`nDistribution created successfully!" -ForegroundColor Green
     Write-Host "   Location: $ZipPath" -ForegroundColor White
     Write-Host "   Size: $([math]::Round($ZipSize, 2)) MB" -ForegroundColor White
     
@@ -182,10 +181,10 @@ try {
     Write-Host "`nCleaning up temporary files..." -ForegroundColor Gray
     Remove-Item $TempDir -Recurse -Force
     
-    Write-Host "`n📦 Ready for distribution!" -ForegroundColor Cyan
+    Write-Host "`nReady for distribution!" -ForegroundColor Cyan
     
 } catch {
-    Write-Host "`n❌ Error creating distribution: $_" -ForegroundColor Red
+    Write-Host "`nError creating distribution: $_" -ForegroundColor Red
     throw
 } finally {
     Pop-Location

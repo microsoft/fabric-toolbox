@@ -4,15 +4,16 @@ Copyright (c) 2025 DAX Performance Tuner Contributors
 
 IMPORTANT: This project uses dual licensing:
 
-1. MIT License (this file): Applies to the Python MCP server, configuration,
-   utilities, and other original code created for this project.
+1. MIT License (this file): Applies to the C# MCP server, configuration,
+   setup scripts, and other original code created for this project.
 
-2. Microsoft Reciprocal License (Ms-RL): Applies to the C# DAX Executor
-   component (src/dax_executor/) which contains code derived from DAX Studio.
-   See src/dax_executor/LICENSE-MSRL.txt for the full Ms-RL license text.
+2. Microsoft Reciprocal License (Ms-RL): Applies to the DaxTraceRunner
+   component (src/DaxPerformanceTuner.Library/Infrastructure/DaxTraceRunner.cs)
+   which contains code derived from DAX Studio.
+   See src/LICENSE-MSRL.txt for the full Ms-RL license text.
 
 This MIT license does NOT apply to:
-- The C# DAX Executor component (governed by Ms-RL)
+- The DaxTraceRunner component (governed by Ms-RL)
 - Third-party content, documentation, or research referenced or linked
   within this project
 

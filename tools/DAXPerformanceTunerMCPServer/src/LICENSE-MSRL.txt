@@ -1,7 +1,7 @@
 Microsoft Reciprocal License (Ms-RL)
 
-This license applies to the C# DAX Executor component in this directory, which
-contains code derived from DAX Studio (https://github.com/DaxStudio/DaxStudio).
+This license applies to the DaxTraceRunner component (Infrastructure/DaxTraceRunner.cs),
+which contains code derived from DAX Studio (https://github.com/DaxStudio/DaxStudio).
 
 ================================================================================
 
