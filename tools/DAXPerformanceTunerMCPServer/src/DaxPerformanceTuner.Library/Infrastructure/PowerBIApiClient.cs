@@ -6,7 +6,6 @@ namespace DaxPerformanceTuner.Library.Infrastructure;
 
 /// <summary>
 /// Thin wrapper around the Power BI REST API for workspace discovery.
-/// Port of Python powerbi_api.py.
 /// </summary>
 public class PowerBIApiClient
 {

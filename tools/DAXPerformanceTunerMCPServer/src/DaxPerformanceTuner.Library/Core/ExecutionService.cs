@@ -9,7 +9,6 @@ namespace DaxPerformanceTuner.Library.Core;
 
 /// <summary>
 /// DAX query execution, measure inlining, and prepare-query orchestration.
-/// Port of Python execution.py — the largest core module.
 /// </summary>
 public class ExecutionService
 {
@@ -18,8 +17,6 @@ public class ExecutionService
     private readonly MetadataService _metadata;
     private readonly ResearchService _research;
     private readonly DaxPerformanceTunerConfig _config;
-
-    private static readonly JsonSerializerOptions _jsonOpts = new() { WriteIndented = true };
 
     public ExecutionService(
         IAuthService auth, SessionManager sessionManager,
@@ -114,7 +111,7 @@ public class ExecutionService
                 });
             }
 
-            // Track query execution in session history (port of Python track_dax_query_execution)
+            // Track query execution in session history
             var performanceDataDict = performance.ValueKind != JsonValueKind.Undefined
                 ? new Dictionary<string, object?>
                 {
@@ -149,7 +146,7 @@ public class ExecutionService
             if (performance.ValueKind != JsonValueKind.Undefined) response["Performance"] = JsonSerializer.Deserialize<object>(performance.GetRawText())!;
             if (eventDetails.ValueKind != JsonValueKind.Undefined) response["EventDetails"] = JsonSerializer.Deserialize<object>(eventDetails.GetRawText())!;
 
-            return JsonSerializer.Serialize(response, _jsonOpts);
+            return JsonHelper.Serialize(response);
         }
         catch (Exception ex)
         {
@@ -215,7 +212,7 @@ public class ExecutionService
                 ["model_metadata"] = metadata ?? new Dictionary<string, object>()
             };
 
-            return JsonSerializer.Serialize(result, _jsonOpts);
+            return JsonHelper.Serialize(result);
         }
         catch (Exception ex)
         {
@@ -297,7 +294,6 @@ public class ExecutionService
 
     // =====================================================================
     // Measure inlining (BFS dependency resolution)
-    // Port of Python execution.py _collect_dependencies / _build_enhanced_query
     // =====================================================================
 
     private async Task<(string EnhancedQuery, int FunctionsAdded, int MeasuresAdded)> InlineMeasuresAsync(
@@ -567,6 +563,5 @@ public class ExecutionService
     }
 
     // ---- helper ----
-    private static string Error(string msg) =>
-        JsonSerializer.Serialize(new { status = "error", error = msg }, _jsonOpts);
+    private static string Error(string msg) => JsonHelper.ErrorJson(msg);
 }

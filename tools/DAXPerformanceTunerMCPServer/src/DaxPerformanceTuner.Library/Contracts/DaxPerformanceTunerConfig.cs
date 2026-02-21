@@ -12,9 +12,7 @@ public class DaxPerformanceTunerConfig
     public PerformanceThresholdsConfig PerformanceThresholds { get; set; } = new();
     public int DaxExecutionRuns { get; set; } = 3;
     public int DaxExecutionTimeoutSeconds { get; set; } = 600;
-    public int DaxFormatterTimeoutSeconds { get; set; } = 30;
     public int ResearchRequestTimeout { get; set; } = 30;
-    public int ResearchMaxWorkers { get; set; } = 8;
     public int ResearchMinContentLength { get; set; } = 200;
 }
 

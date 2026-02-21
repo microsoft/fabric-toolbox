@@ -1,5 +1,4 @@
 using System.ComponentModel;
-using System.Text.Json;
 using DaxPerformanceTuner.Library.Core;
 using DaxPerformanceTuner.Library.Models;
 using ModelContextProtocol.Server;
@@ -27,7 +26,7 @@ public class SessionStatusTool
     {
         var session = _sessionManager.GetCurrentSession();
         if (session == null)
-            return JsonSerializer.Serialize(new { status = "no_session", message = "No active session. Use connect_to_dataset first." });
+            return JsonHelper.Serialize(new { status = "no_session", message = "No active session. Use connect_to_dataset first." });
 
         var conn = session.ConnectionInfo;
         var qd = session.QueryData;
@@ -74,7 +73,7 @@ public class SessionStatusTool
             }
         };
 
-        return JsonSerializer.Serialize(result, new JsonSerializerOptions { WriteIndented = true });
+        return JsonHelper.Serialize(result);
     }
 
     private static Dictionary<string, object?> QueryRecordToDict(QueryRecord record)

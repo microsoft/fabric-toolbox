@@ -57,17 +57,6 @@ namespace DaxPerformanceTuner.Library.Infrastructure
             return SystemJsonSerializer.Serialize(errorResult, new SystemJsonSerializerOptions { WriteIndented = true });
         }
 
-        private static string BuildConnectionString(string dataSource, string datasetName, string accessToken)
-        {
-            // Desktop connection - no authentication
-            if (dataSource.Contains("localhost:", StringComparison.OrdinalIgnoreCase))
-            {
-                return $"Data Source={dataSource};Initial Catalog={datasetName};";
-            }
-            // Cloud connection - use token
-            return $"Data Source={dataSource};Initial Catalog={datasetName};Password={accessToken};";
-        }
-
         public static async Task<string> RunTraceWithXmlaAsync(
             string accessToken,
             string xmlaServer,
@@ -79,7 +68,7 @@ namespace DaxPerformanceTuner.Library.Infrastructure
 
 
                 // Setup connection string using the provided XMLA server
-                var connectionString = BuildConnectionString(xmlaServer, datasetName, accessToken);
+                var connectionString = XmlaClient.BuildConnectionString(xmlaServer, datasetName, accessToken);
                 
                 return await ExecuteTraceInternal(connectionString, daxQuery, accessToken, datasetName);
             }
@@ -344,10 +333,8 @@ namespace DaxPerformanceTuner.Library.Infrastructure
                     if (trace != null)
                     {
 
-                        try { trace.Stop(); } 
-                        catch (Exception ex) {  }
-                        try { trace.Drop(); } 
-                        catch (Exception ex) {  }
+                        try { trace.Stop(); } catch { }
+                        try { trace.Drop(); } catch { }
                     }
                 }
 

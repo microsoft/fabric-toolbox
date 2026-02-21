@@ -10,7 +10,7 @@ namespace DaxPerformanceTuner.Library.Core;
 /// <summary>
 /// Research service that fetches DAX optimization guidance.
 /// Pattern-matched article detection plus concurrent HTTP article fetching.
-/// Port of Python research.py — uses ArticlePatterns for the full article registry.
+/// Uses ArticlePatterns for the full article registry.
 /// </summary>
 public class ResearchService
 {

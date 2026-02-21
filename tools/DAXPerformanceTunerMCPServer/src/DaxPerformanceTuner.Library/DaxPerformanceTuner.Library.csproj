@@ -15,7 +15,7 @@
     <PackageReference Include="System.Management" Version="9.0.0" />
   </ItemGroup>
 
-  <!-- Local Analysis Services DLLs (same as existing dax_executor) -->
+  <!-- Local Analysis Services DLLs -->
   <ItemGroup>
     <Reference Include="Microsoft.AnalysisServices.AdomdClient">
       <HintPath>..\..\dotnet\Microsoft.AnalysisServices.AdomdClient.dll</HintPath>

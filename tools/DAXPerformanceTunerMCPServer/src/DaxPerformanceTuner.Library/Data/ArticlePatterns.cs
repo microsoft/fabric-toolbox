@@ -4,7 +4,6 @@ namespace DaxPerformanceTuner.Library.Data;
 
 /// <summary>
 /// DAX Optimization Article Patterns and Detection Rules.
-/// Port of Python article_patterns.py.
 ///
 /// ATTRIBUTION:
 /// This module contains DAX pattern detection rules and optimization guidance derived from
@@ -62,7 +61,7 @@ public static class ArticlePatterns
     public record ArticleConfig(string Title, string? Url, string? Content, string[] Patterns);
 
     // ======================================================================
-    // All articles — exact port of Python ARTICLE_PATTERNS dict
+    // All articles
     // ======================================================================
 
     public static readonly Dictionary<string, ArticleConfig> Articles = new()
@@ -676,7 +675,7 @@ public static class ArticlePatterns
     };
 
     // ======================================================================
-    // CUST000 full inline content — exact port of Python article_patterns.py
+    // CUST000 full inline content
     // ======================================================================
 
     private const string Cust000Content = """

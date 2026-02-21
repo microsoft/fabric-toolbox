@@ -4,7 +4,7 @@ namespace DaxPerformanceTuner.Library.Core;
 
 /// <summary>
 /// Pure-function helpers for performance comparison, semantic-equivalence checks,
-/// and fastest-run selection.  Port of Python analysis.py.
+/// and fastest-run selection.
 /// </summary>
 public static class AnalysisHelper
 {

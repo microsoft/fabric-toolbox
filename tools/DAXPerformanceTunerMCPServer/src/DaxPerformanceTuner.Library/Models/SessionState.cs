@@ -19,7 +19,6 @@ public class SessionState
 /// <summary>
 /// Tracks query state across the optimization workflow.
 /// Stores raw DaxTraceRunner output as JsonDocument so we can compare runs.
-/// Port of Python session.py _create_empty_query_data + SessionState.
 /// </summary>
 public class QueryData
 {

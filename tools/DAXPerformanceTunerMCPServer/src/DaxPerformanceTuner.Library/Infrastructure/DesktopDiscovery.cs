@@ -7,7 +7,7 @@ namespace DaxPerformanceTuner.Library.Infrastructure;
 
 /// <summary>
 /// Discovers local Power BI Desktop instances and enumerates their datasets.
-/// Port of Python discovery.py using WMI + TOM instead of psutil / win32gui.
+/// Uses WMI + TOM for process discovery and dataset enumeration.
 /// </summary>
 public static class DesktopDiscovery
 {

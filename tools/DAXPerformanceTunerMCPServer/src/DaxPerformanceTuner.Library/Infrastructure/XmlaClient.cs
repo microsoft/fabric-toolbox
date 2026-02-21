@@ -1,7 +1,7 @@
 using System.Data;
 using System.Net;
-using System.Text.Json;
 using DaxPerformanceTuner.Library.Contracts;
+using DaxPerformanceTuner.Library.Core;
 using Microsoft.AnalysisServices.AdomdClient;
 
 namespace DaxPerformanceTuner.Library.Infrastructure;
@@ -72,7 +72,7 @@ public static class XmlaClient
             adapter.Fill(ds);
 
             if (ds.Tables.Count == 0)
-                return JsonSerializer.Serialize(new { columns = Array.Empty<string>(), rows = Array.Empty<object>(), row_count = 0 });
+                return JsonHelper.Serialize(new { columns = Array.Empty<string>(), rows = Array.Empty<object>(), row_count = 0 });
 
             var table = ds.Tables[0];
             var columns = table.Columns.Cast<DataColumn>().Select(c => c.ColumnName).ToList();
@@ -89,9 +89,7 @@ public static class XmlaClient
                 rows.Add(d);
             }
 
-            return JsonSerializer.Serialize(
-                new { columns, rows, row_count = rows.Count },
-                new JsonSerializerOptions { WriteIndented = true });
+            return JsonHelper.Serialize(new { columns, rows, row_count = rows.Count });
         }
         catch (Exception ex)
         {
@@ -101,7 +99,7 @@ public static class XmlaClient
 
     /// <summary>
     /// Execute a query with automatic auth retry on failure for service connections.
-    /// Port of Python execute_dax_query_direct auth retry logic.
+    /// Auth retry logic for service connections.
     /// </summary>
     public static async Task<string> ExecuteQueryWithRetryAsync(
         string xmlaEndpoint, string datasetName, string query,

@@ -6,7 +6,6 @@ namespace DaxPerformanceTuner.Library.Core;
 
 /// <summary>
 /// Retrieves model metadata via INFO.TABLES / INFO.COLUMNS / INFO.MEASURES / INFO.RELATIONSHIPS.
-/// Port of Python metadata.py.
 /// </summary>
 public class MetadataService
 {
@@ -184,7 +183,6 @@ public class MetadataService
     /// Get metadata limited to tables/columns/measures relevant to the given query.
     /// Uses INFO.CALCDEPENDENCY to find which tables the query touches,
     /// then expands through active relationships (BFS) before filtering.
-    /// Port of Python get_limited_metadata + expand_tables_through_relationships.
     /// </summary>
     public async Task<Dictionary<string, object>> GetLimitedMetadataAsync(
         string targetQuery, string xmlaEndpoint, string datasetName)
@@ -315,7 +313,6 @@ public class MetadataService
     /// BFS expansion through active relationships.
     /// For single-direction (cross_filtering "1" / "Single"): follows from→to.
     /// For bidirectional (cross_filtering "2" / "Both"): follows both directions.
-    /// Port of Python expand_tables_through_relationships.
     /// </summary>
     private static HashSet<string> ExpandTablesThroughRelationships(
         HashSet<string> initialTables, List<Dictionary<string, string?>> relationships)

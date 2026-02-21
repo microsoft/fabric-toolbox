@@ -7,7 +7,6 @@ namespace DaxPerformanceTuner.Library.Core;
 
 /// <summary>
 /// Smart connection routing — connects, discovers, or guides the user.
-/// Port of Python connection.py.
 /// </summary>
 public class ConnectionService
 {
@@ -200,7 +199,7 @@ public class ConnectionService
         // Nothing → list workspaces
         var result = await _powerBIApi.ListWorkspacesAsync();
         if (result.TryGetValue("status", out var s) && s?.ToString() == "error")
-            return JsonSerializer.Serialize(result, _jsonOpts);
+            return JsonHelper.Serialize(result);
 
         var wsList2 = result.TryGetValue("workspaces", out var workspaces) ? workspaces : new List<object>();
         var wsCount2 = wsList2 is System.Collections.ICollection wc ? wc.Count : 0;
@@ -281,7 +280,6 @@ public class ConnectionService
 
     // ---- helpers ----
 
-    private static readonly JsonSerializerOptions _jsonOpts = new() { WriteIndented = true };
-    private static string Json(object obj) => JsonSerializer.Serialize(obj, _jsonOpts);
-    private static string Error(string msg) => Json(new { status = "error", error = msg });
+    private static string Json(object obj) => JsonHelper.Serialize(obj);
+    private static string Error(string msg) => JsonHelper.ErrorJson(msg);
 }

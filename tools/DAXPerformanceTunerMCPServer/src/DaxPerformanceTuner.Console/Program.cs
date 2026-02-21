@@ -133,8 +133,8 @@ builder.Logging.AddConsole(options =>
 builder.Logging.SetMinimumLevel(LogLevel.Information);
 
 // Configure MCP server with stdio transport
-// Use snake_case naming policy so MCP wire parameter names match
-// the Python server (e.g. dataset_name, dax_query, workspace_name).
+// Use snake_case naming policy for MCP wire parameter names
+// (e.g. dataset_name, dax_query, workspace_name).
 var snakeCaseOptions = new JsonSerializerOptions
 {
     PropertyNamingPolicy = JsonNamingPolicy.SnakeCaseLower,

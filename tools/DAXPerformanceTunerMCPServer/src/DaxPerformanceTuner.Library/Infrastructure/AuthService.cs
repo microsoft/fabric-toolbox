@@ -6,7 +6,7 @@ namespace DaxPerformanceTuner.Library.Infrastructure;
 
 /// <summary>
 /// Azure AD authentication via MSAL.NET PublicClientApplication.
-/// Port of Python auth.py — supports interactive browser + silent token refresh.
+/// Supports interactive browser + silent token refresh.
 /// </summary>
 public class AuthService : IAuthService
 {

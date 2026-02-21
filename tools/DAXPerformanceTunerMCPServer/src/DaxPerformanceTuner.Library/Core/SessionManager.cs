@@ -4,7 +4,6 @@ namespace DaxPerformanceTuner.Library.Core;
 
 /// <summary>
 /// Thread-safe in-memory session manager. Tracks one active optimization session at a time.
-/// Port of Python session.py SessionManager.
 /// </summary>
 public class SessionManager
 {
@@ -79,7 +78,6 @@ public class SessionManager
 
     /// <summary>
     /// Track a query execution as either baseline or optimization attempt.
-    /// Port of Python SessionState.track_query_execution + SessionManager.track_dax_query_execution.
     /// </summary>
     public string? TrackQueryExecution(
         string daxQuery, string executionMode,
@@ -166,7 +164,6 @@ public class SessionManager
 
     /// <summary>
     /// Reset query data and establish a new baseline for the current session.
-    /// Port of Python SessionState.establish_new_baseline.
     /// </summary>
     public bool EstablishNewBaseline(string query)
     {
