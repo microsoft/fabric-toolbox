@@ -81,7 +81,7 @@ public class ConnectionService
 
         // Have dataset name only → search all desktop instances
         if (datasetName != null)
-            return SearchAndConnectDesktop(datasetName);
+            return await SearchAndConnectDesktopAsync(datasetName);
 
         // Nothing → discover all desktop instances
         var instances = DesktopDiscovery.DiscoverInstances();
@@ -99,8 +99,10 @@ public class ConnectionService
         });
     }
 
-    private string SearchAndConnectDesktop(string datasetName)
+    private async Task<string> SearchAndConnectDesktopAsync(string datasetName)
     {
+      try
+      {
         var instances = DesktopDiscovery.DiscoverInstances();
         if (instances.Count == 0)
             return Error("No desktop instances found. Please open Power BI Desktop with a model loaded.");
@@ -133,7 +135,7 @@ public class ConnectionService
         if (matches.Count == 1)
         {
             var m = matches[0];
-            return AttemptConnectionAsync(m.Dataset.Name, null, $"localhost:{m.Port}").GetAwaiter().GetResult();
+            return await AttemptConnectionAsync(m.Dataset.Name, null, $"localhost:{m.Port}");
         }
 
         return Json(new
@@ -144,6 +146,11 @@ public class ConnectionService
             searched_for = datasetName,
             message = $"Found {matches.Count} datasets matching '{datasetName}'. Specify desktop_port or exact dataset_name."
         });
+      }
+      catch (Exception ex)
+      {
+          return Error($"Desktop search failed: {ex.Message}");
+      }
     }
 
     // ---- service ----
@@ -164,13 +171,15 @@ public class ConnectionService
             if (datasets.Count == 0 && workspaceName != null)
             {
                 var wsResult = await _powerBIApi.ListWorkspacesAsync();
+                var wsList = wsResult.TryGetValue("workspaces", out var wsObj) ? wsObj : new List<object>();
+                var wsCount = wsList is System.Collections.ICollection c ? c.Count : 0;
                 return Json(new
                 {
                     status = "discovery",
                     action = "workspace_not_found",
                     searched_for = workspaceName,
-                    workspaces = wsResult.TryGetValue("workspaces", out var ws) ? ws : new List<object>(),
-                    message = $"No datasets found in '{workspaceName}'."
+                    workspaces = wsList,
+                    message = $"Workspace '{workspaceName}' not found. Found {wsCount} available workspace(s)."
                 });
             }
 
@@ -180,7 +189,7 @@ public class ConnectionService
                 action = "needs_dataset_name",
                 available_datasets = datasets.Select(d => new { name = d.Name, id = d.Id }),
                 location = workspaceName ?? xmlaEndpoint,
-                message = $"Found {datasets.Count} dataset(s). Specify dataset_name to connect."
+                message = $"Found {datasets.Count} dataset(s) in workspace. Specify dataset_name to connect."
             });
         }
 
@@ -193,12 +202,14 @@ public class ConnectionService
         if (result.TryGetValue("status", out var s) && s?.ToString() == "error")
             return JsonSerializer.Serialize(result, _jsonOpts);
 
+        var wsList2 = result.TryGetValue("workspaces", out var workspaces) ? workspaces : new List<object>();
+        var wsCount2 = wsList2 is System.Collections.ICollection wc ? wc.Count : 0;
         return Json(new
         {
             status = "discovery",
             action = "needs_connection_info",
-            workspaces = result.TryGetValue("workspaces", out var workspaces) ? workspaces : new List<object>(),
-            message = $"Found workspaces. Specify workspace_name + dataset_name to connect."
+            workspaces = wsList2,
+            message = $"Found {wsCount2} workspace(s). Specify workspace_name + dataset_name to connect."
         });
     }
 
@@ -219,19 +230,37 @@ public class ConnectionService
                     return Error("Authentication required – please sign in to Power BI");
             }
 
-            // Test connection
+            // Test connection — parse JSON and verify rows (matches Python)
             var testResult = XmlaClient.ExecuteQuery(endpoint, datasetName, "EVALUATE { 1 }", token);
             if (testResult.StartsWith("Error:"))
-                return Error($"Failed to connect to dataset '{datasetName}' at {endpoint}. {testResult}");
+                return Error($"Failed to connect to dataset '{datasetName}' at {endpoint}");
+
+            try
+            {
+                var testData = JsonSerializer.Deserialize<JsonElement>(testResult);
+                if (!testData.TryGetProperty("rows", out var rows) || rows.GetArrayLength() == 0)
+                    return Error($"Failed to connect to dataset '{datasetName}' at {endpoint}");
+            }
+            catch
+            {
+                return Error($"Failed to connect to dataset '{datasetName}' at {endpoint}");
+            }
 
             // Create session
-            _sessionManager.CreateSession(new ConnectionInfo
+            try
             {
-                XmlaEndpoint = endpoint,
-                DatasetName = datasetName,
-                WorkspaceName = resolved,
-                IsDesktop = isDesktop
-            });
+                _sessionManager.CreateSession(new ConnectionInfo
+                {
+                    XmlaEndpoint = endpoint,
+                    DatasetName = datasetName,
+                    WorkspaceName = resolved,
+                    IsDesktop = isDesktop
+                });
+            }
+            catch (Exception exc)
+            {
+                return Error($"Session initialization failed: {exc.Message}");
+            }
 
             return Json(new
             {
@@ -241,7 +270,7 @@ public class ConnectionService
                 dataset_name = datasetName,
                 xmla_endpoint = endpoint,
                 is_desktop = isDesktop,
-                message = $"Connected to '{datasetName}' at {resolved}"
+                message = $"\u2705 Connected to '{datasetName}' at {resolved}"
             });
         }
         catch (Exception ex)

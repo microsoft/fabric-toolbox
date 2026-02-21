@@ -10,19 +10,19 @@ namespace DaxPerformanceTuner.Library.Tools;
 /// </summary>
 public class ConnectRequest
 {
-    [Description("Name or ID of the dataset to connect to")]
+    [Description("Dataset to connect to (or partial name to search)")]
     public string? DatasetName { get; set; }
 
-    [Description("Power BI Service workspace name (service only)")]
+    [Description("Power BI workspace name (service only)")]
     public string? WorkspaceName { get; set; }
 
     [Description("Full XMLA endpoint URL")]
     public string? XmlaEndpoint { get; set; }
 
-    [Description("Port number of Power BI Desktop instance (desktop only)")]
+    [Description("Desktop instance port (desktop only)")]
     public int? DesktopPort { get; set; }
 
-    [Description("Explicit location: 'desktop' or 'service'. Auto-detects if not provided.")]
+    [Description("Explicit location - 'desktop' or 'service' (optional, auto-detects if not provided)")]
     public string? Location { get; set; }
 }
 

@@ -27,7 +27,7 @@ public class ExecuteQueryTool
         "Execute optimized DAX queries with performance measurement and comparison to baseline. " +
         "CRITICAL WORKFLOW REQUIREMENT: " +
         "BEFORE EVERY QUERY EXECUTION, YOU MUST: " +
-        "1. REVIEW THE prepare_query_for_optimization OUTPUT - To formulate an optimization plan based on deep analysis of the baseline results and research articles. " +
+        "1. REVIEW THE prepared_query_for_optimization OUTPUT - To formulate an optimization plan based on deep analysis of the baseline results and research articles. " +
         "AFTER EVERY QUERY EXECUTION, YOU MUST: " +
         "1. ANALYZE THE COMPLETE RESPONSE - Don't just look at status/performance summary. " +
         "2. EXAMINE THE Performance OBJECT - Look at FE/SE split, SE_Queries count, SE_Par values. " +

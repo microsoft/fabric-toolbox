@@ -57,8 +57,8 @@ public class PrepareQueryTool
         "Only after forming that plan with validated symptoms should you produce an optimized measure version for execution. " +
         "4. model_metadata: summary (table/column/measure counts), relationships (cardinality + direction for filter propagation and join reduction reasoning), columns + measures (only those relevant to query scope, enabling validation of referenced names and potential additive behavior). " +
         "LLM MUST THINK ALOUD (OPTIONAL BUT ENCOURAGED): It may output a reasoning section enumerating baselines metrics, suspected bottlenecks, article references, proposed changes, and risk of semantic drift. " +
-        "INPUT REQUIRED: Raw DAX query with measure references (e.g. EVALUATE SUMMARIZECOLUMNS('Product'[Category], 'Total Sales', [Total Sales])). " +
-        "DO NOT PASS already inlined / modified optimization attempts here - use only original user intent query.")]
+        "INPUT REQUIRED: Raw DAX query with measure references (e.g. EVALUATE SUMMARIZECOLUMNS('Product'[Category], \"Total Sales\", [Total Sales])). " +
+        "DO NOT PASS already inlined / modified optimization attempts here\u2014use only original user intent query.")]
     public async Task<string> Execute(PrepareQueryRequest request)
     {
         return await _executionService.PrepareQueryAsync(request.Query);
