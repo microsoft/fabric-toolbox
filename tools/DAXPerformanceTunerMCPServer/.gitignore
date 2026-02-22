@@ -50,8 +50,8 @@ tmp/
 *.log
 logs/
 
-# Distribution archives
-*.zip
+# Distribution archives (allow DAXPerformanceTunerMCPServer zips for easy download)
+!DAXPerformanceTunerMCPServer_*.zip
 
 # Setup script outputs
 setup.log

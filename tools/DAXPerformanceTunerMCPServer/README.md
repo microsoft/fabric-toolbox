@@ -51,6 +51,8 @@ Before you begin, install:
    - ✅ Restore NuGet packages and build the MCP server from C# source
    - ✅ Generate MCP configuration in `.vscode/mcp.json`
 
+   > **Note:** The only file needed to run the MCP server is the `dax-performance-tuner.exe` produced by the setup scripts. For security reasons, pre-built executables are not stored in the fabric-toolbox repository — instead, `setup.bat` / `setup.ps1` compile the exe from source so you can verify exactly what you're running.
+
 3. **Start the MCP Server in VS Code**
    - Open VS Code in the extracted `DAXPerformanceTunerMCPServer\` folder
    - Open the `.vscode\mcp.json` file
@@ -91,7 +93,7 @@ Before you begin, install:
    - Use double backslashes (`\\`) in the JSON paths
    - Replace `C:\\path\\to\\` with your actual installation directory
 
-2. **Start the Server**
+3. **Start the Server**
    - Save the `claude_desktop_config.json` file
    - The server will start automatically when Claude Desktop launches
 
