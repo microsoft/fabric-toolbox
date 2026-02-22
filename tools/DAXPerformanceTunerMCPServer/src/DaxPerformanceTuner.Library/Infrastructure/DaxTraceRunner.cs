@@ -227,9 +227,8 @@ namespace DaxPerformanceTuner.Library.Infrastructure
                             collectedEvents.Add(traceEvent);
                             
                         }
-                        catch (Exception ex)
+                        catch
                         {
-
                         }
                     };
 
@@ -488,9 +487,8 @@ namespace DaxPerformanceTuner.Library.Infrastructure
                     }
                 }
             }
-            catch (Exception ex)
+            catch
             {
-
                 result = GetFallbackEventColumns();
             }
 
@@ -550,9 +548,8 @@ namespace DaxPerformanceTuner.Library.Infrastructure
 
                     }
                 }
-                catch (Exception ex)
+                catch
                 {
-
                 }
                 
                 await Task.Run(() => {
@@ -572,9 +569,8 @@ namespace DaxPerformanceTuner.Library.Infrastructure
                 });
 
             }
-            catch (Exception ex)
+            catch
             {
-
             }
         }
 
@@ -602,9 +598,8 @@ namespace DaxPerformanceTuner.Library.Infrastructure
                 
 
             }
-            catch (Exception ex)
+            catch
             {
-
             }
             
             return mapping;
@@ -634,9 +629,8 @@ namespace DaxPerformanceTuner.Library.Infrastructure
                 
 
             }
-            catch (Exception ex)
+            catch
             {
-
             }
             
             return mapping;
@@ -657,12 +651,10 @@ namespace DaxPerformanceTuner.Library.Infrastructure
                 }
 
             }
-            catch (Exception ex)
+            catch
             {
-
             }
         }
-
 
     }
 

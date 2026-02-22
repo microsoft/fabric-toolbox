@@ -48,8 +48,7 @@ Before you begin, install:
    
    The setup will:
    - ✅ Validate .NET SDK 8.0+ installation
-   - ✅ Build the MCP server from C# source
-   - ✅ Unblock DLLs from Windows security restrictions
+   - ✅ Restore NuGet packages and build the MCP server from C# source
    - ✅ Generate MCP configuration in `.vscode/mcp.json`
 
 3. **Start the MCP Server in VS Code**
@@ -131,7 +130,7 @@ Before you begin, install:
 ## 📦 What's Included
 
 - **C# MCP Server** (`src/`) - Complete implementation with 4 specialized tools, built from source during setup
-- **ADOMD.NET Libraries** - Microsoft DLLs in `dotnet/` folder for XMLA connectivity
+- **NuGet Dependencies** - ADOMD.NET, MSAL, and other packages restored automatically during build
 - **Automated Setup Scripts** - `setup.bat` and `setup.ps1` handle building and configuration
 
 ---

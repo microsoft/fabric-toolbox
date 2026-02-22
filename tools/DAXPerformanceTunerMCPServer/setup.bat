@@ -18,7 +18,6 @@ echo.
 echo What this script does:
 echo  [CHECK] Validates .NET SDK 8.0+ installation
 echo  [BUILD] Builds and publishes the MCP server from C# source
-echo  [UNBLOCK] Unblocks DLLs from Windows security restrictions
 echo  [CONFIG] Configures VS Code MCP settings
 echo.
 echo Press any key to start, or close this window to cancel...
@@ -68,12 +67,6 @@ if not exist "%EXE_PATH%" (
 )
 
 echo [SUCCESS] MCP server built successfully
-echo.
-
-REM ---------- Unblock DLLs ----------
-echo Unblocking DLLs from Windows security restrictions...
-powershell -ExecutionPolicy Bypass -Command "Get-ChildItem -Path 'dotnet\*.dll' -ErrorAction SilentlyContinue | ForEach-Object { Unblock-File -Path $_.FullName -ErrorAction SilentlyContinue }"
-echo [SUCCESS] DLLs unblocked
 echo.
 
 REM ---------- Configure VS Code MCP ----------

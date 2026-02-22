@@ -103,17 +103,6 @@ if (-not $SkipInstall) {
     Write-Info "Skipping build (handled by setup.bat)"
 }
 
-# ---------- Unblock DLLs ----------
-Write-Step "Unblocking DLLs from Windows security restrictions..."
-try {
-    $dlls = @()
-    $dlls += Get-ChildItem -Path "dotnet\*.dll" -ErrorAction SilentlyContinue
-    foreach ($d in $dlls) { Unblock-File -Path $d.FullName -ErrorAction SilentlyContinue }
-    if ($dlls.Count -gt 0) { Write-Success "Unblocked $($dlls.Count) DLL(s)" } else { Write-Info "No DLLs to unblock" }
-} catch {
-    Write-Warn "Could not unblock some DLLs - consider running as Administrator"
-}
-
 # ---------- Configure VS Code MCP ----------
 Write-Step "Configuring VS Code (.vscode/mcp.json)..."
 $scriptDir = $PSScriptRoot

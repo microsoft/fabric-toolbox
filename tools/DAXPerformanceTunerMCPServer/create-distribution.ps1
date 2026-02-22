@@ -45,7 +45,6 @@ try {
         @{ Path = "ATTRIBUTION.md"; Type = "File" }
         @{ Path = "setup.bat"; Type = "File" }
         @{ Path = "setup.ps1"; Type = "File" }
-        @{ Path = "dotnet"; Type = "Directory" }
         @{ Path = "src"; Type = "Directory" }
     )
     
@@ -133,7 +132,6 @@ try {
         "src\DaxPerformanceTuner.Library\DaxPerformanceTuner.Library.csproj",
         "src\DaxPerformanceTuner.sln",
         "src\LICENSE-MSRL.txt",
-        "dotnet\Microsoft.AnalysisServices.AdomdClient.dll",
         "setup.bat",
         "setup.ps1"
     )
