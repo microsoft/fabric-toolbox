@@ -64,6 +64,8 @@ When running inside a Microsoft Fabric Notebook, the tool can authenticate using
 ```python
 from fabric_assessment_tool.services.assessment_service import AssessmentService
 
+sql_admin_password = notebookutils.credentials.getSecret("akvName", "secret")
+
 service = AssessmentService()
 results = service.assess(
     source="synapse",
@@ -72,8 +74,8 @@ results = service.assess(
     output_path="/lakehouse/default/Files/assessment",
     subscription_id="<your-subscription-id>",
     auth_method="fabric",
-    sql_admin_password="your_password",   # optional: bypasses password prompt
-    create_dmv=True,                      # optional: auto-creates DMV without prompt
+    sql_admin_password=sql_admin_password,   # optional: bypasses password prompt
+    create_dmv=True,                         # optional: auto-creates DMV without prompt
 )
 ```
 
