@@ -624,18 +624,25 @@ This project is licensed under the **MIT License**. See the [LICENSE](../../LICE
 
 ## Changelog
 
-### Upcoming Release
+### Version 1.0.5 - Pipeline Support and Cache Performance
 
-**Unreleased** - New Resource Types and Admin API
+**Latest Release** - Full Pipeline Support and Smarter Caching
+- ✅ Full pipeline support for all 46 `Remove-*` functions — pipe `Get-Fabric*` output directly to `Remove-Fabric*`
+- ✅ Fixed `[Alias('id')]` bindings so `Get-FabricWorkspace | Remove-FabricWorkspace` and similar patterns work correctly
+- ✅ Eliminated repeated API calls for unresolvable IDs — fallback results are now cached, not re-fetched
+- ✅ Cross-cache population: resolving a workspace name also caches its capacity ID (and vice versa), halving API calls
+- ✅ Changed "not found" resolve messages from Warning to Verbose — quieter output in mixed-capacity environments
+
+### Version 1.0.4 - New Resource Types and Admin API
+
+**Previous Release** - New Resource Types and Admin API
 - ✅ 295+ cmdlets (51 new functions added)
 - ✅ 6 new resource types: Graph Model, Snowflake Database, Cosmos DB Database, Dataflow, SQL Database, Admin
 - ✅ Admin API for tenant-wide visibility into workspaces, items, and user access
 - ✅ Full pipeline support with `ValueFromPipelineByPropertyName`
 - ✅ Intelligent output formatting with PSTypeName decoration
 
-### Previous Release
-
-**Version 1.0.0** - Major Modernization Release
+### Version 1.0.0 - Major Modernization Release
 - ✅ 244+ cmdlets covering all major Fabric resource types
 - ✅ Centralized helper functions (1,000+ lines of duplicate code eliminated)
 - ✅ Enhanced retry logic with exponential backoff

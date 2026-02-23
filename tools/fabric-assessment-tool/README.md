@@ -1,8 +1,14 @@
 <p align="center">
 	<h1 align="center">
-		<img src="./res/logo.png" alt="Logo" width="200">
+		<img src="./media/logo.png" alt="Logo" width="200">
 	</h1>
 	<p align="center">Migration Assessment Tool for Fabric DE/DW<br>Fabric Assessment Tool is a command-line tool for connecting, extracting, and exporting data from various cloud data platforms to help with migration planning and assessment</p>
+</p>
+
+<p align="center">
+  <br>
+  <img src="./media/preview.gif" alt="Preview of the tool" width="600">
+  <br>
 </p>
 
 ## Why?

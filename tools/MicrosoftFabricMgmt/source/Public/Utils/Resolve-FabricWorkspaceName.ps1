@@ -69,18 +69,33 @@ function Resolve-FabricWorkspaceName {
                 if (-not $DisableCache) {
                     Set-PSFConfig -FullName "MicrosoftFabricMgmt.Cache.$cacheKey" -Value $name
                     Write-PSFMessage -Level Debug -Message "Cached workspace name '$name' for ID '$WorkspaceId'"
+
+                    # Cross-populate capacity ID cache to avoid a redundant API call from Resolve-FabricCapacityIdFromWorkspace
+                    if ($workspace.capacityId) {
+                        $capacityIdCacheKey = "WorkspaceCapacityId_$WorkspaceId"
+                        Set-PSFConfig -FullName "MicrosoftFabricMgmt.Cache.$capacityIdCacheKey" -Value $workspace.capacityId
+                        Write-PSFMessage -Level Debug -Message "Cached capacity ID '$($workspace.capacityId)' for workspace ID '$WorkspaceId' (cross-populated)"
+                    }
                 }
 
                 return $name
             }
 
-            # Workspace not found, return ID as fallback
-            Write-PSFMessage -Level Warning -Message "Workspace with ID '$WorkspaceId' not found. Returning ID as fallback."
+            # Workspace not found, cache fallback to prevent repeated API calls
+            Write-PSFMessage -Level Verbose -Message "Workspace with ID '$WorkspaceId' not found. Returning ID as fallback."
+            if (-not $DisableCache) {
+                Set-PSFConfig -FullName "MicrosoftFabricMgmt.Cache.$cacheKey" -Value $WorkspaceId
+                Write-PSFMessage -Level Debug -Message "Cached fallback for workspace ID '$WorkspaceId' (not found)"
+            }
             return $WorkspaceId
         }
         catch {
             # Error occurred, log and return ID as fallback
-            Write-PSFMessage -Level Warning -Message "Failed to resolve workspace ID '$WorkspaceId': $($_.Exception.Message)" -ErrorRecord $_
+            Write-PSFMessage -Level Verbose -Message "Failed to resolve workspace ID '$WorkspaceId': $($_.Exception.Message)"
+            if (-not $DisableCache) {
+                Set-PSFConfig -FullName "MicrosoftFabricMgmt.Cache.$cacheKey" -Value $WorkspaceId
+                Write-PSFMessage -Level Debug -Message "Cached fallback for workspace ID '$WorkspaceId' (error)"
+            }
             return $WorkspaceId
         }
     }
