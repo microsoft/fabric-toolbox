@@ -21,6 +21,8 @@ public class SessionState
 /// </summary>
 public class QueryData
 {
+    /// <summary>The very first raw query the user submitted, before any measure/function inlining. Survives re-baselines.</summary>
+    public string? UserInputQuery { get; set; }
     public string? OriginalQuery { get; set; }
     public string? EnhancedQuery { get; set; }
     public bool BaselineEstablished { get; set; }

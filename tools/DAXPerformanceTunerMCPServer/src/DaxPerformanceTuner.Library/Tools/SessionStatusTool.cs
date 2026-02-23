@@ -48,6 +48,7 @@ public class SessionStatusTool
             {
                 ["summary"] = new Dictionary<string, object?>
                 {
+                    ["user_input_query"] = qd.UserInputQuery,
                     ["original_query"] = qd.OriginalQuery,
                     ["baseline_established"] = qd.BaselineEstablished,
                     ["best_optimization_query_id"] = qd.BestOptimizationQueryId,

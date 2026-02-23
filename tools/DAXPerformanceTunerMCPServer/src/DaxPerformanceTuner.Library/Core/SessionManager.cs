@@ -166,12 +166,14 @@ public class SessionManager
         {
             if (_currentSession == null) return false;
 
-            // Carry forward the original baseline performance so cumulative improvement survives re-baselines.
+            // Carry forward the original baseline performance and user input query so cumulative improvement survives re-baselines.
             var originalPerf = _currentSession.QueryData?.OriginalBaselinePerformance
                 ?? _currentSession.QueryData?.BaselinePerformance;
+            var userInputQuery = _currentSession.QueryData?.UserInputQuery;
 
             _currentSession.QueryData = new QueryData
             {
+                UserInputQuery = userInputQuery,
                 OriginalQuery = query,
                 OriginalBaselinePerformance = originalPerf
             };

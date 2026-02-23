@@ -178,6 +178,13 @@ public class ExecutionService
             // Establish new baseline in session (resets query data)
             _sessionManager.EstablishNewBaseline(query);
 
+            // Capture the very first raw user query (before inlining) — survives re-baselines
+            _sessionManager.UpdateQueryData(qd =>
+            {
+                if (string.IsNullOrEmpty(qd.UserInputQuery))
+                    qd.UserInputQuery = query;
+            });
+
             // STEP 1: Inline measures
             var (enhancedQuery, functionsAdded, measuresAdded) = await InlineMeasuresAsync(
                 query, endpoint!, dataset!, token);
