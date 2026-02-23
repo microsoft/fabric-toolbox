@@ -35,13 +35,27 @@ public static class DesktopDiscovery
 
                     // Extract -s parameter (data directory) where msmdsrv.port.txt lives
                     var match = Regex.Match(cmdLine, @"-s\s+""?([^""]+)""?");
-                    if (!match.Success) continue;
+                    if (!match.Success)
+                    {
+                        Console.Error.WriteLine($"[DesktopDiscovery] No -s param in cmdLine for PID {pid}: {cmdLine}");
+                        continue;
+                    }
 
                     var dataDir = match.Groups[1].Value.TrimEnd('\\');
                     var portFile = Path.Combine(dataDir, "msmdsrv.port.txt");
 
-                    if (!File.Exists(portFile)) continue;
-                    if (!int.TryParse(File.ReadAllText(portFile).Trim(), out var port)) continue;
+                    if (!File.Exists(portFile))
+                    {
+                        Console.Error.WriteLine($"[DesktopDiscovery] Port file not found: {portFile}");
+                        continue;
+                    }
+                    // Port file is written by msmdsrv.exe as UTF-16 LE (no BOM) — strip null bytes
+                    var portText = File.ReadAllText(portFile, System.Text.Encoding.Unicode).Trim();
+                    if (!int.TryParse(portText, out var port))
+                    {
+                        Console.Error.WriteLine($"[DesktopDiscovery] Could not parse port from: {portFile} (content: '{portText}')");
+                        continue;
+                    }
 
                     // Get parent process info (PBIDesktop.exe window title)
                     string? windowTitle = null;
@@ -61,18 +75,18 @@ public static class DesktopDiscovery
                                 if (string.IsNullOrEmpty(windowTitle))
                                     windowTitle = $"{parentName} (PID: {parentPid})";
                             }
-                            catch { }
+                            catch (Exception ex) { Console.Error.WriteLine($"[DesktopDiscovery] Parent process lookup failed for PID {parentPid}: {ex.Message}"); }
                         }
                     }
-                    catch { }
+                    catch (Exception ex) { Console.Error.WriteLine($"[DesktopDiscovery] Parent WMI query failed: {ex.Message}"); }
 
                     var datasets = ListDatabases($"localhost:{port}");
                     instances.Add(new DesktopInstance(port, windowTitle, parentName, datasets));
                 }
-                catch { continue; }
+                catch (Exception ex) { Console.Error.WriteLine($"[DesktopDiscovery] Error processing instance: {ex.Message}"); continue; }
             }
         }
-        catch { }
+        catch (Exception ex) { Console.Error.WriteLine($"[DesktopDiscovery] WMI query failed: {ex.Message}"); }
 
         instances.Sort((a, b) => a.Port.CompareTo(b.Port));
         return instances;
