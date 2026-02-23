@@ -1,5 +1,3 @@
-using System.Text.RegularExpressions;
-
 namespace DaxPerformanceTuner.Library.Data;
 
 /// <summary>

@@ -1,4 +1,3 @@
-using System.Collections.Generic;
 using System.Text.Json;
 using System.Text.RegularExpressions;
 using DaxPerformanceTuner.Library.Contracts;
@@ -95,14 +94,12 @@ public class ExecutionService
                     // Track best optimization
                     _sessionManager.UpdateQueryData(qd =>
                     {
-                        qd.OptimizationAttempts++;
                         if (improvement > qd.BestImprovementPercent)
                         {
                             qd.BestImprovementPercent = improvement;
                             qd.BestMeetsThreshold = improvement >= _config.PerformanceThresholds.ImprovementThresholdPercent;
                             qd.BestIsEquivalent = semanticEquiv != null &&
                                 semanticEquiv.TryGetValue("is_equivalent", out var eq) && eq is true;
-                            qd.BestOptimizationQuery = daxQuery;
                         }
                     });
                 }
@@ -216,7 +213,6 @@ public class ExecutionService
                 ["prepared_query"] = new Dictionary<string, object>
                 {
                     ["enhanced_query"] = enhancedQuery,
-                    ["original_query"] = query,
                     ["functions_added"] = functionsAdded,
                     ["measures_added"] = measuresAdded
                 },
@@ -275,8 +271,9 @@ public class ExecutionService
 
             return root;
         }
-        catch
+        catch (Exception ex)
         {
+            Console.Error.WriteLine($"[ExecutionService] RunTraceAsync failed: {ex.Message}");
             return null;
         }
     }

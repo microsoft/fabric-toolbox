@@ -1,5 +1,4 @@
 using System.Data;
-using System.Net;
 using DaxPerformanceTuner.Library.Contracts;
 using DaxPerformanceTuner.Library.Core;
 using Microsoft.AnalysisServices.AdomdClient;

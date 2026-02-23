@@ -110,7 +110,10 @@ public static class DesktopDiscovery
             }
             server.Disconnect();
         }
-        catch { }
+        catch (Exception ex)
+        {
+            Console.Error.WriteLine($"[DesktopDiscovery] ListDatabases failed: {ex.Message}");
+        }
         return databases;
     }
 }

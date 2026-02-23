@@ -55,11 +55,6 @@ public class SessionManager
     }
 
     /// <summary>
-    /// Check if there is an active session with a valid connection.
-    /// </summary>
-    public bool HasActiveSession => _currentSession?.ConnectionInfo != null;
-
-    /// <summary>
     /// Validate that a session exists and has a connection. Returns (isValid, session, errorMessage).
     /// </summary>
     public (bool IsValid, SessionState? Session, string? Error) ValidateSession()

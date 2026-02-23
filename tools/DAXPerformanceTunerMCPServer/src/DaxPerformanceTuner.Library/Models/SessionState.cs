@@ -1,5 +1,4 @@
 using System.Text.Json;
-using System.Text.Json.Serialization;
 
 namespace DaxPerformanceTuner.Library.Models;
 
@@ -39,8 +38,6 @@ public class QueryData
     public double BestImprovementPercent { get; set; }
     public bool BestMeetsThreshold { get; set; }
     public bool BestIsEquivalent { get; set; }
-    public int OptimizationAttempts { get; set; }
-    public string? BestOptimizationQuery { get; set; }
     public string? BestOptimizationQueryId { get; set; }
 
     /// <summary>Per-attempt history: baseline record. Port of Python query_data["baseline"].</summary>
