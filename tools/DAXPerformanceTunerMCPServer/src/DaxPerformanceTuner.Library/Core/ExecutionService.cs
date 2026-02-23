@@ -311,8 +311,14 @@ public class ExecutionService
     {
         // Parse DEFINE block
         var (defineBlock, mainQuery) = ParseDefineBlock(originalQuery);
-        var existingMeasures = FindExistingMeasures(defineBlock);
-        var existingFunctions = FindExistingFunctions(defineBlock);
+
+        // Scan the FULL original query for existing definitions, not just the parsed
+        // define block. ParseDefineBlock uses lazy matching to find the first EVALUATE,
+        // which can truncate the define block if a function body contains EVALUATE.
+        // Scanning the full query is safe because FUNCTION/MEASURE keywords only appear
+        // in DEFINE blocks, never in EVALUATE clauses.
+        var existingMeasures = FindExistingMeasures(originalQuery);
+        var existingFunctions = FindExistingFunctions(originalQuery);
 
         // Get model measures
         List<Dictionary<string, string?>> measuresData;

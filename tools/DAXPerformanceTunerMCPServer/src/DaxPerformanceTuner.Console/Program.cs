@@ -21,10 +21,11 @@ This is an MCP tool that enables a workflow-driven, research-driven, and testing
 **2-STAGE OPTIMIZATION WORKFLOW:**
 
 **STAGE 1 - CONNECTION ESTABLISHMENT:**
-**CALL THIS TOOL FIRST TO ESTABLISH CONNECTION**
+**CALL THIS TOOL FIRST TO ESTABLISH CONNECTION (also resets any previous optimization session)**
 - Use connect_to_dataset with workspace_name + dataset_name or xmla_endpoint + dataset_name
 - Verify successful connection to Power BI dataset
 - Only proceed once connection is confirmed
+- NOTE: Calling connect_to_dataset always starts a fresh session, even when reconnecting to the same dataset
 
 **STAGE 2 - COMPREHENSIVE BASELINE & OPTIMIZATION:**
 - **SINGLE COMPREHENSIVE STEP: Call prepare_query_for_optimization** with the original user query
