@@ -35,53 +35,56 @@ function Remove-FabricDomainWorkspace {
     [CmdletBinding(SupportsShouldProcess = $true, ConfirmImpact = 'Medium')]
     [Alias('Unassign-FabricDomainWorkspace')]
     param (
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $true, ValueFromPipeline = $true, ValueFromPipelineByPropertyName = $true)]
         [ValidateNotNullOrEmpty()]
+        [Alias('id')]
         [string]$DomainId,
 
-        [Parameter(Mandatory = $false)]
+        [Parameter(Mandatory = $false, ValueFromPipelineByPropertyName = $true)]
         [ValidateNotNullOrEmpty()]
         [array]$WorkspaceIds
     )
 
-    try {
-        # Validate authentication token before proceeding
-        Invoke-FabricAuthCheck -ThrowOnFailure
+    process {
+        try {
+            # Validate authentication token before proceeding
+            Invoke-FabricAuthCheck -ThrowOnFailure
 
-        # Construct the API endpoint URI based on the presence of WorkspaceIds
-        # Construct the request body
-        if ($WorkspaceIds -and $WorkspaceIds.Count -gt 0) {
-            $endpointSuffix = "unassignWorkspaces"
-            $body = @{
-                workspacesIds = $WorkspaceIds
+            # Construct the API endpoint URI based on the presence of WorkspaceIds
+            # Construct the request body
+            if ($WorkspaceIds -and $WorkspaceIds.Count -gt 0) {
+                $endpointSuffix = "unassignWorkspaces"
+                $body = @{
+                    workspacesIds = $WorkspaceIds
+                }
+                $bodyJson = Convert-FabricRequestBody -InputObject $body
             }
-            $bodyJson = Convert-FabricRequestBody -InputObject $body
-        }
-        else {
-            $endpointSuffix = "unassignAllWorkspaces"
-            $bodyJson = $null
-        }
-        $apiEndpointURI = New-FabricAPIUri -Segments @('admin', 'domains', $DomainId, $endpointSuffix)
-        Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
-        Write-FabricLog -Message "Request Body: $bodyJson" -Level Debug
-
-        # Make the API request (guarded by ShouldProcess)
-        if ($PSCmdlet.ShouldProcess($DomainId, 'Unassign workspaces from domain')) {
-            $apiParams = @{
-                BaseURI = $apiEndpointURI
-                Headers = $script:FabricAuthContext.FabricHeaders
-                Method  = 'Post'
-                Body    = $bodyJson
+            else {
+                $endpointSuffix = "unassignAllWorkspaces"
+                $bodyJson = $null
             }
-            $response = Invoke-FabricAPIRequest @apiParams
+            $apiEndpointURI = New-FabricAPIUri -Segments @('admin', 'domains', $DomainId, $endpointSuffix)
+            Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
+            Write-FabricLog -Message "Request Body: $bodyJson" -Level Debug
 
-            Write-FabricLog -Message "Successfully unassigned workspaces to the domain with ID '$DomainId'." -Level Host
-            $response
+            # Make the API request (guarded by ShouldProcess)
+            if ($PSCmdlet.ShouldProcess($DomainId, 'Unassign workspaces from domain')) {
+                $apiParams = @{
+                    BaseURI = $apiEndpointURI
+                    Headers = $script:FabricAuthContext.FabricHeaders
+                    Method  = 'Post'
+                    Body    = $bodyJson
+                }
+                $response = Invoke-FabricAPIRequest @apiParams
+
+                Write-FabricLog -Message "Successfully unassigned workspaces to the domain with ID '$DomainId'." -Level Host
+                $response
+            }
         }
-    }
-    catch {
-        # Capture and log error details
-        $errorDetails = $_.Exception.Message
-        Write-FabricLog -Message "Failed to unassign workspaces to the domain with ID '$DomainId'. Error: $errorDetails" -Level Error
+        catch {
+            # Capture and log error details
+            $errorDetails = $_.Exception.Message
+            Write-FabricLog -Message "Failed to unassign workspaces to the domain with ID '$DomainId'. Error: $errorDetails" -Level Error
+        }
     }
 }

@@ -28,51 +28,54 @@ Author: Tiago Balabuch
 function Remove-FabricSharingLinks {
     [CmdletBinding(SupportsShouldProcess=$true, ConfirmImpact='High')]
     param (
-        [Parameter(Mandatory = $false)]
+        [Parameter(Mandatory = $false, ValueFromPipelineByPropertyName = $true)]
         [ValidateNotNullOrEmpty()]
         [ValidateSet('OrgLink')]
         $sharingLinkType = 'OrgLink'
     )
-    try {
-        # Validate Items structure
-        foreach ($item in $Items) {
-            if (-not ($item.id -and $item.type)) {
-                throw "Each Item must contain 'id' and 'type' properties. Found: $item"
+
+    process {
+        try {
+            # Validate Items structure
+            foreach ($item in $Items) {
+                if (-not ($item.id -and $item.type)) {
+                    throw "Each Item must contain 'id' and 'type' properties. Found: $item"
+                }
+            }
+
+            Invoke-FabricAuthCheck -ThrowOnFailure
+
+
+            # Construct the API endpoint URI
+            $apiEndpointURI = "{0}/admin/items/removeAllSharingLinks" -f $script:FabricAuthContext.BaseUrl, $WorkspaceId
+            Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
+
+            # Construct the request body
+            $body = @{
+                sharingLinkType = $sharingLinkType
+            }
+
+            # Convert the body to JSON
+            $bodyJson = $body | ConvertTo-Json -Depth 2
+            Write-FabricLog -Message "Request Body: $bodyJson" -Level Debug
+
+            # Make the API request
+            if ($PSCmdlet.ShouldProcess("all items with sharing link type '$sharingLinkType'", "Remove all sharing links")) {
+                $response = Invoke-FabricAPIRequest `
+                    -BaseURI $apiEndpointURI `
+                    -Headers $script:FabricAuthContext.FabricHeaders `
+                    -Method Post `
+                    -Body $bodyJson
+
+                # Return the API response
+                Write-FabricLog -Message "All sharing links have been removed successfully from the specified items." -Level Host
+                return $response
             }
         }
-
-        Invoke-FabricAuthCheck -ThrowOnFailure
-
-
-        # Construct the API endpoint URI
-        $apiEndpointURI = "{0}/admin/items/removeAllSharingLinks" -f $script:FabricAuthContext.BaseUrl, $WorkspaceId
-        Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
-
-        # Construct the request body
-        $body = @{
-            sharingLinkType = $sharingLinkType
+        catch {
+            # Capture and log error details
+            $errorDetails = $_.Exception.Message
+            Write-FabricLog -Message "Failed to remove all sharing links. Error details: $errorDetails" -Level Error
         }
-
-        # Convert the body to JSON
-        $bodyJson = $body | ConvertTo-Json -Depth 2
-        Write-FabricLog -Message "Request Body: $bodyJson" -Level Debug
-
-        # Make the API request
-        if ($PSCmdlet.ShouldProcess("all items with sharing link type '$sharingLinkType'", "Remove all sharing links")) {
-            $response = Invoke-FabricAPIRequest `
-                -BaseURI $apiEndpointURI `
-                -Headers $script:FabricAuthContext.FabricHeaders `
-                -Method Post `
-                -Body $bodyJson
-
-            # Return the API response
-            Write-FabricLog -Message "All sharing links have been removed successfully from the specified items." -Level Host
-            return $response
-        }
-    }
-    catch {
-        # Capture and log error details
-        $errorDetails = $_.Exception.Message
-        Write-FabricLog -Message "Failed to remove all sharing links. Error details: $errorDetails" -Level Error
     }
 }
