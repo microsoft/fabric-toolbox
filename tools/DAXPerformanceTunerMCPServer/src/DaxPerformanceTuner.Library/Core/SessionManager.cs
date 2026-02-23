@@ -171,7 +171,15 @@ public class SessionManager
         {
             if (_currentSession == null) return false;
 
-            _currentSession.QueryData = new QueryData { OriginalQuery = query };
+            // Carry forward the original baseline performance so cumulative improvement survives re-baselines.
+            var originalPerf = _currentSession.QueryData?.OriginalBaselinePerformance
+                ?? _currentSession.QueryData?.BaselinePerformance;
+
+            _currentSession.QueryData = new QueryData
+            {
+                OriginalQuery = query,
+                OriginalBaselinePerformance = originalPerf
+            };
             _currentSession.LastUpdated = DateTime.UtcNow;
             return true;
         }

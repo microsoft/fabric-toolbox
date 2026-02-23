@@ -32,6 +32,9 @@ public class QueryData
     /// <summary>Baseline performance metrics extracted for quick access.</summary>
     public PerformanceSnapshot? BaselinePerformance { get; set; }
 
+    /// <summary>Performance snapshot from the very first baseline. Survives re-baselines so cumulative improvement can be tracked.</summary>
+    public PerformanceSnapshot? OriginalBaselinePerformance { get; set; }
+
     /// <summary>Best optimization so far.</summary>
     public double BestImprovementPercent { get; set; }
     public bool BestMeetsThreshold { get; set; }

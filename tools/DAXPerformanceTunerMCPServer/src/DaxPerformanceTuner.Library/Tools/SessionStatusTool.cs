@@ -69,6 +69,14 @@ public class SessionStatusTool
                     fe_ms = qd.BaselinePerformance.FormulaEngineMs,
                     se_ms = qd.BaselinePerformance.StorageEngineMs,
                     se_queries = qd.BaselinePerformance.StorageEngineQueries
+                },
+                ["original_baseline_performance"] = qd.OriginalBaselinePerformance == null
+                    || qd.OriginalBaselinePerformance == qd.BaselinePerformance ? null : new
+                {
+                    total_ms = qd.OriginalBaselinePerformance.TotalMs,
+                    fe_ms = qd.OriginalBaselinePerformance.FormulaEngineMs,
+                    se_ms = qd.OriginalBaselinePerformance.StorageEngineMs,
+                    se_queries = qd.OriginalBaselinePerformance.StorageEngineQueries
                 }
             }
         };

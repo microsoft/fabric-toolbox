@@ -74,6 +74,15 @@ public class ExecutionService
                         ["meets_threshold"] = improvement >= _config.PerformanceThresholds.ImprovementThresholdPercent
                     };
 
+                    // Include cumulative improvement vs original baseline when re-baselined
+                    var originalPerf = session.QueryData.OriginalBaselinePerformance;
+                    if (originalPerf != null && originalPerf != baselinePerf)
+                    {
+                        var cumulativeImprovement = AnalysisHelper.CalculateImprovement(originalPerf.TotalMs, currentTotal);
+                        perfAnalysis["original_baseline_total_ms"] = originalPerf.TotalMs;
+                        perfAnalysis["cumulative_improvement_percent"] = cumulativeImprovement;
+                    }
+
                     // Semantic equivalence
                     if (session.QueryData.BaselineRawResult != null && results.ValueKind != JsonValueKind.Undefined)
                     {
@@ -107,7 +116,11 @@ public class ExecutionService
                     qd.BaselineEstablished = true;
                     qd.BaselineRawResult = JsonDocument.Parse(fastest.GetRawText());
                     if (performance.ValueKind != JsonValueKind.Undefined)
+                    {
                         qd.BaselinePerformance = PerformanceSnapshot.FromJson(performance);
+                        // Seed original baseline on the very first run (not already set by EstablishNewBaseline carry-forward)
+                        qd.OriginalBaselinePerformance ??= qd.BaselinePerformance;
+                    }
                 });
             }
 
