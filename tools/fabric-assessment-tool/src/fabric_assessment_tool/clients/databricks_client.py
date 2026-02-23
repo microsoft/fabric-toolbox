@@ -65,7 +65,7 @@ class DatabricksClient:
         self.token_provider = token_provider or create_token_provider(auth_method)
         self.custom_subscription_id = subscription_id
         self.authenticate()
-        self.workspaces = self.get_workspaces()
+        self._workspace_cache: dict[str, DatabricksWorkspaceInfo] = {}
 
     def authenticate(self) -> None:
         """Authenticate with Azure using the configured token provider."""
@@ -90,9 +90,10 @@ class DatabricksClient:
             raise Exception(f"Failed to authenticate with Azure: {e}")
 
     def get_workspaces(self) -> list[DatabricksWorkspaceInfo]:
-        """Get all Databricks workspaces in the subscription."""
-        # For demo purposes, return mock data as dataclass
+        """Get all Databricks workspaces in the subscription.
 
+        Used for interactive workspace selection when no workspace names are provided.
+        """
         args = Namespace()
         # https://learn.microsoft.com/en-us/rest/api/databricks/workspaces/list-by-subscription?view=rest-databricks-2024-05-01&tabs=HTTP
         args.uri = f"/subscriptions/{self.subscription_id}/providers/Microsoft.Databricks/workspaces"
@@ -112,6 +113,10 @@ class DatabricksClient:
             )
             for workspace in json_req.get("value", [])
         ]
+
+        # Populate cache
+        for ws in workspaces:
+            self._workspace_cache[ws.name.lower()] = ws
 
         return workspaces
 
@@ -216,20 +221,22 @@ class DatabricksClient:
             raise Exception(f"Failed to assess workspace {workspace_name}: {e}")
 
     def _get_workspace_info(self, workspace_name: str) -> DatabricksWorkspaceInfo:
-        """Get Databricks workspace information."""
-        ws = next(
-            (
-                workspace
-                for workspace in self.workspaces
-                if workspace.name.lower() == workspace_name.lower()
-            ),
-            None,
-        )
+        """Get Databricks workspace information.
 
-        if not ws:
-            raise ValueError(f"Workspace not found: {workspace_name}")
+        Returns cached info if available, otherwise fetches all workspaces
+        from the management API and looks up the requested one.
+        """
+        cache_key = workspace_name.lower()
+        if cache_key in self._workspace_cache:
+            return self._workspace_cache[cache_key]
 
-        return ws
+        # Fetch all workspaces and populate cache
+        self.get_workspaces()
+
+        if cache_key in self._workspace_cache:
+            return self._workspace_cache[cache_key]
+
+        raise ValueError(f"Workspace not found: {workspace_name}")
 
     def _get_clusters(self) -> DatabricksClusters:
         try:

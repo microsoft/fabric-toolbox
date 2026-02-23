@@ -27,6 +27,8 @@ class AssessmentService:
         output_format: str = "json",
         subscription_id: Optional[str] = None,
         auth_method: Optional[str] = None,
+        sql_admin_password: Optional[str] = None,
+        create_dmv: bool = False,
     ) -> Dict[str, Any]:
         """
         Perform assessment on specified workspaces.
@@ -39,6 +41,8 @@ class AssessmentService:
             output_format: Export format (json, csv, parquet)
             subscription_id: Azure subscription ID (optional, will use Azure CLI default if not provided)
             auth_method: Authentication method ("azure-cli", "fabric", or None for auto-detect)
+            sql_admin_password: SQL admin password for dedicated SQL pools (bypasses interactive prompt)
+            create_dmv: Auto-create vTableSizes DMV without confirmation prompt
 
         Returns:
             Assessment results dictionary
@@ -51,6 +55,10 @@ class AssessmentService:
             client_kwargs["subscription_id"] = subscription_id
         if auth_method:
             client_kwargs["auth_method"] = auth_method
+        if sql_admin_password is not None:
+            client_kwargs["sql_admin_password"] = sql_admin_password
+        if create_dmv:
+            client_kwargs["create_dmv"] = create_dmv
         client = self._get_client(source=source, **client_kwargs)
 
         # Perform assessment

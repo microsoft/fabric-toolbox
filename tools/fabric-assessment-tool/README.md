@@ -48,10 +48,36 @@ When running inside a Microsoft Fabric Notebook, the tool can authenticate using
 
 > **Note:** When using Fabric authentication, `--subscription-id` is required since there is no equivalent to `az account show` in the Fabric Notebook environment.
 
-```python
-# Example usage in a Fabric Notebook cell
-!fat assess --source synapse --auth-method fabric --subscription-id <your-subscription-id> --ws workspace1 -o /lakehouse/default/Files/assessment
+#### CLI usage from a notebook cell
+
+```bash
+!fat assess --source synapse --auth-method fabric \
+    --subscription-id <your-subscription-id> \
+    --ws workspace1 \
+    -o /lakehouse/default/Files/assessment \
+    --sql-admin-password "your_password" \
+    --create-dmv
 ```
+
+#### Python API usage from a notebook cell
+
+```python
+from fabric_assessment_tool.services.assessment_service import AssessmentService
+
+service = AssessmentService()
+results = service.assess(
+    source="synapse",
+    mode="full",
+    workspaces=["my-synapse-workspace"],
+    output_path="/lakehouse/default/Files/assessment",
+    subscription_id="<your-subscription-id>",
+    auth_method="fabric",
+    sql_admin_password="your_password",   # optional: bypasses password prompt
+    create_dmv=True,                      # optional: auto-creates DMV without prompt
+)
+```
+
+> **Tip:** The `--sql-admin-password` and `--create-dmv` parameters are optional. If you don't need dedicated SQL pool table statistics, you can omit them entirely.
 
 
 
@@ -79,6 +105,8 @@ fat assess --source <synapse|databricks> \
   - *If not provided, it will prompt the list of reachable workspaces to select*
 - `--subscription-id`: Azure subscription ID (if not provided, will use default credentials). **Required** when using `--auth-method fabric`
 - `--auth-method`: Authentication method (`azure-cli` or `fabric`). Default: auto-detect based on environment
+- `--sql-admin-password`: SQL admin password for dedicated SQL pools (bypasses interactive prompt)
+- `--create-dmv`: Auto-create vTableSizes DMV without confirmation prompt (for non-interactive execution)
 
 **Examples:**
 ```bash
