@@ -22,34 +22,37 @@ Author: Tiago Balabuch
 function Remove-FabricWorkspace {
     [CmdletBinding(SupportsShouldProcess=$true, ConfirmImpact = 'High')]
     param (
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $true, ValueFromPipeline = $true, ValueFromPipelineByPropertyName = $true)]
         [ValidateNotNullOrEmpty()]
+        [Alias('id')]
         [string]$WorkspaceId
     )
 
-    try {
-        # Validate authentication
-        Invoke-FabricAuthCheck -ThrowOnFailure
+    process {
+        try {
+            # Validate authentication
+            Invoke-FabricAuthCheck -ThrowOnFailure
 
-        # Construct the API endpoint URI
-        $apiEndpointURI = New-FabricAPIUri -Resource 'workspaces' -WorkspaceId $WorkspaceId
+            # Construct the API endpoint URI
+            $apiEndpointURI = New-FabricAPIUri -Resource 'workspaces' -WorkspaceId $WorkspaceId
 
-        # Make the API request
-        $apiParams = @{
-            Headers = $script:FabricAuthContext.FabricHeaders
-            BaseURI = $apiEndpointURI
-            Method = 'Delete'
+            # Make the API request
+            $apiParams = @{
+                Headers = $script:FabricAuthContext.FabricHeaders
+                BaseURI = $apiEndpointURI
+                Method = 'Delete'
+            }
+
+            if ($PSCmdlet.ShouldProcess("Workspace '$WorkspaceId'", 'Delete')) {
+                $response = Invoke-FabricAPIRequest @apiParams
+                Write-FabricLog -Message "Workspace '$WorkspaceId' deleted successfully!" -Level Host
+                $response
+            }
         }
-
-        if ($PSCmdlet.ShouldProcess("Workspace '$WorkspaceId'", 'Delete')) {
-            $response = Invoke-FabricAPIRequest @apiParams
-            Write-FabricLog -Message "Workspace '$WorkspaceId' deleted successfully!" -Level Host
-            $response
+        catch {
+            # Capture and log error details
+            $errorDetails = $_.Exception.Message
+            Write-FabricLog -Message "Failed to delete workspace. Error: $errorDetails" -Level Error
         }
-    }
-    catch {
-        # Capture and log error details
-        $errorDetails = $_.Exception.Message
-        Write-FabricLog -Message "Failed to delete workspace. Error: $errorDetails" -Level Error
     }
 }

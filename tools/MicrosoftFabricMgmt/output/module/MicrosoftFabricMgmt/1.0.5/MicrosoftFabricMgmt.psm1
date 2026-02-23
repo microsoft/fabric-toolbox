@@ -772,7 +772,7 @@ function Select-FabricResource {
         $resultItems = $InputObject | Where-Object { $_.id -eq $Id }
 
         if (-not $resultItems) {
-            Write-FabricLog -Message "$ResourceType with ID '$Id' not found" -Level Warning
+            Write-FabricLog -Message "$ResourceType with ID '$Id' not found" -Level Verbose
             return $resultItems
         }
         Write-FabricLog -Message "Found $ResourceType with ID: $Id" -Level Debug
@@ -783,7 +783,7 @@ function Select-FabricResource {
         $resultItems = $InputObject | Where-Object { $_.displayName -eq $DisplayName }
 
         if (-not $resultItems) {
-            Write-FabricLog -Message "$ResourceType with DisplayName '$DisplayName' not found" -Level Warning
+            Write-FabricLog -Message "$ResourceType with DisplayName '$DisplayName' not found" -Level Verbose
             return $resultItems
         }
         Write-FabricLog -Message "Found $(@($resultItems).Count) $ResourceType resource(s) with DisplayName: $DisplayName" -Level Debug
@@ -2340,7 +2340,7 @@ function Remove-FabricApacheAirflowJob {
         [ValidateNotNullOrEmpty()]
         [string]$WorkspaceId,
 
-        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
+        [Parameter(Mandatory = $true, ValueFromPipeline = $true, ValueFromPipelineByPropertyName = $true)]
         [ValidateNotNullOrEmpty()]
         [Alias('id')]
         [string]$ApacheAirflowJobId
@@ -2972,37 +2972,41 @@ function Get-FabricConnectionSupportedType {
 function Remove-FabricConnection {
     [CmdletBinding(SupportsShouldProcess = $true, ConfirmImpact = 'Medium')]
     param (
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $true, ValueFromPipeline = $true, ValueFromPipelineByPropertyName = $true)]
         [ValidateNotNullOrEmpty()]
+        [Alias('id')]
         [string]$ConnectionId
     )
-    try {
-        # Validate authentication
-        Invoke-FabricAuthCheck -ThrowOnFailure
 
-        # Construct the API endpoint URI
-        $apiEndpointURI = New-FabricAPIUri -Resource 'connections' -ItemId $ConnectionId
+    process {
+        try {
+            # Validate authentication
+            Invoke-FabricAuthCheck -ThrowOnFailure
 
-        if ($PSCmdlet.ShouldProcess("Connection '$ConnectionId'", "Delete")) {
-            # Make the API request
-            $apiParams = @{
-                Headers = $script:FabricAuthContext.FabricHeaders
-                BaseURI = $apiEndpointURI
-                Method = 'Delete'
+            # Construct the API endpoint URI
+            $apiEndpointURI = New-FabricAPIUri -Resource 'connections' -ItemId $ConnectionId
+
+            if ($PSCmdlet.ShouldProcess("Connection '$ConnectionId'", "Delete")) {
+                # Make the API request
+                $apiParams = @{
+                    Headers = $script:FabricAuthContext.FabricHeaders
+                    BaseURI = $apiEndpointURI
+                    Method = 'Delete'
+                }
+                $response = Invoke-FabricAPIRequest @apiParams
+                Write-FabricLog -Message "Connection '$ConnectionId' deleted successfully." -Level Host
+                $response
             }
-            $response = Invoke-FabricAPIRequest @apiParams
-            Write-FabricLog -Message "Connection '$ConnectionId' deleted successfully." -Level Host
-            $response
-        }
 
-    }
-    catch {
-        # Capture and log error details
-        $errorDetails = $_.Exception.Message
-        Write-FabricLog -Message "Failed to delete Connection '$ConnectionId'. Error: $errorDetails" -Level Error
+        }
+        catch {
+            # Capture and log error details
+            $errorDetails = $_.Exception.Message
+            Write-FabricLog -Message "Failed to delete Connection '$ConnectionId'. Error: $errorDetails" -Level Error
+        }
     }
 }
-#EndRegion '.\Public\Connections\Remove-FabricConnection.ps1' 54
+#EndRegion '.\Public\Connections\Remove-FabricConnection.ps1' 58
 #Region '.\Public\Connections\Remove-FabricConnectionRoleAssignment.ps1' -1
 
 <#
@@ -3033,42 +3037,45 @@ Author: Tiago Balabuch
 function Remove-FabricConnectionRoleAssignment {
     [CmdletBinding(SupportsShouldProcess = $true, ConfirmImpact = 'Medium')]
     param (
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
         [ValidateNotNullOrEmpty()]
         [string]$ConnectionId,
 
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $true, ValueFromPipeline = $true, ValueFromPipelineByPropertyName = $true)]
         [ValidateNotNullOrEmpty()]
+        [Alias('id')]
         [string]$ConnectionRoleAssignmentId
     )
 
-    try {
-        # Validate authentication
-        Invoke-FabricAuthCheck -ThrowOnFailure
+    process {
+        try {
+            # Validate authentication
+            Invoke-FabricAuthCheck -ThrowOnFailure
 
-        # Construct the API endpoint URI
-        $apiEndpointURI = New-FabricAPIUri -Resource 'connections' -ItemId $ConnectionId -Subresource 'roleAssignments'
-        $apiEndpointURI = "$apiEndpointURI/$ConnectionRoleAssignmentId"
+            # Construct the API endpoint URI
+            $apiEndpointURI = New-FabricAPIUri -Resource 'connections' -ItemId $ConnectionId -Subresource 'roleAssignments'
+            $apiEndpointURI = "$apiEndpointURI/$ConnectionRoleAssignmentId"
 
-        if ($PSCmdlet.ShouldProcess("Role assignment '$ConnectionRoleAssignmentId' on Connection '$ConnectionId'", "Delete")) {
-            # Make the API request
-            $apiParams = @{
-                Headers = $script:FabricAuthContext.FabricHeaders
-                BaseURI = $apiEndpointURI
-                Method = 'Delete'
+            if ($PSCmdlet.ShouldProcess("Role assignment '$ConnectionRoleAssignmentId' on Connection '$ConnectionId'", "Delete")) {
+                # Make the API request
+                $apiParams = @{
+                    Headers = $script:FabricAuthContext.FabricHeaders
+                    BaseURI = $apiEndpointURI
+                    Method = 'Delete'
+                }
+                $response = Invoke-FabricAPIRequest @apiParams
+                Write-FabricLog -Message "Role assignment '$ConnectionRoleAssignmentId' successfully removed from Connection '$ConnectionId'." -Level Host
+                $response
             }
-            $response = Invoke-FabricAPIRequest @apiParams
-            Write-FabricLog -Message "Role assignment '$ConnectionRoleAssignmentId' successfully removed from Connection '$ConnectionId'." -Level Host
-            $response
+        }
+        catch {
+            # Capture and log error details
+            $errorDetails = $_.Exception.Message
+            Write-FabricLog -Message "Failed to remove role assignments for ConnectionId '$ConnectionId'. Error: $errorDetails" -Level Error
         }
     }
-    catch {
-        # Capture and log error details
-        $errorDetails = $_.Exception.Message
-        Write-FabricLog -Message "Failed to remove role assignments for ConnectionId '$ConnectionId'. Error: $errorDetails" -Level Error
-    }
 }
-#EndRegion '.\Public\Connections\Remove-FabricConnectionRoleAssignment.ps1' 64
+#EndRegion '.\Public\Connections\Remove-FabricConnectionRoleAssignment.ps1' 67
 #Region '.\Public\Connections\Update-FabricConnectionRoleAssignment.ps1' -1
 
 <#
@@ -3500,7 +3507,7 @@ function Remove-FabricCopyJob {
         [ValidateNotNullOrEmpty()]
         [string]$WorkspaceId,
 
-        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
+        [Parameter(Mandatory = $true, ValueFromPipeline = $true, ValueFromPipelineByPropertyName = $true)]
         [ValidateNotNullOrEmpty()]
         [Alias('id')]
         [string]$CopyJobId
@@ -4628,7 +4635,7 @@ function Remove-FabricDataPipeline {
         [ValidateNotNullOrEmpty()]
         [string]$WorkspaceId,
 
-        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
+        [Parameter(Mandatory = $true, ValueFromPipeline = $true, ValueFromPipelineByPropertyName = $true)]
         [ValidateNotNullOrEmpty()]
         [Alias('id')]
         [string]$DataPipelineId
@@ -6189,39 +6196,42 @@ Author: Tiago Balabuch
 function Remove-FabricDomain {
     [CmdletBinding(SupportsShouldProcess = $true, ConfirmImpact = 'High')]
     param (
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $true, ValueFromPipeline = $true, ValueFromPipelineByPropertyName = $true)]
         [ValidateNotNullOrEmpty()]
+        [Alias('id')]
         [string]$DomainId
     )
 
-    try {
-        # Validate authentication token before proceeding
-        Invoke-FabricAuthCheck -ThrowOnFailure
+    process {
+        try {
+            # Validate authentication token before proceeding
+            Invoke-FabricAuthCheck -ThrowOnFailure
 
-        # Construct the API endpoint URI
-        $apiEndpointURI = New-FabricAPIUri -Segments @('admin', 'domains', $DomainId)
-        Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
+            # Construct the API endpoint URI
+            $apiEndpointURI = New-FabricAPIUri -Segments @('admin', 'domains', $DomainId)
+            Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
 
-        # Make the API request (guarded by ShouldProcess)
-        if ($PSCmdlet.ShouldProcess($DomainId, 'Delete Fabric domain')) {
-            $apiParams = @{
-                Headers = $script:FabricAuthContext.FabricHeaders
-                BaseURI = $apiEndpointURI
-                Method  = 'Delete'
+            # Make the API request (guarded by ShouldProcess)
+            if ($PSCmdlet.ShouldProcess($DomainId, 'Delete Fabric domain')) {
+                $apiParams = @{
+                    Headers = $script:FabricAuthContext.FabricHeaders
+                    BaseURI = $apiEndpointURI
+                    Method  = 'Delete'
+                }
+                $response = Invoke-FabricAPIRequest @apiParams
+
+                Write-FabricLog -Message "Domain '$DomainId' deleted successfully!" -Level Host
+                $response
             }
-            $response = Invoke-FabricAPIRequest @apiParams
-
-            Write-FabricLog -Message "Domain '$DomainId' deleted successfully!" -Level Host
-            $response
+        }
+        catch {
+            # Capture and log error details
+            $errorDetails = $_.Exception.Message
+            Write-FabricLog -Message "Failed to delete domain '$DomainId'. Error: $errorDetails" -Level Error
         }
     }
-    catch {
-        # Capture and log error details
-        $errorDetails = $_.Exception.Message
-        Write-FabricLog -Message "Failed to delete domain '$DomainId'. Error: $errorDetails" -Level Error
-    }
 }
-#EndRegion '.\Public\Domain\Remove-FabricDomain.ps1' 59
+#EndRegion '.\Public\Domain\Remove-FabricDomain.ps1' 62
 #Region '.\Public\Domain\Remove-FabricDomainWorkspace.ps1' -1
 
 
@@ -6261,57 +6271,60 @@ function Remove-FabricDomainWorkspace {
     [CmdletBinding(SupportsShouldProcess = $true, ConfirmImpact = 'Medium')]
     [Alias('Unassign-FabricDomainWorkspace')]
     param (
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $true, ValueFromPipeline = $true, ValueFromPipelineByPropertyName = $true)]
         [ValidateNotNullOrEmpty()]
+        [Alias('id')]
         [string]$DomainId,
 
-        [Parameter(Mandatory = $false)]
+        [Parameter(Mandatory = $false, ValueFromPipelineByPropertyName = $true)]
         [ValidateNotNullOrEmpty()]
         [array]$WorkspaceIds
     )
 
-    try {
-        # Validate authentication token before proceeding
-        Invoke-FabricAuthCheck -ThrowOnFailure
+    process {
+        try {
+            # Validate authentication token before proceeding
+            Invoke-FabricAuthCheck -ThrowOnFailure
 
-        # Construct the API endpoint URI based on the presence of WorkspaceIds
-        # Construct the request body
-        if ($WorkspaceIds -and $WorkspaceIds.Count -gt 0) {
-            $endpointSuffix = "unassignWorkspaces"
-            $body = @{
-                workspacesIds = $WorkspaceIds
+            # Construct the API endpoint URI based on the presence of WorkspaceIds
+            # Construct the request body
+            if ($WorkspaceIds -and $WorkspaceIds.Count -gt 0) {
+                $endpointSuffix = "unassignWorkspaces"
+                $body = @{
+                    workspacesIds = $WorkspaceIds
+                }
+                $bodyJson = Convert-FabricRequestBody -InputObject $body
             }
-            $bodyJson = Convert-FabricRequestBody -InputObject $body
-        }
-        else {
-            $endpointSuffix = "unassignAllWorkspaces"
-            $bodyJson = $null
-        }
-        $apiEndpointURI = New-FabricAPIUri -Segments @('admin', 'domains', $DomainId, $endpointSuffix)
-        Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
-        Write-FabricLog -Message "Request Body: $bodyJson" -Level Debug
-
-        # Make the API request (guarded by ShouldProcess)
-        if ($PSCmdlet.ShouldProcess($DomainId, 'Unassign workspaces from domain')) {
-            $apiParams = @{
-                BaseURI = $apiEndpointURI
-                Headers = $script:FabricAuthContext.FabricHeaders
-                Method  = 'Post'
-                Body    = $bodyJson
+            else {
+                $endpointSuffix = "unassignAllWorkspaces"
+                $bodyJson = $null
             }
-            $response = Invoke-FabricAPIRequest @apiParams
+            $apiEndpointURI = New-FabricAPIUri -Segments @('admin', 'domains', $DomainId, $endpointSuffix)
+            Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
+            Write-FabricLog -Message "Request Body: $bodyJson" -Level Debug
 
-            Write-FabricLog -Message "Successfully unassigned workspaces to the domain with ID '$DomainId'." -Level Host
-            $response
+            # Make the API request (guarded by ShouldProcess)
+            if ($PSCmdlet.ShouldProcess($DomainId, 'Unassign workspaces from domain')) {
+                $apiParams = @{
+                    BaseURI = $apiEndpointURI
+                    Headers = $script:FabricAuthContext.FabricHeaders
+                    Method  = 'Post'
+                    Body    = $bodyJson
+                }
+                $response = Invoke-FabricAPIRequest @apiParams
+
+                Write-FabricLog -Message "Successfully unassigned workspaces to the domain with ID '$DomainId'." -Level Host
+                $response
+            }
         }
-    }
-    catch {
-        # Capture and log error details
-        $errorDetails = $_.Exception.Message
-        Write-FabricLog -Message "Failed to unassign workspaces to the domain with ID '$DomainId'. Error: $errorDetails" -Level Error
+        catch {
+            # Capture and log error details
+            $errorDetails = $_.Exception.Message
+            Write-FabricLog -Message "Failed to unassign workspaces to the domain with ID '$DomainId'. Error: $errorDetails" -Level Error
+        }
     }
 }
-#EndRegion '.\Public\Domain\Remove-FabricDomainWorkspace.ps1' 88
+#EndRegion '.\Public\Domain\Remove-FabricDomainWorkspace.ps1' 91
 #Region '.\Public\Domain\Remove-FabricDomainWorkspaceRoleAssignment.ps1' -1
 
 <#
@@ -6351,8 +6364,9 @@ function Remove-FabricDomainWorkspaceRoleAssignment {
     [CmdletBinding(SupportsShouldProcess = $true, ConfirmImpact = 'Medium')]
     [Alias('Unassign-FabricDomainWorkspaceByRoleAssignment')]
     param (
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $true, ValueFromPipeline = $true, ValueFromPipelineByPropertyName = $true)]
         [ValidateNotNullOrEmpty()]
+        [Alias('id')]
         [string]$DomainId,
 
         [Parameter(Mandatory = $true)]
@@ -6365,51 +6379,53 @@ function Remove-FabricDomainWorkspaceRoleAssignment {
         [System.Object]$PrincipalIds #Must contain a JSON array of principals with 'id' and 'type' properties
     )
 
-    try {
-        # Validate PrincipalIds structure
-        # This uses a .NET HashSet to accelerate lookup even more, especially useful in large collections.
-        foreach ($principal in $PrincipalIds) {
-            if (-not ($principal.id -and $principal.type)) {
-                throw "Each Principal must contain 'id' and 'type' properties. Found: $principal"
+    process {
+        try {
+            # Validate PrincipalIds structure
+            # This uses a .NET HashSet to accelerate lookup even more, especially useful in large collections.
+            foreach ($principal in $PrincipalIds) {
+                if (-not ($principal.id -and $principal.type)) {
+                    throw "Each Principal must contain 'id' and 'type' properties. Found: $principal"
+                }
+            }
+
+            # Validate authentication token before proceeding
+            Invoke-FabricAuthCheck -ThrowOnFailure
+
+            # Construct the API endpoint URI
+            $apiEndpointURI = New-FabricAPIUri -Segments @('admin', 'domains', $DomainId, 'roleAssignments', 'bulkUnassign')
+            Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
+
+            # Construct the request body
+            $body = @{
+                type       = $DomainRole
+                principals = $PrincipalIds
+            }
+            $bodyJson = Convert-FabricRequestBody -InputObject $body
+            Write-FabricLog -Message "Request Body: $bodyJson" -Level Debug
+
+            # Make the API request (guarded by ShouldProcess)
+            if ($PSCmdlet.ShouldProcess($DomainId, "Unassign role '$DomainRole' from principals")) {
+                $apiParams = @{
+                    BaseURI = $apiEndpointURI
+                    Headers = $script:FabricAuthContext.FabricHeaders
+                    Method  = 'Post'
+                    Body    = $bodyJson
+                }
+                $response = Invoke-FabricAPIRequest @apiParams
+
+                Write-FabricLog -Message "Bulk role unassignment for domain '$DomainId' completed successfully!" -Level Host
+                $response
             }
         }
-
-        # Validate authentication token before proceeding
-        Invoke-FabricAuthCheck -ThrowOnFailure
-
-        # Construct the API endpoint URI
-        $apiEndpointURI = New-FabricAPIUri -Segments @('admin', 'domains', $DomainId, 'roleAssignments', 'bulkUnassign')
-        Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
-
-        # Construct the request body
-        $body = @{
-            type       = $DomainRole
-            principals = $PrincipalIds
+        catch {
+            # Capture and log error details
+            $errorDetails = $_.Exception.Message
+            Write-FabricLog -Message "Failed to bulk assign roles in domain '$DomainId'. Error: $errorDetails" -Level Error
         }
-        $bodyJson = Convert-FabricRequestBody -InputObject $body
-        Write-FabricLog -Message "Request Body: $bodyJson" -Level Debug
-
-        # Make the API request (guarded by ShouldProcess)
-        if ($PSCmdlet.ShouldProcess($DomainId, "Unassign role '$DomainRole' from principals")) {
-            $apiParams = @{
-                BaseURI = $apiEndpointURI
-                Headers = $script:FabricAuthContext.FabricHeaders
-                Method  = 'Post'
-                Body    = $bodyJson
-            }
-            $response = Invoke-FabricAPIRequest @apiParams
-
-            Write-FabricLog -Message "Bulk role unassignment for domain '$DomainId' completed successfully!" -Level Host
-            $response
-        }
-    }
-    catch {
-        # Capture and log error details
-        $errorDetails = $_.Exception.Message
-        Write-FabricLog -Message "Failed to bulk assign roles in domain '$DomainId'. Error: $errorDetails" -Level Error
     }
 }
-#EndRegion '.\Public\Domain\Remove-FabricDomainWorkspaceRoleAssignment.ps1' 96
+#EndRegion '.\Public\Domain\Remove-FabricDomainWorkspaceRoleAssignment.ps1' 99
 #Region '.\Public\Domain\Update-FabricDomain.ps1' -1
 
 <#
@@ -7138,7 +7154,7 @@ function Remove-FabricEnvironment {
         [ValidateNotNullOrEmpty()]
         [string]$WorkspaceId,
 
-        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
+        [Parameter(Mandatory = $true, ValueFromPipeline = $true, ValueFromPipelineByPropertyName = $true)]
         [ValidateNotNullOrEmpty()]
         [Alias('id')]
         [string]$EnvironmentId
@@ -7212,7 +7228,7 @@ function Remove-FabricEnvironmentStagingLibrary {
         [ValidateNotNullOrEmpty()]
         [string]$WorkspaceId,
 
-        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
+        [Parameter(Mandatory = $true, ValueFromPipeline = $true, ValueFromPipelineByPropertyName = $true)]
         [ValidateNotNullOrEmpty()]
         [Alias('id')]
         [string]$EnvironmentId,
@@ -7958,7 +7974,7 @@ function Remove-FabricEventhouse {
         [ValidateNotNullOrEmpty()]
         [string]$WorkspaceId,
 
-        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
+        [Parameter(Mandatory = $true, ValueFromPipeline = $true, ValueFromPipelineByPropertyName = $true)]
         [ValidateNotNullOrEmpty()]
         [Alias('id')]
         [string]$EventhouseId
@@ -8944,7 +8960,7 @@ function Remove-FabricEventstream {
         [ValidateNotNullOrEmpty()]
         [string]$WorkspaceId,
 
-        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
+        [Parameter(Mandatory = $true, ValueFromPipeline = $true, ValueFromPipelineByPropertyName = $true)]
         [ValidateNotNullOrEmpty()]
         [Alias('id')]
         [string]$EventstreamId
@@ -10162,43 +10178,47 @@ function New-FabricFolder {
 function Remove-FabricFolder {
     [CmdletBinding(SupportsShouldProcess = $true, ConfirmImpact = 'High')]
     param (
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
         [ValidateNotNullOrEmpty()]
         [string]$WorkspaceId,
 
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $true, ValueFromPipeline = $true, ValueFromPipelineByPropertyName = $true)]
         [ValidateNotNullOrEmpty()]
+        [Alias('id')]
         [string]$FolderId
     )
-    try {
-        # Validate authentication
-        Invoke-FabricAuthCheck -ThrowOnFailure
 
-        # Construct the API endpoint URI
-        $apiEndpointURI = New-FabricAPIUri -Resource 'workspaces' -WorkspaceId $WorkspaceId -Subresource "folders/$FolderId"
+    process {
+        try {
+            # Validate authentication
+            Invoke-FabricAuthCheck -ThrowOnFailure
 
-        if ($PSCmdlet.ShouldProcess($FolderId, "Delete folder in workspace '$WorkspaceId'")) {
-            # Make the API request
-            $apiParams = @{
-                Headers = $script:FabricAuthContext.FabricHeaders
-                BaseURI = $apiEndpointURI
-                Method  = 'Delete'
+            # Construct the API endpoint URI
+            $apiEndpointURI = New-FabricAPIUri -Resource 'workspaces' -WorkspaceId $WorkspaceId -Subresource "folders/$FolderId"
+
+            if ($PSCmdlet.ShouldProcess($FolderId, "Delete folder in workspace '$WorkspaceId'")) {
+                # Make the API request
+                $apiParams = @{
+                    Headers = $script:FabricAuthContext.FabricHeaders
+                    BaseURI = $apiEndpointURI
+                    Method  = 'Delete'
+                }
+                $response = Invoke-FabricAPIRequest @apiParams
+
+                # Return the API response
+                Write-FabricLog -Message "Folder '$FolderId' deleted successfully from workspace '$WorkspaceId'." -Level Host
+                $response
             }
-            $response = Invoke-FabricAPIRequest @apiParams
 
-            # Return the API response
-            Write-FabricLog -Message "Folder '$FolderId' deleted successfully from workspace '$WorkspaceId'." -Level Host
-            $response
         }
-
-    }
-    catch {
-        # Capture and log error details
-        $errorDetails = $_.Exception.Message
-        Write-FabricLog -Message "Failed to delete Folder '$FolderId' from workspace '$WorkspaceId'. Error: $errorDetails" -Level Error
+        catch {
+            # Capture and log error details
+            $errorDetails = $_.Exception.Message
+            Write-FabricLog -Message "Failed to delete Folder '$FolderId' from workspace '$WorkspaceId'. Error: $errorDetails" -Level Error
+        }
     }
 }
-#EndRegion '.\Public\Folder\Remove-FabricFolder.ps1' 64
+#EndRegion '.\Public\Folder\Remove-FabricFolder.ps1' 68
 #Region '.\Public\Folder\Update-FabricFolder.ps1' -1
 
 <#
@@ -11509,7 +11529,7 @@ function Remove-FabricGraphQLApi {
         [ValidateNotNullOrEmpty()]
         [string]$WorkspaceId,
 
-        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
+        [Parameter(Mandatory = $true, ValueFromPipeline = $true, ValueFromPipelineByPropertyName = $true)]
         [ValidateNotNullOrEmpty()]
         [Alias('id')]
         [string]$GraphQLApiId
@@ -12161,7 +12181,7 @@ function Remove-FabricKQLDashboard {
         [ValidateNotNullOrEmpty()]
         [string]$WorkspaceId,
 
-        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
+        [Parameter(Mandatory = $true, ValueFromPipeline = $true, ValueFromPipelineByPropertyName = $true)]
         [ValidateNotNullOrEmpty()]
         [Alias('id')]
         [string]$KQLDashboardId
@@ -12964,7 +12984,7 @@ function Remove-FabricKQLDatabase {
         [ValidateNotNullOrEmpty()]
         [string]$WorkspaceId,
 
-        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
+        [Parameter(Mandatory = $true, ValueFromPipeline = $true, ValueFromPipelineByPropertyName = $true)]
         [ValidateNotNullOrEmpty()]
         [Alias('id')]
         [string]$KQLDatabaseId
@@ -13663,7 +13683,7 @@ function Remove-FabricKQLQueryset {
         [ValidateNotNullOrEmpty()]
         [string]$WorkspaceId,
 
-        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
+        [Parameter(Mandatory = $true, ValueFromPipeline = $true, ValueFromPipelineByPropertyName = $true)]
         [ValidateNotNullOrEmpty()]
         [Alias('id')]
         [string]$KQLQuerysetId
@@ -13982,56 +14002,59 @@ Author: Tiago Balabuch
 function Remove-FabricLabel {
     [CmdletBinding(SupportsShouldProcess = $true, ConfirmImpact = 'High')]
     param (
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $true, ValueFromPipeline = $true, ValueFromPipelineByPropertyName = $true)]
         [ValidateNotNullOrEmpty()]
         [System.Object]$Items # Array with 'id' and 'type'
     )
-    try {
-        # Validate Items structure
-        foreach ($item in $Items) {
-            if (-not ($item.id -and $item.type)) {
-                throw "Each Item must contain 'id' and 'type' properties. Found: $item"
+
+    process {
+        try {
+            # Validate Items structure
+            foreach ($item in $Items) {
+                if (-not ($item.id -and $item.type)) {
+                    throw "Each Item must contain 'id' and 'type' properties. Found: $item"
+                }
+            }
+
+            Invoke-FabricAuthCheck -ThrowOnFailure
+
+
+            # Construct the API endpoint URI
+            $apiEndpointURI = "{0}/admin/items/bulkRemoveLabels" -f $script:FabricAuthContext.BaseUrl, $WorkspaceId
+            Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
+
+            # Construct the request body
+            $body = @{
+                items = $Items
+            }
+
+            # Convert the body to JSON
+            $bodyJson = $body | ConvertTo-Json -Depth 2
+            Write-FabricLog -Message "Request Body: $bodyJson" -Level Debug
+
+            # Make the API request
+            $apiParams = @{
+                BaseURI = $apiEndpointURI
+                Headers = $script:FabricAuthContext.FabricHeaders
+                Method = 'Post'
+                Body = $bodyJson
+            }
+            if ($PSCmdlet.ShouldProcess("Bulk label removal", "Remove labels from $($Items.Count) item(s)")) {
+                $response = Invoke-FabricAPIRequest @apiParams
+
+                # Return the API response
+                Write-FabricLog -Message "Bulk label removal completed successfully." -Level Host
+                return $response
             }
         }
-
-        Invoke-FabricAuthCheck -ThrowOnFailure
-
-
-        # Construct the API endpoint URI
-        $apiEndpointURI = "{0}/admin/items/bulkRemoveLabels" -f $script:FabricAuthContext.BaseUrl, $WorkspaceId
-        Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
-
-        # Construct the request body
-        $body = @{
-            items = $Items
+        catch {
+            # Capture and log error details
+            $errorDetails = $_.Exception.Message
+            Write-FabricLog -Message "Failed to remove labels in bulk. Error: $errorDetails" -Level Error
         }
-
-        # Convert the body to JSON
-        $bodyJson = $body | ConvertTo-Json -Depth 2
-        Write-FabricLog -Message "Request Body: $bodyJson" -Level Debug
-
-        # Make the API request
-        $apiParams = @{
-            BaseURI = $apiEndpointURI
-            Headers = $script:FabricAuthContext.FabricHeaders
-            Method = 'Post'
-            Body = $bodyJson
-        }
-        if ($PSCmdlet.ShouldProcess("Bulk label removal", "Remove labels from $($Items.Count) item(s)")) {
-            $response = Invoke-FabricAPIRequest @apiParams
-
-            # Return the API response
-            Write-FabricLog -Message "Bulk label removal completed successfully." -Level Host
-            return $response
-        }
-    }
-    catch {
-        # Capture and log error details
-        $errorDetails = $_.Exception.Message
-        Write-FabricLog -Message "Failed to remove labels in bulk. Error: $errorDetails" -Level Error
     }
 }
-#EndRegion '.\Public\Labels\Remove-FabricLabel.ps1' 72
+#EndRegion '.\Public\Labels\Remove-FabricLabel.ps1' 75
 #Region '.\Public\Labels\Set-FabricLabel.ps1' -1
 
 <#
@@ -14554,7 +14577,7 @@ function Remove-FabricLakehouse {
         [ValidateNotNullOrEmpty()]
         [string]$WorkspaceId,
 
-        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
+        [Parameter(Mandatory = $true, ValueFromPipeline = $true, ValueFromPipelineByPropertyName = $true)]
         [ValidateNotNullOrEmpty()]
         [Alias('id')]
         [string]$LakehouseId
@@ -15397,44 +15420,48 @@ function New-FabricManagedPrivateEndpoint {
 function Remove-FabricManagedPrivateEndpoint {
     [CmdletBinding(SupportsShouldProcess = $true, ConfirmImpact = 'High')]
     param (
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
         [ValidateNotNullOrEmpty()]
         [string]$WorkspaceId,
 
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $true, ValueFromPipeline = $true, ValueFromPipelineByPropertyName = $true)]
         [ValidateNotNullOrEmpty()]
+        [Alias('id')]
         [string]$ManagedPrivateEndpointId
     )
-    try {
-        Invoke-FabricAuthCheck -ThrowOnFailure
+
+    process {
+        try {
+            Invoke-FabricAuthCheck -ThrowOnFailure
 
 
-        # Construct the API endpoint URI
-        $apiEndpointURI = "{0}/workspaces/{1}/managedPrivateEndpoints/{2}" -f $script:FabricAuthContext.BaseUrl, $WorkspaceId, $ManagedPrivateEndpointId
-        Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
+            # Construct the API endpoint URI
+            $apiEndpointURI = "{0}/workspaces/{1}/managedPrivateEndpoints/{2}" -f $script:FabricAuthContext.BaseUrl, $WorkspaceId, $ManagedPrivateEndpointId
+            Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
 
-        # Make the API request
-        $apiParams = @{
-            Headers = $script:FabricAuthContext.FabricHeaders
-            BaseURI = $apiEndpointURI
-            Method  = 'Delete'
+            # Make the API request
+            $apiParams = @{
+                Headers = $script:FabricAuthContext.FabricHeaders
+                BaseURI = $apiEndpointURI
+                Method  = 'Delete'
+            }
+            if ($PSCmdlet.ShouldProcess($ManagedPrivateEndpointId, "Delete Managed Private Endpoint in workspace '$WorkspaceId'")) {
+                $response = Invoke-FabricAPIRequest @apiParams
+
+                # Return the API response
+                Write-FabricLog -Message "Managed Private Endpoint '$ManagedPrivateEndpointId' deleted successfully from workspace '$WorkspaceId'." -Level Host
+                return $response
+            }
+
         }
-        if ($PSCmdlet.ShouldProcess($ManagedPrivateEndpointId, "Delete Managed Private Endpoint in workspace '$WorkspaceId'")) {
-            $response = Invoke-FabricAPIRequest @apiParams
-
-            # Return the API response
-            Write-FabricLog -Message "Managed Private Endpoint '$ManagedPrivateEndpointId' deleted successfully from workspace '$WorkspaceId'." -Level Host
-            return $response
+        catch {
+            # Capture and log error details
+            $errorDetails = $_.Exception.Message
+            Write-FabricLog -Message "Failed to delete Managed Private Endpoint '$ManagedPrivateEndpointId' from workspace '$WorkspaceId'. Error: $errorDetails" -Level Error
         }
-
-    }
-    catch {
-        # Capture and log error details
-        $errorDetails = $_.Exception.Message
-        Write-FabricLog -Message "Failed to delete Managed Private Endpoint '$ManagedPrivateEndpointId' from workspace '$WorkspaceId'. Error: $errorDetails" -Level Error
     }
 }
-#EndRegion '.\Public\Managed Private Endpoint\Remove-FabricManagedPrivateEndpoint.ps1' 64
+#EndRegion '.\Public\Managed Private Endpoint\Remove-FabricManagedPrivateEndpoint.ps1' 68
 #Region '.\Public\Mirrored Database\Get-FabricMirroredDatabase.ps1' -1
 
 <#
@@ -15936,7 +15963,7 @@ function Remove-FabricMirroredDatabase {
         [ValidateNotNullOrEmpty()]
         [string]$WorkspaceId,
 
-        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
+        [Parameter(Mandatory = $true, ValueFromPipeline = $true, ValueFromPipelineByPropertyName = $true)]
         [ValidateNotNullOrEmpty()]
         [Alias('id')]
         [string]$MirroredDatabaseId
@@ -16697,7 +16724,7 @@ function Remove-FabricMLExperiment {
         [ValidateNotNullOrEmpty()]
         [string]$WorkspaceId,
 
-        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
+        [Parameter(Mandatory = $true, ValueFromPipeline = $true, ValueFromPipelineByPropertyName = $true)]
         [ValidateNotNullOrEmpty()]
         [Alias('id')]
         [string]$MLExperimentId
@@ -17068,7 +17095,7 @@ function Remove-FabricMLModel {
         [ValidateNotNullOrEmpty()]
         [string]$WorkspaceId,
 
-        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
+        [Parameter(Mandatory = $true, ValueFromPipeline = $true, ValueFromPipelineByPropertyName = $true)]
         [ValidateNotNullOrEmpty()]
         [Alias('id')]
         [string]$MLModelId
@@ -17560,46 +17587,50 @@ function New-FabricMountedDataFactory {
 function Remove-FabricMountedDataFactory {
     [CmdletBinding(SupportsShouldProcess = $true, ConfirmImpact = 'High')]
     param (
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
         [ValidateNotNullOrEmpty()]
         [string]$WorkspaceId,
 
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $true, ValueFromPipeline = $true, ValueFromPipelineByPropertyName = $true)]
         [ValidateNotNullOrEmpty()]
+        [Alias('id')]
         [string]$MountedDataFactoryId
     )
-    try {
-        Invoke-FabricAuthCheck -ThrowOnFailure
+
+    process {
+        try {
+            Invoke-FabricAuthCheck -ThrowOnFailure
 
 
-        # Construct the API endpoint URI
-        $apiEndpointURI = "{0}/workspaces/{1}/mountedDataFactories/{2}" -f $script:FabricAuthContext.BaseUrl, $WorkspaceId, $MountedDataFactoryId
-        Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
+            # Construct the API endpoint URI
+            $apiEndpointURI = "{0}/workspaces/{1}/mountedDataFactories/{2}" -f $script:FabricAuthContext.BaseUrl, $WorkspaceId, $MountedDataFactoryId
+            Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
 
-        # Make the API request when confirmed
-        $target = "Mounted Data Factory '$MountedDataFactoryId' in workspace '$WorkspaceId'"
-        $action = "Delete Mounted Data Factory"
-        if ($PSCmdlet.ShouldProcess($target, $action)) {
-            $apiParams = @{
-                Headers = $script:FabricAuthContext.FabricHeaders
-                BaseURI = $apiEndpointURI
-                Method  = 'Delete'
+            # Make the API request when confirmed
+            $target = "Mounted Data Factory '$MountedDataFactoryId' in workspace '$WorkspaceId'"
+            $action = "Delete Mounted Data Factory"
+            if ($PSCmdlet.ShouldProcess($target, $action)) {
+                $apiParams = @{
+                    Headers = $script:FabricAuthContext.FabricHeaders
+                    BaseURI = $apiEndpointURI
+                    Method  = 'Delete'
+                }
+                $response = Invoke-FabricAPIRequest @apiParams
+
+                # Return the API response
+                Write-FabricLog -Message "Mounted Data Factory '$MountedDataFactoryId' deleted successfully from workspace '$WorkspaceId'." -Level Host
+                return $response
             }
-            $response = Invoke-FabricAPIRequest @apiParams
 
-            # Return the API response
-            Write-FabricLog -Message "Mounted Data Factory '$MountedDataFactoryId' deleted successfully from workspace '$WorkspaceId'." -Level Host
-            return $response
         }
-
-    }
-    catch {
-        # Capture and log error details
-        $errorDetails = $_.Exception.Message
-        Write-FabricLog -Message "Failed to delete Mounted Data Factory '$MountedDataFactoryId'. Error: $errorDetails" -Level Error
+        catch {
+            # Capture and log error details
+            $errorDetails = $_.Exception.Message
+            Write-FabricLog -Message "Failed to delete Mounted Data Factory '$MountedDataFactoryId'. Error: $errorDetails" -Level Error
+        }
     }
 }
-#EndRegion '.\Public\Mounted Data Factory\Remove-FabricMountedDataFactory.ps1' 67
+#EndRegion '.\Public\Mounted Data Factory\Remove-FabricMountedDataFactory.ps1' 71
 #Region '.\Public\Mounted Data Factory\Update-FabricMountedDataFactory.ps1' -1
 
 <#
@@ -18511,7 +18542,7 @@ function Remove-FabricNotebook {
         [ValidateNotNullOrEmpty()]
         [string]$WorkspaceId,
 
-        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
+        [Parameter(Mandatory = $true, ValueFromPipeline = $true, ValueFromPipelineByPropertyName = $true)]
         [ValidateNotNullOrEmpty()]
         [Alias('id')]
         [string]$NotebookId
@@ -19296,54 +19327,58 @@ function New-FabricOneLakeShortcut {
 function Remove-FabricOneLakeShortcut {
     [CmdletBinding(SupportsShouldProcess = $true, ConfirmImpact = 'High')]
     param (
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
         [ValidateNotNullOrEmpty()]
         [string]$WorkspaceId,
 
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
         [ValidateNotNullOrEmpty()]
         [string]$ItemId,
 
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
         [ValidateNotNullOrEmpty()]
         [string]$ShortcutPath,
 
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $true, ValueFromPipeline = $true, ValueFromPipelineByPropertyName = $true)]
         [ValidateNotNullOrEmpty()]
+        [Alias('id')]
         [string]$ShortcutName
     )
-    try {
-        Invoke-FabricAuthCheck -ThrowOnFailure
+
+    process {
+        try {
+            Invoke-FabricAuthCheck -ThrowOnFailure
 
 
-        # Construct the API endpoint URI
-        $apiEndpointURI = "{0}/workspaces/{1}/items/{2}/shortcuts/{3}/{4}" -f $script:FabricAuthContext.BaseUrl, $WorkspaceId, $ItemId, $ShortcutPath, $ShortcutName
-        Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
+            # Construct the API endpoint URI
+            $apiEndpointURI = "{0}/workspaces/{1}/items/{2}/shortcuts/{3}/{4}" -f $script:FabricAuthContext.BaseUrl, $WorkspaceId, $ItemId, $ShortcutPath, $ShortcutName
+            Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
 
-        # Make the API request when confirmed
-        $target = "Shortcut '$ShortcutName' at path '$ShortcutPath' on item '$ItemId' in workspace '$WorkspaceId'"
-        $action = "Delete OneLake Shortcut"
-        if ($PSCmdlet.ShouldProcess($target, $action)) {
-            $apiParams = @{
-                Headers = $script:FabricAuthContext.FabricHeaders
-                BaseURI = $apiEndpointURI
-                Method  = 'Delete'
+            # Make the API request when confirmed
+            $target = "Shortcut '$ShortcutName' at path '$ShortcutPath' on item '$ItemId' in workspace '$WorkspaceId'"
+            $action = "Delete OneLake Shortcut"
+            if ($PSCmdlet.ShouldProcess($target, $action)) {
+                $apiParams = @{
+                    Headers = $script:FabricAuthContext.FabricHeaders
+                    BaseURI = $apiEndpointURI
+                    Method  = 'Delete'
+                }
+                $response = Invoke-FabricAPIRequest @apiParams
+
+                # Return the API response
+                Write-FabricLog -Message "OneLake Shortcut '$ShortcutName' was successfully deleted from item '$ItemId' in workspace '$WorkspaceId'." -Level Host
+                return $response
             }
-            $response = Invoke-FabricAPIRequest @apiParams
 
-            # Return the API response
-            Write-FabricLog -Message "OneLake Shortcut '$ShortcutName' was successfully deleted from item '$ItemId' in workspace '$WorkspaceId'." -Level Host
-            return $response
         }
-
-    }
-    catch {
-        # Capture and log error details
-        $errorDetails = $_.Exception.Message
-        Write-FabricLog -Message "Failed to delete OneLake Shortcut '$ShortcutName' from item '$ItemId' in workspace '$WorkspaceId'. Error: $errorDetails" -Level Error
+        catch {
+            # Capture and log error details
+            $errorDetails = $_.Exception.Message
+            Write-FabricLog -Message "Failed to delete OneLake Shortcut '$ShortcutName' from item '$ItemId' in workspace '$WorkspaceId'. Error: $errorDetails" -Level Error
+        }
     }
 }
-#EndRegion '.\Public\OneLake\Remove-FabricOneLakeShortcut.ps1' 80
+#EndRegion '.\Public\OneLake\Remove-FabricOneLakeShortcut.ps1' 84
 #Region '.\Public\OneLake\Reset-FabricOneLakeShortcutCache.ps1' -1
 
 <#
@@ -20157,7 +20192,7 @@ function Remove-FabricReflex {
         [ValidateNotNullOrEmpty()]
         [string]$WorkspaceId,
 
-        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
+        [Parameter(Mandatory = $true, ValueFromPipeline = $true, ValueFromPipelineByPropertyName = $true)]
         [ValidateNotNullOrEmpty()]
         [Alias('id')]
         [string]$ReflexId
@@ -20752,7 +20787,7 @@ function Remove-FabricReport {
         [ValidateNotNullOrEmpty()]
         [string]$WorkspaceId,
 
-        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
+        [Parameter(Mandatory = $true, ValueFromPipeline = $true, ValueFromPipelineByPropertyName = $true)]
         [ValidateNotNullOrEmpty()]
         [Alias('id')]
         [string]$ReportId
@@ -21323,7 +21358,7 @@ function Remove-FabricSemanticModel {
         [ValidateNotNullOrEmpty()]
         [string]$WorkspaceId,
 
-        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
+        [Parameter(Mandatory = $true, ValueFromPipeline = $true, ValueFromPipelineByPropertyName = $true)]
         [ValidateNotNullOrEmpty()]
         [Alias('id')]
         [string]$SemanticModelId
@@ -21604,55 +21639,58 @@ Author: Tiago Balabuch
 function Remove-FabricSharingLinks {
     [CmdletBinding(SupportsShouldProcess=$true, ConfirmImpact='High')]
     param (
-        [Parameter(Mandatory = $false)]
+        [Parameter(Mandatory = $false, ValueFromPipelineByPropertyName = $true)]
         [ValidateNotNullOrEmpty()]
         [ValidateSet('OrgLink')]
         $sharingLinkType = 'OrgLink'
     )
-    try {
-        # Validate Items structure
-        foreach ($item in $Items) {
-            if (-not ($item.id -and $item.type)) {
-                throw "Each Item must contain 'id' and 'type' properties. Found: $item"
+
+    process {
+        try {
+            # Validate Items structure
+            foreach ($item in $Items) {
+                if (-not ($item.id -and $item.type)) {
+                    throw "Each Item must contain 'id' and 'type' properties. Found: $item"
+                }
+            }
+
+            Invoke-FabricAuthCheck -ThrowOnFailure
+
+
+            # Construct the API endpoint URI
+            $apiEndpointURI = "{0}/admin/items/removeAllSharingLinks" -f $script:FabricAuthContext.BaseUrl, $WorkspaceId
+            Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
+
+            # Construct the request body
+            $body = @{
+                sharingLinkType = $sharingLinkType
+            }
+
+            # Convert the body to JSON
+            $bodyJson = $body | ConvertTo-Json -Depth 2
+            Write-FabricLog -Message "Request Body: $bodyJson" -Level Debug
+
+            # Make the API request
+            if ($PSCmdlet.ShouldProcess("all items with sharing link type '$sharingLinkType'", "Remove all sharing links")) {
+                $response = Invoke-FabricAPIRequest `
+                    -BaseURI $apiEndpointURI `
+                    -Headers $script:FabricAuthContext.FabricHeaders `
+                    -Method Post `
+                    -Body $bodyJson
+
+                # Return the API response
+                Write-FabricLog -Message "All sharing links have been removed successfully from the specified items." -Level Host
+                return $response
             }
         }
-
-        Invoke-FabricAuthCheck -ThrowOnFailure
-
-
-        # Construct the API endpoint URI
-        $apiEndpointURI = "{0}/admin/items/removeAllSharingLinks" -f $script:FabricAuthContext.BaseUrl, $WorkspaceId
-        Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
-
-        # Construct the request body
-        $body = @{
-            sharingLinkType = $sharingLinkType
+        catch {
+            # Capture and log error details
+            $errorDetails = $_.Exception.Message
+            Write-FabricLog -Message "Failed to remove all sharing links. Error details: $errorDetails" -Level Error
         }
-
-        # Convert the body to JSON
-        $bodyJson = $body | ConvertTo-Json -Depth 2
-        Write-FabricLog -Message "Request Body: $bodyJson" -Level Debug
-
-        # Make the API request
-        if ($PSCmdlet.ShouldProcess("all items with sharing link type '$sharingLinkType'", "Remove all sharing links")) {
-            $response = Invoke-FabricAPIRequest `
-                -BaseURI $apiEndpointURI `
-                -Headers $script:FabricAuthContext.FabricHeaders `
-                -Method Post `
-                -Body $bodyJson
-
-            # Return the API response
-            Write-FabricLog -Message "All sharing links have been removed successfully from the specified items." -Level Host
-            return $response
-        }
-    }
-    catch {
-        # Capture and log error details
-        $errorDetails = $_.Exception.Message
-        Write-FabricLog -Message "Failed to remove all sharing links. Error details: $errorDetails" -Level Error
     }
 }
-#EndRegion '.\Public\Sharing Links\Remove-FabricSharingLinks.ps1' 79
+#EndRegion '.\Public\Sharing Links\Remove-FabricSharingLinks.ps1' 82
 #Region '.\Public\Sharing Links\Remove-FabricSharingLinksBulk.ps1' -1
 
 <#
@@ -21687,60 +21725,63 @@ Author: Tiago Balabuch
 function Remove-FabricSharingLinksBulk {
     [CmdletBinding(SupportsShouldProcess=$true, ConfirmImpact='High')]
     param (
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $true, ValueFromPipeline = $true, ValueFromPipelineByPropertyName = $true)]
         [ValidateNotNullOrEmpty()]
         [System.Object]$Items, # Array with 'id' and 'type'
 
-        [Parameter(Mandatory = $false)]
+        [Parameter(Mandatory = $false, ValueFromPipelineByPropertyName = $true)]
         [ValidateNotNullOrEmpty()]
         [ValidateSet('OrgLink')]
         $sharingLinkType = 'OrgLink'
     )
-    try {
-        # Validate Items structure
-        foreach ($item in $Items) {
-            if (-not ($item.id -and $item.type)) {
-                throw "Each Item must contain 'id' and 'type' properties. Found: $item"
+
+    process {
+        try {
+            # Validate Items structure
+            foreach ($item in $Items) {
+                if (-not ($item.id -and $item.type)) {
+                    throw "Each Item must contain 'id' and 'type' properties. Found: $item"
+                }
+            }
+
+            Invoke-FabricAuthCheck -ThrowOnFailure
+
+
+            # Construct the API endpoint URI
+            $apiEndpointURI = "{0}/admin/items/bulkRemoveSharingLinks" -f $script:FabricAuthContext.BaseUrl, $WorkspaceId
+            Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
+
+            # Construct the request body
+            $body = @{
+                items = $Items
+                sharingLinkType = $sharingLinkType
+            }
+
+            # Convert the body to JSON
+            $bodyJson = $body | ConvertTo-Json -Depth 2
+            Write-FabricLog -Message "Request Body: $bodyJson" -Level Debug
+
+            # Make the API request
+            if ($PSCmdlet.ShouldProcess("$($Items.Count) item(s) with sharing link type '$sharingLinkType'", "Remove sharing links in bulk")) {
+                $response = Invoke-FabricAPIRequest `
+                    -BaseURI $apiEndpointURI `
+                    -Headers $script:FabricAuthContext.FabricHeaders `
+                    -Method Post `
+                    -Body $bodyJson
+
+                # Return the API response
+                Write-FabricLog -Message "Bulk sharing link removal completed successfully for $($Items.Count) item(s)." -Level Host
+                return $response
             }
         }
-
-        Invoke-FabricAuthCheck -ThrowOnFailure
-
-
-        # Construct the API endpoint URI
-        $apiEndpointURI = "{0}/admin/items/bulkRemoveSharingLinks" -f $script:FabricAuthContext.BaseUrl, $WorkspaceId
-        Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
-
-        # Construct the request body
-        $body = @{
-            items = $Items
-            sharingLinkType = $sharingLinkType
+        catch {
+            # Capture and log error details
+            $errorDetails = $_.Exception.Message
+            Write-FabricLog -Message "Failed to remove sharing link removal in bulk. Error: $errorDetails" -Level Error
         }
-
-        # Convert the body to JSON
-        $bodyJson = $body | ConvertTo-Json -Depth 2
-        Write-FabricLog -Message "Request Body: $bodyJson" -Level Debug
-
-        # Make the API request
-        if ($PSCmdlet.ShouldProcess("$($Items.Count) item(s) with sharing link type '$sharingLinkType'", "Remove sharing links in bulk")) {
-            $response = Invoke-FabricAPIRequest `
-                -BaseURI $apiEndpointURI `
-                -Headers $script:FabricAuthContext.FabricHeaders `
-                -Method Post `
-                -Body $bodyJson
-
-            # Return the API response
-            Write-FabricLog -Message "Bulk sharing link removal completed successfully for $($Items.Count) item(s)." -Level Host
-            return $response
-        }
-    }
-    catch {
-        # Capture and log error details
-        $errorDetails = $_.Exception.Message
-        Write-FabricLog -Message "Failed to remove sharing link removal in bulk. Error: $errorDetails" -Level Error
     }
 }
-#EndRegion '.\Public\Sharing Links\Remove-FabricSharingLinksBulk.ps1' 86
+#EndRegion '.\Public\Sharing Links\Remove-FabricSharingLinksBulk.ps1' 89
 #Region '.\Public\Snowflake Database\Get-FabricSnowflakeDatabase.ps1' -1
 
 <#
@@ -22765,7 +22806,7 @@ function Remove-FabricSparkJobDefinition {
         [ValidateNotNullOrEmpty()]
         [string]$WorkspaceId,
 
-        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
+        [Parameter(Mandatory = $true, ValueFromPipeline = $true, ValueFromPipelineByPropertyName = $true)]
         [ValidateNotNullOrEmpty()]
         [Alias('id')]
         [string]$SparkJobDefinitionId
@@ -23722,7 +23763,7 @@ function Remove-FabricSparkCustomPool {
         [ValidateNotNullOrEmpty()]
         [string]$WorkspaceId,
 
-        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
+        [Parameter(Mandatory = $true, ValueFromPipeline = $true, ValueFromPipelineByPropertyName = $true)]
         [ValidateNotNullOrEmpty()]
         [Alias('id')]
         [string]$SparkCustomPoolId
@@ -25633,40 +25674,44 @@ function New-FabricTag {
 function Remove-FabricTag {
     [CmdletBinding(SupportsShouldProcess=$true, ConfirmImpact='High')]
     param (
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $true, ValueFromPipeline = $true, ValueFromPipelineByPropertyName = $true)]
         [ValidateNotNullOrEmpty()]
+        [Alias('id')]
         [string]$TagId
     )
-    try {
-        Invoke-FabricAuthCheck -ThrowOnFailure
+
+    process {
+        try {
+            Invoke-FabricAuthCheck -ThrowOnFailure
 
 
-        # Construct the API endpoint URI
-        $apiEndpointURI = "{0}/v1/admin/tags/{1}" -f $script:FabricAuthContext.BaseUrl, $TagId
-        Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
+            # Construct the API endpoint URI
+            $apiEndpointURI = "{0}/v1/admin/tags/{1}" -f $script:FabricAuthContext.BaseUrl, $TagId
+            Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
 
-        # Make the API request
-        if ($PSCmdlet.ShouldProcess("tag '$TagId'", "Remove")) {
-            $apiParams = @{
-                Headers = $script:FabricAuthContext.FabricHeaders
-                BaseURI = $apiEndpointURI
-                Method = 'Delete'
+            # Make the API request
+            if ($PSCmdlet.ShouldProcess("tag '$TagId'", "Remove")) {
+                $apiParams = @{
+                    Headers = $script:FabricAuthContext.FabricHeaders
+                    BaseURI = $apiEndpointURI
+                    Method = 'Delete'
+                }
+                $response = Invoke-FabricAPIRequest @apiParams
+
+                # Return the API response
+                Write-FabricLog -Message "Tag '$TagId' deleted successfully." -Level Host
+                return $response
             }
-            $response = Invoke-FabricAPIRequest @apiParams
 
-            # Return the API response
-            Write-FabricLog -Message "Tag '$TagId' deleted successfully." -Level Host
-            return $response
         }
-
-    }
-    catch {
-        # Capture and log error details
-        $errorDetails = $_.Exception.Message
-        Write-FabricLog -Message "Failed to delete Warehouse '$WarehouseId' from workspace '$WorkspaceId'. Error: $errorDetails" -Level Error
+        catch {
+            # Capture and log error details
+            $errorDetails = $_.Exception.Message
+            Write-FabricLog -Message "Failed to delete Warehouse '$WarehouseId' from workspace '$WorkspaceId'. Error: $errorDetails" -Level Error
+        }
     }
 }
-#EndRegion '.\Public\Tags\Remove-FabricTag.ps1' 58
+#EndRegion '.\Public\Tags\Remove-FabricTag.ps1' 62
 #Region '.\Public\Tags\Update-FabricTag.ps1' -1
 
 <#
@@ -27359,6 +27404,10 @@ function Resolve-FabricCapacityIdFromWorkspace {
             $cached = Get-PSFConfigValue -FullName "MicrosoftFabricMgmt.Cache.$cacheKey" -Fallback $null
 
             if ($cached) {
+                if ($cached -eq '__NONE__') {
+                    Write-PSFMessage -Level Debug -Message "Cache hit (no capacity assigned) for workspace ID '$WorkspaceId'"
+                    return $null
+                }
                 Write-PSFMessage -Level Debug -Message "Cache hit for workspace capacity ID '$WorkspaceId': $cached"
                 return $cached
             }
@@ -27378,23 +27427,38 @@ function Resolve-FabricCapacityIdFromWorkspace {
                 if (-not $DisableCache) {
                     Set-PSFConfig -FullName "MicrosoftFabricMgmt.Cache.$cacheKey" -Value $capacityId
                     Write-PSFMessage -Level Debug -Message "Cached capacity ID '$capacityId' for workspace ID '$WorkspaceId'"
+
+                    # Cross-populate workspace name cache to avoid a redundant API call from Resolve-FabricWorkspaceName
+                    if ($workspace.displayName) {
+                        $workspaceNameCacheKey = "WorkspaceName_$WorkspaceId"
+                        Set-PSFConfig -FullName "MicrosoftFabricMgmt.Cache.$workspaceNameCacheKey" -Value $workspace.displayName
+                        Write-PSFMessage -Level Debug -Message "Cached workspace name '$($workspace.displayName)' for workspace ID '$WorkspaceId' (cross-populated)"
+                    }
                 }
 
                 return $capacityId
             }
 
-            # Workspace found but no capacityId
-            Write-PSFMessage -Level Debug -Message "Workspace '$WorkspaceId' has no capacity assigned"
+            # Workspace found but no capacityId - cache sentinel to prevent repeated API calls
+            Write-PSFMessage -Level Verbose -Message "Workspace '$WorkspaceId' has no capacity assigned"
+            if (-not $DisableCache) {
+                Set-PSFConfig -FullName "MicrosoftFabricMgmt.Cache.$cacheKey" -Value '__NONE__'
+                Write-PSFMessage -Level Debug -Message "Cached 'no capacity' sentinel for workspace ID '$WorkspaceId'"
+            }
             return $null
         }
         catch {
             # Error occurred, log and return null
-            Write-PSFMessage -Level Warning -Message "Failed to resolve capacity ID from workspace ID '$WorkspaceId': $($_.Exception.Message)" -ErrorRecord $_
+            Write-PSFMessage -Level Verbose -Message "Failed to resolve capacity ID from workspace ID '$WorkspaceId': $($_.Exception.Message)"
+            if (-not $DisableCache) {
+                Set-PSFConfig -FullName "MicrosoftFabricMgmt.Cache.$cacheKey" -Value '__NONE__'
+                Write-PSFMessage -Level Debug -Message "Cached 'no capacity' sentinel for workspace ID '$WorkspaceId' (error)"
+            }
             return $null
         }
     }
 }
-#EndRegion '.\Public\Utils\Resolve-FabricCapacityIdFromWorkspace.ps1' 81
+#EndRegion '.\Public\Utils\Resolve-FabricCapacityIdFromWorkspace.ps1' 100
 #Region '.\Public\Utils\Resolve-FabricCapacityName.ps1' -1
 
 function Resolve-FabricCapacityName {
@@ -27473,18 +27537,26 @@ function Resolve-FabricCapacityName {
                 return $name
             }
 
-            # Capacity not found, return ID as fallback
-            Write-PSFMessage -Level Warning -Message "Capacity with ID '$CapacityId' not found. Returning ID as fallback."
+            # Capacity not found, cache fallback to prevent repeated API calls
+            Write-PSFMessage -Level Verbose -Message "Capacity with ID '$CapacityId' not found. Returning ID as fallback."
+            if (-not $DisableCache) {
+                Set-PSFConfig -FullName "MicrosoftFabricMgmt.Cache.$cacheKey" -Value $CapacityId
+                Write-PSFMessage -Level Debug -Message "Cached fallback for capacity ID '$CapacityId' (not found)"
+            }
             return $CapacityId
         }
         catch {
             # Error occurred, log and return ID as fallback
-            Write-PSFMessage -Level Warning -Message "Failed to resolve capacity ID '$CapacityId': $($_.Exception.Message)" -ErrorRecord $_
+            Write-PSFMessage -Level Verbose -Message "Failed to resolve capacity ID '$CapacityId': $($_.Exception.Message)"
+            if (-not $DisableCache) {
+                Set-PSFConfig -FullName "MicrosoftFabricMgmt.Cache.$cacheKey" -Value $CapacityId
+                Write-PSFMessage -Level Debug -Message "Cached fallback for capacity ID '$CapacityId' (error)"
+            }
             return $CapacityId
         }
     }
 }
-#EndRegion '.\Public\Utils\Resolve-FabricCapacityName.ps1' 88
+#EndRegion '.\Public\Utils\Resolve-FabricCapacityName.ps1' 96
 #Region '.\Public\Utils\Resolve-FabricWorkspaceName.ps1' -1
 
 function Resolve-FabricWorkspaceName {
@@ -27558,23 +27630,38 @@ function Resolve-FabricWorkspaceName {
                 if (-not $DisableCache) {
                     Set-PSFConfig -FullName "MicrosoftFabricMgmt.Cache.$cacheKey" -Value $name
                     Write-PSFMessage -Level Debug -Message "Cached workspace name '$name' for ID '$WorkspaceId'"
+
+                    # Cross-populate capacity ID cache to avoid a redundant API call from Resolve-FabricCapacityIdFromWorkspace
+                    if ($workspace.capacityId) {
+                        $capacityIdCacheKey = "WorkspaceCapacityId_$WorkspaceId"
+                        Set-PSFConfig -FullName "MicrosoftFabricMgmt.Cache.$capacityIdCacheKey" -Value $workspace.capacityId
+                        Write-PSFMessage -Level Debug -Message "Cached capacity ID '$($workspace.capacityId)' for workspace ID '$WorkspaceId' (cross-populated)"
+                    }
                 }
 
                 return $name
             }
 
-            # Workspace not found, return ID as fallback
-            Write-PSFMessage -Level Warning -Message "Workspace with ID '$WorkspaceId' not found. Returning ID as fallback."
+            # Workspace not found, cache fallback to prevent repeated API calls
+            Write-PSFMessage -Level Verbose -Message "Workspace with ID '$WorkspaceId' not found. Returning ID as fallback."
+            if (-not $DisableCache) {
+                Set-PSFConfig -FullName "MicrosoftFabricMgmt.Cache.$cacheKey" -Value $WorkspaceId
+                Write-PSFMessage -Level Debug -Message "Cached fallback for workspace ID '$WorkspaceId' (not found)"
+            }
             return $WorkspaceId
         }
         catch {
             # Error occurred, log and return ID as fallback
-            Write-PSFMessage -Level Warning -Message "Failed to resolve workspace ID '$WorkspaceId': $($_.Exception.Message)" -ErrorRecord $_
+            Write-PSFMessage -Level Verbose -Message "Failed to resolve workspace ID '$WorkspaceId': $($_.Exception.Message)"
+            if (-not $DisableCache) {
+                Set-PSFConfig -FullName "MicrosoftFabricMgmt.Cache.$cacheKey" -Value $WorkspaceId
+                Write-PSFMessage -Level Debug -Message "Cached fallback for workspace ID '$WorkspaceId' (error)"
+            }
             return $WorkspaceId
         }
     }
 }
-#EndRegion '.\Public\Utils\Resolve-FabricWorkspaceName.ps1' 88
+#EndRegion '.\Public\Utils\Resolve-FabricWorkspaceName.ps1' 103
 #Region '.\Public\Utils\Set-FabricApiHeaders.ps1' -1
 
 <#
@@ -28091,7 +28178,7 @@ function Remove-FabricVariableLibrary {
         [ValidateNotNullOrEmpty()]
         [string]$WorkspaceId,
 
-        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
+        [Parameter(Mandatory = $true, ValueFromPipeline = $true, ValueFromPipelineByPropertyName = $true)]
         [ValidateNotNullOrEmpty()]
         [Alias('id')]
         [string]$VariableLibraryId
@@ -28831,7 +28918,7 @@ function Remove-FabricWarehouse {
         [ValidateNotNullOrEmpty()]
         [string]$WorkspaceId,
 
-        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
+        [Parameter(Mandatory = $true, ValueFromPipeline = $true, ValueFromPipelineByPropertyName = $true)]
         [ValidateNotNullOrEmpty()]
         [Alias('id')]
         [string]$WarehouseId
@@ -28898,11 +28985,11 @@ function Remove-FabricWarehouseSnapshot {
     param (
         [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
         [ValidateNotNullOrEmpty()]
-        [Alias('id')]
         [string]$WorkspaceId,
 
-        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
+        [Parameter(Mandatory = $true, ValueFromPipeline = $true, ValueFromPipelineByPropertyName = $true)]
         [ValidateNotNullOrEmpty()]
+        [Alias('id')]
         [string]$WarehouseSnapshotId
     )
     process {
@@ -29959,38 +30046,41 @@ Author: Tiago Balabuch
 function Remove-FabricWorkspace {
     [CmdletBinding(SupportsShouldProcess=$true, ConfirmImpact = 'High')]
     param (
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $true, ValueFromPipeline = $true, ValueFromPipelineByPropertyName = $true)]
         [ValidateNotNullOrEmpty()]
+        [Alias('id')]
         [string]$WorkspaceId
     )
 
-    try {
-        # Validate authentication
-        Invoke-FabricAuthCheck -ThrowOnFailure
+    process {
+        try {
+            # Validate authentication
+            Invoke-FabricAuthCheck -ThrowOnFailure
 
-        # Construct the API endpoint URI
-        $apiEndpointURI = New-FabricAPIUri -Resource 'workspaces' -WorkspaceId $WorkspaceId
+            # Construct the API endpoint URI
+            $apiEndpointURI = New-FabricAPIUri -Resource 'workspaces' -WorkspaceId $WorkspaceId
 
-        # Make the API request
-        $apiParams = @{
-            Headers = $script:FabricAuthContext.FabricHeaders
-            BaseURI = $apiEndpointURI
-            Method = 'Delete'
+            # Make the API request
+            $apiParams = @{
+                Headers = $script:FabricAuthContext.FabricHeaders
+                BaseURI = $apiEndpointURI
+                Method = 'Delete'
+            }
+
+            if ($PSCmdlet.ShouldProcess("Workspace '$WorkspaceId'", 'Delete')) {
+                $response = Invoke-FabricAPIRequest @apiParams
+                Write-FabricLog -Message "Workspace '$WorkspaceId' deleted successfully!" -Level Host
+                $response
+            }
         }
-
-        if ($PSCmdlet.ShouldProcess("Workspace '$WorkspaceId'", 'Delete')) {
-            $response = Invoke-FabricAPIRequest @apiParams
-            Write-FabricLog -Message "Workspace '$WorkspaceId' deleted successfully!" -Level Host
-            $response
+        catch {
+            # Capture and log error details
+            $errorDetails = $_.Exception.Message
+            Write-FabricLog -Message "Failed to delete workspace. Error: $errorDetails" -Level Error
         }
-    }
-    catch {
-        # Capture and log error details
-        $errorDetails = $_.Exception.Message
-        Write-FabricLog -Message "Failed to delete workspace. Error: $errorDetails" -Level Error
     }
 }
-#EndRegion '.\Public\Workspace\Remove-FabricWorkspace.ps1' 56
+#EndRegion '.\Public\Workspace\Remove-FabricWorkspace.ps1' 59
 #Region '.\Public\Workspace\Remove-FabricWorkspaceCapacity.ps1' -1
 
 <#
@@ -30018,38 +30108,42 @@ Author: Tiago Balabuch
 function Remove-FabricWorkspaceCapacity {
     [CmdletBinding(SupportsShouldProcess = $true, ConfirmImpact = 'Medium')]
     param (
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $true, ValueFromPipeline = $true, ValueFromPipelineByPropertyName = $true)]
         [ValidateNotNullOrEmpty()]
+        [Alias('id')]
         [string]$WorkspaceId
     )
-    try {
-        # Validate authentication token before proceeding.
-        Invoke-FabricAuthCheck -ThrowOnFailure
 
-        # Construct the API endpoint URI
-        $apiEndpointURI = New-FabricAPIUri -Resource 'workspaces' -WorkspaceId $WorkspaceId -Subresource 'unassignFromCapacity'
-        Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
+    process {
+        try {
+            # Validate authentication token before proceeding.
+            Invoke-FabricAuthCheck -ThrowOnFailure
 
-        if ($PSCmdlet.ShouldProcess("$WorkspaceId" , "Remove from Capacity")) {
-            # Make the API request
-        $response = Invoke-FabricAPIRequest `
-            -BaseURI $apiEndpointURI `
-            -Headers $script:FabricAuthContext.FabricHeaders `
-            -Method Post
+            # Construct the API endpoint URI
+            $apiEndpointURI = New-FabricAPIUri -Resource 'workspaces' -WorkspaceId $WorkspaceId -Subresource 'unassignFromCapacity'
+            Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
+
+            if ($PSCmdlet.ShouldProcess("$WorkspaceId" , "Remove from Capacity")) {
+                # Make the API request
+            $response = Invoke-FabricAPIRequest `
+                -BaseURI $apiEndpointURI `
+                -Headers $script:FabricAuthContext.FabricHeaders `
+                -Method Post
+            }
+
+
+            # Return the API response
+            Write-FabricLog -Message "Workspace capacity has been successfully unassigned from workspace '$WorkspaceId'." -Level Host
+            $response
         }
-
-
-        # Return the API response
-        Write-FabricLog -Message "Workspace capacity has been successfully unassigned from workspace '$WorkspaceId'." -Level Host
-        $response
-    }
-    catch {
-        # Capture and log error details
-        $errorDetails = $_.Exception.Message
-        Write-FabricLog -Message "Failed to unassign workspace from capacity. Error: $errorDetails" -Level Error
+        catch {
+            # Capture and log error details
+            $errorDetails = $_.Exception.Message
+            Write-FabricLog -Message "Failed to unassign workspace from capacity. Error: $errorDetails" -Level Error
+        }
     }
 }
-#EndRegion '.\Public\Workspace\Remove-FabricWorkspaceCapacity.ps1' 57
+#EndRegion '.\Public\Workspace\Remove-FabricWorkspaceCapacity.ps1' 61
 #Region '.\Public\Workspace\Remove-FabricWorkspaceIdentity.ps1' -1
 
 <#
@@ -30077,40 +30171,43 @@ Author: Tiago Balabuch
 function Remove-FabricWorkspaceIdentity {
     [CmdletBinding(SupportsShouldProcess=$true, ConfirmImpact = 'High')]
     param (
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $true, ValueFromPipeline = $true, ValueFromPipelineByPropertyName = $true)]
         [ValidateNotNullOrEmpty()]
+        [Alias('id')]
         [string]$WorkspaceId
     )
 
-    try {
-        # Validate authentication token before proceeding.
-        Invoke-FabricAuthCheck -ThrowOnFailure
+    process {
+        try {
+            # Validate authentication token before proceeding.
+            Invoke-FabricAuthCheck -ThrowOnFailure
 
-        # Construct the API endpoint URI
-        $apiEndpointURI = New-FabricAPIUri -Resource 'workspaces' -WorkspaceId $WorkspaceId -Subresource 'deprovisionIdentity'
-        Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
+            # Construct the API endpoint URI
+            $apiEndpointURI = New-FabricAPIUri -Resource 'workspaces' -WorkspaceId $WorkspaceId -Subresource 'deprovisionIdentity'
+            Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
 
-        # Make the API request
-        $apiParams = @{
-            BaseURI = $apiEndpointURI
-            Headers = $script:FabricAuthContext.FabricHeaders
-            Method = 'Post'
+            # Make the API request
+            $apiParams = @{
+                BaseURI = $apiEndpointURI
+                Headers = $script:FabricAuthContext.FabricHeaders
+                Method = 'Post'
+            }
+
+            if ($PSCmdlet.ShouldProcess("Workspace identity for '$WorkspaceId'", 'Deprovision')) {
+                Invoke-FabricAPIRequest @apiParams
+
+                # Return the API response
+                Write-FabricLog -Message "Workspace identity was successfully deprovisioned for workspace '$WorkspaceId'." -Level Host
+            }
         }
-
-        if ($PSCmdlet.ShouldProcess("Workspace identity for '$WorkspaceId'", 'Deprovision')) {
-            Invoke-FabricAPIRequest @apiParams
-
-            # Return the API response
-            Write-FabricLog -Message "Workspace identity was successfully deprovisioned for workspace '$WorkspaceId'." -Level Host
+        catch {
+            # Capture and log error details
+            $errorDetails = $_.Exception.Message
+            Write-FabricLog -Message "Failed to deprovision workspace identity. Error: $errorDetails" -Level Error
         }
-    }
-    catch {
-        # Capture and log error details
-        $errorDetails = $_.Exception.Message
-        Write-FabricLog -Message "Failed to deprovision workspace identity. Error: $errorDetails" -Level Error
     }
 }
-#EndRegion '.\Public\Workspace\Remove-FabricWorkspaceIdentity.ps1' 59
+#EndRegion '.\Public\Workspace\Remove-FabricWorkspaceIdentity.ps1' 62
 #Region '.\Public\Workspace\Remove-FabricWorkspaceRoleAssignment.ps1' -1
 
 <#
@@ -30142,45 +30239,48 @@ Author: Tiago Balabuch
 function Remove-FabricWorkspaceRoleAssignment {
     [CmdletBinding(SupportsShouldProcess=$true, ConfirmImpact = 'High')]
     param (
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
         [ValidateNotNullOrEmpty()]
         [string]$WorkspaceId,
 
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $true, ValueFromPipeline = $true, ValueFromPipelineByPropertyName = $true)]
         [ValidateNotNullOrEmpty()]
+        [Alias('id')]
         [string]$WorkspaceRoleAssignmentId
     )
 
-    try {
-        # Validate authentication token before proceeding.
-        Invoke-FabricAuthCheck -ThrowOnFailure
+    process {
+        try {
+            # Validate authentication token before proceeding.
+            Invoke-FabricAuthCheck -ThrowOnFailure
 
-        # Construct the API endpoint URI
-        $apiEndpointURI = New-FabricAPIUri -Resource 'workspaces' -WorkspaceId $WorkspaceId -Subresource 'roleAssignments' -ItemId $WorkspaceRoleAssignmentId
-        Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
+            # Construct the API endpoint URI
+            $apiEndpointURI = New-FabricAPIUri -Resource 'workspaces' -WorkspaceId $WorkspaceId -Subresource 'roleAssignments' -ItemId $WorkspaceRoleAssignmentId
+            Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
 
-        # Make the API request
-        $apiParams = @{
-            Headers = $script:FabricAuthContext.FabricHeaders
-            BaseURI = $apiEndpointURI
-            Method = 'Delete'
+            # Make the API request
+            $apiParams = @{
+                Headers = $script:FabricAuthContext.FabricHeaders
+                BaseURI = $apiEndpointURI
+                Method = 'Delete'
+            }
+
+            if ($PSCmdlet.ShouldProcess("Role assignment '$WorkspaceRoleAssignmentId' in workspace '$WorkspaceId'", 'Remove')) {
+                $response = Invoke-FabricAPIRequest @apiParams
+
+                # Return the API response
+                Write-FabricLog -Message "Role assignment '$WorkspaceRoleAssignmentId' successfully removed from workspace '$WorkspaceId'." -Level Host
+                $response
+            }
         }
-
-        if ($PSCmdlet.ShouldProcess("Role assignment '$WorkspaceRoleAssignmentId' in workspace '$WorkspaceId'", 'Remove')) {
-            $response = Invoke-FabricAPIRequest @apiParams
-
-            # Return the API response
-            Write-FabricLog -Message "Role assignment '$WorkspaceRoleAssignmentId' successfully removed from workspace '$WorkspaceId'." -Level Host
-            $response
+        catch {
+            # Capture and log error details
+            $errorDetails = $_.Exception.Message
+            Write-FabricLog -Message "Failed to remove role assignments for WorkspaceId '$WorkspaceId'. Error: $errorDetails" -Level Error
         }
-    }
-    catch {
-        # Capture and log error details
-        $errorDetails = $_.Exception.Message
-        Write-FabricLog -Message "Failed to remove role assignments for WorkspaceId '$WorkspaceId'. Error: $errorDetails" -Level Error
     }
 }
-#EndRegion '.\Public\Workspace\Remove-FabricWorkspaceRoleAssignment.ps1' 68
+#EndRegion '.\Public\Workspace\Remove-FabricWorkspaceRoleAssignment.ps1' 71
 #Region '.\Public\Workspace\Update-FabricWorkspace.ps1' -1
 
 <#

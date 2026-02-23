@@ -27,41 +27,44 @@ Author: Tiago Balabuch
 function Remove-FabricWorkspaceRoleAssignment {
     [CmdletBinding(SupportsShouldProcess=$true, ConfirmImpact = 'High')]
     param (
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
         [ValidateNotNullOrEmpty()]
         [string]$WorkspaceId,
 
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $true, ValueFromPipeline = $true, ValueFromPipelineByPropertyName = $true)]
         [ValidateNotNullOrEmpty()]
+        [Alias('id')]
         [string]$WorkspaceRoleAssignmentId
     )
 
-    try {
-        # Validate authentication token before proceeding.
-        Invoke-FabricAuthCheck -ThrowOnFailure
+    process {
+        try {
+            # Validate authentication token before proceeding.
+            Invoke-FabricAuthCheck -ThrowOnFailure
 
-        # Construct the API endpoint URI
-        $apiEndpointURI = New-FabricAPIUri -Resource 'workspaces' -WorkspaceId $WorkspaceId -Subresource 'roleAssignments' -ItemId $WorkspaceRoleAssignmentId
-        Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
+            # Construct the API endpoint URI
+            $apiEndpointURI = New-FabricAPIUri -Resource 'workspaces' -WorkspaceId $WorkspaceId -Subresource 'roleAssignments' -ItemId $WorkspaceRoleAssignmentId
+            Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
 
-        # Make the API request
-        $apiParams = @{
-            Headers = $script:FabricAuthContext.FabricHeaders
-            BaseURI = $apiEndpointURI
-            Method = 'Delete'
+            # Make the API request
+            $apiParams = @{
+                Headers = $script:FabricAuthContext.FabricHeaders
+                BaseURI = $apiEndpointURI
+                Method = 'Delete'
+            }
+
+            if ($PSCmdlet.ShouldProcess("Role assignment '$WorkspaceRoleAssignmentId' in workspace '$WorkspaceId'", 'Remove')) {
+                $response = Invoke-FabricAPIRequest @apiParams
+
+                # Return the API response
+                Write-FabricLog -Message "Role assignment '$WorkspaceRoleAssignmentId' successfully removed from workspace '$WorkspaceId'." -Level Host
+                $response
+            }
         }
-
-        if ($PSCmdlet.ShouldProcess("Role assignment '$WorkspaceRoleAssignmentId' in workspace '$WorkspaceId'", 'Remove')) {
-            $response = Invoke-FabricAPIRequest @apiParams
-
-            # Return the API response
-            Write-FabricLog -Message "Role assignment '$WorkspaceRoleAssignmentId' successfully removed from workspace '$WorkspaceId'." -Level Host
-            $response
+        catch {
+            # Capture and log error details
+            $errorDetails = $_.Exception.Message
+            Write-FabricLog -Message "Failed to remove role assignments for WorkspaceId '$WorkspaceId'. Error: $errorDetails" -Level Error
         }
-    }
-    catch {
-        # Capture and log error details
-        $errorDetails = $_.Exception.Message
-        Write-FabricLog -Message "Failed to remove role assignments for WorkspaceId '$WorkspaceId'. Error: $errorDetails" -Level Error
     }
 }
