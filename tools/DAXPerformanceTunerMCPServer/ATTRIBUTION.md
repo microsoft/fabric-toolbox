@@ -4,13 +4,13 @@ This project references, links to, and builds upon valuable DAX optimization kno
 
 ## DAX Studio - Code Derivation (Ms-RL License)
 
-The C# DAX Executor component (`src/dax_executor/`) contains code derived from DAX Studio:
+The DaxTraceRunner component (`src/DaxPerformanceTuner.Library/Infrastructure/DaxTraceRunner.cs`) contains code derived from DAX Studio:
 
 - **Project**: DAX Studio
 - **Repository**: https://github.com/DaxStudio/DaxStudio
 - **Copyright**: Darren Gosbell and DAX Studio contributors
 - **License**: Microsoft Reciprocal License (Ms-RL)
-- **License File**: `src/dax_executor/LICENSE-MSRL.txt`
+- **License File**: `src/LICENSE-MSRL.txt`
 
 **Derived Components:**
 - Trace event setup and collection patterns
@@ -42,7 +42,7 @@ Copyright © SQLBI. All rights reserved.
 
 The MIT License in this repository applies **only to the original code and tooling** created for this project, including:
 
-- MCP server implementation (`src/server.py`)
+- MCP server implementation (`src/`)
 - Connection and execution infrastructure
 - Session management and workflow orchestration
 - Custom optimization analysis code
