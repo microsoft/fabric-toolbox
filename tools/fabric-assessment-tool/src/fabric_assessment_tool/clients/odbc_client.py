@@ -90,6 +90,36 @@ class OdbcClient:
             for row in cursor:
                 yield row
 
+    def get_schemas(self) -> list[str]:
+        """Get schema names from the dedicated SQL pool.
+
+        Returns:
+            List of schema names
+        """
+        query = """
+SELECT SCHEMA_NAME
+FROM INFORMATION_SCHEMA.SCHEMATA
+ORDER BY SCHEMA_NAME
+"""
+        return [row.SCHEMA_NAME for row in self.execute_query(query)]
+
+    def get_tables(self, schema_name: str) -> list[str]:
+        """Get table names for a given schema in the dedicated SQL pool.
+
+        Args:
+            schema_name: The schema to list tables for
+
+        Returns:
+            List of table names
+        """
+        query = f"""
+SELECT TABLE_NAME
+FROM INFORMATION_SCHEMA.TABLES
+WHERE TABLE_SCHEMA = '{schema_name}' AND TABLE_TYPE = 'BASE TABLE'
+ORDER BY TABLE_NAME
+"""
+        return [row.TABLE_NAME for row in self.execute_query(query)]
+
     def check_table_statistics_dmv_exists(self) -> bool:
         """
         Check if the vTableSizes view exists in the master database.

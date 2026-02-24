@@ -5,7 +5,6 @@ from argparse import Namespace
 from datetime import datetime, timezone
 from typing import Any, Dict, Optional
 
-from azure.identity import AzureCliCredential
 from databricks.sdk import WorkspaceClient
 
 from ..assessment.common import AssessmentStatus
@@ -42,6 +41,7 @@ from ..assessment.databricks import (
 )
 from ..utils import ui as utils_ui
 from .api_client import ApiClient, ApiResponse
+from .token_provider import TokenProvider, create_token_provider
 
 
 class DatabricksClient:
@@ -50,6 +50,8 @@ class DatabricksClient:
     def __init__(
         self,
         subscription_id: Optional[str] = None,
+        token_provider: Optional[TokenProvider] = None,
+        auth_method: Optional[str] = None,
         **kwargs,
     ):
         """
@@ -57,50 +59,41 @@ class DatabricksClient:
 
         Args:
             subscription_id: Azure subscription ID (optional, will use Azure CLI default if not provided)
+            token_provider: Optional TokenProvider instance for authentication
+            auth_method: Authentication method ("azure-cli", "fabric", or None for auto-detect)
         """
+        self.token_provider = token_provider or create_token_provider(auth_method)
         self.custom_subscription_id = subscription_id
         self.authenticate()
-        self.workspaces = self.get_workspaces()
+        self._workspace_cache: dict[str, DatabricksWorkspaceInfo] = {}
 
     def authenticate(self) -> None:
-        """Authenticate with Databricks using access token."""
+        """Authenticate with Azure using the configured token provider."""
         try:
-            self.credential = AzureCliCredential()
-            self.azure_token = self.credential.get_token(
+            azure_token = self.token_provider.get_token(
                 "https://management.azure.com/.default"
             )
             self.azure_client = ApiClient(
-                token=self.azure_token.token, api_version="2024-05-01"
+                token=azure_token, api_version="2024-05-01"
             )
-            import json
-            import subprocess
 
-            cmd = "az account show"
-            output = subprocess.run(
-                cmd,
-                shell=True,
-                check=False,
-                stderr=subprocess.PIPE,
-                stdout=subprocess.PIPE,
-            )
-            result = json.loads(output.stdout)
-            if result:
-                self.account_info = result
-                self.tenant_id = self.account_info["tenantId"]
-                # Use custom subscription_id if provided, otherwise use Azure CLI default
-                self.subscription_id = (
-                    self.custom_subscription_id or self.account_info["id"]
+            # Use custom subscription_id if provided, otherwise use provider default
+            default_sub = self.token_provider.get_subscription_id()
+            self.subscription_id = self.custom_subscription_id or default_sub
+            if not self.subscription_id:
+                raise Exception(
+                    "No subscription ID available. "
+                    "Please provide --subscription-id when using Fabric notebook authentication."
                 )
-            else:
-                raise Exception("Failed to get account info from Azure CLI")
 
         except Exception as e:
             raise Exception(f"Failed to authenticate with Azure: {e}")
 
     def get_workspaces(self) -> list[DatabricksWorkspaceInfo]:
-        """Get all Databricks workspaces in the subscription."""
-        # For demo purposes, return mock data as dataclass
+        """Get all Databricks workspaces in the subscription.
 
+        Used for interactive workspace selection when no workspace names are provided.
+        """
         args = Namespace()
         # https://learn.microsoft.com/en-us/rest/api/databricks/workspaces/list-by-subscription?view=rest-databricks-2024-05-01&tabs=HTTP
         args.uri = f"/subscriptions/{self.subscription_id}/providers/Microsoft.Databricks/workspaces"
@@ -121,12 +114,19 @@ class DatabricksClient:
             for workspace in json_req.get("value", [])
         ]
 
+        # Populate cache
+        for ws in workspaces:
+            self._workspace_cache[ws.name.lower()] = ws
+
         return workspaces
 
     def _auth_databricks(self, workspace_url) -> None:
 
+        databricks_token = self.token_provider.get_token(
+            "2ff814a6-3304-4ab8-85cb-cd0e6f879c1d/.default"
+        )
         self.workspace_client = WorkspaceClient(
-            host=workspace_url, auth_type="azure-cli"
+            host=workspace_url, token=databricks_token
         )
         self.api_client = ApiClient(base_url=workspace_url, scope="", api_version="")
         # Reuse the authentication of the session of the Databricks API client
@@ -221,20 +221,22 @@ class DatabricksClient:
             raise Exception(f"Failed to assess workspace {workspace_name}: {e}")
 
     def _get_workspace_info(self, workspace_name: str) -> DatabricksWorkspaceInfo:
-        """Get Databricks workspace information."""
-        ws = next(
-            (
-                workspace
-                for workspace in self.workspaces
-                if workspace.name.lower() == workspace_name.lower()
-            ),
-            None,
-        )
+        """Get Databricks workspace information.
 
-        if not ws:
-            raise ValueError(f"Workspace not found: {workspace_name}")
+        Returns cached info if available, otherwise fetches all workspaces
+        from the management API and looks up the requested one.
+        """
+        cache_key = workspace_name.lower()
+        if cache_key in self._workspace_cache:
+            return self._workspace_cache[cache_key]
 
-        return ws
+        # Fetch all workspaces and populate cache
+        self.get_workspaces()
+
+        if cache_key in self._workspace_cache:
+            return self._workspace_cache[cache_key]
+
+        raise ValueError(f"Workspace not found: {workspace_name}")
 
     def _get_clusters(self) -> DatabricksClusters:
         try:

@@ -65,6 +65,26 @@ Examples:
             help="Azure subscription ID (if not provided, will use default credentials)",
         )
 
+        parser.add_argument(
+            "--auth-method",
+            choices=["azure-cli", "fabric"],
+            default=None,
+            help="Authentication method (default: auto-detect). Use 'fabric' when running inside a Fabric Notebook",
+        )
+
+        parser.add_argument(
+            "--sql-admin-password",
+            default=None,
+            help="SQL admin password for dedicated SQL pools (bypasses interactive prompt)",
+        )
+
+        parser.add_argument(
+            "--create-dmv",
+            action="store_true",
+            default=False,
+            help="Auto-create vTableSizes DMV without confirmation prompt (for non-interactive execution)",
+        )
+
     def handle(self, args: argparse.Namespace) -> None:
         """Handle the assess command execution."""
         print(f"Starting assessment of {args.source} workspaces...")
@@ -82,6 +102,9 @@ Examples:
                 output_path=args.output,
                 output_format=getattr(args, "format", "json"),
                 subscription_id=getattr(args, "subscription_id", None),
+                auth_method=getattr(args, "auth_method", None),
+                sql_admin_password=getattr(args, "sql_admin_password", None),
+                create_dmv=getattr(args, "create_dmv", False),
             )
 
             utils_ui.print(f"Assessment completed successfully!")
