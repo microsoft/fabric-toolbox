@@ -22,8 +22,12 @@ public class SessionState
 public class QueryData
 {
     /// <summary>The very first raw query the user submitted, before any measure/function inlining. Survives re-baselines.</summary>
-    public string? UserInputQuery { get; set; }
     public string? OriginalQuery { get; set; }
+
+    /// <summary>The query passed to the current prepare call. Overwritten each time prepare is called.</summary>
+    public string? TargetQuery { get; set; }
+
+    /// <summary>The query after inlining model FUNCTIONs/MEASUREs. This is what actually gets executed.</summary>
     public string? EnhancedQuery { get; set; }
     public bool BaselineEstablished { get; set; }
 

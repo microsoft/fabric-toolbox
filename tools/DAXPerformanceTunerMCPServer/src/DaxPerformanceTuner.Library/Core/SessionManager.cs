@@ -132,10 +132,6 @@ public class SessionManager
                 qd.Optimizations[queryId] = record;
             }
 
-            // Track original query
-            if (string.IsNullOrEmpty(qd.OriginalQuery))
-                qd.OriginalQuery = daxQuery;
-
             // Update performance summary for optimization attempts
             if (executionMode != "baseline" && performanceAnalysis != null)
             {
@@ -166,15 +162,15 @@ public class SessionManager
         {
             if (_currentSession == null) return false;
 
-            // Carry forward the original baseline performance and user input query so cumulative improvement survives re-baselines.
+            // Carry forward the original query and original baseline performance so cumulative improvement survives re-baselines.
             var originalPerf = _currentSession.QueryData?.OriginalBaselinePerformance
                 ?? _currentSession.QueryData?.BaselinePerformance;
-            var userInputQuery = _currentSession.QueryData?.UserInputQuery;
+            var originalQuery = _currentSession.QueryData?.OriginalQuery;
 
             _currentSession.QueryData = new QueryData
             {
-                UserInputQuery = userInputQuery,
-                OriginalQuery = query,
+                OriginalQuery = originalQuery,
+                TargetQuery = query,
                 OriginalBaselinePerformance = originalPerf
             };
             _currentSession.LastUpdated = DateTime.UtcNow;

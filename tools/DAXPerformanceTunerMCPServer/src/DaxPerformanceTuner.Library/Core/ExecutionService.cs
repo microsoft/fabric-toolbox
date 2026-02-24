@@ -181,8 +181,8 @@ public class ExecutionService
             // Capture the very first raw user query (before inlining) — survives re-baselines
             _sessionManager.UpdateQueryData(qd =>
             {
-                if (string.IsNullOrEmpty(qd.UserInputQuery))
-                    qd.UserInputQuery = query;
+                if (string.IsNullOrEmpty(qd.OriginalQuery))
+                    qd.OriginalQuery = query;
             });
 
             // STEP 1: Inline measures
