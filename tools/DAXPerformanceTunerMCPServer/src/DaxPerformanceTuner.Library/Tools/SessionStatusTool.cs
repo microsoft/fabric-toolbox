@@ -84,11 +84,19 @@ public class SessionStatusTool
 
         summary["target_query"] = qd.TargetQuery;
         summary["enhanced_query"] = qd.EnhancedQuery;
-        summary["baseline_established"] = qd.BaselineEstablished;
-        summary["best_optimization_query_id"] = qd.BestOptimizationQueryId;
-        summary["best_improvement_percentage"] = qd.BestImprovementPercent;
-        summary["meets_improvement_threshold"] = qd.BestMeetsThreshold;
-        summary["best_optimization_equivalent"] = qd.BestIsEquivalent;
+        summary["baseline_established"] = qd.Baseline?.Success == true;
+        summary["total_optimization_attempts"] = qd.TotalOptimizationAttempts;
+
+        if (qd.BestOptimization != null)
+        {
+            summary["best_optimization"] = new
+            {
+                query_id = qd.BestOptimization.QueryId,
+                improvement_percent = qd.BestOptimization.ImprovementPercent,
+                meets_threshold = qd.BestOptimization.MeetsThreshold,
+                is_equivalent = qd.BestOptimization.IsEquivalent
+            };
+        }
 
         return summary;
     }

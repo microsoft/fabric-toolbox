@@ -57,7 +57,7 @@ public class ExecutionService
             Dictionary<string, object>? semanticEquiv = null;
 
             var session = _sessionManager.GetCurrentSession();
-            if (executionMode == "optimization" && session?.QueryData?.BaselineEstablished == true)
+            if (executionMode == "optimization" && session?.QueryData?.Baseline?.Success == true)
             {
                 var baselinePerf = session.QueryData.BaselinePerformance;
                 if (baselinePerf != null && performance.ValueKind != JsonValueKind.Undefined)
@@ -82,26 +82,15 @@ public class ExecutionService
                         perfAnalysis["cumulative_improvement_percent"] = cumulativeImprovement;
                     }
 
-                    // Semantic equivalence
-                    if (session.QueryData.BaselineRawResult != null && results.ValueKind != JsonValueKind.Undefined)
+                    // Semantic equivalence — derive baseline results from Baseline record (no separate BaselineRawResult needed)
+                    if (session.QueryData.Baseline?.Results != null
+                        && session.QueryData.Baseline.Results.TryGetValue("results", out var brObj)
+                        && brObj is JsonElement baselineResults
+                        && baselineResults.ValueKind != JsonValueKind.Undefined
+                        && results.ValueKind != JsonValueKind.Undefined)
                     {
-                        var baselineResults = session.QueryData.BaselineRawResult.RootElement
-                            .TryGetProperty("Results", out var br) ? br : default;
-                        if (baselineResults.ValueKind != JsonValueKind.Undefined)
-                            semanticEquiv = AnalysisHelper.ComputeSemanticEquivalence(baselineResults, results);
+                        semanticEquiv = AnalysisHelper.ComputeSemanticEquivalence(baselineResults, results);
                     }
-
-                    // Track best optimization
-                    _sessionManager.UpdateQueryData(qd =>
-                    {
-                        if (improvement > qd.BestImprovementPercent)
-                        {
-                            qd.BestImprovementPercent = improvement;
-                            qd.BestMeetsThreshold = improvement >= _config.PerformanceThresholds.ImprovementThresholdPercent;
-                            qd.BestIsEquivalent = semanticEquiv != null &&
-                                semanticEquiv.TryGetValue("is_equivalent", out var eq) && eq is true;
-                        }
-                    });
                 }
             }
 
@@ -110,8 +99,6 @@ public class ExecutionService
             {
                 _sessionManager.UpdateQueryData(qd =>
                 {
-                    qd.BaselineEstablished = true;
-                    qd.BaselineRawResult = JsonDocument.Parse(fastest.GetRawText());
                     if (performance.ValueKind != JsonValueKind.Undefined)
                     {
                         qd.BaselinePerformance = PerformanceSnapshot.FromJson(performance);

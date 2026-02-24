@@ -125,11 +125,11 @@ public class SessionManager
             if (executionMode == "baseline")
             {
                 qd.Baseline = record;
-                if (error == null) qd.BaselineEstablished = true;
             }
             else
             {
                 qd.Optimizations[queryId] = record;
+                qd.TotalOptimizationAttempts++;
             }
 
             // Update performance summary for optimization attempts
@@ -137,13 +137,17 @@ public class SessionManager
             {
                 if (performanceAnalysis.TryGetValue("improvement_percent", out var impObj) && impObj is double improvement)
                 {
-                    if (improvement > qd.BestImprovementPercent)
+                    var currentBest = qd.BestOptimization?.ImprovementPercent ?? 0;
+                    if (improvement > currentBest)
                     {
-                        qd.BestImprovementPercent = improvement;
-                        qd.BestOptimizationQueryId = queryId;
-                        qd.BestMeetsThreshold = performanceAnalysis.TryGetValue("meets_threshold", out var mt) && mt is true;
-                        qd.BestIsEquivalent = semanticEquivalence != null &&
-                            semanticEquivalence.TryGetValue("is_equivalent", out var eq) && eq is true;
+                        qd.BestOptimization = new BestOptimization
+                        {
+                            QueryId = queryId,
+                            ImprovementPercent = improvement,
+                            MeetsThreshold = performanceAnalysis.TryGetValue("meets_threshold", out var mt) && mt is true,
+                            IsEquivalent = semanticEquivalence != null &&
+                                semanticEquivalence.TryGetValue("is_equivalent", out var eq) && eq is true
+                        };
                     }
                 }
             }
@@ -162,16 +166,18 @@ public class SessionManager
         {
             if (_currentSession == null) return false;
 
-            // Carry forward the original query and original baseline performance so cumulative improvement survives re-baselines.
+            // Carry forward the original query, original baseline performance, and total attempts so cumulative tracking survives re-baselines.
             var originalPerf = _currentSession.QueryData?.OriginalBaselinePerformance
                 ?? _currentSession.QueryData?.BaselinePerformance;
             var originalQuery = _currentSession.QueryData?.OriginalQuery;
+            var totalAttempts = _currentSession.QueryData?.TotalOptimizationAttempts ?? 0;
 
             _currentSession.QueryData = new QueryData
             {
                 OriginalQuery = originalQuery,
                 TargetQuery = query,
-                OriginalBaselinePerformance = originalPerf
+                OriginalBaselinePerformance = originalPerf,
+                TotalOptimizationAttempts = totalAttempts
             };
             _currentSession.LastUpdated = DateTime.UtcNow;
             return true;
