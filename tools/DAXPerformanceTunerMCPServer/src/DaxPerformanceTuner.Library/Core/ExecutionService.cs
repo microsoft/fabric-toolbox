@@ -1,4 +1,3 @@
-using System.Collections.Generic;
 using System.Text.Json;
 using System.Text.RegularExpressions;
 using DaxPerformanceTuner.Library.Contracts;
@@ -58,7 +57,7 @@ public class ExecutionService
             Dictionary<string, object>? semanticEquiv = null;
 
             var session = _sessionManager.GetCurrentSession();
-            if (executionMode == "optimization" && session?.QueryData?.BaselineEstablished == true)
+            if (executionMode == "optimization" && session?.QueryData?.Baseline?.Success == true)
             {
                 var baselinePerf = session.QueryData.BaselinePerformance;
                 if (baselinePerf != null && performance.ValueKind != JsonValueKind.Undefined)
@@ -74,28 +73,24 @@ public class ExecutionService
                         ["meets_threshold"] = improvement >= _config.PerformanceThresholds.ImprovementThresholdPercent
                     };
 
-                    // Semantic equivalence
-                    if (session.QueryData.BaselineRawResult != null && results.ValueKind != JsonValueKind.Undefined)
+                    // Include cumulative improvement vs original baseline when re-baselined
+                    var originalPerf = session.QueryData.OriginalBaselinePerformance;
+                    if (originalPerf != null && originalPerf != baselinePerf)
                     {
-                        var baselineResults = session.QueryData.BaselineRawResult.RootElement
-                            .TryGetProperty("Results", out var br) ? br : default;
-                        if (baselineResults.ValueKind != JsonValueKind.Undefined)
-                            semanticEquiv = AnalysisHelper.ComputeSemanticEquivalence(baselineResults, results);
+                        var cumulativeImprovement = AnalysisHelper.CalculateImprovement(originalPerf.TotalMs, currentTotal);
+                        perfAnalysis["original_baseline_total_ms"] = originalPerf.TotalMs;
+                        perfAnalysis["cumulative_improvement_percent"] = cumulativeImprovement;
                     }
 
-                    // Track best optimization
-                    _sessionManager.UpdateQueryData(qd =>
+                    // Semantic equivalence — derive baseline results from Baseline record (no separate BaselineRawResult needed)
+                    if (session.QueryData.Baseline?.Results != null
+                        && session.QueryData.Baseline.Results.TryGetValue("results", out var brObj)
+                        && brObj is JsonElement baselineResults
+                        && baselineResults.ValueKind != JsonValueKind.Undefined
+                        && results.ValueKind != JsonValueKind.Undefined)
                     {
-                        qd.OptimizationAttempts++;
-                        if (improvement > qd.BestImprovementPercent)
-                        {
-                            qd.BestImprovementPercent = improvement;
-                            qd.BestMeetsThreshold = improvement >= _config.PerformanceThresholds.ImprovementThresholdPercent;
-                            qd.BestIsEquivalent = semanticEquiv != null &&
-                                semanticEquiv.TryGetValue("is_equivalent", out var eq) && eq is true;
-                            qd.BestOptimizationQuery = daxQuery;
-                        }
-                    });
+                        semanticEquiv = AnalysisHelper.ComputeSemanticEquivalence(baselineResults, results);
+                    }
                 }
             }
 
@@ -104,10 +99,12 @@ public class ExecutionService
             {
                 _sessionManager.UpdateQueryData(qd =>
                 {
-                    qd.BaselineEstablished = true;
-                    qd.BaselineRawResult = JsonDocument.Parse(fastest.GetRawText());
                     if (performance.ValueKind != JsonValueKind.Undefined)
+                    {
                         qd.BaselinePerformance = PerformanceSnapshot.FromJson(performance);
+                        // Seed original baseline on the very first run (not already set by EstablishNewBaseline carry-forward)
+                        qd.OriginalBaselinePerformance ??= qd.BaselinePerformance;
+                    }
                 });
             }
 
@@ -168,6 +165,13 @@ public class ExecutionService
             // Establish new baseline in session (resets query data)
             _sessionManager.EstablishNewBaseline(query);
 
+            // Capture the very first raw user query (before inlining) — survives re-baselines
+            _sessionManager.UpdateQueryData(qd =>
+            {
+                if (string.IsNullOrEmpty(qd.OriginalQuery))
+                    qd.OriginalQuery = query;
+            });
+
             // STEP 1: Inline measures
             var (enhancedQuery, functionsAdded, measuresAdded) = await InlineMeasuresAsync(
                 query, endpoint!, dataset!, token);
@@ -203,7 +207,6 @@ public class ExecutionService
                 ["prepared_query"] = new Dictionary<string, object>
                 {
                     ["enhanced_query"] = enhancedQuery,
-                    ["original_query"] = query,
                     ["functions_added"] = functionsAdded,
                     ["measures_added"] = measuresAdded
                 },
@@ -262,8 +265,9 @@ public class ExecutionService
 
             return root;
         }
-        catch
+        catch (Exception ex)
         {
+            Console.Error.WriteLine($"[ExecutionService] RunTraceAsync failed: {ex.Message}");
             return null;
         }
     }
@@ -301,8 +305,14 @@ public class ExecutionService
     {
         // Parse DEFINE block
         var (defineBlock, mainQuery) = ParseDefineBlock(originalQuery);
-        var existingMeasures = FindExistingMeasures(defineBlock);
-        var existingFunctions = FindExistingFunctions(defineBlock);
+
+        // Scan the FULL original query for existing definitions, not just the parsed
+        // define block. ParseDefineBlock uses lazy matching to find the first EVALUATE,
+        // which can truncate the define block if a function body contains EVALUATE.
+        // Scanning the full query is safe because FUNCTION/MEASURE keywords only appear
+        // in DEFINE blocks, never in EVALUATE clauses.
+        var existingMeasures = FindExistingMeasures(originalQuery);
+        var existingFunctions = FindExistingFunctions(originalQuery);
 
         // Get model measures
         List<Dictionary<string, string?>> measuresData;

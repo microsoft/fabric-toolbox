@@ -55,11 +55,6 @@ public class SessionManager
     }
 
     /// <summary>
-    /// Check if there is an active session with a valid connection.
-    /// </summary>
-    public bool HasActiveSession => _currentSession?.ConnectionInfo != null;
-
-    /// <summary>
     /// Validate that a session exists and has a connection. Returns (isValid, session, errorMessage).
     /// </summary>
     public (bool IsValid, SessionState? Session, string? Error) ValidateSession()
@@ -130,29 +125,29 @@ public class SessionManager
             if (executionMode == "baseline")
             {
                 qd.Baseline = record;
-                if (error == null) qd.BaselineEstablished = true;
             }
             else
             {
                 qd.Optimizations[queryId] = record;
+                qd.TotalOptimizationAttempts++;
             }
-
-            // Track original query
-            if (string.IsNullOrEmpty(qd.OriginalQuery))
-                qd.OriginalQuery = daxQuery;
 
             // Update performance summary for optimization attempts
             if (executionMode != "baseline" && performanceAnalysis != null)
             {
                 if (performanceAnalysis.TryGetValue("improvement_percent", out var impObj) && impObj is double improvement)
                 {
-                    if (improvement > qd.BestImprovementPercent)
+                    var currentBest = qd.BestOptimization?.ImprovementPercent ?? 0;
+                    if (improvement > currentBest)
                     {
-                        qd.BestImprovementPercent = improvement;
-                        qd.BestOptimizationQueryId = queryId;
-                        qd.BestMeetsThreshold = performanceAnalysis.TryGetValue("meets_threshold", out var mt) && mt is true;
-                        qd.BestIsEquivalent = semanticEquivalence != null &&
-                            semanticEquivalence.TryGetValue("is_equivalent", out var eq) && eq is true;
+                        qd.BestOptimization = new BestOptimization
+                        {
+                            QueryId = queryId,
+                            ImprovementPercent = improvement,
+                            MeetsThreshold = performanceAnalysis.TryGetValue("meets_threshold", out var mt) && mt is true,
+                            IsEquivalent = semanticEquivalence != null &&
+                                semanticEquivalence.TryGetValue("is_equivalent", out var eq) && eq is true
+                        };
                     }
                 }
             }
@@ -171,7 +166,19 @@ public class SessionManager
         {
             if (_currentSession == null) return false;
 
-            _currentSession.QueryData = new QueryData { OriginalQuery = query };
+            // Carry forward the original query, original baseline performance, and total attempts so cumulative tracking survives re-baselines.
+            var originalPerf = _currentSession.QueryData?.OriginalBaselinePerformance
+                ?? _currentSession.QueryData?.BaselinePerformance;
+            var originalQuery = _currentSession.QueryData?.OriginalQuery;
+            var totalAttempts = _currentSession.QueryData?.TotalOptimizationAttempts ?? 0;
+
+            _currentSession.QueryData = new QueryData
+            {
+                OriginalQuery = originalQuery,
+                TargetQuery = query,
+                OriginalBaselinePerformance = originalPerf,
+                TotalOptimizationAttempts = totalAttempts
+            };
             _currentSession.LastUpdated = DateTime.UtcNow;
             return true;
         }

@@ -38,7 +38,7 @@ public class ConnectTool
 
     [McpServerTool(Name = "connect_to_dataset"), Description(
         "Smart connection tool - connects if enough info, discovers if not. " +
-        "SMART BEHAVIOR: This tool figures out what you need and does it automatically! " +
+        "IMPORTANT: Connecting always resets any existing optimization session. Call this to start a new optimization workflow. " +
         "DIRECT CONNECT (has dataset_name + location): " +
         "connect_to_dataset(dataset_name='Sales Model', workspace_name='Sales Analytics') or " +
         "connect_to_dataset(dataset_name='ae86...', desktop_port=57466) or " +

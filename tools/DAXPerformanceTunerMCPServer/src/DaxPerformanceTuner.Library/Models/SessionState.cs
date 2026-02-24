@@ -1,5 +1,4 @@
 using System.Text.Json;
-using System.Text.Json.Serialization;
 
 namespace DaxPerformanceTuner.Library.Models;
 
@@ -18,27 +17,30 @@ public class SessionState
 
 /// <summary>
 /// Tracks query state across the optimization workflow.
-/// Stores raw DaxTraceRunner output as JsonDocument so we can compare runs.
+/// Baseline results for semantic equivalence are derived from the Baseline QueryRecord.
 /// </summary>
 public class QueryData
 {
+    /// <summary>The very first raw query the user submitted, before any measure/function inlining. Survives re-baselines.</summary>
     public string? OriginalQuery { get; set; }
+
+    /// <summary>The query passed to the current prepare call. Overwritten each time prepare is called.</summary>
+    public string? TargetQuery { get; set; }
+
+    /// <summary>The query after inlining model FUNCTIONs/MEASUREs. This is what actually gets executed.</summary>
     public string? EnhancedQuery { get; set; }
-    public bool BaselineEstablished { get; set; }
 
-    /// <summary>Raw DaxTraceRunner JSON output for the baseline run (fastest of N).</summary>
-    public JsonDocument? BaselineRawResult { get; set; }
-
-    /// <summary>Baseline performance metrics extracted for quick access.</summary>
+    /// <summary>Baseline performance metrics extracted for quick typed access (improvement calculations, carry-forward).</summary>
     public PerformanceSnapshot? BaselinePerformance { get; set; }
 
-    /// <summary>Best optimization so far.</summary>
-    public double BestImprovementPercent { get; set; }
-    public bool BestMeetsThreshold { get; set; }
-    public bool BestIsEquivalent { get; set; }
-    public int OptimizationAttempts { get; set; }
-    public string? BestOptimizationQuery { get; set; }
-    public string? BestOptimizationQueryId { get; set; }
+    /// <summary>Performance snapshot from the very first baseline. Survives re-baselines so cumulative improvement can be tracked.</summary>
+    public PerformanceSnapshot? OriginalBaselinePerformance { get; set; }
+
+    /// <summary>Best optimization attempt this session. Null until the first optimization beats 0% improvement.</summary>
+    public BestOptimization? BestOptimization { get; set; }
+
+    /// <summary>Total optimization attempts across all baselines. Survives re-baselines.</summary>
+    public int TotalOptimizationAttempts { get; set; }
 
     /// <summary>Per-attempt history: baseline record. Port of Python query_data["baseline"].</summary>
     public QueryRecord? Baseline { get; set; }
@@ -88,4 +90,16 @@ public class PerformanceSnapshot
             StorageEngineCache = perf.TryGetProperty("SE_Cache", out var scache) ? scache.GetInt32() : 0,
         };
     }
+}
+
+/// <summary>
+/// Tracks the best optimization attempt in the current baseline window.
+/// Reset when a new baseline is established.
+/// </summary>
+public class BestOptimization
+{
+    public string QueryId { get; set; } = "";
+    public double ImprovementPercent { get; set; }
+    public bool MeetsThreshold { get; set; }
+    public bool IsEquivalent { get; set; }
 }

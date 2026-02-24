@@ -46,34 +46,59 @@ public class SessionStatusTool
             },
             ["query_data"] = qd == null ? null : new Dictionary<string, object?>
             {
-                ["summary"] = new Dictionary<string, object?>
-                {
-                    ["original_query"] = qd.OriginalQuery,
-                    ["baseline_established"] = qd.BaselineEstablished,
-                    ["best_optimization_query_id"] = qd.BestOptimizationQueryId,
-                    ["best_improvement_percentage"] = qd.BestImprovementPercent,
-                    ["meets_improvement_threshold"] = qd.BestMeetsThreshold,
-                    ["best_optimization_equivalent"] = qd.BestIsEquivalent
-                },
+                ["summary"] = BuildSummary(qd),
                 ["baseline"] = qd.Baseline == null ? new Dictionary<string, object?>() : QueryRecordToDict(qd.Baseline),
                 ["optimizations"] = qd.Optimizations.Count == 0
                     ? new Dictionary<string, object?>()
                     : qd.Optimizations.ToDictionary(
                         kvp => kvp.Key,
                         kvp => (object?)QueryRecordToDict(kvp.Value)),
-                // Additional C# fields for backwards compat
-                ["enhanced_query"] = qd.EnhancedQuery,
                 ["baseline_performance"] = qd.BaselinePerformance == null ? null : new
                 {
                     total_ms = qd.BaselinePerformance.TotalMs,
                     fe_ms = qd.BaselinePerformance.FormulaEngineMs,
                     se_ms = qd.BaselinePerformance.StorageEngineMs,
                     se_queries = qd.BaselinePerformance.StorageEngineQueries
+                },
+                ["original_baseline_performance"] = qd.OriginalBaselinePerformance == null
+                    || qd.OriginalBaselinePerformance == qd.BaselinePerformance ? null : new
+                {
+                    total_ms = qd.OriginalBaselinePerformance.TotalMs,
+                    fe_ms = qd.OriginalBaselinePerformance.FormulaEngineMs,
+                    se_ms = qd.OriginalBaselinePerformance.StorageEngineMs,
+                    se_queries = qd.OriginalBaselinePerformance.StorageEngineQueries
                 }
             }
         };
 
         return JsonHelper.Serialize(result);
+    }
+
+    private static Dictionary<string, object?> BuildSummary(QueryData qd)
+    {
+        var summary = new Dictionary<string, object?>();
+
+        // Only expose original_query when it differs from target (i.e., after a re-baseline)
+        if (qd.OriginalQuery != null && qd.OriginalQuery != qd.TargetQuery)
+            summary["original_query"] = qd.OriginalQuery;
+
+        summary["target_query"] = qd.TargetQuery;
+        summary["enhanced_query"] = qd.EnhancedQuery;
+        summary["baseline_established"] = qd.Baseline?.Success == true;
+        summary["total_optimization_attempts"] = qd.TotalOptimizationAttempts;
+
+        if (qd.BestOptimization != null)
+        {
+            summary["best_optimization"] = new
+            {
+                query_id = qd.BestOptimization.QueryId,
+                improvement_percent = qd.BestOptimization.ImprovementPercent,
+                meets_threshold = qd.BestOptimization.MeetsThreshold,
+                is_equivalent = qd.BestOptimization.IsEquivalent
+            };
+        }
+
+        return summary;
     }
 
     private static Dictionary<string, object?> QueryRecordToDict(QueryRecord record)

@@ -205,14 +205,27 @@ public class MetadataService
 
             var depRaw = await RunMetadataQueryAsync(xmlaEndpoint, datasetName, token, depQuery);
             var tablesUsed = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+            var columnsUsed = new HashSet<string>(StringComparer.OrdinalIgnoreCase); // "Table|Column" keys
 
             if (depRaw != null)
             {
                 foreach (var dep in depRaw)
                 {
                     var table = dep.GetValueOrDefault("referenced_table");
+                    var obj = dep.GetValueOrDefault("referenced_object");
+                    var objType = dep.GetValueOrDefault("referenced_object_type");
+
                     if (!string.IsNullOrEmpty(table))
+                    {
                         tablesUsed.Add(table);
+
+                        // Track specific columns referenced by the query
+                        if (!string.IsNullOrEmpty(obj) &&
+                            (objType == "COLUMN" || objType == "CALC_COLUMN"))
+                        {
+                            columnsUsed.Add($"{table}|{obj}");
+                        }
+                    }
                 }
             }
 
@@ -229,10 +242,13 @@ public class MetadataService
                 tablesUsed = ExpandTablesThroughRelationships(tablesUsed, rels);
             }
 
-            // Filter tables, columns, measures, relationships to only those touching used tables
+            // Filter tables, columns, relationships to only those touching used tables
+            // Measures are NOT included — they are already fully inlined into the enhanced_query DEFINE block
             var filteredTables = FilterByTableName(full["tables"], tablesUsed);
-            var filteredColumns = FilterByTableName(full["columns"], tablesUsed);
-            var filteredMeasures = FilterByTableName(full["measures"], tablesUsed);
+            // Filter columns to only those specifically referenced by the query (not all columns from expanded tables)
+            var filteredColumns = columnsUsed.Count > 0
+                ? FilterByColumnReference(full["columns"], columnsUsed)
+                : FilterByTableName(full["columns"], tablesUsed);
             var filteredRelationships = FilterRelationships(full["relationships"], tablesUsed);
 
             return new Dictionary<string, object>
@@ -242,12 +258,10 @@ public class MetadataService
                 {
                     ["table_count"] = filteredTables.Count,
                     ["column_count"] = filteredColumns.Count,
-                    ["measure_count"] = filteredMeasures.Count,
                     ["relationship_count"] = filteredRelationships.Count
                 },
                 ["tables"] = filteredTables,
                 ["columns"] = filteredColumns,
-                ["measures"] = filteredMeasures,
                 ["relationships"] = filteredRelationships
             };
         }
@@ -296,6 +310,22 @@ public class MetadataService
     {
         if (items is not List<Dictionary<string, string?>> list) return [];
         return list.Where(d => d.TryGetValue("table_name", out var tn) && tn != null && tables.Contains(tn)).ToList();
+    }
+
+    /// <summary>
+    /// Filter columns to only those specifically referenced by the query.
+    /// Keys in <paramref name="columnRefs"/> are "TableName|ColumnName".
+    /// </summary>
+    private static List<Dictionary<string, string?>> FilterByColumnReference(
+        object items, HashSet<string> columnRefs)
+    {
+        if (items is not List<Dictionary<string, string?>> list) return [];
+        return list.Where(d =>
+        {
+            var tn = d.GetValueOrDefault("table_name");
+            var cn = d.GetValueOrDefault("column_name");
+            return tn != null && cn != null && columnRefs.Contains($"{tn}|{cn}");
+        }).ToList();
     }
 
     private static List<Dictionary<string, string?>> FilterRelationships(object items, HashSet<string> tables)

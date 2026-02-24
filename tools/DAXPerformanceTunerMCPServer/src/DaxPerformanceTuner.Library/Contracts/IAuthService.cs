@@ -16,8 +16,4 @@ public interface IAuthService
     /// </summary>
     Task<string?> AcquireTokenInteractiveAsync();
 
-    /// <summary>
-    /// Check if we have a cached token that is still valid or can be silently refreshed.
-    /// </summary>
-    bool HasCachedToken { get; }
 }

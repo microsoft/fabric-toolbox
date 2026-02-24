@@ -1,5 +1,3 @@
-using System.Text.RegularExpressions;
-
 namespace DaxPerformanceTuner.Library.Data;
 
 /// <summary>
@@ -21,7 +19,7 @@ public static class ArticlePatterns
         @"(?:APPROXIMATEDISTINCTCOUNT|AVERAGE|AVERAGEA|COUNT|COUNTA|COUNTBLANK|COUNTROWS|DISTINCTCOUNT|DISTINCTCOUNTNOBLANK|MAX|MAXA|MIN|MINA|PRODUCT|SUM)";
 
     private const string DAX_ITERATORS =
-        @"(?:FILTER|AVERAGEX|COUNTAX|COUNTX|MAXX|MINX|PRODUCTX|SUMX|CONCATENATEX|RANKX|PERCENTILEINC\.EXC|PERCENTILEEXC\.INC|FIRSTNONBLANK|LASTNONBLANK|FIRSTNONBLANKVALUE|LASTNONBLANKVALUE|GENERATE|GENERATEALL|ADDCOLUMNS|SELECTCOLUMNS|SUBSTITUTEWITHINDEX|TOPN|TOPNSKIP|VARX\.P|VARX\.S)";
+        @"(?:FILTER|AVERAGEX|COUNTAX|COUNTX|MAXX|MINX|PRODUCTX|SUMX|CONCATENATEX|RANKX|PERCENTILEX\.INC|PERCENTILEX\.EXC|FIRSTNONBLANK|LASTNONBLANK|FIRSTNONBLANKVALUE|LASTNONBLANKVALUE|GENERATE|GENERATEALL|ADDCOLUMNS|SELECTCOLUMNS|SUBSTITUTEWITHINDEX|TOPN|TOPNSKIP|VARX\.P|VARX\.S)";
 
     private const string DAX_CONTEXT_TRANSITION =
         @"(?:CALCULATE|CALCULATETABLE|CLOSINGBALANCEMONTH|CLOSINGBALANCEQUARTER|CLOSINGBALANCEWEEK|CLOSINGBALANCEYEAR|DATEADD|DATESMTD|DATESQTD|DATESWTD|DATESYTD|ENDOFMONTH|ENDOFQUARTER|ENDOFWEEK|ENDOFYEAR|FIRSTDATE|FIRSTNONBLANK|FIRSTNONBLANKVALUE|LASTDATE|LASTNONBLANK|LASTNONBLANKVALUE|NEXTDAY|NEXTMONTH|NEXTQUARTER|NEXTWEEK|NEXTYEAR|OPENINGBALANCEMONTH|OPENINGBALANCEQUARTER|OPENINGBALANCEWEEK|OPENINGBALANCEYEAR|PARALLELPERIOD|PREVIOUSDAY|PREVIOUSMONTH|PREVIOUSQUARTER|PREVIOUSWEEK|PREVIOUSYEAR|RELATEDTABLE|SAMEPERIODLASTYEAR|SELECTEDMEASURE|STARTOFMONTH|STARTOFQUARTER|STARTOFWEEK|STARTOFYEAR|TOTALMTD|TOTALQTD|TOTALWTD|TOTALYTD)";
@@ -157,7 +155,7 @@ public static class ArticlePatterns
             VAR B = AVERAGEX ( Base, [@TotalSales] )
             """,
             Expand(
-                @"({DAX_ITERATORS})\s*\(\s*(?<arg1>[^,()]+(?:\([^)]*\))?)\s*,[\s\S]{20,800}?({DAX_ITERATORS})\s*\(\s*\k<arg1>\s*,"
+                @"({DAX_ITERATORS})\s*\(\s*'?(?<arg1>[^,'()]+)'?\s*,[\s\S]{20,800}?({DAX_ITERATORS})\s*\(\s*'?\k<arg1>'?\s*,"
             )
         ),
 
@@ -672,6 +670,144 @@ public static class ArticlePatterns
                 @"({DAX_ITERATORS})\s*\([^,]*,\s*[\s\S]*?\[[A-Za-z_][A-Za-z0-9 _]*\]"
             )
         ),
+
+        // ==================================================================
+        // CUST014 — Replace SELECTEDVALUE with MAX/MIN for single-value contexts
+        // ==================================================================
+        ["CUST014"] = new(
+            "Replace SELECTEDVALUE with MAX/MIN for single-value contexts",
+            null,
+            """
+            When a filter context guarantees exactly one value for a column, SELECTEDVALUE adds unnecessary
+            overhead compared to MAX or MIN. SELECTEDVALUE internally checks for a single distinct value and
+            returns BLANK if multiple exist, which adds formula engine cost. When the context already guarantees
+            a single value (e.g., inside an iterator over VALUES/DISTINCT or in a context transition), MAX or
+            MIN is semantically equivalent and avoids the extra cardinality check.
+
+            Anti-pattern examples:
+
+            SUMX(
+                VALUES(Product[Category]),
+                SELECTEDVALUE(Product[Category]) & ": " & FORMAT([Total Sales], "#,0")
+            )
+
+            ADDCOLUMNS(
+                VALUES(Date[Year]),
+                "@Label", SELECTEDVALUE(Date[Year])
+            )
+
+            Preferred patterns:
+
+            SUMX(
+                VALUES(Product[Category]),
+                MAX(Product[Category]) & ": " & FORMAT([Total Sales], "#,0")
+            )
+
+            ADDCOLUMNS(
+                VALUES(Date[Year]),
+                "@Label", MAX(Date[Year])
+            )
+            """,
+            [
+                @"SELECTEDVALUE\s*\("
+            ]
+        ),
+
+        // ==================================================================
+        // CUST015 — Use ALLEXCEPT instead of ALL + VALUES restoration
+        // ==================================================================
+        ["CUST015"] = new(
+            "Use ALLEXCEPT instead of ALL + VALUES restoration",
+            null,
+            """
+            When clearing filter context with ALL() and then restoring specific columns via VALUES() or
+            explicit filters, ALLEXCEPT achieves the same result in a single operation. This reduces the
+            number of filter arguments and can produce a simpler query plan.
+
+            Anti-pattern examples:
+
+            CALCULATE(
+                [Total Sales],
+                ALL(Sales),
+                VALUES(Sales[Region])
+            )
+
+            CALCULATE(
+                SUM(Sales[Amount]),
+                ALL(Sales),
+                VALUES(Sales[Region]),
+                VALUES(Sales[Year])
+            )
+
+            Preferred patterns:
+
+            CALCULATE(
+                [Total Sales],
+                ALLEXCEPT(Sales, Sales[Region])
+            )
+
+            CALCULATE(
+                SUM(Sales[Amount]),
+                ALLEXCEPT(Sales, Sales[Region], Sales[Year])
+            )
+            """,
+            [
+                @"CALCULATE(?:TABLE)?\s*\([^)]*,[\s\S]*?ALL\s*\(\s*('?[A-Za-z_][A-Za-z0-9 ]*'?)\s*\)[\s\S]*?VALUES\s*\(\s*\1\["
+            ]
+        ),
+
+        // ==================================================================
+        // CUST016 — Flatten nested CALCULATE calls
+        // ==================================================================
+        ["CUST016"] = new(
+            "Flatten nested CALCULATE calls",
+            null,
+            """
+            Nested CALCULATE calls create multiple context transitions when a single CALCULATE with combined
+            filter arguments would suffice. Each CALCULATE creates a separate context transition boundary,
+            and nesting them adds unnecessary formula engine overhead. Flatten them by merging the filter
+            arguments into one CALCULATE call.
+
+            Anti-pattern examples:
+
+            CALCULATE(
+                CALCULATE(
+                    [Total Sales],
+                    Sales[Region] = "West"
+                ),
+                Date[Year] = 2023
+            )
+
+            CALCULATE(
+                CALCULATE(
+                    SUM(Sales[Amount]),
+                    Product[Category] = "Electronics"
+                ),
+                Sales[Year] = 2023,
+                Sales[Region] = "West"
+            )
+
+            Preferred patterns:
+
+            CALCULATE(
+                [Total Sales],
+                Sales[Region] = "West",
+                Date[Year] = 2023
+            )
+
+            CALCULATE(
+                SUM(Sales[Amount]),
+                Product[Category] = "Electronics",
+                Sales[Year] = 2023,
+                Sales[Region] = "West"
+            )
+            """,
+            [
+                @"CALCULATE\s*\(\s*CALCULATE\s*\(",
+                @"CALCULATETABLE\s*\(\s*CALCULATE(?:TABLE)?\s*\("
+            ]
+        ),
+
     };
 
     // ======================================================================

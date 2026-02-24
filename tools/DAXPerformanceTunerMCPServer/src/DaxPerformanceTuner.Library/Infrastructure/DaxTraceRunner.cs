@@ -14,12 +14,7 @@
 // - DMV-based column/table ID mapping (GetColumnIdToNameMapping, GetTableIdToNameMapping)
 // ============================================================================
 
-using System;
-using System.Collections.Generic;
-using System.Threading.Tasks;
 using System.Data;
-using System.Linq;
-using System.IO;
 using System.Xml;
 using System.Xml.XPath;
 using Microsoft.AnalysisServices.AdomdClient;
@@ -138,9 +133,6 @@ namespace DaxPerformanceTuner.Library.Infrastructure
 
                     trace.Filter = GetSessionIdFilter(sessionId, applicationName);
                     
-                    // Set stop time for automatic cleanup
-                    trace.StopTime = DateTime.UtcNow.AddHours(TRACE_AUTO_STOP_HOURS);
-
                     SetupTraceEvents(trace, queryConnection);
 
                     trace.OnEvent += (sender, e) =>
@@ -227,8 +219,9 @@ namespace DaxPerformanceTuner.Library.Infrastructure
                             collectedEvents.Add(traceEvent);
                             
                         }
-                        catch
+                        catch (Exception ex)
                         {
+                            Console.Error.WriteLine($"[DaxTraceRunner] Trace event handler error: {ex.Message}");
                         }
                     };
 
@@ -242,10 +235,10 @@ namespace DaxPerformanceTuner.Library.Infrastructure
                     await ClearDatasetCache(queryConnection, server, datasetName);
 
 
-                    for (int i = 0; i < 5; i++)
+                    for (int i = 0; i < TRACE_PING_ITERATIONS; i++)
                     {
                         PingTraceConnection(queryConnection);
-                        await Task.Delay(500);
+                        await Task.Delay(TRACE_PING_INTERVAL_MS);
                     }
 
 
@@ -548,8 +541,9 @@ namespace DaxPerformanceTuner.Library.Infrastructure
 
                     }
                 }
-                catch
+                catch (Exception ex)
                 {
+                    Console.Error.WriteLine($"[DaxTraceRunner] Database ID lookup failed: {ex.Message}");
                 }
                 
                 await Task.Run(() => {
@@ -569,8 +563,9 @@ namespace DaxPerformanceTuner.Library.Infrastructure
                 });
 
             }
-            catch
+            catch (Exception ex)
             {
+                Console.Error.WriteLine($"[DaxTraceRunner] Cache clear failed: {ex.Message}");
             }
         }
 
@@ -598,8 +593,9 @@ namespace DaxPerformanceTuner.Library.Infrastructure
                 
 
             }
-            catch
+            catch (Exception ex)
             {
+                Console.Error.WriteLine($"[DaxTraceRunner] Column ID mapping failed: {ex.Message}");
             }
             
             return mapping;
@@ -629,8 +625,9 @@ namespace DaxPerformanceTuner.Library.Infrastructure
                 
 
             }
-            catch
+            catch (Exception ex)
             {
+                Console.Error.WriteLine($"[DaxTraceRunner] Table ID mapping failed: {ex.Message}");
             }
             
             return mapping;

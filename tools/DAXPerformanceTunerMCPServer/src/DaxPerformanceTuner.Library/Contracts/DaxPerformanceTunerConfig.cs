@@ -11,7 +11,6 @@ public class DaxPerformanceTunerConfig
     public int TokenRefreshBufferSeconds { get; set; } = 300;
     public PerformanceThresholdsConfig PerformanceThresholds { get; set; } = new();
     public int DaxExecutionRuns { get; set; } = 3;
-    public int DaxExecutionTimeoutSeconds { get; set; } = 600;
     public int ResearchRequestTimeout { get; set; } = 30;
     public int ResearchMinContentLength { get; set; } = 200;
 }
@@ -19,6 +18,4 @@ public class DaxPerformanceTunerConfig
 public class PerformanceThresholdsConfig
 {
     public double ImprovementThresholdPercent { get; set; } = 10.0;
-    public int MaxTotalTimeMs { get; set; } = 120000;
-    public double SignificantImprovementPercent { get; set; } = 20.0;
 }

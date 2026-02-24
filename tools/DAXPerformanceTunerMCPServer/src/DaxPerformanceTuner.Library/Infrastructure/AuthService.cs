@@ -49,8 +49,6 @@ public class AuthService : IAuthService
             .Build();
     }
 
-    public bool HasCachedToken => _accessToken != null && !IsTokenExpired();
-
     public async Task<string?> GetAccessTokenAsync()
     {
         await _tokenLock.WaitAsync();

@@ -21,10 +21,11 @@ This is an MCP tool that enables a workflow-driven, research-driven, and testing
 **2-STAGE OPTIMIZATION WORKFLOW:**
 
 **STAGE 1 - CONNECTION ESTABLISHMENT:**
-**CALL THIS TOOL FIRST TO ESTABLISH CONNECTION**
+**CALL THIS TOOL FIRST TO ESTABLISH CONNECTION (also resets any previous optimization session)**
 - Use connect_to_dataset with workspace_name + dataset_name or xmla_endpoint + dataset_name
 - Verify successful connection to Power BI dataset
 - Only proceed once connection is confirmed
+- NOTE: Calling connect_to_dataset always starts a fresh session, even when reconnecting to the same dataset
 
 **STAGE 2 - COMPREHENSIVE BASELINE & OPTIMIZATION:**
 - **SINGLE COMPREHENSIVE STEP: Call prepare_query_for_optimization** with the original user query
@@ -40,15 +41,7 @@ This is an MCP tool that enables a workflow-driven, research-driven, and testing
 **OPTIMIZATION ITERATIONS:**
 - **OPTIMIZATION TARGET: Optimize the MEASURE AND USER-DEFINED FUNCTION DEFINITIONS from baseline, not the query structure**
 - Keep the same SUMMARIZECOLUMNS grouping as baseline - focus on optimizing measure and function logic
-- **OPTIMIZATION STRATEGY: Use the comprehensive analysis from prepare_query_for_optimization:**
-  - **Baseline Performance Analysis**: FE/SE split, callback patterns, materialization sizes
-  - **Model Metadata**: Schema information to ensure syntactically correct optimizations
-  - **Research Articles**: Targeted optimization guidance based on detected patterns
-  - **DAX Optimization Guidance**: Apply the comprehensive optimization guidance provided below
-- Based on this analysis, develop specific optimizations that address identified bottlenecks:
-  - Observe baseline performance symptoms (high FE %, many SE queries, CallbackDataID/EncodeCallback, large materializations vs final row count)
-  - Map symptoms to optimization themes (Fusion opportunities, Callback reduction, Cardinality pruning, Iterator simplification, Variable caching)
-  - Apply specific DAX patterns from the guidance and research articles
+- **OPTIMIZATION STRATEGY:** Use the performance data, model metadata, research articles, and DAX Optimization Guidance returned by prepare_query_for_optimization to develop specific optimizations that address identified bottlenecks
 - **Semantic Equivalence Requirement:**
   - Optimized query MUST return identical row count, column structure, and values to baseline
   - Changing aggregation levels or grouping structure = automatic failure
