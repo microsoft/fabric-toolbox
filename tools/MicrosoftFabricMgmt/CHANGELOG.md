@@ -4,7 +4,39 @@ The format is based on and uses the types of changes according to [Keep a Change
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+
+## [1.0.6] - 2026-02-26
+
 ### Added
+
+- **`Get-FabricItem`**: New function to list or retrieve items within a workspace using the core Items API
+  (`GET /workspaces/{workspaceId}/items` and `GET /workspaces/{workspaceId}/items/{itemId}`).
+  - Supports optional `ItemType` filter when listing (e.g. `Lakehouse`, `Notebook`)
+  - Pipeline input from `Get-FabricWorkspace` via `Alias('id')` on `WorkspaceId`
+  - Output objects carry `workspaceId` and `id` properties enabling direct piping to `Get-FabricOneLakeDataAccessRole`
+
+- **`Get-FabricOneLakeDataAccessRole`** *(Preview API)*: New function to retrieve OneLake data access roles for a Fabric item
+  using the preview OneLake Data Access Security API endpoints.
+  - Without `-RoleName`: lists all roles via `GET /workspaces/{workspaceId}/items/{itemId}/dataAccessRoles` (paginated)
+  - With `-RoleName`: retrieves a specific role via `GET /workspaces/{workspaceId}/items/{itemId}/dataAccessRoles/{roleName}?preview=true`
+  - Pipeline input from `Get-FabricItem` — `workspaceId` binds to `WorkspaceId`, `id` binds to `ItemId` via alias
+  - Human-readable terminal output via custom Format.ps1xml view; the full PSObject is preserved for pipeline use
+  - Graceful error handling: `moreDetails` from structured API error responses surfaced as a tidy Warning; full error at Debug
+  - Full three-command pipeline supported:
+    ```powershell
+    Get-FabricWorkspace -WorkspaceName "MyWorkspace" | Get-FabricItem | Get-FabricOneLakeDataAccessRole
+    Get-FabricWorkspace -WorkspaceName "MyWorkspace" | Get-FabricItem -ItemType "Lakehouse" | Get-FabricOneLakeDataAccessRole
+    ```
+
+### Changed
+
+- **`Invoke-FabricAPIRequest`**: Improved error handling for structured API error responses
+  - `moreDetails` entries from Fabric API error responses are now included in the thrown error message
+  - `$script:FabricLastAPIError` is now populated before throwing on non-2xx responses, enabling callers to access
+    structured error data in their catch blocks under PowerShell 7 (where `$_.ErrorDetails.Message` is not populated)
+  - Inner catch log level changed from `Error` to `Debug` to prevent duplicate output (callers own the user-facing message)
+
+- **`prefix.ps1`**: Added module-load warning for the preview OneLake Data Access Security API notice
 
 ## [1.0.5] - 2026-02-24 
 
