@@ -103,7 +103,20 @@ MicrosoftFabricMgmt v1.0.0 - BREAKING CHANGES:
 - Authentication still works via Set-FabricApiHeaders
 - See BREAKING-CHANGES.md for migration guide
 "@
-#EndRegion '.\prefix.ps1' 104
+
+# ============================================================================
+# Preview API Notice - OneLake Data Access Security
+# ============================================================================
+
+Write-PSFMessage -Level Important -Message @"
+PREVIEW API NOTICE - OneLake Data Access Security (Get-FabricOneLakeDataAccessRole):
+- These functions use Microsoft Fabric Preview API endpoints that may change based on
+  feedback and are not recommended for production use.
+- Only read operations are currently implemented in this module.
+- Data-changing operations (create, update, delete roles) are NOT implemented.
+- Use with caution in production environments.
+"@
+#EndRegion '.\prefix.ps1' 117
 #Region '.\Private\Add-FabricTypeName.ps1' -1
 
 function Add-FabricTypeName {
@@ -11801,6 +11814,152 @@ function Update-FabricGraphQLApiDefinition {
 }
 }
 #EndRegion '.\Public\GraphQLApi\Update-FabricGraphQLApiDefinition.ps1' 130
+#Region '.\Public\Items\Get-FabricItem.ps1' -1
+
+<#
+.SYNOPSIS
+    Gets items from a Microsoft Fabric workspace.
+
+.DESCRIPTION
+    The Get-FabricItem cmdlet retrieves Fabric items from a specified workspace.
+
+    When ItemId is provided, retrieves a single specific item using the Get Item endpoint
+    (GET /workspaces/{workspaceId}/items/{itemId}).
+
+    When ItemId is omitted, lists all items in the workspace using the List Items endpoint
+    (GET /workspaces/{workspaceId}/items). Pagination is handled automatically.
+
+    An optional ItemType filter can be used to narrow results to a specific item type
+    (e.g. Lakehouse, Notebook, Warehouse).
+
+.PARAMETER WorkspaceId
+    The GUID of the workspace to retrieve items from. Mandatory.
+    Accepts pipeline input by property name. Also accepts the 'id' property alias, so workspace
+    objects returned by Get-FabricWorkspace can be piped directly.
+
+.PARAMETER ItemId
+    Optional. The GUID of a specific item to retrieve.
+
+.PARAMETER ItemType
+    Optional. Filters the item list to a specific type (e.g. Lakehouse, Notebook, Warehouse).
+    Has no effect when ItemId is specified.
+
+.PARAMETER Raw
+    Optional. When specified, returns the raw API response without type decoration.
+
+.EXAMPLE
+    Get-FabricItem -WorkspaceId "11111111-2222-3333-4444-555555555555"
+
+    Lists all items in the specified workspace.
+
+.EXAMPLE
+    Get-FabricItem -WorkspaceId "11111111-2222-3333-4444-555555555555" -ItemType "Lakehouse"
+
+    Lists all Lakehouse items in the workspace.
+
+.EXAMPLE
+    Get-FabricItem -WorkspaceId "11111111-2222-3333-4444-555555555555" -ItemId "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee"
+
+    Retrieves a single item by ID.
+
+.EXAMPLE
+    Get-FabricWorkspace -WorkspaceName "MyWorkspace" | Get-FabricItem
+
+    Lists all items in a workspace by piping from Get-FabricWorkspace.
+    The workspace object's 'id' property binds to WorkspaceId.
+
+.EXAMPLE
+    Get-FabricWorkspace -WorkspaceName "MyWorkspace" | Get-FabricItem | Get-FabricOneLakeDataAccessRole
+
+    Retrieves OneLake data access roles for every item in a workspace using the pipeline.
+
+.NOTES
+    - Requires Member or higher role on the workspace.
+    - Required delegated scopes: Item.Read.All or Item.ReadWrite.All
+    - API Reference: https://learn.microsoft.com/en-us/rest/api/fabric/core/items
+
+    Author: Rob Sewell
+#>
+function Get-FabricItem {
+    [CmdletBinding()]
+    param (
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
+        [ValidateNotNullOrEmpty()]
+        [Alias('id')]
+        [string]$WorkspaceId,
+
+        [Parameter(Mandatory = $false)]
+        [ValidateNotNullOrEmpty()]
+        [string]$ItemId,
+
+        [Parameter(Mandatory = $false)]
+        [ValidateNotNullOrEmpty()]
+        [string]$ItemType,
+
+        [Parameter()]
+        [switch]$Raw
+    )
+
+    process {
+        try {
+            Invoke-FabricAuthCheck -ThrowOnFailure
+
+            if ($ItemId) {
+                # Get a specific item by ID
+                $apiEndpointURI = "{0}/workspaces/{1}/items/{2}" -f `
+                    $script:FabricAuthContext.BaseUrl, $WorkspaceId, $ItemId
+                Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
+
+                $apiParams = @{
+                    BaseURI = $apiEndpointURI
+                    Headers = $script:FabricAuthContext.FabricHeaders
+                    Method  = 'Get'
+                }
+                $response = Invoke-FabricAPIRequest @apiParams
+
+                if (-not $response) {
+                    Write-FabricLog -Message "No item '$ItemId' found in workspace '$WorkspaceId'." -Level Verbose
+                    return
+                }
+
+                if ($Raw) {
+                    return $response
+                }
+
+                $response | Add-FabricTypeName -TypeName 'MicrosoftFabric.Item'
+                return $response
+            }
+            else {
+                # List all items in the workspace. Invoke-FabricAPIRequest handles pagination automatically.
+                $apiEndpointURI = "{0}/workspaces/{1}/items" -f `
+                    $script:FabricAuthContext.BaseUrl, $WorkspaceId
+                if ($ItemType) {
+                    $apiEndpointURI += "?type=$([System.Uri]::EscapeDataString($ItemType))"
+                }
+                Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
+
+                $apiParams = @{
+                    BaseURI = $apiEndpointURI
+                    Headers = $script:FabricAuthContext.FabricHeaders
+                    Method  = 'Get'
+                }
+                $response = Invoke-FabricAPIRequest @apiParams
+
+                if (-not $response) {
+                    Write-FabricLog -Message "No items found in workspace '$WorkspaceId'." -Level Verbose
+                    return
+                }
+
+                return Select-FabricResource -InputObject $response -ResourceType 'Item' -TypeName 'MicrosoftFabric.Item' -Raw:$Raw
+            }
+        }
+        catch {
+            $errorDetails = $_.Exception.Message
+            Write-FabricLog -Message "Failed to retrieve item(s) in workspace '$WorkspaceId'. Error: $errorDetails" -Level Error
+        }
+    }
+}
+#EndRegion '.\Public\Items\Get-FabricItem.ps1' 144
 #Region '.\Public\KQL Dashboard\Get-FabricKQLDashboard.ps1' -1
 
 <#
@@ -18845,6 +19004,193 @@ function Update-FabricNotebookDefinition {
     }
 }
 #EndRegion '.\Public\Notebook\Update-FabricNotebookDefinition.ps1' 148
+#Region '.\Public\OneLake\Get-FabricOneLakeDataAccessRole.ps1' -1
+
+<#
+.SYNOPSIS
+    Gets OneLake data access roles for a Fabric item.
+
+.DESCRIPTION
+    The Get-FabricOneLakeDataAccessRole cmdlet retrieves OneLake data access roles
+    for a specified Fabric item within a workspace.
+
+    When RoleName is provided, retrieves a single specific role using the preview API
+    endpoint (GET /dataAccessRoles/{roleName}?preview=true).
+
+    When RoleName is omitted, lists all data access roles using the list API endpoint
+    (GET /dataAccessRoles). Pagination is handled automatically.
+
+    PREVIEW API NOTICE: These endpoints are part of a Microsoft Fabric Preview release,
+    provided for evaluation and development purposes only. They may change based on feedback
+    and are not recommended for production use. Only read operations are implemented in this
+    module; data-changing operations (create, update, delete) are not available.
+
+.PARAMETER WorkspaceId
+    The GUID of the workspace containing the Fabric item. Mandatory.
+    Accepts pipeline input by property name (binds to the 'workspaceId' property on objects
+    returned by Get-FabricItem and similar commands).
+
+.PARAMETER ItemId
+    The GUID of the Fabric item whose data access roles you want to retrieve. Mandatory.
+    Accepts pipeline input by property name. Also accepts the 'id' property alias, so objects
+    returned by Get-FabricItem can be piped directly.
+
+.PARAMETER RoleName
+    Optional. The name of a specific role to retrieve. When specified, calls the preview
+    Get Data Access Role endpoint. When omitted, all data access roles are listed.
+
+.PARAMETER Raw
+    Optional. When specified, returns the raw API response without type decoration.
+
+.EXAMPLE
+    Get-FabricOneLakeDataAccessRole -WorkspaceId "11111111-2222-3333-4444-555555555555" -ItemId "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee"
+
+    Lists all data access roles for the specified Fabric item. All pages of results are
+    returned automatically.
+
+.EXAMPLE
+    Get-FabricOneLakeDataAccessRole -WorkspaceId "11111111-2222-3333-4444-555555555555" -ItemId "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee" -RoleName "DefaultReader"
+
+    Retrieves the specific 'DefaultReader' data access role using the preview API endpoint.
+
+.EXAMPLE
+    $ws = Get-FabricWorkspace -WorkspaceName "MyWorkspace"
+    Get-FabricItem -WorkspaceId $ws.id -DisplayName "MyLakehouse" | Get-FabricOneLakeDataAccessRole
+
+    Lists all data access roles for a Lakehouse item by piping directly from Get-FabricItem.
+    The piped object's 'workspaceId' property binds to WorkspaceId and its 'id' property binds to ItemId.
+
+.EXAMPLE
+    Get-FabricItem -WorkspaceId "11111111-2222-3333-4444-555555555555" | Get-FabricOneLakeDataAccessRole
+
+    Retrieves data access roles for all items in the workspace by piping from Get-FabricItem.
+
+.NOTES
+    - Caller must have member or higher role on the workspace.
+    - Required delegated scopes: OneLake.Read.All or OneLake.ReadWrite.All
+    - PREVIEW: This API is part of a preview release and may change without notice.
+      It is not recommended for production use.
+    - Only read operations are implemented. Create, update, and delete are not supported
+      by this module.
+    - API Reference: https://learn.microsoft.com/en-us/rest/api/fabric/core/onelake-data-access-security
+
+    Author: Rob Sewell
+#>
+function Get-FabricOneLakeDataAccessRole {
+    [CmdletBinding()]
+    param (
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
+        [ValidateNotNullOrEmpty()]
+        [string]$WorkspaceId,
+
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
+        [ValidateNotNullOrEmpty()]
+        [Alias('id')]
+        [string]$ItemId,
+
+        [Parameter(Mandatory = $false)]
+        [ValidateNotNullOrEmpty()]
+        [string]$RoleName,
+
+        [Parameter()]
+        [switch]$Raw
+    )
+
+    process {
+        try {
+            Invoke-FabricAuthCheck -ThrowOnFailure
+
+            if ($RoleName) {
+                # Get a specific role by name
+                # NOTE: This endpoint requires the ?preview=true query parameter per the API specification.
+                $apiEndpointURI = "{0}/workspaces/{1}/items/{2}/dataAccessRoles/{3}?preview=true" -f `
+                    $script:FabricAuthContext.BaseUrl, $WorkspaceId, $ItemId, $RoleName
+                Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
+
+                $apiParams = @{
+                    BaseURI = $apiEndpointURI
+                    Headers = $script:FabricAuthContext.FabricHeaders
+                    Method  = 'Get'
+                }
+                $response = Invoke-FabricAPIRequest @apiParams
+
+                if (-not $response) {
+                    Write-FabricLog -Message "No data access role '$RoleName' found for item '$ItemId' in workspace '$WorkspaceId'." -Level Verbose
+                    return
+                }
+
+                if ($Raw) {
+                    return $response
+                }
+
+                $response | Add-FabricTypeName -TypeName 'MicrosoftFabric.OneLakeDataAccessRole'
+                return $response
+            }
+            else {
+                # List all data access roles for the item. Invoke-FabricAPIRequest handles pagination automatically.
+                $apiEndpointURI = "{0}/workspaces/{1}/items/{2}/dataAccessRoles" -f `
+                    $script:FabricAuthContext.BaseUrl, $WorkspaceId, $ItemId
+                Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
+
+                $apiParams = @{
+                    BaseURI = $apiEndpointURI
+                    Headers = $script:FabricAuthContext.FabricHeaders
+                    Method  = 'Get'
+                }
+                $response = Invoke-FabricAPIRequest @apiParams
+
+                if (-not $response) {
+                    Write-FabricLog -Message "No data access roles found for item '$ItemId' in workspace '$WorkspaceId'." -Level Verbose
+                    return
+                }
+
+                return Select-FabricResource -InputObject $response -ResourceType 'OneLakeDataAccessRole' -TypeName 'MicrosoftFabric.OneLakeDataAccessRole' -Raw:$Raw
+            }
+        }
+        catch {
+            # Full technical details at Debug for troubleshooting
+            Write-FabricLog -Message "Failed to retrieve OneLake data access role(s) for item '$ItemId' in workspace '$WorkspaceId'. Full error: $($_.Exception.Message)" -Level Debug
+
+            # Resolve the structured error response from whichever source is available:
+            #   PS5.1: Invoke-RestMethod throws, $_.ErrorDetails.Message = raw HTTP response body (JSON)
+            #   PS7:   Invoke-RestMethod succeeds (SkipHttpErrorCheck), manual throw has no ErrorDetails,
+            #          but Invoke-FabricAPIRequest stores the parsed response in $script:FabricLastAPIError
+            $errorSource = $null
+            if ($_.ErrorDetails.Message) {
+                try {
+                    $errorSource = $_.ErrorDetails.Message | ConvertFrom-Json -ErrorAction Stop
+                }
+                catch {
+                    # Not valid JSON - fall through to $script:FabricLastAPIError
+                }
+            }
+            if (-not $errorSource) {
+                $errorSource = $script:FabricLastAPIError
+            }
+
+            # Build a neat, user-facing message from the structured error data
+            $msgLines = @("Unable to retrieve OneLake data access role(s) for item '$ItemId' in workspace '${WorkspaceId}':")
+            if ($errorSource -and $errorSource.moreDetails -and $errorSource.moreDetails.Count -gt 0) {
+                foreach ($detail in $errorSource.moreDetails) {
+                    if ($detail.message) {
+                        $line = "  $($detail.message)"
+                        if ($detail.errorCode) { $line += " [$($detail.errorCode)]" }
+                        $msgLines += $line
+                    }
+                }
+            }
+            elseif ($errorSource -and $errorSource.message) {
+                $msgLines += "  $($errorSource.message)"
+            }
+            else {
+                $msgLines += "  $($_.Exception.Message)"
+            }
+
+            Write-FabricLog -Message ($msgLines -join "`n") -Level Warning
+        }
+    }
+}
+#EndRegion '.\Public\OneLake\Get-FabricOneLakeDataAccessRole.ps1' 185
 #Region '.\Public\OneLake\Get-FabricOneLakeDataAccessSecurity.ps1' -1
 
 <#
@@ -27321,6 +27667,16 @@ function Invoke-FabricAPIRequest {
                             $errorParts += $response.message
                         }
 
+                        # Include specific messages from moreDetails if present - these are
+                        # typically more actionable than the generic top-level message
+                        if ($response.moreDetails) {
+                            foreach ($detail in $response.moreDetails) {
+                                if ($detail.message) {
+                                    $errorParts += $detail.message
+                                }
+                            }
+                        }
+
                         if ($response.requestId) {
                             $errorParts += "RequestId: $($response.requestId)"
                         }
@@ -27344,6 +27700,9 @@ function Invoke-FabricAPIRequest {
                     }
                 }
 
+                # Store the structured response so callers can access moreDetails etc.
+                # in their catch blocks via $script:FabricLastAPIError (PS7 has no ErrorDetails.Message)
+                $script:FabricLastAPIError = $response
                 throw "API request failed with status code $statusCode ($errorMsg). $errorDetails"
             }
 
@@ -27352,11 +27711,13 @@ function Invoke-FabricAPIRequest {
         return , $results.ToArray()
     }
     catch {
-        Write-FabricLog -Message "Invoke Fabric API error. Error: $($_.Exception.Message)" -Level Error
+        # Log at Debug since this rethrows - the calling function is responsible for
+        # user-visible error messages, avoiding duplicate Warning/Error output.
+        Write-FabricLog -Message "Invoke Fabric API error. Error: $($_.Exception.Message)" -Level Debug
         throw
     }
 }
-#EndRegion '.\Public\Utils\Invoke-FabricAPIRequest.ps1' 335
+#EndRegion '.\Public\Utils\Invoke-FabricAPIRequest.ps1' 350
 #Region '.\Public\Utils\Resolve-FabricCapacityIdFromWorkspace.ps1' -1
 
 function Resolve-FabricCapacityIdFromWorkspace {
