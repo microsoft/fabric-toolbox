@@ -47,11 +47,11 @@ Once Data Lake Gen 2 storage account created here are the high levels steps to c
 >
 > ![Historical data in one-month chunks export](./media/ChunkExport.png)
 
->ℹ️ Focus data access will be made by the use of **one shortcut**. To be able to support focus data export from **multiple subscriptions or resource groups**, you will need to export them in the same storage account with the same folder structure.
->
->For example you can export data in to Container/focus folder with the following structure:
->
->Container/focus/ <-- Shortcut target
+ℹ️ Focus data access will be made by the use of **one shortcut**. To be able to support focus data export from **multiple subscriptions or resource groups**, you will need to export them in the same storage account with the same folder structure.
+
+For example you can export data in to Container/focus folder with the following structure:
+
+Container/focus/ <-- Shortcut target
 ├── sub1/
 │ ├── 20260101-20260131/
 │ │ ├── Guid/
@@ -66,8 +66,8 @@ Once Data Lake Gen 2 storage account created here are the high levels steps to c
 │ ├── 20260201-20260128/
 │ │ ├── Guid/
 │ │ │ ├── *.parquet
->
->You are free to use your own folder structure. The ingestion process dynamically detects the number of folders before and after the YYYYMMDD-YYYYMMDD directory. The only requirement is to keep the same structure across all Focus exports.
+
+You are free to use your own folder structure. The ingestion process dynamically detects the number of folders before and after the YYYYMMDD-YYYYMMDD directory. The only requirement is to keep the same structure across all Focus exports.
 
 ## 2 - Configure Fabric items
 
