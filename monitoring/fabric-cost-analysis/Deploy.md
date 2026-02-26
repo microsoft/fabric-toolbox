@@ -51,21 +51,21 @@ Once Data Lake Gen 2 storage account created here are the high levels steps to c
 
 For example you can export data in to Container/focus folder with the following structure:
 
-Container/focus/  #-- Shortcut target
-├── sub1/
-│   ├── 20260101-20260131/
-│   │   ├── Guid/
-│   │   │   ├── *.parquet
-│   ├── 20260201-20260128/
-│   │   ├── Guid/
-│   │   │   ├── *.parquet
-├── sub2/
-│   ├── 20260101-20260131/
-│   │   ├── Guid/
-│   │   │   ├── *.parquet
-│   ├── 20260201-20260128/
-│   │   ├── Guid/
-│   │   │   ├── *.parquet
+Container/focus/  <-- Shortcut target<br>
+├── sub1/<br>
+│   ├── 20260101-20260131/<br>
+│   │   ├── Guid/<br>
+│   │   │   ├── *.parquet<br>
+│   ├── 20260201-20260128/<br>
+│   │   ├── Guid/<br>
+│   │   │   ├── *.parquet<br>
+├── sub2/<br>
+│   ├── 20260101-20260131/<br>
+│   │   ├── Guid/<br>
+│   │   │   ├── *.parquet<br>
+│   ├── 20260201-20260128/<br>
+│   │   ├── Guid/<br>
+│   │   │   ├── *.parquet<br>
 
 You are free to use your own folder structure. The ingestion process dynamically detects the number of folders before and after the YYYYMMDD-YYYYMMDD directory. The only requirement is to keep the same structure across all Focus exports.
 
