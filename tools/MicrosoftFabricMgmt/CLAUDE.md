@@ -144,6 +144,67 @@ function Get-FabricResource {
 - Use `Write-PSFMessage` with `-ErrorRecord $_` to preserve error details
 - Throw exceptions for unrecoverable errors, return `$null` for "not found" scenarios
 
+**Graceful Error Messages — User vs Debug Separation**:
+
+Public functions MUST split error output so users see only actionable information while full technical details are available at Debug level. This avoids overwhelming users with internal API error codes and GUIDs.
+
+There are two sources of structured error data depending on the PowerShell version:
+- **PS5.1**: `Invoke-RestMethod` throws on 4xx → `$_.ErrorDetails.Message` = raw HTTP response body (JSON)
+- **PS7**: `SkipHttpErrorCheck` means no throw from `Invoke-RestMethod`; `Invoke-FabricAPIRequest` stores the parsed response in `$script:FabricLastAPIError` before manually throwing
+
+The standard catch pattern resolves whichever source is available and formats `moreDetails` entries into a clean multi-line message:
+
+```powershell
+catch {
+    # Full technical details at Debug for troubleshooting
+    Write-FabricLog -Message "Failed to <action> '<resource>'. Full error: $($_.Exception.Message)" -Level Debug
+
+    # Resolve the structured error response from whichever source is available
+    $errorSource = $null
+    if ($_.ErrorDetails.Message) {
+        try {
+            $errorSource = $_.ErrorDetails.Message | ConvertFrom-Json -ErrorAction Stop
+        }
+        catch { }
+    }
+    if (-not $errorSource) {
+        $errorSource = $script:FabricLastAPIError   # populated by Invoke-FabricAPIRequest (PS7 path)
+    }
+
+    # Format a neat user-facing message, preferring moreDetails over the generic top-level message
+    $msgLines = @("Unable to <action> '<resource>':")
+    if ($errorSource -and $errorSource.moreDetails -and $errorSource.moreDetails.Count -gt 0) {
+        foreach ($detail in $errorSource.moreDetails) {
+            if ($detail.message) {
+                $line = "  $($detail.message)"
+                if ($detail.errorCode) { $line += " [$($detail.errorCode)]" }
+                $msgLines += $line
+            }
+        }
+    }
+    elseif ($errorSource -and $errorSource.message) {
+        $msgLines += "  $($errorSource.message)"
+    }
+    else {
+        $msgLines += "  $($_.Exception.Message)"
+    }
+
+    Write-FabricLog -Message ($msgLines -join "`n") -Level Warning
+}
+```
+
+**Example output** for a 400 with `moreDetails[0] = { errorCode: "UniversalSecurityFeatureDisabledForWorkspace", message: "Universal security feature is disabled for the workspace" }`:
+- **Debug**: `Failed to retrieve... Full error: API request failed with status code 400 (Bad Request). ErrorCode: BadRequest | ... | Universal security feature is disabled for the workspace | RequestId: ...`
+- **Warning**:
+  ```
+  Unable to retrieve...:
+    Universal security feature is disabled for the workspace [UniversalSecurityFeatureDisabledForWorkspace]
+  ```
+
+**`Invoke-FabricAPIRequest` inner catch MUST log at `Debug`** (not `Error` or `Warning`) because it always rethrows. Logging at a visible level here causes every error to appear twice.
+
+**`$script:FabricLastAPIError`**: Set by `Invoke-FabricAPIRequest` immediately before any non-2xx throw, so callers can access the full structured response in their catch blocks. Do not rely on this for anything other than error formatting in catch blocks — it is overwritten on every failed request.
+
 ### 3. PSFramework Integration
 
 #### Migrating from Write-Message to PSFramework
