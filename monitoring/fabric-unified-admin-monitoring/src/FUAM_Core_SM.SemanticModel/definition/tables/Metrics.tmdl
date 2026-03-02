@@ -1411,7 +1411,7 @@ table Metrics
 		displayFolder: Semantic Models\Optimization Module\BPA
 		lineageTag: 71119d44-d242-4b1c-aa17-8606d39b8bc3
 
-	measure 'FUAM Release' = "2026.1.1"
+	measure 'FUAM Release' = "2026.2.1"
 		displayFolder: Meta
 		lineageTag: 186c2aac-d73b-4371-88ae-423e22b84179
 
@@ -1851,7 +1851,7 @@ table Metrics
 		lineageTag: 60dba4fb-3da2-40d6-bfbb-bea95addec12
 		dataCategory: WebUrl
 
-	/// Count of 30 seconds evaluation windows, where the capacity entered interactive delay (above 100%) 
+	/// Count of 30 seconds evaluation windows, where the capacity entered interactive delay (above 100%)
 	measure 'Throttling Count' =
 			
 			CALCULATE(
@@ -2110,7 +2110,7 @@ table Metrics
 		lineageTag: 551c2d6c-79d7-4f74-b0cc-d5ebe6616b9b
 
 	measure '# Item Level Accesses' = COUNTROWS(item_users)
-		formatString: 0
+		formatString: #,0
 		displayFolder: Items\Access
 		lineageTag: 8585df00-9114-4897-8eb5-76a8d73b2ffb
 
@@ -2169,7 +2169,7 @@ table Metrics
 		displayFolder: Items\General
 		lineageTag: bf476643-294c-45ee-be9f-2435f652d586
 
-	/// Count of 30 seconds evaluation windows, where the capacity entered interactive rejection (above 100%) 
+	/// Count of 30 seconds evaluation windows, where the capacity entered interactive rejection (above 100%)
 	measure 'Throttling L2 Count' =
 			
 			CALCULATE(
@@ -2180,7 +2180,7 @@ table Metrics
 		displayFolder: Capacity TimePoint Metrics\Calculated
 		lineageTag: 087c0417-08f6-413a-9b05-433ca0a6cf82
 
-	/// Count of 30 seconds evaluation windows, where the capacity entered background rejection (above 100%) 
+	/// Count of 30 seconds evaluation windows, where the capacity entered background rejection (above 100%)
 	measure 'Throttling L3 Count' =
 			
 			CALCULATE(

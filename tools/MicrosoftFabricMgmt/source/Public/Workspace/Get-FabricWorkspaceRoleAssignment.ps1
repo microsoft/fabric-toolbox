@@ -11,6 +11,9 @@ The unique identifier of the workspace to fetch role assignments for.
 .PARAMETER WorkspaceRoleAssignmentId
 (Optional) The unique identifier of a specific role assignment to retrieve.
 
+.PARAMETER Raw
+If specified, returns the raw API response without type decoration.
+
 .EXAMPLE
 Get-FabricWorkspaceRoleAssignments -WorkspaceId "workspace123"
 
@@ -38,7 +41,10 @@ function Get-FabricWorkspaceRoleAssignment {
 
         [Parameter(Mandatory = $false)]
         [ValidateNotNullOrEmpty()]
-        [string]$WorkspaceRoleAssignmentId
+        [string]$WorkspaceRoleAssignmentId,
+
+        [Parameter()]
+        [switch]$Raw
     )
 
     try {
@@ -75,8 +81,46 @@ function Get-FabricWorkspaceRoleAssignment {
                 }
             }
 
-            # Add type decoration for custom formatting
-            $customResults | Add-FabricTypeName -TypeName 'MicrosoftFabric.WorkspaceRoleAssignment'
+            if ($Raw) {
+                # Add resolved names directly to objects
+                foreach ($item in $customResults) {
+                    # Resolve WorkspaceName
+                    $workspaceName = $null
+                    if ($item.workspaceId) {
+                        try {
+                            $workspaceName = Resolve-FabricWorkspaceName -WorkspaceId $item.workspaceId
+                        }
+                        catch {
+                            $workspaceName = $item.workspaceId
+                        }
+                    }
+
+                    # Resolve CapacityName via workspace
+                    $capacityName = $null
+                    if ($item.workspaceId) {
+                        try {
+                            $capacityId = Resolve-FabricCapacityIdFromWorkspace -WorkspaceId $item.workspaceId
+                            if ($capacityId) {
+                                $capacityName = Resolve-FabricCapacityName -CapacityId $capacityId
+                            }
+                        }
+                        catch {
+                            $capacityName = $null
+                        }
+                    }
+
+                    if ($null -ne $workspaceName) {
+                        $item | Add-Member -NotePropertyName 'WorkspaceName' -NotePropertyValue $workspaceName -Force
+                    }
+                    if ($null -ne $capacityName) {
+                        $item | Add-Member -NotePropertyName 'CapacityName' -NotePropertyValue $capacityName -Force
+                    }
+                }
+            }
+            else {
+                # Add type decoration for custom formatting
+                $customResults | Add-FabricTypeName -TypeName 'MicrosoftFabric.WorkspaceRoleAssignment'
+            }
 
             return $customResults
         }

@@ -1,0 +1,44 @@
+[build-system]
+requires = ["setuptools>=65.5.1"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name="fabric-assessment-tool"
+authors = [
+    { name = "Microsoft Corporation" },
+]
+version="0.0.1"
+description="Command-line tool for Migration Assessment for Fabric DE/DW"
+readme="README.md"
+requires-python=">=3.10,<3.13"
+license="MIT"
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Operating System :: OS Independent",
+]
+
+dependencies = [
+    "questionary",
+    "prompt_toolkit>=3.0.41",
+    "jmespath",
+    "click>=8.0.0",
+    "requests>=2.25.0",
+    "azure-identity",
+    "azure-mgmt-resource",
+    "databricks-sdk==0.67.0",
+    "mssql-python==1.1.0"
+]
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[project.optional-dependencies]
+test = [
+    "pytest>=8.2.1",
+]
+
+[project.scripts]
+fat = "fabric_assessment_tool.main:main"

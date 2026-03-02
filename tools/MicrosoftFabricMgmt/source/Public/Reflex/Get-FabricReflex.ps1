@@ -15,6 +15,9 @@
 .PARAMETER ReflexName
     The name of the Reflex to retrieve. This parameter is optional.
 
+.PARAMETER Raw
+    If specified, returns the raw API response without any transformation or filtering.
+
 .EXAMPLE
     Get-FabricReflex -WorkspaceId "workspace-12345" -ReflexId "Reflex-67890"
     This example retrieves the Reflex details for the Reflex with ID "Reflex-67890" in the workspace with ID "workspace-12345".
@@ -22,6 +25,10 @@
 .EXAMPLE
     Get-FabricReflex -WorkspaceId "workspace-12345" -ReflexName "My Reflex"
     This example retrieves the Reflex details for the Reflex named "My Reflex" in the workspace with ID "workspace-12345".
+
+.EXAMPLE
+    Get-FabricReflex -WorkspaceId "workspace-12345" -Raw
+    This example retrieves all Reflexes in the workspace with raw API response format.
 
 .NOTES
     - Requires `$FabricConfig` global configuration, including `BaseUrl` and `FabricHeaders`.
@@ -45,7 +52,10 @@ function Get-FabricReflex {
         [Parameter(Mandatory = $false)]
         [ValidateNotNullOrEmpty()]
         [ValidatePattern('^[a-zA-Z0-9_ ]*$')]
-        [string]$ReflexName
+        [string]$ReflexName,
+
+        [Parameter(Mandatory = $false)]
+        [switch]$Raw
     )
 
     process {
@@ -71,32 +81,8 @@ function Get-FabricReflex {
             }
             $dataItems = Invoke-FabricAPIRequest @apiParams
 
-            # Immediately handle empty response
-            if (-not $dataItems) {
-                Write-FabricLog -Message "No reflexes found in workspace: $WorkspaceId" -Level Debug
-                return
-            }
-
-            # Apply filtering logic efficiently
-            if ($ReflexId) {
-                $matchedItems = $dataItems.Where({ $_.Id -eq $ReflexId }, 'First')
-            }
-            elseif ($ReflexName) {
-                $matchedItems = $dataItems.Where({ $_.DisplayName -eq $ReflexName }, 'First')
-            }
-            else {
-                Write-FabricLog -Message "No filter provided. Returning all items." -Level Debug
-                $matchedItems = $dataItems
-            }
-
-            # Handle results
-            if ($matchedItems) {
-                Write-FabricLog -Message "Item(s) found matching the specified criteria." -Level Debug
-                $matchedItems
-            }
-            else {
-                Write-FabricLog -Message "No item found matching the provided criteria." -Level Debug
-            }
+            # Apply filtering and formatting
+            Select-FabricResource -InputObject $dataItems -Id $ReflexId -DisplayName $ReflexName -ResourceType 'Reflex' -TypeName 'MicrosoftFabric.Reflex' -Raw:$Raw
         }
         catch {
             # Capture and log error details

@@ -93,6 +93,8 @@ The following illustration shows you the current structure and purpose of the pr
 
 **Some screenshots of the FUAM_Core_Report:**
 
+Link: [Read more about FUAM_Core_Report Home page metrics here](/monitoring/fabric-unified-admin-monitoring/media/documentation/FUAM_Core_Report.md).
+
 ![image](/monitoring/fabric-unified-admin-monitoring/media/general/fuam_core_1.png)
 
 ![image](/monitoring/fabric-unified-admin-monitoring/media/general/fuam_core_2.png)

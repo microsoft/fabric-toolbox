@@ -1,34 +1,41 @@
 ﻿<#
 .SYNOPSIS
-Retrieves the connection string for a specific SQL Endpoint in a Fabric workspace.
+    Retrieves the connection string for a specific SQL Endpoint in a Fabric workspace.
 
 .DESCRIPTION
-The Get-FabricSQLEndpointConnectionString function retrieves the connection string for a given SQL Endpoint within a specified Fabric workspace.
-It supports optional parameters for guest tenant access and private link type. The function validates authentication, constructs the appropriate API endpoint,
-and returns the connection string or handles errors as needed.
+    The Get-FabricSQLEndpointConnectionString function retrieves the connection string for a given SQL Endpoint
+    within a specified Fabric workspace. It supports optional parameters for guest tenant access and private link type.
+    The function validates authentication, constructs the appropriate API endpoint, and returns the connection string.
 
 .PARAMETER WorkspaceId
-The ID of the workspace containing the SQL Endpoint. This parameter is mandatory.
+    The ID of the workspace containing the SQL Endpoint. This parameter is mandatory.
 
 .PARAMETER SQLEndpointId
-The ID of the SQL Endpoint for which to retrieve the connection string. This parameter is mandatory.
+    The ID of the SQL Endpoint for which to retrieve the connection string. This parameter is mandatory.
 
 .PARAMETER GuestTenantId
-(Optional) The tenant ID for guest access, if applicable.
+    (Optional) The tenant ID for guest access, if applicable.
 
 .PARAMETER PrivateLinkType
-(Optional) The type of private link to use for the connection string. Valid values are 'None' or 'Workspace'.
+    (Optional) The type of private link to use for the connection string. Valid values are 'None' or 'Workspace'.
 
 .EXAMPLE
-Get-FabricSQLEndpointConnectionString -WorkspaceId "workspace123" -SQLEndpointId "endpoint456"
+    Get-FabricSQLEndpointConnectionString -WorkspaceId "workspace123" -SQLEndpointId "endpoint456"
+    Retrieves the connection string for the SQL Endpoint with ID "endpoint456" in workspace "workspace123".
 
 .EXAMPLE
-Get-FabricSQLEndpointConnectionString -WorkspaceId "workspace123" -SQLEndpointId "endpoint456" -GuestTenantId "guestTenant789" -PrivateLinkType "Workspace"
+    Get-FabricSQLEndpointConnectionString -WorkspaceId "workspace123" -SQLEndpointId "endpoint456" -GuestTenantId "guestTenant789" -PrivateLinkType "Workspace"
+    Retrieves the connection string with guest tenant access and workspace private link type.
+
+.EXAMPLE
+    Get-FabricSQLEndpoint -WorkspaceId "workspace123" | Get-FabricSQLEndpointConnectionString
+    Retrieves connection strings for all SQL Endpoints in the workspace using pipeline input.
 
 .NOTES
-    - Requires `$FabricConfig` global configuration, including `BaseUrl` and `FabricHeaders`.
-    - Calls `Test-TokenExpired` to ensure token validity before making the API request.
-    Author: Updated by Jess Pomfret and Rob Sewell November 2026
+    - Requires `$FabricAuthContext` global configuration, including `BaseUrl` and `FabricHeaders`.
+    - Calls `Invoke-FabricAuthCheck` to ensure token validity before making the API request.
+
+    Author: Tiago Balabuch, Jess Pomfret, Rob Sewell
 
 #>
 function Get-FabricSQLEndpointConnectionString {
@@ -36,11 +43,11 @@ function Get-FabricSQLEndpointConnectionString {
     param (
         [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
         [ValidateNotNullOrEmpty()]
-        [Alias('id')]
         [string]$WorkspaceId,
 
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
         [ValidateNotNullOrEmpty()]
+        [Alias('id')]
         [string]$SQLEndpointId,
 
         [Parameter(Mandatory = $false)]
@@ -52,25 +59,31 @@ function Get-FabricSQLEndpointConnectionString {
         [ValidateSet('None', 'Workspace')]
         [string]$PrivateLinkType
     )
+
     try {
+        # Validate authentication
         Invoke-FabricAuthCheck -ThrowOnFailure
 
-
-        # Construct the API endpoint URI
-        $apiEndpointURI = "{0}/workspaces/{1}/sqlEndpoints/{2}/connectionString" -f $script:FabricAuthContext.BaseUrl, $WorkspaceId, $SQLEndpointId
-        # Append query parameters if GuestTenantId or PrivateLinkType are provided
-        $queryParams = @()
+        # Build query parameters hashtable
+        $queryParams = @{}
         if ($GuestTenantId) {
-            $queryParams += "guestTenantId=$GuestTenantId"
+            $queryParams['guestTenantId'] = $GuestTenantId
         }
         if ($PrivateLinkType) {
-            $queryParams += "privateLinkType=$PrivateLinkType"
-        }
-        if ($queryParams.Count -gt 0) {
-            $apiEndpointURI += "?" + ($queryParams -join "&")
+            $queryParams['privateLinkType'] = $PrivateLinkType
         }
 
-        Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
+        # Construct the API endpoint URI using New-FabricAPIUri
+        $uriParams = @{
+            Resource    = 'workspaces'
+            WorkspaceId = $WorkspaceId
+            Subresource = 'sqlEndpoints'
+            ItemId      = "$SQLEndpointId/connectionString"
+        }
+        if ($queryParams.Count -gt 0) {
+            $uriParams['QueryParameters'] = $queryParams
+        }
+        $apiEndpointURI = New-FabricAPIUri @uriParams
 
         # Make the API request
         $apiParams = @{
@@ -78,17 +91,16 @@ function Get-FabricSQLEndpointConnectionString {
             Headers = $script:FabricAuthContext.FabricHeaders
             Method  = 'Get'
         }
-        $dataItems = Invoke-FabricAPIRequest @apiParams
+        $response = Invoke-FabricAPIRequest @apiParams
 
-        # Immediately handle empty response
-        if (-not $dataItems) {
-            Write-FabricLog -Message "No data returned from the API." -Level Warning
+        # Handle response
+        if (-not $response) {
+            Write-FabricLog -Message "No connection string returned from the API." -Level Warning
             return $null
         }
-        else {
-            Write-FabricLog -Message "Item(s) found matching the specified criteria." -Level Debug
-            return $dataItems
-        }
+
+        Write-FabricLog -Message "Connection string retrieved successfully." -Level Debug
+        return $response
     }
     catch {
         # Capture and log error details

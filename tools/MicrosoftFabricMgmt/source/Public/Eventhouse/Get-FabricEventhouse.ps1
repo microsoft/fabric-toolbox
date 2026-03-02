@@ -15,6 +15,9 @@
 .PARAMETER EventhouseName
     The name of the Eventhouse to retrieve. This parameter is optional.
 
+.PARAMETER Raw
+    If specified, returns the raw API response without type decoration.
+
 .EXAMPLE
      Get-FabricEventhouse -WorkspaceId "workspace-12345" -EventhouseId "eventhouse-67890"
     This example retrieves the Eventhouse details for the Eventhouse with ID "eventhouse-67890" in the workspace with ID "workspace-12345".
@@ -45,7 +48,10 @@ function Get-FabricEventhouse {
         [Parameter(Mandatory = $false)]
         [ValidateNotNullOrEmpty()]
         [ValidatePattern('^[a-zA-Z0-9_ ]*$')]
-        [string]$EventhouseName
+        [string]$EventhouseName,
+
+        [Parameter()]
+        [switch]$Raw
     )
 
     process {
@@ -71,7 +77,7 @@ function Get-FabricEventhouse {
             $dataItems = Invoke-FabricAPIRequest @apiParams
 
             # Apply filtering logic
-            Select-FabricResource -InputObject $dataItems -Id $EventhouseId -DisplayName $EventhouseName -ResourceType 'Eventhouse' -TypeName 'MicrosoftFabric.Eventhouse'
+            Select-FabricResource -InputObject $dataItems -Id $EventhouseId -DisplayName $EventhouseName -ResourceType 'Eventhouse' -TypeName 'MicrosoftFabric.Eventhouse' -Raw:$Raw
         }
         catch {
             # Capture and log error details

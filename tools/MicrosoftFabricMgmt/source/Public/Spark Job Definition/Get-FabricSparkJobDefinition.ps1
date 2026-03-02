@@ -15,6 +15,9 @@
 .PARAMETER SparkJobDefinitionName
     The name of the SparkJobDefinition to retrieve. This parameter is optional.
 
+.PARAMETER Raw
+    If specified, returns the raw API response without any transformation or filtering.
+
 .EXAMPLE
     Get-FabricSparkJobDefinition -WorkspaceId "workspace-12345" -SparkJobDefinitionId "SparkJobDefinition-67890"
     This example retrieves the SparkJobDefinition details for the SparkJobDefinition with ID "SparkJobDefinition-67890" in the workspace with ID "workspace-12345".
@@ -22,6 +25,10 @@
 .EXAMPLE
     Get-FabricSparkJobDefinition -WorkspaceId "workspace-12345" -SparkJobDefinitionName "My SparkJobDefinition"
     This example retrieves the SparkJobDefinition details for the SparkJobDefinition named "My SparkJobDefinition" in the workspace with ID "workspace-12345".
+
+.EXAMPLE
+    Get-FabricSparkJobDefinition -WorkspaceId "workspace-12345" -Raw
+    This example retrieves all Spark Job Definitions in the workspace with raw API response format.
 
 .NOTES
     - Requires `$FabricConfig` global configuration, including `BaseUrl` and `FabricHeaders`.
@@ -45,7 +52,10 @@ function Get-FabricSparkJobDefinition {
         [Parameter(Mandatory = $false)]
         [ValidateNotNullOrEmpty()]
         [ValidatePattern('^[a-zA-Z0-9_]*$')]
-        [string]$SparkJobDefinitionName
+        [string]$SparkJobDefinitionName,
+
+        [Parameter(Mandatory = $false)]
+        [switch]$Raw
     )
 
     process {
@@ -71,32 +81,8 @@ function Get-FabricSparkJobDefinition {
             }
             $dataItems = Invoke-FabricAPIRequest @apiParams
 
-            # Immediately handle empty response
-            if (-not $dataItems) {
-                Write-FabricLog -Message "No Spark job definitions found in workspace: $WorkspaceId" -Level Debug
-                return
-            }
-
-            # Apply filtering logic efficiently
-            if ($SparkJobDefinitionId) {
-                $matchedItems = $dataItems.Where({ $_.Id -eq $SparkJobDefinitionId }, 'First')
-            }
-            elseif ($SparkJobDefinitionName) {
-                $matchedItems = $dataItems.Where({ $_.DisplayName -eq $SparkJobDefinitionName }, 'First')
-            }
-            else {
-                Write-FabricLog -Message "No filter provided. Returning all items." -Level Debug
-                $matchedItems = $dataItems
-            }
-
-            # Handle results
-            if ($matchedItems) {
-                Write-FabricLog -Message "Item(s) found matching the specified criteria." -Level Debug
-                $matchedItems
-            }
-            else {
-                Write-FabricLog -Message "No item found matching the provided criteria." -Level Debug
-            }
+            # Apply filtering and formatting
+            Select-FabricResource -InputObject $dataItems -Id $SparkJobDefinitionId -DisplayName $SparkJobDefinitionName -ResourceType 'SparkJobDefinition' -TypeName 'MicrosoftFabric.SparkJobDefinition' -Raw:$Raw
         }
         catch {
             # Capture and log error details

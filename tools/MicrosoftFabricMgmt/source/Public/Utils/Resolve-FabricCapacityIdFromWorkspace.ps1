@@ -43,6 +43,10 @@ function Resolve-FabricCapacityIdFromWorkspace {
             $cached = Get-PSFConfigValue -FullName "MicrosoftFabricMgmt.Cache.$cacheKey" -Fallback $null
 
             if ($cached) {
+                if ($cached -eq '__NONE__') {
+                    Write-PSFMessage -Level Debug -Message "Cache hit (no capacity assigned) for workspace ID '$WorkspaceId'"
+                    return $null
+                }
                 Write-PSFMessage -Level Debug -Message "Cache hit for workspace capacity ID '$WorkspaceId': $cached"
                 return $cached
             }
@@ -62,18 +66,33 @@ function Resolve-FabricCapacityIdFromWorkspace {
                 if (-not $DisableCache) {
                     Set-PSFConfig -FullName "MicrosoftFabricMgmt.Cache.$cacheKey" -Value $capacityId
                     Write-PSFMessage -Level Debug -Message "Cached capacity ID '$capacityId' for workspace ID '$WorkspaceId'"
+
+                    # Cross-populate workspace name cache to avoid a redundant API call from Resolve-FabricWorkspaceName
+                    if ($workspace.displayName) {
+                        $workspaceNameCacheKey = "WorkspaceName_$WorkspaceId"
+                        Set-PSFConfig -FullName "MicrosoftFabricMgmt.Cache.$workspaceNameCacheKey" -Value $workspace.displayName
+                        Write-PSFMessage -Level Debug -Message "Cached workspace name '$($workspace.displayName)' for workspace ID '$WorkspaceId' (cross-populated)"
+                    }
                 }
 
                 return $capacityId
             }
 
-            # Workspace found but no capacityId
-            Write-PSFMessage -Level Debug -Message "Workspace '$WorkspaceId' has no capacity assigned"
+            # Workspace found but no capacityId - cache sentinel to prevent repeated API calls
+            Write-PSFMessage -Level Verbose -Message "Workspace '$WorkspaceId' has no capacity assigned"
+            if (-not $DisableCache) {
+                Set-PSFConfig -FullName "MicrosoftFabricMgmt.Cache.$cacheKey" -Value '__NONE__'
+                Write-PSFMessage -Level Debug -Message "Cached 'no capacity' sentinel for workspace ID '$WorkspaceId'"
+            }
             return $null
         }
         catch {
             # Error occurred, log and return null
-            Write-PSFMessage -Level Warning -Message "Failed to resolve capacity ID from workspace ID '$WorkspaceId': $($_.Exception.Message)" -ErrorRecord $_
+            Write-PSFMessage -Level Verbose -Message "Failed to resolve capacity ID from workspace ID '$WorkspaceId': $($_.Exception.Message)"
+            if (-not $DisableCache) {
+                Set-PSFConfig -FullName "MicrosoftFabricMgmt.Cache.$cacheKey" -Value '__NONE__'
+                Write-PSFMessage -Level Debug -Message "Cached 'no capacity' sentinel for workspace ID '$WorkspaceId' (error)"
+            }
             return $null
         }
     }

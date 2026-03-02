@@ -17,11 +17,19 @@ The ID of the SQL Endpoint to retrieve. This parameter is optional but cannot be
 .PARAMETER SQLEndpointName
 The name of the SQL Endpoint to retrieve. This parameter is optional but cannot be used together with SQLEndpointId.
 
+.PARAMETER Raw
+If specified, returns the raw API response without any transformation or filtering.
+
 .EXAMPLE
 Get-FabricSQLEndpoint -WorkspaceId "workspace123" -SQLEndpointId "endpoint456"
 
 .EXAMPLE
 Get-FabricSQLEndpoint -WorkspaceId "workspace123" -SQLEndpointName "MySQLEndpoint"
+
+.EXAMPLE
+Get-FabricSQLEndpoint -WorkspaceId "workspace123" -Raw
+
+Retrieves all SQL Endpoints in the workspace with raw API response format.
 
 .NOTES
     - Requires `$FabricConfig` global configuration, including `BaseUrl` and `FabricHeaders`.
@@ -46,7 +54,10 @@ function Get-FabricSQLEndpoint {
         [Parameter(Mandatory = $false)]
         [ValidateNotNullOrEmpty()]
         [ValidatePattern('^[a-zA-Z0-9_]*$')]
-        [string]$SQLEndpointName
+        [string]$SQLEndpointName,
+
+        [Parameter(Mandatory = $false)]
+        [switch]$Raw
     )
 
     process {
@@ -72,32 +83,8 @@ function Get-FabricSQLEndpoint {
             }
             $dataItems = Invoke-FabricAPIRequest @apiParams
 
-            # Immediately handle empty response
-            if (-not $dataItems) {
-                Write-FabricLog -Message "No SQL endpoints found in workspace: $WorkspaceId" -Level Debug
-                return
-            }
-
-            # Apply filtering logic efficiently
-            if ($SQLEndpointId) {
-                $matchedItems = $dataItems.Where({ $_.Id -eq $SQLEndpointId }, 'First')
-            }
-            elseif ($SQLEndpointName) {
-                $matchedItems = $dataItems.Where({ $_.DisplayName -eq $SQLEndpointName }, 'First')
-            }
-            else {
-                Write-FabricLog -Message "No filter provided. Returning all items." -Level Debug
-                $matchedItems = $dataItems
-            }
-
-            # Handle results
-            if ($matchedItems) {
-                Write-FabricLog -Message "Item(s) found matching the specified criteria." -Level Debug
-                $matchedItems
-            }
-            else {
-                Write-FabricLog -Message "No item found matching the provided criteria." -Level Debug
-            }
+            # Apply filtering and formatting
+            Select-FabricResource -InputObject $dataItems -Id $SQLEndpointId -DisplayName $SQLEndpointName -ResourceType 'SQLEndpoint' -TypeName 'MicrosoftFabric.SQLEndpoint' -Raw:$Raw
         }
         catch {
             # Capture and log error details

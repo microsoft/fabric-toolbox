@@ -16,6 +16,9 @@
 .PARAMETER ApacheAirflowJobName
     (Optional) The display name of the Apache Airflow Job to retrieve.
 
+.PARAMETER Raw
+    If specified, returns the raw API response without type decoration.
+
 .EXAMPLE
     Get-FabricApacheAirflowJob -WorkspaceId "workspace-12345" -ApacheAirflowJobId "job-67890"
     Retrieves the Apache Airflow Job with ID "job-67890" from the specified workspace.
@@ -46,7 +49,10 @@ function Get-FabricApacheAirflowJob {
         [Parameter(Mandatory = $false)]
         [ValidateNotNullOrEmpty()]
         [ValidatePattern('^[a-zA-Z0-9_ ]*$')]
-        [string]$ApacheAirflowJobName
+        [string]$ApacheAirflowJobName,
+
+        [Parameter()]
+        [switch]$Raw
     )
 
     process {
@@ -72,16 +78,12 @@ function Get-FabricApacheAirflowJob {
             $dataItems = Invoke-FabricAPIRequest @apiParams
 
             # Apply filtering and output results
-            Select-FabricResource -InputObject $dataItems -Id $ApacheAirflowJobId -DisplayName $ApacheAirflowJobName -ResourceType 'Apache Airflow Job' -TypeName 'MicrosoftFabric.ApacheAirflowJob'
+            Select-FabricResource -InputObject $dataItems -Id $ApacheAirflowJobId -DisplayName $ApacheAirflowJobName -ResourceType 'Apache Airflow Job' -TypeName 'MicrosoftFabric.ApacheAirflowJob' -Raw:$Raw
         }
         catch {
             # Capture and log error details
             $errorDetails = $_.Exception.Message
             Write-FabricLog -Message "Failed to retrieve Apache Airflow Job for workspace '$WorkspaceId'. Error: $errorDetails" -Level Error
         }
-        $dataItems = Invoke-FabricAPIRequest @apiParams
-
-        # Apply filtering and output results
-        Select-FabricResource -InputObject $dataItems -Id $ApacheAirflowJobId -DisplayName $ApacheAirflowJobName -ResourceType 'Apache Airflow Job' -TypeName 'MicrosoftFabric.ApacheAirflowJob'
     }
 }

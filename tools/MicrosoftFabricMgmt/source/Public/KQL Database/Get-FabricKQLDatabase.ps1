@@ -1,4 +1,4 @@
-﻿<#
+<#
 .SYNOPSIS
 Retrieves a specific KQL Database or all KQL Databases from a workspace.
 
@@ -14,6 +14,9 @@ Optional. The GUID of a single KQL Database to retrieve directly. Use this when 
 .PARAMETER KQLDatabaseName
 Optional. The display name of a KQL Database to retrieve. Provide this when the Id is unknown and you want to match by name.
 
+.PARAMETER Raw
+When specified, returns the raw API response without any filtering or formatting.
+
 .EXAMPLE
 Get-FabricKQLDatabase -WorkspaceId $wId -KQLDatabaseId '1a2b3c4d-5555-6666-7777-88889999aaaa'
 
@@ -28,6 +31,11 @@ Returns the single database named 'Telemetry' if it exists.
 Get-FabricKQLDatabase -WorkspaceId $wId
 
 Returns all databases in the specified workspace.
+
+.EXAMPLE
+Get-FabricKQLDatabase -WorkspaceId $wId -Raw
+
+Returns the raw API response for all databases in the workspace without any processing.
 
 .NOTES
 - Requires `$FabricConfig` (BaseUrl, FabricHeaders).
@@ -52,7 +60,10 @@ function Get-FabricKQLDatabase {
         [Parameter(Mandatory = $false)]
         [ValidateNotNullOrEmpty()]
         [ValidatePattern('^[a-zA-Z0-9_ ]*$')]
-        [string]$KQLDatabaseName
+        [string]$KQLDatabaseName,
+
+        [Parameter()]
+        [switch]$Raw
     )
 
     process {
@@ -74,36 +85,12 @@ function Get-FabricKQLDatabase {
             $apiParams = @{
                 BaseURI = $apiEndpointURI
                 Headers = $script:FabricAuthContext.FabricHeaders
-                Method = 'Get'
+                Method  = 'Get'
             }
             $dataItems = Invoke-FabricAPIRequest @apiParams
 
-            # Immediately handle empty response
-            if (-not $dataItems) {
-                Write-FabricLog -Message "No KQL databases found in workspace: $WorkspaceId" -Level Debug
-                return
-            }
-
-            # Apply filtering logic efficiently
-            if ($KQLDatabaseId) {
-                $matchedItems = $dataItems.Where({ $_.Id -eq $KQLDatabaseId }, 'First')
-            }
-            elseif ($KQLDatabaseName) {
-                $matchedItems = $dataItems.Where({ $_.DisplayName -eq $KQLDatabaseName }, 'First')
-            }
-            else {
-                Write-FabricLog -Message "No filter provided. Returning all items." -Level Debug
-                $matchedItems = $dataItems
-            }
-
-            # Handle results
-            if ($matchedItems) {
-                Write-FabricLog -Message "Item(s) found matching the specified criteria." -Level Debug
-                $matchedItems
-            }
-            else {
-                Write-FabricLog -Message "No item found matching the provided criteria." -Level Debug
-            }
+            # Apply filtering and formatting
+            Select-FabricResource -InputObject $dataItems -Id $KQLDatabaseId -DisplayName $KQLDatabaseName -ResourceType 'KQLDatabase' -TypeName 'MicrosoftFabric.KQLDatabase' -Raw:$Raw
         }
         catch {
             # Capture and log error details

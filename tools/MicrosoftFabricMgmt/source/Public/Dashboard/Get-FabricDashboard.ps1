@@ -9,9 +9,16 @@
 .PARAMETER WorkspaceId
     The ID of the workspace from which to retrieve dashboards. This parameter is mandatory.
 
+.PARAMETER Raw
+    Returns the raw API response without any filtering or transformation. Use this switch when you need the complete, unprocessed response from the API.
+
 .EXAMPLE
      Get-FabricDashboard -WorkspaceId "12345"
     This example retrieves all dashboards from the workspace with ID "12345".
+
+.EXAMPLE
+    Get-FabricDashboard -WorkspaceId "12345" -Raw
+    Returns the raw API response for all dashboards in the workspace without any formatting or type decoration.
 
 .NOTES
     - Requires `$FabricConfig` global configuration, including `BaseUrl` and `FabricHeaders`.
@@ -26,7 +33,10 @@ function Get-FabricDashboard {
         [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
         [ValidateNotNullOrEmpty()]
         [Alias('id')]
-        [string]$WorkspaceId
+        [string]$WorkspaceId,
+
+        [Parameter(Mandatory = $false)]
+        [switch]$Raw
     )
 
     process {
@@ -43,8 +53,10 @@ function Get-FabricDashboard {
                 Headers = $script:FabricAuthContext.FabricHeaders
                 Method = 'Get'
             }
-            Invoke-FabricAPIRequest @apiParams
+            $dataItems = Invoke-FabricAPIRequest @apiParams
 
+            # Apply filtering
+            Select-FabricResource -InputObject $dataItems -ResourceType 'Dashboard' -TypeName 'MicrosoftFabric.Dashboard' -Raw:$Raw
         }
         catch {
             # Capture and log error details

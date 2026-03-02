@@ -16,6 +16,9 @@
 .PARAMETER SparkCustomPoolName
     The name of the specific Spark custom pool to retrieve. This parameter is optional.
 
+.PARAMETER Raw
+    If specified, returns the raw API response without any transformation or filtering.
+
 .EXAMPLE
     Get-FabricSparkCustomPool -WorkspaceId "12345"
     This example retrieves all Spark custom pools from the workspace with ID "12345".
@@ -27,6 +30,10 @@
 .EXAMPLE
     Get-FabricSparkCustomPool -WorkspaceId "12345" -SparkCustomPoolName "MyPool"
     This example retrieves the Spark custom pool with name "MyPool" from the workspace with ID "12345".
+
+.EXAMPLE
+    Get-FabricSparkCustomPool -WorkspaceId "12345" -Raw
+    This example retrieves all Spark custom pools in the workspace with raw API response format.
 
 .NOTES
     - Requires `$FabricConfig` global configuration, including `BaseUrl` and `FabricHeaders`.
@@ -50,7 +57,10 @@ function Get-FabricSparkCustomPool {
         [Parameter(Mandatory = $false)]
         [ValidateNotNullOrEmpty()]
         [ValidatePattern('^[a-zA-Z0-9_ ]*$')]
-        [string]$SparkCustomPoolName
+        [string]$SparkCustomPoolName,
+
+        [Parameter(Mandatory = $false)]
+        [switch]$Raw
     )
 
     process {
@@ -76,34 +86,8 @@ function Get-FabricSparkCustomPool {
             }
             $dataItems = Invoke-FabricAPIRequest @apiParams
 
-            # Immediately handle empty response
-            if (-not $dataItems) {
-                Write-FabricLog -Message "No Spark custom pools found in workspace: $WorkspaceId" -Level Debug
-                return
-            }
-
-            # Apply filtering logic efficiently
-            if ($SparkCustomPoolId) {
-                $matchedItems = $dataItems.Where({ $_.id -eq $SparkCustomPoolId }, 'First')
-            }
-            elseif ($SparkCustomPoolName) {
-                $matchedItems = $dataItems.Where({ $_.name -eq $SparkCustomPoolName }, 'First')
-            }
-            else {
-                Write-FabricLog -Message "No filter provided. Returning all items." -Level Debug
-                $matchedItems = $dataItems
-            }
-
-            # Handle results and add workspaceId for pipeline support
-            if ($matchedItems) {
-                Write-FabricLog -Message "Item(s) found matching the specified criteria." -Level Debug
-                foreach ($item in $matchedItems) {
-                    $item | Add-Member -NotePropertyName 'workspaceId' -NotePropertyValue $WorkspaceId -Force -PassThru
-                }
-            }
-            else {
-                Write-FabricLog -Message "No item found matching the provided criteria." -Level Debug
-            }
+            # Apply filtering and formatting
+            Select-FabricResource -InputObject $dataItems -Id $SparkCustomPoolId -DisplayName $SparkCustomPoolName -ResourceType 'SparkCustomPool' -TypeName 'MicrosoftFabric.SparkCustomPool' -Raw:$Raw
         }
         catch {
             # Capture and log error details

@@ -1,0 +1,11 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/gitIntegration/platformProperties/2.0.0/schema.json",
+  "metadata": {
+    "type": "Notebook",
+    "displayName": "01 - Explore the Semantic Model with Semantic Link"
+  },
+  "config": {
+    "version": "2.0",
+    "logicalId": "4838edd3-d11c-99e5-4baf-27c064ba2d8c"
+  }
+}

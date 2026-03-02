@@ -1,0 +1,39 @@
+{
+  "version": "1.0.1",
+  "objectTypes": [
+    {
+      "name": "Shortcuts",
+      "state": "Enabled",
+      "subObjectTypes": [
+        {
+          "name": "Shortcuts.OneLake",
+          "state": "Enabled"
+        },
+        {
+          "name": "Shortcuts.AdlsGen2",
+          "state": "Enabled"
+        },
+        {
+          "name": "Shortcuts.Dataverse",
+          "state": "Enabled"
+        },
+        {
+          "name": "Shortcuts.AmazonS3",
+          "state": "Enabled"
+        },
+        {
+          "name": "Shortcuts.S3Compatible",
+          "state": "Enabled"
+        },
+        {
+          "name": "Shortcuts.GoogleCloudStorage",
+          "state": "Enabled"
+        }
+      ]
+    },
+    {
+      "name": "DataAccessRoles",
+      "state": "Disabled"
+    }
+  ]
+}

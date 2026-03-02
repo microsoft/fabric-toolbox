@@ -21,33 +21,37 @@
 function Remove-FabricConnection {
     [CmdletBinding(SupportsShouldProcess = $true, ConfirmImpact = 'Medium')]
     param (
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $true, ValueFromPipeline = $true, ValueFromPipelineByPropertyName = $true)]
         [ValidateNotNullOrEmpty()]
+        [Alias('id')]
         [string]$ConnectionId
     )
-    try {
-        # Validate authentication
-        Invoke-FabricAuthCheck -ThrowOnFailure
 
-        # Construct the API endpoint URI
-        $apiEndpointURI = New-FabricAPIUri -Resource 'connections' -ItemId $ConnectionId
+    process {
+        try {
+            # Validate authentication
+            Invoke-FabricAuthCheck -ThrowOnFailure
 
-        if ($PSCmdlet.ShouldProcess("Connection '$ConnectionId'", "Delete")) {
-            # Make the API request
-            $apiParams = @{
-                Headers = $script:FabricAuthContext.FabricHeaders
-                BaseURI = $apiEndpointURI
-                Method = 'Delete'
+            # Construct the API endpoint URI
+            $apiEndpointURI = New-FabricAPIUri -Resource 'connections' -ItemId $ConnectionId
+
+            if ($PSCmdlet.ShouldProcess("Connection '$ConnectionId'", "Delete")) {
+                # Make the API request
+                $apiParams = @{
+                    Headers = $script:FabricAuthContext.FabricHeaders
+                    BaseURI = $apiEndpointURI
+                    Method = 'Delete'
+                }
+                $response = Invoke-FabricAPIRequest @apiParams
+                Write-FabricLog -Message "Connection '$ConnectionId' deleted successfully." -Level Host
+                $response
             }
-            $response = Invoke-FabricAPIRequest @apiParams
-            Write-FabricLog -Message "Connection '$ConnectionId' deleted successfully." -Level Host
-            $response
-        }
 
-    }
-    catch {
-        # Capture and log error details
-        $errorDetails = $_.Exception.Message
-        Write-FabricLog -Message "Failed to delete Connection '$ConnectionId'. Error: $errorDetails" -Level Error
+        }
+        catch {
+            # Capture and log error details
+            $errorDetails = $_.Exception.Message
+            Write-FabricLog -Message "Failed to delete Connection '$ConnectionId'. Error: $errorDetails" -Level Error
+        }
     }
 }

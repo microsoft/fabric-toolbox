@@ -1,6 +1,6 @@
 # Deploy
 
-🎬 Setup demo available on YouTube: [Fabric Cost Analysis - Deployment](https://youtu.be/ehxiauTPvkA)
+🎬 Setup demo available on YouTube: [Fabric Cost Analysis - Deployment](https://youtu.be/0ZPH_gp_GTw)
 
 > Since not all users will be interested in analyzing reservations or quotas, nor in using a Data Agent on top of the FCA, we have added additional optional steps that can be followed during the initial deployment or added later.
 
