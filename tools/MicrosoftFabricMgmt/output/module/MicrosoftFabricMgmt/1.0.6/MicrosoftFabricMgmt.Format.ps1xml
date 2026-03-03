@@ -1081,5 +1081,96 @@
       </ListControl>
     </View>
 
+    <!--
+      =============================================================================
+      OneLake Data Access Role View
+      =============================================================================
+      The role schema is deeply nested (decisionRules -> permission/constraints,
+      members -> fabricItemMembers/microsoftEntraMembers). A standard table or list
+      view collapses these to "System.Object[]". This CustomControl renders a
+      human-readable indented summary of all nested properties.
+
+      The PSObject is still returned to the pipeline unchanged; this only affects
+      terminal display.
+    -->
+    <View>
+      <Name>OneLakeDataAccessRoleView</Name>
+      <ViewSelectedBy>
+        <TypeName>MicrosoftFabric.OneLakeDataAccessRole</TypeName>
+      </ViewSelectedBy>
+      <CustomControl>
+        <CustomEntries>
+          <CustomEntry>
+            <CustomItem>
+              <ExpressionBinding>
+                <ScriptBlock>
+                  $sb = [System.Text.StringBuilder]::new()
+                  [void]$sb.AppendLine("Role Name  : $($_.name)")
+                  if ($_.id)   { [void]$sb.AppendLine("ID         : $($_.id)") }
+                  if ($_.kind) { [void]$sb.AppendLine("Kind       : $($_.kind)") }
+
+                  if ($_.decisionRules -and $_.decisionRules.Count -gt 0) {
+                      [void]$sb.AppendLine("")
+                      [void]$sb.AppendLine("Decision Rules:")
+                      $ruleNum = 1
+                      foreach ($rule in $_.decisionRules) {
+                          [void]$sb.AppendLine("  Rule $ruleNum ($($rule.effect)):")
+                          foreach ($perm in $rule.permission) {
+                              $vals = ($perm.attributeValueIncludedIn -join ', ')
+                              [void]$sb.AppendLine("    $($perm.attributeName.PadRight(8)): $vals")
+                          }
+                          if ($rule.constraints) {
+                              if ($rule.constraints.rows -and $rule.constraints.rows.Count -gt 0) {
+                                  [void]$sb.AppendLine("    Row Filters:")
+                                  foreach ($row in $rule.constraints.rows) {
+                                      [void]$sb.AppendLine("      Table : $($row.tablePath)")
+                                      [void]$sb.AppendLine("      Filter: $($row.value)")
+                                  }
+                              }
+                              if ($rule.constraints.columns -and $rule.constraints.columns.Count -gt 0) {
+                                  [void]$sb.AppendLine("    Column Filters:")
+                                  foreach ($col in $rule.constraints.columns) {
+                                      [void]$sb.AppendLine("      Table  : $($col.tablePath)")
+                                      [void]$sb.AppendLine("      Columns: $($col.columnNames -join ', ') (Effect: $($col.columnEffect), Actions: $($col.columnAction -join ', '))")
+                                  }
+                              }
+                          }
+                          $ruleNum++
+                      }
+                  }
+
+                  [void]$sb.AppendLine("")
+                  [void]$sb.AppendLine("Members:")
+                  $hasMembers = $false
+                  if ($_.members.fabricItemMembers -and $_.members.fabricItemMembers.Count -gt 0) {
+                      $hasMembers = $true
+                      [void]$sb.AppendLine("  Fabric Item Members:")
+                      foreach ($m in $_.members.fabricItemMembers) {
+                          [void]$sb.AppendLine("    $($m.sourcePath)  ->  $($m.itemAccess -join ', ')")
+                      }
+                  }
+                  if ($_.members.microsoftEntraMembers -and $_.members.microsoftEntraMembers.Count -gt 0) {
+                      $hasMembers = $true
+                      [void]$sb.AppendLine("  Microsoft Entra Members:")
+                      foreach ($m in $_.members.microsoftEntraMembers) {
+                          $line = "    $($m.objectId)"
+                          if ($m.objectType) { $line += "  [$($m.objectType)]" }
+                          if ($m.tenantId)   { $line += "  Tenant: $($m.tenantId)" }
+                          [void]$sb.AppendLine($line)
+                      }
+                  }
+                  if (-not $hasMembers) {
+                      [void]$sb.AppendLine("  (none)")
+                  }
+
+                  $sb.ToString()
+                </ScriptBlock>
+              </ExpressionBinding>
+            </CustomItem>
+          </CustomEntry>
+        </CustomEntries>
+      </CustomControl>
+    </View>
+
   </ViewDefinitions>
 </Configuration>
