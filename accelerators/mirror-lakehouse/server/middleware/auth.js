@@ -1,6 +1,69 @@
 const { ConfidentialClientApplication } = require('@azure/msal-node');
 const logger = require('../utils/logger');
 
+let joseImportPromise = null;
+let jwks = null;
+
+const getJose = async () => {
+  if (!joseImportPromise) {
+    joseImportPromise = import('jose');
+  }
+
+  return joseImportPromise;
+};
+
+const getExpectedAudiences = () => {
+  const audiences = [
+    'https://api.fabric.microsoft.com',
+    'https://api.fabric.microsoft.com/'
+  ];
+
+  if (process.env.CLIENT_ID) {
+    audiences.push(process.env.CLIENT_ID);
+  }
+
+  return audiences;
+};
+
+const getExpectedIssuers = () => {
+  if (!process.env.TENANT_ID) {
+    return [];
+  }
+
+  return [
+    `https://login.microsoftonline.com/${process.env.TENANT_ID}/v2.0`,
+    `https://sts.windows.net/${process.env.TENANT_ID}/`
+  ];
+};
+
+const getJwks = async () => {
+  if (jwks) {
+    return jwks;
+  }
+
+  if (!process.env.TENANT_ID) {
+    throw new Error('TENANT_ID is not configured');
+  }
+
+  const { createRemoteJWKSet } = await getJose();
+  jwks = createRemoteJWKSet(
+    new URL(`https://login.microsoftonline.com/${process.env.TENANT_ID}/discovery/v2.0/keys`)
+  );
+
+  return jwks;
+};
+
+const verifyAccessToken = async (token) => {
+  const { jwtVerify } = await getJose();
+  const tokenJwks = await getJwks();
+
+  return jwtVerify(token, tokenJwks, {
+    issuer: getExpectedIssuers(),
+    audience: getExpectedAudiences(),
+    clockTolerance: '30s'
+  });
+};
+
 // MSAL configuration
 const msalConfig = {
   auth: {
@@ -36,22 +99,13 @@ const authenticateToken = async (req, res, next) => {
       });
     }
 
-    // Decode token to get user information (simplified - in production use proper JWT validation)
+    // Validate token signature and claims using Microsoft Entra JWKS
     try {
-      const tokenParts = token.split('.');
-      if (tokenParts.length !== 3) {
-        throw new Error('Invalid token format');
-      }
-
-      const payload = JSON.parse(Buffer.from(tokenParts[1], 'base64').toString());
-      
-      // Check token expiration
-      if (payload.exp && Date.now() >= payload.exp * 1000) {
-        return res.status(401).json({ 
-          error: 'Unauthorized',
-          message: 'Access token has expired'
-        });
-      }
+      const { payload, protectedHeader } = await verifyAccessToken(token);
+      const tokenScopes = typeof payload.scp === 'string'
+        ? payload.scp.split(' ').filter(Boolean)
+        : [];
+      const tokenRoles = Array.isArray(payload.roles) ? payload.roles : [];
 
       // Attach user info to request (handle different token types)
       req.user = {
@@ -59,19 +113,21 @@ const authenticateToken = async (req, res, next) => {
         email: payload.preferred_username || payload.upn || payload.unique_name,
         name: payload.name || `App ${payload.appid}`, // Fallback for client credentials
         tenantId: payload.tid,
-        roles: payload.roles || [],
-        scopes: payload.scp ? payload.scp.split(' ') : [], // scp might be empty for client credentials
+        roles: tokenRoles,
+        scopes: tokenScopes,
         tokenType: payload.appidacr || payload.amr ? 'ClientCredentials' : 'UserToken',
         audience: payload.aud
       };
 
       req.accessToken = token;
+      req.tokenPayload = payload;
 
       logger.info('User authenticated successfully', {
         userId: req.user.id,
         email: req.user.email,
         tokenType: req.user.tokenType,
         audience: req.user.audience,
+        tokenKid: protectedHeader.kid,
         scopeCount: req.user.scopes.length,
         scopes: req.user.scopes,
         roles: req.user.roles,
@@ -82,7 +138,11 @@ const authenticateToken = async (req, res, next) => {
 
       next();
     } catch (decodeError) {
-      logger.error('Token decode error:', decodeError);
+      logger.warn('Token validation failed', {
+        message: decodeError.message,
+        method: req.method,
+        url: req.url
+      });
       return res.status(401).json({ 
         error: 'Unauthorized',
         message: 'Invalid access token'
@@ -110,32 +170,36 @@ const requireScope = (requiredScopes) => {
       });
     }
 
-    // For Fabric API tokens, check audience first
-    try {
-      const tokenParts = req.accessToken.split('.');
-      const payload = JSON.parse(Buffer.from(tokenParts[1], 'base64').toString());
-      
-      // If token audience is Fabric API, allow access regardless of scopes
-      // This handles client credentials tokens and other valid Fabric API tokens
-      if (payload.aud === 'https://api.fabric.microsoft.com' || 
-          payload.aud === 'https://api.fabric.microsoft.com/') {
-        
-        logger.info('Fabric API token detected - allowing access', {
-          userId: req.user.id,
-          audience: payload.aud,
-          appId: payload.appid,
-          tokenType: payload.appidacr ? 'Client Credentials' : 'User Token',
-          scopes: req.user?.scopes || [],
-          roles: req.user?.roles || []
-        });
-        
-        return next();
-      }
-    } catch (error) {
-      logger.warn('Could not parse token for audience check', {
-        error: error.message,
-        userId: req.user.id
+    const payload = req.tokenPayload;
+
+    if (!payload) {
+      logger.warn('Missing verified token payload for scope check', {
+        userId: req.user.id,
+        method: req.method,
+        url: req.url
       });
+
+      return res.status(401).json({
+        error: 'Unauthorized',
+        message: 'Token payload is unavailable'
+      });
+    }
+
+    // If token audience is Fabric API, allow access regardless of scopes
+    // This handles client credentials tokens and other valid Fabric API tokens
+    if (payload.aud === 'https://api.fabric.microsoft.com' ||
+        payload.aud === 'https://api.fabric.microsoft.com/') {
+
+      logger.info('Fabric API token detected - allowing access', {
+        userId: req.user.id,
+        audience: payload.aud,
+        appId: payload.appid,
+        tokenType: payload.appidacr ? 'Client Credentials' : 'User Token',
+        scopes: req.user?.scopes || [],
+        roles: req.user?.roles || []
+      });
+
+      return next();
     }
 
     // Fall back to traditional scope checking for other tokens

@@ -324,7 +324,10 @@ router.post('/:id/lakehouses', requireScope(['https://api.fabric.microsoft.com/I
       `${process.env.FABRIC_API_BASE_URL}/workspaces/${id}/items`,
       {
         displayName: name,
-        type: 'Lakehouse'
+        type: 'Lakehouse',
+        creationPayload: {
+          enableSchemas: true
+        }
       },
       {
         headers: {
@@ -352,7 +355,8 @@ router.post('/:id/lakehouses', requireScope(['https://api.fabric.microsoft.com/I
       userId: req.user.id,
       workspaceId: id,
       lakehouseId: lakehouse.id,
-      lakehouseName: lakehouse.name
+      lakehouseName: lakehouse.name,
+      schemaEnabled: true
     });
 
     res.status(201).json({

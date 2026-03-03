@@ -130,6 +130,8 @@ It also copies the views and stored procs from the SQL Anayltics Endpoint (It do
 | `PORT` | Backend API port | `3001` |
 | `CLIENT_PORT` | Frontend port | `3000` |
 
+Frontend auth variables (`REACT_APP_CLIENT_ID`, `REACT_APP_TENANT_ID`, `REACT_APP_AUTHORITY`, `REACT_APP_REDIRECT_URI`, `REACT_APP_API_URL`) are automatically derived from the root `.env` during `npm start`/`npm run build`. You can still set explicit `REACT_APP_*` values to override defaults.
+
 ## How It Works
 
 1. **Authentication**: Users log in using their Entra ID credentials

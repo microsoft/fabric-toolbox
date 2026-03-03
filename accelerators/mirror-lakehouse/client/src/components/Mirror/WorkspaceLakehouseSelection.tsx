@@ -170,7 +170,7 @@ const WorkspaceLakehouseSelection: React.FC<WorkspaceLakehouseSelectionProps> = 
       }
 
       setNewLakehouseName('')
-      setSuccessMessage(`Created lakehouse: ${trimmedName}`)
+      setSuccessMessage(`Created schema-enabled lakehouse: ${trimmedName}`)
     } catch (err: any) {
       const message = err.response?.data?.message || 'Failed to create destination lakehouse'
       setError(message)

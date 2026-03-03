@@ -16,7 +16,7 @@ import {
   Speed as SpeedIcon,
 } from '@mui/icons-material'
 import { useMsal } from '@azure/msal-react'
-import { loginRequest } from '../services/authService'
+import { ensureMsalInitialized, logMsalDiagnostic, logMsalInfo, loginRequest } from '../services/authService'
 
 const LoginPage: React.FC = () => {
   const { instance } = useMsal()
@@ -28,9 +28,19 @@ const LoginPage: React.FC = () => {
     setError(null)
 
     try {
+      await ensureMsalInitialized()
+      logMsalInfo('Login button clicked - starting redirect', {
+        accountCount: instance.getAllAccounts().length,
+        hasActiveAccount: !!instance.getActiveAccount(),
+        scopes: loginRequest.scopes
+      })
       await instance.loginRedirect(loginRequest)
     } catch (err) {
-      console.error('Login failed:', err)
+      logMsalDiagnostic('LoginPage loginRedirect failed', err, {
+        location: window.location.href,
+        accountCount: instance.getAllAccounts().length,
+        hasActiveAccount: !!instance.getActiveAccount()
+      })
       setError(err instanceof Error ? err.message : 'Login failed')
       setLoading(false)
     }

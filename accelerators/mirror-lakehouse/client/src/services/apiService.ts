@@ -1,5 +1,5 @@
 import axios, { AxiosInstance, AxiosResponse } from 'axios'
-import { getAccessToken } from './authService'
+import { beginInteractiveReauth, getAccessToken } from './authService'
 
 // API base configuration
 const API_BASE_URL = process.env.REACT_APP_API_URL || '/api'
@@ -21,6 +21,12 @@ apiClient.interceptors.request.use(
       config.headers.Authorization = `Bearer ${token}`
     } catch (error) {
       console.warn('Failed to get access token:', error)
+      if (error instanceof Error && error.message === 'MSAL_INTERACTION_REQUIRED') {
+        await beginInteractiveReauth('api_request_token_failure')
+      } else {
+        window.location.href = '/login'
+      }
+      return Promise.reject(error)
     }
     return config
   },
