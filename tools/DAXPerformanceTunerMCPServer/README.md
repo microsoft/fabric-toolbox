@@ -24,12 +24,8 @@ See the DAX Performance Tuner in action:
 ### **Prerequisites**
 
 Before you begin, install:
-- ✅ **Python 3.8 - 3.13** - [Download here](https://python.org/downloads/)
-  - Important: Check "Add Python to PATH" during installation
-  - Used to create isolated virtual environment
-  - **Note**: Python 3.14+ not yet supported (pythonnet compatibility)
 - ✅ **\.NET SDK 8.0+** - [Download here](https://dotnet.microsoft.com/en-us/download)
-  - Required for building DaxExecutor from source (.NET 8.0 or higher)
+  - Required for building the MCP server from source
 
 ---
 
@@ -51,10 +47,11 @@ Before you begin, install:
    - Double-click `setup.bat` (or run `setup.ps1` in PowerShell)
    
    The setup will:
-   - ✅ Create isolated Python virtual environment
-   - ✅ Install required Python packages in the virtual environment
-   - ✅ Build DaxExecutor.exe from source
+   - ✅ Validate .NET SDK 8.0+ installation
+   - ✅ Restore NuGet packages and build the MCP server from C# source
    - ✅ Generate MCP configuration in `.vscode/mcp.json`
+
+   > **Note:** The only file needed to run the MCP server is the `dax-performance-tuner.exe` produced by the setup scripts. For security reasons, pre-built executables are not stored in the fabric-toolbox repository — instead, `setup.bat` / `setup.ps1` compile the exe from source so you can verify exactly what you're running.
 
 3. **Start the MCP Server in VS Code**
    - Open VS Code in the extracted `DAXPerformanceTunerMCPServer\` folder
@@ -75,7 +72,7 @@ Before you begin, install:
 1. **Run Setup First**
    - Extract the zip file to your preferred location
    - Double-click `setup.bat` (or run `setup.ps1` in PowerShell)
-   - This creates the virtual environment and builds required components
+   - This builds the MCP server from source
    - Wait for setup to complete successfully
 
 2. **Add Configuration**
@@ -85,18 +82,18 @@ Before you begin, install:
    {
      "mcpServers": {
        "dax-performance-tuner": {
-         "command": "C:\\path\\to\\DAXPerformanceTunerMCPServer\\.venv\\Scripts\\python.exe",
-         "args": ["C:\\path\\to\\DAXPerformanceTunerMCPServer\\src\\server.py"]
+         "command": "C:\\path\\to\\DAXPerformanceTunerMCPServer\\src\\DaxPerformanceTuner.Console\\bin\\Release\\net8.0-windows\\win-x64\\publish\\dax-performance-tuner.exe",
+         "args": ["--start"]
        }
      }
    }
    ```
    **Important**: 
-   - Use absolute paths for both `command` and `args`
+   - Use absolute paths for `command`
    - Use double backslashes (`\\`) in the JSON paths
    - Replace `C:\\path\\to\\` with your actual installation directory
 
-2. **Start the Server**
+3. **Start the Server**
    - Save the `claude_desktop_config.json` file
    - The server will start automatically when Claude Desktop launches
 
@@ -104,8 +101,8 @@ Before you begin, install:
    - After updating the config and running the server, reset Claude Desktop
 
 **For Other MCP Clients:**
-- Command: `{install_path}\.venv\Scripts\python.exe` (absolute path)
-- Args: `["{install_path}\\src\\server.py"]` (absolute path)
+- Command: `{install_path}\src\DaxPerformanceTuner.Console\bin\Release\net8.0-windows\win-x64\publish\dax-performance-tuner.exe` (absolute path)
+- Args: `["--start"]`
 - Restart the MCP client after configuration changes
 
 ---
@@ -134,10 +131,9 @@ Before you begin, install:
 
 ## 📦 What's Included
 
-- **C# Source Code** - DaxExecutor built automatically during setup
-- **ADOMD.NET Libraries** - Microsoft DLLs in `dotnet/` folder for XMLA connectivity
-- **Python MCP Server** - Complete implementation with 4 specialized tools
-- **Automated Setup Scripts** - `setup.bat` and `setup.ps1` handle building and installation
+- **C# MCP Server** (`src/`) - Complete implementation with 4 specialized tools, built from source during setup
+- **NuGet Dependencies** - ADOMD.NET, MSAL, and other packages restored automatically during build
+- **Automated Setup Scripts** - `setup.bat` and `setup.ps1` handle building and configuration
 
 ---
 
@@ -155,21 +151,21 @@ This project uses **dual licensing**:
 
 ### MIT License
 Applies to:
-- Python MCP server (`src/server.py`, `src/dax_performance_tuner/`)
+- C# MCP server (`src/`) excluding DaxTraceRunner component
 - Configuration files
 - Setup scripts
 - Documentation (except third-party content)
 
 ### Microsoft Reciprocal License (Ms-RL)
 Applies to:
-- **C# DAX Executor component** (`src/dax_executor/`)
+- **DaxTraceRunner component** (`src/DaxPerformanceTuner.Library/Infrastructure/DaxTraceRunner.cs`)
 - This component contains code derived from [DAX Studio](https://github.com/DaxStudio/DaxStudio)
-- See `src/dax_executor/LICENSE-MSRL.txt` for full license text
+- See `src/LICENSE-MSRL.txt` for full license text
 
 **What this means for users:**
 - ✅ You can freely use, modify, and distribute this project
-- ✅ Most of the project (Python components) is under permissive MIT license
-- ⚠️ If you modify the C# executor component, you must share those changes under Ms-RL
+- ✅ Most of the project is under permissive MIT license
+- ⚠️ If you modify the DaxTraceRunner component, you must share those changes under Ms-RL
 - ℹ️ Ms-RL is an OSI-approved open source license that only requires reciprocal sharing of modifications to Ms-RL files
 
 See `ATTRIBUTION.md` for complete third-party content attribution and licensing details.

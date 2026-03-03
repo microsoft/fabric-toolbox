@@ -24,35 +24,38 @@ Author: Tiago Balabuch
 function Remove-FabricDomain {
     [CmdletBinding(SupportsShouldProcess = $true, ConfirmImpact = 'High')]
     param (
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $true, ValueFromPipeline = $true, ValueFromPipelineByPropertyName = $true)]
         [ValidateNotNullOrEmpty()]
+        [Alias('id')]
         [string]$DomainId
     )
 
-    try {
-        # Validate authentication token before proceeding
-        Invoke-FabricAuthCheck -ThrowOnFailure
+    process {
+        try {
+            # Validate authentication token before proceeding
+            Invoke-FabricAuthCheck -ThrowOnFailure
 
-        # Construct the API endpoint URI
-        $apiEndpointURI = New-FabricAPIUri -Segments @('admin', 'domains', $DomainId)
-        Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
+            # Construct the API endpoint URI
+            $apiEndpointURI = New-FabricAPIUri -Segments @('admin', 'domains', $DomainId)
+            Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
 
-        # Make the API request (guarded by ShouldProcess)
-        if ($PSCmdlet.ShouldProcess($DomainId, 'Delete Fabric domain')) {
-            $apiParams = @{
-                Headers = $script:FabricAuthContext.FabricHeaders
-                BaseURI = $apiEndpointURI
-                Method  = 'Delete'
+            # Make the API request (guarded by ShouldProcess)
+            if ($PSCmdlet.ShouldProcess($DomainId, 'Delete Fabric domain')) {
+                $apiParams = @{
+                    Headers = $script:FabricAuthContext.FabricHeaders
+                    BaseURI = $apiEndpointURI
+                    Method  = 'Delete'
+                }
+                $response = Invoke-FabricAPIRequest @apiParams
+
+                Write-FabricLog -Message "Domain '$DomainId' deleted successfully!" -Level Host
+                $response
             }
-            $response = Invoke-FabricAPIRequest @apiParams
-
-            Write-FabricLog -Message "Domain '$DomainId' deleted successfully!" -Level Host
-            $response
         }
-    }
-    catch {
-        # Capture and log error details
-        $errorDetails = $_.Exception.Message
-        Write-FabricLog -Message "Failed to delete domain '$DomainId'. Error: $errorDetails" -Level Error
+        catch {
+            # Capture and log error details
+            $errorDetails = $_.Exception.Message
+            Write-FabricLog -Message "Failed to delete domain '$DomainId'. Error: $errorDetails" -Level Error
+        }
     }
 }

@@ -9,8 +9,6 @@ Autoscale for Spark,Represents autoscale for Spark on your capacity,GA,FALSE,FAL
 autoscale for Spark Capacity Usage CU,Represents autoscale for Spark on your capacity,GA,FALSE,FALSE,Spark
 OneLake Cache Data Stored,OneLake Cache Data Stored,GA,FALSE,FALSE,OneLake
 Compute Pool Capacity Usage CU,Represents the available capacity,GA,TRUE,TRUE,Not used CU
-Copilot and AI,Represents Copilot and AI on your capacity,GA,FALSE,TRUE,Copilot
-Copilot and AI Capacity Usage CU,Represents Copilot and AI on your capacity,GA,FALSE,TRUE,Copilot
 Cosmos DB backup storage Data Stored,Cosmos DB backup storage Data Stored,Preview,FALSE,TRUE,Cosmos DB
 Cosmos DB data restore Data Stored,Cosmos DB data restore Data Stored,Preview,FALSE,TRUE,Cosmos DB
 Cosmos DB storage Data Stored,Cosmos DB storage Data Stored,Preview,FALSE,TRUE,Cosmos DB
@@ -85,6 +83,7 @@ VNet Data Gateway Capacity Usage CU,VNet Data Gateway Capacity Usage CU,GA,FALSE
 OneLake BCDR Other Operations via proxy Capacity Usage CU,OneLake BCDR Other Operations via proxy Capacity Usage CU,GA,FALSE,TRUE,OneLake
 OneLake BCDR Read Operations via Proxy Capacity Usage CU,OneLake BCDR Read Operations via Proxy Capacity Usage CU,GA,FALSE,TRUE,OneLake
 Operations Agents Compute Capacity Usage CU,Operations Agents Compute,GA,FALSE,TRUE,Operations Agents
+Copilot and AI,Represents Copilot and AI on your capacity,GA,FALSE,TRUE,Copilot
 Copilot and AI Capacity Usage CU,Represents Copilot and AI on your capacity,GA,FALSE,TRUE,Copilot
 Operations Agents Autonomous Reasoning Capacity Usage CU,Operations Agents Autonomous Reasoning Capacity Usage CU,GA,FALSE,TRUE,Operations Agents
 Real-Time Intelligence - Event Listener and Alert Capacity Usage CU,Represents Event Listener and Alerts for Real-Time Intelligence on your capacity,GA,FALSE,TRUE,RTI
