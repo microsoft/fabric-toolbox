@@ -22,7 +22,7 @@ This tool allows to scan one or multiple workspaces in order to get all the info
 
 - **Python** 3.10, 3.11, or 3.12
 - **pip** (Python package installer)
-- **Azure CLI** ([installation guide](https://learn.microsoft.com/en-us/cli/azure/install-azure-cli))
+- **Azure CLI** ([installation guide](https://learn.microsoft.com/en-us/cli/azure/install-azure-cli)) — *or* a **Microsoft Fabric Notebook** environment
 
 ## Installation
 
@@ -34,15 +34,58 @@ pip install resources/fabric_assessment_tool-0.0.1-py3-none-any.whl
 
 ## Authentication
 
-This cli tool leverages the use of Azure Command-Line Inteface (CLI) for authentication.
+This tool supports two authentication methods:
 
-Before running this tool, just log in using:
+### Azure CLI (default)
+
+This is the default method when running on a local machine or VM.
+
+Before running this tool, log in using:
 
 ```
 az login
 ```
 
 You can check [how to install](https://learn.microsoft.com/en-us/cli/azure/install-azure-cli?view=azure-cli-latest) and [authentication details](https://learn.microsoft.com/en-us/cli/azure/authenticate-azure-cli?view=azure-cli-latest) in the official documentation.
+
+### Fabric Notebook
+
+When running inside a Microsoft Fabric Notebook, the tool can authenticate using `notebookutils.credentials.getToken()`. This is auto-detected when `notebookutils` is available, or can be explicitly set with `--auth-method fabric`.
+
+> **Note:** When using Fabric authentication, `--subscription-id` is required since there is no equivalent to `az account show` in the Fabric Notebook environment.
+
+#### CLI usage from a notebook cell
+
+```bash
+!fat assess --source synapse --auth-method fabric \
+    --subscription-id <your-subscription-id> \
+    --ws workspace1 \
+    -o /lakehouse/default/Files/assessment \
+    --sql-admin-password "your_password" \
+    --create-dmv
+```
+
+#### Python API usage from a notebook cell
+
+```python
+from fabric_assessment_tool.services.assessment_service import AssessmentService
+
+sql_admin_password = notebookutils.credentials.getSecret("akvName", "secret")
+
+service = AssessmentService()
+results = service.assess(
+    source="synapse",
+    mode="full",
+    workspaces=["my-synapse-workspace"],
+    output_path="/lakehouse/default/Files/assessment",
+    subscription_id="<your-subscription-id>",
+    auth_method="fabric",
+    sql_admin_password=sql_admin_password,   # optional: bypasses password prompt
+    create_dmv=True,                         # optional: auto-creates DMV without prompt
+)
+```
+
+> **Tip:** The `--sql-admin-password` and `--create-dmv` parameters are optional. If you don't need dedicated SQL pool table statistics, you can omit them entirely.
 
 
 
@@ -68,7 +111,10 @@ fat assess --source <synapse|databricks> \
 - `--ws`: Comma-separated list of workspace names to assess 
   - *For Databricks, use the **workspace name** (not the workspace ID)*
   - *If not provided, it will prompt the list of reachable workspaces to select*
-- `--subscription-id`: Azure subscription ID (if not provided, will use default credentials)
+- `--subscription-id`: Azure subscription ID (if not provided, will use default credentials). **Required** when using `--auth-method fabric`
+- `--auth-method`: Authentication method (`azure-cli` or `fabric`). Default: auto-detect based on environment
+- `--sql-admin-password`: SQL admin password for dedicated SQL pools (bypasses interactive prompt)
+- `--create-dmv`: Auto-create vTableSizes DMV without confirmation prompt (for non-interactive execution)
 
 **Examples:**
 ```bash

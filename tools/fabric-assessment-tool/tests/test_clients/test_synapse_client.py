@@ -41,6 +41,10 @@ def test_get_sql_pools_success():
 def test_get_spark_pools_success():
     cc = SynapseClient()
 
+    workspace_info = cc._get_workspace_info(workspace_name)
+
+    cc._get_synapse_clients(workspace_info.endpoints)
+
     spark_pools = cc._get_spark_pools(workspace_name)
 
     assert spark_pools is not None

@@ -2,8 +2,6 @@ import builtins
 from argparse import Namespace
 from typing import Optional
 
-from azure.identity import AzureCliCredential
-
 from fabric_assessment_tool.errors.api import FATError
 
 from ..assessment.common import AssessmentStatus
@@ -53,6 +51,7 @@ from ..assessment.synapse import (
 from ..utils import ui as utils_ui
 from .api_client import ApiClient
 from .odbc_client import OdbcClient
+from .token_provider import TokenProvider, create_token_provider
 
 
 class SynapseClient:
@@ -61,6 +60,10 @@ class SynapseClient:
     def __init__(
         self,
         subscription_id: Optional[str] = None,
+        token_provider: Optional[TokenProvider] = None,
+        auth_method: Optional[str] = None,
+        sql_admin_password: Optional[str] = None,
+        create_dmv: bool = False,
         **kwargs,
     ):
         """
@@ -68,52 +71,68 @@ class SynapseClient:
 
         Args:
             subscription_id: Azure subscription ID (optional, will use Azure CLI default if not provided)
+            token_provider: Optional TokenProvider instance for authentication
+            auth_method: Authentication method ("azure-cli", "fabric", or None for auto-detect)
+            sql_admin_password: SQL admin password for dedicated SQL pools (bypasses interactive prompt)
+            create_dmv: Auto-create vTableSizes DMV without confirmation prompt
         """
+        self.token_provider = token_provider or create_token_provider(auth_method)
         self.custom_subscription_id = subscription_id
+        self.sql_admin_password = sql_admin_password
+        self.create_dmv = create_dmv
         self.authenticate()
-        self.workspaces = self.get_workspaces()
+        self._workspace_cache: dict[str, SynapseWorkspaceInfo] = {}
         self.dev_endpoint_permission_issues = False
         self.unreached_components = []
         self.paused_databases = []
 
     def authenticate(self) -> None:
-        """Authenticate with Azure using Azure CLI."""
+        """Authenticate with Azure using the configured token provider."""
         try:
-            self.credential = AzureCliCredential()
-            self.azure_token = self.credential.get_token(
-                "https://management.azure.com/.default"
-            )
-            self.synapse_clients: dict[str, ApiClient] = {
-                "azure": ApiClient(token=self.azure_token.token)
-            }
+            self.synapse_clients: dict[str, ApiClient] = {}
 
-            import json
-            import subprocess
-
-            cmd = "az account show"
-            output = subprocess.run(
-                cmd,
-                shell=True,
-                check=False,
-                stderr=subprocess.PIPE,
-                stdout=subprocess.PIPE,
-            )
-            result = json.loads(output.stdout)
-            if result:
-                self.account_info = result
-                self.tenant_id = self.account_info["tenantId"]
-                # Use custom subscription_id if provided, otherwise use Azure CLI default
-                self.subscription_id = (
-                    self.custom_subscription_id or self.account_info["id"]
-                )
-            else:
-                raise Exception("Failed to get account info from Azure CLI")
+            # Use custom subscription_id if provided, otherwise use provider default
+            default_sub = self.token_provider.get_subscription_id()
+            self.subscription_id = self.custom_subscription_id or default_sub
 
         except Exception as e:
             raise Exception(f"Failed to authenticate with Azure: {e}")
 
+    def _ensure_azure_client(self) -> bool:
+        """Lazily create the Azure management API client when needed.
+
+        Returns:
+            True if the Azure management client is available, False otherwise.
+        """
+        if "azure" in self.synapse_clients:
+            return True
+        try:
+            azure_token = self.token_provider.get_token(
+                "https://management.azure.com/.default"
+            )
+            self.synapse_clients["azure"] = ApiClient(token=azure_token)
+            return True
+        except Exception:
+            return False
+
+    @property
+    def _has_azure_client(self) -> bool:
+        """Check if the Azure management API client is available."""
+        return "azure" in self.synapse_clients or self._ensure_azure_client()
+
     def get_workspaces(self) -> list[SynapseWorkspaceInfo]:
-        """Get Synapse workspaces in the subscription."""
+        """Get all Synapse workspaces in the subscription.
+
+        Used for interactive workspace selection when no workspace names are provided.
+        Requires Azure management API access.
+        """
+        if not self.subscription_id:
+            raise Exception(
+                "No subscription ID available. "
+                "Please provide --subscription-id when using Fabric notebook authentication."
+            )
+
+        self._ensure_azure_client()
         args = Namespace()
         args.uri = f"/subscriptions/{self.subscription_id}/providers/Microsoft.Synapse/workspaces"
         req = self.synapse_clients["azure"].do_request(args)
@@ -132,6 +151,10 @@ class SynapseClient:
             )
             for workspace in json_req["value"]
         ]
+
+        # Populate cache
+        for ws in workspaces:
+            self._workspace_cache[ws.name.lower()] = ws
 
         return workspaces
 
@@ -168,9 +191,19 @@ class SynapseClient:
 
             self._get_synapse_clients(workspace_info.endpoints)
 
-            # Get SQL pools - azure endpoint
+            # Gather SQL admin credentials early (needed for dedicated pool schema/table listing and statistics)
+            sql_admin_login = workspace_info.json_response.get("properties").get(
+                "sqlAdministratorLogin"
+            )
+            sql_admin_password = self._get_sql_admin_credentials(
+                workspace_name, sql_admin_login
+            )
+
+            # Get SQL pools - dev endpoint
             utils_ui.print_extracting("SQL Pools")
-            sql_pools = self._get_sql_pools(workspace_name)
+            sql_pools = self._get_sql_pools(
+                workspace_name, sql_admin_login, sql_admin_password
+            )
             utils_ui.print_extraction_done("SQL Pools")
 
             # Get Spark pools - azure endpoint
@@ -230,25 +263,7 @@ class SynapseClient:
             libraries = self._get_libraries(workspace_name)
             utils_ui.print_extraction_done("Libraries")
 
-            # Get dedicated databases - azure endpoint
-            utils_ui.print_extracting("Dedicated Databases")
-            for pool in sql_pools.dedicated_pools:
-                pool.database = SynapseDedicatedDatabase(
-                    name=pool.name,
-                    schemas=self._get_dedicated_schemas(workspace_name, pool.name),
-                    json_response=pool.json_response,
-                )
-            utils_ui.print_extraction_done("Dedicated Databases")
-
             # Get table statistics using SQL admin credentials if provided
-            sql_admin_login = workspace_info.json_response.get("properties").get(
-                "sqlAdministratorLogin"
-            )
-
-            sql_admin_password = self._get_sql_admin_credentials(
-                workspace_name, sql_admin_login
-            )
-
             if sql_admin_login and sql_admin_password:
                 utils_ui.print_extracting("Table Statistics")
                 for pool in sql_pools.dedicated_pools:
@@ -333,7 +348,6 @@ class SynapseClient:
                 managed_private_endpoints=managed_private_endpoints,
                 libraries=libraries,
                 assessment_metadata=assessment_metadata,
-                tenant_id=self.tenant_id,
                 subscription_id=self.subscription_id,
                 resource_group=workspace_info.resource_group,
             )
@@ -342,19 +356,43 @@ class SynapseClient:
             raise Exception(f"Failed to assess workspace {workspace_name}: {e}")
 
     def _get_workspace_info(self, workspace_name: str) -> SynapseWorkspaceInfo:
-        """Get Synapse workspace information."""
-        ws = next(
-            (
-                workspace
-                for workspace in self.workspaces
-                if workspace.name.lower() == workspace_name.lower()
-            ),
-            None,
+        """Get Synapse workspace information.
+
+        Returns cached info if available, otherwise fetches directly
+        from the workspace dev endpoint.
+        """
+        cache_key = workspace_name.lower()
+        if cache_key in self._workspace_cache:
+            return self._workspace_cache[cache_key]
+
+        # Fetch workspace details via the dev endpoint
+        # https://learn.microsoft.com/en-us/rest/api/synapse/data-plane/workspace/get?view=rest-synapse-data-plane-2020-12-01
+        dev_base_url = f"{workspace_name}.dev.azuresynapse.net"
+        dev_scope = "https://dev.azuresynapse.net/.default"
+        dev_token = self.token_provider.get_token(dev_scope)
+        dev_client = ApiClient(
+            base_url=dev_base_url,
+            scope=dev_scope,
+            api_version="2020-12-01",
+            token=dev_token,
         )
 
-        if not ws:
-            raise ValueError(f"Workspace not found: {workspace_name}")
+        args = Namespace()
+        args.uri = "/workspace"
+        req = dev_client.do_request(args)
+        workspace = req.json()
 
+        ws = SynapseWorkspaceInfo(
+            id=workspace["id"],
+            name=workspace["name"],
+            resource_group=workspace["id"].split("/")[4],
+            location=workspace["location"],
+            status=workspace["properties"]["provisioningState"],
+            endpoints=workspace["properties"].get("connectivityEndpoints"),
+            json_response=workspace,
+        )
+
+        self._workspace_cache[cache_key] = ws
         return ws
 
     def _get_synapse_clients(
@@ -374,19 +412,24 @@ class SynapseClient:
                 base_url=base_url,
                 scope=scope,
                 api_version=api_version,
-                token=self.credential.get_token(scope).token if scope else None,
+                token=self.token_provider.get_token(scope) if scope else None,
             )
         return self.synapse_clients
 
-    def _get_sql_pools(self, workspace_name: str) -> SynapseSqlPools:
+    def _get_sql_pools(
+        self,
+        workspace_name: str,
+        sql_admin_login: Optional[str] = None,
+        sql_admin_password: Optional[str] = None,
+    ) -> SynapseSqlPools:
         """Get SQL pools in the workspace."""
 
         ws = self._get_workspace_info(workspace_name)
 
         args = Namespace()
-        # https://learn.microsoft.com/en-us/rest/api/synapse/resourcemanager/sql-pools/list-by-workspace?view=rest-synapse-resourcemanager-2021-06-01&tabs=HTTP
-        args.uri = f"/subscriptions/{self.subscription_id}/resourceGroups/{ws.resource_group}/providers/Microsoft.Synapse/workspaces/{workspace_name}/sqlPools"
-        req = self.synapse_clients["azure"].do_request(args)
+        # https://learn.microsoft.com/en-us/rest/api/synapse/data-plane/sql-pools/list?view=rest-synapse-data-plane-2020-12-01&tabs=HTTP
+        args.uri = f"/sqlPools"
+        req = self.synapse_clients["dev"].do_request(args)
 
         json_req = req.json()
 
@@ -397,7 +440,12 @@ class SynapseClient:
                 sku=pool["sku"]["name"],
                 database=SynapseDedicatedDatabase(
                     name=pool["name"],
-                    schemas=self._get_dedicated_schemas(workspace_name, pool["name"]),
+                    schemas=self._get_dedicated_schemas(
+                        workspace_name,
+                        pool["name"],
+                        sql_admin_login,
+                        sql_admin_password,
+                    ),
                     json_response=pool,
                 ),
                 tables_count=0,
@@ -427,16 +475,16 @@ class SynapseClient:
         ws = self._get_workspace_info(workspace_name)
 
         args = Namespace()
-        # https://learn.microsoft.com/en-us/rest/api/synapse/resourcemanager/big-data-pools/list-by-workspace?view=rest-synapse-resourcemanager-2021-06-01&tabs=HTTP
-        args.uri = f"/subscriptions/{self.subscription_id}/resourceGroups/{ws.resource_group}/providers/Microsoft.Synapse/workspaces/{workspace_name}/bigDataPools"
-        req = self.synapse_clients["azure"].do_request(args)
+        # https://learn.microsoft.com/en-us/rest/api/synapse/data-plane/big-data-pools/list?view=rest-synapse-data-plane-2020-12-01&tabs=HTTP
+        args.uri = "/bigDataPools"
+        req = self.synapse_clients["dev"].do_request(args)
 
         json_req = req.json()
 
         spark_pools = [
             SynapseSparkPool(
                 name=pool["name"],
-                location=pool["location"],
+                location=pool.get("location", ws.location),
                 node_size=pool["properties"]["nodeSize"],
                 node_count=pool["properties"]["nodeCount"],
                 spark_version=pool["properties"]["sparkVersion"],
@@ -919,15 +967,39 @@ class SynapseClient:
             raise e
 
     def _get_dedicated_schemas(
-        self, workspace_name: str, database_name: str
+        self,
+        workspace_name: str,
+        database_name: str,
+        sql_admin_login: Optional[str] = None,
+        sql_admin_password: Optional[str] = None,
     ) -> SynapseSchemas:
-        """Get Spark pools in the workspace."""
+        """Get schemas in a dedicated SQL pool.
 
+        Uses Azure Management API when available, falls back to ODBC.
+        """
+        # Try Azure Management API first
+        if self._has_azure_client and self.subscription_id:
+            return self._get_dedicated_schemas_arm(
+                workspace_name, database_name, sql_admin_login, sql_admin_password
+            )
+
+        # Fall back to ODBC
+        return self._get_dedicated_schemas_odbc(
+            workspace_name, database_name, sql_admin_login, sql_admin_password
+        )
+
+    def _get_dedicated_schemas_arm(
+        self,
+        workspace_name: str,
+        database_name: str,
+        sql_admin_login: Optional[str] = None,
+        sql_admin_password: Optional[str] = None,
+    ) -> SynapseSchemas:
+        """Get schemas via Azure Management API."""
         ws = self._get_workspace_info(workspace_name)
 
         try:
             args = Namespace()
-            # https://learn.microsoft.com/en-us/rest/api/synapse/resourcemanager/sql-pool-schemas/list?view=rest-synapse-resourcemanager-2021-06-01&tabs=HTTP
             args.uri = f"/subscriptions/{self.subscription_id}/resourceGroups/{ws.resource_group}/providers/Microsoft.Synapse/workspaces/{workspace_name}/sqlPools/{database_name}/schemas"
             req = self.synapse_clients["azure"].do_request(args)
 
@@ -938,7 +1010,11 @@ class SynapseClient:
                     name=schema["name"],
                     database=database_name,
                     tables=self._get_dedicated_schema_tables(
-                        workspace_name, database_name, schema["name"]
+                        workspace_name,
+                        database_name,
+                        schema["name"],
+                        sql_admin_login,
+                        sql_admin_password,
                     ),
                     views=SynapseViews(views=[]),
                     json_response=schema,
@@ -954,11 +1030,87 @@ class SynapseClient:
                 return SynapseSchemas(schemas=[])
             raise e
 
-    def _get_dedicated_schema_tables(
-        self, workspace_name: str, database_name: str, schema_name: str
-    ) -> SynapseTables:
-        """Get tables in a dedicated schema."""
+    def _get_dedicated_schemas_odbc(
+        self,
+        workspace_name: str,
+        database_name: str,
+        sql_admin_login: Optional[str] = None,
+        sql_admin_password: Optional[str] = None,
+    ) -> SynapseSchemas:
+        """Get schemas via ODBC using INFORMATION_SCHEMA."""
 
+        if not sql_admin_login or not sql_admin_password:
+            utils_ui.print_warning(
+                f"Skipping schema listing for '{database_name}' - SQL credentials not provided."
+            )
+            return SynapseSchemas(schemas=[])
+
+        try:
+            odbc_client = OdbcClient(
+                workspace_name=workspace_name,
+                database=database_name,
+                username=sql_admin_login,
+                password=sql_admin_password,
+            )
+
+            schema_names = odbc_client.get_schemas()
+
+            schemas = [
+                SynapseSchema(
+                    name=schema_name,
+                    database=database_name,
+                    tables=self._get_dedicated_schema_tables(
+                        workspace_name,
+                        database_name,
+                        schema_name,
+                        sql_admin_login,
+                        sql_admin_password,
+                    ),
+                    views=SynapseViews(views=[]),
+                    json_response={"name": schema_name},
+                )
+                for schema_name in schema_names
+            ]
+
+            return SynapseSchemas(schemas=schemas)
+
+        except FATError as e:
+            if e.status_code == "UpdateNotAllowedOnPausedDatabase":
+                self.paused_databases = self.paused_databases + [database_name]
+                return SynapseSchemas(schemas=[])
+            raise e
+
+    def _get_dedicated_schema_tables(
+        self,
+        workspace_name: str,
+        database_name: str,
+        schema_name: str,
+        sql_admin_login: Optional[str] = None,
+        sql_admin_password: Optional[str] = None,
+    ) -> SynapseTables:
+        """Get tables in a dedicated schema.
+
+        Uses Azure Management API when available, falls back to ODBC.
+        """
+        # Try Azure Management API first
+        if self._has_azure_client and self.subscription_id:
+            return self._get_dedicated_schema_tables_arm(
+                workspace_name, database_name, schema_name
+            )
+
+        # Fall back to ODBC
+        return self._get_dedicated_schema_tables_odbc(
+            workspace_name, database_name, schema_name,
+            sql_admin_login, sql_admin_password,
+        )
+
+    def _get_dedicated_schema_tables_arm(
+        self,
+        workspace_name: str,
+        database_name: str,
+        schema_name: str,
+    ) -> SynapseTables:
+        """Get tables via Azure Management API."""
         ws = self._get_workspace_info(workspace_name)
 
         try:
@@ -986,6 +1138,47 @@ class SynapseClient:
                 return SynapseTables(tables=[])
             raise e
 
+    def _get_dedicated_schema_tables_odbc(
+        self,
+        workspace_name: str,
+        database_name: str,
+        schema_name: str,
+        sql_admin_login: Optional[str] = None,
+        sql_admin_password: Optional[str] = None,
+    ) -> SynapseTables:
+        """Get tables via ODBC using INFORMATION_SCHEMA."""
+
+        if not sql_admin_login or not sql_admin_password:
+            return SynapseTables(tables=[])
+
+        try:
+            odbc_client = OdbcClient(
+                workspace_name=workspace_name,
+                database=database_name,
+                username=sql_admin_login,
+                password=sql_admin_password,
+            )
+
+            table_names = odbc_client.get_tables(schema_name)
+
+            tables = [
+                SynapseTable(
+                    name=table_name,
+                    database=database_name,
+                    schema=schema_name,
+                    statistics=None,
+                    json_response={"name": table_name},
+                )
+                for table_name in table_names
+            ]
+
+            return SynapseTables(tables=tables)
+        except FATError as e:
+            if e.status_code == "UpdateNotAllowedOnPausedDatabase":
+                self.paused_databases = self.paused_databases + [database_name]
+                return SynapseTables(tables=[])
+            raise e
+
     def _get_dedicated_database_statistics(
         self, workspace_name: str, database_name: str, sql_user: str, sql_password: str
     ) -> tuple[list[TableStatistics], list[CodeObjectCount], list[CodeObjectLines]]:
@@ -999,12 +1192,8 @@ class SynapseClient:
         )
 
         if not odbc_client.check_table_statistics_dmv_exists():
-            # Ask for permission to create the view
-            builtins.print("\r")  # Clear previous line
-            confirmation = utils_ui.prompt_confirm(
-                f"Do you want to create the vTableSizes DMV in database '{database_name}' to obtain detailed table statistics? (y/n): "
-            )
-            if confirmation:
+            if self.create_dmv:
+                # Auto-create DMV in non-interactive mode
                 utils_ui.print_extracting(
                     f"Creating table statistics DMV in database {database_name}"
                 )
@@ -1013,10 +1202,24 @@ class SynapseClient:
                     f"Creating table statistics DMV in database {database_name}"
                 )
             else:
-                utils_ui.print_warning(
-                    f"Skipping table statistics collection for database {database_name}"
+                # Ask for permission to create the view
+                builtins.print("\r")  # Clear previous line
+                confirmation = utils_ui.prompt_confirm(
+                    f"Do you want to create the vTableSizes DMV in database '{database_name}' to obtain detailed table statistics? (y/n): "
                 )
-                return ([], [], [])
+                if confirmation:
+                    utils_ui.print_extracting(
+                        f"Creating table statistics DMV in database {database_name}"
+                    )
+                    odbc_client.create_table_statistics_dmv()
+                    utils_ui.print_extraction_done(
+                        f"Creating table statistics DMV in database {database_name}"
+                    )
+                else:
+                    utils_ui.print_warning(
+                        f"Skipping table statistics collection for database {database_name}"
+                    )
+                    return ([], [], [])
 
         return (
             list(odbc_client.get_table_statistics(database_name)),
@@ -1028,7 +1231,7 @@ class SynapseClient:
         self, workspace_name: str, sql_admin_login: Optional[str]
     ) -> Optional[str]:
         """
-        Prompt for SQL admin credentials with disclaimer.
+        Get SQL admin credentials, using stored password if available.
 
         Args:
             workspace_name: Name of the Synapse workspace
@@ -1039,6 +1242,10 @@ class SynapseClient:
         """
         if not sql_admin_login:
             return None
+
+        # Use stored password if provided (non-interactive mode)
+        if self.sql_admin_password is not None:
+            return self.sql_admin_password
 
         # Display disclaimer about DMV usage
         utils_ui.print_fabric_assessment_tool(
