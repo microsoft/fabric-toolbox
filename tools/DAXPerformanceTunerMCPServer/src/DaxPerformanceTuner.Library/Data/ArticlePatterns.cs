@@ -347,6 +347,15 @@ public static class ArticlePatterns
             )
 
             INT(Sales[Quantity] > 5)
+
+            When the result is a count of qualifying rows, eliminate the iterator and callback entirely
+            with a simple predicate — no iterator, no callback, native SE aggregation:
+
+            -- Anti-pattern: iterator + conditional = callback
+            SUMX( Sales, IF(Sales[Amount] > 1000, 1, 0) )
+
+            -- Preferred: native SE aggregation
+            CALCULATE( COUNTROWS(Sales), Sales[Amount] > 1000 )
             """,
             [
                 @"IF\s*\([^,]+,\s*1\s*,\s*0\s*\)"
@@ -672,48 +681,6 @@ public static class ArticlePatterns
         ),
 
         // ==================================================================
-        // CUST014 — Replace SELECTEDVALUE with MAX/MIN for single-value contexts
-        // ==================================================================
-        ["CUST014"] = new(
-            "Replace SELECTEDVALUE with MAX/MIN for single-value contexts",
-            null,
-            """
-            When a filter context guarantees exactly one value for a column, SELECTEDVALUE adds unnecessary
-            overhead compared to MAX or MIN. SELECTEDVALUE internally checks for a single distinct value and
-            returns BLANK if multiple exist, which adds formula engine cost. When the context already guarantees
-            a single value (e.g., inside an iterator over VALUES/DISTINCT or in a context transition), MAX or
-            MIN is semantically equivalent and avoids the extra cardinality check.
-
-            Anti-pattern examples:
-
-            SUMX(
-                VALUES(Product[Category]),
-                SELECTEDVALUE(Product[Category]) & ": " & FORMAT([Total Sales], "#,0")
-            )
-
-            ADDCOLUMNS(
-                VALUES(Date[Year]),
-                "@Label", SELECTEDVALUE(Date[Year])
-            )
-
-            Preferred patterns:
-
-            SUMX(
-                VALUES(Product[Category]),
-                MAX(Product[Category]) & ": " & FORMAT([Total Sales], "#,0")
-            )
-
-            ADDCOLUMNS(
-                VALUES(Date[Year]),
-                "@Label", MAX(Date[Year])
-            )
-            """,
-            [
-                @"SELECTEDVALUE\s*\("
-            ]
-        ),
-
-        // ==================================================================
         // CUST015 — Use ALLEXCEPT instead of ALL + VALUES restoration
         // ==================================================================
         ["CUST015"] = new(
@@ -750,61 +717,14 @@ public static class ArticlePatterns
                 SUM(Sales[Amount]),
                 ALLEXCEPT(Sales, Sales[Region], Sales[Year])
             )
+
+            NOTE: ALLEXCEPT is only valid when the restored column is actively filtered in the current
+            context. Without an active filter, VALUES returns all values (a no-op restore) while ALLEXCEPT
+            still clears other filters — the two forms are not equivalent in that case, and ALL + VALUES
+            is required.
             """,
             [
                 @"CALCULATE(?:TABLE)?\s*\([^)]*,[\s\S]*?ALL\s*\(\s*('?[A-Za-z_][A-Za-z0-9 ]*'?)\s*\)[\s\S]*?VALUES\s*\(\s*\1\["
-            ]
-        ),
-
-        // ==================================================================
-        // CUST016 — Flatten nested CALCULATE calls
-        // ==================================================================
-        ["CUST016"] = new(
-            "Flatten nested CALCULATE calls",
-            null,
-            """
-            Nested CALCULATE calls create multiple context transitions when a single CALCULATE with combined
-            filter arguments would suffice. Each CALCULATE creates a separate context transition boundary,
-            and nesting them adds unnecessary formula engine overhead. Flatten them by merging the filter
-            arguments into one CALCULATE call.
-
-            Anti-pattern examples:
-
-            CALCULATE(
-                CALCULATE(
-                    [Total Sales],
-                    Sales[Region] = "West"
-                ),
-                Date[Year] = 2023
-            )
-
-            CALCULATE(
-                CALCULATE(
-                    SUM(Sales[Amount]),
-                    Product[Category] = "Electronics"
-                ),
-                Sales[Year] = 2023,
-                Sales[Region] = "West"
-            )
-
-            Preferred patterns:
-
-            CALCULATE(
-                [Total Sales],
-                Sales[Region] = "West",
-                Date[Year] = 2023
-            )
-
-            CALCULATE(
-                SUM(Sales[Amount]),
-                Product[Category] = "Electronics",
-                Sales[Year] = 2023,
-                Sales[Region] = "West"
-            )
-            """,
-            [
-                @"CALCULATE\s*\(\s*CALCULATE\s*\(",
-                @"CALCULATETABLE\s*\(\s*CALCULATE(?:TABLE)?\s*\("
             ]
         ),
 
@@ -1024,7 +944,6 @@ DEFINE MEASURE 'Fabric Capacity Units NRT'[MyMeasure] =
 **Solution Strategy:**
 - Replace ALL() + manual filter restoration with ALLEXCEPT()
 - Combine logic to reduce table scans from 2 to 1
-- Use MAX() instead of SELECTEDVALUE() for performance
 - Eliminate unnecessary DISTINCT() operations
 
 **Result:** 91.7 seconds -> 4.7 seconds (95% improvement)
