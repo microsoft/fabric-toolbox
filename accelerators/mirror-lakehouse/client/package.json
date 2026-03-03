@@ -36,10 +36,10 @@
     "web-vitals": "^3.5.0"
   },
   "scripts": {
-    "start": "npx react-scripts start",
-    "build": "npx react-scripts build",
-    "test": "npx react-scripts test",
-    "eject": "npx react-scripts eject",
+    "start": "node scripts/react-scripts-wrapper.js start",
+    "build": "node scripts/react-scripts-wrapper.js build",
+    "test": "node scripts/react-scripts-wrapper.js test",
+    "eject": "node scripts/react-scripts-wrapper.js eject",
     "type-check": "tsc --noEmit"
   },
   "eslintConfig": {

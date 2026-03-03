@@ -5,7 +5,7 @@ import { ThemeProvider, createTheme } from '@mui/material/styles'
 import { CssBaseline } from '@mui/material'
 import { SnackbarProvider } from 'notistack'
 import { QueryClient, QueryClientProvider } from 'react-query'
-import { msalInstance } from './services/authService'
+import { ensureMsalInitialized, logMsalDiagnostic, logMsalInfo, msalInstance } from './services/authService'
 import { AuthProvider } from './contexts/AuthContext'
 import Layout from './components/Layout/Layout'
 import LoginPage from './pages/LoginPage'
@@ -100,17 +100,38 @@ const queryClient = new QueryClient({
 
 const App: React.FC = () => {
   useEffect(() => {
-    // Initialize MSAL
-    msalInstance.initialize().then(() => {
-      // Handle redirect response
-      msalInstance.handleRedirectPromise().then((response) => {
-        if (response) {
-          console.log('Authentication successful:', response)
+    const initializeAuth = async () => {
+      try {
+        await ensureMsalInitialized()
+
+        const response = await msalInstance.handleRedirectPromise()
+        if (response?.account) {
+          msalInstance.setActiveAccount(response.account)
+          logMsalInfo('handleRedirectPromise returned account', {
+            homeAccountId: response.account.homeAccountId,
+            username: response.account.username,
+            tenantId: response.account.tenantId
+          })
+          return
         }
-      }).catch((error) => {
-        console.error('Authentication error:', error)
-      })
-    })
+
+        logMsalInfo('handleRedirectPromise returned no response')
+
+        const activeAccount = msalInstance.getActiveAccount()
+        const accounts = msalInstance.getAllAccounts()
+        if (!activeAccount && accounts.length > 0) {
+          msalInstance.setActiveAccount(accounts[0])
+        }
+      } catch (error) {
+        logMsalDiagnostic('App initializeAuth failed', error, {
+          location: window.location.href,
+          accountCount: msalInstance.getAllAccounts().length,
+          hasActiveAccount: !!msalInstance.getActiveAccount()
+        })
+      }
+    }
+
+    initializeAuth()
 
     // Hide initial loading spinner
     const loadingElement = document.getElementById('loading')

@@ -21,6 +21,8 @@ const debugRoutes = require('./routes/debug');
 const app = express();
 const PORT = process.env.PORT || 3001;
 
+app.set('trust proxy', process.env.TRUST_PROXY ? Number(process.env.TRUST_PROXY) : 1);
+
 // Security middleware
 app.use(helmet());
 
