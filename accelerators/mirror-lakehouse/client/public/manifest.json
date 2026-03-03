@@ -1,0 +1,16 @@
+{
+  "short_name": "Lakehouse Mirror",
+  "name": "Lakehouse Mirror - Microsoft Fabric Tool",
+  "description": "Mirror Microsoft Fabric lakehouses using schema shortcuts",
+  "icons": [
+    {
+      "src": "favicon.ico",
+      "sizes": "64x64 32x32 24x24 16x16",
+      "type": "image/x-icon"
+    }
+  ],
+  "start_url": ".",
+  "display": "standalone",
+  "theme_color": "#000000",
+  "background_color": "#ffffff"
+}
