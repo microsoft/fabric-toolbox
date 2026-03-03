@@ -1,6 +1,9 @@
-# Lakehouse Mirror
+# Lakehouse Clone / Mirror
 
-A web application to mirror Microsoft Fabric lakehouses using schema shortcuts. This tool allows you to replicate the structure of one lakehouse to another by creating schema shortcuts that point to the original tables.
+A web application to Mirror or Clone Microsoft Fabric lakehouses (including SQL analytics endpoint) using shortcuts and also copying the views and stored procedures . 
+
+This tool allows you to replicate the structure of one lakehouse to another by creating table and schema shortcuts that point to the original tables.
+It also copies the views and stored procs from the SQL Anayltics Endpoint (It does not copy the security, RLS or CLS).
 
 ## Features
 
