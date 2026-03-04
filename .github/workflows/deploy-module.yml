@@ -1,15 +1,17 @@
+# Workflow disabled
 on:
-  push:
-    branches:
-      - main
-    paths-ignore:
-      - CHANGELOG.md
-      - .vscode/**
-      - .github/**
-      - images/**
-      - tests/**
-      - '**.md'
-      - '**.yml'
+  workflow_dispatch: # Manual trigger only
+  # push:
+  #   branches:
+  #     - main
+  #   paths-ignore:
+  #     - CHANGELOG.md
+  #     - .vscode/**
+  #     - .github/**
+  #     - images/**
+  #     - tests/**
+  #     - '**.md'
+  #     - '**.yml'
 env:
   buildFolderName: output
   buildArtifactName: output

@@ -44,7 +44,7 @@
                             },
                             "queryRef": "domains_flatten.SubDomainName",
                             "nativeQueryRef": "SubDomainName",
-                            "active": true
+                            "active": false
                         },
                         {
                             "field": {
@@ -279,6 +279,7 @@
                         "queryRefs": [
                             "domains_flatten.MainDomainName"
                         ],
+                        "isCollapsed": true,
                         "identityKeys": [
                             {
                                 "Column": {

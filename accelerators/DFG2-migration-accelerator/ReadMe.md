@@ -14,3 +14,5 @@ To use it:
 		- Add any additional code to filter to a subset of dataflows if the default scope is too broad
 - Note: The Save As REST API will maintain the connections and refresh schedule from your Gen 1 Dataflows but any incremental refresh settings will need to be recreated prior to initial refresh
 - Check back for later versions of this tool, as additional notebooks are planned to help update downstream items with the GUIDs from the newly created Gen 2 Dataflows
+
+- Note - This YouTube video walks through how to use this accelerator - https://youtu.be/We-qUkec4wI
