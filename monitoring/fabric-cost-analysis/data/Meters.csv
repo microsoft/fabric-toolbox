@@ -87,3 +87,4 @@ Copilot and AI,Represents Copilot and AI on your capacity,GA,FALSE,TRUE,Copilot
 Copilot and AI Capacity Usage CU,Represents Copilot and AI on your capacity,GA,FALSE,TRUE,Copilot
 Operations Agents Autonomous Reasoning Capacity Usage CU,Operations Agents Autonomous Reasoning Capacity Usage CU,GA,FALSE,TRUE,Operations Agents
 Real-Time Intelligence - Event Listener and Alert Capacity Usage CU,Represents Event Listener and Alerts for Real-Time Intelligence on your capacity,GA,FALSE,TRUE,RTI
+Capacity Overage Capacity Usage CU,Represents the capacity overage usage on your capacity,GA,FALSE,FALSE,Capacity Overage
