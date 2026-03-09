@@ -728,6 +728,440 @@ public static class ArticlePatterns
             ]
         ),
 
+        // ==================================================================
+        // CUST016 — Wrap SUMMARIZECOLUMNS Filters with CALCULATETABLE
+        // ==================================================================
+        ["CUST016"] = new(
+            "Wrap SUMMARIZECOLUMNS Filters with CALCULATETABLE",
+            null,
+            """
+            Filters passed as direct arguments to SUMMARIZECOLUMNS inside measures can produce
+            unexpected results or suboptimal plans. Move filters to a wrapping CALCULATETABLE instead.
+
+            Anti-pattern examples:
+
+            SUMMARIZECOLUMNS (
+                'Table'[Column],
+                TREATAS ( { "Value" }, 'Table'[FilterColumn] ),
+                "@Calculation", [Measure]
+            )
+
+            SUMMARIZECOLUMNS (
+                'Table'[Column],
+                FILTER ( ALL('Dim'[Key]), 'Dim'[Key] = "X" ),
+                "@Calculation", [Measure]
+            )
+
+            Preferred patterns:
+
+            CALCULATETABLE (
+                SUMMARIZECOLUMNS (
+                    'Table'[Column],
+                    "@Calculation", [Measure]
+                ),
+                'Table'[FilterColumn] = "Value"
+            )
+            """,
+            Expand(
+                @"SUMMARIZECOLUMNS\s*\([\s\S]*?TREATAS\s*\(",
+                @"SUMMARIZECOLUMNS\s*\([\s\S]*?FILTER\s*\(",
+                @"SUMMARIZECOLUMNS\s*\([\s\S]*?\bIN\b"
+            )
+        ),
+
+        // ==================================================================
+        // CUST017 — SWITCH/IF Branch Optimization in SUMMARIZECOLUMNS
+        // ==================================================================
+        ["CUST017"] = new(
+            "SWITCH/IF Branch Optimization in SUMMARIZECOLUMNS",
+            null,
+            """
+            SWITCH/IF inside SUMMARIZECOLUMNS enables branch optimization — the engine evaluates only the
+            matching branch. When this fails, it materializes a full cartesian product. Three things break it:
+
+            1. Multiple aggregations in one branch — merge into a single SUMX:
+               SUMX('Sales', 'Sales'[SalesAmount] - 'Sales'[TotalCost])
+
+            2. Mismatched data types across branches — an implicit cast breaks the optimization; use
+               explicit conversion:
+               CONVERT(SUM('Sales'[OrderQuantity]), CURRENCY)
+
+            3. Context transition inside a branch iterator — a measure reference that requires a context
+               transition (e.g., SUMX(Sales, 'Sales'[Quantity] * [selection])) forces a full crossjoin.
+               If the measure is context-independent, cache it before the iterator:
+               VAR _UnitDiscount = [Unit Discount]
+
+            Anti-pattern examples:
+
+            SWITCH (
+                SELECTEDVALUE('Metric'[Name]),
+                "Revenue", SUM('Sales'[SalesAmount]) - SUM('Sales'[TotalCost]),
+                "Quantity", SUM('Sales'[OrderQuantity])
+            )
+            // Multiple aggregations in the "Revenue" branch break optimization
+
+            SWITCH (
+                SELECTEDVALUE('Metric'[Name]),
+                "Revenue", SUM('Sales'[SalesAmount]),
+                "Quantity", SUM('Sales'[OrderQuantity])
+            )
+            // Mismatched types: CURRENCY vs INTEGER — implicit cast breaks optimization
+
+            SWITCH (
+                SELECTEDVALUE('Metric'[Name]),
+                "Revenue", SUMX(Sales, 'Sales'[Quantity] * [Unit Discount]),
+                "Cost", SUM('Sales'[TotalCost])
+            )
+            // Context transition inside SUMX branch forces crossjoin
+
+            Preferred patterns:
+
+            SWITCH (
+                SELECTEDVALUE('Metric'[Name]),
+                "Revenue", SUMX('Sales', 'Sales'[SalesAmount] - 'Sales'[TotalCost]),
+                "Quantity", CONVERT(SUM('Sales'[OrderQuantity]), CURRENCY)
+            )
+            // Single iterator per branch + explicit type alignment
+
+            VAR _UnitDiscount = [Unit Discount]
+            RETURN
+            SWITCH (
+                SELECTEDVALUE('Metric'[Name]),
+                "Revenue", SUMX(Sales, 'Sales'[Quantity] * _UnitDiscount),
+                "Cost", SUM('Sales'[TotalCost])
+            )
+            // Context-independent measure cached outside the iterator
+            """,
+            Expand(
+                @"SWITCH\s*\([\s\S]*?({DAX_AGGREGATORS}|{DAX_ITERATORS})\s*\([^)]*\)\s*[+\-*/]\s*({DAX_AGGREGATORS}|{DAX_ITERATORS})\s*\(",
+                @"SWITCH\s*\([\s\S]*?,\s*({DAX_CONTEXT_TRANSITION})\s*\(",
+                @"SWITCH\s*\([\s\S]*?,\s*\[[A-Za-z_][A-Za-z0-9 _]*\]",
+                @"IF\s*\([\s\S]*?({DAX_AGGREGATORS}|{DAX_ITERATORS})\s*\([^)]*\)\s*[+\-*/]\s*({DAX_AGGREGATORS}|{DAX_ITERATORS})\s*\(",
+                @"IF\s*\([\s\S]*?,\s*({DAX_CONTEXT_TRANSITION})\s*\(",
+                @"IF\s*\([\s\S]*?,[\s\S]*?\[[A-Za-z_][A-Za-z0-9 _]*\]"
+            )
+        ),
+
+        // ==================================================================
+        // CUST018 — Use COUNTROWS Instead of DISTINCTCOUNT on Key Columns
+        // ==================================================================
+        ["CUST018"] = new(
+            "Use COUNTROWS Instead of DISTINCTCOUNT on Key Columns",
+            null,
+            """
+            When a column is a primary key (one-side of a relationship), DISTINCTCOUNT is redundant —
+            every value is already unique. COUNTROWS is cheaper because it avoids the hash-based
+            distinct computation entirely.
+
+            Anti-pattern examples:
+
+            DISTINCTCOUNT ( 'Product'[ProductKey] )
+
+            DISTINCTCOUNT ( 'Customer'[CustomerID] )
+
+            Preferred patterns:
+
+            COUNTROWS ( 'Product' )
+
+            COUNTROWS ( 'Customer' )
+
+            For non-key columns where DISTINCTCOUNT is a bottleneck, consider the alternative:
+            SUMX(VALUES(Sales[CustomerKey]), 1)
+            which forces formula engine evaluation and may be faster depending on cardinality.
+            """,
+            [
+                @"\bDISTINCTCOUNT\s*\(\s*'?[A-Za-z_][A-Za-z0-9 ]*'?\[\s*[A-Za-z_]*[Kk]ey\s*\]\s*\)",
+                @"\bDISTINCTCOUNT\s*\(\s*'?[A-Za-z_][A-Za-z0-9 ]*'?\[\s*[A-Za-z_]*[Ii][Dd]\s*\]\s*\)"
+            ]
+        ),
+
+        // ==================================================================
+        // CUST019 — Move Calculation to Lower Granularity
+        // ==================================================================
+        ["CUST019"] = new(
+            "Move Calculation to Lower Granularity",
+            null,
+            """
+            When an iterator scans a high-cardinality table but the calculation depends on a
+            low-cardinality attribute, iterate over the attribute instead. This dramatically
+            reduces context transitions from N (all rows) to M (distinct attribute values).
+
+            Anti-pattern examples:
+
+            SUMX( 'Customer', CALCULATE(SUM('Sales'[Amount])) * 'Customer'[DiscountRate] )
+            // 100K customers but only 5 distinct DiscountRate values = 100K context transitions
+
+            SUMX( 'Order', CALCULATE([Total Revenue]) * 'Order'[ShippingMultiplier] )
+            // Millions of orders but few distinct ShippingMultiplier values
+
+            Preferred patterns:
+
+            SUMX(
+                VALUES('Customer'[DiscountRate]),
+                CALCULATE(SUM('Sales'[Amount])) * 'Customer'[DiscountRate]
+            )
+            // 5 iterations instead of 100K
+
+            SUMX(
+                VALUES('Order'[ShippingMultiplier]),
+                CALCULATE([Total Revenue]) * 'Order'[ShippingMultiplier]
+            )
+            """,
+            Expand(
+                @"SUMX\s*\(\s*'?[A-Za-z_][A-Za-z0-9 ]*'?\s*,[\s\S]*?CALCULATE\s*\(",
+                @"({DAX_ITERATORS})\s*\(\s*(?!VALUES|DISTINCT|FILTER|SUMMARIZE|ADDCOLUMNS|SELECTCOLUMNS|TOPN)'?[A-Za-z_][A-Za-z0-9 ]*'?\s*,[\s\S]*?\*\s*'?[A-Za-z_][A-Za-z0-9 ]*'?\["
+            )
+        ),
+
+        // ==================================================================
+        // CUST020 — Experiment with Relationship Overrides via TREATAS and CROSSFILTER
+        // ==================================================================
+        ["CUST020"] = new(
+            "Experiment with Relationship Overrides via TREATAS and CROSSFILTER",
+            null,
+            """
+            Relationship direction and filter propagation directly affect SE query plans. Sometimes
+            bidirectional is faster; sometimes explicit filter propagation wins. Use TREATAS and
+            CROSSFILTER to experiment without model changes.
+
+            This pattern is signaled by trace events showing bidirectional or M2M relationship
+            overhead — unexpected SE join expansion, or existing TREATAS/CROSSFILTER in the measure.
+
+            Example — replace bidirectional bridge with explicit filter:
+
+            CALCULATE(
+                SUM('Sales'[Amount]),
+                CROSSFILTER('Customer'[CustomerKey], 'SportBridge'[CustomerKey], NONE),
+                TREATAS(VALUES('SportBridge'[CustomerKey]), 'Customer'[CustomerKey])
+            )
+
+            When bidirectional relationships cause performance problems, try:
+            1. Disable bidir with CROSSFILTER(..., NONE)
+            2. Push the filter explicitly with TREATAS
+            3. Compare SE query plans — fewer joins and smaller materializations indicate improvement
+            """,
+            []
+        ),
+
+        // ==================================================================
+        // CUST021 — Apply Boolean Multiplier to Unblock Fusion
+        // ==================================================================
+        ["CUST021"] = new(
+            "Apply Boolean Multiplier to Unblock Fusion",
+            null,
+            """
+            When near-identical SE queries on the same fact table differ only by a column filter value
+            or by per-measure VAND tuple predicates, vertical fusion is blocked. Replace the per-measure
+            filter with SUMX(KEEPFILTERS(ALL(Column)), expr * boolean) to move the filter from SE to FE,
+            making SE queries structurally identical so the engine can fuse them.
+
+            This pattern is primarily signaled by trace events: near-identical SE queries on the same
+            fact table differing only by a WHERE filter value or per-measure VAND tuple predicates.
+            It should always be returned as a candidate when analyzing performance.
+
+            Anti-pattern examples:
+
+            CALCULATE( SUM('Sales'[Amount]), 'Product'[Category] = "Bikes" )
+            CALCULATE( SUM('Sales'[Amount]), 'Date'[Date] = _dateAnchor )
+            CALCULATE( MAX('Sales'[DateKey]), 'Sales'[Metric] <> 0 )
+
+            Preferred patterns:
+
+            SUMX(
+                KEEPFILTERS(ALL('Product'[Category])),
+                CALCULATE(SUM('Sales'[Amount])) * ('Product'[Category] = "Bikes")
+            )
+            SUMX(
+                KEEPFILTERS(ALL('Date'[Date])),
+                CALCULATE(SUM('Sales'[Amount])) * ('Date'[Date] = _dateAnchor)
+            )
+            MAXX(
+                ALL('Date'[Date]),
+                CALCULATE(MAX('Sales'[DateKey])) * INT(NOT ISBLANK(CALCULATE(SUM('Sales'[Metric]))))
+            )
+
+            KEEPFILTERS preserves external context; when the column is in the groupby, detail cells
+            iterate only 1 row. Works with all aggregation types.
+
+            BLANK to 0 caveat: the boolean pattern returns 0 instead of BLANK when no data exists.
+            If ISBLANK() checks matter downstream, wrap:
+            VAR _r = SUMX(...) RETURN IF(_r = 0, BLANK(), _r)
+            """,
+            []
+        ),
+
+        // ==================================================================
+        // CUST022 — Replace DIVIDE() with / Operator in Iterators
+        // ==================================================================
+        ["CUST022"] = new(
+            "Replace DIVIDE() with / Operator in Iterators",
+            null,
+            """
+            DIVIDE() includes divide-by-zero protection that forces FE callbacks inside iterators.
+            Use the native / operator to keep the expression SE-native. Only use / when the denominator
+            is guaranteed non-zero. If zero is possible, pre-filter the table to exclude zero-denominator
+            rows.
+
+            Anti-pattern examples:
+
+            SUMX('Fact', 'Fact'[BaseAmount] * DIVIDE(RELATED('Items'[Discount]), RELATED('Items'[LocationAdjustment])))
+
+            SUMX('Sales', DIVIDE('Sales'[Revenue], 'Sales'[Units]))
+
+            AVERAGEX('Products', DIVIDE([Total Sales], [Total Cost]))
+
+            Preferred patterns:
+
+            SUMX('Fact', 'Fact'[BaseAmount] * (RELATED('Items'[Discount]) / RELATED('Items'[LocationAdjustment])))
+
+            SUMX(
+                CALCULATETABLE('Sales', 'Sales'[Units] <> 0),
+                'Sales'[Revenue] / 'Sales'[Units]
+            )
+
+            AVERAGEX(
+                FILTER('Products', [Total Cost] <> 0),
+                [Total Sales] / [Total Cost]
+            )
+            """,
+            Expand(
+                @"({DAX_ITERATORS})\s*\([\s\S]*?DIVIDE\s*\(",
+                @"DIVIDE\s*\(\s*(?:RELATED|'?[A-Za-z_][A-Za-z0-9 ]*'?\[)"
+            )
+        ),
+
+        // ==================================================================
+        // CUST023 — Lift Time Intelligence to Outer CALCULATE for Vertical Fusion
+        // ==================================================================
+        ["CUST023"] = new(
+            "Lift Time Intelligence to Outer CALCULATE for Vertical Fusion",
+            null,
+            """
+            Time intelligence functions (DATESYTD, DATEADD, SAMEPERIODLASTYEAR, etc.) break vertical
+            fusion — each TI-modified measure gets its own SE query. Keep base measures TI-free and
+            apply TI once in an outer wrapper so all base measures fuse into a single SE scan.
+
+            When measures use manual date anchoring via CALCULATE(expr, Column = _var) instead of
+            built-in TI functions, this pattern does not apply — see Boolean Multiplier (CUST021).
+
+            This pattern is primarily signaled by trace events: multiple SE queries hitting the same
+            fact table where each query corresponds to a different TI-wrapped measure.
+            It should always be returned as a candidate when analyzing performance.
+
+            Anti-pattern examples:
+
+            MEASURE 'Sales'[Revenue YTD] = CALCULATE ( [Revenue], DATESYTD('Date'[Date]) )
+            MEASURE 'Sales'[Cost YTD]    = CALCULATE ( [Cost],    DATESYTD('Date'[Date]) )
+            MEASURE 'Sales'[Margin YTD]  = [Revenue YTD] - [Cost YTD]
+            // Each measure applies TI independently — no fusion possible
+
+            Preferred patterns:
+
+            MEASURE 'Sales'[Margin YTD] =
+                CALCULATE ( [Revenue] - [Cost], DATESYTD ( 'Date'[Date] ) )
+            // Base measures [Revenue] and [Cost] fuse; TI applied once in outer wrapper
+            """,
+            []
+        ),
+
+        // ==================================================================
+        // CUST024 — Unblock Horizontal Fusion by Lifting Filters
+        // ==================================================================
+        ["CUST024"] = new(
+            "Unblock Horizontal Fusion by Lifting Filters",
+            null,
+            """
+            Horizontal fusion merges SE queries that differ only by a column-slice filter value.
+            It breaks when: the filtered column is missing from groupby, table-valued or
+            runtime-computed filters are applied per measure, or time intelligence is applied
+            inside each slice measure.
+
+            Fix: keep only simple column-slice filters inside base measures; lift everything else
+            (TI, dynamic variables) to an outer CALCULATE.
+
+            This pattern is primarily signaled by trace events: N near-identical SE queries on the
+            same fact table differing only by a WHERE filter value.
+            It should always be returned as a candidate when analyzing performance.
+
+            Anti-pattern examples:
+
+            MEASURE 'Sales'[Bikes YTD] =
+                CALCULATE ( SUM('Sales'[Amount]), 'Product'[Category] = "Bikes", DATESYTD('Date'[Date]) )
+            MEASURE 'Sales'[Accessories YTD] =
+                CALCULATE ( SUM('Sales'[Amount]), 'Product'[Category] = "Accessories", DATESYTD('Date'[Date]) )
+            // TI inside each slice measure prevents horizontal fusion
+
+            Preferred patterns:
+
+            MEASURE 'Sales'[Bikes] =
+                CALCULATE ( SUM('Sales'[Amount]), 'Product'[Category] = "Bikes" )
+            MEASURE 'Sales'[Accessories] =
+                CALCULATE ( SUM('Sales'[Amount]), 'Product'[Category] = "Accessories" )
+            MEASURE 'Sales'[Combined YTD] =
+                CALCULATE ( [Bikes] + [Accessories], DATESYTD('Date'[Date]) )
+            // Slice measures fuse horizontally; TI applied once in consuming measure
+            """,
+            []
+        ),
+
+        // ==================================================================
+        // CUST025 — Pre-Compute and Join Instead of Filter Round-Trip
+        // ==================================================================
+        ["CUST025"] = new(
+            "Pre-Compute and Join Instead of Filter Round-Trip",
+            null,
+            """
+            When a measure computes a qualifying key set from a filtered aggregation and then uses
+            TREATAS or IN to filter a second aggregation by those keys, the outer SUMMARIZECOLUMNS
+            context compounds the key filter with groupby columns — generating large tuple semi-joins
+            (e.g., 500+ (Brand, Key) pairs in a single WHERE clause). The compound-tuple SE scan
+            often dominates total query time.
+
+            SE signal: VertiPaqSEQueryEnd with DEFINE TABLE ... ININDEX or WHERE ... IN containing
+            hundreds of compound tuples. Single scan duration disproportionately high relative to others.
+
+            Fix: Pre-compute both aggregations independently at the shared key grain, then join with
+            NATURALINNERJOIN in the FE.
+
+            Anti-pattern examples:
+
+            VAR _FilteredAgg =
+                CALCULATETABLE (
+                    ADDCOLUMNS ( VALUES ( 'Fact'[Key] ), "@Agg1", [Measure] ),
+                    'Dim'[Filter] = "X"
+                )
+            VAR _Qualifying = FILTER ( _FilteredAgg, [@Agg1] > 1000000 )
+            VAR _Result =
+                CALCULATE (
+                    [Measure],
+                    TREATAS ( SELECTCOLUMNS ( _Qualifying, "K", 'Fact'[Key] ), 'Fact'[Key] )
+                )
+
+            Preferred patterns:
+
+            VAR _FilteredAgg =
+                CALCULATETABLE (
+                    ADDCOLUMNS ( VALUES ( 'Fact'[Key] ), "@Agg1", [Measure] ),
+                    'Dim'[Filter] = "X"
+                )
+            VAR _Qualifying = FILTER ( _FilteredAgg, [@Agg1] > 1000000 )
+            VAR _UnfilteredAgg =
+                ADDCOLUMNS ( VALUES ( 'Fact'[Key] ), "@Agg2", [Measure] )
+            VAR _Joined = NATURALINNERJOIN ( _Qualifying, _UnfilteredAgg )
+            VAR _Result = SUMX ( _Joined, [@Agg2] )
+
+            Why it works: Each pre-computed table generates independent SE scans — clean, no tuple
+            filters. NATURALINNERJOIN matches on the shared key lineage column in the FE, replacing
+            the expensive compound-tuple SE round-trip with a fast in-memory join.
+            """,
+            [
+                @"TREATAS\s*\(\s*SELECTCOLUMNS\s*\(",
+                @"TREATAS\s*\([\s\S]*?\bIN\b",
+                @"\bNATURALINNERJOIN\s*\(",
+                @"FILTER\s*\([\s\S]*?\[@[A-Za-z_][A-Za-z0-9 _]*\][\s\S]*?TREATAS\s*\("
+            ]
+        ),
+
     };
 
     // ======================================================================
