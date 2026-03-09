@@ -765,7 +765,9 @@ public static class ArticlePatterns
             Expand(
                 @"SUMMARIZECOLUMNS\s*\([\s\S]*?TREATAS\s*\(",
                 @"SUMMARIZECOLUMNS\s*\([\s\S]*?FILTER\s*\(",
-                @"SUMMARIZECOLUMNS\s*\([\s\S]*?\bIN\b"
+                @"SUMMARIZECOLUMNS\s*\([\s\S]*?\bIN\b",
+                @"\bTREATAS\s*\([\s\S]*?SUMMARIZECOLUMNS\b",
+                @"SUMMARIZECOLUMNS\s*\([\s\S]*?({DAX_TABLE_FUNCTIONS})\s*\("
             )
         ),
 
@@ -871,7 +873,8 @@ public static class ArticlePatterns
             """,
             [
                 @"\bDISTINCTCOUNT\s*\(\s*'?[A-Za-z_][A-Za-z0-9 ]*'?\[\s*[A-Za-z_]*[Kk]ey\s*\]\s*\)",
-                @"\bDISTINCTCOUNT\s*\(\s*'?[A-Za-z_][A-Za-z0-9 ]*'?\[\s*[A-Za-z_]*[Ii][Dd]\s*\]\s*\)"
+                @"\bDISTINCTCOUNT\s*\(\s*'?[A-Za-z_][A-Za-z0-9 ]*'?\[\s*[A-Za-z_]*[Ii][Dd]\s*\]\s*\)",
+                @"\bDISTINCTCOUNT\s*\("
             ]
         ),
 
@@ -908,8 +911,9 @@ public static class ArticlePatterns
             )
             """,
             Expand(
-                @"SUMX\s*\(\s*'?[A-Za-z_][A-Za-z0-9 ]*'?\s*,[\s\S]*?CALCULATE\s*\(",
-                @"({DAX_ITERATORS})\s*\(\s*(?!VALUES|DISTINCT|FILTER|SUMMARIZE|ADDCOLUMNS|SELECTCOLUMNS|TOPN)'?[A-Za-z_][A-Za-z0-9 ]*'?\s*,[\s\S]*?\*\s*'?[A-Za-z_][A-Za-z0-9 ]*'?\["
+                @"({DAX_ITERATORS})\s*\(\s*'?[A-Za-z_][A-Za-z0-9 ]*'?\s*,[\s\S]*?CALCULATE\s*\(",
+                @"({DAX_ITERATORS})\s*\(\s*(?!VALUES|DISTINCT|FILTER|SUMMARIZE|ADDCOLUMNS|SELECTCOLUMNS|TOPN)'?[A-Za-z_][A-Za-z0-9 ]*'?\s*,[\s\S]*?\*\s*'?[A-Za-z_][A-Za-z0-9 ]*'?\[",
+                @"({DAX_ITERATORS})\s*\(\s*'?[A-Za-z_][A-Za-z0-9 ]*'?\s*,[\s\S]*?\[[A-Za-z_][A-Za-z0-9 _]*\]"
             )
         ),
 
@@ -1026,7 +1030,8 @@ public static class ArticlePatterns
             """,
             Expand(
                 @"({DAX_ITERATORS})\s*\([\s\S]*?DIVIDE\s*\(",
-                @"DIVIDE\s*\(\s*(?:RELATED|'?[A-Za-z_][A-Za-z0-9 ]*'?\[)"
+                @"DIVIDE\s*\(\s*(?:RELATED|'?[A-Za-z_][A-Za-z0-9 ]*'?\[)",
+                @"\bDIVIDE\s*\("
             )
         ),
 
@@ -1156,9 +1161,12 @@ public static class ArticlePatterns
             """,
             [
                 @"TREATAS\s*\(\s*SELECTCOLUMNS\s*\(",
-                @"TREATAS\s*\([\s\S]*?\bIN\b",
+                @"SELECTCOLUMNS\s*\([\s\S]*?TREATAS\s*\(",
                 @"\bNATURALINNERJOIN\s*\(",
-                @"FILTER\s*\([\s\S]*?\[@[A-Za-z_][A-Za-z0-9 _]*\][\s\S]*?TREATAS\s*\("
+                @"FILTER\s*\([\s\S]*?\[@[A-Za-z_][A-Za-z0-9 _]*\][\s\S]*?TREATAS\s*\(",
+                @"\bIN\s+(?:CALCULATETABLE|FILTER)\s*\(",
+                @"ADDCOLUMNS\s*\([\s\S]*?VALUES\s*\([\s\S]*?\[@",
+                @"FILTER\s*\([^,]*,\s*\[@[A-Za-z_][A-Za-z0-9 _]*\]"
             ]
         ),
 
