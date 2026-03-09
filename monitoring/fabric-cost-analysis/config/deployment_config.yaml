@@ -5,10 +5,9 @@ connections:
 folders:
   - name: "Deployment"
     items:
-    - FCA.Lakehouse
     - Init_FCA_Lakehouse_Tables.Notebook
     - Update_FCA_delivery.Notebook
-  - name: "Focus"
+  - name: "FCA Data Load"
     items:
     - 01_Load_Calendar.Notebook
     - 01_Load_Dimensions.Notebook
@@ -16,10 +15,10 @@ folders:
     - 01_Load_FCAVersion.Notebook
     - 01_Load_Focus.Notebook
     - 01_Load_Meters.Notebook
-    - Load FCA E2E.DataPipeline
   - name: "Data Agent"
     items:
     - 02_Create_DataAgent.Notebook
+    - FCA_Agent.DataAgent
   - name: "Reservations"
     items:
     - 02_Load_DimReservation.Notebook
@@ -37,4 +36,3 @@ folders:
     items:
     - FCA_Core_Report.Report
     - FCA_Core_SM.SemanticModel
-
