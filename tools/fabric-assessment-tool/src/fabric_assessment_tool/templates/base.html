@@ -1,0 +1,523 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}{{ title }}{% endblock %}</title>
+    <style>
+        :root {
+            --primary: #0078d4;
+            --primary-dark: #106ebe;
+            --secondary: #6c757d;
+            --success: #28a745;
+            --warning: #ffc107;
+            --danger: #dc3545;
+            --light: #f8f9fa;
+            --dark: #212529;
+            --border: #dee2e6;
+            --shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        /* Workspace Filter Styles */
+        .workspace-filter {
+            position: relative;
+            margin-left: 1rem;
+        }
+        
+        .filter-btn {
+            background: rgba(255,255,255,0.15);
+            border: 1px solid rgba(255,255,255,0.3);
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.875rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            transition: background 0.2s;
+        }
+        
+        .filter-btn:hover {
+            background: rgba(255,255,255,0.25);
+        }
+        
+        .filter-dropdown {
+            display: none;
+            position: absolute;
+            top: 100%;
+            right: 0;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            min-width: 220px;
+            max-height: 300px;
+            overflow-y: auto;
+            z-index: 1001;
+            margin-top: 0.5rem;
+        }
+        
+        .filter-dropdown.show {
+            display: block;
+        }
+        
+        .filter-dropdown label {
+            display: flex;
+            align-items: center;
+            padding: 0.75rem 1rem;
+            cursor: pointer;
+            color: var(--dark);
+            font-size: 0.875rem;
+            transition: background 0.15s;
+            border-bottom: 1px solid var(--border);
+        }
+        
+        .filter-dropdown label:last-child {
+            border-bottom: none;
+        }
+        
+        .filter-dropdown label:hover {
+            background: var(--light);
+        }
+        
+        .filter-dropdown input[type="checkbox"] {
+            margin-right: 0.75rem;
+            width: 16px;
+            height: 16px;
+            cursor: pointer;
+        }
+        
+        .filter-dropdown .select-all-label {
+            background: var(--light);
+            font-weight: 600;
+            border-bottom: 2px solid var(--border);
+        }
+        
+        .filter-count {
+            background: rgba(255,255,255,0.3);
+            padding: 0.125rem 0.5rem;
+            border-radius: 10px;
+            font-size: 0.75rem;
+            margin-left: 0.25rem;
+        }
+        
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+            line-height: 1.6;
+            color: var(--dark);
+            background-color: #f5f5f5;
+        }
+        
+        /* Navigation */
+        .navbar {
+            background: var(--primary);
+            color: white;
+            padding: 1rem 2rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            box-shadow: var(--shadow);
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+        }
+        
+        .navbar-brand {
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: white;
+            text-decoration: none;
+        }
+        
+        .navbar-nav {
+            display: flex;
+            list-style: none;
+            gap: 1rem;
+        }
+        
+        .navbar-nav a {
+            color: rgba(255,255,255,0.85);
+            text-decoration: none;
+            padding: 0.5rem 1rem;
+            border-radius: 4px;
+            transition: background 0.2s;
+        }
+        
+        .navbar-nav a:hover,
+        .navbar-nav a.active {
+            background: rgba(255,255,255,0.15);
+            color: white;
+        }
+        
+        /* Layout */
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+        
+        .page-header {
+            margin-bottom: 2rem;
+        }
+        
+        .page-header h1 {
+            font-size: 1.75rem;
+            font-weight: 600;
+            color: var(--dark);
+        }
+        
+        .page-header p {
+            color: var(--secondary);
+            margin-top: 0.5rem;
+        }
+        
+        /* Cards */
+        .card {
+            background: white;
+            border-radius: 8px;
+            box-shadow: var(--shadow);
+            margin-bottom: 1.5rem;
+            overflow: hidden;
+        }
+        
+        .card-header {
+            background: var(--light);
+            padding: 1rem 1.5rem;
+            border-bottom: 1px solid var(--border);
+            font-weight: 600;
+        }
+        
+        .card-body {
+            padding: 1.5rem;
+        }
+        
+        /* Grid */
+        .row {
+            display: flex;
+            flex-wrap: wrap;
+            margin: -0.75rem;
+        }
+        
+        .col {
+            flex: 1;
+            padding: 0.75rem;
+            min-width: 250px;
+        }
+        
+        .col-4 { flex: 0 0 33.333%; max-width: 33.333%; }
+        .col-6 { flex: 0 0 50%; max-width: 50%; }
+        .col-12 { flex: 0 0 100%; max-width: 100%; }
+        
+        @media (max-width: 768px) {
+            .col-4, .col-6 { flex: 0 0 100%; max-width: 100%; }
+        }
+        
+        /* Stats Cards */
+        .stat-card {
+            background: white;
+            border-radius: 8px;
+            padding: 1.5rem;
+            box-shadow: var(--shadow);
+            text-align: center;
+        }
+        
+        .stat-card .stat-value {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: var(--primary);
+        }
+        
+        .stat-card .stat-label {
+            color: var(--secondary);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        .stat-card.synapse { border-left: 4px solid #0078d4; }
+        .stat-card.databricks { border-left: 4px solid #ff3621; }
+        .stat-card.success { border-left: 4px solid var(--success); }
+        .stat-card.warning { border-left: 4px solid var(--warning); }
+        
+        /* Tables */
+        .table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.875rem;
+        }
+        
+        .table th,
+        .table td {
+            padding: 0.75rem 1rem;
+            text-align: left;
+            border-bottom: 1px solid var(--border);
+        }
+        
+        .table th {
+            background: var(--light);
+            font-weight: 600;
+            color: var(--secondary);
+            text-transform: uppercase;
+            font-size: 0.75rem;
+            letter-spacing: 0.5px;
+        }
+        
+        .table tbody tr:hover {
+            background: #f8f9fa;
+        }
+        
+        .table-responsive {
+            overflow-x: auto;
+        }
+        
+        /* Badges */
+        .badge {
+            display: inline-block;
+            padding: 0.25rem 0.5rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            border-radius: 4px;
+        }
+        
+        .badge-primary { background: var(--primary); color: white; }
+        .badge-success { background: var(--success); color: white; }
+        .badge-warning { background: var(--warning); color: var(--dark); }
+        .badge-secondary { background: var(--secondary); color: white; }
+        
+        /* Charts */
+        .chart-container {
+            position: relative;
+            height: 300px;
+            width: 100%;
+        }
+        
+        .chart-container.small {
+            height: 200px;
+        }
+        
+        /* Links */
+        a {
+            color: var(--primary);
+            text-decoration: none;
+        }
+        
+        a:hover {
+            text-decoration: underline;
+        }
+        
+        /* Empty state */
+        .empty-state {
+            text-align: center;
+            padding: 3rem;
+            color: var(--secondary);
+        }
+        
+        .empty-state svg {
+            width: 64px;
+            height: 64px;
+            margin-bottom: 1rem;
+            opacity: 0.5;
+        }
+        
+        /* Footer */
+        .footer {
+            text-align: center;
+            padding: 2rem;
+            color: var(--secondary);
+            font-size: 0.875rem;
+            border-top: 1px solid var(--border);
+            margin-top: 2rem;
+            background: white;
+        }
+        
+        /* Utilities */
+        .text-muted { color: var(--secondary); }
+        .text-primary { color: var(--primary); }
+        .text-success { color: var(--success); }
+        .text-warning { color: var(--warning); }
+        .text-danger { color: var(--danger); }
+        .text-center { text-align: center; }
+        .text-right { text-align: right; }
+        .mt-1 { margin-top: 0.5rem; }
+        .mt-2 { margin-top: 1rem; }
+        .mb-1 { margin-bottom: 0.5rem; }
+        .mb-2 { margin-bottom: 1rem; }
+    </style>
+    <!-- Chart.js CDN - lightweight, works offline after first load -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+    {% block head %}{% endblock %}
+</head>
+<body>
+    <nav class="navbar">
+        <a href="{{ base_path }}index.html" class="navbar-brand">📊 {% if platform == 'databricks' %}Databricks{% else %}Synapse{% endif %} Assessment Report</a>
+        <div style="display: flex; align-items: center;">
+            <ul class="navbar-nav">
+                <li><a href="{{ base_path }}index.html" {% if view == 'overview' %}class="active"{% endif %}>Overview</a></li>
+                {% if platform != 'databricks' %}
+                <li><a href="{{ base_path }}views/admin.html" {% if view == 'admin' %}class="active"{% endif %}>Admin</a></li>
+                {% endif %}
+                <li><a href="{{ base_path }}views/data_engineering.html" {% if view == 'data-engineering' %}class="active"{% endif %}>Data Engineering</a></li>
+                <li><a href="{{ base_path }}views/data_warehousing.html" {% if view == 'data-warehousing' %}class="active"{% endif %}>Data Warehousing</a></li>
+                {% if platform != 'databricks' %}
+                <li><a href="{{ base_path }}views/data_integration.html" {% if view == 'data-integration' %}class="active"{% endif %}>Data Integration</a></li>
+                {% endif %}
+            </ul>
+            {% if workspace_names and workspace_names | length > 0 %}
+            <div class="workspace-filter">
+                <button class="filter-btn" onclick="toggleFilterDropdown(event)">
+                    🏢 Workspaces <span class="filter-count" id="filter-count">{{ workspace_names | length }}</span> ▼
+                </button>
+                <div class="filter-dropdown" id="filter-dropdown">
+                    <label class="select-all-label">
+                        <input type="checkbox" id="select-all" checked onchange="toggleSelectAll()">
+                        Select All
+                    </label>
+                    {% for ws_name in workspace_names %}
+                    <label>
+                        <input type="checkbox" class="ws-checkbox" value="{{ ws_name }}" checked onchange="updateWorkspaceFilter()">
+                        {{ ws_name }}
+                    </label>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </nav>
+    
+    <div class="container">
+        {% block content %}{% endblock %}
+    </div>
+    
+    <footer class="footer">
+        <p>Generated by Fabric Assessment Tool on {{ generated_at[:19] if generated_at else 'N/A' }}</p>
+        <p class="text-muted mt-1">Microsoft Fabric Migration Assessment</p>
+    </footer>
+    
+    {% block scripts %}{% endblock %}
+    
+    <script>
+    // Workspace filter functionality (pure vanilla JS)
+    const STORAGE_KEY = 'fat-workspace-filter';
+    
+    function toggleFilterDropdown(event) {
+        event.stopPropagation();
+        const dropdown = document.getElementById('filter-dropdown');
+        dropdown.classList.toggle('show');
+    }
+    
+    // Close dropdown when clicking outside
+    document.addEventListener('click', function(event) {
+        const dropdown = document.getElementById('filter-dropdown');
+        const filterBtn = event.target.closest('.filter-btn');
+        if (dropdown && !filterBtn && !event.target.closest('.filter-dropdown')) {
+            dropdown.classList.remove('show');
+        }
+    });
+    
+    function getSelectedWorkspaces() {
+        const checkboxes = document.querySelectorAll('.ws-checkbox');
+        return Array.from(checkboxes)
+            .filter(cb => cb.checked)
+            .map(cb => cb.value);
+    }
+    
+    function getAllWorkspaces() {
+        const checkboxes = document.querySelectorAll('.ws-checkbox');
+        return Array.from(checkboxes).map(cb => cb.value);
+    }
+    
+    function toggleSelectAll() {
+        const selectAll = document.getElementById('select-all');
+        const checkboxes = document.querySelectorAll('.ws-checkbox');
+        checkboxes.forEach(cb => cb.checked = selectAll.checked);
+        updateWorkspaceFilter();
+    }
+    
+    function updateSelectAllState() {
+        const checkboxes = document.querySelectorAll('.ws-checkbox');
+        const selectAll = document.getElementById('select-all');
+        if (selectAll) {
+            const allChecked = Array.from(checkboxes).every(cb => cb.checked);
+            const someChecked = Array.from(checkboxes).some(cb => cb.checked);
+            selectAll.checked = allChecked;
+            selectAll.indeterminate = someChecked && !allChecked;
+        }
+    }
+    
+    function updateFilterCount() {
+        const selected = getSelectedWorkspaces();
+        const total = getAllWorkspaces().length;
+        const countEl = document.getElementById('filter-count');
+        if (countEl) {
+            countEl.textContent = selected.length === total ? total : `${selected.length}/${total}`;
+        }
+    }
+    
+    function saveFilterState() {
+        const selected = getSelectedWorkspaces();
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(selected));
+    }
+    
+    function loadFilterState() {
+        const saved = localStorage.getItem(STORAGE_KEY);
+        if (saved) {
+            try {
+                const selected = JSON.parse(saved);
+                const allWorkspaces = getAllWorkspaces();
+                const checkboxes = document.querySelectorAll('.ws-checkbox');
+                checkboxes.forEach(cb => {
+                    // If workspace exists in saved list, check it; otherwise uncheck
+                    // If workspace is new (not in saved list at all), default to checked
+                    if (allWorkspaces.includes(cb.value)) {
+                        cb.checked = selected.includes(cb.value);
+                    }
+                });
+                updateSelectAllState();
+                updateFilterCount();
+            } catch (e) {
+                console.warn('Could not load filter state:', e);
+            }
+        }
+    }
+    
+    function updateWorkspaceFilter() {
+        updateSelectAllState();
+        updateFilterCount();
+        saveFilterState();
+        applyWorkspaceFilter();
+    }
+    
+    function applyWorkspaceFilter() {
+        const selected = getSelectedWorkspaces();
+        
+        // Filter table rows with data-workspace attribute
+        document.querySelectorAll('[data-workspace]').forEach(row => {
+            const workspace = row.getAttribute('data-workspace');
+            row.style.display = selected.includes(workspace) ? '' : 'none';
+        });
+        
+        // Update stat cards if updateStats function is defined on the page
+        if (typeof updateFilteredStats === 'function') {
+            updateFilteredStats(selected);
+        }
+        
+        // Update charts if updateFilteredCharts function is defined on the page
+        if (typeof updateFilteredCharts === 'function') {
+            updateFilteredCharts(selected);
+        }
+    }
+    
+    // Initialize filter on page load
+    document.addEventListener('DOMContentLoaded', function() {
+        loadFilterState();
+        applyWorkspaceFilter();
+    });
+    </script>
+</body>
+</html>

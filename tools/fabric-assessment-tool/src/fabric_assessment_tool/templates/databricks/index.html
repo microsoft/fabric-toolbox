@@ -1,0 +1,229 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="page-header">
+    <h1>Databricks Assessment Overview</h1>
+    <p>Summary of all assessed Databricks workspaces</p>
+</div>
+
+<!-- Summary Stats -->
+<div class="row">
+    <div class="col">
+        <div class="stat-card databricks">
+            <div class="stat-value" id="stat-workspaces">{{ summary.workspace_count | default(0) }}</div>
+            <div class="stat-label">Databricks Workspaces</div>
+        </div>
+    </div>
+    <div class="col">
+        <div class="stat-card">
+            <div class="stat-value" id="stat-notebooks">{{ summary.total_notebooks | default(0) }}</div>
+            <div class="stat-label">Notebooks</div>
+        </div>
+    </div>
+    <div class="col">
+        <div class="stat-card">
+            <div class="stat-value" id="stat-clusters">{{ summary.total_clusters | default(0) }}</div>
+            <div class="stat-label">Clusters</div>
+        </div>
+    </div>
+    <div class="col">
+        <div class="stat-card">
+            <div class="stat-value" id="stat-jobs">{{ summary.total_jobs | default(0) }}</div>
+            <div class="stat-label">Jobs</div>
+        </div>
+    </div>
+    <div class="col">
+        <div class="stat-card">
+            <div class="stat-value" id="stat-tables">{{ summary.total_tables | default(0) }}</div>
+            <div class="stat-label">Tables</div>
+        </div>
+    </div>
+</div>
+
+<!-- Resource Counts -->
+<div class="card mt-2">
+    <div class="card-header">Resource Summary</div>
+    <div class="card-body">
+        <div class="row">
+            <div class="col col-6">
+                <div class="chart-container">
+                    <canvas id="resourceChart"></canvas>
+                </div>
+            </div>
+            <div class="col col-6">
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>Resource Type</th>
+                            <th class="text-right">Count</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>Notebooks</td>
+                            <td class="text-right">{{ summary.total_notebooks | default(0) | format_number }}</td>
+                        </tr>
+                        <tr>
+                            <td>Clusters</td>
+                            <td class="text-right">{{ summary.total_clusters | default(0) | format_number }}</td>
+                        </tr>
+                        <tr>
+                            <td>Jobs</td>
+                            <td class="text-right">{{ summary.total_jobs | default(0) | format_number }}</td>
+                        </tr>
+                        <tr>
+                            <td>SQL Warehouses</td>
+                            <td class="text-right">{{ summary.total_sql_warehouses | default(0) | format_number }}</td>
+                        </tr>
+                        <tr>
+                            <td>Tables</td>
+                            <td class="text-right">{{ summary.total_tables | default(0) | format_number }}</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Workspaces List -->
+<div class="card">
+    <div class="card-header">Workspaces</div>
+    <div class="card-body">
+        {% if workspaces %}
+        <div class="table-responsive">
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Workspace</th>
+                        <th class="text-right">Notebooks</th>
+                        <th class="text-right">Clusters</th>
+                        <th class="text-right">Jobs</th>
+                        <th class="text-right">Tables</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for ws_name, ws in workspaces.items() %}
+                    <tr data-workspace="{{ ws_name }}">
+                        <td>
+                            <a href="{{ base_path }}workspaces/{{ ws_name }}.html">{{ ws_name }}</a>
+                        </td>
+                        <td class="text-right">{{ ws.summary.counts.notebooks | default(0) }}</td>
+                        <td class="text-right">{{ ws.summary.counts.clusters | default(0) }}</td>
+                        <td class="text-right">{{ ws.summary.counts.jobs | default(0) }}</td>
+                        <td class="text-right">{{ ws.summary.counts.tables | default(0) }}</td>
+                        <td>
+                            {% set status = ws.summary.assessment_status.status | default(ws.summary.assessment_status | default('unknown')) %}
+                            <span class="badge {% if status == 'completed' %}badge-success{% elif status == 'incomplete' %}badge-warning{% else %}badge-secondary{% endif %}">
+                                {{ status | title }}
+                            </span>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="empty-state">
+            <p>No workspaces found in assessment data.</p>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Quick Links -->
+<div class="row">
+    <div class="col col-4">
+        <div class="card">
+            <div class="card-body text-center">
+                <h3>⚡ Data Engineering</h3>
+                <p class="text-muted mb-2">Notebooks, clusters, jobs</p>
+                <a href="{{ base_path }}views/data_engineering.html">View Details →</a>
+            </div>
+        </div>
+    </div>
+    <div class="col col-4">
+        <div class="card">
+            <div class="card-body text-center">
+                <h3>🏭 Data Warehousing</h3>
+                <p class="text-muted mb-2">SQL warehouses, tables</p>
+                <a href="{{ base_path }}views/data_warehousing.html">View Details →</a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+const workspaceData = {
+{% for ws_name, ws in workspaces.items() %}
+    "{{ ws_name }}": {
+        notebooks: {{ ws.summary.counts.notebooks | default(0) }},
+        clusters: {{ ws.summary.counts.clusters | default(0) }},
+        jobs: {{ ws.summary.counts.jobs | default(0) }},
+        tables: {{ ws.summary.counts.tables | default(0) }},
+        sql_warehouses: {{ ws.summary.counts.sql_warehouses | default(0) }}
+    }{% if not loop.last %},{% endif %}
+{% endfor %}
+};
+
+let resourceChart = null;
+
+function updateFilteredStats(selectedWorkspaces) {
+    let workspaceCount = 0;
+    let notebooks = 0, clusters = 0, jobs = 0, tables = 0, sqlWarehouses = 0;
+    
+    selectedWorkspaces.forEach(ws => {
+        const data = workspaceData[ws];
+        if (data) {
+            workspaceCount++;
+            notebooks += data.notebooks || 0;
+            clusters += data.clusters || 0;
+            jobs += data.jobs || 0;
+            tables += data.tables || 0;
+            sqlWarehouses += data.sql_warehouses || 0;
+        }
+    });
+    
+    document.getElementById('stat-workspaces').textContent = workspaceCount;
+    document.getElementById('stat-notebooks').textContent = notebooks;
+    document.getElementById('stat-clusters').textContent = clusters;
+    document.getElementById('stat-jobs').textContent = jobs;
+    document.getElementById('stat-tables').textContent = tables;
+    
+    if (resourceChart) {
+        resourceChart.data.datasets[0].data = [notebooks, clusters, jobs, sqlWarehouses, tables];
+        resourceChart.update();
+    }
+}
+
+const resourceCtx = document.getElementById('resourceChart');
+if (resourceCtx) {
+    resourceChart = new Chart(resourceCtx, {
+        type: 'bar',
+        data: {
+            labels: ['Notebooks', 'Clusters', 'Jobs', 'SQL Warehouses', 'Tables'],
+            datasets: [{
+                label: 'Count',
+                data: [
+                    {{ summary.total_notebooks | default(0) }},
+                    {{ summary.total_clusters | default(0) }},
+                    {{ summary.total_jobs | default(0) }},
+                    {{ summary.total_sql_warehouses | default(0) }},
+                    {{ summary.total_tables | default(0) }}
+                ],
+                backgroundColor: ['#ff3621', '#0078d4', '#107c10', '#5c2d91', '#008272']
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: { legend: { display: false } },
+            scales: { y: { beginAtZero: true } }
+        }
+    });
+}
+</script>
+{% endblock %}

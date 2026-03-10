@@ -91,7 +91,7 @@ results = service.assess(
 
 ## CLI Commands
 
-Fabric Assessment Tool provides a single main command for the moment:
+Fabric Assessment Tool provides two main commands:
 
 ### `fat assess` - Assess data sources for migration readiness
 
@@ -127,6 +127,48 @@ fat assess --source synapse --mode full --ws workspace1,workspace2 -o /path/to/r
 # Assess Databricks workspace
 fat assess --source databricks --ws my-workspace --output results_folder
 ```
+
+### `fat visualize` - Generate interactive HTML reports
+
+Generate standalone HTML reports with charts and tables to visualize assessment data. Reports work offline and can be viewed in any browser.
+
+```bash
+fat visualize -i <assessment_output_dir> \
+             [-o <report_dir>] \
+             [--view <view_type>] \
+             [--workspace <workspace_name>] \
+             [--open]
+```
+
+**Required Parameters:**
+- `-i/--input`: Path to assessment output directory (from `fat assess` command)
+
+**Optional Parameters:**
+- `-o/--output`: Output directory for HTML reports (default: `<input>/reports`)
+- `--view`: Type of visualization view to generate:
+  - `overview` (default): Global summary across all workspaces
+  - `admin`: Integration runtimes, linked services, private endpoints
+  - `data-engineering`: Notebooks, Spark pools, jobs, clusters
+  - `data-warehousing`: SQL pools, tables, databases, code objects
+  - `data-integration`: Pipelines, dataflows, datasets
+- `--workspace/-ws`: Generate report for a specific workspace only
+- `--open`: Open the generated report in default browser
+
+**Examples:**
+```bash
+# Generate overview report (opens all views)
+fat visualize -i ./assessment_output -o ./reports
+
+# Generate data engineering view
+fat visualize -i ./assessment_output --view data-engineering
+
+# Generate report for specific workspace and open in browser
+fat visualize -i ./assessment_output --workspace my-workspace --open
+
+# Generate admin view to custom directory
+fat visualize -i ./assessment_output --view admin -o ./admin_report
+```
+
 
 
 ## Sample Output

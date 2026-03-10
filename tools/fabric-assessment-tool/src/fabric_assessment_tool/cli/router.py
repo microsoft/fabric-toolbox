@@ -9,12 +9,14 @@ class CLIRouter:
     def __init__(self):
         # Import commands here to avoid circular imports
         from fabric_assessment_tool.commands.assess import AssessCommand
+        from fabric_assessment_tool.commands.visualize import VisualizeCommand
 
         # from fabric_assessment_tool.commands.export import ExportCommand
         # from fabric_assessment_tool.commands.extract import ExtractCommand
 
         self.commands = {
             "assess": AssessCommand(),
+            "visualize": VisualizeCommand(),
             # "extract": ExtractCommand(),
             # "export": ExportCommand(),
         }
@@ -41,12 +43,12 @@ class CLIRouter:
 
     def _print_help(self) -> None:
         """Print help message."""
-        print("usage: fat [-h] assess")
+        print("usage: fat [-h] {assess,visualize}")
         print()
         print("Fabric Assessment Tool - Migration Assessment Tool for Fabric DE/DW")
         print()
         print("positional arguments:")
-        print("  {assess}")
+        print("  {assess,visualize}")
         print("                        Command to execute")
         print()
         print("options:")
@@ -56,6 +58,7 @@ class CLIRouter:
         print(
             "  fat assess --source synapse --mode full --ws workspace1,workspace2 -o output_dir/"
         )
+        print("  fat visualize -i output_dir/ -o reports/ --view overview")
 
     def _create_parser(self) -> argparse.ArgumentParser:
         """Create the main argument parser."""
@@ -67,7 +70,7 @@ class CLIRouter:
 
         parser.add_argument(
             "command",
-            choices=["assess"],
+            choices=["assess", "visualize"],
             help="Command to execute",
         )
 

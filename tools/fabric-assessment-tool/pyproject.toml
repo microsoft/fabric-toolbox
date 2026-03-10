@@ -29,11 +29,15 @@ dependencies = [
     "azure-identity",
     "azure-mgmt-resource",
     "databricks-sdk==0.67.0",
-    "mssql-python==1.1.0"
+    "mssql-python==1.1.0",
+    "jinja2>=3.0.0",
 ]
 
 [tool.setuptools.packages.find]
 where = ["src"]
+
+[tool.setuptools.package-data]
+fabric_assessment_tool = ["templates/*.html", "templates/**/*.html"]
 
 [project.optional-dependencies]
 test = [

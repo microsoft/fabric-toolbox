@@ -1,0 +1,379 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="page-header">
+    <h1>🔄 Data Integration View</h1>
+    <p>Pipelines, dataflows, datasets, and linked services</p>
+</div>
+
+<!-- Summary Stats -->
+<div class="row">
+    <div class="col">
+        <div class="stat-card">
+            <div class="stat-value" id="stat-pipes">{{ integration.pipelines | length }}</div>
+            <div class="stat-label">Pipelines</div>
+        </div>
+    </div>
+    <div class="col">
+        <div class="stat-card">
+            <div class="stat-value" id="stat-acts">{{ integration.pipeline_activities | format_number }}</div>
+            <div class="stat-label">Total Activities</div>
+        </div>
+    </div>
+    <div class="col">
+        <div class="stat-card">
+            <div class="stat-value" id="stat-df">{{ integration.dataflows | length }}</div>
+            <div class="stat-label">Dataflows</div>
+        </div>
+    </div>
+    <div class="col">
+        <div class="stat-card">
+            <div class="stat-value" id="stat-ds">{{ integration.datasets | length }}</div>
+            <div class="stat-label">Datasets</div>
+        </div>
+    </div>
+    <div class="col">
+        <div class="stat-card">
+            <div class="stat-value" id="stat-ls">{{ integration.linked_services | length }}</div>
+            <div class="stat-label">Linked Services</div>
+        </div>
+    </div>
+</div>
+
+<!-- Charts Row -->
+<div class="row mt-2">
+    <!-- Pipelines by Activity Count -->
+    {% if integration.pipelines %}
+    <div class="col col-6">
+        <div class="card">
+            <div class="card-header">Pipeline Complexity (Top 10 by Activities)</div>
+            <div class="card-body">
+                <div class="chart-container">
+                    <canvas id="pipelineChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Datasets by Type -->
+    {% if integration.dataset_types %}
+    <div class="col col-6">
+        <div class="card">
+            <div class="card-header">Datasets by Type</div>
+            <div class="card-body">
+                <div class="chart-container">
+                    <canvas id="datasetChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+
+<!-- Pipelines -->
+<div class="card">
+    <div class="card-header">🔄 Pipelines</div>
+    <div class="card-body">
+        {% if integration.pipelines %}
+        <div class="table-responsive">
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Name</th>
+                        <th>Description</th>
+                        <th class="text-right">Activities</th>
+                        <th>Last Run</th>
+                        <th>Workspace</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for pipe in integration.pipelines | sort(attribute='activities_count', reverse=true) %}
+                    {% if loop.index <= 50 %}
+                    <tr data-workspace="{{ pipe.workspace | default('N/A') }}">
+                        <td>{{ pipe.name | default('Unknown') }}</td>
+                        <td>{{ pipe.description | default('') | truncate(40) }}</td>
+                        <td class="text-right">
+                            <span class="badge {% if pipe.activities_count | default(0) > 10 %}badge-warning{% else %}badge-secondary{% endif %}">
+                                {{ pipe.activities_count | default(0) }}
+                            </span>
+                        </td>
+                        <td>{{ pipe.last_run | default('N/A') }}</td>
+                        <td>{{ pipe.workspace | default('N/A') }}</td>
+                    </tr>
+                    {% endif %}
+                    {% endfor %}
+                    {% if integration.pipelines | length > 50 %}
+                    <tr>
+                        <td colspan="5" class="text-muted">
+                            ... and {{ integration.pipelines | length - 50 }} more pipelines
+                        </td>
+                    </tr>
+                    {% endif %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="empty-state">
+            <p>No pipelines found.</p>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Dataflows -->
+<div class="card">
+    <div class="card-header">🌊 Dataflows</div>
+    <div class="card-body">
+        {% if integration.dataflows %}
+        <div class="table-responsive">
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Name</th>
+                        <th>Workspace</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for df in integration.dataflows[:30] %}
+                    <tr data-workspace="{{ df.workspace | default('N/A') }}">
+                        <td>{{ df.name | default('Unknown') }}</td>
+                        <td>{{ df.workspace | default('N/A') }}</td>
+                    </tr>
+                    {% endfor %}
+                    {% if integration.dataflows | length > 30 %}
+                    <tr>
+                        <td colspan="2" class="text-muted">
+                            ... and {{ integration.dataflows | length - 30 }} more dataflows
+                        </td>
+                    </tr>
+                    {% endif %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="empty-state">
+            <p>No dataflows found.</p>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Datasets -->
+<div class="card">
+    <div class="card-header">📁 Datasets</div>
+    <div class="card-body">
+        {% if integration.datasets %}
+        <div class="table-responsive">
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Name</th>
+                        <th>Type</th>
+                        <th>Workspace</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for ds in integration.datasets[:50] %}
+                    <tr data-workspace="{{ ds.workspace | default('N/A') }}">
+                        <td>{{ ds.name | default('Unknown') }}</td>
+                        <td><span class="badge badge-secondary">{{ ds.type | default('N/A') }}</span></td>
+                        <td>{{ ds.workspace | default('N/A') }}</td>
+                    </tr>
+                    {% endfor %}
+                    {% if integration.datasets | length > 50 %}
+                    <tr>
+                        <td colspan="3" class="text-muted">
+                            ... and {{ integration.datasets | length - 50 }} more datasets
+                        </td>
+                    </tr>
+                    {% endif %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="empty-state">
+            <p>No datasets found.</p>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Linked Services -->
+<div class="card">
+    <div class="card-header">🔗 Linked Services</div>
+    <div class="card-body">
+        {% if integration.linked_services %}
+        <div class="table-responsive">
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Name</th>
+                        <th>Type</th>
+                        <th>Workspace</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for ls in integration.linked_services[:30] %}
+                    <tr data-workspace="{{ ls.workspace | default('N/A') }}">
+                        <td>{{ ls.name | default('Unknown') }}</td>
+                        <td><span class="badge badge-primary">{{ ls.type | default('N/A') }}</span></td>
+                        <td>{{ ls.workspace | default('N/A') }}</td>
+                    </tr>
+                    {% endfor %}
+                    {% if integration.linked_services | length > 30 %}
+                    <tr>
+                        <td colspan="3" class="text-muted">
+                            ... and {{ integration.linked_services | length - 30 }} more linked services
+                        </td>
+                    </tr>
+                    {% endif %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="empty-state">
+            <p>No linked services found.</p>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<div class="mt-2">
+    <a href="{{ base_path }}index.html">← Back to Overview</a>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+// Calculate activities per workspace from pipelines data
+const allPipelines = {{ integration.pipelines | tojson }};
+
+// Build integrationData with calculated activities
+const integrationData = (function() {
+    const data = {};
+    
+    // Initialize workspace data
+    {% for ws_name in workspace_names %}
+    {% set di = workspaces[ws_name].summary.get('data_integration', {}) %}
+    {% set di_counts = di.get('counts', {}) if di is mapping else {} %}
+    data["{{ ws_name }}"] = {
+        pipelines: 0,
+        activities: 0,
+        dataflows: {{ di_counts.get('dataflows', di.get('dataflows', 0)) if di_counts is mapping else di.get('dataflows', 0) }},
+        datasets: {{ di_counts.get('datasets', di.get('datasets', 0)) if di_counts is mapping else di.get('datasets', 0) }},
+        linked_services: {{ di_counts.get('linked_services', di.get('linked_services', 0)) if di_counts is mapping else di.get('linked_services', 0) }}
+    };
+    {% endfor %}
+    
+    // Count pipelines and activities per workspace
+    allPipelines.forEach(pipe => {
+        const ws = pipe.workspace;
+        if (data[ws]) {
+            data[ws].pipelines++;
+            data[ws].activities += pipe.activities_count || 0;
+        }
+    });
+    
+    return data;
+})();
+
+// Chart reference for updates
+let pipelineChart = null;
+const colors = ['#0078d4', '#107c10', '#5c2d91', '#ff8c00', '#008272', '#d83b01', '#e81123', '#00bcf2', '#8764b8', '#00b294'];
+
+function updateFilteredStats(selectedWorkspaces) {
+    let pipes = 0, acts = 0, df = 0, ds = 0, ls = 0;
+    selectedWorkspaces.forEach(ws => {
+        const data = integrationData[ws];
+        if (data) {
+            pipes += data.pipelines || 0;
+            acts += data.activities || 0;
+            df += data.dataflows || 0;
+            ds += data.datasets || 0;
+            ls += data.linked_services || 0;
+        }
+    });
+    document.getElementById('stat-pipes').textContent = pipes;
+    document.getElementById('stat-acts').textContent = acts.toLocaleString();
+    document.getElementById('stat-df').textContent = df;
+    document.getElementById('stat-ds').textContent = ds;
+    document.getElementById('stat-ls').textContent = ls;
+    
+    // Update pipeline complexity chart
+    if (pipelineChart) {
+        // Filter pipelines by selected workspaces
+        const filteredPipelines = allPipelines
+            .filter(p => selectedWorkspaces.includes(p.workspace))
+            .sort((a, b) => (b.activities_count || 0) - (a.activities_count || 0))
+            .slice(0, 10);
+        
+        pipelineChart.data.labels = filteredPipelines.map(p => p.name || 'Unknown');
+        pipelineChart.data.datasets[0].data = filteredPipelines.map(p => p.activities_count || 0);
+        pipelineChart.update();
+    }
+}
+
+{% if integration.pipelines %}
+// Sort pipelines by activity count and get top 10
+const sortedPipelines = allPipelines
+    .sort((a, b) => (b.activities_count || 0) - (a.activities_count || 0))
+    .slice(0, 10);
+
+const pipelineCtx = document.getElementById('pipelineChart');
+if (pipelineCtx && sortedPipelines.length > 0) {
+    pipelineChart = new Chart(pipelineCtx, {
+        type: 'bar',
+        data: {
+            labels: sortedPipelines.map(p => p.name || 'Unknown'),
+            datasets: [{
+                label: 'Activities',
+                data: sortedPipelines.map(p => p.activities_count || 0),
+                backgroundColor: '#107c10'
+            }]
+        },
+        options: {
+            indexAxis: 'y',
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    display: false
+                }
+            },
+            scales: {
+                x: {
+                    beginAtZero: true
+                }
+            }
+        }
+    });
+}
+{% endif %}
+
+{% if integration.dataset_types %}
+const dsCtx = document.getElementById('datasetChart');
+if (dsCtx) {
+    new Chart(dsCtx, {
+        type: 'doughnut',
+        data: {
+            labels: {{ integration.dataset_types.keys() | list | tojson }},
+            datasets: [{
+                data: {{ integration.dataset_types.values() | list | tojson }},
+                backgroundColor: colors.slice(0, {{ integration.dataset_types | length }})
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    position: 'right'
+                }
+            }
+        }
+    });
+}
+{% endif %}
+</script>
+{% endblock %}
