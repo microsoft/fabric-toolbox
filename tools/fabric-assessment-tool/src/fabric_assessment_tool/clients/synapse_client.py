@@ -581,6 +581,8 @@ class SynapseClient:
                     .get("name"),
                     etag=nb.get("etag"),
                     json_response=nb,
+                    uses_mssparkutils=self._check_notebook_for_mssparkutils(nb),
+                    spark_configuration=self._get_target_spark_configuration(nb),
                 )
                 for nb in json_req["value"]
             ]
@@ -592,6 +594,41 @@ class SynapseClient:
                 self.unreached_components.append("notebooks")
                 return SynapseNotebooks(notebooks=[])
             raise e
+
+    def _get_target_spark_configuration(self, resource: dict) -> Optional[str]:
+        """Extract the target Spark configuration name from a resource.
+
+        Args:
+            resource: The resource JSON response (notebook or spark job definition)
+
+        Returns:
+            The Spark configuration name if found, None otherwise
+        """
+        target_config = resource.get("properties", {}).get("targetSparkConfiguration")
+        if target_config and isinstance(target_config, dict):
+            return target_config.get("referenceName")
+        return None
+
+    def _check_notebook_for_mssparkutils(self, notebook: dict) -> bool:
+        """Check if notebook content contains mssparkutils references.
+
+        Args:
+            notebook: The notebook JSON response
+
+        Returns:
+            True if mssparkutils is found in any cell source
+        """
+        cells = notebook.get("properties", {}).get("cells", [])
+        for cell in cells:
+            source = cell.get("source", [])
+            # source can be a list of strings or a single string
+            if isinstance(source, list):
+                content = "".join(source)
+            else:
+                content = str(source)
+            if "mssparkutils" in content:
+                return True
+        return False
 
     def _get_sparkjobdefinitions(
         self, workspace_name: str
@@ -610,6 +647,7 @@ class SynapseClient:
                     name=nb["name"],
                     etag=nb.get("etag"),
                     json_response=nb,
+                    spark_configuration=self._get_target_spark_configuration(nb),
                 )
                 for nb in json_req["value"]
             ]

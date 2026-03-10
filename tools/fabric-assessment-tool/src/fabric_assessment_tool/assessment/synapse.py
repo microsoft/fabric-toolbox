@@ -235,6 +235,8 @@ class SynapseNotebook:
     language: str
     etag: str
     json_response: Any
+    uses_mssparkutils: bool = False
+    spark_configuration: Optional[str] = None
 
 
 @dataclass
@@ -251,6 +253,7 @@ class SynapseSparkJobDefinition:
     name: str
     etag: str
     json_response: Any
+    spark_configuration: Optional[str] = None
 
 
 @dataclass

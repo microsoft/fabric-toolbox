@@ -69,6 +69,7 @@ class DatabricksNotebook:
     embedded_languages: list[str]
     other_magics: list[str]
     json_response: Any
+    uses_dbutils: bool = False
 
 
 @dataclass
