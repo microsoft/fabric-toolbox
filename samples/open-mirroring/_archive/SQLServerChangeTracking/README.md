@@ -1,1 +1,0 @@
-This code sample has been deprecated, please use the GenericMirroring code sample. 

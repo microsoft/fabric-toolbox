@@ -1,1 +1,0 @@
-pwsh -File ".\Run-UploadGatewayLogs.ps1"

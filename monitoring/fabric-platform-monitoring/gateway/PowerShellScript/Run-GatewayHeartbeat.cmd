@@ -1,1 +1,0 @@
-pwsh -File ".\Run-GatewayHeartbeat.ps1"

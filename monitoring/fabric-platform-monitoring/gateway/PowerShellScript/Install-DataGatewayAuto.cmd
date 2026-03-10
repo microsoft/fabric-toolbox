@@ -1,1 +1,0 @@
-pwsh -File ".\Install-DataGatewayAuto.ps1"
