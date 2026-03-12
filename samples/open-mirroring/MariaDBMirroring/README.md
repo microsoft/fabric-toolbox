@@ -85,6 +85,18 @@ State is persisted at: `fabric-landing-zone/.state/state.json`.
 
 ## How to run
 
+Clone the **Fabric Toolbox** repository:
+
+```powershell
+git clone https://github.com/microsoft/fabric-toolbox
+```
+
+Move to the MariaDBMirroring folder
+
+```powershell
+cd samples/open-mirroring/MariaDBMirroring
+```
+
 From this folder:
 
 ```powershell
