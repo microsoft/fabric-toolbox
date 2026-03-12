@@ -127,7 +127,7 @@ table fca
 		changedProperty = Description
 
 	/// Calculates the sum of Pause Cost and Spark Auto Scale
-	measure #OtherPAYG = [#PauseCost]+[#SparkAutoScale]
+	measure #OtherPAYG = [#PauseCost]+[#SparkAutoScale]+[#CapacityAutoScale]
 		lineageTag: c190a166-984d-4729-a7dc-f4de903108ad
 
 		formatStringDefinition =
