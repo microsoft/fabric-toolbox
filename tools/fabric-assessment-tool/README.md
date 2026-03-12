@@ -186,6 +186,20 @@ fat visualize -i ./assessment_output --view data-engineering -o ./engineering_re
 - **Data Engineering**: Notebooks (with language, dbutils usage), clusters, jobs
 - **Data Warehousing**: SQL warehouses, Unity Catalog (catalogs, schemas, tables)
 
+**Screenshots:**
+
+<p align="center">
+  <img src="./media/FAT-Overview.png" alt="Overview Dashboard" width="700">
+  <br>
+  <em>Overview Dashboard - Global summary across all workspaces</em>
+</p>
+
+<p align="center">
+  <img src="./media/FAT-DataIntegration.png" alt="Data Integration View" width="700">
+  <br>
+  <em>Data Integration View - Pipelines, activities, and complexity analysis</em>
+</p>
+
 
 
 ## Sample Output
