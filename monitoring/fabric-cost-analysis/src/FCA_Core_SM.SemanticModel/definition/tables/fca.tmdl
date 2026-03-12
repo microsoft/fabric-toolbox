@@ -326,6 +326,24 @@ table fca
 
 		changedProperty = Description
 
+	/// Calculates the sum of the Capacity Overage relative meters
+	measure #CapacityAutoScale = CALCULATE(SUM(fca[EffectiveCost]), meters[Name]= "Capacity Overage Capacity Usage CU")+0
+		lineageTag: 8a7030ae-404f-4eba-a60b-7da48f7e6567
+
+		formatStringDefinition =
+				SWITCH( MAX(fca[BillingCurrency]),
+				"USD", "\$#,0.00;(\$#,0.00);\$#,0.00",
+				"EUR", "\€#,0.00;(\€#,0.00);\€#,0.00",
+				"#,0.00;(#,0.00);#,0.00")
+
+		changedProperty = Name
+
+		changedProperty = FormatString
+
+		changedProperty = FormatStringDefinition
+
+		changedProperty = Description
+	
 	/// Calculates the used capacity by subtracting the available capacity from the provisioned capacity
 	measure #UsedCapacity = [#ProvisionedCapacity] - [#AvailableCapacity]
 		lineageTag: 82eb1070-e49a-411b-a020-d3fa1e82ac2f
