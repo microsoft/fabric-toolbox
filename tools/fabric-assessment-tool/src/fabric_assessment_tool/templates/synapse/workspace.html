@@ -14,33 +14,42 @@
 <!-- Workspace Summary Stats -->
 <div class="row">
     {% if workspace.platform == 'synapse' %}
+    {% set de = workspace.summary.get('data_engineering', {}) %}
+    {% set de_hybrid = de.get('hybrid', {}) if de is mapping else {} %}
+    {% set de_manual = de.get('manual', {}) if de is mapping else {} %}
+    {% set di = workspace.summary.get('data_integration', {}) %}
+    {% set di_counts = di.get('counts', {}) if di is mapping else {} %}
+    {% set dw = workspace.summary.get('data_warehouse', {}) %}
+    {% set dw_counts = dw.get('counts', {}) if dw is mapping else {} %}
+    {% set dw_dedicated = dw_counts.get('dedicated', {}) if dw_counts is mapping else {} %}
+    {% set dw_serverless = dw_counts.get('serverless', {}) if dw_counts is mapping else {} %}
     <div class="col">
         <div class="stat-card">
-            <div class="stat-value">{{ workspace.summary.data_engineering.notebooks | default(0) }}</div>
+            <div class="stat-value">{{ de_hybrid.get('notebooks', de.get('notebooks', 0)) }}</div>
             <div class="stat-label">Notebooks</div>
         </div>
     </div>
     <div class="col">
         <div class="stat-card">
-            <div class="stat-value">{{ workspace.summary.data_integration.pipelines | default(0) }}</div>
+            <div class="stat-value">{{ di_counts.get('pipelines', di.get('pipelines', 0)) }}</div>
             <div class="stat-label">Pipelines</div>
         </div>
     </div>
     <div class="col">
         <div class="stat-card">
-            <div class="stat-value">{{ workspace.summary.data_warehouse.dedicated_pools | default(0) }}</div>
+            <div class="stat-value">{{ dw_dedicated.get('sql_pools', dw_counts.get('dedicated_pools', 0)) }}</div>
             <div class="stat-label">Dedicated Pools</div>
         </div>
     </div>
     <div class="col">
         <div class="stat-card">
-            <div class="stat-value">{{ workspace.summary.data_engineering.spark_pools | default(0) }}</div>
+            <div class="stat-value">{{ de_manual.get('spark_pools', de.get('spark_pools', 0)) }}</div>
             <div class="stat-label">Spark Pools</div>
         </div>
     </div>
     <div class="col">
         <div class="stat-card">
-            <div class="stat-value">{{ workspace.summary.data_warehouse.total_tables | default(0) }}</div>
+            <div class="stat-value">{{ dw_dedicated.get('tables', 0) + dw_serverless.get('tables', 0) }}</div>
             <div class="stat-label">Tables</div>
         </div>
     </div>

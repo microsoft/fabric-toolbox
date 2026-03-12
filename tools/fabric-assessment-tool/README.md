@@ -130,7 +130,7 @@ fat assess --source databricks --ws my-workspace --output results_folder
 
 ### `fat visualize` - Generate interactive HTML reports
 
-Generate standalone HTML reports with charts and tables to visualize assessment data. Reports work offline and can be viewed in any browser.
+Generate standalone HTML reports with charts and tables to visualize assessment data. Reports work offline and can be viewed in any browser. The tool automatically detects whether the assessment is from Synapse or Databricks and generates platform-specific views.
 
 ```bash
 fat visualize -i <assessment_output_dir> \
@@ -144,7 +144,7 @@ fat visualize -i <assessment_output_dir> \
 - `-i/--input`: Path to assessment output directory (from `fat assess` command)
 
 **Optional Parameters:**
-- `-o/--output`: Output directory for HTML reports (default: `<input>/reports`)
+- `-o/--output`: Output directory for HTML reports (default: `<input>/visualization`)
 - `--view`: Type of visualization view to generate:
   - `overview` (default): Global summary across all workspaces
   - `admin`: Integration runtimes, linked services, private endpoints
@@ -154,20 +154,37 @@ fat visualize -i <assessment_output_dir> \
 - `--workspace/-ws`: Generate report for a specific workspace only
 - `--open`: Open the generated report in default browser
 
+**Features:**
+- **Workspace Filtering**: Interactive checkbox selector to filter results by one or multiple workspaces
+- **Platform Detection**: Automatically detects Synapse vs Databricks and shows relevant metrics
+- **Navigation**: Browse between Overview, Admin, Data Engineering, Data Warehousing, and Data Integration views
+- **Resource Details**: Drill down into individual workspaces for detailed artifact information
+- **Charts**: Visual breakdowns of languages, activity types, pool sizes, and more
+
 **Examples:**
 ```bash
-# Generate overview report (opens all views)
+# Generate all visualization views
 fat visualize -i ./assessment_output -o ./reports
 
-# Generate data engineering view
-fat visualize -i ./assessment_output --view data-engineering
+# Generate and immediately open in browser
+fat visualize -i ./assessment_output --open
 
-# Generate report for specific workspace and open in browser
-fat visualize -i ./assessment_output --workspace my-workspace --open
+# Generate report for specific workspace
+fat visualize -i ./assessment_output --workspace my-synapse-workspace
 
-# Generate admin view to custom directory
-fat visualize -i ./assessment_output --view admin -o ./admin_report
+# Generate data engineering view to custom directory
+fat visualize -i ./assessment_output --view data-engineering -o ./engineering_report
 ```
+
+**Synapse-Specific Views:**
+- **Admin**: Linked services, integration runtimes, managed private endpoints, Spark libraries, Spark configurations
+- **Data Engineering**: Notebooks (with language, Spark config, MSSparkUtils usage), Spark pools, Spark job definitions
+- **Data Warehousing**: Dedicated SQL pools (tables, size, stored procedures), serverless databases
+- **Data Integration**: Pipelines (activity counts, complexity), dataflows, datasets
+
+**Databricks-Specific Views:**
+- **Data Engineering**: Notebooks (with language, dbutils usage), clusters, jobs
+- **Data Warehousing**: SQL warehouses, Unity Catalog (catalogs, schemas, tables)
 
 
 
