@@ -83,7 +83,7 @@
                         <th>Name</th>
                         <th>Description</th>
                         <th class="text-right">Activities</th>
-                        <th>Last Run</th>
+                        <th>Last Published</th>
                         <th>Workspace</th>
                     </tr>
                 </thead>
@@ -92,13 +92,13 @@
                     {% if loop.index <= 50 %}
                     <tr data-workspace="{{ pipe.workspace | default('N/A') }}">
                         <td>{{ pipe.name | default('Unknown') }}</td>
-                        <td>{{ pipe.description | default('') | truncate(40) }}</td>
+                        <td>{{ pipe.description | default('-') | truncate(40) }}</td>
                         <td class="text-right">
                             <span class="badge {% if pipe.activities_count | default(0) > 10 %}badge-warning{% else %}badge-secondary{% endif %}">
                                 {{ pipe.activities_count | default(0) }}
                             </span>
                         </td>
-                        <td>{{ pipe.last_run | default('N/A') }}</td>
+                        <td>{{ pipe.last_run[:10] if pipe.last_run else '-' }}</td>
                         <td>{{ pipe.workspace | default('N/A') }}</td>
                     </tr>
                     {% endif %}

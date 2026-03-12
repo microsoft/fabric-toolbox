@@ -520,8 +520,8 @@ class SynapseClient:
                 SynapsePipeline(
                     name=pipe["name"],
                     description=pipe["properties"].get("description", ""),
-                    last_run="",  # TODO
-                    activities_count=0,  # TODO
+                    last_run=pipe["properties"].get("lastPublishTime", ""),
+                    activities_count=len(pipe["properties"].get("activities", [])),
                     json_response=pipe,
                 )
                 for pipe in json_req["value"]
