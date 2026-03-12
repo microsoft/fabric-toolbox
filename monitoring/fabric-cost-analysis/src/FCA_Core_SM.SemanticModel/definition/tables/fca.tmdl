@@ -206,6 +206,26 @@ table fca
 
 		changedProperty = Description
 
+	/// Calculates the sum of Copilot relative activities
+	measure #Copilot = CALCULATE(SUM(fca[EffectiveCost]), meters[Name]= "Copilot and AI Capacity Usage CU")+0
+		lineageTag: 25adad74-50b7-4a4e-bd58-741a65f35ba8
+
+		formatStringDefinition =
+				SWITCH( MAX(fca[BillingCurrency]),
+				"USD", "\$#,0.00;(\$#,0.00);\$#,0.00",
+				"EUR", "\€#,0.00;(\€#,0.00);\€#,0.00",
+				"#,0.00;(#,0.00);#,0.00")
+
+		changedProperty = Name
+
+		changedProperty = IsHidden
+
+		changedProperty = FormatString
+
+		changedProperty = FormatStringDefinition
+
+		changedProperty = Description
+	
 	/// Calculates the total effective cost by summing the EffectiveCost column in the FCA table
 	measure #TotalCost = CALCULATE(SUM(fca[EffectiveCost]))
 		lineageTag: 526c4716-9009-4d64-bf6b-b35036b22651
