@@ -9,6 +9,7 @@ import { connectionService } from './connectionService';
 import { fabricApiClient } from './fabricApiClient';
 import { ADFComponent, DeploymentResult, PipelineConnectionMappings, LinkedServiceConnectionBridge } from '../types';
 import { PipelineConnectionTransformerService } from './pipelineConnectionTransformerService';
+import { unsupportedActivityService } from './unsupportedActivityService';
 
 export class PipelineTransformer {
   // Store current pipeline name for activity transformation context
@@ -523,9 +524,29 @@ export class PipelineTransformer {
     
     // Get pipeline name from context
     const pipelineName = this.currentPipelineName || 'unknown';
+
+    const typeSummary = activities.reduce<Record<string, number>>((acc, a) => {
+      const t = a?.type || 'unknown';
+      acc[t] = (acc[t] || 0) + 1;
+      return acc;
+    }, {});
+    console.log(`[PipelineTransformer] transformActivities '${pipelineName}': ${activities.length} activities`, typeSummary);
     
     return activities.map(activity => {
       if (!activity || typeof activity !== 'object') return activity;
+
+      // GUARD: Check for unsupported activity types and unsupported dataset references FIRST.
+      // If unsupported, return the original activity definition as-is with only
+      // state: "Inactive" and onInactiveMarkAs: "Failed" added. No other transforms applied.
+      const unsupportedCheck = unsupportedActivityService.checkActivity(activity);
+      if (unsupportedCheck.isUnsupported) {
+        console.log(
+          `[PipelineTransformer] ⚠️ Converting unsupported activity "${activity.name}" (${activity.type}) to Fail activity: ${unsupportedCheck.details}`
+        );
+        return unsupportedActivityService.markAsFail(activity);
+      }
+
+      console.log(`[PipelineTransformer] Transforming activity "${activity.name}" (${activity.type}) in pipeline '${pipelineName}'`);
 
       // Apply activity-level transformations (skip Copy, Custom, and HDInsight - they have specialized transformers)
       if (activity.type !== 'Copy' && activity.type !== 'Custom' && !this.isHDInsightActivity(activity.type)) {
@@ -534,7 +555,7 @@ export class PipelineTransformer {
 
       if (activityTransformer.activityReferencesFailedConnector(activity)) {
         activity.state = 'Inactive';
-        activity.onInactiveMarkAs = 'Succeeded';
+        activity.onInactiveMarkAs = 'Failed';
       }
 
       // Apply specialized transformation based on activity type
@@ -622,24 +643,25 @@ export class PipelineTransformer {
         dependsOn: this.transformActivityDependencies(transformedActivity.dependsOn || []),
         userProperties: transformedActivity.userProperties || [],
         policy: transformedActivity.policy || {},
-        // Override connectVia to empty object for Fabric (no IntegrationRuntimeReference support)
-        connectVia: {}
       };
 
-      // Remove ADF-specific properties that Fabric doesn't support
+      // Remove ADF-specific properties that Fabric doesn't support.
+      // connectVia is a LinkedService concept — not valid on pipeline activities in Fabric.
+      delete (finalActivity as any).connectVia;
       delete (finalActivity as any).linkedServiceName;
       delete (finalActivity as any).linkedService;
 
-      // For Copy and Custom activities, explicitly delete inputs/outputs after transformation
-      // This guards against the spread operator reintroducing these properties
-      if (activity.type === 'Copy' || activity.type === 'Custom') {
-        console.log(`✅ Removed inputs/outputs from ${activity.type} activity: ${activity.name}`);
-        delete (finalActivity as any).inputs;
-        delete (finalActivity as any).outputs;
-      } else {
-        // Transform inputs/outputs for non-Copy and non-Custom activities
-        finalActivity.inputs = activityTransformer.transformActivityInputs(activity.inputs || []);
-        finalActivity.outputs = activityTransformer.transformActivityOutputs(activity.outputs || []);
+      // Fabric uses inline datasetSettings for all activity types — ADF-style inputs/outputs
+      // arrays are never valid in Fabric pipeline definitions. Remove unconditionally.
+      delete (finalActivity as any).inputs;
+      delete (finalActivity as any).outputs;
+
+      // Fail activities have a minimal schema: { name, type, dependsOn, typeProperties } only.
+      // policy and userProperties are not part of the Fail schema; the Fabric designer's strict
+      // JSON schema validator will reject the pipeline if these fields are present.
+      if (transformedActivity.type === 'Fail') {
+        delete (finalActivity as any).policy;
+        delete (finalActivity as any).userProperties;
       }
 
       return finalActivity;
@@ -1071,6 +1093,12 @@ export class PipelineTransformer {
     const endpoint = `${fabricApiClient.baseUrl}/workspaces/${workspaceId}/dataPipelines`;
     const headers = { 'Authorization': `Bearer ${accessToken}`, 'Content-Type': 'application/json' };
     try {
+      console.log(`[PipelineTransformer] createPipeline START '${component.name}'`, {
+        hasConnectionMappings: Boolean(connectionMappings),
+        hasFolderMappings: Boolean(folderMappings),
+        originalActivityCount: component.definition?.properties?.activities?.length ?? component.definition?.activities?.length ?? 0
+      });
+
       // First, transform the basic pipeline definition with connection mappings
       // Pass pipeline name for Custom activity context
       let pipelineDefinition = this.transformPipelineDefinition(
@@ -1078,6 +1106,7 @@ export class PipelineTransformer {
         connectionMappings,
         component.name
       );
+      console.log(`[PipelineTransformer] After transformPipelineDefinition '${component.name}': ${pipelineDefinition.properties?.activities?.length ?? 0} activities`);
       
       // Apply connection mappings if provided (this ensures double application isn't happening)
       if (connectionMappings) {
@@ -1088,6 +1117,7 @@ export class PipelineTransformer {
           this.referenceMappings, // Pass NEW format mappings
           this.linkedServiceBridge // Pass bridge from Configure Connections
         );
+        console.log(`[PipelineTransformer] After transformPipelineWithConnections '${component.name}': ${pipelineDefinition.properties?.activities?.length ?? 0} activities`);
       }
       
       // Update activities for failed connectors (legacy logic)
@@ -1100,6 +1130,14 @@ export class PipelineTransformer {
       const parametersCount = Object.keys(updatedDefinition.properties.parameters || {}).length;
       const variablesCount = Object.keys(updatedDefinition.properties.variables || {}).length;
 
+      console.log(`[PipelineTransformer] Pipeline '${component.name}' post-transform summary:`, {
+        activitiesCount,
+        inactiveActivitiesCount,
+        activeActivitiesCount: activitiesCount - inactiveActivitiesCount,
+        parametersCount,
+        variablesCount
+      });
+
       if (activitiesCount === 0) {
         const originalActivities = component.definition?.properties?.activities || component.definition?.activities || [];
         if (Array.isArray(originalActivities) && originalActivities.length > 0) {
@@ -1109,9 +1147,23 @@ export class PipelineTransformer {
 
       // Clean pipeline definition by removing ADF-specific properties before deployment
       const cleanedDefinition = PipelineConnectionTransformerService.cleanPipelineForFabric(updatedDefinition);
+      console.log(`[PipelineTransformer] cleanPipelineForFabric done for '${component.name}'`);
+
+      // Wrap with name and objectId as required by Fabric pipeline-content.json format.
+      // Normal pipelines tolerate a missing name in pipeline-content.json because Fabric
+      // falls back to displayName in the outer API payload. Pipelines with unsupported
+      // activities trigger stricter Fabric validation of pipeline-content.json and require
+      // name to be explicitly present. objectId is empty string — Fabric assigns it on creation.
+      const fabricPipelineContent = {
+        name: component.fabricTarget?.name || component.name,
+        objectId: '',
+        properties: cleanedDefinition.properties
+      };
+      console.log(`[PipelineTransformer] Encoding pipeline-content.json for '${component.name}' (name='${fabricPipelineContent.name}', properties defined=${Boolean(fabricPipelineContent.properties)})`);
 
       // Generate Base64 payload using the connection transformer service
-      const base64Payload = PipelineConnectionTransformerService.generateFabricPipelinePayload(cleanedDefinition);
+      const base64Payload = PipelineConnectionTransformerService.generateFabricPipelinePayload(fabricPipelineContent);
+      console.log(`[PipelineTransformer] Base64 payload length for '${component.name}': ${base64Payload.length} chars`);
 
       // Get folder ID if component has folder information
       let folderId: string | undefined;
@@ -1135,9 +1187,11 @@ export class PipelineTransformer {
         pipelinePayload.folderId = folderId;
       }
 
+      console.log(`[PipelineTransformer] POST ${endpoint} for '${component.name}'`);
       const response = await fetch(endpoint, { method: 'POST', headers, body: JSON.stringify(pipelinePayload) });
       if (!response.ok) return await fabricApiClient.handleAPIError(response, 'POST', endpoint, pipelinePayload, headers, component.name, component.type);
       const result = await response.json();
+      console.log(`[PipelineTransformer] Pipeline '${component.name}' created successfully, Fabric ID: ${result.id}`);
       
       // Generate connection mapping summary if available
       let note = `Pipeline created successfully with ${activitiesCount} activities, ${parametersCount} parameters, and ${variablesCount} variables`;
@@ -1167,7 +1221,7 @@ export class PipelineTransformer {
       activityTransformer.transformLinkedServiceReferencesToFabric(activity);
       if (activityTransformer.activityReferencesFailedConnector(activity)) {
         activity.state = 'Inactive';
-        activity.onInactiveMarkAs = 'Succeeded';
+        activity.onInactiveMarkAs = 'Failed';
       }
     }
     return updatedDefinition;

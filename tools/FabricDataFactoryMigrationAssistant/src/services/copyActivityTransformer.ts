@@ -455,12 +455,22 @@ export class CopyActivityTransformer {
     parameters: any, 
     role: 'source' | 'sink',
     linkedServiceName?: string,
-    pipelineConnectionMappings?: any
+    pipelineConnectionMappings?: any,
+    pipelineReferenceMappings?: Record<string, Record<string, string>>,
+    pipelineName?: string,
+    activityName?: string
   ): any {
     const properties = datasetComponent.definition?.properties || {};
     
     // Get connection ID for the dataset's LinkedService
-    const connectionId = this.getConnectionIdForLinkedService(linkedServiceName, pipelineConnectionMappings);
+    const connectionId = this.getConnectionIdForLinkedService(
+      linkedServiceName,
+      pipelineConnectionMappings,
+      pipelineReferenceMappings,
+      pipelineName,
+      activityName,
+      role
+    );
 
     // Build proper datasetSettings with all required properties from ADF dataset
     const datasetType = properties?.type || 'Unknown';
@@ -583,31 +593,138 @@ export class CopyActivityTransformer {
       throw new Error('Dataset type is required but was not provided');
     }
 
-    // Dynamic mapping: append "Source" to dataset type with special cases
+    // Complete mapping of ADF dataset types → Fabric source types
     const specialMappings: Record<string, string> = {
+      // SQL
       'AzureSqlTable': 'SqlServerSource',
       'SqlServerTable': 'SqlServerSource',
+      'AzureSqlDWTable': 'SqlDWSource',
+      'AzureSqlMITable': 'SqlMISource',
+      // File / Storage
       'AzureBlob': 'BlobSource',
-      'AzureBlobFSFile': 'DelimitedTextSource',
+      'AzureBlobStorage': 'BlobSource',
+      'AzureBlobFSFile': 'AzureBlobFSSource',
+      'AzureBlobFS': 'AzureBlobFSSource',
       'DelimitedText': 'DelimitedTextSource',
       'Parquet': 'ParquetSource',
       'Json': 'JsonSource',
       'JsonFormat': 'JsonSource',
-      'AzureBlobStorage': 'BlobSource',
-      'AzureDataLakeStore': 'DelimitedTextSource',
+      'Avro': 'AvroSource',
+      'Orc': 'OrcSource',
+      'Excel': 'ExcelSource',
+      'Xml': 'XmlSource',
+      'Binary': 'BinarySource',
+      'AzureDataLakeStore': 'AzureDataLakeStoreSource',
+      'AzureDataLakeStoreFile': 'AzureDataLakeStoreSource',
+      'FileShare': 'FileSystemSource',
       'FileSystem': 'FileSystemSource',
+      'HttpFile': 'HttpSource',
       'HttpServer': 'HttpSource',
-      'RestService': 'RestSource',
-      'OData': 'ODataSource',
-      'Cassandra': 'CassandraSource',
-      'MongoDb': 'MongoDbSource',
-      'CosmosDb': 'CosmosDbSource',
-      'MySql': 'MySqlSource',
-      'PostgreSql': 'PostgreSqlSource',
+      'HdfsFile': 'HdfsSource',
+      // Relational databases
+      'AmazonRdsForOracleTable': 'AmazonRdsForOracleSource',
+      'AmazonRdsForSqlServerTable': 'AmazonRdsForSqlServerSource',
+      'AmazonRedshiftTable': 'AmazonRedshiftSource',
       'Oracle': 'OracleSource',
+      'OracleTable': 'OracleSource',
+      'MySql': 'MySqlSource',
+      'MySqlTable': 'MySqlSource',
+      'PostgreSql': 'PostgreSqlSource',
+      'PostgreSqlTable': 'PostgreSqlSource',
+      'PostgreSqlV2Table': 'PostgreSqlV2Source',
+      'AzureMySqlTable': 'AzureMySqlSource',
+      'AzurePostgreSqlTable': 'AzurePostgreSqlSource',
+      'AzureMariaDBTable': 'AzureMariaDBSource',
+      'MariaDBTable': 'MariaDBSource',
       'DB2': 'Db2Source',
+      'Db2Table': 'Db2Source',
       'Teradata': 'TeradataSource',
-      'Sybase': 'SybaseSource'
+      'TeradataTable': 'TeradataSource',
+      'Sybase': 'SybaseSource',
+      'SybaseTable': 'SybaseSource',
+      'InformixTable': 'InformixSource',
+      'OdbcTable': 'OdbcSource',
+      'MicrosoftAccessTable': 'MicrosoftAccessSource',
+      'NetezzaTable': 'NetezzaSource',
+      'VerticaTable': 'VerticaSource',
+      'GreenplumTable': 'GreenplumSource',
+      // Cloud / SaaS
+      'RestService': 'RestSource',
+      'RestResource': 'RestSource',
+      'OData': 'ODataSource',
+      'ODataResource': 'ODataSource',
+      'SharePointOnlineListResource': 'SharePointOnlineListSource',
+      'Office365': 'Office365Source',
+      // NoSQL
+      'CosmosDb': 'CosmosDbSource',
+      'CosmosDBSqlApiCollection': 'CosmosDBSqlApiSource',
+      'CosmosDBMongoDBApiCollection': 'CosmosDBMongoDBApiSource',
+      'MongoDb': 'MongoDbSource',
+      'MongoDBCollection': 'MongoDBSource',
+      'MongoDBV2Collection': 'MongoDBV2Source',
+      'MongoDBAtlasCollection': 'MongoDBAtlasSource',
+      'Cassandra': 'CassandraSource',
+      'CassandraTable': 'CassandraSource',
+      'DocumentDBCollection': 'DocumentDBCollectionSource',
+      // Analytics / Big Data
+      'AzureDataExplorerTable': 'AzureDataExplorerSource',
+      'AzureDatabricksDeltaLake': 'AzureDatabricksDeltaLakeSource',
+      'GoogleBigQueryObject': 'GoogleBigQuerySource',
+      'GoogleBigQueryV2Object': 'GoogleBigQueryV2Source',
+      'AmazonS3': 'AmazonS3Source',
+      'Snowflake': 'SnowflakeSource',
+      'SnowflakeV2': 'SnowflakeV2Source',
+      'SparkObject': 'SparkSource',
+      'HiveObject': 'HiveSource',
+      'HBaseObject': 'HBaseSource',
+      'ImpalaObject': 'ImpalaSource',
+      'PrestoObject': 'PrestoSource',
+      'PhoenixObject': 'PhoenixSource',
+      'DrillTable': 'DrillSource',
+      'CouchbaseTable': 'CouchbaseSource',
+      // Warehouse
+      'LakeHouseTable': 'LakeHouseTableSource',
+      'WarehouseTable': 'WarehouseSource',
+      // SAP
+      'SapBWCube': 'SapBWSource',
+      'SapCloudForCustomerResource': 'SapCloudForCustomerSource',
+      'SapEccResource': 'SapEccSource',
+      'SapHanaTable': 'SapHanaSource',
+      'SapOdpResource': 'SapOdpSource',
+      'SapOpenHubTable': 'SapOpenHubSource',
+      'SapTableResource': 'SapTableSource',
+      // Dynamics
+      'DynamicsEntity': 'DynamicsSource',
+      'DynamicsCrmEntity': 'DynamicsCrmSource',
+      'DynamicsAXResource': 'DynamicsAXSource',
+      'CommonDataServiceForAppsEntity': 'CommonDataServiceForAppsSource',
+      // Salesforce
+      'SalesforceObject': 'SalesforceSource',
+      'SalesforceV2Object': 'SalesforceV2Source',
+      'SalesforceServiceCloudObject': 'SalesforceServiceCloudSource',
+      'SalesforceServiceCloudV2Object': 'SalesforceServiceCloudV2Source',
+      'SalesforceMarketingCloudObject': 'SalesforceMarketingCloudSource',
+      // Other SaaS
+      'AmazonMwsObject': 'AmazonMwsSource',
+      'ConcurObject': 'ConcurSource',
+      'EloquaObject': 'EloquaSource',
+      'GoogleAdWordsObject': 'GoogleAdWordsSource',
+      'HubspotObject': 'HubspotSource',
+      'JiraObject': 'JiraSource',
+      'MagentoObject': 'MagentoSource',
+      'MarketoObject': 'MarketoSource',
+      'PaypalObject': 'PaypalSource',
+      'QuickBooksObject': 'QuickBooksSource',
+      'RelationalTable': 'RelationalSource',
+      'ResponsysObject': 'ResponsysSource',
+      'ServiceNowObject': 'ServiceNowSource',
+      'ServiceNowV2Object': 'ServiceNowV2Source',
+      'ShopifyObject': 'ShopifySource',
+      'SquareObject': 'SquareSource',
+      'WebTable': 'WebSource',
+      'XeroObject': 'XeroSource',
+      'ZohoObject': 'ZohoSource',
+      'OracleServiceCloudObject': 'OracleServiceCloudSource',
     };
 
     const mappedType = specialMappings[adfDatasetType];
@@ -615,9 +732,10 @@ export class CopyActivityTransformer {
       return mappedType;
     }
 
-    // For unknown dataset types, try to create a reasonable mapping by appending "Source"
-    // This ensures we never return "Unknown" 
-    const generatedType = `${adfDatasetType}Source`;
+    // For unknown dataset types, append "Source" — but strip any existing Source/Sink
+    // suffix first to prevent double-suffix (e.g. OracleSource + Source = OracleSourceSource).
+    const normalizedType = adfDatasetType.replace(/Source$/i, '').replace(/Sink$/i, '');
+    const generatedType = `${normalizedType}Source`;
     console.warn(`Using generated source type '${generatedType}' for ADF dataset type '${adfDatasetType}'. This may need manual verification.`);
     return generatedType;
   }
@@ -632,31 +750,83 @@ export class CopyActivityTransformer {
       throw new Error('Dataset type is required but was not provided');
     }
 
-    // Dynamic mapping: append "Sink" to dataset type with special cases
+    // Complete mapping of ADF dataset types → Fabric sink types
     const specialMappings: Record<string, string> = {
+      // SQL
       'AzureSqlTable': 'SqlServerSink',
       'SqlServerTable': 'SqlServerSink',
+      'AzureSqlDWTable': 'SqlDWSink',
+      'AzureSqlMITable': 'SqlMISink',
+      // File / Storage
       'AzureBlob': 'BlobSink',
-      'AzureBlobFSFile': 'DelimitedTextSink',
+      'AzureBlobStorage': 'BlobSink',
+      'AzureBlobFSFile': 'AzureBlobFSSink',
+      'AzureBlobFS': 'AzureBlobFSSink',
       'DelimitedText': 'DelimitedTextSink',
       'Parquet': 'ParquetSink',
       'Json': 'JsonSink',
       'JsonFormat': 'JsonSink',
-      'AzureBlobStorage': 'BlobSink',
-      'AzureDataLakeStore': 'DelimitedTextSink',
+      'Avro': 'AvroSink',
+      'Orc': 'OrcSink',
+      'Binary': 'BinarySink',
+      'Iceberg': 'IcebergSink',
+      'AzureDataLakeStore': 'AzureDataLakeStoreSink',
+      'AzureDataLakeStoreFile': 'AzureDataLakeStoreSink',
+      'FileShare': 'FileSystemSink',
       'FileSystem': 'FileSystemSink',
-      'HttpServer': 'HttpSink',
-      'RestService': 'RestSink',
-      'OData': 'ODataSink',
-      'Cassandra': 'CassandraSink',
-      'MongoDb': 'MongoDbSink',
-      'CosmosDb': 'CosmosDbSink',
-      'MySql': 'MySqlSink',
-      'PostgreSql': 'PostgreSqlSink',
+      // Relational databases
       'Oracle': 'OracleSink',
+      'OracleTable': 'OracleSink',
+      'MySql': 'MySqlSink',
+      'MySqlTable': 'MySqlSink',
+      'PostgreSql': 'PostgreSqlSink',
+      'PostgreSqlTable': 'PostgreSqlSink',
+      'AzureMySqlTable': 'AzureMySqlSink',
+      'AzurePostgreSqlTable': 'AzurePostgreSqlSink',
       'DB2': 'Db2Sink',
+      'Db2Table': 'Db2Sink',
       'Teradata': 'TeradataSink',
-      'Sybase': 'SybaseSink'
+      'TeradataTable': 'TeradataSink',
+      'Sybase': 'SybaseSink',
+      'SybaseTable': 'SybaseSink',
+      'InformixTable': 'InformixSink',
+      'OdbcTable': 'OdbcSink',
+      'MicrosoftAccessTable': 'MicrosoftAccessSink',
+      // Cloud / SaaS
+      'RestService': 'RestSink',
+      'RestResource': 'RestSink',
+      // NoSQL
+      'CosmosDb': 'CosmosDbSink',
+      'CosmosDBSqlApiCollection': 'CosmosDBSqlApiSink',
+      'CosmosDBMongoDBApiCollection': 'CosmosDBMongoDBApiSink',
+      'MongoDb': 'MongoDbSink',
+      'MongoDBCollection': 'MongoDBSink',
+      'MongoDBV2Collection': 'MongoDBV2Sink',
+      'MongoDBAtlasCollection': 'MongoDBAtlasSink',
+      'Cassandra': 'CassandraSink',
+      'CassandraTable': 'CassandraSink',
+      'DocumentDBCollection': 'DocumentDBCollectionSink',
+      // Analytics / Big Data
+      'AzureDataExplorerTable': 'AzureDataExplorerSink',
+      'AzureDatabricksDeltaLake': 'AzureDatabricksDeltaLakeSink',
+      'AzureSearchIndex': 'AzureSearchIndexSink',
+      'AzureTable': 'AzureTableSink',
+      'AzureQueue': 'AzureQueueSink',
+      'Snowflake': 'SnowflakeSink',
+      'SnowflakeV2': 'SnowflakeV2Sink',
+      // Warehouse
+      'LakeHouseTable': 'LakeHouseTableSink',
+      'WarehouseTable': 'WarehouseSink',
+      // Dynamics
+      'DynamicsEntity': 'DynamicsSink',
+      'DynamicsCrmEntity': 'DynamicsCrmSink',
+      'CommonDataServiceForAppsEntity': 'CommonDataServiceForAppsSink',
+      // Salesforce
+      'SalesforceObject': 'SalesforceSink',
+      'SalesforceV2Object': 'SalesforceV2Sink',
+      'SalesforceServiceCloudObject': 'SalesforceServiceCloudSink',
+      'SalesforceServiceCloudV2Object': 'SalesforceServiceCloudV2Sink',
+      'SapCloudForCustomerResource': 'SapCloudForCustomerSink',
     };
 
     const mappedType = specialMappings[adfDatasetType];
@@ -664,9 +834,10 @@ export class CopyActivityTransformer {
       return mappedType;
     }
 
-    // For unknown dataset types, try to create a reasonable mapping by appending "Sink"
-    // This ensures we never return "Unknown" 
-    const generatedType = `${adfDatasetType}Sink`;
+    // For unknown dataset types, append "Sink" — but strip any existing Source/Sink
+    // suffix first to prevent double-suffix (e.g. OracleSink + Sink = OracleSinkSink).
+    const normalizedType = adfDatasetType.replace(/Source$/i, '').replace(/Sink$/i, '');
+    const generatedType = `${normalizedType}Sink`;
     console.warn(`Using generated sink type '${generatedType}' for ADF dataset type '${adfDatasetType}'. This may need manual verification.`);
     return generatedType;
   }
@@ -681,30 +852,141 @@ export class CopyActivityTransformer {
       throw new Error('Dataset type is required but was not provided');
     }
 
+    // Complete mapping of ADF dataset types → Fabric datasetSettings types
     const typeMapping: Record<string, string> = {
-      'AzureSqlTable': 'SqlServerTable',
+      // SQL
+      'AzureSqlTable': 'AzureSqlTable',
       'SqlServerTable': 'SqlServerTable',
+      'AzureSqlDWTable': 'AzureSqlDWTable',
+      'AzureSqlMITable': 'AzureSqlMITable',
+      // File / Storage
       'DelimitedText': 'DelimitedText',
       'Parquet': 'Parquet',
       'Json': 'Json',
       'JsonFormat': 'Json',
+      'Avro': 'Avro',
+      'Orc': 'Orc',
+      'Excel': 'Excel',
+      'Xml': 'Xml',
+      'Binary': 'Binary',
+      'Iceberg': 'Iceberg',
       'AzureBlob': 'AzureBlob',
-      'AzureBlobFSFile': 'DelimitedText',
       'AzureBlobStorage': 'AzureBlob',
-      'AzureDataLakeStore': 'DelimitedText',
-      'FileSystem': 'FileSystem',
-      'HttpServer': 'Http',
-      'RestService': 'Rest',
-      'OData': 'OData',
-      'Cassandra': 'Cassandra',
-      'MongoDb': 'MongoDb',
-      'CosmosDb': 'CosmosDb',
-      'MySql': 'MySql',
-      'PostgreSql': 'PostgreSql',
-      'Oracle': 'Oracle',
-      'DB2': 'DB2',
-      'Teradata': 'Teradata',
-      'Sybase': 'Sybase'
+      'AzureBlobFSFile': 'AzureBlobFS',
+      'AzureBlobFS': 'AzureBlobFS',
+      'AzureDataLakeStore': 'AzureDataLakeStore',
+      'AzureDataLakeStoreFile': 'AzureDataLakeStore',
+      'FileShare': 'FileShare',
+      'FileSystem': 'FileShare',
+      'HttpFile': 'HttpFile',
+      'HttpServer': 'HttpFile',
+      // Relational databases
+      'AmazonRdsForOracleTable': 'AmazonRdsForOracleTable',
+      'AmazonRdsForSqlServerTable': 'AmazonRdsForSqlServerTable',
+      'AmazonRedshiftTable': 'AmazonRedshiftTable',
+      'Oracle': 'OracleTable',
+      'OracleTable': 'OracleTable',
+      'MySql': 'MySqlTable',
+      'MySqlTable': 'MySqlTable',
+      'PostgreSql': 'PostgreSqlTable',
+      'PostgreSqlTable': 'PostgreSqlTable',
+      'PostgreSqlV2Table': 'PostgreSqlV2Table',
+      'AzureMySqlTable': 'AzureMySqlTable',
+      'AzurePostgreSqlTable': 'AzurePostgreSqlTable',
+      'AzureMariaDBTable': 'AzureMariaDBTable',
+      'MariaDBTable': 'MariaDBTable',
+      'DB2': 'Db2Table',
+      'Db2Table': 'Db2Table',
+      'Teradata': 'TeradataTable',
+      'TeradataTable': 'TeradataTable',
+      'Sybase': 'SybaseTable',
+      'SybaseTable': 'SybaseTable',
+      'InformixTable': 'InformixTable',
+      'OdbcTable': 'OdbcTable',
+      'MicrosoftAccessTable': 'MicrosoftAccessTable',
+      'NetezzaTable': 'NetezzaTable',
+      'VerticaTable': 'VerticaTable',
+      'GreenplumTable': 'GreenplumTable',
+      // Cloud / SaaS
+      'RestService': 'RestResource',
+      'RestResource': 'RestResource',
+      'OData': 'ODataResource',
+      'ODataResource': 'ODataResource',
+      'SharePointOnlineListResource': 'SharePointOnlineListResource',
+      'Office365': 'Office365',
+      // NoSQL
+      'CosmosDb': 'CosmosDBSqlApiCollection',
+      'CosmosDBSqlApiCollection': 'CosmosDBSqlApiCollection',
+      'CosmosDBMongoDBApiCollection': 'CosmosDBMongoDBApiCollection',
+      'MongoDb': 'MongoDBCollection',
+      'MongoDBCollection': 'MongoDBCollection',
+      'MongoDBV2Collection': 'MongoDBV2Collection',
+      'MongoDBAtlasCollection': 'MongoDBAtlasCollection',
+      'Cassandra': 'CassandraTable',
+      'CassandraTable': 'CassandraTable',
+      'DocumentDBCollection': 'DocumentDBCollection',
+      // Analytics / Big Data
+      'AzureDataExplorerTable': 'AzureDataExplorerTable',
+      'AzureDatabricksDeltaLake': 'AzureDatabricksDeltaLake',
+      'AzureSearchIndex': 'AzureSearchIndex',
+      'AzureTable': 'AzureTable',
+      'GoogleBigQueryObject': 'GoogleBigQueryObject',
+      'GoogleBigQueryV2Object': 'GoogleBigQueryV2Object',
+      'AmazonS3': 'AmazonS3',
+      'Snowflake': 'Snowflake',
+      'SnowflakeV2': 'SnowflakeV2',
+      'SparkObject': 'SparkObject',
+      'HiveObject': 'HiveObject',
+      'HBaseObject': 'HBaseObject',
+      'ImpalaObject': 'ImpalaObject',
+      'PrestoObject': 'PrestoObject',
+      'PhoenixObject': 'PhoenixObject',
+      'DrillTable': 'DrillTable',
+      'CouchbaseTable': 'CouchbaseTable',
+      // Warehouse
+      'LakeHouseTable': 'LakeHouseTable',
+      'WarehouseTable': 'WarehouseTable',
+      // SAP
+      'SapBWCube': 'SapBWCube',
+      'SapCloudForCustomerResource': 'SapCloudForCustomerResource',
+      'SapEccResource': 'SapEccResource',
+      'SapHanaTable': 'SapHanaTable',
+      'SapOdpResource': 'SapOdpResource',
+      'SapOpenHubTable': 'SapOpenHubTable',
+      'SapTableResource': 'SapTableResource',
+      // Dynamics
+      'DynamicsEntity': 'DynamicsEntity',
+      'DynamicsCrmEntity': 'DynamicsCrmEntity',
+      'DynamicsAXResource': 'DynamicsAXResource',
+      'CommonDataServiceForAppsEntity': 'CommonDataServiceForAppsEntity',
+      // Salesforce
+      'SalesforceObject': 'SalesforceObject',
+      'SalesforceV2Object': 'SalesforceV2Object',
+      'SalesforceServiceCloudObject': 'SalesforceServiceCloudObject',
+      'SalesforceServiceCloudV2Object': 'SalesforceServiceCloudV2Object',
+      'SalesforceMarketingCloudObject': 'SalesforceMarketingCloudObject',
+      // Other SaaS
+      'AmazonMwsObject': 'AmazonMwsObject',
+      'ConcurObject': 'ConcurObject',
+      'EloquaObject': 'EloquaObject',
+      'GoogleAdWordsObject': 'GoogleAdWordsObject',
+      'HubspotObject': 'HubspotObject',
+      'JiraObject': 'JiraObject',
+      'MagentoObject': 'MagentoObject',
+      'MarketoObject': 'MarketoObject',
+      'PaypalObject': 'PaypalObject',
+      'QuickBooksObject': 'QuickBooksObject',
+      'RelationalTable': 'RelationalTable',
+      'ResponsysObject': 'ResponsysObject',
+      'ServiceNowObject': 'ServiceNowObject',
+      'ServiceNowV2Object': 'ServiceNowV2Object',
+      'ShopifyObject': 'ShopifyObject',
+      'SquareObject': 'SquareObject',
+      'WebTable': 'WebTable',
+      'XeroObject': 'XeroObject',
+      'ZohoObject': 'ZohoObject',
+      'OracleServiceCloudObject': 'OracleServiceCloudObject',
+      'Custom': 'Custom',
     };
 
     const mappedType = typeMapping[adfDatasetType];
@@ -740,12 +1022,6 @@ export class CopyActivityTransformer {
       
       case 'DelimitedText':
         return this.buildDelimitedTextDatasetProperties(typePropertiesWithParams, role);
-      
-      case 'Parquet':
-        return this.buildParquetDatasetProperties(typePropertiesWithParams, role);
-      
-      case 'Json':
-        return this.buildJsonDatasetProperties(typePropertiesWithParams, role);
       
       case 'Parquet':
         return this.buildParquetDatasetProperties(typePropertiesWithParams, role);
