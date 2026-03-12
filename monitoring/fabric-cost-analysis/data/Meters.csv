@@ -88,3 +88,14 @@ Copilot and AI Capacity Usage CU,Represents Copilot and AI on your capacity,GA,F
 Operations Agents Autonomous Reasoning Capacity Usage CU,Operations Agents Autonomous Reasoning Capacity Usage CU,GA,FALSE,TRUE,Operations Agents
 Real-Time Intelligence - Event Listener and Alert Capacity Usage CU,Represents Event Listener and Alerts for Real-Time Intelligence on your capacity,GA,FALSE,TRUE,RTI
 Capacity Overage Capacity Usage CU,Represents the capacity overage usage on your capacity,GA,FALSE,FALSE,Capacity Overage
+Ontology Modeling Capacity Usage CU,Represents the ontology modeling usage on your capacity,GA,FALSE,TRUE,Ontology Modeling
+OneLake BCDR Write Operations Hot Capacity Usage CU,OneLake BCDR Write Operations Hot Capacity Usage CU,GA,FALSE,TRUE,BCDR
+OneLake BCDR Storage Hot Data Stored,OneLake BCDR Storage Hot Data Stored,GA,FALSE,TRUE,BCDR
+OneLake BCDR Read Operations Hot Capacity Usage CU,OneLake BCDR Read Operations Hot Capacity Usage CU,GA,FALSE,TRUE,BCDR
+OneLake BCDR Other Operations Hot Capacity Usage CU,OneLake BCDR Other Operations Hot Capacity Usage CU,GA,FALSE,TRUE,BCDR
+OneLake BCDR Iterative Read Operation Hot Capacity Usage CU,OneLake BCDR Iterative Read Operation Hot Capacity Usage CU,GA,FALSE,TRUE,BCDR
+OneLake Storage Hot Data Stored,OneLake Storage Hot Data Stored,GA,FALSE,TRUE,OneLake
+Onelake read operations hot capacity usage cu,onelake read operations hot capacity usage cu,GA,FALSE,TRUE,OneLake
+Onelake other operations hot capacity usage cu,onelake other operations hot capacity usage cu,GA,FALSE,TRUE,OneLake
+Onelake write operations hot capacity usage cu,onelake write operations hot capacity usage cu,GA,FALSE,TRUE,OneLake
+Onelake iterative read operations hot capacity usage cu,onelake iterative read operations hot capacity usage cu,GA,FALSE,TRUE,OneLake
