@@ -26,10 +26,10 @@ This tool allows to scan one or multiple workspaces in order to get all the info
 
 ## Installation
 
-You can use the [prebuilt wheel file](./resources/fabric_assessment_tool-0.0.1-py3-none-any.whl) in the resources folder.
+You can use the [prebuilt wheel file](./resources/fabric_assessment_tool-0.2.0-py3-none-any.whl) in the resources folder.
 
 ```bash
-pip install resources/fabric_assessment_tool-0.0.1-py3-none-any.whl
+pip install resources/fabric_assessment_tool-0.2.0-py3-none-any.whl
 ```
 
 ## Authentication
@@ -199,7 +199,7 @@ Assessment results are saved in JSON format with the following structure:
     "mode": "full",
     "workspaces": ["workspace1", "workspace2"],
     "timestamp": "2025-10-03T14:15:07.047659",
-    "version": "0.0.1"
+    "version": "0.2.0"
   },
   "results": [
     {

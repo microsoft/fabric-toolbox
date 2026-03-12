@@ -68,7 +68,7 @@ class AssessmentService:
                 "mode": mode,
                 "workspaces": workspaces,
                 "timestamp": datetime.now().isoformat(),
-                "version": "0.0.1",
+                "version": "0.2.0",
                 "output_format": output_format,
             },
             "results": [],
