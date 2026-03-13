@@ -2,6 +2,7 @@
 
 ## Roadmap
 
+- Fabric Jumpstart (https://jumpstart.fabric.microsoft.com/) 
 - Tags analysis
 - Warehouse Auto Scale cost analysis
 - Forecast
