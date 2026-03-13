@@ -77,3 +77,18 @@ Ideas/Suggestions: Submit ideas and suggestions as issues in this repository.
 Bug Reports: A backlog is maintained on the project issues page. If you encounter problems or have suggestions, add an entry to the issues section.
 
 Important: Support tickets should not be opened for issues related to these templates. For any questions or concerns about the templates, create an issue in this repository.
+
+## Community Content
+
+Below is a curated list of blog posts, sessions and articles that dive deeper into the use cases, design choices, and benefits of FCA solution.
+
+- https://blog.crossjoin.co.uk/2025/10/19/monitor-fabric-costs-with-fabric-cost-analysis/
+- https://www.jamesserra.com/archive/2025/12/fabric-cost-analysis-fca/
+- https://blog.robsewell.com/blog/fca-fabric-cost-analysis-for-finops/
+- https://sqlyard.com/2026/01/12/fabric-cost-analysis-explained-bringing-clarity-to-microsoft-fabric-costs/
+- https://community.fabric.microsoft.com/t5/Fabric-platform-Community-Blog/Fabric-Cost-Analysis-Shine-a-light-on-your-platform-costs/ba-p/4907392
+- https://www.linkedin.com/events/fabriccostanalysis-comprendre-m7394636250466578432/
+- https://www.packtpub.com/en-us/product/the-definitive-guide-to-microsoft-fabric-9781806698790
+- https://www.youtube.com/watch?v=6uOlYj_eSzo&list=PLmmHlkXlpkYZNAQRj4IOhb6usUvkGYj34
+- https://www.youtube.com/watch?v=PJSZWTfUfc0&list=PLiYSIjh4cEx0dd7gkLFu2pjDqUkYGv_mU
+- ...

@@ -82,6 +82,9 @@ You are free to use your own folder structure. The ingestion process dynamically
 
 ![FCA](./media/Setup-Export7.png)
 
+ℹ️ If you see a warning about "Missing permissions on the existing connection", please contact the administrator to request the required user permissions.
+The Quota pipeline cannot be activated until the permissions are granted and the deployment is re-run.
+
 - Navigate to your FCA Workspace and refresh the browser to view the newly created artifacts
 
 ![FCA](./media/Setup-Export6.png)
