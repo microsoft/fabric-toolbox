@@ -2179,8 +2179,9 @@ function Get-FabricAnomalyDetectorDefinition {
 function New-FabricAnomalyDetector {
     [CmdletBinding(SupportsShouldProcess = $true, ConfirmImpact = 'Medium')]
     param (
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
         [ValidateNotNullOrEmpty()]
+        [Alias('id')]
         [string]$WorkspaceId,
 
         [Parameter(Mandatory = $true)]
@@ -2296,7 +2297,8 @@ function New-FabricAnomalyDetector {
         Write-FabricLog -Message "Failed to create Anomaly Detector. Error: $errorDetails" -Level Error
     }
 }
-#EndRegion '.\Public\Anomaly Detector\New-FabricAnomalyDetector.ps1' 152
+
+#EndRegion '.\Public\Anomaly Detector\New-FabricAnomalyDetector.ps1' 154
 #Region '.\Public\Anomaly Detector\Remove-FabricAnomalyDetector.ps1' -1
 
 <#
@@ -6378,8 +6380,9 @@ function Get-FabricDigitalTwinBuilderFlowDefinition {
 function New-FabricDigitalTwinBuilderFlow {
     [CmdletBinding(SupportsShouldProcess = $true, ConfirmImpact = 'Medium')]
     param (
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
         [ValidateNotNullOrEmpty()]
+        [Alias('id')]
         [string]$WorkspaceId,
 
         [Parameter(Mandatory = $true)]
@@ -6495,7 +6498,8 @@ function New-FabricDigitalTwinBuilderFlow {
         Write-FabricLog -Message "Failed to create Digital Twin Builder Flow. Error: $errorDetails" -Level Error
     }
 }
-#EndRegion '.\Public\Digital Twin Builder Flow\New-FabricDigitalTwinBuilderFlow.ps1' 152
+
+#EndRegion '.\Public\Digital Twin Builder Flow\New-FabricDigitalTwinBuilderFlow.ps1' 154
 #Region '.\Public\Digital Twin Builder Flow\Remove-FabricDigitalTwinBuilderFlow.ps1' -1
 
 <#
@@ -6987,8 +6991,9 @@ function Get-FabricDigitalTwinBuilderDefinition {
 function New-FabricDigitalTwinBuilder {
     [CmdletBinding(SupportsShouldProcess = $true, ConfirmImpact = 'Medium')]
     param (
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
         [ValidateNotNullOrEmpty()]
+        [Alias('id')]
         [string]$WorkspaceId,
 
         [Parameter(Mandatory = $true)]
@@ -7104,7 +7109,8 @@ function New-FabricDigitalTwinBuilder {
         Write-FabricLog -Message "Failed to create Digital Twin Builder. Error: $errorDetails" -Level Error
     }
 }
-#EndRegion '.\Public\Digital Twin Builder\New-FabricDigitalTwinBuilder.ps1' 152
+
+#EndRegion '.\Public\Digital Twin Builder\New-FabricDigitalTwinBuilder.ps1' 154
 #Region '.\Public\Digital Twin Builder\Remove-FabricDigitalTwinBuilder.ps1' -1
 
 <#
@@ -9626,8 +9632,9 @@ function Get-FabricEventSchemaSetDefinition {
 function New-FabricEventSchemaSet {
     [CmdletBinding(SupportsShouldProcess = $true, ConfirmImpact = 'Medium')]
     param (
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
         [ValidateNotNullOrEmpty()]
+        [Alias('id')]
         [string]$WorkspaceId,
 
         [Parameter(Mandatory = $true)]
@@ -9743,7 +9750,8 @@ function New-FabricEventSchemaSet {
         Write-FabricLog -Message "Failed to create Event Schema Set. Error: $errorDetails" -Level Error
     }
 }
-#EndRegion '.\Public\Event Schema Set\New-FabricEventSchemaSet.ps1' 152
+
+#EndRegion '.\Public\Event Schema Set\New-FabricEventSchemaSet.ps1' 154
 #Region '.\Public\Event Schema Set\Remove-FabricEventSchemaSet.ps1' -1
 
 <#
@@ -13775,8 +13783,9 @@ function Get-FabricGraphQuerySetDefinition {
 function New-FabricGraphQuerySet {
     [CmdletBinding(SupportsShouldProcess = $true, ConfirmImpact = 'Medium')]
     param (
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
         [ValidateNotNullOrEmpty()]
+        [Alias('id')]
         [string]$WorkspaceId,
 
         [Parameter(Mandatory = $true)]
@@ -13892,7 +13901,8 @@ function New-FabricGraphQuerySet {
         Write-FabricLog -Message "Failed to create Graph Query Set. Error: $errorDetails" -Level Error
     }
 }
-#EndRegion '.\Public\Graph Query Set\New-FabricGraphQuerySet.ps1' 152
+
+#EndRegion '.\Public\Graph Query Set\New-FabricGraphQuerySet.ps1' 154
 #Region '.\Public\Graph Query Set\Remove-FabricGraphQuerySet.ps1' -1
 
 <#
@@ -18674,8 +18684,9 @@ function Get-FabricMapDefinition {
 function New-FabricMap {
     [CmdletBinding(SupportsShouldProcess = $true, ConfirmImpact = 'Medium')]
     param (
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
         [ValidateNotNullOrEmpty()]
+        [Alias('id')]
         [string]$WorkspaceId,
 
         [Parameter(Mandatory = $true)]
@@ -18791,7 +18802,8 @@ function New-FabricMap {
         Write-FabricLog -Message "Failed to create Map. Error: $errorDetails" -Level Error
     }
 }
-#EndRegion '.\Public\Map\New-FabricMap.ps1' 152
+
+#EndRegion '.\Public\Map\New-FabricMap.ps1' 154
 #Region '.\Public\Map\Remove-FabricMap.ps1' -1
 
 <#
@@ -19283,8 +19295,9 @@ function Get-FabricMirroredAzureDatabricksCatalogDefinition {
 function New-FabricMirroredAzureDatabricksCatalog {
     [CmdletBinding(SupportsShouldProcess = $true, ConfirmImpact = 'Medium')]
     param (
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
         [ValidateNotNullOrEmpty()]
+        [Alias('id')]
         [string]$WorkspaceId,
 
         [Parameter(Mandatory = $true)]
@@ -19400,7 +19413,8 @@ function New-FabricMirroredAzureDatabricksCatalog {
         Write-FabricLog -Message "Failed to create Mirrored Azure Databricks Catalog. Error: $errorDetails" -Level Error
     }
 }
-#EndRegion '.\Public\Mirrored Azure Databricks Catalog\New-FabricMirroredAzureDatabricksCatalog.ps1' 152
+
+#EndRegion '.\Public\Mirrored Azure Databricks Catalog\New-FabricMirroredAzureDatabricksCatalog.ps1' 154
 #Region '.\Public\Mirrored Azure Databricks Catalog\Remove-FabricMirroredAzureDatabricksCatalog.ps1' -1
 
 <#
@@ -23864,8 +23878,9 @@ function Get-FabricOntologyDefinition {
 function New-FabricOntology {
     [CmdletBinding(SupportsShouldProcess = $true, ConfirmImpact = 'Medium')]
     param (
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
         [ValidateNotNullOrEmpty()]
+        [Alias('id')]
         [string]$WorkspaceId,
 
         [Parameter(Mandatory = $true)]
@@ -23981,7 +23996,8 @@ function New-FabricOntology {
         Write-FabricLog -Message "Failed to create Ontology. Error: $errorDetails" -Level Error
     }
 }
-#EndRegion '.\Public\Ontology\New-FabricOntology.ps1' 152
+
+#EndRegion '.\Public\Ontology\New-FabricOntology.ps1' 154
 #Region '.\Public\Ontology\Remove-FabricOntology.ps1' -1
 
 <#
@@ -24473,8 +24489,9 @@ function Get-FabricOperationsAgentDefinition {
 function New-FabricOperationsAgent {
     [CmdletBinding(SupportsShouldProcess = $true, ConfirmImpact = 'Medium')]
     param (
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
         [ValidateNotNullOrEmpty()]
+        [Alias('id')]
         [string]$WorkspaceId,
 
         [Parameter(Mandatory = $true)]
@@ -24590,7 +24607,8 @@ function New-FabricOperationsAgent {
         Write-FabricLog -Message "Failed to create Operations Agent. Error: $errorDetails" -Level Error
     }
 }
-#EndRegion '.\Public\Operations Agent\New-FabricOperationsAgent.ps1' 152
+
+#EndRegion '.\Public\Operations Agent\New-FabricOperationsAgent.ps1' 154
 #Region '.\Public\Operations Agent\Remove-FabricOperationsAgent.ps1' -1
 
 <#
@@ -32013,8 +32031,9 @@ function Get-FabricUserDataFunctionDefinition {
 function New-FabricUserDataFunction {
     [CmdletBinding(SupportsShouldProcess = $true, ConfirmImpact = 'Medium')]
     param (
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
         [ValidateNotNullOrEmpty()]
+        [Alias('id')]
         [string]$WorkspaceId,
 
         [Parameter(Mandatory = $true)]
@@ -32130,7 +32149,8 @@ function New-FabricUserDataFunction {
         Write-FabricLog -Message "Failed to create User Data Function. Error: $errorDetails" -Level Error
     }
 }
-#EndRegion '.\Public\User Data Function\New-FabricUserDataFunction.ps1' 152
+
+#EndRegion '.\Public\User Data Function\New-FabricUserDataFunction.ps1' 154
 #Region '.\Public\User Data Function\Remove-FabricUserDataFunction.ps1' -1
 
 <#
