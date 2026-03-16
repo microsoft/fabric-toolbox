@@ -1,5 +1,5 @@
 from dataclasses import asdict, dataclass
-from typing import Any, List, Optional
+from typing import Any, Dict, List, Optional
 
 from .common import AssessmentStatus
 
@@ -235,6 +235,8 @@ class SynapseNotebook:
     language: str
     etag: str
     json_response: Any
+    uses_mssparkutils: bool = False
+    spark_configuration: Optional[str] = None
 
 
 @dataclass
@@ -251,6 +253,7 @@ class SynapseSparkJobDefinition:
     name: str
     etag: str
     json_response: Any
+    spark_configuration: Optional[str] = None
 
 
 @dataclass
@@ -360,6 +363,28 @@ class SynapseLibrary:
 
 
 @dataclass
+class SynapseSparkConfiguration:
+    """Synapse Spark Configuration information."""
+
+    name: str
+    description: str
+    configs: Dict[str, str]
+    created: str
+    created_by: str
+    source_pool: str
+    notebook_refs: int
+    sjd_refs: int
+    json_response: Any
+
+
+@dataclass
+class SynapseSparkConfigurations:
+    """Collection of Spark Configurations in a Synapse workspace."""
+
+    spark_configurations: List[SynapseSparkConfiguration]
+
+
+@dataclass
 class SynapseLibraries:
     """Collection of Libraries in a Synapse workspace."""
 
@@ -385,6 +410,7 @@ class SynapseAssessment:
     datasets: SynapseDatasets
     managed_private_endpoints: SynapseManagedPrivateEndpoints
     libraries: SynapseLibraries
+    spark_configurations: SynapseSparkConfigurations
 
     assessment_metadata: SynapseAssessmentMetadata
 

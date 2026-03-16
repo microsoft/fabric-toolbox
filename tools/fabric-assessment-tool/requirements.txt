@@ -11,6 +11,7 @@ azure-mgmt-resource==23.3.0
 databricks-sdk==0.67.0
 poetry
 mssql-python
+jinja2>=3.0.0
 
 # Tests
 pytest

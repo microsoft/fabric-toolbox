@@ -1,6 +1,7 @@
 import builtins
+import json
 from argparse import Namespace
-from typing import Optional
+from typing import Dict, Optional
 
 from fabric_assessment_tool.errors.api import FATError
 
@@ -34,6 +35,8 @@ from ..assessment.synapse import (
     SynapseServerlessDatabase,
     SynapseServerlessDatabases,
     SynapseServerlessPool,
+    SynapseSparkConfiguration,
+    SynapseSparkConfigurations,
     SynapseSparkJobDefinition,
     SynapseSparkJobDefinitions,
     SynapseSparkPool,
@@ -263,6 +266,13 @@ class SynapseClient:
             libraries = self._get_libraries(workspace_name)
             utils_ui.print_extraction_done("Libraries")
 
+            # Extract spark configurations from spark pools, notebooks, and SJDs
+            utils_ui.print_extracting("Spark Configurations")
+            spark_configurations = self._extract_spark_configurations(
+                spark_pools, notebooks, spark_job_definitions
+            )
+            utils_ui.print_extraction_done("Spark Configurations")
+
             # Get table statistics using SQL admin credentials if provided
             if sql_admin_login and sql_admin_password:
                 utils_ui.print_extracting("Table Statistics")
@@ -347,6 +357,7 @@ class SynapseClient:
                 datasets=datasets,
                 managed_private_endpoints=managed_private_endpoints,
                 libraries=libraries,
+                spark_configurations=spark_configurations,
                 assessment_metadata=assessment_metadata,
                 subscription_id=self.subscription_id,
                 resource_group=workspace_info.resource_group,
@@ -509,8 +520,8 @@ class SynapseClient:
                 SynapsePipeline(
                     name=pipe["name"],
                     description=pipe["properties"].get("description", ""),
-                    last_run="",  # TODO
-                    activities_count=0,  # TODO
+                    last_run=pipe["properties"].get("lastPublishTime", ""),
+                    activities_count=len(pipe["properties"].get("activities", [])),
                     json_response=pipe,
                 )
                 for pipe in json_req["value"]
@@ -570,6 +581,8 @@ class SynapseClient:
                     .get("name"),
                     etag=nb.get("etag"),
                     json_response=nb,
+                    uses_mssparkutils=self._check_notebook_for_mssparkutils(nb),
+                    spark_configuration=self._get_target_spark_configuration(nb),
                 )
                 for nb in json_req["value"]
             ]
@@ -581,6 +594,41 @@ class SynapseClient:
                 self.unreached_components.append("notebooks")
                 return SynapseNotebooks(notebooks=[])
             raise e
+
+    def _get_target_spark_configuration(self, resource: dict) -> Optional[str]:
+        """Extract the target Spark configuration name from a resource.
+
+        Args:
+            resource: The resource JSON response (notebook or spark job definition)
+
+        Returns:
+            The Spark configuration name if found, None otherwise
+        """
+        target_config = resource.get("properties", {}).get("targetSparkConfiguration")
+        if target_config and isinstance(target_config, dict):
+            return target_config.get("referenceName")
+        return None
+
+    def _check_notebook_for_mssparkutils(self, notebook: dict) -> bool:
+        """Check if notebook content contains mssparkutils references.
+
+        Args:
+            notebook: The notebook JSON response
+
+        Returns:
+            True if mssparkutils is found in any cell source
+        """
+        cells = notebook.get("properties", {}).get("cells", [])
+        for cell in cells:
+            source = cell.get("source", [])
+            # source can be a list of strings or a single string
+            if isinstance(source, list):
+                content = "".join(source)
+            else:
+                content = str(source)
+            if "mssparkutils" in content:
+                return True
+        return False
 
     def _get_sparkjobdefinitions(
         self, workspace_name: str
@@ -599,6 +647,7 @@ class SynapseClient:
                     name=nb["name"],
                     etag=nb.get("etag"),
                     json_response=nb,
+                    spark_configuration=self._get_target_spark_configuration(nb),
                 )
                 for nb in json_req["value"]
             ]
@@ -1271,3 +1320,121 @@ class SynapseClient:
         from datetime import datetime
 
         return datetime.now().isoformat()
+
+    def _extract_spark_configurations(
+        self,
+        spark_pools: SynapseSparkPools,
+        notebooks: SynapseNotebooks,
+        spark_job_definitions: SynapseSparkJobDefinitions,
+    ) -> SynapseSparkConfigurations:
+        """Extract Spark Configurations from spark pools and count references.
+
+        Spark configurations are defined in spark pools via sparkConfigProperties.
+        They can be referenced by notebooks and spark job definitions via
+        targetSparkConfiguration.
+
+        Args:
+            spark_pools: Collection of spark pools
+            notebooks: Collection of notebooks
+            spark_job_definitions: Collection of spark job definitions
+
+        Returns:
+            SynapseSparkConfigurations containing all configurations with ref counts
+        """
+        # Track configurations by name
+        configs: Dict[str, Dict] = {}
+
+        # Extract configurations from spark pools
+        for pool in spark_pools.spark_pools:
+            pool_json = pool.json_response or {}
+            props = pool_json.get("properties", {})
+            spark_config_props = props.get("sparkConfigProperties")
+
+            if spark_config_props and isinstance(spark_config_props, dict):
+                config_type = spark_config_props.get("configurationType")
+                if config_type == "Artifact":
+                    content_str = spark_config_props.get("content", "{}")
+                    try:
+                        content = json.loads(content_str)
+                        config_name = content.get("name", "")
+                        if config_name:
+                            config_props = content.get("properties", {})
+                            configs[config_name] = {
+                                "name": config_name,
+                                "description": config_props.get("description", ""),
+                                "configs": config_props.get("configs", {}),
+                                "created": config_props.get("created", ""),
+                                "created_by": config_props.get("createdBy", ""),
+                                "source_pool": pool.name,
+                                "notebook_refs": 0,
+                                "sjd_refs": 0,
+                                "json_response": content,
+                            }
+                    except (json.JSONDecodeError, TypeError):
+                        pass
+
+        # Count references from notebooks
+        for notebook in notebooks.notebooks:
+            nb_json = notebook.json_response or {}
+            props = nb_json.get("properties", {})
+            target_config = props.get("targetSparkConfiguration")
+
+            if target_config and isinstance(target_config, dict):
+                config_name = target_config.get("referenceName", "")
+                if config_name:
+                    if config_name not in configs:
+                        # Config referenced but not found in pools
+                        configs[config_name] = {
+                            "name": config_name,
+                            "description": "",
+                            "configs": {},
+                            "created": "",
+                            "created_by": "",
+                            "source_pool": "",
+                            "notebook_refs": 0,
+                            "sjd_refs": 0,
+                            "json_response": {},
+                        }
+                    configs[config_name]["notebook_refs"] += 1
+
+        # Count references from spark job definitions
+        for sjd in spark_job_definitions.spark_job_definitions:
+            sjd_json = sjd.json_response or {}
+            props = sjd_json.get("properties", {})
+            target_config = props.get("targetSparkConfiguration")
+
+            if target_config and isinstance(target_config, dict):
+                config_name = target_config.get("referenceName", "")
+                if config_name:
+                    if config_name not in configs:
+                        # Config referenced but not found in pools
+                        configs[config_name] = {
+                            "name": config_name,
+                            "description": "",
+                            "configs": {},
+                            "created": "",
+                            "created_by": "",
+                            "source_pool": "",
+                            "notebook_refs": 0,
+                            "sjd_refs": 0,
+                            "json_response": {},
+                        }
+                    configs[config_name]["sjd_refs"] += 1
+
+        # Create SynapseSparkConfiguration objects
+        spark_configurations = [
+            SynapseSparkConfiguration(
+                name=cfg["name"],
+                description=cfg["description"],
+                configs=cfg["configs"],
+                created=cfg["created"],
+                created_by=cfg["created_by"],
+                source_pool=cfg["source_pool"],
+                notebook_refs=cfg["notebook_refs"],
+                sjd_refs=cfg["sjd_refs"],
+                json_response=cfg["json_response"],
+            )
+            for cfg in configs.values()
+        ]
+
+        return SynapseSparkConfigurations(spark_configurations=spark_configurations)

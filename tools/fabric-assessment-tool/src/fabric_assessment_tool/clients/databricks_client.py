@@ -340,6 +340,7 @@ class DatabricksClient:
                     obj_path = obj["path"]
                     if obj["object_type"] == "NOTEBOOK":
                         lang = "unknown"
+                        content = ""
                         try:
                             args.uri = status_endpoint
                             args.request_params = {}
@@ -366,6 +367,10 @@ class DatabricksClient:
                             )
                         except:
                             embedded_langs, magics = [], []
+
+                        # Check for dbutils in notebook content
+                        uses_dbutils = self._check_notebook_for_dbutils(content)
+
                         notebooks.append(
                             DatabricksNotebook(
                                 path=obj_path,
@@ -373,6 +378,7 @@ class DatabricksClient:
                                 embedded_languages=embedded_langs,
                                 other_magics=magics,
                                 json_response=obj,  # TODO: Add the export response instead of list respose?
+                                uses_dbutils=uses_dbutils,
                             )
                         )
                     elif obj["object_type"] == "DIRECTORY":
@@ -385,6 +391,24 @@ class DatabricksClient:
         except Exception as e:
             print(f"Failed to get notebooks: {e}")
             return DatabricksNotebooks(notebooks=[])
+
+    def _check_notebook_for_dbutils(self, content: str) -> bool:
+        """Check if notebook content contains dbutils references.
+
+        Args:
+            content: Base64-encoded notebook content
+
+        Returns:
+            True if dbutils is found in the notebook content
+        """
+        if not content:
+            return False
+        try:
+            # Decode base64 content
+            decoded_content = base64.b64decode(content).decode("utf-8")
+            return "dbutils" in decoded_content
+        except Exception:
+            return False
 
     def _extract_task_type(self, task: Any) -> str:
 

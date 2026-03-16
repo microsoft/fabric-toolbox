@@ -1,0 +1,267 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="page-header">
+    <h1>🔧 Admin View</h1>
+    <p>Integration runtimes, linked services, private endpoints, and libraries</p>
+</div>
+
+<!-- Summary Stats -->
+<div class="row">
+    <div class="col">
+        <div class="stat-card">
+            <div class="stat-value" id="stat-ir">{{ admin.integration_runtimes | length }}</div>
+            <div class="stat-label">Integration Runtimes</div>
+        </div>
+    </div>
+    <div class="col">
+        <div class="stat-card">
+            <div class="stat-value" id="stat-ls">{{ admin.linked_services | length }}</div>
+            <div class="stat-label">Linked Services</div>
+        </div>
+    </div>
+    <div class="col">
+        <div class="stat-card">
+            <div class="stat-value" id="stat-mpe">{{ admin.managed_private_endpoints | length }}</div>
+            <div class="stat-label">Private Endpoints</div>
+        </div>
+    </div>
+    <div class="col">
+        <div class="stat-card">
+            <div class="stat-value" id="stat-lib">{{ admin.libraries | length }}</div>
+            <div class="stat-label">Libraries</div>
+        </div>
+    </div>
+</div>
+
+<!-- Linked Services by Type Chart -->
+{% if admin.linked_service_types %}
+<div class="card mt-2">
+    <div class="card-header">Linked Services by Type</div>
+    <div class="card-body">
+        <div class="row">
+            <div class="col col-6">
+                <div class="chart-container">
+                    <canvas id="linkedServicesChart"></canvas>
+                </div>
+            </div>
+            <div class="col col-6">
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>Type</th>
+                            <th class="text-right">Count</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for type, count in admin.linked_service_types.items() | sort(attribute='1', reverse=true) %}
+                        <tr>
+                            <td>{{ type }}</td>
+                            <td class="text-right">{{ count }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<!-- Integration Runtimes -->
+<div class="card">
+    <div class="card-header">⚙️ Integration Runtimes</div>
+    <div class="card-body">
+        {% if admin.integration_runtimes %}
+        <div class="table-responsive">
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Name</th>
+                        <th>Type</th>
+                        <th>Description</th>
+                        <th>Workspace</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for ir in admin.integration_runtimes %}
+                    <tr data-workspace="{{ ir.workspace | default('N/A') }}">
+                        <td>{{ ir.name | default('Unknown') }}</td>
+                        <td><span class="badge badge-secondary">{{ ir.type | default('N/A') }}</span></td>
+                        <td>{{ ir.description | default('') | truncate(50) }}</td>
+                        <td>{{ ir.workspace | default('N/A') }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="empty-state">
+            <p>No integration runtimes found.</p>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Linked Services -->
+<div class="card">
+    <div class="card-header">🔗 Linked Services</div>
+    <div class="card-body">
+        {% if admin.linked_services %}
+        <div class="table-responsive">
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Name</th>
+                        <th>Type</th>
+                        <th>Workspace</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for ls in admin.linked_services %}
+                    <tr data-workspace="{{ ls.workspace | default('N/A') }}">
+                        <td>{{ ls.name | default('Unknown') }}</td>
+                        <td><span class="badge badge-primary">{{ ls.type | default('N/A') }}</span></td>
+                        <td>{{ ls.workspace | default('N/A') }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="empty-state">
+            <p>No linked services found.</p>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Managed Private Endpoints -->
+<div class="card">
+    <div class="card-header">🔒 Managed Private Endpoints</div>
+    <div class="card-body">
+        {% if admin.managed_private_endpoints %}
+        <div class="table-responsive">
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Name</th>
+                        <th>Type</th>
+                        <th>Status</th>
+                        <th>Workspace</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for ep in admin.managed_private_endpoints %}
+                    <tr data-workspace="{{ ep.workspace | default('N/A') }}">
+                        <td>{{ ep.name | default('Unknown') }}</td>
+                        <td>{{ ep.type | default('N/A') }}</td>
+                        <td>
+                            <span class="badge {% if ep.status == 'Approved' %}badge-success{% else %}badge-warning{% endif %}">
+                                {{ ep.status | default('Unknown') }}
+                            </span>
+                        </td>
+                        <td>{{ ep.workspace | default('N/A') }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="empty-state">
+            <p>No managed private endpoints found.</p>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Libraries -->
+{% if admin.libraries %}
+<div class="card">
+    <div class="card-header">📚 Libraries</div>
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Name</th>
+                        <th>Workspace</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for lib in admin.libraries %}
+                    <tr data-workspace="{{ lib.workspace | default('N/A') }}">
+                        <td>{{ lib.name | default('Unknown') }}</td>
+                        <td>{{ lib.workspace | default('N/A') }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<div class="mt-2">
+    <a href="{{ base_path }}index.html">← Back to Overview</a>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+// Admin data for filtering
+const adminData = {
+{% for ws_name, ws in workspaces.items() %}
+    "{{ ws_name }}": {
+        integration_runtimes: {{ ws.admin.integration_runtimes | default([]) | length }},
+        linked_services: {{ ws.admin.linked_services | default([]) | length }},
+        managed_private_endpoints: {{ ws.admin.managed_private_endpoints | default([]) | length }},
+        libraries: {{ ws.admin.libraries | default([]) | length }}
+    }{% if not loop.last %},{% endif %}
+{% endfor %}
+};
+
+function updateFilteredStats(selectedWorkspaces) {
+    let ir = 0, ls = 0, mpe = 0, lib = 0;
+    selectedWorkspaces.forEach(ws => {
+        const data = adminData[ws];
+        if (data) {
+            ir += data.integration_runtimes || 0;
+            ls += data.linked_services || 0;
+            mpe += data.managed_private_endpoints || 0;
+            lib += data.libraries || 0;
+        }
+    });
+    document.getElementById('stat-ir').textContent = ir;
+    document.getElementById('stat-ls').textContent = ls;
+    document.getElementById('stat-mpe').textContent = mpe;
+    document.getElementById('stat-lib').textContent = lib;
+}
+
+{% if admin.linked_service_types %}
+const lsCtx = document.getElementById('linkedServicesChart');
+if (lsCtx) {
+    const colors = ['#0078d4', '#107c10', '#5c2d91', '#ff8c00', '#008272', '#d83b01', '#e81123', '#00bcf2', '#8764b8', '#00b294'];
+    new Chart(lsCtx, {
+        type: 'doughnut',
+        data: {
+            labels: {{ admin.linked_service_types.keys() | list | tojson }},
+            datasets: [{
+                data: {{ admin.linked_service_types.values() | list | tojson }},
+                backgroundColor: colors.slice(0, {{ admin.linked_service_types | length }})
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    position: 'right'
+                }
+            }
+        }
+    });
+}
+{% endif %}
+</script>
+{% endblock %}
