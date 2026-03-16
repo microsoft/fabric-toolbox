@@ -8,8 +8,8 @@
 
 ### 🚀 Key Features
 
-- **295+ Cmdlets** - Complete coverage of Microsoft Fabric REST API
-- **48 Resource Types** - Manage Lakehouses, Warehouses, Notebooks, Pipelines, ML Models, Eventstreams, Graph Models, and more
+- **355+ Cmdlets** - Complete coverage of Microsoft Fabric REST API
+- **58 Resource Types** - Manage Lakehouses, Warehouses, Notebooks, Pipelines, ML Models, Eventstreams, Graph Models, and more
 - **Multiple Auth Methods** - User Principal, Service Principal, and Managed Identity support
 - **Enterprise Ready** - Built-in retry logic, comprehensive error handling, and PSFramework logging
 - **Intelligent Output Formatting** - Automatic GUID-to-name resolution with smart caching for readable results
@@ -442,60 +442,70 @@ Get-Command -Module MicrosoftFabricMgmt -Name *Notebook*
 The module provides comprehensive coverage of Microsoft Fabric resources:
 
 <details>
-<summary><b>📦 48 Resource Types (Click to expand)</b></summary>
+<summary><b>📦 58 Resource Types (Click to expand)</b></summary>
 
 | Resource Type | Cmdlets | Description |
 |---------------|---------|-------------|
-| **Workspace** | 13 | Workspace management, RBAC, capacity assignment |
-| **Lakehouse** | 9 | Lakehouse operations, table management |
-| **Warehouse** | 9 | Warehouse operations and snapshots |
-| **Notebook** | 8 | Notebook deployment and management |
+| **Admin** | 8 | Tenant-wide administration |
+| **Anomaly Detector** | 6 | Anomaly detection operations (Preview) |
+| **Apache Airflow Job** | 6 | Airflow job management |
+| **Capacity** | 1 | Capacity operations |
+| **Connections** | 6 | Connection and gateway management |
+| **Copy Job** | 6 | Data copy operations |
+| **Cosmos DB Database** | 6 | Cosmos DB integration |
+| **Dashboard** | 1 | Dashboard operations |
 | **Data Pipeline** | 4 | Pipeline orchestration |
 | **Dataflow** | 6 | Dataflow operations and parameters |
-| **SQL Database** | 6 | SQL Database management |
+| **Datamart** | 1 | Datamart management |
+| **Digital Twin Builder** | 6 | Digital twin building operations (Preview) |
+| **Digital Twin Builder Flow** | 6 | Digital twin flow management (Preview) |
+| **Domain** | 11 | Domain administration |
+| **Environment** | 13 | Spark environment management |
+| **Event Schema Set** | 6 | Event schema management (Preview) |
 | **Eventstream** | 17 | Real-time data streaming |
 | **Eventhouse** | 6 | Real-time analytics platform |
-| **Environment** | 13 | Spark environment management |
-| **ML Model** | 4 | Machine learning model management |
-| **ML Experiment** | 4 | ML experiment tracking |
-| **KQL Database** | 6 | KQL database operations |
-| **KQL Dashboard** | 6 | KQL dashboard management |
-| **KQL Queryset** | 6 | KQL query management |
-| **Spark Job Definition** | 8 | Spark job orchestration |
-| **Spark** | 9 | Spark pool and settings |
-| **Report** | 6 | Power BI report operations |
-| **Semantic Model** | 6 | Semantic model management |
-| **Dashboard** | 1 | Dashboard operations |
-| **Datamart** | 1 | Datamart management |
-| **Mirrored Database** | 10 | Database mirroring |
-| **Domain** | 11 | Domain administration |
-| **Apache Airflow Job** | 6 | Airflow job management |
-| **Copy Job** | 6 | Data copy operations |
-| **Reflex** | 6 | Reflex item management |
-| **GraphQL API** | 6 | GraphQL API operations |
-| **Graph Model** | 8 | Graph-based data modeling and queries |
-| **Paginated Reports** | 2 | Paginated report management |
-| **Mounted Data Factory** | 6 | Data Factory integration |
 | **External Data Share** | 2 | Data sharing operations |
 | **Folder** | 5 | Workspace folder management |
-| **OneLake** | 6 | OneLake shortcuts and security |
-| **SQL Endpoints** | 3 | SQL endpoint management |
-| **Variable Library** | 5 | Variable management |
+| **Graph Model** | 8 | Graph-based data modeling and queries |
+| **Graph Query Set** | 6 | Graph query operations (Preview) |
+| **GraphQL API** | 6 | GraphQL API operations |
+| **KQL Dashboard** | 6 | KQL dashboard management |
+| **KQL Database** | 6 | KQL database operations |
+| **KQL Queryset** | 6 | KQL query management |
 | **Labels** | 2 | Item labeling |
-| **Tags** | 4 | Item tagging |
-| **Sharing Links** | 2 | Sharing link management |
-| **Connections** | 6 | Connection and gateway management |
-| **Capacity** | 1 | Capacity operations |
-| **Tenant** | 8 | Tenant-level settings |
-| **Users** | 1 | User operations |
-| **Utils** | 6 | Utility functions |
+| **Lakehouse** | 9 | Lakehouse operations, table management |
 | **Managed Private Endpoint** | 3 | Private endpoint management |
+| **Map** | 6 | Map item management (Preview) |
+| **Mirrored Azure Databricks Catalog** | 6 | Databricks catalog mirroring |
+| **Mirrored Database** | 10 | Database mirroring |
 | **Mirrored Warehouse** | 1 | Warehouse mirroring |
+| **ML Experiment** | 4 | ML experiment tracking |
+| **ML Model** | 4 | Machine learning model management |
+| **Mounted Data Factory** | 6 | Data Factory integration |
+| **Notebook** | 8 | Notebook deployment and management |
+| **OneLake** | 6 | OneLake shortcuts and security |
+| **Ontology** | 6 | Ontology management (Preview) |
+| **Operations Agent** | 6 | Operations agent management (Preview) |
+| **Paginated Reports** | 2 | Paginated report management |
+| **Reflex** | 6 | Reflex item management |
+| **Report** | 6 | Power BI report operations |
+| **Semantic Model** | 6 | Semantic model management |
+| **Sharing Links** | 2 | Sharing link management |
 | **Snowflake Database** | 6 | Snowflake integration |
-| **Cosmos DB Database** | 6 | Cosmos DB integration |
-| **Admin** | 8 | Tenant-wide administration |
+| **Spark** | 9 | Spark pool and settings |
+| **Spark Job Definition** | 8 | Spark job orchestration |
+| **SQL Database** | 6 | SQL Database management |
+| **SQL Endpoints** | 3 | SQL endpoint management |
+| **Tags** | 4 | Item tagging |
+| **Tenant** | 8 | Tenant-level settings |
+| **User Data Function** | 6 | User data function operations (Preview) |
+| **Users** | 1 | User operations |
+| **Utils** | 10 | Utility functions |
+| **Variable Library** | 5 | Variable management |
+| **Warehouse** | 9 | Warehouse operations and snapshots |
+| **Workspace** | 14 | Workspace management, RBAC, capacity assignment |
 
-**Total: 295+ Cmdlets** across 48 resource types
+**Total: 355+ Cmdlets** across 58 resource types
 
 </details>
 
