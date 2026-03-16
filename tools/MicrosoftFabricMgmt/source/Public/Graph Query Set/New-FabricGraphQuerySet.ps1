@@ -32,8 +32,9 @@
 function New-FabricGraphQuerySet {
     [CmdletBinding(SupportsShouldProcess = $true, ConfirmImpact = 'Medium')]
     param (
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
         [ValidateNotNullOrEmpty()]
+        [Alias('id')]
         [string]$WorkspaceId,
 
         [Parameter(Mandatory = $true)]
@@ -149,3 +150,4 @@ function New-FabricGraphQuerySet {
         Write-FabricLog -Message "Failed to create Graph Query Set. Error: $errorDetails" -Level Error
     }
 }
+

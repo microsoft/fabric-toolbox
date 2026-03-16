@@ -32,8 +32,9 @@
 function New-FabricMap {
     [CmdletBinding(SupportsShouldProcess = $true, ConfirmImpact = 'Medium')]
     param (
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
         [ValidateNotNullOrEmpty()]
+        [Alias('id')]
         [string]$WorkspaceId,
 
         [Parameter(Mandatory = $true)]
@@ -149,3 +150,4 @@ function New-FabricMap {
         Write-FabricLog -Message "Failed to create Map. Error: $errorDetails" -Level Error
     }
 }
+

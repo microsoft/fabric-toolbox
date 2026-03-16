@@ -32,8 +32,9 @@
 function New-FabricMirroredAzureDatabricksCatalog {
     [CmdletBinding(SupportsShouldProcess = $true, ConfirmImpact = 'Medium')]
     param (
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
         [ValidateNotNullOrEmpty()]
+        [Alias('id')]
         [string]$WorkspaceId,
 
         [Parameter(Mandatory = $true)]
@@ -149,3 +150,4 @@ function New-FabricMirroredAzureDatabricksCatalog {
         Write-FabricLog -Message "Failed to create Mirrored Azure Databricks Catalog. Error: $errorDetails" -Level Error
     }
 }
+

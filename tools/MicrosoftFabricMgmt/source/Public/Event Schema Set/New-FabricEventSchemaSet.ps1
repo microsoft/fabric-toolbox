@@ -32,8 +32,9 @@
 function New-FabricEventSchemaSet {
     [CmdletBinding(SupportsShouldProcess = $true, ConfirmImpact = 'Medium')]
     param (
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
         [ValidateNotNullOrEmpty()]
+        [Alias('id')]
         [string]$WorkspaceId,
 
         [Parameter(Mandatory = $true)]
@@ -149,3 +150,4 @@ function New-FabricEventSchemaSet {
         Write-FabricLog -Message "Failed to create Event Schema Set. Error: $errorDetails" -Level Error
     }
 }
+
