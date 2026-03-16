@@ -68,7 +68,7 @@ And from Teams:
 
 ➡️ [Click here to deploy or update FCA](./Deploy.md)
 
-🆕 We also support Fabric Jumpstart deployement : https://jumpstart.fabric.microsoft.com/
+🆕 FCA can also be deployed via Fabric Jumpstart : https://jumpstart.fabric.microsoft.com/
 
 ## Support
 
