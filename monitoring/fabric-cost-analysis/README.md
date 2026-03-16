@@ -68,6 +68,8 @@ And from Teams:
 
 ➡️ [Click here to deploy or update FCA](./Deploy.md)
 
+🆕 FCA can also be deployed via Fabric Jumpstart : https://jumpstart.fabric.microsoft.com/
+
 ## Support
 
 The FCA solution accelerator template is not an official Microsoft service.
