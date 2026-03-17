@@ -62,7 +62,9 @@ Last Updated: 2026-01-07
 BREAKING CHANGE: No longer populates global $FabricConfig variable.
 Module now uses internal $script:FabricAuthContext.
 #>
-function Set-FabricApiHeaders {
+[Alias('Connect-FabricAccount')]
+function Set-FabricApiHeaders
+{
     [CmdletBinding(DefaultParameterSetName = 'UserPrincipal', SupportsShouldProcess = $true, ConfirmImpact = 'Medium')]
     param (
         [Parameter(Mandatory = $true, ParameterSetName = 'UserPrincipal')]
@@ -79,7 +81,7 @@ function Set-FabricApiHeaders {
         [System.Security.SecureString]$AppSecret,
 
         [Parameter(Mandatory = $true, ParameterSetName = 'ManagedIdentity')]
-        [System.Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSReviewUnusedParameter', '', Justification='Parameter is used for parameter set binding')]
+        [System.Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSReviewUnusedParameter', '', Justification = 'Parameter is used for parameter set binding')]
         [switch]$UseManagedIdentity,
 
         [Parameter(Mandatory = $false, ParameterSetName = 'ManagedIdentity')]
@@ -87,14 +89,18 @@ function Set-FabricApiHeaders {
         [string]$ClientId
     )
 
-    try {
+    try
+    {
         $authMethod = $PSCmdlet.ParameterSetName
         Write-PSFMessage -Level Host -Message "Authenticating to Azure using $authMethod method..."
 
-        if ($PSCmdlet.ShouldProcess("Fabric API configuration for $authMethod", "Set authentication headers")) {
+        if ($PSCmdlet.ShouldProcess("Fabric API configuration for $authMethod", 'Set authentication headers'))
+        {
             # Authenticate based on parameter set
-            switch ($authMethod) {
-                'ServicePrincipal' {
+            switch ($authMethod)
+            {
+                'ServicePrincipal'
+                {
                     Write-PSFMessage -Level Debug -Message "Authenticating with Service Principal: $AppId"
 
                     # PS 5.1 compatible: Use New-Object instead of [pscredential]::new()
@@ -102,17 +108,19 @@ function Set-FabricApiHeaders {
 
                     # Connect to Azure
                     Connect-AzAccount -ServicePrincipal -Credential $psCredential -Tenant $TenantId -ErrorAction Stop | Out-Null
-                    Write-PSFMessage -Level Verbose -Message "Successfully authenticated as service principal"
+                    Write-PSFMessage -Level Verbose -Message 'Successfully authenticated as service principal'
                 }
-                'UserPrincipal' {
+                'UserPrincipal'
+                {
                     Write-PSFMessage -Level Debug -Message "Authenticating with User Principal for tenant: $TenantId"
 
                     # Connect to Azure with user credentials
                     Connect-AzAccount -Tenant $TenantId -ErrorAction Stop | Out-Null
-                    Write-PSFMessage -Level Verbose -Message "Successfully authenticated as user principal"
+                    Write-PSFMessage -Level Verbose -Message 'Successfully authenticated as user principal'
                 }
-                'ManagedIdentity' {
-                    Write-PSFMessage -Level Debug -Message "Authenticating with Managed Identity"
+                'ManagedIdentity'
+                {
+                    Write-PSFMessage -Level Debug -Message 'Authenticating with Managed Identity'
 
                     # Build Connect-AzAccount parameters for MI
                     $connectParams = @{
@@ -121,41 +129,51 @@ function Set-FabricApiHeaders {
                     }
 
                     # Add AccountId for user-assigned MI
-                    if ($ClientId) {
+                    if ($ClientId)
+                    {
                         $connectParams.AccountId = $ClientId
                         Write-PSFMessage -Level Verbose -Message "Using user-assigned managed identity: $ClientId"
                     }
-                    else {
-                        Write-PSFMessage -Level Verbose -Message "Using system-assigned managed identity"
+                    else
+                    {
+                        Write-PSFMessage -Level Verbose -Message 'Using system-assigned managed identity'
                     }
 
                     # Connect using managed identity
                     Connect-AzAccount @connectParams | Out-Null
-                    Write-PSFMessage -Level Verbose -Message "Successfully authenticated with managed identity"
+                    Write-PSFMessage -Level Verbose -Message 'Successfully authenticated with managed identity'
                 }
             }
 
             # Retrieve the access token
-            Write-PSFMessage -Level Debug -Message "Retrieving access token for Fabric API"
+            Write-PSFMessage -Level Debug -Message 'Retrieving access token for Fabric API'
             $resourceUrl = Get-PSFConfigValue -FullName 'MicrosoftFabricMgmt.Api.ResourceUrl'
 
             $fabricToken = Get-AzAccessToken -AsSecureString -ResourceUrl $resourceUrl -ErrorAction Stop -WarningAction SilentlyContinue
 
             # Convert secure token to plain text (PS 5.1 compatible)
-            Write-PSFMessage -Level Debug -Message "Extracting token from SecureString"
+            Write-PSFMessage -Level Debug -Message 'Extracting token from SecureString'
             $plainTokenPtr = [System.Runtime.InteropServices.Marshal]::SecureStringToBSTR($fabricToken.Token)
-            try {
+            try
+            {
                 $plainToken = [System.Runtime.InteropServices.Marshal]::PtrToStringAuto($plainTokenPtr)
 
                 # Update module-scoped authentication context
-                Write-PSFMessage -Level Debug -Message "Updating module authentication context"
+                Write-PSFMessage -Level Debug -Message 'Updating module authentication context'
 
                 $script:FabricAuthContext.FabricHeaders = @{
                     'Content-Type'  = 'application/json; charset=utf-8'
                     'Authorization' = "Bearer $plainToken"
                 }
                 $script:FabricAuthContext.TokenExpiresOn = $fabricToken.ExpiresOn.ToString('o')  # ISO 8601 format
-                $script:FabricAuthContext.TenantId = if ($TenantId) { $TenantId } else { 'ManagedIdentity' }
+                $script:FabricAuthContext.TenantId = if ($TenantId)
+                {
+                    $TenantId 
+                }
+                else
+                {
+                    'ManagedIdentity' 
+                }
                 $script:FabricAuthContext.AuthMethod = $authMethod
                 $script:FabricAuthContext.ClientId = $ClientId
 
@@ -164,21 +182,33 @@ function Set-FabricApiHeaders {
                 Write-PSFMessage -Level Host -Message "Authentication successful. Token expires in $([Math]::Round($expiresIn, 1)) minutes."
                 Write-PSFMessage -Level Verbose -Message "Token expiration: $($fabricToken.ExpiresOn.ToString('u'))"
             }
-            finally {
+            finally
+            {
                 # Ensure secure memory cleanup
                 [System.Runtime.InteropServices.Marshal]::ZeroFreeBSTR($plainTokenPtr)
             }
         }
     }
-    catch {
+    catch
+    {
         $errorDetails = $_.Exception.Message
         Write-PSFMessage -Level Error -Message "Failed to set Fabric authentication: $errorDetails" -ErrorRecord $_
 
         # Provide helpful error messages based on auth method
-        $helpMessage = switch ($authMethod) {
-            'ServicePrincipal' { "Verify AppId, AppSecret, and TenantId are correct. Ensure service principal has appropriate permissions." }
-            'UserPrincipal' { "Verify TenantId is correct. Ensure you have appropriate permissions and can authenticate interactively." }
-            'ManagedIdentity' { "Ensure managed identity is enabled on this Azure resource and has appropriate permissions. Managed Identity only works on Azure VMs, App Services, Functions, etc." }
+        $helpMessage = switch ($authMethod)
+        {
+            'ServicePrincipal'
+            {
+                'Verify AppId, AppSecret, and TenantId are correct. Ensure service principal has appropriate permissions.' 
+            }
+            'UserPrincipal'
+            {
+                'Verify TenantId is correct. Ensure you have appropriate permissions and can authenticate interactively.' 
+            }
+            'ManagedIdentity'
+            {
+                'Ensure managed identity is enabled on this Azure resource and has appropriate permissions. Managed Identity only works on Azure VMs, App Services, Functions, etc.' 
+            }
         }
 
         Write-PSFMessage -Level Important -Message $helpMessage
