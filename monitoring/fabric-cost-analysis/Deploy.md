@@ -171,7 +171,7 @@ Steps to update:
 - 2 - Remove the existing "00_Deploy_FCA" Notebook from your workspace
 - 3 - Import the updated notebook into your FCA workspace
 - 4 - Run the 00_Deploy_FCA.ipynb Notebook
-- 5 - Update the pipeline activities and parameters as needed
+- 5 - Update the pipeline activities and parameters as needed (Running the notebook overwrites existing objects and resets pipeline parameters to their default values. Any custom changes will need to be reapplied)
 - 6 - Run the pipeline and then open the Power BI report.
 
 >ℹ️ This notebook is designed to initially deploy or update all the items in your FCA workspace. You do not need to manually run the Load FCA E2E pipeline after an update. During the next pipeline run, FCA will also check and update the status of your FCA version on the first page of the FCA_Core_Report:
