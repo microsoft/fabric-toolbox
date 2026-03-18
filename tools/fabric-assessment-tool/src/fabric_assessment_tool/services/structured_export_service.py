@@ -326,6 +326,16 @@ class JSONExporter(BaseExporter):
             data, "libraries", admin_dir, "libraries", "library", files_created
         )
 
+        # Export Spark Configurations
+        self._export_component(
+            data,
+            "spark_configurations",
+            admin_dir,
+            "spark_configurations",
+            "spark_configuration",
+            files_created,
+        )
+
         # Create data folder
         data_dir = workspace_dir / "data"
         data_dir.mkdir(exist_ok=True)

@@ -35,8 +35,9 @@ function Remove-FabricDomainWorkspaceRoleAssignment {
     [CmdletBinding(SupportsShouldProcess = $true, ConfirmImpact = 'Medium')]
     [Alias('Unassign-FabricDomainWorkspaceByRoleAssignment')]
     param (
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $true, ValueFromPipeline = $true, ValueFromPipelineByPropertyName = $true)]
         [ValidateNotNullOrEmpty()]
+        [Alias('id')]
         [string]$DomainId,
 
         [Parameter(Mandatory = $true)]
@@ -49,47 +50,49 @@ function Remove-FabricDomainWorkspaceRoleAssignment {
         [System.Object]$PrincipalIds #Must contain a JSON array of principals with 'id' and 'type' properties
     )
 
-    try {
-        # Validate PrincipalIds structure
-        # This uses a .NET HashSet to accelerate lookup even more, especially useful in large collections.
-        foreach ($principal in $PrincipalIds) {
-            if (-not ($principal.id -and $principal.type)) {
-                throw "Each Principal must contain 'id' and 'type' properties. Found: $principal"
+    process {
+        try {
+            # Validate PrincipalIds structure
+            # This uses a .NET HashSet to accelerate lookup even more, especially useful in large collections.
+            foreach ($principal in $PrincipalIds) {
+                if (-not ($principal.id -and $principal.type)) {
+                    throw "Each Principal must contain 'id' and 'type' properties. Found: $principal"
+                }
+            }
+
+            # Validate authentication token before proceeding
+            Invoke-FabricAuthCheck -ThrowOnFailure
+
+            # Construct the API endpoint URI
+            $apiEndpointURI = New-FabricAPIUri -Segments @('admin', 'domains', $DomainId, 'roleAssignments', 'bulkUnassign')
+            Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
+
+            # Construct the request body
+            $body = @{
+                type       = $DomainRole
+                principals = $PrincipalIds
+            }
+            $bodyJson = Convert-FabricRequestBody -InputObject $body
+            Write-FabricLog -Message "Request Body: $bodyJson" -Level Debug
+
+            # Make the API request (guarded by ShouldProcess)
+            if ($PSCmdlet.ShouldProcess($DomainId, "Unassign role '$DomainRole' from principals")) {
+                $apiParams = @{
+                    BaseURI = $apiEndpointURI
+                    Headers = $script:FabricAuthContext.FabricHeaders
+                    Method  = 'Post'
+                    Body    = $bodyJson
+                }
+                $response = Invoke-FabricAPIRequest @apiParams
+
+                Write-FabricLog -Message "Bulk role unassignment for domain '$DomainId' completed successfully!" -Level Host
+                $response
             }
         }
-
-        # Validate authentication token before proceeding
-        Invoke-FabricAuthCheck -ThrowOnFailure
-
-        # Construct the API endpoint URI
-        $apiEndpointURI = New-FabricAPIUri -Segments @('admin', 'domains', $DomainId, 'roleAssignments', 'bulkUnassign')
-        Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
-
-        # Construct the request body
-        $body = @{
-            type       = $DomainRole
-            principals = $PrincipalIds
+        catch {
+            # Capture and log error details
+            $errorDetails = $_.Exception.Message
+            Write-FabricLog -Message "Failed to bulk assign roles in domain '$DomainId'. Error: $errorDetails" -Level Error
         }
-        $bodyJson = Convert-FabricRequestBody -InputObject $body
-        Write-FabricLog -Message "Request Body: $bodyJson" -Level Debug
-
-        # Make the API request (guarded by ShouldProcess)
-        if ($PSCmdlet.ShouldProcess($DomainId, "Unassign role '$DomainRole' from principals")) {
-            $apiParams = @{
-                BaseURI = $apiEndpointURI
-                Headers = $script:FabricAuthContext.FabricHeaders
-                Method  = 'Post'
-                Body    = $bodyJson
-            }
-            $response = Invoke-FabricAPIRequest @apiParams
-
-            Write-FabricLog -Message "Bulk role unassignment for domain '$DomainId' completed successfully!" -Level Host
-            $response
-        }
-    }
-    catch {
-        # Capture and log error details
-        $errorDetails = $_.Exception.Message
-        Write-FabricLog -Message "Failed to bulk assign roles in domain '$DomainId'. Error: $errorDetails" -Level Error
     }
 }

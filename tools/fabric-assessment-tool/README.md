@@ -22,21 +22,25 @@ This tool allows to scan one or multiple workspaces in order to get all the info
 
 - **Python** 3.10, 3.11, or 3.12
 - **pip** (Python package installer)
-- **Azure CLI** ([installation guide](https://learn.microsoft.com/en-us/cli/azure/install-azure-cli))
+- **Azure CLI** ([installation guide](https://learn.microsoft.com/en-us/cli/azure/install-azure-cli)) — *or* a **Microsoft Fabric Notebook** environment
 
 ## Installation
 
-You can use the [prebuilt wheel file](./resources/fabric_assessment_tool-0.0.1-py3-none-any.whl) in the resources folder.
+You can use the [prebuilt wheel file](./resources/fabric_assessment_tool-0.2.0-py3-none-any.whl) in the resources folder.
 
 ```bash
-pip install resources/fabric_assessment_tool-0.0.1-py3-none-any.whl
+pip install resources/fabric_assessment_tool-0.2.0-py3-none-any.whl
 ```
 
 ## Authentication
 
-This cli tool leverages the use of Azure Command-Line Inteface (CLI) for authentication.
+This tool supports two authentication methods:
 
-Before running this tool, just log in using:
+### Azure CLI (default)
+
+This is the default method when running on a local machine or VM.
+
+Before running this tool, log in using:
 
 ```
 az login
@@ -44,11 +48,50 @@ az login
 
 You can check [how to install](https://learn.microsoft.com/en-us/cli/azure/install-azure-cli?view=azure-cli-latest) and [authentication details](https://learn.microsoft.com/en-us/cli/azure/authenticate-azure-cli?view=azure-cli-latest) in the official documentation.
 
+### Fabric Notebook
+
+When running inside a Microsoft Fabric Notebook, the tool can authenticate using `notebookutils.credentials.getToken()`. This is auto-detected when `notebookutils` is available, or can be explicitly set with `--auth-method fabric`.
+
+> **Note:** When using Fabric authentication, `--subscription-id` is required since there is no equivalent to `az account show` in the Fabric Notebook environment.
+
+#### CLI usage from a notebook cell
+
+```bash
+!fat assess --source synapse --auth-method fabric \
+    --subscription-id <your-subscription-id> \
+    --ws workspace1 \
+    -o /lakehouse/default/Files/assessment \
+    --sql-admin-password "your_password" \
+    --create-dmv
+```
+
+#### Python API usage from a notebook cell
+
+```python
+from fabric_assessment_tool.services.assessment_service import AssessmentService
+
+sql_admin_password = notebookutils.credentials.getSecret("akvName", "secret")
+
+service = AssessmentService()
+results = service.assess(
+    source="synapse",
+    mode="full",
+    workspaces=["my-synapse-workspace"],
+    output_path="/lakehouse/default/Files/assessment",
+    subscription_id="<your-subscription-id>",
+    auth_method="fabric",
+    sql_admin_password=sql_admin_password,   # optional: bypasses password prompt
+    create_dmv=True,                         # optional: auto-creates DMV without prompt
+)
+```
+
+> **Tip:** The `--sql-admin-password` and `--create-dmv` parameters are optional. If you don't need dedicated SQL pool table statistics, you can omit them entirely.
+
 
 
 ## CLI Commands
 
-Fabric Assessment Tool provides a single main command for the moment:
+Fabric Assessment Tool provides two main commands:
 
 ### `fat assess` - Assess data sources for migration readiness
 
@@ -68,7 +111,10 @@ fat assess --source <synapse|databricks> \
 - `--ws`: Comma-separated list of workspace names to assess 
   - *For Databricks, use the **workspace name** (not the workspace ID)*
   - *If not provided, it will prompt the list of reachable workspaces to select*
-- `--subscription-id`: Azure subscription ID (if not provided, will use default credentials)
+- `--subscription-id`: Azure subscription ID (if not provided, will use default credentials). **Required** when using `--auth-method fabric`
+- `--auth-method`: Authentication method (`azure-cli` or `fabric`). Default: auto-detect based on environment
+- `--sql-admin-password`: SQL admin password for dedicated SQL pools (bypasses interactive prompt)
+- `--create-dmv`: Auto-create vTableSizes DMV without confirmation prompt (for non-interactive execution)
 
 **Examples:**
 ```bash
@@ -82,6 +128,79 @@ fat assess --source synapse --mode full --ws workspace1,workspace2 -o /path/to/r
 fat assess --source databricks --ws my-workspace --output results_folder
 ```
 
+### `fat visualize` - Generate interactive HTML reports
+
+Generate standalone HTML reports with charts and tables to visualize assessment data. Reports work offline and can be viewed in any browser. The tool automatically detects whether the assessment is from Synapse or Databricks and generates platform-specific views.
+
+```bash
+fat visualize -i <assessment_output_dir> \
+             [-o <report_dir>] \
+             [--view <view_type>] \
+             [--workspace <workspace_name>] \
+             [--open]
+```
+
+**Required Parameters:**
+- `-i/--input`: Path to assessment output directory (from `fat assess` command)
+
+**Optional Parameters:**
+- `-o/--output`: Output directory for HTML reports (default: `<input>/visualization`)
+- `--view`: Type of visualization view to generate:
+  - `overview` (default): Global summary across all workspaces
+  - `admin`: Integration runtimes, linked services, private endpoints
+  - `data-engineering`: Notebooks, Spark pools, jobs, clusters
+  - `data-warehousing`: SQL pools, tables, databases, code objects
+  - `data-integration`: Pipelines, dataflows, datasets
+- `--workspace/-ws`: Generate report for a specific workspace only
+- `--open`: Open the generated report in default browser
+
+**Features:**
+- **Workspace Filtering**: Interactive checkbox selector to filter results by one or multiple workspaces
+- **Platform Detection**: Automatically detects Synapse vs Databricks and shows relevant metrics
+- **Navigation**: Browse between Overview, Admin, Data Engineering, Data Warehousing, and Data Integration views
+- **Resource Details**: Drill down into individual workspaces for detailed artifact information
+- **Charts**: Visual breakdowns of languages, activity types, pool sizes, and more
+
+**Examples:**
+```bash
+# Generate all visualization views
+fat visualize -i ./assessment_output -o ./reports
+
+# Generate and immediately open in browser
+fat visualize -i ./assessment_output --open
+
+# Generate report for specific workspace
+fat visualize -i ./assessment_output --workspace my-synapse-workspace
+
+# Generate data engineering view to custom directory
+fat visualize -i ./assessment_output --view data-engineering -o ./engineering_report
+```
+
+**Synapse-Specific Views:**
+- **Admin**: Linked services, integration runtimes, managed private endpoints, Spark libraries, Spark configurations
+- **Data Engineering**: Notebooks (with language, Spark config, MSSparkUtils usage), Spark pools, Spark job definitions
+- **Data Warehousing**: Dedicated SQL pools (tables, size, stored procedures), serverless databases
+- **Data Integration**: Pipelines (activity counts, complexity), dataflows, datasets
+
+**Databricks-Specific Views:**
+- **Data Engineering**: Notebooks (with language, dbutils usage), clusters, jobs
+- **Data Warehousing**: SQL warehouses, Unity Catalog (catalogs, schemas, tables)
+
+**Screenshots:**
+
+<p align="center">
+  <img src="./media/FAT-Overview.png" alt="Overview Dashboard" width="700">
+  <br>
+  <em>Overview Dashboard - Global summary across all workspaces</em>
+</p>
+
+<p align="center">
+  <img src="./media/FAT-DataIntegration.png" alt="Data Integration View" width="700">
+  <br>
+  <em>Data Integration View - Pipelines, activities, and complexity analysis</em>
+</p>
+
+
 
 ## Sample Output
 
@@ -94,7 +213,7 @@ Assessment results are saved in JSON format with the following structure:
     "mode": "full",
     "workspaces": ["workspace1", "workspace2"],
     "timestamp": "2025-10-03T14:15:07.047659",
-    "version": "0.0.1"
+    "version": "0.2.0"
   },
   "results": [
     {

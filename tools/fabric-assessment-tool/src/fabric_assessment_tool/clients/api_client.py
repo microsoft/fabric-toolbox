@@ -83,7 +83,7 @@ class ApiClient:
         self.session.mount("https://", adapter)
         self.session.headers.update(
             {
-                "User-Agent": f"fabric_assessment_tool/0.0.1 ({platform.system()}; {platform.machine()}; {platform.release()})",
+                "User-Agent": f"fabric_assessment_tool/0.2.0 ({platform.system()}; {platform.machine()}; {platform.release()})",
             }
         )
         if token:

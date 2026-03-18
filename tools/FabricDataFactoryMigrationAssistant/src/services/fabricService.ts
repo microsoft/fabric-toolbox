@@ -2085,6 +2085,14 @@ export class FabricService {
       const parametersCount = Object.keys(updatedDefinition.properties.parameters || {}).length;
       const variablesCount = Object.keys(updatedDefinition.properties.variables || {}).length;
 
+      console.log(`[FabricService] Pipeline '${component.name}' post-transform summary (dependency path):`, {
+        activitiesCount,
+        inactiveActivitiesCount,
+        activeActivitiesCount: activitiesCount - inactiveActivitiesCount,
+        parametersCount,
+        variablesCount
+      });
+
       if (activitiesCount === 0) {
         const originalActivities = component.definition?.properties?.activities || component.definition?.activities || [];
         if (Array.isArray(originalActivities) && originalActivities.length > 0) {
@@ -2092,9 +2100,19 @@ export class FabricService {
         }
       }
 
-      // Generate Base64 payload
+      // Clean pipeline definition and wrap with name/objectId before encoding.
+      // Fabric requires name and objectId in pipeline-content.json; objectId is empty string on first creation.
       const { PipelineConnectionTransformerService } = await import('./pipelineConnectionTransformerService');
-      const base64Payload = PipelineConnectionTransformerService.generateFabricPipelinePayload(updatedDefinition);
+      const cleanedDefinition = PipelineConnectionTransformerService.cleanPipelineForFabric(updatedDefinition);
+      console.log(`[FabricService] cleanPipelineForFabric done for '${component.name}' (dependency path)`);
+      const fabricPipelineContent = {
+        name: component.fabricTarget?.name || component.name,
+        objectId: '',
+        properties: cleanedDefinition.properties
+      };
+      console.log(`[FabricService] Encoding pipeline-content.json for '${component.name}' (name='${fabricPipelineContent.name}', properties defined=${Boolean(fabricPipelineContent.properties)})`);
+      const base64Payload = PipelineConnectionTransformerService.generateFabricPipelinePayload(fabricPipelineContent);
+      console.log(`[FabricService] Base64 payload length for '${component.name}': ${base64Payload.length} chars`);
 
       // Get folder ID if component has folder information
       let folderId: string | undefined;
@@ -2130,6 +2148,7 @@ export class FabricService {
         'Content-Type': 'application/json' 
       };
 
+      console.log(`[FabricService] POST ${endpoint} for '${component.name}' (dependency path)`);
       const response = await fetch(endpoint, { 
         method: 'POST', 
         headers, 
@@ -2141,6 +2160,7 @@ export class FabricService {
       }
 
       const result = await response.json();
+      console.log(`[FabricService] Pipeline '${component.name}' created successfully (dependency path), Fabric ID: ${result.id}`);
       
       // Generate connection mapping summary if available
       let note = `Pipeline created successfully with ${activitiesCount} activities, ${parametersCount} parameters, and ${variablesCount} variables`;

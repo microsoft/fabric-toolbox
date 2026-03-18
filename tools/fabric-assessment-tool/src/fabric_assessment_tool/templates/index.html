@@ -1,0 +1,301 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="page-header">
+    <h1>Assessment Overview</h1>
+    <p>Summary of all assessed workspaces and resources</p>
+</div>
+
+<!-- Summary Stats -->
+<div class="row">
+    <div class="col">
+        <div class="stat-card" data-stat="workspaces">
+            <div class="stat-value" id="stat-workspaces">{{ summary.workspace_count | default(0) }}</div>
+            <div class="stat-label">Workspaces</div>
+        </div>
+    </div>
+    <div class="col">
+        <div class="stat-card synapse" data-stat="synapse">
+            <div class="stat-value" id="stat-synapse">{{ summary.platforms.synapse | default(0) }}</div>
+            <div class="stat-label">Synapse Workspaces</div>
+        </div>
+    </div>
+    <div class="col">
+        <div class="stat-card databricks" data-stat="databricks">
+            <div class="stat-value" id="stat-databricks">{{ summary.platforms.databricks | default(0) }}</div>
+            <div class="stat-label">Databricks Workspaces</div>
+        </div>
+    </div>
+</div>
+
+<!-- Resource Counts -->
+<div class="card mt-2">
+    <div class="card-header">Resource Summary</div>
+    <div class="card-body">
+        <div class="row">
+            <div class="col col-6">
+                <div class="chart-container">
+                    <canvas id="resourceChart"></canvas>
+                </div>
+            </div>
+            <div class="col col-6">
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>Resource Type</th>
+                            <th class="text-right">Count</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>Notebooks</td>
+                            <td class="text-right">{{ summary.total_notebooks | default(0) | format_number }}</td>
+                        </tr>
+                        <tr>
+                            <td>Pipelines</td>
+                            <td class="text-right">{{ summary.total_pipelines | default(0) | format_number }}</td>
+                        </tr>
+                        <tr>
+                            <td>SQL Pools</td>
+                            <td class="text-right">{{ summary.total_sql_pools | default(0) | format_number }}</td>
+                        </tr>
+                        <tr>
+                            <td>Spark Pools / Clusters</td>
+                            <td class="text-right">{{ ((summary.total_spark_pools | default(0)) + (summary.total_clusters | default(0))) | format_number }}</td>
+                        </tr>
+                        <tr>
+                            <td>Tables</td>
+                            <td class="text-right">{{ summary.total_tables | default(0) | format_number }}</td>
+                        </tr>
+                        <tr>
+                            <td>Linked Services</td>
+                            <td class="text-right">{{ summary.total_linked_services | default(0) | format_number }}</td>
+                        </tr>
+                        <tr>
+                            <td>Datasets</td>
+                            <td class="text-right">{{ summary.total_datasets | default(0) | format_number }}</td>
+                        </tr>
+                        <tr>
+                            <td>Dataflows</td>
+                            <td class="text-right">{{ summary.total_dataflows | default(0) | format_number }}</td>
+                        </tr>
+                        <tr>
+                            <td>Jobs</td>
+                            <td class="text-right">{{ summary.total_jobs | default(0) | format_number }}</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Workspaces List -->
+<div class="card">
+    <div class="card-header">Workspaces</div>
+    <div class="card-body">
+        {% if workspaces %}
+        <div class="table-responsive">
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Workspace</th>
+                        <th>Platform</th>
+                        <th class="text-right">Notebooks</th>
+                        <th class="text-right">Pipelines</th>
+                        <th class="text-right">SQL Pools</th>
+                        <th class="text-right">Tables</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for ws_name, ws in workspaces.items() %}
+                    <tr data-workspace="{{ ws_name }}">
+                        <td>
+                            <a href="{{ base_path }}workspaces/{{ ws_name }}.html">{{ ws_name }}</a>
+                        </td>
+                        <td>
+                            <span class="badge {% if ws.platform == 'synapse' %}badge-primary{% else %}badge-secondary{% endif %}">
+                                {{ ws.platform | title }}
+                            </span>
+                        </td>
+                        <td class="text-right">
+                            {% if ws.platform == 'synapse' %}
+                                {{ ws.summary.data_engineering.hybrid.notebooks | default(ws.summary.data_engineering.notebooks | default(0)) }}
+                            {% else %}
+                                {{ ws.summary.counts.notebooks | default(0) }}
+                            {% endif %}
+                        </td>
+                        <td class="text-right">
+                            {% if ws.platform == 'synapse' %}
+                                {{ ws.summary.data_integration.counts.pipelines | default(ws.summary.data_integration.pipelines | default(0)) }}
+                            {% else %}
+                                {{ ws.summary.counts.jobs | default(0) }}
+                            {% endif %}
+                        </td>
+                        <td class="text-right">
+                            {% if ws.platform == 'synapse' %}
+                                {{ ws.summary.data_warehouse.counts.dedicated.sql_pools | default(ws.summary.data_warehouse.dedicated_pools | default(0)) }}
+                            {% else %}
+                                {{ ws.summary.counts.sql_warehouses | default(0) }}
+                            {% endif %}
+                        </td>
+                        <td class="text-right">
+                            {% if ws.platform == 'synapse' %}
+                                {{ (ws.summary.data_warehouse.counts.dedicated.tables | default(0)) + (ws.summary.data_warehouse.counts.serverless.tables | default(0)) }}
+                            {% else %}
+                                {{ ws.summary.counts.tables | default(0) }}
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% set status = ws.summary.assessment_status.status | default(ws.summary.assessment_status | default('unknown')) %}
+                            <span class="badge {% if status == 'completed' %}badge-success{% elif status == 'incomplete' %}badge-warning{% else %}badge-secondary{% endif %}">
+                                {{ status | title }}
+                            </span>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="empty-state">
+            <p>No workspaces found in assessment data.</p>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Quick Links -->
+<div class="row">
+    <div class="col col-4">
+        <div class="card">
+            <div class="card-body text-center">
+                <h3>🔧 Admin View</h3>
+                <p class="text-muted mb-2">Integration runtimes, linked services, security</p>
+                <a href="{{ base_path }}views/admin.html">View Details →</a>
+            </div>
+        </div>
+    </div>
+    <div class="col col-4">
+        <div class="card">
+            <div class="card-body text-center">
+                <h3>⚡ Data Engineering</h3>
+                <p class="text-muted mb-2">Notebooks, Spark pools, jobs</p>
+                <a href="{{ base_path }}views/data_engineering.html">View Details →</a>
+            </div>
+        </div>
+    </div>
+    <div class="col col-4">
+        <div class="card">
+            <div class="card-body text-center">
+                <h3>🏭 Data Warehousing</h3>
+                <p class="text-muted mb-2">SQL pools, tables, databases</p>
+                <a href="{{ base_path }}views/data_warehousing.html">View Details →</a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+// Workspace data for filtering
+const workspaceData = {
+{% for ws_name, ws in workspaces.items() %}
+    "{{ ws_name }}": {
+        platform: "{{ ws.platform }}",
+        notebooks: {{ ws.summary.data_engineering.hybrid.notebooks | default(ws.summary.data_engineering.notebooks | default(0)) if ws.platform == 'synapse' else ws.summary.counts.notebooks | default(0) }},
+        pipelines: {{ ws.summary.data_integration.counts.pipelines | default(ws.summary.data_integration.pipelines | default(0)) if ws.platform == 'synapse' else ws.summary.counts.jobs | default(0) }},
+        sql_pools: {{ ws.summary.data_warehouse.counts.dedicated.sql_pools | default(ws.summary.data_warehouse.dedicated_pools | default(0)) if ws.platform == 'synapse' else ws.summary.counts.sql_warehouses | default(0) }},
+        spark_pools: {{ ws.summary.data_engineering.manual.spark_pools | default(ws.summary.data_engineering.spark_pools | default(0)) if ws.platform == 'synapse' else ws.summary.counts.clusters | default(0) }},
+        tables: {{ (ws.summary.data_warehouse.counts.dedicated.tables | default(0)) + (ws.summary.data_warehouse.counts.serverless.tables | default(0)) if ws.platform == 'synapse' else ws.summary.counts.tables | default(0) }},
+        datasets: {{ ws.summary.data_integration.counts.datasets | default(ws.summary.data_integration.datasets | default(0)) if ws.platform == 'synapse' else 0 }},
+        linked_services: {{ ws.summary.data_integration.counts.linked_services | default(ws.summary.data_integration.linked_services | default(0)) if ws.platform == 'synapse' else 0 }},
+        dataflows: {{ ws.summary.data_integration.counts.dataflows | default(ws.summary.data_integration.dataflows | default(0)) if ws.platform == 'synapse' else 0 }},
+        jobs: {{ ws.summary.counts.jobs | default(0) if ws.platform == 'databricks' else 0 }}
+    }{% if not loop.last %},{% endif %}
+{% endfor %}
+};
+
+let resourceChart = null;
+
+// Update stats when filter changes
+function updateFilteredStats(selectedWorkspaces) {
+    let workspaceCount = 0;
+    let synapseCount = 0;
+    let databricksCount = 0;
+    let notebooks = 0, pipelines = 0, sqlPools = 0, sparkPools = 0, tables = 0, datasets = 0;
+    
+    selectedWorkspaces.forEach(ws => {
+        const data = workspaceData[ws];
+        if (data) {
+            workspaceCount++;
+            if (data.platform === 'synapse') synapseCount++;
+            if (data.platform === 'databricks') databricksCount++;
+            notebooks += data.notebooks || 0;
+            pipelines += data.pipelines || 0;
+            sqlPools += data.sql_pools || 0;
+            sparkPools += data.spark_pools || 0;
+            tables += data.tables || 0;
+            datasets += data.datasets || 0;
+        }
+    });
+    
+    // Update stat cards
+    document.getElementById('stat-workspaces').textContent = workspaceCount;
+    document.getElementById('stat-synapse').textContent = synapseCount;
+    document.getElementById('stat-databricks').textContent = databricksCount;
+    
+    // Update chart
+    if (resourceChart) {
+        resourceChart.data.datasets[0].data = [notebooks, pipelines, sqlPools, sparkPools, tables, datasets];
+        resourceChart.update();
+    }
+}
+
+// Resource distribution chart
+const resourceCtx = document.getElementById('resourceChart');
+if (resourceCtx) {
+    resourceChart = new Chart(resourceCtx, {
+        type: 'bar',
+        data: {
+            labels: ['Notebooks', 'Pipelines', 'SQL Pools', 'Spark/Clusters', 'Tables', 'Datasets'],
+            datasets: [{
+                label: 'Count',
+                data: [
+                    {{ summary.total_notebooks | default(0) }},
+                    {{ summary.total_pipelines | default(0) }},
+                    {{ summary.total_sql_pools | default(0) }},
+                    {{ (summary.total_spark_pools | default(0)) + (summary.total_clusters | default(0)) }},
+                    {{ summary.total_tables | default(0) }},
+                    {{ summary.total_datasets | default(0) }}
+                ],
+                backgroundColor: [
+                    '#0078d4',
+                    '#107c10',
+                    '#5c2d91',
+                    '#ff8c00',
+                    '#008272',
+                    '#d83b01'
+                ]
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    display: false
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true
+                }
+            }
+        }
+    });
+}
+</script>
+{% endblock %}

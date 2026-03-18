@@ -1,0 +1,111 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="page-header">
+    <h1>🏭 Data Warehousing View</h1>
+    <p>SQL warehouses and tables</p>
+</div>
+
+<!-- Summary Stats -->
+<div class="row">
+    <div class="col">
+        <div class="stat-card databricks">
+            <div class="stat-value" id="stat-sqlwh">{{ warehousing.sql_warehouses | length }}</div>
+            <div class="stat-label">SQL Warehouses</div>
+        </div>
+    </div>
+    <div class="col">
+        <div class="stat-card">
+            <div class="stat-value" id="stat-tables">{{ warehousing.total_tables | format_number }}</div>
+            <div class="stat-label">Total Tables</div>
+        </div>
+    </div>
+</div>
+
+<!-- SQL Warehouses -->
+{% if warehousing.sql_warehouses %}
+<div class="card mt-2">
+    <div class="card-header">📊 SQL Warehouses</div>
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Name</th>
+                        <th>Cluster Size</th>
+                        <th class="text-right">Min Clusters</th>
+                        <th class="text-right">Max Clusters</th>
+                        <th>Serverless</th>
+                        <th>Photon</th>
+                        <th>Workspace</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for wh in warehousing.sql_warehouses %}
+                    <tr data-workspace="{{ wh.workspace | default('N/A') }}">
+                        <td>{{ wh.name | default('Unknown') }}</td>
+                        <td><span class="badge badge-secondary">{{ wh.cluster_size | default('N/A') }}</span></td>
+                        <td class="text-right">{{ wh.min_clusters | default('N/A') }}</td>
+                        <td class="text-right">{{ wh.max_clusters | default('N/A') }}</td>
+                        <td>
+                            {% if wh.serverless %}
+                            <span class="badge badge-success">Yes</span>
+                            {% else %}
+                            <span class="badge badge-secondary">No</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if wh.photon_enabled %}
+                            <span class="badge badge-success">Yes</span>
+                            {% else %}
+                            <span class="badge badge-secondary">No</span>
+                            {% endif %}
+                        </td>
+                        <td>{{ wh.workspace | default('N/A') }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% else %}
+<div class="card mt-2">
+    <div class="card-body">
+        <div class="empty-state">
+            <p>No SQL warehouses found.</p>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<div class="mt-2">
+    <a href="{{ base_path }}index.html">← Back to Overview</a>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+const warehousingData = {
+{% for ws_name, ws in workspaces.items() %}
+    "{{ ws_name }}": {
+        sql_warehouses: {{ ws.summary.counts.sql_warehouses | default(0) }},
+        tables: {{ ws.summary.counts.tables | default(0) }}
+    }{% if not loop.last %},{% endif %}
+{% endfor %}
+};
+
+function updateFilteredStats(selectedWorkspaces) {
+    let sqlwh = 0, tables = 0;
+    selectedWorkspaces.forEach(ws => {
+        const data = warehousingData[ws];
+        if (data) {
+            sqlwh += data.sql_warehouses || 0;
+            tables += data.tables || 0;
+        }
+    });
+    document.getElementById('stat-sqlwh').textContent = sqlwh;
+    document.getElementById('stat-tables').textContent = tables.toLocaleString();
+}
+</script>
+{% endblock %}

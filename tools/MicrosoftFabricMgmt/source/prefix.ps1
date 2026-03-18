@@ -101,3 +101,16 @@ MicrosoftFabricMgmt v1.0.0 - BREAKING CHANGES:
 - Authentication still works via Set-FabricApiHeaders
 - See BREAKING-CHANGES.md for migration guide
 "@
+
+# ============================================================================
+# Preview API Notice - OneLake Data Access Security
+# ============================================================================
+
+Write-PSFMessage -Level Important -Message @"
+PREVIEW API NOTICE - OneLake Data Access Security (Get-FabricOneLakeDataAccessRole):
+- These functions use Microsoft Fabric Preview API endpoints that may change based on
+  feedback and are not recommended for production use.
+- Only read operations are currently implemented in this module.
+- Data-changing operations (create, update, delete roles) are NOT implemented.
+- Use with caution in production environments.
+"@

@@ -8,3 +8,5 @@ apt-get update && apt-get install -y \
 pip3 install --user -r requirements.txt
 
 curl https://install.duckdb.org | sh
+
+wget -qO- https://gh.io/copilot-install | bash
