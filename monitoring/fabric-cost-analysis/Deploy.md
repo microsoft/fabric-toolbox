@@ -16,7 +16,7 @@ To create an export (Create [Cost Management exports](https://learn.microsoft.co
 
 >ℹ️ Azure Cost export is available for various Azure account types, including Enterprise Agreement (EA) and Microsoft Customer Agreement (MCA) customers. To view the full list of supported account types, see [Understand Cost Management data](https://learn.microsoft.com/en-us/azure/cost-management-billing/costs/understand-cost-mgt-data).
 
-An Azure Data Lake Storage Gen2 is necessary for saving exported data, the following steps outline how to create a storage account: [Create a storage account](https://learn.microsoft.com/en-us/azure/storage/blobs/create-data-lake-storage-account).
+An Azure Data Lake Storage Gen2 (or an Azure Blob Storage) is necessary for saving exported data, the following steps outline how to create a storage account: [Create a storage account](https://learn.microsoft.com/en-us/azure/storage/blobs/create-data-lake-storage-account). 
 
 Once Data Lake Gen 2 storage account created here are the high levels steps to create an export:
 - Sign into the Azure portal at [https://portal.azure.com](https://portal.azure.com/), search for **Cost Management**
@@ -89,7 +89,7 @@ The Quota pipeline cannot be activated until the permissions are granted and the
 
 ![FCA](./media/Setup-Export6.png)
 
-- Create a new File Shortcut on the FCA Lakehouse ([Create an Azure Data Lake Storage Gen2 shortcut](https://learn.microsoft.com/en-us/fabric/onelake/create-adls-shortcut))
+- Create a new File Shortcut on the FCA Lakehouse ([Create an Azure Data Lake Storage Gen2 shortcut](https://learn.microsoft.com/en-us/fabric/onelake/create-adls-shortcut) or [Create an Azure Blob Storage shortcut](https://learn.microsoft.com/en-us/fabric/onelake/create-blob-shortcut))
   - ‼️The user must have the Storage Blob Data Contributor role assigned
   - Select the ellipsis (**...**) next to **Files**
   - Select **New shortcut**
