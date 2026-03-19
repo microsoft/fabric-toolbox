@@ -8,6 +8,8 @@ Customers may not always clearly distinguish between costs that are included or 
 
 ![FCA](./media/FCASolution.png)
 
+---
+
 ## ✨ Introduction
 
 Fabric Cost Analysis (short: FCA) is a solution to enable holistic monitoring of Microsoft Fabric Cost with the help of Microsoft Fabric.
@@ -20,9 +22,13 @@ FCA is fully developed utilizing Fabric capabilities, with Pipelines and Noteboo
 
 🎬 Demo presentation available on YouTube : [Fabric Cost Analysis](https://youtu.be/6uOlYj_eSzo)
 
+---
+
 ## 🧱 Architecture
 
 ![FCA](./media/FCASolutionArchitecture.png)
+
+---
 
 ## 📚 FCA Inputs
 
@@ -33,6 +39,8 @@ FCA gathers diverse data in Lakehouse to provide cost insights:
 - (optional) FCA extracts Azure Quotas
 
 >ℹ️ FCA will display only data related to Fabric costs, no other Azure cost will be prepare for analyze.
+
+---
 
 ## 🚀 FCA Outputs
 
@@ -60,6 +68,8 @@ And from Teams:
 
 ![FCA Data Agent from Teams](./media/AgentFromTeams.png)
 
+---
+
 ## 📦 Setup
 
 🏃‍♂️‍➡️ Are you ready to try FCA?
@@ -67,6 +77,8 @@ And from Teams:
 ➡️ [Click here to deploy or update FCA](./Deploy.md)
 
 🆕 FCA can also be deployed via Fabric Jumpstart : https://jumpstart.fabric.microsoft.com/
+
+---
 
 ## 🐞 Support
 
@@ -77,6 +89,8 @@ Ideas/Suggestions: Submit ideas and suggestions as issues in this repository.
 Bug Reports: A backlog is maintained on the project issues page. If you encounter problems or have suggestions, add an entry to the issues section.
 
 Important: Support tickets should not be opened for issues related to these templates. For any questions or concerns about the templates, create an issue in this repository.
+
+---
 
 ## 🤝 Community Content
 
