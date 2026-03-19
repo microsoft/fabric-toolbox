@@ -2,7 +2,6 @@
 
 ## Roadmap
 
-- Fabric Jumpstart (https://jumpstart.fabric.microsoft.com/) 
 - Tags analysis
 - Warehouse Auto Scale cost analysis
 - Forecast
@@ -13,6 +12,7 @@
 
 ## 📦 2026.03.13
 
+- Fabric Jumpstart (https://jumpstart.fabric.microsoft.com/) 
 - Fixes
 - Folders
 - New Meters
@@ -41,4 +41,4 @@
 
 ## 📦 2025.9.2
 
-- First Release
+- First Release 🎉
