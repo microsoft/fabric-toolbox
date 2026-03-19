@@ -8,7 +8,7 @@ Customers may not always clearly distinguish between costs that are included or 
 
 ![FCA](./media/FCASolution.png)
 
-## Introduction
+## ✨ Introduction
 
 Fabric Cost Analysis (short: FCA) is a solution to enable holistic monitoring of Microsoft Fabric Cost with the help of Microsoft Fabric.
 
@@ -20,13 +20,11 @@ FCA is fully developed utilizing Fabric capabilities, with Pipelines and Noteboo
 
 🎬 Demo presentation available on YouTube : [Fabric Cost Analysis](https://youtu.be/6uOlYj_eSzo)
 
-## Content
-
-### Architecture
+## 🧱 Architecture
 
 ![FCA](./media/FCASolutionArchitecture.png)
 
-### FCA Inputs
+## 📚 FCA Inputs
 
 FCA gathers diverse data in Lakehouse to provide cost insights:
 - FCA extracts Azure Cost in [FOCUS](https://focus.finops.org/) format (a Unified Standard for Cloud Billing Data)
@@ -36,9 +34,9 @@ FCA gathers diverse data in Lakehouse to provide cost insights:
 
 >ℹ️ FCA will display only data related to Fabric costs, no other Azure cost will be prepare for analyze.
 
-### FCA Outputs
+## 🚀 FCA Outputs
 
-#### Report
+### 📊 Report
 
 | **Page Name** | FinOps Phase [🔗](https://learn.microsoft.com/en-us/cloud-computing/finops/framework/finops-framework#lifecycle) | **Purpose**                                                     | **Sample**                                                     |
 | ----- | ------------------------------------------------------------ | ------------------------------------------------------------ | ------------------------------------------------------------ |
@@ -50,7 +48,7 @@ FCA gathers diverse data in Lakehouse to provide cost insights:
 | **Quota** | Operate | The page offers a detailed view of Azure Quotas per subscriptions | ![Azure Quotas Page](./media/AzureQuotas.png) |
 | **Support** |                                                              | This page is designed to facilitate the learning and comprehension of the specific aspects of fabric costs and the contents of this report | ![Support Page](./media/Report_Support.png) |
 
-#### Data Agent
+### 🤖 Data Agent
 
 With a Data Agent on top of the FCA semantic model you can query in natural language Fabric Cost.
 
@@ -62,7 +60,7 @@ And from Teams:
 
 ![FCA Data Agent from Teams](./media/AgentFromTeams.png)
 
-## Setup
+## 📦 Setup
 
 🏃‍♂️‍➡️ Are you ready to try FCA?
 
@@ -70,7 +68,7 @@ And from Teams:
 
 🆕 FCA can also be deployed via Fabric Jumpstart : https://jumpstart.fabric.microsoft.com/
 
-## Support
+## 🐞 Support
 
 The FCA solution accelerator template is not an official Microsoft service.
 
@@ -80,7 +78,7 @@ Bug Reports: A backlog is maintained on the project issues page. If you encounte
 
 Important: Support tickets should not be opened for issues related to these templates. For any questions or concerns about the templates, create an issue in this repository.
 
-## Community Content
+## 🤝 Community Content
 
 Below is a curated list of blog posts, sessions and articles that dive deeper into the use cases, design choices, and benefits of FCA solution.
 
@@ -94,3 +92,7 @@ Below is a curated list of blog posts, sessions and articles that dive deeper in
 - https://www.youtube.com/watch?v=6uOlYj_eSzo&list=PLmmHlkXlpkYZNAQRj4IOhb6usUvkGYj34
 - https://www.youtube.com/watch?v=PJSZWTfUfc0&list=PLiYSIjh4cEx0dd7gkLFu2pjDqUkYGv_mU
 - ...
+
+---
+
+**Built with ❤️ for the Microsoft Fabric community**
