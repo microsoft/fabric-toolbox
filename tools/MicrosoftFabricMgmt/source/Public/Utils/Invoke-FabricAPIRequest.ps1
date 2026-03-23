@@ -90,6 +90,9 @@ function Invoke-FabricAPIRequest {
         $continuationToken = $null
         $results = New-Object System.Collections.Generic.List[Object]
 
+        # Log initial request details for debugging
+        Write-FabricLog -Message "Invoke-FabricAPIRequest: Method=$Method, BaseURI=$BaseURI, HasBody=$(-not [string]::IsNullOrEmpty($Body))" -Level Debug
+
         # Ensure System.Web assembly is loaded for URL encoding
         if (-not ([System.Web.HttpUtility] -as [type])) {
             Add-Type -AssemblyName System.Web
@@ -100,12 +103,14 @@ function Invoke-FabricAPIRequest {
             # Construct API endpoint URI with continuation token if present
             $apiEndpointURI = $BaseURI
             if ($null -ne $continuationToken) {
-                $encodedToken = [System.Web.HttpUtility]::UrlEncode($continuationToken)
-                $separator = if ($BaseURI -like "*`?*") { "&" } else { "?" }
-                $apiEndpointURI = "$BaseURI$separator" + "continuationToken=$encodedToken"
+                # NOTE: Continuation tokens must be passed as-is without additional URL encoding
+                # The token is already in the correct format from the API response
+                $separator = if ($BaseURI.Contains('?')) { "&" } else { "?" }
+                $apiEndpointURI = "$BaseURI$separator" + "continuationToken=$continuationToken"
             }
 
-            Write-FabricLog -Message "Calling API: $apiEndpointURI" -Level Debug
+            Write-FabricLog -Message "Calling API endpoint: $apiEndpointURI" -Level Debug
+            Write-FabricLog -Message "HTTP Method: $Method, Retry attempt: $(if ($retryCount -gt 0) { $retryCount } else { 'First' })" -Level Debug
 
             # Prepare parameters for Invoke-RestMethod
             $invokeParams = @{
@@ -170,9 +175,11 @@ function Invoke-FabricAPIRequest {
             }
 
             # Handle response based on HTTP status code
+            Write-FabricLog -Message "API response status code: $statusCode" -Level Debug
+
             switch ($statusCode) {
                 200 {
-                    Write-FabricLog -Message "API call succeeded." -Level Debug
+                    Write-FabricLog -Message "API call succeeded (200 OK)." -Level Debug
                     [string]$etag = $responseHeader["ETag"]
 
                     if ($response) {
@@ -270,7 +277,12 @@ function Invoke-FabricAPIRequest {
                 400 { $errorMsg = "Bad Request" }
                 401 { $errorMsg = "Unauthorized" }
                 403 { $errorMsg = "Forbidden" }
-                404 { $errorMsg = "Not Found" }
+                404 {
+                    $errorMsg = "Not Found"
+                    # Log detailed information about 404 errors for troubleshooting
+                    Write-FabricLog -Message "404 Not Found - URI: $apiEndpointURI" -Level Warning
+                    Write-FabricLog -Message "Response: $($response | ConvertTo-Json -Depth 5)" -Level Debug
+                }
                 409 { $errorMsg = "Conflict" }
                 429 { $errorMsg = "Too Many Requests" }
                 500 { $errorMsg = "Internal Server Error" }
