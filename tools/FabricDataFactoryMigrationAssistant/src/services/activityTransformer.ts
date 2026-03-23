@@ -507,7 +507,54 @@ export class ActivityTransformer {
   }
 
   countInactiveActivities(activities: any[]): number {
-    return activities.filter(activity => activity.state === 'Inactive').length;
+    if (!Array.isArray(activities)) return 0;
+
+    let count = 0;
+
+    for (const activity of activities) {
+      if (!activity || typeof activity !== 'object') continue;
+
+      // Count Inactive state activities AND Fail type activities (converted unsupported Synapse activities)
+      if (activity.state === 'Inactive' || activity.type === 'Fail') {
+        count++;
+      }
+
+      // Recurse into ForEach nested activities
+      if (activity.type === 'ForEach' && Array.isArray(activity.typeProperties?.activities)) {
+        count += this.countInactiveActivities(activity.typeProperties.activities);
+      }
+
+      // Recurse into IfCondition true and false branches
+      if (activity.type === 'IfCondition' || activity.type === 'If') {
+        if (Array.isArray(activity.typeProperties?.ifTrueActivities)) {
+          count += this.countInactiveActivities(activity.typeProperties.ifTrueActivities);
+        }
+        if (Array.isArray(activity.typeProperties?.ifFalseActivities)) {
+          count += this.countInactiveActivities(activity.typeProperties.ifFalseActivities);
+        }
+      }
+
+      // Recurse into Switch cases and default activities
+      if (activity.type === 'Switch') {
+        if (Array.isArray(activity.typeProperties?.cases)) {
+          for (const switchCase of activity.typeProperties.cases) {
+            if (Array.isArray(switchCase.activities)) {
+              count += this.countInactiveActivities(switchCase.activities);
+            }
+          }
+        }
+        if (Array.isArray(activity.typeProperties?.defaultActivities)) {
+          count += this.countInactiveActivities(activity.typeProperties.defaultActivities);
+        }
+      }
+
+      // Recurse into Until nested activities
+      if (activity.type === 'Until' && Array.isArray(activity.typeProperties?.activities)) {
+        count += this.countInactiveActivities(activity.typeProperties.activities);
+      }
+    }
+
+    return count;
   }
 
   hasLinkedServiceReferences(activity: any): boolean {

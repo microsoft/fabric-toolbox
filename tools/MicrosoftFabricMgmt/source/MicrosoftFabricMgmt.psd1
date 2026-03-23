@@ -4,7 +4,11 @@
     RootModule           = 'MicrosoftFabricMgmt.psm1'
 
     # Version number of this module.
+<<<<<<< HEAD
     ModuleVersion        = '1.0.8'
+=======
+    ModuleVersion        = '1.0.6'
+>>>>>>> main
 
     # Supported PSEditions
     CompatiblePSEditions = @('Core')

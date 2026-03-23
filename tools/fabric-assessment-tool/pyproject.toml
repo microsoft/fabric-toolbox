@@ -7,7 +7,7 @@ name="fabric-assessment-tool"
 authors = [
     { name = "Microsoft Corporation" },
 ]
-version="0.0.1"
+version="0.2.0"
 description="Command-line tool for Migration Assessment for Fabric DE/DW"
 readme="README.md"
 requires-python=">=3.10,<3.13"
@@ -29,11 +29,15 @@ dependencies = [
     "azure-identity",
     "azure-mgmt-resource",
     "databricks-sdk==0.67.0",
-    "mssql-python==1.1.0"
+    "mssql-python==1.1.0",
+    "jinja2>=3.0.0",
 ]
 
 [tool.setuptools.packages.find]
 where = ["src"]
+
+[tool.setuptools.package-data]
+fabric_assessment_tool = ["templates/*.html", "templates/**/*.html"]
 
 [project.optional-dependencies]
 test = [

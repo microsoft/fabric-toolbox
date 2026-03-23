@@ -112,7 +112,7 @@ function Select-FabricResource {
         $resultItems = $InputObject | Where-Object { $_.id -eq $Id }
 
         if (-not $resultItems) {
-            Write-FabricLog -Message "$ResourceType with ID '$Id' not found" -Level Warning
+            Write-FabricLog -Message "$ResourceType with ID '$Id' not found" -Level Verbose
             return $resultItems
         }
         Write-FabricLog -Message "Found $ResourceType with ID: $Id" -Level Debug
@@ -123,7 +123,7 @@ function Select-FabricResource {
         $resultItems = $InputObject | Where-Object { $_.displayName -eq $DisplayName }
 
         if (-not $resultItems) {
-            Write-FabricLog -Message "$ResourceType with DisplayName '$DisplayName' not found" -Level Warning
+            Write-FabricLog -Message "$ResourceType with DisplayName '$DisplayName' not found" -Level Verbose
             return $resultItems
         }
         Write-FabricLog -Message "Found $(@($resultItems).Count) $ResourceType resource(s) with DisplayName: $DisplayName" -Level Debug

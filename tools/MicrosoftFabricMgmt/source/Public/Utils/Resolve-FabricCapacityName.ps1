@@ -74,13 +74,21 @@ function Resolve-FabricCapacityName {
                 return $name
             }
 
-            # Capacity not found, return ID as fallback
-            Write-PSFMessage -Level Warning -Message "Capacity with ID '$CapacityId' not found. Returning ID as fallback."
+            # Capacity not found, cache fallback to prevent repeated API calls
+            Write-PSFMessage -Level Verbose -Message "Capacity with ID '$CapacityId' not found. Returning ID as fallback."
+            if (-not $DisableCache) {
+                Set-PSFConfig -FullName "MicrosoftFabricMgmt.Cache.$cacheKey" -Value $CapacityId
+                Write-PSFMessage -Level Debug -Message "Cached fallback for capacity ID '$CapacityId' (not found)"
+            }
             return $CapacityId
         }
         catch {
             # Error occurred, log and return ID as fallback
-            Write-PSFMessage -Level Warning -Message "Failed to resolve capacity ID '$CapacityId': $($_.Exception.Message)" -ErrorRecord $_
+            Write-PSFMessage -Level Verbose -Message "Failed to resolve capacity ID '$CapacityId': $($_.Exception.Message)"
+            if (-not $DisableCache) {
+                Set-PSFConfig -FullName "MicrosoftFabricMgmt.Cache.$cacheKey" -Value $CapacityId
+                Write-PSFMessage -Level Debug -Message "Cached fallback for capacity ID '$CapacityId' (error)"
+            }
             return $CapacityId
         }
     }

@@ -1,0 +1,45 @@
+logLevel: INFO
+
+kafka:
+  bootstrapServers: kafka:9092
+  topic: mariadb-cdc
+  partition: 0
+  startFrom: earliest
+  pollTimeoutMs: 1000
+
+consumer:
+  checkIntervalSeconds: 120
+  maxRowsPerUpload: 1000
+  bootstrapOnceFromBeginning: true
+  snapshotTablesOnStart: true
+  resetBootstrapState: false
+  localOnly: true
+
+snapshot:
+  host: mariadb
+  port: 3306
+  user: mirroruser
+  password: <snapshot-password>
+  database: sampledb
+
+onelake:
+  landingZoneRoot: /landing-zone
+  landingZoneUrl: https://onelake.dfs.fabric.microsoft.com/<workspace-id>/<mirrored-database-id>/Files/LandingZone
+  tenantId: <tenant-id>
+  clientId: <client-id>
+  clientSecret: <client-secret>
+
+partner:
+  name: fabric-toolbox-mariadb
+  sourceType: MariaDB
+  sourceVersion: "11.4"
+
+tables:
+  include:
+    - sampledb.customers
+    - sampledb.orders
+  keyColumns:
+    sampledb.customers:
+      - id
+    sampledb.orders:
+      - id

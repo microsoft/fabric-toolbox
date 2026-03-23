@@ -1,0 +1,7 @@
+kafka-python==2.0.2
+pyarrow==20.0.0
+azure-identity==1.23.0
+azure-storage-file-datalake==12.19.0
+PyMySQL==1.1.1
+requests==2.32.4
+PyYAML==6.0.2

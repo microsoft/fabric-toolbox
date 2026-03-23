@@ -309,6 +309,16 @@ function Invoke-FabricAPIRequest {
                             $errorParts += $response.message
                         }
 
+                        # Include specific messages from moreDetails if present - these are
+                        # typically more actionable than the generic top-level message
+                        if ($response.moreDetails) {
+                            foreach ($detail in $response.moreDetails) {
+                                if ($detail.message) {
+                                    $errorParts += $detail.message
+                                }
+                            }
+                        }
+
                         if ($response.requestId) {
                             $errorParts += "RequestId: $($response.requestId)"
                         }
@@ -332,6 +342,9 @@ function Invoke-FabricAPIRequest {
                     }
                 }
 
+                # Store the structured response so callers can access moreDetails etc.
+                # in their catch blocks via $script:FabricLastAPIError (PS7 has no ErrorDetails.Message)
+                $script:FabricLastAPIError = $response
                 throw "API request failed with status code $statusCode ($errorMsg). $errorDetails"
             }
 
@@ -340,7 +353,9 @@ function Invoke-FabricAPIRequest {
         return , $results.ToArray()
     }
     catch {
-        Write-FabricLog -Message "Invoke Fabric API error. Error: $($_.Exception.Message)" -Level Error
+        # Log at Debug since this rethrows - the calling function is responsible for
+        # user-visible error messages, avoiding duplicate Warning/Error output.
+        Write-FabricLog -Message "Invoke Fabric API error. Error: $($_.Exception.Message)" -Level Debug
         throw
     }
 }

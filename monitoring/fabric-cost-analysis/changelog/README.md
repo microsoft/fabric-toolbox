@@ -10,7 +10,14 @@
 
 ## Release
 
-## 📦 2025.01.30
+## 📦 2026.03.13
+
+- Fabric Jumpstart (https://jumpstart.fabric.microsoft.com/) 
+- Fixes
+- Folders
+- New Meters
+
+## 📦 2026.01.30
 
 - Fixes
 
@@ -34,4 +41,4 @@
 
 ## 📦 2025.9.2
 
-- First Release
+- First Release 🎉

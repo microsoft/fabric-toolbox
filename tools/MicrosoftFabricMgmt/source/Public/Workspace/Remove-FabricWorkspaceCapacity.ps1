@@ -23,34 +23,38 @@ Author: Tiago Balabuch
 function Remove-FabricWorkspaceCapacity {
     [CmdletBinding(SupportsShouldProcess = $true, ConfirmImpact = 'Medium')]
     param (
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $true, ValueFromPipeline = $true, ValueFromPipelineByPropertyName = $true)]
         [ValidateNotNullOrEmpty()]
+        [Alias('id')]
         [string]$WorkspaceId
     )
-    try {
-        # Validate authentication token before proceeding.
-        Invoke-FabricAuthCheck -ThrowOnFailure
 
-        # Construct the API endpoint URI
-        $apiEndpointURI = New-FabricAPIUri -Resource 'workspaces' -WorkspaceId $WorkspaceId -Subresource 'unassignFromCapacity'
-        Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
+    process {
+        try {
+            # Validate authentication token before proceeding.
+            Invoke-FabricAuthCheck -ThrowOnFailure
 
-        if ($PSCmdlet.ShouldProcess("$WorkspaceId" , "Remove from Capacity")) {
-            # Make the API request
-        $response = Invoke-FabricAPIRequest `
-            -BaseURI $apiEndpointURI `
-            -Headers $script:FabricAuthContext.FabricHeaders `
-            -Method Post
+            # Construct the API endpoint URI
+            $apiEndpointURI = New-FabricAPIUri -Resource 'workspaces' -WorkspaceId $WorkspaceId -Subresource 'unassignFromCapacity'
+            Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
+
+            if ($PSCmdlet.ShouldProcess("$WorkspaceId" , "Remove from Capacity")) {
+                # Make the API request
+            $response = Invoke-FabricAPIRequest `
+                -BaseURI $apiEndpointURI `
+                -Headers $script:FabricAuthContext.FabricHeaders `
+                -Method Post
+            }
+
+
+            # Return the API response
+            Write-FabricLog -Message "Workspace capacity has been successfully unassigned from workspace '$WorkspaceId'." -Level Host
+            $response
         }
-
-
-        # Return the API response
-        Write-FabricLog -Message "Workspace capacity has been successfully unassigned from workspace '$WorkspaceId'." -Level Host
-        $response
-    }
-    catch {
-        # Capture and log error details
-        $errorDetails = $_.Exception.Message
-        Write-FabricLog -Message "Failed to unassign workspace from capacity. Error: $errorDetails" -Level Error
+        catch {
+            # Capture and log error details
+            $errorDetails = $_.Exception.Message
+            Write-FabricLog -Message "Failed to unassign workspace from capacity. Error: $errorDetails" -Level Error
+        }
     }
 }
