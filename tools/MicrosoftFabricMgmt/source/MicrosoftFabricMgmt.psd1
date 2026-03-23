@@ -4,10 +4,10 @@
     RootModule           = 'MicrosoftFabricMgmt.psm1'
 
     # Version number of this module.
-    ModuleVersion        = '1.0.7'
+    ModuleVersion        = '1.0.8'
 
     # Supported PSEditions
-    CompatiblePSEditions = @('Desktop', 'Core')
+    CompatiblePSEditions = @('Core')
 
     # ID used to uniquely identify this module
     GUID                 = 'd0110b5c-cfcc-4bcc-8049-468880cf66c8'
@@ -19,7 +19,7 @@
     CompanyName          = 'Microsoft Fabric Mgmt by Fabric Toolbox'
 
     # Copyright statement for this module
-    Copyright            = '2025 Microsoft Fabric Mgmt by Fabric Toolbox'
+    Copyright            = '2026 Microsoft Fabric Mgmt by Fabric Toolbox'
 
     # Description of the functionality provided by this module
     Description          = 'PowerShell module for managing Microsoft Fabric resources via the Fabric API. Supports workspaces, lakehouses, warehouses, notebooks, and more.'
