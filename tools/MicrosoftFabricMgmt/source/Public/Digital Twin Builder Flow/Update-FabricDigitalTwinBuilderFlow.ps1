@@ -52,7 +52,7 @@ function Update-FabricDigitalTwinBuilderFlow {
         Invoke-FabricAuthCheck -ThrowOnFailure
 
         # Construct the API endpoint URI
-        $apiEndpointURI = New-FabricAPIUri -Resource 'workspaces' -WorkspaceId $WorkspaceId -Subresource 'DigitalTwinBuilderFlows' -ItemId $DigitalTwinBuilderFlowId
+        $apiEndpointURI = New-FabricAPIUri -Resource 'workspaces' -WorkspaceId $WorkspaceId -Subresource 'digitaltwinbuilderflows' -ItemId $DigitalTwinBuilderFlowId
         Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
 
         # Construct the request body with only provided parameters
