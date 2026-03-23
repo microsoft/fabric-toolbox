@@ -1078,6 +1078,2479 @@ function Write-FabricLog {
     Write-PSFMessage @psfParams
 }
 #EndRegion '.\Private\Write-FabricLog.ps1' 105
+#Region '.\Public\Admin\Add-FabricAdminCapacityWorkspace.ps1' -1
+
+<#
+.SYNOPSIS
+    Assigns workspaces to a capacity using the Power BI admin API.
+
+.DESCRIPTION
+    The Add-FabricAdminCapacityWorkspace cmdlet assigns one or more workspaces to a capacity using the admin API.
+
+.PARAMETER CapacityId
+    Required. The capacity ID to assign workspaces to.
+
+.PARAMETER WorkspaceIds
+    Required. Array of workspace IDs to assign to the capacity.
+
+.EXAMPLE
+    Add-FabricAdminCapacityWorkspace -CapacityId "capacity123" -WorkspaceIds "workspace1","workspace2"
+
+    Assigns two workspaces to the specified capacity.
+
+.NOTES
+    - Uses the Power BI Admin API: https://api.powerbi.com/v1.0/myorg/admin/capacities/{capacityId}/AssignWorkspaces
+    - Requires Fabric Administrator permissions.
+
+    Author: Claude AI
+#>
+function Add-FabricAdminCapacityWorkspace {
+    [CmdletBinding(SupportsShouldProcess, ConfirmImpact = 'High')]
+    param (
+        [Parameter(Mandatory = $true)]
+        [ValidateNotNullOrEmpty()]
+        [string]$CapacityId,
+
+        [Parameter(Mandatory = $true)]
+        [ValidateNotNullOrEmpty()]
+        [string[]]$WorkspaceIds
+    )
+
+    process {
+        try {
+            Invoke-FabricAuthCheck -ThrowOnFailure
+
+            $powerBIAdminBaseUrl = "https://api.powerbi.com/v1.0/myorg"
+            $apiEndpointURI = "$powerBIAdminBaseUrl/admin/capacities/$CapacityId/AssignWorkspaces"
+
+            Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
+
+            $body = @{
+                workspaceIds = $WorkspaceIds
+            }
+            $bodyJson = $body | ConvertTo-Json -Depth 10
+
+            if ($PSCmdlet.ShouldProcess("Capacity '$CapacityId'", "Assign $($WorkspaceIds.Count) workspace(s)")) {
+                $apiParams = @{
+                    BaseURI = $apiEndpointURI
+                    Headers = $script:FabricAuthContext.FabricHeaders
+                    Method  = 'Post'
+                    Body    = $bodyJson
+                }
+                $response = Invoke-FabricAPIRequest @apiParams
+
+                Write-FabricLog -Message "Successfully assigned $($WorkspaceIds.Count) workspace(s) to capacity '$CapacityId'." -Level Debug
+                return $response
+            }
+        }
+        catch {
+            $errorDetails = $_.Exception.Message
+            Write-FabricLog -Message "Failed to assign workspaces to capacity. Error: $errorDetails" -Level Error
+        }
+    }
+}
+#EndRegion '.\Public\Admin\Add-FabricAdminCapacityWorkspace.ps1' 70
+#Region '.\Public\Admin\Add-FabricAdminPipelineUser.ps1' -1
+
+<#
+.SYNOPSIS
+    Adds a user to a pipeline using the Power BI admin API.
+
+.DESCRIPTION
+    The Add-FabricAdminPipelineUser cmdlet adds a user, group, or service principal to a pipeline with specified permissions using the admin API.
+
+.PARAMETER PipelineId
+    Required. The pipeline ID to add the user to.
+
+.PARAMETER Identifier
+    Required. The user's email, object ID, or user principal name.
+
+.PARAMETER AccessRight
+    Required. The permission level: Admin, Member, or Contributor.
+
+.PARAMETER PrincipalType
+    Required. The type of principal: User, Group, or App.
+
+.EXAMPLE
+    Add-FabricAdminPipelineUser -PipelineId "pipeline123" -Identifier "user@example.com" -AccessRight "Member" -PrincipalType "User"
+
+    Adds a user as a member to the specified pipeline.
+
+.NOTES
+    - Uses the Power BI Admin API: https://api.powerbi.com/v1.0/myorg/admin/pipelines/{pipelineId}/users
+    - Requires Fabric Administrator permissions.
+
+    Author: Claude AI
+#>
+function Add-FabricAdminPipelineUser {
+    [CmdletBinding(SupportsShouldProcess, ConfirmImpact = 'Medium')]
+    param (
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
+        [ValidateNotNullOrEmpty()]
+        [Alias('id')]
+        [string]$PipelineId,
+
+        [Parameter(Mandatory = $true)]
+        [ValidateNotNullOrEmpty()]
+        [string]$Identifier,
+
+        [Parameter(Mandatory = $true)]
+        [ValidateSet('Admin', 'Member', 'Contributor')]
+        [string]$AccessRight,
+
+        [Parameter(Mandatory = $true)]
+        [ValidateSet('User', 'Group', 'App')]
+        [string]$PrincipalType
+    )
+
+    process {
+        try {
+            Invoke-FabricAuthCheck -ThrowOnFailure
+
+            $powerBIAdminBaseUrl = "https://api.powerbi.com/v1.0/myorg"
+            $apiEndpointURI = "$powerBIAdminBaseUrl/admin/pipelines/$PipelineId/users"
+
+            Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
+
+            $body = @{
+                identifier     = $Identifier
+                accessRight    = $AccessRight
+                principalType  = $PrincipalType
+            }
+            $bodyJson = $body | ConvertTo-Json -Depth 10
+
+            if ($PSCmdlet.ShouldProcess("Pipeline '$PipelineId'", "Add user '$Identifier' with '$AccessRight' role")) {
+                $apiParams = @{
+                    BaseURI = $apiEndpointURI
+                    Headers = $script:FabricAuthContext.FabricHeaders
+                    Method  = 'Post'
+                    Body    = $bodyJson
+                }
+                $response = Invoke-FabricAPIRequest @apiParams
+
+                Write-FabricLog -Message "User '$Identifier' added to pipeline '$PipelineId' with '$AccessRight' role." -Level Debug
+                return $response
+            }
+        }
+        catch {
+            $errorDetails = $_.Exception.Message
+            Write-FabricLog -Message "Failed to add user to pipeline. Error: $errorDetails" -Level Error
+        }
+    }
+}
+#EndRegion '.\Public\Admin\Add-FabricAdminPipelineUser.ps1' 87
+#Region '.\Public\Admin\Add-FabricAdminWorkspaceUser.ps1' -1
+
+<#
+.SYNOPSIS
+    Adds a user to a workspace using the Power BI admin API.
+
+.DESCRIPTION
+    The Add-FabricAdminWorkspaceUser cmdlet adds a user, group, or service principal to a workspace with specified permissions using the admin API.
+
+.PARAMETER WorkspaceId
+    Required. The workspace ID to add the user to.
+
+.PARAMETER Identifier
+    Required. The user's email, object ID, or user principal name.
+
+.PARAMETER AccessRight
+    Required. The permission level: Admin, Member, Contributor, or Viewer.
+
+.PARAMETER PrincipalType
+    Required. The type of principal: User, Group, or App.
+
+.EXAMPLE
+    Add-FabricAdminWorkspaceUser -WorkspaceId "workspace123" -Identifier "user@example.com" -AccessRight "Member" -PrincipalType "User"
+
+    Adds a user as a member to the specified workspace.
+
+.NOTES
+    - Uses the Power BI Admin API: https://api.powerbi.com/v1.0/myorg/admin/groups/{workspaceId}/users
+    - Requires Fabric Administrator permissions.
+
+    Author: Claude AI
+#>
+function Add-FabricAdminWorkspaceUser {
+    [CmdletBinding(SupportsShouldProcess, ConfirmImpact = 'Medium')]
+    param (
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
+        [ValidateNotNullOrEmpty()]
+        [Alias('id')]
+        [string]$WorkspaceId,
+
+        [Parameter(Mandatory = $true)]
+        [ValidateNotNullOrEmpty()]
+        [string]$Identifier,
+
+        [Parameter(Mandatory = $true)]
+        [ValidateSet('Admin', 'Member', 'Contributor', 'Viewer')]
+        [string]$AccessRight,
+
+        [Parameter(Mandatory = $true)]
+        [ValidateSet('User', 'Group', 'App')]
+        [string]$PrincipalType
+    )
+
+    process {
+        try {
+            Invoke-FabricAuthCheck -ThrowOnFailure
+
+            $powerBIAdminBaseUrl = "https://api.powerbi.com/v1.0/myorg"
+            $apiEndpointURI = "$powerBIAdminBaseUrl/admin/groups/$WorkspaceId/users"
+
+            Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
+
+            $body = @{
+                identifier     = $Identifier
+                accessRight    = $AccessRight
+                principalType  = $PrincipalType
+            }
+            $bodyJson = $body | ConvertTo-Json -Depth 10
+
+            if ($PSCmdlet.ShouldProcess("Workspace '$WorkspaceId'", "Add user '$Identifier' with '$AccessRight' role")) {
+                $apiParams = @{
+                    BaseURI = $apiEndpointURI
+                    Headers = $script:FabricAuthContext.FabricHeaders
+                    Method  = 'Post'
+                    Body    = $bodyJson
+                }
+                $response = Invoke-FabricAPIRequest @apiParams
+
+                Write-FabricLog -Message "User '$Identifier' added to workspace '$WorkspaceId' with '$AccessRight' role." -Level Debug
+                return $response
+            }
+        }
+        catch {
+            $errorDetails = $_.Exception.Message
+            Write-FabricLog -Message "Failed to add user to workspace. Error: $errorDetails" -Level Error
+        }
+    }
+}
+#EndRegion '.\Public\Admin\Add-FabricAdminWorkspaceUser.ps1' 87
+#Region '.\Public\Admin\Export-FabricAdminDataflow.ps1' -1
+
+<#
+.SYNOPSIS
+    Exports a dataflow using the Power BI admin API.
+
+.DESCRIPTION
+    The Export-FabricAdminDataflow cmdlet exports a dataflow as a file using the admin API.
+
+.PARAMETER DataflowId
+    Required. The dataflow ID to export.
+
+.PARAMETER OutFile
+    Optional. The output file path. If not provided, returns the binary content.
+
+.EXAMPLE
+    Export-FabricAdminDataflow -DataflowId "dataflow123"
+
+    Exports the dataflow and returns binary content.
+
+.EXAMPLE
+    Export-FabricAdminDataflow -DataflowId "dataflow123" -OutFile "C:\export\dataflow.pbix"
+
+    Exports the dataflow to a file.
+
+.NOTES
+    - Uses the Power BI Admin API: https://api.powerbi.com/v1.0/myorg/admin/dataflows/{dataflowId}/export
+    - Requires Fabric Administrator permissions.
+
+    Author: Claude AI
+#>
+function Export-FabricAdminDataflow {
+    [CmdletBinding()]
+    param (
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
+        [ValidateNotNullOrEmpty()]
+        [Alias('id')]
+        [string]$DataflowId,
+
+        [Parameter(Mandatory = $false)]
+        [ValidateNotNullOrEmpty()]
+        [string]$OutFile
+    )
+
+    process {
+        try {
+            Invoke-FabricAuthCheck -ThrowOnFailure
+
+            $powerBIAdminBaseUrl = "https://api.powerbi.com/v1.0/myorg"
+            $apiEndpointURI = "$powerBIAdminBaseUrl/admin/dataflows/$DataflowId/export"
+
+            Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
+
+            $apiParams = @{
+                BaseURI = $apiEndpointURI
+                Headers = $script:FabricAuthContext.FabricHeaders
+                Method  = 'Get'
+            }
+            $response = Invoke-FabricAPIRequest @apiParams
+
+            if ($OutFile) {
+                [System.IO.File]::WriteAllBytes($OutFile, $response)
+                Write-FabricLog -Message "Dataflow exported to '$OutFile'." -Level Debug
+                return $OutFile
+            }
+
+            Write-FabricLog -Message "Dataflow exported successfully." -Level Debug
+            return $response
+        }
+        catch {
+            $errorDetails = $_.Exception.Message
+            Write-FabricLog -Message "Failed to export dataflow. Error: $errorDetails" -Level Error
+        }
+    }
+}
+#EndRegion '.\Public\Admin\Export-FabricAdminDataflow.ps1' 74
+#Region '.\Public\Admin\Get-FabricAdminActivityEvent.ps1' -1
+
+<#
+.SYNOPSIS
+    Gets activity events from the Power BI admin API.
+
+.DESCRIPTION
+    The Get-FabricAdminActivityEvent cmdlet retrieves activity events using the admin API. Requires date range parameters.
+
+.PARAMETER StartDateTime
+    Required. The start date and time for the activity events (ISO 8601 format: yyyy-MM-ddTHH:mm:ss.sssZ or yyyy-MM-dd).
+
+.PARAMETER EndDateTime
+    Required. The end date and time for the activity events (ISO 8601 format: yyyy-MM-ddTHH:mm:ss.sssZ or yyyy-MM-dd).
+
+.PARAMETER Filter
+    Optional. OData filter expression.
+
+.PARAMETER Top
+    Optional. Maximum number of items to return.
+
+.PARAMETER Skip
+    Optional. Number of items to skip.
+
+.PARAMETER Raw
+    Optional. Returns raw API response.
+
+.EXAMPLE
+    Get-FabricAdminActivityEvent -StartDateTime "2024-01-01" -EndDateTime "2024-01-31"
+
+    Gets all activity events for January 2024.
+
+.EXAMPLE
+    Get-FabricAdminActivityEvent -StartDateTime "2024-01-01T00:00:00Z" -EndDateTime "2024-01-01T23:59:59Z"
+
+    Gets all activity events for a specific day.
+
+.NOTES
+    - Uses the Power BI Admin API: https://api.powerbi.com/v1.0/myorg/admin/activityevents
+    - Requires Fabric Administrator permissions.
+    - Activity events are typically available for 30 days.
+
+    Author: Claude AI
+#>
+function Get-FabricAdminActivityEvent {
+    [CmdletBinding()]
+    param (
+        [Parameter(Mandatory = $true)]
+        [ValidateNotNullOrEmpty()]
+        [string]$StartDateTime,
+
+        [Parameter(Mandatory = $true)]
+        [ValidateNotNullOrEmpty()]
+        [string]$EndDateTime,
+
+        [Parameter(Mandatory = $false)]
+        [ValidateNotNullOrEmpty()]
+        [string]$Filter,
+
+        [Parameter(Mandatory = $false)]
+        [ValidateRange(1, 5000)]
+        [int]$Top,
+
+        [Parameter(Mandatory = $false)]
+        [ValidateRange(0, [int]::MaxValue)]
+        [int]$Skip,
+
+        [Parameter()]
+        [switch]$Raw
+    )
+
+    process {
+        try {
+            Invoke-FabricAuthCheck -ThrowOnFailure
+
+            $powerBIAdminBaseUrl = "https://api.powerbi.com/v1.0/myorg"
+
+            $queryParams = @()
+            $queryParams += "startDateTime=$([System.Uri]::EscapeDataString($StartDateTime))"
+            $queryParams += "endDateTime=$([System.Uri]::EscapeDataString($EndDateTime))"
+
+            if ($Filter) {
+                $queryParams += "`$filter=$([System.Uri]::EscapeDataString($Filter))"
+            }
+            if ($Top) {
+                $queryParams += "`$top=$Top"
+            }
+            if ($Skip) {
+                $queryParams += "`$skip=$Skip"
+            }
+
+            $apiEndpointURI = "$powerBIAdminBaseUrl/admin/activityevents`?$($queryParams -join '&')"
+
+            Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
+
+            $apiParams = @{
+                BaseURI = $apiEndpointURI
+                Headers = $script:FabricAuthContext.FabricHeaders
+                Method  = 'Get'
+            }
+            $response = Invoke-FabricAPIRequest @apiParams
+
+            if (-not $response) {
+                Write-FabricLog -Message "No activity events returned." -Level Warning
+                return $null
+            }
+
+            if ($Raw) {
+                return $response
+            }
+
+            return Select-FabricResource -InputObject $response -ResourceType 'AdminActivityEvent' -TypeName 'MicrosoftFabric.AdminActivityEvent' -Raw:$Raw
+        }
+        catch {
+            $errorDetails = $_.Exception.Message
+            Write-FabricLog -Message "Failed to retrieve activity events. Error: $errorDetails" -Level Error
+        }
+    }
+}
+#EndRegion '.\Public\Admin\Get-FabricAdminActivityEvent.ps1' 118
+#Region '.\Public\Admin\Get-FabricAdminApp.ps1' -1
+
+<#
+.SYNOPSIS
+    Gets apps from the Power BI admin API for tenant-wide visibility.
+
+.DESCRIPTION
+    The Get-FabricAdminApp cmdlet retrieves Power BI apps using the Power BI admin API endpoint
+    (https://api.powerbi.com/v1.0/myorg/admin/apps). This provides tenant-wide visibility into all
+    apps (including those the user doesn't have access to). Requires Fabric Administrator permissions.
+
+.PARAMETER AppId
+    Optional. Returns only the app matching this ID.
+
+.PARAMETER Filter
+    Optional. OData filter expression to filter the results (e.g., "contains(name,'sales')").
+
+.PARAMETER Top
+    Optional. Maximum number of apps to return.
+
+.PARAMETER Skip
+    Optional. Number of apps to skip (for pagination).
+
+.PARAMETER Raw
+    Optional. When specified, returns the raw API response.
+
+.EXAMPLE
+    Get-FabricAdminApp
+
+    Lists all apps in the tenant.
+
+.EXAMPLE
+    Get-FabricAdminApp -Top 100
+
+    Lists the first 100 apps in the tenant.
+
+.EXAMPLE
+    Get-FabricAdminApp -Filter "contains(name,'Sales')"
+
+    Lists apps with 'Sales' in the name.
+
+.NOTES
+    - Uses the Power BI Admin API: https://api.powerbi.com/v1.0/myorg/admin/apps
+    - Requires Fabric Administrator permissions or service principal with Tenant.Read.All scope.
+    - Rate limited to 200 requests per hour.
+
+    Author: Claude AI
+#>
+function Get-FabricAdminApp {
+    [CmdletBinding()]
+    param (
+        [Parameter(Mandatory = $false)]
+        [ValidateNotNullOrEmpty()]
+        [string]$AppId,
+
+        [Parameter(Mandatory = $false)]
+        [ValidateNotNullOrEmpty()]
+        [string]$Filter,
+
+        [Parameter(Mandatory = $false)]
+        [ValidateRange(1, 5000)]
+        [int]$Top,
+
+        [Parameter(Mandatory = $false)]
+        [ValidateRange(0, [int]::MaxValue)]
+        [int]$Skip,
+
+        [Parameter()]
+        [switch]$Raw
+    )
+
+    process {
+        try {
+            Invoke-FabricAuthCheck -ThrowOnFailure
+
+            $powerBIAdminBaseUrl = "https://api.powerbi.com/v1.0/myorg"
+
+            if ($AppId) {
+                $apiEndpointURI = "$powerBIAdminBaseUrl/admin/apps/$AppId"
+                Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
+
+                $apiParams = @{
+                    BaseURI = $apiEndpointURI
+                    Headers = $script:FabricAuthContext.FabricHeaders
+                    Method  = 'Get'
+                }
+                $response = Invoke-FabricAPIRequest @apiParams
+
+                if ($response) {
+                    if ($Raw) {
+                        return $response
+                    }
+                    $response.PSObject.TypeNames.Insert(0, 'MicrosoftFabric.AdminApp')
+                    return $response
+                }
+                return $null
+            }
+
+            # Build query parameters
+            $queryParams = @()
+            if ($Filter) {
+                $queryParams += "`$filter=$([System.Uri]::EscapeDataString($Filter))"
+            }
+            if ($Top) {
+                $queryParams += "`$top=$Top"
+            }
+            if ($Skip) {
+                $queryParams += "`$skip=$Skip"
+            }
+
+            # Construct the API endpoint URI
+            $apiEndpointURI = "$powerBIAdminBaseUrl/admin/apps"
+            if ($queryParams.Count -gt 0) {
+                $apiEndpointURI = "$apiEndpointURI`?$($queryParams -join '&')"
+            }
+
+            Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
+
+            # Make the API request
+            $apiParams = @{
+                BaseURI = $apiEndpointURI
+                Headers = $script:FabricAuthContext.FabricHeaders
+                Method  = 'Get'
+            }
+            $response = Invoke-FabricAPIRequest @apiParams
+
+            if (-not $response) {
+                Write-FabricLog -Message "No apps returned from admin API." -Level Warning
+                return $null
+            }
+
+            # Use Select-FabricResource for type decoration
+            return Select-FabricResource -InputObject $response -ResourceType 'AdminApp' -TypeName 'MicrosoftFabric.AdminApp' -Raw:$Raw
+        }
+        catch {
+            $errorDetails = $_.Exception.Message
+            Write-FabricLog -Message "Failed to retrieve apps from admin API. Error: $errorDetails" -Level Error
+        }
+    }
+}
+#EndRegion '.\Public\Admin\Get-FabricAdminApp.ps1' 139
+#Region '.\Public\Admin\Get-FabricAdminAppUser.ps1' -1
+
+<#
+.SYNOPSIS
+    Gets users that have access to a Power BI app.
+
+.DESCRIPTION
+    The Get-FabricAdminAppUser cmdlet retrieves users with access to a specific Power BI app using the admin API.
+
+.PARAMETER AppId
+    Required. The ID of the app.
+
+.PARAMETER Raw
+    Optional. When specified, returns the raw API response.
+
+.EXAMPLE
+    Get-FabricAdminAppUser -AppId "12345678-1234-1234-1234-123456789012"
+
+    Lists all users with access to the specified app.
+
+.NOTES
+    - Uses the Power BI Admin API: https://api.powerbi.com/v1.0/myorg/admin/apps/{appId}/users
+    - Requires Fabric Administrator permissions.
+
+    Author: Claude AI
+#>
+function Get-FabricAdminAppUser {
+    [CmdletBinding()]
+    param (
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
+        [Alias('id')]
+        [ValidateNotNullOrEmpty()]
+        [string]$AppId,
+
+        [Parameter()]
+        [switch]$Raw
+    )
+
+    process {
+        try {
+            Invoke-FabricAuthCheck -ThrowOnFailure
+
+            $powerBIAdminBaseUrl = "https://api.powerbi.com/v1.0/myorg"
+            $apiEndpointURI = "$powerBIAdminBaseUrl/admin/apps/$AppId/users"
+
+            Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
+
+            $apiParams = @{
+                BaseURI = $apiEndpointURI
+                Headers = $script:FabricAuthContext.FabricHeaders
+                Method  = 'Get'
+            }
+            $response = Invoke-FabricAPIRequest @apiParams
+
+            if (-not $response) {
+                Write-FabricLog -Message "No users returned." -Level Warning
+                return $null
+            }
+
+            if ($Raw) {
+                return $response
+            }
+
+            # Add context property
+            foreach ($user in $response) {
+                $user | Add-Member -NotePropertyName 'appId' -NotePropertyValue $AppId -Force
+            }
+
+            $response | Add-FabricTypeName -TypeName 'MicrosoftFabric.AdminAppUser'
+            return $response
+        }
+        catch {
+            $errorDetails = $_.Exception.Message
+            Write-FabricLog -Message "Failed to retrieve app users. Error: $errorDetails" -Level Error
+        }
+    }
+}
+#EndRegion '.\Public\Admin\Get-FabricAdminAppUser.ps1' 76
+#Region '.\Public\Admin\Get-FabricAdminCapacity.ps1' -1
+
+<#
+.SYNOPSIS
+    Gets Power BI capacities for the organization.
+
+.DESCRIPTION
+    The Get-FabricAdminCapacity cmdlet retrieves Power BI capacities using the admin API.
+
+.PARAMETER CapacityId
+    Optional. Returns only the capacity matching this ID.
+
+.PARAMETER Filter
+    Optional. OData filter expression.
+
+.PARAMETER Top
+    Optional. Maximum number of items to return.
+
+.PARAMETER Skip
+    Optional. Number of items to skip.
+
+.PARAMETER Raw
+    Optional. Returns raw API response.
+
+.EXAMPLE
+    Get-FabricAdminCapacity
+
+    Lists all capacities.
+
+.NOTES
+    - Uses the Power BI Admin API: https://api.powerbi.com/v1.0/myorg/admin/capacities
+    - Requires Fabric Administrator permissions.
+
+    Author: Claude AI
+#>
+function Get-FabricAdminCapacity {
+    [CmdletBinding()]
+    param (
+        [Parameter(Mandatory = $false)]
+        [ValidateNotNullOrEmpty()]
+        [string]$CapacityId,
+
+        [Parameter(Mandatory = $false)]
+        [ValidateNotNullOrEmpty()]
+        [string]$Filter,
+
+        [Parameter(Mandatory = $false)]
+        [ValidateRange(1, 5000)]
+        [int]$Top,
+
+        [Parameter(Mandatory = $false)]
+        [ValidateRange(0, [int]::MaxValue)]
+        [int]$Skip,
+
+        [Parameter()]
+        [switch]$Raw
+    )
+
+    process {
+        try {
+            Invoke-FabricAuthCheck -ThrowOnFailure
+
+            $powerBIAdminBaseUrl = "https://api.powerbi.com/v1.0/myorg"
+
+            if ($CapacityId) {
+                $apiEndpointURI = "$powerBIAdminBaseUrl/admin/capacities/$CapacityId"
+                Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
+
+                $apiParams = @{
+                    BaseURI = $apiEndpointURI
+                    Headers = $script:FabricAuthContext.FabricHeaders
+                    Method  = 'Get'
+                }
+                $response = Invoke-FabricAPIRequest @apiParams
+
+                if ($response) {
+                    if ($Raw) {
+                        return $response
+                    }
+                    $response.PSObject.TypeNames.Insert(0, 'MicrosoftFabric.AdminCapacity')
+                    return $response
+                }
+                return $null
+            }
+
+            $queryParams = @()
+            if ($Filter) {
+                $queryParams += "`$filter=$([System.Uri]::EscapeDataString($Filter))"
+            }
+            if ($Top) {
+                $queryParams += "`$top=$Top"
+            }
+            if ($Skip) {
+                $queryParams += "`$skip=$Skip"
+            }
+
+            $apiEndpointURI = "$powerBIAdminBaseUrl/admin/capacities"
+            if ($queryParams.Count -gt 0) {
+                $apiEndpointURI = "$apiEndpointURI`?$($queryParams -join '&')"
+            }
+
+            Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
+
+            $apiParams = @{
+                BaseURI = $apiEndpointURI
+                Headers = $script:FabricAuthContext.FabricHeaders
+                Method  = 'Get'
+            }
+            $response = Invoke-FabricAPIRequest @apiParams
+
+            if (-not $response) {
+                Write-FabricLog -Message "No capacities returned." -Level Warning
+                return $null
+            }
+
+            return Select-FabricResource -InputObject $response -ResourceType 'AdminCapacity' -TypeName 'MicrosoftFabric.AdminCapacity' -Raw:$Raw
+        }
+        catch {
+            $errorDetails = $_.Exception.Message
+            Write-FabricLog -Message "Failed to retrieve capacities. Error: $errorDetails" -Level Error
+        }
+    }
+}
+#EndRegion '.\Public\Admin\Get-FabricAdminCapacity.ps1' 122
+#Region '.\Public\Admin\Get-FabricAdminCapacityUser.ps1' -1
+
+<#
+.SYNOPSIS
+    Gets users with access to a capacity using the Power BI admin API.
+
+.DESCRIPTION
+    The Get-FabricAdminCapacityUser cmdlet retrieves users with access to a specific capacity using the admin API.
+
+.PARAMETER CapacityId
+    Required. The capacity ID to get users for.
+
+.PARAMETER Filter
+    Optional. OData filter expression.
+
+.PARAMETER Top
+    Optional. Maximum number of items to return.
+
+.PARAMETER Skip
+    Optional. Number of items to skip.
+
+.PARAMETER Raw
+    Optional. Returns raw API response.
+
+.EXAMPLE
+    Get-FabricAdminCapacityUser -CapacityId "capacity123"
+
+    Lists all users with access to the specified capacity.
+
+.NOTES
+    - Uses the Power BI Admin API: https://api.powerbi.com/v1.0/myorg/admin/capacities/{capacityId}/users
+    - Requires Fabric Administrator permissions.
+
+    Author: Claude AI
+#>
+function Get-FabricAdminCapacityUser {
+    [CmdletBinding()]
+    param (
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
+        [ValidateNotNullOrEmpty()]
+        [Alias('id')]
+        [string]$CapacityId,
+
+        [Parameter(Mandatory = $false)]
+        [ValidateNotNullOrEmpty()]
+        [string]$Filter,
+
+        [Parameter(Mandatory = $false)]
+        [ValidateRange(1, 5000)]
+        [int]$Top,
+
+        [Parameter(Mandatory = $false)]
+        [ValidateRange(0, [int]::MaxValue)]
+        [int]$Skip,
+
+        [Parameter()]
+        [switch]$Raw
+    )
+
+    process {
+        try {
+            Invoke-FabricAuthCheck -ThrowOnFailure
+
+            $powerBIAdminBaseUrl = "https://api.powerbi.com/v1.0/myorg"
+
+            $queryParams = @()
+            if ($Filter) {
+                $queryParams += "`$filter=$([System.Uri]::EscapeDataString($Filter))"
+            }
+            if ($Top) {
+                $queryParams += "`$top=$Top"
+            }
+            if ($Skip) {
+                $queryParams += "`$skip=$Skip"
+            }
+
+            $apiEndpointURI = "$powerBIAdminBaseUrl/admin/capacities/$CapacityId/users"
+            if ($queryParams.Count -gt 0) {
+                $apiEndpointURI = "$apiEndpointURI`?$($queryParams -join '&')"
+            }
+
+            Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
+
+            $apiParams = @{
+                BaseURI = $apiEndpointURI
+                Headers = $script:FabricAuthContext.FabricHeaders
+                Method  = 'Get'
+            }
+            $response = Invoke-FabricAPIRequest @apiParams
+
+            if (-not $response) {
+                Write-FabricLog -Message "No capacity users returned." -Level Warning
+                return $null
+            }
+
+            if ($Raw) {
+                return $response
+            }
+
+            foreach ($user in $response) {
+                $user | Add-Member -NotePropertyName 'capacityId' -NotePropertyValue $CapacityId -Force
+            }
+            $response | Add-FabricTypeName -TypeName 'MicrosoftFabric.AdminCapacityUser'
+
+            return $response
+        }
+        catch {
+            $errorDetails = $_.Exception.Message
+            Write-FabricLog -Message "Failed to retrieve capacity users. Error: $errorDetails" -Level Error
+        }
+    }
+}
+#EndRegion '.\Public\Admin\Get-FabricAdminCapacityUser.ps1' 111
+#Region '.\Public\Admin\Get-FabricAdminDashboard.ps1' -1
+
+<#
+.SYNOPSIS
+    Gets Power BI dashboards for the organization.
+
+.DESCRIPTION
+    The Get-FabricAdminDashboard cmdlet retrieves Power BI dashboards using the admin API.
+
+.PARAMETER DashboardId
+    Optional. Returns only the dashboard matching this ID.
+
+.PARAMETER WorkspaceId
+    Optional. Get dashboards from a specific workspace.
+
+.PARAMETER Filter
+    Optional. OData filter expression.
+
+.PARAMETER Top
+    Optional. Maximum number of items to return.
+
+.PARAMETER Skip
+    Optional. Number of items to skip.
+
+.PARAMETER Raw
+    Optional. Returns raw API response.
+
+.EXAMPLE
+    Get-FabricAdminDashboard
+
+    Lists all dashboards in the tenant.
+
+.NOTES
+    - Uses the Power BI Admin API: https://api.powerbi.com/v1.0/myorg/admin/dashboards
+    - Requires Fabric Administrator permissions.
+
+    Author: Claude AI
+#>
+function Get-FabricAdminDashboard {
+    [CmdletBinding()]
+    param (
+        [Parameter(Mandatory = $false)]
+        [ValidateNotNullOrEmpty()]
+        [string]$DashboardId,
+
+        [Parameter(Mandatory = $false)]
+        [ValidateNotNullOrEmpty()]
+        [string]$WorkspaceId,
+
+        [Parameter(Mandatory = $false)]
+        [ValidateNotNullOrEmpty()]
+        [string]$Filter,
+
+        [Parameter(Mandatory = $false)]
+        [ValidateRange(1, 5000)]
+        [int]$Top,
+
+        [Parameter(Mandatory = $false)]
+        [ValidateRange(0, [int]::MaxValue)]
+        [int]$Skip,
+
+        [Parameter()]
+        [switch]$Raw
+    )
+
+    process {
+        try {
+            Invoke-FabricAuthCheck -ThrowOnFailure
+
+            $powerBIAdminBaseUrl = "https://api.powerbi.com/v1.0/myorg"
+
+            if ($WorkspaceId -and $DashboardId) {
+                $apiEndpointURI = "$powerBIAdminBaseUrl/admin/groups/$WorkspaceId/dashboards/$DashboardId"
+            }
+            elseif ($WorkspaceId) {
+                $apiEndpointURI = "$powerBIAdminBaseUrl/admin/groups/$WorkspaceId/dashboards"
+            }
+            elseif ($DashboardId) {
+                $apiEndpointURI = "$powerBIAdminBaseUrl/admin/dashboards/$DashboardId"
+                Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
+
+                $apiParams = @{
+                    BaseURI = $apiEndpointURI
+                    Headers = $script:FabricAuthContext.FabricHeaders
+                    Method  = 'Get'
+                }
+                $response = Invoke-FabricAPIRequest @apiParams
+
+                if ($response) {
+                    if ($Raw) {
+                        return $response
+                    }
+                    $response.PSObject.TypeNames.Insert(0, 'MicrosoftFabric.AdminDashboard')
+                    return $response
+                }
+                return $null
+            }
+            else {
+                $apiEndpointURI = "$powerBIAdminBaseUrl/admin/dashboards"
+            }
+
+            $queryParams = @()
+            if ($Filter) {
+                $queryParams += "`$filter=$([System.Uri]::EscapeDataString($Filter))"
+            }
+            if ($Top) {
+                $queryParams += "`$top=$Top"
+            }
+            if ($Skip) {
+                $queryParams += "`$skip=$Skip"
+            }
+
+            if ($queryParams.Count -gt 0) {
+                $apiEndpointURI = "$apiEndpointURI`?$($queryParams -join '&')"
+            }
+
+            Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
+
+            $apiParams = @{
+                BaseURI = $apiEndpointURI
+                Headers = $script:FabricAuthContext.FabricHeaders
+                Method  = 'Get'
+            }
+            $response = Invoke-FabricAPIRequest @apiParams
+
+            if (-not $response) {
+                Write-FabricLog -Message "No dashboards returned." -Level Warning
+                return $null
+            }
+
+            return Select-FabricResource -InputObject $response -ResourceType 'AdminDashboard' -TypeName 'MicrosoftFabric.AdminDashboard' -Raw:$Raw
+        }
+        catch {
+            $errorDetails = $_.Exception.Message
+            Write-FabricLog -Message "Failed to retrieve dashboards. Error: $errorDetails" -Level Error
+        }
+    }
+}
+#EndRegion '.\Public\Admin\Get-FabricAdminDashboard.ps1' 137
+#Region '.\Public\Admin\Get-FabricAdminDashboardSubscription.ps1' -1
+
+<#
+.SYNOPSIS
+    Gets subscriptions for a dashboard using the Power BI admin API.
+
+.DESCRIPTION
+    The Get-FabricAdminDashboardSubscription cmdlet retrieves subscriptions for a specific dashboard using the admin API.
+
+.PARAMETER DashboardId
+    Required. The dashboard ID to get subscriptions for.
+
+.PARAMETER Filter
+    Optional. OData filter expression.
+
+.PARAMETER Top
+    Optional. Maximum number of items to return.
+
+.PARAMETER Skip
+    Optional. Number of items to skip.
+
+.PARAMETER Raw
+    Optional. Returns raw API response.
+
+.EXAMPLE
+    Get-FabricAdminDashboardSubscription -DashboardId "dashboard123"
+
+    Lists all subscriptions for the specified dashboard.
+
+.NOTES
+    - Uses the Power BI Admin API: https://api.powerbi.com/v1.0/myorg/admin/dashboards/{dashboardId}/subscriptions
+    - Requires Fabric Administrator permissions.
+
+    Author: Claude AI
+#>
+function Get-FabricAdminDashboardSubscription {
+    [CmdletBinding()]
+    param (
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
+        [ValidateNotNullOrEmpty()]
+        [Alias('id')]
+        [string]$DashboardId,
+
+        [Parameter(Mandatory = $false)]
+        [ValidateNotNullOrEmpty()]
+        [string]$Filter,
+
+        [Parameter(Mandatory = $false)]
+        [ValidateRange(1, 5000)]
+        [int]$Top,
+
+        [Parameter(Mandatory = $false)]
+        [ValidateRange(0, [int]::MaxValue)]
+        [int]$Skip,
+
+        [Parameter()]
+        [switch]$Raw
+    )
+
+    process {
+        try {
+            Invoke-FabricAuthCheck -ThrowOnFailure
+
+            $powerBIAdminBaseUrl = "https://api.powerbi.com/v1.0/myorg"
+
+            $queryParams = @()
+            if ($Filter) {
+                $queryParams += "`$filter=$([System.Uri]::EscapeDataString($Filter))"
+            }
+            if ($Top) {
+                $queryParams += "`$top=$Top"
+            }
+            if ($Skip) {
+                $queryParams += "`$skip=$Skip"
+            }
+
+            $apiEndpointURI = "$powerBIAdminBaseUrl/admin/dashboards/$DashboardId/subscriptions"
+            if ($queryParams.Count -gt 0) {
+                $apiEndpointURI = "$apiEndpointURI`?$($queryParams -join '&')"
+            }
+
+            Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
+
+            $apiParams = @{
+                BaseURI = $apiEndpointURI
+                Headers = $script:FabricAuthContext.FabricHeaders
+                Method  = 'Get'
+            }
+            $response = Invoke-FabricAPIRequest @apiParams
+
+            if (-not $response) {
+                Write-FabricLog -Message "No dashboard subscriptions returned." -Level Warning
+                return $null
+            }
+
+            if ($Raw) {
+                return $response
+            }
+
+            foreach ($subscription in $response) {
+                $subscription | Add-Member -NotePropertyName 'dashboardId' -NotePropertyValue $DashboardId -Force
+            }
+            $response | Add-FabricTypeName -TypeName 'MicrosoftFabric.AdminDashboardSubscription'
+
+            return $response
+        }
+        catch {
+            $errorDetails = $_.Exception.Message
+            Write-FabricLog -Message "Failed to retrieve dashboard subscriptions. Error: $errorDetails" -Level Error
+        }
+    }
+}
+#EndRegion '.\Public\Admin\Get-FabricAdminDashboardSubscription.ps1' 111
+#Region '.\Public\Admin\Get-FabricAdminDashboardTile.ps1' -1
+
+<#
+.SYNOPSIS
+    Gets tiles from a dashboard using the Power BI admin API.
+
+.DESCRIPTION
+    The Get-FabricAdminDashboardTile cmdlet retrieves tiles from a specific dashboard using the admin API.
+
+.PARAMETER DashboardId
+    Required. The dashboard ID to get tiles for.
+
+.PARAMETER Filter
+    Optional. OData filter expression.
+
+.PARAMETER Top
+    Optional. Maximum number of items to return.
+
+.PARAMETER Skip
+    Optional. Number of items to skip.
+
+.PARAMETER Raw
+    Optional. Returns raw API response.
+
+.EXAMPLE
+    Get-FabricAdminDashboardTile -DashboardId "dashboard123"
+
+    Lists all tiles in the specified dashboard.
+
+.NOTES
+    - Uses the Power BI Admin API: https://api.powerbi.com/v1.0/myorg/admin/dashboards/{dashboardId}/tiles
+    - Requires Fabric Administrator permissions.
+
+    Author: Claude AI
+#>
+function Get-FabricAdminDashboardTile {
+    [CmdletBinding()]
+    param (
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
+        [ValidateNotNullOrEmpty()]
+        [Alias('id')]
+        [string]$DashboardId,
+
+        [Parameter(Mandatory = $false)]
+        [ValidateNotNullOrEmpty()]
+        [string]$Filter,
+
+        [Parameter(Mandatory = $false)]
+        [ValidateRange(1, 5000)]
+        [int]$Top,
+
+        [Parameter(Mandatory = $false)]
+        [ValidateRange(0, [int]::MaxValue)]
+        [int]$Skip,
+
+        [Parameter()]
+        [switch]$Raw
+    )
+
+    process {
+        try {
+            Invoke-FabricAuthCheck -ThrowOnFailure
+
+            $powerBIAdminBaseUrl = "https://api.powerbi.com/v1.0/myorg"
+
+            $queryParams = @()
+            if ($Filter) {
+                $queryParams += "`$filter=$([System.Uri]::EscapeDataString($Filter))"
+            }
+            if ($Top) {
+                $queryParams += "`$top=$Top"
+            }
+            if ($Skip) {
+                $queryParams += "`$skip=$Skip"
+            }
+
+            $apiEndpointURI = "$powerBIAdminBaseUrl/admin/dashboards/$DashboardId/tiles"
+            if ($queryParams.Count -gt 0) {
+                $apiEndpointURI = "$apiEndpointURI`?$($queryParams -join '&')"
+            }
+
+            Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
+
+            $apiParams = @{
+                BaseURI = $apiEndpointURI
+                Headers = $script:FabricAuthContext.FabricHeaders
+                Method  = 'Get'
+            }
+            $response = Invoke-FabricAPIRequest @apiParams
+
+            if (-not $response) {
+                Write-FabricLog -Message "No dashboard tiles returned." -Level Warning
+                return $null
+            }
+
+            if ($Raw) {
+                return $response
+            }
+
+            foreach ($tile in $response) {
+                $tile | Add-Member -NotePropertyName 'dashboardId' -NotePropertyValue $DashboardId -Force
+            }
+            $response | Add-FabricTypeName -TypeName 'MicrosoftFabric.AdminDashboardTile'
+
+            return $response
+        }
+        catch {
+            $errorDetails = $_.Exception.Message
+            Write-FabricLog -Message "Failed to retrieve dashboard tiles. Error: $errorDetails" -Level Error
+        }
+    }
+}
+#EndRegion '.\Public\Admin\Get-FabricAdminDashboardTile.ps1' 111
+#Region '.\Public\Admin\Get-FabricAdminDashboardUser.ps1' -1
+
+<#
+.SYNOPSIS
+    Gets users with access to a dashboard using the Power BI admin API.
+
+.DESCRIPTION
+    The Get-FabricAdminDashboardUser cmdlet retrieves users with access to a specific dashboard using the admin API.
+
+.PARAMETER DashboardId
+    Required. The dashboard ID to get users for.
+
+.PARAMETER Filter
+    Optional. OData filter expression.
+
+.PARAMETER Top
+    Optional. Maximum number of items to return.
+
+.PARAMETER Skip
+    Optional. Number of items to skip.
+
+.PARAMETER Raw
+    Optional. Returns raw API response.
+
+.EXAMPLE
+    Get-FabricAdminDashboardUser -DashboardId "dashboard123"
+
+    Lists all users with access to the specified dashboard.
+
+.NOTES
+    - Uses the Power BI Admin API: https://api.powerbi.com/v1.0/myorg/admin/dashboards/{dashboardId}/users
+    - Requires Fabric Administrator permissions.
+
+    Author: Claude AI
+#>
+function Get-FabricAdminDashboardUser {
+    [CmdletBinding()]
+    param (
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
+        [ValidateNotNullOrEmpty()]
+        [Alias('id')]
+        [string]$DashboardId,
+
+        [Parameter(Mandatory = $false)]
+        [ValidateNotNullOrEmpty()]
+        [string]$Filter,
+
+        [Parameter(Mandatory = $false)]
+        [ValidateRange(1, 5000)]
+        [int]$Top,
+
+        [Parameter(Mandatory = $false)]
+        [ValidateRange(0, [int]::MaxValue)]
+        [int]$Skip,
+
+        [Parameter()]
+        [switch]$Raw
+    )
+
+    process {
+        try {
+            Invoke-FabricAuthCheck -ThrowOnFailure
+
+            $powerBIAdminBaseUrl = "https://api.powerbi.com/v1.0/myorg"
+
+            $queryParams = @()
+            if ($Filter) {
+                $queryParams += "`$filter=$([System.Uri]::EscapeDataString($Filter))"
+            }
+            if ($Top) {
+                $queryParams += "`$top=$Top"
+            }
+            if ($Skip) {
+                $queryParams += "`$skip=$Skip"
+            }
+
+            $apiEndpointURI = "$powerBIAdminBaseUrl/admin/dashboards/$DashboardId/users"
+            if ($queryParams.Count -gt 0) {
+                $apiEndpointURI = "$apiEndpointURI`?$($queryParams -join '&')"
+            }
+
+            Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
+
+            $apiParams = @{
+                BaseURI = $apiEndpointURI
+                Headers = $script:FabricAuthContext.FabricHeaders
+                Method  = 'Get'
+            }
+            $response = Invoke-FabricAPIRequest @apiParams
+
+            if (-not $response) {
+                Write-FabricLog -Message "No dashboard users returned." -Level Warning
+                return $null
+            }
+
+            if ($Raw) {
+                return $response
+            }
+
+            foreach ($user in $response) {
+                $user | Add-Member -NotePropertyName 'dashboardId' -NotePropertyValue $DashboardId -Force
+            }
+            $response | Add-FabricTypeName -TypeName 'MicrosoftFabric.AdminDashboardUser'
+
+            return $response
+        }
+        catch {
+            $errorDetails = $_.Exception.Message
+            Write-FabricLog -Message "Failed to retrieve dashboard users. Error: $errorDetails" -Level Error
+        }
+    }
+}
+#EndRegion '.\Public\Admin\Get-FabricAdminDashboardUser.ps1' 111
+#Region '.\Public\Admin\Get-FabricAdminDataflow.ps1' -1
+
+<#
+.SYNOPSIS
+    Gets Power BI dataflows for the organization.
+
+.DESCRIPTION
+    The Get-FabricAdminDataflow cmdlet retrieves Power BI dataflows using the admin API.
+
+.PARAMETER DataflowId
+    Optional. Returns only the dataflow matching this ID.
+
+.PARAMETER WorkspaceId
+    Optional. Get dataflows from a specific workspace.
+
+.PARAMETER Filter
+    Optional. OData filter expression.
+
+.PARAMETER Top
+    Optional. Maximum number of items to return.
+
+.PARAMETER Skip
+    Optional. Number of items to skip.
+
+.PARAMETER Raw
+    Optional. Returns raw API response.
+
+.EXAMPLE
+    Get-FabricAdminDataflow
+
+    Lists all dataflows in the tenant.
+
+.NOTES
+    - Uses the Power BI Admin API: https://api.powerbi.com/v1.0/myorg/admin/dataflows
+    - Requires Fabric Administrator permissions.
+
+    Author: Claude AI
+#>
+function Get-FabricAdminDataflow {
+    [CmdletBinding()]
+    param (
+        [Parameter(Mandatory = $false)]
+        [ValidateNotNullOrEmpty()]
+        [string]$DataflowId,
+
+        [Parameter(Mandatory = $false)]
+        [ValidateNotNullOrEmpty()]
+        [string]$WorkspaceId,
+
+        [Parameter(Mandatory = $false)]
+        [ValidateNotNullOrEmpty()]
+        [string]$Filter,
+
+        [Parameter(Mandatory = $false)]
+        [ValidateRange(1, 5000)]
+        [int]$Top,
+
+        [Parameter(Mandatory = $false)]
+        [ValidateRange(0, [int]::MaxValue)]
+        [int]$Skip,
+
+        [Parameter()]
+        [switch]$Raw
+    )
+
+    process {
+        try {
+            Invoke-FabricAuthCheck -ThrowOnFailure
+
+            $powerBIAdminBaseUrl = "https://api.powerbi.com/v1.0/myorg"
+
+            if ($WorkspaceId -and $DataflowId) {
+                $apiEndpointURI = "$powerBIAdminBaseUrl/admin/groups/$WorkspaceId/dataflows/$DataflowId"
+            }
+            elseif ($WorkspaceId) {
+                $apiEndpointURI = "$powerBIAdminBaseUrl/admin/groups/$WorkspaceId/dataflows"
+            }
+            elseif ($DataflowId) {
+                $apiEndpointURI = "$powerBIAdminBaseUrl/admin/dataflows/$DataflowId"
+                Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
+
+                $apiParams = @{
+                    BaseURI = $apiEndpointURI
+                    Headers = $script:FabricAuthContext.FabricHeaders
+                    Method  = 'Get'
+                }
+                $response = Invoke-FabricAPIRequest @apiParams
+
+                if ($response) {
+                    if ($Raw) {
+                        return $response
+                    }
+                    $response.PSObject.TypeNames.Insert(0, 'MicrosoftFabric.AdminDataflow')
+                    return $response
+                }
+                return $null
+            }
+            else {
+                $apiEndpointURI = "$powerBIAdminBaseUrl/admin/dataflows"
+            }
+
+            $queryParams = @()
+            if ($Filter) {
+                $queryParams += "`$filter=$([System.Uri]::EscapeDataString($Filter))"
+            }
+            if ($Top) {
+                $queryParams += "`$top=$Top"
+            }
+            if ($Skip) {
+                $queryParams += "`$skip=$Skip"
+            }
+
+            if ($queryParams.Count -gt 0) {
+                $apiEndpointURI = "$apiEndpointURI`?$($queryParams -join '&')"
+            }
+
+            Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
+
+            $apiParams = @{
+                BaseURI = $apiEndpointURI
+                Headers = $script:FabricAuthContext.FabricHeaders
+                Method  = 'Get'
+            }
+            $response = Invoke-FabricAPIRequest @apiParams
+
+            if (-not $response) {
+                Write-FabricLog -Message "No dataflows returned." -Level Warning
+                return $null
+            }
+
+            return Select-FabricResource -InputObject $response -ResourceType 'AdminDataflow' -TypeName 'MicrosoftFabric.AdminDataflow' -Raw:$Raw
+        }
+        catch {
+            $errorDetails = $_.Exception.Message
+            Write-FabricLog -Message "Failed to retrieve dataflows. Error: $errorDetails" -Level Error
+        }
+    }
+}
+#EndRegion '.\Public\Admin\Get-FabricAdminDataflow.ps1' 137
+#Region '.\Public\Admin\Get-FabricAdminDataflowDatasource.ps1' -1
+
+<#
+.SYNOPSIS
+    Gets datasources for a dataflow using the Power BI admin API.
+
+.DESCRIPTION
+    The Get-FabricAdminDataflowDatasource cmdlet retrieves datasources for a specific dataflow using the admin API.
+
+.PARAMETER DataflowId
+    Required. The dataflow ID to get datasources for.
+
+.PARAMETER Filter
+    Optional. OData filter expression.
+
+.PARAMETER Top
+    Optional. Maximum number of items to return.
+
+.PARAMETER Skip
+    Optional. Number of items to skip.
+
+.PARAMETER Raw
+    Optional. Returns raw API response.
+
+.EXAMPLE
+    Get-FabricAdminDataflowDatasource -DataflowId "dataflow123"
+
+    Lists all datasources for the specified dataflow.
+
+.NOTES
+    - Uses the Power BI Admin API: https://api.powerbi.com/v1.0/myorg/admin/dataflows/{dataflowId}/datasources
+    - Requires Fabric Administrator permissions.
+
+    Author: Claude AI
+#>
+function Get-FabricAdminDataflowDatasource {
+    [CmdletBinding()]
+    param (
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
+        [ValidateNotNullOrEmpty()]
+        [Alias('id')]
+        [string]$DataflowId,
+
+        [Parameter(Mandatory = $false)]
+        [ValidateNotNullOrEmpty()]
+        [string]$Filter,
+
+        [Parameter(Mandatory = $false)]
+        [ValidateRange(1, 5000)]
+        [int]$Top,
+
+        [Parameter(Mandatory = $false)]
+        [ValidateRange(0, [int]::MaxValue)]
+        [int]$Skip,
+
+        [Parameter()]
+        [switch]$Raw
+    )
+
+    process {
+        try {
+            Invoke-FabricAuthCheck -ThrowOnFailure
+
+            $powerBIAdminBaseUrl = "https://api.powerbi.com/v1.0/myorg"
+
+            $queryParams = @()
+            if ($Filter) {
+                $queryParams += "`$filter=$([System.Uri]::EscapeDataString($Filter))"
+            }
+            if ($Top) {
+                $queryParams += "`$top=$Top"
+            }
+            if ($Skip) {
+                $queryParams += "`$skip=$Skip"
+            }
+
+            $apiEndpointURI = "$powerBIAdminBaseUrl/admin/dataflows/$DataflowId/datasources"
+            if ($queryParams.Count -gt 0) {
+                $apiEndpointURI = "$apiEndpointURI`?$($queryParams -join '&')"
+            }
+
+            Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
+
+            $apiParams = @{
+                BaseURI = $apiEndpointURI
+                Headers = $script:FabricAuthContext.FabricHeaders
+                Method  = 'Get'
+            }
+            $response = Invoke-FabricAPIRequest @apiParams
+
+            if (-not $response) {
+                Write-FabricLog -Message "No dataflow datasources returned." -Level Warning
+                return $null
+            }
+
+            if ($Raw) {
+                return $response
+            }
+
+            foreach ($datasource in $response) {
+                $datasource | Add-Member -NotePropertyName 'dataflowId' -NotePropertyValue $DataflowId -Force
+            }
+            $response | Add-FabricTypeName -TypeName 'MicrosoftFabric.AdminDataflowDatasource'
+
+            return $response
+        }
+        catch {
+            $errorDetails = $_.Exception.Message
+            Write-FabricLog -Message "Failed to retrieve dataflow datasources. Error: $errorDetails" -Level Error
+        }
+    }
+}
+#EndRegion '.\Public\Admin\Get-FabricAdminDataflowDatasource.ps1' 111
+#Region '.\Public\Admin\Get-FabricAdminDataflowUpstream.ps1' -1
+
+<#
+.SYNOPSIS
+    Gets upstream dataflows for a dataflow using the Power BI admin API.
+
+.DESCRIPTION
+    The Get-FabricAdminDataflowUpstream cmdlet retrieves upstream dataflows for a specific dataflow in a workspace using the admin API.
+
+.PARAMETER WorkspaceId
+    Required. The workspace ID containing the dataflow.
+
+.PARAMETER DataflowId
+    Required. The dataflow ID to get upstream dataflows for.
+
+.PARAMETER Filter
+    Optional. OData filter expression.
+
+.PARAMETER Top
+    Optional. Maximum number of items to return.
+
+.PARAMETER Skip
+    Optional. Number of items to skip.
+
+.PARAMETER Raw
+    Optional. Returns raw API response.
+
+.EXAMPLE
+    Get-FabricAdminDataflowUpstream -WorkspaceId "workspace123" -DataflowId "dataflow123"
+
+    Lists all upstream dataflows for the specified dataflow.
+
+.NOTES
+    - Uses the Power BI Admin API: https://api.powerbi.com/v1.0/myorg/admin/groups/{workspaceId}/dataflows/{dataflowId}/upstreamDataflows
+    - Requires Fabric Administrator permissions.
+
+    Author: Claude AI
+#>
+function Get-FabricAdminDataflowUpstream {
+    [CmdletBinding()]
+    param (
+        [Parameter(Mandatory = $true)]
+        [ValidateNotNullOrEmpty()]
+        [string]$WorkspaceId,
+
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
+        [ValidateNotNullOrEmpty()]
+        [Alias('id')]
+        [string]$DataflowId,
+
+        [Parameter(Mandatory = $false)]
+        [ValidateNotNullOrEmpty()]
+        [string]$Filter,
+
+        [Parameter(Mandatory = $false)]
+        [ValidateRange(1, 5000)]
+        [int]$Top,
+
+        [Parameter(Mandatory = $false)]
+        [ValidateRange(0, [int]::MaxValue)]
+        [int]$Skip,
+
+        [Parameter()]
+        [switch]$Raw
+    )
+
+    process {
+        try {
+            Invoke-FabricAuthCheck -ThrowOnFailure
+
+            $powerBIAdminBaseUrl = "https://api.powerbi.com/v1.0/myorg"
+
+            $queryParams = @()
+            if ($Filter) {
+                $queryParams += "`$filter=$([System.Uri]::EscapeDataString($Filter))"
+            }
+            if ($Top) {
+                $queryParams += "`$top=$Top"
+            }
+            if ($Skip) {
+                $queryParams += "`$skip=$Skip"
+            }
+
+            $apiEndpointURI = "$powerBIAdminBaseUrl/admin/groups/$WorkspaceId/dataflows/$DataflowId/upstreamDataflows"
+            if ($queryParams.Count -gt 0) {
+                $apiEndpointURI = "$apiEndpointURI`?$($queryParams -join '&')"
+            }
+
+            Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
+
+            $apiParams = @{
+                BaseURI = $apiEndpointURI
+                Headers = $script:FabricAuthContext.FabricHeaders
+                Method  = 'Get'
+            }
+            $response = Invoke-FabricAPIRequest @apiParams
+
+            if (-not $response) {
+                Write-FabricLog -Message "No upstream dataflows returned." -Level Warning
+                return $null
+            }
+
+            if ($Raw) {
+                return $response
+            }
+
+            foreach ($dataflow in $response) {
+                $dataflow | Add-Member -NotePropertyName 'workspaceId' -NotePropertyValue $WorkspaceId -Force
+                $dataflow | Add-Member -NotePropertyName 'dataflowId' -NotePropertyValue $DataflowId -Force
+            }
+            $response | Add-FabricTypeName -TypeName 'MicrosoftFabric.AdminDataflowUpstream'
+
+            return $response
+        }
+        catch {
+            $errorDetails = $_.Exception.Message
+            Write-FabricLog -Message "Failed to retrieve upstream dataflows. Error: $errorDetails" -Level Error
+        }
+    }
+}
+#EndRegion '.\Public\Admin\Get-FabricAdminDataflowUpstream.ps1' 119
+#Region '.\Public\Admin\Get-FabricAdminDataflowUser.ps1' -1
+
+<#
+.SYNOPSIS
+    Gets users with access to a dataflow using the Power BI admin API.
+
+.DESCRIPTION
+    The Get-FabricAdminDataflowUser cmdlet retrieves users with access to a specific dataflow using the admin API.
+
+.PARAMETER DataflowId
+    Required. The dataflow ID to get users for.
+
+.PARAMETER Filter
+    Optional. OData filter expression.
+
+.PARAMETER Top
+    Optional. Maximum number of items to return.
+
+.PARAMETER Skip
+    Optional. Number of items to skip.
+
+.PARAMETER Raw
+    Optional. Returns raw API response.
+
+.EXAMPLE
+    Get-FabricAdminDataflowUser -DataflowId "dataflow123"
+
+    Lists all users with access to the specified dataflow.
+
+.NOTES
+    - Uses the Power BI Admin API: https://api.powerbi.com/v1.0/myorg/admin/dataflows/{dataflowId}/users
+    - Requires Fabric Administrator permissions.
+
+    Author: Claude AI
+#>
+function Get-FabricAdminDataflowUser {
+    [CmdletBinding()]
+    param (
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
+        [ValidateNotNullOrEmpty()]
+        [Alias('id')]
+        [string]$DataflowId,
+
+        [Parameter(Mandatory = $false)]
+        [ValidateNotNullOrEmpty()]
+        [string]$Filter,
+
+        [Parameter(Mandatory = $false)]
+        [ValidateRange(1, 5000)]
+        [int]$Top,
+
+        [Parameter(Mandatory = $false)]
+        [ValidateRange(0, [int]::MaxValue)]
+        [int]$Skip,
+
+        [Parameter()]
+        [switch]$Raw
+    )
+
+    process {
+        try {
+            Invoke-FabricAuthCheck -ThrowOnFailure
+
+            $powerBIAdminBaseUrl = "https://api.powerbi.com/v1.0/myorg"
+
+            $queryParams = @()
+            if ($Filter) {
+                $queryParams += "`$filter=$([System.Uri]::EscapeDataString($Filter))"
+            }
+            if ($Top) {
+                $queryParams += "`$top=$Top"
+            }
+            if ($Skip) {
+                $queryParams += "`$skip=$Skip"
+            }
+
+            $apiEndpointURI = "$powerBIAdminBaseUrl/admin/dataflows/$DataflowId/users"
+            if ($queryParams.Count -gt 0) {
+                $apiEndpointURI = "$apiEndpointURI`?$($queryParams -join '&')"
+            }
+
+            Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
+
+            $apiParams = @{
+                BaseURI = $apiEndpointURI
+                Headers = $script:FabricAuthContext.FabricHeaders
+                Method  = 'Get'
+            }
+            $response = Invoke-FabricAPIRequest @apiParams
+
+            if (-not $response) {
+                Write-FabricLog -Message "No dataflow users returned." -Level Warning
+                return $null
+            }
+
+            if ($Raw) {
+                return $response
+            }
+
+            foreach ($user in $response) {
+                $user | Add-Member -NotePropertyName 'dataflowId' -NotePropertyValue $DataflowId -Force
+            }
+            $response | Add-FabricTypeName -TypeName 'MicrosoftFabric.AdminDataflowUser'
+
+            return $response
+        }
+        catch {
+            $errorDetails = $_.Exception.Message
+            Write-FabricLog -Message "Failed to retrieve dataflow users. Error: $errorDetails" -Level Error
+        }
+    }
+}
+#EndRegion '.\Public\Admin\Get-FabricAdminDataflowUser.ps1' 111
+#Region '.\Public\Admin\Get-FabricAdminDataset.ps1' -1
+
+<#
+.SYNOPSIS
+    Gets Power BI datasets for the organization.
+
+.DESCRIPTION
+    The Get-FabricAdminDataset cmdlet retrieves Power BI datasets using the admin API.
+
+.PARAMETER DatasetId
+    Optional. Returns only the dataset matching this ID.
+
+.PARAMETER WorkspaceId
+    Optional. Get datasets from a specific workspace.
+
+.PARAMETER Filter
+    Optional. OData filter expression.
+
+.PARAMETER Top
+    Optional. Maximum number of items to return.
+
+.PARAMETER Skip
+    Optional. Number of items to skip.
+
+.PARAMETER Raw
+    Optional. Returns raw API response.
+
+.EXAMPLE
+    Get-FabricAdminDataset
+
+    Lists all datasets in the tenant.
+
+.NOTES
+    - Uses the Power BI Admin API: https://api.powerbi.com/v1.0/myorg/admin/datasets
+    - Requires Fabric Administrator permissions.
+
+    Author: Claude AI
+#>
+function Get-FabricAdminDataset {
+    [CmdletBinding()]
+    param (
+        [Parameter(Mandatory = $false)]
+        [ValidateNotNullOrEmpty()]
+        [string]$DatasetId,
+
+        [Parameter(Mandatory = $false)]
+        [ValidateNotNullOrEmpty()]
+        [string]$WorkspaceId,
+
+        [Parameter(Mandatory = $false)]
+        [ValidateNotNullOrEmpty()]
+        [string]$Filter,
+
+        [Parameter(Mandatory = $false)]
+        [ValidateRange(1, 5000)]
+        [int]$Top,
+
+        [Parameter(Mandatory = $false)]
+        [ValidateRange(0, [int]::MaxValue)]
+        [int]$Skip,
+
+        [Parameter()]
+        [switch]$Raw
+    )
+
+    process {
+        try {
+            Invoke-FabricAuthCheck -ThrowOnFailure
+
+            $powerBIAdminBaseUrl = "https://api.powerbi.com/v1.0/myorg"
+
+            if ($WorkspaceId -and $DatasetId) {
+                $apiEndpointURI = "$powerBIAdminBaseUrl/admin/groups/$WorkspaceId/datasets/$DatasetId"
+            }
+            elseif ($WorkspaceId) {
+                $apiEndpointURI = "$powerBIAdminBaseUrl/admin/groups/$WorkspaceId/datasets"
+            }
+            elseif ($DatasetId) {
+                $apiEndpointURI = "$powerBIAdminBaseUrl/admin/datasets/$DatasetId"
+                Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
+
+                $apiParams = @{
+                    BaseURI = $apiEndpointURI
+                    Headers = $script:FabricAuthContext.FabricHeaders
+                    Method  = 'Get'
+                }
+                $response = Invoke-FabricAPIRequest @apiParams
+
+                if ($response) {
+                    if ($Raw) {
+                        return $response
+                    }
+                    $response.PSObject.TypeNames.Insert(0, 'MicrosoftFabric.AdminDataset')
+                    return $response
+                }
+                return $null
+            }
+            else {
+                $apiEndpointURI = "$powerBIAdminBaseUrl/admin/datasets"
+            }
+
+            $queryParams = @()
+            if ($Filter) {
+                $queryParams += "`$filter=$([System.Uri]::EscapeDataString($Filter))"
+            }
+            if ($Top) {
+                $queryParams += "`$top=$Top"
+            }
+            if ($Skip) {
+                $queryParams += "`$skip=$Skip"
+            }
+
+            if ($queryParams.Count -gt 0) {
+                $apiEndpointURI = "$apiEndpointURI`?$($queryParams -join '&')"
+            }
+
+            Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
+
+            $apiParams = @{
+                BaseURI = $apiEndpointURI
+                Headers = $script:FabricAuthContext.FabricHeaders
+                Method  = 'Get'
+            }
+            $response = Invoke-FabricAPIRequest @apiParams
+
+            if (-not $response) {
+                Write-FabricLog -Message "No datasets returned." -Level Warning
+                return $null
+            }
+
+            return Select-FabricResource -InputObject $response -ResourceType 'AdminDataset' -TypeName 'MicrosoftFabric.AdminDataset' -Raw:$Raw
+        }
+        catch {
+            $errorDetails = $_.Exception.Message
+            Write-FabricLog -Message "Failed to retrieve datasets. Error: $errorDetails" -Level Error
+        }
+    }
+}
+#EndRegion '.\Public\Admin\Get-FabricAdminDataset.ps1' 137
+#Region '.\Public\Admin\Get-FabricAdminDatasetDataflowLink.ps1' -1
+
+<#
+.SYNOPSIS
+    Gets upstream dataflows linked to datasets in a workspace using the Power BI admin API.
+
+.DESCRIPTION
+    The Get-FabricAdminDatasetDataflowLink cmdlet retrieves upstream dataflows linked to datasets in a specific workspace using the admin API.
+
+.PARAMETER WorkspaceId
+    Required. The workspace ID to get dataset-dataflow links for.
+
+.PARAMETER Filter
+    Optional. OData filter expression.
+
+.PARAMETER Top
+    Optional. Maximum number of items to return.
+
+.PARAMETER Skip
+    Optional. Number of items to skip.
+
+.PARAMETER Raw
+    Optional. Returns raw API response.
+
+.EXAMPLE
+    Get-FabricAdminDatasetDataflowLink -WorkspaceId "workspace123"
+
+    Lists all dataset-dataflow links in the specified workspace.
+
+.NOTES
+    - Uses the Power BI Admin API: https://api.powerbi.com/v1.0/myorg/admin/groups/{workspaceId}/datasets/upstreamDataflows
+    - Requires Fabric Administrator permissions.
+
+    Author: Claude AI
+#>
+function Get-FabricAdminDatasetDataflowLink {
+    [CmdletBinding()]
+    param (
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
+        [ValidateNotNullOrEmpty()]
+        [Alias('id')]
+        [string]$WorkspaceId,
+
+        [Parameter(Mandatory = $false)]
+        [ValidateNotNullOrEmpty()]
+        [string]$Filter,
+
+        [Parameter(Mandatory = $false)]
+        [ValidateRange(1, 5000)]
+        [int]$Top,
+
+        [Parameter(Mandatory = $false)]
+        [ValidateRange(0, [int]::MaxValue)]
+        [int]$Skip,
+
+        [Parameter()]
+        [switch]$Raw
+    )
+
+    process {
+        try {
+            Invoke-FabricAuthCheck -ThrowOnFailure
+
+            $powerBIAdminBaseUrl = "https://api.powerbi.com/v1.0/myorg"
+
+            $queryParams = @()
+            if ($Filter) {
+                $queryParams += "`$filter=$([System.Uri]::EscapeDataString($Filter))"
+            }
+            if ($Top) {
+                $queryParams += "`$top=$Top"
+            }
+            if ($Skip) {
+                $queryParams += "`$skip=$Skip"
+            }
+
+            $apiEndpointURI = "$powerBIAdminBaseUrl/admin/groups/$WorkspaceId/datasets/upstreamDataflows"
+            if ($queryParams.Count -gt 0) {
+                $apiEndpointURI = "$apiEndpointURI`?$($queryParams -join '&')"
+            }
+
+            Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
+
+            $apiParams = @{
+                BaseURI = $apiEndpointURI
+                Headers = $script:FabricAuthContext.FabricHeaders
+                Method  = 'Get'
+            }
+            $response = Invoke-FabricAPIRequest @apiParams
+
+            if (-not $response) {
+                Write-FabricLog -Message "No dataset-dataflow links returned." -Level Warning
+                return $null
+            }
+
+            if ($Raw) {
+                return $response
+            }
+
+            foreach ($link in $response) {
+                $link | Add-Member -NotePropertyName 'workspaceId' -NotePropertyValue $WorkspaceId -Force
+            }
+            $response | Add-FabricTypeName -TypeName 'MicrosoftFabric.AdminDatasetDataflowLink'
+
+            return $response
+        }
+        catch {
+            $errorDetails = $_.Exception.Message
+            Write-FabricLog -Message "Failed to retrieve dataset-dataflow links. Error: $errorDetails" -Level Error
+        }
+    }
+}
+#EndRegion '.\Public\Admin\Get-FabricAdminDatasetDataflowLink.ps1' 111
+#Region '.\Public\Admin\Get-FabricAdminDatasetDatasource.ps1' -1
+
+<#
+.SYNOPSIS
+    Gets datasources for a dataset using the Power BI admin API.
+
+.DESCRIPTION
+    The Get-FabricAdminDatasetDatasource cmdlet retrieves datasources for a specific dataset using the admin API.
+
+.PARAMETER DatasetId
+    Required. The dataset ID to get datasources for.
+
+.PARAMETER Filter
+    Optional. OData filter expression.
+
+.PARAMETER Top
+    Optional. Maximum number of items to return.
+
+.PARAMETER Skip
+    Optional. Number of items to skip.
+
+.PARAMETER Raw
+    Optional. Returns raw API response.
+
+.EXAMPLE
+    Get-FabricAdminDatasetDatasource -DatasetId "dataset123"
+
+    Lists all datasources for the specified dataset.
+
+.NOTES
+    - Uses the Power BI Admin API: https://api.powerbi.com/v1.0/myorg/admin/datasets/{datasetId}/datasources
+    - Requires Fabric Administrator permissions.
+
+    Author: Claude AI
+#>
+function Get-FabricAdminDatasetDatasource {
+    [CmdletBinding()]
+    param (
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
+        [ValidateNotNullOrEmpty()]
+        [Alias('id')]
+        [string]$DatasetId,
+
+        [Parameter(Mandatory = $false)]
+        [ValidateNotNullOrEmpty()]
+        [string]$Filter,
+
+        [Parameter(Mandatory = $false)]
+        [ValidateRange(1, 5000)]
+        [int]$Top,
+
+        [Parameter(Mandatory = $false)]
+        [ValidateRange(0, [int]::MaxValue)]
+        [int]$Skip,
+
+        [Parameter()]
+        [switch]$Raw
+    )
+
+    process {
+        try {
+            Invoke-FabricAuthCheck -ThrowOnFailure
+
+            $powerBIAdminBaseUrl = "https://api.powerbi.com/v1.0/myorg"
+
+            $queryParams = @()
+            if ($Filter) {
+                $queryParams += "`$filter=$([System.Uri]::EscapeDataString($Filter))"
+            }
+            if ($Top) {
+                $queryParams += "`$top=$Top"
+            }
+            if ($Skip) {
+                $queryParams += "`$skip=$Skip"
+            }
+
+            $apiEndpointURI = "$powerBIAdminBaseUrl/admin/datasets/$DatasetId/datasources"
+            if ($queryParams.Count -gt 0) {
+                $apiEndpointURI = "$apiEndpointURI`?$($queryParams -join '&')"
+            }
+
+            Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
+
+            $apiParams = @{
+                BaseURI = $apiEndpointURI
+                Headers = $script:FabricAuthContext.FabricHeaders
+                Method  = 'Get'
+            }
+            $response = Invoke-FabricAPIRequest @apiParams
+
+            if (-not $response) {
+                Write-FabricLog -Message "No dataset datasources returned." -Level Warning
+                return $null
+            }
+
+            if ($Raw) {
+                return $response
+            }
+
+            foreach ($datasource in $response) {
+                $datasource | Add-Member -NotePropertyName 'datasetId' -NotePropertyValue $DatasetId -Force
+            }
+            $response | Add-FabricTypeName -TypeName 'MicrosoftFabric.AdminDatasetDatasource'
+
+            return $response
+        }
+        catch {
+            $errorDetails = $_.Exception.Message
+            Write-FabricLog -Message "Failed to retrieve dataset datasources. Error: $errorDetails" -Level Error
+        }
+    }
+}
+#EndRegion '.\Public\Admin\Get-FabricAdminDatasetDatasource.ps1' 111
+#Region '.\Public\Admin\Get-FabricAdminDatasetUser.ps1' -1
+
+<#
+.SYNOPSIS
+    Gets users with access to a dataset using the Power BI admin API.
+
+.DESCRIPTION
+    The Get-FabricAdminDatasetUser cmdlet retrieves users with access to a specific dataset using the admin API.
+
+.PARAMETER DatasetId
+    Required. The dataset ID to get users for.
+
+.PARAMETER Filter
+    Optional. OData filter expression.
+
+.PARAMETER Top
+    Optional. Maximum number of items to return.
+
+.PARAMETER Skip
+    Optional. Number of items to skip.
+
+.PARAMETER Raw
+    Optional. Returns raw API response.
+
+.EXAMPLE
+    Get-FabricAdminDatasetUser -DatasetId "dataset123"
+
+    Lists all users with access to the specified dataset.
+
+.NOTES
+    - Uses the Power BI Admin API: https://api.powerbi.com/v1.0/myorg/admin/datasets/{datasetId}/users
+    - Requires Fabric Administrator permissions.
+
+    Author: Claude AI
+#>
+function Get-FabricAdminDatasetUser {
+    [CmdletBinding()]
+    param (
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
+        [ValidateNotNullOrEmpty()]
+        [Alias('id')]
+        [string]$DatasetId,
+
+        [Parameter(Mandatory = $false)]
+        [ValidateNotNullOrEmpty()]
+        [string]$Filter,
+
+        [Parameter(Mandatory = $false)]
+        [ValidateRange(1, 5000)]
+        [int]$Top,
+
+        [Parameter(Mandatory = $false)]
+        [ValidateRange(0, [int]::MaxValue)]
+        [int]$Skip,
+
+        [Parameter()]
+        [switch]$Raw
+    )
+
+    process {
+        try {
+            Invoke-FabricAuthCheck -ThrowOnFailure
+
+            $powerBIAdminBaseUrl = "https://api.powerbi.com/v1.0/myorg"
+
+            $queryParams = @()
+            if ($Filter) {
+                $queryParams += "`$filter=$([System.Uri]::EscapeDataString($Filter))"
+            }
+            if ($Top) {
+                $queryParams += "`$top=$Top"
+            }
+            if ($Skip) {
+                $queryParams += "`$skip=$Skip"
+            }
+
+            $apiEndpointURI = "$powerBIAdminBaseUrl/admin/datasets/$DatasetId/users"
+            if ($queryParams.Count -gt 0) {
+                $apiEndpointURI = "$apiEndpointURI`?$($queryParams -join '&')"
+            }
+
+            Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
+
+            $apiParams = @{
+                BaseURI = $apiEndpointURI
+                Headers = $script:FabricAuthContext.FabricHeaders
+                Method  = 'Get'
+            }
+            $response = Invoke-FabricAPIRequest @apiParams
+
+            if (-not $response) {
+                Write-FabricLog -Message "No dataset users returned." -Level Warning
+                return $null
+            }
+
+            if ($Raw) {
+                return $response
+            }
+
+            foreach ($user in $response) {
+                $user | Add-Member -NotePropertyName 'datasetId' -NotePropertyValue $DatasetId -Force
+            }
+            $response | Add-FabricTypeName -TypeName 'MicrosoftFabric.AdminDatasetUser'
+
+            return $response
+        }
+        catch {
+            $errorDetails = $_.Exception.Message
+            Write-FabricLog -Message "Failed to retrieve dataset users. Error: $errorDetails" -Level Error
+        }
+    }
+}
+#EndRegion '.\Public\Admin\Get-FabricAdminDatasetUser.ps1' 111
+#Region '.\Public\Admin\Get-FabricAdminEncryptionKey.ps1' -1
+
+<#
+.SYNOPSIS
+    Gets tenant encryption keys from the Power BI admin API.
+
+.DESCRIPTION
+    The Get-FabricAdminEncryptionKey cmdlet retrieves tenant encryption keys using the admin API.
+
+.PARAMETER KeyId
+    Optional. Returns only the encryption key matching this ID.
+
+.PARAMETER Filter
+    Optional. OData filter expression.
+
+.PARAMETER Top
+    Optional. Maximum number of items to return.
+
+.PARAMETER Skip
+    Optional. Number of items to skip.
+
+.PARAMETER Raw
+    Optional. Returns raw API response.
+
+.EXAMPLE
+    Get-FabricAdminEncryptionKey
+
+    Lists all encryption keys in the tenant.
+
+.EXAMPLE
+    Get-FabricAdminEncryptionKey -KeyId "key123"
+
+    Gets a specific encryption key by ID.
+
+.NOTES
+    - Uses the Power BI Admin API: https://api.powerbi.com/v1.0/myorg/admin/tenantKeys
+    - Requires Fabric Administrator permissions.
+
+    Author: Claude AI
+#>
+function Get-FabricAdminEncryptionKey {
+    [CmdletBinding()]
+    param (
+        [Parameter(Mandatory = $false)]
+        [ValidateNotNullOrEmpty()]
+        [string]$KeyId,
+
+        [Parameter(Mandatory = $false)]
+        [ValidateNotNullOrEmpty()]
+        [string]$Filter,
+
+        [Parameter(Mandatory = $false)]
+        [ValidateRange(1, 5000)]
+        [int]$Top,
+
+        [Parameter(Mandatory = $false)]
+        [ValidateRange(0, [int]::MaxValue)]
+        [int]$Skip,
+
+        [Parameter()]
+        [switch]$Raw
+    )
+
+    process {
+        try {
+            Invoke-FabricAuthCheck -ThrowOnFailure
+
+            $powerBIAdminBaseUrl = "https://api.powerbi.com/v1.0/myorg"
+
+            if ($KeyId) {
+                $apiEndpointURI = "$powerBIAdminBaseUrl/admin/tenantKeys/$KeyId"
+                Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
+
+                $apiParams = @{
+                    BaseURI = $apiEndpointURI
+                    Headers = $script:FabricAuthContext.FabricHeaders
+                    Method  = 'Get'
+                }
+                $response = Invoke-FabricAPIRequest @apiParams
+
+                if ($response) {
+                    if ($Raw) {
+                        return $response
+                    }
+                    $response.PSObject.TypeNames.Insert(0, 'MicrosoftFabric.AdminEncryptionKey')
+                    return $response
+                }
+                return $null
+            }
+
+            $queryParams = @()
+            if ($Filter) {
+                $queryParams += "`$filter=$([System.Uri]::EscapeDataString($Filter))"
+            }
+            if ($Top) {
+                $queryParams += "`$top=$Top"
+            }
+            if ($Skip) {
+                $queryParams += "`$skip=$Skip"
+            }
+
+            $apiEndpointURI = "$powerBIAdminBaseUrl/admin/tenantKeys"
+            if ($queryParams.Count -gt 0) {
+                $apiEndpointURI = "$apiEndpointURI`?$($queryParams -join '&')"
+            }
+
+            Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
+
+            $apiParams = @{
+                BaseURI = $apiEndpointURI
+                Headers = $script:FabricAuthContext.FabricHeaders
+                Method  = 'Get'
+            }
+            $response = Invoke-FabricAPIRequest @apiParams
+
+            if (-not $response) {
+                Write-FabricLog -Message "No encryption keys returned." -Level Warning
+                return $null
+            }
+
+            return Select-FabricResource -InputObject $response -ResourceType 'AdminEncryptionKey' -TypeName 'MicrosoftFabric.AdminEncryptionKey' -Raw:$Raw
+        }
+        catch {
+            $errorDetails = $_.Exception.Message
+            Write-FabricLog -Message "Failed to retrieve encryption keys. Error: $errorDetails" -Level Error
+        }
+    }
+}
+#EndRegion '.\Public\Admin\Get-FabricAdminEncryptionKey.ps1' 127
 #Region '.\Public\Admin\Get-FabricAdminGitConnection.ps1' -1
 
 <#
@@ -1143,6 +3616,135 @@ function Get-FabricAdminGitConnection {
     }
 }
 #EndRegion '.\Public\Admin\Get-FabricAdminGitConnection.ps1' 63
+#Region '.\Public\Admin\Get-FabricAdminImport.ps1' -1
+
+<#
+.SYNOPSIS
+    Gets imports from the Power BI admin API.
+
+.DESCRIPTION
+    The Get-FabricAdminImport cmdlet retrieves imports using the admin API.
+
+.PARAMETER ImportId
+    Optional. Returns only the import matching this ID.
+
+.PARAMETER Filter
+    Optional. OData filter expression.
+
+.PARAMETER Top
+    Optional. Maximum number of items to return.
+
+.PARAMETER Skip
+    Optional. Number of items to skip.
+
+.PARAMETER Raw
+    Optional. Returns raw API response.
+
+.EXAMPLE
+    Get-FabricAdminImport
+
+    Lists all imports in the tenant.
+
+.EXAMPLE
+    Get-FabricAdminImport -ImportId "import123"
+
+    Gets a specific import by ID.
+
+.NOTES
+    - Uses the Power BI Admin API: https://api.powerbi.com/v1.0/myorg/admin/imports
+    - Requires Fabric Administrator permissions.
+
+    Author: Claude AI
+#>
+function Get-FabricAdminImport {
+    [CmdletBinding()]
+    param (
+        [Parameter(Mandatory = $false)]
+        [ValidateNotNullOrEmpty()]
+        [string]$ImportId,
+
+        [Parameter(Mandatory = $false)]
+        [ValidateNotNullOrEmpty()]
+        [string]$Filter,
+
+        [Parameter(Mandatory = $false)]
+        [ValidateRange(1, 5000)]
+        [int]$Top,
+
+        [Parameter(Mandatory = $false)]
+        [ValidateRange(0, [int]::MaxValue)]
+        [int]$Skip,
+
+        [Parameter()]
+        [switch]$Raw
+    )
+
+    process {
+        try {
+            Invoke-FabricAuthCheck -ThrowOnFailure
+
+            $powerBIAdminBaseUrl = "https://api.powerbi.com/v1.0/myorg"
+
+            if ($ImportId) {
+                $apiEndpointURI = "$powerBIAdminBaseUrl/admin/imports/$ImportId"
+                Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
+
+                $apiParams = @{
+                    BaseURI = $apiEndpointURI
+                    Headers = $script:FabricAuthContext.FabricHeaders
+                    Method  = 'Get'
+                }
+                $response = Invoke-FabricAPIRequest @apiParams
+
+                if ($response) {
+                    if ($Raw) {
+                        return $response
+                    }
+                    $response.PSObject.TypeNames.Insert(0, 'MicrosoftFabric.AdminImport')
+                    return $response
+                }
+                return $null
+            }
+
+            $queryParams = @()
+            if ($Filter) {
+                $queryParams += "`$filter=$([System.Uri]::EscapeDataString($Filter))"
+            }
+            if ($Top) {
+                $queryParams += "`$top=$Top"
+            }
+            if ($Skip) {
+                $queryParams += "`$skip=$Skip"
+            }
+
+            $apiEndpointURI = "$powerBIAdminBaseUrl/admin/imports"
+            if ($queryParams.Count -gt 0) {
+                $apiEndpointURI = "$apiEndpointURI`?$($queryParams -join '&')"
+            }
+
+            Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
+
+            $apiParams = @{
+                BaseURI = $apiEndpointURI
+                Headers = $script:FabricAuthContext.FabricHeaders
+                Method  = 'Get'
+            }
+            $response = Invoke-FabricAPIRequest @apiParams
+
+            if (-not $response) {
+                Write-FabricLog -Message "No imports returned." -Level Warning
+                return $null
+            }
+
+            return Select-FabricResource -InputObject $response -ResourceType 'AdminImport' -TypeName 'MicrosoftFabric.AdminImport' -Raw:$Raw
+        }
+        catch {
+            $errorDetails = $_.Exception.Message
+            Write-FabricLog -Message "Failed to retrieve imports. Error: $errorDetails" -Level Error
+        }
+    }
+}
+#EndRegion '.\Public\Admin\Get-FabricAdminImport.ps1' 127
 #Region '.\Public\Admin\Get-FabricAdminItem.ps1' -1
 
 <#
@@ -1422,6 +4024,610 @@ function Get-FabricAdminItemUser {
     }
 }
 #EndRegion '.\Public\Admin\Get-FabricAdminItemUser.ps1' 107
+#Region '.\Public\Admin\Get-FabricAdminModifiedWorkspace.ps1' -1
+
+<#
+.SYNOPSIS
+    Gets recently modified workspaces using the Power BI admin API.
+
+.DESCRIPTION
+    The Get-FabricAdminModifiedWorkspace cmdlet retrieves workspaces that have been recently modified using the admin API.
+
+.PARAMETER Filter
+    Optional. OData filter expression.
+
+.PARAMETER Top
+    Optional. Maximum number of items to return.
+
+.PARAMETER Skip
+    Optional. Number of items to skip.
+
+.PARAMETER Raw
+    Optional. Returns raw API response.
+
+.EXAMPLE
+    Get-FabricAdminModifiedWorkspace
+
+    Lists all recently modified workspaces.
+
+.EXAMPLE
+    Get-FabricAdminModifiedWorkspace -Top 10
+
+    Gets the top 10 recently modified workspaces.
+
+.NOTES
+    - Uses the Power BI Admin API: https://api.powerbi.com/v1.0/myorg/admin/workspaces/modified
+    - Requires Fabric Administrator permissions.
+
+    Author: Claude AI
+#>
+function Get-FabricAdminModifiedWorkspace {
+    [CmdletBinding()]
+    param (
+        [Parameter(Mandatory = $false)]
+        [ValidateNotNullOrEmpty()]
+        [string]$Filter,
+
+        [Parameter(Mandatory = $false)]
+        [ValidateRange(1, 5000)]
+        [int]$Top,
+
+        [Parameter(Mandatory = $false)]
+        [ValidateRange(0, [int]::MaxValue)]
+        [int]$Skip,
+
+        [Parameter()]
+        [switch]$Raw
+    )
+
+    process {
+        try {
+            Invoke-FabricAuthCheck -ThrowOnFailure
+
+            $powerBIAdminBaseUrl = "https://api.powerbi.com/v1.0/myorg"
+
+            $queryParams = @()
+            if ($Filter) {
+                $queryParams += "`$filter=$([System.Uri]::EscapeDataString($Filter))"
+            }
+            if ($Top) {
+                $queryParams += "`$top=$Top"
+            }
+            if ($Skip) {
+                $queryParams += "`$skip=$Skip"
+            }
+
+            $apiEndpointURI = "$powerBIAdminBaseUrl/admin/workspaces/modified"
+            if ($queryParams.Count -gt 0) {
+                $apiEndpointURI = "$apiEndpointURI`?$($queryParams -join '&')"
+            }
+
+            Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
+
+            $apiParams = @{
+                BaseURI = $apiEndpointURI
+                Headers = $script:FabricAuthContext.FabricHeaders
+                Method  = 'Get'
+            }
+            $response = Invoke-FabricAPIRequest @apiParams
+
+            if (-not $response) {
+                Write-FabricLog -Message "No modified workspaces returned." -Level Warning
+                return $null
+            }
+
+            return Select-FabricResource -InputObject $response -ResourceType 'AdminModifiedWorkspace' -TypeName 'MicrosoftFabric.AdminModifiedWorkspace' -Raw:$Raw
+        }
+        catch {
+            $errorDetails = $_.Exception.Message
+            Write-FabricLog -Message "Failed to retrieve modified workspaces. Error: $errorDetails" -Level Error
+        }
+    }
+}
+#EndRegion '.\Public\Admin\Get-FabricAdminModifiedWorkspace.ps1' 99
+#Region '.\Public\Admin\Get-FabricAdminPipeline.ps1' -1
+
+<#
+.SYNOPSIS
+    Gets Power BI deployment pipelines for the organization.
+
+.DESCRIPTION
+    The Get-FabricAdminPipeline cmdlet retrieves Power BI pipelines using the admin API.
+
+.PARAMETER PipelineId
+    Optional. Returns only the pipeline matching this ID.
+
+.PARAMETER Filter
+    Optional. OData filter expression.
+
+.PARAMETER Top
+    Optional. Maximum number of items to return.
+
+.PARAMETER Skip
+    Optional. Number of items to skip.
+
+.PARAMETER Raw
+    Optional. Returns raw API response.
+
+.EXAMPLE
+    Get-FabricAdminPipeline
+
+    Lists all pipelines in the tenant.
+
+.NOTES
+    - Uses the Power BI Admin API: https://api.powerbi.com/v1.0/myorg/admin/pipelines
+    - Requires Fabric Administrator permissions.
+
+    Author: Claude AI
+#>
+function Get-FabricAdminPipeline {
+    [CmdletBinding()]
+    param (
+        [Parameter(Mandatory = $false)]
+        [ValidateNotNullOrEmpty()]
+        [string]$PipelineId,
+
+        [Parameter(Mandatory = $false)]
+        [ValidateNotNullOrEmpty()]
+        [string]$Filter,
+
+        [Parameter(Mandatory = $false)]
+        [ValidateRange(1, 5000)]
+        [int]$Top,
+
+        [Parameter(Mandatory = $false)]
+        [ValidateRange(0, [int]::MaxValue)]
+        [int]$Skip,
+
+        [Parameter()]
+        [switch]$Raw
+    )
+
+    process {
+        try {
+            Invoke-FabricAuthCheck -ThrowOnFailure
+
+            $powerBIAdminBaseUrl = "https://api.powerbi.com/v1.0/myorg"
+
+            if ($PipelineId) {
+                $apiEndpointURI = "$powerBIAdminBaseUrl/admin/pipelines/$PipelineId"
+                Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
+
+                $apiParams = @{
+                    BaseURI = $apiEndpointURI
+                    Headers = $script:FabricAuthContext.FabricHeaders
+                    Method  = 'Get'
+                }
+                $response = Invoke-FabricAPIRequest @apiParams
+
+                if ($response) {
+                    if ($Raw) {
+                        return $response
+                    }
+                    $response.PSObject.TypeNames.Insert(0, 'MicrosoftFabric.AdminPipeline')
+                    return $response
+                }
+                return $null
+            }
+
+            $queryParams = @()
+            if ($Filter) {
+                $queryParams += "`$filter=$([System.Uri]::EscapeDataString($Filter))"
+            }
+            if ($Top) {
+                $queryParams += "`$top=$Top"
+            }
+            if ($Skip) {
+                $queryParams += "`$skip=$Skip"
+            }
+
+            $apiEndpointURI = "$powerBIAdminBaseUrl/admin/pipelines"
+            if ($queryParams.Count -gt 0) {
+                $apiEndpointURI = "$apiEndpointURI`?$($queryParams -join '&')"
+            }
+
+            Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
+
+            $apiParams = @{
+                BaseURI = $apiEndpointURI
+                Headers = $script:FabricAuthContext.FabricHeaders
+                Method  = 'Get'
+            }
+            $response = Invoke-FabricAPIRequest @apiParams
+
+            if (-not $response) {
+                Write-FabricLog -Message "No pipelines returned." -Level Warning
+                return $null
+            }
+
+            return Select-FabricResource -InputObject $response -ResourceType 'AdminPipeline' -TypeName 'MicrosoftFabric.AdminPipeline' -Raw:$Raw
+        }
+        catch {
+            $errorDetails = $_.Exception.Message
+            Write-FabricLog -Message "Failed to retrieve pipelines. Error: $errorDetails" -Level Error
+        }
+    }
+}
+#EndRegion '.\Public\Admin\Get-FabricAdminPipeline.ps1' 122
+#Region '.\Public\Admin\Get-FabricAdminPipelineUser.ps1' -1
+
+<#
+.SYNOPSIS
+    Gets users with access to a pipeline using the Power BI admin API.
+
+.DESCRIPTION
+    The Get-FabricAdminPipelineUser cmdlet retrieves users with access to a specific pipeline using the admin API.
+
+.PARAMETER PipelineId
+    Required. The pipeline ID to get users for.
+
+.PARAMETER Filter
+    Optional. OData filter expression.
+
+.PARAMETER Top
+    Optional. Maximum number of items to return.
+
+.PARAMETER Skip
+    Optional. Number of items to skip.
+
+.PARAMETER Raw
+    Optional. Returns raw API response.
+
+.EXAMPLE
+    Get-FabricAdminPipelineUser -PipelineId "pipeline123"
+
+    Lists all users with access to the specified pipeline.
+
+.NOTES
+    - Uses the Power BI Admin API: https://api.powerbi.com/v1.0/myorg/admin/pipelines/{pipelineId}/users
+    - Requires Fabric Administrator permissions.
+
+    Author: Claude AI
+#>
+function Get-FabricAdminPipelineUser {
+    [CmdletBinding()]
+    param (
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
+        [ValidateNotNullOrEmpty()]
+        [Alias('id')]
+        [string]$PipelineId,
+
+        [Parameter(Mandatory = $false)]
+        [ValidateNotNullOrEmpty()]
+        [string]$Filter,
+
+        [Parameter(Mandatory = $false)]
+        [ValidateRange(1, 5000)]
+        [int]$Top,
+
+        [Parameter(Mandatory = $false)]
+        [ValidateRange(0, [int]::MaxValue)]
+        [int]$Skip,
+
+        [Parameter()]
+        [switch]$Raw
+    )
+
+    process {
+        try {
+            Invoke-FabricAuthCheck -ThrowOnFailure
+
+            $powerBIAdminBaseUrl = "https://api.powerbi.com/v1.0/myorg"
+
+            $queryParams = @()
+            if ($Filter) {
+                $queryParams += "`$filter=$([System.Uri]::EscapeDataString($Filter))"
+            }
+            if ($Top) {
+                $queryParams += "`$top=$Top"
+            }
+            if ($Skip) {
+                $queryParams += "`$skip=$Skip"
+            }
+
+            $apiEndpointURI = "$powerBIAdminBaseUrl/admin/pipelines/$PipelineId/users"
+            if ($queryParams.Count -gt 0) {
+                $apiEndpointURI = "$apiEndpointURI`?$($queryParams -join '&')"
+            }
+
+            Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
+
+            $apiParams = @{
+                BaseURI = $apiEndpointURI
+                Headers = $script:FabricAuthContext.FabricHeaders
+                Method  = 'Get'
+            }
+            $response = Invoke-FabricAPIRequest @apiParams
+
+            if (-not $response) {
+                Write-FabricLog -Message "No pipeline users returned." -Level Warning
+                return $null
+            }
+
+            if ($Raw) {
+                return $response
+            }
+
+            foreach ($user in $response) {
+                $user | Add-Member -NotePropertyName 'pipelineId' -NotePropertyValue $PipelineId -Force
+            }
+            $response | Add-FabricTypeName -TypeName 'MicrosoftFabric.AdminPipelineUser'
+
+            return $response
+        }
+        catch {
+            $errorDetails = $_.Exception.Message
+            Write-FabricLog -Message "Failed to retrieve pipeline users. Error: $errorDetails" -Level Error
+        }
+    }
+}
+#EndRegion '.\Public\Admin\Get-FabricAdminPipelineUser.ps1' 111
+#Region '.\Public\Admin\Get-FabricAdminProfile.ps1' -1
+
+<#
+.SYNOPSIS
+    Gets profiles from the Power BI admin API.
+
+.DESCRIPTION
+    The Get-FabricAdminProfile cmdlet retrieves profiles using the admin API.
+
+.PARAMETER ProfileId
+    Optional. Returns only the profile matching this ID.
+
+.PARAMETER Filter
+    Optional. OData filter expression.
+
+.PARAMETER Top
+    Optional. Maximum number of items to return.
+
+.PARAMETER Skip
+    Optional. Number of items to skip.
+
+.PARAMETER Raw
+    Optional. Returns raw API response.
+
+.EXAMPLE
+    Get-FabricAdminProfile
+
+    Lists all profiles in the tenant.
+
+.EXAMPLE
+    Get-FabricAdminProfile -ProfileId "profile123"
+
+    Gets a specific profile by ID.
+
+.NOTES
+    - Uses the Power BI Admin API: https://api.powerbi.com/v1.0/myorg/admin/profiles
+    - Requires Fabric Administrator permissions.
+
+    Author: Claude AI
+#>
+function Get-FabricAdminProfile {
+    [CmdletBinding()]
+    param (
+        [Parameter(Mandatory = $false)]
+        [ValidateNotNullOrEmpty()]
+        [string]$ProfileId,
+
+        [Parameter(Mandatory = $false)]
+        [ValidateNotNullOrEmpty()]
+        [string]$Filter,
+
+        [Parameter(Mandatory = $false)]
+        [ValidateRange(1, 5000)]
+        [int]$Top,
+
+        [Parameter(Mandatory = $false)]
+        [ValidateRange(0, [int]::MaxValue)]
+        [int]$Skip,
+
+        [Parameter()]
+        [switch]$Raw
+    )
+
+    process {
+        try {
+            Invoke-FabricAuthCheck -ThrowOnFailure
+
+            $powerBIAdminBaseUrl = "https://api.powerbi.com/v1.0/myorg"
+
+            if ($ProfileId) {
+                $apiEndpointURI = "$powerBIAdminBaseUrl/admin/profiles/$ProfileId"
+                Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
+
+                $apiParams = @{
+                    BaseURI = $apiEndpointURI
+                    Headers = $script:FabricAuthContext.FabricHeaders
+                    Method  = 'Get'
+                }
+                $response = Invoke-FabricAPIRequest @apiParams
+
+                if ($response) {
+                    if ($Raw) {
+                        return $response
+                    }
+                    $response.PSObject.TypeNames.Insert(0, 'MicrosoftFabric.AdminProfile')
+                    return $response
+                }
+                return $null
+            }
+
+            $queryParams = @()
+            if ($Filter) {
+                $queryParams += "`$filter=$([System.Uri]::EscapeDataString($Filter))"
+            }
+            if ($Top) {
+                $queryParams += "`$top=$Top"
+            }
+            if ($Skip) {
+                $queryParams += "`$skip=$Skip"
+            }
+
+            $apiEndpointURI = "$powerBIAdminBaseUrl/admin/profiles"
+            if ($queryParams.Count -gt 0) {
+                $apiEndpointURI = "$apiEndpointURI`?$($queryParams -join '&')"
+            }
+
+            Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
+
+            $apiParams = @{
+                BaseURI = $apiEndpointURI
+                Headers = $script:FabricAuthContext.FabricHeaders
+                Method  = 'Get'
+            }
+            $response = Invoke-FabricAPIRequest @apiParams
+
+            if (-not $response) {
+                Write-FabricLog -Message "No profiles returned." -Level Warning
+                return $null
+            }
+
+            return Select-FabricResource -InputObject $response -ResourceType 'AdminProfile' -TypeName 'MicrosoftFabric.AdminProfile' -Raw:$Raw
+        }
+        catch {
+            $errorDetails = $_.Exception.Message
+            Write-FabricLog -Message "Failed to retrieve profiles. Error: $errorDetails" -Level Error
+        }
+    }
+}
+#EndRegion '.\Public\Admin\Get-FabricAdminProfile.ps1' 127
+#Region '.\Public\Admin\Get-FabricAdminRefreshable.ps1' -1
+
+<#
+.SYNOPSIS
+    Gets refreshable datasets from a capacity using the Power BI admin API.
+
+.DESCRIPTION
+    The Get-FabricAdminRefreshable cmdlet retrieves refreshable datasets from a specific capacity using the admin API.
+
+.PARAMETER CapacityId
+    Required. The capacity ID to get refreshables from.
+
+.PARAMETER RefreshableId
+    Optional. Returns only the refreshable matching this ID.
+
+.PARAMETER Filter
+    Optional. OData filter expression.
+
+.PARAMETER Top
+    Optional. Maximum number of items to return.
+
+.PARAMETER Skip
+    Optional. Number of items to skip.
+
+.PARAMETER Raw
+    Optional. Returns raw API response.
+
+.EXAMPLE
+    Get-FabricAdminRefreshable -CapacityId "capacity123"
+
+    Lists all refreshables in the specified capacity.
+
+.EXAMPLE
+    Get-FabricAdminRefreshable -CapacityId "capacity123" -RefreshableId "dataset123"
+
+    Gets a specific refreshable by ID.
+
+.NOTES
+    - Uses the Power BI Admin API: https://api.powerbi.com/v1.0/myorg/admin/capacities/{capacityId}/refreshables
+    - Requires Fabric Administrator permissions.
+
+    Author: Claude AI
+#>
+function Get-FabricAdminRefreshable {
+    [CmdletBinding()]
+    param (
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
+        [ValidateNotNullOrEmpty()]
+        [Alias('id')]
+        [string]$CapacityId,
+
+        [Parameter(Mandatory = $false)]
+        [ValidateNotNullOrEmpty()]
+        [string]$RefreshableId,
+
+        [Parameter(Mandatory = $false)]
+        [ValidateNotNullOrEmpty()]
+        [string]$Filter,
+
+        [Parameter(Mandatory = $false)]
+        [ValidateRange(1, 5000)]
+        [int]$Top,
+
+        [Parameter(Mandatory = $false)]
+        [ValidateRange(0, [int]::MaxValue)]
+        [int]$Skip,
+
+        [Parameter()]
+        [switch]$Raw
+    )
+
+    process {
+        try {
+            Invoke-FabricAuthCheck -ThrowOnFailure
+
+            $powerBIAdminBaseUrl = "https://api.powerbi.com/v1.0/myorg"
+
+            if ($RefreshableId) {
+                $apiEndpointURI = "$powerBIAdminBaseUrl/admin/capacities/$CapacityId/refreshables/$RefreshableId"
+                Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
+
+                $apiParams = @{
+                    BaseURI = $apiEndpointURI
+                    Headers = $script:FabricAuthContext.FabricHeaders
+                    Method  = 'Get'
+                }
+                $response = Invoke-FabricAPIRequest @apiParams
+
+                if ($response) {
+                    if ($Raw) {
+                        return $response
+                    }
+                    $response.PSObject.TypeNames.Insert(0, 'MicrosoftFabric.AdminRefreshable')
+                    return $response
+                }
+                return $null
+            }
+
+            $queryParams = @()
+            if ($Filter) {
+                $queryParams += "`$filter=$([System.Uri]::EscapeDataString($Filter))"
+            }
+            if ($Top) {
+                $queryParams += "`$top=$Top"
+            }
+            if ($Skip) {
+                $queryParams += "`$skip=$Skip"
+            }
+
+            $apiEndpointURI = "$powerBIAdminBaseUrl/admin/capacities/$CapacityId/refreshables"
+            if ($queryParams.Count -gt 0) {
+                $apiEndpointURI = "$apiEndpointURI`?$($queryParams -join '&')"
+            }
+
+            Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
+
+            $apiParams = @{
+                BaseURI = $apiEndpointURI
+                Headers = $script:FabricAuthContext.FabricHeaders
+                Method  = 'Get'
+            }
+            $response = Invoke-FabricAPIRequest @apiParams
+
+            if (-not $response) {
+                Write-FabricLog -Message "No refreshables returned." -Level Warning
+                return $null
+            }
+
+            return Select-FabricResource -InputObject $response -ResourceType 'AdminRefreshable' -TypeName 'MicrosoftFabric.AdminRefreshable' -Raw:$Raw
+        }
+        catch {
+            $errorDetails = $_.Exception.Message
+            Write-FabricLog -Message "Failed to retrieve refreshables. Error: $errorDetails" -Level Error
+        }
+    }
+}
+#EndRegion '.\Public\Admin\Get-FabricAdminRefreshable.ps1' 135
 #Region '.\Public\Admin\Get-FabricAdminReport.ps1' -1
 
 <#
@@ -1537,6 +4743,232 @@ function Get-FabricAdminReport {
     }
 }
 #EndRegion '.\Public\Admin\Get-FabricAdminReport.ps1' 113
+#Region '.\Public\Admin\Get-FabricAdminReportSubscription.ps1' -1
+
+<#
+.SYNOPSIS
+    Gets subscriptions for a report using the Power BI admin API.
+
+.DESCRIPTION
+    The Get-FabricAdminReportSubscription cmdlet retrieves subscriptions for a specific report using the admin API.
+
+.PARAMETER ReportId
+    Required. The report ID to get subscriptions for.
+
+.PARAMETER Filter
+    Optional. OData filter expression.
+
+.PARAMETER Top
+    Optional. Maximum number of items to return.
+
+.PARAMETER Skip
+    Optional. Number of items to skip.
+
+.PARAMETER Raw
+    Optional. Returns raw API response.
+
+.EXAMPLE
+    Get-FabricAdminReportSubscription -ReportId "report123"
+
+    Lists all subscriptions for the specified report.
+
+.NOTES
+    - Uses the Power BI Admin API: https://api.powerbi.com/v1.0/myorg/admin/reports/{reportId}/subscriptions
+    - Requires Fabric Administrator permissions.
+
+    Author: Claude AI
+#>
+function Get-FabricAdminReportSubscription {
+    [CmdletBinding()]
+    param (
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
+        [ValidateNotNullOrEmpty()]
+        [Alias('id')]
+        [string]$ReportId,
+
+        [Parameter(Mandatory = $false)]
+        [ValidateNotNullOrEmpty()]
+        [string]$Filter,
+
+        [Parameter(Mandatory = $false)]
+        [ValidateRange(1, 5000)]
+        [int]$Top,
+
+        [Parameter(Mandatory = $false)]
+        [ValidateRange(0, [int]::MaxValue)]
+        [int]$Skip,
+
+        [Parameter()]
+        [switch]$Raw
+    )
+
+    process {
+        try {
+            Invoke-FabricAuthCheck -ThrowOnFailure
+
+            $powerBIAdminBaseUrl = "https://api.powerbi.com/v1.0/myorg"
+
+            $queryParams = @()
+            if ($Filter) {
+                $queryParams += "`$filter=$([System.Uri]::EscapeDataString($Filter))"
+            }
+            if ($Top) {
+                $queryParams += "`$top=$Top"
+            }
+            if ($Skip) {
+                $queryParams += "`$skip=$Skip"
+            }
+
+            $apiEndpointURI = "$powerBIAdminBaseUrl/admin/reports/$ReportId/subscriptions"
+            if ($queryParams.Count -gt 0) {
+                $apiEndpointURI = "$apiEndpointURI`?$($queryParams -join '&')"
+            }
+
+            Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
+
+            $apiParams = @{
+                BaseURI = $apiEndpointURI
+                Headers = $script:FabricAuthContext.FabricHeaders
+                Method  = 'Get'
+            }
+            $response = Invoke-FabricAPIRequest @apiParams
+
+            if (-not $response) {
+                Write-FabricLog -Message "No report subscriptions returned." -Level Warning
+                return $null
+            }
+
+            if ($Raw) {
+                return $response
+            }
+
+            foreach ($subscription in $response) {
+                $subscription | Add-Member -NotePropertyName 'reportId' -NotePropertyValue $ReportId -Force
+            }
+            $response | Add-FabricTypeName -TypeName 'MicrosoftFabric.AdminReportSubscription'
+
+            return $response
+        }
+        catch {
+            $errorDetails = $_.Exception.Message
+            Write-FabricLog -Message "Failed to retrieve report subscriptions. Error: $errorDetails" -Level Error
+        }
+    }
+}
+#EndRegion '.\Public\Admin\Get-FabricAdminReportSubscription.ps1' 111
+#Region '.\Public\Admin\Get-FabricAdminReportUser.ps1' -1
+
+<#
+.SYNOPSIS
+    Gets users with access to a report using the Power BI admin API.
+
+.DESCRIPTION
+    The Get-FabricAdminReportUser cmdlet retrieves users with access to a specific report using the admin API.
+
+.PARAMETER ReportId
+    Required. The report ID to get users for.
+
+.PARAMETER Filter
+    Optional. OData filter expression.
+
+.PARAMETER Top
+    Optional. Maximum number of items to return.
+
+.PARAMETER Skip
+    Optional. Number of items to skip.
+
+.PARAMETER Raw
+    Optional. Returns raw API response.
+
+.EXAMPLE
+    Get-FabricAdminReportUser -ReportId "report123"
+
+    Lists all users with access to the specified report.
+
+.NOTES
+    - Uses the Power BI Admin API: https://api.powerbi.com/v1.0/myorg/admin/reports/{reportId}/users
+    - Requires Fabric Administrator permissions.
+
+    Author: Claude AI
+#>
+function Get-FabricAdminReportUser {
+    [CmdletBinding()]
+    param (
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
+        [ValidateNotNullOrEmpty()]
+        [Alias('id')]
+        [string]$ReportId,
+
+        [Parameter(Mandatory = $false)]
+        [ValidateNotNullOrEmpty()]
+        [string]$Filter,
+
+        [Parameter(Mandatory = $false)]
+        [ValidateRange(1, 5000)]
+        [int]$Top,
+
+        [Parameter(Mandatory = $false)]
+        [ValidateRange(0, [int]::MaxValue)]
+        [int]$Skip,
+
+        [Parameter()]
+        [switch]$Raw
+    )
+
+    process {
+        try {
+            Invoke-FabricAuthCheck -ThrowOnFailure
+
+            $powerBIAdminBaseUrl = "https://api.powerbi.com/v1.0/myorg"
+
+            $queryParams = @()
+            if ($Filter) {
+                $queryParams += "`$filter=$([System.Uri]::EscapeDataString($Filter))"
+            }
+            if ($Top) {
+                $queryParams += "`$top=$Top"
+            }
+            if ($Skip) {
+                $queryParams += "`$skip=$Skip"
+            }
+
+            $apiEndpointURI = "$powerBIAdminBaseUrl/admin/reports/$ReportId/users"
+            if ($queryParams.Count -gt 0) {
+                $apiEndpointURI = "$apiEndpointURI`?$($queryParams -join '&')"
+            }
+
+            Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
+
+            $apiParams = @{
+                BaseURI = $apiEndpointURI
+                Headers = $script:FabricAuthContext.FabricHeaders
+                Method  = 'Get'
+            }
+            $response = Invoke-FabricAPIRequest @apiParams
+
+            if (-not $response) {
+                Write-FabricLog -Message "No report users returned." -Level Warning
+                return $null
+            }
+
+            if ($Raw) {
+                return $response
+            }
+
+            foreach ($user in $response) {
+                $user | Add-Member -NotePropertyName 'reportId' -NotePropertyValue $ReportId -Force
+            }
+            $response | Add-FabricTypeName -TypeName 'MicrosoftFabric.AdminReportUser'
+
+            return $response
+        }
+        catch {
+            $errorDetails = $_.Exception.Message
+            Write-FabricLog -Message "Failed to retrieve report users. Error: $errorDetails" -Level Error
+        }
+    }
+}
+#EndRegion '.\Public\Admin\Get-FabricAdminReportUser.ps1' 111
 #Region '.\Public\Admin\Get-FabricAdminUserAccess.ps1' -1
 
 <#
@@ -1636,6 +5068,424 @@ function Get-FabricAdminUserAccess {
     }
 }
 #EndRegion '.\Public\Admin\Get-FabricAdminUserAccess.ps1' 97
+#Region '.\Public\Admin\Get-FabricAdminUserArtifactAccess.ps1' -1
+
+<#
+.SYNOPSIS
+    Gets artifact access for a user using the Power BI admin API.
+
+.DESCRIPTION
+    The Get-FabricAdminUserArtifactAccess cmdlet retrieves artifact access information for a specific user using the admin API.
+
+.PARAMETER UserId
+    Required. The user ID to get artifact access for.
+
+.PARAMETER Filter
+    Optional. OData filter expression.
+
+.PARAMETER Top
+    Optional. Maximum number of items to return.
+
+.PARAMETER Skip
+    Optional. Number of items to skip.
+
+.PARAMETER Raw
+    Optional. Returns raw API response.
+
+.EXAMPLE
+    Get-FabricAdminUserArtifactAccess -UserId "user123"
+
+    Gets all artifacts the specified user has access to.
+
+.NOTES
+    - Uses the Power BI Admin API: https://api.powerbi.com/v1.0/myorg/admin/users/{userId}/artifactAccess
+    - Requires Fabric Administrator permissions.
+
+    Author: Claude AI
+#>
+function Get-FabricAdminUserArtifactAccess {
+    [CmdletBinding()]
+    param (
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
+        [ValidateNotNullOrEmpty()]
+        [Alias('id')]
+        [string]$UserId,
+
+        [Parameter(Mandatory = $false)]
+        [ValidateNotNullOrEmpty()]
+        [string]$Filter,
+
+        [Parameter(Mandatory = $false)]
+        [ValidateRange(1, 5000)]
+        [int]$Top,
+
+        [Parameter(Mandatory = $false)]
+        [ValidateRange(0, [int]::MaxValue)]
+        [int]$Skip,
+
+        [Parameter()]
+        [switch]$Raw
+    )
+
+    process {
+        try {
+            Invoke-FabricAuthCheck -ThrowOnFailure
+
+            $powerBIAdminBaseUrl = "https://api.powerbi.com/v1.0/myorg"
+
+            $queryParams = @()
+            if ($Filter) {
+                $queryParams += "`$filter=$([System.Uri]::EscapeDataString($Filter))"
+            }
+            if ($Top) {
+                $queryParams += "`$top=$Top"
+            }
+            if ($Skip) {
+                $queryParams += "`$skip=$Skip"
+            }
+
+            $apiEndpointURI = "$powerBIAdminBaseUrl/admin/users/$UserId/artifactAccess"
+            if ($queryParams.Count -gt 0) {
+                $apiEndpointURI = "$apiEndpointURI`?$($queryParams -join '&')"
+            }
+
+            Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
+
+            $apiParams = @{
+                BaseURI = $apiEndpointURI
+                Headers = $script:FabricAuthContext.FabricHeaders
+                Method  = 'Get'
+            }
+            $response = Invoke-FabricAPIRequest @apiParams
+
+            if (-not $response) {
+                Write-FabricLog -Message "No artifact access returned." -Level Warning
+                return $null
+            }
+
+            if ($Raw) {
+                return $response
+            }
+
+            foreach ($artifact in $response) {
+                $artifact | Add-Member -NotePropertyName 'userId' -NotePropertyValue $UserId -Force
+            }
+            $response | Add-FabricTypeName -TypeName 'MicrosoftFabric.AdminUserArtifactAccess'
+
+            return $response
+        }
+        catch {
+            $errorDetails = $_.Exception.Message
+            Write-FabricLog -Message "Failed to retrieve user artifact access. Error: $errorDetails" -Level Error
+        }
+    }
+}
+#EndRegion '.\Public\Admin\Get-FabricAdminUserArtifactAccess.ps1' 111
+#Region '.\Public\Admin\Get-FabricAdminUserSubscription.ps1' -1
+
+<#
+.SYNOPSIS
+    Gets subscriptions for a user using the Power BI admin API.
+
+.DESCRIPTION
+    The Get-FabricAdminUserSubscription cmdlet retrieves subscriptions for a specific user using the admin API.
+
+.PARAMETER UserId
+    Required. The user ID to get subscriptions for.
+
+.PARAMETER Filter
+    Optional. OData filter expression.
+
+.PARAMETER Top
+    Optional. Maximum number of items to return.
+
+.PARAMETER Skip
+    Optional. Number of items to skip.
+
+.PARAMETER Raw
+    Optional. Returns raw API response.
+
+.EXAMPLE
+    Get-FabricAdminUserSubscription -UserId "user123"
+
+    Gets all subscriptions for the specified user.
+
+.NOTES
+    - Uses the Power BI Admin API: https://api.powerbi.com/v1.0/myorg/admin/users/{userId}/subscriptions
+    - Requires Fabric Administrator permissions.
+
+    Author: Claude AI
+#>
+function Get-FabricAdminUserSubscription {
+    [CmdletBinding()]
+    param (
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
+        [ValidateNotNullOrEmpty()]
+        [Alias('id')]
+        [string]$UserId,
+
+        [Parameter(Mandatory = $false)]
+        [ValidateNotNullOrEmpty()]
+        [string]$Filter,
+
+        [Parameter(Mandatory = $false)]
+        [ValidateRange(1, 5000)]
+        [int]$Top,
+
+        [Parameter(Mandatory = $false)]
+        [ValidateRange(0, [int]::MaxValue)]
+        [int]$Skip,
+
+        [Parameter()]
+        [switch]$Raw
+    )
+
+    process {
+        try {
+            Invoke-FabricAuthCheck -ThrowOnFailure
+
+            $powerBIAdminBaseUrl = "https://api.powerbi.com/v1.0/myorg"
+
+            $queryParams = @()
+            if ($Filter) {
+                $queryParams += "`$filter=$([System.Uri]::EscapeDataString($Filter))"
+            }
+            if ($Top) {
+                $queryParams += "`$top=$Top"
+            }
+            if ($Skip) {
+                $queryParams += "`$skip=$Skip"
+            }
+
+            $apiEndpointURI = "$powerBIAdminBaseUrl/admin/users/$UserId/subscriptions"
+            if ($queryParams.Count -gt 0) {
+                $apiEndpointURI = "$apiEndpointURI`?$($queryParams -join '&')"
+            }
+
+            Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
+
+            $apiParams = @{
+                BaseURI = $apiEndpointURI
+                Headers = $script:FabricAuthContext.FabricHeaders
+                Method  = 'Get'
+            }
+            $response = Invoke-FabricAPIRequest @apiParams
+
+            if (-not $response) {
+                Write-FabricLog -Message "No user subscriptions returned." -Level Warning
+                return $null
+            }
+
+            if ($Raw) {
+                return $response
+            }
+
+            foreach ($subscription in $response) {
+                $subscription | Add-Member -NotePropertyName 'userId' -NotePropertyValue $UserId -Force
+            }
+            $response | Add-FabricTypeName -TypeName 'MicrosoftFabric.AdminUserSubscription'
+
+            return $response
+        }
+        catch {
+            $errorDetails = $_.Exception.Message
+            Write-FabricLog -Message "Failed to retrieve user subscriptions. Error: $errorDetails" -Level Error
+        }
+    }
+}
+#EndRegion '.\Public\Admin\Get-FabricAdminUserSubscription.ps1' 111
+#Region '.\Public\Admin\Get-FabricAdminWidelySharedArtifactLink.ps1' -1
+
+<#
+.SYNOPSIS
+    Gets widely shared artifact links shared to the whole organization using the Power BI admin API.
+
+.DESCRIPTION
+    The Get-FabricAdminWidelySharedArtifactLink cmdlet retrieves artifacts that are shared as links to the whole organization using the admin API.
+
+.PARAMETER Filter
+    Optional. OData filter expression.
+
+.PARAMETER Top
+    Optional. Maximum number of items to return.
+
+.PARAMETER Skip
+    Optional. Number of items to skip.
+
+.PARAMETER Raw
+    Optional. Returns raw API response.
+
+.EXAMPLE
+    Get-FabricAdminWidelySharedArtifactLink
+
+    Lists all artifacts with links shared to the whole organization.
+
+.NOTES
+    - Uses the Power BI Admin API: https://api.powerbi.com/v1.0/myorg/admin/widelySharedArtifacts/linksSharedToWholeOrganization
+    - Requires Fabric Administrator permissions.
+
+    Author: Claude AI
+#>
+function Get-FabricAdminWidelySharedArtifactLink {
+    [CmdletBinding()]
+    param (
+        [Parameter(Mandatory = $false)]
+        [ValidateNotNullOrEmpty()]
+        [string]$Filter,
+
+        [Parameter(Mandatory = $false)]
+        [ValidateRange(1, 5000)]
+        [int]$Top,
+
+        [Parameter(Mandatory = $false)]
+        [ValidateRange(0, [int]::MaxValue)]
+        [int]$Skip,
+
+        [Parameter()]
+        [switch]$Raw
+    )
+
+    process {
+        try {
+            Invoke-FabricAuthCheck -ThrowOnFailure
+
+            $powerBIAdminBaseUrl = "https://api.powerbi.com/v1.0/myorg"
+
+            $queryParams = @()
+            if ($Filter) {
+                $queryParams += "`$filter=$([System.Uri]::EscapeDataString($Filter))"
+            }
+            if ($Top) {
+                $queryParams += "`$top=$Top"
+            }
+            if ($Skip) {
+                $queryParams += "`$skip=$Skip"
+            }
+
+            $apiEndpointURI = "$powerBIAdminBaseUrl/admin/widelySharedArtifacts/linksSharedToWholeOrganization"
+            if ($queryParams.Count -gt 0) {
+                $apiEndpointURI = "$apiEndpointURI`?$($queryParams -join '&')"
+            }
+
+            Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
+
+            $apiParams = @{
+                BaseURI = $apiEndpointURI
+                Headers = $script:FabricAuthContext.FabricHeaders
+                Method  = 'Get'
+            }
+            $response = Invoke-FabricAPIRequest @apiParams
+
+            if (-not $response) {
+                Write-FabricLog -Message "No widely shared artifact links returned." -Level Warning
+                return $null
+            }
+
+            return Select-FabricResource -InputObject $response -ResourceType 'AdminWidelySharedArtifactLink' -TypeName 'MicrosoftFabric.AdminWidelySharedArtifactLink' -Raw:$Raw
+        }
+        catch {
+            $errorDetails = $_.Exception.Message
+            Write-FabricLog -Message "Failed to retrieve widely shared artifact links. Error: $errorDetails" -Level Error
+        }
+    }
+}
+#EndRegion '.\Public\Admin\Get-FabricAdminWidelySharedArtifactLink.ps1' 94
+#Region '.\Public\Admin\Get-FabricAdminWidelySharedArtifactWeb.ps1' -1
+
+<#
+.SYNOPSIS
+    Gets widely shared artifacts published to web using the Power BI admin API.
+
+.DESCRIPTION
+    The Get-FabricAdminWidelySharedArtifactWeb cmdlet retrieves artifacts that are published to the web using the admin API.
+
+.PARAMETER Filter
+    Optional. OData filter expression.
+
+.PARAMETER Top
+    Optional. Maximum number of items to return.
+
+.PARAMETER Skip
+    Optional. Number of items to skip.
+
+.PARAMETER Raw
+    Optional. Returns raw API response.
+
+.EXAMPLE
+    Get-FabricAdminWidelySharedArtifactWeb
+
+    Lists all artifacts published to the web.
+
+.NOTES
+    - Uses the Power BI Admin API: https://api.powerbi.com/v1.0/myorg/admin/widelySharedArtifacts/publishedToWeb
+    - Requires Fabric Administrator permissions.
+
+    Author: Claude AI
+#>
+function Get-FabricAdminWidelySharedArtifactWeb {
+    [CmdletBinding()]
+    param (
+        [Parameter(Mandatory = $false)]
+        [ValidateNotNullOrEmpty()]
+        [string]$Filter,
+
+        [Parameter(Mandatory = $false)]
+        [ValidateRange(1, 5000)]
+        [int]$Top,
+
+        [Parameter(Mandatory = $false)]
+        [ValidateRange(0, [int]::MaxValue)]
+        [int]$Skip,
+
+        [Parameter()]
+        [switch]$Raw
+    )
+
+    process {
+        try {
+            Invoke-FabricAuthCheck -ThrowOnFailure
+
+            $powerBIAdminBaseUrl = "https://api.powerbi.com/v1.0/myorg"
+
+            $queryParams = @()
+            if ($Filter) {
+                $queryParams += "`$filter=$([System.Uri]::EscapeDataString($Filter))"
+            }
+            if ($Top) {
+                $queryParams += "`$top=$Top"
+            }
+            if ($Skip) {
+                $queryParams += "`$skip=$Skip"
+            }
+
+            $apiEndpointURI = "$powerBIAdminBaseUrl/admin/widelySharedArtifacts/publishedToWeb"
+            if ($queryParams.Count -gt 0) {
+                $apiEndpointURI = "$apiEndpointURI`?$($queryParams -join '&')"
+            }
+
+            Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
+
+            $apiParams = @{
+                BaseURI = $apiEndpointURI
+                Headers = $script:FabricAuthContext.FabricHeaders
+                Method  = 'Get'
+            }
+            $response = Invoke-FabricAPIRequest @apiParams
+
+            if (-not $response) {
+                Write-FabricLog -Message "No published to web artifacts returned." -Level Warning
+                return $null
+            }
+
+            return Select-FabricResource -InputObject $response -ResourceType 'AdminWidelySharedArtifactWeb' -TypeName 'MicrosoftFabric.AdminWidelySharedArtifactWeb' -Raw:$Raw
+        }
+        catch {
+            $errorDetails = $_.Exception.Message
+            Write-FabricLog -Message "Failed to retrieve published to web artifacts. Error: $errorDetails" -Level Error
+        }
+    }
+}
+#EndRegion '.\Public\Admin\Get-FabricAdminWidelySharedArtifactWeb.ps1' 94
 #Region '.\Public\Admin\Get-FabricAdminWorkspace.ps1' -1
 
 <#
@@ -1647,33 +5497,61 @@ function Get-FabricAdminUserAccess {
     This provides tenant-wide visibility into all workspaces (including those the user doesn't have access to).
     Requires Fabric Administrator permissions.
 
+    When called without parameters, lists all workspaces in the tenant.
+    When piped with capacity objects, retrieves workspaces for each capacity.
+
 .PARAMETER WorkspaceId
-    Optional. Returns only the workspace matching this ID.
+    Optional. Workspace ID to retrieve a specific workspace. Accepts pipeline input.
+    When provided, returns only the workspace matching this ID.
+
+.PARAMETER CapacityId
+    Optional. Capacity ID to filter workspaces assigned to a specific capacity.
+    Accepts pipeline input from Get-FabricAdminCapacity via the 'id' property.
 
 .PARAMETER WorkspaceName
-    Optional. Filter workspaces by name.
+    Optional. Filter workspaces by display name (substring match).
 
 .PARAMETER WorkspaceType
     Optional. Filter by workspace type. Valid values: personal, workspace, adminworkspace.
 
-.PARAMETER CapacityId
-    Optional. Filter workspaces by capacity ID.
-
 .PARAMETER State
     Optional. Filter by workspace state. Valid values: active, deleted.
 
+.PARAMETER Filter
+    Optional. OData filter expression for advanced filtering.
+    Example: "contains(displayName,'Sales') and state eq 'Active'"
+
+.PARAMETER Top
+    Optional. Maximum number of workspaces to return (1-5000). Default returns all.
+
+.PARAMETER Skip
+    Optional. Number of workspaces to skip for pagination.
+
+.PARAMETER OrderBy
+    Optional. OData orderby expression for sorting results.
+    Example: "displayName" or "displayName desc"
+
+.PARAMETER ContinuationToken
+    Optional. Token for retrieving next page of results in paginated responses.
+
 .PARAMETER Raw
-    Optional. When specified, returns the raw API response.
+    Optional. When specified, returns the raw API response without type decoration.
 
 .EXAMPLE
     Get-FabricAdminWorkspace
 
-    Lists all workspaces in the tenant.
+    Lists all workspaces in the tenant (no parameters required).
 
 .EXAMPLE
     Get-FabricAdminWorkspace -WorkspaceId "12345678-1234-1234-1234-123456789012"
 
-    Returns the workspace with the specified ID.
+    Returns the specific workspace with the given ID.
+
+.EXAMPLE
+    Get-FabricAdminCapacity | Get-FabricAdminWorkspace
+
+    Gets all workspaces for each capacity returned from Get-FabricAdminCapacity.
+    This is the recommended way to iterate through workspaces by capacity.
 
 .EXAMPLE
     Get-FabricAdminWorkspace -WorkspaceType "workspace" -State "active"
@@ -1683,12 +5561,24 @@ function Get-FabricAdminUserAccess {
 .EXAMPLE
     Get-FabricAdminWorkspace -CapacityId "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee"
 
-    Lists all workspaces on the specified capacity.
+    Lists all workspaces assigned to a specific capacity.
+
+.EXAMPLE
+    Get-FabricAdminWorkspace -Filter "contains(displayName,'Sales')" -Top 100
+
+    Lists first 100 workspaces with 'Sales' in the name, using OData filter.
+
+.EXAMPLE
+    Get-FabricAdminWorkspace -Top 50 -Skip 100
+
+    Gets workspaces 101-150 (pagination).
 
 .NOTES
+    - API Endpoint: GET /v1/admin/workspaces
     - Requires Fabric Administrator permissions or service principal with Tenant.Read.All scope.
     - Rate limited to 200 requests per hour.
-    - This is a preview API.
+    - Supports OData query syntax for advanced filtering and sorting.
+    - Reference: https://learn.microsoft.com/rest/api/fabric/admin/workspaces/list-workspaces
 
     Author: Tiago Balabuch, Jess Pomfret, Rob Sewell
 
@@ -1696,9 +5586,14 @@ function Get-FabricAdminUserAccess {
 function Get-FabricAdminWorkspace {
     [CmdletBinding()]
     param (
-        [Parameter(Mandatory = $false)]
+        [Parameter(Mandatory = $false, ValueFromPipeline = $true, ValueFromPipelineByPropertyName = $true)]
         [ValidateNotNullOrEmpty()]
+        [Alias('id')]
         [string]$WorkspaceId,
+
+        [Parameter(Mandatory = $false, ValueFromPipelineByPropertyName = $true)]
+        [ValidateNotNullOrEmpty()]
+        [string]$CapacityId,
 
         [Parameter(Mandatory = $false)]
         [ValidateNotNullOrEmpty()]
@@ -1708,14 +5603,29 @@ function Get-FabricAdminWorkspace {
         [ValidateSet('personal', 'workspace', 'adminworkspace')]
         [string]$WorkspaceType,
 
-        [Parameter(Mandatory = $false, ValueFromPipelineByPropertyName = $true)]
-        [ValidateNotNullOrEmpty()]
-        [Alias('id')]
-        [string]$CapacityId,
-
         [Parameter(Mandatory = $false)]
         [ValidateSet('active', 'deleted')]
         [string]$State,
+
+        [Parameter(Mandatory = $false)]
+        [ValidateNotNullOrEmpty()]
+        [string]$Filter,
+
+        [Parameter(Mandatory = $false)]
+        [ValidateRange(1, 5000)]
+        [int]$Top,
+
+        [Parameter(Mandatory = $false)]
+        [ValidateRange(0, [int]::MaxValue)]
+        [int]$Skip,
+
+        [Parameter(Mandatory = $false)]
+        [ValidateNotNullOrEmpty()]
+        [string]$OrderBy,
+
+        [Parameter(Mandatory = $false)]
+        [ValidateNotNullOrEmpty()]
+        [string]$ContinuationToken,
 
         [Parameter()]
         [switch]$Raw
@@ -1725,7 +5635,7 @@ function Get-FabricAdminWorkspace {
         try {
             Invoke-FabricAuthCheck -ThrowOnFailure
 
-            # If WorkspaceId provided, get specific workspace
+            # If specific WorkspaceId provided, get that specific workspace
             if ($WorkspaceId) {
                 $apiEndpointURI = "{0}/admin/workspaces/{1}" -f $script:FabricAuthContext.BaseUrl, $WorkspaceId
                 Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
@@ -1738,42 +5648,54 @@ function Get-FabricAdminWorkspace {
                 $response = Invoke-FabricAPIRequest @apiParams
 
                 if ($response) {
-                    if ($Raw) {
-                        return $response
+                    if (-not $Raw) {
+                        $response.PSObject.TypeNames.Insert(0, 'MicrosoftFabric.AdminWorkspace')
                     }
-                    $response.PSObject.TypeNames.Insert(0, 'MicrosoftFabric.AdminWorkspace')
-                    return $response
+                    $response
                 }
-                return $null
+                return
             }
 
             # Build query parameters for list operation
-            $queryParams = @{}
+            $queryParams = [System.Collections.Generic.List[string]]::new()
+
+            if ($CapacityId) {
+                $queryParams.Add("capacityId=$CapacityId")
+            }
             if ($WorkspaceName) {
-                $queryParams['name'] = $WorkspaceName
+                # Note: API may use 'name' or 'displayName' for filtering
+                $queryParams.Add("name=$([System.Uri]::EscapeDataString($WorkspaceName))")
             }
             if ($WorkspaceType) {
-                $queryParams['type'] = $WorkspaceType
-            }
-            if ($CapacityId) {
-                $queryParams['capacityId'] = $CapacityId
+                $queryParams.Add("type=$WorkspaceType")
             }
             if ($State) {
-                $queryParams['state'] = $State
+                $queryParams.Add("state=$State")
+            }
+            if ($Filter) {
+                # OData filter parameter
+                $queryParams.Add("`$filter=$([System.Uri]::EscapeDataString($Filter))")
+            }
+            if ($Top) {
+                $queryParams.Add("`$top=$Top")
+            }
+            if ($Skip) {
+                $queryParams.Add("`$skip=$Skip")
+            }
+            if ($OrderBy) {
+                $queryParams.Add("`$orderby=$([System.Uri]::EscapeDataString($OrderBy))")
+            }
+            if ($ContinuationToken) {
+                $queryParams.Add("continuationToken=$([System.Uri]::EscapeDataString($ContinuationToken))")
             }
 
             # Construct the API endpoint URI
-            $uriParams = @{
-                BaseUrl  = $script:FabricAuthContext.BaseUrl
-                Endpoint = 'admin/workspaces'
-            }
+            $apiEndpointURI = "{0}/admin/workspaces" -f $script:FabricAuthContext.BaseUrl
             if ($queryParams.Count -gt 0) {
-                $queryString = ($queryParams.GetEnumerator() | ForEach-Object { "$($_.Key)=$($_.Value)" }) -join '&'
-                $apiEndpointURI = "{0}/{1}?{2}" -f $script:FabricAuthContext.BaseUrl, 'admin/workspaces', $queryString
+                $queryString = $queryParams -join '&'
+                $apiEndpointURI = "$apiEndpointURI`?$queryString"
             }
-            else {
-                $apiEndpointURI = "{0}/{1}" -f $script:FabricAuthContext.BaseUrl, 'admin/workspaces'
-            }
+
             Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
 
             # Make the API request
@@ -1789,8 +5711,8 @@ function Get-FabricAdminWorkspace {
                 return $null
             }
 
-            # Use Select-FabricResource for filtering and type decoration
-            return Select-FabricResource -InputObject $response -DisplayName $WorkspaceName -ResourceType 'AdminWorkspace' -TypeName 'MicrosoftFabric.AdminWorkspace' -Raw:$Raw
+            # Use Select-FabricResource for type decoration
+            Select-FabricResource -InputObject $response -DisplayName $WorkspaceName -ResourceType 'AdminWorkspace' -TypeName 'MicrosoftFabric.AdminWorkspace' -Raw:$Raw
         }
         catch {
             $errorDetails = $_.Exception.Message
@@ -1798,7 +5720,294 @@ function Get-FabricAdminWorkspace {
         }
     }
 }
-#EndRegion '.\Public\Admin\Get-FabricAdminWorkspace.ps1' 161
+#EndRegion '.\Public\Admin\Get-FabricAdminWorkspace.ps1' 233
+#Region '.\Public\Admin\Get-FabricAdminWorkspaceScanResult.ps1' -1
+
+<#
+.SYNOPSIS
+    Gets workspace scan results using the Power BI admin API.
+
+.DESCRIPTION
+    The Get-FabricAdminWorkspaceScanResult cmdlet retrieves the results of a workspace scan operation using the admin API.
+
+.PARAMETER ScanId
+    Required. The scan ID to get results for.
+
+.PARAMETER Filter
+    Optional. OData filter expression.
+
+.PARAMETER Top
+    Optional. Maximum number of items to return.
+
+.PARAMETER Skip
+    Optional. Number of items to skip.
+
+.PARAMETER Raw
+    Optional. Returns raw API response.
+
+.EXAMPLE
+    Get-FabricAdminWorkspaceScanResult -ScanId "scan123"
+
+    Gets the results of a specific workspace scan.
+
+.NOTES
+    - Uses the Power BI Admin API: https://api.powerbi.com/v1.0/myorg/admin/workspaces/scanResult/{scanId}
+    - Requires Fabric Administrator permissions.
+
+    Author: Claude AI
+#>
+function Get-FabricAdminWorkspaceScanResult {
+    [CmdletBinding()]
+    param (
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
+        [ValidateNotNullOrEmpty()]
+        [Alias('id')]
+        [string]$ScanId,
+
+        [Parameter(Mandatory = $false)]
+        [ValidateNotNullOrEmpty()]
+        [string]$Filter,
+
+        [Parameter(Mandatory = $false)]
+        [ValidateRange(1, 5000)]
+        [int]$Top,
+
+        [Parameter(Mandatory = $false)]
+        [ValidateRange(0, [int]::MaxValue)]
+        [int]$Skip,
+
+        [Parameter()]
+        [switch]$Raw
+    )
+
+    process {
+        try {
+            Invoke-FabricAuthCheck -ThrowOnFailure
+
+            $powerBIAdminBaseUrl = "https://api.powerbi.com/v1.0/myorg"
+
+            $queryParams = @()
+            if ($Filter) {
+                $queryParams += "`$filter=$([System.Uri]::EscapeDataString($Filter))"
+            }
+            if ($Top) {
+                $queryParams += "`$top=$Top"
+            }
+            if ($Skip) {
+                $queryParams += "`$skip=$Skip"
+            }
+
+            $apiEndpointURI = "$powerBIAdminBaseUrl/admin/workspaces/scanResult/$ScanId"
+            if ($queryParams.Count -gt 0) {
+                $apiEndpointURI = "$apiEndpointURI`?$($queryParams -join '&')"
+            }
+
+            Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
+
+            $apiParams = @{
+                BaseURI = $apiEndpointURI
+                Headers = $script:FabricAuthContext.FabricHeaders
+                Method  = 'Get'
+            }
+            $response = Invoke-FabricAPIRequest @apiParams
+
+            if (-not $response) {
+                Write-FabricLog -Message "No workspace scan results returned." -Level Warning
+                return $null
+            }
+
+            return Select-FabricResource -InputObject $response -ResourceType 'AdminWorkspaceScanResult' -TypeName 'MicrosoftFabric.AdminWorkspaceScanResult' -Raw:$Raw
+        }
+        catch {
+            $errorDetails = $_.Exception.Message
+            Write-FabricLog -Message "Failed to retrieve workspace scan results. Error: $errorDetails" -Level Error
+        }
+    }
+}
+#EndRegion '.\Public\Admin\Get-FabricAdminWorkspaceScanResult.ps1' 102
+#Region '.\Public\Admin\Get-FabricAdminWorkspaceScanStatus.ps1' -1
+
+<#
+.SYNOPSIS
+    Gets workspace scan status using the Power BI admin API.
+
+.DESCRIPTION
+    The Get-FabricAdminWorkspaceScanStatus cmdlet retrieves the status of a workspace scan operation using the admin API.
+
+.PARAMETER ScanId
+    Required. The scan ID to get status for.
+
+.PARAMETER Raw
+    Optional. Returns raw API response.
+
+.EXAMPLE
+    Get-FabricAdminWorkspaceScanStatus -ScanId "scan123"
+
+    Gets the status of a specific workspace scan.
+
+.NOTES
+    - Uses the Power BI Admin API: https://api.powerbi.com/v1.0/myorg/admin/workspaces/scanStatus/{scanId}
+    - Requires Fabric Administrator permissions.
+
+    Author: Claude AI
+#>
+function Get-FabricAdminWorkspaceScanStatus {
+    [CmdletBinding()]
+    param (
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
+        [ValidateNotNullOrEmpty()]
+        [Alias('id')]
+        [string]$ScanId,
+
+        [Parameter()]
+        [switch]$Raw
+    )
+
+    process {
+        try {
+            Invoke-FabricAuthCheck -ThrowOnFailure
+
+            $powerBIAdminBaseUrl = "https://api.powerbi.com/v1.0/myorg"
+
+            $apiEndpointURI = "$powerBIAdminBaseUrl/admin/workspaces/scanStatus/$ScanId"
+            Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
+
+            $apiParams = @{
+                BaseURI = $apiEndpointURI
+                Headers = $script:FabricAuthContext.FabricHeaders
+                Method  = 'Get'
+            }
+            $response = Invoke-FabricAPIRequest @apiParams
+
+            if ($response) {
+                if ($Raw) {
+                    return $response
+                }
+                $response.PSObject.TypeNames.Insert(0, 'MicrosoftFabric.AdminWorkspaceScanStatus')
+                return $response
+            }
+            return $null
+        }
+        catch {
+            $errorDetails = $_.Exception.Message
+            Write-FabricLog -Message "Failed to retrieve workspace scan status. Error: $errorDetails" -Level Error
+        }
+    }
+}
+#EndRegion '.\Public\Admin\Get-FabricAdminWorkspaceScanStatus.ps1' 68
+#Region '.\Public\Admin\Get-FabricAdminWorkspaceUnusedArtifact.ps1' -1
+
+<#
+.SYNOPSIS
+    Gets unused artifacts in a workspace using the Power BI admin API.
+
+.DESCRIPTION
+    The Get-FabricAdminWorkspaceUnusedArtifact cmdlet retrieves unused artifacts in a specific workspace using the admin API.
+
+.PARAMETER WorkspaceId
+    Required. The workspace ID to get unused artifacts for.
+
+.PARAMETER Filter
+    Optional. OData filter expression.
+
+.PARAMETER Top
+    Optional. Maximum number of items to return.
+
+.PARAMETER Skip
+    Optional. Number of items to skip.
+
+.PARAMETER Raw
+    Optional. Returns raw API response.
+
+.EXAMPLE
+    Get-FabricAdminWorkspaceUnusedArtifact -WorkspaceId "workspace123"
+
+    Lists all unused artifacts in the specified workspace.
+
+.NOTES
+    - Uses the Power BI Admin API: https://api.powerbi.com/v1.0/myorg/admin/groups/{workspaceId}/UnusedArtifacts
+    - Requires Fabric Administrator permissions.
+
+    Author: Claude AI
+#>
+function Get-FabricAdminWorkspaceUnusedArtifact {
+    [CmdletBinding()]
+    param (
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
+        [ValidateNotNullOrEmpty()]
+        [Alias('id')]
+        [string]$WorkspaceId,
+
+        [Parameter(Mandatory = $false)]
+        [ValidateNotNullOrEmpty()]
+        [string]$Filter,
+
+        [Parameter(Mandatory = $false)]
+        [ValidateRange(1, 5000)]
+        [int]$Top,
+
+        [Parameter(Mandatory = $false)]
+        [ValidateRange(0, [int]::MaxValue)]
+        [int]$Skip,
+
+        [Parameter()]
+        [switch]$Raw
+    )
+
+    process {
+        try {
+            Invoke-FabricAuthCheck -ThrowOnFailure
+
+            $powerBIAdminBaseUrl = "https://api.powerbi.com/v1.0/myorg"
+
+            $queryParams = @()
+            if ($Filter) {
+                $queryParams += "`$filter=$([System.Uri]::EscapeDataString($Filter))"
+            }
+            if ($Top) {
+                $queryParams += "`$top=$Top"
+            }
+            if ($Skip) {
+                $queryParams += "`$skip=$Skip"
+            }
+
+            $apiEndpointURI = "$powerBIAdminBaseUrl/admin/groups/$WorkspaceId/UnusedArtifacts"
+            if ($queryParams.Count -gt 0) {
+                $apiEndpointURI = "$apiEndpointURI`?$($queryParams -join '&')"
+            }
+
+            Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
+
+            $apiParams = @{
+                BaseURI = $apiEndpointURI
+                Headers = $script:FabricAuthContext.FabricHeaders
+                Method  = 'Get'
+            }
+            $response = Invoke-FabricAPIRequest @apiParams
+
+            if (-not $response) {
+                Write-FabricLog -Message "No unused artifacts returned." -Level Warning
+                return $null
+            }
+
+            if ($Raw) {
+                return $response
+            }
+
+            foreach ($artifact in $response) {
+                $artifact | Add-Member -NotePropertyName 'workspaceId' -NotePropertyValue $WorkspaceId -Force
+            }
+            $response | Add-FabricTypeName -TypeName 'MicrosoftFabric.AdminWorkspaceUnusedArtifact'
+
+            return $response
+        }
+        catch {
+            $errorDetails = $_.Exception.Message
+            Write-FabricLog -Message "Failed to retrieve unused artifacts. Error: $errorDetails" -Level Error
+        }
+    }
+}
+#EndRegion '.\Public\Admin\Get-FabricAdminWorkspaceUnusedArtifact.ps1' 111
 #Region '.\Public\Admin\Get-FabricAdminWorkspaceUser.ps1' -1
 
 <#
@@ -1887,6 +6096,404 @@ function Get-FabricAdminWorkspaceUser {
     }
 }
 #EndRegion '.\Public\Admin\Get-FabricAdminWorkspaceUser.ps1' 86
+#Region '.\Public\Admin\New-FabricAdminEncryptionKey.ps1' -1
+
+<#
+.SYNOPSIS
+    Creates a new tenant encryption key using the Power BI admin API.
+
+.DESCRIPTION
+    The New-FabricAdminEncryptionKey cmdlet creates a new tenant encryption key for Bring Your Own Key (BYOK) using the admin API.
+
+.PARAMETER KeyName
+    Required. The name for the new encryption key.
+
+.EXAMPLE
+    New-FabricAdminEncryptionKey -KeyName "Production Key"
+
+    Creates a new encryption key with the specified name.
+
+.NOTES
+    - Uses the Power BI Admin API: https://api.powerbi.com/v1.0/myorg/admin/tenantKeys
+    - Requires Fabric Administrator permissions.
+    - This operation requires Azure Key Vault integration.
+
+    Author: Claude AI
+#>
+function New-FabricAdminEncryptionKey {
+    [CmdletBinding(SupportsShouldProcess, ConfirmImpact = 'High')]
+    param (
+        [Parameter(Mandatory = $true)]
+        [ValidateNotNullOrEmpty()]
+        [string]$KeyName
+    )
+
+    process {
+        try {
+            Invoke-FabricAuthCheck -ThrowOnFailure
+
+            $powerBIAdminBaseUrl = "https://api.powerbi.com/v1.0/myorg"
+            $apiEndpointURI = "$powerBIAdminBaseUrl/admin/tenantKeys"
+
+            Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
+
+            $body = @{
+                name = $KeyName
+            }
+            $bodyJson = $body | ConvertTo-Json -Depth 10
+
+            if ($PSCmdlet.ShouldProcess("Tenant", "Create new encryption key '$KeyName'")) {
+                $apiParams = @{
+                    BaseURI = $apiEndpointURI
+                    Headers = $script:FabricAuthContext.FabricHeaders
+                    Method  = 'Post'
+                    Body    = $bodyJson
+                }
+                $response = Invoke-FabricAPIRequest @apiParams
+
+                Write-FabricLog -Message "Encryption key '$KeyName' created successfully." -Level Debug
+                return $response
+            }
+        }
+        catch {
+            $errorDetails = $_.Exception.Message
+            Write-FabricLog -Message "Failed to create encryption key. Error: $errorDetails" -Level Error
+        }
+    }
+}
+#EndRegion '.\Public\Admin\New-FabricAdminEncryptionKey.ps1' 64
+#Region '.\Public\Admin\Remove-FabricAdminCapacityWorkspace.ps1' -1
+
+<#
+.SYNOPSIS
+    Unassigns workspaces from a capacity using the Power BI admin API.
+
+.DESCRIPTION
+    The Remove-FabricAdminCapacityWorkspace cmdlet unassigns one or more workspaces from a capacity using the admin API.
+
+.PARAMETER WorkspaceIds
+    Required. Array of workspace IDs to unassign from their current capacity.
+
+.EXAMPLE
+    Remove-FabricAdminCapacityWorkspace -WorkspaceIds "workspace1","workspace2"
+
+    Unassigns two workspaces from their capacity.
+
+.NOTES
+    - Uses the Power BI Admin API: https://api.powerbi.com/v1.0/myorg/admin/capacities/UnassignWorkspacesFromCapacity
+    - Requires Fabric Administrator permissions.
+
+    Author: Claude AI
+#>
+function Remove-FabricAdminCapacityWorkspace {
+    [CmdletBinding(SupportsShouldProcess, ConfirmImpact = 'High')]
+    param (
+        [Parameter(Mandatory = $true)]
+        [ValidateNotNullOrEmpty()]
+        [string[]]$WorkspaceIds
+    )
+
+    process {
+        try {
+            Invoke-FabricAuthCheck -ThrowOnFailure
+
+            $powerBIAdminBaseUrl = "https://api.powerbi.com/v1.0/myorg"
+            $apiEndpointURI = "$powerBIAdminBaseUrl/admin/capacities/UnassignWorkspacesFromCapacity"
+
+            Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
+
+            $body = @{
+                workspaceIds = $WorkspaceIds
+            }
+            $bodyJson = $body | ConvertTo-Json -Depth 10
+
+            if ($PSCmdlet.ShouldProcess("Workspaces", "Unassign $($WorkspaceIds.Count) workspace(s) from capacity")) {
+                $apiParams = @{
+                    BaseURI = $apiEndpointURI
+                    Headers = $script:FabricAuthContext.FabricHeaders
+                    Method  = 'Post'
+                    Body    = $bodyJson
+                }
+                $response = Invoke-FabricAPIRequest @apiParams
+
+                Write-FabricLog -Message "Successfully unassigned $($WorkspaceIds.Count) workspace(s) from capacity." -Level Debug
+                return $response
+            }
+        }
+        catch {
+            $errorDetails = $_.Exception.Message
+            Write-FabricLog -Message "Failed to unassign workspaces from capacity. Error: $errorDetails" -Level Error
+        }
+    }
+}
+#EndRegion '.\Public\Admin\Remove-FabricAdminCapacityWorkspace.ps1' 63
+#Region '.\Public\Admin\Remove-FabricAdminInformationProtectionLabel.ps1' -1
+
+<#
+.SYNOPSIS
+    Removes information protection labels from artifacts using the Power BI admin API.
+
+.DESCRIPTION
+    The Remove-FabricAdminInformationProtectionLabel cmdlet removes information protection labels from artifacts using the admin API.
+
+.PARAMETER ArtifactId
+    Required. The artifact ID to remove the label from.
+
+.PARAMETER ArtifactType
+    Required. The type of artifact: Dashboard, Dataset, Report, etc.
+
+.EXAMPLE
+    Remove-FabricAdminInformationProtectionLabel -ArtifactId "artifact123" -ArtifactType "Dashboard"
+
+    Removes the label from a dashboard.
+
+.NOTES
+    - Uses the Power BI Admin API: https://api.powerbi.com/v1.0/myorg/admin/informationprotection/removeLabels
+    - Requires Fabric Administrator permissions.
+
+    Author: Claude AI
+#>
+function Remove-FabricAdminInformationProtectionLabel {
+    [CmdletBinding(SupportsShouldProcess, ConfirmImpact = 'Medium')]
+    param (
+        [Parameter(Mandatory = $true)]
+        [ValidateNotNullOrEmpty()]
+        [string]$ArtifactId,
+
+        [Parameter(Mandatory = $true)]
+        [ValidateNotNullOrEmpty()]
+        [string]$ArtifactType
+    )
+
+    process {
+        try {
+            Invoke-FabricAuthCheck -ThrowOnFailure
+
+            $powerBIAdminBaseUrl = "https://api.powerbi.com/v1.0/myorg"
+            $apiEndpointURI = "$powerBIAdminBaseUrl/admin/informationprotection/removeLabels"
+
+            Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
+
+            $body = @{
+                artifactId = $ArtifactId
+                artifactType = $ArtifactType
+            }
+            $bodyJson = $body | ConvertTo-Json -Depth 10
+
+            if ($PSCmdlet.ShouldProcess("Artifact '$ArtifactId'", "Remove information protection label")) {
+                $apiParams = @{
+                    BaseURI = $apiEndpointURI
+                    Headers = $script:FabricAuthContext.FabricHeaders
+                    Method  = 'Post'
+                    Body    = $bodyJson
+                }
+                $response = Invoke-FabricAPIRequest @apiParams
+
+                Write-FabricLog -Message "Information protection label removed from artifact '$ArtifactId'." -Level Debug
+                return $response
+            }
+        }
+        catch {
+            $errorDetails = $_.Exception.Message
+            Write-FabricLog -Message "Failed to remove information protection label. Error: $errorDetails" -Level Error
+        }
+    }
+}
+#EndRegion '.\Public\Admin\Remove-FabricAdminInformationProtectionLabel.ps1' 71
+#Region '.\Public\Admin\Remove-FabricAdminPipelineUser.ps1' -1
+
+<#
+.SYNOPSIS
+    Removes a user from a pipeline using the Power BI admin API.
+
+.DESCRIPTION
+    The Remove-FabricAdminPipelineUser cmdlet removes a user from a pipeline using the admin API.
+
+.PARAMETER PipelineId
+    Required. The pipeline ID to remove the user from.
+
+.PARAMETER Identifier
+    Required. The user identifier (email or object ID).
+
+.EXAMPLE
+    Remove-FabricAdminPipelineUser -PipelineId "pipeline123" -Identifier "user@example.com"
+
+    Removes a user from the specified pipeline.
+
+.NOTES
+    - Uses the Power BI Admin API: https://api.powerbi.com/v1.0/myorg/admin/pipelines/{pipelineId}/users/{identifier}
+    - Requires Fabric Administrator permissions.
+
+    Author: Claude AI
+#>
+function Remove-FabricAdminPipelineUser {
+    [CmdletBinding(SupportsShouldProcess, ConfirmImpact = 'High')]
+    param (
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
+        [ValidateNotNullOrEmpty()]
+        [Alias('id')]
+        [string]$PipelineId,
+
+        [Parameter(Mandatory = $true)]
+        [ValidateNotNullOrEmpty()]
+        [string]$Identifier
+    )
+
+    process {
+        try {
+            Invoke-FabricAuthCheck -ThrowOnFailure
+
+            $powerBIAdminBaseUrl = "https://api.powerbi.com/v1.0/myorg"
+            $apiEndpointURI = "$powerBIAdminBaseUrl/admin/pipelines/$PipelineId/users/$Identifier"
+
+            Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
+
+            if ($PSCmdlet.ShouldProcess("Pipeline '$PipelineId'", "Remove user '$Identifier'")) {
+                $apiParams = @{
+                    BaseURI = $apiEndpointURI
+                    Headers = $script:FabricAuthContext.FabricHeaders
+                    Method  = 'Delete'
+                }
+                $response = Invoke-FabricAPIRequest @apiParams
+
+                Write-FabricLog -Message "User '$Identifier' removed from pipeline '$PipelineId'." -Level Debug
+                return $response
+            }
+        }
+        catch {
+            $errorDetails = $_.Exception.Message
+            Write-FabricLog -Message "Failed to remove user from pipeline. Error: $errorDetails" -Level Error
+        }
+    }
+}
+#EndRegion '.\Public\Admin\Remove-FabricAdminPipelineUser.ps1' 65
+#Region '.\Public\Admin\Remove-FabricAdminProfile.ps1' -1
+
+<#
+.SYNOPSIS
+    Deletes a profile using the Power BI admin API.
+
+.DESCRIPTION
+    The Remove-FabricAdminProfile cmdlet deletes a service principal profile from the tenant using the admin API.
+
+.PARAMETER ProfileId
+    Required. The service principal profile object ID to delete.
+
+.EXAMPLE
+    Remove-FabricAdminProfile -ProfileId "profile123"
+
+    Deletes the specified profile.
+
+.NOTES
+    - Uses the Power BI Admin API: https://api.powerbi.com/v1.0/myorg/admin/profiles/{servicePrincipalProfileObjectId}
+    - Requires Fabric Administrator permissions.
+
+    Author: Claude AI
+#>
+function Remove-FabricAdminProfile {
+    [CmdletBinding(SupportsShouldProcess, ConfirmImpact = 'High')]
+    param (
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
+        [ValidateNotNullOrEmpty()]
+        [Alias('id')]
+        [string]$ProfileId
+    )
+
+    process {
+        try {
+            Invoke-FabricAuthCheck -ThrowOnFailure
+
+            $powerBIAdminBaseUrl = "https://api.powerbi.com/v1.0/myorg"
+            $apiEndpointURI = "$powerBIAdminBaseUrl/admin/profiles/$ProfileId"
+
+            Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
+
+            if ($PSCmdlet.ShouldProcess("Profile '$ProfileId'", "Delete")) {
+                $apiParams = @{
+                    BaseURI = $apiEndpointURI
+                    Headers = $script:FabricAuthContext.FabricHeaders
+                    Method  = 'Delete'
+                }
+                $response = Invoke-FabricAPIRequest @apiParams
+
+                Write-FabricLog -Message "Profile '$ProfileId' deleted successfully." -Level Debug
+                return $response
+            }
+        }
+        catch {
+            $errorDetails = $_.Exception.Message
+            Write-FabricLog -Message "Failed to delete profile. Error: $errorDetails" -Level Error
+        }
+    }
+}
+#EndRegion '.\Public\Admin\Remove-FabricAdminProfile.ps1' 58
+#Region '.\Public\Admin\Remove-FabricAdminWorkspaceUser.ps1' -1
+
+<#
+.SYNOPSIS
+    Removes a user from a workspace using the Power BI admin API.
+
+.DESCRIPTION
+    The Remove-FabricAdminWorkspaceUser cmdlet removes a user from a workspace using the admin API.
+
+.PARAMETER WorkspaceId
+    Required. The workspace ID to remove the user from.
+
+.PARAMETER User
+    Required. The user identifier (email or object ID).
+
+.EXAMPLE
+    Remove-FabricAdminWorkspaceUser -WorkspaceId "workspace123" -User "user@example.com"
+
+    Removes a user from the specified workspace.
+
+.NOTES
+    - Uses the Power BI Admin API: https://api.powerbi.com/v1.0/myorg/admin/groups/{workspaceId}/users/{user}
+    - Requires Fabric Administrator permissions.
+
+    Author: Claude AI
+#>
+function Remove-FabricAdminWorkspaceUser {
+    [CmdletBinding(SupportsShouldProcess, ConfirmImpact = 'High')]
+    param (
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
+        [ValidateNotNullOrEmpty()]
+        [Alias('id')]
+        [string]$WorkspaceId,
+
+        [Parameter(Mandatory = $true)]
+        [ValidateNotNullOrEmpty()]
+        [string]$User
+    )
+
+    process {
+        try {
+            Invoke-FabricAuthCheck -ThrowOnFailure
+
+            $powerBIAdminBaseUrl = "https://api.powerbi.com/v1.0/myorg"
+            $apiEndpointURI = "$powerBIAdminBaseUrl/admin/groups/$WorkspaceId/users/$User"
+
+            Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
+
+            if ($PSCmdlet.ShouldProcess("Workspace '$WorkspaceId'", "Remove user '$User'")) {
+                $apiParams = @{
+                    BaseURI = $apiEndpointURI
+                    Headers = $script:FabricAuthContext.FabricHeaders
+                    Method  = 'Delete'
+                }
+                $response = Invoke-FabricAPIRequest @apiParams
+
+                Write-FabricLog -Message "User '$User' removed from workspace '$WorkspaceId'." -Level Debug
+                return $response
+            }
+        }
+        catch {
+            $errorDetails = $_.Exception.Message
+            Write-FabricLog -Message "Failed to remove user from workspace. Error: $errorDetails" -Level Error
+        }
+    }
+}
+#EndRegion '.\Public\Admin\Remove-FabricAdminWorkspaceUser.ps1' 65
 #Region '.\Public\Admin\Restore-FabricAdminWorkspace.ps1' -1
 
 <#
@@ -1985,6 +6592,469 @@ function Restore-FabricAdminWorkspace {
     }
 }
 #EndRegion '.\Public\Admin\Restore-FabricAdminWorkspace.ps1' 96
+#Region '.\Public\Admin\Set-FabricAdminInformationProtectionLabel.ps1' -1
+
+<#
+.SYNOPSIS
+    Sets information protection labels on artifacts using the Power BI admin API.
+
+.DESCRIPTION
+    The Set-FabricAdminInformationProtectionLabel cmdlet applies information protection labels to artifacts using the admin API.
+
+.PARAMETER ArtifactId
+    Required. The artifact ID to label.
+
+.PARAMETER ArtifactType
+    Required. The type of artifact: Dashboard, Dataset, Report, etc.
+
+.PARAMETER LabelId
+    Required. The label ID to apply.
+
+.EXAMPLE
+    Set-FabricAdminInformationProtectionLabel -ArtifactId "artifact123" -ArtifactType "Dashboard" -LabelId "label456"
+
+    Applies a label to a dashboard.
+
+.NOTES
+    - Uses the Power BI Admin API: https://api.powerbi.com/v1.0/myorg/admin/informationprotection/setLabels
+    - Requires Fabric Administrator permissions.
+
+    Author: Claude AI
+#>
+function Set-FabricAdminInformationProtectionLabel {
+    [CmdletBinding(SupportsShouldProcess, ConfirmImpact = 'Medium')]
+    param (
+        [Parameter(Mandatory = $true)]
+        [ValidateNotNullOrEmpty()]
+        [string]$ArtifactId,
+
+        [Parameter(Mandatory = $true)]
+        [ValidateNotNullOrEmpty()]
+        [string]$ArtifactType,
+
+        [Parameter(Mandatory = $true)]
+        [ValidateNotNullOrEmpty()]
+        [string]$LabelId
+    )
+
+    process {
+        try {
+            Invoke-FabricAuthCheck -ThrowOnFailure
+
+            $powerBIAdminBaseUrl = "https://api.powerbi.com/v1.0/myorg"
+            $apiEndpointURI = "$powerBIAdminBaseUrl/admin/informationprotection/setLabels"
+
+            Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
+
+            $body = @{
+                artifactId = $ArtifactId
+                artifactType = $ArtifactType
+                labelId = $LabelId
+            }
+            $bodyJson = $body | ConvertTo-Json -Depth 10
+
+            if ($PSCmdlet.ShouldProcess("Artifact '$ArtifactId'", "Set information protection label")) {
+                $apiParams = @{
+                    BaseURI = $apiEndpointURI
+                    Headers = $script:FabricAuthContext.FabricHeaders
+                    Method  = 'Post'
+                    Body    = $bodyJson
+                }
+                $response = Invoke-FabricAPIRequest @apiParams
+
+                Write-FabricLog -Message "Information protection label set on artifact '$ArtifactId'." -Level Debug
+                return $response
+            }
+        }
+        catch {
+            $errorDetails = $_.Exception.Message
+            Write-FabricLog -Message "Failed to set information protection label. Error: $errorDetails" -Level Error
+        }
+    }
+}
+#EndRegion '.\Public\Admin\Set-FabricAdminInformationProtectionLabel.ps1' 79
+#Region '.\Public\Admin\Start-FabricAdminEncryptionKeyRotation.ps1' -1
+
+<#
+.SYNOPSIS
+    Rotates a tenant encryption key using the Power BI admin API.
+
+.DESCRIPTION
+    The Start-FabricAdminEncryptionKeyRotation cmdlet initiates rotation of a tenant encryption key using the admin API.
+
+.PARAMETER KeyId
+    Required. The encryption key ID to rotate.
+
+.EXAMPLE
+    Start-FabricAdminEncryptionKeyRotation -KeyId "key123"
+
+    Initiates rotation of the specified encryption key.
+
+.NOTES
+    - Uses the Power BI Admin API: https://api.powerbi.com/v1.0/myorg/admin/tenantKeys/{tenantKeyId}/rotate
+    - Requires Fabric Administrator permissions.
+
+    Author: Claude AI
+#>
+function Start-FabricAdminEncryptionKeyRotation {
+    [CmdletBinding(SupportsShouldProcess, ConfirmImpact = 'High')]
+    param (
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
+        [ValidateNotNullOrEmpty()]
+        [Alias('id')]
+        [string]$KeyId
+    )
+
+    process {
+        try {
+            Invoke-FabricAuthCheck -ThrowOnFailure
+
+            $powerBIAdminBaseUrl = "https://api.powerbi.com/v1.0/myorg"
+            $apiEndpointURI = "$powerBIAdminBaseUrl/admin/tenantKeys/$KeyId/rotate"
+
+            Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
+
+            if ($PSCmdlet.ShouldProcess("Encryption key '$KeyId'", "Rotate")) {
+                $apiParams = @{
+                    BaseURI = $apiEndpointURI
+                    Headers = $script:FabricAuthContext.FabricHeaders
+                    Method  = 'Post'
+                    Body    = '{}'
+                }
+                $response = Invoke-FabricAPIRequest @apiParams
+
+                Write-FabricLog -Message "Encryption key '$KeyId' rotation initiated successfully." -Level Debug
+                return $response
+            }
+        }
+        catch {
+            $errorDetails = $_.Exception.Message
+            Write-FabricLog -Message "Failed to rotate encryption key. Error: $errorDetails" -Level Error
+        }
+    }
+}
+#EndRegion '.\Public\Admin\Start-FabricAdminEncryptionKeyRotation.ps1' 59
+#Region '.\Public\Admin\Start-FabricAdminWorkspaceScan.ps1' -1
+
+<#
+.SYNOPSIS
+    Initiates a workspace information scan using the Power BI admin API.
+
+.DESCRIPTION
+    The Start-FabricAdminWorkspaceScan cmdlet starts a scan to gather workspace information using the admin API.
+
+.PARAMETER WorkspaceIds
+    Optional. Array of workspace IDs to scan. If not provided, scans all workspaces.
+
+.EXAMPLE
+    Start-FabricAdminWorkspaceScan
+
+    Initiates a scan of all workspaces.
+
+.EXAMPLE
+    Start-FabricAdminWorkspaceScan -WorkspaceIds "workspace1","workspace2"
+
+    Initiates a scan of specific workspaces.
+
+.NOTES
+    - Uses the Power BI Admin API: https://api.powerbi.com/v1.0/myorg/admin/workspaces/getInfo
+    - Requires Fabric Administrator permissions.
+
+    Author: Claude AI
+#>
+function Start-FabricAdminWorkspaceScan {
+    [CmdletBinding(SupportsShouldProcess, ConfirmImpact = 'Medium')]
+    param (
+        [Parameter(Mandatory = $false)]
+        [ValidateNotNullOrEmpty()]
+        [string[]]$WorkspaceIds
+    )
+
+    process {
+        try {
+            Invoke-FabricAuthCheck -ThrowOnFailure
+
+            $powerBIAdminBaseUrl = "https://api.powerbi.com/v1.0/myorg"
+            $apiEndpointURI = "$powerBIAdminBaseUrl/admin/workspaces/getInfo"
+
+            Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
+
+            $body = @{}
+            if ($WorkspaceIds) {
+                $body.workspaceIds = $WorkspaceIds
+            }
+            $bodyJson = if ($body.Count -gt 0) { $body | ConvertTo-Json -Depth 10 } else { '{}' }
+
+            if ($PSCmdlet.ShouldProcess("Workspaces", "Start information scan")) {
+                $apiParams = @{
+                    BaseURI = $apiEndpointURI
+                    Headers = $script:FabricAuthContext.FabricHeaders
+                    Method  = 'Post'
+                    Body    = $bodyJson
+                }
+                $response = Invoke-FabricAPIRequest @apiParams
+
+                Write-FabricLog -Message "Workspace information scan initiated successfully." -Level Debug
+                return $response
+            }
+        }
+        catch {
+            $errorDetails = $_.Exception.Message
+            Write-FabricLog -Message "Failed to start workspace scan. Error: $errorDetails" -Level Error
+        }
+    }
+}
+#EndRegion '.\Public\Admin\Start-FabricAdminWorkspaceScan.ps1' 69
+#Region '.\Public\Admin\Update-FabricAdminCapacity.ps1' -1
+
+<#
+.SYNOPSIS
+    Updates a capacity using the Power BI admin API.
+
+.DESCRIPTION
+    The Update-FabricAdminCapacity cmdlet updates properties of a capacity using the admin API.
+
+.PARAMETER CapacityId
+    Required. The capacity ID to update.
+
+.PARAMETER DisplayName
+    Optional. The new display name for the capacity.
+
+.PARAMETER Notes
+    Optional. Notes about the capacity.
+
+.EXAMPLE
+    Update-FabricAdminCapacity -CapacityId "capacity123" -DisplayName "Production Capacity"
+
+    Updates the display name of a capacity.
+
+.NOTES
+    - Uses the Power BI Admin API: https://api.powerbi.com/v1.0/myorg/admin/capacities/{capacityId}
+    - Requires Fabric Administrator permissions.
+
+    Author: Claude AI
+#>
+function Update-FabricAdminCapacity {
+    [CmdletBinding(SupportsShouldProcess, ConfirmImpact = 'Medium')]
+    param (
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
+        [ValidateNotNullOrEmpty()]
+        [Alias('id')]
+        [string]$CapacityId,
+
+        [Parameter(Mandatory = $false)]
+        [ValidateNotNullOrEmpty()]
+        [string]$DisplayName,
+
+        [Parameter(Mandatory = $false)]
+        [ValidateNotNullOrEmpty()]
+        [string]$Notes
+    )
+
+    process {
+        try {
+            Invoke-FabricAuthCheck -ThrowOnFailure
+
+            $powerBIAdminBaseUrl = "https://api.powerbi.com/v1.0/myorg"
+            $apiEndpointURI = "$powerBIAdminBaseUrl/admin/capacities/$CapacityId"
+
+            Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
+
+            $body = @{}
+            if ($DisplayName) {
+                $body.displayName = $DisplayName
+            }
+            if ($Notes) {
+                $body.notes = $Notes
+            }
+
+            $bodyJson = if ($body.Count -gt 0) { $body | ConvertTo-Json -Depth 10 } else { '{}' }
+
+            if ($PSCmdlet.ShouldProcess("Capacity '$CapacityId'", "Update")) {
+                $apiParams = @{
+                    BaseURI = $apiEndpointURI
+                    Headers = $script:FabricAuthContext.FabricHeaders
+                    Method  = 'Patch'
+                    Body    = $bodyJson
+                }
+                $response = Invoke-FabricAPIRequest @apiParams
+
+                Write-FabricLog -Message "Capacity '$CapacityId' updated successfully." -Level Debug
+                return $response
+            }
+        }
+        catch {
+            $errorDetails = $_.Exception.Message
+            Write-FabricLog -Message "Failed to update capacity. Error: $errorDetails" -Level Error
+        }
+    }
+}
+#EndRegion '.\Public\Admin\Update-FabricAdminCapacity.ps1' 83
+#Region '.\Public\Admin\Update-FabricAdminPipelineUser.ps1' -1
+
+<#
+.SYNOPSIS
+    Updates a user's access level in a pipeline using the Power BI admin API.
+
+.DESCRIPTION
+    The Update-FabricAdminPipelineUser cmdlet updates a user's permissions in a pipeline using the admin API.
+
+.PARAMETER PipelineId
+    Required. The pipeline ID containing the user.
+
+.PARAMETER Identifier
+    Required. The user identifier (email or object ID).
+
+.PARAMETER AccessRight
+    Required. The new permission level: Admin, Member, or Contributor.
+
+.EXAMPLE
+    Update-FabricAdminPipelineUser -PipelineId "pipeline123" -Identifier "user@example.com" -AccessRight "Admin"
+
+    Updates the user's access level to Admin.
+
+.NOTES
+    - Uses the Power BI Admin API: https://api.powerbi.com/v1.0/myorg/admin/pipelines/{pipelineId}/users/{identifier}
+    - Requires Fabric Administrator permissions.
+
+    Author: Claude AI
+#>
+function Update-FabricAdminPipelineUser {
+    [CmdletBinding(SupportsShouldProcess, ConfirmImpact = 'Medium')]
+    param (
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
+        [ValidateNotNullOrEmpty()]
+        [Alias('id')]
+        [string]$PipelineId,
+
+        [Parameter(Mandatory = $true)]
+        [ValidateNotNullOrEmpty()]
+        [string]$Identifier,
+
+        [Parameter(Mandatory = $true)]
+        [ValidateSet('Admin', 'Member', 'Contributor')]
+        [string]$AccessRight
+    )
+
+    process {
+        try {
+            Invoke-FabricAuthCheck -ThrowOnFailure
+
+            $powerBIAdminBaseUrl = "https://api.powerbi.com/v1.0/myorg"
+            $apiEndpointURI = "$powerBIAdminBaseUrl/admin/pipelines/$PipelineId/users/$Identifier"
+
+            Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
+
+            $body = @{
+                accessRight = $AccessRight
+            }
+            $bodyJson = $body | ConvertTo-Json -Depth 10
+
+            if ($PSCmdlet.ShouldProcess("Pipeline '$PipelineId'", "Update user '$Identifier' to '$AccessRight'")) {
+                $apiParams = @{
+                    BaseURI = $apiEndpointURI
+                    Headers = $script:FabricAuthContext.FabricHeaders
+                    Method  = 'Patch'
+                    Body    = $bodyJson
+                }
+                $response = Invoke-FabricAPIRequest @apiParams
+
+                Write-FabricLog -Message "User '$Identifier' access level updated to '$AccessRight' in pipeline '$PipelineId'." -Level Debug
+                return $response
+            }
+        }
+        catch {
+            $errorDetails = $_.Exception.Message
+            Write-FabricLog -Message "Failed to update pipeline user. Error: $errorDetails" -Level Error
+        }
+    }
+}
+#EndRegion '.\Public\Admin\Update-FabricAdminPipelineUser.ps1' 78
+#Region '.\Public\Admin\Update-FabricAdminWorkspace.ps1' -1
+
+<#
+.SYNOPSIS
+    Updates a workspace using the Power BI admin API.
+
+.DESCRIPTION
+    The Update-FabricAdminWorkspace cmdlet updates properties of a workspace using the admin API.
+
+.PARAMETER WorkspaceId
+    Required. The workspace ID to update.
+
+.PARAMETER DisplayName
+    Optional. The new display name for the workspace.
+
+.PARAMETER Description
+    Optional. The new description for the workspace.
+
+.EXAMPLE
+    Update-FabricAdminWorkspace -WorkspaceId "workspace123" -DisplayName "Updated Name"
+
+    Updates the display name of a workspace.
+
+.NOTES
+    - Uses the Power BI Admin API: https://api.powerbi.com/v1.0/myorg/admin/groups/{workspaceId}
+    - Requires Fabric Administrator permissions.
+
+    Author: Claude AI
+#>
+function Update-FabricAdminWorkspace {
+    [CmdletBinding(SupportsShouldProcess, ConfirmImpact = 'Medium')]
+    param (
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
+        [ValidateNotNullOrEmpty()]
+        [Alias('id')]
+        [string]$WorkspaceId,
+
+        [Parameter(Mandatory = $false)]
+        [ValidateNotNullOrEmpty()]
+        [string]$DisplayName,
+
+        [Parameter(Mandatory = $false)]
+        [ValidateNotNullOrEmpty()]
+        [string]$Description
+    )
+
+    process {
+        try {
+            Invoke-FabricAuthCheck -ThrowOnFailure
+
+            $powerBIAdminBaseUrl = "https://api.powerbi.com/v1.0/myorg"
+            $apiEndpointURI = "$powerBIAdminBaseUrl/admin/groups/$WorkspaceId"
+
+            Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
+
+            $body = @{}
+            if ($DisplayName) {
+                $body.displayName = $DisplayName
+            }
+            if ($Description) {
+                $body.description = $Description
+            }
+
+            $bodyJson = if ($body.Count -gt 0) { $body | ConvertTo-Json -Depth 10 } else { '{}' }
+
+            if ($PSCmdlet.ShouldProcess("Workspace '$WorkspaceId'", "Update")) {
+                $apiParams = @{
+                    BaseURI = $apiEndpointURI
+                    Headers = $script:FabricAuthContext.FabricHeaders
+                    Method  = 'Patch'
+                    Body    = $bodyJson
+                }
+                $response = Invoke-FabricAPIRequest @apiParams
+
+                Write-FabricLog -Message "Workspace '$WorkspaceId' updated successfully." -Level Debug
+                return $response
+            }
+        }
+        catch {
+            $errorDetails = $_.Exception.Message
+            Write-FabricLog -Message "Failed to update workspace. Error: $errorDetails" -Level Error
+        }
+    }
+}
+#EndRegion '.\Public\Admin\Update-FabricAdminWorkspace.ps1' 83
 #Region '.\Public\Anomaly Detector\Get-FabricAnomalyDetector.ps1' -1
 
 <#
@@ -32996,6 +38066,9 @@ function Invoke-FabricAPIRequest {
         $continuationToken = $null
         $results = New-Object System.Collections.Generic.List[Object]
 
+        # Log initial request details for debugging
+        Write-FabricLog -Message "Invoke-FabricAPIRequest: Method=$Method, BaseURI=$BaseURI, HasBody=$(-not [string]::IsNullOrEmpty($Body))" -Level Debug
+
         # Ensure System.Web assembly is loaded for URL encoding
         if (-not ([System.Web.HttpUtility] -as [type])) {
             Add-Type -AssemblyName System.Web
@@ -33006,12 +38079,14 @@ function Invoke-FabricAPIRequest {
             # Construct API endpoint URI with continuation token if present
             $apiEndpointURI = $BaseURI
             if ($null -ne $continuationToken) {
-                $encodedToken = [System.Web.HttpUtility]::UrlEncode($continuationToken)
-                $separator = if ($BaseURI -like "*`?*") { "&" } else { "?" }
-                $apiEndpointURI = "$BaseURI$separator" + "continuationToken=$encodedToken"
+                # NOTE: Continuation tokens must be passed as-is without additional URL encoding
+                # The token is already in the correct format from the API response
+                $separator = if ($BaseURI.Contains('?')) { "&" } else { "?" }
+                $apiEndpointURI = "$BaseURI$separator" + "continuationToken=$continuationToken"
             }
 
-            Write-FabricLog -Message "Calling API: $apiEndpointURI" -Level Debug
+            Write-FabricLog -Message "Calling API endpoint: $apiEndpointURI" -Level Debug
+            Write-FabricLog -Message "HTTP Method: $Method, Retry attempt: $(if ($retryCount -gt 0) { $retryCount } else { 'First' })" -Level Debug
 
             # Prepare parameters for Invoke-RestMethod
             $invokeParams = @{
@@ -33076,9 +38151,11 @@ function Invoke-FabricAPIRequest {
             }
 
             # Handle response based on HTTP status code
+            Write-FabricLog -Message "API response status code: $statusCode" -Level Debug
+
             switch ($statusCode) {
                 200 {
-                    Write-FabricLog -Message "API call succeeded." -Level Debug
+                    Write-FabricLog -Message "API call succeeded (200 OK)." -Level Debug
                     [string]$etag = $responseHeader["ETag"]
 
                     if ($response) {
@@ -33176,7 +38253,12 @@ function Invoke-FabricAPIRequest {
                 400 { $errorMsg = "Bad Request" }
                 401 { $errorMsg = "Unauthorized" }
                 403 { $errorMsg = "Forbidden" }
-                404 { $errorMsg = "Not Found" }
+                404 {
+                    $errorMsg = "Not Found"
+                    # Log detailed information about 404 errors for troubleshooting
+                    Write-FabricLog -Message "404 Not Found - URI: $apiEndpointURI" -Level Warning
+                    Write-FabricLog -Message "Response: $($response | ConvertTo-Json -Depth 5)" -Level Debug
+                }
                 409 { $errorMsg = "Conflict" }
                 429 { $errorMsg = "Too Many Requests" }
                 500 { $errorMsg = "Internal Server Error" }
@@ -33238,7 +38320,7 @@ function Invoke-FabricAPIRequest {
         throw
     }
 }
-#EndRegion '.\Public\Utils\Invoke-FabricAPIRequest.ps1' 335
+#EndRegion '.\Public\Utils\Invoke-FabricAPIRequest.ps1' 347
 #Region '.\Public\Utils\Resolve-FabricCapacityIdFromWorkspace.ps1' -1
 
 function Resolve-FabricCapacityIdFromWorkspace {
