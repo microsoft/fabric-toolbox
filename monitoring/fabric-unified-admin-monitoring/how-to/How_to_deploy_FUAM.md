@@ -37,6 +37,7 @@ The deployment of FUAM can be done with very little effort, since we tried to au
 - Fabric Capacity Metrics app (workspace) **with attached P or F-capacity** with **enabled XMLA endpoint** (at least 'Read')
      - Compatible versions of the Capacity Metrics App: v53, v47, v44 or earlier
     - Before updating, please check [this site] to verify which versions of the Capacity Metrics app are compatible with FUAM.
+    - Since the user who last changed a pipeline will execute the notebook, this user needs to have contributor permissions on the capacity metrics app workspace. Usually this is the user who deployed FUAM.
 
 - **Optional:** Ability to access an Azure Key Vault on your tenant
 
