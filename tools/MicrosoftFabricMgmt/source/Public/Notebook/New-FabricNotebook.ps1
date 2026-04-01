@@ -7,6 +7,9 @@ This function sends a POST request to the Microsoft Fabric API to create a new n
 in the specified workspace. It supports optional parameters for notebook description
 and path definitions for the notebook content.
 
+The function handles both synchronous (201) and asynchronous (202) API responses,
+automatically waiting for long-running operations to complete.
+
 .PARAMETER WorkspaceId
 The unique identifier of the workspace where the notebook will be created.
 
@@ -147,10 +150,11 @@ function New-FabricNotebook {
                 Headers = $script:FabricAuthContext.FabricHeaders
                 Method = 'Post'
                 Body = $bodyJson
+                WaitForCompletion = $true
             }
             $response = Invoke-FabricAPIRequest @apiParams
 
-            # Return the API response
+            # Return the API response (handles both 201 synchronous and 202 async operations)
             Write-FabricLog -Message "Notebook '$NotebookName' created successfully!" -Level Host
             return $response
         }
