@@ -35,6 +35,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `OdbcClient` refactored to support multiple authentication modes with proper connection string generation
 - `SynapseClient` updated with helper methods for credential handling across auth modes
 
+### Fixed
+
+- **Fabric Notebook Hang**: Fixed an issue where the tool would hang indefinitely when running in Microsoft Fabric Notebooks. The root cause was `notebookutils.credentials.getToken()` hanging when requesting the `management.azure.com` scope, which is not supported in that environment. The tool now detects Fabric Notebook authentication and automatically falls back to the ODBC path for schema/table enumeration.
+
 ## [0.2.0] - 2026-03-12
 
 ### Added

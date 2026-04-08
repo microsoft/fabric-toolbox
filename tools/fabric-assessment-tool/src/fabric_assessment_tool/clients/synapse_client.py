@@ -54,7 +54,7 @@ from ..assessment.synapse import (
 from ..utils import ui as utils_ui
 from .api_client import ApiClient
 from .odbc_client import OdbcClient
-from .token_provider import TokenProvider, create_token_provider
+from .token_provider import FabricNotebookTokenProvider, TokenProvider, create_token_provider
 
 
 class SynapseClient:
@@ -125,6 +125,12 @@ class SynapseClient:
         """
         if "azure" in self.synapse_clients:
             return True
+
+        # Skip Azure Management API for Fabric notebooks - notebookutils.credentials.getToken()
+        # hangs indefinitely when requesting the management.azure.com scope
+        if isinstance(self.token_provider, FabricNotebookTokenProvider):
+            return False
+
         try:
             azure_token = self.token_provider.get_token(
                 "https://management.azure.com/.default"
