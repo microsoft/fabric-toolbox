@@ -7,7 +7,7 @@ name="fabric-assessment-tool"
 authors = [
     { name = "Microsoft Corporation" },
 ]
-version="0.2.0"
+version="0.2.1"
 description="Command-line tool for Migration Assessment for Fabric DE/DW"
 readme="README.md"
 requires-python=">=3.10,<3.13"

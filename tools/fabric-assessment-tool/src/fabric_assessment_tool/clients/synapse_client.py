@@ -67,6 +67,10 @@ class SynapseClient:
         auth_method: Optional[str] = None,
         sql_admin_password: Optional[str] = None,
         create_dmv: bool = False,
+        sql_auth_mode: str = "sql",
+        sql_client_id: Optional[str] = None,
+        sql_client_secret: Optional[str] = None,
+        sql_tenant_id: Optional[str] = None,
         **kwargs,
     ):
         """
@@ -78,11 +82,23 @@ class SynapseClient:
             auth_method: Authentication method ("azure-cli", "fabric", or None for auto-detect)
             sql_admin_password: SQL admin password for dedicated SQL pools (bypasses interactive prompt)
             create_dmv: Auto-create vTableSizes DMV without confirmation prompt
+            sql_auth_mode: SQL pool authentication mode:
+                - "sql": Traditional SQL authentication (default)
+                - "entra-interactive": Entra ID interactive authentication (browser popup)
+                - "entra-spn": Entra ID Service Principal authentication
+                - "entra-default": Entra ID default (Azure CLI, managed identity, etc.)
+            sql_client_id: Service principal client ID (required for 'entra-spn' mode)
+            sql_client_secret: Service principal client secret (required for 'entra-spn' mode)
+            sql_tenant_id: Azure tenant ID (optional for 'entra-spn' mode)
         """
         self.token_provider = token_provider or create_token_provider(auth_method)
         self.custom_subscription_id = subscription_id
         self.sql_admin_password = sql_admin_password
         self.create_dmv = create_dmv
+        self.sql_auth_mode = sql_auth_mode
+        self.sql_client_id = sql_client_id
+        self.sql_client_secret = sql_client_secret
+        self.sql_tenant_id = sql_tenant_id
         self.authenticate()
         self._workspace_cache: dict[str, SynapseWorkspaceInfo] = {}
         self.dev_endpoint_permission_issues = False
@@ -274,7 +290,7 @@ class SynapseClient:
             utils_ui.print_extraction_done("Spark Configurations")
 
             # Get table statistics using SQL admin credentials if provided
-            if sql_admin_login and sql_admin_password:
+            if self._has_sql_credentials(sql_admin_login, sql_admin_password):
                 utils_ui.print_extracting("Table Statistics")
                 for pool in sql_pools.dedicated_pools:
                     # Get dedicated databases table statistics - odbc client
@@ -1088,18 +1104,18 @@ class SynapseClient:
     ) -> SynapseSchemas:
         """Get schemas via ODBC using INFORMATION_SCHEMA."""
 
-        if not sql_admin_login or not sql_admin_password:
+        if not self._has_sql_credentials(sql_admin_login, sql_admin_password):
             utils_ui.print_warning(
                 f"Skipping schema listing for '{database_name}' - SQL credentials not provided."
             )
             return SynapseSchemas(schemas=[])
 
         try:
-            odbc_client = OdbcClient(
+            odbc_client = self._create_odbc_client(
                 workspace_name=workspace_name,
-                database=database_name,
-                username=sql_admin_login,
-                password=sql_admin_password,
+                database_name=database_name,
+                sql_admin_login=sql_admin_login,
+                sql_admin_password=sql_admin_password,
             )
 
             schema_names = odbc_client.get_schemas()
@@ -1197,15 +1213,15 @@ class SynapseClient:
     ) -> SynapseTables:
         """Get tables via ODBC using INFORMATION_SCHEMA."""
 
-        if not sql_admin_login or not sql_admin_password:
+        if not self._has_sql_credentials(sql_admin_login, sql_admin_password):
             return SynapseTables(tables=[])
 
         try:
-            odbc_client = OdbcClient(
+            odbc_client = self._create_odbc_client(
                 workspace_name=workspace_name,
-                database=database_name,
-                username=sql_admin_login,
-                password=sql_admin_password,
+                database_name=database_name,
+                sql_admin_login=sql_admin_login,
+                sql_admin_password=sql_admin_password,
             )
 
             table_names = odbc_client.get_tables(schema_name)
@@ -1233,11 +1249,11 @@ class SynapseClient:
     ) -> tuple[list[TableStatistics], list[CodeObjectCount], list[CodeObjectLines]]:
         """Get table statistics from a database."""
 
-        odbc_client = OdbcClient(
+        odbc_client = self._create_odbc_client(
             workspace_name=workspace_name,
-            database=database_name,
-            username=sql_user,
-            password=sql_password,
+            database_name=database_name,
+            sql_admin_login=sql_user,
+            sql_admin_password=sql_password,
         )
 
         if not odbc_client.check_table_statistics_dmv_exists():
@@ -1276,11 +1292,41 @@ class SynapseClient:
             list(odbc_client.get_code_lines_statistics(database_name)),
         )
 
+    def _has_sql_credentials(
+        self,
+        sql_admin_login: Optional[str] = None,
+        sql_admin_password: Optional[str] = None,
+    ) -> bool:
+        """
+        Check if SQL credentials are available for the current auth mode.
+
+        For Entra ID authentication modes, credentials are considered available
+        if the mode is properly configured. For SQL auth, both login and password
+        must be provided.
+
+        Args:
+            sql_admin_login: SQL admin login (for SQL auth mode)
+            sql_admin_password: SQL admin password (for SQL auth mode)
+
+        Returns:
+            True if credentials are available for the current auth mode
+        """
+        if self.sql_auth_mode in ("entra-interactive", "entra-default"):
+            return True
+        elif self.sql_auth_mode == "entra-spn":
+            return bool(self.sql_client_id and self.sql_client_secret)
+        else:  # sql mode
+            return bool(sql_admin_login and sql_admin_password)
+
     def _get_sql_admin_credentials(
         self, workspace_name: str, sql_admin_login: Optional[str]
     ) -> Optional[str]:
         """
         Get SQL admin credentials, using stored password if available.
+
+        For Entra ID authentication modes (entra-interactive, entra-spn, entra-default),
+        this method returns a placeholder value since the actual authentication is handled
+        by the mssql-python driver.
 
         Args:
             workspace_name: Name of the Synapse workspace
@@ -1289,31 +1335,98 @@ class SynapseClient:
         Returns:
             SQL admin password if provided, None otherwise
         """
-        if not sql_admin_login:
-            return None
+        # If auth mode was explicitly set via CLI (not default "sql") or password provided, use it
+        if self.sql_auth_mode in ("entra-interactive", "entra-default"):
+            return "__entra_auth__"  # Placeholder to indicate credentials are available
+        elif self.sql_auth_mode == "entra-spn":
+            if self.sql_client_id and self.sql_client_secret:
+                return "__entra_auth__"  # Placeholder
+            else:
+                utils_ui.print_warning(
+                    "Entra ID Service Principal authentication requires --sql-client-id and --sql-client-secret"
+                )
+                return None
 
-        # Use stored password if provided (non-interactive mode)
+        # If password was provided via CLI, use SQL auth directly
         if self.sql_admin_password is not None:
+            if not sql_admin_login:
+                return None
             return self.sql_admin_password
 
-        # Display disclaimer about DMV usage
+        # Interactive mode - prompt user to choose authentication type
         utils_ui.print_fabric_assessment_tool(
-            "NOTICE: This tool leverages the use of DMVs (Dynamic Management Views) and "
-            "SQL admin credentials to obtain detailed table statistics from Azure Synapse "
-            "Analytics dedicated SQL pools."
+            "NOTICE: This tool can collect detailed table statistics from Azure Synapse "
+            "Analytics dedicated SQL pools using DMVs (Dynamic Management Views)."
         )
         utils_ui.print_fabric_assessment_tool(
-            "For more information about table size queries in Azure Synapse Analytics, "
-            "please refer to the documentation at: "
+            "For more information: "
             "https://learn.microsoft.com/en-us/azure/synapse-analytics/sql/develop-tables-overview#table-size-queries"
         )
 
-        # Ask for sql admin password to get table statistics
-        sql_admin_password = utils_ui.prompt_password(
-            f"Enter SQL admin (login: {sql_admin_login}) password for workspace '{workspace_name}' or leave empty to skip: "
+        # Prompt for authentication type
+        auth_choices = [
+            "Skip - Do not collect dedicated pool statistics",
+            "SQL Authentication - Use SQL admin username and password",
+            "Entra ID Interactive - Browser login with MFA support",
+            "Entra ID Default - Use Azure CLI credentials or managed identity",
+        ]
+
+        selected_auth = utils_ui.prompt_select_item(
+            f"How would you like to authenticate to dedicated SQL pools in '{workspace_name}'?",
+            auth_choices,
         )
 
-        return sql_admin_password
+        if selected_auth is None or selected_auth.startswith("Skip"):
+            return None
+
+        elif selected_auth.startswith("SQL Authentication"):
+            if not sql_admin_login:
+                utils_ui.print_warning("SQL admin login not available for this workspace.")
+                return None
+            sql_admin_password = utils_ui.prompt_password(
+                f"Enter SQL admin (login: {sql_admin_login}) password: "
+            )
+            return sql_admin_password
+
+        elif selected_auth.startswith("Entra ID Interactive"):
+            self.sql_auth_mode = "entra-interactive"
+            return "__entra_auth__"
+
+        elif selected_auth.startswith("Entra ID Default"):
+            self.sql_auth_mode = "entra-default"
+            return "__entra_auth__"
+
+        return None
+
+    def _create_odbc_client(
+        self,
+        workspace_name: str,
+        database_name: str,
+        sql_admin_login: Optional[str] = None,
+        sql_admin_password: Optional[str] = None,
+    ) -> OdbcClient:
+        """
+        Create an OdbcClient with the appropriate authentication parameters.
+
+        Args:
+            workspace_name: The Synapse workspace name
+            database_name: The database name
+            sql_admin_login: SQL admin login (for SQL auth mode)
+            sql_admin_password: SQL admin password (for SQL auth mode)
+
+        Returns:
+            Configured OdbcClient instance
+        """
+        return OdbcClient(
+            workspace_name=workspace_name,
+            database=database_name,
+            username=sql_admin_login,
+            password=sql_admin_password,
+            auth_mode=self.sql_auth_mode,
+            client_id=self.sql_client_id,
+            client_secret=self.sql_client_secret,
+            tenant_id=self.sql_tenant_id,
+        )
 
     def _get_timestamp(self) -> str:
         """Get current timestamp."""
