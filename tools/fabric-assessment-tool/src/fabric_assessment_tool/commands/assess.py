@@ -85,6 +85,38 @@ Examples:
             help="Auto-create vTableSizes DMV without confirmation prompt (for non-interactive execution)",
         )
 
+        # SQL authentication mode options for dedicated SQL pools
+        parser.add_argument(
+            "--sql-auth-mode",
+            choices=["sql", "entra-interactive", "entra-spn", "entra-default"],
+            default="sql",
+            help=(
+                "SQL pool authentication mode (default: sql). Options: "
+                "'sql' for SQL authentication, "
+                "'entra-interactive' for Entra ID browser login with MFA support, "
+                "'entra-spn' for Service Principal authentication, "
+                "'entra-default' for Entra ID default (Azure CLI, managed identity)"
+            ),
+        )
+
+        parser.add_argument(
+            "--sql-client-id",
+            default=None,
+            help="Service principal client ID for Entra ID SPN authentication (required with --sql-auth-mode entra-spn)",
+        )
+
+        parser.add_argument(
+            "--sql-client-secret",
+            default=None,
+            help="Service principal client secret for Entra ID SPN authentication (required with --sql-auth-mode entra-spn)",
+        )
+
+        parser.add_argument(
+            "--sql-tenant-id",
+            default=None,
+            help="Azure tenant ID for Entra ID SPN authentication (optional, defaults to 'common')",
+        )
+
     def handle(self, args: argparse.Namespace) -> None:
         """Handle the assess command execution."""
         print(f"Starting assessment of {args.source} workspaces...")
@@ -105,6 +137,10 @@ Examples:
                 auth_method=getattr(args, "auth_method", None),
                 sql_admin_password=getattr(args, "sql_admin_password", None),
                 create_dmv=getattr(args, "create_dmv", False),
+                sql_auth_mode=getattr(args, "sql_auth_mode", "sql"),
+                sql_client_id=getattr(args, "sql_client_id", None),
+                sql_client_secret=getattr(args, "sql_client_secret", None),
+                sql_tenant_id=getattr(args, "sql_tenant_id", None),
             )
 
             utils_ui.print(f"Assessment completed successfully!")

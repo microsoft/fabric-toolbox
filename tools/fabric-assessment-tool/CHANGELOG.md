@@ -5,6 +5,40 @@ All notable changes to the Fabric Assessment Tool will be documented in this fil
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.2.1] - 2026-04-08
+
+### Added
+
+- **Entra ID Authentication for Dedicated SQL Pools**: New authentication options for connecting to Synapse dedicated SQL pools
+  - `--sql-auth-mode` CLI option with four authentication modes:
+    - `sql` (default): Traditional SQL authentication with username/password
+    - `entra-interactive`: Entra ID interactive authentication with browser popup and MFA support
+    - `entra-spn`: Entra ID Service Principal authentication for non-interactive scenarios
+    - `entra-default`: Entra ID default authentication using Azure CLI credentials or managed identity
+  - `--sql-client-id`: Service principal client ID for SPN authentication
+  - `--sql-client-secret`: Service principal client secret for SPN authentication
+  - `--sql-tenant-id`: Azure tenant ID for SPN authentication (optional, defaults to 'common')
+
+- **Interactive Authentication Prompt**: When running in interactive mode without specifying `--sql-auth-mode`, the tool now prompts users to choose their preferred authentication method for dedicated SQL pools:
+  - Skip - Do not collect dedicated pool statistics
+  - SQL Authentication - Use SQL admin username and password
+  - Entra ID Interactive - Browser login with MFA support
+  - Entra ID Default - Use Azure CLI credentials or managed identity
+
+- **Documentation**: Added comprehensive guide for Entra ID authentication including:
+  - Required database permissions for Entra ID users and service principals
+  - SQL scripts for creating contained database users from external providers
+  - Role assignments for reading system DMVs and creating views
+
+### Changed
+
+- `OdbcClient` refactored to support multiple authentication modes with proper connection string generation
+- `SynapseClient` updated with helper methods for credential handling across auth modes
+
+### Fixed
+
+- **Fabric Notebook Hang**: Fixed an issue where the tool would hang indefinitely when running in Microsoft Fabric Notebooks. The root cause was `notebookutils.credentials.getToken()` hanging when requesting the `management.azure.com` scope, which is not supported in that environment. The tool now detects Fabric Notebook authentication and automatically falls back to the ODBC path for schema/table enumeration.
+
 ## [0.2.0] - 2026-03-12
 
 ### Added

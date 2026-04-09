@@ -26,10 +26,10 @@ This tool allows to scan one or multiple workspaces in order to get all the info
 
 ## Installation
 
-You can use the [prebuilt wheel file](./resources/fabric_assessment_tool-0.2.0-py3-none-any.whl) in the resources folder.
+You can use the [prebuilt wheel file](./resources/fabric_assessment_tool-0.2.1-py3-none-any.whl) in the resources folder.
 
 ```bash
-pip install resources/fabric_assessment_tool-0.2.0-py3-none-any.whl
+pip install resources/fabric_assessment_tool-0.2.1-py3-none-any.whl
 ```
 
 ## Authentication
@@ -87,6 +87,51 @@ results = service.assess(
 
 > **Tip:** The `--sql-admin-password` and `--create-dmv` parameters are optional. If you don't need dedicated SQL pool table statistics, you can omit them entirely.
 
+### Dedicated SQL Pool Authentication
+
+The tool supports multiple authentication methods for connecting to Synapse dedicated SQL pools to collect table statistics and metadata:
+
+| Authentication Mode | CLI Option | Description |
+|---------------------|------------|-------------|
+| SQL Authentication | `--sql-auth-mode sql` | Traditional SQL Server authentication using username/password. This is the default. |
+| Entra ID Interactive | `--sql-auth-mode entra-interactive` | Browser-based login with MFA support. Opens a browser popup for authentication. |
+| Entra ID Service Principal | `--sql-auth-mode entra-spn` | Non-interactive authentication using a service principal (client ID + secret). |
+| Entra ID Default | `--sql-auth-mode entra-default` | Uses Azure CLI credentials, managed identity, or environment variables. |
+
+#### Required Database Permissions for Entra ID Authentication
+
+When using Entra ID authentication modes (`entra-interactive`, `entra-spn`, or `entra-default`), the authenticated identity (user or service principal) must have the following permissions on each dedicated SQL pool database:
+
+1. **Database User**: The identity must be added as a contained database user:
+   ```sql
+   -- For Entra ID user
+   CREATE USER [user@yourdomain.com] FROM EXTERNAL PROVIDER;
+   
+   -- For Service Principal (use the app name or app ID)
+   CREATE USER [your-app-name] FROM EXTERNAL PROVIDER;
+   ```
+
+2. **Read Permissions**: Grant access to read system views and table metadata:
+   ```sql
+   -- Option 1: Add to db_datareader role (recommended for read-only access)
+   ALTER ROLE db_datareader ADD MEMBER [user@yourdomain.com];
+   
+   -- Option 2: Grant specific SELECT permissions on system DMVs
+   GRANT SELECT ON sys.dm_pdw_nodes TO [user@yourdomain.com];
+   GRANT SELECT ON sys.dm_pdw_nodes_db_partition_stats TO [user@yourdomain.com];
+   GRANT VIEW DATABASE STATE TO [user@yourdomain.com];
+   ```
+
+3. **View Creation Permission** (Optional): If you want the tool to create the `vTableSizes` view:
+   ```sql
+   -- Option 1: Add to db_ddladmin role
+   ALTER ROLE db_ddladmin ADD MEMBER [user@yourdomain.com];
+   
+   -- Option 2: Grant specific CREATE VIEW permission
+   GRANT CREATE VIEW TO [user@yourdomain.com];
+   ```
+
+> **Note:** Ensure that the Azure Synapse workspace has Entra ID authentication enabled with an Entra ID admin configured. See [Microsoft documentation](https://learn.microsoft.com/en-us/azure/synapse-analytics/sql/active-directory-authentication) for details.
 
 
 ## CLI Commands
@@ -115,6 +160,14 @@ fat assess --source <synapse|databricks> \
 - `--auth-method`: Authentication method (`azure-cli` or `fabric`). Default: auto-detect based on environment
 - `--sql-admin-password`: SQL admin password for dedicated SQL pools (bypasses interactive prompt)
 - `--create-dmv`: Auto-create vTableSizes DMV without confirmation prompt (for non-interactive execution)
+- `--sql-auth-mode`: SQL pool authentication mode for dedicated SQL pools:
+  - `sql` (default): Traditional SQL authentication with username/password
+  - `entra-interactive`: Entra ID interactive authentication (browser popup with MFA support)
+  - `entra-spn`: Entra ID Service Principal authentication
+  - `entra-default`: Entra ID default (uses Azure CLI credentials, managed identity, etc.)
+- `--sql-client-id`: Service principal client ID (required with `--sql-auth-mode entra-spn`)
+- `--sql-client-secret`: Service principal client secret (required with `--sql-auth-mode entra-spn`)
+- `--sql-tenant-id`: Azure tenant ID (optional, defaults to 'common')
 
 **Examples:**
 ```bash
@@ -123,6 +176,20 @@ fat assess --source synapse -o ./results_folder
 
 # Assess targeted Synapse workspaces 
 fat assess --source synapse --mode full --ws workspace1,workspace2 -o /path/to/results_folder
+
+# Assess with Entra ID interactive authentication (browser login)
+fat assess --source synapse --ws workspace1 -o ./results --sql-auth-mode entra-interactive
+
+# Assess with Entra ID Service Principal authentication (non-interactive)
+fat assess --source synapse --ws workspace1 -o ./results \
+    --sql-auth-mode entra-spn \
+    --sql-client-id "your-client-id" \
+    --sql-client-secret "your-client-secret" \
+    --sql-tenant-id "your-tenant-id" \
+    --create-dmv
+
+# Assess with Entra ID default (uses Azure CLI credentials)
+fat assess --source synapse --ws workspace1 -o ./results --sql-auth-mode entra-default
 
 # Assess Databricks workspace
 fat assess --source databricks --ws my-workspace --output results_folder
