@@ -10,6 +10,47 @@ This occurs when users create warehouses manually in two different workspaces wi
 
 ---
 
+## Unsupported scenarios
+
+The following CI/CD workflows are **not officially supported** when warehouses in different workspaces have different collations. Even though these operations may succeed without errors, they can result in a collation mismatch between the warehouse and its dataset (TMSL), leading to metadata errors.
+
+<table>
+<thead>
+<tr>
+<th>Scenario</th>
+<th>Description</th>
+<th>Risk</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Deployment Pipelines</strong></td>
+<td>Promoting warehouse content through pipeline stages (e.g., Dev &rarr; Test &rarr; Prod) where the target warehouse was created with a different collation than the source.</td>
+<td>Deployment may succeed, but the dataset collation will not be updated to match the target warehouse collation.</td>
+</tr>
+<tr>
+<td><strong>Branching out to a new or existing workspace</strong></td>
+<td>Using Git integration to branch out from an existing workspace to a new or existing workspace where the warehouse has a different collation.</td>
+<td>Warehouse content is synced, but the collation metadata is not reconciled.</td>
+</tr>
+<tr>
+<td><strong>Switching branches on a workspace</strong></td>
+<td>Switching to a branch that was associated with a warehouse of a different collation on a Git-connected workspace.</td>
+<td>Synced content may carry over collation assumptions that do not match the current warehouse.</td>
+</tr>
+<tr>
+<td><strong>Merging changes between workspaces through branches</strong></td>
+<td>Merging Git branches across workspaces where the warehouses have different collations.</td>
+<td>Merge may succeed at the Git level, but the resulting dataset collation will not reflect the target warehouse's collation.</td>
+</tr>
+</tbody>
+</table>
+
+> [!NOTE]
+> In all of these scenarios, if a collation mismatch occurs, use the script below to update the dataset (TMSL) collation to match the warehouse collation.
+
+---
+
 ## Setup
 
 1. Download `pbi_interactive.py` to a folder on your machine (e.g., `C:\Users\<you>\Documents\`)
@@ -48,6 +89,7 @@ This occurs when users create warehouses manually in two different workspaces wi
 | `--tenant-id` | Yes | Your Azure AD tenant ID (GUID) |
 | `--warehouse-id` | Yes | The Fabric Warehouse ID (GUID) |
 | `--collation` | Yes | The new collation to apply to the dataset |
+| `--base-url` | No | Base URL for the Power BI API (default: `https://df-msit-scus-redirect.analysis.windows.net/v1.0/myorg`) |
 
 ### Supported collation values
 
@@ -97,6 +139,12 @@ SELECT name, collation_name FROM sys.databases WHERE name = '<warehouse name>';
 
 ```powershell
 & python .\pbi_interactive.py --tenant-id "YOUR_TENANT_ID" --warehouse-id "YOUR_WAREHOUSE_ID" --collation "Latin1_General_100_CI_AS_KS_WS_SC_UTF8"
+```
+
+To use a custom base URL:
+
+```powershell
+& python .\pbi_interactive.py --tenant-id "YOUR_TENANT_ID" --warehouse-id "YOUR_WAREHOUSE_ID" --collation "Latin1_General_100_CI_AS_KS_WS_SC_UTF8" --base-url "https://your-custom-endpoint.analysis.windows.net/v1.0/myorg"
 ```
 
 ### macOS / Linux

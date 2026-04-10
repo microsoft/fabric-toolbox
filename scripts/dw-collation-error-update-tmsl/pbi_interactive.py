@@ -13,7 +13,7 @@ import time
 from azure.identity import InteractiveBrowserCredential
 import requests
 
-BASE_URL = "https://df-msit-scus-redirect.analysis.windows.net/v1.0/myorg"
+DEFAULT_BASE_URL = "https://df-msit-scus-redirect.analysis.windows.net/v1.0/myorg"
 SUPPORTED_COLLATIONS = [
     "Latin1_General_100_BIN2_UTF8",
     "Latin1_General_100_CI_AS_KS_WS_SC_UTF8",
@@ -153,9 +153,11 @@ if __name__ == "__main__":
     parser.add_argument("--warehouse-id", required=True, help="Datawarehouse ID (GUID)")
     parser.add_argument("--collation", required=True, choices=SUPPORTED_COLLATIONS,
                         help="New collation value")
+    parser.add_argument("--base-url", default=DEFAULT_BASE_URL,
+                        help=f"Base URL for the Power BI API (default: {DEFAULT_BASE_URL})")
     args = parser.parse_args()
 
-    dw_url = f"{BASE_URL}/datawarehouses/{args.warehouse_id}/"
+    dw_url = f"{args.base_url}/datawarehouses/{args.warehouse_id}/"
 
     try:
         token = get_token_interactive(args.tenant_id)
