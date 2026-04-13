@@ -12,7 +12,7 @@
     "@mui/material": "^5.15.3",
     "@mui/lab": "^5.0.0-alpha.158",
     "@mui/x-data-grid": "^6.18.2",
-    "axios": "^1.6.2",
+    "axios": "^1.15.0",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "react-router-dom": "^6.20.1",
