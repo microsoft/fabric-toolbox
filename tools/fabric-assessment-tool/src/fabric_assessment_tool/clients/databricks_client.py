@@ -9,6 +9,8 @@ from databricks.sdk import WorkspaceClient
 
 from ..assessment.common import AssessmentStatus
 from ..assessment.databricks import (
+    DatabricksAlert,
+    DatabricksAlerts,
     DatabricksAssessment,
     DatabricksAssessmentMetadata,
     DatabricksCatalog,
@@ -17,9 +19,13 @@ from ..assessment.databricks import (
     DatabricksClusters,
     DatabricksConnection,
     DatabricksConnections,
+    DatabricksExperiment,
+    DatabricksExperiments,
     DatabricksExternalLocation,
     DatabricksExternalLocations,
     DatabricksFunction,
+    DatabricksGenieSpace,
+    DatabricksGenieSpaces,
     DatabricksJob,
     DatabricksJobRun,
     DatabricksJobRuns,
@@ -29,10 +35,16 @@ from ..assessment.databricks import (
     DatabricksJobTasks,
     DatabricksNotebook,
     DatabricksNotebooks,
+    DatabricksPipeline,
+    DatabricksPipelines,
+    DatabricksRepo,
+    DatabricksRepos,
     DatabricksSchema,
     DatabricksSchemas,
     DatabricksSecretScope,
     DatabricksSecretScopes,
+    DatabricksServingEndpoint,
+    DatabricksServingEndpoints,
     DatabricksSqlWarehouse,
     DatabricksSqlWarehouses,
     DatabricksTable,
@@ -73,9 +85,7 @@ class DatabricksClient:
             azure_token = self.token_provider.get_token(
                 "https://management.azure.com/.default"
             )
-            self.azure_client = ApiClient(
-                token=azure_token, api_version="2024-05-01"
-            )
+            self.azure_client = ApiClient(token=azure_token, api_version="2024-05-01")
 
             # Use custom subscription_id if provided, otherwise use provider default
             default_sub = self.token_provider.get_subscription_id()
@@ -196,6 +206,36 @@ class DatabricksClient:
             secret_scopes = self._get_secret_scopes()
             utils_ui.print_extraction_done("Secret Scopes")
 
+            # Get DLT pipelines
+            utils_ui.print_extracting("Pipelines")
+            pipelines = self._get_pipelines()
+            utils_ui.print_extraction_done("Pipelines")
+
+            # Get Git repos
+            utils_ui.print_extracting("Repos")
+            repos = self._get_repos()
+            utils_ui.print_extraction_done("Repos")
+
+            # Get MLflow experiments
+            utils_ui.print_extracting("Experiments")
+            experiments = self._get_experiments()
+            utils_ui.print_extraction_done("Experiments")
+
+            # Get model serving endpoints
+            utils_ui.print_extracting("Serving Endpoints")
+            serving_endpoints = self._get_serving_endpoints()
+            utils_ui.print_extraction_done("Serving Endpoints")
+
+            # Get SQL alerts
+            utils_ui.print_extracting("Alerts")
+            alerts = self._get_alerts()
+            utils_ui.print_extraction_done("Alerts")
+
+            # Get Genie spaces
+            utils_ui.print_extracting("Genie Spaces")
+            genie_spaces = self._get_genie_spaces()
+            utils_ui.print_extraction_done("Genie Spaces")
+
             # Create assessment metadata
             assessment_metadata = DatabricksAssessmentMetadata(
                 mode=mode, timestamp=self._get_timestamp()
@@ -214,6 +254,12 @@ class DatabricksClient:
                 connections=connections,
                 secret_scopes=secret_scopes,
                 assessment_metadata=assessment_metadata,
+                pipelines=pipelines,
+                repos=repos,
+                experiments=experiments,
+                serving_endpoints=serving_endpoints,
+                alerts=alerts,
+                genie_spaces=genie_spaces,
                 workspace_url=workspace_info.url,
             )
 
@@ -259,6 +305,41 @@ class DatabricksClient:
                     spark_version=cluster.get("spark_version")
                     or cluster.get("effective_spark_version"),
                     autoscale=cluster.get("autoscale"),
+                    policy_id=cluster.get("policy_id"),
+                    driver_node_type_id=cluster.get("driver_node_type_id"),
+                    custom_tags=cluster.get("custom_tags"),
+                    default_tags=cluster.get("default_tags"),
+                    autotermination_minutes=cluster.get("autotermination_minutes"),
+                    cluster_source=cluster.get("cluster_source"),
+                    state_message=cluster.get("state_message"),
+                    creator_user_name=cluster.get("creator_user_name"),
+                    start_time=(
+                        datetime.fromtimestamp(
+                            cluster["start_time"] / 1000, tz=timezone.utc
+                        ).isoformat()
+                        if cluster.get("start_time")
+                        else None
+                    ),
+                    terminated_time=(
+                        datetime.fromtimestamp(
+                            cluster["terminated_time"] / 1000, tz=timezone.utc
+                        ).isoformat()
+                        if cluster.get("terminated_time")
+                        else None
+                    ),
+                    spark_conf=cluster.get("spark_conf"),
+                    enable_elastic_disk=cluster.get("enable_elastic_disk"),
+                    init_scripts_count=(
+                        len(cluster["init_scripts"])
+                        if cluster.get("init_scripts")
+                        else 0
+                    ),
+                    enable_local_disk_encryption=cluster.get(
+                        "enable_local_disk_encryption"
+                    ),
+                    instance_pool_id=cluster.get("instance_pool_id"),
+                    driver_instance_pool_id=cluster.get("driver_instance_pool_id"),
+                    azure_attributes=cluster.get("azure_attributes"),
                     json_response=cluster,
                 )
                 for cluster in clusters_data
@@ -289,6 +370,17 @@ class DatabricksClient:
                     max_clusters=warehouse["max_num_clusters"],
                     uses_spot_instances=(
                         warehouse.get("spot_instance_policy", "") == "COST_OPTIMIZED"
+                    ),
+                    warehouse_id=warehouse.get("id"),
+                    auto_stop_mins=warehouse.get("auto_stop_mins"),
+                    state=warehouse.get("state"),
+                    creator_name=warehouse.get("creator_name"),
+                    warehouse_type=warehouse.get("warehouse_type"),
+                    spot_instance_policy=warehouse.get("spot_instance_policy"),
+                    channel=(
+                        warehouse.get("channel", {}).get("name")
+                        if isinstance(warehouse.get("channel"), dict)
+                        else warehouse.get("channel")
                     ),
                     json_response=warehouse,
                 )
@@ -341,6 +433,21 @@ class DatabricksClient:
                     if obj["object_type"] == "NOTEBOOK":
                         lang = "unknown"
                         content = ""
+                        created_by = obj.get("created_by")
+                        created_at = (
+                            datetime.fromtimestamp(
+                                obj["created_at"] / 1000, tz=timezone.utc
+                            ).isoformat()
+                            if obj.get("created_at")
+                            else None
+                        )
+                        modified_at = (
+                            datetime.fromtimestamp(
+                                obj["modified_at"] / 1000, tz=timezone.utc
+                            ).isoformat()
+                            if obj.get("modified_at")
+                            else None
+                        )
                         try:
                             args.uri = status_endpoint
                             args.request_params = {}
@@ -379,6 +486,9 @@ class DatabricksClient:
                                 other_magics=magics,
                                 json_response=obj,  # TODO: Add the export response instead of list respose?
                                 uses_dbutils=uses_dbutils,
+                                created_by=created_by,
+                                created_at=created_at,
+                                modified_at=modified_at,
                             )
                         )
                     elif obj["object_type"] == "DIRECTORY":
@@ -436,28 +546,88 @@ class DatabricksClient:
         req = self.api_client.do_request(args)
         runs = req.json()
 
+        # Extract schedule info
+        schedule_raw = settings.get("schedule")
+        schedule = None
+        if schedule_raw:
+            schedule = {
+                "cron_expression": schedule_raw.get("quartz_cron_expression"),
+                "timezone_id": schedule_raw.get("timezone_id"),
+                "pause_status": schedule_raw.get("pause_status"),
+            }
+
+        # Extract email notifications
+        email_raw = settings.get("email_notifications")
+        email_notifications = None
+        if email_raw:
+            email_notifications = {
+                "on_success": email_raw.get("on_success", []),
+                "on_failure": email_raw.get("on_failure", []),
+                "on_start": email_raw.get("on_start", []),
+            }
+
+        # Build task list with enriched fields
+        tasks_list = []
+        if (
+            settings.get("format") == "MULTI_TASK"
+        ):  # format can be SINGLE_TASK | MULTI_TASK
+            for task in settings.get("tasks", []):
+                # Determine cluster type and config
+                cluster_type = None
+                cluster_config = None
+                if task.get("existing_cluster_id"):
+                    cluster_type = "existing"
+                    cluster_config = {
+                        "existing_cluster_id": task["existing_cluster_id"]
+                    }
+                elif task.get("job_cluster_key"):
+                    cluster_type = "job_cluster"
+                    cluster_config = {"job_cluster_key": task["job_cluster_key"]}
+                elif task.get("new_cluster"):
+                    cluster_type = "new_cluster"
+                    nc = task["new_cluster"]
+                    cluster_config = {
+                        "spark_version": nc.get("spark_version"),
+                        "node_type_id": nc.get("node_type_id"),
+                        "num_workers": nc.get("num_workers"),
+                    }
+
+                tasks_list.append(
+                    DatabricksJobTask(
+                        name=task.get("task_key", ""),
+                        type=self._extract_task_type(task),
+                        libraries=task.get("libraries", {}),
+                        json_response=task,
+                        task_key=task.get("task_key"),
+                        description=task.get("description"),
+                        timeout_seconds=task.get("timeout_seconds"),
+                        max_retries=task.get("max_retries"),
+                        cluster_type=cluster_type,
+                        cluster_config=cluster_config,
+                    )
+                )
+
+        # Extract creator and created_time from the job list response
+        creator_user_name = job.get("creator_user_name")
+        created_time = (
+            datetime.fromtimestamp(
+                job["created_time"] / 1000, tz=timezone.utc
+            ).isoformat()
+            if job.get("created_time")
+            else None
+        )
+
         return DatabricksJob(
             job_id=job_id,
-            tasks=DatabricksJobTasks(
-                tasks=(
-                    (
-                        [
-                            DatabricksJobTask(
-                                name=task.get("task_key", ""),
-                                type=self._extract_task_type(task),
-                                libraries=task.get("libraries", {}),
-                                json_response=task,
-                            )
-                            for task in settings.get("tasks", [])
-                        ]
-                    )
-                    if settings.get("format")
-                    == "MULTI_TASK"  # format can be SINGLE_TASK | MULTI_TASK
-                    else []
-                )
-            ),
+            tasks=DatabricksJobTasks(tasks=tasks_list),
             settings=DatabricksJobSettings(
-                name=settings.get("name"), json_response=settings
+                name=settings.get("name"),
+                json_response=settings,
+                timeout_seconds=settings.get("timeout_seconds"),
+                max_concurrent_runs=settings.get("max_concurrent_runs"),
+                format=settings.get("format"),
+                schedule=schedule,
+                email_notifications=email_notifications,
             ),
             latest_runs=DatabricksJobRuns(
                 runs=[
@@ -481,6 +651,8 @@ class DatabricksClient:
                     for run in runs.get("runs", [])
                 ]
             ),
+            creator_user_name=creator_user_name,
+            created_time=created_time,
         )
 
     def _get_jobs(self) -> DatabricksJobs:
@@ -538,6 +710,27 @@ class DatabricksClient:
                             "spark.sql.statistics.numRows", None
                         )
                     ),
+                    full_name=table.get("full_name"),
+                    storage_location=table.get("storage_location"),
+                    created_at=(
+                        datetime.fromtimestamp(
+                            table["created_at"] / 1000, tz=timezone.utc
+                        ).isoformat()
+                        if table.get("created_at")
+                        else None
+                    ),
+                    updated_at=(
+                        datetime.fromtimestamp(
+                            table["updated_at"] / 1000, tz=timezone.utc
+                        ).isoformat()
+                        if table.get("updated_at")
+                        else None
+                    ),
+                    created_by=table.get("created_by"),
+                    updated_by=table.get("updated_by"),
+                    table_id=table.get("table_id"),
+                    properties=table.get("properties"),
+                    view_definition=table.get("view_definition"),
                     json_response=table,
                 )
                 for table in json_req.get("tables", [])
@@ -707,6 +900,176 @@ class DatabricksClient:
         except Exception as e:
             print(f"Failed to get secret scopes: {e}")
             return DatabricksSecretScopes(secret_scopes=[])
+
+    def _get_pipelines(self) -> DatabricksPipelines:
+        """Get Delta Live Tables pipelines in the workspace."""
+        try:
+            args = Namespace()
+            args.uri = "/api/2.0/pipelines"
+            req = self.api_client.do_request(args)
+            json_req = req.json()
+            pipelines = [
+                DatabricksPipeline(
+                    pipeline_id=p.get("pipeline_id"),
+                    name=p.get("name"),
+                    state=p.get("state"),
+                    creator_user_name=p.get("creator_user_name"),
+                    json_response=p,
+                )
+                for p in json_req.get("statuses", [])
+            ]
+            return DatabricksPipelines(pipelines=pipelines)
+        except Exception as e:
+            print(f"Failed to get pipelines: {e}")
+            return DatabricksPipelines(pipelines=[])
+
+    def _get_repos(self) -> DatabricksRepos:
+        """Get Git repos in the workspace."""
+        try:
+            args = Namespace()
+            args.uri = "/api/2.0/repos"
+            req = self.api_client.do_request(args)
+            json_req = req.json()
+            repos = [
+                DatabricksRepo(
+                    repo_id=str(r.get("id", "")),
+                    path=r.get("path", ""),
+                    url=r.get("url"),
+                    provider=r.get("provider"),
+                    branch=r.get("branch"),
+                    head_commit_id=r.get("head_commit_id"),
+                    json_response=r,
+                )
+                for r in json_req.get("repos", [])
+            ]
+            return DatabricksRepos(repos=repos)
+        except Exception as e:
+            print(f"Failed to get repos: {e}")
+            return DatabricksRepos(repos=[])
+
+    def _get_experiments(self) -> DatabricksExperiments:
+        """Get MLflow experiments in the workspace."""
+        try:
+            args = Namespace()
+            args.uri = "/api/2.0/mlflow/experiments/search"
+            req = self.api_client.do_request(args)
+            json_req = req.json()
+            experiments = [
+                DatabricksExperiment(
+                    experiment_id=exp.get("experiment_id", ""),
+                    name=exp.get("name", ""),
+                    artifact_location=exp.get("artifact_location"),
+                    lifecycle_stage=exp.get("lifecycle_stage"),
+                    creation_time=(
+                        datetime.fromtimestamp(
+                            int(exp["creation_time"]) / 1000, tz=timezone.utc
+                        ).isoformat()
+                        if exp.get("creation_time")
+                        else None
+                    ),
+                    last_update_time=(
+                        datetime.fromtimestamp(
+                            int(exp["last_update_time"]) / 1000, tz=timezone.utc
+                        ).isoformat()
+                        if exp.get("last_update_time")
+                        else None
+                    ),
+                    json_response=exp,
+                )
+                for exp in json_req.get("experiments", [])
+            ]
+            return DatabricksExperiments(experiments=experiments)
+        except Exception as e:
+            print(f"Failed to get experiments: {e}")
+            return DatabricksExperiments(experiments=[])
+
+    def _get_serving_endpoints(self) -> DatabricksServingEndpoints:
+        """Get model serving endpoints in the workspace."""
+        try:
+            args = Namespace()
+            args.uri = "/api/2.0/serving-endpoints"
+            req = self.api_client.do_request(args)
+            json_req = req.json()
+            endpoints = [
+                DatabricksServingEndpoint(
+                    name=ep.get("name", ""),
+                    creator=ep.get("creator"),
+                    state=(
+                        ep.get("state", {}).get("config_update")
+                        if isinstance(ep.get("state"), dict)
+                        else None
+                    ),
+                    creation_timestamp=(
+                        datetime.fromtimestamp(
+                            ep["creation_timestamp"] / 1000, tz=timezone.utc
+                        ).isoformat()
+                        if ep.get("creation_timestamp")
+                        else None
+                    ),
+                    last_updated_timestamp=(
+                        datetime.fromtimestamp(
+                            ep["last_updated_timestamp"] / 1000, tz=timezone.utc
+                        ).isoformat()
+                        if ep.get("last_updated_timestamp")
+                        else None
+                    ),
+                    json_response=ep,
+                )
+                for ep in json_req.get("endpoints", [])
+            ]
+            return DatabricksServingEndpoints(serving_endpoints=endpoints)
+        except Exception as e:
+            print(f"Failed to get serving endpoints: {e}")
+            return DatabricksServingEndpoints(serving_endpoints=[])
+
+    def _get_alerts(self) -> DatabricksAlerts:
+        """Get SQL alerts in the workspace."""
+        try:
+            args = Namespace()
+            args.uri = "/api/2.0/sql/alerts"
+            req = self.api_client.do_request(args)
+            json_req = req.json()
+            # The alerts API may return a list directly or under "results" key
+            alerts_data = (
+                json_req if isinstance(json_req, list) else json_req.get("results", [])
+            )
+            alerts = [
+                DatabricksAlert(
+                    alert_id=alert.get("id", ""),
+                    display_name=alert.get("display_name") or alert.get("name"),
+                    query_id=alert.get("query_id"),
+                    owner_user_name=alert.get("owner_user_name"),
+                    state=alert.get("state"),
+                    json_response=alert,
+                )
+                for alert in alerts_data
+            ]
+            return DatabricksAlerts(alerts=alerts)
+        except Exception as e:
+            print(f"Failed to get alerts: {e}")
+            return DatabricksAlerts(alerts=[])
+
+    def _get_genie_spaces(self) -> DatabricksGenieSpaces:
+        """Get Genie spaces in the workspace."""
+        try:
+            args = Namespace()
+            args.uri = "/api/2.0/genie/spaces"
+            req = self.api_client.do_request(args)
+            json_req = req.json()
+            spaces = [
+                DatabricksGenieSpace(
+                    space_id=space.get("space_id", ""),
+                    title=space.get("title"),
+                    description=space.get("description"),
+                    warehouse_id=space.get("warehouse_id"),
+                    json_response=space,
+                )
+                for space in json_req.get("spaces", [])
+            ]
+            return DatabricksGenieSpaces(genie_spaces=spaces)
+        except Exception as e:
+            print(f"Failed to get Genie spaces: {e}")
+            return DatabricksGenieSpaces(genie_spaces=[])
 
     def _get_timestamp(self) -> str:
         """Get current timestamp."""

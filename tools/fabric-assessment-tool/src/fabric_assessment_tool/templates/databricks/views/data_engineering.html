@@ -186,6 +186,172 @@
 </div>
 {% endif %}
 
+<!-- DLT Pipelines -->
+{% if engineering.pipelines %}
+<div class="card">
+    <div class="card-header">🔄 DLT Pipelines</div>
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Name</th>
+                        <th>State</th>
+                        <th>Creator</th>
+                        <th>Workspace</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for p in engineering.pipelines[:30] %}
+                    <tr data-workspace="{{ p.workspace | default('N/A') }}">
+                        <td>{{ p.name | default(p.pipeline_id | default('Unknown')) }}</td>
+                        <td>
+                            <span class="badge {% if p.state == 'RUNNING' %}badge-success{% elif p.state == 'IDLE' %}badge-secondary{% else %}badge-warning{% endif %}">
+                                {{ p.state | default('Unknown') }}
+                            </span>
+                        </td>
+                        <td>{{ p.creator_user_name | default('N/A') }}</td>
+                        <td>{{ p.workspace | default('N/A') }}</td>
+                    </tr>
+                    {% endfor %}
+                    {% if engineering.pipelines | length > 30 %}
+                    <tr>
+                        <td colspan="4" class="text-muted">
+                            ... and {{ engineering.pipelines | length - 30 }} more pipelines
+                        </td>
+                    </tr>
+                    {% endif %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<!-- MLflow Experiments -->
+{% if engineering.experiments %}
+<div class="card">
+    <div class="card-header">🧪 MLflow Experiments</div>
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Name</th>
+                        <th>Lifecycle Stage</th>
+                        <th>Last Updated</th>
+                        <th>Workspace</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for exp in engineering.experiments[:30] %}
+                    <tr data-workspace="{{ exp.workspace | default('N/A') }}">
+                        <td>{{ exp.name | default('Unknown') }}</td>
+                        <td>
+                            <span class="badge {% if exp.lifecycle_stage == 'active' %}badge-success{% else %}badge-secondary{% endif %}">
+                                {{ exp.lifecycle_stage | default('N/A') }}
+                            </span>
+                        </td>
+                        <td>{{ exp.last_update_time | default('N/A') }}</td>
+                        <td>{{ exp.workspace | default('N/A') }}</td>
+                    </tr>
+                    {% endfor %}
+                    {% if engineering.experiments | length > 30 %}
+                    <tr>
+                        <td colspan="4" class="text-muted">
+                            ... and {{ engineering.experiments | length - 30 }} more experiments
+                        </td>
+                    </tr>
+                    {% endif %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<!-- Serving Endpoints -->
+{% if engineering.serving_endpoints %}
+<div class="card">
+    <div class="card-header">🚀 Model Serving Endpoints</div>
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Name</th>
+                        <th>State</th>
+                        <th>Creator</th>
+                        <th>Created</th>
+                        <th>Workspace</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for ep in engineering.serving_endpoints[:30] %}
+                    <tr data-workspace="{{ ep.workspace | default('N/A') }}">
+                        <td>{{ ep.name | default('Unknown') }}</td>
+                        <td>
+                            <span class="badge {% if ep.state == 'READY' %}badge-success{% else %}badge-secondary{% endif %}">
+                                {{ ep.state | default('N/A') }}
+                            </span>
+                        </td>
+                        <td>{{ ep.creator | default('N/A') }}</td>
+                        <td>{{ ep.creation_timestamp | default('N/A') }}</td>
+                        <td>{{ ep.workspace | default('N/A') }}</td>
+                    </tr>
+                    {% endfor %}
+                    {% if engineering.serving_endpoints | length > 30 %}
+                    <tr>
+                        <td colspan="5" class="text-muted">
+                            ... and {{ engineering.serving_endpoints | length - 30 }} more endpoints
+                        </td>
+                    </tr>
+                    {% endif %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<!-- Git Repos -->
+{% if engineering.repos %}
+<div class="card">
+    <div class="card-header">📂 Git Repos</div>
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Path</th>
+                        <th>Provider</th>
+                        <th>Branch</th>
+                        <th>Workspace</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for r in engineering.repos[:30] %}
+                    <tr data-workspace="{{ r.workspace | default('N/A') }}">
+                        <td>{{ r.path | default('Unknown') }}</td>
+                        <td>{{ r.provider | default('N/A') }}</td>
+                        <td>{{ r.branch | default('N/A') }}</td>
+                        <td>{{ r.workspace | default('N/A') }}</td>
+                    </tr>
+                    {% endfor %}
+                    {% if engineering.repos | length > 30 %}
+                    <tr>
+                        <td colspan="4" class="text-muted">
+                            ... and {{ engineering.repos | length - 30 }} more repos
+                        </td>
+                    </tr>
+                    {% endif %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endif %}
+
 <div class="mt-2">
     <a href="{{ base_path }}index.html">← Back to Overview</a>
 </div>

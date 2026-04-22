@@ -79,6 +79,30 @@
                             <td>Tables</td>
                             <td class="text-right">{{ summary.total_tables | default(0) | format_number }}</td>
                         </tr>
+                        <tr>
+                            <td>Pipelines (DLT)</td>
+                            <td class="text-right">{{ summary.total_pipelines | default(0) | format_number }}</td>
+                        </tr>
+                        <tr>
+                            <td>Repos</td>
+                            <td class="text-right">{{ summary.total_repos | default(0) | format_number }}</td>
+                        </tr>
+                        <tr>
+                            <td>MLflow Experiments</td>
+                            <td class="text-right">{{ summary.total_experiments | default(0) | format_number }}</td>
+                        </tr>
+                        <tr>
+                            <td>Serving Endpoints</td>
+                            <td class="text-right">{{ summary.total_serving_endpoints | default(0) | format_number }}</td>
+                        </tr>
+                        <tr>
+                            <td>SQL Alerts</td>
+                            <td class="text-right">{{ summary.total_alerts | default(0) | format_number }}</td>
+                        </tr>
+                        <tr>
+                            <td>Genie Spaces</td>
+                            <td class="text-right">{{ summary.total_genie_spaces | default(0) | format_number }}</td>
+                        </tr>
                     </tbody>
                 </table>
             </div>

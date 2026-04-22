@@ -570,6 +570,15 @@ class JSONExporter(BaseExporter):
                                     )
                                 files_created.append(str(view_file))
 
+    @staticmethod
+    def _safe_filename(name: str) -> str:
+        """Create a filesystem-safe filename from a string."""
+        return (
+            "".join(c for c in str(name) if c.isalnum() or c in ("-", "_", "."))
+            .strip()
+            .replace(" ", "_")
+        ) or "unknown"
+
     def _export_databricks_details(
         self, data: Dict[str, Any], workspace_dir: Path
     ) -> List[str]:
@@ -669,6 +678,138 @@ class JSONExporter(BaseExporter):
                         cls=DecimalEncoder,
                     )
                 files_created.append(str(notebook_file))
+
+        # Export pipelines
+        if "pipelines" in data:
+            pipelines_dir = resources_dir / "pipelines"
+            pipelines_dir.mkdir(exist_ok=True)
+
+            for pipeline in data["pipelines"].get("pipelines", []):
+                safe_name = self._safe_filename(
+                    pipeline.get("name", pipeline.get("pipeline_id", "unknown"))
+                )
+                pipeline_file = pipelines_dir / f"pipeline_{safe_name}.json"
+                with open(pipeline_file, "w") as f:
+                    json.dump(
+                        {
+                            "type": "databricks_pipeline",
+                            "pipeline_data": pipeline,
+                            "exported_at": datetime.now().isoformat(),
+                        },
+                        f,
+                        indent=2,
+                        cls=DecimalEncoder,
+                    )
+                files_created.append(str(pipeline_file))
+
+        # Export repos
+        if "repos" in data:
+            repos_dir = resources_dir / "repos"
+            repos_dir.mkdir(exist_ok=True)
+
+            for repo in data["repos"].get("repos", []):
+                safe_name = self._safe_filename(
+                    repo.get("repo_id", repo.get("path", "unknown"))
+                )
+                repo_file = repos_dir / f"repo_{safe_name}.json"
+                with open(repo_file, "w") as f:
+                    json.dump(
+                        {
+                            "type": "databricks_repo",
+                            "repo_data": repo,
+                            "exported_at": datetime.now().isoformat(),
+                        },
+                        f,
+                        indent=2,
+                        cls=DecimalEncoder,
+                    )
+                files_created.append(str(repo_file))
+
+        # Export experiments
+        if "experiments" in data:
+            experiments_dir = resources_dir / "experiments"
+            experiments_dir.mkdir(exist_ok=True)
+
+            for experiment in data["experiments"].get("experiments", []):
+                safe_name = self._safe_filename(
+                    experiment.get("experiment_id", "unknown")
+                )
+                exp_file = experiments_dir / f"experiment_{safe_name}.json"
+                with open(exp_file, "w") as f:
+                    json.dump(
+                        {
+                            "type": "databricks_experiment",
+                            "experiment_data": experiment,
+                            "exported_at": datetime.now().isoformat(),
+                        },
+                        f,
+                        indent=2,
+                        cls=DecimalEncoder,
+                    )
+                files_created.append(str(exp_file))
+
+        # Export serving endpoints
+        if "serving_endpoints" in data:
+            endpoints_dir = resources_dir / "serving_endpoints"
+            endpoints_dir.mkdir(exist_ok=True)
+
+            for endpoint in data["serving_endpoints"].get("serving_endpoints", []):
+                safe_name = self._safe_filename(endpoint.get("name", "unknown"))
+                ep_file = endpoints_dir / f"endpoint_{safe_name}.json"
+                with open(ep_file, "w") as f:
+                    json.dump(
+                        {
+                            "type": "databricks_serving_endpoint",
+                            "endpoint_data": endpoint,
+                            "exported_at": datetime.now().isoformat(),
+                        },
+                        f,
+                        indent=2,
+                        cls=DecimalEncoder,
+                    )
+                files_created.append(str(ep_file))
+
+        # Export alerts
+        if "alerts" in data:
+            alerts_dir = resources_dir / "alerts"
+            alerts_dir.mkdir(exist_ok=True)
+
+            for alert in data["alerts"].get("alerts", []):
+                safe_name = self._safe_filename(alert.get("alert_id", "unknown"))
+                alert_file = alerts_dir / f"alert_{safe_name}.json"
+                with open(alert_file, "w") as f:
+                    json.dump(
+                        {
+                            "type": "databricks_alert",
+                            "alert_data": alert,
+                            "exported_at": datetime.now().isoformat(),
+                        },
+                        f,
+                        indent=2,
+                        cls=DecimalEncoder,
+                    )
+                files_created.append(str(alert_file))
+
+        # Export genie spaces
+        if "genie_spaces" in data:
+            genie_dir = resources_dir / "genie_spaces"
+            genie_dir.mkdir(exist_ok=True)
+
+            for space in data["genie_spaces"].get("genie_spaces", []):
+                safe_name = self._safe_filename(space.get("space_id", "unknown"))
+                space_file = genie_dir / f"space_{safe_name}.json"
+                with open(space_file, "w") as f:
+                    json.dump(
+                        {
+                            "type": "databricks_genie_space",
+                            "space_data": space,
+                            "exported_at": datetime.now().isoformat(),
+                        },
+                        f,
+                        indent=2,
+                        cls=DecimalEncoder,
+                    )
+                files_created.append(str(space_file))
 
         return files_created
 

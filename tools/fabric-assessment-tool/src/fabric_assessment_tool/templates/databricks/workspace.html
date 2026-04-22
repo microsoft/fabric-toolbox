@@ -229,6 +229,158 @@
         </div>
     </div>
     {% endif %}
+
+    <!-- Pipelines -->
+    {% if workspace.resources.pipelines %}
+    <div class="col col-6">
+        <div class="card">
+            <div class="card-header">🔄 DLT Pipelines ({{ workspace.resources.pipelines | length }})</div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>Name</th>
+                                <th>State</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for p in workspace.resources.pipelines[:10] %}
+                            {% set p_info = p.pipeline_data or p.data or p %}
+                            <tr>
+                                <td>{{ p_info.name | default('Unknown') }}</td>
+                                <td>
+                                    <span class="badge {% if p_info.state == 'RUNNING' %}badge-success{% elif p_info.state == 'IDLE' %}badge-secondary{% else %}badge-warning{% endif %}">
+                                        {{ p_info.state | default('Unknown') }}
+                                    </span>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                            {% if workspace.resources.pipelines | length > 10 %}
+                            <tr>
+                                <td colspan="2" class="text-muted">
+                                    ... and {{ workspace.resources.pipelines | length - 10 }} more
+                                </td>
+                            </tr>
+                            {% endif %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Experiments -->
+    {% if workspace.resources.experiments %}
+    <div class="col col-6">
+        <div class="card">
+            <div class="card-header">🧪 MLflow Experiments ({{ workspace.resources.experiments | length }})</div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>Name</th>
+                                <th>Stage</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for exp in workspace.resources.experiments[:10] %}
+                            {% set exp_info = exp.experiment_data or exp.data or exp %}
+                            <tr>
+                                <td>{{ exp_info.name | default('Unknown') }}</td>
+                                <td>{{ exp_info.lifecycle_stage | default('N/A') }}</td>
+                            </tr>
+                            {% endfor %}
+                            {% if workspace.resources.experiments | length > 10 %}
+                            <tr>
+                                <td colspan="2" class="text-muted">
+                                    ... and {{ workspace.resources.experiments | length - 10 }} more
+                                </td>
+                            </tr>
+                            {% endif %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Serving Endpoints -->
+    {% if workspace.resources.serving_endpoints %}
+    <div class="col col-6">
+        <div class="card">
+            <div class="card-header">🚀 Serving Endpoints ({{ workspace.resources.serving_endpoints | length }})</div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>Name</th>
+                                <th>Creator</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for ep in workspace.resources.serving_endpoints[:10] %}
+                            {% set ep_info = ep.endpoint_data or ep.data or ep %}
+                            <tr>
+                                <td>{{ ep_info.name | default('Unknown') }}</td>
+                                <td>{{ ep_info.creator | default('N/A') }}</td>
+                            </tr>
+                            {% endfor %}
+                            {% if workspace.resources.serving_endpoints | length > 10 %}
+                            <tr>
+                                <td colspan="2" class="text-muted">
+                                    ... and {{ workspace.resources.serving_endpoints | length - 10 }} more
+                                </td>
+                            </tr>
+                            {% endif %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Repos -->
+    {% if workspace.resources.repos %}
+    <div class="col col-6">
+        <div class="card">
+            <div class="card-header">📂 Git Repos ({{ workspace.resources.repos | length }})</div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>Path</th>
+                                <th>Provider</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for r in workspace.resources.repos[:10] %}
+                            {% set r_info = r.repo_data or r.data or r %}
+                            <tr>
+                                <td>{{ r_info.path | default('Unknown') }}</td>
+                                <td>{{ r_info.provider | default('N/A') }}</td>
+                            </tr>
+                            {% endfor %}
+                            {% if workspace.resources.repos | length > 10 %}
+                            <tr>
+                                <td colspan="2" class="text-muted">
+                                    ... and {{ workspace.resources.repos | length - 10 }} more
+                                </td>
+                            </tr>
+                            {% endif %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
 </div>
 {% endif %}
 
