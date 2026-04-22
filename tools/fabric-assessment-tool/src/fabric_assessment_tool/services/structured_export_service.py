@@ -640,7 +640,7 @@ class JSONExporter(BaseExporter):
         self._export_databricks_unity_catalogs(data, data_dir, files_created)
 
         if "sql_warehouses" in data:
-            sql_wh_dir = workspace_dir / "sql_warehouses"
+            sql_wh_dir = resources_dir / "sql_warehouses"
             sql_wh_dir.mkdir(exist_ok=True)
             for wh in data["sql_warehouses"].get("sql_warehouses", []):
                 wh_file = sql_wh_dir / f"warehouse_{wh['name']}.json"
@@ -810,6 +810,69 @@ class JSONExporter(BaseExporter):
                         cls=DecimalEncoder,
                     )
                 files_created.append(str(space_file))
+
+        # Export external locations
+        if "external_locations" in data:
+            ext_dir = resources_dir / "external_locations"
+            ext_dir.mkdir(exist_ok=True)
+
+            for ext in data["external_locations"].get("external_locations", []):
+                safe_name = self._safe_filename(ext.get("name", "unknown"))
+                ext_file = ext_dir / f"external_location_{safe_name}.json"
+                with open(ext_file, "w") as f:
+                    json.dump(
+                        {
+                            "type": "databricks_external_location",
+                            "external_location_data": ext,
+                            "exported_at": datetime.now().isoformat(),
+                        },
+                        f,
+                        indent=2,
+                        cls=DecimalEncoder,
+                    )
+                files_created.append(str(ext_file))
+
+        # Export connections
+        if "connections" in data:
+            conn_dir = resources_dir / "connections"
+            conn_dir.mkdir(exist_ok=True)
+
+            for conn in data["connections"].get("connections", []):
+                safe_name = self._safe_filename(conn.get("name", "unknown"))
+                conn_file = conn_dir / f"connection_{safe_name}.json"
+                with open(conn_file, "w") as f:
+                    json.dump(
+                        {
+                            "type": "databricks_connection",
+                            "connection_data": conn,
+                            "exported_at": datetime.now().isoformat(),
+                        },
+                        f,
+                        indent=2,
+                        cls=DecimalEncoder,
+                    )
+                files_created.append(str(conn_file))
+
+        # Export secret scopes
+        if "secret_scopes" in data:
+            scope_dir = resources_dir / "secret_scopes"
+            scope_dir.mkdir(exist_ok=True)
+
+            for scope in data["secret_scopes"].get("secret_scopes", []):
+                safe_name = self._safe_filename(scope.get("name", "unknown"))
+                scope_file = scope_dir / f"secret_scope_{safe_name}.json"
+                with open(scope_file, "w") as f:
+                    json.dump(
+                        {
+                            "type": "databricks_secret_scope",
+                            "secret_scope_data": scope,
+                            "exported_at": datetime.now().isoformat(),
+                        },
+                        f,
+                        indent=2,
+                        cls=DecimalEncoder,
+                    )
+                files_created.append(str(scope_file))
 
         return files_created
 

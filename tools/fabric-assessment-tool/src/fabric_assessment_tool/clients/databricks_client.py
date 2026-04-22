@@ -8,6 +8,7 @@ from typing import Any, Dict, Optional
 from databricks.sdk import WorkspaceClient
 
 from ..assessment.common import AssessmentStatus
+from ..errors.api import FATError
 from ..assessment.databricks import (
     DatabricksAlert,
     DatabricksAlerts,
@@ -1018,6 +1019,12 @@ class DatabricksClient:
                 for ep in json_req.get("endpoints", [])
             ]
             return DatabricksServingEndpoints(serving_endpoints=endpoints)
+        except FATError as e:
+            if e.status_code == "NotFound":
+                # Model Serving is not enabled in this workspace; treat as empty.
+                return DatabricksServingEndpoints(serving_endpoints=[])
+            print(f"Failed to get serving endpoints: {e}")
+            return DatabricksServingEndpoints(serving_endpoints=[])
         except Exception as e:
             print(f"Failed to get serving endpoints: {e}")
             return DatabricksServingEndpoints(serving_endpoints=[])

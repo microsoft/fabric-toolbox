@@ -208,10 +208,11 @@ class ApiClient:
                             "NotFound",
                         )
                     case 429:
-                        retry_after = int(response.headers["Retry-After"])
-                        print(
-                            f"Rate limit exceeded. {attempt}º retrying attemp in {retry_after} seconds"
-                        )
+                        retry_after = int(response.headers.get("Retry-After", 5))
+                        if DEBUG:
+                            print(
+                                f"Rate limit exceeded. {attempt}º retrying attemp in {retry_after} seconds"
+                            )
                         time.sleep(retry_after)
                         continue
                     case 201 | 202 if wait and self.scope == [
@@ -327,6 +328,8 @@ class ApiClient:
                 _text = json.loads(response.text)
                 if _text and "next_page_token" in _text:
                     _page_token = _text["next_page_token"]
+                    if not getattr(args, "request_params", None):
+                        args.request_params = {}
                     args.request_params["page_token"] = _page_token
                     # utils_ui.print_info(
                     #     f"Continuation token found for Fabric. Fetching next page of results..."

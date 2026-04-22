@@ -37,7 +37,7 @@
     </div>
     <div class="col">
         <div class="stat-card">
-            <div class="stat-value">{{ workspace.summary.counts.tables | default(0) }}</div>
+            <div class="stat-value">{{ workspace.summary.counts.total_tables | default(workspace.summary.counts.tables) | default(0) }}</div>
             <div class="stat-label">Tables</div>
         </div>
     </div>
@@ -100,10 +100,10 @@
                         </thead>
                         <tbody>
                             {% for nb in workspace.resources.notebooks[:10] %}
-                            {% set nb_info = nb.data or nb %}
+                            {% set nb_info = nb.notebook_data or nb.data or nb %}
                             <tr>
-                                <td>{{ nb_info.name | default('Unknown') }}</td>
-                                <td>{{ nb_info.language | default(nb_info.default_language | default('N/A')) }}</td>
+                                <td>{{ nb_info.path | default(nb_info.name) | default('Unknown') }}</td>
+                                <td>{{ (nb_info.json_response.language if nb_info.json_response else None) | default(nb_info.default_language) | default(nb_info.language) | default('N/A') }}</td>
                             </tr>
                             {% endfor %}
                             {% if workspace.resources.notebooks | length > 10 %}
@@ -138,7 +138,7 @@
                         </thead>
                         <tbody>
                             {% for cl in workspace.resources.clusters %}
-                            {% set cl_info = cl.data or cl %}
+                            {% set cl_info = cl.cluster_data or cl.data or cl %}
                             <tr>
                                 <td>{{ cl_info.cluster_name | default(cl_info.name | default('Unknown')) }}</td>
                                 <td>
@@ -167,21 +167,25 @@
                     <table class="table">
                         <thead>
                             <tr>
+                                <th>Name</th>
                                 <th>Job ID</th>
                                 <th>Tasks</th>
                             </tr>
                         </thead>
                         <tbody>
                             {% for job in workspace.resources.jobs[:10] %}
-                            {% set job_info = job.data or job %}
+                            {% set job_info = job.job_data or job.data or job %}
+                            {% set job_settings = job_info.settings if job_info.settings is mapping else {} %}
+                            {% set job_tasks = job_info.tasks.tasks if job_info.tasks is mapping and job_info.tasks.tasks else (job_info.tasks if job_info.tasks is iterable and job_info.tasks is not mapping else []) %}
                             <tr>
+                                <td>{{ job_settings.name | default('Unknown') }}</td>
                                 <td>{{ job_info.job_id | default('Unknown') }}</td>
-                                <td>{{ job_info.tasks | length if job_info.tasks else 0 }}</td>
+                                <td>{{ job_tasks | length }}</td>
                             </tr>
                             {% endfor %}
                             {% if workspace.resources.jobs | length > 10 %}
                             <tr>
-                                <td colspan="2" class="text-muted">
+                                <td colspan="3" class="text-muted">
                                     ... and {{ workspace.resources.jobs | length - 10 }} more
                                 </td>
                             </tr>
@@ -211,7 +215,7 @@
                         </thead>
                         <tbody>
                             {% for wh in workspace.resources.sql_warehouses %}
-                            {% set wh_info = wh.data or wh %}
+                            {% set wh_info = wh.warehouse_data or wh.data or wh %}
                             <tr>
                                 <td>{{ wh_info.name | default('Unknown') }}</td>
                                 <td>{{ wh_info.cluster_size | default('N/A') }}</td>

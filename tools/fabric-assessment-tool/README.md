@@ -26,10 +26,10 @@ This tool allows to scan one or multiple workspaces in order to get all the info
 
 ## Installation
 
-You can use the [prebuilt wheel file](./resources/fabric_assessment_tool-0.2.1-py3-none-any.whl) in the resources folder.
+You can use the [prebuilt wheel file](./resources/fabric_assessment_tool-0.2.2-py3-none-any.whl) in the resources folder.
 
 ```bash
-pip install resources/fabric_assessment_tool-0.2.1-py3-none-any.whl
+pip install resources/fabric_assessment_tool-0.2.2-py3-none-any.whl
 ```
 
 ## Authentication
@@ -250,8 +250,9 @@ fat visualize -i ./assessment_output --view data-engineering -o ./engineering_re
 - **Data Integration**: Pipelines (activity counts, complexity), dataflows, datasets
 
 **Databricks-Specific Views:**
-- **Data Engineering**: Notebooks (with language, dbutils usage), clusters, jobs
+- **Data Engineering**: Notebooks (with language, dbutils usage), clusters, jobs, DLT pipelines, MLflow experiments, repos
 - **Data Warehousing**: SQL warehouses, Unity Catalog (catalogs, schemas, tables)
+- **Overview**: Resource Summary chart (logarithmic y-axis) covering all 11 Databricks resource categories — Notebooks, Clusters, Jobs, SQL Warehouses, Tables, DLT Pipelines, Repos, MLflow Experiments, Serving Endpoints, SQL Alerts, Genie Spaces
 
 **Screenshots:**
 
