@@ -59,9 +59,70 @@
                     <td>{{ workspace.summary.workspace_info.resource_group | default('N/A') }}</td>
                 </tr>
                 <tr>
+                    <td><strong>Managed Resource Group</strong></td>
+                    <td>{{ workspace.summary.workspace_info.managed_resource_group | default('N/A', true) }}</td>
+                </tr>
+                <tr>
                     <td><strong>Location</strong></td>
                     <td>{{ workspace.summary.workspace_info.location | default('N/A') }}</td>
                 </tr>
+                <tr>
+                    <td><strong>Pricing Tier</strong></td>
+                    <td>{{ workspace.summary.workspace_info.tier | default('N/A', true) | title }}</td>
+                </tr>
+                <tr>
+                    <td><strong>Workspace Type</strong></td>
+                    <td>
+                        {% set wtype = workspace.summary.workspace_info.workspace_type | default('unknown', true) %}
+                        <span class="badge {% if wtype == 'hybrid' %}badge-warning{% elif wtype == 'serverless' %}badge-success{% else %}badge-secondary{% endif %}">
+                            {{ wtype | title }}
+                        </span>
+                    </td>
+                </tr>
+                {% if workspace.summary.workspace_info.workspace_type == 'hybrid' %}
+                <tr>
+                    <td><strong>VNet Injected</strong></td>
+                    <td>{{ 'Yes' if workspace.summary.workspace_info.vnet_injected else 'No' }}</td>
+                </tr>
+                <tr>
+                    <td><strong>Custom VNet</strong></td>
+                    <td><code>{{ workspace.summary.workspace_info.custom_virtual_network_id | default('N/A', true) }}</code></td>
+                </tr>
+                <tr>
+                    <td><strong>Uses Private Endpoints</strong></td>
+                    <td>
+                        {% set pe = workspace.summary.workspace_info.uses_private_endpoints %}
+                        <span class="badge {% if pe %}badge-success{% else %}badge-secondary{% endif %}">
+                            {{ 'Yes' if pe else 'No' }}
+                        </span>
+                        {% if workspace.summary.workspace_info.private_endpoint_count %}
+                        ({{ workspace.summary.workspace_info.private_endpoint_count }} connection{{ 's' if workspace.summary.workspace_info.private_endpoint_count != 1 else '' }})
+                        {% endif %}
+                    </td>
+                </tr>
+                <tr>
+                    <td><strong>Public Network Access</strong></td>
+                    <td>
+                        {% set pna = workspace.summary.workspace_info.public_network_access | default('N/A', true) %}
+                        <span class="badge {% if pna == 'Enabled' %}badge-warning{% elif pna == 'Disabled' %}badge-success{% else %}badge-secondary{% endif %}">
+                            {{ pna }}
+                        </span>
+                    </td>
+                </tr>
+                <tr>
+                    <td><strong>No Public IP (NPIP)</strong></td>
+                    <td>
+                        {% set npip = workspace.summary.workspace_info.no_public_ip %}
+                        {% if npip is none %}
+                            N/A
+                        {% else %}
+                            <span class="badge {% if npip %}badge-success{% else %}badge-secondary{% endif %}">
+                                {{ 'Yes' if npip else 'No' }}
+                            </span>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endif %}
                 <tr>
                     <td><strong>Status</strong></td>
                     <td>{{ workspace.summary.workspace_info.status | default('N/A') }}</td>
@@ -96,6 +157,8 @@
                             <tr>
                                 <th>Name</th>
                                 <th>Language</th>
+                                <th class="text-right">Size (KB)</th>
+                                <th>Uses dbutils</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -104,11 +167,26 @@
                             <tr>
                                 <td>{{ nb_info.path | default(nb_info.name, true) | default('Unknown', true) }}</td>
                                 <td>{{ (nb_info.json_response.language if nb_info.json_response else None) | default(nb_info.default_language, true) | default(nb_info.language, true) | default('N/A', true) }}</td>
+                                <td class="text-right">
+                                    {% set _sz = nb_info.size %}
+                                    {% if _sz is number and _sz > 0 %}
+                                        {{ '%.1f' | format(_sz / 1024) }}
+                                    {% else %}
+                                        N/A
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if nb_info.uses_dbutils %}
+                                    <span class="badge" style="background-color: #ffc107; color: #000;">Yes</span>
+                                    {% else %}
+                                    <span class="badge badge-secondary">No</span>
+                                    {% endif %}
+                                </td>
                             </tr>
                             {% endfor %}
                             {% if workspace.resources.notebooks | length > 10 %}
                             <tr>
-                                <td colspan="2" class="text-muted">
+                                <td colspan="4" class="text-muted">
                                     ... and {{ workspace.resources.notebooks | length - 10 }} more
                                 </td>
                             </tr>
@@ -121,12 +199,33 @@
     </div>
     {% endif %}
 
-    <!-- Clusters -->
+    <!-- Clusters: All-Purpose Compute + Job Clusters (latest per source) -->
     {% if workspace.resources.clusters %}
+    {% set _all_clusters = [] %}
+    {% for cl in workspace.resources.clusters %}
+        {% set _ci = cl.cluster_data or cl.data or cl %}
+        {% set _ = _all_clusters.append(_ci) %}
+    {% endfor %}
+    {% set _all_purpose = _all_clusters | rejectattr('cluster_source', 'equalto', 'JOB') | list %}
+    {% set _job_clusters_raw = _all_clusters | selectattr('cluster_source', 'equalto', 'JOB') | list %}
+
+    {# Group JOB clusters by source (job_id parsed from cluster name) and keep latest by start_time #}
+    {% set _by_source = {} %}
+    {% for cl in _job_clusters_raw %}
+        {% set _name = cl.cluster_name or cl.name or '' %}
+        {% set _src = _name.split('-run-')[0] if '-run-' in _name else _name %}
+        {% set _existing = _by_source.get(_src) %}
+        {% if not _existing or (cl.start_time or '') > (_existing.start_time or '') %}
+            {% set _ = _by_source.update({_src: cl}) %}
+        {% endif %}
+    {% endfor %}
+    {% set _job_clusters = _by_source.values() | list %}
+
     <div class="col col-6">
         <div class="card">
-            <div class="card-header">🖥️ Clusters ({{ workspace.resources.clusters | length }})</div>
+            <div class="card-header">🖥️ All-Purpose Compute ({{ _all_purpose | length }})</div>
             <div class="card-body">
+                {% if _all_purpose %}
                 <div class="table-responsive">
                     <table class="table">
                         <thead>
@@ -137,21 +236,59 @@
                             </tr>
                         </thead>
                         <tbody>
-                            {% for cl in workspace.resources.clusters %}
-                            {% set cl_info = cl.cluster_data or cl.data or cl %}
+                            {% for cl in _all_purpose %}
                             <tr>
-                                <td>{{ cl_info.cluster_name | default(cl_info.name | default('Unknown')) }}</td>
+                                <td>{{ cl.cluster_name | default(cl.name | default('Unknown')) }}</td>
                                 <td>
-                                    <span class="badge {% if cl_info.state == 'RUNNING' %}badge-success{% else %}badge-secondary{% endif %}">
-                                        {{ cl_info.state | default('Unknown') }}
+                                    <span class="badge {% if cl.state == 'RUNNING' %}badge-success{% else %}badge-secondary{% endif %}">
+                                        {{ cl.state | default('Unknown') }}
                                     </span>
                                 </td>
-                                <td>{{ cl_info.node_type_id | default('N/A') }}</td>
+                                <td>{{ cl.node_type_id | default('N/A') }}</td>
                             </tr>
                             {% endfor %}
                         </tbody>
                     </table>
                 </div>
+                {% else %}
+                <p class="text-muted">No all-purpose clusters.</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <div class="col col-6">
+        <div class="card">
+            <div class="card-header">⚙️ Job Clusters — latest per source ({{ _job_clusters | length }} of {{ _job_clusters_raw | length }})</div>
+            <div class="card-body">
+                {% if _job_clusters %}
+                <div class="table-responsive">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>Source</th>
+                                <th>Name</th>
+                                <th>Node Type</th>
+                                <th>Last Started</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for cl in _job_clusters %}
+                            {% set _name = cl.cluster_name or cl.name or '' %}
+                            {% set _src = _name.split('-run-')[0] if '-run-' in _name else _name %}
+                            <tr>
+                                <td><code>{{ _src }}</code></td>
+                                <td>{{ _name | default('Unknown') }}</td>
+                                <td>{{ cl.node_type_id | default('N/A') }}</td>
+                                <td>{{ cl.start_time | default('N/A', true) }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <p class="text-muted">No job clusters.</p>
+                {% endif %}
             </div>
         </div>
     </div>
@@ -169,7 +306,8 @@
                             <tr>
                                 <th>Name</th>
                                 <th>Job ID</th>
-                                <th>Tasks</th>
+                                <th class="text-right">Tasks</th>
+                                <th class="text-right">Avg duration (last 3 runs)</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -180,12 +318,20 @@
                             <tr>
                                 <td>{{ job_settings.name | default('Unknown') }}</td>
                                 <td>{{ job_info.job_id | default('Unknown') }}</td>
-                                <td>{{ job_tasks | length }}</td>
+                                <td class="text-right">{{ job_tasks | length }}</td>
+                                <td class="text-right">
+                                    {% set _avg = job_info.avg_duration_ms_last_3_runs %}
+                                    {% if _avg is number and _avg > 0 %}
+                                        {{ '%.1f' | format(_avg / 1000) }} s
+                                    {% else %}
+                                        N/A
+                                    {% endif %}
+                                </td>
                             </tr>
                             {% endfor %}
                             {% if workspace.resources.jobs | length > 10 %}
                             <tr>
-                                <td colspan="3" class="text-muted">
+                                <td colspan="4" class="text-muted">
                                     ... and {{ workspace.resources.jobs | length - 10 }} more
                                 </td>
                             </tr>

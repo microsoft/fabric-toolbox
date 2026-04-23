@@ -130,6 +130,7 @@
                 <thead>
                     <tr>
                         <th>Workspace</th>
+                        <th>Type</th>
                         <th class="text-right">Notebooks</th>
                         <th class="text-right">Clusters</th>
                         <th class="text-right">Jobs</th>
@@ -142,6 +143,18 @@
                     <tr data-workspace="{{ ws_name }}">
                         <td>
                             <a href="{{ base_path }}workspaces/{{ ws_name }}.html">{{ ws_name }}</a>
+                        </td>
+                        <td>
+                            {% set wtype = ws.summary.workspace_info.workspace_type | default('unknown', true) %}
+                            <span class="badge {% if wtype == 'hybrid' %}badge-warning{% elif wtype == 'serverless' %}badge-success{% else %}badge-secondary{% endif %}">
+                                {{ wtype | title }}
+                            </span>
+                            {% if ws.summary.workspace_info.vnet_injected %}
+                                <span class="badge badge-secondary" title="VNet-injected">VNet</span>
+                            {% endif %}
+                            {% if ws.summary.workspace_info.uses_private_endpoints %}
+                                <span class="badge badge-secondary" title="Private endpoints in use">PE</span>
+                            {% endif %}
                         </td>
                         <td class="text-right">{{ ws.summary.counts.notebooks | default(0) }}</td>
                         <td class="text-right">{{ ws.summary.counts.clusters | default(0) }}</td>

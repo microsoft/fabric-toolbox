@@ -5,6 +5,23 @@ from .common import AssessmentStatus
 
 
 @dataclass
+class DatabricksNetworkSettings:
+    """Grouped network configuration for a Databricks workspace.
+
+    Consolidates the network-related properties that previously lived as
+    flat fields on :class:`DatabricksWorkspaceInfo`. Kept alongside the
+    flat fields for backward compatibility with existing consumers.
+    """
+
+    vnet_injected: Optional[bool] = None
+    custom_virtual_network_id: Optional[str] = None
+    uses_private_endpoints: Optional[bool] = None
+    public_network_access: Optional[str] = None  # "Enabled" | "Disabled"
+    private_endpoint_count: Optional[int] = None
+    no_public_ip: Optional[bool] = None  # NPIP (enableNoPublicIp) for Hybrid workspaces
+
+
+@dataclass
 class DatabricksWorkspaceInfo:
     """Databricks workspace information."""
 
@@ -15,6 +32,16 @@ class DatabricksWorkspaceInfo:
     status: str
     tier: str
     json_response: Any
+    location: Optional[str] = None
+    managed_resource_group: Optional[str] = None
+    workspace_type: Optional[str] = None  # "hybrid" | "serverless"
+    vnet_injected: Optional[bool] = None
+    custom_virtual_network_id: Optional[str] = None
+    uses_private_endpoints: Optional[bool] = None
+    public_network_access: Optional[str] = None  # "Enabled" | "Disabled"
+    private_endpoint_count: Optional[int] = None
+    no_public_ip: Optional[bool] = None
+    network_settings: Optional[DatabricksNetworkSettings] = None
 
 
 @dataclass
@@ -214,6 +241,7 @@ class DatabricksJob:
     latest_runs: DatabricksJobRuns
     creator_user_name: Optional[str] = None
     created_time: Optional[str] = None
+    avg_duration_ms_last_3_runs: Optional[float] = None
 
 
 @dataclass

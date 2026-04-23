@@ -55,6 +55,7 @@ from ..assessment.databricks import (
     DatabricksTable,
     DatabricksVolume,
     DatabricksWorkspaceInfo,
+    DatabricksNetworkSettings,
 )
 from ..utils import ui as utils_ui
 from .api_client import ApiClient, ApiResponse
@@ -90,7 +91,7 @@ class DatabricksClient:
             azure_token = self.token_provider.get_token(
                 "https://management.azure.com/.default"
             )
-            self.azure_client = ApiClient(token=azure_token, api_version="2024-05-01")
+            self.azure_client = ApiClient(token=azure_token, api_version="2026-01-01")
 
             # Use custom subscription_id if provided, otherwise use provider default
             default_sub = self.token_provider.get_subscription_id()
@@ -117,15 +118,7 @@ class DatabricksClient:
         json_req = req.json()
 
         workspaces = [
-            DatabricksWorkspaceInfo(
-                id=workspace["id"],
-                name=workspace["name"],
-                resource_group=workspace["id"].split("/")[4],
-                url=workspace["properties"].get("workspaceUrl"),
-                status=workspace["properties"].get("provisioningState"),
-                tier=workspace["sku"]["name"],
-                json_response=workspace,
-            )
+            self._build_workspace_info(workspace)
             for workspace in json_req.get("value", [])
         ]
 
@@ -134,6 +127,76 @@ class DatabricksClient:
             self._workspace_cache[ws.name.lower()] = ws
 
         return workspaces
+
+    @staticmethod
+    def _build_workspace_info(workspace: dict) -> DatabricksWorkspaceInfo:
+        """Build a DatabricksWorkspaceInfo from a management-plane response.
+
+        Derives ``workspace_type`` and network topology fields from the
+        ``properties.parameters`` and ``properties.privateEndpointConnections``
+        blocks returned by the Azure Databricks ARM API.
+        """
+        properties = workspace.get("properties") or {}
+        parameters = properties.get("parameters") or {}
+        custom_vnet = (parameters.get("customVirtualNetworkId") or {}).get("value")
+        private_endpoint_conns = properties.get("privateEndpointConnections") or []
+        raw_pna = properties.get("publicNetworkAccess")
+        managed_rg_id = properties.get("managedResourceGroupId") or ""
+        managed_rg_name = (
+            managed_rg_id.split("/")[-1] if managed_rg_id else None
+        )
+
+        vnet_injected = bool(custom_vnet)
+        uses_private_endpoints = (
+            len(private_endpoint_conns) > 0 or raw_pna == "Disabled"
+        )
+        # Azure Databricks treats a missing ``publicNetworkAccess`` value as
+        # the implicit default of "Enabled" (it is only populated explicitly
+        # on newer workspaces and on Private Link configurations). Normalise
+        # to a non-null value so reports don't show "N/A" for workspaces
+        # where the field simply wasn't set.
+        public_network_access = raw_pna if raw_pna else "Enabled"
+        npip_value = (parameters.get("enableNoPublicIp") or {}).get("value")
+        no_public_ip = bool(npip_value) if npip_value is not None else None
+        # ``computeMode`` is the authoritative ARM property: "Hybrid" workspaces
+        # support classic compute (whether on a managed or customer VNet);
+        # "Serverless" workspaces have classic compute disabled. We fall back
+        # to the presence of a managed resource group when the field is
+        # missing (older API versions) — only Hybrid workspaces have one.
+        compute_mode = (properties.get("computeMode") or "").strip()
+        if compute_mode:
+            workspace_type = compute_mode.lower()
+        else:
+            workspace_type = "hybrid" if managed_rg_name else "serverless"
+
+        network_settings = DatabricksNetworkSettings(
+            vnet_injected=vnet_injected,
+            custom_virtual_network_id=custom_vnet,
+            uses_private_endpoints=uses_private_endpoints,
+            public_network_access=public_network_access,
+            private_endpoint_count=len(private_endpoint_conns),
+            no_public_ip=no_public_ip,
+        )
+
+        return DatabricksWorkspaceInfo(
+            id=workspace["id"],
+            name=workspace["name"],
+            resource_group=workspace["id"].split("/")[4],
+            url=properties.get("workspaceUrl"),
+            status=properties.get("provisioningState"),
+            tier=workspace["sku"]["name"],
+            location=workspace.get("location"),
+            managed_resource_group=managed_rg_name,
+            workspace_type=workspace_type,
+            vnet_injected=vnet_injected,
+            custom_virtual_network_id=custom_vnet,
+            uses_private_endpoints=uses_private_endpoints,
+            public_network_access=public_network_access,
+            private_endpoint_count=len(private_endpoint_conns),
+            no_public_ip=no_public_ip,
+            network_settings=network_settings,
+            json_response=workspace,
+        )
 
     def _auth_databricks(self, workspace_url) -> None:
 
@@ -652,6 +715,33 @@ class DatabricksClient:
             else None
         )
 
+        # Compute average duration (ms) over the latest up-to-3 runs.
+        # The /runs/list endpoint returns runs sorted newest-first. We prefer
+        # ``run_duration`` (the wall-clock total now reported by Jobs 2.1+),
+        # falling back to the legacy ``execution_duration`` and finally to the
+        # sum of the three duration components for older API responses.
+        def _run_duration_ms(r: dict) -> int:
+            for key in ("run_duration", "execution_duration"):
+                v = r.get(key)
+                if v:
+                    return int(v)
+            return int(
+                (r.get("setup_duration") or 0)
+                + (r.get("execution_duration") or 0)
+                + (r.get("cleanup_duration") or 0)
+            )
+
+        latest_run_durations = [
+            _run_duration_ms(run)
+            for run in (runs.get("runs") or [])[:3]
+            if _run_duration_ms(run) > 0
+        ]
+        avg_duration_ms = (
+            sum(latest_run_durations) / len(latest_run_durations)
+            if latest_run_durations
+            else None
+        )
+
         return DatabricksJob(
             job_id=job_id,
             tasks=DatabricksJobTasks(tasks=tasks_list),
@@ -688,6 +778,7 @@ class DatabricksClient:
             ),
             creator_user_name=creator_user_name,
             created_time=created_time,
+            avg_duration_ms_last_3_runs=avg_duration_ms,
         )
 
     def _get_jobs(self) -> DatabricksJobs:

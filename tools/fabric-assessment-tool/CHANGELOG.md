@@ -9,6 +9,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **Databricks Cluster Policies**: Inventory workspace cluster policies — name, description, creator, definition
+- **Databricks Instance Pools**: Discover instance pools — name, node type, min/max idle instances, state
+- **Databricks Workspace Type Detection**: Classify workspaces as `hybrid` vs `serverless` using the authoritative ARM `properties.computeMode` field (api-version `2026-01-01`), falling back to the presence of a managed resource group when the field is missing. Surface `workspace_type`, `vnet_injected`, `custom_virtual_network_id`, `uses_private_endpoints`, `private_endpoint_count`, `public_network_access` (defaults to `Enabled` when ARM returns null, matching Azure's implicit default), `no_public_ip` (NPIP), `managed_resource_group`, and a grouped `network_settings` object in `workspace_info`; render them as badges/columns on the Databricks overview and workspace detail HTML views
 - **Databricks DLT Pipelines**: Discover Delta Live Tables pipelines via REST API (`/api/2.0/pipelines`) — name, state, creator
 - **Databricks Git Repos**: Inventory workspace Git repos — path, provider, branch, head commit
 - **Databricks MLflow Experiments**: List MLflow experiments — name, lifecycle stage, creation/update timestamps
@@ -18,16 +21,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
-- **Enriched Databricks Clusters**: Added 16 fields — `policy_id`, `driver_node_type_id`, `custom_tags`, `default_tags`, `autotermination_minutes`, `cluster_source`, `state_message`, `creator_user_name`, `start_time`, `terminated_time`, `spark_conf`, `enable_elastic_disk`, `init_scripts_count`, `enable_local_disk_encryption`, `instance_pool_id`, `azure_attributes`
-- **Enriched Databricks SQL Warehouses**: Added 7 fields — `warehouse_id`, `auto_stop_mins`, `state`, `creator_name`, `warehouse_type`, `spot_instance_policy`, `channel`
-- **Enriched Databricks Notebooks**: Added 3 fields — `created_by`, `created_at`, `modified_at`
-- **Enriched Databricks Jobs**: Added 13 fields across Job, JobSettings, and JobTask — `creator_user_name`, `created_time`, `timeout_seconds`, `max_concurrent_runs`, `format`, `schedule`, `email_notifications`, `task_key`, `description`, `max_retries`, `cluster_type`, `cluster_config`
+- **Enriched Databricks Clusters**: Added 16 fields — `policy_id`, `driver_node_type_id`, `custom_tags`, `default_tags`, `autotermination_minutes`, `cluster_source`, `state_message`, `creator_user_name`, `start_time`, `terminated_time`, `spark_conf`, `enable_elastic_disk`, `init_scripts_count`, `enable_local_disk_encryption`, `instance_pool_id`, `azure_attributes`, plus `disk_spec` (disk type/count/size) from the follow-up enrichment pass
+- **Enriched Databricks SQL Warehouses**: Added 7 fields — `warehouse_id`, `auto_stop_mins`, `state`, `creator_name`, `warehouse_type`, `spot_instance_policy`, `channel`, plus `custom_tags`
+- **Enriched Databricks Notebooks**: Added 3 fields — `created_by`, `created_at`, `modified_at`, plus `size` (object content size in bytes)
+- **Enriched Databricks Unity Catalog Tables**: Added 9 fields — `full_name`, `storage_location`, `created_at`, `updated_at`, `created_by`, `updated_by`, `table_id`, `properties`, `view_definition`, plus `partition_columns`, `delta_runtime_properties`, `enable_predictive_optimization`, and `sql_path`
+- **Enriched Databricks Jobs**: Added 13 fields across Job, JobSettings, and JobTask — `creator_user_name`, `created_time`, `timeout_seconds`, `max_concurrent_runs`, `format`, `schedule`, `email_notifications`, `task_key`, `description`, `max_retries`, `cluster_type`, `cluster_config`; Jobs now also expose `avg_duration_ms_last_3_runs` (computed from `run_duration` with a fallback to the deprecated component fields)
 - **Enriched Databricks Unity Catalog Tables**: Added 9 fields — `full_name`, `storage_location`, `created_at`, `updated_at`, `created_by`, `updated_by`, `table_id`, `properties`, `view_definition`
 - **Visualization**: Updated Databricks overview, workspace, and data engineering templates with sections for all new resource types
 - **Export**: Structured JSON export now includes all new resource types under `resources/`
 - **Export**: Databricks `external_locations/`, `connections/`, and `secret_scopes/` now emitted as individual JSON files under `resources/` (previously counted in summary but missing from the file tree)
 - **Export**: Databricks `sql_warehouses/` moved under `resources/` to match the layout used by every other Databricks resource category
 - **Visualization — Resource Summary**: Two-row layout (full-width chart above, full-width table below), logarithmic y-axis to keep low-cardinality resources readable next to high-cardinality ones, and all 11 Databricks resource types now charted (Notebooks, Clusters, Jobs, SQL Warehouses, Tables, DLT Pipelines, Repos, MLflow Experiments, Serving Endpoints, SQL Alerts, Genie Spaces)
+- **Visualization — Workspace & Data Engineering Views**: Notebook tables now show `Size (KB)` and `Uses dbutils`; cluster listings split into "All-Purpose Compute" and "Job Clusters — latest per source" cards (job clusters deduplicated by `job-{id}` source, keeping the latest run); job tables show `Avg duration (last 3 runs)` in seconds
 
 ### Fixed
 
