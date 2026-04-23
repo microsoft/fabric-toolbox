@@ -102,8 +102,8 @@
                             {% for nb in workspace.resources.notebooks[:10] %}
                             {% set nb_info = nb.notebook_data or nb.data or nb %}
                             <tr>
-                                <td>{{ nb_info.path | default(nb_info.name) | default('Unknown') }}</td>
-                                <td>{{ (nb_info.json_response.language if nb_info.json_response else None) | default(nb_info.default_language) | default(nb_info.language) | default('N/A') }}</td>
+                                <td>{{ nb_info.path | default(nb_info.name, true) | default('Unknown', true) }}</td>
+                                <td>{{ (nb_info.json_response.language if nb_info.json_response else None) | default(nb_info.default_language, true) | default(nb_info.language, true) | default('N/A', true) }}</td>
                             </tr>
                             {% endfor %}
                             {% if workspace.resources.notebooks | length > 10 %}

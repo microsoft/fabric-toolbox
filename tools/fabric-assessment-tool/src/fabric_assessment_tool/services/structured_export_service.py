@@ -643,7 +643,10 @@ class JSONExporter(BaseExporter):
             sql_wh_dir = resources_dir / "sql_warehouses"
             sql_wh_dir.mkdir(exist_ok=True)
             for wh in data["sql_warehouses"].get("sql_warehouses", []):
-                wh_file = sql_wh_dir / f"warehouse_{wh['name']}.json"
+                safe_name = self._safe_filename(
+                    wh.get("name", wh.get("warehouse_id", "unknown"))
+                )
+                wh_file = sql_wh_dir / f"warehouse_{safe_name}.json"
                 with open(wh_file, "w") as f:
                     json.dump(
                         {

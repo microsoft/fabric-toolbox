@@ -236,32 +236,33 @@ function updateFilteredStats(selectedWorkspaces) {
         resourceChart.data.datasets[0].data = [
             notebooks, clusters, jobs, sqlWarehouses, tables,
             pipelines, repos, experiments, servingEndpoints, alerts, genieSpaces
-        ];
+        ].map(v => v > 0 ? v : null);
         resourceChart.update();
     }
 }
 
 const resourceCtx = document.getElementById('resourceChart');
 if (resourceCtx) {
+    const rawCounts = [
+        {{ summary.total_notebooks | default(0) }},
+        {{ summary.total_clusters | default(0) }},
+        {{ summary.total_jobs | default(0) }},
+        {{ summary.total_sql_warehouses | default(0) }},
+        {{ summary.total_tables | default(0) }},
+        {{ summary.total_pipelines | default(0) }},
+        {{ summary.total_repos | default(0) }},
+        {{ summary.total_experiments | default(0) }},
+        {{ summary.total_serving_endpoints | default(0) }},
+        {{ summary.total_alerts | default(0) }},
+        {{ summary.total_genie_spaces | default(0) }}
+    ];
     resourceChart = new Chart(resourceCtx, {
         type: 'bar',
         data: {
             labels: ['Notebooks', 'Clusters', 'Jobs', 'SQL Warehouses', 'Tables', 'Pipelines (DLT)', 'Repos', 'MLflow Experiments', 'Serving Endpoints', 'SQL Alerts', 'Genie Spaces'],
             datasets: [{
                 label: 'Count',
-                data: [
-                    {{ summary.total_notebooks | default(0) }},
-                    {{ summary.total_clusters | default(0) }},
-                    {{ summary.total_jobs | default(0) }},
-                    {{ summary.total_sql_warehouses | default(0) }},
-                    {{ summary.total_tables | default(0) }},
-                    {{ summary.total_pipelines | default(0) }},
-                    {{ summary.total_repos | default(0) }},
-                    {{ summary.total_experiments | default(0) }},
-                    {{ summary.total_serving_endpoints | default(0) }},
-                    {{ summary.total_alerts | default(0) }},
-                    {{ summary.total_genie_spaces | default(0) }}
-                ],
+                data: rawCounts.map(v => v > 0 ? v : null),
                 backgroundColor: ['#ff3621', '#0078d4', '#107c10', '#5c2d91', '#008272', '#d83b01', '#e3008c', '#8764b8', '#038387', '#986f0b', '#498205']
             }]
         },
@@ -272,7 +273,10 @@ if (resourceCtx) {
                 legend: { display: false },
                 tooltip: {
                     callbacks: {
-                        label: function(ctx) { return 'Count: ' + ctx.parsed.y; }
+                        label: function(ctx) {
+                            const raw = rawCounts[ctx.dataIndex];
+                            return 'Count: ' + (raw !== undefined ? raw : 0);
+                        }
                     }
                 }
             },

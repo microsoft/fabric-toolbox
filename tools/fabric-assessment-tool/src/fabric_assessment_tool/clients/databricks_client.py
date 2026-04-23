@@ -929,20 +929,31 @@ class DatabricksClient:
         try:
             args = Namespace()
             args.uri = "/api/2.0/repos"
-            req = self.api_client.do_request(args)
-            json_req = req.json()
-            repos = [
-                DatabricksRepo(
-                    repo_id=str(r.get("id", "")),
-                    path=r.get("path", ""),
-                    url=r.get("url"),
-                    provider=r.get("provider"),
-                    branch=r.get("branch"),
-                    head_commit_id=r.get("head_commit_id"),
-                    json_response=r,
-                )
-                for r in json_req.get("repos", [])
-            ]
+            # Databricks Repos live under /Users/<email>/Repos/...; the API
+            # returns an empty payload unless path_prefix is provided.
+            args.request_params = {"path_prefix": "/Users"}
+            repos: list[DatabricksRepo] = []
+            next_page_token: Optional[str] = None
+            while True:
+                if next_page_token:
+                    args.request_params["next_page_token"] = next_page_token
+                req = self.api_client.do_request(args)
+                json_req = req.json()
+                for r in json_req.get("repos", []):
+                    repos.append(
+                        DatabricksRepo(
+                            repo_id=str(r.get("id", "")),
+                            path=r.get("path", ""),
+                            url=r.get("url"),
+                            provider=r.get("provider"),
+                            branch=r.get("branch"),
+                            head_commit_id=r.get("head_commit_id"),
+                            json_response=r,
+                        )
+                    )
+                next_page_token = json_req.get("next_page_token")
+                if not next_page_token:
+                    break
             return DatabricksRepos(repos=repos)
         except Exception as e:
             print(f"Failed to get repos: {e}")
@@ -952,7 +963,7 @@ class DatabricksClient:
         """Get MLflow experiments in the workspace."""
         try:
             args = Namespace()
-            args.uri = "/api/2.0/mlflow/experiments/search"
+            args.uri = "/api/2.0/mlflow/experiments/list"
             req = self.api_client.do_request(args)
             json_req = req.json()
             experiments = [
@@ -996,7 +1007,7 @@ class DatabricksClient:
                     name=ep.get("name", ""),
                     creator=ep.get("creator"),
                     state=(
-                        ep.get("state", {}).get("config_update")
+                        ep.get("state", {}).get("ready")
                         if isinstance(ep.get("state"), dict)
                         else None
                     ),

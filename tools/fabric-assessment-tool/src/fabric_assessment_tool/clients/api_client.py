@@ -211,7 +211,7 @@ class ApiClient:
                         retry_after = int(response.headers.get("Retry-After", 5))
                         if DEBUG:
                             print(
-                                f"Rate limit exceeded. {attempt}º retrying attemp in {retry_after} seconds"
+                                f"Rate limit exceeded. Retry attempt {attempt} in {retry_after} seconds."
                             )
                         time.sleep(retry_after)
                         continue
