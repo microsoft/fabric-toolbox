@@ -643,8 +643,10 @@ class JSONExporter(BaseExporter):
             sql_wh_dir = resources_dir / "sql_warehouses"
             sql_wh_dir.mkdir(exist_ok=True)
             for wh in data["sql_warehouses"].get("sql_warehouses", []):
+                warehouse_id = wh.get("warehouse_id") or "unknown"
+                warehouse_name = wh.get("name") or warehouse_id
                 safe_name = self._safe_filename(
-                    wh.get("name", wh.get("warehouse_id", "unknown"))
+                    f"{warehouse_name}_{warehouse_id}"
                 )
                 wh_file = sql_wh_dir / f"warehouse_{safe_name}.json"
                 with open(wh_file, "w") as f:
@@ -688,8 +690,12 @@ class JSONExporter(BaseExporter):
             pipelines_dir.mkdir(exist_ok=True)
 
             for pipeline in data["pipelines"].get("pipelines", []):
+                pipeline_id = pipeline.get("pipeline_id") or "unknown"
+                pipeline_name = pipeline.get("name") or pipeline_id
                 safe_name = self._safe_filename(
-                    pipeline.get("name", pipeline.get("pipeline_id", "unknown"))
+                    f"{pipeline_name}_{pipeline_id}"
+                    if pipeline_name != pipeline_id
+                    else pipeline_id
                 )
                 pipeline_file = pipelines_dir / f"pipeline_{safe_name}.json"
                 with open(pipeline_file, "w") as f:
@@ -712,7 +718,7 @@ class JSONExporter(BaseExporter):
 
             for repo in data["repos"].get("repos", []):
                 safe_name = self._safe_filename(
-                    repo.get("repo_id", repo.get("path", "unknown"))
+                    repo.get("repo_id") or repo.get("path") or "unknown"
                 )
                 repo_file = repos_dir / f"repo_{safe_name}.json"
                 with open(repo_file, "w") as f:
