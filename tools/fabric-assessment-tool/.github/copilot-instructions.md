@@ -57,42 +57,32 @@ CLI Command → Service Layer → Platform Client → Assessment Dataclasses →
    - `common.py` - Shared types like `AssessmentStatus`
 
 ### HTML Templates (Visualization)
-Templates use Jinja2 and are organized for platform-specific reporting:
+Templates use Jinja2 and are organized for platform-specific reporting.
+See [`html-generator.md`](./html-generator.md) for the full pipeline,
+JSON unwrapping convention, workspace-filter/Chart.js patterns,
+view/resource extension steps, and Databricks-specific cluster-split /
+avg-duration / network-badge rendering.
+
+Quick layout:
 
 ```
 templates/
-├── base.html                    # Master layout with navbar, CSS, Chart.js, workspace filter JS
+├── base.html                    # Master layout (navbar, CSS, Chart.js, filter JS)
 ├── index.html                   # Redirects to platform-specific index
-├── workspace.html               # Generic workspace detail template
-├── synapse/
-│   ├── index.html               # Synapse overview dashboard
-│   ├── workspace.html           # Synapse workspace details
-│   └── views/                   # (inherits from views/)
-├── databricks/
-│   ├── index.html               # Databricks overview dashboard
-│   ├── workspace.html           # Databricks workspace details
-│   └── views/                   # (inherits from views/)
-└── views/
-    ├── admin.html               # Integration runtimes, linked services (Synapse only)
-    ├── data_engineering.html    # Notebooks, Spark pools, clusters, jobs
-    ├── data_integration.html    # Pipelines, dataflows, datasets (Synapse only)
-    └── data_warehousing.html    # SQL pools, tables, Unity Catalog
+├── workspace.html               # Fallback workspace detail
+├── synapse/   {index,workspace}.html + views/
+├── databricks/{index,workspace}.html + views/
+└── views/                       # Generic fallbacks (Synapse)
 ```
 
-**Template Conventions:**
-- All view templates extend `base.html` using `{% extends "base.html" %}`
-- Use `{% block content %}` for main content, `{% block scripts %}` for page-specific JS
-- Row filtering uses `data-workspace="{{ ws_name }}"` attribute on table rows
-- Charts use Chart.js with embedded `<canvas>` elements
-- Custom Jinja filters: `format_number`, `format_size` (registered in `VisualizationService`)
-- Platform detection via `platform` variable (`synapse` or `databricks`)
-- Workspace filtering persists to localStorage under key `fat-workspace-filter`
+Key conventions at a glance:
 
-**Adding a New Visualization View:**
-1. Create template in `templates/views/new_view.html` extending `base.html`
-2. Add route in `VisualizationService._generate_*_report()` methods
-3. Add nav link in `base.html` navbar
-4. Implement `updateFilteredStats(selectedWorkspaces)` JS function for dynamic filtering
+- All view templates `{% extends "base.html" %}` with `{% block content %}` and `{% block scripts %}`.
+- Row filtering: `data-workspace="{{ ws_name }}"` + optional `updateFilteredStats(selectedWorkspaces)`.
+- Custom filters: `format_number`, `format_size` (registered in `VisualizationService`).
+- Platform detection: `_detect_platform()` → `platform` template variable.
+- Workspace filter persistence: localStorage key `fat-workspace-filter`.
+- **Always unwrap wrapped resource JSON** with `item.<kind>_data or item.data or item` — see `html-generator.md`.
 
 ## Assessment Dataclass Hierarchy
 
