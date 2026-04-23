@@ -105,6 +105,14 @@
                             <td>Genie Spaces</td>
                             <td class="text-right">{{ summary.total_genie_spaces | default(0) | format_number }}</td>
                         </tr>
+                        <tr>
+                            <td>Cluster Policies</td>
+                            <td class="text-right">{{ summary.total_cluster_policies | default(0) | format_number }}</td>
+                        </tr>
+                        <tr>
+                            <td>Instance Pools</td>
+                            <td class="text-right">{{ summary.total_instance_pools | default(0) | format_number }}</td>
+                        </tr>
                     </tbody>
                 </table>
             </div>
@@ -196,7 +204,9 @@ const workspaceData = {
         experiments: {{ ws.summary.counts.experiments | default(0) }},
         serving_endpoints: {{ ws.summary.counts.serving_endpoints | default(0) }},
         alerts: {{ ws.summary.counts.alerts | default(0) }},
-        genie_spaces: {{ ws.summary.counts.genie_spaces | default(0) }}
+        genie_spaces: {{ ws.summary.counts.genie_spaces | default(0) }},
+        cluster_policies: {{ ws.summary.counts.cluster_policies | default(0) }},
+        instance_pools: {{ ws.summary.counts.instance_pools | default(0) }}
     }{% if not loop.last %},{% endif %}
 {% endfor %}
 };
@@ -207,6 +217,7 @@ function updateFilteredStats(selectedWorkspaces) {
     let workspaceCount = 0;
     let notebooks = 0, clusters = 0, jobs = 0, tables = 0, sqlWarehouses = 0;
     let pipelines = 0, repos = 0, experiments = 0, servingEndpoints = 0, alerts = 0, genieSpaces = 0;
+    let clusterPolicies = 0, instancePools = 0;
     
     selectedWorkspaces.forEach(ws => {
         const data = workspaceData[ws];
@@ -223,6 +234,8 @@ function updateFilteredStats(selectedWorkspaces) {
             servingEndpoints += data.serving_endpoints || 0;
             alerts += data.alerts || 0;
             genieSpaces += data.genie_spaces || 0;
+            clusterPolicies += data.cluster_policies || 0;
+            instancePools += data.instance_pools || 0;
         }
     });
     
@@ -235,7 +248,8 @@ function updateFilteredStats(selectedWorkspaces) {
     if (resourceChart) {
         resourceChart.data.datasets[0].data = [
             notebooks, clusters, jobs, sqlWarehouses, tables,
-            pipelines, repos, experiments, servingEndpoints, alerts, genieSpaces
+            pipelines, repos, experiments, servingEndpoints, alerts, genieSpaces,
+            clusterPolicies, instancePools
         ].map(v => v > 0 ? v : null);
         resourceChart.update();
     }
@@ -254,16 +268,18 @@ if (resourceCtx) {
         {{ summary.total_experiments | default(0) }},
         {{ summary.total_serving_endpoints | default(0) }},
         {{ summary.total_alerts | default(0) }},
-        {{ summary.total_genie_spaces | default(0) }}
+        {{ summary.total_genie_spaces | default(0) }},
+        {{ summary.total_cluster_policies | default(0) }},
+        {{ summary.total_instance_pools | default(0) }}
     ];
     resourceChart = new Chart(resourceCtx, {
         type: 'bar',
         data: {
-            labels: ['Notebooks', 'Clusters', 'Jobs', 'SQL Warehouses', 'Tables', 'Pipelines (DLT)', 'Repos', 'MLflow Experiments', 'Serving Endpoints', 'SQL Alerts', 'Genie Spaces'],
+            labels: ['Notebooks', 'Clusters', 'Jobs', 'SQL Warehouses', 'Tables', 'Pipelines (DLT)', 'Repos', 'MLflow Experiments', 'Serving Endpoints', 'SQL Alerts', 'Genie Spaces', 'Cluster Policies', 'Instance Pools'],
             datasets: [{
                 label: 'Count',
                 data: rawCounts.map(v => v > 0 ? v : null),
-                backgroundColor: ['#ff3621', '#0078d4', '#107c10', '#5c2d91', '#008272', '#d83b01', '#e3008c', '#8764b8', '#038387', '#986f0b', '#498205']
+                backgroundColor: ['#ff3621', '#0078d4', '#107c10', '#5c2d91', '#008272', '#d83b01', '#e3008c', '#8764b8', '#038387', '#986f0b', '#498205', '#7e5c35', '#005a9e']
             }]
         },
         options: {

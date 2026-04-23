@@ -17,6 +17,8 @@ from ..assessment.databricks import (
     DatabricksCatalog,
     DatabricksCatalogs,
     DatabricksCluster,
+    DatabricksClusterPolicies,
+    DatabricksClusterPolicy,
     DatabricksClusters,
     DatabricksConnection,
     DatabricksConnections,
@@ -27,6 +29,8 @@ from ..assessment.databricks import (
     DatabricksFunction,
     DatabricksGenieSpace,
     DatabricksGenieSpaces,
+    DatabricksInstancePool,
+    DatabricksInstancePools,
     DatabricksJob,
     DatabricksJobRun,
     DatabricksJobRuns,
@@ -237,6 +241,16 @@ class DatabricksClient:
             genie_spaces = self._get_genie_spaces()
             utils_ui.print_extraction_done("Genie Spaces")
 
+            # Get cluster policies (workspace-summary)
+            utils_ui.print_extracting("Cluster Policies")
+            cluster_policies = self._get_cluster_policies()
+            utils_ui.print_extraction_done("Cluster Policies")
+
+            # Get instance pools (workspace-summary)
+            utils_ui.print_extracting("Instance Pools")
+            instance_pools = self._get_instance_pools()
+            utils_ui.print_extraction_done("Instance Pools")
+
             # Create assessment metadata
             assessment_metadata = DatabricksAssessmentMetadata(
                 mode=mode, timestamp=self._get_timestamp()
@@ -261,6 +275,8 @@ class DatabricksClient:
                 serving_endpoints=serving_endpoints,
                 alerts=alerts,
                 genie_spaces=genie_spaces,
+                cluster_policies=cluster_policies,
+                instance_pools=instance_pools,
                 workspace_url=workspace_info.url,
             )
 
@@ -341,6 +357,7 @@ class DatabricksClient:
                     instance_pool_id=cluster.get("instance_pool_id"),
                     driver_instance_pool_id=cluster.get("driver_instance_pool_id"),
                     azure_attributes=cluster.get("azure_attributes"),
+                    disk_spec=cluster.get("disk_spec"),
                     json_response=cluster,
                 )
                 for cluster in clusters_data
@@ -382,6 +399,11 @@ class DatabricksClient:
                         warehouse.get("channel", {}).get("name")
                         if isinstance(warehouse.get("channel"), dict)
                         else warehouse.get("channel")
+                    ),
+                    custom_tags=(
+                        warehouse.get("tags", {}).get("custom_tags")
+                        if isinstance(warehouse.get("tags"), dict)
+                        else None
                     ),
                     json_response=warehouse,
                 )
@@ -449,22 +471,25 @@ class DatabricksClient:
                             if obj.get("modified_at")
                             else None
                         )
+                        size = obj.get("size")
                         try:
                             args.uri = status_endpoint
-                            args.request_params = {}
+                            args.request_params = {"path": obj_path}
 
-                            lang = (
-                                self.api_client.do_request(args)
-                                .json()
-                                .get("language", "unknown")
-                            )
-                        except:
+                            status_json = self.api_client.do_request(args).json()
+                            lang = status_json.get("language", "unknown")
+                            # /api/2.0/workspace/list omits size for notebooks;
+                            # get-status returns it reliably as bytes.
+                            if size is None:
+                                size = status_json.get("size")
+                        except Exception:
                             pass
                         try:
                             args.uri = export_endpoint
-                            args.request_params = (
-                                {"path": obj_path, "format": "SOURCE"},
-                            )
+                            args.request_params = {
+                                "path": obj_path,
+                                "format": "SOURCE",
+                            }
                             content = (
                                 self.api_client.do_request(args)
                                 .json()
@@ -473,7 +498,15 @@ class DatabricksClient:
                             embedded_langs, magics = self._detect_embedded_magics(
                                 content
                             )
-                        except:
+                            # Databricks doesn't expose notebook size on list or
+                            # get-status (those only return size for FILE). Fall
+                            # back to the decoded SOURCE byte length.
+                            if size is None and content:
+                                try:
+                                    size = len(base64.b64decode(content))
+                                except Exception:
+                                    pass
+                        except Exception:
                             embedded_langs, magics = [], []
 
                         # Check for dbutils in notebook content
@@ -490,6 +523,7 @@ class DatabricksClient:
                                 created_by=created_by,
                                 created_at=created_at,
                                 modified_at=modified_at,
+                                size=size,
                             )
                         )
                     elif obj["object_type"] == "DIRECTORY":
@@ -685,6 +719,25 @@ class DatabricksClient:
                 return None
         return None
 
+    def _extract_partition_columns(self, columns: list) -> Optional[list[str]]:
+        """Return partition column names ordered by partition_index.
+
+        Unity Catalog table columns expose ``partition_index`` (int) on every
+        column; non-partition columns have it unset/None. Returns None when no
+        partition columns exist so the field serialises as null.
+        """
+        if not columns:
+            return None
+        partitions = [
+            (col.get("partition_index"), col.get("name"))
+            for col in columns
+            if col.get("partition_index") is not None and col.get("name")
+        ]
+        if not partitions:
+            return None
+        partitions.sort(key=lambda item: item[0])
+        return [name for _, name in partitions]
+
     def _get_tables(self, catalog_name: str, schema_name: str) -> list[DatabricksTable]:
         """Get databases and tables in the workspace."""
         try:
@@ -732,6 +785,16 @@ class DatabricksClient:
                     table_id=table.get("table_id"),
                     properties=table.get("properties"),
                     view_definition=table.get("view_definition"),
+                    partition_columns=self._extract_partition_columns(
+                        table.get("columns", [])
+                    ),
+                    delta_runtime_properties=table.get(
+                        "delta_runtime_properties_kvpairs"
+                    ),
+                    enable_predictive_optimization=table.get(
+                        "enable_predictive_optimization"
+                    ),
+                    sql_path=table.get("sql_path"),
                     json_response=table,
                 )
                 for table in json_req.get("tables", [])
@@ -1088,6 +1151,53 @@ class DatabricksClient:
         except Exception as e:
             print(f"Failed to get Genie spaces: {e}")
             return DatabricksGenieSpaces(genie_spaces=[])
+
+    def _get_cluster_policies(self) -> DatabricksClusterPolicies:
+        """Get cluster policies in the workspace."""
+        try:
+            args = Namespace()
+            args.uri = "/api/2.0/policies/clusters/list"
+            req = self.api_client.do_request(args)
+            json_req = req.json()
+            policies = [
+                DatabricksClusterPolicy(
+                    policy_id=policy.get("policy_id", ""),
+                    name=policy.get("name", ""),
+                    description=policy.get("description"),
+                    is_default=policy.get("is_default"),
+                    policy_family_id=policy.get("policy_family_id"),
+                    json_response=policy,
+                )
+                for policy in json_req.get("policies", [])
+            ]
+            return DatabricksClusterPolicies(cluster_policies=policies)
+        except Exception as e:
+            print(f"Failed to get cluster policies: {e}")
+            return DatabricksClusterPolicies(cluster_policies=[])
+
+    def _get_instance_pools(self) -> DatabricksInstancePools:
+        """Get instance pools in the workspace."""
+        try:
+            args = Namespace()
+            args.uri = "/api/2.0/instance-pools/list"
+            req = self.api_client.do_request(args)
+            json_req = req.json()
+            pools = [
+                DatabricksInstancePool(
+                    instance_pool_id=pool.get("instance_pool_id", ""),
+                    instance_pool_name=pool.get("instance_pool_name", ""),
+                    node_type_id=pool.get("node_type_id"),
+                    min_idle_instances=pool.get("min_idle_instances"),
+                    max_capacity=pool.get("max_capacity"),
+                    state=pool.get("state"),
+                    json_response=pool,
+                )
+                for pool in json_req.get("instance_pools", [])
+            ]
+            return DatabricksInstancePools(instance_pools=pools)
+        except Exception as e:
+            print(f"Failed to get instance pools: {e}")
+            return DatabricksInstancePools(instance_pools=[])
 
     def _get_timestamp(self) -> str:
         """Get current timestamp."""

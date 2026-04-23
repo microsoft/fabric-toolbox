@@ -47,6 +47,7 @@ class DatabricksCluster:
     instance_pool_id: Optional[str] = None
     driver_instance_pool_id: Optional[str] = None
     azure_attributes: Optional[dict] = None
+    disk_spec: Optional[dict] = None
 
 
 @dataclass
@@ -54,6 +55,45 @@ class DatabricksClusters:
     """Collection of clusters in a Databricks workspace."""
 
     clusters: List[DatabricksCluster]
+
+
+@dataclass
+class DatabricksClusterPolicy:
+    """Databricks cluster policy summary."""
+
+    policy_id: str
+    name: str
+    json_response: Any
+    description: Optional[str] = None
+    is_default: Optional[bool] = None
+    policy_family_id: Optional[str] = None
+
+
+@dataclass
+class DatabricksClusterPolicies:
+    """Collection of cluster policies in a Databricks workspace."""
+
+    cluster_policies: List[DatabricksClusterPolicy]
+
+
+@dataclass
+class DatabricksInstancePool:
+    """Databricks instance pool summary."""
+
+    instance_pool_id: str
+    instance_pool_name: str
+    json_response: Any
+    node_type_id: Optional[str] = None
+    min_idle_instances: Optional[int] = None
+    max_capacity: Optional[int] = None
+    state: Optional[str] = None
+
+
+@dataclass
+class DatabricksInstancePools:
+    """Collection of instance pools in a Databricks workspace."""
+
+    instance_pools: List[DatabricksInstancePool]
 
 
 @dataclass
@@ -75,6 +115,7 @@ class DatabricksSqlWarehouse:
     warehouse_type: Optional[str] = None
     spot_instance_policy: Optional[str] = None
     channel: Optional[str] = None
+    custom_tags: Optional[list] = None
 
 
 @dataclass
@@ -97,6 +138,7 @@ class DatabricksNotebook:
     created_by: Optional[str] = None
     created_at: Optional[str] = None
     modified_at: Optional[str] = None
+    size: Optional[int] = None
 
 
 @dataclass
@@ -228,6 +270,10 @@ class DatabricksTable:
     table_id: Optional[str] = None
     properties: Optional[dict] = None
     view_definition: Optional[str] = None
+    partition_columns: Optional[List[str]] = None
+    delta_runtime_properties: Optional[dict] = None
+    enable_predictive_optimization: Optional[str] = None
+    sql_path: Optional[str] = None
 
 
 @dataclass
@@ -476,6 +522,8 @@ class DatabricksAssessment:
     serving_endpoints: Optional[DatabricksServingEndpoints] = None
     alerts: Optional[DatabricksAlerts] = None
     genie_spaces: Optional[DatabricksGenieSpaces] = None
+    cluster_policies: Optional[DatabricksClusterPolicies] = None
+    instance_pools: Optional[DatabricksInstancePools] = None
 
     # Connection information
     workspace_url: Optional[str] = None
@@ -553,6 +601,14 @@ class DatabricksAssessment:
         summary["counts"]["alerts"] = len(self.alerts.alerts) if self.alerts else 0
         summary["counts"]["genie_spaces"] = (
             len(self.genie_spaces.genie_spaces) if self.genie_spaces else 0
+        )
+        summary["counts"]["cluster_policies"] = (
+            len(self.cluster_policies.cluster_policies)
+            if self.cluster_policies
+            else 0
+        )
+        summary["counts"]["instance_pools"] = (
+            len(self.instance_pools.instance_pools) if self.instance_pools else 0
         )
 
         return summary

@@ -814,6 +814,53 @@ class JSONExporter(BaseExporter):
                     )
                 files_created.append(str(space_file))
 
+        # Export cluster policies
+        if "cluster_policies" in data:
+            policies_dir = resources_dir / "cluster_policies"
+            policies_dir.mkdir(exist_ok=True)
+
+            for policy in data["cluster_policies"].get("cluster_policies", []):
+                safe_name = self._safe_filename(
+                    policy.get("name") or policy.get("policy_id", "unknown")
+                )
+                policy_file = policies_dir / f"policy_{safe_name}.json"
+                with open(policy_file, "w") as f:
+                    json.dump(
+                        {
+                            "type": "databricks_cluster_policy",
+                            "cluster_policy_data": policy,
+                            "exported_at": datetime.now().isoformat(),
+                        },
+                        f,
+                        indent=2,
+                        cls=DecimalEncoder,
+                    )
+                files_created.append(str(policy_file))
+
+        # Export instance pools
+        if "instance_pools" in data:
+            pools_dir = resources_dir / "instance_pools"
+            pools_dir.mkdir(exist_ok=True)
+
+            for pool in data["instance_pools"].get("instance_pools", []):
+                safe_name = self._safe_filename(
+                    pool.get("instance_pool_name")
+                    or pool.get("instance_pool_id", "unknown")
+                )
+                pool_file = pools_dir / f"pool_{safe_name}.json"
+                with open(pool_file, "w") as f:
+                    json.dump(
+                        {
+                            "type": "databricks_instance_pool",
+                            "instance_pool_data": pool,
+                            "exported_at": datetime.now().isoformat(),
+                        },
+                        f,
+                        indent=2,
+                        cls=DecimalEncoder,
+                    )
+                files_created.append(str(pool_file))
+
         # Export external locations
         if "external_locations" in data:
             ext_dir = resources_dir / "external_locations"

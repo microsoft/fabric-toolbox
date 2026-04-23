@@ -334,6 +334,10 @@ class VisualizationService:
         summary["total_alerts"] += counts.get("alerts", 0)
         summary.setdefault("total_genie_spaces", 0)
         summary["total_genie_spaces"] += counts.get("genie_spaces", 0)
+        summary.setdefault("total_cluster_policies", 0)
+        summary["total_cluster_policies"] += counts.get("cluster_policies", 0)
+        summary.setdefault("total_instance_pools", 0)
+        summary["total_instance_pools"] += counts.get("instance_pools", 0)
 
     def _generate_overview(
         self, data: Dict[str, Any], output_dir: Path, platform: str = "synapse"
