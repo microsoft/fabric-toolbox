@@ -90,7 +90,7 @@ const warehousingData = {
 {% for ws_name, ws in workspaces.items() %}
     "{{ ws_name }}": {
         sql_warehouses: {{ ws.summary.counts.sql_warehouses | default(0) }},
-        tables: {{ ws.summary.counts.tables | default(0) }}
+        tables: {{ ws.summary.counts.total_tables | default(ws.summary.counts.tables) | default(0) }}
     }{% if not loop.last %},{% endif %}
 {% endfor %}
 };

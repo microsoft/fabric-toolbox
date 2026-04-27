@@ -68,6 +68,7 @@
                     <tr>
                         <th>Name</th>
                         <th>Language</th>
+                        <th class="text-right">Size (KB)</th>
                         <th>Uses dbutils</th>
                         <th>Workspace</th>
                     </tr>
@@ -81,6 +82,14 @@
                                 {{ nb.language | default(nb.default_language | default('N/A')) }}
                             </span>
                         </td>
+                        <td class="text-right">
+                            {% set _sz = nb.size %}
+                            {% if _sz is number and _sz > 0 %}
+                                {{ '%.1f' | format(_sz / 1024) }}
+                            {% else %}
+                                N/A
+                            {% endif %}
+                        </td>
                         <td>
                             {% if nb.uses_dbutils %}
                             <span class="badge" style="background-color: #ffc107; color: #000;">Yes</span>
@@ -93,7 +102,7 @@
                     {% endfor %}
                     {% if engineering.notebooks | length > 50 %}
                     <tr>
-                        <td colspan="4" class="text-muted">
+                        <td colspan="5" class="text-muted">
                             ... and {{ engineering.notebooks | length - 50 }} more notebooks
                         </td>
                     </tr>
@@ -109,11 +118,25 @@
     </div>
 </div>
 
-<!-- Clusters -->
+<!-- Clusters: All-Purpose Compute + Job Clusters (latest per source) -->
 {% if engineering.clusters %}
+{% set _all_purpose = engineering.clusters | rejectattr('cluster_source', 'equalto', 'JOB') | list %}
+{% set _job_clusters_raw = engineering.clusters | selectattr('cluster_source', 'equalto', 'JOB') | list %}
+{% set _by_source = {} %}
+{% for cl in _job_clusters_raw %}
+    {% set _name = cl.cluster_name or '' %}
+    {% set _src_key = (cl.workspace | default('')) ~ '|' ~ (_name.split('-run-')[0] if '-run-' in _name else _name) %}
+    {% set _existing = _by_source.get(_src_key) %}
+    {% if not _existing or (cl.start_time or '') > (_existing.start_time or '') %}
+        {% set _ = _by_source.update({_src_key: cl}) %}
+    {% endif %}
+{% endfor %}
+{% set _job_clusters = _by_source.values() | list %}
+
 <div class="card">
-    <div class="card-header">🖥️ Clusters</div>
+    <div class="card-header">🖥️ All-Purpose Compute ({{ _all_purpose | length }})</div>
     <div class="card-body">
+        {% if _all_purpose %}
         <div class="table-responsive">
             <table class="table">
                 <thead>
@@ -128,7 +151,7 @@
                     </tr>
                 </thead>
                 <tbody>
-                    {% for cl in engineering.clusters %}
+                    {% for cl in _all_purpose %}
                     <tr data-workspace="{{ cl.workspace | default('N/A') }}">
                         <td>{{ cl.cluster_name | default('Unknown') }}</td>
                         <td>
@@ -146,6 +169,47 @@
                 </tbody>
             </table>
         </div>
+        {% else %}
+        <p class="text-muted">No all-purpose clusters.</p>
+        {% endif %}
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-header">⚙️ Job Clusters — latest per source ({{ _job_clusters | length }} of {{ _job_clusters_raw | length }})</div>
+    <div class="card-body">
+        {% if _job_clusters %}
+        <div class="table-responsive">
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Source</th>
+                        <th>Name</th>
+                        <th>Node Type</th>
+                        <th>Spark Version</th>
+                        <th>Last Started</th>
+                        <th>Workspace</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for cl in _job_clusters %}
+                    {% set _name = cl.cluster_name or '' %}
+                    {% set _src = _name.split('-run-')[0] if '-run-' in _name else _name %}
+                    <tr data-workspace="{{ cl.workspace | default('N/A') }}">
+                        <td><code>{{ _src }}</code></td>
+                        <td>{{ _name | default('Unknown') }}</td>
+                        <td>{{ cl.node_type_id | default('N/A') }}</td>
+                        <td><span class="badge badge-secondary">{{ cl.spark_version | default('N/A') }}</span></td>
+                        <td>{{ cl.start_time | default('N/A', true) }}</td>
+                        <td>{{ cl.workspace | default('N/A') }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <p class="text-muted">No job clusters.</p>
+        {% endif %}
     </div>
 </div>
 {% endif %}
@@ -159,23 +223,200 @@
             <table class="table">
                 <thead>
                     <tr>
+                        <th>Name</th>
                         <th>Job ID</th>
                         <th class="text-right">Tasks</th>
+                        <th class="text-right">Avg duration (last 3 runs)</th>
                         <th>Workspace</th>
                     </tr>
                 </thead>
                 <tbody>
                     {% for job in engineering.jobs[:30] %}
                     <tr data-workspace="{{ job.workspace | default('N/A') }}">
+                        <td>{{ job.name | default((job.settings.name if job.settings is mapping else None) | default('Unknown', true)) }}</td>
                         <td>{{ job.job_id | default('Unknown') }}</td>
                         <td class="text-right">{{ job.tasks | length if job.tasks else 0 }}</td>
+                        <td class="text-right">
+                            {% set _avg = job.avg_duration_ms_last_3_runs %}
+                            {% if _avg is number and _avg > 0 %}
+                                {{ '%.1f' | format(_avg / 1000) }} s
+                            {% else %}
+                                N/A
+                            {% endif %}
+                        </td>
                         <td>{{ job.workspace | default('N/A') }}</td>
                     </tr>
                     {% endfor %}
                     {% if engineering.jobs | length > 30 %}
                     <tr>
-                        <td colspan="3" class="text-muted">
+                        <td colspan="5" class="text-muted">
                             ... and {{ engineering.jobs | length - 30 }} more jobs
+                        </td>
+                    </tr>
+                    {% endif %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<!-- DLT Pipelines -->
+{% if engineering.pipelines %}
+<div class="card">
+    <div class="card-header">🔄 DLT Pipelines</div>
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Name</th>
+                        <th>State</th>
+                        <th>Creator</th>
+                        <th>Workspace</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for p in engineering.pipelines[:30] %}
+                    <tr data-workspace="{{ p.workspace | default('N/A') }}">
+                        <td>{{ p.name | default(p.pipeline_id | default('Unknown')) }}</td>
+                        <td>
+                            <span class="badge {% if p.state == 'RUNNING' %}badge-success{% elif p.state == 'IDLE' %}badge-secondary{% else %}badge-warning{% endif %}">
+                                {{ p.state | default('Unknown') }}
+                            </span>
+                        </td>
+                        <td>{{ p.creator_user_name | default('N/A') }}</td>
+                        <td>{{ p.workspace | default('N/A') }}</td>
+                    </tr>
+                    {% endfor %}
+                    {% if engineering.pipelines | length > 30 %}
+                    <tr>
+                        <td colspan="4" class="text-muted">
+                            ... and {{ engineering.pipelines | length - 30 }} more pipelines
+                        </td>
+                    </tr>
+                    {% endif %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<!-- MLflow Experiments -->
+{% if engineering.experiments %}
+<div class="card">
+    <div class="card-header">🧪 MLflow Experiments</div>
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Name</th>
+                        <th>Lifecycle Stage</th>
+                        <th>Last Updated</th>
+                        <th>Workspace</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for exp in engineering.experiments[:30] %}
+                    <tr data-workspace="{{ exp.workspace | default('N/A') }}">
+                        <td>{{ exp.name | default('Unknown') }}</td>
+                        <td>
+                            <span class="badge {% if exp.lifecycle_stage == 'active' %}badge-success{% else %}badge-secondary{% endif %}">
+                                {{ exp.lifecycle_stage | default('N/A') }}
+                            </span>
+                        </td>
+                        <td>{{ exp.last_update_time | default('N/A') }}</td>
+                        <td>{{ exp.workspace | default('N/A') }}</td>
+                    </tr>
+                    {% endfor %}
+                    {% if engineering.experiments | length > 30 %}
+                    <tr>
+                        <td colspan="4" class="text-muted">
+                            ... and {{ engineering.experiments | length - 30 }} more experiments
+                        </td>
+                    </tr>
+                    {% endif %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<!-- Serving Endpoints -->
+{% if engineering.serving_endpoints %}
+<div class="card">
+    <div class="card-header">🚀 Model Serving Endpoints</div>
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Name</th>
+                        <th>State</th>
+                        <th>Creator</th>
+                        <th>Created</th>
+                        <th>Workspace</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for ep in engineering.serving_endpoints[:30] %}
+                    <tr data-workspace="{{ ep.workspace | default('N/A') }}">
+                        <td>{{ ep.name | default('Unknown') }}</td>
+                        <td>
+                            <span class="badge {% if ep.state == 'READY' %}badge-success{% else %}badge-secondary{% endif %}">
+                                {{ ep.state | default('N/A') }}
+                            </span>
+                        </td>
+                        <td>{{ ep.creator | default('N/A') }}</td>
+                        <td>{{ ep.creation_timestamp | default('N/A') }}</td>
+                        <td>{{ ep.workspace | default('N/A') }}</td>
+                    </tr>
+                    {% endfor %}
+                    {% if engineering.serving_endpoints | length > 30 %}
+                    <tr>
+                        <td colspan="5" class="text-muted">
+                            ... and {{ engineering.serving_endpoints | length - 30 }} more endpoints
+                        </td>
+                    </tr>
+                    {% endif %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<!-- Git Repos -->
+{% if engineering.repos %}
+<div class="card">
+    <div class="card-header">📂 Git Repos</div>
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Path</th>
+                        <th>Provider</th>
+                        <th>Branch</th>
+                        <th>Workspace</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for r in engineering.repos[:30] %}
+                    <tr data-workspace="{{ r.workspace | default('N/A') }}">
+                        <td>{{ r.path | default('Unknown') }}</td>
+                        <td>{{ r.provider | default('N/A') }}</td>
+                        <td>{{ r.branch | default('N/A') }}</td>
+                        <td>{{ r.workspace | default('N/A') }}</td>
+                    </tr>
+                    {% endfor %}
+                    {% if engineering.repos | length > 30 %}
+                    <tr>
+                        <td colspan="4" class="text-muted">
+                            ... and {{ engineering.repos | length - 30 }} more repos
                         </td>
                     </tr>
                     {% endif %}
