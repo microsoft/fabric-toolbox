@@ -6,7 +6,7 @@
       "connectionString": "Data Source=powerbi://api.powerbi.com/v1.0/myorg/Focus;initial catalog=FCA_Core_SM;integrated security=ClaimsToken",
       "pbiServiceModelId": null,
       "pbiModelVirtualServerName": "sobe_wowvirtualserver",
-      "pbiModelDatabaseName": "609eb124-c8bc-4a6e-b055-926424ae89f7",
+      "pbiModelDatabaseName": "26c9f0b0-fc20-4eaf-8309-b38bba897b6e",
       "name": "EntityDataSource",
       "connectionType": "pbiServiceXmlaStyleLive"
     }
