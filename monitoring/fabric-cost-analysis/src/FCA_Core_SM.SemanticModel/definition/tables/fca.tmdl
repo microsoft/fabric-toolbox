@@ -577,7 +577,6 @@ table fca
 
 	/// Total cost of Copilot and AI activities
 	measure #Copilot = [#CopilotPAYG] + [#CopilotRI]
-		formatString: #,0.###############\ "€";-#,0.###############\ "€";#,0.###############\ "€"
 		displayFolder: measures
 		lineageTag: 171c0915-77e5-407a-a648-9150a74f344b
 
