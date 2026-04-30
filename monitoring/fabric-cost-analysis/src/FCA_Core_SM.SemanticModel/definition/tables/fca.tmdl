@@ -581,7 +581,17 @@ table fca
 		displayFolder: measures
 		lineageTag: 171c0915-77e5-407a-a648-9150a74f344b
 
+		formatStringDefinition =
+				SWITCH( MAX(fca[BillingCurrency]),
+				"USD", "\$#,0.00;(\$#,0.00);\$#,0.00",
+				"EUR", "\€#,0.00;(\€#,0.00);\€#,0.00",
+				"#,0.00;(#,0.00);#,0.00")
+
 		changedProperty = DisplayFolder
+
+		changedProperty = FormatString
+
+		changedProperty = FormatStringDefinition
 
 		changedProperty = Name
 
