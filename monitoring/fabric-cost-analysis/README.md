@@ -105,6 +105,8 @@ Below is a curated list of blog posts, sessions and articles that dive deeper in
 - https://www.packtpub.com/en-us/product/the-definitive-guide-to-microsoft-fabric-9781806698790
 - https://www.youtube.com/watch?v=6uOlYj_eSzo&list=PLmmHlkXlpkYZNAQRj4IOhb6usUvkGYj34
 - https://www.youtube.com/watch?v=PJSZWTfUfc0&list=PLiYSIjh4cEx0dd7gkLFu2pjDqUkYGv_mU
+- https://www.linkedin.com/pulse/fabcon-2026-recap-ai-business-people-iurii-yurri-iurchenko-fachdm-6uavc/
+- https://www.linkedin.com/pulse/economics-modern-data-platforms-microsoft-fabric-vs-junco-boquer-3dtge/
 - ...
 
 ---
