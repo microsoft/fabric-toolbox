@@ -445,9 +445,12 @@ table fca
 
 		changedProperty = Description
 
-	/// FinOps Maturity Score - Dimension 1: RI Coverage
-	/// Measures what percentage of provisioned capacity cost is backed by a Reservation vs PAYG.
-	/// Target: 100% RI coverage. Score = 100 when fully RI-backed, 0 when fully PAYG.
+	/// FinOps Maturity Score - Dimension 1: RI Coverage (weight 30% of overall score).
+	/// Measures what percentage of provisioned Fabric capacity cost is backed by a Reserved Instance (RI) vs Pay-As-You-Go (PAYG).
+	/// Formula: MIN(1, #Reservation / (#Reservation + #CapacityPAYG)) * 100.
+	/// A score of 100 means all capacity is RI-backed (best practice). A score of 0 means all capacity is PAYG (worst case).
+	/// Interpretation: score >= 90 = excellent, 70-89 = good, 50-69 = needs improvement, < 50 = critical action required.
+	/// To improve: purchase or extend RI reservations to cover more of the provisioned Fabric capacity.
 	measure 'Score - RI Coverage' = ```
 			
 			VAR RI_Coverage = DIVIDE([#Reservation], [#Reservation] + [#CapacityPAYG])
@@ -463,9 +466,12 @@ table fca
 
 		changedProperty = Description
 
-	/// FinOps Maturity Score - Dimension 2: RI Utilization
-	/// Measures how much of the purchased Reserved Instances are actually consumed.
-	/// Target: >= 95% of reserved hours used. Score decays linearly below 95%.
+	/// FinOps Maturity Score - Dimension 2: RI Utilization (weight 25% of overall score).
+	/// Measures what percentage of purchased Reserved Instance hours are actually consumed across all active reservations.
+	/// Formula: MIN(1, [Reservation used ratio %] / 0.95) * 100. Based on UsedHours vs ReservedHours from reservation_usage.
+	/// A score of 100 means >= 95% of reserved capacity is being used (target). A low score means waste: unused RI hours still incur full cost.
+	/// Interpretation: score >= 95 = excellent, 80-94 = acceptable, 60-79 = review needed, < 60 = RI is largely wasted.
+	/// To improve: right-size or consolidate RIs to match actual usage, or increase workload throughput to consume more reserved capacity.
 	measure 'Score - RI Utilization' = ```
 			
 			VAR RI_Used = [Reservation used ratio %]
@@ -481,9 +487,12 @@ table fca
 
 		changedProperty = Description
 
-	/// FinOps Maturity Score - Dimension 3: Capacity Utilization
-	/// Measures how much of the provisioned capacity is actually being used.
-	/// Target: >= 70% utilization. Score = 100 at 70%+, decays proportionally below.
+	/// FinOps Maturity Score - Dimension 3: Capacity Utilization (weight 20% of overall score).
+	/// Measures how efficiently the provisioned Fabric capacity is being consumed by workloads.
+	/// Formula: MIN(1, [#UsageRatioCapacity] / 0.70) * 100. UsageRatioCapacity = UsedCapacity / ProvisionedCapacity.
+	/// A score of 100 means >= 70% of provisioned capacity is actively used (target). Low scores indicate over-provisioned capacity sitting idle.
+	/// Interpretation: score >= 90 = excellent, 70-89 = good, 50-69 = over-provisioned, < 50 = significant waste.
+	/// To improve: right-size the Fabric capacity SKU downward, or increase workload scheduling to fill available CUs.
 	measure 'Score - Capacity Utilization' = ```
 			
 			VAR Usage = [#UsageRatioCapacity]
@@ -499,9 +508,13 @@ table fca
 
 		changedProperty = Description
 
-	/// FinOps Maturity Score - Dimension 4: Low Pause Cost
-	/// Measures whether capacity pause/delete surcharges are kept minimal.
-	/// Target: < 5% is excellent; decays to 0 at 10%+ of provisioned capacity cost.
+	/// FinOps Maturity Score - Dimension 4: Low Pause Cost (weight 15% of overall score).
+	/// Measures whether Fabric capacity pause and delete surcharge costs are kept to a minimum relative to total provisioned capacity spend.
+	/// Formula: MAX(0, (1 - [PauseCost %] / 0.10) * 100). PauseCost % = #PauseCost / (#CapacityPAYG + #Reservation).
+	/// A score of 100 means zero pause/delete surcharges. Score decays to 0 when pause costs reach 10% of provisioned capacity cost.
+	/// Pause surcharges arise when a Fabric capacity is paused before the minimum billing period expires; frequent pause/resume cycles amplify this cost.
+	/// Interpretation: score >= 90 = excellent, 70-89 = acceptable, 50-69 = review pause schedules, < 50 = high pause waste.
+	/// To improve: align pause schedules to respect minimum billing windows, or prefer scaling down over pausing for short periods.
 	measure 'Score - Pause Cost' = ```
 			
 			VAR PauseRatio = [PauseCost %]
@@ -517,9 +530,13 @@ table fca
 
 		changedProperty = Description
 
-	/// FinOps Maturity Score - Dimension 5: Low Autoscale / Overage
-	/// Measures whether costly Spark autoscale and capacity overage are avoided.
-	/// Target: < 5% of total cost. Decays to 0 at 15%+ of total spend in autoscale.
+	/// FinOps Maturity Score - Dimension 5: Low Autoscale and Overage (weight 10% of overall score).
+	/// Measures whether costly Spark autoscale bursts and capacity overage charges are kept under control relative to total Fabric spend.
+	/// Formula: MAX(0, (1 - (#SparkAutoScale + #CapacityAutoScale) / #TotalCost / 0.15) * 100).
+	/// A score of 100 means no autoscale or overage charges (target). Score decays to 0 when autoscale costs reach 15% of total spend.
+	/// Autoscale charges occur when workloads burst beyond provisioned CUs; overage charges apply when capacity limits are exceeded.
+	/// Interpretation: score >= 90 = excellent, 70-89 = monitored, 50-69 = capacity may need upsizing, < 50 = persistent bursting issue.
+	/// To improve: upgrade the Fabric capacity SKU to match peak demand, or optimize Spark job scheduling to reduce burst spikes.
 	measure 'Score - Low Autoscale' = ```
 			
 			VAR AutoscaleRatio = DIVIDE([#SparkAutoScale] + [#CapacityAutoScale], [#TotalCost])
@@ -535,9 +552,13 @@ table fca
 
 		changedProperty = Description
 
-	/// FinOps Maturity Score - Composite
-	/// Weighted aggregate of all 5 FinOps dimensions.
-	/// RI Coverage 30% + RI Utilization 25% + Capacity Utilization 20% + Pause Cost 15% + Low Autoscale 10%.
+	/// FinOps Maturity Score - Composite (0 to 100 scale).
+	/// Weighted aggregate of all 5 FinOps best-practice dimensions for Microsoft Fabric capacity management.
+	/// Weights: RI Coverage 30% + RI Utilization 25% + Capacity Utilization 20% + Pause Cost 15% + Low Autoscale 10%.
+	/// A score of 100 represents full FinOps maturity: all capacity RI-backed, fully utilised, no pause waste, no autoscale bursts.
+	/// A score below 50 indicates significant cost optimisation opportunities exist.
+	/// This score can be tracked over time to measure FinOps programme progress. Pair with [FinOps Maturity Label] for a human-readable classification.
+	/// To identify which area to address first, compare the 5 sub-scores: the lowest-scoring dimension offers the greatest improvement opportunity.
 	measure 'FinOps Maturity Score' = ```
 			
 			VAR S1 = [Score - RI Coverage]           * 0.30
@@ -556,8 +577,10 @@ table fca
 
 		changedProperty = Description
 
-	/// FinOps Maturity Label - Text badge based on FinOps Maturity Score.
-	/// Optimized (>=85), Managed (>=65), Defined (>=45), Crawling (>=25), Initial (<25).
+	/// FinOps Maturity Label - Human-readable classification derived from the [FinOps Maturity Score].
+	/// Returns one of five levels aligned to the FinOps Foundation maturity model: Optimized (score >= 85), Managed (>= 65), Defined (>= 45), Crawling (>= 25), Initial (< 25).
+	/// Use this measure as a badge or status indicator on report cards and executive summaries.
+	/// Optimized: best-in-class cost efficiency. Managed: strong practices with minor gaps. Defined: processes in place but opportunities remain. Crawling: early adoption. Initial: little to no FinOps practice in place.
 	measure 'FinOps Maturity Label' = ```
 			
 			VAR Score = [FinOps Maturity Score]
