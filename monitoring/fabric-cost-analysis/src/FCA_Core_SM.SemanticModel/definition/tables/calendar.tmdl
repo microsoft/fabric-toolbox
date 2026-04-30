@@ -219,5 +219,3 @@ table calendar
 
 	changedProperty = Description
 
-	annotation PBI_ResultType = Table
-

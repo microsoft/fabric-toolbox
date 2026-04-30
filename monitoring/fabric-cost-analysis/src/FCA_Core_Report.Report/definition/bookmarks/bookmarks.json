@@ -1,0 +1,28 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/bookmarksMetadata/1.0.0/schema.json",
+  "items": [
+    {
+      "name": "4520ec1da8373765bb91"
+    },
+    {
+      "name": "a3ef3ee004d974074a49"
+    },
+    {
+      "name": "e9d05aae1a683cae1914"
+    },
+    {
+      "name": "701891c4837087aed6b0"
+    },
+    {
+      "name": "802e3845308b6e5a6ad6"
+    },
+    {
+      "name": "13a41a683fe348645038",
+      "displayName": "Quota",
+      "children": [
+        "bc686634a00acaef52ed",
+        "5aac6795611b29c63929"
+      ]
+    }
+  ]
+}

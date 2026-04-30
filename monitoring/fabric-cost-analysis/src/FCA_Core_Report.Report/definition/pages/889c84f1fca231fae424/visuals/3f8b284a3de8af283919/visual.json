@@ -1,0 +1,194 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.8.0/schema.json",
+  "name": "3f8b284a3de8af283919",
+  "position": {
+    "x": 11.665822784810127,
+    "y": 359.79853431045967,
+    "z": 0,
+    "height": 332.782944703531,
+    "width": 1250.6990006662224,
+    "tabOrder": 0
+  },
+  "visual": {
+    "visualType": "textbox",
+    "objects": {
+      "general": [
+        {
+          "properties": {
+            "paragraphs": [
+              {
+                "textRuns": [
+                  {
+                    "value": "Some interesting facts:",
+                    "textStyle": {
+                      "textDecoration": "underline"
+                    }
+                  }
+                ]
+              },
+              {
+                "textRuns": [
+                  {
+                    "value": "Compute Pool Capacity Usage CU represents the available capacity."
+                  }
+                ],
+                "listType": "bullet"
+              },
+              {
+                "textRuns": [
+                  {
+                    "value": "When a capacity is paused, the data stored continues to be billed using the pay-as-you-go rate per GB. All transactions to that capacity are rejected when it is paused, so no Fabric CUs are consumed due to OneLake transactions."
+                  }
+                ],
+                "listType": "bullet"
+              },
+              {
+                "textRuns": [
+                  {
+                    "value": "RI applies to \"uptime\" of a capacity. A pause event will all go to PayGo as a reconcillation event, regardless of the customer using RI."
+                  }
+                ],
+                "listType": "bullet"
+              },
+              {
+                "textRuns": [
+                  {
+                    "value": "Autoscale Billing for Spark introduces a new pay-as-you-go billing model for Apache Spark workloads in Microsoft Fabric, designed to provide greater flexibility and cost optimization."
+                  }
+                ],
+                "listType": "bullet"
+              },
+              {
+                "textRuns": [
+                  {
+                    "value": "The disaster recovery feature in Fabric enables geo-replication of your data for enhanced security and reliability. This feature consumes more storage and transactions, which are billed as BCDR Storage and BCDR Operations respectively. For an exhaustive breakdown of all associated disaster recovery costs to help you plan and budget accordingly, see "
+                  },
+                  {
+                    "value": "OneLake compute and storage consumption",
+                    "textStyle": {},
+                    "url": "https://learn.microsoft.com/en-us/fabric/onelake/onelake-consumption"
+                  },
+                  {
+                    "value": "."
+                  }
+                ],
+                "listType": "bullet"
+              },
+              {
+                "textRuns": [
+                  {
+                    "value": "The consumption of the data via shortcuts is always counted against the consumer’s capacity, so the capacity where the data is stored can be paused without disrupting downstream consumers in other capacities. See an example on the "
+                  },
+                  {
+                    "value": "OneLake Capacity Consumption page",
+                    "textStyle": {},
+                    "url": "https://learn.microsoft.com/en-us/fabric/onelake/onelake-capacity-consumption#onelake-compute"
+                  },
+                  {
+                    "value": "."
+                  }
+                ],
+                "listType": "bullet"
+              },
+              {
+                "textRuns": [
+                  {
+                    "value": ""
+                  }
+                ]
+              },
+              {
+                "textRuns": [
+                  {
+                    "value": "Resources:",
+                    "textStyle": {
+                      "textDecoration": "underline"
+                    }
+                  }
+                ]
+              },
+              {
+                "textRuns": [
+                  {
+                    "value": "Microsoft Fabric - Pricing",
+                    "textStyle": {},
+                    "url": "https://azure.microsoft.com/en-us/pricing/details/microsoft-fabric/"
+                  }
+                ],
+                "listType": "bullet"
+              },
+              {
+                "textRuns": [
+                  {
+                    "value": "Save costs with Microsoft Fabric Capacity reservations",
+                    "textStyle": {},
+                    "url": "https://learn.microsoft.com/en-us/azure/cost-management-billing/reservations/fabric-capacity"
+                  }
+                ],
+                "listType": "bullet"
+              },
+              {
+                "textRuns": [
+                  {
+                    "value": "FinOps for Microsoft Fabric",
+                    "textStyle": {},
+                    "url": "https://www.linkedin.com/pulse/finops-microsoft-fabric-romain-casteres-hc6ee/"
+                  }
+                ],
+                "listType": "bullet"
+              },
+              {
+                "textRuns": [
+                  {
+                    "value": "FOCUS cost and usage details file schema",
+                    "textStyle": {},
+                    "url": "https://learn.microsoft.com/en-us/azure/cost-management-billing/dataset-schema/cost-usage-details-focus"
+                  }
+                ],
+                "listType": "bullet"
+              },
+              {
+                "textRuns": [
+                  {
+                    "value": "Autoscale Billing for Spark in Microsoft Fabric",
+                    "textStyle": {},
+                    "url": "https://learn.microsoft.com/en-us/fabric/data-engineering/autoscale-billing-for-spark-overview"
+                  }
+                ],
+                "listType": "bullet"
+              },
+              {
+                "textRuns": [
+                  {
+                    "value": "Microsoft Fabric Invoice meters",
+                    "textStyle": {},
+                    "url": "https://learn.microsoft.com/en-us/fabric/enterprise/azure-billing#invoice-meters"
+                  }
+                ],
+                "listType": "bullet"
+              },
+              {
+                "textRuns": [
+                  {
+                    "value": "Fabric operations",
+                    "textStyle": {},
+                    "url": "https://learn.microsoft.com/en-us/fabric/enterprise/fabric-operations"
+                  }
+                ],
+                "listType": "bullet"
+              },
+              {
+                "textRuns": [
+                  {
+                    "value": ""
+                  }
+                ]
+              }
+            ]
+          }
+        }
+      ]
+    },
+    "drillFilterOtherVisuals": true
+  }
+}
