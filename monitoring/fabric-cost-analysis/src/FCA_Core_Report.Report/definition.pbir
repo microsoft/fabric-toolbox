@@ -3,7 +3,7 @@
   "version": "4.0",
   "datasetReference": {
     "byConnection": {
-      "connectionString": "Data Source=\"powerbi://api.powerbi.com/v1.0/myorg/FCA Release 042026\";initial catalog=FCA_Core_SM;access mode=readonly;integrated security=ClaimsToken;semanticmodelid=609eb124-c8bc-4a6e-b055-926424ae89f7"
+      "connectionString": "Data Source=\"powerbi://api.powerbi.com/v1.0/2ff4551d-8047-4774-933b-fbf579d75326/FCA Release 042026\";initial catalog=FCA_Core_SM;access mode=readonly;integrated security=ClaimsToken;semanticmodelid=609eb124-c8bc-4a6e-b055-926424ae89f7"
     }
   }
 }
