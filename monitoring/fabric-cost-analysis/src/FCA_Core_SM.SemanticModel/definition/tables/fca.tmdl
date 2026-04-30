@@ -445,6 +445,137 @@ table fca
 
 		changedProperty = Description
 
+	/// FinOps Maturity Score - Dimension 1: RI Coverage
+	/// Measures what percentage of provisioned capacity cost is backed by a Reservation vs PAYG.
+	/// Target: 100% RI coverage. Score = 100 when fully RI-backed, 0 when fully PAYG.
+	measure 'Score - RI Coverage' = ```
+			
+			VAR RI_Coverage = DIVIDE([#Reservation], [#Reservation] + [#CapacityPAYG])
+			VAR Score = MIN(1, DIVIDE(RI_Coverage, 1.0)) * 100
+			RETURN ROUND(Score, 1)
+			```
+		formatString: 0.0
+		lineageTag: a1b2c3d4-e5f6-7890-ab12-cd34ef560001
+
+		changedProperty = Name
+
+		changedProperty = FormatString
+
+		changedProperty = Description
+
+	/// FinOps Maturity Score - Dimension 2: RI Utilization
+	/// Measures how much of the purchased Reserved Instances are actually consumed.
+	/// Target: >= 95% of reserved hours used. Score decays linearly below 95%.
+	measure 'Score - RI Utilization' = ```
+			
+			VAR RI_Used = [Reservation used ratio %]
+			VAR Score = MIN(1, DIVIDE(RI_Used, 0.95)) * 100
+			RETURN ROUND(Score, 1)
+			```
+		formatString: 0.0
+		lineageTag: a1b2c3d4-e5f6-7890-ab12-cd34ef560002
+
+		changedProperty = Name
+
+		changedProperty = FormatString
+
+		changedProperty = Description
+
+	/// FinOps Maturity Score - Dimension 3: Capacity Utilization
+	/// Measures how much of the provisioned capacity is actually being used.
+	/// Target: >= 70% utilization. Score = 100 at 70%+, decays proportionally below.
+	measure 'Score - Capacity Utilization' = ```
+			
+			VAR Usage = [#UsageRatioCapacity]
+			VAR Score = MIN(1, DIVIDE(Usage, 0.70)) * 100
+			RETURN ROUND(Score, 1)
+			```
+		formatString: 0.0
+		lineageTag: a1b2c3d4-e5f6-7890-ab12-cd34ef560003
+
+		changedProperty = Name
+
+		changedProperty = FormatString
+
+		changedProperty = Description
+
+	/// FinOps Maturity Score - Dimension 4: Low Pause Cost
+	/// Measures whether capacity pause/delete surcharges are kept minimal.
+	/// Target: < 5% is excellent; decays to 0 at 10%+ of provisioned capacity cost.
+	measure 'Score - Pause Cost' = ```
+			
+			VAR PauseRatio = [PauseCost %]
+			VAR Score = MAX(0, (1 - DIVIDE(PauseRatio, 0.10)) * 100)
+			RETURN ROUND(Score, 1)
+			```
+		formatString: 0.0
+		lineageTag: a1b2c3d4-e5f6-7890-ab12-cd34ef560004
+
+		changedProperty = Name
+
+		changedProperty = FormatString
+
+		changedProperty = Description
+
+	/// FinOps Maturity Score - Dimension 5: Low Autoscale / Overage
+	/// Measures whether costly Spark autoscale and capacity overage are avoided.
+	/// Target: < 5% of total cost. Decays to 0 at 15%+ of total spend in autoscale.
+	measure 'Score - Low Autoscale' = ```
+			
+			VAR AutoscaleRatio = DIVIDE([#SparkAutoScale] + [#CapacityAutoScale], [#TotalCost])
+			VAR Score = MAX(0, (1 - DIVIDE(AutoscaleRatio, 0.15)) * 100)
+			RETURN ROUND(Score, 1)
+			```
+		formatString: 0.0
+		lineageTag: a1b2c3d4-e5f6-7890-ab12-cd34ef560005
+
+		changedProperty = Name
+
+		changedProperty = FormatString
+
+		changedProperty = Description
+
+	/// FinOps Maturity Score - Composite
+	/// Weighted aggregate of all 5 FinOps dimensions.
+	/// RI Coverage 30% + RI Utilization 25% + Capacity Utilization 20% + Pause Cost 15% + Low Autoscale 10%.
+	measure 'FinOps Maturity Score' = ```
+			
+			VAR S1 = [Score - RI Coverage]           * 0.30
+			VAR S2 = [Score - RI Utilization]        * 0.25
+			VAR S3 = [Score - Capacity Utilization]  * 0.20
+			VAR S4 = [Score - Pause Cost]            * 0.15
+			VAR S5 = [Score - Low Autoscale]         * 0.10
+			RETURN ROUND(S1 + S2 + S3 + S4 + S5, 1)
+			```
+		formatString: 0.0
+		lineageTag: a1b2c3d4-e5f6-7890-ab12-cd34ef560006
+
+		changedProperty = Name
+
+		changedProperty = FormatString
+
+		changedProperty = Description
+
+	/// FinOps Maturity Label - Text badge based on FinOps Maturity Score.
+	/// Optimized (>=85), Managed (>=65), Defined (>=45), Crawling (>=25), Initial (<25).
+	measure 'FinOps Maturity Label' = ```
+			
+			VAR Score = [FinOps Maturity Score]
+			RETURN
+			    SWITCH(TRUE(),
+			        Score >= 85, "Optimized",
+			        Score >= 65, "Managed",
+			        Score >= 45, "Defined",
+			        Score >= 25, "Crawling",
+			        "Initial"
+			    )
+			```
+		lineageTag: a1b2c3d4-e5f6-7890-ab12-cd34ef560007
+
+		changedProperty = Name
+
+		changedProperty = Description
+
 	column BilledCost
 		dataType: double
 		sourceProviderType: decimal(38, 18)
