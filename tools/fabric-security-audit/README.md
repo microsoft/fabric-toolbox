@@ -1,6 +1,6 @@
 # Fabric Security Audit
 
-> **v2.0.0** — Automated security troubleshooter for Microsoft Fabric Warehouses and Lakehouse SQL Endpoints.
+> **v2.0.1** — Automated security troubleshooter for Microsoft Fabric Warehouses and Lakehouse SQL Endpoints.
 
 A self-contained PowerShell script that collects, correlates, and reports on every access layer for a Fabric Warehouse or SQL Endpoint — workspace roles, item sharing, OneLake Security, SQL permissions, shortcuts, and more — in a single command.
 
@@ -11,6 +11,9 @@ A self-contained PowerShell script that collects, correlates, and reports on eve
 ```powershell
 # One-liner: paste your Power BI URL
 .\Invoke-FabricSecurityAudit.ps1 -Url "https://app.powerbi.com/groups/<wsId>/warehouses/<artId>?ctid=..."
+
+# Lakehouse URL from Fabric
+.\Invoke-FabricSecurityAudit.ps1 -Url "https://app.fabric.microsoft.com/groups/<wsId>/lakehouses/<artId>?experience=fabric-developer"
 
 # Investigate a specific user's permissions
 .\Invoke-FabricSecurityAudit.ps1 -Url "https://..." -User "user@contoso.com"
@@ -69,6 +72,16 @@ The script auto-detects whether the target is a **Warehouse** or **SQL Endpoint 
 
 ### PowerShell Module
 - **Az.Accounts** — auto-installed if missing (no manual setup needed)
+
+### Authentication Tip
+
+If Fabric token acquisition is blocked by MFA or conditional access, run:
+
+```powershell
+Connect-AzAccount -AuthScope "https://api.fabric.microsoft.com"
+```
+
+Then run the audit command again. The script also retries with this scoped login automatically when token acquisition fails and falls back to device-code authentication when browser login cannot launch.
 
 ### Required Permissions
 

@@ -1,6 +1,6 @@
 <#
 .SYNOPSIS
-    Fabric Security Audit — Warehouse & SQL Endpoint security troubleshooter.
+    Fabric Security Audit - Warehouse & SQL Endpoint security troubleshooter.
 
 .DESCRIPTION
     Collects security-related information for troubleshooting access issues
@@ -54,6 +54,7 @@
     The workspace and artifact IDs are extracted automatically.
     Example: https://app.powerbi.com/groups/<wsId>/warehouses/<artId>?...
     Example: https://app.powerbi.com/groups/<wsId>/lakewarehouses/<artId>?...
+    Example: https://app.fabric.microsoft.com/groups/<wsId>/lakehouses/<artId>?...
 
 .PARAMETER WorkspaceId
     The Fabric workspace GUID. Required if -Url is not provided.
@@ -132,7 +133,7 @@
     .\Invoke-FabricSecurityAudit.ps1 -Help
 #>
 
-# NOTE: #Requires removed intentionally — we auto-install Az.Accounts below.
+# NOTE: #Requires removed intentionally - we auto-install Az.Accounts below.
 
 [CmdletBinding()]
 param(
@@ -176,7 +177,7 @@ param(
 
 Set-StrictMode -Version Latest
 $ErrorActionPreference = 'Continue'
-$script:Version = '2.0.0'
+$script:Version = '2.0.1'
 
 # ============================================================
 #region  BANNER
@@ -286,7 +287,7 @@ $requiredModules = @('Az.Accounts')
 
 foreach ($mod in $requiredModules) {
     if (-not (Get-Module -ListAvailable -Name $mod -ErrorAction SilentlyContinue)) {
-        Write-Host "  Module '$mod' not found — installing ..." -ForegroundColor Yellow
+        Write-Host "  Module '$mod' not found - installing ..." -ForegroundColor Yellow
         try {
             # Prefer PowerShellGet v3+ (Install-PSResource) if available
             if (Get-Command Install-PSResource -ErrorAction SilentlyContinue) {
@@ -312,7 +313,7 @@ Import-Module Az.Accounts -ErrorAction Stop
 # ============================================================
 
 if ($Url) {
-    if ($Url -match '/groups/([0-9a-fA-F\-]{36})/(warehouses|lakewarehouses)/([0-9a-fA-F\-]{36})') {
+    if ($Url -match '/groups/([0-9a-fA-F\-]{36})/(warehouses|lakewarehouses|lakehouses)/([0-9a-fA-F\-]{36})') {
         $WorkspaceId = $Matches[1]
         $ArtifactId  = $Matches[3]
         $urlHint     = $Matches[2]
@@ -322,7 +323,7 @@ if ($Url) {
         Write-Host "    Type hint  : $urlHint"
     }
     else {
-        throw "Could not parse IDs from URL. Expected: .../groups/<wsId>/warehouses/<artId> or .../groups/<wsId>/lakewarehouses/<artId>"
+        throw "Could not parse IDs from URL. Expected: .../groups/<wsId>/warehouses/<artId>, .../lakewarehouses/<artId>, or .../lakehouses/<artId>"
     }
 }
 
@@ -343,8 +344,10 @@ if ($SummarizeUsers.Count -gt 0) {
 # Apply -NoSafeguards: remove row limits
 if ($NoSafeguards) {
     $MaxRows = [int]::MaxValue
-    $MaxGroupMembers = [int]::MaxValue
+    # Microsoft Graph rejects extremely large $top values. Use paging instead.
+    $MaxGroupMembers = 999
 }
+$script:NoSafeguardsFlag = $NoSafeguards.IsPresent
 
 #endregion
 
@@ -374,7 +377,7 @@ function Write-Section ([string]$Title) {
     Write-Host "  >> " -NoNewline -ForegroundColor DarkYellow
     Write-Host "[$script:SectionNum/$script:TotalSections] " -NoNewline -ForegroundColor DarkGray
     Write-Host $Title -NoNewline -ForegroundColor Cyan
-    Write-Host "  ($elapsed | $pct%)" -ForegroundColor DarkGray
+    Write-Host ('  ({0} | {1}%)' -f $elapsed, $pct) -ForegroundColor DarkGray
     Write-Host "    $('-' * ($Title.Length + 2))" -ForegroundColor DarkCyan
 }
 
@@ -395,7 +398,7 @@ function Confirm-LargeResultSet {
 
     Write-Host "    WARNING: $Section returned $RowCount rows (limit: $Limit)." -ForegroundColor Red
     if ($script:NoPromptFlag) {
-        Write-Host "    -NoPrompt set — saving first $Limit rows and continuing." -ForegroundColor Yellow
+        Write-Host "    -NoPrompt set - saving first $Limit rows and continuing." -ForegroundColor Yellow
         return $false  # caller should truncate
     }
     Write-Host '    Options:' -ForegroundColor Yellow
@@ -408,9 +411,52 @@ function Confirm-LargeResultSet {
     }
 }
 
+function Coalesce-Value {
+    param(
+        [object]$Value,
+        [object]$Fallback
+    )
+    if ($null -ne $Value -and $Value -ne '') { $Value } else { $Fallback }
+}
+
+function ConvertTo-SqlLikeLiteral {
+    param([string]$Value)
+    if (-not $Value) { return $null }
+    $Value.Replace("'", "''").Replace('[', '[[]').Replace('%', '[%]').Replace('_', '[_]')
+}
+
 function Get-PlainToken ([string]$ResourceUrl) {
     # Az.Accounts >=12 returns SecureString in .Token; older returns plain string.
-    $t = Get-AzAccessToken -ResourceUrl $ResourceUrl
+    if (-not (Get-Variable -Name TokenAuthRetried -Scope Script -ErrorAction SilentlyContinue)) {
+        $script:TokenAuthRetried = @{}
+    }
+
+    try {
+        $t = Get-AzAccessToken -ResourceUrl $ResourceUrl -ErrorAction Stop
+    }
+    catch {
+        if (-not $script:TokenAuthRetried.ContainsKey($ResourceUrl)) {
+            $script:TokenAuthRetried[$ResourceUrl] = $true
+            Write-Host "  Token required for $ResourceUrl. Launching scoped Azure login..." -ForegroundColor Yellow
+            Write-Host "  If prompted, complete MFA/conditional access for this resource." -ForegroundColor DarkGray
+            try {
+                Connect-AzAccount -AuthScope $ResourceUrl -ErrorAction Stop | Out-Null
+            }
+            catch {
+                Write-Host "  Browser login failed. Falling back to device-code authentication..." -ForegroundColor Yellow
+                Connect-AzAccount -AuthScope $ResourceUrl -UseDeviceAuthentication -ErrorAction Stop | Out-Null
+            }
+            $t = Get-AzAccessToken -ResourceUrl $ResourceUrl -ErrorAction Stop
+        }
+        else {
+            throw "Failed to acquire an access token for $ResourceUrl. Re-run Connect-AzAccount -AuthScope '$ResourceUrl' manually, then run this script again. $($_.Exception.Message)"
+        }
+    }
+
+    if (-not $t -or -not $t.PSObject.Properties['Token'] -or -not $t.Token) {
+        throw "Get-AzAccessToken returned no token for $ResourceUrl. Re-run Connect-AzAccount -AuthScope '$ResourceUrl' manually, then run this script again."
+    }
+
     if ($t.Token -is [securestring]) {
         [System.Net.NetworkCredential]::new('', $t.Token).Password
     } else {
@@ -430,14 +476,69 @@ function Invoke-FabricApi {
         [object]$Body
     )
     $uri = "https://api.fabric.microsoft.com/v1$Path"
+    $script:LastFabricApiError = $null
     $headers = @{ Authorization = "Bearer $(Get-FabricToken)"; 'Content-Type' = 'application/json' }
     $params = @{ Uri = $uri; Method = $Method; Headers = $headers; ErrorAction = 'Stop' }
     if ($Body) { $params.Body = ($Body | ConvertTo-Json -Depth 10) }
     try {
-        Invoke-RestMethod @params
+        $response = Invoke-RestMethod @params
+
+        # Fabric collection APIs return continuationUri/continuationToken when paginated.
+        if ($Method -eq 'GET' -and $response -and $response.PSObject.Properties['value']) {
+            $allValues = @($response.value)
+            $continuationUri = if ($response.PSObject.Properties['continuationUri']) { $response.continuationUri } else { $null }
+            while ($continuationUri) {
+                $nextResponse = Invoke-RestMethod -Uri $continuationUri -Method $Method -Headers $headers -ErrorAction Stop
+                if ($nextResponse -and $nextResponse.PSObject.Properties['value']) {
+                    $allValues += @($nextResponse.value)
+                }
+                $continuationUri = if ($nextResponse -and $nextResponse.PSObject.Properties['continuationUri']) { $nextResponse.continuationUri } else { $null }
+            }
+            $response.value = $allValues
+        }
+
+        $response
     }
     catch {
         Write-Warning "Fabric API call failed [$Method $Path]: $($_.Exception.Message)"
+        $errorBody = $null
+        if ($_.ErrorDetails.Message) {
+            $errorBody = $_.ErrorDetails.Message
+        }
+        elseif ($_.Exception.Response) {
+            $stream = $_.Exception.Response.GetResponseStream()
+            if ($stream) {
+                $reader = [System.IO.StreamReader]::new($stream)
+                $errorBody = $reader.ReadToEnd()
+            }
+        }
+        if ($errorBody) {
+            try {
+                $parsedError = $errorBody | ConvertFrom-Json -ErrorAction Stop
+                $script:LastFabricApiError = [PSCustomObject]@{
+                    Path        = $Path
+                    Method      = $Method
+                    ErrorCode   = $parsedError.errorCode
+                    Message     = $parsedError.message
+                    MoreDetails = $parsedError.moreDetails
+                    RequestId   = $parsedError.requestId
+                }
+                $detailText = @($parsedError.moreDetails | ForEach-Object { "$($_.errorCode): $($_.message)" }) -join '; '
+                if ($detailText) {
+                    Write-Warning "Fabric API details [$Method $Path]: $detailText"
+                }
+            }
+            catch {
+                $script:LastFabricApiError = [PSCustomObject]@{
+                    Path        = $Path
+                    Method      = $Method
+                    ErrorCode   = ''
+                    Message     = $errorBody
+                    MoreDetails = @()
+                    RequestId   = ''
+                }
+            }
+        }
         $null
     }
 }
@@ -448,7 +549,23 @@ function Invoke-GraphApi {
     $uri = "https://graph.microsoft.com/v1.0$Path"
     $headers = @{ Authorization = "Bearer $(Get-GraphToken)"; 'Content-Type' = 'application/json' }
     try {
-        Invoke-RestMethod -Uri $uri -Headers $headers -ErrorAction Stop
+        $response = Invoke-RestMethod -Uri $uri -Headers $headers -ErrorAction Stop
+
+        # In -NoSafeguards mode, follow Graph pagination for collection responses.
+        if ($script:NoSafeguardsFlag -and $response -and $response.PSObject.Properties['value']) {
+            $allValues = @($response.value)
+            $nextLinkProp = $response.PSObject.Properties['@odata.nextLink']
+            while ($nextLinkProp -and $nextLinkProp.Value) {
+                $response = Invoke-RestMethod -Uri $nextLinkProp.Value -Headers $headers -ErrorAction Stop
+                if ($response -and $response.PSObject.Properties['value']) {
+                    $allValues += @($response.value)
+                }
+                $nextLinkProp = if ($response) { $response.PSObject.Properties['@odata.nextLink'] } else { $null }
+            }
+            $response.value = $allValues
+        }
+
+        $response
     }
     catch {
         Write-Warning "Graph API call failed [$Path]: $($_.Exception.Message)"
@@ -501,7 +618,14 @@ function Save-Result {
     }
     $path = Join-Path $script:OutputFolder "$Name.$Format"
     switch ($Format) {
-        'csv'  { $Data | Export-Csv -Path $path -NoTypeInformation -Encoding UTF8 }
+        'csv'  {
+            if ($Data -is [System.Data.DataTable]) {
+                $Data.Rows | Export-Csv -Path $path -NoTypeInformation -Encoding UTF8
+            }
+            else {
+                $Data | Export-Csv -Path $path -NoTypeInformation -Encoding UTF8
+            }
+        }
         'json' { $Data | ConvertTo-Json -Depth 10 | Set-Content -Path $path -Encoding UTF8 }
     }
     Write-Host "    Saved  $($Name).$Format" -ForegroundColor DarkGreen
@@ -579,7 +703,8 @@ $parentLakehouseId = $null
 
 $report = [System.Text.StringBuilder]::new()
 [void]$report.AppendLine("# Fabric Security Audit Report v$($script:Version)")
-[void]$report.AppendLine("**Mode**: $auditMode | **Generated**: $(Get-Date -Format 'yyyy-MM-dd HH:mm:ss UTC' -AsUTC)")
+$generatedUtc = [DateTime]::UtcNow.ToString('yyyy-MM-dd HH:mm:ss UTC')
+[void]$report.AppendLine("**Mode**: $auditMode | **Generated**: $generatedUtc")
 [void]$report.AppendLine("**Auditor**: $($context.Account.Id)")
 [void]$report.AppendLine("")
 
@@ -656,8 +781,8 @@ if ($workspace.PSObject.Properties['sensitivityLabel'] -and $workspace.sensitivi
         # 404 is expected when no managed identity is configured
     }
     if ($wsIdentity) {
-        $idType = $wsIdentity.type ?? 'Unknown'
-        $appId  = $wsIdentity.applicationId ?? '(none)'
+        $idType = Coalesce-Value $wsIdentity.type 'Unknown'
+        $appId  = Coalesce-Value $wsIdentity.applicationId '(none)'
         Write-Host "  Workspace Identity:" -ForegroundColor White
         Write-Host "    Type     : $idType" -ForegroundColor White
         Write-Host "    App ID   : $appId" -ForegroundColor White
@@ -797,7 +922,7 @@ if ($auditMode -eq 'Warehouse') {
 }
 else {
     # --- SQL ENDPOINT: find parent Lakehouse to get connection string ---
-    Write-Host "  SQL Endpoint detected — searching for parent Lakehouse ..."
+    Write-Host "  SQL Endpoint detected - searching for parent Lakehouse ..."
     $allItems = Invoke-FabricApi -Path "/workspaces/$WorkspaceId/items"
     $artifact = $itemInfo
 
@@ -848,7 +973,8 @@ if ($SqlEndpointOverride) {
 if ($DatabaseName) { $resolvedDbName = $DatabaseName }
 if (-not $resolvedDbName) { $resolvedDbName = $ArtifactId }
 
-Write-Host "  SQL Server  : $($sqlEndpointServer ?? '(not discovered)')"
+$sqlEndpointLabel = Coalesce-Value $sqlEndpointServer '(not discovered)'
+Write-Host "  SQL Server  : $sqlEndpointLabel"
 Write-Host "  Database    : $resolvedDbName"
 
 [void]$report.AppendLine("## 4. Artifact Details")
@@ -888,12 +1014,13 @@ if ($auditMode -eq 'SQLEndpoint') {
     foreach ($artId in $onelakeTargets) {
         Write-Host "  Checking OneLake Security for artifact $artId ..."
 
-        $dataRoles = Invoke-FabricApi -Path "/workspaces/$WorkspaceId/items/$artId/dataAccessRoles"
+        $dataRolesPath = "/workspaces/$WorkspaceId/items/$artId/dataAccessRoles"
+        $dataRoles = Invoke-FabricApi -Path $dataRolesPath
         if ($dataRoles -and $dataRoles.value) {
         $roleList = $dataRoles.value
         Write-Host "    OneLake Security: ENABLED ($($roleList.Count) role(s))" -ForegroundColor Green
 
-        [void]$report.AppendLine("### OneLake Security — Artifact $artId")
+        [void]$report.AppendLine("### OneLake Security - Artifact $artId")
         [void]$report.AppendLine("**Status**: Enabled")
         [void]$report.AppendLine("")
 
@@ -926,7 +1053,7 @@ if ($auditMode -eq 'SQLEndpoint') {
                 }
             }
 
-            # Console output — role details
+            # Console output - role details
             Write-Host ''
             Write-Host "      Role: $roleName" -ForegroundColor White
             Write-Host "        Effect      : $effect"
@@ -936,8 +1063,8 @@ if ($auditMode -eq 'SQLEndpoint') {
             if ($entraMembers.Count -gt 0) {
                 Write-Host "        Entra Members:" -ForegroundColor Green
                 foreach ($em in $entraMembers) {
-                    $name = $em.displayName ?? $em.objectId
-                    $type = $em.type ?? 'unknown'
+                    $name = Coalesce-Value $em.displayName $em.objectId
+                    $type = Coalesce-Value $em.type 'unknown'
                     Write-Host "          - $name ($type) [$($em.objectId)]"
                 }
             } else {
@@ -967,7 +1094,9 @@ if ($auditMode -eq 'SQLEndpoint') {
                 [void]$report.AppendLine("| Display Name | Type | Object ID |")
                 [void]$report.AppendLine("|-------------|------|-----------|")
                 foreach ($em in $entraMembers) {
-                    [void]$report.AppendLine("| $($em.displayName ?? $em.objectId) | $($em.type ?? 'unknown') | $($em.objectId) |")
+                    $emName = Coalesce-Value $em.displayName $em.objectId
+                    $emType = Coalesce-Value $em.type 'unknown'
+                    [void]$report.AppendLine("| $emName | $emType | $($em.objectId) |")
                 }
                 [void]$report.AppendLine("")
             }
@@ -989,8 +1118,8 @@ if ($auditMode -eq 'SQLEndpoint') {
                 $allRoleMembers += [PSCustomObject]@{
                     ArtifactId    = $artId
                     RoleName      = $roleName
-                    PrincipalName = $em.displayName ?? $em.objectId
-                    PrincipalType = $em.type ?? 'EntraMember'
+                    PrincipalName = Coalesce-Value $em.displayName $em.objectId
+                    PrincipalType = Coalesce-Value $em.type 'EntraMember'
                     PrincipalId   = $em.objectId
                     MemberKind    = 'Entra'
                 }
@@ -1011,9 +1140,19 @@ if ($auditMode -eq 'SQLEndpoint') {
     }
     else {
         Write-Host "    OneLake Security: NOT ENABLED or no roles found" -ForegroundColor Yellow
-        $script:Issues.Add("OneLake Security not enabled on artifact $artId")
+        $apiDetail = $null
+        if ($script:LastFabricApiError -and $script:LastFabricApiError.Path -eq $dataRolesPath) {
+            $apiDetail = @($script:LastFabricApiError.MoreDetails | ForEach-Object { "$($_.errorCode): $($_.message)" }) -join '; '
+            if (-not $apiDetail) { $apiDetail = $script:LastFabricApiError.Message }
+        }
+        $issueText = if ($apiDetail) { "OneLake Security not enabled on artifact $artId ($apiDetail)" } else { "OneLake Security not enabled on artifact $artId" }
+        $script:Issues.Add($issueText)
         [void]$report.AppendLine("### OneLake Security - Artifact $artId")
         [void]$report.AppendLine("**Status**: Not enabled or no roles defined")
+        if ($apiDetail) {
+            [void]$report.AppendLine("")
+            [void]$report.AppendLine("**Fabric API detail**: $apiDetail")
+        }
         [void]$report.AppendLine("")
     }
 }
@@ -1023,7 +1162,7 @@ else {
     Write-Section '5. OneLake Security (Skipped)'
     Write-Host '  Not applicable to Warehouse artifacts.' -ForegroundColor DarkGray
     [void]$report.AppendLine("## 5. OneLake Security")
-    [void]$report.AppendLine("*Skipped — not applicable to Warehouse artifacts.*")
+    [void]$report.AppendLine("*Skipped - not applicable to Warehouse artifacts.*")
     [void]$report.AppendLine("")
 }
 
@@ -1080,7 +1219,7 @@ foreach ($userRef in $InvestigateUsers) {
                 $groups = $memberOf.value | Where-Object { $_.'@odata.type' -eq '#microsoft.graph.group' }
                 Write-Host "      Member of $($groups.Count) group(s)$(if ($memberOf.value.Count -ge $MaxGroupMembers) {' (may be truncated)'})"
                 if ($groups.Count -gt $MaxRows) {
-                    Write-Host "      Large group membership ($($groups.Count)) — truncating output to $MaxRows" -ForegroundColor Yellow
+                    Write-Host "      Large group membership ($($groups.Count)) - truncating output to $MaxRows" -ForegroundColor Yellow
                     $groups = $groups | Select-Object -First $MaxRows
                 }
                 $groupData = $groups | ForEach-Object {
@@ -1176,7 +1315,7 @@ if (-not $sqlEndpointServer) {
     Write-Warning '  SQL endpoint not discovered and no override provided. Skipping SQL queries.'
     Write-Warning '  Re-run with -SqlEndpointOverride to provide the endpoint manually.'
     [void]$report.AppendLine("## 7. SQL Permission Evidence")
-    [void]$report.AppendLine("**Skipped** — SQL endpoint not available.")
+    [void]$report.AppendLine("**Skipped** - SQL endpoint not available.")
     [void]$report.AppendLine("")
 }
 else {
@@ -1210,7 +1349,7 @@ LEFT JOIN sys.objects o
     if ($result6a.Rows.Count -gt 0) {
         Write-Host "    $($result6a.Rows.Count) row(s) returned"
         if ($result6a.Rows.Count -ge $MaxRows) {
-            Write-Host "    Result set hit the $MaxRows row limit — results may be truncated." -ForegroundColor Yellow
+            Write-Host "    Result set hit the $MaxRows row limit - results may be truncated." -ForegroundColor Yellow
         }
         Save-Result -Name '06a_role_members_permissions' -Data $result6a
     }
@@ -1233,7 +1372,7 @@ JOIN sys.database_principals mp
     if ($result6b.Rows.Count -gt 0) {
         Write-Host "    $($result6b.Rows.Count) row(s) returned"
         if ($result6b.Rows.Count -ge $MaxRows) {
-            Write-Host "    Result set hit the $MaxRows row limit — results may be truncated." -ForegroundColor Yellow
+            Write-Host "    Result set hit the $MaxRows row limit - results may be truncated." -ForegroundColor Yellow
         }
         Save-Result -Name '06b_role_memberships' -Data $result6b
     }
@@ -1291,7 +1430,10 @@ ORDER BY principal_name, dp.class_desc, securable, dp.permission_name;
     if ($InvestigateUsers.Count -gt 0 -and $resolvedPrincipals.Count -gt 0) {
         Write-Host '  6d. Permissions for investigated users ...'
         $nameFilters = ($resolvedPrincipals | Where-Object { $_.DisplayName -ne '(NOT FOUND)' } |
-            ForEach-Object { "mp.name LIKE '%$($_.DisplayName)%'" }) -join ' OR '
+            ForEach-Object {
+                $safeDisplayName = ConvertTo-SqlLikeLiteral $_.DisplayName
+                if ($safeDisplayName) { "mp.name LIKE '%$safeDisplayName%'" }
+            }) -join ' OR '
 
         if ($nameFilters) {
             $query6d = @"
@@ -1350,7 +1492,7 @@ LEFT JOIN sys.security_predicates pred
         Write-Host "    No RLS policies found."
     }
 
-    Write-Host '  6e. Column-Level Security (CLS) — column permissions ...'
+    Write-Host '  6e. Column-Level Security (CLS) - column permissions ...'
     $queryCLS = @"
 SELECT TOP ($MaxRows)
     pr.name         AS PrincipalName,
@@ -1430,7 +1572,7 @@ ORDER BY type_desc, name;
     if ($resultPrincipals -and $resultPrincipals.Rows.Count -gt 0) {
         Write-Host "    $($resultPrincipals.Rows.Count) principal(s) found"
         if ($resultPrincipals.Rows.Count -ge $MaxRows) {
-            Write-Host "    Result set hit the $MaxRows row limit — results may be truncated." -ForegroundColor Yellow
+            Write-Host "    Result set hit the $MaxRows row limit - results may be truncated." -ForegroundColor Yellow
         }
         Save-Result -Name '06g_all_principals' -Data $resultPrincipals
     }
@@ -1565,7 +1707,7 @@ if ($auditMode -eq 'SQLEndpoint') {
         }
         Save-Result -Name "07_shortcuts_$artId" -Data $scData
 
-        [void]$report.AppendLine("### Shortcuts — Artifact $artId")
+        [void]$report.AppendLine("### Shortcuts - Artifact $artId")
         [void]$report.AppendLine("| Name | Path | Target Type | Target Workspace | Target Item |")
         [void]$report.AppendLine("|------|------|-------------|------------------|-------------|")
         foreach ($sc in $scData) {
@@ -1576,7 +1718,7 @@ if ($auditMode -eq 'SQLEndpoint') {
         # For cross-workspace shortcuts, check workspace permissions on target
         $crossWs = $scData | Where-Object { $_.TargetWorkspace -and $_.TargetWorkspace -ne $WorkspaceId }
         if ($crossWs) {
-            Write-Host "    Cross-workspace shortcuts detected — checking target workspace permissions ..." -ForegroundColor Yellow
+            Write-Host "    Cross-workspace shortcuts detected - checking target workspace permissions ..." -ForegroundColor Yellow
             $targetWorkspaces = $crossWs.TargetWorkspace | Select-Object -Unique
             foreach ($twsId in $targetWorkspaces) {
                 $twsRoles = Invoke-FabricApi -Path "/workspaces/$twsId/roleAssignments"
@@ -1604,7 +1746,7 @@ if ($auditMode -eq 'SQLEndpoint') {
 else {
     Write-Host '  Shortcuts not applicable to Warehouse artifacts.' -ForegroundColor DarkGray
     [void]$report.AppendLine("## 8. Shortcuts")
-    [void]$report.AppendLine("*Skipped — not applicable to Warehouse artifacts.*")
+    [void]$report.AppendLine("*Skipped - not applicable to Warehouse artifacts.*")
     [void]$report.AppendLine("")
 }
 
@@ -1623,7 +1765,7 @@ ORDER BY TABLE_SCHEMA, TABLE_NAME;
     if ($resultTables -and $resultTables.Rows.Count -gt 0) {
         Write-Host "    $($resultTables.Rows.Count) table(s)/view(s) in SQL endpoint"
         if ($resultTables.Rows.Count -ge $MaxRows) {
-            Write-Host "    Result set hit the $MaxRows row limit — results may be truncated." -ForegroundColor Yellow
+            Write-Host "    Result set hit the $MaxRows row limit - results may be truncated." -ForegroundColor Yellow
         }
         Save-Result -Name '07_sql_tables_views' -Data $resultTables
     }
@@ -1698,7 +1840,7 @@ if ($SummarizeUsers.Count -gt 0) {
     foreach ($summaryRef in $SummarizeUsers) {
         $p = $resolvedPrincipals | Where-Object { $_.Input -eq $summaryRef -or $_.ObjectId -eq $summaryRef } | Select-Object -First 1
         if (-not $p -or -not $p.ObjectId) {
-            Write-Host "  Skipping '$summaryRef' — could not resolve principal." -ForegroundColor Yellow
+            Write-Host "  Skipping '$summaryRef' - could not resolve principal." -ForegroundColor Yellow
             continue
         }
 
@@ -1749,7 +1891,8 @@ if ($SummarizeUsers.Count -gt 0) {
                         }
                         foreach ($em in $entraMembers) {
                             if ($em.objectId -eq $p.ObjectId -or $em.objectId -in $userGroupIds) {
-                                $via = if ($em.objectId -eq $p.ObjectId) { 'Direct' } else { "Via group: $($em.displayName ?? $em.objectId)" }
+                                $memberName = Coalesce-Value $em.displayName $em.objectId
+                                $via = if ($em.objectId -eq $p.ObjectId) { 'Direct' } else { "Via group: $memberName" }
                                 $summaryRows.Add([PSCustomObject]@{ Layer="OneLake Security ($olLabel)"; Source=$via; Detail=$olRole.name; Status='Assigned' })
                                 $foundInOL = $true
                             }
@@ -1849,23 +1992,23 @@ Write-Host '  Appending actionable checklist to the report.' -ForegroundColor Da
 [void]$report.AppendLine("")
 [void]$report.AppendLine("Use the data collected above to walk through these checks:")
 [void]$report.AppendLine("")
-[void]$report.AppendLine("- [ ] **Step 1** — Identity mode verified (User Identity vs Delegated). See section 6f.")
-[void]$report.AppendLine("- [ ] **Step 2** — Principal Object IDs match across Workspace roles and SQL principals. Cross-reference sections 2, 5, and 6g.")
+[void]$report.AppendLine("- [ ] **Step 1** - Identity mode verified (User Identity vs Delegated). See section 6f.")
+[void]$report.AppendLine("- [ ] **Step 2** - Principal Object IDs match across Workspace roles and SQL principals. Cross-reference sections 2, 5, and 6g.")
 if ($auditMode -eq 'SQLEndpoint') {
-    [void]$report.AppendLine("- [ ] **Step 3** — OneLake Security role assignments verified (section 4).")
-    [void]$report.AppendLine("- [ ] **Step 4** — Same AAD principal exists in Workspace permissions AND OneLake Security (source + target Lakehouse).")
+    [void]$report.AppendLine("- [ ] **Step 3** - OneLake Security role assignments verified (section 4).")
+    [void]$report.AppendLine("- [ ] **Step 4** - Same AAD principal exists in Workspace permissions AND OneLake Security (source + target Lakehouse).")
 }
-[void]$report.AppendLine("- [ ] **Step 5** — Individual vs group vs mixed assignments identified (section 8).")
-[void]$report.AppendLine("- [ ] **Step 6** — No unrelated or conflicting role memberships (section 6a, 6c — check for DENY).")
-[void]$report.AppendLine("- [ ] **Step 7** — RLS/CLS setup confirmed (section 6e).")
+[void]$report.AppendLine("- [ ] **Step 5** - Individual vs group vs mixed assignments identified (section 8).")
+[void]$report.AppendLine("- [ ] **Step 6** - No unrelated or conflicting role memberships (section 6a, 6c - check for DENY).")
+[void]$report.AppendLine("- [ ] **Step 7** - RLS/CLS setup confirmed (section 6e).")
 if ($auditMode -eq 'SQLEndpoint') {
-    [void]$report.AppendLine("- [ ] **Step 8** — External shortcut permissions verified (section 7 — cross-workspace roles).")
-    [void]$report.AppendLine("- [ ] **Step 9** — Remediation: assign group-based OneLake Security roles, remove individual/mixed, drop & recreate shortcuts after role fixes.")
-    [void]$report.AppendLine("- [ ] **Step 10** — Final SQL Endpoint validation — query shortcut tables, confirm no AccessDenied / NoRoleDefined.")
+    [void]$report.AppendLine("- [ ] **Step 8** - External shortcut permissions verified (section 7 - cross-workspace roles).")
+    [void]$report.AppendLine("- [ ] **Step 9** - Remediation: assign group-based OneLake Security roles, remove individual/mixed, drop & recreate shortcuts after role fixes.")
+    [void]$report.AppendLine("- [ ] **Step 10** - Final SQL Endpoint validation - query shortcut tables, confirm no AccessDenied / NoRoleDefined.")
 }
 else {
-    [void]$report.AppendLine("- [ ] **Step 8** — Remediation: fix DENY entries, correct role memberships, verify schema/object permissions.")
-    [void]$report.AppendLine("- [ ] **Step 9** — Final Warehouse validation — run test queries, confirm no permission errors.")
+    [void]$report.AppendLine("- [ ] **Step 8** - Remediation: fix DENY entries, correct role memberships, verify schema/object permissions.")
+    [void]$report.AppendLine("- [ ] **Step 9** - Final Warehouse validation - run test queries, confirm no permission errors.")
 }
 [void]$report.AppendLine("")
 
@@ -1970,7 +2113,7 @@ if ($issueCount -eq 0) {
 }
 Write-Host ''
 
-# ── Zip output ──
+# -- Zip output --
 if (-not $NoZip) {
     $zipPath = "$OutputFolder.zip"
     try {
@@ -1989,7 +2132,7 @@ if (-not $NoZip) {
     Write-Host ''
 }
 
-# ── Diff mode ──
+# -- Diff mode --
 if ($DiffWith -and (Test-Path $DiffWith)) {
     Write-Host '  >> DIFF MODE' -ForegroundColor Magenta
     Write-Host "    Comparing with: $DiffWith" -ForegroundColor Gray
