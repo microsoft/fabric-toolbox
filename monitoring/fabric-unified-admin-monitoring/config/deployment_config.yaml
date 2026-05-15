@@ -90,5 +90,9 @@ folders:
   - name: "Optimization Module"
     items:
     - 00_Run_Optimization_Module_for_SM_Unit.Notebook
+  - name: "Tags"
+    items:
+    - 01_Tags_Unit.Notebook
+    - Load_Tags_E2E.DataPipeline
     
     

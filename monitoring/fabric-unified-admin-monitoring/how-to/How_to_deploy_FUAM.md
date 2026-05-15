@@ -35,7 +35,7 @@ The deployment of FUAM can be done with very little effort, since we tried to au
     - _Users can create Fabric items_ for FUAM workspace admin(s) - [learn.microsoft.com](https://learn.microsoft.com/en-us/fabric/admin/fabric-switch)
     - _Allow XMLA endpoints and Analyze in Excel with on-premises semantic models_ – [learn.microsoft.com](https://learn.microsoft.com/en-us/fabric/admin/service-admin-portal-integration#allow-xmla-endpoints-and-analyze-in-excel-with-on-premises-datasets)
 - Fabric Capacity Metrics app (workspace) **with attached P or F-capacity** with **enabled XMLA endpoint** (at least 'Read')
-     - Compatible versions of the Capacity Metrics App: v53, v47, v44 or earlier
+     - Compatible versions of the Capacity Metrics App: v65, v53, v47, v44 or earlier
     - Before updating, please check [this site] to verify which versions of the Capacity Metrics app are compatible with FUAM.
     - Since the user who last changed a pipeline will execute the notebook, this user needs to have contributor permissions on the capacity metrics app workspace. Usually this is the user who deployed FUAM.
 
@@ -119,6 +119,8 @@ We recommend to create a new Capacity Metrics App (with automatically deployed w
 
 
 > **Important:**  By default the Metrics App workspace is created on a Pro license. If you don't change this to F/P-SKU you will get an error
+
+> **Important:**  It is recommended to have a seperate instance of the capacity metrics app running just for FUAM. This way you can test the compatibility and still update your regular version
 
 ## 6. Run orchestration Pipeline
 

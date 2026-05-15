@@ -464,6 +464,34 @@
                         }
                     }
                 }
+            },
+            {
+                "name": "Load_Tag_E2E",
+                "type": "ExecutePipeline",
+                "dependsOn": [
+                    {
+                        "activity": "Load_WidelyShared_PublishedToWeb",
+                        "dependencyConditions": [
+                            "Completed"
+                        ]
+                    }
+                ],
+                "policy": {
+                    "secureInput": false
+                },
+                "typeProperties": {
+                    "pipeline": {
+                        "referenceName": "df3d796d-f02d-3baa-98ed-17ae09708fb2",
+                        "type": "PipelineReference"
+                    },
+                    "waitOnCompletion": true,
+                    "parameters": {
+                        "display_data": {
+                            "value": "@pipeline().parameters.display_data",
+                            "type": "Expression"
+                        }
+                    }
+                }
             }
         ],
         "parameters": {
@@ -477,19 +505,19 @@
             },
             "metric_days_in_scope": {
                 "type": "int",
-                "defaultValue": 5
+                "defaultValue": 2
             },
             "metric_workspace": {
                 "type": "string",
-                "defaultValue": "f41928d0-580d-4178-90ee-9d7cde90e602"
+                "defaultValue": "5edcbd6e-b4d3-4625-ae22-a4d524221f78"
             },
             "metric_dataset": {
                 "type": "string",
-                "defaultValue": "34d3843c-ac57-4fd6-8c79-d278be9fcfa0"
+                "defaultValue": "2d4511ba-4364-4468-9171-d5f39c19f66e"
             },
             "activity_days_in_scope": {
                 "type": "int",
-                "defaultValue": 5
+                "defaultValue": 2
             },
             "display_data": {
                 "type": "bool",

@@ -172,6 +172,14 @@
         "fuam_id": "0c455dc0-51fe-33b8-8b36-401a002dfab4"
     },
     {
+        "name": "01_Tags_Unit.Notebook",
+        "fuam_id": "a2948d7f-30bf-3653-8aad-266b643951d5"
+    },
+    {
+        "name": "Load_Tags_E2E.DataPipeline",
+        "fuam_id": "df3d796d-f02d-3baa-98ed-17ae09708fb2"
+    },
+    {
         "name": "Load_FUAM_Data_E2E.DataPipeline",
         "fuam_id": "ad02d6fe-ab95-3fd4-ab53-c010c0a41921"
     },

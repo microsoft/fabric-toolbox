@@ -2,11 +2,11 @@
     "properties": {
         "activities": [
             {
-                "name": "01_Transfer_WidelyShared_OrganizationLinks_Unit",
+                "name": "01_Tags_Unit",
                 "type": "TridentNotebook",
                 "dependsOn": [
                     {
-                        "activity": "Get WidelyShareArtifacts LinksSharedToWholeOrganization",
+                        "activity": "Get Tags",
                         "dependencyConditions": [
                             "Succeeded"
                         ]
@@ -20,7 +20,7 @@
                     "secureInput": false
                 },
                 "typeProperties": {
-                    "notebookId": "074a86df-d371-3b5d-8172-2e1b576bcc42",
+                    "notebookId": "a2948d7f-30bf-3653-8aad-266b643951d5",
                     "workspaceId": "88c8d9fa-2c24-3fad-8f46-b36431c7ba1d",
                     "parameters": {
                         "display_data": {
@@ -35,10 +35,16 @@
                 }
             },
             {
-                "name": "Get WidelyShareArtifacts LinksSharedToWholeOrganization",
-                "description": "https://learn.microsoft.com/en-en/rest/api/power-bi/admin/widely-shared-artifacts-links-shared-to-whole-organization#code-try-0",
+                "name": "Get Tags",
                 "type": "Copy",
-                "dependsOn": [],
+                "dependsOn": [
+                    {
+                        "activity": "Delete files",
+                        "dependencyConditions": [
+                            "Succeeded"
+                        ]
+                    }
+                ],
                 "policy": {
                     "timeout": "0.12:00:00",
                     "retry": 0,
@@ -50,28 +56,31 @@
                     "source": {
                         "type": "RestSource",
                         "httpRequestTimeout": "00:01:40",
-                        "requestInterval": "00.00:00:00.010",
+                        "requestInterval": "00.00:00:02.000",
                         "requestMethod": "GET",
                         "paginationRules": {
-                            "supportRFC5988": "true",
-                            "AbsoluteUrl": "$.$.continuationUri"
+                            "AbsoluteUrl": {
+                                "value": "@string('$.continuationUri')",
+                                "type": "Expression"
+                            }
                         },
                         "datasetSettings": {
                             "annotations": [],
                             "type": "RestResource",
                             "typeProperties": {
-                                "relativeUrl": "widelySharedArtifacts/linksSharedToWholeOrganization"
+                                "relativeUrl": "tags"
                             },
                             "schema": [],
                             "externalReferences": {
-                                "connection": "3345091d-bb11-463c-a384-7971da807eee"
+                                "connection": "e665127a-bc6f-3487-b0ce-d3b2141df298"
                             }
                         }
                     },
                     "sink": {
                         "type": "JsonSink",
                         "storeSettings": {
-                            "type": "LakehouseWriteSettings"
+                            "type": "AzureBlobStorageWriteSettings",
+                            "copyBehavior": "FlattenHierarchy"
                         },
                         "formatSettings": {
                             "type": "JsonWriteSettings",
@@ -95,14 +104,56 @@
                             "typeProperties": {
                                 "location": {
                                     "type": "LakehouseLocation",
-                                    "fileName": "organization_links.json",
-                                    "folderPath": "raw/widely_shared_artifacts/organization_links"
+                                    "fileName": "tags.json",
+                                    "folderPath": "raw/tags"
                                 }
                             },
                             "schema": {}
                         }
                     },
                     "enableStaging": false
+                }
+            },
+            {
+                "name": "Delete files",
+                "type": "Delete",
+                "dependsOn": [],
+                "policy": {
+                    "timeout": "0.12:00:00",
+                    "retry": 0,
+                    "retryIntervalInSeconds": 30,
+                    "secureOutput": false,
+                    "secureInput": false
+                },
+                "typeProperties": {
+                    "datasetSettings": {
+                        "annotations": [],
+                        "linkedService": {
+                            "name": "FUAM_Lakehouse",
+                            "properties": {
+                                "annotations": [],
+                                "type": "Lakehouse",
+                                "typeProperties": {
+                                    "workspaceId": "88c8d9fa-2c24-3fad-8f46-b36431c7ba1d",
+                                    "artifactId": "6cff634b-88f7-3505-bed2-c03a36776a8b",
+                                    "rootFolder": "Files"
+                                }
+                            }
+                        },
+                        "type": "Binary",
+                        "typeProperties": {
+                            "location": {
+                                "type": "LakehouseLocation",
+                                "folderPath": "raw/tags"
+                            }
+                        }
+                    },
+                    "enableLogging": false,
+                    "storeSettings": {
+                        "type": "AzureBlobStorageReadSettings",
+                        "recursive": true,
+                        "enablePartitionDiscovery": false
+                    }
                 }
             }
         ],
