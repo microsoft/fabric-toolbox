@@ -164,11 +164,11 @@
             },
             "metric_workspace": {
                 "type": "string",
-                "defaultValue": "d0182223-a6a9-4aa1-bf5c-24d8ee582b9d"
+                "defaultValue": "5edcbd6e-b4d3-4625-ae22-a4d524221f78"
             },
             "metric_dataset": {
                 "type": "string",
-                "defaultValue": "Fabric Capacity Metrics"
+                "defaultValue": "2d4511ba-4364-4468-9171-d5f39c19f66e"
             },
             "display_data": {
                 "type": "bool",
