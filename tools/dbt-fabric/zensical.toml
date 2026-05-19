@@ -9,7 +9,7 @@ edit_uri = "edit/main/tools/dbt-fabric/docs/"
 copyright = """
 dbt and dbt Core are trademarks of dbt Labs, Inc.
 Microsoft and Microsoft Fabric are trademarks of the Microsoft Corporation.
-This website is not affiliated with dbt Labs or Microsoft.
+This website is not affiliated with dbt Labs.
 """
 
 watch = ["README.md"]
