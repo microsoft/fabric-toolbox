@@ -100,3 +100,26 @@ Onelake other operations hot capacity usage cu,onelake other operations hot capa
 Onelake write operations hot capacity usage cu,onelake write operations hot capacity usage CU,GA,FALSE,TRUE,OneLake
 Onelake iterative read operations hot capacity usage cu,onelake iterative read operations hot capacity usage CU,GA,FALSE,TRUE,OneLake
 High Scale Dataflow Compute - SQL Capacity Usage CU,High Scale Dataflow Compute - SQL Capacity Usage CU,GA,FALSE,TRUE,Dataflows
+Anomaly Detector Queries Capacity Usage CU,Anomaly Detector Queries Capacity Usage CU,GA,FALSE,TRUE,ML
+dbt job Capacity Usage CU,dbt job Capacity Usage CU,GA,FALSE,TRUE,Data Orchestration
+eventstreams connectors Capacity Usage CU,eventstreams connectors Capacity Usage CU,GA,FALSE,TRUE,RTI
+Fabric Planning - Automated Jobs Capacity Usage CU,Fabric Planning - Automated Jobs Capacity Usage CU,GA,FALSE,TRUE,Fabric Planning
+Fabric Planning - Planner Sessions Capacity Usage CU,Fabric Planning - Planner Sessions Capacity Usage CU,GA,FALSE,TRUE,Fabric Planning
+Fabric Planning - Stakeholder Sessions Capacity Usage CU,Fabric Planning - Stakeholder Sessions Capacity Usage CU,GA,FALSE,TRUE,Fabric Planning
+Fabric Planning - Viewer Sessions Capacity Usage CU,Fabric Planning - Viewer Sessions Capacity Usage CU,GA,FALSE,TRUE,Fabric Planning
+Graph data management Capacity Usage CU,Graph data management Capacity Usage CU,GA,FALSE,TRUE,Graph
+Graph data science Capacity Usage CU,Graph data science Capacity Usage CU,GA,FALSE,TRUE,Graph
+Map processing Capacity Usage CU,Map processing Capacity Usage CU,GA,FALSE,TRUE,Map
+Map services Capacity Usage CU,Map services Capacity Usage CU,GA,FALSE,TRUE,Map
+OneLake BCDR Iterative Write Operations Hot Capacity Usage CU,OneLake BCDR Iterative Write Operations Hot Capacity Usage CU,GA,FALSE,TRUE,BCDR
+OneLake Data Retrieval Cold Capacity Usage CU,OneLake Data Retrieval Cold Capacity Usage CU,GA,FALSE,TRUE,OneLake
+OneLake Data Retrieval Cool Capacity Usage CU,OneLake Data Retrieval Cool Capacity Usage CU,GA,FALSE,TRUE,OneLake
+OneLake diagnostics Capacity Usage CU,OneLake diagnostics Capacity Usage CU,GA,FALSE,TRUE,OneLake
+OneLake Iterative Write Operations Hot Capacity Usage CU,OneLake Iterative Write Operations Hot Capacity Usage CU,GA,FALSE,TRUE,OneLake
+Ontology AI Capacity Usage CU,Ontology AI Capacity Usage CU,GA,FALSE,TRUE,Ontology Modeling
+Ontology Logic and Operations Capacity Usage CU,Ontology Logic and Operations Capacity Usage CU,GA,FALSE,TRUE,Ontology Modeling
+SSIS in Fabric Capacity Usage CU,SSIS in Fabric Capacity Usage CU,GA,FALSE,TRUE,Data Movement
+OneLake Storage Cold Data Stored,OneLake Storage Cold Data Stored,GA,FALSE,FALSE,OneLake
+OneLake Storage Cool Data Stored,OneLake Storage Cool Data Stored,GA,FALSE,FALSE,OneLake
+Onelake BCDR Storage Cold Data Stored,Onelake BCDR Storage Cold Data Stored,GA,FALSE,FALSE,BCDR
+Onelake BCDR Storage Cool Data Stored,Onelake BCDR Storage Cool Data Stored,GA,FALSE,FALSE,BCDR
