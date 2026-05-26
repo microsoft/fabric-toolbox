@@ -1,10 +1,10 @@
-# Fabric Maturity Score
+# Fabric FinOps Maturity Score
 
-The **Fabric Maturity Score** (also referred to as the **FinOps Maturity Score** in the semantic model) is a composite indicator, on a **0 to 100 scale**, that summarises how well a Microsoft Fabric capacity estate is being managed against FinOps best practices.
+The **Fabric FinOps Maturity Score** (also referred to as the **FinOps Maturity Score** in the semantic model) is a composite indicator, on a **0 to 100 scale**, that summarises how well a Microsoft Fabric capacity estate is being managed against FinOps best practices.
 
 It is exposed on the **Summary** page of the FCA report as a gauge with a colour-coded label, and is available in the semantic model so it can be reused in custom reports, Data Agents or alerts.
 
-![Fabric Maturity Score gauge](./media/MaturityScore.png)
+![Fabric FinOps Maturity Score gauge](./media/MaturityScore.png)
 
 >ℹ️ All measures referenced below live in the `fca` table of the **FCA_Core_SM** semantic model and are grouped in the `maturity score` display folder. The 5 sub-scores are hidden by default; only the composite **FinOps Maturity Score** and **FinOps Maturity Label** are visible.
 
@@ -14,7 +14,7 @@ It is exposed on the **Summary** page of the FCA report as a gauge with a colour
 
 Microsoft Fabric cost depends on many levers (SKU sizing, reservations, pause/resume strategy, Spark autoscale, capacity overage, ...). Looking at a single KPI is rarely enough to know if a tenant is well-managed.
 
-The Fabric Maturity Score addresses this by:
+The Fabric FinOps Maturity Score addresses this by:
 
 - **Aggregating** 5 independent FinOps dimensions into one easy-to-communicate KPI
 - **Highlighting** the weakest dimension so that optimisation efforts are prioritised where they have the most impact
@@ -229,7 +229,7 @@ flowchart LR
 - **Capacity benchmarking** — slice the score by `CapacityName`, `ResourceLocation` or `SubscriptionName` to compare capacities and identify outliers.
 - **Trend tracking** — add the `calendar` table to the score over months/quarters to monitor FinOps programme progress.
 - **Action prioritisation** — display the 5 sub-scores side by side; act first on the lowest one (weighted by its share of the composite).
-- **Data Agent** — ask the FCA Data Agent questions like *"What is my Fabric Maturity score and which dimension is the weakest?"* — the descriptions on each measure are surfaced to the agent to ground the answer.
+- **Data Agent** — ask the FCA Data Agent questions like *"What is my Fabric FinOps Maturity score and which dimension is the weakest?"* — the descriptions on each measure are surfaced to the agent to ground the answer.
 
 ---
 
