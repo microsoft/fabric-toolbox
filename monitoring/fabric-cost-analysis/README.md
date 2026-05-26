@@ -38,7 +38,7 @@ FCA gathers diverse data in Lakehouse to provide cost insights:
 - (optional) FCA extracts Azure Reservations details
 - (optional) FCA extracts Azure Quotas
 
->ℹ️ FCA will display only data related to Fabric costs, no other Azure cost will be prepare for analyze.
+>ℹ️ FCA will display only data related to Fabric costs, no other Azure cost will be prepared for analysis.
 
 ---
 
@@ -96,20 +96,20 @@ Important: Support tickets should not be opened for issues related to these temp
 
 Below is a curated list of blog posts, sessions and articles that dive deeper into the use cases, design choices, and benefits of FCA solution.
 
-- https://blog.crossjoin.co.uk/2025/10/19/monitor-fabric-costs-with-fabric-cost-analysis/
-- https://www.jamesserra.com/archive/2025/12/fabric-cost-analysis-fca/
-- https://blog.robsewell.com/blog/fca-fabric-cost-analysis-for-finops/
-- https://sqlyard.com/2026/01/12/fabric-cost-analysis-explained-bringing-clarity-to-microsoft-fabric-costs/
-- https://community.fabric.microsoft.com/t5/Fabric-platform-Community-Blog/Fabric-Cost-Analysis-Shine-a-light-on-your-platform-costs/ba-p/4907392
-- https://www.linkedin.com/events/fabriccostanalysis-comprendre-m7394636250466578432/
-- https://www.packtpub.com/en-us/product/the-definitive-guide-to-microsoft-fabric-9781806698790
-- https://www.youtube.com/watch?v=6uOlYj_eSzo&list=PLmmHlkXlpkYZNAQRj4IOhb6usUvkGYj34
-- https://www.youtube.com/watch?v=PJSZWTfUfc0&list=PLiYSIjh4cEx0dd7gkLFu2pjDqUkYGv_mU
-- https://www.linkedin.com/pulse/fabcon-2026-recap-ai-business-people-iurii-yurri-iurchenko-fachdm-6uavc/
-- https://www.linkedin.com/pulse/economics-modern-data-platforms-microsoft-fabric-vs-junco-boquer-3dtge/
-- https://www.element61.be/en/resource/fabric-cost-analysis-bringing-transparency-microsoft-fabric-spend
-- https://www.youtube.com/live/KxRPZpxJZ0I
-- ...
+- 📖 **fabricbook.net** – community knowledge hub around Microsoft Fabric: <https://fabricbook.net/>
+- ✍️ **Chris Webb (Crossjoin blog)** – *Monitor Fabric costs with Fabric Cost Analysis* (Oct 2025): <https://blog.crossjoin.co.uk/2025/10/19/monitor-fabric-costs-with-fabric-cost-analysis/>
+- ✍️ **James Serra** – *Fabric Cost Analysis (FCA)* (Dec 2025): <https://www.jamesserra.com/archive/2025/12/fabric-cost-analysis-fca/>
+- ✍️ **Rob Sewell** – *FCA: Fabric Cost Analysis for FinOps*: <https://blog.robsewell.com/blog/fca-fabric-cost-analysis-for-finops/>
+- ✍️ **SQLYard** – *Fabric Cost Analysis explained: bringing clarity to Microsoft Fabric costs* (Jan 2026): <https://sqlyard.com/2026/01/12/fabric-cost-analysis-explained-bringing-clarity-to-microsoft-fabric-costs/>
+- 💬 **Microsoft Fabric Community Blog** – *Fabric Cost Analysis: Shine a light on your platform costs*: <https://community.fabric.microsoft.com/t5/Fabric-platform-Community-Blog/Fabric-Cost-Analysis-Shine-a-light-on-your-platform-costs/ba-p/4907392>
+- 🎤 **LinkedIn Event (FR)** – *Fabric Cost Analysis : comprendre…*: <https://www.linkedin.com/events/fabriccostanalysis-comprendre-m7394636250466578432/>
+- 📚 **Packt book** – *The Definitive Guide to Microsoft Fabric*: <https://www.packtpub.com/en-us/product/the-definitive-guide-to-microsoft-fabric-9781806698790>
+- ▶️ **YouTube playlist** – Fabric Cost Analysis walkthrough series: <https://www.youtube.com/watch?v=6uOlYj_eSzo&list=PLmmHlkXlpkYZNAQRj4IOhb6usUvkGYj34>
+- ▶️ **YouTube playlist** – Fabric Cost Analysis walkthrough (alternate series): <https://www.youtube.com/watch?v=PJSZWTfUfc0&list=PLiYSIjh4cEx0dd7gkLFu2pjDqUkYGv_mU>
+- ✍️ **Iurii (Yurri) Iurchenko on LinkedIn** – *FabCon 2026 recap: AI, business, people*: <https://www.linkedin.com/pulse/fabcon-2026-recap-ai-business-people-iurii-yurri-iurchenko-fachdm-6uavc/>
+- ✍️ **Junco Boquer on LinkedIn** – *The economics of modern data platforms with Microsoft Fabric*: <https://www.linkedin.com/pulse/economics-modern-data-platforms-microsoft-fabric-vs-junco-boquer-3dtge/>
+- ✍️ **Element61** – *Fabric Cost Analysis: bringing transparency to Microsoft Fabric spend*: <https://www.element61.be/en/resource/fabric-cost-analysis-bringing-transparency-microsoft-fabric-spend>
+- 📺 **YouTube live session** on Fabric Cost Analysis: <https://www.youtube.com/live/KxRPZpxJZ0I>
 
 ---
 

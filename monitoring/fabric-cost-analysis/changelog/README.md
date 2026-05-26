@@ -6,7 +6,7 @@
 - Warehouse Auto Scale cost analysis
 - Forecast
 - What if analysis
-- Corellate cost with CU based on Fabric Capacity Operations Events
+- Correlate cost with CU based on Fabric Capacity Operations Events
 
 ## Release
 
@@ -17,7 +17,7 @@
 - Data Agent updates
 - Several bug fixes
 - Additional documentation
-- As always, a big thank you to everyon
+- As always, a big thank you to everyone
 
 
 ## 📦 2026.03.13
