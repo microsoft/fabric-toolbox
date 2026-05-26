@@ -17,8 +17,7 @@
 - Data Agent updates
 - Several bug fixes
 - Additional documentation
-- As always, a big thank you to everyone
-
+- Meters Updates
 
 ## 📦 2026.03.13
 
