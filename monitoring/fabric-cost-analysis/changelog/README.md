@@ -10,6 +10,16 @@
 
 ## Release
 
+## 📦 2026.05.26
+
+- Update for the Fabric Jumpstart
+- New FinOps Maturity Score
+- Data Agent updates
+- Several bug fixes
+- Additional documentation
+- As always, a big thank you to everyon
+
+
 ## 📦 2026.03.13
 
 - Fabric Jumpstart (https://jumpstart.fabric.microsoft.com/) 
