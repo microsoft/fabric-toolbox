@@ -108,7 +108,7 @@ Below is a curated list of blog posts, sessions and articles that dive deeper in
 - https://www.linkedin.com/pulse/fabcon-2026-recap-ai-business-people-iurii-yurri-iurchenko-fachdm-6uavc/
 - https://www.linkedin.com/pulse/economics-modern-data-platforms-microsoft-fabric-vs-junco-boquer-3dtge/
 - https://www.element61.be/en/resource/fabric-cost-analysis-bringing-transparency-microsoft-fabric-spend
-- https://www.youtube.com/live/KxRPZpxJZ0I?si=tJoKQbKUn5Pg_8i6
+- https://www.youtube.com/live/KxRPZpxJZ0I
 - ...
 
 ---
