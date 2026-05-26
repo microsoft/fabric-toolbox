@@ -4,7 +4,7 @@ The **Fabric Maturity Score** (also referred to as the **FinOps Maturity Score**
 
 It is exposed on the **Summary** page of the FCA report as a gauge with a colour-coded label, and is available in the semantic model so it can be reused in custom reports, Data Agents or alerts.
 
-![Fabric Maturity Score gauge](./media/Report_Summary.png)
+![Fabric Maturity Score gauge](./media/MaturityScore.png)
 
 >ℹ️ All measures referenced below live in the `fca` table of the **FCA_Core_SM** semantic model and are grouped in the `maturity score` display folder. The 5 sub-scores are hidden by default; only the composite **FinOps Maturity Score** and **FinOps Maturity Label** are visible.
 
