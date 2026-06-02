@@ -2,6 +2,28 @@
 for Fabric Unified Admin Monitoring solution accelerator.
 
 --------------------------
+## 📦 2026.6.1
+
+Date: 2026-06-02
+
+Link: [Click here to update FUAM](/monitoring/fabric-unified-admin-monitoring/how-to/How_to_update_FUAM.md)
+
+### 📈 Enhancements
+
+- **New Optimization Module for Semantic Models (Beta)**
+    - Helps identify root causes of high CU utilization by analyzing the top *n* items per capacity (by previous-day CU consumption)
+    - Collects **Best Practice Analyzer** results and **VertiPaq Analyzer** data (per table) for semantic models
+    - Adds new notebook `01_Run_Optimization_Module_for_SM_Unit` and new pipeline `Load_Optimization_Module_E2E`
+    - **Deactivated by default** in the `Load_FUAM_Data_E2E` pipeline — activate manually to try it out
+    - Documentation: [FUAM Optimization Module – Semantic Models](/monitoring/fabric-unified-admin-monitoring/media/documentation/FUAM_Optimization_SemanticModels.md)
+
+
+Best Regards!
+
+Kevin
+
+
+--------------------------
 ## 📦 2026.5.1
 
 Date: 2026-05-15

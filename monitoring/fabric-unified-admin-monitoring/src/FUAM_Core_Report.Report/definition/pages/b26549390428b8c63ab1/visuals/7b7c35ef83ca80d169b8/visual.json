@@ -1,5 +1,5 @@
 {
-    "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.5.0/schema.json",
+    "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.9.0/schema.json",
     "name": "7b7c35ef83ca80d169b8",
     "position": {
         "x": 1539.9457343449988,
@@ -169,23 +169,5 @@
             ]
         },
         "drillFilterOtherVisuals": true
-    },
-    "filterConfig": {
-        "filters": [
-            {
-                "name": "4a4af092efa61ec59c1a",
-                "field": {
-                    "Measure": {
-                        "Expression": {
-                            "SourceRef": {
-                                "Entity": "Metrics"
-                            }
-                        },
-                        "Property": "Last Run Datetime OM-SM"
-                    }
-                },
-                "type": "Advanced"
-            }
-        ]
     }
 }

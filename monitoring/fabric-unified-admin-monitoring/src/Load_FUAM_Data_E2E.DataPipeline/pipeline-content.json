@@ -492,6 +492,66 @@
                         }
                     }
                 }
+            },
+            {
+                "name": "Load_Optimization_Module_E2E",
+                "type": "ExecutePipeline",
+                "state": "Inactive",
+                "onInactiveMarkAs": "Succeeded",
+                "dependsOn": [
+                    {
+                        "activity": "Load_Tag_E2E",
+                        "dependencyConditions": [
+                            "Completed"
+                        ]
+                    },
+                    {
+                        "activity": "Load_Capacity_Metrics",
+                        "dependencyConditions": [
+                            "Completed"
+                        ]
+                    }
+                ],
+                "policy": {
+                    "secureInput": false
+                },
+                "typeProperties": {
+                    "pipeline": {
+                        "referenceName": "313c5fed-5b0b-3cc9-a5ef-4a636962c50c",
+                        "type": "PipelineReference"
+                    },
+                    "waitOnCompletion": true,
+                    "parameters": {
+                        "display_data": {
+                            "value": "@pipeline().parameters.display_data",
+                            "type": "Expression"
+                        },
+                        "top_n_semantic_models_per_capacity": {
+                            "value": "@pipeline().parameters.om_top_n_semantic_models_per_capacity",
+                            "type": "Expression"
+                        },
+                        "keyvault_name": {
+                            "value": "@pipeline().parameters.optional_keyvault_name",
+                            "type": "Expression"
+                        },
+                        "keyvault_sp_tenantId_secret_name": {
+                            "value": "@pipeline().parameters.optional_keyvault_sp_tenantId_secret_name",
+                            "type": "Expression"
+                        },
+                        "keyvault_sp_clientId_secret_name": {
+                            "value": "@pipeline().parameters.optional_keyvault_sp_clientId_secret_name",
+                            "type": "Expression"
+                        },
+                        "keyvault_sp_secret_secret_name": {
+                            "value": "@pipeline().parameters.optional_keyvault_sp_secret_secret_name",
+                            "type": "Expression"
+                        },
+                        "keyvault_sp_ent_app_object_id_secret_name": {
+                            "value": "@pipeline().parameters.optional_keyvault_sp_enterprise_object_id_secret_name",
+                            "type": "Expression"
+                        }
+                    }
+                }
             }
         ],
         "parameters": {
@@ -529,11 +589,11 @@
             },
             "optional_keyvault_sp_tenantId_secret_name": {
                 "type": "string",
-                "defaultValue": "fuam-sp-client"
+                "defaultValue": "fuam-sp-tenant"
             },
             "optional_keyvault_sp_clientId_secret_name": {
                 "type": "string",
-                "defaultValue": "fuam-sp-tenant"
+                "defaultValue": "fuam-sp-client"
             },
             "optional_keyvault_sp_secret_secret_name": {
                 "type": "string",
@@ -552,6 +612,10 @@
                 "defaultValue": false
             },
             "activity_anonymize_after_days": {
+                "type": "int",
+                "defaultValue": 0
+            },
+            "om_top_n_semantic_models_per_capacity": {
                 "type": "int",
                 "defaultValue": 0
             }

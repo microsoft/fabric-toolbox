@@ -1,13 +1,13 @@
 {
-    "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.5.0/schema.json",
+    "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.9.0/schema.json",
     "name": "3ee39fb3c6627697f90b",
     "position": {
         "x": 180.67151061791944,
         "y": 775.0047153504297,
-        "z": 64005,
+        "z": 67000,
         "height": 51.66666666666667,
         "width": 67.5,
-        "tabOrder": 64005
+        "tabOrder": 67000
     },
     "visual": {
         "visualType": "card",
@@ -196,20 +196,6 @@
     },
     "filterConfig": {
         "filters": [
-            {
-                "name": "1eb6a8a14e3592fb36f2",
-                "field": {
-                    "Measure": {
-                        "Expression": {
-                            "SourceRef": {
-                                "Entity": "Metrics"
-                            }
-                        },
-                        "Property": "Widely Shared Organisation Links"
-                    }
-                },
-                "type": "Advanced"
-            },
             {
                 "name": "1afe77f0cf18c2372489",
                 "field": {

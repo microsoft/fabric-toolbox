@@ -1,5 +1,5 @@
 {
-    "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.5.0/schema.json",
+    "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.9.0/schema.json",
     "name": "8af641b537f2e6f1961a",
     "position": {
         "x": 18.072289156626507,
@@ -280,37 +280,5 @@
             ]
         },
         "drillFilterOtherVisuals": true
-    },
-    "filterConfig": {
-        "filters": [
-            {
-                "name": "2376c665943cf456ee28",
-                "field": {
-                    "Measure": {
-                        "Expression": {
-                            "SourceRef": {
-                                "Entity": "Metrics"
-                            }
-                        },
-                        "Property": "# Analyzed Semantic Models OM-SM"
-                    }
-                },
-                "type": "Advanced"
-            },
-            {
-                "name": "1b7893717846675f66ad",
-                "field": {
-                    "Column": {
-                        "Expression": {
-                            "SourceRef": {
-                                "Entity": "semantic_model_content_types"
-                            }
-                        },
-                        "Property": "MappedName"
-                    }
-                },
-                "type": "Categorical"
-            }
-        ]
     }
 }

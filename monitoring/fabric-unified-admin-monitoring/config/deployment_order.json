@@ -180,6 +180,14 @@
         "fuam_id": "df3d796d-f02d-3baa-98ed-17ae09708fb2"
     },
     {
+        "name": "01_Run_Optimization_Module_for_SM_Unit.Notebook",
+        "fuam_id": "21b2b2fb-85df-3fd8-ac8c-5fca5aa8b830"
+    },
+    {
+        "name": "Load_Optimization_Module_E2E.DataPipeline",
+        "fuam_id": "313c5fed-5b0b-3cc9-a5ef-4a636962c50c"
+    },
+    {
         "name": "Load_FUAM_Data_E2E.DataPipeline",
         "fuam_id": "ad02d6fe-ab95-3fd4-ab53-c010c0a41921"
     },

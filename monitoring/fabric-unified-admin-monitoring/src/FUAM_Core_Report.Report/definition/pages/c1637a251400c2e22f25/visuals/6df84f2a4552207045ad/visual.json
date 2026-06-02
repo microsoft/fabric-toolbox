@@ -1,13 +1,13 @@
 {
-    "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.5.0/schema.json",
+    "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.9.0/schema.json",
     "name": "6df84f2a4552207045ad",
     "position": {
         "x": 23.52941176470588,
         "y": 588.2352941176471,
-        "z": 11001,
+        "z": 6000,
         "height": 463.235294117647,
         "width": 1872.0588235294117,
-        "tabOrder": 11001
+        "tabOrder": 6000
     },
     "visual": {
         "visualType": "tableEx",
@@ -552,146 +552,6 @@
                         }
                     ]
                 }
-            },
-            {
-                "name": "1c0b834a4e3dc73cb09c",
-                "field": {
-                    "Column": {
-                        "Expression": {
-                            "SourceRef": {
-                                "Entity": "widelyshared_organization_links"
-                            }
-                        },
-                        "Property": "artifactType"
-                    }
-                },
-                "type": "Categorical"
-            },
-            {
-                "name": "85853227b491c34a156f",
-                "field": {
-                    "Column": {
-                        "Expression": {
-                            "SourceRef": {
-                                "Entity": "widelyshared_organization_links"
-                            }
-                        },
-                        "Property": "ItemId"
-                    }
-                },
-                "type": "Categorical"
-            },
-            {
-                "name": "6fe20994d7cb8010c5a1",
-                "field": {
-                    "Column": {
-                        "Expression": {
-                            "SourceRef": {
-                                "Entity": "widelyshared_organization_links"
-                            }
-                        },
-                        "Property": "item_displayName"
-                    }
-                },
-                "type": "Categorical"
-            },
-            {
-                "name": "766d0b00ae0aa40ee0a2",
-                "field": {
-                    "Column": {
-                        "Expression": {
-                            "SourceRef": {
-                                "Entity": "widelyshared_organization_links"
-                            }
-                        },
-                        "Property": "sharer_displayName"
-                    }
-                },
-                "type": "Categorical"
-            },
-            {
-                "name": "43475827007b860e1091",
-                "field": {
-                    "Column": {
-                        "Expression": {
-                            "SourceRef": {
-                                "Entity": "widelyshared_organization_links"
-                            }
-                        },
-                        "Property": "accessRight"
-                    }
-                },
-                "type": "Categorical"
-            },
-            {
-                "name": "2e07fd3577ea7a6c4e61",
-                "field": {
-                    "Column": {
-                        "Expression": {
-                            "SourceRef": {
-                                "Entity": "widelyshared_organization_links"
-                            }
-                        },
-                        "Property": "sharer_principalType"
-                    }
-                },
-                "type": "Categorical"
-            },
-            {
-                "name": "d35f336e49ecbbdb5d8b",
-                "field": {
-                    "Column": {
-                        "Expression": {
-                            "SourceRef": {
-                                "Entity": "widelyshared_organization_links"
-                            }
-                        },
-                        "Property": "sharer_emailAddress"
-                    }
-                },
-                "type": "Categorical"
-            },
-            {
-                "name": "f40cf129a44e3b2f47bf",
-                "field": {
-                    "Column": {
-                        "Expression": {
-                            "SourceRef": {
-                                "Entity": "widelyshared_organization_links"
-                            }
-                        },
-                        "Property": "shareType"
-                    }
-                },
-                "type": "Categorical"
-            },
-            {
-                "name": "a6ebc595060ee12db396",
-                "field": {
-                    "Column": {
-                        "Expression": {
-                            "SourceRef": {
-                                "Entity": "widelyshared_organization_links"
-                            }
-                        },
-                        "Property": "sharer_graphId"
-                    }
-                },
-                "type": "Categorical"
-            },
-            {
-                "name": "d63407fe7b40ad3530f8",
-                "field": {
-                    "Column": {
-                        "Expression": {
-                            "SourceRef": {
-                                "Entity": "widelyshared_organization_links"
-                            }
-                        },
-                        "Property": "TransferDate"
-                    }
-                },
-                "type": "Categorical"
             }
         ],
         "filterSortOrder": "Custom"

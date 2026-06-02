@@ -1,5 +1,5 @@
 {
-    "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.5.0/schema.json",
+    "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.9.0/schema.json",
     "name": "b51a64a79ab56c768c02",
     "position": {
         "x": 105.17241379310346,
@@ -20,14 +20,14 @@
                                 "Column": {
                                     "Expression": {
                                         "SourceRef": {
-                                            "Entity": "semantic_model_bpa_results"
+                                            "Entity": "semantic_model_analyzer_runs"
                                         }
                                     },
                                     "Property": "RunName"
                                 }
                             },
-                            "queryRef": "semantic_model_bpa_results.RunName",
-                            "nativeQueryRef": "RunName",
+                            "queryRef": "semantic_model_analyzer_runs.RunName",
+                            "nativeQueryRef": "RunName1",
                             "active": true
                         },
                         {
@@ -87,19 +87,6 @@
             },
             "sortDefinition": {
                 "sort": [
-                    {
-                        "field": {
-                            "Column": {
-                                "Expression": {
-                                    "SourceRef": {
-                                        "Entity": "semantic_model_bpa_results"
-                                    }
-                                },
-                                "Property": "RunName"
-                            }
-                        },
-                        "direction": "Ascending"
-                    },
                     {
                         "field": {
                             "Column": {

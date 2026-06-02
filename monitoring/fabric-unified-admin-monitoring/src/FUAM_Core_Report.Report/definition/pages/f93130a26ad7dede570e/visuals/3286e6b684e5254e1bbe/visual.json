@@ -1,5 +1,5 @@
 {
-    "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.5.0/schema.json",
+    "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.9.0/schema.json",
     "name": "3286e6b684e5254e1bbe",
     "position": {
         "x": 492.156862745098,
@@ -7,7 +7,7 @@
         "z": 2000,
         "height": 55.3921568627451,
         "width": 85.7843137254902,
-        "tabOrder": 60000
+        "tabOrder": 58000
     },
     "visual": {
         "visualType": "card",
@@ -197,20 +197,6 @@
     },
     "filterConfig": {
         "filters": [
-            {
-                "name": "96381beafdf83a43d038",
-                "field": {
-                    "Measure": {
-                        "Expression": {
-                            "SourceRef": {
-                                "Entity": "Metrics"
-                            }
-                        },
-                        "Property": "# Active Artifacts"
-                    }
-                },
-                "type": "Advanced"
-            },
             {
                 "name": "19b9ea27fa76026cede6",
                 "field": {
