@@ -589,11 +589,11 @@
             },
             "optional_keyvault_sp_tenantId_secret_name": {
                 "type": "string",
-                "defaultValue": "fuam-sp-client"
+                "defaultValue": "fuam-sp-tenant"
             },
             "optional_keyvault_sp_clientId_secret_name": {
                 "type": "string",
-                "defaultValue": "fuam-sp-tenant"
+                "defaultValue": "fuam-sp-client"
             },
             "optional_keyvault_sp_secret_secret_name": {
                 "type": "string",
