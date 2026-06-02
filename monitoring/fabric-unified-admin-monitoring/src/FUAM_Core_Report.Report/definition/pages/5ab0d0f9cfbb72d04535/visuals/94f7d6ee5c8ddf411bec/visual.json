@@ -1,10 +1,10 @@
 {
-    "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.5.0/schema.json",
+    "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.9.0/schema.json",
     "name": "94f7d6ee5c8ddf411bec",
     "position": {
         "x": 23.076923076923077,
         "y": 78.9439689865499,
-        "z": 3000,
+        "z": 2000,
         "height": 70.76923076923077,
         "width": 141.53846153846155,
         "tabOrder": 0
@@ -133,23 +133,5 @@
             ]
         },
         "drillFilterOtherVisuals": true
-    },
-    "filterConfig": {
-        "filters": [
-            {
-                "name": "2e1fe17114c899a88c20",
-                "field": {
-                    "Measure": {
-                        "Expression": {
-                            "SourceRef": {
-                                "Entity": "Metrics"
-                            }
-                        },
-                        "Property": "# Different Datasource Types"
-                    }
-                },
-                "type": "Advanced"
-            }
-        ]
     }
 }

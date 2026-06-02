@@ -1411,7 +1411,7 @@ table Metrics
 		displayFolder: Semantic Models\Optimization Module\BPA
 		lineageTag: 71119d44-d242-4b1c-aa17-8606d39b8bc3
 
-	measure 'FUAM Release' = "2026.5.1"
+	measure 'FUAM Release' = "2026.6.1"
 		displayFolder: Meta
 		lineageTag: 186c2aac-d73b-4371-88ae-423e22b84179
 
@@ -1651,11 +1651,11 @@ table Metrics
 		lineageTag: c5ce404e-2ee0-46a0-8be9-e9938c65f2ab
 
 	measure 'Last Run OM-SM' =
-			
-			CALCULATE(
-			    MAX(semantic_model_analyzer_runs[RunId]),
-			    REMOVEFILTERS(semantic_model_analyzer_runs[RunId])
-			)
+			MAX(semantic_model_analyzer_runs[RunId])
+			//CALCULATE(
+			//    MAX(semantic_model_analyzer_runs[RunId]),
+			 //   REMOVEFILTERS(semantic_model_analyzer_runs[RunId])
+			//)
 		formatString: 0
 		displayFolder: Semantic Models\Optimization Module\General
 		lineageTag: 355a3faf-4756-4502-84ae-9160f26f05e2
@@ -2512,7 +2512,7 @@ table Metrics
 
 	measure 'Total Size - Last Run OM-SM' =
 			
-			VAR _runId = [Last Run OM-SM]
+			VAR _runId = MAX(semantic_model_analyzer_runs[RunId])
 			VAR _value = CALCULATE(
 			        [Total Size (model)],
 			        semantic_model_analyzer_runs[RunId] = _runId
@@ -2622,7 +2622,7 @@ table Metrics
 			
 			IF(ISBLANK([Previous Run OM-SM]),
 			    BLANK(),
-			    [# Tables - Previous Run OM-SM] - [# Tables - Last Run OM-SM]
+			     [# Tables - Last Run OM-SM] - [# Tables - Previous Run OM-SM]
 			    )
 		formatString: 0
 		displayFolder: Semantic Models\Optimization Module\Run Metrics - Comparison
@@ -2632,7 +2632,7 @@ table Metrics
 			
 			IF(ISBLANK([Previous Run OM-SM]),
 			    BLANK(),
-			    [Total Size - Previous Run OM-SM] - [Total Size - Last Run OM-SM]
+			     [Total Size - Last Run OM-SM] - [Total Size - Previous Run OM-SM]
 			    )
 		displayFolder: Semantic Models\Optimization Module\Run Metrics - Comparison
 		lineageTag: c5f46d29-701d-497d-b257-cd77bd29ce14
@@ -2690,6 +2690,25 @@ table Metrics
 		formatString: #,0
 		displayFolder: Widely Shared Objects
 		lineageTag: e4f420a6-f48d-4e76-8465-e1dd1f4a33ad
+
+	measure 'Last Run Name' =
+			
+			VAR _lastRundId = [Last Run OM-SM]
+			VAR _lastValue = CALCULATE(
+			        MAX(semantic_model_analyzer_runs[RunName]),
+			        semantic_model_analyzer_runs[RunId] = _lastRundId
+			    )
+			RETURN
+			    _lastValue
+		displayFolder: Semantic Models\Optimization Module\General
+		lineageTag: 07986b49-6361-4228-8b3c-5facb38c2d98
+
+	measure 'Last Run Date' = [Last Run Datetime OM-SM]
+		formatString: yyyy-mm-dd
+		displayFolder: Semantic Models\Optimization Module\General
+		lineageTag: 3bdb903d-18ed-4a4d-9f3b-63f1f411d4c4
+
+		annotation PBI_FormatHint = {"isCustom":true}
 
 	column Value
 		isHidden

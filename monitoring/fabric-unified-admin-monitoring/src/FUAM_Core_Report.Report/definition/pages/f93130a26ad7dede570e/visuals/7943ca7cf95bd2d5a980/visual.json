@@ -1,13 +1,13 @@
 {
-    "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.5.0/schema.json",
+    "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.9.0/schema.json",
     "name": "7943ca7cf95bd2d5a980",
     "position": {
         "x": 211.66666666666669,
         "y": 632.5,
-        "z": 64003,
+        "z": 65000,
         "height": 51.66666666666667,
         "width": 67.5,
-        "tabOrder": 64003
+        "tabOrder": 65000
     },
     "visual": {
         "visualType": "card",
@@ -193,23 +193,5 @@
             ]
         },
         "drillFilterOtherVisuals": true
-    },
-    "filterConfig": {
-        "filters": [
-            {
-                "name": "ff32d445df807eea2d63",
-                "field": {
-                    "Measure": {
-                        "Expression": {
-                            "SourceRef": {
-                                "Entity": "Metrics"
-                            }
-                        },
-                        "Property": "# Datasource Instances"
-                    }
-                },
-                "type": "Advanced"
-            }
-        ]
     }
 }

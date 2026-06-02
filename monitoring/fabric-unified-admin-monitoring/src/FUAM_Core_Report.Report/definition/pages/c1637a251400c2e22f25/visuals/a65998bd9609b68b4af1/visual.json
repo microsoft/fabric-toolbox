@@ -1,5 +1,5 @@
 {
-    "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.5.0/schema.json",
+    "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.9.0/schema.json",
     "name": "a65998bd9609b68b4af1",
     "position": {
         "x": 23.52941176470588,
@@ -7,7 +7,7 @@
         "z": 1000,
         "height": 463.235294117647,
         "width": 1872.0588235294117,
-        "tabOrder": 8000
+        "tabOrder": 3000
     },
     "visual": {
         "visualType": "tableEx",
@@ -552,146 +552,6 @@
                         }
                     ]
                 }
-            },
-            {
-                "name": "ad15b181f7b5bd86677c",
-                "field": {
-                    "Column": {
-                        "Expression": {
-                            "SourceRef": {
-                                "Entity": "widelyshared_publishtoweb"
-                            }
-                        },
-                        "Property": "artifactType"
-                    }
-                },
-                "type": "Categorical"
-            },
-            {
-                "name": "75d28835ae00e3e482d4",
-                "field": {
-                    "Column": {
-                        "Expression": {
-                            "SourceRef": {
-                                "Entity": "widelyshared_publishtoweb"
-                            }
-                        },
-                        "Property": "ItemId"
-                    }
-                },
-                "type": "Categorical"
-            },
-            {
-                "name": "bc4203888fa953447507",
-                "field": {
-                    "Column": {
-                        "Expression": {
-                            "SourceRef": {
-                                "Entity": "widelyshared_publishtoweb"
-                            }
-                        },
-                        "Property": "item_displayName"
-                    }
-                },
-                "type": "Categorical"
-            },
-            {
-                "name": "135fab79347ecabe670b",
-                "field": {
-                    "Column": {
-                        "Expression": {
-                            "SourceRef": {
-                                "Entity": "widelyshared_publishtoweb"
-                            }
-                        },
-                        "Property": "shareType"
-                    }
-                },
-                "type": "Categorical"
-            },
-            {
-                "name": "6c536d6d098f22758b69",
-                "field": {
-                    "Column": {
-                        "Expression": {
-                            "SourceRef": {
-                                "Entity": "widelyshared_publishtoweb"
-                            }
-                        },
-                        "Property": "accessRight"
-                    }
-                },
-                "type": "Categorical"
-            },
-            {
-                "name": "bf4ba574fc7f71bc69a1",
-                "field": {
-                    "Column": {
-                        "Expression": {
-                            "SourceRef": {
-                                "Entity": "widelyshared_publishtoweb"
-                            }
-                        },
-                        "Property": "sharer_displayName"
-                    }
-                },
-                "type": "Categorical"
-            },
-            {
-                "name": "28c1636dc3da3c090335",
-                "field": {
-                    "Column": {
-                        "Expression": {
-                            "SourceRef": {
-                                "Entity": "widelyshared_publishtoweb"
-                            }
-                        },
-                        "Property": "sharer_emailAddress"
-                    }
-                },
-                "type": "Categorical"
-            },
-            {
-                "name": "086cfc3589b6fcb3e6e9",
-                "field": {
-                    "Column": {
-                        "Expression": {
-                            "SourceRef": {
-                                "Entity": "widelyshared_publishtoweb"
-                            }
-                        },
-                        "Property": "sharer_graphId"
-                    }
-                },
-                "type": "Categorical"
-            },
-            {
-                "name": "2a9404b3de74be5f26b4",
-                "field": {
-                    "Column": {
-                        "Expression": {
-                            "SourceRef": {
-                                "Entity": "widelyshared_publishtoweb"
-                            }
-                        },
-                        "Property": "sharer_principalType"
-                    }
-                },
-                "type": "Categorical"
-            },
-            {
-                "name": "ab7a77518c8876ef8804",
-                "field": {
-                    "Column": {
-                        "Expression": {
-                            "SourceRef": {
-                                "Entity": "widelyshared_publishtoweb"
-                            }
-                        },
-                        "Property": "TransferDate"
-                    }
-                },
-                "type": "Categorical"
             }
         ],
         "filterSortOrder": "Custom"

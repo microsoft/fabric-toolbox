@@ -1,5 +1,5 @@
 {
-    "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.5.0/schema.json",
+    "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.9.0/schema.json",
     "name": "da3d6ca01652c76ecd69",
     "position": {
         "x": 1344.5652173913043,
@@ -365,6 +365,11 @@
                     "selector": {
                         "metadata": "aggregated_activities_last_30days.Activity"
                     }
+                }
+            ],
+            "columnHeaders": [
+                {
+                    "properties": {}
                 }
             ]
         },
