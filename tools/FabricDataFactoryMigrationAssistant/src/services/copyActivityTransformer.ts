@@ -2,16 +2,35 @@ import { adfParserService } from './adfParserService';
 
 /**
  * Enhanced service for transforming ADF Copy activities to Fabric format
- * Properly handles dataset parameters, connection mappings, and Fabric structure
+ * 
+ * Key Features:
+ * - Converts ADF inputs/outputs to Fabric datasetSettings
+ * - Handles dataset parameter substitution
+ * - Maps connection references to Fabric connection IDs
+ * - Automatically fixes wildcard path fileSystem issues
+ * 
+ * Wildcard Fix (Jan 2026):
+ * When wildcardFolderPath or wildcardFileName are used in storeSettings,
+ * ensures the fileSystem property is present in datasetSettings.typeProperties.location.
+ * This is required in Fabric but was missing in ADF-to-Fabric transformations.
+ * 
+ * @see docs/WILDCARD_FIX_GUIDE.md for troubleshooting
  */
 export class CopyActivityTransformer {
   /**
    * Transforms an ADF Copy activity to Fabric format
    * @param activity The ADF Copy activity
-   * @param connectionMappings The connection mappings from the UI
+   * @param connectionMappings The OLD format connection mappings (deprecated)
+   * @param pipelineReferenceMappings The NEW format reference mappings
+   * @param pipelineName The current pipeline name
    * @returns The transformed Fabric Copy activity
    */
-  transformCopyActivity(activity: any, connectionMappings?: any): any {
+  transformCopyActivity(
+    activity: any, 
+    connectionMappings?: any,
+    pipelineReferenceMappings?: Record<string, Record<string, string>>,
+    pipelineName?: string
+  ): any {
     if (!activity || activity.type !== 'Copy') {
       return activity;
     }
@@ -30,7 +49,13 @@ export class CopyActivityTransformer {
 
     const transformedActivity = {
       ...activity,
-      typeProperties: this.transformCopyTypeProperties(activity, datasetMappings, connectionMappings)
+      typeProperties: this.transformCopyTypeProperties(
+        activity, 
+        datasetMappings, 
+        connectionMappings,
+        pipelineReferenceMappings,
+        pipelineName
+      )
     };
 
     // Remove ADF-specific properties that are not used in Fabric pipelines
@@ -72,17 +97,46 @@ export class CopyActivityTransformer {
    * Transforms the typeProperties of a Copy activity
    * @param activity The full Copy activity (including inputs/outputs)
    * @param datasetMappings The dataset mappings from parser
-   * @param pipelineConnectionMappings The connection mappings
+   * @param pipelineConnectionMappings The OLD format connection mappings (deprecated)
+   * @param pipelineReferenceMappings The NEW format reference mappings
+   * @param pipelineName The current pipeline name
    * @returns The transformed typeProperties for Fabric
    */
-  private transformCopyTypeProperties(activity: any, datasetMappings: any, pipelineConnectionMappings?: any): any {
+  private transformCopyTypeProperties(
+    activity: any, 
+    datasetMappings: any, 
+    pipelineConnectionMappings?: any,
+    pipelineReferenceMappings?: Record<string, Record<string, string>>,
+    pipelineName?: string
+  ): any {
     const typeProperties = activity.typeProperties || {};
+    const activityName = activity.name;
     
     const transformed: any = {
-      source: this.transformCopySource(typeProperties.source || {}, datasetMappings, pipelineConnectionMappings),
-      sink: this.transformCopySink(typeProperties.sink || {}, datasetMappings, pipelineConnectionMappings),
+      source: this.transformCopySource(
+        typeProperties.source || {}, 
+        datasetMappings, 
+        pipelineConnectionMappings,
+        pipelineReferenceMappings,
+        pipelineName,
+        activityName
+      ),
+      sink: this.transformCopySink(
+        typeProperties.sink || {}, 
+        datasetMappings, 
+        pipelineConnectionMappings,
+        pipelineReferenceMappings,
+        pipelineName,
+        activityName
+      ),
       enableStaging: typeProperties.enableStaging || false,
-      stagingSettings: this.transformStagingSettings(typeProperties.stagingSettings, pipelineConnectionMappings),
+      stagingSettings: this.transformStagingSettings(
+        typeProperties.stagingSettings, 
+        pipelineConnectionMappings,
+        pipelineReferenceMappings,
+        pipelineName,
+        activityName
+      ),
       parallelCopies: typeProperties.parallelCopies || undefined,
       dataIntegrationUnits: typeProperties.dataIntegrationUnits || undefined,
       translator: typeProperties.translator || undefined,
@@ -100,13 +154,52 @@ export class CopyActivityTransformer {
   }
 
   /**
+   * Detects if wildcard paths are being used in storeSettings
+   * 
+   * In ADF/Synapse, wildcard paths allow reading multiple files matching a pattern:
+   * - wildcardFolderPath: Match folders by pattern (e.g., "input/*", "@variables('path')")
+   * - wildcardFileName: Match files by pattern (e.g., "*.json", "data_*.parquet")
+   * 
+   * When wildcards are used, Fabric requires the fileSystem to be explicitly set
+   * in datasetSettings.typeProperties.location, even though ADF doesn't require it
+   * in the activity definition (it comes from the dataset).
+   * 
+   * @param storeSettings The storeSettings object from source or sink
+   * @returns true if wildcardFolderPath or wildcardFileName is present
+   * 
+   * @example
+   * // Returns true
+   * hasWildcardPaths({
+   *   type: 'AzureBlobFSReadSettings',
+   *   wildcardFileName: '*.json'
+   * })
+   */
+  private hasWildcardPaths(storeSettings: any): boolean {
+    if (!storeSettings || typeof storeSettings !== 'object') {
+      return false;
+    }
+    
+    return Boolean(
+      storeSettings.wildcardFolderPath || 
+      storeSettings.wildcardFileName
+    );
+  }
+
+  /**
    * Transforms the source configuration for a Copy activity
    * @param source The ADF source configuration
    * @param datasetMappings The dataset mappings
    * @param pipelineConnectionMappings The connection mappings
    * @returns The transformed source with datasetSettings
    */
-  private transformCopySource(source: any, datasetMappings: any, pipelineConnectionMappings?: any): any {
+  private transformCopySource(
+    source: any, 
+    datasetMappings: any, 
+    pipelineConnectionMappings?: any,
+    pipelineReferenceMappings?: Record<string, Record<string, string>>,
+    pipelineName?: string,
+    activityName?: string
+  ): any {
     const sourceDataset = datasetMappings.sourceDataset;
     const sourceParameters = datasetMappings.sourceParameters || {};
 
@@ -145,8 +238,73 @@ export class CopyActivityTransformer {
       sourceParameters,
       'source',
       linkedServiceName,
-      pipelineConnectionMappings
+      pipelineConnectionMappings,
+      pipelineReferenceMappings,
+      pipelineName,
+      activityName
     );
+
+    // WILDCARD FIX: When wildcards are used, ensure fileSystem is in datasetSettings
+    if (this.hasWildcardPaths(source.storeSettings)) {
+      console.log(`🔍 Wildcard paths detected in source storeSettings for activity '${activityName || 'unknown'}'`);
+      
+      // Check if datasetSettings has a location object (file-based datasets)
+      if (datasetSettings?.typeProperties?.location) {
+        // If fileSystem is not already set, try to get it from the dataset's original typeProperties
+        if (!datasetSettings.typeProperties.location.fileSystem && !datasetSettings.typeProperties.location.container) {
+          const originalLocation = sourceDataset.definition?.properties?.typeProperties?.location || {};
+          
+          // Get fileSystem or container from original dataset location
+          const fileSystemValue = originalLocation.fileSystem || originalLocation.container;
+          
+          if (fileSystemValue) {
+            // If it's an Expression object, extract the value and apply parameter substitution
+            let resolvedFileSystem: any;
+            
+            if (typeof fileSystemValue === 'object' && fileSystemValue !== null && fileSystemValue.value) {
+              // Handle Expression objects
+              const expressionValue = fileSystemValue.value;
+              if (typeof expressionValue === 'string') {
+                resolvedFileSystem = this.replaceParameterReferences(expressionValue, sourceParameters);
+              } else {
+                // Nested Expression object edge case
+                console.warn(`⚠️ Source fileSystem has nested Expression object structure, using as-is`);
+                resolvedFileSystem = expressionValue;
+              }
+            } else if (typeof fileSystemValue === 'string') {
+              // Handle plain string values
+              resolvedFileSystem = this.replaceParameterReferences(fileSystemValue, sourceParameters);
+            } else {
+              // Handle non-standard types (number, boolean, etc.)
+              console.warn(`⚠️ Source fileSystem has unexpected type: ${typeof fileSystemValue}, converting to string`);
+              resolvedFileSystem = String(fileSystemValue);
+            }
+            
+            // Final validation before setting
+            if (resolvedFileSystem && resolvedFileSystem !== 'undefined' && resolvedFileSystem !== 'null') {
+              // Trim whitespace from resolved value
+              const trimmedValue = typeof resolvedFileSystem === 'string' ? resolvedFileSystem.trim() : resolvedFileSystem;
+              
+              if (trimmedValue && trimmedValue !== '') {
+                datasetSettings.typeProperties.location.fileSystem = trimmedValue;
+                console.log(`✅ Wildcard fix applied: Added fileSystem to source datasetSettings.typeProperties.location: "${trimmedValue}"`);
+              } else {
+                console.warn(`⚠️ Wildcard detected but resolved fileSystem value is empty for source in activity '${activityName || 'unknown'}'`);
+              }
+            } else {
+              console.warn(`⚠️ Wildcard detected but could not resolve fileSystem value for source in activity '${activityName || 'unknown'}'`);
+            }
+          } else {
+            console.warn(`⚠️ Wildcard detected but no fileSystem/container found in dataset definition for source in activity '${activityName || 'unknown'}'`);
+          }
+        } else {
+          const existingValue = datasetSettings.typeProperties.location.fileSystem || datasetSettings.typeProperties.location.container;
+          console.log(`✓ fileSystem already present in source datasetSettings.typeProperties.location: "${existingValue}"`);
+        }
+      } else {
+        console.warn(`⚠️ Wildcard detected in source but datasetSettings does not have a location object (dataset type: ${datasetSettings?.type || 'unknown'}) for activity '${activityName || 'unknown'}'`);
+      }
+    }
 
     return {
       ...source,
@@ -162,7 +320,14 @@ export class CopyActivityTransformer {
    * @param pipelineConnectionMappings The connection mappings
    * @returns The transformed sink with datasetSettings
    */
-  private transformCopySink(sink: any, datasetMappings: any, pipelineConnectionMappings?: any): any {
+  private transformCopySink(
+    sink: any, 
+    datasetMappings: any, 
+    pipelineConnectionMappings?: any,
+    pipelineReferenceMappings?: Record<string, Record<string, string>>,
+    pipelineName?: string,
+    activityName?: string
+  ): any {
     const sinkDataset = datasetMappings.sinkDataset;
     const sinkParameters = datasetMappings.sinkParameters || {};
 
@@ -201,8 +366,73 @@ export class CopyActivityTransformer {
       sinkParameters,
       'sink',
       linkedServiceName,
-      pipelineConnectionMappings
+      pipelineConnectionMappings,
+      pipelineReferenceMappings,
+      pipelineName,
+      activityName
     );
+
+    // WILDCARD FIX: When wildcards are used, ensure fileSystem is in datasetSettings
+    if (this.hasWildcardPaths(sink.storeSettings)) {
+      console.log(`🔍 Wildcard paths detected in sink storeSettings for activity '${activityName || 'unknown'}'`);
+      
+      // Check if datasetSettings has a location object (file-based datasets)
+      if (datasetSettings?.typeProperties?.location) {
+        // If fileSystem is not already set, try to get it from the dataset's original typeProperties
+        if (!datasetSettings.typeProperties.location.fileSystem && !datasetSettings.typeProperties.location.container) {
+          const originalLocation = sinkDataset.definition?.properties?.typeProperties?.location || {};
+          
+          // Get fileSystem or container from original dataset location
+          const fileSystemValue = originalLocation.fileSystem || originalLocation.container;
+          
+          if (fileSystemValue) {
+            // If it's an Expression object, extract the value and apply parameter substitution
+            let resolvedFileSystem: any;
+            
+            if (typeof fileSystemValue === 'object' && fileSystemValue !== null && fileSystemValue.value) {
+              // Handle Expression objects
+              const expressionValue = fileSystemValue.value;
+              if (typeof expressionValue === 'string') {
+                resolvedFileSystem = this.replaceParameterReferences(expressionValue, sinkParameters);
+              } else {
+                // Nested Expression object edge case
+                console.warn(`⚠️ Sink fileSystem has nested Expression object structure, using as-is`);
+                resolvedFileSystem = expressionValue;
+              }
+            } else if (typeof fileSystemValue === 'string') {
+              // Handle plain string values
+              resolvedFileSystem = this.replaceParameterReferences(fileSystemValue, sinkParameters);
+            } else {
+              // Handle non-standard types (number, boolean, etc.)
+              console.warn(`⚠️ Sink fileSystem has unexpected type: ${typeof fileSystemValue}, converting to string`);
+              resolvedFileSystem = String(fileSystemValue);
+            }
+            
+            // Final validation before setting
+            if (resolvedFileSystem && resolvedFileSystem !== 'undefined' && resolvedFileSystem !== 'null') {
+              // Trim whitespace from resolved value
+              const trimmedValue = typeof resolvedFileSystem === 'string' ? resolvedFileSystem.trim() : resolvedFileSystem;
+              
+              if (trimmedValue && trimmedValue !== '') {
+                datasetSettings.typeProperties.location.fileSystem = trimmedValue;
+                console.log(`✅ Wildcard fix applied: Added fileSystem to sink datasetSettings.typeProperties.location: "${trimmedValue}"`);
+              } else {
+                console.warn(`⚠️ Wildcard detected but resolved fileSystem value is empty for sink in activity '${activityName || 'unknown'}'`);
+              }
+            } else {
+              console.warn(`⚠️ Wildcard detected but could not resolve fileSystem value for sink in activity '${activityName || 'unknown'}'`);
+            }
+          } else {
+            console.warn(`⚠️ Wildcard detected but no fileSystem/container found in dataset definition for sink in activity '${activityName || 'unknown'}'`);
+          }
+        } else {
+          const existingValue = datasetSettings.typeProperties.location.fileSystem || datasetSettings.typeProperties.location.container;
+          console.log(`✓ fileSystem already present in sink datasetSettings.typeProperties.location: "${existingValue}"`);
+        }
+      } else {
+        console.warn(`⚠️ Wildcard detected in sink but datasetSettings does not have a location object (dataset type: ${datasetSettings?.type || 'unknown'}) for activity '${activityName || 'unknown'}'`);
+      }
+    }
 
     return {
       ...sink,
@@ -225,12 +455,22 @@ export class CopyActivityTransformer {
     parameters: any, 
     role: 'source' | 'sink',
     linkedServiceName?: string,
-    pipelineConnectionMappings?: any
+    pipelineConnectionMappings?: any,
+    pipelineReferenceMappings?: Record<string, Record<string, string>>,
+    pipelineName?: string,
+    activityName?: string
   ): any {
     const properties = datasetComponent.definition?.properties || {};
     
     // Get connection ID for the dataset's LinkedService
-    const connectionId = this.getConnectionIdForLinkedService(linkedServiceName, pipelineConnectionMappings);
+    const connectionId = this.getConnectionIdForLinkedService(
+      linkedServiceName,
+      pipelineConnectionMappings,
+      pipelineReferenceMappings,
+      pipelineName,
+      activityName,
+      role
+    );
 
     // Build proper datasetSettings with all required properties from ADF dataset
     const datasetType = properties?.type || 'Unknown';
@@ -264,56 +504,75 @@ export class CopyActivityTransformer {
 
   /**
    * Gets the connection ID for a LinkedService from the pipeline connection mappings
+   * Uses 4-tier fallback: Priority 1 = NEW referenceMappings, Priority 2 = OLD pipelineConnectionMappings
    * @param linkedServiceName The LinkedService name
-   * @param pipelineConnectionMappings The connection mappings
-   * @returns The Fabric connection ID or undefined
+   * @param pipelineConnectionMappings The OLD format connection mappings
+   * @param pipelineReferenceMappings The NEW format reference mappings
+   * @param pipelineName The current pipeline name
+   * @param activityName The current activity name
+   * @param role The dataset role (source or sink)
+   * @returns The connection ID if found, undefined otherwise
    */
-  private getConnectionIdForLinkedService(linkedServiceName?: string, pipelineConnectionMappings?: any): string | undefined {
-    if (!linkedServiceName || !pipelineConnectionMappings) {
-      console.warn(`Missing parameters for connection lookup: linkedServiceName=${linkedServiceName}, hasMappings=${Boolean(pipelineConnectionMappings)}`);
+  private getConnectionIdForLinkedService(
+    linkedServiceName?: string, 
+    pipelineConnectionMappings?: any,
+    pipelineReferenceMappings?: Record<string, Record<string, string>>,
+    pipelineName?: string,
+    activityName?: string,
+    role?: 'source' | 'sink'
+  ): string | undefined {
+    if (!linkedServiceName) {
+      console.warn('No LinkedService name provided for connection lookup');
+      return undefined;
+    }
+
+    // PRIORITY 1: Try NEW referenceMappings (referenceId-based format)
+    if (pipelineReferenceMappings && pipelineName && activityName && role) {
+      const pipelineMappings = pipelineReferenceMappings[pipelineName];
+      if (pipelineMappings) {
+        const referenceId = `${pipelineName}_${activityName}_${role}`;
+        const connectionId = pipelineMappings[referenceId];
+        if (connectionId) {
+          console.log(`🎯 Found connection via NEW referenceMappings: ${referenceId} -> ${connectionId}`);
+          return connectionId;
+        }
+      }
+    }
+
+    // PRIORITY 2: Try OLD pipelineConnectionMappings (backward compatibility)
+    if (!pipelineConnectionMappings) {
+      console.warn('No connection mappings available');
       return undefined;
     }
 
     console.log(`Looking for connection mapping for LinkedService: ${linkedServiceName}`);
-    console.log(`Available pipeline mappings:`, Object.keys(pipelineConnectionMappings));
 
     // Look through all pipeline mappings to find the connection ID for this LinkedService
-    for (const pipelineName in pipelineConnectionMappings) {
-      const pipelineMappings = pipelineConnectionMappings[pipelineName];
-      console.log(`Checking pipeline '${pipelineName}' with ${Object.keys(pipelineMappings).length} mappings`);
+    for (const pName in pipelineConnectionMappings) {
+      const pipelineMappings = pipelineConnectionMappings[pName];
       
       for (const activityKey in pipelineMappings) {
         const mapping = pipelineMappings[activityKey];
         
-        console.log(`Checking mapping for key '${activityKey}':`, {
-          hasLinkedServiceRef: Boolean(mapping?.linkedServiceReference),
-          linkedServiceRefName: mapping?.linkedServiceReference?.name,
-          hasSelectedConnectionId: Boolean(mapping?.selectedConnectionId),
-          selectedConnectionId: mapping?.selectedConnectionId,
-          activityName: mapping?.activityName,
-          activityType: mapping?.activityType
-        });
-        
         // Check by LinkedService reference name
         if (mapping?.linkedServiceReference?.name === linkedServiceName && mapping?.selectedConnectionId) {
-          console.log(`✅ Found connection mapping by LinkedService reference: ${linkedServiceName} -> ${mapping.selectedConnectionId} (via ${pipelineName}.${activityKey})`);
+          console.log(`✅ Found connection via OLD mappings (LinkedService match): ${linkedServiceName} -> ${mapping.selectedConnectionId}`);
           return mapping.selectedConnectionId;
         }
         
-        // Check if the activity key contains the LinkedService name (for unique ID mappings like activityName_linkedServiceName_index)
+        // Check if the activity key contains the LinkedService name
         if (activityKey.includes(linkedServiceName) && mapping?.selectedConnectionId) {
-          console.log(`✅ Found connection mapping by activity key pattern: ${linkedServiceName} -> ${mapping.selectedConnectionId} (via ${pipelineName}.${activityKey})`);
+          console.log(`✅ Found connection via OLD mappings (key pattern): ${linkedServiceName} -> ${mapping.selectedConnectionId}`);
           return mapping.selectedConnectionId;
         }
 
-        // Additional check: look for LinkedService name in the mapping structure itself
+        // Check mapping structure for LinkedService name
         if (mapping?.selectedConnectionId) {
-          // Check if this mapping is for the LinkedService we're looking for
           const mappingLinkedServiceName = mapping?.linkedServiceReference?.name || 
-                                          (activityKey.split('_').find(part => part === linkedServiceName));
+                                          (activityKey.split('_').find((part: string) => part === linkedServiceName));
           
           if (mappingLinkedServiceName === linkedServiceName) {
-            console.log(`✅ Found connection mapping by deep search: ${linkedServiceName} -> ${mapping.selectedConnectionId} (via ${pipelineName}.${activityKey})`);
+            console.log(`✅ Found connection via OLD mappings (deep search): ${linkedServiceName} -> ${mapping.selectedConnectionId}`);
             return mapping.selectedConnectionId;
           }
         }
@@ -321,7 +580,6 @@ export class CopyActivityTransformer {
     }
 
     console.warn(`❌ No connection mapping found for LinkedService: ${linkedServiceName}`);
-    console.log(`Available mappings for debugging:`, JSON.stringify(pipelineConnectionMappings, null, 2));
     return undefined;
   }
 
@@ -335,31 +593,138 @@ export class CopyActivityTransformer {
       throw new Error('Dataset type is required but was not provided');
     }
 
-    // Dynamic mapping: append "Source" to dataset type with special cases
+    // Complete mapping of ADF dataset types → Fabric source types
     const specialMappings: Record<string, string> = {
+      // SQL
       'AzureSqlTable': 'SqlServerSource',
       'SqlServerTable': 'SqlServerSource',
+      'AzureSqlDWTable': 'SqlDWSource',
+      'AzureSqlMITable': 'SqlMISource',
+      // File / Storage
       'AzureBlob': 'BlobSource',
-      'AzureBlobFSFile': 'DelimitedTextSource',
+      'AzureBlobStorage': 'BlobSource',
+      'AzureBlobFSFile': 'AzureBlobFSSource',
+      'AzureBlobFS': 'AzureBlobFSSource',
       'DelimitedText': 'DelimitedTextSource',
       'Parquet': 'ParquetSource',
       'Json': 'JsonSource',
       'JsonFormat': 'JsonSource',
-      'AzureBlobStorage': 'BlobSource',
-      'AzureDataLakeStore': 'DelimitedTextSource',
+      'Avro': 'AvroSource',
+      'Orc': 'OrcSource',
+      'Excel': 'ExcelSource',
+      'Xml': 'XmlSource',
+      'Binary': 'BinarySource',
+      'AzureDataLakeStore': 'AzureDataLakeStoreSource',
+      'AzureDataLakeStoreFile': 'AzureDataLakeStoreSource',
+      'FileShare': 'FileSystemSource',
       'FileSystem': 'FileSystemSource',
+      'HttpFile': 'HttpSource',
       'HttpServer': 'HttpSource',
-      'RestService': 'RestSource',
-      'OData': 'ODataSource',
-      'Cassandra': 'CassandraSource',
-      'MongoDb': 'MongoDbSource',
-      'CosmosDb': 'CosmosDbSource',
-      'MySql': 'MySqlSource',
-      'PostgreSql': 'PostgreSqlSource',
+      'HdfsFile': 'HdfsSource',
+      // Relational databases
+      'AmazonRdsForOracleTable': 'AmazonRdsForOracleSource',
+      'AmazonRdsForSqlServerTable': 'AmazonRdsForSqlServerSource',
+      'AmazonRedshiftTable': 'AmazonRedshiftSource',
       'Oracle': 'OracleSource',
+      'OracleTable': 'OracleSource',
+      'MySql': 'MySqlSource',
+      'MySqlTable': 'MySqlSource',
+      'PostgreSql': 'PostgreSqlSource',
+      'PostgreSqlTable': 'PostgreSqlSource',
+      'PostgreSqlV2Table': 'PostgreSqlV2Source',
+      'AzureMySqlTable': 'AzureMySqlSource',
+      'AzurePostgreSqlTable': 'AzurePostgreSqlSource',
+      'AzureMariaDBTable': 'AzureMariaDBSource',
+      'MariaDBTable': 'MariaDBSource',
       'DB2': 'Db2Source',
+      'Db2Table': 'Db2Source',
       'Teradata': 'TeradataSource',
-      'Sybase': 'SybaseSource'
+      'TeradataTable': 'TeradataSource',
+      'Sybase': 'SybaseSource',
+      'SybaseTable': 'SybaseSource',
+      'InformixTable': 'InformixSource',
+      'OdbcTable': 'OdbcSource',
+      'MicrosoftAccessTable': 'MicrosoftAccessSource',
+      'NetezzaTable': 'NetezzaSource',
+      'VerticaTable': 'VerticaSource',
+      'GreenplumTable': 'GreenplumSource',
+      // Cloud / SaaS
+      'RestService': 'RestSource',
+      'RestResource': 'RestSource',
+      'OData': 'ODataSource',
+      'ODataResource': 'ODataSource',
+      'SharePointOnlineListResource': 'SharePointOnlineListSource',
+      'Office365': 'Office365Source',
+      // NoSQL
+      'CosmosDb': 'CosmosDbSource',
+      'CosmosDBSqlApiCollection': 'CosmosDBSqlApiSource',
+      'CosmosDBMongoDBApiCollection': 'CosmosDBMongoDBApiSource',
+      'MongoDb': 'MongoDbSource',
+      'MongoDBCollection': 'MongoDBSource',
+      'MongoDBV2Collection': 'MongoDBV2Source',
+      'MongoDBAtlasCollection': 'MongoDBAtlasSource',
+      'Cassandra': 'CassandraSource',
+      'CassandraTable': 'CassandraSource',
+      'DocumentDBCollection': 'DocumentDBCollectionSource',
+      // Analytics / Big Data
+      'AzureDataExplorerTable': 'AzureDataExplorerSource',
+      'AzureDatabricksDeltaLake': 'AzureDatabricksDeltaLakeSource',
+      'GoogleBigQueryObject': 'GoogleBigQuerySource',
+      'GoogleBigQueryV2Object': 'GoogleBigQueryV2Source',
+      'AmazonS3': 'AmazonS3Source',
+      'Snowflake': 'SnowflakeSource',
+      'SnowflakeV2': 'SnowflakeV2Source',
+      'SparkObject': 'SparkSource',
+      'HiveObject': 'HiveSource',
+      'HBaseObject': 'HBaseSource',
+      'ImpalaObject': 'ImpalaSource',
+      'PrestoObject': 'PrestoSource',
+      'PhoenixObject': 'PhoenixSource',
+      'DrillTable': 'DrillSource',
+      'CouchbaseTable': 'CouchbaseSource',
+      // Warehouse
+      'LakeHouseTable': 'LakeHouseTableSource',
+      'WarehouseTable': 'WarehouseSource',
+      // SAP
+      'SapBWCube': 'SapBWSource',
+      'SapCloudForCustomerResource': 'SapCloudForCustomerSource',
+      'SapEccResource': 'SapEccSource',
+      'SapHanaTable': 'SapHanaSource',
+      'SapOdpResource': 'SapOdpSource',
+      'SapOpenHubTable': 'SapOpenHubSource',
+      'SapTableResource': 'SapTableSource',
+      // Dynamics
+      'DynamicsEntity': 'DynamicsSource',
+      'DynamicsCrmEntity': 'DynamicsCrmSource',
+      'DynamicsAXResource': 'DynamicsAXSource',
+      'CommonDataServiceForAppsEntity': 'CommonDataServiceForAppsSource',
+      // Salesforce
+      'SalesforceObject': 'SalesforceSource',
+      'SalesforceV2Object': 'SalesforceV2Source',
+      'SalesforceServiceCloudObject': 'SalesforceServiceCloudSource',
+      'SalesforceServiceCloudV2Object': 'SalesforceServiceCloudV2Source',
+      'SalesforceMarketingCloudObject': 'SalesforceMarketingCloudSource',
+      // Other SaaS
+      'AmazonMwsObject': 'AmazonMwsSource',
+      'ConcurObject': 'ConcurSource',
+      'EloquaObject': 'EloquaSource',
+      'GoogleAdWordsObject': 'GoogleAdWordsSource',
+      'HubspotObject': 'HubspotSource',
+      'JiraObject': 'JiraSource',
+      'MagentoObject': 'MagentoSource',
+      'MarketoObject': 'MarketoSource',
+      'PaypalObject': 'PaypalSource',
+      'QuickBooksObject': 'QuickBooksSource',
+      'RelationalTable': 'RelationalSource',
+      'ResponsysObject': 'ResponsysSource',
+      'ServiceNowObject': 'ServiceNowSource',
+      'ServiceNowV2Object': 'ServiceNowV2Source',
+      'ShopifyObject': 'ShopifySource',
+      'SquareObject': 'SquareSource',
+      'WebTable': 'WebSource',
+      'XeroObject': 'XeroSource',
+      'ZohoObject': 'ZohoSource',
+      'OracleServiceCloudObject': 'OracleServiceCloudSource',
     };
 
     const mappedType = specialMappings[adfDatasetType];
@@ -367,9 +732,10 @@ export class CopyActivityTransformer {
       return mappedType;
     }
 
-    // For unknown dataset types, try to create a reasonable mapping by appending "Source"
-    // This ensures we never return "Unknown" 
-    const generatedType = `${adfDatasetType}Source`;
+    // For unknown dataset types, append "Source" — but strip any existing Source/Sink
+    // suffix first to prevent double-suffix (e.g. OracleSource + Source = OracleSourceSource).
+    const normalizedType = adfDatasetType.replace(/Source$/i, '').replace(/Sink$/i, '');
+    const generatedType = `${normalizedType}Source`;
     console.warn(`Using generated source type '${generatedType}' for ADF dataset type '${adfDatasetType}'. This may need manual verification.`);
     return generatedType;
   }
@@ -384,31 +750,83 @@ export class CopyActivityTransformer {
       throw new Error('Dataset type is required but was not provided');
     }
 
-    // Dynamic mapping: append "Sink" to dataset type with special cases
+    // Complete mapping of ADF dataset types → Fabric sink types
     const specialMappings: Record<string, string> = {
+      // SQL
       'AzureSqlTable': 'SqlServerSink',
       'SqlServerTable': 'SqlServerSink',
+      'AzureSqlDWTable': 'SqlDWSink',
+      'AzureSqlMITable': 'SqlMISink',
+      // File / Storage
       'AzureBlob': 'BlobSink',
-      'AzureBlobFSFile': 'DelimitedTextSink',
+      'AzureBlobStorage': 'BlobSink',
+      'AzureBlobFSFile': 'AzureBlobFSSink',
+      'AzureBlobFS': 'AzureBlobFSSink',
       'DelimitedText': 'DelimitedTextSink',
       'Parquet': 'ParquetSink',
       'Json': 'JsonSink',
       'JsonFormat': 'JsonSink',
-      'AzureBlobStorage': 'BlobSink',
-      'AzureDataLakeStore': 'DelimitedTextSink',
+      'Avro': 'AvroSink',
+      'Orc': 'OrcSink',
+      'Binary': 'BinarySink',
+      'Iceberg': 'IcebergSink',
+      'AzureDataLakeStore': 'AzureDataLakeStoreSink',
+      'AzureDataLakeStoreFile': 'AzureDataLakeStoreSink',
+      'FileShare': 'FileSystemSink',
       'FileSystem': 'FileSystemSink',
-      'HttpServer': 'HttpSink',
-      'RestService': 'RestSink',
-      'OData': 'ODataSink',
-      'Cassandra': 'CassandraSink',
-      'MongoDb': 'MongoDbSink',
-      'CosmosDb': 'CosmosDbSink',
-      'MySql': 'MySqlSink',
-      'PostgreSql': 'PostgreSqlSink',
+      // Relational databases
       'Oracle': 'OracleSink',
+      'OracleTable': 'OracleSink',
+      'MySql': 'MySqlSink',
+      'MySqlTable': 'MySqlSink',
+      'PostgreSql': 'PostgreSqlSink',
+      'PostgreSqlTable': 'PostgreSqlSink',
+      'AzureMySqlTable': 'AzureMySqlSink',
+      'AzurePostgreSqlTable': 'AzurePostgreSqlSink',
       'DB2': 'Db2Sink',
+      'Db2Table': 'Db2Sink',
       'Teradata': 'TeradataSink',
-      'Sybase': 'SybaseSink'
+      'TeradataTable': 'TeradataSink',
+      'Sybase': 'SybaseSink',
+      'SybaseTable': 'SybaseSink',
+      'InformixTable': 'InformixSink',
+      'OdbcTable': 'OdbcSink',
+      'MicrosoftAccessTable': 'MicrosoftAccessSink',
+      // Cloud / SaaS
+      'RestService': 'RestSink',
+      'RestResource': 'RestSink',
+      // NoSQL
+      'CosmosDb': 'CosmosDbSink',
+      'CosmosDBSqlApiCollection': 'CosmosDBSqlApiSink',
+      'CosmosDBMongoDBApiCollection': 'CosmosDBMongoDBApiSink',
+      'MongoDb': 'MongoDbSink',
+      'MongoDBCollection': 'MongoDBSink',
+      'MongoDBV2Collection': 'MongoDBV2Sink',
+      'MongoDBAtlasCollection': 'MongoDBAtlasSink',
+      'Cassandra': 'CassandraSink',
+      'CassandraTable': 'CassandraSink',
+      'DocumentDBCollection': 'DocumentDBCollectionSink',
+      // Analytics / Big Data
+      'AzureDataExplorerTable': 'AzureDataExplorerSink',
+      'AzureDatabricksDeltaLake': 'AzureDatabricksDeltaLakeSink',
+      'AzureSearchIndex': 'AzureSearchIndexSink',
+      'AzureTable': 'AzureTableSink',
+      'AzureQueue': 'AzureQueueSink',
+      'Snowflake': 'SnowflakeSink',
+      'SnowflakeV2': 'SnowflakeV2Sink',
+      // Warehouse
+      'LakeHouseTable': 'LakeHouseTableSink',
+      'WarehouseTable': 'WarehouseSink',
+      // Dynamics
+      'DynamicsEntity': 'DynamicsSink',
+      'DynamicsCrmEntity': 'DynamicsCrmSink',
+      'CommonDataServiceForAppsEntity': 'CommonDataServiceForAppsSink',
+      // Salesforce
+      'SalesforceObject': 'SalesforceSink',
+      'SalesforceV2Object': 'SalesforceV2Sink',
+      'SalesforceServiceCloudObject': 'SalesforceServiceCloudSink',
+      'SalesforceServiceCloudV2Object': 'SalesforceServiceCloudV2Sink',
+      'SapCloudForCustomerResource': 'SapCloudForCustomerSink',
     };
 
     const mappedType = specialMappings[adfDatasetType];
@@ -416,9 +834,10 @@ export class CopyActivityTransformer {
       return mappedType;
     }
 
-    // For unknown dataset types, try to create a reasonable mapping by appending "Sink"
-    // This ensures we never return "Unknown" 
-    const generatedType = `${adfDatasetType}Sink`;
+    // For unknown dataset types, append "Sink" — but strip any existing Source/Sink
+    // suffix first to prevent double-suffix (e.g. OracleSink + Sink = OracleSinkSink).
+    const normalizedType = adfDatasetType.replace(/Source$/i, '').replace(/Sink$/i, '');
+    const generatedType = `${normalizedType}Sink`;
     console.warn(`Using generated sink type '${generatedType}' for ADF dataset type '${adfDatasetType}'. This may need manual verification.`);
     return generatedType;
   }
@@ -433,30 +852,141 @@ export class CopyActivityTransformer {
       throw new Error('Dataset type is required but was not provided');
     }
 
+    // Complete mapping of ADF dataset types → Fabric datasetSettings types
     const typeMapping: Record<string, string> = {
-      'AzureSqlTable': 'SqlServerTable',
+      // SQL
+      'AzureSqlTable': 'AzureSqlTable',
       'SqlServerTable': 'SqlServerTable',
+      'AzureSqlDWTable': 'AzureSqlDWTable',
+      'AzureSqlMITable': 'AzureSqlMITable',
+      // File / Storage
       'DelimitedText': 'DelimitedText',
       'Parquet': 'Parquet',
       'Json': 'Json',
       'JsonFormat': 'Json',
+      'Avro': 'Avro',
+      'Orc': 'Orc',
+      'Excel': 'Excel',
+      'Xml': 'Xml',
+      'Binary': 'Binary',
+      'Iceberg': 'Iceberg',
       'AzureBlob': 'AzureBlob',
-      'AzureBlobFSFile': 'DelimitedText',
       'AzureBlobStorage': 'AzureBlob',
-      'AzureDataLakeStore': 'DelimitedText',
-      'FileSystem': 'FileSystem',
-      'HttpServer': 'Http',
-      'RestService': 'Rest',
-      'OData': 'OData',
-      'Cassandra': 'Cassandra',
-      'MongoDb': 'MongoDb',
-      'CosmosDb': 'CosmosDb',
-      'MySql': 'MySql',
-      'PostgreSql': 'PostgreSql',
-      'Oracle': 'Oracle',
-      'DB2': 'DB2',
-      'Teradata': 'Teradata',
-      'Sybase': 'Sybase'
+      'AzureBlobFSFile': 'AzureBlobFS',
+      'AzureBlobFS': 'AzureBlobFS',
+      'AzureDataLakeStore': 'AzureDataLakeStore',
+      'AzureDataLakeStoreFile': 'AzureDataLakeStore',
+      'FileShare': 'FileShare',
+      'FileSystem': 'FileShare',
+      'HttpFile': 'HttpFile',
+      'HttpServer': 'HttpFile',
+      // Relational databases
+      'AmazonRdsForOracleTable': 'AmazonRdsForOracleTable',
+      'AmazonRdsForSqlServerTable': 'AmazonRdsForSqlServerTable',
+      'AmazonRedshiftTable': 'AmazonRedshiftTable',
+      'Oracle': 'OracleTable',
+      'OracleTable': 'OracleTable',
+      'MySql': 'MySqlTable',
+      'MySqlTable': 'MySqlTable',
+      'PostgreSql': 'PostgreSqlTable',
+      'PostgreSqlTable': 'PostgreSqlTable',
+      'PostgreSqlV2Table': 'PostgreSqlV2Table',
+      'AzureMySqlTable': 'AzureMySqlTable',
+      'AzurePostgreSqlTable': 'AzurePostgreSqlTable',
+      'AzureMariaDBTable': 'AzureMariaDBTable',
+      'MariaDBTable': 'MariaDBTable',
+      'DB2': 'Db2Table',
+      'Db2Table': 'Db2Table',
+      'Teradata': 'TeradataTable',
+      'TeradataTable': 'TeradataTable',
+      'Sybase': 'SybaseTable',
+      'SybaseTable': 'SybaseTable',
+      'InformixTable': 'InformixTable',
+      'OdbcTable': 'OdbcTable',
+      'MicrosoftAccessTable': 'MicrosoftAccessTable',
+      'NetezzaTable': 'NetezzaTable',
+      'VerticaTable': 'VerticaTable',
+      'GreenplumTable': 'GreenplumTable',
+      // Cloud / SaaS
+      'RestService': 'RestResource',
+      'RestResource': 'RestResource',
+      'OData': 'ODataResource',
+      'ODataResource': 'ODataResource',
+      'SharePointOnlineListResource': 'SharePointOnlineListResource',
+      'Office365': 'Office365',
+      // NoSQL
+      'CosmosDb': 'CosmosDBSqlApiCollection',
+      'CosmosDBSqlApiCollection': 'CosmosDBSqlApiCollection',
+      'CosmosDBMongoDBApiCollection': 'CosmosDBMongoDBApiCollection',
+      'MongoDb': 'MongoDBCollection',
+      'MongoDBCollection': 'MongoDBCollection',
+      'MongoDBV2Collection': 'MongoDBV2Collection',
+      'MongoDBAtlasCollection': 'MongoDBAtlasCollection',
+      'Cassandra': 'CassandraTable',
+      'CassandraTable': 'CassandraTable',
+      'DocumentDBCollection': 'DocumentDBCollection',
+      // Analytics / Big Data
+      'AzureDataExplorerTable': 'AzureDataExplorerTable',
+      'AzureDatabricksDeltaLake': 'AzureDatabricksDeltaLake',
+      'AzureSearchIndex': 'AzureSearchIndex',
+      'AzureTable': 'AzureTable',
+      'GoogleBigQueryObject': 'GoogleBigQueryObject',
+      'GoogleBigQueryV2Object': 'GoogleBigQueryV2Object',
+      'AmazonS3': 'AmazonS3',
+      'Snowflake': 'Snowflake',
+      'SnowflakeV2': 'SnowflakeV2',
+      'SparkObject': 'SparkObject',
+      'HiveObject': 'HiveObject',
+      'HBaseObject': 'HBaseObject',
+      'ImpalaObject': 'ImpalaObject',
+      'PrestoObject': 'PrestoObject',
+      'PhoenixObject': 'PhoenixObject',
+      'DrillTable': 'DrillTable',
+      'CouchbaseTable': 'CouchbaseTable',
+      // Warehouse
+      'LakeHouseTable': 'LakeHouseTable',
+      'WarehouseTable': 'WarehouseTable',
+      // SAP
+      'SapBWCube': 'SapBWCube',
+      'SapCloudForCustomerResource': 'SapCloudForCustomerResource',
+      'SapEccResource': 'SapEccResource',
+      'SapHanaTable': 'SapHanaTable',
+      'SapOdpResource': 'SapOdpResource',
+      'SapOpenHubTable': 'SapOpenHubTable',
+      'SapTableResource': 'SapTableResource',
+      // Dynamics
+      'DynamicsEntity': 'DynamicsEntity',
+      'DynamicsCrmEntity': 'DynamicsCrmEntity',
+      'DynamicsAXResource': 'DynamicsAXResource',
+      'CommonDataServiceForAppsEntity': 'CommonDataServiceForAppsEntity',
+      // Salesforce
+      'SalesforceObject': 'SalesforceObject',
+      'SalesforceV2Object': 'SalesforceV2Object',
+      'SalesforceServiceCloudObject': 'SalesforceServiceCloudObject',
+      'SalesforceServiceCloudV2Object': 'SalesforceServiceCloudV2Object',
+      'SalesforceMarketingCloudObject': 'SalesforceMarketingCloudObject',
+      // Other SaaS
+      'AmazonMwsObject': 'AmazonMwsObject',
+      'ConcurObject': 'ConcurObject',
+      'EloquaObject': 'EloquaObject',
+      'GoogleAdWordsObject': 'GoogleAdWordsObject',
+      'HubspotObject': 'HubspotObject',
+      'JiraObject': 'JiraObject',
+      'MagentoObject': 'MagentoObject',
+      'MarketoObject': 'MarketoObject',
+      'PaypalObject': 'PaypalObject',
+      'QuickBooksObject': 'QuickBooksObject',
+      'RelationalTable': 'RelationalTable',
+      'ResponsysObject': 'ResponsysObject',
+      'ServiceNowObject': 'ServiceNowObject',
+      'ServiceNowV2Object': 'ServiceNowV2Object',
+      'ShopifyObject': 'ShopifyObject',
+      'SquareObject': 'SquareObject',
+      'WebTable': 'WebTable',
+      'XeroObject': 'XeroObject',
+      'ZohoObject': 'ZohoObject',
+      'OracleServiceCloudObject': 'OracleServiceCloudObject',
+      'Custom': 'Custom',
     };
 
     const mappedType = typeMapping[adfDatasetType];
@@ -492,12 +1022,6 @@ export class CopyActivityTransformer {
       
       case 'DelimitedText':
         return this.buildDelimitedTextDatasetProperties(typePropertiesWithParams, role);
-      
-      case 'Parquet':
-        return this.buildParquetDatasetProperties(typePropertiesWithParams, role);
-      
-      case 'Json':
-        return this.buildJsonDatasetProperties(typePropertiesWithParams, role);
       
       case 'Parquet':
         return this.buildParquetDatasetProperties(typePropertiesWithParams, role);
@@ -590,8 +1114,15 @@ export class CopyActivityTransformer {
     // Handle @{dataset().parameterName} format
     result = result.replace(/@\{dataset\(\)\.(\w+)\}/g, (match, paramName) => {
       if (parameters && parameters.hasOwnProperty(paramName)) {
-        console.log(`Replacing parameter ${paramName} with value: ${parameters[paramName]}`);
-        return parameters[paramName];
+        let paramValue = parameters[paramName];
+        
+        // Extract .value from Expression objects FIRST
+        if (typeof paramValue === 'object' && paramValue !== null && 'value' in paramValue && paramValue.type === 'Expression') {
+          paramValue = paramValue.value;
+        }
+        
+        console.log(`Replacing parameter ${paramName} with value: ${paramValue}`);
+        return String(paramValue);
       }
       return match;
     });
@@ -599,8 +1130,15 @@ export class CopyActivityTransformer {
     // Handle @dataset().parameterName format (without curly braces)
     result = result.replace(/@dataset\(\)\.(\w+)/g, (match, paramName) => {
       if (parameters && parameters.hasOwnProperty(paramName)) {
-        console.log(`Replacing parameter ${paramName} with value: ${parameters[paramName]}`);
-        return parameters[paramName];
+        let paramValue = parameters[paramName];
+        
+        // Extract .value from Expression objects FIRST
+        if (typeof paramValue === 'object' && paramValue !== null && 'value' in paramValue && paramValue.type === 'Expression') {
+          paramValue = paramValue.value;
+        }
+        
+        console.log(`Replacing parameter ${paramName} with value: ${paramValue}`);
+        return String(paramValue);
       }
       return match;
     });
@@ -682,6 +1220,11 @@ export class CopyActivityTransformer {
     if (typeProperties.quoteChar !== undefined) {
       result.quoteChar = typeProperties.quoteChar;
     }
+
+    // Add compression object only if it exists
+    if (typeProperties.compression !== undefined) {
+      result.compression = typeProperties.compression;
+    }
     
     return result;
   }
@@ -723,6 +1266,11 @@ export class CopyActivityTransformer {
     // Add compression codec only if it exists
     if (typeProperties.compressionCodec !== undefined) {
       result.compressionCodec = typeProperties.compressionCodec;
+    }
+
+    // Add compression object only if it exists
+    if (typeProperties.compression !== undefined) {
+      result.compression = typeProperties.compression;
     }
     
     return result;
@@ -766,6 +1314,11 @@ export class CopyActivityTransformer {
     if (typeProperties.encodingName !== undefined) {
       result.encodingName = typeProperties.encodingName;
     }
+
+    // Add compression object only if it exists
+    if (typeProperties.compression !== undefined) {
+      result.compression = typeProperties.compression;
+    }
     
     return result;
   }
@@ -803,6 +1356,11 @@ export class CopyActivityTransformer {
     if (Object.keys(locationResult).length > 0) {
       result.location = locationResult;
     }
+
+    // Add compression object only if it exists
+    if (typeProperties.compression !== undefined) {
+      result.compression = typeProperties.compression;
+    }
     
     return result;
   }
@@ -810,14 +1368,42 @@ export class CopyActivityTransformer {
   /**
    * Transforms staging settings for Copy activities
    * @param stagingSettings The ADF staging settings
-   * @param pipelineConnectionMappings The connection mappings
+   * @param pipelineConnectionMappings The OLD format connection mappings (deprecated)
+   * @param pipelineReferenceMappings The NEW format reference mappings
+   * @param pipelineName The current pipeline name
+   * @param activityName The current activity name
    * @returns The transformed staging settings for Fabric
    */
-  private transformStagingSettings(stagingSettings: any, pipelineConnectionMappings?: any): any {
+  private transformStagingSettings(
+    stagingSettings: any, 
+    pipelineConnectionMappings?: any,
+    pipelineReferenceMappings?: Record<string, Record<string, string>>,
+    pipelineName?: string,
+    activityName?: string
+  ): any {
     if (!stagingSettings) return undefined;
 
     const linkedServiceName = stagingSettings.linkedServiceName?.referenceName;
-    const connectionId = this.getConnectionIdForLinkedService(linkedServiceName, pipelineConnectionMappings);
+    let connectionId: string | undefined;
+
+    // Try NEW format first (pipelineReferenceMappings with referenceId)
+    if (pipelineReferenceMappings && pipelineName && activityName) {
+      const referenceId = `${pipelineName}_${activityName}_staging`;
+      const pipelineMappings = pipelineReferenceMappings[pipelineName];
+      connectionId = pipelineMappings?.[referenceId];
+      
+      if (connectionId) {
+        console.log(`Using NEW format staging connection mapping: ${referenceId} -> ${connectionId}`);
+      }
+    }
+
+    // Fallback to OLD format for backward compatibility
+    if (!connectionId && linkedServiceName) {
+      connectionId = this.getConnectionIdForLinkedService(linkedServiceName, pipelineConnectionMappings);
+      if (connectionId) {
+        console.log(`Using OLD format staging connection mapping: ${linkedServiceName} -> ${connectionId}`);
+      }
+    }
 
     const result: any = {};
     

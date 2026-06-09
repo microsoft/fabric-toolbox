@@ -1,0 +1,101 @@
+services:
+  # ── MariaDB with row-based binary logging ──────────────────────────
+  mariadb:
+    image: mariadb:11.4
+    container_name: mariadb
+    environment:
+      MARIADB_ROOT_PASSWORD: MyRootP@ssw0rd!
+      MARIADB_DATABASE: sampledb
+      MARIADB_USER: mirroruser
+      MARIADB_PASSWORD: MirrorP@ssw0rd!
+    ports:
+      - "3306:3306"
+    volumes:
+      - mariadb_data:/var/lib/mysql
+      # Custom config enables binlog_format=ROW & binlog_row_image=FULL
+      - ./config/mariadb/custom.cnf:/etc/mysql/conf.d/custom.cnf:ro
+      # Init script bootstraps the required user, sample tables, and seed data
+      - ./config/mariadb/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+    healthcheck:
+      test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
+      start_period: 30s
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ── Apache Kafka (KRaft mode – no Zookeeper needed) ────────────────
+  kafka:
+    image: apache/kafka:3.8.1
+    container_name: kafka
+    environment:
+      # KRaft single-node settings
+      KAFKA_NODE_ID: 0
+      KAFKA_PROCESS_ROLES: broker,controller
+      KAFKA_CONTROLLER_QUORUM_VOTERS: 0@kafka:9093
+      KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER
+      # Listeners
+      KAFKA_LISTENERS: PLAINTEXT://:9092,CONTROLLER://:9093,EXTERNAL://:9094
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092,EXTERNAL://localhost:9094
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,CONTROLLER:PLAINTEXT,EXTERNAL:PLAINTEXT
+      KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
+      # Topic defaults
+      KAFKA_AUTO_CREATE_TOPICS_ENABLE: "true"
+      # Required for KRaft
+      CLUSTER_ID: "MkU3OEVBNTcwNTJENDM2Qk"
+    ports:
+      - "9094:9094"     # external access on localhost:9094
+    volumes:
+      - kafka_data:/var/lib/kafka/data
+    healthcheck:
+      test: ["CMD-SHELL", "/opt/kafka/bin/kafka-topics.sh --bootstrap-server localhost:9092 --list"]
+      start_period: 30s
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ── MaxScale KafkaCDC router ───────────────────────────────────────
+  maxscale:
+    image: mariadb/maxscale:latest
+    container_name: maxscale
+    depends_on:
+      mariadb:
+        condition: service_healthy
+      kafka:
+        condition: service_healthy
+    volumes:
+      - ./config/maxscale/maxscale.cnf:/etc/maxscale.cnf:ro
+      - maxscale_data:/var/lib/maxscale
+    # No ports exposed – MaxScale KafkaCDC doesn't use listeners
+
+  # ── Kafka UI – graphical monitoring dashboard ──────────────────────
+  kafka-ui:
+    image: provectuslabs/kafka-ui:latest
+    container_name: kafka-ui
+    depends_on:
+      kafka:
+        condition: service_healthy
+    environment:
+      KAFKA_CLUSTERS_0_NAME: local
+      KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS: kafka:9092
+    ports:
+      - "8080:8080"
+
+  # ── MariaDB -> Fabric Open Mirroring mirror ───────────────────────
+  mariadb-fabric-mirror:
+    build:
+      context: .
+      dockerfile: consumer/Dockerfile
+    container_name: mariadb-fabric-mirror
+    depends_on:
+      kafka:
+        condition: service_healthy
+      mariadb:
+        condition: service_healthy
+    volumes:
+      - ./fabric-landing-zone:/landing-zone
+      - ./consumer/config.yaml:/app/config.yaml:ro
+
+volumes:
+  mariadb_data:
+  kafka_data:
+  maxscale_data:

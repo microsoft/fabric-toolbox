@@ -1,0 +1,36 @@
+# MaxScale configuration for KafkaCDC
+# Streams MariaDB CDC events to Kafka as JSON
+
+[maxscale]
+threads            = auto
+log_augmentation   = 1
+
+# MariaDB server definition
+[server1]
+type               = server
+address            = mariadb
+port               = 3306
+protocol           = MariaDBBackend
+
+# Monitor to track server state
+[MariaDB-Monitor]
+type               = monitor
+module             = mariadbmon
+servers            = server1
+user               = maxscale
+password           = MaxScaleP@ss1!
+monitor_interval   = 2s
+
+# KafkaCDC service — replicates binlog events to Kafka as JSON
+[Kafka-CDC]
+type               = service
+router             = kafkacdc
+servers            = server1
+user               = maxscale
+password           = MaxScaleP@ss1!
+bootstrap_servers  = kafka:9092
+topic              = mariadb-cdc
+# Start from the current GTID position (skip historical data)
+gtid               = newest
+# Send schema change events so consumers know the table structure
+send_schema        = true

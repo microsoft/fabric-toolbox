@@ -1,0 +1,320 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="page-header">
+    <h1>🏭 Data Warehousing View</h1>
+    <p>SQL pools, SQL warehouses, databases, tables, and SQL scripts</p>
+</div>
+
+<!-- Summary Stats -->
+<div class="row">
+    <div class="col">
+        <div class="stat-card synapse">
+            <div class="stat-value" id="stat-ded">{{ warehousing.dedicated_pools | length }}</div>
+            <div class="stat-label">Dedicated Pools</div>
+        </div>
+    </div>
+    <div class="col">
+        <div class="stat-card synapse">
+            <div class="stat-value" id="stat-srv">{{ warehousing.serverless_pools | length }}</div>
+            <div class="stat-label">Serverless Pools</div>
+        </div>
+    </div>
+    <div class="col">
+        <div class="stat-card databricks">
+            <div class="stat-value" id="stat-sqlwh">{{ warehousing.sql_warehouses | length }}</div>
+            <div class="stat-label">SQL Warehouses</div>
+        </div>
+    </div>
+    <div class="col">
+        <div class="stat-card">
+            <div class="stat-value" id="stat-tables">{{ warehousing.total_tables | format_number }}</div>
+            <div class="stat-label">Total Tables</div>
+        </div>
+    </div>
+    <div class="col">
+        <div class="stat-card">
+            <div class="stat-value" id="stat-size">{{ warehousing.total_size_gb | round(2) }} GB</div>
+            <div class="stat-label">Total Size</div>
+        </div>
+    </div>
+</div>
+
+<!-- Dedicated SQL Pools (Synapse) -->
+{% if warehousing.dedicated_pools %}
+<div class="card mt-2">
+    <div class="card-header">🗄️ Dedicated SQL Pools (Synapse)</div>
+    <div class="card-body">
+        <div class="row">
+            <div class="col col-6">
+                <div class="chart-container">
+                    <canvas id="poolSizeChart"></canvas>
+                </div>
+            </div>
+            <div class="col col-6">
+                <div class="table-responsive">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>Name</th>
+                                <th>SKU</th>
+                                <th>Status</th>
+                                <th class="text-right">Tables</th>
+                                <th class="text-right">Size (GB)</th>
+                                <th>Workspace</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for pool in warehousing.dedicated_pools %}
+                            <tr data-workspace="{{ pool.workspace | default('N/A') }}">
+                                <td>{{ pool.name | default('Unknown') }}</td>
+                                <td><span class="badge badge-secondary">{{ pool.sku | default('N/A') }}</span></td>
+                                <td>
+                                    <span class="badge {% if pool.status == 'Online' %}badge-success{% else %}badge-warning{% endif %}">
+                                        {{ pool.status | default('Unknown') }}
+                                    </span>
+                                </td>
+                                <td class="text-right">{{ pool.tables_count | default(0) | format_number }}</td>
+                                <td class="text-right">{{ pool.size_gb | default(0) | round(2) }}</td>
+                                <td>{{ pool.workspace | default('N/A') }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<!-- SQL Warehouses (Databricks) -->
+{% if warehousing.sql_warehouses %}
+<div class="card">
+    <div class="card-header">📊 SQL Warehouses (Databricks)</div>
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Name</th>
+                        <th>Cluster Size</th>
+                        <th>Min Clusters</th>
+                        <th>Max Clusters</th>
+                        <th>Serverless</th>
+                        <th>Photon</th>
+                        <th>Workspace</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for wh in warehousing.sql_warehouses %}
+                    <tr data-workspace="{{ wh.workspace | default('N/A') }}">
+                        <td>{{ wh.name | default('Unknown') }}</td>
+                        <td><span class="badge badge-secondary">{{ wh.cluster_size | default('N/A') }}</span></td>
+                        <td class="text-right">{{ wh.min_clusters | default('N/A') }}</td>
+                        <td class="text-right">{{ wh.max_clusters | default('N/A') }}</td>
+                        <td>
+                            {% if wh.serverless %}
+                            <span class="badge badge-success">Yes</span>
+                            {% else %}
+                            <span class="badge badge-secondary">No</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if wh.photon_enabled %}
+                            <span class="badge badge-success">Yes</span>
+                            {% else %}
+                            <span class="badge badge-secondary">No</span>
+                            {% endif %}
+                        </td>
+                        <td>{{ wh.workspace | default('N/A') }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<!-- Serverless Pools (Synapse) -->
+{% if warehousing.serverless_pools %}
+<div class="card">
+    <div class="card-header">☁️ Serverless SQL Pools (Synapse)</div>
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Name</th>
+                        <th>Status</th>
+                        <th>Workspace</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for pool in warehousing.serverless_pools %}
+                    <tr data-workspace="{{ pool.workspace | default('N/A') }}">
+                        <td>{{ pool.name | default('Built-in') }}</td>
+                        <td>
+                            <span class="badge {% if pool.status == 'Online' %}badge-success{% else %}badge-warning{% endif %}">
+                                {{ pool.status | default('Online') }}
+                            </span>
+                        </td>
+                        <td>{{ pool.workspace | default('N/A') }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<!-- Databases -->
+{% if warehousing.databases %}
+<div class="card">
+    <div class="card-header">🗃️ Databases</div>
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Name</th>
+                        <th>Type</th>
+                        <th>Workspace</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for db in warehousing.databases[:30] %}
+                    <tr data-workspace="{{ db.workspace | default('N/A') }}">
+                        <td>{{ db.name | default('Unknown') }}</td>
+                        <td><span class="badge badge-secondary">{{ db.db_type | default('N/A') | replace('_', ' ') | title }}</span></td>
+                        <td>{{ db.workspace | default('N/A') }}</td>
+                    </tr>
+                    {% endfor %}
+                    {% if warehousing.databases | length > 30 %}
+                    <tr>
+                        <td colspan="3" class="text-muted">
+                            ... and {{ warehousing.databases | length - 30 }} more databases
+                        </td>
+                    </tr>
+                    {% endif %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<!-- SQL Scripts -->
+{% if warehousing.sql_scripts %}
+<div class="card">
+    <div class="card-header">📝 SQL Scripts</div>
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Name</th>
+                        <th>Workspace</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for script in warehousing.sql_scripts[:30] %}
+                    <tr data-workspace="{{ script.workspace | default('N/A') }}">
+                        <td>{{ script.name | default('Unknown') }}</td>
+                        <td>{{ script.workspace | default('N/A') }}</td>
+                    </tr>
+                    {% endfor %}
+                    {% if warehousing.sql_scripts | length > 30 %}
+                    <tr>
+                        <td colspan="2" class="text-muted">
+                            ... and {{ warehousing.sql_scripts | length - 30 }} more scripts
+                        </td>
+                    </tr>
+                    {% endif %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<div class="mt-2">
+    <a href="{{ base_path }}index.html">← Back to Overview</a>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+// Data warehousing data for filtering
+const warehousingData = {
+{% for ws_name, ws in workspaces.items() %}
+    "{{ ws_name }}": {
+        dedicated_pools: {{ ws.summary.data_warehouse.counts.dedicated.sql_pools | default(ws.summary.data_warehouse.dedicated_pools | default(0)) if ws.platform == 'synapse' else 0 }},
+        serverless_pools: {{ ws.summary.data_warehouse.counts.serverless.sql_pools | default(1 if ws.summary.data_warehouse.serverless_pool | default(false) else 0) if ws.platform == 'synapse' else 0 }},
+        sql_warehouses: {{ ws.summary.counts.sql_warehouses | default(0) if ws.platform == 'databricks' else 0 }},
+        tables: {{ (ws.summary.data_warehouse.counts.dedicated.tables | default(0)) + (ws.summary.data_warehouse.counts.serverless.tables | default(0)) if ws.platform == 'synapse' else ws.summary.counts.tables | default(0) }},
+        size_gb: {{ ws.summary.data_warehouse.counts.dedicated.table_size_gb | default(ws.summary.data_warehouse.total_size_gb | default(0)) if ws.platform == 'synapse' else 0 }}
+    }{% if not loop.last %},{% endif %}
+{% endfor %}
+};
+
+function updateFilteredStats(selectedWorkspaces) {
+    let ded = 0, srv = 0, sqlwh = 0, tables = 0, sizeGb = 0;
+    selectedWorkspaces.forEach(ws => {
+        const data = warehousingData[ws];
+        if (data) {
+            ded += data.dedicated_pools || 0;
+            srv += data.serverless_pools || 0;
+            sqlwh += data.sql_warehouses || 0;
+            tables += data.tables || 0;
+            sizeGb += data.size_gb || 0;
+        }
+    });
+    document.getElementById('stat-ded').textContent = ded;
+    document.getElementById('stat-srv').textContent = srv;
+    document.getElementById('stat-sqlwh').textContent = sqlwh;
+    document.getElementById('stat-tables').textContent = tables.toLocaleString();
+    document.getElementById('stat-size').textContent = sizeGb.toFixed(2) + ' GB';
+}
+
+{% if warehousing.dedicated_pools %}
+const poolCtx = document.getElementById('poolSizeChart');
+if (poolCtx) {
+    const poolNames = {{ warehousing.dedicated_pools | map(attribute='name') | list | tojson }};
+    const poolSizes = {{ warehousing.dedicated_pools | map(attribute='size_gb', default=0) | list | tojson }};
+    
+    new Chart(poolCtx, {
+        type: 'bar',
+        data: {
+            labels: poolNames,
+            datasets: [{
+                label: 'Size (GB)',
+                data: poolSizes,
+                backgroundColor: '#5c2d91'
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    display: false
+                },
+                title: {
+                    display: true,
+                    text: 'Pool Size (GB)'
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true
+                }
+            }
+        }
+    });
+}
+{% endif %}
+</script>
+{% endblock %}

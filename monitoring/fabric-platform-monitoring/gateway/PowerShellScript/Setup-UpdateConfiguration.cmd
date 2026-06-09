@@ -1,0 +1,1 @@
+pwsh -File ".\Setup-UpdateConfiguration.ps1"

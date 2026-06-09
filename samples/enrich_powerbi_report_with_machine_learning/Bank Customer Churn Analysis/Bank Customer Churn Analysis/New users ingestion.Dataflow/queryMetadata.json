@@ -1,0 +1,46 @@
+{
+  "formatVersion": "202502",
+  "computeEngineSettings": {},
+  "name": "New users",
+  "queryGroups": [],
+  "documentLocale": "en-US",
+  "queriesMetadata": {
+    "New Users": {
+      "queryId": "6d3fe86c-de52-48fa-8db3-ab28025a357e",
+      "queryName": "New Users"
+    },
+    "fnFeatureEngineering": {
+      "queryId": "f92f6b62-b2c6-492b-aebf-c3f196d836ee",
+      "queryName": "fnFeatureEngineering",
+      "loadEnabled": false
+    },
+    "PredictChurnRisk": {
+      "queryId": "cece41cf-dce2-4cc3-bdf6-98c084668169",
+      "queryName": "PredictChurnRisk",
+      "loadEnabled": false
+    }
+  },
+  "connections": [
+    {
+      "path": "https://eastus201092026-my.sharepoint.com/personal/adminuser01_eastus201092026_onmicrosoft_com/",
+      "kind": "Web",
+      "connectionId": "{\"ClusterId\":\"878dab76-4f88-4c1a-aec0-c9e72ba25153\",\"DatasourceId\":\"ec65f774-d192-42fd-8e00-0ec74d2448d7\"}"
+    },
+    {
+      "path": "https://login.microsoftonline.com/61a7d6de-e079-4aff-ae8d-25cb5f9e0b4f/oauth2/v2.0/token",
+      "kind": "Web",
+      "connectionId": "{\"ClusterId\":\"878dab76-4f88-4c1a-aec0-c9e72ba25153\",\"DatasourceId\":\"5fc761de-2c5e-44cd-b871-843f7fb673f7\"}"
+    },
+    {
+      "path": "https://api.fabric.microsoft.com/v1/workspaces/f5d4f720-7eb0-4cc1-b70d-e1d912197072/mlmodels/badcad8a-0bd7-47bd-915f-50a01631dc50/endpoint/score",
+      "kind": "Web",
+      "connectionId": "{\"ClusterId\":\"878dab76-4f88-4c1a-aec0-c9e72ba25153\",\"DatasourceId\":\"fc2c275b-f5c3-4f19-a168-0207b50d55d0\"}"
+    },
+    {
+      "path": "Lakehouse",
+      "kind": "Lakehouse",
+      "connectionId": "{\"ClusterId\":\"878dab76-4f88-4c1a-aec0-c9e72ba25153\",\"DatasourceId\":\"3eb80c32-33bb-443e-89b8-e22d85715466\"}"
+    }
+  ],
+  "fastCombine": true
+}

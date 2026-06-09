@@ -1278,6 +1278,86 @@ The following activities reference datasets and have their LinkedService connect
 **Delete Activity** (1 dataset):
 - Dataset via `typeProperties.dataset.referenceName`
 
+#### Copy Activity Wildcard Path Support
+
+**Issue:** In ADF/Synapse, when wildcard paths are used in Copy Activity (`wildcardFolderPath` or `wildcardFileName`), the `fileSystem` (container) property comes from the dataset definition, not from the activity's `storeSettings`. However, in Fabric, the `fileSystem` must be present in `datasetSettings.typeProperties.location` for wildcard operations to work correctly.
+
+**Solution:** The application automatically detects wildcard paths and ensures the `fileSystem` property is properly included in the Fabric `datasetSettings` object.
+
+**Supported Scenarios:**
+- ✅ Wildcard folder paths (`wildcardFolderPath`)
+- ✅ Wildcard file names (`wildcardFileName`)
+- ✅ Hardcoded `fileSystem` values in datasets
+- ✅ Parameterized `fileSystem` values (e.g., `@dataset().p_container`)
+- ✅ Global parameter references (e.g., `@pipeline().globalParameters.gp_Container`)
+- ✅ Nested Copy activities (ForEach, IfCondition, Switch, Until)
+- ✅ Both source and sink wildcard paths
+- ✅ Fallback to `container` property when `fileSystem` not present
+
+**Example Transformation:**
+
+```json
+// ADF: Copy Activity with Wildcard
+{
+  "name": "Copy data1",
+  "type": "Copy",
+  "typeProperties": {
+    "source": {
+      "type": "JsonSource",
+      "storeSettings": {
+        "type": "AzureBlobFSReadSettings",
+        "wildcardFolderPath": "@pipeline().globalParameters.gp_Directory",
+        "wildcardFileName": "*.json"
+      }
+    }
+  },
+  "inputs": [{
+    "referenceName": "Json1",
+    "parameters": {
+      "p_container": "@pipeline().globalParameters.gp_Container"
+    }
+  }]
+}
+
+// Dataset Definition
+{
+  "name": "Json1",
+  "typeProperties": {
+    "location": {
+      "type": "AzureBlobFSLocation",
+      "fileSystem": { "value": "@dataset().p_container", "type": "Expression" }
+    }
+  }
+}
+
+// Fabric: Transformed with fileSystem in datasetSettings
+{
+  "name": "Copy data1",
+  "type": "Copy",
+  "typeProperties": {
+    "source": {
+      "type": "JsonSource",
+      "storeSettings": {
+        "type": "AzureBlobFSReadSettings",
+        "wildcardFolderPath": "@pipeline().globalParameters.gp_Directory",
+        "wildcardFileName": "*.json"
+      },
+      "datasetSettings": {
+        "type": "Json",
+        "typeProperties": {
+          "location": {
+            "type": "AzureBlobFSLocation",
+            "fileSystem": "@pipeline().globalParameters.gp_Container"
+          }
+        }
+      }
+    }
+  }
+}
+```
+
+**Troubleshooting:** See [Wildcard Fix Guide](docs/WILDCARD_FIX_GUIDE.md) for detailed troubleshooting steps.
+
 #### Activities with Direct LinkedService References
 
 These activities reference LinkedServices directly (not through datasets):

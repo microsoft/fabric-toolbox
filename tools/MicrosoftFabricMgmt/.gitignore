@@ -1,0 +1,52 @@
+**.bak
+*.local.*
+!**/README.md
+.kitchen/
+
+~*.*
+*.nupkg
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+
+# Build results
+
+
+# allow the module folder for now until it can be deployed to the PowerShell Gallery
+# Ignore the output directory
+[Oo]utput/
+[Oo]utput/RequiredModules/
+
+# Allow Git to descend into output/
+![Oo]utput/
+
+# Allow Git to descend into output/module/
+![Oo]utput/module/
+
+# Allow Git to descend into output/module/MicrosoftFabricMgmt/
+![Oo]utput/module/MicrosoftFabricMgmt/
+
+# allow everything inside MicrosoftFabricMgmt
+![Oo]utput/module/MicrosoftFabricMgmt/**
+
+
+
+# MSTest test Results
+[Tt]est[Rr]esult*/
+[Bb]uild[Ll]og.*
+
+# NUNIT
+*.VisualState.xml
+TestResult.xml
+
+# Visual Studio code coverage results
+*.coverage
+.vs
+.psproj
+.sln
+markdownissues.txt
+node_modules
+package-lock.json
+
+# just a comment

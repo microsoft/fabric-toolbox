@@ -1,0 +1,543 @@
+{
+    "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.5.0/schema.json",
+    "name": "77cfcd5e1cb21d76ab5c",
+    "position": {
+        "x": 5.423443768475524,
+        "y": 470.67308307741024,
+        "z": 8000,
+        "height": 160,
+        "width": 370.7317073170732,
+        "tabOrder": 5000
+    },
+    "visual": {
+        "visualType": "lineStackedColumnComboChart",
+        "query": {
+            "queryState": {
+                "Category": {
+                    "projections": [
+                        {
+                            "field": {
+                                "Column": {
+                                    "Expression": {
+                                        "SourceRef": {
+                                            "Entity": "capacity_metrics_by_timepoint"
+                                        }
+                                    },
+                                    "Property": "TimePoint"
+                                }
+                            },
+                            "queryRef": "capacity_metrics_by_timepoint.TimePoint",
+                            "nativeQueryRef": "TimePoint",
+                            "active": true
+                        }
+                    ]
+                },
+                "Tooltips": {
+                    "projections": [
+                        {
+                            "field": {
+                                "Measure": {
+                                    "Expression": {
+                                        "SourceRef": {
+                                            "Entity": "Metrics"
+                                        }
+                                    },
+                                    "Property": "Add %"
+                                }
+                            },
+                            "queryRef": "Metrics FUAM.Add %",
+                            "nativeQueryRef": "Add %1"
+                        },
+                        {
+                            "field": {
+                                "Measure": {
+                                    "Expression": {
+                                        "SourceRef": {
+                                            "Entity": "Metrics"
+                                        }
+                                    },
+                                    "Property": "Burndown %"
+                                }
+                            },
+                            "queryRef": "Metrics FUAM.Burndown %",
+                            "nativeQueryRef": "Burndown %1"
+                        },
+                        {
+                            "field": {
+                                "Measure": {
+                                    "Expression": {
+                                        "SourceRef": {
+                                            "Entity": "Metrics"
+                                        }
+                                    },
+                                    "Property": "Cumulative %"
+                                }
+                            },
+                            "queryRef": "Metrics FUAM.Cumulative %",
+                            "nativeQueryRef": "Cumulative %1"
+                        },
+                        {
+                            "field": {
+                                "Measure": {
+                                    "Expression": {
+                                        "SourceRef": {
+                                            "Entity": "Metrics"
+                                        }
+                                    },
+                                    "Property": "Expected minutes to burndown"
+                                }
+                            },
+                            "queryRef": "Metrics FUAM.Expected minutes to burndown",
+                            "nativeQueryRef": "Expected minutes to burndown1"
+                        }
+                    ]
+                },
+                "Y": {
+                    "projections": [
+                        {
+                            "field": {
+                                "Measure": {
+                                    "Expression": {
+                                        "SourceRef": {
+                                            "Entity": "Metrics"
+                                        }
+                                    },
+                                    "Property": "Add %"
+                                }
+                            },
+                            "queryRef": "Metrics FUAM.Add %",
+                            "nativeQueryRef": "Add %1"
+                        },
+                        {
+                            "field": {
+                                "Measure": {
+                                    "Expression": {
+                                        "SourceRef": {
+                                            "Entity": "Metrics"
+                                        }
+                                    },
+                                    "Property": "Burndown %"
+                                }
+                            },
+                            "queryRef": "Metrics FUAM.Burndown %",
+                            "nativeQueryRef": "Burndown %1"
+                        }
+                    ]
+                },
+                "Y2": {
+                    "projections": [
+                        {
+                            "field": {
+                                "Measure": {
+                                    "Expression": {
+                                        "SourceRef": {
+                                            "Entity": "Metrics"
+                                        }
+                                    },
+                                    "Property": "Cumulative %"
+                                }
+                            },
+                            "queryRef": "Metrics FUAM.Cumulative %",
+                            "nativeQueryRef": "Cumulative %1"
+                        },
+                        {
+                            "field": {
+                                "Measure": {
+                                    "Expression": {
+                                        "SourceRef": {
+                                            "Entity": "Metrics"
+                                        }
+                                    },
+                                    "Property": "Overage reference line"
+                                }
+                            },
+                            "queryRef": "Metrics FUAM.Overage reference line",
+                            "nativeQueryRef": "Overage reference line1"
+                        }
+                    ]
+                }
+            },
+            "sortDefinition": {
+                "sort": [
+                    {
+                        "field": {
+                            "Column": {
+                                "Expression": {
+                                    "SourceRef": {
+                                        "Entity": "capacity_metrics_by_timepoint"
+                                    }
+                                },
+                                "Property": "TimePoint"
+                            }
+                        },
+                        "direction": "Ascending"
+                    }
+                ],
+                "isDefaultSort": true
+            }
+        },
+        "objects": {
+            "zoom": [
+                {
+                    "properties": {
+                        "show": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "true"
+                                }
+                            }
+                        },
+                        "showOnValueAxis": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "false"
+                                }
+                            }
+                        },
+                        "showOnCategoryAxis": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "false"
+                                }
+                            }
+                        }
+                    }
+                }
+            ],
+            "valueAxis": [
+                {
+                    "properties": {
+                        "showAxisTitle": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "true"
+                                }
+                            }
+                        },
+                        "titleText": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "'Carryforward %'"
+                                }
+                            }
+                        },
+                        "secShowAxisTitle": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "false"
+                                }
+                            }
+                        },
+                        "secShow": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "true"
+                                }
+                            }
+                        }
+                    }
+                }
+            ],
+            "legend": [
+                {
+                    "properties": {
+                        "show": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "true"
+                                }
+                            }
+                        },
+                        "fontSize": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "8D"
+                                }
+                            }
+                        }
+                    }
+                }
+            ],
+            "categoryAxis": [
+                {
+                    "properties": {
+                        "show": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "true"
+                                }
+                            }
+                        },
+                        "showAxisTitle": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "false"
+                                }
+                            }
+                        },
+                        "axisType": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "'Scalar'"
+                                }
+                            }
+                        }
+                    }
+                }
+            ],
+            "dataPoint": [
+                {
+                    "properties": {
+                        "fill": {
+                            "solid": {
+                                "color": {
+                                    "expr": {
+                                        "Conditional": {
+                                            "Cases": [
+                                                {
+                                                    "Condition": {
+                                                        "Comparison": {
+                                                            "ComparisonKind": 2,
+                                                            "Left": {
+                                                                "Measure": {
+                                                                    "Expression": {
+                                                                        "SourceRef": {
+                                                                            "Entity": "All Measures"
+                                                                        }
+                                                                    },
+                                                                    "Property": "Dynamic BackgroundRejection %"
+                                                                }
+                                                            },
+                                                            "Right": {
+                                                                "Literal": {
+                                                                    "Value": "1D"
+                                                                }
+                                                            }
+                                                        }
+                                                    },
+                                                    "Value": {
+                                                        "Literal": {
+                                                            "Value": "'#DA5C5F'"
+                                                        }
+                                                    }
+                                                },
+                                                {
+                                                    "Condition": {
+                                                        "And": {
+                                                            "Left": {
+                                                                "Comparison": {
+                                                                    "ComparisonKind": 2,
+                                                                    "Left": {
+                                                                        "Measure": {
+                                                                            "Expression": {
+                                                                                "SourceRef": {
+                                                                                    "Entity": "All Measures"
+                                                                                }
+                                                                            },
+                                                                            "Property": "Dynamic BackgroundRejection %"
+                                                                        }
+                                                                    },
+                                                                    "Right": {
+                                                                        "Literal": {
+                                                                            "Value": "0D"
+                                                                        }
+                                                                    }
+                                                                }
+                                                            },
+                                                            "Right": {
+                                                                "Comparison": {
+                                                                    "ComparisonKind": 3,
+                                                                    "Left": {
+                                                                        "Measure": {
+                                                                            "Expression": {
+                                                                                "SourceRef": {
+                                                                                    "Entity": "All Measures"
+                                                                                }
+                                                                            },
+                                                                            "Property": "Dynamic BackgroundRejection %"
+                                                                        }
+                                                                    },
+                                                                    "Right": {
+                                                                        "Literal": {
+                                                                            "Value": "1D"
+                                                                        }
+                                                                    }
+                                                                }
+                                                            }
+                                                        }
+                                                    },
+                                                    "Value": {
+                                                        "Literal": {
+                                                            "Value": "'#F2C5C7'"
+                                                        }
+                                                    }
+                                                }
+                                            ]
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "selector": {
+                        "data": [
+                            {
+                                "dataViewWildcard": {
+                                    "matchingOption": 1
+                                }
+                            }
+                        ]
+                    }
+                },
+                {
+                    "properties": {
+                        "fill": {
+                            "solid": {
+                                "color": {
+                                    "expr": {
+                                        "ThemeDataColor": {
+                                            "ColorId": 4,
+                                            "Percent": -0.25
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "selector": {
+                        "metadata": "Metrics FUAM.Burndown %"
+                    }
+                },
+                {
+                    "properties": {
+                        "fill": {
+                            "solid": {
+                                "color": {
+                                    "expr": {
+                                        "Literal": {
+                                            "Value": "'#F67474'"
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "selector": {
+                        "metadata": "Metrics FUAM.Cumulative %"
+                    }
+                },
+                {
+                    "properties": {
+                        "fill": {
+                            "solid": {
+                                "color": {
+                                    "expr": {
+                                        "Literal": {
+                                            "Value": "'#6E6E6E'"
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "selector": {
+                        "metadata": "Metrics FUAM.Overage reference line"
+                    }
+                }
+            ],
+            "lineStyles": [
+                {
+                    "properties": {
+                        "strokeWidth": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "2L"
+                                }
+                            }
+                        },
+                        "lineStyle": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "'dotted'"
+                                }
+                            }
+                        }
+                    }
+                }
+            ]
+        },
+        "visualContainerObjects": {
+            "dropShadow": [
+                {
+                    "properties": {
+                        "show": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "true"
+                                }
+                            }
+                        },
+                        "color": {
+                            "solid": {
+                                "color": {
+                                    "expr": {
+                                        "ThemeDataColor": {
+                                            "ColorId": 0,
+                                            "Percent": -0.2
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            ],
+            "title": [
+                {
+                    "properties": {
+                        "text": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "'Overages % over time'"
+                                }
+                            }
+                        }
+                    }
+                }
+            ],
+            "border": [
+                {
+                    "properties": {
+                        "show": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "true"
+                                }
+                            }
+                        },
+                        "color": {
+                            "solid": {
+                                "color": {
+                                    "expr": {
+                                        "ThemeDataColor": {
+                                            "ColorId": 0,
+                                            "Percent": 0
+                                        }
+                                    }
+                                }
+                            }
+                        },
+                        "radius": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "5D"
+                                }
+                            }
+                        }
+                    }
+                }
+            ]
+        },
+        "drillFilterOtherVisuals": true
+    }
+}

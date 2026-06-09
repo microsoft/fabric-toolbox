@@ -1,0 +1,11 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/gitIntegration/platformProperties/2.0.0/schema.json",
+  "metadata": {
+    "type": "SemanticModel",
+    "displayName": "Gateway Monitoring"
+  },
+  "config": {
+    "version": "2.0",
+    "logicalId": "b391ddbe-a2ac-aece-4d20-6801657d3a6a"
+  }
+}

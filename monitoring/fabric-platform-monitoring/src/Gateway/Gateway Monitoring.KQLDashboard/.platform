@@ -1,0 +1,12 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/gitIntegration/platformProperties/2.0.0/schema.json",
+  "metadata": {
+    "type": "KQLDashboard",
+    "displayName": "Gateway Monitoring",
+    "description": "Gateway Monitoring"
+  },
+  "config": {
+    "version": "2.0",
+    "logicalId": "5dfe7633-370f-86da-4506-9c082a3cc38c"
+  }
+}

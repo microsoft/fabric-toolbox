@@ -1,0 +1,426 @@
+# Extract Lakehouse SQL Schema Pipeline
+# This pipeline extracts SQL schema objects (views, stored procedures, functions)
+# from Fabric Lakehouse SQL endpoints and commits them to Git for review.
+#
+# Trigger Options:
+#   1. Manual: Run pipeline manually to extract current Fabric state → creates new branch
+#   2. Branch Policy: Triggered via "Build Validation" policy on PRs
+#
+# For branch policy runs:
+#   - The PR source branch name is used as the Fabric workspace name
+#   - Schema changes are committed back to the feature branch
+#
+# Purpose: Ensure schema changes made directly in Fabric are captured in Git
+
+trigger: none
+
+# To enable scheduled extraction (e.g., daily drift detection), uncomment below:
+# schedules:
+#   - cron: "0 6 * * *"
+#     displayName: "Daily schema extraction"
+#     branches:
+#       include:
+#         - main
+#     always: false
+
+parameters:
+  - name: source_environment
+    displayName: Source environment (ignored if custom_workspace_name is set)
+    type: string
+    default: 'dev'
+    values:
+      - dev
+      - test
+      - prod
+  
+  - name: custom_workspace_name
+    displayName: Custom workspace name (for feature workspaces - leave empty to use environment)
+    type: string
+    default: ''
+  
+  - name: create_branch
+    displayName: Create new branch (for manual runs when no PR exists)
+    type: boolean
+    default: true
+  
+  - name: branch_name
+    displayName: Branch name (only used if create_branch is true)
+    type: string
+    default: 'schema-extraction/auto'
+
+variables:
+  # Linked to Azure Key Vault for SPN credentials (tenant id, client id, secret)
+  - group: Fabric_Deployment_Group_S
+  # Contains workspace names per environment (devWorkspaceName, testWorkspaceName, prodWorkspaceName)
+  # For branch policy runs, the feature workspace is derived from the PR source branch name
+  - group: Fabric_Deployment_Group_DWFeature_NS
+  - name: schema_output_path
+    value: 'lakehouse-schema'
+
+stages:
+  - stage: ExtractSchema
+    displayName: "Extract Lakehouse SQL Schema"
+    jobs:
+      - job: Extract
+        displayName: "Extract and Commit Schema"
+        pool:
+          vmImage: 'windows-latest'
+        steps:
+          # Checkout with credentials for git push
+          - checkout: self
+            persistCredentials: true
+            fetchDepth: 0
+
+          # Check if we should skip (last commit was from this pipeline)
+          # Branch policies don't honor [skip ci], so we check manually
+          - pwsh: |
+              $prSourceBranch = "$(System.PullRequest.SourceBranch)"
+              $buildReason = "$(Build.Reason)"
+              
+              Write-Host "Build Reason: $buildReason"
+              Write-Host "PR Source Branch: $prSourceBranch"
+              
+              # Check if this is a PR validation build
+              if ($buildReason -eq "PullRequest" -and $prSourceBranch -and $prSourceBranch.StartsWith("refs/heads/")) {
+                # This is a PR build - check the source branch's last commit
+                $branchName = $prSourceBranch -replace "refs/heads/", ""
+                Write-Host "Fetching PR source branch: $branchName"
+                git fetch origin $branchName
+                $lastCommitMsg = git log -1 --format="%s" "origin/$branchName"
+                $lastCommitAuthor = git log -1 --format="%an" "origin/$branchName"
+              } else {
+                # Not a PR build or manual trigger - check current HEAD
+                $lastCommitMsg = git log -1 --format="%s"
+                $lastCommitAuthor = git log -1 --format="%an"
+              }
+              
+              Write-Host "Last commit message: $lastCommitMsg"
+              Write-Host "Last commit author: $lastCommitAuthor"
+              
+              # Skip if [skip ci] is in the commit message (means our pipeline made this commit)
+              if ($lastCommitMsg -match "\[skip ci\]") {
+                Write-Host "##[warning]Last commit contains [skip ci] - this was made by the pipeline. Skipping to prevent loop."
+                Write-Host "##vso[task.setvariable variable=SKIP_EXTRACTION]true"
+              } else {
+                Write-Host "Last commit is from a user - proceeding with extraction."
+                Write-Host "##vso[task.setvariable variable=SKIP_EXTRACTION]false"
+              }
+            displayName: "Check for Pipeline Commit (Skip Loop)"
+
+          # Install .NET SDK for SqlPackage
+          - task: UseDotNet@2
+            condition: ne(variables['SKIP_EXTRACTION'], 'true')
+            inputs:
+              packageType: 'sdk'
+              version: '8.x'
+            displayName: "Set up .NET SDK"
+
+          # Install SqlPackage
+          - pwsh: |
+              dotnet tool install -g microsoft.sqlpackage
+              $toolPath = "$env:USERPROFILE\.dotnet\tools"
+              Write-Host "##vso[task.prependpath]$toolPath"
+            condition: ne(variables['SKIP_EXTRACTION'], 'true')
+            displayName: "Install SqlPackage"
+
+          # Use Python to get Lakehouse SQL endpoints from Fabric API
+          - task: UsePythonVersion@0
+            condition: ne(variables['SKIP_EXTRACTION'], 'true')
+            inputs:
+              versionSpec: '3.12'
+              addToPath: true
+            displayName: "Set up Python"
+
+          - script: |
+              python -m pip install --upgrade pip
+              pip install azure-identity requests
+            condition: ne(variables['SKIP_EXTRACTION'], 'true')
+            displayName: "Install Python dependencies"
+
+          # Get Lakehouse SQL endpoints from Fabric workspace
+          - task: PythonScript@0
+            condition: ne(variables['SKIP_EXTRACTION'], 'true')
+            inputs:
+              scriptSource: 'inline'
+              script: |
+                import os
+                import json
+                import requests
+                from azure.identity import ClientSecretCredential
+
+                tenant_id = os.environ.get('AZTENANTID')
+                client_id = os.environ.get('AZCLIENTID')
+                client_secret = os.environ.get('AZSPSECRET')
+                source_env = '${{ parameters.source_environment }}'
+                custom_workspace = '${{ parameters.custom_workspace_name }}'
+                pr_source_branch = os.environ.get('PR_SOURCE_BRANCH', '')
+                
+                # Extract branch name from refs/heads/branch-name format
+                feature_workspace = ''
+                if pr_source_branch:
+                    # Strip 'refs/heads/' prefix if present
+                    if pr_source_branch.startswith('refs/heads/'):
+                        feature_workspace = pr_source_branch[11:]  # len('refs/heads/') = 11
+                    else:
+                        feature_workspace = pr_source_branch
+                    print(f"PR source branch: {pr_source_branch} -> Workspace: {feature_workspace}")
+                
+                # Determine which workspace to use:
+                # 1. Custom workspace parameter (manual runs) - highest priority
+                # 2. Feature workspace from branch name (branch policy runs)
+                # 3. Environment workspace (fallback)
+                
+                if custom_workspace and custom_workspace.strip():
+                    workspace_name = custom_workspace.strip()
+                    print(f"Using custom workspace (parameter): {workspace_name}")
+                elif feature_workspace:
+                    # PR source branch exists = branch policy run
+                    workspace_name = feature_workspace
+                    print(f"Branch policy run - Using feature workspace: {workspace_name}")
+                else:
+                    # Get workspace name from variable group based on environment
+                    workspace_name_var = f'{source_env}WorkspaceName'
+                    workspace_name = os.environ.get(workspace_name_var, os.environ.get('devWorkspaceName'))
+                    print(f"Using environment workspace: {workspace_name}")
+                
+                if not workspace_name:
+                    print("##vso[task.logissue type=warning]No workspace name found for environment")
+                    print("##vso[task.setvariable variable=LAKEHOUSE_SQL_ENDPOINTS][]")
+                    exit(0)
+
+                print(f"Getting SQL endpoints from workspace: {workspace_name}")
+
+                # Authenticate with Fabric API
+                credential = ClientSecretCredential(tenant_id, client_id, client_secret)
+                token = credential.get_token("https://api.fabric.microsoft.com/.default")
+                
+                headers = {
+                    "Authorization": f"Bearer {token.token}",
+                    "Content-Type": "application/json"
+                }
+
+                # Get workspace ID
+                workspaces_url = "https://api.fabric.microsoft.com/v1/workspaces"
+                resp = requests.get(workspaces_url, headers=headers)
+                resp.raise_for_status()
+                
+                workspace_id = None
+                for ws in resp.json().get("value", []):
+                    if ws["displayName"] == workspace_name:
+                        workspace_id = ws["id"]
+                        break
+
+                if not workspace_id:
+                    print(f"##vso[task.logissue type=warning]Workspace '{workspace_name}' not found")
+                    print("##vso[task.setvariable variable=LAKEHOUSE_SQL_ENDPOINTS][]")
+                    exit(0)
+
+                print(f"Found workspace ID: {workspace_id}")
+
+                # Get Lakehouse items
+                items_url = f"https://api.fabric.microsoft.com/v1/workspaces/{workspace_id}/items?type=Lakehouse"
+                resp = requests.get(items_url, headers=headers)
+                resp.raise_for_status()
+                
+                lakehouses = resp.json().get("value", [])
+                sql_endpoints = []
+
+                for lh in lakehouses:
+                    lh_id = lh["id"]
+                    lh_name = lh["displayName"]
+                    
+                    # Get Lakehouse details including SQL endpoint
+                    lh_url = f"https://api.fabric.microsoft.com/v1/workspaces/{workspace_id}/lakehouses/{lh_id}"
+                    resp = requests.get(lh_url, headers=headers)
+                    
+                    if resp.status_code == 200:
+                        lh_details = resp.json()
+                        sql_props = lh_details.get("properties", {}).get("sqlEndpointProperties", {})
+                        conn_string = sql_props.get("connectionString")
+                        
+                        if conn_string:
+                            sql_endpoints.append({
+                                "displayName": lh_name,
+                                "connectionString": conn_string
+                            })
+                            print(f"Found SQL endpoint for {lh_name}: {conn_string}")
+
+                endpoints_json = json.dumps(sql_endpoints)
+                print(f"##vso[task.setvariable variable=LAKEHOUSE_SQL_ENDPOINTS]{endpoints_json}")
+                print(f"Found {len(sql_endpoints)} Lakehouse SQL endpoints")
+            env:
+              AZTENANTID: $(aztenantid)
+              AZCLIENTID: $(azclientid)
+              AZSPSECRET: $(azspsecret)
+              PR_SOURCE_BRANCH: $(System.PullRequest.SourceBranch)
+            displayName: "Get Lakehouse SQL Endpoints"
+
+          # Run extraction script
+          - pwsh: |
+              $endpoints = '$(LAKEHOUSE_SQL_ENDPOINTS)'
+              if (-not $endpoints -or $endpoints -eq '[]') {
+                Write-Host "No SQL endpoints found. Skipping extraction."
+                exit 0
+              }
+              
+              Write-Host "Extracting schemas for endpoints:"
+              Write-Host $endpoints
+              
+              .\.deploy\extract-lakehouse-schema.ps1 `
+                -TenantId "$(aztenantid)" `
+                -ClientId "$(azclientid)" `
+                -ClientSecret "$(azspsecret)" `
+                -SqlEndpointsJson $endpoints `
+                -OutputPath "$(schema_output_path)"
+            condition: ne(variables['SKIP_EXTRACTION'], 'true')
+            displayName: "Extract Lakehouse SQL Schema"
+            workingDirectory: $(Build.SourcesDirectory)
+
+          # Check for changes
+          - pwsh: |
+              $schemaPath = "$(Build.SourcesDirectory)\$(schema_output_path)"
+              if (Test-Path $schemaPath) {
+                $fileCount = (Get-ChildItem -Path $schemaPath -Recurse -File).Count
+                Write-Host "Found $fileCount schema files"
+                Write-Host "##vso[task.setvariable variable=SCHEMA_FILES_FOUND]$fileCount"
+              } else {
+                Write-Host "No schema directory found"
+                Write-Host "##vso[task.setvariable variable=SCHEMA_FILES_FOUND]0"
+              }
+            condition: ne(variables['SKIP_EXTRACTION'], 'true')
+            displayName: "Check for Schema Files"
+
+          # Configure Git and commit changes
+          - pwsh: |
+              if ([int]"$(SCHEMA_FILES_FOUND)" -eq 0) {
+                Write-Host "No schema files to commit"
+                exit 0
+              }
+
+              # Configure git
+              git config user.email "azure-pipelines@dev.azure.com"
+              git config user.name "Azure Pipelines"
+
+              # Determine target branch based on trigger type
+              $prSourceBranch = "$(System.PullRequest.SourceBranch)"
+              # Check if this is a PR/branch policy run (variable is set and not the literal macro)
+              $isPR = $prSourceBranch -and `
+                      $prSourceBranch -ne "" -and `
+                      $prSourceBranch -ne "`$(System.PullRequest.SourceBranch)" -and `
+                      $prSourceBranch.StartsWith("refs/heads/")
+              $createBranch = "${{ parameters.create_branch }}" -eq "True"
+              $paramBranchName = "${{ parameters.branch_name }}"
+              
+              Write-Host "PR Source Branch value: '$prSourceBranch'"
+              Write-Host "Is PR/Branch Policy run: $isPR"
+              
+              # Store extracted schema files before branch switch
+              $schemaDir = "$(Build.SourcesDirectory)/$(schema_output_path)"
+              $tempSchemaDir = "$env:TEMP/schema_backup"
+              if (Test-Path $schemaDir) {
+                Copy-Item -Path $schemaDir -Destination $tempSchemaDir -Recurse -Force
+                Write-Host "Backed up schema files to temp location"
+              }
+              
+              if ($isPR) {
+                # Branch policy run: checkout the actual source branch (not merge commit)
+                $targetBranch = $prSourceBranch -replace "refs/heads/", ""
+                Write-Host "Branch policy run detected. Target branch: $targetBranch"
+                
+                # Fetch and checkout the actual source branch
+                git fetch origin $targetBranch
+                git checkout -B $targetBranch origin/$targetBranch
+                Write-Host "Checked out source branch: $targetBranch"
+                
+                # Restore schema files after branch switch
+                if (Test-Path $tempSchemaDir) {
+                  if (Test-Path $schemaDir) {
+                    Remove-Item -Path $schemaDir -Recurse -Force
+                  }
+                  Copy-Item -Path $tempSchemaDir -Destination $schemaDir -Recurse -Force
+                  Remove-Item -Path $tempSchemaDir -Recurse -Force
+                  Write-Host "Restored schema files to working directory"
+                }
+              }
+              elseif ($createBranch) {
+                # Manual run with create_branch=true: create new branch
+                $timestamp = Get-Date -Format "yyyyMMdd-HHmmss"
+                $targetBranch = "$paramBranchName-$timestamp"
+                Write-Host "Manual run. Creating new branch: $targetBranch"
+                
+                # Restore schema files (in case they were backed up)
+                if (Test-Path $tempSchemaDir) {
+                  if (Test-Path $schemaDir) {
+                    Remove-Item -Path $schemaDir -Recurse -Force
+                  }
+                  Copy-Item -Path $tempSchemaDir -Destination $schemaDir -Recurse -Force
+                  Remove-Item -Path $tempSchemaDir -Recurse -Force
+                }
+                
+                # Create new branch from current HEAD
+                git checkout -b $targetBranch
+              }
+              else {
+                # Manual run without create_branch: use current branch
+                $targetBranch = "$(Build.SourceBranchName)"
+                Write-Host "Committing to current branch: $targetBranch"
+                git fetch origin $targetBranch
+                git checkout $targetBranch
+                
+                # Restore schema files
+                if (Test-Path $tempSchemaDir) {
+                  if (Test-Path $schemaDir) {
+                    Remove-Item -Path $schemaDir -Recurse -Force
+                  }
+                  Copy-Item -Path $tempSchemaDir -Destination $schemaDir -Recurse -Force
+                  Remove-Item -Path $tempSchemaDir -Recurse -Force
+                }
+              }
+
+              # Stage schema files
+              git add "$(schema_output_path)/*"
+
+              # Check if there are actual changes
+              $status = git status --porcelain "$(schema_output_path)"
+              if ($status) {
+                Write-Host "Changes detected:"
+                Write-Host $status
+
+                # Build commit message based on workspace source
+                # Include [skip ci] to prevent infinite loop when branch policy triggers on push
+                $customWs = "${{ parameters.custom_workspace_name }}"
+                if ($customWs -and $customWs.Trim()) {
+                  $commitMsg = "[skip ci] Extract Lakehouse SQL schema from $customWs"
+                } else {
+                  $commitMsg = "[skip ci] Extract Lakehouse SQL schema from ${{ parameters.source_environment }}"
+                }
+                git commit -m $commitMsg
+                
+                # Push to remote (credentials persisted from checkout)
+                git push origin HEAD:refs/heads/$targetBranch
+                
+                Write-Host ""
+                Write-Host "=========================================="
+                Write-Host "SUCCESS: Schema extracted and committed!"
+                Write-Host "=========================================="
+                Write-Host "Branch: $targetBranch"
+                Write-Host ""
+                if (-not $isPR) {
+                  Write-Host "NEXT STEP: Create a Pull Request from '$targetBranch' to 'main'"
+                  Write-Host "Go to: Azure DevOps > Repos > Pull Requests > New Pull Request"
+                }
+                Write-Host ""
+              } else {
+                Write-Host "No changes detected in schema files - Fabric schemas match Git"
+              }
+            condition: ne(variables['SKIP_EXTRACTION'], 'true')
+            displayName: "Commit Schema Changes"
+
+          # Publish schema as artifact for review
+          - task: PublishBuildArtifacts@1
+            inputs:
+              PathtoPublish: '$(Build.SourcesDirectory)/$(schema_output_path)'
+              ArtifactName: 'lakehouse-schema'
+              publishLocation: 'Container'
+            condition: and(ne(variables['SKIP_EXTRACTION'], 'true'), gt(variables['SCHEMA_FILES_FOUND'], 0))
+            displayName: "Publish Schema Artifact"

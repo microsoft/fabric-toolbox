@@ -1,0 +1,93 @@
+table domains_flatten
+	lineageTag: a647cb1c-0fec-44f6-9fcf-f081bb8590f8
+	sourceLineageTag: [dbo].[domains_flatten]
+
+	column DomainId
+		dataType: string
+		sourceProviderType: varchar(8000)
+		lineageTag: d42d7d08-df4b-4a73-99dc-b06f9a1ec545
+		sourceLineageTag: DomainId
+		summarizeBy: none
+		sourceColumn: DomainId
+
+		annotation SummarizationSetBy = Automatic
+
+	column DomainContributorsScope
+		dataType: string
+		isHidden
+		sourceProviderType: varchar(8000)
+		lineageTag: cc7375a1-5693-4066-9eb5-0a31246406b4
+		sourceLineageTag: DomainContributorsScope
+		summarizeBy: none
+		sourceColumn: DomainContributorsScope
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	column OriginalDomainName
+		dataType: string
+		isHidden
+		sourceProviderType: varchar(8000)
+		lineageTag: 12eb4bf6-ea82-45c6-9f5b-88e1c52e4798
+		sourceLineageTag: OriginalDomainName
+		summarizeBy: none
+		sourceColumn: OriginalDomainName
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	column OriginalParentDomainId
+		dataType: string
+		isHidden
+		sourceProviderType: varchar(8000)
+		lineageTag: 94862846-6e53-4ac6-8940-c073969787e5
+		sourceLineageTag: OriginalParentDomainId
+		summarizeBy: none
+		sourceColumn: OriginalParentDomainId
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	column MainDomainName
+		dataType: string
+		sourceProviderType: varchar(8000)
+		lineageTag: f66a5b71-2a45-4243-a70a-97a64fe0c237
+		sourceLineageTag: MainDomainName
+		summarizeBy: none
+		sourceColumn: MainDomainName
+
+		annotation SummarizationSetBy = Automatic
+
+	column SubDomainName
+		dataType: string
+		sourceProviderType: varchar(8000)
+		lineageTag: e8456fbc-6ef9-4989-9001-667117c1dba2
+		sourceLineageTag: SubDomainName
+		summarizeBy: none
+		sourceColumn: SubDomainName
+
+		annotation SummarizationSetBy = Automatic
+
+	column IsSubDomain
+		dataType: int64
+		formatString: 0
+		sourceProviderType: int
+		lineageTag: 2887cd36-d55f-4493-868d-a6707d3c417b
+		sourceLineageTag: IsSubDomain
+		summarizeBy: none
+		sourceColumn: IsSubDomain
+
+		annotation SummarizationSetBy = Automatic
+
+	partition domains_flatten = entity
+		mode: directLake
+		source
+			entityName: domains_flatten
+			schemaName: dbo
+			expressionSource: DatabaseQuery
+
+	annotation PBI_ResultType = Table
+

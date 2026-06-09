@@ -1,0 +1,73 @@
+{
+    "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.5.0/schema.json",
+    "name": "7c6b43c9d1bd1a4e0d0d",
+    "position": {
+        "x": 148.88888888888889,
+        "y": 2232.222222222222,
+        "z": 32000,
+        "height": 35.55555555555556,
+        "width": 696.6666666666666,
+        "tabOrder": 29004
+    },
+    "visual": {
+        "visualType": "textbox",
+        "objects": {
+            "general": [
+                {
+                    "properties": {
+                        "paragraphs": [
+                            {
+                                "textRuns": [
+                                    {
+                                        "value": "In-Depth Diagnostic Scan Runs | Best Practice Analyzer | ",
+                                        "textStyle": {
+                                            "fontFamily": "Segoe UI Semibold",
+                                            "fontSize": "11pt"
+                                        }
+                                    },
+                                    {
+                                        "value": "Last Run",
+                                        "textStyle": {
+                                            "fontWeight": "bold",
+                                            "fontFamily": "Segoe UI Semibold",
+                                            "fontSize": "11pt"
+                                        }
+                                    }
+                                ]
+                            }
+                        ]
+                    }
+                }
+            ]
+        },
+        "visualContainerObjects": {
+            "border": [
+                {
+                    "properties": {
+                        "show": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "false"
+                                }
+                            }
+                        }
+                    }
+                }
+            ],
+            "background": [
+                {
+                    "properties": {
+                        "show": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "false"
+                                }
+                            }
+                        }
+                    }
+                }
+            ]
+        },
+        "drillFilterOtherVisuals": true
+    }
+}

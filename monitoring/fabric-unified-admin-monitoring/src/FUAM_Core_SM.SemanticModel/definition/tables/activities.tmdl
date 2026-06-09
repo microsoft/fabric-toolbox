@@ -319,16 +319,6 @@ table activities
 
 		annotation SummarizationSetBy = Automatic
 
-	column GitIntegrationRequest
-		dataType: string
-		sourceProviderType: varchar(8000)
-		lineageTag: a0525748-4204-4fb8-aacf-717e05b47861
-		sourceLineageTag: GitIntegrationRequest
-		summarizeBy: none
-		sourceColumn: GitIntegrationRequest
-
-		annotation SummarizationSetBy = Automatic
-
 	column Id
 		dataType: string
 		sourceProviderType: varchar(8000)
@@ -697,36 +687,6 @@ table activities
 
 		annotation SummarizationSetBy = Automatic
 
-	column DataflowId
-		dataType: string
-		sourceProviderType: varchar(8000)
-		lineageTag: c541a101-068b-4e08-9cac-47e4b7f5a67a
-		sourceLineageTag: DataflowId
-		summarizeBy: none
-		sourceColumn: DataflowId
-
-		annotation SummarizationSetBy = Automatic
-
-	column DataflowName
-		dataType: string
-		sourceProviderType: varchar(8000)
-		lineageTag: a56726fc-c9a1-4973-98fa-0196258f01e2
-		sourceLineageTag: DataflowName
-		summarizeBy: none
-		sourceColumn: DataflowName
-
-		annotation SummarizationSetBy = Automatic
-
-	column DataflowType
-		dataType: string
-		sourceProviderType: varchar(8000)
-		lineageTag: df6e9f41-9a12-41b1-9403-cfaf545fcb43
-		sourceLineageTag: DataflowType
-		summarizeBy: none
-		sourceColumn: DataflowType
-
-		annotation SummarizationSetBy = Automatic
-
 	column Datasets
 		dataType: string
 		sourceProviderType: varchar(8000)
@@ -744,48 +704,6 @@ table activities
 		sourceLineageTag: DatasourceInformations
 		summarizeBy: none
 		sourceColumn: DatasourceInformations
-
-		annotation SummarizationSetBy = Automatic
-
-	column DeploymentPipelineId
-		dataType: int64
-		formatString: 0
-		sourceProviderType: bigint
-		lineageTag: 562942ba-7a58-4bfa-90cb-a9c1ed975b52
-		sourceLineageTag: DeploymentPipelineId
-		summarizeBy: count
-		sourceColumn: DeploymentPipelineId
-
-		annotation SummarizationSetBy = Automatic
-
-	column DeploymentPipelineObjectId
-		dataType: string
-		sourceProviderType: varchar(8000)
-		lineageTag: f6badb2a-2d16-40fb-8988-c98a3cea10cb
-		sourceLineageTag: DeploymentPipelineObjectId
-		summarizeBy: none
-		sourceColumn: DeploymentPipelineObjectId
-
-		annotation SummarizationSetBy = Automatic
-
-	column DeploymentPipelineOperationId
-		dataType: string
-		sourceProviderType: varchar(8000)
-		lineageTag: 163325f0-b4cf-4de4-85c3-acb7f69b00e5
-		sourceLineageTag: DeploymentPipelineOperationId
-		summarizeBy: none
-		sourceColumn: DeploymentPipelineOperationId
-
-		annotation SummarizationSetBy = Automatic
-
-	column DeploymentPipelineStageOrder
-		dataType: int64
-		formatString: 0
-		sourceProviderType: bigint
-		lineageTag: 51c8388e-5760-4126-a143-9821ac7f171c
-		sourceLineageTag: DeploymentPipelineStageOrder
-		summarizeBy: sum
-		sourceColumn: DeploymentPipelineStageOrder
 
 		annotation SummarizationSetBy = Automatic
 
@@ -839,98 +757,6 @@ table activities
 
 		annotation SummarizationSetBy = Automatic
 
-	column ImportDisplayName
-		dataType: string
-		sourceProviderType: varchar(8000)
-		lineageTag: 5ebcc794-cd06-4e58-a17e-889551f8ae62
-		sourceLineageTag: ImportDisplayName
-		summarizeBy: none
-		sourceColumn: ImportDisplayName
-
-		annotation SummarizationSetBy = Automatic
-
-	column ImportId
-		dataType: string
-		sourceProviderType: varchar(8000)
-		lineageTag: 7fa563f6-3e72-4ea9-b91c-7036d25b5051
-		sourceLineageTag: ImportId
-		summarizeBy: none
-		sourceColumn: ImportId
-
-		annotation SummarizationSetBy = Automatic
-
-	column ImportSource
-		dataType: string
-		sourceProviderType: varchar(8000)
-		lineageTag: 63dcd559-1ebc-43a6-8cf6-0828de4f6ddd
-		sourceLineageTag: ImportSource
-		summarizeBy: none
-		sourceColumn: ImportSource
-
-		annotation SummarizationSetBy = Automatic
-
-	column ImportType
-		dataType: string
-		sourceProviderType: varchar(8000)
-		lineageTag: d8a4f620-7f80-4069-9c71-13f833f26bb9
-		sourceLineageTag: ImportType
-		summarizeBy: none
-		sourceColumn: ImportType
-
-		annotation SummarizationSetBy = Automatic
-
-	column OrgAppPermission
-		dataType: string
-		sourceProviderType: varchar(8000)
-		lineageTag: b9a24558-2c5a-428f-b817-d4f1c8659b12
-		sourceLineageTag: OrgAppPermission
-		summarizeBy: none
-		sourceColumn: OrgAppPermission
-
-		annotation SummarizationSetBy = Automatic
-
-	column PackageId
-		dataType: int64
-		formatString: 0
-		sourceProviderType: bigint
-		lineageTag: 6b3516f7-e5fd-46bb-8ae6-1836466c8ed3
-		sourceLineageTag: PackageId
-		summarizeBy: count
-		sourceColumn: PackageId
-
-		annotation SummarizationSetBy = Automatic
-
-	column SubfolderId
-		dataType: int64
-		formatString: 0
-		sourceProviderType: bigint
-		lineageTag: 67ff67b2-1b08-4ee1-a91c-1360fa2ab547
-		sourceLineageTag: SubfolderId
-		summarizeBy: count
-		sourceColumn: SubfolderId
-
-		annotation SummarizationSetBy = Automatic
-
-	column SubfolderName
-		dataType: string
-		sourceProviderType: varchar(8000)
-		lineageTag: c1487235-b44c-45f1-b19d-224b8c4d2da3
-		sourceLineageTag: SubfolderName
-		summarizeBy: none
-		sourceColumn: SubfolderName
-
-		annotation SummarizationSetBy = Automatic
-
-	column SubfolderObjectId
-		dataType: string
-		sourceProviderType: varchar(8000)
-		lineageTag: 2b32fbc9-cd34-4f42-9839-eb13ab5d08a2
-		sourceLineageTag: SubfolderObjectId
-		summarizeBy: none
-		sourceColumn: SubfolderObjectId
-
-		annotation SummarizationSetBy = Automatic
-
 	column SwitchState
 		dataType: string
 		sourceProviderType: varchar(8000)
@@ -938,277 +764,6 @@ table activities
 		sourceLineageTag: SwitchState
 		summarizeBy: none
 		sourceColumn: SwitchState
-
-		annotation SummarizationSetBy = Automatic
-
-	column UpdateDatasourcesRequest
-		dataType: string
-		sourceProviderType: varchar(8000)
-		lineageTag: 37c55bdc-67e5-414b-b90b-368c58af7b37
-		sourceLineageTag: UpdateDatasourcesRequest
-		summarizeBy: none
-		sourceColumn: UpdateDatasourcesRequest
-
-		annotation SummarizationSetBy = Automatic
-
-	column UserInformation
-		dataType: string
-		sourceProviderType: varchar(8000)
-		lineageTag: 79b67fb8-4856-4282-a98c-697f84e6119d
-		sourceLineageTag: UserInformation
-		summarizeBy: none
-		sourceColumn: UserInformation
-
-		annotation SummarizationSetBy = Automatic
-
-	column WorkspaceAccessList
-		dataType: string
-		sourceProviderType: varchar(8000)
-		lineageTag: 45d69a8a-c657-488b-b45f-cda9365fa2cc
-		sourceLineageTag: WorkspaceAccessList
-		summarizeBy: none
-		sourceColumn: WorkspaceAccessList
-
-		annotation SummarizationSetBy = Automatic
-
-	column DatasourceObjectIds
-		dataType: string
-		sourceProviderType: varchar(8000)
-		lineageTag: 15797dfa-d537-4754-a710-ac0965b78356
-		sourceLineageTag: DatasourceObjectIds
-		summarizeBy: none
-		sourceColumn: DatasourceObjectIds
-
-		annotation SummarizationSetBy = Automatic
-
-	column ModelId
-		dataType: string
-		sourceProviderType: varchar(8000)
-		lineageTag: 62e8ead3-1e2a-4bf6-aa8f-bce17f85326f
-		sourceLineageTag: ModelId
-		summarizeBy: none
-		sourceColumn: ModelId
-
-		annotation SummarizationSetBy = Automatic
-
-	column Monikers
-		dataType: string
-		sourceProviderType: varchar(8000)
-		lineageTag: 8299bb20-a5fa-4962-917b-71a1b1ed16fa
-		sourceLineageTag: Monikers
-		summarizeBy: none
-		sourceColumn: Monikers
-
-		annotation SummarizationSetBy = Automatic
-
-	column TenantAdminFeatureSwitchProperties
-		dataType: string
-		sourceProviderType: varchar(8000)
-		lineageTag: 250fc13f-c32a-4452-97cb-402ad669bf4f
-		sourceLineageTag: TenantAdminFeatureSwitchProperties
-		summarizeBy: none
-		sourceColumn: TenantAdminFeatureSwitchProperties
-
-		annotation SummarizationSetBy = Automatic
-
-	column TenantAdminFeatureSwitches
-		dataType: string
-		sourceProviderType: varchar(8000)
-		lineageTag: 63a28565-9cd9-4b59-b465-4833e8c81317
-		sourceLineageTag: TenantAdminFeatureSwitches
-		summarizeBy: none
-		sourceColumn: TenantAdminFeatureSwitches
-
-		annotation SummarizationSetBy = Automatic
-
-	column CopiedReportId
-		dataType: string
-		sourceProviderType: varchar(8000)
-		lineageTag: 71463bba-7012-4639-9b6a-d50251304dce
-		sourceLineageTag: CopiedReportId
-		summarizeBy: none
-		sourceColumn: CopiedReportId
-
-		annotation SummarizationSetBy = Automatic
-
-	column CopiedReportName
-		dataType: string
-		sourceProviderType: varchar(8000)
-		lineageTag: a34f4b85-3f8e-4a28-bc9f-3a21eb493d97
-		sourceLineageTag: CopiedReportName
-		summarizeBy: none
-		sourceColumn: CopiedReportName
-
-		annotation SummarizationSetBy = Automatic
-
-	column GatewayClusters
-		dataType: string
-		sourceProviderType: varchar(8000)
-		lineageTag: 055c28db-f51a-4e25-92c7-7365cdddc65c
-		sourceLineageTag: GatewayClusters
-		summarizeBy: none
-		sourceColumn: GatewayClusters
-
-		annotation SummarizationSetBy = Automatic
-
-	column GatewayName
-		dataType: string
-		sourceProviderType: varchar(8000)
-		lineageTag: ad1d6c1e-0359-4b30-abee-290bbe4ea90d
-		sourceLineageTag: GatewayName
-		summarizeBy: none
-		sourceColumn: GatewayName
-
-		annotation SummarizationSetBy = Automatic
-
-	column GatewayStatus
-		dataType: string
-		sourceProviderType: varchar(8000)
-		lineageTag: 7378053e-1fc3-4947-8147-5553e1b99db3
-		sourceLineageTag: GatewayStatus
-		summarizeBy: none
-		sourceColumn: GatewayStatus
-
-		annotation SummarizationSetBy = Automatic
-
-	column GatewayType
-		dataType: string
-		sourceProviderType: varchar(8000)
-		lineageTag: d3aeea62-7f00-4ca7-bd83-724c3b1e047a
-		sourceLineageTag: GatewayType
-		summarizeBy: none
-		sourceColumn: GatewayType
-
-		annotation SummarizationSetBy = Automatic
-
-	column OrganizationalGalleryItemDisplayName
-		dataType: string
-		sourceProviderType: varchar(8000)
-		lineageTag: 267193ef-c172-454d-8f3a-0f883b0b1bc6
-		sourceLineageTag: OrganizationalGalleryItemDisplayName
-		summarizeBy: none
-		sourceColumn: OrganizationalGalleryItemDisplayName
-
-		annotation SummarizationSetBy = Automatic
-
-	column OrganizationalGalleryItemId
-		dataType: int64
-		formatString: 0
-		sourceProviderType: bigint
-		lineageTag: f69af369-05d2-462c-b160-7cf723441b3a
-		sourceLineageTag: OrganizationalGalleryItemId
-		summarizeBy: count
-		sourceColumn: OrganizationalGalleryItemId
-
-		annotation SummarizationSetBy = Automatic
-
-	column OrganizationalGalleryItemPublishTime
-		dataType: string
-		sourceProviderType: varchar(8000)
-		lineageTag: 11bb612d-c082-44d2-84e8-6d5e2b89ee77
-		sourceLineageTag: OrganizationalGalleryItemPublishTime
-		summarizeBy: none
-		sourceColumn: OrganizationalGalleryItemPublishTime
-
-		annotation SummarizationSetBy = Automatic
-
-	column ReportMobileLayoutAction
-		dataType: string
-		sourceProviderType: varchar(8000)
-		lineageTag: fd9ab843-02f6-4a4d-a22f-f90b613cc774
-		sourceLineageTag: ReportMobileLayoutAction
-		summarizeBy: none
-		sourceColumn: ReportMobileLayoutAction
-
-		annotation SummarizationSetBy = Automatic
-
-	column TargetWorkspaceId
-		dataType: string
-		sourceProviderType: varchar(8000)
-		lineageTag: 3972d164-135b-4781-a749-31b06a5485dc
-		sourceLineageTag: TargetWorkspaceId
-		summarizeBy: none
-		sourceColumn: TargetWorkspaceId
-
-		annotation SummarizationSetBy = Automatic
-
-	column TileText
-		dataType: string
-		sourceProviderType: varchar(8000)
-		lineageTag: 98452533-cb60-44c1-b24a-70ab921be49f
-		sourceLineageTag: TileText
-		summarizeBy: none
-		sourceColumn: TileText
-
-		annotation SummarizationSetBy = Automatic
-
-	column CustomVisualAccessTokenResourceId
-		dataType: string
-		sourceProviderType: varchar(8000)
-		lineageTag: 2deddd37-63c8-4fab-98f5-efd2861843cc
-		sourceLineageTag: CustomVisualAccessTokenResourceId
-		summarizeBy: none
-		sourceColumn: CustomVisualAccessTokenResourceId
-
-		annotation SummarizationSetBy = Automatic
-
-	column CustomVisualAccessTokenSiteUri
-		dataType: string
-		sourceProviderType: varchar(8000)
-		lineageTag: 37e7ebe3-78d6-43bb-a41b-6e3ddef1c5a5
-		sourceLineageTag: CustomVisualAccessTokenSiteUri
-		summarizeBy: none
-		sourceColumn: CustomVisualAccessTokenSiteUri
-
-		annotation SummarizationSetBy = Automatic
-
-	column DeploymentPipelineAccesses
-		dataType: string
-		sourceProviderType: varchar(8000)
-		lineageTag: eb18a1c6-b32f-43f8-a815-8920b4545d55
-		sourceLineageTag: DeploymentPipelineAccesses
-		summarizeBy: none
-		sourceColumn: DeploymentPipelineAccesses
-
-		annotation SummarizationSetBy = Automatic
-
-	column DeploymentPipelineDisplayName
-		dataType: string
-		sourceProviderType: varchar(8000)
-		lineageTag: 5071af5a-e8eb-4694-9248-39f398e20a2a
-		sourceLineageTag: DeploymentPipelineDisplayName
-		summarizeBy: none
-		sourceColumn: DeploymentPipelineDisplayName
-
-		annotation SummarizationSetBy = Automatic
-
-	column ItemsCount
-		dataType: string
-		sourceProviderType: varchar(8000)
-		lineageTag: aaa8d702-48c3-4fc1-8068-1615e0d70475
-		sourceLineageTag: ItemsCount
-		summarizeBy: none
-		sourceColumn: ItemsCount
-
-		annotation SummarizationSetBy = Automatic
-
-	column CredentialSetupMode
-		dataType: string
-		sourceProviderType: varchar(8000)
-		lineageTag: 86e939a8-3693-4770-980e-1c37d1ff84fb
-		sourceLineageTag: CredentialSetupMode
-		summarizeBy: none
-		sourceColumn: CredentialSetupMode
-
-		annotation SummarizationSetBy = Automatic
-
-	column DataflowRefreshScheduleType
-		dataType: string
-		sourceProviderType: varchar(8000)
-		lineageTag: 4a4475e9-28f4-4367-8684-2837468cc3e9
-		sourceLineageTag: DataflowRefreshScheduleType
-		summarizeBy: none
-		sourceColumn: DataflowRefreshScheduleType
 
 		annotation SummarizationSetBy = Automatic
 
@@ -1306,144 +861,550 @@ table activities
 
 		annotation SummarizationSetBy = Automatic
 
-	column ArtifactAccessRequestInfo
+	column DataflowId
 		dataType: string
-		sourceProviderType: varchar(8000)
-		lineageTag: 38abccd0-7295-4184-963b-41d24c89934e
-		sourceLineageTag: ArtifactAccessRequestInfo
+		lineageTag: d27b4eb4-cfd3-40dd-a7fe-e2e3231738ad
+		sourceLineageTag: DataflowId
 		summarizeBy: none
-		sourceColumn: ArtifactAccessRequestInfo
+		sourceColumn: DataflowId
 
 		annotation SummarizationSetBy = Automatic
 
-	column ExternalResource
+	column DataflowName
 		dataType: string
-		sourceProviderType: varchar(8000)
-		lineageTag: 67784566-d416-4ac9-a0ee-598025600689
-		sourceLineageTag: ExternalResource
+		lineageTag: f72434fd-cf73-4af7-93cc-4943460c2fd1
+		sourceLineageTag: DataflowName
 		summarizeBy: none
-		sourceColumn: ExternalResource
+		sourceColumn: DataflowName
 
 		annotation SummarizationSetBy = Automatic
 
-	column ModelSettings
+	column DataflowType
 		dataType: string
-		sourceProviderType: varchar(8000)
-		lineageTag: a3c4558a-48f9-4abe-9c9e-2b5fe7dc6b62
-		sourceLineageTag: ModelSettings
+		lineageTag: 881c4631-6bc2-4b18-8ad0-3897e0f6ef18
+		sourceLineageTag: DataflowType
 		summarizeBy: none
-		sourceColumn: ModelSettings
+		sourceColumn: DataflowType
 
 		annotation SummarizationSetBy = Automatic
 
-	column ExportedArtifactDownloadInfo
+	column DatasourceObjectIds
 		dataType: string
-		sourceProviderType: varchar(8000)
-		lineageTag: ea3918a6-be57-4d08-b631-b038a7843555
-		sourceLineageTag: ExportedArtifactDownloadInfo
+		lineageTag: c04cfc4a-6cac-42db-a180-d2009d95f418
+		sourceLineageTag: DatasourceObjectIds
 		summarizeBy: none
-		sourceColumn: ExportedArtifactDownloadInfo
+		sourceColumn: DatasourceObjectIds
 
 		annotation SummarizationSetBy = Automatic
 
-	column ExportedArtifactInfo
+	column ImportDisplayName
 		dataType: string
-		sourceProviderType: varchar(8000)
-		lineageTag: 05973244-d133-49e2-929a-37578dd02ecf
-		sourceLineageTag: ExportedArtifactInfo
+		lineageTag: ed43737e-8537-4bd5-8f2e-c8ef923c5667
+		sourceLineageTag: ImportDisplayName
 		summarizeBy: none
-		sourceColumn: ExportedArtifactInfo
+		sourceColumn: ImportDisplayName
 
 		annotation SummarizationSetBy = Automatic
 
-	column ExternalSubscribeeInformation
+	column ImportId
 		dataType: string
-		sourceProviderType: varchar(8000)
-		lineageTag: d74ba41f-f9b4-4b86-9e75-8946fa6a5c6b
-		sourceLineageTag: ExternalSubscribeeInformation
+		lineageTag: 43d36abd-c472-488d-92cc-d989fffb52cb
+		sourceLineageTag: ImportId
 		summarizeBy: none
-		sourceColumn: ExternalSubscribeeInformation
+		sourceColumn: ImportId
 
 		annotation SummarizationSetBy = Automatic
 
-	column HasFullReportAttachment
-		dataType: boolean
-		formatString: """TRUE"";""TRUE"";""FALSE"""
-		sourceProviderType: bit
-		lineageTag: 6616880c-5ef9-4b11-9fa6-5d1d62ee3a0d
-		sourceLineageTag: HasFullReportAttachment
+	column ImportSource
+		dataType: string
+		lineageTag: 87a81766-f970-4fa4-9d35-7de6557f9bcc
+		sourceLineageTag: ImportSource
 		summarizeBy: none
-		sourceColumn: HasFullReportAttachment
+		sourceColumn: ImportSource
+
+		annotation SummarizationSetBy = Automatic
+
+	column ImportType
+		dataType: string
+		lineageTag: cd99c180-96ca-4afa-872c-f0f32a20f454
+		sourceLineageTag: ImportType
+		summarizeBy: none
+		sourceColumn: ImportType
+
+		annotation SummarizationSetBy = Automatic
+
+	column ModelId
+		dataType: string
+		lineageTag: d2137cae-7cea-4a5e-98eb-7672e4c18e2f
+		sourceLineageTag: ModelId
+		summarizeBy: none
+		sourceColumn: ModelId
+
+		annotation SummarizationSetBy = Automatic
+
+	column Monikers
+		dataType: string
+		lineageTag: e61db680-3d58-4242-b5c9-a79412f7a177
+		sourceLineageTag: Monikers
+		summarizeBy: none
+		sourceColumn: Monikers
+
+		annotation SummarizationSetBy = Automatic
+
+	column OwningAppContext
+		dataType: string
+		lineageTag: 2f5af349-7d00-498e-876a-dd94a6b23d52
+		sourceLineageTag: OwningAppContext
+		summarizeBy: none
+		sourceColumn: OwningAppContext
+
+		annotation SummarizationSetBy = Automatic
+
+	column PackageId
+		dataType: int64
+		formatString: 0
+		lineageTag: fce7b232-31d6-4e6b-8c4e-3ad14f1307b6
+		sourceLineageTag: PackageId
+		summarizeBy: count
+		sourceColumn: PackageId
+
+		annotation SummarizationSetBy = Automatic
+
+	column SubfolderId
+		dataType: int64
+		formatString: 0
+		lineageTag: c1945429-3ea6-4125-8ee7-192841f1361e
+		sourceLineageTag: SubfolderId
+		summarizeBy: count
+		sourceColumn: SubfolderId
+
+		annotation SummarizationSetBy = Automatic
+
+	column SubfolderName
+		dataType: string
+		lineageTag: 2f227c29-76b5-4c67-95d7-ade30dbddc53
+		sourceLineageTag: SubfolderName
+		summarizeBy: none
+		sourceColumn: SubfolderName
+
+		annotation SummarizationSetBy = Automatic
+
+	column SubfolderObjectId
+		dataType: string
+		lineageTag: b7d8be41-dcd4-43e1-8375-39d031e3a963
+		sourceLineageTag: SubfolderObjectId
+		summarizeBy: none
+		sourceColumn: SubfolderObjectId
+
+		annotation SummarizationSetBy = Automatic
+
+	column UserInformation
+		dataType: string
+		lineageTag: 0855fdfe-9476-4f41-8487-e277f89931aa
+		sourceLineageTag: UserInformation
+		summarizeBy: none
+		sourceColumn: UserInformation
 
 		annotation SummarizationSetBy = Automatic
 
 	column PaginatedReportDataSources
 		dataType: string
-		sourceProviderType: varchar(8000)
-		lineageTag: 534d15b9-332b-4e9c-8c17-02c044f36d41
+		lineageTag: d2180feb-f95c-4d4a-bdf5-cf4b6bccc18e
 		sourceLineageTag: PaginatedReportDataSources
 		summarizeBy: none
 		sourceColumn: PaginatedReportDataSources
 
 		annotation SummarizationSetBy = Automatic
 
-	column SubscribeeInformation
+	column OrgAppPermission
 		dataType: string
-		sourceProviderType: varchar(8000)
-		lineageTag: ab7660be-1649-4036-8c50-b77eb8593a7f
-		sourceLineageTag: SubscribeeInformation
+		lineageTag: c5b6a945-2a19-4610-bd83-e6d57e96c140
+		sourceLineageTag: OrgAppPermission
 		summarizeBy: none
-		sourceColumn: SubscribeeInformation
+		sourceColumn: OrgAppPermission
 
 		annotation SummarizationSetBy = Automatic
 
-	column SubscriptionDetails
+	column DeploymentPipelineAccesses
 		dataType: string
-		sourceProviderType: varchar(8000)
-		lineageTag: dc4fc410-5f1b-4ec9-bfcd-dbc6c4e3af82
-		sourceLineageTag: SubscriptionDetails
+		lineageTag: e07fb410-4f67-4c08-9a74-9b26caa366b5
+		sourceLineageTag: DeploymentPipelineAccesses
 		summarizeBy: none
-		sourceColumn: SubscriptionDetails
+		sourceColumn: DeploymentPipelineAccesses
 
 		annotation SummarizationSetBy = Automatic
 
-	column SubscriptionSchedule
-		dataType: string
-		sourceProviderType: varchar(8000)
-		lineageTag: af2ad8e4-da3e-4030-9a62-6360494686b9
-		sourceLineageTag: SubscriptionSchedule
-		summarizeBy: none
-		sourceColumn: SubscriptionSchedule
+	column OrganizationalGalleryItemId
+		dataType: int64
+		formatString: 0
+		lineageTag: 7ae90fe8-588a-4f6f-9628-d83ce5d13756
+		sourceLineageTag: OrganizationalGalleryItemId
+		summarizeBy: count
+		sourceColumn: OrganizationalGalleryItemId
 
 		annotation SummarizationSetBy = Automatic
 
-	column SharingAction
+	column TenantAdminFeatureSwitches
 		dataType: string
-		sourceProviderType: varchar(8000)
-		lineageTag: c48b6ff9-f052-4295-9a9d-0bf2db2fbc14
-		sourceLineageTag: SharingAction
+		lineageTag: 1e052f8b-0fc8-4ea6-9ba4-af7b156fee41
+		sourceLineageTag: TenantAdminFeatureSwitches
 		summarizeBy: none
-		sourceColumn: SharingAction
+		sourceColumn: TenantAdminFeatureSwitches
+
+		annotation SummarizationSetBy = Automatic
+
+	column DeploymentPipelineObjectId
+		dataType: string
+		lineageTag: 2756acfc-db8b-4a65-b83c-d2e94115a5c6
+		sourceLineageTag: DeploymentPipelineObjectId
+		summarizeBy: none
+		sourceColumn: DeploymentPipelineObjectId
+
+		annotation SummarizationSetBy = Automatic
+
+	column ExternalResource
+		dataType: string
+		lineageTag: 4e90737c-4720-4657-a4db-3ed9c7bf3103
+		sourceLineageTag: ExternalResource
+		summarizeBy: none
+		sourceColumn: ExternalResource
+
+		annotation SummarizationSetBy = Automatic
+
+	column DeploymentPipelineDisplayName
+		dataType: string
+		lineageTag: dd18bf71-3bfd-4bd4-9ae4-85164e028b47
+		sourceLineageTag: DeploymentPipelineDisplayName
+		summarizeBy: none
+		sourceColumn: DeploymentPipelineDisplayName
+
+		annotation SummarizationSetBy = Automatic
+
+	column CustomVisualAccessTokenSiteUri
+		dataType: string
+		lineageTag: 2243a2d4-9090-45a4-be6e-b8cdb8b4b85e
+		sourceLineageTag: CustomVisualAccessTokenSiteUri
+		summarizeBy: none
+		sourceColumn: CustomVisualAccessTokenSiteUri
 
 		annotation SummarizationSetBy = Automatic
 
 	column SharingInformation
 		dataType: string
-		sourceProviderType: varchar(8000)
-		lineageTag: f1db7f41-e5a5-4c56-88e7-cb056026a7a8
+		lineageTag: c609f299-f468-444e-b363-1d7cbff45ab3
 		sourceLineageTag: SharingInformation
 		summarizeBy: none
 		sourceColumn: SharingInformation
 
 		annotation SummarizationSetBy = Automatic
 
+	column GatewayType
+		dataType: string
+		lineageTag: d9399c71-f342-4ace-80ee-06e98b3ffd56
+		sourceLineageTag: GatewayType
+		summarizeBy: none
+		sourceColumn: GatewayType
+
+		annotation SummarizationSetBy = Automatic
+
+	column DeploymentPipelineStageOrder
+		dataType: int64
+		formatString: 0
+		lineageTag: 4a96a787-beed-42ab-aab4-5d5fba6d7e12
+		sourceLineageTag: DeploymentPipelineStageOrder
+		summarizeBy: sum
+		sourceColumn: DeploymentPipelineStageOrder
+
+		annotation SummarizationSetBy = Automatic
+
+	column ExportedArtifactInfo
+		dataType: string
+		lineageTag: 68164f34-b47c-43ea-944d-8667377fa360
+		sourceLineageTag: ExportedArtifactInfo
+		summarizeBy: none
+		sourceColumn: ExportedArtifactInfo
+
+		annotation SummarizationSetBy = Automatic
+
+	column ReportMobileLayoutAction
+		dataType: string
+		lineageTag: 659ecf3c-4155-463d-b417-c8e2dd20c097
+		sourceLineageTag: ReportMobileLayoutAction
+		summarizeBy: none
+		sourceColumn: ReportMobileLayoutAction
+
+		annotation SummarizationSetBy = Automatic
+
+	column DataflowRefreshScheduleType
+		dataType: string
+		lineageTag: 6f76ba36-0d33-4c4b-bbce-a25dd07c9e7c
+		sourceLineageTag: DataflowRefreshScheduleType
+		summarizeBy: none
+		sourceColumn: DataflowRefreshScheduleType
+
+		annotation SummarizationSetBy = Automatic
+
+	column GatewayStatus
+		dataType: string
+		lineageTag: 77410255-dcc7-4e5c-9adf-545be993a45d
+		sourceLineageTag: GatewayStatus
+		summarizeBy: none
+		sourceColumn: GatewayStatus
+
+		annotation SummarizationSetBy = Automatic
+
+	column TenantAdminFeatureSwitchProperties
+		dataType: string
+		lineageTag: 91c55668-972b-46c1-8ce2-6670fe366c79
+		sourceLineageTag: TenantAdminFeatureSwitchProperties
+		summarizeBy: none
+		sourceColumn: TenantAdminFeatureSwitchProperties
+
+		annotation SummarizationSetBy = Automatic
+
+	column ArtifactAccessRequestInfo
+		dataType: string
+		lineageTag: 4ae2d569-794c-4517-b863-d0706054a137
+		sourceLineageTag: ArtifactAccessRequestInfo
+		summarizeBy: none
+		sourceColumn: ArtifactAccessRequestInfo
+
+		annotation SummarizationSetBy = Automatic
+
+	column CopiedReportId
+		dataType: string
+		lineageTag: 6f4ae47e-afad-4517-bdfd-c4a82c8bb994
+		sourceLineageTag: CopiedReportId
+		summarizeBy: none
+		sourceColumn: CopiedReportId
+
+		annotation SummarizationSetBy = Automatic
+
+	column GitIntegrationRequest
+		dataType: string
+		lineageTag: 81f8dbb6-2e31-4c6d-ad54-84bb37845f04
+		sourceLineageTag: GitIntegrationRequest
+		summarizeBy: none
+		sourceColumn: GitIntegrationRequest
+
+		annotation SummarizationSetBy = Automatic
+
+	column SubscriptionDetails
+		dataType: string
+		lineageTag: 80ba8bf8-aecb-4462-8fe2-97ad9edfd21e
+		sourceLineageTag: SubscriptionDetails
+		summarizeBy: none
+		sourceColumn: SubscriptionDetails
+
+		annotation SummarizationSetBy = Automatic
+
+	column HasFullReportAttachment
+		dataType: boolean
+		formatString: """TRUE"";""TRUE"";""FALSE"""
+		lineageTag: 04589750-9a8c-448f-83e4-9b5d608c0519
+		sourceLineageTag: HasFullReportAttachment
+		summarizeBy: none
+		sourceColumn: HasFullReportAttachment
+
+		annotation SummarizationSetBy = Automatic
+
+	column SubscribeeInformation
+		dataType: string
+		lineageTag: 7bd64bc0-9d1f-47de-8e5c-74b5bf35976a
+		sourceLineageTag: SubscribeeInformation
+		summarizeBy: none
+		sourceColumn: SubscribeeInformation
+
+		annotation SummarizationSetBy = Automatic
+
+	column GatewayName
+		dataType: string
+		lineageTag: a797ef8c-9b4a-4ab2-8f64-ef29d0c2d7ff
+		sourceLineageTag: GatewayName
+		summarizeBy: none
+		sourceColumn: GatewayName
+
+		annotation SummarizationSetBy = Automatic
+
+	column DeploymentPipelineId
+		dataType: int64
+		formatString: 0
+		lineageTag: c6ed9f0c-0dd1-4a23-99a9-33a64d655639
+		sourceLineageTag: DeploymentPipelineId
+		summarizeBy: count
+		sourceColumn: DeploymentPipelineId
+
+		annotation SummarizationSetBy = Automatic
+
+	column CopiedReportName
+		dataType: string
+		lineageTag: 31684b02-e257-45a8-bbb5-b54bf1150762
+		sourceLineageTag: CopiedReportName
+		summarizeBy: none
+		sourceColumn: CopiedReportName
+
+		annotation SummarizationSetBy = Automatic
+
+	column OrganizationalGalleryItemDisplayName
+		dataType: string
+		lineageTag: a5c5f0b1-0c6a-4e80-965e-00c0f57d300f
+		sourceLineageTag: OrganizationalGalleryItemDisplayName
+		summarizeBy: none
+		sourceColumn: OrganizationalGalleryItemDisplayName
+
+		annotation SummarizationSetBy = Automatic
+
+	column ItemsCount
+		dataType: string
+		lineageTag: 85907e92-6bf1-4029-9934-6290432ad33b
+		sourceLineageTag: ItemsCount
+		summarizeBy: none
+		sourceColumn: ItemsCount
+
+		annotation SummarizationSetBy = Automatic
+
+	column ExternalSubscribeeInformation
+		dataType: string
+		lineageTag: 5255822a-b1ea-4091-8809-df4d08bb2768
+		sourceLineageTag: ExternalSubscribeeInformation
+		summarizeBy: none
+		sourceColumn: ExternalSubscribeeInformation
+
+		annotation SummarizationSetBy = Automatic
+
+	column SharingAction
+		dataType: string
+		lineageTag: bbd3159a-0c48-4326-94e6-eb6806a1f499
+		sourceLineageTag: SharingAction
+		summarizeBy: none
+		sourceColumn: SharingAction
+
+		annotation SummarizationSetBy = Automatic
+
 	column SharingScope
 		dataType: string
-		sourceProviderType: varchar(8000)
-		lineageTag: 867b6a23-ab8c-41fb-a359-e5bb5f26ccc5
+		lineageTag: 38099904-a7ed-470a-ab7a-1e1bb58a679a
 		sourceLineageTag: SharingScope
 		summarizeBy: none
 		sourceColumn: SharingScope
+
+		annotation SummarizationSetBy = Automatic
+
+	column TileText
+		dataType: string
+		lineageTag: f2ccaef1-4951-4375-8227-f1911fb51229
+		sourceLineageTag: TileText
+		summarizeBy: none
+		sourceColumn: TileText
+
+		annotation SummarizationSetBy = Automatic
+
+	column CustomVisualAccessTokenResourceId
+		dataType: string
+		lineageTag: 9d3eabe0-4889-470a-9987-8062aa2a2142
+		sourceLineageTag: CustomVisualAccessTokenResourceId
+		summarizeBy: none
+		sourceColumn: CustomVisualAccessTokenResourceId
+
+		annotation SummarizationSetBy = Automatic
+
+	column OrganizationalGalleryItemPublishTime
+		dataType: string
+		lineageTag: f9230478-9c36-4238-b628-e1a394306a1f
+		sourceLineageTag: OrganizationalGalleryItemPublishTime
+		summarizeBy: none
+		sourceColumn: OrganizationalGalleryItemPublishTime
+
+		annotation SummarizationSetBy = Automatic
+
+	column SubscriptionSchedule
+		dataType: string
+		lineageTag: d743f668-b27c-4493-a266-230d7dfdade3
+		sourceLineageTag: SubscriptionSchedule
+		summarizeBy: none
+		sourceColumn: SubscriptionSchedule
+
+		annotation SummarizationSetBy = Automatic
+
+	column CredentialSetupMode
+		dataType: string
+		lineageTag: dad89a95-19fc-4169-abc8-b8cee38477a6
+		sourceLineageTag: CredentialSetupMode
+		summarizeBy: none
+		sourceColumn: CredentialSetupMode
+
+		annotation SummarizationSetBy = Automatic
+
+	column DeploymentPipelineOperationId
+		dataType: string
+		lineageTag: d0ea3afd-7d22-4b48-ae22-e051ad24ebfb
+		sourceLineageTag: DeploymentPipelineOperationId
+		summarizeBy: none
+		sourceColumn: DeploymentPipelineOperationId
+
+		annotation SummarizationSetBy = Automatic
+
+	column WorkspaceAccessList
+		dataType: string
+		lineageTag: 3bf73851-a82b-4d79-82e4-dc0d5ed19bd0
+		sourceLineageTag: WorkspaceAccessList
+		summarizeBy: none
+		sourceColumn: WorkspaceAccessList
+
+		annotation SummarizationSetBy = Automatic
+
+	column TargetWorkspaceId
+		dataType: string
+		lineageTag: 6c10b2a1-1b5c-40cc-8ed7-6274b30ae127
+		sourceLineageTag: TargetWorkspaceId
+		summarizeBy: none
+		sourceColumn: TargetWorkspaceId
+
+		annotation SummarizationSetBy = Automatic
+
+	column ExportedArtifactDownloadInfo
+		dataType: string
+		lineageTag: 3f31bcdd-582c-4e97-bad0-951cb1332225
+		sourceLineageTag: ExportedArtifactDownloadInfo
+		summarizeBy: none
+		sourceColumn: ExportedArtifactDownloadInfo
+
+		annotation SummarizationSetBy = Automatic
+
+	column UpdateDatasourcesRequest
+		dataType: string
+		lineageTag: 9d311d49-66bd-478a-9c7c-fddefc4eeabb
+		sourceLineageTag: UpdateDatasourcesRequest
+		summarizeBy: none
+		sourceColumn: UpdateDatasourcesRequest
+
+		annotation SummarizationSetBy = Automatic
+
+	column ModelSettings
+		dataType: string
+		lineageTag: afa4fe6c-f26f-44c2-bf97-594a5b521035
+		sourceLineageTag: ModelSettings
+		summarizeBy: none
+		sourceColumn: ModelSettings
+
+		annotation SummarizationSetBy = Automatic
+
+	column GatewayClusters
+		dataType: string
+		lineageTag: 92b0ad78-5e9b-4ec5-ad5b-e046582e1edf
+		sourceLineageTag: GatewayClusters
+		summarizeBy: none
+		sourceColumn: GatewayClusters
+
+		annotation SummarizationSetBy = Automatic
+
+	column DomainId
+		dataType: string
+		sourceProviderType: varchar(8000)
+		lineageTag: 70051ec6-b6a2-4ac5-8b85-819f428b8aa0
+		sourceLineageTag: DomainId
+		summarizeBy: none
+		sourceColumn: DomainId
 
 		annotation SummarizationSetBy = Automatic
 

@@ -382,7 +382,7 @@ class LinkedServiceConnectionService {
         connectivityType: linkedService.selectedConnectivityType || 'ShareableCloud',
         connectionDetails: {
           type: linkedService.selectedConnectionType || 'Generic',
-          creationMethod: linkedService.selectedConnectionType || 'Generic',
+          creationMethod: creationMethod?.name || linkedService.selectedConnectionType || 'Generic',
           parameters
         },
         credentialDetails: {
@@ -665,6 +665,15 @@ class LinkedServiceConnectionService {
     // Get FabricDataPipelines connections for ExecutePipeline activities
     const executePipelineConnections: LinkedServiceConnection[] = [];
     
+    // Phase 1: Collect all ExecutePipeline activities across all pipelines
+    const allExecutePipelineActivities: Array<{
+      pipelineName: string;
+      activityName: string;
+      targetPipelineName: string;
+      waitOnCompletion: boolean;
+      parameters: Record<string, any>;
+    }> = [];
+
     adfComponents
       .filter(component => component.type === 'pipeline')
       .forEach(pipeline => {
@@ -673,38 +682,55 @@ class LinkedServiceConnectionService {
           if (activity.type === 'ExecutePipeline') {
             const targetPipelineName = activity.typeProperties?.pipeline?.referenceName;
             if (targetPipelineName) {
-              // Create a FabricDataPipelines connection for this ExecutePipeline activity
-              const connectionName = `${pipeline.name}_${activity.name}_FabricDataPipeline`;
-              executePipelineConnections.push({
-                linkedServiceName: connectionName,
-                linkedServiceType: 'FabricDataPipelines',
-                linkedServiceDefinition: {
-                  type: 'FabricDataPipelines',
-                  parentPipeline: pipeline.name,
-                  activityName: activity.name,
-                  targetPipelineName: targetPipelineName,
-                  waitOnCompletion: activity.typeProperties?.waitOnCompletion !== false,
-                  parameters: activity.typeProperties?.parameters || {}
-                },
-                mappingMode: 'new' as const,
-                existingConnectionId: undefined,
-                existingConnection: undefined,
-                selectedConnectivityType: 'ShareableCloud' as const, // FabricDataPipelines is always cloud
-                selectedGatewayId: undefined,
-                selectedConnectionType: 'FabricDataPipelines',
-                connectionParameters: {},
-                credentialType: 'WorkspaceIdentity', // FabricDataPipelines uses workspace identity
-                credentials: {},
-                skipTestConnection: false,
-                status: 'pending' as const,
-                validationErrors: []
+              allExecutePipelineActivities.push({
+                pipelineName: pipeline.name,
+                activityName: activity.name,
+                targetPipelineName,
+                waitOnCompletion: activity.typeProperties?.waitOnCompletion !== false,
+                parameters: activity.typeProperties?.parameters || {}
               });
             }
           }
         });
       });
 
-    console.log(`Found ${regularLinkedServices.length} regular LinkedServices and ${executePipelineConnections.length} FabricDataPipelines connections`);
+    // Phase 2: Create single shared connection if any ExecutePipeline activities exist
+    if (allExecutePipelineActivities.length > 0) {
+      executePipelineConnections.push({
+        linkedServiceName: 'FabricDataPipelines_Shared',
+        linkedServiceType: 'FabricDataPipelines',
+        linkedServiceDefinition: {
+          type: 'FabricDataPipelines',
+          isSharedConnection: true,
+          affectedActivities: allExecutePipelineActivities,
+          useSeparateConnections: false, // Default: use shared connection
+          // Legacy properties for backward compatibility (use first activity as representative)
+          parentPipeline: allExecutePipelineActivities[0].pipelineName,
+          activityName: allExecutePipelineActivities[0].activityName,
+          targetPipelineName: allExecutePipelineActivities[0].targetPipelineName,
+          waitOnCompletion: allExecutePipelineActivities[0].waitOnCompletion,
+          parameters: allExecutePipelineActivities[0].parameters
+        },
+        mappingMode: 'new' as const,
+        existingConnectionId: undefined,
+        existingConnection: undefined,
+        selectedConnectivityType: 'ShareableCloud' as const, // FabricDataPipelines is always cloud
+        selectedGatewayId: undefined,
+        selectedConnectionType: 'FabricDataPipelines',
+        connectionParameters: {},
+        credentialType: 'WorkspaceIdentity', // FabricDataPipelines uses workspace identity
+        credentials: {},
+        skipTestConnection: false,
+        status: 'pending' as const,
+        validationErrors: []
+      });
+    }
+
+    console.log(
+      `Found ${regularLinkedServices.length} regular LinkedServices and ` +
+      `${executePipelineConnections.length > 0 ? '1 shared FabricDataPipelines connection' : '0 FabricDataPipelines connections'} ` +
+      `(for ${allExecutePipelineActivities.length} ExecutePipeline activities)`
+    );
     
     return [...regularLinkedServices, ...executePipelineConnections];
   }
@@ -723,35 +749,36 @@ class LinkedServiceConnectionService {
     // Find the creation method
     const creationMethod = connectionTypeDetails.creationMethods?.find(m => m.name === creationMethodName);
     
-    // Map parameters based on creation method requirements
-    if (creationMethod?.parameters) {
-      for (const param of creationMethod.parameters) {
-        // Try to map from ADF type properties
-        const value = typeProps[param.name] || 
-                     typeProps[param.name.toLowerCase()] ||
-                     this.findSimilarProperty(typeProps, param.name);
-        
-        if (value !== undefined) {
-          parameters[param.name] = value;
-        } else if (param.defaultValue !== undefined) {
-          parameters[param.name] = param.defaultValue;
-        }
-      }
+    // CRITICAL: Early return if no creation method found
+    if (!creationMethod?.parameters) {
+      console.warn(`No creation method parameters found for ${linkedServiceConnection.type}`);
+      return parameters;
     }
 
-    // Common parameter mappings
-    if (typeProps.server) parameters.server = typeProps.server;
-    if (typeProps.serverName) parameters.serverName = typeProps.serverName;
-    if (typeProps.host) parameters.host = typeProps.host;
-    if (typeProps.database) parameters.database = typeProps.database;
-    if (typeProps.databaseName) parameters.databaseName = typeProps.databaseName;
-    if (typeProps.connectionString) parameters.connectionString = typeProps.connectionString;
-    if (typeProps.serviceUri) parameters.serviceUri = typeProps.serviceUri;
-    if (typeProps.endpoint) parameters.endpoint = typeProps.endpoint;
-    if (typeProps.url) parameters.url = typeProps.url;
-    if (typeProps.port) parameters.port = typeProps.port;
-    if (typeProps.username) parameters.username = typeProps.username;
-    if (typeProps.userId) parameters.userId = typeProps.userId;
+    // Build allowed parameter names from schema
+    const allowedParameterNames = new Set<string>(
+      creationMethod.parameters.map((p: any) => p.name)
+    );
+
+    console.log(`Schema-allowed parameters for ${linkedServiceConnection.type}:`, 
+      Array.from(allowedParameterNames));
+
+    // Only map parameters that exist in the schema
+    creationMethod.parameters.forEach((param: any) => {
+      let value = this.findSimilarProperty(typeProps, param.name, allowedParameterNames);
+      
+      if (value !== undefined && value !== null) {
+        parameters[param.name] = value;
+        console.log(`  Mapped ${param.name} = ${typeof value === 'object' ? JSON.stringify(value) : value}`);
+      } else if (param.required) {
+        console.warn(`  Required parameter '${param.name}' has no value`);
+      }
+    });
+
+    console.log(`Final parameters for ${linkedServiceConnection.type}:`, {
+      count: Object.keys(parameters).length,
+      keys: Object.keys(parameters)
+    });
 
     return parameters;
   }
@@ -759,11 +786,22 @@ class LinkedServiceConnectionService {
   /**
    * Find similar property in type properties (case-insensitive and pattern matching)
    */
-  private findSimilarProperty(typeProps: Record<string, any>, targetName: string): any {
+  private findSimilarProperty(
+    typeProps: Record<string, any>, 
+    targetName: string,
+    allowedNames?: Set<string>
+  ): any {
     const lowerTarget = targetName.toLowerCase();
     
     // Direct match
-    if (typeProps[lowerTarget]) return typeProps[lowerTarget];
+    if (typeProps[lowerTarget]) {
+      // NEW: Verify against schema if provided
+      if (allowedNames && !allowedNames.has(targetName)) {
+        console.log(`  Skipping '${lowerTarget}' - not in schema-allowed parameters`);
+        return undefined;
+      }
+      return typeProps[lowerTarget];
+    }
     
     // Pattern matching for common variations
     const patterns = [
@@ -776,7 +814,14 @@ class LinkedServiceConnectionService {
     for (const { pattern, alternatives } of patterns) {
       if (pattern.test(targetName)) {
         for (const alt of alternatives) {
-          if (typeProps[alt]) return typeProps[alt];
+          if (typeProps[alt]) {
+            // NEW: Verify against schema if provided
+            if (allowedNames && !allowedNames.has(targetName)) {
+              console.log(`  Skipping '${alt}' - not in schema-allowed parameters`);
+              return undefined;
+            }
+            return typeProps[alt];
+          }
         }
       }
     }

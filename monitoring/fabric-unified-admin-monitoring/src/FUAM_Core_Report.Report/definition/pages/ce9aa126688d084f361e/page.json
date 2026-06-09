@@ -1,0 +1,10 @@
+{
+    "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/page/2.0.0/schema.json",
+    "name": "ce9aa126688d084f361e",
+    "displayName": "TT | Delegated Tenant Setting Switch",
+    "displayOption": "ActualSize",
+    "height": 180,
+    "width": 900,
+    "visibility": "HiddenInViewMode",
+    "type": "Tooltip"
+}

@@ -1,0 +1,96 @@
+version: '3.8'
+
+services:
+  # Main application service
+  lakehouse-mirror:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "3000:3001"  # Map container port 3001 to host port 3000
+    environment:
+      # Override environment variables for container
+      - NODE_ENV=production
+      - PORT=3001
+      - CLIENT_PORT=3000
+    env_file:
+      - .env
+    volumes:
+      # Mount logs directory for persistence
+      - lakehouse-logs:/app/logs
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "node", "-e", "require('http').get('http://localhost:3001/health', (res) => { process.exit(res.statusCode === 200 ? 0 : 1) }).on('error', () => { process.exit(1) })"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    networks:
+      - lakehouse-network
+
+  # Development service (alternative to the main service)
+  lakehouse-mirror-dev:
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+    ports:
+      - "3000:3000"  # React dev server
+      - "3001:3001"  # API server
+    environment:
+      - NODE_ENV=development
+      - CHOKIDAR_USEPOLLING=true  # Enable file watching in Docker
+    env_file:
+      - .env
+    volumes:
+      # Mount source code for hot reloading
+      - ./client/src:/app/client/src
+      - ./client/public:/app/client/public
+      - ./server:/app/server
+      - lakehouse-logs:/app/logs
+      # Exclude node_modules from volume mounts
+      - /app/client/node_modules
+      - /app/server/node_modules
+    networks:
+      - lakehouse-network
+    profiles:
+      - dev
+
+  # Redis for production job queue and caching (optional)
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis-data:/data
+    restart: unless-stopped
+    networks:
+      - lakehouse-network
+    profiles:
+      - redis
+
+  # Nginx reverse proxy for production (optional)
+  nginx:
+    image: nginx:alpine
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./nginx/ssl:/etc/nginx/ssl:ro
+    depends_on:
+      - lakehouse-mirror
+    restart: unless-stopped
+    networks:
+      - lakehouse-network
+    profiles:
+      - nginx
+
+volumes:
+  lakehouse-logs:
+    driver: local
+  redis-data:
+    driver: local
+
+networks:
+  lakehouse-network:
+    driver: bridge

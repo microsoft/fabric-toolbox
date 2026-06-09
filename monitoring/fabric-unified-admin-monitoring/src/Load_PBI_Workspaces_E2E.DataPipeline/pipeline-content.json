@@ -2,7 +2,7 @@
     "properties": {
         "activities": [
             {
-                "name": "Delete files",
+                "name": "Delete files temp PBI WS",
                 "type": "Delete",
                 "dependsOn": [],
                 "policy": {
@@ -48,7 +48,7 @@
                 "type": "Lookup",
                 "dependsOn": [
                     {
-                        "activity": "Delete files",
+                        "activity": "Delete files temp PBI WS",
                         "dependencyConditions": [
                             "Succeeded"
                         ]
@@ -285,6 +285,12 @@
                         "dependencyConditions": [
                             "Succeeded"
                         ]
+                    },
+                    {
+                        "activity": "Get Fabric Workspaces",
+                        "dependencyConditions": [
+                            "Succeeded"
+                        ]
                     }
                 ],
                 "policy": {
@@ -307,6 +313,125 @@
                         }
                     },
                     "sessionTag": "fuam"
+                }
+            },
+            {
+                "name": "Get Fabric Workspaces",
+                "description": "https://learn.microsoft.com/en-us/rest/api/fabric/admin/workspaces/list-workspaces?tabs=HTTP",
+                "type": "Copy",
+                "dependsOn": [
+                    {
+                        "activity": "Delete temp files Fabric WS",
+                        "dependencyConditions": [
+                            "Succeeded"
+                        ]
+                    }
+                ],
+                "policy": {
+                    "timeout": "0.12:00:00",
+                    "retry": 0,
+                    "retryIntervalInSeconds": 30,
+                    "secureOutput": false,
+                    "secureInput": false
+                },
+                "typeProperties": {
+                    "source": {
+                        "type": "RestSource",
+                        "httpRequestTimeout": "00:01:40",
+                        "requestInterval": "00.00:00:00.010",
+                        "requestMethod": "GET",
+                        "paginationRules": {
+                            "AbsoluteUrl": "$.$.continuationUri"
+                        },
+                        "datasetSettings": {
+                            "annotations": [],
+                            "type": "RestResource",
+                            "typeProperties": {
+                                "relativeUrl": "workspaces"
+                            },
+                            "schema": [],
+                            "externalReferences": {
+                                "connection": "e665127a-bc6f-3487-b0ce-d3b2141df298"
+                            }
+                        }
+                    },
+                    "sink": {
+                        "type": "JsonSink",
+                        "storeSettings": {
+                            "type": "LakehouseWriteSettings"
+                        },
+                        "formatSettings": {
+                            "type": "JsonWriteSettings",
+                            "filePattern": "arrayOfObjects"
+                        },
+                        "datasetSettings": {
+                            "annotations": [],
+                            "linkedService": {
+                                "name": "FUAM_Lakehouse",
+                                "properties": {
+                                    "annotations": [],
+                                    "type": "Lakehouse",
+                                    "typeProperties": {
+                                        "workspaceId": "88c8d9fa-2c24-3fad-8f46-b36431c7ba1d",
+                                        "artifactId": "6cff634b-88f7-3505-bed2-c03a36776a8b",
+                                        "rootFolder": "Files"
+                                    }
+                                }
+                            },
+                            "type": "Json",
+                            "typeProperties": {
+                                "location": {
+                                    "type": "LakehouseLocation",
+                                    "fileName": "fabric_workspaces.json",
+                                    "folderPath": "raw/fabric_workspaces"
+                                }
+                            },
+                            "schema": {}
+                        }
+                    },
+                    "enableStaging": false
+                }
+            },
+            {
+                "name": "Delete temp files Fabric WS",
+                "type": "Delete",
+                "dependsOn": [],
+                "policy": {
+                    "timeout": "0.12:00:00",
+                    "retry": 0,
+                    "retryIntervalInSeconds": 30,
+                    "secureOutput": false,
+                    "secureInput": false
+                },
+                "typeProperties": {
+                    "datasetSettings": {
+                        "annotations": [],
+                        "linkedService": {
+                            "name": "FUAM_Lakehouse",
+                            "properties": {
+                                "annotations": [],
+                                "type": "Lakehouse",
+                                "typeProperties": {
+                                    "workspaceId": "88c8d9fa-2c24-3fad-8f46-b36431c7ba1d",
+                                    "artifactId": "6cff634b-88f7-3505-bed2-c03a36776a8b",
+                                    "rootFolder": "Files"
+                                }
+                            }
+                        },
+                        "type": "Binary",
+                        "typeProperties": {
+                            "location": {
+                                "type": "LakehouseLocation",
+                                "folderPath": "raw/fabric_workspaces"
+                            }
+                        }
+                    },
+                    "enableLogging": false,
+                    "storeSettings": {
+                        "type": "LakehouseReadSettings",
+                        "recursive": true,
+                        "enablePartitionDiscovery": false
+                    }
                 }
             }
         ],

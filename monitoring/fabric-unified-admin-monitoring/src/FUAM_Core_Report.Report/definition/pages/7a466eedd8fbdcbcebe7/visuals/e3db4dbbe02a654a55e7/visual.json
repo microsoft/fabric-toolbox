@@ -1,0 +1,173 @@
+{
+    "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.5.0/schema.json",
+    "name": "e3db4dbbe02a654a55e7",
+    "position": {
+        "x": 1226.5164644714039,
+        "y": 8.492201039861351,
+        "z": 5000,
+        "height": 52.16637781629116,
+        "width": 538.6481802426343,
+        "tabOrder": 6000
+    },
+    "visual": {
+        "visualType": "card",
+        "query": {
+            "queryState": {
+                "Values": {
+                    "projections": [
+                        {
+                            "field": {
+                                "Measure": {
+                                    "Expression": {
+                                        "SourceRef": {
+                                            "Entity": "Metrics"
+                                        }
+                                    },
+                                    "Property": "Select Capacity Label"
+                                }
+                            },
+                            "queryRef": "Metrics.Select Capacity Label",
+                            "nativeQueryRef": "Select Capacity Label"
+                        }
+                    ]
+                }
+            }
+        },
+        "objects": {
+            "labels": [
+                {
+                    "properties": {
+                        "fontSize": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "20D"
+                                }
+                            }
+                        },
+                        "color": {
+                            "solid": {
+                                "color": {
+                                    "expr": {
+                                        "Conditional": {
+                                            "Cases": [
+                                                {
+                                                    "Condition": {
+                                                        "Comparison": {
+                                                            "ComparisonKind": 0,
+                                                            "Left": {
+                                                                "Measure": {
+                                                                    "Expression": {
+                                                                        "SourceRef": {
+                                                                            "Entity": "Metrics"
+                                                                        }
+                                                                    },
+                                                                    "Property": "Select Capacity Label"
+                                                                }
+                                                            },
+                                                            "Right": {
+                                                                "Literal": {
+                                                                    "Value": "'Select a capacity'"
+                                                                }
+                                                            }
+                                                        },
+                                                        "Annotations": {
+                                                            "PowerBI.SQExprEvaluationKind": 1,
+                                                            "PowerBI.SQExprTextOperatorOption": 2
+                                                        }
+                                                    },
+                                                    "Value": {
+                                                        "Literal": {
+                                                            "Value": "'#FFFFFF'"
+                                                        }
+                                                    }
+                                                }
+                                            ]
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            ],
+            "categoryLabels": [
+                {
+                    "properties": {
+                        "show": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "false"
+                                }
+                            }
+                        }
+                    }
+                }
+            ]
+        },
+        "visualContainerObjects": {
+            "background": [
+                {
+                    "properties": {
+                        "color": {
+                            "solid": {
+                                "color": {
+                                    "expr": {
+                                        "Conditional": {
+                                            "Cases": [
+                                                {
+                                                    "Condition": {
+                                                        "Comparison": {
+                                                            "ComparisonKind": 0,
+                                                            "Left": {
+                                                                "Measure": {
+                                                                    "Expression": {
+                                                                        "SourceRef": {
+                                                                            "Entity": "Metrics"
+                                                                        }
+                                                                    },
+                                                                    "Property": "Select Capacity Label"
+                                                                }
+                                                            },
+                                                            "Right": {
+                                                                "Literal": {
+                                                                    "Value": "'Select a capacity'"
+                                                                }
+                                                            }
+                                                        },
+                                                        "Annotations": {
+                                                            "PowerBI.SQExprEvaluationKind": 1,
+                                                            "PowerBI.SQExprTextOperatorOption": 2
+                                                        }
+                                                    },
+                                                    "Value": {
+                                                        "Literal": {
+                                                            "Value": "'#ED4E7D'"
+                                                        }
+                                                    }
+                                                }
+                                            ]
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            ],
+            "title": [
+                {
+                    "properties": {
+                        "show": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "false"
+                                }
+                            }
+                        }
+                    }
+                }
+            ]
+        },
+        "drillFilterOtherVisuals": true
+    }
+}

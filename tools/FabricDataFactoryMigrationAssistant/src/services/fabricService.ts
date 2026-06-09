@@ -257,7 +257,7 @@ export class FabricService {
     // 4. Pipelines
     pipelines.forEach(mapping => {
       const component = mapping.component;
-      const pipelineDefinition = pipelineTransformer.transformPipelineDefinition(component.definition, pipelineConnectionMappings);
+      const pipelineDefinition = pipelineTransformer.transformPipelineDefinition(component.definition, pipelineConnectionMappings, component.name);
       const base64Payload = btoa(JSON.stringify(pipelineDefinition));
 
       const payload = {
@@ -1324,7 +1324,7 @@ export class FabricService {
         return this.transformLookupActivityProperties(typeProperties);
       case 'ForEach':
         return this.transformForEachActivityProperties(typeProperties);
-      case 'If':
+      case 'IfCondition':
         return this.transformIfActivityProperties(typeProperties);
       case 'Wait':
         return this.transformWaitActivityProperties(typeProperties);
@@ -1834,7 +1834,7 @@ export class FabricService {
       });
 
       // Transform the pipeline definition and resolve dependencies
-      let pipelineDefinition = pipelineTransformer.transformPipelineDefinition(component.definition, pipelineConnectionMappings);
+      let pipelineDefinition = pipelineTransformer.transformPipelineDefinition(component.definition, pipelineConnectionMappings, component.name);
       
       // Apply connection mappings if provided
       if (pipelineConnectionMappings) {
@@ -1842,7 +1842,9 @@ export class FabricService {
         pipelineDefinition = PipelineConnectionTransformerService.transformPipelineWithConnections(
           pipelineDefinition, 
           component.name, 
-          pipelineConnectionMappings
+          pipelineConnectionMappings,
+          pipelineTransformer.getReferenceMappings(), // Pass NEW format mappings
+          pipelineTransformer.getLinkedServiceBridge() // Pass bridge from Configure Connections
         );
       }
 
@@ -1876,144 +1878,199 @@ export class FabricService {
         console.log(`[FabricService] Global parameter transformations applied for pipeline '${component.name}': ${variableNamesWithTypes.length} variables`);
       }
 
-      // Resolve InvokePipeline activity dependencies
+      // Resolve InvokePipeline activity dependencies (including nested activities)
       if (pipelineDefinition.properties?.activities) {
-        console.log(`Processing ${pipelineDefinition.properties.activities.length} activities for pipeline '${component.name}'`);
+        console.log(`Processing ${pipelineDefinition.properties.activities.length} top-level activities (including nested) for pipeline '${component.name}'`);
         
-        for (const activity of pipelineDefinition.properties.activities) {
-          if (activity.type === 'InvokePipeline') {
-            console.log(`Found InvokePipeline activity '${activity.name}'`, {
-              hasOriginalTargetPipeline: Boolean(activity._originalTargetPipeline),
-              originalTargetPipeline: activity._originalTargetPipeline,
-              currentPipelineId: activity.typeProperties?.pipelineId,
-              currentWorkspaceId: activity.typeProperties?.workspaceId,
-              currentConnectionId: activity.externalReferences?.connection
-            });
-
-            if (activity._originalTargetPipeline) {
-              // Get the deployed pipeline ID for the target pipeline
-              let targetPipelineId = deployedPipelineIds?.get(activity._originalTargetPipeline);
-              
-              console.log(`Looking up target pipeline '${activity._originalTargetPipeline}' in deployed pipeline IDs`, {
-                found: Boolean(targetPipelineId),
-                targetPipelineId,
-                availablePipelineIds: deployedPipelineIds ? Array.from(deployedPipelineIds.keys()) : []
+        // Helper function to recursively process InvokePipeline activities at all nesting levels
+        const processInvokePipelineActivitiesRecursively = async (activities: any[], nestingPath: string = ''): Promise<void> => {
+          for (const activity of activities) {
+            const activityPath = nestingPath ? `${nestingPath} → ${activity.name}` : activity.name;
+            
+            // Process current activity if it's InvokePipeline
+            if (activity.type === 'InvokePipeline') {
+              console.log(`Found InvokePipeline activity '${activity.name}' at path: ${activityPath}`, {
+                hasOriginalTargetPipeline: Boolean(activity._originalTargetPipeline),
+                originalTargetPipeline: activity._originalTargetPipeline,
+                currentPipelineId: activity.typeProperties?.pipelineId,
+                currentWorkspaceId: activity.typeProperties?.workspaceId,
+                currentConnectionId: activity.externalReferences?.connection
               });
 
-              // If not found in deployed pipeline IDs, try fallback lookup using Fabric API
-              if (!targetPipelineId) {
-                console.log(`Target pipeline '${activity._originalTargetPipeline}' not found in deployed pipeline IDs, attempting fallback lookup`);
+              if (activity._originalTargetPipeline) {
+                // Get the deployed pipeline ID for the target pipeline
+                let targetPipelineId = deployedPipelineIds?.get(activity._originalTargetPipeline);
                 
-                try {
-                  const { pipelineFallbackService } = await import('./pipelineFallbackService');
-                  const fallbackResult = await pipelineFallbackService.resolvePipelineReference(
-                    activity._originalTargetPipeline,
-                    workspaceId,
-                    accessToken
+                console.log(`Looking up target pipeline '${activity._originalTargetPipeline}' in deployed pipeline IDs`, {
+                  found: Boolean(targetPipelineId),
+                  targetPipelineId,
+                  availablePipelineIds: deployedPipelineIds ? Array.from(deployedPipelineIds.keys()) : []
+                });
+
+                // If not found in deployed pipeline IDs, try fallback lookup using Fabric API
+                if (!targetPipelineId) {
+                  console.log(`Target pipeline '${activity._originalTargetPipeline}' not found in deployed pipeline IDs, attempting fallback lookup`);
+                  
+                  try {
+                    const { pipelineFallbackService } = await import('./pipelineFallbackService');
+                    const fallbackResult = await pipelineFallbackService.resolvePipelineReference(
+                      activity._originalTargetPipeline,
+                      workspaceId,
+                      accessToken
+                    );
+                    
+                    if (fallbackResult) {
+                      targetPipelineId = fallbackResult;
+                      console.log(`Successfully resolved target pipeline '${activity._originalTargetPipeline}' using fallback lookup: ${targetPipelineId}`);
+                      
+                      // Add to deployed pipeline IDs for future reference
+                      deployedPipelineIds?.set(activity._originalTargetPipeline, targetPipelineId);
+                    } else {
+                      console.warn(`Fallback lookup failed for target pipeline '${activity._originalTargetPipeline}'`);
+                    }
+                  } catch (fallbackError) {
+                    const fallbackErrorMessage = fallbackError instanceof Error ? fallbackError.message : 'Unknown fallback error';
+                    console.warn(`Fallback pipeline lookup failed for '${activity._originalTargetPipeline}':`, {
+                      error: fallbackErrorMessage,
+                      workspaceId,
+                      targetPipeline: activity._originalTargetPipeline
+                    });
+                  }
+                }
+
+                if (targetPipelineId) {
+                  // Set pipeline-specific properties
+                  activity.typeProperties.pipelineId = targetPipelineId;
+                  activity.typeProperties.workspaceId = workspaceId;
+                  
+                  // Get the FabricDataPipelines connection ID from pipeline connection mappings
+                  // The mapping keys are generated with the pattern: `${activityName}_${linkedServiceName}_${refIndex}`
+                  // where linkedServiceName is "FabricDataPipelines" for InvokePipeline activities
+                  const pipelineMappings = pipelineConnectionMappings?.[component.name] || {};
+                  
+                  // Find the mapping key that starts with the activity name and contains FabricDataPipelines
+                  const possibleMappingKeys = Object.keys(pipelineMappings).filter(key => 
+                    key.startsWith(`${activity.name}_FabricDataPipelines`)
                   );
                   
-                  if (fallbackResult) {
-                    targetPipelineId = fallbackResult;
-                    console.log(`Successfully resolved target pipeline '${activity._originalTargetPipeline}' using fallback lookup: ${targetPipelineId}`);
-                    
-                    // Add to deployed pipeline IDs for future reference
-                    deployedPipelineIds?.set(activity._originalTargetPipeline, targetPipelineId);
-                  } else {
-                    console.warn(`Fallback lookup failed for target pipeline '${activity._originalTargetPipeline}'`);
-                  }
-                } catch (fallbackError) {
-                  const fallbackErrorMessage = fallbackError instanceof Error ? fallbackError.message : 'Unknown fallback error';
-                  console.warn(`Fallback pipeline lookup failed for '${activity._originalTargetPipeline}':`, {
-                    error: fallbackErrorMessage,
-                    workspaceId,
-                    targetPipeline: activity._originalTargetPipeline
-                  });
-                }
-              }
-
-              if (targetPipelineId) {
-                // Set pipeline-specific properties
-                activity.typeProperties.pipelineId = targetPipelineId;
-                activity.typeProperties.workspaceId = workspaceId;
-                
-                // Get the FabricDataPipelines connection ID from pipeline connection mappings
-                // The mapping keys are generated with the pattern: `${activityName}_${linkedServiceName}_${refIndex}`
-                // where linkedServiceName is "FabricDataPipelines" for InvokePipeline activities
-                const pipelineMappings = pipelineConnectionMappings?.[component.name] || {};
-                
-                // Find the mapping key that starts with the activity name and contains FabricDataPipelines
-                const possibleMappingKeys = Object.keys(pipelineMappings).filter(key => 
-                  key.startsWith(`${activity.name}_FabricDataPipelines`)
-                );
-                
-                console.log(`Looking for FabricDataPipelines connection mapping for activity '${activity.name}'`, {
-                  activityName: activity.name,
-                  possibleMappingKeys,
-                  totalMappings: Object.keys(pipelineMappings).length,
-                  availableMappings: Object.keys(pipelineMappings)
-                });
-                
-                let activityConnectionMapping: any = null;
-                let usedMappingKey = '';
-                
-                // Try to find the correct mapping key
-                for (const key of possibleMappingKeys) {
-                  if (pipelineMappings[key]?.selectedConnectionId) {
-                    activityConnectionMapping = pipelineMappings[key];
-                    usedMappingKey = key;
-                    break;
-                  }
-                }
-                
-                if (activityConnectionMapping?.selectedConnectionId) {
-                  activity.externalReferences.connection = activityConnectionMapping.selectedConnectionId;
-                  console.log(`Successfully applied FabricDataPipelines connection '${activityConnectionMapping.selectedConnectionId}' to InvokePipeline activity '${activity.name}' using mapping key '${usedMappingKey}'`);
-                } else {
-                  const detailedErrorInfo = {
+                  console.log(`Looking for FabricDataPipelines connection mapping for activity '${activity.name}' at path: ${activityPath}`, {
                     activityName: activity.name,
-                    parentPipeline: component.name,
                     possibleMappingKeys,
-                    availableMappings: Object.keys(pipelineMappings),
-                    hasAnyMappings: Object.keys(pipelineMappings).length > 0,
+                    totalMappings: Object.keys(pipelineMappings).length,
+                    availableMappings: Object.keys(pipelineMappings)
+                  });
+                  
+                  let activityConnectionMapping: any = null;
+                  let usedMappingKey = '';
+                  
+                  // Try to find the correct mapping key
+                  for (const key of possibleMappingKeys) {
+                    if (pipelineMappings[key]?.selectedConnectionId) {
+                      activityConnectionMapping = pipelineMappings[key];
+                      usedMappingKey = key;
+                      break;
+                    }
+                  }
+                  
+                  if (activityConnectionMapping?.selectedConnectionId) {
+                    activity.externalReferences.connection = activityConnectionMapping.selectedConnectionId;
+                    console.log(`Successfully applied FabricDataPipelines connection '${activityConnectionMapping.selectedConnectionId}' to InvokePipeline activity '${activity.name}' at path: ${activityPath} using mapping key '${usedMappingKey}'`);
+                  } else {
+                    const detailedErrorInfo = {
+                      activityName: activity.name,
+                      activityPath,
+                      parentPipeline: component.name,
+                      possibleMappingKeys,
+                      availableMappings: Object.keys(pipelineMappings),
+                      hasAnyMappings: Object.keys(pipelineMappings).length > 0,
+                      targetPipeline: activity._originalTargetPipeline,
+                      pipelineConnectionMappings: pipelineConnectionMappings ? Object.keys(pipelineConnectionMappings) : [],
+                      mappingValues: Object.fromEntries(
+                        Object.entries(pipelineMappings).map(([key, value]) => [key, { hasConnectionId: Boolean(value?.selectedConnectionId), connectionId: value?.selectedConnectionId }])
+                      )
+                    };
+                    
+                    console.error(`No FabricDataPipelines connection mapping found for InvokePipeline activity`, detailedErrorInfo);
+                    
+                    const errorMessage = `Missing FabricDataPipelines connection mapping for InvokePipeline activity '${activity.name}' at path: ${activityPath} in pipeline '${component.name}'. Expected mapping key pattern: '${activity.name}_FabricDataPipelines_*'. Found possible keys: [${possibleMappingKeys.join(', ')}]. Available mappings: [${Object.keys(pipelineMappings).join(', ')}]. Please ensure this activity is mapped to a FabricDataPipelines connection in the Map Components stage.`;
+                    
+                    throw new Error(errorMessage);
+                  }
+                  
+                  // Remove the temporary property
+                  delete activity._originalTargetPipeline;
+                  
+                  console.log(`Successfully resolved InvokePipeline '${activity.name}' dependencies at path: ${activityPath}:`, {
+                    pipelineId: targetPipelineId,
+                    workspaceId,
+                    connectionId: activity.externalReferences.connection,
+                    resolvedViaFallback: !deployedPipelineIds?.has(activity._originalTargetPipeline)
+                  });
+                } else {
+                  console.error(`Target pipeline '${activity._originalTargetPipeline}' not found in deployed pipeline IDs or via fallback lookup`, {
                     targetPipeline: activity._originalTargetPipeline,
-                    pipelineConnectionMappings: pipelineConnectionMappings ? Object.keys(pipelineConnectionMappings) : [],
-                    mappingValues: Object.fromEntries(
-                      Object.entries(pipelineMappings).map(([key, value]) => [key, { hasConnectionId: Boolean(value?.selectedConnectionId), connectionId: value?.selectedConnectionId }])
-                    )
-                  };
+                    activityName: activity.name,
+                    activityPath,
+                    parentPipeline: component.name,
+                    availablePipelineIds: deployedPipelineIds ? Array.from(deployedPipelineIds.keys()) : [],
+                    deployedPipelineIdsSize: deployedPipelineIds?.size || 0
+                  });
                   
-                  console.error(`No FabricDataPipelines connection mapping found for InvokePipeline activity`, detailedErrorInfo);
-                  
-                  const errorMessage = `Missing FabricDataPipelines connection mapping for InvokePipeline activity '${activity.name}' in pipeline '${component.name}'. Expected mapping key pattern: '${activity.name}_FabricDataPipelines_*'. Found possible keys: [${possibleMappingKeys.join(', ')}]. Available mappings: [${Object.keys(pipelineMappings).join(', ')}]. Please ensure this activity is mapped to a FabricDataPipelines connection in the Map Components stage.`;
-                  
-                  throw new Error(errorMessage);
+                  throw new Error(`Target pipeline '${activity._originalTargetPipeline}' not found. It must be deployed before pipeline '${component.name}' with InvokePipeline activity '${activity.name}' at path: ${activityPath}, or it should already exist in the workspace. Check deployment ordering or verify the target pipeline exists in Fabric.`);
                 }
-                
-                // Remove the temporary property
-                delete activity._originalTargetPipeline;
-                
-                console.log(`Successfully resolved InvokePipeline '${activity.name}' dependencies:`, {
-                  pipelineId: targetPipelineId,
-                  workspaceId,
-                  connectionId: activity.externalReferences.connection,
-                  resolvedViaFallback: !deployedPipelineIds?.has(activity._originalTargetPipeline)
-                });
               } else {
-                console.error(`Target pipeline '${activity._originalTargetPipeline}' not found in deployed pipeline IDs or via fallback lookup`, {
-                  targetPipeline: activity._originalTargetPipeline,
-                  activityName: activity.name,
-                  parentPipeline: component.name,
-                  availablePipelineIds: deployedPipelineIds ? Array.from(deployedPipelineIds.keys()) : [],
-                  deployedPipelineIdsSize: deployedPipelineIds?.size || 0
-                });
-                
-                throw new Error(`Target pipeline '${activity._originalTargetPipeline}' not found. It must be deployed before pipeline '${component.name}' with InvokePipeline activity '${activity.name}', or it should already exist in the workspace. Check deployment ordering or verify the target pipeline exists in Fabric.`);
+                console.warn(`InvokePipeline activity '${activity.name}' at path: ${activityPath} missing _originalTargetPipeline property - this indicates a transformation issue`);
               }
-            } else {
-              console.warn(`InvokePipeline activity '${activity.name}' missing _originalTargetPipeline property - this indicates a transformation issue`);
+            }
+            
+            // Recursively process nested activities in container activities
+            if (activity.typeProperties) {
+              // ForEach container
+              if (activity.type === 'ForEach' && Array.isArray(activity.typeProperties.activities)) {
+                console.log(`Recursively processing ${activity.typeProperties.activities.length} nested activities in ForEach '${activity.name}'`);
+                await processInvokePipelineActivitiesRecursively(activity.typeProperties.activities, activityPath);
+              }
+              
+              // IfCondition container
+              if (activity.type === 'IfCondition') {
+                if (Array.isArray(activity.typeProperties.ifTrueActivities)) {
+                  console.log(`Recursively processing ${activity.typeProperties.ifTrueActivities.length} nested activities in IfCondition '${activity.name}' (ifTrue branch)`);
+                  await processInvokePipelineActivitiesRecursively(activity.typeProperties.ifTrueActivities, `${activityPath} [ifTrue]`);
+                }
+                if (Array.isArray(activity.typeProperties.ifFalseActivities)) {
+                  console.log(`Recursively processing ${activity.typeProperties.ifFalseActivities.length} nested activities in IfCondition '${activity.name}' (ifFalse branch)`);
+                  await processInvokePipelineActivitiesRecursively(activity.typeProperties.ifFalseActivities, `${activityPath} [ifFalse]`);
+                }
+              }
+              
+              // Until container
+              if (activity.type === 'Until' && Array.isArray(activity.typeProperties.activities)) {
+                console.log(`Recursively processing ${activity.typeProperties.activities.length} nested activities in Until '${activity.name}'`);
+                await processInvokePipelineActivitiesRecursively(activity.typeProperties.activities, activityPath);
+              }
+              
+              // Switch container
+              if (activity.type === 'Switch') {
+                if (Array.isArray(activity.typeProperties.cases)) {
+                  for (let i = 0; i < activity.typeProperties.cases.length; i++) {
+                    const switchCase = activity.typeProperties.cases[i];
+                    if (Array.isArray(switchCase.activities)) {
+                      console.log(`Recursively processing ${switchCase.activities.length} nested activities in Switch '${activity.name}' (case ${i})`);
+                      await processInvokePipelineActivitiesRecursively(switchCase.activities, `${activityPath} [case ${i}]`);
+                    }
+                  }
+                }
+                if (Array.isArray(activity.typeProperties.defaultActivities)) {
+                  console.log(`Recursively processing ${activity.typeProperties.defaultActivities.length} nested activities in Switch '${activity.name}' (default case)`);
+                  await processInvokePipelineActivitiesRecursively(activity.typeProperties.defaultActivities, `${activityPath} [default]`);
+                }
+              }
             }
           }
-        }
+        };
+        
+        // Process all activities recursively
+        await processInvokePipelineActivitiesRecursively(pipelineDefinition.properties.activities);
       }
 
       // Update activities for failed connectors
@@ -2028,6 +2085,14 @@ export class FabricService {
       const parametersCount = Object.keys(updatedDefinition.properties.parameters || {}).length;
       const variablesCount = Object.keys(updatedDefinition.properties.variables || {}).length;
 
+      console.log(`[FabricService] Pipeline '${component.name}' post-transform summary (dependency path):`, {
+        activitiesCount,
+        inactiveActivitiesCount,
+        activeActivitiesCount: activitiesCount - inactiveActivitiesCount,
+        parametersCount,
+        variablesCount
+      });
+
       if (activitiesCount === 0) {
         const originalActivities = component.definition?.properties?.activities || component.definition?.activities || [];
         if (Array.isArray(originalActivities) && originalActivities.length > 0) {
@@ -2035,9 +2100,19 @@ export class FabricService {
         }
       }
 
-      // Generate Base64 payload
+      // Clean pipeline definition and wrap with name/objectId before encoding.
+      // Fabric requires name and objectId in pipeline-content.json; objectId is empty string on first creation.
       const { PipelineConnectionTransformerService } = await import('./pipelineConnectionTransformerService');
-      const base64Payload = PipelineConnectionTransformerService.generateFabricPipelinePayload(updatedDefinition);
+      const cleanedDefinition = PipelineConnectionTransformerService.cleanPipelineForFabric(updatedDefinition);
+      console.log(`[FabricService] cleanPipelineForFabric done for '${component.name}' (dependency path)`);
+      const fabricPipelineContent = {
+        name: component.fabricTarget?.name || component.name,
+        objectId: '',
+        properties: cleanedDefinition.properties
+      };
+      console.log(`[FabricService] Encoding pipeline-content.json for '${component.name}' (name='${fabricPipelineContent.name}', properties defined=${Boolean(fabricPipelineContent.properties)})`);
+      const base64Payload = PipelineConnectionTransformerService.generateFabricPipelinePayload(fabricPipelineContent);
+      console.log(`[FabricService] Base64 payload length for '${component.name}': ${base64Payload.length} chars`);
 
       // Get folder ID if component has folder information
       let folderId: string | undefined;
@@ -2073,6 +2148,7 @@ export class FabricService {
         'Content-Type': 'application/json' 
       };
 
+      console.log(`[FabricService] POST ${endpoint} for '${component.name}' (dependency path)`);
       const response = await fetch(endpoint, { 
         method: 'POST', 
         headers, 
@@ -2084,6 +2160,7 @@ export class FabricService {
       }
 
       const result = await response.json();
+      console.log(`[FabricService] Pipeline '${component.name}' created successfully (dependency path), Fabric ID: ${result.id}`);
       
       // Generate connection mapping summary if available
       let note = `Pipeline created successfully with ${activitiesCount} activities, ${parametersCount} parameters, and ${variablesCount} variables`;

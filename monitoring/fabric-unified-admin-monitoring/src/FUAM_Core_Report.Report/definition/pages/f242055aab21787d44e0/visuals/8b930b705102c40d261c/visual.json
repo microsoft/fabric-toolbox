@@ -1,0 +1,569 @@
+{
+    "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.5.0/schema.json",
+    "name": "8b930b705102c40d261c",
+    "position": {
+        "x": 19.047619047619047,
+        "y": 273.015873015873,
+        "z": 1000,
+        "height": 226.984126984127,
+        "width": 915.8730158730159,
+        "tabOrder": 13000
+    },
+    "visual": {
+        "visualType": "barChart",
+        "query": {
+            "queryState": {
+                "Category": {
+                    "projections": [
+                        {
+                            "field": {
+                                "Column": {
+                                    "Expression": {
+                                        "SourceRef": {
+                                            "Entity": "semantic_model_bpa_rule_catalog"
+                                        }
+                                    },
+                                    "Property": "Severity"
+                                }
+                            },
+                            "queryRef": "semantic_model_bpa_rule_catalog.Severity",
+                            "nativeQueryRef": "Severity",
+                            "active": true
+                        }
+                    ]
+                },
+                "Y": {
+                    "projections": [
+                        {
+                            "field": {
+                                "Measure": {
+                                    "Expression": {
+                                        "SourceRef": {
+                                            "Entity": "Metrics"
+                                        }
+                                    },
+                                    "Property": "BPA Violations"
+                                }
+                            },
+                            "queryRef": "Metrics.BPA Violations",
+                            "nativeQueryRef": "BPA Violations"
+                        }
+                    ]
+                }
+            },
+            "sortDefinition": {
+                "sort": [
+                    {
+                        "field": {
+                            "Measure": {
+                                "Expression": {
+                                    "SourceRef": {
+                                        "Entity": "Metrics"
+                                    }
+                                },
+                                "Property": "BPA Violations"
+                            }
+                        },
+                        "direction": "Descending"
+                    }
+                ],
+                "isDefaultSort": true
+            }
+        },
+        "objects": {
+            "categoryAxis": [
+                {
+                    "properties": {
+                        "maxMarginFactor": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "50L"
+                                }
+                            }
+                        }
+                    }
+                }
+            ],
+            "dataPoint": [
+                {
+                    "properties": {}
+                },
+                {
+                    "properties": {
+                        "fill": {
+                            "solid": {
+                                "color": {
+                                    "expr": {
+                                        "Literal": {
+                                            "Value": "'#D7B33F'"
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "selector": {
+                        "data": [
+                            {
+                                "scopeId": {
+                                    "Comparison": {
+                                        "ComparisonKind": 0,
+                                        "Left": {
+                                            "Column": {
+                                                "Expression": {
+                                                    "SourceRef": {
+                                                        "Entity": "modelbparesults"
+                                                    }
+                                                },
+                                                "Property": "Severity"
+                                            }
+                                        },
+                                        "Right": {
+                                            "Literal": {
+                                                "Value": "'Warning'"
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        ]
+                    }
+                },
+                {
+                    "properties": {
+                        "fill": {
+                            "solid": {
+                                "color": {
+                                    "expr": {
+                                        "ThemeDataColor": {
+                                            "ColorId": 3,
+                                            "Percent": 0
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "selector": {
+                        "data": [
+                            {
+                                "scopeId": {
+                                    "Comparison": {
+                                        "ComparisonKind": 0,
+                                        "Left": {
+                                            "Column": {
+                                                "Expression": {
+                                                    "SourceRef": {
+                                                        "Entity": "modelbparesults"
+                                                    }
+                                                },
+                                                "Property": "Severity"
+                                            }
+                                        },
+                                        "Right": {
+                                            "Literal": {
+                                                "Value": "'Info'"
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        ]
+                    }
+                },
+                {
+                    "properties": {
+                        "fill": {
+                            "solid": {
+                                "color": {
+                                    "expr": {
+                                        "Literal": {
+                                            "Value": "'#F45454'"
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "selector": {
+                        "data": [
+                            {
+                                "scopeId": {
+                                    "Comparison": {
+                                        "ComparisonKind": 0,
+                                        "Left": {
+                                            "Column": {
+                                                "Expression": {
+                                                    "SourceRef": {
+                                                        "Entity": "modelbparesults"
+                                                    }
+                                                },
+                                                "Property": "Severity"
+                                            }
+                                        },
+                                        "Right": {
+                                            "Literal": {
+                                                "Value": "'Error'"
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        ]
+                    }
+                },
+                {
+                    "properties": {
+                        "fill": {
+                            "solid": {
+                                "color": {
+                                    "expr": {
+                                        "Literal": {
+                                            "Value": "'#D7B33F'"
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "selector": {
+                        "data": [
+                            {
+                                "scopeId": {
+                                    "Comparison": {
+                                        "ComparisonKind": 0,
+                                        "Left": {
+                                            "Column": {
+                                                "Expression": {
+                                                    "SourceRef": {
+                                                        "Entity": "semantic_model_bpa_results"
+                                                    }
+                                                },
+                                                "Property": "Severity"
+                                            }
+                                        },
+                                        "Right": {
+                                            "Literal": {
+                                                "Value": "'Warning'"
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        ]
+                    }
+                },
+                {
+                    "properties": {
+                        "fill": {
+                            "solid": {
+                                "color": {
+                                    "expr": {
+                                        "Literal": {
+                                            "Value": "'#F45454'"
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "selector": {
+                        "data": [
+                            {
+                                "scopeId": {
+                                    "Comparison": {
+                                        "ComparisonKind": 0,
+                                        "Left": {
+                                            "Column": {
+                                                "Expression": {
+                                                    "SourceRef": {
+                                                        "Entity": "semantic_model_bpa_results"
+                                                    }
+                                                },
+                                                "Property": "Severity"
+                                            }
+                                        },
+                                        "Right": {
+                                            "Literal": {
+                                                "Value": "'Error'"
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        ]
+                    }
+                },
+                {
+                    "properties": {
+                        "fill": {
+                            "solid": {
+                                "color": {
+                                    "expr": {
+                                        "Conditional": {
+                                            "Cases": [
+                                                {
+                                                    "Condition": {
+                                                        "Comparison": {
+                                                            "ComparisonKind": 0,
+                                                            "Left": {
+                                                                "Aggregation": {
+                                                                    "Expression": {
+                                                                        "Column": {
+                                                                            "Expression": {
+                                                                                "SourceRef": {
+                                                                                    "Entity": "semantic_model_bpa_rule_catalog"
+                                                                                }
+                                                                            },
+                                                                            "Property": "Severity"
+                                                                        }
+                                                                    },
+                                                                    "Function": 3
+                                                                }
+                                                            },
+                                                            "Right": {
+                                                                "Literal": {
+                                                                    "Value": "'Error'"
+                                                                }
+                                                            }
+                                                        },
+                                                        "Annotations": {
+                                                            "PowerBI.SQExprEvaluationKind": 1,
+                                                            "PowerBI.SQExprTextOperatorOption": 2
+                                                        }
+                                                    },
+                                                    "Value": {
+                                                        "Literal": {
+                                                            "Value": "'#F45454'"
+                                                        }
+                                                    }
+                                                },
+                                                {
+                                                    "Condition": {
+                                                        "Comparison": {
+                                                            "ComparisonKind": 0,
+                                                            "Left": {
+                                                                "Aggregation": {
+                                                                    "Expression": {
+                                                                        "Column": {
+                                                                            "Expression": {
+                                                                                "SourceRef": {
+                                                                                    "Entity": "semantic_model_bpa_rule_catalog"
+                                                                                }
+                                                                            },
+                                                                            "Property": "Severity"
+                                                                        }
+                                                                    },
+                                                                    "Function": 3
+                                                                }
+                                                            },
+                                                            "Right": {
+                                                                "Literal": {
+                                                                    "Value": "'Warning'"
+                                                                }
+                                                            }
+                                                        },
+                                                        "Annotations": {
+                                                            "PowerBI.SQExprEvaluationKind": 1,
+                                                            "PowerBI.SQExprTextOperatorOption": 2
+                                                        }
+                                                    },
+                                                    "Value": {
+                                                        "Literal": {
+                                                            "Value": "'#FFA342'"
+                                                        }
+                                                    }
+                                                },
+                                                {
+                                                    "Condition": {
+                                                        "Comparison": {
+                                                            "ComparisonKind": 0,
+                                                            "Left": {
+                                                                "Aggregation": {
+                                                                    "Expression": {
+                                                                        "Column": {
+                                                                            "Expression": {
+                                                                                "SourceRef": {
+                                                                                    "Entity": "semantic_model_bpa_rule_catalog"
+                                                                                }
+                                                                            },
+                                                                            "Property": "Severity"
+                                                                        }
+                                                                    },
+                                                                    "Function": 3
+                                                                }
+                                                            },
+                                                            "Right": {
+                                                                "Literal": {
+                                                                    "Value": "'Info'"
+                                                                }
+                                                            }
+                                                        },
+                                                        "Annotations": {
+                                                            "PowerBI.SQExprEvaluationKind": 1,
+                                                            "PowerBI.SQExprTextOperatorOption": 2
+                                                        }
+                                                    },
+                                                    "Value": {
+                                                        "Literal": {
+                                                            "Value": "'#3D7DEB'"
+                                                        }
+                                                    }
+                                                }
+                                            ]
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "selector": {
+                        "data": [
+                            {
+                                "dataViewWildcard": {
+                                    "matchingOption": 1
+                                }
+                            }
+                        ]
+                    }
+                }
+            ],
+            "labels": [
+                {
+                    "properties": {
+                        "show": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "true"
+                                }
+                            }
+                        }
+                    }
+                }
+            ]
+        },
+        "visualContainerObjects": {
+            "title": [
+                {
+                    "properties": {
+                        "show": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "true"
+                                }
+                            }
+                        },
+                        "text": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "'BPA Violations by Category'"
+                                }
+                            }
+                        },
+                        "fontSize": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "12D"
+                                }
+                            }
+                        }
+                    }
+                }
+            ],
+            "border": [
+                {
+                    "properties": {
+                        "show": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "true"
+                                }
+                            }
+                        },
+                        "radius": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "5D"
+                                }
+                            }
+                        }
+                    }
+                }
+            ],
+            "dropShadow": [
+                {
+                    "properties": {
+                        "show": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "true"
+                                }
+                            }
+                        },
+                        "color": {
+                            "solid": {
+                                "color": {
+                                    "expr": {
+                                        "ThemeDataColor": {
+                                            "ColorId": 0,
+                                            "Percent": -0.1
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            ],
+            "visualTooltip": [
+                {
+                    "properties": {
+                        "type": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "'Default'"
+                                }
+                            }
+                        }
+                    }
+                }
+            ]
+        },
+        "drillFilterOtherVisuals": true
+    },
+    "filterConfig": {
+        "filters": [
+            {
+                "name": "bcfa5410b9891d8ed479",
+                "ordinal": 0,
+                "field": {
+                    "Measure": {
+                        "Expression": {
+                            "SourceRef": {
+                                "Entity": "Metrics"
+                            }
+                        },
+                        "Property": "BPA Violations"
+                    }
+                },
+                "type": "Advanced"
+            },
+            {
+                "name": "5ef266e143a659acc0cd",
+                "ordinal": 1,
+                "field": {
+                    "Column": {
+                        "Expression": {
+                            "SourceRef": {
+                                "Entity": "semantic_model_bpa_rule_catalog"
+                            }
+                        },
+                        "Property": "Severity"
+                    }
+                },
+                "type": "Categorical"
+            }
+        ],
+        "filterSortOrder": "Custom"
+    }
+}

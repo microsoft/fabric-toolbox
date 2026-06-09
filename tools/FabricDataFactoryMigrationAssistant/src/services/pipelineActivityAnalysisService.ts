@@ -26,6 +26,12 @@ export interface PipelineActivityMapping {
 }
 
 /**
+ * @deprecated Use UnifiedActivityMappingService for new code.
+ * This service is maintained for deployment validation only.
+ * 
+ * The UnifiedActivityMappingService provides referenceId-aware ActivityReference
+ * objects with better support for complex activities like Custom and HDInsight.
+ * 
  * Utility to inspect pipeline components and extract LinkedService references
  * used by the mapping / UI flows.
  */
@@ -337,6 +343,23 @@ export class PipelineActivityAnalysisService {
     // Staging settings linkedServiceName (Copy activity)
     if (typeProperties.stagingSettings?.linkedServiceName?.referenceName) {
       return { name: typeProperties.stagingSettings.linkedServiceName.referenceName, type: typeProperties.stagingSettings.linkedServiceName.type || 'LinkedServiceReference' };
+    }
+
+    // HDInsight storage connections (script, JAR, file, job storage)
+    if (typeProperties.scriptLinkedService?.referenceName) {
+      return { name: typeProperties.scriptLinkedService.referenceName, type: typeProperties.scriptLinkedService.type || 'LinkedServiceReference' };
+    }
+
+    if (typeProperties.jarLinkedService?.referenceName) {
+      return { name: typeProperties.jarLinkedService.referenceName, type: typeProperties.jarLinkedService.type || 'LinkedServiceReference' };
+    }
+
+    if (typeProperties.fileLinkedService?.referenceName) {
+      return { name: typeProperties.fileLinkedService.referenceName, type: typeProperties.fileLinkedService.type || 'LinkedServiceReference' };
+    }
+
+    if (typeProperties.sparkJobLinkedService?.referenceName) {
+      return { name: typeProperties.sparkJobLinkedService.referenceName, type: typeProperties.sparkJobLinkedService.type || 'LinkedServiceReference' };
     }
 
     return null;

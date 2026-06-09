@@ -1,0 +1,79 @@
+{
+    "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.5.0/schema.json",
+    "name": "64ed960bbf53a68b268f",
+    "position": {
+        "x": 122.91666666666667,
+        "y": 998.9583333333334,
+        "z": 11000,
+        "height": 34.375,
+        "width": 419.7916666666667,
+        "tabOrder": 12000
+    },
+    "visual": {
+        "visualType": "textbox",
+        "objects": {
+            "general": [
+                {
+                    "properties": {
+                        "paragraphs": [
+                            {
+                                "textRuns": [
+                                    {
+                                        "value": "Optimization Module in FUAM is ",
+                                        "textStyle": {
+                                            "color": "black"
+                                        }
+                                    },
+                                    {
+                                        "value": "powered by ",
+                                        "textStyle": {
+                                            "fontWeight": "bold",
+                                            "color": "black"
+                                        }
+                                    },
+                                    {
+                                        "value": "Semantic Link Labs",
+                                        "textStyle": {
+                                            "fontWeight": "bold",
+                                            "color": "black"
+                                        },
+                                        "url": "https://github.com/microsoft/semantic-link-labs"
+                                    }
+                                ]
+                            }
+                        ]
+                    }
+                }
+            ]
+        },
+        "visualContainerObjects": {
+            "background": [
+                {
+                    "properties": {
+                        "show": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "false"
+                                }
+                            }
+                        }
+                    }
+                }
+            ],
+            "border": [
+                {
+                    "properties": {
+                        "show": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "false"
+                                }
+                            }
+                        }
+                    }
+                }
+            ]
+        },
+        "drillFilterOtherVisuals": true
+    }
+}

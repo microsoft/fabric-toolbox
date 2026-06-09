@@ -1,0 +1,342 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="page-header">
+    <h1>⚡ Data Engineering View</h1>
+    <p>Notebooks, Spark pools, Spark configurations, and Spark job definitions</p>
+</div>
+
+<!-- Summary Stats -->
+<div class="row">
+    <div class="col">
+        <div class="stat-card">
+            <div class="stat-value" id="stat-nb">{{ engineering.notebooks | length }}</div>
+            <div class="stat-label">Notebooks</div>
+        </div>
+    </div>
+    <div class="col">
+        <div class="stat-card synapse">
+            <div class="stat-value" id="stat-sp">{{ engineering.spark_pools | length }}</div>
+            <div class="stat-label">Spark Pools</div>
+        </div>
+    </div>
+    <div class="col">
+        <div class="stat-card">
+            <div class="stat-value" id="stat-sc">{{ engineering.spark_configurations | length }}</div>
+            <div class="stat-label">Spark Configurations</div>
+        </div>
+    </div>
+    <div class="col">
+        <div class="stat-card">
+            <div class="stat-value" id="stat-sjd">{{ engineering.spark_job_definitions | length }}</div>
+            <div class="stat-label">Spark Job Definitions</div>
+        </div>
+    </div>
+</div>
+
+<!-- Charts Row -->
+<div class="row mt-2">
+    {% if engineering.notebook_languages %}
+    <div class="col col-6">
+        <div class="card">
+            <div class="card-header">Notebooks by Language</div>
+            <div class="card-body">
+                <div class="chart-container">
+                    <canvas id="notebookLangChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    {% if engineering.spark_versions %}
+    <div class="col col-6">
+        <div class="card">
+            <div class="card-header">Spark Versions Distribution</div>
+            <div class="card-body">
+                <div class="chart-container">
+                    <canvas id="sparkVersionChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+
+<!-- Notebooks List -->
+<div class="card">
+    <div class="card-header">📓 Notebooks</div>
+    <div class="card-body">
+        {% if engineering.notebooks %}
+        <div class="table-responsive">
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Name</th>
+                        <th>Language</th>
+                        <th>Spark Configuration</th>
+                        <th>Uses MSSparkUtils</th>
+                        <th>Workspace</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for nb in engineering.notebooks[:50] %}
+                    <tr data-workspace="{{ nb.workspace | default('N/A') }}">
+                        <td>{{ nb.name | default(nb.path | default('Unknown')) }}</td>
+                        <td>
+                            <span class="badge badge-secondary">
+                                {{ nb.language | default(nb.default_language | default('N/A')) }}
+                            </span>
+                        </td>
+                        <td>{{ nb.spark_configuration | default('-') }}</td>
+                        <td>
+                            {% if nb.uses_mssparkutils %}
+                            <span class="badge" style="background-color: #ffc107; color: #000;">Yes</span>
+                            {% else %}
+                            <span class="badge badge-secondary">No</span>
+                            {% endif %}
+                        </td>
+                        <td>{{ nb.workspace | default('N/A') }}</td>
+                    </tr>
+                    {% endfor %}
+                    {% if engineering.notebooks | length > 50 %}
+                    <tr>
+                        <td colspan="5" class="text-muted">
+                            ... and {{ engineering.notebooks | length - 50 }} more notebooks
+                        </td>
+                    </tr>
+                    {% endif %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="empty-state">
+            <p>No notebooks found.</p>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Spark Pools -->
+{% if engineering.spark_pools %}
+<div class="card">
+    <div class="card-header">🔥 Spark Pools</div>
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Name</th>
+                        <th>Node Size</th>
+                        <th>Node Count</th>
+                        <th>Spark Version</th>
+                        <th>Workspace</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for sp in engineering.spark_pools %}
+                    <tr data-workspace="{{ sp.workspace | default('N/A') }}">
+                        <td>{{ sp.name | default('Unknown') }}</td>
+                        <td>{{ sp.node_size | default('N/A') }}</td>
+                        <td>{{ sp.node_count | default('N/A') }}</td>
+                        <td><span class="badge badge-secondary">{{ sp.spark_version | default('N/A') }}</span></td>
+                        <td>{{ sp.workspace | default('N/A') }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<!-- Spark Configurations -->
+{% if engineering.spark_configurations %}
+<div class="card">
+    <div class="card-header">⚙️ Spark Configurations</div>
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Name</th>
+                        <th>Source Pool</th>
+                        <th class="text-right">Notebook Refs</th>
+                        <th class="text-right">SJD Refs</th>
+                        <th class="text-right">Total Refs</th>
+                        <th>Created By</th>
+                        <th>Workspace</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for sc in engineering.spark_configurations %}
+                    <tr data-workspace="{{ sc.workspace | default('N/A') }}">
+                        <td>{{ sc.name | default('Unknown') }}</td>
+                        <td>{{ sc.source_pool | default('N/A') }}</td>
+                        <td class="text-right">{{ sc.notebook_refs | default(0) }}</td>
+                        <td class="text-right">{{ sc.sjd_refs | default(0) }}</td>
+                        <td class="text-right"><strong>{{ (sc.notebook_refs | default(0)) + (sc.sjd_refs | default(0)) }}</strong></td>
+                        <td>{{ sc.created_by | default('N/A') }}</td>
+                        <td>{{ sc.workspace | default('N/A') }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% if engineering.spark_configurations %}
+        <div class="mt-1">
+            <details>
+                <summary class="text-muted" style="cursor: pointer;">📋 Configuration Details</summary>
+                <div class="mt-1">
+                    {% for sc in engineering.spark_configurations %}
+                    {% if sc.configs %}
+                    <div class="card mt-1">
+                        <div class="card-header">{{ sc.name }}</div>
+                        <div class="card-body">
+                            <table class="table">
+                                <thead>
+                                    <tr>
+                                        <th>Property</th>
+                                        <th>Value</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for key, value in sc.configs.items() %}
+                                    <tr>
+                                        <td><code>{{ key }}</code></td>
+                                        <td>{{ value }}</td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                    {% endif %}
+                    {% endfor %}
+                </div>
+            </details>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endif %}
+
+<!-- Spark Job Definitions -->
+{% if engineering.spark_job_definitions %}
+<div class="card">
+    <div class="card-header">⚡ Spark Job Definitions</div>
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Name</th>
+                        <th>Spark Configuration</th>
+                        <th>Workspace</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for sjd in engineering.spark_job_definitions %}
+                    <tr data-workspace="{{ sjd.workspace | default('N/A') }}">
+                        <td>{{ sjd.name | default('Unknown') }}</td>
+                        <td>{{ sjd.spark_configuration | default('-') }}</td>
+                        <td>{{ sjd.workspace | default('N/A') }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<div class="mt-2">
+    <a href="{{ base_path }}index.html">← Back to Overview</a>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+// Spark configurations data for filtering
+const sparkConfigs = {{ engineering.spark_configurations | tojson }};
+
+const engineeringData = {
+{% for ws_name, ws in workspaces.items() %}
+{% set de = ws.summary.get('data_engineering', {}) %}
+{% set de_hybrid = de.get('hybrid', {}) if de is mapping else {} %}
+{% set de_manual = de.get('manual', {}) if de is mapping else {} %}
+    "{{ ws_name }}": {
+        notebooks: {{ de_hybrid.get('notebooks', de.get('notebooks', 0)) if de_hybrid is mapping else de.get('notebooks', 0) }},
+        spark_pools: {{ de_manual.get('spark_pools', de.get('spark_pools', 0)) if de_manual is mapping else de.get('spark_pools', 0) }},
+        spark_job_definitions: {{ de_hybrid.get('spark_job_definitions', de.get('spark_job_definitions', 0)) if de_hybrid is mapping else de.get('spark_job_definitions', 0) }}
+    }{% if not loop.last %},{% endif %}
+{% endfor %}
+};
+
+function updateFilteredStats(selectedWorkspaces) {
+    let nb = 0, sp = 0, sjd = 0;
+    selectedWorkspaces.forEach(ws => {
+        const data = engineeringData[ws];
+        if (data) {
+            nb += data.notebooks || 0;
+            sp += data.spark_pools || 0;
+            sjd += data.spark_job_definitions || 0;
+        }
+    });
+    
+    // Count spark configurations for selected workspaces
+    const sc = sparkConfigs.filter(c => selectedWorkspaces.includes(c.workspace)).length;
+    
+    document.getElementById('stat-nb').textContent = nb;
+    document.getElementById('stat-sp').textContent = sp;
+    document.getElementById('stat-sc').textContent = sc;
+    document.getElementById('stat-sjd').textContent = sjd;
+}
+
+const colors = ['#0078d4', '#107c10', '#5c2d91', '#ff8c00', '#008272', '#d83b01', '#e81123', '#00bcf2', '#8764b8', '#00b294'];
+
+{% if engineering.notebook_languages %}
+const nbLangCtx = document.getElementById('notebookLangChart');
+if (nbLangCtx) {
+    new Chart(nbLangCtx, {
+        type: 'doughnut',
+        data: {
+            labels: {{ engineering.notebook_languages.keys() | list | tojson }},
+            datasets: [{
+                data: {{ engineering.notebook_languages.values() | list | tojson }},
+                backgroundColor: colors.slice(0, {{ engineering.notebook_languages | length }})
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: { legend: { position: 'right' } }
+        }
+    });
+}
+{% endif %}
+
+{% if engineering.spark_versions %}
+const sparkCtx = document.getElementById('sparkVersionChart');
+if (sparkCtx) {
+    new Chart(sparkCtx, {
+        type: 'bar',
+        data: {
+            labels: {{ engineering.spark_versions.keys() | list | tojson }},
+            datasets: [{
+                label: 'Count',
+                data: {{ engineering.spark_versions.values() | list | tojson }},
+                backgroundColor: '#0078d4'
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: { legend: { display: false } },
+            scales: { y: { beginAtZero: true } }
+        }
+    });
+}
+{% endif %}
+</script>
+{% endblock %}

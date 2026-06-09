@@ -152,12 +152,19 @@ table reports
 
 		annotation SummarizationSetBy = Automatic
 
+	column 'sensitivityLabel.labelId'
+		dataType: string
+		lineageTag: 56d51470-fbc3-4a87-801a-068a22852b78
+		sourceLineageTag: sensitivityLabel.labelId
+		summarizeBy: none
+		sourceColumn: sensitivityLabel.labelId
+
+		annotation SummarizationSetBy = Automatic
+
 	partition reports = entity
 		mode: directLake
 		source
 			entityName: reports
 			schemaName: dbo
 			expressionSource: DatabaseQuery
-
-	annotation PBI_ResultType = Table
 

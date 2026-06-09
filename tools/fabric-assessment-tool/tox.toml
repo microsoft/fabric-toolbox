@@ -1,0 +1,55 @@
+requires = ["tox>=4"]
+env_list = ["lint", "type", "py310", "py311", "py312"]
+
+# Base testing environment
+[env_run_base]
+description = "run unit tests"
+deps = [
+    "pytest>=8",
+    "pytest-sugar",
+    "pytest-cov",
+    "urllib3<2.3.0,>=2.0.0",
+]
+commands = [
+    [
+        "pytest",
+        { replace = "posargs", default = [
+            "--cov",
+            "--cov-report=html",
+            "--cov-report=xml",
+            "--cov-append",
+            "tests/",
+        ], extend = true },
+    ],
+]
+
+# Linting Environment
+[env.lint]
+description = "Run linters"
+skip_install = true
+deps = ["black"]
+commands = [["black", { replace = "posargs", default = ["."], extend = true }]]
+
+# Type Checking Environment
+[env.type]
+description = "Run type checks"
+deps = [
+    "mypy",
+    "types-jmespath",
+    "types-requests",
+]
+commands = [
+    [
+        "mypy",
+        { replace = "posargs", default = [
+            "src",
+            #"tests",
+        ], extend = true },
+    ],
+]
+
+# Black Configuration
+[tool.black]
+line-length = 88
+target-version = ['py310', 'py311', 'py312']
+exclude = '/(\.git|\.tox|\.venv|_build|dist)/'

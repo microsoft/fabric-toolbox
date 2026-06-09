@@ -1,0 +1,11 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/gitIntegration/platformProperties/2.0.0/schema.json",
+  "metadata": {
+    "type": "Report",
+    "displayName": "Bank Customer Churn Analysis"
+  },
+  "config": {
+    "version": "2.0",
+    "logicalId": "ecb8357c-121e-a700-4edc-07fc59d59672"
+  }
+}

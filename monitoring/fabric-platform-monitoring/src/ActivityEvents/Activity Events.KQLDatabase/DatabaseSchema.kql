@@ -1,0 +1,155 @@
+// KQL script
+// Use management commands in this script to configure your database items, such as tables, functions, materialized views, and more.
+
+
+.create-merge table ActivityEventsRaw (ActivityEvents:dynamic) with (folder = "Raw") 
+.create-merge table ActivityEvents (Id:guid, Workload:string, RecordType:int, RequestId:guid, RefreshEnforcementPolicy:int, CreationTime:datetime, Activity:string, Operation:string, OrganizationId:guid, UserId:string, UserKey:string, UserType:int, details:dynamic) 
+.create-or-alter function with (folder = "UpdatePolicyFunctions", docstring = "Function to extract data from ActivityEventsRaw", skipvalidation = "true") parse_AcitivityEvents() {
+    let columns=dynamic(["Id", "Workload", "RecordType", "RequestId", "RefreshEnforcementPolicy", "CreationTime", "Activity", "Operation", "OrganizationId", "UserId", "UserKey", "UserType"]);
+    ActivityEventsRaw
+    | extend
+        Id=toguid(ActivityEvents.Id),
+        CreationTime=todatetime(ActivityEvents.CreationTime)
+    | join kind=leftanti ActivityEvents on CreationTime and Id
+    | extend
+        Workload=tostring(ActivityEvents.Workload),
+        RecordType=toint(ActivityEvents.RecordType),
+        RequestId=toguid(ActivityEvents.RequestId),
+        RefreshEnforcementPolicy=toint(ActivityEvents.RefreshEnforcementPolicy),
+        Activity=tostring(ActivityEvents.Activity),
+        Operation=tostring(ActivityEvents.Operation),
+        OrganizationId=toguid(ActivityEvents.OrganizationId),
+        UserId=tostring(ActivityEvents.UserId),
+        UserKey=tostring(ActivityEvents.UserKey),
+        UserType=toint(ActivityEvents.UserType)
+    | extend ActivityEvents=bag_remove_keys(ActivityEvents, columns)
+    | project-rename details=ActivityEvents
+    | project-reorder
+        Id,
+        Workload,
+        RecordType,
+        RequestId,
+        RefreshEnforcementPolicy,
+        CreationTime,
+        Activity,
+        Operation,
+        OrganizationId,
+        UserId,
+        UserKey,
+        UserType,
+        details
+ }
+.create-or-alter function with (skipvalidation = "true") ItemsViews(daysToFilter:timespan=time(14.00:00:00)) {
+    ActivityEvents
+    | where CreationTime > ago(daysToFilter)
+    | where Operation in ("ViewDashboard", "ViewDataflow", "ViewDatamart", "ViewReport", "ViewWarehouse","ViewArtifact","ReadArtifact")
+    | project Id,CreationTime,Operation,UserId,WorkspaceId=toguid(details.WorkspaceId),WorkspaceName=tostring(details.WorkSpaceName),details,
+        ItemType=tostring(case(
+            Operation in ("ViewDashboard", "ViewReport"),details.ArtifactKind,
+            Operation in ("ViewDataflow"),"Dataflow",
+            Operation in ("ViewDatamart"),"Datamart",
+            details.ObjectType
+        )),
+        ItemId=toguid(case(
+            Operation in ("ViewDashboard", "ViewReport"),details.ArtifactId,
+            Operation in ("ViewDataflow"),details.DataflowId,
+            details.ObjectId
+        )),
+        ItemName=tostring(case(
+            Operation in ("ViewDashboard", "ViewReport"),details.ArtifactName,
+            Operation in ("ViewDataflow"),details.DataflowName,
+            details.ObjectDisplayName
+        ))
+    | where isnotempty( ItemType)
+}
+.create-or-alter function with (skipvalidation = "true") ItemsDeletion(daysToFilter:timespan=time(14.00:00:00)) {
+    ActivityEvents
+    | where CreationTime > ago(daysToFilter)
+    | where Operation in ("DeleteDashboard", "DeleteDataflow", "DeleteDatamart", "DeleteReport", "DeleteWarehouse","DeleteArtifact")
+    | project Id,CreationTime,Operation,UserId,workspaceId=toguid(details.WorkspaceId),workspaceName=tostring(details.WorkSpaceName),
+        itemType=tostring(case(
+            Operation in ("DeleteDashboard", "DeleteReport"),details.ArtifactKind,
+            Operation in ("DeleteDataflow"),"Dataflow",
+            Operation in ("DeleteDatamart"),"Datamart",
+            details.ObjectType
+        )),
+        itemId=toguid(case(
+            Operation in ("DeleteDashboard", "DeleteReport"),details.ArtifactId,
+            Operation in ("DeleteDataflow"),iff(isempty(details.DataflowId),details.ObjectId,details.DataflowId),
+            details.ObjectId
+        )),
+        itemName=tostring(case(
+            Operation in ("DeleteDashboard", "DeleteReport"),details.ArtifactName,
+            Operation in ("DeleteDataflow"),details.DataflowName,
+            details.ObjectDisplayName
+        ))
+        | where iff(itemType=="Dataflow",isnotempty(itemName),true)
+        | summarize arg_max(CreationTime,Id,Operation) by workspaceId,workspaceName,itemId,itemName, itemType,UserId
+}
+.create-or-alter function with (skipvalidation = "true") ItemsCreation(daysToFilter:timespan=time(14.00:00:00)) {
+     ActivityEvents
+    | where Operation in ("CreateDataset", "CreateReport", "CreateDataflow", "CreateArtifact", "CreateDashboard", "CreateWarehouse")
+    | where CreationTime > ago(daysToFilter)
+    | project
+        Id,
+        CreationTime,
+        Operation,
+        UserId,
+        WorkspaceId=toguid(details.WorkspaceId),
+        WorkspaceName=tostring(details.WorkSpaceName),
+        details,
+        ItemType=tostring(
+             case(
+                 Operation in ("CreateDashboard", "CreateReport"),
+                 details.ArtifactKind,
+                 Operation in ("CreateDataset"),
+                 "SemanticModel",
+                 Operation in ("CreateDataflow"),
+                 "Dataflow",
+                 details.ObjectType
+             )
+         ),
+        ItemId=toguid(
+           case(
+               Operation in ("CreateDashboard", "CreateReport", "CreateDataset"),
+               details.ArtifactId,
+               Operation in ("CreateDataflow"),
+               iff(isempty(details.DataflowId), details.ObjectId, details.DataflowId),
+               details.ObjectId
+           )
+       ),
+        ItemName=tostring(
+             case(
+                 Operation in ("CreateDashboard", "CreateReport", "CreateDataset"),
+                 details.ArtifactName,
+                 Operation in ("CreateDataflow"),
+                 details.DataflowName,
+                 details.ObjectDisplayName
+             )
+         )
+    | summarize arg_max(CreationTime, *) by ItemId
+ }
+.create-or-alter function with (skipvalidation = "true") WorkspaceCreation(daysToFilter:timespan=time(14.00:00:00)) {
+     ActivityEvents
+    | where CreationTime > ago(daysToFilter)
+    | where Activity == "CreateFolder"
+    | extend
+        WorkspaceId = toguid(details.WorkspaceId),
+        WorkspaceName = tostring(details.WorkSpaceName),
+        CapacityId = toguid(details.CapacityId),
+        ClientIP = tostring(details.ClientIP),
+        IsSuccess = tobool(details.IsSuccess)
+    | extend Location = geo_info_from_ip_address(ClientIP)
+ }
+.create-or-alter materialized-view  ItemsLastView on table ActivityEvents { ItemsViews()
+    | summarize arg_max(CreationTime,Id,UserId) by ItemId }
+.create-or-alter materialized-view  ActivitiesByWorkspaceUserDay on table ActivityEvents { ActivityEvents
+| extend ['Year-Month'] = format_datetime(CreationTime,"yyyy-MM"), workspaceId = toguid(details.WorkspaceId), UserId=tolower(UserId)
+| summarize Events=count() by ['Year-Month'], Operation, CreationDay=bin(CreationTime,1d), workspaceId,UserId }
+.alter table ActivityEventsRaw policy retention @'{"SoftDeletePeriod":"00:00:00","Recoverability":"Disabled"}'
+.alter table ActivityEventsRaw policy caching hotdata = time(00:00:00) hotindex = time(00:00:00)
+.alter table ActivityEventsRaw policy streamingingestion "{\"IsEnabled\":false,\"HintAllocatedRate\":null,\"NumberOfRowStores\":null,\"SealIntervalLimit\":null,\"SealThresholdBytes\":null,\"UsageTags\":[],\"IsMaintenanceActive\":false}"
+.alter table ActivityEvents policy retention @'{"SoftDeletePeriod":"730.00:00:00","Recoverability":"Disabled"}'
+.alter table ActivityEvents policy caching hotdata = time(90.00:00:00) hotindex = time(90.00:00:00)
+.alter table ActivityEvents policy streamingingestion "{\"IsEnabled\":false,\"HintAllocatedRate\":null,\"NumberOfRowStores\":null,\"SealIntervalLimit\":null,\"SealThresholdBytes\":null,\"UsageTags\":[],\"IsMaintenanceActive\":false}"
+.alter table ActivityEvents policy update "[{\"IsEnabled\":true,\"Source\":\"ActivityEventsRaw\",\"Query\":\"parse_AcitivityEvents()\",\"IsTransactional\":true,\"PropagateIngestionProperties\":false,\"ManagedIdentity\":null}]"

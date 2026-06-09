@@ -1,0 +1,11 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/gitIntegration/platformProperties/2.0.0/schema.json",
+  "metadata": {
+    "type": "DataPipeline",
+    "displayName": "Refresh Inventory"
+  },
+  "config": {
+    "version": "2.0",
+    "logicalId": "c769baa6-1bdf-8ab5-4902-9ccd2aa4e257"
+  }
+}

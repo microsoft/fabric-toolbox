@@ -1,0 +1,66 @@
+table 'Query Connections'
+	lineageTag: 716d7f06-3dbc-4559-9bbb-16469fcaa3a6
+
+	column QueryTrackingId
+		dataType: string
+		sourceProviderType: nvarchar(max)
+		lineageTag: c356dfed-2bd8-45e9-9086-33f2da014c3b
+		summarizeBy: none
+		sourceColumn: QueryTrackingId
+
+		annotation SummarizationSetBy = Automatic
+
+	column DataSource
+		dataType: string
+		sourceProviderType: nvarchar(max)
+		lineageTag: a1fd3470-a433-4758-bea3-7893c3091eb7
+		summarizeBy: none
+		sourceColumn: DataSource
+
+		annotation SummarizationSetBy = Automatic
+
+	column Path
+		dataType: string
+		sourceProviderType: nvarchar(max)
+		lineageTag: ccc06b3f-e2e9-47a6-8cd8-8d8f5bb04616
+		summarizeBy: none
+		sourceColumn: Path
+
+		annotation SummarizationSetBy = Automatic
+
+	partition 'Query Connections' = m
+		mode: directQuery
+		source = ```
+				let
+				    selectedGatewaysName = if Type.Is(Value.Type(SelectedGateways), List.Type) then 
+				      Text.Combine({"'", Text.Combine(SelectedGateways, "','") , "'"})
+				    else
+				      Text.Combine({"'" , SelectedGateways , "'"}),
+				
+				    selectAllGateways = if Type.Is(Value.Type(SelectedGateways), List.Type) then 
+				      List.Contains(SelectedGateways, "__SelectAll__")
+				    else
+				      true,
+				    selectedClustersName = if Type.Is(Value.Type(SelectedClusters), List.Type) then 
+				      Text.Combine({"'", Text.Combine(SelectedClusters, "','") , "'"})
+				    else
+				      Text.Combine({"'" , SelectedClusters , "'"}),
+				
+				    selectAllClusters = if Type.Is(Value.Type(SelectedClusters), List.Type) then 
+				      List.Contains(SelectedClusters, "__SelectAll__")
+				    else
+				      true,
+				    Source = AzureDataExplorer.Contents(KustoURL, KustoDB, null, null),
+				    QueryConnections1 = Source{[Name="QueryConnections"]}[Data],
+				    #"Invoked FunctionQueryConnections1" = QueryConnections1(DateTime.ToText(DateToSearch, "yyyy-MM-dd"), DaysBack
+				        ,selectAllGateways,Text.Combine({"[",selectedGatewaysName,"]"})
+				        ,selectAllClusters,Text.Combine({"[",selectedClustersName,"]"})
+				    )
+				in
+				    #"Invoked FunctionQueryConnections1"
+				```
+
+	annotation PBI_NavigationStepName = Navigation
+
+	annotation PBI_ResultType = Table
+

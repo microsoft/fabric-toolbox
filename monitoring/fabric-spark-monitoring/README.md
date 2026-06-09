@@ -59,7 +59,7 @@ After running the notebook, complete the following **manual configuration steps*
 
 ## 📐 Architecture
 
-<img width="1057" height="552" alt="image" src="https://github.com/user-attachments/assets/83d566b6-6539-4bc2-8359-1e626686b1ec" />
+![image](./media/arch.png)
 
 The architecture is composed by:
 
@@ -74,16 +74,15 @@ The architecture is composed by:
 
 1.Application meters (Memory, CPU, Shuffling, Spilling)
 
-<img width="1757" height="553" alt="image" src="https://github.com/user-attachments/assets/0f1f3599-4525-494e-8bff-e32622212afc" />
+![image](./media/image1.png)
 
 2.Side by Side application comparison
 
-<img width="1857" height="855" alt="image" src="https://github.com/user-attachments/assets/6481a9f5-edec-4ff8-b0b2-b3c1111be1d1" />
+![image](./media/image2.png)
 
 3.SparkLens optimizations/Reccomendations
 
-<img width="1827" height="722" alt="image" src="https://github.com/user-attachments/assets/22f2ca35-9c82-4130-a0f9-6a5aaa1e03ae" />
-
+![image](./media/image3.png)
 ---
 
 ## 🤝 Contributing

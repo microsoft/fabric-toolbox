@@ -1,0 +1,11 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/gitIntegration/platformProperties/2.0.0/schema.json",
+  "metadata": {
+    "type": "DataPipeline",
+    "displayName": "Refresh Activity Events"
+  },
+  "config": {
+    "version": "2.0",
+    "logicalId": "52101d8a-14aa-89e4-4826-f722b61817b9"
+  }
+}

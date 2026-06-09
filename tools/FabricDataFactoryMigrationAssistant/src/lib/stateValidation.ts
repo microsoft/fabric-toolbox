@@ -231,6 +231,9 @@ export function createDefaultAppState(): AppState {
     pipelineConnectionMappings: {},
     pipelineReferenceMappings: {},
     linkedServiceConnectionBridge: {},
+    bridgeVersion: 0,
+    lastProcessedBridgeVersion: 0,
+    autoMappedReferences: new Set<string>(),
     workspaceCredentials: {
       credentials: [],
       isLoading: false,

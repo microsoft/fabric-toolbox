@@ -84,6 +84,24 @@ table dataflows
 
 		annotation SummarizationSetBy = Automatic
 
+	column description
+		dataType: string
+		lineageTag: b958f125-f3c3-492f-89e7-f40256928226
+		sourceLineageTag: description
+		summarizeBy: none
+		sourceColumn: description
+
+		annotation SummarizationSetBy = Automatic
+
+	column upstreamDataflows
+		dataType: string
+		lineageTag: c451ca5b-054f-4534-9de6-f32c244158c8
+		sourceLineageTag: upstreamDataflows
+		summarizeBy: none
+		sourceColumn: upstreamDataflows
+
+		annotation SummarizationSetBy = Automatic
+
 	partition dataflows = entity
 		mode: directLake
 		source

@@ -1,0 +1,84 @@
+<#
+.SYNOPSIS
+Assigns workspaces to a domain based on principal IDs in Microsoft Fabric.
+
+.DESCRIPTION
+The `Add-FabricDomainWorkspaceByPrincipal` function sends a request to assign workspaces to a specified domain using a JSON object of principal IDs and types.
+
+.PARAMETER DomainId
+The ID of the domain to which workspaces will be assigned. This parameter is mandatory.
+
+.PARAMETER PrincipalIds
+An array representing the principals with their `id` and `type` properties. Must contain a `principals` key with an array of objects.
+
+.EXAMPLE
+$PrincipalIds = @(
+    @{id = "813abb4a-414c-4ac0-9c2c-bd17036fd58c";  type = "User"},
+    @{id = "b5b9495c-685a-447a-b4d3-2d8e963e6288"; type = "User"}
+    )
+
+Add-FabricDomainWorkspaceByPrincipal -DomainId "12345" -PrincipalIds $principals
+
+Assigns the workspaces based on the provided principal IDs and types.
+
+.NOTES
+- Requires `$FabricConfig` global configuration, including `BaseUrl` and `FabricHeaders`.
+- Calls `Test-TokenExpired` to ensure token validity before making the API request.
+
+Author: Tiago Balabuch
+#>
+
+function Add-FabricDomainWorkspaceByPrincipal {
+    [CmdletBinding(SupportsShouldProcess = $true, ConfirmImpact = 'Medium')]
+    param (
+        [Parameter(Mandatory = $true)]
+        [ValidateNotNullOrEmpty()]
+        [string]$DomainId,
+
+        [Parameter(Mandatory = $true)]
+        [ValidateNotNullOrEmpty()]
+        [System.Object]$PrincipalIds # Must contain 'id' and 'type' properties
+    )
+
+    try {
+        # Validate PrincipalIds structure
+        foreach ($principal in $PrincipalIds) {
+            if (-not ($principal.ContainsKey('id') -and $principal.ContainsKey('type'))) {
+                throw "Each principal object must contain 'id' and 'type' properties."
+            }
+        }
+
+        # Validate authentication token before proceeding
+        Invoke-FabricAuthCheck -ThrowOnFailure
+
+        # Construct the API endpoint URI
+        $apiEndpointURI = New-FabricAPIUri -Segments @('admin', 'domains', $DomainId, 'assignWorkspacesByPrincipals')
+        Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
+
+        # Construct the request body
+        $body = @{
+            principals = $PrincipalIds
+        }
+
+        $bodyJson = Convert-FabricRequestBody -InputObject $body
+        Write-FabricLog -Message "Request Body: $bodyJson" -Level Debug
+
+        # Make the API request (guarded by ShouldProcess)
+        if ($PSCmdlet.ShouldProcess($DomainId, 'Assign workspaces to domain by principals')) {
+            $apiParams = @{
+                BaseURI = $apiEndpointURI
+                Headers = $script:FabricAuthContext.FabricHeaders
+                Method  = 'Post'
+                Body    = $bodyJson
+            }
+            $null = Invoke-FabricAPIRequest @apiParams
+
+            Write-FabricLog -Message "Assigning domain workspaces by principal completed successfully!" -Level Host
+        }
+    }
+    catch {
+        # Capture and log error details
+        $errorDetails = $_.Exception.Message
+        Write-FabricLog -Message "Failed to assign domain workspaces by principals. Error: $errorDetails" -Level Error
+    }
+}

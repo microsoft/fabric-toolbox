@@ -7,7 +7,8 @@ import type {
   LinkedServiceConnection, 
   ConnectionDeploymentResult, 
   APIRequestDetails,
-  ExistingFabricConnection 
+  ExistingFabricConnection,
+  SupportedConnectionType
 } from '../types';
 import { fabricConnectionsService } from './fabricConnectionsService';
 
@@ -85,10 +86,11 @@ export class ConnectionDeploymentService {
   static async deployNewConnections(
     linkedServices: LinkedServiceConnection[],
     accessToken: string,
-    workspaceId: string
+    workspaceId: string,
+    supportedConnectionTypes?: SupportedConnectionType[]
   ): Promise<ConnectionDeploymentResult[]> {
     const newConnections = linkedServices.filter(ls => ls.mappingMode === 'new');
-    return this.deployConnections(accessToken, workspaceId, newConnections);
+    return this.deployConnections(accessToken, workspaceId, newConnections, supportedConnectionTypes);
   }
 
   /**
@@ -97,7 +99,8 @@ export class ConnectionDeploymentService {
   static async deployConnections(
     accessToken: string,
     workspaceId: string,
-    linkedServices: LinkedServiceConnection[]
+    linkedServices: LinkedServiceConnection[],
+    supportedConnectionTypes?: SupportedConnectionType[]
   ): Promise<ConnectionDeploymentResult[]> {
     const results: ConnectionDeploymentResult[] = [];
 
@@ -124,14 +127,23 @@ export class ConnectionDeploymentService {
           // Create new connection
           const connectionResult = await fabricConnectionsService.createConnection(
             accessToken,
-            linkedService
+            linkedService,
+            supportedConnectionTypes
           );
 
           if (connectionResult.success && connectionResult.connectionId) {
+            console.log(`✓ Propagating connection result:`, {
+              linkedServiceName: linkedService.linkedServiceName,
+              fabricConnectionId: connectionResult.connectionId,
+              fabricConnectionName: connectionResult.connectionName,
+              hasConnectionName: !!connectionResult.connectionName
+            });
+
             results.push({
               linkedServiceName: linkedService.linkedServiceName,
               status: 'success',
               fabricConnectionId: connectionResult.connectionId,
+              fabricConnectionName: connectionResult.connectionName,  // NEW: Propagate from API
               apiRequestDetails: connectionResult.apiRequestDetails
             });
           } else {

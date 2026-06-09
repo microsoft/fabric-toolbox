@@ -44,6 +44,9 @@ jobs:
           api_location: ""
           output_location: "dist"
           skip_app_build: true
+          skip_api_build: true
+        env:
+          NODE_VERSION: "20"
 
       - name: Deployment Summary
         run: |

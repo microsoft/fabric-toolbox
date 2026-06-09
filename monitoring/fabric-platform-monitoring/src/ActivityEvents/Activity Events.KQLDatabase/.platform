@@ -1,0 +1,12 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/gitIntegration/platformProperties/2.0.0/schema.json",
+  "metadata": {
+    "type": "KQLDatabase",
+    "displayName": "Activity Events",
+    "description": "AuditLogs"
+  },
+  "config": {
+    "version": "2.0",
+    "logicalId": "bd6dc6be-ec5f-a6d8-4389-cabd6b73c509"
+  }
+}

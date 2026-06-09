@@ -1,0 +1,35 @@
+model Model
+	culture: en-US
+	defaultPowerBIDataSourceVersion: powerBI_V3
+	sourceQueryCulture: en-US
+	dataAccessOptions
+		legacyRedirects
+		returnErrorValuesAsNull
+
+queryGroup Parameters
+
+	annotation PBI_QueryGroupOrder = 0
+
+annotation PBI_QueryOrder = ["Gateway Node Info","KustoURL","KustoDB","Calendar","Period","DaysBack","DateToSearch","Query Execution","Query Connections","Execution Measures","SelectedGateways","SelectedClusters","System Counters"]
+
+annotation __PBI_TimeIntelligenceEnabled = 1
+
+annotation PBIDesktopVersion = 2.141.1451.0 (25.03)+5007b75f0f7edbed506e31fcb76584cd6d711788
+
+annotation PBI_ProTooling = ["DevMode"]
+
+ref table 'Gateway Node Info'
+ref table DateTableTemplate_1248dd8b-d642-4c21-8f3c-638ea14b43a2
+ref table Calendar
+ref table LocalDateTable_806bfee6-7282-4e7c-bc5c-1f501d4227f2
+ref table LocalDateTable_758ae1f6-73ea-4834-a83d-5f63daa0003d
+ref table LocalDateTable_21295484-02b4-41dc-a118-481a9522f4e8
+ref table Period
+ref table 'Query Execution'
+ref table 'Query Connections'
+ref table 'Execution Measures'
+ref table 'System Counters'
+ref table 'Param - Counters Measure'
+
+ref cultureInfo en-US
+

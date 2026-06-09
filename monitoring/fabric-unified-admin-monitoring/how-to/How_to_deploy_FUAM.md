@@ -35,8 +35,9 @@ The deployment of FUAM can be done with very little effort, since we tried to au
     - _Users can create Fabric items_ for FUAM workspace admin(s) - [learn.microsoft.com](https://learn.microsoft.com/en-us/fabric/admin/fabric-switch)
     - _Allow XMLA endpoints and Analyze in Excel with on-premises semantic models_ – [learn.microsoft.com](https://learn.microsoft.com/en-us/fabric/admin/service-admin-portal-integration#allow-xmla-endpoints-and-analyze-in-excel-with-on-premises-datasets)
 - Fabric Capacity Metrics app (workspace) **with attached P or F-capacity** with **enabled XMLA endpoint** (at least 'Read')
-     - Compatible Versions of the Capacity Metrics App: v44 or earlier
+     - Compatible versions of the Capacity Metrics App: v65, v53, v47, v44 or earlier
     - Before updating, please check [this site] to verify which versions of the Capacity Metrics app are compatible with FUAM.
+    - Since the user who last changed a pipeline will execute the notebook, this user needs to have contributor permissions on the capacity metrics app workspace. Usually this is the user who deployed FUAM.
 
 - **Optional:** Ability to access an Azure Key Vault on your tenant
 
@@ -119,6 +120,8 @@ We recommend to create a new Capacity Metrics App (with automatically deployed w
 
 > **Important:**  By default the Metrics App workspace is created on a Pro license. If you don't change this to F/P-SKU you will get an error
 
+> **Important:**  It is recommended to have a seperate instance of the capacity metrics app running just for FUAM. This way you can test the compatibility and still update your regular version
+
 ## 6. Run orchestration Pipeline
 
 > **Info:** The **Load_FUAM_Data_E2E** is the main end-to-end orchestration pipeline of FUAM. It contains/triggers all other sub-pipelines (FUAM modules), which are implemented in the solution. 
@@ -136,15 +139,19 @@ The Pipeline has different parameters, which are controlling the data load flow:
 |----------------|-------------------------------|-----------------------------|
 |has_tenant_domains|If **true**, the tenant inventory is enriched with domain information. Use it only, if domains are in use at your tenant. **Default is false**        | true or false            |
 |extract_powerbi_artifacts_only|If **true**, the tenant inventory contains **only** semantic models, dataflows, datamarts, reports, dashboard and apps. If **false** the pipeline extracts Power BI **and** Fabric items. Currently, first-party workloads are supported only. **Default is false** | true or false |
-|metric_days_in_scope|Defines how many days should be extracted from the capacity metrics app. A maximum of 14 days can be extracted. For an initial load you can set it to the maximum and in subsequent runs reduce it to 2 days|range between **1** and **14**|
+|metric_days_in_scope|Defines how many days should be extracted from the capacity metrics app. A maximum of 14 days can be extracted. For an initial load you can set it to the maximum and in subsequent runs reduce it to 2 days|Integer range between **1** and **14**|
 |metric_workspace|This is the name _or_ id of the workspace where the capacity metrics app was deployed|string|
 |metric_dataset|This is the name _or_ id of the semantic model of the capacity metrics app |string|
-|activity_days_in_scope|It defines how many days in the past the activity must be retrieved from the API. Recommended to **use 28 for the initial load** and change the value to **2 for daily load**.| range between **2** and **28** |
+|activity_days_in_scope|It defines how many days in the past the activity must be retrieved from the API. Recommended to **use 28 for the initial load** and change the value to **2 for daily load**.| Integer range between **2** and **28** |
 |display_data|If **true**, the notebooks will display more information about each relevant step at runtime. This is useful for debugging. **Default is false**| true or false |
 |optional_keyvault_name|**Optional**: If you have configured a key vault, enter the name of the key vault. Otherwise, simply leave this field blank. In this case, the Load_Inventory module will use the Notebook owner's identity.| empty or string|
 |optional_keyvault_sp_ tenantId_secret_name|**Optional**: If you have configured a key vault and its secrets, enter the name of the tenantId secret name. Otherwise, simply leave this field blank. In this case, the Load_Inventory module will use the Notebook owner's identity.|empty or string|
 |optional_keyvault_sp_ clientId_secret_name|**Optional**: If you have configured a key vault and its secrets, enter the name of the clientId secret name. Otherwise, simply leave this field blank. In this case, the Load_Inventory module will use the Notebook owner's identity.|empty or string|
 |optional_keyvault_sp_ secret_secret_name|**Optional**: If you have configured a key vault and its secrets, enter the name of the service principal's secret secret name. Otherwise, simply leave this field blank. In this case, the Load_Inventory module will use the Notebook owner's identity.|empty or string|
+|activity_anonymize_tables|If **true**, the Load_Activities module enables anonymization of activities Lakehouse table for the recently loaded activity logs. <br><br> **_Important:_** The anonymization logic will has the "UserId" and "UserKey" columns. <br><br> **_Tip:_** Use it in combination of the parameter **activity_anonymize_after_days = 0** to anonymize the currently loaded activity log values. |true or false|
+|activity_anonymize_after_days|Default is **0**. If value is higher than 0 (zero) and the parameter **activity_anonymize_tables** is **true** the Load_Activities module will anonymize (hash with md5) the **activities** Lakehouse table columns ("UserId" and "UserKey") before the given day. <br><br> _**Example A:**_ Let's assume you stored 190 days of activity logs in FUAM_Lakehouse. You set the parameter activity_anonymize_after_days to **90**. In this case the last 90 days of activities data will **not** be anonymized, the rest days from d-91 and d-190 will be anonymized.   |Integer range between **0** and **365**|
+|activity_anonymize_files|If **true**, the Load_Activities module will delete all the raw historical activity JSON files in FUAM_Lakehouse/Files/history/actities folder. <br> <br> If **false**, the logic will keep the raw activity JSON files and populates it after every pipeline execution.|true or false|
+|om_top_n_semantic_models_per_capacity|This Parameter determines for how many semantic models per capacity the Optimization module is automatically executed|Integer. It is recommended to start with a small number to check runtime and later increase|
 
 
 - Run the Pipeline once. This will initially load the data into FUAM_Lakehouse
@@ -183,6 +190,14 @@ The Pipeline has different parameters, which are controlling the data load flow:
 - Feel free to explore the report pages
    ![](/monitoring/fabric-unified-admin-monitoring/media/deployment/FUAM_basic_deployment_process_7_3.png)
 
+|Step|Description|
+|---|---|
+|A|On-demand report pages, each page is designed for a specific purpose.|
+|B|Every report page has a its predefined filter columns for the current context.|
+|C|Navigation action buttons **More** (navigates to given report page) and **Info** (navigates to github documentation).|
+|D|Analytical pathways in FUAM provide for Fabric Administrators specific guided self-service assessment experiences. Click on **Start** to begin the walkthrough.|
+|E|Meta data to your current FUAM deployment. One a new FUAM release is available, the button will be purple with the text "Update is available". Otherwise it is green with the text "FUAM is up-to-date."|
+|F|Explore other monitoring experiences like "FUAM's specific reports" or the "Fabric Cost Analysis" solution accelerator.|
 
 > **Error handling:** In case of errors like 'Visual can't be rendered', please check the 'Remark' section.
 
@@ -255,5 +270,6 @@ src.zip
 - [Documentation - FUAM's Authorization & Authentication](/monitoring/fabric-unified-admin-monitoring/media/documentation/FUAM_Authorization.md)
 - [Documentation - FUAM Architecture](/monitoring/fabric-unified-admin-monitoring/media/documentation/FUAM_Architecture.md)
 - [Documentation - FUAM Lakehouse table lineage](/monitoring/fabric-unified-admin-monitoring/media/documentation/FUAM_Documentation_Lakehouse_table_lineage.pdf)
+- [Documentation - FUAM Technical Deep Dive](/monitoring/fabric-unified-admin-monitoring/media/documentation/FUAM_Technical_Deep_Dive.md)
 
 ----------------

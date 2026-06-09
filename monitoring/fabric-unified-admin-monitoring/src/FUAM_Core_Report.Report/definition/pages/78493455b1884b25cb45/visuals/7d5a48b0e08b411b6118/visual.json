@@ -1,0 +1,130 @@
+{
+    "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.5.0/schema.json",
+    "name": "7d5a48b0e08b411b6118",
+    "position": {
+        "x": 29,
+        "y": 210,
+        "z": 7000,
+        "height": 103,
+        "width": 494,
+        "tabOrder": 6000
+    },
+    "visual": {
+        "visualType": "slicer",
+        "query": {
+            "queryState": {
+                "Values": {
+                    "projections": [
+                        {
+                            "field": {
+                                "Column": {
+                                    "Expression": {
+                                        "SourceRef": {
+                                            "Entity": "unused_workspaces_parameter"
+                                        }
+                                    },
+                                    "Property": "unused_workspaces_days_in_scope"
+                                }
+                            },
+                            "queryRef": "unused_workspaces_parameter.unused_workspaces_days_in_scope",
+                            "nativeQueryRef": "Unused Workspaces Days in Scope",
+                            "active": true,
+                            "displayName": "Unused Workspaces Days in Scope"
+                        }
+                    ]
+                }
+            }
+        },
+        "objects": {
+            "data": [
+                {
+                    "properties": {
+                        "numericStart": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "40D"
+                                }
+                            }
+                        },
+                        "mode": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "'Single'"
+                                }
+                            }
+                        }
+                    }
+                }
+            ],
+            "general": [
+                {
+                    "properties": {
+                        "filter": {
+                            "filter": {
+                                "Version": 2,
+                                "From": [
+                                    {
+                                        "Name": "u",
+                                        "Entity": "unused_workspaces_parameter",
+                                        "Type": 0
+                                    }
+                                ],
+                                "Where": [
+                                    {
+                                        "Condition": {
+                                            "Comparison": {
+                                                "ComparisonKind": 0,
+                                                "Left": {
+                                                    "Column": {
+                                                        "Expression": {
+                                                            "SourceRef": {
+                                                                "Source": "u"
+                                                            }
+                                                        },
+                                                        "Property": "unused_workspaces_days_in_scope"
+                                                    }
+                                                },
+                                                "Right": {
+                                                    "Literal": {
+                                                        "Value": "40D"
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
+                                ]
+                            }
+                        }
+                    }
+                }
+            ]
+        },
+        "visualContainerObjects": {
+            "dropShadow": [
+                {
+                    "properties": {
+                        "show": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "true"
+                                }
+                            }
+                        },
+                        "color": {
+                            "solid": {
+                                "color": {
+                                    "expr": {
+                                        "Literal": {
+                                            "Value": "'#E6E6E6'"
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            ]
+        },
+        "drillFilterOtherVisuals": true
+    }
+}

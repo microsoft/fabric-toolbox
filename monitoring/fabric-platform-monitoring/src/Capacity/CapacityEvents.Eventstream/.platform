@@ -1,0 +1,11 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/gitIntegration/platformProperties/2.0.0/schema.json",
+  "metadata": {
+    "type": "Eventstream",
+    "displayName": "CapacityEvents"
+  },
+  "config": {
+    "version": "2.0",
+    "logicalId": "d156c61a-5f5d-bf9c-4f99-69a0e68705a4"
+  }
+}

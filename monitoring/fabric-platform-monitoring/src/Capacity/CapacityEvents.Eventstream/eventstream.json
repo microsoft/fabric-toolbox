@@ -1,0 +1,56 @@
+{
+  "sources": [
+    {
+      "id": "10e64794-a92d-412e-b05c-cc524c2d5ba1",
+      "name": "Capacity",
+      "type": "CustomEndpoint",
+      "properties": {}
+    }
+  ],
+  "destinations": [
+    {
+      "id": "4ffaf708-517e-4b73-9d39-5bd2d11ad2fc",
+      "name": "CustomOutput",
+      "type": "CustomEndpoint",
+      "properties": {},
+      "inputNodes": [
+        {
+          "name": "CapacityEvents-stream"
+        }
+      ]
+    },
+    {
+      "id": "69e4b617-3596-4ca2-a7af-d3947bc7a9cc",
+      "name": "Eventhouse",
+      "type": "Eventhouse",
+      "properties": {
+        "dataIngestionMode": "DirectIngestion",
+        "workspaceId": "00000000-0000-0000-0000-000000000000",
+        "itemId": "efe0982e-e191-beef-4eb1-a7d34c90d39a",
+        "tableName": "CapacityEventsRaw",
+        "connectionName": "CapacityEvents",
+        "mappingRuleName": "CapacityEventsRaw_mapping"
+      },
+      "inputNodes": [
+        {
+          "name": "CapacityEvents-stream"
+        }
+      ]
+    }
+  ],
+  "streams": [
+    {
+      "id": "34c86e78-855b-4780-a57f-d3e4b5f2070e",
+      "name": "CapacityEvents-stream",
+      "type": "DefaultStream",
+      "properties": {},
+      "inputNodes": [
+        {
+          "name": "Capacity"
+        }
+      ]
+    }
+  ],
+  "operators": [],
+  "compatibilityLevel": "1.0"
+}

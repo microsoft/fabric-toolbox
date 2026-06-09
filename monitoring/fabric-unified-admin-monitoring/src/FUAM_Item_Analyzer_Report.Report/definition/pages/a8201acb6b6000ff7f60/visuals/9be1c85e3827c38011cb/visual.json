@@ -1,0 +1,643 @@
+{
+    "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.5.0/schema.json",
+    "name": "9be1c85e3827c38011cb",
+    "position": {
+        "x": 645.5555555555555,
+        "y": 2284.4444444444443,
+        "z": 4000,
+        "height": 531.1111111111111,
+        "width": 1252.2222222222222,
+        "tabOrder": 2000
+    },
+    "visual": {
+        "visualType": "tableEx",
+        "query": {
+            "queryState": {
+                "Values": {
+                    "projections": [
+                        {
+                            "field": {
+                                "Column": {
+                                    "Expression": {
+                                        "SourceRef": {
+                                            "Entity": "semantic_model_bpa_results"
+                                        }
+                                    },
+                                    "Property": "RunName"
+                                }
+                            },
+                            "queryRef": "semantic_model_bpa_results.RunName",
+                            "nativeQueryRef": "Run",
+                            "displayName": "Run"
+                        },
+                        {
+                            "field": {
+                                "Column": {
+                                    "Expression": {
+                                        "SourceRef": {
+                                            "Entity": "semantic_model_bpa_results"
+                                        }
+                                    },
+                                    "Property": "Scope"
+                                }
+                            },
+                            "queryRef": "semantic_model_bpa_results.Scope",
+                            "nativeQueryRef": "Object Type",
+                            "displayName": "Object Type"
+                        },
+                        {
+                            "field": {
+                                "Column": {
+                                    "Expression": {
+                                        "SourceRef": {
+                                            "Entity": "semantic_model_bpa_results"
+                                        }
+                                    },
+                                    "Property": "ObjectName"
+                                }
+                            },
+                            "queryRef": "semantic_model_bpa_results.ObjectName",
+                            "nativeQueryRef": "Object Name",
+                            "displayName": "Object Name"
+                        },
+                        {
+                            "field": {
+                                "Column": {
+                                    "Expression": {
+                                        "SourceRef": {
+                                            "Entity": "semantic_model_bpa_rule_catalog"
+                                        }
+                                    },
+                                    "Property": "RuleName"
+                                }
+                            },
+                            "queryRef": "semantic_model_bpa_rule_catalog.RuleName",
+                            "nativeQueryRef": "Rule",
+                            "displayName": "Rule"
+                        },
+                        {
+                            "field": {
+                                "Column": {
+                                    "Expression": {
+                                        "SourceRef": {
+                                            "Entity": "semantic_model_bpa_rule_catalog"
+                                        }
+                                    },
+                                    "Property": "Description"
+                                }
+                            },
+                            "queryRef": "Min(semantic_model_bpa_rule_catalog.Description)",
+                            "nativeQueryRef": "Description1"
+                        },
+                        {
+                            "field": {
+                                "Aggregation": {
+                                    "Expression": {
+                                        "Column": {
+                                            "Expression": {
+                                                "SourceRef": {
+                                                    "Entity": "semantic_model_bpa_rule_catalog"
+                                                }
+                                            },
+                                            "Property": "URL"
+                                        }
+                                    },
+                                    "Function": 3
+                                }
+                            },
+                            "queryRef": "Min(semantic_model_bpa_rule_catalog.URL)",
+                            "nativeQueryRef": "Mitigation URL",
+                            "displayName": "Mitigation URL"
+                        }
+                    ]
+                }
+            }
+        },
+        "objects": {
+            "columnHeaders": [
+                {
+                    "properties": {
+                        "fontFamily": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "'''Segoe UI Semibold'', wf_segoe-ui_semibold, helvetica, arial, sans-serif'"
+                                }
+                            }
+                        },
+                        "backColor": {
+                            "solid": {
+                                "color": {
+                                    "expr": {
+                                        "ThemeDataColor": {
+                                            "ColorId": 2,
+                                            "Percent": 0
+                                        }
+                                    }
+                                }
+                            }
+                        },
+                        "fontColor": {
+                            "solid": {
+                                "color": {
+                                    "expr": {
+                                        "ThemeDataColor": {
+                                            "ColorId": 0,
+                                            "Percent": 0
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            ],
+            "grid": [
+                {
+                    "properties": {
+                        "gridVertical": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "true"
+                                }
+                            }
+                        },
+                        "rowPadding": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "3D"
+                                }
+                            }
+                        }
+                    }
+                }
+            ],
+            "values": [
+                {
+                    "properties": {
+                        "backColorSecondary": {
+                            "solid": {
+                                "color": {
+                                    "expr": {
+                                        "Literal": {
+                                            "Value": "'#F5F6F5'"
+                                        }
+                                    }
+                                }
+                            }
+                        },
+                        "urlIcon": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "true"
+                                }
+                            }
+                        }
+                    }
+                }
+            ],
+            "columnWidth": [
+                {
+                    "properties": {
+                        "value": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "621.4803128866781D"
+                                }
+                            }
+                        }
+                    },
+                    "selector": {
+                        "metadata": "semantic_model_bpa_rule_catalog.Description"
+                    }
+                },
+                {
+                    "properties": {
+                        "value": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "79.23887143684982D"
+                                }
+                            }
+                        }
+                    },
+                    "selector": {
+                        "metadata": "semantic_model_bpa_rule_catalog.URL"
+                    }
+                },
+                {
+                    "properties": {
+                        "value": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "325.4066457471528D"
+                                }
+                            }
+                        }
+                    },
+                    "selector": {
+                        "metadata": "semantic_model_bpa_rule_catalog.RuleName"
+                    }
+                },
+                {
+                    "properties": {
+                        "value": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "261.5694648766371D"
+                                }
+                            }
+                        }
+                    },
+                    "selector": {
+                        "metadata": "semantic_model_bpa_results.ObjectName"
+                    }
+                },
+                {
+                    "properties": {
+                        "value": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "400.30599280854227D"
+                                }
+                            }
+                        }
+                    },
+                    "selector": {
+                        "metadata": "Min(semantic_model_bpa_rule_catalog.Description)"
+                    }
+                },
+                {
+                    "properties": {
+                        "value": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "83.11112115804507D"
+                                }
+                            }
+                        }
+                    },
+                    "selector": {
+                        "metadata": "Min(semantic_model_bpa_rule_catalog.URL)"
+                    }
+                }
+            ],
+            "total": [
+                {
+                    "properties": {
+                        "totals": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "false"
+                                }
+                            }
+                        }
+                    }
+                }
+            ]
+        },
+        "visualContainerObjects": {
+            "title": [
+                {
+                    "properties": {
+                        "show": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "true"
+                                }
+                            }
+                        },
+                        "text": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "'Semantic Model BPA Violation Details'"
+                                }
+                            }
+                        },
+                        "fontSize": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "12D"
+                                }
+                            }
+                        }
+                    }
+                }
+            ],
+            "border": [
+                {
+                    "properties": {
+                        "show": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "true"
+                                }
+                            }
+                        },
+                        "radius": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "5D"
+                                }
+                            }
+                        }
+                    }
+                }
+            ],
+            "dropShadow": [
+                {
+                    "properties": {
+                        "show": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "true"
+                                }
+                            }
+                        },
+                        "color": {
+                            "solid": {
+                                "color": {
+                                    "expr": {
+                                        "ThemeDataColor": {
+                                            "ColorId": 0,
+                                            "Percent": -0.1
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            ],
+            "subTitle": [
+                {
+                    "properties": {
+                        "show": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "true"
+                                }
+                            }
+                        },
+                        "text": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "'Highlight a Run from the left handside to filter this table'"
+                                }
+                            }
+                        }
+                    }
+                }
+            ]
+        },
+        "drillFilterOtherVisuals": true
+    },
+    "filterConfig": {
+        "filters": [
+            {
+                "name": "9d27cbf0b961a6db60ec",
+                "ordinal": 0,
+                "field": {
+                    "Column": {
+                        "Expression": {
+                            "SourceRef": {
+                                "Entity": "semantic_model_bpa_rule_catalog"
+                            }
+                        },
+                        "Property": "RuleId"
+                    }
+                },
+                "type": "Advanced",
+                "howCreated": "User"
+            },
+            {
+                "name": "9b8816902d600950dcc9",
+                "ordinal": 1,
+                "field": {
+                    "Column": {
+                        "Expression": {
+                            "SourceRef": {
+                                "Entity": "semantic_model_bpa_rule_catalog"
+                            }
+                        },
+                        "Property": "Category"
+                    }
+                },
+                "type": "Categorical",
+                "howCreated": "User"
+            },
+            {
+                "name": "b5993d42b10a0040c8d3",
+                "ordinal": 2,
+                "field": {
+                    "Column": {
+                        "Expression": {
+                            "SourceRef": {
+                                "Entity": "semantic_model_bpa_rule_catalog"
+                            }
+                        },
+                        "Property": "Severity"
+                    }
+                },
+                "type": "Categorical",
+                "howCreated": "User"
+            },
+            {
+                "name": "8b1bd1387331439cf1ee",
+                "ordinal": 3,
+                "field": {
+                    "Column": {
+                        "Expression": {
+                            "SourceRef": {
+                                "Entity": "semantic_model_bpa_rule_catalog"
+                            }
+                        },
+                        "Property": "RuleName"
+                    }
+                },
+                "type": "Categorical"
+            },
+            {
+                "name": "b9978421addbaf815437",
+                "ordinal": 4,
+                "field": {
+                    "Column": {
+                        "Expression": {
+                            "SourceRef": {
+                                "Entity": "semantic_model_bpa_rule_catalog"
+                            }
+                        },
+                        "Property": "Description"
+                    }
+                },
+                "type": "Categorical"
+            },
+            {
+                "name": "a3145f82985c3fa65c3f",
+                "ordinal": 5,
+                "field": {
+                    "Aggregation": {
+                        "Expression": {
+                            "Column": {
+                                "Expression": {
+                                    "SourceRef": {
+                                        "Entity": "semantic_model_bpa_rule_catalog"
+                                    }
+                                },
+                                "Property": "URL"
+                            }
+                        },
+                        "Function": 3
+                    }
+                },
+                "type": "Advanced"
+            },
+            {
+                "name": "919dc56363352d24d3ec",
+                "ordinal": 6,
+                "field": {
+                    "Column": {
+                        "Expression": {
+                            "SourceRef": {
+                                "Entity": "semantic_model_bpa_results"
+                            }
+                        },
+                        "Property": "ObjectName"
+                    }
+                },
+                "type": "Categorical"
+            },
+            {
+                "name": "a58d746346ff6eb717d8",
+                "ordinal": 7,
+                "field": {
+                    "Column": {
+                        "Expression": {
+                            "SourceRef": {
+                                "Entity": "semantic_model_bpa_results"
+                            }
+                        },
+                        "Property": "RunId"
+                    }
+                },
+                "type": "TopN",
+                "filter": {
+                    "Version": 2,
+                    "From": [
+                        {
+                            "Name": "subquery",
+                            "Expression": {
+                                "Subquery": {
+                                    "Query": {
+                                        "Version": 2,
+                                        "From": [
+                                            {
+                                                "Name": "s",
+                                                "Entity": "semantic_model_bpa_results",
+                                                "Type": 0
+                                            },
+                                            {
+                                                "Name": "m",
+                                                "Entity": "Metrics",
+                                                "Type": 0
+                                            }
+                                        ],
+                                        "Select": [
+                                            {
+                                                "Column": {
+                                                    "Expression": {
+                                                        "SourceRef": {
+                                                            "Source": "s"
+                                                        }
+                                                    },
+                                                    "Property": "RunId"
+                                                },
+                                                "Name": "field"
+                                            }
+                                        ],
+                                        "OrderBy": [
+                                            {
+                                                "Direction": 2,
+                                                "Expression": {
+                                                    "Measure": {
+                                                        "Expression": {
+                                                            "SourceRef": {
+                                                                "Source": "m"
+                                                            }
+                                                        },
+                                                        "Property": "Last Run OM-SM"
+                                                    }
+                                                }
+                                            }
+                                        ],
+                                        "Top": 1
+                                    }
+                                }
+                            },
+                            "Type": 2
+                        },
+                        {
+                            "Name": "s",
+                            "Entity": "semantic_model_bpa_results",
+                            "Type": 0
+                        }
+                    ],
+                    "Where": [
+                        {
+                            "Condition": {
+                                "In": {
+                                    "Expressions": [
+                                        {
+                                            "Column": {
+                                                "Expression": {
+                                                    "SourceRef": {
+                                                        "Source": "s"
+                                                    }
+                                                },
+                                                "Property": "RunId"
+                                            }
+                                        }
+                                    ],
+                                    "Table": {
+                                        "SourceRef": {
+                                            "Source": "subquery"
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    ]
+                },
+                "howCreated": "User"
+            },
+            {
+                "name": "7ad1894186f42e279261",
+                "field": {
+                    "Column": {
+                        "Expression": {
+                            "SourceRef": {
+                                "Entity": "semantic_model_bpa_results"
+                            }
+                        },
+                        "Property": "RunName"
+                    }
+                },
+                "type": "Categorical"
+            },
+            {
+                "name": "52e405ca493a27713f84",
+                "field": {
+                    "Column": {
+                        "Expression": {
+                            "SourceRef": {
+                                "Entity": "semantic_model_bpa_results"
+                            }
+                        },
+                        "Property": "Scope"
+                    }
+                },
+                "type": "Categorical"
+            }
+        ],
+        "filterSortOrder": "Custom"
+    }
+}

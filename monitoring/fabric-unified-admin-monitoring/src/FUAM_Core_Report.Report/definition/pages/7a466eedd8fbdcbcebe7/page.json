@@ -1,0 +1,124 @@
+{
+    "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/page/2.0.0/schema.json",
+    "name": "7a466eedd8fbdcbcebe7",
+    "displayName": "Capacity Compute",
+    "displayOption": "FitToPage",
+    "height": 1400,
+    "width": 1920,
+    "filterConfig": {
+        "filters": [
+            {
+                "name": "def0636c21a6e3095bad",
+                "displayName": "Capacity",
+                "field": {
+                    "Column": {
+                        "Expression": {
+                            "SourceRef": {
+                                "Entity": "capacities"
+                            }
+                        },
+                        "Property": "displayName"
+                    }
+                },
+                "type": "Categorical",
+                "howCreated": "User",
+                "objects": {
+                    "general": [
+                        {
+                            "properties": {
+                                "requireSingleSelect": {
+                                    "expr": {
+                                        "Literal": {
+                                            "Value": "true"
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    ]
+                }
+            },
+            {
+                "name": "652590a83b23408b2972",
+                "field": {
+                    "Column": {
+                        "Expression": {
+                            "SourceRef": {
+                                "Entity": "capacities"
+                            }
+                        },
+                        "Property": "CapacityId"
+                    }
+                },
+                "type": "Categorical",
+                "howCreated": "User",
+                "objects": {
+                    "general": [
+                        {
+                            "properties": {
+                                "requireSingleSelect": {
+                                    "expr": {
+                                        "Literal": {
+                                            "Value": "true"
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    ]
+                }
+            }
+        ]
+    },
+    "pageBinding": {
+        "name": "56015b25235d2cda7974",
+        "type": "Default",
+        "parameters": [
+            {
+                "name": "4997e2abbb6428fc2442",
+                "boundFilter": "652590a83b23408b2972",
+                "qnaSingleSelectRequired": true,
+                "fieldExpr": {
+                    "Column": {
+                        "Expression": {
+                            "SourceRef": {
+                                "Entity": "capacities"
+                            }
+                        },
+                        "Property": "CapacityId"
+                    }
+                }
+            },
+            {
+                "name": "a6a9f66fa47a0e28becd",
+                "boundFilter": "def0636c21a6e3095bad",
+                "qnaSingleSelectRequired": true,
+                "fieldExpr": {
+                    "Column": {
+                        "Expression": {
+                            "SourceRef": {
+                                "Entity": "capacities"
+                            }
+                        },
+                        "Property": "displayName"
+                    }
+                }
+            }
+        ]
+    },
+    "objects": {
+        "displayArea": [
+            {
+                "properties": {
+                    "verticalAlignment": {
+                        "expr": {
+                            "Literal": {
+                                "Value": "'Middle'"
+                            }
+                        }
+                    }
+                }
+            }
+        ]
+    }
+}

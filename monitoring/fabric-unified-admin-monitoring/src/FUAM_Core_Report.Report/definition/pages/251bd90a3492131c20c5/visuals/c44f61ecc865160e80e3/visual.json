@@ -1,0 +1,66 @@
+{
+    "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.5.0/schema.json",
+    "name": "c44f61ecc865160e80e3",
+    "position": {
+        "x": 751.3888888888889,
+        "y": 0,
+        "z": 10000,
+        "height": 74.30555555555556,
+        "width": 531.25,
+        "tabOrder": 10000
+    },
+    "visual": {
+        "visualType": "image",
+        "objects": {
+            "image": [
+                {
+                    "properties": {
+                        "sourceFile": {
+                            "image": {
+                                "name": {
+                                    "expr": {
+                                        "Literal": {
+                                            "Value": "'dom_lvl.png'"
+                                        }
+                                    }
+                                },
+                                "url": {
+                                    "expr": {
+                                        "ResourcePackageItem": {
+                                            "PackageName": "RegisteredResources",
+                                            "PackageType": 1,
+                                            "ItemName": "dom_lvl8848531544471335.png"
+                                        }
+                                    }
+                                },
+                                "scaling": {
+                                    "expr": {
+                                        "Literal": {
+                                            "Value": "'Normal'"
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            ]
+        },
+        "visualContainerObjects": {
+            "border": [
+                {
+                    "properties": {
+                        "show": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "false"
+                                }
+                            }
+                        }
+                    }
+                }
+            ]
+        },
+        "drillFilterOtherVisuals": true
+    }
+}

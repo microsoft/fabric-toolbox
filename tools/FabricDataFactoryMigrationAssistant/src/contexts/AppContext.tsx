@@ -12,7 +12,8 @@ import {
   FabricGateway, 
   SupportedConnectionType, 
   ConnectionDeploymentResult, 
-  PipelineConnectionMappings, 
+  PipelineConnectionMappings,
+  PipelineReferenceMappings, 
   WorkspaceCredentialState, 
   WorkspaceCredentialMapping, 
   WorkspaceIdentityInfo,
@@ -53,10 +54,13 @@ type AppAction =
   | { type: 'SET_CONNECTION_DEPLOYMENT_RESULTS'; payload: ConnectionDeploymentResult[] }
   | { type: 'ADD_CONNECTION_DEPLOYMENT_RESULT'; payload: ConnectionDeploymentResult }
   | { type: 'SET_PIPELINE_CONNECTION_MAPPINGS'; payload: PipelineConnectionMappings }
+  | { type: 'SET_PIPELINE_REFERENCE_MAPPINGS'; payload: PipelineReferenceMappings }
   | { type: 'UPDATE_PIPELINE_CONNECTION_MAPPING'; payload: { pipelineName: string; activityName: string; mapping: any } }
   | { type: 'UPDATE_CUSTOM_ACTIVITY_MAPPING'; payload: { pipelineName: string; activityName: string; reference: any } }
   | { type: 'BUILD_LINKEDSERVICE_CONNECTION_BRIDGE'; payload: any }
   | { type: 'UPDATE_BRIDGE_MAPPING'; payload: { linkedServiceName: string; mapping: any } }
+  | { type: 'MARK_BRIDGE_PROCESSED'; payload: number }
+  | { type: 'SET_AUTO_MAPPED_REFERENCES'; payload: string[] }
   | { type: 'SET_WORKSPACE_CREDENTIALS'; payload: WorkspaceCredentialState }
   | { type: 'UPDATE_WORKSPACE_CREDENTIAL'; payload: { index: number; update: Partial<WorkspaceCredentialMapping> } }
   | { type: 'SET_WORKSPACE_IDENTITY'; payload: WorkspaceIdentityInfo }
@@ -277,6 +281,9 @@ function appReducer(state: AppState, action: AppAction): AppState {
     case 'SET_PIPELINE_CONNECTION_MAPPINGS':
       return { ...state, pipelineConnectionMappings: action.payload || {} };
     
+    case 'SET_PIPELINE_REFERENCE_MAPPINGS':
+      return { ...state, pipelineReferenceMappings: action.payload || {} };
+    
     case 'UPDATE_PIPELINE_CONNECTION_MAPPING':
       const { pipelineName, activityName, mapping } = action.payload;
       return {
@@ -325,7 +332,8 @@ function appReducer(state: AppState, action: AppAction): AppState {
     case 'BUILD_LINKEDSERVICE_CONNECTION_BRIDGE':
       return { 
         ...state, 
-        linkedServiceConnectionBridge: action.payload || {} 
+        linkedServiceConnectionBridge: action.payload || {},
+        bridgeVersion: state.bridgeVersion + 1
       };
     
     case 'UPDATE_BRIDGE_MAPPING':
@@ -335,6 +343,18 @@ function appReducer(state: AppState, action: AppAction): AppState {
           ...state.linkedServiceConnectionBridge,
           [action.payload.linkedServiceName]: action.payload.mapping
         }
+      };
+    
+    case 'MARK_BRIDGE_PROCESSED':
+      return {
+        ...state,
+        lastProcessedBridgeVersion: action.payload
+      };
+    
+    case 'SET_AUTO_MAPPED_REFERENCES':
+      return {
+        ...state,
+        autoMappedReferences: new Set(action.payload)
       };
     
     case 'SET_WORKSPACE_CREDENTIALS':

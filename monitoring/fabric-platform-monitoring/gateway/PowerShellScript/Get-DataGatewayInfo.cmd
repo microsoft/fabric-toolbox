@@ -1,0 +1,1 @@
+pwsh -File ".\Get-DataGatewayInfo.ps1"

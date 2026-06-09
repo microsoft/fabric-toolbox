@@ -1,273 +1,688 @@
-# Powershell MicrosoftFabricMgmt
+# MicrosoftFabricMgmt PowerShell Module
 
 ## Overview
-The MicrosoftFabricMgmt is a collection of PowerShell scripts designed to interact with the Microsoft Fabric API. It provides functionalities to manage various resources within a Microsoft Fabric workspace, such as Spark Job Definitions, ML Models, Reports, Notebooks, and more.
 
-## Table of Contents
-- [Installation](#installation)
-- [Prerequisites](#prerequisites)
-- [Configuration](#configuration)
-- [Functions](#functions)
-- [License](#license)
+**MicrosoftFabricMgmt** is an enterprise-grade PowerShell module providing comprehensive automation and management capabilities for **Microsoft Fabric** environments. Built with PowerShell best practices and modern development standards, this module delivers a robust, production-ready interface to the entire Microsoft Fabric REST API ecosystem.
 
-## Installation
-To install the MicrosoftFabricMgmt, clone the repository and import the module in your PowerShell session:
-```sh
-git clone https://github.com/microsoft/fabric-toolbox.git
-Import-Module ./tools/MicrosoftFabricMgmt/MicrosoftFabricMGMT/MicrosoftFabricMgmt.psm1
+**NOTE:** This module is currently only compatible with PowerShell version 7 and later. PowerShell 5.1 support could be added if there is sufficient demand.
+
+### 🚀 Key Features
+
+- **355+ Cmdlets** - Complete coverage of Microsoft Fabric REST API
+- **58 Resource Types** - Manage Lakehouses, Warehouses, Notebooks, Pipelines, ML Models, Eventstreams, Graph Models, and more
+- **Multiple Auth Methods** - User Principal, Service Principal, and Managed Identity support
+- **Enterprise Ready** - Built-in retry logic, comprehensive error handling, and PSFramework logging
+- **Intelligent Output Formatting** - Automatic GUID-to-name resolution with smart caching for readable results
+- **API Validated** - All endpoints verified against [official Microsoft Fabric REST API specifications](https://github.com/microsoft/fabric-rest-api-specs)
+- **Cross-Platform** - PowerShell 5.1+ and PowerShell 7+ compatible
+- **Fully Documented** - Complete help documentation and examples for every cmdlet
+- **Modern Architecture** - Centralized helper functions eliminate code duplication and improve maintainability
+
+### 💪 What You Can Do
+
+**Workspace Management**
+- Create, update, and manage workspaces
+- Configure role-based access control (RBAC)
+- Assign workspaces to capacities and domains
+- Provision workspace identities
+
+**Data Platform**
+- Manage Lakehouses, Warehouses, and SQL Endpoints
+- Orchestrate Data Pipelines and Dataflows
+- Configure Mirrored Databases
+- Automate OneLake shortcuts and data access policies
+
+**Analytics & BI**
+- Deploy and manage Semantic Models, Reports, and Dashboards
+- Create KQL Databases, Dashboards, and Querysets
+- Configure Eventhouses and Real-Time Intelligence
+- Manage Paginated Reports
+
+**Data Engineering**
+- Deploy Notebooks and Spark Job Definitions
+- Configure Environments and custom Spark pools
+- Manage ML Experiments and Models
+- Orchestrate Apache Airflow Jobs
+
+**Streaming & Real-Time**
+- Create and manage Eventstreams
+- Configure destinations and sources
+- Control stream operations (pause, resume, suspend)
+
+**Administration**
+- Tenant-level settings and capacity management
+- Domain administration and workspace assignments
+- Connection and gateway management
+- Deployment pipeline automation
+- **Admin API**: Tenant-wide workspace and item visibility
+- Audit user access across the entire tenant
+- Restore deleted workspaces
+
+**Data Integration**
+- Snowflake Database connections for cross-platform analytics
+- Cosmos DB Database integration for NoSQL workloads
+- Graph Models for relationship-based data analysis
+
+---
+
+## Quick Start
+
+### Installation
+
+#### From PowerShell Gallery (Recommended)
+
+As with all PowerShell modules, you can either clone the repository and import the module manually, or use the PowerShell Gallery to install it directly. We recommend using the PowerShell Gallery for easier updates and management.
+
+```powershell
+# Install from PowerShell Gallery
+Install-Module -Name MicrosoftFabricMgmt
 ```
+You can find the module on the PowerShell Gallery here: [MicrosoftFabricMgmt on PSGallery](https://www.powershellgallery.com/packages/MicrosoftFabricMgmt)
+
+You can update the module at any time using:
+
+```powershell
+# Update the module
+Update-Module -Name MicrosoftFabricMgmt
+```
+
+
+#### Manual Installation
+
+```powershell
+# Install required dependencies
+$RequiredModules = @(
+    @{ Name = 'PSFramework'; MinimumVersion = '5.0.0' }
+    @{ Name = 'Az.Accounts'; MinimumVersion = '5.0.0' }
+    @{ Name = 'Az.Resources'; MinimumVersion = '6.15.1' }
+    @{ Name = 'MicrosoftPowerBIMgmt'; MinimumVersion = '1.2.1111' }
+)
+
+foreach ($module in $RequiredModules) {
+    if (-not (Get-Module -ListAvailable -Name $module.Name -ErrorAction SilentlyContinue)) {
+        Install-Module -Name $module.Name -MinimumVersion $module.MinimumVersion -Repository PSGallery -Scope CurrentUser
+    }
+}
+
+# Clone the repository
+git clone https://github.com/microsoft/fabric-toolbox.git
+cd fabric-toolbox
+```
+
+You can also download the ZIP file from GitHub and extract it. You can even use [this function Rob created](https://gist.github.com/SQLDBAWithABeard/fc2c5bf1e0c2ba6a89e88d234e1a79c0 ) to only extract the tools\MicrosoftFabricMgmt folder.
+
+```powershell
+
+# Import the module
+Import-Module .\output\module\MicrosoftFabricMgmt\*\MicrosoftFabricMgmt.psd1
+```
+
+### Authentication Setup
+
+Before using any cmdlets, authenticate to Microsoft Fabric using `Set-FabricApiHeaders`. The module supports three authentication methods:
+
+#### Option 1: User Principal (Interactive)
+
+Best for: Interactive sessions, development, testing
+
+```powershell
+# Authenticate with your user account
+Set-FabricApiHeaders -TenantId "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
+
+# This will prompt for interactive authentication via your browser
+# Your credentials are cached for the sessions
+```
+![Fabric Headers](docs/images/Set-FabricApiHeaders.png)
+
+#### Option 2: Service Principal (Automated)
+
+Best for: CI/CD pipelines, automation scripts, scheduled tasks
+
+```powershell
+# Define your Service Principal credentials
+$tenantId = "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
+$appId = "yyyyyyyy-yyyy-yyyy-yyyy-yyyyyyyyyyyy"
+$appSecret = "your-client-secret-value"
+
+# Convert secret to SecureString
+$secureAppSecret = $appSecret | ConvertTo-SecureString -AsPlainText -Force
+
+# Authenticate
+Set-FabricApiHeaders -TenantId $tenantId -AppId $appId -AppSecret $secureAppSecret
+```
+
+**Service Principal Setup Requirements:**
+1. Register an App in Azure AD
+2. Grant **Fabric API permissions** to the App
+3. Assign appropriate **Fabric roles** (Admin, Member, Contributor, Viewer)
+4. Enable [Service Principal access in Fabric admin settings](https://learn.microsoft.com/fabric/admin/service-admin-portal-developer#service-principals-can-use-fabric-apis)
+
+#### Option 3: Managed Identity (Azure Resources)
+
+Best for: Azure VMs, Azure Functions, Azure Automation, Azure DevOps
+
+```powershell
+# Authenticate using the system-assigned or user-assigned managed identity
+Set-FabricApiHeaders -TenantId "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" -UseManagedIdentity
+
+# For user-assigned managed identity, specify the client ID
+$managedIdentityClientId = "zzzzzzzz-zzzz-zzzz-zzzz-zzzzzzzzzzzz"
+Set-FabricApiHeaders -TenantId $tenantId -UseManagedIdentity -ManagedIdentityId $managedIdentityClientId
+```
+
+**Managed Identity Setup Requirements:**
+1. Enable Managed Identity on your Azure resource
+2. Grant **Fabric API permissions** via Azure RBAC
+3. Assign appropriate **Fabric workspace roles**
+
+### Your First Commands
+
+Once authenticated, you're ready to manage your Fabric environment:
+
+```powershell
+# List all workspaces you have access to
+Get-FabricWorkspace
+
+# Get a specific workspace by name
+Get-FabricWorkspace -WorkspaceName "My Analytics Workspace"
+```
+
+![Fabric Workspace](docs/images/Get-FabricWorkspace.png)
+
+```powershell
+
+# Create a new workspace
+$newWorkspace = New-FabricWorkspace -WorkspaceName "Dev Environment" -WorkspaceDescription "Development workspace for analytics"
+
+# Assign the workspace to a capacity
+Assign-FabricWorkspaceCapacity -WorkspaceId $newWorkspace.id -CapacityId "your-capacity-id"
+
+# List all lakehouses in a workspace
+Get-FabricLakehouse -WorkspaceId $newWorkspace.id
+
+# Create a lakehouse
+New-FabricLakehouse -WorkspaceId $newWorkspace.id -LakehouseName "SalesData" -LakehouseDescription "Sales analytics lakehouse"
+```
+
+![Fabric Lakehouse](docs/images/FirstSteps.png)
+
+```powershell
+# List notebooks in a workspace
+Get-FabricNotebook -WorkspaceId $newWorkspace.id
+
+# Get workspace role assignments
+Get-FabricWorkspaceRoleAssignment -WorkspaceId $newWorkspace.id
+
+# Add a user to the workspace
+Add-FabricWorkspaceRoleAssignment -WorkspaceId $newWorkspace.id -PrincipalId "user@contoso.com" -Role "Contributor"
+```
+
+### Common Scenarios
+
+#### 📊 Deploy a Complete Analytics Environment
+
+```powershell
+# 1. Create workspace
+$workspace = New-FabricWorkspace -WorkspaceName "Sales Analytics" -WorkspaceDescription "Q4 Sales Analysis"
+
+# 2. Assign to capacity
+Add-FabricWorkspaceCapacity -WorkspaceId $workspace.id -CapacityId $capacityId
+
+# 3. Create lakehouse for data storage
+$lakehouse = New-FabricLakehouse -WorkspaceId $workspace.id -LakehouseName "SalesData"
+
+# 4. Create warehouse for analytics
+$warehouse = New-FabricWarehouse -WorkspaceId $workspace.id -WarehouseName "SalesWarehouse"
+
+# 5. Deploy notebooks for data processing
+New-FabricNotebook -WorkspaceId $workspace.id -NotebookName "Data Processing"
+
+# 6. Create data pipeline for orchestration
+New-FabricDataPipeline -WorkspaceId $workspace.id -DataPipelineName "Sales ETL Pipeline"
+
+# 7. Add team members
+Add-FabricWorkspaceRoleAssignment -WorkspaceId $workspace.id -PrincipalId "analyst@contoso.com" -Role "Contributor"
+```
+
+#### 🔄 Automate Environment Promotion
+
+```powershell
+# Get items from Dev workspace
+$devWorkspace = Get-FabricWorkspace -WorkspaceName "Dev"
+$notebooks = Get-FabricNotebook -WorkspaceId $devWorkspace.id
+$pipelines = Get-FabricDataPipeline -WorkspaceId $devWorkspace.id
+
+# Create in Production workspace
+$prodWorkspace = Get-FabricWorkspace -WorkspaceName "Production"
+
+foreach ($notebook in $notebooks) {
+    $definition = Get-FabricNotebookDefinition -WorkspaceId $devWorkspace.id -NotebookId $notebook.id
+    New-FabricNotebook -WorkspaceId $prodWorkspace.id -NotebookName $notebook.displayName
+    Update-FabricNotebookDefinition -WorkspaceId $prodWorkspace.id -NotebookId $newNotebook.id -NotebookDefinition $definition
+}
+```
+
+#### 🛡️ Audit Workspace Access
+
+```powershell
+# Get all workspaces
+$workspaces = Get-FabricWorkspace
+
+# Audit role assignments
+$auditReport = foreach ($workspace in $workspaces) {
+    $assignments = Get-FabricWorkspaceRoleAssignment -WorkspaceId $workspace.id
+
+    foreach ($assignment in $assignments) {
+        [PSCustomObject]@{
+            WorkspaceName = $workspace.displayName
+            UserEmail = $assignment.UserPrincipalName
+            DisplayName = $assignment.DisplayName
+            Role = $assignment.Role
+            Type = $assignment.Type
+        }
+    }
+}
+
+# Export to CSV
+$auditReport | Export-Csv -Path "FabricWorkspaceAudit_$(Get-Date -Format 'yyyyMMdd').csv" -NoTypeInformation
+```
+
+---
+
+## 📊 Intelligent Output Formatting
+
+The module includes smart output formatting that automatically makes results more readable and actionable by:
+
+### Automatic Name Resolution
+Instead of displaying raw GUIDs, the module automatically resolves IDs to human-readable names:
+- **Capacity IDs** → Capacity display names
+- **Workspace IDs** → Workspace display names
+
+**Example - Without Formatting:**
+```powershell
+id                                   displayName          type      workspaceId                          capacityId
+--                                   -----------          ----      -----------                          ----------
+a1b2c3d4-e5f6-1234-5678-9abcdef01234 Sales Lakehouse      Lakehouse f9e8d7c6-b5a4-9876-5432-1fedcba98765 c4d5e6f7...
+```
+
+**Example - With Smart Formatting:**
+```powershell
+Capacity Name        Workspace Name       Item Name           Type      ID
+-------------        --------------       ---------           ----      --
+Premium Capacity P1  Sales Analytics      Sales Lakehouse     Lakehouse a1b2c3d4-e5f6...
+Premium Capacity P1  Sales Analytics      ETL Notebook        Notebook  b2c3d4e5-f6a7...
+Premium Capacity P2  Marketing Workspace  Campaign Data       Warehouse c3d4e5f6-a7b8...
+```
+
+### Performance with Smart Caching
+Name resolutions are cached for optimal performance:
+- **First lookup:** ~200ms (API call)
+- **Cached lookup:** <1ms (~200x faster!)
+- Cache persists across sessions
+- Automatic cache management
+
+### Clear Cache When Needed
+After renaming capacities or workspaces, clear the cache to fetch updated names:
+
+```powershell
+# Clear all cached name resolutions
+Clear-FabricNameCache -Force
+
+# Output: Successfully cleared 42 cached name resolution(s)
+```
+
+### Consistent Display Format
+All objects display with consistent column priority:
+1. Capacity Name
+2. Workspace Name
+3. Item Name
+4. Item Type
+5. Additional properties...
+
+**Learn More:** See the complete [Output Formatting Guide](docs/OUTPUT-FORMATTING.md) for details on format views, caching behavior, and troubleshooting.
+
+---
 
 ## Prerequisites
 
-You can install the entire Azure PowerShell module or just the Az.Accounts module, which is required for this toolkit.
+### PowerShell Version
+- **PowerShell 5.1** or later
+- **PowerShell 7+** (recommended for cross-platform support)
 
-1. [Instal Azure PowerShell module](https://learn.microsoft.com./azure/install-azure-powershell?view=azps-13.0.0)
-2. [Install individual module](https://learn.microsoft.com./azure/install-azps-optimized?view=azps-13.0.0#install-individual-service-specific-modules)
+### Required Modules
+The following modules are automatically installed as dependencies:
 
+| Module | Minimum Version | Purpose |
+|--------|----------------|---------|
+| PSFramework | 5.0.0 | Configuration management and logging |
+| Az.Accounts | 5.0.0 | Azure authentication |
+| Az.Resources | 6.15.1 | Azure resource management |
+| MicrosoftPowerBIMgmt | 1.2.1111 | Power BI integration |
+
+### Permissions Required
+
+**For User Principal:**
+- Appropriate Fabric workspace roles (Admin, Member, Contributor, or Viewer)
+- Tenant-level permissions for admin operations
+
+**For Service Principal:**
+- App must be enabled in [Fabric admin portal](https://learn.microsoft.com/fabric/admin/service-admin-portal-developer#service-principals-can-use-fabric-apis)
+- Fabric API delegated scopes granted
+- Workspace roles assigned
+
+**For Managed Identity:**
+- Identity must have Fabric API permissions
+- Workspace roles assigned via RBAC
+
+---
+
+## Architecture & Design
+
+### Modern PowerShell Best Practices
+
+This module implements industry-standard PowerShell development practices:
+
+- ✅ **DRY Principle** - Centralized helper functions eliminate 1,000+ lines of duplicate code
+- ✅ **Approved Verbs** - All cmdlets use [PowerShell approved verbs](https://learn.microsoft.com/powershell/scripting/developer/cmdlet/approved-verbs-for-windows-powershell-commands)
+- ✅ **Proper Scoping** - Module-scoped variables prevent global namespace pollution
+- ✅ **Natural Output** - Leverages PowerShell pipeline for idiomatic code
+- ✅ **Comprehensive Error Handling** - Try/catch blocks with detailed error messages
+- ✅ **PSFramework Integration** - Consistent logging and configuration management
+- ✅ **API Validation** - All endpoints verified against [official Fabric REST API specs](https://github.com/microsoft/fabric-rest-api-specs)
+
+### Centralized Helper Functions
+
+The module uses core helper functions that provide:
+
+1. **Invoke-FabricAuthCheck** - Consistent authentication validation across all cmdlets
+2. **New-FabricAPIUri** - Standardized API endpoint construction with query parameters
+3. **Select-FabricResource** - Consistent resource filtering and type decoration for Get-* cmdlets
+4. **Add-FabricTypeName** - PSTypeName decoration for custom formatting
+5. **Invoke-FabricAPIRequest** - Centralized API calls with pagination, retry logic, and LRO support
+
+**Benefits:**
+- Bug fixes in one place automatically benefit all 294 cmdlets
+- Consistent behavior across entire module
+- Easier testing and maintenance
+- Enhanced retry logic with exponential backoff
+- Automatic pagination handling via continuation tokens
+- Built-in Long Running Operation (LRO) support
+
+### Built-in Resilience
+
+- **Automatic Retry Logic** - Handles transient failures (429, 503, 504 status codes)
+- **Exponential Backoff** - Intelligent retry delays with jitter
+- **Respects Rate Limits** - Honors `Retry-After` headers from API
+- **Comprehensive Logging** - Debug, verbose, and error logging via PSFramework
+
+---
+
+## Documentation
+
+### Cmdlet Help
+
+Every cmdlet includes comprehensive help documentation:
 
 ```powershell
-Install-Module -Name Az -Repository PSGallery -Force
+# Get help for any cmdlet
+Get-Help Get-FabricWorkspace -Full
+Get-Help Set-FabricApiHeaders -Examples
+Get-Help New-FabricLakehouse -Parameter LakehouseName
+
+# List all available cmdlets
+Get-Command -Module MicrosoftFabricMgmt
+
+# Find cmdlets by resource type
+Get-Command -Module MicrosoftFabricMgmt -Name *Lakehouse*
+Get-Command -Module MicrosoftFabricMgmt -Name *Notebook*
 ```
+
+### Resource Coverage
+
+The module provides comprehensive coverage of Microsoft Fabric resources:
+
+<details>
+<summary><b>📦 58 Resource Types (Click to expand)</b></summary>
+
+| Resource Type | Cmdlets | Description |
+|---------------|---------|-------------|
+| **Admin** | 8 | Tenant-wide administration |
+| **Anomaly Detector** | 6 | Anomaly detection operations (Preview) |
+| **Apache Airflow Job** | 6 | Airflow job management |
+| **Capacity** | 1 | Capacity operations |
+| **Connections** | 6 | Connection and gateway management |
+| **Copy Job** | 6 | Data copy operations |
+| **Cosmos DB Database** | 6 | Cosmos DB integration |
+| **Dashboard** | 1 | Dashboard operations |
+| **Data Pipeline** | 4 | Pipeline orchestration |
+| **Dataflow** | 6 | Dataflow operations and parameters |
+| **Datamart** | 1 | Datamart management |
+| **Digital Twin Builder** | 6 | Digital twin building operations (Preview) |
+| **Digital Twin Builder Flow** | 6 | Digital twin flow management (Preview) |
+| **Domain** | 11 | Domain administration |
+| **Environment** | 13 | Spark environment management |
+| **Event Schema Set** | 6 | Event schema management (Preview) |
+| **Eventstream** | 17 | Real-time data streaming |
+| **Eventhouse** | 6 | Real-time analytics platform |
+| **External Data Share** | 2 | Data sharing operations |
+| **Folder** | 5 | Workspace folder management |
+| **Graph Model** | 8 | Graph-based data modeling and queries |
+| **Graph Query Set** | 6 | Graph query operations (Preview) |
+| **GraphQL API** | 6 | GraphQL API operations |
+| **KQL Dashboard** | 6 | KQL dashboard management |
+| **KQL Database** | 6 | KQL database operations |
+| **KQL Queryset** | 6 | KQL query management |
+| **Labels** | 2 | Item labeling |
+| **Lakehouse** | 9 | Lakehouse operations, table management |
+| **Managed Private Endpoint** | 3 | Private endpoint management |
+| **Map** | 6 | Map item management (Preview) |
+| **Mirrored Azure Databricks Catalog** | 6 | Databricks catalog mirroring |
+| **Mirrored Database** | 10 | Database mirroring |
+| **Mirrored Warehouse** | 1 | Warehouse mirroring |
+| **ML Experiment** | 4 | ML experiment tracking |
+| **ML Model** | 4 | Machine learning model management |
+| **Mounted Data Factory** | 6 | Data Factory integration |
+| **Notebook** | 8 | Notebook deployment and management |
+| **OneLake** | 6 | OneLake shortcuts and security |
+| **Ontology** | 6 | Ontology management (Preview) |
+| **Operations Agent** | 6 | Operations agent management (Preview) |
+| **Paginated Reports** | 2 | Paginated report management |
+| **Reflex** | 6 | Reflex item management |
+| **Report** | 6 | Power BI report operations |
+| **Semantic Model** | 6 | Semantic model management |
+| **Sharing Links** | 2 | Sharing link management |
+| **Snowflake Database** | 6 | Snowflake integration |
+| **Spark** | 9 | Spark pool and settings |
+| **Spark Job Definition** | 8 | Spark job orchestration |
+| **SQL Database** | 6 | SQL Database management |
+| **SQL Endpoints** | 3 | SQL endpoint management |
+| **Tags** | 4 | Item tagging |
+| **Tenant** | 8 | Tenant-level settings |
+| **User Data Function** | 6 | User data function operations (Preview) |
+| **Users** | 1 | User operations |
+| **Utils** | 10 | Utility functions |
+| **Variable Library** | 5 | Variable management |
+| **Warehouse** | 9 | Warehouse operations and snapshots |
+| **Workspace** | 14 | Workspace management, RBAC, capacity assignment |
+
+**Total: 355+ Cmdlets** across 58 resource types
+
+</details>
+
+---
+
+## Advanced Usage
+
+### Pipeline Integration
+
+All cmdlets support PowerShell pipeline operations:
+
 ```powershell
-Install-Module -Name Az.Accounts -Force -AllowClobber
+# Get all lakehouses and export their metadata
+Get-FabricWorkspace |
+    ForEach-Object {
+        Get-FabricLakehouse -WorkspaceId $_.id
+    } |
+    Export-Csv -Path "AllLakehouses.csv" -NoTypeInformation
+
+# Filter workspaces and list their notebooks
+Get-FabricWorkspace |
+    Where-Object { $_.displayName -like "Dev*" } |
+    ForEach-Object {
+        Get-FabricNotebook -WorkspaceId $_.id |
+            Select-Object @{N='Workspace';E={$_.displayName}}, displayName, id
+    }
 ```
 
-> [!NOTE]
-> After install or update you can import the Az.Accounts module
+### Error Handling
 
 ```powershell
-Import-Module Az.Accounts -Force
+try {
+    $workspace = New-FabricWorkspace -WorkspaceName "Production" -ErrorAction Stop
+    Write-Host "Workspace created: $($workspace.id)"
+}
+catch {
+    Write-Error "Failed to create workspace: $_"
+    # Handle error appropriately
+}
 ```
 
-## Configuration
+### Logging and Diagnostics
 
-Before using the toolkit, set the Fabric Headers using the command `Set-FabricApiHeaders`. Without this you cannot call an API global variable with your API `BaseUrl` and `FabricHeaders`:
+The module uses PSFramework for comprehensive logging:
 
 ```powershell
-# User Principal
-Set-FabricApiHeaders -tenantId "xxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxx"
+# Enable verbose logging
+$VerbosePreference = "Continue"
+Get-FabricWorkspace
+
+# View PSFramework message log
+Get-PSFMessage -Last 50
+
+# Configure logging to file
+Set-PSFLoggingProvider -Name logfile -FilePath "C:\Logs\Fabric.log" -Enabled $true
 ```
+
+---
+
+## Contributing
+
+We welcome contributions! This project is part of the [microsoft/fabric-toolbox](https://github.com/microsoft/fabric-toolbox) repository.
+
+### Development Setup
 
 ```powershell
-# Service Principal
-$tenantId = "xxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxx"
-$appId = "00000000-0000-0000-0000-000000000000"
-$appSecret = "your-secret"
-$secureAppSecret = $appSecret | ConvertTo-SecureString -AsPlainText -Force
+# Clone the repository
+git clone https://github.com/microsoft/fabric-toolbox.git
+cd fabric-toolbox/tools/MicrosoftFabricMgmt
 
-Set-FabricApiHeaders -TenantId $tenantId -AppId $appId -AppSecret $secureAppSecret
+# Install development dependencies
+.\build.ps1 -ResolveDependency
 
+# Build the module
+.\build.ps1 -Tasks build
+
+# Run tests
+.\build.ps1 -Tasks test
 ```
 
-## Functions
+### Module Build System
 
-### Capacity
-- [Get-FabricCapacity.ps1](./MicrosoftFabricMgmt/docs/Get-FabricCapacity.md)
+The module uses [Sampler](https://github.com/gaelcolas/Sampler), a modern PowerShell module scaffolding framework:
 
-### Dashboard
-- [Get-FabricDashboard.ps1](./MicrosoftFabricMgmt/docs/Get-FabricDashboard.md)
+- **Build**: `.\build.ps1 -Tasks build`
+- **Test**: `.\build.ps1 -Tasks test`
+- **Clean**: `.\build.ps1 -Tasks clean`
+- **Pack**: `.\build.ps1 -Tasks pack`
 
-### Data Pipeline
-- [Get-FabricDataPipeline.ps1](./MicrosoftFabricMgmt/docs/Get-FabricDataPipeline.md)
-- [New-FabricDataPipeline.ps1](./MicrosoftFabricMgmt/docs/New-FabricDataPipeline.md)
-- [Remove-FabricDataPipelines.ps1](./MicrosoftFabricMgmt/docs/Remove-FabricDataPipeline.md)
-- [Update-FabricNotebook.ps1](./MicrosoftFabricMgmt/docs/Update-FabricDataPipeline.md)
-### Datamart
-- [Get-FabricDatamart.ps1](./MicrosoftFabricMgmt/docs/Get-FabricDatamart.md)
+---
 
-### Domain
-- [Assign-FabricDomainWorkspaceByCapacity.ps1](./MicrosoftFabricMgmt/docs/Assign-FabricDomainWorkspaceByCapacity.md)
-- [Assign-FabricDomainWorkspaceById.ps1](./MicrosoftFabricMgmt/docs/Assign-FabricDomainWorkspaceById.md)
-- [Assign-FabricDomainWorkspaceByPrincipal.ps1](./MicrosoftFabricMgmt/docs/Assign-FabricDomainWorkspaceByPrincipal.md)
-- [Assign-FabricDomainWorkspaceRoleAssignment.ps1](./MicrosoftFabricMgmt/docs/Assign-FabricDomainWorkspaceRoleAssignment.md)
-- [Get-FabricDomain.ps1](./MicrosoftFabricMgmt/docs/Get-FabricDomain.md)
-- [Get-FabricDomainWorkspace.ps1](./MicrosoftFabricMgmt/docs/Get-FabricDomainWorkspace.md)
-- [New-FabricDomain.ps1](./MicrosoftFabricMgmt/docs/New-FabricDomain.md)
-- [Remove-FabricDomain.ps1](./MicrosoftFabricMgmt/docs/Remove-FabricDomain.md)
-- [Unassign-FabricDomainWorkspace.ps1](./MicrosoftFabricMgmt/docs/Unassign-FabricDomainWorkspace.md)
-- [Unassign-FabricDomainWorkspaceRoleAssignment.ps1](./MicrosoftFabricMgmt/docs/Unassign-FabricDomainWorkspaceRoleAssignment.md)
-- [Update-FabricDomain.ps1](./MicrosoftFabricMgmt/docs/Update-FabricDomain.md)
+## Support & Resources
 
-### Environment
-- [Get-FabricEnvironment.ps1](./MicrosoftFabricMgmt/docs/Get-FabricEnvironment.md)
-- [Get-FabricEnvironmentLibrary.ps1](./MicrosoftFabricMgmt/docs/Get-FabricEnvironmentLibrary.md)
-- [Get-FabricEnvironmentSparkCompute.ps1](./MicrosoftFabricMgmt/docs/Get-FabricEnvironmentSparkCompute.md)
-- [Get-FabricEnvironmentStagingLibrary.ps1](./MicrosoftFabricMgmt/docs/Get-FabricEnvironmentStagingLibrary.md)
-- [Get-FabricEnvironmentStagingSparkCompute.ps1](./MicrosoftFabricMgmt/docs/Get-FabricEnvironmentStagingSparkCompute.md)
-- [New-FabricEnvironment.ps1](./MicrosoftFabricMgmt/docs/New-FabricEnvironment.md)
-- [Publish-FabricEnvironment.ps1](./MicrosoftFabricMgmt/docs/Publish-FabricEnvironment.md)
-- [Remove-FabricEnvironment.ps1](./MicrosoftFabricMgmt/docs/Remove-FabricEnvironment.md)
-- [Remove-FabricEnvironmentStagingLibrary.ps1](./MicrosoftFabricMgmt/docs/Remove-FabricEnvironmentStagingLibrary.md)
-- [Stop-FabricEnvironmentPublish.ps1](./MicrosoftFabricMgmt/docs/Stop-FabricEnvironmentPublish.md)
-- [Update-FabricEnvironment.ps1](./MicrosoftFabricMgmt/docs/Update-FabricEnvironment.md)
-- [Update-FabricEnvironmentStagingSparkCompute.ps1](./MicrosoftFabricMgmt/docs/Update-FabricEnvironmentStagingSparkCompute.md)
-- [Upload-FabricEnvironmentStagingLibrary.ps1](./MicrosoftFabricMgmt/docs/Upload-FabricEnvironmentStagingLibrary.md)
+### Documentation
+- **Module Documentation**: See `docs/` folder for detailed cmdlet documentation
+- **Output Formatting Guide**: [docs/OUTPUT-FORMATTING.md](docs/OUTPUT-FORMATTING.md) - Complete guide to output formatting and caching
+- **Clear Cache Function**: [docs/Clear-FabricNameCache.md](docs/Clear-FabricNameCache.md) - Cache management documentation
+- **Microsoft Fabric Docs**: [Microsoft Fabric Documentation](https://learn.microsoft.com/fabric/)
+- **REST API Reference**: [Fabric REST API](https://learn.microsoft.com/rest/api/fabric/)
+- **API Specifications**: [Official Swagger Specs](https://github.com/microsoft/fabric-rest-api-specs)
 
-### Eventhouse
-- [Get-FabricEventhouse.ps1](./MicrosoftFabricMgmt/docs/Get-FabricEventhouse.md)
-- [Get-FabricEventhouseDefinition.ps1](./MicrosoftFabricMgmt/docs/Get-FabricEventhouseDefinition.md)
-- [New-FabricEventhouse.ps1](./MicrosoftFabricMgmt/docs/New-FabricEventhouse.md)
-- [Remove-FabricEventhouse.ps1](./MicrosoftFabricMgmt/docs/Remove-FabricEventhouse.md)
-- [Update-FabricEventhouse.ps1](./MicrosoftFabricMgmt/docs/Update-FabricEventhouse.md)
-- [Update-FabricEventhouseDefinition.ps1](./MicrosoftFabricMgmt/docs/Update-FabricEventhouseDefinition.md)
+### Community
+- **Issues**: [GitHub Issues](https://github.com/microsoft/fabric-toolbox/issues)
+- **Discussions**: [GitHub Discussions](https://github.com/microsoft/fabric-toolbox/discussions)
 
-### Eventstream
-- [Get-FabricEventstream.ps1](./MicrosoftFabricMgmt/docs/Get-FabricEventstream.md)
-- [Get-FabricEventstreamDefinition.ps1](./MicrosoftFabricMgmt/docs/Get-FabricEventstreamDefinition.md)
-- [New-FabricEventstream.ps1](./MicrosoftFabricMgmt/docs/New-FabricEventstream.md)
-- [Remove-FabricEventstream.ps1](./MicrosoftFabricMgmt/docs/Remove-FabricEventstream.md)
-- [Update-FabricEventstream.ps1](./MicrosoftFabricMgmt/docs/Update-FabricEventstream.md)
-- [Update-FabricEventstreamDefinition.ps1](./MicrosoftFabricMgmt/docs/Update-FabricEventstreamDefinition.md)
+### Getting Help
 
-### KQL Dashboard
-- [Get-FabricKQLDashboard.ps1](./MicrosoftFabricMgmt/docs/Get-FabricKQLDashboard.md)
-- [Get-FabricKQLDashboardDefinition.ps1](./MicrosoftFabricMgmt/docs/Get-FabricKQLDashboardDefinition.md)
-- [New-FabricKQLDashboard.ps1](./MicrosoftFabricMgmt/docs/New-FabricKQLDashboard.md)
-- [Remove-FabricKQLDashboard.ps1](./MicrosoftFabricMgmt/docs/Remove-FabricKQLDashboard.md)
-- [Update-FabricKQLDashboard.ps1](./MicrosoftFabricMgmt/docs/Update-FabricKQLDashboard.md)
-- [Update-FabricKQLDashboardDefinition.ps1](./MicrosoftFabricMgmt/docs/Update-FabricKQLDashboardDefinition.md)
+```powershell
+# Get help for any cmdlet
+Get-Help <CmdletName> -Full
 
-### KQL Database
-- [Get-FabricKQLDatabase.ps1](./MicrosoftFabricMgmt/docs/Get-FabricKQLDatabase.md)
-- [Get-FabricKQLDatabaseDefinition.ps1](./MicrosoftFabricMgmt/docs/Get-FabricKQLDatabaseDefinition.md)
-- [New-FabricKQLDatabase.ps1](./MicrosoftFabricMgmt/docs/New-FabricKQLDatabase.md)
-- [Remove-FabricKQLDatabase.ps1](./MicrosoftFabricMgmt/docs/Remove-FabricKQLDatabase.md)
-- [Update-FabricKQLDatabase.ps1](./MicrosoftFabricMgmt/docs/Update-FabricKQLDatabase.md)
-- [Update-FabricKQLDatabaseDefinition.ps1](./MicrosoftFabricMgmt/docs/Update-FabricKQLDatabaseDefinition.md)
+# List all cmdlets in the module
+Get-Command -Module MicrosoftFabricMgmt
 
-### KQL Queryset
-- [Get-FabricKQLQueryset.ps1](./MicrosoftFabricMgmt/docs/Get-FabricKQLQueryset.md)
-- [Get-FabricKQLQuerysetDefinition.ps1](./MicrosoftFabricMgmt/docs/Get-FabricKQLQuerysetDefinition.md)
-- [New-FabricKQLQueryset.ps1](./MicrosoftFabricMgmt/docs/New-FabricKQLQueryset.md)
-- [Remove-FabricKQLQueryset.ps1](./MicrosoftFabricMgmt/docs/Remove-FabricKQLQueryset.md)
-- [Update-FabricKQLQueryset.ps1](./MicrosoftFabricMgmt/docs/Update-FabricKQLQueryset.md)
-- [Update-FabricKQLQuerysetDefinition.ps1](./MicrosoftFabricMgmt/docs/Update-FabricKQLQuerysetDefinition.md)
+# Find cmdlets by keyword
+Get-Command -Module MicrosoftFabricMgmt | Where-Object { $_.Name -like "*Lakehouse*" }
+```
 
-### Lakehouse
-- [Get-FabricLakehouse.ps1](./MicrosoftFabricMgmt/docs/Get-FabricLakehouse.md)
-- [Get-FabricLakehouseTable.ps1](./MicrosoftFabricMgmt/docs/Get-FabricLakehouseTable.md)
-- [Load-FabricLakehouseTable.ps1](./MicrosoftFabricMgmt/docs/Load-FabricLakehouseTable.md)
-- [New-FabricLakehouse.ps1](./MicrosoftFabricMgmt/docs/New-FabricLakehouse.md)
-- [Remove-FabricLakehouse.ps1](./MicrosoftFabricMgmt/docs/Remove-FabricLakehouse.md)
-- [Start-FabricLakehouseTableMaintenance.ps1](./MicrosoftFabricMgmt/docs/Start-FabricLakehouseTableMaintenance.md)
-- [Update-FabricLakehouse.ps1](./MicrosoftFabricMgmt/docs/Update-FabricLakehouse.md)
-
-
-### Mirrored Database
-- [Get-FabricMirroredDatabase.ps1](./MicrosoftFabricMgmt/docs/Get-FabricMirroredDatabase.md)
-- [Get-FabricMirroredDatabaseDefinition.ps1](./MicrosoftFabricMgmt/docs/Get-FabricMirroredDatabaseDefinition.md)
-- [Get-FabricMirroredDatabaseStatus.ps1](./MicrosoftFabricMgmt/docs/Get-FabricMirroredDatabaseStatus.md)
-- [Get-FabricMirroredDatabaseTableStatus.ps1](./MicrosoftFabricMgmt/docs/Get-FabricMirroredDatabaseTableStatus.md)
-- [New-FabricMirroredDatabase.ps1](./MicrosoftFabricMgmt/docs/New-FabricMirroredDatabase.md)
-- [Remove-FabricMirroredDatabase.ps1](./MicrosoftFabricMgmt/docs/Remove-FabricMirroredDatabase.md)
-- [Start-FabricMirroredDatabaseMirroring.ps1](./MicrosoftFabricMgmt/docs/Start-FabricMirroredDatabaseMirroring.md)
-- [Stop-FabricMirroredDatabaseMirroring.ps1](./MicrosoftFabricMgmt/docs/Stop-FabricMirroredDatabaseMirroring.md)
-- [Update-FabricMirroredDatabase.ps1](./MicrosoftFabricMgmt/docs/Update-FabricMirroredDatabase.md)
-- [Update-FabricMirroredDatabaseDefinition.ps1](./MicrosoftFabricMgmt/docs/Update-FabricMirroredDatabaseDefinition.md)
-
-
-### Mirrored Warehouse
-
-[Get-FabricMirroredWarehouse.ps1](./MicrosoftFabricMgmt/docs/Get-FabricMirroredWarehouse.md)
-
-### ML Experiment
-- [Get-FabricMLExperiment.ps1](./MicrosoftFabricMgmt/docs/Get-FabricMLExperiment.md)
-- [New-FabricMLExperiment.ps1](./MicrosoftFabricMgmt/docs/New-FabricMLExperiment.md)
-- [Remove-FabricMLExperiment.ps1](./MicrosoftFabricMgmt/docs/Remove-FabricMLExperiment.md)
-- [Update-FabricMLExperiment.ps1](./MicrosoftFabricMgmt/docs/Update-FabricMLExperiment.md)
-
-### ML Model
-- [Get-FabricMLModel.ps1](./MicrosoftFabricMgmt/docs/Get-FabricMLModel.md)
-- [New-FabricMLModel.ps1](./MicrosoftFabricMgmt/docs/New-FabricMLModel.md)
-- [Remove-FabricMLModel.ps1](./MicrosoftFabricMgmt/docs/Remove-FabricMLModel.md)
-- [Update-FabricMLModel.ps1](./MicrosoftFabricMgmt/docs/Update-FabricMLModel.md)
-
-### Notebook
-- [Get-FabricNotebook.ps1](./MicrosoftFabricMgmt/docs/Get-FabricNotebook.md)
-- [Get-FabricNotebookDefinition.ps1](./MicrosoftFabricMgmt/docs/Get-FabricNotebookDefinition.md)
-- [New-FabricNotebook.ps1](./MicrosoftFabricMgmt/docs/New-FabricNotebook.md)
-- [Remove-FabricNotebook.ps1](./MicrosoftFabricMgmt/docs/Remove-FabricNotebook.md)
-- [Update-FabricNotebook.ps1](./MicrosoftFabricMgmt/docs/Update-FabricNotebook.md)
-- [Update-FabricNotebookDefinition.ps1](./MicrosoftFabricMgmt/docs/Update-FabricNotebookDefinition.md)
-
-### Paginated Reports
-- [Get-FabricPaginatedReport.ps1](./MicrosoftFabricMgmt/docs/Get-FabricPaginatedReport.md)
-- [Update-FabricPaginatedReport.ps1](./MicrosoftFabricMgmt/docs/Update-FabricPaginatedReport.md)
-
-### Reflex
-- [Get-FabricReflex.ps1](./MicrosoftFabricMgmt/docs/Get-FabricReflex.md)
-- [Get-FabricReflexDefinition.ps1](./MicrosoftFabricMgmt/docs/Get-FabricReflexDefinition.md)
-- [New-FabricReflex.ps1](./MicrosoftFabricMgmt/docs/New-FabricReflex.md)
-- [Remove-FabricReflex.ps1](./MicrosoftFabricMgmt/docs/Remove-FabricReflex.md)
-- [Update-FabricReflex.ps1](./MicrosoftFabricMgmt/docs/Update-FabricReflex.md)
-- [Update-FabricReflexDefinition.ps1](./MicrosoftFabricMgmt/docs/Update-FabricReflexDefinition.md)
-
-### Report
-- [Get-FabricReport.ps1](./MicrosoftFabricMgmt/docs/Get-FabricReport.md)
-- [Get-FabricReportDefinition.ps1](./MicrosoftFabricMgmt/docs/Get-FabricReportDefinition.md)
-- [New-FabricReport.ps1](./MicrosoftFabricMgmt/docs/New-FabricReport.md)
-- [Remove-FabricReport.ps1](./MicrosoftFabricMgmt/docs/Remove-FabricReport.md)
-- [Update-FabricReport.ps1](./MicrosoftFabricMgmt/docs/Update-FabricReport.md)
-- [Update-FabricReportDefinition.ps1](./MicrosoftFabricMgmt/docs/Update-FabricReportDefinition.md)
-
-### Semantic Model
-- [Get-FabricSemanticModel.ps1](./MicrosoftFabricMgmt/docs/Get-FabricSemanticModel.md)
-- [Get-FabricSemanticModelDefinition.ps1](./MicrosoftFabricMgmt/docs/Get-FabricSemanticModelDefinition.md)
-- [New-FabricSemanticModel.ps1](./MicrosoftFabricMgmt/docs/New-FabricSemanticModel.md)
-- [Remove-FabricSemanticModel.ps1](./MicrosoftFabricMgmt/docs/Remove-FabricSemanticModel.md)
-- [Update-FabricSemanticModel.ps1](./MicrosoftFabricMgmt/docs/Update-FabricSemanticModel.md)
-- [Update-FabricSemanticModelDefinition.ps1](./MicrosoftFabricMgmt/docs/Update-FabricSemanticModelDefinition.md)
-
-### Spark
-- [Get-FabricSparkCustomPool.ps1](./MicrosoftFabricMgmt/docs/Get-FabricSparkCustomPool.md)
-- [Get-FabricSparkSettings.ps1](./MicrosoftFabricMgmt/docs/Get-FabricSparkSettings.md)
-- [New-FabricSparkCustomPool.ps1](./MicrosoftFabricMgmt/docs/New-FabricSparkCustomPool.md)
-- [Remove-FabricSparkCustomPool.ps1](./MicrosoftFabricMgmt/docs/Remove-FabricSparkCustomPool.md)
-- [Update-FabricSparkCustomPool.ps1](./MicrosoftFabricMgmt/docs/Update-FabricSparkCustomPool.md)
-- [Update-FabricSparkSettings.ps1](./MicrosoftFabricMgmt/docs/Update-FabricSparkSettings.md)
-
-### Spark Job Definition
-- [Get-FabricSparkJobDefinition.ps1](./MicrosoftFabricMgmt/docs/Get-FabricSparkJobDefinition.md)
-- [Get-FabricSparkJobDefinitionDefinition.ps1](./MicrosoftFabricMgmt/docs/Get-FabricSparkJobDefinitionDefinition.md)
-- [New-FabricSparkJobDefinition.ps1](./MicrosoftFabricMgmt/docs/New-FabricSparkJobDefinition.md)
-- [Remove-FabricSparkJobDefinition.ps1](./MicrosoftFabricMgmt/docs/Remove-FabricSparkJobDefinition.md)
-- [Start-FabricSparkJobDefinitionOnDemand.ps1](./MicrosoftFabricMgmt/docs/Start-FabricSparkJobDefinitionOnDemand.md)
-- [Update-FabricSparkJobDefinition.ps1](./MicrosoftFabricMgmt/docs/Update-FabricSparkJobDefinition.md)
-- [Update-FabricSparkJobDefinitionDefinition.ps1](./MicrosoftFabricMgmt/docs/Update-FabricSparkJobDefinitionDefinition.md)
-
-### SQL Endpoints
-- [Get-FabricSQLEndpoint.ps1](./MicrosoftFabricMgmt/docs/Get-FabricSQLEndpoint.md)
-
-### Tenant
-- [Get-FabricTenantSetting.ps1](./MicrosoftFabricMgmt/docs/Get-FabricTenantSetting.md)
-- [Get-FabricTenantSettingOverridesCapacity.ps1](./MicrosoftFabricMgmt/docs/Get-FabricTenantSettingOverridesCapacity.md)
-
-## Utils
-- [Convert-FromBase64.ps1](./MicrosoftFabricMgmt/docs/Convert-FromBase64.md)
-- [Convert-ToBase64.ps1](./MicrosoftFabricMgmt/docs/Convert-ToBase64.md)
-- [Get-FabricLongRunningOperation.ps1](./MicrosoftFabricMgmt/docs/Get-FabricLongRunningOperation.md)
-- [Get-FabricLongRunningOperationResult.ps1](./MicrosoftFabricMgmt/docs/Get-FabricLongRunningOperationResult.md)
-- [Set-FabricApiHeaders.ps1](./MicrosoftFabricMgmt/docs/Set-FabricApiHeaders.md)
-
-### Warehouse
-- [Get-FabricWarehouse.ps1](./MicrosoftFabricMgmt/docs/Get-FabricWarehouse.md)
-- [New-FabricWarehouse.ps1](./MicrosoftFabricMgmt/docs/New-FabricWarehouse.md)
-- [Remove-FabricWarehouse.ps1](./MicrosoftFabricMgmt/docs/Remove-FabricWarehouse.md)
-- [Update-FabricWarehouse.ps1](./MicrosoftFabricMgmt/docs/Update-FabricWarehouse.md)
-
-### Workspace
-- [Add-FabricWorkspaceIdentity.ps1](./MicrosoftFabricMgmt/docs/Add-FabricWorkspaceIdentity.md)
-- [Add-FabricWorkspaceRoleAssignment.ps1](./MicrosoftFabricMgmt/docs/Add-FabricWorkspaceRoleAssignments.md)
-- [Assign-FabricWorkspaceCapacity.ps1](./MicrosoftFabricMgmt/docs/Assign-FabricWorkspaceCapacity.md)
-- [Get-FabricWorkspace.ps1](./MicrosoftFabricMgmt/docs/Get-FabricWorkspace.md)
-- [Get-FabricWorkspaceRoleAssignment.ps1](./MicrosoftFabricMgmt/docs/Get-FabricWorkspaceRoleAssignment.md)
-- [New-FabricWorkspace.ps1](./MicrosoftFabricMgmt/docs/New-FabricWorkspace.md)
-- [Remove-FabricWorkspace.ps1](./MicrosoftFabricMgmt/docs/Remove-FabricWorkspace.md)
-- [Remove-FabricWorkspaceIdentity.ps1](./MicrosoftFabricMgmt/docs/Remove-FabricWorkspaceIdentity.md)
-- [Remove-FabricWorkspaceRoleAssignment.ps1](./MicrosoftFabricMgmt/docs/Remove-FabricWorkspaceRoleAssignment.md)
-- [Unassign-FabricWorkspaceCapacity.ps1](./MicrosoftFabricMgmt/docs/Unassign-FabricWorkspaceCapacity.md)
-- [Update-FabricWorkspace.ps1](./MicrosoftFabricMgmt/docs/Update-FabricWorkspace.md)
-- [Update-FabricWorkspaceRoleAssignment.ps1](./MicrosoftFabricMgmt/docs/Update-FabricWorkspaceRoleAssignment.md)
+---
 
 ## License
-This project is licensed under the MIT License. See the [LICENSE](/LICENSE) file for details.
+
+This project is licensed under the **MIT License**. See the [LICENSE](../../LICENSE) file for details.
+
+---
+
+## Changelog
+
+### Version 1.0.5 - Pipeline Support and Cache Performance
+
+**Latest Release** - Full Pipeline Support and Smarter Caching
+- ✅ Full pipeline support for all 46 `Remove-*` functions — pipe `Get-Fabric*` output directly to `Remove-Fabric*`
+- ✅ Fixed `[Alias('id')]` bindings so `Get-FabricWorkspace | Remove-FabricWorkspace` and similar patterns work correctly
+- ✅ Eliminated repeated API calls for unresolvable IDs — fallback results are now cached, not re-fetched
+- ✅ Cross-cache population: resolving a workspace name also caches its capacity ID (and vice versa), halving API calls
+- ✅ Changed "not found" resolve messages from Warning to Verbose — quieter output in mixed-capacity environments
+
+### Version 1.0.4 - New Resource Types and Admin API
+
+**Previous Release** - New Resource Types and Admin API
+- ✅ 295+ cmdlets (51 new functions added)
+- ✅ 6 new resource types: Graph Model, Snowflake Database, Cosmos DB Database, Dataflow, SQL Database, Admin
+- ✅ Admin API for tenant-wide visibility into workspaces, items, and user access
+- ✅ Full pipeline support with `ValueFromPipelineByPropertyName`
+- ✅ Intelligent output formatting with PSTypeName decoration
+
+### Version 1.0.0 - Major Modernization Release
+- ✅ 244+ cmdlets covering all major Fabric resource types
+- ✅ Centralized helper functions (1,000+ lines of duplicate code eliminated)
+- ✅ Enhanced retry logic with exponential backoff
+- ✅ All endpoints validated against official API specifications
+- ✅ PowerShell 5.1 and 7+ compatibility
+- ✅ Comprehensive error handling and logging
+- ✅ Fixed workspace role assignment URI construction bug
+- ✅ Implemented PowerShell community best practices
+
+For detailed release notes, see [CHANGELOG.md](./CHANGELOG.md).
+
+---
+
+## Acknowledgments
+
+**Authors & Contributors:**
+- Tiago Balabuch
+- Jess Pomfret
+- Rob Sewell
+
+**Special Thanks:**
+- Microsoft Fabric Team for the comprehensive REST API
+- PowerShell Community for best practices and guidance
+- PSFramework Team for the excellent logging and configuration framework
+
+---
+
+<p align="center">
+  <strong>Built with ❤️ by the Microsoft Fabric community</strong><br>
+  <a href="https://github.com/microsoft/fabric-toolbox">GitHub</a> •
+  <a href="https://learn.microsoft.com/fabric/">Microsoft Fabric Docs</a> •
+  <a href="https://www.powershellgallery.com/packages/MicrosoftFabricMgmt">PowerShell Gallery</a>
+</p>

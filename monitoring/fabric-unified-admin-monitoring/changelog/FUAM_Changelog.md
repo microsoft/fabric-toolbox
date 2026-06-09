@@ -2,6 +2,149 @@
 for Fabric Unified Admin Monitoring solution accelerator.
 
 --------------------------
+## 📦 2026.6.1
+
+Date: 2026-06-02
+
+Link: [Click here to update FUAM](/monitoring/fabric-unified-admin-monitoring/how-to/How_to_update_FUAM.md)
+
+### 📈 Enhancements
+
+- **New Optimization Module for Semantic Models (Beta)**
+    - Helps identify root causes of high CU utilization by analyzing the top *n* items per capacity (by previous-day CU consumption)
+    - Collects **Best Practice Analyzer** results and **VertiPaq Analyzer** data (per table) for semantic models
+    - Adds new notebook `01_Run_Optimization_Module_for_SM_Unit` and new pipeline `Load_Optimization_Module_E2E`
+    - **Deactivated by default** in the `Load_FUAM_Data_E2E` pipeline — activate manually to try it out
+    - Documentation: [FUAM Optimization Module – Semantic Models](/monitoring/fabric-unified-admin-monitoring/media/documentation/FUAM_Optimization_SemanticModels.md)
+
+
+Best Regards!
+
+Kevin
+
+
+--------------------------
+## 📦 2026.5.1
+
+Date: 2026-05-15
+
+Link: [Click here to update FUAM](/monitoring/fabric-unified-admin-monitoring/how-to/How_to_update_FUAM.md)
+
+### 📈 Enhancements
+
+- **Extraction of Tags**
+    - FUAM now extracts the tag information
+    - New tables "tags" and "workspace_tags" have been added
+    - Reporting still needs to be updated
+
+### ✅ Fixes
+
+- **Missing subdomain**
+     - Fixed an issue, which caused the domain extraction to fail in case the was no subdomain present
+     - Now the script works without subdomain
+
+
+- **Tags datatype**
+    - Fixed an issue, which make the "02_Transfer_Workspace_Unit" notebook fail because of wrong data type in table
+
+Thanks to everyone pointing out the error in Github issues and coming up with solutions!
+
+
+Best Regards!
+
+Kevin & Gellért
+
+
+--------------------------
+
+
+Date: 2026-02-04
+
+Link: [Click here to update FUAM](/monitoring/fabric-unified-admin-monitoring/how-to/How_to_update_FUAM.md)
+
+
+### 📈 Enhancements
+
+- **New Capacity Metrics support:**
+    - FUAM now supports the v53 of the capacity metrics
+
+
+### ✅ Fixes
+
+- **Data consistency (CapacityId Upper case issue)**
+     - Fixed an issue, which caused inconsistency in FUAM_Lakehouse tables, where CapacityId is included
+     - Download and run the newest Deploy_FUAM Notebook, which will fix the data issues.
+
+- **Historic audit log files:**
+    - Fixed an issue, which disabled to store the raw audit log jsons in `FUAM_Lakehouse/Files/history/` subfolder
+
+
+Best Regards!
+
+Kevin & Gellért
+
+
+--------------------------
+## 📦 2026.1.1
+
+Date: 2025-12-23
+
+
+### 📈 Enhancements
+
+- **New data**:
+    - Domain Information
+    - Workspace Domain Mapping
+    - Datasource Semantic Model Mapping
+    - Widely Shared - Organization Links
+    - Widely Shared - PublishedToWeb
+
+- **Report updates**:
+    - New navigation from Overview Page to different topics
+    - New Analytical Pathways: 
+        - Unused workspaces with single click communication to the workspace owners
+        - Access Management Report
+    - New report pages:
+        - Data Sources (for Semantic Models)
+        - Widely Share Objects
+    - Update to Item_Analyzer Report
+ 
+- **Report design**:
+  - With this update, we harmonized the design language across FCA, Workspace Monitoring Dashboards, and FUAM. We hope this helps you monitor your tenant, Fabric costs, workspaces, and items with a consistent look and feel.
+ 
+    
+- **Others**: 
+    - Anonymization of Activities (Can be parameterized in the main pipeline)
+    - Automatic Deployment into folders
+ 
+**Screenshots from new release:**
+Enhanced Home screen of FUAM_Core_Report:
+![image](/monitoring/fabric-unified-admin-monitoring/media/changelog/changelog_2026.1.1_1.png)
+
+New Domains page:
+![image](/monitoring/fabric-unified-admin-monitoring/media/changelog/changelog_2026.1.1_4.png)
+
+New Analytical Pathway "Unused workspaces":
+![image](/monitoring/fabric-unified-admin-monitoring/media/changelog/changelog_2026.1.1_2.png)
+
+New Analytical Pathway "Access Management Report":
+![image](/monitoring/fabric-unified-admin-monitoring/media/changelog/changelog_2026.1.1_3.png)
+
+New Item level access details:
+![image](/monitoring/fabric-unified-admin-monitoring/media/changelog/changelog_2026.1.1_7.png)
+
+New mapped Datasource page (focused on semantic model connections):
+![image](/monitoring/fabric-unified-admin-monitoring/media/changelog/changelog_2026.1.1_5.png)
+
+New "Widely shared object" page:
+![image](/monitoring/fabric-unified-admin-monitoring/media/changelog/changelog_2026.1.1_6.png)
+
+
+Best Regards!
+
+Kevin & Gellért
+
+--------------------------
 
 ## 📦 2025.9.1
 

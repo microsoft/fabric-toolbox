@@ -1,0 +1,1702 @@
+{
+  "schema_version": "60",
+  "pagesNavWidth": 287.33331298828125,
+  "autoRefresh": {
+    "enabled": true,
+    "defaultInterval": "30s"
+  },
+  "tiles": [
+    {
+      "id": "49683a7c-580f-4124-b69d-d3354d9d73c3",
+      "title": "Workspaces",
+      "visualType": "card",
+      "pageId": "18e30e2b-75d2-4a6a-96af-33afe350a391",
+      "layout": {
+        "x": 0,
+        "y": 0,
+        "width": 3,
+        "height": 3
+      },
+      "queryRef": {
+        "kind": "query",
+        "queryId": "8d31e211-faf1-431c-acc9-2722fa589e3d"
+      },
+      "visualOptions": {
+        "multiStat__textSize": "auto",
+        "multiStat__valueColumn": null,
+        "colorRulesDisabled": false,
+        "colorStyle": "light",
+        "colorRules": []
+      }
+    },
+    {
+      "id": "b9272a05-9233-44dc-9bca-9da2ead33115",
+      "title": "Items",
+      "visualType": "card",
+      "pageId": "18e30e2b-75d2-4a6a-96af-33afe350a391",
+      "layout": {
+        "x": 0,
+        "y": 3,
+        "width": 3,
+        "height": 3
+      },
+      "queryRef": {
+        "kind": "query",
+        "queryId": "2b4dfb1d-b8df-4e81-a08f-296c157aeb99"
+      },
+      "visualOptions": {
+        "multiStat__textSize": "auto",
+        "multiStat__valueColumn": null,
+        "colorRulesDisabled": true,
+        "colorStyle": "light",
+        "colorRules": []
+      }
+    },
+    {
+      "id": "504068c6-a925-4b5a-b1f9-4db86daf61c0",
+      "title": "Items Distribution",
+      "visualType": "pie",
+      "pageId": "18e30e2b-75d2-4a6a-96af-33afe350a391",
+      "layout": {
+        "x": 0,
+        "y": 6,
+        "width": 11,
+        "height": 9
+      },
+      "queryRef": {
+        "kind": "query",
+        "queryId": "10394ab4-ea9c-4048-a125-e985c6361ad1"
+      },
+      "visualOptions": {
+        "hideLegend": false,
+        "legendLocation": "right",
+        "xColumn": null,
+        "yColumns": null,
+        "seriesColumns": null,
+        "crossFilterDisabled": false,
+        "drillthroughDisabled": false,
+        "labelDisabled": false,
+        "pie__label": [
+          "name",
+          "percentage",
+          "value"
+        ],
+        "tooltipDisabled": false,
+        "pie__tooltip": [
+          "name",
+          "percentage",
+          "value"
+        ],
+        "pie__orderBy": "size",
+        "pie__kind": "donut",
+        "pie__topNSlices": null,
+        "crossFilter": [
+          {
+            "interaction": "column",
+            "property": "itemType",
+            "parameterId": "34e75136-fe42-4819-bbed-a38401e18a0a",
+            "disabled": false
+          }
+        ],
+        "drillthrough": []
+      }
+    },
+    {
+      "id": "3d3bc367-d956-45af-85da-ed39c56c6e95",
+      "title": "Items Views",
+      "visualType": "area",
+      "pageId": "18e30e2b-75d2-4a6a-96af-33afe350a391",
+      "layout": {
+        "x": 11,
+        "y": 6,
+        "width": 13,
+        "height": 9
+      },
+      "queryRef": {
+        "kind": "query",
+        "queryId": "9e298314-ba72-4b2c-80e3-fb7c09f3c7f4"
+      },
+      "visualOptions": {
+        "multipleYAxes": {
+          "base": {
+            "id": "-1",
+            "label": "",
+            "columns": [],
+            "yAxisMaximumValue": null,
+            "yAxisMinimumValue": null,
+            "yAxisScale": "linear",
+            "horizontalLines": []
+          },
+          "additional": [],
+          "showMultiplePanels": false
+        },
+        "hideLegend": false,
+        "legendLocation": "right",
+        "xColumnTitle": "",
+        "xColumn": null,
+        "yColumns": [
+          "Views"
+        ],
+        "seriesColumns": null,
+        "xAxisScale": "linear",
+        "verticalLine": "",
+        "crossFilterDisabled": false,
+        "drillthroughDisabled": false,
+        "crossFilter": [],
+        "drillthrough": [],
+        "selectedDataOnLoad": {
+          "all": true,
+          "limit": 10
+        },
+        "dataPointsTooltip": {
+          "all": false,
+          "limit": 1
+        }
+      }
+    },
+    {
+      "id": "cc240f62-e91c-4a50-9365-5dfe59339035",
+      "title": "Workspace Users by Access Right",
+      "visualType": "bar",
+      "pageId": "18e30e2b-75d2-4a6a-96af-33afe350a391",
+      "layout": {
+        "x": 0,
+        "y": 30,
+        "width": 9,
+        "height": 9
+      },
+      "queryRef": {
+        "kind": "query",
+        "queryId": "1ac1b783-a290-409d-8b7c-00a1c17bc4b5"
+      },
+      "visualOptions": {
+        "multipleYAxes": {
+          "base": {
+            "id": "-1",
+            "label": "",
+            "columns": [],
+            "yAxisMaximumValue": null,
+            "yAxisMinimumValue": null,
+            "yAxisScale": "linear",
+            "horizontalLines": []
+          },
+          "additional": [],
+          "showMultiplePanels": false
+        },
+        "hideLegend": false,
+        "legendLocation": "right",
+        "xColumnTitle": "",
+        "xColumn": null,
+        "yColumns": null,
+        "seriesColumns": null,
+        "xAxisScale": "linear",
+        "verticalLine": "",
+        "crossFilterDisabled": false,
+        "drillthroughDisabled": false,
+        "crossFilter": [],
+        "drillthrough": [],
+        "selectedDataOnLoad": {
+          "all": true,
+          "limit": 10
+        },
+        "dataPointsTooltip": {
+          "all": false,
+          "limit": 1
+        }
+      }
+    },
+    {
+      "id": "33abcc99-8886-401c-b7a0-775625bff7c5",
+      "title": "Items Users by Access Rights",
+      "visualType": "stackedbar",
+      "pageId": "18e30e2b-75d2-4a6a-96af-33afe350a391",
+      "layout": {
+        "x": 9,
+        "y": 30,
+        "width": 15,
+        "height": 9
+      },
+      "queryRef": {
+        "kind": "query",
+        "queryId": "3998fa47-d3a4-49d6-9755-de47fad8b691"
+      },
+      "visualOptions": {
+        "multipleYAxes": {
+          "base": {
+            "id": "-1",
+            "label": "",
+            "columns": [],
+            "yAxisMaximumValue": null,
+            "yAxisMinimumValue": null,
+            "yAxisScale": "linear",
+            "horizontalLines": []
+          },
+          "additional": [],
+          "showMultiplePanels": false
+        },
+        "hideLegend": false,
+        "legendLocation": "right",
+        "xColumnTitle": "",
+        "xColumn": null,
+        "yColumns": null,
+        "seriesColumns": null,
+        "xAxisScale": "linear",
+        "verticalLine": "",
+        "crossFilterDisabled": false,
+        "drillthroughDisabled": false,
+        "crossFilter": [],
+        "drillthrough": [],
+        "selectedDataOnLoad": {
+          "all": true,
+          "limit": 5
+        },
+        "dataPointsTooltip": {
+          "all": false,
+          "limit": 1
+        }
+      }
+    },
+    {
+      "id": "4425f235-b6c1-4626-a09e-7aea50440bf2",
+      "title": "Workspace Distribution",
+      "visualType": "multistat",
+      "pageId": "18e30e2b-75d2-4a6a-96af-33afe350a391",
+      "layout": {
+        "x": 3,
+        "y": 0,
+        "width": 8,
+        "height": 6
+      },
+      "queryRef": {
+        "kind": "query",
+        "queryId": "96925004-7e6e-4393-9639-0c0962fd60eb"
+      },
+      "visualOptions": {
+        "multiStat__textSize": "auto",
+        "multiStat__valueColumn": null,
+        "colorRulesDisabled": false,
+        "colorStyle": "light",
+        "multiStat__displayOrientation": "horizontal",
+        "multiStat__labelColumn": null,
+        "multiStat__slot": {
+          "width": 2,
+          "height": 2
+        },
+        "colorRules": [
+          {
+            "id": "bceef47d-94cb-4b7e-9d39-fac4e1e53051",
+            "ruleType": "colorByCondition",
+            "applyToColumn": null,
+            "hideText": false,
+            "applyTo": "cells",
+            "conditions": [
+              {
+                "operator": "==",
+                "column": "Is On Capacity",
+                "values": [
+                  "true"
+                ]
+              }
+            ],
+            "chainingOperator": "and",
+            "colorStyle": "bold",
+            "color": null,
+            "tag": "Capacity",
+            "icon": "tvMonitor",
+            "ruleName": "",
+            "visualType": "multistat"
+          },
+          {
+            "id": "8f667eca-f307-4595-969f-e565c25769f3",
+            "ruleType": "colorByCondition",
+            "applyToColumn": null,
+            "hideText": false,
+            "applyTo": "cells",
+            "conditions": [
+              {
+                "operator": "!=",
+                "column": "Is On Capacity",
+                "values": [
+                  "true"
+                ]
+              }
+            ],
+            "chainingOperator": "and",
+            "colorStyle": "light",
+            "color": null,
+            "tag": "Shared",
+            "icon": "globe",
+            "ruleName": "",
+            "visualType": "multistat"
+          }
+        ]
+      }
+    },
+    {
+      "id": "c2418d87-e805-488e-9a51-4a101fa07811",
+      "title": "Workspaces Name (Limit 1000)",
+      "visualType": "table",
+      "pageId": "18e30e2b-75d2-4a6a-96af-33afe350a391",
+      "layout": {
+        "x": 11,
+        "y": 0,
+        "width": 13,
+        "height": 6
+      },
+      "queryRef": {
+        "kind": "query",
+        "queryId": "42391191-a0cf-482a-87eb-6feaab70c471"
+      },
+      "visualOptions": {
+        "table__enableRenderLinks": true,
+        "colorRulesDisabled": true,
+        "colorStyle": "light",
+        "crossFilterDisabled": false,
+        "drillthroughDisabled": false,
+        "crossFilter": [],
+        "drillthrough": [],
+        "table__renderLinks": [],
+        "colorRules": []
+      }
+    },
+    {
+      "id": "1423b692-597b-4b70-b252-6434656bc6db",
+      "title": "Events by Location",
+      "visualType": "map",
+      "pageId": "18e30e2b-75d2-4a6a-96af-33afe350a391",
+      "layout": {
+        "x": 0,
+        "y": 15,
+        "width": 24,
+        "height": 15
+      },
+      "queryRef": {
+        "kind": "query",
+        "queryId": "a2987918-351a-4e83-9bb3-f4a88b23f3d6"
+      },
+      "visualOptions": {
+        "map__type": "bubble",
+        "map__latitudeColumn": "latitude",
+        "map__longitudeColumn": "longitude",
+        "map__labelColumn": "ItemType",
+        "map__sizeColumn": null,
+        "map__sizeDisabled": false,
+        "map__geoType": "numeric",
+        "map__geoPointColumn": null
+      }
+    },
+    {
+      "id": "bbdc0011-f6a3-46b1-b829-ad19b8ea65de",
+      "title": "Tenant Settings",
+      "visualType": "table",
+      "pageId": "1de25296-8923-4f37-a572-d81d3a261f5a",
+      "layout": {
+        "x": 5,
+        "y": 0,
+        "width": 19,
+        "height": 8
+      },
+      "queryRef": {
+        "kind": "query",
+        "queryId": "719e4955-58b1-450d-bf42-82a007d181b5"
+      },
+      "visualOptions": {
+        "table__enableRenderLinks": true,
+        "colorRulesDisabled": true,
+        "colorStyle": "light",
+        "crossFilterDisabled": false,
+        "drillthroughDisabled": false,
+        "crossFilter": [],
+        "drillthrough": [],
+        "table__renderLinks": [],
+        "colorRules": []
+      }
+    },
+    {
+      "id": "4d27bdad-eaa7-460c-88ed-e63c6a1da9f0",
+      "title": "Tenant Settings Status",
+      "visualType": "pie",
+      "pageId": "1de25296-8923-4f37-a572-d81d3a261f5a",
+      "layout": {
+        "x": 0,
+        "y": 3,
+        "width": 5,
+        "height": 5
+      },
+      "queryRef": {
+        "kind": "query",
+        "queryId": "71f1e5cf-6f4b-4279-ad25-d5f6cbb59f49"
+      },
+      "visualOptions": {
+        "hideLegend": false,
+        "legendLocation": "bottom",
+        "xColumn": null,
+        "yColumns": null,
+        "seriesColumns": null,
+        "crossFilterDisabled": false,
+        "drillthroughDisabled": false,
+        "labelDisabled": false,
+        "pie__label": [
+          "name",
+          "percentage"
+        ],
+        "tooltipDisabled": false,
+        "pie__tooltip": [
+          "name",
+          "percentage",
+          "value"
+        ],
+        "pie__orderBy": "size",
+        "pie__kind": "pie",
+        "pie__topNSlices": null,
+        "crossFilter": [
+          {
+            "interaction": "column",
+            "property": "Enabled",
+            "parameterId": "325d6c8c-af01-422b-981e-5e158f99b29b",
+            "disabled": false
+          }
+        ],
+        "drillthrough": []
+      }
+    },
+    {
+      "id": "4d1389bd-8e77-46c7-96a8-761745b0ab02",
+      "title": "Workspace Delegated Settings",
+      "visualType": "card",
+      "pageId": "1de25296-8923-4f37-a572-d81d3a261f5a",
+      "layout": {
+        "x": 0,
+        "y": 16,
+        "width": 5,
+        "height": 3
+      },
+      "queryRef": {
+        "kind": "query",
+        "queryId": "9c159e0e-3009-4bc1-818f-5743fd3bf21b"
+      },
+      "visualOptions": {
+        "multiStat__textSize": "auto",
+        "multiStat__valueColumn": null,
+        "colorRulesDisabled": false,
+        "colorStyle": "light",
+        "colorRules": []
+      }
+    },
+    {
+      "id": "286fcc07-339f-481c-8f37-f0d7752c8436",
+      "title": "Capacities Deletages Settings",
+      "visualType": "column",
+      "pageId": "1de25296-8923-4f37-a572-d81d3a261f5a",
+      "layout": {
+        "x": 5,
+        "y": 16,
+        "width": 19,
+        "height": 6
+      },
+      "queryRef": {
+        "kind": "query",
+        "queryId": "867e916a-1493-4e2e-a3a5-c5a6bad67f98"
+      },
+      "visualOptions": {
+        "multipleYAxes": {
+          "base": {
+            "id": "-1",
+            "label": "",
+            "columns": [],
+            "yAxisMaximumValue": null,
+            "yAxisMinimumValue": null,
+            "yAxisScale": "linear",
+            "horizontalLines": []
+          },
+          "additional": [],
+          "showMultiplePanels": false
+        },
+        "hideLegend": false,
+        "legendLocation": "bottom",
+        "xColumnTitle": "",
+        "xColumn": "Capacity Name",
+        "yColumns": [
+          "Settings Changed"
+        ],
+        "seriesColumns": null,
+        "xAxisScale": "linear",
+        "verticalLine": "",
+        "crossFilterDisabled": false,
+        "drillthroughDisabled": false,
+        "crossFilter": [],
+        "drillthrough": []
+      }
+    },
+    {
+      "id": "1ef04b86-b0f1-40f6-a2af-9c0a0a67cae3",
+      "title": "Domain Delegated Settings",
+      "visualType": "card",
+      "pageId": "1de25296-8923-4f37-a572-d81d3a261f5a",
+      "layout": {
+        "x": 0,
+        "y": 19,
+        "width": 5,
+        "height": 3
+      },
+      "queryRef": {
+        "kind": "query",
+        "queryId": "b8c58d2b-76a2-41d7-ac52-09b4c242ba7d"
+      },
+      "visualOptions": {
+        "multiStat__textSize": "auto",
+        "multiStat__valueColumn": null,
+        "colorRulesDisabled": false,
+        "colorStyle": "light",
+        "colorRules": []
+      }
+    },
+    {
+      "id": "64db27dc-9183-4c35-abe2-12c4b228bb68",
+      "title": "Tenant Settings",
+      "visualType": "card",
+      "pageId": "1de25296-8923-4f37-a572-d81d3a261f5a",
+      "layout": {
+        "x": 0,
+        "y": 0,
+        "width": 5,
+        "height": 3
+      },
+      "queryRef": {
+        "kind": "query",
+        "queryId": "cf5690e2-b5b5-4bc1-b69b-7c614f9696ea"
+      },
+      "visualOptions": {
+        "multiStat__textSize": "auto",
+        "multiStat__valueColumn": null,
+        "colorRulesDisabled": false,
+        "colorStyle": "light",
+        "colorRules": []
+      }
+    },
+    {
+      "id": "6a148b3f-4610-4a20-9908-1615335c8199",
+      "title": "Tenant Setting History",
+      "visualType": "table",
+      "pageId": "1de25296-8923-4f37-a572-d81d3a261f5a",
+      "layout": {
+        "x": 5,
+        "y": 8,
+        "width": 19,
+        "height": 8
+      },
+      "queryRef": {
+        "kind": "query",
+        "queryId": "e37731ac-8504-46df-b9f8-dfd7e9d8e0e1"
+      },
+      "visualOptions": {
+        "table__enableRenderLinks": true,
+        "colorRulesDisabled": true,
+        "colorStyle": "light",
+        "crossFilterDisabled": false,
+        "drillthroughDisabled": false,
+        "crossFilter": [],
+        "drillthrough": [],
+        "table__renderLinks": [],
+        "colorRules": []
+      }
+    },
+    {
+      "id": "80677a2a-a1f4-4beb-962f-c6831c287c0c",
+      "title": "Tenant Settings History",
+      "visualType": "card",
+      "pageId": "1de25296-8923-4f37-a572-d81d3a261f5a",
+      "layout": {
+        "x": 0,
+        "y": 8,
+        "width": 5,
+        "height": 3
+      },
+      "queryRef": {
+        "kind": "query",
+        "queryId": "f22570bb-1b98-4b8c-9132-f9a8702503c7"
+      },
+      "visualOptions": {
+        "multiStat__textSize": "auto",
+        "multiStat__valueColumn": null,
+        "colorRulesDisabled": false,
+        "colorStyle": "light",
+        "colorRules": []
+      }
+    },
+    {
+      "id": "f83ec3a9-653a-41ec-bcb6-522ea8ade50b",
+      "title": "Tenant Setting History Status",
+      "visualType": "pie",
+      "pageId": "1de25296-8923-4f37-a572-d81d3a261f5a",
+      "layout": {
+        "x": 0,
+        "y": 11,
+        "width": 5,
+        "height": 5
+      },
+      "queryRef": {
+        "kind": "query",
+        "queryId": "a591a13f-20f4-4403-a8fc-2ef4532cf164"
+      },
+      "visualOptions": {
+        "hideLegend": false,
+        "legendLocation": "bottom",
+        "xColumn": null,
+        "yColumns": null,
+        "seriesColumns": null,
+        "crossFilterDisabled": false,
+        "drillthroughDisabled": false,
+        "labelDisabled": false,
+        "pie__label": [
+          "name",
+          "percentage"
+        ],
+        "tooltipDisabled": false,
+        "pie__tooltip": [
+          "name",
+          "percentage",
+          "value"
+        ],
+        "pie__orderBy": "size",
+        "pie__kind": "pie",
+        "pie__topNSlices": null,
+        "crossFilter": [],
+        "drillthrough": []
+      }
+    },
+    {
+      "id": "ce38ea36-eef6-4cdc-bdd5-75ead397482a",
+      "title": "Top 10 Activities",
+      "visualType": "pie",
+      "pageId": "85a9420d-d8f9-4850-b417-078eb48d75d6",
+      "layout": {
+        "x": 0,
+        "y": 0,
+        "width": 10,
+        "height": 9
+      },
+      "queryRef": {
+        "kind": "query",
+        "queryId": "133b91fc-0de4-444e-9be3-f3a5efe9783f"
+      },
+      "visualOptions": {
+        "hideLegend": false,
+        "legendLocation": "right",
+        "xColumn": null,
+        "yColumns": null,
+        "seriesColumns": null,
+        "crossFilterDisabled": false,
+        "drillthroughDisabled": false,
+        "labelDisabled": false,
+        "pie__label": [
+          "name",
+          "percentage"
+        ],
+        "tooltipDisabled": false,
+        "pie__tooltip": [
+          "name",
+          "percentage",
+          "value"
+        ],
+        "pie__orderBy": "size",
+        "pie__kind": "donut",
+        "pie__topNSlices": null,
+        "crossFilter": [],
+        "drillthrough": []
+      }
+    },
+    {
+      "id": "a86562e6-4660-4103-adfd-55e0e431d5ae",
+      "title": "Top 20 Activities by Time",
+      "visualType": "line",
+      "pageId": "85a9420d-d8f9-4850-b417-078eb48d75d6",
+      "layout": {
+        "x": 10,
+        "y": 0,
+        "width": 14,
+        "height": 9
+      },
+      "queryRef": {
+        "kind": "query",
+        "queryId": "3ac5ba3a-ca1f-481d-a310-c35e3a11d9f9"
+      },
+      "visualOptions": {
+        "multipleYAxes": {
+          "base": {
+            "id": "-1",
+            "label": "",
+            "columns": [],
+            "yAxisMaximumValue": null,
+            "yAxisMinimumValue": null,
+            "yAxisScale": "linear",
+            "horizontalLines": []
+          },
+          "additional": [],
+          "showMultiplePanels": false
+        },
+        "hideLegend": false,
+        "legendLocation": "bottom",
+        "xColumnTitle": "",
+        "xColumn": "CreationTime",
+        "yColumns": [
+          "Acitivities"
+        ],
+        "seriesColumns": [
+          "Activity"
+        ],
+        "xAxisScale": "linear",
+        "verticalLine": "",
+        "crossFilterDisabled": false,
+        "drillthroughDisabled": false,
+        "crossFilter": [],
+        "drillthrough": [],
+        "selectedDataOnLoad": {
+          "all": true,
+          "limit": 10
+        },
+        "dataPointsTooltip": {
+          "all": true,
+          "limit": 5
+        }
+      }
+    },
+    {
+      "id": "3ac50266-611f-426f-b311-921301b6f08a",
+      "title": "Items Views",
+      "visualType": "area",
+      "pageId": "85a9420d-d8f9-4850-b417-078eb48d75d6",
+      "layout": {
+        "x": 0,
+        "y": 9,
+        "width": 24,
+        "height": 11
+      },
+      "queryRef": {
+        "kind": "query",
+        "queryId": "77e8c991-078f-4258-b96d-5287d37af947"
+      },
+      "visualOptions": {
+        "multipleYAxes": {
+          "base": {
+            "id": "-1",
+            "label": "",
+            "columns": [],
+            "yAxisMaximumValue": null,
+            "yAxisMinimumValue": null,
+            "yAxisScale": "linear",
+            "horizontalLines": []
+          },
+          "additional": [],
+          "showMultiplePanels": false
+        },
+        "hideLegend": false,
+        "legendLocation": "right",
+        "xColumnTitle": "",
+        "xColumn": null,
+        "yColumns": [
+          "Views"
+        ],
+        "seriesColumns": null,
+        "xAxisScale": "linear",
+        "verticalLine": "",
+        "crossFilterDisabled": false,
+        "drillthroughDisabled": false,
+        "crossFilter": [],
+        "drillthrough": [],
+        "selectedDataOnLoad": {
+          "all": true,
+          "limit": 10
+        },
+        "dataPointsTooltip": {
+          "all": false,
+          "limit": 1
+        }
+      }
+    },
+    {
+      "id": "415aed12-93a5-4b13-820c-be460c23e7b4",
+      "title": "Events by Location",
+      "visualType": "map",
+      "pageId": "85a9420d-d8f9-4850-b417-078eb48d75d6",
+      "layout": {
+        "x": 0,
+        "y": 20,
+        "width": 24,
+        "height": 15
+      },
+      "queryRef": {
+        "kind": "query",
+        "queryId": "51ae83bc-ba06-486d-a6ca-b44b72948ef9"
+      },
+      "visualOptions": {
+        "map__type": "bubble",
+        "map__latitudeColumn": "latitude",
+        "map__longitudeColumn": "longitude",
+        "map__labelColumn": "ItemType",
+        "map__sizeColumn": null,
+        "map__sizeDisabled": false,
+        "map__geoType": "numeric",
+        "map__geoPointColumn": null
+      }
+    }
+  ],
+  "baseQueries": [
+    {
+      "id": "952f73d4-42f8-42f2-b69d-b6a0c5ebc51f",
+      "queryId": "c09adb1c-1644-48da-af50-cced5a19cf25",
+      "variableName": "_capacityBase"
+    },
+    {
+      "id": "9949ad0c-33d5-4601-a4c6-31b22b2b2146",
+      "queryId": "f0e17fe2-a3de-45e2-be40-7fe29d450ddb",
+      "variableName": "_workspaceQuery"
+    },
+    {
+      "id": "0f580744-5476-4d92-9952-d068418a95d4",
+      "queryId": "a40a67d4-afa7-4899-b173-7e8658adb90c",
+      "variableName": "_tenantSettingBase"
+    },
+    {
+      "id": "95cbbaa9-f6e0-49b5-bbbb-a871c8aa917b",
+      "queryId": "617ce60e-7bdd-4fe9-b35f-2bc3e06d5110",
+      "variableName": "_activities"
+    }
+  ],
+  "parameters": [
+    {
+      "kind": "string",
+      "id": "bb8c5d1f-d6c8-41e4-a275-19b4fe180abf",
+      "displayName": "Workspace Type",
+      "description": "",
+      "variableName": "_type",
+      "selectionType": "array",
+      "includeAllOption": true,
+      "defaultValue": {
+        "kind": "values",
+        "values": [
+          "Workspace"
+        ]
+      },
+      "dataSource": {
+        "kind": "static",
+        "values": [
+          {
+            "value": "Workspace"
+          },
+          {
+            "displayText": "Personal Workspaces",
+            "value": "Personal"
+          },
+          {
+            "displayText": "Admin Workspace",
+            "value": "AdminWorkspace"
+          }
+        ]
+      },
+      "showOnPages": {
+        "kind": "selection",
+        "pageIds": [
+          "18e30e2b-75d2-4a6a-96af-33afe350a391",
+          "1c4f2529-4172-40aa-9d15-0847f70d4224",
+          "a1c59cad-7d9d-435a-b176-0a4cbaed8244"
+        ]
+      },
+      "allIsNull": false
+    },
+    {
+      "kind": "string",
+      "id": "4ab33326-30b4-4848-b859-e46a6b468958",
+      "displayName": "Workspace State",
+      "description": "",
+      "variableName": "_state",
+      "selectionType": "array",
+      "includeAllOption": true,
+      "defaultValue": {
+        "kind": "values",
+        "values": [
+          "Active"
+        ]
+      },
+      "dataSource": {
+        "kind": "static",
+        "values": [
+          {
+            "value": "Active"
+          },
+          {
+            "value": "Deleted"
+          }
+        ]
+      },
+      "showOnPages": {
+        "kind": "selection",
+        "pageIds": [
+          "18e30e2b-75d2-4a6a-96af-33afe350a391",
+          "1c4f2529-4172-40aa-9d15-0847f70d4224",
+          "a1c59cad-7d9d-435a-b176-0a4cbaed8244"
+        ]
+      },
+      "allIsNull": false
+    },
+    {
+      "kind": "string",
+      "selectionType": "freetext",
+      "id": "76eeb2c3-ac8f-47a3-a121-231100464801",
+      "displayName": "Workspace Name",
+      "variableName": "_workspaceName",
+      "description": "",
+      "defaultValue": {
+        "kind": "all"
+      },
+      "showOnPages": {
+        "kind": "selection",
+        "pageIds": [
+          "18e30e2b-75d2-4a6a-96af-33afe350a391"
+        ]
+      }
+    },
+    {
+      "kind": "string",
+      "id": "c679ed27-182d-4448-b3c5-b0f5a57eaaf0",
+      "displayName": "Workspace Name Exact (Limit 1000)",
+      "description": "",
+      "variableName": "_workspaceNameExact",
+      "selectionType": "array",
+      "includeAllOption": true,
+      "defaultValue": {
+        "kind": "all"
+      },
+      "dataSource": {
+        "kind": "query",
+        "columns": {
+          "value": "id",
+          "label": "name"
+        },
+        "queryRef": {
+          "kind": "query",
+          "queryId": "430479e6-69ae-4a84-b5bb-46b8bcffb4f7"
+        },
+        "autoReset": true
+      },
+      "showOnPages": {
+        "kind": "selection",
+        "pageIds": [
+          "18e30e2b-75d2-4a6a-96af-33afe350a391"
+        ]
+      }
+    },
+    {
+      "kind": "bool",
+      "id": "89826f28-e5db-446c-a9b7-5ac75de16d7e",
+      "displayName": "Is On Capacity",
+      "description": "",
+      "variableName": "_isOnCapacity",
+      "selectionType": "array",
+      "includeAllOption": true,
+      "defaultValue": {
+        "kind": "all"
+      },
+      "dataSource": {
+        "kind": "static",
+        "values": [
+          {
+            "value": true
+          },
+          {
+            "value": false
+          }
+        ]
+      },
+      "showOnPages": {
+        "kind": "selection",
+        "pageIds": [
+          "18e30e2b-75d2-4a6a-96af-33afe350a391"
+        ]
+      },
+      "allIsNull": false
+    },
+    {
+      "kind": "string",
+      "id": "cc0f1e7c-ce27-4119-8af9-aef51bd5b588",
+      "displayName": "Capacity Sku",
+      "description": "",
+      "variableName": "_capacityType",
+      "selectionType": "array",
+      "includeAllOption": true,
+      "defaultValue": {
+        "kind": "all"
+      },
+      "dataSource": {
+        "kind": "query",
+        "columns": {
+          "value": "Sku"
+        },
+        "queryRef": {
+          "kind": "query",
+          "queryId": "5710b390-579e-4d9c-b636-744f4da0e879"
+        },
+        "autoReset": true
+      },
+      "showOnPages": {
+        "kind": "selection",
+        "pageIds": [
+          "1c4f2529-4172-40aa-9d15-0847f70d4224",
+          "18e30e2b-75d2-4a6a-96af-33afe350a391",
+          "a1c59cad-7d9d-435a-b176-0a4cbaed8244"
+        ]
+      },
+      "allIsNull": false
+    },
+    {
+      "kind": "string",
+      "id": "606524c1-03d6-44c4-9646-c463f112007c",
+      "displayName": "Capacity",
+      "description": "",
+      "variableName": "_capacities",
+      "selectionType": "array",
+      "includeAllOption": true,
+      "defaultValue": {
+        "kind": "all"
+      },
+      "dataSource": {
+        "kind": "query",
+        "columns": {
+          "value": "CapacityId",
+          "label": "CapacityName"
+        },
+        "queryRef": {
+          "kind": "query",
+          "queryId": "83eb2ef4-88ac-4ba3-8e10-19327bcd5a3d"
+        },
+        "autoReset": true
+      },
+      "showOnPages": {
+        "kind": "selection",
+        "pageIds": [
+          "1c4f2529-4172-40aa-9d15-0847f70d4224",
+          "18e30e2b-75d2-4a6a-96af-33afe350a391",
+          "a1c59cad-7d9d-435a-b176-0a4cbaed8244"
+        ]
+      },
+      "allIsNull": false
+    },
+    {
+      "kind": "duration",
+      "id": "b5502e34-f456-4421-8006-f487e5896867",
+      "displayName": "Time range",
+      "description": "",
+      "beginVariableName": "_startTime",
+      "endVariableName": "_endTime",
+      "defaultValue": {
+        "kind": "dynamic",
+        "count": 1,
+        "unit": "hours"
+      },
+      "showOnPages": {
+        "kind": "selection",
+        "pageIds": [
+          "e5e21d78-33e3-471d-8e8b-57df0c3695fb",
+          "a1c59cad-7d9d-435a-b176-0a4cbaed8244",
+          "1c4f2529-4172-40aa-9d15-0847f70d4224",
+          "18e30e2b-75d2-4a6a-96af-33afe350a391",
+          "85a9420d-d8f9-4850-b417-078eb48d75d6"
+        ]
+      }
+    },
+    {
+      "kind": "string",
+      "id": "4d82042a-0b81-4bf1-8896-1a5479b627b4",
+      "displayName": "Gateways",
+      "description": "",
+      "variableName": "_gateways",
+      "selectionType": "array",
+      "includeAllOption": true,
+      "defaultValue": {
+        "kind": "all"
+      },
+      "dataSource": {
+        "kind": "query",
+        "columns": {
+          "value": "gatewayId",
+          "label": "gatewayName"
+        },
+        "queryRef": {
+          "kind": "query",
+          "queryId": "788fb926-4efb-4676-8366-0f2635c7e9c3"
+        }
+      },
+      "showOnPages": {
+        "kind": "selection",
+        "pageIds": [
+          "e5e21d78-33e3-471d-8e8b-57df0c3695fb"
+        ]
+      },
+      "allIsNull": false
+    },
+    {
+      "kind": "string",
+      "id": "11906270-ffb7-479c-b354-23ea2df05aa6",
+      "displayName": "Gateway Nodes",
+      "description": "",
+      "variableName": "_gatewayNodes",
+      "selectionType": "array",
+      "includeAllOption": true,
+      "defaultValue": {
+        "kind": "all"
+      },
+      "dataSource": {
+        "kind": "query",
+        "columns": {
+          "value": "memberId",
+          "label": "memberName"
+        },
+        "queryRef": {
+          "kind": "query",
+          "queryId": "f752b78f-54e2-408f-b6bd-17d03d40f2b5"
+        },
+        "autoReset": true
+      },
+      "showOnPages": {
+        "kind": "selection",
+        "pageIds": [
+          "e5e21d78-33e3-471d-8e8b-57df0c3695fb"
+        ]
+      },
+      "allIsNull": false
+    },
+    {
+      "kind": "bool",
+      "id": "325d6c8c-af01-422b-981e-5e158f99b29b",
+      "displayName": "Tenant Setting State",
+      "description": "",
+      "variableName": "_tenantSettingEnabled",
+      "selectionType": "array",
+      "includeAllOption": true,
+      "defaultValue": {
+        "kind": "all"
+      },
+      "dataSource": {
+        "kind": "static",
+        "values": [
+          {
+            "value": true
+          },
+          {
+            "value": false
+          }
+        ]
+      },
+      "showOnPages": {
+        "kind": "selection",
+        "pageIds": [
+          "1de25296-8923-4f37-a572-d81d3a261f5a"
+        ]
+      },
+      "allIsNull": false
+    },
+    {
+      "kind": "datetime",
+      "id": "3346818d-6cc9-4d5a-b49a-f200723c9627",
+      "displayName": "Date",
+      "description": "",
+      "variableName": "_date",
+      "selectionType": "scalar",
+      "includeAllOption": false,
+      "defaultValue": {
+        "kind": "query-result"
+      },
+      "dataSource": {
+        "kind": "query",
+        "columns": {
+          "value": "scanTime"
+        },
+        "queryRef": {
+          "kind": "query",
+          "queryId": "b85f210a-0218-4b3d-af67-255b5fe65f64"
+        }
+      },
+      "showOnPages": {
+        "kind": "selection",
+        "pageIds": [
+          "1de25296-8923-4f37-a572-d81d3a261f5a"
+        ]
+      }
+    },
+    {
+      "kind": "string",
+      "id": "34e75136-fe42-4819-bbed-a38401e18a0a",
+      "displayName": "Item Type",
+      "description": "",
+      "variableName": "_itemType",
+      "selectionType": "array",
+      "includeAllOption": true,
+      "defaultValue": {
+        "kind": "all"
+      },
+      "dataSource": {
+        "kind": "query",
+        "columns": {
+          "value": "itemType"
+        },
+        "queryRef": {
+          "kind": "query",
+          "queryId": "0541e32c-be34-4891-b047-18f7def8410b"
+        },
+        "autoReset": true
+      },
+      "showOnPages": {
+        "kind": "all"
+      },
+      "allIsNull": false
+    },
+    {
+      "kind": "string",
+      "id": "ed12ecb0-77dc-4cf9-885c-efe31a0cedb0",
+      "displayName": "Activity",
+      "description": "",
+      "variableName": "_activity",
+      "selectionType": "array",
+      "includeAllOption": true,
+      "defaultValue": {
+        "kind": "all"
+      },
+      "dataSource": {
+        "kind": "query",
+        "columns": {
+          "value": "Activity"
+        },
+        "queryRef": {
+          "kind": "query",
+          "queryId": "59a08a4a-4b7d-41b8-8950-11058cf28772"
+        },
+        "autoReset": true
+      },
+      "showOnPages": {
+        "kind": "all"
+      },
+      "allIsNull": false
+    }
+  ],
+  "dataSources": [
+    {
+      "kind": "kusto-trident",
+      "scopeId": "kusto-trident",
+      "clusterUri": "",
+      "database": "36fc7e5f-a842-baf4-41c2-fea04f878458",
+      "name": "Platform Inventory",
+      "id": "8a9a70d8-02b9-4236-85be-90fa83a60c8e",
+      "workspace": "00000000-0000-0000-0000-000000000000"
+    },
+    {
+      "kind": "kusto-trident",
+      "scopeId": "kusto-trident",
+      "clusterUri": "",
+      "database": "bd6dc6be-ec5f-a6d8-4389-cabd6b73c509",
+      "name": "Activity Events",
+      "id": "dd58a502-08f8-44cb-848e-832d94d1de53",
+      "workspace": "00000000-0000-0000-0000-000000000000"
+    }
+  ],
+  "pages": [
+    {
+      "name": "Platform Summary",
+      "id": "18e30e2b-75d2-4a6a-96af-33afe350a391"
+    },
+    {
+      "name": "Activities Overview",
+      "id": "85a9420d-d8f9-4850-b417-078eb48d75d6"
+    },
+    {
+      "name": "Tenant Settings Overview",
+      "id": "1de25296-8923-4f37-a572-d81d3a261f5a"
+    }
+  ],
+  "queries": [
+    {
+      "dataSource": {
+        "kind": "inline",
+        "dataSourceId": "8a9a70d8-02b9-4236-85be-90fa83a60c8e"
+      },
+      "text": "_workspaceQuery\n| count ",
+      "id": "8d31e211-faf1-431c-acc9-2722fa589e3d",
+      "usedVariables": [
+        "_workspaceQuery"
+      ]
+    },
+    {
+      "dataSource": {
+        "kind": "inline",
+        "dataSourceId": "8a9a70d8-02b9-4236-85be-90fa83a60c8e"
+      },
+      "text": "Items\n| join kind=inner _workspaceQuery on $right.id == $left.workspaceId\n| count ",
+      "id": "2b4dfb1d-b8df-4e81-a08f-296c157aeb99",
+      "usedVariables": [
+        "_workspaceQuery"
+      ]
+    },
+    {
+      "dataSource": {
+        "kind": "inline",
+        "dataSourceId": "8a9a70d8-02b9-4236-85be-90fa83a60c8e"
+      },
+      "text": "Items\n| join kind=inner _workspaceQuery on $left.workspaceId == $right.id\n| where itemType in (_itemType)\n| summarize ItemsCount=count() by itemType",
+      "id": "10394ab4-ea9c-4048-a125-e985c6361ad1",
+      "usedVariables": [
+        "_itemType",
+        "_workspaceQuery"
+      ]
+    },
+    {
+      "dataSource": {
+        "kind": "inline",
+        "dataSourceId": "8a9a70d8-02b9-4236-85be-90fa83a60c8e"
+      },
+      "text": "let _workspaces = _workspaceQuery |project id;\nlet _timespan = case(\n    _endTime - _startTime >= timespan(730d), timespan(1d),\n    _endTime - _startTime >= timespan(365d), timespan(1d),\n    _endTime - _startTime >= timespan(60d), timespan(6h),\n    _endTime - _startTime >= timespan(14d), timespan(1h),\n    _endTime - _startTime >= timespan(1d), timespan(30m),\n    timespan(1m)\n);\ndatabase(\"Activity Events\").ItemsViews(_endTime - _startTime)\n| where WorkspaceId in (_workspaces)\n| summarize Views=count() by ItemType,bin(CreationTime,_timespan)",
+      "id": "9e298314-ba72-4b2c-80e3-fb7c09f3c7f4",
+      "usedVariables": [
+        "_endTime",
+        "_startTime",
+        "_workspaceQuery"
+      ]
+    },
+    {
+      "dataSource": {
+        "kind": "inline",
+        "dataSourceId": "8a9a70d8-02b9-4236-85be-90fa83a60c8e"
+      },
+      "text": "WorkspacesUsers\n| join kind=inner _workspaceQuery on $left.workspaceId == $right.id\n| summarize Users=count_distinct(graphId) by principalType,Access=groupUserAccessRight",
+      "id": "1ac1b783-a290-409d-8b7c-00a1c17bc4b5",
+      "usedVariables": [
+        "_workspaceQuery"
+      ]
+    },
+    {
+      "dataSource": {
+        "kind": "inline",
+        "dataSourceId": "8a9a70d8-02b9-4236-85be-90fa83a60c8e"
+      },
+      "text": "ItemsUsers\n| join kind=inner _workspaceQuery on $left.workspaceId == $right.id\n| summarize Users=count_distinct(graphId) by Type = itemType, Access=userAccessRight",
+      "id": "3998fa47-d3a4-49d6-9755-de47fad8b691",
+      "usedVariables": [
+        "_workspaceQuery"
+      ]
+    },
+    {
+      "dataSource": {
+        "kind": "inline",
+        "dataSourceId": "8a9a70d8-02b9-4236-85be-90fa83a60c8e"
+      },
+      "text": "_workspaceQuery\n| summarize Workspaces=count() by Type=type,[\"Is On Capacity\"]=isOnDedicatedCapacity\n| order by Type, ['Is On Capacity'] desc ",
+      "id": "96925004-7e6e-4393-9639-0c0962fd60eb",
+      "usedVariables": [
+        "_workspaceQuery"
+      ]
+    },
+    {
+      "dataSource": {
+        "kind": "inline",
+        "dataSourceId": "8a9a70d8-02b9-4236-85be-90fa83a60c8e"
+      },
+      "text": "let _itemCount = Items | where itemType in (_itemType) | summarize Items=count() by workspaceId;\n_workspaceQuery\n| lookup Capacities on $left.capacityId == $right.CapacityId\n| lookup _itemCount on $left.id == $right.workspaceId\n| project [\"Workspace Name\"]=name, Description=description, [\"Capacity Name\"] = CapacityName, Items\n| top 1000 by Items",
+      "id": "42391191-a0cf-482a-87eb-6feaab70c471",
+      "usedVariables": [
+        "_itemType",
+        "_workspaceQuery"
+      ]
+    },
+    {
+      "dataSource": {
+        "kind": "inline",
+        "dataSourceId": "8a9a70d8-02b9-4236-85be-90fa83a60c8e"
+      },
+      "text": "let _workspaces = _workspaceQuery | project id;\ndatabase(\"Activity Events\").ItemsViews(_endTime - _startTime)\n| where WorkspaceId in (_workspaces)\n| project IPLocation=geo_info_from_ip_address(tostring(details.ClientIP)), ItemType\n| project latitude=toreal(IPLocation.latitude), longitude=toreal(IPLocation.longitude), ItemType\n| summarize Events=count() by latitude,longitude,ItemType\n| where isnotempty( latitude) or isnotempty(longitude)",
+      "id": "a2987918-351a-4e83-9bb3-f4a88b23f3d6",
+      "usedVariables": [
+        "_endTime",
+        "_startTime",
+        "_workspaceQuery"
+      ]
+    },
+    {
+      "dataSource": {
+        "kind": "inline",
+        "dataSourceId": "8a9a70d8-02b9-4236-85be-90fa83a60c8e"
+      },
+      "text": "_tenantSettingBase\n| project TenantSettingGroup,Title, Enabled, CanSpecifySecurityGroups,EnabledSecurityGroups\n| order by TenantSettingGroup asc ",
+      "id": "719e4955-58b1-450d-bf42-82a007d181b5",
+      "usedVariables": [
+        "_tenantSettingBase"
+      ]
+    },
+    {
+      "dataSource": {
+        "kind": "inline",
+        "dataSourceId": "8a9a70d8-02b9-4236-85be-90fa83a60c8e"
+      },
+      "text": "_tenantSettingBase\n| summarize Settings=count() by Enabled",
+      "id": "71f1e5cf-6f4b-4279-ad25-d5f6cbb59f49",
+      "usedVariables": [
+        "_tenantSettingBase"
+      ]
+    },
+    {
+      "dataSource": {
+        "kind": "inline",
+        "dataSourceId": "8a9a70d8-02b9-4236-85be-90fa83a60c8e"
+      },
+      "text": "WorkspaceDelegatedSettings\n| count ",
+      "id": "9c159e0e-3009-4bc1-818f-5743fd3bf21b",
+      "usedVariables": []
+    },
+    {
+      "dataSource": {
+        "kind": "inline",
+        "dataSourceId": "8a9a70d8-02b9-4236-85be-90fa83a60c8e"
+      },
+      "text": "CapacityDelegatedSettings\n| summarize count() by CapacityId\n| lookup Capacities on CapacityId\n| where isnotempty( CapacityName)\n| project ['Settings Changed']=count_, ['Capacity Name']=CapacityName\n| order by ['Settings Changed']",
+      "id": "867e916a-1493-4e2e-a3a5-c5a6bad67f98",
+      "usedVariables": []
+    },
+    {
+      "dataSource": {
+        "kind": "inline",
+        "dataSourceId": "8a9a70d8-02b9-4236-85be-90fa83a60c8e"
+      },
+      "text": "DomainDelegatedSettings\n| count",
+      "id": "b8c58d2b-76a2-41d7-ac52-09b4c242ba7d",
+      "usedVariables": []
+    },
+    {
+      "dataSource": {
+        "kind": "inline",
+        "dataSourceId": "8a9a70d8-02b9-4236-85be-90fa83a60c8e"
+      },
+      "text": "_tenantSettingBase\n| count ",
+      "id": "cf5690e2-b5b5-4bc1-b69b-7c614f9696ea",
+      "usedVariables": [
+        "_tenantSettingBase"
+      ]
+    },
+    {
+      "dataSource": {
+        "kind": "inline",
+        "dataSourceId": "8a9a70d8-02b9-4236-85be-90fa83a60c8e"
+      },
+      "text": "TenantSettingsHistory\n| where scanTime between (datetime_add('second',-1,_date) .. datetime_add('second',+1,_date))\n| where Enabled in (_tenantSettingEnabled)",
+      "id": "e37731ac-8504-46df-b9f8-dfd7e9d8e0e1",
+      "usedVariables": [
+        "_date",
+        "_tenantSettingEnabled"
+      ]
+    },
+    {
+      "dataSource": {
+        "kind": "inline",
+        "dataSourceId": "8a9a70d8-02b9-4236-85be-90fa83a60c8e"
+      },
+      "text": "TenantSettingsHistory\n| where scanTime between (datetime_add('second',-1,_date) .. datetime_add('second',+1,_date))\n| where Enabled in (_tenantSettingEnabled)\n| count ",
+      "id": "f22570bb-1b98-4b8c-9132-f9a8702503c7",
+      "usedVariables": [
+        "_date",
+        "_tenantSettingEnabled"
+      ]
+    },
+    {
+      "dataSource": {
+        "kind": "inline",
+        "dataSourceId": "8a9a70d8-02b9-4236-85be-90fa83a60c8e"
+      },
+      "text": "TenantSettingsHistory\n| where scanTime between (datetime_add('second',-1,_date) .. datetime_add('second',+1,_date))\n| where Enabled in (_tenantSettingEnabled)\n| summarize Settings=count() by Enabled",
+      "id": "a591a13f-20f4-4403-a8fc-2ef4532cf164",
+      "usedVariables": [
+        "_date",
+        "_tenantSettingEnabled"
+      ]
+    },
+    {
+      "dataSource": {
+        "kind": "inline",
+        "dataSourceId": "dd58a502-08f8-44cb-848e-832d94d1de53"
+      },
+      "text": "_activities\n| summarize Activities=count() by Activity\n| top 10 by Activities",
+      "id": "133b91fc-0de4-444e-9be3-f3a5efe9783f",
+      "usedVariables": [
+        "_activities"
+      ]
+    },
+    {
+      "dataSource": {
+        "kind": "inline",
+        "dataSourceId": "dd58a502-08f8-44cb-848e-832d94d1de53"
+      },
+      "text": "// let _workspaces = _workspaceQuery |project id;\nlet _timespan = case(\n    _endTime - _startTime >= timespan(730d), timespan(1d),\n    _endTime - _startTime >= timespan(365d), timespan(1d),\n    _endTime - _startTime >= timespan(60d), timespan(1d),\n    _endTime - _startTime >= timespan(14d), timespan(6h),\n    _endTime - _startTime >= timespan(1d), timespan(30m),\n    timespan(1m)\n);\n_activities\n// | summarize Acitivities=count() by bin(CreationTime,_timespan), Activity\n| make-series Acitivities=count() on CreationTime step _timespan by Activity\n| top 20 by array_length(Acitivities)",
+      "id": "3ac5ba3a-ca1f-481d-a310-c35e3a11d9f9",
+      "usedVariables": [
+        "_activities",
+        "_endTime",
+        "_startTime"
+      ]
+    },
+    {
+      "dataSource": {
+        "kind": "inline",
+        "dataSourceId": "8a9a70d8-02b9-4236-85be-90fa83a60c8e"
+      },
+      "text": "let _workspaces = _workspaceQuery |project id;\nlet _timespan = case(\n    _endTime - _startTime >= timespan(730d), timespan(1d),\n    _endTime - _startTime >= timespan(365d), timespan(1d),\n    _endTime - _startTime >= timespan(60d), timespan(6h),\n    _endTime - _startTime >= timespan(14d), timespan(1h),\n    _endTime - _startTime >= timespan(1d), timespan(30m),\n    timespan(1m)\n);\ndatabase(\"Activity Events\").ItemsViews(_endTime - _startTime)\n| where WorkspaceId in (_workspaces)\n| summarize Views=count() by ItemType,bin(CreationTime,_timespan)",
+      "id": "77e8c991-078f-4258-b96d-5287d37af947",
+      "usedVariables": [
+        "_endTime",
+        "_startTime",
+        "_workspaceQuery"
+      ]
+    },
+    {
+      "dataSource": {
+        "kind": "inline",
+        "dataSourceId": "8a9a70d8-02b9-4236-85be-90fa83a60c8e"
+      },
+      "text": "let _workspaces = _workspaceQuery | project id;\ndatabase(\"Activity Events\").ItemsViews(_endTime - _startTime)\n| where WorkspaceId in (_workspaces)\n| project IPLocation=geo_info_from_ip_address(tostring(details.ClientIP)), ItemType\n| project latitude=toreal(IPLocation.latitude), longitude=toreal(IPLocation.longitude), ItemType\n| summarize Events=count() by latitude,longitude,ItemType\n| where isnotempty( latitude) or isnotempty(longitude)",
+      "id": "51ae83bc-ba06-486d-a6ca-b44b72948ef9",
+      "usedVariables": [
+        "_endTime",
+        "_startTime",
+        "_workspaceQuery"
+      ]
+    },
+    {
+      "id": "c09adb1c-1644-48da-af50-cced5a19cf25",
+      "dataSource": {
+        "kind": "inline",
+        "dataSourceId": "8a9a70d8-02b9-4236-85be-90fa83a60c8e"
+      },
+      "text": "Capacities\n| where CapacityId in (_capacities)\n| where Sku in (_capacityType)",
+      "usedVariables": [
+        "_capacities",
+        "_capacityType"
+      ]
+    },
+    {
+      "id": "f0e17fe2-a3de-45e2-be40-7fe29d450ddb",
+      "dataSource": {
+        "kind": "inline",
+        "dataSourceId": "8a9a70d8-02b9-4236-85be-90fa83a60c8e"
+      },
+      "text": "let _wsId = Items | where itemType in (_itemType) | summarize by workspaceId;\nWorkspaces\n| where id in (_wsId)\n| where isOnDedicatedCapacity in (_isOnCapacity)\n    and type in (_type)\n    and name contains _workspaceName\n    and state in (_state)\n    and case(\n        isnotempty(_workspaceName) and isnotempty(_workspaceNameExact), id in (_workspaceNameExact),\n        true\n    )\n| where iff(\n    false in (_isOnCapacity),\n    isempty(capacityId) or capacityId in (_capacities),\n    capacityId in (_capacities)\n    )",
+      "usedVariables": [
+        "_capacities",
+        "_isOnCapacity",
+        "_itemType",
+        "_state",
+        "_type",
+        "_workspaceName",
+        "_workspaceNameExact"
+      ]
+    },
+    {
+      "id": "a40a67d4-afa7-4899-b173-7e8658adb90c",
+      "dataSource": {
+        "kind": "inline",
+        "dataSourceId": "8a9a70d8-02b9-4236-85be-90fa83a60c8e"
+      },
+      "text": "TenantSettings\n| where Enabled in (_tenantSettingEnabled)",
+      "usedVariables": [
+        "_tenantSettingEnabled"
+      ]
+    },
+    {
+      "id": "617ce60e-7bdd-4fe9-b35f-2bc3e06d5110",
+      "dataSource": {
+        "kind": "inline",
+        "dataSourceId": "dd58a502-08f8-44cb-848e-832d94d1de53"
+      },
+      "text": "ActivityEvents\n| where CreationTime between (_startTime .. _endTime)\n| where Activity in (_activity)",
+      "usedVariables": [
+        "_activity",
+        "_endTime",
+        "_startTime"
+      ]
+    },
+    {
+      "dataSource": {
+        "kind": "inline",
+        "dataSourceId": "8a9a70d8-02b9-4236-85be-90fa83a60c8e"
+      },
+      "text": "Workspaces\n| where name contains _workspaceName\n| project id,name\n| take 1000",
+      "id": "430479e6-69ae-4a84-b5bb-46b8bcffb4f7",
+      "usedVariables": [
+        "_workspaceName"
+      ]
+    },
+    {
+      "dataSource": {
+        "kind": "inline",
+        "dataSourceId": "8a9a70d8-02b9-4236-85be-90fa83a60c8e"
+      },
+      "text": "Capacities\n| summarize by Sku\n| where Sku != \"PP3\"",
+      "id": "5710b390-579e-4d9c-b636-744f4da0e879",
+      "usedVariables": []
+    },
+    {
+      "dataSource": {
+        "kind": "inline",
+        "dataSourceId": "8a9a70d8-02b9-4236-85be-90fa83a60c8e"
+      },
+      "text": "Capacities\n| where Sku in (_capacityType)\n| project CapacityId,CapacityName",
+      "id": "83eb2ef4-88ac-4ba3-8e10-19327bcd5a3d",
+      "usedVariables": [
+        "_capacityType"
+      ]
+    },
+    {
+      "dataSource": {
+        "kind": "inline",
+        "dataSourceId": "8a9a70d8-02b9-4236-85be-90fa83a60c8e"
+      },
+      "text": "Gateways\n| project gatewayName, gatewayId",
+      "id": "788fb926-4efb-4676-8366-0f2635c7e9c3",
+      "usedVariables": []
+    },
+    {
+      "dataSource": {
+        "kind": "inline",
+        "dataSourceId": "8a9a70d8-02b9-4236-85be-90fa83a60c8e"
+      },
+      "text": "_gatewayBase\n| join hint.strategy=broadcast GatewayMembers on gatewayId\n| project memberId, memberName",
+      "id": "f752b78f-54e2-408f-b6bd-17d03d40f2b5",
+      "usedVariables": [
+        "_gatewayBase"
+      ]
+    },
+    {
+      "dataSource": {
+        "kind": "inline",
+        "dataSourceId": "8a9a70d8-02b9-4236-85be-90fa83a60c8e"
+      },
+      "text": "TenantSettingsHistory\n| summarize by scanTime\n| order by scanTime desc ",
+      "id": "b85f210a-0218-4b3d-af67-255b5fe65f64",
+      "usedVariables": []
+    },
+    {
+      "dataSource": {
+        "kind": "inline",
+        "dataSourceId": "8a9a70d8-02b9-4236-85be-90fa83a60c8e"
+      },
+      "text": "Items\n| summarize by itemType",
+      "id": "0541e32c-be34-4891-b047-18f7def8410b",
+      "usedVariables": []
+    },
+    {
+      "dataSource": {
+        "kind": "inline",
+        "dataSourceId": "dd58a502-08f8-44cb-848e-832d94d1de53"
+      },
+      "text": "ActivityEvents\n| where CreationTime between (_startTime .. _endTime)\n| summarize by Activity\n| order by Activity asc ",
+      "id": "59a08a4a-4b7d-41b8-8950-11058cf28772",
+      "usedVariables": [
+        "_endTime",
+        "_startTime"
+      ]
+    }
+  ]
+}

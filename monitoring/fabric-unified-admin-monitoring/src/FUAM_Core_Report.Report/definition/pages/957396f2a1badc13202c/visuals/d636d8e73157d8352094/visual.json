@@ -1,0 +1,259 @@
+{
+    "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.5.0/schema.json",
+    "name": "d636d8e73157d8352094",
+    "position": {
+        "x": 1588.5247850378412,
+        "y": 158.8524785037841,
+        "z": 6000,
+        "height": 549.1365851725641,
+        "width": 310.85786741688787,
+        "tabOrder": 4000
+    },
+    "visual": {
+        "visualType": "textbox",
+        "objects": {
+            "general": [
+                {
+                    "properties": {
+                        "paragraphs": [
+                            {
+                                "textRuns": [
+                                    {
+                                        "value": "Step 3) ",
+                                        "textStyle": {
+                                            "fontWeight": "bold",
+                                            "fontSize": "12pt",
+                                            "color": "#248a85"
+                                        }
+                                    },
+                                    {
+                                        "value": "Check recurring outlier items",
+                                        "textStyle": {
+                                            "fontWeight": "bold",
+                                            "fontSize": "12pt"
+                                        }
+                                    }
+                                ]
+                            },
+                            {
+                                "textRuns": [
+                                    {
+                                        "value": "In this step, review the table.",
+                                        "textStyle": {
+                                            "fontFamily": "Segoe UI",
+                                            "fontSize": "14px"
+                                        }
+                                    }
+                                ]
+                            },
+                            {
+                                "textRuns": [
+                                    {
+                                        "value": " Items marked in red indicate a ",
+                                        "textStyle": {
+                                            "fontFamily": "Segoe UI",
+                                            "fontSize": "14px"
+                                        }
+                                    },
+                                    {
+                                        "value": "“bad-actor”",
+                                        "textStyle": {
+                                            "fontFamily": "Segoe UI",
+                                            "fontStyle": "italic",
+                                            "fontSize": "14px"
+                                        }
+                                    },
+                                    {
+                                        "value": " behavior within the last 14 days.",
+                                        "textStyle": {
+                                            "fontFamily": "Segoe UI",
+                                            "fontSize": "14px"
+                                        }
+                                    }
+                                ]
+                            },
+                            {
+                                "textRuns": [
+                                    {
+                                        "value": ""
+                                    }
+                                ]
+                            },
+                            {
+                                "textRuns": [
+                                    {
+                                        "value": "Daily CU vs 14d Avg CU",
+                                        "textStyle": {
+                                            "fontWeight": "bold",
+                                            "fontSize": "12pt"
+                                        }
+                                    }
+                                ]
+                            },
+                            {
+                                "textRuns": [
+                                    {
+                                        "value": "This metric compares the item’s total daily average CU with its 14‑day average CU.",
+                                        "textStyle": {
+                                            "fontFamily": "Segoe UI",
+                                            "fontSize": "14px"
+                                        }
+                                    }
+                                ]
+                            },
+                            {
+                                "textRuns": [
+                                    {
+                                        "value": " FUAM uses it to highlight when an item has consumed more CU in the last 14 days than across its entire lifecycle.",
+                                        "textStyle": {
+                                            "fontFamily": "Segoe UI",
+                                            "fontSize": "14px"
+                                        }
+                                    }
+                                ]
+                            },
+                            {
+                                "textRuns": [
+                                    {
+                                        "value": ""
+                                    }
+                                ]
+                            },
+                            {
+                                "textRuns": [
+                                    {
+                                        "value": ""
+                                    }
+                                ]
+                            },
+                            {
+                                "textRuns": [
+                                    {
+                                        "value": "Outlier Factor",
+                                        "textStyle": {
+                                            "fontWeight": "bold",
+                                            "fontSize": "12pt"
+                                        }
+                                    }
+                                ]
+                            },
+                            {
+                                "textRuns": [
+                                    {
+                                        "value": "Every F‑SKU and every workload has its own characteristics.",
+                                        "textStyle": {
+                                            "fontFamily": "Segoe UI",
+                                            "fontSize": "14px"
+                                        }
+                                    }
+                                ]
+                            },
+                            {
+                                "textRuns": [
+                                    {
+                                        "value": "Total CU and the percentage of capacity utilization are important metrics; however, they do not necessarily indicate whether an item is an outlier.",
+                                        "textStyle": {
+                                            "fontFamily": "Segoe UI",
+                                            "fontSize": "14px"
+                                        }
+                                    }
+                                ]
+                            },
+                            {
+                                "textRuns": [
+                                    {
+                                        "value": "To address this, FUAM calculates an ",
+                                        "textStyle": {
+                                            "fontFamily": "Segoe UI",
+                                            "fontSize": "14px"
+                                        }
+                                    },
+                                    {
+                                        "value": "Outlier Factor",
+                                        "textStyle": {
+                                            "fontFamily": "Segoe UI",
+                                            "fontStyle": "italic",
+                                            "fontSize": "14px"
+                                        }
+                                    },
+                                    {
+                                        "value": " based on standard variance.",
+                                        "textStyle": {
+                                            "fontFamily": "Segoe UI",
+                                            "fontSize": "14px"
+                                        }
+                                    }
+                                ]
+                            },
+                            {
+                                "textRuns": [
+                                    {
+                                        "value": "The more filled the dice symbol is, the higher the outlier factor.",
+                                        "textStyle": {
+                                            "fontFamily": "Segoe UI",
+                                            "fontSize": "14px"
+                                        }
+                                    }
+                                ]
+                            },
+                            {
+                                "textRuns": [
+                                    {
+                                        "value": " We recommend analyzing such items in the next steps.",
+                                        "textStyle": {
+                                            "fontFamily": "Segoe UI",
+                                            "fontSize": "14px"
+                                        }
+                                    }
+                                ]
+                            },
+                            {
+                                "textRuns": [
+                                    {
+                                        "value": ""
+                                    }
+                                ]
+                            },
+                            {
+                                "textRuns": [
+                                    {
+                                        "value": ""
+                                    }
+                                ]
+                            }
+                        ]
+                    }
+                }
+            ]
+        },
+        "visualContainerObjects": {
+            "border": [
+                {
+                    "properties": {
+                        "show": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "false"
+                                }
+                            }
+                        }
+                    }
+                }
+            ],
+            "background": [
+                {
+                    "properties": {
+                        "show": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "false"
+                                }
+                            }
+                        }
+                    }
+                }
+            ]
+        },
+        "drillFilterOtherVisuals": true
+    }
+}

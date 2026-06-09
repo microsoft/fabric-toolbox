@@ -1,0 +1,172 @@
+{
+    "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.5.0/schema.json",
+    "name": "644b430ba0978fa46e11",
+    "position": {
+        "x": 38.541666666666686,
+        "y": 165.62499999999983,
+        "z": 7000,
+        "height": 84.375,
+        "width": 854.1666666666667,
+        "tabOrder": 7000
+    },
+    "visual": {
+        "visualType": "slicer",
+        "query": {
+            "queryState": {
+                "Values": {
+                    "projections": [
+                        {
+                            "field": {
+                                "Column": {
+                                    "Expression": {
+                                        "SourceRef": {
+                                            "Entity": "workspaces_scanned_users"
+                                        }
+                                    },
+                                    "Property": "PrincipalType"
+                                }
+                            },
+                            "queryRef": "workspaces_scanned_users.PrincipalType",
+                            "nativeQueryRef": "PrincipalType",
+                            "active": true
+                        },
+                        {
+                            "field": {
+                                "Column": {
+                                    "Expression": {
+                                        "SourceRef": {
+                                            "Entity": "workspaces_scanned_users"
+                                        }
+                                    },
+                                    "Property": "Identifier"
+                                }
+                            },
+                            "queryRef": "workspaces_scanned_users.Identifier",
+                            "nativeQueryRef": "Search for User based on Workspace Access",
+                            "active": false,
+                            "displayName": "Search for User based on Workspace Access"
+                        }
+                    ]
+                }
+            }
+        },
+        "expansionStates": [
+            {
+                "roles": [
+                    "Values"
+                ],
+                "levels": [
+                    {
+                        "queryRefs": [
+                            "workspaces_scanned_users.PrincipalType"
+                        ],
+                        "isCollapsed": true,
+                        "identityKeys": [
+                            {
+                                "Column": {
+                                    "Expression": {
+                                        "SourceRef": {
+                                            "Entity": "workspaces_scanned_users"
+                                        }
+                                    },
+                                    "Property": "PrincipalType"
+                                }
+                            }
+                        ],
+                        "isPinned": true
+                    },
+                    {
+                        "queryRefs": [
+                            "workspaces_scanned_users.Identifier"
+                        ],
+                        "isCollapsed": true,
+                        "isPinned": true
+                    }
+                ],
+                "root": {}
+            }
+        ],
+        "objects": {
+            "data": [
+                {
+                    "properties": {
+                        "mode": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "'Dropdown'"
+                                }
+                            }
+                        }
+                    }
+                }
+            ],
+            "general": [
+                {
+                    "properties": {
+                        "selfFilterEnabled": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "true"
+                                }
+                            }
+                        }
+                    }
+                }
+            ],
+            "items": [
+                {
+                    "properties": {
+                        "textSize": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "10D"
+                                }
+                            }
+                        }
+                    }
+                }
+            ],
+            "header": [
+                {
+                    "properties": {
+                        "text": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "'Search for User based on Workspace Access'"
+                                }
+                            }
+                        }
+                    }
+                }
+            ]
+        },
+        "visualContainerObjects": {
+            "dropShadow": [
+                {
+                    "properties": {
+                        "show": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "true"
+                                }
+                            }
+                        },
+                        "color": {
+                            "solid": {
+                                "color": {
+                                    "expr": {
+                                        "ThemeDataColor": {
+                                            "ColorId": 0,
+                                            "Percent": -0.2
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            ]
+        },
+        "drillFilterOtherVisuals": true
+    }
+}

@@ -80,5 +80,3 @@ table capacity_refreshables
 			schemaName: dbo
 			expressionSource: DatabaseQuery
 
-	annotation PBI_ResultType = Table
-

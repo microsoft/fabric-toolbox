@@ -43,8 +43,9 @@ The tool consists of three main components:
 1. **Query Log Collection:**  
    - Captures both summary query counts and detailed DAX query logs.
 
-1. **Unused Column Identification:**  
-   - Compares lakehouse/warehouse and model metadata to identify unused columns in your model's source lakehouse/warehouse.
+1. **Unused Column Identification (Direct Lake Only):**  
+   - Automatically discovers lakehouse/warehouse connections from the model's shared expressions and compares Delta table schemas with model columns to identify unused columns.
+   - Supports both DL over SQL Endpoint and DL over OneLake expression formats, including models that source from multiple lakehouses.
    - Removing unused columns will result in greater data compression and performance.
 
 1. **Cold Cache & Resident Statistics:**  

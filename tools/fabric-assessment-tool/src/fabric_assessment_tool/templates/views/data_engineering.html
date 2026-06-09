@@ -1,0 +1,352 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="page-header">
+    <h1>⚡ Data Engineering View</h1>
+    <p>Notebooks, Spark pools, clusters, jobs, and Spark job definitions</p>
+</div>
+
+<!-- Summary Stats -->
+<div class="row">
+    <div class="col">
+        <div class="stat-card">
+            <div class="stat-value" id="stat-nb">{{ engineering.notebooks | length }}</div>
+            <div class="stat-label">Notebooks</div>
+        </div>
+    </div>
+    <div class="col">
+        <div class="stat-card synapse">
+            <div class="stat-value" id="stat-sp">{{ engineering.spark_pools | length }}</div>
+            <div class="stat-label">Spark Pools</div>
+        </div>
+    </div>
+    <div class="col">
+        <div class="stat-card databricks">
+            <div class="stat-value" id="stat-cl">{{ engineering.clusters | length }}</div>
+            <div class="stat-label">Clusters</div>
+        </div>
+    </div>
+    <div class="col">
+        <div class="stat-card">
+            <div class="stat-value" id="stat-jobs">{{ engineering.jobs | length }}</div>
+            <div class="stat-label">Jobs</div>
+        </div>
+    </div>
+    <div class="col">
+        <div class="stat-card">
+            <div class="stat-value" id="stat-sjd">{{ engineering.spark_job_definitions | length }}</div>
+            <div class="stat-label">Spark Job Definitions</div>
+        </div>
+    </div>
+</div>
+
+<!-- Charts Row -->
+<div class="row mt-2">
+    <!-- Notebooks by Language -->
+    {% if engineering.notebook_languages %}
+    <div class="col col-6">
+        <div class="card">
+            <div class="card-header">Notebooks by Language</div>
+            <div class="card-body">
+                <div class="chart-container">
+                    <canvas id="notebookLangChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Spark Versions -->
+    {% if engineering.spark_versions %}
+    <div class="col col-6">
+        <div class="card">
+            <div class="card-header">Spark Versions Distribution</div>
+            <div class="card-body">
+                <div class="chart-container">
+                    <canvas id="sparkVersionChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+
+<!-- Notebooks List -->
+<div class="card">
+    <div class="card-header">📓 Notebooks</div>
+    <div class="card-body">
+        {% if engineering.notebooks %}
+        <div class="table-responsive">
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Name</th>
+                        <th>Language</th>
+                        <th>Workspace</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for nb in engineering.notebooks[:50] %}
+                    <tr data-workspace="{{ nb.workspace | default('N/A') }}">
+                        <td>{{ nb.name | default(nb.path | default('Unknown')) }}</td>
+                        <td>
+                            <span class="badge badge-secondary">
+                                {{ nb.language | default(nb.default_language | default('N/A')) }}
+                            </span>
+                        </td>
+                        <td>{{ nb.workspace | default('N/A') }}</td>
+                    </tr>
+                    {% endfor %}
+                    {% if engineering.notebooks | length > 50 %}
+                    <tr>
+                        <td colspan="3" class="text-muted">
+                            ... and {{ engineering.notebooks | length - 50 }} more notebooks
+                        </td>
+                    </tr>
+                    {% endif %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="empty-state">
+            <p>No notebooks found.</p>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Spark Pools (Synapse) -->
+{% if engineering.spark_pools %}
+<div class="card">
+    <div class="card-header">🔥 Spark Pools (Synapse)</div>
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Name</th>
+                        <th>Node Size</th>
+                        <th>Node Count</th>
+                        <th>Spark Version</th>
+                        <th>Workspace</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for sp in engineering.spark_pools %}
+                    <tr data-workspace="{{ sp.workspace | default('N/A') }}">
+                        <td>{{ sp.name | default('Unknown') }}</td>
+                        <td>{{ sp.node_size | default('N/A') }}</td>
+                        <td>{{ sp.node_count | default('N/A') }}</td>
+                        <td><span class="badge badge-secondary">{{ sp.spark_version | default('N/A') }}</span></td>
+                        <td>{{ sp.workspace | default('N/A') }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<!-- Clusters (Databricks) -->
+{% if engineering.clusters %}
+<div class="card">
+    <div class="card-header">🖥️ Clusters (Databricks)</div>
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Name</th>
+                        <th>State</th>
+                        <th>Node Type</th>
+                        <th>Cores</th>
+                        <th>Memory (MB)</th>
+                        <th>Spark Version</th>
+                        <th>Workspace</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for cl in engineering.clusters %}
+                    <tr data-workspace="{{ cl.workspace | default('N/A') }}">
+                        <td>{{ cl.cluster_name | default('Unknown') }}</td>
+                        <td>
+                            <span class="badge {% if cl.state == 'RUNNING' %}badge-success{% elif cl.state == 'TERMINATED' %}badge-secondary{% else %}badge-warning{% endif %}">
+                                {{ cl.state | default('Unknown') }}
+                            </span>
+                        </td>
+                        <td>{{ cl.node_type_id | default('N/A') }}</td>
+                        <td class="text-right">{{ cl.cluster_cores | default('N/A') }}</td>
+                        <td class="text-right">{{ cl.cluster_memory_mb | default('N/A') | format_number }}</td>
+                        <td><span class="badge badge-secondary">{{ cl.spark_version | default('N/A') }}</span></td>
+                        <td>{{ cl.workspace | default('N/A') }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<!-- Jobs (Databricks) -->
+{% if engineering.jobs %}
+<div class="card">
+    <div class="card-header">📋 Jobs (Databricks)</div>
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Job ID</th>
+                        <th class="text-right">Tasks</th>
+                        <th>Workspace</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for job in engineering.jobs[:30] %}
+                    <tr data-workspace="{{ job.workspace | default('N/A') }}">
+                        <td>{{ job.job_id | default('Unknown') }}</td>
+                        <td class="text-right">{{ job.tasks | length if job.tasks else 0 }}</td>
+                        <td>{{ job.workspace | default('N/A') }}</td>
+                    </tr>
+                    {% endfor %}
+                    {% if engineering.jobs | length > 30 %}
+                    <tr>
+                        <td colspan="3" class="text-muted">
+                            ... and {{ engineering.jobs | length - 30 }} more jobs
+                        </td>
+                    </tr>
+                    {% endif %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<!-- Spark Job Definitions (Synapse) -->
+{% if engineering.spark_job_definitions %}
+<div class="card">
+    <div class="card-header">⚡ Spark Job Definitions (Synapse)</div>
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Name</th>
+                        <th>Workspace</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for sjd in engineering.spark_job_definitions %}
+                    <tr data-workspace="{{ sjd.workspace | default('N/A') }}">
+                        <td>{{ sjd.name | default('Unknown') }}</td>
+                        <td>{{ sjd.workspace | default('N/A') }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<div class="mt-2">
+    <a href="{{ base_path }}index.html">← Back to Overview</a>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+// Data engineering data for filtering
+const engineeringData = {
+{% for ws_name, ws in workspaces.items() %}
+    "{{ ws_name }}": {
+        notebooks: {{ ws.summary.data_engineering.hybrid.notebooks | default(ws.summary.data_engineering.notebooks | default(0)) if ws.platform == 'synapse' else ws.summary.counts.notebooks | default(0) }},
+        spark_pools: {{ ws.summary.data_engineering.manual.spark_pools | default(ws.summary.data_engineering.spark_pools | default(0)) if ws.platform == 'synapse' else 0 }},
+        clusters: {{ ws.summary.counts.clusters | default(0) if ws.platform == 'databricks' else 0 }},
+        jobs: {{ ws.summary.counts.jobs | default(0) if ws.platform == 'databricks' else 0 }},
+        spark_job_definitions: {{ ws.summary.data_engineering.hybrid.spark_job_definitions | default(ws.summary.data_engineering.spark_job_definitions | default(0)) if ws.platform == 'synapse' else 0 }}
+    }{% if not loop.last %},{% endif %}
+{% endfor %}
+};
+
+function updateFilteredStats(selectedWorkspaces) {
+    let nb = 0, sp = 0, cl = 0, jobs = 0, sjd = 0;
+    selectedWorkspaces.forEach(ws => {
+        const data = engineeringData[ws];
+        if (data) {
+            nb += data.notebooks || 0;
+            sp += data.spark_pools || 0;
+            cl += data.clusters || 0;
+            jobs += data.jobs || 0;
+            sjd += data.spark_job_definitions || 0;
+        }
+    });
+    document.getElementById('stat-nb').textContent = nb;
+    document.getElementById('stat-sp').textContent = sp;
+    document.getElementById('stat-cl').textContent = cl;
+    document.getElementById('stat-jobs').textContent = jobs;
+    document.getElementById('stat-sjd').textContent = sjd;
+}
+
+const colors = ['#0078d4', '#107c10', '#5c2d91', '#ff8c00', '#008272', '#d83b01', '#e81123', '#00bcf2', '#8764b8', '#00b294'];
+
+{% if engineering.notebook_languages %}
+const nbLangCtx = document.getElementById('notebookLangChart');
+if (nbLangCtx) {
+    new Chart(nbLangCtx, {
+        type: 'doughnut',
+        data: {
+            labels: {{ engineering.notebook_languages.keys() | list | tojson }},
+            datasets: [{
+                data: {{ engineering.notebook_languages.values() | list | tojson }},
+                backgroundColor: colors.slice(0, {{ engineering.notebook_languages | length }})
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    position: 'right'
+                }
+            }
+        }
+    });
+}
+{% endif %}
+
+{% if engineering.spark_versions %}
+const sparkCtx = document.getElementById('sparkVersionChart');
+if (sparkCtx) {
+    new Chart(sparkCtx, {
+        type: 'bar',
+        data: {
+            labels: {{ engineering.spark_versions.keys() | list | tojson }},
+            datasets: [{
+                label: 'Count',
+                data: {{ engineering.spark_versions.values() | list | tojson }},
+                backgroundColor: '#0078d4'
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    display: false
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true
+                }
+            }
+        }
+    });
+}
+{% endif %}
+</script>
+{% endblock %}

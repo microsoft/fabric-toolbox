@@ -1,0 +1,82 @@
+{
+    "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.5.0/schema.json",
+    "name": "cb9524fce19a99484e5e",
+    "position": {
+        "x": 1645.0819672131147,
+        "y": 176.22950819672133,
+        "z": 0,
+        "height": 89.34426229508198,
+        "width": 263.9344262295082,
+        "tabOrder": 16000
+    },
+    "visual": {
+        "visualType": "textbox",
+        "objects": {
+            "general": [
+                {
+                    "properties": {
+                        "paragraphs": [
+                            {
+                                "textRuns": [
+                                    {
+                                        "value": "Usage",
+                                        "textStyle": {
+                                            "fontWeight": "bold",
+                                            "fontSize": "12pt"
+                                        }
+                                    }
+                                ],
+                                "horizontalTextAlignment": "right"
+                            },
+                            {
+                                "textRuns": [
+                                    {
+                                        "value": "We recommend filtering for a single item. There are two main monitoring areas:"
+                                    }
+                                ],
+                                "horizontalTextAlignment": "right"
+                            },
+                            {
+                                "textRuns": [
+                                    {
+                                        "value": " CU utilization and activities."
+                                    }
+                                ],
+                                "horizontalTextAlignment": "right"
+                            }
+                        ]
+                    }
+                }
+            ]
+        },
+        "visualContainerObjects": {
+            "border": [
+                {
+                    "properties": {
+                        "show": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "false"
+                                }
+                            }
+                        }
+                    }
+                }
+            ],
+            "background": [
+                {
+                    "properties": {
+                        "show": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "false"
+                                }
+                            }
+                        }
+                    }
+                }
+            ]
+        },
+        "drillFilterOtherVisuals": true
+    }
+}

@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo, useCallback } from 'react';
+import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -18,6 +18,7 @@ import { useAppContext } from '../../contexts/AppContext';
 import { linkedServiceConnectionService } from '../../services/linkedServiceConnectionService';
 import { ExistingConnectionsService } from '../../services/existingConnectionsService';
 import { toast } from 'sonner';
+import { cn } from '@/lib/utils';
 import { NavigationDebug } from '../NavigationDebug';
 import type { 
   LinkedServiceConnection, 
@@ -37,6 +38,8 @@ interface ConnectionConfigurationProps {
   isLoading: boolean;
   onUpdate: (index: number, update: Partial<LinkedServiceConnection>) => void;
   onFetchConnectionTypes: (connectivityType: 'ShareableCloud' | 'OnPremisesGateway' | 'VirtualNetworkGateway', gatewayId?: string) => Promise<void>;
+  onExpandSharedConnection?: (index: number) => void;
+  onCollapseToSharedConnection?: (index: number) => void;
 }
 
 function ConnectionConfiguration({
@@ -46,7 +49,9 @@ function ConnectionConfiguration({
   supportedConnectionTypes,
   isLoading,
   onUpdate,
-  onFetchConnectionTypes
+  onFetchConnectionTypes,
+  onExpandSharedConnection,
+  onCollapseToSharedConnection
 }: ConnectionConfigurationProps) {
   const [isExpanded, setIsExpanded] = useState(false);
   const [selectedCreationMethod, setSelectedCreationMethod] = useState<ConnectionCreationMethod | null>(null);
@@ -146,13 +151,20 @@ function ConnectionConfiguration({
     }
   }, [existingConnections, linkedService.linkedServiceName, linkedService.linkedServiceType, linkedService.mappingMode, index, onUpdate]);
 
-  // Auto-initialize FabricDataPipelines connections
+  // Effect 1: Auto-initialize FabricDataPipelines connection configuration
   useEffect(() => {
-    if (linkedService.linkedServiceType === 'FabricDataPipelines' && 
-        linkedService.mappingMode === 'new' &&
-        !linkedService.selectedConnectivityType) {
-      // Auto-configure FabricDataPipelines to use cloud connectivity
-      console.log(`Auto-configuring FabricDataPipelines connection ${linkedService.linkedServiceName}...`);
+    if (
+      linkedService.linkedServiceType === 'FabricDataPipelines' && 
+      linkedService.mappingMode === 'new' &&
+      !linkedService.selectedConnectivityType && // Guard: only run if NOT already configured
+      !linkedService.selectedConnectionType      // Additional guard for connection type
+    ) {
+      console.log('[Auto-Config Step 1] Setting FabricDataPipelines defaults:', {
+        linkedServiceName: linkedService.linkedServiceName,
+        connectivity: 'ShareableCloud',
+        connectionType: 'FabricDataPipelines',
+        credential: 'WorkspaceIdentity'
+      });
       
       onUpdate(index, {
         selectedConnectivityType: 'ShareableCloud',
@@ -161,22 +173,14 @@ function ConnectionConfiguration({
         connectionParameters: {},
         credentials: {}
       });
-
-      // Fetch connection types for FabricDataPipelines
-      if (state.auth.accessToken) {
-        onFetchConnectionTypes('ShareableCloud').catch(error => {
-          console.error('Failed to fetch FabricDataPipelines connection types:', error);
-        });
-      }
     }
   }, [
-    linkedService.linkedServiceType, 
-    linkedService.mappingMode, 
-    linkedService.selectedConnectivityType,
-    state.auth.accessToken,
+    linkedService.linkedServiceType,
+    linkedService.mappingMode,
+    linkedService.selectedConnectivityType,  // Prevents re-run after configuration
+    linkedService.selectedConnectionType,     // Prevents re-run after connection type set
     index,
-    onUpdate,
-    onFetchConnectionTypes
+    onUpdate
   ]);
 
   const fetchExistingConnections = async () => {
@@ -493,6 +497,18 @@ function ConnectionConfiguration({
                     <CardTitle className="text-lg">{linkedService.linkedServiceName}</CardTitle>
                     <CardDescription>
                       Type: {linkedService.linkedServiceType} • {getStatusBadge()}
+                      {linkedService.linkedServiceType === 'FabricDataPipelines' && 
+                       linkedService.linkedServiceDefinition.isSharedConnection && (
+                        <Badge variant="secondary" className="ml-2 bg-blue-100 text-blue-800 border-blue-200">
+                          Shared by {linkedService.linkedServiceDefinition.affectedActivities?.length || 0} activities
+                        </Badge>
+                      )}
+                      {linkedService.linkedServiceType === 'FabricDataPipelines' && 
+                       linkedService.linkedServiceDefinition.expandedFromShared && (
+                        <Badge variant="outline" className="ml-2 border-blue-300 text-blue-700">
+                          Individual
+                        </Badge>
+                      )}
                     </CardDescription>
                   </div>
                 </div>
@@ -511,6 +527,23 @@ function ConnectionConfiguration({
               {linkedService.skip && (
                 <div className="text-xs text-gray-500">
                   This LinkedService is marked as skipped and will be excluded from validation & deployment.
+                </div>
+              )}
+              {/* Shared FabricDataPipelines Info */}
+              {linkedService.linkedServiceType === 'FabricDataPipelines' && 
+               linkedService.linkedServiceDefinition.isSharedConnection && 
+               !linkedService.skip && (
+                <div className="mt-3 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                  <div className="text-sm font-medium text-blue-900 mb-2">
+                    ExecutePipeline Activities Using This Connection:
+                  </div>
+                  <div className="space-y-1 max-h-32 overflow-y-auto">
+                    {linkedService.linkedServiceDefinition.affectedActivities?.map((activity: any, idx: number) => (
+                      <div key={idx} className="text-xs text-blue-800 pl-2">
+                        • {activity.pipelineName}.{activity.activityName} → {activity.targetPipelineName}
+                      </div>
+                    ))}
+                  </div>
                 </div>
               )}
             </div>
@@ -1036,18 +1069,70 @@ function ConnectionConfiguration({
                                     type="password"
                                     value={linkedService.credentials.password || ''}
                                     onChange={(e) => handleCredentialChange('password', e.target.value)}
-                                    placeholder="Enter Windows account password"
+                                    placeholder="Enter password"
                                     className="w-full"
                                   />
                                 </div>
                               </>
                             )}
-
+                            
                             {linkedService.credentialType === 'WindowsWithoutImpersonation' && (
                               <div className="text-sm text-muted-foreground">
                                 The gateway's service account will be used for authentication. No additional credentials required.
                               </div>
                             )}
+                          </div>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Advanced Options for Shared FabricDataPipelines Connection */}
+                    {linkedService.linkedServiceType === 'FabricDataPipelines' && 
+                     linkedService.linkedServiceDefinition.isSharedConnection && (
+                      <div className="space-y-3">
+                        <Separator />
+                        <div className="space-y-3 p-4 border rounded-lg bg-muted/30">
+                          <Label className="text-sm font-medium">Advanced Options</Label>
+                          <div className="space-y-3">
+                            <div className="flex items-start space-x-3">
+                              <Checkbox
+                                id={`separate-${index}`}
+                                checked={linkedService.linkedServiceDefinition.useSeparateConnections || false}
+                                onCheckedChange={(checked: boolean) => {
+                                  const isExpanding = checked === true;
+                                  
+                                  console.log('[Checkbox Toggle]', {
+                                    action: isExpanding ? 'Expanding' : 'Collapsing',
+                                    index,
+                                    connectionName: linkedService.linkedServiceName
+                                  });
+
+                                  if (isExpanding) {
+                                    // Expand shared connection into individual cards
+                                    if (onExpandSharedConnection) {
+                                      onExpandSharedConnection(index);
+                                    }
+                                  } else {
+                                    // Collapse individual cards back to shared connection
+                                    if (onCollapseToSharedConnection) {
+                                      onCollapseToSharedConnection(index);
+                                    }
+                                  }
+                                }}
+                              />
+                              <div className="flex-1">
+                                <Label 
+                                  htmlFor={`separate-${index}`}
+                                  className="text-sm font-normal cursor-pointer"
+                                >
+                                  Use separate connections for each ExecutePipeline activity
+                                </Label>
+                                <p className="text-xs text-muted-foreground mt-1">
+                                  By default, all ExecutePipeline activities share one FabricDataPipelines connection. 
+                                  Enable this option if you need individual connections per activity (advanced scenario).
+                                </p>
+                              </div>
+                            </div>
                           </div>
                         </div>
                       </div>
@@ -1099,6 +1184,9 @@ export function LinkedServiceConnectionPage() {
   const [visibleCount, setVisibleCount] = useState(40);
   const [statusFilter, setStatusFilter] = useState<'all' | 'configured' | 'pending' | 'failed' | 'skipped'>('all'); // added 'skipped'
 
+  // Track which connection types have been successfully fetched
+  const hasFetchedConnectionTypes = useRef<Set<string>>(new Set());
+
   // Initialize LinkedServices from ADF components
   useEffect(() => {
     const initializeLinkedServices = async () => {
@@ -1139,6 +1227,74 @@ export function LinkedServiceConnectionPage() {
       initializeLinkedServices();
     }
   }, [state.adfComponents, state.auth.accessToken]); // Removed dispatch to prevent infinite loop
+
+  const fetchSupportedConnectionTypesForConnectivity = useCallback(async (
+    connectivityType: 'ShareableCloud' | 'OnPremisesGateway' | 'VirtualNetworkGateway',
+    gatewayId?: string
+  ) => {
+    if (!state.auth.accessToken) return;
+
+    // Create unique key for this fetch request
+    const fetchKey = `${connectivityType}-${gatewayId || 'none'}`;
+
+    // Guard: Already fetched successfully
+    if (hasFetchedConnectionTypes.current.has(fetchKey)) {
+      console.log(`[Fetch Cache] Already have ${fetchKey} connection types, using cached data`);
+      return;
+    }
+
+    try {
+      setIsLoading(true);
+      
+      // For cloud connections, no gateway ID
+      // For gateway connections, use the provided gateway ID
+      const actualGatewayId = connectivityType === 'ShareableCloud' ? undefined : gatewayId;
+      
+      const connectionTypes = await linkedServiceConnectionService.fetchSupportedConnectionTypes(
+        state.auth.accessToken,
+        actualGatewayId
+      );
+      
+      console.log(`Fetched connection types for ${connectivityType}:`, connectionTypes);
+      
+      dispatch({ type: 'SET_SUPPORTED_CONNECTION_TYPES', payload: connectionTypes });
+      hasFetchedConnectionTypes.current.add(fetchKey); // Mark as successfully fetched
+      
+      if (connectionTypes && connectionTypes.length > 0) {
+        setError(null);
+      } else {
+        setError(`No supported connection types available for ${connectivityType} connectivity`);
+      }
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'Failed to fetch supported connection types';
+      console.error('Failed to fetch supported connection types:', err);
+      
+      setError(`Connection Types API Error: ${errorMessage}`);
+      dispatch({ type: 'SET_SUPPORTED_CONNECTION_TYPES', payload: [] });
+    } finally {
+      setIsLoading(false);
+    }
+  }, [state.auth.accessToken, dispatch]);
+
+  // Get current linked services from state
+  const linkedServices = state.connectionMappings?.linkedServices || [];
+
+  // Auto-fetch ShareableCloud connection types when any linked services exist
+  useEffect(() => {
+    if (
+      linkedServices.length > 0 &&
+      state.auth.accessToken &&
+      !hasFetchedConnectionTypes.current.has('ShareableCloud')
+    ) {
+      console.log('[Parent] Auto-fetching ShareableCloud connection types...');
+      hasFetchedConnectionTypes.current.add('ShareableCloud');
+      
+      fetchSupportedConnectionTypesForConnectivity('ShareableCloud').catch(error => {
+        console.error('[Parent] Failed to fetch connection types:', error);
+        hasFetchedConnectionTypes.current.delete('ShareableCloud'); // Allow retry on error
+      });
+    }
+  }, [linkedServices.length, state.auth.accessToken, fetchSupportedConnectionTypesForConnectivity]);
 
   const fetchGateways = async () => {
     if (!state.auth.accessToken) return;
@@ -1279,50 +1435,9 @@ export function LinkedServiceConnectionPage() {
     }
   };
 
-  const fetchSupportedConnectionTypesForConnectivity = async (
-    connectivityType: 'ShareableCloud' | 'OnPremisesGateway' | 'VirtualNetworkGateway',
-    gatewayId?: string
-  ) => {
-    if (!state.auth.accessToken) return;
-
-    try {
-      setIsLoading(true);
-      
-      // For cloud connections, no gateway ID
-      // For gateway connections, use the provided gateway ID
-      const actualGatewayId = connectivityType === 'ShareableCloud' ? undefined : gatewayId;
-      
-      const connectionTypes = await linkedServiceConnectionService.fetchSupportedConnectionTypes(
-        state.auth.accessToken,
-        actualGatewayId
-      );
-      
-      console.log(`Fetched connection types for ${connectivityType}:`, connectionTypes);
-      
-      dispatch({ type: 'SET_SUPPORTED_CONNECTION_TYPES', payload: connectionTypes });
-      
-      if (connectionTypes && connectionTypes.length > 0) {
-        setError(null);
-      } else {
-        setError(`No supported connection types available for ${connectivityType} connectivity`);
-      }
-    } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Failed to fetch supported connection types';
-      console.error('Failed to fetch supported connection types:', err);
-      
-      setError(`Connection Types API Error: ${errorMessage}`);
-      dispatch({ type: 'SET_SUPPORTED_CONNECTION_TYPES', payload: [] });
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
   const handleLinkedServiceUpdate = (index: number, update: Partial<LinkedServiceConnection>) => {
     dispatch({ type: 'UPDATE_LINKED_SERVICE', payload: { index, update } });
   };
-
-  // Get current linked services from state
-  const linkedServices = state.connectionMappings?.linkedServices || [];
 
   // Derive type options
   const typeOptions = useMemo(
@@ -1409,6 +1524,223 @@ export function LinkedServiceConnectionPage() {
   const canProceed = () => {
     if (linkedServices.length === 0) return true;
     return linkedServices.every(ls => ls.skip || ls.status === 'configured');
+  };
+
+  /**
+   * Expands a shared FabricDataPipelines connection into individual cards.
+   * Creates one card per affected activity, preserving activity metadata.
+   */
+  const handleExpandSharedConnection = useCallback((sharedConnectionIndex: number) => {
+    const sharedConnection = state.connectionMappings?.linkedServices?.[sharedConnectionIndex];
+    
+    if (!sharedConnection || 
+        sharedConnection.linkedServiceType !== 'FabricDataPipelines' ||
+        !sharedConnection.linkedServiceDefinition?.isSharedConnection ||
+        !sharedConnection.linkedServiceDefinition?.affectedActivities) {
+      console.error('[Expansion] Invalid shared connection at index', sharedConnectionIndex);
+      return;
+    }
+
+    console.log('[Expansion] Expanding shared connection:', {
+      name: sharedConnection.linkedServiceName,
+      activityCount: sharedConnection.linkedServiceDefinition.affectedActivities.length
+    });
+
+    // Create individual connections for each affected activity
+    const expandedConnections: LinkedServiceConnection[] = 
+      sharedConnection.linkedServiceDefinition.affectedActivities.map((activity: any) => {
+        const individualName = `FabricDataPipelines_${activity.pipelineName}_${activity.activityName}`;
+        
+        return {
+          linkedServiceName: individualName,
+          linkedServiceType: 'FabricDataPipelines',
+          linkedServiceDefinition: {
+            type: 'FabricDataPipelines',
+            isSharedConnection: false,
+            parentPipeline: activity.pipelineName,
+            activityName: activity.activityName,
+            targetPipelineName: activity.targetPipelineName,
+            waitOnCompletion: activity.waitOnCompletion,
+            parameters: activity.parameters,
+            // Mark as part of expanded group for visual styling
+            expandedFromShared: true,
+            originalSharedName: sharedConnection.linkedServiceName
+          },
+          mappingMode: 'new' as const,
+          selectedConnectivityType: 'ShareableCloud',
+          selectedConnectionType: 'FabricDataPipelines',
+          credentialType: 'WorkspaceIdentity',
+          connectionParameters: {},
+          credentials: {},
+          skipTestConnection: true,
+          status: 'pending' as const,
+          validationErrors: []
+        };
+      });
+
+    // Build new linkedServices array using immutable operations
+    const currentServices = state.connectionMappings?.linkedServices || [];
+    const updatedServices = [
+      ...currentServices.slice(0, sharedConnectionIndex),  // Everything before
+      ...expandedConnections,                               // Expanded individual cards
+      ...currentServices.slice(sharedConnectionIndex + 1)   // Everything after
+    ];
+
+    dispatch({
+      type: 'SET_CONNECTION_MAPPINGS',
+      payload: {
+        ...state.connectionMappings,
+        linkedServices: updatedServices
+      }
+    });
+
+    toast.success(`Expanded into ${expandedConnections.length} individual connections`);
+  }, [state.connectionMappings, dispatch]);
+
+  /**
+   * Collapses individual FabricDataPipelines connections back into single shared card.
+   * Reconstructs shared connection with all affected activities.
+   */
+  const handleCollapseToSharedConnection = useCallback((firstIndividualIndex: number) => {
+    const currentServices = state.connectionMappings?.linkedServices || [];
+    const firstIndividual = currentServices[firstIndividualIndex];
+    
+    if (!firstIndividual || 
+        firstIndividual.linkedServiceType !== 'FabricDataPipelines' ||
+        !firstIndividual.linkedServiceDefinition?.expandedFromShared) {
+      console.error('[Collapse] Not an expanded individual connection at index', firstIndividualIndex);
+      return;
+    }
+
+    const originalSharedName = firstIndividual.linkedServiceDefinition.originalSharedName;
+    
+    // Find all consecutive individual connections from the same original shared connection
+    const expandedGroup: LinkedServiceConnection[] = [];
+    let currentIndex = firstIndividualIndex;
+    
+    while (currentIndex < currentServices.length) {
+      const connection = currentServices[currentIndex];
+      
+      if (connection.linkedServiceType === 'FabricDataPipelines' &&
+          connection.linkedServiceDefinition?.expandedFromShared &&
+          connection.linkedServiceDefinition?.originalSharedName === originalSharedName) {
+        expandedGroup.push(connection);
+        currentIndex++;
+      } else {
+        break; // Stop when we hit a non-matching connection
+      }
+    }
+
+    console.log('[Collapse] Collapsing group:', {
+      originalName: originalSharedName,
+      count: expandedGroup.length,
+      startIndex: firstIndividualIndex
+    });
+
+    // Reconstruct affectedActivities from individual connections
+    const affectedActivities = expandedGroup.map((conn: LinkedServiceConnection) => ({
+      pipelineName: conn.linkedServiceDefinition.parentPipeline || '',
+      activityName: conn.linkedServiceDefinition.activityName || '',
+      targetPipelineName: conn.linkedServiceDefinition.targetPipelineName || '',
+      waitOnCompletion: conn.linkedServiceDefinition.waitOnCompletion,
+      parameters: conn.linkedServiceDefinition.parameters
+    }));
+
+    // Create reconstructed shared connection with RESET configuration
+    const sharedConnection: LinkedServiceConnection = {
+      linkedServiceName: originalSharedName || 'FabricDataPipelines_Shared',
+      linkedServiceType: 'FabricDataPipelines',
+      linkedServiceDefinition: {
+        type: 'FabricDataPipelines',
+        isSharedConnection: true,
+        affectedActivities,
+        useSeparateConnections: false // Reset to default
+      },
+      mappingMode: 'new',
+      selectedConnectivityType: 'ShareableCloud',
+      selectedConnectionType: 'FabricDataPipelines',
+      credentialType: 'WorkspaceIdentity',
+      connectionParameters: {},
+      credentials: {},
+      skipTestConnection: true,
+      status: 'pending',
+      validationErrors: []
+    };
+
+    // Build new linkedServices array
+    const updatedServices = [
+      ...currentServices.slice(0, firstIndividualIndex),              // Everything before group
+      sharedConnection,                                                // Single shared card
+      ...currentServices.slice(firstIndividualIndex + expandedGroup.length) // Everything after group
+    ];
+
+    dispatch({
+      type: 'SET_CONNECTION_MAPPINGS',
+      payload: {
+        ...state.connectionMappings,
+        linkedServices: updatedServices
+      }
+    });
+
+    toast.success('Collapsed back to shared connection');
+  }, [state.connectionMappings, dispatch]);
+
+  /**
+   * Checks if a connection is an individual FabricDataPipelines card from expansion.
+   */
+  const isFabricDataPipelinesIndividual = (conn: LinkedServiceConnection): boolean => {
+    return conn.linkedServiceType === 'FabricDataPipelines' &&
+           conn.linkedServiceDefinition?.expandedFromShared === true;
+  };
+
+  /**
+   * Checks if this is the first card in an expanded FabricDataPipelines group.
+   */
+  const isFirstInGroup = (index: number): boolean => {
+    const services = state.connectionMappings?.linkedServices || [];
+    const current = services[index];
+    
+    if (!isFabricDataPipelinesIndividual(current)) return false;
+    
+    // First if previous card is NOT part of same group
+    if (index === 0) return true;
+    
+    const previous = services[index - 1];
+    return !isFabricDataPipelinesIndividual(previous) ||
+           previous.linkedServiceDefinition?.originalSharedName !== current.linkedServiceDefinition?.originalSharedName;
+  };
+
+  /**
+   * Checks if this is the last card in an expanded FabricDataPipelines group.
+   */
+  const isLastInGroup = (index: number): boolean => {
+    const services = state.connectionMappings?.linkedServices || [];
+    const current = services[index];
+    
+    if (!isFabricDataPipelinesIndividual(current)) return false;
+    
+    // Last if next card is NOT part of same group
+    if (index === services.length - 1) return true;
+    
+    const next = services[index + 1];
+    return !isFabricDataPipelinesIndividual(next) ||
+           next.linkedServiceDefinition?.originalSharedName !== current.linkedServiceDefinition?.originalSharedName;
+  };
+
+  /**
+   * Counts cards in the current expanded group.
+   */
+  const getGroupCardCount = (index: number): number => {
+    const services = state.connectionMappings?.linkedServices || [];
+    const current = services[index];
+    
+    if (!isFabricDataPipelinesIndividual(current)) return 0;
+    
+    const originalName = current.linkedServiceDefinition?.originalSharedName;
+    return services.filter((svc: LinkedServiceConnection) => 
+      isFabricDataPipelinesIndividual(svc) &&
+      svc.linkedServiceDefinition?.originalSharedName === originalName
+    ).length;
   };
 
   // ADD missing navigation handlers
@@ -1634,17 +1966,54 @@ export function LinkedServiceConnectionPage() {
                       ls => ls.linkedServiceName === linkedService.linkedServiceName
                     );
                     if (originalIndex === -1) return null;
+                    
+                    // Check if this is an individual expanded FabricDataPipelines connection
+                    const isIndividual = linkedService.linkedServiceType === 'FabricDataPipelines' &&
+                                        linkedService.linkedServiceDefinition?.expandedFromShared === true;
+                    const isFirst = isIndividual && isFirstInGroup(originalIndex);
+                    const isLast = isIndividual && isLastInGroup(originalIndex);
+                    const cardCount = isIndividual ? getGroupCardCount(originalIndex) : 0;
+                    
                     return (
-                      <ConnectionConfiguration
-                        key={linkedService.linkedServiceName}
-                        linkedService={linkedService}
-                        index={originalIndex}
-                        availableGateways={state.connectionMappings?.availableGateways || []}
-                        supportedConnectionTypes={state.connectionMappings?.supportedConnectionTypes || []}
-                        isLoading={isLoading}
-                        onUpdate={handleLinkedServiceUpdate}
-                        onFetchConnectionTypes={fetchSupportedConnectionTypesForConnectivity}
-                      />
+                      <React.Fragment key={linkedService.linkedServiceName}>
+                        {/* Group Header - only render for first card in group */}
+                        {isIndividual && isFirst && (
+                          <div className="mb-3 flex items-center gap-2 pl-6">
+                            <span className="text-sm font-medium text-blue-800">
+                              FabricDataPipelines Individual Connections
+                            </span>
+                            <Badge variant="secondary" className="bg-blue-100 text-blue-800 border-blue-200">
+                              {cardCount} {cardCount === 1 ? 'card' : 'cards'}
+                            </Badge>
+                          </div>
+                        )}
+
+                        {/* Connection Card - wrapped with conditional grouping styles */}
+                        <div
+                          className={cn(
+                            "mb-4",
+                            // Group indentation and border
+                            isIndividual && "ml-6 pl-4 border-l-4 border-blue-300 rounded-lg",
+                            // Top border for first in group
+                            isIndividual && isFirst && "border-t-2 border-blue-200 rounded-tl-lg pt-2",
+                            // Bottom border for last in group
+                            isIndividual && isLast && "border-b-2 border-blue-200 rounded-bl-lg pb-2"
+                          )}
+                        >
+                          <ConnectionConfiguration
+                            key={linkedService.linkedServiceName}
+                            linkedService={linkedService}
+                            index={originalIndex}
+                            availableGateways={state.connectionMappings?.availableGateways || []}
+                            supportedConnectionTypes={state.connectionMappings?.supportedConnectionTypes || []}
+                            isLoading={isLoading}
+                            onUpdate={handleLinkedServiceUpdate}
+                            onFetchConnectionTypes={fetchSupportedConnectionTypesForConnectivity}
+                            onExpandSharedConnection={handleExpandSharedConnection}
+                            onCollapseToSharedConnection={handleCollapseToSharedConnection}
+                          />
+                        </div>
+                      </React.Fragment>
                     );
                   })
                 )}

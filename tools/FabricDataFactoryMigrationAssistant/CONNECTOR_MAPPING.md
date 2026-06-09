@@ -469,6 +469,212 @@ For unsupported connectors:
 
 ---
 
+## Activity Reference Location Types
+
+The application uses a **referenceId-based mapping system** to track LinkedService references across different activity types and locations. Each reference has a unique `referenceId` in the format: `pipelineName_activityName_location`.
+
+### Location Types Reference
+
+| Location | Description | ADF Property Path | Activity Types | Required |
+|----------|-------------|-------------------|----------------|----------|
+| `invoke` | Pipeline invocation connection | `activity.typeProperties.pipeline.referenceName` | ExecutePipeline | Yes |
+| `activity` / `activity-level` | Direct activity LinkedService | `activity.linkedServiceName.referenceName` | Custom, Script, StoredProcedure | Yes |
+| `dataset` | Dataset-based connection | `dataset.properties.linkedServiceName.referenceName` | Copy, Lookup, GetMetadata, Delete | Yes |
+| `source` | Copy source dataset | `activity.inputs[n].referenceName` → dataset | Copy | Yes |
+| `sink` | Copy sink dataset | `activity.outputs[n].referenceName` → dataset | Copy | Yes |
+| `staging` | Copy staging storage | `activity.typeProperties.stagingSettings.linkedServiceName` | Copy (when `enableStaging: true`) | Dynamic |
+| `cluster` | HDInsight cluster connection | `activity.linkedServiceName.referenceName` | HDInsightSpark, HDInsightHive, etc. | Yes |
+| `script` | HDInsight script storage | `activity.typeProperties.scriptLinkedService.referenceName` | HDInsight activities | No |
+| `jar` | HDInsight JAR storage | `activity.typeProperties.jarLinkedService.referenceName` | HDInsightSpark, HDInsightMapReduce | No |
+| `file` | HDInsight file storage | `activity.typeProperties.fileLinkedService.referenceName` | HDInsight activities | No |
+| `sparkJob` | HDInsight Spark job storage | `activity.typeProperties.sparkJobLinkedService.referenceName` | HDInsightSpark | No |
+| `linkedServices` | Web activity LinkedServices array | `activity.typeProperties.linkedServices[n].referenceName` | Web, WebHook | No |
+| `resource` | Custom activity resource LinkedService | `activity.typeProperties.resourceLinkedService.referenceName` | Custom | No |
+| `reference-object` / `refobj_N` | Custom activity reference objects | `activity.typeProperties.referenceObjects.linkedServices[n]` | Custom | No |
+
+### Extraction Patterns by Activity Type
+
+#### ExecutePipeline Activities
+```typescript
+// ADF Property Path
+activity.typeProperties.pipeline.referenceName
+
+// Extraction Pattern
+if (activityType === 'ExecutePipeline') {
+  references.push({
+    referenceId: `${pipelineName}_${activityName}_invoke`,
+    location: 'invoke',
+    linkedServiceName: 'FabricDataPipelines', // Synthetic name
+    displayName: `Invoke Pipeline: ${targetPipelineName}`,
+    isRequired: true
+  });
+}
+
+// Fabric Transformation
+transformedActivity.externalReferences.connection = mappedConnectionId;
+```
+
+**Critical Note**: ExecutePipeline activities in ADF transform to InvokePipeline in Fabric and require a FabricDataPipelines connection. This is a synthetic LinkedService name used to map the pipeline invocation connection.
+
+#### Copy Activities with Staging
+```typescript
+// ADF Property Paths
+activity.typeProperties.enableStaging
+activity.typeProperties.stagingSettings.linkedServiceName.referenceName
+
+// Extraction Pattern
+if (activity.typeProperties?.stagingSettings?.linkedServiceName?.referenceName) {
+  const enableStaging = activity.typeProperties.enableStaging === true;
+  references.push({
+    referenceId: `${pipelineName}_${activityName}_staging`,
+    location: 'staging',
+    linkedServiceName: stagingLinkedService,
+    displayName: 'Staging Storage',
+    isRequired: enableStaging // Dynamic based on enableStaging flag
+  });
+}
+
+// Fabric Transformation
+transformedActivity.typeProperties.stagingSettings = {
+  path: originalPath,
+  externalReferences: { connection: mappedConnectionId }
+};
+```
+
+**Best Practice**: Staging is only required when `enableStaging: true`. The extraction dynamically sets `isRequired` based on this flag.
+
+#### HDInsight Activities (Multi-Storage)
+```typescript
+// ADF Property Paths
+activity.linkedServiceName.referenceName                    // Cluster
+activity.typeProperties.scriptLinkedService.referenceName   // Script storage
+activity.typeProperties.jarLinkedService.referenceName      // JAR storage
+activity.typeProperties.fileLinkedService.referenceName     // File storage
+activity.typeProperties.sparkJobLinkedService.referenceName // Spark job storage
+
+// Extraction Pattern
+if (['HDInsightSpark', 'HDInsightHive', 'HDInsightPig', 'HDInsightMapReduce', 'HDInsightStreaming'].includes(activityType)) {
+  // 1. Cluster connection (always required)
+  references.push({
+    referenceId: `${pipelineName}_${activityName}_cluster`,
+    location: 'activity-level',
+    linkedServiceName: clusterLinkedService,
+    displayName: 'HDInsight Cluster',
+    isRequired: true
+  });
+  
+  // 2-5. Storage connections (optional - script, jar, file, sparkJob)
+  // Each with isRequired: false
+}
+```
+
+**Migration Note**: HDInsight has limited support in Fabric. Consider migrating to Fabric Spark notebooks instead.
+
+#### Web Activities (LinkedServices Array)
+```typescript
+// ADF Property Paths
+activity.linkedServiceName.referenceName             // Single LinkedService
+activity.typeProperties.linkedServices[n].referenceName  // Array of LinkedServices
+
+// Extraction Pattern
+if (activityType === 'Web' || activityType === 'WebHook') {
+  // Single activity-level LinkedService
+  if (activity.linkedServiceName?.referenceName) {
+    references.push({ referenceId, location: 'activity-level', isRequired: false });
+  }
+  
+  // Loop through linkedServices array (not just first element)
+  const linkedServices = activity.typeProperties?.linkedServices || [];
+  linkedServices.forEach((ls, index) => {
+    references.push({
+      referenceId: `${pipelineName}_${activityName}_linkedService_${index}`,
+      location: 'linkedServices',
+      linkedServiceName: ls.referenceName,
+      displayName: `Web LinkedService ${index + 1}`,
+      isRequired: false,
+      arrayIndex: index
+    });
+  });
+}
+```
+
+#### Copy Activities (Multiple Datasets)
+```typescript
+// ADF Property Paths
+activity.inputs[n].referenceName  → dataset.properties.linkedServiceName  // Sources
+activity.outputs[n].referenceName → dataset.properties.linkedServiceName // Sinks
+
+// Extraction Pattern - Loop through ALL inputs/outputs (not just [0])
+const inputs = activity.inputs || [];
+inputs.forEach((input, index) => {
+  const referenceId = inputs.length > 1 
+    ? `${pipelineName}_${activityName}_source_${index}`  // Multiple sources
+    : `${pipelineName}_${activityName}_source`;          // Single source
+  
+  references.push({
+    referenceId,
+    location: 'dataset',
+    linkedServiceName: resolvedLinkedService,
+    displayName: inputs.length > 1 ? `Source ${index + 1}` : 'Source',
+    isRequired: true,
+    arrayIndex: inputs.length > 1 ? index : undefined
+  });
+});
+
+// Same pattern for outputs/sinks
+```
+
+**Important**: Always loop through ALL array entries, not just `[0]`. Use index-based referenceIds for multiple datasets.
+
+#### Custom Activities (Multi-Location)
+```typescript
+// ADF Property Paths
+activity.linkedServiceName.referenceName                              // Activity-level
+activity.typeProperties.resourceLinkedService.referenceName           // Resource
+activity.typeProperties.referenceObjects.linkedServices[n].referenceName  // Reference objects
+
+// Extraction Pattern - 3 separate locations
+references.push({ referenceId: `${pipelineName}_${activityName}_activity`, location: 'activity-level', isRequired: true });
+references.push({ referenceId: `${pipelineName}_${activityName}_resource`, location: 'resource', isRequired: false });
+// Loop through referenceObjects array
+referenceLinkedServices.forEach((ls, index) => {
+  references.push({
+    referenceId: `${pipelineName}_${activityName}_refobj_${index}`,
+    location: 'reference-object',
+    displayName: `Reference Object ${index + 1}`,
+    isRequired: false,
+    arrayIndex: index
+  });
+});
+```
+
+### ReferenceId Format Standards
+
+**Format**: `pipelineName_activityName_location` (underscores, no special characters)
+
+**Examples**:
+- `002Parent_Execute Pipeline1_invoke` - ExecutePipeline activity
+- `004Copy_Copy data1_source` - Copy source dataset
+- `004Copy_Copy data1_sink` - Copy sink dataset
+- `004Copy_Copy data1_staging` - Copy staging storage
+- `HDInsightPipeline_Spark1_cluster` - HDInsight cluster
+- `HDInsightPipeline_Spark1_script` - HDInsight script storage
+- `WebPipeline_CallAPI_linkedService_0` - First Web LinkedService
+- `CustomPipeline_BatchJob_refobj_2` - Third reference object
+
+### Migration Validation
+
+After implementing these patterns, validate extraction completeness:
+
+1. **Upload ARMTemplateForFactory.json** sample
+2. **Verify ExecutePipeline** (4 instances) extracted with `FabricDataPipelines`
+3. **Verify Copy staging** (1 instance with `enableStaging: true`)
+4. **Check referenceId format** matches `pipelineName_activityName_location` standard
+5. **Test auto-mapping** with bridge and name-match fallbacks
+6. **Deploy test pipelines** (002Parent, 004Copy) to verify no "external reference not found" errors
+
+---
+
 ## Additional Resources
 
 - [Microsoft Fabric Documentation](https://learn.microsoft.com/fabric/)
@@ -477,4 +683,4 @@ For unsupported connectors:
 
 ---
 
-*Last Updated: October 13, 2025*
+*Last Updated: December 1, 2025*

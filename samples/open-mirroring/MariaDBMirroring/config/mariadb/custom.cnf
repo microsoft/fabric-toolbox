@@ -1,0 +1,10 @@
+[mysqld]
+# Enable row-based binary logging (required for KafkaCDC)
+log_bin                = mariadb-bin
+binlog_format          = ROW
+binlog_row_image       = FULL
+server_id              = 1
+
+# GTID settings for replication
+gtid_strict_mode       = ON
+log_slave_updates      = ON

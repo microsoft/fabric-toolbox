@@ -10,11 +10,9 @@ model Model
 
 annotation __PBI_TimeIntelligenceEnabled = 0
 
-annotation PBIDesktopVersion = 2.147.7761.2 (Main)+4fed62a961b3b674388272b595c56068c5925805
-
 annotation PBI_QueryOrder = ["DatabaseQuery"]
 
-annotation PBI_ProTooling = ["WebModelingEdit","TMDL-Extension"]
+annotation PBI_ProTooling = ["WebModelingEdit","TMDL-Extension","RemoteModeling"]
 
 annotation FUAM_Tag = ["FUAM_2025.4.1"]
 
@@ -42,21 +40,30 @@ ref table workspaces_scanned_users
 ref table workspaces
 ref table Metrics
 ref table tenant_settings
-ref table delegated_tenant_settings_overrides
 ref table capacity_refreshable_details
 ref table git_connections
-ref table semantic_model_bpa_results
 ref table capacity_regions
-ref table workspace_monitoring_reports
 ref table semantic_model_bpa_rule_catalog
-ref table semantic_model_analyzer_runs
 ref table size_units
 ref table semantic_model_content_types
-ref table semantic_model_vertipaq_tables
-ref table semantic_model_vertipaq_relationships
 ref table calendar_timepoints
 ref table capacity_refreshable_summaries
 ref table audit_latest_available_fuam_version
+ref table item_users
+ref table capacity_users
+ref table tenant_settings_enabled_security_groups
+ref table audit_activity_log_anonymization
+ref table delegated_tenant_settings_overrides
+ref table semantic_model_bpa_results
+ref table semantic_model_analyzer_runs
+ref table semantic_model_vertipaq_tables
+ref table semantic_model_vertipaq_relationships
+ref table domains_flatten
+ref table unused_workspaces_parameter
+ref table widelyshared_organization_links
+ref table widelyshared_publishtoweb
+ref table semantic_model_datasources
+ref table audit_granted_ws_access_for_analyzer
 
 ref cultureInfo en-US
 

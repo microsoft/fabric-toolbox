@@ -1,0 +1,45 @@
+{
+  "sources": [
+    {
+      "id": "e89fabcc-4816-44c7-9b9d-603ded5cfc44",
+      "name": "Reports",
+      "type": "CustomEndpoint",
+      "properties": {}
+    }
+  ],
+  "destinations": [
+    {
+      "id": "455b09fe-340f-473f-9772-6eddc9e14b34",
+      "name": "Eventhouse",
+      "type": "Eventhouse",
+      "properties": {
+        "dataIngestionMode": "DirectIngestion",
+        "workspaceId": "00000000-0000-0000-0000-000000000000",
+        "itemId": "476e80c9-35ca-afd8-4b01-94875b5a2475",
+        "tableName": "GatewayReports-Raw",
+        "connectionName": "GatewayMonitoringReports",
+        "mappingRuleName": "GatewayReports-Raw_mapping"
+      },
+      "inputNodes": [
+        {
+          "name": "GatewayMonitoringReports-stream"
+        }
+      ]
+    }
+  ],
+  "streams": [
+    {
+      "id": "4095ec34-d492-40b1-a274-230df33b902f",
+      "name": "GatewayMonitoringReports-stream",
+      "type": "DefaultStream",
+      "properties": {},
+      "inputNodes": [
+        {
+          "name": "Reports"
+        }
+      ]
+    }
+  ],
+  "operators": [],
+  "compatibilityLevel": "1.0"
+}

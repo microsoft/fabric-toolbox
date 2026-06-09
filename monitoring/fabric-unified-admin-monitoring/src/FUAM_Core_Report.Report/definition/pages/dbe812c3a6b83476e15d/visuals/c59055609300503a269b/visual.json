@@ -1,0 +1,143 @@
+{
+    "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.5.0/schema.json",
+    "name": "c59055609300503a269b",
+    "position": {
+        "x": 1520.5882352941176,
+        "y": 8.088235294117647,
+        "z": 12000,
+        "height": 55.147058823529406,
+        "width": 48.52941176470588,
+        "tabOrder": 12000
+    },
+    "visual": {
+        "visualType": "actionButton",
+        "objects": {
+            "icon": [
+                {
+                    "properties": {
+                        "shapeType": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "'custom'"
+                                }
+                            }
+                        },
+                        "lineColor": {
+                            "solid": {
+                                "color": {
+                                    "expr": {
+                                        "ThemeDataColor": {
+                                            "ColorId": 2,
+                                            "Percent": 0
+                                        }
+                                    }
+                                }
+                            }
+                        },
+                        "image": {
+                            "image": {
+                                "name": {
+                                    "expr": {
+                                        "Literal": {
+                                            "Value": "'icon_home.png'"
+                                        }
+                                    }
+                                },
+                                "url": {
+                                    "expr": {
+                                        "ResourcePackageItem": {
+                                            "PackageName": "RegisteredResources",
+                                            "PackageType": 1,
+                                            "ItemName": "icon_home4461773375624677.png"
+                                        }
+                                    }
+                                },
+                                "scaling": {
+                                    "expr": {
+                                        "Literal": {
+                                            "Value": "'Normal'"
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "selector": {
+                        "id": "default"
+                    }
+                }
+            ]
+        },
+        "visualContainerObjects": {
+            "visualLink": [
+                {
+                    "properties": {
+                        "show": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "true"
+                                }
+                            }
+                        },
+                        "type": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "'PageNavigation'"
+                                }
+                            }
+                        },
+                        "navigationSection": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "'f93130a26ad7dede570e'"
+                                }
+                            }
+                        },
+                        "tooltip": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "'Go to home page'"
+                                }
+                            }
+                        }
+                    }
+                }
+            ],
+            "border": [
+                {
+                    "properties": {
+                        "show": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "true"
+                                }
+                            }
+                        },
+                        "radius": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "12D"
+                                }
+                            }
+                        }
+                    }
+                }
+            ],
+            "background": [
+                {
+                    "properties": {
+                        "show": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "true"
+                                }
+                            }
+                        }
+                    }
+                }
+            ]
+        },
+        "drillFilterOtherVisuals": true
+    },
+    "howCreated": "InsertVisualButton"
+}

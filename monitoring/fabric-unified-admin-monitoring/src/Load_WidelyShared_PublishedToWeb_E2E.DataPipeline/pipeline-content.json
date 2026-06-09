@@ -1,0 +1,116 @@
+{
+    "properties": {
+        "activities": [
+            {
+                "name": "01_Transfer_WidelyShared_PublishedToWeb_Unit",
+                "type": "TridentNotebook",
+                "dependsOn": [
+                    {
+                        "activity": "Get WidelyShareArtifacts PublishedToWeb",
+                        "dependencyConditions": [
+                            "Succeeded"
+                        ]
+                    }
+                ],
+                "policy": {
+                    "timeout": "0.12:00:00",
+                    "retry": 0,
+                    "retryIntervalInSeconds": 30,
+                    "secureOutput": false,
+                    "secureInput": false
+                },
+                "typeProperties": {
+                    "notebookId": "0691fca3-d327-3584-b190-c419f8cf09a8",
+                    "workspaceId": "88c8d9fa-2c24-3fad-8f46-b36431c7ba1d",
+                    "parameters": {
+                        "display_data": {
+                            "value": {
+                                "value": "@pipeline().parameters.display_data",
+                                "type": "Expression"
+                            },
+                            "type": "bool"
+                        }
+                    },
+                    "sessionTag": "fuam"
+                }
+            },
+            {
+                "name": "Get WidelyShareArtifacts PublishedToWeb",
+                "description": "https://learn.microsoft.com/de-de/rest/api/power-bi/admin/widely-shared-artifacts-published-to-web",
+                "type": "Copy",
+                "dependsOn": [],
+                "policy": {
+                    "timeout": "0.12:00:00",
+                    "retry": 0,
+                    "retryIntervalInSeconds": 30,
+                    "secureOutput": false,
+                    "secureInput": false
+                },
+                "typeProperties": {
+                    "source": {
+                        "type": "RestSource",
+                        "httpRequestTimeout": "00:01:40",
+                        "requestInterval": "00.00:00:00.010",
+                        "requestMethod": "GET",
+                        "paginationRules": {
+                            "supportRFC5988": "true",
+                            "AbsoluteUrl": "$.$.continuationUri"
+                        },
+                        "datasetSettings": {
+                            "annotations": [],
+                            "type": "RestResource",
+                            "typeProperties": {
+                                "relativeUrl": "widelySharedArtifacts/publishedToWeb"
+                            },
+                            "schema": [],
+                            "externalReferences": {
+                                "connection": "09f68371-365e-3501-a70d-6291901f4ba5"
+                            }
+                        }
+                    },
+                    "sink": {
+                        "type": "JsonSink",
+                        "storeSettings": {
+                            "type": "LakehouseWriteSettings"
+                        },
+                        "formatSettings": {
+                            "type": "JsonWriteSettings",
+                            "filePattern": "arrayOfObjects"
+                        },
+                        "datasetSettings": {
+                            "annotations": [],
+                            "linkedService": {
+                                "name": "FUAM_Lakehouse",
+                                "properties": {
+                                    "annotations": [],
+                                    "type": "Lakehouse",
+                                    "typeProperties": {
+                                        "workspaceId": "88c8d9fa-2c24-3fad-8f46-b36431c7ba1d",
+                                        "artifactId": "6cff634b-88f7-3505-bed2-c03a36776a8b",
+                                        "rootFolder": "Files"
+                                    }
+                                }
+                            },
+                            "type": "Json",
+                            "typeProperties": {
+                                "location": {
+                                    "type": "LakehouseLocation",
+                                    "fileName": "publishedToWeb.json",
+                                    "folderPath": "raw/widely_shared_artifacts/publishedToWeb"
+                                }
+                            },
+                            "schema": {}
+                        }
+                    },
+                    "enableStaging": false
+                }
+            }
+        ],
+        "parameters": {
+            "display_data": {
+                "type": "bool",
+                "defaultValue": false
+            }
+        }
+    }
+}

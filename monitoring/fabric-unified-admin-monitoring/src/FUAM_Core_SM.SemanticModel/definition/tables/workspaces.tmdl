@@ -137,6 +137,16 @@ table workspaces
 
 		annotation SummarizationSetBy = Automatic
 
+	column DomainId
+		dataType: string
+		sourceProviderType: varchar(8000)
+		lineageTag: ad566cd7-2f01-40c1-a089-dc0cab454f13
+		sourceLineageTag: DomainId
+		summarizeBy: none
+		sourceColumn: DomainId
+
+		annotation SummarizationSetBy = Automatic
+
 	partition workspaces = entity
 		mode: directLake
 		source

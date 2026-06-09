@@ -1,0 +1,45 @@
+{
+  "sources": [
+    {
+      "id": "10e64794-a92d-412e-b05c-cc524c2d5ba1",
+      "name": "Heartbeat",
+      "type": "CustomEndpoint",
+      "properties": {}
+    }
+  ],
+  "destinations": [
+    {
+      "id": "731a06ef-f755-45d4-87da-e0476904049c",
+      "name": "Eventhouse",
+      "type": "Eventhouse",
+      "properties": {
+        "dataIngestionMode": "DirectIngestion",
+        "workspaceId": "00000000-0000-0000-0000-000000000000",
+        "itemId": "476e80c9-35ca-afd8-4b01-94875b5a2475",
+        "tableName": "GatewaysHeartbeat",
+        "connectionName": "GatewayMonitoringHeartbeat",
+        "mappingRuleName": "GatewaysHeartbeat_mapping"
+      },
+      "inputNodes": [
+        {
+          "name": "GatewayMonitoringHeartbeat-stream"
+        }
+      ]
+    }
+  ],
+  "streams": [
+    {
+      "id": "01957249-bbaa-499c-9a36-95f2e66472a3",
+      "name": "GatewayMonitoringHeartbeat-stream",
+      "type": "DefaultStream",
+      "properties": {},
+      "inputNodes": [
+        {
+          "name": "Heartbeat"
+        }
+      ]
+    }
+  ],
+  "operators": [],
+  "compatibilityLevel": "1.0"
+}

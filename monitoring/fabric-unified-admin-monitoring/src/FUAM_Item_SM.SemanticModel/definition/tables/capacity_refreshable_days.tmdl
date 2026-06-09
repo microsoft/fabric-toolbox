@@ -49,5 +49,3 @@ table capacity_refreshable_days
 			schemaName: dbo
 			expressionSource: DatabaseQuery
 
-	annotation PBI_ResultType = Table
-

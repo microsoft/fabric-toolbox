@@ -69,5 +69,3 @@ table workspaces_scanned_users
 			schemaName: dbo
 			expressionSource: DatabaseQuery
 
-	annotation PBI_ResultType = Table
-

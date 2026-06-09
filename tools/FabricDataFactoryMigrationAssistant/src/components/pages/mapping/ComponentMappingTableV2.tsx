@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useEffect } from 'react';
+import React, { useState, useMemo, useEffect, useRef, useCallback, useLayoutEffect } from 'react';
 import { 
   MagnifyingGlass, 
   FunnelSimple, 
@@ -29,6 +29,7 @@ import { RadioGroup, RadioGroupItem } from '../../ui/radio-group';
 import { Checkbox } from '../../ui/checkbox';
 import { Progress } from '../../ui/progress';
 import type { ADFComponent, FabricTarget, PipelineMappingSummary, ActivityGroup, ActivityWithReferences } from '../../../types';
+import { debounce } from '../../../lib/debounce';
 
 interface ComponentMappingTableV2Props {
   // General components (triggers, global parameters, etc.)
@@ -54,6 +55,9 @@ interface ComponentMappingTableV2Props {
   existingConnections?: any[];
   loadingConnections?: boolean;
   autoSelectedMappings?: string[];
+  
+  // Step 11: Visual indicators for auto vs manual mappings
+  autoMappedReferences?: Set<string>;
   
   // Display options
   componentType?: string;
@@ -115,6 +119,7 @@ export function ComponentMappingTableV2({
   existingConnections = [],
   loadingConnections = false,
   autoSelectedMappings = [],
+  autoMappedReferences,
   componentType = '',
   showActivityDetails = false,
   enableExpandAll = false
@@ -129,6 +134,36 @@ export function ComponentMappingTableV2({
   // Expansion state
   const [expandedRows, setExpandedRows] = useState<Set<string>>(new Set());
   const [expandedGroups, setExpandedGroups] = useState<Set<string>>(new Set());
+  
+  // Scroll position preservation
+  const scrollPositionRef = useRef<number>(0);
+  const isUpdatingRef = useRef(false);
+  
+  // Save scroll position on scroll events
+  useEffect(() => {
+    const saveScroll = () => {
+      scrollPositionRef.current = window.scrollY;
+    };
+    
+    window.addEventListener('scroll', saveScroll, { passive: true });
+    return () => window.removeEventListener('scroll', saveScroll);
+  }, []);
+  
+  // Restore scroll position after re-renders (using useLayoutEffect for sync execution)
+  useLayoutEffect(() => {
+    if (isUpdatingRef.current && scrollPositionRef.current > 0) {
+      window.scrollTo({
+        top: scrollPositionRef.current,
+        behavior: 'auto' // No smooth scrolling - instant restore
+      });
+      isUpdatingRef.current = false;
+    }
+  }, [pipelineSummaries, pipelineConnectionMappings]);
+  
+  // Mark when updates happen
+  useEffect(() => {
+    isUpdatingRef.current = true;
+  }, [pipelineConnectionMappings]);
 
   // Determine if we're in pipeline mode
   const isPipelineMode = pipelineSummaries.length > 0;
@@ -559,6 +594,7 @@ export function ComponentMappingTableV2({
                     loadingConnections={loadingConnections}
                     getActivityTypeColor={getActivityTypeColor}
                     getReferenceLocationColor={getReferenceLocationColor}
+                    autoMappedReferences={autoMappedReferences}
                   />
                 ))
               ) : (
@@ -618,6 +654,7 @@ interface PipelineRowProps {
   loadingConnections: boolean;
   getActivityTypeColor: (type: string) => { bg: string; text: string; border: string };
   getReferenceLocationColor: (location: string) => { bg: string; text: string; border: string };
+  autoMappedReferences?: Set<string>;
 }
 
 function PipelineRow({
@@ -633,7 +670,8 @@ function PipelineRow({
   existingConnections,
   loadingConnections,
   getActivityTypeColor,
-  getReferenceLocationColor
+  getReferenceLocationColor,
+  autoMappedReferences
 }: PipelineRowProps) {
   const mappings = pipelineConnectionMappings[pipeline.pipelineName] || {};
   const isFullyMapped = pipeline.mappingPercentage === 100;
@@ -721,6 +759,7 @@ function PipelineRow({
                   loadingConnections={loadingConnections}
                   getActivityTypeColor={getActivityTypeColor}
                   getReferenceLocationColor={getReferenceLocationColor}
+                  autoMappedReferences={autoMappedReferences}
                 />
               ))}
             </div>
@@ -743,6 +782,7 @@ interface ActivityGroupSectionProps {
   loadingConnections: boolean;
   getActivityTypeColor: (type: string) => { bg: string; text: string; border: string };
   getReferenceLocationColor: (location: string) => { bg: string; text: string; border: string };
+  autoMappedReferences?: Set<string>;
 }
 
 function ActivityGroupSection({
@@ -755,7 +795,8 @@ function ActivityGroupSection({
   existingConnections,
   loadingConnections,
   getActivityTypeColor,
-  getReferenceLocationColor
+  getReferenceLocationColor,
+  autoMappedReferences
 }: ActivityGroupSectionProps) {
   const colors = getActivityTypeColor(group.type);
   const isFullyMapped = group.mappingPercentage === 100;
@@ -803,6 +844,7 @@ function ActivityGroupSection({
               loadingConnections={loadingConnections}
               onActivityConnectionMapping={onActivityConnectionMapping}
               getReferenceLocationColor={getReferenceLocationColor}
+              autoMappedReferences={autoMappedReferences}
             />
           ))}
         </div>
@@ -820,6 +862,7 @@ interface ActivityItemProps {
   loadingConnections: boolean;
   onActivityConnectionMapping?: (pipelineName: string, referenceId: string, connectionId: string) => void;
   getReferenceLocationColor: (location: string) => { bg: string; text: string; border: string };
+  autoMappedReferences?: Set<string>;
 }
 
 function ActivityItem({
@@ -829,8 +872,26 @@ function ActivityItem({
   existingConnections,
   loadingConnections,
   onActivityConnectionMapping,
-  getReferenceLocationColor
+  getReferenceLocationColor,
+  autoMappedReferences
 }: ActivityItemProps) {
+  // Local state for optimistic updates
+  const [localMappings, setLocalMappings] = useState<Record<string, string>>({});
+  
+  // Debounced callback to parent - created once and reused
+  const debouncedCallback = useRef(
+    debounce((pName: string, refId: string, connId: string) => {
+      onActivityConnectionMapping?.(pName, refId, connId);
+    }, 300)
+  ).current;
+  
+  // Cleanup on unmount
+  useEffect(() => {
+    return () => {
+      debouncedCallback.cancel();
+    };
+  }, [debouncedCallback]);
+  
   return (
     <div className="px-16 py-3 border-t border-border/50 space-y-2">
       <div className="flex items-start justify-between">
@@ -859,7 +920,14 @@ function ActivityItem({
       <div className="space-y-2 ml-4">
         {activity.references.map(ref => {
           const locationColors = getReferenceLocationColor(ref.location);
-          const selectedConnectionId = mappings[ref.referenceId] || ref.selectedConnectionId;
+          // Use local mapping if available, otherwise use parent mapping
+          const selectedConnectionId = localMappings[ref.referenceId] || 
+                                       mappings[ref.referenceId] || 
+                                       ref.selectedConnectionId;
+          
+          // Step 11: Check if this reference was auto-mapped
+          const referenceKey = `${pipelineName}:${ref.referenceId}`;
+          const wasAutoMapped = autoMappedReferences?.has(referenceKey);
 
           return (
             <div 
@@ -872,6 +940,18 @@ function ActivityItem({
                     <Badge variant="outline" className={`text-xs ${locationColors.text}`}>
                       {ref.location}
                     </Badge>
+                    {selectedConnectionId && (
+                      <Badge 
+                        variant={wasAutoMapped ? 'default' : 'secondary'} 
+                        className={`text-xs ${
+                          wasAutoMapped 
+                            ? 'bg-green-100 text-green-800 border-green-300' 
+                            : 'bg-blue-100 text-blue-800 border-blue-300'
+                        }`}
+                      >
+                        {wasAutoMapped ? 'Auto' : 'Manual'}
+                      </Badge>
+                    )}
                     {ref.datasetName && (
                       <span className="text-xs text-muted-foreground">
                         Dataset: {ref.datasetName}
@@ -886,7 +966,14 @@ function ActivityItem({
                   <Select
                     value={selectedConnectionId || ''}
                     onValueChange={(value) => {
-                      onActivityConnectionMapping?.(pipelineName, ref.referenceId, value);
+                      // Optimistic update - immediate UI response
+                      setLocalMappings(prev => ({
+                        ...prev,
+                        [ref.referenceId]: value
+                      }));
+                      
+                      // Debounced parent callback - batches updates
+                      debouncedCallback(pipelineName, ref.referenceId, value);
                     }}
                     disabled={loadingConnections}
                   >

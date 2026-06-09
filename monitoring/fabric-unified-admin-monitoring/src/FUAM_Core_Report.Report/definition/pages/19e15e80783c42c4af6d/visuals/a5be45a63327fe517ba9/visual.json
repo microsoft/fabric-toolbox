@@ -1,0 +1,83 @@
+{
+    "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.5.0/schema.json",
+    "name": "a5be45a63327fe517ba9",
+    "position": {
+        "x": 899.5138302145463,
+        "y": 85.78522958770114,
+        "z": 12000,
+        "height": 78.05682133375599,
+        "width": 529.9647343186591,
+        "tabOrder": 9000
+    },
+    "visual": {
+        "visualType": "textbox",
+        "objects": {
+            "general": [
+                {
+                    "properties": {
+                        "paragraphs": [
+                            {
+                                "textRuns": [
+                                    {
+                                        "value": "Capacity SKUs & States:",
+                                        "textStyle": {
+                                            "fontWeight": "bold"
+                                        }
+                                    }
+                                ]
+                            },
+                            {
+                                "textRuns": [
+                                    {
+                                        "value": "Please note that the SKU and the State are based on the last inventory scan result. ",
+                                        "textStyle": {
+                                            "fontFamily": "inherit",
+                                            "fontSize": "inherit"
+                                        }
+                                    },
+                                    {
+                                        "value": "When you up-/ or downscale capacities, you won't see the changes in this report. ",
+                                        "textStyle": {
+                                            "fontWeight": "bold",
+                                            "fontFamily": "inherit",
+                                            "fontSize": "inherit"
+                                        }
+                                    }
+                                ]
+                            }
+                        ]
+                    }
+                }
+            ]
+        },
+        "visualContainerObjects": {
+            "background": [
+                {
+                    "properties": {
+                        "show": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "false"
+                                }
+                            }
+                        }
+                    }
+                }
+            ],
+            "border": [
+                {
+                    "properties": {
+                        "show": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "false"
+                                }
+                            }
+                        }
+                    }
+                }
+            ]
+        },
+        "drillFilterOtherVisuals": true
+    }
+}

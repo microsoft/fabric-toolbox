@@ -1,0 +1,90 @@
+{
+    "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.5.0/schema.json",
+    "name": "8edff51d691abd4d1391",
+    "position": {
+        "x": 654.9467597825181,
+        "y": 11.695477853259252,
+        "z": 5000,
+        "height": 95.02575755773142,
+        "width": 625.70806514937,
+        "tabOrder": 2000
+    },
+    "visual": {
+        "visualType": "textbox",
+        "objects": {
+            "general": [
+                {
+                    "properties": {
+                        "paragraphs": [
+                            {
+                                "textRuns": [
+                                    {
+                                        "value": "Step 1) ",
+                                        "textStyle": {
+                                            "fontWeight": "bold",
+                                            "fontSize": "12pt",
+                                            "color": "#248a85"
+                                        }
+                                    },
+                                    {
+                                        "value": "Highlight a day on one of your capacities",
+                                        "textStyle": {
+                                            "fontWeight": "bold",
+                                            "fontSize": "12pt"
+                                        }
+                                    }
+                                ],
+                                "horizontalTextAlignment": "center"
+                            },
+                            {
+                                "textRuns": [
+                                    {
+                                        "value": "To find outliers over time, it is great to start with a single day on a given capacity. "
+                                    }
+                                ],
+                                "horizontalTextAlignment": "center"
+                            },
+                            {
+                                "textRuns": [
+                                    {
+                                        "value": "The daily tooltip helps you to understand what is happened on that day on your capacity based on all the key CU metrics, what you know from Capacity Metrics App."
+                                    }
+                                ],
+                                "horizontalTextAlignment": "center"
+                            }
+                        ]
+                    }
+                }
+            ]
+        },
+        "visualContainerObjects": {
+            "border": [
+                {
+                    "properties": {
+                        "show": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "false"
+                                }
+                            }
+                        }
+                    }
+                }
+            ],
+            "background": [
+                {
+                    "properties": {
+                        "show": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "false"
+                                }
+                            }
+                        }
+                    }
+                }
+            ]
+        },
+        "drillFilterOtherVisuals": true
+    }
+}

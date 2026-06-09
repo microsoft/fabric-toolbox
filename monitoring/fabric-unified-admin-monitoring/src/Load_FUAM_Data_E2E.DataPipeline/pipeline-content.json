@@ -29,6 +29,18 @@
                         "display_data": {
                             "value": "@pipeline().parameters.display_data",
                             "type": "Expression"
+                        },
+                        "anonymize_tables": {
+                            "value": "@pipeline().parameters.activity_anonymize_tables",
+                            "type": "Expression"
+                        },
+                        "anonymize_files": {
+                            "value": "@pipeline().parameters.activity_anonymize_files",
+                            "type": "Expression"
+                        },
+                        "anonymize_after_days": {
+                            "value": "@pipeline().parameters.activity_anonymize_after_days",
+                            "type": "Expression"
                         }
                     }
                 }
@@ -336,7 +348,7 @@
                 "type": "TridentNotebook",
                 "dependsOn": [
                     {
-                        "activity": "Load_Git_Connections_E2E",
+                        "activity": "Generate_Calendar_Table",
                         "dependencyConditions": [
                             "Completed"
                         ]
@@ -354,12 +366,198 @@
                     "workspaceId": "88c8d9fa-2c24-3fad-8f46-b36431c7ba1d",
                     "sessionTag": "fuam"
                 }
+            },
+            {
+                "name": "If has domains",
+                "type": "IfCondition",
+                "dependsOn": [
+                    {
+                        "activity": "Load_Git_Connections_E2E",
+                        "dependencyConditions": [
+                            "Completed"
+                        ]
+                    }
+                ],
+                "typeProperties": {
+                    "expression": {
+                        "value": "@if(pipeline().parameters.has_tenant_domains, 1, 0)",
+                        "type": "Expression"
+                    },
+                    "ifFalseActivities": [],
+                    "ifTrueActivities": [
+                        {
+                            "name": "Load_Domains",
+                            "type": "ExecutePipeline",
+                            "dependsOn": [],
+                            "policy": {
+                                "secureInput": false
+                            },
+                            "typeProperties": {
+                                "pipeline": {
+                                    "referenceName": "801070ba-e25e-3617-af3a-94acc6d580a0",
+                                    "type": "PipelineReference"
+                                },
+                                "waitOnCompletion": true,
+                                "parameters": {
+                                    "display_data": {
+                                        "value": "@pipeline().parameters.display_data",
+                                        "type": "Expression"
+                                    }
+                                }
+                            }
+                        }
+                    ]
+                }
+            },
+            {
+                "name": "Load_WidelyShared_OrganizationLinks",
+                "type": "ExecutePipeline",
+                "dependsOn": [
+                    {
+                        "activity": "If has domains",
+                        "dependencyConditions": [
+                            "Completed"
+                        ]
+                    }
+                ],
+                "policy": {
+                    "secureInput": false
+                },
+                "typeProperties": {
+                    "pipeline": {
+                        "referenceName": "c021e625-601b-367b-a1c0-ad61f018b3bd",
+                        "type": "PipelineReference"
+                    },
+                    "waitOnCompletion": true,
+                    "parameters": {
+                        "display_data": {
+                            "value": "@pipeline().parameters.display_data",
+                            "type": "Expression"
+                        }
+                    }
+                }
+            },
+            {
+                "name": "Load_WidelyShared_PublishedToWeb",
+                "type": "ExecutePipeline",
+                "dependsOn": [
+                    {
+                        "activity": "Load_WidelyShared_OrganizationLinks",
+                        "dependencyConditions": [
+                            "Completed"
+                        ]
+                    }
+                ],
+                "policy": {
+                    "secureInput": false
+                },
+                "typeProperties": {
+                    "pipeline": {
+                        "referenceName": "87104edd-1254-3e6a-8bb5-7f960c415eee",
+                        "type": "PipelineReference"
+                    },
+                    "waitOnCompletion": true,
+                    "parameters": {
+                        "display_data": {
+                            "value": "@pipeline().parameters.display_data",
+                            "type": "Expression"
+                        }
+                    }
+                }
+            },
+            {
+                "name": "Load_Tag_E2E",
+                "type": "ExecutePipeline",
+                "dependsOn": [
+                    {
+                        "activity": "Load_WidelyShared_PublishedToWeb",
+                        "dependencyConditions": [
+                            "Completed"
+                        ]
+                    }
+                ],
+                "policy": {
+                    "secureInput": false
+                },
+                "typeProperties": {
+                    "pipeline": {
+                        "referenceName": "df3d796d-f02d-3baa-98ed-17ae09708fb2",
+                        "type": "PipelineReference"
+                    },
+                    "waitOnCompletion": true,
+                    "parameters": {
+                        "display_data": {
+                            "value": "@pipeline().parameters.display_data",
+                            "type": "Expression"
+                        }
+                    }
+                }
+            },
+            {
+                "name": "Load_Optimization_Module_E2E",
+                "type": "ExecutePipeline",
+                "state": "Inactive",
+                "onInactiveMarkAs": "Succeeded",
+                "dependsOn": [
+                    {
+                        "activity": "Load_Tag_E2E",
+                        "dependencyConditions": [
+                            "Completed"
+                        ]
+                    },
+                    {
+                        "activity": "Load_Capacity_Metrics",
+                        "dependencyConditions": [
+                            "Completed"
+                        ]
+                    }
+                ],
+                "policy": {
+                    "secureInput": false
+                },
+                "typeProperties": {
+                    "pipeline": {
+                        "referenceName": "313c5fed-5b0b-3cc9-a5ef-4a636962c50c",
+                        "type": "PipelineReference"
+                    },
+                    "waitOnCompletion": true,
+                    "parameters": {
+                        "display_data": {
+                            "value": "@pipeline().parameters.display_data",
+                            "type": "Expression"
+                        },
+                        "top_n_semantic_models_per_capacity": {
+                            "value": "@pipeline().parameters.om_top_n_semantic_models_per_capacity",
+                            "type": "Expression"
+                        },
+                        "keyvault_name": {
+                            "value": "@pipeline().parameters.optional_keyvault_name",
+                            "type": "Expression"
+                        },
+                        "keyvault_sp_tenantId_secret_name": {
+                            "value": "@pipeline().parameters.optional_keyvault_sp_tenantId_secret_name",
+                            "type": "Expression"
+                        },
+                        "keyvault_sp_clientId_secret_name": {
+                            "value": "@pipeline().parameters.optional_keyvault_sp_clientId_secret_name",
+                            "type": "Expression"
+                        },
+                        "keyvault_sp_secret_secret_name": {
+                            "value": "@pipeline().parameters.optional_keyvault_sp_secret_secret_name",
+                            "type": "Expression"
+                        },
+                        "keyvault_sp_ent_app_object_id_secret_name": {
+                            "value": "@pipeline().parameters.optional_keyvault_sp_enterprise_object_id_secret_name",
+                            "type": "Expression"
+                        }
+                    }
+                }
             }
         ],
         "parameters": {
             "has_tenant_domains": {
                 "type": "bool",
-                "defaultValue": false
+                "defaultValue": true
             },
             "extract_powerbi_artifacts_only": {
                 "type": "bool",
@@ -371,11 +569,11 @@
             },
             "metric_workspace": {
                 "type": "string",
-                "defaultValue": "CHANGE HERE"
+                "defaultValue": "5edcbd6e-b4d3-4625-ae22-a4d524221f78"
             },
             "metric_dataset": {
                 "type": "string",
-                "defaultValue": "CHANGE HERE"
+                "defaultValue": "2d4511ba-4364-4468-9171-d5f39c19f66e"
             },
             "activity_days_in_scope": {
                 "type": "int",
@@ -386,16 +584,40 @@
                 "defaultValue": false
             },
             "optional_keyvault_name": {
-                "type": "string"
+                "type": "string",
+                "defaultValue": "fuamkv"
             },
             "optional_keyvault_sp_tenantId_secret_name": {
-                "type": "string"
+                "type": "string",
+                "defaultValue": "fuam-sp-tenant"
             },
             "optional_keyvault_sp_clientId_secret_name": {
-                "type": "string"
+                "type": "string",
+                "defaultValue": "fuam-sp-client"
             },
             "optional_keyvault_sp_secret_secret_name": {
-                "type": "string"
+                "type": "string",
+                "defaultValue": "fuam-sp-secret"
+            },
+            "optional_keyvault_sp_enterprise_object_id_secret_name": {
+                "type": "string",
+                "defaultValue": "fuam-sp-enterprise-app-object-id"
+            },
+            "activity_anonymize_tables": {
+                "type": "bool",
+                "defaultValue": false
+            },
+            "activity_anonymize_files": {
+                "type": "bool",
+                "defaultValue": false
+            },
+            "activity_anonymize_after_days": {
+                "type": "int",
+                "defaultValue": 0
+            },
+            "om_top_n_semantic_models_per_capacity": {
+                "type": "int",
+                "defaultValue": 0
             }
         }
     }

@@ -3,6 +3,9 @@
   "private": true,
   "version": "0.0.0",
   "type": "module",
+  "engines": {
+    "node": ">=20"
+  },
   "scripts": {
     "dev": "vite",
     "kill": "fuser -k 5000/tcp",
@@ -73,7 +76,7 @@
     "tailwind-merge": "^3.0.2",
     "three": "^0.175.0",
     "tw-animate-css": "^1.2.4",
-    "uuid": "^11.1.0",
+    "uuid": "^14.0.0",
     "vaul": "^1.1.2",
     "zod": "^3.25.76"
   },
@@ -96,7 +99,7 @@
     "tailwindcss": "^4.1.11",
     "typescript": "~5.7.2",
     "typescript-eslint": "^8.38.0",
-    "vite": "^6.4.1",
+    "vite": "^6.4.2",
     "vitest": "^3.2.4"
   },
   "workspaces": {

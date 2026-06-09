@@ -1,0 +1,49 @@
+table 'Param - Counters Measure'
+	lineageTag: 864b3d37-456c-446e-bfd7-978897ac4bb2
+
+	column 'Param - Counters Measure'
+		lineageTag: fd5cb968-18c4-4776-850a-45a2ee6ce221
+		summarizeBy: none
+		sourceColumn: [Value1]
+		sortByColumn: 'Param - Counters Measure Order'
+
+		relatedColumnDetails
+			groupByColumn: 'Param - Counter Axis Fields'
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Param - Counter Axis Fields'
+		isHidden
+		lineageTag: 69d22069-54af-461a-a6d7-4ac6fd4ff4a8
+		summarizeBy: none
+		sourceColumn: [Value2]
+		sortByColumn: 'Param - Counters Measure Order'
+
+		extendedProperty ParameterMetadata =
+				{
+				  "version": 3,
+				  "kind": 2
+				}
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Param - Counters Measure Order'
+		isHidden
+		formatString: 0
+		lineageTag: c9d265dc-cba5-4b2e-9c7d-0c70d94ed807
+		summarizeBy: sum
+		sourceColumn: [Value3]
+
+		annotation SummarizationSetBy = Automatic
+
+	partition 'Param - Counters Measure' = calculated
+		mode: import
+		source =
+				{
+				    ("Average", NAMEOF('System Counters'[Avg. Counter Value]), 0),
+				    ("Max", NAMEOF('System Counters'[Max Counter Value]), 1),
+				    ("Min", NAMEOF('System Counters'[Min Counter Value]), 2)
+				}
+
+	annotation PBI_Id = d5274dd4f2c74ba58ec533563cfb1adc
+

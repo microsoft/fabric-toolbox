@@ -1,0 +1,114 @@
+table item_users
+	lineageTag: aabc5fba-a24f-498f-b064-c82ad160c221
+	sourceLineageTag: [dbo].[item_users]
+
+	column WorkspaceId
+		dataType: string
+		lineageTag: f0793aa4-b64c-4df5-abc2-fffda56bba21
+		sourceLineageTag: WorkspaceId
+		summarizeBy: none
+		sourceColumn: WorkspaceId
+
+		annotation SummarizationSetBy = Automatic
+
+	column ItemId
+		dataType: string
+		lineageTag: b4bbc6d3-829c-4049-a1d5-90fd78d72d38
+		sourceLineageTag: ItemId
+		summarizeBy: none
+		sourceColumn: ItemId
+
+		changedProperty = SummarizeBy
+
+		annotation SummarizationSetBy = User
+
+	column ItemType
+		dataType: string
+		lineageTag: fd3c724c-8187-4d74-8940-eb9eb497eb4d
+		sourceLineageTag: ItemType
+		summarizeBy: none
+		sourceColumn: ItemType
+
+		annotation SummarizationSetBy = Automatic
+
+	column ItemName
+		dataType: string
+		lineageTag: aa533eae-5e1b-4efd-b3d7-348526743b30
+		sourceLineageTag: ItemName
+		summarizeBy: none
+		sourceColumn: ItemName
+
+		annotation SummarizationSetBy = Automatic
+
+	column AccessRight
+		dataType: string
+		lineageTag: dff4d136-623f-4f33-983e-0746ac0b58d2
+		sourceLineageTag: AccessRight
+		summarizeBy: none
+		sourceColumn: AccessRight
+
+		annotation SummarizationSetBy = Automatic
+
+	column EmailAddress
+		dataType: string
+		lineageTag: 21a1dfb7-48f8-4153-9114-eab582ae9769
+		sourceLineageTag: EmailAddress
+		summarizeBy: none
+		sourceColumn: EmailAddress
+
+		annotation SummarizationSetBy = Automatic
+
+	column DisplayName
+		dataType: string
+		lineageTag: c18b8776-de22-4157-8e92-495e826c5fb8
+		sourceLineageTag: DisplayName
+		summarizeBy: none
+		sourceColumn: DisplayName
+
+		annotation SummarizationSetBy = Automatic
+
+	column Identifier
+		dataType: string
+		lineageTag: a8c10c83-0c5d-4ee0-b08b-b0c8ea632bf4
+		sourceLineageTag: Identifier
+		summarizeBy: none
+		sourceColumn: Identifier
+
+		annotation SummarizationSetBy = Automatic
+
+	column GraphId
+		dataType: string
+		lineageTag: 48ebf627-9c6b-4601-b0a7-cf01b2fca706
+		sourceLineageTag: GraphId
+		summarizeBy: none
+		sourceColumn: GraphId
+
+		annotation SummarizationSetBy = Automatic
+
+	column PrincipalType
+		dataType: string
+		lineageTag: 35f3249f-7bb4-4fdc-a8fb-8faba34f6fa3
+		sourceLineageTag: PrincipalType
+		summarizeBy: none
+		sourceColumn: PrincipalType
+
+		annotation SummarizationSetBy = Automatic
+
+	column UserType
+		dataType: string
+		lineageTag: 98db762c-395b-4816-812c-27ee4678e3f7
+		sourceLineageTag: UserType
+		summarizeBy: none
+		sourceColumn: UserType
+
+		annotation SummarizationSetBy = Automatic
+
+	partition item_users = entity
+		mode: directLake
+		source
+			entityName: item_users
+			schemaName: dbo
+			expressionSource: DatabaseQuery
+
+	annotation PBI_ResultType = Table
+

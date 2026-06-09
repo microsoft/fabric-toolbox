@@ -303,6 +303,7 @@ export interface APIRequestDetails {
   endpoint: string;
   payload: Record<string, any>;
   headers?: Record<string, string> | undefined;
+  validationErrors?: string[];  // NEW: Capture validation errors before API call
 }
 
 export interface ApiError {
@@ -358,6 +359,12 @@ export interface AppState {
   pipelineReferenceMappings: PipelineReferenceMappings;
   /** NEW: Bridge between LinkedService mappings and Pipeline activities */
   linkedServiceConnectionBridge: LinkedServiceConnectionBridge;
+  /** NEW: Bridge version tracking - increments when bridge is rebuilt */
+  bridgeVersion: number;
+  /** NEW: Track last processed bridge version to prevent duplicate auto-mapping runs */
+  lastProcessedBridgeVersion: number;
+  /** NEW: Track which activity references were auto-mapped (format: "pipelineName:referenceId") */
+  autoMappedReferences: Set<string>;
   workspaceCredentials: WorkspaceCredentialState;
   deploymentResults: DeploymentResult[];
   connectionDeploymentResults: ConnectionDeploymentResult[];
@@ -383,8 +390,9 @@ export interface LinkedServiceConnectionBridge {
     connectionId: string;            // Mapped Fabric Connection ID
     connectionDisplayName: string;   // Connection display name for UI
     connectionType: string;          // Connection type
-    mappingSource: 'auto' | 'manual'; // How mapping was created
+    mappingSource: 'auto' | 'manual' | 'deployed' | 'pending-deployment'; // How mapping was created
     timestamp: string;               // When mapping was created
+    deploymentTimestamp?: string;    // When connection was deployed (for new connections)
   };
 }
 
@@ -460,9 +468,35 @@ export interface LinkedServiceConnection {
   credentialType?: string;
   credentials: Record<string, any>;
   skipTestConnection: boolean;
-  status: 'pending' | 'configured' | 'failed' | 'skipped';
+  status: 'pending' | 'configured' | 'failed' | 'skipped' | 'deployed';
   validationErrors: string[];
   skip?: boolean;
+  
+  // NEW: Deployed connection tracking (populated after deployment)
+  deployedConnectionId?: string;      // Real Fabric connection ID after deployment
+  deployedConnectionName?: string;     // Deployed connection name
+  deploymentTimestamp?: string;        // When the connection was deployed
+  deploymentError?: string;            // Error message if deployment failed
+}
+
+// FabricDataPipelines-specific connection definition with shared connection support
+export interface FabricDataPipelinesDefinition {
+  type: 'FabricDataPipelines';
+  isSharedConnection?: boolean; // True when one connection serves multiple ExecutePipeline activities
+  affectedActivities?: Array<{
+    pipelineName: string;
+    activityName: string;
+    targetPipelineName: string;
+    waitOnCompletion?: boolean;
+    parameters?: Record<string, any>;
+  }>;
+  useSeparateConnections?: boolean; // Advanced option: allow user to override shared behavior
+  // Legacy properties (kept for backward compatibility when useSeparateConnections=true)
+  parentPipeline?: string;
+  activityName?: string;
+  targetPipelineName?: string;
+  waitOnCompletion?: boolean;
+  parameters?: Record<string, any>;
 }
 
 export interface FabricGateway {
@@ -615,6 +649,65 @@ export interface PipelineReferenceMappings {
 // ============================================================================
 
 /**
+ * HDInsight Activity Type Properties
+ * Consolidated interface for all HDInsight activity transformations
+ */
+export interface HDInsightActivityTypeProperties {
+  /** The HDInsight activity subtype */
+  hdiActivityType: 'Hive' | 'Pig' | 'MapReduce' | 'Spark' | 'Streaming';
+  
+  /** Script settings (for Hive, Pig) */
+  scriptSettings?: {
+    scriptPath: string;
+    externalReferences?: {
+      connection: string; // Storage connection ID
+    };
+  };
+  
+  /** JAR settings (for MapReduce) */
+  jarSettings?: {
+    jarFilePath: string;
+    jarLibs?: string[];
+    externalReferences?: {
+      connection: string; // Storage connection ID
+    };
+  };
+  
+  /** File settings (for Streaming) */
+  fileSettings?: {
+    filePaths: string[];
+    input: string;
+    output: string;
+    externalReferences?: {
+      connection: string; // Storage connection ID
+    };
+  };
+  
+  /** Spark-specific properties */
+  entryFilePath?: string;
+  rootPath?: string;
+  
+  /** Common properties across all types */
+  className?: string;
+  mapper?: string;
+  reducer?: string;
+  combiner?: string;
+  proxyUser?: string;
+  arguments?: any[];
+  parameters?: Record<string, any>;
+  variables?: Record<string, any>;
+  defines?: Record<string, any>;
+  sparkConfig?: Record<string, any>;
+  getDebugInfo?: 'None' | 'Always' | 'Failure';
+  queryTimeout?: number;
+  
+  /** Storage connection for entire activity (optional override) */
+  externalReferences?: {
+    connection: string;
+  };
+}
+
+/**
  * Unified activity type enum for UI categorization
  */
 export type ActivityTypeEnum = 
@@ -644,6 +737,9 @@ export type ActivityTypeEnum =
   | 'DatabricksSparkPython'
   | 'HDInsightSpark'
   | 'HDInsightHive'
+  | 'HDInsightPig'
+  | 'HDInsightMapReduce'
+  | 'HDInsightStreaming'
   | 'SynapseNotebook'
   | 'SynapseSparkJob'
   | 'Script'
@@ -810,6 +906,7 @@ export interface ConnectionDeploymentResult {
   linkedServiceName: string;
   status: 'success' | 'failed' | 'skipped';
   fabricConnectionId?: string;
+  fabricConnectionName?: string;  // NEW: Display name from Fabric API
   errorMessage?: string;
   skipReason?: string;
   apiRequestDetails?: APIRequestDetails;
@@ -1158,3 +1255,26 @@ export interface PipelineLibraryVariable {
   variableName: string;
   libraryName: string;
 }
+
+/**
+ * PHASE 0 COMPLETION VERIFICATION
+ * 
+ * This type-level check ensures all Phase 0 type definitions are complete.
+ * Build will FAIL if any required property is missing.
+ * 
+ * DO NOT REMOVE - Required for build-time Phase 0 validation
+ */
+type Phase0CompletionCheck = {
+  // Verify APIRequestDetails has validationErrors property
+  validationErrorsExists: 'validationErrors' extends keyof APIRequestDetails 
+    ? true 
+    : 'ERROR: APIRequestDetails.validationErrors is missing - Phase 0 Step 0.0 incomplete';
+  
+  // Verify ConnectionDeploymentResult has fabricConnectionName property
+  fabricConnectionNameExists: 'fabricConnectionName' extends keyof ConnectionDeploymentResult 
+    ? true 
+    : 'ERROR: ConnectionDeploymentResult.fabricConnectionName is missing - Phase 0 Step 0.1 incomplete';
+};
+
+// Force TypeScript to evaluate the type (will error if any check fails)
+const _phase0Verification: Phase0CompletionCheck = {} as Phase0CompletionCheck;

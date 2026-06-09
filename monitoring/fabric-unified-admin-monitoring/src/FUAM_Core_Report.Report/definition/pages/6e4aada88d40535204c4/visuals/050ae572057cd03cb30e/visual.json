@@ -1,0 +1,76 @@
+{
+    "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.5.0/schema.json",
+    "name": "050ae572057cd03cb30e",
+    "position": {
+        "x": 15.116279069767442,
+        "y": 72.09302325581396,
+        "z": 16000,
+        "height": 75.5813953488372,
+        "width": 272.09302325581393,
+        "tabOrder": 13000
+    },
+    "visual": {
+        "visualType": "textbox",
+        "objects": {
+            "general": [
+                {
+                    "properties": {
+                        "paragraphs": [
+                            {
+                                "textRuns": [
+                                    {
+                                        "value": "Important:",
+                                        "textStyle": {
+                                            "fontWeight": "bold",
+                                            "fontSize": "14.6667px"
+                                        }
+                                    }
+                                ]
+                            },
+                            {
+                                "textRuns": [
+                                    {
+                                        "value": "This table contains only a sub-set of all columns in the activity table.",
+                                        "textStyle": {
+                                            "fontFamily": "inherit",
+                                            "fontSize": "inherit"
+                                        }
+                                    }
+                                ]
+                            }
+                        ]
+                    }
+                }
+            ]
+        },
+        "visualContainerObjects": {
+            "background": [
+                {
+                    "properties": {
+                        "show": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "false"
+                                }
+                            }
+                        }
+                    }
+                }
+            ],
+            "border": [
+                {
+                    "properties": {
+                        "show": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "false"
+                                }
+                            }
+                        }
+                    }
+                }
+            ]
+        },
+        "drillFilterOtherVisuals": true
+    }
+}

@@ -1,0 +1,415 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="page-header">
+    <h1>{{ workspace_name }}</h1>
+    <p>
+        <span class="badge {% if workspace.platform == 'synapse' %}badge-primary{% else %}badge-secondary{% endif %}">
+            {{ workspace.platform | title }}
+        </span>
+        Detailed workspace assessment
+    </p>
+</div>
+
+<!-- Workspace Summary Stats -->
+<div class="row">
+    {% if workspace.platform == 'synapse' %}
+    <div class="col">
+        <div class="stat-card">
+            <div class="stat-value">{{ workspace.summary.data_engineering.notebooks | default(0) }}</div>
+            <div class="stat-label">Notebooks</div>
+        </div>
+    </div>
+    <div class="col">
+        <div class="stat-card">
+            <div class="stat-value">{{ workspace.summary.data_integration.pipelines | default(0) }}</div>
+            <div class="stat-label">Pipelines</div>
+        </div>
+    </div>
+    <div class="col">
+        <div class="stat-card">
+            <div class="stat-value">{{ workspace.summary.data_warehouse.dedicated_pools | default(0) }}</div>
+            <div class="stat-label">Dedicated Pools</div>
+        </div>
+    </div>
+    <div class="col">
+        <div class="stat-card">
+            <div class="stat-value">{{ workspace.summary.data_engineering.spark_pools | default(0) }}</div>
+            <div class="stat-label">Spark Pools</div>
+        </div>
+    </div>
+    <div class="col">
+        <div class="stat-card">
+            <div class="stat-value">{{ workspace.summary.data_warehouse.total_tables | default(0) }}</div>
+            <div class="stat-label">Tables</div>
+        </div>
+    </div>
+    {% else %}
+    <div class="col">
+        <div class="stat-card">
+            <div class="stat-value">{{ workspace.summary.counts.notebooks | default(0) }}</div>
+            <div class="stat-label">Notebooks</div>
+        </div>
+    </div>
+    <div class="col">
+        <div class="stat-card">
+            <div class="stat-value">{{ workspace.summary.counts.jobs | default(0) }}</div>
+            <div class="stat-label">Jobs</div>
+        </div>
+    </div>
+    <div class="col">
+        <div class="stat-card">
+            <div class="stat-value">{{ workspace.summary.counts.clusters | default(0) }}</div>
+            <div class="stat-label">Clusters</div>
+        </div>
+    </div>
+    <div class="col">
+        <div class="stat-card">
+            <div class="stat-value">{{ workspace.summary.counts.sql_warehouses | default(0) }}</div>
+            <div class="stat-label">SQL Warehouses</div>
+        </div>
+    </div>
+    <div class="col">
+        <div class="stat-card">
+            <div class="stat-value">{{ workspace.summary.counts.tables | default(0) }}</div>
+            <div class="stat-label">Tables</div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+
+<!-- Workspace Info -->
+<div class="card mt-2">
+    <div class="card-header">Workspace Information</div>
+    <div class="card-body">
+        <table class="table">
+            <tbody>
+                {% if workspace.summary.workspace_info %}
+                <tr>
+                    <td><strong>Name</strong></td>
+                    <td>{{ workspace.summary.workspace_info.name | default('N/A') }}</td>
+                </tr>
+                <tr>
+                    <td><strong>Resource Group</strong></td>
+                    <td>{{ workspace.summary.workspace_info.resource_group | default('N/A') }}</td>
+                </tr>
+                <tr>
+                    <td><strong>Location</strong></td>
+                    <td>{{ workspace.summary.workspace_info.location | default('N/A') }}</td>
+                </tr>
+                <tr>
+                    <td><strong>Status</strong></td>
+                    <td>{{ workspace.summary.workspace_info.status | default('N/A') }}</td>
+                </tr>
+                {% endif %}
+                <tr>
+                    <td><strong>Assessment Status</strong></td>
+                    <td>
+                        {% set status = workspace.summary.assessment_status | default('unknown') %}
+                        <span class="badge {% if status == 'completed' %}badge-success{% elif status == 'incomplete' %}badge-warning{% else %}badge-secondary{% endif %}">
+                            {{ status | title }}
+                        </span>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Resources by Category -->
+{% if workspace.resources %}
+<div class="row">
+    <!-- Notebooks -->
+    {% if workspace.resources.notebooks %}
+    <div class="col col-6">
+        <div class="card">
+            <div class="card-header">📓 Notebooks ({{ workspace.resources.notebooks | length }})</div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>Name</th>
+                                <th>Language</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for nb in workspace.resources.notebooks[:10] %}
+                            {% set nb_info = nb.data or nb %}
+                            <tr>
+                                <td>{{ nb_info.name | default('Unknown') }}</td>
+                                <td>{{ nb_info.language | default(nb_info.default_language | default('N/A')) }}</td>
+                            </tr>
+                            {% endfor %}
+                            {% if workspace.resources.notebooks | length > 10 %}
+                            <tr>
+                                <td colspan="2" class="text-muted">
+                                    ... and {{ workspace.resources.notebooks | length - 10 }} more
+                                </td>
+                            </tr>
+                            {% endif %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Pipelines -->
+    {% if workspace.resources.pipelines %}
+    <div class="col col-6">
+        <div class="card">
+            <div class="card-header">🔄 Pipelines ({{ workspace.resources.pipelines | length }})</div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>Name</th>
+                                <th class="text-right">Activities</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for pipe in workspace.resources.pipelines[:10] %}
+                            {% set pipe_info = pipe.data or pipe %}
+                            <tr>
+                                <td>{{ pipe_info.name | default('Unknown') }}</td>
+                                <td class="text-right">{{ pipe_info.activities_count | default(0) }}</td>
+                            </tr>
+                            {% endfor %}
+                            {% if workspace.resources.pipelines | length > 10 %}
+                            <tr>
+                                <td colspan="2" class="text-muted">
+                                    ... and {{ workspace.resources.pipelines | length - 10 }} more
+                                </td>
+                            </tr>
+                            {% endif %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- SQL Pools -->
+    {% if workspace.resources.sql_pools %}
+    <div class="col col-6">
+        <div class="card">
+            <div class="card-header">🗄️ SQL Pools ({{ workspace.resources.sql_pools | length }})</div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>Name</th>
+                                <th>SKU</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for pool in workspace.resources.sql_pools %}
+                            {% set pool_info = pool.data or pool.pool_data or pool %}
+                            <tr>
+                                <td>{{ pool_info.name | default('Unknown') }}</td>
+                                <td>{{ pool_info.sku | default('N/A') }}</td>
+                                <td>
+                                    <span class="badge {% if pool_info.status == 'Online' %}badge-success{% else %}badge-secondary{% endif %}">
+                                        {{ pool_info.status | default('Unknown') }}
+                                    </span>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Spark Pools -->
+    {% if workspace.resources.spark_pools %}
+    <div class="col col-6">
+        <div class="card">
+            <div class="card-header">⚡ Spark Pools ({{ workspace.resources.spark_pools | length }})</div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>Name</th>
+                                <th>Node Size</th>
+                                <th>Nodes</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for sp in workspace.resources.spark_pools %}
+                            {% set sp_info = sp.data or sp %}
+                            <tr>
+                                <td>{{ sp_info.name | default('Unknown') }}</td>
+                                <td>{{ sp_info.node_size | default('N/A') }}</td>
+                                <td>{{ sp_info.node_count | default('N/A') }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Clusters (Databricks) -->
+    {% if workspace.resources.clusters %}
+    <div class="col col-6">
+        <div class="card">
+            <div class="card-header">🖥️ Clusters ({{ workspace.resources.clusters | length }})</div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>Name</th>
+                                <th>State</th>
+                                <th>Node Type</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for cl in workspace.resources.clusters %}
+                            {% set cl_info = cl.data or cl %}
+                            <tr>
+                                <td>{{ cl_info.cluster_name | default(cl_info.name | default('Unknown')) }}</td>
+                                <td>
+                                    <span class="badge {% if cl_info.state == 'RUNNING' %}badge-success{% else %}badge-secondary{% endif %}">
+                                        {{ cl_info.state | default('Unknown') }}
+                                    </span>
+                                </td>
+                                <td>{{ cl_info.node_type_id | default('N/A') }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Jobs (Databricks) -->
+    {% if workspace.resources.jobs %}
+    <div class="col col-6">
+        <div class="card">
+            <div class="card-header">📋 Jobs ({{ workspace.resources.jobs | length }})</div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>Job ID</th>
+                                <th>Tasks</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for job in workspace.resources.jobs[:10] %}
+                            {% set job_info = job.data or job %}
+                            <tr>
+                                <td>{{ job_info.job_id | default('Unknown') }}</td>
+                                <td>{{ job_info.tasks | length if job_info.tasks else 0 }}</td>
+                            </tr>
+                            {% endfor %}
+                            {% if workspace.resources.jobs | length > 10 %}
+                            <tr>
+                                <td colspan="2" class="text-muted">
+                                    ... and {{ workspace.resources.jobs | length - 10 }} more
+                                </td>
+                            </tr>
+                            {% endif %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endif %}
+
+<!-- Admin Resources (Synapse) -->
+{% if workspace.admin %}
+<h3 class="mt-2 mb-1">Admin Resources</h3>
+<div class="row">
+    <!-- Linked Services -->
+    {% if workspace.admin.linked_services %}
+    <div class="col col-6">
+        <div class="card">
+            <div class="card-header">🔗 Linked Services ({{ workspace.admin.linked_services | length }})</div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>Name</th>
+                                <th>Type</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for ls in workspace.admin.linked_services[:10] %}
+                            {% set ls_info = ls.data or ls %}
+                            <tr>
+                                <td>{{ ls_info.name | default('Unknown') }}</td>
+                                <td>{{ ls_info.type | default('N/A') }}</td>
+                            </tr>
+                            {% endfor %}
+                            {% if workspace.admin.linked_services | length > 10 %}
+                            <tr>
+                                <td colspan="2" class="text-muted">
+                                    ... and {{ workspace.admin.linked_services | length - 10 }} more
+                                </td>
+                            </tr>
+                            {% endif %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Integration Runtimes -->
+    {% if workspace.admin.integration_runtimes %}
+    <div class="col col-6">
+        <div class="card">
+            <div class="card-header">⚙️ Integration Runtimes ({{ workspace.admin.integration_runtimes | length }})</div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>Name</th>
+                                <th>Type</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for ir in workspace.admin.integration_runtimes %}
+                            {% set ir_info = ir.data or ir %}
+                            <tr>
+                                <td>{{ ir_info.name | default('Unknown') }}</td>
+                                <td>{{ ir_info.type | default('N/A') }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endif %}
+
+<div class="mt-2">
+    <a href="{{ base_path }}index.html">← Back to Overview</a>
+</div>
+{% endblock %}

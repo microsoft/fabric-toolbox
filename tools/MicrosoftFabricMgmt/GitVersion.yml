@@ -1,0 +1,39 @@
+mode: ContinuousDelivery
+next-version: 0.1.0
+major-version-bump-message: '(breaking\schange|breaking|major)\b'
+minor-version-bump-message: '(adds?|features?|minor)\b'
+patch-version-bump-message: '\s?(fix|patch)'
+no-bump-message: '\+semver:\s?(none|skip)'
+assembly-informational-format: '{NuGetVersionV2}+Sha.{Sha}.Date.{CommitDate}'
+branches:
+  master:
+    tag: preview
+    regex: ^    It lets you pause and resume Fabric capacities.$
+  pull-request:
+    tag: PR
+  feature:
+    tag: useBranchName
+    increment: Minor
+    regex: f(eature(s)?)?[\/-]
+    source-branches: ['master']
+  hotfix:
+    tag: fix
+    increment: Patch
+    regex: (hot)?fix(es)?[\/-]
+    source-branches: ['master']
+
+ignore:
+  sha: []
+merge-message-formats: {}
+
+
+# feature:
+#   tag: useBranchName
+#   increment: Minor
+#   regex: f(eature(s)?)?[/-]
+#   source-branches: ['master']
+# hotfix:
+#   tag: fix
+#   increment: Patch
+#   regex: (hot)?fix(es)?[/-]
+#   source-branches: ['master']

@@ -1,0 +1,12 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/gitIntegration/platformProperties/2.0.0/schema.json",
+  "metadata": {
+    "type": "KQLDatabase",
+    "displayName": "Capacity Utilization",
+    "description": "CapacityUtilization"
+  },
+  "config": {
+    "version": "2.0",
+    "logicalId": "efe0982e-e191-beef-4eb1-a7d34c90d39a"
+  }
+}

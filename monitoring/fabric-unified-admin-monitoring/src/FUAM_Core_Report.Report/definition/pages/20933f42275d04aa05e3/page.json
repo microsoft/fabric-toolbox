@@ -1,0 +1,10 @@
+{
+    "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/page/2.0.0/schema.json",
+    "name": "20933f42275d04aa05e3",
+    "displayName": "TT | Tenant Setting Switch",
+    "displayOption": "ActualSize",
+    "height": 113,
+    "width": 800,
+    "visibility": "HiddenInViewMode",
+    "type": "Tooltip"
+}

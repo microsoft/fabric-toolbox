@@ -1,0 +1,32 @@
+# Development Docker configuration for Lakehouse Mirror
+FROM node:18-alpine
+
+# Set working directory
+WORKDIR /app
+
+# Install dependencies for both client and server
+COPY client/package*.json ./client/
+COPY server/package*.json ./server/
+COPY package*.json ./
+
+# Install all dependencies (including dev dependencies)
+RUN cd client && npm install && \
+    cd ../server && npm install && \
+    cd .. && npm install
+
+# Copy source code
+COPY client/ ./client/
+COPY server/ ./server/
+COPY .env* ./
+
+# Create logs directory
+RUN mkdir -p ./logs
+
+# Install development tools globally
+RUN npm install -g concurrently nodemon
+
+# Expose ports
+EXPOSE 3000 3001
+
+# Start both client and server in development mode
+CMD ["npm", "run", "dev"]

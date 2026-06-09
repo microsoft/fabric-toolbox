@@ -1,0 +1,29 @@
+{
+  "name": "lakehouse-mirror",
+  "version": "1.0.0",
+  "description": "Web application to mirror Microsoft Fabric lakehouses using schema shortcuts",
+  "main": "server/index.js",
+  "scripts": {
+    "dev": "concurrently \"npm run server:dev\" \"npm run client:dev\"",
+    "server:dev": "cd server && npm run dev",
+    "client:dev": "cd client && npm start",
+    "build": "cd client && npm run build",
+    "start": "cd server && npm start",
+    "install:all": "npm install && cd server && npm install && cd ../client && npm install",
+    "test": "cd server && npm test && cd ../client && npm test",
+    "docker:build": "docker build -t lakehouse-mirror .",
+    "docker:run": "docker run -p 3000:3000 -p 3001:3001 lakehouse-mirror"
+  },
+  "keywords": [
+    "microsoft-fabric",
+    "lakehouse",
+    "power-bi",
+    "azure",
+    "data-engineering"
+  ],
+  "author": "Your Name",
+  "license": "MIT",
+  "devDependencies": {
+    "concurrently": "^8.2.2"
+  }
+}

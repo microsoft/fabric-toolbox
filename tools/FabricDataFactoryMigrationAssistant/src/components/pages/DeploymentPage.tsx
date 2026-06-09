@@ -33,8 +33,56 @@ export function DeploymentPage() {
   // NOTE: This page now only handles Data Factory component deployment.
   // Connection deployment is handled by the separate DeployConnectionsPage component.
 
+  // Validate deployment readiness - prevent pipeline deployment without connections
+  const validateDeploymentReadiness = (): { ready: boolean; warnings: string[] } => {
+    const warnings: string[] = [];
+    
+    // Check if connections were deployed
+    const connectionCount = state.connectionDeploymentResults?.length || 0;
+    const successfulConnections = state.connectionDeploymentResults?.filter(
+      c => c.status === 'success' && c.fabricConnectionId
+    ).length || 0;
+    
+    if (connectionCount === 0) {
+      warnings.push('No connections were deployed. Pipelines may fail if they reference LinkedServices.');
+    } else if (successfulConnections === 0) {
+      warnings.push(`All ${connectionCount} connections failed to deploy. Pipelines will likely fail.`);
+    } else if (successfulConnections < connectionCount) {
+      warnings.push(
+        `Only ${successfulConnections}/${connectionCount} connections deployed successfully. ` +
+        `Some pipelines may fail with invalid reference errors.`
+      );
+    }
+    
+    console.log('Deployment readiness check:', {
+      totalConnections: connectionCount,
+      successfulConnections: successfulConnections,
+      hasWarnings: warnings.length > 0,
+      warnings: warnings
+    });
+    
+    return {
+      ready: successfulConnections > 0 || connectionCount === 0,
+      warnings: warnings
+    };
+  };
+
   const startDeployment = async () => {
     if (!state.auth.accessToken || !state.selectedWorkspace?.id) {
+      return;
+    }
+
+    // NEW: Validate deployment readiness
+    const readinessCheck = validateDeploymentReadiness();
+    if (readinessCheck.warnings.length > 0) {
+      readinessCheck.warnings.forEach(warning => {
+        console.warn(`⚠️ ${warning}`);
+        toast.warning(warning);
+      });
+    }
+    
+    if (!readinessCheck.ready) {
+      toast.error('Cannot proceed with deployment - no successful connections available');
       return;
     }
 
@@ -74,7 +122,7 @@ export function DeploymentPage() {
           setDeploymentLog(prev => [...prev, progress.status]);
         },
         // Connection results are handled by separate deployment flow
-        [],
+        state.connectionDeploymentResults || [],  // ✅ FIXED - Pass actual connection results
         // Pipeline connection mappings for activity transformation (OLD format - backward compatibility)
         state.pipelineConnectionMappings || {},
         // Pipeline reference mappings for Custom activity transformation (NEW referenceId-based)
@@ -198,6 +246,25 @@ export function DeploymentPage() {
   const skippedDeployments = (state.deploymentResults || []).filter(r => r && r.status === 'skipped');
 
   const hasStartedDeployment = (state.deploymentResults || []).length > 0 || isDeploying;
+
+  // Monitor connection deployment state
+  useEffect(() => {
+    if (state.connectionDeploymentResults && state.connectionDeploymentResults.length > 0) {
+      console.log('Connection deployment results available:', {
+        total: state.connectionDeploymentResults.length,
+        successful: state.connectionDeploymentResults.filter(r => r.status === 'success').length,
+        failed: state.connectionDeploymentResults.filter(r => r.status === 'failed').length,
+        results: state.connectionDeploymentResults.map(r => ({
+          linkedService: r.linkedServiceName,
+          status: r.status,
+          hasFabricId: !!r.fabricConnectionId,
+          hasDisplayName: !!r.fabricConnectionName
+        }))
+      });
+    } else {
+      console.log('No connection deployment results available - pipelines may fail if they use LinkedServices');
+    }
+  }, [state.connectionDeploymentResults]);
 
   return (
     <WizardLayout

@@ -23,18 +23,20 @@ import {
   LinkedServiceConnection 
 } from '../types';
 import { ActivityLinkedServiceReference } from './pipelineActivityAnalysisService';
+import { buildReferenceId } from '../lib/utils';
 
 /**
  * Bridge mapping from LinkedService name to Fabric Connection details
  */
 export interface LinkedServiceConnectionBridge {
   [linkedServiceName: string]: {
-    originalName: string;           // Original ADF LinkedService name
-    connectionId: string;            // Mapped Fabric Connection ID
-    connectionDisplayName: string;   // Connection display name for UI
-    connectionType: string;          // Connection type
-    mappingSource: 'auto' | 'manual'; // How mapping was created
-    timestamp: string;               // When mapping was created
+    originalName: string;                           // Original ADF LinkedService name
+    connectionId: string;                            // Mapped Fabric Connection ID (may be placeholder or deployed)
+    connectionDisplayName: string;                   // Connection display name for UI
+    connectionType: string;                          // Connection type
+    mappingSource: 'auto' | 'manual' | 'deployed' | 'pending-deployment'; // How mapping was created
+    timestamp: string;                               // When mapping was created
+    deploymentTimestamp?: string;                    // When connection was deployed (if applicable)
   };
 }
 
@@ -75,6 +77,38 @@ export class LinkedServiceMappingBridgeService {
         return;
       }
       
+      // Special handling for expanded FabricDataPipelines individual connections
+      if (ls.linkedServiceType === 'FabricDataPipelines' && 
+          ls.linkedServiceDefinition?.expandedFromShared === true) {
+        
+        const originalSharedName = ls.linkedServiceDefinition.originalSharedName;
+        const pipelineName = ls.linkedServiceDefinition.parentPipeline;
+        const activityName = ls.linkedServiceDefinition.activityName;
+        
+        // Create bridge entry using pipeline + activity as key
+        // This matches how activities reference the connection
+        const activityKey = `${pipelineName}_${activityName}_invoke`;
+        
+        bridge[activityKey] = {
+          originalName: originalSharedName || ls.linkedServiceName,
+          connectionId: ls.deployedConnectionId || `pending-${ls.linkedServiceName}`,
+          connectionDisplayName: ls.deployedConnectionName || ls.linkedServiceName,
+          connectionType: ls.selectedConnectionType || 'FabricDataPipelines',
+          mappingSource: ls.deployedConnectionId ? 'deployed' : 'pending-deployment',
+          timestamp: new Date().toISOString(),
+          deploymentTimestamp: ls.deploymentTimestamp,
+          // Additional metadata for debugging
+          activityContext: {
+            pipelineName,
+            activityName,
+            isIndividualConnection: true
+          }
+        } as any;
+        
+        console.log(`Bridge (Individual): ${activityKey} → ${ls.deployedConnectionId || 'pending'}`);
+        return; // Skip default mapping logic
+      }
+      
       // Case 1: Mapped to existing connection
       if (ls.mappingMode === 'existing' && ls.existingConnectionId) {
         bridge[ls.linkedServiceName] = {
@@ -87,47 +121,76 @@ export class LinkedServiceMappingBridgeService {
         };
       }
       // Case 2: New connection was configured
-      else if (ls.mappingMode === 'new' && ls.status === 'configured') {
-        // For new connections, we need to get the ID after deployment
-        // For now, use a placeholder that indicates pending deployment
-        const connectionId = `new-${ls.linkedServiceName}`;
+      else if (ls.mappingMode === 'new' && (ls.status === 'configured' || ls.status === 'deployed')) {
+        // Priority 1: Use deployed connection ID if available (after deployment)
+        // Priority 2: Use placeholder ID (before deployment)
+        const connectionId = ls.deployedConnectionId || `new-${ls.linkedServiceName}`;
+        const connectionName = ls.deployedConnectionName || ls.linkedServiceName;
+        const isDeployed = !!ls.deployedConnectionId;
         
         bridge[ls.linkedServiceName] = {
           originalName: ls.linkedServiceName,
           connectionId: connectionId,
-          connectionDisplayName: ls.linkedServiceName, // Use LinkedService name as display name
+          connectionDisplayName: connectionName,
           connectionType: ls.selectedConnectionType || 'Unknown',
-          mappingSource: 'auto',
-          timestamp: new Date().toISOString()
+          mappingSource: isDeployed ? 'deployed' : 'pending-deployment',
+          timestamp: new Date().toISOString(),
+          deploymentTimestamp: ls.deploymentTimestamp
         };
+        
+        console.log(`Bridge: ${ls.linkedServiceName} → ${connectionId} (${isDeployed ? 'deployed' : 'pending deployment'})`);
       }
     });
+    
+    // Log bridge statistics
+    const totalEntries = Object.keys(bridge).length;
+    const deployedEntries = Object.values(bridge).filter(
+      entry => entry.mappingSource === 'deployed'
+    ).length;
+    const pendingEntries = Object.values(bridge).filter(
+      entry => entry.mappingSource === 'pending-deployment'
+    ).length;
+    const autoEntries = Object.values(bridge).filter(
+      entry => entry.mappingSource === 'auto'
+    ).length;
+    
+    console.log(`LinkedService Bridge built: ${totalEntries} total entries`);
+    console.log(`  - ${deployedEntries} deployed connections`);
+    console.log(`  - ${pendingEntries} pending deployment`);
+    console.log(`  - ${autoEntries} existing connections`);
     
     return bridge;
   }
   
   /**
    * Applies bridge mappings to pipeline activities
+   * Returns a Record keyed by referenceId for efficient lookups
    * 
    * @param pipelineName Pipeline name
    * @param activityReferences Activity references requiring mapping
    * @param bridge LinkedService-to-Connection bridge
-   * @returns Pre-populated pipeline connection mappings
+   * @returns Pre-populated pipeline connection mappings keyed by referenceId
    */
   static applyBridgeToPipeline(
     pipelineName: string,
     activityReferences: ActivityLinkedServiceReference[],
     bridge: LinkedServiceConnectionBridge
-  ): ActivityConnectionMapping[] {
-    return activityReferences.map((ref) => {
+  ): Record<string, ActivityConnectionMapping> {
+    const mappings: Record<string, ActivityConnectionMapping> = {};
+    
+    activityReferences.forEach((ref, index) => {
       const linkedServiceName = ref.linkedServiceName || ref.datasetLinkedServiceName;
       
       if (!linkedServiceName) {
-        return {
+        const location = this.mapReferenceLocationToStandard(ref.referenceLocation);
+        const referenceId = buildReferenceId(pipelineName, ref.activityName, location);
+        
+        mappings[referenceId] = {
           activityName: ref.activityName,
           activityType: ref.activityType,
           selectedConnectionId: undefined
         };
+        return;
       }
       
       // Check if we have a direct bridge mapping for this LinkedService
@@ -141,7 +204,11 @@ export class LinkedServiceMappingBridgeService {
         }
       }
       
-      return {
+      // Generate referenceId using standardized format
+      const location = this.mapReferenceLocationToStandard(ref.referenceLocation);
+      const referenceId = buildReferenceId(pipelineName, ref.activityName, location);
+      
+      mappings[referenceId] = {
         activityName: ref.activityName,
         activityType: ref.activityType,
         linkedServiceReference: ref.linkedServiceName 
@@ -150,6 +217,44 @@ export class LinkedServiceMappingBridgeService {
         selectedConnectionId: bridgeMapping?.connectionId
       };
     });
+    
+    return mappings;
+  }
+  
+  /**
+   * Helper to map old referenceLocation values to standardized location strings
+   * This ensures consistency with unifiedActivityMappingService format
+   * 
+   * @param location - Original reference location
+   * @returns Standardized location string
+   */
+  private static mapReferenceLocationToStandard(location?: string): string {
+    const locationMap: Record<string, string> = {
+      'direct': 'activity',
+      'typeProperties': 'activity',
+      'dataset': 'dataset',
+      'invoke': 'invoke',
+      'invokePipeline': 'invoke',
+      'source': 'source',
+      'sink': 'sink',
+      'staging': 'staging',
+      'linkedServices': 'linkedServices',
+      'cluster': 'cluster',
+      'storage': 'storage',
+      'script': 'script',
+      'jar': 'jar',
+      'file': 'file',
+      'sparkJob': 'sparkJob',
+      'resource': 'resource',
+      'refobj_0': 'refobj_0',
+      'refobj_1': 'refobj_1',
+      'refobj_2': 'refobj_2',
+      'refobj_3': 'refobj_3',
+      'refobj_4': 'refobj_4'
+    };
+    
+    // Passthrough if no mapping found (instead of defaulting to 'activity')
+    return locationMap[location || 'direct'] || location || 'activity';
   }
   
   /**

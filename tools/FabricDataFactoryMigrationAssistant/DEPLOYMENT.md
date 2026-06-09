@@ -53,8 +53,8 @@ Deploy the Azure Data Factory to Microsoft Fabric Migration Assistant to your Az
 
    GitHub Details:
    ├─ Source: GitHub
-   ├─ Organization: Mirabile-S
-   ├─ Repository: PipelineToFabricUpgrader
+   ├─ Organization: [YOUR-GITHUB-USERNAME]
+   ├─ Repository: [YOUR-REPO-NAME]
    ├─ Branch: main
    
    Build Details:
@@ -97,12 +97,14 @@ az group create \
 az staticwebapp create \
   --name pipeline-fabric-upgrader \
   --resource-group pipeline-upgrader-rg \
-  --source https://github.com/Mirabile-S/PipelineToFabricUpgrader \
+  --source https://github.com/[YOUR-GITHUB-USERNAME]/[YOUR-REPO-NAME] \
   --location eastus2 \
   --branch main \
   --app-location "/" \
   --output-location "dist" \
   --login-with-github
+
+# Note: Replace [YOUR-GITHUB-USERNAME] and [YOUR-REPO-NAME] with your actual GitHub username and repository name
 
 # Get the deployment URL
 az staticwebapp show \
@@ -214,7 +216,7 @@ Your credentials are saved locally (browser localStorage), so you won't need to 
 3. See all deployment runs and their status
 
 # Or check GitHub:
-1. Go to https://github.com/Mirabile-S/PipelineToFabricUpgrader
+1. Go to your repository on GitHub
 2. Click "Actions" tab
 3. See all workflow runs
 ```
@@ -310,8 +312,10 @@ Solution:
 
 ```bash
 # Clone the repository
-git clone https://github.com/Mirabile-S/PipelineToFabricUpgrader.git
-cd PipelineToFabricUpgrader
+git clone https://github.com/[YOUR-GITHUB-USERNAME]/[YOUR-REPO-NAME].git
+cd [YOUR-REPO-NAME]
+
+# Note: Replace [YOUR-GITHUB-USERNAME] and [YOUR-REPO-NAME] with your actual values
 
 # Install dependencies
 npm install
@@ -365,8 +369,8 @@ For local development, set redirect URI to: `http://localhost:5173`
 
 ### Getting Help
 
-- **Issues:** [GitHub Issues](https://github.com/Mirabile-S/PipelineToFabricUpgrader/issues)
-- **Discussions:** [GitHub Discussions](https://github.com/Mirabile-S/PipelineToFabricUpgrader/discussions)
+- **Issues:** Report issues in your repository's GitHub Issues
+- **Discussions:** Ask questions in your repository's GitHub Discussions
 - **Documentation:** [README](README.md)
 
 ---

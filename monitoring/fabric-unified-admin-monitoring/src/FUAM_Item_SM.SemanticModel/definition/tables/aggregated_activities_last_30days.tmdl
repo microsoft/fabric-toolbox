@@ -4,14 +4,18 @@ table aggregated_activities_last_30days
 
 	column CreationDate
 		dataType: dateTime
-		formatString: General Date
+		formatString: yyyy-mm-dd
 		sourceProviderType: date
 		lineageTag: 08d71231-0180-4126-87db-94eb70a7c6f0
 		sourceLineageTag: CreationDate
 		summarizeBy: none
 		sourceColumn: CreationDate
 
+		changedProperty = FormatString
+
 		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isCustom":true}
 
 	column Experience
 		dataType: string
@@ -148,12 +152,47 @@ table aggregated_activities_last_30days
 
 		annotation SummarizationSetBy = Automatic
 
+	column ObjectType
+		dataType: string
+		lineageTag: 99e5b9f7-3057-42d9-8614-74780fe891f5
+		sourceLineageTag: ObjectType
+		summarizeBy: none
+		sourceColumn: ObjectType
+
+		annotation SummarizationSetBy = Automatic
+
+	column ItemId
+		dataType: string
+		lineageTag: 2f7fc7f4-94f3-4c3a-8440-497692eab525
+		sourceLineageTag: ItemId
+		summarizeBy: none
+		sourceColumn: ItemId
+
+		annotation SummarizationSetBy = Automatic
+
+	column ResultStatus
+		dataType: string
+		lineageTag: a2764609-c67b-48d3-bbfa-9c56a40e7a71
+		sourceLineageTag: ResultStatus
+		summarizeBy: none
+		sourceColumn: ResultStatus
+
+		annotation SummarizationSetBy = Automatic
+
+	column IsSuccess
+		dataType: boolean
+		formatString: """TRUE"";""TRUE"";""FALSE"""
+		lineageTag: d18652bd-a5f5-4a82-88a5-c79e68f240d8
+		sourceLineageTag: IsSuccess
+		summarizeBy: none
+		sourceColumn: IsSuccess
+
+		annotation SummarizationSetBy = Automatic
+
 	partition aggregated_activities_last_30days = entity
 		mode: directLake
 		source
 			entityName: aggregated_activities_last_30days
 			schemaName: dbo
 			expressionSource: DatabaseQuery
-
-	annotation PBI_ResultType = Table
 

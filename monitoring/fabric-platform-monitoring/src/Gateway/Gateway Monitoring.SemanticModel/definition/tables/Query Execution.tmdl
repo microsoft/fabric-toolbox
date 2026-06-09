@@ -1,0 +1,313 @@
+table 'Query Execution'
+	lineageTag: 53f0d509-533f-41a8-abf4-a67565034eba
+
+	column RootActivityId
+		dataType: string
+		sourceProviderType: nvarchar(max)
+		lineageTag: 0203cb6f-22f1-4eb4-83e3-fbbc1f5fa08c
+		summarizeBy: none
+		sourceColumn: RootActivityId
+
+		annotation SummarizationSetBy = Automatic
+
+	column GatewayObjectId
+		dataType: string
+		sourceProviderType: nvarchar(max)
+		lineageTag: a02d18a9-5f68-4708-b89b-0803d8adbddd
+		summarizeBy: none
+		sourceColumn: GatewayObjectId
+
+		annotation SummarizationSetBy = Automatic
+
+	column WorkspaceId
+		dataType: string
+		sourceProviderType: nvarchar(max)
+		lineageTag: cbc492d9-c35d-435f-bf18-28843cb02f4a
+		summarizeBy: none
+		sourceColumn: WorkspaceId
+
+		annotation SummarizationSetBy = Automatic
+
+	column ItemId
+		dataType: string
+		sourceProviderType: nvarchar(max)
+		lineageTag: 0a028d7c-0670-495c-812e-c2bb4bdae10b
+		summarizeBy: none
+		sourceColumn: ItemId
+
+		annotation SummarizationSetBy = Automatic
+
+	column QueryExecutionStartTimeUTC
+		dataType: dateTime
+		formatString: dd-mmm-yy hh:nn:ss AM/PM
+		sourceProviderType: datetimeoffset
+		lineageTag: 4043bc96-61f4-47ea-bd4a-e9883dddec01
+		summarizeBy: none
+		sourceColumn: QueryExecutionStartTimeUTC
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isDateTimeCustom":true}
+
+	column QueryExecutionEndTimeUTC
+		dataType: dateTime
+		formatString: dd-mmm-yy hh:nn:ss AM/PM
+		sourceProviderType: datetimeoffset
+		lineageTag: 8fe346f3-9288-48f1-a58c-7b1d857a42bd
+		summarizeBy: none
+		sourceColumn: QueryExecutionEndTimeUTC
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isDateTimeCustom":true}
+
+	column QueryExecutionDuration_ms_
+		dataType: int64
+		formatString: 0
+		sourceProviderType: bigint
+		lineageTag: 60c81dad-1e89-4c2a-89b9-b991999f8ba3
+		summarizeBy: none
+		sourceColumn: QueryExecutionDuration_ms_
+
+		annotation SummarizationSetBy = Automatic
+
+	column DataProcessingEndTimeUTC
+		dataType: dateTime
+		formatString: General Date
+		sourceProviderType: datetimeoffset
+		lineageTag: b6a4cd99-090a-49ec-88a1-831482438d6c
+		summarizeBy: none
+		sourceColumn: DataProcessingEndTimeUTC
+
+		annotation SummarizationSetBy = Automatic
+
+	column DataProcessingDuration_ms_
+		dataType: int64
+		formatString: 0
+		sourceProviderType: bigint
+		lineageTag: b48d9e2e-17a3-4a9b-b286-18828801a2f7
+		summarizeBy: none
+		sourceColumn: DataProcessingDuration_ms_
+
+		annotation SummarizationSetBy = Automatic
+
+	column RequestId
+		dataType: string
+		sourceProviderType: nvarchar(max)
+		lineageTag: be5369e2-d820-4fa9-a9fc-4b88cb5c71e8
+		summarizeBy: none
+		sourceColumn: RequestId
+
+		annotation SummarizationSetBy = Automatic
+
+	column QueryTrackingId
+		dataType: string
+		sourceProviderType: nvarchar(max)
+		lineageTag: bd75f469-e36f-4f5e-9823-bb71c417479c
+		summarizeBy: none
+		sourceColumn: QueryTrackingId
+
+		annotation SummarizationSetBy = Automatic
+
+	column CurrentActivityId
+		dataType: string
+		sourceProviderType: nvarchar(max)
+		lineageTag: 6636e1af-d047-43c8-9b5d-d7fe101f6c58
+		summarizeBy: none
+		sourceColumn: CurrentActivityId
+
+		annotation SummarizationSetBy = Automatic
+
+	column Success
+		dataType: string
+		sourceProviderType: nvarchar(max)
+		lineageTag: 2bcc82f6-a562-44be-ac85-526414d32dde
+		summarizeBy: none
+		sourceColumn: Success
+
+		annotation SummarizationSetBy = Automatic
+
+	column QueryText
+		dataType: string
+		sourceProviderType: nvarchar(max)
+		lineageTag: 9f7674e4-f76b-42c8-a280-71f3e8a916d5
+		summarizeBy: none
+		sourceColumn: QueryText
+
+		annotation SummarizationSetBy = Automatic
+
+	column Table
+		dataType: string
+		sourceProviderType: nvarchar(max)
+		lineageTag: 0629a76a-de62-4c06-8389-675b47313ebd
+		summarizeBy: none
+		sourceColumn: Table
+
+		annotation SummarizationSetBy = Automatic
+
+	column OperationType
+		dataType: string
+		sourceProviderType: nvarchar(max)
+		lineageTag: ccb22819-b2cf-4c52-b424-e10ba86cbc12
+		summarizeBy: none
+		sourceColumn: OperationType
+
+		annotation SummarizationSetBy = Automatic
+
+	column QueryType
+		dataType: string
+		sourceProviderType: nvarchar(max)
+		lineageTag: e686f242-3a4d-4713-9e40-500aca13dc37
+		summarizeBy: none
+		sourceColumn: QueryType
+
+		annotation SummarizationSetBy = Automatic
+
+	column DataSource
+		dataType: string
+		lineageTag: 71aaccac-2f6c-4cf2-8d31-adef76984319
+		summarizeBy: none
+		sourceColumn: DataSource
+
+		annotation SummarizationSetBy = Automatic
+
+	column ServiceName
+		dataType: string
+		sourceProviderType: nvarchar(max)
+		lineageTag: b868d789-979a-4129-b6a5-18d35392c298
+		summarizeBy: none
+		sourceColumn: ServiceName
+
+		annotation SummarizationSetBy = Automatic
+
+	column SKU
+		dataType: string
+		sourceProviderType: nvarchar(max)
+		lineageTag: cf12e793-676c-4957-8c7d-de2a38200989
+		summarizeBy: none
+		sourceColumn: SKU
+
+		annotation SummarizationSetBy = Automatic
+
+	column DataReadingAndSerializationDuration_ms_
+		dataType: int64
+		formatString: 0
+		sourceProviderType: bigint
+		lineageTag: e1f8281e-3654-41b7-b6d5-7ced89001acb
+		summarizeBy: none
+		sourceColumn: DataReadingAndSerializationDuration_ms_
+
+		annotation SummarizationSetBy = Automatic
+
+	column SpoolingDiskWritingDuration_ms_
+		dataType: int64
+		formatString: 0
+		sourceProviderType: bigint
+		lineageTag: 0836e76c-3f94-4a52-bb49-251761f42730
+		summarizeBy: none
+		sourceColumn: SpoolingDiskWritingDuration_ms_
+
+		annotation SummarizationSetBy = Automatic
+
+	column SpoolingDiskReadingDuration_ms_
+		dataType: int64
+		formatString: 0
+		sourceProviderType: bigint
+		lineageTag: 93276c21-21c9-49b3-94d6-1315980f4361
+		summarizeBy: none
+		sourceColumn: SpoolingDiskReadingDuration_ms_
+
+		annotation SummarizationSetBy = Automatic
+
+	column SpoolingTotalDataSize_byte_
+		dataType: int64
+		formatString: 0
+		sourceProviderType: bigint
+		lineageTag: a56334c4-b29b-484f-8d34-a130987bf5eb
+		summarizeBy: none
+		sourceColumn: SpoolingTotalDataSize_byte_
+
+		annotation SummarizationSetBy = Automatic
+
+	column ErrorMessage
+		dataType: string
+		sourceProviderType: nvarchar(max)
+		lineageTag: 639e2848-e5c0-46f4-a5ca-ba8e7b808af6
+		summarizeBy: none
+		sourceColumn: ErrorMessage
+
+		annotation SummarizationSetBy = Automatic
+
+	column HostContextType
+		dataType: string
+		sourceProviderType: nvarchar(max)
+		lineageTag: d661ff60-0c49-473e-90a0-7710a390dc82
+		summarizeBy: none
+		sourceColumn: HostContextType
+
+		annotation SummarizationSetBy = Automatic
+
+	column ConnectionIds
+		dataType: string
+		sourceProviderType: nvarchar(max)
+		lineageTag: ac197fe6-fd0c-41e1-b719-c292d42ba6f7
+		summarizeBy: none
+		sourceColumn: ConnectionIds
+
+		annotation SummarizationSetBy = Automatic
+
+	column ClusterName
+		dataType: string
+		sourceProviderType: nvarchar(max)
+		lineageTag: 3efbda59-f0b7-40a2-953b-d13f6d39c57f
+		summarizeBy: none
+		sourceColumn: ClusterName
+
+		annotation SummarizationSetBy = Automatic
+
+	column NodeName
+		dataType: string
+		sourceProviderType: nvarchar(max)
+		lineageTag: 6a2cc750-6858-48e4-a8a8-f1616f1e235d
+		summarizeBy: none
+		sourceColumn: NodeName
+
+		annotation SummarizationSetBy = Automatic
+
+	partition 'Query Execution' = m
+		mode: directQuery
+		source = ```
+				let
+				    selectedGatewaysName = if Type.Is(Value.Type(SelectedGateways), List.Type) then 
+				      Text.Combine({"'", Text.Combine(SelectedGateways, "','") , "'"})
+				    else
+				      Text.Combine({"'" , SelectedGateways , "'"}),
+				
+				    selectAllGateways = if Type.Is(Value.Type(SelectedGateways), List.Type) then 
+				      List.Contains(SelectedGateways, "__SelectAll__")
+				    else
+				      true,
+				    selectedClustersName = if Type.Is(Value.Type(SelectedClusters), List.Type) then 
+				      Text.Combine({"'", Text.Combine(SelectedClusters, "','") , "'"})
+				    else
+				      Text.Combine({"'" , SelectedClusters , "'"}),
+				
+				    selectAllClusters = if Type.Is(Value.Type(SelectedClusters), List.Type) then 
+				      List.Contains(SelectedClusters, "__SelectAll__")
+				    else
+				      true,
+				    Source = AzureDataExplorer.Contents(KustoURL, KustoDB, null, null),
+				    QueryExecutionUnified1 = Source{[Name="QueryExecutionUnified"]}[Data],
+				    #"Invoked FunctionQueryExecutionUnified1" = QueryExecutionUnified1(DateTime.ToText(DateToSearch, "yyyy-MM-dd"),DaysBack
+				        ,selectAllGateways,Text.Combine({"[",selectedGatewaysName,"]"})
+				        ,selectAllClusters,Text.Combine({"[",selectedClustersName,"]"})
+				        ),
+				    #"Changed Type" = Table.TransformColumnTypes(#"Invoked FunctionQueryExecutionUnified1",{{"DataSource", type text}})
+				in
+				    #"Changed Type"
+				```
+
+	annotation PBI_NavigationStepName = Navigation
+
+	annotation PBI_ResultType = Table
+

@@ -1,0 +1,112 @@
+<#
+.SYNOPSIS
+    Creates a new folder in a specified Microsoft Fabric workspace.
+
+.DESCRIPTION
+    This function sends a POST request to the Microsoft Fabric API to create a new folder
+    within the specified workspace. Optionally, a parent folder can be specified to nest the new folder.
+
+.PARAMETER WorkspaceId
+    The unique identifier of the workspace where the folder will be created. This parameter is mandatory.
+
+.PARAMETER FolderName
+    The name of the folder to be created. Must be 1-255 characters and not contain invalid or reserved names.
+
+.PARAMETER ParentFolderId
+    (Optional) The unique identifier of the parent folder under which the new folder will be created.
+
+.EXAMPLE
+    New-FabricFolderps1 -WorkspaceId "workspace-12345" -FolderName "Reports"
+    Creates a new folder named "Reports" in the workspace with ID "workspace-12345".
+
+.EXAMPLE
+    New-FabricFolderps1 -WorkspaceId "workspace-12345" -FolderName "2024" -ParentFolderId "folder-67890"
+    Creates a new folder named "2024" under the parent folder with ID "folder-67890" in the specified workspace.
+
+.NOTES
+    - Requires `$FabricConfig` global configuration, including `BaseUrl` and `FabricHeaders`.
+    - Calls `Test-TokenExpired` to ensure token validity before making the API request.
+
+    Author: Tiago Balabuch
+#>
+function New-FabricFolder {
+    [CmdletBinding(SupportsShouldProcess = $true, ConfirmImpact = 'Medium')]
+    param (
+        [Parameter(Mandatory = $true)]
+        [ValidateNotNullOrEmpty()]
+        [string]$WorkspaceId,
+
+        [Parameter(Mandatory = $true)]
+        [ValidateNotNullOrEmpty()]
+        [ValidatePattern('^(?!\s)(?!.*\s$)(?!.*[~"#.&*:<>?\/{|}])(?!\$recycle\.bin$|^recycled$|^recycler$)[^\x00-\x1F]{1,255}$')]
+        [string]$FolderName,
+
+        [Parameter(Mandatory = $false)]
+        [ValidateNotNullOrEmpty()]
+        [string]$ParentFolderId
+    )
+    try {
+        # Additional FolderName validation
+        if ($FolderName) {
+            if ($FolderName.Length -gt 255) {
+                Write-FabricLog -Message "Folder name exceeds 255 characters." -Level Error
+                return $null
+            }
+            if ($FolderName -match '^[\s]|\s$') {
+                Write-FabricLog -Message "Folder name cannot have leading or trailing spaces." -Level Error
+                return $null
+            }
+            if ($FolderName -match '[~"#.&*:<>?\/{|}]') {
+                Write-FabricLog -Message "Folder name contains invalid characters: ~ # . & * : < > ? / { | }\" -Level Error
+                return $null
+            }
+            if ($FolderName -match '^\$recycle\.bin$|^recycled$|^recycler$') {
+                Write-FabricLog -Message "Folder name cannot be a system-reserved name." -Level Error
+                return $null
+            }
+            if ($FolderName -match '[\x00-\x1F]') {
+                Write-FabricLog -Message "Folder name contains control characters." -Level Error
+                return $null
+            }
+        }
+
+        # Validate authentication
+        Invoke-FabricAuthCheck -ThrowOnFailure
+
+        # Construct the API endpoint URI
+        $apiEndpointURI = New-FabricAPIUri -Resource 'workspaces' -WorkspaceId $WorkspaceId -Subresource 'folders'
+
+        # Construct the request body
+        $body = @{
+            displayName = $FolderName
+        }
+
+        if ($ParentFolderId) {
+            $body.parentFolderId = $ParentFolderId
+        }
+
+        # Convert the body to JSON format
+        $bodyJson = Convert-FabricRequestBody -InputObject $body
+
+        # Make the API request (guarded by ShouldProcess)
+        if ($PSCmdlet.ShouldProcess($FolderName, "Create folder in workspace '$WorkspaceId'")) {
+            $apiParams = @{
+                BaseURI = $apiEndpointURI
+                Headers = $script:FabricAuthContext.FabricHeaders
+                Method  = 'Post'
+                Body    = $bodyJson
+            }
+            $response = Invoke-FabricAPIRequest @apiParams
+
+            # Return the API response
+            Write-FabricLog -Message "Folder created successfully!" -Level Host
+            $response
+        }
+
+    }
+    catch {
+        # Capture and log error details
+        $errorDetails = $_.Exception.Message
+        Write-FabricLog -Message "Failed to create Folder. Error: $errorDetails" -Level Error
+    }
+}

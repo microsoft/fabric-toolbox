@@ -1,0 +1,149 @@
+// KQL script
+// Use management commands in this script to configure your database items, such as tables, functions, materialized views, and more.
+
+
+.create-merge table CapacityEventsRaw (specversion:real, source:guid, ['time']:datetime, id:guid, subject:string, dataschemaversion:real, type:string, data:dynamic) with (folder = "Raw") 
+.create-or-alter table CapacityEventsRaw ingestion json mapping 'CapacityEventsRaw_mapping'
+```
+[{"Properties":{"Path":"$['specversion']"},"column":"specversion","datatype":""},{"Properties":{"Path":"$['source']"},"column":"source","datatype":""},{"Properties":{"Path":"$['time']"},"column":"time","datatype":""},{"Properties":{"Path":"$['id']"},"column":"id","datatype":""},{"Properties":{"Path":"$['subject']"},"column":"subject","datatype":""},{"Properties":{"Path":"$['dataschemaversion']"},"column":"dataschemaversion","datatype":""},{"Properties":{"Path":"$['type']"},"column":"type","datatype":""},{"Properties":{"Path":"$['data']"},"column":"data","datatype":""}]
+```
+.create-merge table CapacitySummary (id:guid, specversion:real, source:guid, ['time']:datetime, subject:string, dataschemaversion:real, type:string, tenantId:guid, capacityId:guid, capacityName:string, capacitySku:string, capacityRegion:string, windowStartTime:datetime, windowEndTime:datetime, baseCapacityUnits:long, timepointCapacityUnits:long, capacityUnitMs:real, capacityUnitSecond:real, interactiveDelayThresholdPercentage:real, interactiveRejectionThresholdPercentage:real, backgroundRejectionThresholdPercentage:real, overageTotalCapacityUnitMs:real, overageAddCapacityUnitMs:real, overageBurndownCapacityUnitMs:real, utilizationBackground:real, utilizationInteractive:real, utilizationBackgroundPreview:real, utilizationInteractivePreview:real, processedOverageCapacityUnitsMs:real, capacityUnitUtilizationBreakdown:dynamic, overageBillingLimitCapacityUnitsMs:real) 
+.create-merge table CapacityState (id:guid, specversion:real, source:guid, ['time']:datetime, subject:string, dataschemaversion:real, type:string, tenantId:guid, capacityId:guid, capacityName:string, capacitySku:string, capacityRegion:string, transitionTime:datetime, capacityState:string, stateChangeReason:string) 
+.create-merge table CapacityWorkloadSummary (id:guid, specversion:real, source:guid, ['time']:datetime, subject:string, dataschemaversion:real, type:string, tenantId:guid, capacityId:guid, capacityName:string, capacitySku:string, capacityRegion:string, windowStartTime:datetime, windowEndTime:datetime, baseCapacityUnits:long, workloadKind:string, interactiveCU:real, backgroundCU:real, interactivePreviewCU:real, backgroundPreviewCU:real) 
+.create-or-alter function with (folder = "UpdatePolicyFunctions", skipvalidation = "true") parse_CapacityEventsSummary() {
+     CapacityEventsRaw
+    | where ["type"] == "Microsoft.Fabric.Capacity.Summary"
+    | extend
+        tenantId=toguid(data.tenantId),
+        capacityId=toguid(data.capacityId),
+        capacityName=tostring(data.capacityName),
+        capacitySku=tostring(data.capacitySku),
+        capacityRegion=tostring(data.capacityRegion),
+        windowEndTime=todatetime(data.windowEndTime),
+        windowStartTime=todatetime(data.windowStartTime),
+        baseCapacityUnits=tolong(data.baseCapacityUnits),        
+        capacityUnitMs=toreal(data.capacityUnitMs),        
+        interactiveDelayThresholdPercentage=toreal(data.interactiveDelayThresholdPercentage),
+        interactiveRejectionThresholdPercentage=toreal(data.interactiveRejectionThresholdPercentage),
+        backgroundRejectionThresholdPercentage=toreal(data.backgroundRejectionThresholdPercentage),
+        overageTotalCapacityUnitMs=toreal(data.overageTotalCapacityUnitMs),
+        overageAddCapacityUnitMs=toreal(data.overageAddCapacityUnitMs),
+        overageBurndownCapacityUnitMs=toreal(data.overageBurndownCapacityUnitMs),
+        utilizationBackground=toreal(data.utilizationBackground),
+        utilizationInteractive=toreal(data.utilizationInteractive),
+        utilizationBackgroundPreview=toreal(data.utilizationBackgroundPreview),
+        utilizationInteractivePreview=toreal(data.utilizationInteractivePreview),
+        processedOverageCapacityUnitsMs=toreal(data.processedOverageCapacityUnitsMs),
+        capacityUnitUtilizationBreakdown=data.capacityUnitUtilizationBreakdown,
+        overageBillingLimitCapacityUnitsMs=toreal(data.overageBillingLimitCapacityUnitsMs)
+    | extend
+        timepointCapacityUnits = baseCapacityUnits * 30,
+        capacityUnitSecond=capacityUnitMs / 1000.0
+    | project
+        id,
+        specversion,
+        source,
+        ['time'],
+        subject,
+        dataschemaversion,
+        type,
+        tenantId,
+        capacityId,
+        capacityName,
+        capacitySku,
+        capacityRegion,
+        windowStartTime,
+        windowEndTime,
+        baseCapacityUnits,
+        timepointCapacityUnits,
+        capacityUnitMs,
+        capacityUnitSecond,        
+        interactiveDelayThresholdPercentage,
+        interactiveRejectionThresholdPercentage,
+        backgroundRejectionThresholdPercentage,
+        overageTotalCapacityUnitMs,
+        overageAddCapacityUnitMs,
+        overageBurndownCapacityUnitMs,
+        utilizationBackground,
+        utilizationInteractive,
+        utilizationBackgroundPreview,
+        utilizationInteractivePreview,
+        processedOverageCapacityUnitsMs,
+        capacityUnitUtilizationBreakdown,
+        overageBillingLimitCapacityUnitsMs
+ }
+.create-or-alter function with (folder = "UpdatePolicyFunctions", skipvalidation = "true") parse_CapacityEventsState() {
+     CapacityEventsRaw
+    | where ["type"] == "Microsoft.Fabric.Capacity.State"
+    | extend
+        tenantId = toguid(""),
+        capacityId=toguid(data.capacityId),
+        capacityName=tostring(data.capacityName),
+        capacitySku=tostring(data.capacitySku),
+        capacityRegion = "",
+        transitionTime=todatetime(data.transitionTime),
+        capacityState=tostring(data.capacityState),
+        stateChangeReason=tostring(data.stateChangeReason)
+    | project
+        id,
+        specversion,
+        source,
+        ['time'],
+        subject,    
+        dataschemaversion,
+        type,
+        tenantId,
+        capacityId,
+        capacityName,
+        capacitySku,
+        capacityRegion,
+        transitionTime,
+        capacityState,
+        stateChangeReason
+ }
+.create-or-alter function with (folder = "UpdatePolicyFunctions", skipvalidation = "true") parse_CapacityEventsWorkloadSummary() {
+     CapacityEventsRaw
+    | where ["type"] == "Microsoft.Fabric.Capacity.Summary"
+    | where isnotempty(data.capacityUnitUtilizationBreakdown)
+    | extend
+        tenantId=toguid(data.tenantId),
+        capacityId=toguid(data.capacityId),
+        capacityName=tostring(data.capacityName),
+        capacitySku=tostring(data.capacitySku),
+        capacityRegion=tostring(data.capacityRegion),
+        windowEndTime=todatetime(data.windowEndTime),
+        windowStartTime=todatetime(data.windowStartTime),
+        baseCapacityUnits=tolong(data.baseCapacityUnits),  
+        cuBreakdown=data.capacityUnitUtilizationBreakdown
+    | mv-expand cuBreakdown
+    | project
+        id,
+        specversion,
+        source,
+        ['time'],
+        subject,
+        dataschemaversion,
+        type,
+        tenantId,
+        capacityId,
+        capacityName,
+        capacitySku,
+        capacityRegion,
+        windowStartTime,
+        windowEndTime,
+        baseCapacityUnits,
+        workloadKind = tostring(cuBreakdown.WorkloadKind),
+        interactiveCU= iff(isempty(cuBreakdown.Utilization.Interactive), 0.0, todouble(cuBreakdown.Utilization.Interactive)),
+        backgroundCU = iff(isempty(cuBreakdown.Utilization.Background), 0.0, todouble(cuBreakdown.Utilization.Background)),
+        interactivePreviewCU = iff(isempty(cuBreakdown.UtilizationPreview.Interactive), 0.0, todouble(cuBreakdown.UtilizationPreview.Interactive)),
+        backgroundPreviewCU = iff(isempty(cuBreakdown.UtilizationPreview.Background), 0.0, todouble(cuBreakdown.UtilizationPreview.Background))
+ }
+.alter table CapacityEventsRaw policy retention @'{"SoftDeletePeriod":"01:00:00","Recoverability":"Disabled"}'
+.alter table CapacityEventsRaw policy caching hotdata = time(1.00:00:00) hotindex = time(1.00:00:00)
+.alter table CapacitySummary policy retention @'{"SoftDeletePeriod":"730.00:00:00","Recoverability":"Disabled"}'
+.alter table CapacitySummary policy caching hotdata = time(90.00:00:00) hotindex = time(90.00:00:00)
+.alter table CapacityState policy retention @'{"SoftDeletePeriod":"730.00:00:00","Recoverability":"Disabled"}'
+.alter table CapacityState policy caching hotdata = time(90.00:00:00) hotindex = time(90.00:00:00)
+.alter table CapacitySummary policy update "[{\"IsEnabled\":true,\"Source\":\"CapacityEventsRaw\",\"Query\":\"parse_CapacityEventsSummary()\",\"IsTransactional\":true,\"PropagateIngestionProperties\":false,\"ManagedIdentity\":null}]"
+.alter table CapacityState policy update "[{\"IsEnabled\":true,\"Source\":\"CapacityEventsRaw\",\"Query\":\"parse_CapacityEventsState()\",\"IsTransactional\":true,\"PropagateIngestionProperties\":false,\"ManagedIdentity\":null}]"
+.alter table CapacityWorkloadSummary policy update "[{\"IsEnabled\":true,\"Source\":\"CapacityEventsRaw\",\"Query\":\"parse_CapacityEventsWorkloadSummary()\",\"IsTransactional\":true,\"PropagateIngestionProperties\":true,\"ManagedIdentity\":null}]"

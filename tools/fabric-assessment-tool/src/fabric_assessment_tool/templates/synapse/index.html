@@ -1,0 +1,309 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="page-header">
+    <h1>Synapse Assessment Overview</h1>
+    <p>Summary of all assessed Azure Synapse Analytics workspaces</p>
+</div>
+
+<!-- Summary Stats -->
+<div class="row">
+    <div class="col">
+        <div class="stat-card synapse">
+            <div class="stat-value" id="stat-workspaces">{{ summary.workspace_count | default(0) }}</div>
+            <div class="stat-label">Synapse Workspaces</div>
+        </div>
+    </div>
+    <div class="col">
+        <div class="stat-card">
+            <div class="stat-value" id="stat-notebooks">{{ summary.total_notebooks | default(0) }}</div>
+            <div class="stat-label">Notebooks</div>
+        </div>
+    </div>
+    <div class="col">
+        <div class="stat-card">
+            <div class="stat-value" id="stat-pipelines">{{ summary.total_pipelines | default(0) }}</div>
+            <div class="stat-label">Pipelines</div>
+        </div>
+    </div>
+    <div class="col">
+        <div class="stat-card">
+            <div class="stat-value" id="stat-sql-pools">{{ summary.total_sql_pools | default(0) }}</div>
+            <div class="stat-label">SQL Pools</div>
+        </div>
+    </div>
+    <div class="col">
+        <div class="stat-card">
+            <div class="stat-value" id="stat-spark-pools">{{ summary.total_spark_pools | default(0) }}</div>
+            <div class="stat-label">Spark Pools</div>
+        </div>
+    </div>
+</div>
+
+<!-- Resource Counts -->
+<div class="card mt-2">
+    <div class="card-header">Resource Summary</div>
+    <div class="card-body">
+        <div class="row">
+            <div class="col col-6">
+                <div class="chart-container">
+                    <canvas id="resourceChart"></canvas>
+                </div>
+            </div>
+            <div class="col col-6">
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>Resource Type</th>
+                            <th class="text-right">Count</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>Notebooks</td>
+                            <td class="text-right">{{ summary.total_notebooks | default(0) | format_number }}</td>
+                        </tr>
+                        <tr>
+                            <td>Pipelines</td>
+                            <td class="text-right">{{ summary.total_pipelines | default(0) | format_number }}</td>
+                        </tr>
+                        <tr>
+                            <td>Dedicated SQL Pools</td>
+                            <td class="text-right">{{ summary.total_sql_pools | default(0) | format_number }}</td>
+                        </tr>
+                        <tr>
+                            <td>Spark Pools</td>
+                            <td class="text-right">{{ summary.total_spark_pools | default(0) | format_number }}</td>
+                        </tr>
+                        <tr>
+                            <td>Tables</td>
+                            <td class="text-right">{{ summary.total_tables | default(0) | format_number }}</td>
+                        </tr>
+                        <tr>
+                            <td>Linked Services</td>
+                            <td class="text-right">{{ summary.total_linked_services | default(0) | format_number }}</td>
+                        </tr>
+                        <tr>
+                            <td>Datasets</td>
+                            <td class="text-right">{{ summary.total_datasets | default(0) | format_number }}</td>
+                        </tr>
+                        <tr>
+                            <td>Dataflows</td>
+                            <td class="text-right">{{ summary.total_dataflows | default(0) | format_number }}</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Workspaces List -->
+<div class="card">
+    <div class="card-header">Workspaces</div>
+    <div class="card-body">
+        {% if workspaces %}
+        <div class="table-responsive">
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Workspace</th>
+                        <th class="text-right">Notebooks</th>
+                        <th class="text-right">Pipelines</th>
+                        <th class="text-right">SQL Pools</th>
+                        <th class="text-right">Tables</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for ws_name, ws in workspaces.items() %}
+                    {% set de = ws.summary.get('data_engineering', {}) %}
+                    {% set di = ws.summary.get('data_integration', {}) %}
+                    {% set dw = ws.summary.get('data_warehouse', {}) %}
+                    {% set de_hybrid = de.get('hybrid', {}) if de is mapping else {} %}
+                    {% set di_counts = di.get('counts', {}) if di is mapping else {} %}
+                    {% set dw_counts = dw.get('counts', {}) if dw is mapping else {} %}
+                    {% set dw_dedicated = dw_counts.get('dedicated', {}) if dw_counts is mapping else {} %}
+                    {% set dw_serverless = dw_counts.get('serverless', {}) if dw_counts is mapping else {} %}
+                    <tr data-workspace="{{ ws_name }}">
+                        <td>
+                            <a href="{{ base_path }}workspaces/{{ ws_name }}.html">{{ ws_name }}</a>
+                        </td>
+                        <td class="text-right">
+                            {{ de_hybrid.get('notebooks', de.get('notebooks', 0)) if de_hybrid is mapping else de.get('notebooks', 0) }}
+                        </td>
+                        <td class="text-right">
+                            {{ di_counts.get('pipelines', di.get('pipelines', 0)) if di_counts is mapping else di.get('pipelines', 0) }}
+                        </td>
+                        <td class="text-right">
+                            {{ dw_dedicated.get('sql_pools', dw.get('dedicated_pools', 0)) if dw_dedicated is mapping else dw.get('dedicated_pools', 0) }}
+                        </td>
+                        <td class="text-right">
+                            {% set ded_tables = dw_dedicated.get('tables', 0) if dw_dedicated is mapping else 0 %}
+                            {% set srv_tables = dw_serverless.get('tables', 0) if dw_serverless is mapping else 0 %}
+                            {{ ded_tables + srv_tables }}
+                        </td>
+                        <td>
+                            {% set status_obj = ws.summary.get('assessment_status', 'unknown') %}
+                            {% set status = status_obj.get('status', status_obj) if status_obj is mapping else status_obj %}
+                            <span class="badge {% if status == 'completed' %}badge-success{% elif status == 'incomplete' %}badge-warning{% else %}badge-secondary{% endif %}">
+                                {{ status | title }}
+                            </span>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="empty-state">
+            <p>No workspaces found in assessment data.</p>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Quick Links -->
+<div class="row">
+    <div class="col col-4">
+        <div class="card">
+            <div class="card-body text-center">
+                <h3>🔧 Admin View</h3>
+                <p class="text-muted mb-2">Integration runtimes, linked services, security</p>
+                <a href="{{ base_path }}views/admin.html">View Details →</a>
+            </div>
+        </div>
+    </div>
+    <div class="col col-4">
+        <div class="card">
+            <div class="card-body text-center">
+                <h3>⚡ Data Engineering</h3>
+                <p class="text-muted mb-2">Notebooks, Spark pools, Spark jobs</p>
+                <a href="{{ base_path }}views/data_engineering.html">View Details →</a>
+            </div>
+        </div>
+    </div>
+    <div class="col col-4">
+        <div class="card">
+            <div class="card-body text-center">
+                <h3>🏭 Data Warehousing</h3>
+                <p class="text-muted mb-2">SQL pools, tables, databases</p>
+                <a href="{{ base_path }}views/data_warehousing.html">View Details →</a>
+            </div>
+        </div>
+    </div>
+</div>
+<div class="row">
+    <div class="col col-4">
+        <div class="card">
+            <div class="card-body text-center">
+                <h3>🔄 Data Integration</h3>
+                <p class="text-muted mb-2">Pipelines, dataflows, datasets</p>
+                <a href="{{ base_path }}views/data_integration.html">View Details →</a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+// Workspace data for filtering
+const workspaceData = {
+{% for ws_name, ws in workspaces.items() %}
+{% set de = ws.summary.get('data_engineering', {}) %}
+{% set di = ws.summary.get('data_integration', {}) %}
+{% set dw = ws.summary.get('data_warehouse', {}) %}
+{% set de_hybrid = de.get('hybrid', {}) if de is mapping else {} %}
+{% set de_manual = de.get('manual', {}) if de is mapping else {} %}
+{% set di_counts = di.get('counts', {}) if di is mapping else {} %}
+{% set dw_counts = dw.get('counts', {}) if dw is mapping else {} %}
+{% set dw_dedicated = dw_counts.get('dedicated', {}) if dw_counts is mapping else {} %}
+{% set dw_serverless = dw_counts.get('serverless', {}) if dw_counts is mapping else {} %}
+    "{{ ws_name }}": {
+        notebooks: {{ de_hybrid.get('notebooks', de.get('notebooks', 0)) if de_hybrid is mapping else de.get('notebooks', 0) }},
+        pipelines: {{ di_counts.get('pipelines', di.get('pipelines', 0)) if di_counts is mapping else di.get('pipelines', 0) }},
+        sql_pools: {{ dw_dedicated.get('sql_pools', dw.get('dedicated_pools', 0)) if dw_dedicated is mapping else dw.get('dedicated_pools', 0) }},
+        spark_pools: {{ de_manual.get('spark_pools', de.get('spark_pools', 0)) if de_manual is mapping else de.get('spark_pools', 0) }},
+        tables: {{ (dw_dedicated.get('tables', 0) if dw_dedicated is mapping else 0) + (dw_serverless.get('tables', 0) if dw_serverless is mapping else 0) }},
+        datasets: {{ di_counts.get('datasets', di.get('datasets', 0)) if di_counts is mapping else di.get('datasets', 0) }},
+        linked_services: {{ di_counts.get('linked_services', di.get('linked_services', 0)) if di_counts is mapping else di.get('linked_services', 0) }},
+        dataflows: {{ di_counts.get('dataflows', di.get('dataflows', 0)) if di_counts is mapping else di.get('dataflows', 0) }}
+    }{% if not loop.last %},{% endif %}
+{% endfor %}
+};
+
+let resourceChart = null;
+
+function updateFilteredStats(selectedWorkspaces) {
+    let workspaceCount = 0;
+    let notebooks = 0, pipelines = 0, sqlPools = 0, sparkPools = 0, tables = 0, datasets = 0, dataflows = 0, linkedServices = 0;
+    
+    selectedWorkspaces.forEach(ws => {
+        const data = workspaceData[ws];
+        if (data) {
+            workspaceCount++;
+            notebooks += data.notebooks || 0;
+            pipelines += data.pipelines || 0;
+            sqlPools += data.sql_pools || 0;
+            sparkPools += data.spark_pools || 0;
+            tables += data.tables || 0;
+            datasets += data.datasets || 0;
+            dataflows += data.dataflows || 0;
+            linkedServices += data.linked_services || 0;
+        }
+    });
+    
+    document.getElementById('stat-workspaces').textContent = workspaceCount;
+    document.getElementById('stat-notebooks').textContent = notebooks;
+    document.getElementById('stat-pipelines').textContent = pipelines;
+    document.getElementById('stat-sql-pools').textContent = sqlPools;
+    document.getElementById('stat-spark-pools').textContent = sparkPools;
+    
+    if (resourceChart) {
+        resourceChart.data.datasets[0].data = [notebooks, pipelines, sqlPools, sparkPools, tables, datasets, dataflows, linkedServices];
+        resourceChart.update();
+    }
+}
+
+// Resource distribution chart
+const resourceCtx = document.getElementById('resourceChart');
+if (resourceCtx) {
+    resourceChart = new Chart(resourceCtx, {
+        type: 'bar',
+        data: {
+            labels: ['Notebooks', 'Pipelines', 'SQL Pools', 'Spark Pools', 'Tables', 'Datasets', 'Dataflows', 'Linked Svc'],
+            datasets: [{
+                label: 'Count',
+                data: [
+                    {{ summary.total_notebooks | default(0) }},
+                    {{ summary.total_pipelines | default(0) }},
+                    {{ summary.total_sql_pools | default(0) }},
+                    {{ summary.total_spark_pools | default(0) }},
+                    {{ summary.total_tables | default(0) }},
+                    {{ summary.total_datasets | default(0) }},
+                    {{ summary.total_dataflows | default(0) }},
+                    {{ summary.total_linked_services | default(0) }}
+                ],
+                backgroundColor: [
+                    '#0078d4',
+                    '#107c10',
+                    '#5c2d91',
+                    '#ff8c00',
+                    '#008272',
+                    '#d83b01',
+                    '#00bcf2',
+                    '#8764b8'
+                ]
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: { legend: { display: false } },
+            scales: { y: { beginAtZero: true } }
+        }
+    });
+}
+</script>
+{% endblock %}

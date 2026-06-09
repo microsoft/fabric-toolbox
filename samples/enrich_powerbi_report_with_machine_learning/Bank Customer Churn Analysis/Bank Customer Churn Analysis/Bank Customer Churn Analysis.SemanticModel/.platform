@@ -1,0 +1,11 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/gitIntegration/platformProperties/2.0.0/schema.json",
+  "metadata": {
+    "type": "SemanticModel",
+    "displayName": "Bank Customer Churn Analysis"
+  },
+  "config": {
+    "version": "2.0",
+    "logicalId": "971320e5-d334-9392-46ab-f6c7131eacb0"
+  }
+}

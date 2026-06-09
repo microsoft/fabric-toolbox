@@ -1,0 +1,41 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/variableLibrary/definition/variables/1.0.0/schema.json",
+  "variables": [
+    {
+      "name": "cluster_ingest",
+      "note": "",
+      "type": "String",
+      "value": ""
+    },
+    {
+      "name": "cluster_query",
+      "note": "",
+      "type": "String",
+      "value": ""
+    },
+    {
+      "name": "key_vault_uri",
+      "note": "",
+      "type": "String",
+      "value": ""
+    },
+    {
+      "name": "key_vault_tenant_id",
+      "note": "",
+      "type": "String",
+      "value": ""
+    },
+    {
+      "name": "key_vault_client_id",
+      "note": "",
+      "type": "String",
+      "value": ""
+    },
+    {
+      "name": "key_vault_client_secret",
+      "note": "",
+      "type": "String",
+      "value": ""
+    }
+  ]
+}

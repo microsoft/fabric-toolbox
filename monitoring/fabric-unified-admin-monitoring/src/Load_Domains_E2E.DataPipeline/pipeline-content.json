@@ -1,0 +1,115 @@
+{
+    "properties": {
+        "activities": [
+            {
+                "name": "01_Transfer_Domains_Unit",
+                "type": "TridentNotebook",
+                "dependsOn": [
+                    {
+                        "activity": "Get Domains",
+                        "dependencyConditions": [
+                            "Succeeded"
+                        ]
+                    }
+                ],
+                "policy": {
+                    "timeout": "0.12:00:00",
+                    "retry": 0,
+                    "retryIntervalInSeconds": 30,
+                    "secureOutput": false,
+                    "secureInput": false
+                },
+                "typeProperties": {
+                    "notebookId": "6dae6a75-82a4-3cdd-889a-d22132550bc7",
+                    "workspaceId": "88c8d9fa-2c24-3fad-8f46-b36431c7ba1d",
+                    "parameters": {
+                        "display_data": {
+                            "value": {
+                                "value": "@pipeline().parameters.display_data",
+                                "type": "Expression"
+                            },
+                            "type": "bool"
+                        }
+                    },
+                    "sessionTag": "fuam"
+                }
+            },
+            {
+                "name": "Get Domains",
+                "description": "https://learn.microsoft.com/en-us/rest/api/fabric/admin/domains/list-domains?tabs=HTTP",
+                "type": "Copy",
+                "dependsOn": [],
+                "policy": {
+                    "timeout": "0.12:00:00",
+                    "retry": 0,
+                    "retryIntervalInSeconds": 30,
+                    "secureOutput": false,
+                    "secureInput": false
+                },
+                "typeProperties": {
+                    "source": {
+                        "type": "RestSource",
+                        "httpRequestTimeout": "00:01:40",
+                        "requestInterval": "00.00:00:00.010",
+                        "requestMethod": "GET",
+                        "paginationRules": {
+                            "supportRFC5988": "true"
+                        },
+                        "datasetSettings": {
+                            "annotations": [],
+                            "type": "RestResource",
+                            "typeProperties": {
+                                "relativeUrl": "domains"
+                            },
+                            "schema": [],
+                            "externalReferences": {
+                                "connection": "e665127a-bc6f-3487-b0ce-d3b2141df298"
+                            }
+                        }
+                    },
+                    "sink": {
+                        "type": "JsonSink",
+                        "storeSettings": {
+                            "type": "LakehouseWriteSettings"
+                        },
+                        "formatSettings": {
+                            "type": "JsonWriteSettings",
+                            "filePattern": "arrayOfObjects"
+                        },
+                        "datasetSettings": {
+                            "annotations": [],
+                            "linkedService": {
+                                "name": "FUAM_Lakehouse",
+                                "properties": {
+                                    "annotations": [],
+                                    "type": "Lakehouse",
+                                    "typeProperties": {
+                                        "workspaceId": "88c8d9fa-2c24-3fad-8f46-b36431c7ba1d",
+                                        "artifactId": "6cff634b-88f7-3505-bed2-c03a36776a8b",
+                                        "rootFolder": "Files"
+                                    }
+                                }
+                            },
+                            "type": "Json",
+                            "typeProperties": {
+                                "location": {
+                                    "type": "LakehouseLocation",
+                                    "fileName": "domains.json",
+                                    "folderPath": "raw/domains"
+                                }
+                            },
+                            "schema": {}
+                        }
+                    },
+                    "enableStaging": false
+                }
+            }
+        ],
+        "parameters": {
+            "display_data": {
+                "type": "bool",
+                "defaultValue": false
+            }
+        }
+    }
+}

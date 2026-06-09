@@ -1,0 +1,173 @@
+table 'System Counters'
+	lineageTag: 4e41764f-fcf1-45c6-a4d4-fe6f94dd9924
+
+	measure 'Avg. Counter Value' = ```
+			
+			var selectedCounter = LOWER(SELECTEDVALUE('System Counters'[CounterName]))
+			var counterValue =  AVERAGE('System Counters'[Average])
+			return SWITCH(selectedCounter
+			, "gatewaycpupercent", 
+			// https://medium.com/microsoftazure/on-premises-data-gateway-monitoring-series-part-2-cpu-counters-99631a0a5b17
+			var numCores = MAX(MAX('Gateway Node Info'[Logical Cores]),1)
+			return DIVIDE(counterValue, numCores)
+			, counterValue)
+			```
+		lineageTag: 0a7a14a7-19c3-4903-83d5-0a42250fa584
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'Max Counter Value' = ```
+			
+			var selectedCounter = LOWER(SELECTEDVALUE('System Counters'[CounterName]))
+			var counterValue =  MAX('System Counters'[Max])
+			return SWITCH(selectedCounter
+			, "gatewaycpupercent", 
+			// https://medium.com/microsoftazure/on-premises-data-gateway-monitoring-series-part-2-cpu-counters-99631a0a5b17
+			var numCores = MAX(MAX('Gateway Node Info'[Logical Cores]),1)
+			return DIVIDE(counterValue, numCores)
+			, counterValue)
+			```
+		lineageTag: daafb990-d78a-477f-83e2-5a79627516c1
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'Min Counter Value' = ```
+			
+			var selectedCounter = LOWER(SELECTEDVALUE('System Counters'[CounterName]))
+			var counterValue =  MIN('System Counters'[Min])
+			return SWITCH(selectedCounter
+			, "gatewaycpupercent", 
+			// https://medium.com/microsoftazure/on-premises-data-gateway-monitoring-series-part-2-cpu-counters-99631a0a5b17
+			var numCores = MAX(MAX('Gateway Node Info'[Logical Cores]),1)
+			return DIVIDE(counterValue, numCores)
+			, counterValue)
+			```
+		lineageTag: cb4c0611-d303-4c14-a4d8-e5436b3d7c95
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column ClusterId
+		dataType: string
+		sourceProviderType: nvarchar(max)
+		lineageTag: e100a674-f13f-406e-8f41-dbb295324317
+		summarizeBy: none
+		sourceColumn: ClusterId
+
+		annotation SummarizationSetBy = Automatic
+
+	column ClusterName
+		dataType: string
+		sourceProviderType: nvarchar(max)
+		lineageTag: 3e2d0243-6110-46bd-b899-f0f30a6772af
+		summarizeBy: none
+		sourceColumn: ClusterName
+
+		annotation SummarizationSetBy = Automatic
+
+	column NodeId
+		dataType: string
+		sourceProviderType: nvarchar(max)
+		lineageTag: 80fac5da-be1f-4107-b480-db9f4fbc07f8
+		summarizeBy: none
+		sourceColumn: NodeId
+
+		annotation SummarizationSetBy = Automatic
+
+	column NodeName
+		dataType: string
+		sourceProviderType: nvarchar(max)
+		lineageTag: 8b506e2a-814e-43cb-8415-8b153bc374c2
+		summarizeBy: none
+		sourceColumn: NodeName
+
+		annotation SummarizationSetBy = Automatic
+
+	column CounterName
+		dataType: string
+		sourceProviderType: nvarchar(max)
+		lineageTag: 47b3505f-60ea-418f-aca6-4fa1782ade9c
+		summarizeBy: none
+		sourceColumn: CounterName
+
+		annotation SummarizationSetBy = Automatic
+
+	column Max
+		dataType: double
+		sourceProviderType: double
+		lineageTag: c491098a-5180-49ad-8df6-3f7d2b3c7b37
+		summarizeBy: sum
+		sourceColumn: Max
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column Min
+		dataType: double
+		sourceProviderType: double
+		lineageTag: f2aa9d45-d4b9-40e2-9c12-5f17d2f477f4
+		summarizeBy: sum
+		sourceColumn: Min
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column Average
+		dataType: double
+		sourceProviderType: double
+		lineageTag: 6f16af4b-4840-4c09-8a9e-df0b877b471c
+		summarizeBy: sum
+		sourceColumn: Average
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column AggregationEndTimeUTC
+		dataType: dateTime
+		formatString: General Date
+		sourceProviderType: datetimeoffset
+		lineageTag: 09bb2644-3a7f-4669-8a56-3c1cb2590b37
+		summarizeBy: none
+		sourceColumn: AggregationEndTimeUTC
+
+		annotation SummarizationSetBy = Automatic
+
+	partition 'System Counters' = m
+		mode: directQuery
+		source = ```
+				let
+				    selectedGatewaysName = if Type.Is(Value.Type(SelectedGateways), List.Type) then 
+				      Text.Combine({"'", Text.Combine(SelectedGateways, "','") , "'"})
+				    else
+				      Text.Combine({"'" , SelectedGateways , "'"}),
+				
+				    selectAllGateways = if Type.Is(Value.Type(SelectedGateways), List.Type) then 
+				      List.Contains(SelectedGateways, "__SelectAll__")
+				    else
+				      true,
+				    selectedClustersName = if Type.Is(Value.Type(SelectedClusters), List.Type) then 
+				      Text.Combine({"'", Text.Combine(SelectedClusters, "','") , "'"})
+				    else
+				      Text.Combine({"'" , SelectedClusters , "'"}),
+				
+				    selectAllClusters = if Type.Is(Value.Type(SelectedClusters), List.Type) then 
+				      List.Contains(SelectedClusters, "__SelectAll__")
+				    else
+				      true,
+				    Source = AzureDataExplorer.Contents(KustoURL, KustoDB, null, null),
+				    SystemCounters = Source{[Name="SystemCounters"]}[Data],
+				    #"Invoked FunctionSystemCounters" = SystemCounters(DateTime.ToText(DateToSearch, "yyyy-MM-dd"), DaysBack
+				        ,selectAllGateways,Text.Combine({"[",selectedGatewaysName,"]"})
+				        ,selectAllClusters,Text.Combine({"[",selectedClustersName,"]"})
+				    ),
+				    #"Renamed Columns" = Table.RenameColumns(#"Invoked FunctionSystemCounters",{{"Average", "Average"}, {"Max", "Max"}, {"Min", "Min"}})
+				in
+				    #"Renamed Columns"
+				```
+
+	annotation PBI_NavigationStepName = Navigation
+
+	annotation PBI_ResultType = Table
+

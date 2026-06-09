@@ -64,7 +64,7 @@ export function extractFolderFromPipeline(component: ADFComponent): ADFFolderInf
  * Extract all unique folders from a collection of ADF components
  * 
  * @param components - Array of ADF components
- * @returns Array of unique folder information objects
+ * @returns Array of unique folder information objects (including all intermediate paths)
  */
 export function extractAllFolders(components: ADFComponent[]): ADFFolderInfo[] {
   const folderMap = new Map<string, ADFFolderInfo>();
@@ -72,8 +72,36 @@ export function extractAllFolders(components: ADFComponent[]): ADFFolderInfo[] {
   for (const component of components) {
     const folderInfo = extractFolderFromPipeline(component);
     
-    if (folderInfo && !folderMap.has(folderInfo.path)) {
-      folderMap.set(folderInfo.path, folderInfo);
+    if (folderInfo) {
+      // Add the full folder path
+      if (!folderMap.has(folderInfo.path)) {
+        folderMap.set(folderInfo.path, folderInfo);
+      }
+      
+      // Add all intermediate parent folders
+      // For example, if path is 'Folder1/Folder2/Folder3', also create entries for:
+      // - 'Folder1'
+      // - 'Folder1/Folder2'
+      for (let i = 1; i < folderInfo.segments.length; i++) {
+        const intermediateSegments = folderInfo.segments.slice(0, i);
+        const intermediatePath = intermediateSegments.join('/');
+        
+        if (!folderMap.has(intermediatePath)) {
+          const intermediateName = intermediateSegments[intermediateSegments.length - 1];
+          const intermediateParentPath = intermediateSegments.length > 1
+            ? intermediateSegments.slice(0, -1).join('/')
+            : undefined;
+          
+          folderMap.set(intermediatePath, {
+            path: intermediatePath,
+            name: intermediateName,
+            parentPath: intermediateParentPath,
+            depth: intermediateSegments.length,
+            segments: intermediateSegments,
+            originalPath: intermediatePath
+          });
+        }
+      }
     }
   }
 

@@ -1,0 +1,111 @@
+{
+  "properties": {
+    "activities": [
+      {
+        "type": "TridentNotebook",
+        "typeProperties": {
+          "notebookId": "505b4c37-0557-a70e-404c-02d18abdd261",
+          "workspaceId": "00000000-0000-0000-0000-000000000000",
+          "parameters": {
+            "key_vault_uri": {
+              "value": {
+                "value": "@pipeline().libraryVariables.FabricPlatformMonitoring_key_vault_uri",
+                "type": "Expression"
+              },
+              "type": "string"
+            },
+            "key_vault_tenant_id": {
+              "value": {
+                "value": "@pipeline().libraryVariables.FabricPlatformMonitoring_key_vault_tenant_id",
+                "type": "Expression"
+              },
+              "type": "string"
+            },
+            "key_vault_client_id": {
+              "value": {
+                "value": "@pipeline().libraryVariables.FabricPlatformMonitoring_key_vault_client_id",
+                "type": "Expression"
+              },
+              "type": "string"
+            },
+            "key_vault_client_secret": {
+              "value": {
+                "value": "@pipeline().libraryVariables.FabricPlatformMonitoring_key_vault_client_secret",
+                "type": "Expression"
+              },
+              "type": "string"
+            },
+            "cluster_query": {
+              "value": {
+                "value": "@pipeline().libraryVariables.FabricPlatformMonitoring_cluster_query",
+                "type": "Expression"
+              },
+              "type": "string"
+            },
+            "cluster_ingest": {
+              "value": {
+                "value": "@pipeline().libraryVariables.FabricPlatformMonitoring_cluster_ingest",
+                "type": "Expression"
+              },
+              "type": "string"
+            },
+            "database_name": {
+              "value": {
+                "value": "@pipeline().parameters.kusto_db",
+                "type": "Expression"
+              },
+              "type": "string"
+            }
+          }
+        },
+        "policy": {
+          "timeout": "0.12:00:00",
+          "retry": 0,
+          "retryIntervalInSeconds": 30,
+          "secureInput": false,
+          "secureOutput": false
+        },
+        "name": "Inventory",
+        "dependsOn": []
+      }
+    ],
+    "parameters": {
+      "kusto_db": {
+        "type": "String",
+        "defaultValue": "Platform Inventory"
+      }
+    },
+    "libraryVariables": {
+      "FabricPlatformMonitoring_cluster_ingest": {
+        "type": "String",
+        "variableName": "kusto_ingest_uri",
+        "libraryName": "Fabric Platform Monitoring"
+      },
+      "FabricPlatformMonitoring_cluster_query": {
+        "type": "String",
+        "variableName": "kusto_query_uri",
+        "libraryName": "Fabric Platform Monitoring"
+      },
+      "FabricPlatformMonitoring_key_vault_uri": {
+        "type": "String",
+        "variableName": "key_vault_uri",
+        "libraryName": "Fabric Platform Monitoring"
+      },
+      "FabricPlatformMonitoring_key_vault_tenant_id": {
+        "type": "String",
+        "variableName": "key_vault_tenant_id",
+        "libraryName": "Fabric Platform Monitoring"
+      },
+      "FabricPlatformMonitoring_key_vault_client_id": {
+        "type": "String",
+        "variableName": "key_vault_client_id",
+        "libraryName": "Fabric Platform Monitoring"
+      },
+      "FabricPlatformMonitoring_key_vault_client_secret": {
+        "type": "String",
+        "variableName": "key_vault_client_secret",
+        "libraryName": "Fabric Platform Monitoring"
+      }
+    }
+  }
+}

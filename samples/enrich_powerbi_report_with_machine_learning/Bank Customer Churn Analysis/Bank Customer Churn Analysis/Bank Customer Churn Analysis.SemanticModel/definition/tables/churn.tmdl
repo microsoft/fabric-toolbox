@@ -1,0 +1,192 @@
+table churn
+	lineageTag: 2ddb9fb3-8319-4d5b-84bf-2ec439a6a4c0
+	sourceLineageTag: [dbo].[churn]
+
+	measure TotalCustomer = DISTINCTCOUNT(churn[CustomerId])
+		formatString: 0
+		lineageTag: fe5f6bc6-ff5b-4dac-be81-2c00a1621ac8
+
+		changedProperty = Name
+
+	measure ChurnRate = SUM(churn[Exited])/[TotalCustomer]
+		lineageTag: 8c6e3b99-dbca-4a49-9a19-8769a16830d5
+
+		changedProperty = Name
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure ActiveRate = SUM(churn[IsActiveMember])/[TotalCustomer]
+		lineageTag: b6b001cb-0f6d-41e2-97aa-0765cd73ff57
+
+		changedProperty = Name
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure AverageBalance = AVERAGE(churn[Balance])
+		formatString: 0
+		lineageTag: c29d008f-1672-40ee-8098-3a03ca7c0aeb
+
+		changedProperty = Name
+
+	column RowNumber
+		dataType: string
+		lineageTag: c31232df-3954-4a57-8d27-fd0fb144bd88
+		sourceLineageTag: RowNumber
+		summarizeBy: none
+		sourceColumn: RowNumber
+
+		annotation SummarizationSetBy = Automatic
+
+	column CustomerId
+		dataType: int64
+		formatString: 0
+		lineageTag: 7e8a03eb-59c5-4e3e-b232-016ddbec077e
+		sourceLineageTag: CustomerId
+		summarizeBy: count
+		sourceColumn: CustomerId
+
+		changedProperty = DataType
+
+		annotation SummarizationSetBy = Automatic
+
+	column Surname
+		dataType: string
+		lineageTag: 1d782da6-ebe6-486b-9261-04e62e29c57c
+		sourceLineageTag: Surname
+		summarizeBy: none
+		sourceColumn: Surname
+
+		annotation SummarizationSetBy = Automatic
+
+	column CreditScore
+		dataType: int64
+		formatString: 0
+		lineageTag: ee7b0263-a467-45e0-9c7c-a6a3bd12f046
+		sourceLineageTag: CreditScore
+		summarizeBy: sum
+		sourceColumn: CreditScore
+
+		changedProperty = DataType
+
+		annotation SummarizationSetBy = Automatic
+
+	column Geography
+		dataType: string
+		lineageTag: 7153cd30-364d-44f8-960a-e5a74d69798e
+		sourceLineageTag: Geography
+		summarizeBy: none
+		sourceColumn: Geography
+
+		annotation SummarizationSetBy = Automatic
+
+	column Gender
+		dataType: string
+		lineageTag: c258ee4e-8e4c-48cd-881c-3388be3cb54b
+		sourceLineageTag: Gender
+		summarizeBy: none
+		sourceColumn: Gender
+
+		annotation SummarizationSetBy = Automatic
+
+	column Age
+		dataType: int64
+		formatString: 0
+		lineageTag: 51426772-d6cb-47b0-ad81-3bd696ee4e2c
+		sourceLineageTag: Age
+		summarizeBy: sum
+		sourceColumn: Age
+
+		changedProperty = DataType
+
+		annotation SummarizationSetBy = Automatic
+
+	column Tenure
+		dataType: int64
+		formatString: 0
+		lineageTag: 40c2dacb-f435-4075-8d4c-2038d9dbff27
+		sourceLineageTag: Tenure
+		summarizeBy: sum
+		sourceColumn: Tenure
+
+		changedProperty = DataType
+
+		annotation SummarizationSetBy = Automatic
+
+	column Balance
+		dataType: int64
+		formatString: 0
+		lineageTag: e862ff6b-9942-49e4-9013-8bb56ab6b2f2
+		sourceLineageTag: Balance
+		summarizeBy: sum
+		sourceColumn: Balance
+
+		changedProperty = DataType
+
+		annotation SummarizationSetBy = Automatic
+
+	column NumOfProducts
+		dataType: int64
+		formatString: 0
+		lineageTag: 9d1736b6-1ef4-4106-a9e3-b902a221b71a
+		sourceLineageTag: NumOfProducts
+		summarizeBy: sum
+		sourceColumn: NumOfProducts
+
+		changedProperty = DataType
+
+		annotation SummarizationSetBy = Automatic
+
+	column HasCrCard
+		dataType: int64
+		formatString: 0
+		lineageTag: 4e22169f-5db4-462f-bc03-161d37f04b30
+		sourceLineageTag: HasCrCard
+		summarizeBy: sum
+		sourceColumn: HasCrCard
+
+		changedProperty = DataType
+
+		annotation SummarizationSetBy = Automatic
+
+	column IsActiveMember
+		dataType: int64
+		formatString: 0
+		lineageTag: d890424d-0ed7-4fb5-99cf-4bbf05ea43a3
+		sourceLineageTag: IsActiveMember
+		summarizeBy: sum
+		sourceColumn: IsActiveMember
+
+		changedProperty = DataType
+
+		annotation SummarizationSetBy = Automatic
+
+	column EstimatedSalary
+		dataType: int64
+		formatString: 0
+		lineageTag: e1a77879-3dbb-4a76-91cf-7c8ed36dc7e1
+		sourceLineageTag: EstimatedSalary
+		summarizeBy: sum
+		sourceColumn: EstimatedSalary
+
+		changedProperty = DataType
+
+		annotation SummarizationSetBy = Automatic
+
+	column Exited
+		dataType: int64
+		formatString: 0
+		lineageTag: 96103797-c686-47de-9333-ec22aef5be43
+		sourceLineageTag: Exited
+		summarizeBy: sum
+		sourceColumn: Exited
+
+		changedProperty = DataType
+
+		annotation SummarizationSetBy = Automatic
+
+	partition churn = entity
+		mode: directLake
+		source
+			entityName: churn
+			expressionSource: 'DirectLake - BankCustomerChurnLakehouse'
+

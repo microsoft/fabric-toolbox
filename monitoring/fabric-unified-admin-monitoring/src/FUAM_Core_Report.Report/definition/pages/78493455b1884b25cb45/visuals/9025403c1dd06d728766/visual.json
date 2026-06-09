@@ -1,0 +1,1941 @@
+{
+    "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.5.0/schema.json",
+    "name": "9025403c1dd06d728766",
+    "position": {
+        "x": 535,
+        "y": 213,
+        "z": 6000,
+        "height": 908,
+        "width": 1551,
+        "tabOrder": 5000
+    },
+    "visual": {
+        "visualType": "tableEx",
+        "query": {
+            "queryState": {
+                "Values": {
+                    "projections": [
+                        {
+                            "field": {
+                                "Column": {
+                                    "Expression": {
+                                        "SourceRef": {
+                                            "Entity": "workspaces"
+                                        }
+                                    },
+                                    "Property": "WorkspaceName"
+                                }
+                            },
+                            "queryRef": "workspaces.WorkspaceName",
+                            "nativeQueryRef": "Workspace",
+                            "displayName": "Workspace"
+                        },
+                        {
+                            "field": {
+                                "Measure": {
+                                    "Expression": {
+                                        "SourceRef": {
+                                            "Entity": "Metrics"
+                                        }
+                                    },
+                                    "Property": "Unused Workspace Indicator CU TI"
+                                }
+                            },
+                            "queryRef": "Metrics.Unused Workspace Indicator CU TI",
+                            "nativeQueryRef": "Indicator - CU Consumption",
+                            "displayName": "Indicator - CU Consumption"
+                        },
+                        {
+                            "field": {
+                                "Measure": {
+                                    "Expression": {
+                                        "SourceRef": {
+                                            "Entity": "Metrics"
+                                        }
+                                    },
+                                    "Property": "Unused Workspace Indicator Activities (ItemId) TI"
+                                }
+                            },
+                            "queryRef": "Metrics.Unused Workspace Indicator Activities (ItemId) TI",
+                            "nativeQueryRef": "Indicator - Item Activities",
+                            "displayName": "Indicator - Item Activities"
+                        },
+                        {
+                            "field": {
+                                "Measure": {
+                                    "Expression": {
+                                        "SourceRef": {
+                                            "Entity": "Metrics"
+                                        }
+                                    },
+                                    "Property": "Unused Workspace Indicator ViewReport TI"
+                                }
+                            },
+                            "queryRef": "Metrics.Unused Workspace Indicator ViewReport TI",
+                            "nativeQueryRef": "Indicator - Interaction via Power BI",
+                            "displayName": "Indicator - Interaction via Power BI"
+                        },
+                        {
+                            "field": {
+                                "Measure": {
+                                    "Expression": {
+                                        "SourceRef": {
+                                            "Entity": "Metrics"
+                                        }
+                                    },
+                                    "Property": "Unused Workspace Indicator AnalyzedInExternalAppl TI"
+                                }
+                            },
+                            "queryRef": "Metrics.Unused Workspace Indicator AnalyzedInExternalAppl TI",
+                            "nativeQueryRef": "Indicator - Interaction via External App",
+                            "displayName": "Indicator - Interaction via External App"
+                        },
+                        {
+                            "field": {
+                                "Measure": {
+                                    "Expression": {
+                                        "SourceRef": {
+                                            "Entity": "Metrics"
+                                        }
+                                    },
+                                    "Property": "Unused Workspace Indicator AnalyzedInExcel TI"
+                                }
+                            },
+                            "queryRef": "Metrics.Unused Workspace Indicator AnalyzedInExcel TI",
+                            "nativeQueryRef": "Indicator - Interaction via Excel",
+                            "displayName": "Indicator - Interaction via Excel"
+                        },
+                        {
+                            "field": {
+                                "Measure": {
+                                    "Expression": {
+                                        "SourceRef": {
+                                            "Entity": "Metrics"
+                                        }
+                                    },
+                                    "Property": "Unused Workspace Indicator Score TI"
+                                }
+                            },
+                            "queryRef": "Metrics.Unused Workspace Indicator Score TI",
+                            "nativeQueryRef": "Final Score: Unused Workspace Indicator",
+                            "displayName": "Final Score: Unused Workspace Indicator"
+                        },
+                        {
+                            "field": {
+                                "Measure": {
+                                    "Expression": {
+                                        "SourceRef": {
+                                            "Entity": "Metrics"
+                                        }
+                                    },
+                                    "Property": "Unused Workspace Action Mail To"
+                                }
+                            },
+                            "queryRef": "Metrics.Unused Workspace Action Mail To",
+                            "nativeQueryRef": "Mail to WS Admin",
+                            "displayName": "Mail to WS Admin"
+                        },
+                        {
+                            "field": {
+                                "Measure": {
+                                    "Expression": {
+                                        "SourceRef": {
+                                            "Entity": "Metrics"
+                                        }
+                                    },
+                                    "Property": "Unused Workspace Action Teams To"
+                                }
+                            },
+                            "queryRef": "Metrics.Unused Workspace Action Teams To",
+                            "nativeQueryRef": "Teams Chat to WS Admin",
+                            "displayName": "Teams Chat to WS Admin"
+                        },
+                        {
+                            "field": {
+                                "Measure": {
+                                    "Expression": {
+                                        "SourceRef": {
+                                            "Entity": "Metrics"
+                                        }
+                                    },
+                                    "Property": "First Workspace Admin (User)"
+                                }
+                            },
+                            "queryRef": "Metrics.First Workspace Admin (User)",
+                            "nativeQueryRef": "First Workspace Admin (User)"
+                        }
+                    ]
+                }
+            },
+            "sortDefinition": {
+                "sort": [
+                    {
+                        "field": {
+                            "Measure": {
+                                "Expression": {
+                                    "SourceRef": {
+                                        "Entity": "Metrics"
+                                    }
+                                },
+                                "Property": "Unused Workspace Indicator Score TI"
+                            }
+                        },
+                        "direction": "Descending"
+                    }
+                ]
+            }
+        },
+        "objects": {
+            "columnHeaders": [
+                {
+                    "properties": {
+                        "fontFamily": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "'''Segoe UI Semibold'', wf_segoe-ui_semibold, helvetica, arial, sans-serif'"
+                                }
+                            }
+                        },
+                        "backColor": {
+                            "solid": {
+                                "color": {
+                                    "expr": {
+                                        "ThemeDataColor": {
+                                            "ColorId": 9,
+                                            "Percent": 0.4
+                                        }
+                                    }
+                                }
+                            }
+                        },
+                        "fontColor": {
+                            "solid": {
+                                "color": {
+                                    "expr": {
+                                        "ThemeDataColor": {
+                                            "ColorId": 1,
+                                            "Percent": 0
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            ],
+            "grid": [
+                {
+                    "properties": {
+                        "gridVertical": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "true"
+                                }
+                            }
+                        },
+                        "rowPadding": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "3D"
+                                }
+                            }
+                        },
+                        "outlineColor": {
+                            "solid": {
+                                "color": {
+                                    "expr": {
+                                        "ThemeDataColor": {
+                                            "ColorId": 9,
+                                            "Percent": -0.5
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            ],
+            "values": [
+                {
+                    "properties": {
+                        "backColorSecondary": {
+                            "solid": {
+                                "color": {
+                                    "expr": {
+                                        "Literal": {
+                                            "Value": "'#F5F6F5'"
+                                        }
+                                    }
+                                }
+                            }
+                        },
+                        "backColorPrimary": {
+                            "solid": {
+                                "color": {
+                                    "expr": {
+                                        "ThemeDataColor": {
+                                            "ColorId": 0,
+                                            "Percent": 0
+                                        }
+                                    }
+                                }
+                            }
+                        },
+                        "urlIcon": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "true"
+                                }
+                            }
+                        }
+                    }
+                },
+                {
+                    "properties": {
+                        "icon": {
+                            "kind": "Icon",
+                            "layout": {
+                                "expr": {
+                                    "Literal": {
+                                        "Value": "'Before'"
+                                    }
+                                }
+                            },
+                            "verticalAlignment": {
+                                "expr": {
+                                    "Literal": {
+                                        "Value": "'Top'"
+                                    }
+                                }
+                            },
+                            "value": {
+                                "expr": {
+                                    "Conditional": {
+                                        "Cases": [
+                                            {
+                                                "Condition": {
+                                                    "Comparison": {
+                                                        "ComparisonKind": 2,
+                                                        "Left": {
+                                                            "Measure": {
+                                                                "Expression": {
+                                                                    "SourceRef": {
+                                                                        "Entity": "Metrics"
+                                                                    }
+                                                                },
+                                                                "Property": "Unused Workspace Indicator Score TI"
+                                                            }
+                                                        },
+                                                        "Right": {
+                                                            "RangePercent": {
+                                                                "Min": {
+                                                                    "ScopedEval": {
+                                                                        "Expression": {
+                                                                            "Aggregation": {
+                                                                                "Expression": {
+                                                                                    "ScopedEval": {
+                                                                                        "Expression": {
+                                                                                            "Measure": {
+                                                                                                "Expression": {
+                                                                                                    "SourceRef": {
+                                                                                                        "Entity": "Metrics"
+                                                                                                    }
+                                                                                                },
+                                                                                                "Property": "Unused Workspace Indicator Score TI"
+                                                                                            }
+                                                                                        },
+                                                                                        "Scope": [
+                                                                                            {
+                                                                                                "AllRolesRef": {}
+                                                                                            }
+                                                                                        ]
+                                                                                    }
+                                                                                },
+                                                                                "Function": 3
+                                                                            }
+                                                                        },
+                                                                        "Scope": []
+                                                                    }
+                                                                },
+                                                                "Max": {
+                                                                    "ScopedEval": {
+                                                                        "Expression": {
+                                                                            "Aggregation": {
+                                                                                "Expression": {
+                                                                                    "ScopedEval": {
+                                                                                        "Expression": {
+                                                                                            "Measure": {
+                                                                                                "Expression": {
+                                                                                                    "SourceRef": {
+                                                                                                        "Entity": "Metrics"
+                                                                                                    }
+                                                                                                },
+                                                                                                "Property": "Unused Workspace Indicator Score TI"
+                                                                                            }
+                                                                                        },
+                                                                                        "Scope": [
+                                                                                            {
+                                                                                                "AllRolesRef": {}
+                                                                                            }
+                                                                                        ]
+                                                                                    }
+                                                                                },
+                                                                                "Function": 4
+                                                                            }
+                                                                        },
+                                                                        "Scope": []
+                                                                    }
+                                                                },
+                                                                "Percent": 0.8
+                                                            }
+                                                        }
+                                                    }
+                                                },
+                                                "Value": {
+                                                    "Literal": {
+                                                        "Value": "'QuadrantFullColored'"
+                                                    }
+                                                }
+                                            },
+                                            {
+                                                "Condition": {
+                                                    "And": {
+                                                        "Left": {
+                                                            "Comparison": {
+                                                                "ComparisonKind": 2,
+                                                                "Left": {
+                                                                    "Measure": {
+                                                                        "Expression": {
+                                                                            "SourceRef": {
+                                                                                "Entity": "Metrics"
+                                                                            }
+                                                                        },
+                                                                        "Property": "Unused Workspace Indicator Score TI"
+                                                                    }
+                                                                },
+                                                                "Right": {
+                                                                    "RangePercent": {
+                                                                        "Min": {
+                                                                            "ScopedEval": {
+                                                                                "Expression": {
+                                                                                    "Aggregation": {
+                                                                                        "Expression": {
+                                                                                            "ScopedEval": {
+                                                                                                "Expression": {
+                                                                                                    "Measure": {
+                                                                                                        "Expression": {
+                                                                                                            "SourceRef": {
+                                                                                                                "Entity": "Metrics"
+                                                                                                            }
+                                                                                                        },
+                                                                                                        "Property": "Unused Workspace Indicator Score TI"
+                                                                                                    }
+                                                                                                },
+                                                                                                "Scope": [
+                                                                                                    {
+                                                                                                        "AllRolesRef": {}
+                                                                                                    }
+                                                                                                ]
+                                                                                            }
+                                                                                        },
+                                                                                        "Function": 3
+                                                                                    }
+                                                                                },
+                                                                                "Scope": []
+                                                                            }
+                                                                        },
+                                                                        "Max": {
+                                                                            "ScopedEval": {
+                                                                                "Expression": {
+                                                                                    "Aggregation": {
+                                                                                        "Expression": {
+                                                                                            "ScopedEval": {
+                                                                                                "Expression": {
+                                                                                                    "Measure": {
+                                                                                                        "Expression": {
+                                                                                                            "SourceRef": {
+                                                                                                                "Entity": "Metrics"
+                                                                                                            }
+                                                                                                        },
+                                                                                                        "Property": "Unused Workspace Indicator Score TI"
+                                                                                                    }
+                                                                                                },
+                                                                                                "Scope": [
+                                                                                                    {
+                                                                                                        "AllRolesRef": {}
+                                                                                                    }
+                                                                                                ]
+                                                                                            }
+                                                                                        },
+                                                                                        "Function": 4
+                                                                                    }
+                                                                                },
+                                                                                "Scope": []
+                                                                            }
+                                                                        },
+                                                                        "Percent": 0.6
+                                                                    }
+                                                                }
+                                                            }
+                                                        },
+                                                        "Right": {
+                                                            "Comparison": {
+                                                                "ComparisonKind": 3,
+                                                                "Left": {
+                                                                    "Measure": {
+                                                                        "Expression": {
+                                                                            "SourceRef": {
+                                                                                "Entity": "Metrics"
+                                                                            }
+                                                                        },
+                                                                        "Property": "Unused Workspace Indicator Score TI"
+                                                                    }
+                                                                },
+                                                                "Right": {
+                                                                    "RangePercent": {
+                                                                        "Min": {
+                                                                            "ScopedEval": {
+                                                                                "Expression": {
+                                                                                    "Aggregation": {
+                                                                                        "Expression": {
+                                                                                            "ScopedEval": {
+                                                                                                "Expression": {
+                                                                                                    "Measure": {
+                                                                                                        "Expression": {
+                                                                                                            "SourceRef": {
+                                                                                                                "Entity": "Metrics"
+                                                                                                            }
+                                                                                                        },
+                                                                                                        "Property": "Unused Workspace Indicator Score TI"
+                                                                                                    }
+                                                                                                },
+                                                                                                "Scope": [
+                                                                                                    {
+                                                                                                        "AllRolesRef": {}
+                                                                                                    }
+                                                                                                ]
+                                                                                            }
+                                                                                        },
+                                                                                        "Function": 3
+                                                                                    }
+                                                                                },
+                                                                                "Scope": []
+                                                                            }
+                                                                        },
+                                                                        "Max": {
+                                                                            "ScopedEval": {
+                                                                                "Expression": {
+                                                                                    "Aggregation": {
+                                                                                        "Expression": {
+                                                                                            "ScopedEval": {
+                                                                                                "Expression": {
+                                                                                                    "Measure": {
+                                                                                                        "Expression": {
+                                                                                                            "SourceRef": {
+                                                                                                                "Entity": "Metrics"
+                                                                                                            }
+                                                                                                        },
+                                                                                                        "Property": "Unused Workspace Indicator Score TI"
+                                                                                                    }
+                                                                                                },
+                                                                                                "Scope": [
+                                                                                                    {
+                                                                                                        "AllRolesRef": {}
+                                                                                                    }
+                                                                                                ]
+                                                                                            }
+                                                                                        },
+                                                                                        "Function": 4
+                                                                                    }
+                                                                                },
+                                                                                "Scope": []
+                                                                            }
+                                                                        },
+                                                                        "Percent": 0.8
+                                                                    }
+                                                                }
+                                                            }
+                                                        }
+                                                    }
+                                                },
+                                                "Value": {
+                                                    "Literal": {
+                                                        "Value": "'Quadrant75Colored'"
+                                                    }
+                                                }
+                                            },
+                                            {
+                                                "Condition": {
+                                                    "And": {
+                                                        "Left": {
+                                                            "Comparison": {
+                                                                "ComparisonKind": 2,
+                                                                "Left": {
+                                                                    "Measure": {
+                                                                        "Expression": {
+                                                                            "SourceRef": {
+                                                                                "Entity": "Metrics"
+                                                                            }
+                                                                        },
+                                                                        "Property": "Unused Workspace Indicator Score TI"
+                                                                    }
+                                                                },
+                                                                "Right": {
+                                                                    "RangePercent": {
+                                                                        "Min": {
+                                                                            "ScopedEval": {
+                                                                                "Expression": {
+                                                                                    "Aggregation": {
+                                                                                        "Expression": {
+                                                                                            "ScopedEval": {
+                                                                                                "Expression": {
+                                                                                                    "Measure": {
+                                                                                                        "Expression": {
+                                                                                                            "SourceRef": {
+                                                                                                                "Entity": "Metrics"
+                                                                                                            }
+                                                                                                        },
+                                                                                                        "Property": "Unused Workspace Indicator Score TI"
+                                                                                                    }
+                                                                                                },
+                                                                                                "Scope": [
+                                                                                                    {
+                                                                                                        "AllRolesRef": {}
+                                                                                                    }
+                                                                                                ]
+                                                                                            }
+                                                                                        },
+                                                                                        "Function": 3
+                                                                                    }
+                                                                                },
+                                                                                "Scope": []
+                                                                            }
+                                                                        },
+                                                                        "Max": {
+                                                                            "ScopedEval": {
+                                                                                "Expression": {
+                                                                                    "Aggregation": {
+                                                                                        "Expression": {
+                                                                                            "ScopedEval": {
+                                                                                                "Expression": {
+                                                                                                    "Measure": {
+                                                                                                        "Expression": {
+                                                                                                            "SourceRef": {
+                                                                                                                "Entity": "Metrics"
+                                                                                                            }
+                                                                                                        },
+                                                                                                        "Property": "Unused Workspace Indicator Score TI"
+                                                                                                    }
+                                                                                                },
+                                                                                                "Scope": [
+                                                                                                    {
+                                                                                                        "AllRolesRef": {}
+                                                                                                    }
+                                                                                                ]
+                                                                                            }
+                                                                                        },
+                                                                                        "Function": 4
+                                                                                    }
+                                                                                },
+                                                                                "Scope": []
+                                                                            }
+                                                                        },
+                                                                        "Percent": 0.4
+                                                                    }
+                                                                }
+                                                            }
+                                                        },
+                                                        "Right": {
+                                                            "Comparison": {
+                                                                "ComparisonKind": 3,
+                                                                "Left": {
+                                                                    "Measure": {
+                                                                        "Expression": {
+                                                                            "SourceRef": {
+                                                                                "Entity": "Metrics"
+                                                                            }
+                                                                        },
+                                                                        "Property": "Unused Workspace Indicator Score TI"
+                                                                    }
+                                                                },
+                                                                "Right": {
+                                                                    "RangePercent": {
+                                                                        "Min": {
+                                                                            "ScopedEval": {
+                                                                                "Expression": {
+                                                                                    "Aggregation": {
+                                                                                        "Expression": {
+                                                                                            "ScopedEval": {
+                                                                                                "Expression": {
+                                                                                                    "Measure": {
+                                                                                                        "Expression": {
+                                                                                                            "SourceRef": {
+                                                                                                                "Entity": "Metrics"
+                                                                                                            }
+                                                                                                        },
+                                                                                                        "Property": "Unused Workspace Indicator Score TI"
+                                                                                                    }
+                                                                                                },
+                                                                                                "Scope": [
+                                                                                                    {
+                                                                                                        "AllRolesRef": {}
+                                                                                                    }
+                                                                                                ]
+                                                                                            }
+                                                                                        },
+                                                                                        "Function": 3
+                                                                                    }
+                                                                                },
+                                                                                "Scope": []
+                                                                            }
+                                                                        },
+                                                                        "Max": {
+                                                                            "ScopedEval": {
+                                                                                "Expression": {
+                                                                                    "Aggregation": {
+                                                                                        "Expression": {
+                                                                                            "ScopedEval": {
+                                                                                                "Expression": {
+                                                                                                    "Measure": {
+                                                                                                        "Expression": {
+                                                                                                            "SourceRef": {
+                                                                                                                "Entity": "Metrics"
+                                                                                                            }
+                                                                                                        },
+                                                                                                        "Property": "Unused Workspace Indicator Score TI"
+                                                                                                    }
+                                                                                                },
+                                                                                                "Scope": [
+                                                                                                    {
+                                                                                                        "AllRolesRef": {}
+                                                                                                    }
+                                                                                                ]
+                                                                                            }
+                                                                                        },
+                                                                                        "Function": 4
+                                                                                    }
+                                                                                },
+                                                                                "Scope": []
+                                                                            }
+                                                                        },
+                                                                        "Percent": 0.6
+                                                                    }
+                                                                }
+                                                            }
+                                                        }
+                                                    }
+                                                },
+                                                "Value": {
+                                                    "Literal": {
+                                                        "Value": "'Quadrant50Colored'"
+                                                    }
+                                                }
+                                            },
+                                            {
+                                                "Condition": {
+                                                    "And": {
+                                                        "Left": {
+                                                            "Comparison": {
+                                                                "ComparisonKind": 2,
+                                                                "Left": {
+                                                                    "Measure": {
+                                                                        "Expression": {
+                                                                            "SourceRef": {
+                                                                                "Entity": "Metrics"
+                                                                            }
+                                                                        },
+                                                                        "Property": "Unused Workspace Indicator Score TI"
+                                                                    }
+                                                                },
+                                                                "Right": {
+                                                                    "RangePercent": {
+                                                                        "Min": {
+                                                                            "ScopedEval": {
+                                                                                "Expression": {
+                                                                                    "Aggregation": {
+                                                                                        "Expression": {
+                                                                                            "ScopedEval": {
+                                                                                                "Expression": {
+                                                                                                    "Measure": {
+                                                                                                        "Expression": {
+                                                                                                            "SourceRef": {
+                                                                                                                "Entity": "Metrics"
+                                                                                                            }
+                                                                                                        },
+                                                                                                        "Property": "Unused Workspace Indicator Score TI"
+                                                                                                    }
+                                                                                                },
+                                                                                                "Scope": [
+                                                                                                    {
+                                                                                                        "AllRolesRef": {}
+                                                                                                    }
+                                                                                                ]
+                                                                                            }
+                                                                                        },
+                                                                                        "Function": 3
+                                                                                    }
+                                                                                },
+                                                                                "Scope": []
+                                                                            }
+                                                                        },
+                                                                        "Max": {
+                                                                            "ScopedEval": {
+                                                                                "Expression": {
+                                                                                    "Aggregation": {
+                                                                                        "Expression": {
+                                                                                            "ScopedEval": {
+                                                                                                "Expression": {
+                                                                                                    "Measure": {
+                                                                                                        "Expression": {
+                                                                                                            "SourceRef": {
+                                                                                                                "Entity": "Metrics"
+                                                                                                            }
+                                                                                                        },
+                                                                                                        "Property": "Unused Workspace Indicator Score TI"
+                                                                                                    }
+                                                                                                },
+                                                                                                "Scope": [
+                                                                                                    {
+                                                                                                        "AllRolesRef": {}
+                                                                                                    }
+                                                                                                ]
+                                                                                            }
+                                                                                        },
+                                                                                        "Function": 4
+                                                                                    }
+                                                                                },
+                                                                                "Scope": []
+                                                                            }
+                                                                        },
+                                                                        "Percent": 0.2
+                                                                    }
+                                                                }
+                                                            }
+                                                        },
+                                                        "Right": {
+                                                            "Comparison": {
+                                                                "ComparisonKind": 3,
+                                                                "Left": {
+                                                                    "Measure": {
+                                                                        "Expression": {
+                                                                            "SourceRef": {
+                                                                                "Entity": "Metrics"
+                                                                            }
+                                                                        },
+                                                                        "Property": "Unused Workspace Indicator Score TI"
+                                                                    }
+                                                                },
+                                                                "Right": {
+                                                                    "RangePercent": {
+                                                                        "Min": {
+                                                                            "ScopedEval": {
+                                                                                "Expression": {
+                                                                                    "Aggregation": {
+                                                                                        "Expression": {
+                                                                                            "ScopedEval": {
+                                                                                                "Expression": {
+                                                                                                    "Measure": {
+                                                                                                        "Expression": {
+                                                                                                            "SourceRef": {
+                                                                                                                "Entity": "Metrics"
+                                                                                                            }
+                                                                                                        },
+                                                                                                        "Property": "Unused Workspace Indicator Score TI"
+                                                                                                    }
+                                                                                                },
+                                                                                                "Scope": [
+                                                                                                    {
+                                                                                                        "AllRolesRef": {}
+                                                                                                    }
+                                                                                                ]
+                                                                                            }
+                                                                                        },
+                                                                                        "Function": 3
+                                                                                    }
+                                                                                },
+                                                                                "Scope": []
+                                                                            }
+                                                                        },
+                                                                        "Max": {
+                                                                            "ScopedEval": {
+                                                                                "Expression": {
+                                                                                    "Aggregation": {
+                                                                                        "Expression": {
+                                                                                            "ScopedEval": {
+                                                                                                "Expression": {
+                                                                                                    "Measure": {
+                                                                                                        "Expression": {
+                                                                                                            "SourceRef": {
+                                                                                                                "Entity": "Metrics"
+                                                                                                            }
+                                                                                                        },
+                                                                                                        "Property": "Unused Workspace Indicator Score TI"
+                                                                                                    }
+                                                                                                },
+                                                                                                "Scope": [
+                                                                                                    {
+                                                                                                        "AllRolesRef": {}
+                                                                                                    }
+                                                                                                ]
+                                                                                            }
+                                                                                        },
+                                                                                        "Function": 4
+                                                                                    }
+                                                                                },
+                                                                                "Scope": []
+                                                                            }
+                                                                        },
+                                                                        "Percent": 0.4
+                                                                    }
+                                                                }
+                                                            }
+                                                        }
+                                                    }
+                                                },
+                                                "Value": {
+                                                    "Literal": {
+                                                        "Value": "'Quadrant25Colored'"
+                                                    }
+                                                }
+                                            },
+                                            {
+                                                "Condition": {
+                                                    "Comparison": {
+                                                        "ComparisonKind": 3,
+                                                        "Left": {
+                                                            "Measure": {
+                                                                "Expression": {
+                                                                    "SourceRef": {
+                                                                        "Entity": "Metrics"
+                                                                    }
+                                                                },
+                                                                "Property": "Unused Workspace Indicator Score TI"
+                                                            }
+                                                        },
+                                                        "Right": {
+                                                            "RangePercent": {
+                                                                "Min": {
+                                                                    "ScopedEval": {
+                                                                        "Expression": {
+                                                                            "Aggregation": {
+                                                                                "Expression": {
+                                                                                    "ScopedEval": {
+                                                                                        "Expression": {
+                                                                                            "Measure": {
+                                                                                                "Expression": {
+                                                                                                    "SourceRef": {
+                                                                                                        "Entity": "Metrics"
+                                                                                                    }
+                                                                                                },
+                                                                                                "Property": "Unused Workspace Indicator Score TI"
+                                                                                            }
+                                                                                        },
+                                                                                        "Scope": [
+                                                                                            {
+                                                                                                "AllRolesRef": {}
+                                                                                            }
+                                                                                        ]
+                                                                                    }
+                                                                                },
+                                                                                "Function": 3
+                                                                            }
+                                                                        },
+                                                                        "Scope": []
+                                                                    }
+                                                                },
+                                                                "Max": {
+                                                                    "ScopedEval": {
+                                                                        "Expression": {
+                                                                            "Aggregation": {
+                                                                                "Expression": {
+                                                                                    "ScopedEval": {
+                                                                                        "Expression": {
+                                                                                            "Measure": {
+                                                                                                "Expression": {
+                                                                                                    "SourceRef": {
+                                                                                                        "Entity": "Metrics"
+                                                                                                    }
+                                                                                                },
+                                                                                                "Property": "Unused Workspace Indicator Score TI"
+                                                                                            }
+                                                                                        },
+                                                                                        "Scope": [
+                                                                                            {
+                                                                                                "AllRolesRef": {}
+                                                                                            }
+                                                                                        ]
+                                                                                    }
+                                                                                },
+                                                                                "Function": 4
+                                                                            }
+                                                                        },
+                                                                        "Scope": []
+                                                                    }
+                                                                },
+                                                                "Percent": 0.2
+                                                            }
+                                                        }
+                                                    }
+                                                },
+                                                "Value": {
+                                                    "Literal": {
+                                                        "Value": "'QuadrantEmpty'"
+                                                    }
+                                                }
+                                            }
+                                        ]
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "selector": {
+                        "data": [
+                            {
+                                "dataViewWildcard": {
+                                    "matchingOption": 1
+                                }
+                            }
+                        ],
+                        "metadata": "Metrics.Unused Workspace Indicator Score TI"
+                    }
+                },
+                {
+                    "properties": {
+                        "icon": {
+                            "kind": "Icon",
+                            "layout": {
+                                "expr": {
+                                    "Literal": {
+                                        "Value": "'IconOnly'"
+                                    }
+                                }
+                            },
+                            "verticalAlignment": {
+                                "expr": {
+                                    "Literal": {
+                                        "Value": "'Middle'"
+                                    }
+                                }
+                            },
+                            "value": {
+                                "expr": {
+                                    "Conditional": {
+                                        "Cases": [
+                                            {
+                                                "Condition": {
+                                                    "Comparison": {
+                                                        "ComparisonKind": 0,
+                                                        "Left": {
+                                                            "Measure": {
+                                                                "Expression": {
+                                                                    "SourceRef": {
+                                                                        "Entity": "Metrics"
+                                                                    }
+                                                                },
+                                                                "Property": "Unused Workspace Indicator Activities (ItemId) TI"
+                                                            }
+                                                        },
+                                                        "Right": {
+                                                            "Literal": {
+                                                                "Value": "null"
+                                                            }
+                                                        }
+                                                    }
+                                                },
+                                                "Value": {
+                                                    "Literal": {
+                                                        "Value": "'CircleHigh'"
+                                                    }
+                                                }
+                                            },
+                                            {
+                                                "Condition": {
+                                                    "Comparison": {
+                                                        "ComparisonKind": 0,
+                                                        "Left": {
+                                                            "Measure": {
+                                                                "Expression": {
+                                                                    "SourceRef": {
+                                                                        "Entity": "Metrics"
+                                                                    }
+                                                                },
+                                                                "Property": "Unused Workspace Indicator Activities (ItemId) TI"
+                                                            }
+                                                        },
+                                                        "Right": {
+                                                            "Literal": {
+                                                                "Value": "1D"
+                                                            }
+                                                        }
+                                                    }
+                                                },
+                                                "Value": {
+                                                    "Literal": {
+                                                        "Value": "'SignLow'"
+                                                    }
+                                                }
+                                            }
+                                        ]
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "selector": {
+                        "data": [
+                            {
+                                "dataViewWildcard": {
+                                    "matchingOption": 1
+                                }
+                            }
+                        ],
+                        "metadata": "Metrics.Unused Workspace Indicator Activities (ItemId) TI"
+                    }
+                },
+                {
+                    "properties": {
+                        "icon": {
+                            "kind": "Icon",
+                            "layout": {
+                                "expr": {
+                                    "Literal": {
+                                        "Value": "'IconOnly'"
+                                    }
+                                }
+                            },
+                            "verticalAlignment": {
+                                "expr": {
+                                    "Literal": {
+                                        "Value": "'Middle'"
+                                    }
+                                }
+                            },
+                            "value": {
+                                "expr": {
+                                    "Conditional": {
+                                        "Cases": [
+                                            {
+                                                "Condition": {
+                                                    "Comparison": {
+                                                        "ComparisonKind": 0,
+                                                        "Left": {
+                                                            "Measure": {
+                                                                "Expression": {
+                                                                    "SourceRef": {
+                                                                        "Entity": "Metrics"
+                                                                    }
+                                                                },
+                                                                "Property": "Unused Workspace Indicator ViewReport TI"
+                                                            }
+                                                        },
+                                                        "Right": {
+                                                            "Literal": {
+                                                                "Value": "null"
+                                                            }
+                                                        }
+                                                    }
+                                                },
+                                                "Value": {
+                                                    "Literal": {
+                                                        "Value": "'CircleHigh'"
+                                                    }
+                                                }
+                                            },
+                                            {
+                                                "Condition": {
+                                                    "Comparison": {
+                                                        "ComparisonKind": 0,
+                                                        "Left": {
+                                                            "Measure": {
+                                                                "Expression": {
+                                                                    "SourceRef": {
+                                                                        "Entity": "Metrics"
+                                                                    }
+                                                                },
+                                                                "Property": "Unused Workspace Indicator ViewReport TI"
+                                                            }
+                                                        },
+                                                        "Right": {
+                                                            "Literal": {
+                                                                "Value": "1D"
+                                                            }
+                                                        }
+                                                    }
+                                                },
+                                                "Value": {
+                                                    "Literal": {
+                                                        "Value": "'SignLow'"
+                                                    }
+                                                }
+                                            }
+                                        ]
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "selector": {
+                        "data": [
+                            {
+                                "dataViewWildcard": {
+                                    "matchingOption": 1
+                                }
+                            }
+                        ],
+                        "metadata": "Metrics.Unused Workspace Indicator ViewReport TI"
+                    }
+                },
+                {
+                    "properties": {
+                        "icon": {
+                            "kind": "Icon",
+                            "layout": {
+                                "expr": {
+                                    "Literal": {
+                                        "Value": "'IconOnly'"
+                                    }
+                                }
+                            },
+                            "verticalAlignment": {
+                                "expr": {
+                                    "Literal": {
+                                        "Value": "'Middle'"
+                                    }
+                                }
+                            },
+                            "value": {
+                                "expr": {
+                                    "Conditional": {
+                                        "Cases": [
+                                            {
+                                                "Condition": {
+                                                    "Comparison": {
+                                                        "ComparisonKind": 0,
+                                                        "Left": {
+                                                            "Measure": {
+                                                                "Expression": {
+                                                                    "SourceRef": {
+                                                                        "Entity": "Metrics"
+                                                                    }
+                                                                },
+                                                                "Property": "Unused Workspace Indicator AnalyzedInExternalAppl TI"
+                                                            }
+                                                        },
+                                                        "Right": {
+                                                            "Literal": {
+                                                                "Value": "null"
+                                                            }
+                                                        }
+                                                    }
+                                                },
+                                                "Value": {
+                                                    "Literal": {
+                                                        "Value": "'CircleHigh'"
+                                                    }
+                                                }
+                                            },
+                                            {
+                                                "Condition": {
+                                                    "Comparison": {
+                                                        "ComparisonKind": 0,
+                                                        "Left": {
+                                                            "Measure": {
+                                                                "Expression": {
+                                                                    "SourceRef": {
+                                                                        "Entity": "Metrics"
+                                                                    }
+                                                                },
+                                                                "Property": "Unused Workspace Indicator AnalyzedInExternalAppl TI"
+                                                            }
+                                                        },
+                                                        "Right": {
+                                                            "Literal": {
+                                                                "Value": "1D"
+                                                            }
+                                                        }
+                                                    }
+                                                },
+                                                "Value": {
+                                                    "Literal": {
+                                                        "Value": "'SignLow'"
+                                                    }
+                                                }
+                                            }
+                                        ]
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "selector": {
+                        "data": [
+                            {
+                                "dataViewWildcard": {
+                                    "matchingOption": 1
+                                }
+                            }
+                        ],
+                        "metadata": "Metrics.Unused Workspace Indicator AnalyzedInExternalAppl TI"
+                    }
+                },
+                {
+                    "properties": {
+                        "icon": {
+                            "kind": "Icon",
+                            "layout": {
+                                "expr": {
+                                    "Literal": {
+                                        "Value": "'IconOnly'"
+                                    }
+                                }
+                            },
+                            "verticalAlignment": {
+                                "expr": {
+                                    "Literal": {
+                                        "Value": "'Middle'"
+                                    }
+                                }
+                            },
+                            "value": {
+                                "expr": {
+                                    "Conditional": {
+                                        "Cases": [
+                                            {
+                                                "Condition": {
+                                                    "Comparison": {
+                                                        "ComparisonKind": 0,
+                                                        "Left": {
+                                                            "Measure": {
+                                                                "Expression": {
+                                                                    "SourceRef": {
+                                                                        "Entity": "Metrics"
+                                                                    }
+                                                                },
+                                                                "Property": "Unused Workspace Indicator AnalyzedInExcel TI"
+                                                            }
+                                                        },
+                                                        "Right": {
+                                                            "Literal": {
+                                                                "Value": "null"
+                                                            }
+                                                        }
+                                                    }
+                                                },
+                                                "Value": {
+                                                    "Literal": {
+                                                        "Value": "'CircleHigh'"
+                                                    }
+                                                }
+                                            },
+                                            {
+                                                "Condition": {
+                                                    "Comparison": {
+                                                        "ComparisonKind": 0,
+                                                        "Left": {
+                                                            "Measure": {
+                                                                "Expression": {
+                                                                    "SourceRef": {
+                                                                        "Entity": "Metrics"
+                                                                    }
+                                                                },
+                                                                "Property": "Unused Workspace Indicator AnalyzedInExcel TI"
+                                                            }
+                                                        },
+                                                        "Right": {
+                                                            "Literal": {
+                                                                "Value": "1D"
+                                                            }
+                                                        }
+                                                    }
+                                                },
+                                                "Value": {
+                                                    "Literal": {
+                                                        "Value": "'SignLow'"
+                                                    }
+                                                }
+                                            }
+                                        ]
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "selector": {
+                        "data": [
+                            {
+                                "dataViewWildcard": {
+                                    "matchingOption": 1
+                                }
+                            }
+                        ],
+                        "metadata": "Metrics.Unused Workspace Indicator AnalyzedInExcel TI"
+                    }
+                },
+                {
+                    "properties": {
+                        "icon": {
+                            "kind": "Icon",
+                            "layout": {
+                                "expr": {
+                                    "Literal": {
+                                        "Value": "'IconOnly'"
+                                    }
+                                }
+                            },
+                            "verticalAlignment": {
+                                "expr": {
+                                    "Literal": {
+                                        "Value": "'Middle'"
+                                    }
+                                }
+                            },
+                            "value": {
+                                "expr": {
+                                    "Conditional": {
+                                        "Cases": [
+                                            {
+                                                "Condition": {
+                                                    "Comparison": {
+                                                        "ComparisonKind": 0,
+                                                        "Left": {
+                                                            "Measure": {
+                                                                "Expression": {
+                                                                    "SourceRef": {
+                                                                        "Entity": "Metrics"
+                                                                    }
+                                                                },
+                                                                "Property": "Unused Workspace Indicator CU TI"
+                                                            }
+                                                        },
+                                                        "Right": {
+                                                            "Literal": {
+                                                                "Value": "null"
+                                                            }
+                                                        }
+                                                    }
+                                                },
+                                                "Value": {
+                                                    "Literal": {
+                                                        "Value": "'CircleHigh'"
+                                                    }
+                                                }
+                                            },
+                                            {
+                                                "Condition": {
+                                                    "Comparison": {
+                                                        "ComparisonKind": 0,
+                                                        "Left": {
+                                                            "Measure": {
+                                                                "Expression": {
+                                                                    "SourceRef": {
+                                                                        "Entity": "Metrics"
+                                                                    }
+                                                                },
+                                                                "Property": "Unused Workspace Indicator CU TI"
+                                                            }
+                                                        },
+                                                        "Right": {
+                                                            "Literal": {
+                                                                "Value": "1D"
+                                                            }
+                                                        }
+                                                    }
+                                                },
+                                                "Value": {
+                                                    "Literal": {
+                                                        "Value": "'SignLow'"
+                                                    }
+                                                }
+                                            }
+                                        ]
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "selector": {
+                        "data": [
+                            {
+                                "dataViewWildcard": {
+                                    "matchingOption": 1
+                                }
+                            }
+                        ],
+                        "metadata": "Metrics.Unused Workspace Indicator CU TI"
+                    }
+                }
+            ],
+            "columnWidth": [
+                {
+                    "properties": {
+                        "value": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "372D"
+                                }
+                            }
+                        }
+                    },
+                    "selector": {
+                        "metadata": "workspaces.WorkspaceName"
+                    }
+                },
+                {
+                    "properties": {
+                        "value": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "104D"
+                                }
+                            }
+                        }
+                    },
+                    "selector": {
+                        "metadata": "Metrics.Unused Workspace Indicator Activities (ItemId) TI"
+                    }
+                },
+                {
+                    "properties": {
+                        "value": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "108D"
+                                }
+                            }
+                        }
+                    },
+                    "selector": {
+                        "metadata": "Metrics.Unused Workspace Indicator AnalyzedInExcel TI"
+                    }
+                },
+                {
+                    "properties": {
+                        "value": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "106D"
+                                }
+                            }
+                        }
+                    },
+                    "selector": {
+                        "metadata": "Metrics.Unused Workspace Indicator AnalyzedInExternalAppl TI"
+                    }
+                },
+                {
+                    "properties": {
+                        "value": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "110D"
+                                }
+                            }
+                        }
+                    },
+                    "selector": {
+                        "metadata": "Metrics.Unused Workspace Indicator ViewReport TI"
+                    }
+                },
+                {
+                    "properties": {
+                        "value": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "101D"
+                                }
+                            }
+                        }
+                    },
+                    "selector": {
+                        "metadata": "Metrics.Unused Workspace Indicator CU TI"
+                    }
+                },
+                {
+                    "properties": {
+                        "value": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "150D"
+                                }
+                            }
+                        }
+                    },
+                    "selector": {
+                        "metadata": "Metrics.Unused Workspace Indicator Score TI"
+                    }
+                },
+                {
+                    "properties": {
+                        "value": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "76D"
+                                }
+                            }
+                        }
+                    },
+                    "selector": {
+                        "metadata": "Metrics.Unused Workspace Action Mail To"
+                    }
+                },
+                {
+                    "properties": {
+                        "value": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "94D"
+                                }
+                            }
+                        }
+                    },
+                    "selector": {
+                        "metadata": "Metrics.Unused Workspace Action Teams To"
+                    }
+                }
+            ],
+            "total": [
+                {
+                    "properties": {
+                        "totals": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "false"
+                                }
+                            }
+                        }
+                    }
+                }
+            ]
+        },
+        "visualContainerObjects": {
+            "title": [
+                {
+                    "properties": {
+                        "show": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "true"
+                                }
+                            }
+                        },
+                        "text": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "'Identified Unused Workspaces'"
+                                }
+                            }
+                        },
+                        "fontSize": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "12D"
+                                }
+                            }
+                        }
+                    }
+                }
+            ],
+            "border": [
+                {
+                    "properties": {
+                        "show": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "true"
+                                }
+                            }
+                        },
+                        "radius": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "5D"
+                                }
+                            }
+                        }
+                    }
+                }
+            ],
+            "dropShadow": [
+                {
+                    "properties": {
+                        "show": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "true"
+                                }
+                            }
+                        },
+                        "color": {
+                            "solid": {
+                                "color": {
+                                    "expr": {
+                                        "ThemeDataColor": {
+                                            "ColorId": 0,
+                                            "Percent": -0.1
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            ],
+            "subTitle": [
+                {
+                    "properties": {
+                        "show": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "false"
+                                }
+                            }
+                        },
+                        "text": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "''"
+                                }
+                            }
+                        }
+                    }
+                }
+            ],
+            "visualTooltip": [
+                {
+                    "properties": {
+                        "show": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "false"
+                                }
+                            }
+                        }
+                    }
+                }
+            ]
+        },
+        "drillFilterOtherVisuals": true
+    },
+    "filterConfig": {
+        "filters": [
+            {
+                "name": "ab10cecf4eb1b9b04d60",
+                "ordinal": 0,
+                "field": {
+                    "Measure": {
+                        "Expression": {
+                            "SourceRef": {
+                                "Entity": "Metrics"
+                            }
+                        },
+                        "Property": "# Workspaces"
+                    }
+                },
+                "type": "Advanced",
+                "howCreated": "User"
+            },
+            {
+                "name": "b0d63d31a081eb8096e0",
+                "ordinal": 1,
+                "field": {
+                    "Column": {
+                        "Expression": {
+                            "SourceRef": {
+                                "Entity": "workspaces"
+                            }
+                        },
+                        "Property": "WorkspaceName"
+                    }
+                },
+                "type": "Advanced",
+                "filter": {
+                    "Version": 2,
+                    "From": [
+                        {
+                            "Name": "w",
+                            "Entity": "workspaces",
+                            "Type": 0
+                        }
+                    ],
+                    "Where": [
+                        {
+                            "Condition": {
+                                "Not": {
+                                    "Expression": {
+                                        "Comparison": {
+                                            "ComparisonKind": 0,
+                                            "Left": {
+                                                "Column": {
+                                                    "Expression": {
+                                                        "SourceRef": {
+                                                            "Source": "w"
+                                                        }
+                                                    },
+                                                    "Property": "WorkspaceName"
+                                                }
+                                            },
+                                            "Right": {
+                                                "Literal": {
+                                                    "Value": "null"
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    ]
+                },
+                "objects": {
+                    "general": [
+                        {
+                            "properties": {}
+                        }
+                    ]
+                }
+            },
+            {
+                "name": "1d46bdc11b3977709c00",
+                "ordinal": 2,
+                "field": {
+                    "Measure": {
+                        "Expression": {
+                            "SourceRef": {
+                                "Entity": "Metrics"
+                            }
+                        },
+                        "Property": "# Active Artifacts"
+                    }
+                },
+                "type": "Advanced",
+                "howCreated": "User"
+            },
+            {
+                "name": "44402030436044ce1089",
+                "ordinal": 3,
+                "field": {
+                    "Measure": {
+                        "Expression": {
+                            "SourceRef": {
+                                "Entity": "Metrics"
+                            }
+                        },
+                        "Property": "Unused Workspace Indicator Activities (ItemId) TI"
+                    }
+                },
+                "type": "Advanced"
+            },
+            {
+                "name": "5c9d88061604a8161da6",
+                "ordinal": 4,
+                "field": {
+                    "Measure": {
+                        "Expression": {
+                            "SourceRef": {
+                                "Entity": "Metrics"
+                            }
+                        },
+                        "Property": "Unused Workspace Indicator AnalyzedInExternalAppl TI"
+                    }
+                },
+                "type": "Advanced"
+            },
+            {
+                "name": "503385a91d330e3c7b05",
+                "ordinal": 5,
+                "field": {
+                    "Measure": {
+                        "Expression": {
+                            "SourceRef": {
+                                "Entity": "Metrics"
+                            }
+                        },
+                        "Property": "Unused Workspace Indicator CU TI"
+                    }
+                },
+                "type": "Advanced"
+            },
+            {
+                "name": "aeb54496ce440034e161",
+                "ordinal": 6,
+                "field": {
+                    "Measure": {
+                        "Expression": {
+                            "SourceRef": {
+                                "Entity": "Metrics"
+                            }
+                        },
+                        "Property": "Unused Workspace Indicator ViewReport TI"
+                    }
+                },
+                "type": "Advanced"
+            },
+            {
+                "name": "05340edc27b835a9932c",
+                "ordinal": 7,
+                "field": {
+                    "Measure": {
+                        "Expression": {
+                            "SourceRef": {
+                                "Entity": "Metrics"
+                            }
+                        },
+                        "Property": "Unused Workspace Indicator AnalyzedInExcel TI"
+                    }
+                },
+                "type": "Advanced"
+            },
+            {
+                "name": "3e6e48bf880c6813ba90",
+                "ordinal": 8,
+                "field": {
+                    "Measure": {
+                        "Expression": {
+                            "SourceRef": {
+                                "Entity": "Metrics"
+                            }
+                        },
+                        "Property": "Unused Workspace Indicator Score TI"
+                    }
+                },
+                "type": "Advanced",
+                "filter": {
+                    "Version": 2,
+                    "From": [
+                        {
+                            "Name": "m",
+                            "Entity": "Metrics",
+                            "Type": 0
+                        }
+                    ],
+                    "Where": [
+                        {
+                            "Condition": {
+                                "Comparison": {
+                                    "ComparisonKind": 2,
+                                    "Left": {
+                                        "Measure": {
+                                            "Expression": {
+                                                "SourceRef": {
+                                                    "Source": "m"
+                                                }
+                                            },
+                                            "Property": "Unused Workspace Indicator Score TI"
+                                        }
+                                    },
+                                    "Right": {
+                                        "Literal": {
+                                            "Value": "0.4D"
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    ]
+                }
+            }
+        ],
+        "filterSortOrder": "Custom"
+    }
+}

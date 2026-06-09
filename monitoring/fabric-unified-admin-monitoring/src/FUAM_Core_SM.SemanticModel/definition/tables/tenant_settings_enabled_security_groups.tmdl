@@ -1,0 +1,50 @@
+table tenant_settings_enabled_security_groups
+	lineageTag: ea869977-4375-4a92-9f5e-900d089c2da7
+	sourceLineageTag: [dbo].[tenant_settings_enabled_security_groups]
+
+	column settingName
+		dataType: string
+		lineageTag: a67931a0-5e91-40f3-a117-503f9583e7c0
+		sourceLineageTag: settingName
+		summarizeBy: none
+		sourceColumn: settingName
+
+		annotation SummarizationSetBy = Automatic
+
+	column TransferDateTime
+		dataType: dateTime
+		formatString: General Date
+		lineageTag: 15362c46-7bc2-4da5-93ff-640d73c497fb
+		sourceLineageTag: TransferDateTime
+		summarizeBy: none
+		sourceColumn: TransferDateTime
+
+		annotation SummarizationSetBy = Automatic
+
+	column graphId
+		dataType: string
+		lineageTag: 491c50b0-4c23-45d1-a277-23a740f7078a
+		sourceLineageTag: graphId
+		summarizeBy: none
+		sourceColumn: graphId
+
+		annotation SummarizationSetBy = Automatic
+
+	column name
+		dataType: string
+		lineageTag: 8f995064-e9ef-48bb-8b66-dee651851681
+		sourceLineageTag: name
+		summarizeBy: none
+		sourceColumn: name
+
+		annotation SummarizationSetBy = Automatic
+
+	partition tenant_settings_enabled_security_groups = entity
+		mode: directLake
+		source
+			entityName: tenant_settings_enabled_security_groups
+			schemaName: dbo
+			expressionSource: DatabaseQuery
+
+	annotation PBI_ResultType = Table
+

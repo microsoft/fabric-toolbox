@@ -1,0 +1,11 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/gitIntegration/platformProperties/2.0.0/schema.json",
+  "metadata": {
+    "type": "Notebook",
+    "displayName": "Capacity Events Update Eventstream"
+  },
+  "config": {
+    "version": "2.0",
+    "logicalId": "e56ab424-bc5c-859b-409a-e7e1534f8a10"
+  }
+}

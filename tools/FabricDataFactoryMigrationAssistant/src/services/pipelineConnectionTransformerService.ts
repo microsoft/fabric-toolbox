@@ -11,13 +11,17 @@ export class PipelineConnectionTransformerService {
    * Transforms a pipeline definition by applying connection mappings
    * @param pipelineDefinition The original pipeline definition
    * @param pipelineName The name of the pipeline
-   * @param connectionMappings The mappings from activities to Fabric connections
+   * @param connectionMappings The mappings from activities to Fabric connections (OLD format - backward compatibility)
+   * @param pipelineReferenceMappings The reference-based mappings (NEW format - from ComponentMappingTableV2)
+   * @param linkedServiceBridge Bridge mappings from Configure Connections page
    * @returns The transformed pipeline definition
    */
   static transformPipelineWithConnections(
     pipelineDefinition: any,
     pipelineName: string,
-    connectionMappings: PipelineConnectionMappings
+    connectionMappings: PipelineConnectionMappings,
+    pipelineReferenceMappings?: Record<string, Record<string, string>>,
+    linkedServiceBridge?: Record<string, any>
   ): any {
     if (!pipelineDefinition || !pipelineDefinition.properties) {
       console.warn(`Invalid pipeline definition for ${pipelineName}`);
@@ -28,54 +32,208 @@ export class PipelineConnectionTransformerService {
     const activities = transformedDefinition.properties.activities || [];
 
     const pipelineMappings = connectionMappings[pipelineName] || {};
+    const referenceMappings = pipelineReferenceMappings?.[pipelineName] || {};
     
     console.log(`Applying connection mappings for pipeline '${pipelineName}':`, {
       availableMappings: Object.keys(pipelineMappings),
+      availableReferenceMappings: Object.keys(referenceMappings),
       activitiesCount: activities.length,
-      mappingsCount: Object.keys(pipelineMappings).length
+      mappingsCount: Object.keys(pipelineMappings).length,
+      referenceMappingsCount: Object.keys(referenceMappings).length,
+      hasLinkedServiceBridge: Boolean(linkedServiceBridge)
     });
 
-    // Transform each activity
-    activities.forEach((activity: any) => {
+    /**
+     * Helper: Find connection ID for activity with 4-tier fallback system and logging
+     * Priority 1: 🎯 NEW referenceMappings (referenceId-based from ComponentMappingTableV2)
+     * Priority 2: 🔄 OLD pipelineConnectionMappings (backward compatibility)
+     * Priority 3: 🌉 BRIDGE linkedServiceBridge (from Configure Connections page)
+     * Priority 4: ❌ MISS - no mapping found
+     */
+    const findConnectionIdForActivity = (activityName: string, referenceId?: string, linkedServiceName?: string): string | undefined => {
+      // Priority 1: Try NEW referenceMappings
+      if (referenceId && referenceMappings[referenceId]) {
+        console.log(`  🎯 NEW format hit: ${activityName} (${referenceId}) → ${referenceMappings[referenceId]}`);
+        return referenceMappings[referenceId];
+      }
+
+      // Priority 2: Try OLD pipelineConnectionMappings (activity name based)
+      const activityMapping = pipelineMappings[activityName];
+      if (activityMapping?.selectedConnectionId) {
+        console.log(`  🔄 OLD format hit: ${activityName} → ${activityMapping.selectedConnectionId}`);
+        return activityMapping.selectedConnectionId;
+      }
+
+      // Priority 3: Try linkedServiceBridge (from Configure Connections)
+      if (linkedServiceName && linkedServiceBridge?.[linkedServiceName]) {
+        const bridgeConnectionId = linkedServiceBridge[linkedServiceName].connectionId;
+        console.log(`  🌉 BRIDGE hit: ${activityName} (${linkedServiceName}) → ${bridgeConnectionId}`);
+        return bridgeConnectionId;
+      }
+
+      // Priority 4: No mapping found
+      console.log(`  ❌ MISS: ${activityName} (referenceId: ${referenceId || 'none'}, linkedService: ${linkedServiceName || 'none'})`);
+      return undefined;
+    };
+
+    /**
+     * Recursive function to process activity and ALL nested activities
+     * Applies connection mappings at all nesting depths
+     * @param activity Activity to process
+     * @param depth Recursion depth (0 = top-level, 1+ = nested)
+     */
+    const processActivity = (activity: any, depth: number = 0): void => {
       if (!activity?.name) return;
 
-      // Find all mappings for this activity (since we now use unique IDs that include LinkedService name)
-      const activityMappings = Object.entries(pipelineMappings).filter(([key, mapping]) => {
-        // Check if this mapping key starts with the activity name
-        return key.startsWith(`${activity.name}_`);
-      });
-
-      console.log(`Processing activity '${activity.name}':`, {
+      const indent = '  '.repeat(depth);
+      console.log(`${indent}[Depth ${depth}] Processing activity '${activity.name}':`, {
         type: activity.type,
-        foundMappings: activityMappings.length,
-        mappingKeys: activityMappings.map(([key]) => key),
+        hasDatasetSettings: Boolean(activity.typeProperties?.datasetSettings),
         hasLinkedServiceRefs: this.activityHasLinkedServiceReferences(activity)
       });
 
-      if (activityMappings.length > 0) {
-        // Apply all connection mappings for this activity
-        activityMappings.forEach(([mappingKey, activityMapping]) => {
-          if (activityMapping?.selectedConnectionId) {
-            console.log(`Applying connection mapping: ${mappingKey} -> ${activityMapping.selectedConnectionId}`);
-            
-            // Apply the connection mapping to this activity
-            this.applyConnectionMappingToActivity(activity, activityMapping.selectedConnectionId, mappingKey);
-          } else {
-            console.warn(`Connection mapping '${mappingKey}' has no selectedConnectionId`);
-          }
-        });
-      } else {
-        // No specific mapping found, check if this activity has LinkedService references that need to be handled
-        this.handleUnmappedLinkedServiceReferences(activity, pipelineName);
+      // ============================================================================
+      // VALIDATION HANDLER (from Phase 0)
+      // ============================================================================
+      if (activity.type === 'Validation') {
+        console.warn(`${indent}[VALIDATION] Activity '${activity.name}' not supported in Fabric - marking as Inactive`);
+        
+        activity.state = 'Inactive';
+        activity.onInactiveMarkAs = 'Succeeded';
+        
+        if (activity.typeProperties?.dataset) {
+          const datasetRef = activity.typeProperties.dataset.referenceName || 'unknown';
+          console.warn(`${indent}  → Removing dataset reference: ${datasetRef}`);
+          delete activity.typeProperties.dataset;
+        }
+        
+        console.log(`${indent}  ✅ Validation activity '${activity.name}' marked as Inactive`);
+        return;
       }
 
-      // Apply standard activity transformations (convert text to expressions, etc.)
+      // ============================================================================
+      // LOOKUP/GETMETADATA/DELETE HANDLER (existing + Delete added)
+      // ============================================================================
+      if ((activity.type === 'Lookup' || activity.type === 'GetMetadata' || activity.type === 'Delete') && 
+          activity.typeProperties?.datasetSettings) {
+        
+        console.log(`${indent}Applying dataset-level connection for ${activity.type} activity '${activity.name}'`);
+        
+        const datasetReferenceId = `${pipelineName}_${activity.name}_dataset`;
+        
+        const connectionId = findConnectionIdForActivity(
+          activity.name,
+          datasetReferenceId,
+          undefined
+        );
+
+        if (connectionId) {
+          console.log(`${indent}  ✅ Found connection: ${datasetReferenceId} → ${connectionId}`);
+          
+          if (!activity.typeProperties.datasetSettings.externalReferences) {
+            activity.typeProperties.datasetSettings.externalReferences = {};
+          }
+          activity.typeProperties.datasetSettings.externalReferences.connection = connectionId;
+
+          console.log(`${indent}  ✅ Applied dataset connection to ${activity.name}`);
+        } else {
+          console.warn(`${indent}  ❌ No connection mapping found - marking as Inactive`);
+          activity.state = 'Inactive';
+          activity.onInactiveMarkAs = 'Succeeded';
+        }
+      } else {
+        // ========================================================================
+        // STANDARD ACTIVITY-LEVEL CONNECTION HANDLER (existing)
+        // ========================================================================
+        const activityLevelReferenceId = `${pipelineName}_${activity.name}_activity`;
+        const linkedServiceName = activity.linkedServiceName?.referenceName;
+        
+        const connectionId = findConnectionIdForActivity(
+          activity.name,
+          activityLevelReferenceId,
+          linkedServiceName
+        );
+
+        if (connectionId) {
+          this.applyConnectionMappingToActivity(activity, connectionId, activityLevelReferenceId);
+        } else {
+          this.handleUnmappedLinkedServiceReferences(activity, pipelineName);
+        }
+      }
+
+      // ============================================================================
+      // STANDARD TRANSFORMATIONS (existing)
+      // ============================================================================
       try {
         activityTransformer.transformLinkedServiceReferencesToFabric(activity, connectionMappings);
       } catch (error) {
-        console.warn(`Failed to transform activity ${activity.name}:`, error);
+        console.warn(`${indent}Failed to transform activity ${activity.name}:`, error);
       }
-    });
+
+      // ============================================================================
+      // RECURSION: Process nested activities based on container type
+      // ============================================================================
+      const nextDepth = depth + 1;
+
+      // Container Type 1: ForEach
+      if (activity.type === 'ForEach' && activity.typeProperties?.activities) {
+        const nestedActivities = activity.typeProperties.activities;
+        console.log(`${indent}  ↳ ForEach '${activity.name}': Processing ${nestedActivities.length} nested activities`);
+        nestedActivities.forEach((nested: any) => processActivity(nested, nextDepth));
+      }
+
+      // Container Type 2: IfCondition
+      if (activity.type === 'IfCondition') {
+        if (activity.typeProperties?.ifTrueActivities?.length > 0) {
+          const trueActivities = activity.typeProperties.ifTrueActivities;
+          console.log(`${indent}  ↳ IfCondition '${activity.name}': Processing ${trueActivities.length} TRUE branch activities`);
+          trueActivities.forEach((nested: any) => processActivity(nested, nextDepth));
+        }
+
+        if (activity.typeProperties?.ifFalseActivities?.length > 0) {
+          const falseActivities = activity.typeProperties.ifFalseActivities;
+          console.log(`${indent}  ↳ IfCondition '${activity.name}': Processing ${falseActivities.length} FALSE branch activities`);
+          falseActivities.forEach((nested: any) => processActivity(nested, nextDepth));
+        }
+      }
+
+      // Container Type 3: Switch
+      if (activity.type === 'Switch') {
+        if (activity.typeProperties?.cases?.length > 0) {
+          const cases = activity.typeProperties.cases;
+          console.log(`${indent}  ↳ Switch '${activity.name}': Processing ${cases.length} cases`);
+          
+          cases.forEach((caseItem: any, caseIndex: number) => {
+            if (caseItem.activities?.length > 0) {
+              console.log(`${indent}    ↳ Case ${caseIndex}: Processing ${caseItem.activities.length} activities`);
+              caseItem.activities.forEach((nested: any) => processActivity(nested, nextDepth));
+            }
+          });
+        }
+
+        if (activity.typeProperties?.defaultActivities?.length > 0) {
+          const defaultActivities = activity.typeProperties.defaultActivities;
+          console.log(`${indent}  ↳ Switch '${activity.name}': Processing ${defaultActivities.length} default activities`);
+          defaultActivities.forEach((nested: any) => processActivity(nested, nextDepth));
+        }
+      }
+
+      // Container Type 4: Until
+      if (activity.type === 'Until' && activity.typeProperties?.activities?.length > 0) {
+        const nestedActivities = activity.typeProperties.activities;
+        console.log(`${indent}  ↳ Until '${activity.name}': Processing ${nestedActivities.length} nested activities`);
+        nestedActivities.forEach((nested: any) => processActivity(nested, nextDepth));
+      }
+
+      console.log(`${indent}✓ Completed '${activity.name}' (${activity.type}, depth ${depth})`);
+    };
+
+    // ============================================================================
+    // ENTRY POINT: Process all top-level activities
+    // ============================================================================
+    console.log(`Starting recursive activity processing for pipeline '${pipelineName}'`);
+    activities.forEach((activity: any) => processActivity(activity, 0));
+    console.log(`Completed recursive activity processing for pipeline '${pipelineName}'`);
 
     console.log(`Completed connection mapping application for pipeline '${pipelineName}'`);
     return transformedDefinition;

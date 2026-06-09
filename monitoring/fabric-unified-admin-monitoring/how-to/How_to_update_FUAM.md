@@ -18,6 +18,8 @@ To update FUAM (Fabric Unified Admin Monitoring) to the latest version, follow t
 
 ## 1. Preparation
 
+**Optional:** Review the [changelog here](/monitoring/fabric-unified-admin-monitoring/changelog/FUAM_Changelog.md).
+
 #### 1a) Scope of the update
 Before you update your FUAM workspace, please review the following illustration, which describes which items will be overwritten or updated during an update of FUAM:
 
@@ -43,7 +45,7 @@ Before you update your FUAM workspace, please review the following illustration,
 
 > **Info:** This notebook is designed to initially deploy or update all the items in your FUAM workspace.
 
-### 3. Update Pipeline parameters
+## 3. Update Pipeline parameters
 
 **Important:** When you re-run the `Deploy_FUAM` notebook, the update logic will overwrite your current parameters in the `Load_FUAM_Data_E2E` pipeline.
 
@@ -51,7 +53,7 @@ Before you update your FUAM workspace, please review the following illustration,
 6. Set your previously saved parameters.
 7. Save the pipeline.
 
-### 4. Open PBI report
+## 4. Open PBI report
 
 8. Navigate to your FUAM workspace.
 9. Search for the item `FUAM_Core_Report`.
@@ -82,3 +84,4 @@ You are now using the latest and greatest version of FUAM!
 - [Documentation - FUAM Authorization & Authentication](/monitoring/fabric-unified-admin-monitoring/media/documentation/FUAM_Authorization.md)
 - [Documentation - FUAM Architecture](/monitoring/fabric-unified-admin-monitoring/media/documentation/FUAM_Architecture.md)
 - [Documentation - FUAM Lakehouse Table Lineage](/monitoring/fabric-unified-admin-monitoring/media/documentation/FUAM_Documentation_Lakehouse_table_lineage.pdf)
+- [Documentation - FUAM Technical Deep Dive](/monitoring/fabric-unified-admin-monitoring/media/documentation/FUAM_Technical_Deep_Dive.md)
