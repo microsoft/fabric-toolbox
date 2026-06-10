@@ -80,6 +80,17 @@ And from Teams:
 
 ---
 
+## 💰 Solution Cost (CU Usage)
+
+Running FCA itself consumes Fabric capacity (CUs) to execute its pipelines and notebooks. Based on real customer deployments, here is a representative example of FCA cost:
+
+- **Sample configuration**: 4 regions, 50 capacities, 13 reservations (RIs), daily pipeline execution, data reload over 2 months (current + previous)
+- **Observed impact**: ~2% of an F4 capacity, slightly above ~6,000 CUs per day
+
+Overall, even at this scale, FCA remains a lightweight solution with a predictable and limited capacity footprint.
+
+---
+
 ## 🐞 Support
 
 The FCA solution accelerator template is not an official Microsoft service.
