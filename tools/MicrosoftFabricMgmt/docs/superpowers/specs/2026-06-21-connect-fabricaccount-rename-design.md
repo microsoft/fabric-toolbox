@@ -58,17 +58,17 @@ session.
 - **Function:** thin wrapper exposing a param block identical to
   `Connect-FabricAccount` (duplicated verbatim so parameter sets, validation, and tab
   completion remain identical), then forwarding via `Connect-FabricAccount @PSBoundParameters`.
-- **Deprecation warning:** on first invocation per session only:
+- **Deprecation warning:** emitted via PSFramework's `-Once` parameter, which writes
+  the message only once per PowerShell process (per session), keyed by an identifier
+  string. No manual flag or `prefix.ps1` change is needed.
 
   ```powershell
   function Set-FabricApiHeaders {
       [CmdletBinding(DefaultParameterSetName = 'UserPrincipal', SupportsShouldProcess = $true, ConfirmImpact = 'Medium')]
       param ( <# param block identical to Connect-FabricAccount #> )
 
-      if (-not $script:FabricDeprecationWarned_SetFabricApiHeaders) {
-          Write-PSFMessage -Level Warning -Message "Set-FabricApiHeaders is deprecated; use Connect-FabricAccount instead. (This warning shows once per session.)"
-          $script:FabricDeprecationWarned_SetFabricApiHeaders = $true
-      }
+      Write-PSFMessage -Level Warning -Once 'MicrosoftFabricMgmt.SetFabricApiHeaders.Deprecation' `
+          -Message "Set-FabricApiHeaders is deprecated; use Connect-FabricAccount instead. (This warning shows once per session.)"
       Connect-FabricAccount @PSBoundParameters
   }
   ```
@@ -76,14 +76,7 @@ session.
 - The wrapper passes through `-WhatIf` / `-Confirm` naturally via `@PSBoundParameters`;
   `SupportsShouldProcess` on the wrapper keeps those common parameters bindable.
 
-### Component 3: Session warning flag
-
-- **File:** `source/prefix.ps1`.
-- Initialize `$script:FabricDeprecationWarned_SetFabricApiHeaders = $false` at module
-  load, alongside existing module-scoped state. This guarantees the warning resets per
-  import/session and avoids an undefined-variable reference on first use.
-
-### Component 4: Manifest exports
+### Component 3: Manifest exports
 
 - **File:** `source/MicrosoftFabricMgmt.psd1`.
 - `FunctionsToExport`: replace `'Set-FabricApiHeaders'` with **both**
@@ -94,7 +87,7 @@ session.
   > files, the source manifest edit may be redundant but is kept explicit and correct.
   > The plan will verify the built manifest exports both names.
 
-### Component 5: Documentation
+### Component 4: Documentation
 
 - Rename/regenerate `docs/Set-FabricApiHeaders.md` → `docs/Connect-FabricAccount.md`
   (primary), and either retain a short `docs/Set-FabricApiHeaders.md` stub pointing to
@@ -117,9 +110,12 @@ Update `tests/Unit/Set-FabricApiHeaders.Tests.ps1` (and/or add
 2. `Set-FabricApiHeaders` forwards correctly to `Connect-FabricAccount` for each
    parameter set (mock `Connect-FabricAccount`, assert it is invoked with the expected
    bound parameters).
-3. `Set-FabricApiHeaders` emits the deprecation warning exactly **once per session**:
-   reset the flag, mock `Write-PSFMessage`, invoke twice, assert the warning-level
-   message fired exactly once and `Connect-FabricAccount` was invoked twice.
+3. `Set-FabricApiHeaders` emits the deprecation warning via `Write-PSFMessage -Once`:
+   mock `Write-PSFMessage` and `Connect-FabricAccount`, invoke the wrapper, and assert
+   `Write-PSFMessage` was called once with `-Level Warning` and the expected `-Once`
+   identifier, and `Connect-FabricAccount` was invoked. (The actual once-per-process
+   suppression is PSFramework's responsibility, so the test verifies the wrapper passes
+   `-Once` rather than re-testing PSFramework internals.)
 4. Both commands are exported and resolvable after importing the built module.
 
 ## Verification
