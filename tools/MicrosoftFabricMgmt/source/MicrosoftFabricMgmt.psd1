@@ -197,7 +197,7 @@
     'Convert-FromBase64', 'Convert-ToBase64',
     'Get-FabricLongRunningOperation',
     'Get-FabricLongRunningOperationResult', 'Invoke-FabricAPIRequest',
-    'Set-FabricApiHeaders', 'Clear-FabricNameCache',
+    'Connect-FabricAccount', 'Set-FabricApiHeaders', 'Clear-FabricNameCache',
     'Resolve-FabricCapacityName', 'Resolve-FabricWorkspaceName',
     'Resolve-FabricCapacityIdFromWorkspace', 'Get-FabricVariableLibrary',
     'Get-FabricVariableLibraryDefinition', 'New-FabricVariableLibrary',

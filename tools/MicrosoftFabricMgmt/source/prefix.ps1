@@ -98,7 +98,7 @@ Write-PSFMessage -Level Important -Message @"
 MicrosoftFabricMgmt v1.0.0 - BREAKING CHANGES:
 - The global `$FabricConfig variable has been removed
 - Module now uses internal state management via PSFramework
-- Authentication still works via Set-FabricApiHeaders
+- Authenticate via Connect-FabricAccount (Set-FabricApiHeaders remains as a deprecated alias)
 - See BREAKING-CHANGES.md for migration guide
 "@
 
