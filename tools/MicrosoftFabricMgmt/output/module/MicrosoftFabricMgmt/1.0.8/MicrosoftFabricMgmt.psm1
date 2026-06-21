@@ -23745,8 +23745,7 @@ function Remove-FabricManagedPrivateEndpoint {
         }
     }
 }
-<<<<<<<< HEAD:tools/MicrosoftFabricMgmt/output/module/MicrosoftFabricMgmt/1.0.8/MicrosoftFabricMgmt.psm1
-#EndRegion '.\Public\Managed Private Endpoint\Remove-FabricManagedPrivateEndpoint.ps1' 64
+#EndRegion '.\Public\Managed Private Endpoint\Remove-FabricManagedPrivateEndpoint.ps1' 68
 #Region '.\Public\Map\Get-FabricMap.ps1' -1
 
 <#
@@ -24969,9 +24968,6 @@ function Update-FabricMirroredAzureDatabricksCatalogDefinition {
     }
 }
 #EndRegion '.\Public\Mirrored Azure Databricks Catalog\Update-FabricMirroredAzureDatabricksCatalogDefinition.ps1' 125
-========
-#EndRegion '.\Public\Managed Private Endpoint\Remove-FabricManagedPrivateEndpoint.ps1' 68
->>>>>>>> main:tools/MicrosoftFabricMgmt/output/module/MicrosoftFabricMgmt/1.0.6/MicrosoftFabricMgmt.psm1
 #Region '.\Public\Mirrored Database\Get-FabricMirroredDatabase.ps1' -1
 
 <#
@@ -31402,10 +31398,16 @@ function Get-FabricReportDefinition {
 .PARAMETER ReportPathDefinition
     A mandatory path to the folder that contains Report definition files to upload.
 
+.PARAMETER FolderId
+    Optional. The folder ID where the Report will be placed. If omitted, the Report is created in the workspace root.
 
 .EXAMPLE
     New-FabricReport -WorkspaceId "workspace-12345" -ReportName "New Report" -ReportDescription "Description of the new Report"
     This example creates a new Report named "New Report" in the workspace with ID "workspace-12345" with the provided description.
+
+.EXAMPLE
+    New-FabricReport -WorkspaceId "workspace-12345" -ReportName "New Report" -ReportPathDefinition "C:\Definitions\Report" -FolderId "folder-67890"
+    This example creates a new Report from the specified definition files and places it in the folder with ID "folder-67890".
 
 .NOTES
     - Requires `$FabricConfig` global configuration, including `BaseUrl` and `FabricHeaders`.
@@ -31432,19 +31434,26 @@ function New-FabricReport {
 
         [Parameter(Mandatory = $true)]
         [ValidateNotNullOrEmpty()]
-        [string]$ReportPathDefinition
+        [string]$ReportPathDefinition,
+
+        [Parameter(Mandatory = $false)]
+        [ValidateNotNullOrEmpty()]
+        [string]$FolderId
     )
     try {
+        # Validate authentication
         Invoke-FabricAuthCheck -ThrowOnFailure
 
-
         # Construct the API endpoint URI
-        $apiEndpointURI = "{0}/workspaces/{1}/reports" -f $script:FabricAuthContext.BaseUrl, $WorkspaceId
-        Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
+        $apiEndpointURI = New-FabricAPIUri -Resource 'workspaces' -WorkspaceId $WorkspaceId -Subresource 'reports'
 
         # Construct the request body
         $body = @{
             displayName = $ReportName
+        }
+
+        if ($FolderId) {
+            $body.folderId = $FolderId
         }
 
         if ($ReportDescription) {
@@ -31464,8 +31473,7 @@ function New-FabricReport {
         }
 
         # Convert the body to JSON
-        $bodyJson = $body | ConvertTo-Json -Depth 10
-        Write-FabricLog -Message "Request Body: $bodyJson" -Level Debug
+        $bodyJson = Convert-FabricRequestBody -InputObject $body
 
         # Make the API request
         if ($PSCmdlet.ShouldProcess("Report '$ReportName' in workspace '$WorkspaceId'", "Create")) {
@@ -31479,7 +31487,7 @@ function New-FabricReport {
 
             # Return the API response
             Write-FabricLog -Message "Report '$ReportName' created successfully!" -Level Host
-            return $response
+            $response
         }
     }
     catch {
@@ -31488,7 +31496,7 @@ function New-FabricReport {
         Write-FabricLog -Message "Failed to create Report. Error: $errorDetails" -Level Error
     }
 }
-#EndRegion '.\Public\Report\New-FabricReport.ps1' 107
+#EndRegion '.\Public\Report\New-FabricReport.ps1' 119
 #Region '.\Public\Report\Remove-FabricReport.ps1' -1
 
 <#
@@ -31978,9 +31986,16 @@ function Get-FabricSemanticModelDefinition {
 .PARAMETER SemanticModelPathDefinition
     An optional path to the SemanticModel definition file to upload.
 
+.PARAMETER FolderId
+    Optional. The folder ID where the SemanticModel will be placed. If omitted, the SemanticModel is created in the workspace root.
+
 .EXAMPLE
     New-FabricSemanticModel -WorkspaceId "workspace-12345" -SemanticModelName "New SemanticModel" -SemanticModelDescription "Description of the new SemanticModel"
     This example creates a new SemanticModel named "New SemanticModel" in the workspace with ID "workspace-12345" with the provided description.
+
+.EXAMPLE
+    New-FabricSemanticModel -WorkspaceId "workspace-12345" -SemanticModelName "New SemanticModel" -SemanticModelPathDefinition "C:\Definitions\Model" -FolderId "folder-67890"
+    This example creates a new SemanticModel from the specified definition files and places it in the folder with ID "folder-67890".
 
 .NOTES
     - Requires `$FabricConfig` global configuration, including `BaseUrl` and `FabricHeaders`.
@@ -32007,14 +32022,18 @@ function New-FabricSemanticModel {
 
         [Parameter(Mandatory = $true)]
         [ValidateNotNullOrEmpty()]
-        [string]$SemanticModelPathDefinition
+        [string]$SemanticModelPathDefinition,
+
+        [Parameter(Mandatory = $false)]
+        [ValidateNotNullOrEmpty()]
+        [string]$FolderId
     )
     try {
+        # Validate authentication
         Invoke-FabricAuthCheck -ThrowOnFailure
 
-
         # Construct the API endpoint URI
-        $apiEndpointURI = "{0}/workspaces/{1}/semanticModels" -f $script:FabricAuthContext.BaseUrl, $WorkspaceId
+        $apiEndpointURI = New-FabricAPIUri -Resource 'workspaces' -WorkspaceId $WorkspaceId -Subresource 'semanticModels'
 
         # Construct the request body
         $body = @{
@@ -32022,6 +32041,10 @@ function New-FabricSemanticModel {
             definition  = @{
                 parts = @()
             }
+        }
+
+        if ($FolderId) {
+            $body.folderId = $FolderId
         }
 
         # As Report has multiple parts, we need to get the definition parts
@@ -32034,8 +32057,7 @@ function New-FabricSemanticModel {
         }
 
         # Convert the body to JSON
-        $bodyJson = $body | ConvertTo-Json -Depth 10
-        Write-FabricLog -Message "Request Body: $bodyJson" -Level Debug
+        $bodyJson = Convert-FabricRequestBody -InputObject $body
 
         # Make the API request
         if ($PSCmdlet.ShouldProcess("Semantic Model '$SemanticModelName' in workspace '$WorkspaceId'", "Create")) {
@@ -32049,7 +32071,7 @@ function New-FabricSemanticModel {
 
             # Return the API response
             Write-FabricLog -Message "SemanticModel '$SemanticModelName' created successfully!" -Level Host
-            return $response
+            $response
         }
 
     }
@@ -32059,7 +32081,7 @@ function New-FabricSemanticModel {
         Write-FabricLog -Message "Failed to create SemanticModel. Error: $errorDetails" -Level Error
     }
 }
-#EndRegion '.\Public\Semantic Model\New-FabricSemanticModel.ps1' 102
+#EndRegion '.\Public\Semantic Model\New-FabricSemanticModel.ps1' 116
 #Region '.\Public\Semantic Model\Remove-FabricSemanticModel.ps1' -1
 
 <#
@@ -38730,11 +38752,7 @@ function Invoke-FabricAPIRequest {
         throw
     }
 }
-<<<<<<<< HEAD:tools/MicrosoftFabricMgmt/output/module/MicrosoftFabricMgmt/1.0.8/MicrosoftFabricMgmt.psm1
-#EndRegion '.\Public\Utils\Invoke-FabricAPIRequest.ps1' 347
-========
-#EndRegion '.\Public\Utils\Invoke-FabricAPIRequest.ps1' 350
->>>>>>>> main:tools/MicrosoftFabricMgmt/output/module/MicrosoftFabricMgmt/1.0.6/MicrosoftFabricMgmt.psm1
+#EndRegion '.\Public\Utils\Invoke-FabricAPIRequest.ps1' 362
 #Region '.\Public\Utils\Resolve-FabricCapacityIdFromWorkspace.ps1' -1
 
 function Resolve-FabricCapacityIdFromWorkspace {

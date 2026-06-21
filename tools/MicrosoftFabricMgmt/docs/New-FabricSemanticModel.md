@@ -43,6 +43,12 @@ This function sends a POST request to the Microsoft Fabric API to create a new S
 - **Type:** String
 - **Mandatory:** Yes
 
+### FolderId
+
+- **Description:** The folder ID where the SemanticModel will be placed. If omitted, the SemanticModel is created in the workspace root.
+- **Type:** String
+- **Mandatory:** No
+
 ## Usage Examples
 
 ### Example 1: Create a SemanticModel
@@ -51,6 +57,14 @@ This function sends a POST request to the Microsoft Fabric API to create a new S
 $workspace = Get-FabricWorkspace -WorkspaceName "workspace-12345"
 New-FabricSemanticModel -WorkspaceId $workspace.id -SemanticModelName "SemanticModel-123456" -SemanticModelPathDefinition "C:\temp\API\SemanticModel"
 
+```
+
+### Example 2: Create a SemanticModel inside a folder
+
+```powershell
+$workspace = Get-FabricWorkspace -WorkspaceName "workspace-12345"
+$folder = Get-FabricFolder -WorkspaceId $workspace.id -FolderName "Models"
+New-FabricSemanticModel -WorkspaceId $workspace.id -SemanticModelName "SemanticModel-123456" -SemanticModelPathDefinition "C:\temp\API\SemanticModel" -FolderId $folder.id
 ```
 
 ## Prerequisites
