@@ -7,11 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- `Connect-FabricAccount` as the primary authentication command (mirrors `Connect-AzAccount`).
+
 - **`New-FabricSemanticModel`** and **`New-FabricReport`**: New optional `-FolderId` parameter that places the newly created item directly inside a workspace folder (resolves [#427](https://github.com/microsoft/fabric-toolbox/issues/427)). Maps to the Fabric *Create item* API `folderId` request-body property; when omitted, the item is created in the workspace root.
 
 ### Changed
 
 - **`New-FabricSemanticModel`** and **`New-FabricReport`**: Modernized to the shared helper pattern used by newer cmdlets — endpoint URIs are now built with `New-FabricAPIUri` and request bodies serialized with `Convert-FabricRequestBody` (replacing inline string-formatted URIs and `ConvertTo-Json -Depth 10`). Both functions now emit the API response via natural pipeline output instead of `return`.
+
+### Deprecated
+
+- `Set-FabricApiHeaders` is now a backward-compatible wrapper for `Connect-FabricAccount` and emits a one-time-per-session warning. It remains fully supported.
 
 ## [1.0.6] - 2026-02-26
 

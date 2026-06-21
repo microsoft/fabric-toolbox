@@ -119,7 +119,9 @@ Import-Module .\output\module\MicrosoftFabricMgmt\*\MicrosoftFabricMgmt.psd1
 
 ### Authentication Setup
 
-Before using any cmdlets, authenticate to Microsoft Fabric using `Set-FabricApiHeaders`. The module supports three authentication methods:
+Before using any cmdlets, authenticate to Microsoft Fabric using `Connect-FabricAccount`. The module supports three authentication methods:
+
+> **Note:** `Set-FabricApiHeaders` is a deprecated backward-compatible wrapper for `Connect-FabricAccount` and emits a one-time-per-session warning. Update scripts to use `Connect-FabricAccount` instead.
 
 #### Option 1: User Principal (Interactive)
 
@@ -127,12 +129,11 @@ Best for: Interactive sessions, development, testing
 
 ```powershell
 # Authenticate with your user account
-Set-FabricApiHeaders -TenantId "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
+Connect-FabricAccount -TenantId "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
 
 # This will prompt for interactive authentication via your browser
 # Your credentials are cached for the sessions
 ```
-![Fabric Headers](docs/images/Set-FabricApiHeaders.png)
 
 #### Option 2: Service Principal (Automated)
 
@@ -148,7 +149,7 @@ $appSecret = "your-client-secret-value"
 $secureAppSecret = $appSecret | ConvertTo-SecureString -AsPlainText -Force
 
 # Authenticate
-Set-FabricApiHeaders -TenantId $tenantId -AppId $appId -AppSecret $secureAppSecret
+Connect-FabricAccount -TenantId $tenantId -AppId $appId -AppSecret $secureAppSecret
 ```
 
 **Service Principal Setup Requirements:**
@@ -162,12 +163,12 @@ Set-FabricApiHeaders -TenantId $tenantId -AppId $appId -AppSecret $secureAppSecr
 Best for: Azure VMs, Azure Functions, Azure Automation, Azure DevOps
 
 ```powershell
-# Authenticate using the system-assigned or user-assigned managed identity
-Set-FabricApiHeaders -TenantId "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" -UseManagedIdentity
+# Authenticate using the system-assigned managed identity
+Connect-FabricAccount -UseManagedIdentity
 
 # For user-assigned managed identity, specify the client ID
 $managedIdentityClientId = "zzzzzzzz-zzzz-zzzz-zzzz-zzzzzzzzzzzz"
-Set-FabricApiHeaders -TenantId $tenantId -UseManagedIdentity -ManagedIdentityId $managedIdentityClientId
+Connect-FabricAccount -UseManagedIdentity -ClientId $managedIdentityClientId
 ```
 
 **Managed Identity Setup Requirements:**
@@ -426,7 +427,7 @@ Every cmdlet includes comprehensive help documentation:
 ```powershell
 # Get help for any cmdlet
 Get-Help Get-FabricWorkspace -Full
-Get-Help Set-FabricApiHeaders -Examples
+Get-Help Connect-FabricAccount -Examples
 Get-Help New-FabricLakehouse -Parameter LakehouseName
 
 # List all available cmdlets

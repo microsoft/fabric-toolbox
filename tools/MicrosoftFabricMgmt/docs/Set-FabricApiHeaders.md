@@ -1,5 +1,7 @@
 # Set-FabricApiHeaders
 
+> **Deprecated:** Use [`Connect-FabricAccount`](Connect-FabricAccount.md) instead. `Set-FabricApiHeaders` remains as a backward-compatible wrapper and emits a one-time-per-session warning.
+
 ## Overview
 
 The `Set-FabricApiHeaders` function configures the Fabric API headers by logging into a specified Azure tenant, retrieving an access token, and updating the global configuration for subsequent API requests. It supports both service principal and user-based authentication methods.
