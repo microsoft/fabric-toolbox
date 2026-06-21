@@ -74,5 +74,12 @@ Describe "Set-FabricApiHeaders" -Tag "UnitTests" {
                 $Level -eq 'Warning' -and $Once -eq 'MicrosoftFabricMgmt.SetFabricApiHeaders.Deprecation'
             }
         }
+
+        It "Forwards the ManagedIdentity parameter set to Connect-FabricAccount" {
+            Set-FabricApiHeaders -UseManagedIdentity -Confirm:$false
+            Should -Invoke -ModuleName MicrosoftFabricMgmt Connect-FabricAccount -Times 1 -Exactly -ParameterFilter {
+                $UseManagedIdentity -eq $true -and -not $TenantId
+            }
+        }
     }
 }
