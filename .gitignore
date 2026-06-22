@@ -622,3 +622,4 @@ tools/MicrosoftFabricMgmt/.apispec/warehouse.definitions.json
 tools/MicrosoftFabricMgmt/.apispec/warehouse.swagger.json
 tools/MicrosoftFabricMgmt/.apispec/warehouseSnapshot.definitions.json
 tools/MicrosoftFabricMgmt/.apispec/warehouseSnapshot.swagger.json
+tools/MicrosoftFabricMgmt/PRESENTATION_PROMPT.md
