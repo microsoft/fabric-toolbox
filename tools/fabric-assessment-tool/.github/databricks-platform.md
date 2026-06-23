@@ -5,6 +5,12 @@ Platform-specific conventions and API quirks for the Databricks scanner in
 before changing anything Databricks-related — a lot of it is non-obvious
 and was learned the hard way.
 
+> Companion docs: [`synapse-platform.md`](./synapse-platform.md) for the
+> Synapse counterpart, [`json-export-service.md`](./json-export-service.md)
+> for how these dataclasses get serialized to disk, and
+> [`html-generator.md`](./html-generator.md) for the templates that read
+> the exported JSON back.
+
 ## Azure Databricks Workspaces (ARM / Management Plane)
 
 ### Resource listing endpoints
