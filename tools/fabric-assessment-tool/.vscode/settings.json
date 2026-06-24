@@ -31,5 +31,25 @@
     ],
     "[json]": {
         "editor.defaultFormatter": "vscode.json-language-features"
+    },
+    "chat.agentSkillsLocations": {
+        ".github/skills": true,
+        ".agents/skills": true,
+        ".claude/skills": true,
+        "~/.copilot/skills": true,
+        "~/.agents/skills": true,
+        "~/.claude/skills": true,
+        "~/.vscode/extensions/synapsevscode.synapse-1.25.0/copilot/skills": true
+    },
+    "chat.promptFilesRecommendations": {
+        "speckit.constitution": true,
+        "speckit.specify": true,
+        "speckit.plan": true,
+        "speckit.tasks": true,
+        "speckit.implement": true
+    },
+    "chat.tools.terminal.autoApprove": {
+        ".specify/scripts/bash/": true,
+        ".specify/scripts/powershell/": true
     }
 }

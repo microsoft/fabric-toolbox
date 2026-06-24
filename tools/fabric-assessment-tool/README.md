@@ -142,6 +142,7 @@ Fabric Assessment Tool provides two main commands:
 
 ```bash
 fat assess --source <synapse|databricks> \
+          [--cloud <azure|aws>] \
           --mode <full> \
           --ws <workspace1_name,workspace2_name> \
           -o/--output <output_path>
@@ -153,9 +154,12 @@ fat assess --source <synapse|databricks> \
 
 **Optional Parameters:**
 - `--mode`: Assessment mode (currently supports: full)
+- `--cloud`: Cloud provider for the source platform (`azure` or `aws`). Default: `azure`. Use `aws` with `--source databricks` for AWS Databricks workspaces.
 - `--ws`: Comma-separated list of workspace names to assess 
   - *For Databricks, use the **workspace name** (not the workspace ID)*
-  - *If not provided, it will prompt the list of reachable workspaces to select*
+  - *For Azure sources, if not provided, it will prompt the list of reachable workspaces to select*
+  - *For AWS Databricks, if not provided, it lists selectable workspaces through the Databricks account API. Set `DATABRICKS_ACCOUNT_ID`, `DATABRICKS_CLIENT_ID`, and `DATABRICKS_CLIENT_SECRET` for this mode*
+  - *For multiple AWS Databricks workspaces, set `DATABRICKS_CLIENT_ID` and `DATABRICKS_CLIENT_SECRET`; `DATABRICKS_TOKEN` is only valid for a single workspace context*
 - `--subscription-id`: Azure subscription ID (if not provided, will use default credentials). **Required** when using `--auth-method fabric`
 - `--auth-method`: Authentication method (`azure-cli` or `fabric`). Default: auto-detect based on environment
 - `--sql-admin-password`: SQL admin password for dedicated SQL pools (bypasses interactive prompt)
@@ -193,6 +197,17 @@ fat assess --source synapse --ws workspace1 -o ./results --sql-auth-mode entra-d
 
 # Assess Databricks workspace
 fat assess --source databricks --ws my-workspace --output results_folder
+
+# Assess AWS Databricks workspace using environment-variable authentication
+export DATABRICKS_HOST="https://dbc-xxxxxxxx-xxxx.cloud.databricks.com"
+export DATABRICKS_TOKEN="<your-token>"
+fat assess --source databricks --cloud aws --ws my-workspace --output results_folder
+
+# Assess multiple AWS Databricks workspaces using OAuth client credentials
+export DATABRICKS_ACCOUNT_ID="<your-account-id>"
+export DATABRICKS_CLIENT_ID="<your-client-id>"
+export DATABRICKS_CLIENT_SECRET="<your-client-secret>"
+fat assess --source databricks --cloud aws --ws workspace1,workspace2 --output results_folder
 ```
 
 ### `fat visualize` - Generate interactive HTML reports

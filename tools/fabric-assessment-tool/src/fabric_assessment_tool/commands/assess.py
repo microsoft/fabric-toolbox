@@ -21,6 +21,7 @@ Examples:
   fat assess --source synapse --mode full --ws workspace1,workspace2 -o output_dir/
   fat assess --source synapse --mode full --ws workspace1 --subscription-id 12345678-1234-1234-1234-123456789012 -o output_dir/
   fat assess --source databricks --mode full --ws my-workspace --output results/ --format json
+  fat assess --source databricks --cloud aws --ws my-workspace --output results/
         """
 
     def configure_parser(self, parser: argparse.ArgumentParser) -> None:
@@ -37,6 +38,17 @@ Examples:
             choices=["full"],
             default="full",
             help="Assessment mode (currently supports: full)",
+        )
+
+        parser.add_argument(
+            "--cloud",
+            choices=["azure", "aws"],
+            default="azure",
+            help=(
+                "Cloud provider for the source platform. Use 'aws' with "
+                "Databricks workspaces authenticated through DATABRICKS_* "
+                "environment variables."
+            ),
         )
 
         parser.add_argument(
@@ -130,6 +142,7 @@ Examples:
             result = self.assessment_service.assess(
                 source=args.source,
                 mode=args.mode,
+                cloud=args.cloud,
                 workspaces=workspaces,
                 output_path=args.output,
                 output_format=getattr(args, "format", "json"),
@@ -152,7 +165,9 @@ Examples:
                     workspace_name = export_result.get("workspace_name", "Unknown")
                     workspace_dir = export_result.get("workspace_directory", "")
                     total_files = export_result.get("total_files", 0)
-                    utils_ui.print(f"  {workspace_name}: {total_files} files in {workspace_dir}")
+                    utils_ui.print(
+                        f"  {workspace_name}: {total_files} files in {workspace_dir}"
+                    )
 
             # Show detailed status information for each workspace
             if result.get("results"):
@@ -160,12 +175,16 @@ Examples:
                 for workspace_result in result["results"]:
                     workspace_name = workspace_result.get("workspace", "Unknown")
                     status = workspace_result.get("status", "unknown")
-                    
+
                     if status == "success":
                         print(f"  ✓ {workspace_name}: Completed successfully")
                     elif status == "incomplete":
-                        assessment_status = workspace_result.get("assessment_status", {})
-                        description = assessment_status.get("description", "Assessment incomplete")
+                        assessment_status = workspace_result.get(
+                            "assessment_status", {}
+                        )
+                        description = assessment_status.get(
+                            "description", "Assessment incomplete"
+                        )
                         print(f"  ⚠ {workspace_name}: {description}")
                     elif status == "failed":
                         error = workspace_result.get("error", "Unknown error")

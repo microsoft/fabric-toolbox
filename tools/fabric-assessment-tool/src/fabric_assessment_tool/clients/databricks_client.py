@@ -4,8 +4,9 @@ import re
 from argparse import Namespace
 from datetime import datetime, timezone
 from typing import Any, Dict, Optional
+from urllib.parse import urlparse
 
-from databricks.sdk import WorkspaceClient
+from databricks.sdk import AccountClient, WorkspaceClient
 
 from ..assessment.common import AssessmentStatus
 from ..errors.api import FATError
@@ -70,6 +71,7 @@ class DatabricksClient:
         subscription_id: Optional[str] = None,
         token_provider: Optional[TokenProvider] = None,
         auth_method: Optional[str] = None,
+        cloud: str = "azure",
         **kwargs,
     ):
         """
@@ -79,14 +81,39 @@ class DatabricksClient:
             subscription_id: Azure subscription ID (optional, will use Azure CLI default if not provided)
             token_provider: Optional TokenProvider instance for authentication
             auth_method: Authentication method ("azure-cli", "fabric", or None for auto-detect)
+            cloud: Cloud provider for the Databricks workspace ("azure" or "aws")
         """
-        self.token_provider = token_provider or create_token_provider(auth_method)
+        self.cloud = (cloud or "azure").lower()
+        if self.cloud not in {"azure", "aws"}:
+            raise ValueError(f"Unsupported Databricks cloud: {cloud}")
+
+        self.token_provider = (
+            token_provider or create_token_provider(auth_method)
+            if self.cloud == "azure"
+            else token_provider
+        )
         self.custom_subscription_id = subscription_id
+        self.account_client: Optional[AccountClient] = None
         self.authenticate()
         self._workspace_cache: dict[str, DatabricksWorkspaceInfo] = {}
 
     def authenticate(self) -> None:
-        """Authenticate with Azure using the configured token provider."""
+        """Authenticate with the configured Databricks cloud."""
+        if self.cloud == "aws":
+            self._validate_aws_environment()
+            self.subscription_id = None
+            if os.getenv("DATABRICKS_ACCOUNT_ID") and self._has_aws_oauth_credentials():
+                self.account_client = AccountClient(
+                    host=os.getenv(
+                        "DATABRICKS_ACCOUNT_HOST",
+                        "https://accounts.cloud.databricks.com",
+                    ),
+                    account_id=os.environ["DATABRICKS_ACCOUNT_ID"],
+                    client_id=os.environ["DATABRICKS_CLIENT_ID"],
+                    client_secret=os.environ["DATABRICKS_CLIENT_SECRET"],
+                )
+            return
+
         try:
             azure_token = self.token_provider.get_token(
                 "https://management.azure.com/.default"
@@ -105,11 +132,51 @@ class DatabricksClient:
         except Exception as e:
             raise Exception(f"Failed to authenticate with Azure: {e}")
 
+    def _validate_aws_environment(self) -> None:
+        """Validate Databricks AWS environment-variable authentication."""
+        has_pat = bool(os.getenv("DATABRICKS_TOKEN"))
+        has_oauth = self._has_aws_oauth_credentials()
+        has_host = bool(os.getenv("DATABRICKS_HOST"))
+
+        if not has_pat and not has_oauth:
+            raise ValueError(
+                "AWS Databricks assessments require DATABRICKS_TOKEN or "
+                "DATABRICKS_CLIENT_ID and DATABRICKS_CLIENT_SECRET to be set"
+            )
+
+        if has_pat and not has_oauth and not has_host:
+            raise ValueError(
+                "AWS Databricks assessments using DATABRICKS_TOKEN also require "
+                "DATABRICKS_HOST to be set"
+            )
+
+    @staticmethod
+    def _has_aws_oauth_credentials() -> bool:
+        return bool(os.getenv("DATABRICKS_CLIENT_ID")) and bool(
+            os.getenv("DATABRICKS_CLIENT_SECRET")
+        )
+
     def get_workspaces(self) -> list[DatabricksWorkspaceInfo]:
         """Get all Databricks workspaces in the subscription.
 
         Used for interactive workspace selection when no workspace names are provided.
         """
+        if self.cloud == "aws":
+            if self.account_client:
+                workspaces = [
+                    self._build_aws_account_workspace_info(workspace)
+                    for workspace in self.account_client.workspaces.list()
+                ]
+                for workspace in workspaces:
+                    self._workspace_cache[workspace.name.lower()] = workspace
+                return workspaces
+
+            raise ValueError(
+                "AWS Databricks workspace selection requires DATABRICKS_ACCOUNT_ID, "
+                "DATABRICKS_CLIENT_ID, and DATABRICKS_CLIENT_SECRET so workspaces "
+                "can be listed through the Databricks account API."
+            )
+
         args = Namespace()
         # https://learn.microsoft.com/en-us/rest/api/databricks/workspaces/list-by-subscription?view=rest-databricks-2024-05-01&tabs=HTTP
         args.uri = f"/subscriptions/{self.subscription_id}/providers/Microsoft.Databricks/workspaces"
@@ -128,6 +195,82 @@ class DatabricksClient:
 
         return workspaces
 
+    def _build_aws_host_workspace_info(
+        self, workspace_name: str, workspace_host: Optional[str] = None
+    ) -> DatabricksWorkspaceInfo:
+        """Build workspace info for an AWS Databricks workspace from environment variables."""
+        workspace_host = self._normalize_workspace_host(
+            workspace_host or os.environ["DATABRICKS_HOST"]
+        )
+        workspace_url = self._format_workspace_url(workspace_host)
+        region = os.getenv("DATABRICKS_WORKSPACE_REGION")
+
+        return DatabricksWorkspaceInfo(
+            id=workspace_host,
+            name=workspace_name,
+            resource_group="",
+            url=workspace_url,
+            status="unknown",
+            tier=os.getenv("DATABRICKS_WORKSPACE_TIER", "unknown"),
+            location=region,
+            workspace_type="aws",
+            json_response={
+                "cloud": "aws",
+                "workspace_name": workspace_name,
+                "workspace_url": workspace_url,
+                "region": region,
+                "source": "environment",
+            },
+        )
+
+    def _build_aws_account_workspace_info(
+        self, workspace: Any
+    ) -> DatabricksWorkspaceInfo:
+        """Build workspace info for an AWS Databricks account workspace."""
+        workspace_name = getattr(workspace, "workspace_name", None)
+        deployment_name = getattr(workspace, "deployment_name", None)
+        workspace_id = getattr(workspace, "workspace_id", None)
+        if not workspace_name:
+            raise ValueError("Databricks account workspace is missing workspace_name")
+        if not deployment_name:
+            raise ValueError(
+                f"Databricks account workspace is missing deployment_name: {workspace_name}"
+            )
+
+        workspace_host = self._aws_deployment_to_host(deployment_name)
+        workspace_status = getattr(workspace, "workspace_status", None)
+        pricing_tier = getattr(workspace, "pricing_tier", None)
+        workspace_json = (
+            workspace.as_dict()
+            if hasattr(workspace, "as_dict")
+            else dict(vars(workspace))
+        )
+
+        return DatabricksWorkspaceInfo(
+            id=str(workspace_id or workspace_host),
+            name=workspace_name,
+            resource_group="",
+            url=self._format_workspace_url(workspace_host),
+            status=str(workspace_status) if workspace_status else "unknown",
+            tier=str(pricing_tier) if pricing_tier else "unknown",
+            location=getattr(workspace, "aws_region", None)
+            or getattr(workspace, "location", None),
+            workspace_type="aws",
+            json_response=workspace_json,
+        )
+
+    @staticmethod
+    def _aws_deployment_to_host(deployment_name: str) -> str:
+        deployment_host = DatabricksClient._normalize_workspace_host(deployment_name)
+        if "." in deployment_host:
+            return deployment_host
+        return f"{deployment_host}.cloud.databricks.com"
+
+    def _derive_aws_workspace_name(self) -> str:
+        """Derive a stable workspace name from DATABRICKS_HOST."""
+        workspace_host = self._normalize_workspace_host(os.environ["DATABRICKS_HOST"])
+        return workspace_host.split(".")[0]
+
     @staticmethod
     def _build_workspace_info(workspace: dict) -> DatabricksWorkspaceInfo:
         """Build a DatabricksWorkspaceInfo from a management-plane response.
@@ -142,9 +285,7 @@ class DatabricksClient:
         private_endpoint_conns = properties.get("privateEndpointConnections") or []
         raw_pna = properties.get("publicNetworkAccess")
         managed_rg_id = properties.get("managedResourceGroupId") or ""
-        managed_rg_name = (
-            managed_rg_id.split("/")[-1] if managed_rg_id else None
-        )
+        managed_rg_name = managed_rg_id.split("/")[-1] if managed_rg_id else None
 
         vnet_injected = bool(custom_vnet)
         uses_private_endpoints = (
@@ -199,14 +340,28 @@ class DatabricksClient:
         )
 
     def _auth_databricks(self, workspace_url) -> None:
+        api_host = self._normalize_workspace_host(workspace_url)
 
-        databricks_token = self.token_provider.get_token(
-            "2ff814a6-3304-4ab8-85cb-cd0e6f879c1d/.default"
-        )
-        self.workspace_client = WorkspaceClient(
-            host=workspace_url, token=databricks_token
-        )
-        self.api_client = ApiClient(base_url=workspace_url, scope="", api_version="")
+        if self.cloud == "aws":
+            token = os.getenv("DATABRICKS_TOKEN")
+            host = self._format_workspace_url(api_host)
+            if token and not self.account_client:
+                self.workspace_client = WorkspaceClient(host=host, token=token)
+            else:
+                self.workspace_client = WorkspaceClient(
+                    host=host,
+                    client_id=os.environ["DATABRICKS_CLIENT_ID"],
+                    client_secret=os.environ["DATABRICKS_CLIENT_SECRET"],
+                )
+        else:
+            databricks_token = self.token_provider.get_token(
+                "2ff814a6-3304-4ab8-85cb-cd0e6f879c1d/.default"
+            )
+            self.workspace_client = WorkspaceClient(
+                host=workspace_url, token=databricks_token
+            )
+
+        self.api_client = ApiClient(base_url=api_host, scope="", api_version="")
         # Reuse the authentication of the session of the Databricks API client
         self.api_client.session.auth = (
             self.workspace_client.api_client._api_client._session.auth
@@ -352,6 +507,11 @@ class DatabricksClient:
         Returns cached info if available, otherwise fetches all workspaces
         from the management API and looks up the requested one.
         """
+        if self.cloud == "aws":
+            workspace_info = self._get_aws_workspace_info(workspace_name)
+            self._workspace_cache[workspace_info.name.lower()] = workspace_info
+            return workspace_info
+
         cache_key = workspace_name.lower()
         if cache_key in self._workspace_cache:
             return self._workspace_cache[cache_key]
@@ -363,6 +523,78 @@ class DatabricksClient:
             return self._workspace_cache[cache_key]
 
         raise ValueError(f"Workspace not found: {workspace_name}")
+
+    def _get_aws_workspace_info(self, workspace_name: str) -> DatabricksWorkspaceInfo:
+        """Resolve AWS workspace info from account API or single-workspace host env vars."""
+        if workspace_name:
+            cache_key = workspace_name.lower()
+            if cache_key in self._workspace_cache:
+                return self._workspace_cache[cache_key]
+
+        if self.account_client:
+            requested_name = workspace_name.lower()
+            for account_workspace in self.account_client.workspaces.list():
+                candidate = self._build_aws_account_workspace_info(account_workspace)
+                self._workspace_cache[candidate.name.lower()] = candidate
+                if (
+                    candidate.name.lower() == requested_name
+                    or self._normalize_workspace_host(candidate.url).lower()
+                    == requested_name
+                ):
+                    return candidate
+
+            raise ValueError(
+                f"Workspace not found in Databricks account: {workspace_name}"
+            )
+
+        if workspace_name and self._is_workspace_host(workspace_name):
+            workspace_host = self._normalize_workspace_host(workspace_name)
+            return self._build_aws_host_workspace_info(
+                workspace_host.split(".")[0],
+                workspace_host=workspace_host,
+            )
+
+        if os.getenv("DATABRICKS_HOST"):
+            env_workspace_name = (
+                os.getenv("DATABRICKS_WORKSPACE_NAME")
+                or self._derive_aws_workspace_name()
+            )
+            if workspace_name and workspace_name.lower() != env_workspace_name.lower():
+                raise ValueError(
+                    "AWS Databricks workspace-name resolution for multiple "
+                    "workspaces requires DATABRICKS_ACCOUNT_ID with "
+                    "DATABRICKS_CLIENT_ID and DATABRICKS_CLIENT_SECRET. "
+                    "Alternatively, pass each AWS workspace as its workspace URL "
+                    "or hostname."
+                )
+            return self._build_aws_host_workspace_info(
+                workspace_name or env_workspace_name
+            )
+
+        raise ValueError(
+            "AWS Databricks workspace-name resolution requires "
+            "DATABRICKS_ACCOUNT_ID with DATABRICKS_CLIENT_ID and "
+            "DATABRICKS_CLIENT_SECRET, or DATABRICKS_HOST for a single workspace."
+        )
+
+    @staticmethod
+    def _normalize_workspace_host(workspace_url: str) -> str:
+        """Return the Databricks workspace host without scheme or trailing slash."""
+        parsed = urlparse(workspace_url)
+        host = parsed.netloc if parsed.netloc else parsed.path
+        return host.strip().strip("/")
+
+    @staticmethod
+    def _is_workspace_host(workspace_name: str) -> bool:
+        """Return whether a workspace argument looks like a Databricks host or URL."""
+        return "." in DatabricksClient._normalize_workspace_host(workspace_name)
+
+    @staticmethod
+    def _format_workspace_url(workspace_url: str) -> str:
+        """Return a Databricks workspace URL with an https scheme."""
+        if workspace_url.startswith("http://") or workspace_url.startswith("https://"):
+            return workspace_url.rstrip("/")
+        return f"https://{workspace_url.rstrip('/')}"
 
     def _get_clusters(self) -> DatabricksClusters:
         try:
