@@ -1,0 +1,20 @@
+# Backup files
+*.abf
+
+# Log files
+*.log
+logs/
+
+# User-specific configuration (contains secrets)
+config.json
+
+# PowerShell module artifacts
+*.psm1.bak
+
+# IDE / Editor
+.vscode/
+*.code-workspace
+
+# OS
+Thumbs.db
+.DS_Store
