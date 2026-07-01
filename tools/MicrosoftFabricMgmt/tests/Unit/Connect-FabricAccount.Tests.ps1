@@ -32,16 +32,16 @@ BeforeAll {
     Import-Module $ModuleManifest -Force -ErrorAction Stop
 }
 
-Describe "Set-FabricApiHeaders" -Tag "UnitTests" {
+Describe "Connect-FabricAccount" -Tag "UnitTests" {
 
     BeforeDiscovery {
-        $command = Get-Command -Name Set-FabricApiHeaders
+        $command = Get-Command -Name Connect-FabricAccount
         $expected = $expectedParams
     }
 
     Context "Parameter validation" {
         BeforeAll {
-            $command = Get-Command -Name Set-FabricApiHeaders
+            $command = Get-Command -Name Connect-FabricAccount
             $expected = $expectedParams
         }
 
@@ -55,31 +55,20 @@ Describe "Set-FabricApiHeaders" -Tag "UnitTests" {
         }
     }
 
-    Context "Backward-compatible wrapper" {
+    Context "Authentication behaviour" {
         BeforeAll {
-            Mock -ModuleName MicrosoftFabricMgmt Connect-FabricAccount { }
-            Mock -ModuleName MicrosoftFabricMgmt Write-PSFMessage { }
-        }
-
-        It "Forwards parameters to Connect-FabricAccount" {
-            Set-FabricApiHeaders -TenantId '00000000-0000-0000-0000-000000000002' -Confirm:$false
-            Should -Invoke -ModuleName MicrosoftFabricMgmt Connect-FabricAccount -Times 1 -Exactly -ParameterFilter {
-                $TenantId -eq '00000000-0000-0000-0000-000000000002'
+            Mock -ModuleName MicrosoftFabricMgmt Connect-AzAccount { }
+            Mock -ModuleName MicrosoftFabricMgmt Get-AzAccessToken {
+                [PSCustomObject]@{
+                    Token     = (ConvertTo-SecureString 'fake-token' -AsPlainText -Force)
+                    ExpiresOn = ([DateTimeOffset]::Now).AddHours(1)
+                }
             }
         }
 
-        It "Emits a deprecation warning via Write-PSFMessage -Once" {
-            Set-FabricApiHeaders -TenantId '00000000-0000-0000-0000-000000000003' -Confirm:$false
-            Should -Invoke -ModuleName MicrosoftFabricMgmt Write-PSFMessage -ParameterFilter {
-                $Level -eq 'Warning' -and $Once -eq 'MicrosoftFabricMgmt.SetFabricApiHeaders.Deprecation'
-            }
-        }
-
-        It "Forwards the ManagedIdentity parameter set to Connect-FabricAccount" {
-            Set-FabricApiHeaders -UseManagedIdentity -Confirm:$false
-            Should -Invoke -ModuleName MicrosoftFabricMgmt Connect-FabricAccount -Times 1 -Exactly -ParameterFilter {
-                $UseManagedIdentity -eq $true -and -not $TenantId
-            }
+        It "Acquires a token for user principal auth" {
+            Connect-FabricAccount -TenantId '00000000-0000-0000-0000-000000000001' -Confirm:$false
+            Should -Invoke -ModuleName MicrosoftFabricMgmt Get-AzAccessToken -Times 1 -Exactly
         }
     }
 }

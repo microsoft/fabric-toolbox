@@ -24,11 +24,13 @@ Import-Module ./FabricACEToolkit/FabricACEToolkit.psm1
 
 ## Configuration
 
-Before using the toolkit, set the Fabric Headers using the command `Set-FabricApiHeaders`. Without this you cannot call an API global variable with your API `BaseUrl` and `FabricHeaders`:
+Before using the toolkit, authenticate using `Connect-FabricAccount`. Without this you cannot call any Fabric API:
 
 ```powershell
-Set-FabricApiHeaders -tenantId "xxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxx"
+Connect-FabricAccount -TenantId "xxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxx"
 ```
+
+> **Note:** `Set-FabricApiHeaders` is a deprecated backward-compatible wrapper for `Connect-FabricAccount` and emits a one-time-per-session warning.
 
 ## Functions
 
@@ -216,11 +218,12 @@ Set-FabricApiHeaders -tenantId "xxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxx"
 - [Get-FabricTenantSettingOverridesCapacity.ps1](Get-FabricTenantSettingOverridesCapacity.md)
 
 ## Utils
+- [Connect-FabricAccount.ps1](Connect-FabricAccount.md)
 - [Convert-FromBase64.ps1](Convert-FromBase64.md)
 - [Convert-ToBase64.ps1](Convert-ToBase64.md)
 - [Get-FabricLongRunningOperation.ps1](Get-FabricLongRunningOperation.md)
 - [Get-FabricLongRunningOperationResult.ps1](Get-FabricLongRunningOperationResult.md)
-- [Set-FabricApiHeaders.ps1](Set-FabricApiHeaders.md)
+- [Set-FabricApiHeaders.ps1](Set-FabricApiHeaders.md) *(deprecated — use Connect-FabricAccount)*
 
 ### Warehouse
 - [Get-FabricWarehouse.ps1](Get-FabricWarehouse.md)
