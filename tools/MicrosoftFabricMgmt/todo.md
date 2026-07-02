@@ -68,7 +68,7 @@ Commits: e1bfa5c (enrich/-Raw/tooling), 72ae570 (analyzer/authors/process-blocks
 ## Phase 3 — New commands (IN PROGRESS; property-completeness precondition confirmed)
 Building missing High-priority commands, each with full-property return + enrichment + -Raw + type + meaningful tests + analyzer-clean.
 - [x] **Connections create/update**: `New-FabricConnection` (POST /connections), `Update-FabricConnection` (PATCH /connections/{id}). Polymorphic body via -ConnectionDetails/-CredentialDetails hashtables; GatewayName enrichment; tests 11/11; analyzer 0.
-- [ ] Job Scheduler (~9): item schedules CRUD + run-on-demand + job instances (list/get/cancel).
+- [x] **Job Scheduler (7 commands)**: New/Get/Update/Remove-FabricItemSchedule, Start-FabricItemJob, Get-FabricItemJobInstance, Stop-FabricItemJobInstance. `{jobType}` paths via `-Segments`. Tests 27/27; analyzer 0. Also fixed a `New-FabricAPIUri` binding bug (mandatory `[string[]]$Segments` rejected a null trailing element → the two getters built the segment list conditionally instead).
 - [ ] Git integration write (~9): Connect/Disconnect/CommitToGit/UpdateFromGit/GetStatus/InitializeConnection/MyGitCredentials.
 - [ ] Deployment Pipelines (~15): CRUD + stages + AssignWorkspaceToStage + DeployStageContent + operations.
 Remaining verified gaps also: ML Model scoring, SQL DB start/stop mirroring (Start/Stop-FabricSQLDatabaseMirroring EXIST), Warehouse restore points, External Data Share provider/accept, DataPipeline definition pair, workspace outbound/network policies.

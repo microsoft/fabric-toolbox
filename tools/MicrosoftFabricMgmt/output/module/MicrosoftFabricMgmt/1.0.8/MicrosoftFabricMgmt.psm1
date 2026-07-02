@@ -704,8 +704,9 @@ function New-FabricAPIUri {
         [Parameter(ParameterSetName = 'Parts')]
         [string]$Subresource,
 
+        # No ValidateNotNullOrEmpty here: callers intentionally pass optional trailing
+        # segments (e.g. an omitted id) as $null, and the builder below skips null/empty.
         [Parameter(Mandatory = $true, ParameterSetName = 'Segments')]
-        [ValidateNotNullOrEmpty()]
         [string[]]$Segments,
 
         [Parameter()]
@@ -761,7 +762,7 @@ function New-FabricAPIUri {
     Write-FabricLog -Message "Constructed API URI: $uri" -Level Debug
     return $uri
 }
-#EndRegion '.\Private\New-FabricAPIUri.ps1' 137
+#EndRegion '.\Private\New-FabricAPIUri.ps1' 138
 #Region '.\Private\Select-FabricResource.ps1' -1
 
 <#
@@ -22185,6 +22186,826 @@ function Get-FabricItem {
     }
 }
 #EndRegion '.\Public\Items\Get-FabricItem.ps1' 144
+#Region '.\Public\Job Scheduler\Get-FabricItemJobInstance.ps1' -1
+
+<#
+.SYNOPSIS
+    Retrieves job instances for a Microsoft Fabric item.
+
+.DESCRIPTION
+    The Get-FabricItemJobInstance function retrieves the job instances that have run (or are
+    running) for a Fabric item.
+
+    When -JobInstanceId is supplied it returns the single matching instance via
+    /workspaces/{workspaceId}/items/{itemId}/jobs/instances/{jobInstanceId}; otherwise it
+    lists all instances via /workspaces/{workspaceId}/items/{itemId}/jobs/instances.
+    Note that the list/get instance endpoints do not include a jobType segment.
+
+    By default each returned object is enriched with the originating WorkspaceId (stamped
+    from the parameter) and a resolved WorkspaceName, and decorated for the custom table
+    view. Pass -Raw to return the untouched API response.
+
+.PARAMETER WorkspaceId
+    The unique identifier of the workspace containing the item. Mandatory.
+
+.PARAMETER ItemId
+    The unique identifier of the item whose job instances are retrieved. Mandatory.
+
+.PARAMETER JobInstanceId
+    Optional. The unique identifier of a single job instance to retrieve.
+
+.PARAMETER Raw
+    If specified, returns the untouched API response with no added properties or type decoration.
+
+.EXAMPLE
+    Get-FabricItemJobInstance -WorkspaceId "12345678-1234-1234-1234-123456789012" -ItemId "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee"
+
+    Lists all job instances for the item, enriched with WorkspaceName.
+
+.EXAMPLE
+    Get-FabricItemJobInstance -WorkspaceId "12345678-1234-1234-1234-123456789012" -ItemId "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee" -JobInstanceId "inst-1"
+
+    Returns the single job instance with that ID.
+
+.OUTPUTS
+    System.Object
+    Job instance object(s) with all API-returned properties plus WorkspaceName when enriched.
+
+.NOTES
+    - API Endpoints:
+        GET /workspaces/{workspaceId}/items/{itemId}/jobs/instances
+        GET /workspaces/{workspaceId}/items/{itemId}/jobs/instances/{jobInstanceId}
+    - Requires: authentication via Set-FabricApiHeaders / Connect-FabricAccount.
+
+    Author: Tiago Balabuch, Jess Pomfret, Rob Sewell
+#>
+function Get-FabricItemJobInstance {
+    [CmdletBinding()]
+    param (
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
+        [ValidateNotNullOrEmpty()]
+        [string]$WorkspaceId,
+
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
+        [ValidateNotNullOrEmpty()]
+        [string]$ItemId,
+
+        [Parameter(Mandatory = $false)]
+        [ValidateNotNullOrEmpty()]
+        [string]$JobInstanceId,
+
+        [Parameter()]
+        [switch]$Raw
+    )
+
+    process {
+        try {
+            Invoke-FabricAuthCheck -ThrowOnFailure
+
+            # No jobType segment here; append JobInstanceId only when a single instance is requested.
+            $segments = @('workspaces', $WorkspaceId, 'items', $ItemId, 'jobs', 'instances')
+            if ($JobInstanceId) { $segments += $JobInstanceId }
+            $apiEndpointURI = New-FabricAPIUri -Segments $segments
+            Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
+
+            $apiParams = @{
+                BaseURI = $apiEndpointURI
+                Headers = $script:FabricAuthContext.FabricHeaders
+                Method  = 'Get'
+            }
+            $response = Invoke-FabricAPIRequest @apiParams
+
+            if (-not $response) {
+                Write-FabricLog -Message "No job instances returned for item '$ItemId'." -Level Warning
+                return $null
+            }
+
+            if ($Raw) {
+                return $response
+            }
+
+            # Resolve the workspace display name once for all returned instances.
+            $workspaceName = $WorkspaceId
+            try {
+                $workspaceName = Resolve-FabricWorkspaceName -WorkspaceId $WorkspaceId
+            }
+            catch {
+                Write-FabricLog -Message "Failed to resolve workspace name for ID '$WorkspaceId': $($_.Exception.Message)" -Level Debug
+            }
+
+            foreach ($instance in $response) {
+                $instance | Add-Member -NotePropertyName 'workspaceId'   -NotePropertyValue $WorkspaceId   -Force
+                $instance | Add-Member -NotePropertyName 'WorkspaceName' -NotePropertyValue $workspaceName -Force
+            }
+
+            $response | Add-FabricTypeName -TypeName 'MicrosoftFabric.ItemJobInstance'
+            $response
+        }
+        catch {
+            $errorDetails = $_.Exception.Message
+            Write-FabricLog -Message "Failed to retrieve job instances for item '$ItemId'. Error: $errorDetails" -Level Error
+        }
+    }
+}
+#EndRegion '.\Public\Job Scheduler\Get-FabricItemJobInstance.ps1' 120
+#Region '.\Public\Job Scheduler\Get-FabricItemSchedule.ps1' -1
+
+<#
+.SYNOPSIS
+    Retrieves job schedules for a Microsoft Fabric item.
+
+.DESCRIPTION
+    The Get-FabricItemSchedule function retrieves the schedules configured for a specific
+    job type on a Fabric item.
+
+    When -ScheduleId is supplied it returns the single matching schedule via
+    /workspaces/{workspaceId}/items/{itemId}/jobs/{jobType}/schedules/{scheduleId};
+    otherwise it lists all schedules for the job type via
+    /workspaces/{workspaceId}/items/{itemId}/jobs/{jobType}/schedules.
+
+    By default each returned object is enriched with the originating WorkspaceId (stamped
+    from the parameter) and a resolved WorkspaceName, and decorated for the custom table
+    view. Pass -Raw to return the untouched API response.
+
+.PARAMETER WorkspaceId
+    The unique identifier of the workspace containing the item. Mandatory.
+
+.PARAMETER ItemId
+    The unique identifier of the item whose schedules are retrieved. Mandatory.
+
+.PARAMETER JobType
+    The job type whose schedules should be retrieved (e.g. 'RunNotebook', 'Pipeline'). Mandatory.
+
+.PARAMETER ScheduleId
+    Optional. The unique identifier of a single schedule to retrieve.
+
+.PARAMETER Raw
+    If specified, returns the untouched API response with no added properties or type decoration.
+
+.EXAMPLE
+    Get-FabricItemSchedule -WorkspaceId "12345678-1234-1234-1234-123456789012" -ItemId "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee" -JobType 'RunNotebook'
+
+    Lists all RunNotebook schedules for the item, enriched with WorkspaceName.
+
+.EXAMPLE
+    Get-FabricItemSchedule -WorkspaceId "12345678-1234-1234-1234-123456789012" -ItemId "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee" -JobType 'RunNotebook' -ScheduleId "sched-1"
+
+    Returns the single schedule with that ID.
+
+.OUTPUTS
+    System.Object
+    Schedule object(s) with all API-returned properties plus WorkspaceName when enriched.
+
+.NOTES
+    - API Endpoints:
+        GET /workspaces/{workspaceId}/items/{itemId}/jobs/{jobType}/schedules
+        GET /workspaces/{workspaceId}/items/{itemId}/jobs/{jobType}/schedules/{scheduleId}
+    - Requires: authentication via Set-FabricApiHeaders / Connect-FabricAccount.
+
+    Author: Tiago Balabuch, Jess Pomfret, Rob Sewell
+#>
+function Get-FabricItemSchedule {
+    [CmdletBinding()]
+    param (
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
+        [ValidateNotNullOrEmpty()]
+        [string]$WorkspaceId,
+
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
+        [ValidateNotNullOrEmpty()]
+        [string]$ItemId,
+
+        [Parameter(Mandatory = $true)]
+        [ValidateNotNullOrEmpty()]
+        [string]$JobType,
+
+        [Parameter(Mandatory = $false)]
+        [ValidateNotNullOrEmpty()]
+        [string]$ScheduleId,
+
+        [Parameter()]
+        [switch]$Raw
+    )
+
+    process {
+        try {
+            Invoke-FabricAuthCheck -ThrowOnFailure
+
+            # Build the segment list, appending ScheduleId only when a single schedule is requested.
+            $segments = @('workspaces', $WorkspaceId, 'items', $ItemId, 'jobs', $JobType, 'schedules')
+            if ($ScheduleId) { $segments += $ScheduleId }
+            $apiEndpointURI = New-FabricAPIUri -Segments $segments
+            Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
+
+            $apiParams = @{
+                BaseURI = $apiEndpointURI
+                Headers = $script:FabricAuthContext.FabricHeaders
+                Method  = 'Get'
+            }
+            $response = Invoke-FabricAPIRequest @apiParams
+
+            if (-not $response) {
+                Write-FabricLog -Message "No schedules returned for item '$ItemId'." -Level Warning
+                return $null
+            }
+
+            if ($Raw) {
+                return $response
+            }
+
+            # Resolve the workspace display name once for all returned schedules.
+            $workspaceName = $WorkspaceId
+            try {
+                $workspaceName = Resolve-FabricWorkspaceName -WorkspaceId $WorkspaceId
+            }
+            catch {
+                Write-FabricLog -Message "Failed to resolve workspace name for ID '$WorkspaceId': $($_.Exception.Message)" -Level Debug
+            }
+
+            foreach ($schedule in $response) {
+                $schedule | Add-Member -NotePropertyName 'workspaceId'   -NotePropertyValue $WorkspaceId   -Force
+                $schedule | Add-Member -NotePropertyName 'WorkspaceName' -NotePropertyValue $workspaceName -Force
+            }
+
+            $response | Add-FabricTypeName -TypeName 'MicrosoftFabric.ItemSchedule'
+            $response
+        }
+        catch {
+            $errorDetails = $_.Exception.Message
+            Write-FabricLog -Message "Failed to retrieve schedules for item '$ItemId'. Error: $errorDetails" -Level Error
+        }
+    }
+}
+#EndRegion '.\Public\Job Scheduler\Get-FabricItemSchedule.ps1' 127
+#Region '.\Public\Job Scheduler\New-FabricItemSchedule.ps1' -1
+
+<#
+.SYNOPSIS
+    Creates a new schedule for a job on a Microsoft Fabric item.
+
+.DESCRIPTION
+    The New-FabricItemSchedule function creates a schedule for a specific job type on a
+    Fabric item via POST to
+    /workspaces/{workspaceId}/items/{itemId}/jobs/{jobType}/schedules.
+
+    Because the schedule configuration is polymorphic on its type (Cron, Daily, Weekly,
+    MonthlyOnDates), the configuration is supplied as a hashtable and passed through
+    verbatim so any schedule type can be expressed.
+
+    The full created schedule object is returned. By default it is enriched with the
+    originating WorkspaceId (stamped from the parameter), a resolved WorkspaceName, and
+    decorated for the custom table view; pass -Raw to return the untouched API response.
+
+.PARAMETER WorkspaceId
+    The unique identifier of the workspace containing the item. Mandatory.
+
+.PARAMETER ItemId
+    The unique identifier of the item the schedule is created for. Mandatory.
+
+.PARAMETER JobType
+    The job type to schedule (e.g. 'RunNotebook', 'Pipeline', 'sparkjob', 'DefaultJob').
+    Mandatory.
+
+.PARAMETER Enabled
+    Whether the schedule is enabled. Mandatory.
+
+.PARAMETER Configuration
+    A hashtable describing the polymorphic schedule configuration. Passed through verbatim.
+    Example (Cron):
+    @{ type = 'Cron'; startDateTime = '2024-04-28T00:00:00'; endDateTime = '2024-04-30T23:59:00'; localTimeZoneId = 'Central Standard Time'; interval = 10 }
+    Example (Daily):
+    @{ type = 'Daily'; startDateTime = '2024-04-28T00:00:00'; endDateTime = '2024-04-30T23:59:00'; localTimeZoneId = 'Central Standard Time'; times = @('09:00','17:00') }
+
+.PARAMETER Raw
+    If specified, returns the untouched API response with no added properties or type decoration.
+
+.EXAMPLE
+    $config = @{ type = 'Cron'; startDateTime = '2024-04-28T00:00:00'; endDateTime = '2024-04-30T23:59:00'; localTimeZoneId = 'Central Standard Time'; interval = 10 }
+    New-FabricItemSchedule -WorkspaceId "12345678-1234-1234-1234-123456789012" -ItemId "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee" -JobType 'RunNotebook' -Enabled $true -Configuration $config
+
+    Creates an enabled Cron schedule for the notebook run job.
+
+.OUTPUTS
+    System.Object
+    The created schedule object with all API-returned properties (plus WorkspaceName when enriched).
+
+.NOTES
+    - API Endpoint: POST /workspaces/{workspaceId}/items/{itemId}/jobs/{jobType}/schedules
+    - Requires: authentication via Set-FabricApiHeaders / Connect-FabricAccount.
+
+    Author: Tiago Balabuch, Jess Pomfret, Rob Sewell
+#>
+function New-FabricItemSchedule {
+    [CmdletBinding(SupportsShouldProcess = $true, ConfirmImpact = 'Medium')]
+    param (
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
+        [ValidateNotNullOrEmpty()]
+        [string]$WorkspaceId,
+
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
+        [ValidateNotNullOrEmpty()]
+        [string]$ItemId,
+
+        [Parameter(Mandatory = $true)]
+        [ValidateNotNullOrEmpty()]
+        [string]$JobType,
+
+        [Parameter(Mandatory = $true)]
+        [bool]$Enabled,
+
+        [Parameter(Mandatory = $true)]
+        [ValidateNotNullOrEmpty()]
+        [hashtable]$Configuration,
+
+        [Parameter()]
+        [switch]$Raw
+    )
+
+    process {
+        try {
+            Invoke-FabricAuthCheck -ThrowOnFailure
+
+            $apiEndpointURI = New-FabricAPIUri -Segments @('workspaces', $WorkspaceId, 'items', $ItemId, 'jobs', $JobType, 'schedules')
+            Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
+
+            # configuration is passed through verbatim so any schedule type's schema can be expressed.
+            $body = @{
+                enabled       = $Enabled
+                configuration = $Configuration
+            }
+
+            $bodyJson = $body | ConvertTo-Json -Depth 10
+            Write-FabricLog -Message "Request Body: $bodyJson" -Level Debug
+
+            $apiParams = @{
+                BaseURI = $apiEndpointURI
+                Headers = $script:FabricAuthContext.FabricHeaders
+                Method  = 'Post'
+                Body    = $bodyJson
+            }
+
+            if ($PSCmdlet.ShouldProcess($ItemId, "Create Fabric item schedule")) {
+                $response = Invoke-FabricAPIRequest @apiParams
+
+                if (-not $response) {
+                    Write-FabricLog -Message "No response returned after creating schedule for item '$ItemId'." -Level Warning
+                    return $null
+                }
+
+                if ($Raw) {
+                    return $response
+                }
+
+                # Enrich: stamp the originating workspace id and resolve its display name.
+                $response | Add-Member -NotePropertyName 'workspaceId' -NotePropertyValue $WorkspaceId -Force
+                $workspaceName = $WorkspaceId
+                try {
+                    $workspaceName = Resolve-FabricWorkspaceName -WorkspaceId $WorkspaceId
+                }
+                catch {
+                    Write-FabricLog -Message "Failed to resolve workspace name for ID '$WorkspaceId': $($_.Exception.Message)" -Level Debug
+                }
+                $response | Add-Member -NotePropertyName 'WorkspaceName' -NotePropertyValue $workspaceName -Force
+
+                $response | Add-FabricTypeName -TypeName 'MicrosoftFabric.ItemSchedule'
+                Write-FabricLog -Message "Schedule for item '$ItemId' created successfully!" -Level Host
+                return $response
+            }
+        }
+        catch {
+            $errorDetails = $_.Exception.Message
+            Write-FabricLog -Message "Failed to create schedule for item '$ItemId'. Error: $errorDetails" -Level Error
+        }
+    }
+}
+#EndRegion '.\Public\Job Scheduler\New-FabricItemSchedule.ps1' 140
+#Region '.\Public\Job Scheduler\Remove-FabricItemSchedule.ps1' -1
+
+<#
+.SYNOPSIS
+    Removes a job schedule from a Microsoft Fabric item.
+
+.DESCRIPTION
+    The Remove-FabricItemSchedule function sends a DELETE request to the Microsoft Fabric API
+    to remove a schedule for a specific job type on an item via
+    /workspaces/{workspaceId}/items/{itemId}/jobs/{jobType}/schedules/{scheduleId}.
+
+.PARAMETER WorkspaceId
+    The unique identifier of the workspace containing the item. Mandatory.
+
+.PARAMETER ItemId
+    The unique identifier of the item whose schedule is removed. Mandatory.
+
+.PARAMETER JobType
+    The job type of the schedule (e.g. 'RunNotebook', 'Pipeline'). Mandatory.
+
+.PARAMETER ScheduleId
+    The unique identifier of the schedule to delete. Mandatory.
+
+.EXAMPLE
+    Remove-FabricItemSchedule -WorkspaceId "12345678-1234-1234-1234-123456789012" -ItemId "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee" -JobType 'RunNotebook' -ScheduleId "sched-1"
+
+    Removes the specified schedule from the item.
+
+.EXAMPLE
+    Get-FabricItemSchedule -WorkspaceId $ws -ItemId $item -JobType 'RunNotebook' | Remove-FabricItemSchedule -Confirm:$false
+
+    Removes all schedules for the job type by piping them from Get-FabricItemSchedule.
+
+.NOTES
+    - API Endpoint: DELETE /workspaces/{workspaceId}/items/{itemId}/jobs/{jobType}/schedules/{scheduleId}
+    - Requires: authentication via Set-FabricApiHeaders / Connect-FabricAccount.
+
+    Author: Tiago Balabuch, Jess Pomfret, Rob Sewell
+#>
+function Remove-FabricItemSchedule {
+    [CmdletBinding(SupportsShouldProcess = $true, ConfirmImpact = 'High')]
+    param (
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
+        [ValidateNotNullOrEmpty()]
+        [string]$WorkspaceId,
+
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
+        [ValidateNotNullOrEmpty()]
+        [string]$ItemId,
+
+        [Parameter(Mandatory = $true)]
+        [ValidateNotNullOrEmpty()]
+        [string]$JobType,
+
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
+        [ValidateNotNullOrEmpty()]
+        [Alias('id')]
+        [string]$ScheduleId
+    )
+
+    process {
+        try {
+            Invoke-FabricAuthCheck -ThrowOnFailure
+
+            $apiEndpointURI = New-FabricAPIUri -Segments @('workspaces', $WorkspaceId, 'items', $ItemId, 'jobs', $JobType, 'schedules', $ScheduleId)
+            Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
+
+            $apiParams = @{
+                BaseURI = $apiEndpointURI
+                Headers = $script:FabricAuthContext.FabricHeaders
+                Method  = 'Delete'
+            }
+
+            if ($PSCmdlet.ShouldProcess($ScheduleId, "Remove schedule from item '$ItemId'")) {
+                $null = Invoke-FabricAPIRequest @apiParams
+                Write-FabricLog -Message "Schedule '$ScheduleId' removed successfully!" -Level Host
+            }
+        }
+        catch {
+            $errorDetails = $_.Exception.Message
+            Write-FabricLog -Message "Failed to remove schedule '$ScheduleId'. Error: $errorDetails" -Level Error
+        }
+    }
+}
+#EndRegion '.\Public\Job Scheduler\Remove-FabricItemSchedule.ps1' 83
+#Region '.\Public\Job Scheduler\Start-FabricItemJob.ps1' -1
+
+<#
+.SYNOPSIS
+    Starts an on-demand job on a Microsoft Fabric item.
+
+.DESCRIPTION
+    The Start-FabricItemJob function triggers an on-demand job run for a specific job type
+    on a Fabric item via POST to
+    /workspaces/{workspaceId}/items/{itemId}/jobs/{jobType}/instances.
+
+    Optional execution data can be supplied as a hashtable and is passed through verbatim
+    in the request body. When no execution data is provided, no body is sent.
+
+    This is a long-running operation: the API responds with a 202 and an operation/location
+    header used to track the job instance. The response is returned as-is (no enrichment);
+    -Raw is accepted for interface uniformity.
+
+.PARAMETER WorkspaceId
+    The unique identifier of the workspace containing the item. Mandatory.
+
+.PARAMETER ItemId
+    The unique identifier of the item to run the job on. Mandatory.
+
+.PARAMETER JobType
+    The job type to run on demand (e.g. 'RunNotebook', 'Pipeline', 'sparkjob'). Mandatory.
+
+.PARAMETER ExecutionData
+    Optional. A hashtable of execution data passed through verbatim in the request body,
+    e.g. @{ parameters = @{ param1 = 'value1' }; configuration = @{ ... } }.
+
+.PARAMETER Raw
+    Accepted for interface uniformity. The response is returned as-is regardless.
+
+.EXAMPLE
+    Start-FabricItemJob -WorkspaceId "12345678-1234-1234-1234-123456789012" -ItemId "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee" -JobType 'RunNotebook'
+
+    Starts a notebook run job with no execution data.
+
+.EXAMPLE
+    $exec = @{ parameters = @{ parameterName = @{ value = '1'; type = 'int' } } }
+    Start-FabricItemJob -WorkspaceId $ws -ItemId $item -JobType 'RunNotebook' -ExecutionData $exec
+
+    Starts a notebook run job passing execution parameters.
+
+.OUTPUTS
+    System.Object
+    The API response for the started job instance (long-running operation tracking data).
+
+.NOTES
+    - API Endpoint: POST /workspaces/{workspaceId}/items/{itemId}/jobs/{jobType}/instances
+    - Requires: authentication via Set-FabricApiHeaders / Connect-FabricAccount.
+
+    Author: Tiago Balabuch, Jess Pomfret, Rob Sewell
+#>
+function Start-FabricItemJob {
+    [CmdletBinding(SupportsShouldProcess = $true, ConfirmImpact = 'Medium')]
+    param (
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
+        [ValidateNotNullOrEmpty()]
+        [string]$WorkspaceId,
+
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
+        [ValidateNotNullOrEmpty()]
+        [string]$ItemId,
+
+        [Parameter(Mandatory = $true)]
+        [ValidateNotNullOrEmpty()]
+        [string]$JobType,
+
+        [Parameter(Mandatory = $false)]
+        [hashtable]$ExecutionData,
+
+        [Parameter()]
+        [switch]$Raw
+    )
+
+    process {
+        try {
+            Invoke-FabricAuthCheck -ThrowOnFailure
+
+            $apiEndpointURI = New-FabricAPIUri -Segments @('workspaces', $WorkspaceId, 'items', $ItemId, 'jobs', $JobType, 'instances')
+            Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
+
+            $apiParams = @{
+                BaseURI = $apiEndpointURI
+                Headers = $script:FabricAuthContext.FabricHeaders
+                Method  = 'Post'
+            }
+
+            # Only send a body when execution data is provided.
+            if ($ExecutionData) {
+                $body = @{ executionData = $ExecutionData }
+                $bodyJson = $body | ConvertTo-Json -Depth 10
+                Write-FabricLog -Message "Request Body: $bodyJson" -Level Debug
+                $apiParams.Body = $bodyJson
+            }
+
+            if ($PSCmdlet.ShouldProcess($ItemId, "Start Fabric item job '$JobType'")) {
+                $response = Invoke-FabricAPIRequest @apiParams
+
+                if ($Raw) {
+                    return $response
+                }
+
+                Write-FabricLog -Message "Job '$JobType' started for item '$ItemId'." -Level Host
+                return $response
+            }
+        }
+        catch {
+            $errorDetails = $_.Exception.Message
+            Write-FabricLog -Message "Failed to start job '$JobType' for item '$ItemId'. Error: $errorDetails" -Level Error
+        }
+    }
+}
+#EndRegion '.\Public\Job Scheduler\Start-FabricItemJob.ps1' 114
+#Region '.\Public\Job Scheduler\Stop-FabricItemJobInstance.ps1' -1
+
+<#
+.SYNOPSIS
+    Cancels a running job instance on a Microsoft Fabric item.
+
+.DESCRIPTION
+    The Stop-FabricItemJobInstance function requests cancellation of a job instance on a
+    Fabric item via POST to
+    /workspaces/{workspaceId}/items/{itemId}/jobs/instances/{jobInstanceId}/cancel.
+
+.PARAMETER WorkspaceId
+    The unique identifier of the workspace containing the item. Mandatory.
+
+.PARAMETER ItemId
+    The unique identifier of the item whose job instance is cancelled. Mandatory.
+
+.PARAMETER JobInstanceId
+    The unique identifier of the job instance to cancel. Mandatory.
+
+.EXAMPLE
+    Stop-FabricItemJobInstance -WorkspaceId "12345678-1234-1234-1234-123456789012" -ItemId "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee" -JobInstanceId "inst-1"
+
+    Requests cancellation of the specified job instance.
+
+.EXAMPLE
+    Get-FabricItemJobInstance -WorkspaceId $ws -ItemId $item | Where-Object status -eq 'InProgress' | Stop-FabricItemJobInstance -Confirm:$false
+
+    Cancels all in-progress job instances by piping them from Get-FabricItemJobInstance.
+
+.NOTES
+    - API Endpoint: POST /workspaces/{workspaceId}/items/{itemId}/jobs/instances/{jobInstanceId}/cancel
+    - Requires: authentication via Set-FabricApiHeaders / Connect-FabricAccount.
+
+    Author: Tiago Balabuch, Jess Pomfret, Rob Sewell
+#>
+function Stop-FabricItemJobInstance {
+    [CmdletBinding(SupportsShouldProcess = $true, ConfirmImpact = 'High')]
+    param (
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
+        [ValidateNotNullOrEmpty()]
+        [string]$WorkspaceId,
+
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
+        [ValidateNotNullOrEmpty()]
+        [string]$ItemId,
+
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
+        [ValidateNotNullOrEmpty()]
+        [Alias('id')]
+        [string]$JobInstanceId
+    )
+
+    process {
+        try {
+            Invoke-FabricAuthCheck -ThrowOnFailure
+
+            $apiEndpointURI = New-FabricAPIUri -Segments @('workspaces', $WorkspaceId, 'items', $ItemId, 'jobs', 'instances', $JobInstanceId, 'cancel')
+            Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
+
+            $apiParams = @{
+                BaseURI = $apiEndpointURI
+                Headers = $script:FabricAuthContext.FabricHeaders
+                Method  = 'Post'
+            }
+
+            if ($PSCmdlet.ShouldProcess($JobInstanceId, "Cancel job instance on item '$ItemId'")) {
+                $null = Invoke-FabricAPIRequest @apiParams
+                Write-FabricLog -Message "Cancellation requested for job instance '$JobInstanceId'." -Level Host
+            }
+        }
+        catch {
+            $errorDetails = $_.Exception.Message
+            Write-FabricLog -Message "Failed to cancel job instance '$JobInstanceId'. Error: $errorDetails" -Level Error
+        }
+    }
+}
+#EndRegion '.\Public\Job Scheduler\Stop-FabricItemJobInstance.ps1' 76
+#Region '.\Public\Job Scheduler\Update-FabricItemSchedule.ps1' -1
+
+<#
+.SYNOPSIS
+    Updates an existing job schedule on a Microsoft Fabric item.
+
+.DESCRIPTION
+    The Update-FabricItemSchedule function updates a schedule for a specific job type on a
+    Fabric item via PATCH to
+    /workspaces/{workspaceId}/items/{itemId}/jobs/{jobType}/schedules/{scheduleId}.
+
+    Only the fields that are supplied are sent in the request body. The schedule
+    configuration is polymorphic and, when provided, is passed through verbatim as a
+    hashtable so any schedule type can be expressed.
+
+    The full updated schedule object is returned. By default it is enriched with the
+    originating WorkspaceId (stamped from the parameter), a resolved WorkspaceName, and
+    decorated for the custom table view; pass -Raw to return the untouched API response.
+
+.PARAMETER WorkspaceId
+    The unique identifier of the workspace containing the item. Mandatory.
+
+.PARAMETER ItemId
+    The unique identifier of the item whose schedule is updated. Mandatory.
+
+.PARAMETER JobType
+    The job type of the schedule (e.g. 'RunNotebook', 'Pipeline'). Mandatory.
+
+.PARAMETER ScheduleId
+    The unique identifier of the schedule to update. Mandatory.
+
+.PARAMETER Enabled
+    Optional. Whether the schedule is enabled. Only included in the request when supplied.
+
+.PARAMETER Configuration
+    Optional. A hashtable describing the polymorphic schedule configuration. Passed through
+    verbatim. Only included in the request when supplied.
+
+.PARAMETER Raw
+    If specified, returns the untouched API response with no added properties or type decoration.
+
+.EXAMPLE
+    Update-FabricItemSchedule -WorkspaceId "12345678-1234-1234-1234-123456789012" -ItemId "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee" -JobType 'RunNotebook' -ScheduleId "sched-1" -Enabled $false
+
+    Disables the schedule without altering its configuration.
+
+.EXAMPLE
+    $config = @{ type = 'Daily'; startDateTime = '2024-04-28T00:00:00'; endDateTime = '2024-04-30T23:59:00'; localTimeZoneId = 'Central Standard Time'; times = @('09:00') }
+    Update-FabricItemSchedule -WorkspaceId "12345678-1234-1234-1234-123456789012" -ItemId "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee" -JobType 'RunNotebook' -ScheduleId "sched-1" -Configuration $config
+
+    Replaces the schedule configuration with a daily schedule.
+
+.OUTPUTS
+    System.Object
+    The updated schedule object with all API-returned properties (plus WorkspaceName when enriched).
+
+.NOTES
+    - API Endpoint: PATCH /workspaces/{workspaceId}/items/{itemId}/jobs/{jobType}/schedules/{scheduleId}
+    - Requires: authentication via Set-FabricApiHeaders / Connect-FabricAccount.
+
+    Author: Tiago Balabuch, Jess Pomfret, Rob Sewell
+#>
+function Update-FabricItemSchedule {
+    [CmdletBinding(SupportsShouldProcess = $true, ConfirmImpact = 'Medium')]
+    param (
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
+        [ValidateNotNullOrEmpty()]
+        [string]$WorkspaceId,
+
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
+        [ValidateNotNullOrEmpty()]
+        [string]$ItemId,
+
+        [Parameter(Mandatory = $true)]
+        [ValidateNotNullOrEmpty()]
+        [string]$JobType,
+
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
+        [ValidateNotNullOrEmpty()]
+        [string]$ScheduleId,
+
+        [Parameter(Mandatory = $false)]
+        [bool]$Enabled,
+
+        [Parameter(Mandatory = $false)]
+        [hashtable]$Configuration,
+
+        [Parameter()]
+        [switch]$Raw
+    )
+
+    process {
+        try {
+            Invoke-FabricAuthCheck -ThrowOnFailure
+
+            $apiEndpointURI = New-FabricAPIUri -Segments @('workspaces', $WorkspaceId, 'items', $ItemId, 'jobs', $JobType, 'schedules', $ScheduleId)
+            Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
+
+            # Only include supplied fields in the request body.
+            $body = @{}
+            if ($PSBoundParameters.ContainsKey('Enabled')) { $body.enabled = $Enabled }
+            if ($PSBoundParameters.ContainsKey('Configuration')) { $body.configuration = $Configuration }
+
+            $bodyJson = $body | ConvertTo-Json -Depth 10
+            Write-FabricLog -Message "Request Body: $bodyJson" -Level Debug
+
+            $apiParams = @{
+                BaseURI = $apiEndpointURI
+                Headers = $script:FabricAuthContext.FabricHeaders
+                Method  = 'Patch'
+                Body    = $bodyJson
+            }
+
+            if ($PSCmdlet.ShouldProcess($ScheduleId, "Update Fabric item schedule")) {
+                $response = Invoke-FabricAPIRequest @apiParams
+
+                if (-not $response) {
+                    Write-FabricLog -Message "No response returned after updating schedule '$ScheduleId'." -Level Warning
+                    return $null
+                }
+
+                if ($Raw) {
+                    return $response
+                }
+
+                # Enrich: stamp the originating workspace id and resolve its display name.
+                $response | Add-Member -NotePropertyName 'workspaceId' -NotePropertyValue $WorkspaceId -Force
+                $workspaceName = $WorkspaceId
+                try {
+                    $workspaceName = Resolve-FabricWorkspaceName -WorkspaceId $WorkspaceId
+                }
+                catch {
+                    Write-FabricLog -Message "Failed to resolve workspace name for ID '$WorkspaceId': $($_.Exception.Message)" -Level Debug
+                }
+                $response | Add-Member -NotePropertyName 'WorkspaceName' -NotePropertyValue $workspaceName -Force
+
+                $response | Add-FabricTypeName -TypeName 'MicrosoftFabric.ItemSchedule'
+                Write-FabricLog -Message "Schedule '$ScheduleId' updated successfully!" -Level Host
+                return $response
+            }
+        }
+        catch {
+            $errorDetails = $_.Exception.Message
+            Write-FabricLog -Message "Failed to update schedule '$ScheduleId'. Error: $errorDetails" -Level Error
+        }
+    }
+}
+#EndRegion '.\Public\Job Scheduler\Update-FabricItemSchedule.ps1' 146
 #Region '.\Public\KQL Dashboard\Get-FabricKQLDashboard.ps1' -1
 
 <#

@@ -1,5 +1,16 @@
 ## [1.0.8] - 2026-07-02
 
+### Added
+
+- **`New-FabricConnection`** and **`Update-FabricConnection`**: new commands completing the
+  connection CRUD family (Get/Remove/RoleAssignment already existed).
+  - `New-FabricConnection` → `POST /connections`; `Update-FabricConnection` → `PATCH /connections/{connectionId}`.
+  - The polymorphic (per connectivity type) request body is expressed via `-ConnectionDetails`/
+    `-CredentialDetails` hashtables plus typed `-ConnectivityType`/`-GatewayId`/`-PrivacyLevel` parameters.
+  - Return the full created/updated connection object (all API properties) enriched with a resolved
+    `GatewayName` (when gateway-bound) and the `MicrosoftFabric.Connection` type; `-Raw` returns the
+    untouched response. `SupportsShouldProcess` (honors `-WhatIf`/`-Confirm`).
+
 ### Fixed
 
 - **`New-FabricAPIUri -Segments` (34 functions were silently broken)**: The helper never had a `-Segments`

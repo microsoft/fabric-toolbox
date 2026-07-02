@@ -77,8 +77,9 @@ function New-FabricAPIUri {
         [Parameter(ParameterSetName = 'Parts')]
         [string]$Subresource,
 
+        # No ValidateNotNullOrEmpty here: callers intentionally pass optional trailing
+        # segments (e.g. an omitted id) as $null, and the builder below skips null/empty.
         [Parameter(Mandatory = $true, ParameterSetName = 'Segments')]
-        [ValidateNotNullOrEmpty()]
         [string[]]$Segments,
 
         [Parameter()]
