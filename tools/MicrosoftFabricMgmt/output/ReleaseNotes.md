@@ -2,6 +2,11 @@
 
 ### Fixed
 
+- **`New-FabricAPIUri -Segments` (34 functions were silently broken)**: The helper never had a `-Segments`
+  parameter, yet 34 functions called `New-FabricAPIUri -Segments @(...)` — every `*Definition` getter/updater
+  built via segments plus the Domain functions. The call failed parameter binding, the error was swallowed by
+  the surrounding try/catch, and the function returned nothing without ever calling the API. Added a `-Segments`
+  parameter (its own parameter set) that builds the path from an ordered segment list, restoring these functions.
 - **`Add/Remove/Update-FabricConnectionRoleAssignment`**: Corrected the request URI. These functions built
   `/connections/roleAssignments/{connectionId}` instead of the correct `/connections/{connectionId}/roleAssignments`
   (and `.../roleAssignments/{roleAssignmentId}` for Remove/Update), so they targeted the wrong endpoint at runtime.
@@ -53,6 +58,16 @@
   schema round-trip tests that resolve each function's response schema (with `allOf`/cross-file `$ref` resolution) and
   assert every schema property survives on the enriched output; includes a negative control proving trimming is detected.
 - **Enrichment flip tests** (`tests/Unit/EnrichmentFlip.Tests.ps1`): verify default output is enriched and `-Raw` is untouched.
+- **Behavior tests for 80 Get-* functions** that previously had none: each asserts the exact constructed API
+  endpoint + HTTP method, the default resolved-name enrichment + type decoration (or passthrough for
+  definitions/scalars), and that `-Raw` returns the untouched response.
+
+### Changed (QA)
+
+- **Pipeline correctness — 78 functions**: wrapped bodies in `process{}` blocks so `ValueFromPipeline`
+  functions process every piped item, not just the last (`PSUseProcessBlockForPipelineCommand`).
+- **PSScriptAnalyzer clean** across `source/Public` and `source/Private`; added missing `Author:` lines to
+  66 function files.
 - **Power BI REST API spec cache**: `Update-FabricAPISpecsCache.ps1` now also caches the Power BI API
   (`powerbi.swagger.json` + `powerbi-api-validation.json`) so the admin functions can be validated against a spec.
 - **`Validate-FabricModuleCoverage.ps1`**: rewritten to path-based matching (extracts each function's constructed URI

@@ -59,8 +59,10 @@ Research complete (2026-07-01). Decisions locked with maintainer. Working order 
 Baseline QA-gate failures: 323 (167 missing unit test + 88 ScriptAnalyzer + 66 missing author + 2 orphans).
 - [x] **ScriptAnalyzer (88 → 0 on source/Public):** fixed 78 `PSUseProcessBlockForPipelineCommand` by wrapping bodies in `process{}` (REAL fix — pipeline funcs now process every piped item, not just the last), via 3 agents (verified parse-clean + rule-cleared). Fixed the remainder: OutputType attrs (Resolve-*/Export), empty catch (OneLakeDataAccessRole), unused param (Set-FabricApiHeaders), 2 BOMs, trailing ws (Get-FabricDomain). Suppressed a false-positive ShouldProcess on the private New-FabricAPIUri (pure URI builder). Analyzer now 0 on source/Public AND source/Private.
 - [x] **Author (66 → 0):** added "Author: Tiago Balabuch, Jess Pomfret, Rob Sewell" to the .NOTES of the 66 files lacking one (newer resource families + Resolve-* helpers), encoding preserved, parse-clean.
-- [ ] **Missing unit tests (167):** per decision, write MEANINGFUL behavior tests for KEY functions (not 167 param stubs). Identify high-use test-less functions; write real tests like the new suites. (NEXT)
-- [ ] 2 orphans: `Get-FabricExternalDataShares.Tests.ps1` (plural; no matching function — rename/remove) and a `Clear-FabricNameCache` functional test failure (investigate).
+- [x] **Meaningful tests for all 80 test-less Get-*** (decision: meaningful, not stubs). Canonical `Get-FabricAdminDataset.Tests.ps1` + 79 via 4 agent batches (~263 test cases, all green). Each asserts exact endpoint + method + enrichment/type (or passthrough for definitions/scalars) + `-Raw` untouched.
+- [x] Orphans: deleted plural `Get-FabricExternalDataShares.Tests.ps1`; `Clear-FabricNameCache` failure is full-run contamination only (passes 10/0 isolated).
+- [x] **2nd major bug found + fixed via the test pass:** `New-FabricAPIUri -Segments` didn't exist → 34 functions (all `*Definition` get/update built via segments + Domain functions) silently no-op'd. Added `-Segments` parameter set. Verified a definition getter now POSTs the correct `.../getDefinition` URL.
+- [ ] Remaining test-less: ~85 NON-Get-* functions (New/Update/Remove/Add/Start/etc.) — out of the chosen "all Get-*" scope; do in a later pass if wanted.
 
 ## Phase 3 — New commands (DEFERRED until validator fixed)
 Verified genuine gaps (High): Git integration write ops, Deployment Pipelines, Job Scheduler, New/Update-FabricConnection.

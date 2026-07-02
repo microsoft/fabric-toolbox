@@ -6,6 +6,7 @@ $expectedParams = @(
     "WorkspaceId"
     "ItemId"
     "Subresource"
+    "Segments"
     "QueryParameters"
     "ProgressAction"
     "Verbose"

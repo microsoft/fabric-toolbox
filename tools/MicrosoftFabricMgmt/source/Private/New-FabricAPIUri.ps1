@@ -22,6 +22,12 @@
 .PARAMETER Subresource
     Optional subresource path (e.g., 'users', 'roleAssignments', 'definition').
 
+.PARAMETER Segments
+    Explicit ordered list of path segments to append after the base URL, e.g.
+    @('workspaces', $workspaceId, 'notebooks', $itemId, 'getDefinition'). Use this when
+    the path does not fit the Resource/WorkspaceId/Subresource/ItemId shape. Mutually
+    exclusive with -Resource. Null/empty segments are skipped.
+
 .PARAMETER QueryParameters
     Optional hashtable of query parameters to append to the URI.
 
@@ -53,23 +59,27 @@
     Last Updated: 2026-01-07
 #>
 function New-FabricAPIUri {
-    [CmdletBinding()]
+    [CmdletBinding(DefaultParameterSetName = 'Parts')]
     [OutputType([string])]
     [System.Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSUseShouldProcessForStateChangingFunctions', '', Justification = 'Pure URI string builder; does not change system state despite the New verb.')]
     param(
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $true, ParameterSetName = 'Parts')]
         [ValidateNotNullOrEmpty()]
         [string]$Resource,
 
-        [Parameter()]
+        [Parameter(ParameterSetName = 'Parts')]
         [Alias('ResourceId')]
         [string]$WorkspaceId,
 
-        [Parameter()]
+        [Parameter(ParameterSetName = 'Parts')]
         [string]$ItemId,
 
-        [Parameter()]
+        [Parameter(ParameterSetName = 'Parts')]
         [string]$Subresource,
+
+        [Parameter(Mandatory = $true, ParameterSetName = 'Segments')]
+        [ValidateNotNullOrEmpty()]
+        [string[]]$Segments,
 
         [Parameter()]
         [hashtable]$QueryParameters
@@ -81,21 +91,30 @@ function New-FabricAPIUri {
     # Start building the URI
     $uriParts = [System.Collections.Generic.List[string]]::new()
     $uriParts.Add($baseUrl)
-    $uriParts.Add($Resource)
 
-    # Add workspace ID if provided
-    if ($WorkspaceId) {
-        $uriParts.Add($WorkspaceId)
+    if ($PSCmdlet.ParameterSetName -eq 'Segments') {
+        # Explicit path segments (skip null/empty so callers can pass optional parts).
+        foreach ($seg in $Segments) {
+            if (-not [string]::IsNullOrEmpty($seg)) { $uriParts.Add($seg) }
+        }
     }
+    else {
+        $uriParts.Add($Resource)
 
-    # Add subresource if provided
-    if ($Subresource) {
-        $uriParts.Add($Subresource)
-    }
+        # Add workspace ID if provided
+        if ($WorkspaceId) {
+            $uriParts.Add($WorkspaceId)
+        }
 
-    # Add item ID if provided (typically comes after subresource)
-    if ($ItemId) {
-        $uriParts.Add($ItemId)
+        # Add subresource if provided
+        if ($Subresource) {
+            $uriParts.Add($Subresource)
+        }
+
+        # Add item ID if provided (typically comes after subresource)
+        if ($ItemId) {
+            $uriParts.Add($ItemId)
+        }
     }
 
     # Join parts with forward slashes
