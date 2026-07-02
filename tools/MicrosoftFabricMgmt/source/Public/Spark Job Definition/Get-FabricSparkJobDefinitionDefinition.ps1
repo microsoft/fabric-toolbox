@@ -21,6 +21,9 @@
 .PARAMETER SparkJobDefinitionFormat
     The format in which to retrieve the SparkJobDefinition definition. This parameter is optional.
 
+.PARAMETER Raw
+    If specified, returns the untouched API response.
+
 .EXAMPLE
     Get-FabricSparkJobDefinitionDefinition -WorkspaceId "workspace-12345" -SparkJobDefinitionId "SparkJobDefinition-67890"
     This example retrieves the definition of the SparkJobDefinition with ID "SparkJobDefinition-67890" in the workspace with ID "workspace-12345".
@@ -50,7 +53,10 @@ function Get-FabricSparkJobDefinitionDefinition {
         [Parameter(Mandatory = $false)]
         [ValidateNotNullOrEmpty()]
         [ValidateSet('SparkJobDefinitionV1')]
-        [string]$SparkJobDefinitionFormat = "SparkJobDefinitionV1"
+        [string]$SparkJobDefinitionFormat = "SparkJobDefinitionV1",
+
+        [Parameter()]
+        [switch]$Raw
     )
     try {
         Invoke-FabricAuthCheck -ThrowOnFailure
@@ -68,6 +74,10 @@ function Get-FabricSparkJobDefinitionDefinition {
             -BaseURI $apiEndpointURI `
             -Headers $script:FabricAuthContext.FabricHeaders `
             -Method Post
+
+        if ($Raw) {
+            return $response
+        }
 
         # Return the API response
         Write-FabricLog -Message "Spark Job Definition '$SparkJobDefinitionId' definition retrieved successfully!" -Level Debug

@@ -4,13 +4,15 @@ function Clear-FabricNameCache {
         Clears the cached capacity and workspace name resolutions.
 
     .DESCRIPTION
-        Removes all cached capacity and workspace name lookups from PSFramework's
-        configuration cache. Use this if capacity or workspace names have changed
-        and you need to force fresh API lookups.
+        Removes all cached name lookups from PSFramework's configuration cache.
+        Use this if any names have changed and you need to force fresh API lookups.
 
         This function clears:
         - All cached capacity names (from Resolve-FabricCapacityName)
         - All cached workspace names (from Resolve-FabricWorkspaceName)
+        - All cached gateway names (from Resolve-FabricGatewayName)
+        - All cached dataset names and workspace IDs (from Resolve-FabricDatasetName)
+        - All cross-populated workspace capacity IDs (from Resolve-FabricWorkspaceName)
 
     .PARAMETER Force
         If specified, clears the cache without confirmation.
@@ -18,7 +20,7 @@ function Clear-FabricNameCache {
     .EXAMPLE
         Clear-FabricNameCache
 
-        Clears all cached capacity and workspace names.
+        Clears all cached capacity, workspace, gateway, and dataset names.
 
     .EXAMPLE
         Clear-FabricNameCache -Force
@@ -27,7 +29,7 @@ function Clear-FabricNameCache {
 
     .NOTES
         This function is useful when:
-        - Capacity or workspace names have been renamed
+        - Capacity, workspace, gateway, or dataset names have been renamed
         - You suspect cached data is stale
         - You want to reduce memory usage from large caches
     #>

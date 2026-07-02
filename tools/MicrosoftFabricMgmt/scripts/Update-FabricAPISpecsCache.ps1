@@ -210,6 +210,7 @@ if (-not (Test-Path $CachePath)) {
 # List of all swagger spec directories from the repo
 $swaggerSpecs = @(
     'admin'
+    'common'   # shared base definitions (Item, Principal, PaginatedResponse, ...) referenced via ../common/definitions.json
     'anomalyDetector'
     'apacheAirflowJob'
     'copyJob'
@@ -282,6 +283,11 @@ if (-not $SkipDownload) {
                 FileType   = 'definitions'
             }
         )
+
+        # 'common' provides shared definitions only; it has no swagger.json.
+        if ($spec -eq 'common') {
+            $filesToDownload = @($filesToDownload | Where-Object { $_.FileType -eq 'definitions' })
+        }
 
         foreach ($fileInfo in $filesToDownload) {
             $url = $fileInfo.Url
@@ -483,6 +489,121 @@ foreach ($path in $consolidatedLookup.Endpoints.Keys) {
 $validationFile = Join-Path $CachePath 'fabric-api-validation.json'
 $validationLookup | ConvertTo-Json -Depth 10 -Compress:$false | Out-File -FilePath $validationFile -Encoding UTF8 -Force
 Write-Host "Validation lookup saved to: $validationFile" -ForegroundColor Green
+
+#endregion
+
+#region Power BI REST API Cache
+
+# The Power BI REST API (api.powerbi.com) has no per-resource specs repo like Fabric.
+# The authoritative machine-readable source is the swagger Microsoft uses to generate
+# the Power BI .NET SDK: a single self-contained OpenAPI 2.0 document.
+$powerBISwaggerUrl  = 'https://raw.githubusercontent.com/microsoft/PowerBI-CSharp/master/sdk/swaggers/swagger.json'
+$powerBISwaggerFile = Join-Path $CachePath 'powerbi.swagger.json'
+
+if (-not $SkipDownload) {
+    if ((Test-Path $powerBISwaggerFile) -and -not $Force) {
+        Write-Host "[SKIP] powerbi.swagger (already cached)" -ForegroundColor Gray
+        $skippedCount++
+    }
+    else {
+        try {
+            Write-Host "[DOWNLOADING] powerbi.swagger..." -ForegroundColor Yellow -NoNewline
+            $pbiResponse = Invoke-WebRequest -Uri $powerBISwaggerUrl -UseBasicParsing -ErrorAction Stop
+            $pbiResponse.Content | Out-File -FilePath $powerBISwaggerFile -Encoding UTF8 -Force
+            $null = Get-Content $powerBISwaggerFile -Raw | ConvertFrom-Json -ErrorAction Stop
+            Write-Host " SUCCESS" -ForegroundColor Green
+            $downloadedCount++
+        }
+        catch {
+            Write-Host " FAILED" -ForegroundColor Red
+            Write-Host "  Error: $($_.Exception.Message)" -ForegroundColor Red
+            $failedCount++
+            $failedSpecs += 'powerbi.swagger'
+        }
+    }
+}
+
+if (Test-Path $powerBISwaggerFile) {
+    Write-Host "`nCreating Power BI validation lookup..." -ForegroundColor Cyan
+    try {
+        $pbiSwagger = Get-Content $powerBISwaggerFile -Raw | ConvertFrom-Json -AsHashtable -ErrorAction Stop
+
+        # OpenAPI 2.0: operation parameters may be inline or a $ref into the global parameters map.
+        $pbiGlobalParams = @{}
+        if ($pbiSwagger.ContainsKey('parameters') -and $pbiSwagger.parameters) {
+            foreach ($gp in $pbiSwagger.parameters.GetEnumerator()) {
+                $pbiGlobalParams[$gp.Key] = $gp.Value
+            }
+        }
+
+        function Resolve-PBIParameter {
+            param($Param)
+            if ($Param -is [hashtable] -and $Param.ContainsKey('$ref')) {
+                $refName = ($Param['$ref'] -split '/')[-1]
+                if ($pbiGlobalParams.ContainsKey($refName)) { return $pbiGlobalParams[$refName] }
+            }
+            return $Param
+        }
+
+        $pbiValidation = @{
+            Version     = '1.0.0'
+            GeneratedAt = (Get-Date).ToString('o')
+            BaseUrl     = 'https://api.powerbi.com'
+            Endpoints   = @{}
+        }
+        $pbiOpCount = 0
+
+        foreach ($pathKey in $pbiSwagger.paths.Keys) {
+            $pathData = $pbiSwagger.paths[$pathKey]
+            $pbiValidation.Endpoints[$pathKey] = @{
+                ResourceType = $null
+                Methods      = @{}
+            }
+
+            foreach ($method in @('get', 'post', 'put', 'patch', 'delete')) {
+                if (-not $pathData.ContainsKey($method)) { continue }
+                $operation = $pathData[$method]
+                $pbiOpCount++
+
+                $required = @(); $optional = @(); $pathParams = @(); $queryParams = @(); $hasBody = $false
+                foreach ($rawParam in @($operation.parameters)) {
+                    if (-not $rawParam) { continue }
+                    $param = Resolve-PBIParameter -Param $rawParam
+                    if (-not $param.name) { continue }
+                    switch ($param.in) {
+                        'path'  { $pathParams  += $param.name }
+                        'query' { $queryParams += $param.name }
+                        'body'  { $hasBody = $true }
+                    }
+                    if ($param.required) { $required += $param.name } else { $optional += $param.name }
+                }
+
+                # Tag is the operation group (e.g. Admin, Datasets, Gateways) - used as ResourceType.
+                $tag = if ($operation.tags -and $operation.tags.Count -gt 0) { $operation.tags[0] } else { 'Unknown' }
+                if (-not $pbiValidation.Endpoints[$pathKey].ResourceType) {
+                    $pbiValidation.Endpoints[$pathKey].ResourceType = $tag
+                }
+
+                $pbiValidation.Endpoints[$pathKey].Methods[$method.ToUpper()] = @{
+                    OperationId    = $operation.operationId
+                    RequiredParams = $required
+                    OptionalParams = $optional
+                    PathParams     = $pathParams
+                    QueryParams    = $queryParams
+                    HasBody        = $hasBody
+                    Tag            = $tag
+                }
+            }
+        }
+
+        $pbiValidationFile = Join-Path $CachePath 'powerbi-api-validation.json'
+        $pbiValidation | ConvertTo-Json -Depth 10 -Compress:$false | Out-File -FilePath $pbiValidationFile -Encoding UTF8 -Force
+        Write-Host "Power BI validation lookup saved to: $pbiValidationFile ($pbiOpCount operations across $($pbiValidation.Endpoints.Count) paths)" -ForegroundColor Green
+    }
+    catch {
+        Write-Host "[ERROR] powerbi validation - $($_.Exception.Message)" -ForegroundColor Red
+    }
+}
 
 #endregion
 

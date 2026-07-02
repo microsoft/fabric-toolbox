@@ -17,6 +17,9 @@ Handles both synchronous and asynchronous operations, with detailed logging and 
 Specifies the format of the Eventstream definition. Currently, only 'ipynb' is supported.
 Default: 'ipynb'.
 
+.PARAMETER Raw
+If specified, returns the untouched API response.
+
 .EXAMPLE
 Get-FabricEventstreamDefinition -WorkspaceId "12345" -EventstreamId "67890"
 
@@ -48,7 +51,10 @@ function Get-FabricEventstreamDefinition {
 
         [Parameter(Mandatory = $false)]
         [ValidateNotNullOrEmpty()]
-        [string]$EventstreamFormat
+        [string]$EventstreamFormat,
+
+        [Parameter()]
+        [switch]$Raw
     )
     try {
         # Validate authentication
@@ -71,6 +77,10 @@ function Get-FabricEventstreamDefinition {
             Method  = 'Post'
         }
         $response = Invoke-FabricAPIRequest @apiParams
+
+        if ($Raw) {
+            return $response
+        }
 
         # Return the API response
         Write-FabricLog -Message "Eventstream '$EventstreamId' definition retrieved successfully!" -Level Host

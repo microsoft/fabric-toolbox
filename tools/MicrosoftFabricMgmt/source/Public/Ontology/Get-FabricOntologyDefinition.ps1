@@ -12,6 +12,9 @@
 .PARAMETER OntologyId
     (Mandatory) The unique identifier of the Ontology item whose definition needs to be retrieved.
 
+.PARAMETER Raw
+    If specified, returns the untouched API response.
+
 .EXAMPLE
     Get-FabricOntologyDefinition -WorkspaceId "12345" -OntologyId "67890"
 
@@ -34,7 +37,10 @@ function Get-FabricOntologyDefinition {
 
         [Parameter(Mandatory = $true)]
         [ValidateNotNullOrEmpty()]
-        [string]$OntologyId
+        [string]$OntologyId,
+
+        [Parameter()]
+        [switch]$Raw
     )
 
     try {
@@ -52,7 +58,13 @@ function Get-FabricOntologyDefinition {
             Headers = $script:FabricAuthContext.FabricHeaders
             Method = 'Post'
         }
-        Invoke-FabricAPIRequest @apiParams
+        $response = Invoke-FabricAPIRequest @apiParams
+
+        if ($Raw) {
+            return $response
+        }
+
+        $response
     }
     catch {
         # Capture and log error details

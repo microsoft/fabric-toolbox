@@ -17,6 +17,9 @@ Id is already known from a previous call.
 Optional. When provided, returns only the snapshot whose display name exactly matches this value. Do not combine with
 WarehouseSnapshotId.
 
+.PARAMETER Raw
+If specified, returns the untouched API response with no added properties or type decoration.
+
 .EXAMPLE
 Get-FabricWarehouseSnapshot -WorkspaceId "workspace-12345" -WarehouseSnapshotId "snap-67890"
 
@@ -53,7 +56,10 @@ function Get-FabricWarehouseSnapshot {
         [Parameter(Mandatory = $false)]
         [ValidateNotNullOrEmpty()]
         [ValidatePattern('^[a-zA-Z0-9_]*$')]
-        [string]$WarehouseSnapshotName
+        [string]$WarehouseSnapshotName,
+
+        [Parameter()]
+        [switch]$Raw
     )
 
     try {
@@ -96,14 +102,48 @@ function Get-FabricWarehouseSnapshot {
         }
 
         # Handle results
-        if ($matchedItems) {
-            Write-FabricLog -Message "Item(s) found matching the specified criteria." -Level Debug
-            return $matchedItems
-        }
-        else {
+        if (-not $matchedItems) {
             Write-FabricLog -Message "No item found matching the provided criteria." -Level Warning
             return $null
         }
+
+        if ($Raw) {
+            return $matchedItems
+        }
+
+        Write-FabricLog -Message "Item(s) found matching the specified criteria." -Level Debug
+
+        # Enrich with resolved workspace and capacity names
+        $workspaceName = $null
+        try {
+            $workspaceName = Resolve-FabricWorkspaceName -WorkspaceId $WorkspaceId
+        }
+        catch {
+            $workspaceName = $WorkspaceId
+            Write-FabricLog -Message "Failed to resolve workspace name for ID '$WorkspaceId': $($_.Exception.Message)" -Level Debug
+        }
+
+        $capacityName = $null
+        try {
+            $capacityId = Resolve-FabricCapacityIdFromWorkspace -WorkspaceId $WorkspaceId
+            if ($capacityId) {
+                $capacityName = Resolve-FabricCapacityName -CapacityId $capacityId
+            }
+        }
+        catch {
+            Write-FabricLog -Message "Failed to resolve capacity name for workspace ID '$WorkspaceId': $($_.Exception.Message)" -Level Debug
+        }
+
+        foreach ($item in $matchedItems) {
+            $item | Add-Member -NotePropertyName 'workspaceId'   -NotePropertyValue $WorkspaceId   -Force
+            $item | Add-Member -NotePropertyName 'WorkspaceName' -NotePropertyValue $workspaceName -Force
+            if ($null -ne $capacityName) {
+                $item | Add-Member -NotePropertyName 'CapacityName' -NotePropertyValue $capacityName -Force
+            }
+        }
+
+        $matchedItems | Add-FabricTypeName -TypeName 'MicrosoftFabric.WarehouseSnapshot'
+        return $matchedItems
     }
     catch {
         # Capture and log error details

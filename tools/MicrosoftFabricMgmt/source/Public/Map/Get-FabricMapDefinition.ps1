@@ -12,6 +12,9 @@
 .PARAMETER MapId
     (Mandatory) The unique identifier of the Map item whose definition needs to be retrieved.
 
+.PARAMETER Raw
+    If specified, returns the untouched API response.
+
 .EXAMPLE
     Get-FabricMapDefinition -WorkspaceId "12345" -MapId "67890"
 
@@ -34,7 +37,10 @@ function Get-FabricMapDefinition {
 
         [Parameter(Mandatory = $true)]
         [ValidateNotNullOrEmpty()]
-        [string]$MapId
+        [string]$MapId,
+
+        [Parameter()]
+        [switch]$Raw
     )
 
     try {
@@ -52,7 +58,13 @@ function Get-FabricMapDefinition {
             Headers = $script:FabricAuthContext.FabricHeaders
             Method = 'Post'
         }
-        Invoke-FabricAPIRequest @apiParams
+        $response = Invoke-FabricAPIRequest @apiParams
+
+        if ($Raw) {
+            return $response
+        }
+
+        $response
     }
     catch {
         # Capture and log error details

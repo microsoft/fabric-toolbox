@@ -12,6 +12,9 @@
 .PARAMETER GraphQuerySetId
     (Mandatory) The unique identifier of the Graph Query Set item whose definition needs to be retrieved.
 
+.PARAMETER Raw
+    If specified, returns the untouched API response.
+
 .EXAMPLE
     Get-FabricGraphQuerySetDefinition -WorkspaceId "12345" -GraphQuerySetId "67890"
 
@@ -34,7 +37,10 @@ function Get-FabricGraphQuerySetDefinition {
 
         [Parameter(Mandatory = $true)]
         [ValidateNotNullOrEmpty()]
-        [string]$GraphQuerySetId
+        [string]$GraphQuerySetId,
+
+        [Parameter()]
+        [switch]$Raw
     )
 
     try {
@@ -52,7 +58,13 @@ function Get-FabricGraphQuerySetDefinition {
             Headers = $script:FabricAuthContext.FabricHeaders
             Method = 'Post'
         }
-        Invoke-FabricAPIRequest @apiParams
+        $response = Invoke-FabricAPIRequest @apiParams
+
+        if ($Raw) {
+            return $response
+        }
+
+        $response
     }
     catch {
         # Capture and log error details

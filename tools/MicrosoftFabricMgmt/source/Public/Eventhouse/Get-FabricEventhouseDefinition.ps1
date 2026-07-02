@@ -15,6 +15,9 @@
 .PARAMETER EventhouseFormat
     The format in which to retrieve the Eventhouse definition. This parameter is optional.
 
+.PARAMETER Raw
+    If specified, returns the untouched API response.
+
 .EXAMPLE
      Get-FabricEventhouseDefinition -WorkspaceId "workspace-12345" -EventhouseId "eventhouse-67890"
     This example retrieves the definition of the Eventhouse with ID "eventhouse-67890" in the workspace with ID "workspace-12345".
@@ -44,7 +47,10 @@ function Get-FabricEventhouseDefinition {
 
         [Parameter(Mandatory = $false)]
         [ValidateNotNullOrEmpty()]
-        [string]$EventhouseFormat
+        [string]$EventhouseFormat,
+
+        [Parameter()]
+        [switch]$Raw
     )
     try {
         # Validate authentication
@@ -61,6 +67,10 @@ function Get-FabricEventhouseDefinition {
             Method = 'Post'
         }
         $response = Invoke-FabricAPIRequest @apiParams
+
+        if ($Raw) {
+            return $response
+        }
 
         # Return the API response
         Write-FabricLog -Message "Eventhouse '$EventhouseId' definition retrieved successfully!" -Level Debug

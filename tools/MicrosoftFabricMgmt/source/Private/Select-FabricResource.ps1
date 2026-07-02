@@ -7,9 +7,10 @@
     It handles mutual exclusivity of ID vs DisplayName filtering and provides consistent
     warning messages when resources are not found.
 
-    By default, returned objects are decorated with PSTypeNames for custom formatting
-    (showing Capacity Name, Workspace Name, etc. in table view). Use the -Raw switch
-    to instead add resolved name properties directly to the objects for export scenarios.
+    By default, returned objects are ENRICHED: resolved-name NoteProperties
+    (CapacityName, WorkspaceName) are attached directly to each object AND a PSTypeName
+    is added for the custom .ps1xml table view. Use the -Raw switch to return the
+    untouched API response with no added properties and no type decoration.
 
 .PARAMETER InputObject
     The collection of resources to filter (typically from an API response).
@@ -30,10 +31,10 @@
     Ignored when -Raw is specified.
 
 .PARAMETER Raw
-    When specified, adds resolved name properties (CapacityName, WorkspaceName) directly
-    to the output objects instead of using PSTypeName formatting. This is useful when
-    piping to Export-Csv, ConvertTo-Json, or other commands that need the resolved
-    names as actual properties rather than display-only formatting.
+    When specified, returns the untouched API response objects with NO added
+    resolved-name properties and NO type decoration. Use this when you need the exact
+    API payload. By default (without -Raw) the objects are enriched with CapacityName
+    and WorkspaceName NoteProperties, which are available to Export-Csv/ConvertTo-Json.
 
 .OUTPUTS
     System.Object[]
@@ -55,10 +56,15 @@
     Returns all lakehouses (no filtering).
 
 .EXAMPLE
-    Select-FabricResource -InputObject $items -ResourceType 'Lakehouse' -TypeName 'MicrosoftFabric.Lakehouse' -Raw
+    Select-FabricResource -InputObject $items -ResourceType 'Lakehouse' -TypeName 'MicrosoftFabric.Lakehouse'
 
-    Returns all lakehouses with CapacityName and WorkspaceName properties added directly
-    to each object, suitable for export to CSV or JSON.
+    Returns all lakehouses enriched with CapacityName and WorkspaceName NoteProperties
+    and decorated for the custom table view, suitable for display or export to CSV/JSON.
+
+.EXAMPLE
+    Select-FabricResource -InputObject $items -ResourceType 'Lakehouse' -Raw
+
+    Returns the untouched API objects with no added properties and no type decoration.
 
 .NOTES
     This function saves approximately 20 lines per Get-* function × ~50 functions = ~1,000 lines.
@@ -129,55 +135,56 @@ function Select-FabricResource {
         Write-FabricLog -Message "Found $(@($resultItems).Count) $ResourceType resource(s) with DisplayName: $DisplayName" -Level Debug
     }
 
-    # Apply Raw or TypeName decoration
-    if ($resultItems) {
-        if ($Raw) {
-            # Add resolved name properties directly to objects
-            foreach ($item in $resultItems) {
-                # Resolve CapacityName
-                $capacityName = $null
-                if ($item.capacityId) {
-                    try {
-                        $capacityName = Resolve-FabricCapacityName -CapacityId $item.capacityId
-                    }
-                    catch {
-                        $capacityName = $item.capacityId
-                    }
+    # Enrich by default: attach resolved-name NoteProperties AND type decoration.
+    # -Raw returns the untouched API response (no added names, no type decoration).
+    if ($resultItems -and -not $Raw) {
+        # Add resolved name properties directly to the objects so they are available
+        # for export (Export-Csv/ConvertTo-Json) as well as display.
+        foreach ($item in $resultItems) {
+            # Resolve CapacityName (directly, or cascaded from workspaceId)
+            $capacityName = $null
+            if ($item.capacityId) {
+                try {
+                    $capacityName = Resolve-FabricCapacityName -CapacityId $item.capacityId
                 }
-                elseif ($item.workspaceId) {
-                    try {
-                        $capacityId = Resolve-FabricCapacityIdFromWorkspace -WorkspaceId $item.workspaceId
-                        if ($capacityId) {
-                            $capacityName = Resolve-FabricCapacityName -CapacityId $capacityId
-                        }
-                    }
-                    catch {
-                        $capacityName = $null
-                    }
-                }
-
-                # Resolve WorkspaceName
-                $workspaceName = $null
-                if ($item.workspaceId) {
-                    try {
-                        $workspaceName = Resolve-FabricWorkspaceName -WorkspaceId $item.workspaceId
-                    }
-                    catch {
-                        $workspaceName = $item.workspaceId
-                    }
-                }
-
-                # Add properties to the object
-                if ($null -ne $capacityName) {
-                    $item | Add-Member -NotePropertyName 'CapacityName' -NotePropertyValue $capacityName -Force
-                }
-                if ($null -ne $workspaceName) {
-                    $item | Add-Member -NotePropertyName 'WorkspaceName' -NotePropertyValue $workspaceName -Force
+                catch {
+                    $capacityName = $item.capacityId
                 }
             }
+            elseif ($item.workspaceId) {
+                try {
+                    $capacityId = Resolve-FabricCapacityIdFromWorkspace -WorkspaceId $item.workspaceId
+                    if ($capacityId) {
+                        $capacityName = Resolve-FabricCapacityName -CapacityId $capacityId
+                    }
+                }
+                catch {
+                    $capacityName = $null
+                }
+            }
+
+            # Resolve WorkspaceName
+            $workspaceName = $null
+            if ($item.workspaceId) {
+                try {
+                    $workspaceName = Resolve-FabricWorkspaceName -WorkspaceId $item.workspaceId
+                }
+                catch {
+                    $workspaceName = $item.workspaceId
+                }
+            }
+
+            # Add properties to the object
+            if ($null -ne $capacityName) {
+                $item | Add-Member -NotePropertyName 'CapacityName' -NotePropertyValue $capacityName -Force
+            }
+            if ($null -ne $workspaceName) {
+                $item | Add-Member -NotePropertyName 'WorkspaceName' -NotePropertyValue $workspaceName -Force
+            }
         }
-        elseif ($TypeName) {
-            # Add type decoration for formatting
+
+        # Add type decoration so the custom .ps1xml table view applies on display.
+        if ($TypeName) {
             $resultItems | Add-FabricTypeName -TypeName $TypeName
         }
     }

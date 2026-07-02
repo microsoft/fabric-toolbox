@@ -17,6 +17,8 @@ Handles both synchronous and asynchronous operations, with detailed logging and 
 .PARAMETER KQLDatabaseFormat
 Specifies the format of the KQLDatabase definition. Currently, only 'ipynb' is supported.
 
+.PARAMETER Raw
+If specified, returns the untouched API response.
 
 .EXAMPLE
 Get-FabricKQLDatabaseDefinition -WorkspaceId "12345" -KQLDatabaseId "67890"
@@ -49,7 +51,10 @@ function Get-FabricKQLDatabaseDefinition {
 
         [Parameter(Mandatory = $false)]
         [ValidateNotNullOrEmpty()]
-        [string]$KQLDatabaseFormat
+        [string]$KQLDatabaseFormat,
+
+        [Parameter()]
+        [switch]$Raw
     )
     try {
         # Validate authentication token before proceeding.
@@ -71,6 +76,10 @@ function Get-FabricKQLDatabaseDefinition {
             Method = 'Post'
         }
         $response = Invoke-FabricAPIRequest @apiParams
+
+        if ($Raw) {
+            return $response
+        }
 
         # Return the API response
         Write-FabricLog -Message "KQLDatabase '$KQLDatabaseId' definition retrieved successfully!" -Level Debug

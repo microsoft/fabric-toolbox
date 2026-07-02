@@ -18,6 +18,9 @@ Handles both synchronous and asynchronous operations, with detailed logging and 
 Specifies the format of the notebook definition. Currently, only 'ipynb' is supported.
 Default: 'ipynb'.
 
+.PARAMETER Raw
+If specified, returns the untouched API response.
+
 .EXAMPLE
 Get-FabricNotebookDefinition -WorkspaceId "12345" -NotebookId "67890"
 
@@ -49,7 +52,10 @@ function Get-FabricNotebookDefinition {
         [Parameter(Mandatory = $false)]
         [ValidateNotNullOrEmpty()]
         [ValidateSet('ipynb', 'fabricGitSource')]
-        [string]$NotebookFormat = 'ipynb'
+        [string]$NotebookFormat = 'ipynb',
+
+        [Parameter()]
+        [switch]$Raw
     )
     try {
         Invoke-FabricAuthCheck -ThrowOnFailure
@@ -69,6 +75,10 @@ function Get-FabricNotebookDefinition {
             Method = 'Post'
         }
         $response = Invoke-FabricAPIRequest @apiParams
+
+        if ($Raw) {
+            return $response
+        }
 
         # Return the API response
         Write-FabricLog -Message "Notebook '$NotebookId' definition retrieved successfully!" -Level Debug

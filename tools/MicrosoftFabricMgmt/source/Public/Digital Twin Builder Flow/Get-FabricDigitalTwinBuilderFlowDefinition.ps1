@@ -12,6 +12,9 @@
 .PARAMETER DigitalTwinBuilderFlowId
     (Mandatory) The unique identifier of the Digital Twin Builder Flow item whose definition needs to be retrieved.
 
+.PARAMETER Raw
+    If specified, returns the untouched API response.
+
 .EXAMPLE
     Get-FabricDigitalTwinBuilderFlowDefinition -WorkspaceId "12345" -DigitalTwinBuilderFlowId "67890"
 
@@ -34,7 +37,10 @@ function Get-FabricDigitalTwinBuilderFlowDefinition {
 
         [Parameter(Mandatory = $true)]
         [ValidateNotNullOrEmpty()]
-        [string]$DigitalTwinBuilderFlowId
+        [string]$DigitalTwinBuilderFlowId,
+
+        [Parameter()]
+        [switch]$Raw
     )
 
     try {
@@ -52,7 +58,13 @@ function Get-FabricDigitalTwinBuilderFlowDefinition {
             Headers = $script:FabricAuthContext.FabricHeaders
             Method = 'Post'
         }
-        Invoke-FabricAPIRequest @apiParams
+        $response = Invoke-FabricAPIRequest @apiParams
+
+        if ($Raw) {
+            return $response
+        }
+
+        $response
     }
     catch {
         # Capture and log error details

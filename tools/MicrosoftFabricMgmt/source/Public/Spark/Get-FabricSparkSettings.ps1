@@ -9,6 +9,9 @@
 .PARAMETER WorkspaceId
     The unique identifier of the workspace from which to retrieve Spark settings. This parameter is mandatory.
 
+.PARAMETER Raw
+    If specified, returns the untouched API response.
+
 .EXAMPLE
     Get-FabricSparkSettings -WorkspaceId "workspace-12345"
     This example retrieves the Spark settings for the workspace with ID "workspace-12345".
@@ -28,7 +31,10 @@ function Get-FabricSparkSettings
         [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
         [ValidateNotNullOrEmpty()]
         [Alias('id')]
-        [string]$WorkspaceId
+        [string]$WorkspaceId,
+
+        [Parameter()]
+        [switch]$Raw
     )
 
     try
@@ -95,6 +101,10 @@ function Get-FabricSparkSettings
             # Step 8: Add data to the list
             if ($null -ne $response)
             {
+                if ($Raw)
+                {
+                    return $response
+                }
                 Write-FabricLog -Message "Adding data to the list" -Level Debug
                 $SparkSettings += $response
 

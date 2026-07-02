@@ -1,24 +1,26 @@
-﻿#Requires -Module @{ ModuleName="Pester"; ModuleVersion="5.0"}
+#Requires -Module @{ ModuleName="Pester"; ModuleVersion="5.0"}
 param(
     $ModuleName = "MicrosoftFabricMgmt",
-    $expectedParams = @(
-        "InputObject"
-        "Id"
-        "DisplayName"
-        "ResourceType"
-        "ProgressAction"
-        "Verbose"
-        "Debug"
-        "ErrorAction"
-        "WarningAction"
-        "InformationAction"
-        "InformationVariable"
-        "OutVariable"
-        "OutBuffer"
-        "PipelineVariable"
-        "ErrorVariable"
-        "WarningVariable"
-    )
+$expectedParams = @(
+    "InputObject"
+    "Id"
+    "DisplayName"
+    "ResourceType"
+    "TypeName"
+    "Raw"
+    "ProgressAction"
+    "Verbose"
+    "Debug"
+    "ErrorAction"
+    "WarningAction"
+    "InformationAction"
+    "InformationVariable"
+    "OutVariable"
+    "OutBuffer"
+    "PipelineVariable"
+    "ErrorVariable"
+    "WarningVariable"
+)
 )
 
 Describe "Select-FabricResource" -Tag "UnitTests" {

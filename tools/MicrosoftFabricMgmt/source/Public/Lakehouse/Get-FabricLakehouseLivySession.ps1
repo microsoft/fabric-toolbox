@@ -14,6 +14,9 @@ The Get-FabricLakehouseLivySession function queries the Fabric API to obtain Liv
 .PARAMETER LivyId
 (Optional) The ID of a specific Livy session to retrieve.
 
+.PARAMETER Raw
+If specified, returns the untouched API response with no added properties or type decoration.
+
 .EXAMPLE
 Get-FabricLakehouseLivySession -WorkspaceId "12345" -LakehouseId "67890"
 
@@ -44,7 +47,10 @@ function Get-FabricLakehouseLivySession {
 
         [Parameter(Mandatory = $false)]
         [ValidateNotNullOrEmpty()]
-        [string]$LivyId
+        [string]$LivyId,
+
+        [Parameter()]
+        [switch]$Raw
     )
     try {
         Invoke-FabricAuthCheck -ThrowOnFailure
@@ -78,14 +84,48 @@ function Get-FabricLakehouseLivySession {
         }
 
         # Handle results
-        if ($matchedItems) {
-            Write-FabricLog -Message "Item(s) found matching the specified criteria." -Level Debug
-            return $matchedItems
-        }
-        else {
+        if (-not $matchedItems) {
             Write-FabricLog -Message "No item found matching the provided criteria." -Level Warning
             return $null
         }
+
+        if ($Raw) {
+            return $matchedItems
+        }
+
+        Write-FabricLog -Message "Item(s) found matching the specified criteria." -Level Debug
+
+        # Enrich with resolved workspace and capacity names
+        $workspaceName = $null
+        try {
+            $workspaceName = Resolve-FabricWorkspaceName -WorkspaceId $WorkspaceId
+        }
+        catch {
+            $workspaceName = $WorkspaceId
+            Write-FabricLog -Message "Failed to resolve workspace name for ID '$WorkspaceId': $($_.Exception.Message)" -Level Debug
+        }
+
+        $capacityName = $null
+        try {
+            $capacityId = Resolve-FabricCapacityIdFromWorkspace -WorkspaceId $WorkspaceId
+            if ($capacityId) {
+                $capacityName = Resolve-FabricCapacityName -CapacityId $capacityId
+            }
+        }
+        catch {
+            Write-FabricLog -Message "Failed to resolve capacity name for workspace ID '$WorkspaceId': $($_.Exception.Message)" -Level Debug
+        }
+
+        foreach ($item in $matchedItems) {
+            $item | Add-Member -NotePropertyName 'workspaceId'   -NotePropertyValue $WorkspaceId   -Force
+            $item | Add-Member -NotePropertyName 'WorkspaceName' -NotePropertyValue $workspaceName -Force
+            if ($null -ne $capacityName) {
+                $item | Add-Member -NotePropertyName 'CapacityName' -NotePropertyValue $capacityName -Force
+            }
+        }
+
+        $matchedItems | Add-FabricTypeName -TypeName 'MicrosoftFabric.LivySession'
+        return $matchedItems
     }
     catch {
         # Capture and log error details

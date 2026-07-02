@@ -18,6 +18,9 @@
 .PARAMETER ParentPath
     The parent path to filter shortcuts. Optional.
 
+.PARAMETER Raw
+    If specified, returns the untouched API response with no added properties or type decoration.
+
 .EXAMPLE
     Get-FabricOneLakeShortcut -WorkspaceId "workspace-12345" -ItemId "item-67890"
     Retrieves all shortcuts for the specified OneLake item.
@@ -50,7 +53,10 @@ function Get-FabricOneLakeShortcut {
 
         [Parameter(Mandatory = $false)]
         [ValidateNotNullOrEmpty()]
-        [string]$ParentPath
+        [string]$ParentPath,
+
+        [Parameter()]
+        [switch]$Raw
     )
     try {
         Invoke-FabricAuthCheck -ThrowOnFailure
@@ -87,16 +93,49 @@ function Get-FabricOneLakeShortcut {
         }
 
         # Handle results
-        if ($matchedItems) {
-            Write-FabricLog -Message "Item(s) found matching the specified criteria." -Level Debug
-            # Add type decoration for custom formatting
-            $matchedItems | Add-FabricTypeName -TypeName 'MicrosoftFabric.OneLakeShortcut'
-            return $matchedItems
-        }
-        else {
+        if (-not $matchedItems) {
             Write-FabricLog -Message "No item found matching the provided criteria." -Level Warning
             return $null
         }
+
+        if ($Raw) {
+            return $matchedItems
+        }
+
+        Write-FabricLog -Message "Item(s) found matching the specified criteria." -Level Debug
+
+        # Enrich with resolved workspace and capacity names
+        $workspaceName = $null
+        try {
+            $workspaceName = Resolve-FabricWorkspaceName -WorkspaceId $WorkspaceId
+        }
+        catch {
+            $workspaceName = $WorkspaceId
+            Write-FabricLog -Message "Failed to resolve workspace name for ID '$WorkspaceId': $($_.Exception.Message)" -Level Debug
+        }
+
+        $capacityName = $null
+        try {
+            $capacityId = Resolve-FabricCapacityIdFromWorkspace -WorkspaceId $WorkspaceId
+            if ($capacityId) {
+                $capacityName = Resolve-FabricCapacityName -CapacityId $capacityId
+            }
+        }
+        catch {
+            Write-FabricLog -Message "Failed to resolve capacity name for workspace ID '$WorkspaceId': $($_.Exception.Message)" -Level Debug
+        }
+
+        foreach ($item in $matchedItems) {
+            $item | Add-Member -NotePropertyName 'workspaceId'   -NotePropertyValue $WorkspaceId   -Force
+            $item | Add-Member -NotePropertyName 'WorkspaceName' -NotePropertyValue $workspaceName -Force
+            if ($null -ne $capacityName) {
+                $item | Add-Member -NotePropertyName 'CapacityName' -NotePropertyValue $capacityName -Force
+            }
+        }
+
+        # Add type decoration for custom formatting
+        $matchedItems | Add-FabricTypeName -TypeName 'MicrosoftFabric.OneLakeShortcut'
+        return $matchedItems
     }
     catch {
         # Capture and log error details

@@ -19,6 +19,9 @@ The ID of the Warehouse for which to retrieve the connection string. This parame
 .PARAMETER PrivateLinkType
 (Optional) The type of private link to use for the connection string. Valid values are 'None' or 'Workspace'.
 
+.PARAMETER Raw
+If specified, returns the untouched API response.
+
 .EXAMPLE
 Get-FabricWarehouseConnectionString -WorkspaceId "workspace123" -WarehouseId "warehouse456"
 
@@ -49,7 +52,10 @@ function Get-FabricWarehouseConnectionString {
         [Parameter(Mandatory = $false)]
         [ValidateNotNullOrEmpty()]
         [ValidateSet('None', 'Workspace')]
-        [string]$PrivateLinkType
+        [string]$PrivateLinkType,
+
+        [Parameter()]
+        [switch]$Raw
     )
     try {
         Invoke-FabricAuthCheck -ThrowOnFailure
@@ -78,6 +84,10 @@ function Get-FabricWarehouseConnectionString {
             Method  = 'Get'
         }
         $dataItems = Invoke-FabricAPIRequest @apiParams
+
+        if ($Raw) {
+            return $dataItems
+        }
 
         # Immediately handle empty response
         if (-not $dataItems) {

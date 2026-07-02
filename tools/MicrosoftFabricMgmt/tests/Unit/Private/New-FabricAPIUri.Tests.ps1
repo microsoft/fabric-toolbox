@@ -1,25 +1,25 @@
 #Requires -Module @{ ModuleName="Pester"; ModuleVersion="5.0"}
 param(
     $ModuleName = "MicrosoftFabricMgmt",
-    $expectedParams = @(
-        "Resource"
-        "WorkspaceId"
-        "ItemId"
-        "Subresource"
-        "QueryParameters"
-        "ProgressAction"
-        "Verbose"
-        "Debug"
-        "ErrorAction"
-        "WarningAction"
-        "InformationAction"
-        "InformationVariable"
-        "OutVariable"
-        "OutBuffer"
-        "PipelineVariable"
-        "ErrorVariable"
-        "WarningVariable"
-    )
+$expectedParams = @(
+    "Resource"
+    "WorkspaceId"
+    "ItemId"
+    "Subresource"
+    "QueryParameters"
+    "ProgressAction"
+    "Verbose"
+    "Debug"
+    "ErrorAction"
+    "WarningAction"
+    "InformationAction"
+    "InformationVariable"
+    "OutVariable"
+    "OutBuffer"
+    "PipelineVariable"
+    "ErrorVariable"
+    "WarningVariable"
+)
 )
 
 Describe "New-FabricAPIUri" -Tag "UnitTests" {

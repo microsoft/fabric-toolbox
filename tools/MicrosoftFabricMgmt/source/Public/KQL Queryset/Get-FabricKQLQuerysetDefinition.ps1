@@ -16,6 +16,9 @@ Handles both synchronous and asynchronous operations, with detailed logging and 
 .PARAMETER KQLQuerysetFormat
 Specifies the format of the KQLQueryset definition.
 
+.PARAMETER Raw
+If specified, returns the untouched API response.
+
 .EXAMPLE
 Get-FabricKQLQuerysetDefinition -WorkspaceId "12345" -KQLQuerysetId "67890"
 
@@ -46,7 +49,10 @@ function Get-FabricKQLQuerysetDefinition {
 
         [Parameter(Mandatory = $false)]
         [ValidateNotNullOrEmpty()]
-        [string]$KQLQuerysetFormat
+        [string]$KQLQuerysetFormat,
+
+        [Parameter()]
+        [switch]$Raw
     )
     try {
         # Validate authentication token before proceeding.
@@ -68,6 +74,10 @@ function Get-FabricKQLQuerysetDefinition {
             Method = 'Post'
         }
         $response = Invoke-FabricAPIRequest @apiParams
+
+        if ($Raw) {
+            return $response
+        }
 
         Write-FabricLog -Message "KQLQueryset '$KQLQuerysetId' definition retrieved successfully!" -Level Debug
         return $response

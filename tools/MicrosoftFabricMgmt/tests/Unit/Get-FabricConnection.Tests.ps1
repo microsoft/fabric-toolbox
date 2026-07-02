@@ -4,6 +4,7 @@ param(
 $expectedParams = @(
     "ConnectionId"
     "ConnectionName"
+    "Raw"
     "ProgressAction"
     "Verbose"
     "Debug"

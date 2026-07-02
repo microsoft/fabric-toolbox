@@ -15,6 +15,9 @@
 .PARAMETER ReflexFormat
     The format in which to retrieve the Reflex definition. This parameter is optional.
 
+.PARAMETER Raw
+    If specified, returns the untouched API response.
+
 .EXAMPLE
     Get-FabricReflexDefinition -WorkspaceId "workspace-12345" -ReflexId "Reflex-67890"
     This example retrieves the definition of the Reflex with ID "Reflex-67890" in the workspace with ID "workspace-12345".
@@ -44,7 +47,10 @@ function Get-FabricReflexDefinition {
 
         [Parameter(Mandatory = $false)]
         [ValidateNotNullOrEmpty()]
-        [string]$ReflexFormat
+        [string]$ReflexFormat,
+
+        [Parameter()]
+        [switch]$Raw
     )
     try {
         Invoke-FabricAuthCheck -ThrowOnFailure
@@ -64,6 +70,10 @@ function Get-FabricReflexDefinition {
             Method = 'Post'
         }
         $response = Invoke-FabricAPIRequest @apiParams
+
+        if ($Raw) {
+            return $response
+        }
 
         # Return the API response
         Write-FabricLog -Message "Reflex '$ReflexId' definition retrieved successfully!" -Level Debug

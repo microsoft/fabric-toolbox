@@ -289,6 +289,74 @@ function Convert-FabricRequestBody {
     }
 }
 #EndRegion '.\Private\Convert-FabricRequestBody.ps1' 76
+#Region '.\Private\Get-FabricRetryDelay.ps1' -1
+
+<#
+.SYNOPSIS
+    Computes the number of seconds to wait before retrying a transient API failure.
+
+.DESCRIPTION
+    Honors an API-provided Retry-After header when present; otherwise falls back to
+    exponential backoff with sub-second jitter. The result is clamped to a sane range
+    so a missing, zero, or hostile Retry-After value cannot hang the caller.
+
+    This logic is factored out of Invoke-FabricAPIRequest so it can be unit tested
+    directly (the backoff path previously threw an OverflowException).
+
+.PARAMETER ResponseHeader
+    Optional hashtable of response headers. If it contains a 'Retry-After' entry
+    (int or single-element array), that value is used.
+
+.PARAMETER RetryCount
+    The current retry attempt number (1-based), used for the exponential backoff exponent.
+
+.PARAMETER BackoffMultiplier
+    Base for the exponential backoff (delay = BackoffMultiplier ^ RetryCount). Default 2.
+
+.PARAMETER MaxDelaySeconds
+    Upper clamp for the returned delay. Default 120.
+
+.OUTPUTS
+    System.Int32 - seconds to wait (>= 1, <= MaxDelaySeconds).
+#>
+function Get-FabricRetryDelay {
+    [CmdletBinding()]
+    [OutputType([int])]
+    param(
+        [Parameter()]
+        [hashtable]$ResponseHeader,
+
+        [Parameter(Mandatory = $true)]
+        [int]$RetryCount,
+
+        [Parameter()]
+        [int]$BackoffMultiplier = 2,
+
+        [Parameter()]
+        [int]$MaxDelaySeconds = 120
+    )
+
+    # Use $null check (not truthiness) so an explicit Retry-After of 0 is honored (then clamped).
+    $delay = if ($ResponseHeader -and $null -ne $ResponseHeader['Retry-After']) {
+        $retryAfterValue = $ResponseHeader['Retry-After']
+        if ($retryAfterValue -is [array]) { [int]$retryAfterValue[0] } else { [int]$retryAfterValue }
+    }
+    else {
+        # Exponential backoff with sub-second jitter.
+        # NOTE: do NOT seed Get-Random with (Get-Date).Ticks - casting the Int64 tick
+        # count to [int] overflows and throws, which previously broke this path.
+        $baseDelay = [Math]::Pow($BackoffMultiplier, $RetryCount)
+        $jitterSeconds = (Get-Random -Minimum 0 -Maximum 1000) / 1000.0
+        [int][Math]::Ceiling($baseDelay + $jitterSeconds)
+    }
+
+    # Clamp so a missing/zero/hostile Retry-After can't hang (or busy-loop) the caller.
+    if ($delay -lt 1) { $delay = 1 }
+    if ($delay -gt $MaxDelaySeconds) { $delay = $MaxDelaySeconds }
+
+    return $delay
+}
+#EndRegion '.\Private\Get-FabricRetryDelay.ps1' 66
 #Region '.\Private\Get-FileDefinitionPart.ps1' -1
 
 <#
@@ -569,10 +637,14 @@ function Invoke-TokenRefresh {
     The base resource type (e.g., 'workspaces', 'capacities', 'items').
 
 .PARAMETER WorkspaceId
-    Optional workspace GUID. If provided, will be included in the URI path.
+    Optional GUID for the primary resource id that follows -Resource in the path
+    (e.g. the workspace id in /workspaces/{id}, or a connection id in
+    /connections/{id}). Aliased as -ResourceId for non-workspace resources.
 
 .PARAMETER ItemId
-    Optional item GUID. If provided, will be included in the URI path after workspace.
+    Optional leaf item GUID. If provided, it is placed LAST in the path (after any
+    -Subresource), e.g. /workspaces/{workspaceId}/items/{itemId} or
+    /connections/{connectionId}/roleAssignments/{itemId}.
 
 .PARAMETER Subresource
     Optional subresource path (e.g., 'users', 'roleAssignments', 'definition').
@@ -616,6 +688,7 @@ function New-FabricAPIUri {
         [string]$Resource,
 
         [Parameter()]
+        [Alias('ResourceId')]
         [string]$WorkspaceId,
 
         [Parameter()]
@@ -668,7 +741,7 @@ function New-FabricAPIUri {
     Write-FabricLog -Message "Constructed API URI: $uri" -Level Debug
     return $uri
 }
-#EndRegion '.\Private\New-FabricAPIUri.ps1' 112
+#EndRegion '.\Private\New-FabricAPIUri.ps1' 117
 #Region '.\Private\Select-FabricResource.ps1' -1
 
 <#
@@ -680,9 +753,10 @@ function New-FabricAPIUri {
     It handles mutual exclusivity of ID vs DisplayName filtering and provides consistent
     warning messages when resources are not found.
 
-    By default, returned objects are decorated with PSTypeNames for custom formatting
-    (showing Capacity Name, Workspace Name, etc. in table view). Use the -Raw switch
-    to instead add resolved name properties directly to the objects for export scenarios.
+    By default, returned objects are ENRICHED: resolved-name NoteProperties
+    (CapacityName, WorkspaceName) are attached directly to each object AND a PSTypeName
+    is added for the custom .ps1xml table view. Use the -Raw switch to return the
+    untouched API response with no added properties and no type decoration.
 
 .PARAMETER InputObject
     The collection of resources to filter (typically from an API response).
@@ -703,10 +777,10 @@ function New-FabricAPIUri {
     Ignored when -Raw is specified.
 
 .PARAMETER Raw
-    When specified, adds resolved name properties (CapacityName, WorkspaceName) directly
-    to the output objects instead of using PSTypeName formatting. This is useful when
-    piping to Export-Csv, ConvertTo-Json, or other commands that need the resolved
-    names as actual properties rather than display-only formatting.
+    When specified, returns the untouched API response objects with NO added
+    resolved-name properties and NO type decoration. Use this when you need the exact
+    API payload. By default (without -Raw) the objects are enriched with CapacityName
+    and WorkspaceName NoteProperties, which are available to Export-Csv/ConvertTo-Json.
 
 .OUTPUTS
     System.Object[]
@@ -728,10 +802,15 @@ function New-FabricAPIUri {
     Returns all lakehouses (no filtering).
 
 .EXAMPLE
-    Select-FabricResource -InputObject $items -ResourceType 'Lakehouse' -TypeName 'MicrosoftFabric.Lakehouse' -Raw
+    Select-FabricResource -InputObject $items -ResourceType 'Lakehouse' -TypeName 'MicrosoftFabric.Lakehouse'
 
-    Returns all lakehouses with CapacityName and WorkspaceName properties added directly
-    to each object, suitable for export to CSV or JSON.
+    Returns all lakehouses enriched with CapacityName and WorkspaceName NoteProperties
+    and decorated for the custom table view, suitable for display or export to CSV/JSON.
+
+.EXAMPLE
+    Select-FabricResource -InputObject $items -ResourceType 'Lakehouse' -Raw
+
+    Returns the untouched API objects with no added properties and no type decoration.
 
 .NOTES
     This function saves approximately 20 lines per Get-* function × ~50 functions = ~1,000 lines.
@@ -802,62 +881,63 @@ function Select-FabricResource {
         Write-FabricLog -Message "Found $(@($resultItems).Count) $ResourceType resource(s) with DisplayName: $DisplayName" -Level Debug
     }
 
-    # Apply Raw or TypeName decoration
-    if ($resultItems) {
-        if ($Raw) {
-            # Add resolved name properties directly to objects
-            foreach ($item in $resultItems) {
-                # Resolve CapacityName
-                $capacityName = $null
-                if ($item.capacityId) {
-                    try {
-                        $capacityName = Resolve-FabricCapacityName -CapacityId $item.capacityId
-                    }
-                    catch {
-                        $capacityName = $item.capacityId
-                    }
+    # Enrich by default: attach resolved-name NoteProperties AND type decoration.
+    # -Raw returns the untouched API response (no added names, no type decoration).
+    if ($resultItems -and -not $Raw) {
+        # Add resolved name properties directly to the objects so they are available
+        # for export (Export-Csv/ConvertTo-Json) as well as display.
+        foreach ($item in $resultItems) {
+            # Resolve CapacityName (directly, or cascaded from workspaceId)
+            $capacityName = $null
+            if ($item.capacityId) {
+                try {
+                    $capacityName = Resolve-FabricCapacityName -CapacityId $item.capacityId
                 }
-                elseif ($item.workspaceId) {
-                    try {
-                        $capacityId = Resolve-FabricCapacityIdFromWorkspace -WorkspaceId $item.workspaceId
-                        if ($capacityId) {
-                            $capacityName = Resolve-FabricCapacityName -CapacityId $capacityId
-                        }
-                    }
-                    catch {
-                        $capacityName = $null
-                    }
-                }
-
-                # Resolve WorkspaceName
-                $workspaceName = $null
-                if ($item.workspaceId) {
-                    try {
-                        $workspaceName = Resolve-FabricWorkspaceName -WorkspaceId $item.workspaceId
-                    }
-                    catch {
-                        $workspaceName = $item.workspaceId
-                    }
-                }
-
-                # Add properties to the object
-                if ($null -ne $capacityName) {
-                    $item | Add-Member -NotePropertyName 'CapacityName' -NotePropertyValue $capacityName -Force
-                }
-                if ($null -ne $workspaceName) {
-                    $item | Add-Member -NotePropertyName 'WorkspaceName' -NotePropertyValue $workspaceName -Force
+                catch {
+                    $capacityName = $item.capacityId
                 }
             }
+            elseif ($item.workspaceId) {
+                try {
+                    $capacityId = Resolve-FabricCapacityIdFromWorkspace -WorkspaceId $item.workspaceId
+                    if ($capacityId) {
+                        $capacityName = Resolve-FabricCapacityName -CapacityId $capacityId
+                    }
+                }
+                catch {
+                    $capacityName = $null
+                }
+            }
+
+            # Resolve WorkspaceName
+            $workspaceName = $null
+            if ($item.workspaceId) {
+                try {
+                    $workspaceName = Resolve-FabricWorkspaceName -WorkspaceId $item.workspaceId
+                }
+                catch {
+                    $workspaceName = $item.workspaceId
+                }
+            }
+
+            # Add properties to the object
+            if ($null -ne $capacityName) {
+                $item | Add-Member -NotePropertyName 'CapacityName' -NotePropertyValue $capacityName -Force
+            }
+            if ($null -ne $workspaceName) {
+                $item | Add-Member -NotePropertyName 'WorkspaceName' -NotePropertyValue $workspaceName -Force
+            }
         }
-        elseif ($TypeName) {
-            # Add type decoration for formatting
+
+        # Add type decoration so the custom .ps1xml table view applies on display.
+        if ($TypeName) {
             $resultItems | Add-FabricTypeName -TypeName $TypeName
         }
     }
 
     return $resultItems
 }
-#EndRegion '.\Private\Select-FabricResource.ps1' 187
+#EndRegion '.\Private\Select-FabricResource.ps1' 194
 #Region '.\Private\Test-TokenExpired.ps1' -1
 
 <#
@@ -1979,8 +2059,18 @@ function Get-FabricAdminCapacityUser {
                 return $response
             }
 
+            # Resolve the capacity display name once (cached after first lookup)
+            $capacityName = $CapacityId
+            try {
+                $capacityName = Resolve-FabricCapacityName -CapacityId $CapacityId
+            }
+            catch {
+                Write-FabricLog -Message "Failed to resolve capacity name for ID '$CapacityId': $($_.Exception.Message)" -Level Debug
+            }
+
             foreach ($user in $response) {
                 $user | Add-Member -NotePropertyName 'capacityId' -NotePropertyValue $CapacityId -Force
+                $user | Add-Member -NotePropertyName 'CapacityName' -NotePropertyValue $capacityName -Force
             }
             $response | Add-FabricTypeName -TypeName 'MicrosoftFabric.AdminCapacityUser'
 
@@ -1992,7 +2082,7 @@ function Get-FabricAdminCapacityUser {
         }
     }
 }
-#EndRegion '.\Public\Admin\Get-FabricAdminCapacityUser.ps1' 111
+#EndRegion '.\Public\Admin\Get-FabricAdminCapacityUser.ps1' 121
 #Region '.\Public\Admin\Get-FabricAdminDashboard.ps1' -1
 
 <#
@@ -2829,9 +2919,19 @@ function Get-FabricAdminDataflowUpstream {
                 return $response
             }
 
+            # Resolve the workspace display name once (cached after first lookup)
+            $workspaceName = $WorkspaceId
+            try {
+                $workspaceName = Resolve-FabricWorkspaceName -WorkspaceId $WorkspaceId
+            }
+            catch {
+                Write-FabricLog -Message "Failed to resolve workspace name for ID '$WorkspaceId': $($_.Exception.Message)" -Level Debug
+            }
+
             foreach ($dataflow in $response) {
                 $dataflow | Add-Member -NotePropertyName 'workspaceId' -NotePropertyValue $WorkspaceId -Force
                 $dataflow | Add-Member -NotePropertyName 'dataflowId' -NotePropertyValue $DataflowId -Force
+                $dataflow | Add-Member -NotePropertyName 'WorkspaceName' -NotePropertyValue $workspaceName -Force
             }
             $response | Add-FabricTypeName -TypeName 'MicrosoftFabric.AdminDataflowUpstream'
 
@@ -2843,7 +2943,7 @@ function Get-FabricAdminDataflowUpstream {
         }
     }
 }
-#EndRegion '.\Public\Admin\Get-FabricAdminDataflowUpstream.ps1' 119
+#EndRegion '.\Public\Admin\Get-FabricAdminDataflowUpstream.ps1' 129
 #Region '.\Public\Admin\Get-FabricAdminDataflowUser.ps1' -1
 
 <#
@@ -2961,39 +3061,85 @@ function Get-FabricAdminDataflowUser {
 
 <#
 .SYNOPSIS
-    Gets Power BI datasets for the organization.
+    Gets Power BI datasets for the organization and enriches them with resolved names.
 
 .DESCRIPTION
-    The Get-FabricAdminDataset cmdlet retrieves Power BI datasets using the admin API.
+    The Get-FabricAdminDataset cmdlet retrieves Power BI datasets using the admin API
+    and enriches each returned object with two additional properties:
+
+    - DatasetName: a promoted copy of the dataset's name property for easy display
+    - WorkspaceName: the human-readable workspace name resolved from the workspaceId
+      using the caching infrastructure (Resolve-FabricWorkspaceName)
+
+    This means the objects passed down the pipeline carry all the context needed for
+    readable output, CSV export, or further filtering — without relying on the
+    ps1xml format file.
+
+    Pass -Raw to suppress enrichment and receive the unmodified API response. This
+    is also used internally by Resolve-FabricDatasetName to avoid circular enrichment.
 
 .PARAMETER DatasetId
-    Optional. Returns only the dataset matching this ID.
+    Optional. Returns only the dataset matching this ID. Can be combined with
+    WorkspaceId to scope the lookup to a specific workspace.
 
 .PARAMETER WorkspaceId
-    Optional. Get datasets from a specific workspace.
+    Optional. Returns only datasets belonging to this workspace. Can be combined
+    with DatasetId to retrieve a single dataset within a workspace.
 
 .PARAMETER Filter
-    Optional. OData filter expression.
+    Optional. OData filter expression applied server-side (e.g. "isRefreshable eq true").
 
 .PARAMETER Top
-    Optional. Maximum number of items to return.
+    Optional. Maximum number of datasets to return (1–5000).
 
 .PARAMETER Skip
-    Optional. Number of items to skip.
+    Optional. Number of datasets to skip before returning results (for paging).
 
 .PARAMETER Raw
-    Optional. Returns raw API response.
+    Optional. Returns the unmodified API response without adding DatasetName or
+    WorkspaceName properties. Useful for export scenarios or when called internally
+    by name-resolution functions.
 
 .EXAMPLE
     Get-FabricAdminDataset
 
-    Lists all datasets in the tenant.
+    Lists all datasets in the tenant with DatasetName and WorkspaceName resolved.
+
+.EXAMPLE
+    Get-FabricAdminDataset -WorkspaceId "12345678-1234-1234-1234-123456789012"
+
+    Lists all datasets in the specified workspace with enriched names.
+
+.EXAMPLE
+    Get-FabricAdminDataset -DatasetId "abcdef12-abcd-abcd-abcd-abcdef123456"
+
+    Returns the single dataset with that ID, enriched with DatasetName and WorkspaceName.
+
+.EXAMPLE
+    Get-FabricAdminDataset -Filter "isRefreshable eq true" -Top 100
+
+    Returns up to 100 refreshable datasets, enriched.
+
+.EXAMPLE
+    Get-FabricAdminDataset -Raw | Export-Csv datasets.csv -NoTypeInformation
+
+    Exports raw dataset data to CSV without any enrichment overhead.
+
+.OUTPUTS
+    System.Object
+    Dataset objects with all API-returned properties plus DatasetName and WorkspaceName.
 
 .NOTES
-    - Uses the Power BI Admin API: https://api.powerbi.com/v1.0/myorg/admin/datasets
-    - Requires Fabric Administrator permissions.
+    - API Endpoints:
+        GET https://api.powerbi.com/v1.0/myorg/admin/datasets
+        GET https://api.powerbi.com/v1.0/myorg/admin/datasets/{datasetId}
+        GET https://api.powerbi.com/v1.0/myorg/admin/groups/{groupId}/datasets
+        GET https://api.powerbi.com/v1.0/myorg/admin/groups/{groupId}/datasets/{datasetId}
+    - Requires: Fabric Administrator permissions
+    - Scope: Tenant.Read.All or Tenant.ReadWrite.All
+    - Rate limit: max 50 requests/hour or 5 requests/minute per tenant
 
-    Author: Claude AI
+    Author: Rob Sewell
 #>
 function Get-FabricAdminDataset {
     [CmdletBinding()]
@@ -3028,6 +3174,7 @@ function Get-FabricAdminDataset {
 
             $powerBIAdminBaseUrl = "https://api.powerbi.com/v1.0/myorg"
 
+            # Determine the correct endpoint based on supplied parameters
             if ($WorkspaceId -and $DatasetId) {
                 $apiEndpointURI = "$powerBIAdminBaseUrl/admin/groups/$WorkspaceId/datasets/$DatasetId"
             }
@@ -3035,6 +3182,7 @@ function Get-FabricAdminDataset {
                 $apiEndpointURI = "$powerBIAdminBaseUrl/admin/groups/$WorkspaceId/datasets"
             }
             elseif ($DatasetId) {
+                # Single dataset by ID — handled separately (no query params, different response shape)
                 $apiEndpointURI = "$powerBIAdminBaseUrl/admin/datasets/$DatasetId"
                 Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
 
@@ -3045,19 +3193,23 @@ function Get-FabricAdminDataset {
                 }
                 $response = Invoke-FabricAPIRequest @apiParams
 
-                if ($response) {
-                    if ($Raw) {
-                        return $response
-                    }
-                    $response.PSObject.TypeNames.Insert(0, 'MicrosoftFabric.AdminDataset')
+                if (-not $response) {
+                    return $null
+                }
+
+                if ($Raw) {
                     return $response
                 }
-                return $null
+
+                Add-FabricDatasetProperties -Dataset $response
+                $response | Add-FabricTypeName -TypeName 'MicrosoftFabric.AdminDataset'
+                return $response
             }
             else {
                 $apiEndpointURI = "$powerBIAdminBaseUrl/admin/datasets"
             }
 
+            # Build optional OData query string
             $queryParams = @()
             if ($Filter) {
                 $queryParams += "`$filter=$([System.Uri]::EscapeDataString($Filter))"
@@ -3087,7 +3239,16 @@ function Get-FabricAdminDataset {
                 return $null
             }
 
-            return Select-FabricResource -InputObject $response -ResourceType 'AdminDataset' -TypeName 'MicrosoftFabric.AdminDataset' -Raw:$Raw
+            if ($Raw) {
+                return $response
+            }
+
+            foreach ($dataset in $response) {
+                Add-FabricDatasetProperties -Dataset $dataset
+            }
+
+            $response | Add-FabricTypeName -TypeName 'MicrosoftFabric.AdminDataset'
+            $response
         }
         catch {
             $errorDetails = $_.Exception.Message
@@ -3095,7 +3256,33 @@ function Get-FabricAdminDataset {
         }
     }
 }
-#EndRegion '.\Public\Admin\Get-FabricAdminDataset.ps1' 137
+
+# Internal helper — adds DatasetName and WorkspaceName directly to the dataset object.
+# Kept in the same file so it stays co-located with the function it supports.
+function Add-FabricDatasetProperties {
+    [CmdletBinding()]
+    param(
+        [Parameter(Mandatory)]
+        [object]$Dataset
+    )
+
+    # Promote 'name' as DatasetName for consistency with other enriched objects
+    $Dataset | Add-Member -NotePropertyName 'DatasetName' -NotePropertyValue $Dataset.name -Force
+
+    # Resolve and attach the workspace display name (cached after first lookup)
+    if ($Dataset.workspaceId) {
+        $workspaceName = $null
+        try {
+            $workspaceName = Resolve-FabricWorkspaceName -WorkspaceId $Dataset.workspaceId
+        }
+        catch {
+            $workspaceName = $Dataset.workspaceId
+            Write-FabricLog -Message "Failed to resolve workspace name for ID '$($Dataset.workspaceId)': $($_.Exception.Message)" -Level Debug
+        }
+        $Dataset | Add-Member -NotePropertyName 'WorkspaceName' -NotePropertyValue $workspaceName -Force
+    }
+}
+#EndRegion '.\Public\Admin\Get-FabricAdminDataset.ps1' 224
 #Region '.\Public\Admin\Get-FabricAdminDatasetDataflowLink.ps1' -1
 
 <#
@@ -3195,8 +3382,18 @@ function Get-FabricAdminDatasetDataflowLink {
                 return $response
             }
 
+            # Resolve the workspace display name once (cached after first lookup)
+            $workspaceName = $WorkspaceId
+            try {
+                $workspaceName = Resolve-FabricWorkspaceName -WorkspaceId $WorkspaceId
+            }
+            catch {
+                Write-FabricLog -Message "Failed to resolve workspace name for ID '$WorkspaceId': $($_.Exception.Message)" -Level Debug
+            }
+
             foreach ($link in $response) {
                 $link | Add-Member -NotePropertyName 'workspaceId' -NotePropertyValue $WorkspaceId -Force
+                $link | Add-Member -NotePropertyName 'WorkspaceName' -NotePropertyValue $workspaceName -Force
             }
             $response | Add-FabricTypeName -TypeName 'MicrosoftFabric.AdminDatasetDataflowLink'
 
@@ -3208,41 +3405,69 @@ function Get-FabricAdminDatasetDataflowLink {
         }
     }
 }
-#EndRegion '.\Public\Admin\Get-FabricAdminDatasetDataflowLink.ps1' 111
+#EndRegion '.\Public\Admin\Get-FabricAdminDatasetDataflowLink.ps1' 121
 #Region '.\Public\Admin\Get-FabricAdminDatasetDatasource.ps1' -1
 
 <#
 .SYNOPSIS
-    Gets datasources for a dataset using the Power BI admin API.
+    Gets datasources for a Power BI dataset using the admin API, enriched with resolved names.
 
 .DESCRIPTION
-    The Get-FabricAdminDatasetDatasource cmdlet retrieves datasources for a specific dataset using the admin API.
+    The Get-FabricAdminDatasetDatasource cmdlet retrieves all datasources associated with
+    a specific Power BI dataset using the admin API, then enriches each returned object
+    with four additional properties:
+
+    - datasetId:    the dataset ID that owns these datasources (input parameter)
+    - DatasetName:  resolved via Resolve-FabricDatasetName (cached)
+    - WorkspaceName: resolved via Resolve-FabricWorkspaceName using the workspace ID
+                     cross-populated into cache by Resolve-FabricDatasetName (cached)
+    - GatewayName:  resolved via Resolve-FabricGatewayName for each unique gatewayId
+                    present on the datasource (cached)
+
+    All name resolution uses PSFramework-backed caching, so repeated calls for the
+    same dataset, workspace, or gateway incur no additional API cost.
+
+    Pass -Raw to suppress all enrichment and receive the unmodified API response.
 
 .PARAMETER DatasetId
-    Required. The dataset ID to get datasources for.
-
-.PARAMETER Filter
-    Optional. OData filter expression.
-
-.PARAMETER Top
-    Optional. Maximum number of items to return.
-
-.PARAMETER Skip
-    Optional. Number of items to skip.
+    Required. The ID (GUID) of the dataset whose datasources should be retrieved.
+    Accepts pipeline input by property name, making it compatible with the output
+    of Get-FabricAdminDataset.
 
 .PARAMETER Raw
-    Optional. Returns raw API response.
+    Optional. Returns the unmodified API response without adding any enrichment
+    properties. Useful for export scenarios.
 
 .EXAMPLE
-    Get-FabricAdminDatasetDatasource -DatasetId "dataset123"
+    Get-FabricAdminDatasetDatasource -DatasetId "abcdef12-abcd-abcd-abcd-abcdef123456"
 
-    Lists all datasources for the specified dataset.
+    Returns all datasources for the dataset, enriched with DatasetName, WorkspaceName,
+    and GatewayName.
+
+.EXAMPLE
+    Get-FabricAdminDataset | Get-FabricAdminDatasetDatasource
+
+    Retrieves all datasets in the tenant and pipes them to get their datasources.
+    Name resolution is cached so each workspace and gateway is only looked up once.
+
+.EXAMPLE
+    Get-FabricAdminDatasetDatasource -DatasetId "abcdef12-abcd-abcd-abcd-abcdef123456" -Raw
+
+    Returns raw datasource data without any enrichment.
+
+.OUTPUTS
+    System.Object
+    Datasource objects with all API-returned properties plus datasetId, DatasetName,
+    WorkspaceName, and GatewayName.
 
 .NOTES
-    - Uses the Power BI Admin API: https://api.powerbi.com/v1.0/myorg/admin/datasets/{datasetId}/datasources
-    - Requires Fabric Administrator permissions.
+    - API Endpoint:
+        GET https://api.powerbi.com/v1.0/myorg/admin/datasets/{datasetId}/datasources
+    - Requires: Fabric Administrator permissions
+    - Scope: Tenant.Read.All or Tenant.ReadWrite.All
+    - Rate limit: max 300 requests/hour per tenant
 
-    Author: Claude AI
+    Author: Rob Sewell
 #>
 function Get-FabricAdminDatasetDatasource {
     [CmdletBinding()]
@@ -3251,18 +3476,6 @@ function Get-FabricAdminDatasetDatasource {
         [ValidateNotNullOrEmpty()]
         [Alias('id')]
         [string]$DatasetId,
-
-        [Parameter(Mandatory = $false)]
-        [ValidateNotNullOrEmpty()]
-        [string]$Filter,
-
-        [Parameter(Mandatory = $false)]
-        [ValidateRange(1, 5000)]
-        [int]$Top,
-
-        [Parameter(Mandatory = $false)]
-        [ValidateRange(0, [int]::MaxValue)]
-        [int]$Skip,
 
         [Parameter()]
         [switch]$Raw
@@ -3273,22 +3486,7 @@ function Get-FabricAdminDatasetDatasource {
             Invoke-FabricAuthCheck -ThrowOnFailure
 
             $powerBIAdminBaseUrl = "https://api.powerbi.com/v1.0/myorg"
-
-            $queryParams = @()
-            if ($Filter) {
-                $queryParams += "`$filter=$([System.Uri]::EscapeDataString($Filter))"
-            }
-            if ($Top) {
-                $queryParams += "`$top=$Top"
-            }
-            if ($Skip) {
-                $queryParams += "`$skip=$Skip"
-            }
-
             $apiEndpointURI = "$powerBIAdminBaseUrl/admin/datasets/$DatasetId/datasources"
-            if ($queryParams.Count -gt 0) {
-                $apiEndpointURI = "$apiEndpointURI`?$($queryParams -join '&')"
-            }
 
             Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
 
@@ -3300,7 +3498,7 @@ function Get-FabricAdminDatasetDatasource {
             $response = Invoke-FabricAPIRequest @apiParams
 
             if (-not $response) {
-                Write-FabricLog -Message "No dataset datasources returned." -Level Warning
+                Write-FabricLog -Message "No datasources returned for dataset '$DatasetId'." -Level Warning
                 return $null
             }
 
@@ -3308,20 +3506,63 @@ function Get-FabricAdminDatasetDatasource {
                 return $response
             }
 
-            foreach ($datasource in $response) {
-                $datasource | Add-Member -NotePropertyName 'datasetId' -NotePropertyValue $DatasetId -Force
+            # Resolve dataset name (also cross-populates DatasetWorkspaceId cache)
+            $datasetName = $null
+            try {
+                $datasetName = Resolve-FabricDatasetName -DatasetId $DatasetId
             }
-            $response | Add-FabricTypeName -TypeName 'MicrosoftFabric.AdminDatasetDatasource'
+            catch {
+                $datasetName = $DatasetId
+                Write-FabricLog -Message "Failed to resolve dataset name for ID '$DatasetId': $($_.Exception.Message)" -Level Debug
+            }
 
-            return $response
+            # Retrieve the workspace ID from cache (cross-populated by Resolve-FabricDatasetName)
+            $workspaceId = Get-PSFConfigValue -FullName "MicrosoftFabricMgmt.Cache.DatasetWorkspaceId_$DatasetId" -Fallback $null
+
+            $workspaceName = $null
+            if ($workspaceId) {
+                try {
+                    $workspaceName = Resolve-FabricWorkspaceName -WorkspaceId $workspaceId
+                }
+                catch {
+                    $workspaceName = $workspaceId
+                    Write-FabricLog -Message "Failed to resolve workspace name for ID '$workspaceId': $($_.Exception.Message)" -Level Debug
+                }
+            }
+
+            foreach ($datasource in $response) {
+                # Stamp dataset context onto each datasource
+                $datasource | Add-Member -NotePropertyName 'datasetId'    -NotePropertyValue $DatasetId   -Force
+                $datasource | Add-Member -NotePropertyName 'DatasetName'  -NotePropertyValue $datasetName  -Force
+
+                if ($null -ne $workspaceName) {
+                    $datasource | Add-Member -NotePropertyName 'WorkspaceName' -NotePropertyValue $workspaceName -Force
+                }
+
+                # Resolve gateway name if this datasource is bound to a gateway
+                if ($datasource.gatewayId) {
+                    $gatewayName = $null
+                    try {
+                        $gatewayName = Resolve-FabricGatewayName -GatewayId $datasource.gatewayId
+                    }
+                    catch {
+                        $gatewayName = $datasource.gatewayId
+                        Write-FabricLog -Message "Failed to resolve gateway name for ID '$($datasource.gatewayId)': $($_.Exception.Message)" -Level Debug
+                    }
+                    $datasource | Add-Member -NotePropertyName 'GatewayName' -NotePropertyValue $gatewayName -Force
+                }
+            }
+
+            $response | Add-FabricTypeName -TypeName 'MicrosoftFabric.AdminDatasetDatasource'
+            $response
         }
         catch {
             $errorDetails = $_.Exception.Message
-            Write-FabricLog -Message "Failed to retrieve dataset datasources. Error: $errorDetails" -Level Error
+            Write-FabricLog -Message "Failed to retrieve datasources for dataset '$DatasetId'. Error: $errorDetails" -Level Error
         }
     }
 }
-#EndRegion '.\Public\Admin\Get-FabricAdminDatasetDatasource.ps1' 111
+#EndRegion '.\Public\Admin\Get-FabricAdminDatasetDatasource.ps1' 155
 #Region '.\Public\Admin\Get-FabricAdminDatasetUser.ps1' -1
 
 <#
@@ -3421,8 +3662,18 @@ function Get-FabricAdminDatasetUser {
                 return $response
             }
 
+            # Resolve the dataset display name once (cached after first lookup)
+            $datasetName = $DatasetId
+            try {
+                $datasetName = Resolve-FabricDatasetName -DatasetId $DatasetId
+            }
+            catch {
+                Write-FabricLog -Message "Failed to resolve dataset name for ID '$DatasetId': $($_.Exception.Message)" -Level Debug
+            }
+
             foreach ($user in $response) {
                 $user | Add-Member -NotePropertyName 'datasetId' -NotePropertyValue $DatasetId -Force
+                $user | Add-Member -NotePropertyName 'DatasetName' -NotePropertyValue $datasetName -Force
             }
             $response | Add-FabricTypeName -TypeName 'MicrosoftFabric.AdminDatasetUser'
 
@@ -3434,7 +3685,7 @@ function Get-FabricAdminDatasetUser {
         }
     }
 }
-#EndRegion '.\Public\Admin\Get-FabricAdminDatasetUser.ps1' 111
+#EndRegion '.\Public\Admin\Get-FabricAdminDatasetUser.ps1' 121
 #Region '.\Public\Admin\Get-FabricAdminEncryptionKey.ps1' -1
 
 <#
@@ -3564,6 +3815,760 @@ function Get-FabricAdminEncryptionKey {
     }
 }
 #EndRegion '.\Public\Admin\Get-FabricAdminEncryptionKey.ps1' 127
+#Region '.\Public\Admin\Get-FabricAdminGateway.ps1' -1
+
+function Get-FabricAdminGateway {
+    <#
+    .SYNOPSIS
+        Gets one or all Power BI gateways for which the current user is a gateway admin.
+
+    .DESCRIPTION
+        The Get-FabricAdminGateway cmdlet retrieves Power BI on-premises data gateways
+        using the Power BI REST API. When called without parameters it returns all gateways
+        for which the authenticated user has gateway admin permissions. When a GatewayId
+        is supplied it returns the details of that specific gateway.
+
+        The gatewayId property returned by the API is the cluster/mesh gateway ID, which
+        differs from the gateway's own id. This function overwrites gatewayId with the
+        authoritative id value so that downstream pipeline binding always receives the
+        correct gateway identity.
+
+        Note: Virtual network (VNet) data gateways are not supported by this API.
+
+    .PARAMETER GatewayId
+        Optional. The ID (GUID) of a specific gateway to retrieve. When omitted, all
+        gateways visible to the current user are returned.
+
+    .PARAMETER Raw
+        If specified, returns the untouched API response with no added properties or type decoration.
+
+    .EXAMPLE
+        Get-FabricAdminGateway
+
+        Returns all gateways for which the current user is a gateway admin.
+
+    .EXAMPLE
+        Get-FabricAdminGateway -GatewayId "12345678-abcd-1234-efgh-123456789012"
+
+        Returns the details of the specified gateway.
+
+    .EXAMPLE
+        Get-FabricAdminGateway | Get-FabricAdminGatewayDatasource
+
+        Retrieves all gateways and pipes them through to get their datasources.
+
+    .OUTPUTS
+        System.Object
+        Returns Gateway object(s) with properties: id, name, type, gatewayStatus,
+        gatewayAnnotation, publicKey, gatewayId (corrected to match id).
+
+    .NOTES
+        - API Endpoints:
+            GET https://api.powerbi.com/v1.0/myorg/gateways
+            GET https://api.powerbi.com/v1.0/myorg/gateways/{gatewayId}
+        - Requires: Authentication via Set-FabricApiHeaders
+        - Permissions: User must be a gateway admin
+        - Scope: Dataset.ReadWrite.All or Dataset.Read.All
+        - VNet gateways are not supported
+
+        Author: Rob Sewell
+    #>
+    [CmdletBinding()]
+    param (
+        [Parameter(Mandatory = $false)]
+        [ValidateNotNullOrEmpty()]
+        [string]$GatewayId,
+
+        [Parameter()]
+        [switch]$Raw
+    )
+
+    process {
+        try {
+            Write-FabricLog -Message "Validating authentication token..." -Level Debug
+            Invoke-FabricAuthCheck -ThrowOnFailure
+
+            $powerBIBaseUrl = "https://api.powerbi.com/v1.0/myorg"
+
+            if ($GatewayId) {
+                $apiEndpointURI = "$powerBIBaseUrl/gateways/$GatewayId"
+            }
+            else {
+                $apiEndpointURI = "$powerBIBaseUrl/gateways"
+            }
+
+            Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
+
+            $apiParams = @{
+                BaseURI = $apiEndpointURI
+                Headers = $script:FabricAuthContext.FabricHeaders
+                Method  = 'Get'
+            }
+            $response = Invoke-FabricAPIRequest @apiParams
+
+            if (-not $response) {
+                Write-FabricLog -Message "No gateway(s) returned." -Level Warning
+                return $null
+            }
+
+            Write-FabricLog -Message "Successfully retrieved $(@($response).Count) gateway(s)." -Level Debug
+
+            if ($Raw) {
+                return $response
+            }
+
+            # The API returns a 'gatewayId' property that reflects the cluster/mesh gateway
+            # ID rather than the gateway's own identity. Replace it with the correct 'id'
+            # so that pipeline binding (ValueFromPipelineByPropertyName on 'gatewayId') and
+            # downstream name-resolution calls always receive the authoritative gateway ID.
+            foreach ($gateway in $response) {
+                if ($gateway.id) {
+                    $gateway | Add-Member -NotePropertyName 'gatewayId' -NotePropertyValue $gateway.id -Force
+                }
+            }
+
+            $response | Add-FabricTypeName -TypeName 'MicrosoftFabric.Gateway'
+            $response
+        }
+        catch {
+            $errorDetails = $_.Exception.Message
+            Write-FabricLog -Message "Failed to retrieve gateway(s). Error: $errorDetails" -Level Error
+        }
+    }
+}
+#EndRegion '.\Public\Admin\Get-FabricAdminGateway.ps1' 120
+#Region '.\Public\Admin\Get-FabricAdminGatewayDatasource.ps1' -1
+
+function Get-FabricAdminGatewayDatasource {
+    <#
+    .SYNOPSIS
+        Gets all datasources registered on a Power BI gateway.
+
+    .DESCRIPTION
+        The Get-FabricAdminGatewayDatasource cmdlet retrieves all datasources registered on
+        a specific Power BI on-premises data gateway using the Power BI REST API.
+
+        Each returned datasource object is enriched with the following additional properties
+        so that all human-readable context is available directly on the object without
+        relying on the format file:
+
+        - GatewayName : display name of the gateway, resolved via Resolve-FabricGatewayName (cached)
+        - Connection  : human-readable connection string parsed from the connectionDetails
+                        JSON (server\database, path, URL, etc.)
+
+        The gatewayId property returned by the API is the cluster/mesh gateway ID, which
+        differs from the gateway's own id. This function overwrites gatewayId on every
+        returned object with the authoritative value supplied via -GatewayId.
+
+        Note: Virtual network (VNet) data gateways are not supported by this API.
+
+    .PARAMETER GatewayId
+        Required. The ID (GUID) of the gateway whose datasources should be retrieved.
+        Accepts pipeline input by property name, making it compatible with the output
+        of Get-FabricAdminGateway.
+
+    .PARAMETER Raw
+        Optional. Returns the unmodified API response without adding GatewayName,
+        Connection, or corrected gatewayId properties.
+
+    .EXAMPLE
+        Get-FabricAdminGatewayDatasource -GatewayId "12345678-abcd-1234-efgh-123456789012"
+
+        Returns all datasources on the specified gateway, enriched with GatewayName
+        and Connection.
+
+    .EXAMPLE
+        Get-FabricAdminGateway | Get-FabricAdminGatewayDatasource
+
+        Retrieves all gateways and pipes them to get their datasources.
+
+    .EXAMPLE
+        Get-FabricAdminGatewayDatasource -GatewayId "12345678-abcd-1234-efgh-123456789012" -Raw
+
+        Returns the raw API response without enrichment.
+
+    .OUTPUTS
+        System.Object
+        Returns GatewayDatasource object(s) with properties: id, gatewayId (corrected),
+        datasourceType, datasourceName, credentialType, connectionDetails (raw JSON),
+        Connection (parsed, enriched), GatewayName (enriched).
+
+    .NOTES
+        - API Endpoint: GET https://api.powerbi.com/v1.0/myorg/gateways/{gatewayId}/datasources
+        - Requires: Authentication via Set-FabricApiHeaders
+        - Permissions: User must be a gateway admin
+        - Scope: Dataset.ReadWrite.All or Dataset.Read.All
+        - VNet gateways are not supported
+
+        Author: Rob Sewell
+    #>
+    [CmdletBinding()]
+    param (
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
+        [ValidateNotNullOrEmpty()]
+        [Alias('id')]
+        [string]$GatewayId,
+
+        [Parameter()]
+        [switch]$Raw
+    )
+
+    process {
+        try {
+            Write-FabricLog -Message "Validating authentication token..." -Level Debug
+            Invoke-FabricAuthCheck -ThrowOnFailure
+
+            $powerBIBaseUrl = "https://api.powerbi.com/v1.0/myorg"
+            $apiEndpointURI = "$powerBIBaseUrl/gateways/$GatewayId/datasources"
+
+            Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
+
+            $apiParams = @{
+                BaseURI = $apiEndpointURI
+                Headers = $script:FabricAuthContext.FabricHeaders
+                Method  = 'Get'
+            }
+            $response = Invoke-FabricAPIRequest @apiParams
+
+            if (-not $response) {
+                Write-FabricLog -Message "No datasources returned for gateway '$GatewayId'." -Level Warning
+                return $null
+            }
+
+            if ($Raw) {
+                return $response
+            }
+
+            # Resolve gateway name once for all datasources (PSF cached after first call)
+            $gatewayName = $GatewayId
+            try {
+                $gatewayName = Resolve-FabricGatewayName -GatewayId $GatewayId
+            }
+            catch {
+                Write-FabricLog -Message "Could not resolve gateway name for '$GatewayId': $($_.Exception.Message)" -Level Debug
+            }
+
+            foreach ($datasource in $response) {
+                # Overwrite the cluster/mesh gatewayId with the authoritative gateway ID
+                $datasource | Add-Member -NotePropertyName 'gatewayId'   -NotePropertyValue $GatewayId   -Force
+                $datasource | Add-Member -NotePropertyName 'GatewayName' -NotePropertyValue $gatewayName -Force
+
+                # Parse connectionDetails JSON into a readable Connection property
+                $connection = $datasource.connectionDetails
+                if ($datasource.connectionDetails) {
+                    try {
+                        $parsed = $datasource.connectionDetails | ConvertFrom-Json
+                        $parts  = @()
+                        if ($parsed.server)      { $parts += $parsed.server }
+                        if ($parsed.database)    { $parts += $parsed.database }
+                        if ($parsed.path)        { $parts += $parsed.path }
+                        if ($parsed.url)         { $parts += $parsed.url }
+                        if ($parsed.loginServer) { $parts += $parsed.loginServer }
+                        if ($parts.Count -gt 0) {
+                            $connection = $parts -join '\'
+                        }
+                    }
+                    catch {
+                        Write-FabricLog -Message "Could not parse connectionDetails for datasource '$($datasource.datasourceName)': $($_.Exception.Message)" -Level Debug
+                    }
+                }
+                $datasource | Add-Member -NotePropertyName 'Connection' -NotePropertyValue $connection -Force
+            }
+
+            Write-FabricLog -Message "Successfully retrieved $(@($response).Count) datasource(s) for gateway '$gatewayName'." -Level Debug
+            $response | Add-FabricTypeName -TypeName 'MicrosoftFabric.GatewayDatasource'
+            $response
+        }
+        catch {
+            $errorDetails = $_.Exception.Message
+            Write-FabricLog -Message "Failed to retrieve datasources for gateway '$GatewayId'. Error: $errorDetails" -Level Error
+        }
+    }
+}
+#EndRegion '.\Public\Admin\Get-FabricAdminGatewayDatasource.ps1' 147
+#Region '.\Public\Admin\Get-FabricAdminGatewayDatasourceById.ps1' -1
+
+function Get-FabricAdminGatewayDatasourceById {
+    <#
+    .SYNOPSIS
+        Gets a single datasource registered on a Power BI gateway by its datasource ID.
+
+    .DESCRIPTION
+        The Get-FabricAdminGatewayDatasourceById cmdlet retrieves a specific datasource
+        from a Power BI on-premises data gateway using the Power BI REST API.
+
+        The returned object is enriched with the following additional properties so that
+        all human-readable context is available directly on the object without relying on
+        the format file:
+
+        - GatewayName : display name of the gateway, resolved via Resolve-FabricGatewayName (cached)
+        - Connection  : human-readable connection string parsed from the connectionDetails
+                        JSON (server\database, path, URL, etc.)
+
+        The gatewayId property returned by the API is the cluster/mesh gateway ID, which
+        differs from the gateway's own id. This function overwrites gatewayId with the
+        authoritative id value so that downstream pipeline binding always receives the
+        correct gateway identity.
+
+        Note: Virtual network (VNet) data gateways are not supported by this API.
+
+    .PARAMETER GatewayId
+        Required. The ID (GUID) of the gateway on which the datasource is registered.
+        Accepts pipeline input by property name, making it compatible with the output
+        of Get-FabricAdminGateway and Get-FabricAdminGatewayDatasource.
+
+    .PARAMETER DatasourceId
+        Required. The ID (GUID) of the specific datasource to retrieve.
+        Accepts pipeline input by property name, making it compatible with the output
+        of Get-FabricAdminGatewayDatasource (where the property is named 'id').
+
+    .PARAMETER Raw
+        Optional. Returns the unmodified API response without adding GatewayName or
+        Connection enrichment properties.
+
+    .EXAMPLE
+        Get-FabricAdminGatewayDatasourceById -GatewayId "12345678-abcd-1234-efgh-123456789012" `
+                                             -DatasourceId "abcdef12-1234-1234-1234-abcdef123456"
+
+        Returns the specified datasource enriched with GatewayName and Connection.
+
+    .EXAMPLE
+        Get-FabricAdminGatewayDatasource -GatewayId "12345678-abcd-1234-efgh-123456789012" |
+            Get-FabricAdminGatewayDatasourceById -GatewayId "12345678-abcd-1234-efgh-123456789012"
+
+        Pipes all datasources from a gateway back through to retrieve full detail for each.
+
+    .EXAMPLE
+        Get-FabricAdminGatewayDatasourceById -GatewayId "12345678-abcd-1234-efgh-123456789012" `
+                                             -DatasourceId "abcdef12-1234-1234-1234-abcdef123456" -Raw
+
+        Returns the raw API response without enrichment.
+
+    .OUTPUTS
+        System.Object
+        Returns a GatewayDatasource object with properties: id, gatewayId (corrected),
+        datasourceType, datasourceName, credentialType, credentialDetails,
+        connectionDetails (raw JSON), Connection (parsed, enriched), GatewayName (enriched).
+
+    .NOTES
+        - API Endpoint:
+            GET https://api.powerbi.com/v1.0/myorg/gateways/{gatewayId}/datasources/{datasourceId}
+        - Requires: Authentication via Set-FabricApiHeaders
+        - Permissions: User must be a gateway admin
+        - Scope: Dataset.ReadWrite.All or Dataset.Read.All
+        - VNet gateways are not supported
+
+        Author: Rob Sewell
+    #>
+    [CmdletBinding()]
+    param (
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
+        [ValidateNotNullOrEmpty()]
+        [string]$GatewayId,
+
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
+        [ValidateNotNullOrEmpty()]
+        [Alias('id')]
+        [string]$DatasourceId,
+
+        [Parameter()]
+        [switch]$Raw
+    )
+
+    process {
+        try {
+            Write-FabricLog -Message "Validating authentication token..." -Level Debug
+            Invoke-FabricAuthCheck -ThrowOnFailure
+
+            $powerBIBaseUrl = "https://api.powerbi.com/v1.0/myorg"
+            $apiEndpointURI = "$powerBIBaseUrl/gateways/$GatewayId/datasources/$DatasourceId"
+
+            Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
+
+            $apiParams = @{
+                BaseURI = $apiEndpointURI
+                Headers = $script:FabricAuthContext.FabricHeaders
+                Method  = 'Get'
+            }
+            $response = Invoke-FabricAPIRequest @apiParams
+
+            if (-not $response) {
+                Write-FabricLog -Message "No datasource returned for gateway '$GatewayId', datasource '$DatasourceId'." -Level Warning
+                return $null
+            }
+
+            if ($Raw) {
+                return $response
+            }
+
+            # The API returns a gatewayId property that reflects the cluster/mesh gateway ID
+            # rather than the gateway's own identity. Overwrite it with the correct value so
+            # downstream consumers and pipeline binding always get the authoritative ID.
+            $response | Add-Member -NotePropertyName 'gatewayId' -NotePropertyValue $GatewayId -Force
+
+            # Resolve gateway name (PSF cached after first call)
+            $gatewayName = $GatewayId
+            try {
+                $gatewayName = Resolve-FabricGatewayName -GatewayId $GatewayId
+            }
+            catch {
+                Write-FabricLog -Message "Could not resolve gateway name for '$GatewayId': $($_.Exception.Message)" -Level Debug
+            }
+            $response | Add-Member -NotePropertyName 'GatewayName' -NotePropertyValue $gatewayName -Force
+
+            # Parse connectionDetails JSON into a readable connection string
+            $connection = $response.connectionDetails
+            if ($response.connectionDetails) {
+                try {
+                    $parsed = $response.connectionDetails | ConvertFrom-Json
+                    $parts  = @()
+                    if ($parsed.server)      { $parts += $parsed.server }
+                    if ($parsed.database)    { $parts += $parsed.database }
+                    if ($parsed.path)        { $parts += $parsed.path }
+                    if ($parsed.url)         { $parts += $parsed.url }
+                    if ($parsed.loginServer) { $parts += $parsed.loginServer }
+                    if ($parts.Count -gt 0) {
+                        $connection = $parts -join '\'
+                    }
+                }
+                catch {
+                    Write-FabricLog -Message "Could not parse connectionDetails for datasource '$DatasourceId': $($_.Exception.Message)" -Level Debug
+                }
+            }
+            $response | Add-Member -NotePropertyName 'Connection' -NotePropertyValue $connection -Force
+
+            Write-FabricLog -Message "Successfully retrieved datasource '$($response.datasourceName)' on gateway '$gatewayName'." -Level Debug
+            $response | Add-FabricTypeName -TypeName 'MicrosoftFabric.GatewayDatasource'
+            $response
+        }
+        catch {
+            $errorDetails = $_.Exception.Message
+            Write-FabricLog -Message "Failed to retrieve datasource '$DatasourceId' on gateway '$GatewayId'. Error: $errorDetails" -Level Error
+        }
+    }
+}
+#EndRegion '.\Public\Admin\Get-FabricAdminGatewayDatasourceById.ps1' 160
+#Region '.\Public\Admin\Get-FabricAdminGatewayInventory.ps1' -1
+
+<#
+.SYNOPSIS
+    Returns a joined inventory of gateways, connections, datasources, datasets, workspaces,
+    and reports across the tenant.
+
+.DESCRIPTION
+    The Get-FabricAdminGatewayInventory cmdlet aggregates data from five API layers and
+    returns one flat output row per unique combination of:
+
+        Gateway → Connection → Datasource → Dataset → Workspace → Report
+
+    It works as follows:
+
+    1. Retrieves gateways (optionally scoped to a single gateway via -GatewayId).
+    2. For each gateway, retrieves its registered datasources. These are indexed by their
+       datasource ID (GatewayDatasource.id).
+    3. Retrieves all admin datasets filtered to those with isOnPremGatewayRequired eq true
+       to minimise the scope of step 4.
+    4. For each on-premises dataset, retrieves its admin datasources. The datasourceId on
+       each admin datasource is matched against the gateway datasource index from step 2.
+       Only datasets bound to the gateways returned in step 1 are processed further.
+    5. Reports are fetched on demand per workspace using the workspace-scoped admin
+       reports endpoint (GET /admin/groups/{workspaceId}/reports). Each workspace is only
+       queried once and the results are cached in-memory for the duration of the run.
+       This avoids fetching the entire tenant report catalogue up front, which can be
+       extremely large.
+    6. For each matched gateway datasource + dataset combination, one output row is emitted
+       per report associated with that dataset. Datasets with no reports still appear with
+       null ReportId and ReportName.
+
+    All workspace and gateway name resolution uses the PSF caching layer, so names are
+    only fetched once per ID. Use Clear-FabricNameCache to force fresh lookups.
+
+    Performance note: step 4 makes one API call per on-premises dataset. In large tenants
+    this can be hundreds of calls. Step 5 makes one additional call per unique workspace
+    that has at least one matched dataset. Progress is reported via Write-Progress and
+    logged at Verbose level. Scope the run with -GatewayId to reduce overall call volume.
+
+.PARAMETER GatewayId
+    Optional. When supplied, only the specified gateway is queried in step 1. The final
+    output is therefore scoped to datasets and reports connected through that gateway.
+    When omitted, all gateways visible to the authenticated user are included.
+
+.PARAMETER Raw
+    If specified, returns the untouched API response with no added properties or type decoration.
+    In this aggregator that means workspace names are not resolved and the WorkspaceName column
+    carries the raw workspace ID instead of the resolved display name.
+
+.EXAMPLE
+    Get-FabricAdminGatewayInventory
+
+    Returns the full tenant inventory across all gateways the user administers.
+
+.EXAMPLE
+    Get-FabricAdminGatewayInventory -GatewayId "12345678-abcd-1234-efgh-123456789012"
+
+    Returns the inventory for a single gateway only.
+
+.EXAMPLE
+    Get-FabricAdminGatewayInventory | Export-Csv gateway-inventory.csv -NoTypeInformation
+
+    Exports the full inventory to a CSV file.
+
+.EXAMPLE
+    Get-FabricAdminGatewayInventory | Where-Object { $_.WorkspaceName -eq 'Finance' }
+
+    Filters the inventory to rows belonging to the Finance workspace.
+
+.OUTPUTS
+    System.Management.Automation.PSCustomObject
+    Each output object has the following properties:
+
+        GatewayName     - Display name of the gateway
+        GatewayId       - ID of the gateway
+        DatasourceName  - Display name of the gateway datasource
+        DatasourceType  - Type (e.g. Sql, AnalysisServices, OData)
+        Connection      - Formatted connection string parsed from connectionDetails JSON
+                          (server\database, path, URL, etc.)
+        DatasetId       - ID of the Power BI dataset
+        DatasetName     - Name of the Power BI dataset
+        WorkspaceId     - ID of the workspace containing the dataset
+        WorkspaceName   - Display name of the workspace
+        ReportId        - ID of the report (null if no report is built on this dataset)
+        ReportName      - Display name of the report (null if no reports)
+
+.NOTES
+    - Required permissions:
+        * Gateway admin rights (Dataset.ReadWrite.All or Dataset.Read.All)
+        * Fabric Administrator or Tenant.Read.All for admin dataset/report APIs
+    - Rate limits apply to the underlying admin APIs (see individual function docs)
+    - VNet gateways are not supported by the gateway APIs used in step 1 and 2
+
+    Author: Rob Sewell
+#>
+function Get-FabricAdminGatewayInventory {
+    [CmdletBinding()]
+    param (
+        [Parameter(Mandatory = $false)]
+        [ValidateNotNullOrEmpty()]
+        [string]$GatewayId,
+
+        [Parameter()]
+        [switch]$Raw
+    )
+
+    process {
+        try {
+            Invoke-FabricAuthCheck -ThrowOnFailure
+
+            #region Step 1 — Gateways
+            Write-FabricLog -Message "Step 1: Retrieving gateway(s)..." -Level Host
+
+            if ($GatewayId) {
+                $gateways = @(Get-FabricAdminGateway -GatewayId $GatewayId)
+            }
+            else {
+                $gateways = @(Get-FabricAdminGateway)
+            }
+
+            if (-not $gateways -or $gateways.Count -eq 0) {
+                Write-FabricLog -Message "No gateways found. Ensure the authenticated account has gateway admin rights." -Level Warning
+                return
+            }
+
+            Write-FabricLog -Message "Found $($gateways.Count) gateway(s)." -Level Host
+            #endregion
+
+            #region Step 2 — Gateway datasources (indexed by datasource ID)
+            Write-FabricLog -Message "Step 2: Retrieving datasources for each gateway..." -Level Host
+
+            # Key: GatewayDatasource.id (= datasourceId used in admin dataset datasource API)
+            $gatewayDatasourceIndex = @{}
+
+            foreach ($gateway in $gateways) {
+                Write-FabricLog -Message "  Gateway '$($gateway.name)': retrieving datasources..." -Level Verbose
+                $gwDatasources = Get-FabricAdminGatewayDatasource -GatewayId $gateway.id -Raw
+
+                if (-not $gwDatasources) {
+                    Write-FabricLog -Message "  Gateway '$($gateway.name)': no datasources found." -Level Verbose
+                    continue
+                }
+
+                foreach ($ds in $gwDatasources) {
+                    # Parse connectionDetails JSON into a readable connection string
+                    $connectionString = $ds.connectionDetails
+                    if ($ds.connectionDetails) {
+                        try {
+                            $parsed = $ds.connectionDetails | ConvertFrom-Json
+                            $parts  = @()
+                            if ($parsed.server)      { $parts += $parsed.server }
+                            if ($parsed.database)    { $parts += $parsed.database }
+                            if ($parsed.path)        { $parts += $parsed.path }
+                            if ($parsed.url)         { $parts += $parsed.url }
+                            if ($parsed.loginServer) { $parts += $parsed.loginServer }
+                            if ($parts.Count -gt 0) {
+                                $connectionString = $parts -join '\'
+                            }
+                        }
+                        catch {
+                            Write-FabricLog -Message "  Could not parse connectionDetails for datasource '$($ds.datasourceName)': $($_.Exception.Message)" -Level Debug
+                        }
+                    }
+
+                    $gatewayDatasourceIndex[$ds.id] = [PSCustomObject]@{
+                        GatewayId      = $gateway.id
+                        GatewayName    = $gateway.name
+                        DatasourceName = $ds.datasourceName
+                        DatasourceType = $ds.datasourceType
+                        Connection     = $connectionString
+                    }
+                }
+            }
+
+            if ($gatewayDatasourceIndex.Count -eq 0) {
+                Write-FabricLog -Message "No gateway datasources found across the specified gateway(s)." -Level Warning
+                return
+            }
+
+            Write-FabricLog -Message "Indexed $($gatewayDatasourceIndex.Count) gateway datasource(s) total." -Level Host
+            #endregion
+
+            #region Step 3 — On-premises datasets
+            Write-FabricLog -Message "Step 3: Retrieving on-premises datasets (isOnPremGatewayRequired eq true)..." -Level Host
+
+            $datasets = @(Get-FabricAdminDataset -Filter 'isOnPremGatewayRequired eq true' -Raw)
+
+            if (-not $datasets -or $datasets.Count -eq 0) {
+                Write-FabricLog -Message "No datasets requiring on-premises gateways found." -Level Warning
+                return
+            }
+
+            Write-FabricLog -Message "Found $($datasets.Count) on-premises dataset(s). Querying their datasources..." -Level Host
+            #endregion
+
+            #region Step 4 — Match dataset datasources to gateway datasource index
+            # Key: workspaceId  Value: hashtable of { datasetId -> List[report] }
+            # Reports are fetched per workspace on first need and cached here for the run.
+            $workspaceReportCache = @{}
+
+            $results       = [System.Collections.Generic.List[object]]::new()
+            $totalDatasets = $datasets.Count
+            $processed     = 0
+
+            # Placeholder used when a matched dataset has no reports
+            $noReport = [PSCustomObject]@{ id = $null; name = $null }
+
+            foreach ($dataset in $datasets) {
+                $processed++
+                Write-Progress `
+                    -Activity "Get-FabricAdminGatewayInventory" `
+                    -Status "Dataset $processed of $totalDatasets : $($dataset.name)" `
+                    -PercentComplete ([int](($processed / $totalDatasets) * 100))
+
+                Write-FabricLog -Message "  [$processed/$totalDatasets] Dataset '$($dataset.name)' ($($dataset.id))" -Level Verbose
+
+                $datasetDatasources = Get-FabricAdminDatasetDatasource -DatasetId $dataset.id -Raw -ErrorAction SilentlyContinue
+
+                if (-not $datasetDatasources) {
+                    Write-FabricLog -Message "    No datasources returned — skipping." -Level Debug
+                    continue
+                }
+
+                # Check whether any datasource on this dataset matches a known gateway datasource
+                $hasGatewayMatch = $false
+                foreach ($datasetDs in $datasetDatasources) {
+                    if ($datasetDs.datasourceId -and $gatewayDatasourceIndex.ContainsKey($datasetDs.datasourceId)) {
+                        $hasGatewayMatch = $true
+                        break
+                    }
+                }
+
+                if (-not $hasGatewayMatch) {
+                    Write-FabricLog -Message "    No gateway datasource match — skipping." -Level Debug
+                    continue
+                }
+
+                # Resolve workspace name once per dataset (PSF cached across the whole run).
+                # With -Raw, skip resolution and leave the raw workspace ID in place.
+                $workspaceName = $dataset.workspaceId
+                if (-not $Raw -and $dataset.workspaceId) {
+                    try {
+                        $workspaceName = Resolve-FabricWorkspaceName -WorkspaceId $dataset.workspaceId
+                    }
+                    catch {
+                        Write-FabricLog -Message "    Could not resolve workspace '$($dataset.workspaceId)': $($_.Exception.Message)" -Level Debug
+                    }
+                }
+
+                #region Step 5 — Lazy per-workspace report lookup (cached in-memory)
+                if ($dataset.workspaceId -and -not $workspaceReportCache.ContainsKey($dataset.workspaceId)) {
+                    Write-FabricLog -Message "    Fetching reports for workspace '$workspaceName' (first time)..." -Level Verbose
+
+                    # Key: datasetId  Value: List[report]
+                    $wsReportIndex = @{}
+                    $wsReports = Get-FabricAdminReport -WorkspaceId $dataset.workspaceId -Raw -ErrorAction SilentlyContinue
+
+                    if ($wsReports) {
+                        foreach ($report in $wsReports) {
+                            if (-not $report.datasetId) { continue }
+                            if (-not $wsReportIndex.ContainsKey($report.datasetId)) {
+                                $wsReportIndex[$report.datasetId] = [System.Collections.Generic.List[object]]::new()
+                            }
+                            $wsReportIndex[$report.datasetId].Add($report)
+                        }
+                        Write-FabricLog -Message "    Cached $($wsReports.Count) report(s) for workspace '$workspaceName'." -Level Debug
+                    }
+
+                    $workspaceReportCache[$dataset.workspaceId] = $wsReportIndex
+                }
+                #endregion
+
+                foreach ($datasetDs in $datasetDatasources) {
+                    if (-not $datasetDs.datasourceId -or -not $gatewayDatasourceIndex.ContainsKey($datasetDs.datasourceId)) {
+                        continue
+                    }
+
+                    $gwDs = $gatewayDatasourceIndex[$datasetDs.datasourceId]
+
+                    # Look up reports for this dataset from the per-workspace cache
+                    $reports = @($noReport)
+                    if ($dataset.workspaceId -and $workspaceReportCache.ContainsKey($dataset.workspaceId)) {
+                        $wsIdx = $workspaceReportCache[$dataset.workspaceId]
+                        if ($wsIdx.ContainsKey($dataset.id)) {
+                            $reports = $wsIdx[$dataset.id]
+                        }
+                    }
+
+                    foreach ($report in $reports) {
+                        $results.Add([PSCustomObject]@{
+                            GatewayName    = $gwDs.GatewayName
+                            GatewayId      = $gwDs.GatewayId
+                            DatasourceName = $gwDs.DatasourceName
+                            DatasourceType = $gwDs.DatasourceType
+                            Connection     = $gwDs.Connection
+                            DatasetId      = $dataset.id
+                            DatasetName    = $dataset.name
+                            WorkspaceId    = $dataset.workspaceId
+                            WorkspaceName  = $workspaceName
+                            ReportId       = $report.id
+                            ReportName     = $report.name
+                        })
+                    }
+                }
+            }
+
+            Write-Progress -Activity "Get-FabricAdminGatewayInventory" -Completed
+            #endregion
+
+            Write-FabricLog -Message "Inventory complete. $($results.Count) row(s) returned across $totalDatasets dataset(s) processed." -Level Host
+
+            $results.ToArray()
+        }
+        catch {
+            $errorDetails = $_.Exception.Message
+            Write-FabricLog -Message "Failed to retrieve gateway inventory. Error: $errorDetails" -Level Error
+        }
+    }
+}
+#EndRegion '.\Public\Admin\Get-FabricAdminGatewayInventory.ps1' 319
 #Region '.\Public\Admin\Get-FabricAdminGitConnection.ps1' -1
 
 <#
@@ -4020,10 +5025,20 @@ function Get-FabricAdminItemUser {
                 return $response
             }
 
+            # Resolve the workspace display name once (cached after first lookup)
+            $workspaceName = $WorkspaceId
+            try {
+                $workspaceName = Resolve-FabricWorkspaceName -WorkspaceId $WorkspaceId
+            }
+            catch {
+                Write-FabricLog -Message "Failed to resolve workspace name for ID '$WorkspaceId': $($_.Exception.Message)" -Level Debug
+            }
+
             # Add context and type name for formatting
             foreach ($user in $response) {
                 $user | Add-Member -NotePropertyName 'workspaceId' -NotePropertyValue $WorkspaceId -Force
                 $user | Add-Member -NotePropertyName 'itemId' -NotePropertyValue $ItemId -Force
+                $user | Add-Member -NotePropertyName 'WorkspaceName' -NotePropertyValue $workspaceName -Force
             }
             $response | Add-FabricTypeName -TypeName 'MicrosoftFabric.AdminItemUser'
 
@@ -4036,7 +5051,7 @@ function Get-FabricAdminItemUser {
         }
     }
 }
-#EndRegion '.\Public\Admin\Get-FabricAdminItemUser.ps1' 107
+#EndRegion '.\Public\Admin\Get-FabricAdminItemUser.ps1' 117
 #Region '.\Public\Admin\Get-FabricAdminModifiedWorkspace.ps1' -1
 
 <#
@@ -4648,12 +5663,28 @@ function Get-FabricAdminRefreshable {
     Gets reports from the Power BI admin API for tenant-wide visibility.
 
 .DESCRIPTION
-    The Get-FabricAdminReport cmdlet retrieves Power BI reports using the Power BI admin API endpoint
-    (https://api.powerbi.com/v1.0/myorg/admin/reports). This provides tenant-wide visibility into all
-    reports (including those the user doesn't have access to). Requires Fabric Administrator permissions.
+    The Get-FabricAdminReport cmdlet retrieves Power BI reports using the Power BI admin API.
+    This provides tenant-wide visibility into all reports (including those the user doesn't
+    have direct access to). Requires Fabric Administrator permissions.
+
+    When -WorkspaceId is supplied the workspace-scoped endpoint is used:
+        GET /admin/groups/{workspaceId}/reports
+    This is significantly faster and smaller than the tenant-wide call when you only need
+    reports from specific workspaces.
+
+    When neither -WorkspaceId nor -Filter is supplied the tenant-wide endpoint is used:
+        GET /admin/reports
+    Note: this can return tens of thousands of rows in large tenants. Prefer -WorkspaceId
+    or a targeted -Filter when possible.
+
+.PARAMETER WorkspaceId
+    Optional. Returns only reports belonging to this workspace. Uses the workspace-scoped
+    admin endpoint, which is much faster than the tenant-wide call.
+    Accepts pipeline input by property name.
 
 .PARAMETER Filter
-    Optional. OData filter expression to filter the results (e.g., "contains(name,'sales')").
+    Optional. OData filter expression applied server-side (e.g. "contains(name,'sales')").
+    Ignored when -WorkspaceId is supplied (workspace-scoped endpoint does not support $filter).
 
 .PARAMETER Top
     Optional. Maximum number of reports to return.
@@ -4667,7 +5698,12 @@ function Get-FabricAdminRefreshable {
 .EXAMPLE
     Get-FabricAdminReport
 
-    Lists all reports in the tenant.
+    Lists all reports in the tenant. Can be large — consider scoping with -WorkspaceId.
+
+.EXAMPLE
+    Get-FabricAdminReport -WorkspaceId "12345678-1234-1234-1234-123456789012"
+
+    Lists all reports in the specified workspace using the faster workspace-scoped endpoint.
 
 .EXAMPLE
     Get-FabricAdminReport -Top 100
@@ -4680,16 +5716,21 @@ function Get-FabricAdminRefreshable {
     Lists reports with 'Sales' in the name.
 
 .NOTES
-    - Uses the Power BI Admin API: https://api.powerbi.com/v1.0/myorg/admin/reports
+    - API Endpoints:
+        GET https://api.powerbi.com/v1.0/myorg/admin/reports
+        GET https://api.powerbi.com/v1.0/myorg/admin/groups/{groupId}/reports
     - Requires Fabric Administrator permissions or service principal with Tenant.Read.All scope.
     - Rate limited to 200 requests per hour.
 
     Author: Tiago Balabuch, Jess Pomfret, Rob Sewell
-
 #>
 function Get-FabricAdminReport {
     [CmdletBinding()]
     param (
+        [Parameter(Mandatory = $false, ValueFromPipelineByPropertyName = $true)]
+        [ValidateNotNullOrEmpty()]
+        [string]$WorkspaceId,
+
         [Parameter(Mandatory = $false)]
         [ValidateNotNullOrEmpty()]
         [string]$Filter,
@@ -4710,30 +5751,33 @@ function Get-FabricAdminReport {
         try {
             Invoke-FabricAuthCheck -ThrowOnFailure
 
-            # Power BI Admin API base URL
             $powerBIAdminBaseUrl = "https://api.powerbi.com/v1.0/myorg"
 
-            # Build query parameters
-            $queryParams = @()
-            if ($Filter) {
-                $queryParams += "`$filter=$([System.Uri]::EscapeDataString($Filter))"
+            if ($WorkspaceId) {
+                # Workspace-scoped endpoint — much faster, no $filter support
+                $apiEndpointURI = "$powerBIAdminBaseUrl/admin/groups/$WorkspaceId/reports"
+                Write-FabricLog -Message "API Endpoint (workspace-scoped): $apiEndpointURI" -Level Debug
             }
-            if ($Top) {
-                $queryParams += "`$top=$Top"
-            }
-            if ($Skip) {
-                $queryParams += "`$skip=$Skip"
+            else {
+                # Tenant-wide endpoint — supports OData query params
+                $queryParams = @()
+                if ($Filter) {
+                    $queryParams += "`$filter=$([System.Uri]::EscapeDataString($Filter))"
+                }
+                if ($Top) {
+                    $queryParams += "`$top=$Top"
+                }
+                if ($Skip) {
+                    $queryParams += "`$skip=$Skip"
+                }
+
+                $apiEndpointURI = "$powerBIAdminBaseUrl/admin/reports"
+                if ($queryParams.Count -gt 0) {
+                    $apiEndpointURI = "$apiEndpointURI`?$($queryParams -join '&')"
+                }
+                Write-FabricLog -Message "API Endpoint (tenant-wide): $apiEndpointURI" -Level Debug
             }
 
-            # Construct the API endpoint URI
-            $apiEndpointURI = "$powerBIAdminBaseUrl/admin/reports"
-            if ($queryParams.Count -gt 0) {
-                $apiEndpointURI = "$apiEndpointURI`?$($queryParams -join '&')"
-            }
-
-            Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
-
-            # Make the API request
             $apiParams = @{
                 BaseURI = $apiEndpointURI
                 Headers = $script:FabricAuthContext.FabricHeaders
@@ -4746,7 +5790,6 @@ function Get-FabricAdminReport {
                 return $null
             }
 
-            # Use Select-FabricResource for type decoration
             return Select-FabricResource -InputObject $response -ResourceType 'AdminReport' -TypeName 'MicrosoftFabric.AdminReport' -Raw:$Raw
         }
         catch {
@@ -4755,7 +5798,7 @@ function Get-FabricAdminReport {
         }
     }
 }
-#EndRegion '.\Public\Admin\Get-FabricAdminReport.ps1' 113
+#EndRegion '.\Public\Admin\Get-FabricAdminReport.ps1' 141
 #Region '.\Public\Admin\Get-FabricAdminReportSubscription.ps1' -1
 
 <#
@@ -5896,7 +6939,7 @@ function Get-FabricAdminWorkspaceScanStatus {
                 if ($Raw) {
                     return $response
                 }
-                $response.PSObject.TypeNames.Insert(0, 'MicrosoftFabric.AdminWorkspaceScanStatus')
+                $response | Add-FabricTypeName -TypeName 'MicrosoftFabric.AdminWorkspaceScanStatus'
                 return $response
             }
             return $null
@@ -6007,8 +7050,18 @@ function Get-FabricAdminWorkspaceUnusedArtifact {
                 return $response
             }
 
+            # Resolve the workspace display name once (cached after first lookup)
+            $workspaceName = $WorkspaceId
+            try {
+                $workspaceName = Resolve-FabricWorkspaceName -WorkspaceId $WorkspaceId
+            }
+            catch {
+                Write-FabricLog -Message "Failed to resolve workspace name for ID '$WorkspaceId': $($_.Exception.Message)" -Level Debug
+            }
+
             foreach ($artifact in $response) {
                 $artifact | Add-Member -NotePropertyName 'workspaceId' -NotePropertyValue $WorkspaceId -Force
+                $artifact | Add-Member -NotePropertyName 'WorkspaceName' -NotePropertyValue $workspaceName -Force
             }
             $response | Add-FabricTypeName -TypeName 'MicrosoftFabric.AdminWorkspaceUnusedArtifact'
 
@@ -6020,7 +7073,7 @@ function Get-FabricAdminWorkspaceUnusedArtifact {
         }
     }
 }
-#EndRegion '.\Public\Admin\Get-FabricAdminWorkspaceUnusedArtifact.ps1' 111
+#EndRegion '.\Public\Admin\Get-FabricAdminWorkspaceUnusedArtifact.ps1' 121
 #Region '.\Public\Admin\Get-FabricAdminWorkspaceUser.ps1' -1
 
 <#
@@ -6093,9 +7146,19 @@ function Get-FabricAdminWorkspaceUser {
                 return $response
             }
 
+            # Resolve the workspace display name once (cached after first lookup)
+            $workspaceName = $WorkspaceId
+            try {
+                $workspaceName = Resolve-FabricWorkspaceName -WorkspaceId $WorkspaceId
+            }
+            catch {
+                Write-FabricLog -Message "Failed to resolve workspace name for ID '$WorkspaceId': $($_.Exception.Message)" -Level Debug
+            }
+
             # Add workspace context and type name for formatting
             foreach ($user in $response) {
                 $user | Add-Member -NotePropertyName 'workspaceId' -NotePropertyValue $WorkspaceId -Force
+                $user | Add-Member -NotePropertyName 'WorkspaceName' -NotePropertyValue $workspaceName -Force
             }
             $response | Add-FabricTypeName -TypeName 'MicrosoftFabric.AdminWorkspaceUser'
 
@@ -6108,7 +7171,7 @@ function Get-FabricAdminWorkspaceUser {
         }
     }
 }
-#EndRegion '.\Public\Admin\Get-FabricAdminWorkspaceUser.ps1' 86
+#EndRegion '.\Public\Admin\Get-FabricAdminWorkspaceUser.ps1' 96
 #Region '.\Public\Admin\New-FabricAdminEncryptionKey.ps1' -1
 
 <#
@@ -7177,6 +8240,9 @@ function Get-FabricAnomalyDetector {
 .PARAMETER AnomalyDetectorId
     (Mandatory) The unique identifier of the Anomaly Detector item whose definition needs to be retrieved.
 
+.PARAMETER Raw
+    If specified, returns the untouched API response.
+
 .EXAMPLE
     Get-FabricAnomalyDetectorDefinition -WorkspaceId "12345" -AnomalyDetectorId "67890"
 
@@ -7199,7 +8265,10 @@ function Get-FabricAnomalyDetectorDefinition {
 
         [Parameter(Mandatory = $true)]
         [ValidateNotNullOrEmpty()]
-        [string]$AnomalyDetectorId
+        [string]$AnomalyDetectorId,
+
+        [Parameter()]
+        [switch]$Raw
     )
 
     try {
@@ -7217,7 +8286,13 @@ function Get-FabricAnomalyDetectorDefinition {
             Headers = $script:FabricAuthContext.FabricHeaders
             Method = 'Post'
         }
-        Invoke-FabricAPIRequest @apiParams
+        $response = Invoke-FabricAPIRequest @apiParams
+
+        if ($Raw) {
+            return $response
+        }
+
+        $response
     }
     catch {
         # Capture and log error details
@@ -7225,7 +8300,7 @@ function Get-FabricAnomalyDetectorDefinition {
         Write-FabricLog -Message "Failed to retrieve Anomaly Detector definition. Error: $errorDetails" -Level Error
     }
 }
-#EndRegion '.\Public\Anomaly Detector\Get-FabricAnomalyDetectorDefinition.ps1' 63
+#EndRegion '.\Public\Anomaly Detector\Get-FabricAnomalyDetectorDefinition.ps1' 75
 #Region '.\Public\Anomaly Detector\New-FabricAnomalyDetector.ps1' -1
 
 <#
@@ -7790,6 +8865,9 @@ It supports both synchronous and asynchronous operations, with detailed logging 
 .PARAMETER ApacheAirflowJobFormat
 (Optional) Specifies the format of the Apache Airflow Job definition. For example, 'json' or 'xml'.
 
+.PARAMETER Raw
+If specified, returns the untouched API response.
+
 .EXAMPLE
 Get-FabricApacheAirflowJobDefinition -WorkspaceId "12345" -ApacheAirflowJobId "67890"
 
@@ -7817,7 +8895,10 @@ function Get-FabricApacheAirflowJobDefinition {
 
         [Parameter(Mandatory = $false)]
         [ValidateNotNullOrEmpty()]
-        [string]$ApacheAirflowJobFormat
+        [string]$ApacheAirflowJobFormat,
+
+        [Parameter()]
+        [switch]$Raw
     )
     try {
         # Validate authentication
@@ -7844,7 +8925,13 @@ function Get-FabricApacheAirflowJobDefinition {
             Headers = $script:FabricAuthContext.FabricHeaders
             Method = 'Post'
         }
-        Invoke-FabricAPIRequest @apiParams
+        $response = Invoke-FabricAPIRequest @apiParams
+
+        if ($Raw) {
+            return $response
+        }
+
+        $response
     }
     catch {
         # Capture and log error details
@@ -7852,7 +8939,7 @@ function Get-FabricApacheAirflowJobDefinition {
         Write-FabricLog -Message "Failed to retrieve Apache Airflow Job definition. Error: $errorDetails" -Level Error
     }
 }
-#EndRegion '.\Public\Apache Airflow Job\Get-FabricApacheAirflowJobDefinition.ps1' 80
+#EndRegion '.\Public\Apache Airflow Job\Get-FabricApacheAirflowJobDefinition.ps1' 92
 #Region '.\Public\Apache Airflow Job\New-FabricApacheAirflowJob.ps1' -1
 
 <#
@@ -8456,7 +9543,7 @@ function Add-FabricConnectionRoleAssignment {
         Invoke-FabricAuthCheck -ThrowOnFailure
 
         # Construct the API endpoint URI
-        $apiEndpointURI = New-FabricAPIUri -Resource 'connections' -ItemId $ConnectionId -Subresource 'roleAssignments'
+        $apiEndpointURI = New-FabricAPIUri -Resource 'connections' -ResourceId $ConnectionId -Subresource 'roleAssignments'
 
         # Construct the request body
         $body = @{
@@ -8585,6 +9672,9 @@ function Get-FabricConnection {
 .PARAMETER ShowAllCreationMethods
     Optional. When set, includes all available creation methods for each supported connection type in the response. This is useful to discover which connection types can be created programmatically or through the UI.
 
+.PARAMETER Raw
+    If specified, returns the untouched API response.
+
 .EXAMPLE
     Get-FabricConnection -GatewayId "Connection-67890"
     Returns details for the connection with ID "Connection-67890".
@@ -8607,7 +9697,10 @@ function Get-FabricConnectionSupportedType {
         [string]$GatewayId,
 
         [Parameter(Mandatory = $false)]
-        [switch]$ShowAllCreationMethods
+        [switch]$ShowAllCreationMethods,
+
+        [Parameter()]
+        [switch]$Raw
     )
 
     try {
@@ -8632,7 +9725,13 @@ function Get-FabricConnectionSupportedType {
             Headers = $script:FabricAuthContext.FabricHeaders
             Method  = 'Get'
         }
-        Invoke-FabricAPIRequest @apiParams
+        $response = Invoke-FabricAPIRequest @apiParams
+
+        if ($Raw) {
+            return $response
+        }
+
+        $response
     }
     catch {
         # Capture and log error details
@@ -8640,7 +9739,7 @@ function Get-FabricConnectionSupportedType {
         Write-FabricLog -Message "Failed to retrieve Connection. Error: $errorDetails" -Level Error
     }
 }
-#EndRegion '.\Public\Connections\Get-FabricConnectionSupportedType.ps1' 73
+#EndRegion '.\Public\Connections\Get-FabricConnectionSupportedType.ps1' 85
 #Region '.\Public\Connections\Remove-FabricConnection.ps1' -1
 
 <#
@@ -8747,8 +9846,7 @@ function Remove-FabricConnectionRoleAssignment {
             Invoke-FabricAuthCheck -ThrowOnFailure
 
             # Construct the API endpoint URI
-            $apiEndpointURI = New-FabricAPIUri -Resource 'connections' -ItemId $ConnectionId -Subresource 'roleAssignments'
-            $apiEndpointURI = "$apiEndpointURI/$ConnectionRoleAssignmentId"
+            $apiEndpointURI = New-FabricAPIUri -Resource 'connections' -ResourceId $ConnectionId -Subresource 'roleAssignments' -ItemId $ConnectionRoleAssignmentId
 
             if ($PSCmdlet.ShouldProcess("Role assignment '$ConnectionRoleAssignmentId' on Connection '$ConnectionId'", "Delete")) {
                 # Make the API request
@@ -8769,7 +9867,7 @@ function Remove-FabricConnectionRoleAssignment {
         }
     }
 }
-#EndRegion '.\Public\Connections\Remove-FabricConnectionRoleAssignment.ps1' 67
+#EndRegion '.\Public\Connections\Remove-FabricConnectionRoleAssignment.ps1' 66
 #Region '.\Public\Connections\Update-FabricConnectionRoleAssignment.ps1' -1
 
 <#
@@ -8818,8 +9916,7 @@ function Update-FabricConnectionRoleAssignment {
         Invoke-FabricAuthCheck -ThrowOnFailure
 
         # Construct the API endpoint URI
-        $apiEndpointURI = New-FabricAPIUri -Resource 'connections' -ItemId $ConnectionId -Subresource 'roleAssignments'
-        $apiEndpointURI = "$apiEndpointURI/$ConnectionRoleAssignmentId"
+        $apiEndpointURI = New-FabricAPIUri -Resource 'connections' -ResourceId $ConnectionId -Subresource 'roleAssignments' -ItemId $ConnectionRoleAssignmentId
 
         # Construct the request body
         $body = @{
@@ -8848,7 +9945,7 @@ function Update-FabricConnectionRoleAssignment {
         Write-FabricLog -Message "Failed to update role assignment. Error: $errorDetails" -Level Error
     }
 }
-#EndRegion '.\Public\Connections\Update-FabricConnectionRoleAssignment.ps1' 77
+#EndRegion '.\Public\Connections\Update-FabricConnectionRoleAssignment.ps1' 76
 #Region '.\Public\Copy Job\Get-FabricCopyJob.ps1' -1
 
 <#
@@ -8963,6 +10060,9 @@ It supports both synchronous and asynchronous operations, with detailed logging 
 .PARAMETER CopyJobFormat
 (Optional) Specifies the format of the Copy Job definition. For example, 'json' or 'xml'.
 
+.PARAMETER Raw
+If specified, returns the untouched API response.
+
 .EXAMPLE
 Get-FabricCopyJobDefinition -WorkspaceId "12345" -CopyJobId "67890"
 
@@ -8989,7 +10089,10 @@ function Get-FabricCopyJobDefinition {
 
         [Parameter(Mandatory = $false)]
         [ValidateNotNullOrEmpty()]
-        [string]$CopyJobFormat
+        [string]$CopyJobFormat,
+
+        [Parameter()]
+        [switch]$Raw
     )
     try {
         # Validate authentication token before proceeding
@@ -9010,7 +10113,13 @@ function Get-FabricCopyJobDefinition {
             Headers = $script:FabricAuthContext.FabricHeaders
             Method = 'Post'
         }
-        Invoke-FabricAPIRequest @apiParams
+        $response = Invoke-FabricAPIRequest @apiParams
+
+        if ($Raw) {
+            return $response
+        }
+
+        $response
     }
     catch {
         # Capture and log error details
@@ -9018,7 +10127,7 @@ function Get-FabricCopyJobDefinition {
         Write-FabricLog -Message "Failed to retrieve Copy Job definition. Error: $errorDetails" -Level Error
     }
 }
-#EndRegion '.\Public\Copy Job\Get-FabricCopyJobDefinition.ps1' 74
+#EndRegion '.\Public\Copy Job\Get-FabricCopyJobDefinition.ps1' 86
 #Region '.\Public\Copy Job\New-FabricCopyJob.ps1' -1
 
 <#
@@ -9609,6 +10718,9 @@ function Get-FabricCosmosDBDatabase {
 .PARAMETER CosmosDBDatabaseId
     The GUID of the Cosmos DB Database whose definition to retrieve.
 
+.PARAMETER Raw
+    If specified, returns the untouched API response.
+
 .EXAMPLE
     Get-FabricCosmosDBDatabaseDefinition -WorkspaceId "12345678-1234-1234-1234-123456789012" -CosmosDBDatabaseId "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee"
 
@@ -9631,7 +10743,10 @@ function Get-FabricCosmosDBDatabaseDefinition {
         [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
         [ValidateNotNullOrEmpty()]
         [Alias('id')]
-        [string]$CosmosDBDatabaseId
+        [string]$CosmosDBDatabaseId,
+
+        [Parameter()]
+        [switch]$Raw
     )
 
     process {
@@ -9650,6 +10765,10 @@ function Get-FabricCosmosDBDatabaseDefinition {
             }
             $response = Invoke-FabricAPIRequest @apiParams
 
+            if ($Raw) {
+                return $response
+            }
+
             if ($response) {
                 Write-FabricLog -Message "Cosmos DB Database definition retrieved successfully." -Level Debug
                 return $response
@@ -9661,7 +10780,7 @@ function Get-FabricCosmosDBDatabaseDefinition {
         }
     }
 }
-#EndRegion '.\Public\Cosmos DB Database\Get-FabricCosmosDBDatabaseDefinition.ps1' 67
+#EndRegion '.\Public\Cosmos DB Database\Get-FabricCosmosDBDatabaseDefinition.ps1' 77
 #Region '.\Public\Cosmos DB Database\New-FabricCosmosDBDatabase.ps1' -1
 
 <#
@@ -10591,6 +11710,9 @@ function Get-FabricDataflow {
 .PARAMETER DataflowId
     The unique identifier of the Dataflow.
 
+.PARAMETER Raw
+    If specified, returns the untouched API response.
+
 .EXAMPLE
     Get-FabricDataflowDefinition -WorkspaceId "12345678-1234-1234-1234-123456789012" -DataflowId "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee"
 
@@ -10614,7 +11736,10 @@ function Get-FabricDataflowDefinition {
         [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
         [ValidateNotNullOrEmpty()]
         [Alias('id')]
-        [string]$DataflowId
+        [string]$DataflowId,
+
+        [Parameter()]
+        [switch]$Raw
     )
 
     process {
@@ -10638,6 +11763,10 @@ function Get-FabricDataflowDefinition {
                 return $null
             }
 
+            if ($Raw) {
+                return $response
+            }
+
             Write-FabricLog -Message "Dataflow definition retrieved successfully." -Level Debug
             return $response
         }
@@ -10647,7 +11776,7 @@ function Get-FabricDataflowDefinition {
         }
     }
 }
-#EndRegion '.\Public\Dataflow\Get-FabricDataflowDefinition.ps1' 71
+#EndRegion '.\Public\Dataflow\Get-FabricDataflowDefinition.ps1' 81
 #Region '.\Public\Dataflow\Get-FabricDataflowParameter.ps1' -1
 
 <#
@@ -10662,6 +11791,9 @@ function Get-FabricDataflowDefinition {
 
 .PARAMETER DataflowId
     The unique identifier of the Dataflow.
+
+.PARAMETER Raw
+    If specified, returns the untouched API response with no added properties or type decoration.
 
 .EXAMPLE
     Get-FabricDataflowParameter -WorkspaceId "12345678-1234-1234-1234-123456789012" -DataflowId "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee"
@@ -10685,7 +11817,10 @@ function Get-FabricDataflowParameter {
         [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
         [ValidateNotNullOrEmpty()]
         [Alias('id')]
-        [string]$DataflowId
+        [string]$DataflowId,
+
+        [Parameter()]
+        [switch]$Raw
     )
 
     process {
@@ -10709,7 +11844,42 @@ function Get-FabricDataflowParameter {
                 return $null
             }
 
+            if ($Raw) {
+                return $response
+            }
+
             Write-FabricLog -Message "Dataflow parameters retrieved successfully." -Level Debug
+
+            # Enrich with resolved workspace and capacity names
+            $workspaceName = $null
+            try {
+                $workspaceName = Resolve-FabricWorkspaceName -WorkspaceId $WorkspaceId
+            }
+            catch {
+                $workspaceName = $WorkspaceId
+                Write-FabricLog -Message "Failed to resolve workspace name for ID '$WorkspaceId': $($_.Exception.Message)" -Level Debug
+            }
+
+            $capacityName = $null
+            try {
+                $capacityId = Resolve-FabricCapacityIdFromWorkspace -WorkspaceId $WorkspaceId
+                if ($capacityId) {
+                    $capacityName = Resolve-FabricCapacityName -CapacityId $capacityId
+                }
+            }
+            catch {
+                Write-FabricLog -Message "Failed to resolve capacity name for workspace ID '$WorkspaceId': $($_.Exception.Message)" -Level Debug
+            }
+
+            foreach ($item in $response) {
+                $item | Add-Member -NotePropertyName 'workspaceId'   -NotePropertyValue $WorkspaceId   -Force
+                $item | Add-Member -NotePropertyName 'WorkspaceName' -NotePropertyValue $workspaceName -Force
+                if ($null -ne $capacityName) {
+                    $item | Add-Member -NotePropertyName 'CapacityName' -NotePropertyValue $capacityName -Force
+                }
+            }
+
+            $response | Add-FabricTypeName -TypeName 'MicrosoftFabric.DataflowParameter'
             return $response
         }
         catch {
@@ -10718,7 +11888,7 @@ function Get-FabricDataflowParameter {
         }
     }
 }
-#EndRegion '.\Public\Dataflow\Get-FabricDataflowParameter.ps1' 69
+#EndRegion '.\Public\Dataflow\Get-FabricDataflowParameter.ps1' 110
 #Region '.\Public\Dataflow\New-FabricDataflow.ps1' -1
 
 <#
@@ -11385,6 +12555,9 @@ function Get-FabricDigitalTwinBuilderFlow {
 .PARAMETER DigitalTwinBuilderFlowId
     (Mandatory) The unique identifier of the Digital Twin Builder Flow item whose definition needs to be retrieved.
 
+.PARAMETER Raw
+    If specified, returns the untouched API response.
+
 .EXAMPLE
     Get-FabricDigitalTwinBuilderFlowDefinition -WorkspaceId "12345" -DigitalTwinBuilderFlowId "67890"
 
@@ -11407,7 +12580,10 @@ function Get-FabricDigitalTwinBuilderFlowDefinition {
 
         [Parameter(Mandatory = $true)]
         [ValidateNotNullOrEmpty()]
-        [string]$DigitalTwinBuilderFlowId
+        [string]$DigitalTwinBuilderFlowId,
+
+        [Parameter()]
+        [switch]$Raw
     )
 
     try {
@@ -11425,7 +12601,13 @@ function Get-FabricDigitalTwinBuilderFlowDefinition {
             Headers = $script:FabricAuthContext.FabricHeaders
             Method = 'Post'
         }
-        Invoke-FabricAPIRequest @apiParams
+        $response = Invoke-FabricAPIRequest @apiParams
+
+        if ($Raw) {
+            return $response
+        }
+
+        $response
     }
     catch {
         # Capture and log error details
@@ -11433,7 +12615,7 @@ function Get-FabricDigitalTwinBuilderFlowDefinition {
         Write-FabricLog -Message "Failed to retrieve Digital Twin Builder Flow definition. Error: $errorDetails" -Level Error
     }
 }
-#EndRegion '.\Public\Digital Twin Builder Flow\Get-FabricDigitalTwinBuilderFlowDefinition.ps1' 63
+#EndRegion '.\Public\Digital Twin Builder Flow\Get-FabricDigitalTwinBuilderFlowDefinition.ps1' 75
 #Region '.\Public\Digital Twin Builder Flow\New-FabricDigitalTwinBuilderFlow.ps1' -1
 
 <#
@@ -11996,6 +13178,9 @@ function Get-FabricDigitalTwinBuilder {
 .PARAMETER DigitalTwinBuilderId
     (Mandatory) The unique identifier of the Digital Twin Builder item whose definition needs to be retrieved.
 
+.PARAMETER Raw
+    If specified, returns the untouched API response.
+
 .EXAMPLE
     Get-FabricDigitalTwinBuilderDefinition -WorkspaceId "12345" -DigitalTwinBuilderId "67890"
 
@@ -12018,7 +13203,10 @@ function Get-FabricDigitalTwinBuilderDefinition {
 
         [Parameter(Mandatory = $true)]
         [ValidateNotNullOrEmpty()]
-        [string]$DigitalTwinBuilderId
+        [string]$DigitalTwinBuilderId,
+
+        [Parameter()]
+        [switch]$Raw
     )
 
     try {
@@ -12036,7 +13224,13 @@ function Get-FabricDigitalTwinBuilderDefinition {
             Headers = $script:FabricAuthContext.FabricHeaders
             Method = 'Post'
         }
-        Invoke-FabricAPIRequest @apiParams
+        $response = Invoke-FabricAPIRequest @apiParams
+
+        if ($Raw) {
+            return $response
+        }
+
+        $response
     }
     catch {
         # Capture and log error details
@@ -12044,7 +13238,7 @@ function Get-FabricDigitalTwinBuilderDefinition {
         Write-FabricLog -Message "Failed to retrieve Digital Twin Builder definition. Error: $errorDetails" -Level Error
     }
 }
-#EndRegion '.\Public\Digital Twin Builder\Get-FabricDigitalTwinBuilderDefinition.ps1' 63
+#EndRegion '.\Public\Digital Twin Builder\Get-FabricDigitalTwinBuilderDefinition.ps1' 75
 #Region '.\Public\Digital Twin Builder\New-FabricDigitalTwinBuilder.ps1' -1
 
 <#
@@ -12947,6 +14141,9 @@ The `Get-FabricDomainWorkspace` function fetches the workspaces for the given do
 .PARAMETER DomainId
 The ID of the domain for which to retrieve workspaces.
 
+.PARAMETER Raw
+If specified, returns the untouched API response with no added properties or type decoration.
+
 .EXAMPLE
 Get-FabricDomainWorkspace -DomainId "12345"
 
@@ -12965,7 +14162,10 @@ function Get-FabricDomainWorkspace {
     param (
         [Parameter(Mandatory = $true)]
         [ValidateNotNullOrEmpty()]
-        [string]$DomainId
+        [string]$DomainId,
+
+        [Parameter()]
+        [switch]$Raw
     )
 
     try {
@@ -12982,7 +14182,49 @@ function Get-FabricDomainWorkspace {
             Headers = $script:FabricAuthContext.FabricHeaders
             Method = 'Get'
         }
-        Invoke-FabricAPIRequest @apiParams
+        $dataItems = Invoke-FabricAPIRequest @apiParams
+
+        if (-not $dataItems) {
+            Write-FabricLog -Message "No data returned from the API." -Level Warning
+            return $null
+        }
+
+        if ($Raw) {
+            return $dataItems
+        }
+
+        # Each returned item is a workspace; resolve names from its own id
+        foreach ($item in $dataItems) {
+            $wsId = $item.id
+            if (-not $wsId) {
+                continue
+            }
+
+            try {
+                $workspaceName = Resolve-FabricWorkspaceName -WorkspaceId $wsId
+            }
+            catch {
+                $workspaceName = $wsId
+                Write-FabricLog -Message "Failed to resolve workspace name for ID '$wsId': $($_.Exception.Message)" -Level Debug
+            }
+            $item | Add-Member -NotePropertyName 'WorkspaceName' -NotePropertyValue $workspaceName -Force
+
+            try {
+                $capacityId = Resolve-FabricCapacityIdFromWorkspace -WorkspaceId $wsId
+                if ($capacityId) {
+                    $capacityName = Resolve-FabricCapacityName -CapacityId $capacityId
+                    if ($null -ne $capacityName) {
+                        $item | Add-Member -NotePropertyName 'CapacityName' -NotePropertyValue $capacityName -Force
+                    }
+                }
+            }
+            catch {
+                Write-FabricLog -Message "Failed to resolve capacity name for workspace ID '$wsId': $($_.Exception.Message)" -Level Debug
+            }
+        }
+
+        $dataItems | Add-FabricTypeName -TypeName 'MicrosoftFabric.DomainWorkspace'
+        return $dataItems
     }
     catch {
         # Capture and log error details
@@ -12990,7 +14232,7 @@ function Get-FabricDomainWorkspace {
         Write-FabricLog -Message "Failed to retrieve domain workspaces. Error: $errorDetails" -Level Error
     }
 }
-#EndRegion '.\Public\Domain\Get-FabricDomainWorkspace.ps1' 54
+#EndRegion '.\Public\Domain\Get-FabricDomainWorkspace.ps1' 102
 #Region '.\Public\Domain\New-FabricDomain.ps1' -1
 
 <#
@@ -13570,6 +14812,9 @@ to handle errors gracefully.
 .PARAMETER EnvironmentId
 The unique identifier of the environment whose libraries are being queried.
 
+.PARAMETER Raw
+If specified, returns the untouched API response with no added properties or type decoration.
+
 .EXAMPLE
 Get-FabricEnvironmentLibrary -WorkspaceId "workspace-12345" -EnvironmentId "environment-67890"
 
@@ -13591,7 +14836,10 @@ function Get-FabricEnvironmentLibrary {
 
         [Parameter(Mandatory = $true)]
         [ValidateNotNullOrEmpty()]
-        [string]$EnvironmentId
+        [string]$EnvironmentId,
+
+        [Parameter()]
+        [switch]$Raw
     )
     try {
         # Validate authentication
@@ -13606,7 +14854,48 @@ function Get-FabricEnvironmentLibrary {
             Headers = $script:FabricAuthContext.FabricHeaders
             Method = 'Get'
         }
-        Invoke-FabricAPIRequest @apiParams
+        $dataItems = Invoke-FabricAPIRequest @apiParams
+
+        if (-not $dataItems) {
+            Write-FabricLog -Message "No data returned from the API." -Level Warning
+            return $null
+        }
+
+        if ($Raw) {
+            return $dataItems
+        }
+
+        # Enrich with resolved workspace and capacity names
+        $workspaceName = $null
+        try {
+            $workspaceName = Resolve-FabricWorkspaceName -WorkspaceId $WorkspaceId
+        }
+        catch {
+            $workspaceName = $WorkspaceId
+            Write-FabricLog -Message "Failed to resolve workspace name for ID '$WorkspaceId': $($_.Exception.Message)" -Level Debug
+        }
+
+        $capacityName = $null
+        try {
+            $capacityId = Resolve-FabricCapacityIdFromWorkspace -WorkspaceId $WorkspaceId
+            if ($capacityId) {
+                $capacityName = Resolve-FabricCapacityName -CapacityId $capacityId
+            }
+        }
+        catch {
+            Write-FabricLog -Message "Failed to resolve capacity name for workspace ID '$WorkspaceId': $($_.Exception.Message)" -Level Debug
+        }
+
+        foreach ($item in $dataItems) {
+            $item | Add-Member -NotePropertyName 'workspaceId'   -NotePropertyValue $WorkspaceId   -Force
+            $item | Add-Member -NotePropertyName 'WorkspaceName' -NotePropertyValue $workspaceName -Force
+            if ($null -ne $capacityName) {
+                $item | Add-Member -NotePropertyName 'CapacityName' -NotePropertyValue $capacityName -Force
+            }
+        }
+
+        $dataItems | Add-FabricTypeName -TypeName 'MicrosoftFabric.EnvironmentLibrary'
+        return $dataItems
     }
     catch {
         # Capture and log error details
@@ -13615,7 +14904,7 @@ function Get-FabricEnvironmentLibrary {
     }
 
 }
-#EndRegion '.\Public\Environment\Get-FabricEnvironmentLibrary.ps1' 61
+#EndRegion '.\Public\Environment\Get-FabricEnvironmentLibrary.ps1' 108
 #Region '.\Public\Environment\Get-FabricEnvironmentSparkCompute.ps1' -1
 
 <#
@@ -13632,6 +14921,9 @@ The unique identifier of the workspace containing the target environment.
 
 .PARAMETER EnvironmentId
 The unique identifier of the environment whose Spark compute details are being retrieved.
+
+.PARAMETER Raw
+If specified, returns the untouched API response with no added properties or type decoration.
 
 .EXAMPLE
 Get-FabricEnvironmentSparkCompute -WorkspaceId "workspace-12345" -EnvironmentId "environment-67890"
@@ -13654,7 +14946,10 @@ function Get-FabricEnvironmentSparkCompute {
 
         [Parameter(Mandatory = $true)]
         [ValidateNotNullOrEmpty()]
-        [string]$EnvironmentId
+        [string]$EnvironmentId,
+
+        [Parameter()]
+        [switch]$Raw
     )
 
     try {
@@ -13670,7 +14965,48 @@ function Get-FabricEnvironmentSparkCompute {
             Headers = $script:FabricAuthContext.FabricHeaders
             Method = 'Get'
         }
-        Invoke-FabricAPIRequest @apiParams
+        $dataItems = Invoke-FabricAPIRequest @apiParams
+
+        if (-not $dataItems) {
+            Write-FabricLog -Message "No data returned from the API." -Level Warning
+            return $null
+        }
+
+        if ($Raw) {
+            return $dataItems
+        }
+
+        # Enrich with resolved workspace and capacity names
+        $workspaceName = $null
+        try {
+            $workspaceName = Resolve-FabricWorkspaceName -WorkspaceId $WorkspaceId
+        }
+        catch {
+            $workspaceName = $WorkspaceId
+            Write-FabricLog -Message "Failed to resolve workspace name for ID '$WorkspaceId': $($_.Exception.Message)" -Level Debug
+        }
+
+        $capacityName = $null
+        try {
+            $capacityId = Resolve-FabricCapacityIdFromWorkspace -WorkspaceId $WorkspaceId
+            if ($capacityId) {
+                $capacityName = Resolve-FabricCapacityName -CapacityId $capacityId
+            }
+        }
+        catch {
+            Write-FabricLog -Message "Failed to resolve capacity name for workspace ID '$WorkspaceId': $($_.Exception.Message)" -Level Debug
+        }
+
+        foreach ($item in $dataItems) {
+            $item | Add-Member -NotePropertyName 'workspaceId'   -NotePropertyValue $WorkspaceId   -Force
+            $item | Add-Member -NotePropertyName 'WorkspaceName' -NotePropertyValue $workspaceName -Force
+            if ($null -ne $capacityName) {
+                $item | Add-Member -NotePropertyName 'CapacityName' -NotePropertyValue $capacityName -Force
+            }
+        }
+
+        $dataItems | Add-FabricTypeName -TypeName 'MicrosoftFabric.EnvironmentSparkCompute'
+        return $dataItems
     }
     catch {
         # Capture and log error details
@@ -13679,7 +15015,7 @@ function Get-FabricEnvironmentSparkCompute {
     }
 
 }
-#EndRegion '.\Public\Environment\Get-FabricEnvironmentSparkCompute.ps1' 62
+#EndRegion '.\Public\Environment\Get-FabricEnvironmentSparkCompute.ps1' 109
 #Region '.\Public\Environment\Get-FabricEnvironmentStagingLibrary.ps1' -1
 
 <#
@@ -13695,6 +15031,9 @@ The unique identifier of the workspace containing the target environment.
 
 .PARAMETER EnvironmentId
 The unique identifier of the environment for which staging library details are being retrieved.
+
+.PARAMETER Raw
+If specified, returns the untouched API response with no added properties or type decoration.
 
 .EXAMPLE
  Get-FabricEnvironmentStagingLibrary -WorkspaceId "workspace-12345" -EnvironmentId "environment-67890"
@@ -13717,7 +15056,10 @@ function Get-FabricEnvironmentStagingLibrary {
 
         [Parameter(Mandatory = $true)]
         [ValidateNotNullOrEmpty()]
-        [string]$EnvironmentId
+        [string]$EnvironmentId,
+
+        [Parameter()]
+        [switch]$Raw
     )
     try {
         # Validate authentication
@@ -13732,7 +15074,48 @@ function Get-FabricEnvironmentStagingLibrary {
             Headers = $script:FabricAuthContext.FabricHeaders
             Method = 'Get'
         }
-        Invoke-FabricAPIRequest @apiParams
+        $dataItems = Invoke-FabricAPIRequest @apiParams
+
+        if (-not $dataItems) {
+            Write-FabricLog -Message "No data returned from the API." -Level Warning
+            return $null
+        }
+
+        if ($Raw) {
+            return $dataItems
+        }
+
+        # Enrich with resolved workspace and capacity names
+        $workspaceName = $null
+        try {
+            $workspaceName = Resolve-FabricWorkspaceName -WorkspaceId $WorkspaceId
+        }
+        catch {
+            $workspaceName = $WorkspaceId
+            Write-FabricLog -Message "Failed to resolve workspace name for ID '$WorkspaceId': $($_.Exception.Message)" -Level Debug
+        }
+
+        $capacityName = $null
+        try {
+            $capacityId = Resolve-FabricCapacityIdFromWorkspace -WorkspaceId $WorkspaceId
+            if ($capacityId) {
+                $capacityName = Resolve-FabricCapacityName -CapacityId $capacityId
+            }
+        }
+        catch {
+            Write-FabricLog -Message "Failed to resolve capacity name for workspace ID '$WorkspaceId': $($_.Exception.Message)" -Level Debug
+        }
+
+        foreach ($item in $dataItems) {
+            $item | Add-Member -NotePropertyName 'workspaceId'   -NotePropertyValue $WorkspaceId   -Force
+            $item | Add-Member -NotePropertyName 'WorkspaceName' -NotePropertyValue $workspaceName -Force
+            if ($null -ne $capacityName) {
+                $item | Add-Member -NotePropertyName 'CapacityName' -NotePropertyValue $capacityName -Force
+            }
+        }
+
+        $dataItems | Add-FabricTypeName -TypeName 'MicrosoftFabric.EnvironmentStagingLibrary'
+        return $dataItems
     }
     catch {
         # Capture and log error details
@@ -13741,7 +15124,7 @@ function Get-FabricEnvironmentStagingLibrary {
     }
 
 }
-#EndRegion '.\Public\Environment\Get-FabricEnvironmentStagingLibrary.ps1' 60
+#EndRegion '.\Public\Environment\Get-FabricEnvironmentStagingLibrary.ps1' 107
 #Region '.\Public\Environment\Get-FabricEnvironmentStagingSparkCompute.ps1' -1
 
 <#
@@ -13757,6 +15140,9 @@ The unique identifier of the workspace containing the target environment.
 
 .PARAMETER EnvironmentId
 The unique identifier of the environment for which staging Spark compute details are being retrieved.
+
+.PARAMETER Raw
+If specified, returns the untouched API response with no added properties or type decoration.
 
 .EXAMPLE
 Get-FabricEnvironmentStagingSparkCompute -WorkspaceId "workspace-12345" -EnvironmentId "environment-67890"
@@ -13779,7 +15165,10 @@ function Get-FabricEnvironmentStagingSparkCompute {
 
         [Parameter(Mandatory = $true)]
         [ValidateNotNullOrEmpty()]
-        [string]$EnvironmentId
+        [string]$EnvironmentId,
+
+        [Parameter()]
+        [switch]$Raw
     )
     try {
         # Validate authentication
@@ -13794,7 +15183,48 @@ function Get-FabricEnvironmentStagingSparkCompute {
             Headers = $script:FabricAuthContext.FabricHeaders
             Method = 'Get'
         }
-        Invoke-FabricAPIRequest @apiParams
+        $dataItems = Invoke-FabricAPIRequest @apiParams
+
+        if (-not $dataItems) {
+            Write-FabricLog -Message "No data returned from the API." -Level Warning
+            return $null
+        }
+
+        if ($Raw) {
+            return $dataItems
+        }
+
+        # Enrich with resolved workspace and capacity names
+        $workspaceName = $null
+        try {
+            $workspaceName = Resolve-FabricWorkspaceName -WorkspaceId $WorkspaceId
+        }
+        catch {
+            $workspaceName = $WorkspaceId
+            Write-FabricLog -Message "Failed to resolve workspace name for ID '$WorkspaceId': $($_.Exception.Message)" -Level Debug
+        }
+
+        $capacityName = $null
+        try {
+            $capacityId = Resolve-FabricCapacityIdFromWorkspace -WorkspaceId $WorkspaceId
+            if ($capacityId) {
+                $capacityName = Resolve-FabricCapacityName -CapacityId $capacityId
+            }
+        }
+        catch {
+            Write-FabricLog -Message "Failed to resolve capacity name for workspace ID '$WorkspaceId': $($_.Exception.Message)" -Level Debug
+        }
+
+        foreach ($item in $dataItems) {
+            $item | Add-Member -NotePropertyName 'workspaceId'   -NotePropertyValue $WorkspaceId   -Force
+            $item | Add-Member -NotePropertyName 'WorkspaceName' -NotePropertyValue $workspaceName -Force
+            if ($null -ne $capacityName) {
+                $item | Add-Member -NotePropertyName 'CapacityName' -NotePropertyValue $capacityName -Force
+            }
+        }
+
+        $dataItems | Add-FabricTypeName -TypeName 'MicrosoftFabric.EnvironmentStagingSparkCompute'
+        return $dataItems
     }
     catch {
         # Capture and log error details
@@ -13803,7 +15233,7 @@ function Get-FabricEnvironmentStagingSparkCompute {
     }
 
 }
-#EndRegion '.\Public\Environment\Get-FabricEnvironmentStagingSparkCompute.ps1' 60
+#EndRegion '.\Public\Environment\Get-FabricEnvironmentStagingSparkCompute.ps1' 107
 #Region '.\Public\Environment\Import-FabricEnvironmentStagingLibrary.ps1' -1
 
 <#
@@ -14646,6 +16076,9 @@ function Get-FabricEventSchemaSet {
 .PARAMETER EventSchemaSetId
     (Mandatory) The unique identifier of the Event Schema Set item whose definition needs to be retrieved.
 
+.PARAMETER Raw
+    If specified, returns the untouched API response.
+
 .EXAMPLE
     Get-FabricEventSchemaSetDefinition -WorkspaceId "12345" -EventSchemaSetId "67890"
 
@@ -14668,7 +16101,10 @@ function Get-FabricEventSchemaSetDefinition {
 
         [Parameter(Mandatory = $true)]
         [ValidateNotNullOrEmpty()]
-        [string]$EventSchemaSetId
+        [string]$EventSchemaSetId,
+
+        [Parameter()]
+        [switch]$Raw
     )
 
     try {
@@ -14686,7 +16122,13 @@ function Get-FabricEventSchemaSetDefinition {
             Headers = $script:FabricAuthContext.FabricHeaders
             Method = 'Post'
         }
-        Invoke-FabricAPIRequest @apiParams
+        $response = Invoke-FabricAPIRequest @apiParams
+
+        if ($Raw) {
+            return $response
+        }
+
+        $response
     }
     catch {
         # Capture and log error details
@@ -14694,7 +16136,7 @@ function Get-FabricEventSchemaSetDefinition {
         Write-FabricLog -Message "Failed to retrieve Event Schema Set definition. Error: $errorDetails" -Level Error
     }
 }
-#EndRegion '.\Public\Event Schema Set\Get-FabricEventSchemaSetDefinition.ps1' 63
+#EndRegion '.\Public\Event Schema Set\Get-FabricEventSchemaSetDefinition.ps1' 75
 #Region '.\Public\Event Schema Set\New-FabricEventSchemaSet.ps1' -1
 
 <#
@@ -15258,6 +16700,9 @@ function Get-FabricEventhouse {
 .PARAMETER EventhouseFormat
     The format in which to retrieve the Eventhouse definition. This parameter is optional.
 
+.PARAMETER Raw
+    If specified, returns the untouched API response.
+
 .EXAMPLE
      Get-FabricEventhouseDefinition -WorkspaceId "workspace-12345" -EventhouseId "eventhouse-67890"
     This example retrieves the definition of the Eventhouse with ID "eventhouse-67890" in the workspace with ID "workspace-12345".
@@ -15287,7 +16732,10 @@ function Get-FabricEventhouseDefinition {
 
         [Parameter(Mandatory = $false)]
         [ValidateNotNullOrEmpty()]
-        [string]$EventhouseFormat
+        [string]$EventhouseFormat,
+
+        [Parameter()]
+        [switch]$Raw
     )
     try {
         # Validate authentication
@@ -15305,6 +16753,10 @@ function Get-FabricEventhouseDefinition {
         }
         $response = Invoke-FabricAPIRequest @apiParams
 
+        if ($Raw) {
+            return $response
+        }
+
         # Return the API response
         Write-FabricLog -Message "Eventhouse '$EventhouseId' definition retrieved successfully!" -Level Debug
         $response
@@ -15316,7 +16768,7 @@ function Get-FabricEventhouseDefinition {
     }
 
 }
-#EndRegion '.\Public\Eventhouse\Get-FabricEventhouseDefinition.ps1' 76
+#EndRegion '.\Public\Eventhouse\Get-FabricEventhouseDefinition.ps1' 86
 #Region '.\Public\Eventhouse\New-FabricEventhouse.ps1' -1
 
 <#
@@ -15893,6 +17345,9 @@ Handles both synchronous and asynchronous operations, with detailed logging and 
 Specifies the format of the Eventstream definition. Currently, only 'ipynb' is supported.
 Default: 'ipynb'.
 
+.PARAMETER Raw
+If specified, returns the untouched API response.
+
 .EXAMPLE
 Get-FabricEventstreamDefinition -WorkspaceId "12345" -EventstreamId "67890"
 
@@ -15924,7 +17379,10 @@ function Get-FabricEventstreamDefinition {
 
         [Parameter(Mandatory = $false)]
         [ValidateNotNullOrEmpty()]
-        [string]$EventstreamFormat
+        [string]$EventstreamFormat,
+
+        [Parameter()]
+        [switch]$Raw
     )
     try {
         # Validate authentication
@@ -15948,6 +17406,10 @@ function Get-FabricEventstreamDefinition {
         }
         $response = Invoke-FabricAPIRequest @apiParams
 
+        if ($Raw) {
+            return $response
+        }
+
         # Return the API response
         Write-FabricLog -Message "Eventstream '$EventstreamId' definition retrieved successfully!" -Level Host
         $response
@@ -15959,7 +17421,7 @@ function Get-FabricEventstreamDefinition {
     }
 
 }
-#EndRegion '.\Public\Eventstream\Get-FabricEventstreamDefinition.ps1' 86
+#EndRegion '.\Public\Eventstream\Get-FabricEventstreamDefinition.ps1' 96
 #Region '.\Public\Eventstream\Get-FabricEventstreamDestination.ps1' -1
 
 <#
@@ -15977,6 +17439,9 @@ Get-FabricEventstreamDestination issues a GET request to the Fabric API to fetch
 
 .PARAMETER DestinationId
 (Mandatory) The ID of the destination to retrieve.
+
+.PARAMETER Raw
+If specified, returns the untouched API response with no added properties or type decoration.
 
 .EXAMPLE
 Get-FabricEventstreamDestination -WorkspaceId "12345" -EventstreamId "67890" -DestinationId "abcd"
@@ -16004,7 +17469,10 @@ function Get-FabricEventstreamDestination {
 
         [Parameter(Mandatory = $true)]
         [ValidateNotNullOrEmpty()]
-        [string]$DestinationId
+        [string]$DestinationId,
+
+        [Parameter()]
+        [switch]$Raw
     )
     try {
         # Validate authentication
@@ -16020,7 +17488,48 @@ function Get-FabricEventstreamDestination {
             Headers = $script:FabricAuthContext.FabricHeaders
             Method  = 'Get'
         }
-        Invoke-FabricAPIRequest @apiParams
+        $dataItems = Invoke-FabricAPIRequest @apiParams
+
+        if (-not $dataItems) {
+            Write-FabricLog -Message "No data returned from the API." -Level Warning
+            return $null
+        }
+
+        if ($Raw) {
+            return $dataItems
+        }
+
+        # Enrich with resolved workspace and capacity names
+        $workspaceName = $null
+        try {
+            $workspaceName = Resolve-FabricWorkspaceName -WorkspaceId $WorkspaceId
+        }
+        catch {
+            $workspaceName = $WorkspaceId
+            Write-FabricLog -Message "Failed to resolve workspace name for ID '$WorkspaceId': $($_.Exception.Message)" -Level Debug
+        }
+
+        $capacityName = $null
+        try {
+            $capacityId = Resolve-FabricCapacityIdFromWorkspace -WorkspaceId $WorkspaceId
+            if ($capacityId) {
+                $capacityName = Resolve-FabricCapacityName -CapacityId $capacityId
+            }
+        }
+        catch {
+            Write-FabricLog -Message "Failed to resolve capacity name for workspace ID '$WorkspaceId': $($_.Exception.Message)" -Level Debug
+        }
+
+        foreach ($item in $dataItems) {
+            $item | Add-Member -NotePropertyName 'workspaceId'   -NotePropertyValue $WorkspaceId   -Force
+            $item | Add-Member -NotePropertyName 'WorkspaceName' -NotePropertyValue $workspaceName -Force
+            if ($null -ne $capacityName) {
+                $item | Add-Member -NotePropertyName 'CapacityName' -NotePropertyValue $capacityName -Force
+            }
+        }
+
+        $dataItems | Add-FabricTypeName -TypeName 'MicrosoftFabric.EventstreamDestination'
+        return $dataItems
     }
     catch {
         # Capture and log error details
@@ -16028,7 +17537,7 @@ function Get-FabricEventstreamDestination {
         Write-FabricLog -Message "Failed to retrieve Eventstream Destination. Error: $errorDetails" -Level Error
     }
 }
-#EndRegion '.\Public\Eventstream\Get-FabricEventstreamDestination.ps1' 67
+#EndRegion '.\Public\Eventstream\Get-FabricEventstreamDestination.ps1' 114
 #Region '.\Public\Eventstream\Get-FabricEventstreamDestinationConnection.ps1' -1
 
 <#
@@ -16046,6 +17555,9 @@ Get-FabricEventstreamDestinationConnection issues a GET request to the Fabric AP
 
 .PARAMETER DestinationId
 [string] (Mandatory) The destination ID whose connection details will be retrieved.
+
+.PARAMETER Raw
+If specified, returns the untouched API response with no added properties or type decoration.
 
 .EXAMPLE
 Get-FabricEventstreamDestinationConnection -WorkspaceId "12345" -EventstreamId "67890" -DestinationId "abcd"
@@ -16076,7 +17588,10 @@ function Get-FabricEventstreamDestinationConnection {
 
         [Parameter(Mandatory = $true)]
         [ValidateNotNullOrEmpty()]
-        [string]$DestinationId
+        [string]$DestinationId,
+
+        [Parameter()]
+        [switch]$Raw
     )
     try {
         # Validate authentication
@@ -16092,7 +17607,13 @@ function Get-FabricEventstreamDestinationConnection {
             Headers = $script:FabricAuthContext.FabricHeaders
             Method  = 'Get'
         }
-        Invoke-FabricAPIRequest @apiParams
+        $response = Invoke-FabricAPIRequest @apiParams
+
+        if ($Raw) {
+            return $response
+        }
+
+        $response
     }
     catch {
         # Capture and log error details
@@ -16100,7 +17621,7 @@ function Get-FabricEventstreamDestinationConnection {
         Write-FabricLog -Message "Failed to retrieve Eventstream Destination Connection. Error: $errorDetails" -Level Error
     }
 }
-#EndRegion '.\Public\Eventstream\Get-FabricEventstreamDestinationConnection.ps1' 70
+#EndRegion '.\Public\Eventstream\Get-FabricEventstreamDestinationConnection.ps1' 82
 #Region '.\Public\Eventstream\Get-FabricEventstreamSource.ps1' -1
 
 <#
@@ -16118,6 +17639,9 @@ The Eventstream ID that contains the source. (Required)
 
 .PARAMETER SourceId
 The ID of the source to retrieve. (Required)
+
+.PARAMETER Raw
+If specified, returns the untouched API response with no added properties or type decoration.
 
 .EXAMPLE
 Get-FabricEventstreamSource -WorkspaceId "12345" -EventstreamId "67890" -SourceId "abcd"
@@ -16143,7 +17667,10 @@ function Get-FabricEventstreamSource {
 
         [Parameter(Mandatory = $true)]
         [ValidateNotNullOrEmpty()]
-        [string]$SourceId
+        [string]$SourceId,
+
+        [Parameter()]
+        [switch]$Raw
     )
     try {
         # Validate authentication
@@ -16159,7 +17686,48 @@ function Get-FabricEventstreamSource {
             Headers = $script:FabricAuthContext.FabricHeaders
             Method  = 'Get'
         }
-        Invoke-FabricAPIRequest @apiParams
+        $dataItems = Invoke-FabricAPIRequest @apiParams
+
+        if (-not $dataItems) {
+            Write-FabricLog -Message "No data returned from the API." -Level Warning
+            return $null
+        }
+
+        if ($Raw) {
+            return $dataItems
+        }
+
+        # Enrich with resolved workspace and capacity names
+        $workspaceName = $null
+        try {
+            $workspaceName = Resolve-FabricWorkspaceName -WorkspaceId $WorkspaceId
+        }
+        catch {
+            $workspaceName = $WorkspaceId
+            Write-FabricLog -Message "Failed to resolve workspace name for ID '$WorkspaceId': $($_.Exception.Message)" -Level Debug
+        }
+
+        $capacityName = $null
+        try {
+            $capacityId = Resolve-FabricCapacityIdFromWorkspace -WorkspaceId $WorkspaceId
+            if ($capacityId) {
+                $capacityName = Resolve-FabricCapacityName -CapacityId $capacityId
+            }
+        }
+        catch {
+            Write-FabricLog -Message "Failed to resolve capacity name for workspace ID '$WorkspaceId': $($_.Exception.Message)" -Level Debug
+        }
+
+        foreach ($item in $dataItems) {
+            $item | Add-Member -NotePropertyName 'workspaceId'   -NotePropertyValue $WorkspaceId   -Force
+            $item | Add-Member -NotePropertyName 'WorkspaceName' -NotePropertyValue $workspaceName -Force
+            if ($null -ne $capacityName) {
+                $item | Add-Member -NotePropertyName 'CapacityName' -NotePropertyValue $capacityName -Force
+            }
+        }
+
+        $dataItems | Add-FabricTypeName -TypeName 'MicrosoftFabric.EventstreamSource'
+        return $dataItems
     }
     catch {
         # Capture and log error details
@@ -16167,7 +17735,7 @@ function Get-FabricEventstreamSource {
         Write-FabricLog -Message "Failed to retrieve Eventstream Source. Error: $errorDetails" -Level Error
     }
 }
-#EndRegion '.\Public\Eventstream\Get-FabricEventstreamSource.ps1' 65
+#EndRegion '.\Public\Eventstream\Get-FabricEventstreamSource.ps1' 112
 #Region '.\Public\Eventstream\Get-FabricEventstreamSourceConnection.ps1' -1
 
 <#
@@ -16186,6 +17754,9 @@ The identifier of the Eventstream that contains the source. (Mandatory)
 
 .PARAMETER SourceId
 The identifier of the source whose connection details will be retrieved. (Mandatory)
+
+.PARAMETER Raw
+If specified, returns the untouched API response with no added properties or type decoration.
 
 .OUTPUTS
 System.Object
@@ -16215,7 +17786,10 @@ function Get-FabricEventstreamSourceConnection {
 
         [Parameter(Mandatory = $true)]
         [ValidateNotNullOrEmpty()]
-        [string]$SourceId
+        [string]$SourceId,
+
+        [Parameter()]
+        [switch]$Raw
     )
     try {
         # Validate authentication
@@ -16231,7 +17805,13 @@ function Get-FabricEventstreamSourceConnection {
             Headers = $script:FabricAuthContext.FabricHeaders
             Method  = 'Get'
         }
-        Invoke-FabricAPIRequest @apiParams
+        $response = Invoke-FabricAPIRequest @apiParams
+
+        if ($Raw) {
+            return $response
+        }
+
+        $response
     }
     catch {
         # Capture and log error details
@@ -16239,7 +17819,7 @@ function Get-FabricEventstreamSourceConnection {
         Write-FabricLog -Message "Failed to retrieve Eventstream Source Connection. Error: $errorDetails" -Level Error
     }
 }
-#EndRegion '.\Public\Eventstream\Get-FabricEventstreamSourceConnection.ps1' 70
+#EndRegion '.\Public\Eventstream\Get-FabricEventstreamSourceConnection.ps1' 82
 #Region '.\Public\Eventstream\Get-FabricEventstreamTopology.ps1' -1
 
 <#
@@ -16254,6 +17834,9 @@ The workspace ID that contains the Eventstream. (Required)
 
 .PARAMETER EventstreamId
 The Eventstream ID whose topology will be retrieved. (Required)
+
+.PARAMETER Raw
+If specified, returns the untouched API response with no added properties or type decoration.
 
 .EXAMPLE
 Get-FabricEventstreamTopology -WorkspaceId "12345" -EventstreamId "67890"
@@ -16275,7 +17858,10 @@ function Get-FabricEventstreamTopology {
 
         [Parameter(Mandatory = $true)]
         [ValidateNotNullOrEmpty()]
-        [string]$EventstreamId
+        [string]$EventstreamId,
+
+        [Parameter()]
+        [switch]$Raw
     )
     try {
         # Validate authentication
@@ -16291,7 +17877,48 @@ function Get-FabricEventstreamTopology {
             Headers = $script:FabricAuthContext.FabricHeaders
             Method  = 'Get'
         }
-        Invoke-FabricAPIRequest @apiParams
+        $dataItems = Invoke-FabricAPIRequest @apiParams
+
+        if (-not $dataItems) {
+            Write-FabricLog -Message "No data returned from the API." -Level Warning
+            return $null
+        }
+
+        if ($Raw) {
+            return $dataItems
+        }
+
+        # Enrich with resolved workspace and capacity names
+        $workspaceName = $null
+        try {
+            $workspaceName = Resolve-FabricWorkspaceName -WorkspaceId $WorkspaceId
+        }
+        catch {
+            $workspaceName = $WorkspaceId
+            Write-FabricLog -Message "Failed to resolve workspace name for ID '$WorkspaceId': $($_.Exception.Message)" -Level Debug
+        }
+
+        $capacityName = $null
+        try {
+            $capacityId = Resolve-FabricCapacityIdFromWorkspace -WorkspaceId $WorkspaceId
+            if ($capacityId) {
+                $capacityName = Resolve-FabricCapacityName -CapacityId $capacityId
+            }
+        }
+        catch {
+            Write-FabricLog -Message "Failed to resolve capacity name for workspace ID '$WorkspaceId': $($_.Exception.Message)" -Level Debug
+        }
+
+        foreach ($item in $dataItems) {
+            $item | Add-Member -NotePropertyName 'workspaceId'   -NotePropertyValue $WorkspaceId   -Force
+            $item | Add-Member -NotePropertyName 'WorkspaceName' -NotePropertyValue $workspaceName -Force
+            if ($null -ne $capacityName) {
+                $item | Add-Member -NotePropertyName 'CapacityName' -NotePropertyValue $capacityName -Force
+            }
+        }
+
+        $dataItems | Add-FabricTypeName -TypeName 'MicrosoftFabric.EventstreamTopology'
+        return $dataItems
     }
     catch {
         # Capture and log error details
@@ -16299,7 +17926,7 @@ function Get-FabricEventstreamTopology {
         Write-FabricLog -Message "Failed to retrieve Eventstream Topology. Error: $errorDetails" -Level Error
     }
 }
-#EndRegion '.\Public\Eventstream\Get-FabricEventstreamTopology.ps1' 58
+#EndRegion '.\Public\Eventstream\Get-FabricEventstreamTopology.ps1' 105
 #Region '.\Public\Eventstream\New-FabricEventstream.ps1' -1
 
 <#
@@ -17974,6 +19601,9 @@ function Get-FabricGraphModel {
 .PARAMETER Format
     Optional. The format of the Graph Model public definition.
 
+.PARAMETER Raw
+    If specified, returns the untouched API response.
+
 .EXAMPLE
     Get-FabricGraphModelDefinition -WorkspaceId "12345678-1234-1234-1234-123456789012" -GraphModelId "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee"
 
@@ -18001,7 +19631,10 @@ function Get-FabricGraphModelDefinition {
 
         [Parameter(Mandatory = $false)]
         [ValidateNotNullOrEmpty()]
-        [string]$Format
+        [string]$Format,
+
+        [Parameter()]
+        [switch]$Raw
     )
 
     process {
@@ -18035,6 +19668,10 @@ function Get-FabricGraphModelDefinition {
             }
             $response = Invoke-FabricAPIRequest @apiParams
 
+            if ($Raw) {
+                return $response
+            }
+
             if ($response) {
                 Write-FabricLog -Message "Graph Model definition retrieved successfully." -Level Debug
                 return $response
@@ -18046,7 +19683,7 @@ function Get-FabricGraphModelDefinition {
         }
     }
 }
-#EndRegion '.\Public\Graph Model\Get-FabricGraphModelDefinition.ps1' 90
+#EndRegion '.\Public\Graph Model\Get-FabricGraphModelDefinition.ps1' 100
 #Region '.\Public\Graph Model\Get-FabricGraphModelQueryableType.ps1' -1
 
 <#
@@ -18062,6 +19699,9 @@ function Get-FabricGraphModelDefinition {
 
 .PARAMETER GraphModelId
     The GUID of the Graph Model to get the queryable type for.
+
+.PARAMETER Raw
+    If specified, returns the untouched API response with no added properties or type decoration.
 
 .EXAMPLE
     Get-FabricGraphModelQueryableType -WorkspaceId "12345678-1234-1234-1234-123456789012" -GraphModelId "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee"
@@ -18085,7 +19725,10 @@ function Get-FabricGraphModelQueryableType {
         [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
         [ValidateNotNullOrEmpty()]
         [Alias('id')]
-        [string]$GraphModelId
+        [string]$GraphModelId,
+
+        [Parameter()]
+        [switch]$Raw
     )
 
     process {
@@ -18111,10 +19754,48 @@ function Get-FabricGraphModelQueryableType {
             }
             $response = Invoke-FabricAPIRequest @apiParams
 
-            if ($response) {
-                Write-FabricLog -Message "Queryable graph type retrieved successfully." -Level Debug
+            if (-not $response) {
+                Write-FabricLog -Message "No data returned from the API." -Level Warning
+                return $null
+            }
+
+            if ($Raw) {
                 return $response
             }
+
+            Write-FabricLog -Message "Queryable graph type retrieved successfully." -Level Debug
+
+            # Enrich with resolved workspace and capacity names
+            $workspaceName = $null
+            try {
+                $workspaceName = Resolve-FabricWorkspaceName -WorkspaceId $WorkspaceId
+            }
+            catch {
+                $workspaceName = $WorkspaceId
+                Write-FabricLog -Message "Failed to resolve workspace name for ID '$WorkspaceId': $($_.Exception.Message)" -Level Debug
+            }
+
+            $capacityName = $null
+            try {
+                $capacityId = Resolve-FabricCapacityIdFromWorkspace -WorkspaceId $WorkspaceId
+                if ($capacityId) {
+                    $capacityName = Resolve-FabricCapacityName -CapacityId $capacityId
+                }
+            }
+            catch {
+                Write-FabricLog -Message "Failed to resolve capacity name for workspace ID '$WorkspaceId': $($_.Exception.Message)" -Level Debug
+            }
+
+            foreach ($item in $response) {
+                $item | Add-Member -NotePropertyName 'workspaceId'   -NotePropertyValue $WorkspaceId   -Force
+                $item | Add-Member -NotePropertyName 'WorkspaceName' -NotePropertyValue $workspaceName -Force
+                if ($null -ne $capacityName) {
+                    $item | Add-Member -NotePropertyName 'CapacityName' -NotePropertyValue $capacityName -Force
+                }
+            }
+
+            $response | Add-FabricTypeName -TypeName 'MicrosoftFabric.GraphModelQueryableType'
+            return $response
         }
         catch {
             $errorDetails = $_.Exception.Message
@@ -18122,7 +19803,7 @@ function Get-FabricGraphModelQueryableType {
         }
     }
 }
-#EndRegion '.\Public\Graph Model\Get-FabricGraphModelQueryableType.ps1' 74
+#EndRegion '.\Public\Graph Model\Get-FabricGraphModelQueryableType.ps1' 118
 #Region '.\Public\Graph Model\Invoke-FabricGraphModelQuery.ps1' -1
 
 <#
@@ -18801,6 +20482,9 @@ function Get-FabricGraphQuerySet {
 .PARAMETER GraphQuerySetId
     (Mandatory) The unique identifier of the Graph Query Set item whose definition needs to be retrieved.
 
+.PARAMETER Raw
+    If specified, returns the untouched API response.
+
 .EXAMPLE
     Get-FabricGraphQuerySetDefinition -WorkspaceId "12345" -GraphQuerySetId "67890"
 
@@ -18823,7 +20507,10 @@ function Get-FabricGraphQuerySetDefinition {
 
         [Parameter(Mandatory = $true)]
         [ValidateNotNullOrEmpty()]
-        [string]$GraphQuerySetId
+        [string]$GraphQuerySetId,
+
+        [Parameter()]
+        [switch]$Raw
     )
 
     try {
@@ -18841,7 +20528,13 @@ function Get-FabricGraphQuerySetDefinition {
             Headers = $script:FabricAuthContext.FabricHeaders
             Method = 'Post'
         }
-        Invoke-FabricAPIRequest @apiParams
+        $response = Invoke-FabricAPIRequest @apiParams
+
+        if ($Raw) {
+            return $response
+        }
+
+        $response
     }
     catch {
         # Capture and log error details
@@ -18849,7 +20542,7 @@ function Get-FabricGraphQuerySetDefinition {
         Write-FabricLog -Message "Failed to retrieve Graph Query Set definition. Error: $errorDetails" -Level Error
     }
 }
-#EndRegion '.\Public\Graph Query Set\Get-FabricGraphQuerySetDefinition.ps1' 63
+#EndRegion '.\Public\Graph Query Set\Get-FabricGraphQuerySetDefinition.ps1' 75
 #Region '.\Public\Graph Query Set\New-FabricGraphQuerySet.ps1' -1
 
 <#
@@ -19411,6 +21104,9 @@ function Get-FabricGraphQLApi {
 .PARAMETER GraphQLApiFormat
     The desired format for the API definition (e.g., 'json'). Optional.
 
+.PARAMETER Raw
+    If specified, returns the untouched API response.
+
 .EXAMPLE
     Get-FabricGraphQLApiDefinition -WorkspaceId "workspace-12345" -GraphQLApiId "GraphQLApi-67890"
     Retrieves the definition for the specified GraphQL API in the given workspace.
@@ -19439,7 +21135,10 @@ function Get-FabricGraphQLApiDefinition {
 
         [Parameter(Mandatory = $false)]
         [ValidateNotNullOrEmpty()]
-        [string]$GraphQLApiFormat
+        [string]$GraphQLApiFormat,
+
+        [Parameter()]
+        [switch]$Raw
     )
     try {
         # Validate authentication
@@ -19463,6 +21162,10 @@ function Get-FabricGraphQLApiDefinition {
         }
         $response = Invoke-FabricAPIRequest @apiParams
 
+        if ($Raw) {
+            return $response
+        }
+
         # Return the API response
         Write-FabricLog -Message "GraphQLApi '$GraphQLApiId' definition retrieved successfully!" -Level Debug
         $response
@@ -19473,7 +21176,7 @@ function Get-FabricGraphQLApiDefinition {
         Write-FabricLog -Message "Failed to retrieve GraphQLApi. Error: $errorDetails" -Level Error
     }
  }
-#EndRegion '.\Public\GraphQLApi\Get-FabricGraphQLApiDefinition.ps1' 79
+#EndRegion '.\Public\GraphQLApi\Get-FabricGraphQLApiDefinition.ps1' 89
 #Region '.\Public\GraphQLApi\New-FabricGraphQLApi.ps1' -1
 
 <#
@@ -20210,6 +21913,9 @@ Handles both synchronous and asynchronous operations, with detailed logging and 
 .PARAMETER KQLDashboardFormat
 Specifies the format of the KQLDashboard definition.
 
+.PARAMETER Raw
+If specified, returns the untouched API response.
+
 .EXAMPLE
 Get-FabricKQLDashboardDefinition -WorkspaceId "12345" -KQLDashboardId "67890"
 
@@ -20240,7 +21946,10 @@ function Get-FabricKQLDashboardDefinition {
 
         [Parameter(Mandatory = $false)]
         [ValidateNotNullOrEmpty()]
-        [string]$KQLDashboardFormat
+        [string]$KQLDashboardFormat,
+
+        [Parameter()]
+        [switch]$Raw
     )
     try {
         # Validate authentication token before proceeding.
@@ -20263,6 +21972,10 @@ function Get-FabricKQLDashboardDefinition {
         }
         $response = Invoke-FabricAPIRequest @apiParams
 
+        if ($Raw) {
+            return $response
+        }
+
         # Return the API response
         Write-FabricLog -Message "KQLDashboard '$KQLDashboardId' definition retrieved successfully!" -Level Host
         return $response
@@ -20274,7 +21987,7 @@ function Get-FabricKQLDashboardDefinition {
     }
 
 }
-#EndRegion '.\Public\KQL Dashboard\Get-FabricKQLDashboardDefinition.ps1' 83
+#EndRegion '.\Public\KQL Dashboard\Get-FabricKQLDashboardDefinition.ps1' 93
 #Region '.\Public\KQL Dashboard\New-FabricKQLDashboard.ps1' -1
 
 <#
@@ -20884,6 +22597,8 @@ Handles both synchronous and asynchronous operations, with detailed logging and 
 .PARAMETER KQLDatabaseFormat
 Specifies the format of the KQLDatabase definition. Currently, only 'ipynb' is supported.
 
+.PARAMETER Raw
+If specified, returns the untouched API response.
 
 .EXAMPLE
 Get-FabricKQLDatabaseDefinition -WorkspaceId "12345" -KQLDatabaseId "67890"
@@ -20916,7 +22631,10 @@ function Get-FabricKQLDatabaseDefinition {
 
         [Parameter(Mandatory = $false)]
         [ValidateNotNullOrEmpty()]
-        [string]$KQLDatabaseFormat
+        [string]$KQLDatabaseFormat,
+
+        [Parameter()]
+        [switch]$Raw
     )
     try {
         # Validate authentication token before proceeding.
@@ -20939,6 +22657,10 @@ function Get-FabricKQLDatabaseDefinition {
         }
         $response = Invoke-FabricAPIRequest @apiParams
 
+        if ($Raw) {
+            return $response
+        }
+
         # Return the API response
         Write-FabricLog -Message "KQLDatabase '$KQLDatabaseId' definition retrieved successfully!" -Level Debug
         return $response
@@ -20949,7 +22671,7 @@ function Get-FabricKQLDatabaseDefinition {
         Write-FabricLog -Message "Failed to retrieve KQLDatabase. Error: $errorDetails" -Level Error
     }
 }
-#EndRegion '.\Public\KQL Database\Get-FabricKQLDatabaseDefinition.ps1' 85
+#EndRegion '.\Public\KQL Database\Get-FabricKQLDatabaseDefinition.ps1' 94
 #Region '.\Public\KQL Database\New-FabricKQLDatabase.ps1' -1
 
 <#
@@ -21713,6 +23435,9 @@ Handles both synchronous and asynchronous operations, with detailed logging and 
 .PARAMETER KQLQuerysetFormat
 Specifies the format of the KQLQueryset definition.
 
+.PARAMETER Raw
+If specified, returns the untouched API response.
+
 .EXAMPLE
 Get-FabricKQLQuerysetDefinition -WorkspaceId "12345" -KQLQuerysetId "67890"
 
@@ -21743,7 +23468,10 @@ function Get-FabricKQLQuerysetDefinition {
 
         [Parameter(Mandatory = $false)]
         [ValidateNotNullOrEmpty()]
-        [string]$KQLQuerysetFormat
+        [string]$KQLQuerysetFormat,
+
+        [Parameter()]
+        [switch]$Raw
     )
     try {
         # Validate authentication token before proceeding.
@@ -21766,6 +23494,10 @@ function Get-FabricKQLQuerysetDefinition {
         }
         $response = Invoke-FabricAPIRequest @apiParams
 
+        if ($Raw) {
+            return $response
+        }
+
         Write-FabricLog -Message "KQLQueryset '$KQLQuerysetId' definition retrieved successfully!" -Level Debug
         return $response
     }
@@ -21776,7 +23508,7 @@ function Get-FabricKQLQuerysetDefinition {
     }
 
 }
-#EndRegion '.\Public\KQL Queryset\Get-FabricKQLQuerysetDefinition.ps1' 82
+#EndRegion '.\Public\KQL Queryset\Get-FabricKQLQuerysetDefinition.ps1' 92
 #Region '.\Public\KQL Queryset\New-FabricKQLQueryset.ps1' -1
 
 <#
@@ -22568,6 +24300,9 @@ The Get-FabricLakehouseLivySession function queries the Fabric API to obtain Liv
 .PARAMETER LivyId
 (Optional) The ID of a specific Livy session to retrieve.
 
+.PARAMETER Raw
+If specified, returns the untouched API response with no added properties or type decoration.
+
 .EXAMPLE
 Get-FabricLakehouseLivySession -WorkspaceId "12345" -LakehouseId "67890"
 
@@ -22598,7 +24333,10 @@ function Get-FabricLakehouseLivySession {
 
         [Parameter(Mandatory = $false)]
         [ValidateNotNullOrEmpty()]
-        [string]$LivyId
+        [string]$LivyId,
+
+        [Parameter()]
+        [switch]$Raw
     )
     try {
         Invoke-FabricAuthCheck -ThrowOnFailure
@@ -22632,14 +24370,48 @@ function Get-FabricLakehouseLivySession {
         }
 
         # Handle results
-        if ($matchedItems) {
-            Write-FabricLog -Message "Item(s) found matching the specified criteria." -Level Debug
-            return $matchedItems
-        }
-        else {
+        if (-not $matchedItems) {
             Write-FabricLog -Message "No item found matching the provided criteria." -Level Warning
             return $null
         }
+
+        if ($Raw) {
+            return $matchedItems
+        }
+
+        Write-FabricLog -Message "Item(s) found matching the specified criteria." -Level Debug
+
+        # Enrich with resolved workspace and capacity names
+        $workspaceName = $null
+        try {
+            $workspaceName = Resolve-FabricWorkspaceName -WorkspaceId $WorkspaceId
+        }
+        catch {
+            $workspaceName = $WorkspaceId
+            Write-FabricLog -Message "Failed to resolve workspace name for ID '$WorkspaceId': $($_.Exception.Message)" -Level Debug
+        }
+
+        $capacityName = $null
+        try {
+            $capacityId = Resolve-FabricCapacityIdFromWorkspace -WorkspaceId $WorkspaceId
+            if ($capacityId) {
+                $capacityName = Resolve-FabricCapacityName -CapacityId $capacityId
+            }
+        }
+        catch {
+            Write-FabricLog -Message "Failed to resolve capacity name for workspace ID '$WorkspaceId': $($_.Exception.Message)" -Level Debug
+        }
+
+        foreach ($item in $matchedItems) {
+            $item | Add-Member -NotePropertyName 'workspaceId'   -NotePropertyValue $WorkspaceId   -Force
+            $item | Add-Member -NotePropertyName 'WorkspaceName' -NotePropertyValue $workspaceName -Force
+            if ($null -ne $capacityName) {
+                $item | Add-Member -NotePropertyName 'CapacityName' -NotePropertyValue $capacityName -Force
+            }
+        }
+
+        $matchedItems | Add-FabricTypeName -TypeName 'MicrosoftFabric.LivySession'
+        return $matchedItems
     }
     catch {
         # Capture and log error details
@@ -22647,7 +24419,7 @@ function Get-FabricLakehouseLivySession {
         Write-FabricLog -Message "Failed to retrieve Lakehouse Livy Session. Error: $errorDetails" -Level Error
     }
 }
-#EndRegion '.\Public\Lakehouse\Get-FabricLakehouseLivySession.ps1' 96
+#EndRegion '.\Public\Lakehouse\Get-FabricLakehouseLivySession.ps1' 136
 #Region '.\Public\Lakehouse\Get-FabricLakehouseTable.ps1' -1
 
 <#
@@ -22664,6 +24436,9 @@ The GUID of the workspace hosting the Lakehouse. Required so the API can locate 
 .PARAMETER LakehouseId
 The Id of the Lakehouse whose tables you want to enumerate. Required for the request URL. Provide the Lakehouse Id
 returned from a prior Get-FabricLakehouse call.
+
+.PARAMETER Raw
+If specified, returns the untouched API response with no added properties or type decoration.
 
 .EXAMPLE
 Get-FabricLakehouseTable -WorkspaceId 11111111-2222-3333-4444-555555555555 -LakehouseId aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee
@@ -22682,7 +24457,10 @@ function Get-FabricLakehouseTable {
 
         [Parameter(Mandatory = $false)]
         [ValidateNotNullOrEmpty()]
-        [string]$LakehouseId
+        [string]$LakehouseId,
+
+        [Parameter()]
+        [switch]$Raw
     )
     try {
         Invoke-FabricAuthCheck -ThrowOnFailure
@@ -22704,14 +24482,48 @@ function Get-FabricLakehouseTable {
         $dataItems = Invoke-FabricAPIRequest @apiParams
 
         # Handle results
-        if ($dataItems) {
-            Write-FabricLog -Message "Item(s) found matching the specified criteria." -Level Debug
-            return $dataItems
-        }
-        else {
+        if (-not $dataItems) {
             Write-FabricLog -Message "No data returned from the API." -Level Warning
             return $null
         }
+
+        if ($Raw) {
+            return $dataItems
+        }
+
+        Write-FabricLog -Message "Item(s) found matching the specified criteria." -Level Debug
+
+        # Enrich with resolved workspace and capacity names
+        $workspaceName = $null
+        try {
+            $workspaceName = Resolve-FabricWorkspaceName -WorkspaceId $WorkspaceId
+        }
+        catch {
+            $workspaceName = $WorkspaceId
+            Write-FabricLog -Message "Failed to resolve workspace name for ID '$WorkspaceId': $($_.Exception.Message)" -Level Debug
+        }
+
+        $capacityName = $null
+        try {
+            $capacityId = Resolve-FabricCapacityIdFromWorkspace -WorkspaceId $WorkspaceId
+            if ($capacityId) {
+                $capacityName = Resolve-FabricCapacityName -CapacityId $capacityId
+            }
+        }
+        catch {
+            Write-FabricLog -Message "Failed to resolve capacity name for workspace ID '$WorkspaceId': $($_.Exception.Message)" -Level Debug
+        }
+
+        foreach ($item in $dataItems) {
+            $item | Add-Member -NotePropertyName 'workspaceId'   -NotePropertyValue $WorkspaceId   -Force
+            $item | Add-Member -NotePropertyName 'WorkspaceName' -NotePropertyValue $workspaceName -Force
+            if ($null -ne $capacityName) {
+                $item | Add-Member -NotePropertyName 'CapacityName' -NotePropertyValue $capacityName -Force
+            }
+        }
+
+        $dataItems | Add-FabricTypeName -TypeName 'MicrosoftFabric.LakehouseTable'
+        return $dataItems
     }
     catch {
         # Capture and log error details
@@ -22720,7 +24532,7 @@ function Get-FabricLakehouseTable {
     }
 
 }
-#EndRegion '.\Public\Lakehouse\Get-FabricLakehouseTable.ps1' 71
+#EndRegion '.\Public\Lakehouse\Get-FabricLakehouseTable.ps1' 111
 #Region '.\Public\Lakehouse\New-FabricLakehouse.ps1' -1
 
 <#
@@ -23745,8 +25557,7 @@ function Remove-FabricManagedPrivateEndpoint {
         }
     }
 }
-<<<<<<<< HEAD:tools/MicrosoftFabricMgmt/output/module/MicrosoftFabricMgmt/1.0.8/MicrosoftFabricMgmt.psm1
-#EndRegion '.\Public\Managed Private Endpoint\Remove-FabricManagedPrivateEndpoint.ps1' 64
+#EndRegion '.\Public\Managed Private Endpoint\Remove-FabricManagedPrivateEndpoint.ps1' 68
 #Region '.\Public\Map\Get-FabricMap.ps1' -1
 
 <#
@@ -23856,6 +25667,9 @@ function Get-FabricMap {
 .PARAMETER MapId
     (Mandatory) The unique identifier of the Map item whose definition needs to be retrieved.
 
+.PARAMETER Raw
+    If specified, returns the untouched API response.
+
 .EXAMPLE
     Get-FabricMapDefinition -WorkspaceId "12345" -MapId "67890"
 
@@ -23878,7 +25692,10 @@ function Get-FabricMapDefinition {
 
         [Parameter(Mandatory = $true)]
         [ValidateNotNullOrEmpty()]
-        [string]$MapId
+        [string]$MapId,
+
+        [Parameter()]
+        [switch]$Raw
     )
 
     try {
@@ -23896,7 +25713,13 @@ function Get-FabricMapDefinition {
             Headers = $script:FabricAuthContext.FabricHeaders
             Method = 'Post'
         }
-        Invoke-FabricAPIRequest @apiParams
+        $response = Invoke-FabricAPIRequest @apiParams
+
+        if ($Raw) {
+            return $response
+        }
+
+        $response
     }
     catch {
         # Capture and log error details
@@ -23904,7 +25727,7 @@ function Get-FabricMapDefinition {
         Write-FabricLog -Message "Failed to retrieve Map definition. Error: $errorDetails" -Level Error
     }
 }
-#EndRegion '.\Public\Map\Get-FabricMapDefinition.ps1' 63
+#EndRegion '.\Public\Map\Get-FabricMapDefinition.ps1' 75
 #Region '.\Public\Map\New-FabricMap.ps1' -1
 
 <#
@@ -24467,6 +26290,9 @@ function Get-FabricMirroredAzureDatabricksCatalog {
 .PARAMETER MirroredAzureDatabricksCatalogId
     (Mandatory) The unique identifier of the Mirrored Azure Databricks Catalog item whose definition needs to be retrieved.
 
+.PARAMETER Raw
+    If specified, returns the untouched API response.
+
 .EXAMPLE
     Get-FabricMirroredAzureDatabricksCatalogDefinition -WorkspaceId "12345" -MirroredAzureDatabricksCatalogId "67890"
 
@@ -24489,7 +26315,10 @@ function Get-FabricMirroredAzureDatabricksCatalogDefinition {
 
         [Parameter(Mandatory = $true)]
         [ValidateNotNullOrEmpty()]
-        [string]$MirroredAzureDatabricksCatalogId
+        [string]$MirroredAzureDatabricksCatalogId,
+
+        [Parameter()]
+        [switch]$Raw
     )
 
     try {
@@ -24507,7 +26336,13 @@ function Get-FabricMirroredAzureDatabricksCatalogDefinition {
             Headers = $script:FabricAuthContext.FabricHeaders
             Method = 'Post'
         }
-        Invoke-FabricAPIRequest @apiParams
+        $response = Invoke-FabricAPIRequest @apiParams
+
+        if ($Raw) {
+            return $response
+        }
+
+        $response
     }
     catch {
         # Capture and log error details
@@ -24515,7 +26350,7 @@ function Get-FabricMirroredAzureDatabricksCatalogDefinition {
         Write-FabricLog -Message "Failed to retrieve Mirrored Azure Databricks Catalog definition. Error: $errorDetails" -Level Error
     }
 }
-#EndRegion '.\Public\Mirrored Azure Databricks Catalog\Get-FabricMirroredAzureDatabricksCatalogDefinition.ps1' 63
+#EndRegion '.\Public\Mirrored Azure Databricks Catalog\Get-FabricMirroredAzureDatabricksCatalogDefinition.ps1' 75
 #Region '.\Public\Mirrored Azure Databricks Catalog\New-FabricMirroredAzureDatabricksCatalog.ps1' -1
 
 <#
@@ -24969,9 +26804,6 @@ function Update-FabricMirroredAzureDatabricksCatalogDefinition {
     }
 }
 #EndRegion '.\Public\Mirrored Azure Databricks Catalog\Update-FabricMirroredAzureDatabricksCatalogDefinition.ps1' 125
-========
-#EndRegion '.\Public\Managed Private Endpoint\Remove-FabricManagedPrivateEndpoint.ps1' 68
->>>>>>>> main:tools/MicrosoftFabricMgmt/output/module/MicrosoftFabricMgmt/1.0.6/MicrosoftFabricMgmt.psm1
 #Region '.\Public\Mirrored Database\Get-FabricMirroredDatabase.ps1' -1
 
 <#
@@ -25097,6 +26929,9 @@ Handles both synchronous and asynchronous operations, with detailed logging and 
 .PARAMETER MirroredDatabaseId
 (Optional)The unique identifier of the MirroredDatabase whose definition needs to be retrieved.
 
+.PARAMETER Raw
+If specified, returns the untouched API response.
+
 .EXAMPLE
 Get-FabricMirroredDatabaseDefinition -WorkspaceId "12345" -MirroredDatabaseId "67890"
 
@@ -25123,7 +26958,10 @@ function Get-FabricMirroredDatabaseDefinition {
 
         [Parameter(Mandatory = $false)]
         [ValidateNotNullOrEmpty()]
-        [string]$MirroredDatabaseId
+        [string]$MirroredDatabaseId,
+
+        [Parameter()]
+        [switch]$Raw
     )
     try {
         Invoke-FabricAuthCheck -ThrowOnFailure
@@ -25141,6 +26979,10 @@ function Get-FabricMirroredDatabaseDefinition {
         }
         $response = Invoke-FabricAPIRequest @apiParams
 
+        if ($Raw) {
+            return $response
+        }
+
         # Return the API response
         Write-FabricLog -Message "Mirrored Database '$MirroredDatabaseId' definition retrieved successfully!" -Level Debug
         return $response
@@ -25152,7 +26994,7 @@ function Get-FabricMirroredDatabaseDefinition {
     }
 
 }
-#EndRegion '.\Public\Mirrored Database\Get-FabricMirroredDatabaseDefinition.ps1' 71
+#EndRegion '.\Public\Mirrored Database\Get-FabricMirroredDatabaseDefinition.ps1' 81
 #Region '.\Public\Mirrored Database\Get-FabricMirroredDatabaseStatus.ps1' -1
 
 <#
@@ -25169,6 +27011,9 @@ workspace and is required.
 
 .PARAMETER MirroredDatabaseId
 The Id of the mirrored database to check. Provide the resource Id so the API can return status for that specific item.
+
+.PARAMETER Raw
+If specified, returns the untouched API response with no added properties or type decoration.
 
 .EXAMPLE
 Get-FabricMirroredDatabaseStatus -WorkspaceId 11111111-2222-3333-4444-555555555555 -MirroredDatabaseId aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee
@@ -25187,7 +27032,10 @@ function Get-FabricMirroredDatabaseStatus {
 
         [Parameter(Mandatory = $false)]
         [ValidateNotNullOrEmpty()]
-        [string]$MirroredDatabaseId
+        [string]$MirroredDatabaseId,
+
+        [Parameter()]
+        [switch]$Raw
     )
     try {
         Invoke-FabricAuthCheck -ThrowOnFailure
@@ -25205,8 +27053,47 @@ function Get-FabricMirroredDatabaseStatus {
         }
         $response = Invoke-FabricAPIRequest @apiParams
 
-        # Return the API response
+        if (-not $response) {
+            Write-FabricLog -Message "No data returned from the API." -Level Warning
+            return $null
+        }
+
+        if ($Raw) {
+            return $response
+        }
+
         Write-FabricLog -Message "Mirrored Database '$MirroredDatabaseId' status retrieved successfully!" -Level Debug
+
+        # Enrich with resolved workspace and capacity names
+        $workspaceName = $null
+        try {
+            $workspaceName = Resolve-FabricWorkspaceName -WorkspaceId $WorkspaceId
+        }
+        catch {
+            $workspaceName = $WorkspaceId
+            Write-FabricLog -Message "Failed to resolve workspace name for ID '$WorkspaceId': $($_.Exception.Message)" -Level Debug
+        }
+
+        $capacityName = $null
+        try {
+            $capacityId = Resolve-FabricCapacityIdFromWorkspace -WorkspaceId $WorkspaceId
+            if ($capacityId) {
+                $capacityName = Resolve-FabricCapacityName -CapacityId $capacityId
+            }
+        }
+        catch {
+            Write-FabricLog -Message "Failed to resolve capacity name for workspace ID '$WorkspaceId': $($_.Exception.Message)" -Level Debug
+        }
+
+        foreach ($item in $response) {
+            $item | Add-Member -NotePropertyName 'workspaceId'   -NotePropertyValue $WorkspaceId   -Force
+            $item | Add-Member -NotePropertyName 'WorkspaceName' -NotePropertyValue $workspaceName -Force
+            if ($null -ne $capacityName) {
+                $item | Add-Member -NotePropertyName 'CapacityName' -NotePropertyValue $capacityName -Force
+            }
+        }
+
+        $response | Add-FabricTypeName -TypeName 'MicrosoftFabric.MirroredDatabaseStatus'
         return $response
     }
     catch {
@@ -25216,7 +27103,7 @@ function Get-FabricMirroredDatabaseStatus {
     }
 
 }
-#EndRegion '.\Public\Mirrored Database\Get-FabricMirroredDatabaseStatus.ps1' 62
+#EndRegion '.\Public\Mirrored Database\Get-FabricMirroredDatabaseStatus.ps1' 107
 #Region '.\Public\Mirrored Database\Get-FabricMirroredDatabaseTableStatus.ps1' -1
 
 <#
@@ -25235,6 +27122,9 @@ The GUID of the workspace that contains the mirrored database. This is required 
 The Id of the mirrored database whose table-level status you want to inspect. Provide the resource Id to retrieve the
 status collection for all mirrored tables.
 
+.PARAMETER Raw
+If specified, returns the untouched API response with no added properties or type decoration.
+
 .EXAMPLE
 Get-FabricMirroredDatabaseTableStatus -WorkspaceId 11111111-2222-3333-4444-555555555555 -MirroredDatabaseId aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee
 
@@ -25252,7 +27142,10 @@ function Get-FabricMirroredDatabaseTableStatus {
 
         [Parameter(Mandatory = $false)]
         [ValidateNotNullOrEmpty()]
-        [string]$MirroredDatabaseId
+        [string]$MirroredDatabaseId,
+
+        [Parameter()]
+        [switch]$Raw
     )
     try {
         Invoke-FabricAuthCheck -ThrowOnFailure
@@ -25274,10 +27167,44 @@ function Get-FabricMirroredDatabaseTableStatus {
             Write-FabricLog -Message "No data returned from the API." -Level Warning
             return $null
         }
-        else {
-            Write-FabricLog -Message "Item(s) found. Data retrieved successfully!" -Level Debug
+
+        if ($Raw) {
             return $dataItems
         }
+
+        Write-FabricLog -Message "Item(s) found. Data retrieved successfully!" -Level Debug
+
+        # Enrich with resolved workspace and capacity names
+        $workspaceName = $null
+        try {
+            $workspaceName = Resolve-FabricWorkspaceName -WorkspaceId $WorkspaceId
+        }
+        catch {
+            $workspaceName = $WorkspaceId
+            Write-FabricLog -Message "Failed to resolve workspace name for ID '$WorkspaceId': $($_.Exception.Message)" -Level Debug
+        }
+
+        $capacityName = $null
+        try {
+            $capacityId = Resolve-FabricCapacityIdFromWorkspace -WorkspaceId $WorkspaceId
+            if ($capacityId) {
+                $capacityName = Resolve-FabricCapacityName -CapacityId $capacityId
+            }
+        }
+        catch {
+            Write-FabricLog -Message "Failed to resolve capacity name for workspace ID '$WorkspaceId': $($_.Exception.Message)" -Level Debug
+        }
+
+        foreach ($item in $dataItems) {
+            $item | Add-Member -NotePropertyName 'workspaceId'   -NotePropertyValue $WorkspaceId   -Force
+            $item | Add-Member -NotePropertyName 'WorkspaceName' -NotePropertyValue $workspaceName -Force
+            if ($null -ne $capacityName) {
+                $item | Add-Member -NotePropertyName 'CapacityName' -NotePropertyValue $capacityName -Force
+            }
+        }
+
+        $dataItems | Add-FabricTypeName -TypeName 'MicrosoftFabric.MirroredDatabaseTableStatus'
+        return $dataItems
     }
     catch {
         # Capture and log error details
@@ -25285,7 +27212,7 @@ function Get-FabricMirroredDatabaseTableStatus {
         Write-FabricLog -Message "Failed to retrieve MirroredDatabase. Error: $errorDetails" -Level Error
     }
 }
-#EndRegion '.\Public\Mirrored Database\Get-FabricMirroredDatabaseTableStatus.ps1' 67
+#EndRegion '.\Public\Mirrored Database\Get-FabricMirroredDatabaseTableStatus.ps1' 107
 #Region '.\Public\Mirrored Database\New-FabricMirroredDatabase.ps1' -1
 
 <#
@@ -26845,6 +28772,9 @@ function Get-FabricMountedDataFactory {
 .PARAMETER MountedDataFactoryFormat
     The format for the Data Factory definition (e.g., 'json'). Optional.
 
+.PARAMETER Raw
+    If specified, returns the untouched API response.
+
 .EXAMPLE
     Get-FabricMountedDataFactoryDefinition -WorkspaceId "workspace-12345" -MountedDataFactoryId "factory-67890"
     Retrieves the definition for the specified mounted Data Factory.
@@ -26873,7 +28803,10 @@ function Get-FabricMountedDataFactoryDefinition {
 
         [Parameter(Mandatory = $false)]
         [ValidateNotNullOrEmpty()]
-        [string]$MountedDataFactoryFormat
+        [string]$MountedDataFactoryFormat,
+
+        [Parameter()]
+        [switch]$Raw
     )
     try {
         Invoke-FabricAuthCheck -ThrowOnFailure
@@ -26894,6 +28827,10 @@ function Get-FabricMountedDataFactoryDefinition {
         }
         $response = Invoke-FabricAPIRequest @apiParams
 
+        if ($Raw) {
+            return $response
+        }
+
         # Return the API response
         Write-FabricLog -Message "Mounted Data Factory '$MountedDataFactoryId' definition retrieved successfully!" -Level Debug
         return $response
@@ -26904,7 +28841,7 @@ function Get-FabricMountedDataFactoryDefinition {
         Write-FabricLog -Message "Failed to retrieve Mounted Data Factory. Error: $errorDetails" -Level Error
     }
  }
-#EndRegion '.\Public\Mounted Data Factory\Get-FabricMountedDataFactoryDefinition.ps1' 76
+#EndRegion '.\Public\Mounted Data Factory\Get-FabricMountedDataFactoryDefinition.ps1' 86
 #Region '.\Public\Mounted Data Factory\New-FabricMountedDataFactory.ps1' -1
 
 <#
@@ -27503,6 +29440,9 @@ Handles both synchronous and asynchronous operations, with detailed logging and 
 Specifies the format of the notebook definition. Currently, only 'ipynb' is supported.
 Default: 'ipynb'.
 
+.PARAMETER Raw
+If specified, returns the untouched API response.
+
 .EXAMPLE
 Get-FabricNotebookDefinition -WorkspaceId "12345" -NotebookId "67890"
 
@@ -27534,7 +29474,10 @@ function Get-FabricNotebookDefinition {
         [Parameter(Mandatory = $false)]
         [ValidateNotNullOrEmpty()]
         [ValidateSet('ipynb', 'fabricGitSource')]
-        [string]$NotebookFormat = 'ipynb'
+        [string]$NotebookFormat = 'ipynb',
+
+        [Parameter()]
+        [switch]$Raw
     )
     try {
         Invoke-FabricAuthCheck -ThrowOnFailure
@@ -27555,6 +29498,10 @@ function Get-FabricNotebookDefinition {
         }
         $response = Invoke-FabricAPIRequest @apiParams
 
+        if ($Raw) {
+            return $response
+        }
+
         # Return the API response
         Write-FabricLog -Message "Notebook '$NotebookId' definition retrieved successfully!" -Level Debug
         return $response
@@ -27565,7 +29512,7 @@ function Get-FabricNotebookDefinition {
         Write-FabricLog -Message "Failed to retrieve Notebook. Error: $errorDetails" -Level Error
     }
 }
-#EndRegion '.\Public\Notebook\Get-FabricNotebookDefinition.ps1' 83
+#EndRegion '.\Public\Notebook\Get-FabricNotebookDefinition.ps1' 93
 #Region '.\Public\Notebook\Get-FabricNotebookLivySession.ps1' -1
 
 <#
@@ -27583,6 +29530,9 @@ The ID of the notebook for which to retrieve Livy sessions.
 
 .PARAMETER LivyId
 (Optional) The ID of a specific Livy session to retrieve.
+
+.PARAMETER Raw
+If specified, returns the untouched API response with no added properties or type decoration.
 
 .EXAMPLE
 Get-FabricNotebookLivySession -WorkspaceId "12345" -NotebookId "67890"
@@ -27614,7 +29564,10 @@ function Get-FabricNotebookLivySession {
 
         [Parameter(Mandatory = $false)]
         [ValidateNotNullOrEmpty()]
-        [string]$LivyId
+        [string]$LivyId,
+
+        [Parameter()]
+        [switch]$Raw
     )
     try {
         Invoke-FabricAuthCheck -ThrowOnFailure
@@ -27648,14 +29601,48 @@ function Get-FabricNotebookLivySession {
         }
 
         # Handle results
-        if ($matchedItems) {
-            Write-FabricLog -Message "Item(s) found matching the specified criteria." -Level Debug
-            return $matchedItems
-        }
-        else {
+        if (-not $matchedItems) {
             Write-FabricLog -Message "No item found matching the provided criteria." -Level Warning
             return $null
         }
+
+        if ($Raw) {
+            return $matchedItems
+        }
+
+        Write-FabricLog -Message "Item(s) found matching the specified criteria." -Level Debug
+
+        # Enrich with resolved workspace and capacity names
+        $workspaceName = $null
+        try {
+            $workspaceName = Resolve-FabricWorkspaceName -WorkspaceId $WorkspaceId
+        }
+        catch {
+            $workspaceName = $WorkspaceId
+            Write-FabricLog -Message "Failed to resolve workspace name for ID '$WorkspaceId': $($_.Exception.Message)" -Level Debug
+        }
+
+        $capacityName = $null
+        try {
+            $capacityId = Resolve-FabricCapacityIdFromWorkspace -WorkspaceId $WorkspaceId
+            if ($capacityId) {
+                $capacityName = Resolve-FabricCapacityName -CapacityId $capacityId
+            }
+        }
+        catch {
+            Write-FabricLog -Message "Failed to resolve capacity name for workspace ID '$WorkspaceId': $($_.Exception.Message)" -Level Debug
+        }
+
+        foreach ($item in $matchedItems) {
+            $item | Add-Member -NotePropertyName 'workspaceId'   -NotePropertyValue $WorkspaceId   -Force
+            $item | Add-Member -NotePropertyName 'WorkspaceName' -NotePropertyValue $workspaceName -Force
+            if ($null -ne $capacityName) {
+                $item | Add-Member -NotePropertyName 'CapacityName' -NotePropertyValue $capacityName -Force
+            }
+        }
+
+        $matchedItems | Add-FabricTypeName -TypeName 'MicrosoftFabric.LivySession'
+        return $matchedItems
     }
     catch {
         # Capture and log error details
@@ -27663,7 +29650,7 @@ function Get-FabricNotebookLivySession {
         Write-FabricLog -Message "Failed to retrieve Notebook Livy Session. Error: $errorDetails" -Level Error
     }
 }
-#EndRegion '.\Public\Notebook\Get-FabricNotebookLivySession.ps1' 96
+#EndRegion '.\Public\Notebook\Get-FabricNotebookLivySession.ps1' 136
 #Region '.\Public\Notebook\New-FabricNotebook.ps1' -1
 
 <#
@@ -28402,6 +30389,9 @@ function Get-FabricOneLakeDataAccessRole {
 .PARAMETER DryRun
     (Optional) If specified, performs a dry run without applying changes.
 
+.PARAMETER Raw
+    If specified, returns the untouched API response with no added properties or type decoration.
+
 .EXAMPLE
     Set-FabricOneLakeDataAccessSecurity -WorkspaceId "workspace-12345" -ItemId "item-67890" -RoleName "DataReaders" -Paths "/data" -Actions "Read" -ObjectType "User" -ObjectId "user-guid" -TenantId "tenant-guid"
 
@@ -28423,8 +30413,12 @@ function Get-FabricOneLakeDataAccessSecurity {
         [ValidateNotNullOrEmpty()]
         [string]$ItemId,
 
-    [Parameter(Mandatory = $false)]
-    [string]$RoleName    )
+        [Parameter(Mandatory = $false)]
+        [string]$RoleName,
+
+        [Parameter()]
+        [switch]$Raw
+    )
     try {
         Invoke-FabricAuthCheck -ThrowOnFailure
 
@@ -28440,6 +30434,10 @@ function Get-FabricOneLakeDataAccessSecurity {
             Method  = 'Get'
         }
         $response = Invoke-FabricAPIRequest @apiParams
+
+        if ($Raw) {
+            return $response
+        }
 
         # Optionally filter by RoleName if provided
         if ($RoleName) {
@@ -28466,7 +30464,7 @@ function Get-FabricOneLakeDataAccessSecurity {
         Write-FabricLog -Message "Failed to get OneLake Data Access Security. Error: $errorDetails" -Level Error
     }
 }
-#EndRegion '.\Public\OneLake\Get-FabricOneLakeDataAccessSecurity.ps1' 106
+#EndRegion '.\Public\OneLake\Get-FabricOneLakeDataAccessSecurity.ps1' 117
 #Region '.\Public\OneLake\Get-FabricOneLakeShortcut.ps1' -1
 
 <#
@@ -28488,6 +30486,9 @@ function Get-FabricOneLakeDataAccessSecurity {
 
 .PARAMETER ParentPath
     The parent path to filter shortcuts. Optional.
+
+.PARAMETER Raw
+    If specified, returns the untouched API response with no added properties or type decoration.
 
 .EXAMPLE
     Get-FabricOneLakeShortcut -WorkspaceId "workspace-12345" -ItemId "item-67890"
@@ -28521,7 +30522,10 @@ function Get-FabricOneLakeShortcut {
 
         [Parameter(Mandatory = $false)]
         [ValidateNotNullOrEmpty()]
-        [string]$ParentPath
+        [string]$ParentPath,
+
+        [Parameter()]
+        [switch]$Raw
     )
     try {
         Invoke-FabricAuthCheck -ThrowOnFailure
@@ -28558,16 +30562,49 @@ function Get-FabricOneLakeShortcut {
         }
 
         # Handle results
-        if ($matchedItems) {
-            Write-FabricLog -Message "Item(s) found matching the specified criteria." -Level Debug
-            # Add type decoration for custom formatting
-            $matchedItems | Add-FabricTypeName -TypeName 'MicrosoftFabric.OneLakeShortcut'
-            return $matchedItems
-        }
-        else {
+        if (-not $matchedItems) {
             Write-FabricLog -Message "No item found matching the provided criteria." -Level Warning
             return $null
         }
+
+        if ($Raw) {
+            return $matchedItems
+        }
+
+        Write-FabricLog -Message "Item(s) found matching the specified criteria." -Level Debug
+
+        # Enrich with resolved workspace and capacity names
+        $workspaceName = $null
+        try {
+            $workspaceName = Resolve-FabricWorkspaceName -WorkspaceId $WorkspaceId
+        }
+        catch {
+            $workspaceName = $WorkspaceId
+            Write-FabricLog -Message "Failed to resolve workspace name for ID '$WorkspaceId': $($_.Exception.Message)" -Level Debug
+        }
+
+        $capacityName = $null
+        try {
+            $capacityId = Resolve-FabricCapacityIdFromWorkspace -WorkspaceId $WorkspaceId
+            if ($capacityId) {
+                $capacityName = Resolve-FabricCapacityName -CapacityId $capacityId
+            }
+        }
+        catch {
+            Write-FabricLog -Message "Failed to resolve capacity name for workspace ID '$WorkspaceId': $($_.Exception.Message)" -Level Debug
+        }
+
+        foreach ($item in $matchedItems) {
+            $item | Add-Member -NotePropertyName 'workspaceId'   -NotePropertyValue $WorkspaceId   -Force
+            $item | Add-Member -NotePropertyName 'WorkspaceName' -NotePropertyValue $workspaceName -Force
+            if ($null -ne $capacityName) {
+                $item | Add-Member -NotePropertyName 'CapacityName' -NotePropertyValue $capacityName -Force
+            }
+        }
+
+        # Add type decoration for custom formatting
+        $matchedItems | Add-FabricTypeName -TypeName 'MicrosoftFabric.OneLakeShortcut'
+        return $matchedItems
     }
     catch {
         # Capture and log error details
@@ -28575,7 +30612,7 @@ function Get-FabricOneLakeShortcut {
         Write-FabricLog -Message "Failed to retrieve OneLake Shortcut(s). Error details: $errorDetails" -Level Error
     }
 }
-#EndRegion '.\Public\OneLake\Get-FabricOneLakeShortcut.ps1' 107
+#EndRegion '.\Public\OneLake\Get-FabricOneLakeShortcut.ps1' 146
 #Region '.\Public\OneLake\New-FabricOneLakeShortcut.ps1' -1
 
 <#
@@ -29248,6 +31285,9 @@ function Get-FabricOntology {
 .PARAMETER OntologyId
     (Mandatory) The unique identifier of the Ontology item whose definition needs to be retrieved.
 
+.PARAMETER Raw
+    If specified, returns the untouched API response.
+
 .EXAMPLE
     Get-FabricOntologyDefinition -WorkspaceId "12345" -OntologyId "67890"
 
@@ -29270,7 +31310,10 @@ function Get-FabricOntologyDefinition {
 
         [Parameter(Mandatory = $true)]
         [ValidateNotNullOrEmpty()]
-        [string]$OntologyId
+        [string]$OntologyId,
+
+        [Parameter()]
+        [switch]$Raw
     )
 
     try {
@@ -29288,7 +31331,13 @@ function Get-FabricOntologyDefinition {
             Headers = $script:FabricAuthContext.FabricHeaders
             Method = 'Post'
         }
-        Invoke-FabricAPIRequest @apiParams
+        $response = Invoke-FabricAPIRequest @apiParams
+
+        if ($Raw) {
+            return $response
+        }
+
+        $response
     }
     catch {
         # Capture and log error details
@@ -29296,7 +31345,7 @@ function Get-FabricOntologyDefinition {
         Write-FabricLog -Message "Failed to retrieve Ontology definition. Error: $errorDetails" -Level Error
     }
 }
-#EndRegion '.\Public\Ontology\Get-FabricOntologyDefinition.ps1' 63
+#EndRegion '.\Public\Ontology\Get-FabricOntologyDefinition.ps1' 75
 #Region '.\Public\Ontology\New-FabricOntology.ps1' -1
 
 <#
@@ -29859,6 +31908,9 @@ function Get-FabricOperationsAgent {
 .PARAMETER OperationsAgentId
     (Mandatory) The unique identifier of the Operations Agent item whose definition needs to be retrieved.
 
+.PARAMETER Raw
+    If specified, returns the untouched API response.
+
 .EXAMPLE
     Get-FabricOperationsAgentDefinition -WorkspaceId "12345" -OperationsAgentId "67890"
 
@@ -29881,7 +31933,10 @@ function Get-FabricOperationsAgentDefinition {
 
         [Parameter(Mandatory = $true)]
         [ValidateNotNullOrEmpty()]
-        [string]$OperationsAgentId
+        [string]$OperationsAgentId,
+
+        [Parameter()]
+        [switch]$Raw
     )
 
     try {
@@ -29899,7 +31954,13 @@ function Get-FabricOperationsAgentDefinition {
             Headers = $script:FabricAuthContext.FabricHeaders
             Method = 'Post'
         }
-        Invoke-FabricAPIRequest @apiParams
+        $response = Invoke-FabricAPIRequest @apiParams
+
+        if ($Raw) {
+            return $response
+        }
+
+        $response
     }
     catch {
         # Capture and log error details
@@ -29907,7 +31968,7 @@ function Get-FabricOperationsAgentDefinition {
         Write-FabricLog -Message "Failed to retrieve Operations Agent definition. Error: $errorDetails" -Level Error
     }
 }
-#EndRegion '.\Public\Operations Agent\Get-FabricOperationsAgentDefinition.ps1' 63
+#EndRegion '.\Public\Operations Agent\Get-FabricOperationsAgentDefinition.ps1' 75
 #Region '.\Public\Operations Agent\New-FabricOperationsAgent.ps1' -1
 
 <#
@@ -30682,6 +32743,9 @@ function Get-FabricReflex {
 .PARAMETER ReflexFormat
     The format in which to retrieve the Reflex definition. This parameter is optional.
 
+.PARAMETER Raw
+    If specified, returns the untouched API response.
+
 .EXAMPLE
     Get-FabricReflexDefinition -WorkspaceId "workspace-12345" -ReflexId "Reflex-67890"
     This example retrieves the definition of the Reflex with ID "Reflex-67890" in the workspace with ID "workspace-12345".
@@ -30711,7 +32775,10 @@ function Get-FabricReflexDefinition {
 
         [Parameter(Mandatory = $false)]
         [ValidateNotNullOrEmpty()]
-        [string]$ReflexFormat
+        [string]$ReflexFormat,
+
+        [Parameter()]
+        [switch]$Raw
     )
     try {
         Invoke-FabricAuthCheck -ThrowOnFailure
@@ -30732,6 +32799,10 @@ function Get-FabricReflexDefinition {
         }
         $response = Invoke-FabricAPIRequest @apiParams
 
+        if ($Raw) {
+            return $response
+        }
+
         # Return the API response
         Write-FabricLog -Message "Reflex '$ReflexId' definition retrieved successfully!" -Level Debug
         return $response
@@ -30743,7 +32814,7 @@ function Get-FabricReflexDefinition {
     }
 
 }
-#EndRegion '.\Public\Reflex\Get-FabricReflexDefinition.ps1' 79
+#EndRegion '.\Public\Reflex\Get-FabricReflexDefinition.ps1' 89
 #Region '.\Public\Reflex\New-FabricReflex.ps1' -1
 
 <#
@@ -31318,6 +33389,9 @@ function Get-FabricReport {
 .PARAMETER ReportFormat
     The format in which to retrieve the Report definition. This parameter is optional.
 
+.PARAMETER Raw
+    If specified, returns the untouched API response.
+
 .EXAMPLE
     Get-FabricReportDefinition -WorkspaceId "workspace-12345" -ReportId "Report-67890"
     This example retrieves the definition of the Report with ID "Report-67890" in the workspace with ID "workspace-12345".
@@ -31347,7 +33421,10 @@ function Get-FabricReportDefinition {
 
         [Parameter(Mandatory = $false)]
         [ValidateNotNullOrEmpty()]
-        [string]$ReportFormat
+        [string]$ReportFormat,
+
+        [Parameter()]
+        [switch]$Raw
     )
     try {
         Invoke-FabricAuthCheck -ThrowOnFailure
@@ -31369,6 +33446,10 @@ function Get-FabricReportDefinition {
         }
         $response = Invoke-FabricAPIRequest @apiParams
 
+        if ($Raw) {
+            return $response
+        }
+
         # Return the API response
         Write-FabricLog -Message "Report '$ReportId' definition retrieved successfully!" -Level Debug
         return $response
@@ -31379,7 +33460,7 @@ function Get-FabricReportDefinition {
         Write-FabricLog -Message "Failed to retrieve Report. Error: $errorDetails" -Level Error
     }
 }
-#EndRegion '.\Public\Report\Get-FabricReportDefinition.ps1' 79
+#EndRegion '.\Public\Report\Get-FabricReportDefinition.ps1' 89
 #Region '.\Public\Report\New-FabricReport.ps1' -1
 
 <#
@@ -31893,6 +33974,9 @@ function Get-FabricSemanticModel {
 .PARAMETER SemanticModelFormat
     The format in which to retrieve the SemanticModel definition. This parameter is optional.
 
+.PARAMETER Raw
+    If specified, returns the untouched API response.
+
 .EXAMPLE
     Get-FabricSemanticModelDefinition -WorkspaceId "workspace-12345" -SemanticModelId "SemanticModel-67890"
     This example retrieves the definition of the SemanticModel with ID "SemanticModel-67890" in the workspace with ID "workspace-12345".
@@ -31923,7 +34007,10 @@ function Get-FabricSemanticModelDefinition {
         [Parameter(Mandatory = $false)]
         [ValidateNotNullOrEmpty()]
         [ValidateSet('TMDL', 'TMSL')]
-        [string]$SemanticModelFormat = "TMDL"
+        [string]$SemanticModelFormat = "TMDL",
+
+        [Parameter()]
+        [switch]$Raw
     )
     try {
         Invoke-FabricAuthCheck -ThrowOnFailure
@@ -31944,6 +34031,10 @@ function Get-FabricSemanticModelDefinition {
         }
         $response = Invoke-FabricAPIRequest @apiParams
 
+        if ($Raw) {
+            return $response
+        }
+
         # Return the API response
         Write-FabricLog -Message "SemanticModel '$SemanticModelId' definition retrieved successfully!" -Level Debug
         return $response
@@ -31955,7 +34046,7 @@ function Get-FabricSemanticModelDefinition {
     }
 
 }
-#EndRegion '.\Public\Semantic Model\Get-FabricSemanticModelDefinition.ps1' 80
+#EndRegion '.\Public\Semantic Model\Get-FabricSemanticModelDefinition.ps1' 90
 #Region '.\Public\Semantic Model\New-FabricSemanticModel.ps1' -1
 
 <#
@@ -32347,17 +34438,10 @@ function Update-FabricSemanticModelDefinition {
 
 <#
 .SYNOPSIS
-Removes all sharing links in bulk from s        # Make the API request
-        $apiParams = @{
-            BaseURI = $apiEndpointURI
-            Headers = $script:FabricAuthContext.FabricHeaders
-            Method = 'Delete'
-            Body = $bodyJson
-        }
-        $response = Invoke-FabricAPIRequest @apiParamsied items in Microsoft Fabric.
+Removes all organization sharing links for every Fabric item in the tenant.
 
 .DESCRIPTION
-Removes all sharing links of a specified type (e.g., 'OrgLink') from multiple items (such as datasets, reports, etc.) within a Microsoft Fabric workspace. Each item must include 'id' and 'type' properties. The function validates authentication and sends a bulk removal request to the Fabric API.
+Removes all sharing links of a specified type (e.g., 'OrgLink') from every Fabric item in the tenant by sending a POST request to the admin removeAllSharingLinks API. This action affects all items tenant-wide and cannot be undone. Requires Fabric administrator permissions.
 
 .PARAMETER sharingLinkType
 Specifies the type of sharing link to remove. Default is 'OrgLink'. Only supported value is 'OrgLink'.
@@ -32366,9 +34450,9 @@ Specifies the type of sharing link to remove. Default is 'OrgLink'. Only support
     Remove-FabricSharingLinks -sharingLinkType 'OrgLink'
 
 .NOTES
-- Requires `$FabricConfig` global configuration, including `BaseUrl` and `FabricHeaders`.
-- Calls `Test-TokenExpired` to ensure token validity before making the API request.
-- Each item in `$Items` must have 'id' and 'type' properties.
+- API Endpoint: POST /admin/items/removeAllSharingLinks
+- Requires Fabric administrator permissions and a valid authentication context.
+- Destructive and tenant-wide: supports -WhatIf/-Confirm (ConfirmImpact High).
 
 Author: Tiago Balabuch
 #>
@@ -32383,18 +34467,10 @@ function Remove-FabricSharingLinks {
 
     process {
         try {
-            # Validate Items structure
-            foreach ($item in $Items) {
-                if (-not ($item.id -and $item.type)) {
-                    throw "Each Item must contain 'id' and 'type' properties. Found: $item"
-                }
-            }
-
             Invoke-FabricAuthCheck -ThrowOnFailure
 
-
             # Construct the API endpoint URI
-            $apiEndpointURI = "{0}/admin/items/removeAllSharingLinks" -f $script:FabricAuthContext.BaseUrl, $WorkspaceId
+            $apiEndpointURI = "{0}/admin/items/removeAllSharingLinks" -f $script:FabricAuthContext.BaseUrl
             Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
 
             # Construct the request body
@@ -32426,22 +34502,15 @@ function Remove-FabricSharingLinks {
         }
     }
 }
-#EndRegion '.\Public\Sharing Links\Remove-FabricSharingLinks.ps1' 82
+#EndRegion '.\Public\Sharing Links\Remove-FabricSharingLinks.ps1' 67
 #Region '.\Public\Sharing Links\Remove-FabricSharingLinksBulk.ps1' -1
 
 <#
 .SYNOPSIS
-Removes sharing links in bulk from items in Mic        # Make the API request
-        $apiParams = @{
-            BaseURI = $apiEndpointURI
-            Headers = $script:FabricAuthContext.FabricHeaders
-            Method = 'Delete'
-            Body = $bodyJson
-        }
-        $response = Invoke-FabricAPIRequest @apiParamst Fabric.
+Removes sharing links in bulk from the specified Fabric items.
 
 .DESCRIPTION
-Removes sharing links of a specified type (e.g., 'OrgLink') from multiple items (such as datasets, reports, etc.) in a Microsoft Fabric workspace by sending a bulk removal request to the Fabric API. Each item must include 'id' and 'type' properties.
+Removes sharing links of a specified type (e.g., 'OrgLink') from the supplied set of Fabric items by sending a POST request to the admin bulkRemoveSharingLinks API. Each item must include 'id' and 'type' properties. Requires Fabric administrator permissions.
 
 .PARAMETER Items
 An array of objects, each containing 'id' and 'type' properties, representing the items from which sharing links will be removed.
@@ -32484,7 +34553,7 @@ function Remove-FabricSharingLinksBulk {
 
 
             # Construct the API endpoint URI
-            $apiEndpointURI = "{0}/admin/items/bulkRemoveSharingLinks" -f $script:FabricAuthContext.BaseUrl, $WorkspaceId
+            $apiEndpointURI = "{0}/admin/items/bulkRemoveSharingLinks" -f $script:FabricAuthContext.BaseUrl
             Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
 
             # Construct the request body
@@ -32517,7 +34586,7 @@ function Remove-FabricSharingLinksBulk {
         }
     }
 }
-#EndRegion '.\Public\Sharing Links\Remove-FabricSharingLinksBulk.ps1' 89
+#EndRegion '.\Public\Sharing Links\Remove-FabricSharingLinksBulk.ps1' 82
 #Region '.\Public\Snowflake Database\Get-FabricSnowflakeDatabase.ps1' -1
 
 <#
@@ -32632,6 +34701,9 @@ function Get-FabricSnowflakeDatabase {
 .PARAMETER SnowflakeDatabaseId
     The GUID of the Snowflake Database whose definition to retrieve.
 
+.PARAMETER Raw
+    If specified, returns the untouched API response.
+
 .EXAMPLE
     Get-FabricSnowflakeDatabaseDefinition -WorkspaceId "12345678-1234-1234-1234-123456789012" -SnowflakeDatabaseId "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee"
 
@@ -32654,7 +34726,10 @@ function Get-FabricSnowflakeDatabaseDefinition {
         [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
         [ValidateNotNullOrEmpty()]
         [Alias('id')]
-        [string]$SnowflakeDatabaseId
+        [string]$SnowflakeDatabaseId,
+
+        [Parameter()]
+        [switch]$Raw
     )
 
     process {
@@ -32673,6 +34748,10 @@ function Get-FabricSnowflakeDatabaseDefinition {
             }
             $response = Invoke-FabricAPIRequest @apiParams
 
+            if ($Raw) {
+                return $response
+            }
+
             if ($response) {
                 Write-FabricLog -Message "Snowflake Database definition retrieved successfully." -Level Debug
                 return $response
@@ -32684,7 +34763,7 @@ function Get-FabricSnowflakeDatabaseDefinition {
         }
     }
 }
-#EndRegion '.\Public\Snowflake Database\Get-FabricSnowflakeDatabaseDefinition.ps1' 67
+#EndRegion '.\Public\Snowflake Database\Get-FabricSnowflakeDatabaseDefinition.ps1' 77
 #Region '.\Public\Snowflake Database\New-FabricSnowflakeDatabase.ps1' -1
 
 <#
@@ -33198,6 +35277,9 @@ function Get-FabricSparkJobDefinition {
 .PARAMETER SparkJobDefinitionFormat
     The format in which to retrieve the SparkJobDefinition definition. This parameter is optional.
 
+.PARAMETER Raw
+    If specified, returns the untouched API response.
+
 .EXAMPLE
     Get-FabricSparkJobDefinitionDefinition -WorkspaceId "workspace-12345" -SparkJobDefinitionId "SparkJobDefinition-67890"
     This example retrieves the definition of the SparkJobDefinition with ID "SparkJobDefinition-67890" in the workspace with ID "workspace-12345".
@@ -33227,7 +35309,10 @@ function Get-FabricSparkJobDefinitionDefinition {
         [Parameter(Mandatory = $false)]
         [ValidateNotNullOrEmpty()]
         [ValidateSet('SparkJobDefinitionV1')]
-        [string]$SparkJobDefinitionFormat = "SparkJobDefinitionV1"
+        [string]$SparkJobDefinitionFormat = "SparkJobDefinitionV1",
+
+        [Parameter()]
+        [switch]$Raw
     )
     try {
         Invoke-FabricAuthCheck -ThrowOnFailure
@@ -33246,6 +35331,10 @@ function Get-FabricSparkJobDefinitionDefinition {
             -Headers $script:FabricAuthContext.FabricHeaders `
             -Method Post
 
+        if ($Raw) {
+            return $response
+        }
+
         # Return the API response
         Write-FabricLog -Message "Spark Job Definition '$SparkJobDefinitionId' definition retrieved successfully!" -Level Debug
         return $response
@@ -33256,7 +35345,7 @@ function Get-FabricSparkJobDefinitionDefinition {
         Write-FabricLog -Message "Failed to retrieve Spark Job Definition. Error: $errorDetails" -Level Error
     }
 }
-#EndRegion '.\Public\Spark Job Definition\Get-FabricSparkJobDefinitionDefinition.ps1' 82
+#EndRegion '.\Public\Spark Job Definition\Get-FabricSparkJobDefinitionDefinition.ps1' 92
 #Region '.\Public\Spark Job Definition\Get-FabricSparkJobDefinitionLivySession.ps1' -1
 
 <#
@@ -33274,6 +35363,9 @@ The ID of the Spark Job Definition whose Livy sessions are to be retrieved.
 
 .PARAMETER LivyId
 (Optional) The ID of a specific Livy session to retrieve.
+
+.PARAMETER Raw
+If specified, returns the untouched API response with no added properties or type decoration.
 
 .EXAMPLE
 Get-FabricSparkJobDefinitionLivySession -WorkspaceId "12345" -SparkJobDefinitionId "jobdef-001"
@@ -33305,7 +35397,10 @@ function Get-FabricSparkJobDefinitionLivySession {
 
         [Parameter(Mandatory = $false)]
         [ValidateNotNullOrEmpty()]
-        [string]$LivyId
+        [string]$LivyId,
+
+        [Parameter()]
+        [switch]$Raw
     )
     try {
         Invoke-FabricAuthCheck -ThrowOnFailure
@@ -33339,14 +35434,48 @@ function Get-FabricSparkJobDefinitionLivySession {
         }
 
         # Handle results
-        if ($matchedItems) {
-            Write-FabricLog -Message "Item(s) found matching the specified criteria." -Level Debug
-            return $matchedItems
-        }
-        else {
+        if (-not $matchedItems) {
             Write-FabricLog -Message "No item found matching the provided criteria." -Level Warning
             return $null
         }
+
+        if ($Raw) {
+            return $matchedItems
+        }
+
+        Write-FabricLog -Message "Item(s) found matching the specified criteria." -Level Debug
+
+        # Enrich with resolved workspace and capacity names
+        $workspaceName = $null
+        try {
+            $workspaceName = Resolve-FabricWorkspaceName -WorkspaceId $WorkspaceId
+        }
+        catch {
+            $workspaceName = $WorkspaceId
+            Write-FabricLog -Message "Failed to resolve workspace name for ID '$WorkspaceId': $($_.Exception.Message)" -Level Debug
+        }
+
+        $capacityName = $null
+        try {
+            $capacityId = Resolve-FabricCapacityIdFromWorkspace -WorkspaceId $WorkspaceId
+            if ($capacityId) {
+                $capacityName = Resolve-FabricCapacityName -CapacityId $capacityId
+            }
+        }
+        catch {
+            Write-FabricLog -Message "Failed to resolve capacity name for workspace ID '$WorkspaceId': $($_.Exception.Message)" -Level Debug
+        }
+
+        foreach ($item in $matchedItems) {
+            $item | Add-Member -NotePropertyName 'workspaceId'   -NotePropertyValue $WorkspaceId   -Force
+            $item | Add-Member -NotePropertyName 'WorkspaceName' -NotePropertyValue $workspaceName -Force
+            if ($null -ne $capacityName) {
+                $item | Add-Member -NotePropertyName 'CapacityName' -NotePropertyValue $capacityName -Force
+            }
+        }
+
+        $matchedItems | Add-FabricTypeName -TypeName 'MicrosoftFabric.LivySession'
+        return $matchedItems
     }
     catch {
         # Capture and log error details
@@ -33354,7 +35483,7 @@ function Get-FabricSparkJobDefinitionLivySession {
         Write-FabricLog -Message "Failed to retrieve Spark Job Definition Livy Session. Error: $errorDetails" -Level Error
     }
 }
-#EndRegion '.\Public\Spark Job Definition\Get-FabricSparkJobDefinitionLivySession.ps1' 96
+#EndRegion '.\Public\Spark Job Definition\Get-FabricSparkJobDefinitionLivySession.ps1' 136
 #Region '.\Public\Spark Job Definition\New-FabricSparkJobDefinition.ps1' -1
 
 <#
@@ -34029,6 +36158,9 @@ The Get-FabricSparkLivySession function queries the Fabric API to obtain Spark L
 .PARAMETER LivyId
 (Optional) The ID of a specific Livy session to retrieve.
 
+.PARAMETER Raw
+If specified, returns the untouched API response with no added properties or type decoration.
+
 .EXAMPLE
 Get-FabricSparkLivySession -WorkspaceId "12345"
 
@@ -34055,7 +36187,10 @@ function Get-FabricSparkLivySession {
 
         [Parameter(Mandatory = $false)]
         [ValidateNotNullOrEmpty()]
-        [string]$LivyId
+        [string]$LivyId,
+
+        [Parameter()]
+        [switch]$Raw
     )
     try {
         Invoke-FabricAuthCheck -ThrowOnFailure
@@ -34089,14 +36224,48 @@ function Get-FabricSparkLivySession {
         }
 
         # Handle results
-        if ($matchedItems) {
-            Write-FabricLog -Message "Item(s) found matching the specified criteria." -Level Debug
-            return $matchedItems
-        }
-        else {
+        if (-not $matchedItems) {
             Write-FabricLog -Message "No item found matching the provided criteria." -Level Warning
             return $null
         }
+
+        if ($Raw) {
+            return $matchedItems
+        }
+
+        Write-FabricLog -Message "Item(s) found matching the specified criteria." -Level Debug
+
+        # Enrich with resolved workspace and capacity names
+        $workspaceName = $null
+        try {
+            $workspaceName = Resolve-FabricWorkspaceName -WorkspaceId $WorkspaceId
+        }
+        catch {
+            $workspaceName = $WorkspaceId
+            Write-FabricLog -Message "Failed to resolve workspace name for ID '$WorkspaceId': $($_.Exception.Message)" -Level Debug
+        }
+
+        $capacityName = $null
+        try {
+            $capacityId = Resolve-FabricCapacityIdFromWorkspace -WorkspaceId $WorkspaceId
+            if ($capacityId) {
+                $capacityName = Resolve-FabricCapacityName -CapacityId $capacityId
+            }
+        }
+        catch {
+            Write-FabricLog -Message "Failed to resolve capacity name for workspace ID '$WorkspaceId': $($_.Exception.Message)" -Level Debug
+        }
+
+        foreach ($item in $matchedItems) {
+            $item | Add-Member -NotePropertyName 'workspaceId'   -NotePropertyValue $WorkspaceId   -Force
+            $item | Add-Member -NotePropertyName 'WorkspaceName' -NotePropertyValue $workspaceName -Force
+            if ($null -ne $capacityName) {
+                $item | Add-Member -NotePropertyName 'CapacityName' -NotePropertyValue $capacityName -Force
+            }
+        }
+
+        $matchedItems | Add-FabricTypeName -TypeName 'MicrosoftFabric.LivySession'
+        return $matchedItems
     }
     catch {
         # Capture and log error details
@@ -34104,7 +36273,7 @@ function Get-FabricSparkLivySession {
         Write-FabricLog -Message "Failed to retrieve Spark Livy Session. Error: $errorDetails" -Level Error
     }
 }
-#EndRegion '.\Public\Spark\Get-FabricSparkLivySession.ps1' 89
+#EndRegion '.\Public\Spark\Get-FabricSparkLivySession.ps1' 129
 #Region '.\Public\Spark\Get-FabricSparkSettings.ps1' -1
 
 <#
@@ -34117,6 +36286,9 @@ function Get-FabricSparkLivySession {
 
 .PARAMETER WorkspaceId
     The unique identifier of the workspace from which to retrieve Spark settings. This parameter is mandatory.
+
+.PARAMETER Raw
+    If specified, returns the untouched API response.
 
 .EXAMPLE
     Get-FabricSparkSettings -WorkspaceId "workspace-12345"
@@ -34137,7 +36309,10 @@ function Get-FabricSparkSettings
         [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
         [ValidateNotNullOrEmpty()]
         [Alias('id')]
-        [string]$WorkspaceId
+        [string]$WorkspaceId,
+
+        [Parameter()]
+        [switch]$Raw
     )
 
     try
@@ -34204,6 +36379,10 @@ function Get-FabricSparkSettings
             # Step 8: Add data to the list
             if ($null -ne $response)
             {
+                if ($Raw)
+                {
+                    return $response
+                }
                 Write-FabricLog -Message "Adding data to the list" -Level Debug
                 $SparkSettings += $response
 
@@ -34249,7 +36428,7 @@ function Get-FabricSparkSettings
     }
 
 }
-#EndRegion '.\Public\Spark\Get-FabricSparkSettings.ps1' 143
+#EndRegion '.\Public\Spark\Get-FabricSparkSettings.ps1' 153
 #Region '.\Public\Spark\Get-FabricSparkWorkspaceSettings.ps1' -1
 
 <#
@@ -34262,6 +36441,9 @@ function Get-FabricSparkSettings
 
 .PARAMETER WorkspaceId
     The unique identifier of the workspace from which to retrieve Spark settings. This parameter is mandatory.
+
+.PARAMETER Raw
+    If specified, returns the untouched API response.
 
 .EXAMPLE
     Get-FabricSparkSettings -WorkspaceId "workspace-12345"
@@ -34280,7 +36462,10 @@ function Get-FabricSparkWorkspaceSettings {
         [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
         [ValidateNotNullOrEmpty()]
         [Alias('id')]
-        [string]$WorkspaceId
+        [string]$WorkspaceId,
+
+        [Parameter()]
+        [switch]$Raw
     )
     try {
         Invoke-FabricAuthCheck -ThrowOnFailure
@@ -34299,6 +36484,10 @@ function Get-FabricSparkWorkspaceSettings {
         }
         $dataItems = Invoke-FabricAPIRequest @apiParams
 
+        if ($Raw) {
+            return $dataItems
+        }
+
         # Immediately handle empty response
         if (-not $dataItems) {
             Write-FabricLog -Message "No data returned from the API." -Level Warning
@@ -34316,7 +36505,7 @@ function Get-FabricSparkWorkspaceSettings {
         Write-FabricLog -Message "Failed to retrieve SparkSettings. Error: $errorDetails" -Level Error
     }
 }
-#EndRegion '.\Public\Spark\Get-FabricSparkWorkspaceSettings.ps1' 65
+#EndRegion '.\Public\Spark\Get-FabricSparkWorkspaceSettings.ps1' 75
 #Region '.\Public\Spark\New-FabricSparkCustomPool.ps1' -1
 
 <#
@@ -35229,6 +37418,9 @@ function Get-FabricSQLDatabase {
 .PARAMETER PrivateLinkType
     (Optional) The type of private link to use for the connection string. Valid values are 'None' or 'Workspace'.
 
+.PARAMETER Raw
+    If specified, returns the untouched API response.
+
 .EXAMPLE
     Get-FabricSQLDatabaseConnectionString -WorkspaceId "workspace123" -SQLDatabaseId "database456"
     Retrieves the connection string for the SQL Database with ID "database456" in workspace "workspace123".
@@ -35267,7 +37459,10 @@ function Get-FabricSQLDatabaseConnectionString {
         [Parameter(Mandatory = $false)]
         [ValidateNotNullOrEmpty()]
         [ValidateSet('None', 'Workspace')]
-        [string]$PrivateLinkType
+        [string]$PrivateLinkType,
+
+        [Parameter()]
+        [switch]$Raw
     )
 
     process {
@@ -35310,6 +37505,10 @@ function Get-FabricSQLDatabaseConnectionString {
                 return $null
             }
 
+            if ($Raw) {
+                return $response
+            }
+
             Write-FabricLog -Message "Connection string retrieved successfully." -Level Debug
             return $response
         }
@@ -35320,7 +37519,7 @@ function Get-FabricSQLDatabaseConnectionString {
         }
     }
 }
-#EndRegion '.\Public\SQL Database\Get-FabricSQLDatabaseConnectionString.ps1' 113
+#EndRegion '.\Public\SQL Database\Get-FabricSQLDatabaseConnectionString.ps1' 123
 #Region '.\Public\SQL Database\Get-FabricSQLDatabaseDefinition.ps1' -1
 
 <#
@@ -35336,6 +37535,9 @@ function Get-FabricSQLDatabaseConnectionString {
 
 .PARAMETER SQLDatabaseId
     The unique identifier of the SQL Database.
+
+.PARAMETER Raw
+    If specified, returns the untouched API response.
 
 .EXAMPLE
     Get-FabricSQLDatabaseDefinition -WorkspaceId "12345678-1234-1234-1234-123456789012" -SQLDatabaseId "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee"
@@ -35360,7 +37562,10 @@ function Get-FabricSQLDatabaseDefinition {
         [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
         [ValidateNotNullOrEmpty()]
         [Alias('id')]
-        [string]$SQLDatabaseId
+        [string]$SQLDatabaseId,
+
+        [Parameter()]
+        [switch]$Raw
     )
 
     process {
@@ -35384,6 +37589,10 @@ function Get-FabricSQLDatabaseDefinition {
                 return $null
             }
 
+            if ($Raw) {
+                return $response
+            }
+
             Write-FabricLog -Message "SQL Database definition retrieved successfully." -Level Debug
             return $response
         }
@@ -35393,7 +37602,7 @@ function Get-FabricSQLDatabaseDefinition {
         }
     }
 }
-#EndRegion '.\Public\SQL Database\Get-FabricSQLDatabaseDefinition.ps1' 71
+#EndRegion '.\Public\SQL Database\Get-FabricSQLDatabaseDefinition.ps1' 81
 #Region '.\Public\SQL Database\New-FabricSQLDatabase.ps1' -1
 
 <#
@@ -36028,6 +38237,9 @@ function Get-FabricSQLEndpoint {
 .PARAMETER PrivateLinkType
     (Optional) The type of private link to use for the connection string. Valid values are 'None' or 'Workspace'.
 
+.PARAMETER Raw
+    If specified, returns the untouched API response.
+
 .EXAMPLE
     Get-FabricSQLEndpointConnectionString -WorkspaceId "workspace123" -SQLEndpointId "endpoint456"
     Retrieves the connection string for the SQL Endpoint with ID "endpoint456" in workspace "workspace123".
@@ -36066,7 +38278,10 @@ function Get-FabricSQLEndpointConnectionString {
         [Parameter(Mandatory = $false)]
         [ValidateNotNullOrEmpty()]
         [ValidateSet('None', 'Workspace')]
-        [string]$PrivateLinkType
+        [string]$PrivateLinkType,
+
+        [Parameter()]
+        [switch]$Raw
     )
 
     try {
@@ -36108,6 +38323,10 @@ function Get-FabricSQLEndpointConnectionString {
             return $null
         }
 
+        if ($Raw) {
+            return $response
+        }
+
         Write-FabricLog -Message "Connection string retrieved successfully." -Level Debug
         return $response
     }
@@ -36117,7 +38336,7 @@ function Get-FabricSQLEndpointConnectionString {
         Write-FabricLog -Message "Failed to retrieve SQL Endpoint connection string. Error: $errorDetails" -Level Error
     }
 }
-#EndRegion '.\Public\SQL Endpoints\Get-FabricSQLEndpointConnectionString.ps1' 111
+#EndRegion '.\Public\SQL Endpoints\Get-FabricSQLEndpointConnectionString.ps1' 121
 #Region '.\Public\SQL Endpoints\Update-FabricSQLEndpointMetadata.ps1' -1
 
 <#
@@ -36224,6 +38443,9 @@ function Update-FabricSQLEndpointMetadata {
 .PARAMETER TagName
     The display name of the tag to retrieve. Optional; specify either TagId or TagName, not both.
 
+.PARAMETER Raw
+    If specified, returns the untouched API response.
+
 .EXAMPLE
     Get-FabricTag -TagId "tag-12345"
     Retrieves the tag with the ID "tag-12345".
@@ -36249,7 +38471,10 @@ function Get-FabricTag {
         [Parameter(Mandatory = $false)]
         [ValidateNotNullOrEmpty()]
         [ValidatePattern('^[a-zA-Z0-9_]*$')]
-        [string]$TagName
+        [string]$TagName,
+
+        [Parameter()]
+        [switch]$Raw
     )
 
     try {
@@ -36278,6 +38503,10 @@ function Get-FabricTag {
         if (-not $dataItems) {
             Write-FabricLog -Message "No data returned from the API." -Level Warning
             return $null
+        }
+
+        if ($Raw) {
+            return $dataItems
         }
 
         # Apply filtering logic efficiently
@@ -36309,7 +38538,7 @@ function Get-FabricTag {
     }
 
 }
-#EndRegion '.\Public\Tags\Get-FabricTag.ps1' 100
+#EndRegion '.\Public\Tags\Get-FabricTag.ps1' 110
 #Region '.\Public\Tags\New-FabricTag.ps1' -1
 
 <#
@@ -36537,6 +38766,9 @@ The `Get-FabricCapacityTenantSettingOverrides` function retrieves tenant setting
 .PARAMETER capacityId
 The ID of the capacity for which tenant setting overrides should be retrieved. If not provided, overrides for all capacities will be retrieved.
 
+.PARAMETER Raw
+If specified, returns the untouched API response.
+
 .EXAMPLE
 Get-FabricCapacityTenantSettingOverrides
 
@@ -36558,7 +38790,10 @@ function Get-FabricCapacityTenantSettingOverrides {
     param (
         [Parameter(Mandatory = $false)]
         [ValidateNotNullOrEmpty()]
-        [string]$capacityId
+        [string]$capacityId,
+
+        [Parameter()]
+        [switch]$Raw
     )
     try {
         Invoke-FabricAuthCheck -ThrowOnFailure
@@ -36584,6 +38819,10 @@ function Get-FabricCapacityTenantSettingOverrides {
         }
         $dataItems = Invoke-FabricAPIRequest @apiParams
 
+        if ($Raw) {
+            return $dataItems
+        }
+
         # Immediately handle empty response
         if (-not $dataItems) {
             Write-FabricLog -Message "No data returned from the API." -Level Warning
@@ -36601,7 +38840,7 @@ function Get-FabricCapacityTenantSettingOverrides {
         Write-FabricLog -Message "Error retrieving capacity tenant setting overrides: $errorDetails" -Level Error
     }
 }
-#EndRegion '.\Public\Tenant\Get-FabricCapacityTenantSettingOverrides.ps1' 75
+#EndRegion '.\Public\Tenant\Get-FabricCapacityTenantSettingOverrides.ps1' 85
 #Region '.\Public\Tenant\Get-FabricDomainTenantSettingOverrides.ps1' -1
 
 <#
@@ -36610,6 +38849,9 @@ Retrieves tenant setting overrides for a specific domain or all capacities in th
 
 .DESCRIPTION
 The `Get-FabricDomainTenantSettingOverrides` function retrieves tenant setting overrides for all domains in the Fabric tenant by making a GET request to the designated API endpoint. The function ensures token validity before making the request and handles the response appropriately.
+
+.PARAMETER Raw
+If specified, returns the untouched API response.
 
 .EXAMPLE
 Get-FabricDomainTenantSettingOverrides
@@ -36625,7 +38867,10 @@ Author: Tiago Balabuch
 #>
 function Get-FabricDomainTenantSettingOverrides {
     [CmdletBinding()]
-    param ( )
+    param (
+        [Parameter()]
+        [switch]$Raw
+    )
     try {
         Invoke-FabricAuthCheck -ThrowOnFailure
 
@@ -36643,6 +38888,10 @@ function Get-FabricDomainTenantSettingOverrides {
         }
         $dataItems = Invoke-FabricAPIRequest @apiParams
 
+        if ($Raw) {
+            return $dataItems
+        }
+
         # Immediately handle empty response
         if (-not $dataItems) {
             Write-FabricLog -Message "No data returned from the API." -Level Warning
@@ -36659,7 +38908,7 @@ function Get-FabricDomainTenantSettingOverrides {
         Write-FabricLog -Message "Error retrieving domain tenant setting overrides: $errorDetails" -Level Error
     }
 }
-#EndRegion '.\Public\Tenant\Get-FabricDomainTenantSettingOverrides.ps1' 56
+#EndRegion '.\Public\Tenant\Get-FabricDomainTenantSettingOverrides.ps1' 66
 #Region '.\Public\Tenant\Get-FabricTenantSetting.ps1' -1
 
 <#
@@ -36671,6 +38920,9 @@ The `Get-FabricTenantSetting` function retrieves tenant settings for a Fabric en
 
 .PARAMETER SettingTitle
 (Optional) The title of a specific tenant setting to filter the results.
+
+.PARAMETER Raw
+If specified, returns the untouched API response.
 
 .EXAMPLE
 Get-FabricTenantSetting
@@ -36695,7 +38947,10 @@ function Get-FabricTenantSetting {
     param (
         [Parameter(Mandatory = $false)]
         [ValidateNotNullOrEmpty()]
-        [string]$SettingTitle
+        [string]$SettingTitle,
+
+        [Parameter()]
+        [switch]$Raw
     )
 
     try {
@@ -36719,6 +38974,10 @@ function Get-FabricTenantSetting {
         if (-not $dataItems) {
             Write-FabricLog -Message "No data returned from the API." -Level Warning
             return $null
+        }
+
+        if ($Raw) {
+            return $dataItems
         }
 
         # Apply filtering logic efficiently
@@ -36746,7 +39005,7 @@ function Get-FabricTenantSetting {
         Write-FabricLog -Message "Error retrieving tenant settings: $errorDetails" -Level Error
     }
 }
-#EndRegion '.\Public\Tenant\Get-FabricTenantSetting.ps1' 85
+#EndRegion '.\Public\Tenant\Get-FabricTenantSetting.ps1' 95
 #Region '.\Public\Tenant\Get-FabricTenantSettingOverridesCapacity.ps1' -1
 
 <#
@@ -36755,6 +39014,9 @@ Retrieves capacities tenant settings overrides from the Fabric tenant.
 
 .DESCRIPTION
 The `Get-FabricTenantSetting` function retrieves capacities tenant settings overrides for a Fabric tenant by making a GET request to the appropriate API endpoint.
+
+.PARAMETER Raw
+If specified, returns the untouched API response.
 
 .EXAMPLE
 Get-FabricTenantSettingOverridesCapacity
@@ -36772,7 +39034,10 @@ Author: Tiago Balabuch
 function Get-FabricTenantSettingOverridesCapacity {
     [CmdletBinding()]
     [OutputType([object[]])]
-    param ()
+    param (
+        [Parameter()]
+        [switch]$Raw
+    )
     try {
         # Step 1: Ensure token validity
         Write-FabricLog -Message "Validating token..." -Level Debug
@@ -36830,6 +39095,9 @@ function Get-FabricTenantSettingOverridesCapacity {
 
             # Step 8: Add data to the list
             if ($null -ne $response) {
+                if ($Raw) {
+                    return $response
+                }
                 Write-FabricLog -Message "Adding data to the list" -Level Debug
                 $capacitiesOverrides += $response.value
 
@@ -36866,7 +39134,7 @@ function Get-FabricTenantSettingOverridesCapacity {
         Write-FabricLog -Message "Failed to retrieve capacities tenant settings overrides. Error: $errorDetails" -Level Error
     }
 }
-#EndRegion '.\Public\Tenant\Get-FabricTenantSettingOverridesCapacity.ps1' 118
+#EndRegion '.\Public\Tenant\Get-FabricTenantSettingOverridesCapacity.ps1' 127
 #Region '.\Public\Tenant\Get-FabricWorkspaceTenantSettingOverrides.ps1' -1
 
 <#
@@ -36875,6 +39143,9 @@ Retrieves tenant setting overrides for all workspaces in the Fabric tenant.
 
 .DESCRIPTION
 The `Get-FabricWorkspaceTenantSettingOverrides` function retrieves tenant setting overrides for all workspaces in the Fabric tenant by making a GET request to the appropriate API endpoint. The function validates the authentication token before making the request and handles the response accordingly.
+
+.PARAMETER Raw
+If specified, returns the untouched API response.
 
 .EXAMPLE
 Get-FabricWorkspaceTenantSettingOverrides
@@ -36889,7 +39160,10 @@ Author: Tiago Balabuch
 #>
 function Get-FabricWorkspaceTenantSettingOverrides {
     [CmdletBinding()]
-    param ( )
+    param (
+        [Parameter()]
+        [switch]$Raw
+    )
     try {
         Invoke-FabricAuthCheck -ThrowOnFailure
 
@@ -36906,6 +39180,10 @@ function Get-FabricWorkspaceTenantSettingOverrides {
             Method = 'Get'
         }
         $dataItems = Invoke-FabricAPIRequest @apiParams
+
+        if ($Raw) {
+            return $dataItems
+        }
 
         # Immediately handle empty response
         if (-not $dataItems) {
@@ -36924,7 +39202,7 @@ function Get-FabricWorkspaceTenantSettingOverrides {
         Write-FabricLog -Message "Error retrieving workspaces tenant setting overrides: $errorDetails" -Level Error
     }
 }
-#EndRegion '.\Public\Tenant\Get-FabricWorkspaceTenantSettingOverrides.ps1' 56
+#EndRegion '.\Public\Tenant\Get-FabricWorkspaceTenantSettingOverrides.ps1' 66
 #Region '.\Public\Tenant\Revoke-FabricCapacityTenantSettingOverrides.ps1' -1
 
 <#
@@ -37411,6 +39689,9 @@ function Get-FabricUserDataFunction {
 .PARAMETER UserDataFunctionId
     (Mandatory) The unique identifier of the User Data Function item whose definition needs to be retrieved.
 
+.PARAMETER Raw
+    If specified, returns the untouched API response.
+
 .EXAMPLE
     Get-FabricUserDataFunctionDefinition -WorkspaceId "12345" -UserDataFunctionId "67890"
 
@@ -37433,7 +39714,10 @@ function Get-FabricUserDataFunctionDefinition {
 
         [Parameter(Mandatory = $true)]
         [ValidateNotNullOrEmpty()]
-        [string]$UserDataFunctionId
+        [string]$UserDataFunctionId,
+
+        [Parameter()]
+        [switch]$Raw
     )
 
     try {
@@ -37451,7 +39735,13 @@ function Get-FabricUserDataFunctionDefinition {
             Headers = $script:FabricAuthContext.FabricHeaders
             Method = 'Post'
         }
-        Invoke-FabricAPIRequest @apiParams
+        $response = Invoke-FabricAPIRequest @apiParams
+
+        if ($Raw) {
+            return $response
+        }
+
+        $response
     }
     catch {
         # Capture and log error details
@@ -37459,7 +39749,7 @@ function Get-FabricUserDataFunctionDefinition {
         Write-FabricLog -Message "Failed to retrieve User Data Function definition. Error: $errorDetails" -Level Error
     }
 }
-#EndRegion '.\Public\User Data Function\Get-FabricUserDataFunctionDefinition.ps1' 63
+#EndRegion '.\Public\User Data Function\Get-FabricUserDataFunctionDefinition.ps1' 75
 #Region '.\Public\User Data Function\New-FabricUserDataFunction.ps1' -1
 
 <#
@@ -37929,6 +40219,9 @@ function Update-FabricUserDataFunctionDefinition {
 .PARAMETER Type
     The type of access entity to filter the results by. This parameter is optional and supports predefined values such as 'CopyJob', 'Dashboard', 'DataPipeline', etc.
 
+.PARAMETER Raw
+    If specified, returns the untouched API response.
+
 .EXAMPLE
     Get-FabricUserListAccessEntities -UserId "user-12345"
     This example retrieves all access entities associated with the user having ID "user-12345".
@@ -37953,7 +40246,10 @@ function Get-FabricUserListAccessEntities {
         [Parameter(Mandatory = $false)]
         [ValidateNotNullOrEmpty()]
         [ValidateSet('CopyJob', ' Dashboard', 'DataPipeline', 'Datamart', 'Environment', 'Eventhouse', 'Eventstream', 'GraphQLApi', 'KQLDashboard', 'KQLDatabase', 'KQLQueryset', 'Lakehouse', 'MLExperiment', 'MLModel', 'MirroredDatabase', 'MountedDataFactory', 'Notebook', 'PaginatedReport', 'Reflex', 'Report', 'SQLDatabase', 'SQLEndpoint', 'SemanticModel', 'SparkJobDefinition', 'VariableLibrary', 'Warehouse')]
-        [string]$Type
+        [string]$Type,
+
+        [Parameter()]
+        [switch]$Raw
     )
     try {
         Invoke-FabricAuthCheck -ThrowOnFailure
@@ -37980,11 +40276,13 @@ function Get-FabricUserListAccessEntities {
             Write-FabricLog -Message "No data returned from the API." -Level Warning
             return $null
         }
-        else {
-            # Return all workspace tenant setting overrides
-            Write-FabricLog -Message "Successfully retrieved access entities for user ID '$UserId'. Entity count: $($dataItems.Count)" -Level Debug
+
+        if ($Raw) {
             return $dataItems
         }
+
+        Write-FabricLog -Message "Successfully retrieved access entities for user ID '$UserId'. Entity count: $($dataItems.Count)" -Level Debug
+        return $dataItems
     }
     catch {
         # Capture and log error details
@@ -37992,7 +40290,7 @@ function Get-FabricUserListAccessEntities {
         Write-FabricLog -Message "Failed to retrieve Warehouse. Error: $errorDetails" -Level Error
     }
 }
-#EndRegion '.\Public\Users\Get-FabricUserListAccessEntities.ps1' 78
+#EndRegion '.\Public\Users\Get-FabricUserListAccessEntities.ps1' 86
 #Region '.\Public\Utils\Clear-FabricNameCache.ps1' -1
 
 function Clear-FabricNameCache {
@@ -38001,13 +40299,15 @@ function Clear-FabricNameCache {
         Clears the cached capacity and workspace name resolutions.
 
     .DESCRIPTION
-        Removes all cached capacity and workspace name lookups from PSFramework's
-        configuration cache. Use this if capacity or workspace names have changed
-        and you need to force fresh API lookups.
+        Removes all cached name lookups from PSFramework's configuration cache.
+        Use this if any names have changed and you need to force fresh API lookups.
 
         This function clears:
         - All cached capacity names (from Resolve-FabricCapacityName)
         - All cached workspace names (from Resolve-FabricWorkspaceName)
+        - All cached gateway names (from Resolve-FabricGatewayName)
+        - All cached dataset names and workspace IDs (from Resolve-FabricDatasetName)
+        - All cross-populated workspace capacity IDs (from Resolve-FabricWorkspaceName)
 
     .PARAMETER Force
         If specified, clears the cache without confirmation.
@@ -38015,7 +40315,7 @@ function Clear-FabricNameCache {
     .EXAMPLE
         Clear-FabricNameCache
 
-        Clears all cached capacity and workspace names.
+        Clears all cached capacity, workspace, gateway, and dataset names.
 
     .EXAMPLE
         Clear-FabricNameCache -Force
@@ -38024,7 +40324,7 @@ function Clear-FabricNameCache {
 
     .NOTES
         This function is useful when:
-        - Capacity or workspace names have been renamed
+        - Capacity, workspace, gateway, or dataset names have been renamed
         - You suspect cached data is stale
         - You want to reduce memory usage from large caches
     #>
@@ -38070,7 +40370,7 @@ function Clear-FabricNameCache {
         }
     }
 }
-#EndRegion '.\Public\Utils\Clear-FabricNameCache.ps1' 76
+#EndRegion '.\Public\Utils\Clear-FabricNameCache.ps1' 78
 #Region '.\Public\Utils\Convert-FromBase64.ps1' -1
 
 <#
@@ -38226,6 +40526,9 @@ Defaults to 5 seconds which balances responsiveness with request volume.
 Maximum number of seconds to wait before aborting with a timeout error. The default of 900 seconds (15 minutes) helps
 prevent indefinite polling if the service stops updating status.
 
+.PARAMETER Raw
+If specified, returns the untouched API response.
+
 .EXAMPLE
 Get-FabricLongRunningOperation -operationId "12345-abcd-67890-efgh" -retryAfter 10 -timeoutInSeconds 1200
 
@@ -38254,7 +40557,10 @@ function Get-FabricLongRunningOperation {
         [int]$retryAfter = 5,
 
         [Parameter(Mandatory = $false)]
-        [int]$timeoutInSeconds = 900
+        [int]$timeoutInSeconds = 900,
+
+        [Parameter()]
+        [switch]$Raw
     )
 
     if (-not ($operationId -or $location)) {
@@ -38298,6 +40604,10 @@ function Get-FabricLongRunningOperation {
 
         } while ($operation.status -notin @("Succeeded", "Completed", "Failed"))
 
+        if ($Raw) {
+            return $operation
+        }
+
         # Return the operation result
         return $operation
     }
@@ -38308,7 +40618,7 @@ function Get-FabricLongRunningOperation {
         throw
     }
 }
-#EndRegion '.\Public\Utils\Get-FabricLongRunningOperation.ps1' 108
+#EndRegion '.\Public\Utils\Get-FabricLongRunningOperation.ps1' 118
 #Region '.\Public\Utils\Get-FabricLongRunningOperationResult.ps1' -1
 
 <#
@@ -38321,6 +40631,9 @@ of a specific long-running operation. This is typically used after confirming th
 
 .PARAMETER operationId
 The unique identifier of the completed long-running operation whose result you want to retrieve.
+
+.PARAMETER Raw
+If specified, returns the untouched API response.
 
 .EXAMPLE
 Get-FabricLongRunningOperationResult -operationId "12345-abcd-67890-efgh"
@@ -38337,7 +40650,10 @@ This command fetches the result of the operation with the specified operationId.
 function Get-FabricLongRunningOperationResult {
     param (
         [Parameter(Mandatory = $true)]
-        [string]$operationId
+        [string]$operationId,
+
+        [Parameter()]
+        [switch]$Raw
     )
     Invoke-FabricAuthCheck -ThrowOnFailure
 
@@ -38355,6 +40671,10 @@ function Get-FabricLongRunningOperationResult {
         }
         $response = Invoke-FabricAPIRequest @apiParams
 
+        if ($Raw) {
+            return $response
+        }
+
         # Return the API response
         Write-FabricLog -Message "LRO result return: $($response)" -Level Debug
         return $response
@@ -38366,7 +40686,7 @@ function Get-FabricLongRunningOperationResult {
         throw
     }
 }
-#EndRegion '.\Public\Utils\Get-FabricLongRunningOperationResult.ps1' 56
+#EndRegion '.\Public\Utils\Get-FabricLongRunningOperationResult.ps1' 66
 #Region '.\Public\Utils\Invoke-FabricAPIRequest.ps1' -1
 
 <#
@@ -38518,21 +40838,9 @@ function Invoke-FabricAPIRequest {
                 if ($isTransientFailure -and $retryCount -lt $MaxRetries) {
                     $retryCount++
 
-                    # Check for Retry-After header
-                    $retryAfterSeconds = if ($responseHeader -and $responseHeader['Retry-After']) {
-                        $retryAfterValue = $responseHeader['Retry-After']
-                        # Handle case where Retry-After might be an array
-                        if ($retryAfterValue -is [array]) {
-                            [int]$retryAfterValue[0]
-                        } else {
-                            [int]$retryAfterValue
-                        }
-                    } else {
-                        # Calculate exponential backoff with jitter
-                        $baseDelay = [Math]::Pow($RetryBackoffMultiplier, $retryCount)
-                        $jitter = Get-Random -Minimum 0 -Maximum 1000 -SetSeed ([int](Get-Date).Ticks)
-                        [int]($baseDelay + ($jitter / 1000))
-                    }
+                    # Determine the wait: honors Retry-After when present, else exponential
+                    # backoff with jitter, clamped to a sane range. (Factored out for testing.)
+                    $retryAfterSeconds = Get-FabricRetryDelay -ResponseHeader $responseHeader -RetryCount $retryCount -BackoffMultiplier $RetryBackoffMultiplier
 
                     Write-FabricLog -Message "Transient failure (status $statusCode). Retry $retryCount of $MaxRetries after $retryAfterSeconds seconds..." -Level Warning
                     Start-Sleep -Seconds $retryAfterSeconds
@@ -38730,11 +41038,7 @@ function Invoke-FabricAPIRequest {
         throw
     }
 }
-<<<<<<<< HEAD:tools/MicrosoftFabricMgmt/output/module/MicrosoftFabricMgmt/1.0.8/MicrosoftFabricMgmt.psm1
-#EndRegion '.\Public\Utils\Invoke-FabricAPIRequest.ps1' 347
-========
 #EndRegion '.\Public\Utils\Invoke-FabricAPIRequest.ps1' 350
->>>>>>>> main:tools/MicrosoftFabricMgmt/output/module/MicrosoftFabricMgmt/1.0.6/MicrosoftFabricMgmt.psm1
 #Region '.\Public\Utils\Resolve-FabricCapacityIdFromWorkspace.ps1' -1
 
 function Resolve-FabricCapacityIdFromWorkspace {
@@ -38935,6 +41239,216 @@ function Resolve-FabricCapacityName {
     }
 }
 #EndRegion '.\Public\Utils\Resolve-FabricCapacityName.ps1' 96
+#Region '.\Public\Utils\Resolve-FabricDatasetName.ps1' -1
+
+function Resolve-FabricDatasetName {
+    <#
+    .SYNOPSIS
+        Resolves a Power BI Dataset ID to its display name.
+
+    .DESCRIPTION
+        Looks up the dataset display name from a dataset ID (GUID) using the admin API.
+        Results are cached using PSFramework's configuration system for performance.
+
+        As a side effect of the API call, the dataset's workspace ID is also cached
+        under the key "DatasetWorkspaceId_{DatasetId}" to avoid redundant API calls
+        when callers subsequently need to resolve the workspace name.
+
+        The cache persists for the session lifetime and is shared across all
+        functions. Use Clear-FabricNameCache to clear the cache if needed.
+
+    .PARAMETER DatasetId
+        The dataset ID (GUID) to resolve.
+
+    .PARAMETER DisableCache
+        If specified, bypasses the cache and always makes a fresh API call.
+
+    .EXAMPLE
+        Resolve-FabricDatasetName -DatasetId "12345-abcd-efgh"
+
+        Returns the display name for the specified dataset, using cache if available.
+
+    .EXAMPLE
+        Resolve-FabricDatasetName -DatasetId "12345-abcd-efgh" -DisableCache
+
+        Forces a fresh API call, bypassing the cache.
+
+    .NOTES
+        This function uses PSFramework's configuration system for caching.
+        Cache key format: "DatasetName_{DatasetId}"
+        Cross-populates: "DatasetWorkspaceId_{DatasetId}" for workspace resolution.
+        Requires Fabric Administrator permissions (Tenant.Read.All or Tenant.ReadWrite.All scope).
+    #>
+    [CmdletBinding()]
+    param(
+        [Parameter(Mandatory, ValueFromPipeline, ValueFromPipelineByPropertyName)]
+        [ValidateNotNullOrEmpty()]
+        [Alias('Id')]
+        [string]$DatasetId,
+
+        [Parameter()]
+        [switch]$DisableCache
+    )
+
+    process {
+        # Generate cache key
+        $cacheKey = "DatasetName_$DatasetId"
+
+        # Check cache first (unless disabled)
+        if (-not $DisableCache) {
+            $cached = Get-PSFConfigValue -FullName "MicrosoftFabricMgmt.Cache.$cacheKey" -Fallback $null
+
+            if ($cached) {
+                Write-PSFMessage -Level Debug -Message "Cache hit for dataset ID '$DatasetId': $cached"
+                return $cached
+            }
+        }
+
+        # Cache miss or disabled - make API call
+        Write-PSFMessage -Level Debug -Message "Cache miss for dataset ID '$DatasetId' - resolving via API"
+
+        try {
+            # Use -Raw to retrieve the unmodified API object without triggering downstream enrichment
+            $dataset = Get-FabricAdminDataset -DatasetId $DatasetId -Raw -ErrorAction Stop
+
+            if ($dataset -and $dataset.name) {
+                $name = $dataset.name
+
+                # Cache the result (unless caching is disabled)
+                if (-not $DisableCache) {
+                    Set-PSFConfig -FullName "MicrosoftFabricMgmt.Cache.$cacheKey" -Value $name
+                    Write-PSFMessage -Level Debug -Message "Cached dataset name '$name' for ID '$DatasetId'"
+
+                    # Cross-populate workspace ID cache to avoid a redundant API call
+                    # when callers subsequently resolve the workspace name
+                    if ($dataset.workspaceId) {
+                        $workspaceIdCacheKey = "DatasetWorkspaceId_$DatasetId"
+                        Set-PSFConfig -FullName "MicrosoftFabricMgmt.Cache.$workspaceIdCacheKey" -Value $dataset.workspaceId
+                        Write-PSFMessage -Level Debug -Message "Cached workspace ID '$($dataset.workspaceId)' for dataset ID '$DatasetId' (cross-populated)"
+                    }
+                }
+
+                return $name
+            }
+
+            # Dataset not found, cache fallback to prevent repeated API calls
+            Write-PSFMessage -Level Verbose -Message "Dataset with ID '$DatasetId' not found. Returning ID as fallback."
+            if (-not $DisableCache) {
+                Set-PSFConfig -FullName "MicrosoftFabricMgmt.Cache.$cacheKey" -Value $DatasetId
+                Write-PSFMessage -Level Debug -Message "Cached fallback for dataset ID '$DatasetId' (not found)"
+            }
+            return $DatasetId
+        }
+        catch {
+            # Error occurred, log and return ID as fallback
+            Write-PSFMessage -Level Verbose -Message "Failed to resolve dataset ID '$DatasetId': $($_.Exception.Message)"
+            if (-not $DisableCache) {
+                Set-PSFConfig -FullName "MicrosoftFabricMgmt.Cache.$cacheKey" -Value $DatasetId
+                Write-PSFMessage -Level Debug -Message "Cached fallback for dataset ID '$DatasetId' (error)"
+            }
+            return $DatasetId
+        }
+    }
+}
+#EndRegion '.\Public\Utils\Resolve-FabricDatasetName.ps1' 110
+#Region '.\Public\Utils\Resolve-FabricGatewayName.ps1' -1
+
+function Resolve-FabricGatewayName {
+    <#
+    .SYNOPSIS
+        Resolves a Power BI Gateway ID to its display name.
+
+    .DESCRIPTION
+        Looks up the gateway display name from a gateway ID (GUID).
+        Results are cached using PSFramework's configuration system for performance.
+
+        The cache persists for the session lifetime and is shared across all
+        functions. Use Clear-FabricNameCache to clear the cache if needed.
+
+    .PARAMETER GatewayId
+        The gateway ID (GUID) to resolve.
+
+    .PARAMETER DisableCache
+        If specified, bypasses the cache and always makes a fresh API call.
+
+    .EXAMPLE
+        Resolve-FabricGatewayName -GatewayId "12345-abcd-efgh"
+
+        Returns the display name for the specified gateway, using cache if available.
+
+    .EXAMPLE
+        Resolve-FabricGatewayName -GatewayId "12345-abcd-efgh" -DisableCache
+
+        Forces a fresh API call, bypassing the cache.
+
+    .NOTES
+        This function uses PSFramework's configuration system for caching.
+        Cache key format: "GatewayName_{GatewayId}"
+        Requires gateway admin permissions (Dataset.ReadWrite.All or Dataset.Read.All scope).
+    #>
+    [CmdletBinding()]
+    param(
+        [Parameter(Mandatory, ValueFromPipeline, ValueFromPipelineByPropertyName)]
+        [ValidateNotNullOrEmpty()]
+        [Alias('Id')]
+        [string]$GatewayId,
+
+        [Parameter()]
+        [switch]$DisableCache
+    )
+
+    process {
+        # Generate cache key
+        $cacheKey = "GatewayName_$GatewayId"
+
+        # Check cache first (unless disabled)
+        if (-not $DisableCache) {
+            $cached = Get-PSFConfigValue -FullName "MicrosoftFabricMgmt.Cache.$cacheKey" -Fallback $null
+
+            if ($cached) {
+                Write-PSFMessage -Level Debug -Message "Cache hit for gateway ID '$GatewayId': $cached"
+                return $cached
+            }
+        }
+
+        # Cache miss or disabled - make API call
+        Write-PSFMessage -Level Debug -Message "Cache miss for gateway ID '$GatewayId' - resolving via API"
+
+        try {
+            $gateway = Get-FabricAdminGateway -GatewayId $GatewayId -ErrorAction Stop
+
+            if ($gateway -and $gateway.name) {
+                $name = $gateway.name
+
+                # Cache the result (unless caching is disabled)
+                if (-not $DisableCache) {
+                    Set-PSFConfig -FullName "MicrosoftFabricMgmt.Cache.$cacheKey" -Value $name
+                    Write-PSFMessage -Level Debug -Message "Cached gateway name '$name' for ID '$GatewayId'"
+                }
+
+                return $name
+            }
+
+            # Gateway not found, cache fallback to prevent repeated API calls
+            Write-PSFMessage -Level Verbose -Message "Gateway with ID '$GatewayId' not found. Returning ID as fallback."
+            if (-not $DisableCache) {
+                Set-PSFConfig -FullName "MicrosoftFabricMgmt.Cache.$cacheKey" -Value $GatewayId
+                Write-PSFMessage -Level Debug -Message "Cached fallback for gateway ID '$GatewayId' (not found)"
+            }
+            return $GatewayId
+        }
+        catch {
+            # Error occurred, log and return ID as fallback
+            Write-PSFMessage -Level Verbose -Message "Failed to resolve gateway ID '$GatewayId': $($_.Exception.Message)"
+            if (-not $DisableCache) {
+                Set-PSFConfig -FullName "MicrosoftFabricMgmt.Cache.$cacheKey" -Value $GatewayId
+                Write-PSFMessage -Level Debug -Message "Cached fallback for gateway ID '$GatewayId' (error)"
+            }
+            return $GatewayId
+        }
+    }
+}
+#EndRegion '.\Public\Utils\Resolve-FabricGatewayName.ps1' 96
 #Region '.\Public\Utils\Resolve-FabricWorkspaceName.ps1' -1
 
 function Resolve-FabricWorkspaceName {
@@ -39344,6 +41858,9 @@ function Get-FabricVariableLibrary {
 .PARAMETER VariableLibraryFormat
     The format for the variable library definition (e.g., 'json'). Optional.
 
+.PARAMETER Raw
+    If specified, returns the untouched API response.
+
 .EXAMPLE
     Get-FabricVariableLibraryDefinition -WorkspaceId "workspace-12345" -VariableLibraryId "library-67890"
     Retrieves the definition for the specified variable library in the given workspace.
@@ -39372,7 +41889,10 @@ function Get-FabricVariableLibraryDefinition {
 
         [Parameter(Mandatory = $false)]
         [ValidateNotNullOrEmpty()]
-        [string]$VariableLibraryFormat
+        [string]$VariableLibraryFormat,
+
+        [Parameter()]
+        [switch]$Raw
     )
     try {
         Invoke-FabricAuthCheck -ThrowOnFailure
@@ -39393,6 +41913,10 @@ function Get-FabricVariableLibraryDefinition {
         }
         $response = Invoke-FabricAPIRequest @apiParams
 
+        if ($Raw) {
+            return $response
+        }
+
         # Return the API response
         Write-FabricLog -Message "Variable Library '$VariableLibraryId' definition retrieved successfully!" -Level Debug
         return $response
@@ -39403,7 +41927,7 @@ function Get-FabricVariableLibraryDefinition {
         Write-FabricLog -Message "Failed to retrieve Variable Library. Error: $errorDetails" -Level Error
     }
 }
-#EndRegion '.\Public\Variable Library\Get-FabricVariableLibraryDefinition.ps1' 76
+#EndRegion '.\Public\Variable Library\Get-FabricVariableLibraryDefinition.ps1' 86
 #Region '.\Public\Variable Library\New-FabricVariableLibrary.ps1' -1
 
 <#
@@ -39837,6 +42361,9 @@ The ID of the Warehouse for which to retrieve the connection string. This parame
 .PARAMETER PrivateLinkType
 (Optional) The type of private link to use for the connection string. Valid values are 'None' or 'Workspace'.
 
+.PARAMETER Raw
+If specified, returns the untouched API response.
+
 .EXAMPLE
 Get-FabricWarehouseConnectionString -WorkspaceId "workspace123" -WarehouseId "warehouse456"
 
@@ -39867,7 +42394,10 @@ function Get-FabricWarehouseConnectionString {
         [Parameter(Mandatory = $false)]
         [ValidateNotNullOrEmpty()]
         [ValidateSet('None', 'Workspace')]
-        [string]$PrivateLinkType
+        [string]$PrivateLinkType,
+
+        [Parameter()]
+        [switch]$Raw
     )
     try {
         Invoke-FabricAuthCheck -ThrowOnFailure
@@ -39897,6 +42427,10 @@ function Get-FabricWarehouseConnectionString {
         }
         $dataItems = Invoke-FabricAPIRequest @apiParams
 
+        if ($Raw) {
+            return $dataItems
+        }
+
         # Immediately handle empty response
         if (-not $dataItems) {
             Write-FabricLog -Message "No data returned from the API." -Level Warning
@@ -39913,7 +42447,7 @@ function Get-FabricWarehouseConnectionString {
         Write-FabricLog -Message "Failed to retrieve Warehouse connection string. Error: $errorDetails" -Level Error
     }
 }
-#EndRegion '.\Public\Warehouse\Get-FabricWarehouseConnectionString.ps1' 98
+#EndRegion '.\Public\Warehouse\Get-FabricWarehouseConnectionString.ps1' 108
 #Region '.\Public\Warehouse\Get-FabricWarehouseSnapshot.ps1' -1
 
 <#
@@ -39934,6 +42468,9 @@ Id is already known from a previous call.
 .PARAMETER WarehouseSnapshotName
 Optional. When provided, returns only the snapshot whose display name exactly matches this value. Do not combine with
 WarehouseSnapshotId.
+
+.PARAMETER Raw
+If specified, returns the untouched API response with no added properties or type decoration.
 
 .EXAMPLE
 Get-FabricWarehouseSnapshot -WorkspaceId "workspace-12345" -WarehouseSnapshotId "snap-67890"
@@ -39971,7 +42508,10 @@ function Get-FabricWarehouseSnapshot {
         [Parameter(Mandatory = $false)]
         [ValidateNotNullOrEmpty()]
         [ValidatePattern('^[a-zA-Z0-9_]*$')]
-        [string]$WarehouseSnapshotName
+        [string]$WarehouseSnapshotName,
+
+        [Parameter()]
+        [switch]$Raw
     )
 
     try {
@@ -40014,14 +42554,48 @@ function Get-FabricWarehouseSnapshot {
         }
 
         # Handle results
-        if ($matchedItems) {
-            Write-FabricLog -Message "Item(s) found matching the specified criteria." -Level Debug
-            return $matchedItems
-        }
-        else {
+        if (-not $matchedItems) {
             Write-FabricLog -Message "No item found matching the provided criteria." -Level Warning
             return $null
         }
+
+        if ($Raw) {
+            return $matchedItems
+        }
+
+        Write-FabricLog -Message "Item(s) found matching the specified criteria." -Level Debug
+
+        # Enrich with resolved workspace and capacity names
+        $workspaceName = $null
+        try {
+            $workspaceName = Resolve-FabricWorkspaceName -WorkspaceId $WorkspaceId
+        }
+        catch {
+            $workspaceName = $WorkspaceId
+            Write-FabricLog -Message "Failed to resolve workspace name for ID '$WorkspaceId': $($_.Exception.Message)" -Level Debug
+        }
+
+        $capacityName = $null
+        try {
+            $capacityId = Resolve-FabricCapacityIdFromWorkspace -WorkspaceId $WorkspaceId
+            if ($capacityId) {
+                $capacityName = Resolve-FabricCapacityName -CapacityId $capacityId
+            }
+        }
+        catch {
+            Write-FabricLog -Message "Failed to resolve capacity name for workspace ID '$WorkspaceId': $($_.Exception.Message)" -Level Debug
+        }
+
+        foreach ($item in $matchedItems) {
+            $item | Add-Member -NotePropertyName 'workspaceId'   -NotePropertyValue $WorkspaceId   -Force
+            $item | Add-Member -NotePropertyName 'WorkspaceName' -NotePropertyValue $workspaceName -Force
+            if ($null -ne $capacityName) {
+                $item | Add-Member -NotePropertyName 'CapacityName' -NotePropertyValue $capacityName -Force
+            }
+        }
+
+        $matchedItems | Add-FabricTypeName -TypeName 'MicrosoftFabric.WarehouseSnapshot'
+        return $matchedItems
     }
     catch {
         # Capture and log error details
@@ -40029,7 +42603,7 @@ function Get-FabricWarehouseSnapshot {
         Write-FabricLog -Message "Failed to retrieve Warehouse Snapshot. Error: $errorDetails" -Level Error
     }
 }
-#EndRegion '.\Public\Warehouse\Get-FabricWarehouseSnapshot.ps1' 114
+#EndRegion '.\Public\Warehouse\Get-FabricWarehouseSnapshot.ps1' 154
 #Region '.\Public\Warehouse\New-FabricWarehouse.ps1' -1
 
 <#
@@ -40965,6 +43539,9 @@ Optional. Filter workspaces by state. Valid values: Active, Deleted.
 .PARAMETER CapacityId
 Optional. Filter workspaces by the capacity they are assigned to.
 
+.PARAMETER Raw
+If specified, returns the untouched API response with no added properties or type decoration.
+
 .EXAMPLE
 Get-FabricWorkspaceAsAdmin
 
@@ -41016,7 +43593,10 @@ function Get-FabricWorkspaceAsAdmin {
 
         [Parameter(Mandatory = $false)]
         [ValidateNotNullOrEmpty()]
-        [string]$CapacityId
+        [string]$CapacityId,
+
+        [Parameter()]
+        [switch]$Raw
     )
 
     try {
@@ -41073,6 +43653,24 @@ function Get-FabricWorkspaceAsAdmin {
             return $null
         }
 
+        if ($Raw) {
+            return $dataItems
+        }
+
+        # Enrich each workspace with its resolved capacity name (cached after first lookup)
+        foreach ($workspace in $dataItems) {
+            if ($workspace.capacityId) {
+                $capacityName = $workspace.capacityId
+                try {
+                    $capacityName = Resolve-FabricCapacityName -CapacityId $workspace.capacityId
+                }
+                catch {
+                    Write-FabricLog -Message "Failed to resolve capacity name for ID '$($workspace.capacityId)': $($_.Exception.Message)" -Level Debug
+                }
+                $workspace | Add-Member -NotePropertyName 'CapacityName' -NotePropertyValue $capacityName -Force
+            }
+        }
+
         # Add type decoration for custom formatting
         # Note: Admin API returns 'name' instead of 'displayName', so use AdminWorkspace type
         $dataItems | Add-FabricTypeName -TypeName 'MicrosoftFabric.AdminWorkspace'
@@ -41086,7 +43684,7 @@ function Get-FabricWorkspaceAsAdmin {
         Write-FabricLog -Message "Failed to retrieve workspaces from admin API. Error: $errorDetails" -Level Error
     }
 }
-#EndRegion '.\Public\Workspace\Get-FabricWorkspaceAsAdmin.ps1' 143
+#EndRegion '.\Public\Workspace\Get-FabricWorkspaceAsAdmin.ps1' 167
 #Region '.\Public\Workspace\Get-FabricWorkspaceGitConnection.ps1' -1
 
 <#
@@ -41098,6 +43696,9 @@ The `Get-FabricWorkspaceGitConnection` function queries the Fabric API to obtain
 
 .PARAMETER WorkspaceId
 (Optional) The unique identifier of the workspace to filter Git connection details for. If omitted, all available workspace Git connections are returned.
+
+.PARAMETER Raw
+If specified, returns the untouched API response with no added properties or type decoration.
 
 .EXAMPLE
 Get-FabricWorkspaceGitConnection -WorkspaceId "workspace123"
@@ -41122,7 +43723,10 @@ function Get-FabricWorkspaceGitConnection {
     param (
         [Parameter(Mandatory = $false)]
         [ValidateNotNullOrEmpty()]
-        [string]$WorkspaceId
+        [string]$WorkspaceId,
+
+        [Parameter()]
+        [switch]$Raw
     )
     try {
         # Validate authentication
@@ -41138,6 +43742,10 @@ function Get-FabricWorkspaceGitConnection {
             Method = 'Get'
         }
         $dataItems = Invoke-FabricAPIRequest @apiParams
+
+        if ($Raw) {
+            return $dataItems
+        }
 
         # Apply filtering - using custom property 'workspaceId' instead of 'Id'
         if ($WorkspaceId) {
@@ -41159,7 +43767,7 @@ function Get-FabricWorkspaceGitConnection {
         Write-FabricLog -Message "Failed to retrieve workspace. Error: $errorDetails" -Level Error
     }
 }
-#EndRegion '.\Public\Workspace\Get-FabricWorkspaceGitConnection.ps1' 71
+#EndRegion '.\Public\Workspace\Get-FabricWorkspaceGitConnection.ps1' 81
 #Region '.\Public\Workspace\Get-FabricWorkspaceRoleAssignment.ps1' -1
 
 <#
@@ -41176,7 +43784,10 @@ The unique identifier of the workspace to fetch role assignments for.
 (Optional) The unique identifier of a specific role assignment to retrieve.
 
 .PARAMETER Raw
-If specified, returns the raw API response without type decoration.
+If specified, returns the untouched API response (including the full nested principal
+object) with no added properties and no type decoration. By default the returned objects
+include every API property plus resolved WorkspaceName/CapacityName and flattened
+convenience fields (PrincipalId, DisplayName, Type, Role, etc.) for display.
 
 .EXAMPLE
 Get-FabricWorkspaceRoleAssignments -WorkspaceId "workspace123"
@@ -41227,67 +43838,51 @@ function Get-FabricWorkspaceRoleAssignment {
         }
         $dataItems = Invoke-FabricAPIRequest @apiParams
 
-        # Apply filtering
-        $matchedItems = Select-FabricResource -InputObject $dataItems -Id $WorkspaceRoleAssignmentId -ResourceType 'WorkspaceRoleAssignment'
+        # Filter by role assignment id if provided. Pass -Raw so Select-FabricResource
+        # does not attempt enrichment; roleAssignment items carry no workspaceId of their
+        # own (the workspace comes from the -WorkspaceId parameter), so we enrich here.
+        $matchedItems = Select-FabricResource -InputObject $dataItems -Id $WorkspaceRoleAssignmentId -ResourceType 'WorkspaceRoleAssignment' -Raw
 
-        # Transform data into custom objects with type decoration
-        if ($matchedItems) {
-            $customResults = foreach ($obj in $matchedItems) {
-                [PSCustomObject]@{
-                    workspaceId       = $WorkspaceId  # Add workspaceId for formatting
-                    ID                = $obj.id
-                    PrincipalId       = $obj.principal.id
-                    DisplayName       = $obj.principal.displayName
-                    Type              = $obj.principal.type
-                    UserPrincipalName = $obj.principal.userDetails.userPrincipalName
-                    aadAppId          = $obj.principal.servicePrincipalDetails.aadAppId
-                    Role              = $obj.role
-                }
-            }
-
-            if ($Raw) {
-                # Add resolved names directly to objects
-                foreach ($item in $customResults) {
-                    # Resolve WorkspaceName
-                    $workspaceName = $null
-                    if ($item.workspaceId) {
-                        try {
-                            $workspaceName = Resolve-FabricWorkspaceName -WorkspaceId $item.workspaceId
-                        }
-                        catch {
-                            $workspaceName = $item.workspaceId
-                        }
-                    }
-
-                    # Resolve CapacityName via workspace
-                    $capacityName = $null
-                    if ($item.workspaceId) {
-                        try {
-                            $capacityId = Resolve-FabricCapacityIdFromWorkspace -WorkspaceId $item.workspaceId
-                            if ($capacityId) {
-                                $capacityName = Resolve-FabricCapacityName -CapacityId $capacityId
-                            }
-                        }
-                        catch {
-                            $capacityName = $null
-                        }
-                    }
-
-                    if ($null -ne $workspaceName) {
-                        $item | Add-Member -NotePropertyName 'WorkspaceName' -NotePropertyValue $workspaceName -Force
-                    }
-                    if ($null -ne $capacityName) {
-                        $item | Add-Member -NotePropertyName 'CapacityName' -NotePropertyValue $capacityName -Force
-                    }
-                }
-            }
-            else {
-                # Add type decoration for custom formatting
-                $customResults | Add-FabricTypeName -TypeName 'MicrosoftFabric.WorkspaceRoleAssignment'
-            }
-
-            return $customResults
+        if (-not $matchedItems) {
+            return
         }
+
+        # -Raw returns the untouched API response (nested principal object preserved as-is).
+        if ($Raw) {
+            return $matchedItems
+        }
+
+        # Resolve workspace/capacity names once (shared by all assignments in this workspace).
+        $workspaceName = $null
+        try { $workspaceName = Resolve-FabricWorkspaceName -WorkspaceId $WorkspaceId }
+        catch { $workspaceName = $WorkspaceId }
+
+        $capacityName = $null
+        try {
+            $capacityId = Resolve-FabricCapacityIdFromWorkspace -WorkspaceId $WorkspaceId
+            if ($capacityId) { $capacityName = Resolve-FabricCapacityName -CapacityId $capacityId }
+        }
+        catch { $capacityName = $null }
+
+        foreach ($obj in $matchedItems) {
+            # Preserve every API property (including the full nested principal object) and
+            # add workspace context plus flattened convenience fields used by the table view.
+            $obj | Add-Member -NotePropertyName 'workspaceId'       -NotePropertyValue $WorkspaceId -Force
+            $obj | Add-Member -NotePropertyName 'WorkspaceName'     -NotePropertyValue $workspaceName -Force
+            if ($null -ne $capacityName) {
+                $obj | Add-Member -NotePropertyName 'CapacityName'  -NotePropertyValue $capacityName -Force
+            }
+            $obj | Add-Member -NotePropertyName 'ID'                -NotePropertyValue $obj.id -Force
+            $obj | Add-Member -NotePropertyName 'PrincipalId'       -NotePropertyValue $obj.principal.id -Force
+            $obj | Add-Member -NotePropertyName 'DisplayName'       -NotePropertyValue $obj.principal.displayName -Force
+            $obj | Add-Member -NotePropertyName 'Type'              -NotePropertyValue $obj.principal.type -Force
+            $obj | Add-Member -NotePropertyName 'UserPrincipalName' -NotePropertyValue $obj.principal.userDetails.userPrincipalName -Force
+            $obj | Add-Member -NotePropertyName 'aadAppId'          -NotePropertyValue $obj.principal.servicePrincipalDetails.aadAppId -Force
+            $obj | Add-Member -NotePropertyName 'Role'              -NotePropertyValue $obj.role -Force
+        }
+
+        $matchedItems | Add-FabricTypeName -TypeName 'MicrosoftFabric.WorkspaceRoleAssignment'
+        $matchedItems
     }
     catch {
         # Capture and log error details
@@ -41295,7 +43890,7 @@ function Get-FabricWorkspaceRoleAssignment {
         Write-FabricLog -Message "Failed to retrieve role assignments for WorkspaceId '$WorkspaceId'. Error: $errorDetails" -Level Error
     }
 }
-#EndRegion '.\Public\Workspace\Get-FabricWorkspaceRoleAssignment.ps1' 134
+#EndRegion '.\Public\Workspace\Get-FabricWorkspaceRoleAssignment.ps1' 121
 #Region '.\Public\Workspace\New-FabricWorkspace.ps1' -1
 
 <#

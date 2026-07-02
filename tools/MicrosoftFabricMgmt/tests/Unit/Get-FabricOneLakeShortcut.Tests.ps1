@@ -6,6 +6,7 @@ $expectedParams = @(
     "ItemId"
     "ShortcutName"
     "ParentPath"
+    "Raw"
     "ProgressAction"
     "Verbose"
     "Debug"

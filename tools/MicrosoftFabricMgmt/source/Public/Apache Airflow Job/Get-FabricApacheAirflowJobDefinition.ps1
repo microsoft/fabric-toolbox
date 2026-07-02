@@ -15,6 +15,9 @@ It supports both synchronous and asynchronous operations, with detailed logging 
 .PARAMETER ApacheAirflowJobFormat
 (Optional) Specifies the format of the Apache Airflow Job definition. For example, 'json' or 'xml'.
 
+.PARAMETER Raw
+If specified, returns the untouched API response.
+
 .EXAMPLE
 Get-FabricApacheAirflowJobDefinition -WorkspaceId "12345" -ApacheAirflowJobId "67890"
 
@@ -42,7 +45,10 @@ function Get-FabricApacheAirflowJobDefinition {
 
         [Parameter(Mandatory = $false)]
         [ValidateNotNullOrEmpty()]
-        [string]$ApacheAirflowJobFormat
+        [string]$ApacheAirflowJobFormat,
+
+        [Parameter()]
+        [switch]$Raw
     )
     try {
         # Validate authentication
@@ -69,7 +75,13 @@ function Get-FabricApacheAirflowJobDefinition {
             Headers = $script:FabricAuthContext.FabricHeaders
             Method = 'Post'
         }
-        Invoke-FabricAPIRequest @apiParams
+        $response = Invoke-FabricAPIRequest @apiParams
+
+        if ($Raw) {
+            return $response
+        }
+
+        $response
     }
     catch {
         # Capture and log error details

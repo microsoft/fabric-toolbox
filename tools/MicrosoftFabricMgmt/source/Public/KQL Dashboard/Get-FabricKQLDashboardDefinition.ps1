@@ -16,6 +16,9 @@ Handles both synchronous and asynchronous operations, with detailed logging and 
 .PARAMETER KQLDashboardFormat
 Specifies the format of the KQLDashboard definition.
 
+.PARAMETER Raw
+If specified, returns the untouched API response.
+
 .EXAMPLE
 Get-FabricKQLDashboardDefinition -WorkspaceId "12345" -KQLDashboardId "67890"
 
@@ -46,7 +49,10 @@ function Get-FabricKQLDashboardDefinition {
 
         [Parameter(Mandatory = $false)]
         [ValidateNotNullOrEmpty()]
-        [string]$KQLDashboardFormat
+        [string]$KQLDashboardFormat,
+
+        [Parameter()]
+        [switch]$Raw
     )
     try {
         # Validate authentication token before proceeding.
@@ -68,6 +74,10 @@ function Get-FabricKQLDashboardDefinition {
             Method = 'Post'
         }
         $response = Invoke-FabricAPIRequest @apiParams
+
+        if ($Raw) {
+            return $response
+        }
 
         # Return the API response
         Write-FabricLog -Message "KQLDashboard '$KQLDashboardId' definition retrieved successfully!" -Level Host

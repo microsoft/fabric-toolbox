@@ -16,6 +16,9 @@ It supports both synchronous and asynchronous operations, with detailed logging 
 .PARAMETER CopyJobFormat
 (Optional) Specifies the format of the Copy Job definition. For example, 'json' or 'xml'.
 
+.PARAMETER Raw
+If specified, returns the untouched API response.
+
 .EXAMPLE
 Get-FabricCopyJobDefinition -WorkspaceId "12345" -CopyJobId "67890"
 
@@ -42,7 +45,10 @@ function Get-FabricCopyJobDefinition {
 
         [Parameter(Mandatory = $false)]
         [ValidateNotNullOrEmpty()]
-        [string]$CopyJobFormat
+        [string]$CopyJobFormat,
+
+        [Parameter()]
+        [switch]$Raw
     )
     try {
         # Validate authentication token before proceeding
@@ -63,7 +69,13 @@ function Get-FabricCopyJobDefinition {
             Headers = $script:FabricAuthContext.FabricHeaders
             Method = 'Post'
         }
-        Invoke-FabricAPIRequest @apiParams
+        $response = Invoke-FabricAPIRequest @apiParams
+
+        if ($Raw) {
+            return $response
+        }
+
+        $response
     }
     catch {
         # Capture and log error details

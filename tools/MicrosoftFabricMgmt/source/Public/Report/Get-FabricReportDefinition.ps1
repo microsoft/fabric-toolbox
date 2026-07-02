@@ -15,6 +15,9 @@
 .PARAMETER ReportFormat
     The format in which to retrieve the Report definition. This parameter is optional.
 
+.PARAMETER Raw
+    If specified, returns the untouched API response.
+
 .EXAMPLE
     Get-FabricReportDefinition -WorkspaceId "workspace-12345" -ReportId "Report-67890"
     This example retrieves the definition of the Report with ID "Report-67890" in the workspace with ID "workspace-12345".
@@ -44,7 +47,10 @@ function Get-FabricReportDefinition {
 
         [Parameter(Mandatory = $false)]
         [ValidateNotNullOrEmpty()]
-        [string]$ReportFormat
+        [string]$ReportFormat,
+
+        [Parameter()]
+        [switch]$Raw
     )
     try {
         Invoke-FabricAuthCheck -ThrowOnFailure
@@ -65,6 +71,10 @@ function Get-FabricReportDefinition {
             Method = 'Post'
         }
         $response = Invoke-FabricAPIRequest @apiParams
+
+        if ($Raw) {
+            return $response
+        }
 
         # Return the API response
         Write-FabricLog -Message "Report '$ReportId' definition retrieved successfully!" -Level Debug

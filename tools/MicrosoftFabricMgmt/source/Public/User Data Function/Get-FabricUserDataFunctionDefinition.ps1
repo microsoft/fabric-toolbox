@@ -12,6 +12,9 @@
 .PARAMETER UserDataFunctionId
     (Mandatory) The unique identifier of the User Data Function item whose definition needs to be retrieved.
 
+.PARAMETER Raw
+    If specified, returns the untouched API response.
+
 .EXAMPLE
     Get-FabricUserDataFunctionDefinition -WorkspaceId "12345" -UserDataFunctionId "67890"
 
@@ -34,7 +37,10 @@ function Get-FabricUserDataFunctionDefinition {
 
         [Parameter(Mandatory = $true)]
         [ValidateNotNullOrEmpty()]
-        [string]$UserDataFunctionId
+        [string]$UserDataFunctionId,
+
+        [Parameter()]
+        [switch]$Raw
     )
 
     try {
@@ -52,7 +58,13 @@ function Get-FabricUserDataFunctionDefinition {
             Headers = $script:FabricAuthContext.FabricHeaders
             Method = 'Post'
         }
-        Invoke-FabricAPIRequest @apiParams
+        $response = Invoke-FabricAPIRequest @apiParams
+
+        if ($Raw) {
+            return $response
+        }
+
+        $response
     }
     catch {
         # Capture and log error details

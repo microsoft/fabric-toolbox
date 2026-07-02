@@ -14,6 +14,9 @@
 .PARAMETER VariableLibraryFormat
     The format for the variable library definition (e.g., 'json'). Optional.
 
+.PARAMETER Raw
+    If specified, returns the untouched API response.
+
 .EXAMPLE
     Get-FabricVariableLibraryDefinition -WorkspaceId "workspace-12345" -VariableLibraryId "library-67890"
     Retrieves the definition for the specified variable library in the given workspace.
@@ -42,7 +45,10 @@ function Get-FabricVariableLibraryDefinition {
 
         [Parameter(Mandatory = $false)]
         [ValidateNotNullOrEmpty()]
-        [string]$VariableLibraryFormat
+        [string]$VariableLibraryFormat,
+
+        [Parameter()]
+        [switch]$Raw
     )
     try {
         Invoke-FabricAuthCheck -ThrowOnFailure
@@ -62,6 +68,10 @@ function Get-FabricVariableLibraryDefinition {
             Method  = 'Post'
         }
         $response = Invoke-FabricAPIRequest @apiParams
+
+        if ($Raw) {
+            return $response
+        }
 
         # Return the API response
         Write-FabricLog -Message "Variable Library '$VariableLibraryId' definition retrieved successfully!" -Level Debug

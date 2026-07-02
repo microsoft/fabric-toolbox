@@ -12,6 +12,9 @@
 .PARAMETER SQLDatabaseId
     The unique identifier of the SQL Database.
 
+.PARAMETER Raw
+    If specified, returns the untouched API response.
+
 .EXAMPLE
     Get-FabricSQLDatabaseDefinition -WorkspaceId "12345678-1234-1234-1234-123456789012" -SQLDatabaseId "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee"
 
@@ -35,7 +38,10 @@ function Get-FabricSQLDatabaseDefinition {
         [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
         [ValidateNotNullOrEmpty()]
         [Alias('id')]
-        [string]$SQLDatabaseId
+        [string]$SQLDatabaseId,
+
+        [Parameter()]
+        [switch]$Raw
     )
 
     process {
@@ -57,6 +63,10 @@ function Get-FabricSQLDatabaseDefinition {
             if (-not $response) {
                 Write-FabricLog -Message "No definition returned from the API." -Level Warning
                 return $null
+            }
+
+            if ($Raw) {
+                return $response
             }
 
             Write-FabricLog -Message "SQL Database definition retrieved successfully." -Level Debug

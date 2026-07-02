@@ -19,6 +19,9 @@
 .PARAMETER PrivateLinkType
     (Optional) The type of private link to use for the connection string. Valid values are 'None' or 'Workspace'.
 
+.PARAMETER Raw
+    If specified, returns the untouched API response.
+
 .EXAMPLE
     Get-FabricSQLEndpointConnectionString -WorkspaceId "workspace123" -SQLEndpointId "endpoint456"
     Retrieves the connection string for the SQL Endpoint with ID "endpoint456" in workspace "workspace123".
@@ -57,7 +60,10 @@ function Get-FabricSQLEndpointConnectionString {
         [Parameter(Mandatory = $false)]
         [ValidateNotNullOrEmpty()]
         [ValidateSet('None', 'Workspace')]
-        [string]$PrivateLinkType
+        [string]$PrivateLinkType,
+
+        [Parameter()]
+        [switch]$Raw
     )
 
     try {
@@ -97,6 +103,10 @@ function Get-FabricSQLEndpointConnectionString {
         if (-not $response) {
             Write-FabricLog -Message "No connection string returned from the API." -Level Warning
             return $null
+        }
+
+        if ($Raw) {
+            return $response
         }
 
         Write-FabricLog -Message "Connection string retrieved successfully." -Level Debug

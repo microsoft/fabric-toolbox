@@ -10,10 +10,14 @@
     The base resource type (e.g., 'workspaces', 'capacities', 'items').
 
 .PARAMETER WorkspaceId
-    Optional workspace GUID. If provided, will be included in the URI path.
+    Optional GUID for the primary resource id that follows -Resource in the path
+    (e.g. the workspace id in /workspaces/{id}, or a connection id in
+    /connections/{id}). Aliased as -ResourceId for non-workspace resources.
 
 .PARAMETER ItemId
-    Optional item GUID. If provided, will be included in the URI path after workspace.
+    Optional leaf item GUID. If provided, it is placed LAST in the path (after any
+    -Subresource), e.g. /workspaces/{workspaceId}/items/{itemId} or
+    /connections/{connectionId}/roleAssignments/{itemId}.
 
 .PARAMETER Subresource
     Optional subresource path (e.g., 'users', 'roleAssignments', 'definition').
@@ -57,6 +61,7 @@ function New-FabricAPIUri {
         [string]$Resource,
 
         [Parameter()]
+        [Alias('ResourceId')]
         [string]$WorkspaceId,
 
         [Parameter()]

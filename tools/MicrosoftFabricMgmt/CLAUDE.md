@@ -14,10 +14,12 @@ This document provides comprehensive instructions for AI-assisted development of
 - **PlatyPS**: Help documentation generation
 
 **PowerShell Compatibility**:
-- **CRITICAL**: Module MUST support both PowerShell 5.1 and PowerShell 7+
-- Code must handle version-specific differences explicitly
-- Test on both versions before deployment
-- Use `$PSVersionTable.PSVersion` to detect version and branch logic when needed
+- **Target: PowerShell 7+ (Core) ONLY.** The manifest declares `CompatiblePSEditions = @('Core')` and
+  `PowerShellVersion = '7.0'`; the module does not load on Windows PowerShell 5.1 (it uses 7+-only features
+  such as `Invoke-RestMethod -SkipHttpErrorCheck`/`-StatusCodeVariable`). Do NOT reintroduce a 5.1 requirement
+  without also reworking the HTTP error handling in `Invoke-FabricAPIRequest`.
+- PS7-only language features (ternary `?:`, null-coalescing `??`, pipeline chain `&&`/`||`, `::new()`) ARE permitted.
+- Prefer `.\build.ps1` (pwsh) for build/test; the built module targets pwsh 7.
 
 **API Endpoint Validation**:
 - **CRITICAL**: All API endpoints MUST be validated against the official [Microsoft Fabric REST API Specs](https://github.com/microsoft/fabric-rest-api-specs/)
@@ -324,9 +326,28 @@ Set-FabricApiHeaders -UseManagedIdentity
 - Support token refresh without re-authentication
 - Clear sensitive data from memory after use
 
-### 5. Output Formatting - MANDATORY FOR ALL GET-* FUNCTIONS
+### 5. Output Enrichment & Formatting - MANDATORY FOR ALL GET-* FUNCTIONS
 
-**⚠️ CRITICAL REQUIREMENT**: Every Get-* function that returns Fabric resources MUST implement output formatting for user-friendly display.
+**⚠️ CRITICAL REQUIREMENT**: Every Get-* function that returns a resource MUST return a **decorated PSObject**: the full API response (every property — never a trimmed subset) plus resolved-name NoteProperties plus a `PSTypeName`. Display formatting (`.ps1xml`) is layered on top and kept for now, but enrichment on the object is the source of truth.
+
+#### The Two APIs
+
+The module wraps **two** REST APIs. Every function, coverage check, and property-completeness test must target the correct one:
+
+| API | Base URL | Used by | Spec source of truth |
+|-----|----------|---------|----------------------|
+| Microsoft Fabric REST API | `https://api.fabric.microsoft.com/v1` | Core `Get/New/Set/Remove-Fabric*` | `tools/.api-specs-cache/*.swagger.json` (+ `fabric-api-validation.json`) |
+| Power BI REST API | `https://api.powerbi.com/v1.0/myorg` | `Get-FabricAdmin*` (53 fns) | `tools/.api-specs-cache/powerbi.*.json` (Power BI spec cache) |
+
+`Validate-FabricModuleCoverage.ps1` validates against both caches. When adding/validating a function, confirm the endpoint, method, and full response schema in the matching spec.
+
+#### Enrichment Policy (the core rule going forward)
+
+1. **Return every property the API sends.** We previously kept only id/displayName/workspace and discarded the rest — stop doing this. Surface all fields.
+2. **Add resolved-name NoteProperties** via the `Resolve-Fabric*Name` helpers (cached): e.g. `WorkspaceName`, `CapacityName`, `DatasetName`, `GatewayName`. Add via `Add-Member -Force`.
+3. **Decorate with `Add-FabricTypeName -TypeName 'MicrosoftFabric.<ResourceType>'`** so `.ps1xml` views match.
+4. **`-Raw` returns the untouched API response** — no added names, no type decoration. Every Get-* MUST expose `-Raw`.
+5. **A unit test per function asserts property completeness** against the API definition (all schema properties present on the default, non-`-Raw` output) — see section 6.
 
 #### Why Output Formatting Matters
 
@@ -436,40 +457,7 @@ Examples:
 - [ ] Module builds successfully (`.\build.ps1 -Tasks build`)
 - [ ] No errors or warnings in build output
 
-#### Current Formatting Status (Phase 5 Complete)
-
-**Formatted Functions (11 of 34)** - 32% Coverage:
-1. Get-FabricLakehouse ✅
-2. Get-FabricNotebook ✅
-3. Get-FabricWarehouse ✅
-4. Get-FabricWorkspace ✅
-5. Get-FabricCapacity ✅
-6. Get-FabricWorkspaceRoleAssignment ✅
-7. Get-FabricEnvironment ✅
-8. Get-FabricEventhouse ✅
-9. Get-FabricApacheAirflowJob ✅
-10. Get-FabricGraphQLApi ✅
-11. Get-FabricEventstream ✅
-
-**Remaining Functions (23)** - See [PHASE6_FORMATTING_COMPLETION.md](PHASE6_FORMATTING_COMPLETION.md) for tracking
-
-**Priority 1 Functions to Format Next (8 most commonly used)**:
-- Get-FabricReport
-- Get-FabricSemanticModel
-- Get-FabricDataPipeline
-- Get-FabricDashboard
-- Get-FabricSparkJobDefinition
-- Get-FabricKQLDatabase
-- Get-FabricKQLQueryset
-- Get-FabricKQLDashboard
-
-**Format Views Available**:
-- `FabricItemView` - 32 item types configured
-- `WorkspaceView` - Workspace objects
-- `CapacityView` - Capacity objects
-- `DomainView` - Domain objects
-- `RoleAssignmentView` - Role assignments
-- `JobView` - Job objects
+**Format Views Available** (`source/MicrosoftFabricMgmt.Format.ps1xml`): `FabricItemView`, `WorkspaceView`, `CapacityView`, `DomainView`, `RoleAssignmentView`, `JobView`. Add a new `<View>` only when a resource needs a distinct default table. Track enrichment/formatting backfill progress in `todo.md`.
 
 #### Cascading Resolution (for items without capacityId)
 
@@ -489,11 +477,7 @@ Display: "Premium Capacity P1"
 
 Both levels are cached for optimal performance (200-500x faster on cache hit).
 
-**Related Documentation**:
-- See section 8: "Output Formatting with .ps1xml Files" for format file syntax
-- See section 10: "Adding a New Function" for complete workflow
-- See [docs/OUTPUT-FORMATTING.md](docs/OUTPUT-FORMATTING.md) for detailed guide
-- See [PHASE6_FORMATTING_COMPLETION.md](PHASE6_FORMATTING_COMPLETION.md) for remaining work tracking
+**Related Documentation**: see section 8 (format file syntax) and section 10 ("Adding a New Function").
 
 ---
 
@@ -810,194 +794,15 @@ SEE ALSO
 - `about_MicrosoftFabricMgmt_Configuration`
 - `about_MicrosoftFabricMgmt_QuickStart`
 
-### 8. Output Formatting Standards
+### 8. Output Formatting Reference (.ps1xml)
 
-#### Overview
+`.ps1xml` format files control **display only** — they never modify the object in the pipeline; all enriched properties remain accessible via `Select-Object`/`Format-List`. Formatting is layered on top of the enrichment described in section 5; enrichment is the source of truth.
 
-PowerShell formatting files (`.ps1xml`) define how objects are displayed to users without modifying the actual objects in the pipeline. The module MUST provide custom formatting to ensure consistent, user-friendly output across all 244 functions.
+**File**: `source/MicrosoftFabricMgmt.Format.ps1xml`, loaded via `FormatsToProcess` in the manifest. Format files are cached at import — to test changes: `Remove-Module MicrosoftFabricMgmt -Force`, `.\build.ps1 -Tasks build`, then re-import from `output/module/...`.
 
-**Key Principle**: Formatting affects **display only**, not pipeline data. All object properties remain available even if not displayed by default.
+**Standard display order** (table views): Capacity Name → Workspace Name → Item Name → Item Type → key IDs. Users think hierarchically (capacity → workspace → item), so resolved names lead and GUIDs follow. `Resolve-Fabric*Name` helpers are **public** so format ScriptBlocks can call them. See the `<View>` template in section 10 ("Adding a New Function") for exact XML.
 
-**Reference Documentation**:
-- [Formatting File Overview](https://learn.microsoft.com/en-us/powershell/scripting/developer/format/formatting-file-overview?view=powershell-7.5)
-- [Format Schema XML Reference](https://learn.microsoft.com/en-us/powershell/scripting/developer/format/format-schema-xml-reference?view=powershell-7.5)
-
-#### MicrosoftFabricMgmt Output Format Standard
-
-**CRITICAL**: All module functions MUST return objects with consistent, user-friendly display formatting.
-
-**Standard Display Order** (applies to all item/resource objects):
-1. **Capacity Name** (resolved from CapacityId if available)
-2. **Workspace Name** (resolved from WorkspaceId)
-3. **Item Name** (DisplayName property)
-4. **Item Type** (Type property)
-5. **...remaining properties** (in logical order)
-
-**Rationale**: Users think hierarchically (Capacity → Workspace → Item), so display should match mental model.
-
----
-
-### 8. Output Formatting with .ps1xml Files
-
-#### Overview
-
-PowerShell format files (`.ps1xml`) define **how objects are displayed** to users without modifying the actual object data in the pipeline. All object properties remain available even if not displayed by default.
-
-**Key Principle**: Formatting files control **display only** - they don't affect the object in the pipeline.
-
-#### File Location & Loading
-
-**Format File Location**: `source/MicrosoftFabricMgmt.Format.ps1xml`
-
-**Loading Format File**:
-```powershell
-# In module manifest (MicrosoftFabricMgmt.psd1)
-@{
-    FormatsToProcess = @('MicrosoftFabricMgmt.Format.ps1xml')
-}
-```
-
-**IMPORTANT**: Format files are loaded at module import and cached by PowerShell. To test changes:
-```powershell
-# Remove module from session
-Remove-Module MicrosoftFabricMgmt -Force
-
-# Rebuild module
-.\build.ps1 -Tasks build
-
-# Import fresh module
-Import-Module .\output\module\MicrosoftFabricMgmt\1.0.0\MicrosoftFabricMgmt.psd1 -Force
-```
-
----
-
-### 9. Output Formatting Standards
-
-#### Overview
-
-PowerShell formatting files (`.ps1xml`) control how objects appear when displayed to the user **without modifying the actual objects** in the pipeline. All object properties remain available for further pipeline operations even if not displayed.
-
-**Critical Principle**: Formatting affects **display only**, not the data itself. Users can always access all properties via `Select-Object`, `Format-List`, etc.
-
-#### Module Formatting File Location
-
-**File**: `source/MicrosoftFabricMgmt.Format.ps1xml`
-
-This file is automatically loaded when the module imports. It defines default display formats for all Fabric resource types.
-
-#### Output Display Priority (User-Centric Design)
-
-All Fabric resources should follow this display priority to maximize usefulness:
-
-**Primary Context (Always Visible)**:
-1. **Capacity Name** - Where the resource lives (highest context)
-2. **Workspace Name** - Logical container for resources
-3. **Item Name** - The resource's display name
-4. **Item Type** - What kind of resource (Lakehouse, Notebook, etc.)
-
-**Secondary Information** (shown in List view or when selected):
-- All other properties (IDs, descriptions, metadata, etc.)
-
-### Why This Order Matters
-
-**User Mental Model**: "Which capacity → which workspace → which item → what type"
-- Users think in terms of names, not GUIDs
-- Capacity/Workspace provide context for where the item lives
-- Item Name + Type identify the specific resource
-
-**Current Problem**: Default output shows:
-```powershell
-id                   : 12345-guid
-displayName          : MyLakehouse
-type                 : Lakehouse
-workspaceId          : workspace-guid
-```
-
-**Desired Output**:
-```
-Capacity      Workspace         Item              Type
---------      ---------         ----              ----
-Premium-001   Analytics WS      Sales Data        Lakehouse
-Premium-001   Analytics WS      Customer Reports  Notebook
-```
-
----
-
-## Output Formatting Implementation Plan
-
-### Phase 5A: Output Formatting (NEW SCOPE)
-
-#### Goal: User-Friendly Default Display
-
-**Problem**: Current output shows raw API responses with GUIDs instead of human-readable names.
-
-**Solution**: Implement PowerShell format files (`.ps1xml`) to control default display output.
-
-### Standard Output Format (All Resources)
-
-**Display Priority**:
-1. **Capacity Name** (resolved from capacityId)
-2. **Workspace Name** (resolved from workspaceId)
-3. **Item Name** (displayName property)
-4. **Item Type** (type property)
-5. **Rest of properties** (in default order)
-
-### Implementation Plan
-
-#### Step 1: Create Helper Functions for Name Resolution
-
-**New Helper Functions Needed**:
-
-1. **`Get-FabricCapacityName`** - Resolve Capacity ID to Name
-   ```powershell
-   function Get-FabricCapacityName {
-       param([string]$CapacityId)
-       # Cache results for performance
-       # Return capacity display name
-   }
-   ```
-
-2. **Get-FabricWorkspaceName** - Resolve workspace ID to name
-   ```powershell
-   function Get-FabricWorkspaceName {
-       param([string]$WorkspaceId)
-       # Cache lookups to avoid repeated API calls
-   }
-   ```
-
-3. **Add-FabricResourceNames** - Helper to enrich objects
-   ```powershell
-   function Add-FabricResourceNames {
-       param([Parameter(ValueFromPipeline)]$InputObject)
-       process {
-           # Add CapacityName, WorkspaceName to object
-       }
-   }
-   ```
-
-### Implementation Plan
-
-1. **Create Format.ps1xml File**
-   - Location: `source/MicrosoftFabricMgmt.Format.ps1xml`
-   - Define default table views for all major resource types
-   - Priority columns: Capacity Name, Workspace Name, Item Name, Item Type
-
-2. **Create Helper Functions**
-   - `Get-FabricCapacityName` - Resolve capacity ID to name
-   - `Get-FabricWorkspaceName` - Resolve workspace ID to name
-   - Add caching to avoid repeated API calls
-
-3. **Update Module Manifest**
-   - Add `FormatsToProcess` entry in `.psd1` file
-
-4. **Add Type Data**
-   - Create `.ps1xml` types file to add computed properties
-   - `PSTypeName` decorators for custom formatting
-
-Would you like me to:
-1. Start implementing the formatting file structure?
-2. Create helper functions for resolving Capacity/Workspace names from IDs?
-3. Both?
+**References**: [Formatting File Overview](https://learn.microsoft.com/en-us/powershell/scripting/developer/format/formatting-file-overview?view=powershell-7.5) · [Format Schema XML Reference](https://learn.microsoft.com/en-us/powershell/scripting/developer/format/format-schema-xml-reference?view=powershell-7.5)
 
 #### Build Configuration
 
@@ -1125,41 +930,20 @@ Get-FabricWorkspace  # Not: Get-FabricWorkspaces (even when returning multiple)
 
 #### PowerShell Version Compatibility
 
-**CRITICAL**: Code must work on both PowerShell 5.1 and PowerShell 7+
-
-**Version-Specific Considerations**:
+**Target: PowerShell 7+ (Core) only** (manifest: `CompatiblePSEditions = @('Core')`, `PowerShellVersion = '7.0'`).
+PS7-only features are permitted and encouraged where they improve clarity:
 
 ```powershell
-# Ternary operator (PowerShell 7+ only) - DO NOT USE
-$value = $condition ? $trueValue : $falseValue  # BREAKS in PS 5.1
-
-# Use traditional if/else instead
-$value = if ($condition) { $trueValue } else { $falseValue }  # Works in both
-
-# Null coalescing (PowerShell 7+ only) - DO NOT USE
-$value = $variable ?? $defaultValue  # BREAKS in PS 5.1
-
-# Use traditional pattern instead
-$value = if ($null -eq $variable) { $defaultValue } else { $variable }  # Works in both
-
-# Pipeline chain operators (PowerShell 7+ only) - DO NOT USE
-Get-Item file.txt && Get-Content file.txt  # BREAKS in PS 5.1
-
-# Use traditional error handling
-if (Get-Item file.txt -ErrorAction SilentlyContinue) {
-    Get-Content file.txt
-}
-
-# .ForEach() and .Where() methods - Available in PS 4+, safe to use
-$results.Where({ $_.Id -eq $targetId }, 'First')  # Works in both
-$items.ForEach({ $_.Name })  # Works in both
+$value = $condition ? $trueValue : $defaultValue     # ternary - OK
+$value = $variable ?? $defaultValue                  # null-coalescing - OK
+Get-Item file.txt && Get-Content file.txt            # pipeline chain - OK
+$obj = [System.Collections.Generic.List[object]]::new()   # ::new() - OK
+$results.Where({ $_.Id -eq $targetId }, 'First')     # .Where()/.ForEach() - OK
 ```
 
 **Testing Requirements**:
-- Test all code on both PowerShell 5.1 and PowerShell 7.4+
-- Use `$PSVersionTable.PSVersion` to detect version for branching logic
-- Document any version-specific behavior
-- CI/CD should test both versions
+- Test on PowerShell 7.4+ (pwsh). Windows PowerShell 5.1 is NOT a target.
+- The `Invoke-RestMethod` calls rely on 7+-only `-SkipHttpErrorCheck`/`-StatusCodeVariable`/`-ResponseHeadersVariable`.
 
 #### Formatting Standards
 
@@ -1690,20 +1474,13 @@ When working on this module:
    # First time or after dependency changes
    .\build.ps1 -ResolveDependency -noop
 
-   # Build and test in clean process (PowerShell 7+)
+   # Build and test in a clean process (PowerShell 7+)
    pwsh -NoProfile -Command ".\build.ps1 -Tasks clean,build,test"
-
-   # Build and test in PowerShell 5.1 (if available)
-   powershell.exe -NoProfile -Command ".\build.ps1 -Tasks clean,build,test"
    ```
 
-2. **Test on both PowerShell versions** - Code must work on PS 5.1 and 7+
+2. **Test on PowerShell 7.4+** — the module targets PS7 (Core) only; Windows PowerShell 5.1 is not supported.
 
-3. **Avoid PowerShell 7+ only syntax**:
-   - NO ternary operators (`?:`)
-   - NO null coalescing (`??`)
-   - NO pipeline chain operators (`&&`, `||`)
-   - Use `New-Object` instead of `::new()`
+3. **PowerShell 7+ syntax is allowed** (ternary `?:`, null-coalescing `??`, pipeline chains `&&`/`||`, `::new()`).
 
 4. **Follow existing patterns** - consistency is key
 
@@ -1776,9 +1553,13 @@ Import-Module ./output/module/MicrosoftFabricMgmt -Force
 
 ## API Validation and Coverage
 
+Validation spans **both** APIs (see section 5): the Fabric REST API (cached swagger under `tools/.api-specs-cache/*.swagger.json`) and the Power BI REST API (Power BI spec cache `tools/.api-specs-cache/powerbi.*.json`, built by `Update-FabricAPISpecsCache.ps1`). `Validate-FabricModuleCoverage.ps1` reports against both.
+
+There are **four** validation areas: (1) endpoint coverage, (2) `-Raw` presence, (3) request-parameter completeness, and (4) **response-property completeness** — every property in the API response schema must appear on the enriched (non-`-Raw`) output, asserted by a per-function unit test.
+
 ### Validation Script
 
-Run the comprehensive validation script to check module coverage against the official Fabric API:
+Run the comprehensive validation script to check module coverage against the official Fabric and Power BI APIs:
 
 ```powershell
 # Run full validation
@@ -1790,13 +1571,15 @@ Run the comprehensive validation script to check module coverage against the off
 .\scripts\Validate-FabricModuleCoverage.ps1 -ValidationType Parameters    # Parameter completeness
 ```
 
-### Current Validation Status (2026-01-20)
+### Current Validation Status
 
 | Metric | Status | Target |
 |--------|--------|--------|
-| **API Coverage** | 41.4% (227/548 operations) | 80%+ |
+| **Fabric API Coverage** | 41.4% (227/548 operations) | 80%+ |
+| **Power BI API Coverage** | TBD (research pass in progress) | 80%+ |
 | **-Raw Parameter** | 40.9% (36/88 Get-* functions) | 100% |
-| **Parameter Completeness** | 47.6% (108/227 matched) | 90%+ |
+| **Request-Parameter Completeness** | 47.6% (108/227 matched) | 90%+ |
+| **Response-Property Completeness** | TBD (research pass in progress) | 100% |
 
 ### Three Validation Areas
 
@@ -1898,13 +1681,18 @@ Many platform and admin operations are missing. Prioritize by usage.
 
 ### API Specs Cache
 
-The module uses a cached copy of the [Microsoft Fabric REST API Specs](https://github.com/microsoft/fabric-rest-api-specs).
-
 **Cache Location**: `tools/.api-specs-cache/`
-- `fabric-api-lookup.json` - Full API details with descriptions
-- `fabric-api-validation.json` - Simplified validation data
 
-**Update Cache**:
+Fabric REST API — cached from [Microsoft Fabric REST API Specs](https://github.com/microsoft/fabric-rest-api-specs):
+- `*.swagger.json` / `*.definitions.json` - per-resource specs + schemas
+- `fabric-api-lookup.json` - full API details with descriptions
+- `fabric-api-validation.json` - simplified validation data
+
+Power BI REST API — cached for the `Get-FabricAdmin*` functions:
+- `powerbi.swagger.json` / `powerbi.definitions.json` - endpoints + response schemas
+- `powerbi-api-validation.json` - simplified validation data
+
+**Update Cache** (fetches both APIs):
 ```powershell
 .\scripts\Update-FabricAPISpecsCache.ps1
 ```
@@ -1914,11 +1702,12 @@ The module uses a cached copy of the [Microsoft Fabric REST API Specs](https://g
 ## Module Roadmap
 
 ### Current Priorities
-1. **Complete -Raw Parameter** - Add `-Raw` to all 52 remaining Get-* functions
-2. **Add Missing Parameters** - Especially `continuationToken`, `maxResults`, query params
-3. **Increase API Coverage** - Target 80% coverage (currently 41%)
-4. **Increase test coverage** - Target 85% coverage (currently low)
-5. **Improve error messages** - Make all errors actionable with clear next steps
+1. **Response-property completeness** - Return every property both APIs send + resolved-name NoteProperties; enforce with per-function tests validated against the spec cache
+2. **Complete -Raw Parameter** - Add `-Raw` (untouched response) to all remaining Get-* functions
+3. **Add Missing Parameters** - Especially `continuationToken`, `maxResults`, query params
+4. **Increase API Coverage (both APIs)** - Target 80%; build/maintain the Power BI spec cache
+5. **Increase test coverage** - Target 85% coverage (currently low)
+6. **Improve error messages** - Make all errors actionable with clear next steps
 
 ### Future Enhancements
 - Implement automatic token refresh
@@ -1930,7 +1719,7 @@ The module uses a cached copy of the [Microsoft Fabric REST API Specs](https://g
 
 ---
 
-**Last Updated**: 2026-01-20
-**Module Version**: 1.0.4
+**Last Updated**: 2026-07-01
+**Module Version**: 1.0.8
 **Original Author**: Tiago Balabuch
 **Current Maintainer**: Rob Sewell

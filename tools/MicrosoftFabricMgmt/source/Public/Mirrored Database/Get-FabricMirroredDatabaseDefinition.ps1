@@ -13,6 +13,9 @@ Handles both synchronous and asynchronous operations, with detailed logging and 
 .PARAMETER MirroredDatabaseId
 (Optional)The unique identifier of the MirroredDatabase whose definition needs to be retrieved.
 
+.PARAMETER Raw
+If specified, returns the untouched API response.
+
 .EXAMPLE
 Get-FabricMirroredDatabaseDefinition -WorkspaceId "12345" -MirroredDatabaseId "67890"
 
@@ -39,7 +42,10 @@ function Get-FabricMirroredDatabaseDefinition {
 
         [Parameter(Mandatory = $false)]
         [ValidateNotNullOrEmpty()]
-        [string]$MirroredDatabaseId
+        [string]$MirroredDatabaseId,
+
+        [Parameter()]
+        [switch]$Raw
     )
     try {
         Invoke-FabricAuthCheck -ThrowOnFailure
@@ -56,6 +62,10 @@ function Get-FabricMirroredDatabaseDefinition {
             Method = 'Post'
         }
         $response = Invoke-FabricAPIRequest @apiParams
+
+        if ($Raw) {
+            return $response
+        }
 
         # Return the API response
         Write-FabricLog -Message "Mirrored Database '$MirroredDatabaseId' definition retrieved successfully!" -Level Debug

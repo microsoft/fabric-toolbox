@@ -12,6 +12,9 @@
 .PARAMETER AnomalyDetectorId
     (Mandatory) The unique identifier of the Anomaly Detector item whose definition needs to be retrieved.
 
+.PARAMETER Raw
+    If specified, returns the untouched API response.
+
 .EXAMPLE
     Get-FabricAnomalyDetectorDefinition -WorkspaceId "12345" -AnomalyDetectorId "67890"
 
@@ -34,7 +37,10 @@ function Get-FabricAnomalyDetectorDefinition {
 
         [Parameter(Mandatory = $true)]
         [ValidateNotNullOrEmpty()]
-        [string]$AnomalyDetectorId
+        [string]$AnomalyDetectorId,
+
+        [Parameter()]
+        [switch]$Raw
     )
 
     try {
@@ -52,7 +58,13 @@ function Get-FabricAnomalyDetectorDefinition {
             Headers = $script:FabricAuthContext.FabricHeaders
             Method = 'Post'
         }
-        Invoke-FabricAPIRequest @apiParams
+        $response = Invoke-FabricAPIRequest @apiParams
+
+        if ($Raw) {
+            return $response
+        }
+
+        $response
     }
     catch {
         # Capture and log error details

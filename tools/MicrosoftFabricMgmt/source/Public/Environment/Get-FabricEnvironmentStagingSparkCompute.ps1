@@ -12,6 +12,9 @@ The unique identifier of the workspace containing the target environment.
 .PARAMETER EnvironmentId
 The unique identifier of the environment for which staging Spark compute details are being retrieved.
 
+.PARAMETER Raw
+If specified, returns the untouched API response with no added properties or type decoration.
+
 .EXAMPLE
 Get-FabricEnvironmentStagingSparkCompute -WorkspaceId "workspace-12345" -EnvironmentId "environment-67890"
 
@@ -33,7 +36,10 @@ function Get-FabricEnvironmentStagingSparkCompute {
 
         [Parameter(Mandatory = $true)]
         [ValidateNotNullOrEmpty()]
-        [string]$EnvironmentId
+        [string]$EnvironmentId,
+
+        [Parameter()]
+        [switch]$Raw
     )
     try {
         # Validate authentication
@@ -48,7 +54,48 @@ function Get-FabricEnvironmentStagingSparkCompute {
             Headers = $script:FabricAuthContext.FabricHeaders
             Method = 'Get'
         }
-        Invoke-FabricAPIRequest @apiParams
+        $dataItems = Invoke-FabricAPIRequest @apiParams
+
+        if (-not $dataItems) {
+            Write-FabricLog -Message "No data returned from the API." -Level Warning
+            return $null
+        }
+
+        if ($Raw) {
+            return $dataItems
+        }
+
+        # Enrich with resolved workspace and capacity names
+        $workspaceName = $null
+        try {
+            $workspaceName = Resolve-FabricWorkspaceName -WorkspaceId $WorkspaceId
+        }
+        catch {
+            $workspaceName = $WorkspaceId
+            Write-FabricLog -Message "Failed to resolve workspace name for ID '$WorkspaceId': $($_.Exception.Message)" -Level Debug
+        }
+
+        $capacityName = $null
+        try {
+            $capacityId = Resolve-FabricCapacityIdFromWorkspace -WorkspaceId $WorkspaceId
+            if ($capacityId) {
+                $capacityName = Resolve-FabricCapacityName -CapacityId $capacityId
+            }
+        }
+        catch {
+            Write-FabricLog -Message "Failed to resolve capacity name for workspace ID '$WorkspaceId': $($_.Exception.Message)" -Level Debug
+        }
+
+        foreach ($item in $dataItems) {
+            $item | Add-Member -NotePropertyName 'workspaceId'   -NotePropertyValue $WorkspaceId   -Force
+            $item | Add-Member -NotePropertyName 'WorkspaceName' -NotePropertyValue $workspaceName -Force
+            if ($null -ne $capacityName) {
+                $item | Add-Member -NotePropertyName 'CapacityName' -NotePropertyValue $capacityName -Force
+            }
+        }
+
+        $dataItems | Add-FabricTypeName -TypeName 'MicrosoftFabric.EnvironmentStagingSparkCompute'
+        return $dataItems
     }
     catch {
         # Capture and log error details

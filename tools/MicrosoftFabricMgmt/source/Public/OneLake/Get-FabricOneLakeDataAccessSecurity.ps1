@@ -39,6 +39,9 @@
 .PARAMETER DryRun
     (Optional) If specified, performs a dry run without applying changes.
 
+.PARAMETER Raw
+    If specified, returns the untouched API response with no added properties or type decoration.
+
 .EXAMPLE
     Set-FabricOneLakeDataAccessSecurity -WorkspaceId "workspace-12345" -ItemId "item-67890" -RoleName "DataReaders" -Paths "/data" -Actions "Read" -ObjectType "User" -ObjectId "user-guid" -TenantId "tenant-guid"
 
@@ -60,8 +63,12 @@ function Get-FabricOneLakeDataAccessSecurity {
         [ValidateNotNullOrEmpty()]
         [string]$ItemId,
 
-    [Parameter(Mandatory = $false)]
-    [string]$RoleName    )
+        [Parameter(Mandatory = $false)]
+        [string]$RoleName,
+
+        [Parameter()]
+        [switch]$Raw
+    )
     try {
         Invoke-FabricAuthCheck -ThrowOnFailure
 
@@ -77,6 +84,10 @@ function Get-FabricOneLakeDataAccessSecurity {
             Method  = 'Get'
         }
         $response = Invoke-FabricAPIRequest @apiParams
+
+        if ($Raw) {
+            return $response
+        }
 
         # Optionally filter by RoleName if provided
         if ($RoleName) {

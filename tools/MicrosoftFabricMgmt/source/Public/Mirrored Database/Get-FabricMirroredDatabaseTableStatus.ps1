@@ -14,6 +14,9 @@ The GUID of the workspace that contains the mirrored database. This is required 
 The Id of the mirrored database whose table-level status you want to inspect. Provide the resource Id to retrieve the
 status collection for all mirrored tables.
 
+.PARAMETER Raw
+If specified, returns the untouched API response with no added properties or type decoration.
+
 .EXAMPLE
 Get-FabricMirroredDatabaseTableStatus -WorkspaceId 11111111-2222-3333-4444-555555555555 -MirroredDatabaseId aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee
 
@@ -31,7 +34,10 @@ function Get-FabricMirroredDatabaseTableStatus {
 
         [Parameter(Mandatory = $false)]
         [ValidateNotNullOrEmpty()]
-        [string]$MirroredDatabaseId
+        [string]$MirroredDatabaseId,
+
+        [Parameter()]
+        [switch]$Raw
     )
     try {
         Invoke-FabricAuthCheck -ThrowOnFailure
@@ -53,10 +59,44 @@ function Get-FabricMirroredDatabaseTableStatus {
             Write-FabricLog -Message "No data returned from the API." -Level Warning
             return $null
         }
-        else {
-            Write-FabricLog -Message "Item(s) found. Data retrieved successfully!" -Level Debug
+
+        if ($Raw) {
             return $dataItems
         }
+
+        Write-FabricLog -Message "Item(s) found. Data retrieved successfully!" -Level Debug
+
+        # Enrich with resolved workspace and capacity names
+        $workspaceName = $null
+        try {
+            $workspaceName = Resolve-FabricWorkspaceName -WorkspaceId $WorkspaceId
+        }
+        catch {
+            $workspaceName = $WorkspaceId
+            Write-FabricLog -Message "Failed to resolve workspace name for ID '$WorkspaceId': $($_.Exception.Message)" -Level Debug
+        }
+
+        $capacityName = $null
+        try {
+            $capacityId = Resolve-FabricCapacityIdFromWorkspace -WorkspaceId $WorkspaceId
+            if ($capacityId) {
+                $capacityName = Resolve-FabricCapacityName -CapacityId $capacityId
+            }
+        }
+        catch {
+            Write-FabricLog -Message "Failed to resolve capacity name for workspace ID '$WorkspaceId': $($_.Exception.Message)" -Level Debug
+        }
+
+        foreach ($item in $dataItems) {
+            $item | Add-Member -NotePropertyName 'workspaceId'   -NotePropertyValue $WorkspaceId   -Force
+            $item | Add-Member -NotePropertyName 'WorkspaceName' -NotePropertyValue $workspaceName -Force
+            if ($null -ne $capacityName) {
+                $item | Add-Member -NotePropertyName 'CapacityName' -NotePropertyValue $capacityName -Force
+            }
+        }
+
+        $dataItems | Add-FabricTypeName -TypeName 'MicrosoftFabric.MirroredDatabaseTableStatus'
+        return $dataItems
     }
     catch {
         # Capture and log error details

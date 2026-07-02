@@ -12,6 +12,9 @@
 .PARAMETER OperationsAgentId
     (Mandatory) The unique identifier of the Operations Agent item whose definition needs to be retrieved.
 
+.PARAMETER Raw
+    If specified, returns the untouched API response.
+
 .EXAMPLE
     Get-FabricOperationsAgentDefinition -WorkspaceId "12345" -OperationsAgentId "67890"
 
@@ -34,7 +37,10 @@ function Get-FabricOperationsAgentDefinition {
 
         [Parameter(Mandatory = $true)]
         [ValidateNotNullOrEmpty()]
-        [string]$OperationsAgentId
+        [string]$OperationsAgentId,
+
+        [Parameter()]
+        [switch]$Raw
     )
 
     try {
@@ -52,7 +58,13 @@ function Get-FabricOperationsAgentDefinition {
             Headers = $script:FabricAuthContext.FabricHeaders
             Method = 'Post'
         }
-        Invoke-FabricAPIRequest @apiParams
+        $response = Invoke-FabricAPIRequest @apiParams
+
+        if ($Raw) {
+            return $response
+        }
+
+        $response
     }
     catch {
         # Capture and log error details

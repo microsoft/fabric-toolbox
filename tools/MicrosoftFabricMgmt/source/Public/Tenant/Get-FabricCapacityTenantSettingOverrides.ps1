@@ -8,6 +8,9 @@ The `Get-FabricCapacityTenantSettingOverrides` function retrieves tenant setting
 .PARAMETER capacityId
 The ID of the capacity for which tenant setting overrides should be retrieved. If not provided, overrides for all capacities will be retrieved.
 
+.PARAMETER Raw
+If specified, returns the untouched API response.
+
 .EXAMPLE
 Get-FabricCapacityTenantSettingOverrides
 
@@ -29,7 +32,10 @@ function Get-FabricCapacityTenantSettingOverrides {
     param (
         [Parameter(Mandatory = $false)]
         [ValidateNotNullOrEmpty()]
-        [string]$capacityId
+        [string]$capacityId,
+
+        [Parameter()]
+        [switch]$Raw
     )
     try {
         Invoke-FabricAuthCheck -ThrowOnFailure
@@ -54,6 +60,10 @@ function Get-FabricCapacityTenantSettingOverrides {
             Method = 'Get'
         }
         $dataItems = Invoke-FabricAPIRequest @apiParams
+
+        if ($Raw) {
+            return $dataItems
+        }
 
         # Immediately handle empty response
         if (-not $dataItems) {

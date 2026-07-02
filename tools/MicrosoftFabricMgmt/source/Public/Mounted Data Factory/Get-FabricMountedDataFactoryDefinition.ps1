@@ -14,6 +14,9 @@
 .PARAMETER MountedDataFactoryFormat
     The format for the Data Factory definition (e.g., 'json'). Optional.
 
+.PARAMETER Raw
+    If specified, returns the untouched API response.
+
 .EXAMPLE
     Get-FabricMountedDataFactoryDefinition -WorkspaceId "workspace-12345" -MountedDataFactoryId "factory-67890"
     Retrieves the definition for the specified mounted Data Factory.
@@ -42,7 +45,10 @@ function Get-FabricMountedDataFactoryDefinition {
 
         [Parameter(Mandatory = $false)]
         [ValidateNotNullOrEmpty()]
-        [string]$MountedDataFactoryFormat
+        [string]$MountedDataFactoryFormat,
+
+        [Parameter()]
+        [switch]$Raw
     )
     try {
         Invoke-FabricAuthCheck -ThrowOnFailure
@@ -62,6 +68,10 @@ function Get-FabricMountedDataFactoryDefinition {
             Method  = 'Post'
         }
         $response = Invoke-FabricAPIRequest @apiParams
+
+        if ($Raw) {
+            return $response
+        }
 
         # Return the API response
         Write-FabricLog -Message "Mounted Data Factory '$MountedDataFactoryId' definition retrieved successfully!" -Level Debug

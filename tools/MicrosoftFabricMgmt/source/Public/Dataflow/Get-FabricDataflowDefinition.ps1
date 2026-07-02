@@ -12,6 +12,9 @@
 .PARAMETER DataflowId
     The unique identifier of the Dataflow.
 
+.PARAMETER Raw
+    If specified, returns the untouched API response.
+
 .EXAMPLE
     Get-FabricDataflowDefinition -WorkspaceId "12345678-1234-1234-1234-123456789012" -DataflowId "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee"
 
@@ -35,7 +38,10 @@ function Get-FabricDataflowDefinition {
         [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
         [ValidateNotNullOrEmpty()]
         [Alias('id')]
-        [string]$DataflowId
+        [string]$DataflowId,
+
+        [Parameter()]
+        [switch]$Raw
     )
 
     process {
@@ -57,6 +63,10 @@ function Get-FabricDataflowDefinition {
             if (-not $response) {
                 Write-FabricLog -Message "No definition returned from the API." -Level Warning
                 return $null
+            }
+
+            if ($Raw) {
+                return $response
             }
 
             Write-FabricLog -Message "Dataflow definition retrieved successfully." -Level Debug

@@ -15,6 +15,9 @@
 .PARAMETER SemanticModelFormat
     The format in which to retrieve the SemanticModel definition. This parameter is optional.
 
+.PARAMETER Raw
+    If specified, returns the untouched API response.
+
 .EXAMPLE
     Get-FabricSemanticModelDefinition -WorkspaceId "workspace-12345" -SemanticModelId "SemanticModel-67890"
     This example retrieves the definition of the SemanticModel with ID "SemanticModel-67890" in the workspace with ID "workspace-12345".
@@ -45,7 +48,10 @@ function Get-FabricSemanticModelDefinition {
         [Parameter(Mandatory = $false)]
         [ValidateNotNullOrEmpty()]
         [ValidateSet('TMDL', 'TMSL')]
-        [string]$SemanticModelFormat = "TMDL"
+        [string]$SemanticModelFormat = "TMDL",
+
+        [Parameter()]
+        [switch]$Raw
     )
     try {
         Invoke-FabricAuthCheck -ThrowOnFailure
@@ -65,6 +71,10 @@ function Get-FabricSemanticModelDefinition {
             Method = 'Post'
         }
         $response = Invoke-FabricAPIRequest @apiParams
+
+        if ($Raw) {
+            return $response
+        }
 
         # Return the API response
         Write-FabricLog -Message "SemanticModel '$SemanticModelId' definition retrieved successfully!" -Level Debug

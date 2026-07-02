@@ -14,6 +14,9 @@
 .PARAMETER GraphQLApiFormat
     The desired format for the API definition (e.g., 'json'). Optional.
 
+.PARAMETER Raw
+    If specified, returns the untouched API response.
+
 .EXAMPLE
     Get-FabricGraphQLApiDefinition -WorkspaceId "workspace-12345" -GraphQLApiId "GraphQLApi-67890"
     Retrieves the definition for the specified GraphQL API in the given workspace.
@@ -42,7 +45,10 @@ function Get-FabricGraphQLApiDefinition {
 
         [Parameter(Mandatory = $false)]
         [ValidateNotNullOrEmpty()]
-        [string]$GraphQLApiFormat
+        [string]$GraphQLApiFormat,
+
+        [Parameter()]
+        [switch]$Raw
     )
     try {
         # Validate authentication
@@ -65,6 +71,10 @@ function Get-FabricGraphQLApiDefinition {
             Method  = 'Post'
         }
         $response = Invoke-FabricAPIRequest @apiParams
+
+        if ($Raw) {
+            return $response
+        }
 
         # Return the API response
         Write-FabricLog -Message "GraphQLApi '$GraphQLApiId' definition retrieved successfully!" -Level Debug

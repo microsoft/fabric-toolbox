@@ -95,8 +95,18 @@ function Get-FabricAdminWorkspaceUnusedArtifact {
                 return $response
             }
 
+            # Resolve the workspace display name once (cached after first lookup)
+            $workspaceName = $WorkspaceId
+            try {
+                $workspaceName = Resolve-FabricWorkspaceName -WorkspaceId $WorkspaceId
+            }
+            catch {
+                Write-FabricLog -Message "Failed to resolve workspace name for ID '$WorkspaceId': $($_.Exception.Message)" -Level Debug
+            }
+
             foreach ($artifact in $response) {
                 $artifact | Add-Member -NotePropertyName 'workspaceId' -NotePropertyValue $WorkspaceId -Force
+                $artifact | Add-Member -NotePropertyName 'WorkspaceName' -NotePropertyValue $workspaceName -Force
             }
             $response | Add-FabricTypeName -TypeName 'MicrosoftFabric.AdminWorkspaceUnusedArtifact'
 

@@ -95,8 +95,18 @@ function Get-FabricAdminDatasetUser {
                 return $response
             }
 
+            # Resolve the dataset display name once (cached after first lookup)
+            $datasetName = $DatasetId
+            try {
+                $datasetName = Resolve-FabricDatasetName -DatasetId $DatasetId
+            }
+            catch {
+                Write-FabricLog -Message "Failed to resolve dataset name for ID '$DatasetId': $($_.Exception.Message)" -Level Debug
+            }
+
             foreach ($user in $response) {
                 $user | Add-Member -NotePropertyName 'datasetId' -NotePropertyValue $DatasetId -Force
+                $user | Add-Member -NotePropertyName 'DatasetName' -NotePropertyValue $datasetName -Force
             }
             $response | Add-FabricTypeName -TypeName 'MicrosoftFabric.AdminDatasetUser'
 

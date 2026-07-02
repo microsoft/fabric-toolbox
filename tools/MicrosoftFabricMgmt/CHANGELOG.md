@@ -5,6 +5,64 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- **`Add/Remove/Update-FabricConnectionRoleAssignment`**: Corrected the request URI. These functions built
+  `/connections/roleAssignments/{connectionId}` instead of the correct `/connections/{connectionId}/roleAssignments`
+  (and `.../roleAssignments/{roleAssignmentId}` for Remove/Update), so they targeted the wrong endpoint at runtime.
+  Root cause was `New-FabricAPIUri` placing `-Subresource` before `-ItemId`; the connection id was passed via `-ItemId`.
+- **`Remove-FabricSharingLinks`**: Removed a dead validation loop over an undefined `$Items` variable and repaired
+  corrupted comment-based help. No change to the (already correct) `POST /admin/items/removeAllSharingLinks` call.
+- **`Remove-FabricSharingLinksBulk`**: Repaired corrupted comment-based help and removed an unused format argument.
+  No change to the (already correct) `POST /admin/items/bulkRemoveSharingLinks` call.
+- **`Invoke-FabricAPIRequest` retry backoff**: Fixed an `OverflowException` in the transient-failure (429/503/504)
+  retry path. When the API returned no `Retry-After` header, the backoff delay was computed with
+  `[int](Get-Date).Ticks`, which overflows `Int32` and threw instead of backing off. Extracted the delay
+  calculation into a tested `Get-FabricRetryDelay` helper (honors `Retry-After`, exponential backoff with jitter,
+  clamped 1..120s).
+
+### Changed
+
+- **`-Raw` parameter coverage is now 100% of Get-* functions.** Added `-Raw` (returns the untouched API response)
+  to the ~72 remaining `Get-Fabric*` functions that lacked it — definitions, connection strings, tenant/settings,
+  long-running-operation getters, sub-resources, and admin getters.
+- **Resolved-name enrichment extended** to sub-resource and admin getters whose response (or parameter) carries a
+  resolvable id: Environment libraries/compute, Eventstream sources/destinations, Livy sessions, Lakehouse tables,
+  Mirrored DB status, OneLake shortcuts, Warehouse snapshots, and admin dataflow/dataset/workspace/capacity getters
+  now attach `WorkspaceName`/`CapacityName`/`DatasetName` (as applicable) and a `MicrosoftFabric.*` type on the
+  default path; `-Raw` bypasses enrichment. Enrichment only ADDS NoteProperties — no API property is dropped.
+- **Enrichment / `-Raw` behavior (affects most `Get-Fabric*` functions)**: Default output is now ENRICHED —
+  the full API object plus resolved-name NoteProperties (`WorkspaceName`, `CapacityName`, and where applicable
+  `DatasetName`/`GatewayName`) and a type decoration for the table view. `-Raw` now returns the UNTOUCHED API
+  response (no added properties, no type decoration). Previously the behavior was inverted (default added only
+  type decoration; `-Raw` added the resolved names). If you relied on `-Raw` to obtain resolved names, use the
+  default (non-`-Raw`) output instead; if you need the exact API payload, use `-Raw`.
+- **`Get-FabricWorkspaceRoleAssignment`**: No longer discards the nested `principal` object (previously it
+  rebuilt a trimmed object, dropping `principal.groupDetails`, `servicePrincipalProfileDetails`, etc.). Default
+  output now preserves every API property and adds flattened convenience fields + resolved names; `-Raw` returns
+  the untouched response.
+- **`New-FabricAPIUri`**: Added a `-ResourceId` alias for `-WorkspaceId` to make the primary-resource-id slot
+  self-documenting for non-workspace resources (e.g. connections). Clarified parameter help on segment ordering.
+- **`Update-FabricAPISpecsCache.ps1`**: Also caches the shared `common` definitions (the `Item` base and other
+  shared schemas), enabling response-schema resolution for property-completeness validation.
+- **PowerShell support clarification**: The module targets **PowerShell 7+ (Core) only** (manifest already declares
+  `CompatiblePSEditions = @('Core')`, `PowerShellVersion = '7.0'`). This supersedes the v1.0.0 note about "PowerShell
+  5.1 compatibility" — the module does not load on Windows PowerShell 5.1, and the HTTP layer relies on 7+-only
+  `Invoke-RestMethod` features (`-SkipHttpErrorCheck`, `-StatusCodeVariable`, `-ResponseHeadersVariable`).
+
+### Added
+
+- **API URI regression tests** (`tests/Unit/ApiUriRegression.Tests.ps1`): assert the exact request URI + HTTP method
+  for the connection role-assignment and admin sharing-links functions, and pin the `New-FabricAPIUri` ordering contract.
+- **Property-completeness harness** (`tests/Unit/PropertyCompleteness.Tests.ps1` + `scripts/Get-FabricSchemaProperty.ps1`):
+  schema round-trip tests that resolve each function's response schema (with `allOf`/cross-file `$ref` resolution) and
+  assert every schema property survives on the enriched output; includes a negative control proving trimming is detected.
+- **Enrichment flip tests** (`tests/Unit/EnrichmentFlip.Tests.ps1`): verify default output is enriched and `-Raw` is untouched.
+- **Power BI REST API spec cache**: `Update-FabricAPISpecsCache.ps1` now also caches the Power BI API
+  (`powerbi.swagger.json` + `powerbi-api-validation.json`) so the admin functions can be validated against a spec.
+- **`Validate-FabricModuleCoverage.ps1`**: rewritten to path-based matching (extracts each function's constructed URI
+  and method) with a new `-Api Fabric|PowerBI|All` switch, fixing large false-negative undercounting of coverage.
+
 ## [1.0.6] - 2026-02-26
 
 ### Added
