@@ -9,6 +9,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **Job Scheduler command family** (7 new commands) for generic item jobs and schedules:
+  `New-FabricItemSchedule`, `Get-FabricItemSchedule`, `Update-FabricItemSchedule`,
+  `Remove-FabricItemSchedule` (`.../items/{itemId}/jobs/{jobType}/schedules[/{scheduleId}]`),
+  `Start-FabricItemJob` (`POST .../jobs/{jobType}/instances`), `Get-FabricItemJobInstance`
+  (`.../jobs/instances[/{jobInstanceId}]`), and `Stop-FabricItemJobInstance`
+  (`POST .../jobs/instances/{jobInstanceId}/cancel`). Schedule `-Configuration` and job
+  `-ExecutionData` are hashtable pass-throughs; getters enrich WorkspaceName + type and
+  honor `-Raw`; state-changing commands support `-WhatIf`/`-Confirm`.
 - **`New-FabricConnection`** and **`Update-FabricConnection`**: new commands completing the
   connection CRUD family (Get/Remove/RoleAssignment already existed).
   - `New-FabricConnection` → `POST /connections`; `Update-FabricConnection` → `PATCH /connections/{connectionId}`.

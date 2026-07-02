@@ -19863,6 +19863,805 @@ function Update-FabricFolder {
     }
 }
 #EndRegion '.\Public\Folder\Update-FabricFolder.ps1' 104
+#Region '.\Public\Git\Connect-FabricWorkspaceGit.ps1' -1
+
+<#
+.SYNOPSIS
+Connects a Microsoft Fabric workspace to a Git repository and branch.
+
+.DESCRIPTION
+The Connect-FabricWorkspaceGit function connects a workspace to a Git repository via POST
+to the Fabric `/workspaces/{workspaceId}/git/connect` endpoint.
+
+This operation only establishes the connection; it does not sync the workspace with the
+connected branch. To complete the sync, call Initialize-FabricWorkspaceGitConnection and
+then either Save-FabricWorkspaceGitCommit or Update-FabricWorkspaceFromGit.
+
+Because the provider connection information is polymorphic on the Git provider type
+(Azure DevOps, GitHub, etc.), the provider details are supplied as a hashtable and passed
+through verbatim so any provider schema can be expressed. The API response is returned
+as-is.
+
+.PARAMETER WorkspaceId
+The unique identifier of the workspace to connect to Git. Mandatory.
+
+.PARAMETER GitProviderDetails
+A hashtable describing the Git provider connection information, passed through verbatim as
+the request body's gitProviderDetails property, e.g.
+@{ gitProviderType = 'AzureDevOps'; organizationName = 'org'; projectName = 'proj'; repositoryName = 'repo'; branchName = 'main'; directoryName = '/' }
+
+.PARAMETER Raw
+If specified, returns the untouched API response with no added properties or type decoration.
+
+.EXAMPLE
+$provider = @{ gitProviderType = 'AzureDevOps'; organizationName = 'org'; projectName = 'proj'; repositoryName = 'repo'; branchName = 'main'; directoryName = '/' }
+Connect-FabricWorkspaceGit -WorkspaceId "12345678-1234-1234-1234-123456789012" -GitProviderDetails $provider
+
+Connects the workspace to the specified Azure DevOps repository and branch.
+
+.OUTPUTS
+System.Object
+The API response from the connect operation.
+
+.NOTES
+- API Endpoint: POST /workspaces/{workspaceId}/git/connect
+- Requires: authentication via Set-FabricApiHeaders / Connect-FabricAccount.
+
+Author: Tiago Balabuch, Jess Pomfret, Rob Sewell
+#>
+function Connect-FabricWorkspaceGit {
+    [CmdletBinding(SupportsShouldProcess = $true, ConfirmImpact = 'Medium')]
+    param (
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
+        [ValidateNotNullOrEmpty()]
+        [string]$WorkspaceId,
+
+        [Parameter(Mandatory = $true)]
+        [ValidateNotNullOrEmpty()]
+        [hashtable]$GitProviderDetails,
+
+        [Parameter()]
+        [switch]$Raw
+    )
+
+    process {
+        try {
+            Invoke-FabricAuthCheck -ThrowOnFailure
+
+            $apiEndpointURI = New-FabricAPIUri -Resource 'workspaces' -WorkspaceId $WorkspaceId -Subresource 'git/connect'
+            Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
+
+            # gitProviderDetails is passed through verbatim so any provider schema can be expressed.
+            $body = @{
+                gitProviderDetails = $GitProviderDetails
+            }
+
+            $bodyJson = $body | ConvertTo-Json -Depth 10
+            Write-FabricLog -Message "Request Body: $bodyJson" -Level Debug
+
+            $apiParams = @{
+                BaseURI = $apiEndpointURI
+                Headers = $script:FabricAuthContext.FabricHeaders
+                Method  = 'Post'
+                Body    = $bodyJson
+            }
+
+            if ($PSCmdlet.ShouldProcess($WorkspaceId, "Connect workspace to Git")) {
+                $response = Invoke-FabricAPIRequest @apiParams
+
+                if ($Raw) {
+                    return $response
+                }
+
+                Write-FabricLog -Message "Workspace '$WorkspaceId' connected to Git successfully!" -Level Host
+                return $response
+            }
+        }
+        catch {
+            $errorDetails = $_.Exception.Message
+            Write-FabricLog -Message "Failed to connect workspace '$WorkspaceId' to Git. Error: $errorDetails" -Level Error
+        }
+    }
+}
+#EndRegion '.\Public\Git\Connect-FabricWorkspaceGit.ps1' 99
+#Region '.\Public\Git\Disconnect-FabricWorkspaceGit.ps1' -1
+
+<#
+.SYNOPSIS
+Disconnects a Microsoft Fabric workspace from its connected Git repository and branch.
+
+.DESCRIPTION
+The Disconnect-FabricWorkspaceGit function disconnects a workspace from the Git repository
+and branch it is connected to, via POST to the Fabric
+`/workspaces/{workspaceId}/git/disconnect` endpoint. The request has no body.
+
+.PARAMETER WorkspaceId
+The unique identifier of the workspace to disconnect from Git. Mandatory.
+
+.PARAMETER Raw
+If specified, returns the untouched API response with no added properties or type decoration.
+
+.EXAMPLE
+Disconnect-FabricWorkspaceGit -WorkspaceId "12345678-1234-1234-1234-123456789012"
+
+Disconnects the workspace from its connected Git repository and branch.
+
+.OUTPUTS
+System.Object
+The API response from the disconnect operation.
+
+.NOTES
+- API Endpoint: POST /workspaces/{workspaceId}/git/disconnect
+- Requires: authentication via Set-FabricApiHeaders / Connect-FabricAccount.
+
+Author: Tiago Balabuch, Jess Pomfret, Rob Sewell
+#>
+function Disconnect-FabricWorkspaceGit {
+    [CmdletBinding(SupportsShouldProcess = $true, ConfirmImpact = 'High')]
+    param (
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
+        [ValidateNotNullOrEmpty()]
+        [string]$WorkspaceId,
+
+        [Parameter()]
+        [switch]$Raw
+    )
+
+    process {
+        try {
+            Invoke-FabricAuthCheck -ThrowOnFailure
+
+            $apiEndpointURI = New-FabricAPIUri -Resource 'workspaces' -WorkspaceId $WorkspaceId -Subresource 'git/disconnect'
+            Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
+
+            $apiParams = @{
+                BaseURI = $apiEndpointURI
+                Headers = $script:FabricAuthContext.FabricHeaders
+                Method  = 'Post'
+            }
+
+            if ($PSCmdlet.ShouldProcess($WorkspaceId, "Disconnect workspace from Git")) {
+                $response = Invoke-FabricAPIRequest @apiParams
+
+                if ($Raw) {
+                    return $response
+                }
+
+                Write-FabricLog -Message "Workspace '$WorkspaceId' disconnected from Git successfully!" -Level Host
+                return $response
+            }
+        }
+        catch {
+            $errorDetails = $_.Exception.Message
+            Write-FabricLog -Message "Failed to disconnect workspace '$WorkspaceId' from Git. Error: $errorDetails" -Level Error
+        }
+    }
+}
+#EndRegion '.\Public\Git\Disconnect-FabricWorkspaceGit.ps1' 72
+#Region '.\Public\Git\Get-FabricWorkspaceGitCredential.ps1' -1
+
+<#
+.SYNOPSIS
+Retrieves the caller's Git credentials configuration for a Microsoft Fabric workspace.
+
+.DESCRIPTION
+The Get-FabricWorkspaceGitCredential function returns the caller's Git credentials
+configuration via GET to the Fabric `/workspaces/{workspaceId}/git/myGitCredentials`
+endpoint. The response indicates how the caller's credentials are obtained for the relevant
+Git provider (automatically or through a configured connection), or that they are not
+configured.
+
+By default the returned object is decorated for the custom view. Pass -Raw to return the
+untouched API response.
+
+.PARAMETER WorkspaceId
+The unique identifier of the workspace whose Git credentials configuration is retrieved. Mandatory.
+
+.PARAMETER Raw
+If specified, returns the untouched API response with no added properties or type decoration.
+
+.EXAMPLE
+Get-FabricWorkspaceGitCredential -WorkspaceId "12345678-1234-1234-1234-123456789012"
+
+Returns the caller's Git credentials configuration for the workspace.
+
+.OUTPUTS
+System.Object
+The Git credentials configuration object with all API-returned properties.
+
+.NOTES
+- API Endpoint: GET /workspaces/{workspaceId}/git/myGitCredentials
+- Requires: authentication via Set-FabricApiHeaders / Connect-FabricAccount.
+
+Author: Tiago Balabuch, Jess Pomfret, Rob Sewell
+#>
+function Get-FabricWorkspaceGitCredential {
+    [CmdletBinding()]
+    param (
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
+        [ValidateNotNullOrEmpty()]
+        [string]$WorkspaceId,
+
+        [Parameter()]
+        [switch]$Raw
+    )
+
+    process {
+        try {
+            Invoke-FabricAuthCheck -ThrowOnFailure
+
+            $apiEndpointURI = New-FabricAPIUri -Resource 'workspaces' -WorkspaceId $WorkspaceId -Subresource 'git/myGitCredentials'
+            Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
+
+            $apiParams = @{
+                BaseURI = $apiEndpointURI
+                Headers = $script:FabricAuthContext.FabricHeaders
+                Method  = 'Get'
+            }
+            $response = Invoke-FabricAPIRequest @apiParams
+
+            if (-not $response) {
+                Write-FabricLog -Message "No Git credentials configuration returned for workspace '$WorkspaceId'." -Level Warning
+                return $null
+            }
+
+            if ($Raw) {
+                return $response
+            }
+
+            $response | Add-FabricTypeName -TypeName 'MicrosoftFabric.GitCredentials'
+            $response
+        }
+        catch {
+            $errorDetails = $_.Exception.Message
+            Write-FabricLog -Message "Failed to retrieve Git credentials for workspace '$WorkspaceId'. Error: $errorDetails" -Level Error
+        }
+    }
+}
+#EndRegion '.\Public\Git\Get-FabricWorkspaceGitCredential.ps1' 79
+#Region '.\Public\Git\Get-FabricWorkspaceGitStatus.ps1' -1
+
+<#
+.SYNOPSIS
+Retrieves the Git status of items in a Microsoft Fabric workspace.
+
+.DESCRIPTION
+The Get-FabricWorkspaceGitStatus function returns the Git status of the workspace via GET
+to the Fabric `/workspaces/{workspaceId}/git/status` endpoint. The status indicates changes
+to items since the last workspace and remote branch sync, flagging conflicts when both the
+remote and workspace versions were modified.
+
+By default the returned status object is enriched with the originating WorkspaceId (stamped
+from the parameter) and a resolved WorkspaceName, and decorated for the custom view. Pass
+-Raw to return the untouched API response.
+
+.PARAMETER WorkspaceId
+The unique identifier of the workspace whose Git status is retrieved. Mandatory.
+
+.PARAMETER Raw
+If specified, returns the untouched API response with no added properties or type decoration.
+
+.EXAMPLE
+Get-FabricWorkspaceGitStatus -WorkspaceId "12345678-1234-1234-1234-123456789012"
+
+Returns the Git status object for the workspace, enriched with WorkspaceName.
+
+.OUTPUTS
+System.Object
+The Git status object with all API-returned properties plus WorkspaceName when enriched.
+
+.NOTES
+- API Endpoint: GET /workspaces/{workspaceId}/git/status
+- Requires: authentication via Set-FabricApiHeaders / Connect-FabricAccount.
+
+Author: Tiago Balabuch, Jess Pomfret, Rob Sewell
+#>
+function Get-FabricWorkspaceGitStatus {
+    [CmdletBinding()]
+    param (
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
+        [ValidateNotNullOrEmpty()]
+        [string]$WorkspaceId,
+
+        [Parameter()]
+        [switch]$Raw
+    )
+
+    process {
+        try {
+            Invoke-FabricAuthCheck -ThrowOnFailure
+
+            $apiEndpointURI = New-FabricAPIUri -Resource 'workspaces' -WorkspaceId $WorkspaceId -Subresource 'git/status'
+            Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
+
+            $apiParams = @{
+                BaseURI = $apiEndpointURI
+                Headers = $script:FabricAuthContext.FabricHeaders
+                Method  = 'Get'
+            }
+            $response = Invoke-FabricAPIRequest @apiParams
+
+            if (-not $response) {
+                Write-FabricLog -Message "No Git status returned for workspace '$WorkspaceId'." -Level Warning
+                return $null
+            }
+
+            if ($Raw) {
+                return $response
+            }
+
+            # Resolve the workspace display name for context.
+            $workspaceName = $WorkspaceId
+            try {
+                $workspaceName = Resolve-FabricWorkspaceName -WorkspaceId $WorkspaceId
+            }
+            catch {
+                Write-FabricLog -Message "Failed to resolve workspace name for ID '$WorkspaceId': $($_.Exception.Message)" -Level Debug
+            }
+
+            $response | Add-Member -NotePropertyName 'workspaceId'   -NotePropertyValue $WorkspaceId   -Force
+            $response | Add-Member -NotePropertyName 'WorkspaceName' -NotePropertyValue $workspaceName -Force
+
+            $response | Add-FabricTypeName -TypeName 'MicrosoftFabric.GitStatus'
+            $response
+        }
+        catch {
+            $errorDetails = $_.Exception.Message
+            Write-FabricLog -Message "Failed to retrieve Git status for workspace '$WorkspaceId'. Error: $errorDetails" -Level Error
+        }
+    }
+}
+#EndRegion '.\Public\Git\Get-FabricWorkspaceGitStatus.ps1' 91
+#Region '.\Public\Git\Initialize-FabricWorkspaceGitConnection.ps1' -1
+
+<#
+.SYNOPSIS
+Initializes the Git connection for a Microsoft Fabric workspace connected to Git.
+
+.DESCRIPTION
+The Initialize-FabricWorkspaceGitConnection function initializes a workspace's Git
+connection via POST to the Fabric `/workspaces/{workspaceId}/git/initializeConnection`
+endpoint. It should be called after a successful Connect-FabricWorkspaceGit. Based on the
+required action returned, complete the sync by calling either Save-FabricWorkspaceGitCommit
+or Update-FabricWorkspaceFromGit.
+
+An optional initialization strategy determines how conflicts between the workspace and the
+remote branch are resolved during the initial sync. The API response (including any
+required action) is returned as-is.
+
+.PARAMETER WorkspaceId
+The unique identifier of the workspace whose Git connection is initialized. Mandatory.
+
+.PARAMETER InitializationStrategy
+Optional. The strategy used to resolve differences during initialization.
+Valid values: None, PreferRemote, PreferWorkspace. Only sent when supplied.
+
+.PARAMETER Raw
+If specified, returns the untouched API response with no added properties or type decoration.
+
+.EXAMPLE
+Initialize-FabricWorkspaceGitConnection -WorkspaceId "12345678-1234-1234-1234-123456789012"
+
+Initializes the Git connection using the service default strategy.
+
+.EXAMPLE
+Initialize-FabricWorkspaceGitConnection -WorkspaceId "12345678-1234-1234-1234-123456789012" -InitializationStrategy 'PreferWorkspace'
+
+Initializes the Git connection, preferring the workspace content on conflict.
+
+.OUTPUTS
+System.Object
+The API response from the initialize connection operation, including the required action.
+
+.NOTES
+- API Endpoint: POST /workspaces/{workspaceId}/git/initializeConnection
+- Requires: authentication via Set-FabricApiHeaders / Connect-FabricAccount.
+
+Author: Tiago Balabuch, Jess Pomfret, Rob Sewell
+#>
+function Initialize-FabricWorkspaceGitConnection {
+    [CmdletBinding(SupportsShouldProcess = $true, ConfirmImpact = 'Medium')]
+    param (
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
+        [ValidateNotNullOrEmpty()]
+        [string]$WorkspaceId,
+
+        [Parameter(Mandatory = $false)]
+        [ValidateSet('None', 'PreferRemote', 'PreferWorkspace')]
+        [string]$InitializationStrategy,
+
+        [Parameter()]
+        [switch]$Raw
+    )
+
+    process {
+        try {
+            Invoke-FabricAuthCheck -ThrowOnFailure
+
+            $apiEndpointURI = New-FabricAPIUri -Resource 'workspaces' -WorkspaceId $WorkspaceId -Subresource 'git/initializeConnection'
+            Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
+
+            # Build the body only from supplied fields.
+            $body = @{}
+            if ($InitializationStrategy) { $body.initializationStrategy = $InitializationStrategy }
+
+            $bodyJson = $body | ConvertTo-Json -Depth 10
+            Write-FabricLog -Message "Request Body: $bodyJson" -Level Debug
+
+            $apiParams = @{
+                BaseURI = $apiEndpointURI
+                Headers = $script:FabricAuthContext.FabricHeaders
+                Method  = 'Post'
+                Body    = $bodyJson
+            }
+
+            if ($PSCmdlet.ShouldProcess($WorkspaceId, "Initialize workspace Git connection")) {
+                $response = Invoke-FabricAPIRequest @apiParams
+
+                if ($Raw) {
+                    return $response
+                }
+
+                Write-FabricLog -Message "Git connection initialized for workspace '$WorkspaceId' successfully!" -Level Host
+                return $response
+            }
+        }
+        catch {
+            $errorDetails = $_.Exception.Message
+            Write-FabricLog -Message "Failed to initialize Git connection for workspace '$WorkspaceId'. Error: $errorDetails" -Level Error
+        }
+    }
+}
+#EndRegion '.\Public\Git\Initialize-FabricWorkspaceGitConnection.ps1' 99
+#Region '.\Public\Git\Save-FabricWorkspaceGitCommit.ps1' -1
+
+<#
+.SYNOPSIS
+Commits changes made in a Microsoft Fabric workspace to the connected Git branch.
+
+.DESCRIPTION
+The Save-FabricWorkspaceGitCommit function commits workspace changes to the connected
+remote branch via POST to the Fabric `/workspaces/{workspaceId}/git/commitToGit` endpoint.
+
+You can commit all changes (Mode 'All') or only specific changed items (Mode 'Selective').
+When committing selectively, supply the items to include via -Items. The API response is
+returned as-is.
+
+.PARAMETER WorkspaceId
+The unique identifier of the workspace whose changes are committed. Mandatory.
+
+.PARAMETER Mode
+The commit mode. Valid values: All, Selective. Mandatory.
+
+.PARAMETER Comment
+Optional. The commit comment/message.
+
+.PARAMETER WorkspaceHead
+Optional. The full SHA hash that the workspace is currently synced to. Used for
+concurrency control; the request fails if it does not match the system head.
+
+.PARAMETER Items
+Optional. An array of item identifiers to commit when Mode is 'Selective'. Each entry is a
+hashtable such as @{ objectId = '...' } or @{ logicalId = '...' }.
+
+.PARAMETER Raw
+If specified, returns the untouched API response with no added properties or type decoration.
+
+.EXAMPLE
+Save-FabricWorkspaceGitCommit -WorkspaceId "12345678-1234-1234-1234-123456789012" -Mode 'All' -Comment 'Nightly commit'
+
+Commits all workspace changes to the connected Git branch.
+
+.EXAMPLE
+$items = @(@{ objectId = 'aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee' })
+Save-FabricWorkspaceGitCommit -WorkspaceId "12345678-1234-1234-1234-123456789012" -Mode 'Selective' -Items $items -Comment 'Commit one item'
+
+Commits only the specified item to the connected Git branch.
+
+.OUTPUTS
+System.Object
+The API response from the commit operation.
+
+.NOTES
+- API Endpoint: POST /workspaces/{workspaceId}/git/commitToGit
+- Requires: authentication via Set-FabricApiHeaders / Connect-FabricAccount.
+
+Author: Tiago Balabuch, Jess Pomfret, Rob Sewell
+#>
+function Save-FabricWorkspaceGitCommit {
+    [CmdletBinding(SupportsShouldProcess = $true, ConfirmImpact = 'Medium')]
+    param (
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
+        [ValidateNotNullOrEmpty()]
+        [string]$WorkspaceId,
+
+        [Parameter(Mandatory = $true)]
+        [ValidateSet('All', 'Selective')]
+        [string]$Mode,
+
+        [Parameter(Mandatory = $false)]
+        [string]$Comment,
+
+        [Parameter(Mandatory = $false)]
+        [string]$WorkspaceHead,
+
+        [Parameter(Mandatory = $false)]
+        [object[]]$Items,
+
+        [Parameter()]
+        [switch]$Raw
+    )
+
+    process {
+        try {
+            Invoke-FabricAuthCheck -ThrowOnFailure
+
+            $apiEndpointURI = New-FabricAPIUri -Resource 'workspaces' -WorkspaceId $WorkspaceId -Subresource 'git/commitToGit'
+            Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
+
+            # Build the body from supplied fields only.
+            $body = @{
+                mode = $Mode
+            }
+            if ($PSBoundParameters.ContainsKey('Comment')) { $body.comment = $Comment }
+            if ($WorkspaceHead) { $body.workspaceHead = $WorkspaceHead }
+            if ($Items) { $body.items = $Items }
+
+            $bodyJson = $body | ConvertTo-Json -Depth 10
+            Write-FabricLog -Message "Request Body: $bodyJson" -Level Debug
+
+            $apiParams = @{
+                BaseURI = $apiEndpointURI
+                Headers = $script:FabricAuthContext.FabricHeaders
+                Method  = 'Post'
+                Body    = $bodyJson
+            }
+
+            if ($PSCmdlet.ShouldProcess($WorkspaceId, "Commit workspace changes to Git")) {
+                $response = Invoke-FabricAPIRequest @apiParams
+
+                if ($Raw) {
+                    return $response
+                }
+
+                Write-FabricLog -Message "Workspace '$WorkspaceId' changes committed to Git successfully!" -Level Host
+                return $response
+            }
+        }
+        catch {
+            $errorDetails = $_.Exception.Message
+            Write-FabricLog -Message "Failed to commit workspace '$WorkspaceId' changes to Git. Error: $errorDetails" -Level Error
+        }
+    }
+}
+#EndRegion '.\Public\Git\Save-FabricWorkspaceGitCommit.ps1' 120
+#Region '.\Public\Git\Update-FabricWorkspaceFromGit.ps1' -1
+
+<#
+.SYNOPSIS
+Updates a Microsoft Fabric workspace with commits pushed to the connected Git branch.
+
+.DESCRIPTION
+The Update-FabricWorkspaceFromGit function updates the workspace with commits from the
+connected remote branch via POST to the Fabric
+`/workspaces/{workspaceId}/git/updateFromGit` endpoint.
+
+The update affects only items changed in those commits. When called immediately after
+Connect-FabricWorkspaceGit and Initialize-FabricWorkspaceGitConnection, it performs a full
+update of the entire workspace. Optional conflict resolution and update options may be
+supplied as hashtables and are passed through verbatim. The API response is returned as-is.
+
+.PARAMETER WorkspaceId
+The unique identifier of the workspace to update from Git. Mandatory.
+
+.PARAMETER RemoteCommitHash
+The remote full SHA commit hash to update the workspace to. Mandatory.
+
+.PARAMETER WorkspaceHead
+Optional. The full SHA hash that the workspace is currently synced to. Used for
+concurrency control; the request fails if it does not match the system head.
+
+.PARAMETER ConflictResolution
+Optional hashtable describing how to resolve conflicts, passed through verbatim, e.g.
+@{ conflictResolutionType = 'Workspace'; conflictResolutionPolicy = 'PreferWorkspace' }
+
+.PARAMETER Options
+Optional hashtable of update options, passed through verbatim, e.g.
+@{ allowOverrideItems = $true }
+
+.PARAMETER Raw
+If specified, returns the untouched API response with no added properties or type decoration.
+
+.EXAMPLE
+Update-FabricWorkspaceFromGit -WorkspaceId "12345678-1234-1234-1234-123456789012" -RemoteCommitHash "7d03b2918bf6aa62f96d0a4307293f3853201705"
+
+Updates the workspace to the specified remote commit.
+
+.EXAMPLE
+$conflict = @{ conflictResolutionType = 'Workspace'; conflictResolutionPolicy = 'PreferWorkspace' }
+$options = @{ allowOverrideItems = $true }
+Update-FabricWorkspaceFromGit -WorkspaceId "12345678-1234-1234-1234-123456789012" -RemoteCommitHash "7d03b29..." -WorkspaceHead "eaa737b..." -ConflictResolution $conflict -Options $options
+
+Updates the workspace, preferring the workspace on conflict and allowing item overrides.
+
+.OUTPUTS
+System.Object
+The API response from the update-from-Git operation.
+
+.NOTES
+- API Endpoint: POST /workspaces/{workspaceId}/git/updateFromGit
+- Requires: authentication via Set-FabricApiHeaders / Connect-FabricAccount.
+
+Author: Tiago Balabuch, Jess Pomfret, Rob Sewell
+#>
+function Update-FabricWorkspaceFromGit {
+    [CmdletBinding(SupportsShouldProcess = $true, ConfirmImpact = 'Medium')]
+    param (
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
+        [ValidateNotNullOrEmpty()]
+        [string]$WorkspaceId,
+
+        [Parameter(Mandatory = $true)]
+        [ValidateNotNullOrEmpty()]
+        [string]$RemoteCommitHash,
+
+        [Parameter(Mandatory = $false)]
+        [string]$WorkspaceHead,
+
+        [Parameter(Mandatory = $false)]
+        [hashtable]$ConflictResolution,
+
+        [Parameter(Mandatory = $false)]
+        [hashtable]$Options,
+
+        [Parameter()]
+        [switch]$Raw
+    )
+
+    process {
+        try {
+            Invoke-FabricAuthCheck -ThrowOnFailure
+
+            $apiEndpointURI = New-FabricAPIUri -Resource 'workspaces' -WorkspaceId $WorkspaceId -Subresource 'git/updateFromGit'
+            Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
+
+            # Build the body from supplied fields; nested objects are passed through verbatim.
+            $body = @{
+                remoteCommitHash = $RemoteCommitHash
+            }
+            if ($WorkspaceHead) { $body.workspaceHead = $WorkspaceHead }
+            if ($ConflictResolution) { $body.conflictResolution = $ConflictResolution }
+            if ($Options) { $body.options = $Options }
+
+            $bodyJson = $body | ConvertTo-Json -Depth 10
+            Write-FabricLog -Message "Request Body: $bodyJson" -Level Debug
+
+            $apiParams = @{
+                BaseURI = $apiEndpointURI
+                Headers = $script:FabricAuthContext.FabricHeaders
+                Method  = 'Post'
+                Body    = $bodyJson
+            }
+
+            if ($PSCmdlet.ShouldProcess($WorkspaceId, "Update workspace from Git")) {
+                $response = Invoke-FabricAPIRequest @apiParams
+
+                if ($Raw) {
+                    return $response
+                }
+
+                Write-FabricLog -Message "Workspace '$WorkspaceId' updated from Git successfully!" -Level Host
+                return $response
+            }
+        }
+        catch {
+            $errorDetails = $_.Exception.Message
+            Write-FabricLog -Message "Failed to update workspace '$WorkspaceId' from Git. Error: $errorDetails" -Level Error
+        }
+    }
+}
+#EndRegion '.\Public\Git\Update-FabricWorkspaceFromGit.ps1' 124
+#Region '.\Public\Git\Update-FabricWorkspaceGitCredential.ps1' -1
+
+<#
+.SYNOPSIS
+Updates the caller's Git credentials configuration for a Microsoft Fabric workspace.
+
+.DESCRIPTION
+The Update-FabricWorkspaceGitCredential function updates the caller's Git credentials
+configuration via PATCH to the Fabric `/workspaces/{workspaceId}/git/myGitCredentials`
+endpoint.
+
+Because the request body is polymorphic on the credentials source (Automatic,
+ConfiguredConnection, None), the credential details are supplied as a hashtable and passed
+through verbatim so any source shape can be expressed. The supplied hashtable must include
+the discriminating `source` property. The API response is returned as-is.
+
+.PARAMETER WorkspaceId
+The unique identifier of the workspace whose Git credentials configuration is updated. Mandatory.
+
+.PARAMETER CredentialDetails
+A hashtable describing the Git credentials source, passed through verbatim as the request
+body. Must include a `source` property (Automatic, ConfiguredConnection or None) plus any
+source-specific fields, e.g. @{ source = 'ConfiguredConnection'; connectionId = '3f2504e0-4f89-11d3-9a0c-0305e82c3301' }
+or @{ source = 'Automatic' } or @{ source = 'None' }.
+
+.PARAMETER Raw
+If specified, returns the untouched API response with no added properties or type decoration.
+
+.EXAMPLE
+$cred = @{ source = 'ConfiguredConnection'; connectionId = '3f2504e0-4f89-11d3-9a0c-0305e82c3301' }
+Update-FabricWorkspaceGitCredential -WorkspaceId "12345678-1234-1234-1234-123456789012" -CredentialDetails $cred
+
+Updates the caller's Git credentials to use the specified configured connection.
+
+.EXAMPLE
+Update-FabricWorkspaceGitCredential -WorkspaceId "12345678-1234-1234-1234-123456789012" -CredentialDetails @{ source = 'Automatic' }
+
+Updates the caller's Git credentials to be obtained automatically.
+
+.OUTPUTS
+System.Object
+The updated Git credentials configuration object returned by the API.
+
+.NOTES
+- API Endpoint: PATCH /workspaces/{workspaceId}/git/myGitCredentials
+- Requires: authentication via Set-FabricApiHeaders / Connect-FabricAccount.
+
+Author: Tiago Balabuch, Jess Pomfret, Rob Sewell
+#>
+function Update-FabricWorkspaceGitCredential {
+    [CmdletBinding(SupportsShouldProcess = $true, ConfirmImpact = 'Medium')]
+    param (
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
+        [ValidateNotNullOrEmpty()]
+        [string]$WorkspaceId,
+
+        [Parameter(Mandatory = $true)]
+        [ValidateNotNullOrEmpty()]
+        [Alias('Source')]
+        [hashtable]$CredentialDetails,
+
+        [Parameter()]
+        [switch]$Raw
+    )
+
+    process {
+        try {
+            Invoke-FabricAuthCheck -ThrowOnFailure
+
+            $apiEndpointURI = New-FabricAPIUri -Resource 'workspaces' -WorkspaceId $WorkspaceId -Subresource 'git/myGitCredentials'
+            Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
+
+            # The credential details hashtable is passed through verbatim as the request body.
+            $bodyJson = $CredentialDetails | ConvertTo-Json -Depth 10
+            Write-FabricLog -Message "Request Body: $bodyJson" -Level Debug
+
+            $apiParams = @{
+                BaseURI = $apiEndpointURI
+                Headers = $script:FabricAuthContext.FabricHeaders
+                Method  = 'Patch'
+                Body    = $bodyJson
+            }
+
+            if ($PSCmdlet.ShouldProcess($WorkspaceId, "Update workspace Git credentials")) {
+                $response = Invoke-FabricAPIRequest @apiParams
+
+                if ($Raw) {
+                    return $response
+                }
+
+                Write-FabricLog -Message "Git credentials for workspace '$WorkspaceId' updated successfully!" -Level Host
+                return $response
+            }
+        }
+        catch {
+            $errorDetails = $_.Exception.Message
+            Write-FabricLog -Message "Failed to update Git credentials for workspace '$WorkspaceId'. Error: $errorDetails" -Level Error
+        }
+    }
+}
+#EndRegion '.\Public\Git\Update-FabricWorkspaceGitCredential.ps1' 99
 #Region '.\Public\Graph Model\Get-FabricGraphModel.ps1' -1
 
 <#
