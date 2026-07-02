@@ -5,6 +5,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- **`New-FabricConnection`** and **`Update-FabricConnection`**: new commands completing the
+  connection CRUD family (Get/Remove/RoleAssignment already existed).
+  - `New-FabricConnection` → `POST /connections`; `Update-FabricConnection` → `PATCH /connections/{connectionId}`.
+  - The polymorphic (per connectivity type) request body is expressed via `-ConnectionDetails`/
+    `-CredentialDetails` hashtables plus typed `-ConnectivityType`/`-GatewayId`/`-PrivacyLevel` parameters.
+  - Return the full created/updated connection object (all API properties) enriched with a resolved
+    `GatewayName` (when gateway-bound) and the `MicrosoftFabric.Connection` type; `-Raw` returns the
+    untouched response. `SupportsShouldProcess` (honors `-WhatIf`/`-Confirm`).
+
 ### Fixed
 
 - **`New-FabricAPIUri -Segments` (34 functions were silently broken)**: The helper never had a `-Segments`

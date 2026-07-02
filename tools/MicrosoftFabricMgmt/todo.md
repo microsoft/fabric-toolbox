@@ -65,8 +65,14 @@ Commits: e1bfa5c (enrich/-Raw/tooling), 72ae570 (analyzer/authors/process-blocks
 - [x] **2nd major bug found + fixed via the test pass:** `New-FabricAPIUri -Segments` didn't exist → 34 functions (all `*Definition` get/update built via segments + Domain functions) silently no-op'd. Added `-Segments` parameter set. Verified a definition getter now POSTs the correct `.../getDefinition` URL.
 - [x] **Meaningful tests for all 85 NON-Get-* test-less functions** (16 New, 20 Remove, 33 Update, 5 Start, Stop, Set, 3 Add, Export, Invoke, Restore + 3 Resolve helpers). State-changing funcs assert endpoint+method with `-Confirm:$false` and a `-WhatIf`-makes-no-call test; Resolve-* use the cache/fallback pattern. All green via 4 agent batches. => ALL 165 test-less functions now covered.
 
-## Phase 3 — New commands (DEFERRED until validator fixed)
-Verified genuine gaps (High): Git integration write ops, Deployment Pipelines, Job Scheduler, New/Update-FabricConnection.
+## Phase 3 — New commands (IN PROGRESS; property-completeness precondition confirmed)
+Building missing High-priority commands, each with full-property return + enrichment + -Raw + type + meaningful tests + analyzer-clean.
+- [x] **Connections create/update**: `New-FabricConnection` (POST /connections), `Update-FabricConnection` (PATCH /connections/{id}). Polymorphic body via -ConnectionDetails/-CredentialDetails hashtables; GatewayName enrichment; tests 11/11; analyzer 0.
+- [ ] Job Scheduler (~9): item schedules CRUD + run-on-demand + job instances (list/get/cancel).
+- [ ] Git integration write (~9): Connect/Disconnect/CommitToGit/UpdateFromGit/GetStatus/InitializeConnection/MyGitCredentials.
+- [ ] Deployment Pipelines (~15): CRUD + stages + AssignWorkspaceToStage + DeployStageContent + operations.
+Remaining verified gaps also: ML Model scoring, SQL DB start/stop mirroring (Start/Stop-FabricSQLDatabaseMirroring EXIST), Warehouse restore points, External Data Share provider/accept, DataPipeline definition pair, workspace outbound/network policies.
+Note: fetched platform/definitions/connections.json into the (gitignored) cache for schema — add it to Update-FabricAPISpecsCache.ps1 for durable validation of connection bodies.
 Medium: ML Model scoring, SQL DB start/stop mirroring, Warehouse restore points, External Data Share provider/accept, DataPipeline definition pair, dataflow job scheduling, workspace outbound/network policies.
 
 ## Notes
