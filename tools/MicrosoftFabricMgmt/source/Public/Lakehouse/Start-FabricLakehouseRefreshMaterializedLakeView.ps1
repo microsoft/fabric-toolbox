@@ -50,49 +50,51 @@ function Start-FabricLakehouseRefreshMaterializedLakeView {
         [Parameter(Mandatory = $false)]
         [switch]$WaitForCompletion
     )
-    try {
-        Invoke-FabricAuthCheck -ThrowOnFailure
+    process {
+        try {
+            Invoke-FabricAuthCheck -ThrowOnFailure
 
 
-        # Validate input parameters
-        #$lakehouse = Get-FabricLakehouse -WorkspaceId $WorkspaceId -LakehouseId $LakehouseId
-        #if ($lakehouse.properties.PSObject.Properties['defaultSchema'] -and -not $SchemaName) {
-        #    Write-Error "The Lakehouse '$lakehouse.displayName' has schema enabled, but no schema name was provided. Please specify the 'SchemaName' parameter to proceed."
-        #    return $null
-        #}
+            # Validate input parameters
+            #$lakehouse = Get-FabricLakehouse -WorkspaceId $WorkspaceId -LakehouseId $LakehouseId
+            #if ($lakehouse.properties.PSObject.Properties['defaultSchema'] -and -not $SchemaName) {
+            #    Write-Error "The Lakehouse '$lakehouse.displayName' has schema enabled, but no schema name was provided. Please specify the 'SchemaName' parameter to proceed."
+            #    return $null
+            #}
 
-        # Construct the API endpoint URI
-        $apiEndpointURI = "{0}/workspaces/{1}/lakehouses/{2}/jobs/instances?jobType={3}" -f $script:FabricAuthContext.BaseUrl, $WorkspaceId , $LakehouseId, $JobType
-        Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
+            # Construct the API endpoint URI
+            $apiEndpointURI = "{0}/workspaces/{1}/lakehouses/{2}/jobs/instances?jobType={3}" -f $script:FabricAuthContext.BaseUrl, $WorkspaceId , $LakehouseId, $JobType
+            Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
 
-          # Make the API request
-        $apiParams = @{
-            BaseURI = $apiEndpointURI
-            Headers = $script:FabricAuthContext.FabricHeaders
-            Method  = 'Post'
-        }
-
-        if ($WaitForCompletion.IsPresent) {
-            $apiParams.WaitForCompletion = $true
-        }
-        if ($PSCmdlet.ShouldProcess($LakehouseId, "Start refresh materialized lake views job in workspace '$WorkspaceId'")) {
-            $response = Invoke-FabricAPIRequest @apiParams
-
-            if ($WaitForCompletion) {
-                Write-FabricLog -Message "Refresh MLV job for Lakehouse '$LakehouseId' has completed." -Level Host
-                Write-FabricLog -Message "Job details: $($response | ConvertTo-Json -Depth 5)" -Level Debug
+              # Make the API request
+            $apiParams = @{
+                BaseURI = $apiEndpointURI
+                Headers = $script:FabricAuthContext.FabricHeaders
+                Method  = 'Post'
             }
-            else {
-                Write-FabricLog -Message "Refresh MLV job for Lakehouse '$LakehouseId' has been started and is running asynchronously." -Level Host
-                Write-FabricLog -Message "You can monitor the job status using the job ID from the response." -Level Debug
+
+            if ($WaitForCompletion.IsPresent) {
+                $apiParams.WaitForCompletion = $true
             }
-            # Return the API response
-            return $response
+            if ($PSCmdlet.ShouldProcess($LakehouseId, "Start refresh materialized lake views job in workspace '$WorkspaceId'")) {
+                $response = Invoke-FabricAPIRequest @apiParams
+
+                if ($WaitForCompletion) {
+                    Write-FabricLog -Message "Refresh MLV job for Lakehouse '$LakehouseId' has completed." -Level Host
+                    Write-FabricLog -Message "Job details: $($response | ConvertTo-Json -Depth 5)" -Level Debug
+                }
+                else {
+                    Write-FabricLog -Message "Refresh MLV job for Lakehouse '$LakehouseId' has been started and is running asynchronously." -Level Host
+                    Write-FabricLog -Message "You can monitor the job status using the job ID from the response." -Level Debug
+                }
+                # Return the API response
+                return $response
+            }
         }
-    }
-    catch {
-        # Capture and log error details
-        $errorDetails = $_.Exception.Message
-        Write-FabricLog -Message "Failed to start refresh MLV job. Error: $errorDetails" -Level Error
+        catch {
+            # Capture and log error details
+            $errorDetails = $_.Exception.Message
+            Write-FabricLog -Message "Failed to start refresh MLV job. Error: $errorDetails" -Level Error
+        }
     }
 }

@@ -20,6 +20,7 @@ function Resolve-FabricCapacityIdFromWorkspace {
         Returns the capacity ID for the workspace, using cache if available.
 
     .NOTES
+    Author: Tiago Balabuch, Jess Pomfret, Rob Sewell
         This function uses PSFramework's configuration system for caching.
         Cache key format: "WorkspaceCapacityId_{WorkspaceId}"
     #>

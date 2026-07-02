@@ -22,6 +22,7 @@
     Update-FabricGraphQuerySet -WorkspaceId "workspace-12345" -GraphQuerySetId "-67890" -GraphQuerySetDescription "Updated description"
 
 .NOTES
+Author: Tiago Balabuch, Jess Pomfret, Rob Sewell
     - Requires the $FabricConfig global configuration, which must include BaseUrl and FabricHeaders.
     - Ensures token validity by invoking Invoke-FabricAuthCheck before making the API request.
 
@@ -46,54 +47,56 @@ function Update-FabricGraphQuerySet {
         [ValidateNotNullOrEmpty()]
         [string]$GraphQuerySetDisplayName
     )
+    process {
 
-    try {
-        # Validate authentication token before proceeding
-        Invoke-FabricAuthCheck -ThrowOnFailure
+        try {
+            # Validate authentication token before proceeding
+            Invoke-FabricAuthCheck -ThrowOnFailure
 
-        # Construct the API endpoint URI
-        $apiEndpointURI = New-FabricAPIUri -Resource 'workspaces' -WorkspaceId $WorkspaceId -Subresource 'GraphQuerySets' -ItemId $GraphQuerySetId
-        Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
+            # Construct the API endpoint URI
+            $apiEndpointURI = New-FabricAPIUri -Resource 'workspaces' -WorkspaceId $WorkspaceId -Subresource 'GraphQuerySets' -ItemId $GraphQuerySetId
+            Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
 
-        # Construct the request body with only provided parameters
-        $body = @{}
+            # Construct the request body with only provided parameters
+            $body = @{}
 
-        if ($GraphQuerySetDisplayName) {
-            $body.displayName = $GraphQuerySetDisplayName
-        }
-
-        if ($GraphQuerySetDescription) {
-            $body.description = $GraphQuerySetDescription
-        }
-
-        # Only proceed if there are updates to apply
-        if ($body.Count -eq 0) {
-            Write-FabricLog -Message "No updates specified for Graph Query Set '$GraphQuerySetId'." -Level Warning
-            return
-        }
-
-        $bodyJson = $body | ConvertTo-Json -Depth 10
-        Write-FabricLog -Message "Request Body: $bodyJson" -Level Debug
-
-        # Make the API request when confirmed
-        $target = "Workspace '$WorkspaceId'"
-        $action = "Update Graph Query Set '$GraphQuerySetId'"
-        if ($PSCmdlet.ShouldProcess($target, $action)) {
-            $apiParams = @{
-                BaseURI = $apiEndpointURI
-                Headers = $script:FabricAuthContext.FabricHeaders
-                Method = 'Patch'
-                Body = $bodyJson
+            if ($GraphQuerySetDisplayName) {
+                $body.displayName = $GraphQuerySetDisplayName
             }
-            $response = Invoke-FabricAPIRequest @apiParams
 
-            Write-FabricLog -Message "Graph Query Set '$GraphQuerySetId' updated successfully!" -Level Host
-            return $response
+            if ($GraphQuerySetDescription) {
+                $body.description = $GraphQuerySetDescription
+            }
+
+            # Only proceed if there are updates to apply
+            if ($body.Count -eq 0) {
+                Write-FabricLog -Message "No updates specified for Graph Query Set '$GraphQuerySetId'." -Level Warning
+                return
+            }
+
+            $bodyJson = $body | ConvertTo-Json -Depth 10
+            Write-FabricLog -Message "Request Body: $bodyJson" -Level Debug
+
+            # Make the API request when confirmed
+            $target = "Workspace '$WorkspaceId'"
+            $action = "Update Graph Query Set '$GraphQuerySetId'"
+            if ($PSCmdlet.ShouldProcess($target, $action)) {
+                $apiParams = @{
+                    BaseURI = $apiEndpointURI
+                    Headers = $script:FabricAuthContext.FabricHeaders
+                    Method = 'Patch'
+                    Body = $bodyJson
+                }
+                $response = Invoke-FabricAPIRequest @apiParams
+
+                Write-FabricLog -Message "Graph Query Set '$GraphQuerySetId' updated successfully!" -Level Host
+                return $response
+            }
         }
-    }
-    catch {
-        # Capture and log error details
-        $errorDetails = $_.Exception.Message
-        Write-FabricLog -Message "Failed to update Graph Query Set '$GraphQuerySetId'. Error: $errorDetails" -Level Error
+        catch {
+            # Capture and log error details
+            $errorDetails = $_.Exception.Message
+            Write-FabricLog -Message "Failed to update Graph Query Set '$GraphQuerySetId'. Error: $errorDetails" -Level Error
+        }
     }
 }

@@ -55,6 +55,7 @@
 function New-FabricAPIUri {
     [CmdletBinding()]
     [OutputType([string])]
+    [System.Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSUseShouldProcessForStateChangingFunctions', '', Justification = 'Pure URI string builder; does not change system state despite the New verb.')]
     param(
         [Parameter(Mandatory = $true)]
         [ValidateNotNullOrEmpty()]

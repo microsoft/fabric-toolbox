@@ -69,48 +69,50 @@ function Get-FabricOneLakeDataAccessSecurity {
         [Parameter()]
         [switch]$Raw
     )
-    try {
-        Invoke-FabricAuthCheck -ThrowOnFailure
+    process {
+        try {
+            Invoke-FabricAuthCheck -ThrowOnFailure
 
 
-        # Construct the API endpoint URI
-        $apiEndpointURI = "{0}/workspaces/{1}/items/{2}/dataAccessRoles" -f $script:FabricAuthContext.BaseUrl, $WorkspaceId, $ItemId
-        Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
+            # Construct the API endpoint URI
+            $apiEndpointURI = "{0}/workspaces/{1}/items/{2}/dataAccessRoles" -f $script:FabricAuthContext.BaseUrl, $WorkspaceId, $ItemId
+            Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
 
-        # Make the API request
-        $apiParams = @{
-            BaseURI = $apiEndpointURI
-            Headers = $script:FabricAuthContext.FabricHeaders
-            Method  = 'Get'
-        }
-        $response = Invoke-FabricAPIRequest @apiParams
+            # Make the API request
+            $apiParams = @{
+                BaseURI = $apiEndpointURI
+                Headers = $script:FabricAuthContext.FabricHeaders
+                Method  = 'Get'
+            }
+            $response = Invoke-FabricAPIRequest @apiParams
 
-        if ($Raw) {
+            if ($Raw) {
+                return $response
+            }
+
+            # Optionally filter by RoleName if provided
+            if ($RoleName) {
+                Write-FabricLog -Message "Filtering roles by name '$RoleName'." -Level Debug
+                try {
+                    # Support both array and envelope shapes
+                    if ($response -is [System.Collections.IEnumerable]) {
+                        return ($response | Where-Object { $_.name -eq $RoleName -or $_.RoleName -eq $RoleName })
+                    }
+                    elseif ($response.value) {
+                        return ($response.value | Where-Object { $_.name -eq $RoleName -or $_.RoleName -eq $RoleName })
+                    }
+                }
+                catch {
+                    Write-FabricLog -Message "Unable to filter response by RoleName due to unexpected shape." -Level Debug
+                }
+            }
+
             return $response
         }
-
-        # Optionally filter by RoleName if provided
-        if ($RoleName) {
-            Write-FabricLog -Message "Filtering roles by name '$RoleName'." -Level Debug
-            try {
-                # Support both array and envelope shapes
-                if ($response -is [System.Collections.IEnumerable]) {
-                    return ($response | Where-Object { $_.name -eq $RoleName -or $_.RoleName -eq $RoleName })
-                }
-                elseif ($response.value) {
-                    return ($response.value | Where-Object { $_.name -eq $RoleName -or $_.RoleName -eq $RoleName })
-                }
-            }
-            catch {
-                Write-FabricLog -Message "Unable to filter response by RoleName due to unexpected shape." -Level Debug
-            }
+        catch {
+            # Capture and log error details
+            $errorDetails = $_.Exception.Message
+            Write-FabricLog -Message "Failed to get OneLake Data Access Security. Error: $errorDetails" -Level Error
         }
-
-        return $response
-    }
-    catch {
-        # Capture and log error details
-        $errorDetails = $_.Exception.Message
-        Write-FabricLog -Message "Failed to get OneLake Data Access Security. Error: $errorDetails" -Level Error
     }
 }

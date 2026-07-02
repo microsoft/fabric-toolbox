@@ -113,6 +113,7 @@ function Set-FabricApiHeaders {
                 }
                 'ManagedIdentity' {
                     Write-PSFMessage -Level Debug -Message "Authenticating with Managed Identity"
+                    Write-PSFMessage -Level Debug -Message "UseManagedIdentity: $UseManagedIdentity"
 
                     # Build Connect-AzAccount parameters for MI
                     $connectParams = @{

@@ -22,6 +22,7 @@
     Update-FabricDigitalTwinBuilderFlow -WorkspaceId "workspace-12345" -DigitalTwinBuilderFlowId "-67890" -DigitalTwinBuilderFlowDescription "Updated description"
 
 .NOTES
+Author: Tiago Balabuch, Jess Pomfret, Rob Sewell
     - Requires the $FabricConfig global configuration, which must include BaseUrl and FabricHeaders.
     - Ensures token validity by invoking Invoke-FabricAuthCheck before making the API request.
 
@@ -46,54 +47,56 @@ function Update-FabricDigitalTwinBuilderFlow {
         [ValidateNotNullOrEmpty()]
         [string]$DigitalTwinBuilderFlowDisplayName
     )
+    process {
 
-    try {
-        # Validate authentication token before proceeding
-        Invoke-FabricAuthCheck -ThrowOnFailure
+        try {
+            # Validate authentication token before proceeding
+            Invoke-FabricAuthCheck -ThrowOnFailure
 
-        # Construct the API endpoint URI
-        $apiEndpointURI = New-FabricAPIUri -Resource 'workspaces' -WorkspaceId $WorkspaceId -Subresource 'DigitalTwinBuilderFlows' -ItemId $DigitalTwinBuilderFlowId
-        Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
+            # Construct the API endpoint URI
+            $apiEndpointURI = New-FabricAPIUri -Resource 'workspaces' -WorkspaceId $WorkspaceId -Subresource 'DigitalTwinBuilderFlows' -ItemId $DigitalTwinBuilderFlowId
+            Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
 
-        # Construct the request body with only provided parameters
-        $body = @{}
+            # Construct the request body with only provided parameters
+            $body = @{}
 
-        if ($DigitalTwinBuilderFlowDisplayName) {
-            $body.displayName = $DigitalTwinBuilderFlowDisplayName
-        }
-
-        if ($DigitalTwinBuilderFlowDescription) {
-            $body.description = $DigitalTwinBuilderFlowDescription
-        }
-
-        # Only proceed if there are updates to apply
-        if ($body.Count -eq 0) {
-            Write-FabricLog -Message "No updates specified for Digital Twin Builder Flow '$DigitalTwinBuilderFlowId'." -Level Warning
-            return
-        }
-
-        $bodyJson = $body | ConvertTo-Json -Depth 10
-        Write-FabricLog -Message "Request Body: $bodyJson" -Level Debug
-
-        # Make the API request when confirmed
-        $target = "Workspace '$WorkspaceId'"
-        $action = "Update Digital Twin Builder Flow '$DigitalTwinBuilderFlowId'"
-        if ($PSCmdlet.ShouldProcess($target, $action)) {
-            $apiParams = @{
-                BaseURI = $apiEndpointURI
-                Headers = $script:FabricAuthContext.FabricHeaders
-                Method = 'Patch'
-                Body = $bodyJson
+            if ($DigitalTwinBuilderFlowDisplayName) {
+                $body.displayName = $DigitalTwinBuilderFlowDisplayName
             }
-            $response = Invoke-FabricAPIRequest @apiParams
 
-            Write-FabricLog -Message "Digital Twin Builder Flow '$DigitalTwinBuilderFlowId' updated successfully!" -Level Host
-            return $response
+            if ($DigitalTwinBuilderFlowDescription) {
+                $body.description = $DigitalTwinBuilderFlowDescription
+            }
+
+            # Only proceed if there are updates to apply
+            if ($body.Count -eq 0) {
+                Write-FabricLog -Message "No updates specified for Digital Twin Builder Flow '$DigitalTwinBuilderFlowId'." -Level Warning
+                return
+            }
+
+            $bodyJson = $body | ConvertTo-Json -Depth 10
+            Write-FabricLog -Message "Request Body: $bodyJson" -Level Debug
+
+            # Make the API request when confirmed
+            $target = "Workspace '$WorkspaceId'"
+            $action = "Update Digital Twin Builder Flow '$DigitalTwinBuilderFlowId'"
+            if ($PSCmdlet.ShouldProcess($target, $action)) {
+                $apiParams = @{
+                    BaseURI = $apiEndpointURI
+                    Headers = $script:FabricAuthContext.FabricHeaders
+                    Method = 'Patch'
+                    Body = $bodyJson
+                }
+                $response = Invoke-FabricAPIRequest @apiParams
+
+                Write-FabricLog -Message "Digital Twin Builder Flow '$DigitalTwinBuilderFlowId' updated successfully!" -Level Host
+                return $response
+            }
         }
-    }
-    catch {
-        # Capture and log error details
-        $errorDetails = $_.Exception.Message
-        Write-FabricLog -Message "Failed to update Digital Twin Builder Flow '$DigitalTwinBuilderFlowId'. Error: $errorDetails" -Level Error
+        catch {
+            # Capture and log error details
+            $errorDetails = $_.Exception.Message
+            Write-FabricLog -Message "Failed to update Digital Twin Builder Flow '$DigitalTwinBuilderFlowId'. Error: $errorDetails" -Level Error
+        }
     }
 }

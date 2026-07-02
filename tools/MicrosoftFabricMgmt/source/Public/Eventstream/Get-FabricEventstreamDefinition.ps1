@@ -56,40 +56,42 @@ function Get-FabricEventstreamDefinition {
         [Parameter()]
         [switch]$Raw
     )
-    try {
-        # Validate authentication
-        Invoke-FabricAuthCheck -ThrowOnFailure
+    process {
+        try {
+            # Validate authentication
+            Invoke-FabricAuthCheck -ThrowOnFailure
 
-        # Construct the API endpoint URI with optional format parameter
-        $queryParams = if ($EventstreamFormat) {
-            @{ format = $EventstreamFormat }
-        } else {
-            $null
+            # Construct the API endpoint URI with optional format parameter
+            $queryParams = if ($EventstreamFormat) {
+                @{ format = $EventstreamFormat }
+            } else {
+                $null
+            }
+
+            $apiEndpointURI = New-FabricAPIUri -Resource 'workspaces' -WorkspaceId $WorkspaceId -Subresource 'eventstreams' -ItemId $EventstreamId -QueryParameters $queryParams
+            $apiEndpointURI = $apiEndpointURI -replace '/eventstreams/([^/]+)$', '/eventstreams/$1/getDefinition'
+
+            # Make the API request
+            $apiParams = @{
+                BaseURI = $apiEndpointURI
+                Headers = $script:FabricAuthContext.FabricHeaders
+                Method  = 'Post'
+            }
+            $response = Invoke-FabricAPIRequest @apiParams
+
+            if ($Raw) {
+                return $response
+            }
+
+            # Return the API response
+            Write-FabricLog -Message "Eventstream '$EventstreamId' definition retrieved successfully!" -Level Host
+            $response
+        }
+        catch {
+            # Capture and log error details
+            $errorDetails = $_.Exception.Message
+            Write-FabricLog -Message "Failed to retrieve Eventstream. Error: $errorDetails" -Level Error
         }
 
-        $apiEndpointURI = New-FabricAPIUri -Resource 'workspaces' -WorkspaceId $WorkspaceId -Subresource 'eventstreams' -ItemId $EventstreamId -QueryParameters $queryParams
-        $apiEndpointURI = $apiEndpointURI -replace '/eventstreams/([^/]+)$', '/eventstreams/$1/getDefinition'
-
-        # Make the API request
-        $apiParams = @{
-            BaseURI = $apiEndpointURI
-            Headers = $script:FabricAuthContext.FabricHeaders
-            Method  = 'Post'
-        }
-        $response = Invoke-FabricAPIRequest @apiParams
-
-        if ($Raw) {
-            return $response
-        }
-
-        # Return the API response
-        Write-FabricLog -Message "Eventstream '$EventstreamId' definition retrieved successfully!" -Level Host
-        $response
     }
-    catch {
-        # Capture and log error details
-        $errorDetails = $_.Exception.Message
-        Write-FabricLog -Message "Failed to retrieve Eventstream. Error: $errorDetails" -Level Error
-    }
-
 }

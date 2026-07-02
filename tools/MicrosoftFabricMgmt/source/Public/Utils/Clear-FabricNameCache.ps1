@@ -28,6 +28,7 @@ function Clear-FabricNameCache {
         Clears the cache without prompting for confirmation.
 
     .NOTES
+    Author: Tiago Balabuch, Jess Pomfret, Rob Sewell
         This function is useful when:
         - Capacity, workspace, gateway, or dataset names have been renamed
         - You suspect cached data is stale

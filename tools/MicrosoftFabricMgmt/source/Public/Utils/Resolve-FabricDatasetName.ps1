@@ -31,12 +31,14 @@ function Resolve-FabricDatasetName {
         Forces a fresh API call, bypassing the cache.
 
     .NOTES
+    Author: Tiago Balabuch, Jess Pomfret, Rob Sewell
         This function uses PSFramework's configuration system for caching.
         Cache key format: "DatasetName_{DatasetId}"
         Cross-populates: "DatasetWorkspaceId_{DatasetId}" for workspace resolution.
         Requires Fabric Administrator permissions (Tenant.Read.All or Tenant.ReadWrite.All scope).
     #>
     [CmdletBinding()]
+    [OutputType([string])]
     param(
         [Parameter(Mandatory, ValueFromPipeline, ValueFromPipelineByPropertyName)]
         [ValidateNotNullOrEmpty()]

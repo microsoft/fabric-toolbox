@@ -58,34 +58,36 @@ function Get-FabricSparkJobDefinitionDefinition {
         [Parameter()]
         [switch]$Raw
     )
-    try {
-        Invoke-FabricAuthCheck -ThrowOnFailure
+    process {
+        try {
+            Invoke-FabricAuthCheck -ThrowOnFailure
 
 
-        # Construct the API endpoint URI with filtering logic
-        $apiEndpointURI = "{0}/workspaces/{1}/sparkJobDefinitions/{2}/getDefinition" -f $script:FabricAuthContext.BaseUrl, $WorkspaceId, $SparkJobDefinitionId
-        if ($SparkJobDefinitionFormat) {
-            $apiEndpointURI = "{0}?format={1}" -f $apiEndpointURI, $SparkJobDefinitionFormat
-        }
-        Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
+            # Construct the API endpoint URI with filtering logic
+            $apiEndpointURI = "{0}/workspaces/{1}/sparkJobDefinitions/{2}/getDefinition" -f $script:FabricAuthContext.BaseUrl, $WorkspaceId, $SparkJobDefinitionId
+            if ($SparkJobDefinitionFormat) {
+                $apiEndpointURI = "{0}?format={1}" -f $apiEndpointURI, $SparkJobDefinitionFormat
+            }
+            Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
 
-        # Make the API request
-        $response = Invoke-FabricAPIRequest `
-            -BaseURI $apiEndpointURI `
-            -Headers $script:FabricAuthContext.FabricHeaders `
-            -Method Post
+            # Make the API request
+            $response = Invoke-FabricAPIRequest `
+                -BaseURI $apiEndpointURI `
+                -Headers $script:FabricAuthContext.FabricHeaders `
+                -Method Post
 
-        if ($Raw) {
+            if ($Raw) {
+                return $response
+            }
+
+            # Return the API response
+            Write-FabricLog -Message "Spark Job Definition '$SparkJobDefinitionId' definition retrieved successfully!" -Level Debug
             return $response
         }
-
-        # Return the API response
-        Write-FabricLog -Message "Spark Job Definition '$SparkJobDefinitionId' definition retrieved successfully!" -Level Debug
-        return $response
-    }
-    catch {
-        # Capture and log error details
-        $errorDetails = $_.Exception.Message
-        Write-FabricLog -Message "Failed to retrieve Spark Job Definition. Error: $errorDetails" -Level Error
+        catch {
+            # Capture and log error details
+            $errorDetails = $_.Exception.Message
+            Write-FabricLog -Message "Failed to retrieve Spark Job Definition. Error: $errorDetails" -Level Error
+        }
     }
 }

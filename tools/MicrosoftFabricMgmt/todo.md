@@ -55,6 +55,13 @@ Research complete (2026-07-01). Decisions locked with maintainer. Working order 
 - New `MicrosoftFabric.*` type names added (LivySession, EnvironmentSparkCompute, EventstreamSource, LakehouseTable, MirroredDatabaseStatus, OneLakeShortcut, WarehouseSnapshot, AdminDataset, etc.) have NO `.ps1xml` views yet → they display default/list formatting. Add table views incrementally (formatting backfill).
 - Extend `PropertyCompleteness.Tests.ps1` coverage table to a few newly-enriched functions.
 
+## QA debt (IN PROGRESS) — decisions: fix code (not suppress), author="Tiago Balabuch, Jess Pomfret, Rob Sewell", meaningful tests for key functions
+Baseline QA-gate failures: 323 (167 missing unit test + 88 ScriptAnalyzer + 66 missing author + 2 orphans).
+- [x] **ScriptAnalyzer (88 → 0 on source/Public):** fixed 78 `PSUseProcessBlockForPipelineCommand` by wrapping bodies in `process{}` (REAL fix — pipeline funcs now process every piped item, not just the last), via 3 agents (verified parse-clean + rule-cleared). Fixed the remainder: OutputType attrs (Resolve-*/Export), empty catch (OneLakeDataAccessRole), unused param (Set-FabricApiHeaders), 2 BOMs, trailing ws (Get-FabricDomain). Suppressed a false-positive ShouldProcess on the private New-FabricAPIUri (pure URI builder). Analyzer now 0 on source/Public AND source/Private.
+- [x] **Author (66 → 0):** added "Author: Tiago Balabuch, Jess Pomfret, Rob Sewell" to the .NOTES of the 66 files lacking one (newer resource families + Resolve-* helpers), encoding preserved, parse-clean.
+- [ ] **Missing unit tests (167):** per decision, write MEANINGFUL behavior tests for KEY functions (not 167 param stubs). Identify high-use test-less functions; write real tests like the new suites. (NEXT)
+- [ ] 2 orphans: `Get-FabricExternalDataShares.Tests.ps1` (plural; no matching function — rename/remove) and a `Clear-FabricNameCache` functional test failure (investigate).
+
 ## Phase 3 — New commands (DEFERRED until validator fixed)
 Verified genuine gaps (High): Git integration write ops, Deployment Pipelines, Job Scheduler, New/Update-FabricConnection.
 Medium: ML Model scoring, SQL DB start/stop mirroring, Warehouse restore points, External Data Share provider/accept, DataPipeline definition pair, dataflow job scheduling, workspace outbound/network policies.

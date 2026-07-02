@@ -21,6 +21,7 @@
     Retrieves the definition of the Operations Agent item with ID 67890 from the workspace with ID 12345.
 
 .NOTES
+Author: Tiago Balabuch, Jess Pomfret, Rob Sewell
     - Requires $FabricConfig global configuration, including BaseUrl and FabricHeaders.
     - Calls Invoke-FabricAuthCheck to ensure token validity before making the API request.
     - Handles long-running operations asynchronously.
@@ -42,33 +43,35 @@ function Get-FabricOperationsAgentDefinition {
         [Parameter()]
         [switch]$Raw
     )
+    process {
 
-    try {
-        # Validate authentication token before proceeding
-        Invoke-FabricAuthCheck -ThrowOnFailure
+        try {
+            # Validate authentication token before proceeding
+            Invoke-FabricAuthCheck -ThrowOnFailure
 
-        # Construct the API endpoint URL
-        $segments = @('workspaces', $WorkspaceId, 'OperationsAgents', $OperationsAgentId, 'getDefinition')
-        $apiEndpointURI = New-FabricAPIUri -Segments $segments
-        Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
+            # Construct the API endpoint URL
+            $segments = @('workspaces', $WorkspaceId, 'OperationsAgents', $OperationsAgentId, 'getDefinition')
+            $apiEndpointURI = New-FabricAPIUri -Segments $segments
+            Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
 
-        # Make the API request
-        $apiParams = @{
-            BaseURI = $apiEndpointURI
-            Headers = $script:FabricAuthContext.FabricHeaders
-            Method = 'Post'
+            # Make the API request
+            $apiParams = @{
+                BaseURI = $apiEndpointURI
+                Headers = $script:FabricAuthContext.FabricHeaders
+                Method = 'Post'
+            }
+            $response = Invoke-FabricAPIRequest @apiParams
+
+            if ($Raw) {
+                return $response
+            }
+
+            $response
         }
-        $response = Invoke-FabricAPIRequest @apiParams
-
-        if ($Raw) {
-            return $response
+        catch {
+            # Capture and log error details
+            $errorDetails = $_.Exception.Message
+            Write-FabricLog -Message "Failed to retrieve Operations Agent definition. Error: $errorDetails" -Level Error
         }
-
-        $response
-    }
-    catch {
-        # Capture and log error details
-        $errorDetails = $_.Exception.Message
-        Write-FabricLog -Message "Failed to retrieve Operations Agent definition. Error: $errorDetails" -Level Error
     }
 }
