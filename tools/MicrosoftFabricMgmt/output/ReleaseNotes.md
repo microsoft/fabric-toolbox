@@ -2,6 +2,13 @@
 
 ### Added
 
+- **Workspace Git integration command family** (8 new commands): `Connect-FabricWorkspaceGit`,
+  `Disconnect-FabricWorkspaceGit`, `Initialize-FabricWorkspaceGitConnection`,
+  `Save-FabricWorkspaceGitCommit` (commit workspace → git), `Update-FabricWorkspaceFromGit`
+  (update workspace ← git), `Get-FabricWorkspaceGitStatus`, `Get-FabricWorkspaceGitCredential`,
+  `Update-FabricWorkspaceGitCredential` (all under `/workspaces/{workspaceId}/git/...`).
+  Complex bodies (provider details, commit mode/items, conflict resolution, credentials source)
+  are hashtable pass-throughs; state-changing commands support `-WhatIf`/`-Confirm`; getters honor `-Raw`.
 - **Job Scheduler command family** (7 new commands) for generic item jobs and schedules:
   `New-FabricItemSchedule`, `Get-FabricItemSchedule`, `Update-FabricItemSchedule`,
   `Remove-FabricItemSchedule` (`.../items/{itemId}/jobs/{jobType}/schedules[/{scheduleId}]`),
