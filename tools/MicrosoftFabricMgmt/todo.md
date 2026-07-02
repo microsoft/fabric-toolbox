@@ -62,7 +62,7 @@ Baseline QA-gate failures: 323 (167 missing unit test + 88 ScriptAnalyzer + 66 m
 - [x] **Meaningful tests for all 80 test-less Get-*** (decision: meaningful, not stubs). Canonical `Get-FabricAdminDataset.Tests.ps1` + 79 via 4 agent batches (~263 test cases, all green). Each asserts exact endpoint + method + enrichment/type (or passthrough for definitions/scalars) + `-Raw` untouched.
 - [x] Orphans: deleted plural `Get-FabricExternalDataShares.Tests.ps1`; `Clear-FabricNameCache` failure is full-run contamination only (passes 10/0 isolated).
 - [x] **2nd major bug found + fixed via the test pass:** `New-FabricAPIUri -Segments` didn't exist → 34 functions (all `*Definition` get/update built via segments + Domain functions) silently no-op'd. Added `-Segments` parameter set. Verified a definition getter now POSTs the correct `.../getDefinition` URL.
-- [ ] Remaining test-less: ~85 NON-Get-* functions (New/Update/Remove/Add/Start/etc.) — out of the chosen "all Get-*" scope; do in a later pass if wanted.
+- [x] **Meaningful tests for all 85 NON-Get-* test-less functions** (16 New, 20 Remove, 33 Update, 5 Start, Stop, Set, 3 Add, Export, Invoke, Restore + 3 Resolve helpers). State-changing funcs assert endpoint+method with `-Confirm:$false` and a `-WhatIf`-makes-no-call test; Resolve-* use the cache/fallback pattern. All green via 4 agent batches. => ALL 165 test-less functions now covered.
 
 ## Phase 3 — New commands (DEFERRED until validator fixed)
 Verified genuine gaps (High): Git integration write ops, Deployment Pipelines, Job Scheduler, New/Update-FabricConnection.
