@@ -53,6 +53,7 @@ Research complete (2026-07-01). Decisions locked with maintainer. Working order 
 
 ### Follow-ups (new type names need format views)
 - New `MicrosoftFabric.*` type names added (LivySession, EnvironmentSparkCompute, EventstreamSource, LakehouseTable, MirroredDatabaseStatus, OneLakeShortcut, WarehouseSnapshot, AdminDataset, etc.) have NO `.ps1xml` views yet → they display default/list formatting. Add table views incrementally (formatting backfill).
+  - [x] **Formatting backfill pass 1 (2026-07-03)**: added the 10 standard item resource types (AnomalyDetector, DigitalTwinBuilder(+Flow), EventSchemaSet, GraphQuerySet, Map, MirroredAzureDatabricksCatalog, Ontology, OperationsAgent, UserDataFunction) to the shared FabricItemView + FabricItemListView; added dedicated ConnectionView + DeploymentPipelineView. Structural test `tests/Unit/FormatViews.Tests.ps1`. Full build,test GREEN 8631/0/1-skip; render-verified. Remaining (default list is acceptable; add only if a distinct table helps): sub-resource/status/policy/session/admin types (ItemSchedule, ItemJobInstance, WarehouseRestorePoint, MLModelEndpoint(+Version), the 4 Workspace* networking policy types, GitStatus, LivySession, Eventstream* etc.).
 - Extend `PropertyCompleteness.Tests.ps1` coverage table to a few newly-enriched functions.
 
 ## QA debt (DONE) — decisions: fix code (not suppress), author="Tiago Balabuch, Jess Pomfret, Rob Sewell", meaningful tests for ALL test-less functions

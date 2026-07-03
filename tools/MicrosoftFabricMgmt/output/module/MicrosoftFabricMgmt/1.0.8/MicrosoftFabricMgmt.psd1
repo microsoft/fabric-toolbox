@@ -122,6 +122,24 @@
 
 ### Added
 
+- **Workspace networking commands** (8 new) filling the remaining platform networking gap
+  (all preview, under `/workspaces/{workspaceId}/networking/communicationPolicy/...`):
+  `Get/Set-FabricWorkspaceNetworkCommunicationPolicy` (full policy; PUT supports optimistic
+  concurrency via `-IfMatch`), `Get/Set-FabricWorkspaceOutboundConnectionRule`,
+  `Get/Set-FabricWorkspaceOutboundGatewayRule`, and `Get/Set-FabricWorkspaceGitOutboundPolicy`
+  (`-IfMatch`). Getters enrich with `WorkspaceName` + a `MicrosoftFabric.*` type and honor `-Raw`;
+  setters take hashtable pass-through bodies and support `-WhatIf`/`-Confirm`.
+- **`Set-FabricOneLakeImmutabilityPolicy`** (new): `POST /workspaces/{workspaceId}/onelake/settings/modifyImmutabilityPolicy`;
+  `-Scope` (DiagnosticLogs) + `-RetentionDays`; supports `-WhatIf`/`-Confirm` and `-Raw`.
+
+### Changed
+
+- **`Get-FabricAdminRefreshable`**: `-CapacityId` is now optional. When omitted, the org-wide
+  refreshables list is returned (`GET /admin/capacities/refreshables`, `$top` defaulted to 1000);
+  when supplied, behavior is unchanged. Added `-Expand` (e.g. `capacities`) for both variants.
+
+### Added (earlier this release)
+
 - **Additional resource commands** (19) filling verified coverage gaps:
   - **DataPipeline definition** (2): `Get/Update-FabricDataPipelineDefinition`.
   - **Warehouse restore points** (5): `Get/New/Update/Remove-FabricWarehouseRestorePoint`,
@@ -220,22 +238,7 @@
 
 - **API URI regression tests** (`tests/Unit/ApiUriRegression.Tests.ps1`): assert the exact request URI + HTTP method
   for the connection role-assignment and admin sharing-links functions, and pin the `New-FabricAPIUri` ordering contract.
-- **Property-completeness harness** (`tests/Unit/PropertyCompleteness.Tests.ps1` + `scripts/Get-FabricSchemaProperty.ps1`):
-  schema round-trip tests that resolve each function''s response schema (with `allOf`/cross-file `$ref` resolution) and
-  assert every schema property survives on the enriched output; includes a negative control proving trimming is detected.
-- **Enrichment flip tests** (`tests/Unit/EnrichmentFlip.Tests.ps1`): verify default output is enriched and `-Raw` is untouched.
-- **Behavior tests for 80 Get-* functions** that previously had none: each asserts the exact constructed API
-  endpoint + HTTP method, the default resolved-name enrichment + type decoration (or passthrough for
-  definitions/scalars), and that `-Raw` returns the untouched response.
-
-### Changed (QA)
-
-- **Pipeline correctness — 78 functions**: wrapped bodies in `process{}` blocks so `ValueFromPipeline`
-  functions process every piped item, not just the last (`PSUseProcessBlockForPipelineCommand`).
-- **PSScriptAnalyzer clean** across `source/Public` and `source/Private`; added missing `Author:` lines to
-  66 function files.
-- **Power BI REST API spec cache**: `Update-FabricAPISpecsCache.ps1` now also caches the Power BI API
-  (`powerbi.swagger.json` + `powerbi-api-validation.json`) so the admin f'
+- **Property-completeness harness** (`tests/Unit/PropertyCompleteness.Tests.ps1` + `scripts/Get-FabricSchemaProperty.ps'
 
             # Prerelease string of this module
             # Prerelease = ''

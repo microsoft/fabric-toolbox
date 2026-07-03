@@ -50,6 +50,16 @@
         <TypeName>MicrosoftFabric.Dataflow</TypeName>
         <TypeName>MicrosoftFabric.VariableLibrary</TypeName>
         <TypeName>MicrosoftFabric.Warehouse</TypeName>
+        <TypeName>MicrosoftFabric.AnomalyDetector</TypeName>
+        <TypeName>MicrosoftFabric.DigitalTwinBuilder</TypeName>
+        <TypeName>MicrosoftFabric.DigitalTwinBuilderFlow</TypeName>
+        <TypeName>MicrosoftFabric.EventSchemaSet</TypeName>
+        <TypeName>MicrosoftFabric.GraphQuerySet</TypeName>
+        <TypeName>MicrosoftFabric.Map</TypeName>
+        <TypeName>MicrosoftFabric.MirroredAzureDatabricksCatalog</TypeName>
+        <TypeName>MicrosoftFabric.Ontology</TypeName>
+        <TypeName>MicrosoftFabric.OperationsAgent</TypeName>
+        <TypeName>MicrosoftFabric.UserDataFunction</TypeName>
       </ViewSelectedBy>
       <TableControl>
         <TableHeaders>
@@ -710,6 +720,16 @@
         <TypeName>MicrosoftFabric.Dataflow</TypeName>
         <TypeName>MicrosoftFabric.VariableLibrary</TypeName>
         <TypeName>MicrosoftFabric.Warehouse</TypeName>
+        <TypeName>MicrosoftFabric.AnomalyDetector</TypeName>
+        <TypeName>MicrosoftFabric.DigitalTwinBuilder</TypeName>
+        <TypeName>MicrosoftFabric.DigitalTwinBuilderFlow</TypeName>
+        <TypeName>MicrosoftFabric.EventSchemaSet</TypeName>
+        <TypeName>MicrosoftFabric.GraphQuerySet</TypeName>
+        <TypeName>MicrosoftFabric.Map</TypeName>
+        <TypeName>MicrosoftFabric.MirroredAzureDatabricksCatalog</TypeName>
+        <TypeName>MicrosoftFabric.Ontology</TypeName>
+        <TypeName>MicrosoftFabric.OperationsAgent</TypeName>
+        <TypeName>MicrosoftFabric.UserDataFunction</TypeName>
       </ViewSelectedBy>
       <ListControl>
         <ListEntries>
@@ -1170,6 +1190,123 @@
           </CustomEntry>
         </CustomEntries>
       </CustomControl>
+    </View>
+
+    <!--
+      =============================================================================
+      Connection View - For connection objects (not workspace-scoped)
+      =============================================================================
+      Display Priority: Connection Name, Connectivity Type, Gateway Name, ID
+    -->
+    <View>
+      <Name>ConnectionView</Name>
+      <ViewSelectedBy>
+        <TypeName>MicrosoftFabric.Connection</TypeName>
+      </ViewSelectedBy>
+      <TableControl>
+        <TableHeaders>
+          <TableColumnHeader>
+            <Label>Connection Name</Label>
+            <Width>30</Width>
+          </TableColumnHeader>
+          <TableColumnHeader>
+            <Label>Connectivity Type</Label>
+            <Width>22</Width>
+          </TableColumnHeader>
+          <TableColumnHeader>
+            <Label>Gateway Name</Label>
+            <Width>25</Width>
+          </TableColumnHeader>
+          <TableColumnHeader>
+            <Label>ID</Label>
+          </TableColumnHeader>
+        </TableHeaders>
+        <TableRowEntries>
+          <TableRowEntry>
+            <TableColumnItems>
+              <!-- Connection Name (displayName) -->
+              <TableColumnItem>
+                <ScriptBlock>
+                  if ($_.displayName) { $_.displayName } else { 'N/A' }
+                </ScriptBlock>
+              </TableColumnItem>
+              <!-- Connectivity Type -->
+              <TableColumnItem>
+                <PropertyName>connectivityType</PropertyName>
+              </TableColumnItem>
+              <!-- Gateway Name - use enriched GatewayName if present, else resolve from gatewayId -->
+              <TableColumnItem>
+                <ScriptBlock>
+                  if ($_.GatewayName) {
+                    $_.GatewayName
+                  }
+                  elseif ($_.gatewayId) {
+                    try {
+                      Resolve-FabricGatewayName -GatewayId $_.gatewayId
+                    }
+                    catch {
+                      $_.gatewayId
+                    }
+                  }
+                  else {
+                    'N/A'
+                  }
+                </ScriptBlock>
+              </TableColumnItem>
+              <!-- ID -->
+              <TableColumnItem>
+                <PropertyName>id</PropertyName>
+              </TableColumnItem>
+            </TableColumnItems>
+          </TableRowEntry>
+        </TableRowEntries>
+      </TableControl>
+    </View>
+
+    <!--
+      =============================================================================
+      Deployment Pipeline View - For deployment pipeline objects (not workspace-scoped)
+      =============================================================================
+      Display Priority: Pipeline Name, Description, ID
+    -->
+    <View>
+      <Name>DeploymentPipelineView</Name>
+      <ViewSelectedBy>
+        <TypeName>MicrosoftFabric.DeploymentPipeline</TypeName>
+      </ViewSelectedBy>
+      <TableControl>
+        <TableHeaders>
+          <TableColumnHeader>
+            <Label>Pipeline Name</Label>
+            <Width>35</Width>
+          </TableColumnHeader>
+          <TableColumnHeader>
+            <Label>Description</Label>
+            <Width>45</Width>
+          </TableColumnHeader>
+          <TableColumnHeader>
+            <Label>ID</Label>
+          </TableColumnHeader>
+        </TableHeaders>
+        <TableRowEntries>
+          <TableRowEntry>
+            <TableColumnItems>
+              <!-- Pipeline Name (displayName) -->
+              <TableColumnItem>
+                <PropertyName>displayName</PropertyName>
+              </TableColumnItem>
+              <!-- Description -->
+              <TableColumnItem>
+                <PropertyName>description</PropertyName>
+              </TableColumnItem>
+              <!-- ID -->
+              <TableColumnItem>
+                <PropertyName>id</PropertyName>
+              </TableColumnItem>
+            </TableColumnItems>
+          </TableRowEntry>
+        </TableRowEntries>
+      </TableControl>
     </View>
 
   </ViewDefinitions>
