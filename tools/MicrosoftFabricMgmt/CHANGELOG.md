@@ -7,6 +7,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **Workspace networking commands** (8 new) filling the remaining platform networking gap
+  (all preview, under `/workspaces/{workspaceId}/networking/communicationPolicy/...`):
+  `Get/Set-FabricWorkspaceNetworkCommunicationPolicy` (full policy; PUT supports optimistic
+  concurrency via `-IfMatch`), `Get/Set-FabricWorkspaceOutboundConnectionRule`,
+  `Get/Set-FabricWorkspaceOutboundGatewayRule`, and `Get/Set-FabricWorkspaceGitOutboundPolicy`
+  (`-IfMatch`). Getters enrich with `WorkspaceName` + a `MicrosoftFabric.*` type and honor `-Raw`;
+  setters take hashtable pass-through bodies and support `-WhatIf`/`-Confirm`.
+- **`Set-FabricOneLakeImmutabilityPolicy`** (new): `POST /workspaces/{workspaceId}/onelake/settings/modifyImmutabilityPolicy`;
+  `-Scope` (DiagnosticLogs) + `-RetentionDays`; supports `-WhatIf`/`-Confirm` and `-Raw`.
+
+### Changed
+
+- **`Get-FabricAdminRefreshable`**: `-CapacityId` is now optional. When omitted, the org-wide
+  refreshables list is returned (`GET /admin/capacities/refreshables`, `$top` defaulted to 1000);
+  when supplied, behavior is unchanged. Added `-Expand` (e.g. `capacities`) for both variants.
+
+### Added (earlier this release)
+
 - **Additional resource commands** (19) filling verified coverage gaps:
   - **DataPipeline definition** (2): `Get/Update-FabricDataPipelineDefinition`.
   - **Warehouse restore points** (5): `Get/New/Update/Remove-FabricWarehouseRestorePoint`,

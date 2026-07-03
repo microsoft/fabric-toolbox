@@ -56,4 +56,22 @@ Describe 'Get-FabricAdminRefreshable' -Tag 'UnitTests' {
         $r[0].PSObject.TypeNames[0]    | Should -Not -Be 'MicrosoftFabric.AdminRefreshable'
         $r[0].id                       | Should -Be 'rf-1'
     }
+
+    It 'calls the org-wide refreshables endpoint (with default $top) when CapacityId is omitted' {
+        $null = Get-FabricAdminRefreshable
+        $global:__capUri    | Should -Be 'https://api.powerbi.com/v1.0/myorg/admin/capacities/refreshables?$top=1000'
+        $global:__capMethod | Should -Be 'Get'
+    }
+
+    It 'passes $expand through on the org-wide call' {
+        $null = Get-FabricAdminRefreshable -Expand 'capacities'
+        $global:__capUri | Should -Match '\$expand=capacities'
+        $global:__capUri | Should -Match '/admin/capacities/refreshables\?'
+    }
+
+    It 'honors an explicit -Top on the org-wide call (no default injected)' {
+        $null = Get-FabricAdminRefreshable -Top 50
+        $global:__capUri | Should -Match '\$top=50'
+        $global:__capUri | Should -Not -Match '\$top=1000'
+    }
 }

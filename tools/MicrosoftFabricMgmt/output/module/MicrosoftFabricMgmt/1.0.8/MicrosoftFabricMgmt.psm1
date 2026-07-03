@@ -5545,22 +5545,32 @@ function Get-FabricAdminProfile {
 
 <#
 .SYNOPSIS
-    Gets refreshable datasets from a capacity using the Power BI admin API.
+    Gets refreshable datasets using the Power BI admin API.
 
 .DESCRIPTION
-    The Get-FabricAdminRefreshable cmdlet retrieves refreshable datasets from a specific capacity using the admin API.
+    The Get-FabricAdminRefreshable cmdlet retrieves refreshable datasets using the admin API.
+
+    When -CapacityId is supplied it returns the refreshables for that capacity via
+    /admin/capacities/{capacityId}/refreshables. When -CapacityId is omitted it returns the
+    org-wide list of refreshables across all capacities the caller can access via
+    /admin/capacities/refreshables.
 
 .PARAMETER CapacityId
-    Required. The capacity ID to get refreshables from.
+    Optional. The capacity ID to get refreshables from. When omitted, the org-wide list is returned.
 
 .PARAMETER RefreshableId
-    Optional. Returns only the refreshable matching this ID.
+    Optional. Returns only the refreshable matching this ID. Requires -CapacityId.
+
+.PARAMETER Expand
+    Optional. Accepts a comma-separated list of data types to expand inline in the response
+    (for example 'capacities' or 'groups').
 
 .PARAMETER Filter
     Optional. OData filter expression.
 
 .PARAMETER Top
-    Optional. Maximum number of items to return.
+    Optional. Maximum number of items to return. The org-wide API requires this; when omitted
+    for the org-wide call a default of 1000 is used.
 
 .PARAMETER Skip
     Optional. Number of items to skip.
@@ -5574,20 +5584,27 @@ function Get-FabricAdminProfile {
     Lists all refreshables in the specified capacity.
 
 .EXAMPLE
+    Get-FabricAdminRefreshable
+
+    Lists all refreshables across every capacity the caller can access (org-wide).
+
+.EXAMPLE
     Get-FabricAdminRefreshable -CapacityId "capacity123" -RefreshableId "dataset123"
 
     Gets a specific refreshable by ID.
 
 .NOTES
-    - Uses the Power BI Admin API: https://api.powerbi.com/v1.0/myorg/admin/capacities/{capacityId}/refreshables
+    - Uses the Power BI Admin API:
+        https://api.powerbi.com/v1.0/myorg/admin/capacities/refreshables
+        https://api.powerbi.com/v1.0/myorg/admin/capacities/{capacityId}/refreshables
     - Requires Fabric Administrator permissions.
 
-    Author: Claude AI
+    Author: Tiago Balabuch, Jess Pomfret, Rob Sewell
 #>
 function Get-FabricAdminRefreshable {
     [CmdletBinding()]
     param (
-        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
+        [Parameter(Mandatory = $false, ValueFromPipelineByPropertyName = $true)]
         [ValidateNotNullOrEmpty()]
         [Alias('id')]
         [string]$CapacityId,
@@ -5595,6 +5612,10 @@ function Get-FabricAdminRefreshable {
         [Parameter(Mandatory = $false)]
         [ValidateNotNullOrEmpty()]
         [string]$RefreshableId,
+
+        [Parameter(Mandatory = $false)]
+        [ValidateNotNullOrEmpty()]
+        [string]$Expand,
 
         [Parameter(Mandatory = $false)]
         [ValidateNotNullOrEmpty()]
@@ -5619,11 +5640,18 @@ function Get-FabricAdminRefreshable {
             $powerBIAdminBaseUrl = "https://api.powerbi.com/v1.0/myorg"
 
             if ($RefreshableId) {
-                $apiEndpointURI = "$powerBIAdminBaseUrl/admin/capacities/$CapacityId/refreshables/$RefreshableId"
-                Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
+                if (-not $CapacityId) {
+                    Write-FabricLog -Message "-RefreshableId requires -CapacityId to be specified." -Level Error
+                    return $null
+                }
+                $singleUri = "$powerBIAdminBaseUrl/admin/capacities/$CapacityId/refreshables/$RefreshableId"
+                if ($Expand) {
+                    $singleUri = "$singleUri`?`$expand=$([System.Uri]::EscapeDataString($Expand))"
+                }
+                Write-FabricLog -Message "API Endpoint: $singleUri" -Level Debug
 
                 $apiParams = @{
-                    BaseURI = $apiEndpointURI
+                    BaseURI = $singleUri
                     Headers = $script:FabricAuthContext.FabricHeaders
                     Method  = 'Get'
                 }
@@ -5640,17 +5668,29 @@ function Get-FabricAdminRefreshable {
             }
 
             $queryParams = @()
+            if ($Expand) {
+                $queryParams += "`$expand=$([System.Uri]::EscapeDataString($Expand))"
+            }
             if ($Filter) {
                 $queryParams += "`$filter=$([System.Uri]::EscapeDataString($Filter))"
             }
             if ($Top) {
                 $queryParams += "`$top=$Top"
             }
+            elseif (-not $CapacityId) {
+                # The org-wide refreshables endpoint requires $top; default it when omitted.
+                $queryParams += "`$top=1000"
+            }
             if ($Skip) {
                 $queryParams += "`$skip=$Skip"
             }
 
-            $apiEndpointURI = "$powerBIAdminBaseUrl/admin/capacities/$CapacityId/refreshables"
+            if ($CapacityId) {
+                $apiEndpointURI = "$powerBIAdminBaseUrl/admin/capacities/$CapacityId/refreshables"
+            }
+            else {
+                $apiEndpointURI = "$powerBIAdminBaseUrl/admin/capacities/refreshables"
+            }
             if ($queryParams.Count -gt 0) {
                 $apiEndpointURI = "$apiEndpointURI`?$($queryParams -join '&')"
             }
@@ -5677,7 +5717,7 @@ function Get-FabricAdminRefreshable {
         }
     }
 }
-#EndRegion '.\Public\Admin\Get-FabricAdminRefreshable.ps1' 135
+#EndRegion '.\Public\Admin\Get-FabricAdminRefreshable.ps1' 175
 #Region '.\Public\Admin\Get-FabricAdminReport.ps1' -1
 
 <#
@@ -36162,6 +36202,106 @@ function Set-FabricOneLakeDataAccessSecurity {
     }
 }
 #EndRegion '.\Public\OneLake\Set-FabricOneLakeDataAccessSecurity.ps1' 184
+#Region '.\Public\OneLake\Set-FabricOneLakeImmutabilityPolicy.ps1' -1
+
+<#
+.SYNOPSIS
+Sets (modifies) the OneLake immutability policy for a Microsoft Fabric workspace.
+
+.DESCRIPTION
+The Set-FabricOneLakeImmutabilityPolicy function configures the OneLake immutability
+policy for a workspace via POST to the Fabric
+`/workspaces/{workspaceId}/onelake/settings/modifyImmutabilityPolicy` endpoint.
+
+An immutability policy protects data written under the given scope from being changed or
+deleted for a defined retention window. The request body is built from the -Scope and
+-RetentionDays parameters. The API response is returned as-is.
+
+.PARAMETER WorkspaceId
+The unique identifier of the workspace whose immutability policy is set. Mandatory.
+
+.PARAMETER Scope
+The scope the immutability policy applies to. Valid value: DiagnosticLogs. Mandatory.
+
+.PARAMETER RetentionDays
+The number of days data in the scope is retained as immutable. Must be 1 or greater. Mandatory.
+
+.PARAMETER Raw
+If specified, returns the untouched API response with no added properties or type decoration.
+
+.EXAMPLE
+Set-FabricOneLakeImmutabilityPolicy -WorkspaceId "12345678-1234-1234-1234-123456789012" -Scope 'DiagnosticLogs' -RetentionDays 30
+
+Configures a 30-day immutability policy for diagnostic logs in the workspace.
+
+.OUTPUTS
+System.Object
+The API response returned after modifying the immutability policy.
+
+.NOTES
+- API Endpoint: POST /workspaces/{workspaceId}/onelake/settings/modifyImmutabilityPolicy
+- Requires: authentication via Set-FabricApiHeaders / Connect-FabricAccount.
+
+Author: Tiago Balabuch, Jess Pomfret, Rob Sewell
+#>
+function Set-FabricOneLakeImmutabilityPolicy {
+    [CmdletBinding(SupportsShouldProcess = $true, ConfirmImpact = 'High')]
+    param (
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
+        [ValidateNotNullOrEmpty()]
+        [string]$WorkspaceId,
+
+        [Parameter(Mandatory = $true)]
+        [ValidateSet('DiagnosticLogs')]
+        [string]$Scope,
+
+        [Parameter(Mandatory = $true)]
+        [ValidateRange(1, [int]::MaxValue)]
+        [int]$RetentionDays,
+
+        [Parameter()]
+        [switch]$Raw
+    )
+
+    process {
+        try {
+            Invoke-FabricAuthCheck -ThrowOnFailure
+
+            $apiEndpointURI = New-FabricAPIUri -Resource 'workspaces' -WorkspaceId $WorkspaceId -Subresource 'onelake/settings/modifyImmutabilityPolicy'
+            Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
+
+            $body = @{
+                scope         = $Scope
+                retentionDays = $RetentionDays
+            }
+            $bodyJson = $body | ConvertTo-Json -Depth 10
+            Write-FabricLog -Message "Request Body: $bodyJson" -Level Debug
+
+            $apiParams = @{
+                BaseURI = $apiEndpointURI
+                Headers = $script:FabricAuthContext.FabricHeaders
+                Method  = 'Post'
+                Body    = $bodyJson
+            }
+
+            if ($PSCmdlet.ShouldProcess($WorkspaceId, "Set OneLake immutability policy ($Scope, $RetentionDays days)")) {
+                $response = Invoke-FabricAPIRequest @apiParams
+
+                if ($Raw) {
+                    return $response
+                }
+
+                Write-FabricLog -Message "OneLake immutability policy for workspace '$WorkspaceId' set successfully!" -Level Host
+                return $response
+            }
+        }
+        catch {
+            $errorDetails = $_.Exception.Message
+            Write-FabricLog -Message "Failed to set OneLake immutability policy for workspace '$WorkspaceId'. Error: $errorDetails" -Level Error
+        }
+    }
+}
+#EndRegion '.\Public\OneLake\Set-FabricOneLakeImmutabilityPolicy.ps1' 98
 #Region '.\Public\Ontology\Get-FabricOntology.ps1' -1
 
 <#
@@ -48802,6 +48942,784 @@ function Update-FabricWarehouseSnapshot {
         Write-FabricLog -Message "Failed to update Warehouse Snapshot '$WarehouseSnapshotName'. Error: $errorDetails" -Level Error
     }    }}
 #EndRegion '.\Public\Warehouse\Update-FabricWarehouseSnapshot.ps1' 107
+#Region '.\Public\Workspace Networking\Get-FabricWorkspaceGitOutboundPolicy.ps1' -1
+
+<#
+.SYNOPSIS
+Retrieves the Git outbound networking policy for a Microsoft Fabric workspace.
+
+.DESCRIPTION
+The Get-FabricWorkspaceGitOutboundPolicy function retrieves the Git outbound networking
+communication policy for a workspace via GET to the Fabric
+`/workspaces/{workspaceId}/networking/communicationPolicy/outbound/git` endpoint. This
+feature is currently in preview.
+
+By default the returned object is enriched with the originating WorkspaceId (stamped from
+the parameter) and a resolved WorkspaceName, and decorated for the custom table view.
+Pass -Raw to return the untouched API response.
+
+.PARAMETER WorkspaceId
+The unique identifier of the workspace whose Git outbound policy is retrieved. Mandatory.
+
+.PARAMETER Raw
+If specified, returns the untouched API response with no added properties or type decoration.
+
+.EXAMPLE
+Get-FabricWorkspaceGitOutboundPolicy -WorkspaceId "12345678-1234-1234-1234-123456789012"
+
+Returns the Git outbound networking policy for the workspace, enriched with WorkspaceName.
+
+.OUTPUTS
+System.Object
+The Git outbound policy object with all API-returned properties plus WorkspaceName when enriched.
+
+.NOTES
+- API Endpoint: GET /workspaces/{workspaceId}/networking/communicationPolicy/outbound/git
+- Requires: authentication via Set-FabricApiHeaders / Connect-FabricAccount.
+- Preview: this API is part of a Fabric Preview release.
+
+Author: Tiago Balabuch, Jess Pomfret, Rob Sewell
+#>
+function Get-FabricWorkspaceGitOutboundPolicy {
+    [CmdletBinding()]
+    param (
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
+        [ValidateNotNullOrEmpty()]
+        [string]$WorkspaceId,
+
+        [Parameter()]
+        [switch]$Raw
+    )
+
+    process {
+        try {
+            Invoke-FabricAuthCheck -ThrowOnFailure
+
+            $apiEndpointURI = New-FabricAPIUri -Resource 'workspaces' -WorkspaceId $WorkspaceId -Subresource 'networking/communicationPolicy/outbound/git'
+            Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
+
+            $apiParams = @{
+                BaseURI = $apiEndpointURI
+                Headers = $script:FabricAuthContext.FabricHeaders
+                Method  = 'Get'
+            }
+            $response = Invoke-FabricAPIRequest @apiParams
+
+            if (-not $response) {
+                Write-FabricLog -Message "No Git outbound policy returned for workspace '$WorkspaceId'." -Level Warning
+                return $null
+            }
+
+            if ($Raw) {
+                return $response
+            }
+
+            $workspaceName = $WorkspaceId
+            try {
+                $workspaceName = Resolve-FabricWorkspaceName -WorkspaceId $WorkspaceId
+            }
+            catch {
+                Write-FabricLog -Message "Failed to resolve workspace name for ID '$WorkspaceId': $($_.Exception.Message)" -Level Debug
+            }
+
+            foreach ($item in $response) {
+                $item | Add-Member -NotePropertyName 'workspaceId'   -NotePropertyValue $WorkspaceId   -Force
+                $item | Add-Member -NotePropertyName 'WorkspaceName' -NotePropertyValue $workspaceName -Force
+            }
+
+            $response | Add-FabricTypeName -TypeName 'MicrosoftFabric.WorkspaceGitOutboundPolicy'
+            $response
+        }
+        catch {
+            $errorDetails = $_.Exception.Message
+            Write-FabricLog -Message "Failed to retrieve Git outbound policy for workspace '$WorkspaceId'. Error: $errorDetails" -Level Error
+        }
+    }
+}
+#EndRegion '.\Public\Workspace Networking\Get-FabricWorkspaceGitOutboundPolicy.ps1' 93
+#Region '.\Public\Workspace Networking\Get-FabricWorkspaceNetworkCommunicationPolicy.ps1' -1
+
+<#
+.SYNOPSIS
+Retrieves the networking communication policy for a Microsoft Fabric workspace.
+
+.DESCRIPTION
+The Get-FabricWorkspaceNetworkCommunicationPolicy function retrieves the networking
+communication policy for a workspace via GET to the Fabric
+`/workspaces/{workspaceId}/networking/communicationPolicy` endpoint. This feature is
+currently in preview.
+
+By default the returned object is enriched with the originating WorkspaceId (stamped from
+the parameter) and a resolved WorkspaceName, and decorated for the custom table view.
+Pass -Raw to return the untouched API response.
+
+.PARAMETER WorkspaceId
+The unique identifier of the workspace whose networking communication policy is retrieved. Mandatory.
+
+.PARAMETER Raw
+If specified, returns the untouched API response with no added properties or type decoration.
+
+.EXAMPLE
+Get-FabricWorkspaceNetworkCommunicationPolicy -WorkspaceId "12345678-1234-1234-1234-123456789012"
+
+Returns the networking communication policy for the workspace, enriched with WorkspaceName.
+
+.OUTPUTS
+System.Object
+The networking communication policy object with all API-returned properties plus WorkspaceName when enriched.
+
+.NOTES
+- API Endpoint: GET /workspaces/{workspaceId}/networking/communicationPolicy
+- Requires: authentication via Set-FabricApiHeaders / Connect-FabricAccount.
+- Preview: this API is part of a Fabric Preview release.
+
+Author: Tiago Balabuch, Jess Pomfret, Rob Sewell
+#>
+function Get-FabricWorkspaceNetworkCommunicationPolicy {
+    [CmdletBinding()]
+    param (
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
+        [ValidateNotNullOrEmpty()]
+        [string]$WorkspaceId,
+
+        [Parameter()]
+        [switch]$Raw
+    )
+
+    process {
+        try {
+            Invoke-FabricAuthCheck -ThrowOnFailure
+
+            $apiEndpointURI = New-FabricAPIUri -Resource 'workspaces' -WorkspaceId $WorkspaceId -Subresource 'networking/communicationPolicy'
+            Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
+
+            $apiParams = @{
+                BaseURI = $apiEndpointURI
+                Headers = $script:FabricAuthContext.FabricHeaders
+                Method  = 'Get'
+            }
+            $response = Invoke-FabricAPIRequest @apiParams
+
+            if (-not $response) {
+                Write-FabricLog -Message "No networking communication policy returned for workspace '$WorkspaceId'." -Level Warning
+                return $null
+            }
+
+            if ($Raw) {
+                return $response
+            }
+
+            $workspaceName = $WorkspaceId
+            try {
+                $workspaceName = Resolve-FabricWorkspaceName -WorkspaceId $WorkspaceId
+            }
+            catch {
+                Write-FabricLog -Message "Failed to resolve workspace name for ID '$WorkspaceId': $($_.Exception.Message)" -Level Debug
+            }
+
+            foreach ($item in $response) {
+                $item | Add-Member -NotePropertyName 'workspaceId'   -NotePropertyValue $WorkspaceId   -Force
+                $item | Add-Member -NotePropertyName 'WorkspaceName' -NotePropertyValue $workspaceName -Force
+            }
+
+            $response | Add-FabricTypeName -TypeName 'MicrosoftFabric.WorkspaceNetworkCommunicationPolicy'
+            $response
+        }
+        catch {
+            $errorDetails = $_.Exception.Message
+            Write-FabricLog -Message "Failed to retrieve networking communication policy for workspace '$WorkspaceId'. Error: $errorDetails" -Level Error
+        }
+    }
+}
+#EndRegion '.\Public\Workspace Networking\Get-FabricWorkspaceNetworkCommunicationPolicy.ps1' 93
+#Region '.\Public\Workspace Networking\Get-FabricWorkspaceOutboundConnectionRule.ps1' -1
+
+<#
+.SYNOPSIS
+Retrieves the outbound cloud connection rules for a Microsoft Fabric workspace.
+
+.DESCRIPTION
+The Get-FabricWorkspaceOutboundConnectionRule function retrieves the outbound cloud
+connection rules for a workspace enabled with Outbound Access Protection (OAP) via GET to
+the Fabric `/workspaces/{workspaceId}/networking/communicationPolicy/outbound/connections`
+endpoint. Rules are only returned when the workspace's network communication policy has
+`outbound.publicAccessRules.defaultAction` set to Deny. This feature is currently in preview.
+
+By default the returned object is enriched with the originating WorkspaceId (stamped from
+the parameter) and a resolved WorkspaceName, and decorated for the custom table view.
+Pass -Raw to return the untouched API response.
+
+.PARAMETER WorkspaceId
+The unique identifier of the workspace whose outbound connection rules are retrieved. Mandatory.
+
+.PARAMETER Raw
+If specified, returns the untouched API response with no added properties or type decoration.
+
+.EXAMPLE
+Get-FabricWorkspaceOutboundConnectionRule -WorkspaceId "12345678-1234-1234-1234-123456789012"
+
+Returns the outbound cloud connection rules for the workspace, enriched with WorkspaceName.
+
+.OUTPUTS
+System.Object
+The outbound connection rules object with all API-returned properties plus WorkspaceName when enriched.
+
+.NOTES
+- API Endpoint: GET /workspaces/{workspaceId}/networking/communicationPolicy/outbound/connections
+- Requires: authentication via Set-FabricApiHeaders / Connect-FabricAccount.
+- Preview: this API is part of a Fabric Preview release.
+
+Author: Tiago Balabuch, Jess Pomfret, Rob Sewell
+#>
+function Get-FabricWorkspaceOutboundConnectionRule {
+    [CmdletBinding()]
+    param (
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
+        [ValidateNotNullOrEmpty()]
+        [string]$WorkspaceId,
+
+        [Parameter()]
+        [switch]$Raw
+    )
+
+    process {
+        try {
+            Invoke-FabricAuthCheck -ThrowOnFailure
+
+            $apiEndpointURI = New-FabricAPIUri -Resource 'workspaces' -WorkspaceId $WorkspaceId -Subresource 'networking/communicationPolicy/outbound/connections'
+            Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
+
+            $apiParams = @{
+                BaseURI = $apiEndpointURI
+                Headers = $script:FabricAuthContext.FabricHeaders
+                Method  = 'Get'
+            }
+            $response = Invoke-FabricAPIRequest @apiParams
+
+            if (-not $response) {
+                Write-FabricLog -Message "No outbound connection rules returned for workspace '$WorkspaceId'." -Level Warning
+                return $null
+            }
+
+            if ($Raw) {
+                return $response
+            }
+
+            $workspaceName = $WorkspaceId
+            try {
+                $workspaceName = Resolve-FabricWorkspaceName -WorkspaceId $WorkspaceId
+            }
+            catch {
+                Write-FabricLog -Message "Failed to resolve workspace name for ID '$WorkspaceId': $($_.Exception.Message)" -Level Debug
+            }
+
+            foreach ($item in $response) {
+                $item | Add-Member -NotePropertyName 'workspaceId'   -NotePropertyValue $WorkspaceId   -Force
+                $item | Add-Member -NotePropertyName 'WorkspaceName' -NotePropertyValue $workspaceName -Force
+            }
+
+            $response | Add-FabricTypeName -TypeName 'MicrosoftFabric.WorkspaceOutboundConnectionRule'
+            $response
+        }
+        catch {
+            $errorDetails = $_.Exception.Message
+            Write-FabricLog -Message "Failed to retrieve outbound connection rules for workspace '$WorkspaceId'. Error: $errorDetails" -Level Error
+        }
+    }
+}
+#EndRegion '.\Public\Workspace Networking\Get-FabricWorkspaceOutboundConnectionRule.ps1' 94
+#Region '.\Public\Workspace Networking\Get-FabricWorkspaceOutboundGatewayRule.ps1' -1
+
+<#
+.SYNOPSIS
+Retrieves the outbound gateway rules for a Microsoft Fabric workspace.
+
+.DESCRIPTION
+The Get-FabricWorkspaceOutboundGatewayRule function retrieves the outbound gateway rules
+for a workspace enabled with Outbound Access Protection (OAP) via GET to the Fabric
+`/workspaces/{workspaceId}/networking/communicationPolicy/outbound/gateways` endpoint.
+This feature is currently in preview.
+
+By default the returned object is enriched with the originating WorkspaceId (stamped from
+the parameter) and a resolved WorkspaceName, and decorated for the custom table view.
+Pass -Raw to return the untouched API response.
+
+.PARAMETER WorkspaceId
+The unique identifier of the workspace whose outbound gateway rules are retrieved. Mandatory.
+
+.PARAMETER Raw
+If specified, returns the untouched API response with no added properties or type decoration.
+
+.EXAMPLE
+Get-FabricWorkspaceOutboundGatewayRule -WorkspaceId "12345678-1234-1234-1234-123456789012"
+
+Returns the outbound gateway rules for the workspace, enriched with WorkspaceName.
+
+.OUTPUTS
+System.Object
+The outbound gateway rules object with all API-returned properties plus WorkspaceName when enriched.
+
+.NOTES
+- API Endpoint: GET /workspaces/{workspaceId}/networking/communicationPolicy/outbound/gateways
+- Requires: authentication via Set-FabricApiHeaders / Connect-FabricAccount.
+- Preview: this API is part of a Fabric Preview release.
+
+Author: Tiago Balabuch, Jess Pomfret, Rob Sewell
+#>
+function Get-FabricWorkspaceOutboundGatewayRule {
+    [CmdletBinding()]
+    param (
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
+        [ValidateNotNullOrEmpty()]
+        [string]$WorkspaceId,
+
+        [Parameter()]
+        [switch]$Raw
+    )
+
+    process {
+        try {
+            Invoke-FabricAuthCheck -ThrowOnFailure
+
+            $apiEndpointURI = New-FabricAPIUri -Resource 'workspaces' -WorkspaceId $WorkspaceId -Subresource 'networking/communicationPolicy/outbound/gateways'
+            Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
+
+            $apiParams = @{
+                BaseURI = $apiEndpointURI
+                Headers = $script:FabricAuthContext.FabricHeaders
+                Method  = 'Get'
+            }
+            $response = Invoke-FabricAPIRequest @apiParams
+
+            if (-not $response) {
+                Write-FabricLog -Message "No outbound gateway rules returned for workspace '$WorkspaceId'." -Level Warning
+                return $null
+            }
+
+            if ($Raw) {
+                return $response
+            }
+
+            $workspaceName = $WorkspaceId
+            try {
+                $workspaceName = Resolve-FabricWorkspaceName -WorkspaceId $WorkspaceId
+            }
+            catch {
+                Write-FabricLog -Message "Failed to resolve workspace name for ID '$WorkspaceId': $($_.Exception.Message)" -Level Debug
+            }
+
+            foreach ($item in $response) {
+                $item | Add-Member -NotePropertyName 'workspaceId'   -NotePropertyValue $WorkspaceId   -Force
+                $item | Add-Member -NotePropertyName 'WorkspaceName' -NotePropertyValue $workspaceName -Force
+            }
+
+            $response | Add-FabricTypeName -TypeName 'MicrosoftFabric.WorkspaceOutboundGatewayRule'
+            $response
+        }
+        catch {
+            $errorDetails = $_.Exception.Message
+            Write-FabricLog -Message "Failed to retrieve outbound gateway rules for workspace '$WorkspaceId'. Error: $errorDetails" -Level Error
+        }
+    }
+}
+#EndRegion '.\Public\Workspace Networking\Get-FabricWorkspaceOutboundGatewayRule.ps1' 93
+#Region '.\Public\Workspace Networking\Set-FabricWorkspaceGitOutboundPolicy.ps1' -1
+
+<#
+.SYNOPSIS
+Sets the Git outbound networking policy for a Microsoft Fabric workspace.
+
+.DESCRIPTION
+The Set-FabricWorkspaceGitOutboundPolicy function sets the Git outbound networking
+communication policy for a workspace via PUT to the Fabric
+`/workspaces/{workspaceId}/networking/communicationPolicy/outbound/git` endpoint.
+
+Because the request body schema is nested and evolving, the policy is supplied as a
+hashtable and passed through verbatim. This feature is currently in preview.
+
+.PARAMETER WorkspaceId
+The unique identifier of the workspace whose Git outbound policy is set. Mandatory.
+
+.PARAMETER GitPolicy
+A hashtable describing the Git outbound policy, passed through verbatim as the request body.
+
+.PARAMETER IfMatch
+Optional ETag value. When supplied, the call succeeds only if the resource's current ETag
+matches, providing optimistic-concurrency protection.
+
+.PARAMETER Raw
+If specified, returns the untouched API response with no added properties or type decoration.
+
+.EXAMPLE
+Set-FabricWorkspaceGitOutboundPolicy -WorkspaceId $ws -GitPolicy @{ defaultAction = 'Deny' }
+
+Restricts Git outbound access for the workspace.
+
+.OUTPUTS
+System.Object
+The API response returned after setting the policy.
+
+.NOTES
+- API Endpoint: PUT /workspaces/{workspaceId}/networking/communicationPolicy/outbound/git
+- Requires: authentication via Set-FabricApiHeaders / Connect-FabricAccount.
+- Preview: this API is part of a Fabric Preview release.
+
+Author: Tiago Balabuch, Jess Pomfret, Rob Sewell
+#>
+function Set-FabricWorkspaceGitOutboundPolicy {
+    [CmdletBinding(SupportsShouldProcess = $true, ConfirmImpact = 'High')]
+    param (
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
+        [ValidateNotNullOrEmpty()]
+        [string]$WorkspaceId,
+
+        [Parameter(Mandatory = $true)]
+        [ValidateNotNullOrEmpty()]
+        [Alias('Policy')]
+        [hashtable]$GitPolicy,
+
+        [Parameter(Mandatory = $false)]
+        [ValidateNotNullOrEmpty()]
+        [string]$IfMatch,
+
+        [Parameter()]
+        [switch]$Raw
+    )
+
+    process {
+        try {
+            Invoke-FabricAuthCheck -ThrowOnFailure
+
+            $apiEndpointURI = New-FabricAPIUri -Resource 'workspaces' -WorkspaceId $WorkspaceId -Subresource 'networking/communicationPolicy/outbound/git'
+            Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
+
+            $bodyJson = $GitPolicy | ConvertTo-Json -Depth 10
+            Write-FabricLog -Message "Request Body: $bodyJson" -Level Debug
+
+            # Clone the auth headers before adding If-Match so the shared context is not mutated.
+            $headers = $script:FabricAuthContext.FabricHeaders
+            if ($IfMatch) {
+                $headers = $script:FabricAuthContext.FabricHeaders.Clone()
+                $headers['If-Match'] = $IfMatch
+            }
+
+            $apiParams = @{
+                BaseURI = $apiEndpointURI
+                Headers = $headers
+                Method  = 'Put'
+                Body    = $bodyJson
+            }
+
+            if ($PSCmdlet.ShouldProcess($WorkspaceId, "Set workspace Git outbound policy")) {
+                $response = Invoke-FabricAPIRequest @apiParams
+
+                if ($Raw) {
+                    return $response
+                }
+
+                Write-FabricLog -Message "Git outbound policy for workspace '$WorkspaceId' set successfully!" -Level Host
+                return $response
+            }
+        }
+        catch {
+            $errorDetails = $_.Exception.Message
+            Write-FabricLog -Message "Failed to set Git outbound policy for workspace '$WorkspaceId'. Error: $errorDetails" -Level Error
+        }
+    }
+}
+#EndRegion '.\Public\Workspace Networking\Set-FabricWorkspaceGitOutboundPolicy.ps1' 103
+#Region '.\Public\Workspace Networking\Set-FabricWorkspaceNetworkCommunicationPolicy.ps1' -1
+
+<#
+.SYNOPSIS
+Sets the networking communication policy for a Microsoft Fabric workspace.
+
+.DESCRIPTION
+The Set-FabricWorkspaceNetworkCommunicationPolicy function sets the networking
+communication policy for a workspace via PUT to the Fabric
+`/workspaces/{workspaceId}/networking/communicationPolicy` endpoint.
+
+This API uses the PUT method and overwrites all settings; any omitted policy is reset to
+its default value. Always run Get-FabricWorkspaceNetworkCommunicationPolicy first and
+supply the full policy. Because the request body schema is nested and evolving, the policy
+is supplied as a hashtable and passed through verbatim. This feature is currently in preview.
+
+.PARAMETER WorkspaceId
+The unique identifier of the workspace whose networking communication policy is set. Mandatory.
+
+.PARAMETER CommunicationPolicy
+A hashtable describing the full networking communication policy, passed through verbatim as
+the request body, e.g.
+@{ inbound = @{ defaultAction = 'Allow' }; outbound = @{ publicAccessRules = @{ defaultAction = 'Deny' } } }
+
+.PARAMETER IfMatch
+Optional ETag value. When supplied, the call succeeds only if the resource's current ETag
+matches, providing optimistic-concurrency protection.
+
+.PARAMETER Raw
+If specified, returns the untouched API response with no added properties or type decoration.
+
+.EXAMPLE
+$policy = Get-FabricWorkspaceNetworkCommunicationPolicy -WorkspaceId $ws -Raw
+$policy.outbound.publicAccessRules.defaultAction = 'Deny'
+Set-FabricWorkspaceNetworkCommunicationPolicy -WorkspaceId $ws -CommunicationPolicy $policy
+
+Enables outbound access protection by denying public outbound access by default.
+
+.OUTPUTS
+System.Object
+The API response returned after setting the policy.
+
+.NOTES
+- API Endpoint: PUT /workspaces/{workspaceId}/networking/communicationPolicy
+- Requires: authentication via Set-FabricApiHeaders / Connect-FabricAccount.
+- Permissions: caller must have the admin workspace role.
+- Preview: this API is part of a Fabric Preview release.
+
+Author: Tiago Balabuch, Jess Pomfret, Rob Sewell
+#>
+function Set-FabricWorkspaceNetworkCommunicationPolicy {
+    [CmdletBinding(SupportsShouldProcess = $true, ConfirmImpact = 'High')]
+    param (
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
+        [ValidateNotNullOrEmpty()]
+        [string]$WorkspaceId,
+
+        [Parameter(Mandatory = $true)]
+        [ValidateNotNullOrEmpty()]
+        [Alias('Policy')]
+        [hashtable]$CommunicationPolicy,
+
+        [Parameter(Mandatory = $false)]
+        [ValidateNotNullOrEmpty()]
+        [string]$IfMatch,
+
+        [Parameter()]
+        [switch]$Raw
+    )
+
+    process {
+        try {
+            Invoke-FabricAuthCheck -ThrowOnFailure
+
+            $apiEndpointURI = New-FabricAPIUri -Resource 'workspaces' -WorkspaceId $WorkspaceId -Subresource 'networking/communicationPolicy'
+            Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
+
+            $bodyJson = $CommunicationPolicy | ConvertTo-Json -Depth 10
+            Write-FabricLog -Message "Request Body: $bodyJson" -Level Debug
+
+            # Clone the auth headers before adding If-Match so the shared context is not mutated.
+            $headers = $script:FabricAuthContext.FabricHeaders
+            if ($IfMatch) {
+                $headers = $script:FabricAuthContext.FabricHeaders.Clone()
+                $headers['If-Match'] = $IfMatch
+            }
+
+            $apiParams = @{
+                BaseURI = $apiEndpointURI
+                Headers = $headers
+                Method  = 'Put'
+                Body    = $bodyJson
+            }
+
+            if ($PSCmdlet.ShouldProcess($WorkspaceId, "Set workspace network communication policy")) {
+                $response = Invoke-FabricAPIRequest @apiParams
+
+                if ($Raw) {
+                    return $response
+                }
+
+                Write-FabricLog -Message "Network communication policy for workspace '$WorkspaceId' set successfully!" -Level Host
+                return $response
+            }
+        }
+        catch {
+            $errorDetails = $_.Exception.Message
+            Write-FabricLog -Message "Failed to set network communication policy for workspace '$WorkspaceId'. Error: $errorDetails" -Level Error
+        }
+    }
+}
+#EndRegion '.\Public\Workspace Networking\Set-FabricWorkspaceNetworkCommunicationPolicy.ps1' 110
+#Region '.\Public\Workspace Networking\Set-FabricWorkspaceOutboundConnectionRule.ps1' -1
+
+<#
+.SYNOPSIS
+Sets the outbound cloud connection rules for a Microsoft Fabric workspace.
+
+.DESCRIPTION
+The Set-FabricWorkspaceOutboundConnectionRule function sets the outbound cloud connection
+rules for a workspace enabled with Outbound Access Protection (OAP) via PUT to the Fabric
+`/workspaces/{workspaceId}/networking/communicationPolicy/outbound/connections` endpoint.
+
+Because the request body schema is nested and evolving, the rules are supplied as a
+hashtable and passed through verbatim. This feature is currently in preview.
+
+.PARAMETER WorkspaceId
+The unique identifier of the workspace whose outbound connection rules are set. Mandatory.
+
+.PARAMETER Connections
+A hashtable describing the outbound cloud connection rules, passed through verbatim as the
+request body, e.g. @{ value = @(@{ connectionId = '...' }) }
+
+.PARAMETER Raw
+If specified, returns the untouched API response with no added properties or type decoration.
+
+.EXAMPLE
+Set-FabricWorkspaceOutboundConnectionRule -WorkspaceId $ws -Connections @{ value = @(@{ connectionId = '3f2504e0-4f89-11d3-9a0c-0305e82c3301' }) }
+
+Allows the specified cloud connection for the OAP-enabled workspace.
+
+.OUTPUTS
+System.Object
+The API response returned after setting the rules.
+
+.NOTES
+- API Endpoint: PUT /workspaces/{workspaceId}/networking/communicationPolicy/outbound/connections
+- Requires: authentication via Set-FabricApiHeaders / Connect-FabricAccount.
+- Preview: this API is part of a Fabric Preview release.
+
+Author: Tiago Balabuch, Jess Pomfret, Rob Sewell
+#>
+function Set-FabricWorkspaceOutboundConnectionRule {
+    [CmdletBinding(SupportsShouldProcess = $true, ConfirmImpact = 'High')]
+    param (
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
+        [ValidateNotNullOrEmpty()]
+        [string]$WorkspaceId,
+
+        [Parameter(Mandatory = $true)]
+        [ValidateNotNullOrEmpty()]
+        [hashtable]$Connections,
+
+        [Parameter()]
+        [switch]$Raw
+    )
+
+    process {
+        try {
+            Invoke-FabricAuthCheck -ThrowOnFailure
+
+            $apiEndpointURI = New-FabricAPIUri -Resource 'workspaces' -WorkspaceId $WorkspaceId -Subresource 'networking/communicationPolicy/outbound/connections'
+            Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
+
+            $bodyJson = $Connections | ConvertTo-Json -Depth 10
+            Write-FabricLog -Message "Request Body: $bodyJson" -Level Debug
+
+            $apiParams = @{
+                BaseURI = $apiEndpointURI
+                Headers = $script:FabricAuthContext.FabricHeaders
+                Method  = 'Put'
+                Body    = $bodyJson
+            }
+
+            if ($PSCmdlet.ShouldProcess($WorkspaceId, "Set workspace outbound connection rules")) {
+                $response = Invoke-FabricAPIRequest @apiParams
+
+                if ($Raw) {
+                    return $response
+                }
+
+                Write-FabricLog -Message "Outbound connection rules for workspace '$WorkspaceId' set successfully!" -Level Host
+                return $response
+            }
+        }
+        catch {
+            $errorDetails = $_.Exception.Message
+            Write-FabricLog -Message "Failed to set outbound connection rules for workspace '$WorkspaceId'. Error: $errorDetails" -Level Error
+        }
+    }
+}
+#EndRegion '.\Public\Workspace Networking\Set-FabricWorkspaceOutboundConnectionRule.ps1' 88
+#Region '.\Public\Workspace Networking\Set-FabricWorkspaceOutboundGatewayRule.ps1' -1
+
+<#
+.SYNOPSIS
+Sets the outbound gateway rules for a Microsoft Fabric workspace.
+
+.DESCRIPTION
+The Set-FabricWorkspaceOutboundGatewayRule function sets the outbound gateway rules for a
+workspace enabled with Outbound Access Protection (OAP) via PUT to the Fabric
+`/workspaces/{workspaceId}/networking/communicationPolicy/outbound/gateways` endpoint.
+
+Because the request body schema is nested and evolving, the rules are supplied as a
+hashtable and passed through verbatim. This feature is currently in preview.
+
+.PARAMETER WorkspaceId
+The unique identifier of the workspace whose outbound gateway rules are set. Mandatory.
+
+.PARAMETER Gateways
+A hashtable describing the outbound gateway rules, passed through verbatim as the request
+body, e.g. @{ value = @(@{ gatewayId = '...' }) }
+
+.PARAMETER Raw
+If specified, returns the untouched API response with no added properties or type decoration.
+
+.EXAMPLE
+Set-FabricWorkspaceOutboundGatewayRule -WorkspaceId $ws -Gateways @{ value = @(@{ gatewayId = '3f2504e0-4f89-11d3-9a0c-0305e82c3301' }) }
+
+Allows the specified gateway for the OAP-enabled workspace.
+
+.OUTPUTS
+System.Object
+The API response returned after setting the rules.
+
+.NOTES
+- API Endpoint: PUT /workspaces/{workspaceId}/networking/communicationPolicy/outbound/gateways
+- Requires: authentication via Set-FabricApiHeaders / Connect-FabricAccount.
+- Preview: this API is part of a Fabric Preview release.
+
+Author: Tiago Balabuch, Jess Pomfret, Rob Sewell
+#>
+function Set-FabricWorkspaceOutboundGatewayRule {
+    [CmdletBinding(SupportsShouldProcess = $true, ConfirmImpact = 'High')]
+    param (
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
+        [ValidateNotNullOrEmpty()]
+        [string]$WorkspaceId,
+
+        [Parameter(Mandatory = $true)]
+        [ValidateNotNullOrEmpty()]
+        [hashtable]$Gateways,
+
+        [Parameter()]
+        [switch]$Raw
+    )
+
+    process {
+        try {
+            Invoke-FabricAuthCheck -ThrowOnFailure
+
+            $apiEndpointURI = New-FabricAPIUri -Resource 'workspaces' -WorkspaceId $WorkspaceId -Subresource 'networking/communicationPolicy/outbound/gateways'
+            Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
+
+            $bodyJson = $Gateways | ConvertTo-Json -Depth 10
+            Write-FabricLog -Message "Request Body: $bodyJson" -Level Debug
+
+            $apiParams = @{
+                BaseURI = $apiEndpointURI
+                Headers = $script:FabricAuthContext.FabricHeaders
+                Method  = 'Put'
+                Body    = $bodyJson
+            }
+
+            if ($PSCmdlet.ShouldProcess($WorkspaceId, "Set workspace outbound gateway rules")) {
+                $response = Invoke-FabricAPIRequest @apiParams
+
+                if ($Raw) {
+                    return $response
+                }
+
+                Write-FabricLog -Message "Outbound gateway rules for workspace '$WorkspaceId' set successfully!" -Level Host
+                return $response
+            }
+        }
+        catch {
+            $errorDetails = $_.Exception.Message
+            Write-FabricLog -Message "Failed to set outbound gateway rules for workspace '$WorkspaceId'. Error: $errorDetails" -Level Error
+        }
+    }
+}
+#EndRegion '.\Public\Workspace Networking\Set-FabricWorkspaceOutboundGatewayRule.ps1' 88
 #Region '.\Public\Workspace\Add-FabricWorkspaceCapacity.ps1' -1
 
 <#
