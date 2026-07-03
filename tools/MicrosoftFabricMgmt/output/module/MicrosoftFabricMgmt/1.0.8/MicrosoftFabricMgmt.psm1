@@ -11646,6 +11646,106 @@ function Get-FabricDataPipeline {
     }
 }
 #EndRegion '.\Public\Data Pipeline\Get-FabricDataPipeline.ps1' 86
+#Region '.\Public\Data Pipeline\Get-FabricDataPipelineDefinition.ps1' -1
+
+<#
+.SYNOPSIS
+Retrieves the public definition of a data pipeline from a Microsoft Fabric workspace.
+
+.DESCRIPTION
+The Get-FabricDataPipelineDefinition function sends a POST request to the
+/workspaces/{workspaceId}/dataPipelines/{dataPipelineId}/getDefinition endpoint to
+retrieve the public definition (parts) of a data pipeline. The definition parts are
+returned unchanged so callers can inspect or persist the pipeline content.
+
+.PARAMETER WorkspaceId
+(Mandatory) The unique identifier of the workspace containing the data pipeline.
+
+.PARAMETER DataPipelineId
+(Mandatory) The unique identifier of the data pipeline whose definition is retrieved.
+
+.PARAMETER Format
+(Optional) The format of the data pipeline public definition. When supplied it is
+appended as the ?format= query parameter.
+
+.PARAMETER Raw
+If specified, returns the untouched API response.
+
+.EXAMPLE
+Get-FabricDataPipelineDefinition -WorkspaceId "12345" -DataPipelineId "67890"
+
+Retrieves the definition of the data pipeline with ID 67890 from workspace 12345.
+
+.EXAMPLE
+Get-FabricDataPipelineDefinition -WorkspaceId "12345" -DataPipelineId "67890" -Raw
+
+Retrieves the untouched API response for the data pipeline definition.
+
+.OUTPUTS
+System.Object
+The data pipeline definition object, including its definition parts.
+
+.NOTES
+- API Endpoint: POST /workspaces/{workspaceId}/dataPipelines/{dataPipelineId}/getDefinition
+- Requires `$FabricAuthContext` global configuration, including BaseUrl and FabricHeaders.
+- Calls Invoke-FabricAuthCheck to ensure token validity before making the API request.
+
+Author: Tiago Balabuch, Jess Pomfret, Rob Sewell
+#>
+function Get-FabricDataPipelineDefinition {
+    [CmdletBinding()]
+    param (
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
+        [ValidateNotNullOrEmpty()]
+        [string]$WorkspaceId,
+
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
+        [ValidateNotNullOrEmpty()]
+        [Alias('id')]
+        [string]$DataPipelineId,
+
+        [Parameter(Mandatory = $false)]
+        [ValidateNotNullOrEmpty()]
+        [string]$Format,
+
+        [Parameter()]
+        [switch]$Raw
+    )
+
+    process {
+        try {
+            Invoke-FabricAuthCheck -ThrowOnFailure
+
+            # Construct the API endpoint URI, appending the format query parameter when supplied.
+            $segments = @('workspaces', $WorkspaceId, 'dataPipelines', $DataPipelineId, 'getDefinition')
+            $apiEndpointURI = New-FabricAPIUri -Segments $segments
+            if ($Format) {
+                $apiEndpointURI = "{0}?format={1}" -f $apiEndpointURI, $Format
+            }
+            Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
+
+            # Make the API request
+            $apiParams = @{
+                BaseURI = $apiEndpointURI
+                Headers = $script:FabricAuthContext.FabricHeaders
+                Method  = 'Post'
+            }
+            $response = Invoke-FabricAPIRequest @apiParams
+
+            if ($Raw) {
+                return $response
+            }
+
+            Write-FabricLog -Message "Data pipeline '$DataPipelineId' definition retrieved successfully!" -Level Debug
+            return $response
+        }
+        catch {
+            $errorDetails = $_.Exception.Message
+            Write-FabricLog -Message "Failed to retrieve Data Pipeline definition. Error: $errorDetails" -Level Error
+        }
+    }
+}
+#EndRegion '.\Public\Data Pipeline\Get-FabricDataPipelineDefinition.ps1' 98
 #Region '.\Public\Data Pipeline\New-FabricDataPipeline.ps1' -1
 
 <#
@@ -11915,6 +12015,129 @@ function Update-FabricDataPipeline {
     }
 }
 #EndRegion '.\Public\Data Pipeline\Update-FabricDataPipeline.ps1' 105
+#Region '.\Public\Data Pipeline\Update-FabricDataPipelineDefinition.ps1' -1
+
+<#
+.SYNOPSIS
+Updates the public definition of a data pipeline in a Microsoft Fabric workspace.
+
+.DESCRIPTION
+The Update-FabricDataPipelineDefinition function sends a POST request to the
+/workspaces/{workspaceId}/dataPipelines/{dataPipelineId}/updateDefinition endpoint to
+override the definition of an existing data pipeline. The definition is supplied as a
+hashtable (containing the definition parts) so any pipeline definition shape can be
+expressed. Optionally the item metadata can be updated from a supplied .platform part.
+
+.PARAMETER WorkspaceId
+(Mandatory) The unique identifier of the workspace containing the data pipeline.
+
+.PARAMETER DataPipelineId
+(Mandatory) The unique identifier of the data pipeline to update.
+
+.PARAMETER Definition
+(Mandatory) A hashtable describing the data pipeline definition, e.g.
+@{ parts = @(@{ path = 'pipeline-content.json'; payload = '<base64>'; payloadType = 'InlineBase64' }) }
+
+.PARAMETER UpdateMetadata
+(Optional) When specified, appends ?updateMetadata=true so the item's metadata is
+updated using the metadata in the supplied .platform file.
+
+.PARAMETER Raw
+If specified, returns the untouched API response.
+
+.EXAMPLE
+$definition = @{ parts = @(@{ path = 'pipeline-content.json'; payload = $encoded; payloadType = 'InlineBase64' }) }
+Update-FabricDataPipelineDefinition -WorkspaceId "12345" -DataPipelineId "67890" -Definition $definition
+
+Overrides the definition of the data pipeline with ID 67890 in workspace 12345.
+
+.EXAMPLE
+Update-FabricDataPipelineDefinition -WorkspaceId "12345" -DataPipelineId "67890" -Definition $definition -UpdateMetadata
+
+Overrides the definition and updates item metadata from the supplied .platform part.
+
+.OUTPUTS
+System.Object
+The API response from the update definition operation.
+
+.NOTES
+- API Endpoint: POST /workspaces/{workspaceId}/dataPipelines/{dataPipelineId}/updateDefinition
+- Requires `$FabricAuthContext` global configuration, including BaseUrl and FabricHeaders.
+- Calls Invoke-FabricAuthCheck to ensure token validity before making the API request.
+
+Author: Tiago Balabuch, Jess Pomfret, Rob Sewell
+#>
+function Update-FabricDataPipelineDefinition {
+    [CmdletBinding(SupportsShouldProcess = $true, ConfirmImpact = 'Medium')]
+    param (
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
+        [ValidateNotNullOrEmpty()]
+        [string]$WorkspaceId,
+
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
+        [ValidateNotNullOrEmpty()]
+        [Alias('id')]
+        [string]$DataPipelineId,
+
+        [Parameter(Mandatory = $true)]
+        [ValidateNotNullOrEmpty()]
+        [hashtable]$Definition,
+
+        [Parameter(Mandatory = $false)]
+        [switch]$UpdateMetadata,
+
+        [Parameter()]
+        [switch]$Raw
+    )
+
+    process {
+        try {
+            Invoke-FabricAuthCheck -ThrowOnFailure
+
+            # Construct the API endpoint URI, appending updateMetadata when requested.
+            $segments = @('workspaces', $WorkspaceId, 'dataPipelines', $DataPipelineId, 'updateDefinition')
+            $apiEndpointURI = New-FabricAPIUri -Segments $segments
+            if ($UpdateMetadata) {
+                $apiEndpointURI = "{0}?updateMetadata=true" -f $apiEndpointURI
+            }
+            Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
+
+            # Construct the request body. The supplied definition hashtable is passed
+            # through verbatim so any pipeline definition shape can be expressed.
+            $body = @{
+                definition = $Definition
+            }
+
+            $bodyJson = $body | ConvertTo-Json -Depth 10
+            Write-FabricLog -Message "Request Body: $bodyJson" -Level Debug
+
+            $apiParams = @{
+                BaseURI = $apiEndpointURI
+                Headers = $script:FabricAuthContext.FabricHeaders
+                Method  = 'Post'
+                Body    = $bodyJson
+            }
+
+            $target = "Data pipeline '$DataPipelineId' in workspace '$WorkspaceId'"
+            $action = "Update Data Pipeline definition"
+            if ($PSCmdlet.ShouldProcess($target, $action)) {
+                $response = Invoke-FabricAPIRequest @apiParams
+
+                if ($Raw) {
+                    return $response
+                }
+
+                Write-FabricLog -Message "Data pipeline definition '$DataPipelineId' updated successfully!" -Level Host
+                return $response
+            }
+        }
+        catch {
+            $errorDetails = $_.Exception.Message
+            Write-FabricLog -Message "Failed to update Data Pipeline definition. Error: $errorDetails" -Level Error
+        }
+    }
+}
+#EndRegion '.\Public\Data Pipeline\Update-FabricDataPipelineDefinition.ps1' 121
 #Region '.\Public\Dataflow\Get-FabricDataflow.ps1' -1
 
 <#
@@ -20604,6 +20827,100 @@ function Update-FabricEventstreamDefinition {
     }
 }
 #EndRegion '.\Public\Eventstream\Update-FabricEventstreamDefinition.ps1' 145
+#Region '.\Public\External Data Share\Approve-FabricExternalDataShareInvitation.ps1' -1
+
+<#
+.SYNOPSIS
+    Accepts a Microsoft Fabric external data share invitation into a target item.
+
+.DESCRIPTION
+    The Approve-FabricExternalDataShareInvitation function accepts an external data share
+    invitation via POST to the top-level Fabric endpoint
+    /externalDataShares/invitations/{invitationId}/accept
+    (ExternalDataSharesRecipient_AcceptExternalDataShareInvitation).
+
+    The request body (AcceptExternalDataShareInvitationRequest) is polymorphic - it carries
+    the provider tenant ID and a payload describing the target item / shortcut creation for
+    the accepted share. Because the payload varies, the full request body is supplied as a
+    hashtable and passed through verbatim so any accept scenario can be expressed.
+
+.PARAMETER InvitationId
+    The unique identifier of the external data share invitation to accept. Mandatory.
+
+.PARAMETER Body
+    A hashtable representing the AcceptExternalDataShareInvitationRequest payload, passed
+    through verbatim as the request body. Typically includes fields such as providerTenantId
+    and a payload / target item definition. Mandatory.
+
+.EXAMPLE
+    $request = @{
+        providerTenantId = '99999999-9999-9999-9999-999999999999'
+        payload = @{
+            payloadType = 'ShortcutCreation'
+            item = @{ workspaceId = 'ws-1'; id = 'item-1' }
+            path = 'Files'
+        }
+    }
+    Approve-FabricExternalDataShareInvitation -InvitationId "11111111-2222-3333-4444-555555555555" -Body $request
+
+    Accepts the invitation, creating the share in the specified target item.
+
+.OUTPUTS
+    System.Object
+    The API response returned after accepting the invitation.
+
+.NOTES
+    - API Endpoint: POST /externalDataShares/invitations/{invitationId}/accept
+    - Requires: authentication via Set-FabricApiHeaders / Connect-FabricAccount.
+
+    Author: Tiago Balabuch, Jess Pomfret, Rob Sewell
+#>
+function Approve-FabricExternalDataShareInvitation {
+    [CmdletBinding(SupportsShouldProcess = $true, ConfirmImpact = 'Medium')]
+    param (
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
+        [ValidateNotNullOrEmpty()]
+        [Alias('id')]
+        [string]$InvitationId,
+
+        [Parameter(Mandatory = $true)]
+        [ValidateNotNullOrEmpty()]
+        [hashtable]$Body
+    )
+
+    process {
+        try {
+            Invoke-FabricAuthCheck -ThrowOnFailure
+
+            # Top-level invitation accept path; all segments are mandatory and non-null.
+            $segments = @('externalDataShares', 'invitations', $InvitationId, 'accept')
+            $apiEndpointURI = New-FabricAPIUri -Segments $segments
+            Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
+
+            # The accept request body is polymorphic; pass it through verbatim.
+            $bodyJson = $Body | ConvertTo-Json -Depth 10
+            Write-FabricLog -Message "Request Body: $bodyJson" -Level Debug
+
+            $apiParams = @{
+                BaseURI = $apiEndpointURI
+                Headers = $script:FabricAuthContext.FabricHeaders
+                Method  = 'Post'
+                Body    = $bodyJson
+            }
+
+            if ($PSCmdlet.ShouldProcess($InvitationId, "Accept external data share invitation")) {
+                $response = Invoke-FabricAPIRequest @apiParams
+                Write-FabricLog -Message "External data share invitation '$InvitationId' accepted successfully!" -Level Host
+                $response
+            }
+        }
+        catch {
+            $errorDetails = $_.Exception.Message
+            Write-FabricLog -Message "Failed to accept external data share invitation '$InvitationId'. Error: $errorDetails" -Level Error
+        }
+    }
+}
+#EndRegion '.\Public\External Data Share\Approve-FabricExternalDataShareInvitation.ps1' 92
 #Region '.\Public\External Data Share\Get-FabricExternalDataShare.ps1' -1
 
 <#
@@ -20668,6 +20985,327 @@ function Get-FabricExternalDataShare {
     }
 }
 #EndRegion '.\Public\External Data Share\Get-FabricExternalDataShare.ps1' 62
+#Region '.\Public\External Data Share\Get-FabricExternalDataShareInvitation.ps1' -1
+
+<#
+.SYNOPSIS
+    Retrieves details about a Microsoft Fabric external data share invitation.
+
+.DESCRIPTION
+    The Get-FabricExternalDataShareInvitation function returns information about an external
+    data share invitation via GET to the top-level Fabric endpoint
+    /externalDataShares/invitations/{invitationId}
+    (ExternalDataSharesRecipient_GetExternalDataShareInvitationDetails).
+
+    The provider tenant ID is a required query parameter for this operation.
+
+    By default the returned object is decorated for the custom table view. Pass -Raw to
+    return the untouched API response.
+
+.PARAMETER InvitationId
+    The unique identifier of the external data share invitation. Mandatory.
+
+.PARAMETER ProviderTenantId
+    The tenant ID of the external data share provider. Required query parameter for the API.
+
+.PARAMETER Raw
+    If specified, returns the untouched API response with no type decoration.
+
+.EXAMPLE
+    Get-FabricExternalDataShareInvitation -InvitationId "11111111-2222-3333-4444-555555555555" -ProviderTenantId "99999999-9999-9999-9999-999999999999"
+
+    Retrieves details of the external data share invitation from the specified provider tenant.
+
+.OUTPUTS
+    System.Object
+    The external data share invitation details object with all API-returned properties.
+
+.NOTES
+    - API Endpoint: GET /externalDataShares/invitations/{invitationId}?providerTenantId={providerTenantId}
+    - Requires: authentication via Set-FabricApiHeaders / Connect-FabricAccount.
+
+    Author: Tiago Balabuch, Jess Pomfret, Rob Sewell
+#>
+function Get-FabricExternalDataShareInvitation {
+    [CmdletBinding()]
+    param (
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
+        [ValidateNotNullOrEmpty()]
+        [Alias('id')]
+        [string]$InvitationId,
+
+        [Parameter(Mandatory = $true)]
+        [ValidateNotNullOrEmpty()]
+        [string]$ProviderTenantId,
+
+        [Parameter()]
+        [switch]$Raw
+    )
+
+    process {
+        try {
+            Invoke-FabricAuthCheck -ThrowOnFailure
+
+            # Top-level invitation path; providerTenantId is a required query parameter.
+            $segments = @('externalDataShares', 'invitations', $InvitationId)
+            $queryParameters = @{ providerTenantId = $ProviderTenantId }
+            $apiEndpointURI = New-FabricAPIUri -Segments $segments -QueryParameters $queryParameters
+            Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
+
+            $apiParams = @{
+                BaseURI = $apiEndpointURI
+                Headers = $script:FabricAuthContext.FabricHeaders
+                Method  = 'Get'
+            }
+            $response = Invoke-FabricAPIRequest @apiParams
+
+            if (-not $response) {
+                Write-FabricLog -Message "No external data share invitation found with ID '$InvitationId'." -Level Warning
+                return $null
+            }
+
+            if ($Raw) {
+                return $response
+            }
+
+            $response | Add-FabricTypeName -TypeName 'MicrosoftFabric.ExternalDataShareInvitation'
+            $response
+        }
+        catch {
+            $errorDetails = $_.Exception.Message
+            Write-FabricLog -Message "Failed to retrieve external data share invitation '$InvitationId'. Error: $errorDetails" -Level Error
+        }
+    }
+}
+#EndRegion '.\Public\External Data Share\Get-FabricExternalDataShareInvitation.ps1' 91
+#Region '.\Public\External Data Share\New-FabricExternalDataShare.ps1' -1
+
+<#
+.SYNOPSIS
+    Creates an external data share for a path or list of paths in a Microsoft Fabric item.
+
+.DESCRIPTION
+    The New-FabricExternalDataShare function creates an external data share via POST to the
+    Fabric endpoint /workspaces/{workspaceId}/items/{itemId}/externalDataShares
+    (ExternalDataSharesProvider_CreateExternalDataShare).
+
+    The request body (CreateExternalDataShareRequest) carries the list of item-relative
+    paths to share and the recipient details. Because the recipient portion can vary, the
+    recipient is supplied as a hashtable and an optional -Properties hashtable is merged
+    into the body verbatim so any additional request fields can be expressed.
+
+    By default the created object is enriched with the originating WorkspaceId (stamped from
+    the parameter), a resolved WorkspaceName, and decorated for the custom table view. Pass
+    -Raw to return the untouched API response.
+
+.PARAMETER WorkspaceId
+    The unique identifier of the workspace containing the item. Mandatory.
+
+.PARAMETER ItemId
+    The unique identifier of the item to share data from. Mandatory.
+
+.PARAMETER Paths
+    One or more item-relative paths to share (CreateExternalDataShareRequest.paths). Mandatory.
+
+.PARAMETER Recipient
+    A hashtable describing the recipient (CreateExternalDataShareRequest.recipient), e.g.
+    @{ userPrincipalName = 'user@contoso.com'; tenantId = '00000000-0000-0000-0000-000000000000' }.
+    Mandatory.
+
+.PARAMETER Properties
+    Optional hashtable of additional request fields merged into the body verbatim. Use this
+    for any CreateExternalDataShareRequest fields not exposed as dedicated parameters.
+
+.PARAMETER Raw
+    If specified, returns the untouched API response with no added properties or type decoration.
+
+.EXAMPLE
+    New-FabricExternalDataShare -WorkspaceId "12345678-1234-1234-1234-123456789012" -ItemId "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee" -Paths 'Files/shared' -Recipient @{ userPrincipalName = 'user@contoso.com'; tenantId = '99999999-9999-9999-9999-999999999999' }
+
+    Creates an external data share of the 'Files/shared' path for the specified recipient.
+
+.OUTPUTS
+    System.Object
+    The created external data share object with all API-returned properties plus WorkspaceName when enriched.
+
+.NOTES
+    - API Endpoint: POST /workspaces/{workspaceId}/items/{itemId}/externalDataShares
+    - Requires: authentication via Set-FabricApiHeaders / Connect-FabricAccount.
+
+    Author: Tiago Balabuch, Jess Pomfret, Rob Sewell
+#>
+function New-FabricExternalDataShare {
+    [CmdletBinding(SupportsShouldProcess = $true, ConfirmImpact = 'Medium')]
+    param (
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
+        [ValidateNotNullOrEmpty()]
+        [string]$WorkspaceId,
+
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
+        [ValidateNotNullOrEmpty()]
+        [string]$ItemId,
+
+        [Parameter(Mandatory = $true)]
+        [ValidateNotNullOrEmpty()]
+        [string[]]$Paths,
+
+        [Parameter(Mandatory = $true)]
+        [ValidateNotNullOrEmpty()]
+        [hashtable]$Recipient,
+
+        [Parameter(Mandatory = $false)]
+        [hashtable]$Properties,
+
+        [Parameter()]
+        [switch]$Raw
+    )
+
+    process {
+        try {
+            Invoke-FabricAuthCheck -ThrowOnFailure
+
+            # Build the segment list explicitly; all segments are mandatory and non-null.
+            $segments = @('workspaces', $WorkspaceId, 'items', $ItemId, 'externalDataShares')
+            $apiEndpointURI = New-FabricAPIUri -Segments $segments
+            Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
+
+            # Construct the request body. The recipient (and any extra Properties) are passed
+            # through verbatim so the polymorphic parts of the schema can be expressed.
+            $body = @{
+                paths     = $Paths
+                recipient = $Recipient
+            }
+            if ($Properties) {
+                foreach ($key in $Properties.Keys) {
+                    $body[$key] = $Properties[$key]
+                }
+            }
+
+            $bodyJson = $body | ConvertTo-Json -Depth 10
+            Write-FabricLog -Message "Request Body: $bodyJson" -Level Debug
+
+            $apiParams = @{
+                BaseURI = $apiEndpointURI
+                Headers = $script:FabricAuthContext.FabricHeaders
+                Method  = 'Post'
+                Body    = $bodyJson
+            }
+
+            if ($PSCmdlet.ShouldProcess($ItemId, "Create external data share in workspace '$WorkspaceId'")) {
+                $response = Invoke-FabricAPIRequest @apiParams
+
+                if (-not $response) {
+                    Write-FabricLog -Message "No response returned after creating external data share for item '$ItemId'." -Level Warning
+                    return $null
+                }
+
+                if ($Raw) {
+                    return $response
+                }
+
+                # Resolve the workspace display name for the created share.
+                $workspaceName = $WorkspaceId
+                try {
+                    $workspaceName = Resolve-FabricWorkspaceName -WorkspaceId $WorkspaceId
+                }
+                catch {
+                    Write-FabricLog -Message "Failed to resolve workspace name for ID '$WorkspaceId': $($_.Exception.Message)" -Level Debug
+                }
+
+                $response | Add-Member -NotePropertyName 'workspaceId'   -NotePropertyValue $WorkspaceId   -Force
+                $response | Add-Member -NotePropertyName 'WorkspaceName' -NotePropertyValue $workspaceName -Force
+
+                $response | Add-FabricTypeName -TypeName 'MicrosoftFabric.ExternalDataShare'
+                Write-FabricLog -Message "External data share created successfully for item '$ItemId'!" -Level Host
+                return $response
+            }
+        }
+        catch {
+            $errorDetails = $_.Exception.Message
+            Write-FabricLog -Message "Failed to create external data share for item '$ItemId'. Error: $errorDetails" -Level Error
+        }
+    }
+}
+#EndRegion '.\Public\External Data Share\New-FabricExternalDataShare.ps1' 147
+#Region '.\Public\External Data Share\Remove-FabricExternalDataShare.ps1' -1
+
+<#
+.SYNOPSIS
+    Deletes an external data share from a Microsoft Fabric workspace item.
+
+.DESCRIPTION
+    The Remove-FabricExternalDataShare function deletes an external data share via DELETE to
+    the Fabric endpoint
+    /workspaces/{workspaceId}/items/{itemId}/externalDataShares/{externalDataShareId}
+    (ExternalDataSharesProvider_DeleteExternalDataShare).
+
+    This is distinct from Revoke-FabricExternalDataShare, which revokes an active share via
+    the admin revoke endpoint. Deleting removes the external data share record entirely.
+
+.PARAMETER WorkspaceId
+    The unique identifier of the workspace containing the item. Mandatory.
+
+.PARAMETER ItemId
+    The unique identifier of the item that owns the external data share. Mandatory.
+
+.PARAMETER ExternalDataShareId
+    The unique identifier of the external data share to delete. Mandatory.
+
+.EXAMPLE
+    Remove-FabricExternalDataShare -WorkspaceId "12345678-1234-1234-1234-123456789012" -ItemId "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee" -ExternalDataShareId "ffffffff-1111-2222-3333-444444444444"
+
+    Deletes the specified external data share from the workspace item.
+
+.NOTES
+    - API Endpoint: DELETE /workspaces/{workspaceId}/items/{itemId}/externalDataShares/{externalDataShareId}
+    - Requires: authentication via Set-FabricApiHeaders / Connect-FabricAccount.
+
+    Author: Tiago Balabuch, Jess Pomfret, Rob Sewell
+#>
+function Remove-FabricExternalDataShare {
+    [CmdletBinding(SupportsShouldProcess = $true, ConfirmImpact = 'High')]
+    param (
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
+        [ValidateNotNullOrEmpty()]
+        [string]$WorkspaceId,
+
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
+        [ValidateNotNullOrEmpty()]
+        [string]$ItemId,
+
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
+        [ValidateNotNullOrEmpty()]
+        [Alias('id')]
+        [string]$ExternalDataShareId
+    )
+
+    process {
+        try {
+            Invoke-FabricAuthCheck -ThrowOnFailure
+
+            # Build the segment list explicitly; all segments are mandatory and non-null.
+            $segments = @('workspaces', $WorkspaceId, 'items', $ItemId, 'externalDataShares', $ExternalDataShareId)
+            $apiEndpointURI = New-FabricAPIUri -Segments $segments
+            Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
+
+            $apiParams = @{
+                BaseURI = $apiEndpointURI
+                Headers = $script:FabricAuthContext.FabricHeaders
+                Method  = 'Delete'
+            }
+
+            if ($PSCmdlet.ShouldProcess($ExternalDataShareId, "Delete external data share for item '$ItemId' in workspace '$WorkspaceId'")) {
+                $null = Invoke-FabricAPIRequest @apiParams
+                Write-FabricLog -Message "External data share '$ExternalDataShareId' deleted successfully!" -Level Host
+            }
+        }
+        catch {
+            $errorDetails = $_.Exception.Message
+            Write-FabricLog -Message "Failed to delete external data share '$ExternalDataShareId'. Error: $errorDetails" -Level Error
+        }
+    }
+}
+#EndRegion '.\Public\External Data Share\Remove-FabricExternalDataShare.ps1' 77
 #Region '.\Public\External Data Share\Revoke-FabricExternalDataShare.ps1' -1
 
 <#
@@ -31762,6 +32400,205 @@ function Update-FabricMLExperiment {
     }
 }
 #EndRegion '.\Public\ML Experiment\Update-FabricMLExperiment.ps1' 109
+#Region '.\Public\ML Model\Disable-FabricMLModelEndpointVersion.ps1' -1
+
+<#
+.SYNOPSIS
+    Deactivates endpoint version(s) of a Microsoft Fabric ML Model.
+
+.DESCRIPTION
+    The Disable-FabricMLModelEndpointVersion function deactivates machine learning model
+    endpoint versions.
+
+    When -VersionName is supplied it deactivates that single version via POST to
+    /workspaces/{workspaceId}/mlmodels/{modelId}/endpoint/versions/{name}/deactivate.
+
+    When -All is supplied instead it deactivates every version for the model via POST to
+    /workspaces/{workspaceId}/mlmodels/{modelId}/endpoint/versions/deactivateAll.
+
+    Exactly one of -VersionName or -All must be supplied.
+
+    These are long-running operations; the response is returned as-is.
+
+.PARAMETER WorkspaceId
+    The unique identifier of the workspace containing the ML Model. Mandatory.
+
+.PARAMETER MLModelId
+    The unique identifier of the ML Model whose endpoint version(s) are deactivated. Mandatory.
+
+.PARAMETER VersionName
+    The name of a single endpoint version to deactivate. Mutually exclusive with -All.
+
+.PARAMETER All
+    Deactivate all endpoint versions for the model. Mutually exclusive with -VersionName.
+
+.EXAMPLE
+    Disable-FabricMLModelEndpointVersion -WorkspaceId $ws -MLModelId $model -VersionName '3'
+
+    Deactivates version '3' of the ML Model endpoint.
+
+.EXAMPLE
+    Disable-FabricMLModelEndpointVersion -WorkspaceId $ws -MLModelId $model -All
+
+    Deactivates all endpoint versions for the ML Model.
+
+.OUTPUTS
+    System.Object
+    The API response for the deactivation operation (long-running operation tracking data).
+
+.NOTES
+    - API Endpoints:
+        POST /workspaces/{workspaceId}/mlmodels/{modelId}/endpoint/versions/{name}/deactivate
+        POST /workspaces/{workspaceId}/mlmodels/{modelId}/endpoint/versions/deactivateAll
+    - Requires: authentication via Set-FabricApiHeaders / Connect-FabricAccount.
+
+    Author: Tiago Balabuch, Jess Pomfret, Rob Sewell
+#>
+function Disable-FabricMLModelEndpointVersion {
+    [CmdletBinding(SupportsShouldProcess = $true, ConfirmImpact = 'Medium')]
+    param (
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
+        [ValidateNotNullOrEmpty()]
+        [string]$WorkspaceId,
+
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
+        [ValidateNotNullOrEmpty()]
+        [string]$MLModelId,
+
+        [Parameter(Mandatory = $false)]
+        [ValidateNotNullOrEmpty()]
+        [string]$VersionName,
+
+        [Parameter(Mandatory = $false)]
+        [switch]$All
+    )
+
+    process {
+        # Enforce that exactly one of -VersionName or -All is supplied. This validation is
+        # intentionally outside the try/catch so the error propagates to the caller instead
+        # of being logged and swallowed.
+        if ($VersionName -and $All) {
+            throw "Specify only one of -VersionName or -All, not both."
+        }
+        if (-not $VersionName -and -not $All) {
+            throw "You must specify either -VersionName or -All."
+        }
+
+        try {
+            Invoke-FabricAuthCheck -ThrowOnFailure
+
+            if ($All) {
+                $segments = @('workspaces', $WorkspaceId, 'mlmodels', $MLModelId, 'endpoint', 'versions', 'deactivateAll')
+                $target = "all versions"
+            }
+            else {
+                $segments = @('workspaces', $WorkspaceId, 'mlmodels', $MLModelId, 'endpoint', 'versions', $VersionName, 'deactivate')
+                $target = "version '$VersionName'"
+            }
+            $apiEndpointURI = New-FabricAPIUri -Segments $segments
+            Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
+
+            $apiParams = @{
+                BaseURI = $apiEndpointURI
+                Headers = $script:FabricAuthContext.FabricHeaders
+                Method  = 'Post'
+            }
+
+            if ($PSCmdlet.ShouldProcess($MLModelId, "Deactivate Fabric ML Model endpoint $target")) {
+                $response = Invoke-FabricAPIRequest @apiParams
+
+                Write-FabricLog -Message "Deactivation of $target for ML Model '$MLModelId' requested." -Level Host
+                return $response
+            }
+        }
+        catch {
+            $errorDetails = $_.Exception.Message
+            Write-FabricLog -Message "Failed to deactivate endpoint version(s) for ML Model '$MLModelId'. Error: $errorDetails" -Level Error
+        }
+    }
+}
+#EndRegion '.\Public\ML Model\Disable-FabricMLModelEndpointVersion.ps1' 116
+#Region '.\Public\ML Model\Enable-FabricMLModelEndpointVersion.ps1' -1
+
+<#
+.SYNOPSIS
+    Activates a specific endpoint version of a Microsoft Fabric ML Model.
+
+.DESCRIPTION
+    The Enable-FabricMLModelEndpointVersion function activates a machine learning model
+    endpoint version so it can serve scoring requests, via POST to
+    /workspaces/{workspaceId}/mlmodels/{modelId}/endpoint/versions/{name}/activate.
+
+    This is a long-running operation; the response is returned as-is.
+
+.PARAMETER WorkspaceId
+    The unique identifier of the workspace containing the ML Model. Mandatory.
+
+.PARAMETER MLModelId
+    The unique identifier of the ML Model whose endpoint version is activated. Mandatory.
+
+.PARAMETER VersionName
+    The name of the endpoint version to activate. Mandatory.
+
+.EXAMPLE
+    Enable-FabricMLModelEndpointVersion -WorkspaceId $ws -MLModelId $model -VersionName '3'
+
+    Activates version '3' of the ML Model endpoint.
+
+.OUTPUTS
+    System.Object
+    The API response for the activation operation (long-running operation tracking data).
+
+.NOTES
+    - API Endpoint: POST /workspaces/{workspaceId}/mlmodels/{modelId}/endpoint/versions/{name}/activate
+    - Requires: authentication via Set-FabricApiHeaders / Connect-FabricAccount.
+
+    Author: Tiago Balabuch, Jess Pomfret, Rob Sewell
+#>
+function Enable-FabricMLModelEndpointVersion {
+    [CmdletBinding(SupportsShouldProcess = $true, ConfirmImpact = 'Medium')]
+    param (
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
+        [ValidateNotNullOrEmpty()]
+        [string]$WorkspaceId,
+
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
+        [ValidateNotNullOrEmpty()]
+        [string]$MLModelId,
+
+        [Parameter(Mandatory = $true)]
+        [ValidateNotNullOrEmpty()]
+        [string]$VersionName
+    )
+
+    process {
+        try {
+            Invoke-FabricAuthCheck -ThrowOnFailure
+
+            $segments = @('workspaces', $WorkspaceId, 'mlmodels', $MLModelId, 'endpoint', 'versions', $VersionName, 'activate')
+            $apiEndpointURI = New-FabricAPIUri -Segments $segments
+            Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
+
+            $apiParams = @{
+                BaseURI = $apiEndpointURI
+                Headers = $script:FabricAuthContext.FabricHeaders
+                Method  = 'Post'
+            }
+
+            if ($PSCmdlet.ShouldProcess($VersionName, "Activate Fabric ML Model endpoint version")) {
+                $response = Invoke-FabricAPIRequest @apiParams
+
+                Write-FabricLog -Message "Endpoint version '$VersionName' for ML Model '$MLModelId' activation requested." -Level Host
+                return $response
+            }
+        }
+        catch {
+            $errorDetails = $_.Exception.Message
+            Write-FabricLog -Message "Failed to activate endpoint version '$VersionName' for ML Model '$MLModelId'. Error: $errorDetails" -Level Error
+        }
+    }
+}
+#EndRegion '.\Public\ML Model\Enable-FabricMLModelEndpointVersion.ps1' 79
 #Region '.\Public\ML Model\Get-FabricMLModel.ps1' -1
 
 <#
@@ -31859,6 +32696,436 @@ function Get-FabricMLModel {
 
 }
 #EndRegion '.\Public\ML Model\Get-FabricMLModel.ps1' 95
+#Region '.\Public\ML Model\Get-FabricMLModelEndpoint.ps1' -1
+
+<#
+.SYNOPSIS
+    Retrieves the endpoint of a Microsoft Fabric ML Model.
+
+.DESCRIPTION
+    The Get-FabricMLModelEndpoint function retrieves the serving endpoint for a specific
+    machine learning model via GET to
+    /workspaces/{workspaceId}/mlmodels/{modelId}/endpoint.
+
+    By default the returned object is enriched with the originating WorkspaceId (stamped
+    from the parameter) and a resolved WorkspaceName, and decorated for the custom table
+    view. Pass -Raw to return the untouched API response.
+
+.PARAMETER WorkspaceId
+    The unique identifier of the workspace containing the ML Model. Mandatory.
+
+.PARAMETER MLModelId
+    The unique identifier of the ML Model whose endpoint is retrieved. Mandatory.
+
+.PARAMETER Raw
+    If specified, returns the untouched API response with no added properties or type decoration.
+
+.EXAMPLE
+    Get-FabricMLModelEndpoint -WorkspaceId "12345678-1234-1234-1234-123456789012" -MLModelId "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee"
+
+    Retrieves the ML Model endpoint, enriched with WorkspaceName.
+
+.OUTPUTS
+    System.Object
+    The ML Model endpoint object with all API-returned properties plus WorkspaceName when enriched.
+
+.NOTES
+    - API Endpoint: GET /workspaces/{workspaceId}/mlmodels/{modelId}/endpoint
+    - Requires: authentication via Set-FabricApiHeaders / Connect-FabricAccount.
+
+    Author: Tiago Balabuch, Jess Pomfret, Rob Sewell
+#>
+function Get-FabricMLModelEndpoint {
+    [CmdletBinding()]
+    param (
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
+        [ValidateNotNullOrEmpty()]
+        [string]$WorkspaceId,
+
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
+        [ValidateNotNullOrEmpty()]
+        [string]$MLModelId,
+
+        [Parameter()]
+        [switch]$Raw
+    )
+
+    process {
+        try {
+            Invoke-FabricAuthCheck -ThrowOnFailure
+
+            $segments = @('workspaces', $WorkspaceId, 'mlmodels', $MLModelId, 'endpoint')
+            $apiEndpointURI = New-FabricAPIUri -Segments $segments
+            Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
+
+            $apiParams = @{
+                BaseURI = $apiEndpointURI
+                Headers = $script:FabricAuthContext.FabricHeaders
+                Method  = 'Get'
+            }
+            $response = Invoke-FabricAPIRequest @apiParams
+
+            if (-not $response) {
+                Write-FabricLog -Message "No endpoint returned for ML Model '$MLModelId'." -Level Warning
+                return $null
+            }
+
+            if ($Raw) {
+                return $response
+            }
+
+            # Resolve the workspace display name once for all returned objects.
+            $workspaceName = $WorkspaceId
+            try {
+                $workspaceName = Resolve-FabricWorkspaceName -WorkspaceId $WorkspaceId
+            }
+            catch {
+                Write-FabricLog -Message "Failed to resolve workspace name for ID '$WorkspaceId': $($_.Exception.Message)" -Level Debug
+            }
+
+            foreach ($endpoint in $response) {
+                $endpoint | Add-Member -NotePropertyName 'workspaceId'   -NotePropertyValue $WorkspaceId   -Force
+                $endpoint | Add-Member -NotePropertyName 'WorkspaceName' -NotePropertyValue $workspaceName -Force
+            }
+
+            $response | Add-FabricTypeName -TypeName 'MicrosoftFabric.MLModelEndpoint'
+            $response
+        }
+        catch {
+            $errorDetails = $_.Exception.Message
+            Write-FabricLog -Message "Failed to retrieve endpoint for ML Model '$MLModelId'. Error: $errorDetails" -Level Error
+        }
+    }
+}
+#EndRegion '.\Public\ML Model\Get-FabricMLModelEndpoint.ps1' 100
+#Region '.\Public\ML Model\Get-FabricMLModelEndpointVersion.ps1' -1
+
+<#
+.SYNOPSIS
+    Retrieves endpoint version(s) of a Microsoft Fabric ML Model.
+
+.DESCRIPTION
+    The Get-FabricMLModelEndpointVersion function retrieves machine learning model endpoint
+    versions.
+
+    When -VersionName is supplied it returns the single matching version via
+    /workspaces/{workspaceId}/mlmodels/{modelId}/endpoint/versions/{name}; otherwise it
+    lists all versions via
+    /workspaces/{workspaceId}/mlmodels/{modelId}/endpoint/versions.
+
+    By default each returned object is enriched with the originating WorkspaceId (stamped
+    from the parameter) and a resolved WorkspaceName, and decorated for the custom table
+    view. Pass -Raw to return the untouched API response.
+
+.PARAMETER WorkspaceId
+    The unique identifier of the workspace containing the ML Model. Mandatory.
+
+.PARAMETER MLModelId
+    The unique identifier of the ML Model whose endpoint versions are retrieved. Mandatory.
+
+.PARAMETER VersionName
+    Optional. The name of a single endpoint version to retrieve.
+
+.PARAMETER Raw
+    If specified, returns the untouched API response with no added properties or type decoration.
+
+.EXAMPLE
+    Get-FabricMLModelEndpointVersion -WorkspaceId $ws -MLModelId $model
+
+    Lists all endpoint versions for the ML Model, enriched with WorkspaceName.
+
+.EXAMPLE
+    Get-FabricMLModelEndpointVersion -WorkspaceId $ws -MLModelId $model -VersionName '3'
+
+    Returns the single endpoint version named '3'.
+
+.OUTPUTS
+    System.Object
+    Endpoint version object(s) with all API-returned properties plus WorkspaceName when enriched.
+
+.NOTES
+    - API Endpoints:
+        GET /workspaces/{workspaceId}/mlmodels/{modelId}/endpoint/versions
+        GET /workspaces/{workspaceId}/mlmodels/{modelId}/endpoint/versions/{name}
+    - Requires: authentication via Set-FabricApiHeaders / Connect-FabricAccount.
+
+    Author: Tiago Balabuch, Jess Pomfret, Rob Sewell
+#>
+function Get-FabricMLModelEndpointVersion {
+    [CmdletBinding()]
+    param (
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
+        [ValidateNotNullOrEmpty()]
+        [string]$WorkspaceId,
+
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
+        [ValidateNotNullOrEmpty()]
+        [string]$MLModelId,
+
+        [Parameter(Mandatory = $false)]
+        [ValidateNotNullOrEmpty()]
+        [string]$VersionName,
+
+        [Parameter()]
+        [switch]$Raw
+    )
+
+    process {
+        try {
+            Invoke-FabricAuthCheck -ThrowOnFailure
+
+            # Build the segment list, appending VersionName only when a single version is requested.
+            $segments = @('workspaces', $WorkspaceId, 'mlmodels', $MLModelId, 'endpoint', 'versions')
+            if ($VersionName) { $segments += $VersionName }
+            $apiEndpointURI = New-FabricAPIUri -Segments $segments
+            Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
+
+            $apiParams = @{
+                BaseURI = $apiEndpointURI
+                Headers = $script:FabricAuthContext.FabricHeaders
+                Method  = 'Get'
+            }
+            $response = Invoke-FabricAPIRequest @apiParams
+
+            if (-not $response) {
+                Write-FabricLog -Message "No endpoint versions returned for ML Model '$MLModelId'." -Level Warning
+                return $null
+            }
+
+            if ($Raw) {
+                return $response
+            }
+
+            # Resolve the workspace display name once for all returned versions.
+            $workspaceName = $WorkspaceId
+            try {
+                $workspaceName = Resolve-FabricWorkspaceName -WorkspaceId $WorkspaceId
+            }
+            catch {
+                Write-FabricLog -Message "Failed to resolve workspace name for ID '$WorkspaceId': $($_.Exception.Message)" -Level Debug
+            }
+
+            foreach ($version in $response) {
+                $version | Add-Member -NotePropertyName 'workspaceId'   -NotePropertyValue $WorkspaceId   -Force
+                $version | Add-Member -NotePropertyName 'WorkspaceName' -NotePropertyValue $workspaceName -Force
+            }
+
+            $response | Add-FabricTypeName -TypeName 'MicrosoftFabric.MLModelEndpointVersion'
+            $response
+        }
+        catch {
+            $errorDetails = $_.Exception.Message
+            Write-FabricLog -Message "Failed to retrieve endpoint versions for ML Model '$MLModelId'. Error: $errorDetails" -Level Error
+        }
+    }
+}
+#EndRegion '.\Public\ML Model\Get-FabricMLModelEndpointVersion.ps1' 120
+#Region '.\Public\ML Model\Invoke-FabricMLModelEndpointScore.ps1' -1
+
+<#
+.SYNOPSIS
+    Scores input data against the default version of a Microsoft Fabric ML Model endpoint.
+
+.DESCRIPTION
+    The Invoke-FabricMLModelEndpointScore function submits input data to the default version
+    of a machine learning model's serving endpoint and returns the scoring results, via POST
+    to /workspaces/{workspaceId}/mlModels/{modelId}/endpoint/score.
+
+    Note: this operation uses the 'mlModels' (capital M) path casing per the Fabric API
+    specification, unlike the other endpoint operations which use lowercase 'mlmodels'.
+
+    The scoring request body (ScoreDataRequest: inputs, and optionally formatType and
+    orientation) is supplied via the -InputData hashtable and passed through verbatim. This
+    is a long-running operation; the score response is returned as-is.
+
+.PARAMETER WorkspaceId
+    The unique identifier of the workspace containing the ML Model. Mandatory.
+
+.PARAMETER MLModelId
+    The unique identifier of the ML Model to score against. Mandatory.
+
+.PARAMETER InputData
+    A hashtable representing the ScoreDataRequest body, passed through verbatim, e.g.
+    @{ inputs = @(@(1, 2, 3)); formatType = 'dataframe'; orientation = 'split' }. Mandatory.
+
+.PARAMETER Raw
+    If specified, returns the untouched API response. The score response is returned as-is regardless.
+
+.EXAMPLE
+    $data = @{ inputs = @(@(5.1, 3.5, 1.4, 0.2)) }
+    Invoke-FabricMLModelEndpointScore -WorkspaceId $ws -MLModelId $model -InputData $data
+
+    Scores a single input row against the default endpoint version.
+
+.OUTPUTS
+    System.Object
+    The score response (ScoreDataResponse) containing predictions.
+
+.NOTES
+    - API Endpoint: POST /workspaces/{workspaceId}/mlModels/{modelId}/endpoint/score
+    - Requires: authentication via Set-FabricApiHeaders / Connect-FabricAccount.
+
+    Author: Tiago Balabuch, Jess Pomfret, Rob Sewell
+#>
+function Invoke-FabricMLModelEndpointScore {
+    [CmdletBinding()]
+    param (
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
+        [ValidateNotNullOrEmpty()]
+        [string]$WorkspaceId,
+
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
+        [ValidateNotNullOrEmpty()]
+        [string]$MLModelId,
+
+        [Parameter(Mandatory = $true)]
+        [ValidateNotNullOrEmpty()]
+        [hashtable]$InputData,
+
+        [Parameter()]
+        [switch]$Raw
+    )
+
+    process {
+        try {
+            Invoke-FabricAuthCheck -ThrowOnFailure
+
+            # NOTE: 'mlModels' capital M here per the Fabric API spec for the default-version score path.
+            $segments = @('workspaces', $WorkspaceId, 'mlModels', $MLModelId, 'endpoint', 'score')
+            $apiEndpointURI = New-FabricAPIUri -Segments $segments
+            Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
+
+            # The score request body is passed through verbatim.
+            $bodyJson = $InputData | ConvertTo-Json -Depth 10
+            Write-FabricLog -Message "Request Body: $bodyJson" -Level Debug
+
+            $apiParams = @{
+                BaseURI = $apiEndpointURI
+                Headers = $script:FabricAuthContext.FabricHeaders
+                Method  = 'Post'
+                Body    = $bodyJson
+            }
+            $response = Invoke-FabricAPIRequest @apiParams
+
+            if ($Raw) {
+                return $response
+            }
+
+            Write-FabricLog -Message "Scoring request completed for ML Model '$MLModelId'." -Level Host
+            return $response
+        }
+        catch {
+            $errorDetails = $_.Exception.Message
+            Write-FabricLog -Message "Failed to score against endpoint for ML Model '$MLModelId'. Error: $errorDetails" -Level Error
+        }
+    }
+}
+#EndRegion '.\Public\ML Model\Invoke-FabricMLModelEndpointScore.ps1' 99
+#Region '.\Public\ML Model\Invoke-FabricMLModelEndpointVersionScore.ps1' -1
+
+<#
+.SYNOPSIS
+    Scores input data against a specific version of a Microsoft Fabric ML Model endpoint.
+
+.DESCRIPTION
+    The Invoke-FabricMLModelEndpointVersionScore function submits input data to a specific
+    version of a machine learning model's serving endpoint and returns the scoring results,
+    via POST to
+    /workspaces/{workspaceId}/mlmodels/{modelId}/endpoint/versions/{name}/score.
+
+    The scoring request body (ScoreDataRequest: inputs, and optionally formatType and
+    orientation) is supplied via the -InputData hashtable and passed through verbatim. This
+    is a long-running operation; the score response is returned as-is.
+
+.PARAMETER WorkspaceId
+    The unique identifier of the workspace containing the ML Model. Mandatory.
+
+.PARAMETER MLModelId
+    The unique identifier of the ML Model to score against. Mandatory.
+
+.PARAMETER VersionName
+    The name of the endpoint version to score against. Mandatory.
+
+.PARAMETER InputData
+    A hashtable representing the ScoreDataRequest body, passed through verbatim, e.g.
+    @{ inputs = @(@(1, 2, 3)); formatType = 'dataframe'; orientation = 'split' }. Mandatory.
+
+.PARAMETER Raw
+    If specified, returns the untouched API response. The score response is returned as-is regardless.
+
+.EXAMPLE
+    $data = @{ inputs = @(@(5.1, 3.5, 1.4, 0.2)) }
+    Invoke-FabricMLModelEndpointVersionScore -WorkspaceId $ws -MLModelId $model -VersionName '3' -InputData $data
+
+    Scores a single input row against version '3' of the endpoint.
+
+.OUTPUTS
+    System.Object
+    The score response (ScoreDataResponse) containing predictions.
+
+.NOTES
+    - API Endpoint: POST /workspaces/{workspaceId}/mlmodels/{modelId}/endpoint/versions/{name}/score
+    - Requires: authentication via Set-FabricApiHeaders / Connect-FabricAccount.
+
+    Author: Tiago Balabuch, Jess Pomfret, Rob Sewell
+#>
+function Invoke-FabricMLModelEndpointVersionScore {
+    [CmdletBinding()]
+    param (
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
+        [ValidateNotNullOrEmpty()]
+        [string]$WorkspaceId,
+
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
+        [ValidateNotNullOrEmpty()]
+        [string]$MLModelId,
+
+        [Parameter(Mandatory = $true)]
+        [ValidateNotNullOrEmpty()]
+        [string]$VersionName,
+
+        [Parameter(Mandatory = $true)]
+        [ValidateNotNullOrEmpty()]
+        [hashtable]$InputData,
+
+        [Parameter()]
+        [switch]$Raw
+    )
+
+    process {
+        try {
+            Invoke-FabricAuthCheck -ThrowOnFailure
+
+            $segments = @('workspaces', $WorkspaceId, 'mlmodels', $MLModelId, 'endpoint', 'versions', $VersionName, 'score')
+            $apiEndpointURI = New-FabricAPIUri -Segments $segments
+            Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
+
+            # The score request body is passed through verbatim.
+            $bodyJson = $InputData | ConvertTo-Json -Depth 10
+            Write-FabricLog -Message "Request Body: $bodyJson" -Level Debug
+
+            $apiParams = @{
+                BaseURI = $apiEndpointURI
+                Headers = $script:FabricAuthContext.FabricHeaders
+                Method  = 'Post'
+                Body    = $bodyJson
+            }
+            $response = Invoke-FabricAPIRequest @apiParams
+
+            if ($Raw) {
+                return $response
+            }
+
+            Write-FabricLog -Message "Scoring request completed for ML Model '$MLModelId' version '$VersionName'." -Level Host
+            return $response
+        }
+        catch {
+            $errorDetails = $_.Exception.Message
+            Write-FabricLog -Message "Failed to score against endpoint version '$VersionName' for ML Model '$MLModelId'. Error: $errorDetails" -Level Error
+        }
+    }
+}
+#EndRegion '.\Public\ML Model\Invoke-FabricMLModelEndpointVersionScore.ps1' 103
 #Region '.\Public\ML Model\New-FabricMLModel.ps1' -1
 
 <#
@@ -32111,6 +33378,260 @@ function Update-FabricMLModel {
     }
 }
 #EndRegion '.\Public\ML Model\Update-FabricMLModel.ps1' 87
+#Region '.\Public\ML Model\Update-FabricMLModelEndpoint.ps1' -1
+
+<#
+.SYNOPSIS
+    Updates the endpoint (default version configuration) of a Microsoft Fabric ML Model.
+
+.DESCRIPTION
+    The Update-FabricMLModelEndpoint function updates the default version configuration of a
+    machine learning model's serving endpoint via PATCH to
+    /workspaces/{workspaceId}/mlmodels/{modelId}/endpoint.
+
+    Supplied fields from the UpdateMLModelEndpointRequest schema (defaultVersionName,
+    defaultVersionAssignmentBehavior) are sent in the request body. Any additional or
+    future fields may be supplied via the -Properties hashtable, which is merged into the
+    body verbatim. The full updated endpoint object is returned; pass -Raw for the
+    untouched API response.
+
+.PARAMETER WorkspaceId
+    The unique identifier of the workspace containing the ML Model. Mandatory.
+
+.PARAMETER MLModelId
+    The unique identifier of the ML Model whose endpoint is updated. Mandatory.
+
+.PARAMETER DefaultVersionName
+    Optional. The name of the endpoint version to set as the default.
+
+.PARAMETER DefaultVersionAssignmentBehavior
+    Optional. The default version assignment behavior. Valid values: StaticallyConfigured, NotConfigured.
+
+.PARAMETER Properties
+    Optional hashtable of additional endpoint properties merged into the request body
+    verbatim (passthrough for any UpdateMLModelEndpointRequest field not exposed as a
+    dedicated parameter).
+
+.PARAMETER Raw
+    If specified, returns the untouched API response with no added properties or type decoration.
+
+.EXAMPLE
+    Update-FabricMLModelEndpoint -WorkspaceId $ws -MLModelId $model -DefaultVersionName '3' -DefaultVersionAssignmentBehavior 'StaticallyConfigured'
+
+    Sets version '3' as the statically configured default version for the endpoint.
+
+.OUTPUTS
+    System.Object
+    The updated ML Model endpoint object.
+
+.NOTES
+    - API Endpoint: PATCH /workspaces/{workspaceId}/mlmodels/{modelId}/endpoint
+    - Requires: authentication via Set-FabricApiHeaders / Connect-FabricAccount.
+
+    Author: Tiago Balabuch, Jess Pomfret, Rob Sewell
+#>
+function Update-FabricMLModelEndpoint {
+    [CmdletBinding(SupportsShouldProcess = $true, ConfirmImpact = 'Medium')]
+    param (
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
+        [ValidateNotNullOrEmpty()]
+        [string]$WorkspaceId,
+
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
+        [ValidateNotNullOrEmpty()]
+        [string]$MLModelId,
+
+        [Parameter(Mandatory = $false)]
+        [ValidateNotNullOrEmpty()]
+        [string]$DefaultVersionName,
+
+        [Parameter(Mandatory = $false)]
+        [ValidateSet('StaticallyConfigured', 'NotConfigured')]
+        [string]$DefaultVersionAssignmentBehavior,
+
+        [Parameter(Mandatory = $false)]
+        [hashtable]$Properties,
+
+        [Parameter()]
+        [switch]$Raw
+    )
+
+    process {
+        try {
+            Invoke-FabricAuthCheck -ThrowOnFailure
+
+            $segments = @('workspaces', $WorkspaceId, 'mlmodels', $MLModelId, 'endpoint')
+            $apiEndpointURI = New-FabricAPIUri -Segments $segments
+            Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
+
+            # Build the body from supplied fields; -Properties passes through any extra keys.
+            $body = @{}
+            if ($DefaultVersionName) { $body.defaultVersionName = $DefaultVersionName }
+            if ($DefaultVersionAssignmentBehavior) { $body.defaultVersionAssignmentBehavior = $DefaultVersionAssignmentBehavior }
+            if ($Properties) {
+                foreach ($key in $Properties.Keys) { $body[$key] = $Properties[$key] }
+            }
+
+            $bodyJson = $body | ConvertTo-Json -Depth 10
+            Write-FabricLog -Message "Request Body: $bodyJson" -Level Debug
+
+            $apiParams = @{
+                BaseURI = $apiEndpointURI
+                Headers = $script:FabricAuthContext.FabricHeaders
+                Method  = 'Patch'
+                Body    = $bodyJson
+            }
+
+            if ($PSCmdlet.ShouldProcess($MLModelId, "Update Fabric ML Model endpoint")) {
+                $response = Invoke-FabricAPIRequest @apiParams
+
+                if (-not $response) {
+                    Write-FabricLog -Message "No response returned after updating endpoint for ML Model '$MLModelId'." -Level Warning
+                    return $null
+                }
+
+                if ($Raw) {
+                    return $response
+                }
+
+                $response | Add-FabricTypeName -TypeName 'MicrosoftFabric.MLModelEndpoint'
+                Write-FabricLog -Message "Endpoint for ML Model '$MLModelId' updated successfully!" -Level Host
+                return $response
+            }
+        }
+        catch {
+            $errorDetails = $_.Exception.Message
+            Write-FabricLog -Message "Failed to update endpoint for ML Model '$MLModelId'. Error: $errorDetails" -Level Error
+        }
+    }
+}
+#EndRegion '.\Public\ML Model\Update-FabricMLModelEndpoint.ps1' 126
+#Region '.\Public\ML Model\Update-FabricMLModelEndpointVersion.ps1' -1
+
+<#
+.SYNOPSIS
+    Updates a specific endpoint version of a Microsoft Fabric ML Model.
+
+.DESCRIPTION
+    The Update-FabricMLModelEndpointVersion function updates the configuration of a specific
+    machine learning model endpoint version via PATCH to
+    /workspaces/{workspaceId}/mlmodels/{modelId}/endpoint/versions/{name}.
+
+    Supplied fields from the UpdateMLModelEndpointVersionRequest schema (scaleRule) are sent
+    in the request body. Any additional or future fields may be supplied via the -Properties
+    hashtable, which is merged into the body verbatim. The full updated version object is
+    returned; pass -Raw for the untouched API response.
+
+.PARAMETER WorkspaceId
+    The unique identifier of the workspace containing the ML Model. Mandatory.
+
+.PARAMETER MLModelId
+    The unique identifier of the ML Model whose endpoint version is updated. Mandatory.
+
+.PARAMETER VersionName
+    The name of the endpoint version to update. Mandatory.
+
+.PARAMETER ScaleRule
+    Optional. The scale rule for the endpoint version. Valid values: AlwaysOn, AllowScaleToZero.
+
+.PARAMETER Properties
+    Optional hashtable of additional version properties merged into the request body
+    verbatim (passthrough for any UpdateMLModelEndpointVersionRequest field not exposed as
+    a dedicated parameter).
+
+.PARAMETER Raw
+    If specified, returns the untouched API response with no added properties or type decoration.
+
+.EXAMPLE
+    Update-FabricMLModelEndpointVersion -WorkspaceId $ws -MLModelId $model -VersionName '3' -ScaleRule 'AllowScaleToZero'
+
+    Configures version '3' of the endpoint to allow scaling to zero.
+
+.OUTPUTS
+    System.Object
+    The updated ML Model endpoint version object.
+
+.NOTES
+    - API Endpoint: PATCH /workspaces/{workspaceId}/mlmodels/{modelId}/endpoint/versions/{name}
+    - Requires: authentication via Set-FabricApiHeaders / Connect-FabricAccount.
+
+    Author: Tiago Balabuch, Jess Pomfret, Rob Sewell
+#>
+function Update-FabricMLModelEndpointVersion {
+    [CmdletBinding(SupportsShouldProcess = $true, ConfirmImpact = 'Medium')]
+    param (
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
+        [ValidateNotNullOrEmpty()]
+        [string]$WorkspaceId,
+
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
+        [ValidateNotNullOrEmpty()]
+        [string]$MLModelId,
+
+        [Parameter(Mandatory = $true)]
+        [ValidateNotNullOrEmpty()]
+        [string]$VersionName,
+
+        [Parameter(Mandatory = $false)]
+        [ValidateSet('AlwaysOn', 'AllowScaleToZero')]
+        [string]$ScaleRule,
+
+        [Parameter(Mandatory = $false)]
+        [hashtable]$Properties,
+
+        [Parameter()]
+        [switch]$Raw
+    )
+
+    process {
+        try {
+            Invoke-FabricAuthCheck -ThrowOnFailure
+
+            $segments = @('workspaces', $WorkspaceId, 'mlmodels', $MLModelId, 'endpoint', 'versions', $VersionName)
+            $apiEndpointURI = New-FabricAPIUri -Segments $segments
+            Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
+
+            # Build the body from supplied fields; -Properties passes through any extra keys.
+            $body = @{}
+            if ($ScaleRule) { $body.scaleRule = $ScaleRule }
+            if ($Properties) {
+                foreach ($key in $Properties.Keys) { $body[$key] = $Properties[$key] }
+            }
+
+            $bodyJson = $body | ConvertTo-Json -Depth 10
+            Write-FabricLog -Message "Request Body: $bodyJson" -Level Debug
+
+            $apiParams = @{
+                BaseURI = $apiEndpointURI
+                Headers = $script:FabricAuthContext.FabricHeaders
+                Method  = 'Patch'
+                Body    = $bodyJson
+            }
+
+            if ($PSCmdlet.ShouldProcess($VersionName, "Update Fabric ML Model endpoint version")) {
+                $response = Invoke-FabricAPIRequest @apiParams
+
+                if (-not $response) {
+                    Write-FabricLog -Message "No response returned after updating endpoint version '$VersionName' for ML Model '$MLModelId'." -Level Warning
+                    return $null
+                }
+
+                if ($Raw) {
+                    return $response
+                }
+
+                $response | Add-FabricTypeName -TypeName 'MicrosoftFabric.MLModelEndpointVersion'
+                Write-FabricLog -Message "Endpoint version '$VersionName' for ML Model '$MLModelId' updated successfully!" -Level Host
+                return $response
+            }
+        }
+        catch {
+            $errorDetails = $_.Exception.Message
+            Write-FabricLog -Message "Failed to update endpoint version '$VersionName' for ML Model '$MLModelId'. Error: $errorDetails" -Level Error
+        }
+    }
+}
+#EndRegion '.\Public\ML Model\Update-FabricMLModelEndpointVersion.ps1' 124
 #Region '.\Public\Mounted Data Factory\Get-FabricMountedDataFactory.ps1' -1
 
 <#
@@ -45986,6 +47507,129 @@ function Get-FabricWarehouseConnectionString {
     }
 }
 #EndRegion '.\Public\Warehouse\Get-FabricWarehouseConnectionString.ps1' 110
+#Region '.\Public\Warehouse\Get-FabricWarehouseRestorePoint.ps1' -1
+
+<#
+.SYNOPSIS
+    Retrieves restore points for a Microsoft Fabric warehouse.
+
+.DESCRIPTION
+    The Get-FabricWarehouseRestorePoint function retrieves restore points for a warehouse.
+
+    When -RestorePointId is supplied it returns the single matching restore point via
+    /workspaces/{workspaceId}/warehouses/{warehouseId}/restorePoints/{restorePointId};
+    otherwise it lists all restore points via
+    /workspaces/{workspaceId}/warehouses/{warehouseId}/restorePoints.
+
+    By default each returned object is enriched with the originating WorkspaceId (stamped
+    from the parameter) and a resolved WorkspaceName, and decorated for the custom table
+    view. Pass -Raw to return the untouched API response.
+
+.PARAMETER WorkspaceId
+    (Mandatory) The unique identifier of the workspace containing the warehouse.
+
+.PARAMETER WarehouseId
+    (Mandatory) The unique identifier of the warehouse whose restore points are retrieved.
+
+.PARAMETER RestorePointId
+    (Optional) The unique identifier of a single restore point to retrieve.
+
+.PARAMETER Raw
+    If specified, returns the untouched API response with no added properties or type decoration.
+
+.EXAMPLE
+    Get-FabricWarehouseRestorePoint -WorkspaceId "12345" -WarehouseId "67890"
+
+    Lists all restore points for the warehouse, enriched with WorkspaceName.
+
+.EXAMPLE
+    Get-FabricWarehouseRestorePoint -WorkspaceId "12345" -WarehouseId "67890" -RestorePointId "rp-1"
+
+    Returns the single restore point with that ID.
+
+.OUTPUTS
+    System.Object
+    Restore point object(s) with all API-returned properties plus WorkspaceName when enriched.
+
+.NOTES
+    - API Endpoints:
+        GET /workspaces/{workspaceId}/warehouses/{warehouseId}/restorePoints
+        GET /workspaces/{workspaceId}/warehouses/{warehouseId}/restorePoints/{restorePointId}
+    - Requires `$FabricAuthContext` global configuration, including BaseUrl and FabricHeaders.
+    - Calls Invoke-FabricAuthCheck to ensure token validity before making the API request.
+
+    Author: Tiago Balabuch, Jess Pomfret, Rob Sewell
+#>
+function Get-FabricWarehouseRestorePoint {
+    [CmdletBinding()]
+    param (
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
+        [ValidateNotNullOrEmpty()]
+        [string]$WorkspaceId,
+
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
+        [ValidateNotNullOrEmpty()]
+        [Alias('id')]
+        [string]$WarehouseId,
+
+        [Parameter(Mandatory = $false)]
+        [ValidateNotNullOrEmpty()]
+        [string]$RestorePointId,
+
+        [Parameter()]
+        [switch]$Raw
+    )
+
+    process {
+        try {
+            Invoke-FabricAuthCheck -ThrowOnFailure
+
+            # Build the segment list, appending RestorePointId only when a single restore point is requested.
+            $segments = @('workspaces', $WorkspaceId, 'warehouses', $WarehouseId, 'restorePoints')
+            if ($RestorePointId) { $segments += $RestorePointId }
+            $apiEndpointURI = New-FabricAPIUri -Segments $segments
+            Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
+
+            $apiParams = @{
+                BaseURI = $apiEndpointURI
+                Headers = $script:FabricAuthContext.FabricHeaders
+                Method  = 'Get'
+            }
+            $response = Invoke-FabricAPIRequest @apiParams
+
+            if (-not $response) {
+                Write-FabricLog -Message "No restore points returned for warehouse '$WarehouseId'." -Level Warning
+                return $null
+            }
+
+            if ($Raw) {
+                return $response
+            }
+
+            # Resolve the workspace display name once for all returned restore points.
+            $workspaceName = $WorkspaceId
+            try {
+                $workspaceName = Resolve-FabricWorkspaceName -WorkspaceId $WorkspaceId
+            }
+            catch {
+                Write-FabricLog -Message "Failed to resolve workspace name for ID '$WorkspaceId': $($_.Exception.Message)" -Level Debug
+            }
+
+            foreach ($item in $response) {
+                $item | Add-Member -NotePropertyName 'workspaceId'   -NotePropertyValue $WorkspaceId   -Force
+                $item | Add-Member -NotePropertyName 'WorkspaceName' -NotePropertyValue $workspaceName -Force
+            }
+
+            $response | Add-FabricTypeName -TypeName 'MicrosoftFabric.WarehouseRestorePoint'
+            $response
+        }
+        catch {
+            $errorDetails = $_.Exception.Message
+            Write-FabricLog -Message "Failed to retrieve Warehouse Restore Point. Error: $errorDetails" -Level Error
+        }
+    }
+}
+#EndRegion '.\Public\Warehouse\Get-FabricWarehouseRestorePoint.ps1' 121
 #Region '.\Public\Warehouse\Get-FabricWarehouseSnapshot.ps1' -1
 
 <#
@@ -46250,6 +47894,136 @@ function New-FabricWarehouse {
     }
 }
 #EndRegion '.\Public\Warehouse\New-FabricWarehouse.ps1' 104
+#Region '.\Public\Warehouse\New-FabricWarehouseRestorePoint.ps1' -1
+
+<#
+.SYNOPSIS
+    Creates a restore point for a Microsoft Fabric warehouse.
+
+.DESCRIPTION
+    The New-FabricWarehouseRestorePoint function sends a POST request to the
+    /workspaces/{workspaceId}/warehouses/{warehouseId}/restorePoints endpoint to create a
+    user-defined restore point for a warehouse.
+
+    The created restore point object is returned. By default it is enriched with the
+    originating WorkspaceId, a resolved WorkspaceName, and decorated for the custom table
+    view; pass -Raw to return the untouched API response.
+
+.PARAMETER WorkspaceId
+    (Mandatory) The unique identifier of the workspace containing the warehouse.
+
+.PARAMETER WarehouseId
+    (Mandatory) The unique identifier of the warehouse to create the restore point for.
+
+.PARAMETER DisplayName
+    (Optional) The restore point name. Maximum length is 128 characters.
+
+.PARAMETER Description
+    (Optional) The restore point description. Maximum length is 512 characters.
+
+.PARAMETER Raw
+    If specified, returns the untouched API response with no added properties or type decoration.
+
+.EXAMPLE
+    New-FabricWarehouseRestorePoint -WorkspaceId "12345" -WarehouseId "67890" -DisplayName "Before upgrade"
+
+    Creates a restore point named "Before upgrade" for the warehouse.
+
+.OUTPUTS
+    System.Object
+    The created restore point object with all API-returned properties plus WorkspaceName when enriched.
+
+.NOTES
+    - API Endpoint: POST /workspaces/{workspaceId}/warehouses/{warehouseId}/restorePoints
+    - Requires `$FabricAuthContext` global configuration, including BaseUrl and FabricHeaders.
+    - Calls Invoke-FabricAuthCheck to ensure token validity before making the API request.
+
+    Author: Tiago Balabuch, Jess Pomfret, Rob Sewell
+#>
+function New-FabricWarehouseRestorePoint {
+    [CmdletBinding(SupportsShouldProcess = $true, ConfirmImpact = 'Medium')]
+    param (
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
+        [ValidateNotNullOrEmpty()]
+        [string]$WorkspaceId,
+
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
+        [ValidateNotNullOrEmpty()]
+        [Alias('id')]
+        [string]$WarehouseId,
+
+        [Parameter(Mandatory = $false)]
+        [ValidateNotNullOrEmpty()]
+        [string]$DisplayName,
+
+        [Parameter(Mandatory = $false)]
+        [ValidateNotNullOrEmpty()]
+        [string]$Description,
+
+        [Parameter()]
+        [switch]$Raw
+    )
+
+    process {
+        try {
+            Invoke-FabricAuthCheck -ThrowOnFailure
+
+            $segments = @('workspaces', $WorkspaceId, 'warehouses', $WarehouseId, 'restorePoints')
+            $apiEndpointURI = New-FabricAPIUri -Segments $segments
+            Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
+
+            # Construct the request body per the CreateRestorePointRequest schema.
+            $body = @{}
+            if ($DisplayName) { $body.displayName = $DisplayName }
+            if ($Description) { $body.description = $Description }
+
+            $bodyJson = $body | ConvertTo-Json -Depth 10
+            Write-FabricLog -Message "Request Body: $bodyJson" -Level Debug
+
+            $apiParams = @{
+                BaseURI = $apiEndpointURI
+                Headers = $script:FabricAuthContext.FabricHeaders
+                Method  = 'Post'
+                Body    = $bodyJson
+            }
+
+            $target = "Warehouse '$WarehouseId' in workspace '$WorkspaceId'"
+            if ($PSCmdlet.ShouldProcess($target, "Create Warehouse restore point")) {
+                $response = Invoke-FabricAPIRequest @apiParams
+
+                if (-not $response) {
+                    Write-FabricLog -Message "No response returned after creating restore point for warehouse '$WarehouseId'." -Level Warning
+                    return $null
+                }
+
+                if ($Raw) {
+                    return $response
+                }
+
+                # Resolve the workspace display name for enrichment.
+                $workspaceName = $WorkspaceId
+                try {
+                    $workspaceName = Resolve-FabricWorkspaceName -WorkspaceId $WorkspaceId
+                }
+                catch {
+                    Write-FabricLog -Message "Failed to resolve workspace name for ID '$WorkspaceId': $($_.Exception.Message)" -Level Debug
+                }
+
+                $response | Add-Member -NotePropertyName 'workspaceId'   -NotePropertyValue $WorkspaceId   -Force
+                $response | Add-Member -NotePropertyName 'WorkspaceName' -NotePropertyValue $workspaceName -Force
+
+                $response | Add-FabricTypeName -TypeName 'MicrosoftFabric.WarehouseRestorePoint'
+                Write-FabricLog -Message "Restore point created successfully for warehouse '$WarehouseId'!" -Level Host
+                return $response
+            }
+        }
+        catch {
+            $errorDetails = $_.Exception.Message
+            Write-FabricLog -Message "Failed to create Warehouse Restore Point. Error: $errorDetails" -Level Error
+        }
+    }
+}
+#EndRegion '.\Public\Warehouse\New-FabricWarehouseRestorePoint.ps1' 128
 #Region '.\Public\Warehouse\New-FabricWarehouseSnapshot.ps1' -1
 
 <#
@@ -46446,6 +48220,83 @@ function Remove-FabricWarehouse {
         Write-FabricLog -Message "Failed to delete Warehouse '$WarehouseId' from workspace '$WorkspaceId'. Error: $errorDetails" -Level Error
     }    }}
 #EndRegion '.\Public\Warehouse\Remove-FabricWarehouse.ps1' 67
+#Region '.\Public\Warehouse\Remove-FabricWarehouseRestorePoint.ps1' -1
+
+<#
+.SYNOPSIS
+    Removes a restore point from a Microsoft Fabric warehouse.
+
+.DESCRIPTION
+    The Remove-FabricWarehouseRestorePoint function sends a DELETE request to the
+    /workspaces/{workspaceId}/warehouses/{warehouseId}/restorePoints/{restorePointId}
+    endpoint to delete a user-defined restore point. System generated restore points
+    cannot be deleted.
+
+.PARAMETER WorkspaceId
+    (Mandatory) The unique identifier of the workspace containing the warehouse.
+
+.PARAMETER WarehouseId
+    (Mandatory) The unique identifier of the warehouse containing the restore point.
+
+.PARAMETER RestorePointId
+    (Mandatory) The unique identifier of the restore point to delete.
+
+.EXAMPLE
+    Remove-FabricWarehouseRestorePoint -WorkspaceId "12345" -WarehouseId "67890" -RestorePointId "rp-1"
+
+    Removes the specified restore point from the warehouse.
+
+.NOTES
+    - API Endpoint: DELETE /workspaces/{workspaceId}/warehouses/{warehouseId}/restorePoints/{restorePointId}
+    - Requires `$FabricAuthContext` global configuration, including BaseUrl and FabricHeaders.
+    - Calls Invoke-FabricAuthCheck to ensure token validity before making the API request.
+
+    Author: Tiago Balabuch, Jess Pomfret, Rob Sewell
+#>
+function Remove-FabricWarehouseRestorePoint {
+    [CmdletBinding(SupportsShouldProcess = $true, ConfirmImpact = 'High')]
+    param (
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
+        [ValidateNotNullOrEmpty()]
+        [string]$WorkspaceId,
+
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
+        [ValidateNotNullOrEmpty()]
+        [string]$WarehouseId,
+
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
+        [ValidateNotNullOrEmpty()]
+        [Alias('id')]
+        [string]$RestorePointId
+    )
+
+    process {
+        try {
+            Invoke-FabricAuthCheck -ThrowOnFailure
+
+            $segments = @('workspaces', $WorkspaceId, 'warehouses', $WarehouseId, 'restorePoints', $RestorePointId)
+            $apiEndpointURI = New-FabricAPIUri -Segments $segments
+            Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
+
+            $apiParams = @{
+                BaseURI = $apiEndpointURI
+                Headers = $script:FabricAuthContext.FabricHeaders
+                Method  = 'Delete'
+            }
+
+            $target = "Restore point '$RestorePointId' on warehouse '$WarehouseId'"
+            if ($PSCmdlet.ShouldProcess($target, "Remove Warehouse restore point")) {
+                $null = Invoke-FabricAPIRequest @apiParams
+                Write-FabricLog -Message "Restore point '$RestorePointId' removed successfully!" -Level Host
+            }
+        }
+        catch {
+            $errorDetails = $_.Exception.Message
+            Write-FabricLog -Message "Failed to remove Warehouse Restore Point. Error: $errorDetails" -Level Error
+        }
+    }
+}
+#EndRegion '.\Public\Warehouse\Remove-FabricWarehouseRestorePoint.ps1' 75
 #Region '.\Public\Warehouse\Remove-FabricWarehouseSnapshot.ps1' -1
 
 <#
@@ -46517,6 +48368,84 @@ function Remove-FabricWarehouseSnapshot {
     }
 }
 #EndRegion '.\Public\Warehouse\Remove-FabricWarehouseSnapshot.ps1' 69
+#Region '.\Public\Warehouse\Restore-FabricWarehouseToRestorePoint.ps1' -1
+
+<#
+.SYNOPSIS
+    Restores a Microsoft Fabric warehouse in-place to a specified restore point.
+
+.DESCRIPTION
+    The Restore-FabricWarehouseToRestorePoint function sends a POST request to the
+    /workspaces/{workspaceId}/warehouses/{warehouseId}/restorePoints/{restorePointId}/restore
+    endpoint to restore a warehouse in-place to the state captured by the specified
+    restore point. The API supports long running operations. No request body is sent.
+
+.PARAMETER WorkspaceId
+    (Mandatory) The unique identifier of the workspace containing the warehouse.
+
+.PARAMETER WarehouseId
+    (Mandatory) The unique identifier of the warehouse to restore.
+
+.PARAMETER RestorePointId
+    (Mandatory) The unique identifier of the restore point to restore the warehouse to.
+
+.EXAMPLE
+    Restore-FabricWarehouseToRestorePoint -WorkspaceId "12345" -WarehouseId "67890" -RestorePointId "rp-1"
+
+    Restores the warehouse in-place to the specified restore point.
+
+.NOTES
+    - API Endpoint: POST /workspaces/{workspaceId}/warehouses/{warehouseId}/restorePoints/{restorePointId}/restore
+    - Requires `$FabricAuthContext` global configuration, including BaseUrl and FabricHeaders.
+    - Calls Invoke-FabricAuthCheck to ensure token validity before making the API request.
+
+    Author: Tiago Balabuch, Jess Pomfret, Rob Sewell
+#>
+function Restore-FabricWarehouseToRestorePoint {
+    [CmdletBinding(SupportsShouldProcess = $true, ConfirmImpact = 'High')]
+    param (
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
+        [ValidateNotNullOrEmpty()]
+        [string]$WorkspaceId,
+
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
+        [ValidateNotNullOrEmpty()]
+        [string]$WarehouseId,
+
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
+        [ValidateNotNullOrEmpty()]
+        [Alias('id')]
+        [string]$RestorePointId
+    )
+
+    process {
+        try {
+            Invoke-FabricAuthCheck -ThrowOnFailure
+
+            $segments = @('workspaces', $WorkspaceId, 'warehouses', $WarehouseId, 'restorePoints', $RestorePointId, 'restore')
+            $apiEndpointURI = New-FabricAPIUri -Segments $segments
+            Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
+
+            $apiParams = @{
+                BaseURI = $apiEndpointURI
+                Headers = $script:FabricAuthContext.FabricHeaders
+                Method  = 'Post'
+            }
+
+            $target = "Warehouse '$WarehouseId' in workspace '$WorkspaceId'"
+            $action = "Restore to restore point '$RestorePointId'"
+            if ($PSCmdlet.ShouldProcess($target, $action)) {
+                $null = Invoke-FabricAPIRequest @apiParams
+                Write-FabricLog -Message "Warehouse '$WarehouseId' restored to restore point '$RestorePointId' successfully!" -Level Host
+            }
+        }
+        catch {
+            $errorDetails = $_.Exception.Message
+            Write-FabricLog -Message "Failed to restore Warehouse to Restore Point. Error: $errorDetails" -Level Error
+        }
+    }
+}
+#EndRegion '.\Public\Warehouse\Restore-FabricWarehouseToRestorePoint.ps1' 76
 #Region '.\Public\Warehouse\Update-FabricWarehouse.ps1' -1
 
 <#
@@ -46626,6 +48555,144 @@ function Update-FabricWarehouse {
     }
 }
 #EndRegion '.\Public\Warehouse\Update-FabricWarehouse.ps1' 107
+#Region '.\Public\Warehouse\Update-FabricWarehouseRestorePoint.ps1' -1
+
+<#
+.SYNOPSIS
+    Updates a restore point for a Microsoft Fabric warehouse.
+
+.DESCRIPTION
+    The Update-FabricWarehouseRestorePoint function sends a PATCH request to the
+    /workspaces/{workspaceId}/warehouses/{warehouseId}/restorePoints/{restorePointId}
+    endpoint to update the display name and/or description of an existing restore point.
+
+    Only the supplied fields are included in the request body. The updated restore point
+    object is returned. By default it is enriched with the originating WorkspaceId, a
+    resolved WorkspaceName, and decorated for the custom table view; pass -Raw to return
+    the untouched API response.
+
+.PARAMETER WorkspaceId
+    (Mandatory) The unique identifier of the workspace containing the warehouse.
+
+.PARAMETER WarehouseId
+    (Mandatory) The unique identifier of the warehouse containing the restore point.
+
+.PARAMETER RestorePointId
+    (Mandatory) The unique identifier of the restore point to update.
+
+.PARAMETER DisplayName
+    (Optional) The new restore point name. Maximum length is 128 characters.
+
+.PARAMETER Description
+    (Optional) The new restore point description. Maximum length is 512 characters.
+
+.PARAMETER Raw
+    If specified, returns the untouched API response with no added properties or type decoration.
+
+.EXAMPLE
+    Update-FabricWarehouseRestorePoint -WorkspaceId "12345" -WarehouseId "67890" -RestorePointId "rp-1" -DisplayName "Renamed"
+
+    Updates the display name of the restore point.
+
+.OUTPUTS
+    System.Object
+    The updated restore point object with all API-returned properties plus WorkspaceName when enriched.
+
+.NOTES
+    - API Endpoint: PATCH /workspaces/{workspaceId}/warehouses/{warehouseId}/restorePoints/{restorePointId}
+    - Requires `$FabricAuthContext` global configuration, including BaseUrl and FabricHeaders.
+    - Calls Invoke-FabricAuthCheck to ensure token validity before making the API request.
+
+    Author: Tiago Balabuch, Jess Pomfret, Rob Sewell
+#>
+function Update-FabricWarehouseRestorePoint {
+    [CmdletBinding(SupportsShouldProcess = $true, ConfirmImpact = 'Medium')]
+    param (
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
+        [ValidateNotNullOrEmpty()]
+        [string]$WorkspaceId,
+
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
+        [ValidateNotNullOrEmpty()]
+        [string]$WarehouseId,
+
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
+        [ValidateNotNullOrEmpty()]
+        [Alias('id')]
+        [string]$RestorePointId,
+
+        [Parameter(Mandatory = $false)]
+        [ValidateNotNullOrEmpty()]
+        [string]$DisplayName,
+
+        [Parameter(Mandatory = $false)]
+        [ValidateNotNullOrEmpty()]
+        [string]$Description,
+
+        [Parameter()]
+        [switch]$Raw
+    )
+
+    process {
+        try {
+            Invoke-FabricAuthCheck -ThrowOnFailure
+
+            $segments = @('workspaces', $WorkspaceId, 'warehouses', $WarehouseId, 'restorePoints', $RestorePointId)
+            $apiEndpointURI = New-FabricAPIUri -Segments $segments
+            Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
+
+            # Construct the request body with only the supplied fields per UpdateRestorePointRequest.
+            $body = @{}
+            if ($DisplayName) { $body.displayName = $DisplayName }
+            if ($Description) { $body.description = $Description }
+
+            $bodyJson = $body | ConvertTo-Json -Depth 10
+            Write-FabricLog -Message "Request Body: $bodyJson" -Level Debug
+
+            $apiParams = @{
+                BaseURI = $apiEndpointURI
+                Headers = $script:FabricAuthContext.FabricHeaders
+                Method  = 'Patch'
+                Body    = $bodyJson
+            }
+
+            $target = "Restore point '$RestorePointId' on warehouse '$WarehouseId'"
+            if ($PSCmdlet.ShouldProcess($target, "Update Warehouse restore point")) {
+                $response = Invoke-FabricAPIRequest @apiParams
+
+                if (-not $response) {
+                    Write-FabricLog -Message "No response returned after updating restore point '$RestorePointId'." -Level Warning
+                    return $null
+                }
+
+                if ($Raw) {
+                    return $response
+                }
+
+                # Resolve the workspace display name for enrichment.
+                $workspaceName = $WorkspaceId
+                try {
+                    $workspaceName = Resolve-FabricWorkspaceName -WorkspaceId $WorkspaceId
+                }
+                catch {
+                    Write-FabricLog -Message "Failed to resolve workspace name for ID '$WorkspaceId': $($_.Exception.Message)" -Level Debug
+                }
+
+                $response | Add-Member -NotePropertyName 'workspaceId'   -NotePropertyValue $WorkspaceId   -Force
+                $response | Add-Member -NotePropertyName 'WorkspaceName' -NotePropertyValue $workspaceName -Force
+
+                $response | Add-FabricTypeName -TypeName 'MicrosoftFabric.WarehouseRestorePoint'
+                Write-FabricLog -Message "Restore point '$RestorePointId' updated successfully!" -Level Host
+                return $response
+            }
+        }
+        catch {
+            $errorDetails = $_.Exception.Message
+            Write-FabricLog -Message "Failed to update Warehouse Restore Point. Error: $errorDetails" -Level Error
+        }
+    }
+}
+#EndRegion '.\Public\Warehouse\Update-FabricWarehouseRestorePoint.ps1' 136
 #Region '.\Public\Warehouse\Update-FabricWarehouseSnapshot.ps1' -1
 
 <#

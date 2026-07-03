@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **Additional resource commands** (19) filling verified coverage gaps:
+  - **DataPipeline definition** (2): `Get/Update-FabricDataPipelineDefinition`.
+  - **Warehouse restore points** (5): `Get/New/Update/Remove-FabricWarehouseRestorePoint`,
+    `Restore-FabricWarehouseToRestorePoint`.
+  - **ML Model endpoint** (8): `Get/Update-FabricMLModelEndpoint`,
+    `Get/Update-FabricMLModelEndpointVersion`, `Enable/Disable-FabricMLModelEndpointVersion`
+    (Disable supports `-All` → deactivateAll), `Invoke-FabricMLModelEndpointScore`,
+    `Invoke-FabricMLModelEndpointVersionScore`.
+  - **External Data Share** (4): `New-FabricExternalDataShare`, `Remove-FabricExternalDataShare`
+    (provider delete, distinct from revoke), `Get-FabricExternalDataShareInvitation`,
+    `Approve-FabricExternalDataShareInvitation` (recipient accept).
 - **Deployment Pipelines command family** (14 new commands): pipeline CRUD
   (`Get/New/Update/Remove-FabricDeploymentPipeline`), stages
   (`Get/Update-FabricDeploymentPipelineStage`, `Get-FabricDeploymentPipelineStageItem`),
