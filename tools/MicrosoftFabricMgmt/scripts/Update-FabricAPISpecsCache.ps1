@@ -40,6 +40,8 @@
     Creates the following files in the cache directory:
     - {spec}.swagger.json - Raw swagger files for each API
     - {spec}.definitions.json - Definition files for each API
+    - {spec}.{nested}.definitions.json - Nested definition files a swagger $refs as
+      ./definitions/{nested}.json (auto-discovered; e.g. platform.workspaceNetworkingPolicy.definitions.json)
     - cache-metadata.json - Download metadata and statistics
     - fabric-api-lookup.json - Consolidated lookup for validation
 
@@ -48,8 +50,8 @@
     The cache directory should be added to .gitignore.
 
     Author: Tiago Balabuch, Jess Pomfret, Rob Sewell
-    Version: 2.0.0
-    Last Updated: 2026-01-20
+    Version: 2.1.0
+    Last Updated: 2026-07-03
 #>
 
 [CmdletBinding()]
@@ -324,6 +326,54 @@ if (-not $SkipDownload) {
             }
         }
     }
+}
+
+# Nested per-spec definition files: several swaggers (notably 'platform' and 'admin') split
+# their body/response schemas into sibling files referenced as "./definitions/<name>.json"
+# (e.g. platform -> workspaceNetworkingPolicy.json, connections.json, deploymentPipelines.json,
+# gitIntegration.json, externaldatasharing.json). Without these the body/response schemas for
+# those operations cannot be resolved. Auto-discover the references from each downloaded swagger
+# so the list stays correct as Microsoft evolves the specs. Cached as <spec>.<name>.definitions.json.
+$nestedDefinitionFiles = @()
+if (-not $SkipDownload) {
+    Write-Host "`nDownloading nested definition files referenced by swaggers..." -ForegroundColor Cyan
+    foreach ($spec in $swaggerSpecs) {
+        $specSwaggerFile = Join-Path $CachePath "$spec.swagger.json"
+        if (-not (Test-Path $specSwaggerFile)) { continue }
+
+        $swaggerText = Get-Content $specSwaggerFile -Raw
+        $nestedNames = [regex]::Matches($swaggerText, '\./definitions/([A-Za-z0-9]+)\.json') |
+            ForEach-Object { $_.Groups[1].Value } |
+            Sort-Object -Unique
+
+        foreach ($nested in $nestedNames) {
+            $nestedUrl  = "$baseUrl/$spec/definitions/$nested.json"
+            $nestedOut  = Join-Path $CachePath "$spec.$nested.definitions.json"
+            $nestedDefinitionFiles += "$spec.$nested.definitions.json"
+
+            if ((Test-Path $nestedOut) -and -not $Force) {
+                Write-Host "[SKIP] $spec/definitions/$nested (already cached)" -ForegroundColor Gray
+                $skippedCount++
+                continue
+            }
+
+            try {
+                Write-Host "[DOWNLOADING] $spec/definitions/$nested..." -ForegroundColor Yellow -NoNewline
+                $nestedResponse = Invoke-WebRequest -Uri $nestedUrl -UseBasicParsing -ErrorAction Stop
+                $nestedResponse.Content | Out-File -FilePath $nestedOut -Encoding UTF8 -Force
+                $null = Get-Content $nestedOut -Raw | ConvertFrom-Json -ErrorAction Stop
+                Write-Host " SUCCESS" -ForegroundColor Green
+                $downloadedCount++
+            }
+            catch {
+                Write-Host " FAILED" -ForegroundColor Red
+                Write-Host "  Error: $($_.Exception.Message)" -ForegroundColor Red
+                $failedCount++
+                $failedSpecs += "$spec/$nested"
+            }
+        }
+    }
+    $nestedDefinitionFiles = @($nestedDefinitionFiles | Sort-Object -Unique)
 }
 
 #endregion
@@ -619,10 +669,11 @@ $metadata = @{
     SpecList          = $swaggerSpecs
     Statistics        = $consolidatedLookup.Statistics
     Files             = @{
-        ConsolidatedLookup = 'fabric-api-lookup.json'
-        ValidationLookup   = 'fabric-api-validation.json'
-        SwaggerFiles       = @($swaggerSpecs | ForEach-Object { "$_.swagger.json" })
-        DefinitionFiles    = @($swaggerSpecs | ForEach-Object { "$_.definitions.json" })
+        ConsolidatedLookup    = 'fabric-api-lookup.json'
+        ValidationLookup      = 'fabric-api-validation.json'
+        SwaggerFiles          = @($swaggerSpecs | ForEach-Object { "$_.swagger.json" })
+        DefinitionFiles       = @($swaggerSpecs | ForEach-Object { "$_.definitions.json" })
+        NestedDefinitionFiles = $nestedDefinitionFiles
     }
 } | ConvertTo-Json -Depth 10
 

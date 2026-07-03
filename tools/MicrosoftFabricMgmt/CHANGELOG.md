@@ -3,7 +3,11 @@
 The format is based on and uses the types of changes according to [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## [1.1.0] - Unreleased
+
+Minor version bump for the accumulated feature work this cycle (~59 new commands plus the
+enrichment/`-Raw` model). Also moves past the stale locally-installed `1.0.9` so freshly
+built dev modules win module auto-resolution.
 
 ### Added
 
@@ -19,6 +23,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- **`scripts/Update-FabricAPISpecsCache.ps1`**: now auto-discovers and downloads the nested
+  `./definitions/{name}.json` files each swagger `$ref`s (cached as `{spec}.{name}.definitions.json`)
+  — e.g. `platform.workspaceNetworkingPolicy.definitions.json`, connections, deploymentPipelines,
+  gitIntegration, externaldatasharing — so the body/response schemas for those operations are
+  durably resolvable during validation. 15 nested files fetched (platform, admin, eventstream), 0 failures.
 - **`scripts/sync-test-expected-params.ps1` idempotency**: a second run no longer corrupts
   test files. Previously the `param()`-insert fallback ran whenever the regex replacement
   produced no change — including the already-synced case — so re-running duplicated the

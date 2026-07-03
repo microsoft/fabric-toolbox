@@ -1719,7 +1719,7 @@ Power BI REST API — cached for the `Get-FabricAdmin*` functions:
 
 ---
 
-**Last Updated**: 2026-07-01
-**Module Version**: 1.0.8
+**Last Updated**: 2026-07-03
+**Module Version**: 1.1.0
 **Original Author**: Tiago Balabuch
 **Current Maintainer**: Rob Sewell

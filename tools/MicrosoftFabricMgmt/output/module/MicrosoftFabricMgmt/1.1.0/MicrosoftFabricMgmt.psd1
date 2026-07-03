@@ -4,7 +4,7 @@
     RootModule           = 'MicrosoftFabricMgmt.psm1'
 
     # Version number of this module.
-    ModuleVersion        = '1.0.8'
+    ModuleVersion        = '1.1.0'
 
     # Supported PSEditions
     CompatiblePSEditions = @('Core')
@@ -118,7 +118,7 @@
             # IconUri = ''
 
             # ReleaseNotes of this module
-            ReleaseNotes = '## [1.0.8] - 2026-07-03
+            ReleaseNotes = '## [1.1.0] - 2026-07-03
 
 ### Added
 
@@ -131,6 +131,18 @@
   setters take hashtable pass-through bodies and support `-WhatIf`/`-Confirm`.
 - **`Set-FabricOneLakeImmutabilityPolicy`** (new): `POST /workspaces/{workspaceId}/onelake/settings/modifyImmutabilityPolicy`;
   `-Scope` (DiagnosticLogs) + `-RetentionDays`; supports `-WhatIf`/`-Confirm` and `-Raw`.
+
+### Fixed
+
+- **`scripts/sync-test-expected-params.ps1` idempotency**: a second run no longer corrupts
+  test files. Previously the `param()`-insert fallback ran whenever the regex replacement
+  produced no change — including the already-synced case — so re-running duplicated the
+  `$expectedParams` block into every synced test file (253 had both a `param()` and the array).
+  The branch is now chosen by whether the block exists, the pattern anchors on horizontal
+  whitespace so replacement is byte-stable, and the helper (`Set-ExpectedParamsInTest`, renamed
+  from the unapproved-verb `Replace-…`) plus the main loop are guarded for dot-source testing.
+  New regression suite `tests/Unit/SyncExpectedParams.Tests.ps1`; idempotency also verified
+  against the real `tests/Unit` tree (second run: 0 files changed).
 
 ### Changed
 
@@ -229,15 +241,7 @@
   type decoration; `-Raw` added the resolved names). If you relied on `-Raw` to obtain resolved names, use the
   default (non-`-Raw`) output instead; if you need the exact API payload, use `-Raw`.
 - **`Get-FabricWorkspaceRoleAssignment`**: No longer discards the nested `principal` object (previously it
-  rebuilt a trimmed object, dropping `principal.groupDetails`, `servicePrincipalProfileDetails`, etc.). Default
-  output now preserves every API property and adds flattened convenience fields + resolved names; `-Raw` returns
-  the untouched response.
-- **`New-FabricAPIUri`**: Added a `-ResourceId` alias for `-WorkspaceId` to make the primary-resource-id slot
-  self-documenting for non-workspace resources (e.g. connections). Clarified parameter help on segment ordering.
-- **`Update-FabricAPISpecsCache.ps1`**: Also caches the shared `common` definitions (the `Item` base and other
-  shared schemas), enabling response-schema resolution for property-completeness validation.
-- **PowerShell support clarification**: The module targets **PowerShell 7+ (Core) only** (manifest already declares
-  `CompatiblePSEditions = @(''Core'')`, `PowerShellVersion = ''7.0''`). This supersedes the '
+  rebuilt a trimmed object, dropping `principal.groupDetails'
 
             # Prerelease string of this module
             # Prerelease = ''
