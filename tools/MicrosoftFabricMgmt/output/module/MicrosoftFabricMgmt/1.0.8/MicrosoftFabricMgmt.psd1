@@ -122,6 +122,17 @@
 
 ### Added
 
+- **Additional resource commands** (19) filling verified coverage gaps:
+  - **DataPipeline definition** (2): `Get/Update-FabricDataPipelineDefinition`.
+  - **Warehouse restore points** (5): `Get/New/Update/Remove-FabricWarehouseRestorePoint`,
+    `Restore-FabricWarehouseToRestorePoint`.
+  - **ML Model endpoint** (8): `Get/Update-FabricMLModelEndpoint`,
+    `Get/Update-FabricMLModelEndpointVersion`, `Enable/Disable-FabricMLModelEndpointVersion`
+    (Disable supports `-All` → deactivateAll), `Invoke-FabricMLModelEndpointScore`,
+    `Invoke-FabricMLModelEndpointVersionScore`.
+  - **External Data Share** (4): `New-FabricExternalDataShare`, `Remove-FabricExternalDataShare`
+    (provider delete, distinct from revoke), `Get-FabricExternalDataShareInvitation`,
+    `Approve-FabricExternalDataShareInvitation` (recipient accept).
 - **Deployment Pipelines command family** (14 new commands): pipeline CRUD
   (`Get/New/Update/Remove-FabricDeploymentPipeline`), stages
   (`Get/Update-FabricDeploymentPipelineStage`, `Get-FabricDeploymentPipelineStageItem`),
@@ -224,11 +235,7 @@
 - **PSScriptAnalyzer clean** across `source/Public` and `source/Private`; added missing `Author:` lines to
   66 function files.
 - **Power BI REST API spec cache**: `Update-FabricAPISpecsCache.ps1` now also caches the Power BI API
-  (`powerbi.swagger.json` + `powerbi-api-validation.json`) so the admin functions can be validated against a spec.
-- **`Validate-FabricModuleCoverage.ps1`**: rewritten to path-based matching (extracts each function''s constructed URI
-  and method) with a new `-Api Fabric|PowerBI|All` switch, fixing large false-negative undercounting of coverage.
-
-'
+  (`powerbi.swagger.json` + `powerbi-api-validation.json`) so the admin f'
 
             # Prerelease string of this module
             # Prerelease = ''
