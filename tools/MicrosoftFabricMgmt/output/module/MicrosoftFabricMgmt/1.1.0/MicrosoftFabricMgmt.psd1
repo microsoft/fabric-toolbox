@@ -134,6 +134,11 @@
 
 ### Fixed
 
+- **`scripts/Update-FabricAPISpecsCache.ps1`**: now auto-discovers and downloads the nested
+  `./definitions/{name}.json` files each swagger `$ref`s (cached as `{spec}.{name}.definitions.json`)
+  — e.g. `platform.workspaceNetworkingPolicy.definitions.json`, connections, deploymentPipelines,
+  gitIntegration, externaldatasharing — so the body/response schemas for those operations are
+  durably resolvable during validation. 15 nested files fetched (platform, admin, eventstream), 0 failures.
 - **`scripts/sync-test-expected-params.ps1` idempotency**: a second run no longer corrupts
   test files. Previously the `param()`-insert fallback ran whenever the regex replacement
   produced no change — including the already-synced case — so re-running duplicated the
@@ -146,6 +151,18 @@
 
 ### Changed
 
+- **Job-type-in-path modernization**: `Start-FabricLakehouseRefreshMaterializedLakeView`,
+  `Start-FabricLakehouseTableMaintenance`, and `Start-FabricSparkJobDefinitionOnDemand` now call
+  the preferred `.../jobs/{jobType}/instances` path-segment form instead of the legacy
+  `.../jobs/instances?jobType=` query form (both are accepted by the API; the path form is the
+  documented shape). Behavior tests assert the new URL and that the query form is gone. Also
+  removed a dead undefined-variable body reference in the Spark on-demand function.
+- **Display formatting backfill (pass 2)**: `WarehouseSnapshot` (a full item) folded into the
+  shared item table/list views; new dedicated views `ItemJobInstanceView` (Workspace / Job Type /
+  Status / Invoke Type / Start / ID), `ItemScheduleView`, `LakehouseTableView`, and
+  `WarehouseRestorePointView`. Single-object/status/scalar types (networking policies, mirroring
+  statuses, Livy sessions, etc.) intentionally remain on default list rendering per the
+  "add a view only when a resource needs a distinct table" rule.
 - **`Get-FabricAdminRefreshable`**: `-CapacityId` is now optional. When omitted, the org-wide
   refreshables list is returned (`GET /admin/capacities/refreshables`, `$top` defaulted to 1000);
   when supplied, behavior is unchanged. Added `-Expand` (e.g. `capacities`) for both variants.
@@ -226,22 +243,7 @@
 
 ### Changed
 
-- **`-Raw` parameter coverage is now 100% of Get-* functions.** Added `-Raw` (returns the untouched API response)
-  to the ~72 remaining `Get-Fabric*` functions that lacked it — definitions, connection strings, tenant/settings,
-  long-running-operation getters, sub-resources, and admin getters.
-- **Resolved-name enrichment extended** to sub-resource and admin getters whose response (or parameter) carries a
-  resolvable id: Environment libraries/compute, Eventstream sources/destinations, Livy sessions, Lakehouse tables,
-  Mirrored DB status, OneLake shortcuts, Warehouse snapshots, and admin dataflow/dataset/workspace/capacity getters
-  now attach `WorkspaceName`/`CapacityName`/`DatasetName` (as applicable) and a `MicrosoftFabric.*` type on the
-  default path; `-Raw` bypasses enrichment. Enrichment only ADDS NoteProperties — no API property is dropped.
-- **Enrichment / `-Raw` behavior (affects most `Get-Fabric*` functions)**: Default output is now ENRICHED —
-  the full API object plus resolved-name NoteProperties (`WorkspaceName`, `CapacityName`, and where applicable
-  `DatasetName`/`GatewayName`) and a type decoration for the table view. `-Raw` now returns the UNTOUCHED API
-  response (no added properties, no type decoration). Previously the behavior was inverted (default added only
-  type decoration; `-Raw` added the resolved names). If you relied on `-Raw` to obtain resolved names, use the
-  default (non-`-Raw`) output instead; if you need the exact API payload, use `-Raw`.
-- **`Get-FabricWorkspaceRoleAssignment`**: No longer discards the nested `principal` object (previously it
-  rebuilt a trimmed object, dropping `principal.groupDetails'
+- **`-Raw` parameter coverage is now 100% of Get-* functions.** Added `-Raw` (returns the untouched'
 
             # Prerelease string of this module
             # Prerelease = ''

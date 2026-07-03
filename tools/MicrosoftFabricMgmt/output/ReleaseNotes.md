@@ -14,6 +14,11 @@
 
 ### Fixed
 
+- **`scripts/Update-FabricAPISpecsCache.ps1`**: now auto-discovers and downloads the nested
+  `./definitions/{name}.json` files each swagger `$ref`s (cached as `{spec}.{name}.definitions.json`)
+  — e.g. `platform.workspaceNetworkingPolicy.definitions.json`, connections, deploymentPipelines,
+  gitIntegration, externaldatasharing — so the body/response schemas for those operations are
+  durably resolvable during validation. 15 nested files fetched (platform, admin, eventstream), 0 failures.
 - **`scripts/sync-test-expected-params.ps1` idempotency**: a second run no longer corrupts
   test files. Previously the `param()`-insert fallback ran whenever the regex replacement
   produced no change — including the already-synced case — so re-running duplicated the
@@ -26,6 +31,18 @@
 
 ### Changed
 
+- **Job-type-in-path modernization**: `Start-FabricLakehouseRefreshMaterializedLakeView`,
+  `Start-FabricLakehouseTableMaintenance`, and `Start-FabricSparkJobDefinitionOnDemand` now call
+  the preferred `.../jobs/{jobType}/instances` path-segment form instead of the legacy
+  `.../jobs/instances?jobType=` query form (both are accepted by the API; the path form is the
+  documented shape). Behavior tests assert the new URL and that the query form is gone. Also
+  removed a dead undefined-variable body reference in the Spark on-demand function.
+- **Display formatting backfill (pass 2)**: `WarehouseSnapshot` (a full item) folded into the
+  shared item table/list views; new dedicated views `ItemJobInstanceView` (Workspace / Job Type /
+  Status / Invoke Type / Start / ID), `ItemScheduleView`, `LakehouseTableView`, and
+  `WarehouseRestorePointView`. Single-object/status/scalar types (networking policies, mirroring
+  statuses, Livy sessions, etc.) intentionally remain on default list rendering per the
+  "add a view only when a resource needs a distinct table" rule.
 - **`Get-FabricAdminRefreshable`**: `-CapacityId` is now optional. When omitted, the org-wide
   refreshables list is returned (`GET /admin/capacities/refreshables`, `$top` defaulted to 1000);
   when supplied, behavior is unchanged. Added `-Expand` (e.g. `capacities`) for both variants.

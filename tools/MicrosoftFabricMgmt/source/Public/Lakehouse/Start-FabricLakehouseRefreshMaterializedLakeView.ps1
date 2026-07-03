@@ -62,8 +62,10 @@ function Start-FabricLakehouseRefreshMaterializedLakeView {
             #    return $null
             #}
 
-            # Construct the API endpoint URI
-            $apiEndpointURI = "{0}/workspaces/{1}/lakehouses/{2}/jobs/instances?jobType={3}" -f $script:FabricAuthContext.BaseUrl, $WorkspaceId , $LakehouseId, $JobType
+            # Construct the API endpoint URI using the preferred job-type-in-path form
+            # (/jobs/{jobType}/instances). The legacy ?jobType= query form still works but the
+            # path-segment form is the documented, preferred shape.
+            $apiEndpointURI = New-FabricAPIUri -Segments @('workspaces', $WorkspaceId, 'lakehouses', $LakehouseId, 'jobs', $JobType, 'instances')
             Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
 
               # Make the API request

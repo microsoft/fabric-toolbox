@@ -60,6 +60,7 @@
         <TypeName>MicrosoftFabric.Ontology</TypeName>
         <TypeName>MicrosoftFabric.OperationsAgent</TypeName>
         <TypeName>MicrosoftFabric.UserDataFunction</TypeName>
+        <TypeName>MicrosoftFabric.WarehouseSnapshot</TypeName>
       </ViewSelectedBy>
       <TableControl>
         <TableHeaders>
@@ -730,6 +731,7 @@
         <TypeName>MicrosoftFabric.Ontology</TypeName>
         <TypeName>MicrosoftFabric.OperationsAgent</TypeName>
         <TypeName>MicrosoftFabric.UserDataFunction</TypeName>
+        <TypeName>MicrosoftFabric.WarehouseSnapshot</TypeName>
       </ViewSelectedBy>
       <ListControl>
         <ListEntries>
@@ -1303,6 +1305,164 @@
               <TableColumnItem>
                 <PropertyName>id</PropertyName>
               </TableColumnItem>
+            </TableColumnItems>
+          </TableRowEntry>
+        </TableRowEntries>
+      </TableControl>
+    </View>
+
+    <!--
+      =============================================================================
+      Item Job Instance View - job runs for an item
+      =============================================================================
+      Display Priority: Workspace Name, Job Type, Status, Invoke Type, Start (UTC), ID
+    -->
+    <View>
+      <Name>ItemJobInstanceView</Name>
+      <ViewSelectedBy>
+        <TypeName>MicrosoftFabric.ItemJobInstance</TypeName>
+      </ViewSelectedBy>
+      <TableControl>
+        <TableHeaders>
+          <TableColumnHeader><Label>Workspace Name</Label><Width>25</Width></TableColumnHeader>
+          <TableColumnHeader><Label>Job Type</Label><Width>18</Width></TableColumnHeader>
+          <TableColumnHeader><Label>Status</Label><Width>12</Width></TableColumnHeader>
+          <TableColumnHeader><Label>Invoke Type</Label><Width>12</Width></TableColumnHeader>
+          <TableColumnHeader><Label>Start (UTC)</Label><Width>22</Width></TableColumnHeader>
+          <TableColumnHeader><Label>ID</Label></TableColumnHeader>
+        </TableHeaders>
+        <TableRowEntries>
+          <TableRowEntry>
+            <TableColumnItems>
+              <TableColumnItem>
+                <ScriptBlock>
+                  if ($_.WorkspaceName) { $_.WorkspaceName }
+                  elseif ($_.workspaceId) { try { Resolve-FabricWorkspaceName -WorkspaceId $_.workspaceId } catch { $_.workspaceId } }
+                  else { 'N/A' }
+                </ScriptBlock>
+              </TableColumnItem>
+              <TableColumnItem><PropertyName>jobType</PropertyName></TableColumnItem>
+              <TableColumnItem><PropertyName>status</PropertyName></TableColumnItem>
+              <TableColumnItem><PropertyName>invokeType</PropertyName></TableColumnItem>
+              <TableColumnItem><PropertyName>startTimeUtc</PropertyName></TableColumnItem>
+              <TableColumnItem><PropertyName>id</PropertyName></TableColumnItem>
+            </TableColumnItems>
+          </TableRowEntry>
+        </TableRowEntries>
+      </TableControl>
+    </View>
+
+    <!--
+      =============================================================================
+      Item Schedule View - job schedules for an item
+      =============================================================================
+      Display Priority: Workspace Name, Enabled, ID
+    -->
+    <View>
+      <Name>ItemScheduleView</Name>
+      <ViewSelectedBy>
+        <TypeName>MicrosoftFabric.ItemSchedule</TypeName>
+      </ViewSelectedBy>
+      <TableControl>
+        <TableHeaders>
+          <TableColumnHeader><Label>Workspace Name</Label><Width>25</Width></TableColumnHeader>
+          <TableColumnHeader><Label>Enabled</Label><Width>10</Width></TableColumnHeader>
+          <TableColumnHeader><Label>Type</Label><Width>18</Width></TableColumnHeader>
+          <TableColumnHeader><Label>ID</Label></TableColumnHeader>
+        </TableHeaders>
+        <TableRowEntries>
+          <TableRowEntry>
+            <TableColumnItems>
+              <TableColumnItem>
+                <ScriptBlock>
+                  if ($_.WorkspaceName) { $_.WorkspaceName }
+                  elseif ($_.workspaceId) { try { Resolve-FabricWorkspaceName -WorkspaceId $_.workspaceId } catch { $_.workspaceId } }
+                  else { 'N/A' }
+                </ScriptBlock>
+              </TableColumnItem>
+              <TableColumnItem><PropertyName>enabled</PropertyName></TableColumnItem>
+              <TableColumnItem>
+                <ScriptBlock>
+                  if ($_.configuration -and $_.configuration.type) { $_.configuration.type } else { 'N/A' }
+                </ScriptBlock>
+              </TableColumnItem>
+              <TableColumnItem><PropertyName>id</PropertyName></TableColumnItem>
+            </TableColumnItems>
+          </TableRowEntry>
+        </TableRowEntries>
+      </TableControl>
+    </View>
+
+    <!--
+      =============================================================================
+      Lakehouse Table View - tables within a lakehouse
+      =============================================================================
+      Display Priority: Workspace Name, Table Name, Type, Format, Location
+    -->
+    <View>
+      <Name>LakehouseTableView</Name>
+      <ViewSelectedBy>
+        <TypeName>MicrosoftFabric.LakehouseTable</TypeName>
+      </ViewSelectedBy>
+      <TableControl>
+        <TableHeaders>
+          <TableColumnHeader><Label>Workspace Name</Label><Width>22</Width></TableColumnHeader>
+          <TableColumnHeader><Label>Table Name</Label><Width>25</Width></TableColumnHeader>
+          <TableColumnHeader><Label>Type</Label><Width>12</Width></TableColumnHeader>
+          <TableColumnHeader><Label>Format</Label><Width>10</Width></TableColumnHeader>
+          <TableColumnHeader><Label>Location</Label></TableColumnHeader>
+        </TableHeaders>
+        <TableRowEntries>
+          <TableRowEntry>
+            <TableColumnItems>
+              <TableColumnItem>
+                <ScriptBlock>
+                  if ($_.WorkspaceName) { $_.WorkspaceName }
+                  elseif ($_.workspaceId) { try { Resolve-FabricWorkspaceName -WorkspaceId $_.workspaceId } catch { $_.workspaceId } }
+                  else { 'N/A' }
+                </ScriptBlock>
+              </TableColumnItem>
+              <TableColumnItem><PropertyName>name</PropertyName></TableColumnItem>
+              <TableColumnItem><PropertyName>type</PropertyName></TableColumnItem>
+              <TableColumnItem><PropertyName>format</PropertyName></TableColumnItem>
+              <TableColumnItem><PropertyName>location</PropertyName></TableColumnItem>
+            </TableColumnItems>
+          </TableRowEntry>
+        </TableRowEntries>
+      </TableControl>
+    </View>
+
+    <!--
+      =============================================================================
+      Warehouse Restore Point View
+      =============================================================================
+      Display Priority: Workspace Name, Display Name, Creation Mode, ID
+    -->
+    <View>
+      <Name>WarehouseRestorePointView</Name>
+      <ViewSelectedBy>
+        <TypeName>MicrosoftFabric.WarehouseRestorePoint</TypeName>
+      </ViewSelectedBy>
+      <TableControl>
+        <TableHeaders>
+          <TableColumnHeader><Label>Workspace Name</Label><Width>25</Width></TableColumnHeader>
+          <TableColumnHeader><Label>Display Name</Label><Width>30</Width></TableColumnHeader>
+          <TableColumnHeader><Label>Creation Mode</Label><Width>15</Width></TableColumnHeader>
+          <TableColumnHeader><Label>ID</Label></TableColumnHeader>
+        </TableHeaders>
+        <TableRowEntries>
+          <TableRowEntry>
+            <TableColumnItems>
+              <TableColumnItem>
+                <ScriptBlock>
+                  if ($_.WorkspaceName) { $_.WorkspaceName }
+                  elseif ($_.workspaceId) { try { Resolve-FabricWorkspaceName -WorkspaceId $_.workspaceId } catch { $_.workspaceId } }
+                  else { 'N/A' }
+                </ScriptBlock>
+              </TableColumnItem>
+              <TableColumnItem><PropertyName>displayName</PropertyName></TableColumnItem>
+              <TableColumnItem><PropertyName>creationMode</PropertyName></TableColumnItem>
+              <TableColumnItem><PropertyName>id</PropertyName></TableColumnItem>
             </TableColumnItems>
           </TableRowEntry>
         </TableRowEntries>

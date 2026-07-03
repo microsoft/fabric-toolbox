@@ -28873,8 +28873,10 @@ function Start-FabricLakehouseRefreshMaterializedLakeView {
             #    return $null
             #}
 
-            # Construct the API endpoint URI
-            $apiEndpointURI = "{0}/workspaces/{1}/lakehouses/{2}/jobs/instances?jobType={3}" -f $script:FabricAuthContext.BaseUrl, $WorkspaceId , $LakehouseId, $JobType
+            # Construct the API endpoint URI using the preferred job-type-in-path form
+            # (/jobs/{jobType}/instances). The legacy ?jobType= query form still works but the
+            # path-segment form is the documented, preferred shape.
+            $apiEndpointURI = New-FabricAPIUri -Segments @('workspaces', $WorkspaceId, 'lakehouses', $LakehouseId, 'jobs', $JobType, 'instances')
             Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
 
               # Make the API request
@@ -28909,7 +28911,7 @@ function Start-FabricLakehouseRefreshMaterializedLakeView {
         }
     }
 }
-#EndRegion '.\Public\Lakehouse\Start-FabricLakehouseRefreshMaterializedLakeView.ps1' 101
+#EndRegion '.\Public\Lakehouse\Start-FabricLakehouseRefreshMaterializedLakeView.ps1' 103
 #Region '.\Public\Lakehouse\Start-FabricLakehouseTableMaintenance.ps1' -1
 
 <#
@@ -29012,8 +29014,10 @@ function Start-FabricLakehouseTableMaintenance {
                 return $null
             }
 
-            # Construct the API endpoint URI
-            $apiEndpointURI = "{0}/workspaces/{1}/lakehouses/{2}/jobs/instances?jobType={3}" -f $script:FabricAuthContext.BaseUrl, $WorkspaceId , $LakehouseId, $JobType
+            # Construct the API endpoint URI using the preferred job-type-in-path form
+            # (/jobs/{jobType}/instances). The legacy ?jobType= query form still works but the
+            # path-segment form is the documented, preferred shape.
+            $apiEndpointURI = New-FabricAPIUri -Segments @('workspaces', $WorkspaceId, 'lakehouses', $LakehouseId, 'jobs', $JobType, 'instances')
             Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
 
             # Construct the request body
@@ -29100,7 +29104,7 @@ function Start-FabricLakehouseTableMaintenance {
         }
     }
 }
-#EndRegion '.\Public\Lakehouse\Start-FabricLakehouseTableMaintenance.ps1' 189
+#EndRegion '.\Public\Lakehouse\Start-FabricLakehouseTableMaintenance.ps1' 191
 #Region '.\Public\Lakehouse\Update-FabricLakehouse.ps1' -1
 
 <#
@@ -40924,8 +40928,10 @@ function Start-FabricSparkJobDefinitionOnDemand {
             Invoke-FabricAuthCheck -ThrowOnFailure
 
 
-        # Construct the API endpoint URI
-        $apiEndpointURI = "{0}/workspaces/{1}/SparkJobDefinitions/{2}/jobs/instances?jobType={3}" -f $script:FabricAuthContext.BaseUrl, $WorkspaceId , $SparkJobDefinitionId, $JobType
+        # Construct the API endpoint URI using the preferred job-type-in-path form
+        # (/jobs/{jobType}/instances). The legacy ?jobType= query form still works but the
+        # path-segment form is the documented, preferred shape.
+        $apiEndpointURI = New-FabricAPIUri -Segments @('workspaces', $WorkspaceId, 'sparkJobDefinitions', $SparkJobDefinitionId, 'jobs', $JobType, 'instances')
         Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
 
         # Step 4: Make the API request
@@ -40934,7 +40940,6 @@ function Start-FabricSparkJobDefinitionOnDemand {
                 BaseURI = $apiEndpointURI
                 Headers = $script:FabricAuthContext.FabricHeaders
                 Method  = 'Post'
-                Body    = $bodyJson
             }
             if ($WaitForCompletion.IsPresent) {
                 $apiParams.WaitForCompletion = $true
@@ -40962,7 +40967,7 @@ function Start-FabricSparkJobDefinitionOnDemand {
         }
     }
 }
-#EndRegion '.\Public\Spark Job Definition\Start-FabricSparkJobDefinitionOnDemand.ps1' 94
+#EndRegion '.\Public\Spark Job Definition\Start-FabricSparkJobDefinitionOnDemand.ps1' 95
 #Region '.\Public\Spark Job Definition\Update-FabricSparkJobDefinition.ps1' -1
 
 <#

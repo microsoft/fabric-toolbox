@@ -57,4 +57,16 @@ Describe 'MicrosoftFabricMgmt.Format.ps1xml' -Tag 'UnitTests' {
     It 'defines a DeploymentPipelineView selecting MicrosoftFabric.DeploymentPipeline' {
         Get-ViewTypeNames -ViewName 'DeploymentPipelineView' | Should -Contain 'MicrosoftFabric.DeploymentPipeline'
     }
+
+    It 'folds WarehouseSnapshot (a full item) into the shared item views' {
+        Get-ViewTypeNames -ViewName 'FabricItemView'     | Should -Contain 'MicrosoftFabric.WarehouseSnapshot'
+        Get-ViewTypeNames -ViewName 'FabricItemListView' | Should -Contain 'MicrosoftFabric.WarehouseSnapshot'
+    }
+
+    It 'defines dedicated views for the sub-resource collections' {
+        Get-ViewTypeNames -ViewName 'ItemJobInstanceView'        | Should -Contain 'MicrosoftFabric.ItemJobInstance'
+        Get-ViewTypeNames -ViewName 'ItemScheduleView'           | Should -Contain 'MicrosoftFabric.ItemSchedule'
+        Get-ViewTypeNames -ViewName 'LakehouseTableView'         | Should -Contain 'MicrosoftFabric.LakehouseTable'
+        Get-ViewTypeNames -ViewName 'WarehouseRestorePointView'  | Should -Contain 'MicrosoftFabric.WarehouseRestorePoint'
+    }
 }

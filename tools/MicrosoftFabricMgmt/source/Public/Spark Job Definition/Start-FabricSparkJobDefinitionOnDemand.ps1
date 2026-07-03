@@ -53,8 +53,10 @@ function Start-FabricSparkJobDefinitionOnDemand {
             Invoke-FabricAuthCheck -ThrowOnFailure
 
 
-        # Construct the API endpoint URI
-        $apiEndpointURI = "{0}/workspaces/{1}/SparkJobDefinitions/{2}/jobs/instances?jobType={3}" -f $script:FabricAuthContext.BaseUrl, $WorkspaceId , $SparkJobDefinitionId, $JobType
+        # Construct the API endpoint URI using the preferred job-type-in-path form
+        # (/jobs/{jobType}/instances). The legacy ?jobType= query form still works but the
+        # path-segment form is the documented, preferred shape.
+        $apiEndpointURI = New-FabricAPIUri -Segments @('workspaces', $WorkspaceId, 'sparkJobDefinitions', $SparkJobDefinitionId, 'jobs', $JobType, 'instances')
         Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
 
         # Step 4: Make the API request
@@ -63,7 +65,6 @@ function Start-FabricSparkJobDefinitionOnDemand {
                 BaseURI = $apiEndpointURI
                 Headers = $script:FabricAuthContext.FabricHeaders
                 Method  = 'Post'
-                Body    = $bodyJson
             }
             if ($WaitForCompletion.IsPresent) {
                 $apiParams.WaitForCompletion = $true
