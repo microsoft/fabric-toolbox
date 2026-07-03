@@ -137,6 +137,13 @@
 - **`Get-FabricAdminRefreshable`**: `-CapacityId` is now optional. When omitted, the org-wide
   refreshables list is returned (`GET /admin/capacities/refreshables`, `$top` defaulted to 1000);
   when supplied, behavior is unchanged. Added `-Expand` (e.g. `capacities`) for both variants.
+- **Display formatting backfill** (`MicrosoftFabricMgmt.Format.ps1xml`): the standard item
+  resource types `AnomalyDetector`, `DigitalTwinBuilder`, `DigitalTwinBuilderFlow`,
+  `EventSchemaSet`, `GraphQuerySet`, `Map`, `MirroredAzureDatabricksCatalog`, `Ontology`,
+  `OperationsAgent`, and `UserDataFunction` now render with the shared Capacity/Workspace/Item
+  table + list views. Added dedicated `ConnectionView` (Connection Name / Connectivity Type /
+  Gateway Name / ID) and `DeploymentPipelineView` (Pipeline Name / Description / ID). Formatting
+  is display-only; the enriched object still carries every property.
 
 ### Added (earlier this release)
 
@@ -230,15 +237,7 @@
 - **`Update-FabricAPISpecsCache.ps1`**: Also caches the shared `common` definitions (the `Item` base and other
   shared schemas), enabling response-schema resolution for property-completeness validation.
 - **PowerShell support clarification**: The module targets **PowerShell 7+ (Core) only** (manifest already declares
-  `CompatiblePSEditions = @(''Core'')`, `PowerShellVersion = ''7.0''`). This supersedes the v1.0.0 note about "PowerShell
-  5.1 compatibility" — the module does not load on Windows PowerShell 5.1, and the HTTP layer relies on 7+-only
-  `Invoke-RestMethod` features (`-SkipHttpErrorCheck`, `-StatusCodeVariable`, `-ResponseHeadersVariable`).
-
-### Added
-
-- **API URI regression tests** (`tests/Unit/ApiUriRegression.Tests.ps1`): assert the exact request URI + HTTP method
-  for the connection role-assignment and admin sharing-links functions, and pin the `New-FabricAPIUri` ordering contract.
-- **Property-completeness harness** (`tests/Unit/PropertyCompleteness.Tests.ps1` + `scripts/Get-FabricSchemaProperty.ps'
+  `CompatiblePSEditions = @(''Core'')`, `PowerShellVersion = ''7.0''`). This supersedes the '
 
             # Prerelease string of this module
             # Prerelease = ''

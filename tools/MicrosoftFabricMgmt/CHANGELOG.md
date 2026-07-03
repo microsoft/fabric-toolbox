@@ -17,6 +17,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **`Set-FabricOneLakeImmutabilityPolicy`** (new): `POST /workspaces/{workspaceId}/onelake/settings/modifyImmutabilityPolicy`;
   `-Scope` (DiagnosticLogs) + `-RetentionDays`; supports `-WhatIf`/`-Confirm` and `-Raw`.
 
+### Fixed
+
+- **`scripts/sync-test-expected-params.ps1` idempotency**: a second run no longer corrupts
+  test files. Previously the `param()`-insert fallback ran whenever the regex replacement
+  produced no change — including the already-synced case — so re-running duplicated the
+  `$expectedParams` block into every synced test file (253 had both a `param()` and the array).
+  The branch is now chosen by whether the block exists, the pattern anchors on horizontal
+  whitespace so replacement is byte-stable, and the helper (`Set-ExpectedParamsInTest`, renamed
+  from the unapproved-verb `Replace-…`) plus the main loop are guarded for dot-source testing.
+  New regression suite `tests/Unit/SyncExpectedParams.Tests.ps1`; idempotency also verified
+  against the real `tests/Unit` tree (second run: 0 files changed).
+
 ### Changed
 
 - **`Get-FabricAdminRefreshable`**: `-CapacityId` is now optional. When omitted, the org-wide

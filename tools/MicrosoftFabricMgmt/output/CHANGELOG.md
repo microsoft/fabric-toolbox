@@ -24,6 +24,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **`Get-FabricAdminRefreshable`**: `-CapacityId` is now optional. When omitted, the org-wide
   refreshables list is returned (`GET /admin/capacities/refreshables`, `$top` defaulted to 1000);
   when supplied, behavior is unchanged. Added `-Expand` (e.g. `capacities`) for both variants.
+- **Display formatting backfill** (`MicrosoftFabricMgmt.Format.ps1xml`): the standard item
+  resource types `AnomalyDetector`, `DigitalTwinBuilder`, `DigitalTwinBuilderFlow`,
+  `EventSchemaSet`, `GraphQuerySet`, `Map`, `MirroredAzureDatabricksCatalog`, `Ontology`,
+  `OperationsAgent`, and `UserDataFunction` now render with the shared Capacity/Workspace/Item
+  table + list views. Added dedicated `ConnectionView` (Connection Name / Connectivity Type /
+  Gateway Name / ID) and `DeploymentPipelineView` (Pipeline Name / Description / ID). Formatting
+  is display-only; the enriched object still carries every property.
 
 ### Added (earlier this release)
 
