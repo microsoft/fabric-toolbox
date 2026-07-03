@@ -12770,6 +12770,1397 @@ function Get-FabricDatamart {
     }
 }
 #EndRegion '.\Public\Datamart\Get-FabricDatamart.ps1' 81
+#Region '.\Public\Deployment Pipeline\Add-FabricDeploymentPipelineRoleAssignment.ps1' -1
+
+<#
+.SYNOPSIS
+    Adds a role assignment to a Microsoft Fabric deployment pipeline.
+
+.DESCRIPTION
+    The Add-FabricDeploymentPipelineRoleAssignment function assigns a role to a principal
+    (User, Group, ServicePrincipal, ServicePrincipalProfile) on a deployment pipeline via
+    POST /deploymentPipelines/{deploymentPipelineId}/roleAssignments.
+
+    The request body contains the principal (id and type) and the role to assign.
+
+.PARAMETER DeploymentPipelineId
+    The unique identifier of the deployment pipeline. Mandatory.
+
+.PARAMETER PrincipalId
+    The unique identifier of the principal to assign the role to. Mandatory.
+
+.PARAMETER PrincipalType
+    The type of principal. Valid values: Group, ServicePrincipal, ServicePrincipalProfile, User. Mandatory.
+
+.PARAMETER Role
+    The role to assign to the principal. Valid values: Admin. Mandatory.
+
+.EXAMPLE
+    Add-FabricDeploymentPipelineRoleAssignment -DeploymentPipelineId "11111111-1111-1111-1111-111111111111" -PrincipalId "22222222-2222-2222-2222-222222222222" -PrincipalType "User" -Role "Admin"
+
+    Assigns the Admin role to the specified user on the deployment pipeline.
+
+.OUTPUTS
+    System.Object
+    The API response for the created role assignment.
+
+.NOTES
+    - API Endpoint: POST /deploymentPipelines/{deploymentPipelineId}/roleAssignments
+    - Requires: authentication via Set-FabricApiHeaders / Connect-FabricAccount.
+
+    Author: Tiago Balabuch, Jess Pomfret, Rob Sewell
+#>
+function Add-FabricDeploymentPipelineRoleAssignment {
+    [CmdletBinding(SupportsShouldProcess = $true, ConfirmImpact = 'Medium')]
+    param (
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
+        [ValidateNotNullOrEmpty()]
+        [string]$DeploymentPipelineId,
+
+        [Parameter(Mandatory = $true)]
+        [ValidateNotNullOrEmpty()]
+        [string]$PrincipalId,
+
+        [Parameter(Mandatory = $true)]
+        [ValidateNotNullOrEmpty()]
+        [ValidateSet('Group', 'ServicePrincipal', 'ServicePrincipalProfile', 'User')]
+        [string]$PrincipalType,
+
+        [Parameter(Mandatory = $true)]
+        [ValidateNotNullOrEmpty()]
+        [ValidateSet('Admin')]
+        [string]$Role
+    )
+
+    process {
+        try {
+            # Validate authentication
+            Invoke-FabricAuthCheck -ThrowOnFailure
+
+            # Construct the API endpoint URI
+            $segments = @('deploymentPipelines', $DeploymentPipelineId, 'roleAssignments')
+            $apiEndpointURI = New-FabricAPIUri -Segments $segments
+            Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
+
+            # Construct the request body
+            $body = @{
+                principal = @{
+                    id   = $PrincipalId
+                    type = $PrincipalType
+                }
+                role      = $Role
+            }
+            $bodyJson = Convert-FabricRequestBody -InputObject $body
+
+            if ($PSCmdlet.ShouldProcess("Role '$Role' to principal '$PrincipalId' on deployment pipeline '$DeploymentPipelineId'", "Assign")) {
+                # Make the API request
+                $apiParams = @{
+                    BaseURI = $apiEndpointURI
+                    Headers = $script:FabricAuthContext.FabricHeaders
+                    Method  = 'Post'
+                    Body    = $bodyJson
+                }
+                $response = Invoke-FabricAPIRequest @apiParams
+                Write-FabricLog -Message "Role '$Role' assigned to principal '$PrincipalId' on deployment pipeline '$DeploymentPipelineId'." -Level Host
+                $response
+            }
+        }
+        catch {
+            # Capture and log error details
+            $errorDetails = $_.Exception.Message
+            Write-FabricLog -Message "Failed to assign role to principal '$PrincipalId' on deployment pipeline '$DeploymentPipelineId'. Error: $errorDetails" -Level Error
+        }
+    }
+}
+#EndRegion '.\Public\Deployment Pipeline\Add-FabricDeploymentPipelineRoleAssignment.ps1' 101
+#Region '.\Public\Deployment Pipeline\Add-FabricDeploymentPipelineStageWorkspace.ps1' -1
+
+<#
+.SYNOPSIS
+    Assigns a workspace to a stage of a Microsoft Fabric deployment pipeline.
+
+.DESCRIPTION
+    The Add-FabricDeploymentPipelineStageWorkspace function assigns the specified workspace
+    to the specified stage of a deployment pipeline via
+    POST /deploymentPipelines/{deploymentPipelineId}/stages/{stageId}/assignWorkspace.
+
+    The request body contains the workspace id to assign. This operation fails if there is an
+    active deployment operation, or if either the stage or the workspace is already assigned.
+
+.PARAMETER DeploymentPipelineId
+    The unique identifier of the deployment pipeline. Mandatory.
+
+.PARAMETER StageId
+    The unique identifier of the deployment pipeline stage. Mandatory.
+
+.PARAMETER WorkspaceId
+    The unique identifier of the workspace to assign to the stage. Mandatory.
+
+.EXAMPLE
+    Add-FabricDeploymentPipelineStageWorkspace -DeploymentPipelineId "11111111-1111-1111-1111-111111111111" -StageId "22222222-2222-2222-2222-222222222222" -WorkspaceId "33333333-3333-3333-3333-333333333333"
+
+    Assigns the workspace to the specified deployment pipeline stage.
+
+.OUTPUTS
+    System.Object
+    The API response for the assign-workspace operation.
+
+.NOTES
+    - API Endpoint: POST /deploymentPipelines/{deploymentPipelineId}/stages/{stageId}/assignWorkspace
+    - Requires: authentication via Set-FabricApiHeaders / Connect-FabricAccount.
+
+    Author: Tiago Balabuch, Jess Pomfret, Rob Sewell
+#>
+function Add-FabricDeploymentPipelineStageWorkspace {
+    [CmdletBinding(SupportsShouldProcess = $true, ConfirmImpact = 'Medium')]
+    param (
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
+        [ValidateNotNullOrEmpty()]
+        [string]$DeploymentPipelineId,
+
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
+        [ValidateNotNullOrEmpty()]
+        [string]$StageId,
+
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
+        [ValidateNotNullOrEmpty()]
+        [string]$WorkspaceId
+    )
+
+    process {
+        try {
+            # Validate authentication
+            Invoke-FabricAuthCheck -ThrowOnFailure
+
+            # Construct the API endpoint URI
+            $segments = @('deploymentPipelines', $DeploymentPipelineId, 'stages', $StageId, 'assignWorkspace')
+            $apiEndpointURI = New-FabricAPIUri -Segments $segments
+            Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
+
+            # Construct the request body
+            $body = @{
+                workspaceId = $WorkspaceId
+            }
+            $bodyJson = Convert-FabricRequestBody -InputObject $body
+
+            if ($PSCmdlet.ShouldProcess("Workspace '$WorkspaceId' to stage '$StageId' of deployment pipeline '$DeploymentPipelineId'", "Assign")) {
+                # Make the API request
+                $apiParams = @{
+                    BaseURI = $apiEndpointURI
+                    Headers = $script:FabricAuthContext.FabricHeaders
+                    Method  = 'Post'
+                    Body    = $bodyJson
+                }
+                $response = Invoke-FabricAPIRequest @apiParams
+                Write-FabricLog -Message "Workspace '$WorkspaceId' assigned to stage '$StageId' of deployment pipeline '$DeploymentPipelineId'." -Level Host
+                $response
+            }
+        }
+        catch {
+            # Capture and log error details
+            $errorDetails = $_.Exception.Message
+            Write-FabricLog -Message "Failed to assign workspace '$WorkspaceId' to stage '$StageId' of deployment pipeline '$DeploymentPipelineId'. Error: $errorDetails" -Level Error
+        }
+    }
+}
+#EndRegion '.\Public\Deployment Pipeline\Add-FabricDeploymentPipelineStageWorkspace.ps1' 89
+#Region '.\Public\Deployment Pipeline\Get-FabricDeploymentPipeline.ps1' -1
+
+<#
+.SYNOPSIS
+    Retrieves one or all Microsoft Fabric deployment pipelines.
+
+.DESCRIPTION
+    The Get-FabricDeploymentPipeline function retrieves deployment pipelines from the
+    top-level Fabric `/deploymentPipelines` endpoint.
+
+    When -DeploymentPipelineId is supplied it returns the single matching pipeline via
+    GET /deploymentPipelines/{deploymentPipelineId}; otherwise it lists all deployment
+    pipelines the user can access via GET /deploymentPipelines.
+
+    By default each returned object is decorated for the custom table view. Pass -Raw to
+    return the untouched API response.
+
+.PARAMETER DeploymentPipelineId
+    Optional. The unique identifier of a single deployment pipeline to retrieve. When
+    omitted, all accessible deployment pipelines are returned.
+
+.PARAMETER Raw
+    If specified, returns the untouched API response with no added properties or type decoration.
+
+.EXAMPLE
+    Get-FabricDeploymentPipeline
+
+    Lists all deployment pipelines the current user can access.
+
+.EXAMPLE
+    Get-FabricDeploymentPipeline -DeploymentPipelineId "12345678-1234-1234-1234-123456789012"
+
+    Returns the single deployment pipeline with that ID.
+
+.OUTPUTS
+    System.Object
+    Deployment pipeline object(s) with all API-returned properties.
+
+.NOTES
+    - API Endpoints:
+        GET /deploymentPipelines
+        GET /deploymentPipelines/{deploymentPipelineId}
+    - Requires: authentication via Set-FabricApiHeaders / Connect-FabricAccount.
+
+    Author: Tiago Balabuch, Jess Pomfret, Rob Sewell
+#>
+function Get-FabricDeploymentPipeline {
+    [CmdletBinding()]
+    param (
+        [Parameter(Mandatory = $false, ValueFromPipelineByPropertyName = $true)]
+        [ValidateNotNullOrEmpty()]
+        [Alias('id')]
+        [string]$DeploymentPipelineId,
+
+        [Parameter()]
+        [switch]$Raw
+    )
+
+    process {
+        try {
+            Invoke-FabricAuthCheck -ThrowOnFailure
+
+            if ($DeploymentPipelineId) {
+                $apiEndpointURI = New-FabricAPIUri -Resource 'deploymentPipelines' -ResourceId $DeploymentPipelineId
+            }
+            else {
+                $apiEndpointURI = New-FabricAPIUri -Resource 'deploymentPipelines'
+            }
+            Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
+
+            $apiParams = @{
+                BaseURI = $apiEndpointURI
+                Headers = $script:FabricAuthContext.FabricHeaders
+                Method  = 'Get'
+            }
+            $response = Invoke-FabricAPIRequest @apiParams
+
+            if (-not $response) {
+                Write-FabricLog -Message "No deployment pipeline(s) returned." -Level Warning
+                return $null
+            }
+
+            if ($Raw) {
+                return $response
+            }
+
+            $response | Add-FabricTypeName -TypeName 'MicrosoftFabric.DeploymentPipeline'
+            $response
+        }
+        catch {
+            $errorDetails = $_.Exception.Message
+            Write-FabricLog -Message "Failed to retrieve deployment pipeline(s). Error: $errorDetails" -Level Error
+        }
+    }
+}
+#EndRegion '.\Public\Deployment Pipeline\Get-FabricDeploymentPipeline.ps1' 94
+#Region '.\Public\Deployment Pipeline\Get-FabricDeploymentPipelineOperation.ps1' -1
+
+<#
+.SYNOPSIS
+    Retrieves deploy operations for a Microsoft Fabric deployment pipeline.
+
+.DESCRIPTION
+    The Get-FabricDeploymentPipelineOperation function retrieves deploy operations performed on a
+    deployment pipeline.
+
+    When -OperationId is supplied it returns the single matching operation (including the deployment
+    execution plan) via /deploymentPipelines/{deploymentPipelineId}/operations/{operationId};
+    otherwise it lists the up-to-20 most recent operations via
+    /deploymentPipelines/{deploymentPipelineId}/operations.
+
+    By default the returned object(s) are decorated for the custom table view. Pass -Raw to return
+    the untouched API response.
+
+.PARAMETER DeploymentPipelineId
+    The unique identifier of the deployment pipeline. Mandatory.
+
+.PARAMETER OperationId
+    Optional. The unique identifier of a single deploy operation to retrieve.
+
+.PARAMETER Raw
+    If specified, returns the untouched API response with no type decoration.
+
+.EXAMPLE
+    Get-FabricDeploymentPipelineOperation -DeploymentPipelineId "11111111-1111-1111-1111-111111111111"
+
+    Lists the most recent deploy operations for the deployment pipeline.
+
+.EXAMPLE
+    Get-FabricDeploymentPipelineOperation -DeploymentPipelineId "11111111-1111-1111-1111-111111111111" -OperationId "22222222-2222-2222-2222-222222222222"
+
+    Returns the single deploy operation with that ID, including its execution plan.
+
+.OUTPUTS
+    System.Object
+    Deploy operation object(s) with all API-returned properties.
+
+.NOTES
+    - API Endpoints:
+        GET /deploymentPipelines/{deploymentPipelineId}/operations
+        GET /deploymentPipelines/{deploymentPipelineId}/operations/{operationId}
+    - Requires: authentication via Set-FabricApiHeaders / Connect-FabricAccount.
+
+    Author: Tiago Balabuch, Jess Pomfret, Rob Sewell
+#>
+function Get-FabricDeploymentPipelineOperation {
+    [CmdletBinding()]
+    param (
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
+        [ValidateNotNullOrEmpty()]
+        [string]$DeploymentPipelineId,
+
+        [Parameter(Mandatory = $false)]
+        [ValidateNotNullOrEmpty()]
+        [string]$OperationId,
+
+        [Parameter()]
+        [switch]$Raw
+    )
+
+    process {
+        try {
+            # Validate authentication
+            Invoke-FabricAuthCheck -ThrowOnFailure
+
+            # Build the segment list, appending OperationId only when a single operation is requested.
+            $segments = @('deploymentPipelines', $DeploymentPipelineId, 'operations')
+            if ($OperationId) { $segments += $OperationId }
+            $apiEndpointURI = New-FabricAPIUri -Segments $segments
+            Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
+
+            # Make the API request
+            $apiParams = @{
+                BaseURI = $apiEndpointURI
+                Headers = $script:FabricAuthContext.FabricHeaders
+                Method  = 'Get'
+            }
+            $response = Invoke-FabricAPIRequest @apiParams
+
+            if (-not $response) {
+                Write-FabricLog -Message "No operations returned for deployment pipeline '$DeploymentPipelineId'." -Level Warning
+                return $null
+            }
+
+            if ($Raw) {
+                return $response
+            }
+
+            $response | Add-FabricTypeName -TypeName 'MicrosoftFabric.DeploymentPipelineOperation'
+            $response
+        }
+        catch {
+            # Capture and log error details
+            $errorDetails = $_.Exception.Message
+            Write-FabricLog -Message "Failed to retrieve operations for deployment pipeline '$DeploymentPipelineId'. Error: $errorDetails" -Level Error
+        }
+    }
+}
+#EndRegion '.\Public\Deployment Pipeline\Get-FabricDeploymentPipelineOperation.ps1' 101
+#Region '.\Public\Deployment Pipeline\Get-FabricDeploymentPipelineRoleAssignment.ps1' -1
+
+<#
+.SYNOPSIS
+    Retrieves the role assignments for a Microsoft Fabric deployment pipeline.
+
+.DESCRIPTION
+    The Get-FabricDeploymentPipelineRoleAssignment function retrieves the list of role assignments
+    for a deployment pipeline via
+    GET /deploymentPipelines/{deploymentPipelineId}/roleAssignments.
+
+    By default the returned object(s) are decorated for the custom table view. Pass -Raw to return
+    the untouched API response.
+
+.PARAMETER DeploymentPipelineId
+    The unique identifier of the deployment pipeline. Mandatory.
+
+.PARAMETER Raw
+    If specified, returns the untouched API response with no type decoration.
+
+.EXAMPLE
+    Get-FabricDeploymentPipelineRoleAssignment -DeploymentPipelineId "11111111-1111-1111-1111-111111111111"
+
+    Lists the role assignments for the deployment pipeline.
+
+.OUTPUTS
+    System.Object
+    Role assignment object(s) with all API-returned properties.
+
+.NOTES
+    - API Endpoint: GET /deploymentPipelines/{deploymentPipelineId}/roleAssignments
+    - Requires: authentication via Set-FabricApiHeaders / Connect-FabricAccount.
+
+    Author: Tiago Balabuch, Jess Pomfret, Rob Sewell
+#>
+function Get-FabricDeploymentPipelineRoleAssignment {
+    [CmdletBinding()]
+    param (
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
+        [ValidateNotNullOrEmpty()]
+        [string]$DeploymentPipelineId,
+
+        [Parameter()]
+        [switch]$Raw
+    )
+
+    process {
+        try {
+            # Validate authentication
+            Invoke-FabricAuthCheck -ThrowOnFailure
+
+            # Construct the API endpoint URI
+            $segments = @('deploymentPipelines', $DeploymentPipelineId, 'roleAssignments')
+            $apiEndpointURI = New-FabricAPIUri -Segments $segments
+            Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
+
+            # Make the API request
+            $apiParams = @{
+                BaseURI = $apiEndpointURI
+                Headers = $script:FabricAuthContext.FabricHeaders
+                Method  = 'Get'
+            }
+            $response = Invoke-FabricAPIRequest @apiParams
+
+            if (-not $response) {
+                Write-FabricLog -Message "No role assignments returned for deployment pipeline '$DeploymentPipelineId'." -Level Warning
+                return $null
+            }
+
+            if ($Raw) {
+                return $response
+            }
+
+            $response | Add-FabricTypeName -TypeName 'MicrosoftFabric.DeploymentPipelineRoleAssignment'
+            $response
+        }
+        catch {
+            # Capture and log error details
+            $errorDetails = $_.Exception.Message
+            Write-FabricLog -Message "Failed to retrieve role assignments for deployment pipeline '$DeploymentPipelineId'. Error: $errorDetails" -Level Error
+        }
+    }
+}
+#EndRegion '.\Public\Deployment Pipeline\Get-FabricDeploymentPipelineRoleAssignment.ps1' 82
+#Region '.\Public\Deployment Pipeline\Get-FabricDeploymentPipelineStage.ps1' -1
+
+<#
+.SYNOPSIS
+    Retrieves the stages of a Microsoft Fabric deployment pipeline.
+
+.DESCRIPTION
+    The Get-FabricDeploymentPipelineStage function retrieves the stages configured for a
+    deployment pipeline.
+
+    When -StageId is supplied it returns the single matching stage via
+    GET /deploymentPipelines/{deploymentPipelineId}/stages/{stageId}; otherwise it lists
+    all stages via GET /deploymentPipelines/{deploymentPipelineId}/stages.
+
+    By default each returned object is decorated for the custom table view. Pass -Raw to
+    return the untouched API response.
+
+.PARAMETER DeploymentPipelineId
+    The unique identifier of the deployment pipeline whose stages are retrieved. Mandatory.
+
+.PARAMETER StageId
+    Optional. The unique identifier of a single stage to retrieve.
+
+.PARAMETER Raw
+    If specified, returns the untouched API response with no added properties or type decoration.
+
+.EXAMPLE
+    Get-FabricDeploymentPipelineStage -DeploymentPipelineId "12345678-1234-1234-1234-123456789012"
+
+    Lists all stages for the deployment pipeline.
+
+.EXAMPLE
+    Get-FabricDeploymentPipelineStage -DeploymentPipelineId "12345678-1234-1234-1234-123456789012" -StageId "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee"
+
+    Returns the single stage with that ID.
+
+.OUTPUTS
+    System.Object
+    Deployment pipeline stage object(s) with all API-returned properties.
+
+.NOTES
+    - API Endpoints:
+        GET /deploymentPipelines/{deploymentPipelineId}/stages
+        GET /deploymentPipelines/{deploymentPipelineId}/stages/{stageId}
+    - Requires: authentication via Set-FabricApiHeaders / Connect-FabricAccount.
+
+    Author: Tiago Balabuch, Jess Pomfret, Rob Sewell
+#>
+function Get-FabricDeploymentPipelineStage {
+    [CmdletBinding()]
+    param (
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
+        [ValidateNotNullOrEmpty()]
+        [Alias('id')]
+        [string]$DeploymentPipelineId,
+
+        [Parameter(Mandatory = $false)]
+        [ValidateNotNullOrEmpty()]
+        [string]$StageId,
+
+        [Parameter()]
+        [switch]$Raw
+    )
+
+    process {
+        try {
+            Invoke-FabricAuthCheck -ThrowOnFailure
+
+            # Build the segment list, appending StageId only when a single stage is requested.
+            $segments = @('deploymentPipelines', $DeploymentPipelineId, 'stages')
+            if ($StageId) { $segments += $StageId }
+            $apiEndpointURI = New-FabricAPIUri -Segments $segments
+            Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
+
+            $apiParams = @{
+                BaseURI = $apiEndpointURI
+                Headers = $script:FabricAuthContext.FabricHeaders
+                Method  = 'Get'
+            }
+            $response = Invoke-FabricAPIRequest @apiParams
+
+            if (-not $response) {
+                Write-FabricLog -Message "No stage(s) returned for deployment pipeline '$DeploymentPipelineId'." -Level Warning
+                return $null
+            }
+
+            if ($Raw) {
+                return $response
+            }
+
+            $response | Add-FabricTypeName -TypeName 'MicrosoftFabric.DeploymentPipelineStage'
+            $response
+        }
+        catch {
+            $errorDetails = $_.Exception.Message
+            Write-FabricLog -Message "Failed to retrieve stage(s) for deployment pipeline '$DeploymentPipelineId'. Error: $errorDetails" -Level Error
+        }
+    }
+}
+#EndRegion '.\Public\Deployment Pipeline\Get-FabricDeploymentPipelineStage.ps1' 98
+#Region '.\Public\Deployment Pipeline\Get-FabricDeploymentPipelineStageItem.ps1' -1
+
+<#
+.SYNOPSIS
+    Retrieves the supported items from a Microsoft Fabric deployment pipeline stage.
+
+.DESCRIPTION
+    The Get-FabricDeploymentPipelineStageItem function retrieves the supported items from
+    the workspace assigned to a specified stage of a deployment pipeline via
+    GET /deploymentPipelines/{deploymentPipelineId}/stages/{stageId}/items.
+
+    By default each returned object is decorated for the custom table view. Pass -Raw to
+    return the untouched API response.
+
+.PARAMETER DeploymentPipelineId
+    The unique identifier of the deployment pipeline. Mandatory.
+
+.PARAMETER StageId
+    The unique identifier of the stage whose items are retrieved. Mandatory.
+
+.PARAMETER Raw
+    If specified, returns the untouched API response with no added properties or type decoration.
+
+.EXAMPLE
+    Get-FabricDeploymentPipelineStageItem -DeploymentPipelineId "12345678-1234-1234-1234-123456789012" -StageId "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee"
+
+    Lists the supported items in the workspace assigned to the stage.
+
+.OUTPUTS
+    System.Object
+    Deployment pipeline stage item object(s) with all API-returned properties.
+
+.NOTES
+    - API Endpoint: GET /deploymentPipelines/{deploymentPipelineId}/stages/{stageId}/items
+    - Requires: authentication via Set-FabricApiHeaders / Connect-FabricAccount.
+
+    Author: Tiago Balabuch, Jess Pomfret, Rob Sewell
+#>
+function Get-FabricDeploymentPipelineStageItem {
+    [CmdletBinding()]
+    param (
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
+        [ValidateNotNullOrEmpty()]
+        [Alias('id')]
+        [string]$DeploymentPipelineId,
+
+        [Parameter(Mandatory = $true)]
+        [ValidateNotNullOrEmpty()]
+        [string]$StageId,
+
+        [Parameter()]
+        [switch]$Raw
+    )
+
+    process {
+        try {
+            Invoke-FabricAuthCheck -ThrowOnFailure
+
+            $segments = @('deploymentPipelines', $DeploymentPipelineId, 'stages', $StageId, 'items')
+            $apiEndpointURI = New-FabricAPIUri -Segments $segments
+            Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
+
+            $apiParams = @{
+                BaseURI = $apiEndpointURI
+                Headers = $script:FabricAuthContext.FabricHeaders
+                Method  = 'Get'
+            }
+            $response = Invoke-FabricAPIRequest @apiParams
+
+            if (-not $response) {
+                Write-FabricLog -Message "No stage item(s) returned for stage '$StageId'." -Level Warning
+                return $null
+            }
+
+            if ($Raw) {
+                return $response
+            }
+
+            $response | Add-FabricTypeName -TypeName 'MicrosoftFabric.DeploymentPipelineStageItem'
+            $response
+        }
+        catch {
+            $errorDetails = $_.Exception.Message
+            Write-FabricLog -Message "Failed to retrieve stage item(s) for stage '$StageId'. Error: $errorDetails" -Level Error
+        }
+    }
+}
+#EndRegion '.\Public\Deployment Pipeline\Get-FabricDeploymentPipelineStageItem.ps1' 86
+#Region '.\Public\Deployment Pipeline\Invoke-FabricDeploymentPipelineDeploy.ps1' -1
+
+<#
+.SYNOPSIS
+    Deploys content between stages of a Microsoft Fabric deployment pipeline.
+
+.DESCRIPTION
+    The Invoke-FabricDeploymentPipelineDeploy function deploys items from the source stage of a
+    deployment pipeline to the target stage via
+    POST /deploymentPipelines/{deploymentPipelineId}/deploy.
+
+    The request body is built from the supplied fields (sourceStageId, targetStageId, items, note,
+    options). When -Items is omitted, all supported items in the source stage are deployed.
+
+    This is a long-running operation: the API responds with a 202 and operation/location tracking
+    data used to monitor the deployment. The response is returned as-is; -Raw is accepted for
+    interface uniformity.
+
+.PARAMETER DeploymentPipelineId
+    The unique identifier of the deployment pipeline. Mandatory.
+
+.PARAMETER SourceStageId
+    The unique identifier of the source stage to deploy from. Mandatory.
+
+.PARAMETER TargetStageId
+    Optional. The unique identifier of the target stage to deploy to.
+
+.PARAMETER Items
+    Optional. An array of item objects to selectively deploy, each with a sourceItemId and itemType,
+    e.g. @(@{ sourceItemId = '...'; itemType = 'Report' }). When omitted, all items are deployed.
+
+.PARAMETER Note
+    Optional. A free-text note (max 1024 characters) describing the deployment.
+
+.PARAMETER Options
+    Optional. A hashtable of deployment options passed through verbatim in the request body,
+    e.g. @{ allowCrossRegionDeployment = $true }.
+
+.PARAMETER Raw
+    Accepted for interface uniformity. The response is returned as-is regardless.
+
+.EXAMPLE
+    Invoke-FabricDeploymentPipelineDeploy -DeploymentPipelineId "11111111-1111-1111-1111-111111111111" -SourceStageId "22222222-2222-2222-2222-222222222222" -TargetStageId "33333333-3333-3333-3333-333333333333"
+
+    Deploys all supported items from the source stage to the target stage.
+
+.EXAMPLE
+    $items = @(@{ sourceItemId = '44444444-4444-4444-4444-444444444444'; itemType = 'Report' })
+    Invoke-FabricDeploymentPipelineDeploy -DeploymentPipelineId $pipe -SourceStageId $src -TargetStageId $tgt -Items $items -Note 'Selective deploy'
+
+    Selectively deploys the specified report with a note.
+
+.OUTPUTS
+    System.Object
+    The API response for the deploy operation (long-running operation tracking data).
+
+.NOTES
+    - API Endpoint: POST /deploymentPipelines/{deploymentPipelineId}/deploy
+    - Requires: authentication via Set-FabricApiHeaders / Connect-FabricAccount.
+
+    Author: Tiago Balabuch, Jess Pomfret, Rob Sewell
+#>
+function Invoke-FabricDeploymentPipelineDeploy {
+    [CmdletBinding(SupportsShouldProcess = $true, ConfirmImpact = 'Medium')]
+    param (
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
+        [ValidateNotNullOrEmpty()]
+        [string]$DeploymentPipelineId,
+
+        [Parameter(Mandatory = $true)]
+        [ValidateNotNullOrEmpty()]
+        [string]$SourceStageId,
+
+        [Parameter(Mandatory = $false)]
+        [ValidateNotNullOrEmpty()]
+        [string]$TargetStageId,
+
+        [Parameter(Mandatory = $false)]
+        [object[]]$Items,
+
+        [Parameter(Mandatory = $false)]
+        [ValidateNotNullOrEmpty()]
+        [string]$Note,
+
+        [Parameter(Mandatory = $false)]
+        [hashtable]$Options,
+
+        [Parameter()]
+        [switch]$Raw
+    )
+
+    process {
+        try {
+            # Validate authentication
+            Invoke-FabricAuthCheck -ThrowOnFailure
+
+            # Construct the API endpoint URI
+            $segments = @('deploymentPipelines', $DeploymentPipelineId, 'deploy')
+            $apiEndpointURI = New-FabricAPIUri -Segments $segments
+            Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
+
+            # Construct the request body from supplied fields only
+            $body = @{
+                sourceStageId = $SourceStageId
+            }
+            if ($TargetStageId) { $body.targetStageId = $TargetStageId }
+            if ($Items) { $body.items = $Items }
+            if ($Note) { $body.note = $Note }
+            if ($Options) { $body.options = $Options }
+
+            $bodyJson = Convert-FabricRequestBody -InputObject $body
+
+            if ($PSCmdlet.ShouldProcess("Deployment pipeline '$DeploymentPipelineId' from stage '$SourceStageId'", "Deploy")) {
+                # Make the API request
+                $apiParams = @{
+                    BaseURI = $apiEndpointURI
+                    Headers = $script:FabricAuthContext.FabricHeaders
+                    Method  = 'Post'
+                    Body    = $bodyJson
+                }
+                $response = Invoke-FabricAPIRequest @apiParams
+
+                if ($Raw) {
+                    return $response
+                }
+
+                Write-FabricLog -Message "Deployment triggered for deployment pipeline '$DeploymentPipelineId' from stage '$SourceStageId'." -Level Host
+                $response
+            }
+        }
+        catch {
+            # Capture and log error details
+            $errorDetails = $_.Exception.Message
+            Write-FabricLog -Message "Failed to deploy deployment pipeline '$DeploymentPipelineId'. Error: $errorDetails" -Level Error
+        }
+    }
+}
+#EndRegion '.\Public\Deployment Pipeline\Invoke-FabricDeploymentPipelineDeploy.ps1' 136
+#Region '.\Public\Deployment Pipeline\New-FabricDeploymentPipeline.ps1' -1
+
+<#
+.SYNOPSIS
+    Creates a new Microsoft Fabric deployment pipeline.
+
+.DESCRIPTION
+    The New-FabricDeploymentPipeline function creates a deployment pipeline via POST to the
+    top-level Fabric `/deploymentPipelines` endpoint.
+
+    The display name is required; a description and an array of stages may optionally be
+    supplied. Each stage is a hashtable following the DeploymentPipelineStageRequest shape,
+    e.g. @{ displayName = 'Development'; description = 'Dev stage'; isPublic = $false }.
+
+    The full created deployment pipeline object is returned and decorated for the custom
+    table view. Pass -Raw to return the untouched API response.
+
+.PARAMETER DeploymentPipelineName
+    The display name of the deployment pipeline to create. Maps to the request body
+    property `displayName`.
+
+.PARAMETER Description
+    Optional description for the deployment pipeline.
+
+.PARAMETER Stages
+    Optional array of stage definitions. Each element is a hashtable following the
+    DeploymentPipelineStageRequest schema (displayName, description, isPublic), e.g.
+    @(@{ displayName = 'Development'; isPublic = $false }, @{ displayName = 'Production'; isPublic = $true }).
+
+.PARAMETER Raw
+    If specified, returns the untouched API response with no added properties or type decoration.
+
+.EXAMPLE
+    New-FabricDeploymentPipeline -DeploymentPipelineName 'Analytics Release'
+
+    Creates a deployment pipeline named 'Analytics Release'.
+
+.EXAMPLE
+    $stages = @(
+        @{ displayName = 'Development'; description = 'Dev'; isPublic = $false },
+        @{ displayName = 'Production';  description = 'Prod'; isPublic = $true }
+    )
+    New-FabricDeploymentPipeline -DeploymentPipelineName 'Analytics Release' -Description 'Release pipeline' -Stages $stages
+
+    Creates a deployment pipeline with two stages.
+
+.OUTPUTS
+    System.Object
+    The created deployment pipeline object with all API-returned properties.
+
+.NOTES
+    - API Endpoint: POST /deploymentPipelines
+    - Requires: authentication via Set-FabricApiHeaders / Connect-FabricAccount.
+
+    Author: Tiago Balabuch, Jess Pomfret, Rob Sewell
+#>
+function New-FabricDeploymentPipeline {
+    [CmdletBinding(SupportsShouldProcess = $true, ConfirmImpact = 'Medium')]
+    param (
+        [Parameter(Mandatory = $true)]
+        [ValidateNotNullOrEmpty()]
+        [string]$DeploymentPipelineName,
+
+        [Parameter(Mandatory = $false)]
+        [ValidateNotNullOrEmpty()]
+        [string]$Description,
+
+        [Parameter(Mandatory = $false)]
+        [hashtable[]]$Stages,
+
+        [Parameter()]
+        [switch]$Raw
+    )
+
+    process {
+        try {
+            Invoke-FabricAuthCheck -ThrowOnFailure
+
+            $apiEndpointURI = New-FabricAPIUri -Resource 'deploymentPipelines'
+            Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
+
+            $body = @{
+                displayName = $DeploymentPipelineName
+            }
+            if ($Description) { $body.description = $Description }
+            if ($Stages) { $body.stages = $Stages }
+
+            $bodyJson = $body | ConvertTo-Json -Depth 10
+            Write-FabricLog -Message "Request Body: $bodyJson" -Level Debug
+
+            $apiParams = @{
+                BaseURI = $apiEndpointURI
+                Headers = $script:FabricAuthContext.FabricHeaders
+                Method  = 'Post'
+                Body    = $bodyJson
+            }
+
+            if ($PSCmdlet.ShouldProcess($DeploymentPipelineName, "Create Fabric deployment pipeline")) {
+                $response = Invoke-FabricAPIRequest @apiParams
+
+                if (-not $response) {
+                    Write-FabricLog -Message "No response returned after creating deployment pipeline '$DeploymentPipelineName'." -Level Warning
+                    return $null
+                }
+
+                if ($Raw) {
+                    return $response
+                }
+
+                $response | Add-FabricTypeName -TypeName 'MicrosoftFabric.DeploymentPipeline'
+                Write-FabricLog -Message "Deployment pipeline '$DeploymentPipelineName' created successfully!" -Level Host
+                return $response
+            }
+        }
+        catch {
+            $errorDetails = $_.Exception.Message
+            Write-FabricLog -Message "Failed to create deployment pipeline '$DeploymentPipelineName'. Error: $errorDetails" -Level Error
+        }
+    }
+}
+#EndRegion '.\Public\Deployment Pipeline\New-FabricDeploymentPipeline.ps1' 119
+#Region '.\Public\Deployment Pipeline\Remove-FabricDeploymentPipeline.ps1' -1
+
+<#
+.SYNOPSIS
+    Removes a Microsoft Fabric deployment pipeline.
+
+.DESCRIPTION
+    The Remove-FabricDeploymentPipeline function deletes a deployment pipeline via DELETE
+    to `/deploymentPipelines/{deploymentPipelineId}`.
+
+    This is a destructive operation and supports -WhatIf and -Confirm. Because it has a
+    high confirm impact, confirmation is requested by default unless suppressed with
+    -Confirm:$false.
+
+.PARAMETER DeploymentPipelineId
+    The unique identifier of the deployment pipeline to remove. Accepts pipeline input by
+    property name (e.g. from Get-FabricDeploymentPipeline).
+
+.EXAMPLE
+    Remove-FabricDeploymentPipeline -DeploymentPipelineId "12345678-1234-1234-1234-123456789012"
+
+    Removes the specified deployment pipeline (prompts for confirmation).
+
+.EXAMPLE
+    Get-FabricDeploymentPipeline -DeploymentPipelineId "12345678-1234-1234-1234-123456789012" | Remove-FabricDeploymentPipeline -Confirm:$false
+
+    Removes the deployment pipeline without prompting.
+
+.OUTPUTS
+    None.
+
+.NOTES
+    - API Endpoint: DELETE /deploymentPipelines/{deploymentPipelineId}
+    - Requires: authentication via Set-FabricApiHeaders / Connect-FabricAccount.
+
+    Author: Tiago Balabuch, Jess Pomfret, Rob Sewell
+#>
+function Remove-FabricDeploymentPipeline {
+    [CmdletBinding(SupportsShouldProcess = $true, ConfirmImpact = 'High')]
+    param (
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
+        [ValidateNotNullOrEmpty()]
+        [Alias('id')]
+        [string]$DeploymentPipelineId
+    )
+
+    process {
+        try {
+            Invoke-FabricAuthCheck -ThrowOnFailure
+
+            $apiEndpointURI = New-FabricAPIUri -Resource 'deploymentPipelines' -ResourceId $DeploymentPipelineId
+            Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
+
+            $apiParams = @{
+                BaseURI = $apiEndpointURI
+                Headers = $script:FabricAuthContext.FabricHeaders
+                Method  = 'Delete'
+            }
+
+            if ($PSCmdlet.ShouldProcess($DeploymentPipelineId, "Remove Fabric deployment pipeline")) {
+                $null = Invoke-FabricAPIRequest @apiParams
+                Write-FabricLog -Message "Deployment pipeline '$DeploymentPipelineId' removed successfully!" -Level Host
+            }
+        }
+        catch {
+            $errorDetails = $_.Exception.Message
+            Write-FabricLog -Message "Failed to remove deployment pipeline '$DeploymentPipelineId'. Error: $errorDetails" -Level Error
+        }
+    }
+}
+#EndRegion '.\Public\Deployment Pipeline\Remove-FabricDeploymentPipeline.ps1' 69
+#Region '.\Public\Deployment Pipeline\Remove-FabricDeploymentPipelineRoleAssignment.ps1' -1
+
+<#
+.SYNOPSIS
+    Removes a role assignment from a Microsoft Fabric deployment pipeline.
+
+.DESCRIPTION
+    The Remove-FabricDeploymentPipelineRoleAssignment function deletes the role assignment for the
+    specified principal from a deployment pipeline via
+    DELETE /deploymentPipelines/{deploymentPipelineId}/roleAssignments/{principalId}.
+
+.PARAMETER DeploymentPipelineId
+    The unique identifier of the deployment pipeline. Mandatory.
+
+.PARAMETER PrincipalId
+    The unique identifier of the principal whose role assignment is removed. Mandatory.
+
+.EXAMPLE
+    Remove-FabricDeploymentPipelineRoleAssignment -DeploymentPipelineId "11111111-1111-1111-1111-111111111111" -PrincipalId "22222222-2222-2222-2222-222222222222"
+
+    Removes the role assignment for the specified principal from the deployment pipeline.
+
+.OUTPUTS
+    System.Object
+    The API response for the delete operation.
+
+.NOTES
+    - API Endpoint: DELETE /deploymentPipelines/{deploymentPipelineId}/roleAssignments/{principalId}
+    - Requires: authentication via Set-FabricApiHeaders / Connect-FabricAccount.
+
+    Author: Tiago Balabuch, Jess Pomfret, Rob Sewell
+#>
+function Remove-FabricDeploymentPipelineRoleAssignment {
+    [CmdletBinding(SupportsShouldProcess = $true, ConfirmImpact = 'High')]
+    param (
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
+        [ValidateNotNullOrEmpty()]
+        [string]$DeploymentPipelineId,
+
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
+        [ValidateNotNullOrEmpty()]
+        [Alias('id')]
+        [string]$PrincipalId
+    )
+
+    process {
+        try {
+            # Validate authentication
+            Invoke-FabricAuthCheck -ThrowOnFailure
+
+            # Construct the API endpoint URI
+            $segments = @('deploymentPipelines', $DeploymentPipelineId, 'roleAssignments', $PrincipalId)
+            $apiEndpointURI = New-FabricAPIUri -Segments $segments
+            Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
+
+            if ($PSCmdlet.ShouldProcess("Role assignment for principal '$PrincipalId' on deployment pipeline '$DeploymentPipelineId'", "Delete")) {
+                # Make the API request
+                $apiParams = @{
+                    BaseURI = $apiEndpointURI
+                    Headers = $script:FabricAuthContext.FabricHeaders
+                    Method  = 'Delete'
+                }
+                $response = Invoke-FabricAPIRequest @apiParams
+                Write-FabricLog -Message "Role assignment for principal '$PrincipalId' removed from deployment pipeline '$DeploymentPipelineId'." -Level Host
+                $response
+            }
+        }
+        catch {
+            # Capture and log error details
+            $errorDetails = $_.Exception.Message
+            Write-FabricLog -Message "Failed to remove role assignment for principal '$PrincipalId' on deployment pipeline '$DeploymentPipelineId'. Error: $errorDetails" -Level Error
+        }
+    }
+}
+#EndRegion '.\Public\Deployment Pipeline\Remove-FabricDeploymentPipelineRoleAssignment.ps1' 73
+#Region '.\Public\Deployment Pipeline\Remove-FabricDeploymentPipelineStageWorkspace.ps1' -1
+
+<#
+.SYNOPSIS
+    Unassigns the workspace from a stage of a Microsoft Fabric deployment pipeline.
+
+.DESCRIPTION
+    The Remove-FabricDeploymentPipelineStageWorkspace function unassigns the workspace from the
+    specified stage of a deployment pipeline via
+    POST /deploymentPipelines/{deploymentPipelineId}/stages/{stageId}/unassignWorkspace.
+
+    No request body is sent. This operation fails if there is an active deployment operation.
+
+.PARAMETER DeploymentPipelineId
+    The unique identifier of the deployment pipeline. Mandatory.
+
+.PARAMETER StageId
+    The unique identifier of the deployment pipeline stage. Mandatory.
+
+.EXAMPLE
+    Remove-FabricDeploymentPipelineStageWorkspace -DeploymentPipelineId "11111111-1111-1111-1111-111111111111" -StageId "22222222-2222-2222-2222-222222222222"
+
+    Unassigns the workspace from the specified deployment pipeline stage.
+
+.OUTPUTS
+    System.Object
+    The API response for the unassign-workspace operation.
+
+.NOTES
+    - API Endpoint: POST /deploymentPipelines/{deploymentPipelineId}/stages/{stageId}/unassignWorkspace
+    - Requires: authentication via Set-FabricApiHeaders / Connect-FabricAccount.
+
+    Author: Tiago Balabuch, Jess Pomfret, Rob Sewell
+#>
+function Remove-FabricDeploymentPipelineStageWorkspace {
+    [CmdletBinding(SupportsShouldProcess = $true, ConfirmImpact = 'High')]
+    param (
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
+        [ValidateNotNullOrEmpty()]
+        [string]$DeploymentPipelineId,
+
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
+        [ValidateNotNullOrEmpty()]
+        [string]$StageId
+    )
+
+    process {
+        try {
+            # Validate authentication
+            Invoke-FabricAuthCheck -ThrowOnFailure
+
+            # Construct the API endpoint URI
+            $segments = @('deploymentPipelines', $DeploymentPipelineId, 'stages', $StageId, 'unassignWorkspace')
+            $apiEndpointURI = New-FabricAPIUri -Segments $segments
+            Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
+
+            if ($PSCmdlet.ShouldProcess("Workspace from stage '$StageId' of deployment pipeline '$DeploymentPipelineId'", "Unassign")) {
+                # Make the API request (no body required)
+                $apiParams = @{
+                    BaseURI = $apiEndpointURI
+                    Headers = $script:FabricAuthContext.FabricHeaders
+                    Method  = 'Post'
+                }
+                $response = Invoke-FabricAPIRequest @apiParams
+                Write-FabricLog -Message "Workspace unassigned from stage '$StageId' of deployment pipeline '$DeploymentPipelineId'." -Level Host
+                $response
+            }
+        }
+        catch {
+            # Capture and log error details
+            $errorDetails = $_.Exception.Message
+            Write-FabricLog -Message "Failed to unassign workspace from stage '$StageId' of deployment pipeline '$DeploymentPipelineId'. Error: $errorDetails" -Level Error
+        }
+    }
+}
+#EndRegion '.\Public\Deployment Pipeline\Remove-FabricDeploymentPipelineStageWorkspace.ps1' 74
+#Region '.\Public\Deployment Pipeline\Update-FabricDeploymentPipeline.ps1' -1
+
+<#
+.SYNOPSIS
+    Updates an existing Microsoft Fabric deployment pipeline.
+
+.DESCRIPTION
+    The Update-FabricDeploymentPipeline function updates the properties of a deployment
+    pipeline via PATCH to `/deploymentPipelines/{deploymentPipelineId}`.
+
+    Only the supplied fields (display name and/or description) are included in the request
+    body. The full updated deployment pipeline object is returned and decorated for the
+    custom table view. Pass -Raw to return the untouched API response.
+
+.PARAMETER DeploymentPipelineId
+    The unique identifier of the deployment pipeline to update. Accepts pipeline input by
+    property name (e.g. from Get-FabricDeploymentPipeline).
+
+.PARAMETER DeploymentPipelineName
+    Optional new display name for the deployment pipeline. Maps to the request body
+    property `displayName`.
+
+.PARAMETER Description
+    Optional new description for the deployment pipeline.
+
+.PARAMETER Raw
+    If specified, returns the untouched API response with no added properties or type decoration.
+
+.EXAMPLE
+    Update-FabricDeploymentPipeline -DeploymentPipelineId "12345678-1234-1234-1234-123456789012" -DeploymentPipelineName 'Renamed Pipeline'
+
+    Renames the deployment pipeline.
+
+.EXAMPLE
+    Get-FabricDeploymentPipeline -DeploymentPipelineId "12345678-1234-1234-1234-123456789012" | Update-FabricDeploymentPipeline -Description 'Updated description'
+
+    Updates the description of the deployment pipeline.
+
+.OUTPUTS
+    System.Object
+    The updated deployment pipeline object with all API-returned properties.
+
+.NOTES
+    - API Endpoint: PATCH /deploymentPipelines/{deploymentPipelineId}
+    - Requires: authentication via Set-FabricApiHeaders / Connect-FabricAccount.
+
+    Author: Tiago Balabuch, Jess Pomfret, Rob Sewell
+#>
+function Update-FabricDeploymentPipeline {
+    [CmdletBinding(SupportsShouldProcess = $true, ConfirmImpact = 'Medium')]
+    param (
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
+        [ValidateNotNullOrEmpty()]
+        [Alias('id')]
+        [string]$DeploymentPipelineId,
+
+        [Parameter(Mandatory = $false)]
+        [ValidateNotNullOrEmpty()]
+        [string]$DeploymentPipelineName,
+
+        [Parameter(Mandatory = $false)]
+        [ValidateNotNullOrEmpty()]
+        [string]$Description,
+
+        [Parameter()]
+        [switch]$Raw
+    )
+
+    process {
+        try {
+            Invoke-FabricAuthCheck -ThrowOnFailure
+
+            $apiEndpointURI = New-FabricAPIUri -Resource 'deploymentPipelines' -ResourceId $DeploymentPipelineId
+            Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
+
+            # Only include supplied fields in the request body.
+            $body = @{}
+            if ($DeploymentPipelineName) { $body.displayName = $DeploymentPipelineName }
+            if ($Description) { $body.description = $Description }
+
+            $bodyJson = $body | ConvertTo-Json -Depth 10
+            Write-FabricLog -Message "Request Body: $bodyJson" -Level Debug
+
+            $apiParams = @{
+                BaseURI = $apiEndpointURI
+                Headers = $script:FabricAuthContext.FabricHeaders
+                Method  = 'Patch'
+                Body    = $bodyJson
+            }
+
+            if ($PSCmdlet.ShouldProcess($DeploymentPipelineId, "Update Fabric deployment pipeline")) {
+                $response = Invoke-FabricAPIRequest @apiParams
+
+                if (-not $response) {
+                    Write-FabricLog -Message "No response returned after updating deployment pipeline '$DeploymentPipelineId'." -Level Warning
+                    return $null
+                }
+
+                if ($Raw) {
+                    return $response
+                }
+
+                $response | Add-FabricTypeName -TypeName 'MicrosoftFabric.DeploymentPipeline'
+                Write-FabricLog -Message "Deployment pipeline '$DeploymentPipelineId' updated successfully!" -Level Host
+                return $response
+            }
+        }
+        catch {
+            $errorDetails = $_.Exception.Message
+            Write-FabricLog -Message "Failed to update deployment pipeline '$DeploymentPipelineId'. Error: $errorDetails" -Level Error
+        }
+    }
+}
+#EndRegion '.\Public\Deployment Pipeline\Update-FabricDeploymentPipeline.ps1' 112
+#Region '.\Public\Deployment Pipeline\Update-FabricDeploymentPipelineStage.ps1' -1
+
+<#
+.SYNOPSIS
+    Updates a stage of a Microsoft Fabric deployment pipeline.
+
+.DESCRIPTION
+    The Update-FabricDeploymentPipelineStage function updates the properties of a single
+    deployment pipeline stage via PATCH to
+    `/deploymentPipelines/{deploymentPipelineId}/stages/{stageId}`.
+
+    Only the supplied fields (display name, description and/or public visibility) are
+    included in the request body. IsPublic is only sent when explicitly provided so that a
+    value of $false is honoured. The full updated stage object is returned and decorated
+    for the custom table view. Pass -Raw to return the untouched API response.
+
+.PARAMETER DeploymentPipelineId
+    The unique identifier of the deployment pipeline containing the stage. Mandatory.
+
+.PARAMETER StageId
+    The unique identifier of the stage to update. Mandatory.
+
+.PARAMETER DisplayName
+    Optional new display name for the stage.
+
+.PARAMETER Description
+    Optional new description for the stage.
+
+.PARAMETER IsPublic
+    Optional boolean controlling whether the stage is public. Only sent when explicitly
+    supplied.
+
+.PARAMETER Raw
+    If specified, returns the untouched API response with no added properties or type decoration.
+
+.EXAMPLE
+    Update-FabricDeploymentPipelineStage -DeploymentPipelineId "12345678-1234-1234-1234-123456789012" -StageId "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee" -DisplayName 'Production'
+
+    Renames the stage to 'Production'.
+
+.EXAMPLE
+    Update-FabricDeploymentPipelineStage -DeploymentPipelineId "12345678-1234-1234-1234-123456789012" -StageId "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee" -IsPublic $false
+
+    Marks the stage as not public.
+
+.OUTPUTS
+    System.Object
+    The updated deployment pipeline stage object with all API-returned properties.
+
+.NOTES
+    - API Endpoint: PATCH /deploymentPipelines/{deploymentPipelineId}/stages/{stageId}
+    - Requires: authentication via Set-FabricApiHeaders / Connect-FabricAccount.
+
+    Author: Tiago Balabuch, Jess Pomfret, Rob Sewell
+#>
+function Update-FabricDeploymentPipelineStage {
+    [CmdletBinding(SupportsShouldProcess = $true, ConfirmImpact = 'Medium')]
+    param (
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
+        [ValidateNotNullOrEmpty()]
+        [Alias('id')]
+        [string]$DeploymentPipelineId,
+
+        [Parameter(Mandatory = $true)]
+        [ValidateNotNullOrEmpty()]
+        [string]$StageId,
+
+        [Parameter(Mandatory = $false)]
+        [ValidateNotNullOrEmpty()]
+        [string]$DisplayName,
+
+        [Parameter(Mandatory = $false)]
+        [ValidateNotNullOrEmpty()]
+        [string]$Description,
+
+        [Parameter(Mandatory = $false)]
+        [bool]$IsPublic,
+
+        [Parameter()]
+        [switch]$Raw
+    )
+
+    process {
+        try {
+            Invoke-FabricAuthCheck -ThrowOnFailure
+
+            $segments = @('deploymentPipelines', $DeploymentPipelineId, 'stages', $StageId)
+            $apiEndpointURI = New-FabricAPIUri -Segments $segments
+            Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
+
+            # Only include supplied fields in the request body. IsPublic is checked via
+            # $PSBoundParameters so an explicit $false is sent while an omitted switch is not.
+            $body = @{}
+            if ($DisplayName) { $body.displayName = $DisplayName }
+            if ($Description) { $body.description = $Description }
+            if ($PSBoundParameters.ContainsKey('IsPublic')) { $body.isPublic = $IsPublic }
+
+            $bodyJson = $body | ConvertTo-Json -Depth 10
+            Write-FabricLog -Message "Request Body: $bodyJson" -Level Debug
+
+            $apiParams = @{
+                BaseURI = $apiEndpointURI
+                Headers = $script:FabricAuthContext.FabricHeaders
+                Method  = 'Patch'
+                Body    = $bodyJson
+            }
+
+            if ($PSCmdlet.ShouldProcess($StageId, "Update Fabric deployment pipeline stage")) {
+                $response = Invoke-FabricAPIRequest @apiParams
+
+                if (-not $response) {
+                    Write-FabricLog -Message "No response returned after updating stage '$StageId'." -Level Warning
+                    return $null
+                }
+
+                if ($Raw) {
+                    return $response
+                }
+
+                $response | Add-FabricTypeName -TypeName 'MicrosoftFabric.DeploymentPipelineStage'
+                Write-FabricLog -Message "Deployment pipeline stage '$StageId' updated successfully!" -Level Host
+                return $response
+            }
+        }
+        catch {
+            $errorDetails = $_.Exception.Message
+            Write-FabricLog -Message "Failed to update stage '$StageId'. Error: $errorDetails" -Level Error
+        }
+    }
+}
+#EndRegion '.\Public\Deployment Pipeline\Update-FabricDeploymentPipelineStage.ps1' 129
 #Region '.\Public\Digital Twin Builder Flow\Get-FabricDigitalTwinBuilderFlow.ps1' -1
 
 <#
