@@ -122,6 +122,15 @@
 
 ### Added
 
+- **Deployment Pipelines command family** (14 new commands): pipeline CRUD
+  (`Get/New/Update/Remove-FabricDeploymentPipeline`), stages
+  (`Get/Update-FabricDeploymentPipelineStage`, `Get-FabricDeploymentPipelineStageItem`),
+  workspace assignment (`Add/Remove-FabricDeploymentPipelineStageWorkspace`),
+  deployment (`Invoke-FabricDeploymentPipelineDeploy`), operations
+  (`Get-FabricDeploymentPipelineOperation`), and role assignments
+  (`Get/Add/Remove-FabricDeploymentPipelineRoleAssignment`), all under `/deploymentPipelines/...`.
+  Deploy `-Items`/`-Options` are hashtable/array pass-throughs; state-changing commands support
+  `-WhatIf`/`-Confirm`; getters honor `-Raw` and add a `MicrosoftFabric.*` type.
 - **Workspace Git integration command family** (8 new commands): `Connect-FabricWorkspaceGit`,
   `Disconnect-FabricWorkspaceGit`, `Initialize-FabricWorkspaceGitConnection`,
   `Save-FabricWorkspaceGitCommit` (commit workspace → git), `Update-FabricWorkspaceFromGit`
