@@ -80,6 +80,15 @@ Note: create/accept bodies for External Data Share and some ML endpoint update f
 Note: ~~fetched platform/definitions/connections.json into the (gitignored) cache — add it to Update-FabricAPISpecsCache.ps1~~ **DONE 2026-07-03**: the cache updater now auto-discovers every `./definitions/{name}.json` a swagger `$ref`s and downloads it as `{spec}.{name}.definitions.json` (15 nested files: platform connections/deploymentPipelines/gitIntegration/externaldatasharing/gateways/managedPrivateEndpoint/tags/workspaceNetworkingPolicy, admin domains/sharinglinks/externaldatasharing/tags, eventstream common/source/destination/topology). Durable validation of the networking/connection/deployment body schemas no longer relies on ad-hoc fetches.
 Medium: ML Model scoring, SQL DB start/stop mirroring, Warehouse restore points, External Data Share provider/accept, DataPipeline definition pair, dataflow job scheduling, workspace outbound/network policies.
 
+## Property map & flattening backlog (NEW 2026-07-04)
+- [x] Generated `docs/api-property-map.md` via new `scripts/New-FabricPropertyMap.ps1` (spec-driven, repeatable): per-resource table of API response-schema properties (name + type + nested `$ref`) vs. what the module returns. Confirms the enrichment-first contract — every top-level API property is returned (verified by `PropertyCompleteness.Tests.ps1`); `-Raw` untouched; default adds resolved-name NoteProps. 26 resources mapped.
+- [ ] **NEXT — flatten high-value nested props** (see the doc's "High-value targets" table): surface buried scalars as flat top-level NoteProperties during enrichment, e.g.:
+  - Lakehouse/MirroredDatabase: `properties.sqlEndpointProperties.connectionString` → `SqlEndpointConnectionString`; `properties.oneLakeTablesPath/oneLakeFilesPath/defaultSchema`
+  - Warehouse/WarehouseSnapshot/SQLDatabase: `properties.connectionString` → `ConnectionString` (+ SQLDatabase `serverFqdn`, `databaseName`, earliest/latestRestorePoint, backupRetentionDays)
+  - Eventhouse/KQLDatabase: `properties.queryServiceUri`/`ingestionServiceUri`
+  - Environment: `properties.publishDetails.state`; SparkJobDefinition: `properties.oneLakeRootPath`
+  Leave the nested object in place; add flat aliases via `Add-Member` in each getter (or a shared helper). Regenerate the doc after `Update-FabricAPISpecsCache.ps1`.
+
 ## Notes
 - Reference implementation for new pattern: `source/Public/Admin/Get-FabricAdminDatasetDatasource.ps1`.
 - Resolvers exist: Workspace, Capacity, CapacityIdFromWorkspace, Dataset, Gateway. No new resolvers needed.
