@@ -82,12 +82,9 @@ Medium: ML Model scoring, SQL DB start/stop mirroring, Warehouse restore points,
 
 ## Property map & flattening backlog (NEW 2026-07-04)
 - [x] Generated `docs/api-property-map.md` via new `scripts/New-FabricPropertyMap.ps1` (spec-driven, repeatable): per-resource table of API response-schema properties (name + type + nested `$ref`) vs. what the module returns. Confirms the enrichment-first contract — every top-level API property is returned (verified by `PropertyCompleteness.Tests.ps1`); `-Raw` untouched; default adds resolved-name NoteProps. 26 resources mapped.
-- [ ] **NEXT — flatten high-value nested props** (see the doc's "High-value targets" table): surface buried scalars as flat top-level NoteProperties during enrichment, e.g.:
-  - Lakehouse/MirroredDatabase: `properties.sqlEndpointProperties.connectionString` → `SqlEndpointConnectionString`; `properties.oneLakeTablesPath/oneLakeFilesPath/defaultSchema`
-  - Warehouse/WarehouseSnapshot/SQLDatabase: `properties.connectionString` → `ConnectionString` (+ SQLDatabase `serverFqdn`, `databaseName`, earliest/latestRestorePoint, backupRetentionDays)
-  - Eventhouse/KQLDatabase: `properties.queryServiceUri`/`ingestionServiceUri`
-  - Environment: `properties.publishDetails.state`; SparkJobDefinition: `properties.oneLakeRootPath`
-  Leave the nested object in place; add flat aliases via `Add-Member` in each getter (or a shared helper). Regenerate the doc after `Update-FabricAPISpecsCache.ps1`.
+- [x] **DONE 2026-07-04 — flatten high-value nested props**: new private `Add-FabricFlattenedProperty` (source/Private) surfaces buried `properties.*` scalars as flat top-level NoteProperties, called from the enrich branch of `Select-FabricResource` (so ALL item getters that use it gain the fields at once; never runs on `-Raw`). Covers: `properties.connectionString`→`ConnectionString`; oneLakeTablesPath/FilesPath/RootPath; defaultSchema; queryServiceUri/ingestionServiceUri; serverFqdn/databaseName/earliest+latestRestorePoint/backupRetentionDays; nested `sqlEndpointProperties.connectionString`→`SqlEndpointConnectionString` (+Id, +ProvisioningStatus); `publishDetails.state`→`PublishState`; parent ids, snapshotDateTime, createdDate. Guarded per-field, idempotent. Tests: `Private/Add-FabricFlattenedProperty.Tests.ps1` (7/7) + EnrichmentFlip flatten/-Raw cases. Full build,test GREEN 8637/0/1-skip.
+  - Follow-up (optional): a few enriching getters use manual Add-Member instead of `Select-FabricResource` (e.g. Job Scheduler, status getters) and so don't auto-flatten — wire `Add-FabricFlattenedProperty` into those if their `properties` carry useful scalars.
+- [x] Removed a pre-existing orphan test `tests/Unit/New-FabricNotebookNEW.Tests.ps1` (referenced a non-existent `New-FabricNotebookNEW`; caused a silent Pester container-discovery failure).
 
 ## Notes
 - Reference implementation for new pattern: `source/Public/Admin/Get-FabricAdminDatasetDatasource.ps1`.

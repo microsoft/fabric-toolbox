@@ -183,6 +183,12 @@ function Select-FabricResource {
             }
         }
 
+        # Surface useful scalars buried under the nested `properties` object (connection
+        # strings, service URIs, OneLake paths, etc.) as flat top-level NoteProperties.
+        # Guarded per-field, so items without those properties are unaffected. Never runs
+        # on -Raw (this whole block is skipped when -Raw is set).
+        $null = $resultItems | Add-FabricFlattenedProperty
+
         # Add type decoration so the custom .ps1xml table view applies on display.
         if ($TypeName) {
             $resultItems | Add-FabricTypeName -TypeName $TypeName

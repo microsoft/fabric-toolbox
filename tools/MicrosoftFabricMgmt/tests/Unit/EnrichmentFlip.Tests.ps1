@@ -41,6 +41,34 @@ Describe "Select-FabricResource enrichment flip" -Tag "UnitTests" {
             $r[0].PSObject.TypeNames[0]    | Should -Not -Be 'MicrosoftFabric.Lakehouse'
         }
     }
+
+    It "Default output flattens buried properties.* scalars to top-level fields" {
+        InModuleScope MicrosoftFabricMgmt {
+            $items = @([pscustomobject]@{
+                    id         = '1'; displayName = 'LH'; workspaceId = 'ws-1'
+                    properties = [pscustomobject]@{
+                        oneLakeTablesPath     = 'abfss://ws/lh/Tables'
+                        sqlEndpointProperties = [pscustomobject]@{ connectionString = 'srv.fabric' }
+                    }
+                })
+            $r = Select-FabricResource -InputObject $items -ResourceType 'Lakehouse' -TypeName 'MicrosoftFabric.Lakehouse'
+            $r[0].OneLakeTablesPath           | Should -Be 'abfss://ws/lh/Tables'
+            $r[0].SqlEndpointConnectionString | Should -Be 'srv.fabric'
+            # Nested object still intact.
+            $r[0].properties.sqlEndpointProperties.connectionString | Should -Be 'srv.fabric'
+        }
+    }
+
+    It "-Raw does NOT flatten (buried scalars stay nested only)" {
+        InModuleScope MicrosoftFabricMgmt {
+            $items = @([pscustomobject]@{
+                    id         = '1'; displayName = 'LH'; workspaceId = 'ws-1'
+                    properties = [pscustomobject]@{ sqlEndpointProperties = [pscustomobject]@{ connectionString = 'srv.fabric' } }
+                })
+            $r = Select-FabricResource -InputObject $items -ResourceType 'Lakehouse' -TypeName 'MicrosoftFabric.Lakehouse' -Raw
+            $r[0].PSObject.Properties.Name | Should -Not -Contain 'SqlEndpointConnectionString'
+        }
+    }
 }
 
 Describe "Get-FabricWorkspaceRoleAssignment enrichment" -Tag "UnitTests" {
