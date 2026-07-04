@@ -10,7 +10,7 @@
 
 ### 1.1 - Cost FOCUS Data
 
-🚩 If you've already deployed [FinOps hubs](https://learn.microsoft.com/en-us/cloud-computing/finops/toolkit/hubs/finops-hubs-overview), you can plug the FCA on top and so you can skip this 1.1 steps.
+🚩 If you've already deployed [FinOps hubs](https://learn.microsoft.com/en-us/cloud-computing/finops/toolkit/hubs/finops-hubs-overview), you can plug the FCA on top and so you can skip step 1.1.
 
 To create an export (Create [Cost Management exports](https://learn.microsoft.com/en-us/azure/cost-management-billing/costs/tutorial-improved-exports#create-exports)) the [Cost Management Contributor role](https://learn.microsoft.com/en-us/azure/cost-management-billing/costs/understand-work-scopes#roles-used-in-cost-management-on-rbac-scopes) will be required.
 
@@ -76,7 +76,7 @@ You are free to use your own folder structure. The ingestion process dynamically
 - You can configure the Workspace to allow the share of a high concurrency session during the pipeline execution to limit the Spark vCore needs during the execution of parallel notebooks
   ![alt text](./media/pipelinehc.png)
 
-- 🚩 Download and import the ➡️   **[00_Deploy_FCA.ipynb](./script/00_Deploy_FCA.ipynb)**   ⬅️ Notebook into your FCA workspace ([Import existing notebooks](https://learn.microsoft.com/en-us/fabric/data-engineering/how-to-use-notebook#import-existing-notebooks))
+- 🚩 Download and import the ➡️   **[00_Deploy_FCA.ipynb](./script/00_Deploy_FCA.ipynb)**   ⬅️ Notebook into your FCA workspace ([Import existing notebooks](https://learn.microsoft.com/en-us/fabric/data-engineering/how-to-use-notebook#import-existing-notebooks)) (unless you deployed the solution via the Jumpstart)
 
 - Click "Run All" in the Notebook
 
@@ -152,7 +152,7 @@ Steps to create the Data Agent:
 - Navigate to your FCA Workspace and refresh the browser to view the newly created artifact *FCA_Agent* and open it to chat with your data
 - Enhance custom agents in Microsoft Copilot Studio by leveraging insights from FCA Fabric Data Agent and chat in Teams, as demonstrated in following video: https://www.youtube.com/watch?v=GCtk2HPxZi8
 
-# Update
+## Update
 
 To update FCA (Fabric Cost Analysis) to the latest version, follow the documented steps below.
 
@@ -177,3 +177,4 @@ Steps to update:
 >ℹ️ This notebook is designed to initially deploy or update all the items in your FCA workspace. You do not need to manually run the Load FCA E2E pipeline after an update. During the next pipeline run, FCA will also check and update the status of your FCA version on the first page of the FCA_Core_Report:
 
 ![FCA](./media/VersionUpdate.png)
+

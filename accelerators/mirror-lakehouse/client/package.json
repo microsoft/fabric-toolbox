@@ -12,15 +12,15 @@
     "@mui/material": "^5.15.3",
     "@mui/lab": "^5.0.0-alpha.158",
     "@mui/x-data-grid": "^6.18.2",
-    "axios": "^1.6.2",
+    "axios": "^1.16.0",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
-    "react-router-dom": "^6.20.1",
+    "react-router-dom": "^6.30.4",
     "react-query": "^3.39.3",
     "recharts": "^2.8.0",
     "notistack": "^3.0.1",
     "date-fns": "^2.30.0",
-    "lodash": "^4.17.21"
+    "lodash": "^4.18.1"
   },
   "devDependencies": {
     "@testing-library/jest-dom": "^6.1.5",

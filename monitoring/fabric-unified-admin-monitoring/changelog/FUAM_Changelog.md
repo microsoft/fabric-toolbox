@@ -2,7 +2,61 @@
 for Fabric Unified Admin Monitoring solution accelerator.
 
 --------------------------
-## 📦 2026.2.1
+## 📦 2026.6.1
+
+Date: 2026-06-02
+
+Link: [Click here to update FUAM](/monitoring/fabric-unified-admin-monitoring/how-to/How_to_update_FUAM.md)
+
+### 📈 Enhancements
+
+- **New Optimization Module for Semantic Models (Beta)**
+    - Helps identify root causes of high CU utilization by analyzing the top *n* items per capacity (by previous-day CU consumption)
+    - Collects **Best Practice Analyzer** results and **VertiPaq Analyzer** data (per table) for semantic models
+    - Adds new notebook `01_Run_Optimization_Module_for_SM_Unit` and new pipeline `Load_Optimization_Module_E2E`
+    - **Deactivated by default** in the `Load_FUAM_Data_E2E` pipeline — activate manually to try it out
+    - Documentation: [FUAM Optimization Module – Semantic Models](/monitoring/fabric-unified-admin-monitoring/media/documentation/FUAM_Optimization_SemanticModels.md)
+
+
+Best Regards!
+
+Kevin
+
+
+--------------------------
+## 📦 2026.5.1
+
+Date: 2026-05-15
+
+Link: [Click here to update FUAM](/monitoring/fabric-unified-admin-monitoring/how-to/How_to_update_FUAM.md)
+
+### 📈 Enhancements
+
+- **Extraction of Tags**
+    - FUAM now extracts the tag information
+    - New tables "tags" and "workspace_tags" have been added
+    - Reporting still needs to be updated
+
+### ✅ Fixes
+
+- **Missing subdomain**
+     - Fixed an issue, which caused the domain extraction to fail in case the was no subdomain present
+     - Now the script works without subdomain
+
+
+- **Tags datatype**
+    - Fixed an issue, which make the "02_Transfer_Workspace_Unit" notebook fail because of wrong data type in table
+
+Thanks to everyone pointing out the error in Github issues and coming up with solutions!
+
+
+Best Regards!
+
+Kevin & Gellért
+
+
+--------------------------
+
 
 Date: 2026-02-04
 

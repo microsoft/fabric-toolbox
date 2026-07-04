@@ -1,5 +1,5 @@
 {
-    "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/report/3.1.0/schema.json",
+    "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/report/3.3.0/schema.json",
     "themeCollection": {
         "baseTheme": {
             "name": "CY24SU10",
@@ -214,6 +214,51 @@
                 },
                 "type": "Categorical",
                 "howCreated": "User"
+            },
+            {
+                "name": "0e11b797403344a43f37",
+                "field": {
+                    "Column": {
+                        "Expression": {
+                            "SourceRef": {
+                                "Entity": "semantic_models"
+                            }
+                        },
+                        "Property": "SemanticModelId"
+                    }
+                },
+                "type": "Categorical",
+                "howCreated": "User"
+            },
+            {
+                "name": "46ae8b39404e18c41c3f",
+                "field": {
+                    "Column": {
+                        "Expression": {
+                            "SourceRef": {
+                                "Entity": "active_items"
+                            }
+                        },
+                        "Property": "id"
+                    }
+                },
+                "type": "Categorical",
+                "howCreated": "User"
+            },
+            {
+                "name": "cb7b4f930e6eda847ae2",
+                "field": {
+                    "Column": {
+                        "Expression": {
+                            "SourceRef": {
+                                "Entity": "active_items"
+                            }
+                        },
+                        "Property": "id"
+                    }
+                },
+                "type": "Categorical",
+                "howCreated": "User"
             }
         ],
         "filterSortOrder": "Custom"
@@ -238,7 +283,7 @@
                     "expanded": {
                         "expr": {
                             "Literal": {
-                                "Value": "false"
+                                "Value": "true"
                             }
                         }
                     }
@@ -271,13 +316,13 @@
                     "type": "Image"
                 },
                 {
-                    "name": "report_background_item_analyze39279580274885717.png",
-                    "path": "report_background_item_analyze39279580274885717.png",
+                    "name": "fuam_core_bg853874069902813.png",
+                    "path": "fuam_core_bg853874069902813.png",
                     "type": "Image"
                 },
                 {
-                    "name": "fuam_core_bg853874069902813.png",
-                    "path": "fuam_core_bg853874069902813.png",
+                    "name": "report_background_item_analyze39279580274885717.png",
+                    "path": "report_background_item_analyze39279580274885717.png",
                     "type": "Image"
                 },
                 {

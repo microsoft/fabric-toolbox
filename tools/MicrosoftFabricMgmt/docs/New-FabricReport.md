@@ -43,6 +43,12 @@ This function sends a POST request to the Microsoft Fabric API to create a new r
 - **Type:** String
 - **Mandatory:** Yes
 
+### FolderId
+
+- **Description:** The folder ID where the Report will be placed. If omitted, the Report is created in the workspace root.
+- **Type:** String
+- **Mandatory:** No
+
 ## Usage Examples
 
 ### Example 1: Create a report
@@ -57,6 +63,14 @@ New-FabricReport -WorkspaceId $workspace.id -ReportName "Report01"
 ```powershell
 $workspace = Get-FabricWorkspace -WorkspaceName "workspace-12345"
 New-FabricReport -WorkspaceId $workspace.id -ReportName "Report02" -ReportDescription "Report Description" -ReportPathDefinition "C:\temp\API\Report"
+```
+
+### Example 3: Create a report inside a folder
+
+```powershell
+$workspace = Get-FabricWorkspace -WorkspaceName "workspace-12345"
+$folder = Get-FabricFolder -WorkspaceId $workspace.id -FolderName "Reports"
+New-FabricReport -WorkspaceId $workspace.id -ReportName "Report03" -ReportPathDefinition "C:\temp\API\Report" -FolderId $folder.id
 ```
 
 ## Prerequisites

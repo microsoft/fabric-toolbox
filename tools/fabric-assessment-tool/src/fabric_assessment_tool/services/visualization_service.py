@@ -321,8 +321,23 @@ class VisualizationService:
         summary["total_clusters"] += counts.get("clusters", 0)
         summary["total_notebooks"] += counts.get("notebooks", 0)
         summary["total_jobs"] += counts.get("jobs", 0)
-        summary["total_tables"] += counts.get("tables", 0)
+        summary["total_tables"] += counts.get("total_tables", counts.get("tables", 0))
         summary["total_sql_warehouses"] += counts.get("sql_warehouses", 0)
+        summary["total_pipelines"] += counts.get("pipelines", 0)
+        summary.setdefault("total_repos", 0)
+        summary["total_repos"] += counts.get("repos", 0)
+        summary.setdefault("total_experiments", 0)
+        summary["total_experiments"] += counts.get("experiments", 0)
+        summary.setdefault("total_serving_endpoints", 0)
+        summary["total_serving_endpoints"] += counts.get("serving_endpoints", 0)
+        summary.setdefault("total_alerts", 0)
+        summary["total_alerts"] += counts.get("alerts", 0)
+        summary.setdefault("total_genie_spaces", 0)
+        summary["total_genie_spaces"] += counts.get("genie_spaces", 0)
+        summary.setdefault("total_cluster_policies", 0)
+        summary["total_cluster_policies"] += counts.get("cluster_policies", 0)
+        summary.setdefault("total_instance_pools", 0)
+        summary["total_instance_pools"] += counts.get("instance_pools", 0)
 
     def _generate_overview(
         self, data: Dict[str, Any], output_dir: Path, platform: str = "synapse"
@@ -361,9 +376,11 @@ class VisualizationService:
     ) -> str:
         """Generate a detailed report for a single workspace."""
         platform = data.get("platform", "synapse")
-        template_path = f"{platform}/workspace.html" if self._template_exists(
+        template_path = (
             f"{platform}/workspace.html"
-        ) else "workspace.html"
+            if self._template_exists(f"{platform}/workspace.html")
+            else "workspace.html"
+        )
         template = self.env.get_template(template_path)
         ws_data = data.get("workspaces", {}).get(workspace_name, {})
         workspace_names = list(data.get("workspaces", {}).keys())
@@ -581,12 +598,18 @@ class VisualizationService:
 
             # Notebooks
             for nb in resources.get("notebooks", []):
-                nb_data = nb.get("data", nb)
+                nb_data = nb.get("notebook_data") or nb.get("data") or nb
                 nb_data["workspace"] = ws_name
                 de["notebooks"].append(nb_data)
-                lang = nb_data.get(
-                    "language", nb_data.get("default_language", "Unknown")
+                lang = (
+                    (nb_data.get("json_response") or {}).get("language")
+                    or nb_data.get("language")
+                    or nb_data.get("default_language")
+                    or "Unknown"
                 )
+                nb_data["language"] = lang
+                if "name" not in nb_data and nb_data.get("path"):
+                    nb_data["name"] = nb_data["path"].rsplit("/", 1)[-1]
                 de["notebook_languages"][lang] = (
                     de["notebook_languages"].get(lang, 0) + 1
                 )
@@ -617,19 +640,63 @@ class VisualizationService:
             elif platform == "databricks":
                 # Clusters
                 for cl in resources.get("clusters", []):
-                    cl_data = cl.get("data", cl)
+                    cl_data = cl.get("cluster_data") or cl.get("data") or cl
                     cl_data["workspace"] = ws_name
                     de["clusters"].append(cl_data)
-                    version = cl_data.get("spark_version", "Unknown")
+                    version = cl_data.get("spark_version") or (
+                        cl_data.get("json_response") or {}
+                    ).get("spark_version") or "Unknown"
                     de["spark_versions"][version] = (
                         de["spark_versions"].get(version, 0) + 1
                     )
 
                 # Jobs
                 for job in resources.get("jobs", []):
-                    job_data = job.get("data", job)
+                    job_data = job.get("job_data") or job.get("data") or job
                     job_data["workspace"] = ws_name
+                    job_settings = job_data.get("settings") or {}
+                    if isinstance(job_settings, dict) and job_settings.get("name"):
+                        job_data.setdefault("name", job_settings["name"])
+                    job_tasks = job_data.get("tasks")
+                    if isinstance(job_tasks, dict) and "tasks" in job_tasks:
+                        job_data["tasks"] = job_tasks["tasks"]
                     de["jobs"].append(job_data)
+
+                # Pipelines (DLT)
+                for p in resources.get("pipelines", []):
+                    p_data = p.get("pipeline_data") or p.get("data") or p
+                    p_data["workspace"] = ws_name
+                    de.setdefault("pipelines", []).append(p_data)
+
+                # Repos
+                for r in resources.get("repos", []):
+                    r_data = r.get("repo_data") or r.get("data") or r
+                    r_data["workspace"] = ws_name
+                    de.setdefault("repos", []).append(r_data)
+
+                # Experiments
+                for exp in resources.get("experiments", []):
+                    exp_data = exp.get("experiment_data") or exp.get("data") or exp
+                    exp_data["workspace"] = ws_name
+                    de.setdefault("experiments", []).append(exp_data)
+
+                # Serving Endpoints
+                for ep in resources.get("serving_endpoints", []):
+                    ep_data = ep.get("endpoint_data") or ep.get("data") or ep
+                    ep_data["workspace"] = ws_name
+                    de.setdefault("serving_endpoints", []).append(ep_data)
+
+                # Alerts
+                for alert in resources.get("alerts", []):
+                    alert_data = alert.get("alert_data") or alert.get("data") or alert
+                    alert_data["workspace"] = ws_name
+                    de.setdefault("alerts", []).append(alert_data)
+
+                # Genie Spaces
+                for gs in resources.get("genie_spaces", []):
+                    gs_data = gs.get("space_data") or gs.get("data") or gs
+                    gs_data["workspace"] = ws_name
+                    de.setdefault("genie_spaces", []).append(gs_data)
 
         return de
 
@@ -667,11 +734,15 @@ class VisualizationService:
                     if "dedicated" in pool_type.lower() or pool_data.get("sku"):
                         # Get tables and size from summary if not in pool_data
                         if pool_data.get("tables_count", 0) == 0:
-                            pool_data["tables_count"] = dedicated_counts.get("tables", 0)
+                            pool_data["tables_count"] = dedicated_counts.get(
+                                "tables", 0
+                            )
                         if pool_data.get("size_gb", 0) == 0:
                             size_val = dedicated_counts.get("table_size_gb", 0)
                             pool_data["size_gb"] = (
-                                float(size_val) if isinstance(size_val, str) else size_val
+                                float(size_val)
+                                if isinstance(size_val, str)
+                                else size_val
                             )
                         dw["dedicated_pools"].append(pool_data)
                         dw["total_tables"] += pool_data.get("tables_count", 0)
@@ -679,7 +750,9 @@ class VisualizationService:
                     else:
                         # For serverless, get tables from summary
                         if pool_data.get("tables_count", 0) == 0:
-                            pool_data["tables_count"] = serverless_counts.get("tables", 0)
+                            pool_data["tables_count"] = serverless_counts.get(
+                                "tables", 0
+                            )
                         dw["serverless_pools"].append(pool_data)
                         dw["total_tables"] += pool_data.get("tables_count", 0)
 
@@ -716,7 +789,7 @@ class VisualizationService:
             elif platform == "databricks":
                 # SQL warehouses
                 for wh in resources.get("sql_warehouses", []):
-                    wh_data = wh.get("data", wh)
+                    wh_data = wh.get("warehouse_data") or wh.get("data") or wh
                     wh_data["workspace"] = ws_name
                     dw["sql_warehouses"].append(wh_data)
 
@@ -749,7 +822,9 @@ class VisualizationService:
                     json_resp = pipe_data.get("json_response", {})
                     properties = json_resp.get("properties", {})
                     activities = properties.get("activities", [])
-                    activities_count = len(activities) if isinstance(activities, list) else 0
+                    activities_count = (
+                        len(activities) if isinstance(activities, list) else 0
+                    )
                     pipe_data["activities_count"] = activities_count
                 di["pipelines"].append(pipe_data)
                 di["pipeline_activities"] += activities_count

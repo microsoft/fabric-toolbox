@@ -1,5 +1,5 @@
 {
-    "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.5.0/schema.json",
+    "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.9.0/schema.json",
     "name": "6af9a2559b945dd3574d",
     "position": {
         "x": 18.072289156626507,
@@ -374,48 +374,6 @@
                 },
                 "type": "Advanced",
                 "howCreated": "User"
-            },
-            {
-                "name": "203cd68eee42c56c93e3",
-                "field": {
-                    "Column": {
-                        "Expression": {
-                            "SourceRef": {
-                                "Entity": "capacities"
-                            }
-                        },
-                        "Property": "displayName"
-                    }
-                },
-                "type": "Categorical"
-            },
-            {
-                "name": "8b2f5381ae41e2861fd1",
-                "field": {
-                    "Measure": {
-                        "Expression": {
-                            "SourceRef": {
-                                "Entity": "Metrics"
-                            }
-                        },
-                        "Property": "# Analyzed Semantic Models OM-SM"
-                    }
-                },
-                "type": "Advanced"
-            },
-            {
-                "name": "05ba641235d27e23cdeb",
-                "field": {
-                    "Measure": {
-                        "Expression": {
-                            "SourceRef": {
-                                "Entity": "Metrics"
-                            }
-                        },
-                        "Property": "Runs OM-SM"
-                    }
-                },
-                "type": "Advanced"
             }
         ],
         "filterSortOrder": "Custom"

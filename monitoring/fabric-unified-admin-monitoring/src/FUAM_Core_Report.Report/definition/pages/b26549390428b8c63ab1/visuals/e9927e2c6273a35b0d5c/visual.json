@@ -1,5 +1,5 @@
 {
-    "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.5.0/schema.json",
+    "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.9.0/schema.json",
     "name": "e9927e2c6273a35b0d5c",
     "position": {
         "x": 1274.3787918015587,
@@ -180,28 +180,5 @@
             ]
         },
         "drillFilterOtherVisuals": true
-    },
-    "filterConfig": {
-        "filters": [
-            {
-                "name": "cd3fae1201d0267a13d2",
-                "field": {
-                    "Aggregation": {
-                        "Expression": {
-                            "Column": {
-                                "Expression": {
-                                    "SourceRef": {
-                                        "Entity": "semantic_model_analyzer_runs"
-                                    }
-                                },
-                                "Property": "SemanticModelId"
-                            }
-                        },
-                        "Function": 2
-                    }
-                },
-                "type": "Advanced"
-            }
-        ]
     }
 }

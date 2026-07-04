@@ -6,9 +6,18 @@
 - Warehouse Auto Scale cost analysis
 - Forecast
 - What if analysis
-- Corellate cost with CU based on Fabric Capacity Operations Events
+- Correlate cost with CU based on Fabric Capacity Operations Events
 
 ## Release
+
+## 📦 2026.05.26
+
+- Update for the Fabric Jumpstart
+- New FinOps Maturity Score
+- Data Agent updates
+- Several bug fixes
+- Additional documentation
+- Meters Updates
 
 ## 📦 2026.03.13
 

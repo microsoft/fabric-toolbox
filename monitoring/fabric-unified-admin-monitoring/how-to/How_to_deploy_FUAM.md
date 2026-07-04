@@ -35,7 +35,7 @@ The deployment of FUAM can be done with very little effort, since we tried to au
     - _Users can create Fabric items_ for FUAM workspace admin(s) - [learn.microsoft.com](https://learn.microsoft.com/en-us/fabric/admin/fabric-switch)
     - _Allow XMLA endpoints and Analyze in Excel with on-premises semantic models_ – [learn.microsoft.com](https://learn.microsoft.com/en-us/fabric/admin/service-admin-portal-integration#allow-xmla-endpoints-and-analyze-in-excel-with-on-premises-datasets)
 - Fabric Capacity Metrics app (workspace) **with attached P or F-capacity** with **enabled XMLA endpoint** (at least 'Read')
-     - Compatible versions of the Capacity Metrics App: v53, v47, v44 or earlier
+     - Compatible versions of the Capacity Metrics App: v65, v53, v47, v44 or earlier
     - Before updating, please check [this site] to verify which versions of the Capacity Metrics app are compatible with FUAM.
     - Since the user who last changed a pipeline will execute the notebook, this user needs to have contributor permissions on the capacity metrics app workspace. Usually this is the user who deployed FUAM.
 
@@ -120,6 +120,8 @@ We recommend to create a new Capacity Metrics App (with automatically deployed w
 
 > **Important:**  By default the Metrics App workspace is created on a Pro license. If you don't change this to F/P-SKU you will get an error
 
+> **Important:**  It is recommended to have a seperate instance of the capacity metrics app running just for FUAM. This way you can test the compatibility and still update your regular version
+
 ## 6. Run orchestration Pipeline
 
 > **Info:** The **Load_FUAM_Data_E2E** is the main end-to-end orchestration pipeline of FUAM. It contains/triggers all other sub-pipelines (FUAM modules), which are implemented in the solution. 
@@ -149,6 +151,7 @@ The Pipeline has different parameters, which are controlling the data load flow:
 |activity_anonymize_tables|If **true**, the Load_Activities module enables anonymization of activities Lakehouse table for the recently loaded activity logs. <br><br> **_Important:_** The anonymization logic will has the "UserId" and "UserKey" columns. <br><br> **_Tip:_** Use it in combination of the parameter **activity_anonymize_after_days = 0** to anonymize the currently loaded activity log values. |true or false|
 |activity_anonymize_after_days|Default is **0**. If value is higher than 0 (zero) and the parameter **activity_anonymize_tables** is **true** the Load_Activities module will anonymize (hash with md5) the **activities** Lakehouse table columns ("UserId" and "UserKey") before the given day. <br><br> _**Example A:**_ Let's assume you stored 190 days of activity logs in FUAM_Lakehouse. You set the parameter activity_anonymize_after_days to **90**. In this case the last 90 days of activities data will **not** be anonymized, the rest days from d-91 and d-190 will be anonymized.   |Integer range between **0** and **365**|
 |activity_anonymize_files|If **true**, the Load_Activities module will delete all the raw historical activity JSON files in FUAM_Lakehouse/Files/history/actities folder. <br> <br> If **false**, the logic will keep the raw activity JSON files and populates it after every pipeline execution.|true or false|
+|om_top_n_semantic_models_per_capacity|This Parameter determines for how many semantic models per capacity the Optimization module is automatically executed|Integer. It is recommended to start with a small number to check runtime and later increase|
 
 
 - Run the Pipeline once. This will initially load the data into FUAM_Lakehouse

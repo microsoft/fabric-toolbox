@@ -247,12 +247,19 @@ table reservation_usage
 
 		annotation SummarizationSetBy = Automatic
 
+	column SubId
+		dataType: string
+		lineageTag: 2612618d-537f-409d-9ad8-92f88c117087
+		sourceLineageTag: SubId
+		summarizeBy: none
+		sourceColumn: SubId
+
+		annotation SummarizationSetBy = Automatic
+
 	partition reservation_usage = entity
 		mode: directLake
 		source
 			entityName: reservation_usage
 			schemaName: dbo
 			expressionSource: DatabaseQuery
-
-	annotation PBI_ResultType = Table
 

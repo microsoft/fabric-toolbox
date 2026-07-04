@@ -1,5 +1,5 @@
 {
-    "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.5.0/schema.json",
+    "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.9.0/schema.json",
     "name": "3da0df8015e0871bfdc8",
     "position": {
         "x": 1200,
@@ -216,16 +216,16 @@
                 "sort": [
                     {
                         "field": {
-                            "Measure": {
+                            "Column": {
                                 "Expression": {
                                     "SourceRef": {
-                                        "Entity": "Metrics"
+                                        "Entity": "semantic_model_vertipaq_tables"
                                     }
                                 },
-                                "Property": "Rows (table)"
+                                "Property": "Name"
                             }
                         },
-                        "direction": "Descending"
+                        "direction": "Ascending"
                     }
                 ]
             }

@@ -1,5 +1,5 @@
 {
-    "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.5.0/schema.json",
+    "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.9.0/schema.json",
     "name": "fa41b0749d670a9fa8db",
     "position": {
         "x": 588.2530120481928,
@@ -15,6 +15,21 @@
             "queryState": {
                 "Values": {
                     "projections": [
+                        {
+                            "field": {
+                                "Measure": {
+                                    "Expression": {
+                                        "SourceRef": {
+                                            "Entity": "Metrics"
+                                        }
+                                    },
+                                    "Property": "Last Run Date"
+                                }
+                            },
+                            "queryRef": "Metrics.Last Run Date",
+                            "nativeQueryRef": "Last Run1",
+                            "displayName": "Last Run"
+                        },
                         {
                             "field": {
                                 "Column": {
@@ -62,23 +77,18 @@
                         },
                         {
                             "field": {
-                                "Aggregation": {
+                                "Measure": {
                                     "Expression": {
-                                        "Column": {
-                                            "Expression": {
-                                                "SourceRef": {
-                                                    "Entity": "semantic_model_analyzer_runs"
-                                                }
-                                            },
-                                            "Property": "RunName"
+                                        "SourceRef": {
+                                            "Entity": "Metrics"
                                         }
                                     },
-                                    "Function": 4
+                                    "Property": "Last Run Name"
                                 }
                             },
-                            "queryRef": "Max(semantic_model_analyzer_runs.RunName)",
-                            "nativeQueryRef": "Last Run",
-                            "displayName": "Last Run"
+                            "queryRef": "Metrics.Last Run Name",
+                            "nativeQueryRef": "Run",
+                            "displayName": "Run"
                         },
                         {
                             "field": {
@@ -162,16 +172,16 @@
                 "sort": [
                     {
                         "field": {
-                            "Column": {
+                            "Measure": {
                                 "Expression": {
                                     "SourceRef": {
-                                        "Entity": "capacities"
+                                        "Entity": "Metrics"
                                     }
                                 },
-                                "Property": "displayName"
+                                "Property": "Last Run Date"
                             }
                         },
-                        "direction": "Ascending"
+                        "direction": "Descending"
                     }
                 ]
             }
@@ -1308,7 +1318,7 @@
                         "value": {
                             "expr": {
                                 "Literal": {
-                                    "Value": "130.6626460114222D"
+                                    "Value": "122.69534099165138D"
                                 }
                             }
                         }
@@ -1385,6 +1395,20 @@
                     },
                     "selector": {
                         "metadata": "capacities.displayName"
+                    }
+                },
+                {
+                    "properties": {
+                        "value": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "80.10666030069731D"
+                                }
+                            }
+                        }
+                    },
+                    "selector": {
+                        "metadata": "Metrics.Last Run Date"
                     }
                 }
             ],
@@ -1650,7 +1674,7 @@
                 "howCreated": "User"
             },
             {
-                "name": "a55a4555630969dfe801",
+                "name": "b768f314e221a62d15a0",
                 "field": {
                     "Column": {
                         "Expression": {
@@ -1664,7 +1688,7 @@
                 "type": "Categorical"
             },
             {
-                "name": "e48306a8a7b57df27e86",
+                "name": "f0b3c122d2632f775944",
                 "field": {
                     "Column": {
                         "Expression": {
@@ -1678,26 +1702,21 @@
                 "type": "Categorical"
             },
             {
-                "name": "e953e8b9b1311ab076cd",
+                "name": "dc39af3f57493fc6a678",
                 "field": {
-                    "Aggregation": {
+                    "Measure": {
                         "Expression": {
-                            "Column": {
-                                "Expression": {
-                                    "SourceRef": {
-                                        "Entity": "semantic_model_analyzer_runs"
-                                    }
-                                },
-                                "Property": "RunName"
+                            "SourceRef": {
+                                "Entity": "Metrics"
                             }
                         },
-                        "Function": 4
+                        "Property": "Last Run Name"
                     }
                 },
                 "type": "Advanced"
             },
             {
-                "name": "ee98bee262a78d67f724",
+                "name": "40181089c6987fd986d1",
                 "field": {
                     "Measure": {
                         "Expression": {
@@ -1711,7 +1730,7 @@
                 "type": "Advanced"
             },
             {
-                "name": "0435ca649aceceecb650",
+                "name": "1ad43138e9c46d670790",
                 "field": {
                     "Measure": {
                         "Expression": {
@@ -1725,7 +1744,7 @@
                 "type": "Advanced"
             },
             {
-                "name": "831c2afc4b4ecfd108b9",
+                "name": "ec0ec5cfadd27dda32a7",
                 "field": {
                     "Measure": {
                         "Expression": {
@@ -1739,7 +1758,7 @@
                 "type": "Advanced"
             },
             {
-                "name": "1ece04930fd5b8a19758",
+                "name": "4a98d8a30c5c420ed5d8",
                 "field": {
                     "Measure": {
                         "Expression": {
@@ -1753,7 +1772,7 @@
                 "type": "Advanced"
             },
             {
-                "name": "81c30943aa1671db52b0",
+                "name": "c40e60d9a33844c34a40",
                 "field": {
                     "Measure": {
                         "Expression": {
@@ -1762,6 +1781,20 @@
                             }
                         },
                         "Property": "BPA Violations (Usability Impact) - Last Run OM-SM"
+                    }
+                },
+                "type": "Advanced"
+            },
+            {
+                "name": "97da0ddafff7721dfac2",
+                "field": {
+                    "Measure": {
+                        "Expression": {
+                            "SourceRef": {
+                                "Entity": "Metrics"
+                            }
+                        },
+                        "Property": "Last Run Date"
                     }
                 },
                 "type": "Advanced"

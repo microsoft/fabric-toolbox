@@ -29,6 +29,10 @@ class AssessmentService:
         auth_method: Optional[str] = None,
         sql_admin_password: Optional[str] = None,
         create_dmv: bool = False,
+        sql_auth_mode: str = "sql",
+        sql_client_id: Optional[str] = None,
+        sql_client_secret: Optional[str] = None,
+        sql_tenant_id: Optional[str] = None,
     ) -> Dict[str, Any]:
         """
         Perform assessment on specified workspaces.
@@ -43,6 +47,14 @@ class AssessmentService:
             auth_method: Authentication method ("azure-cli", "fabric", or None for auto-detect)
             sql_admin_password: SQL admin password for dedicated SQL pools (bypasses interactive prompt)
             create_dmv: Auto-create vTableSizes DMV without confirmation prompt
+            sql_auth_mode: SQL pool authentication mode:
+                - "sql": Traditional SQL authentication (default)
+                - "entra-interactive": Entra ID interactive authentication (browser popup)
+                - "entra-spn": Entra ID Service Principal authentication
+                - "entra-default": Entra ID default (Azure CLI, managed identity, etc.)
+            sql_client_id: Service principal client ID (required for 'entra-spn' mode)
+            sql_client_secret: Service principal client secret (required for 'entra-spn' mode)
+            sql_tenant_id: Azure tenant ID (optional for 'entra-spn' mode)
 
         Returns:
             Assessment results dictionary
@@ -59,6 +71,15 @@ class AssessmentService:
             client_kwargs["sql_admin_password"] = sql_admin_password
         if create_dmv:
             client_kwargs["create_dmv"] = create_dmv
+        # SQL auth mode parameters (Synapse only)
+        if sql_auth_mode:
+            client_kwargs["sql_auth_mode"] = sql_auth_mode
+        if sql_client_id:
+            client_kwargs["sql_client_id"] = sql_client_id
+        if sql_client_secret:
+            client_kwargs["sql_client_secret"] = sql_client_secret
+        if sql_tenant_id:
+            client_kwargs["sql_tenant_id"] = sql_tenant_id
         client = self._get_client(source=source, **client_kwargs)
 
         # Perform assessment

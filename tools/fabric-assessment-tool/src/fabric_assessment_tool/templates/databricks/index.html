@@ -45,12 +45,14 @@
     <div class="card-header">Resource Summary</div>
     <div class="card-body">
         <div class="row">
-            <div class="col col-6">
-                <div class="chart-container">
+            <div class="col col-12">
+                <div class="chart-container" style="height: 340px;">
                     <canvas id="resourceChart"></canvas>
                 </div>
             </div>
-            <div class="col col-6">
+        </div>
+        <div class="row mt-2">
+            <div class="col col-12">
                 <table class="table">
                     <thead>
                         <tr>
@@ -79,6 +81,38 @@
                             <td>Tables</td>
                             <td class="text-right">{{ summary.total_tables | default(0) | format_number }}</td>
                         </tr>
+                        <tr>
+                            <td>Pipelines (DLT)</td>
+                            <td class="text-right">{{ summary.total_pipelines | default(0) | format_number }}</td>
+                        </tr>
+                        <tr>
+                            <td>Repos</td>
+                            <td class="text-right">{{ summary.total_repos | default(0) | format_number }}</td>
+                        </tr>
+                        <tr>
+                            <td>MLflow Experiments</td>
+                            <td class="text-right">{{ summary.total_experiments | default(0) | format_number }}</td>
+                        </tr>
+                        <tr>
+                            <td>Serving Endpoints</td>
+                            <td class="text-right">{{ summary.total_serving_endpoints | default(0) | format_number }}</td>
+                        </tr>
+                        <tr>
+                            <td>SQL Alerts</td>
+                            <td class="text-right">{{ summary.total_alerts | default(0) | format_number }}</td>
+                        </tr>
+                        <tr>
+                            <td>Genie Spaces</td>
+                            <td class="text-right">{{ summary.total_genie_spaces | default(0) | format_number }}</td>
+                        </tr>
+                        <tr>
+                            <td>Cluster Policies</td>
+                            <td class="text-right">{{ summary.total_cluster_policies | default(0) | format_number }}</td>
+                        </tr>
+                        <tr>
+                            <td>Instance Pools</td>
+                            <td class="text-right">{{ summary.total_instance_pools | default(0) | format_number }}</td>
+                        </tr>
                     </tbody>
                 </table>
             </div>
@@ -96,6 +130,7 @@
                 <thead>
                     <tr>
                         <th>Workspace</th>
+                        <th>Type</th>
                         <th class="text-right">Notebooks</th>
                         <th class="text-right">Clusters</th>
                         <th class="text-right">Jobs</th>
@@ -109,10 +144,22 @@
                         <td>
                             <a href="{{ base_path }}workspaces/{{ ws_name }}.html">{{ ws_name }}</a>
                         </td>
+                        <td>
+                            {% set wtype = ws.summary.workspace_info.workspace_type | default('unknown', true) %}
+                            <span class="badge {% if wtype == 'hybrid' %}badge-warning{% elif wtype == 'serverless' %}badge-success{% else %}badge-secondary{% endif %}">
+                                {{ wtype | title }}
+                            </span>
+                            {% if ws.summary.workspace_info.vnet_injected %}
+                                <span class="badge badge-secondary" title="VNet-injected">VNet</span>
+                            {% endif %}
+                            {% if ws.summary.workspace_info.uses_private_endpoints %}
+                                <span class="badge badge-secondary" title="Private endpoints in use">PE</span>
+                            {% endif %}
+                        </td>
                         <td class="text-right">{{ ws.summary.counts.notebooks | default(0) }}</td>
                         <td class="text-right">{{ ws.summary.counts.clusters | default(0) }}</td>
                         <td class="text-right">{{ ws.summary.counts.jobs | default(0) }}</td>
-                        <td class="text-right">{{ ws.summary.counts.tables | default(0) }}</td>
+                        <td class="text-right">{{ ws.summary.counts.total_tables | default(ws.summary.counts.tables) | default(0) }}</td>
                         <td>
                             {% set status = ws.summary.assessment_status.status | default(ws.summary.assessment_status | default('unknown')) %}
                             <span class="badge {% if status == 'completed' %}badge-success{% elif status == 'incomplete' %}badge-warning{% else %}badge-secondary{% endif %}">
@@ -163,8 +210,16 @@ const workspaceData = {
         notebooks: {{ ws.summary.counts.notebooks | default(0) }},
         clusters: {{ ws.summary.counts.clusters | default(0) }},
         jobs: {{ ws.summary.counts.jobs | default(0) }},
-        tables: {{ ws.summary.counts.tables | default(0) }},
-        sql_warehouses: {{ ws.summary.counts.sql_warehouses | default(0) }}
+        tables: {{ ws.summary.counts.total_tables | default(ws.summary.counts.tables) | default(0) }},
+        sql_warehouses: {{ ws.summary.counts.sql_warehouses | default(0) }},
+        pipelines: {{ ws.summary.counts.pipelines | default(0) }},
+        repos: {{ ws.summary.counts.repos | default(0) }},
+        experiments: {{ ws.summary.counts.experiments | default(0) }},
+        serving_endpoints: {{ ws.summary.counts.serving_endpoints | default(0) }},
+        alerts: {{ ws.summary.counts.alerts | default(0) }},
+        genie_spaces: {{ ws.summary.counts.genie_spaces | default(0) }},
+        cluster_policies: {{ ws.summary.counts.cluster_policies | default(0) }},
+        instance_pools: {{ ws.summary.counts.instance_pools | default(0) }}
     }{% if not loop.last %},{% endif %}
 {% endfor %}
 };
@@ -174,6 +229,8 @@ let resourceChart = null;
 function updateFilteredStats(selectedWorkspaces) {
     let workspaceCount = 0;
     let notebooks = 0, clusters = 0, jobs = 0, tables = 0, sqlWarehouses = 0;
+    let pipelines = 0, repos = 0, experiments = 0, servingEndpoints = 0, alerts = 0, genieSpaces = 0;
+    let clusterPolicies = 0, instancePools = 0;
     
     selectedWorkspaces.forEach(ws => {
         const data = workspaceData[ws];
@@ -184,6 +241,14 @@ function updateFilteredStats(selectedWorkspaces) {
             jobs += data.jobs || 0;
             tables += data.tables || 0;
             sqlWarehouses += data.sql_warehouses || 0;
+            pipelines += data.pipelines || 0;
+            repos += data.repos || 0;
+            experiments += data.experiments || 0;
+            servingEndpoints += data.serving_endpoints || 0;
+            alerts += data.alerts || 0;
+            genieSpaces += data.genie_spaces || 0;
+            clusterPolicies += data.cluster_policies || 0;
+            instancePools += data.instance_pools || 0;
         }
     });
     
@@ -194,34 +259,69 @@ function updateFilteredStats(selectedWorkspaces) {
     document.getElementById('stat-tables').textContent = tables;
     
     if (resourceChart) {
-        resourceChart.data.datasets[0].data = [notebooks, clusters, jobs, sqlWarehouses, tables];
+        resourceChart.data.datasets[0].data = [
+            notebooks, clusters, jobs, sqlWarehouses, tables,
+            pipelines, repos, experiments, servingEndpoints, alerts, genieSpaces,
+            clusterPolicies, instancePools
+        ].map(v => v > 0 ? v : null);
         resourceChart.update();
     }
 }
 
 const resourceCtx = document.getElementById('resourceChart');
 if (resourceCtx) {
+    const rawCounts = [
+        {{ summary.total_notebooks | default(0) }},
+        {{ summary.total_clusters | default(0) }},
+        {{ summary.total_jobs | default(0) }},
+        {{ summary.total_sql_warehouses | default(0) }},
+        {{ summary.total_tables | default(0) }},
+        {{ summary.total_pipelines | default(0) }},
+        {{ summary.total_repos | default(0) }},
+        {{ summary.total_experiments | default(0) }},
+        {{ summary.total_serving_endpoints | default(0) }},
+        {{ summary.total_alerts | default(0) }},
+        {{ summary.total_genie_spaces | default(0) }},
+        {{ summary.total_cluster_policies | default(0) }},
+        {{ summary.total_instance_pools | default(0) }}
+    ];
     resourceChart = new Chart(resourceCtx, {
         type: 'bar',
         data: {
-            labels: ['Notebooks', 'Clusters', 'Jobs', 'SQL Warehouses', 'Tables'],
+            labels: ['Notebooks', 'Clusters', 'Jobs', 'SQL Warehouses', 'Tables', 'Pipelines (DLT)', 'Repos', 'MLflow Experiments', 'Serving Endpoints', 'SQL Alerts', 'Genie Spaces', 'Cluster Policies', 'Instance Pools'],
             datasets: [{
                 label: 'Count',
-                data: [
-                    {{ summary.total_notebooks | default(0) }},
-                    {{ summary.total_clusters | default(0) }},
-                    {{ summary.total_jobs | default(0) }},
-                    {{ summary.total_sql_warehouses | default(0) }},
-                    {{ summary.total_tables | default(0) }}
-                ],
-                backgroundColor: ['#ff3621', '#0078d4', '#107c10', '#5c2d91', '#008272']
+                data: rawCounts.map(v => v > 0 ? v : null),
+                backgroundColor: ['#ff3621', '#0078d4', '#107c10', '#5c2d91', '#008272', '#d83b01', '#e3008c', '#8764b8', '#038387', '#986f0b', '#498205', '#7e5c35', '#005a9e']
             }]
         },
         options: {
             responsive: true,
             maintainAspectRatio: false,
-            plugins: { legend: { display: false } },
-            scales: { y: { beginAtZero: true } }
+            plugins: {
+                legend: { display: false },
+                tooltip: {
+                    callbacks: {
+                        label: function(ctx) {
+                            const raw = rawCounts[ctx.dataIndex];
+                            return 'Count: ' + (raw !== undefined ? raw : 0);
+                        }
+                    }
+                }
+            },
+            scales: {
+                y: {
+                    type: 'logarithmic',
+                    min: 0.9,
+                    title: { display: true, text: 'Count (log scale)' },
+                    ticks: {
+                        callback: function(value) {
+                            const allowed = [1, 2, 5, 10, 20, 50, 100, 200, 500, 1000, 2000, 5000, 10000];
+                            return allowed.includes(value) ? value : null;
+                        }
+                    }
+                }
+            }
         }
     });
 }

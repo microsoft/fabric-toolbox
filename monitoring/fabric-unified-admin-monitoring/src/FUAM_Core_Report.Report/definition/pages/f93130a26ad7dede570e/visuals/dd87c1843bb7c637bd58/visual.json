@@ -1,13 +1,13 @@
 {
-    "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.5.0/schema.json",
+    "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.9.0/schema.json",
     "name": "dd87c1843bb7c637bd58",
     "position": {
         "x": 181.90555535210754,
         "y": 350.65331233749583,
-        "z": 60000,
+        "z": 58000,
         "height": 59,
         "width": 92.94320137693632,
-        "tabOrder": 59000
+        "tabOrder": 57000
     },
     "visual": {
         "visualType": "card",
@@ -193,23 +193,5 @@
             ]
         },
         "drillFilterOtherVisuals": true
-    },
-    "filterConfig": {
-        "filters": [
-            {
-                "name": "d709e57f443721f6993e",
-                "field": {
-                    "Measure": {
-                        "Expression": {
-                            "SourceRef": {
-                                "Entity": "Metrics"
-                            }
-                        },
-                        "Property": "# Users last 30d"
-                    }
-                },
-                "type": "Advanced"
-            }
-        ]
     }
 }

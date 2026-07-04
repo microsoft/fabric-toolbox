@@ -1,13 +1,13 @@
 {
-    "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.5.0/schema.json",
+    "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.9.0/schema.json",
     "name": "9fb84da7931ab9ff9512",
     "position": {
         "x": 23.076923076923077,
         "y": 163.07692307692307,
-        "z": 9003,
+        "z": 8000,
         "height": 887.6923076923076,
         "width": 740,
-        "tabOrder": 9003
+        "tabOrder": 8000
     },
     "visual": {
         "visualType": "barChart",
@@ -460,39 +460,6 @@
                 },
                 "type": "Categorical",
                 "howCreated": "User"
-            },
-            {
-                "name": "565733f8dc22af999b9c",
-                "field": {
-                    "Column": {
-                        "Expression": {
-                            "SourceRef": {
-                                "Entity": "datasource_instances"
-                            }
-                        },
-                        "Property": "fuam_datasourceKind"
-                    }
-                },
-                "type": "Categorical"
-            },
-            {
-                "name": "acdbce3546b9a7aaed66",
-                "field": {
-                    "Aggregation": {
-                        "Expression": {
-                            "Column": {
-                                "Expression": {
-                                    "SourceRef": {
-                                        "Entity": "semantic_model_datasources"
-                                    }
-                                },
-                                "Property": "SemanticModelId"
-                            }
-                        },
-                        "Function": 5
-                    }
-                },
-                "type": "Advanced"
             }
         ],
         "filterSortOrder": "Custom"

@@ -1,5 +1,5 @@
 {
-    "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.5.0/schema.json",
+    "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.9.0/schema.json",
     "name": "db0dd54161b6e9cca5e7",
     "position": {
         "x": 1052.4637239374522,
@@ -465,6 +465,11 @@
                             }
                         }
                     }
+                }
+            ],
+            "columnHeaders": [
+                {
+                    "properties": {}
                 }
             ]
         },

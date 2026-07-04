@@ -131,6 +131,10 @@
   setters take hashtable pass-through bodies and support `-WhatIf`/`-Confirm`.
 - **`Set-FabricOneLakeImmutabilityPolicy`** (new): `POST /workspaces/{workspaceId}/onelake/settings/modifyImmutabilityPolicy`;
   `-Scope` (DiagnosticLogs) + `-RetentionDays`; supports `-WhatIf`/`-Confirm` and `-Raw`.
+- **`New-FabricSemanticModel`** and **`New-FabricReport`**: new optional `-FolderId` parameter that
+  places the newly created item directly inside a workspace folder (resolves
+  [#427](https://github.com/microsoft/fabric-toolbox/issues/427)). Maps to the Fabric *Create item*
+  API `folderId` request-body property; when omitted, the item is created in the workspace root.
 
 ### Fixed
 
@@ -181,6 +185,10 @@
   table + list views. Added dedicated `ConnectionView` (Connection Name / Connectivity Type /
   Gateway Name / ID) and `DeploymentPipelineView` (Pipeline Name / Description / ID). Formatting
   is display-only; the enriched object still carries every property.
+- **`New-FabricSemanticModel`** and **`New-FabricReport`**: modernized to the shared helper pattern
+  used by newer cmdlets — endpoint URIs are now built with `New-FabricAPIUri` and request bodies
+  serialized with `Convert-FabricRequestBody`. Both now emit the API response via natural pipeline
+  output instead of `return`.
 
 ### Added (earlier this release)
 
@@ -234,13 +242,7 @@
   parameter, yet 34 functions called `New-FabricAPIUri -Segments @(...)` — every `*Definition` getter/updater
   built via segments plus the Domain functions. The call failed parameter binding, the error was swallowed by
   the surrounding try/catch, and the function returned nothing without ever calling the API. Added a `-Segments`
-  parameter (its own parameter set) that builds the path from an ordered segment list, restoring these functions.
-- **`Add/Remove/Update-FabricConnectionRoleAssignment`**: Corrected the request URI. These functions built
-  `/connections/roleAssignments/{connectionId}` instead of the correct `/connections/{connectionId}/roleAssignments`
-  (and `.../roleAssignments/{roleAssignmentId}` for Remove/Update), so they targeted the wrong endpoint at runtime.
-  Root cause was `New-FabricAPIUri` placing `-Subresource` before `-ItemId`; the connection id was passed via `-ItemId`.
-- **`Remove-FabricSharingLinks`**: Removed a dead validation loop over an undefined `$Items` variable and repaired
-  corrupted comment-based help. No change to the (already correct) `POST /admin/items/removeAllSharingLinks'
+  parameter (its own parameter set) that builds the path from an ordered segment list, restorin'
 
             # Prerelease string of this module
             # Prerelease = ''

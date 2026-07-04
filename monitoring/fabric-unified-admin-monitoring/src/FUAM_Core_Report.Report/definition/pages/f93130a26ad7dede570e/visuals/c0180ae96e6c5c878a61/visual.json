@@ -1,13 +1,13 @@
 {
-    "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.5.0/schema.json",
+    "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.9.0/schema.json",
     "name": "c0180ae96e6c5c878a61",
     "position": {
         "x": 120.39374979435176,
         "y": 775.5602878601954,
-        "z": 64006,
+        "z": 68000,
         "height": 53.333333333333336,
         "width": 67.5,
-        "tabOrder": 64006
+        "tabOrder": 68000
     },
     "visual": {
         "visualType": "card",
@@ -249,20 +249,6 @@
                     ]
                 },
                 "howCreated": "User"
-            },
-            {
-                "name": "44a8ccf9b58dd0f7cbc5",
-                "field": {
-                    "Measure": {
-                        "Expression": {
-                            "SourceRef": {
-                                "Entity": "Metrics"
-                            }
-                        },
-                        "Property": "Widely Shared Objects Published to Web"
-                    }
-                },
-                "type": "Advanced"
             },
             {
                 "name": "fc1ad287704f0beb1838",

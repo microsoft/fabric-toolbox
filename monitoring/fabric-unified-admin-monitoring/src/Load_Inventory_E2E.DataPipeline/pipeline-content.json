@@ -3,6 +3,7 @@
         "activities": [
             {
                 "name": "01_Transfer_Incremental_Inventory_Unit",
+                "description": "Execute 01_Transfer_Incremental_Inventory_Unit",
                 "type": "TridentNotebook",
                 "dependsOn": [],
                 "policy": {

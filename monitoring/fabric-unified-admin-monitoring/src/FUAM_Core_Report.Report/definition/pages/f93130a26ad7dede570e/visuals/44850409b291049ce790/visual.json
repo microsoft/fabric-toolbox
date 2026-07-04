@@ -1,13 +1,13 @@
 {
-    "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.5.0/schema.json",
+    "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.9.0/schema.json",
     "name": "44850409b291049ce790",
     "position": {
         "x": 395.0086058519793,
         "y": 105.9552495697074,
-        "z": 19000,
+        "z": 18000,
         "height": 55.76592082616179,
         "width": 123.6144578313253,
-        "tabOrder": 16000
+        "tabOrder": 15000
     },
     "visual": {
         "visualType": "card",
@@ -204,20 +204,6 @@
                 },
                 "type": "Categorical",
                 "howCreated": "User"
-            },
-            {
-                "name": "44714eb00716b1526955",
-                "field": {
-                    "Measure": {
-                        "Expression": {
-                            "SourceRef": {
-                                "Entity": "Metrics"
-                            }
-                        },
-                        "Property": "Median Refresh Duration Minutes"
-                    }
-                },
-                "type": "Advanced"
             }
         ]
     }

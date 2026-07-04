@@ -1,47 +1,113 @@
-from typing import Any, Iterator, Optional
+from typing import Any, Iterator, Literal, Optional
 
 from mssql_python import connect
 
 from ..assessment.synapse import CodeObjectCount, CodeObjectLines, TableStatistics
 
+# Supported SQL authentication modes
+SqlAuthMode = Literal["sql", "entra-interactive", "entra-spn", "entra-default"]
+
 
 class OdbcClient:
-    """ODBC client for connecting to Azure Synapse Analytics dedicated SQL pools."""
+    """ODBC client for connecting to Azure Synapse Analytics dedicated SQL pools.
+
+    Supports multiple authentication modes:
+    - sql: Traditional SQL authentication with username/password
+    - entra-interactive: Entra ID interactive authentication (browser popup)
+    - entra-spn: Entra ID Service Principal authentication
+    - entra-default: Entra ID default authentication (Azure CLI, managed identity, etc.)
+    """
 
     def __init__(
-        self, workspace_name: str, database: str, username: str, password: str
+        self,
+        workspace_name: str,
+        database: str,
+        username: Optional[str] = None,
+        password: Optional[str] = None,
+        auth_mode: SqlAuthMode = "sql",
+        client_id: Optional[str] = None,
+        client_secret: Optional[str] = None,
+        tenant_id: Optional[str] = None,
     ):
         """
         Initialize ODBC client with connection parameters.
 
         Args:
             workspace_name: The Synapse workspace name (e.g., 'myworkspace.sql.azuresynapse.net')
-            user: SQL authentication username
-            password: SQL authentication password
+            database: The database name to connect to
+            username: SQL authentication username (required for 'sql' mode)
+            password: SQL authentication password (required for 'sql' mode)
+            auth_mode: Authentication mode - 'sql', 'entra-interactive', 'entra-spn', or 'entra-default'
+            client_id: Service principal client ID (required for 'entra-spn' mode)
+            client_secret: Service principal client secret (required for 'entra-spn' mode)
+            tenant_id: Azure tenant ID (optional for 'entra-spn' mode, defaults to 'common')
         """
         self.workspace_name = workspace_name
         self.database = database
         self.username = username
         self.password = password
+        self.auth_mode = auth_mode
+        self.client_id = client_id
+        self.client_secret = client_secret
+        self.tenant_id = tenant_id or "common"
+        self._validate_auth_params()
         self._connection_string = self._build_connection_string()
         self._connection: Optional[Any] = None
 
+    def _validate_auth_params(self) -> None:
+        """Validate that required parameters are provided for the selected auth mode."""
+        if self.auth_mode == "sql":
+            if not self.username or not self.password:
+                raise ValueError(
+                    "SQL authentication requires both 'username' and 'password'"
+                )
+        elif self.auth_mode == "entra-spn":
+            if not self.client_id or not self.client_secret:
+                raise ValueError(
+                    "Entra ID Service Principal authentication requires "
+                    "'client_id' and 'client_secret'"
+                )
+        # entra-interactive and entra-default don't require additional params
+
     def _build_connection_string(self) -> str:
-        """Build the ODBC connection string."""
+        """Build the connection string based on the authentication mode."""
         # Ensure workspace_name has the full domain if not provided
         if not self.workspace_name.endswith(".sql.azuresynapse.net"):
             server = f"{self.workspace_name}.sql.azuresynapse.net"
         else:
             server = self.workspace_name
 
-        return (
+        # Base connection string components
+        base = (
             f"Server=tcp:{server},1433;"
-            f";Database={self.database};"
-            f"Uid={self.username};"
-            f"Pwd={self.password};"
+            f"Database={self.database};"
             f"Encrypt=yes;"
             f"TrustServerCertificate=no;"
         )
+
+        if self.auth_mode == "sql":
+            return base + f"Uid={self.username};Pwd={self.password};"
+
+        elif self.auth_mode == "entra-interactive":
+            # Interactive browser-based authentication with MFA support
+            return base + "Authentication=ActiveDirectoryInteractive;"
+
+        elif self.auth_mode == "entra-spn":
+            # Service Principal authentication
+            # UID = client_id, PWD = client_secret
+            return (
+                base
+                + f"Authentication=ActiveDirectoryServicePrincipal;"
+                f"UID={self.client_id};"
+                f"PWD={self.client_secret};"
+            )
+
+        elif self.auth_mode == "entra-default":
+            # Default authentication - uses Azure CLI, managed identity, etc.
+            return base + "Authentication=ActiveDirectoryDefault;"
+
+        else:
+            raise ValueError(f"Unsupported authentication mode: {self.auth_mode}")
 
     def __enter__(self):
         """Enter context manager - open connection."""

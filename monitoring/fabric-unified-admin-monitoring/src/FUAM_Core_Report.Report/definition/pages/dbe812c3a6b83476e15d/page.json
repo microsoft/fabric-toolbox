@@ -1,5 +1,5 @@
 {
-    "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/page/2.0.0/schema.json",
+    "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/page/2.1.0/schema.json",
     "name": "dbe812c3a6b83476e15d",
     "displayName": "Item Catalog",
     "displayOption": "FitToPage",
@@ -90,6 +90,45 @@
                     }
                 },
                 "type": "Categorical",
+                "filter": {
+                    "Version": 2,
+                    "From": [
+                        {
+                            "Name": "w",
+                            "Entity": "workspaces",
+                            "Type": 0
+                        }
+                    ],
+                    "Where": [
+                        {
+                            "Condition": {
+                                "In": {
+                                    "Expressions": [
+                                        {
+                                            "Column": {
+                                                "Expression": {
+                                                    "SourceRef": {
+                                                        "Source": "w"
+                                                    }
+                                                },
+                                                "Property": "WorkspaceName"
+                                            }
+                                        }
+                                    ],
+                                    "Values": [
+                                        [
+                                            {
+                                                "Literal": {
+                                                    "Value": "'FUAM_Version_2026_5_1'"
+                                                }
+                                            }
+                                        ]
+                                    ]
+                                }
+                            }
+                        }
+                    ]
+                },
                 "howCreated": "User"
             },
             {

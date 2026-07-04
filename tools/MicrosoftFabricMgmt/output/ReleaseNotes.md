@@ -11,6 +11,10 @@
   setters take hashtable pass-through bodies and support `-WhatIf`/`-Confirm`.
 - **`Set-FabricOneLakeImmutabilityPolicy`** (new): `POST /workspaces/{workspaceId}/onelake/settings/modifyImmutabilityPolicy`;
   `-Scope` (DiagnosticLogs) + `-RetentionDays`; supports `-WhatIf`/`-Confirm` and `-Raw`.
+- **`New-FabricSemanticModel`** and **`New-FabricReport`**: new optional `-FolderId` parameter that
+  places the newly created item directly inside a workspace folder (resolves
+  [#427](https://github.com/microsoft/fabric-toolbox/issues/427)). Maps to the Fabric *Create item*
+  API `folderId` request-body property; when omitted, the item is created in the workspace root.
 
 ### Fixed
 
@@ -61,6 +65,10 @@
   table + list views. Added dedicated `ConnectionView` (Connection Name / Connectivity Type /
   Gateway Name / ID) and `DeploymentPipelineView` (Pipeline Name / Description / ID). Formatting
   is display-only; the enriched object still carries every property.
+- **`New-FabricSemanticModel`** and **`New-FabricReport`**: modernized to the shared helper pattern
+  used by newer cmdlets — endpoint URIs are now built with `New-FabricAPIUri` and request bodies
+  serialized with `Convert-FabricRequestBody`. Both now emit the API response via natural pipeline
+  output instead of `return`.
 
 ### Added (earlier this release)
 
