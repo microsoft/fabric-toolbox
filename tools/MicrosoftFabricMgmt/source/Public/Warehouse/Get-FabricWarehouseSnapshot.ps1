@@ -143,6 +143,10 @@ function Get-FabricWarehouseSnapshot {
                 }
             }
 
+            # Surface buried properties.* scalars (ConnectionString, ParentWarehouseId,
+            # SnapshotDateTime) as flat top-level fields. Skipped on -Raw (early return above).
+            $null = $matchedItems | Add-FabricFlattenedProperty
+
             $matchedItems | Add-FabricTypeName -TypeName 'MicrosoftFabric.WarehouseSnapshot'
             return $matchedItems
         }
