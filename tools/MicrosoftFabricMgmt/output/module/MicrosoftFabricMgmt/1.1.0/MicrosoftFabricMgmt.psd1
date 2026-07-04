@@ -134,6 +134,14 @@
 
 ### Fixed
 
+- **`Get-FabricAdminWorkspace` filtering**: the `-Filter` parameter (and `-Top`/`-Skip`/`-OrderBy`)
+  never worked — the Fabric admin `GET /admin/workspaces` endpoint does not support OData query
+  options, so those values were silently ignored. Removed the four phantom parameters and added the
+  genuinely-supported `-EncryptionStatus` (auto-sets `-Include encryption`) and `-Include`. Also fixed
+  `-WorkspaceName`, which returned nothing because the results were re-filtered client-side on
+  `displayName` while the admin API returns `name`; filtering is now server-side via the `name` query
+  parameter. Use the named filters (`-CapacityId`/`-WorkspaceName`/`-WorkspaceType`/`-State`/
+  `-EncryptionStatus`) or pipe to `Where-Object`/`Select-Object` for client-side work.
 - **`scripts/Update-FabricAPISpecsCache.ps1`**: now auto-discovers and downloads the nested
   `./definitions/{name}.json` files each swagger `$ref`s (cached as `{spec}.{name}.definitions.json`)
   — e.g. `platform.workspaceNetworkingPolicy.definitions.json`, connections, deploymentPipelines,
@@ -232,18 +240,7 @@
   (and `.../roleAssignments/{roleAssignmentId}` for Remove/Update), so they targeted the wrong endpoint at runtime.
   Root cause was `New-FabricAPIUri` placing `-Subresource` before `-ItemId`; the connection id was passed via `-ItemId`.
 - **`Remove-FabricSharingLinks`**: Removed a dead validation loop over an undefined `$Items` variable and repaired
-  corrupted comment-based help. No change to the (already correct) `POST /admin/items/removeAllSharingLinks` call.
-- **`Remove-FabricSharingLinksBulk`**: Repaired corrupted comment-based help and removed an unused format argument.
-  No change to the (already correct) `POST /admin/items/bulkRemoveSharingLinks` call.
-- **`Invoke-FabricAPIRequest` retry backoff**: Fixed an `OverflowException` in the transient-failure (429/503/504)
-  retry path. When the API returned no `Retry-After` header, the backoff delay was computed with
-  `[int](Get-Date).Ticks`, which overflows `Int32` and threw instead of backing off. Extracted the delay
-  calculation into a tested `Get-FabricRetryDelay` helper (honors `Retry-After`, exponential backoff with jitter,
-  clamped 1..120s).
-
-### Changed
-
-- **`-Raw` parameter coverage is now 100% of Get-* functions.** Added `-Raw` (returns the untouched'
+  corrupted comment-based help. No change to the (already correct) `POST /admin/items/removeAllSharingLinks'
 
             # Prerelease string of this module
             # Prerelease = ''

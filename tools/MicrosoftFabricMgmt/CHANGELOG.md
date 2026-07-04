@@ -19,6 +19,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- **`Get-FabricAdminWorkspace` filtering**: the `-Filter` parameter (and `-Top`/`-Skip`/`-OrderBy`)
+  never worked — the Fabric admin `GET /admin/workspaces` endpoint does not support OData query
+  options, so those values were silently ignored. Removed the four phantom parameters and added the
+  genuinely-supported `-EncryptionStatus` (auto-sets `-Include encryption`) and `-Include`. Also fixed
+  `-WorkspaceName`, which returned nothing because the results were re-filtered client-side on
+  `displayName` while the admin API returns `name`; filtering is now server-side via the `name` query
+  parameter. Use the named filters (`-CapacityId`/`-WorkspaceName`/`-WorkspaceType`/`-State`/
+  `-EncryptionStatus`) or pipe to `Where-Object`/`Select-Object` for client-side work.
 - **`scripts/Update-FabricAPISpecsCache.ps1`**: now auto-discovers and downloads the nested
   `./definitions/{name}.json` files each swagger `$ref`s (cached as `{spec}.{name}.definitions.json`)
   — e.g. `platform.workspaceNetworkingPolicy.definitions.json`, connections, deploymentPipelines,

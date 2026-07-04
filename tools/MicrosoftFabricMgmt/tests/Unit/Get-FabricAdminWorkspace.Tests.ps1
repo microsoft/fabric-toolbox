@@ -61,4 +61,31 @@ Describe 'Get-FabricAdminWorkspace' -Tag 'UnitTests' {
         $r[0].PSObject.TypeNames[0]    | Should -Not -Be 'MicrosoftFabric.AdminWorkspace'
         $r[0].id                       | Should -Be 'ws-1'
     }
+
+    It 'sends the supported named filters as query parameters' {
+        $null = Get-FabricAdminWorkspace -WorkspaceName 'Sales' -WorkspaceType 'workspace' -State 'active' -CapacityId 'cap-9'
+        $global:__capUri | Should -Match 'name=Sales'
+        $global:__capUri | Should -Match 'type=workspace'
+        $global:__capUri | Should -Match 'state=active'
+        $global:__capUri | Should -Match 'capacityId=cap-9'
+    }
+
+    It '-WorkspaceName no longer drops rows (server-side name filter; no client-side displayName re-filter)' {
+        $r = Get-FabricAdminWorkspace -WorkspaceName 'Analytics'
+        @($r).Count   | Should -Be 1
+        $r[0].id      | Should -Be 'ws-1'
+    }
+
+    It '-EncryptionStatus is sent and auto-includes encryption' {
+        $null = Get-FabricAdminWorkspace -EncryptionStatus 'Active'
+        $global:__capUri | Should -Match 'encryptionStatus=Active'
+        $global:__capUri | Should -Match 'include=encryption'
+    }
+
+    It 'does not send OData query options and no longer exposes those parameters' {
+        $null = Get-FabricAdminWorkspace -State 'active'
+        $global:__capUri | Should -Not -Match '\$filter|\$top|\$skip|\$orderby'
+        $params = (Get-Command Get-FabricAdminWorkspace).Parameters.Keys
+        foreach ($p in 'Filter', 'Top', 'Skip', 'OrderBy') { $params | Should -Not -Contain $p }
+    }
 }
