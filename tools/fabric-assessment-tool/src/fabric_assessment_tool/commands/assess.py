@@ -22,6 +22,7 @@ Examples:
   fat assess --source synapse --mode full --ws workspace1 --subscription-id 12345678-1234-1234-1234-123456789012 -o output_dir/
   fat assess --source databricks --mode full --ws my-workspace --output results/ --format json
   fat assess --source databricks --cloud aws --ws my-workspace --output results/
+  fat assess --source databricks --cloud aws --ws dev,prod --resources jobs -o results/
         """
 
     def configure_parser(self, parser: argparse.ArgumentParser) -> None:
@@ -59,9 +60,10 @@ Examples:
         )
 
         parser.add_argument(
-            "-ws",
+            "--ws",
             "--workspace",
             default="",
+            dest="workspace",
             help="Comma-separated list of workspace names to assess",
         )
 
@@ -70,6 +72,19 @@ Examples:
             choices=["json", "csv", "parquet"],
             default="json",
             help="Output format for detailed data (default: json)",
+        )
+
+        parser.add_argument(
+            "--resources",
+            default=None,
+            help=(
+                "Comma-separated list of resource types to extract (default: all). "
+                "Use to re-extract only specific resources without repeating a full assessment. "
+                "Valid Databricks resources: clusters, sql_warehouses, notebooks, jobs, "
+                "catalogs, external_locations, connections, secret_scopes, pipelines, "
+                "repos, experiments, serving_endpoints, alerts, genie_spaces, "
+                "cluster_policies, instance_pools"
+            ),
         )
 
         parser.add_argument(
@@ -138,6 +153,11 @@ Examples:
             ws.strip() for ws in args.workspace.split(",") if ws.strip() != ""
         ]
 
+        # Parse resources filter
+        resources = None
+        if getattr(args, "resources", None):
+            resources = [r.strip() for r in args.resources.split(",") if r.strip()]
+
         try:
             result = self.assessment_service.assess(
                 source=args.source,
@@ -154,6 +174,7 @@ Examples:
                 sql_client_id=getattr(args, "sql_client_id", None),
                 sql_client_secret=getattr(args, "sql_client_secret", None),
                 sql_tenant_id=getattr(args, "sql_tenant_id", None),
+                resources=resources,
             )
 
             utils_ui.print(f"Assessment completed successfully!")

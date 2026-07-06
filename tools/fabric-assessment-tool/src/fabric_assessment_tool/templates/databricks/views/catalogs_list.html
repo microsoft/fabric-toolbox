@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="page-header">
+    <h1>📦 All Unity Catalogs</h1>
+    <p>{{ items | length }} catalogs across all workspaces</p>
+</div>
+<div class="card">
+    <div class="card-header">Unity Catalogs (Page {{ current_page }} of {{ total_pages }})</div>
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table">
+                <thead><tr><th>Name</th><th class="text-right">Schemas</th><th class="text-right">Managed</th><th class="text-right">External</th><th class="text-right">Views</th><th class="text-right">Volumes</th><th class="text-right">Functions</th><th>Workspace</th></tr></thead>
+                <tbody>
+                    {% for cat in page_items %}
+                    <tr data-workspace="{{ cat.workspace | default('N/A') }}">
+                        <td><strong>{{ cat.name | default('Unknown') }}</strong></td>
+                        <td class="text-right">{{ cat.schemas | default(0) }}</td>
+                        <td class="text-right">{{ cat.managed_tables | default(0) | format_number }}</td>
+                        <td class="text-right">{{ cat.external_tables | default(0) | format_number }}</td>
+                        <td class="text-right">{{ cat.views | default(0) | format_number }}</td>
+                        <td class="text-right">{{ cat.volumes | default(0) }}</td>
+                        <td class="text-right">{{ cat.functions | default(0) }}</td>
+                        <td>{{ cat.workspace | default('N/A') }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% if total_pages > 1 %}
+        <nav class="pagination-nav">
+            {% if current_page > 1 %}<a href="catalogs_page_{{ current_page - 1 }}.html">← Previous</a>{% endif %}
+            <span class="pagination-info">Page {{ current_page }} of {{ total_pages }}</span>
+            {% if current_page < total_pages %}<a href="catalogs_page_{{ current_page + 1 }}.html">Next →</a>{% endif %}
+        </nav>
+        {% endif %}
+    </div>
+</div>
+<div class="mt-2"><a href="data_warehousing.html">← Back to Data Warehousing</a></div>
+{% endblock %}

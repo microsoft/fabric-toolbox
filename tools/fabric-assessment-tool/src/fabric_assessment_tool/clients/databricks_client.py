@@ -1,9 +1,11 @@
 import base64
+import json
 import os
 import re
 from argparse import Namespace
 from datetime import datetime, timezone
-from typing import Any, Dict, Optional
+from pathlib import Path
+from typing import Any, Dict, List, Optional
 from urllib.parse import urlparse
 
 from databricks.sdk import AccountClient, WorkspaceClient
@@ -63,6 +65,28 @@ from .api_client import ApiClient, ApiResponse
 from .token_provider import TokenProvider, create_token_provider
 
 
+class _CountOnlyCollection:
+    """Lightweight stub for resource collections loaded from disk.
+
+    Supports len() on the collection field for summary count purposes.
+    """
+
+    def __init__(self, field_name: str, count: int):
+        # Create an attribute with the given field name containing a list of `count` items
+        setattr(self, field_name, [None] * count)
+
+
+def _normalize_notebook_path(path: str) -> str:
+    """Normalize a notebook path by removing the /Workspace prefix.
+
+    The Databricks Jobs API stores paths with /Workspace/ prefix but the
+    Workspace listing API returns paths without it.
+    """
+    if path and path.startswith("/Workspace/"):
+        return path[len("/Workspace") :]
+    return path or ""
+
+
 class DatabricksClient:
     """Client for Databricks APIs."""
 
@@ -96,6 +120,7 @@ class DatabricksClient:
         self.account_client: Optional[AccountClient] = None
         self.authenticate()
         self._workspace_cache: dict[str, DatabricksWorkspaceInfo] = {}
+        self.extraction_warnings: list[str] = []
 
     def authenticate(self) -> None:
         """Authenticate with the configured Databricks cloud."""
@@ -367,116 +392,237 @@ class DatabricksClient:
             self.workspace_client.api_client._api_client._session.auth
         )
 
-    def assess_workspace(self, workspace_name: str, mode: str) -> DatabricksAssessment:
+    def assess_workspace(
+        self,
+        workspace_name: str,
+        mode: str,
+        resources: Optional[List[str]] = None,
+        output_path: Optional[str] = None,
+    ) -> DatabricksAssessment:
         """
         Assess a Databricks workspace.
 
         Args:
             workspace_name: Name of the Databricks workspace
             mode: Assessment mode (full, etc.)
+            resources: Optional list of resource types to extract. When None, all
+                resources are extracted. When specified, only listed types are
+                fetched from the API; others are loaded from previously exported
+                data on disk.
+            output_path: Output directory where previous exports live (required
+                when resources is specified)
 
         Returns:
             DatabricksAssessment object with all assessment data
         """
-        utils_ui.print(
-            f"Assessing Databricks workspace: {workspace_name} (mode: {mode})"
-        )
+        if resources:
+            utils_ui.print(
+                f"Assessing Databricks workspace: {workspace_name} "
+                f"(partial: {', '.join(resources)})"
+            )
+        else:
+            utils_ui.print(
+                f"Assessing Databricks workspace: {workspace_name} (mode: {mode})"
+            )
 
         try:
+            # Reset extraction warnings for this workspace
+            self.extraction_warnings = []
+
             # Get workspace details
             workspace_info = self._get_workspace_info(workspace_name)
 
             # Use the workspace_info to authenticate the databricks client
             self._auth_databricks(workspace_info.url)
 
+            # Determine which resources to extract
+            _should_extract = (
+                (lambda r: r in resources) if resources else (lambda r: True)
+            )
+
+            # Load existing data from disk for resources not being re-extracted
+            disk_data = {}
+            if resources and output_path:
+                disk_data = self._load_resources_from_disk(
+                    workspace_name, output_path, resources
+                )
+
             # Get clusters
-            utils_ui.print_extracting("Clusters")
-            clusters = self._get_clusters()
-            utils_ui.print_extraction_done("Clusters")
+            if _should_extract("clusters"):
+                utils_ui.print_extracting("Clusters")
+                clusters = self._get_clusters()
+                utils_ui.print_extraction_done("Clusters")
+            else:
+                clusters = disk_data.get("clusters", DatabricksClusters(clusters=[]))
 
             # Get SQL Warehouses
-            utils_ui.print_extracting("SQL Warehouses")
-            sql_warehouses = self._get_sql_warehouses()
-            utils_ui.print_extraction_done("SQL Warehouses")
+            if _should_extract("sql_warehouses"):
+                utils_ui.print_extracting("SQL Warehouses")
+                sql_warehouses = self._get_sql_warehouses()
+                utils_ui.print_extraction_done("SQL Warehouses")
+            else:
+                sql_warehouses = disk_data.get(
+                    "sql_warehouses", DatabricksSqlWarehouses(sql_warehouses=[])
+                )
 
             # Get notebooks
-            utils_ui.print_extracting("Notebooks")
-            notebooks = self._get_notebooks()
-            utils_ui.print_extraction_done("Notebooks")
+            if _should_extract("notebooks"):
+                utils_ui.print_extracting("Notebooks")
+                notebooks = self._get_notebooks()
+                utils_ui.print_extraction_done("Notebooks")
+            else:
+                notebooks = disk_data.get(
+                    "notebooks", DatabricksNotebooks(notebooks=[])
+                )
 
             # Get jobs
-            utils_ui.print_extracting("Jobs")
-            jobs = self._get_jobs()
-            utils_ui.print_extraction_done("Jobs")
+            if _should_extract("jobs"):
+                utils_ui.print_extracting("Jobs")
+                jobs = self._get_jobs()
+                utils_ui.print_extraction_done("Jobs")
+            else:
+                jobs = disk_data.get("jobs", DatabricksJobs(jobs=[]))
+
+            # Cross-reference notebooks with job execution data
+            if _should_extract("notebooks") or _should_extract("jobs"):
+                notebooks = self._annotate_notebooks_with_job_execution(notebooks, jobs)
 
             # Get catalogs
-            utils_ui.print_extracting("Catalogs")
-            catalogs = self._get_catalogs()
-            utils_ui.print_extraction_done("Catalogs")
+            if _should_extract("catalogs"):
+                utils_ui.print_extracting("Catalogs")
+                catalogs = self._get_catalogs()
+                utils_ui.print_extraction_done("Catalogs")
+            else:
+                catalogs = disk_data.get("catalogs", DatabricksCatalogs(catalogs=[]))
 
             # Get external locations
-            utils_ui.print_extracting("External Locations")
-            external_locations = self._get_external_locations()
-            utils_ui.print_extraction_done("External Locations")
+            if _should_extract("external_locations"):
+                utils_ui.print_extracting("External Locations")
+                external_locations = self._get_external_locations()
+                utils_ui.print_extraction_done("External Locations")
+            else:
+                external_locations = disk_data.get(
+                    "external_locations",
+                    DatabricksExternalLocations(external_locations=[]),
+                )
 
             # Get connections
-            utils_ui.print_extracting("Connections")
-            connections = self._get_connections()
-            utils_ui.print_extraction_done("Connections")
+            if _should_extract("connections"):
+                utils_ui.print_extracting("Connections")
+                connections = self._get_connections()
+                utils_ui.print_extraction_done("Connections")
+            else:
+                connections = disk_data.get(
+                    "connections", DatabricksConnections(connections=[])
+                )
 
             # Get secret scopes
-            utils_ui.print_extracting("Secret Scopes")
-            secret_scopes = self._get_secret_scopes()
-            utils_ui.print_extraction_done("Secret Scopes")
+            if _should_extract("secret_scopes"):
+                utils_ui.print_extracting("Secret Scopes")
+                secret_scopes = self._get_secret_scopes()
+                utils_ui.print_extraction_done("Secret Scopes")
+            else:
+                secret_scopes = disk_data.get(
+                    "secret_scopes", DatabricksSecretScopes(secret_scopes=[])
+                )
 
             # Get DLT pipelines
-            utils_ui.print_extracting("Pipelines")
-            pipelines = self._get_pipelines()
-            utils_ui.print_extraction_done("Pipelines")
+            if _should_extract("pipelines"):
+                utils_ui.print_extracting("Pipelines")
+                pipelines = self._get_pipelines()
+                utils_ui.print_extraction_done("Pipelines")
+            else:
+                pipelines = disk_data.get(
+                    "pipelines", DatabricksPipelines(pipelines=[])
+                )
 
             # Get Git repos
-            utils_ui.print_extracting("Repos")
-            repos = self._get_repos()
-            utils_ui.print_extraction_done("Repos")
+            if _should_extract("repos"):
+                utils_ui.print_extracting("Repos")
+                repos = self._get_repos()
+                utils_ui.print_extraction_done("Repos")
+            else:
+                repos = disk_data.get("repos", DatabricksRepos(repos=[]))
 
             # Get MLflow experiments
-            utils_ui.print_extracting("Experiments")
-            experiments = self._get_experiments()
-            utils_ui.print_extraction_done("Experiments")
+            if _should_extract("experiments"):
+                utils_ui.print_extracting("Experiments")
+                experiments = self._get_experiments()
+                utils_ui.print_extraction_done("Experiments")
+            else:
+                experiments = disk_data.get(
+                    "experiments", DatabricksExperiments(experiments=[])
+                )
 
             # Get model serving endpoints
-            utils_ui.print_extracting("Serving Endpoints")
-            serving_endpoints = self._get_serving_endpoints()
-            utils_ui.print_extraction_done("Serving Endpoints")
+            if _should_extract("serving_endpoints"):
+                utils_ui.print_extracting("Serving Endpoints")
+                serving_endpoints = self._get_serving_endpoints()
+                utils_ui.print_extraction_done("Serving Endpoints")
+            else:
+                serving_endpoints = disk_data.get(
+                    "serving_endpoints",
+                    DatabricksServingEndpoints(serving_endpoints=[]),
+                )
 
             # Get SQL alerts
-            utils_ui.print_extracting("Alerts")
-            alerts = self._get_alerts()
-            utils_ui.print_extraction_done("Alerts")
+            if _should_extract("alerts"):
+                utils_ui.print_extracting("Alerts")
+                alerts = self._get_alerts()
+                utils_ui.print_extraction_done("Alerts")
+            else:
+                alerts = disk_data.get("alerts", DatabricksAlerts(alerts=[]))
 
             # Get Genie spaces
-            utils_ui.print_extracting("Genie Spaces")
-            genie_spaces = self._get_genie_spaces()
-            utils_ui.print_extraction_done("Genie Spaces")
+            if _should_extract("genie_spaces"):
+                utils_ui.print_extracting("Genie Spaces")
+                genie_spaces = self._get_genie_spaces()
+                utils_ui.print_extraction_done("Genie Spaces")
+            else:
+                genie_spaces = disk_data.get(
+                    "genie_spaces", DatabricksGenieSpaces(genie_spaces=[])
+                )
 
             # Get cluster policies (workspace-summary)
-            utils_ui.print_extracting("Cluster Policies")
-            cluster_policies = self._get_cluster_policies()
-            utils_ui.print_extraction_done("Cluster Policies")
+            if _should_extract("cluster_policies"):
+                utils_ui.print_extracting("Cluster Policies")
+                cluster_policies = self._get_cluster_policies()
+                utils_ui.print_extraction_done("Cluster Policies")
+            else:
+                cluster_policies = disk_data.get(
+                    "cluster_policies", DatabricksClusterPolicies(cluster_policies=[])
+                )
 
             # Get instance pools (workspace-summary)
-            utils_ui.print_extracting("Instance Pools")
-            instance_pools = self._get_instance_pools()
-            utils_ui.print_extraction_done("Instance Pools")
+            if _should_extract("instance_pools"):
+                utils_ui.print_extracting("Instance Pools")
+                instance_pools = self._get_instance_pools()
+                utils_ui.print_extraction_done("Instance Pools")
+            else:
+                instance_pools = disk_data.get(
+                    "instance_pools", DatabricksInstancePools(instance_pools=[])
+                )
 
             # Create assessment metadata
             assessment_metadata = DatabricksAssessmentMetadata(
                 mode=mode, timestamp=self._get_timestamp()
             )
 
-            # Return complete assessment object
+            # Determine final status based on extraction warnings
+            if self.extraction_warnings:
+                status = AssessmentStatus(
+                    status="incomplete",
+                    description=(
+                        "Assessment completed with partial data. "
+                        f"Failed to fully extract: {', '.join(self.extraction_warnings)}"
+                    ),
+                )
+            else:
+                status = AssessmentStatus(status="completed")
+
+            # Return assessment object
             return DatabricksAssessment(
-                status=AssessmentStatus(status="completed"),
+                status=status,
                 workspace_info=workspace_info,
                 clusters=clusters,
                 sql_warehouses=sql_warehouses,
@@ -500,6 +646,222 @@ class DatabricksClient:
 
         except Exception as e:
             raise Exception(f"Failed to assess workspace {workspace_name}: {e}")
+
+    def _load_resources_from_disk(
+        self,
+        workspace_name: str,
+        output_path: str,
+        resources_to_extract: List[str],
+    ) -> Dict[str, Any]:
+        """Load previously exported resources from disk.
+
+        Reads JSON files from the output directory for resource types that are
+        NOT being re-extracted, reconstructing lightweight collection objects
+        with enough data for summary computation.
+
+        Args:
+            workspace_name: Name of the workspace folder
+            output_path: Base output directory
+            resources_to_extract: Resources being freshly extracted (excluded from loading)
+
+        Returns:
+            Dict mapping resource type name to its collection dataclass
+        """
+        workspace_dir = Path(output_path) / workspace_name / "resources"
+        loaded: Dict[str, Any] = {}
+
+        # Mapping from resource name to (folder name, item class, collection class, collection field)
+        resource_map = {
+            "clusters": ("clusters", DatabricksCluster, DatabricksClusters, "clusters"),
+            "sql_warehouses": (
+                "sql_warehouses",
+                DatabricksSqlWarehouse,
+                DatabricksSqlWarehouses,
+                "sql_warehouses",
+            ),
+            "notebooks": (
+                "notebooks",
+                DatabricksNotebook,
+                DatabricksNotebooks,
+                "notebooks",
+            ),
+            "jobs": ("jobs", DatabricksJob, DatabricksJobs, "jobs"),
+            "pipelines": (
+                "pipelines",
+                DatabricksPipeline,
+                DatabricksPipelines,
+                "pipelines",
+            ),
+            "repos": ("repos", DatabricksRepo, DatabricksRepos, "repos"),
+            "experiments": (
+                "experiments",
+                DatabricksExperiment,
+                DatabricksExperiments,
+                "experiments",
+            ),
+            "serving_endpoints": (
+                "serving_endpoints",
+                DatabricksServingEndpoint,
+                DatabricksServingEndpoints,
+                "serving_endpoints",
+            ),
+            "alerts": ("alerts", DatabricksAlert, DatabricksAlerts, "alerts"),
+            "genie_spaces": (
+                "genie_spaces",
+                DatabricksGenieSpace,
+                DatabricksGenieSpaces,
+                "genie_spaces",
+            ),
+            "cluster_policies": (
+                "cluster_policies",
+                DatabricksClusterPolicy,
+                DatabricksClusterPolicies,
+                "cluster_policies",
+            ),
+            "instance_pools": (
+                "instance_pools",
+                DatabricksInstancePool,
+                DatabricksInstancePools,
+                "instance_pools",
+            ),
+            "external_locations": (
+                "external_locations",
+                DatabricksExternalLocation,
+                DatabricksExternalLocations,
+                "external_locations",
+            ),
+            "connections": (
+                "connections",
+                DatabricksConnection,
+                DatabricksConnections,
+                "connections",
+            ),
+            "secret_scopes": (
+                "secret_scopes",
+                DatabricksSecretScope,
+                DatabricksSecretScopes,
+                "secret_scopes",
+            ),
+        }
+
+        for res_name, (folder, item_cls, coll_cls, field_name) in resource_map.items():
+            if res_name in resources_to_extract:
+                continue  # Will be freshly extracted
+
+            folder_path = workspace_dir / folder
+            if not folder_path.exists():
+                continue
+
+            items = []
+            for json_file in sorted(folder_path.glob("*.json")):
+                try:
+                    with open(json_file, "r", encoding="utf-8") as f:
+                        data = json.load(f)
+                    # Extract the inner data (wrapped format)
+                    inner = (
+                        data.get(f"{res_name.rstrip('s')}_data")
+                        or data.get(f"{folder.rstrip('s')}_data")
+                        or data.get("data")
+                        or data
+                    )
+                    # For counting purposes, store the raw dict
+                    items.append(inner)
+                except (json.JSONDecodeError, IOError):
+                    continue
+
+            # Build collection with count - use a lightweight approach
+            # Store raw dicts; get_summary() only needs len()
+            loaded[res_name] = self._build_collection_from_dicts(
+                res_name, items, coll_cls, field_name
+            )
+
+        return loaded
+
+    def _build_collection_from_dicts(
+        self, res_name: str, items: List[dict], coll_cls: Any, field_name: str
+    ) -> Any:
+        """Build a collection dataclass from raw dict items loaded from disk.
+
+        For summary purposes, we only need the collection to report accurate
+        counts via len(). We store minimal dataclass instances.
+        """
+        if res_name == "notebooks":
+            objs = [
+                DatabricksNotebook(
+                    path=item.get("path", ""),
+                    default_language=item.get("default_language", ""),
+                    embedded_languages=item.get("embedded_languages", []),
+                    other_magics=item.get("other_magics", []),
+                    json_response=item.get("json_response", {}),
+                    uses_dbutils=item.get("uses_dbutils", False),
+                    last_job_execution=item.get("last_job_execution"),
+                    executed_by_jobs=item.get("executed_by_jobs"),
+                )
+                for item in items
+            ]
+            return DatabricksNotebooks(notebooks=objs)
+        elif res_name == "jobs":
+            objs = [
+                DatabricksJob(
+                    job_id=item.get("job_id", 0),
+                    tasks=DatabricksJobTasks(
+                        tasks=[
+                            DatabricksJobTask(
+                                name=t.get("name", ""),
+                                type=t.get("type", ""),
+                                libraries=t.get("libraries", {}),
+                                json_response=t,
+                                notebook_path=t.get("notebook_path"),
+                            )
+                            for t in (
+                                item.get("tasks", {}).get("tasks", [])
+                                if isinstance(item.get("tasks"), dict)
+                                else item.get("tasks", [])
+                            )
+                        ]
+                    ),
+                    settings=DatabricksJobSettings(
+                        name=(item.get("settings") or {}).get("name", ""),
+                        json_response=item.get("settings", {}),
+                    ),
+                    latest_runs=DatabricksJobRuns(
+                        runs=[
+                            DatabricksJobRun(
+                                id=r.get("id", ""),
+                                state=r.get("state", ""),
+                                result_state=r.get("result_state", ""),
+                                start_time=r.get("start_time", ""),
+                                end_time=r.get("end_time"),
+                                execution_duration=r.get("execution_duration", "0"),
+                                json_response=r,
+                            )
+                            for r in (
+                                item.get("latest_runs", {}).get("runs", [])
+                                if isinstance(item.get("latest_runs"), dict)
+                                else []
+                            )
+                        ]
+                    ),
+                    avg_duration_ms_last_3_runs=item.get("avg_duration_ms_last_3_runs"),
+                )
+                for item in items
+            ]
+            return DatabricksJobs(jobs=objs)
+        elif res_name == "clusters":
+            objs = [
+                DatabricksCluster(
+                    cluster_id=item.get("cluster_id", ""),
+                    cluster_name=item.get("cluster_name", ""),
+                    state=item.get("state", ""),
+                    json_response=item,
+                )
+                for item in items
+            ]
+            return DatabricksClusters(clusters=objs)
+        else:
+            # Generic: count-only stub using the collection length
+            # Create a simple object that reports correct len()
+            return _CountOnlyCollection(field_name, len(items))
 
     def _get_workspace_info(self, workspace_name: str) -> DatabricksWorkspaceInfo:
         """Get Databricks workspace information.
@@ -657,6 +1019,13 @@ class DatabricksClient:
                 )
                 for cluster in clusters_data
             ]
+
+            if not clusters:
+                utils_ui.print_warning(
+                    "No clusters returned. This may indicate insufficient "
+                    "permissions (the service principal needs CAN_ATTACH_TO "
+                    "or workspace admin access to list clusters)."
+                )
 
             return DatabricksClusters(clusters=clusters)
 
@@ -867,12 +1236,15 @@ class DatabricksClient:
 
         if job.get("has_more", False):
             args.uri = f"{base_endpoint}/get?job_id={job_id}"
+            args.auto_paginate = False
             req = self.api_client.do_request(args)
             settings = req.json().get("settings", {})
         else:
             settings = job.get("settings", {})
 
+        args = Namespace()
         args.uri = f"{base_endpoint}/runs/list?job_id={job_id}&limit=3"
+        args.auto_paginate = False
         req = self.api_client.do_request(args)
         runs = req.json()
 
@@ -933,6 +1305,13 @@ class DatabricksClient:
                         timeout_seconds=task.get("timeout_seconds"),
                         max_retries=task.get("max_retries"),
                         cluster_type=cluster_type,
+                        notebook_path=(
+                            task.get("notebook_task", {}).get("notebook_path")
+                            or task.get("for_each_task", {})
+                            .get("task", {})
+                            .get("notebook_task", {})
+                            .get("notebook_path")
+                        ),
                         cluster_config=cluster_config,
                     )
                 )
@@ -1016,23 +1395,67 @@ class DatabricksClient:
     def _get_jobs(self) -> DatabricksJobs:
         """Get jobs in the workspace."""
         try:
-            args = Namespace()
-            args.uri = f"api/2.2/jobs/list"
-            args.request_params = {"expand_tasks": "true"}
-            resp = self.api_client.do_request(args)
-            json_resp = resp.json()
-
-            jobs = [
-                self._get_job_details(job)
-                for job in json_resp.get("jobs", [])
-                if job.get("job_id") is not None
-            ]
+            jobs = []
+            next_page_token: Optional[str] = None
+            while True:
+                args = Namespace()
+                args.uri = "api/2.2/jobs/list"
+                args.request_params = {"expand_tasks": "true", "limit": "100"}
+                if next_page_token:
+                    args.request_params["page_token"] = next_page_token
+                args.auto_paginate = False
+                resp = self.api_client.do_request(args)
+                json_resp = resp.json()
+                for job in json_resp.get("jobs", []):
+                    if job.get("job_id") is not None:
+                        jobs.append(self._get_job_details(job))
+                next_page_token = json_resp.get("next_page_token")
+                if not next_page_token:
+                    break
 
             return DatabricksJobs(jobs=jobs)
 
         except Exception as e:
-            print(f"Failed to get jobs: {e}")
+            utils_ui.print_warning(f"Jobs extraction failed: {e}")
+            self.extraction_warnings.append("jobs")
             return DatabricksJobs(jobs=[])
+
+    def _annotate_notebooks_with_job_execution(
+        self, notebooks: DatabricksNotebooks, jobs: DatabricksJobs
+    ) -> DatabricksNotebooks:
+        """Cross-reference notebooks with job execution data.
+
+        For each notebook that is referenced by a job task, annotate it with
+        the job IDs and the most recent execution timestamp.
+        """
+        # Build map: normalized_notebook_path -> [(job_id, latest_run_start_time)]
+        path_to_jobs: dict = {}
+        for job in jobs.jobs:
+            for task in job.tasks.tasks:
+                if task.notebook_path:
+                    norm_path = _normalize_notebook_path(task.notebook_path)
+                    if norm_path not in path_to_jobs:
+                        path_to_jobs[norm_path] = []
+                    # Get the most recent run start_time for this job
+                    latest_run_time = None
+                    if job.latest_runs and job.latest_runs.runs:
+                        latest_run_time = max(
+                            (r.start_time for r in job.latest_runs.runs),
+                            default=None,
+                        )
+                    path_to_jobs[norm_path].append((job.job_id, latest_run_time))
+
+        # Annotate notebooks
+        for notebook in notebooks.notebooks:
+            norm_nb_path = _normalize_notebook_path(notebook.path)
+            if norm_nb_path in path_to_jobs:
+                entries = path_to_jobs[norm_nb_path]
+                notebook.executed_by_jobs = [job_id for job_id, _ in entries]
+                run_times = [t for _, t in entries if t is not None]
+                if run_times:
+                    notebook.last_job_execution = max(run_times)
+
+        return notebooks
 
     def _get_optional_long(self, data: Optional[str]) -> Optional[int]:
         if data is not None:

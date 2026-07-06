@@ -34,6 +34,7 @@ class AssessmentService:
         sql_client_id: Optional[str] = None,
         sql_client_secret: Optional[str] = None,
         sql_tenant_id: Optional[str] = None,
+        resources: Optional[List[str]] = None,
     ) -> Dict[str, Any]:
         """
         Perform assessment on specified workspaces.
@@ -148,7 +149,9 @@ class AssessmentService:
             # print(f"Assessing workspace: {workspace}")
             try:
                 # Get assessment data as dataclass object
-                workspace_assessment = client.assess_workspace(workspace, mode)
+                workspace_assessment = client.assess_workspace(
+                    workspace, mode, resources=resources, output_path=output_path
+                )
 
                 # Export the assessment data using the structured export service
                 export_result = self.export_service.export_assessment(
@@ -156,6 +159,7 @@ class AssessmentService:
                     workspace_name=workspace,
                     output_path=output_path,
                     format=output_format,
+                    resources=resources,
                 )
 
                 export_results["results"].append(export_result)
