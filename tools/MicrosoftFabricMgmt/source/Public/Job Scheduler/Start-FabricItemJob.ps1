@@ -47,7 +47,7 @@
 
 .NOTES
     - API Endpoint: POST /workspaces/{workspaceId}/items/{itemId}/jobs/{jobType}/instances
-    - Requires: authentication via Set-FabricApiHeaders / Connect-FabricAccount.
+    - Requires: authentication via Connect-FabricAccount.
 
     Author: Tiago Balabuch, Jess Pomfret, Rob Sewell
 #>

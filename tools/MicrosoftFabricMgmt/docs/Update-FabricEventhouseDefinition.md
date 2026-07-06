@@ -48,7 +48,7 @@ Update-FabricEventhouseDefinition -WorkspaceId $workspace.id -EventhouseId $even
 
 ## Prerequisites
 
-- Use the command `Set-FabricApiHeaders` to set global configuration variable `$FabricConfig`, containing:
+- Use the command `Connect-FabricAccount` to set global configuration variable `$FabricConfig`, containing:
   - `BaseUrl`: Base API endpoint for Fabric.
   - `FabricHeaders`: Authentication headers for API requests.
 - Token validation requires the `Test-TokenExpired` helper function.

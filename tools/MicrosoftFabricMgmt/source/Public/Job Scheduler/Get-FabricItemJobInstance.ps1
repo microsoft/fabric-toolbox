@@ -45,7 +45,7 @@
     - API Endpoints:
         GET /workspaces/{workspaceId}/items/{itemId}/jobs/instances
         GET /workspaces/{workspaceId}/items/{itemId}/jobs/instances/{jobInstanceId}
-    - Requires: authentication via Set-FabricApiHeaders / Connect-FabricAccount.
+    - Requires: authentication via Connect-FabricAccount.
 
     Author: Tiago Balabuch, Jess Pomfret, Rob Sewell
 #>

@@ -40,7 +40,7 @@ The API response returned after setting the policy.
 
 .NOTES
 - API Endpoint: PUT /workspaces/{workspaceId}/networking/communicationPolicy
-- Requires: authentication via Set-FabricApiHeaders / Connect-FabricAccount.
+- Requires: authentication via Connect-FabricAccount.
 - Permissions: caller must have the admin workspace role.
 - Preview: this API is part of a Fabric Preview release.
 

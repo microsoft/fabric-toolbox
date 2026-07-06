@@ -31,7 +31,7 @@ The API response returned after setting the rules.
 
 .NOTES
 - API Endpoint: PUT /workspaces/{workspaceId}/networking/communicationPolicy/outbound/gateways
-- Requires: authentication via Set-FabricApiHeaders / Connect-FabricAccount.
+- Requires: authentication via Connect-FabricAccount.
 - Preview: this API is part of a Fabric Preview release.
 
 Author: Tiago Balabuch, Jess Pomfret, Rob Sewell

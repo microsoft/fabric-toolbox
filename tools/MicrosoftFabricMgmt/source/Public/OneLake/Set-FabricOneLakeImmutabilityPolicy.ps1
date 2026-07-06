@@ -34,7 +34,7 @@ The API response returned after modifying the immutability policy.
 
 .NOTES
 - API Endpoint: POST /workspaces/{workspaceId}/onelake/settings/modifyImmutabilityPolicy
-- Requires: authentication via Set-FabricApiHeaders / Connect-FabricAccount.
+- Requires: authentication via Connect-FabricAccount.
 
 Author: Tiago Balabuch, Jess Pomfret, Rob Sewell
 #>

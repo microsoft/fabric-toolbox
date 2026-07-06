@@ -43,7 +43,7 @@
 
 .NOTES
     - API Endpoint: PATCH /workspaces/{workspaceId}/mlmodels/{modelId}/endpoint/versions/{name}
-    - Requires: authentication via Set-FabricApiHeaders / Connect-FabricAccount.
+    - Requires: authentication via Connect-FabricAccount.
 
     Author: Tiago Balabuch, Jess Pomfret, Rob Sewell
 #>

@@ -26,7 +26,7 @@
 
 .NOTES
     - API Endpoint: POST /deploymentPipelines/{deploymentPipelineId}/stages/{stageId}/unassignWorkspace
-    - Requires: authentication via Set-FabricApiHeaders / Connect-FabricAccount.
+    - Requires: authentication via Connect-FabricAccount.
 
     Author: Tiago Balabuch, Jess Pomfret, Rob Sewell
 #>

@@ -3,7 +3,7 @@
 Sets the Fabric API headers with a valid token for the specified Azure tenant.
 
 .DESCRIPTION
-The `Set-FabricApiHeaders` function authenticates to Azure and retrieves an access token for the Fabric API.
+The `Connect-FabricAccount` function authenticates to Azure and retrieves an access token for the Fabric API.
 Supports three authentication methods:
 - User Principal (interactive)
 - Service Principal (automated)
@@ -27,23 +27,23 @@ Switch to use Azure Managed Identity authentication. Suitable for Azure VMs, App
 Optional. Client ID for user-assigned managed identity. Omit for system-assigned managed identity.
 
 .EXAMPLE
-Set-FabricApiHeaders -TenantId "12345678-1234-1234-1234-123456789012"
+Connect-FabricAccount -TenantId "12345678-1234-1234-1234-123456789012"
 
 Authenticates using current user credentials (interactive).
 
 .EXAMPLE
 $appSecret = "your-secret" | ConvertTo-SecureString -AsPlainText -Force
-Set-FabricApiHeaders -TenantId $tid -AppId $appId -AppSecret $appSecret
+Connect-FabricAccount -TenantId $tid -AppId $appId -AppSecret $appSecret
 
 Authenticates using service principal (non-interactive).
 
 .EXAMPLE
-Set-FabricApiHeaders -UseManagedIdentity
+Connect-FabricAccount -UseManagedIdentity
 
 Authenticates using system-assigned managed identity (Azure resources only).
 
 .EXAMPLE
-Set-FabricApiHeaders -UseManagedIdentity -ClientId "87654321-4321-4321-4321-210987654321"
+Connect-FabricAccount -UseManagedIdentity -ClientId "87654321-4321-4321-4321-210987654321"
 
 Authenticates using user-assigned managed identity.
 
@@ -54,6 +54,7 @@ None. Updates module-scoped authentication context.
 API Endpoint: N/A (Authentication only)
 Permissions Required: Appropriate Azure AD permissions for chosen auth method
 Authentication: This IS the authentication function
+Alias: Set-FabricApiHeaders (retained for backward compatibility)
 
 Author: Tiago Balabuch, Jess Pomfret, Rob Sewell
 Version: 1.0.0
@@ -62,8 +63,9 @@ Last Updated: 2026-01-07
 BREAKING CHANGE: No longer populates global $FabricConfig variable.
 Module now uses internal $script:FabricAuthContext.
 #>
-function Set-FabricApiHeaders {
+function Connect-FabricAccount {
     [CmdletBinding(DefaultParameterSetName = 'UserPrincipal', SupportsShouldProcess = $true, ConfirmImpact = 'Medium')]
+    [Alias('Set-FabricApiHeaders')]
     param (
         [Parameter(Mandatory = $true, ParameterSetName = 'UserPrincipal')]
         [Parameter(Mandatory = $true, ParameterSetName = 'ServicePrincipal')]

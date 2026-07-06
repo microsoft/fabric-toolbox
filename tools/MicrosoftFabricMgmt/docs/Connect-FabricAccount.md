@@ -1,8 +1,8 @@
-# Set-FabricApiHeaders
+# Connect-FabricAccount
 
 ## Overview
 
-The `Set-FabricApiHeaders` function configures the Fabric API headers by logging into a specified Azure tenant, retrieving an access token, and updating the global configuration for subsequent API requests. It supports both service principal and user-based authentication methods.
+The `Connect-FabricAccount` function configures the Fabric API headers by logging into a specified Azure tenant, retrieving an access token, and updating the global configuration for subsequent API requests. It supports both service principal and user-based authentication methods.
 
 ## Features
 
@@ -42,13 +42,13 @@ $appId = "888888888-88888-88888-8888-888888888888"
 $appSecret = "your-app-secret"
 $secureAppSecret = $appSecret | ConvertTo-SecureString -AsPlainText -Force
 
-Set-FabricApiHeaders -TenantId $tenantId -AppId $appId -AppSecret $secureAppSecret
+Connect-FabricAccount -TenantId $tenantId -AppId $appId -AppSecret $secureAppSecret
 ```
 
 ### Example 2: Use current user authentication
 
 ```powershell
-Set-FabricApiHeaders -TenantId "your-tenant-id"
+Connect-FabricAccount -TenantId "your-tenant-id"
 ```
 
 ## Prerequisites

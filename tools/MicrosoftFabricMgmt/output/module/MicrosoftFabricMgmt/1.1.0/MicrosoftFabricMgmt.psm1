@@ -100,7 +100,7 @@ Write-PSFMessage -Level Important -Message @"
 MicrosoftFabricMgmt v1.0.0 - BREAKING CHANGES:
 - The global `$FabricConfig variable has been removed
 - Module now uses internal state management via PSFramework
-- Authentication still works via Set-FabricApiHeaders
+- Authentication still works via Connect-FabricAccount
 - See BREAKING-CHANGES.md for migration guide
 "@
 
@@ -620,7 +620,7 @@ function Invoke-FabricAuthCheck {
     $isExpired = Test-TokenExpired -AutoRefresh
 
     if ($isExpired) {
-        $message = "Authentication token has expired. Please run Set-FabricApiHeaders to authenticate."
+        $message = "Authentication token has expired. Please run Connect-FabricAccount to authenticate."
         Write-FabricLog -Message $message -Level Error
 
         if ($ThrowOnFailure) {
@@ -687,7 +687,7 @@ function Invoke-TokenRefresh {
 
         # User Principal requires interactive login - cannot auto-refresh
         if ($authMethod -eq 'UserPrincipal') {
-            Write-PSFMessage -Level Warning -Message "User Principal authentication requires interactive login. Please run Set-FabricApiHeaders with -TenantId parameter."
+            Write-PSFMessage -Level Warning -Message "User Principal authentication requires interactive login. Please run Connect-FabricAccount with -TenantId parameter."
             return $false
         }
 
@@ -698,7 +698,7 @@ function Invoke-TokenRefresh {
             'ServicePrincipal' {
                 # Service Principal requires stored credentials - cannot auto-refresh
                 # This would require storing the AppSecret which is a security risk
-                Write-PSFMessage -Level Warning -Message "Service Principal authentication cannot be automatically refreshed. Please run Set-FabricApiHeaders again with credentials."
+                Write-PSFMessage -Level Warning -Message "Service Principal authentication cannot be automatically refreshed. Please run Connect-FabricAccount again with credentials."
                 return $false
             }
             'ManagedIdentity' {
@@ -1140,14 +1140,14 @@ function Test-TokenExpired {
 
         # Check if authentication context exists
         if (-not $script:FabricAuthContext) {
-            Write-PSFMessage -Level Warning -Message "Authentication context not initialized. Please run Set-FabricApiHeaders to authenticate."
+            Write-PSFMessage -Level Warning -Message "Authentication context not initialized. Please run Connect-FabricAccount to authenticate."
             return $true  # Token is effectively expired/missing
         }
 
         # Ensure required properties have valid values
         if ([string]::IsNullOrWhiteSpace($script:FabricAuthContext.TenantId) -or
             [string]::IsNullOrWhiteSpace($script:FabricAuthContext.TokenExpiresOn)) {
-            Write-PSFMessage -Level Warning -Message "Token details are missing. Please run Set-FabricApiHeaders to configure authentication."
+            Write-PSFMessage -Level Warning -Message "Token details are missing. Please run Connect-FabricAccount to configure authentication."
             return $true  # Token is effectively expired/missing
         }
 
@@ -1160,7 +1160,7 @@ function Test-TokenExpired {
 
         # Check if the token is expired
         if ($tokenExpiryDate -le [DateTimeOffset]::Now) {
-            Write-PSFMessage -Level Warning -Message "Authentication token has expired. Please run Set-FabricApiHeaders to refresh your session."
+            Write-PSFMessage -Level Warning -Message "Authentication token has expired. Please run Connect-FabricAccount to refresh your session."
 
             # Attempt auto-refresh if requested
             if ($AutoRefresh.IsPresent) {
@@ -1171,7 +1171,7 @@ function Test-TokenExpired {
                     return $false  # Token is now valid
                 }
                 else {
-                    Write-PSFMessage -Level Warning -Message "Automatic token refresh failed. Please run Set-FabricApiHeaders to re-authenticate."
+                    Write-PSFMessage -Level Warning -Message "Automatic token refresh failed. Please run Connect-FabricAccount to re-authenticate."
                     return $true  # Token is still expired
                 }
             }
@@ -4018,7 +4018,7 @@ function Get-FabricAdminGateway {
         - API Endpoints:
             GET https://api.powerbi.com/v1.0/myorg/gateways
             GET https://api.powerbi.com/v1.0/myorg/gateways/{gatewayId}
-        - Requires: Authentication via Set-FabricApiHeaders
+        - Requires: Authentication via Connect-FabricAccount
         - Permissions: User must be a gateway admin
         - Scope: Dataset.ReadWrite.All or Dataset.Read.All
         - VNet gateways are not supported
@@ -4147,7 +4147,7 @@ function Get-FabricAdminGatewayDatasource {
 
     .NOTES
         - API Endpoint: GET https://api.powerbi.com/v1.0/myorg/gateways/{gatewayId}/datasources
-        - Requires: Authentication via Set-FabricApiHeaders
+        - Requires: Authentication via Connect-FabricAccount
         - Permissions: User must be a gateway admin
         - Scope: Dataset.ReadWrite.All or Dataset.Read.All
         - VNet gateways are not supported
@@ -4305,7 +4305,7 @@ function Get-FabricAdminGatewayDatasourceById {
     .NOTES
         - API Endpoint:
             GET https://api.powerbi.com/v1.0/myorg/gateways/{gatewayId}/datasources/{datasourceId}
-        - Requires: Authentication via Set-FabricApiHeaders
+        - Requires: Authentication via Connect-FabricAccount
         - Permissions: User must be a gateway admin
         - Scope: Dataset.ReadWrite.All or Dataset.Read.All
         - VNet gateways are not supported
@@ -9999,7 +9999,7 @@ The created connection object with all API-returned properties (plus GatewayName
 
 .NOTES
 - API Endpoint: POST /connections
-- Requires: authentication via Set-FabricApiHeaders / Connect-FabricAccount.
+- Requires: authentication via Connect-FabricAccount.
 
 Author: Tiago Balabuch, Jess Pomfret, Rob Sewell
 #>
@@ -10272,7 +10272,7 @@ The updated connection object with all API-returned properties (plus GatewayName
 
 .NOTES
 - API Endpoint: PATCH /connections/{connectionId}
-- Requires: authentication via Set-FabricApiHeaders / Connect-FabricAccount.
+- Requires: authentication via Connect-FabricAccount.
 
 Author: Tiago Balabuch, Jess Pomfret, Rob Sewell
 #>
@@ -13198,7 +13198,7 @@ function Get-FabricDatamart {
 
 .NOTES
     - API Endpoint: POST /deploymentPipelines/{deploymentPipelineId}/roleAssignments
-    - Requires: authentication via Set-FabricApiHeaders / Connect-FabricAccount.
+    - Requires: authentication via Connect-FabricAccount.
 
     Author: Tiago Balabuch, Jess Pomfret, Rob Sewell
 #>
@@ -13299,7 +13299,7 @@ function Add-FabricDeploymentPipelineRoleAssignment {
 
 .NOTES
     - API Endpoint: POST /deploymentPipelines/{deploymentPipelineId}/stages/{stageId}/assignWorkspace
-    - Requires: authentication via Set-FabricApiHeaders / Connect-FabricAccount.
+    - Requires: authentication via Connect-FabricAccount.
 
     Author: Tiago Balabuch, Jess Pomfret, Rob Sewell
 #>
@@ -13398,7 +13398,7 @@ function Add-FabricDeploymentPipelineStageWorkspace {
     - API Endpoints:
         GET /deploymentPipelines
         GET /deploymentPipelines/{deploymentPipelineId}
-    - Requires: authentication via Set-FabricApiHeaders / Connect-FabricAccount.
+    - Requires: authentication via Connect-FabricAccount.
 
     Author: Tiago Balabuch, Jess Pomfret, Rob Sewell
 #>
@@ -13497,7 +13497,7 @@ function Get-FabricDeploymentPipeline {
     - API Endpoints:
         GET /deploymentPipelines/{deploymentPipelineId}/operations
         GET /deploymentPipelines/{deploymentPipelineId}/operations/{operationId}
-    - Requires: authentication via Set-FabricApiHeaders / Connect-FabricAccount.
+    - Requires: authentication via Connect-FabricAccount.
 
     Author: Tiago Balabuch, Jess Pomfret, Rob Sewell
 #>
@@ -13586,7 +13586,7 @@ function Get-FabricDeploymentPipelineOperation {
 
 .NOTES
     - API Endpoint: GET /deploymentPipelines/{deploymentPipelineId}/roleAssignments
-    - Requires: authentication via Set-FabricApiHeaders / Connect-FabricAccount.
+    - Requires: authentication via Connect-FabricAccount.
 
     Author: Tiago Balabuch, Jess Pomfret, Rob Sewell
 #>
@@ -13683,7 +13683,7 @@ function Get-FabricDeploymentPipelineRoleAssignment {
     - API Endpoints:
         GET /deploymentPipelines/{deploymentPipelineId}/stages
         GET /deploymentPipelines/{deploymentPipelineId}/stages/{stageId}
-    - Requires: authentication via Set-FabricApiHeaders / Connect-FabricAccount.
+    - Requires: authentication via Connect-FabricAccount.
 
     Author: Tiago Balabuch, Jess Pomfret, Rob Sewell
 #>
@@ -13773,7 +13773,7 @@ function Get-FabricDeploymentPipelineStage {
 
 .NOTES
     - API Endpoint: GET /deploymentPipelines/{deploymentPipelineId}/stages/{stageId}/items
-    - Requires: authentication via Set-FabricApiHeaders / Connect-FabricAccount.
+    - Requires: authentication via Connect-FabricAccount.
 
     Author: Tiago Balabuch, Jess Pomfret, Rob Sewell
 #>
@@ -13885,7 +13885,7 @@ function Get-FabricDeploymentPipelineStageItem {
 
 .NOTES
     - API Endpoint: POST /deploymentPipelines/{deploymentPipelineId}/deploy
-    - Requires: authentication via Set-FabricApiHeaders / Connect-FabricAccount.
+    - Requires: authentication via Connect-FabricAccount.
 
     Author: Tiago Balabuch, Jess Pomfret, Rob Sewell
 #>
@@ -14017,7 +14017,7 @@ function Invoke-FabricDeploymentPipelineDeploy {
 
 .NOTES
     - API Endpoint: POST /deploymentPipelines
-    - Requires: authentication via Set-FabricApiHeaders / Connect-FabricAccount.
+    - Requires: authentication via Connect-FabricAccount.
 
     Author: Tiago Balabuch, Jess Pomfret, Rob Sewell
 #>
@@ -14119,7 +14119,7 @@ function New-FabricDeploymentPipeline {
 
 .NOTES
     - API Endpoint: DELETE /deploymentPipelines/{deploymentPipelineId}
-    - Requires: authentication via Set-FabricApiHeaders / Connect-FabricAccount.
+    - Requires: authentication via Connect-FabricAccount.
 
     Author: Tiago Balabuch, Jess Pomfret, Rob Sewell
 #>
@@ -14185,7 +14185,7 @@ function Remove-FabricDeploymentPipeline {
 
 .NOTES
     - API Endpoint: DELETE /deploymentPipelines/{deploymentPipelineId}/roleAssignments/{principalId}
-    - Requires: authentication via Set-FabricApiHeaders / Connect-FabricAccount.
+    - Requires: authentication via Connect-FabricAccount.
 
     Author: Tiago Balabuch, Jess Pomfret, Rob Sewell
 #>
@@ -14262,7 +14262,7 @@ function Remove-FabricDeploymentPipelineRoleAssignment {
 
 .NOTES
     - API Endpoint: POST /deploymentPipelines/{deploymentPipelineId}/stages/{stageId}/unassignWorkspace
-    - Requires: authentication via Set-FabricApiHeaders / Connect-FabricAccount.
+    - Requires: authentication via Connect-FabricAccount.
 
     Author: Tiago Balabuch, Jess Pomfret, Rob Sewell
 #>
@@ -14352,7 +14352,7 @@ function Remove-FabricDeploymentPipelineStageWorkspace {
 
 .NOTES
     - API Endpoint: PATCH /deploymentPipelines/{deploymentPipelineId}
-    - Requires: authentication via Set-FabricApiHeaders / Connect-FabricAccount.
+    - Requires: authentication via Connect-FabricAccount.
 
     Author: Tiago Balabuch, Jess Pomfret, Rob Sewell
 #>
@@ -14473,7 +14473,7 @@ function Update-FabricDeploymentPipeline {
 
 .NOTES
     - API Endpoint: PATCH /deploymentPipelines/{deploymentPipelineId}/stages/{stageId}
-    - Requires: authentication via Set-FabricApiHeaders / Connect-FabricAccount.
+    - Requires: authentication via Connect-FabricAccount.
 
     Author: Tiago Balabuch, Jess Pomfret, Rob Sewell
 #>
@@ -21040,7 +21040,7 @@ function Update-FabricEventstreamDefinition {
 
 .NOTES
     - API Endpoint: POST /externalDataShares/invitations/{invitationId}/accept
-    - Requires: authentication via Set-FabricApiHeaders / Connect-FabricAccount.
+    - Requires: authentication via Connect-FabricAccount.
 
     Author: Tiago Balabuch, Jess Pomfret, Rob Sewell
 #>
@@ -21191,7 +21191,7 @@ function Get-FabricExternalDataShare {
 
 .NOTES
     - API Endpoint: GET /externalDataShares/invitations/{invitationId}?providerTenantId={providerTenantId}
-    - Requires: authentication via Set-FabricApiHeaders / Connect-FabricAccount.
+    - Requires: authentication via Connect-FabricAccount.
 
     Author: Tiago Balabuch, Jess Pomfret, Rob Sewell
 #>
@@ -21299,7 +21299,7 @@ function Get-FabricExternalDataShareInvitation {
 
 .NOTES
     - API Endpoint: POST /workspaces/{workspaceId}/items/{itemId}/externalDataShares
-    - Requires: authentication via Set-FabricApiHeaders / Connect-FabricAccount.
+    - Requires: authentication via Connect-FabricAccount.
 
     Author: Tiago Balabuch, Jess Pomfret, Rob Sewell
 #>
@@ -21427,7 +21427,7 @@ function New-FabricExternalDataShare {
 
 .NOTES
     - API Endpoint: DELETE /workspaces/{workspaceId}/items/{itemId}/externalDataShares/{externalDataShareId}
-    - Requires: authentication via Set-FabricApiHeaders / Connect-FabricAccount.
+    - Requires: authentication via Connect-FabricAccount.
 
     Author: Tiago Balabuch, Jess Pomfret, Rob Sewell
 #>
@@ -22103,7 +22103,7 @@ The API response from the connect operation.
 
 .NOTES
 - API Endpoint: POST /workspaces/{workspaceId}/git/connect
-- Requires: authentication via Set-FabricApiHeaders / Connect-FabricAccount.
+- Requires: authentication via Connect-FabricAccount.
 
 Author: Tiago Balabuch, Jess Pomfret, Rob Sewell
 #>
@@ -22190,7 +22190,7 @@ The API response from the disconnect operation.
 
 .NOTES
 - API Endpoint: POST /workspaces/{workspaceId}/git/disconnect
-- Requires: authentication via Set-FabricApiHeaders / Connect-FabricAccount.
+- Requires: authentication via Connect-FabricAccount.
 
 Author: Tiago Balabuch, Jess Pomfret, Rob Sewell
 #>
@@ -22269,7 +22269,7 @@ The Git credentials configuration object with all API-returned properties.
 
 .NOTES
 - API Endpoint: GET /workspaces/{workspaceId}/git/myGitCredentials
-- Requires: authentication via Set-FabricApiHeaders / Connect-FabricAccount.
+- Requires: authentication via Connect-FabricAccount.
 
 Author: Tiago Balabuch, Jess Pomfret, Rob Sewell
 #>
@@ -22350,7 +22350,7 @@ The Git status object with all API-returned properties plus WorkspaceName when e
 
 .NOTES
 - API Endpoint: GET /workspaces/{workspaceId}/git/status
-- Requires: authentication via Set-FabricApiHeaders / Connect-FabricAccount.
+- Requires: authentication via Connect-FabricAccount.
 
 Author: Tiago Balabuch, Jess Pomfret, Rob Sewell
 #>
@@ -22453,7 +22453,7 @@ The API response from the initialize connection operation, including the require
 
 .NOTES
 - API Endpoint: POST /workspaces/{workspaceId}/git/initializeConnection
-- Requires: authentication via Set-FabricApiHeaders / Connect-FabricAccount.
+- Requires: authentication via Connect-FabricAccount.
 
 Author: Tiago Balabuch, Jess Pomfret, Rob Sewell
 #>
@@ -22562,7 +22562,7 @@ The API response from the commit operation.
 
 .NOTES
 - API Endpoint: POST /workspaces/{workspaceId}/git/commitToGit
-- Requires: authentication via Set-FabricApiHeaders / Connect-FabricAccount.
+- Requires: authentication via Connect-FabricAccount.
 
 Author: Tiago Balabuch, Jess Pomfret, Rob Sewell
 #>
@@ -22688,7 +22688,7 @@ The API response from the update-from-Git operation.
 
 .NOTES
 - API Endpoint: POST /workspaces/{workspaceId}/git/updateFromGit
-- Requires: authentication via Set-FabricApiHeaders / Connect-FabricAccount.
+- Requires: authentication via Connect-FabricAccount.
 
 Author: Tiago Balabuch, Jess Pomfret, Rob Sewell
 #>
@@ -22804,7 +22804,7 @@ The updated Git credentials configuration object returned by the API.
 
 .NOTES
 - API Endpoint: PATCH /workspaces/{workspaceId}/git/myGitCredentials
-- Requires: authentication via Set-FabricApiHeaders / Connect-FabricAccount.
+- Requires: authentication via Connect-FabricAccount.
 
 Author: Tiago Balabuch, Jess Pomfret, Rob Sewell
 #>
@@ -25232,7 +25232,7 @@ function Get-FabricItem {
     - API Endpoints:
         GET /workspaces/{workspaceId}/items/{itemId}/jobs/instances
         GET /workspaces/{workspaceId}/items/{itemId}/jobs/instances/{jobInstanceId}
-    - Requires: authentication via Set-FabricApiHeaders / Connect-FabricAccount.
+    - Requires: authentication via Connect-FabricAccount.
 
     Author: Tiago Balabuch, Jess Pomfret, Rob Sewell
 #>
@@ -25357,7 +25357,7 @@ function Get-FabricItemJobInstance {
     - API Endpoints:
         GET /workspaces/{workspaceId}/items/{itemId}/jobs/{jobType}/schedules
         GET /workspaces/{workspaceId}/items/{itemId}/jobs/{jobType}/schedules/{scheduleId}
-    - Requires: authentication via Set-FabricApiHeaders / Connect-FabricAccount.
+    - Requires: authentication via Connect-FabricAccount.
 
     Author: Tiago Balabuch, Jess Pomfret, Rob Sewell
 #>
@@ -25488,7 +25488,7 @@ function Get-FabricItemSchedule {
 
 .NOTES
     - API Endpoint: POST /workspaces/{workspaceId}/items/{itemId}/jobs/{jobType}/schedules
-    - Requires: authentication via Set-FabricApiHeaders / Connect-FabricAccount.
+    - Requires: authentication via Connect-FabricAccount.
 
     Author: Tiago Balabuch, Jess Pomfret, Rob Sewell
 #>
@@ -25611,7 +25611,7 @@ function New-FabricItemSchedule {
 
 .NOTES
     - API Endpoint: DELETE /workspaces/{workspaceId}/items/{itemId}/jobs/{jobType}/schedules/{scheduleId}
-    - Requires: authentication via Set-FabricApiHeaders / Connect-FabricAccount.
+    - Requires: authentication via Connect-FabricAccount.
 
     Author: Tiago Balabuch, Jess Pomfret, Rob Sewell
 #>
@@ -25712,7 +25712,7 @@ function Remove-FabricItemSchedule {
 
 .NOTES
     - API Endpoint: POST /workspaces/{workspaceId}/items/{itemId}/jobs/{jobType}/instances
-    - Requires: authentication via Set-FabricApiHeaders / Connect-FabricAccount.
+    - Requires: authentication via Connect-FabricAccount.
 
     Author: Tiago Balabuch, Jess Pomfret, Rob Sewell
 #>
@@ -25809,7 +25809,7 @@ function Start-FabricItemJob {
 
 .NOTES
     - API Endpoint: POST /workspaces/{workspaceId}/items/{itemId}/jobs/instances/{jobInstanceId}/cancel
-    - Requires: authentication via Set-FabricApiHeaders / Connect-FabricAccount.
+    - Requires: authentication via Connect-FabricAccount.
 
     Author: Tiago Balabuch, Jess Pomfret, Rob Sewell
 #>
@@ -25913,7 +25913,7 @@ function Stop-FabricItemJobInstance {
 
 .NOTES
     - API Endpoint: PATCH /workspaces/{workspaceId}/items/{itemId}/jobs/{jobType}/schedules/{scheduleId}
-    - Requires: authentication via Set-FabricApiHeaders / Connect-FabricAccount.
+    - Requires: authentication via Connect-FabricAccount.
 
     Author: Tiago Balabuch, Jess Pomfret, Rob Sewell
 #>
@@ -32623,7 +32623,7 @@ function Update-FabricMLExperiment {
     - API Endpoints:
         POST /workspaces/{workspaceId}/mlmodels/{modelId}/endpoint/versions/{name}/deactivate
         POST /workspaces/{workspaceId}/mlmodels/{modelId}/endpoint/versions/deactivateAll
-    - Requires: authentication via Set-FabricApiHeaders / Connect-FabricAccount.
+    - Requires: authentication via Connect-FabricAccount.
 
     Author: Tiago Balabuch, Jess Pomfret, Rob Sewell
 #>
@@ -32724,7 +32724,7 @@ function Disable-FabricMLModelEndpointVersion {
 
 .NOTES
     - API Endpoint: POST /workspaces/{workspaceId}/mlmodels/{modelId}/endpoint/versions/{name}/activate
-    - Requires: authentication via Set-FabricApiHeaders / Connect-FabricAccount.
+    - Requires: authentication via Connect-FabricAccount.
 
     Author: Tiago Balabuch, Jess Pomfret, Rob Sewell
 #>
@@ -32904,7 +32904,7 @@ function Get-FabricMLModel {
 
 .NOTES
     - API Endpoint: GET /workspaces/{workspaceId}/mlmodels/{modelId}/endpoint
-    - Requires: authentication via Set-FabricApiHeaders / Connect-FabricAccount.
+    - Requires: authentication via Connect-FabricAccount.
 
     Author: Tiago Balabuch, Jess Pomfret, Rob Sewell
 #>
@@ -33020,7 +33020,7 @@ function Get-FabricMLModelEndpoint {
     - API Endpoints:
         GET /workspaces/{workspaceId}/mlmodels/{modelId}/endpoint/versions
         GET /workspaces/{workspaceId}/mlmodels/{modelId}/endpoint/versions/{name}
-    - Requires: authentication via Set-FabricApiHeaders / Connect-FabricAccount.
+    - Requires: authentication via Connect-FabricAccount.
 
     Author: Tiago Balabuch, Jess Pomfret, Rob Sewell
 #>
@@ -33136,7 +33136,7 @@ function Get-FabricMLModelEndpointVersion {
 
 .NOTES
     - API Endpoint: POST /workspaces/{workspaceId}/mlModels/{modelId}/endpoint/score
-    - Requires: authentication via Set-FabricApiHeaders / Connect-FabricAccount.
+    - Requires: authentication via Connect-FabricAccount.
 
     Author: Tiago Balabuch, Jess Pomfret, Rob Sewell
 #>
@@ -33238,7 +33238,7 @@ function Invoke-FabricMLModelEndpointScore {
 
 .NOTES
     - API Endpoint: POST /workspaces/{workspaceId}/mlmodels/{modelId}/endpoint/versions/{name}/score
-    - Requires: authentication via Set-FabricApiHeaders / Connect-FabricAccount.
+    - Requires: authentication via Connect-FabricAccount.
 
     Author: Tiago Balabuch, Jess Pomfret, Rob Sewell
 #>
@@ -33599,7 +33599,7 @@ function Update-FabricMLModel {
 
 .NOTES
     - API Endpoint: PATCH /workspaces/{workspaceId}/mlmodels/{modelId}/endpoint
-    - Requires: authentication via Set-FabricApiHeaders / Connect-FabricAccount.
+    - Requires: authentication via Connect-FabricAccount.
 
     Author: Tiago Balabuch, Jess Pomfret, Rob Sewell
 #>
@@ -33726,7 +33726,7 @@ function Update-FabricMLModelEndpoint {
 
 .NOTES
     - API Endpoint: PATCH /workspaces/{workspaceId}/mlmodels/{modelId}/endpoint/versions/{name}
-    - Requires: authentication via Set-FabricApiHeaders / Connect-FabricAccount.
+    - Requires: authentication via Connect-FabricAccount.
 
     Author: Tiago Balabuch, Jess Pomfret, Rob Sewell
 #>
@@ -36373,7 +36373,7 @@ The API response returned after modifying the immutability policy.
 
 .NOTES
 - API Endpoint: POST /workspaces/{workspaceId}/onelake/settings/modifyImmutabilityPolicy
-- Requires: authentication via Set-FabricApiHeaders / Connect-FabricAccount.
+- Requires: authentication via Connect-FabricAccount.
 
 Author: Tiago Balabuch, Jess Pomfret, Rob Sewell
 #>
@@ -45716,6 +45716,199 @@ function Clear-FabricNameCache {
     }
 }
 #EndRegion '.\Public\Utils\Clear-FabricNameCache.ps1' 79
+#Region '.\Public\Utils\Connect-FabricAccount.ps1' -1
+
+<#
+.SYNOPSIS
+Sets the Fabric API headers with a valid token for the specified Azure tenant.
+
+.DESCRIPTION
+The `Connect-FabricAccount` function authenticates to Azure and retrieves an access token for the Fabric API.
+Supports three authentication methods:
+- User Principal (interactive)
+- Service Principal (automated)
+- Managed Identity (Azure resources)
+
+.PARAMETER TenantId
+The Azure Active Directory tenant (directory) GUID. Required for User Principal and Service Principal authentication.
+
+.PARAMETER AppId
+Client/Application ID (GUID) of the Azure AD application for service principal authentication.
+Must be used together with AppSecret parameter.
+
+.PARAMETER AppSecret
+Secure string containing the client secret for service principal authentication.
+Convert plain text using: `ConvertTo-SecureString -AsPlainText -Force`
+
+.PARAMETER UseManagedIdentity
+Switch to use Azure Managed Identity authentication. Suitable for Azure VMs, App Services, Functions, etc.
+
+.PARAMETER ClientId
+Optional. Client ID for user-assigned managed identity. Omit for system-assigned managed identity.
+
+.EXAMPLE
+Connect-FabricAccount -TenantId "12345678-1234-1234-1234-123456789012"
+
+Authenticates using current user credentials (interactive).
+
+.EXAMPLE
+$appSecret = "your-secret" | ConvertTo-SecureString -AsPlainText -Force
+Connect-FabricAccount -TenantId $tid -AppId $appId -AppSecret $appSecret
+
+Authenticates using service principal (non-interactive).
+
+.EXAMPLE
+Connect-FabricAccount -UseManagedIdentity
+
+Authenticates using system-assigned managed identity (Azure resources only).
+
+.EXAMPLE
+Connect-FabricAccount -UseManagedIdentity -ClientId "87654321-4321-4321-4321-210987654321"
+
+Authenticates using user-assigned managed identity.
+
+.OUTPUTS
+None. Updates module-scoped authentication context.
+
+.NOTES
+API Endpoint: N/A (Authentication only)
+Permissions Required: Appropriate Azure AD permissions for chosen auth method
+Authentication: This IS the authentication function
+Alias: Set-FabricApiHeaders (retained for backward compatibility)
+
+Author: Tiago Balabuch, Jess Pomfret, Rob Sewell
+Version: 1.0.0
+Last Updated: 2026-01-07
+
+BREAKING CHANGE: No longer populates global $FabricConfig variable.
+Module now uses internal $script:FabricAuthContext.
+#>
+function Connect-FabricAccount {
+    [CmdletBinding(DefaultParameterSetName = 'UserPrincipal', SupportsShouldProcess = $true, ConfirmImpact = 'Medium')]
+    [Alias('Set-FabricApiHeaders')]
+    param (
+        [Parameter(Mandatory = $true, ParameterSetName = 'UserPrincipal')]
+        [Parameter(Mandatory = $true, ParameterSetName = 'ServicePrincipal')]
+        [ValidateNotNullOrEmpty()]
+        [string]$TenantId,
+
+        [Parameter(Mandatory = $true, ParameterSetName = 'ServicePrincipal')]
+        [ValidateNotNullOrEmpty()]
+        [string]$AppId,
+
+        [Parameter(Mandatory = $true, ParameterSetName = 'ServicePrincipal')]
+        [ValidateNotNullOrEmpty()]
+        [System.Security.SecureString]$AppSecret,
+
+        [Parameter(Mandatory = $true, ParameterSetName = 'ManagedIdentity')]
+        [System.Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSReviewUnusedParameter', '', Justification='Parameter is used for parameter set binding')]
+        [switch]$UseManagedIdentity,
+
+        [Parameter(Mandatory = $false, ParameterSetName = 'ManagedIdentity')]
+        [ValidateNotNullOrEmpty()]
+        [string]$ClientId
+    )
+
+    try {
+        $authMethod = $PSCmdlet.ParameterSetName
+        Write-PSFMessage -Level Host -Message "Authenticating to Azure using $authMethod method..."
+
+        if ($PSCmdlet.ShouldProcess("Fabric API configuration for $authMethod", "Set authentication headers")) {
+            # Authenticate based on parameter set
+            switch ($authMethod) {
+                'ServicePrincipal' {
+                    Write-PSFMessage -Level Debug -Message "Authenticating with Service Principal: $AppId"
+
+                    # PS 5.1 compatible: Use New-Object instead of [pscredential]::new()
+                    $psCredential = New-Object System.Management.Automation.PSCredential($AppId, $AppSecret)
+
+                    # Connect to Azure
+                    Connect-AzAccount -ServicePrincipal -Credential $psCredential -Tenant $TenantId -ErrorAction Stop | Out-Null
+                    Write-PSFMessage -Level Verbose -Message "Successfully authenticated as service principal"
+                }
+                'UserPrincipal' {
+                    Write-PSFMessage -Level Debug -Message "Authenticating with User Principal for tenant: $TenantId"
+
+                    # Connect to Azure with user credentials
+                    Connect-AzAccount -Tenant $TenantId -ErrorAction Stop | Out-Null
+                    Write-PSFMessage -Level Verbose -Message "Successfully authenticated as user principal"
+                }
+                'ManagedIdentity' {
+                    Write-PSFMessage -Level Debug -Message "Authenticating with Managed Identity"
+                    Write-PSFMessage -Level Debug -Message "UseManagedIdentity: $UseManagedIdentity"
+
+                    # Build Connect-AzAccount parameters for MI
+                    $connectParams = @{
+                        Identity    = $true
+                        ErrorAction = 'Stop'
+                    }
+
+                    # Add AccountId for user-assigned MI
+                    if ($ClientId) {
+                        $connectParams.AccountId = $ClientId
+                        Write-PSFMessage -Level Verbose -Message "Using user-assigned managed identity: $ClientId"
+                    }
+                    else {
+                        Write-PSFMessage -Level Verbose -Message "Using system-assigned managed identity"
+                    }
+
+                    # Connect using managed identity
+                    Connect-AzAccount @connectParams | Out-Null
+                    Write-PSFMessage -Level Verbose -Message "Successfully authenticated with managed identity"
+                }
+            }
+
+            # Retrieve the access token
+            Write-PSFMessage -Level Debug -Message "Retrieving access token for Fabric API"
+            $resourceUrl = Get-PSFConfigValue -FullName 'MicrosoftFabricMgmt.Api.ResourceUrl'
+
+            $fabricToken = Get-AzAccessToken -AsSecureString -ResourceUrl $resourceUrl -ErrorAction Stop -WarningAction SilentlyContinue
+
+            # Convert secure token to plain text (PS 5.1 compatible)
+            Write-PSFMessage -Level Debug -Message "Extracting token from SecureString"
+            $plainTokenPtr = [System.Runtime.InteropServices.Marshal]::SecureStringToBSTR($fabricToken.Token)
+            try {
+                $plainToken = [System.Runtime.InteropServices.Marshal]::PtrToStringAuto($plainTokenPtr)
+
+                # Update module-scoped authentication context
+                Write-PSFMessage -Level Debug -Message "Updating module authentication context"
+
+                $script:FabricAuthContext.FabricHeaders = @{
+                    'Content-Type'  = 'application/json; charset=utf-8'
+                    'Authorization' = "Bearer $plainToken"
+                }
+                $script:FabricAuthContext.TokenExpiresOn = $fabricToken.ExpiresOn.ToString('o')  # ISO 8601 format
+                $script:FabricAuthContext.TenantId = if ($TenantId) { $TenantId } else { 'ManagedIdentity' }
+                $script:FabricAuthContext.AuthMethod = $authMethod
+                $script:FabricAuthContext.ClientId = $ClientId
+
+                # Calculate time until expiration
+                $expiresIn = ($fabricToken.ExpiresOn - [DateTimeOffset]::Now).TotalMinutes
+                Write-PSFMessage -Level Host -Message "Authentication successful. Token expires in $([Math]::Round($expiresIn, 1)) minutes."
+                Write-PSFMessage -Level Verbose -Message "Token expiration: $($fabricToken.ExpiresOn.ToString('u'))"
+            }
+            finally {
+                # Ensure secure memory cleanup
+                [System.Runtime.InteropServices.Marshal]::ZeroFreeBSTR($plainTokenPtr)
+            }
+        }
+    }
+    catch {
+        $errorDetails = $_.Exception.Message
+        Write-PSFMessage -Level Error -Message "Failed to set Fabric authentication: $errorDetails" -ErrorRecord $_
+
+        # Provide helpful error messages based on auth method
+        $helpMessage = switch ($authMethod) {
+            'ServicePrincipal' { "Verify AppId, AppSecret, and TenantId are correct. Ensure service principal has appropriate permissions." }
+            'UserPrincipal' { "Verify TenantId is correct. Ensure you have appropriate permissions and can authenticate interactively." }
+            'ManagedIdentity' { "Ensure managed identity is enabled on this Azure resource and has appropriate permissions. Managed Identity only works on Azure VMs, App Services, Functions, etc." }
+        }
+
+        Write-PSFMessage -Level Important -Message $helpMessage
+        throw "Unable to configure Fabric authentication. $helpMessage"
+    }
+}
+#EndRegion '.\Public\Utils\Connect-FabricAccount.ps1' 191
 #Region '.\Public\Utils\Convert-FromBase64.ps1' -1
 
 <#
@@ -46908,197 +47101,6 @@ function Resolve-FabricWorkspaceName {
     }
 }
 #EndRegion '.\Public\Utils\Resolve-FabricWorkspaceName.ps1' 105
-#Region '.\Public\Utils\Set-FabricApiHeaders.ps1' -1
-
-<#
-.SYNOPSIS
-Sets the Fabric API headers with a valid token for the specified Azure tenant.
-
-.DESCRIPTION
-The `Set-FabricApiHeaders` function authenticates to Azure and retrieves an access token for the Fabric API.
-Supports three authentication methods:
-- User Principal (interactive)
-- Service Principal (automated)
-- Managed Identity (Azure resources)
-
-.PARAMETER TenantId
-The Azure Active Directory tenant (directory) GUID. Required for User Principal and Service Principal authentication.
-
-.PARAMETER AppId
-Client/Application ID (GUID) of the Azure AD application for service principal authentication.
-Must be used together with AppSecret parameter.
-
-.PARAMETER AppSecret
-Secure string containing the client secret for service principal authentication.
-Convert plain text using: `ConvertTo-SecureString -AsPlainText -Force`
-
-.PARAMETER UseManagedIdentity
-Switch to use Azure Managed Identity authentication. Suitable for Azure VMs, App Services, Functions, etc.
-
-.PARAMETER ClientId
-Optional. Client ID for user-assigned managed identity. Omit for system-assigned managed identity.
-
-.EXAMPLE
-Set-FabricApiHeaders -TenantId "12345678-1234-1234-1234-123456789012"
-
-Authenticates using current user credentials (interactive).
-
-.EXAMPLE
-$appSecret = "your-secret" | ConvertTo-SecureString -AsPlainText -Force
-Set-FabricApiHeaders -TenantId $tid -AppId $appId -AppSecret $appSecret
-
-Authenticates using service principal (non-interactive).
-
-.EXAMPLE
-Set-FabricApiHeaders -UseManagedIdentity
-
-Authenticates using system-assigned managed identity (Azure resources only).
-
-.EXAMPLE
-Set-FabricApiHeaders -UseManagedIdentity -ClientId "87654321-4321-4321-4321-210987654321"
-
-Authenticates using user-assigned managed identity.
-
-.OUTPUTS
-None. Updates module-scoped authentication context.
-
-.NOTES
-API Endpoint: N/A (Authentication only)
-Permissions Required: Appropriate Azure AD permissions for chosen auth method
-Authentication: This IS the authentication function
-
-Author: Tiago Balabuch, Jess Pomfret, Rob Sewell
-Version: 1.0.0
-Last Updated: 2026-01-07
-
-BREAKING CHANGE: No longer populates global $FabricConfig variable.
-Module now uses internal $script:FabricAuthContext.
-#>
-function Set-FabricApiHeaders {
-    [CmdletBinding(DefaultParameterSetName = 'UserPrincipal', SupportsShouldProcess = $true, ConfirmImpact = 'Medium')]
-    param (
-        [Parameter(Mandatory = $true, ParameterSetName = 'UserPrincipal')]
-        [Parameter(Mandatory = $true, ParameterSetName = 'ServicePrincipal')]
-        [ValidateNotNullOrEmpty()]
-        [string]$TenantId,
-
-        [Parameter(Mandatory = $true, ParameterSetName = 'ServicePrincipal')]
-        [ValidateNotNullOrEmpty()]
-        [string]$AppId,
-
-        [Parameter(Mandatory = $true, ParameterSetName = 'ServicePrincipal')]
-        [ValidateNotNullOrEmpty()]
-        [System.Security.SecureString]$AppSecret,
-
-        [Parameter(Mandatory = $true, ParameterSetName = 'ManagedIdentity')]
-        [System.Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSReviewUnusedParameter', '', Justification='Parameter is used for parameter set binding')]
-        [switch]$UseManagedIdentity,
-
-        [Parameter(Mandatory = $false, ParameterSetName = 'ManagedIdentity')]
-        [ValidateNotNullOrEmpty()]
-        [string]$ClientId
-    )
-
-    try {
-        $authMethod = $PSCmdlet.ParameterSetName
-        Write-PSFMessage -Level Host -Message "Authenticating to Azure using $authMethod method..."
-
-        if ($PSCmdlet.ShouldProcess("Fabric API configuration for $authMethod", "Set authentication headers")) {
-            # Authenticate based on parameter set
-            switch ($authMethod) {
-                'ServicePrincipal' {
-                    Write-PSFMessage -Level Debug -Message "Authenticating with Service Principal: $AppId"
-
-                    # PS 5.1 compatible: Use New-Object instead of [pscredential]::new()
-                    $psCredential = New-Object System.Management.Automation.PSCredential($AppId, $AppSecret)
-
-                    # Connect to Azure
-                    Connect-AzAccount -ServicePrincipal -Credential $psCredential -Tenant $TenantId -ErrorAction Stop | Out-Null
-                    Write-PSFMessage -Level Verbose -Message "Successfully authenticated as service principal"
-                }
-                'UserPrincipal' {
-                    Write-PSFMessage -Level Debug -Message "Authenticating with User Principal for tenant: $TenantId"
-
-                    # Connect to Azure with user credentials
-                    Connect-AzAccount -Tenant $TenantId -ErrorAction Stop | Out-Null
-                    Write-PSFMessage -Level Verbose -Message "Successfully authenticated as user principal"
-                }
-                'ManagedIdentity' {
-                    Write-PSFMessage -Level Debug -Message "Authenticating with Managed Identity"
-                    Write-PSFMessage -Level Debug -Message "UseManagedIdentity: $UseManagedIdentity"
-
-                    # Build Connect-AzAccount parameters for MI
-                    $connectParams = @{
-                        Identity    = $true
-                        ErrorAction = 'Stop'
-                    }
-
-                    # Add AccountId for user-assigned MI
-                    if ($ClientId) {
-                        $connectParams.AccountId = $ClientId
-                        Write-PSFMessage -Level Verbose -Message "Using user-assigned managed identity: $ClientId"
-                    }
-                    else {
-                        Write-PSFMessage -Level Verbose -Message "Using system-assigned managed identity"
-                    }
-
-                    # Connect using managed identity
-                    Connect-AzAccount @connectParams | Out-Null
-                    Write-PSFMessage -Level Verbose -Message "Successfully authenticated with managed identity"
-                }
-            }
-
-            # Retrieve the access token
-            Write-PSFMessage -Level Debug -Message "Retrieving access token for Fabric API"
-            $resourceUrl = Get-PSFConfigValue -FullName 'MicrosoftFabricMgmt.Api.ResourceUrl'
-
-            $fabricToken = Get-AzAccessToken -AsSecureString -ResourceUrl $resourceUrl -ErrorAction Stop -WarningAction SilentlyContinue
-
-            # Convert secure token to plain text (PS 5.1 compatible)
-            Write-PSFMessage -Level Debug -Message "Extracting token from SecureString"
-            $plainTokenPtr = [System.Runtime.InteropServices.Marshal]::SecureStringToBSTR($fabricToken.Token)
-            try {
-                $plainToken = [System.Runtime.InteropServices.Marshal]::PtrToStringAuto($plainTokenPtr)
-
-                # Update module-scoped authentication context
-                Write-PSFMessage -Level Debug -Message "Updating module authentication context"
-
-                $script:FabricAuthContext.FabricHeaders = @{
-                    'Content-Type'  = 'application/json; charset=utf-8'
-                    'Authorization' = "Bearer $plainToken"
-                }
-                $script:FabricAuthContext.TokenExpiresOn = $fabricToken.ExpiresOn.ToString('o')  # ISO 8601 format
-                $script:FabricAuthContext.TenantId = if ($TenantId) { $TenantId } else { 'ManagedIdentity' }
-                $script:FabricAuthContext.AuthMethod = $authMethod
-                $script:FabricAuthContext.ClientId = $ClientId
-
-                # Calculate time until expiration
-                $expiresIn = ($fabricToken.ExpiresOn - [DateTimeOffset]::Now).TotalMinutes
-                Write-PSFMessage -Level Host -Message "Authentication successful. Token expires in $([Math]::Round($expiresIn, 1)) minutes."
-                Write-PSFMessage -Level Verbose -Message "Token expiration: $($fabricToken.ExpiresOn.ToString('u'))"
-            }
-            finally {
-                # Ensure secure memory cleanup
-                [System.Runtime.InteropServices.Marshal]::ZeroFreeBSTR($plainTokenPtr)
-            }
-        }
-    }
-    catch {
-        $errorDetails = $_.Exception.Message
-        Write-PSFMessage -Level Error -Message "Failed to set Fabric authentication: $errorDetails" -ErrorRecord $_
-
-        # Provide helpful error messages based on auth method
-        $helpMessage = switch ($authMethod) {
-            'ServicePrincipal' { "Verify AppId, AppSecret, and TenantId are correct. Ensure service principal has appropriate permissions." }
-            'UserPrincipal' { "Verify TenantId is correct. Ensure you have appropriate permissions and can authenticate interactively." }
-            'ManagedIdentity' { "Ensure managed identity is enabled on this Azure resource and has appropriate permissions. Managed Identity only works on Azure VMs, App Services, Functions, etc." }
-        }
-
-        Write-PSFMessage -Level Important -Message $helpMessage
-        throw "Unable to configure Fabric authentication. $helpMessage"
-    }
-}
-#EndRegion '.\Public\Utils\Set-FabricApiHeaders.ps1' 189
 #Region '.\Public\Variable Library\Get-FabricVariableLibrary.ps1' -1
 
 <#
@@ -49139,7 +49141,7 @@ The Git outbound policy object with all API-returned properties plus WorkspaceNa
 
 .NOTES
 - API Endpoint: GET /workspaces/{workspaceId}/networking/communicationPolicy/outbound/git
-- Requires: authentication via Set-FabricApiHeaders / Connect-FabricAccount.
+- Requires: authentication via Connect-FabricAccount.
 - Preview: this API is part of a Fabric Preview release.
 
 Author: Tiago Balabuch, Jess Pomfret, Rob Sewell
@@ -49234,7 +49236,7 @@ The networking communication policy object with all API-returned properties plus
 
 .NOTES
 - API Endpoint: GET /workspaces/{workspaceId}/networking/communicationPolicy
-- Requires: authentication via Set-FabricApiHeaders / Connect-FabricAccount.
+- Requires: authentication via Connect-FabricAccount.
 - Preview: this API is part of a Fabric Preview release.
 
 Author: Tiago Balabuch, Jess Pomfret, Rob Sewell
@@ -49330,7 +49332,7 @@ The outbound connection rules object with all API-returned properties plus Works
 
 .NOTES
 - API Endpoint: GET /workspaces/{workspaceId}/networking/communicationPolicy/outbound/connections
-- Requires: authentication via Set-FabricApiHeaders / Connect-FabricAccount.
+- Requires: authentication via Connect-FabricAccount.
 - Preview: this API is part of a Fabric Preview release.
 
 Author: Tiago Balabuch, Jess Pomfret, Rob Sewell
@@ -49425,7 +49427,7 @@ The outbound gateway rules object with all API-returned properties plus Workspac
 
 .NOTES
 - API Endpoint: GET /workspaces/{workspaceId}/networking/communicationPolicy/outbound/gateways
-- Requires: authentication via Set-FabricApiHeaders / Connect-FabricAccount.
+- Requires: authentication via Connect-FabricAccount.
 - Preview: this API is part of a Fabric Preview release.
 
 Author: Tiago Balabuch, Jess Pomfret, Rob Sewell
@@ -49525,7 +49527,7 @@ The API response returned after setting the policy.
 
 .NOTES
 - API Endpoint: PUT /workspaces/{workspaceId}/networking/communicationPolicy/outbound/git
-- Requires: authentication via Set-FabricApiHeaders / Connect-FabricAccount.
+- Requires: authentication via Connect-FabricAccount.
 - Preview: this API is part of a Fabric Preview release.
 
 Author: Tiago Balabuch, Jess Pomfret, Rob Sewell
@@ -49636,7 +49638,7 @@ The API response returned after setting the policy.
 
 .NOTES
 - API Endpoint: PUT /workspaces/{workspaceId}/networking/communicationPolicy
-- Requires: authentication via Set-FabricApiHeaders / Connect-FabricAccount.
+- Requires: authentication via Connect-FabricAccount.
 - Permissions: caller must have the admin workspace role.
 - Preview: this API is part of a Fabric Preview release.
 
@@ -49739,7 +49741,7 @@ The API response returned after setting the rules.
 
 .NOTES
 - API Endpoint: PUT /workspaces/{workspaceId}/networking/communicationPolicy/outbound/connections
-- Requires: authentication via Set-FabricApiHeaders / Connect-FabricAccount.
+- Requires: authentication via Connect-FabricAccount.
 - Preview: this API is part of a Fabric Preview release.
 
 Author: Tiago Balabuch, Jess Pomfret, Rob Sewell
@@ -49829,7 +49831,7 @@ The API response returned after setting the rules.
 
 .NOTES
 - API Endpoint: PUT /workspaces/{workspaceId}/networking/communicationPolicy/outbound/gateways
-- Requires: authentication via Set-FabricApiHeaders / Connect-FabricAccount.
+- Requires: authentication via Connect-FabricAccount.
 - Preview: this API is part of a Fabric Preview release.
 
 Author: Tiago Balabuch, Jess Pomfret, Rob Sewell

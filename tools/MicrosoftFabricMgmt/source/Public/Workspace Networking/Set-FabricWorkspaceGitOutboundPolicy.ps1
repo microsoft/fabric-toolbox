@@ -34,7 +34,7 @@ The API response returned after setting the policy.
 
 .NOTES
 - API Endpoint: PUT /workspaces/{workspaceId}/networking/communicationPolicy/outbound/git
-- Requires: authentication via Set-FabricApiHeaders / Connect-FabricAccount.
+- Requires: authentication via Connect-FabricAccount.
 - Preview: this API is part of a Fabric Preview release.
 
 Author: Tiago Balabuch, Jess Pomfret, Rob Sewell

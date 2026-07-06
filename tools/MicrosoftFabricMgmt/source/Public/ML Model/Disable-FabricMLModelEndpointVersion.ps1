@@ -46,7 +46,7 @@
     - API Endpoints:
         POST /workspaces/{workspaceId}/mlmodels/{modelId}/endpoint/versions/{name}/deactivate
         POST /workspaces/{workspaceId}/mlmodels/{modelId}/endpoint/versions/deactivateAll
-    - Requires: authentication via Set-FabricApiHeaders / Connect-FabricAccount.
+    - Requires: authentication via Connect-FabricAccount.
 
     Author: Tiago Balabuch, Jess Pomfret, Rob Sewell
 #>

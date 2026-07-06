@@ -50,7 +50,7 @@ Get-FabricEventstream -WorkspaceId $workspace.id -EventstreamId "66ba709c-6531-4
 ```
 
 ## Prerequisites
-- Use the command `Set-FabricApiHeaders` to set global configuration variable `$FabricConfig`, containing:
+- Use the command `Connect-FabricAccount` to set global configuration variable `$FabricConfig`, containing:
   - `BaseUrl`: Base API endpoint for Fabric.
   - `FabricHeaders`: Authentication headers for API requests.
 - Token validation requires the `Test-TokenExpired` helper function.

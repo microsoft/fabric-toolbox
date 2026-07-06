@@ -54,7 +54,7 @@ function Get-FabricAdminGatewayDatasource {
 
     .NOTES
         - API Endpoint: GET https://api.powerbi.com/v1.0/myorg/gateways/{gatewayId}/datasources
-        - Requires: Authentication via Set-FabricApiHeaders
+        - Requires: Authentication via Connect-FabricAccount
         - Permissions: User must be a gateway admin
         - Scope: Dataset.ReadWrite.All or Dataset.Read.All
         - VNet gateways are not supported

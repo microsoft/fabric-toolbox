@@ -5,7 +5,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [1.1.0] - 2026-07-04
+## [1.1.0] - 2026-07-06
 
 ### Added
 
@@ -50,6 +50,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- **Authentication command renamed to `Connect-FabricAccount`**: the auth function formerly named
+  `Set-FabricApiHeaders` is now `Connect-FabricAccount` (matching Azure/Fabric tooling conventions and
+  the name referenced throughout the help). **`Set-FabricApiHeaders` is retained as an exported alias**,
+  so existing scripts keep working unchanged. All help/messages/docs now refer to `Connect-FabricAccount`.
 - **Job-type-in-path modernization**: `Start-FabricLakehouseRefreshMaterializedLakeView`,
   `Start-FabricLakehouseTableMaintenance`, and `Start-FabricSparkJobDefinitionOnDemand` now call
   the preferred `.../jobs/{jobType}/instances` path-segment form instead of the legacy

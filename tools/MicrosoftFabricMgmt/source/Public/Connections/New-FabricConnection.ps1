@@ -50,7 +50,7 @@ The created connection object with all API-returned properties (plus GatewayName
 
 .NOTES
 - API Endpoint: POST /connections
-- Requires: authentication via Set-FabricApiHeaders / Connect-FabricAccount.
+- Requires: authentication via Connect-FabricAccount.
 
 Author: Tiago Balabuch, Jess Pomfret, Rob Sewell
 #>

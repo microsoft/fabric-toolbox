@@ -47,7 +47,7 @@ The API response from the commit operation.
 
 .NOTES
 - API Endpoint: POST /workspaces/{workspaceId}/git/commitToGit
-- Requires: authentication via Set-FabricApiHeaders / Connect-FabricAccount.
+- Requires: authentication via Connect-FabricAccount.
 
 Author: Tiago Balabuch, Jess Pomfret, Rob Sewell
 #>

@@ -30,7 +30,7 @@ The outbound connection rules object with all API-returned properties plus Works
 
 .NOTES
 - API Endpoint: GET /workspaces/{workspaceId}/networking/communicationPolicy/outbound/connections
-- Requires: authentication via Set-FabricApiHeaders / Connect-FabricAccount.
+- Requires: authentication via Connect-FabricAccount.
 - Preview: this API is part of a Fabric Preview release.
 
 Author: Tiago Balabuch, Jess Pomfret, Rob Sewell

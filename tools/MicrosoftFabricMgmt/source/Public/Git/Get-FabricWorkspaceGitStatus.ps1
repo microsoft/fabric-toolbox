@@ -29,7 +29,7 @@ The Git status object with all API-returned properties plus WorkspaceName when e
 
 .NOTES
 - API Endpoint: GET /workspaces/{workspaceId}/git/status
-- Requires: authentication via Set-FabricApiHeaders / Connect-FabricAccount.
+- Requires: authentication via Connect-FabricAccount.
 
 Author: Tiago Balabuch, Jess Pomfret, Rob Sewell
 #>

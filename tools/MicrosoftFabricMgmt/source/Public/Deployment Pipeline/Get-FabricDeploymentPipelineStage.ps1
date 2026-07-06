@@ -40,7 +40,7 @@
     - API Endpoints:
         GET /deploymentPipelines/{deploymentPipelineId}/stages
         GET /deploymentPipelines/{deploymentPipelineId}/stages/{stageId}
-    - Requires: authentication via Set-FabricApiHeaders / Connect-FabricAccount.
+    - Requires: authentication via Connect-FabricAccount.
 
     Author: Tiago Balabuch, Jess Pomfret, Rob Sewell
 #>

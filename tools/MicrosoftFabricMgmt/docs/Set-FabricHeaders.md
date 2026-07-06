@@ -1,8 +1,8 @@
-# Set-FabricApiHeaders
+# Connect-FabricAccount
 
 ## Overview
 
-The `Set-FabricApiHeaders` function facilitates interaction with the Microsoft Fabric API by setting API headers with a valid token for a specified Azure tenant. It manages authentication and ensures proper configuration for subsequent API requests.
+The `Connect-FabricAccount` function facilitates interaction with the Microsoft Fabric API by setting API headers with a valid token for a specified Azure tenant. It manages authentication and ensures proper configuration for subsequent API requests.
 
 ## Features
 
@@ -23,7 +23,7 @@ The `Set-FabricApiHeaders` function facilitates interaction with the Microsoft F
 ### Example: Configure Headers for a Specific Tenant
 
 ```powershell
-Set-FabricApiHeaders -TenantId "xxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
+Connect-FabricAccount -TenantId "xxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
 ```
 
 Logs in to Azure with the specified tenant ID, retrieves an access token, and configures the Fabric API headers.

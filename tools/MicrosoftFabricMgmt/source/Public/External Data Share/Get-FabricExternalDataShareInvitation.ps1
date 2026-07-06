@@ -33,7 +33,7 @@
 
 .NOTES
     - API Endpoint: GET /externalDataShares/invitations/{invitationId}?providerTenantId={providerTenantId}
-    - Requires: authentication via Set-FabricApiHeaders / Connect-FabricAccount.
+    - Requires: authentication via Connect-FabricAccount.
 
     Author: Tiago Balabuch, Jess Pomfret, Rob Sewell
 #>
