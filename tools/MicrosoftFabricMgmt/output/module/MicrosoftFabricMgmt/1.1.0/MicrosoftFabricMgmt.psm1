@@ -4107,6 +4107,11 @@ function Get-FabricAdminGatewayDatasource {
         - GatewayName : display name of the gateway, resolved via Resolve-FabricGatewayName (cached)
         - Connection  : human-readable connection string parsed from the connectionDetails
                         JSON (server\database, path, URL, etc.)
+        - ConnectionDetailsParsed : the connectionDetails JSON parsed into a structured object
+        - Flattened fields : every field inside connectionDetails is also surfaced as a PascalCased
+                        top-level property. These vary by datasourceType, e.g. Server/Database (Sql,
+                        AnalysisServices, Oracle), Url (OData, Web, SharePoint), Path (File, Folder),
+                        ConnectionString (Odbc). Whatever keys the API returns are surfaced.
 
         The gatewayId property returned by the API is the cluster/mesh gateway ID, which
         differs from the gateway's own id. This function overwrites gatewayId on every
@@ -4143,7 +4148,8 @@ function Get-FabricAdminGatewayDatasource {
         System.Object
         Returns GatewayDatasource object(s) with properties: id, gatewayId (corrected),
         datasourceType, datasourceName, credentialType, connectionDetails (raw JSON),
-        Connection (parsed, enriched), GatewayName (enriched).
+        Connection (parsed summary), ConnectionDetailsParsed (structured), GatewayName (enriched),
+        plus the flattened connectionDetails fields (Server/Database/Url/Path/ConnectionString/...).
 
     .NOTES
         - API Endpoint: GET https://api.powerbi.com/v1.0/myorg/gateways/{gatewayId}/datasources
@@ -4205,19 +4211,39 @@ function Get-FabricAdminGatewayDatasource {
                 $datasource | Add-Member -NotePropertyName 'gatewayId'   -NotePropertyValue $GatewayId   -Force
                 $datasource | Add-Member -NotePropertyName 'GatewayName' -NotePropertyValue $gatewayName -Force
 
-                # Parse connectionDetails JSON into a readable Connection property
+                # Parse connectionDetails JSON: build the readable Connection summary AND
+                # "unflatten" every field onto the object. The fields vary by datasourceType
+                # (e.g. Server/Database for Sql, Url for OData/Web/SharePoint, Path for
+                # File/Folder, ConnectionString for Odbc), so whatever keys are present are
+                # surfaced as PascalCased top-level properties plus a structured
+                # ConnectionDetailsParsed object. Never runs on -Raw (early return above).
                 $connection = $datasource.connectionDetails
                 if ($datasource.connectionDetails) {
                     try {
-                        $parsed = $datasource.connectionDetails | ConvertFrom-Json
-                        $parts  = @()
-                        if ($parsed.server)      { $parts += $parsed.server }
-                        if ($parsed.database)    { $parts += $parsed.database }
-                        if ($parsed.path)        { $parts += $parsed.path }
-                        if ($parsed.url)         { $parts += $parsed.url }
-                        if ($parsed.loginServer) { $parts += $parsed.loginServer }
+                        $parsed = $datasource.connectionDetails | ConvertFrom-Json -ErrorAction Stop
+
+                        # Human-readable summary (server\database, path, url, ...).
+                        $parts = @()
+                        foreach ($field in 'server', 'database', 'path', 'url', 'loginServer') {
+                            if ($parsed.$field) { $parts += $parsed.$field }
+                        }
                         if ($parts.Count -gt 0) {
                             $connection = $parts -join '\'
+                        }
+
+                        # Structured access to the full parsed payload.
+                        $datasource | Add-Member -NotePropertyName 'ConnectionDetailsParsed' -NotePropertyValue $parsed -Force
+
+                        # Flatten each field to a PascalCased top-level property, guarding the
+                        # datasource's own core fields against being overwritten.
+                        $reserved = @('id', 'gatewayId', 'datasourceType', 'datasourceName',
+                            'credentialType', 'connectionDetails', 'Connection', 'GatewayName',
+                            'ConnectionDetailsParsed')
+                        foreach ($detail in $parsed.PSObject.Properties) {
+                            if ($null -eq $detail.Value) { continue }
+                            $propName = $detail.Name.Substring(0, 1).ToUpperInvariant() + $detail.Name.Substring(1)
+                            if ($propName -in $reserved) { $propName = 'Detail' + $propName }
+                            $datasource | Add-Member -NotePropertyName $propName -NotePropertyValue $detail.Value -Force
                         }
                     }
                     catch {
@@ -4237,7 +4263,7 @@ function Get-FabricAdminGatewayDatasource {
         }
     }
 }
-#EndRegion '.\Public\Admin\Get-FabricAdminGatewayDatasource.ps1' 147
+#EndRegion '.\Public\Admin\Get-FabricAdminGatewayDatasource.ps1' 173
 #Region '.\Public\Admin\Get-FabricAdminGatewayDatasourceById.ps1' -1
 
 function Get-FabricAdminGatewayDatasourceById {

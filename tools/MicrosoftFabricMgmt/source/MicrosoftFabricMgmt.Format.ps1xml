@@ -1469,5 +1469,42 @@
       </TableControl>
     </View>
 
+    <!--
+      =============================================================================
+      Gateway Datasource View - datasources registered on a gateway
+      =============================================================================
+      Display Priority: Gateway Name, Datasource Name, Type, Credential, Connection
+      (Connection is the parsed summary; per-type fields like Server/Database/Url/Path
+       are also present on the object for selection/export.)
+    -->
+    <View>
+      <Name>GatewayDatasourceView</Name>
+      <ViewSelectedBy>
+        <TypeName>MicrosoftFabric.GatewayDatasource</TypeName>
+      </ViewSelectedBy>
+      <TableControl>
+        <TableHeaders>
+          <TableColumnHeader><Label>Gateway Name</Label><Width>22</Width></TableColumnHeader>
+          <TableColumnHeader><Label>Datasource Name</Label><Width>25</Width></TableColumnHeader>
+          <TableColumnHeader><Label>Type</Label><Width>16</Width></TableColumnHeader>
+          <TableColumnHeader><Label>Credential</Label><Width>12</Width></TableColumnHeader>
+          <TableColumnHeader><Label>Connection</Label></TableColumnHeader>
+        </TableHeaders>
+        <TableRowEntries>
+          <TableRowEntry>
+            <TableColumnItems>
+              <TableColumnItem>
+                <ScriptBlock>if ($_.GatewayName) { $_.GatewayName } else { $_.gatewayId }</ScriptBlock>
+              </TableColumnItem>
+              <TableColumnItem><PropertyName>datasourceName</PropertyName></TableColumnItem>
+              <TableColumnItem><PropertyName>datasourceType</PropertyName></TableColumnItem>
+              <TableColumnItem><PropertyName>credentialType</PropertyName></TableColumnItem>
+              <TableColumnItem><PropertyName>Connection</PropertyName></TableColumnItem>
+            </TableColumnItems>
+          </TableRowEntry>
+        </TableRowEntries>
+      </TableControl>
+    </View>
+
   </ViewDefinitions>
 </Configuration>

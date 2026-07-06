@@ -48,6 +48,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- **`Get-FabricAdminGatewayDatasource` now unflattens `connectionDetails`**: the datasource's
+  `connectionDetails` JSON is parsed and every field is surfaced as a PascalCased top-level
+  property (varies by `datasourceType` — `Server`/`Database` for Sql/AnalysisServices/Oracle,
+  `Url` for OData/Web/SharePoint, `Path` for File/Folder, `ConnectionString` for Odbc, etc.),
+  plus a structured `ConnectionDetailsParsed` object. The raw `connectionDetails` string and the
+  `Connection` summary are unchanged; `-Raw` output is untouched. Added a `GatewayDatasourceView`
+  format view (Gateway / Datasource / Type / Credential / Connection).
 - **Authentication command renamed to `Connect-FabricAccount`**: the auth function formerly named
   `Set-FabricApiHeaders` is now `Connect-FabricAccount` (matching Azure/Fabric tooling conventions and
   the name referenced throughout the help). **`Set-FabricApiHeaders` is retained as an exported alias**,

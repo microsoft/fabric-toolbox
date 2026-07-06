@@ -163,6 +163,13 @@
 
 ### Changed
 
+- **`Get-FabricAdminGatewayDatasource` now unflattens `connectionDetails`**: the datasource''s
+  `connectionDetails` JSON is parsed and every field is surfaced as a PascalCased top-level
+  property (varies by `datasourceType` — `Server`/`Database` for Sql/AnalysisServices/Oracle,
+  `Url` for OData/Web/SharePoint, `Path` for File/Folder, `ConnectionString` for Odbc, etc.),
+  plus a structured `ConnectionDetailsParsed` object. The raw `connectionDetails` string and the
+  `Connection` summary are unchanged; `-Raw` output is untouched. Added a `GatewayDatasourceView`
+  format view (Gateway / Datasource / Type / Credential / Connection).
 - **Authentication command renamed to `Connect-FabricAccount`**: the auth function formerly named
   `Set-FabricApiHeaders` is now `Connect-FabricAccount` (matching Azure/Fabric tooling conventions and
   the name referenced throughout the help). **`Set-FabricApiHeaders` is retained as an exported alias**,
@@ -233,17 +240,7 @@
   honor `-Raw`; state-changing commands support `-WhatIf`/`-Confirm`.
 - **`New-FabricConnection`** and **`Update-FabricConnection`**: new commands completing the
   connection CRUD family (Get/Remove/RoleAssignment already existed).
-  - `New-FabricConnection` → `POST /connections`; `Update-FabricConnection` → `PATCH /connections/{connectionId}`.
-  - The polymorphic (per connectivity type) request body is expressed via `-ConnectionDetails`/
-    `-CredentialDetails` hashtables plus typed `-ConnectivityType`/`-GatewayId`/`-PrivacyLevel` parameters.
-  - Return the full created/updated connection object (all API properties) enriched with a resolved
-    `GatewayName` (when gateway-bound) and the `MicrosoftFabric.Connection` type; `-Raw` returns the
-    untouched response. `SupportsShouldProcess` (honors `-WhatIf`/`-Confirm`).
-
-### Fixed
-
-- **`New-FabricAPIUri -Segments` (34 functions were silently broken)**: The helper never had a `-Segments`
-  parameter, y'
+  - `New-FabricConnection` → `POST /connections`; `Update-FabricConnection` → `PATCH /connectio'
 
             # Prerelease string of this module
             # Prerelease = ''

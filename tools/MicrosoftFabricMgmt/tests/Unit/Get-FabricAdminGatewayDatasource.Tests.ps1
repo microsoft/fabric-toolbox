@@ -55,11 +55,42 @@ Describe 'Get-FabricAdminGatewayDatasource' -Tag 'UnitTests' {
         $r[0].datasourceName        | Should -Be 'Sales DB'
     }
 
-    It '-Raw returns the untouched response (gatewayId not corrected, no added names, no type)' {
+    It 'unflattens connectionDetails onto the object (Sql: Server/Database + parsed object; raw preserved)' {
+        $r = Get-FabricAdminGatewayDatasource -GatewayId '77777777-7777-7777-7777-777777777777'
+        $r[0].Server   | Should -Be 'srv1'
+        $r[0].Database | Should -Be 'db1'
+        $r[0].ConnectionDetailsParsed.server | Should -Be 'srv1'
+        # raw connectionDetails string left intact
+        $r[0].connectionDetails | Should -Be '{"server":"srv1","database":"db1"}'
+    }
+
+    It '-Raw returns the untouched response (gatewayId not corrected, no added names, no flattening, no type)' {
         $r = Get-FabricAdminGatewayDatasource -GatewayId '77777777-7777-7777-7777-777777777777' -Raw
         $r[0].gatewayId                | Should -Be 'cluster-99'
         $r[0].PSObject.Properties.Name | Should -Not -Contain 'GatewayName'
         $r[0].PSObject.Properties.Name | Should -Not -Contain 'Connection'
+        $r[0].PSObject.Properties.Name | Should -Not -Contain 'Server'
+        $r[0].PSObject.Properties.Name | Should -Not -Contain 'ConnectionDetailsParsed'
         $r[0].PSObject.TypeNames[0]    | Should -Not -Be 'MicrosoftFabric.GatewayDatasource'
+    }
+}
+
+Describe 'Get-FabricAdminGatewayDatasource unflatten by type' -Tag 'UnitTests' {
+
+    BeforeAll {
+        Mock -ModuleName MicrosoftFabricMgmt Invoke-FabricAPIRequest {
+            @(
+                [pscustomobject]@{ id = 'o1'; datasourceName = 'Feed';   datasourceType = 'OData'; connectionDetails = '{"url":"https://contoso/odata"}' }
+                [pscustomobject]@{ id = 'f1'; datasourceName = 'Budget'; datasourceType = 'File';  connectionDetails = '{"path":"\\\\nas\\fin\\b.xlsx"}' }
+                [pscustomobject]@{ id = 'x1'; datasourceName = 'ERP';    datasourceType = 'Odbc';  connectionDetails = '{"connectionString":"Driver={PG};Server=pg1"}' }
+            )
+        }
+    }
+
+    It 'surfaces the type-specific field (OData->Url, File->Path, Odbc->ConnectionString)' {
+        $r = Get-FabricAdminGatewayDatasource -GatewayId '77777777-7777-7777-7777-777777777777'
+        ($r | Where-Object datasourceType -eq 'OData').Url              | Should -Be 'https://contoso/odata'
+        ($r | Where-Object datasourceType -eq 'File').Path              | Should -Be '\\nas\fin\b.xlsx'
+        ($r | Where-Object datasourceType -eq 'Odbc').ConnectionString  | Should -Be 'Driver={PG};Server=pg1'
     }
 }

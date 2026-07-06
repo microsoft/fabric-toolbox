@@ -69,4 +69,8 @@ Describe 'MicrosoftFabricMgmt.Format.ps1xml' -Tag 'UnitTests' {
         Get-ViewTypeNames -ViewName 'LakehouseTableView'         | Should -Contain 'MicrosoftFabric.LakehouseTable'
         Get-ViewTypeNames -ViewName 'WarehouseRestorePointView'  | Should -Contain 'MicrosoftFabric.WarehouseRestorePoint'
     }
+
+    It 'defines a GatewayDatasourceView selecting MicrosoftFabric.GatewayDatasource' {
+        Get-ViewTypeNames -ViewName 'GatewayDatasourceView' | Should -Contain 'MicrosoftFabric.GatewayDatasource'
+    }
 }
