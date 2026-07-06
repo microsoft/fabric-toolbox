@@ -5,6 +5,33 @@ All notable changes to the Fabric Assessment Tool will be documented in this fil
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.3.0] - 2026-07-06
+
+### Added
+
+- **AWS Databricks Cloud Support (`--cloud aws`)**: Full support for assessing Databricks workspaces running on AWS. Authenticate via `DATABRICKS_HOST`+`DATABRICKS_TOKEN` (single workspace) or OAuth service principal credentials (`DATABRICKS_ACCOUNT_ID`, `DATABRICKS_CLIENT_ID`, `DATABRICKS_CLIENT_SECRET`) for multi-workspace assessment. Account-level API enables workspace discovery and selection.
+- **Selective Resource Extraction (`--resources`)**: New CLI argument to re-extract only specific resource types without repeating a full assessment. Previously exported data is preserved and summaries are recalculated accurately. Example: `fat assess --source databricks --cloud aws --ws dev --resources jobs -o results/`
+- **Notebook-Job Cross-Reference**: Job tasks now include a `notebook_path` field (including nested `for_each_task` notebooks), and notebooks are annotated with `last_job_execution` (timestamp) and `executed_by_jobs` (list of job IDs) after assessment. Path normalization handles `/Workspace/` prefix mismatch between Jobs API and Workspace listing API.
+- **Job Activity Insights (Visualization)**: Data Engineering view now shows Active vs Stale jobs (30-day threshold) and Notebooks Referenced by Jobs vs Not Referenced, with interactive doughnut charts that respond to workspace filtering.
+- **Unity Catalog in Data Warehousing View**: The Data Warehousing tab now displays catalogs (with schema/table/volume/function counts), schemas (managed/external/view breakdown), tables (type, format, columns), and views — each with paginated "View all" pages.
+- **Paginated Artifact Lists**: All artifact tables (notebooks, jobs, clusters, pipelines, experiments, serving endpoints, repos, catalogs, schemas, tables, views) now show a 10-item preview with "View all →" links to paginated pages (100 items/page).
+- **Dynamic Chart Filtering**: All charts (Notebooks by Language, Spark Versions, Job Activity, Notebooks Referenced) update dynamically when the workspace filter changes.
+- **Extraction Warning Tracking**: When a resource extraction fails, the assessment status is set to "incomplete" with a description of failed components, and a warning is printed.
+- **Databricks Service Principal Permissions Documentation**: README now documents required permissions per resource type for service principal authentication.
+
+### Changed
+
+- **`--ws` argument** (previously `-ws`): Now uses standard double-dash form `--ws`/`--workspace` matching CLI conventions.
+- **Jobs extraction uses iterative pagination**: Fixed "maximum recursion depth exceeded" error when extracting jobs from large workspaces (3,000+ jobs). Uses `auto_paginate=False` with manual page token iteration instead of recursive API client pagination.
+- **Summary preservation in partial mode**: When using `--resources`, existing summary counts for non-extracted resources are preserved from the previous `summary.json` rather than being zeroed out.
+- **Interleaved preview items**: Artifact preview tables interleave items from all workspaces round-robin, ensuring workspace filtering always shows results.
+- **Empty filter feedback**: Tables display "No items match the selected workspace filter" when all rows are hidden by the workspace filter.
+
+### Fixed
+
+- **Notebook path normalization**: Job tasks store paths with `/Workspace/` prefix but notebook listing API returns paths without it. Both cross-reference methods now normalize paths before matching.
+- **Nested `for_each_task` extraction**: Notebooks referenced inside `for_each_task.task.notebook_task` are now correctly extracted and counted.
+
 ## [0.2.2] - 2026-04-22
 
 ### Added
