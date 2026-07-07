@@ -18,6 +18,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Dynamic Chart Filtering**: All charts (Notebooks by Language, Spark Versions, Job Activity, Notebooks Referenced) update dynamically when the workspace filter changes.
 - **Extraction Warning Tracking**: When a resource extraction fails, the assessment status is set to "incomplete" with a description of failed components, and a warning is printed.
 - **Databricks Service Principal Permissions Documentation**: README now documents required permissions per resource type for service principal authentication.
+- **Notebook Content Download (`--download-notebooks`)**: Optional flag to download and export full notebook source content. When enabled, decoded notebook files are saved in a `notebook_sources/` folder preserving the workspace directory structure. Disabled by default.
 
 ### Changed
 
@@ -31,6 +32,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - **Notebook path normalization**: Job tasks store paths with `/Workspace/` prefix but notebook listing API returns paths without it. Both cross-reference methods now normalize paths before matching.
 - **Nested `for_each_task` extraction**: Notebooks referenced inside `for_each_task.task.notebook_task` are now correctly extracted and counted.
+- **Stale notebook annotations on partial extraction**: When `--resources jobs` is used, notebook files are now also rewritten on disk with updated job execution annotations.
 
 ## [0.2.2] - 2026-04-22
 
