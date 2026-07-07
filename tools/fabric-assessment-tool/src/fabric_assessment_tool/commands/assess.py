@@ -93,6 +93,14 @@ Examples:
         )
 
         parser.add_argument(
+            "--download-notebooks",
+            action="store_true",
+            default=False,
+            help="Download and export full notebook source content (disabled by default). "
+            "Stores decoded notebook files in a notebook_sources/ folder.",
+        )
+
+        parser.add_argument(
             "--auth-method",
             choices=["azure-cli", "fabric"],
             default=None,
@@ -175,6 +183,7 @@ Examples:
                 sql_client_secret=getattr(args, "sql_client_secret", None),
                 sql_tenant_id=getattr(args, "sql_tenant_id", None),
                 resources=resources,
+                download_notebooks=getattr(args, "download_notebooks", False),
             )
 
             utils_ui.print(f"Assessment completed successfully!")

@@ -35,6 +35,7 @@ class AssessmentService:
         sql_client_secret: Optional[str] = None,
         sql_tenant_id: Optional[str] = None,
         resources: Optional[List[str]] = None,
+        download_notebooks: bool = False,
     ) -> Dict[str, Any]:
         """
         Perform assessment on specified workspaces.
@@ -116,7 +117,7 @@ class AssessmentService:
                 "cloud": cloud,
                 "workspaces": workspaces,
                 "timestamp": datetime.now().isoformat(),
-                "version": "0.2.0",
+                "version": "0.3.0",
                 "output_format": output_format,
             },
             "results": [],
@@ -150,16 +151,26 @@ class AssessmentService:
             try:
                 # Get assessment data as dataclass object
                 workspace_assessment = client.assess_workspace(
-                    workspace, mode, resources=resources, output_path=output_path
+                    workspace,
+                    mode,
+                    resources=resources,
+                    output_path=output_path,
+                    download_notebooks=download_notebooks,
                 )
 
                 # Export the assessment data using the structured export service
+                # When jobs are re-extracted, notebooks are re-annotated with
+                # job execution data — ensure they are also rewritten on disk.
+                export_resources = resources
+                if resources and "jobs" in resources and "notebooks" not in resources:
+                    export_resources = list(resources) + ["notebooks"]
+
                 export_result = self.export_service.export_assessment(
                     assessment_data=workspace_assessment,
                     workspace_name=workspace,
                     output_path=output_path,
                     format=output_format,
-                    resources=resources,
+                    resources=export_resources,
                 )
 
                 export_results["results"].append(export_result)

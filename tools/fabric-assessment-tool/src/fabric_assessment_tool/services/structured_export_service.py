@@ -671,6 +671,8 @@ class JSONExporter(BaseExporter):
             _clear_folder(notebooks_dir)
 
             for i, notebook in enumerate(data["notebooks"].get("notebooks", [])):
+                # Export metadata (without content to keep JSON clean)
+                nb_export = {k: v for k, v in notebook.items() if k != "content"}
                 notebook_file = (
                     notebooks_dir / f"{notebook.get('path').replace('/', '_')}.json"
                 )
@@ -678,7 +680,7 @@ class JSONExporter(BaseExporter):
                     json.dump(
                         {
                             "type": "notebook",
-                            "notebook_data": notebook,
+                            "notebook_data": nb_export,
                             "exported_at": datetime.now().isoformat(),
                         },
                         f,
@@ -686,6 +688,24 @@ class JSONExporter(BaseExporter):
                         cls=DecimalEncoder,
                     )
                 files_created.append(str(notebook_file))
+
+                # Export notebook source content if available
+                if notebook.get("content"):
+                    sources_dir = workspace_dir / "notebook_sources"
+                    sources_dir.mkdir(exist_ok=True)
+                    nb_path = notebook.get("path", f"notebook_{i}")
+                    # Preserve folder structure under notebook_sources/
+                    source_file = sources_dir / nb_path.lstrip("/")
+                    source_file.parent.mkdir(parents=True, exist_ok=True)
+                    try:
+                        import base64
+
+                        decoded = base64.b64decode(notebook["content"]).decode("utf-8")
+                        with open(source_file, "w", encoding="utf-8") as f:
+                            f.write(decoded)
+                        files_created.append(str(source_file))
+                    except Exception:
+                        pass
 
         # Export pipelines
         if "pipelines" in data and _should_export("pipelines"):

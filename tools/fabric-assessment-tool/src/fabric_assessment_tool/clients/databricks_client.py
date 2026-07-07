@@ -398,6 +398,7 @@ class DatabricksClient:
         mode: str,
         resources: Optional[List[str]] = None,
         output_path: Optional[str] = None,
+        download_notebooks: bool = False,
     ) -> DatabricksAssessment:
         """
         Assess a Databricks workspace.
@@ -468,7 +469,7 @@ class DatabricksClient:
             # Get notebooks
             if _should_extract("notebooks"):
                 utils_ui.print_extracting("Notebooks")
-                notebooks = self._get_notebooks()
+                notebooks = self._get_notebooks(download_content=download_notebooks)
                 utils_ui.print_extraction_done("Notebooks")
             else:
                 notebooks = disk_data.get(
@@ -1098,8 +1099,13 @@ class DatabricksClient:
         except Exception:
             return [], []
 
-    def _get_notebooks(self) -> DatabricksNotebooks:
-        """Get notebooks in the workspace."""
+    def _get_notebooks(self, download_content: bool = False) -> DatabricksNotebooks:
+        """Get notebooks in the workspace.
+
+        Args:
+            download_content: When True, store base64-encoded notebook source
+                content on each DatabricksNotebook instance for later export.
+        """
         try:
             notebooks: list[DatabricksNotebook] = []
             list_endpoint = f"api/2.0/workspace/list"
@@ -1182,12 +1188,13 @@ class DatabricksClient:
                                 default_language=lang,
                                 embedded_languages=embedded_langs,
                                 other_magics=magics,
-                                json_response=obj,  # TODO: Add the export response instead of list respose?
+                                json_response=obj,
                                 uses_dbutils=uses_dbutils,
                                 created_by=created_by,
                                 created_at=created_at,
                                 modified_at=modified_at,
                                 size=size,
+                                content=content if download_content else None,
                             )
                         )
                     elif obj["object_type"] == "DIRECTORY":

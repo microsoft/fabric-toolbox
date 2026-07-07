@@ -168,6 +168,7 @@ class DatabricksNotebook:
     size: Optional[int] = None
     last_job_execution: Optional[str] = None
     executed_by_jobs: Optional[List[int]] = None
+    content: Optional[str] = None
 
 
 @dataclass
