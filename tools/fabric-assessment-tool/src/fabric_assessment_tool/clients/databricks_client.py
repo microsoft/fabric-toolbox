@@ -1447,14 +1447,17 @@ class DatabricksClient:
 
         # Annotate notebooks
         for notebook in notebooks.notebooks:
+            # Reset derived fields to avoid carrying stale values (e.g., when loading from disk)
+            notebook.executed_by_jobs = None
+            notebook.last_job_execution = None
+
             norm_nb_path = _normalize_notebook_path(notebook.path)
             if norm_nb_path in path_to_jobs:
                 entries = path_to_jobs[norm_nb_path]
-                notebook.executed_by_jobs = [job_id for job_id, _ in entries]
+                notebook.executed_by_jobs = sorted({job_id for job_id, _ in entries})
                 run_times = [t for _, t in entries if t is not None]
                 if run_times:
                     notebook.last_job_execution = max(run_times)
-
         return notebooks
 
     def _get_optional_long(self, data: Optional[str]) -> Optional[int]:
