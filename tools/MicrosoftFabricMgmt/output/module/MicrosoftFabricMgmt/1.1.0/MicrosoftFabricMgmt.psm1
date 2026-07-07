@@ -9820,7 +9820,8 @@ function Add-FabricConnectionRoleAssignment {
     Optional. The unique identifier of the connection.
 
 .PARAMETER ConnectionName
-    Optional. The display name of the connection.
+    Optional. The display name of the connection to filter by. Any characters are accepted
+    (connection names may contain hyphens, dots, parentheses, etc.).
 
 .PARAMETER Raw
     Returns the raw API response without any filtering or transformation. Use this switch when you need the complete, unprocessed response from the API.
@@ -9838,8 +9839,8 @@ function Add-FabricConnectionRoleAssignment {
     Returns the raw API response for all connections without any formatting or type decoration.
 
 .NOTES
-    - Requires `$FabricConfig` with `BaseUrl` and `FabricHeaders`.
-    - Uses `Test-TokenExpired` for authentication validation.
+    - API Endpoint: GET /connections
+    - Requires: authentication via Connect-FabricAccount / Set-FabricApiHeaders.
 
     Author: Tiago Balabuch
 #>
@@ -9852,7 +9853,6 @@ function Get-FabricConnection {
 
         [Parameter(Mandatory = $false, ParameterSetName = 'Name')]
         [ValidateNotNullOrEmpty()]
-        [ValidatePattern('^[a-zA-Z0-9_ ]*$')]
         [string]$ConnectionName,
 
         [Parameter(Mandatory = $false)]

@@ -5,7 +5,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [1.1.0] - 2026-07-06
+## [1.1.0] - 2026-07-07
 
 ### Added
 
@@ -25,6 +25,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- **`Get-FabricConnection -ConnectionName` validation**: removed the over-restrictive
+  `ValidatePattern('^[a-zA-Z0-9_ ]*$')` that rejected valid connection names containing hyphens,
+  dots, parentheses, etc. The name is a filter, so it now accepts any string (`ValidateNotNullOrEmpty`),
+  matching `New-FabricConnection`. Also corrected the stale `$FabricConfig`/`Test-TokenExpired` note.
 - **`Get-FabricAdminWorkspace` filtering**: the `-Filter` parameter (and `-Top`/`-Skip`/`-OrderBy`)
   never worked — the Fabric admin `GET /admin/workspaces` endpoint does not support OData query
   options, so those values were silently ignored. Removed the four phantom parameters and added the

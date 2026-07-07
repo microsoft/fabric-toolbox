@@ -118,7 +118,7 @@
             # IconUri = ''
 
             # ReleaseNotes of this module
-            ReleaseNotes = '## [1.1.0] - 2026-07-06
+            ReleaseNotes = '## [1.1.0] - 2026-07-07
 
 ### Added
 
@@ -138,6 +138,10 @@
 
 ### Fixed
 
+- **`Get-FabricConnection -ConnectionName` validation**: removed the over-restrictive
+  `ValidatePattern(''^[a-zA-Z0-9_ ]*$'')` that rejected valid connection names containing hyphens,
+  dots, parentheses, etc. The name is a filter, so it now accepts any string (`ValidateNotNullOrEmpty`),
+  matching `New-FabricConnection`. Also corrected the stale `$FabricConfig`/`Test-TokenExpired` note.
 - **`Get-FabricAdminWorkspace` filtering**: the `-Filter` parameter (and `-Top`/`-Skip`/`-OrderBy`)
   never worked — the Fabric admin `GET /admin/workspaces` endpoint does not support OData query
   options, so those values were silently ignored. Removed the four phantom parameters and added the
@@ -236,11 +240,7 @@
   `Start-FabricItemJob` (`POST .../jobs/{jobType}/instances`), `Get-FabricItemJobInstance`
   (`.../jobs/instances[/{jobInstanceId}]`), and `Stop-FabricItemJobInstance`
   (`POST .../jobs/instances/{jobInstanceId}/cancel`). Schedule `-Configuration` and job
-  `-ExecutionData` are hashtable pass-throughs; getters enrich WorkspaceName + type and
-  honor `-Raw`; state-changing commands support `-WhatIf`/`-Confirm`.
-- **`New-FabricConnection`** and **`Update-FabricConnection`**: new commands completing the
-  connection CRUD family (Get/Remove/RoleAssignment already existed).
-  - `New-FabricConnection` → `POST /connections`; `Update-FabricConnection` → `PATCH /connectio'
+  `-ExecutionData` are ha'
 
             # Prerelease string of this module
             # Prerelease = ''
