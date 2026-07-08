@@ -5,6 +5,7 @@ import json
 import platform
 import re
 import time
+import urllib
 from argparse import Namespace
 from typing import Optional
 from urllib.parse import urlparse
@@ -12,7 +13,6 @@ from urllib.parse import urlparse
 import requests
 from requests.adapters import HTTPAdapter, Retry
 from requests.structures import CaseInsensitiveDict
-import urllib
 
 from fabric_assessment_tool.errors.api import AzureAPIError, FATError
 

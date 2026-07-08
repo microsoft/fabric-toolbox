@@ -99,6 +99,12 @@ Examples:
             help="Download and export full notebook source content (disabled by default). "
             "Stores decoded notebook files in a notebook_sources/ folder.",
         )
+        parser.add_argument(
+            "--max-parallel-api-calls",
+            type=int,
+            default=8,
+            help="Maximum concurrent Databricks API calls for notebook/job and catalog schema extraction (default: 8).",
+        )
 
         parser.add_argument(
             "--auth-method",
@@ -184,6 +190,7 @@ Examples:
                 sql_tenant_id=getattr(args, "sql_tenant_id", None),
                 resources=resources,
                 download_notebooks=getattr(args, "download_notebooks", False),
+                max_parallel_api_calls=getattr(args, "max_parallel_api_calls", 8),
             )
 
             utils_ui.print(f"Assessment completed successfully!")

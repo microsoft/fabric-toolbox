@@ -113,6 +113,28 @@ class TestGetJobsPagination:
 
         assert len(result.jobs) == 1
 
+    @patch.object(DatabricksClient, "_parallel_map_ordered")
+    @patch.object(DatabricksClient, "_get_job_details")
+    def test_uses_parallel_job_detail_fetch(self, mock_details, mock_parallel):
+        """_get_jobs delegates job-detail expansion to bounded parallel mapper."""
+        client = _create_client_with_mock_api()
+        client._max_parallel_api_calls = 4
+        mock_details.side_effect = lambda job: MagicMock(job_id=job["job_id"])
+        client.api_client.do_request.return_value = _make_api_response(
+            [_make_job_data(1), _make_job_data(2)]
+        )
+        mock_parallel.side_effect = lambda items, worker, max_workers: [
+            worker(item) for item in items
+        ]
+
+        result = client._get_jobs()
+
+        assert len(result.jobs) == 2
+        mock_parallel.assert_called_once()
+        called_items, _, called_workers = mock_parallel.call_args[0]
+        assert len(called_items) == 2
+        assert called_workers == 4
+
 
 class TestExtractionWarnings:
     """Tests for extraction failure warning behavior."""

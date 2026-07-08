@@ -3,6 +3,7 @@ import json
 import os
 import re
 from argparse import Namespace
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Dict, List, Optional
@@ -61,7 +62,7 @@ from ..assessment.databricks import (
     DatabricksNetworkSettings,
 )
 from ..utils import ui as utils_ui
-from .api_client import ApiClient, ApiResponse
+from .api_client import ApiClient
 from .token_provider import TokenProvider, create_token_provider
 
 
@@ -121,6 +122,7 @@ class DatabricksClient:
         self.authenticate()
         self._workspace_cache: dict[str, DatabricksWorkspaceInfo] = {}
         self.extraction_warnings: list[str] = []
+        self._max_parallel_api_calls = 8
 
     def authenticate(self) -> None:
         """Authenticate with the configured Databricks cloud."""
@@ -392,6 +394,27 @@ class DatabricksClient:
             self.workspace_client.api_client._api_client._session.auth
         )
 
+    def _extract_notebook_paths(self, list_endpoint: str) -> list[dict]:
+        notebook_objs: list[dict] = []
+
+        def traverse(current_path):
+            args = Namespace()
+            args.uri = list_endpoint
+            args.request_params = {"path": current_path}
+            try:
+                data = self.api_client.do_request(args).json()
+            except Exception:
+                return
+
+            for obj in data.get("objects", []):
+                if obj["object_type"] == "NOTEBOOK":
+                    notebook_objs.append(obj)
+                elif obj["object_type"] == "DIRECTORY":
+                    traverse(obj["path"])
+
+        traverse("/")
+        return notebook_objs
+
     def assess_workspace(
         self,
         workspace_name: str,
@@ -399,6 +422,7 @@ class DatabricksClient:
         resources: Optional[List[str]] = None,
         output_path: Optional[str] = None,
         download_notebooks: bool = False,
+        max_parallel_api_calls: int = 8,
     ) -> DatabricksAssessment:
         """
         Assess a Databricks workspace.
@@ -435,6 +459,7 @@ class DatabricksClient:
 
             # Use the workspace_info to authenticate the databricks client
             self._auth_databricks(workspace_info.url)
+            self._max_parallel_api_calls = max(1, int(max_parallel_api_calls))
 
             # Determine which resources to extract
             _should_extract = (
@@ -622,7 +647,7 @@ class DatabricksClient:
                 status = AssessmentStatus(status="completed")
 
             # Return assessment object
-            return DatabricksAssessment(
+            assessment = DatabricksAssessment(
                 status=status,
                 workspace_info=workspace_info,
                 clusters=clusters,
@@ -644,6 +669,7 @@ class DatabricksClient:
                 instance_pools=instance_pools,
                 workspace_url=workspace_info.url,
             )
+            return assessment
 
         except Exception as e:
             raise Exception(f"Failed to assess workspace {workspace_name}: {e}")
@@ -1099,6 +1125,100 @@ class DatabricksClient:
         except Exception:
             return [], []
 
+    def _build_notebook_from_obj(
+        self,
+        obj: dict,
+        status_endpoint: str,
+        export_endpoint: str,
+        download_content: bool,
+    ) -> DatabricksNotebook:
+        obj_path = obj["path"]
+        lang = "unknown"
+        content = ""
+        created_by = obj.get("created_by")
+        created_at = (
+            datetime.fromtimestamp(
+                obj["created_at"] / 1000, tz=timezone.utc
+            ).isoformat()
+            if obj.get("created_at")
+            else None
+        )
+        modified_at = (
+            datetime.fromtimestamp(
+                obj["modified_at"] / 1000, tz=timezone.utc
+            ).isoformat()
+            if obj.get("modified_at")
+            else None
+        )
+        size = obj.get("size")
+
+        try:
+            args = Namespace()
+            args.uri = status_endpoint
+            args.request_params = {"path": obj_path}
+            status_json = self.api_client.do_request(args).json()
+            lang = status_json.get("language", "unknown")
+            if size is None:
+                size = status_json.get("size")
+        except Exception:
+            pass
+
+        try:
+            args = Namespace()
+            args.uri = export_endpoint
+            args.request_params = {"path": obj_path, "format": "SOURCE"}
+            content = self.api_client.do_request(args).json().get("content", "")
+            embedded_langs, magics = self._detect_embedded_magics(content)
+            if size is None and content:
+                try:
+                    size = len(base64.b64decode(content))
+                except Exception:
+                    pass
+        except Exception:
+            embedded_langs, magics = [], []
+
+        uses_dbutils = self._check_notebook_for_dbutils(content)
+        return DatabricksNotebook(
+            path=obj_path,
+            default_language=lang,
+            embedded_languages=embedded_langs,
+            other_magics=magics,
+            json_response=obj,
+            uses_dbutils=uses_dbutils,
+            created_by=created_by,
+            created_at=created_at,
+            modified_at=modified_at,
+            size=size,
+            content=content if download_content else None,
+        )
+
+    def _parallel_map_ordered(
+        self,
+        items: list,
+        worker,
+        max_workers: int,
+    ) -> list:
+        if not items:
+            return []
+        workers = max(1, min(max_workers, len(items)))
+        if workers == 1:
+            return [worker(item) for item in items]
+
+        indexed_results: dict[int, Any] = {}
+        with ThreadPoolExecutor(max_workers=workers) as executor:
+            future_to_index = {
+                executor.submit(worker, item): idx for idx, item in enumerate(items)
+            }
+            for future in as_completed(future_to_index):
+                idx = future_to_index[future]
+                indexed_results[idx] = future.result()
+        return [indexed_results[i] for i in sorted(indexed_results)]
+
+    def _catalog_parallel_api_calls(self) -> int:
+        """Throttle catalog fan-out to reduce nested concurrency pressure."""
+        configured = max(1, getattr(self, "_max_parallel_api_calls", 8))
+        return min(configured, 3)
+
     def _get_notebooks(self, download_content: bool = False) -> DatabricksNotebooks:
         """Get notebooks in the workspace.
 
@@ -1112,95 +1232,17 @@ class DatabricksClient:
             export_endpoint = f"api/2.0/workspace/export"
             status_endpoint = f"api/2.0/workspace/get-status"
 
-            def traverse(current_path):
-                args = Namespace()
-                args.uri = list_endpoint
-                args.request_params = {"path": current_path}
-                try:
-                    data = self.api_client.do_request(args).json()
-                except:
-                    return
-
-                for obj in data.get("objects", []):
-                    obj_path = obj["path"]
-                    if obj["object_type"] == "NOTEBOOK":
-                        lang = "unknown"
-                        content = ""
-                        created_by = obj.get("created_by")
-                        created_at = (
-                            datetime.fromtimestamp(
-                                obj["created_at"] / 1000, tz=timezone.utc
-                            ).isoformat()
-                            if obj.get("created_at")
-                            else None
-                        )
-                        modified_at = (
-                            datetime.fromtimestamp(
-                                obj["modified_at"] / 1000, tz=timezone.utc
-                            ).isoformat()
-                            if obj.get("modified_at")
-                            else None
-                        )
-                        size = obj.get("size")
-                        try:
-                            args.uri = status_endpoint
-                            args.request_params = {"path": obj_path}
-
-                            status_json = self.api_client.do_request(args).json()
-                            lang = status_json.get("language", "unknown")
-                            # /api/2.0/workspace/list omits size for notebooks;
-                            # get-status returns it reliably as bytes.
-                            if size is None:
-                                size = status_json.get("size")
-                        except Exception:
-                            pass
-                        try:
-                            args.uri = export_endpoint
-                            args.request_params = {
-                                "path": obj_path,
-                                "format": "SOURCE",
-                            }
-                            content = (
-                                self.api_client.do_request(args)
-                                .json()
-                                .get("content", "")
-                            )
-                            embedded_langs, magics = self._detect_embedded_magics(
-                                content
-                            )
-                            # Databricks doesn't expose notebook size on list or
-                            # get-status (those only return size for FILE). Fall
-                            # back to the decoded SOURCE byte length.
-                            if size is None and content:
-                                try:
-                                    size = len(base64.b64decode(content))
-                                except Exception:
-                                    pass
-                        except Exception:
-                            embedded_langs, magics = [], []
-
-                        # Check for dbutils in notebook content
-                        uses_dbutils = self._check_notebook_for_dbutils(content)
-
-                        notebooks.append(
-                            DatabricksNotebook(
-                                path=obj_path,
-                                default_language=lang,
-                                embedded_languages=embedded_langs,
-                                other_magics=magics,
-                                json_response=obj,
-                                uses_dbutils=uses_dbutils,
-                                created_by=created_by,
-                                created_at=created_at,
-                                modified_at=modified_at,
-                                size=size,
-                                content=content if download_content else None,
-                            )
-                        )
-                    elif obj["object_type"] == "DIRECTORY":
-                        traverse(obj_path)
-
-            traverse("/")
+            notebook_objs = self._extract_notebook_paths(list_endpoint=list_endpoint)
+            notebooks = self._parallel_map_ordered(
+                notebook_objs,
+                lambda obj: self._build_notebook_from_obj(
+                    obj=obj,
+                    status_endpoint=status_endpoint,
+                    export_endpoint=export_endpoint,
+                    download_content=download_content,
+                ),
+                getattr(self, "_max_parallel_api_calls", 8),
+            )
 
             return DatabricksNotebooks(notebooks=notebooks)
 
@@ -1413,9 +1455,18 @@ class DatabricksClient:
                 args.auto_paginate = False
                 resp = self.api_client.do_request(args)
                 json_resp = resp.json()
-                for job in json_resp.get("jobs", []):
-                    if job.get("job_id") is not None:
-                        jobs.append(self._get_job_details(job))
+                page_jobs = [
+                    job
+                    for job in json_resp.get("jobs", [])
+                    if job.get("job_id") is not None
+                ]
+                jobs.extend(
+                    self._parallel_map_ordered(
+                        page_jobs,
+                        self._get_job_details,
+                        getattr(self, "_max_parallel_api_calls", 8),
+                    )
+                )
                 next_page_token = json_resp.get("next_page_token")
                 if not next_page_token:
                     break
@@ -1610,6 +1661,32 @@ class DatabricksClient:
             print(f"Failed to get functions: {e}")
             return []
 
+    def _build_schema_from_catalog(
+        self, catalog_name: str, schema: dict
+    ) -> DatabricksSchema:
+        schema_name = schema.get("name") or ""
+        return DatabricksSchema(
+            name=schema_name,
+            catalog=catalog_name,
+            comment=schema.get("comment"),
+            storage_root=schema.get("storage_root"),
+            tables=self._get_tables(catalog_name, schema_name),
+            volumes=self._get_volumes(catalog_name, schema_name),
+            functions=self._get_functions(catalog_name, schema_name),
+            json_response=schema,
+        )
+
+    def _build_catalog(self, catalog: dict) -> DatabricksCatalog:
+        catalog_name = catalog.get("name") or ""
+        return DatabricksCatalog(
+            name=catalog_name,
+            comment=catalog.get("comment"),
+            owner=catalog.get("owner"),
+            storage_root=catalog.get("storage_root"),
+            schemas=self._get_schemas(catalog_name),
+            json_response=catalog,
+        )
+
     def _get_schemas(self, catalog_name: str) -> DatabricksSchemas:
         """Get databases and tables in the workspace."""
         try:
@@ -1617,19 +1694,12 @@ class DatabricksClient:
             args.uri = f"/api/2.1/unity-catalog/schemas?catalog_name={catalog_name}"
             req = self.api_client.do_request(args)
             json_req = req.json()
-            schemas = [
-                DatabricksSchema(
-                    name=schema.get("name"),
-                    catalog=catalog_name,
-                    comment=schema.get("comment"),
-                    storage_root=schema.get("storage_root"),
-                    tables=self._get_tables(catalog_name, schema.get("name")),
-                    volumes=self._get_volumes(catalog_name, schema.get("name")),
-                    functions=self._get_functions(catalog_name, schema.get("name")),
-                    json_response=schema,
-                )
-                for schema in json_req.get("schemas", [])
-            ]
+            schema_items = json_req.get("schemas", [])
+            schemas = self._parallel_map_ordered(
+                schema_items,
+                lambda schema: self._build_schema_from_catalog(catalog_name, schema),
+                self._catalog_parallel_api_calls(),
+            )
             return DatabricksSchemas(schemas=schemas)
         except Exception as e:
             print(f"Failed to get catalogs: {e}")
@@ -1643,15 +1713,7 @@ class DatabricksClient:
             req = self.api_client.do_request(args)
             json_req = req.json()
             catalogs = [
-                DatabricksCatalog(
-                    name=catalog.get("name"),
-                    comment=catalog.get("comment"),
-                    owner=catalog.get("owner"),
-                    storage_root=catalog.get("storage_root"),
-                    schemas=self._get_schemas(catalog.get("name")),
-                    json_response=catalog,
-                )
-                for catalog in json_req.get("catalogs", [])
+                self._build_catalog(catalog) for catalog in json_req.get("catalogs", [])
             ]
             return DatabricksCatalogs(catalogs=catalogs)
         except Exception as e:

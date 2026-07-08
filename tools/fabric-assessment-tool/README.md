@@ -190,6 +190,7 @@ fat assess --source <synapse|databricks> \
 - `--sql-tenant-id`: Azure tenant ID (optional, defaults to 'common')
 - `--resources`: Comma-separated list of resource types to extract. When omitted, all resources are extracted. Use this to re-extract only specific resources without repeating a full assessment. Previously exported data for other resources is preserved and summaries are recalculated accurately.
   - Valid Databricks resources: `clusters`, `sql_warehouses`, `notebooks`, `jobs`, `catalogs`, `external_locations`, `connections`, `secret_scopes`, `pipelines`, `repos`, `experiments`, `serving_endpoints`, `alerts`, `genie_spaces`, `cluster_policies`, `instance_pools`
+- `--max-parallel-api-calls`: Maximum concurrent Databricks API calls used by notebook/job extraction and catalog schema fan-out (default: `8`; catalog fan-out is internally capped to avoid excessive throttling).
 
 **Examples:**
 ```bash
@@ -232,6 +233,10 @@ fat assess --source databricks --cloud aws --ws dev,prod --resources jobs -o res
 
 # Re-extract jobs and notebooks without repeating the full assessment
 fat assess --source databricks --cloud aws --ws dev --resources jobs,notebooks -o results_folder
+
+# Increase API parallelism for Databricks extraction
+fat assess --source databricks --ws jdc-adb -o results_folder \
+    --max-parallel-api-calls 12
 ```
 
 ### `fat visualize` - Generate interactive HTML reports
