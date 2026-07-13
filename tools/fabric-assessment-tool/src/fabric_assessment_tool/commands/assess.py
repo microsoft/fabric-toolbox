@@ -1,8 +1,30 @@
 import argparse
+import logging
+from pathlib import Path
 
 from ..utils import ui as utils_ui
 from ..services.assessment_service import AssessmentService
 from .base import BaseCommand
+
+LOG_FORMAT = "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+
+
+def _configure_logging(log_file: str | None = None) -> None:
+    root_logger = logging.getLogger()
+    root_logger.handlers.clear()
+    if not log_file:
+        return
+
+    root_logger.setLevel(logging.DEBUG)
+    log_path = Path(log_file)
+    log_path.parent.mkdir(parents=True, exist_ok=True)
+    file_handler = logging.FileHandler(log_path, encoding="utf-8")
+    file_handler.setLevel(logging.DEBUG)
+    file_handler.setFormatter(logging.Formatter(LOG_FORMAT))
+    root_logger.addHandler(file_handler)
+
+
+logger = logging.getLogger(__name__)
 
 
 class AssessCommand(BaseCommand):
@@ -105,6 +127,11 @@ Examples:
             default=8,
             help="Maximum concurrent Databricks API calls for notebook/job and catalog schema extraction (default: 8).",
         )
+        parser.add_argument(
+            "--log-file",
+            default=None,
+            help="Optional log file path. When provided, logs are written to this file.",
+        )
 
         parser.add_argument(
             "--auth-method",
@@ -160,6 +187,9 @@ Examples:
 
     def handle(self, args: argparse.Namespace) -> None:
         """Handle the assess command execution."""
+        _configure_logging(getattr(args, "log_file", None))
+        if getattr(args, "log_file", None):
+            logger.info("Logging initialized (log_file=%s)", getattr(args, "log_file"))
         print(f"Starting assessment of {args.source} workspaces...")
 
         # Parse workspace names

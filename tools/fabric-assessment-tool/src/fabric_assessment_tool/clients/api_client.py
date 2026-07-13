@@ -2,6 +2,7 @@
 # Licensed under the MIT License.
 
 import json
+import logging
 import platform
 import re
 import time
@@ -18,6 +19,7 @@ from fabric_assessment_tool.errors.api import AzureAPIError, FATError
 
 GUID_PATTERN = r"([a-f0-9\-]{36})"
 DEBUG = False
+logger = logging.getLogger(__name__)
 
 
 class ApiResponse:
@@ -174,12 +176,20 @@ class ApiClient:
 
             for attempt in range(self.retries_count + 1):
 
-                # TODO: Log request
                 start_time = time.time()
                 response = self.session.request(
                     method=method, url=url, **request_params
                 )
-                # TODO: Log Response
+                elapsed_ms = (time.time() - start_time) * 1000
+                logger.debug(
+                    "API call %s %s completed with status=%s in %.2f ms (attempt %s/%s)",
+                    str(method).upper(),
+                    uri,
+                    response.status_code,
+                    elapsed_ms,
+                    attempt + 1,
+                    self.retries_count + 1,
+                )
 
                 api_error_code = response.headers.get(
                     "x-ms-public-api-error-code", None
@@ -211,6 +221,12 @@ class ApiClient:
                         )
                     case 429:
                         retry_after = int(response.headers.get("Retry-After", 5))
+                        logger.warning(
+                            "Rate limit reached for %s %s; retrying in %s seconds",
+                            str(method).upper(),
+                            uri,
+                            retry_after,
+                        )
                         if DEBUG:
                             print(
                                 f"Rate limit exceeded. Retry attempt {attempt} in {retry_after} seconds."
