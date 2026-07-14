@@ -2,7 +2,7 @@
 Quick Tutorial:
 
 1. Run Code Below
-2. Run this SQL code in a separate cell to get list of tables in the lakehouses accross all workspaces (non-schema-enabled only)
+2. Run this SQL code in a separate cell to get list of tables in the lakehouses across all workspaces (non-schema-enabled only)
 
 %%sql
 SELECT workspace_name, lakehouse_name, table_name, table_type, location, format 
