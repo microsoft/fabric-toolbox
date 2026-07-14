@@ -13,7 +13,6 @@ FROM fabric_lakehouse_inventory
 
 import sempy.fabric as fabric
 import pandas as pd
-from pyspark.sql.types import StructType, StructField, StringType
 
 all_tables = []
 failed = []
@@ -39,11 +38,11 @@ for _, ws in workspaces.iterrows():
                 df.insert(1, "lakehouse_name", lh_name)
                 all_tables.append(df)
 
-            except Exception:
-                failed.append({"workspace": ws_name, "lakehouse": lh_name})
+            except Exception as e:
+                failed.append({"workspace": ws_name, "lakehouse": lh_name, "error": str(e)})
 
-    except Exception:
-        failed.append({"workspace": ws_name, "lakehouse": "N/A"})
+    except Exception as e:
+        failed.append({"workspace": ws_name, "lakehouse": "N/A", "error": str(e)})
 
 if all_tables:
     result = pd.concat(all_tables, ignore_index=True)
@@ -58,13 +57,14 @@ if all_tables:
         "location":    "location",
     })[["workspace_name", "lakehouse_name", "table_name", "table_type", "location", "format"]]
 
-    spark_df = spark.createDataFrame(inventory.astype(str))
+    spark_df = spark.createDataFrame(inventory.astype(str)).cache()
     spark_df.createOrReplaceTempView("fabric_lakehouse_inventory")
 
-    print(f"Total tables indexed: {spark_df.count()}")
+    total_tables = spark_df.count()
+    print(f"Total tables indexed: {total_tables}")
     print("View fabric_lakehouse_inventory created. Query it with:")
 
-    display(spark.sql("SELECT workspace_name, lakehouse_name, table_name, table_type, location, format FROM fabric_lakehouse_inventory"))
+    display(spark.sql("SELECT workspace_name, lakehouse_name, table_name, table_type, location, format FROM fabric_lakehouse_inventory LIMIT 100"))
 else:
     print("No tables found.")
 
