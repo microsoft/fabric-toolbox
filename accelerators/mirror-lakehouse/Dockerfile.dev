@@ -1,5 +1,5 @@
 # Development Docker configuration for Lakehouse Mirror
-FROM node:18-alpine
+FROM node:26.5.0-alpine
 
 # Set working directory
 WORKDIR /app
