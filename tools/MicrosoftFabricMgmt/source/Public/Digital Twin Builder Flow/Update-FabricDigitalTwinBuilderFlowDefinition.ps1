@@ -22,6 +22,7 @@
     Update-FabricDigitalTwinBuilderFlowDefinition -WorkspaceId "workspace-12345" -DigitalTwinBuilderFlowId "-67890" -DigitalTwinBuilderFlowPathDefinition "C:\definitions\item.json"
 
 .NOTES
+Author: Tiago Balabuch, Jess Pomfret, Rob Sewell
     - Requires $FabricConfig global configuration, including BaseUrl and FabricHeaders.
     - Calls Invoke-FabricAuthCheck to ensure token validity before making the API request.
 

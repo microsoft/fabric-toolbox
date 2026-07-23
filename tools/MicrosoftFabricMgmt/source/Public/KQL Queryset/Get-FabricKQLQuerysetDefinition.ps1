@@ -16,6 +16,9 @@ Handles both synchronous and asynchronous operations, with detailed logging and 
 .PARAMETER KQLQuerysetFormat
 Specifies the format of the KQLQueryset definition.
 
+.PARAMETER Raw
+If specified, returns the untouched API response.
+
 .EXAMPLE
 Get-FabricKQLQuerysetDefinition -WorkspaceId "12345" -KQLQuerysetId "67890"
 
@@ -46,36 +49,45 @@ function Get-FabricKQLQuerysetDefinition {
 
         [Parameter(Mandatory = $false)]
         [ValidateNotNullOrEmpty()]
-        [string]$KQLQuerysetFormat
+        [string]$KQLQuerysetFormat,
+
+        [Parameter()]
+        [switch]$Raw
     )
-    try {
-        # Validate authentication token before proceeding.
-        Write-FabricLog -Message "Validating authentication token..." -Level Debug
-        Test-TokenExpired
-        Write-FabricLog -Message "Authentication token is valid." -Level Debug
+    process {
+        try {
+            # Validate authentication token before proceeding.
+            Write-FabricLog -Message "Validating authentication token..." -Level Debug
+            Test-TokenExpired
+            Write-FabricLog -Message "Authentication token is valid." -Level Debug
 
-        # Construct the API endpoint URI with filtering logic
-        $apiEndpointURI = "{0}/workspaces/{1}/kqlQuerysets/{2}/getDefinition" -f $FabricConfig.BaseUrl, $WorkspaceId, $KQLQuerysetId
-        if ($KQLQuerysetFormat) {
-            $apiEndpointURI = "{0}?format={1}" -f $apiEndpointURI, $KQLQuerysetFormat
+            # Construct the API endpoint URI with filtering logic
+            $apiEndpointURI = "{0}/workspaces/{1}/kqlQuerysets/{2}/getDefinition" -f $FabricConfig.BaseUrl, $WorkspaceId, $KQLQuerysetId
+            if ($KQLQuerysetFormat) {
+                $apiEndpointURI = "{0}?format={1}" -f $apiEndpointURI, $KQLQuerysetFormat
+            }
+            Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
+
+            # Make the API request
+            $apiParams = @{
+                BaseURI = $apiEndpointURI
+                Headers = $FabricConfig.FabricHeaders
+                Method = 'Post'
+            }
+            $response = Invoke-FabricAPIRequest @apiParams
+
+            if ($Raw) {
+                return $response
+            }
+
+            Write-FabricLog -Message "KQLQueryset '$KQLQuerysetId' definition retrieved successfully!" -Level Debug
+            return $response
         }
-        Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
-
-        # Make the API request
-        $apiParams = @{
-            BaseURI = $apiEndpointURI
-            Headers = $FabricConfig.FabricHeaders
-            Method = 'Post'
+        catch {
+            # Capture and log error details
+            $errorDetails = $_.Exception.Message
+            Write-FabricLog -Message "Failed to retrieve KQLQueryset. Error: $errorDetails" -Level Error
         }
-        $response = Invoke-FabricAPIRequest @apiParams
 
-        Write-FabricLog -Message "KQLQueryset '$KQLQuerysetId' definition retrieved successfully!" -Level Debug
-        return $response
     }
-    catch {
-        # Capture and log error details
-        $errorDetails = $_.Exception.Message
-        Write-FabricLog -Message "Failed to retrieve KQLQueryset. Error: $errorDetails" -Level Error
-    }
-
 }

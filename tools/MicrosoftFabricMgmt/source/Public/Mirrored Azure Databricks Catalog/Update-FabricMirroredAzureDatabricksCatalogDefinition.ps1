@@ -22,6 +22,7 @@
     Update-FabricMirroredAzureDatabricksCatalogDefinition -WorkspaceId "workspace-12345" -MirroredAzureDatabricksCatalogId "-67890" -MirroredAzureDatabricksCatalogPathDefinition "C:\definitions\item.json"
 
 .NOTES
+Author: Tiago Balabuch, Jess Pomfret, Rob Sewell
     - Requires $FabricConfig global configuration, including BaseUrl and FabricHeaders.
     - Calls Invoke-FabricAuthCheck to ensure token validity before making the API request.
 

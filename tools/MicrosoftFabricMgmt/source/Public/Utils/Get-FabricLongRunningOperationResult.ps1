@@ -9,6 +9,9 @@ of a specific long-running operation. This is typically used after confirming th
 .PARAMETER operationId
 The unique identifier of the completed long-running operation whose result you want to retrieve.
 
+.PARAMETER Raw
+If specified, returns the untouched API response.
+
 .EXAMPLE
 Get-FabricLongRunningOperationResult -operationId "12345-abcd-67890-efgh"
 
@@ -24,7 +27,10 @@ This command fetches the result of the operation with the specified operationId.
 function Get-FabricLongRunningOperationResult {
     param (
         [Parameter(Mandatory = $true)]
-        [string]$operationId
+        [string]$operationId,
+
+        [Parameter()]
+        [switch]$Raw
     )
     Invoke-FabricAuthCheck -ThrowOnFailure
 
@@ -41,6 +47,10 @@ function Get-FabricLongRunningOperationResult {
             Method = 'Get'
         }
         $response = Invoke-FabricAPIRequest @apiParams
+
+        if ($Raw) {
+            return $response
+        }
 
         # Return the API response
         Write-FabricLog -Message "LRO result return: $($response)" -Level Debug

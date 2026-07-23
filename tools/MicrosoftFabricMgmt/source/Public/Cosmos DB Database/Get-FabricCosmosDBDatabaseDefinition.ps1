@@ -12,6 +12,9 @@
 .PARAMETER CosmosDBDatabaseId
     The GUID of the Cosmos DB Database whose definition to retrieve.
 
+.PARAMETER Raw
+    If specified, returns the untouched API response.
+
 .EXAMPLE
     Get-FabricCosmosDBDatabaseDefinition -WorkspaceId "12345678-1234-1234-1234-123456789012" -CosmosDBDatabaseId "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee"
 
@@ -34,7 +37,10 @@ function Get-FabricCosmosDBDatabaseDefinition {
         [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
         [ValidateNotNullOrEmpty()]
         [Alias('id')]
-        [string]$CosmosDBDatabaseId
+        [string]$CosmosDBDatabaseId,
+
+        [Parameter()]
+        [switch]$Raw
     )
 
     process {
@@ -52,6 +58,10 @@ function Get-FabricCosmosDBDatabaseDefinition {
                 Method  = 'Post'
             }
             $response = Invoke-FabricAPIRequest @apiParams
+
+            if ($Raw) {
+                return $response
+            }
 
             if ($response) {
                 Write-FabricLog -Message "Cosmos DB Database definition retrieved successfully." -Level Debug

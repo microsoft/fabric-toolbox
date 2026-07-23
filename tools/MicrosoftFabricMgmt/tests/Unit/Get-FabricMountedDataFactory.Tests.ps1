@@ -5,6 +5,7 @@ $expectedParams = @(
     "WorkspaceId"
     "MountedDataFactoryId"
     "MountedDataFactoryName"
+    "Raw"
     "ProgressAction"
     "Verbose"
     "Debug"

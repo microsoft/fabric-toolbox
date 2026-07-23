@@ -5,6 +5,7 @@ $expectedParams = @(
     "WorkspaceId"
     "ApacheAirflowJobId"
     "ApacheAirflowJobName"
+    "Raw"
     "ProgressAction"
     "Verbose"
     "Debug"

@@ -17,6 +17,8 @@ Handles both synchronous and asynchronous operations, with detailed logging and 
 .PARAMETER KQLDatabaseFormat
 Specifies the format of the KQLDatabase definition. Currently, only 'ipynb' is supported.
 
+.PARAMETER Raw
+If specified, returns the untouched API response.
 
 .EXAMPLE
 Get-FabricKQLDatabaseDefinition -WorkspaceId "12345" -KQLDatabaseId "67890"
@@ -49,36 +51,45 @@ function Get-FabricKQLDatabaseDefinition {
 
         [Parameter(Mandatory = $false)]
         [ValidateNotNullOrEmpty()]
-        [string]$KQLDatabaseFormat
+        [string]$KQLDatabaseFormat,
+
+        [Parameter()]
+        [switch]$Raw
     )
-    try {
-        # Validate authentication token before proceeding.
-        Write-FabricLog -Message "Validating authentication token..." -Level Debug
-        Test-TokenExpired
-        Write-FabricLog -Message "Authentication token is valid." -Level Debug
+    process {
+        try {
+            # Validate authentication token before proceeding.
+            Write-FabricLog -Message "Validating authentication token..." -Level Debug
+            Test-TokenExpired
+            Write-FabricLog -Message "Authentication token is valid." -Level Debug
 
-        # Construct the API endpoint URI with filtering logic
-        $apiEndpointURI = "{0}/workspaces/{1}/KQLDatabases/{2}/getDefinition" -f $FabricConfig.BaseUrl, $WorkspaceId, $KQLDatabaseId
-        if ($KQLDatabaseFormat) {
-            $apiEndpointURI = "{0}?format={1}" -f $apiEndpointURI, $KQLDatabaseFormat
+            # Construct the API endpoint URI with filtering logic
+            $apiEndpointURI = "{0}/workspaces/{1}/KQLDatabases/{2}/getDefinition" -f $FabricConfig.BaseUrl, $WorkspaceId, $KQLDatabaseId
+            if ($KQLDatabaseFormat) {
+                $apiEndpointURI = "{0}?format={1}" -f $apiEndpointURI, $KQLDatabaseFormat
+            }
+            Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
+
+            # Make the API request
+            $apiParams = @{
+                BaseURI = $apiEndpointURI
+                Headers = $FabricConfig.FabricHeaders
+                Method = 'Post'
+            }
+            $response = Invoke-FabricAPIRequest @apiParams
+
+            if ($Raw) {
+                return $response
+            }
+
+            # Return the API response
+            Write-FabricLog -Message "KQLDatabase '$KQLDatabaseId' definition retrieved successfully!" -Level Debug
+            return $response
         }
-        Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
-
-        # Make the API request
-        $apiParams = @{
-            BaseURI = $apiEndpointURI
-            Headers = $FabricConfig.FabricHeaders
-            Method = 'Post'
+        catch {
+            # Capture and log error details
+            $errorDetails = $_.Exception.Message
+            Write-FabricLog -Message "Failed to retrieve KQLDatabase. Error: $errorDetails" -Level Error
         }
-        $response = Invoke-FabricAPIRequest @apiParams
-
-        # Return the API response
-        Write-FabricLog -Message "KQLDatabase '$KQLDatabaseId' definition retrieved successfully!" -Level Debug
-        return $response
-    }
-    catch {
-        # Capture and log error details
-        $errorDetails = $_.Exception.Message
-        Write-FabricLog -Message "Failed to retrieve KQLDatabase. Error: $errorDetails" -Level Error
     }
 }

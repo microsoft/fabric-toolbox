@@ -12,6 +12,9 @@
 .PARAMETER TagName
     The display name of the tag to retrieve. Optional; specify either TagId or TagName, not both.
 
+.PARAMETER Raw
+    If specified, returns the untouched API response.
+
 .EXAMPLE
     Get-FabricTag -TagId "tag-12345"
     Retrieves the tag with the ID "tag-12345".
@@ -37,7 +40,10 @@ function Get-FabricTag {
         [Parameter(Mandatory = $false)]
         [ValidateNotNullOrEmpty()]
         [ValidatePattern('^[a-zA-Z0-9_]*$')]
-        [string]$TagName
+        [string]$TagName,
+
+        [Parameter()]
+        [switch]$Raw
     )
 
     try {
@@ -66,6 +72,10 @@ function Get-FabricTag {
         if (-not $dataItems) {
             Write-FabricLog -Message "No data returned from the API." -Level Warning
             return $null
+        }
+
+        if ($Raw) {
+            return $dataItems
         }
 
         # Apply filtering logic efficiently

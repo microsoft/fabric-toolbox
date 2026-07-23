@@ -5,6 +5,9 @@ Retrieves tenant setting overrides for a specific domain or all capacities in th
 .DESCRIPTION
 The `Get-FabricDomainTenantSettingOverrides` function retrieves tenant setting overrides for all domains in the Fabric tenant by making a GET request to the designated API endpoint. The function ensures token validity before making the request and handles the response appropriately.
 
+.PARAMETER Raw
+If specified, returns the untouched API response.
+
 .EXAMPLE
 Get-FabricDomainTenantSettingOverrides
 
@@ -19,7 +22,10 @@ Author: Tiago Balabuch
 #>
 function Get-FabricDomainTenantSettingOverrides {
     [CmdletBinding()]
-    param ( )
+    param (
+        [Parameter()]
+        [switch]$Raw
+    )
     try {
         Invoke-FabricAuthCheck -ThrowOnFailure
 
@@ -36,6 +42,10 @@ function Get-FabricDomainTenantSettingOverrides {
             Method = 'Get'
         }
         $dataItems = Invoke-FabricAPIRequest @apiParams
+
+        if ($Raw) {
+            return $dataItems
+        }
 
         # Immediately handle empty response
         if (-not $dataItems) {

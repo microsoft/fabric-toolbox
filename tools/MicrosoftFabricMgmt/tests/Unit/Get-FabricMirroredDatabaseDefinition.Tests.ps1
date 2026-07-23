@@ -4,6 +4,7 @@ param(
 $expectedParams = @(
     "WorkspaceId"
     "MirroredDatabaseId"
+    "Raw"
     "ProgressAction"
     "Verbose"
     "Debug"
