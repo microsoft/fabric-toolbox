@@ -83,7 +83,7 @@ class ApiClient:
         self.session.mount("https://", adapter)
         self.session.headers.update(
             {
-                "User-Agent": f"fabric_assessment_tool/0.2.0 ({platform.system()}; {platform.machine()}; {platform.release()})",
+                "User-Agent": f"fabric_assessment_tool/0.3.0 ({platform.system()}; {platform.machine()}; {platform.release()})",
             }
         )
         if token:
@@ -131,7 +131,7 @@ class ApiClient:
 
         if continuation_token:
             request_params["continuationToken"] = continuation_token
-        
+
         if skip_token:
             request_params["$skipToken"] = skip_token
 
@@ -139,7 +139,9 @@ class ApiClient:
         url = f"https://{self.base_url}/{uri}"
         if request_params:
             url += f"?{requests.compat.urlencode(request_params)}"
-            url = url.replace("%24skipToken=", "$skipToken=")  # Fix encoding for single quotes
+            url = url.replace(
+                "%24skipToken=", "$skipToken="
+            )  # Fix encoding for single quotes
 
         # Build headers
         headers = {}
@@ -284,6 +286,10 @@ class ApiClient:
         if DEBUG:
             self._print_response_details(response)
 
+        # Allow callers to disable auto-pagination when they handle it manually
+        if getattr(args, "auto_paginate", True) is False:
+            return response
+
         _continuation_token = None
 
         # In ADLS Gen2 / Onelake, check for x-ms-continuation token in response headers
@@ -308,14 +314,14 @@ class ApiClient:
                 response.status_code = 200
                 response.append_text(_response.text)
             return response
-        
+
         # Synapse nextLink pagination
         if response.text != "" and response.text != "null":
             if "nextLink" in response.text:
                 _text = json.loads(response.text)
                 if _text and "nextLink" in _text:
                     next_link = _text["nextLink"]
-                    skip_token = urllib.parse.parse_qs(next_link)['$skipToken'][0]
+                    skip_token = urllib.parse.parse_qs(next_link)["$skipToken"][0]
                     _response = self.do_request(args, skip_token=skip_token)
                     if _response.status_code == 200:
                         response.status_code = 200

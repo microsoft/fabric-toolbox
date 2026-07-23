@@ -1,11 +1,14 @@
 import base64
+import json
 import os
 import re
 from argparse import Namespace
 from datetime import datetime, timezone
-from typing import Any, Dict, Optional
+from pathlib import Path
+from typing import Any, Dict, List, Optional
+from urllib.parse import urlparse
 
-from databricks.sdk import WorkspaceClient
+from databricks.sdk import AccountClient, WorkspaceClient
 
 from ..assessment.common import AssessmentStatus
 from ..errors.api import FATError
@@ -62,6 +65,28 @@ from .api_client import ApiClient, ApiResponse
 from .token_provider import TokenProvider, create_token_provider
 
 
+class _CountOnlyCollection:
+    """Lightweight stub for resource collections loaded from disk.
+
+    Supports len() on the collection field for summary count purposes.
+    """
+
+    def __init__(self, field_name: str, count: int):
+        # Create an attribute with the given field name containing a list of `count` items
+        setattr(self, field_name, [None] * count)
+
+
+def _normalize_notebook_path(path: str) -> str:
+    """Normalize a notebook path by removing the /Workspace prefix.
+
+    The Databricks Jobs API stores paths with /Workspace/ prefix but the
+    Workspace listing API returns paths without it.
+    """
+    if path and path.startswith("/Workspace/"):
+        return path[len("/Workspace") :]
+    return path or ""
+
+
 class DatabricksClient:
     """Client for Databricks APIs."""
 
@@ -70,6 +95,7 @@ class DatabricksClient:
         subscription_id: Optional[str] = None,
         token_provider: Optional[TokenProvider] = None,
         auth_method: Optional[str] = None,
+        cloud: str = "azure",
         **kwargs,
     ):
         """
@@ -79,14 +105,40 @@ class DatabricksClient:
             subscription_id: Azure subscription ID (optional, will use Azure CLI default if not provided)
             token_provider: Optional TokenProvider instance for authentication
             auth_method: Authentication method ("azure-cli", "fabric", or None for auto-detect)
+            cloud: Cloud provider for the Databricks workspace ("azure" or "aws")
         """
-        self.token_provider = token_provider or create_token_provider(auth_method)
+        self.cloud = (cloud or "azure").lower()
+        if self.cloud not in {"azure", "aws"}:
+            raise ValueError(f"Unsupported Databricks cloud: {cloud}")
+
+        self.token_provider = (
+            token_provider or create_token_provider(auth_method)
+            if self.cloud == "azure"
+            else token_provider
+        )
         self.custom_subscription_id = subscription_id
+        self.account_client: Optional[AccountClient] = None
         self.authenticate()
         self._workspace_cache: dict[str, DatabricksWorkspaceInfo] = {}
+        self.extraction_warnings: list[str] = []
 
     def authenticate(self) -> None:
-        """Authenticate with Azure using the configured token provider."""
+        """Authenticate with the configured Databricks cloud."""
+        if self.cloud == "aws":
+            self._validate_aws_environment()
+            self.subscription_id = None
+            if os.getenv("DATABRICKS_ACCOUNT_ID") and self._has_aws_oauth_credentials():
+                self.account_client = AccountClient(
+                    host=os.getenv(
+                        "DATABRICKS_ACCOUNT_HOST",
+                        "https://accounts.cloud.databricks.com",
+                    ),
+                    account_id=os.environ["DATABRICKS_ACCOUNT_ID"],
+                    client_id=os.environ["DATABRICKS_CLIENT_ID"],
+                    client_secret=os.environ["DATABRICKS_CLIENT_SECRET"],
+                )
+            return
+
         try:
             azure_token = self.token_provider.get_token(
                 "https://management.azure.com/.default"
@@ -105,11 +157,51 @@ class DatabricksClient:
         except Exception as e:
             raise Exception(f"Failed to authenticate with Azure: {e}")
 
+    def _validate_aws_environment(self) -> None:
+        """Validate Databricks AWS environment-variable authentication."""
+        has_pat = bool(os.getenv("DATABRICKS_TOKEN"))
+        has_oauth = self._has_aws_oauth_credentials()
+        has_host = bool(os.getenv("DATABRICKS_HOST"))
+
+        if not has_pat and not has_oauth:
+            raise ValueError(
+                "AWS Databricks assessments require DATABRICKS_TOKEN or "
+                "DATABRICKS_CLIENT_ID and DATABRICKS_CLIENT_SECRET to be set"
+            )
+
+        if has_pat and not has_oauth and not has_host:
+            raise ValueError(
+                "AWS Databricks assessments using DATABRICKS_TOKEN also require "
+                "DATABRICKS_HOST to be set"
+            )
+
+    @staticmethod
+    def _has_aws_oauth_credentials() -> bool:
+        return bool(os.getenv("DATABRICKS_CLIENT_ID")) and bool(
+            os.getenv("DATABRICKS_CLIENT_SECRET")
+        )
+
     def get_workspaces(self) -> list[DatabricksWorkspaceInfo]:
         """Get all Databricks workspaces in the subscription.
 
         Used for interactive workspace selection when no workspace names are provided.
         """
+        if self.cloud == "aws":
+            if self.account_client:
+                workspaces = [
+                    self._build_aws_account_workspace_info(workspace)
+                    for workspace in self.account_client.workspaces.list()
+                ]
+                for workspace in workspaces:
+                    self._workspace_cache[workspace.name.lower()] = workspace
+                return workspaces
+
+            raise ValueError(
+                "AWS Databricks workspace selection requires DATABRICKS_ACCOUNT_ID, "
+                "DATABRICKS_CLIENT_ID, and DATABRICKS_CLIENT_SECRET so workspaces "
+                "can be listed through the Databricks account API."
+            )
+
         args = Namespace()
         # https://learn.microsoft.com/en-us/rest/api/databricks/workspaces/list-by-subscription?view=rest-databricks-2024-05-01&tabs=HTTP
         args.uri = f"/subscriptions/{self.subscription_id}/providers/Microsoft.Databricks/workspaces"
@@ -128,6 +220,82 @@ class DatabricksClient:
 
         return workspaces
 
+    def _build_aws_host_workspace_info(
+        self, workspace_name: str, workspace_host: Optional[str] = None
+    ) -> DatabricksWorkspaceInfo:
+        """Build workspace info for an AWS Databricks workspace from environment variables."""
+        workspace_host = self._normalize_workspace_host(
+            workspace_host or os.environ["DATABRICKS_HOST"]
+        )
+        workspace_url = self._format_workspace_url(workspace_host)
+        region = os.getenv("DATABRICKS_WORKSPACE_REGION")
+
+        return DatabricksWorkspaceInfo(
+            id=workspace_host,
+            name=workspace_name,
+            resource_group="",
+            url=workspace_url,
+            status="unknown",
+            tier=os.getenv("DATABRICKS_WORKSPACE_TIER", "unknown"),
+            location=region,
+            workspace_type="aws",
+            json_response={
+                "cloud": "aws",
+                "workspace_name": workspace_name,
+                "workspace_url": workspace_url,
+                "region": region,
+                "source": "environment",
+            },
+        )
+
+    def _build_aws_account_workspace_info(
+        self, workspace: Any
+    ) -> DatabricksWorkspaceInfo:
+        """Build workspace info for an AWS Databricks account workspace."""
+        workspace_name = getattr(workspace, "workspace_name", None)
+        deployment_name = getattr(workspace, "deployment_name", None)
+        workspace_id = getattr(workspace, "workspace_id", None)
+        if not workspace_name:
+            raise ValueError("Databricks account workspace is missing workspace_name")
+        if not deployment_name:
+            raise ValueError(
+                f"Databricks account workspace is missing deployment_name: {workspace_name}"
+            )
+
+        workspace_host = self._aws_deployment_to_host(deployment_name)
+        workspace_status = getattr(workspace, "workspace_status", None)
+        pricing_tier = getattr(workspace, "pricing_tier", None)
+        workspace_json = (
+            workspace.as_dict()
+            if hasattr(workspace, "as_dict")
+            else dict(vars(workspace))
+        )
+
+        return DatabricksWorkspaceInfo(
+            id=str(workspace_id or workspace_host),
+            name=workspace_name,
+            resource_group="",
+            url=self._format_workspace_url(workspace_host),
+            status=str(workspace_status) if workspace_status else "unknown",
+            tier=str(pricing_tier) if pricing_tier else "unknown",
+            location=getattr(workspace, "aws_region", None)
+            or getattr(workspace, "location", None),
+            workspace_type="aws",
+            json_response=workspace_json,
+        )
+
+    @staticmethod
+    def _aws_deployment_to_host(deployment_name: str) -> str:
+        deployment_host = DatabricksClient._normalize_workspace_host(deployment_name)
+        if "." in deployment_host:
+            return deployment_host
+        return f"{deployment_host}.cloud.databricks.com"
+
+    def _derive_aws_workspace_name(self) -> str:
+        """Derive a stable workspace name from DATABRICKS_HOST."""
+        workspace_host = self._normalize_workspace_host(os.environ["DATABRICKS_HOST"])
+        return workspace_host.split(".")[0]
+
     @staticmethod
     def _build_workspace_info(workspace: dict) -> DatabricksWorkspaceInfo:
         """Build a DatabricksWorkspaceInfo from a management-plane response.
@@ -142,9 +310,7 @@ class DatabricksClient:
         private_endpoint_conns = properties.get("privateEndpointConnections") or []
         raw_pna = properties.get("publicNetworkAccess")
         managed_rg_id = properties.get("managedResourceGroupId") or ""
-        managed_rg_name = (
-            managed_rg_id.split("/")[-1] if managed_rg_id else None
-        )
+        managed_rg_name = managed_rg_id.split("/")[-1] if managed_rg_id else None
 
         vnet_injected = bool(custom_vnet)
         uses_private_endpoints = (
@@ -199,129 +365,265 @@ class DatabricksClient:
         )
 
     def _auth_databricks(self, workspace_url) -> None:
+        api_host = self._normalize_workspace_host(workspace_url)
 
-        databricks_token = self.token_provider.get_token(
-            "2ff814a6-3304-4ab8-85cb-cd0e6f879c1d/.default"
-        )
-        self.workspace_client = WorkspaceClient(
-            host=workspace_url, token=databricks_token
-        )
-        self.api_client = ApiClient(base_url=workspace_url, scope="", api_version="")
+        if self.cloud == "aws":
+            token = os.getenv("DATABRICKS_TOKEN")
+            host = self._format_workspace_url(api_host)
+            if token and not self.account_client:
+                self.workspace_client = WorkspaceClient(host=host, token=token)
+            else:
+                self.workspace_client = WorkspaceClient(
+                    host=host,
+                    client_id=os.environ["DATABRICKS_CLIENT_ID"],
+                    client_secret=os.environ["DATABRICKS_CLIENT_SECRET"],
+                )
+        else:
+            databricks_token = self.token_provider.get_token(
+                "2ff814a6-3304-4ab8-85cb-cd0e6f879c1d/.default"
+            )
+            self.workspace_client = WorkspaceClient(
+                host=workspace_url, token=databricks_token
+            )
+
+        self.api_client = ApiClient(base_url=api_host, scope="", api_version="")
         # Reuse the authentication of the session of the Databricks API client
         self.api_client.session.auth = (
             self.workspace_client.api_client._api_client._session.auth
         )
 
-    def assess_workspace(self, workspace_name: str, mode: str) -> DatabricksAssessment:
+    def assess_workspace(
+        self,
+        workspace_name: str,
+        mode: str,
+        resources: Optional[List[str]] = None,
+        output_path: Optional[str] = None,
+        download_notebooks: bool = False,
+    ) -> DatabricksAssessment:
         """
         Assess a Databricks workspace.
 
         Args:
             workspace_name: Name of the Databricks workspace
             mode: Assessment mode (full, etc.)
+            resources: Optional list of resource types to extract. When None, all
+                resources are extracted. When specified, only listed types are
+                fetched from the API; others are loaded from previously exported
+                data on disk.
+            output_path: Output directory where previous exports live (required
+                when resources is specified)
 
         Returns:
             DatabricksAssessment object with all assessment data
         """
-        utils_ui.print(
-            f"Assessing Databricks workspace: {workspace_name} (mode: {mode})"
-        )
+        if resources:
+            utils_ui.print(
+                f"Assessing Databricks workspace: {workspace_name} "
+                f"(partial: {', '.join(resources)})"
+            )
+        else:
+            utils_ui.print(
+                f"Assessing Databricks workspace: {workspace_name} (mode: {mode})"
+            )
 
         try:
+            # Reset extraction warnings for this workspace
+            self.extraction_warnings = []
+
             # Get workspace details
             workspace_info = self._get_workspace_info(workspace_name)
 
             # Use the workspace_info to authenticate the databricks client
             self._auth_databricks(workspace_info.url)
 
+            # Determine which resources to extract
+            _should_extract = (
+                (lambda r: r in resources) if resources else (lambda r: True)
+            )
+
+            # Load existing data from disk for resources not being re-extracted
+            disk_data = {}
+            if resources and output_path:
+                disk_data = self._load_resources_from_disk(
+                    workspace_name, output_path, resources
+                )
+
             # Get clusters
-            utils_ui.print_extracting("Clusters")
-            clusters = self._get_clusters()
-            utils_ui.print_extraction_done("Clusters")
+            if _should_extract("clusters"):
+                utils_ui.print_extracting("Clusters")
+                clusters = self._get_clusters()
+                utils_ui.print_extraction_done("Clusters")
+            else:
+                clusters = disk_data.get("clusters", DatabricksClusters(clusters=[]))
 
             # Get SQL Warehouses
-            utils_ui.print_extracting("SQL Warehouses")
-            sql_warehouses = self._get_sql_warehouses()
-            utils_ui.print_extraction_done("SQL Warehouses")
+            if _should_extract("sql_warehouses"):
+                utils_ui.print_extracting("SQL Warehouses")
+                sql_warehouses = self._get_sql_warehouses()
+                utils_ui.print_extraction_done("SQL Warehouses")
+            else:
+                sql_warehouses = disk_data.get(
+                    "sql_warehouses", DatabricksSqlWarehouses(sql_warehouses=[])
+                )
 
             # Get notebooks
-            utils_ui.print_extracting("Notebooks")
-            notebooks = self._get_notebooks()
-            utils_ui.print_extraction_done("Notebooks")
+            if _should_extract("notebooks"):
+                utils_ui.print_extracting("Notebooks")
+                notebooks = self._get_notebooks(download_content=download_notebooks)
+                utils_ui.print_extraction_done("Notebooks")
+            else:
+                notebooks = disk_data.get(
+                    "notebooks", DatabricksNotebooks(notebooks=[])
+                )
 
             # Get jobs
-            utils_ui.print_extracting("Jobs")
-            jobs = self._get_jobs()
-            utils_ui.print_extraction_done("Jobs")
+            if _should_extract("jobs"):
+                utils_ui.print_extracting("Jobs")
+                jobs = self._get_jobs()
+                utils_ui.print_extraction_done("Jobs")
+            else:
+                jobs = disk_data.get("jobs", DatabricksJobs(jobs=[]))
+
+            # Cross-reference notebooks with job execution data
+            if _should_extract("notebooks") or _should_extract("jobs"):
+                notebooks = self._annotate_notebooks_with_job_execution(notebooks, jobs)
 
             # Get catalogs
-            utils_ui.print_extracting("Catalogs")
-            catalogs = self._get_catalogs()
-            utils_ui.print_extraction_done("Catalogs")
+            if _should_extract("catalogs"):
+                utils_ui.print_extracting("Catalogs")
+                catalogs = self._get_catalogs()
+                utils_ui.print_extraction_done("Catalogs")
+            else:
+                catalogs = disk_data.get("catalogs", DatabricksCatalogs(catalogs=[]))
 
             # Get external locations
-            utils_ui.print_extracting("External Locations")
-            external_locations = self._get_external_locations()
-            utils_ui.print_extraction_done("External Locations")
+            if _should_extract("external_locations"):
+                utils_ui.print_extracting("External Locations")
+                external_locations = self._get_external_locations()
+                utils_ui.print_extraction_done("External Locations")
+            else:
+                external_locations = disk_data.get(
+                    "external_locations",
+                    DatabricksExternalLocations(external_locations=[]),
+                )
 
             # Get connections
-            utils_ui.print_extracting("Connections")
-            connections = self._get_connections()
-            utils_ui.print_extraction_done("Connections")
+            if _should_extract("connections"):
+                utils_ui.print_extracting("Connections")
+                connections = self._get_connections()
+                utils_ui.print_extraction_done("Connections")
+            else:
+                connections = disk_data.get(
+                    "connections", DatabricksConnections(connections=[])
+                )
 
             # Get secret scopes
-            utils_ui.print_extracting("Secret Scopes")
-            secret_scopes = self._get_secret_scopes()
-            utils_ui.print_extraction_done("Secret Scopes")
+            if _should_extract("secret_scopes"):
+                utils_ui.print_extracting("Secret Scopes")
+                secret_scopes = self._get_secret_scopes()
+                utils_ui.print_extraction_done("Secret Scopes")
+            else:
+                secret_scopes = disk_data.get(
+                    "secret_scopes", DatabricksSecretScopes(secret_scopes=[])
+                )
 
             # Get DLT pipelines
-            utils_ui.print_extracting("Pipelines")
-            pipelines = self._get_pipelines()
-            utils_ui.print_extraction_done("Pipelines")
+            if _should_extract("pipelines"):
+                utils_ui.print_extracting("Pipelines")
+                pipelines = self._get_pipelines()
+                utils_ui.print_extraction_done("Pipelines")
+            else:
+                pipelines = disk_data.get(
+                    "pipelines", DatabricksPipelines(pipelines=[])
+                )
 
             # Get Git repos
-            utils_ui.print_extracting("Repos")
-            repos = self._get_repos()
-            utils_ui.print_extraction_done("Repos")
+            if _should_extract("repos"):
+                utils_ui.print_extracting("Repos")
+                repos = self._get_repos()
+                utils_ui.print_extraction_done("Repos")
+            else:
+                repos = disk_data.get("repos", DatabricksRepos(repos=[]))
 
             # Get MLflow experiments
-            utils_ui.print_extracting("Experiments")
-            experiments = self._get_experiments()
-            utils_ui.print_extraction_done("Experiments")
+            if _should_extract("experiments"):
+                utils_ui.print_extracting("Experiments")
+                experiments = self._get_experiments()
+                utils_ui.print_extraction_done("Experiments")
+            else:
+                experiments = disk_data.get(
+                    "experiments", DatabricksExperiments(experiments=[])
+                )
 
             # Get model serving endpoints
-            utils_ui.print_extracting("Serving Endpoints")
-            serving_endpoints = self._get_serving_endpoints()
-            utils_ui.print_extraction_done("Serving Endpoints")
+            if _should_extract("serving_endpoints"):
+                utils_ui.print_extracting("Serving Endpoints")
+                serving_endpoints = self._get_serving_endpoints()
+                utils_ui.print_extraction_done("Serving Endpoints")
+            else:
+                serving_endpoints = disk_data.get(
+                    "serving_endpoints",
+                    DatabricksServingEndpoints(serving_endpoints=[]),
+                )
 
             # Get SQL alerts
-            utils_ui.print_extracting("Alerts")
-            alerts = self._get_alerts()
-            utils_ui.print_extraction_done("Alerts")
+            if _should_extract("alerts"):
+                utils_ui.print_extracting("Alerts")
+                alerts = self._get_alerts()
+                utils_ui.print_extraction_done("Alerts")
+            else:
+                alerts = disk_data.get("alerts", DatabricksAlerts(alerts=[]))
 
             # Get Genie spaces
-            utils_ui.print_extracting("Genie Spaces")
-            genie_spaces = self._get_genie_spaces()
-            utils_ui.print_extraction_done("Genie Spaces")
+            if _should_extract("genie_spaces"):
+                utils_ui.print_extracting("Genie Spaces")
+                genie_spaces = self._get_genie_spaces()
+                utils_ui.print_extraction_done("Genie Spaces")
+            else:
+                genie_spaces = disk_data.get(
+                    "genie_spaces", DatabricksGenieSpaces(genie_spaces=[])
+                )
 
             # Get cluster policies (workspace-summary)
-            utils_ui.print_extracting("Cluster Policies")
-            cluster_policies = self._get_cluster_policies()
-            utils_ui.print_extraction_done("Cluster Policies")
+            if _should_extract("cluster_policies"):
+                utils_ui.print_extracting("Cluster Policies")
+                cluster_policies = self._get_cluster_policies()
+                utils_ui.print_extraction_done("Cluster Policies")
+            else:
+                cluster_policies = disk_data.get(
+                    "cluster_policies", DatabricksClusterPolicies(cluster_policies=[])
+                )
 
             # Get instance pools (workspace-summary)
-            utils_ui.print_extracting("Instance Pools")
-            instance_pools = self._get_instance_pools()
-            utils_ui.print_extraction_done("Instance Pools")
+            if _should_extract("instance_pools"):
+                utils_ui.print_extracting("Instance Pools")
+                instance_pools = self._get_instance_pools()
+                utils_ui.print_extraction_done("Instance Pools")
+            else:
+                instance_pools = disk_data.get(
+                    "instance_pools", DatabricksInstancePools(instance_pools=[])
+                )
 
             # Create assessment metadata
             assessment_metadata = DatabricksAssessmentMetadata(
                 mode=mode, timestamp=self._get_timestamp()
             )
 
-            # Return complete assessment object
+            # Determine final status based on extraction warnings
+            if self.extraction_warnings:
+                status = AssessmentStatus(
+                    status="incomplete",
+                    description=(
+                        "Assessment completed with partial data. "
+                        f"Failed to fully extract: {', '.join(self.extraction_warnings)}"
+                    ),
+                )
+            else:
+                status = AssessmentStatus(status="completed")
+
+            # Return assessment object
             return DatabricksAssessment(
-                status=AssessmentStatus(status="completed"),
+                status=status,
                 workspace_info=workspace_info,
                 clusters=clusters,
                 sql_warehouses=sql_warehouses,
@@ -346,12 +648,233 @@ class DatabricksClient:
         except Exception as e:
             raise Exception(f"Failed to assess workspace {workspace_name}: {e}")
 
+    def _load_resources_from_disk(
+        self,
+        workspace_name: str,
+        output_path: str,
+        resources_to_extract: List[str],
+    ) -> Dict[str, Any]:
+        """Load previously exported resources from disk.
+
+        Reads JSON files from the output directory for resource types that are
+        NOT being re-extracted, reconstructing lightweight collection objects
+        with enough data for summary computation.
+
+        Args:
+            workspace_name: Name of the workspace folder
+            output_path: Base output directory
+            resources_to_extract: Resources being freshly extracted (excluded from loading)
+
+        Returns:
+            Dict mapping resource type name to its collection dataclass
+        """
+        workspace_dir = Path(output_path) / workspace_name / "resources"
+        loaded: Dict[str, Any] = {}
+
+        # Mapping from resource name to (folder name, item class, collection class, collection field)
+        resource_map = {
+            "clusters": ("clusters", DatabricksCluster, DatabricksClusters, "clusters"),
+            "sql_warehouses": (
+                "sql_warehouses",
+                DatabricksSqlWarehouse,
+                DatabricksSqlWarehouses,
+                "sql_warehouses",
+            ),
+            "notebooks": (
+                "notebooks",
+                DatabricksNotebook,
+                DatabricksNotebooks,
+                "notebooks",
+            ),
+            "jobs": ("jobs", DatabricksJob, DatabricksJobs, "jobs"),
+            "pipelines": (
+                "pipelines",
+                DatabricksPipeline,
+                DatabricksPipelines,
+                "pipelines",
+            ),
+            "repos": ("repos", DatabricksRepo, DatabricksRepos, "repos"),
+            "experiments": (
+                "experiments",
+                DatabricksExperiment,
+                DatabricksExperiments,
+                "experiments",
+            ),
+            "serving_endpoints": (
+                "serving_endpoints",
+                DatabricksServingEndpoint,
+                DatabricksServingEndpoints,
+                "serving_endpoints",
+            ),
+            "alerts": ("alerts", DatabricksAlert, DatabricksAlerts, "alerts"),
+            "genie_spaces": (
+                "genie_spaces",
+                DatabricksGenieSpace,
+                DatabricksGenieSpaces,
+                "genie_spaces",
+            ),
+            "cluster_policies": (
+                "cluster_policies",
+                DatabricksClusterPolicy,
+                DatabricksClusterPolicies,
+                "cluster_policies",
+            ),
+            "instance_pools": (
+                "instance_pools",
+                DatabricksInstancePool,
+                DatabricksInstancePools,
+                "instance_pools",
+            ),
+            "external_locations": (
+                "external_locations",
+                DatabricksExternalLocation,
+                DatabricksExternalLocations,
+                "external_locations",
+            ),
+            "connections": (
+                "connections",
+                DatabricksConnection,
+                DatabricksConnections,
+                "connections",
+            ),
+            "secret_scopes": (
+                "secret_scopes",
+                DatabricksSecretScope,
+                DatabricksSecretScopes,
+                "secret_scopes",
+            ),
+        }
+
+        for res_name, (folder, item_cls, coll_cls, field_name) in resource_map.items():
+            if res_name in resources_to_extract:
+                continue  # Will be freshly extracted
+
+            folder_path = workspace_dir / folder
+            if not folder_path.exists():
+                continue
+
+            items = []
+            for json_file in sorted(folder_path.glob("*.json")):
+                try:
+                    with open(json_file, "r", encoding="utf-8") as f:
+                        data = json.load(f)
+                    # Extract the inner data (wrapped format)
+                    inner = (
+                        data.get(f"{res_name.rstrip('s')}_data")
+                        or data.get(f"{folder.rstrip('s')}_data")
+                        or data.get("data")
+                        or data
+                    )
+                    # For counting purposes, store the raw dict
+                    items.append(inner)
+                except (json.JSONDecodeError, IOError):
+                    continue
+
+            # Build collection with count - use a lightweight approach
+            # Store raw dicts; get_summary() only needs len()
+            loaded[res_name] = self._build_collection_from_dicts(
+                res_name, items, coll_cls, field_name
+            )
+
+        return loaded
+
+    def _build_collection_from_dicts(
+        self, res_name: str, items: List[dict], coll_cls: Any, field_name: str
+    ) -> Any:
+        """Build a collection dataclass from raw dict items loaded from disk.
+
+        For summary purposes, we only need the collection to report accurate
+        counts via len(). We store minimal dataclass instances.
+        """
+        if res_name == "notebooks":
+            objs = [
+                DatabricksNotebook(
+                    path=item.get("path", ""),
+                    default_language=item.get("default_language", ""),
+                    embedded_languages=item.get("embedded_languages", []),
+                    other_magics=item.get("other_magics", []),
+                    json_response=item.get("json_response", {}),
+                    uses_dbutils=item.get("uses_dbutils", False),
+                    last_job_execution=item.get("last_job_execution"),
+                    executed_by_jobs=item.get("executed_by_jobs"),
+                )
+                for item in items
+            ]
+            return DatabricksNotebooks(notebooks=objs)
+        elif res_name == "jobs":
+            objs = [
+                DatabricksJob(
+                    job_id=item.get("job_id", 0),
+                    tasks=DatabricksJobTasks(
+                        tasks=[
+                            DatabricksJobTask(
+                                name=t.get("name", ""),
+                                type=t.get("type", ""),
+                                libraries=t.get("libraries", {}),
+                                json_response=t,
+                                notebook_path=t.get("notebook_path"),
+                            )
+                            for t in (
+                                item.get("tasks", {}).get("tasks", [])
+                                if isinstance(item.get("tasks"), dict)
+                                else item.get("tasks", [])
+                            )
+                        ]
+                    ),
+                    settings=DatabricksJobSettings(
+                        name=(item.get("settings") or {}).get("name", ""),
+                        json_response=item.get("settings", {}),
+                    ),
+                    latest_runs=DatabricksJobRuns(
+                        runs=[
+                            DatabricksJobRun(
+                                id=r.get("id", ""),
+                                state=r.get("state", ""),
+                                result_state=r.get("result_state", ""),
+                                start_time=r.get("start_time", ""),
+                                end_time=r.get("end_time"),
+                                execution_duration=r.get("execution_duration", "0"),
+                                json_response=r,
+                            )
+                            for r in (
+                                item.get("latest_runs", {}).get("runs", [])
+                                if isinstance(item.get("latest_runs"), dict)
+                                else []
+                            )
+                        ]
+                    ),
+                    avg_duration_ms_last_3_runs=item.get("avg_duration_ms_last_3_runs"),
+                )
+                for item in items
+            ]
+            return DatabricksJobs(jobs=objs)
+        elif res_name == "clusters":
+            objs = [
+                DatabricksCluster(
+                    cluster_id=item.get("cluster_id", ""),
+                    cluster_name=item.get("cluster_name", ""),
+                    state=item.get("state", ""),
+                    json_response=item,
+                )
+                for item in items
+            ]
+            return DatabricksClusters(clusters=objs)
+        else:
+            # Generic: count-only stub using the collection length
+            # Create a simple object that reports correct len()
+            return _CountOnlyCollection(field_name, len(items))
+
     def _get_workspace_info(self, workspace_name: str) -> DatabricksWorkspaceInfo:
         """Get Databricks workspace information.
 
         Returns cached info if available, otherwise fetches all workspaces
         from the management API and looks up the requested one.
         """
+        if self.cloud == "aws":
+            workspace_info = self._get_aws_workspace_info(workspace_name)
+            self._workspace_cache[workspace_info.name.lower()] = workspace_info
+            return workspace_info
+
         cache_key = workspace_name.lower()
         if cache_key in self._workspace_cache:
             return self._workspace_cache[cache_key]
@@ -363,6 +886,78 @@ class DatabricksClient:
             return self._workspace_cache[cache_key]
 
         raise ValueError(f"Workspace not found: {workspace_name}")
+
+    def _get_aws_workspace_info(self, workspace_name: str) -> DatabricksWorkspaceInfo:
+        """Resolve AWS workspace info from account API or single-workspace host env vars."""
+        if workspace_name:
+            cache_key = workspace_name.lower()
+            if cache_key in self._workspace_cache:
+                return self._workspace_cache[cache_key]
+
+        if self.account_client:
+            requested_name = workspace_name.lower()
+            for account_workspace in self.account_client.workspaces.list():
+                candidate = self._build_aws_account_workspace_info(account_workspace)
+                self._workspace_cache[candidate.name.lower()] = candidate
+                if (
+                    candidate.name.lower() == requested_name
+                    or self._normalize_workspace_host(candidate.url).lower()
+                    == requested_name
+                ):
+                    return candidate
+
+            raise ValueError(
+                f"Workspace not found in Databricks account: {workspace_name}"
+            )
+
+        if workspace_name and self._is_workspace_host(workspace_name):
+            workspace_host = self._normalize_workspace_host(workspace_name)
+            return self._build_aws_host_workspace_info(
+                workspace_host.split(".")[0],
+                workspace_host=workspace_host,
+            )
+
+        if os.getenv("DATABRICKS_HOST"):
+            env_workspace_name = (
+                os.getenv("DATABRICKS_WORKSPACE_NAME")
+                or self._derive_aws_workspace_name()
+            )
+            if workspace_name and workspace_name.lower() != env_workspace_name.lower():
+                raise ValueError(
+                    "AWS Databricks workspace-name resolution for multiple "
+                    "workspaces requires DATABRICKS_ACCOUNT_ID with "
+                    "DATABRICKS_CLIENT_ID and DATABRICKS_CLIENT_SECRET. "
+                    "Alternatively, pass each AWS workspace as its workspace URL "
+                    "or hostname."
+                )
+            return self._build_aws_host_workspace_info(
+                workspace_name or env_workspace_name
+            )
+
+        raise ValueError(
+            "AWS Databricks workspace-name resolution requires "
+            "DATABRICKS_ACCOUNT_ID with DATABRICKS_CLIENT_ID and "
+            "DATABRICKS_CLIENT_SECRET, or DATABRICKS_HOST for a single workspace."
+        )
+
+    @staticmethod
+    def _normalize_workspace_host(workspace_url: str) -> str:
+        """Return the Databricks workspace host without scheme or trailing slash."""
+        parsed = urlparse(workspace_url)
+        host = parsed.netloc if parsed.netloc else parsed.path
+        return host.strip().strip("/")
+
+    @staticmethod
+    def _is_workspace_host(workspace_name: str) -> bool:
+        """Return whether a workspace argument looks like a Databricks host or URL."""
+        return "." in DatabricksClient._normalize_workspace_host(workspace_name)
+
+    @staticmethod
+    def _format_workspace_url(workspace_url: str) -> str:
+        """Return a Databricks workspace URL with an https scheme."""
+        if workspace_url.startswith("http://") or workspace_url.startswith("https://"):
+            return workspace_url.rstrip("/")
+        return f"https://{workspace_url.rstrip('/')}"
 
     def _get_clusters(self) -> DatabricksClusters:
         try:
@@ -425,6 +1020,13 @@ class DatabricksClient:
                 )
                 for cluster in clusters_data
             ]
+
+            if not clusters:
+                utils_ui.print_warning(
+                    "No clusters returned. This may indicate insufficient "
+                    "permissions (the service principal needs CAN_ATTACH_TO "
+                    "or workspace admin access to list clusters)."
+                )
 
             return DatabricksClusters(clusters=clusters)
 
@@ -497,8 +1099,13 @@ class DatabricksClient:
         except Exception:
             return [], []
 
-    def _get_notebooks(self) -> DatabricksNotebooks:
-        """Get notebooks in the workspace."""
+    def _get_notebooks(self, download_content: bool = False) -> DatabricksNotebooks:
+        """Get notebooks in the workspace.
+
+        Args:
+            download_content: When True, store base64-encoded notebook source
+                content on each DatabricksNotebook instance for later export.
+        """
         try:
             notebooks: list[DatabricksNotebook] = []
             list_endpoint = f"api/2.0/workspace/list"
@@ -581,12 +1188,13 @@ class DatabricksClient:
                                 default_language=lang,
                                 embedded_languages=embedded_langs,
                                 other_magics=magics,
-                                json_response=obj,  # TODO: Add the export response instead of list respose?
+                                json_response=obj,
                                 uses_dbutils=uses_dbutils,
                                 created_by=created_by,
                                 created_at=created_at,
                                 modified_at=modified_at,
                                 size=size,
+                                content=content if download_content else None,
                             )
                         )
                     elif obj["object_type"] == "DIRECTORY":
@@ -635,12 +1243,15 @@ class DatabricksClient:
 
         if job.get("has_more", False):
             args.uri = f"{base_endpoint}/get?job_id={job_id}"
+            args.auto_paginate = False
             req = self.api_client.do_request(args)
             settings = req.json().get("settings", {})
         else:
             settings = job.get("settings", {})
 
+        args = Namespace()
         args.uri = f"{base_endpoint}/runs/list?job_id={job_id}&limit=3"
+        args.auto_paginate = False
         req = self.api_client.do_request(args)
         runs = req.json()
 
@@ -701,6 +1312,13 @@ class DatabricksClient:
                         timeout_seconds=task.get("timeout_seconds"),
                         max_retries=task.get("max_retries"),
                         cluster_type=cluster_type,
+                        notebook_path=(
+                            task.get("notebook_task", {}).get("notebook_path")
+                            or task.get("for_each_task", {})
+                            .get("task", {})
+                            .get("notebook_task", {})
+                            .get("notebook_path")
+                        ),
                         cluster_config=cluster_config,
                     )
                 )
@@ -784,23 +1402,70 @@ class DatabricksClient:
     def _get_jobs(self) -> DatabricksJobs:
         """Get jobs in the workspace."""
         try:
-            args = Namespace()
-            args.uri = f"api/2.2/jobs/list"
-            args.request_params = {"expand_tasks": "true"}
-            resp = self.api_client.do_request(args)
-            json_resp = resp.json()
-
-            jobs = [
-                self._get_job_details(job)
-                for job in json_resp.get("jobs", [])
-                if job.get("job_id") is not None
-            ]
+            jobs = []
+            next_page_token: Optional[str] = None
+            while True:
+                args = Namespace()
+                args.uri = "api/2.2/jobs/list"
+                args.request_params = {"expand_tasks": "true", "limit": "100"}
+                if next_page_token:
+                    args.request_params["page_token"] = next_page_token
+                args.auto_paginate = False
+                resp = self.api_client.do_request(args)
+                json_resp = resp.json()
+                for job in json_resp.get("jobs", []):
+                    if job.get("job_id") is not None:
+                        jobs.append(self._get_job_details(job))
+                next_page_token = json_resp.get("next_page_token")
+                if not next_page_token:
+                    break
 
             return DatabricksJobs(jobs=jobs)
 
         except Exception as e:
-            print(f"Failed to get jobs: {e}")
+            utils_ui.print_warning(f"Jobs extraction failed: {e}")
+            self.extraction_warnings.append("jobs")
             return DatabricksJobs(jobs=[])
+
+    def _annotate_notebooks_with_job_execution(
+        self, notebooks: DatabricksNotebooks, jobs: DatabricksJobs
+    ) -> DatabricksNotebooks:
+        """Cross-reference notebooks with job execution data.
+
+        For each notebook that is referenced by a job task, annotate it with
+        the job IDs and the most recent execution timestamp.
+        """
+        # Build map: normalized_notebook_path -> [(job_id, latest_run_start_time)]
+        path_to_jobs: dict = {}
+        for job in jobs.jobs:
+            for task in job.tasks.tasks:
+                if task.notebook_path:
+                    norm_path = _normalize_notebook_path(task.notebook_path)
+                    if norm_path not in path_to_jobs:
+                        path_to_jobs[norm_path] = []
+                    # Get the most recent run start_time for this job
+                    latest_run_time = None
+                    if job.latest_runs and job.latest_runs.runs:
+                        latest_run_time = max(
+                            (r.start_time for r in job.latest_runs.runs),
+                            default=None,
+                        )
+                    path_to_jobs[norm_path].append((job.job_id, latest_run_time))
+
+        # Annotate notebooks
+        for notebook in notebooks.notebooks:
+            # Reset derived fields to avoid carrying stale values (e.g., when loading from disk)
+            notebook.executed_by_jobs = None
+            notebook.last_job_execution = None
+
+            norm_nb_path = _normalize_notebook_path(notebook.path)
+            if norm_nb_path in path_to_jobs:
+                entries = path_to_jobs[norm_nb_path]
+                notebook.executed_by_jobs = sorted({job_id for job_id, _ in entries})
+                run_times = [t for _, t in entries if t is not None]
+                if run_times:
+                    notebook.last_job_execution = max(run_times)
+        return notebooks
 
     def _get_optional_long(self, data: Optional[str]) -> Optional[int]:
         if data is not None:

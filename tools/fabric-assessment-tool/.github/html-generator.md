@@ -6,6 +6,13 @@ HTML visualization pipeline in
 before adding a view, a chart, or a new resource-type table — the
 unwrapping, aggregation, and filtering patterns are load-bearing.
 
+> Companion docs: [`json-export-service.md`](./json-export-service.md)
+> is the producer side — the `{kind}_data` wrapper convention this
+> generator unwraps is defined there.
+> [`synapse-platform.md`](./synapse-platform.md) and
+> [`databricks-platform.md`](./databricks-platform.md) explain the
+> upstream resource semantics.
+
 ## Pipeline Overview
 
 ```

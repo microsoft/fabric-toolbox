@@ -131,6 +131,146 @@ class VisualizationService:
         dw_report = self._generate_data_warehousing_view(data, output_dir, "databricks")
         files_created.append(dw_report)
 
+        # Generate paginated list pages for notebooks, jobs, clusters
+        de_data = self._aggregate_data_engineering(
+            data.get("workspaces", {}), "databricks"
+        )
+        workspace_names = list(data.get("workspaces", {}).keys())
+        common_ctx = {
+            "data": data,
+            "workspaces": data.get("workspaces", {}),
+            "workspace_names": workspace_names,
+            "generated_at": data.get("generated_at"),
+            "view": "data-engineering",
+            "platform": "databricks",
+            "base_path": "../",
+        }
+
+        files_created.extend(
+            self._generate_paginated_list(
+                items=de_data.get("notebooks", []),
+                template_name="databricks/views/notebooks_list.html",
+                file_prefix="notebooks_page",
+                title="All Notebooks",
+                output_dir=output_dir,
+                extra_context=common_ctx,
+            )
+        )
+        files_created.extend(
+            self._generate_paginated_list(
+                items=de_data.get("jobs", []),
+                template_name="databricks/views/jobs_list.html",
+                file_prefix="jobs_page",
+                title="All Jobs",
+                output_dir=output_dir,
+                extra_context=common_ctx,
+            )
+        )
+        files_created.extend(
+            self._generate_paginated_list(
+                items=de_data.get("clusters", []),
+                template_name="databricks/views/clusters_list.html",
+                file_prefix="clusters_page",
+                title="All Clusters",
+                output_dir=output_dir,
+                extra_context=common_ctx,
+            )
+        )
+        files_created.extend(
+            self._generate_paginated_list(
+                items=de_data.get("pipelines", []),
+                template_name="databricks/views/pipelines_list.html",
+                file_prefix="pipelines_page",
+                title="All DLT Pipelines",
+                output_dir=output_dir,
+                extra_context=common_ctx,
+            )
+        )
+        files_created.extend(
+            self._generate_paginated_list(
+                items=de_data.get("experiments", []),
+                template_name="databricks/views/experiments_list.html",
+                file_prefix="experiments_page",
+                title="All MLflow Experiments",
+                output_dir=output_dir,
+                extra_context=common_ctx,
+            )
+        )
+        files_created.extend(
+            self._generate_paginated_list(
+                items=de_data.get("serving_endpoints", []),
+                template_name="databricks/views/serving_endpoints_list.html",
+                file_prefix="serving_endpoints_page",
+                title="All Serving Endpoints",
+                output_dir=output_dir,
+                extra_context=common_ctx,
+            )
+        )
+        files_created.extend(
+            self._generate_paginated_list(
+                items=de_data.get("repos", []),
+                template_name="databricks/views/repos_list.html",
+                file_prefix="repos_page",
+                title="All Git Repos",
+                output_dir=output_dir,
+                extra_context=common_ctx,
+            )
+        )
+
+        # Generate paginated list pages for data warehousing
+        dw_data = self._aggregate_data_warehousing(
+            data.get("workspaces", {}), "databricks"
+        )
+        dw_ctx = {
+            "data": data,
+            "workspaces": data.get("workspaces", {}),
+            "workspace_names": workspace_names,
+            "generated_at": data.get("generated_at"),
+            "view": "data-warehousing",
+            "platform": "databricks",
+            "base_path": "../",
+        }
+        files_created.extend(
+            self._generate_paginated_list(
+                items=dw_data.get("catalogs", []),
+                template_name="databricks/views/catalogs_list.html",
+                file_prefix="catalogs_page",
+                title="All Unity Catalogs",
+                output_dir=output_dir,
+                extra_context=dw_ctx,
+            )
+        )
+        files_created.extend(
+            self._generate_paginated_list(
+                items=dw_data.get("schemas", []),
+                template_name="databricks/views/schemas_list.html",
+                file_prefix="schemas_page",
+                title="All Schemas",
+                output_dir=output_dir,
+                extra_context=dw_ctx,
+            )
+        )
+        files_created.extend(
+            self._generate_paginated_list(
+                items=dw_data.get("tables", []),
+                template_name="databricks/views/tables_list.html",
+                file_prefix="tables_page",
+                title="All Tables",
+                output_dir=output_dir,
+                extra_context=dw_ctx,
+            )
+        )
+        files_created.extend(
+            self._generate_paginated_list(
+                items=dw_data.get("views", []),
+                template_name="databricks/views/views_list.html",
+                file_prefix="views_page",
+                title="All Views",
+                output_dir=output_dir,
+                extra_context=dw_ctx,
+            )
+        )
+
         return files_created
 
     def _load_assessment_data(
@@ -475,6 +615,62 @@ class VisualizationService:
 
         return str(output_file)
 
+    def _generate_paginated_list(
+        self,
+        items: List[Any],
+        template_name: str,
+        file_prefix: str,
+        title: str,
+        output_dir: Path,
+        extra_context: Dict[str, Any],
+        page_size: int = 100,
+    ) -> List[str]:
+        """Generate paginated HTML list pages for a collection of items.
+
+        Args:
+            items: Full list of items to paginate
+            template_name: Jinja2 template path
+            file_prefix: Output filename prefix (e.g., "notebooks_page")
+            title: Page title
+            output_dir: Output directory root
+            extra_context: Additional template variables (platform, workspace_names, etc.)
+            page_size: Items per page
+
+        Returns:
+            List of generated file paths
+        """
+        if not items:
+            return []
+
+        import math
+
+        total_pages = math.ceil(len(items) / page_size)
+        template = self.env.get_template(template_name)
+        views_dir = output_dir / "views"
+        views_dir.mkdir(exist_ok=True)
+        files_created = []
+
+        for page_num in range(1, total_pages + 1):
+            start = (page_num - 1) * page_size
+            end = start + page_size
+            page_items = items[start:end]
+
+            html = template.render(
+                title=f"{title} - Page {page_num}",
+                items=items,
+                page_items=page_items,
+                current_page=page_num,
+                total_pages=total_pages,
+                **extra_context,
+            )
+
+            output_file = views_dir / f"{file_prefix}_{page_num}.html"
+            with open(output_file, "w", encoding="utf-8") as f:
+                f.write(html)
+            files_created.append(str(output_file))
+
+        return files_created
+
     def _generate_data_warehousing_view(
         self, data: Dict[str, Any], output_dir: Path, platform: str = "synapse"
     ) -> str:
@@ -643,9 +839,11 @@ class VisualizationService:
                     cl_data = cl.get("cluster_data") or cl.get("data") or cl
                     cl_data["workspace"] = ws_name
                     de["clusters"].append(cl_data)
-                    version = cl_data.get("spark_version") or (
-                        cl_data.get("json_response") or {}
-                    ).get("spark_version") or "Unknown"
+                    version = (
+                        cl_data.get("spark_version")
+                        or (cl_data.get("json_response") or {}).get("spark_version")
+                        or "Unknown"
+                    )
                     de["spark_versions"][version] = (
                         de["spark_versions"].get(version, 0) + 1
                     )
@@ -698,7 +896,133 @@ class VisualizationService:
                     gs_data["workspace"] = ws_name
                     de.setdefault("genie_spaces", []).append(gs_data)
 
+        # Compute job activity stats (active vs stale) for Databricks
+        if platform == "databricks":
+            self._compute_job_activity_stats(de, workspaces)
+            self._compute_notebook_job_reference_stats(de)
+
+        # Interleave items by workspace so preview slices represent all workspaces
+        for key in ["notebooks", "jobs", "clusters"]:
+            if de.get(key) and len(workspaces) > 1:
+                by_ws: Dict[str, list] = {}
+                for item in de[key]:
+                    ws = item.get("workspace", "")
+                    by_ws.setdefault(ws, []).append(item)
+                interleaved = []
+                ws_lists = list(by_ws.values())
+                max_len = max(len(lst) for lst in ws_lists) if ws_lists else 0
+                for i in range(max_len):
+                    for lst in ws_lists:
+                        if i < len(lst):
+                            interleaved.append(lst[i])
+                de[key] = interleaved
+
         return de
+
+    def _compute_job_activity_stats(
+        self, de: Dict[str, Any], workspaces: Dict[str, Dict[str, Any]]
+    ) -> None:
+        """Classify jobs as active or stale based on last run time.
+
+        A job is active if its most recent run started less than 30 days
+        before the assessment timestamp. Jobs with no runs are stale.
+        """
+        from datetime import timedelta, timezone
+
+        # Determine assessment timestamp from any workspace metadata
+        assessment_time = None
+        for ws_data in workspaces.values():
+            meta = ws_data.get("summary", {}).get("assessment_metadata", {})
+            ts = meta.get("timestamp")
+            if ts:
+                try:
+                    assessment_time = datetime.fromisoformat(ts)
+                    break
+                except (ValueError, TypeError):
+                    pass
+        if assessment_time is None:
+            assessment_time = datetime.now()
+
+        # Make assessment_time offset-aware (UTC) if naive
+        if assessment_time.tzinfo is None:
+            assessment_time = assessment_time.replace(tzinfo=timezone.utc)
+
+        cutoff = assessment_time - timedelta(days=30)
+        active_count = 0
+        stale_count = 0
+
+        for job in de["jobs"]:
+            runs = job.get("latest_runs")
+            if isinstance(runs, dict):
+                runs = runs.get("runs", [])
+            if not runs:
+                stale_count += 1
+                continue
+
+            # Find the most recent run start_time
+            latest_run_time = None
+            for run in runs:
+                start = run.get("start_time") if isinstance(run, dict) else None
+                if start:
+                    try:
+                        t = datetime.fromisoformat(str(start))
+                        if t.tzinfo is None:
+                            t = t.replace(tzinfo=timezone.utc)
+                        if latest_run_time is None or t > latest_run_time:
+                            latest_run_time = t
+                    except (ValueError, TypeError):
+                        pass
+
+            if latest_run_time and latest_run_time >= cutoff:
+                active_count += 1
+            else:
+                stale_count += 1
+
+        de["active_jobs"] = active_count
+        de["stale_jobs"] = stale_count
+
+    def _compute_notebook_job_reference_stats(self, de: Dict[str, Any]) -> None:
+        """Count notebooks referenced by jobs vs those not referenced."""
+
+        def _normalize_path(path: str) -> str:
+            if path and path.startswith("/Workspace/"):
+                return path[len("/Workspace") :]
+            return path or ""
+
+        # Collect all notebook paths referenced by job tasks (normalized)
+        referenced_paths: set = set()
+        for job in de["jobs"]:
+            tasks = job.get("tasks")
+            if isinstance(tasks, dict):
+                tasks = tasks.get("tasks", [])
+            if not tasks:
+                continue
+            for task in tasks:
+                if isinstance(task, dict):
+                    nb_path = task.get("notebook_path")
+                    if not nb_path:
+                        # Check nested for_each_task
+                        nb_path = (
+                            task.get("for_each_task", {})
+                            .get("task", {})
+                            .get("notebook_task", {})
+                            .get("notebook_path")
+                        )
+                    if nb_path:
+                        referenced_paths.add(_normalize_path(nb_path))
+
+        # Count notebooks that are/aren't referenced
+        referenced_count = 0
+        not_referenced_count = 0
+        for nb in de["notebooks"]:
+            path = _normalize_path(nb.get("path", ""))
+            if path in referenced_paths:
+                referenced_count += 1
+            else:
+                not_referenced_count += 1
+
+        de["notebooks_referenced_by_jobs"] = referenced_count
+        de["notebooks_not_referenced"] = not_referenced_count
 
     def _aggregate_data_warehousing(
         self, workspaces: Dict[str, Dict[str, Any]], platform: str = "synapse"
@@ -792,6 +1116,112 @@ class VisualizationService:
                     wh_data = wh.get("warehouse_data") or wh.get("data") or wh
                     wh_data["workspace"] = ws_name
                     dw["sql_warehouses"].append(wh_data)
+
+                # Unity Catalog - aggregate from data folder structure
+                uc_data = data_catalog.get("unity_catalog", {})
+                catalogs_data = uc_data.get("catalogs", {})
+                for cat_name, cat_content in catalogs_data.items():
+                    if not isinstance(cat_content, dict):
+                        continue
+                    # Read catalog info from its JSON file
+                    cat_info = cat_content.get(cat_name, {})
+                    cat_data_inner = (
+                        cat_info.get("data", cat_info)
+                        if isinstance(cat_info, dict)
+                        else {}
+                    )
+
+                    schemas_content = cat_content.get("schemas", {})
+                    schema_count = 0
+                    managed_count = 0
+                    external_count = 0
+                    view_count = 0
+                    volume_count = 0
+                    function_count = 0
+
+                    schema_list = []
+                    for schema_name, schema_content in schemas_content.items():
+                        if not isinstance(schema_content, dict):
+                            continue
+                        schema_count += 1
+                        s_managed = 0
+                        s_external = 0
+                        s_views = 0
+                        s_volumes = 0
+                        s_functions = 0
+
+                        tables_content = schema_content.get("tables", {})
+                        if isinstance(tables_content, dict):
+                            for tbl_name, tbl_data in tables_content.items():
+                                if not isinstance(tbl_data, dict):
+                                    continue
+                                t_inner = tbl_data.get("data", tbl_data)
+                                t_type = t_inner.get("type", "")
+                                item = {
+                                    "name": t_inner.get("name", tbl_name),
+                                    "catalog": cat_name,
+                                    "schema": schema_name,
+                                    "type": t_type,
+                                    "format": t_inner.get("format", ""),
+                                    "columns": t_inner.get("columns", 0),
+                                    "size_bytes": t_inner.get("statistics_size_bytes"),
+                                    "row_count": t_inner.get("statistics_row_count"),
+                                    "workspace": ws_name,
+                                }
+                                if t_type == "VIEW":
+                                    s_views += 1
+                                    dw.setdefault("views", []).append(item)
+                                elif t_type == "MANAGED":
+                                    s_managed += 1
+                                    dw.setdefault("tables", []).append(item)
+                                else:
+                                    s_external += 1
+                                    dw.setdefault("tables", []).append(item)
+
+                        volumes_content = schema_content.get("volumes", {})
+                        if isinstance(volumes_content, dict):
+                            s_volumes = len(volumes_content)
+
+                        functions_content = schema_content.get("functions", {})
+                        if isinstance(functions_content, dict):
+                            s_functions = len(functions_content)
+
+                        managed_count += s_managed
+                        external_count += s_external
+                        view_count += s_views
+                        volume_count += s_volumes
+                        function_count += s_functions
+
+                        schema_list.append(
+                            {
+                                "name": schema_name,
+                                "catalog": cat_name,
+                                "managed_tables": s_managed,
+                                "external_tables": s_external,
+                                "views": s_views,
+                                "volumes": s_volumes,
+                                "functions": s_functions,
+                                "workspace": ws_name,
+                            }
+                        )
+
+                    dw.setdefault("catalogs", []).append(
+                        {
+                            "name": cat_name,
+                            "owner": cat_data_inner.get("owner", ""),
+                            "comment": cat_data_inner.get("comment", ""),
+                            "schemas": schema_count,
+                            "managed_tables": managed_count,
+                            "external_tables": external_count,
+                            "views": view_count,
+                            "volumes": volume_count,
+                            "functions": function_count,
+                            "workspace": ws_name,
+                        }
+                    )
+
+                    dw.setdefault("schemas", []).extend(schema_list)
+                    dw["total_tables"] += managed_count + external_count
 
         return dw
 

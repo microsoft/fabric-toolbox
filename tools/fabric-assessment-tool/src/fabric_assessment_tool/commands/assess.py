@@ -21,6 +21,8 @@ Examples:
   fat assess --source synapse --mode full --ws workspace1,workspace2 -o output_dir/
   fat assess --source synapse --mode full --ws workspace1 --subscription-id 12345678-1234-1234-1234-123456789012 -o output_dir/
   fat assess --source databricks --mode full --ws my-workspace --output results/ --format json
+  fat assess --source databricks --cloud aws --ws my-workspace --output results/
+  fat assess --source databricks --cloud aws --ws dev,prod --resources jobs -o results/
         """
 
     def configure_parser(self, parser: argparse.ArgumentParser) -> None:
@@ -40,6 +42,17 @@ Examples:
         )
 
         parser.add_argument(
+            "--cloud",
+            choices=["azure", "aws"],
+            default="azure",
+            help=(
+                "Cloud provider for the source platform. Use 'aws' with "
+                "Databricks workspaces authenticated through DATABRICKS_* "
+                "environment variables."
+            ),
+        )
+
+        parser.add_argument(
             "-o",
             "--output",
             required=True,
@@ -47,9 +60,10 @@ Examples:
         )
 
         parser.add_argument(
-            "-ws",
+            "--ws",
             "--workspace",
             default="",
+            dest="workspace",
             help="Comma-separated list of workspace names to assess",
         )
 
@@ -61,8 +75,29 @@ Examples:
         )
 
         parser.add_argument(
+            "--resources",
+            default=None,
+            help=(
+                "Comma-separated list of resource types to extract (default: all). "
+                "Use to re-extract only specific resources without repeating a full assessment. "
+                "Valid Databricks resources: clusters, sql_warehouses, notebooks, jobs, "
+                "catalogs, external_locations, connections, secret_scopes, pipelines, "
+                "repos, experiments, serving_endpoints, alerts, genie_spaces, "
+                "cluster_policies, instance_pools"
+            ),
+        )
+
+        parser.add_argument(
             "--subscription-id",
             help="Azure subscription ID (if not provided, will use default credentials)",
+        )
+
+        parser.add_argument(
+            "--download-notebooks",
+            action="store_true",
+            default=False,
+            help="Download and export full notebook source content (disabled by default). "
+            "Stores decoded notebook files in a notebook_sources/ folder.",
         )
 
         parser.add_argument(
@@ -126,10 +161,16 @@ Examples:
             ws.strip() for ws in args.workspace.split(",") if ws.strip() != ""
         ]
 
+        # Parse resources filter
+        resources = None
+        if getattr(args, "resources", None):
+            resources = [r.strip() for r in args.resources.split(",") if r.strip()]
+
         try:
             result = self.assessment_service.assess(
                 source=args.source,
                 mode=args.mode,
+                cloud=args.cloud,
                 workspaces=workspaces,
                 output_path=args.output,
                 output_format=getattr(args, "format", "json"),
@@ -141,6 +182,8 @@ Examples:
                 sql_client_id=getattr(args, "sql_client_id", None),
                 sql_client_secret=getattr(args, "sql_client_secret", None),
                 sql_tenant_id=getattr(args, "sql_tenant_id", None),
+                resources=resources,
+                download_notebooks=getattr(args, "download_notebooks", False),
             )
 
             utils_ui.print(f"Assessment completed successfully!")
@@ -152,7 +195,9 @@ Examples:
                     workspace_name = export_result.get("workspace_name", "Unknown")
                     workspace_dir = export_result.get("workspace_directory", "")
                     total_files = export_result.get("total_files", 0)
-                    utils_ui.print(f"  {workspace_name}: {total_files} files in {workspace_dir}")
+                    utils_ui.print(
+                        f"  {workspace_name}: {total_files} files in {workspace_dir}"
+                    )
 
             # Show detailed status information for each workspace
             if result.get("results"):
@@ -160,12 +205,16 @@ Examples:
                 for workspace_result in result["results"]:
                     workspace_name = workspace_result.get("workspace", "Unknown")
                     status = workspace_result.get("status", "unknown")
-                    
+
                     if status == "success":
                         print(f"  ✓ {workspace_name}: Completed successfully")
                     elif status == "incomplete":
-                        assessment_status = workspace_result.get("assessment_status", {})
-                        description = assessment_status.get("description", "Assessment incomplete")
+                        assessment_status = workspace_result.get(
+                            "assessment_status", {}
+                        )
+                        description = assessment_status.get(
+                            "description", "Assessment incomplete"
+                        )
                         print(f"  ⚠ {workspace_name}: {description}")
                     elif status == "failed":
                         error = workspace_result.get("error", "Unknown error")
