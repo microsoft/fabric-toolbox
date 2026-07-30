@@ -54,7 +54,11 @@ from ..assessment.synapse import (
 from ..utils import ui as utils_ui
 from .api_client import ApiClient
 from .odbc_client import OdbcClient
-from .token_provider import FabricNotebookTokenProvider, TokenProvider, create_token_provider
+from .token_provider import (
+    FabricNotebookTokenProvider,
+    TokenProvider,
+    create_token_provider,
+)
 
 
 class SynapseClient:
@@ -1171,8 +1175,11 @@ class SynapseClient:
 
         # Fall back to ODBC
         return self._get_dedicated_schema_tables_odbc(
-            workspace_name, database_name, schema_name,
-            sql_admin_login, sql_admin_password,
+            workspace_name,
+            database_name,
+            schema_name,
+            sql_admin_login,
+            sql_admin_password,
         )
 
     def _get_dedicated_schema_tables_arm(
@@ -1387,7 +1394,9 @@ class SynapseClient:
 
         elif selected_auth.startswith("SQL Authentication"):
             if not sql_admin_login:
-                utils_ui.print_warning("SQL admin login not available for this workspace.")
+                utils_ui.print_warning(
+                    "SQL admin login not available for this workspace."
+                )
                 return None
             sql_admin_password = utils_ui.prompt_password(
                 f"Enter SQL admin (login: {sql_admin_login}) password: "

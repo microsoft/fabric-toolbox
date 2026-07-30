@@ -9,6 +9,7 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 from contextlib import contextmanager
 from datetime import datetime, timezone
 from pathlib import Path
+from threading import Lock
 from typing import Any, Dict, Iterator, List, Optional
 from urllib.parse import urlparse
 
@@ -128,6 +129,8 @@ class DatabricksClient:
         self._workspace_cache: dict[str, DatabricksWorkspaceInfo] = {}
         self.extraction_warnings: list[str] = []
         self._max_parallel_api_calls = 8
+        self._schema_resource_cache: dict[tuple[str, str, str], Any] = {}
+        self._reset_api_call_savings_metrics()
 
     def authenticate(self) -> None:
         """Authenticate with the configured Databricks cloud."""
@@ -409,6 +412,58 @@ class DatabricksClient:
             elapsed_ms = (time.perf_counter() - start) * 1000
             logger.info("Extraction %s took %.2f ms", item_name, elapsed_ms)
 
+    def _reset_schema_resource_cache(self) -> None:
+        self._schema_resource_cache = {}
+
+    def _get_schema_resource_cache(self) -> dict[tuple[str, str, str], Any]:
+        if not hasattr(self, "_schema_resource_cache"):
+            self._schema_resource_cache = {}
+        return self._schema_resource_cache
+
+    def _reset_api_call_savings_metrics(self) -> None:
+        self._api_call_savings = {
+            "schema_cache_total": 0,
+            "schema_cache_tables": 0,
+            "schema_cache_volumes": 0,
+            "schema_cache_functions": 0,
+            "notebook_status_skipped": 0,
+            "notebook_export_skipped": 0,
+        }
+        self._api_call_savings_lock = Lock()
+
+    def _get_api_call_savings_metrics(self) -> dict[str, int]:
+        if not hasattr(self, "_api_call_savings"):
+            self._reset_api_call_savings_metrics()
+        return self._api_call_savings
+
+    def _increment_api_call_savings(self, key: str, value: int = 1) -> None:
+        if value <= 0:
+            return
+        counters = self._get_api_call_savings_metrics()
+        lock = getattr(self, "_api_call_savings_lock", None)
+        if lock is None:
+            lock = Lock()
+            self._api_call_savings_lock = lock
+        with lock:
+            counters[key] = counters.get(key, 0) + value
+
+    def _log_api_call_savings_summary(self) -> None:
+        counters = self._get_api_call_savings_metrics()
+        schema_cache = counters.get("schema_cache_total", 0)
+        status_skips = counters.get("notebook_status_skipped", 0)
+        export_skips = counters.get("notebook_export_skipped", 0)
+        total_saved = schema_cache + status_skips + export_skips
+        logger.info(
+            "Estimated Databricks API calls saved: total=%d (schema_cache=%d [tables=%d, volumes=%d, functions=%d], notebook_get_status=%d, notebook_export=%d)",
+            total_saved,
+            schema_cache,
+            counters.get("schema_cache_tables", 0),
+            counters.get("schema_cache_volumes", 0),
+            counters.get("schema_cache_functions", 0),
+            status_skips,
+            export_skips,
+        )
+
     def _extract_notebook_paths(self, list_endpoint: str) -> list[dict]:
         with self._log_extraction_timing("_extract_notebook_paths"):
             notebook_objs: list[dict] = []
@@ -420,9 +475,7 @@ class DatabricksClient:
                 try:
                     data = self.api_client.do_request(args).json()
                 except Exception as e:
-                    logger.error(
-                        "Failed to list notebook path %s: %s", current_path, e
-                    )
+                    logger.error("Failed to list notebook path %s: %s", current_path, e)
                     return
 
                 for obj in data.get("objects", []):
@@ -472,6 +525,8 @@ class DatabricksClient:
         try:
             # Reset extraction warnings for this workspace
             self.extraction_warnings = []
+            self._reset_schema_resource_cache()
+            self._reset_api_call_savings_metrics()
 
             # Get workspace details
             workspace_info = self._get_workspace_info(workspace_name)
@@ -704,6 +759,7 @@ class DatabricksClient:
                 instance_pools=instance_pools,
                 workspace_url=workspace_info.url,
             )
+            self._log_api_call_savings_summary()
             return assessment
 
         except Exception as e:
@@ -1170,8 +1226,9 @@ class DatabricksClient:
         download_content: bool,
     ) -> DatabricksNotebook:
         obj_path = obj["path"]
-        lang = "unknown"
+        lang = obj.get("language") or "unknown"
         content = ""
+        embedded_langs, magics = [], []
         created_by = obj.get("created_by")
         created_at = (
             datetime.fromtimestamp(
@@ -1189,31 +1246,37 @@ class DatabricksClient:
         )
         size = obj.get("size")
 
-        try:
-            args = Namespace()
-            args.uri = status_endpoint
-            args.request_params = {"path": obj_path}
-            status_json = self.api_client.do_request(args).json()
-            lang = status_json.get("language", "unknown")
-            if size is None:
-                size = status_json.get("size")
-        except Exception as e:
-            logger.error("Failed to get notebook status for %s: %s", obj_path, e)
+        if not obj.get("language") or size is None:
+            try:
+                args = Namespace()
+                args.uri = status_endpoint
+                args.request_params = {"path": obj_path}
+                status_json = self.api_client.do_request(args).json()
+                lang = status_json.get("language", lang)
+                if size is None:
+                    size = status_json.get("size")
+            except Exception as e:
+                logger.error("Failed to get notebook status for %s: %s", obj_path, e)
 
-        try:
-            args = Namespace()
-            args.uri = export_endpoint
-            args.request_params = {"path": obj_path, "format": "SOURCE"}
-            content = self.api_client.do_request(args).json().get("content", "")
-            embedded_langs, magics = self._detect_embedded_magics(content)
-            if size is None and content:
-                try:
-                    size = len(base64.b64decode(content))
-                except Exception as e:
-                    logger.debug("Failed to decode notebook content for %s: %s", obj_path, e)
-        except Exception as e:
-            logger.error("Failed to export notebook content for %s: %s", obj_path, e)
-            embedded_langs, magics = [], []
+        if download_content:
+            try:
+                args = Namespace()
+                args.uri = export_endpoint
+                args.request_params = {"path": obj_path, "format": "SOURCE"}
+                content = self.api_client.do_request(args).json().get("content", "")
+                embedded_langs, magics = self._detect_embedded_magics(content)
+                if size is None and content:
+                    try:
+                        size = len(base64.b64decode(content))
+                    except Exception as e:
+                        logger.debug(
+                            "Failed to decode notebook content for %s: %s", obj_path, e
+                        )
+            except Exception as e:
+                logger.error(
+                    "Failed to export notebook content for %s: %s", obj_path, e
+                )
+                embedded_langs, magics = [], []
 
         uses_dbutils = self._check_notebook_for_dbutils(content)
         return DatabricksNotebook(
@@ -1271,6 +1334,19 @@ class DatabricksClient:
             status_endpoint = f"api/2.0/workspace/get-status"
 
             notebook_objs = self._extract_notebook_paths(list_endpoint=list_endpoint)
+            status_fallback_count = sum(
+                1
+                for obj in notebook_objs
+                if not obj.get("language") or obj.get("size") is None
+            )
+            status_skipped_count = len(notebook_objs) - status_fallback_count
+            export_skipped_count = len(notebook_objs) if not download_content else 0
+            self._increment_api_call_savings(
+                "notebook_status_skipped", status_skipped_count
+            )
+            self._increment_api_call_savings(
+                "notebook_export_skipped", export_skipped_count
+            )
             notebooks = self._parallel_map_ordered(
                 notebook_objs,
                 lambda obj: self._build_notebook_from_obj(
@@ -1280,6 +1356,14 @@ class DatabricksClient:
                     download_content=download_content,
                 ),
                 getattr(self, "_max_parallel_api_calls", 8),
+            )
+            logger.info(
+                "Notebook extraction skipped %d workspace/get-status calls via list metadata",
+                status_skipped_count,
+            )
+            logger.info(
+                "Notebook extraction skipped %d workspace/export calls",
+                export_skipped_count,
             )
 
             return DatabricksNotebooks(notebooks=notebooks)
@@ -1317,6 +1401,17 @@ class DatabricksClient:
         else:
             return "unknown"
 
+    @staticmethod
+    def _settings_has_notebook_tasks(settings: dict) -> bool:
+        if settings.get("notebook_task"):
+            return True
+        for task in settings.get("tasks", []):
+            if task.get("notebook_task"):
+                return True
+            if task.get("for_each_task", {}).get("task", {}).get("notebook_task"):
+                return True
+        return False
+
     def _get_job_details(self, job: Any) -> DatabricksJob:
         job_id = job["job_id"]
         base_endpoint = "api/2.2/jobs"
@@ -1330,11 +1425,15 @@ class DatabricksClient:
         else:
             settings = job.get("settings", {})
 
-        args = Namespace()
-        args.uri = f"{base_endpoint}/runs/list?job_id={job_id}&limit=3"
-        args.auto_paginate = False
-        req = self.api_client.do_request(args)
-        runs = req.json()
+        has_notebook_tasks = self._settings_has_notebook_tasks(settings)
+        if has_notebook_tasks:
+            args = Namespace()
+            args.uri = f"{base_endpoint}/runs/list?job_id={job_id}&limit=3"
+            args.auto_paginate = False
+            req = self.api_client.do_request(args)
+            runs = req.json()
+        else:
+            runs = {"runs": []}
 
         # Extract schedule info
         schedule_raw = settings.get("schedule")
@@ -1587,6 +1686,12 @@ class DatabricksClient:
 
     def _get_tables(self, catalog_name: str, schema_name: str) -> list[DatabricksTable]:
         """Get databases and tables in the workspace."""
+        cache = self._get_schema_resource_cache()
+        cache_key = ("tables", catalog_name, schema_name)
+        if cache_key in cache:
+            self._increment_api_call_savings("schema_cache_total")
+            self._increment_api_call_savings("schema_cache_tables")
+            return cache[cache_key]
         try:
             args = Namespace()
             args.uri = f"/api/2.1/unity-catalog/tables?catalog_name={catalog_name}&schema_name={schema_name}"
@@ -1646,15 +1751,23 @@ class DatabricksClient:
                 )
                 for table in json_req.get("tables", [])
             ]
+            cache[cache_key] = tables
             return tables
         except Exception as e:
             logger.error("Failed to get catalogs tables: %s", e)
+            cache[cache_key] = []
             return []
 
     def _get_volumes(
         self, catalog_name: str, schema_name: str
     ) -> list[DatabricksVolume]:
         """Get volumes in the workspace."""
+        cache = self._get_schema_resource_cache()
+        cache_key = ("volumes", catalog_name, schema_name)
+        if cache_key in cache:
+            self._increment_api_call_savings("schema_cache_total")
+            self._increment_api_call_savings("schema_cache_volumes")
+            return cache[cache_key]
         try:
             args = Namespace()
             args.uri = f"/api/2.1/unity-catalog/volumes?catalog_name={catalog_name}&schema_name={schema_name}"
@@ -1671,15 +1784,23 @@ class DatabricksClient:
                 )
                 for volume in json_req.get("volumes", [])
             ]
+            cache[cache_key] = volumes
             return volumes
         except Exception as e:
             logger.error("Failed to get volumes: %s", e)
+            cache[cache_key] = []
             return []
 
     def _get_functions(
         self, catalog_name: str, schema_name: str
     ) -> list[DatabricksFunction]:
         """Get functions in the workspace."""
+        cache = self._get_schema_resource_cache()
+        cache_key = ("functions", catalog_name, schema_name)
+        if cache_key in cache:
+            self._increment_api_call_savings("schema_cache_total")
+            self._increment_api_call_savings("schema_cache_functions")
+            return cache[cache_key]
         try:
             args = Namespace()
             args.uri = f"/api/2.1/unity-catalog/functions?catalog_name={catalog_name}&schema_name={schema_name}"
@@ -1696,9 +1817,11 @@ class DatabricksClient:
                 )
                 for function in json_req.get("functions", [])
             ]
+            cache[cache_key] = functions
             return functions
         except Exception as e:
             logger.error("Failed to get functions: %s", e)
+            cache[cache_key] = []
             return []
 
     def _build_schema_from_catalog(
@@ -1735,8 +1858,16 @@ class DatabricksClient:
             req = self.api_client.do_request(args)
             json_req = req.json()
             schema_items = json_req.get("schemas", [])
+            seen_schema_names: set[str] = set()
+            unique_schema_items = []
+            for schema in schema_items:
+                schema_name = schema.get("name") or ""
+                if schema_name in seen_schema_names:
+                    continue
+                seen_schema_names.add(schema_name)
+                unique_schema_items.append(schema)
             schemas = self._parallel_map_ordered(
-                schema_items,
+                unique_schema_items,
                 lambda schema: self._build_schema_from_catalog(catalog_name, schema),
                 self._catalog_parallel_api_calls(),
             )

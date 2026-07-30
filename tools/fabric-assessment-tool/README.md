@@ -190,6 +190,7 @@ fat assess --source <synapse|databricks> \
 - `--sql-tenant-id`: Azure tenant ID (optional, defaults to 'common')
 - `--resources`: Comma-separated list of resource types to extract. When omitted, all resources are extracted. Use this to re-extract only specific resources without repeating a full assessment. Previously exported data for other resources is preserved and summaries are recalculated accurately.
   - Valid Databricks resources: `clusters`, `sql_warehouses`, `notebooks`, `jobs`, `catalogs`, `external_locations`, `connections`, `secret_scopes`, `pipelines`, `repos`, `experiments`, `serving_endpoints`, `alerts`, `genie_spaces`, `cluster_policies`, `instance_pools`
+- `--download-notebooks`: Download and export full Databricks notebook source content. When omitted, notebook extraction is metadata-first, skips workspace/export calls, and falls back to `workspace/get-status` only when list metadata is missing.
 - `--max-parallel-api-calls`: Maximum concurrent Databricks API calls used by notebook/job extraction and catalog schema fan-out (default: `8`; catalog fan-out is internally capped to avoid excessive throttling).
 - `--log-file`: Optional path to write logs. Logging is configured only when this option is set (no console logging handlers are configured). Uses standard logging format (`%(asctime)s - %(name)s - %(levelname)s - %(message)s`).
 
@@ -216,6 +217,7 @@ fat assess --source synapse --ws workspace1 -o ./results \
 fat assess --source synapse --ws workspace1 -o ./results --sql-auth-mode entra-default
 
 # Assess Databricks workspace
+# Note: Job run-history calls are skipped for jobs without notebook tasks.
 fat assess --source databricks --ws my-workspace --output results_folder
 
 # Assess AWS Databricks workspace using environment-variable authentication
