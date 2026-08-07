@@ -82,3 +82,59 @@ def test_aws_databricks_multiple_workspaces_requires_oauth(tmp_path):
             output_path=str(tmp_path),
             cloud="aws",
         )
+
+
+@patch("fabric_assessment_tool.services.assessment_service.StructuredExportService")
+def test_databricks_parallelization_option_forwarded(mock_export_service, tmp_path):
+    service = AssessmentService()
+    fake_client = MagicMock()
+    fake_assessment = MagicMock()
+    fake_assessment.status.status = "completed"
+    fake_assessment.get_summary.return_value = {"counts": {}}
+    fake_client.assess_workspace.return_value = fake_assessment
+    service._get_client = MagicMock(return_value=fake_client)
+    service._save_assessment_summary = MagicMock(
+        return_value=str(tmp_path / "summary.json")
+    )
+    service._save_export_results = MagicMock(return_value=str(tmp_path / "export.json"))
+    service.export_service.export_assessment.return_value = {}
+
+    service.assess(
+        source="databricks",
+        mode="full",
+        workspaces=["jdc-adb"],
+        output_path=str(tmp_path),
+        max_parallel_api_calls=10,
+    )
+
+    kwargs = fake_client.assess_workspace.call_args.kwargs
+    assert kwargs["max_parallel_api_calls"] == 10
+
+
+@patch("fabric_assessment_tool.services.assessment_service.StructuredExportService")
+def test_synapse_does_not_receive_databricks_parallelization_option(
+    mock_export_service, tmp_path
+):
+    service = AssessmentService()
+    fake_client = MagicMock()
+    fake_assessment = MagicMock()
+    fake_assessment.status.status = "completed"
+    fake_assessment.get_summary.return_value = {"counts": {}}
+    fake_client.assess_workspace.return_value = fake_assessment
+    service._get_client = MagicMock(return_value=fake_client)
+    service._save_assessment_summary = MagicMock(
+        return_value=str(tmp_path / "summary.json")
+    )
+    service._save_export_results = MagicMock(return_value=str(tmp_path / "export.json"))
+    service.export_service.export_assessment.return_value = {}
+
+    service.assess(
+        source="synapse",
+        mode="full",
+        workspaces=["syn-ws"],
+        output_path=str(tmp_path),
+        max_parallel_api_calls=10,
+    )
+
+    kwargs = fake_client.assess_workspace.call_args.kwargs
+    assert "max_parallel_api_calls" not in kwargs

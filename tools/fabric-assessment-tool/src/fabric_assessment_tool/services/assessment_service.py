@@ -36,6 +36,7 @@ class AssessmentService:
         sql_tenant_id: Optional[str] = None,
         resources: Optional[List[str]] = None,
         download_notebooks: bool = False,
+        max_parallel_api_calls: int = 8,
     ) -> Dict[str, Any]:
         """
         Perform assessment on specified workspaces.
@@ -150,12 +151,20 @@ class AssessmentService:
             # print(f"Assessing workspace: {workspace}")
             try:
                 # Get assessment data as dataclass object
+                assess_kwargs = {}
+                if source == "databricks":
+                    assess_kwargs.update(
+                        {
+                            "resources": resources,
+                            "output_path": output_path,
+                            "download_notebooks": download_notebooks,
+                            "max_parallel_api_calls": max_parallel_api_calls,
+                        }
+                    )
                 workspace_assessment = client.assess_workspace(
                     workspace,
                     mode,
-                    resources=resources,
-                    output_path=output_path,
-                    download_notebooks=download_notebooks,
+                    **assess_kwargs,
                 )
 
                 # Export the assessment data using the structured export service

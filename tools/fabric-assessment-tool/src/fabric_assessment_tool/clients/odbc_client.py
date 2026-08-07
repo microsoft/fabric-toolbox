@@ -96,8 +96,7 @@ class OdbcClient:
             # Service Principal authentication
             # UID = client_id, PWD = client_secret
             return (
-                base
-                + f"Authentication=ActiveDirectoryServicePrincipal;"
+                base + f"Authentication=ActiveDirectoryServicePrincipal;"
                 f"UID={self.client_id};"
                 f"PWD={self.client_secret};"
             )
